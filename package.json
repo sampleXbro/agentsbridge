@@ -26,6 +26,7 @@
   "scripts": {
     "agentsbridge": "node ./dist/cli.js",
     "build": "tsup",
+    "pretest": "pnpm build",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

@@ -11,6 +11,27 @@ import { spawn } from 'node:child_process';
 const TEST_DIR = join(tmpdir(), 'ab-integration-watch');
 const CLI_PATH = join(process.cwd(), 'dist', 'cli.js');
 
+function waitForFile(path: string, timeoutMs: number): Promise<void> {
+  const start = Date.now();
+  return new Promise((resolve, reject) => {
+    const tick = (): void => {
+      try {
+        readFileSync(path, 'utf-8');
+        resolve();
+        return;
+      } catch {
+        // continue polling
+      }
+      if (Date.now() - start > timeoutMs) {
+        reject(new Error(`Timed out waiting for file: ${path}`));
+        return;
+      }
+      setTimeout(tick, 100);
+    };
+    tick();
+  });
+}
+
 beforeEach(() => {
   mkdirSync(TEST_DIR, { recursive: true });
   writeFileSync(
@@ -44,16 +65,9 @@ describe('agentsbridge watch (integration)', () => {
 
     const chunks: Buffer[] = [];
     child.stdout?.on('data', (chunk: Buffer) => chunks.push(chunk));
+    child.stderr?.on('data', (chunk: Buffer) => chunks.push(chunk));
 
-    await new Promise<void>((resolve) => {
-      child.stdout?.on('data', (chunk: Buffer) => {
-        const out = chunk.toString();
-        if (out.includes('Regenerated') || out.includes('Generated')) {
-          resolve();
-        }
-      });
-      setTimeout(resolve, 3000);
-    });
+    await waitForFile(join(TEST_DIR, '.claude', 'CLAUDE.md'), 15_000);
 
     expect(readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
       'Use TypeScript',
@@ -90,7 +104,11 @@ description: "Updated"
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 
-    await new Promise((r) => setTimeout(r, 3000));
+    const chunks: Buffer[] = [];
+    child.stdout?.on('data', (chunk: Buffer) => chunks.push(chunk));
+    child.stderr?.on('data', (chunk: Buffer) => chunks.push(chunk));
+
+    await waitForFile(join(TEST_DIR, '.claude', 'CLAUDE.md'), 15_000);
 
     expect(readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
       'Use TypeScript',

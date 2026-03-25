@@ -38,7 +38,7 @@
     "typecheck": "tsc --noEmit",
     "changeset": "changeset",
     "version": "changeset version",
-    "release": "pnpm build && npm publish --provenance --access public"
+    "release": "pnpm build && changeset publish"
   },
   "keywords": [
     "ai-rules",

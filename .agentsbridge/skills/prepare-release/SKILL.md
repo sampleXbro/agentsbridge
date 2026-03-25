@@ -1,6 +1,6 @@
 ---
 name: prepare-release
-description: "Use this skill whenever preparing agentsbridge for an npm release — whether first publish, patch, minor, or major. Triggers on: 'prepare release', 'ready to publish', 'ship version', 'release prep', 'get this to npm', 'bump version', 'cut a release', 'what's needed to publish'. Runs a strict ordered checklist: test suite health → timing hardening → CI/CD presence → community health files → version bump → CHANGELOG quality → package contents → README badges → final gate → generate to targets. Do not skip this or work from memory — execute every phase in order and fix gaps before moving on."
+description: "Use this skill whenever preparing agentsbridge for an npm release — whether first publish, patch, minor, or major. Triggers on: 'prepare release', 'ready to publish', 'ship version', 'release prep', 'get this to npm', 'bump version', 'cut a release', 'what's needed to publish'. Runs a strict ordered checklist: test suite health → timing hardening → CI/CD presence → community health files → changesets → CHANGELOG quality → package contents → README badges → final gate → generate to targets. Do not skip this or work from memory — execute every phase in order and fix gaps before moving on."
 ---
 
 # Prepare Release
@@ -9,15 +9,17 @@ You are acting as the release engineer for agentsbridge. Your job is to get the 
 
 ## How publishing works
 
-npm publish is triggered by **creating a GitHub Release** (not by pushing to master). The flow is:
+Publishing is fully automated via changesets. The flow is:
 
 1. All phases below pass locally
-2. Commit and push to `master`
-3. Go to GitHub → Releases → Draft a new release
-4. Set the tag to `v{version}` (e.g. `v0.2.0`), target `master`, fill in the title and description
-5. Publish the release → `release.yml` triggers → builds and publishes to npm automatically
+2. Commit the pending `.changeset/*.md` file and push to `master`
+3. `release.yml` triggers — changesets/action detects pending changesets and **opens a "chore: version packages" PR** that bumps `package.json` and updates `CHANGELOG.md`
+4. Review and **merge the version PR** → `release.yml` triggers again — changesets/action sees no pending changesets, runs `pnpm release` (`pnpm build && changeset publish`), and publishes to npm
+5. GitHub creates a Release and tag automatically
 
-The `release.yml` workflow runs `pnpm build && npm publish --provenance --access public` using the `NPM_TOKEN` secret.
+Prerequisites in GitHub repo settings:
+- **Settings → Actions → General → Workflow permissions**: enable "Allow GitHub Actions to create and approve pull requests"
+- **Settings → Secrets → Actions**: `NPM_TOKEN` must be set to a valid npm token with publish rights
 
 ---
 
@@ -69,7 +71,7 @@ If any of these are missing or too low, update them now. The watch debounce is 3
 Check that both workflow files exist and are correct:
 
 - `.github/workflows/ci.yml` — runs on every push and PR to `master`
-- `.github/workflows/release.yml` — publishes to npm when a GitHub Release is published
+- `.github/workflows/release.yml` — runs changesets publish flow on push to `master`
 
 ### ci.yml must include these steps in order
 
@@ -84,23 +86,30 @@ Check that both workflow files exist and are correct:
 
 Use Node 22 + pnpm 10 + `cache: pnpm` in `setup-node`. Never run e2e in parallel with build — they share `dist/`. Both workflows must have `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true` at the job level to suppress the Node 20 deprecation warning.
 
-### release.yml must trigger on GitHub Release published
+### release.yml must use changesets/action@v1 and trigger on push to master
 
 ```yaml
 on:
-  release:
-    types: [published]
+  push:
+    branches: [master]
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
-  publish:
+  release:
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     permissions:
-      contents: read
+      contents: write
+      pull-requests: write
       id-token: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: pnpm/action-setup@v4
         with:
           version: 10
@@ -111,13 +120,18 @@ jobs:
           registry-url: "https://registry.npmjs.org"
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Build and publish
-        run: pnpm build && npm publish --provenance --access public
+      - name: Create release PR or publish
+        uses: changesets/action@v1
+        with:
+          publish: pnpm release
+          title: "chore: version packages"
+          commit: "chore: version packages"
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 ```
 
-The job needs `id-token: write` for npm provenance. If either file is missing or malformed, create/fix it now.
+The job needs `id-token: write` for npm provenance and `pull-requests: write` to create the version PR. If either file is missing or malformed, create/fix it now.
 
 ---
 
@@ -132,50 +146,37 @@ These must exist. Check each one:
 | `.github/ISSUE_TEMPLATE/bug_report.yml` | version, node, repro, expected behavior fields |
 | `.github/ISSUE_TEMPLATE/feature_request.yml` | problem + solution fields |
 | `.github/ISSUE_TEMPLATE/config.yml` | `blank_issues_enabled: false`, security advisory link |
-| `.github/pull_request_template.md` | type-of-change checklist, TDD + CI checkboxes |
+| `.github/pull_request_template.md` | type-of-change checklist, TDD + CI + changeset checkboxes |
 
 If any are missing, create them. Keep them short and factual — no marketing copy.
 
 ---
 
-## Phase 4 — Version Bump
+## Phase 4 — Changesets Setup
 
-Determine the correct next version using semver:
+Verify changesets is configured correctly:
 
-- **patch** (`0.1.0` → `0.1.1`) — bug fixes only
-- **minor** (`0.1.0` → `0.2.0`) — new features, backwards compatible
-- **major** (`0.1.0` → `2.0.0`) — breaking changes
+1. `.changeset/config.json` exists with `"access": "public"` and `"baseBranch": "master"`
+2. `@changesets/cli` is in `devDependencies` in `package.json`
+3. `package.json` has these scripts:
+   ```json
+   "changeset": "changeset",
+   "version": "changeset version",
+   "release": "pnpm build && changeset publish"
+   ```
+4. Lockfile is up to date (`pnpm install` has been run)
 
-### Option A — Using changesets (recommended for changelog generation)
+### Changeset for this release
 
-If there are pending changeset files in `.changeset/` (anything other than `config.json`):
-
-```bash
-pnpm version
-```
-
-This consumes the changesets, bumps `package.json`, and updates `CHANGELOG.md` automatically.
-
-If no changeset exists yet, create one first:
+If there is no pending changeset file in `.changeset/` (nothing other than `config.json`):
 
 ```bash
 pnpm changeset
 ```
 
-Follow the prompts: select bump type, write a one-line user-facing summary. Then run `pnpm version`.
+Follow the prompts: select the bump type (patch/minor/major), write a one-line user-facing summary. Commit the resulting `.changeset/*.md` file. The `release.yml` workflow will consume it on the next push to `master`.
 
-### Option B — Manual bump
-
-Edit `package.json` version field directly, then update `CHANGELOG.md` manually.
-
-### After bumping
-
-Verify `package.json` version matches what you intend to publish. Commit the version bump:
-
-```bash
-git add package.json CHANGELOG.md .changeset/
-git commit -m "chore: release v{version}"
-```
+If a changeset already exists, confirm it describes the changes accurately before proceeding.
 
 ---
 
@@ -294,7 +295,7 @@ After all phases, produce a release readiness report:
 | Watch timing | ✓/✗ | |
 | CI workflows | ✓/✗ | |
 | Community files | ✓/✗ | |
-| Version bump | ✓/✗ | |
+| Changesets | ✓/✗ | |
 | CHANGELOG | ✓/✗ | |
 | Package contents | ✓/✗ | |
 | README badges | ✓/✗ | |
@@ -302,12 +303,11 @@ After all phases, produce a release readiness report:
 | Generated to targets | ✓/✗ | |
 
 ### Remaining actions before publish
-- [ ] Ensure `NPM_TOKEN` secret is set in GitHub repo settings → Settings → Secrets → Actions
-- [ ] Ensure `CODECOV_TOKEN` secret is set in GitHub repo settings (for coverage badge)
-- [ ] Push to master: `git push origin master`
-- [ ] Go to GitHub → Releases → Draft a new release
-- [ ] Set tag to `v{version}`, target `master`, add title and release notes
-- [ ] Publish the release → npm publish triggers automatically via release.yml
+- [ ] Ensure "Allow GitHub Actions to create and approve pull requests" is enabled in repo Settings → Actions → General
+- [ ] Ensure `NPM_TOKEN` secret is set in repo Settings → Secrets → Actions
+- [ ] Ensure `CODECOV_TOKEN` secret is set (for coverage badge)
+- [ ] Push to master → changesets/action opens the "chore: version packages" PR
+- [ ] Review and merge the version PR → changesets/action publishes to npm automatically
 ```
 
 ---

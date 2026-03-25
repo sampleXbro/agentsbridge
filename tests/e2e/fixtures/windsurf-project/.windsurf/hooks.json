@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "post_tool_use": [
+      {
+        "command": "npm run lint",
+        "show_output": true
+      }
+    ]
+  }
+}

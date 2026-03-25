@@ -1,0 +1,3 @@
+- Gather official docs
+- Summarize constraints
+- Note open questions

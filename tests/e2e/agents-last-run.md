@@ -1,0 +1,263 @@
+# Agents E2E Last Run Report
+
+_Generated: 2026-03-25T07:57:39.733Z_
+
+## Initial — `.agentsbridge/agents/` (canonical fixture)
+
+  - **code-reviewer.md**
+    - description : Code review specialist
+    - model       : sonnet
+    - tools       : Read, Glob, Grep
+    - permission  : ask
+    - max-turns   : 10
+  - **researcher.md**
+    - description : Research documentation and summarize findings
+    - model       : haiku
+    - tools       : Read, WebSearch, WebFetch
+    - disallowed  : Write, Edit
+    - max-turns   : 5
+
+## Target: claude-code
+
+### Generated files
+
+```
+✓ created .claude/CLAUDE.md
+✓ created .claude/rules/typescript.md
+✓ created .claude/commands/review.md
+✓ created .claude/agents/code-reviewer.md
+✓ created .claude/agents/researcher.md
+✓ created .claude/skills/api-generator/SKILL.md
+✓ created .claude/skills/api-generator/references/route-checklist.md
+✓ created .claude/skills/api-generator/template.ts
+✓ created .mcp.json
+✓ created .claude/settings.json
+✓ created .claudeignore
+Generated: 11 created, 0 updated, 0 unchanged
+┌───────────────┬────────────┐
+┌Feature        ┬Claude      ┐
+├───────────────┼────────────┤
+├rules          ┼  ✓         ┤
+├commands (1)   ┼  ✓         ┤
+├agents (2)     ┼  ✓         ┤
+├skills (1)     ┼  ✓         ┤
+├mcp (1 servers)┼  ✓         ┤
+├hooks (1)      ┼  ✓         ┤
+├ignore         ┼  ✓         ┤
+├permissions    ┼  ✓         ┤
+└───────────────┴────────────┘
+
+Legend: ✓ = native  📝 = embedded  ⚠ = partial  – = not supported
+```
+
+#### Agent files in `.claude/agents/`
+
+  - **code-reviewer.md**
+    - description : Code review specialist
+    - model       : sonnet
+    - tools       : Read, Glob, Grep
+    - permission  : ask
+    - max-turns   : 10
+  - **researcher.md**
+    - description : Research documentation and summarize findings
+    - model       : haiku
+    - tools       : Read, WebSearch, WebFetch
+    - disallowed  : Write, Edit
+    - max-turns   : 5
+
+### Imported files
+
+```
+✓ .claude/CLAUDE.md → .agentsbridge/rules/_root.md
+✓ .claude/rules/typescript.md → .agentsbridge/rules/typescript.md
+✓ .claude/commands/review.md → .agentsbridge/commands/review.md
+✓ .claude/agents/code-reviewer.md → .agentsbridge/agents/code-reviewer.md
+✓ .claude/agents/researcher.md → .agentsbridge/agents/researcher.md
+✓ .claude/skills/api-generator/SKILL.md → .agentsbridge/skills/api-generator/SKILL.md
+✓ .claude/skills/api-generator/references/route-checklist.md → .agentsbridge/skills/api-generator/references/route-checklist.md
+✓ .claude/skills/api-generator/template.ts → .agentsbridge/skills/api-generator/template.ts
+✓ .mcp.json → .agentsbridge/mcp.json
+✓ .claude/settings.json → .agentsbridge/permissions.yaml
+✓ .claude/settings.json → .agentsbridge/hooks.yaml
+✓ .claudeignore → .agentsbridge/ignore
+Imported 12 file(s). Run 'agentsbridge generate' to sync to other tools.
+```
+
+#### Canonical `.agentsbridge/agents/` after import
+
+  - **code-reviewer.md**
+    - description : Code review specialist
+    - model       : sonnet
+    - tools       : Read, Glob, Grep
+    - permission  : ask
+    - max-turns   : 10
+  - **researcher.md**
+    - description : Research documentation and summarize findings
+    - model       : haiku
+    - tools       : Read, WebSearch, WebFetch
+    - disallowed  : Write, Edit
+    - max-turns   : 5
+
+## Target: cursor
+
+### Generated files
+
+```
+✓ created AGENTS.md
+✓ created .cursor/rules/general.mdc
+✓ created .cursor/rules/typescript.mdc
+✓ created .cursor/commands/review.md
+✓ created .cursor/agents/code-reviewer.md
+✓ created .cursor/agents/researcher.md
+✓ created .cursor/skills/api-generator/SKILL.md
+✓ created .cursor/skills/api-generator/references/route-checklist.md
+✓ created .cursor/skills/api-generator/template.ts
+✓ created .cursor/mcp.json
+✓ created .cursor/hooks.json
+✓ created .cursorignore
+Generated: 12 created, 0 updated, 0 unchanged
+┌───────────────┬────────────┐
+┌Feature        ┬cursor      ┐
+├───────────────┼────────────┤
+├rules          ┼  ✓         ┤
+├commands (1)   ┼  ✓         ┤
+├agents (2)     ┼  ✓         ┤
+├skills (1)     ┼  ✓         ┤
+├mcp (1 servers)┼  ✓         ┤
+├hooks (1)      ┼  ✓         ┤
+├ignore         ┼  ✓         ┤
+├permissions    ┼  ⚠         ┤
+└───────────────┴────────────┘
+
+Legend: ✓ = native  📝 = embedded  ⚠ = partial  – = not supported
+```
+
+#### Agent files in `.cursor/agents/`
+
+  - **code-reviewer.md**
+    - description : Code review specialist
+    - model       : sonnet
+    - tools       : Read, Glob, Grep
+    - permission  : ask
+    - max-turns   : 10
+  - **researcher.md**
+    - description : Research documentation and summarize findings
+    - model       : haiku
+    - tools       : Read, WebSearch, WebFetch
+    - disallowed  : Write, Edit
+    - max-turns   : 5
+
+### Imported files
+
+```
+✓ AGENTS.md → .agentsbridge/rules/_root.md
+✓ .cursor/rules/typescript.mdc → .agentsbridge/rules/typescript.md
+✓ .cursor/commands/review.md → .agentsbridge/commands/review.md
+✓ .cursor/agents/code-reviewer.md → .agentsbridge/agents/code-reviewer.md
+✓ .cursor/agents/researcher.md → .agentsbridge/agents/researcher.md
+✓ .cursor/skills/api-generator/SKILL.md → .agentsbridge/skills/api-generator/SKILL.md
+✓ .cursor/skills/api-generator/references/route-checklist.md → .agentsbridge/skills/api-generator/references/route-checklist.md
+✓ .cursor/skills/api-generator/template.ts → .agentsbridge/skills/api-generator/template.ts
+✓ .cursor/mcp.json → .agentsbridge/mcp.json
+✓ .cursor/hooks.json → .agentsbridge/hooks.yaml
+✓ .cursorignore → .agentsbridge/ignore
+Imported 11 file(s). Run 'agentsbridge generate' to sync to other tools.
+```
+
+#### Canonical `.agentsbridge/agents/` after import
+
+  - **code-reviewer.md**
+    - description : Code review specialist
+    - model       : sonnet
+    - tools       : Read, Glob, Grep
+    - permission  : ask
+    - max-turns   : 10
+  - **researcher.md**
+    - description : Research documentation and summarize findings
+    - model       : haiku
+    - tools       : Read, WebSearch, WebFetch
+    - disallowed  : Write, Edit
+    - max-turns   : 5
+
+## Target: copilot (agents in .github/agents/*.agent.md)
+
+### Generated files
+
+```
+✓ created .github/copilot-instructions.md
+✓ created .github/instructions/typescript.instructions.md
+✓ created .github/prompts/review.prompt.md
+✓ created .github/agents/code-reviewer.agent.md
+✓ created .github/agents/researcher.agent.md
+✓ created .github/skills/api-generator/SKILL.md
+✓ created .github/skills/api-generator/references/route-checklist.md
+✓ created .github/skills/api-generator/template.ts
+✓ created .github/hooks/agentsbridge.json
+✓ created .github/hooks/scripts/posttooluse-0.sh
+Generated: 10 created, 0 updated, 0 unchanged
+┌───────────────┬────────────┐
+┌Feature        ┬copilot     ┐
+├───────────────┼────────────┤
+├rules          ┼  ✓         ┤
+├commands (1)   ┼  ✓         ┤
+├agents (2)     ┼  ✓         ┤
+├skills (1)     ┼  ✓         ┤
+├mcp (1 servers)┼  –         ┤
+├hooks (1)      ┼  ⚠         ┤
+├ignore         ┼  –         ┤
+├permissions    ┼  –         ┤
+└───────────────┴────────────┘
+
+Legend: ✓ = native  📝 = embedded  ⚠ = partial  – = not supported
+```
+
+#### Agents in `.github/agents/*.agent.md`
+
+  - **code-reviewer**: ✓ present
+    - description  : Code review specialist
+    - body snippet : ✓ present
+  - **researcher**: ✓ present
+    - description  : Research documentation and summarize findings
+    - body snippet : ✓ present
+
+## Embedded agent targets (agents projected into skills)
+
+### cline: exit=0
+
+  - **code-reviewer**: ✓ projected to `.cline/skills/ab-agent-code-reviewer/SKILL.md`
+    - description : Code review specialist
+    - model       : sonnet
+    - tools       : Read, Glob, Grep
+  - **researcher**: ✓ projected to `.cline/skills/ab-agent-researcher/SKILL.md`
+    - description : Research documentation and summarize findings
+    - model       : haiku
+    - tools       : Read, WebSearch, WebFetch
+### windsurf: exit=0
+
+  - **code-reviewer**: ✓ projected to `.windsurf/skills/ab-agent-code-reviewer/SKILL.md`
+    - description : Code review specialist
+    - model       : sonnet
+    - tools       : Read, Glob, Grep
+  - **researcher**: ✓ projected to `.windsurf/skills/ab-agent-researcher/SKILL.md`
+    - description : Research documentation and summarize findings
+    - model       : haiku
+    - tools       : Read, WebSearch, WebFetch
+
+## Native agent targets
+
+### codex-cli: exit=0
+
+  - **code-reviewer**: ✓ `.codex/agents/code-reviewer.toml`
+    - description : ✓
+    - body snippet: ✓
+  - **researcher**: ✓ `.codex/agents/researcher.toml`
+    - description : ✓
+    - body snippet: ✓
+### gemini-cli: exit=0
+
+  - **code-reviewer**: ✓ `.gemini/agents/code-reviewer.md`
+    - description : ✓
+    - body snippet: ✓
+  - **researcher**: ✓ `.gemini/agents/researcher.md`
+    - description : ✓
+    - body snippet: ✓

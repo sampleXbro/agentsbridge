@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": ["Read", "Grep", "Edit", "Bash(pnpm test:*)"],
+    "deny": ["Bash(curl:*)"]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [{ "type": "command", "command": "prettier --write $FILE_PATH", "timeout": 30 }]
+      }
+    ]
+  }
+}

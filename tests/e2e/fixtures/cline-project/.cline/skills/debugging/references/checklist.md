@@ -1,0 +1,3 @@
+- Reproduce the failure
+- Identify the narrowest failing path
+- Re-run the exact command after the fix

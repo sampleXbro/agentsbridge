@@ -1,0 +1,3 @@
+- Check behavior changes
+- Check tests
+- Check unsafe shell usage

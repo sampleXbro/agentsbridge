@@ -1,0 +1,308 @@
+/**
+ * Unit tests for agentsbridge init (including Smart Init / Story 5.2).
+ */
+
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { mkdirSync, writeFileSync, rmSync, readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { runInit, detectExistingConfigs } from '../../../../src/cli/commands/init.js';
+
+const TEST_DIR = join(tmpdir(), 'ab-init-test');
+
+beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
+afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
+
+describe('detectExistingConfigs', () => {
+  it('returns empty when no AI configs present', async () => {
+    const found = await detectExistingConfigs(TEST_DIR);
+    expect(found).toEqual([]);
+  });
+
+  it('detects Claude Code (CLAUDE.md)', async () => {
+    writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Rules');
+    const found = await detectExistingConfigs(TEST_DIR);
+    expect(found).toContain('claude-code');
+  });
+
+  it('detects Cursor (.cursor/rules/)', async () => {
+    mkdirSync(join(TEST_DIR, '.cursor', 'rules'), { recursive: true });
+    const found = await detectExistingConfigs(TEST_DIR);
+    expect(found).toContain('cursor');
+  });
+
+  it('detects Copilot (.github/copilot-instructions.md)', async () => {
+    mkdirSync(join(TEST_DIR, '.github'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.github', 'copilot-instructions.md'), '# Copilot');
+    const found = await detectExistingConfigs(TEST_DIR);
+    expect(found).toContain('copilot');
+  });
+
+  it('detects Copilot (.github/prompts/*.prompt.md)', async () => {
+    mkdirSync(join(TEST_DIR, '.github', 'prompts'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.github', 'prompts', 'review.prompt.md'), 'Review prompt');
+    const found = await detectExistingConfigs(TEST_DIR);
+    expect(found).toContain('copilot');
+  });
+
+  it('detects Continue (.continue/rules/)', async () => {
+    mkdirSync(join(TEST_DIR, '.continue', 'rules'), { recursive: true });
+    const found = await detectExistingConfigs(TEST_DIR);
+    expect(found).toContain('continue');
+  });
+
+  it('detects Continue (.continue/skills/)', async () => {
+    mkdirSync(join(TEST_DIR, '.continue', 'skills', 'api-gen'), { recursive: true });
+    const found = await detectExistingConfigs(TEST_DIR);
+    expect(found).toContain('continue');
+  });
+
+  it('detects Junie (.junie/guidelines.md)', async () => {
+    mkdirSync(join(TEST_DIR, '.junie'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.junie', 'guidelines.md'), '# Junie');
+    const found = await detectExistingConfigs(TEST_DIR);
+    expect(found).toContain('junie');
+  });
+
+  it('detects Junie (.junie/skills/)', async () => {
+    mkdirSync(join(TEST_DIR, '.junie', 'skills', 'api-gen'), { recursive: true });
+    const found = await detectExistingConfigs(TEST_DIR);
+    expect(found).toContain('junie');
+  });
+
+  it('detects Gemini (GEMINI.md)', async () => {
+    writeFileSync(join(TEST_DIR, 'GEMINI.md'), '# Gemini');
+    const found = await detectExistingConfigs(TEST_DIR);
+    expect(found).toContain('gemini-cli');
+  });
+
+  it('detects Cline (.clinerules)', async () => {
+    mkdirSync(join(TEST_DIR, '.clinerules'), { recursive: true });
+    const found = await detectExistingConfigs(TEST_DIR);
+    expect(found).toContain('cline');
+  });
+
+  it('detects Codex (codex.md)', async () => {
+    writeFileSync(join(TEST_DIR, 'codex.md'), '# Codex');
+    const found = await detectExistingConfigs(TEST_DIR);
+    expect(found).toContain('codex-cli');
+  });
+
+  it('detects Windsurf (.windsurfrules)', async () => {
+    writeFileSync(join(TEST_DIR, '.windsurfrules'), '# Windsurf');
+    const found = await detectExistingConfigs(TEST_DIR);
+    expect(found).toContain('windsurf');
+  });
+
+  it('detects multiple tools', async () => {
+    writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '');
+    mkdirSync(join(TEST_DIR, '.cursor', 'rules'), { recursive: true });
+    const found = await detectExistingConfigs(TEST_DIR);
+    expect(found).toContain('claude-code');
+    expect(found).toContain('cursor');
+  });
+
+  it('deduplicates tools detected by multiple paths', async () => {
+    mkdirSync(join(TEST_DIR, '.cursor', 'rules'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.cursor', 'mcp.json'), '{}');
+    const found = await detectExistingConfigs(TEST_DIR);
+    expect(found.filter((t) => t === 'cursor')).toHaveLength(1);
+  });
+});
+
+describe('runInit — scaffold (no existing configs)', () => {
+  it('creates agentsbridge.yaml with all targets', async () => {
+    await runInit(TEST_DIR);
+    const content = readFileSync(join(TEST_DIR, 'agentsbridge.yaml'), 'utf-8');
+    expect(content).toContain('version: 1');
+    expect(content).toContain('claude-code');
+    expect(content).toContain('continue');
+    expect(content).toContain('junie');
+    expect(content).toContain('cursor');
+    expect(content).toContain('rules');
+  });
+
+  it('creates .agentsbridge/rules/_root.md', async () => {
+    await runInit(TEST_DIR);
+    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    expect(content).toContain('root: true');
+    expect(content).toContain('description');
+  });
+
+  it('creates .agentsbridge/rules/example.md', async () => {
+    await runInit(TEST_DIR);
+    expect(existsSync(join(TEST_DIR, '.agentsbridge', 'rules', 'example.md'))).toBe(true);
+  });
+
+  it('creates .agentsbridge/commands/example.md', async () => {
+    await runInit(TEST_DIR);
+    expect(existsSync(join(TEST_DIR, '.agentsbridge', 'commands', 'example.md'))).toBe(true);
+  });
+
+  it('creates .agentsbridge/agents/example.md', async () => {
+    await runInit(TEST_DIR);
+    expect(existsSync(join(TEST_DIR, '.agentsbridge', 'agents', 'example.md'))).toBe(true);
+  });
+
+  it('creates .agentsbridge/skills/example/SKILL.md', async () => {
+    await runInit(TEST_DIR);
+    expect(existsSync(join(TEST_DIR, '.agentsbridge', 'skills', 'example', 'SKILL.md'))).toBe(true);
+  });
+
+  it('creates .agentsbridge/mcp.json', async () => {
+    await runInit(TEST_DIR);
+    expect(existsSync(join(TEST_DIR, '.agentsbridge', 'mcp.json'))).toBe(true);
+  });
+
+  it('creates .agentsbridge/hooks.yaml', async () => {
+    await runInit(TEST_DIR);
+    expect(existsSync(join(TEST_DIR, '.agentsbridge', 'hooks.yaml'))).toBe(true);
+  });
+
+  it('creates .agentsbridge/permissions.yaml', async () => {
+    await runInit(TEST_DIR);
+    expect(existsSync(join(TEST_DIR, '.agentsbridge', 'permissions.yaml'))).toBe(true);
+  });
+
+  it('creates .agentsbridge/ignore', async () => {
+    await runInit(TEST_DIR);
+    expect(existsSync(join(TEST_DIR, '.agentsbridge', 'ignore'))).toBe(true);
+  });
+
+  it('creates agentsbridge.local.yaml template', async () => {
+    await runInit(TEST_DIR);
+    const content = readFileSync(join(TEST_DIR, 'agentsbridge.local.yaml'), 'utf-8');
+    expect(content).toContain('targets');
+    expect(content).toContain('overrides');
+    expect(content).toContain('conversions');
+  });
+
+  it('appends to .gitignore if file exists', async () => {
+    writeFileSync(join(TEST_DIR, '.gitignore'), 'node_modules\n');
+    await runInit(TEST_DIR);
+    const content = readFileSync(join(TEST_DIR, '.gitignore'), 'utf-8');
+    expect(content).toContain('agentsbridge.local.yaml');
+  });
+
+  it('creates .gitignore with entries if missing', async () => {
+    await runInit(TEST_DIR);
+    const content = readFileSync(join(TEST_DIR, '.gitignore'), 'utf-8');
+    expect(content).toContain('agentsbridge.local.yaml');
+    expect(content).toContain('.agentsbridgecache');
+  });
+
+  it('does not duplicate .gitignore entries', async () => {
+    writeFileSync(join(TEST_DIR, '.gitignore'), 'node_modules\nagentsbridge.local.yaml\n');
+    await runInit(TEST_DIR);
+    const content = readFileSync(join(TEST_DIR, '.gitignore'), 'utf-8');
+    const count = (content.match(/agentsbridge\.local\.yaml/g) ?? []).length;
+    expect(count).toBe(1);
+  });
+
+  it('throws when agentsbridge.yaml already exists', async () => {
+    writeFileSync(join(TEST_DIR, 'agentsbridge.yaml'), 'version: 1\n');
+    await expect(runInit(TEST_DIR)).rejects.toThrow(/already initialized/i);
+  });
+});
+
+describe('runInit — existing configs detected, no --yes', () => {
+  it('creates scaffold (not imported content) when existing configs but no --yes', async () => {
+    writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Rules\n');
+    await runInit(TEST_DIR);
+    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    expect(content).toContain('root: true');
+    expect(content).not.toContain('# Rules');
+  });
+
+  it('creates all scaffold files when existing configs but no --yes', async () => {
+    writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Rules\n');
+    await runInit(TEST_DIR);
+    expect(existsSync(join(TEST_DIR, '.agentsbridge', 'commands', 'example.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.agentsbridge', 'agents', 'example.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.agentsbridge', 'mcp.json'))).toBe(true);
+  });
+
+  it('still creates agentsbridge.yaml with all targets when no --yes', async () => {
+    writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Rules\n');
+    await runInit(TEST_DIR);
+    const content = readFileSync(join(TEST_DIR, 'agentsbridge.yaml'), 'utf-8');
+    expect(content).toContain('version: 1');
+    expect(content).toContain('claude-code');
+  });
+});
+
+describe('runInit — Smart Init with --yes flag (Story 5.2)', () => {
+  it('auto-imports claude-code when --yes and CLAUDE.md exists', async () => {
+    writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# My Rules\n\nUse TDD.');
+    await runInit(TEST_DIR, { yes: true });
+    const imported = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    expect(imported).toContain('My Rules');
+    expect(imported).toContain('Use TDD.');
+    expect(imported).toContain('root: true');
+  });
+
+  it('creates agentsbridge.yaml with only detected targets when --yes', async () => {
+    writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Rules\n');
+    await runInit(TEST_DIR, { yes: true });
+    const content = readFileSync(join(TEST_DIR, 'agentsbridge.yaml'), 'utf-8');
+    expect(content).toContain('claude-code');
+    expect(content).not.toContain('gemini-cli');
+  });
+
+  it('auto-imports cursor config when --yes and .cursor/ exists', async () => {
+    mkdirSync(join(TEST_DIR, '.cursor', 'rules'), { recursive: true });
+    writeFileSync(join(TEST_DIR, 'AGENTS.md'), '# Cursor Rules\n\nUse TypeScript.');
+    await runInit(TEST_DIR, { yes: true });
+    const imported = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    expect(imported).toContain('Cursor Rules');
+  });
+
+  it('auto-imports multiple tools when --yes and multiple configs detected', async () => {
+    writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Claude Rules\n');
+    writeFileSync(join(TEST_DIR, '.windsurfrules'), 'Use TDD.');
+    await runInit(TEST_DIR, { yes: true });
+    const config = readFileSync(join(TEST_DIR, 'agentsbridge.yaml'), 'utf-8');
+    expect(config).toContain('claude-code');
+    expect(config).toContain('windsurf');
+    expect(config).not.toContain('gemini-cli');
+  });
+
+  it('still creates scaffold files (local.yaml, .gitignore) when --yes', async () => {
+    writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Rules\n');
+    await runInit(TEST_DIR, { yes: true });
+    expect(existsSync(join(TEST_DIR, 'agentsbridge.local.yaml'))).toBe(true);
+    const gitignore = readFileSync(join(TEST_DIR, '.gitignore'), 'utf-8');
+    expect(gitignore).toContain('agentsbridge.local.yaml');
+  });
+
+  it('works with --yes when no existing configs (empty project)', async () => {
+    await runInit(TEST_DIR, { yes: true });
+    const content = readFileSync(join(TEST_DIR, 'agentsbridge.yaml'), 'utf-8');
+    expect(content).toContain('version: 1');
+    expect(content).toContain('claude-code');
+  });
+
+  it('appends newline before entry when gitignore has no trailing newline', async () => {
+    writeFileSync(join(TEST_DIR, '.gitignore'), 'node_modules');
+    await runInit(TEST_DIR);
+    const content = readFileSync(join(TEST_DIR, '.gitignore'), 'utf-8');
+    expect(content).toContain('node_modules\nagentsbridge.local.yaml');
+  });
+
+  it('--yes with detected but empty tool imports 0 files gracefully', async () => {
+    mkdirSync(join(TEST_DIR, '.cursor', 'rules'), { recursive: true });
+    await runInit(TEST_DIR, { yes: true });
+    const config = readFileSync(join(TEST_DIR, 'agentsbridge.yaml'), 'utf-8');
+    expect(config).toContain('cursor');
+    expect(existsSync(join(TEST_DIR, 'agentsbridge.local.yaml'))).toBe(true);
+  });
+
+  it('does not create scaffold templates when --yes and configs imported', async () => {
+    writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Imported Rules\n');
+    await runInit(TEST_DIR, { yes: true });
+    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    expect(content).toContain('Imported Rules');
+    // scaffold example files are not created when importing
+    expect(existsSync(join(TEST_DIR, '.agentsbridge', 'commands', 'example.md'))).toBe(false);
+  });
+});

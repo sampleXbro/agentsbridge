@@ -1,0 +1,60 @@
+{
+  "mcpServers": {
+    "context7": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ],
+      "env": {}
+    },
+    "github": {
+      "description": "GitHub MCP server for repo operations",
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_TOKEN": "$GITHUB_TOKEN"
+      }
+    }
+  },
+  "experimental": {
+    "enableAgents": true
+  },
+  "hooks": {
+    "BeforeTool": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "name": "BeforeTool-1",
+            "type": "command",
+            "command": "eslint --fix"
+          }
+        ]
+      }
+    ],
+    "AfterTool": [
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "name": "AfterTool-1",
+            "type": "command",
+            "command": "Review the file content for any security concerns"
+          }
+        ]
+      }
+    ]
+  },
+  "context": {
+    "fileName": [
+      "GEMINI.md",
+      "AGENTS.md"
+    ]
+  }
+}

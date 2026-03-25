@@ -1,0 +1,29 @@
+[[rule]]
+decision = "allow"
+priority = 100
+toolName = "run_shell_command"
+commandPrefix = "pnpm build"
+
+[[rule]]
+decision = "allow"
+priority = 101
+toolName = "run_shell_command"
+commandPrefix = "pnpm test"
+
+[[rule]]
+decision = "allow"
+priority = 102
+toolName = "run_shell_command"
+commandPrefix = "git add"
+
+[[rule]]
+decision = "allow"
+priority = 103
+toolName = "run_shell_command"
+commandPrefix = "npx vitest"
+
+[[rule]]
+decision = "allow"
+priority = 104
+toolName = "run_shell_command"
+commandPrefix = "node -e \"console.log\\(['.windsurfrules', 'AGENTS.md'].sort\\(\\)\\)\""

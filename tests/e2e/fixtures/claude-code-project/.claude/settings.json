@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": ["Read", "Grep", "Glob", "LS", "Bash(pnpm test:*)", "Bash(pnpm lint)"],
+    "deny": ["WebFetch", "Bash(curl:*)", "Read(./.env)"]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [{ "type": "command", "command": "prettier --write $FILE_PATH" }]
+      }
+    ]
+  },
+  "mcpServers": {
+    "context7": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"],
+      "env": {}
+    },
+    "github": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": { "GITHUB_TOKEN": "${GITHUB_TOKEN}" }
+    }
+  }
+}

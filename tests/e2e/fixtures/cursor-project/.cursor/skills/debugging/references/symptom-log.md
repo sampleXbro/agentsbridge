@@ -1,0 +1,3 @@
+- Record the first failing command exactly as run.
+- Note whether the failure is deterministic or flaky.
+- Keep a one-line root-cause statement before patching.

@@ -1,0 +1,164 @@
+/**
+ * Unit tests for agentsbridge check command.
+ */
+
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { hashContent } from '../../../../src/utils/hash.js';
+import { runCheck } from '../../../../src/cli/commands/check.js';
+
+const TEST_DIR = join(tmpdir(), 'ab-check-test');
+
+beforeEach(() => {
+  vi.spyOn(process, 'cwd').mockReturnValue(TEST_DIR);
+  rmSync(TEST_DIR, { recursive: true, force: true });
+  mkdirSync(TEST_DIR, { recursive: true });
+});
+
+describe('runCheck', () => {
+  it('returns 0 when checksums match', async () => {
+    writeFileSync(join(TEST_DIR, 'agentsbridge.yaml'), 'version: 1');
+    mkdirSync(join(TEST_DIR, '.agentsbridge', 'rules'), { recursive: true });
+    const body = '# Rules';
+    writeFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), body);
+    const h = 'sha256:' + hashContent(body);
+    writeFileSync(
+      join(TEST_DIR, '.agentsbridge', '.lock'),
+      `generated_at: "2026-01-01T00:00:00Z"
+generated_by: test
+lib_version: "0.1.0"
+checksums:
+  rules/_root.md: "${h}"
+extends: {}
+`,
+    );
+    const code = await runCheck({}, TEST_DIR);
+    expect(code).toBe(0);
+  });
+
+  it('returns 1 when lock is missing', async () => {
+    writeFileSync(join(TEST_DIR, 'agentsbridge.yaml'), 'version: 1');
+    mkdirSync(join(TEST_DIR, '.agentsbridge', 'rules'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), '# Rules');
+    const code = await runCheck({}, TEST_DIR);
+    expect(code).toBe(1);
+  });
+
+  it('returns 1 when checksums mismatch', async () => {
+    writeFileSync(join(TEST_DIR, 'agentsbridge.yaml'), 'version: 1');
+    mkdirSync(join(TEST_DIR, '.agentsbridge', 'rules'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), '# Modified');
+    writeFileSync(
+      join(TEST_DIR, '.agentsbridge', '.lock'),
+      `generated_at: "2026-01-01T00:00:00Z"
+generated_by: test
+lib_version: "0.1.0"
+checksums:
+  rules/_root.md: "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+extends: {}
+`,
+    );
+    const code = await runCheck({}, TEST_DIR);
+    expect(code).toBe(1);
+  });
+
+  it('returns 1 when new file added (not in lock)', async () => {
+    writeFileSync(join(TEST_DIR, 'agentsbridge.yaml'), 'version: 1');
+    mkdirSync(join(TEST_DIR, '.agentsbridge', 'rules'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), '# Rules');
+    writeFileSync(join(TEST_DIR, '.agentsbridge', 'rules', 'new.md'), '# New');
+    writeFileSync(
+      join(TEST_DIR, '.agentsbridge', '.lock'),
+      `generated_at: "2026-01-01T00:00:00Z"
+generated_by: test
+lib_version: "0.1.0"
+checksums:
+  rules/_root.md: "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+extends: {}
+`,
+    );
+    const code = await runCheck({}, TEST_DIR);
+    expect(code).toBe(1);
+  });
+
+  it('returns 1 when extend checksum has changed (extendModified path)', async () => {
+    const baseDir = join(TEST_DIR, 'base-config');
+    mkdirSync(join(baseDir, '.agentsbridge', 'rules'), { recursive: true });
+    writeFileSync(join(baseDir, '.agentsbridge', 'rules', '_root.md'), '# Base');
+    writeFileSync(
+      join(TEST_DIR, 'agentsbridge.yaml'),
+      `version: 1\ntargets: [claude-code]\nfeatures: [rules]\nextends:\n  - name: base\n    source: ./base-config\n    features: [rules]\n`,
+    );
+    mkdirSync(join(TEST_DIR, '.agentsbridge', 'rules'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), '# Local');
+    writeFileSync(
+      join(TEST_DIR, '.agentsbridge', '.lock'),
+      `generated_at: "2026-01-01T00:00:00Z"\ngenerated_by: test\nlib_version: "0.1.0"\nchecksums:\n  rules/_root.md: "sha256:${'a'.repeat(64)}"\nextends:\n  base: "sha256:${'b'.repeat(64)}"\n`,
+    );
+    const code = await runCheck({}, TEST_DIR);
+    expect(code).toBe(1);
+  });
+
+  it('returns 1 when file removed from canonical', async () => {
+    writeFileSync(join(TEST_DIR, 'agentsbridge.yaml'), 'version: 1');
+    mkdirSync(join(TEST_DIR, '.agentsbridge', 'rules'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), '# Rules');
+    const h = 'sha256:' + 'a'.repeat(64);
+    writeFileSync(
+      join(TEST_DIR, '.agentsbridge', '.lock'),
+      `generated_at: "2026-01-01T00:00:00Z"
+generated_by: test
+lib_version: "0.1.0"
+checksums:
+  rules/_root.md: "${h}"
+  rules/removed.md: "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+extends: {}
+`,
+    );
+    const code = await runCheck({}, TEST_DIR);
+    expect(code).toBe(1);
+  });
+
+  it('annotates changed locked features with [LOCKED] in check output', async () => {
+    process.env.NO_COLOR = '1';
+    writeFileSync(
+      join(TEST_DIR, 'agentsbridge.yaml'),
+      `version: 1
+collaboration:
+  strategy: lock
+  lock_features: [rules]
+`,
+    );
+    mkdirSync(join(TEST_DIR, '.agentsbridge', 'rules'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), '# Modified');
+    writeFileSync(
+      join(TEST_DIR, '.agentsbridge', '.lock'),
+      `generated_at: "2026-01-01T00:00:00Z"
+generated_by: test
+lib_version: "0.1.0"
+checksums:
+  rules/_root.md: "sha256:${'0'.repeat(64)}"
+extends: {}
+packs: {}
+`,
+    );
+
+    let output = '';
+    const write = process.stderr.write.bind(process.stderr);
+    process.stderr.write = (chunk: string | Uint8Array) => {
+      output += String(chunk);
+      return true;
+    };
+    try {
+      const code = await runCheck({}, TEST_DIR);
+      expect(code).toBe(1);
+    } finally {
+      process.stderr.write = write;
+      delete process.env.NO_COLOR;
+    }
+
+    expect(output).toContain('rules/_root.md was modified [LOCKED]');
+  });
+});

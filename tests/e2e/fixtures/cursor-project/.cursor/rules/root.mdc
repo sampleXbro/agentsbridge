@@ -1,0 +1,11 @@
+---
+description: Project overview
+alwaysApply: true
+---
+# Project
+
+This is a TypeScript project using pnpm and Vitest.
+
+- Read the relevant importer or generator before changing shared target behavior.
+- Keep CLI output deterministic because the e2e suite asserts on it.
+- Update docs only when the user-facing behavior changes.

@@ -1,0 +1,5 @@
+# Windsurf Rules
+
+- Use TypeScript and keep generated content deterministic.
+- Prefer pure functions and narrow boundary adapters.
+- Add tests for new code and note any verification gaps explicitly.

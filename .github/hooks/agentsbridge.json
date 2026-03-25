@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "type": "command",
+        "bash": "./scripts/pretooluse-0.sh",
+        "comment": "Matcher: Edit|Write"
+      }
+    ],
+    "postToolUse": [
+      {
+        "type": "command",
+        "bash": "./scripts/posttooluse-0.sh",
+        "comment": "Matcher: Read"
+      }
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "claude-code-fixture",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.4.0",
+  "scripts": {
+    "lint": "eslint .",
+    "test": "vitest run"
+  }
+}

@@ -1,0 +1,15 @@
+node_modules
+dist
+build
+coverage
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+Thumbs.db
+.idea
+.worktrees
+.agentsbridge.local.yaml
+agentsbridge.local.yaml
+.vscode/settings.json

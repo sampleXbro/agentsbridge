@@ -1,0 +1,13 @@
+---
+description: TypeScript coding standards
+globs:
+  - src/**/*.ts
+  - tests/**/*.ts
+alwaysApply: false
+---
+# TypeScript Standards
+
+- Use strict mode.
+- No any types.
+- Prefer `unknown` at untrusted boundaries and narrow immediately.
+- Keep exports small and composable.

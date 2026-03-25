@@ -1,0 +1,3 @@
+version: 1
+targets: [claude-code, cursor, copilot, gemini-cli, cline, codex-cli, windsurf]
+features: [rules, commands, agents, skills, mcp, hooks, ignore, permissions]

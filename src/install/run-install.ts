@@ -1,0 +1,221 @@
+/**
+ * agentsbridge install orchestration.
+ */
+
+import { join } from 'node:path';
+import type { ValidatedConfig } from '../config/schema.js';
+import { loadCanonicalWithExtends } from '../canonical/extends.js';
+import { loadConfigFromDir } from '../config/loader.js';
+import { logger } from '../utils/logger.js';
+import { exists } from '../utils/fs.js';
+import { runGenerate } from '../cli/commands/generate.js';
+import { resolveInstallResolvedPath } from './run-install-resolve.js';
+import { isGitAvailable } from './git-pin.js';
+import {
+  hasInstallableResources,
+  resolveAgentPool,
+  resolveCommandPool,
+  resolveRulePool,
+  resolveSkillPool,
+} from './pool-resolution.js';
+import { resolveInstallConflicts } from './install-conflicts.js';
+import { parseInstallSource } from './url-parser.js';
+import {
+  buildInstallPick,
+  deriveInstallFeatures,
+  ensureInstallSelection,
+  pickForSelectedResources,
+} from './install-entry-selection.js';
+import { ruleSlug } from './validate-resources.js';
+import { writeInstallAsExtend } from './install-extend-entry.js';
+import { installAsPack } from './run-install-pack.js';
+import { maybeRunInstallSync } from './install-sync.js';
+import { selectInstallEntryName } from './install-name.js';
+import { readInstallFlags } from './install-flags.js';
+import { resolveInstallDiscovery } from './install-discovery.js';
+import { applyReplayInstallScope, type InstallReplayScope } from './install-replay.js';
+import { resolveManualInstallPersistence } from './manual-install-persistence.js';
+export async function runInstall(
+  flags: Record<string, string | boolean>,
+  args: string[],
+  projectRoot: string,
+  replay?: InstallReplayScope,
+): Promise<void> {
+  const {
+    sync,
+    dryRun,
+    force,
+    useExtends,
+    explicitPath,
+    explicitTarget,
+    explicitAs,
+    nameOverride,
+  } = readInstallFlags(flags);
+  const sourceArg = args[0]?.trim();
+  if (
+    await maybeRunInstallSync({
+      sync,
+      projectRoot,
+      loadConfigDir: async (root) => (await loadConfigFromDir(root)).configDir,
+      reinstall: async (entry) => {
+        const replayPaths = entry.paths && entry.paths.length > 0 ? entry.paths : [entry.path];
+        for (const replayPath of replayPaths) {
+          await runInstall(
+            {
+              ...(force ? { force: true } : {}),
+              ...(dryRun ? { dryRun: true } : {}),
+              name: entry.name,
+              ...(entry.target ? { target: entry.target } : {}),
+              ...(replayPath ? { path: replayPath } : {}),
+              ...(entry.as ? { as: entry.as } : {}),
+            },
+            [entry.source],
+            projectRoot,
+            { features: entry.features, pick: entry.pick },
+          );
+        }
+      },
+    })
+  ) {
+    return;
+  }
+
+  if (!sourceArg) {
+    throw new Error(
+      'Missing source. Usage: agentsbridge install <source> [--path ...] [--target ...]',
+    );
+  }
+  const tty = process.stdin.isTTY;
+  if (!tty && !force && !dryRun) {
+    throw new Error('Non-interactive terminal: use --force or --dry-run for agentsbridge install.');
+  }
+  const { config, configDir } = await loadConfigFromDir(projectRoot);
+  const parsed = await parseInstallSource(sourceArg, configDir, explicitPath);
+  if (parsed.kind !== 'local' && !(await isGitAvailable())) {
+    throw new Error('git is required for remote installs. Please install git and try again.');
+  }
+  const { resolvedPath, sourceForYaml, version } = await resolveInstallResolvedPath(
+    parsed,
+    sourceArg,
+  );
+  const pathInRepo = parsed.pathInRepo.replace(/^\/+|\/+$/g, '');
+  const contentRoot = pathInRepo ? join(resolvedPath, pathInRepo) : resolvedPath;
+  if (!(await exists(contentRoot))) {
+    throw new Error(`Install path does not exist: ${contentRoot}`);
+  }
+  const persisted = await resolveManualInstallPersistence({
+    as: explicitAs,
+    contentRoot,
+    pathInRepo,
+  });
+  const { prep, implicitPick, narrowed, discoveredFeatures } = await resolveInstallDiscovery({
+    resolvedPath,
+    contentRoot,
+    pathInRepo,
+    explicitTarget,
+    explicitAs,
+    replayPick: replay?.pick,
+  });
+  try {
+    const { narrowed: effectiveNarrowed, discoveredFeatures: effectiveFeatures } =
+      applyReplayInstallScope(narrowed, discoveredFeatures, replay);
+    if (!hasInstallableResources(effectiveNarrowed)) {
+      throw new Error(
+        implicitPick || prep.scopedFeatures
+          ? 'No resources match the install path or implicit selection (check pick names exist at that path).'
+          : 'No supported resources found to install (skills, rules, commands, agents).',
+      );
+    }
+    const skillsPool = await resolveSkillPool(effectiveNarrowed, force, dryRun, tty);
+    const rulesPool = await resolveRulePool(effectiveNarrowed, force, dryRun, tty);
+    const commandsPool = await resolveCommandPool(effectiveNarrowed, force, dryRun, tty);
+    const agentsPool = await resolveAgentPool(effectiveNarrowed, force, dryRun, tty);
+    const preConflict = {
+      skills: skillsPool.length,
+      rules: rulesPool.length,
+      commands: commandsPool.length,
+      agents: agentsPool.length,
+    };
+    const { canonical: merged } = await loadCanonicalWithExtends(config, configDir);
+    const selected =
+      !force && !dryRun && tty
+        ? await resolveInstallConflicts(merged, {
+            skills: skillsPool,
+            rules: rulesPool,
+            commands: commandsPool,
+            agents: agentsPool,
+          })
+        : {
+            skillNames: skillsPool.map((s) => s.name),
+            ruleSlugs: rulesPool.map((r) => ruleSlug(r)),
+            commandNames: commandsPool.map((c) => c.name),
+            agentNames: agentsPool.map((a) => a.name),
+          };
+    ensureInstallSelection({ selected, discoveredFeatures: effectiveFeatures, preConflict });
+    const entryFeatures = (replay?.features ??
+      deriveInstallFeatures(effectiveFeatures, selected)) as ValidatedConfig['features'];
+    if (entryFeatures.length === 0) {
+      throw new Error('No features left to install after selection.');
+    }
+    const pick =
+      pickForSelectedResources(replay?.pick, selected) ??
+      persisted.pick ??
+      buildInstallPick({
+        pathInRepo: persisted.pathInRepo ?? pathInRepo,
+        implicitPick,
+        preConflictCounts: preConflict,
+        selected,
+      });
+    const entryName = selectInstallEntryName({
+      config,
+      parsed,
+      entryFeatures,
+      nameOverride,
+    });
+    if (useExtends) {
+      await writeInstallAsExtend({
+        configDir,
+        config,
+        entryArgs: {
+          name: entryName,
+          source: sourceForYaml,
+          version,
+          features: entryFeatures,
+          path: persisted.pathInRepo,
+          pick,
+          yamlTarget: prep.yamlTarget,
+        },
+        dryRun,
+      });
+      if (dryRun) return;
+    } else {
+      if (dryRun) {
+        logger.info(`[dry-run] Would install pack "${entryName}" to .agentsbridge/packs/.`);
+        return;
+      }
+      await installAsPack({
+        configDir,
+        packName: entryName,
+        narrowed: effectiveNarrowed,
+        selected,
+        sourceForYaml,
+        version,
+        sourceKind: parsed.kind,
+        entryFeatures,
+        pick,
+        yamlTarget: prep.yamlTarget,
+        pathInRepo: persisted.pathInRepo,
+        manualAs: explicitAs,
+        renameExistingPack: nameOverride === '',
+      });
+    }
+    const genCode = await runGenerate({}, configDir);
+    if (genCode !== 0) {
+      logger.warn('Generate failed after install. Fix the issue and run agentsbridge generate.');
+    }
+  } finally {
+    if (prep.cleanup) {
+      await prep.cleanup();
+    }
+  }
+}

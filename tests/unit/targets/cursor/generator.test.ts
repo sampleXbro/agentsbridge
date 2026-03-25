@@ -1,0 +1,706 @@
+import { describe, it, expect } from 'vitest';
+import {
+  generateRules,
+  generateCommands,
+  generateAgents,
+  generateSkills,
+  generateMcp,
+  generatePermissions,
+  generateHooks,
+  generateIgnore,
+} from '../../../../src/targets/cursor/generator.js';
+import type { CanonicalFiles } from '../../../../src/core/types.js';
+import { serializeFrontmatter } from '../../../../src/utils/markdown.js';
+
+function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
+  return {
+    rules: [],
+    commands: [],
+    agents: [],
+    skills: [],
+    mcp: null,
+    permissions: null,
+    hooks: null,
+    ignore: [],
+    ...overrides,
+  };
+}
+
+describe('generateRules (cursor)', () => {
+  it('generates AGENTS.md and .cursor/rules/general.mdc from root rule', () => {
+    const canonical: CanonicalFiles = {
+      rules: [
+        {
+          source: '/proj/.agentsbridge/rules/_root.md',
+          root: true,
+          targets: [],
+          description: 'Project rules',
+          globs: [],
+          body: '# Rules\n- Use TypeScript\n',
+        },
+      ],
+      commands: [],
+      agents: [],
+      skills: [],
+      mcp: null,
+      permissions: null,
+      hooks: null,
+      ignore: [],
+    };
+    const results = generateRules(canonical);
+    expect(results).toHaveLength(2);
+    const agentsMd = results.find((r) => r.path === 'AGENTS.md');
+    const generalMdc = results.find((r) => r.path === '.cursor/rules/general.mdc');
+    expect(agentsMd).toBeDefined();
+    expect(agentsMd!.content).toContain('# Rules');
+    expect(agentsMd!.content).toContain('Use TypeScript');
+    expect(agentsMd!.content).not.toContain('alwaysApply');
+    expect(generalMdc).toBeDefined();
+    expect(generalMdc!.content).toContain('alwaysApply: true');
+    expect(generalMdc!.content).toContain('# Rules');
+    expect(generalMdc!.content).toContain('Use TypeScript');
+  });
+
+  it('non-root rule with description and globs includes both in frontmatter', () => {
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: '/proj/.agentsbridge/rules/ts.md',
+          root: false,
+          targets: [],
+          description: 'TypeScript rules',
+          globs: ['src/**/*.ts'],
+          body: 'Use strict mode.',
+        },
+      ],
+    });
+    const results = generateRules(canonical);
+    expect(results[0]!.content).toContain('description: TypeScript rules');
+    expect(results[0]!.content).toContain('src/**/*.ts');
+    expect(results[0]!.content).toContain('alwaysApply: false');
+  });
+
+  it('non-root rule with description but no globs omits globs from frontmatter', () => {
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: '/proj/.agentsbridge/rules/style.md',
+          root: false,
+          targets: [],
+          description: 'Style rules',
+          globs: [],
+          body: 'Style body.',
+        },
+      ],
+    });
+    const results = generateRules(canonical);
+    expect(results[0]!.content).toContain('description: Style rules');
+    expect(results[0]!.content).not.toContain('globs:');
+  });
+
+  it('non-root rule targeted at cursor is included', () => {
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: '/proj/.agentsbridge/rules/cursor-only.md',
+          root: false,
+          targets: ['cursor'],
+          description: 'Cursor-specific',
+          globs: [],
+          body: 'Cursor body.',
+        },
+      ],
+    });
+    const results = generateRules(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0]!.path).toBe('.cursor/rules/cursor-only.mdc');
+  });
+
+  it('non-root rule with no description and no globs has only alwaysApply in frontmatter', () => {
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: '/proj/.agentsbridge/rules/bare.md',
+          root: false,
+          targets: [],
+          description: '',
+          globs: [],
+          body: 'Bare rule.',
+        },
+      ],
+    });
+    const results = generateRules(canonical);
+    expect(results[0]!.content).toContain('alwaysApply: false');
+    expect(results[0]!.content).not.toContain('description:');
+    expect(results[0]!.content).not.toContain('globs:');
+    expect(results[0]!.content).toContain('Bare rule.');
+  });
+
+  it('non-root rule targeted at other tool is filtered out', () => {
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: '/proj/.agentsbridge/rules/claude-only.md',
+          root: false,
+          targets: ['claude-code'],
+          description: '',
+          globs: [],
+          body: 'Claude body.',
+        },
+      ],
+    });
+    const results = generateRules(canonical);
+    expect(results).toHaveLength(0);
+  });
+
+  it('returns no AGENTS.md/general.mdc but does generate .cursor/rules/{slug}.mdc for non-root rules', () => {
+    const canonical: CanonicalFiles = {
+      rules: [
+        {
+          source: '/proj/.agentsbridge/rules/typescript.md',
+          root: false,
+          targets: [],
+          description: '',
+          globs: ['*.ts'],
+          body: 'TypeScript rules',
+        },
+      ],
+      commands: [],
+      agents: [],
+      skills: [],
+      mcp: null,
+      permissions: null,
+      hooks: null,
+      ignore: [],
+    };
+    const results = generateRules(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0]!.path).toBe('.cursor/rules/typescript.mdc');
+    expect(results[0]!.content).toContain('alwaysApply: false');
+  });
+
+  it('handles empty root body', () => {
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: '/proj/.agentsbridge/rules/_root.md',
+          root: true,
+          targets: [],
+          description: '',
+          globs: [],
+          body: '',
+        },
+      ],
+    });
+    const results = generateRules(canonical);
+    const generalMdc = results.find((r) => r.path === '.cursor/rules/general.mdc');
+    expect(generalMdc!.content).toContain('alwaysApply: true');
+  });
+
+  it('handles root rule with empty body — emits both AGENTS.md and general.mdc', () => {
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: '/p/.agentsbridge/rules/_root.md',
+          root: true,
+          targets: [],
+          description: '',
+          globs: [],
+          body: '',
+        },
+      ],
+    });
+    const results = generateRules(canonical);
+    expect(results).toHaveLength(2);
+    expect(results.find((r) => r.path === 'AGENTS.md')).toBeDefined();
+    expect(results.find((r) => r.path === '.cursor/rules/general.mdc')).toBeDefined();
+  });
+
+  it('generates non-root rule with empty body (covers rule.body.trim() || "" branch)', () => {
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: '/proj/.agentsbridge/rules/empty-body.md',
+          root: false,
+          targets: [],
+          description: 'No body rule',
+          globs: [],
+          body: '',
+        },
+      ],
+    });
+    const results = generateRules(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0]!.content).toContain('description: No body rule');
+  });
+
+  it('maps trigger: always_on to alwaysApply: true for non-root rule', () => {
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: '/p/.agentsbridge/rules/always.md',
+          root: false,
+          targets: [],
+          description: 'Always applied',
+          globs: [],
+          body: 'Always body.',
+          trigger: 'always_on' as const,
+        },
+      ],
+    });
+    const results = generateRules(canonical);
+    const rule = results.find((r) => r.path === '.cursor/rules/always.mdc');
+    expect(rule).toBeDefined();
+    expect(rule?.content).toContain('alwaysApply: true');
+  });
+
+  it('maps trigger: model_decision to alwaysApply: false', () => {
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: '/p/.agentsbridge/rules/ai.md',
+          root: false,
+          targets: [],
+          description: '',
+          globs: [],
+          body: 'AI body.',
+          trigger: 'model_decision' as const,
+        },
+      ],
+    });
+    const results = generateRules(canonical);
+    const rule = results.find((r) => r.path === '.cursor/rules/ai.mdc');
+    expect(rule?.content).toContain('alwaysApply: false');
+  });
+
+  it('uses serializeFrontmatter for general.mdc MDC format', () => {
+    const canonical: CanonicalFiles = {
+      rules: [
+        {
+          source: '/proj/.agentsbridge/rules/_root.md',
+          root: true,
+          targets: [],
+          description: '',
+          globs: [],
+          body: 'Body text',
+        },
+      ],
+      commands: [],
+      agents: [],
+      skills: [],
+      mcp: null,
+      permissions: null,
+      hooks: null,
+      ignore: [],
+    };
+    const results = generateRules(canonical);
+    const generalMdc = results.find((r) => r.path === '.cursor/rules/general.mdc');
+    const expected = serializeFrontmatter({ alwaysApply: true }, 'Body text');
+    expect(generalMdc!.content).toBe(expected);
+  });
+});
+
+describe('generateCommands (cursor)', () => {
+  it('generates plain markdown .cursor/commands/*.md from canonical commands', () => {
+    const canonical = makeCanonical({
+      commands: [
+        {
+          source: '/proj/.agentsbridge/commands/review.md',
+          name: 'review',
+          description: 'Run code review',
+          allowedTools: ['Read', 'Grep', 'Bash(git diff)'],
+          body: 'Review current changes.',
+        },
+      ],
+    });
+    const results = generateCommands(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0]!.path).toBe('.cursor/commands/review.md');
+    expect(results[0]!.content).toBe('Review current changes.');
+  });
+
+  it('returns empty when no commands', () => {
+    const canonical = makeCanonical({ commands: [] });
+    expect(generateCommands(canonical)).toEqual([]);
+  });
+
+  it('drops command metadata that Cursor commands cannot represent natively', () => {
+    const canonical = makeCanonical({
+      commands: [
+        {
+          source: '/proj/.agentsbridge/commands/minimal.md',
+          name: 'minimal',
+          description: 'Minimal',
+          allowedTools: [],
+          body: 'Body',
+        },
+      ],
+    });
+    const results = generateCommands(canonical);
+    expect(results[0]!.content).toBe('Body');
+    expect(results[0]!.content).not.toContain('allowed-tools');
+    expect(results[0]!.content).not.toContain('description:');
+  });
+
+  it('generates command with empty body (covers cmd.body.trim() || "" branch)', () => {
+    const canonical = makeCanonical({
+      commands: [
+        {
+          source: '/proj/.agentsbridge/commands/empty.md',
+          name: 'empty',
+          description: 'Empty body command',
+          allowedTools: [],
+          body: '',
+        },
+      ],
+    });
+    const results = generateCommands(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0]!.content).toBe('');
+  });
+});
+
+describe('generateAgents (cursor)', () => {
+  it('generates .cursor/agents/*.md from canonical agents', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          source: '/proj/.agentsbridge/agents/code-reviewer.md',
+          name: 'code-reviewer',
+          description: 'Reviews code for quality',
+          tools: ['Read', 'Grep', 'Glob'],
+          disallowedTools: [],
+          model: 'sonnet',
+          permissionMode: 'default',
+          maxTurns: 10,
+          mcpServers: [],
+          hooks: {},
+          skills: [],
+          memory: '',
+          body: 'You are an expert code reviewer.',
+        },
+      ],
+    });
+    const results = generateAgents(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0]!.path).toBe('.cursor/agents/code-reviewer.md');
+    expect(results[0]!.content).toContain('name: code-reviewer');
+    expect(results[0]!.content).toContain('You are an expert code reviewer.');
+  });
+
+  it('returns empty when no agents', () => {
+    expect(generateAgents(makeCanonical({ agents: [] }))).toEqual([]);
+  });
+
+  it('generates agent with all optional fields present (covers lines 102-115 true branches)', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          source: '/proj/.agentsbridge/agents/full.md',
+          name: 'full',
+          description: 'Full agent',
+          tools: ['Read', 'Write'],
+          disallowedTools: ['Bash'],
+          model: 'claude-opus',
+          permissionMode: 'strict',
+          maxTurns: 5,
+          mcpServers: ['fs'],
+          hooks: { PostToolUse: [{ matcher: 'Write', type: 'command' as const, command: 'lint' }] },
+          skills: ['review'],
+          memory: 'Remember to check types',
+          body: 'You are a full agent.',
+        },
+      ],
+    });
+    const results = generateAgents(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0]!.content).toContain('tools:');
+    expect(results[0]!.content).toContain('disallowedTools:');
+    expect(results[0]!.content).toContain('model: claude-opus');
+    expect(results[0]!.content).toContain('permissionMode: strict');
+    expect(results[0]!.content).toContain('maxTurns: 5');
+    expect(results[0]!.content).toContain('mcpServers:');
+    expect(results[0]!.content).toContain('skills:');
+    expect(results[0]!.content).toContain('memory: Remember to check types');
+  });
+
+  it('generates agent with empty body (covers agent.body.trim() || "" branch)', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          source: '/proj/.agentsbridge/agents/empty.md',
+          name: 'empty',
+          description: 'No body',
+          tools: [],
+          disallowedTools: [],
+          model: '',
+          permissionMode: '',
+          maxTurns: 0,
+          mcpServers: [],
+          hooks: {},
+          skills: [],
+          memory: '',
+          body: '',
+        },
+      ],
+    });
+    const results = generateAgents(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0]!.content).toContain('name: empty');
+  });
+});
+
+describe('generateSkills (cursor)', () => {
+  it('generates .cursor/skills/{name}/SKILL.md from canonical skills', () => {
+    const canonical = makeCanonical({
+      skills: [
+        {
+          source: '/proj/.agentsbridge/skills/api-gen/SKILL.md',
+          name: 'api-gen',
+          description: 'Generate REST API endpoints',
+          body: '# API Gen\nWhen asked to create an API...',
+          supportingFiles: [],
+        },
+      ],
+    });
+    const results = generateSkills(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0]!.path).toBe('.cursor/skills/api-gen/SKILL.md');
+    expect(results[0]!.content).toContain('description:');
+    expect(results[0]!.content).toContain('Generate REST API endpoints');
+    expect(results[0]!.content).toContain('# API Gen');
+  });
+
+  it('returns empty when no skills', () => {
+    expect(generateSkills(makeCanonical({ skills: [] }))).toEqual([]);
+  });
+
+  it('omits description when empty', () => {
+    const canonical = makeCanonical({
+      skills: [
+        {
+          source: '/a',
+          name: 'minimal',
+          description: '',
+          body: 'Body only.',
+          supportingFiles: [],
+        },
+      ],
+    });
+    const results = generateSkills(canonical);
+    expect(results[0]!.content).not.toContain('description:');
+    expect(results[0]!.content).toContain('Body only.');
+  });
+
+  it('generates supporting files inside the skill folder', () => {
+    const canonical = makeCanonical({
+      skills: [
+        {
+          source: '/proj/.agentsbridge/skills/typescript-pro/SKILL.md',
+          name: 'typescript-pro',
+          description: 'TypeScript best practices',
+          body: 'Main skill body.',
+          supportingFiles: [
+            {
+              relativePath: 'references/advanced-types.md',
+              absolutePath:
+                '/proj/.agentsbridge/skills/typescript-pro/references/advanced-types.md',
+              content: '# Advanced Types',
+            },
+            {
+              relativePath: 'references/patterns.md',
+              absolutePath: '/proj/.agentsbridge/skills/typescript-pro/references/patterns.md',
+              content: '# Patterns',
+            },
+          ],
+        },
+      ],
+    });
+    const results = generateSkills(canonical);
+    expect(results).toHaveLength(3);
+    expect(results[0]!.path).toBe('.cursor/skills/typescript-pro/SKILL.md');
+    expect(results[1]!.path).toBe('.cursor/skills/typescript-pro/references/advanced-types.md');
+    expect(results[1]!.content).toBe('# Advanced Types');
+    expect(results[2]!.path).toBe('.cursor/skills/typescript-pro/references/patterns.md');
+  });
+});
+
+describe('generateMcp (cursor)', () => {
+  it('generates .cursor/mcp.json from canonical mcp config', () => {
+    const canonical = makeCanonical({
+      mcp: {
+        mcpServers: {
+          context7: {
+            type: 'stdio',
+            command: 'npx',
+            args: ['-y', '@upstash/context7-mcp'],
+            env: {},
+          },
+        },
+      },
+    });
+    const results = generateMcp(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0]!.path).toBe('.cursor/mcp.json');
+    const parsed = JSON.parse(results[0]!.content) as { mcpServers: Record<string, unknown> };
+    expect(parsed.mcpServers.context7).toMatchObject({
+      type: 'stdio',
+      command: 'npx',
+      args: ['-y', '@upstash/context7-mcp'],
+      env: {},
+    });
+  });
+
+  it('returns empty when mcp is null', () => {
+    expect(generateMcp(makeCanonical({ mcp: null }))).toEqual([]);
+  });
+
+  it('returns empty when mcpServers is empty', () => {
+    expect(generateMcp(makeCanonical({ mcp: { mcpServers: {} } }))).toEqual([]);
+  });
+});
+
+describe('generatePermissions (cursor)', () => {
+  it('returns empty — cursor has no native tool-permission file', () => {
+    const canonical = makeCanonical({
+      permissions: {
+        allow: ['Read', 'Grep'],
+        deny: ['WebFetch'],
+      },
+    });
+    // Cursor does not have a native settings.json equivalent for tool allow/deny.
+    // Permissions are handled via linter warning, not file generation.
+    expect(generatePermissions(canonical)).toEqual([]);
+  });
+
+  it('returns empty when permissions is null', () => {
+    expect(generatePermissions(makeCanonical({ permissions: null }))).toEqual([]);
+  });
+
+  it('returns empty when both allow and deny are empty', () => {
+    expect(generatePermissions(makeCanonical({ permissions: { allow: [], deny: [] } }))).toEqual(
+      [],
+    );
+  });
+});
+
+describe('generateHooks (cursor)', () => {
+  it('generates .cursor/hooks.json from canonical hooks', () => {
+    const canonical = makeCanonical({
+      hooks: {
+        PostToolUse: [{ matcher: 'Write|Edit', command: 'prettier --write $FILE_PATH' }],
+      },
+    });
+    const results = generateHooks(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0]!.path).toBe('.cursor/hooks.json');
+    const parsed = JSON.parse(results[0]!.content) as {
+      version: number;
+      hooks: { PostToolUse: Array<{ matcher: string; hooks: unknown[] }> };
+    };
+    expect(parsed.version).toBe(1);
+    expect(parsed.hooks.PostToolUse).toHaveLength(1);
+    expect(parsed.hooks.PostToolUse[0]).toMatchObject({
+      matcher: 'Write|Edit',
+      hooks: [{ type: 'command', command: 'prettier --write $FILE_PATH' }],
+    });
+  });
+
+  it('returns empty when hooks is null', () => {
+    expect(generateHooks(makeCanonical({ hooks: null }))).toEqual([]);
+  });
+
+  it('returns empty when hooks has no entries', () => {
+    expect(generateHooks(makeCanonical({ hooks: {} }))).toEqual([]);
+  });
+
+  it('generates prompt-type hooks when type is prompt', () => {
+    const canonical = makeCanonical({
+      hooks: {
+        PostToolUse: [
+          {
+            matcher: 'Write',
+            type: 'prompt' as const,
+            prompt: 'Run prettier on the edited file',
+          },
+        ],
+      },
+    });
+    const results = generateHooks(canonical);
+    expect(results).toHaveLength(1);
+    const parsed = JSON.parse(results[0]!.content) as {
+      hooks: { PostToolUse: Array<{ matcher: string; hooks: unknown[] }> };
+    };
+    expect(parsed.hooks.PostToolUse[0].hooks[0]).toMatchObject({
+      type: 'prompt',
+      prompt: 'Run prettier on the edited file',
+    });
+  });
+
+  it('includes timeout when specified in hook entry', () => {
+    const canonical = makeCanonical({
+      hooks: {
+        PostToolUse: [
+          {
+            matcher: 'Write',
+            command: 'prettier --write $FILE_PATH',
+            type: 'command' as const,
+            timeout: 5000,
+          },
+        ],
+      },
+    });
+    const results = generateHooks(canonical);
+    expect(results).toHaveLength(1);
+    const parsed = JSON.parse(results[0]!.content) as {
+      hooks: { PostToolUse: Array<{ hooks: Array<{ timeout?: number }> }> };
+    };
+    expect(parsed.hooks.PostToolUse[0].hooks[0].timeout).toBe(5000);
+  });
+
+  it('returns empty when all hook entries lack command and prompt', () => {
+    const canonical = makeCanonical({
+      hooks: {
+        PostToolUse: [{ matcher: 'Write', type: 'command' as const }],
+      },
+    });
+    const results = generateHooks(canonical);
+    expect(results).toHaveLength(0);
+  });
+
+  it('skips non-array hook values', () => {
+    const canonical = makeCanonical({
+      hooks: {
+        PostToolUse: [{ matcher: 'Write', command: 'prettier', type: 'command' as const }],
+        PreToolUse: 'invalid' as unknown as import('../../../../src/core/types.js').HookEntry[],
+      },
+    });
+    const results = generateHooks(canonical);
+    expect(results).toHaveLength(1);
+    const parsed = JSON.parse(results[0]!.content) as { hooks: Record<string, unknown> };
+    expect(parsed.hooks.PostToolUse).toBeDefined();
+    expect(parsed.hooks.PreToolUse).toBeUndefined();
+  });
+});
+
+describe('generateIgnore (cursor)', () => {
+  it('generates only .cursorignore from canonical ignore patterns', () => {
+    const canonical = makeCanonical({
+      ignore: ['node_modules', '.env', 'coverage/'],
+    });
+    const results = generateIgnore(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0]!.path).toBe('.cursorignore');
+    expect(results[0]!.content).toBe('node_modules\n.env\ncoverage/');
+  });
+
+  it('does not generate .cursorindexingignore (community-sourced, not official)', () => {
+    const canonical = makeCanonical({ ignore: ['dist/'] });
+    const results = generateIgnore(canonical);
+    expect(results.every((r) => r.path !== '.cursorindexingignore')).toBe(true);
+  });
+
+  it('returns empty when ignore is empty', () => {
+    expect(generateIgnore(makeCanonical({ ignore: [] }))).toEqual([]);
+  });
+});

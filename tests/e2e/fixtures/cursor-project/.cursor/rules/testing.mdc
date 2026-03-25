@@ -1,0 +1,12 @@
+---
+description: Testing conventions
+globs:
+  - "**/*.test.ts"
+  - "tests/**/*.ts"
+alwaysApply: false
+---
+# Testing
+
+- Use Vitest.
+- Test the user-visible behavior before implementation details.
+- Prefer one regression case per bug fix instead of broad snapshot churn.

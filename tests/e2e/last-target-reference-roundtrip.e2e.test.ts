@@ -1,0 +1,159 @@
+import { afterEach, describe, expect, it } from 'vitest';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { cleanup, createTestProject } from './helpers/setup.js';
+import { fileExists } from './helpers/assertions.js';
+import { runCli } from './helpers/run-cli.js';
+
+function seedReferenceProject(dir: string, config: string): void {
+  writeFileSync(join(dir, 'agentsbridge.yaml'), config);
+  mkdirSync(join(dir, '.agentsbridge', 'rules'), { recursive: true });
+  mkdirSync(join(dir, '.agentsbridge', 'commands'), { recursive: true });
+  mkdirSync(join(dir, '.agentsbridge', 'skills', 'api-gen', 'references'), {
+    recursive: true,
+  });
+  mkdirSync(join(dir, 'docs'), { recursive: true });
+
+  writeFileSync(
+    join(dir, '.agentsbridge', 'rules', '_root.md'),
+    `---
+root: true
+description: Root rule
+---
+Self: .agentsbridge/rules/_root.md.
+Rule: .agentsbridge/rules/typescript.md.
+Command: .agentsbridge/commands/review.md.
+Skill: .agentsbridge/skills/api-gen/SKILL.md.
+Docs: ../../docs/some-doc.md.
+`,
+  );
+  writeFileSync(
+    join(dir, '.agentsbridge', 'rules', 'typescript.md'),
+    `---
+description: TypeScript rule
+globs: [src/**/*.ts]
+---
+Prefer strict mode.
+`,
+  );
+  writeFileSync(
+    join(dir, '.agentsbridge', 'commands', 'review.md'),
+    `---
+description: Review command
+---
+Root: .agentsbridge/rules/_root.md.
+Skill: .agentsbridge/skills/api-gen/SKILL.md.
+Docs: ../../docs/some-doc.md.
+`,
+  );
+  writeFileSync(
+    join(dir, '.agentsbridge', 'skills', 'api-gen', 'SKILL.md'),
+    '# API Gen\n\nChecklist: .agentsbridge/skills/api-gen/references/checklist.md.\n',
+  );
+  writeFileSync(
+    join(dir, '.agentsbridge', 'skills', 'api-gen', 'references', 'checklist.md'),
+    '# Checklist\n',
+  );
+  writeFileSync(join(dir, 'docs', 'some-doc.md'), '# Some Doc\n');
+}
+
+describe('last target markdown reference round trips', () => {
+  let dir = '';
+
+  afterEach(() => {
+    if (dir) cleanup(dir);
+    dir = '';
+  });
+
+  it('Continue rewrites generated markdown refs and normalizes them back on import', async () => {
+    dir = createTestProject();
+    seedReferenceProject(
+      dir,
+      'version: 1\ntargets: [continue]\nfeatures: [rules, commands, skills]\n',
+    );
+
+    const generateResult = await runCli('generate --targets continue', dir);
+    expect(generateResult.exitCode, generateResult.stderr).toBe(0);
+
+    const rootPath = join(dir, '.continue', 'rules', '_root.md');
+    const commandPath = join(dir, '.continue', 'prompts', 'review.md');
+    const skillPath = join(dir, '.continue', 'skills', 'api-gen', 'SKILL.md');
+    fileExists(rootPath);
+    fileExists(commandPath);
+    fileExists(skillPath);
+
+    const generatedRoot = readFileSync(rootPath, 'utf-8');
+    const generatedCommand = readFileSync(commandPath, 'utf-8');
+
+    expect(generatedRoot).toContain('.continue/rules/_root.md');
+    expect(generatedRoot).toContain('.continue/rules/typescript.md');
+    expect(generatedRoot).toContain('.continue/prompts/review.md');
+    expect(generatedRoot).toContain('.continue/skills/api-gen/SKILL.md');
+    expect(generatedRoot).toContain('docs/some-doc.md');
+    expect(generatedRoot).not.toContain('../../docs/some-doc.md');
+    expect(generatedRoot).not.toContain('.agentsbridge/skills/');
+
+    expect(generatedCommand).toContain('.continue/rules/_root.md');
+    expect(generatedCommand).toContain('.continue/skills/api-gen/SKILL.md');
+    expect(generatedCommand).toContain('docs/some-doc.md');
+    expect(generatedCommand).not.toContain('../../docs/some-doc.md');
+    expect(generatedCommand).not.toContain('.agentsbridge/skills/');
+
+    rmSync(join(dir, '.agentsbridge'), { recursive: true, force: true });
+
+    const importResult = await runCli('import --from continue', dir);
+    expect(importResult.exitCode, importResult.stderr).toBe(0);
+
+    const importedRoot = readFileSync(join(dir, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const importedCommand = readFileSync(
+      join(dir, '.agentsbridge', 'commands', 'review.md'),
+      'utf-8',
+    );
+
+    expect(importedRoot).toContain('.agentsbridge/rules/_root.md');
+    expect(importedRoot).toContain('.agentsbridge/rules/typescript.md');
+    expect(importedRoot).toContain('.agentsbridge/commands/review.md');
+    expect(importedRoot).toContain('.agentsbridge/skills/api-gen/SKILL.md');
+    expect(importedRoot).toContain('docs/some-doc.md');
+    expect(importedRoot).not.toContain('.continue/');
+
+    expect(importedCommand).toContain('.agentsbridge/rules/_root.md');
+    expect(importedCommand).toContain('.agentsbridge/skills/api-gen/SKILL.md');
+    expect(importedCommand).toContain('docs/some-doc.md');
+    expect(importedCommand).not.toContain('.continue/');
+  });
+
+  it('Junie rewrites supported generated refs and preserves canonical fallbacks through import', async () => {
+    dir = createTestProject();
+    seedReferenceProject(dir, 'version: 1\ntargets: [junie]\nfeatures: [rules, skills]\n');
+
+    const generateResult = await runCli('generate --targets junie', dir);
+    expect(generateResult.exitCode, generateResult.stderr).toBe(0);
+
+    const agentsPath = join(dir, '.junie', 'AGENTS.md');
+    const skillPath = join(dir, '.junie', 'skills', 'api-gen', 'SKILL.md');
+    fileExists(agentsPath);
+    fileExists(skillPath);
+
+    const generatedAgents = readFileSync(agentsPath, 'utf-8');
+    expect(generatedAgents).toContain('.junie/AGENTS.md');
+    expect(generatedAgents).toContain('.junie/rules/typescript.md');
+    expect(generatedAgents).toContain('.junie/commands/review.md');
+    expect(generatedAgents).toContain('.junie/skills/api-gen/SKILL.md');
+    expect(generatedAgents).toContain('docs/some-doc.md');
+    expect(generatedAgents).not.toContain('../../docs/some-doc.md');
+    expect(generatedAgents).not.toContain('.agentsbridge/skills/');
+
+    rmSync(join(dir, '.agentsbridge'), { recursive: true, force: true });
+
+    const importResult = await runCli('import --from junie', dir);
+    expect(importResult.exitCode, importResult.stderr).toBe(0);
+
+    const importedRoot = readFileSync(join(dir, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    expect(importedRoot).toContain('.agentsbridge/rules/_root.md');
+    expect(importedRoot).toContain('.agentsbridge/rules/typescript.md');
+    expect(importedRoot).toContain('.junie/commands/review.md');
+    expect(importedRoot).toContain('.agentsbridge/skills/api-gen/SKILL.md');
+    expect(importedRoot).toContain('docs/some-doc.md');
+  });
+});

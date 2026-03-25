@@ -1,0 +1,3 @@
+PostToolUse:
+  - matcher: 'Write|Edit'
+    command: 'prettier --write $FILE_PATH'

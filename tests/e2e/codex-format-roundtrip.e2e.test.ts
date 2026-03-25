@@ -1,0 +1,248 @@
+import { afterEach, describe, expect, it } from 'vitest';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { cleanup, createTestProject } from './helpers/setup.js';
+import { runCli } from './helpers/run-cli.js';
+import { fileContains, fileExists, dirTreeExactly, readText } from './helpers/assertions.js';
+
+function writeCanonicalCodexFixture(dir: string): void {
+  mkdirSync(join(dir, '.agentsbridge', 'rules'), { recursive: true });
+  mkdirSync(join(dir, '.agentsbridge', 'commands'), { recursive: true });
+  mkdirSync(join(dir, '.agentsbridge', 'agents'), { recursive: true });
+  mkdirSync(join(dir, '.agentsbridge', 'skills', 'release-checklist', 'scripts'), {
+    recursive: true,
+  });
+  mkdirSync(join(dir, '.agentsbridge', 'skills', 'release-checklist', 'references'), {
+    recursive: true,
+  });
+  mkdirSync(join(dir, '.agentsbridge', 'skills', 'release-checklist', 'assets'), {
+    recursive: true,
+  });
+  mkdirSync(join(dir, '.agentsbridge', 'skills', 'bug-triage'), { recursive: true });
+
+  writeFileSync(
+    join(dir, 'agentsbridge.yaml'),
+    `version: 1
+targets: [codex-cli]
+features: [rules, commands, agents, skills, mcp]
+`,
+  );
+
+  writeFileSync(
+    join(dir, '.agentsbridge', 'rules', '_root.md'),
+    `---
+root: true
+description: Root guidance
+---
+# Repository expectations
+
+- Use pnpm
+`,
+  );
+  writeFileSync(
+    join(dir, '.agentsbridge', 'rules', 'typescript.md'),
+    `---
+description: TypeScript standards
+globs:
+  - "src/**/*.ts"
+---
+# TypeScript Standards
+
+- Use strict mode
+`,
+  );
+  writeFileSync(
+    join(dir, '.agentsbridge', 'rules', 'payments.md'),
+    `---
+description: Payments service rules
+globs:
+  - "services/payments/**"
+codex_instruction: override
+---
+# Payments service rules
+
+- Use make test-payments
+`,
+  );
+  writeFileSync(
+    join(dir, '.agentsbridge', 'rules', 'default.md'),
+    `---
+description: Command guardrails
+codex_emit: execution
+---
+prefix_rule(
+  pattern = ["git", "status"],
+  decision = "allow",
+  justification = "Allow safe status checks",
+)
+`,
+  );
+
+  writeFileSync(
+    join(dir, '.agentsbridge', 'commands', 'review.md'),
+    `---
+description: Review changes
+allowed-tools: [Read, Bash(git diff)]
+---
+Review current changes.
+`,
+  );
+
+  writeFileSync(
+    join(dir, '.agentsbridge', 'agents', 'reviewer.md'),
+    `---
+description: PR reviewer
+model: gpt-5-codex
+permission-mode: read-only
+---
+Review code carefully.
+`,
+  );
+  writeFileSync(
+    join(dir, '.agentsbridge', 'agents', 'pr-explorer.md'),
+    `---
+description: PR explorer
+model: gpt-5.3-codex-spark
+permission-mode: read-only
+---
+Summarize pull requests.
+`,
+  );
+
+  writeFileSync(
+    join(dir, '.agentsbridge', 'skills', 'release-checklist', 'SKILL.md'),
+    `---
+description: Release checklist helper
+---
+Run release checklist.
+`,
+  );
+  writeFileSync(
+    join(dir, '.agentsbridge', 'skills', 'release-checklist', 'scripts', 'validate.sh'),
+    '#!/usr/bin/env bash\necho validate\n',
+  );
+  writeFileSync(
+    join(dir, '.agentsbridge', 'skills', 'release-checklist', 'references', 'release-notes.md'),
+    '# Release Notes\n',
+  );
+  writeFileSync(
+    join(dir, '.agentsbridge', 'skills', 'release-checklist', 'assets', 'changelog-template.md'),
+    '# Changelog Template\n',
+  );
+  writeFileSync(
+    join(dir, '.agentsbridge', 'skills', 'bug-triage', 'SKILL.md'),
+    `---
+description: Bug triage helper
+---
+Triage incoming bugs.
+`,
+  );
+
+  writeFileSync(
+    join(dir, '.agentsbridge', 'mcp.json'),
+    `{
+  "mcpServers": {
+    "context7": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"],
+      "env": {}
+    }
+  }
+}
+`,
+  );
+}
+
+describe('codex-cli format contract roundtrip', () => {
+  let dir = '';
+
+  afterEach(() => {
+    if (dir) cleanup(dir);
+    dir = '';
+  });
+
+  it('generates codex-cli files in documented format and round-trips back to canonical', async () => {
+    dir = createTestProject();
+    writeCanonicalCodexFixture(dir);
+
+    const generateResult = await runCli('generate --targets codex-cli', dir);
+    expect(generateResult.exitCode, generateResult.stderr).toBe(0);
+
+    fileContains(join(dir, 'AGENTS.md'), '# Repository expectations');
+    fileContains(join(dir, 'src', 'AGENTS.md'), '# TypeScript Standards');
+    fileContains(
+      join(dir, 'services', 'payments', 'AGENTS.override.md'),
+      '# Payments service rules',
+    );
+
+    fileContains(join(dir, '.codex', 'rules', 'default.rules'), 'prefix_rule(');
+    fileContains(join(dir, '.codex', 'rules', 'default.rules'), 'decision = "allow"');
+
+    fileContains(join(dir, '.codex', 'config.toml'), '[mcp_servers.context7]');
+    fileContains(join(dir, '.codex', 'config.toml'), 'command = "npx"');
+
+    fileContains(join(dir, '.codex', 'agents', 'reviewer.toml'), 'name = "reviewer"');
+    fileContains(join(dir, '.codex', 'agents', 'reviewer.toml'), 'developer_instructions =');
+    fileContains(join(dir, '.codex', 'agents', 'pr-explorer.toml'), 'name = "pr-explorer"');
+
+    fileContains(
+      join(dir, '.agents', 'skills', 'release-checklist', 'SKILL.md'),
+      'name: release-checklist',
+    );
+    fileContains(
+      join(dir, '.agents', 'skills', 'release-checklist', 'SKILL.md'),
+      'description: Release checklist helper',
+    );
+    dirTreeExactly(join(dir, '.agents', 'skills', 'release-checklist'), [
+      'SKILL.md',
+      'assets/',
+      'assets/changelog-template.md',
+      'references/',
+      'references/release-notes.md',
+      'scripts/',
+      'scripts/validate.sh',
+    ]);
+    fileContains(join(dir, '.agents', 'skills', 'bug-triage', 'SKILL.md'), 'name: bug-triage');
+
+    rmSync(join(dir, '.agentsbridge'), { recursive: true, force: true });
+
+    const importResult = await runCli('import --from codex-cli', dir);
+    expect(importResult.exitCode, importResult.stderr).toBe(0);
+
+    fileContains(join(dir, '.agentsbridge', 'rules', '_root.md'), 'root: true');
+    fileContains(join(dir, '.agentsbridge', 'rules', 'src.md'), 'globs:');
+    fileContains(join(dir, '.agentsbridge', 'rules', 'src.md'), '  - src/**');
+    fileContains(
+      join(dir, '.agentsbridge', 'rules', 'services-payments.md'),
+      'codex_instruction: override',
+    );
+    fileContains(join(dir, '.agentsbridge', 'rules', 'services-payments.md'), 'globs:');
+    fileContains(
+      join(dir, '.agentsbridge', 'rules', 'services-payments.md'),
+      '  - services/payments/**',
+    );
+    fileContains(join(dir, '.agentsbridge', 'rules', 'default.md'), 'codex_emit: execution');
+    fileContains(join(dir, '.agentsbridge', 'rules', 'default.md'), 'prefix_rule(');
+
+    fileExists(join(dir, '.agentsbridge', 'commands', 'review.md'));
+    fileContains(join(dir, '.agentsbridge', 'agents', 'reviewer.md'), 'name: reviewer');
+    fileContains(join(dir, '.agentsbridge', 'agents', 'pr-explorer.md'), 'name: pr-explorer');
+    fileContains(
+      join(dir, '.agentsbridge', 'skills', 'release-checklist', 'SKILL.md'),
+      'Run release checklist.',
+    );
+    fileExists(join(dir, '.agentsbridge', 'skills', 'release-checklist', 'scripts', 'validate.sh'));
+    fileExists(
+      join(dir, '.agentsbridge', 'skills', 'release-checklist', 'references', 'release-notes.md'),
+    );
+    fileExists(
+      join(dir, '.agentsbridge', 'skills', 'release-checklist', 'assets', 'changelog-template.md'),
+    );
+    fileExists(join(dir, '.agentsbridge', 'skills', 'bug-triage', 'SKILL.md'));
+
+    const mcp = readText(join(dir, '.agentsbridge', 'mcp.json'));
+    expect(mcp).toContain('"context7"');
+    expect(mcp).toContain('"command": "npx"');
+  });
+});

@@ -1,0 +1,2 @@
+allow: [Read, Grep, LS, 'Bash(npm run test:*)']
+deny: [WebFetch, 'Bash(curl:*)', 'Read(./.env)']

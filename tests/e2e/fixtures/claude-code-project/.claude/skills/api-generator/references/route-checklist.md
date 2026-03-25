@@ -1,0 +1,4 @@
+- Mirror the existing `src/api` directory structure.
+- Validate request params, query, and body separately when the route uses all three.
+- Return typed error payloads for validation failures.
+- Add one success test and one malformed-input test.

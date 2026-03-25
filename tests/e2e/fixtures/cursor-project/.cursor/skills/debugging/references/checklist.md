@@ -1,0 +1,3 @@
+- Reproduce the issue first
+- Capture the failing input
+- Verify the fix with the same command

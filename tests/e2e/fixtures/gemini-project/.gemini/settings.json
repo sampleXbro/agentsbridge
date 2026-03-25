@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"],
+      "env": {}
+    }
+  },
+  "ignorePatterns": ["node_modules", "dist", ".env"],
+  "hooks": {
+    "postToolUse": [
+      {
+        "matcher": "Write",
+        "command": "prettier --write $FILE_PATH"
+      },
+      {
+        "matcher": "Edit",
+        "command": "pnpm exec eslint --fix $FILE_PATH"
+      }
+    ]
+  }
+}

@@ -1,0 +1,8 @@
+PreToolUse:
+  - matcher: Edit|Write
+    type: command
+    command: eslint --fix
+PostToolUse:
+  - matcher: Read
+    type: command
+    command: Review the file content for any security concerns

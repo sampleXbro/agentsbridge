@@ -1,0 +1,69 @@
+import { basename } from 'node:path';
+import type { CanonicalCommand } from '../../core/types.js';
+import { serializeFrontmatter } from '../../utils/markdown.js';
+import { CONTINUE_PROMPTS_DIR } from './constants.js';
+
+interface ParsedCommandRule {
+  name: string;
+  description: string;
+  allowedTools: string[];
+}
+
+function toStringArray(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((entry): entry is string => typeof entry === 'string' && entry.length > 0);
+  }
+  if (typeof value === 'string' && value.length > 0) {
+    return value
+      .split(',')
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+export function continueCommandRulePath(name: string): string {
+  return `${CONTINUE_PROMPTS_DIR}/${name}.md`;
+}
+
+export function serializeCommandRule(command: CanonicalCommand): string {
+  const frontmatter: Record<string, unknown> = {
+    description: command.description || undefined,
+    'x-agentsbridge-kind': 'command',
+    'x-agentsbridge-name': command.name,
+    'x-agentsbridge-allowed-tools':
+      command.allowedTools.length > 0 ? command.allowedTools : undefined,
+  };
+  if (frontmatter.description === undefined) delete frontmatter.description;
+  if (frontmatter['x-agentsbridge-allowed-tools'] === undefined) {
+    delete frontmatter['x-agentsbridge-allowed-tools'];
+  }
+  return serializeFrontmatter(frontmatter, command.body.trim() || '');
+}
+
+export function parseCommandRuleFrontmatter(
+  frontmatter: Record<string, unknown>,
+  filePath: string,
+): ParsedCommandRule {
+  const fileName = basename(filePath, '.md');
+  const fromMetadata =
+    typeof frontmatter['x-agentsbridge-name'] === 'string'
+      ? frontmatter['x-agentsbridge-name']
+      : '';
+  const name = (fromMetadata || fileName).trim();
+  return {
+    name,
+    description: typeof frontmatter.description === 'string' ? frontmatter.description : '',
+    allowedTools: toStringArray(frontmatter['x-agentsbridge-allowed-tools']),
+  };
+}
+
+export function serializeImportedCommand(command: ParsedCommandRule, body: string): string {
+  const frontmatter: Record<string, unknown> = {
+    description: command.description || undefined,
+    'allowed-tools': command.allowedTools.length > 0 ? command.allowedTools : undefined,
+  };
+  if (frontmatter.description === undefined) delete frontmatter.description;
+  if (frontmatter['allowed-tools'] === undefined) delete frontmatter['allowed-tools'];
+  return serializeFrontmatter(frontmatter, body.trim() || '');
+}

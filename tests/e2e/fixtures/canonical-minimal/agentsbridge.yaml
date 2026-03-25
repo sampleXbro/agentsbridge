@@ -1,0 +1,6 @@
+version: 1
+targets:
+  - claude-code
+  - cursor
+features:
+  - rules

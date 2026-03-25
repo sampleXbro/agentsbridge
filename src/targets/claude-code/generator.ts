@@ -1,0 +1,195 @@
+/**
+ * Generate Claude Code config files from canonical sources.
+ */
+
+import type { CanonicalFiles } from '../../core/types.js';
+import { getHookCommand, getHookPrompt, hasHookText } from '../../core/hook-command.js';
+import { serializeFrontmatter } from '../../utils/markdown.js';
+
+export interface RulesOutput {
+  path: string;
+  content: string;
+}
+
+/**
+ * Generate CLAUDE.md from root rule + .claude/rules/*.md from non-root rules.
+ * @param canonical - Loaded canonical files
+ * @returns .claude/CLAUDE.md output (from root rule) + .claude/rules/{slug}.md for contextual rules
+ */
+export function generateRules(canonical: CanonicalFiles): RulesOutput[] {
+  const outputs: RulesOutput[] = [];
+
+  const root = canonical.rules.find((r) => r.root);
+  if (root) {
+    outputs.push({
+      path: '.claude/CLAUDE.md',
+      content: root.body.trim() ? root.body : '',
+    });
+  }
+
+  const nonRoot = canonical.rules.filter(
+    (r) => !r.root && (r.targets.length === 0 || r.targets.includes('claude-code')),
+  );
+  for (const rule of nonRoot) {
+    const slug = rule.source.split('/').pop()!.replace(/\.md$/, '');
+    const frontmatter: Record<string, unknown> = {};
+    if (rule.description) frontmatter.description = rule.description;
+    if (rule.globs.length > 0) frontmatter.globs = rule.globs;
+    const content = serializeFrontmatter(frontmatter, rule.body.trim() || '');
+    outputs.push({ path: `.claude/rules/${slug}.md`, content });
+  }
+
+  return outputs;
+}
+
+/**
+ * Generate .claude/commands/*.md from canonical commands.
+ * @param canonical - Loaded canonical files
+ * @returns Array of command file outputs, or [] if no commands
+ */
+export function generateCommands(canonical: CanonicalFiles): RulesOutput[] {
+  return canonical.commands.map((cmd) => {
+    const frontmatter: Record<string, unknown> = {
+      description: cmd.description,
+      'allowed-tools': cmd.allowedTools.length > 0 ? cmd.allowedTools : undefined,
+    };
+    if (frontmatter['allowed-tools'] === undefined) delete frontmatter['allowed-tools'];
+    const content = serializeFrontmatter(frontmatter, cmd.body.trim() || '');
+    return { path: `.claude/commands/${cmd.name}.md`, content };
+  });
+}
+
+/**
+ * Generate .claude/agents/*.md from canonical agents.
+ * @param canonical - Loaded canonical files
+ * @returns Array of agent file outputs, or [] if no agents
+ */
+export function generateAgents(canonical: CanonicalFiles): RulesOutput[] {
+  return canonical.agents.map((agent) => {
+    const frontmatter: Record<string, unknown> = {
+      name: agent.name,
+      description: agent.description,
+      tools: agent.tools.length > 0 ? agent.tools : undefined,
+      disallowedTools: agent.disallowedTools.length > 0 ? agent.disallowedTools : undefined,
+      model: agent.model || undefined,
+      permissionMode: agent.permissionMode || undefined,
+      maxTurns: agent.maxTurns > 0 ? agent.maxTurns : undefined,
+      mcpServers: agent.mcpServers.length > 0 ? agent.mcpServers : undefined,
+      hooks: Object.keys(agent.hooks).length > 0 ? agent.hooks : undefined,
+      skills: agent.skills.length > 0 ? agent.skills : undefined,
+      memory: agent.memory || undefined,
+    };
+    Object.keys(frontmatter).forEach((k) => {
+      if (frontmatter[k] === undefined) delete frontmatter[k];
+    });
+    const content = serializeFrontmatter(frontmatter, agent.body.trim() || '');
+    return { path: `.claude/agents/${agent.name}.md`, content };
+  });
+}
+
+/**
+ * Generate .mcp.json at project root from canonical MCP config.
+ * Claude Code uses .mcp.json as the alternative location for MCP server definitions.
+ * @param canonical - Loaded canonical files
+ * @returns Array with single .mcp.json output, or [] if no MCP config or empty mcpServers
+ */
+export function generateMcp(canonical: CanonicalFiles): RulesOutput[] {
+  if (!canonical.mcp || Object.keys(canonical.mcp.mcpServers).length === 0) return [];
+  const content = JSON.stringify({ mcpServers: canonical.mcp.mcpServers }, null, 2);
+  return [{ path: '.mcp.json', content }];
+}
+
+/**
+ * Generate .claude/skills/{name}/SKILL.md and supporting files from canonical skills.
+ * @param canonical - Loaded canonical files
+ * @returns Array of skill file outputs (SKILL.md + supporting files per skill)
+ */
+export function generateSkills(canonical: CanonicalFiles): RulesOutput[] {
+  const outputs: RulesOutput[] = [];
+  for (const skill of canonical.skills) {
+    const frontmatter: Record<string, unknown> = {
+      name: skill.name,
+      description: skill.description || undefined,
+    };
+    if (frontmatter.description === undefined) delete frontmatter.description;
+    const skillContent = serializeFrontmatter(frontmatter, skill.body.trim() || '');
+    outputs.push({
+      path: `.claude/skills/${skill.name}/SKILL.md`,
+      content: skillContent,
+    });
+    for (const file of skill.supportingFiles) {
+      const relPath = file.relativePath.replace(/\\/g, '/');
+      outputs.push({
+        path: `.claude/skills/${skill.name}/${relPath}`,
+        content: file.content,
+      });
+    }
+  }
+  return outputs;
+}
+
+/**
+ * Generate .claude/settings.json with permissions from canonical sources.
+ * Merges with existing settings.json to preserve hooks, mcpServers, etc.
+ * @param canonical - Loaded canonical files
+ * @returns Array with single .claude/settings.json output, or [] if no permissions
+ */
+export function generatePermissions(canonical: CanonicalFiles): RulesOutput[] {
+  if (!canonical.permissions) return [];
+  const { allow, deny } = canonical.permissions;
+  if (allow.length === 0 && deny.length === 0) return [];
+  const content = JSON.stringify({ permissions: { allow, deny } }, null, 2);
+  return [{ path: '.claude/settings.json', content }];
+}
+
+/**
+ * Convert canonical Hooks to Claude Code settings.json hooks format.
+ * Claude Code: { event: [{ matcher, hooks: [{ type, command?, prompt?, timeout? }] }] }
+ */
+function toClaudeCodeHooks(hooks: import('../../core/types.js').Hooks): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const [event, entries] of Object.entries(hooks)) {
+    if (!Array.isArray(entries)) continue;
+    const translated: Array<{ matcher: string; hooks: unknown[] }> = [];
+    for (const e of entries) {
+      if (!hasHookText(e)) continue;
+      const command = getHookCommand(e);
+      const prompt = getHookPrompt(e);
+      const value = e.type === 'prompt' ? prompt || command : command || prompt;
+      const hookItem: Record<string, unknown> = {
+        type: e.type === 'prompt' ? 'prompt' : 'command',
+        [e.type === 'prompt' ? 'prompt' : 'command']: value,
+      };
+      if (e.timeout !== undefined) hookItem.timeout = e.timeout;
+      translated.push({ matcher: e.matcher, hooks: [hookItem] });
+    }
+    if (translated.length > 0) result[event] = translated;
+  }
+  return result;
+}
+
+/**
+ * Generate .claude/settings.json hooks from canonical sources.
+ * Merges with existing settings.json to preserve permissions, mcpServers, etc.
+ * @param canonical - Loaded canonical files
+ * @returns Array with single .claude/settings.json output, or [] if no hooks
+ */
+export function generateHooks(canonical: CanonicalFiles): RulesOutput[] {
+  if (!canonical.hooks || Object.keys(canonical.hooks).length === 0) return [];
+  const claudeHooks = toClaudeCodeHooks(canonical.hooks);
+  if (Object.keys(claudeHooks).length === 0) return [];
+  const content = JSON.stringify({ hooks: claudeHooks }, null, 2);
+  return [{ path: '.claude/settings.json', content }];
+}
+
+/**
+ * Generate .claudeignore from canonical ignore patterns.
+ * Uses gitignore-style syntax (one pattern per line).
+ * @param canonical - Loaded canonical files
+ * @returns Array with single .claudeignore output, or [] if no patterns
+ */
+export function generateIgnore(canonical: CanonicalFiles): RulesOutput[] {
+  if (!canonical.ignore || canonical.ignore.length === 0) return [];
+  const content = canonical.ignore.join('\n');
+  return [{ path: '.claudeignore', content }];
+}

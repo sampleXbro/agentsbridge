@@ -84,3 +84,9 @@
 - **Commit format**: conventional commits — `feat|fix|test|refactor(scope): message`
 - **Refer to PRD**: `docs/prd-v2-complete.md` for architecture decisions
 - **Refer to tasks**: `docs/agentsbridge-ai-first-tasks.md` for current task specs
+
+## Additional Rules
+
+Target-specific and language-specific rules are in `.codex/instructions/`:
+
+- `.codex/instructions/typescript.md` — TypeScript coding standards (applies to `src/**/*.ts`, `tests/**/*.ts`)

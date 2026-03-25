@@ -1,6 +1,6 @@
 {
   "name": "agentsbridge",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "One canonical source for AI coding agent rules, commands, skills, MCP, hooks, and permissions — synced across Claude Code, Cursor, Copilot, Continue, Junie, Gemini CLI, Cline, Codex CLI, and Windsurf.",
   "type": "module",
   "main": "./dist/cli.js",

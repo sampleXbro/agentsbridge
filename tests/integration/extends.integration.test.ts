@@ -23,13 +23,13 @@ function git(args: string[], cwd: string): string {
 
 function createRemoteRepo(root: string): string {
   const repoDir = join(root, 'remote-repo');
-  mkdirSync(join(repoDir, '.agentsbridge', 'rules'), { recursive: true });
+  mkdirSync(join(repoDir, '.agentsmesh', 'rules'), { recursive: true });
   writeFileSync(
-    join(repoDir, '.agentsbridge', 'rules', '_root.md'),
+    join(repoDir, '.agentsmesh', 'rules', '_root.md'),
     '---\nroot: true\n---\n# Shared remote root\n',
   );
   writeFileSync(
-    join(repoDir, '.agentsbridge', 'permissions.yaml'),
+    join(repoDir, '.agentsmesh', 'permissions.yaml'),
     ['allow:', '  - Bash(pnpm build:*)', '  - Bash(pnpm test:*)', '  - Bash(git add:*)', ''].join(
       '\n',
     ),
@@ -43,7 +43,7 @@ function createRemoteRepo(root: string): string {
 
 beforeEach(() => {
   testDir = mkdtempSync(join(tmpdir(), 'ab-extends-integration-'));
-  mkdirSync(join(testDir, '.agentsbridge', 'rules'), { recursive: true });
+  mkdirSync(join(testDir, '.agentsmesh', 'rules'), { recursive: true });
 });
 
 afterEach(() => {
@@ -56,11 +56,11 @@ describe('generate with remote extends', () => {
     const remoteRepo = createRemoteRepo(testDir);
 
     writeFileSync(
-      join(testDir, '.agentsbridge', 'rules', '_root.md'),
+      join(testDir, '.agentsmesh', 'rules', '_root.md'),
       '---\nroot: true\n---\n# Local root\n',
     );
     writeFileSync(
-      join(testDir, '.agentsbridge', 'permissions.yaml'),
+      join(testDir, '.agentsmesh', 'permissions.yaml'),
       [
         'allow:',
         '  - Bash(pnpm build:*)',
@@ -71,7 +71,7 @@ describe('generate with remote extends', () => {
       ].join('\n'),
     );
     writeFileSync(
-      join(testDir, 'agentsbridge.yaml'),
+      join(testDir, 'agentsmesh.yaml'),
       [
         'version: 1',
         'targets: [claude-code]',

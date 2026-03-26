@@ -31,7 +31,7 @@ describe('generateRules (cursor)', () => {
     const canonical: CanonicalFiles = {
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: 'Project rules',
@@ -65,7 +65,7 @@ describe('generateRules (cursor)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/ts.md',
+          source: '/proj/.agentsmesh/rules/ts.md',
           root: false,
           targets: [],
           description: 'TypeScript rules',
@@ -84,7 +84,7 @@ describe('generateRules (cursor)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/style.md',
+          source: '/proj/.agentsmesh/rules/style.md',
           root: false,
           targets: [],
           description: 'Style rules',
@@ -102,7 +102,7 @@ describe('generateRules (cursor)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/cursor-only.md',
+          source: '/proj/.agentsmesh/rules/cursor-only.md',
           root: false,
           targets: ['cursor'],
           description: 'Cursor-specific',
@@ -120,7 +120,7 @@ describe('generateRules (cursor)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/bare.md',
+          source: '/proj/.agentsmesh/rules/bare.md',
           root: false,
           targets: [],
           description: '',
@@ -140,7 +140,7 @@ describe('generateRules (cursor)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/claude-only.md',
+          source: '/proj/.agentsmesh/rules/claude-only.md',
           root: false,
           targets: ['claude-code'],
           description: '',
@@ -157,7 +157,7 @@ describe('generateRules (cursor)', () => {
     const canonical: CanonicalFiles = {
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/typescript.md',
+          source: '/proj/.agentsmesh/rules/typescript.md',
           root: false,
           targets: [],
           description: '',
@@ -183,7 +183,7 @@ describe('generateRules (cursor)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -201,7 +201,7 @@ describe('generateRules (cursor)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/p/.agentsbridge/rules/_root.md',
+          source: '/p/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -220,7 +220,7 @@ describe('generateRules (cursor)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/empty-body.md',
+          source: '/proj/.agentsmesh/rules/empty-body.md',
           root: false,
           targets: [],
           description: 'No body rule',
@@ -238,7 +238,7 @@ describe('generateRules (cursor)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/p/.agentsbridge/rules/always.md',
+          source: '/p/.agentsmesh/rules/always.md',
           root: false,
           targets: [],
           description: 'Always applied',
@@ -258,7 +258,7 @@ describe('generateRules (cursor)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/p/.agentsbridge/rules/ai.md',
+          source: '/p/.agentsmesh/rules/ai.md',
           root: false,
           targets: [],
           description: '',
@@ -277,7 +277,7 @@ describe('generateRules (cursor)', () => {
     const canonical: CanonicalFiles = {
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -305,7 +305,7 @@ describe('generateCommands (cursor)', () => {
     const canonical = makeCanonical({
       commands: [
         {
-          source: '/proj/.agentsbridge/commands/review.md',
+          source: '/proj/.agentsmesh/commands/review.md',
           name: 'review',
           description: 'Run code review',
           allowedTools: ['Read', 'Grep', 'Bash(git diff)'],
@@ -328,7 +328,7 @@ describe('generateCommands (cursor)', () => {
     const canonical = makeCanonical({
       commands: [
         {
-          source: '/proj/.agentsbridge/commands/minimal.md',
+          source: '/proj/.agentsmesh/commands/minimal.md',
           name: 'minimal',
           description: 'Minimal',
           allowedTools: [],
@@ -346,7 +346,7 @@ describe('generateCommands (cursor)', () => {
     const canonical = makeCanonical({
       commands: [
         {
-          source: '/proj/.agentsbridge/commands/empty.md',
+          source: '/proj/.agentsmesh/commands/empty.md',
           name: 'empty',
           description: 'Empty body command',
           allowedTools: [],
@@ -365,7 +365,7 @@ describe('generateAgents (cursor)', () => {
     const canonical = makeCanonical({
       agents: [
         {
-          source: '/proj/.agentsbridge/agents/code-reviewer.md',
+          source: '/proj/.agentsmesh/agents/code-reviewer.md',
           name: 'code-reviewer',
           description: 'Reviews code for quality',
           tools: ['Read', 'Grep', 'Glob'],
@@ -396,7 +396,7 @@ describe('generateAgents (cursor)', () => {
     const canonical = makeCanonical({
       agents: [
         {
-          source: '/proj/.agentsbridge/agents/full.md',
+          source: '/proj/.agentsmesh/agents/full.md',
           name: 'full',
           description: 'Full agent',
           tools: ['Read', 'Write'],
@@ -428,7 +428,7 @@ describe('generateAgents (cursor)', () => {
     const canonical = makeCanonical({
       agents: [
         {
-          source: '/proj/.agentsbridge/agents/empty.md',
+          source: '/proj/.agentsmesh/agents/empty.md',
           name: 'empty',
           description: 'No body',
           tools: [],
@@ -455,7 +455,7 @@ describe('generateSkills (cursor)', () => {
     const canonical = makeCanonical({
       skills: [
         {
-          source: '/proj/.agentsbridge/skills/api-gen/SKILL.md',
+          source: '/proj/.agentsmesh/skills/api-gen/SKILL.md',
           name: 'api-gen',
           description: 'Generate REST API endpoints',
           body: '# API Gen\nWhen asked to create an API...',
@@ -496,20 +496,19 @@ describe('generateSkills (cursor)', () => {
     const canonical = makeCanonical({
       skills: [
         {
-          source: '/proj/.agentsbridge/skills/typescript-pro/SKILL.md',
+          source: '/proj/.agentsmesh/skills/typescript-pro/SKILL.md',
           name: 'typescript-pro',
           description: 'TypeScript best practices',
           body: 'Main skill body.',
           supportingFiles: [
             {
               relativePath: 'references/advanced-types.md',
-              absolutePath:
-                '/proj/.agentsbridge/skills/typescript-pro/references/advanced-types.md',
+              absolutePath: '/proj/.agentsmesh/skills/typescript-pro/references/advanced-types.md',
               content: '# Advanced Types',
             },
             {
               relativePath: 'references/patterns.md',
-              absolutePath: '/proj/.agentsbridge/skills/typescript-pro/references/patterns.md',
+              absolutePath: '/proj/.agentsmesh/skills/typescript-pro/references/patterns.md',
               content: '# Patterns',
             },
           ],

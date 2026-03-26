@@ -1,0 +1,42 @@
+version: 1
+targets:
+  - claude-code
+  - cursor
+  - copilot
+  - gemini-cli
+  - cline
+  - codex-cli
+  - windsurf
+  - continue
+  - junie
+features:
+  - rules
+  - commands
+  - agents
+  - skills
+  - mcp
+  - hooks
+  - ignore
+  - permissions
+extends:
+  - name: shared-samplexbro-rules
+    source: github:sampleXbro/agentsmesh-acrshmp
+    features:
+      - skills
+      - commands
+      - agents
+      - rules
+      - mcp
+      - hooks
+      - permissions
+
+overrides:
+  cursor:
+    extra_setting: value
+  claude-code:
+    extra_setting: value
+collaboration:
+  strategy: merge
+  lock_features:
+    - mcp
+    - permissions

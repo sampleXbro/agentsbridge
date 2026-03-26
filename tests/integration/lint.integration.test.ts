@@ -1,5 +1,5 @@
 /**
- * Integration test for agentsbridge lint.
+ * Integration test for agentsmesh lint.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -14,15 +14,15 @@ const CLI_PATH = join(process.cwd(), 'dist', 'cli.js');
 beforeEach(() => {
   mkdirSync(TEST_DIR, { recursive: true });
   writeFileSync(
-    join(TEST_DIR, 'agentsbridge.yaml'),
+    join(TEST_DIR, 'agentsmesh.yaml'),
     `version: 1
 targets: [claude-code, cursor]
 features: [rules]
 `,
   );
-  mkdirSync(join(TEST_DIR, '.agentsbridge', 'rules'), { recursive: true });
+  mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
   writeFileSync(
-    join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+    join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
     `---
 root: true
 description: "Project rules"
@@ -35,16 +35,16 @@ description: "Project rules"
 
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
 
-describe('agentsbridge lint (integration)', () => {
+describe('agentsmesh lint (integration)', () => {
   it('passes when rules are valid', () => {
     const out = execSync(`node ${CLI_PATH} lint`, { cwd: TEST_DIR, encoding: 'utf-8' });
     expect(out).toContain('All checks passed');
   });
 
   it('exits 1 when no root rule', () => {
-    rmSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'));
+    rmSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'));
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', 'rules', 'only.md'),
+      join(TEST_DIR, '.agentsmesh', 'rules', 'only.md'),
       `---
 description: "Only"
 ---
@@ -62,7 +62,7 @@ Content
 
   it('shows warnings when globs match 0 files but exit 0', () => {
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', 'rules', 'lib-only.md'),
+      join(TEST_DIR, '.agentsmesh', 'rules', 'lib-only.md'),
       `---
 description: "Lib"
 globs: lib/**/*.ts

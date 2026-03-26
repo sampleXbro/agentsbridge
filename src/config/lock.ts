@@ -12,7 +12,7 @@ import { listPacks } from '../install/pack-reader.js';
 
 const LOCK_FILENAME = '.lock';
 
-/** Paths/patterns for canonical files, relative to .agentsbridge */
+/** Paths/patterns for canonical files, relative to .agentsmesh */
 const CANONICAL_PATTERNS = [
   (r: string) => r.startsWith('rules/') && r.endsWith('.md'),
   (r: string) => r.startsWith('commands/') && r.endsWith('.md'),
@@ -41,8 +41,8 @@ const FEATURE_PATTERNS: Record<string, (path: string) => boolean> = {
 };
 
 /**
- * Read lock file from .agentsbridge directory.
- * @param abDir - Absolute path to .agentsbridge
+ * Read lock file from .agentsmesh directory.
+ * @param abDir - Absolute path to .agentsmesh
  * @returns Parsed LockFile or null if missing
  */
 export async function readLock(abDir: string): Promise<LockFile | null> {
@@ -74,8 +74,8 @@ export async function readLock(abDir: string): Promise<LockFile | null> {
 }
 
 /**
- * Write lock file to .agentsbridge directory.
- * @param abDir - Absolute path to .agentsbridge
+ * Write lock file to .agentsmesh directory.
+ * @param abDir - Absolute path to .agentsmesh
  * @param lock - Lock file data
  */
 export async function writeLock(abDir: string, lock: LockFile): Promise<void> {
@@ -95,9 +95,9 @@ export async function writeLock(abDir: string, lock: LockFile): Promise<void> {
 }
 
 /**
- * Build checksums of all canonical files in .agentsbridge.
- * Paths in result are relative to .agentsbridge (e.g. rules/_root.md).
- * @param abDir - Absolute path to .agentsbridge
+ * Build checksums of all canonical files in .agentsmesh.
+ * Paths in result are relative to .agentsmesh (e.g. rules/_root.md).
+ * @param abDir - Absolute path to .agentsmesh
  * @returns Record of relative path -> sha256:hex
  */
 export async function buildChecksums(abDir: string): Promise<Record<string, string>> {
@@ -145,7 +145,7 @@ export function detectLockedFeatureViolations(
 /**
  * Build pack checksums from a packs directory.
  * Returns pack-name → content_hash from each pack's pack.yaml.
- * @param packsDir - Absolute path to .agentsbridge/packs/
+ * @param packsDir - Absolute path to .agentsmesh/packs/
  */
 export async function buildPackChecksums(packsDir: string): Promise<Record<string, string>> {
   const packs = await listPacks(packsDir);
@@ -178,7 +178,7 @@ export async function buildExtendChecksums(
       result[ext.name] = ext.version;
       continue;
     }
-    const abDir = join(ext.resolvedPath, '.agentsbridge');
+    const abDir = join(ext.resolvedPath, '.agentsmesh');
     const checksums = await buildChecksums(abDir);
     const fingerprint = Object.keys(checksums)
       .sort()

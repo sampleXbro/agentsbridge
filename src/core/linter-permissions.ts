@@ -10,7 +10,7 @@ export function lintPermissions(canonical: CanonicalFiles, target: string): Lint
   return [
     {
       level: 'warning',
-      file: '.agentsbridge/permissions.yaml',
+      file: '.agentsmesh/permissions.yaml',
       target,
       message: 'Cursor permissions are partial; tool-level allow/deny may lose fidelity.',
     },

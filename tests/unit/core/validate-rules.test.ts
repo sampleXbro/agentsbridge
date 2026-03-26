@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { validateRules } from '../../../src/core/validate-rules.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';
 
-const TEST_DIR = join(tmpdir(), 'ab-validate-rules-test');
+const TEST_DIR = join(tmpdir(), 'am-validate-rules-test');
 
 beforeEach(() => {
   mkdirSync(TEST_DIR, { recursive: true });
@@ -35,7 +35,7 @@ describe('validateRules', () => {
   it('returns error when rules exist but no root', () => {
     const rules = [
       {
-        source: join(TEST_DIR, '.agentsbridge', 'rules', 'other.md'),
+        source: join(TEST_DIR, '.agentsmesh', 'rules', 'other.md'),
         root: false,
         targets: [],
         description: 'Other',
@@ -53,7 +53,7 @@ describe('validateRules', () => {
     const projectFiles = ['src/foo.ts', 'src/bar.ts'];
     const rules = [
       {
-        source: join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+        source: join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
         root: true,
         targets: [],
         description: 'Root',
@@ -61,7 +61,7 @@ describe('validateRules', () => {
         body: 'Root',
       },
       {
-        source: join(TEST_DIR, '.agentsbridge', 'rules', 'src-only.md'),
+        source: join(TEST_DIR, '.agentsmesh', 'rules', 'src-only.md'),
         root: false,
         targets: [],
         description: 'Src',
@@ -77,7 +77,7 @@ describe('validateRules', () => {
   it('skips rule when globs empty', () => {
     const rules = [
       {
-        source: join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+        source: join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
         root: true,
         targets: [],
         description: 'Root',
@@ -93,7 +93,7 @@ describe('validateRules', () => {
     const projectFiles = ['src/foo.ts'];
     const rules = [
       {
-        source: join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+        source: join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
         root: true,
         targets: [],
         description: 'Root',
@@ -101,7 +101,7 @@ describe('validateRules', () => {
         body: 'Root',
       },
       {
-        source: join(TEST_DIR, '.agentsbridge', 'rules', 'lib-only.md'),
+        source: join(TEST_DIR, '.agentsmesh', 'rules', 'lib-only.md'),
         root: false,
         targets: [],
         description: 'Lib',

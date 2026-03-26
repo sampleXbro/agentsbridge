@@ -15,9 +15,9 @@ import {
 import { removePathIfExists } from '../scoped-agents-import.js';
 import { WINDSURF_WORKFLOWS_DIR, WINDSURF_SKILLS_DIR } from './constants.js';
 
-const AGENTSBRIDGE_COMMANDS = '.agentsbridge/commands';
-const AGENTSBRIDGE_AGENTS = '.agentsbridge/agents';
-const AGENTSBRIDGE_SKILLS = '.agentsbridge/skills';
+const AGENTSMESH_COMMANDS = '.agentsmesh/commands';
+const AGENTSMESH_AGENTS = '.agentsmesh/agents';
+const AGENTSMESH_SKILLS = '.agentsmesh/skills';
 
 function toStringArray(value: unknown): string[] {
   if (Array.isArray(value)) {
@@ -43,7 +43,7 @@ export async function importWorkflows(
   const workflowsDir = join(projectRoot, WINDSURF_WORKFLOWS_DIR);
   const workflowFiles = await readDirRecursive(workflowsDir);
   const workflowMdFiles = workflowFiles.filter((f) => f.endsWith('.md'));
-  const destCommandsDir = join(projectRoot, AGENTSBRIDGE_COMMANDS);
+  const destCommandsDir = join(projectRoot, AGENTSMESH_COMMANDS);
   for (const srcPath of workflowMdFiles) {
     const content = await readFileSafe(srcPath);
     if (!content) continue;
@@ -71,7 +71,7 @@ export async function importWorkflows(
     results.push({
       fromTool: 'windsurf',
       fromPath: srcPath,
-      toPath: `${AGENTSBRIDGE_COMMANDS}/${name}.md`,
+      toPath: `${AGENTSMESH_COMMANDS}/${name}.md`,
       feature: 'commands',
     });
   }
@@ -94,8 +94,8 @@ export async function importSkills(
       const rawParsed = parseFrontmatter(skillContent);
       const projectedAgent = parseProjectedAgentSkillFrontmatter(rawParsed.frontmatter, ent.name);
       if (projectedAgent) {
-        await removePathIfExists(join(projectRoot, AGENTSBRIDGE_SKILLS, ent.name));
-        const destAgentsDir = join(projectRoot, AGENTSBRIDGE_AGENTS);
+        await removePathIfExists(join(projectRoot, AGENTSMESH_SKILLS, ent.name));
+        const destAgentsDir = join(projectRoot, AGENTSMESH_AGENTS);
         await mkdirp(destAgentsDir);
         const agentPath = join(destAgentsDir, `${projectedAgent.name}.md`);
         await writeFileAtomic(
@@ -105,12 +105,12 @@ export async function importSkills(
         results.push({
           fromTool: 'windsurf',
           fromPath: skillMdPath,
-          toPath: `${AGENTSBRIDGE_AGENTS}/${projectedAgent.name}.md`,
+          toPath: `${AGENTSMESH_AGENTS}/${projectedAgent.name}.md`,
           feature: 'agents',
         });
         continue;
       }
-      const destSkillDir = join(projectRoot, AGENTSBRIDGE_SKILLS, ent.name);
+      const destSkillDir = join(projectRoot, AGENTSMESH_SKILLS, ent.name);
       const destSkillPath = join(destSkillDir, 'SKILL.md');
       const normalized = normalize(skillContent, skillMdPath, destSkillPath);
       await mkdirp(destSkillDir);
@@ -118,7 +118,7 @@ export async function importSkills(
       results.push({
         fromTool: 'windsurf',
         fromPath: skillMdPath,
-        toPath: `${AGENTSBRIDGE_SKILLS}/${ent.name}/SKILL.md`,
+        toPath: `${AGENTSMESH_SKILLS}/${ent.name}/SKILL.md`,
         feature: 'skills',
       });
       const allSkillFiles = await readDirRecursive(skillPath);
@@ -133,7 +133,7 @@ export async function importSkills(
         results.push({
           fromTool: 'windsurf',
           fromPath: absPath,
-          toPath: `${AGENTSBRIDGE_SKILLS}/${ent.name}/${relPath}`,
+          toPath: `${AGENTSMESH_SKILLS}/${ent.name}/${relPath}`,
           feature: 'skills',
         });
       }

@@ -10,7 +10,7 @@ const SKIP_DIRS = new Set([
   'dist',
   'coverage',
   '.worktrees',
-  '.agentsbridgecache',
+  '.agentsmeshcache',
   '.cursor',
 ]);
 

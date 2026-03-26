@@ -21,7 +21,7 @@ describe('importFileDirectory', () => {
 
   it('imports matching files and returns ImportResult entries', async () => {
     const srcDir = '/repo/.cursor/commands';
-    const destDir = '/repo/.agentsbridge/commands';
+    const destDir = '/repo/.agentsmesh/commands';
     const srcPath = `${srcDir}/fix.md`;
     const destPath = `${destDir}/fix.md`;
 
@@ -44,7 +44,7 @@ describe('importFileDirectory', () => {
         expect(normalizeTo(destPath)).toBe(`# fix command|${srcPath}|${destPath}`);
         return {
           destPath,
-          toPath: '.agentsbridge/commands/fix.md',
+          toPath: '.agentsmesh/commands/fix.md',
           feature: 'commands',
           content: normalizeTo(destPath),
         };
@@ -60,7 +60,7 @@ describe('importFileDirectory', () => {
       {
         fromTool: 'cursor',
         fromPath: srcPath,
-        toPath: '.agentsbridge/commands/fix.md',
+        toPath: '.agentsmesh/commands/fix.md',
         feature: 'commands',
       },
     ]);
@@ -68,7 +68,7 @@ describe('importFileDirectory', () => {
 
   it('skips null mappings and empty file contents', async () => {
     const srcDir = '/repo/.cursor/agents';
-    const destDir = '/repo/.agentsbridge/agents';
+    const destDir = '/repo/.agentsmesh/agents';
     const skippedPath = `${srcDir}/skip.md`;
     const emptyPath = `${srcDir}/empty.md`;
 

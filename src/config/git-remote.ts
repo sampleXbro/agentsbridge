@@ -43,7 +43,7 @@ export async function fetchGitRemoteExtend(
     const allowFallback = options.allowOfflineFallback !== false;
     if (allowFallback && (await hasCachedRepo(cacheRepoDir))) {
       console.warn(
-        `[agentsbridge] Remote fetch failed for ${extendName}; using cached version. Error: ${err instanceof Error ? err.message : String(err)}`,
+        `[agentsmesh] Remote fetch failed for ${extendName}; using cached version. Error: ${err instanceof Error ? err.message : String(err)}`,
       );
       return readCachedRepo(cacheRepoDir);
     }
@@ -64,7 +64,7 @@ async function hasCachedRepo(repoDir: string): Promise<boolean> {
 
 function resolveCloneUrl(parsed: ParsedGitSource | ParsedGitlabSource): string {
   if ('cloneUrl' in parsed) {
-    const token = process.env.AGENTSBRIDGE_GITLAB_TOKEN;
+    const token = process.env.AGENTSMESH_GITLAB_TOKEN;
     if (token) {
       const url = new URL(parsed.cloneUrl);
       if (url.protocol === 'https:') {

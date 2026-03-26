@@ -4,27 +4,27 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { importFromCursor } from '../../../../src/targets/cursor/importer.js';
 
-const TEST_DIR = join(tmpdir(), 'agentsbridge-import-cursor-test');
+const TEST_DIR = join(tmpdir(), 'agentsmesh-import-cursor-test');
 
 beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
 
 describe('importFromCursor — rules', () => {
-  it('imports AGENTS.md to .agentsbridge/rules/_root.md', async () => {
+  it('imports AGENTS.md to .agentsmesh/rules/_root.md', async () => {
     writeFileSync(join(TEST_DIR, 'AGENTS.md'), '# Project Rules\n\nUse TypeScript.');
     const results = await importFromCursor(TEST_DIR);
     expect(results).toHaveLength(1);
     expect(results[0]).toMatchObject({
       fromTool: 'cursor',
-      toPath: '.agentsbridge/rules/_root.md',
+      toPath: '.agentsmesh/rules/_root.md',
       feature: 'rules',
     });
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(content).toContain('Use TypeScript.');
   });
 
-  it('imports .cursor/rules/*.mdc to .agentsbridge/rules/*.md', async () => {
+  it('imports .cursor/rules/*.mdc to .agentsmesh/rules/*.md', async () => {
     mkdirSync(join(TEST_DIR, '.cursor', 'rules'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, '.cursor', 'rules', 'typescript.mdc'),
@@ -33,13 +33,10 @@ describe('importFromCursor — rules', () => {
     const results = await importFromCursor(TEST_DIR);
     expect(results).toHaveLength(1);
     expect(results[0]).toMatchObject({
-      toPath: '.agentsbridge/rules/typescript.md',
+      toPath: '.agentsmesh/rules/typescript.md',
       feature: 'rules',
     });
-    const content = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'rules', 'typescript.md'),
-      'utf-8',
-    );
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'), 'utf-8');
     expect(content).toContain('description: TS rules');
     expect(content).toContain('Use strict mode.');
     expect(content).not.toContain('alwaysApply');
@@ -56,10 +53,10 @@ describe('importFromCursor — rules', () => {
     expect(results).toHaveLength(1);
     expect(results[0]).toMatchObject({
       fromTool: 'cursor',
-      toPath: '.agentsbridge/rules/react.md',
+      toPath: '.agentsmesh/rules/react.md',
       feature: 'rules',
     });
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', 'react.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'react.md'), 'utf-8');
     expect(content).toContain('description: React rules');
     expect(content).toContain('Use server components carefully.');
     expect(content).toContain('root: false');
@@ -72,7 +69,7 @@ describe('importFromCursor — rules', () => {
       '---\nalwaysApply: true\n---\n\nRoot content.',
     );
     const results = await importFromCursor(TEST_DIR);
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(results[0]!.feature).toBe('rules');
   });
@@ -85,13 +82,13 @@ describe('importFromCursor — rules', () => {
   it('adds root frontmatter to AGENTS.md when it has none', async () => {
     writeFileSync(join(TEST_DIR, 'AGENTS.md'), 'Plain content.');
     await importFromCursor(TEST_DIR);
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toMatch(/---[\s\S]*?root:\s*true/);
   });
 });
 
 describe('importFromCursor — commands', () => {
-  it('imports .cursor/commands/*.md to .agentsbridge/commands/*.md', async () => {
+  it('imports .cursor/commands/*.md to .agentsmesh/commands/*.md', async () => {
     mkdirSync(join(TEST_DIR, '.cursor', 'commands'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, '.cursor', 'commands', 'review.md'),
@@ -101,10 +98,10 @@ describe('importFromCursor — commands', () => {
     expect(results).toHaveLength(1);
     expect(results[0]).toMatchObject({
       fromTool: 'cursor',
-      toPath: '.agentsbridge/commands/review.md',
+      toPath: '.agentsmesh/commands/review.md',
       feature: 'commands',
     });
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'commands', 'review.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'), 'utf-8');
     expect(content).toContain('description: Run code review');
     expect(content).toContain('Review changes.');
   });
@@ -117,13 +114,13 @@ describe('importFromCursor — commands', () => {
     const commandResults = results.filter((r) => r.feature === 'commands');
     expect(commandResults).toHaveLength(2);
     const paths = commandResults.map((r) => r.toPath).sort();
-    expect(paths).toEqual(['.agentsbridge/commands/deploy.md', '.agentsbridge/commands/review.md']);
+    expect(paths).toEqual(['.agentsmesh/commands/deploy.md', '.agentsmesh/commands/review.md']);
   });
 
   it('preserves existing canonical command metadata when importing body-only generated commands', async () => {
-    mkdirSync(join(TEST_DIR, '.agentsbridge', 'commands'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'commands'), { recursive: true });
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', 'commands', 'review.md'),
+      join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'),
       '---\ndescription: Code review\nallowed-tools:\n  - Read\n  - Grep\n---\n\nOld body.',
     );
     mkdirSync(join(TEST_DIR, '.cursor', 'commands'), { recursive: true });
@@ -131,7 +128,7 @@ describe('importFromCursor — commands', () => {
 
     await importFromCursor(TEST_DIR);
 
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'commands', 'review.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'), 'utf-8');
     expect(content).toContain('description: Code review');
     expect(content).toContain('allowed-tools:');
     expect(content).toContain('- Read');
@@ -142,7 +139,7 @@ describe('importFromCursor — commands', () => {
 });
 
 describe('importFromCursor — agents', () => {
-  it('imports .cursor/agents/*.md to .agentsbridge/agents/*.md', async () => {
+  it('imports .cursor/agents/*.md to .agentsmesh/agents/*.md', async () => {
     mkdirSync(join(TEST_DIR, '.cursor', 'agents'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, '.cursor', 'agents', 'code-reviewer.md'),
@@ -152,11 +149,11 @@ describe('importFromCursor — agents', () => {
     expect(results).toHaveLength(1);
     expect(results[0]).toMatchObject({
       fromTool: 'cursor',
-      toPath: '.agentsbridge/agents/code-reviewer.md',
+      toPath: '.agentsmesh/agents/code-reviewer.md',
       feature: 'agents',
     });
     const content = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'agents', 'code-reviewer.md'),
+      join(TEST_DIR, '.agentsmesh', 'agents', 'code-reviewer.md'),
       'utf-8',
     );
     expect(content).toContain('name: code-reviewer');
@@ -165,7 +162,7 @@ describe('importFromCursor — agents', () => {
 });
 
 describe('importFromCursor — skills (flat format)', () => {
-  it('imports .cursor/skills/{name}.md to .agentsbridge/skills/{name}/SKILL.md', async () => {
+  it('imports .cursor/skills/{name}.md to .agentsmesh/skills/{name}/SKILL.md', async () => {
     mkdirSync(join(TEST_DIR, '.cursor', 'skills'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, '.cursor', 'skills', 'api-gen.md'),
@@ -175,11 +172,11 @@ describe('importFromCursor — skills (flat format)', () => {
     expect(results).toHaveLength(1);
     expect(results[0]).toMatchObject({
       fromTool: 'cursor',
-      toPath: '.agentsbridge/skills/api-gen/SKILL.md',
+      toPath: '.agentsmesh/skills/api-gen/SKILL.md',
       feature: 'skills',
     });
     const content = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'skills', 'api-gen', 'SKILL.md'),
+      join(TEST_DIR, '.agentsmesh', 'skills', 'api-gen', 'SKILL.md'),
       'utf-8',
     );
     expect(content).toContain('Generate APIs');
@@ -195,14 +192,14 @@ describe('importFromCursor — skills (flat format)', () => {
     expect(skillResults).toHaveLength(2);
     const paths = skillResults.map((r) => r.toPath).sort();
     expect(paths).toEqual([
-      '.agentsbridge/skills/api-gen/SKILL.md',
-      '.agentsbridge/skills/tdd/SKILL.md',
+      '.agentsmesh/skills/api-gen/SKILL.md',
+      '.agentsmesh/skills/tdd/SKILL.md',
     ]);
   });
 });
 
-describe('importFromCursor — skills (directory format, generated by agentsbridge)', () => {
-  it('imports .cursor/skills/{name}/SKILL.md to .agentsbridge/skills/{name}/SKILL.md', async () => {
+describe('importFromCursor — skills (directory format, generated by agentsmesh)', () => {
+  it('imports .cursor/skills/{name}/SKILL.md to .agentsmesh/skills/{name}/SKILL.md', async () => {
     mkdirSync(join(TEST_DIR, '.cursor', 'skills', 'post-feature-qa'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, '.cursor', 'skills', 'post-feature-qa', 'SKILL.md'),
@@ -212,11 +209,11 @@ describe('importFromCursor — skills (directory format, generated by agentsbrid
     expect(results).toHaveLength(1);
     expect(results[0]).toMatchObject({
       fromTool: 'cursor',
-      toPath: '.agentsbridge/skills/post-feature-qa/SKILL.md',
+      toPath: '.agentsmesh/skills/post-feature-qa/SKILL.md',
       feature: 'skills',
     });
     const content = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'skills', 'post-feature-qa', 'SKILL.md'),
+      join(TEST_DIR, '.agentsmesh', 'skills', 'post-feature-qa', 'SKILL.md'),
       'utf-8',
     );
     expect(content).toContain('QA checklist');
@@ -243,24 +240,17 @@ describe('importFromCursor — skills (directory format, generated by agentsbrid
     expect(skillResults).toHaveLength(3);
     const paths = skillResults.map((r) => r.toPath).sort();
     expect(paths).toEqual([
-      '.agentsbridge/skills/typescript-pro/SKILL.md',
-      '.agentsbridge/skills/typescript-pro/references/advanced-types.md',
-      '.agentsbridge/skills/typescript-pro/references/patterns.md',
+      '.agentsmesh/skills/typescript-pro/SKILL.md',
+      '.agentsmesh/skills/typescript-pro/references/advanced-types.md',
+      '.agentsmesh/skills/typescript-pro/references/patterns.md',
     ]);
     const skillMd = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'skills', 'typescript-pro', 'SKILL.md'),
+      join(TEST_DIR, '.agentsmesh', 'skills', 'typescript-pro', 'SKILL.md'),
       'utf-8',
     );
     expect(skillMd).toContain('Advanced TypeScript.');
     const refMd = readFileSync(
-      join(
-        TEST_DIR,
-        '.agentsbridge',
-        'skills',
-        'typescript-pro',
-        'references',
-        'advanced-types.md',
-      ),
+      join(TEST_DIR, '.agentsmesh', 'skills', 'typescript-pro', 'references', 'advanced-types.md'),
       'utf-8',
     );
     expect(refMd).toContain('# Advanced Types');
@@ -276,14 +266,14 @@ describe('importFromCursor — skills (directory format, generated by agentsbrid
     expect(skillResults).toHaveLength(2);
     const paths = skillResults.map((r) => r.toPath).sort();
     expect(paths).toEqual([
-      '.agentsbridge/skills/post-feature-qa/SKILL.md',
-      '.agentsbridge/skills/typescript-pro/SKILL.md',
+      '.agentsmesh/skills/post-feature-qa/SKILL.md',
+      '.agentsmesh/skills/typescript-pro/SKILL.md',
     ]);
   });
 });
 
 describe('importFromCursor — mcp.json', () => {
-  it('imports .cursor/mcp.json to .agentsbridge/mcp.json', async () => {
+  it('imports .cursor/mcp.json to .agentsmesh/mcp.json', async () => {
     mkdirSync(join(TEST_DIR, '.cursor'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, '.cursor', 'mcp.json'),
@@ -302,10 +292,10 @@ describe('importFromCursor — mcp.json', () => {
     expect(results).toHaveLength(1);
     expect(results[0]).toMatchObject({
       fromTool: 'cursor',
-      toPath: '.agentsbridge/mcp.json',
+      toPath: '.agentsmesh/mcp.json',
       feature: 'mcp',
     });
-    const mcp = JSON.parse(readFileSync(join(TEST_DIR, '.agentsbridge', 'mcp.json'), 'utf-8')) as {
+    const mcp = JSON.parse(readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf-8')) as {
       mcpServers: Record<string, unknown>;
     };
     expect(mcp.mcpServers.context7).toBeDefined();
@@ -327,7 +317,7 @@ describe('importFromCursor — mcp.json', () => {
 });
 
 describe('importFromCursor — settings.json decomposition', () => {
-  it('imports permissions to .agentsbridge/permissions.yaml', async () => {
+  it('imports permissions to .agentsmesh/permissions.yaml', async () => {
     mkdirSync(join(TEST_DIR, '.cursor'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, '.cursor', 'settings.json'),
@@ -336,13 +326,13 @@ describe('importFromCursor — settings.json decomposition', () => {
     const results = await importFromCursor(TEST_DIR);
     const permResult = results.find((r) => r.feature === 'permissions');
     expect(permResult).toBeDefined();
-    expect(permResult?.toPath).toBe('.agentsbridge/permissions.yaml');
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'permissions.yaml'), 'utf-8');
+    expect(permResult?.toPath).toBe('.agentsmesh/permissions.yaml');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'permissions.yaml'), 'utf-8');
     expect(content).toContain('Read');
     expect(content).toContain('WebFetch');
   });
 
-  it('imports hooks to .agentsbridge/hooks.yaml', async () => {
+  it('imports hooks to .agentsmesh/hooks.yaml', async () => {
     mkdirSync(join(TEST_DIR, '.cursor'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, '.cursor', 'settings.json'),
@@ -360,7 +350,7 @@ describe('importFromCursor — settings.json decomposition', () => {
     const results = await importFromCursor(TEST_DIR);
     const hooksResult = results.find((r) => r.feature === 'hooks');
     expect(hooksResult).toBeDefined();
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'hooks.yaml'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'hooks.yaml'), 'utf-8');
     expect(content).toContain('PostToolUse');
     expect(content).toContain('prettier');
   });
@@ -385,16 +375,16 @@ describe('importFromCursor — settings.json decomposition', () => {
 });
 
 describe('importFromCursor — .cursorignore', () => {
-  it('imports .cursorignore to .agentsbridge/ignore', async () => {
+  it('imports .cursorignore to .agentsmesh/ignore', async () => {
     writeFileSync(join(TEST_DIR, '.cursorignore'), 'node_modules\ndist\n.env\n');
     const results = await importFromCursor(TEST_DIR);
     expect(results).toHaveLength(1);
     expect(results[0]).toMatchObject({
       fromTool: 'cursor',
-      toPath: '.agentsbridge/ignore',
+      toPath: '.agentsmesh/ignore',
       feature: 'ignore',
     });
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'ignore'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'ignore'), 'utf-8');
     expect(content).toContain('node_modules');
     expect(content).toContain('dist');
   });
@@ -408,10 +398,10 @@ describe('importFromCursor — .cursorrules fallback', () => {
     expect(results[0]).toMatchObject({
       fromTool: 'cursor',
       fromPath: expect.stringContaining('.cursorrules'),
-      toPath: '.agentsbridge/rules/_root.md',
+      toPath: '.agentsmesh/rules/_root.md',
       feature: 'rules',
     });
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(content).toContain('# Legacy Cursor Rules');
   });
@@ -420,7 +410,7 @@ describe('importFromCursor — .cursorrules fallback', () => {
     writeFileSync(join(TEST_DIR, 'AGENTS.md'), '# New Root\n');
     writeFileSync(join(TEST_DIR, '.cursorrules'), '# Old Rules\n');
     await importFromCursor(TEST_DIR);
-    const rootContent = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const rootContent = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(rootContent).toContain('# New Root');
     expect(rootContent).not.toContain('# Old Rules');
   });
@@ -433,7 +423,7 @@ describe('importFromCursor — .cursorrules fallback', () => {
     );
     writeFileSync(join(TEST_DIR, '.cursorrules'), '# Old Rules\n');
     await importFromCursor(TEST_DIR);
-    const rootContent = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const rootContent = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(rootContent).toContain('# MDC Root');
     expect(rootContent).not.toContain('# Old Rules');
   });

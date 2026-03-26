@@ -10,7 +10,7 @@ import {
 } from './path-helpers.js';
 
 const ROOT_RELATIVE_PREFIXES = [
-  '.agentsbridge/',
+  '.agentsmesh/',
   '.claude/',
   '.cursor/',
   '.github/',
@@ -39,7 +39,7 @@ const EXTERNAL_REF_PATTERNS = [
 const FENCED_CODE_BLOCK = /^(?:```|~~~)[^\n]*\n[\s\S]*?^(?:```|~~~)/gm;
 
 export const PATH_TOKEN =
-  /(?:\.\.[\\/]|\.\/|\.\\|\/[A-Za-z0-9._-]|[A-Za-z]:[\\/][A-Za-z0-9._-]|\.agentsbridge[\\/]|\.claude[\\/]|\.cursor[\\/]|\.github[\\/]|\.continue[\\/]|\.junie[\\/]|\.gemini[\\/]|\.clinerules[\\/]|\.cline[\\/]|\.agents[\\/]|\.windsurf[\\/]|(?:[A-Za-z0-9._-]+[\\/])+|[A-Za-z0-9._-]+\.[A-Za-z0-9._-]+)[A-Za-z0-9._@%+~:\\/-]*/g;
+  /(?:\.\.[\\/]|\.\/|\.\\|\/[A-Za-z0-9._-]|[A-Za-z]:[\\/][A-Za-z0-9._-]|\.agentsmesh[\\/]|\.claude[\\/]|\.cursor[\\/]|\.github[\\/]|\.continue[\\/]|\.junie[\\/]|\.gemini[\\/]|\.clinerules[\\/]|\.cline[\\/]|\.agents[\\/]|\.windsurf[\\/]|(?:[A-Za-z0-9._-]+[\\/])+|[A-Za-z0-9._-]+\.[A-Za-z0-9._-]+)[A-Za-z0-9._@%+~:\\/-]*/g;
 export const LINE_NUMBER_SUFFIX = /(?::(\d+)){1,2}$/;
 
 export function resolveProjectPath(

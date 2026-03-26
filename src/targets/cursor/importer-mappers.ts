@@ -7,9 +7,9 @@ import {
 import type { ImportFileMapping } from '../import-orchestrator.js';
 import { toToolsArray } from '../shared-import-helpers.js';
 
-const AB_RULES = '.agentsbridge/rules';
-const AB_COMMANDS = '.agentsbridge/commands';
-const AB_AGENTS = '.agentsbridge/agents';
+const AB_RULES = '.agentsmesh/rules';
+const AB_COMMANDS = '.agentsmesh/commands';
+const AB_AGENTS = '.agentsmesh/agents';
 
 export async function mapCursorRuleFile(
   srcPath: string,

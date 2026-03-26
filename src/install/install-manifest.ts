@@ -46,7 +46,7 @@ function sameInstallIdentity(a: InstallManifestEntry, b: InstallManifestEntry): 
 }
 
 function manifestPath(configDir: string): string {
-  return join(configDir, '.agentsbridge', 'installs.yaml');
+  return join(configDir, '.agentsmesh', 'installs.yaml');
 }
 
 export async function readInstallManifest(configDir: string): Promise<InstallManifestEntry[]> {

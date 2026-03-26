@@ -1,5 +1,5 @@
 /**
- * Parse .agentsbridge/ignore into gitignore-style patterns.
+ * Parse .agentsmesh/ignore into gitignore-style patterns.
  */
 
 import { readFileSafe } from '../utils/fs.js';
@@ -7,7 +7,7 @@ import type { IgnorePatterns } from '../core/types.js';
 
 /**
  * Parse ignore file at the given path.
- * @param ignorePath - Absolute path to .agentsbridge/ignore
+ * @param ignorePath - Absolute path to .agentsmesh/ignore
  * @returns Array of ignore patterns (empty array if file missing or empty)
  */
 export async function parseIgnore(ignorePath: string): Promise<IgnorePatterns> {

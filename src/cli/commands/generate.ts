@@ -1,5 +1,5 @@
 /**
- * agentsbridge generate — produce target files from canonical sources.
+ * agentsmesh generate — produce target files from canonical sources.
  */
 
 import { join, resolve, sep } from 'node:path';
@@ -46,7 +46,7 @@ export async function runGenerate(
   options: RunGenerateOptions = {},
 ): Promise<number> {
   if (flags.features !== undefined) {
-    throw new Error('--features is no longer supported. Configure features in agentsbridge.yaml.');
+    throw new Error('--features is no longer supported. Configure features in agentsmesh.yaml.');
   }
 
   const root = projectRoot ?? process.cwd();
@@ -66,7 +66,7 @@ export async function runGenerate(
   const { config, configDir } = await loadConfigFromDir(root);
   const lockFeatures = config.collaboration?.lock_features ?? [];
   if (config.collaboration?.strategy === 'lock' && !force && lockFeatures.length > 0) {
-    const abDir = join(configDir, '.agentsbridge');
+    const abDir = join(configDir, '.agentsmesh');
     const existingLock = await readLock(abDir);
     if (existingLock !== null) {
       const currentChecksums = await buildChecksums(abDir);
@@ -80,7 +80,7 @@ export async function runGenerate(
         for (const violation of violations) {
           logger.error(`  ${violation}`);
         }
-        logger.error("Run 'agentsbridge generate --force' to accept these changes.");
+        logger.error("Run 'agentsmesh generate --force' to accept these changes.");
         throw new Error('Locked feature violation. Use --force to override.');
       }
     }
@@ -104,7 +104,7 @@ export async function runGenerate(
       return 0;
     }
     if (!dryRun) {
-      const abDir = join(configDir, '.agentsbridge');
+      const abDir = join(configDir, '.agentsmesh');
       const checksums = await buildChecksums(abDir);
       const extendChecksums =
         resolvedExtends.length > 0 ? await buildExtendChecksums(resolvedExtends) : {};
@@ -119,10 +119,10 @@ export async function runGenerate(
         packs: packChecksums,
       });
       try {
-        await ensureCacheSymlink(getCacheDir(), join(configDir, '.agentsbridgecache'));
+        await ensureCacheSymlink(getCacheDir(), join(configDir, '.agentsmeshcache'));
       } catch (err) {
         logger.warn(
-          `Could not create .agentsbridgecache symlink: ${err instanceof Error ? err.message : String(err)}`,
+          `Could not create .agentsmeshcache symlink: ${err instanceof Error ? err.message : String(err)}`,
         );
       }
     }
@@ -141,7 +141,7 @@ export async function runGenerate(
     for (const r of drifted) {
       logger.error(`[check] ${r.status} ${r.path} (${r.target})`);
     }
-    logger.error("Generated files are out of sync. Run 'agentsbridge generate' to update them.");
+    logger.error("Generated files are out of sync. Run 'agentsmesh generate' to update them.");
     return 1;
   }
 
@@ -165,7 +165,7 @@ export async function runGenerate(
       logger.info(`Nothing changed. (${unchanged} unchanged)`);
     }
 
-    const abDir = join(configDir, '.agentsbridge');
+    const abDir = join(configDir, '.agentsmesh');
     const checksums = await buildChecksums(abDir);
     const extendChecksums =
       resolvedExtends.length > 0 ? await buildExtendChecksums(resolvedExtends) : {};
@@ -180,10 +180,10 @@ export async function runGenerate(
       packs: packChecksums,
     });
     try {
-      await ensureCacheSymlink(getCacheDir(), join(configDir, '.agentsbridgecache'));
+      await ensureCacheSymlink(getCacheDir(), join(configDir, '.agentsmeshcache'));
     } catch (err) {
       logger.warn(
-        `Could not create .agentsbridgecache symlink: ${err instanceof Error ? err.message : String(err)}`,
+        `Could not create .agentsmeshcache symlink: ${err instanceof Error ? err.message : String(err)}`,
       );
     }
   }

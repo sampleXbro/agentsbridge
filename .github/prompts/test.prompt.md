@@ -1,9 +1,9 @@
 ---
 agent: agent
 description: Run tests and report results
-x-agentsbridge-kind: command
-x-agentsbridge-name: test
-x-agentsbridge-allowed-tools:
+x-agentsmesh-kind: command
+x-agentsmesh-name: test
+x-agentsmesh-allowed-tools:
   - Bash(npx vitest)
   - Read
   - Grep

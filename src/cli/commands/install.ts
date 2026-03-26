@@ -1,5 +1,5 @@
 /**
- * agentsbridge install — add pinned extends entries from git or local paths.
+ * agentsmesh install — add pinned extends entries from git or local paths.
  */
 
 import { runInstall as runInstallCore } from '../../install/run-install.js';

@@ -21,7 +21,7 @@ export function featuresFromCanonical(c: CanonicalFiles): string[] {
 }
 
 /**
- * Resolve file vs directory, then load canonical slice (rules/commands/agents/skills / .agentsbridge).
+ * Resolve file vs directory, then load canonical slice (rules/commands/agents/skills / .agentsmesh).
  */
 export async function discoverFromContentRoot(contentRoot: string): Promise<{
   canonical: CanonicalFiles;

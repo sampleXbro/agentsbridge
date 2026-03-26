@@ -1,5 +1,5 @@
 /**
- * Load Anthropic-style skill directories for extends.path (no .agentsbridge).
+ * Load Anthropic-style skill directories for extends.path (no .agentsmesh).
  */
 
 import { join } from 'node:path';

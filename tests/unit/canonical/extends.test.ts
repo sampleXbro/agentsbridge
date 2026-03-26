@@ -25,7 +25,7 @@ vi.mock('../../../src/canonical/native-extends-importer.js', () => ({
   importNativeToCanonical: mockImportNative,
 }));
 
-const TEST_DIR = join(tmpdir(), 'agentsbridge-extends-test');
+const TEST_DIR = join(tmpdir(), 'agentsmesh-extends-test');
 
 function minimalCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
   return {
@@ -195,16 +195,16 @@ describe('loadCanonicalWithExtends', () => {
     mkdirSync(PROJECT_DIR, { recursive: true });
     mkdirSync(SHARED_DIR, { recursive: true });
     writeFileSync(
-      join(PROJECT_DIR, 'agentsbridge.yaml'),
+      join(PROJECT_DIR, 'agentsmesh.yaml'),
       `version: 1
 targets: [claude-code]
 features: [rules]
 extends: []
 `,
     );
-    mkdirSync(join(PROJECT_DIR, '.agentsbridge', 'rules'), { recursive: true });
+    mkdirSync(join(PROJECT_DIR, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(
-      join(PROJECT_DIR, '.agentsbridge', 'rules', '_root.md'),
+      join(PROJECT_DIR, '.agentsmesh', 'rules', '_root.md'),
       `---
 root: true
 ---
@@ -232,16 +232,16 @@ root: true
   });
 
   it('merges extend then local when extend configured', async () => {
-    mkdirSync(join(SHARED_DIR, '.agentsbridge', 'rules'), { recursive: true });
+    mkdirSync(join(SHARED_DIR, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(
-      join(SHARED_DIR, '.agentsbridge', 'rules', '_root.md'),
+      join(SHARED_DIR, '.agentsmesh', 'rules', '_root.md'),
       `---
 root: true
 ---
 # Shared root`,
     );
     writeFileSync(
-      join(SHARED_DIR, '.agentsbridge', 'rules', 'shared.md'),
+      join(SHARED_DIR, '.agentsmesh', 'rules', 'shared.md'),
       `---
 description: shared
 ---
@@ -283,13 +283,13 @@ description: shared
     await expect(loadCanonicalWithExtends(config, PROJECT_DIR)).rejects.toThrow(/does not exist/);
   });
 
-  it('detects and imports native format when .agentsbridge/ is absent', async () => {
-    // SHARED_DIR has no .agentsbridge/ — mockImportNative creates it
+  it('detects and imports native format when .agentsmesh/ is absent', async () => {
+    // SHARED_DIR has no .agentsmesh/ — mockImportNative creates it
     mockDetect.mockResolvedValue('claude-code');
     mockImportNative.mockImplementation(async (repoPath: string) => {
-      mkdirSync(join(repoPath, '.agentsbridge', 'rules'), { recursive: true });
+      mkdirSync(join(repoPath, '.agentsmesh', 'rules'), { recursive: true });
       writeFileSync(
-        join(repoPath, '.agentsbridge', 'rules', 'imported.md'),
+        join(repoPath, '.agentsmesh', 'rules', 'imported.md'),
         '---\ndescription: imported\n---\n# Imported rule\n',
       );
       return [];
@@ -314,9 +314,9 @@ description: shared
   it('uses explicit extend target instead of auto-detecting when provided', async () => {
     mockDetect.mockResolvedValue('claude-code');
     mockImportNative.mockImplementation(async (repoPath: string) => {
-      mkdirSync(join(repoPath, '.agentsbridge', 'skills', 'chosen-skill'), { recursive: true });
+      mkdirSync(join(repoPath, '.agentsmesh', 'skills', 'chosen-skill'), { recursive: true });
       writeFileSync(
-        join(repoPath, '.agentsbridge', 'skills', 'chosen-skill', 'SKILL.md'),
+        join(repoPath, '.agentsmesh', 'skills', 'chosen-skill', 'SKILL.md'),
         '---\ndescription: imported skill\n---\n# Imported skill\n',
       );
       return [];
@@ -395,9 +395,9 @@ description: shared
     writeFileSync(join(SHARED_DIR, '.gemini', 'commands', 'x.toml'), 'name = "x"\n');
 
     mockImportNative.mockImplementation(async (repoPath: string) => {
-      mkdirSync(join(repoPath, '.agentsbridge', 'commands'), { recursive: true });
+      mkdirSync(join(repoPath, '.agentsmesh', 'commands'), { recursive: true });
       writeFileSync(
-        join(repoPath, '.agentsbridge', 'commands', 'from-ext.md'),
+        join(repoPath, '.agentsmesh', 'commands', 'from-ext.md'),
         '---\ndescription: from ext\n---\n# From extend\n',
       );
       return [];
@@ -425,12 +425,12 @@ description: shared
     expect(canonical.commands.some((c) => c.name === 'from-ext')).toBe(true);
   });
 
-  it('skips import when extends.path and extends.target but .agentsbridge/ already exists', async () => {
+  it('skips import when extends.path and extends.target but .agentsmesh/ already exists', async () => {
     mkdirSync(join(SHARED_DIR, '.gemini', 'commands'), { recursive: true });
     writeFileSync(join(SHARED_DIR, '.gemini', 'commands', 'x.toml'), 'name = "x"\n');
-    mkdirSync(join(SHARED_DIR, '.agentsbridge', 'commands'), { recursive: true });
+    mkdirSync(join(SHARED_DIR, '.agentsmesh', 'commands'), { recursive: true });
     writeFileSync(
-      join(SHARED_DIR, '.agentsbridge', 'commands', 'existing.md'),
+      join(SHARED_DIR, '.agentsmesh', 'commands', 'existing.md'),
       '---\ndescription: existing\n---\n# Existing\n',
     );
 
@@ -457,8 +457,8 @@ description: shared
   });
 
   it('merges packs between extends and local (extends → packs → local)', async () => {
-    // Create a pack with a skill at .agentsbridge/packs/test-pack/
-    const packDir = join(PROJECT_DIR, '.agentsbridge', 'packs', 'test-pack');
+    // Create a pack with a skill at .agentsmesh/packs/test-pack/
+    const packDir = join(PROJECT_DIR, '.agentsmesh', 'packs', 'test-pack');
     const skillDir = join(packDir, 'skills', 'pack-skill');
     mkdirSync(skillDir, { recursive: true });
     writeFileSync(join(skillDir, 'SKILL.md'), '---\ndescription: from pack\n---\n# Pack skill\n');
@@ -489,11 +489,11 @@ description: shared
     expect(canonical.rules.some((r) => r.body.includes('Local root'))).toBe(true);
   });
 
-  it('skips detection when .agentsbridge/ already exists (existing behavior unchanged)', async () => {
-    // SHARED_DIR has .agentsbridge/ created here — detectNativeFormat must NOT be called
-    mkdirSync(join(SHARED_DIR, '.agentsbridge', 'rules'), { recursive: true });
+  it('skips detection when .agentsmesh/ already exists (existing behavior unchanged)', async () => {
+    // SHARED_DIR has .agentsmesh/ created here — detectNativeFormat must NOT be called
+    mkdirSync(join(SHARED_DIR, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(
-      join(SHARED_DIR, '.agentsbridge', 'rules', 'shared.md'),
+      join(SHARED_DIR, '.agentsmesh', 'rules', 'shared.md'),
       '---\ndescription: shared\n---\n# Shared rule\n',
     );
     mockDetect.mockResolvedValue('claude-code'); // would be wrong if called

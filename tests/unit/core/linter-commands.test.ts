@@ -17,7 +17,7 @@ function makeCanonical(commands: CanonicalCommand[]): CanonicalFiles {
 
 function makeCommand(overrides: Partial<CanonicalCommand> = {}): CanonicalCommand {
   return {
-    source: '.agentsbridge/commands/review.md',
+    source: '.agentsmesh/commands/review.md',
     name: 'review',
     description: '',
     allowedTools: [],

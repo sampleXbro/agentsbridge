@@ -14,16 +14,16 @@ describe('generate output collisions', () => {
 
   it('deduplicates identical AGENTS.md outputs from codex-cli and windsurf', async () => {
     dir = createTestProject();
-    mkdirSync(join(dir, '.agentsbridge', 'rules'), { recursive: true });
+    mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(
-      join(dir, 'agentsbridge.yaml'),
+      join(dir, 'agentsmesh.yaml'),
       `version: 1
 targets: [codex-cli, windsurf]
 features: [rules]
 `,
     );
     writeFileSync(
-      join(dir, '.agentsbridge', 'rules', '_root.md'),
+      join(dir, '.agentsmesh', 'rules', '_root.md'),
       `---
 root: true
 description: Shared root
@@ -41,28 +41,28 @@ description: Shared root
 
   it('fails before writing files when targets generate conflicting content for the same path', async () => {
     dir = createTestProject();
-    mkdirSync(join(dir, '.agentsbridge', 'rules'), { recursive: true });
-    mkdirSync(join(dir, '.agentsbridge', 'skills', 'post-feature-qa', 'references'), {
+    mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
+    mkdirSync(join(dir, '.agentsmesh', 'skills', 'post-feature-qa', 'references'), {
       recursive: true,
     });
     writeFileSync(
-      join(dir, 'agentsbridge.yaml'),
+      join(dir, 'agentsmesh.yaml'),
       `version: 1
 targets: [cline, windsurf]
 features: [rules, skills]
 `,
     );
     writeFileSync(
-      join(dir, '.agentsbridge', 'rules', '_root.md'),
+      join(dir, '.agentsmesh', 'rules', '_root.md'),
       `---
 root: true
 description: Shared root
 ---
-Use .agentsbridge/skills/post-feature-qa/ and .agentsbridge/skills/post-feature-qa/references/.
+Use .agentsmesh/skills/post-feature-qa/ and .agentsmesh/skills/post-feature-qa/references/.
 `,
     );
     writeFileSync(
-      join(dir, '.agentsbridge', 'skills', 'post-feature-qa', 'SKILL.md'),
+      join(dir, '.agentsmesh', 'skills', 'post-feature-qa', 'SKILL.md'),
       `---
 description: QA
 ---
@@ -70,7 +70,7 @@ Run QA.
 `,
     );
     writeFileSync(
-      join(dir, '.agentsbridge', 'skills', 'post-feature-qa', 'references', 'checklist.md'),
+      join(dir, '.agentsmesh', 'skills', 'post-feature-qa', 'references', 'checklist.md'),
       '- check\n',
     );
 
@@ -82,28 +82,28 @@ Run QA.
 
   it('prefers codex AGENTS.md when rewritten overlaps differ between codex-cli and windsurf', async () => {
     dir = createTestProject();
-    mkdirSync(join(dir, '.agentsbridge', 'rules'), { recursive: true });
-    mkdirSync(join(dir, '.agentsbridge', 'skills', 'post-feature-qa', 'references'), {
+    mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
+    mkdirSync(join(dir, '.agentsmesh', 'skills', 'post-feature-qa', 'references'), {
       recursive: true,
     });
     writeFileSync(
-      join(dir, 'agentsbridge.yaml'),
+      join(dir, 'agentsmesh.yaml'),
       `version: 1
 targets: [codex-cli, windsurf]
 features: [rules, skills]
 `,
     );
     writeFileSync(
-      join(dir, '.agentsbridge', 'rules', '_root.md'),
+      join(dir, '.agentsmesh', 'rules', '_root.md'),
       `---
 root: true
 description: Shared root
 ---
-Use .agentsbridge/skills/post-feature-qa/ and .agentsbridge/skills/post-feature-qa/references/.
+Use .agentsmesh/skills/post-feature-qa/ and .agentsmesh/skills/post-feature-qa/references/.
 `,
     );
     writeFileSync(
-      join(dir, '.agentsbridge', 'skills', 'post-feature-qa', 'SKILL.md'),
+      join(dir, '.agentsmesh', 'skills', 'post-feature-qa', 'SKILL.md'),
       `---
 description: QA
 ---
@@ -111,7 +111,7 @@ Run QA.
 `,
     );
     writeFileSync(
-      join(dir, '.agentsbridge', 'skills', 'post-feature-qa', 'references', 'checklist.md'),
+      join(dir, '.agentsmesh', 'skills', 'post-feature-qa', 'references', 'checklist.md'),
       '- check\n',
     );
 
@@ -125,19 +125,19 @@ Run QA.
 
   it('deduplicates AGENTS.md overlaps after import-normalized relative skill links', async () => {
     dir = createTestProject();
-    mkdirSync(join(dir, '.agentsbridge', 'rules'), { recursive: true });
-    mkdirSync(join(dir, '.agentsbridge', 'skills', 'post-feature-qa', 'references'), {
+    mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
+    mkdirSync(join(dir, '.agentsmesh', 'skills', 'post-feature-qa', 'references'), {
       recursive: true,
     });
     writeFileSync(
-      join(dir, 'agentsbridge.yaml'),
+      join(dir, 'agentsmesh.yaml'),
       `version: 1
 targets: [codex-cli, windsurf]
 features: [rules, skills]
 `,
     );
     writeFileSync(
-      join(dir, '.agentsbridge', 'rules', '_root.md'),
+      join(dir, '.agentsmesh', 'rules', '_root.md'),
       `---
 root: true
 description: Shared root
@@ -146,7 +146,7 @@ Use ../skills/post-feature-qa/ and ../skills/post-feature-qa/references/.
 `,
     );
     writeFileSync(
-      join(dir, '.agentsbridge', 'skills', 'post-feature-qa', 'SKILL.md'),
+      join(dir, '.agentsmesh', 'skills', 'post-feature-qa', 'SKILL.md'),
       `---
 description: QA
 ---
@@ -154,7 +154,7 @@ Run QA.
 `,
     );
     writeFileSync(
-      join(dir, '.agentsbridge', 'skills', 'post-feature-qa', 'references', 'checklist.md'),
+      join(dir, '.agentsmesh', 'skills', 'post-feature-qa', 'references', 'checklist.md'),
       '- check\n',
     );
 

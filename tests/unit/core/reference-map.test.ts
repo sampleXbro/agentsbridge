@@ -22,23 +22,21 @@ function canonical(): CanonicalFiles {
     agents: [],
     skills: [
       {
-        source: '/proj/.agentsbridge/skills/post-feature-qa/SKILL.md',
+        source: '/proj/.agentsmesh/skills/post-feature-qa/SKILL.md',
         name: 'post-feature-qa',
         description: '',
         body: '',
         supportingFiles: [],
       },
       {
-        source: '/proj/.agentsbridge/skills/add-agent-target/SKILL.md',
+        source: '/proj/.agentsmesh/skills/add-agent-target/SKILL.md',
         name: 'add-agent-target',
         description: '',
         body: '',
         supportingFiles: [
           {
             relativePath: 'references/checklist.md',
-            absolutePath: join(
-              '/proj/.agentsbridge/skills/add-agent-target/references/checklist.md',
-            ),
+            absolutePath: join('/proj/.agentsmesh/skills/add-agent-target/references/checklist.md'),
             content: '',
           },
         ],
@@ -63,18 +61,18 @@ describe('buildReferenceMap', () => {
   ] as const)('maps skill file and directory references for %s', (target, skillDir) => {
     const refs = buildReferenceMap(target, canonical(), config([target]));
 
-    expect(refs.get('.agentsbridge/skills/post-feature-qa')).toBe(`${skillDir}/post-feature-qa`);
-    expect(refs.get('.agentsbridge/skills/post-feature-qa/')).toBe(`${skillDir}/post-feature-qa/`);
-    expect(refs.get('.agentsbridge/skills/add-agent-target/SKILL.md')).toBe(
+    expect(refs.get('.agentsmesh/skills/post-feature-qa')).toBe(`${skillDir}/post-feature-qa`);
+    expect(refs.get('.agentsmesh/skills/post-feature-qa/')).toBe(`${skillDir}/post-feature-qa/`);
+    expect(refs.get('.agentsmesh/skills/add-agent-target/SKILL.md')).toBe(
       `${skillDir}/add-agent-target/SKILL.md`,
     );
-    expect(refs.get('.agentsbridge/skills/add-agent-target/references')).toBe(
+    expect(refs.get('.agentsmesh/skills/add-agent-target/references')).toBe(
       `${skillDir}/add-agent-target/references`,
     );
-    expect(refs.get('.agentsbridge/skills/add-agent-target/references/')).toBe(
+    expect(refs.get('.agentsmesh/skills/add-agent-target/references/')).toBe(
       `${skillDir}/add-agent-target/references/`,
     );
-    expect(refs.get('.agentsbridge/skills/add-agent-target/references/checklist.md')).toBe(
+    expect(refs.get('.agentsmesh/skills/add-agent-target/references/checklist.md')).toBe(
       `${skillDir}/add-agent-target/references/checklist.md`,
     );
   });
@@ -83,7 +81,7 @@ describe('buildReferenceMap', () => {
     const can = canonical();
     can.commands = [
       {
-        source: '/proj/.agentsbridge/commands/deploy.md',
+        source: '/proj/.agentsmesh/commands/deploy.md',
         name: 'deploy',
         description: '',
         allowedTools: [],
@@ -93,14 +91,14 @@ describe('buildReferenceMap', () => {
     const cfg = config(['windsurf']);
     cfg.features = ['rules', 'commands', 'skills'];
     const refs = buildReferenceMap('windsurf', can, cfg);
-    expect(refs.get('.agentsbridge/commands/deploy.md')).toBe('.windsurf/workflows/deploy.md');
+    expect(refs.get('.agentsmesh/commands/deploy.md')).toBe('.windsurf/workflows/deploy.md');
   });
 
   it('maps command references for gemini-cli to TOML command files', () => {
     const can = canonical();
     can.commands = [
       {
-        source: '/proj/.agentsbridge/commands/deploy.md',
+        source: '/proj/.agentsmesh/commands/deploy.md',
         name: 'deploy',
         description: '',
         allowedTools: [],
@@ -110,14 +108,14 @@ describe('buildReferenceMap', () => {
     const cfg = config(['gemini-cli']);
     cfg.features = ['rules', 'commands', 'skills'];
     const refs = buildReferenceMap('gemini-cli', can, cfg);
-    expect(refs.get('.agentsbridge/commands/deploy.md')).toBe('.gemini/commands/deploy.toml');
+    expect(refs.get('.agentsmesh/commands/deploy.md')).toBe('.gemini/commands/deploy.toml');
   });
 
   it('maps `:`-namespaced gemini-cli command references to nested TOML paths', () => {
     const can = canonical();
     can.commands = [
       {
-        source: '/proj/.agentsbridge/commands/git:commit.md',
+        source: '/proj/.agentsmesh/commands/git:commit.md',
         name: 'git:commit',
         description: '',
         allowedTools: [],
@@ -127,16 +125,14 @@ describe('buildReferenceMap', () => {
     const cfg = config(['gemini-cli']);
     cfg.features = ['rules', 'commands', 'skills'];
     const refs = buildReferenceMap('gemini-cli', can, cfg);
-    expect(refs.get('.agentsbridge/commands/git:commit.md')).toBe(
-      '.gemini/commands/git/commit.toml',
-    );
+    expect(refs.get('.agentsmesh/commands/git:commit.md')).toBe('.gemini/commands/git/commit.toml');
   });
 
   it('maps Copilot scoped rules to .instructions.md files', () => {
     const can = canonical();
     can.rules = [
       {
-        source: '/proj/.agentsbridge/rules/typescript.md',
+        source: '/proj/.agentsmesh/rules/typescript.md',
         root: false,
         targets: [],
         description: '',
@@ -148,7 +144,7 @@ describe('buildReferenceMap', () => {
     const cfg = config(['copilot']);
     cfg.features = ['rules', 'skills'];
     const refs = buildReferenceMap('copilot', can, cfg);
-    expect(refs.get('.agentsbridge/rules/typescript.md')).toBe(
+    expect(refs.get('.agentsmesh/rules/typescript.md')).toBe(
       '.github/instructions/typescript.instructions.md',
     );
   });
@@ -157,7 +153,7 @@ describe('buildReferenceMap', () => {
     const can = canonical();
     can.agents = [
       {
-        source: '/proj/.agentsbridge/agents/reviewer.md',
+        source: '/proj/.agentsmesh/agents/reviewer.md',
         name: 'reviewer',
         description: '',
         tools: [],
@@ -175,8 +171,8 @@ describe('buildReferenceMap', () => {
     const cfg = config(['windsurf']);
     cfg.features = ['rules', 'agents', 'skills'];
     const refs = buildReferenceMap('windsurf', can, cfg);
-    expect(refs.has('.agentsbridge/agents/reviewer.md')).toBe(true);
-    expect(refs.get('.agentsbridge/agents/reviewer.md')).toContain('.windsurf/skills/');
+    expect(refs.has('.agentsmesh/agents/reviewer.md')).toBe(true);
+    expect(refs.get('.agentsmesh/agents/reviewer.md')).toContain('.windsurf/skills/');
   });
 
   it('returns empty map for an unknown target', () => {

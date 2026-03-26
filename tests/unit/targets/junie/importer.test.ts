@@ -28,10 +28,10 @@ describe('importFromJunie — rules', () => {
     expect(results).toHaveLength(1);
     expect(results[0]).toMatchObject({
       fromTool: 'junie',
-      toPath: '.agentsbridge/rules/_root.md',
+      toPath: '.agentsmesh/rules/_root.md',
       feature: 'rules',
     });
-    expect(readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8')).toContain(
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8')).toContain(
       'root: true',
     );
   });
@@ -47,10 +47,10 @@ describe('importFromJunie — rules', () => {
     expect(results).toHaveLength(1);
     expect(results[0]).toMatchObject({
       fromTool: 'junie',
-      toPath: '.agentsbridge/rules/_root.md',
+      toPath: '.agentsmesh/rules/_root.md',
       feature: 'rules',
     });
-    expect(readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8')).toContain(
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8')).toContain(
       'Keep it simple.',
     );
   });
@@ -86,12 +86,10 @@ describe('importFromJunie — mcp and ignore', () => {
     const results = await importFromJunie(TEST_DIR);
     expect(results).toHaveLength(1);
     expect(results[0]).toMatchObject({
-      toPath: '.agentsbridge/mcp.json',
+      toPath: '.agentsmesh/mcp.json',
       feature: 'mcp',
     });
-    expect(readFileSync(join(TEST_DIR, '.agentsbridge', 'mcp.json'), 'utf-8')).toContain(
-      'context7',
-    );
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf-8')).toContain('context7');
   });
 
   it('imports .aiignore into canonical ignore', async () => {
@@ -99,10 +97,10 @@ describe('importFromJunie — mcp and ignore', () => {
     const results = await importFromJunie(TEST_DIR);
     expect(results).toHaveLength(1);
     expect(results[0]).toMatchObject({
-      toPath: '.agentsbridge/ignore',
+      toPath: '.agentsmesh/ignore',
       feature: 'ignore',
     });
-    expect(readFileSync(join(TEST_DIR, '.agentsbridge', 'ignore'), 'utf-8')).toContain('.env');
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'ignore'), 'utf-8')).toContain('.env');
   });
 });
 
@@ -121,11 +119,11 @@ describe('importFromJunie — skills', () => {
     const results = await importFromJunie(TEST_DIR);
     expect(results.filter((result) => result.feature === 'skills')).toHaveLength(2);
     expect(
-      readFileSync(join(TEST_DIR, '.agentsbridge', 'skills', 'api-gen', 'SKILL.md'), 'utf-8'),
+      readFileSync(join(TEST_DIR, '.agentsmesh', 'skills', 'api-gen', 'SKILL.md'), 'utf-8'),
     ).toContain('description: API Gen');
     expect(
       readFileSync(
-        join(TEST_DIR, '.agentsbridge', 'skills', 'api-gen', 'references', 'checklist.md'),
+        join(TEST_DIR, '.agentsmesh', 'skills', 'api-gen', 'references', 'checklist.md'),
         'utf-8',
       ),
     ).toContain('# Checklist');
@@ -142,12 +140,12 @@ describe('importFromJunie — commands and agents', () => {
 
     const results = await importFromJunie(TEST_DIR);
     expect(results.filter((result) => result.feature === 'commands')).toHaveLength(1);
-    expect(
-      readFileSync(join(TEST_DIR, '.agentsbridge', 'commands', 'review.md'), 'utf-8'),
-    ).toContain('description: Review command');
-    expect(
-      readFileSync(join(TEST_DIR, '.agentsbridge', 'commands', 'review.md'), 'utf-8'),
-    ).toContain('Run review flow.');
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'), 'utf-8')).toContain(
+      'description: Review command',
+    );
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'), 'utf-8')).toContain(
+      'Run review flow.',
+    );
   });
 
   it('imports .junie/agents/*.md into canonical agents', async () => {
@@ -160,10 +158,10 @@ describe('importFromJunie — commands and agents', () => {
     const results = await importFromJunie(TEST_DIR);
     expect(results.filter((result) => result.feature === 'agents')).toHaveLength(1);
     expect(
-      readFileSync(join(TEST_DIR, '.agentsbridge', 'agents', 'security-reviewer.md'), 'utf-8'),
+      readFileSync(join(TEST_DIR, '.agentsmesh', 'agents', 'security-reviewer.md'), 'utf-8'),
     ).toContain('description: Security specialist');
     expect(
-      readFileSync(join(TEST_DIR, '.agentsbridge', 'agents', 'security-reviewer.md'), 'utf-8'),
+      readFileSync(join(TEST_DIR, '.agentsmesh', 'agents', 'security-reviewer.md'), 'utf-8'),
     ).toContain('Review security issues.');
   });
 });

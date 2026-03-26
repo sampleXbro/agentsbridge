@@ -1,5 +1,5 @@
 /**
- * E2E tests for agentsbridge check.
+ * E2E tests for agentsmesh check.
  */
 
 import { describe, it, expect, afterEach } from 'vitest';
@@ -26,7 +26,7 @@ describe('check', () => {
     dir = createTestProject('canonical-full');
     await runCli('generate', dir);
     writeFileSync(
-      join(dir, '.agentsbridge', 'rules', '_root.md'),
+      join(dir, '.agentsmesh', 'rules', '_root.md'),
       '---\nroot: true\n---\n# Changed\n',
     );
     const r = await runCli('check', dir);
@@ -46,7 +46,7 @@ describe('check', () => {
     dir = createTestProject('canonical-full');
     await runCli('generate', dir);
     const { writeFileSync, mkdirSync } = await import('node:fs');
-    const rulesDir = join(dir, '.agentsbridge', 'rules');
+    const rulesDir = join(dir, '.agentsmesh', 'rules');
     mkdirSync(rulesDir, { recursive: true });
     writeFileSync(join(rulesDir, 'extra.md'), '---\ndescription: Extra\n---\n# Extra\n');
     const r = await runCli('check', dir);

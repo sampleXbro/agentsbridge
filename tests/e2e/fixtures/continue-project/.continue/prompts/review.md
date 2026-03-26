@@ -1,8 +1,8 @@
 ---
 description: Review current changes
-x-agentsbridge-kind: command
-x-agentsbridge-name: review
-x-agentsbridge-allowed-tools:
+x-agentsmesh-kind: command
+x-agentsmesh-name: review
+x-agentsmesh-allowed-tools:
   - Read
   - Bash(git diff)
 ---

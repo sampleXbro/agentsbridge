@@ -1,5 +1,5 @@
 /**
- * Cline skills import helpers — imports .cline/skills into canonical .agentsbridge/skills.
+ * Cline skills import helpers — imports .cline/skills into canonical .agentsmesh/skills.
  */
 
 import { readdir } from 'node:fs/promises';
@@ -13,8 +13,8 @@ import {
 } from '../projected-agent-skill.js';
 import { CLINE_SKILLS_DIR } from './constants.js';
 
-const AGENTSBRIDGE_AGENTS = '.agentsbridge/agents';
-const AGENTSBRIDGE_SKILLS = '.agentsbridge/skills';
+const AGENTSMESH_AGENTS = '.agentsmesh/agents';
+const AGENTSMESH_SKILLS = '.agentsmesh/skills';
 
 export async function importClineSkills(
   projectRoot: string,
@@ -44,7 +44,7 @@ export async function importClineSkills(
     const rawParsed = parseFrontmatter(content);
     const projectedAgent = parseProjectedAgentSkillFrontmatter(rawParsed.frontmatter, name);
     if (projectedAgent) {
-      const destAgentsDir = join(projectRoot, AGENTSBRIDGE_AGENTS);
+      const destAgentsDir = join(projectRoot, AGENTSMESH_AGENTS);
       await mkdirp(destAgentsDir);
       const agentPath = join(destAgentsDir, `${projectedAgent.name}.md`);
       await writeFileAtomic(
@@ -54,15 +54,15 @@ export async function importClineSkills(
       results.push({
         fromTool: 'cline',
         fromPath: skillMdPath,
-        toPath: `${AGENTSBRIDGE_AGENTS}/${projectedAgent.name}.md`,
+        toPath: `${AGENTSMESH_AGENTS}/${projectedAgent.name}.md`,
         feature: 'agents',
       });
       continue;
     }
-    const destSkillPath = join(projectRoot, AGENTSBRIDGE_SKILLS, name, 'SKILL.md');
+    const destSkillPath = join(projectRoot, AGENTSMESH_SKILLS, name, 'SKILL.md');
     const normalized = normalize(content, skillMdPath, destSkillPath);
     const { frontmatter, body } = parseFrontmatter(normalized);
-    const destSkillDir = join(projectRoot, AGENTSBRIDGE_SKILLS, name);
+    const destSkillDir = join(projectRoot, AGENTSMESH_SKILLS, name);
     await mkdirp(destSkillDir);
     const canonicalFm: Record<string, unknown> = {
       description:
@@ -77,7 +77,7 @@ export async function importClineSkills(
     results.push({
       fromTool: 'cline',
       fromPath: skillMdPath,
-      toPath: `${AGENTSBRIDGE_SKILLS}/${name}/SKILL.md`,
+      toPath: `${AGENTSMESH_SKILLS}/${name}/SKILL.md`,
       feature: 'skills',
     });
 
@@ -93,7 +93,7 @@ export async function importClineSkills(
       results.push({
         fromTool: 'cline',
         fromPath: absPath,
-        toPath: `${AGENTSBRIDGE_SKILLS}/${name}/${relPath}`,
+        toPath: `${AGENTSMESH_SKILLS}/${name}/${relPath}`,
         feature: 'skills',
       });
     }

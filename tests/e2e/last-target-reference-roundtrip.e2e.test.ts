@@ -6,29 +6,29 @@ import { fileExists } from './helpers/assertions.js';
 import { runCli } from './helpers/run-cli.js';
 
 function seedReferenceProject(dir: string, config: string): void {
-  writeFileSync(join(dir, 'agentsbridge.yaml'), config);
-  mkdirSync(join(dir, '.agentsbridge', 'rules'), { recursive: true });
-  mkdirSync(join(dir, '.agentsbridge', 'commands'), { recursive: true });
-  mkdirSync(join(dir, '.agentsbridge', 'skills', 'api-gen', 'references'), {
+  writeFileSync(join(dir, 'agentsmesh.yaml'), config);
+  mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
+  mkdirSync(join(dir, '.agentsmesh', 'commands'), { recursive: true });
+  mkdirSync(join(dir, '.agentsmesh', 'skills', 'api-gen', 'references'), {
     recursive: true,
   });
   mkdirSync(join(dir, 'docs'), { recursive: true });
 
   writeFileSync(
-    join(dir, '.agentsbridge', 'rules', '_root.md'),
+    join(dir, '.agentsmesh', 'rules', '_root.md'),
     `---
 root: true
 description: Root rule
 ---
-Self: .agentsbridge/rules/_root.md.
-Rule: .agentsbridge/rules/typescript.md.
-Command: .agentsbridge/commands/review.md.
-Skill: .agentsbridge/skills/api-gen/SKILL.md.
+Self: .agentsmesh/rules/_root.md.
+Rule: .agentsmesh/rules/typescript.md.
+Command: .agentsmesh/commands/review.md.
+Skill: .agentsmesh/skills/api-gen/SKILL.md.
 Docs: ../../docs/some-doc.md.
 `,
   );
   writeFileSync(
-    join(dir, '.agentsbridge', 'rules', 'typescript.md'),
+    join(dir, '.agentsmesh', 'rules', 'typescript.md'),
     `---
 description: TypeScript rule
 globs: [src/**/*.ts]
@@ -37,21 +37,21 @@ Prefer strict mode.
 `,
   );
   writeFileSync(
-    join(dir, '.agentsbridge', 'commands', 'review.md'),
+    join(dir, '.agentsmesh', 'commands', 'review.md'),
     `---
 description: Review command
 ---
-Root: .agentsbridge/rules/_root.md.
-Skill: .agentsbridge/skills/api-gen/SKILL.md.
+Root: .agentsmesh/rules/_root.md.
+Skill: .agentsmesh/skills/api-gen/SKILL.md.
 Docs: ../../docs/some-doc.md.
 `,
   );
   writeFileSync(
-    join(dir, '.agentsbridge', 'skills', 'api-gen', 'SKILL.md'),
-    '# API Gen\n\nChecklist: .agentsbridge/skills/api-gen/references/checklist.md.\n',
+    join(dir, '.agentsmesh', 'skills', 'api-gen', 'SKILL.md'),
+    '# API Gen\n\nChecklist: .agentsmesh/skills/api-gen/references/checklist.md.\n',
   );
   writeFileSync(
-    join(dir, '.agentsbridge', 'skills', 'api-gen', 'references', 'checklist.md'),
+    join(dir, '.agentsmesh', 'skills', 'api-gen', 'references', 'checklist.md'),
     '# Checklist\n',
   );
   writeFileSync(join(dir, 'docs', 'some-doc.md'), '# Some Doc\n');
@@ -91,34 +91,34 @@ describe('last target markdown reference round trips', () => {
     expect(generatedRoot).toContain('.continue/skills/api-gen/SKILL.md');
     expect(generatedRoot).toContain('docs/some-doc.md');
     expect(generatedRoot).not.toContain('../../docs/some-doc.md');
-    expect(generatedRoot).not.toContain('.agentsbridge/skills/');
+    expect(generatedRoot).not.toContain('.agentsmesh/skills/');
 
     expect(generatedCommand).toContain('.continue/rules/_root.md');
     expect(generatedCommand).toContain('.continue/skills/api-gen/SKILL.md');
     expect(generatedCommand).toContain('docs/some-doc.md');
     expect(generatedCommand).not.toContain('../../docs/some-doc.md');
-    expect(generatedCommand).not.toContain('.agentsbridge/skills/');
+    expect(generatedCommand).not.toContain('.agentsmesh/skills/');
 
-    rmSync(join(dir, '.agentsbridge'), { recursive: true, force: true });
+    rmSync(join(dir, '.agentsmesh'), { recursive: true, force: true });
 
     const importResult = await runCli('import --from continue', dir);
     expect(importResult.exitCode, importResult.stderr).toBe(0);
 
-    const importedRoot = readFileSync(join(dir, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const importedRoot = readFileSync(join(dir, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     const importedCommand = readFileSync(
-      join(dir, '.agentsbridge', 'commands', 'review.md'),
+      join(dir, '.agentsmesh', 'commands', 'review.md'),
       'utf-8',
     );
 
-    expect(importedRoot).toContain('.agentsbridge/rules/_root.md');
-    expect(importedRoot).toContain('.agentsbridge/rules/typescript.md');
-    expect(importedRoot).toContain('.agentsbridge/commands/review.md');
-    expect(importedRoot).toContain('.agentsbridge/skills/api-gen/SKILL.md');
+    expect(importedRoot).toContain('.agentsmesh/rules/_root.md');
+    expect(importedRoot).toContain('.agentsmesh/rules/typescript.md');
+    expect(importedRoot).toContain('.agentsmesh/commands/review.md');
+    expect(importedRoot).toContain('.agentsmesh/skills/api-gen/SKILL.md');
     expect(importedRoot).toContain('docs/some-doc.md');
     expect(importedRoot).not.toContain('.continue/');
 
-    expect(importedCommand).toContain('.agentsbridge/rules/_root.md');
-    expect(importedCommand).toContain('.agentsbridge/skills/api-gen/SKILL.md');
+    expect(importedCommand).toContain('.agentsmesh/rules/_root.md');
+    expect(importedCommand).toContain('.agentsmesh/skills/api-gen/SKILL.md');
     expect(importedCommand).toContain('docs/some-doc.md');
     expect(importedCommand).not.toContain('.continue/');
   });
@@ -142,18 +142,18 @@ describe('last target markdown reference round trips', () => {
     expect(generatedAgents).toContain('.junie/skills/api-gen/SKILL.md');
     expect(generatedAgents).toContain('docs/some-doc.md');
     expect(generatedAgents).not.toContain('../../docs/some-doc.md');
-    expect(generatedAgents).not.toContain('.agentsbridge/skills/');
+    expect(generatedAgents).not.toContain('.agentsmesh/skills/');
 
-    rmSync(join(dir, '.agentsbridge'), { recursive: true, force: true });
+    rmSync(join(dir, '.agentsmesh'), { recursive: true, force: true });
 
     const importResult = await runCli('import --from junie', dir);
     expect(importResult.exitCode, importResult.stderr).toBe(0);
 
-    const importedRoot = readFileSync(join(dir, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
-    expect(importedRoot).toContain('.agentsbridge/rules/_root.md');
-    expect(importedRoot).toContain('.agentsbridge/rules/typescript.md');
+    const importedRoot = readFileSync(join(dir, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
+    expect(importedRoot).toContain('.agentsmesh/rules/_root.md');
+    expect(importedRoot).toContain('.agentsmesh/rules/typescript.md');
     expect(importedRoot).toContain('.junie/commands/review.md');
-    expect(importedRoot).toContain('.agentsbridge/skills/api-gen/SKILL.md');
+    expect(importedRoot).toContain('.agentsmesh/skills/api-gen/SKILL.md');
     expect(importedRoot).toContain('docs/some-doc.md');
   });
 });

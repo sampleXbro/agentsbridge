@@ -1,5 +1,5 @@
 /**
- * Integration test for agentsbridge init.
+ * Integration test for agentsmesh init.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -14,17 +14,17 @@ const CLI_PATH = join(process.cwd(), 'dist', 'cli.js');
 beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
 
-describe('agentsbridge init (integration)', () => {
-  it('creates agentsbridge.yaml, .agentsbridge/, and agentsbridge.local.yaml', () => {
+describe('agentsmesh init (integration)', () => {
+  it('creates agentsmesh.yaml, .agentsmesh/, and agentsmesh.local.yaml', () => {
     execSync(`node ${CLI_PATH} init`, { cwd: TEST_DIR });
-    const config = readFileSync(join(TEST_DIR, 'agentsbridge.yaml'), 'utf-8');
+    const config = readFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'utf-8');
     expect(config).toContain('version: 1');
     expect(config).toContain('claude-code');
 
-    const rootRule = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const rootRule = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(rootRule).toContain('root: true');
 
-    const local = readFileSync(join(TEST_DIR, 'agentsbridge.local.yaml'), 'utf-8');
+    const local = readFileSync(join(TEST_DIR, 'agentsmesh.local.yaml'), 'utf-8');
     expect(local).toContain('targets');
     expect(local).toContain('overrides');
   });
@@ -33,11 +33,11 @@ describe('agentsbridge init (integration)', () => {
     writeFileSync(join(TEST_DIR, '.gitignore'), 'node_modules\n');
     execSync(`node ${CLI_PATH} init`, { cwd: TEST_DIR });
     const gitignore = readFileSync(join(TEST_DIR, '.gitignore'), 'utf-8');
-    expect(gitignore).toContain('agentsbridge.local.yaml');
+    expect(gitignore).toContain('agentsmesh.local.yaml');
   });
 
   it('exits with error when already initialized', () => {
-    writeFileSync(join(TEST_DIR, 'agentsbridge.yaml'), 'version: 1\n');
+    writeFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'version: 1\n');
     expect(() => execSync(`node ${CLI_PATH} init`, { cwd: TEST_DIR })).toThrow();
   });
 

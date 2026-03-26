@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { stageManualInstallScope } from '../../../src/install/manual-install-scope.js';
 import { listRelativeFiles } from '../../helpers/install-test-helpers.js';
 
-const ROOT = join(tmpdir(), 'ab-manual-install-scope-skills');
+const ROOT = join(tmpdir(), 'am-manual-install-scope-skills');
 
 afterEach(() => {
   rmSync(ROOT, { recursive: true, force: true });
@@ -20,7 +20,7 @@ describe('stageManualInstallScope skills', () => {
 
     const staged = await stageManualInstallScope(join(skillDir, 'SKILL.md'), 'skills');
     try {
-      expect(listRelativeFiles(join(staged.discoveryRoot, '.agentsbridge', 'skills'))).toEqual([
+      expect(listRelativeFiles(join(staged.discoveryRoot, '.agentsmesh', 'skills'))).toEqual([
         'reviewer/SKILL.md',
         'reviewer/references/checklist.md',
       ]);
@@ -37,7 +37,7 @@ describe('stageManualInstallScope skills', () => {
 
     const staged = await stageManualInstallScope(skillDir, 'skills');
     try {
-      expect(listRelativeFiles(join(staged.discoveryRoot, '.agentsbridge', 'skills'))).toEqual([
+      expect(listRelativeFiles(join(staged.discoveryRoot, '.agentsmesh', 'skills'))).toEqual([
         'qa/SKILL.md',
         'qa/templates/plan.md',
       ]);
@@ -55,7 +55,7 @@ describe('stageManualInstallScope skills', () => {
 
     const staged = await stageManualInstallScope(root, 'skills');
     try {
-      expect(listRelativeFiles(join(staged.discoveryRoot, '.agentsbridge', 'skills'))).toEqual([
+      expect(listRelativeFiles(join(staged.discoveryRoot, '.agentsmesh', 'skills'))).toEqual([
         'release/SKILL.md',
         'review/SKILL.md',
       ]);
@@ -80,7 +80,7 @@ describe('stageManualInstallScope skills', () => {
       preferredSkillNames: ['release-manager'],
     });
     try {
-      expect(listRelativeFiles(join(staged.discoveryRoot, '.agentsbridge', 'skills'))).toEqual([
+      expect(listRelativeFiles(join(staged.discoveryRoot, '.agentsmesh', 'skills'))).toEqual([
         'release-manager/SKILL.md',
         'release-manager/references/guide.md',
       ]);
@@ -107,7 +107,7 @@ describe('stageManualInstallScope skills', () => {
       preferredSkillNames: ['release-manager'],
     });
     try {
-      expect(listRelativeFiles(join(staged.discoveryRoot, '.agentsbridge', 'skills'))).toEqual([
+      expect(listRelativeFiles(join(staged.discoveryRoot, '.agentsmesh', 'skills'))).toEqual([
         'release-manager/SKILL.md',
         'release-manager/references/guide.md',
       ]);

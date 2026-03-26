@@ -1,5 +1,5 @@
 /**
- * Canonical parsers for .agentsbridge/ source files.
+ * Canonical parsers for .agentsmesh/ source files.
  */
 
 export { loadCanonicalFiles } from './loader.js';

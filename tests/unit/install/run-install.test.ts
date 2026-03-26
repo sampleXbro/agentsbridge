@@ -247,7 +247,7 @@ describe('runInstall', () => {
     mockRunGenerate.mockResolvedValue(1);
     await runInstall({ force: true }, ['../upstream'], '/project');
     expect(mockLoggerWarn).toHaveBeenCalledWith(
-      'Generate failed after install. Fix the issue and run agentsbridge generate.',
+      'Generate failed after install. Fix the issue and run agentsmesh generate.',
     );
   });
 

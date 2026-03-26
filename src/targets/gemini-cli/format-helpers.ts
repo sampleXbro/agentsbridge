@@ -12,9 +12,9 @@ import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/fs.js';
 import { parseFrontmatter } from '../../utils/markdown.js';
 import { GEMINI_SETTINGS, GEMINI_IGNORE } from './constants.js';
 
-const AGENTSBRIDGE_MCP = '.agentsbridge/mcp.json';
-const AGENTSBRIDGE_HOOKS = '.agentsbridge/hooks.yaml';
-const AGENTSBRIDGE_IGNORE = '.agentsbridge/ignore';
+const AGENTSMESH_MCP = '.agentsmesh/mcp.json';
+const AGENTSMESH_HOOKS = '.agentsmesh/hooks.yaml';
+const AGENTSMESH_IGNORE = '.agentsmesh/ignore';
 
 export function mapGeminiHookEvent(event: string): string | null {
   switch (event) {
@@ -84,13 +84,13 @@ export async function importGeminiSettings(
     mcpServers !== null &&
     Object.keys(mcpServers).length > 0
   ) {
-    const mcpPath = join(projectRoot, AGENTSBRIDGE_MCP);
-    await mkdirp(join(projectRoot, '.agentsbridge'));
+    const mcpPath = join(projectRoot, AGENTSMESH_MCP);
+    await mkdirp(join(projectRoot, '.agentsmesh'));
     await writeFileAtomic(mcpPath, JSON.stringify({ mcpServers: mcpServers }, null, 2));
     results.push({
       fromTool: 'gemini-cli',
       fromPath: settingsPath,
-      toPath: AGENTSBRIDGE_MCP,
+      toPath: AGENTSMESH_MCP,
       feature: 'mcp',
     });
   }
@@ -101,13 +101,13 @@ export async function importGeminiSettings(
     ignorePatterns.length > 0 &&
     ignorePatterns.every((p): p is string => typeof p === 'string')
   ) {
-    const ignorePath = join(projectRoot, AGENTSBRIDGE_IGNORE);
-    await mkdirp(join(projectRoot, '.agentsbridge'));
+    const ignorePath = join(projectRoot, AGENTSMESH_IGNORE);
+    await mkdirp(join(projectRoot, '.agentsmesh'));
     await writeFileAtomic(ignorePath, ignorePatterns.join('\n') + '\n');
     results.push({
       fromTool: 'gemini-cli',
       fromPath: settingsPath,
-      toPath: AGENTSBRIDGE_IGNORE,
+      toPath: AGENTSMESH_IGNORE,
       feature: 'ignore',
     });
   }
@@ -160,13 +160,13 @@ export async function importGeminiSettings(
     );
     if (mappedHooks.length > 0) {
       const hooksYaml = Object.fromEntries(mappedHooks);
-      const hooksPath = join(projectRoot, AGENTSBRIDGE_HOOKS);
-      await mkdirp(join(projectRoot, '.agentsbridge'));
+      const hooksPath = join(projectRoot, AGENTSMESH_HOOKS);
+      await mkdirp(join(projectRoot, '.agentsmesh'));
       await writeFileAtomic(hooksPath, stringifyYaml(hooksYaml, { lineWidth: 0 }).trimEnd());
       results.push({
         fromTool: 'gemini-cli',
         fromPath: settingsPath,
-        toPath: AGENTSBRIDGE_HOOKS,
+        toPath: AGENTSMESH_HOOKS,
         feature: 'hooks',
       });
     }
@@ -185,13 +185,13 @@ export async function importGeminiIgnore(
       .map((line) => line.trim())
       .filter((line) => line && !line.startsWith('#'));
     if (patterns.length > 0) {
-      await mkdirp(join(projectRoot, '.agentsbridge'));
-      const ignorePath = join(projectRoot, AGENTSBRIDGE_IGNORE);
+      await mkdirp(join(projectRoot, '.agentsmesh'));
+      const ignorePath = join(projectRoot, AGENTSMESH_IGNORE);
       await writeFileAtomic(ignorePath, patterns.join('\n') + '\n');
       results.push({
         fromTool: 'gemini-cli',
         fromPath: geminiIgnorePath,
-        toPath: AGENTSBRIDGE_IGNORE,
+        toPath: AGENTSMESH_IGNORE,
         feature: 'ignore',
       });
     }

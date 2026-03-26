@@ -17,14 +17,14 @@ describe('runCli', () => {
   it('--version returns exitCode 0 and stdout contains version', async () => {
     const result = await runCli('--version', TMP_DIR);
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('agentsbridge');
+    expect(result.stdout).toContain('agentsmesh');
     expect(result.stdout).toMatch(/v\d+\.\d+\.\d+/);
   });
 
   it('empty args shows help — run with no args → exit 0, output contains usage', async () => {
     const r = await runCli('', TMP_DIR);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout + r.stderr).toMatch(/agentsbridge|init|generate/i);
+    expect(r.stdout + r.stderr).toMatch(/agentsmesh|init|generate/i);
   });
 
   it('unknown-cmd returns exitCode 1', async () => {

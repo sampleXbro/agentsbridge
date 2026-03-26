@@ -2,7 +2,7 @@
  * Generate GitHub Copilot config files from canonical sources.
  * Copilot uses .github/copilot-instructions.md (global), .github/instructions/*.instructions.md (scoped rules),
  * .github/prompts/*.prompt.md (native prompt files), .github/skills/{name}/ (native skills),
- * .github/agents/*.agent.md (native agents), .github/hooks/agentsbridge.json (+ scripts) for hooks.
+ * .github/agents/*.agent.md (native agents), .github/hooks/agentsmesh.json (+ scripts) for hooks.
  */
 
 import { basename } from 'node:path';
@@ -137,7 +137,7 @@ export function generateAgents(canonical: CanonicalFiles): RulesOutput[] {
 }
 
 /**
- * Generate .github/hooks/agentsbridge.json from canonical hooks.
+ * Generate .github/hooks/agentsmesh.json from canonical hooks.
  */
 export function generateHooks(canonical: CanonicalFiles): RulesOutput[] {
   if (!canonical.hooks) return [];
@@ -166,7 +166,7 @@ export function generateHooks(canonical: CanonicalFiles): RulesOutput[] {
   if (Object.keys(hooks).length === 0) return [];
   return [
     {
-      path: `${COPILOT_HOOKS_DIR}/agentsbridge.json`,
+      path: `${COPILOT_HOOKS_DIR}/agentsmesh.json`,
       content: JSON.stringify({ version: 1, hooks }, null, 2),
     },
   ];

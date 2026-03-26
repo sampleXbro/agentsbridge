@@ -41,7 +41,7 @@ describe('generateRules (cline)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: 'Project rules',
@@ -62,7 +62,7 @@ describe('generateRules (cline)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -70,7 +70,7 @@ describe('generateRules (cline)', () => {
           body: 'Root',
         },
         {
-          source: '/proj/.agentsbridge/rules/typescript.md',
+          source: '/proj/.agentsmesh/rules/typescript.md',
           root: false,
           targets: [],
           description: 'TS rules',
@@ -92,7 +92,7 @@ describe('generateRules (cline)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -100,7 +100,7 @@ describe('generateRules (cline)', () => {
           body: 'Root',
         },
         {
-          source: '/proj/.agentsbridge/rules/cursor-only.md',
+          source: '/proj/.agentsmesh/rules/cursor-only.md',
           root: false,
           targets: ['cursor'],
           description: '',
@@ -117,7 +117,7 @@ describe('generateRules (cline)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/cursor-only.md',
+          source: '/proj/.agentsmesh/rules/cursor-only.md',
           root: false,
           targets: ['cursor'],
           description: '',
@@ -134,7 +134,7 @@ describe('generateRules (cline)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -152,7 +152,7 @@ describe('generateRules (cline)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/simple.md',
+          source: '/proj/.agentsmesh/rules/simple.md',
           root: false,
           targets: [],
           description: '',
@@ -220,7 +220,7 @@ describe('generateSkills (cline)', () => {
     const canonical = makeCanonical({
       skills: [
         {
-          source: '/proj/.agentsbridge/skills/review/SKILL.md',
+          source: '/proj/.agentsmesh/skills/review/SKILL.md',
           name: 'review',
           description: 'Code review skill',
           body: 'Review code thoroughly.',
@@ -265,7 +265,7 @@ describe('generateSkills (cline)', () => {
     const canonical = makeCanonical({
       skills: [
         {
-          source: '/proj/.agentsbridge/skills/empty/SKILL.md',
+          source: '/proj/.agentsmesh/skills/empty/SKILL.md',
           name: 'empty',
           description: '',
           body: '',
@@ -285,7 +285,7 @@ describe('generateAgents (cline)', () => {
     const canonical = makeCanonical({
       agents: [
         {
-          source: '/proj/.agentsbridge/agents/reviewer.md',
+          source: '/proj/.agentsmesh/agents/reviewer.md',
           name: 'reviewer',
           description: 'Review specialist',
           tools: ['Read', 'Grep'],
@@ -305,10 +305,10 @@ describe('generateAgents (cline)', () => {
     const results = generateAgents(canonical);
 
     expect(results).toHaveLength(1);
-    expect(results[0]?.path).toBe(`${CLINE_SKILLS_DIR}/ab-agent-reviewer/SKILL.md`);
-    expect(results[0]?.content).toContain('x-agentsbridge-kind: agent');
-    expect(results[0]?.content).toContain('x-agentsbridge-name: reviewer');
-    expect(results[0]?.content).toContain('x-agentsbridge-tools:');
+    expect(results[0]?.path).toBe(`${CLINE_SKILLS_DIR}/am-agent-reviewer/SKILL.md`);
+    expect(results[0]?.content).toContain('x-agentsmesh-kind: agent');
+    expect(results[0]?.content).toContain('x-agentsmesh-name: reviewer');
+    expect(results[0]?.content).toContain('x-agentsmesh-tools:');
     expect(results[0]?.content).toContain('Review risky changes first.');
   });
 });
@@ -318,7 +318,7 @@ describe('generateWorkflows (cline)', () => {
     const canonical = makeCanonical({
       commands: [
         {
-          source: '/p/.agentsbridge/commands/deploy.md',
+          source: '/p/.agentsmesh/commands/deploy.md',
           name: 'deploy',
           description: 'Deploy workflow',
           allowedTools: [],
@@ -336,7 +336,7 @@ describe('generateWorkflows (cline)', () => {
     const canonical = makeCanonical({
       commands: [
         {
-          source: '/p/.agentsbridge/commands/deploy.md',
+          source: '/p/.agentsmesh/commands/deploy.md',
           name: 'deploy',
           description: '',
           allowedTools: [],
@@ -352,7 +352,7 @@ describe('generateWorkflows (cline)', () => {
     const canonical = makeCanonical({
       commands: [
         {
-          source: '/p/.agentsbridge/commands/empty.md',
+          source: '/p/.agentsmesh/commands/empty.md',
           name: 'empty',
           description: 'Describe only',
           allowedTools: [],
@@ -368,7 +368,7 @@ describe('generateWorkflows (cline)', () => {
     const canonical = makeCanonical({
       commands: [
         {
-          source: '/p/.agentsbridge/commands/empty.md',
+          source: '/p/.agentsmesh/commands/empty.md',
           name: 'empty',
           description: '',
           allowedTools: [],

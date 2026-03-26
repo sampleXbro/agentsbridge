@@ -25,8 +25,8 @@
 
 - `feature/align-agent-structures` mostly overlaps with `master`. Current `master` already has Gemini native agents and settings enablement in `src/targets/gemini-cli/generator.ts`, Gemini agent import in `src/targets/gemini-cli/importer.ts`, and Junie `.junie/AGENTS.md` plus `.junie/rules/*.md` generation in `src/targets/junie/generator.ts`.
 - The only notable branch-only behavior left in `feature/align-agent-structures` is a Cline compatibility mirror that emits both `.clinerules/_root.md` and `AGENTS.md`; current `master` only emits `AGENTS.md` for the root rule in `src/targets/cline/generator.ts`. This looks optional and should be ported only if dual-root compatibility is still desired by spec.
-- `feature/security-collaboration` contains branch-only collaboration/security work not present on `master`: lock-feature violation detection and `[LOCKED]` reporting, `generate --force` enforcement for `collaboration.strategy: lock`, stricter local extend validation (`.agentsbridge` must exist), remote tarball hashing/integrity sidecar propagation into lock entries, zip-slip filtering during GitHub tar extraction, and a strict mode to disable offline fallback for remote extends.
-- Of those, the highest-value salvage candidates are the zip-slip filter and local-extend `.agentsbridge` validation; the collaboration lock enforcement is also useful if the product still intends to support `strategy: lock`. The tarball-hash and strict-offline pieces would need a careful port because `master` now uses split remote fetchers (`github-remote.ts` / `git-remote.ts`) and pack-aware lock generation.
+- `feature/security-collaboration` contains branch-only collaboration/security work not present on `master`: lock-feature violation detection and `[LOCKED]` reporting, `generate --force` enforcement for `collaboration.strategy: lock`, stricter local extend validation (`.agentsmesh` must exist), remote tarball hashing/integrity sidecar propagation into lock entries, zip-slip filtering during GitHub tar extraction, and a strict mode to disable offline fallback for remote extends.
+- Of those, the highest-value salvage candidates are the zip-slip filter and local-extend `.agentsmesh` validation; the collaboration lock enforcement is also useful if the product still intends to support `strategy: lock`. The tarball-hash and strict-offline pieces would need a careful port because `master` now uses split remote fetchers (`github-remote.ts` / `git-remote.ts`) and pack-aware lock generation.
 
 # Salvage security/collaboration work + remove worktrees
 
@@ -41,7 +41,7 @@
 ## Review (Salvage security/collaboration work + remove worktrees)
 
 - Ported from `feature/security-collaboration`: locked-feature detection in `src/config/lock.ts`, `generate` enforcement for `collaboration.strategy: lock` in `src/cli/commands/generate.ts`, `[LOCKED]` conflict annotations in `src/cli/commands/check.ts`, and zip-slip filtering for GitHub tar extraction in `src/config/github-remote.ts`.
-- Intentionally not ported: local extend `.agentsbridge/` validation. Current `master` supports native-format and skill-pack local extends through `src/canonical/extend-load.ts`, so resolver-level rejection would break legitimate local extends before the importer/loader can normalize them.
+- Intentionally not ported: local extend `.agentsmesh/` validation. Current `master` supports native-format and skill-pack local extends through `src/canonical/extend-load.ts`, so resolver-level rejection would break legitimate local extends before the importer/loader can normalize them.
 - Targeted tests added:
   - `tests/unit/config/lock.test.ts`
   - `tests/unit/cli/commands/generate.test.ts`
@@ -77,7 +77,7 @@
 - [x] Step 8: Integrate packs into `extends.ts` — 19 tests ✓
 - [x] Step 9: Modify install command for pack default — 7 tests ✓
 - [x] Step 10: Lock file integration — 22 tests ✓
-- [x] Step 11: Watch mode awareness — already handled (packs/ is subdirectory of watched .agentsbridge/)
+- [x] Step 11: Watch mode awareness — already handled (packs/ is subdirectory of watched .agentsmesh/)
 - [x] Step 13: Final verification — 1447 unit tests ✓, build ✓, 5 e2e failures all pre-existing on main ✓
 
 ## Install ADR alignment check
@@ -115,7 +115,7 @@
 # Native install subtree parity
 
 - [x] Add failing tests for importer-equivalent native install scoping across supported target folder/file families
-- [x] Add failing tests proving local native installs do not write `.agentsbridge/` into the source repo
+- [x] Add failing tests proving local native installs do not write `.agentsmesh/` into the source repo
 - [x] Refactor install discovery to stage native imports and derive subtree selection from importer results
 - [x] Expand install coverage with per-target native scope matrices plus native-target integration coverage
 - [x] Run targeted verification, `pnpm build`, install e2e, `pnpm lint`, and `pnpm test`
@@ -131,7 +131,7 @@
   - real pack install from a native subtree still materializes canonical pack content and regenerates target output: covered by `tests/integration/install-native-target.integration.test.ts` and `tests/e2e/install.e2e.test.ts`
 - Edge cases covered:
   - explicit target and auto-detect paths both use staged native imports
-  - scoped installs still work when the source repo already has `.agentsbridge/`
+  - scoped installs still work when the source repo already has `.agentsmesh/`
   - settings-only native files (`settings.json`, hooks, mcp, ignore, policies) install without array resources
   - embedded skill directories keep supporting files
   - scoped `AGENTS.md`/projected-command/projected-agent native files resolve to the correct canonical feature
@@ -157,7 +157,7 @@
 - Acceptance criteria:
   - explicit `install --as agents|commands|rules|skills` now installs supported collections from arbitrary folders/files instead of depending on native path heuristics: covered by `tests/integration/install-manual-as.integration.test.ts` and `tests/e2e/install.e2e.test.ts`
   - native-path auto-detection still remains the default path when `--as` is omitted: covered by the existing native subtree suites plus the unchanged install integration flow
-  - successful pack installs now persist reinstall provenance in `.agentsbridge/installs.yaml`: covered by `tests/unit/install/run-install-pack.test.ts` and `tests/integration/install-manual-as.integration.test.ts`
+  - successful pack installs now persist reinstall provenance in `.agentsmesh/installs.yaml`: covered by `tests/unit/install/run-install-pack.test.ts` and `tests/integration/install-manual-as.integration.test.ts`
   - `install --sync` now restores missing materialized packs from the persisted manifest without requiring a source argument: covered by `tests/unit/install/run-install.test.ts`, `tests/integration/install-sync.integration.test.ts`, and `tests/e2e/install.e2e.test.ts`
 - Edge cases covered:
   - single markdown file and folder installs for manual agent/command/rule collections
@@ -248,8 +248,8 @@
 
 - [x] Keep a single primary Gemini instructions file (`GEMINI.md`) and stop emitting `.gemini/GEMINI.md` mirror
 - [ ] Update gemini-cli generator/importer to preserve command namespaces under `.gemini/commands/**` (nested path -> `:` in canonical command name)
-- [ ] Implement gemini-cli permissions -> policies projection (`.gemini/policies/*.toml`) from `.agentsbridge/permissions.yaml`
-- [ ] Implement gemini-cli policies import back into `.agentsbridge/permissions.yaml`
+- [ ] Implement gemini-cli permissions -> policies projection (`.gemini/policies/*.toml`) from `.agentsmesh/permissions.yaml`
+- [ ] Implement gemini-cli policies import back into `.agentsmesh/permissions.yaml`
 - [ ] Update gemini-cli `.gemini/settings.json` generation to set `context.fileName` to include `AGENTS.md`
 - [ ] Update `tests/e2e/helpers/target-contracts.ts` for gemini-cli exact generated/imported file sets
 - [ ] Add/adjust unit tests for gemini-cli generator/importer (namespaced commands + policies roundtrip)
@@ -304,8 +304,8 @@
   - `pnpm vitest run tests/integration/install-manual-as.markdown.integration.test.ts tests/integration/install-manual-as.markdown-merge.integration.test.ts`
   - `pnpm test`
 - Result: all checks passed; final full suite green at 144 files / 1585 tests.
-- [x] Add failing tests for Junie commands projection/import (`.junie/commands/**` <-> `.agentsbridge/commands/**`)
-- [x] Add failing tests for Junie agents projection/import (`.junie/agents/**` <-> `.agentsbridge/agents/**`)
+- [x] Add failing tests for Junie commands projection/import (`.junie/commands/**` <-> `.agentsmesh/commands/**`)
+- [x] Add failing tests for Junie agents projection/import (`.junie/agents/**` <-> `.agentsmesh/agents/**`)
 - [x] Add/extend strict target contract assertions for Junie generated/imported file sets
 - [x] Implement Junie generator support for compatibility mirrors, commands, and agents
 - [x] Implement Junie importer support for commands and agents (plus mirrors where applicable)
@@ -331,7 +331,7 @@
 
 ## Review (Windsurf alignment)
 
-- Behavior: Windsurf now generates `.windsurf/hooks.json` and `.windsurf/mcp_config.example.json`, and imports hooks/MCP back into `.agentsbridge/hooks.yaml` and `.agentsbridge/mcp.json`.
+- Behavior: Windsurf now generates `.windsurf/hooks.json` and `.windsurf/mcp_config.example.json`, and imports hooks/MCP back into `.agentsmesh/hooks.yaml` and `.agentsmesh/mcp.json`.
 - Contract: Updated strict target contracts to include Windsurf hooks + MCP artifacts and canonical imported outputs.
 - Coverage: Added unit tests (generator/importer), e2e capability assertions, fixture coverage, research suite checks, and roundtrip exact-path assertions.
 - Verification: `pnpm vitest tests/unit/targets/windsurf/generator.test.ts tests/unit/targets/windsurf/importer.test.ts tests/agents-folder-structure-research.test.ts tests/import-generate-roundtrip.test.ts`; `pnpm build`; `pnpm vitest run --config vitest.e2e.config.ts tests/e2e/generate-capabilities.e2e.test.ts tests/e2e/import-capabilities.e2e.test.ts tests/e2e/target-contract-matrix.e2e.test.ts`; `pnpm vitest tests/unit/core/matrix.test.ts tests/unit/core/linter.test.ts`.
@@ -364,17 +364,17 @@
   - `pnpm typecheck`
 - Findings:
   - `runLint()` skips command/MCP/permissions/hooks diagnostics whenever `rules` is disabled because the whole per-target loop is gated on `hasRules`; this is a real validation gap in `src/core/linter.ts`.
-  - `loadConfigFromDir()` intentionally drops invalid `agentsbridge.local.yaml` merges silently and keeps the project config, which avoids hard failures but hides operator mistakes in team environments.
+  - `loadConfigFromDir()` intentionally drops invalid `agentsmesh.local.yaml` merges silently and keeps the project config, which avoids hard failures but hides operator mistakes in team environments.
   - Target metadata is split across side-effect registration, dedicated import maps, dedicated lint maps, schema target enums, and matrix data, so adding or changing a target requires synchronized edits in multiple places.
   - The package is currently shipped as a CLI artifact only (`dist/cli.js` as `main`/`exports`), despite the project positioning itself as a library; this limits embedding and makes the CLI the only stable integration seam.
-  - Import writes canonical files directly during traversal without a staging/commit phase, so a partially failing import can leave `.agentsbridge/` in a mixed state.
+  - Import writes canonical files directly during traversal without a staging/commit phase, so a partially failing import can leave `.agentsmesh/` in a mixed state.
 - Maintainability notes:
   - Several files exceed the project’s own 200-line target, especially target-specific importer/generator modules and install orchestration (`windsurf/importer.ts`, `junie/importer.ts`, `gemini-cli/generator.ts`, `codex-cli/generator.ts`, `run-install.ts`).
 
 # Architect review follow-up implementation
 
 - [x] Add failing tests for `lint` when `rules` is disabled but other features are enabled
-- [x] Add failing tests for visible handling of invalid `agentsbridge.local.yaml`
+- [x] Add failing tests for visible handling of invalid `agentsmesh.local.yaml`
 - [x] Implement the `lint` feature-gating fix
 - [x] Implement warning/visibility for invalid local config fallback
 - [x] Consolidate target metadata into a shared source of truth and update schema/import/matrix/lint wiring
@@ -385,7 +385,7 @@
 
 - Behavior:
   - `runLint()` now applies rule checks only when `rules` is enabled, while command/MCP/permission/hook linting runs independently by feature flag.
-  - Invalid `agentsbridge.local.yaml` merges now emit a warning before falling back to the project config.
+  - Invalid `agentsmesh.local.yaml` merges now emit a warning before falling back to the project config.
   - Target ids, import empty-state messages, rule linter wiring, and compatibility capabilities are centralized in `src/targets/target-catalog.ts`, with schema/import/matrix/lint reading from that shared catalog.
 - Targeted sequential verification:
   - `pnpm vitest run tests/unit/core/linter.test.ts`
@@ -402,7 +402,7 @@
   - schema, import, and matrix target metadata read from one shared catalog: covered by `tests/unit/config/schema.test.ts`, `tests/unit/cli/commands/import.test.ts`, and `tests/unit/core/matrix.test.ts`
 - Edge cases covered:
   - simultaneous command/MCP/permission/hook warnings with zero rules enabled
-  - invalid local target list in `agentsbridge.local.yaml` falls back cleanly while warning
+  - invalid local target list in `agentsmesh.local.yaml` falls back cleanly while warning
   - unknown import target validation still reports the supported target set from the shared catalog
   - matrix default target ordering remains aligned with schema defaults
 - Broader verification:
@@ -489,7 +489,7 @@
 
 # Live install sync replay regression
 
-- [x] Reproduce `install --sync` against the current `.agentsbridge/installs.yaml` and identify the failing persisted entry shape
+- [x] Reproduce `install --sync` against the current `.agentsmesh/installs.yaml` and identify the failing persisted entry shape
 - [x] Add a regression test for the exact manifest shape before changing replay behavior
 - [x] Implement the minimal replay/discovery fix so the current manifest syncs successfully
 - [x] Run sequential targeted verification for the replay fix, then broader build/type/test gates

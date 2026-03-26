@@ -21,14 +21,14 @@ const GLOBAL_FLAGS: HelpFlag[] = [
 const COMMANDS: HelpCommand[] = [
   {
     name: 'init',
-    usage: 'agentsbridge init [flags]',
+    usage: 'agentsmesh init [flags]',
     description:
-      'Create agentsbridge.yaml, agentsbridge.local.yaml, and canonical .agentsbridge scaffold',
+      'Create agentsmesh.yaml, agentsmesh.local.yaml, and canonical .agentsmesh scaffold',
     flags: [{ name: '--yes', description: 'Auto-import detected tool configs without prompting' }],
   },
   {
     name: 'generate',
-    usage: 'agentsbridge generate [flags]',
+    usage: 'agentsmesh generate [flags]',
     description: 'Generate target files from canonical sources',
     flags: [
       { name: '--targets <csv>', description: 'Limit generation to target IDs (comma-separated)' },
@@ -41,13 +41,13 @@ const COMMANDS: HelpCommand[] = [
   },
   {
     name: 'import',
-    usage: 'agentsbridge import --from <target>',
-    description: 'Import existing tool config into canonical .agentsbridge files',
+    usage: 'agentsmesh import --from <target>',
+    description: 'Import existing tool config into canonical .agentsmesh files',
     flags: [{ name: '--from <target>', description: 'Source tool ID to import from (required)' }],
   },
   {
     name: 'install',
-    usage: 'agentsbridge install <source> [flags]',
+    usage: 'agentsmesh install <source> [flags]',
     description: 'Install canonical resources from local/remote sources',
     flags: [
       {
@@ -56,7 +56,7 @@ const COMMANDS: HelpCommand[] = [
       },
       {
         name: '--sync',
-        description: 'Reinstall missing packs recorded in .agentsbridge/installs.yaml',
+        description: 'Reinstall missing packs recorded in .agentsmesh/installs.yaml',
       },
       {
         name: '--path <dir>',
@@ -87,13 +87,13 @@ const COMMANDS: HelpCommand[] = [
   },
   {
     name: 'diff',
-    usage: 'agentsbridge diff [flags]',
+    usage: 'agentsmesh diff [flags]',
     description: 'Show patch-style output for what generate would change',
     flags: [{ name: '--targets <csv>', description: 'Limit diff to target IDs (comma-separated)' }],
   },
   {
     name: 'lint',
-    usage: 'agentsbridge lint [flags]',
+    usage: 'agentsmesh lint [flags]',
     description: 'Validate canonical files against target constraints',
     flags: [
       { name: '--targets <csv>', description: 'Limit linting to target IDs (comma-separated)' },
@@ -101,7 +101,7 @@ const COMMANDS: HelpCommand[] = [
   },
   {
     name: 'watch',
-    usage: 'agentsbridge watch [flags]',
+    usage: 'agentsmesh watch [flags]',
     description: 'Watch canonical files and regenerate on change',
     flags: [
       {
@@ -112,19 +112,19 @@ const COMMANDS: HelpCommand[] = [
   },
   {
     name: 'check',
-    usage: 'agentsbridge check',
-    description: 'Verify canonical files still match .agentsbridge/.lock',
+    usage: 'agentsmesh check',
+    description: 'Verify canonical files still match .agentsmesh/.lock',
     flags: [],
   },
   {
     name: 'merge',
-    usage: 'agentsbridge merge',
-    description: 'Resolve .agentsbridge/.lock merge conflicts from current canonical state',
+    usage: 'agentsmesh merge',
+    description: 'Resolve .agentsmesh/.lock merge conflicts from current canonical state',
     flags: [],
   },
   {
     name: 'matrix',
-    usage: 'agentsbridge matrix [flags]',
+    usage: 'agentsmesh matrix [flags]',
     description: 'Print compatibility matrix for enabled features and targets',
     flags: [
       { name: '--targets <csv>', description: 'Limit matrix columns to target IDs' },
@@ -146,7 +146,7 @@ export function printHelp(): void {
     return `- ${command.name.padEnd(8)} ${command.description}\n  Usage: ${command.usage}\n${formatFlags(command.flags)}`;
   }).join('\n\n');
 
-  logger.info(`agentsbridge <command> [flags]
+  logger.info(`agentsmesh <command> [flags]
 
 Global flags:
 ${formatFlags(GLOBAL_FLAGS)}
@@ -154,7 +154,7 @@ ${formatFlags(GLOBAL_FLAGS)}
 Commands:
 ${commandLines}
 
-Tip: run "agentsbridge <command> --help" for this same command reference.`);
+Tip: run "agentsmesh <command> --help" for this same command reference.`);
 }
 
 /**

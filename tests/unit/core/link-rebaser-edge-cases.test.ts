@@ -8,7 +8,7 @@ function noopInput(content: string) {
     input: {
       content,
       projectRoot: '/proj',
-      sourceFile: '/proj/.agentsbridge/rules/_root.md',
+      sourceFile: '/proj/.agentsmesh/rules/_root.md',
       destinationFile: '/proj/CLAUDE.md',
       translatePath: (abs: string) => {
         translated.push(abs);
@@ -29,7 +29,7 @@ function rewriteInput(content: string, existingPaths: string[]) {
   return {
     content,
     projectRoot: '/proj',
-    sourceFile: '/proj/.agentsbridge/rules/_root.md',
+    sourceFile: '/proj/.agentsmesh/rules/_root.md',
     destinationFile: '/proj/CLAUDE.md',
     translatePath: (abs: string) => abs,
     pathExists: (abs: string) => pathSet.has(abs),
@@ -123,7 +123,7 @@ describe('rewriteFileLinks edge cases', () => {
       const result = rewriteFileLinks({
         content: 'Path: C:\\proj\\src\\handler.ts',
         projectRoot: 'C:\\proj',
-        sourceFile: 'C:\\proj\\.agentsbridge\\rules\\_root.md',
+        sourceFile: 'C:\\proj\\.agentsmesh\\rules\\_root.md',
         destinationFile: 'C:\\proj\\CLAUDE.md',
         translatePath: (abs: string) => abs,
         pathExists: (abs: string) => abs === 'C:\\proj\\src\\handler.ts',
@@ -299,10 +299,10 @@ describe('rewriteFileLinks edge cases', () => {
       const result = rewriteFileLinks({
         content: 'See template.ts for the implementation.',
         projectRoot: '/proj',
-        sourceFile: '/proj/.agentsbridge/skills/api-gen/SKILL.md',
+        sourceFile: '/proj/.agentsmesh/skills/api-gen/SKILL.md',
         destinationFile: '/proj/.claude/skills/api-gen/SKILL.md',
         translatePath: (abs: string) =>
-          abs === '/proj/.agentsbridge/skills/api-gen/template.ts'
+          abs === '/proj/.agentsmesh/skills/api-gen/template.ts'
             ? '/proj/.claude/skills/api-gen/template.ts'
             : abs,
         pathExists: (abs: string) => abs === '/proj/.claude/skills/api-gen/template.ts',

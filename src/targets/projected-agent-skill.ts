@@ -1,7 +1,7 @@
 import type { CanonicalAgent, Hooks } from '../core/types.js';
 import { serializeFrontmatter } from '../utils/markdown.js';
 
-export const PROJECTED_AGENT_SKILL_PREFIX = 'ab-agent-';
+export const PROJECTED_AGENT_SKILL_PREFIX = 'am-agent-';
 export const LEGACY_PROJECTED_AGENT_SKILL_PREFIX = 'ab-agent-';
 
 interface ParsedProjectedAgent {
@@ -55,18 +55,18 @@ export function serializeProjectedAgentSkill(agent: CanonicalAgent): string {
   const frontmatter: Record<string, unknown> = {
     name: projectedAgentSkillDirName(agent.name),
     description: agent.description || undefined,
-    'x-agentsbridge-kind': 'agent',
-    'x-agentsbridge-name': agent.name,
-    'x-agentsbridge-tools': agent.tools.length > 0 ? agent.tools : undefined,
-    'x-agentsbridge-disallowed-tools':
+    'x-agentsmesh-kind': 'agent',
+    'x-agentsmesh-name': agent.name,
+    'x-agentsmesh-tools': agent.tools.length > 0 ? agent.tools : undefined,
+    'x-agentsmesh-disallowed-tools':
       agent.disallowedTools.length > 0 ? agent.disallowedTools : undefined,
-    'x-agentsbridge-model': agent.model || undefined,
-    'x-agentsbridge-permission-mode': agent.permissionMode || undefined,
-    'x-agentsbridge-max-turns': agent.maxTurns > 0 ? agent.maxTurns : undefined,
-    'x-agentsbridge-mcp-servers': agent.mcpServers.length > 0 ? agent.mcpServers : undefined,
-    'x-agentsbridge-hooks': Object.keys(agent.hooks).length > 0 ? agent.hooks : undefined,
-    'x-agentsbridge-skills': agent.skills.length > 0 ? agent.skills : undefined,
-    'x-agentsbridge-memory': agent.memory || undefined,
+    'x-agentsmesh-model': agent.model || undefined,
+    'x-agentsmesh-permission-mode': agent.permissionMode || undefined,
+    'x-agentsmesh-max-turns': agent.maxTurns > 0 ? agent.maxTurns : undefined,
+    'x-agentsmesh-mcp-servers': agent.mcpServers.length > 0 ? agent.mcpServers : undefined,
+    'x-agentsmesh-hooks': Object.keys(agent.hooks).length > 0 ? agent.hooks : undefined,
+    'x-agentsmesh-skills': agent.skills.length > 0 ? agent.skills : undefined,
+    'x-agentsmesh-memory': agent.memory || undefined,
   };
   Object.keys(frontmatter).forEach((key) => {
     if (frontmatter[key] === undefined) delete frontmatter[key];
@@ -78,12 +78,10 @@ export function parseProjectedAgentSkillFrontmatter(
   frontmatter: Record<string, unknown>,
   dirName: string,
 ): ParsedProjectedAgent | null {
-  if (frontmatter['x-agentsbridge-kind'] !== 'agent') return null;
+  if (frontmatter['x-agentsmesh-kind'] !== 'agent') return null;
 
   const metadataName =
-    typeof frontmatter['x-agentsbridge-name'] === 'string'
-      ? frontmatter['x-agentsbridge-name']
-      : '';
+    typeof frontmatter['x-agentsmesh-name'] === 'string' ? frontmatter['x-agentsmesh-name'] : '';
   const derivedName = dirName.startsWith(PROJECTED_AGENT_SKILL_PREFIX)
     ? dirName.slice(PROJECTED_AGENT_SKILL_PREFIX.length)
     : dirName.startsWith(LEGACY_PROJECTED_AGENT_SKILL_PREFIX)
@@ -95,26 +93,26 @@ export function parseProjectedAgentSkillFrontmatter(
   return {
     name,
     description: typeof frontmatter.description === 'string' ? frontmatter.description : '',
-    tools: toStringArray(frontmatter['x-agentsbridge-tools']),
-    disallowedTools: toStringArray(frontmatter['x-agentsbridge-disallowed-tools']),
+    tools: toStringArray(frontmatter['x-agentsmesh-tools']),
+    disallowedTools: toStringArray(frontmatter['x-agentsmesh-disallowed-tools']),
     model:
-      typeof frontmatter['x-agentsbridge-model'] === 'string'
-        ? frontmatter['x-agentsbridge-model']
+      typeof frontmatter['x-agentsmesh-model'] === 'string'
+        ? frontmatter['x-agentsmesh-model']
         : '',
     permissionMode:
-      typeof frontmatter['x-agentsbridge-permission-mode'] === 'string'
-        ? frontmatter['x-agentsbridge-permission-mode']
+      typeof frontmatter['x-agentsmesh-permission-mode'] === 'string'
+        ? frontmatter['x-agentsmesh-permission-mode']
         : '',
     maxTurns:
-      typeof frontmatter['x-agentsbridge-max-turns'] === 'number'
-        ? frontmatter['x-agentsbridge-max-turns']
-        : Number(frontmatter['x-agentsbridge-max-turns'] ?? 0),
-    mcpServers: toStringArray(frontmatter['x-agentsbridge-mcp-servers']),
-    hooks: toHooks(frontmatter['x-agentsbridge-hooks']),
-    skills: toStringArray(frontmatter['x-agentsbridge-skills']),
+      typeof frontmatter['x-agentsmesh-max-turns'] === 'number'
+        ? frontmatter['x-agentsmesh-max-turns']
+        : Number(frontmatter['x-agentsmesh-max-turns'] ?? 0),
+    mcpServers: toStringArray(frontmatter['x-agentsmesh-mcp-servers']),
+    hooks: toHooks(frontmatter['x-agentsmesh-hooks']),
+    skills: toStringArray(frontmatter['x-agentsmesh-skills']),
     memory:
-      typeof frontmatter['x-agentsbridge-memory'] === 'string'
-        ? frontmatter['x-agentsbridge-memory']
+      typeof frontmatter['x-agentsmesh-memory'] === 'string'
+        ? frontmatter['x-agentsmesh-memory']
         : '',
   };
 }

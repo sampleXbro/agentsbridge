@@ -4,11 +4,11 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { parseMcp } from '../../../src/canonical/mcp.js';
 
-const TEST_DIR = join(tmpdir(), 'agentsbridge-mcp-test');
-const MCP_PATH = join(TEST_DIR, '.agentsbridge', 'mcp.json');
+const TEST_DIR = join(tmpdir(), 'agentsmesh-mcp-test');
+const MCP_PATH = join(TEST_DIR, '.agentsmesh', 'mcp.json');
 
 beforeEach(() => {
-  mkdirSync(join(TEST_DIR, '.agentsbridge'), { recursive: true });
+  mkdirSync(join(TEST_DIR, '.agentsmesh'), { recursive: true });
 });
 
 afterEach(() => {

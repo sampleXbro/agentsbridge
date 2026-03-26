@@ -8,10 +8,10 @@ import { readFileSafe, readDirRecursive, writeFileAtomic, mkdirp } from '../../u
 import { parseFrontmatter, serializeFrontmatter } from '../../utils/markdown.js';
 import { COPILOT_AGENTS_DIR, COPILOT_SKILLS_DIR } from './constants.js';
 
-const AB_AGENTS = '.agentsbridge/agents';
+const AB_AGENTS = '.agentsmesh/agents';
 
 /**
- * Import .github/agents/*.agent.md into canonical .agentsbridge/agents/*.md.
+ * Import .github/agents/*.agent.md into canonical .agentsmesh/agents/*.md.
  * Strips .agent suffix; maps mcp-servers → mcpServers for canonical compatibility.
  */
 export async function importAgents(
@@ -79,7 +79,7 @@ export async function importSkills(
     const content = await readFileSafe(skillMdPath);
     if (!content) continue;
     const skillName = basename(dirname(skillMdPath));
-    const destSkillDir = join(projectRoot, '.agentsbridge', 'skills', skillName);
+    const destSkillDir = join(projectRoot, '.agentsmesh', 'skills', skillName);
     const allSkillFiles = await readDirRecursive(dirname(skillMdPath));
     for (const absPath of allSkillFiles) {
       const fileContent = await readFileSafe(absPath);
@@ -91,7 +91,7 @@ export async function importSkills(
       results.push({
         fromTool: 'copilot',
         fromPath: absPath,
-        toPath: `.agentsbridge/skills/${skillName}/${relPath}`,
+        toPath: `.agentsmesh/skills/${skillName}/${relPath}`,
         feature: 'skills',
       });
     }

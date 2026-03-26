@@ -12,7 +12,7 @@ const VALID_FEATURES = [
   'permissions',
 ] as const;
 
-/** Valid `extends[].target` / `agentsbridge install --target` identifiers */
+/** Valid `extends[].target` / `agentsmesh install --target` identifiers */
 export const targetSchema = z.enum(TARGET_IDS);
 export const featureSchema = z.enum(VALID_FEATURES);
 
@@ -34,7 +34,7 @@ const extendSourceSchema = z.object({
   version: z.string().optional(),
   target: targetSchema.optional(),
   features: z.array(featureSchema),
-  /** Repo-relative POSIX path for discovery (skill packs, nested .agentsbridge). */
+  /** Repo-relative POSIX path for discovery (skill packs, nested .agentsmesh). */
   path: z.string().optional(),
   pick: extendPickSchema.optional(),
 });
@@ -65,7 +65,7 @@ const conversionsSchema = z
   .strict()
   .optional();
 
-/** Zod schema for agentsbridge.yaml config validation */
+/** Zod schema for agentsmesh.yaml config validation */
 export const configSchema = z.object({
   version: z.literal(1),
   targets: z.array(targetSchema).default([...TARGET_IDS]),

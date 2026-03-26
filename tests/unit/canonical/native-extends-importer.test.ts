@@ -6,7 +6,7 @@ const mockClaudeImport = vi.hoisted(() =>
     {
       fromTool: 'claude-code',
       fromPath: 'CLAUDE.md',
-      toPath: '.agentsbridge/rules/_root.md',
+      toPath: '.agentsmesh/rules/_root.md',
       feature: 'rules',
     },
   ]),

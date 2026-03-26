@@ -1,5 +1,5 @@
 /**
- * Discovery phase for agentsbridge install (native import + slice load + narrow).
+ * Discovery phase for agentsmesh install (native import + slice load + narrow).
  */
 
 import { discoverFromContentRoot, featuresFromCanonical } from './discover-resources.js';

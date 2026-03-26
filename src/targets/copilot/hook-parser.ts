@@ -8,7 +8,7 @@ import { readFileSafe, readDirRecursive, writeFileAtomic, mkdirp } from '../../u
 import { stringify as yamlStringify } from 'yaml';
 import { COPILOT_HOOKS_DIR } from './constants.js';
 
-const AB_HOOKS = '.agentsbridge/hooks.yaml';
+const AB_HOOKS = '.agentsmesh/hooks.yaml';
 
 export function mapCopilotHookEvent(event: string): string | null {
   switch (event) {
@@ -32,7 +32,7 @@ export function extractMatcher(comment: unknown): string {
 }
 
 export function extractWrapperCommand(content: string): string {
-  const metadataMatch = content.match(/^# agentsbridge-command:\s*(.+)$/m);
+  const metadataMatch = content.match(/^# agentsmesh-command:\s*(.+)$/m);
   if (metadataMatch?.[1]) return metadataMatch[1].trim();
   return content
     .replace(/^#!.*\n/, '')

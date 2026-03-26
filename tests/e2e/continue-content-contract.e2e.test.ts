@@ -34,7 +34,7 @@ features:
 
     dirTreeExactly(join(projectDir, '.continue'), [
       'mcpServers/',
-      'mcpServers/agentsbridge.json',
+      'mcpServers/agentsmesh.json',
       'prompts/',
       'prompts/review.md',
       'rules/',
@@ -61,9 +61,9 @@ features:
 
     const prompt = read(projectDir, '.continue/prompts/review.md');
     expect(prompt).toContain('description: Code review');
-    expect(prompt).toContain('x-agentsbridge-kind: command');
-    expect(prompt).toContain('x-agentsbridge-name: review');
-    expect(prompt).toContain('x-agentsbridge-allowed-tools:');
+    expect(prompt).toContain('x-agentsmesh-kind: command');
+    expect(prompt).toContain('x-agentsmesh-name: review');
+    expect(prompt).toContain('x-agentsmesh-allowed-tools:');
     expect(prompt).toContain('Bash(git diff)');
     expect(prompt).toContain('Review current changes for quality.');
     expect(prompt).not.toContain('\nname:');
@@ -77,16 +77,13 @@ features:
       join(projectDir, '.continue/skills/api-generator/references/route-checklist.md'),
       'response schema',
     );
-    fileNotContains(
-      join(projectDir, '.continue/skills/api-generator/template.ts'),
-      '.agentsbridge/',
-    );
+    fileNotContains(join(projectDir, '.continue/skills/api-generator/template.ts'), '.agentsmesh/');
     fileContains(
       join(projectDir, '.continue/skills/api-generator/template.ts'),
       'createRouteSchema',
     );
 
-    const mcp = readJson(join(projectDir, '.continue/mcpServers/agentsbridge.json'));
+    const mcp = readJson(join(projectDir, '.continue/mcpServers/agentsmesh.json'));
     expect(Array.isArray(mcp.mcpServers)).toBe(false);
     const servers = mcp.mcpServers as Record<string, unknown>;
     expect(Object.keys(servers)).toContain('context7');

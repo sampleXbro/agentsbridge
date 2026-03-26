@@ -1,5 +1,5 @@
 /**
- * Find and load agentsbridge config file.
+ * Find and load agentsmesh config file.
  */
 
 import { parse as parseYaml } from 'yaml';
@@ -8,11 +8,11 @@ import { readFileSafe, exists } from '../utils/fs.js';
 import { logger } from '../utils/logger.js';
 import { configSchema, type ValidatedConfig } from './schema.js';
 
-const CONFIG_FILENAME = 'agentsbridge.yaml';
-const LOCAL_CONFIG_FILENAME = 'agentsbridge.local.yaml';
+const CONFIG_FILENAME = 'agentsmesh.yaml';
+const LOCAL_CONFIG_FILENAME = 'agentsmesh.local.yaml';
 
 /**
- * Search upward from startDir for agentsbridge.yaml.
+ * Search upward from startDir for agentsmesh.yaml.
  * @param startDir - Directory to start searching from
  * @returns Absolute path to config file, or null if not found
  */
@@ -34,7 +34,7 @@ export async function findConfigPath(startDir: string): Promise<string | null> {
 
 /**
  * Load and validate config from a YAML file.
- * @param configPath - Absolute path to agentsbridge.yaml
+ * @param configPath - Absolute path to agentsmesh.yaml
  * @returns Validated config
  * @throws Error if file not found or validation fails
  */
@@ -42,7 +42,7 @@ export async function loadConfig(configPath: string): Promise<ValidatedConfig> {
   const content = await readFileSafe(configPath);
   if (content === null) {
     throw new Error(
-      `Config file not found: ${configPath}. Create agentsbridge.yaml in project root.`,
+      `Config file not found: ${configPath}. Create agentsmesh.yaml in project root.`,
     );
   }
 
@@ -125,10 +125,10 @@ function mergeLocalConfig(
 }
 
 /**
- * Find config from dir, load it, merge agentsbridge.local.yaml if present.
+ * Find config from dir, load it, merge agentsmesh.local.yaml if present.
  * Merge strategy (PRD 3.2): targets/features replace; overrides deep merge; extends append.
  * @param startDir - Directory to start searching from
- * @returns Config and directory containing agentsbridge.yaml
+ * @returns Config and directory containing agentsmesh.yaml
  * @throws Error if no config found
  */
 export async function loadConfigFromDir(
@@ -137,7 +137,7 @@ export async function loadConfigFromDir(
   const configPath = await findConfigPath(startDir);
   if (configPath === null) {
     throw new Error(
-      `No agentsbridge.yaml found from ${startDir}. Run 'agentsbridge init' to create one.`,
+      `No agentsmesh.yaml found from ${startDir}. Run 'agentsmesh init' to create one.`,
     );
   }
 
@@ -156,7 +156,7 @@ export async function loadConfigFromDir(
       } else {
         const issues = parsed.error.issues.map((i) => i.message).join('; ');
         logger.warn(
-          `Ignoring invalid agentsbridge.local.yaml at ${localPath}: ${issues}. Using project config instead.`,
+          `Ignoring invalid agentsmesh.local.yaml at ${localPath}: ${issues}. Using project config instead.`,
         );
       }
     }

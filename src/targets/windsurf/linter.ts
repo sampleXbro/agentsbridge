@@ -49,7 +49,7 @@ export function lintRules(
   if (unsupported.length > 0) {
     diags.push({
       level: 'warning',
-      file: '.agentsbridge',
+      file: '.agentsmesh',
       target: TARGET,
       message: `Windsurf cannot project these features yet: ${unsupported.join(', ')}.`,
     });

@@ -1,5 +1,5 @@
 /**
- * agentsbridge install orchestration.
+ * agentsmesh install orchestration.
  */
 
 import { join } from 'node:path';
@@ -82,12 +82,12 @@ export async function runInstall(
 
   if (!sourceArg) {
     throw new Error(
-      'Missing source. Usage: agentsbridge install <source> [--path ...] [--target ...]',
+      'Missing source. Usage: agentsmesh install <source> [--path ...] [--target ...]',
     );
   }
   const tty = process.stdin.isTTY;
   if (!tty && !force && !dryRun) {
-    throw new Error('Non-interactive terminal: use --force or --dry-run for agentsbridge install.');
+    throw new Error('Non-interactive terminal: use --force or --dry-run for agentsmesh install.');
   }
   const { config, configDir } = await loadConfigFromDir(projectRoot);
   const parsed = await parseInstallSource(sourceArg, configDir, explicitPath);
@@ -190,7 +190,7 @@ export async function runInstall(
       if (dryRun) return;
     } else {
       if (dryRun) {
-        logger.info(`[dry-run] Would install pack "${entryName}" to .agentsbridge/packs/.`);
+        logger.info(`[dry-run] Would install pack "${entryName}" to .agentsmesh/packs/.`);
         return;
       }
       await installAsPack({
@@ -211,7 +211,7 @@ export async function runInstall(
     }
     const genCode = await runGenerate({}, configDir);
     if (genCode !== 0) {
-      logger.warn('Generate failed after install. Fix the issue and run agentsbridge generate.');
+      logger.warn('Generate failed after install. Fix the issue and run agentsmesh generate.');
     }
   } finally {
     if (prep.cleanup) {

@@ -13,7 +13,7 @@ export function addSkillDirectoryMappings(
   let fromDir = posix.dirname(canonicalPath);
   let toDir = posix.dirname(targetPath);
 
-  while (fromDir !== '.agentsbridge/skills' && fromDir !== '.') {
+  while (fromDir !== '.agentsmesh/skills' && fromDir !== '.') {
     addDirectoryMapping(refs, fromDir, toDir);
     fromDir = posix.dirname(fromDir);
     toDir = posix.dirname(toDir);

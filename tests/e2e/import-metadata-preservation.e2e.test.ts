@@ -48,7 +48,7 @@ describe('import metadata preservation', () => {
       expect(reviewCommand?.allowedTools).toEqual(['Read', 'Grep', 'Bash(git diff)']);
       expect(reviewCommand?.body).toBe('Review current changes for quality.');
 
-      const rulesDir = join(dir, '.agentsbridge', 'rules');
+      const rulesDir = join(dir, '.agentsmesh', 'rules');
       const importedRuleFiles = readdirSync(rulesDir)
         .filter((name) => name.endsWith('.md'))
         .sort();

@@ -1,5 +1,5 @@
 /**
- * File system helpers for agentsbridge.
+ * File system helpers for agentsmesh.
  */
 
 import {
@@ -137,9 +137,9 @@ export async function copyDir(src: string, dest: string): Promise<void> {
 }
 
 /**
- * Ensure .agentsbridgecache symlink exists pointing to the agentsbridge cache dir.
+ * Ensure .agentsmeshcache symlink exists pointing to the agentsmesh cache dir.
  * Creates or updates the symlink so devs can inspect cached remote extends.
- * @param cacheDir - Absolute path to the cache (e.g. ~/.agentsbridge/cache)
+ * @param cacheDir - Absolute path to the cache (e.g. ~/.agentsmesh/cache)
  * @param linkPath - Absolute path where the symlink should live
  */
 export async function ensureCacheSymlink(cacheDir: string, linkPath: string): Promise<void> {

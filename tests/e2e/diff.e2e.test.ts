@@ -1,5 +1,5 @@
 /**
- * E2E tests for agentsbridge diff.
+ * E2E tests for agentsmesh diff.
  */
 
 import { describe, it, expect, afterEach } from 'vitest';
@@ -35,7 +35,7 @@ describe('diff', () => {
   it('new rule added → shows new file in diff', async () => {
     dir = createTestProject('canonical-full');
     await runCli('generate', dir);
-    const rulesDir = join(dir, '.agentsbridge', 'rules');
+    const rulesDir = join(dir, '.agentsmesh', 'rules');
     writeFileSync(
       join(rulesDir, 'new-rule.md'),
       '---\ndescription: New rule\n---\n# New rule content\n',
@@ -49,7 +49,7 @@ describe('diff', () => {
     dir = createTestProject('canonical-full');
     await runCli('generate', dir);
     const { rmSync } = await import('node:fs');
-    rmSync(join(dir, '.agentsbridge', 'rules', 'typescript.md'));
+    rmSync(join(dir, '.agentsmesh', 'rules', 'typescript.md'));
     const r = await runCli('diff', dir);
     expect(r.exitCode).toBe(0);
     expect(r.stdout + r.stderr).toMatch(/unchanged|created|updated/);

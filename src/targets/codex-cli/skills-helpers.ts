@@ -15,9 +15,9 @@ import {
 import { removePathIfExists } from '../scoped-agents-import.js';
 import { CODEX_SKILLS_DIR, CODEX_SKILLS_FALLBACK_DIR } from './constants.js';
 
-const AB_COMMANDS = '.agentsbridge/commands';
-const AB_AGENTS = '.agentsbridge/agents';
-const AB_SKILLS = '.agentsbridge/skills';
+const AB_COMMANDS = '.agentsmesh/commands';
+const AB_AGENTS = '.agentsmesh/agents';
+const AB_SKILLS = '.agentsmesh/skills';
 
 export async function importSkills(
   projectRoot: string,

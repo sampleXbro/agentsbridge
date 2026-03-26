@@ -6,7 +6,7 @@ import { runLint } from '../../../src/core/linter.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';
 import type { ValidatedConfig } from '../../../src/config/schema.js';
 
-const TEST_DIR = join(tmpdir(), 'ab-mcp-linter-test');
+const TEST_DIR = join(tmpdir(), 'am-mcp-linter-test');
 
 function config(targets: ValidatedConfig['targets']): ValidatedConfig {
   return {
@@ -25,7 +25,7 @@ function canonicalWithMcp(
   return {
     rules: [
       {
-        source: join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+        source: join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
         root: true,
         targets: [],
         description: 'Root',
@@ -63,7 +63,7 @@ describe('MCP linting', () => {
 
     expect(diagnostics).toContainEqual({
       level: 'warning',
-      file: '.agentsbridge/mcp.json',
+      file: '.agentsmesh/mcp.json',
       target: 'cursor',
       message:
         'MCP server "remote" uses env vars or URL/header interpolation; Cursor handling may differ from canonical MCP.',
@@ -86,7 +86,7 @@ describe('MCP linting', () => {
 
     expect(diagnostics).toContainEqual({
       level: 'warning',
-      file: '.agentsbridge/mcp.json',
+      file: '.agentsmesh/mcp.json',
       target: 'codex-cli',
       message:
         'MCP server "remote" uses http transport; codex-cli only generates stdio MCP servers.',

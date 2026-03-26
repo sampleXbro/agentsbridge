@@ -11,16 +11,16 @@ import { runCli } from './helpers/run-cli.js';
 function makeProject(prefix: string): string {
   const base = join(tmpdir(), prefix);
   rmSync(base, { recursive: true, force: true });
-  mkdirSync(join(base, '.agentsbridge', 'rules'), { recursive: true });
+  mkdirSync(join(base, '.agentsmesh', 'rules'), { recursive: true });
   writeFileSync(
-    join(base, 'agentsbridge.yaml'),
+    join(base, 'agentsmesh.yaml'),
     `version: 1
 targets: [claude-code]
 features: [rules]
 `,
   );
   writeFileSync(
-    join(base, '.agentsbridge', 'rules', '_root.md'),
+    join(base, '.agentsmesh', 'rules', '_root.md'),
     `---
 root: true
 ---
@@ -44,7 +44,7 @@ describe('collaboration e2e', () => {
     const dir = makeProject('ab-e2e-collab-lock');
     created.push(dir);
     writeFileSync(
-      join(dir, 'agentsbridge.yaml'),
+      join(dir, 'agentsmesh.yaml'),
       `version: 1
 targets: [claude-code]
 features: [rules]
@@ -58,7 +58,7 @@ collaboration:
     expect(first.exitCode, first.stderr).toBe(0);
 
     writeFileSync(
-      join(dir, '.agentsbridge', 'rules', '_root.md'),
+      join(dir, '.agentsmesh', 'rules', '_root.md'),
       `---
 root: true
 ---
@@ -80,7 +80,7 @@ root: true
     const dir = makeProject('ab-e2e-collab-lock-empty');
     created.push(dir);
     writeFileSync(
-      join(dir, 'agentsbridge.yaml'),
+      join(dir, 'agentsmesh.yaml'),
       `version: 1
 targets: [claude-code]
 features: [rules]
@@ -92,7 +92,7 @@ collaboration:
 
     expect((await runCli('generate', dir)).exitCode).toBe(0);
     writeFileSync(
-      join(dir, '.agentsbridge', 'rules', '_root.md'),
+      join(dir, '.agentsmesh', 'rules', '_root.md'),
       '---\nroot: true\n---\n# Changed\n',
     );
     const second = await runCli('generate', dir);
@@ -105,7 +105,7 @@ collaboration:
       const dir = makeProject(`ab-e2e-collab-${strategy}`);
       created.push(dir);
       writeFileSync(
-        join(dir, 'agentsbridge.yaml'),
+        join(dir, 'agentsmesh.yaml'),
         `version: 1
 targets: [claude-code]
 features: [rules]
@@ -117,7 +117,7 @@ collaboration:
 
       expect((await runCli('generate', dir)).exitCode).toBe(0);
       writeFileSync(
-        join(dir, '.agentsbridge', 'rules', '_root.md'),
+        join(dir, '.agentsmesh', 'rules', '_root.md'),
         '---\nroot: true\n---\n# Changed\n',
       );
       const second = await runCli('generate', dir);
@@ -130,7 +130,7 @@ collaboration:
     const dir = makeProject('ab-e2e-collab-locked-check');
     created.push(dir);
     writeFileSync(
-      join(dir, 'agentsbridge.yaml'),
+      join(dir, 'agentsmesh.yaml'),
       `version: 1
 targets: [claude-code]
 features: [rules]
@@ -140,7 +140,7 @@ collaboration:
 `,
     );
     writeFileSync(
-      join(dir, '.agentsbridge', 'rules', 'extra.md'),
+      join(dir, '.agentsmesh', 'rules', 'extra.md'),
       '---\ndescription: Extra\n---\n# Extra\n',
     );
 
@@ -148,16 +148,16 @@ collaboration:
     expect(generated.exitCode, generated.stderr).toBe(0);
 
     writeFileSync(
-      join(dir, '.agentsbridge', 'rules', '_root.md'),
+      join(dir, '.agentsmesh', 'rules', '_root.md'),
       `---
 root: true
 ---
 # Modified
 `,
     );
-    rmSync(join(dir, '.agentsbridge', 'rules', 'extra.md'));
+    rmSync(join(dir, '.agentsmesh', 'rules', 'extra.md'));
     writeFileSync(
-      join(dir, '.agentsbridge', 'rules', 'added.md'),
+      join(dir, '.agentsmesh', 'rules', 'added.md'),
       '---\ndescription: Added\n---\n# Added\n',
     );
 

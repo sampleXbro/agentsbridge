@@ -1,5 +1,5 @@
 /**
- * E2E tests for agentsbridge generate.
+ * E2E tests for agentsmesh generate.
  */
 
 import { describe, it, expect, afterEach } from 'vitest';
@@ -114,7 +114,7 @@ describe('generate', () => {
   it('lock file created after generate', async () => {
     dir = createTestProject('canonical-full');
     await runCli('generate', dir);
-    fileExists(join(dir, '.agentsbridge', '.lock'));
+    fileExists(join(dir, '.agentsmesh', '.lock'));
   });
 
   it('canonical-minimal generates root rule for all targets without errors', async () => {
@@ -129,16 +129,16 @@ describe('generate', () => {
     dir = createTestProject('canonical-no-config');
     const r = await runCli('generate', dir);
     expect(r.exitCode).toBe(1);
-    expect(r.stderr).toContain('No agentsbridge.yaml');
+    expect(r.stderr).toContain('No agentsmesh.yaml');
   });
 
   it('generate with no root rule — no crash, no files created', async () => {
     dir = createTestProject();
     writeFileSync(
-      join(dir, 'agentsbridge.yaml'),
+      join(dir, 'agentsmesh.yaml'),
       'version: 1\ntargets: [claude-code]\nfeatures: [rules]\n',
     );
-    const rulesDir = join(dir, '.agentsbridge', 'rules');
+    const rulesDir = join(dir, '.agentsmesh', 'rules');
     mkdirSync(rulesDir, { recursive: true });
     writeFileSync(join(rulesDir, 'non-root.md'), '---\ndescription: Not root\n---\n# Body\n');
     const r = await runCli('generate', dir);

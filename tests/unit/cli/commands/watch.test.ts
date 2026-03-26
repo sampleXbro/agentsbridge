@@ -1,5 +1,5 @@
 /**
- * Unit tests for agentsbridge watch command.
+ * Unit tests for agentsmesh watch command.
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -15,15 +15,15 @@ const TEST_DIR = join(tmpdir(), 'ab-watch-cmd-test');
 function setupProject(): void {
   mkdirSync(TEST_DIR, { recursive: true });
   writeFileSync(
-    join(TEST_DIR, 'agentsbridge.yaml'),
+    join(TEST_DIR, 'agentsmesh.yaml'),
     `version: 1
 targets: [claude-code, cursor]
 features: [rules]
 `,
   );
-  mkdirSync(join(TEST_DIR, '.agentsbridge', 'rules'), { recursive: true });
+  mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
   writeFileSync(
-    join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+    join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
     `---
 root: true
 description: "Project rules"
@@ -39,8 +39,8 @@ afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
 
 describe('runWatch', () => {
   it('throws when not initialized (no config)', async () => {
-    rmSync(join(TEST_DIR, 'agentsbridge.yaml'));
-    await expect(runWatch({}, TEST_DIR)).rejects.toThrow(/agentsbridge\.yaml/);
+    rmSync(join(TEST_DIR, 'agentsmesh.yaml'));
+    await expect(runWatch({}, TEST_DIR)).rejects.toThrow(/agentsmesh\.yaml/);
   });
 
   it('starts watching and returns stop function', async () => {
@@ -59,7 +59,7 @@ describe('runWatch', () => {
   it('stops and clears debounce when stop called during debounce', async () => {
     const result = await runWatch({}, TEST_DIR);
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', 'rules', 'other.md'),
+      join(TEST_DIR, '.agentsmesh', 'rules', 'other.md'),
       '---\ndescription: ""\n---\n# Other',
     );
     await result!.stop();
@@ -69,7 +69,7 @@ describe('runWatch', () => {
     const runMatrixSpy = vi.spyOn(matrixMod, 'runMatrix').mockResolvedValue(undefined);
     const result = await runWatch({}, TEST_DIR);
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', 'rules', 'new.md'),
+      join(TEST_DIR, '.agentsmesh', 'rules', 'new.md'),
       '---\ndescription: "New"\n---\n# New',
     );
     await vi.waitFor(() => expect(runMatrixSpy).toHaveBeenCalled(), { timeout: 3000 });
@@ -79,15 +79,15 @@ describe('runWatch', () => {
 
   it('computes fingerprint with permissions', async () => {
     writeFileSync(
-      join(TEST_DIR, 'agentsbridge.yaml'),
+      join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1
 targets: [claude-code]
 features: [rules, permissions]
 `,
     );
-    mkdirSync(join(TEST_DIR, '.agentsbridge'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.agentsmesh'), { recursive: true });
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', 'permissions.yaml'),
+      join(TEST_DIR, '.agentsmesh', 'permissions.yaml'),
       'allow:\n  - Read\n  - Grep\ndeny: []',
     );
     const result = await runWatch({}, TEST_DIR);
@@ -98,7 +98,7 @@ features: [rules, permissions]
     const runMatrixSpy = vi.spyOn(matrixMod, 'runMatrix').mockResolvedValue(undefined);
     const result = await runWatch({}, TEST_DIR);
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', 'rules', 'new.md'),
+      join(TEST_DIR, '.agentsmesh', 'rules', 'new.md'),
       '---\ndescription: "New"\n---\n# New',
     );
     await vi.waitFor(() => expect(runMatrixSpy).toHaveBeenCalled(), { timeout: 3000 });
@@ -111,7 +111,7 @@ features: [rules, permissions]
     const infoSpy = vi.spyOn(logger, 'info').mockImplementation(() => {});
     const result = await runWatch({}, TEST_DIR);
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+      join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
       `---
 root: true
 description: "Project rules"
@@ -128,10 +128,10 @@ description: "Project rules"
     await result!.stop();
   });
 
-  it('does not retrigger from its own .agentsbridge/.lock writes while idle', async () => {
+  it('does not retrigger from its own .agentsmesh/.lock writes while idle', async () => {
     const infoSpy = vi.spyOn(logger, 'info').mockImplementation(() => {});
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', '.lock'),
+      join(TEST_DIR, '.agentsmesh', '.lock'),
       'generated_at: "2026-03-15T14:00:00Z"\nchecksums: {}\nextends: {}\n',
     );
     const result = await runWatch({}, TEST_DIR);

@@ -55,7 +55,7 @@ export interface Target {
   generate(ctx: GenerateContext): GenerateResult[];
 
   /**
-   * Import tool-specific files into canonical .agentsbridge/ format.
+   * Import tool-specific files into canonical .agentsmesh/ format.
    * @param projectRoot - Project root directory
    * @returns Array of import results describing what was imported
    */

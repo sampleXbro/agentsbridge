@@ -1,5 +1,5 @@
 /**
- * Parse .agentsbridge/mcp.json into McpConfig.
+ * Parse .agentsmesh/mcp.json into McpConfig.
  */
 
 import { readFileSafe } from '../utils/fs.js';
@@ -47,7 +47,7 @@ function parseServer(raw: unknown): McpServer | null {
 
 /**
  * Parse mcp.json at the given path.
- * @param mcpPath - Absolute path to .agentsbridge/mcp.json
+ * @param mcpPath - Absolute path to .agentsmesh/mcp.json
  * @returns McpConfig or null if file missing, malformed, or lacks mcpServers
  */
 export async function parseMcp(mcpPath: string): Promise<McpConfig | null> {

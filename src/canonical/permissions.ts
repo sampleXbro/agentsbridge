@@ -1,5 +1,5 @@
 /**
- * Parse .agentsbridge/permissions.yaml into Permissions.
+ * Parse .agentsmesh/permissions.yaml into Permissions.
  */
 
 import { parse as parseYaml } from 'yaml';
@@ -13,7 +13,7 @@ function ensureStringArray(val: unknown): string[] {
 
 /**
  * Parse permissions.yaml at the given path.
- * @param permissionsPath - Absolute path to .agentsbridge/permissions.yaml
+ * @param permissionsPath - Absolute path to .agentsmesh/permissions.yaml
  * @returns Permissions or null if file missing or malformed
  */
 export async function parsePermissions(permissionsPath: string): Promise<Permissions | null> {

@@ -35,7 +35,7 @@ function makeCanonical(projectRoot: string): CanonicalFiles {
   return {
     rules: [
       {
-        source: join(projectRoot, '.agentsbridge', 'rules', '_root.md'),
+        source: join(projectRoot, '.agentsmesh', 'rules', '_root.md'),
         root: true,
         targets: [],
         description: '',
@@ -43,7 +43,7 @@ function makeCanonical(projectRoot: string): CanonicalFiles {
         body: '',
       },
       {
-        source: join(projectRoot, '.agentsbridge', 'rules', 'typescript.md'),
+        source: join(projectRoot, '.agentsmesh', 'rules', 'typescript.md'),
         root: false,
         targets: [],
         description: '',
@@ -53,7 +53,7 @@ function makeCanonical(projectRoot: string): CanonicalFiles {
     ],
     commands: [
       {
-        source: join(projectRoot, '.agentsbridge', 'commands', 'review.md'),
+        source: join(projectRoot, '.agentsmesh', 'commands', 'review.md'),
         name: 'review',
         description: '',
         allowedTools: [],
@@ -62,7 +62,7 @@ function makeCanonical(projectRoot: string): CanonicalFiles {
     ],
     agents: [
       {
-        source: join(projectRoot, '.agentsbridge', 'agents', 'reviewer.md'),
+        source: join(projectRoot, '.agentsmesh', 'agents', 'reviewer.md'),
         name: 'reviewer',
         description: '',
         tools: [],
@@ -79,7 +79,7 @@ function makeCanonical(projectRoot: string): CanonicalFiles {
     ],
     skills: [
       {
-        source: join(projectRoot, '.agentsbridge', 'skills', 'api-gen', 'SKILL.md'),
+        source: join(projectRoot, '.agentsmesh', 'skills', 'api-gen', 'SKILL.md'),
         name: 'api-gen',
         description: '',
         body: '',
@@ -88,7 +88,7 @@ function makeCanonical(projectRoot: string): CanonicalFiles {
             relativePath: 'references/checklist.md',
             absolutePath: join(
               projectRoot,
-              '.agentsbridge',
+              '.agentsmesh',
               'skills',
               'api-gen',
               'references',
@@ -114,13 +114,13 @@ describe('rewriteGeneratedReferences', () => {
         target: 'claude-code',
         path: '.claude/CLAUDE.md',
         content:
-          'See .agentsbridge/rules/typescript.md, .agentsbridge/commands/review.md, .agentsbridge/agents/reviewer.md, and .agentsbridge/skills/api-gen/references/checklist.md.',
+          'See .agentsmesh/rules/typescript.md, .agentsmesh/commands/review.md, .agentsmesh/agents/reviewer.md, and .agentsmesh/skills/api-gen/references/checklist.md.',
         status: 'created',
       },
       {
         target: 'claude-code',
         path: '.claude/commands/review.md',
-        content: 'Load .agentsbridge/skills/api-gen/SKILL.md.',
+        content: 'Load .agentsmesh/skills/api-gen/SKILL.md.',
         status: 'created',
       },
       {
@@ -173,7 +173,7 @@ describe('rewriteGeneratedReferences', () => {
         {
           target: 'codex-cli',
           path: 'AGENTS.md',
-          content: 'See .agentsbridge/rules/typescript.md.',
+          content: 'See .agentsmesh/rules/typescript.md.',
           status: 'created',
         },
       ],
@@ -182,7 +182,7 @@ describe('rewriteGeneratedReferences', () => {
       projectRoot,
     );
 
-    expect(rewritten[0]!.content).toContain('.agentsbridge/rules/typescript.md');
+    expect(rewritten[0]!.content).toContain('.agentsmesh/rules/typescript.md');
   });
 
   it('skips outputs that have no canonical text source mapping', () => {
@@ -191,7 +191,7 @@ describe('rewriteGeneratedReferences', () => {
         {
           target: 'cursor',
           path: '.cursor/mcp.json',
-          content: '{"note":".agentsbridge/commands/review.md"}',
+          content: '{"note":".agentsmesh/commands/review.md"}',
           status: 'created',
         },
       ],
@@ -200,7 +200,7 @@ describe('rewriteGeneratedReferences', () => {
       '/proj',
     );
 
-    expect(rewritten[0]!.content).toBe('{"note":".agentsbridge/commands/review.md"}');
+    expect(rewritten[0]!.content).toBe('{"note":".agentsmesh/commands/review.md"}');
   });
 
   it('rewrites Copilot .github/instructions rule outputs from their canonical rule source', () => {
@@ -208,13 +208,13 @@ describe('rewriteGeneratedReferences', () => {
     const canonical = makeCanonical(projectRoot);
     canonical.rules[1] = {
       ...canonical.rules[1]!,
-      body: 'See .agentsbridge/rules/typescript.md.',
+      body: 'See .agentsmesh/rules/typescript.md.',
     };
     const results: GenerateResult[] = [
       {
         target: 'copilot',
         path: '.github/instructions/typescript.instructions.md',
-        content: 'See .agentsbridge/rules/typescript.md.',
+        content: 'See .agentsmesh/rules/typescript.md.',
         status: 'created',
       },
       {
@@ -243,7 +243,7 @@ describe('rewriteGeneratedReferences', () => {
           target: 'claude-code',
           path: '.claude/CLAUDE.md',
           content:
-            'Absolute: /proj/.agentsbridge/rules/typescript.md, /proj/.agentsbridge/commands/review.md, /proj/.agentsbridge/skills/api-gen/references/checklist.md.',
+            'Absolute: /proj/.agentsmesh/rules/typescript.md, /proj/.agentsmesh/commands/review.md, /proj/.agentsmesh/skills/api-gen/references/checklist.md.',
           status: 'created',
         },
         {
@@ -288,13 +288,13 @@ describe('rewriteGeneratedReferences', () => {
       {
         target: 'windsurf',
         path: 'AGENTS.md',
-        content: 'Use .agentsbridge/skills/api-gen/ and .agentsbridge/skills/api-gen/references/.',
+        content: 'Use .agentsmesh/skills/api-gen/ and .agentsmesh/skills/api-gen/references/.',
         status: 'created',
       },
       {
         target: 'windsurf',
         path: 'src/AGENTS.md',
-        content: 'Use .agentsbridge/skills/api-gen/SKILL.md.',
+        content: 'Use .agentsmesh/skills/api-gen/SKILL.md.',
         status: 'created',
       },
       {
@@ -338,13 +338,13 @@ describe('rewriteGeneratedReferences', () => {
         {
           target: 'claude-code',
           path: '.claude/CLAUDE.md',
-          content: 'See .agentsbridge/skills/api-gen/references/checklist.md.',
+          content: 'See .agentsmesh/skills/api-gen/references/checklist.md.',
           status: 'created',
         },
         {
           target: 'claude-code',
           path: '.claude/commands/review.md',
-          content: 'Load .agentsbridge/skills/api-gen/SKILL.md.',
+          content: 'Load .agentsmesh/skills/api-gen/SKILL.md.',
           status: 'created',
         },
       ],
@@ -365,7 +365,7 @@ describe('rewriteGeneratedReferences', () => {
         ...canonical.skills[0]!.supportingFiles,
         {
           relativePath: 'template.ts',
-          absolutePath: join(projectRoot, '.agentsbridge', 'skills', 'api-gen', 'template.ts'),
+          absolutePath: join(projectRoot, '.agentsmesh', 'skills', 'api-gen', 'template.ts'),
           content: '',
         },
       ],
@@ -376,7 +376,7 @@ describe('rewriteGeneratedReferences', () => {
         {
           target: 'claude-code',
           path: '.claude/skills/api-gen/template.ts',
-          content: 'const ref = ".agentsbridge/skills/api-gen/references/checklist.md";',
+          content: 'const ref = ".agentsmesh/skills/api-gen/references/checklist.md";',
           status: 'created',
         },
       ],
@@ -386,7 +386,7 @@ describe('rewriteGeneratedReferences', () => {
     );
 
     expect(rewritten[0]!.content).toBe(
-      'const ref = ".agentsbridge/skills/api-gen/references/checklist.md";',
+      'const ref = ".agentsmesh/skills/api-gen/references/checklist.md";',
     );
   });
 });

@@ -43,7 +43,7 @@ describe('generateRules (windsurf)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: 'Project rules',
@@ -64,7 +64,7 @@ describe('generateRules (windsurf)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -72,7 +72,7 @@ describe('generateRules (windsurf)', () => {
           body: 'Root',
         },
         {
-          source: '/proj/.agentsbridge/rules/typescript.md',
+          source: '/proj/.agentsmesh/rules/typescript.md',
           root: false,
           targets: [],
           description: 'TS rules',
@@ -94,7 +94,7 @@ describe('generateRules (windsurf)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -102,7 +102,7 @@ describe('generateRules (windsurf)', () => {
           body: 'Root',
         },
         {
-          source: '/proj/.agentsbridge/rules/minimal.md',
+          source: '/proj/.agentsmesh/rules/minimal.md',
           root: false,
           targets: [],
           description: '',
@@ -120,7 +120,7 @@ describe('generateRules (windsurf)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -128,7 +128,7 @@ describe('generateRules (windsurf)', () => {
           body: 'Root',
         },
         {
-          source: '/proj/.agentsbridge/rules/cursor-only.md',
+          source: '/proj/.agentsmesh/rules/cursor-only.md',
           root: false,
           targets: ['cursor'],
           description: '',
@@ -145,7 +145,7 @@ describe('generateRules (windsurf)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/other.md',
+          source: '/proj/.agentsmesh/rules/other.md',
           root: false,
           targets: [],
           description: '',
@@ -162,7 +162,7 @@ describe('generateRules (windsurf)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/p/.agentsbridge/rules/_root.md',
+          source: '/p/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -170,7 +170,7 @@ describe('generateRules (windsurf)', () => {
           body: 'Root',
         },
         {
-          source: '/p/.agentsbridge/rules/bare.md',
+          source: '/p/.agentsmesh/rules/bare.md',
           root: false,
           targets: [],
           description: '',
@@ -189,7 +189,7 @@ describe('generateRules (windsurf)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -209,7 +209,7 @@ describe('generateRules (windsurf) — AGENTS.md + trigger', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -229,7 +229,7 @@ describe('generateRules (windsurf) — AGENTS.md + trigger', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -237,7 +237,7 @@ describe('generateRules (windsurf) — AGENTS.md + trigger', () => {
           body: 'Root',
         },
         {
-          source: '/proj/.agentsbridge/rules/ai.md',
+          source: '/proj/.agentsmesh/rules/ai.md',
           root: false,
           targets: [],
           description: 'AI rule',
@@ -257,7 +257,7 @@ describe('generateRules (windsurf) — AGENTS.md + trigger', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/p/.agentsbridge/rules/_root.md',
+          source: '/p/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -265,7 +265,7 @@ describe('generateRules (windsurf) — AGENTS.md + trigger', () => {
           body: 'Root',
         },
         {
-          source: '/p/.agentsbridge/rules/manual.md',
+          source: '/p/.agentsmesh/rules/manual.md',
           root: false,
           targets: [],
           description: '',
@@ -284,7 +284,7 @@ describe('generateRules (windsurf) — AGENTS.md + trigger', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/p/.agentsbridge/rules/_root.md',
+          source: '/p/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -292,7 +292,7 @@ describe('generateRules (windsurf) — AGENTS.md + trigger', () => {
           body: 'Root',
         },
         {
-          source: '/p/.agentsbridge/rules/no-trigger.md',
+          source: '/p/.agentsmesh/rules/no-trigger.md',
           root: false,
           targets: [],
           description: 'No trigger',
@@ -313,7 +313,7 @@ describe('generateAgents (windsurf)', () => {
     const canonical = makeCanonical({
       agents: [
         {
-          source: '/proj/.agentsbridge/agents/reviewer.md',
+          source: '/proj/.agentsmesh/agents/reviewer.md',
           name: 'reviewer',
           description: 'Review specialist',
           tools: ['Read', 'Grep'],
@@ -333,9 +333,9 @@ describe('generateAgents (windsurf)', () => {
     const results = generateAgents(canonical);
 
     expect(results).toHaveLength(1);
-    expect(results[0]?.path).toBe(`${WINDSURF_SKILLS_DIR}/ab-agent-reviewer/SKILL.md`);
-    expect(results[0]?.content).toContain('x-agentsbridge-kind: agent');
-    expect(results[0]?.content).toContain('x-agentsbridge-name: reviewer');
+    expect(results[0]?.path).toBe(`${WINDSURF_SKILLS_DIR}/am-agent-reviewer/SKILL.md`);
+    expect(results[0]?.content).toContain('x-agentsmesh-kind: agent');
+    expect(results[0]?.content).toContain('x-agentsmesh-name: reviewer');
     expect(results[0]?.content).toContain('Review risky changes first.');
   });
 });
@@ -362,7 +362,7 @@ describe('generateWorkflows (windsurf)', () => {
     const canonical = makeCanonical({
       commands: [
         {
-          source: '/p/.agentsbridge/commands/deploy.md',
+          source: '/p/.agentsmesh/commands/deploy.md',
           name: 'deploy',
           description: 'Deploy the app',
           allowedTools: [],
@@ -387,7 +387,7 @@ describe('generateSkills (windsurf)', () => {
     const canonical = makeCanonical({
       skills: [
         {
-          source: '/p/.agentsbridge/skills/api-gen/SKILL.md',
+          source: '/p/.agentsmesh/skills/api-gen/SKILL.md',
           name: 'api-gen',
           description: 'API generation',
           body: 'When creating APIs, follow patterns.',
@@ -407,14 +407,14 @@ describe('generateSkills (windsurf)', () => {
     const canonical = makeCanonical({
       skills: [
         {
-          source: '/p/.agentsbridge/skills/tdd/SKILL.md',
+          source: '/p/.agentsmesh/skills/tdd/SKILL.md',
           name: 'tdd',
           description: 'TDD skill',
           body: 'Follow TDD.',
           supportingFiles: [
             {
               relativePath: 'example.ts',
-              absolutePath: '/p/.agentsbridge/skills/tdd/example.ts',
+              absolutePath: '/p/.agentsmesh/skills/tdd/example.ts',
               content: 'const x = 1;',
             },
           ],

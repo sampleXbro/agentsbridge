@@ -1,5 +1,5 @@
 /**
- * Integration test for agentsbridge merge.
+ * Integration test for agentsmesh merge.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -14,15 +14,15 @@ const CLI_PATH = join(process.cwd(), 'dist', 'cli.js');
 function setupProject(): void {
   mkdirSync(TEST_DIR, { recursive: true });
   writeFileSync(
-    join(TEST_DIR, 'agentsbridge.yaml'),
+    join(TEST_DIR, 'agentsmesh.yaml'),
     `version: 1
 targets: [claude-code, cursor]
 features: [rules]
 `,
   );
-  mkdirSync(join(TEST_DIR, '.agentsbridge', 'rules'), { recursive: true });
+  mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
   writeFileSync(
-    join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+    join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
     `---
 root: true
 description: "Project rules"
@@ -40,11 +40,11 @@ beforeEach(() => {
 
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
 
-describe('agentsbridge merge (integration)', () => {
+describe('agentsmesh merge (integration)', () => {
   it('resolves lock conflict when .lock has git conflict markers', () => {
     execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', '.lock'),
+      join(TEST_DIR, '.agentsmesh', '.lock'),
       `<<<<<<< HEAD
 generated_at: "2026-03-12T14:30:00Z"
 generated_by: "alice"
@@ -76,7 +76,7 @@ extends: {}
     expect(out).toContain('No conflicts to resolve');
   });
 
-  it('throws when not in agentsbridge project', () => {
+  it('throws when not in agentsmesh project', () => {
     rmSync(TEST_DIR, { recursive: true, force: true });
     mkdirSync(TEST_DIR, { recursive: true });
     expect(() => execSync(`node ${CLI_PATH} merge`, { cwd: TEST_DIR, encoding: 'utf8' })).toThrow();

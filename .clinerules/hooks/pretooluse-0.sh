@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# agentsbridge-matcher: Edit|Write
-# agentsbridge-command: eslint --fix
+# agentsmesh-matcher: Edit|Write
+# agentsmesh-command: eslint --fix
 set -e
 eslint --fix

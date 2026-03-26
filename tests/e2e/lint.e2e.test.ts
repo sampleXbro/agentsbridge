@@ -1,5 +1,5 @@
 /**
- * E2E tests for agentsbridge lint.
+ * E2E tests for agentsmesh lint.
  */
 
 import { describe, it, expect, afterEach } from 'vitest';
@@ -24,7 +24,7 @@ describe('lint', () => {
   // Linter only validates rules, not MCP JSON (parseMcp returns null on invalid)
   it('empty rule body → warning or error', async () => {
     dir = createTestProject('canonical-full');
-    writeFileSync(join(dir, '.agentsbridge', 'rules', '_root.md'), '---\nroot: true\n---\n\n');
+    writeFileSync(join(dir, '.agentsmesh', 'rules', '_root.md'), '---\nroot: true\n---\n\n');
     const r = await runCli('lint', dir);
     // Linter may warn on empty body; exit 0 or 1 both acceptable
     expect([0, 1]).toContain(r.exitCode);

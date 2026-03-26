@@ -1,5 +1,5 @@
 /**
- * E2E helper: run agentsbridge CLI in a given directory.
+ * E2E helper: run agentsmesh CLI in a given directory.
  */
 
 import { spawn } from 'node:child_process';
@@ -16,7 +16,7 @@ export interface RunCliResult {
 }
 
 /**
- * Execute agentsbridge CLI with given args in given cwd.
+ * Execute agentsmesh CLI with given args in given cwd.
  * @param args - CLI arguments (e.g. "--version", "init", "generate --dry-run")
  * @param cwd - Working directory
  * @returns stdout, stderr, and exit code

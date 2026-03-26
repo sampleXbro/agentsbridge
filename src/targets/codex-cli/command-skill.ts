@@ -1,7 +1,7 @@
 import type { CanonicalCommand } from '../../core/types.js';
 import { serializeFrontmatter } from '../../utils/markdown.js';
 
-export const CODEX_COMMAND_SKILL_PREFIX = 'ab-command-';
+export const CODEX_COMMAND_SKILL_PREFIX = 'am-command-';
 export const LEGACY_CODEX_COMMAND_SKILL_PREFIX = 'ab-command-';
 
 interface ParsedCommandSkill {
@@ -31,14 +31,14 @@ export function serializeCommandSkill(command: CanonicalCommand): string {
   const frontmatter: Record<string, unknown> = {
     name: commandSkillDirName(command.name),
     description: command.description || undefined,
-    'x-agentsbridge-kind': 'command',
-    'x-agentsbridge-name': command.name,
-    'x-agentsbridge-allowed-tools':
+    'x-agentsmesh-kind': 'command',
+    'x-agentsmesh-name': command.name,
+    'x-agentsmesh-allowed-tools':
       command.allowedTools.length > 0 ? command.allowedTools : undefined,
   };
   if (frontmatter.description === undefined) delete frontmatter.description;
-  if (frontmatter['x-agentsbridge-allowed-tools'] === undefined) {
-    delete frontmatter['x-agentsbridge-allowed-tools'];
+  if (frontmatter['x-agentsmesh-allowed-tools'] === undefined) {
+    delete frontmatter['x-agentsmesh-allowed-tools'];
   }
   return serializeFrontmatter(frontmatter, command.body.trim() || '');
 }
@@ -47,12 +47,10 @@ export function parseCommandSkillFrontmatter(
   frontmatter: Record<string, unknown>,
   dirName: string,
 ): ParsedCommandSkill | null {
-  if (frontmatter['x-agentsbridge-kind'] !== 'command') return null;
+  if (frontmatter['x-agentsmesh-kind'] !== 'command') return null;
 
   const metadataName =
-    typeof frontmatter['x-agentsbridge-name'] === 'string'
-      ? frontmatter['x-agentsbridge-name']
-      : '';
+    typeof frontmatter['x-agentsmesh-name'] === 'string' ? frontmatter['x-agentsmesh-name'] : '';
   const derivedName = dirName.startsWith(CODEX_COMMAND_SKILL_PREFIX)
     ? dirName.slice(CODEX_COMMAND_SKILL_PREFIX.length)
     : dirName.startsWith(LEGACY_CODEX_COMMAND_SKILL_PREFIX)
@@ -64,7 +62,7 @@ export function parseCommandSkillFrontmatter(
   return {
     name,
     description: typeof frontmatter.description === 'string' ? frontmatter.description : '',
-    allowedTools: toStringArray(frontmatter['x-agentsbridge-allowed-tools']),
+    allowedTools: toStringArray(frontmatter['x-agentsmesh-allowed-tools']),
   };
 }
 

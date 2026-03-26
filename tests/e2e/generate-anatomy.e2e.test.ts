@@ -38,17 +38,17 @@ describe('generate anatomy variants', () => {
 
   it('generates Codex nested src/AGENTS.md for scoped advisory rules', async () => {
     dir = createTestProject();
-    mkdirSync(join(dir, '.agentsbridge', 'rules'), { recursive: true });
+    mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(
-      join(dir, 'agentsbridge.yaml'),
+      join(dir, 'agentsmesh.yaml'),
       'version: 1\ntargets: [codex-cli]\nfeatures: [rules]\n',
     );
     writeFileSync(
-      join(dir, '.agentsbridge', 'rules', '_root.md'),
+      join(dir, '.agentsmesh', 'rules', '_root.md'),
       '---\nroot: true\n---\n# Root rules\n',
     );
     writeFileSync(
-      join(dir, '.agentsbridge', 'rules', 'src.md'),
+      join(dir, '.agentsmesh', 'rules', 'src.md'),
       '---\ndescription: Src rules\nglobs:\n  - src/**/*.ts\n---\n# Src rules\nUse strict mode.\n',
     );
 
@@ -60,17 +60,17 @@ describe('generate anatomy variants', () => {
 
   it('generates Windsurf subdirectory AGENTS.md from scoped canonical rules', async () => {
     dir = createTestProject();
-    mkdirSync(join(dir, '.agentsbridge', 'rules'), { recursive: true });
+    mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(
-      join(dir, 'agentsbridge.yaml'),
+      join(dir, 'agentsmesh.yaml'),
       'version: 1\ntargets: [windsurf]\nfeatures: [rules]\n',
     );
     writeFileSync(
-      join(dir, '.agentsbridge', 'rules', '_root.md'),
+      join(dir, '.agentsmesh', 'rules', '_root.md'),
       '---\nroot: true\n---\n# Root rules\n',
     );
     writeFileSync(
-      join(dir, '.agentsbridge', 'rules', 'src.md'),
+      join(dir, '.agentsmesh', 'rules', 'src.md'),
       '---\ndescription: Src rules\nglobs:\n  - src/**/*.ts\n---\n# Src windsurf rules\nUse strict mode.\n',
     );
 

@@ -78,12 +78,12 @@
 - **Max file size**: 200 lines. Split by responsibility if larger.
 - **No classes unless stateful**: Prefer pure functions + types.
 - **No `any`**: Use `unknown` + narrowing.
-- **Config source of truth**: `.agentsbridge/` directory. Generated files are artifacts.
+- **Config source of truth**: `.agentsmesh/` directory. Generated files are artifacts.
 - **Test naming**: `{module}.test.ts` colocated with source. Integration tests in `tests/integration/`.
 - **Generated artifact tests must be strict**: For generated file structures, assert exact file paths, exact file counts, and exact referenced wrapper/script sets. Do not use loose checks like "at least one file", broad `some(...)`, or prefix-only path assertions when the full output set is known.
 - **Commit format**: conventional commits — `feat|fix|test|refactor(scope): message`
 - **Refer to PRD**: `docs/prd-v2-complete.md` for architecture decisions
-- **Refer to tasks**: `docs/agentsbridge-ai-first-tasks.md` for current task specs
+- **Refer to tasks**: `docs/agentsmesh-ai-first-tasks.md` for current task specs
 
 ---
 

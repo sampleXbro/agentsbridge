@@ -39,7 +39,7 @@ const CANONICAL_AGENTS_DIR = join(
   'e2e',
   'fixtures',
   'canonical-full',
-  '.agentsbridge',
+  '.agentsmesh',
   'agents',
 );
 
@@ -158,9 +158,9 @@ function assertAllAgentFields(filePath: string, name: string): void {
 function projectedAgentSkillPath(target: string, name: string): string {
   switch (target) {
     case 'cline':
-      return `.cline/skills/ab-agent-${name}/SKILL.md`;
+      return `.cline/skills/am-agent-${name}/SKILL.md`;
     case 'windsurf':
-      return `.windsurf/skills/ab-agent-${name}/SKILL.md`;
+      return `.windsurf/skills/am-agent-${name}/SKILL.md`;
     default:
       throw new Error(`Unsupported projected-agent target: ${target}`);
   }
@@ -173,23 +173,23 @@ function assertProjectedAgentFields(filePath: string, name: string): void {
   const raw = readFileSync(filePath, 'utf-8');
 
   expect(String(fm.description ?? ''), `${name}: projected description`).toBe(agent.description);
-  expect(String(fm['x-agentsbridge-kind'] ?? ''), `${name}: projected kind`).toBe('agent');
-  expect(String(fm['x-agentsbridge-name'] ?? ''), `${name}: projected name`).toBe(name);
-  expect(String(fm['x-agentsbridge-model'] ?? ''), `${name}: projected model`).toBe(agent.model);
+  expect(String(fm['x-agentsmesh-kind'] ?? ''), `${name}: projected kind`).toBe('agent');
+  expect(String(fm['x-agentsmesh-name'] ?? ''), `${name}: projected name`).toBe(name);
+  expect(String(fm['x-agentsmesh-model'] ?? ''), `${name}: projected model`).toBe(agent.model);
   expect(
-    String(fm['x-agentsbridge-permission-mode'] ?? ''),
+    String(fm['x-agentsmesh-permission-mode'] ?? ''),
     `${name}: projected permissionMode`,
   ).toBe(agent.permissionMode);
-  expect(Number(fm['x-agentsbridge-max-turns'] ?? 0), `${name}: projected maxTurns`).toBe(
+  expect(Number(fm['x-agentsmesh-max-turns'] ?? 0), `${name}: projected maxTurns`).toBe(
     agent.maxTurns,
   );
 
-  const tools = toStringArray(fm['x-agentsbridge-tools']);
+  const tools = toStringArray(fm['x-agentsmesh-tools']);
   for (const tool of agent.tools) {
     expect(tools, `${name}: projected tools should contain ${tool}`).toContain(tool);
   }
 
-  const disallowed = toStringArray(fm['x-agentsbridge-disallowed-tools']);
+  const disallowed = toStringArray(fm['x-agentsmesh-disallowed-tools']);
   for (const dt of agent.disallowedTools) {
     expect(disallowed, `${name}: projected disallowedTools should contain ${dt}`).toContain(dt);
   }
@@ -323,7 +323,7 @@ describe('agents: import back to canonical', () => {
       const r = await runCli('import --from claude-code', dir);
       expect(r.exitCode, r.stderr).toBe(0);
 
-      const canonicalPath = join(dir, '.agentsbridge', 'agents', `${name}.md`);
+      const canonicalPath = join(dir, '.agentsmesh', 'agents', `${name}.md`);
       fileExists(canonicalPath);
 
       const raw = readFileSync(canonicalPath, 'utf-8');
@@ -357,7 +357,7 @@ describe('agents: import back to canonical', () => {
       const r = await runCli('import --from cursor', dir);
       expect(r.exitCode, r.stderr).toBe(0);
 
-      const canonicalPath = join(dir, '.agentsbridge', 'agents', `${name}.md`);
+      const canonicalPath = join(dir, '.agentsmesh', 'agents', `${name}.md`);
       fileExists(canonicalPath);
 
       const raw = readFileSync(canonicalPath, 'utf-8');
@@ -388,14 +388,14 @@ describe('agents: import back to canonical', () => {
 
     // Remove canonical agents to test import
     const { rmSync } = await import('node:fs');
-    rmSync(join(dir, '.agentsbridge', 'agents'), { recursive: true, force: true });
+    rmSync(join(dir, '.agentsmesh', 'agents'), { recursive: true, force: true });
 
     const r = await runCli('import --from copilot', dir);
     expect(r.exitCode, r.stderr).toBe(0);
 
     // Copilot format does not include disallowedTools, permissionMode, maxTurns
     for (const name of AGENT_NAMES) {
-      const canonicalPath = join(dir, '.agentsbridge', 'agents', `${name}.md`);
+      const canonicalPath = join(dir, '.agentsmesh', 'agents', `${name}.md`);
       fileExists(canonicalPath);
       const agent = AGENTS[name];
       const raw = readFileSync(canonicalPath, 'utf-8');
@@ -417,13 +417,13 @@ describe('agents: import back to canonical', () => {
       expect(genResult.exitCode, genResult.stderr).toBe(0);
 
       const { rmSync } = await import('node:fs');
-      rmSync(join(dir, '.agentsbridge', 'agents'), { recursive: true, force: true });
+      rmSync(join(dir, '.agentsmesh', 'agents'), { recursive: true, force: true });
 
       const importResult = await runCli(`import --from ${target}`, dir);
       expect(importResult.exitCode, importResult.stderr).toBe(0);
 
       for (const name of AGENT_NAMES) {
-        assertAllAgentFields(join(dir, '.agentsbridge', 'agents', `${name}.md`), name);
+        assertAllAgentFields(join(dir, '.agentsmesh', 'agents', `${name}.md`), name);
       }
     },
   );
@@ -435,13 +435,13 @@ describe('agents: import back to canonical', () => {
     expect(genResult.exitCode, genResult.stderr).toBe(0);
 
     const { rmSync } = await import('node:fs');
-    rmSync(join(dir, '.agentsbridge', 'agents'), { recursive: true, force: true });
+    rmSync(join(dir, '.agentsmesh', 'agents'), { recursive: true, force: true });
 
     const importResult = await runCli('import --from codex-cli', dir);
     expect(importResult.exitCode, importResult.stderr).toBe(0);
 
     for (const name of AGENT_NAMES) {
-      const path = join(dir, '.agentsbridge', 'agents', `${name}.md`);
+      const path = join(dir, '.agentsmesh', 'agents', `${name}.md`);
       fileExists(path);
       const raw = readFileSync(path, 'utf-8');
       const agent = AGENTS[name];
@@ -484,7 +484,7 @@ describe('agents: round-trip (generate → import → compare with canonical fix
 
       // Step 3: verify each agent in canonical matches the original fixture
       for (const name of AGENT_NAMES) {
-        const canonicalPath = join(dir, '.agentsbridge', 'agents', `${name}.md`);
+        const canonicalPath = join(dir, '.agentsmesh', 'agents', `${name}.md`);
         fileExists(canonicalPath);
 
         const fm = parseFm(canonicalPath);
@@ -539,12 +539,12 @@ describe('agents: round-trip (generate → import → compare with canonical fix
 
       // Both agents exist in canonical
       for (const name of AGENT_NAMES) {
-        fileExists(join(dir, '.agentsbridge', 'agents', `${name}.md`));
+        fileExists(join(dir, '.agentsmesh', 'agents', `${name}.md`));
       }
 
       // No unexpected extra agent files appeared
       const { readdirSync } = await import('node:fs');
-      const canonicalAgentsDir = join(dir, '.agentsbridge', 'agents');
+      const canonicalAgentsDir = join(dir, '.agentsmesh', 'agents');
       const files = readdirSync(canonicalAgentsDir).filter((f) => f.endsWith('.md'));
       expect(files.sort()).toEqual(AGENT_NAMES.map((name) => `${name}.md`).sort());
     });
@@ -559,13 +559,13 @@ describe('agents: round-trip (generate → import → compare with canonical fix
     expect(genResult.exitCode, genResult.stderr).toBe(0);
 
     const { rmSync } = await import('node:fs');
-    rmSync(join(dir, '.agentsbridge', 'agents'), { recursive: true, force: true });
+    rmSync(join(dir, '.agentsmesh', 'agents'), { recursive: true, force: true });
 
     const importResult = await runCli('import --from copilot', dir);
     expect(importResult.exitCode, importResult.stderr).toBe(0);
 
     for (const name of AGENT_NAMES) {
-      const canonicalPath = join(dir, '.agentsbridge', 'agents', `${name}.md`);
+      const canonicalPath = join(dir, '.agentsmesh', 'agents', `${name}.md`);
       fileExists(canonicalPath);
       const fm = parseFm(canonicalPath);
       const raw = readFileSync(canonicalPath, 'utf-8');
@@ -664,12 +664,12 @@ describe('agents: file manifest (written to tests/e2e/agents-last-run.md)', () =
     lines.push(`\n_Generated: ${ts}_\n`);
 
     // ── INITIAL ───────────────────────────────────────────────────────────
-    const canonicalAgentsDir = join(manifestDir, '.agentsbridge', 'agents');
+    const canonicalAgentsDir = join(manifestDir, '.agentsmesh', 'agents');
     const initialFiles = readdirSync(canonicalAgentsDir)
       .filter((f) => f.endsWith('.md'))
       .sort();
 
-    lines.push(`## Initial — \`.agentsbridge/agents/\` (canonical fixture)\n`);
+    lines.push(`## Initial — \`.agentsmesh/agents/\` (canonical fixture)\n`);
     for (const f of initialFiles) {
       lines.push(agentBlock(canonicalAgentsDir, f));
     }
@@ -711,7 +711,7 @@ describe('agents: file manifest (written to tests/e2e/agents-last-run.md)', () =
       const reimportedFiles = readdirSync(canonicalAgentsDir)
         .filter((f) => f.endsWith('.md'))
         .sort();
-      lines.push(`#### Canonical \`.agentsbridge/agents/\` after import\n`);
+      lines.push(`#### Canonical \`.agentsmesh/agents/\` after import\n`);
       for (const f of reimportedFiles) {
         lines.push(agentBlock(canonicalAgentsDir, f));
       }
@@ -761,8 +761,8 @@ describe('agents: file manifest (written to tests/e2e/agents-last-run.md)', () =
           const fm = parseFm(absoluteProjectedPath);
           lines.push(`  - **${name}**: ✓ projected to \`${projectedPath}\``);
           lines.push(`    - description : ${fm.description ?? '(none)'}`);
-          lines.push(`    - model       : ${fm['x-agentsbridge-model'] ?? '(none)'}`);
-          lines.push(`    - tools       : ${toStringArray(fm['x-agentsbridge-tools']).join(', ')}`);
+          lines.push(`    - model       : ${fm['x-agentsmesh-model'] ?? '(none)'}`);
+          lines.push(`    - tools       : ${toStringArray(fm['x-agentsmesh-tools']).join(', ')}`);
         } else {
           lines.push(`  - **${name}**: ✗ projected skill not found`);
         }

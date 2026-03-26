@@ -32,8 +32,8 @@ describe('stageNativeInstallScope Copilot, Continue, and Gemini CLI', () => {
         '.github/prompts/review.prompt.md': [
           '---',
           'description: Review prompt',
-          'x-agentsbridge-kind: command',
-          'x-agentsbridge-name: review',
+          'x-agentsmesh-kind: command',
+          'x-agentsmesh-name: review',
           '---',
           '',
           'Review the diff.',
@@ -69,10 +69,10 @@ describe('stageNativeInstallScope Copilot, Continue, and Gemini CLI', () => {
       target: 'copilot',
       path: '.github/hooks',
       files: {
-        '.github/hooks/agentsbridge.json': JSON.stringify({
+        '.github/hooks/agentsmesh.json': JSON.stringify({
           hooks: { preToolUse: [{ bash: './pre.sh', comment: 'Matcher: src/**/*.ts' }] },
         }),
-        '.github/hooks/pre.sh': '#!/bin/sh\n# agentsbridge-command: pnpm lint\n',
+        '.github/hooks/pre.sh': '#!/bin/sh\n# agentsmesh-command: pnpm lint\n',
       },
       features: ['hooks'],
     },
@@ -90,7 +90,7 @@ describe('stageNativeInstallScope Copilot, Continue, and Gemini CLI', () => {
       path: '.continue/prompts',
       files: {
         '.continue/prompts/review.md':
-          '---\ndescription: Review\nx-agentsbridge-kind: command\nx-agentsbridge-name: review\n---\n\nReview.\n',
+          '---\ndescription: Review\nx-agentsmesh-kind: command\nx-agentsmesh-name: review\n---\n\nReview.\n',
       },
       features: ['commands'],
       pick: { commands: ['review'] },

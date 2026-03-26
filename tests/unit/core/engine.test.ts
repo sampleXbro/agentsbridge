@@ -6,13 +6,13 @@ import { generate, resolveOutputCollisions } from '../../../src/core/engine.js';
 import type { CanonicalFiles, GenerateResult } from '../../../src/core/types.js';
 import type { ValidatedConfig } from '../../../src/config/schema.js';
 
-const TEST_DIR = join(tmpdir(), 'ab-engine-test');
+const TEST_DIR = join(tmpdir(), 'am-engine-test');
 
 function canonicalWithRootRule(body: string): CanonicalFiles {
   return {
     rules: [
       {
-        source: join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+        source: join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
         root: true,
         targets: [],
         description: '',
@@ -188,7 +188,7 @@ ${body}`;
       ...canonicalWithRootRule('Rules'),
       commands: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'commands', 'review.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'),
           name: 'review',
           description: 'Run code review',
           allowedTools: ['Read', 'Grep'],
@@ -216,7 +216,7 @@ ${body}`;
       ...canonicalWithRootRule('Rules'),
       commands: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'commands', 'review.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'),
           name: 'review',
           description: 'Review',
           allowedTools: [],
@@ -239,7 +239,7 @@ ${body}`;
       ...canonicalWithRootRule('Rules'),
       agents: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'agents', 'reviewer.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'),
           name: 'reviewer',
           description: 'Code reviewer',
           tools: ['Read', 'Grep'],
@@ -271,7 +271,7 @@ ${body}`;
       ...canonicalWithRootRule('Rules'),
       agents: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'agents', 'reviewer.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'),
           name: 'reviewer',
           description: 'Review',
           tools: [],
@@ -302,14 +302,14 @@ ${body}`;
       ...canonicalWithRootRule('Rules'),
       skills: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'skills', 'api-gen', 'SKILL.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'skills', 'api-gen', 'SKILL.md'),
           name: 'api-gen',
           description: 'Generate REST API endpoints',
           body: 'When asked to create an API endpoint, use project conventions.',
           supportingFiles: [
             {
               relativePath: 'template.ts',
-              absolutePath: join(TEST_DIR, '.agentsbridge', 'skills', 'api-gen', 'template.ts'),
+              absolutePath: join(TEST_DIR, '.agentsmesh', 'skills', 'api-gen', 'template.ts'),
               content: 'export const x = 1;',
             },
           ],
@@ -359,7 +359,7 @@ ${body}`;
       ...canonicalWithRootRule('Rules'),
       skills: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'skills', 'foo', 'SKILL.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'skills', 'foo', 'SKILL.md'),
           name: 'foo',
           description: 'Foo skill',
           body: 'Body',
@@ -565,11 +565,11 @@ ${body}`;
     });
     const canonical: CanonicalFiles = {
       ...canonicalWithRootRule(
-        'Use .agentsbridge/skills/post-feature-qa/ and .agentsbridge/skills/post-feature-qa/references/.',
+        'Use .agentsmesh/skills/post-feature-qa/ and .agentsmesh/skills/post-feature-qa/references/.',
       ),
       skills: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'skills', 'post-feature-qa', 'SKILL.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'skills', 'post-feature-qa', 'SKILL.md'),
           name: 'post-feature-qa',
           description: 'QA',
           body: 'Run QA.',
@@ -578,7 +578,7 @@ ${body}`;
               relativePath: 'references/checklist.md',
               absolutePath: join(
                 TEST_DIR,
-                '.agentsbridge',
+                '.agentsmesh',
                 'skills',
                 'post-feature-qa',
                 'references',
@@ -803,7 +803,7 @@ describe('generate Copilot', () => {
       ...canonicalWithRootRule('Root content'),
       rules: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
           root: true,
           targets: [],
           description: '',
@@ -811,7 +811,7 @@ describe('generate Copilot', () => {
           body: 'Root content',
         },
         {
-          source: join(TEST_DIR, '.agentsbridge', 'rules', 'typescript.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'),
           root: false,
           targets: [],
           description: 'TS rules',
@@ -843,7 +843,7 @@ describe('generate Copilot', () => {
       ...canonicalWithRootRule('Root'),
       commands: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'commands', 'review.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'),
           name: 'review',
           description: 'Run review',
           allowedTools: ['Read'],
@@ -859,7 +859,7 @@ describe('generate Copilot', () => {
     const copilot = results.find((r) => r.path === '.github/copilot-instructions.md');
     expect(copilot?.content).toBe('Root');
     const prompt = results.find((r) => r.path === '.github/prompts/review.prompt.md');
-    expect(prompt?.content).toContain('x-agentsbridge-kind: command');
+    expect(prompt?.content).toContain('x-agentsmesh-kind: command');
     expect(prompt?.content).toContain('Review the code.');
   });
 
@@ -879,7 +879,7 @@ describe('generate Copilot', () => {
       canonical,
       projectRoot: TEST_DIR,
     });
-    const hookFile = results.find((r) => r.path === '.github/hooks/agentsbridge.json');
+    const hookFile = results.find((r) => r.path === '.github/hooks/agentsmesh.json');
     expect(hookFile).toBeDefined();
     expect(hookFile?.content).toContain('"hooks"');
     expect(hookFile?.content).toContain('"postToolUse"');
@@ -939,7 +939,7 @@ describe('generate Copilot', () => {
       projectRoot: TEST_DIR,
     });
 
-    const hookFile = results.find((r) => r.path === '.github/hooks/agentsbridge.json');
+    const hookFile = results.find((r) => r.path === '.github/hooks/agentsmesh.json');
     const wrapperPaths = results
       .filter((r) => r.path.startsWith('.github/hooks/scripts/'))
       .map((r) => r.path)
@@ -981,7 +981,7 @@ describe('generate Copilot target', () => {
       ...canonicalWithRootRule('Root content'),
       rules: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
           root: true,
           targets: [],
           description: '',
@@ -989,7 +989,7 @@ describe('generate Copilot target', () => {
           body: 'Root content',
         },
         {
-          source: join(TEST_DIR, '.agentsbridge', 'rules', 'typescript.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'),
           root: false,
           targets: [],
           description: 'TypeScript rules',
@@ -1020,7 +1020,7 @@ describe('generate Copilot target', () => {
       ...canonicalWithRootRule('Root'),
       commands: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'commands', 'review.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'),
           name: 'review',
           description: 'Run review',
           allowedTools: [],
@@ -1029,7 +1029,7 @@ describe('generate Copilot target', () => {
       ],
       agents: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'agents', 'qa.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'agents', 'qa.md'),
           name: 'qa',
           description: 'QA agent',
           tools: [],
@@ -1046,7 +1046,7 @@ describe('generate Copilot target', () => {
       ],
       skills: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'skills', 'test-gen', 'SKILL.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'skills', 'test-gen', 'SKILL.md'),
           name: 'test-gen',
           description: 'Test generator',
           body: 'Generate tests for code.',
@@ -1091,7 +1091,7 @@ describe('generate Copilot target', () => {
       canonical,
       projectRoot: TEST_DIR,
     });
-    const hookFile = results.find((r) => r.path === '.github/hooks/agentsbridge.json');
+    const hookFile = results.find((r) => r.path === '.github/hooks/agentsmesh.json');
     expect(hookFile).toBeDefined();
     expect(hookFile!.content).toContain('"postToolUse"');
   });
@@ -1124,7 +1124,7 @@ describe('generate Gemini CLI', () => {
       rules: [
         canonicalWithRootRule('Root').rules[0]!,
         {
-          source: join(TEST_DIR, '.agentsbridge', 'rules', 'ts.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'rules', 'ts.md'),
           root: false,
           targets: [],
           description: 'TS rules',
@@ -1151,7 +1151,7 @@ describe('generate Gemini CLI', () => {
       ...canonicalWithRootRule('Root'),
       commands: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'commands', 'review.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'),
           name: 'review',
           description: 'Run review',
           allowedTools: ['Read'],
@@ -1272,7 +1272,7 @@ describe('generate Cline', () => {
       ...canonicalWithRootRule('Root'),
       rules: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
           root: true,
           targets: [],
           description: '',
@@ -1280,7 +1280,7 @@ describe('generate Cline', () => {
           body: 'Root',
         },
         {
-          source: join(TEST_DIR, '.agentsbridge', 'rules', 'ts.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'rules', 'ts.md'),
           root: false,
           targets: [],
           description: 'TS rules',
@@ -1351,7 +1351,7 @@ describe('generate Cline', () => {
       ...canonicalWithRootRule('Root'),
       skills: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'skills', 'review', 'SKILL.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'skills', 'review', 'SKILL.md'),
           name: 'review',
           description: 'Code review',
           body: 'Review thoroughly.',
@@ -1378,7 +1378,7 @@ describe('generate Cline', () => {
       ...canonicalWithRootRule('Root'),
       commands: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'commands', 'deploy.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'commands', 'deploy.md'),
           name: 'deploy',
           description: 'Deploy workflow',
           allowedTools: [],
@@ -1424,7 +1424,7 @@ describe('generate Codex', () => {
       ...canonicalWithRootRule(''),
       rules: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'rules', 'ts.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'rules', 'ts.md'),
           root: false,
           targets: [],
           description: '',
@@ -1450,7 +1450,7 @@ describe('generate Codex', () => {
       ...canonicalWithRootRule('Root'),
       skills: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'skills', 'foo', 'SKILL.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'skills', 'foo', 'SKILL.md'),
           name: 'foo',
           description: 'Foo skill',
           body: 'Foo body',
@@ -1479,7 +1479,7 @@ describe('generate Codex', () => {
       ...canonicalWithRootRule('Root'),
       commands: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'commands', 'review.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'),
           name: 'review',
           description: 'Review',
           allowedTools: [],
@@ -1494,13 +1494,13 @@ describe('generate Codex', () => {
     });
     expect(results.every((r) => r.target === 'codex-cli')).toBe(true);
     expect(results.map((r) => r.path).sort()).toEqual([
-      '.agents/skills/ab-command-review/SKILL.md',
+      '.agents/skills/am-command-review/SKILL.md',
       'AGENTS.md',
     ]);
     const commandSkill = results.find(
-      (r) => r.path === '.agents/skills/ab-command-review/SKILL.md',
+      (r) => r.path === '.agents/skills/am-command-review/SKILL.md',
     );
-    expect(commandSkill?.content).toContain('x-agentsbridge-kind: command');
+    expect(commandSkill?.content).toContain('x-agentsmesh-kind: command');
   });
 
   it('skips Codex command-skill projection when disabled in conversions', async () => {
@@ -1515,7 +1515,7 @@ describe('generate Codex', () => {
       ...canonicalWithRootRule('Root'),
       commands: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'commands', 'review.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'),
           name: 'review',
           description: 'Review',
           allowedTools: [],
@@ -1536,7 +1536,7 @@ describe('generate Codex', () => {
       ...canonicalWithRootRule('Root'),
       agents: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'agents', 'reviewer.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'),
           name: 'reviewer',
           description: 'Reviewer',
           tools: [],
@@ -1609,7 +1609,7 @@ describe('generate Windsurf', () => {
       ...canonicalWithRootRule(''),
       rules: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'rules', 'ts.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'rules', 'ts.md'),
           root: false,
           targets: [],
           description: '',
@@ -1635,7 +1635,7 @@ describe('generate Windsurf', () => {
       ...canonicalWithRootRule('Root'),
       commands: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'commands', 'review.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'),
           name: 'review',
           description: 'Review',
           allowedTools: [],
@@ -1644,7 +1644,7 @@ describe('generate Windsurf', () => {
       ],
       skills: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'skills', 'foo', 'SKILL.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'skills', 'foo', 'SKILL.md'),
           name: 'foo',
           description: 'Foo',
           body: 'Foo body',
@@ -1670,7 +1670,7 @@ describe('generate Windsurf', () => {
       ...canonicalWithRootRule('Root'),
       commands: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'commands', 'deploy.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'commands', 'deploy.md'),
           name: 'deploy',
           description: 'Deploy',
           allowedTools: [],
@@ -1688,7 +1688,7 @@ describe('generate Windsurf', () => {
       ...canonicalWithRootRule('Root'),
       skills: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'skills', 'api-gen', 'SKILL.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'skills', 'api-gen', 'SKILL.md'),
           name: 'api-gen',
           description: 'API gen',
           body: 'API body.',
@@ -1705,7 +1705,7 @@ describe('generate Windsurf', () => {
       ...canonicalWithRootRule('Root'),
       agents: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'agents', 'reviewer.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'),
           name: 'reviewer',
           description: 'Reviewer',
           tools: ['Read'],
@@ -1732,9 +1732,9 @@ describe('generate Windsurf', () => {
     });
 
     expect(results.some((r) => r.path === '.gemini/agents/reviewer.md')).toBe(true);
-    expect(results.some((r) => r.path === '.cline/skills/ab-agent-reviewer/SKILL.md')).toBe(true);
+    expect(results.some((r) => r.path === '.cline/skills/am-agent-reviewer/SKILL.md')).toBe(true);
     expect(results.some((r) => r.path === '.codex/agents/reviewer.toml')).toBe(true);
-    expect(results.some((r) => r.path === '.windsurf/skills/ab-agent-reviewer/SKILL.md')).toBe(
+    expect(results.some((r) => r.path === '.windsurf/skills/am-agent-reviewer/SKILL.md')).toBe(
       true,
     );
   });
@@ -1744,7 +1744,7 @@ describe('generate Windsurf', () => {
       ...canonicalWithRootRule('Root'),
       agents: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'agents', 'reviewer.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'),
           name: 'reviewer',
           description: 'Reviewer',
           tools: ['Read'],
@@ -1778,9 +1778,9 @@ describe('generate Windsurf', () => {
 
     // gemini-cli: false = native agents → produces .gemini/agents/*
     expect(results.some((r) => r.path === '.gemini/agents/reviewer.md')).toBe(true);
-    expect(results.some((r) => r.path === '.cline/skills/ab-agent-reviewer/SKILL.md')).toBe(true);
+    expect(results.some((r) => r.path === '.cline/skills/am-agent-reviewer/SKILL.md')).toBe(true);
     expect(results.some((r) => r.path === '.codex/agents/reviewer.toml')).toBe(true);
-    expect(results.some((r) => r.path === '.windsurf/skills/ab-agent-reviewer/SKILL.md')).toBe(
+    expect(results.some((r) => r.path === '.windsurf/skills/am-agent-reviewer/SKILL.md')).toBe(
       false,
     );
   });

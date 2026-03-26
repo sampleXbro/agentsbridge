@@ -1,5 +1,5 @@
 /**
- * agentsbridge install — local dry-run against a skill pack fixture.
+ * agentsmesh install — local dry-run against a skill pack fixture.
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { runInstall } from '../../src/install/run-install.js';
 import { logger } from '../../src/utils/logger.js';
 
-const ROOT = join(tmpdir(), 'ab-install-integration');
+const ROOT = join(tmpdir(), 'am-install-integration');
 
 describe('install (integration)', () => {
   beforeEach(() => {
@@ -19,9 +19,9 @@ describe('install (integration)', () => {
       join(ROOT, 'upstream', 'skills', 'demo', 'SKILL.md'),
       '---\ndescription: Demo skill for install test\n---\n# Demo\n',
     );
-    mkdirSync(join(ROOT, 'project', '.agentsbridge', 'rules'), { recursive: true });
+    mkdirSync(join(ROOT, 'project', '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(
-      join(ROOT, 'project', 'agentsbridge.yaml'),
+      join(ROOT, 'project', 'agentsmesh.yaml'),
       `version: 1
 targets: [claude-code]
 features: [rules, skills]
@@ -29,7 +29,7 @@ extends: []
 `,
     );
     writeFileSync(
-      join(ROOT, 'project', '.agentsbridge', 'rules', '_root.md'),
+      join(ROOT, 'project', '.agentsmesh', 'rules', '_root.md'),
       '---\nroot: true\n---\n# Root\n',
     );
   });
@@ -38,9 +38,9 @@ extends: []
     rmSync(ROOT, { recursive: true, force: true });
   });
 
-  it('dry-run does not modify agentsbridge.yaml', async () => {
+  it('dry-run does not modify agentsmesh.yaml', async () => {
     const project = join(ROOT, 'project');
-    const yamlPath = join(project, 'agentsbridge.yaml');
+    const yamlPath = join(project, 'agentsmesh.yaml');
     const snapshot = readFileSync(yamlPath, 'utf8');
 
     await runInstall({ 'dry-run': true }, [join(ROOT, 'upstream', 'skills', 'demo')], project);

@@ -7,7 +7,7 @@ import {
   KNOWN_NATIVE_PATHS,
 } from '../../../src/config/native-format-detector.js';
 
-const TEST_DIR = join(tmpdir(), 'ab-native-detect-test');
+const TEST_DIR = join(tmpdir(), 'am-native-detect-test');
 
 beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));

@@ -21,5 +21,5 @@ export function getVersion(): string {
  * Prints the CLI version from package.json.
  */
 export function printVersion(): void {
-  process.stdout.write(`agentsbridge v${pkg.version}\n`);
+  process.stdout.write(`agentsmesh v${pkg.version}\n`);
 }

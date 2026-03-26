@@ -12,12 +12,12 @@ function hasNameInFrontmatter(content: string): boolean {
   return lines.slice(1, endIndex).some((line) => line.startsWith('name:'));
 }
 
-const projectRoot = '/tmp/agentsbridge-generated-skills-name-test';
+const projectRoot = '/tmp/agentsmesh-generated-skills-name-test';
 
 const canonical: CanonicalFiles = {
   rules: [
     {
-      source: join(projectRoot, '.agentsbridge/rules/_root.md'),
+      source: join(projectRoot, '.agentsmesh/rules/_root.md'),
       root: true,
       targets: [],
       description: '',
@@ -27,7 +27,7 @@ const canonical: CanonicalFiles = {
   ],
   commands: [
     {
-      source: join(projectRoot, '.agentsbridge/commands/review.md'),
+      source: join(projectRoot, '.agentsmesh/commands/review.md'),
       name: 'review',
       description: 'Review command',
       allowedTools: ['Read'],
@@ -36,7 +36,7 @@ const canonical: CanonicalFiles = {
   ],
   agents: [
     {
-      source: join(projectRoot, '.agentsbridge/agents/reviewer.md'),
+      source: join(projectRoot, '.agentsmesh/agents/reviewer.md'),
       name: 'reviewer',
       description: 'Reviewer agent',
       tools: ['Read'],
@@ -53,7 +53,7 @@ const canonical: CanonicalFiles = {
   ],
   skills: [
     {
-      source: join(projectRoot, '.agentsbridge/skills/typescript-pro/SKILL.md'),
+      source: join(projectRoot, '.agentsmesh/skills/typescript-pro/SKILL.md'),
       name: 'typescript-pro',
       description: 'TypeScript skill',
       body: 'Use strict typing',

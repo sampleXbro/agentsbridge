@@ -42,22 +42,13 @@ describe('generate capabilities', () => {
     const result = await runCli('generate --targets copilot', dir);
     expect(result.exitCode, result.stderr).toBe(0);
 
-    fileContains(
-      join(dir, '.github', 'prompts', 'review.prompt.md'),
-      'x-agentsbridge-kind: command',
-    );
-    fileContains(
-      join(dir, '.github', 'prompts', 'review.prompt.md'),
-      'x-agentsbridge-name: review',
-    );
+    fileContains(join(dir, '.github', 'prompts', 'review.prompt.md'), 'x-agentsmesh-kind: command');
+    fileContains(join(dir, '.github', 'prompts', 'review.prompt.md'), 'x-agentsmesh-name: review');
     fileContains(join(dir, '.github', 'prompts', 'review.prompt.md'), 'Review current changes');
     fileExists(join(dir, '.github', 'instructions', 'typescript.instructions.md'));
     fileContains(join(dir, '.github', 'instructions', 'typescript.instructions.md'), 'applyTo');
-    dirFilesExactly(join(dir, '.github', 'hooks'), [
-      'agentsbridge.json',
-      'scripts/posttooluse-0.sh',
-    ]);
-    const hooks = readJson(join(dir, '.github', 'hooks', 'agentsbridge.json'));
+    dirFilesExactly(join(dir, '.github', 'hooks'), ['agentsmesh.json', 'scripts/posttooluse-0.sh']);
+    const hooks = readJson(join(dir, '.github', 'hooks', 'agentsmesh.json'));
     expect(hooks).toEqual({
       version: 1,
       hooks: {
@@ -74,17 +65,14 @@ describe('generate capabilities', () => {
 
   it('generates the exact Copilot hook wrapper set for all supported hook events', async () => {
     dir = createTestProject();
-    mkdirSync(join(dir, '.agentsbridge', 'rules'), { recursive: true });
+    mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(
-      join(dir, 'agentsbridge.yaml'),
+      join(dir, 'agentsmesh.yaml'),
       'version: 1\ntargets: [copilot]\nfeatures: [rules, hooks]\n',
     );
+    writeFileSync(join(dir, '.agentsmesh', 'rules', '_root.md'), '---\nroot: true\n---\n# Root\n');
     writeFileSync(
-      join(dir, '.agentsbridge', 'rules', '_root.md'),
-      '---\nroot: true\n---\n# Root\n',
-    );
-    writeFileSync(
-      join(dir, '.agentsbridge', 'hooks.yaml'),
+      join(dir, '.agentsmesh', 'hooks.yaml'),
       [
         'PreToolUse:',
         '  - matcher: Bash',
@@ -106,14 +94,14 @@ describe('generate capabilities', () => {
     expect(result.exitCode, result.stderr).toBe(0);
 
     dirFilesExactly(join(dir, '.github', 'hooks'), [
-      'agentsbridge.json',
+      'agentsmesh.json',
       'scripts/notification-0.sh',
       'scripts/posttooluse-0.sh',
       'scripts/pretooluse-0.sh',
       'scripts/userpromptsubmit-0.sh',
     ]);
 
-    const hooks = readJson(join(dir, '.github', 'hooks', 'agentsbridge.json'));
+    const hooks = readJson(join(dir, '.github', 'hooks', 'agentsmesh.json'));
     expect(hooks).toEqual({
       version: 1,
       hooks: {
@@ -156,7 +144,7 @@ features: [rules, commands, agents, skills, hooks]
 `);
 
     writeFileSync(
-      join(dir, '.agentsbridge', 'agents', 'code-reviewer.md'),
+      join(dir, '.agentsmesh', 'agents', 'code-reviewer.md'),
       [
         '---',
         'description: Code review specialist',
@@ -174,7 +162,7 @@ features: [rules, commands, agents, skills, hooks]
       ].join('\n'),
     );
     writeFileSync(
-      join(dir, '.agentsbridge', 'hooks.yaml'),
+      join(dir, '.agentsmesh', 'hooks.yaml'),
       [
         'PostToolUse:',
         '  - matcher: Write|Edit',
@@ -196,18 +184,9 @@ features: [rules, commands, agents, skills, hooks]
     fileNotContains(join(dir, '.github', 'instructions', 'typescript.instructions.md'), '\nglobs:');
 
     fileContains(join(dir, '.github', 'prompts', 'review.prompt.md'), 'agent: agent');
-    fileContains(
-      join(dir, '.github', 'prompts', 'review.prompt.md'),
-      'x-agentsbridge-kind: command',
-    );
-    fileContains(
-      join(dir, '.github', 'prompts', 'review.prompt.md'),
-      'x-agentsbridge-name: review',
-    );
-    fileContains(
-      join(dir, '.github', 'prompts', 'review.prompt.md'),
-      'x-agentsbridge-allowed-tools',
-    );
+    fileContains(join(dir, '.github', 'prompts', 'review.prompt.md'), 'x-agentsmesh-kind: command');
+    fileContains(join(dir, '.github', 'prompts', 'review.prompt.md'), 'x-agentsmesh-name: review');
+    fileContains(join(dir, '.github', 'prompts', 'review.prompt.md'), 'x-agentsmesh-allowed-tools');
     fileContains(join(dir, '.github', 'prompts', 'review.prompt.md'), 'description: Code review');
 
     fileContains(
@@ -239,7 +218,7 @@ features: [rules, commands, agents, skills, hooks]
       'You are a code reviewer.',
     );
 
-    const hooks = readJson(join(dir, '.github', 'hooks', 'agentsbridge.json'));
+    const hooks = readJson(join(dir, '.github', 'hooks', 'agentsmesh.json'));
     expect(hooks).toEqual({
       version: 1,
       hooks: {
@@ -260,11 +239,11 @@ features: [rules, commands, agents, skills, hooks]
     );
     fileContains(
       join(dir, '.github', 'hooks', 'scripts', 'posttooluse-0.sh'),
-      '# agentsbridge-matcher: Write|Edit',
+      '# agentsmesh-matcher: Write|Edit',
     );
     fileContains(
       join(dir, '.github', 'hooks', 'scripts', 'posttooluse-0.sh'),
-      '# agentsbridge-command: prettier --write $FILE_PATH',
+      '# agentsmesh-command: prettier --write $FILE_PATH',
     );
     fileContains(
       join(dir, '.github', 'hooks', 'scripts', 'posttooluse-0.sh'),
@@ -277,7 +256,7 @@ features: [rules, commands, agents, skills, hooks]
       'agents/researcher.agent.md',
       'copilot-instructions.md',
       'hooks/',
-      'hooks/agentsbridge.json',
+      'hooks/agentsmesh.json',
       'hooks/scripts/',
       'hooks/scripts/posttooluse-0.sh',
       'instructions/',
@@ -314,14 +293,14 @@ features: [rules, commands, agents, skills, hooks]
     expect(result.exitCode, result.stderr).toBe(0);
 
     fileContains(
-      join(dir, '.agents', 'skills', 'ab-command-review', 'SKILL.md'),
-      'x-agentsbridge-kind: command',
+      join(dir, '.agents', 'skills', 'am-command-review', 'SKILL.md'),
+      'x-agentsmesh-kind: command',
     );
     fileContains(
-      join(dir, '.agents', 'skills', 'ab-command-review', 'SKILL.md'),
-      'x-agentsbridge-name: review',
+      join(dir, '.agents', 'skills', 'am-command-review', 'SKILL.md'),
+      'x-agentsmesh-name: review',
     );
-    fileContains(join(dir, '.agents', 'skills', 'ab-command-review', 'SKILL.md'), 'Bash(git diff)');
+    fileContains(join(dir, '.agents', 'skills', 'am-command-review', 'SKILL.md'), 'Bash(git diff)');
   });
 
   it.each([
@@ -549,7 +528,7 @@ features: [rules, commands, skills, mcp]
 
     dirTreeExactly(join(dir, '.continue'), [
       'mcpServers/',
-      'mcpServers/agentsbridge.json',
+      'mcpServers/agentsmesh.json',
       'prompts/',
       'prompts/review.md',
       'rules/',
@@ -577,10 +556,10 @@ features: [rules, commands, skills, mcp]
     fileContains(join(dir, '.continue', 'rules', 'typescript.md'), 'globs:');
     fileContains(join(dir, '.continue', 'rules', 'typescript.md'), 'src/**/*.ts');
 
-    fileContains(join(dir, '.continue', 'prompts', 'review.md'), 'x-agentsbridge-kind: command');
-    fileContains(join(dir, '.continue', 'prompts', 'review.md'), 'x-agentsbridge-name: review');
+    fileContains(join(dir, '.continue', 'prompts', 'review.md'), 'x-agentsmesh-kind: command');
+    fileContains(join(dir, '.continue', 'prompts', 'review.md'), 'x-agentsmesh-name: review');
     fileContains(join(dir, '.continue', 'prompts', 'review.md'), 'description: Code review');
-    fileContains(join(dir, '.continue', 'prompts', 'review.md'), 'x-agentsbridge-allowed-tools:');
+    fileContains(join(dir, '.continue', 'prompts', 'review.md'), 'x-agentsmesh-allowed-tools:');
     fileContains(join(dir, '.continue', 'prompts', 'review.md'), 'Bash(git diff)');
     fileNotContains(join(dir, '.continue', 'prompts', 'review.md'), 'invokable:');
     fileNotContains(join(dir, '.continue', 'prompts', 'review.md'), '\nname:');
@@ -599,7 +578,7 @@ features: [rules, commands, skills, mcp]
       'createRouteSchema',
     );
 
-    fileContains(join(dir, '.continue', 'mcpServers', 'agentsbridge.json'), 'context7');
+    fileContains(join(dir, '.continue', 'mcpServers', 'agentsmesh.json'), 'context7');
   });
 
   it('generates Junie primary instruction, commands, agents, project mcp, and .aiignore', async () => {
@@ -611,27 +590,27 @@ features: [rules, commands, agents, skills, mcp, ignore]
     expect(result.exitCode, result.stderr).toBe(0);
 
     dirTreeExactly(dir, [
-      '.agentsbridge/',
-      '.agentsbridge/.lock',
-      '.agentsbridgecache',
-      '.agentsbridge/agents/',
-      '.agentsbridge/agents/code-reviewer.md',
-      '.agentsbridge/agents/researcher.md',
-      '.agentsbridge/commands/',
-      '.agentsbridge/commands/review.md',
-      '.agentsbridge/hooks.yaml',
-      '.agentsbridge/ignore',
-      '.agentsbridge/mcp.json',
-      '.agentsbridge/permissions.yaml',
-      '.agentsbridge/rules/',
-      '.agentsbridge/rules/_root.md',
-      '.agentsbridge/rules/typescript.md',
-      '.agentsbridge/skills/',
-      '.agentsbridge/skills/api-generator/',
-      '.agentsbridge/skills/api-generator/SKILL.md',
-      '.agentsbridge/skills/api-generator/references/',
-      '.agentsbridge/skills/api-generator/references/route-checklist.md',
-      '.agentsbridge/skills/api-generator/template.ts',
+      '.agentsmesh/',
+      '.agentsmesh/.lock',
+      '.agentsmeshcache',
+      '.agentsmesh/agents/',
+      '.agentsmesh/agents/code-reviewer.md',
+      '.agentsmesh/agents/researcher.md',
+      '.agentsmesh/commands/',
+      '.agentsmesh/commands/review.md',
+      '.agentsmesh/hooks.yaml',
+      '.agentsmesh/ignore',
+      '.agentsmesh/mcp.json',
+      '.agentsmesh/permissions.yaml',
+      '.agentsmesh/rules/',
+      '.agentsmesh/rules/_root.md',
+      '.agentsmesh/rules/typescript.md',
+      '.agentsmesh/skills/',
+      '.agentsmesh/skills/api-generator/',
+      '.agentsmesh/skills/api-generator/SKILL.md',
+      '.agentsmesh/skills/api-generator/references/',
+      '.agentsmesh/skills/api-generator/references/route-checklist.md',
+      '.agentsmesh/skills/api-generator/template.ts',
       '.aiignore',
       '.junie/',
       '.junie/AGENTS.md',
@@ -650,7 +629,7 @@ features: [rules, commands, agents, skills, mcp, ignore]
       '.junie/skills/api-generator/references/',
       '.junie/skills/api-generator/references/route-checklist.md',
       '.junie/skills/api-generator/template.ts',
-      'agentsbridge.yaml',
+      'agentsmesh.yaml',
     ]);
     fileContains(join(dir, '.junie', 'AGENTS.md'), '# Standards');
     fileContains(join(dir, '.junie', 'mcp', 'mcp.json'), 'context7');

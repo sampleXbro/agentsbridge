@@ -1,5 +1,5 @@
 /**
- * Write agentsbridge.yaml after merging extends (full-document stringify).
+ * Write agentsmesh.yaml after merging extends (full-document stringify).
  */
 
 import { parse as parseYaml, stringify } from 'yaml';

@@ -1,5 +1,5 @@
 /**
- * Stage manually typed install folders as canonical content under a temp .agentsbridge tree.
+ * Stage manually typed install folders as canonical content under a temp .agentsmesh tree.
  */
 
 import { basename, dirname, join, relative } from 'node:path';
@@ -19,9 +19,9 @@ interface ManualInstallScopeOptions {
 }
 
 async function createStageRoot(): Promise<ManualInstallScope> {
-  const stageBase = await mkdtemp(join(tmpdir(), 'ab-install-manual-'));
+  const stageBase = await mkdtemp(join(tmpdir(), 'am-install-manual-'));
   const discoveryRoot = join(stageBase, 'repo');
-  await mkdirp(join(discoveryRoot, '.agentsbridge'));
+  await mkdirp(join(discoveryRoot, '.agentsmesh'));
   return {
     discoveryRoot,
     cleanup: async (): Promise<void> => {
@@ -155,7 +155,7 @@ export async function stageManualInstallScope(
 ): Promise<ManualInstallScope> {
   const staged = await createStageRoot();
   try {
-    const destDir = join(staged.discoveryRoot, '.agentsbridge', as);
+    const destDir = join(staged.discoveryRoot, '.agentsmesh', as);
     if (as === 'skills') {
       await stageSkills(sourceRoot, destDir, options);
     } else {

@@ -17,7 +17,7 @@ import {
   WINDSURF_MCP_EXAMPLE_FILE,
 } from '../../../../src/targets/windsurf/constants.js';
 
-const TEST_DIR = join(tmpdir(), 'ab-windsurf-importer-test');
+const TEST_DIR = join(tmpdir(), 'am-windsurf-importer-test');
 
 beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
@@ -28,8 +28,8 @@ describe('importFromWindsurf', () => {
     const results = await importFromWindsurf(TEST_DIR);
     expect(results.length).toBe(1);
     expect(results[0]!.fromTool).toBe('windsurf');
-    expect(results[0]!.toPath).toBe('.agentsbridge/rules/_root.md');
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    expect(results[0]!.toPath).toBe('.agentsmesh/rules/_root.md');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(content).toContain('# Windsurf Rules');
     expect(content).toContain('- Use TDD');
@@ -43,12 +43,9 @@ describe('importFromWindsurf', () => {
       '---\ndescription: TS rules\nglobs: ["src/**/*.ts"]\n---\n\nUse strict TS.',
     );
     const results = await importFromWindsurf(TEST_DIR);
-    const ruleResult = results.find((r) => r.toPath === '.agentsbridge/rules/typescript.md');
+    const ruleResult = results.find((r) => r.toPath === '.agentsmesh/rules/typescript.md');
     expect(ruleResult).toBeDefined();
-    const content = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'rules', 'typescript.md'),
-      'utf-8',
-    );
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'), 'utf-8');
     expect(content).toContain('root: false');
     expect(content).toContain('description: TS rules');
     expect(content).toContain('Use strict TS.');
@@ -62,19 +59,19 @@ describe('importFromWindsurf', () => {
       '---\ntrigger: glob\nglob: "src/components/**"\n---\n\nUI constraints.',
     );
     await importFromWindsurf(TEST_DIR);
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', 'ui.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'ui.md'), 'utf-8');
     expect(content).toContain('trigger: glob');
     expect(content).toContain('globs:');
     expect(content).toContain('src/components/**');
     expect(content).not.toContain('\nglob:');
   });
 
-  it('imports .windsurfignore into .agentsbridge/ignore', async () => {
+  it('imports .windsurfignore into .agentsmesh/ignore', async () => {
     writeFileSync(join(TEST_DIR, WINDSURF_IGNORE), 'node_modules/\ndist/\n.env\n');
     const results = await importFromWindsurf(TEST_DIR);
-    const ignoreResult = results.find((r) => r.toPath === '.agentsbridge/ignore');
+    const ignoreResult = results.find((r) => r.toPath === '.agentsmesh/ignore');
     expect(ignoreResult).toBeDefined();
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'ignore'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'ignore'), 'utf-8');
     expect(content).toContain('node_modules/');
     expect(content).toContain('dist/');
     expect(content).toContain('.env');
@@ -88,32 +85,32 @@ describe('importFromWindsurf', () => {
     writeFileSync(join(TEST_DIR, WINDSURF_IGNORE), '*.log\n');
     const results = await importFromWindsurf(TEST_DIR);
     expect(results.length).toBe(3);
-    expect(results.some((r) => r.toPath === '.agentsbridge/rules/_root.md')).toBe(true);
-    expect(results.some((r) => r.toPath === '.agentsbridge/rules/foo.md')).toBe(true);
-    expect(results.some((r) => r.toPath === '.agentsbridge/ignore')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/rules/_root.md')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/rules/foo.md')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/ignore')).toBe(true);
   });
 
   it('handles empty .windsurfrules file (empty body)', async () => {
     writeFileSync(join(TEST_DIR, WINDSURF_RULES_ROOT), '');
     const results = await importFromWindsurf(TEST_DIR);
-    expect(results.find((r) => r.toPath === '.agentsbridge/rules/_root.md')).toBeDefined();
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    expect(results.find((r) => r.toPath === '.agentsmesh/rules/_root.md')).toBeDefined();
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
   });
 
   it('skips .windsurfignore when only comments and whitespace', async () => {
     writeFileSync(join(TEST_DIR, WINDSURF_IGNORE), '# comment\n  \n# another\n');
     const results = await importFromWindsurf(TEST_DIR);
-    expect(results.find((r) => r.toPath === '.agentsbridge/ignore')).toBeUndefined();
+    expect(results.find((r) => r.toPath === '.agentsmesh/ignore')).toBeUndefined();
   });
 
   it('imports .codeiumignore when .windsurfignore is absent', async () => {
     writeFileSync(join(TEST_DIR, CODEIUM_IGNORE), 'node_modules/\nbuild/\n');
     const results = await importFromWindsurf(TEST_DIR);
-    const ignoreResult = results.find((r) => r.toPath === '.agentsbridge/ignore');
+    const ignoreResult = results.find((r) => r.toPath === '.agentsmesh/ignore');
     expect(ignoreResult).toBeDefined();
     expect(ignoreResult!.fromPath).toContain(CODEIUM_IGNORE);
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'ignore'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'ignore'), 'utf-8');
     expect(content).toContain('node_modules/');
     expect(content).toContain('build/');
   });
@@ -123,7 +120,7 @@ describe('importFromWindsurf', () => {
     mkdirSync(rulesDir, { recursive: true });
     writeFileSync(join(rulesDir, '_root.md'), '---\nroot: true\n---\n\nAlternate root.');
     const results = await importFromWindsurf(TEST_DIR);
-    const rootResult = results.find((r) => r.toPath === '.agentsbridge/rules/_root.md');
+    const rootResult = results.find((r) => r.toPath === '.agentsmesh/rules/_root.md');
     expect(rootResult).toBeDefined();
   });
 
@@ -138,18 +135,18 @@ describe('importFromWindsurf', () => {
     mkdirSync(rulesDir, { recursive: true });
     writeFileSync(join(rulesDir, '_root.md'), '---\nroot: true\n---\n\nFrom rules dir');
     const results = await importFromWindsurf(TEST_DIR);
-    const rootContent = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const rootContent = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(rootContent).toContain('From windsurfrules');
     expect(rootContent).not.toContain('From rules dir');
-    expect(results.filter((r) => r.toPath === '.agentsbridge/rules/_root.md')).toHaveLength(1);
+    expect(results.filter((r) => r.toPath === '.agentsmesh/rules/_root.md')).toHaveLength(1);
   });
 
   it('imports AGENTS.md as root rule when .windsurfrules is absent', async () => {
     writeFileSync(join(TEST_DIR, 'AGENTS.md'), '# Windsurf via AGENTS.md\n');
     const results = await importFromWindsurf(TEST_DIR);
-    const rootResult = results.find((r) => r.toPath === '.agentsbridge/rules/_root.md');
+    const rootResult = results.find((r) => r.toPath === '.agentsmesh/rules/_root.md');
     expect(rootResult).toBeDefined();
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(content).toContain('# Windsurf via AGENTS.md');
   });
@@ -177,10 +174,10 @@ describe('importFromWindsurf', () => {
 
     await importFromWindsurf(TEST_DIR);
 
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
-    expect(content).toContain('.agentsbridge/skills/post-feature-qa/');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
+    expect(content).toContain('.agentsmesh/skills/post-feature-qa/');
     expect(content).toContain(
-      '.agentsbridge/skills/post-feature-qa/references/edge-case-checklist.md',
+      '.agentsmesh/skills/post-feature-qa/references/edge-case-checklist.md',
     );
     expect(content).not.toContain('.agents/skills/post-feature-qa/');
   });
@@ -189,7 +186,7 @@ describe('importFromWindsurf', () => {
     writeFileSync(join(TEST_DIR, WINDSURF_RULES_ROOT), 'From windsurfrules');
     writeFileSync(join(TEST_DIR, 'AGENTS.md'), 'From AGENTS.md');
     await importFromWindsurf(TEST_DIR);
-    const rootContent = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const rootContent = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(rootContent).toContain('From windsurfrules');
     expect(rootContent).not.toContain('From AGENTS.md');
   });
@@ -202,7 +199,7 @@ describe('importFromWindsurf', () => {
       '---\ntrigger: model_decision\ndescription: AI decides\n---\n\nAI rule body.',
     );
     await importFromWindsurf(TEST_DIR);
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', 'ai-decide.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'ai-decide.md'), 'utf-8');
     expect(content).toContain('trigger: model_decision');
     expect(content).toContain('AI decides');
   });
@@ -212,10 +209,7 @@ describe('importFromWindsurf', () => {
     mkdirSync(rulesDir, { recursive: true });
     writeFileSync(join(rulesDir, 'manual-rule.md'), '---\ntrigger: manual\n---\n\nManual rule.');
     await importFromWindsurf(TEST_DIR);
-    const content = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'rules', 'manual-rule.md'),
-      'utf-8',
-    );
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'manual-rule.md'), 'utf-8');
     expect(content).toContain('trigger: manual');
   });
 
@@ -239,8 +233,8 @@ describe('importFromWindsurf', () => {
       ),
     );
     const results = await importFromWindsurf(TEST_DIR);
-    expect(results.find((r) => r.toPath === '.agentsbridge/hooks.yaml')).toBeDefined();
-    const hooks = readFileSync(join(TEST_DIR, '.agentsbridge', 'hooks.yaml'), 'utf-8');
+    expect(results.find((r) => r.toPath === '.agentsmesh/hooks.yaml')).toBeDefined();
+    const hooks = readFileSync(join(TEST_DIR, '.agentsmesh', 'hooks.yaml'), 'utf-8');
     expect(hooks).toContain('PreToolUse');
     expect(hooks).toContain('matcher: .*');
     expect(hooks).toContain('command: echo pre');
@@ -266,7 +260,7 @@ describe('importFromWindsurf', () => {
       ),
     );
     await importFromWindsurf(TEST_DIR);
-    const hooks = readFileSync(join(TEST_DIR, '.agentsbridge', 'hooks.yaml'), 'utf-8');
+    const hooks = readFileSync(join(TEST_DIR, '.agentsmesh', 'hooks.yaml'), 'utf-8');
     expect(hooks).toContain('PostToolUse');
     expect(hooks).toContain('matcher: Write');
     expect(hooks).toContain('command: echo post');
@@ -292,8 +286,8 @@ describe('importFromWindsurf', () => {
       ),
     );
     const results = await importFromWindsurf(TEST_DIR);
-    expect(results.find((r) => r.toPath === '.agentsbridge/mcp.json')).toBeDefined();
-    const mcp = readFileSync(join(TEST_DIR, '.agentsbridge', 'mcp.json'), 'utf-8');
+    expect(results.find((r) => r.toPath === '.agentsmesh/mcp.json')).toBeDefined();
+    const mcp = readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf-8');
     expect(mcp).toContain('"mcpServers"');
     expect(mcp).toContain('"context7"');
   });
@@ -313,7 +307,7 @@ describe('importFromWindsurf', () => {
       ),
     );
     const results = await importFromWindsurf(TEST_DIR);
-    const mcpResult = results.find((r) => r.toPath === '.agentsbridge/mcp.json');
+    const mcpResult = results.find((r) => r.toPath === '.agentsmesh/mcp.json');
     expect(mcpResult).toBeDefined();
     expect(mcpResult?.fromPath).toContain('mcp_config.json');
   });
@@ -328,10 +322,10 @@ describe('importFromWindsurf — workflows', () => {
       '---\ndescription: Deploy workflow\n---\n\nRun deploy steps.',
     );
     const results = await importFromWindsurf(TEST_DIR);
-    const cmdResult = results.find((r) => r.toPath === '.agentsbridge/commands/deploy.md');
+    const cmdResult = results.find((r) => r.toPath === '.agentsmesh/commands/deploy.md');
     expect(cmdResult).toBeDefined();
     expect(cmdResult?.feature).toBe('commands');
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'commands', 'deploy.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'commands', 'deploy.md'), 'utf-8');
     expect(content).toContain('description: Deploy workflow');
     expect(content).toContain('Run deploy steps.');
   });
@@ -345,15 +339,15 @@ describe('importFromWindsurf — workflows', () => {
     const cmds = results.filter((r) => r.feature === 'commands');
     expect(cmds).toHaveLength(2);
     expect(cmds.map((r) => r.toPath).sort()).toEqual([
-      '.agentsbridge/commands/deploy.md',
-      '.agentsbridge/commands/review.md',
+      '.agentsmesh/commands/deploy.md',
+      '.agentsmesh/commands/review.md',
     ]);
   });
 
   it('preserves existing canonical command metadata when importing body-only workflows', async () => {
-    mkdirSync(join(TEST_DIR, '.agentsbridge', 'commands'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'commands'), { recursive: true });
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', 'commands', 'review.md'),
+      join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'),
       '---\ndescription: Review workflow\nallowed-tools:\n  - Read\n  - Grep\n---\n\nOld review body.',
     );
     const workflowsDir = join(TEST_DIR, '.windsurf', 'workflows');
@@ -362,7 +356,7 @@ describe('importFromWindsurf — workflows', () => {
 
     await importFromWindsurf(TEST_DIR);
 
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'commands', 'review.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'), 'utf-8');
     expect(content).toContain('description: Review workflow');
     expect(content).toContain('allowed-tools:');
     expect(content).toContain('- Read');
@@ -381,11 +375,11 @@ describe('importFromWindsurf — skills', () => {
       '---\ndescription: API generation skill\n---\n\nWhen creating APIs, follow patterns.',
     );
     const results = await importFromWindsurf(TEST_DIR);
-    const skillResult = results.find((r) => r.toPath === '.agentsbridge/skills/api-gen/SKILL.md');
+    const skillResult = results.find((r) => r.toPath === '.agentsmesh/skills/api-gen/SKILL.md');
     expect(skillResult).toBeDefined();
     expect(skillResult?.feature).toBe('skills');
     const content = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'skills', 'api-gen', 'SKILL.md'),
+      join(TEST_DIR, '.agentsmesh', 'skills', 'api-gen', 'SKILL.md'),
       'utf-8',
     );
     expect(content).toContain('description: API generation skill');
@@ -393,37 +387,37 @@ describe('importFromWindsurf — skills', () => {
   });
 
   it('imports projected agent skills back into canonical agents', async () => {
-    const skillDir = join(TEST_DIR, '.windsurf', 'skills', 'ab-agent-reviewer');
+    const skillDir = join(TEST_DIR, '.windsurf', 'skills', 'am-agent-reviewer');
     mkdirSync(skillDir, { recursive: true });
-    mkdirSync(join(TEST_DIR, '.agentsbridge', 'skills', 'ab-agent-reviewer'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'skills', 'am-agent-reviewer'), { recursive: true });
     writeFileSync(
       join(skillDir, 'SKILL.md'),
       [
         '---',
         'description: Review specialist',
-        'x-agentsbridge-kind: agent',
-        'x-agentsbridge-name: reviewer',
-        'x-agentsbridge-tools:',
+        'x-agentsmesh-kind: agent',
+        'x-agentsmesh-name: reviewer',
+        'x-agentsmesh-tools:',
         '  - Read',
         '  - Grep',
-        'x-agentsbridge-model: sonnet',
-        'x-agentsbridge-permission-mode: ask',
-        'x-agentsbridge-max-turns: 9',
+        'x-agentsmesh-model: sonnet',
+        'x-agentsmesh-permission-mode: ask',
+        'x-agentsmesh-max-turns: 9',
         '---',
         '',
         'Review risky changes first.',
       ].join('\n'),
     );
     const results = await importFromWindsurf(TEST_DIR);
-    expect(results.find((r) => r.toPath === '.agentsbridge/agents/reviewer.md')).toBeDefined();
+    expect(results.find((r) => r.toPath === '.agentsmesh/agents/reviewer.md')).toBeDefined();
     expect(
-      results.find((r) => r.toPath === '.agentsbridge/skills/ab-agent-reviewer/SKILL.md'),
+      results.find((r) => r.toPath === '.agentsmesh/skills/am-agent-reviewer/SKILL.md'),
     ).toBeUndefined();
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'agents', 'reviewer.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'), 'utf-8');
     expect(content).toContain('name: reviewer');
     expect(content).toContain('description: Review specialist');
     expect(content).toContain('Review risky changes first.');
-    expect(existsSync(join(TEST_DIR, '.agentsbridge', 'skills', 'ab-agent-reviewer'))).toBe(false);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'skills', 'am-agent-reviewer'))).toBe(false);
   });
 
   it('imports skill supporting files alongside SKILL.md', async () => {
@@ -432,10 +426,10 @@ describe('importFromWindsurf — skills', () => {
     writeFileSync(join(skillDir, 'SKILL.md'), '# TDD Skill\n');
     writeFileSync(join(skillDir, 'example.ts'), 'const x = 1;');
     const results = await importFromWindsurf(TEST_DIR);
-    expect(results.some((r) => r.toPath === '.agentsbridge/skills/tdd/SKILL.md')).toBe(true);
-    expect(results.some((r) => r.toPath === '.agentsbridge/skills/tdd/example.ts')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/skills/tdd/SKILL.md')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/skills/tdd/example.ts')).toBe(true);
     const supportContent = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'skills', 'tdd', 'example.ts'),
+      join(TEST_DIR, '.agentsmesh', 'skills', 'tdd', 'example.ts'),
       'utf-8',
     );
     expect(supportContent).toBe('const x = 1;');
@@ -453,13 +447,13 @@ describe('importFromWindsurf — skills', () => {
     writeFileSync(join(TEST_DIR, 'AGENTS.md'), '# Root Windsurf Rules\n');
     mkdirSync(join(TEST_DIR, 'src'), { recursive: true });
     writeFileSync(join(TEST_DIR, 'src', 'AGENTS.md'), '# Src Rules\n');
-    mkdirSync(join(TEST_DIR, '.agentsbridge', 'rules'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', 'rules', '.worktrees-security-collaboration.md'),
+      join(TEST_DIR, '.agentsmesh', 'rules', '.worktrees-security-collaboration.md'),
       'stale hidden rule',
     );
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', 'rules', 'tests-e2e-fixtures-windsurf-project.md'),
+      join(TEST_DIR, '.agentsmesh', 'rules', 'tests-e2e-fixtures-windsurf-project.md'),
       'stale fixture rule',
     );
     mkdirSync(join(TEST_DIR, '.worktrees', 'security-collaboration'), { recursive: true });
@@ -480,14 +474,12 @@ describe('importFromWindsurf — skills', () => {
         .filter((r) => r.feature === 'rules')
         .map((r) => r.toPath)
         .sort(),
-    ).toEqual(['.agentsbridge/rules/_root.md', '.agentsbridge/rules/src.md']);
+    ).toEqual(['.agentsmesh/rules/_root.md', '.agentsmesh/rules/src.md']);
     expect(
-      existsSync(join(TEST_DIR, '.agentsbridge', 'rules', '.worktrees-security-collaboration.md')),
+      existsSync(join(TEST_DIR, '.agentsmesh', 'rules', '.worktrees-security-collaboration.md')),
     ).toBe(false);
     expect(
-      existsSync(
-        join(TEST_DIR, '.agentsbridge', 'rules', 'tests-e2e-fixtures-windsurf-project.md'),
-      ),
+      existsSync(join(TEST_DIR, '.agentsmesh', 'rules', 'tests-e2e-fixtures-windsurf-project.md')),
     ).toBe(false);
   });
 });

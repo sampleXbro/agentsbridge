@@ -1,9 +1,9 @@
 ---
 agent: agent
 description: Create a conventional commit/s from current changes
-x-agentsbridge-kind: command
-x-agentsbridge-name: commit
-x-agentsbridge-allowed-tools:
+x-agentsmesh-kind: command
+x-agentsmesh-name: commit
+x-agentsmesh-allowed-tools:
   - Read
   - Grep
   - Bash(git status)

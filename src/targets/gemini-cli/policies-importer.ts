@@ -5,7 +5,7 @@ import type { ImportResult } from '../../core/types.js';
 import { readDirRecursive, readFileSafe, writeFileAtomic, mkdirp } from '../../utils/fs.js';
 import { GEMINI_POLICIES_DIR } from './constants.js';
 
-const AB_PERMISSIONS = '.agentsbridge/permissions.yaml';
+const AB_PERMISSIONS = '.agentsmesh/permissions.yaml';
 
 function unescapeRegexLiteral(value: string): string {
   // Reverse of escapeRegexLiteral: `\.` -> `.`, `\/` -> `/`, etc.
@@ -120,7 +120,7 @@ export async function importGeminiPolicies(projectRoot: string): Promise<ImportR
 
   if (allow.length === 0 && deny.length === 0) return results;
 
-  await mkdirp(join(projectRoot, '.agentsbridge'));
+  await mkdirp(join(projectRoot, '.agentsmesh'));
   const outPath = join(projectRoot, AB_PERMISSIONS);
   const yaml = stringifyYaml({ allow, deny });
   await writeFileAtomic(outPath, yaml.trimEnd() + '\n');

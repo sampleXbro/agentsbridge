@@ -1,5 +1,5 @@
 /**
- * Resolve local or fetched path for agentsbridge install.
+ * Resolve local or fetched path for agentsmesh install.
  */
 
 import { fetchInstallSource } from './fetch-install-source.js';

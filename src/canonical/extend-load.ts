@@ -33,8 +33,8 @@ export async function loadCanonicalForExtend(ext: ResolvedExtend): Promise<Canon
   const base = ext.resolvedPath;
 
   if (!ext.path) {
-    const agentsbridgeDir = join(base, '.agentsbridge');
-    if (!(await exists(agentsbridgeDir))) {
+    const agentsmeshDir = join(base, '.agentsmesh');
+    if (!(await exists(agentsmeshDir))) {
       if (await isSkillPackLayout(base)) {
         const skills = await loadSkillsAtExtendPath(base);
         return { ...emptyCanonical(), skills };
@@ -43,11 +43,11 @@ export async function loadCanonicalForExtend(ext: ResolvedExtend): Promise<Canon
       if (!targetName) {
         throw new Error(
           `Extend "${ext.name}": No supported agent configuration found in ${base}.\n` +
-            `Expected one of: .agentsbridge/, ${KNOWN_NATIVE_PATHS.join(', ')}.`,
+            `Expected one of: .agentsmesh/, ${KNOWN_NATIVE_PATHS.join(', ')}.`,
         );
       }
       logger.info(
-        `[agentsbridge] Extend "${ext.name}": ${ext.target ? 'specified' : 'detected'} ${targetName} format, importing to .agentsbridge/...`,
+        `[agentsmesh] Extend "${ext.name}": ${ext.target ? 'specified' : 'detected'} ${targetName} format, importing to .agentsmesh/...`,
       );
       await importNativeToCanonical(base, targetName);
     }
@@ -60,10 +60,10 @@ export async function loadCanonicalForExtend(ext: ResolvedExtend): Promise<Canon
   }
 
   if (ext.target) {
-    const agentsbridgeDir = join(base, '.agentsbridge');
-    if (!(await exists(agentsbridgeDir))) {
+    const agentsmeshDir = join(base, '.agentsmesh');
+    if (!(await exists(agentsmeshDir))) {
       logger.info(
-        `[agentsbridge] Extend "${ext.name}": path "${ext.path}" with target "${ext.target}" — importing at extend root, then loading canonical.`,
+        `[agentsmesh] Extend "${ext.name}": path "${ext.path}" with target "${ext.target}" — importing at extend root, then loading canonical.`,
       );
       await importNativeToCanonical(base, ext.target);
     }

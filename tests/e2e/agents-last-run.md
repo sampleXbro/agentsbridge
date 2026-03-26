@@ -2,7 +2,7 @@
 
 _Generated: 2026-03-25T07:57:39.733Z_
 
-## Initial — `.agentsbridge/agents/` (canonical fixture)
+## Initial — `.agentsmesh/agents/` (canonical fixture)
 
   - **code-reviewer.md**
     - description : Code review specialist
@@ -68,22 +68,22 @@ Legend: ✓ = native  📝 = embedded  ⚠ = partial  – = not supported
 ### Imported files
 
 ```
-✓ .claude/CLAUDE.md → .agentsbridge/rules/_root.md
-✓ .claude/rules/typescript.md → .agentsbridge/rules/typescript.md
-✓ .claude/commands/review.md → .agentsbridge/commands/review.md
-✓ .claude/agents/code-reviewer.md → .agentsbridge/agents/code-reviewer.md
-✓ .claude/agents/researcher.md → .agentsbridge/agents/researcher.md
-✓ .claude/skills/api-generator/SKILL.md → .agentsbridge/skills/api-generator/SKILL.md
-✓ .claude/skills/api-generator/references/route-checklist.md → .agentsbridge/skills/api-generator/references/route-checklist.md
-✓ .claude/skills/api-generator/template.ts → .agentsbridge/skills/api-generator/template.ts
-✓ .mcp.json → .agentsbridge/mcp.json
-✓ .claude/settings.json → .agentsbridge/permissions.yaml
-✓ .claude/settings.json → .agentsbridge/hooks.yaml
-✓ .claudeignore → .agentsbridge/ignore
-Imported 12 file(s). Run 'agentsbridge generate' to sync to other tools.
+✓ .claude/CLAUDE.md → .agentsmesh/rules/_root.md
+✓ .claude/rules/typescript.md → .agentsmesh/rules/typescript.md
+✓ .claude/commands/review.md → .agentsmesh/commands/review.md
+✓ .claude/agents/code-reviewer.md → .agentsmesh/agents/code-reviewer.md
+✓ .claude/agents/researcher.md → .agentsmesh/agents/researcher.md
+✓ .claude/skills/api-generator/SKILL.md → .agentsmesh/skills/api-generator/SKILL.md
+✓ .claude/skills/api-generator/references/route-checklist.md → .agentsmesh/skills/api-generator/references/route-checklist.md
+✓ .claude/skills/api-generator/template.ts → .agentsmesh/skills/api-generator/template.ts
+✓ .mcp.json → .agentsmesh/mcp.json
+✓ .claude/settings.json → .agentsmesh/permissions.yaml
+✓ .claude/settings.json → .agentsmesh/hooks.yaml
+✓ .claudeignore → .agentsmesh/ignore
+Imported 12 file(s). Run 'agentsmesh generate' to sync to other tools.
 ```
 
-#### Canonical `.agentsbridge/agents/` after import
+#### Canonical `.agentsmesh/agents/` after import
 
   - **code-reviewer.md**
     - description : Code review specialist
@@ -150,21 +150,21 @@ Legend: ✓ = native  📝 = embedded  ⚠ = partial  – = not supported
 ### Imported files
 
 ```
-✓ AGENTS.md → .agentsbridge/rules/_root.md
-✓ .cursor/rules/typescript.mdc → .agentsbridge/rules/typescript.md
-✓ .cursor/commands/review.md → .agentsbridge/commands/review.md
-✓ .cursor/agents/code-reviewer.md → .agentsbridge/agents/code-reviewer.md
-✓ .cursor/agents/researcher.md → .agentsbridge/agents/researcher.md
-✓ .cursor/skills/api-generator/SKILL.md → .agentsbridge/skills/api-generator/SKILL.md
-✓ .cursor/skills/api-generator/references/route-checklist.md → .agentsbridge/skills/api-generator/references/route-checklist.md
-✓ .cursor/skills/api-generator/template.ts → .agentsbridge/skills/api-generator/template.ts
-✓ .cursor/mcp.json → .agentsbridge/mcp.json
-✓ .cursor/hooks.json → .agentsbridge/hooks.yaml
-✓ .cursorignore → .agentsbridge/ignore
-Imported 11 file(s). Run 'agentsbridge generate' to sync to other tools.
+✓ AGENTS.md → .agentsmesh/rules/_root.md
+✓ .cursor/rules/typescript.mdc → .agentsmesh/rules/typescript.md
+✓ .cursor/commands/review.md → .agentsmesh/commands/review.md
+✓ .cursor/agents/code-reviewer.md → .agentsmesh/agents/code-reviewer.md
+✓ .cursor/agents/researcher.md → .agentsmesh/agents/researcher.md
+✓ .cursor/skills/api-generator/SKILL.md → .agentsmesh/skills/api-generator/SKILL.md
+✓ .cursor/skills/api-generator/references/route-checklist.md → .agentsmesh/skills/api-generator/references/route-checklist.md
+✓ .cursor/skills/api-generator/template.ts → .agentsmesh/skills/api-generator/template.ts
+✓ .cursor/mcp.json → .agentsmesh/mcp.json
+✓ .cursor/hooks.json → .agentsmesh/hooks.yaml
+✓ .cursorignore → .agentsmesh/ignore
+Imported 11 file(s). Run 'agentsmesh generate' to sync to other tools.
 ```
 
-#### Canonical `.agentsbridge/agents/` after import
+#### Canonical `.agentsmesh/agents/` after import
 
   - **code-reviewer.md**
     - description : Code review specialist
@@ -192,7 +192,7 @@ Imported 11 file(s). Run 'agentsbridge generate' to sync to other tools.
 ✓ created .github/skills/api-generator/SKILL.md
 ✓ created .github/skills/api-generator/references/route-checklist.md
 ✓ created .github/skills/api-generator/template.ts
-✓ created .github/hooks/agentsbridge.json
+✓ created .github/hooks/agentsmesh.json
 ✓ created .github/hooks/scripts/posttooluse-0.sh
 Generated: 10 created, 0 updated, 0 unchanged
 ┌───────────────┬────────────┐
@@ -224,21 +224,21 @@ Legend: ✓ = native  📝 = embedded  ⚠ = partial  – = not supported
 
 ### cline: exit=0
 
-  - **code-reviewer**: ✓ projected to `.cline/skills/ab-agent-code-reviewer/SKILL.md`
+  - **code-reviewer**: ✓ projected to `.cline/skills/am-agent-code-reviewer/SKILL.md`
     - description : Code review specialist
     - model       : sonnet
     - tools       : Read, Glob, Grep
-  - **researcher**: ✓ projected to `.cline/skills/ab-agent-researcher/SKILL.md`
+  - **researcher**: ✓ projected to `.cline/skills/am-agent-researcher/SKILL.md`
     - description : Research documentation and summarize findings
     - model       : haiku
     - tools       : Read, WebSearch, WebFetch
 ### windsurf: exit=0
 
-  - **code-reviewer**: ✓ projected to `.windsurf/skills/ab-agent-code-reviewer/SKILL.md`
+  - **code-reviewer**: ✓ projected to `.windsurf/skills/am-agent-code-reviewer/SKILL.md`
     - description : Code review specialist
     - model       : sonnet
     - tools       : Read, Glob, Grep
-  - **researcher**: ✓ projected to `.windsurf/skills/ab-agent-researcher/SKILL.md`
+  - **researcher**: ✓ projected to `.windsurf/skills/am-agent-researcher/SKILL.md`
     - description : Research documentation and summarize findings
     - model       : haiku
     - tools       : Read, WebSearch, WebFetch

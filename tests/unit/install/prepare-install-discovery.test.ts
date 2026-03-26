@@ -10,16 +10,16 @@ import { prepareInstallDiscovery } from '../../../src/install/prepare-install-di
 
 const mockImport = vi.hoisted(() =>
   vi.fn<[string, string], Promise<unknown[]>>().mockImplementation(async (root: string) => {
-    mkdirSync(join(root, '.agentsbridge', 'commands'), { recursive: true });
+    mkdirSync(join(root, '.agentsmesh', 'commands'), { recursive: true });
     writeFileSync(
-      join(root, '.agentsbridge', 'commands', 'alpha.md'),
+      join(root, '.agentsmesh', 'commands', 'alpha.md'),
       '---\ndescription: a\n---\nAlpha\n',
     );
     return [
       {
         fromTool: 'gemini-cli',
         fromPath: join(root, '.gemini', 'commands', 'alpha.toml'),
-        toPath: '.agentsbridge/commands/alpha.md',
+        toPath: '.agentsmesh/commands/alpha.md',
         feature: 'commands',
       },
     ];
@@ -38,9 +38,9 @@ function writeMinimalGeminiCommands(repo: string) {
 }
 
 function writeMinimalAgentsbridge(repo: string) {
-  mkdirSync(join(repo, '.agentsbridge', 'commands'), { recursive: true });
+  mkdirSync(join(repo, '.agentsmesh', 'commands'), { recursive: true });
   writeFileSync(
-    join(repo, '.agentsbridge', 'commands', 'keep.md'),
+    join(repo, '.agentsmesh', 'commands', 'keep.md'),
     '---\ndescription: k\n---\n# K\n',
   );
 }
@@ -55,7 +55,7 @@ describe('prepareInstallDiscovery', () => {
     rmSync(ROOT, { recursive: true, force: true });
   });
 
-  it('imports with explicit target when no .agentsbridge', async () => {
+  it('imports with explicit target when no .agentsmesh', async () => {
     writeMinimalGeminiCommands(ROOT);
     const contentRoot = join(ROOT, '.gemini', 'commands');
     const r = await prepareInstallDiscovery(ROOT, contentRoot, '.gemini/commands', {
@@ -68,7 +68,7 @@ describe('prepareInstallDiscovery', () => {
     expect(r.implicitPick?.commands).toContain('alpha');
     expect(r.yamlTarget).toBe('gemini-cli');
     expect(r.importHappened).toBe(true);
-    expect(existsSync(join(ROOT, '.agentsbridge'))).toBe(false);
+    expect(existsSync(join(ROOT, '.agentsmesh'))).toBe(false);
     await r.cleanup?.();
   });
 
@@ -81,11 +81,11 @@ describe('prepareInstallDiscovery', () => {
     expect(mockImport.mock.calls[0]?.[1]).toBe('gemini-cli');
     expect(r.yamlTarget).toBe('gemini-cli');
     expect(r.importHappened).toBe(true);
-    expect(existsSync(join(ROOT, '.agentsbridge'))).toBe(false);
+    expect(existsSync(join(ROOT, '.agentsmesh'))).toBe(false);
     await r.cleanup?.();
   });
 
-  it('stages native scope when .agentsbridge already exists', async () => {
+  it('stages native scope when .agentsmesh already exists', async () => {
     writeMinimalGeminiCommands(ROOT);
     writeMinimalAgentsbridge(ROOT);
     const contentRoot = join(ROOT, '.gemini', 'commands');
@@ -97,7 +97,7 @@ describe('prepareInstallDiscovery', () => {
     expect(r.importHappened).toBe(true);
     expect(r.implicitPick?.commands).toContain('alpha');
     expect(r.yamlTarget).toBe('gemini-cli');
-    expect(existsSync(join(ROOT, '.agentsbridge', 'rules'))).toBe(false);
+    expect(existsSync(join(ROOT, '.agentsmesh', 'rules'))).toBe(false);
     await r.cleanup?.();
   });
 
@@ -107,7 +107,7 @@ describe('prepareInstallDiscovery', () => {
     ).rejects.toThrow();
   });
 
-  it('uses contentRoot for slice when no .agentsbridge and detect returns null', async () => {
+  it('uses contentRoot for slice when no .agentsmesh and detect returns null', async () => {
     mkdirSync(join(ROOT, 'orphan', 'rules'), { recursive: true });
     writeFileSync(join(ROOT, 'orphan', 'rules', 'solo.md'), '---\n---\n# S\n');
     const contentRoot = join(ROOT, 'orphan', 'rules');

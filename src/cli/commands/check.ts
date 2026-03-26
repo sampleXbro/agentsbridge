@@ -1,5 +1,5 @@
 /**
- * agentsbridge check — CI integration for team collaboration.
+ * agentsmesh check — CI integration for team collaboration.
  * Verifies canonical files match the lock file.
  */
 
@@ -28,11 +28,11 @@ export async function runCheck(
   const root = projectRoot ?? process.cwd();
 
   const { config, configDir } = await loadConfigFromDir(root);
-  const abDir = join(configDir, '.agentsbridge');
+  const abDir = join(configDir, '.agentsmesh');
 
   const lock = await readLock(abDir);
   if (lock === null) {
-    logger.error("Not initialized for collaboration. Run 'agentsbridge generate' first.");
+    logger.error("Not initialized for collaboration. Run 'agentsmesh generate' first.");
     return 1;
   }
 
@@ -107,7 +107,7 @@ export async function runCheck(
     logger.error(`  ${p} was removed${suffix}`);
   }
   logger.info(
-    "Run 'agentsbridge merge' to resolve, or 'agentsbridge generate --force' to accept current state.",
+    "Run 'agentsmesh merge' to resolve, or 'agentsmesh generate --force' to accept current state.",
   );
   return 1;
 }

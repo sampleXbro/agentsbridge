@@ -4,8 +4,8 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { parseSkills } from '../../../src/canonical/skills.js';
 
-const TEST_DIR = join(tmpdir(), 'agentsbridge-skills-test');
-const SKILLS_DIR = join(TEST_DIR, '.agentsbridge', 'skills');
+const TEST_DIR = join(tmpdir(), 'agentsmesh-skills-test');
+const SKILLS_DIR = join(TEST_DIR, '.agentsmesh', 'skills');
 
 beforeEach(() => {
   mkdirSync(SKILLS_DIR, { recursive: true });

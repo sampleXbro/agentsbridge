@@ -21,13 +21,13 @@ function git(args: string[], cwd: string): string {
 
 function createRemoteRepo(root: string): string {
   const repoDir = join(root, 'remote-repo');
-  mkdirSync(join(repoDir, '.agentsbridge', 'rules'), { recursive: true });
+  mkdirSync(join(repoDir, '.agentsmesh', 'rules'), { recursive: true });
   writeFileSync(
-    join(repoDir, '.agentsbridge', 'rules', '_root.md'),
+    join(repoDir, '.agentsmesh', 'rules', '_root.md'),
     '---\nroot: true\n---\n# Remote shared root\n',
   );
   writeFileSync(
-    join(repoDir, '.agentsbridge', 'permissions.yaml'),
+    join(repoDir, '.agentsmesh', 'permissions.yaml'),
     ['allow:', '  - Bash(pnpm build:*)', '  - Bash(pnpm test:*)', '  - Bash(git add:*)', ''].join(
       '\n',
     ),
@@ -51,13 +51,13 @@ describe('remote git extends end to end', () => {
     dir = createTestProject();
     const remoteRepo = createRemoteRepo(dir);
 
-    mkdirSync(join(dir, '.agentsbridge', 'rules'), { recursive: true });
+    mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(
-      join(dir, '.agentsbridge', 'rules', '_root.md'),
+      join(dir, '.agentsmesh', 'rules', '_root.md'),
       '---\nroot: true\n---\n# Local root wins\n',
     );
     writeFileSync(
-      join(dir, '.agentsbridge', 'permissions.yaml'),
+      join(dir, '.agentsmesh', 'permissions.yaml'),
       [
         'allow:',
         '  - Bash(pnpm build:*)',
@@ -68,7 +68,7 @@ describe('remote git extends end to end', () => {
       ].join('\n'),
     );
     writeFileSync(
-      join(dir, 'agentsbridge.yaml'),
+      join(dir, 'agentsmesh.yaml'),
       [
         'version: 1',
         'targets: [claude-code]',
@@ -95,6 +95,6 @@ describe('remote git extends end to end', () => {
       'Bash(git add:*)',
       'Bash(npx vitest:*)',
     ]);
-    expect(readFileSync(join(dir, '.agentsbridge', '.lock'), 'utf-8')).toContain('remote-base');
+    expect(readFileSync(join(dir, '.agentsmesh', '.lock'), 'utf-8')).toContain('remote-base');
   });
 });

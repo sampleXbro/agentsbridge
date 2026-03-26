@@ -1,5 +1,5 @@
 /**
- * Resolve git merge conflicts in .agentsbridge/.lock.
+ * Resolve git merge conflicts in .agentsmesh/.lock.
  * When .lock has conflict markers, rebuilds checksums from current canonical files.
  */
 
@@ -19,7 +19,7 @@ const CONFLICT_MARKER = '<<<<<<<';
 
 /**
  * Check if the lock file contains git merge conflict markers.
- * @param abDir - Absolute path to .agentsbridge
+ * @param abDir - Absolute path to .agentsmesh
  * @returns True if lock has conflict markers
  */
 export async function hasLockConflict(abDir: string): Promise<boolean> {
@@ -32,7 +32,7 @@ export async function hasLockConflict(abDir: string): Promise<boolean> {
 /**
  * Resolve lock conflict by rebuilding checksums from current canonical files.
  * Assumes user has already resolved conflicted canonical files (e.g. via git/editor).
- * @param abDir - Absolute path to .agentsbridge
+ * @param abDir - Absolute path to .agentsmesh
  * @param libVersion - Library version for the new lock
  * @param config - Optional config for extend checksums
  * @throws Error if lock has no conflict or does not exist

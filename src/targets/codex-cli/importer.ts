@@ -2,13 +2,13 @@
  * Codex CLI importer — imports canonical config from Codex project files.
  *
  * Sources imported:
- *   AGENTS.md (preferred) / codex.md (fallback) → .agentsbridge/rules/_root.md
- *   .agents/skills/ab-command-{name}/SKILL.md   → .agentsbridge/commands/{name}.md
- *   .agents/skills/{name}/SKILL.md → .agentsbridge/skills/{name}/SKILL.md
- *   .codex/config.toml            → .agentsbridge/mcp.json (mcp_servers section)
- *   .codex/rules/*.rules (embed)  → .agentsbridge/rules/*.md (agentsbridge block)
- *   .codex/rules/*.md (legacy)    → .agentsbridge/rules/*.md
- *   nested AGENTS.md               → .agentsbridge/rules (scoped)
+ *   AGENTS.md (preferred) / codex.md (fallback) → .agentsmesh/rules/_root.md
+ *   .agents/skills/am-command-{name}/SKILL.md   → .agentsmesh/commands/{name}.md
+ *   .agents/skills/{name}/SKILL.md → .agentsmesh/skills/{name}/SKILL.md
+ *   .codex/config.toml            → .agentsmesh/mcp.json (mcp_servers section)
+ *   .codex/rules/*.rules (embed)  → .agentsmesh/rules/*.md (agentsmesh block)
+ *   .codex/rules/*.md (legacy)    → .agentsmesh/rules/*.md
+ *   nested AGENTS.md               → .agentsmesh/rules (scoped)
  */
 
 import { join, relative, dirname, basename } from 'node:path';
@@ -26,10 +26,10 @@ import { importSkills } from './skills-helpers.js';
 import { shouldImportScopedAgentsRule, removePathIfExists } from '../scoped-agents-import.js';
 import { parse as parseToml } from 'smol-toml';
 
-const AB_RULES = '.agentsbridge/rules';
+const AB_RULES = '.agentsmesh/rules';
 
 /**
- * Import Codex config into canonical .agentsbridge/.
+ * Import Codex config into canonical .agentsmesh/.
  *
  * @param projectRoot - Project root directory
  * @returns Import results for each imported file
@@ -53,7 +53,7 @@ async function importAgents(
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
 ): Promise<void> {
   const agentsPath = join(projectRoot, CODEX_AGENTS_DIR);
-  const agentsDestDir = join(projectRoot, '.agentsbridge/agents');
+  const agentsDestDir = join(projectRoot, '.agentsmesh/agents');
   try {
     const agentFiles = await readDirRecursive(agentsPath);
     const tomlFiles = agentFiles.filter((f) => f.endsWith('.toml'));
@@ -96,7 +96,7 @@ async function importAgents(
       results.push({
         fromTool: 'codex-cli',
         fromPath: srcPath,
-        toPath: `.agentsbridge/agents/${name}.md`,
+        toPath: `.agentsmesh/agents/${name}.md`,
         feature: 'agents',
       });
     }

@@ -12,7 +12,7 @@ import {
   seedProject,
 } from '../helpers/install-markdown-fixture.js';
 
-const ROOT = join(tmpdir(), 'ab-install-manual-as-markdown');
+const ROOT = join(tmpdir(), 'am-install-manual-as-markdown');
 
 beforeEach(() => {
   rmSync(ROOT, { recursive: true, force: true });
@@ -39,11 +39,11 @@ describe('install manual --as markdown entities (integration)', () => {
 
       expect(
         listRelativeFiles(
-          join(project, '.agentsbridge', 'packs', `bulk-${testCase.kind}`, testCase.kind),
+          join(project, '.agentsmesh', 'packs', `bulk-${testCase.kind}`, testCase.kind),
         ),
       ).toEqual(testCase.expectedPackFiles);
       expect(listRelativeFiles(join(project, '.claude'))).toEqual(testCase.expectedGeneratedFiles);
-      expect(readInstallManifest(join(project, '.agentsbridge', 'installs.yaml'))).toEqual({
+      expect(readInstallManifest(join(project, '.agentsmesh', 'installs.yaml'))).toEqual({
         version: 1,
         installs: [
           {
@@ -84,7 +84,7 @@ describe('install manual --as markdown entities (integration)', () => {
 
       expect(
         listRelativeFiles(
-          join(project, '.agentsbridge', 'packs', `single-${testCase.kind}`, testCase.kind),
+          join(project, '.agentsmesh', 'packs', `single-${testCase.kind}`, testCase.kind),
         ),
       ).toEqual([expectedOutput]);
       expect(listRelativeFiles(join(project, '.claude'))).toEqual(
@@ -92,19 +92,17 @@ describe('install manual --as markdown entities (integration)', () => {
           ? ['CLAUDE.md', 'rules/quality.md']
           : ['CLAUDE.md', `${testCase.kind}/${expectedOutput}`],
       );
-      expect(readInstallManifest(join(project, '.agentsbridge', 'installs.yaml')).installs).toEqual(
-        [
-          {
-            as: testCase.kind,
-            features: manifestFeatures(testCase.kind),
-            name: `single-${testCase.kind}`,
-            path: testCase.kind,
-            pick: { [testCase.kind]: pickedNames([expectedOutput]) },
-            source: '../upstream',
-            source_kind: 'local',
-          },
-        ],
-      );
+      expect(readInstallManifest(join(project, '.agentsmesh', 'installs.yaml')).installs).toEqual([
+        {
+          as: testCase.kind,
+          features: manifestFeatures(testCase.kind),
+          name: `single-${testCase.kind}`,
+          path: testCase.kind,
+          pick: { [testCase.kind]: pickedNames([expectedOutput]) },
+          source: '../upstream',
+          source_kind: 'local',
+        },
+      ]);
     },
   );
 
@@ -128,7 +126,7 @@ describe('install manual --as markdown entities (integration)', () => {
 
       expect(
         listRelativeFiles(
-          join(project, '.agentsbridge', 'packs', `direct-${testCase.kind}`, testCase.kind),
+          join(project, '.agentsmesh', 'packs', `direct-${testCase.kind}`, testCase.kind),
         ),
       ).toEqual([expectedOutput]);
       expect(listRelativeFiles(join(project, '.claude'))).toEqual(
@@ -136,18 +134,16 @@ describe('install manual --as markdown entities (integration)', () => {
           ? ['CLAUDE.md', 'rules/quality.md']
           : ['CLAUDE.md', `${testCase.kind}/${expectedOutput}`],
       );
-      expect(readInstallManifest(join(project, '.agentsbridge', 'installs.yaml')).installs).toEqual(
-        [
-          {
-            as: testCase.kind,
-            features: manifestFeatures(testCase.kind),
-            name: `direct-${testCase.kind}`,
-            pick: { [testCase.kind]: pickedNames([expectedOutput]) },
-            source: `../upstream/${testCase.kind}/${chosen}`,
-            source_kind: 'local',
-          },
-        ],
-      );
+      expect(readInstallManifest(join(project, '.agentsmesh', 'installs.yaml')).installs).toEqual([
+        {
+          as: testCase.kind,
+          features: manifestFeatures(testCase.kind),
+          name: `direct-${testCase.kind}`,
+          pick: { [testCase.kind]: pickedNames([expectedOutput]) },
+          source: `../upstream/${testCase.kind}/${chosen}`,
+          source_kind: 'local',
+        },
+      ]);
     },
   );
 });

@@ -19,31 +19,28 @@ describe('generate reference rewriting for windsurf (integration)', () => {
 
   it('rewrites skill directory references for windsurf root artifacts', () => {
     writeFileSync(
-      join(testDir, 'agentsbridge.yaml'),
+      join(testDir, 'agentsmesh.yaml'),
       `version: 1
 targets: [windsurf]
 features: [rules, skills]
 `,
     );
-    mkdirSync(join(testDir, '.agentsbridge', 'rules'), { recursive: true });
-    mkdirSync(join(testDir, '.agentsbridge', 'skills', 'post-feature-qa', 'references'), {
+    mkdirSync(join(testDir, '.agentsmesh', 'rules'), { recursive: true });
+    mkdirSync(join(testDir, '.agentsmesh', 'skills', 'post-feature-qa', 'references'), {
       recursive: true,
     });
     writeFileSync(
-      join(testDir, '.agentsbridge', 'rules', '_root.md'),
+      join(testDir, '.agentsmesh', 'rules', '_root.md'),
       `---
 root: true
 description: Root rule
 ---
-Use .agentsbridge/skills/post-feature-qa/ and .agentsbridge/skills/post-feature-qa/references/.
+Use .agentsmesh/skills/post-feature-qa/ and .agentsmesh/skills/post-feature-qa/references/.
 `,
     );
+    writeFileSync(join(testDir, '.agentsmesh', 'skills', 'post-feature-qa', 'SKILL.md'), '# QA\n');
     writeFileSync(
-      join(testDir, '.agentsbridge', 'skills', 'post-feature-qa', 'SKILL.md'),
-      '# QA\n',
-    );
-    writeFileSync(
-      join(testDir, '.agentsbridge', 'skills', 'post-feature-qa', 'references', 'checklist.md'),
+      join(testDir, '.agentsmesh', 'skills', 'post-feature-qa', 'references', 'checklist.md'),
       '# Checklist\n',
     );
 

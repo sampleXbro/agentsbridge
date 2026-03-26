@@ -4,7 +4,7 @@ import type { CanonicalFiles, ImportResult } from '../core/types.js';
 import { mkdirp, readDirRecursive, readFileSafe, writeFileAtomic } from '../utils/fs.js';
 import { parseFrontmatter, serializeFrontmatter } from '../utils/markdown.js';
 
-const AB_SKILLS = '.agentsbridge/skills';
+const AB_SKILLS = '.agentsmesh/skills';
 
 export interface EmbeddedSkillOutput {
   path: string;

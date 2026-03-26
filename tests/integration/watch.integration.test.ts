@@ -1,5 +1,5 @@
 /**
- * Integration test for agentsbridge watch.
+ * Integration test for agentsmesh watch.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -35,15 +35,15 @@ function waitForFile(path: string, timeoutMs: number): Promise<void> {
 beforeEach(() => {
   mkdirSync(TEST_DIR, { recursive: true });
   writeFileSync(
-    join(TEST_DIR, 'agentsbridge.yaml'),
+    join(TEST_DIR, 'agentsmesh.yaml'),
     `version: 1
 targets: [claude-code, cursor]
 features: [rules]
 `,
   );
-  mkdirSync(join(TEST_DIR, '.agentsbridge', 'rules'), { recursive: true });
+  mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
   writeFileSync(
-    join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+    join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
     `---
 root: true
 description: "Project rules"
@@ -56,7 +56,7 @@ description: "Project rules"
 
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
 
-describe('agentsbridge watch (integration)', () => {
+describe('agentsmesh watch (integration)', () => {
   it('generates on startup and watches for changes', async () => {
     const child = spawn('node', [CLI_PATH, 'watch'], {
       cwd: TEST_DIR,
@@ -74,7 +74,7 @@ describe('agentsbridge watch (integration)', () => {
     );
 
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+      join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
       `---
 root: true
 description: "Updated"

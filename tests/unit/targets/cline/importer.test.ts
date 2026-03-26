@@ -15,7 +15,7 @@ import {
   CLINE_WORKFLOWS_DIR,
 } from '../../../../src/targets/cline/constants.js';
 
-const TEST_DIR = join(tmpdir(), 'ab-cline-importer-test');
+const TEST_DIR = join(tmpdir(), 'am-cline-importer-test');
 
 beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
@@ -27,8 +27,8 @@ describe('importFromCline', () => {
     const results = await importFromCline(TEST_DIR);
     expect(results.length).toBe(1);
     expect(results[0]!.fromTool).toBe('cline');
-    expect(results[0]!.toPath).toBe('.agentsbridge/rules/_root.md');
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    expect(results[0]!.toPath).toBe('.agentsmesh/rules/_root.md');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(content).toContain('# Cline Rules');
     expect(content).toContain('- Use TDD');
@@ -39,7 +39,7 @@ describe('importFromCline', () => {
     writeFileSync(join(TEST_DIR, CLINE_RULES_DIR, 'first.md'), '# First Rule\n');
     const results = await importFromCline(TEST_DIR);
     expect(results.length).toBe(1);
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(content).toContain('# First Rule');
   });
@@ -52,29 +52,26 @@ describe('importFromCline', () => {
       '---\ndescription: TS rules\nglobs: ["src/**/*.ts"]\n---\n\nUse strict TS.',
     );
     const results = await importFromCline(TEST_DIR);
-    const ruleResult = results.find((r) => r.toPath === '.agentsbridge/rules/typescript.md');
+    const ruleResult = results.find((r) => r.toPath === '.agentsmesh/rules/typescript.md');
     expect(ruleResult).toBeDefined();
-    const content = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'rules', 'typescript.md'),
-      'utf-8',
-    );
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'), 'utf-8');
     expect(content).toContain('root: false');
     expect(content).toContain('description: TS rules');
     expect(content).toContain('Use strict TS.');
   });
 
-  it('imports .clineignore into .agentsbridge/ignore', async () => {
+  it('imports .clineignore into .agentsmesh/ignore', async () => {
     writeFileSync(join(TEST_DIR, CLINE_IGNORE), 'node_modules/\ndist/\n.env\n');
     const results = await importFromCline(TEST_DIR);
-    const ignoreResult = results.find((r) => r.toPath === '.agentsbridge/ignore');
+    const ignoreResult = results.find((r) => r.toPath === '.agentsmesh/ignore');
     expect(ignoreResult).toBeDefined();
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'ignore'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'ignore'), 'utf-8');
     expect(content).toContain('node_modules/');
     expect(content).toContain('dist/');
     expect(content).toContain('.env');
   });
 
-  it('imports .cline/mcp_settings.json into .agentsbridge/mcp.json', async () => {
+  it('imports .cline/mcp_settings.json into .agentsmesh/mcp.json', async () => {
     mkdirSync(join(TEST_DIR, '.cline'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, CLINE_MCP_SETTINGS),
@@ -85,9 +82,9 @@ describe('importFromCline', () => {
       }),
     );
     const results = await importFromCline(TEST_DIR);
-    const mcpResult = results.find((r) => r.toPath === '.agentsbridge/mcp.json');
+    const mcpResult = results.find((r) => r.toPath === '.agentsmesh/mcp.json');
     expect(mcpResult).toBeDefined();
-    const mcp = JSON.parse(readFileSync(join(TEST_DIR, '.agentsbridge', 'mcp.json'), 'utf-8')) as {
+    const mcp = JSON.parse(readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf-8')) as {
       mcpServers: Record<string, { command: string }>;
     };
     expect(mcp.mcpServers.fs).toBeDefined();
@@ -105,14 +102,14 @@ describe('importFromCline', () => {
       }),
     );
     const results = await importFromCline(TEST_DIR);
-    expect(results.some((r) => r.toPath === '.agentsbridge/mcp.json')).toBe(true);
-    const mcp = JSON.parse(readFileSync(join(TEST_DIR, '.agentsbridge', 'mcp.json'), 'utf-8')) as {
+    expect(results.some((r) => r.toPath === '.agentsmesh/mcp.json')).toBe(true);
+    const mcp = JSON.parse(readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf-8')) as {
       mcpServers: Record<string, { type: string; command: string }>;
     };
     expect(mcp.mcpServers.server.type).toBe('stdio');
   });
 
-  it('imports .cline/skills/*/SKILL.md into .agentsbridge/skills/*/SKILL.md', async () => {
+  it('imports .cline/skills/*/SKILL.md into .agentsmesh/skills/*/SKILL.md', async () => {
     const skillDir = join(TEST_DIR, CLINE_SKILLS_DIR, 'review');
     mkdirSync(skillDir, { recursive: true });
     writeFileSync(
@@ -120,10 +117,10 @@ describe('importFromCline', () => {
       '---\ndescription: Code review skill\n---\n\nRun code review.',
     );
     const results = await importFromCline(TEST_DIR);
-    const skillResult = results.find((r) => r.toPath === '.agentsbridge/skills/review/SKILL.md');
+    const skillResult = results.find((r) => r.toPath === '.agentsmesh/skills/review/SKILL.md');
     expect(skillResult).toBeDefined();
     const content = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'skills', 'review', 'SKILL.md'),
+      join(TEST_DIR, '.agentsmesh', 'skills', 'review', 'SKILL.md'),
       'utf-8',
     );
     expect(content).toContain('description: Code review skill');
@@ -131,32 +128,32 @@ describe('importFromCline', () => {
   });
 
   it('imports projected agent skills back into canonical agents', async () => {
-    const skillDir = join(TEST_DIR, CLINE_SKILLS_DIR, 'ab-agent-reviewer');
+    const skillDir = join(TEST_DIR, CLINE_SKILLS_DIR, 'am-agent-reviewer');
     mkdirSync(skillDir, { recursive: true });
     writeFileSync(
       join(skillDir, 'SKILL.md'),
       [
         '---',
         'description: Review specialist',
-        'x-agentsbridge-kind: agent',
-        'x-agentsbridge-name: reviewer',
-        'x-agentsbridge-tools:',
+        'x-agentsmesh-kind: agent',
+        'x-agentsmesh-name: reviewer',
+        'x-agentsmesh-tools:',
         '  - Read',
         '  - Grep',
-        'x-agentsbridge-model: sonnet',
-        'x-agentsbridge-permission-mode: ask',
-        'x-agentsbridge-max-turns: 9',
+        'x-agentsmesh-model: sonnet',
+        'x-agentsmesh-permission-mode: ask',
+        'x-agentsmesh-max-turns: 9',
         '---',
         '',
         'Review risky changes first.',
       ].join('\n'),
     );
     const results = await importFromCline(TEST_DIR);
-    expect(results.find((r) => r.toPath === '.agentsbridge/agents/reviewer.md')).toBeDefined();
+    expect(results.find((r) => r.toPath === '.agentsmesh/agents/reviewer.md')).toBeDefined();
     expect(
-      results.find((r) => r.toPath === '.agentsbridge/skills/ab-agent-reviewer/SKILL.md'),
+      results.find((r) => r.toPath === '.agentsmesh/skills/am-agent-reviewer/SKILL.md'),
     ).toBeUndefined();
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'agents', 'reviewer.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'), 'utf-8');
     expect(content).toContain('name: reviewer');
     expect(content).toContain('description: Review specialist');
     expect(content).toContain('Review risky changes first.');
@@ -169,11 +166,11 @@ describe('importFromCline', () => {
     writeFileSync(join(skillDir, 'template.ts'), 'export function run() {}');
     const results = await importFromCline(TEST_DIR);
     const templateResult = results.find(
-      (r) => r.toPath === '.agentsbridge/skills/review/template.ts',
+      (r) => r.toPath === '.agentsmesh/skills/review/template.ts',
     );
     expect(templateResult).toBeDefined();
     const content = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'skills', 'review', 'template.ts'),
+      join(TEST_DIR, '.agentsmesh', 'skills', 'review', 'template.ts'),
       'utf-8',
     );
     expect(content).toBe('export function run() {}');
@@ -194,11 +191,11 @@ describe('importFromCline', () => {
     writeFileSync(join(skillDir, 'SKILL.md'), 'Skill');
 
     const results = await importFromCline(TEST_DIR);
-    expect(results.some((r) => r.toPath === '.agentsbridge/rules/_root.md')).toBe(true);
-    expect(results.some((r) => r.toPath === '.agentsbridge/rules/foo.md')).toBe(true);
-    expect(results.some((r) => r.toPath === '.agentsbridge/ignore')).toBe(true);
-    expect(results.some((r) => r.toPath === '.agentsbridge/mcp.json')).toBe(true);
-    expect(results.some((r) => r.toPath === '.agentsbridge/skills/test/SKILL.md')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/rules/_root.md')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/rules/foo.md')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/ignore')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/mcp.json')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/skills/test/SKILL.md')).toBe(true);
   });
 
   it('imports .clinerules/workflows/*.md as canonical commands', async () => {
@@ -209,17 +206,17 @@ describe('importFromCline', () => {
       '---\ndescription: Deploy workflow\n---\n\nRun deploy steps.',
     );
     const results = await importFromCline(TEST_DIR);
-    const cmdResult = results.find((r) => r.toPath === '.agentsbridge/commands/deploy.md');
+    const cmdResult = results.find((r) => r.toPath === '.agentsmesh/commands/deploy.md');
     expect(cmdResult).toBeDefined();
     expect(cmdResult?.fromTool).toBe('cline');
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'commands', 'deploy.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'commands', 'deploy.md'), 'utf-8');
     expect(content).toContain('description: Deploy workflow');
   });
 
   it('preserves existing canonical command metadata when importing body-only workflows', async () => {
-    mkdirSync(join(TEST_DIR, '.agentsbridge', 'commands'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'commands'), { recursive: true });
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', 'commands', 'deploy.md'),
+      join(TEST_DIR, '.agentsmesh', 'commands', 'deploy.md'),
       '---\ndescription: Deploy workflow\nallowed-tools:\n  - Bash(pnpm deploy)\n---\n\nOld deploy body.',
     );
     const workflowsDir = join(TEST_DIR, CLINE_WORKFLOWS_DIR);
@@ -228,7 +225,7 @@ describe('importFromCline', () => {
 
     await importFromCline(TEST_DIR);
 
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'commands', 'deploy.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'commands', 'deploy.md'), 'utf-8');
     expect(content).toContain('description: Deploy workflow');
     expect(content).toContain('allowed-tools:');
     expect(content).toContain('Bash(pnpm deploy)');
@@ -241,8 +238,8 @@ describe('importFromCline', () => {
     const results = await importFromCline(TEST_DIR);
     expect(results.length).toBe(1);
     expect(results[0]!.fromTool).toBe('cline');
-    expect(results[0]!.toPath).toBe('.agentsbridge/rules/_root.md');
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    expect(results[0]!.toPath).toBe('.agentsmesh/rules/_root.md');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(content).toContain('# Project Instructions');
     expect(content).toContain('- Use TDD');
@@ -257,8 +254,8 @@ describe('importFromCline', () => {
       '# Project\nSee .cline/skills/review/SKILL.md for the review skill.\n',
     );
     await importFromCline(TEST_DIR);
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
-    expect(content).toContain('.agentsbridge/skills/review/SKILL.md');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
+    expect(content).toContain('.agentsmesh/skills/review/SKILL.md');
     expect(content).not.toContain('.cline/skills/review/SKILL.md');
   });
 
@@ -267,7 +264,7 @@ describe('importFromCline', () => {
     writeFileSync(join(TEST_DIR, CLINE_RULES_DIR, '_root.md'), '# Cline Root\n');
     writeFileSync(join(TEST_DIR, 'AGENTS.md'), '# Different AGENTS.md\n');
     const results = await importFromCline(TEST_DIR);
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('# Cline Root');
     expect(content).not.toContain('# Different AGENTS.md');
   });
@@ -283,8 +280,8 @@ describe('importFromCline', () => {
     mkdirSync(join(TEST_DIR, CLINE_RULES_DIR), { recursive: true });
     writeFileSync(join(TEST_DIR, CLINE_RULES_DIR, '_root.md'), 'Root');
     const results = await importFromCline(TEST_DIR);
-    expect(results.some((r) => r.toPath === '.agentsbridge/mcp.json')).toBe(false);
-    expect(results.some((r) => r.toPath === '.agentsbridge/rules/_root.md')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/mcp.json')).toBe(false);
+    expect(results.some((r) => r.toPath === '.agentsmesh/rules/_root.md')).toBe(true);
   });
 
   it('skips _root.md in rules when already set from _root.md', async () => {
@@ -292,9 +289,9 @@ describe('importFromCline', () => {
     writeFileSync(join(TEST_DIR, CLINE_RULES_DIR, '_root.md'), 'From _root');
     writeFileSync(join(TEST_DIR, CLINE_RULES_DIR, 'other.md'), '---\nroot: true\n---\n\nOther');
     const results = await importFromCline(TEST_DIR);
-    const rootContent = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const rootContent = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(rootContent).toContain('From _root');
-    expect(results.filter((r) => r.toPath === '.agentsbridge/rules/_root.md')).toHaveLength(1);
+    expect(results.filter((r) => r.toPath === '.agentsmesh/rules/_root.md')).toHaveLength(1);
   });
 });
 
@@ -302,10 +299,10 @@ describe('importFromCline — .clinerules as flat file', () => {
   it('imports .clinerules flat file as root rule', async () => {
     writeFileSync(join(TEST_DIR, CLINE_RULES_DIR), '# Flat Cline Rules\n- Use TDD\n');
     const results = await importFromCline(TEST_DIR);
-    const rootResult = results.find((r) => r.toPath === '.agentsbridge/rules/_root.md');
+    const rootResult = results.find((r) => r.toPath === '.agentsmesh/rules/_root.md');
     expect(rootResult).toBeDefined();
     expect(rootResult?.fromTool).toBe('cline');
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(content).toContain('# Flat Cline Rules');
   });
@@ -316,7 +313,7 @@ describe('importFromCline — .clinerules as flat file', () => {
       '---\ndescription: Flat file rules\n---\n\nBody content.',
     );
     await importFromCline(TEST_DIR);
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(content).toContain('description: Flat file rules');
     expect(content).toContain('Body content.');

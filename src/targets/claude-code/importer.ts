@@ -1,17 +1,17 @@
 /**
- * Claude Code target importer — full fidelity import into canonical .agentsbridge/.
+ * Claude Code target importer — full fidelity import into canonical .agentsmesh/.
  *
  * Sources imported:
- *   .claude/CLAUDE.md            → .agentsbridge/rules/_root.md
- *   CLAUDE.md (legacy fallback)  → .agentsbridge/rules/_root.md
- *   .claude/rules/*.md           → .agentsbridge/rules/*.md
- *   .claude/commands/*.md        → .agentsbridge/commands/*.md
- *   .claude/agents/*.md          → .agentsbridge/agents/*.md
- *   .claude/skills/{name}/SKILL.md + supporting files → .agentsbridge/skills/{name}/
- *   .claude/settings.json        → .agentsbridge/mcp.json (mcpServers)
- *                                  .agentsbridge/permissions.yaml (permissions)
- *                                  .agentsbridge/hooks.yaml (hooks)
- *   .claudeignore                → .agentsbridge/ignore
+ *   .claude/CLAUDE.md            → .agentsmesh/rules/_root.md
+ *   CLAUDE.md (legacy fallback)  → .agentsmesh/rules/_root.md
+ *   .claude/rules/*.md           → .agentsmesh/rules/*.md
+ *   .claude/commands/*.md        → .agentsmesh/commands/*.md
+ *   .claude/agents/*.md          → .agentsmesh/agents/*.md
+ *   .claude/skills/{name}/SKILL.md + supporting files → .agentsmesh/skills/{name}/
+ *   .claude/settings.json        → .agentsmesh/mcp.json (mcpServers)
+ *                                  .agentsmesh/permissions.yaml (permissions)
+ *                                  .agentsmesh/hooks.yaml (hooks)
+ *   .claudeignore                → .agentsmesh/ignore
  */
 
 import { join, basename, relative, dirname } from 'node:path';
@@ -32,14 +32,14 @@ const CLAUDE_AGENTS_DIR = '.claude/agents';
 const CLAUDE_SKILLS_DIR = '.claude/skills';
 const CLAUDEIGNORE = '.claudeignore';
 
-const AB_RULES = '.agentsbridge/rules';
-const AB_COMMANDS = '.agentsbridge/commands';
-const AB_AGENTS = '.agentsbridge/agents';
-const AB_SKILLS = '.agentsbridge/skills';
-const AB_IGNORE = '.agentsbridge/ignore';
+const AB_RULES = '.agentsmesh/rules';
+const AB_COMMANDS = '.agentsmesh/commands';
+const AB_AGENTS = '.agentsmesh/agents';
+const AB_SKILLS = '.agentsmesh/skills';
+const AB_IGNORE = '.agentsmesh/ignore';
 
 /**
- * Import Claude Code config into canonical .agentsbridge/.
+ * Import Claude Code config into canonical .agentsmesh/.
  * @param projectRoot - Project root directory
  * @returns Import results for each imported file
  */

@@ -35,7 +35,7 @@ export const logger = {
     process.stdout.write(c(C.green, '✓ ') + msg + '\n');
   },
   debug(msg: string): void {
-    if (process.env.AGENTSBRIDGE_DEBUG === '1') {
+    if (process.env.AGENTSMESH_DEBUG === '1') {
       process.stdout.write(c(C.cyan, '[debug] ') + msg + '\n');
     }
   },

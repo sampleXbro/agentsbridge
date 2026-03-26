@@ -36,7 +36,7 @@ export async function fetchGithubRemoteExtend(
   buildCacheKey: (provider: string, identifier: string, ref: string) => string,
   allowDefaultBranchFallback = false,
 ): Promise<FetchRemoteResult> {
-  const token = options.token ?? process.env.AGENTSBRIDGE_GITHUB_TOKEN;
+  const token = options.token ?? process.env.AGENTSMESH_GITHUB_TOKEN;
   const refresh = options.refresh === true;
   let tag = parsed.tag;
   if (tag === 'latest') {
@@ -70,7 +70,7 @@ export async function fetchGithubRemoteExtend(
       const topDir = await findExtractTopDir(extractDir);
       if (topDir) {
         console.warn(
-          `[agentsbridge] Network failed for ${extendName}; using cached version. Error: ${err instanceof Error ? err.message : String(err)}`,
+          `[agentsmesh] Network failed for ${extendName}; using cached version. Error: ${err instanceof Error ? err.message : String(err)}`,
         );
         return { resolvedPath: join(extractDir, topDir), version: tag };
       }

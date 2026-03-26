@@ -161,18 +161,16 @@ describe('assertDirsEquivalent', () => {
     rmSync(b, { recursive: true, force: true });
   });
 
-  it('ignores nested paths like .agentsbridge/.lock', () => {
+  it('ignores nested paths like .agentsmesh/.lock', () => {
     const a = join(tmpdir(), 'nested-a-' + randomBytes(4).toString('hex'));
     const b = join(tmpdir(), 'nested-b-' + randomBytes(4).toString('hex'));
-    mkdirSync(join(a, '.agentsbridge'), { recursive: true });
-    mkdirSync(join(b, '.agentsbridge'), { recursive: true });
+    mkdirSync(join(a, '.agentsmesh'), { recursive: true });
+    mkdirSync(join(b, '.agentsmesh'), { recursive: true });
     writeFileSync(join(a, 'x.txt'), 'same');
     writeFileSync(join(b, 'x.txt'), 'same');
-    writeFileSync(join(a, '.agentsbridge', '.lock'), 'lock-a');
-    writeFileSync(join(b, '.agentsbridge', '.lock'), 'lock-b');
-    expect(() =>
-      assertDirsEquivalent(a, b, { ignoreFiles: ['.agentsbridge/.lock'] }),
-    ).not.toThrow();
+    writeFileSync(join(a, '.agentsmesh', '.lock'), 'lock-a');
+    writeFileSync(join(b, '.agentsmesh', '.lock'), 'lock-b');
+    expect(() => assertDirsEquivalent(a, b, { ignoreFiles: ['.agentsmesh/.lock'] })).not.toThrow();
     rmSync(a, { recursive: true, force: true });
     rmSync(b, { recursive: true, force: true });
   });

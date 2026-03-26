@@ -1,6 +1,6 @@
 ---
 name: add-agent-target
-description: Use when adding support for a new AI agent target to agentsbridge. Covers official format research, canonical mapping, importer/generator/linter work, realistic fixtures, unit/integration/e2e coverage, matrix/docs updates, and final verification.
+description: Use when adding support for a new AI agent target to agentsmesh. Covers official format research, canonical mapping, importer/generator/linter work, realistic fixtures, unit/integration/e2e coverage, matrix/docs updates, and final verification.
 ---
 
 # Add Agent Target
@@ -25,8 +25,8 @@ Read `.continue/skills/add-agent-target/references/target-addition-checklist.md`
 - Update compatibility matrix behavior and docs to reflect native, embedded, partial, or unsupported features.
 - Update init detection and import empty-state messaging for the new target when native files exist.
 - Reuse existing capability-focused tests where possible; extend them instead of duplicating assertions across multiple files.
-- Preserve the canonical `.agentsbridge/` contract. If the target cannot represent a feature natively, model that explicitly instead of inventing fake native output.
-- Ensure every internal file link/reference inside generated or imported `.md` artifacts is convertible through the shared reference-rewrite pipeline, just like the existing targets. Do not ship a new target unless canonical `.agentsbridge/...` references round-trip cleanly across that target’s Markdown surfaces.
+- Preserve the canonical `.agentsmesh/` contract. If the target cannot represent a feature natively, model that explicitly instead of inventing fake native output.
+- Ensure every internal file link/reference inside generated or imported `.md` artifacts is convertible through the shared reference-rewrite pipeline, just like the existing targets. Do not ship a new target unless canonical `.agentsmesh/...` references round-trip cleanly across that target’s Markdown surfaces.
 - Run the full verification stack before claiming completion.
 - Run the local `post-feature-qa` skill before marking the task done.
 

@@ -1,5 +1,5 @@
 /**
- * agentsbridge matrix — show compatibility matrix for current config.
+ * agentsmesh matrix — show compatibility matrix for current config.
  */
 
 import { loadConfigFromDir } from '../../config/loader.js';
@@ -33,7 +33,7 @@ export async function runMatrix(
   const rows = buildCompatibilityMatrix(config, canonical);
 
   if (rows.length === 0) {
-    logger.info('No features enabled. Enable features in agentsbridge.yaml.');
+    logger.info('No features enabled. Enable features in agentsmesh.yaml.');
     return;
   }
 

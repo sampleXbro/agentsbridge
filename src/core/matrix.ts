@@ -181,11 +181,11 @@ export function formatVerboseDetails(canonical: CanonicalFiles): string {
     if (count > 0) lines.push(`hooks: ${count} entries in hooks.yaml`);
   }
   if (canonical.ignore.length > 0) {
-    lines.push('ignore: .agentsbridge/ignore');
+    lines.push('ignore: .agentsmesh/ignore');
   }
   if (canonical.permissions) {
     const total = canonical.permissions.allow.length + canonical.permissions.deny.length;
-    if (total > 0) lines.push('permissions: .agentsbridge/permissions.yaml');
+    if (total > 0) lines.push('permissions: .agentsmesh/permissions.yaml');
   }
   if (lines.length === 0) return '';
   return '\nPer-file details:\n' + lines.join('\n') + '\n';

@@ -9,7 +9,7 @@ import {
 
 function makeCommand(overrides: Partial<CanonicalCommand> = {}): CanonicalCommand {
   return {
-    source: '.agentsbridge/commands/review.md',
+    source: '.agentsmesh/commands/review.md',
     name: 'review',
     description: '',
     allowedTools: [],
@@ -32,18 +32,18 @@ describe('continue command rules', () => {
     );
 
     expect(output).not.toContain('invokable:');
-    expect(output).toContain('x-agentsbridge-kind: command');
-    expect(output).toContain('x-agentsbridge-name: review');
-    expect(output).toContain('x-agentsbridge-allowed-tools:');
+    expect(output).toContain('x-agentsmesh-kind: command');
+    expect(output).toContain('x-agentsmesh-name: review');
+    expect(output).toContain('x-agentsmesh-allowed-tools:');
   });
 
-  it('parses command metadata from embedded x-agentsbridge frontmatter', () => {
+  it('parses command metadata from embedded x-agentsmesh frontmatter', () => {
     const parsed = parseCommandRuleFrontmatter(
       {
-        'x-agentsbridge-kind': 'command',
-        'x-agentsbridge-name': 'review',
+        'x-agentsmesh-kind': 'command',
+        'x-agentsmesh-name': 'review',
         description: 'Review the diff',
-        'x-agentsbridge-allowed-tools': 'Read, Bash(git diff)',
+        'x-agentsmesh-allowed-tools': 'Read, Bash(git diff)',
       },
       '.continue/prompts/review.md',
     );
@@ -55,11 +55,11 @@ describe('continue command rules', () => {
     });
   });
 
-  it('derives command name from filename when x-agentsbridge-name is absent', () => {
+  it('derives command name from filename when x-agentsmesh-name is absent', () => {
     const parsed = parseCommandRuleFrontmatter(
       {
         description: 'Review the diff',
-        'x-agentsbridge-allowed-tools': ['Read'],
+        'x-agentsmesh-allowed-tools': ['Read'],
       },
       '.continue/prompts/review.md',
     );

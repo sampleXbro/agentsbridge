@@ -37,8 +37,8 @@ function assertRewritten(content: string, refs: Record<string, string>, dir: str
   expect(content).toContain(refs.doc);
   expect(content).toContain(refs.researchDoc);
   expect(content).toContain(refs.referencesDir);
-  expect(prose).not.toContain('.agentsbridge/');
-  expect(prose).not.toContain('.agentsbridge\\');
+  expect(prose).not.toContain('.agentsmesh/');
+  expect(prose).not.toContain('.agentsmesh\\');
   expect(prose).not.toContain('../../docs/some-doc.md');
   expect(prose).not.toContain('../../../../docs/agents-folder-structure-research.md');
   expect(prose).not.toContain('..\\..\\docs\\some-doc.md');
@@ -49,8 +49,8 @@ function assertRewritten(content: string, refs: Record<string, string>, dir: str
   expect(prose).not.toContain('../agents/code-reviewer.md');
   expect(prose).not.toContain('..\\agents\\code-reviewer.md');
   expect(prose).not.toContain('./typescript.md');
-  expect(prose).not.toContain('.agentsbridge\\commands/review.md');
-  expect(prose).not.toContain(join(dir, '.agentsbridge'));
+  expect(prose).not.toContain('.agentsmesh\\commands/review.md');
+  expect(prose).not.toContain(join(dir, '.agentsmesh'));
 }
 
 function assertExternalRefs(content: string): void {

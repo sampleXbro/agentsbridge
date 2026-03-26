@@ -107,17 +107,17 @@ describe('sweepStaleCache', () => {
     expect(existsSync(b)).toBe(true);
   });
 
-  it('reads maxAgeMs from AGENTSBRIDGE_CACHE_MAX_AGE_DAYS env var when not provided', async () => {
+  it('reads maxAgeMs from AGENTSMESH_CACHE_MAX_AGE_DAYS env var when not provided', async () => {
     const old = makeEntry('env-stale', 8 * DAY);
     const fresh = makeEntry('env-fresh', 2 * DAY);
 
-    const prev = process.env.AGENTSBRIDGE_CACHE_MAX_AGE_DAYS;
-    process.env.AGENTSBRIDGE_CACHE_MAX_AGE_DAYS = '7';
+    const prev = process.env.AGENTSMESH_CACHE_MAX_AGE_DAYS;
+    process.env.AGENTSMESH_CACHE_MAX_AGE_DAYS = '7';
     try {
       await sweepStaleCache(cacheDir);
     } finally {
-      if (prev === undefined) delete process.env.AGENTSBRIDGE_CACHE_MAX_AGE_DAYS;
-      else process.env.AGENTSBRIDGE_CACHE_MAX_AGE_DAYS = prev;
+      if (prev === undefined) delete process.env.AGENTSMESH_CACHE_MAX_AGE_DAYS;
+      else process.env.AGENTSMESH_CACHE_MAX_AGE_DAYS = prev;
     }
 
     expect(existsSync(old)).toBe(false);

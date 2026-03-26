@@ -1,5 +1,5 @@
 /**
- * Pack metadata schema for .agentsbridge/packs/{name}/pack.yaml
+ * Pack metadata schema for .agentsmesh/packs/{name}/pack.yaml
  */
 
 import { z } from 'zod';

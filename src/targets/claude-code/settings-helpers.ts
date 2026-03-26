@@ -10,9 +10,9 @@ import { stringify as yamlStringify } from 'yaml';
 
 const CLAUDE_SETTINGS = '.claude/settings.json';
 const CLAUDE_MCP_JSON = '.mcp.json';
-const AB_MCP = '.agentsbridge/mcp.json';
-const AB_PERMISSIONS = '.agentsbridge/permissions.yaml';
-const AB_HOOKS = '.agentsbridge/hooks.yaml';
+const AB_MCP = '.agentsmesh/mcp.json';
+const AB_PERMISSIONS = '.agentsmesh/permissions.yaml';
+const AB_HOOKS = '.agentsmesh/hooks.yaml';
 
 /**
  * Convert Claude Code settings.json hooks format to canonical hooks.yaml format.

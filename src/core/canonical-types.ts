@@ -1,7 +1,7 @@
 import type { Hooks } from './hook-types.js';
 import type { McpConfig } from './mcp-types.js';
 
-/** A parsed rule from .agentsbridge/rules/ (glob: *.md) */
+/** A parsed rule from .agentsmesh/rules/ (glob: *.md) */
 export interface CanonicalRule {
   /** Source file path (for error reporting) */
   source: string;
@@ -29,7 +29,7 @@ export interface CanonicalRule {
   codexInstructionVariant?: 'default' | 'override';
 }
 
-/** A parsed command from .agentsbridge/commands/ (glob: *.md) */
+/** A parsed command from .agentsmesh/commands/ (glob: *.md) */
 export interface CanonicalCommand {
   source: string;
   /** Command name (derived from filename) */
@@ -40,7 +40,7 @@ export interface CanonicalCommand {
   body: string;
 }
 
-/** A parsed subagent from .agentsbridge/agents/ (glob: *.md) */
+/** A parsed subagent from .agentsmesh/agents/ (glob: *.md) */
 export interface CanonicalAgent {
   source: string;
   name: string;
@@ -75,7 +75,7 @@ export interface SkillSupportingFile {
   content: string;
 }
 
-/** A parsed skill from .agentsbridge/skills/{name}/SKILL.md */
+/** A parsed skill from .agentsmesh/skills/{name}/SKILL.md */
 export interface CanonicalSkill {
   source: string;
   /** Skill name (derived from directory name) */
@@ -96,7 +96,7 @@ export interface Permissions {
 /** Ignore patterns (gitignore syntax lines) */
 export type IgnorePatterns = string[];
 
-/** All canonical files loaded from .agentsbridge/ */
+/** All canonical files loaded from .agentsmesh/ */
 export interface CanonicalFiles {
   rules: CanonicalRule[];
   commands: CanonicalCommand[];

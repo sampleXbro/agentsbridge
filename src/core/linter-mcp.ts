@@ -9,7 +9,7 @@ export function lintMcp(canonical: CanonicalFiles, target: string): LintDiagnost
     if (target === 'cursor' && usesCursorSensitiveInterpolation(server)) {
       diagnostics.push({
         level: 'warning',
-        file: '.agentsbridge/mcp.json',
+        file: '.agentsmesh/mcp.json',
         target,
         message: `MCP server "${name}" uses env vars or URL/header interpolation; Cursor handling may differ from canonical MCP.`,
       });
@@ -18,7 +18,7 @@ export function lintMcp(canonical: CanonicalFiles, target: string): LintDiagnost
     if (target === 'codex-cli' && typeof server.description === 'string' && server.description) {
       diagnostics.push({
         level: 'warning',
-        file: '.agentsbridge/mcp.json',
+        file: '.agentsmesh/mcp.json',
         target,
         message: `MCP server "${name}" has a description, but codex-cli does not project MCP descriptions into .codex/config.toml.`,
       });
@@ -27,7 +27,7 @@ export function lintMcp(canonical: CanonicalFiles, target: string): LintDiagnost
     if (target === 'codex-cli' && isUrlMcpServer(server)) {
       diagnostics.push({
         level: 'warning',
-        file: '.agentsbridge/mcp.json',
+        file: '.agentsmesh/mcp.json',
         target,
         message: `MCP server "${name}" uses ${server.type} transport; codex-cli only generates stdio MCP servers.`,
       });
@@ -36,7 +36,7 @@ export function lintMcp(canonical: CanonicalFiles, target: string): LintDiagnost
     if (target === 'junie' && isUrlMcpServer(server)) {
       diagnostics.push({
         level: 'warning',
-        file: '.agentsbridge/mcp.json',
+        file: '.agentsmesh/mcp.json',
         target,
         message: `MCP server "${name}" uses ${server.type} transport; Junie project mcp.json currently documents stdio MCP servers only.`,
       });

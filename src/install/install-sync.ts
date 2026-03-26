@@ -13,13 +13,13 @@ export async function syncInstalledPacks(args: {
 }): Promise<void> {
   const installs = await readInstallManifest(args.configDir);
   if (installs.length === 0) {
-    logger.info('No recorded installs found in .agentsbridge/installs.yaml.');
+    logger.info('No recorded installs found in .agentsmesh/installs.yaml.');
     return;
   }
 
   const missing = [];
   for (const entry of installs) {
-    const packDir = join(args.configDir, '.agentsbridge', 'packs', entry.name);
+    const packDir = join(args.configDir, '.agentsmesh', 'packs', entry.name);
     if (!(await exists(packDir))) {
       missing.push(entry);
     }
@@ -33,7 +33,7 @@ export async function syncInstalledPacks(args: {
   for (const entry of missing) {
     await args.reinstall(entry);
   }
-  logger.success(`Reinstalled ${missing.length} pack(s) from .agentsbridge/installs.yaml.`);
+  logger.success(`Reinstalled ${missing.length} pack(s) from .agentsmesh/installs.yaml.`);
 }
 
 export async function maybeRunInstallSync(args: {

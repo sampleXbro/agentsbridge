@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { parseHooks } from '../../../src/canonical/hooks.js';
 
-const TEST_DIR = join(tmpdir(), 'agentsbridge-hooks-test');
+const TEST_DIR = join(tmpdir(), 'agentsmesh-hooks-test');
 
 beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));

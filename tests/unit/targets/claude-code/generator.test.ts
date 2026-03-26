@@ -30,7 +30,7 @@ describe('generateRules (claude-code)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: 'Project rules',
@@ -50,7 +50,7 @@ describe('generateRules (claude-code)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/style.md',
+          source: '/proj/.agentsmesh/rules/style.md',
           root: false,
           targets: [],
           description: 'Style rules',
@@ -68,7 +68,7 @@ describe('generateRules (claude-code)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/ts.md',
+          source: '/proj/.agentsmesh/rules/ts.md',
           root: false,
           targets: [],
           description: 'TypeScript rules',
@@ -86,7 +86,7 @@ describe('generateRules (claude-code)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/typescript.md',
+          source: '/proj/.agentsmesh/rules/typescript.md',
           root: false,
           targets: [],
           description: '',
@@ -104,7 +104,7 @@ describe('generateRules (claude-code)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: 'Root',
@@ -112,7 +112,7 @@ describe('generateRules (claude-code)', () => {
           body: '# Root',
         },
         {
-          source: '/proj/.agentsbridge/rules/typescript.md',
+          source: '/proj/.agentsmesh/rules/typescript.md',
           root: false,
           targets: [],
           description: 'TS rules',
@@ -134,7 +134,7 @@ describe('generateRules (claude-code)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -142,7 +142,7 @@ describe('generateRules (claude-code)', () => {
           body: '# Root',
         },
         {
-          source: '/proj/.agentsbridge/rules/cursor-only.md',
+          source: '/proj/.agentsmesh/rules/cursor-only.md',
           root: false,
           targets: ['cursor'],
           description: 'cursor only',
@@ -188,7 +188,7 @@ describe('generateCommands (claude-code)', () => {
     const canonical = makeCanonical({
       commands: [
         {
-          source: '/proj/.agentsbridge/commands/review.md',
+          source: '/proj/.agentsmesh/commands/review.md',
           name: 'review',
           description: 'Run code review',
           allowedTools: ['Read', 'Grep', 'Bash(git diff)'],
@@ -229,7 +229,7 @@ describe('generateAgents (claude-code)', () => {
     const canonical = makeCanonical({
       agents: [
         {
-          source: '/proj/.agentsbridge/agents/code-reviewer.md',
+          source: '/proj/.agentsmesh/agents/code-reviewer.md',
           name: 'code-reviewer',
           description: 'Reviews code for quality',
           tools: ['Read', 'Grep', 'Glob'],
@@ -305,7 +305,7 @@ describe('generateSkills (claude-code)', () => {
     const canonical = makeCanonical({
       skills: [
         {
-          source: '/proj/.agentsbridge/skills/api-gen/SKILL.md',
+          source: '/proj/.agentsmesh/skills/api-gen/SKILL.md',
           name: 'api-gen',
           description: 'Generate REST API endpoints',
           body: '# API Generator\nWhen asked to create an API, check patterns.',
@@ -330,7 +330,7 @@ describe('generateSkills (claude-code)', () => {
     const canonical = makeCanonical({
       skills: [
         {
-          source: '/proj/.agentsbridge/skills/empty/SKILL.md',
+          source: '/proj/.agentsmesh/skills/empty/SKILL.md',
           name: 'empty',
           description: '',
           body: '',
@@ -348,14 +348,14 @@ describe('generateSkills (claude-code)', () => {
     const canonical = makeCanonical({
       skills: [
         {
-          source: '/proj/.agentsbridge/skills/my-skill/SKILL.md',
+          source: '/proj/.agentsmesh/skills/my-skill/SKILL.md',
           name: 'my-skill',
           description: 'My skill',
           body: 'Body.',
           supportingFiles: [
             {
               relativePath: 'template.ts',
-              absolutePath: '/proj/.agentsbridge/skills/my-skill/template.ts',
+              absolutePath: '/proj/.agentsmesh/skills/my-skill/template.ts',
               content: 'export const x = 1;',
             },
           ],

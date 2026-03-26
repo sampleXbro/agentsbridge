@@ -14,7 +14,7 @@ import {
   resolveLatestTag,
 } from '../../../src/config/remote-fetcher.js';
 
-const CACHE_ROOT = join(tmpdir(), 'agentsbridge-remote-fetcher-test');
+const CACHE_ROOT = join(tmpdir(), 'agentsmesh-remote-fetcher-test');
 
 beforeEach(() => mkdirSync(CACHE_ROOT, { recursive: true }));
 afterEach(() => rmSync(CACHE_ROOT, { recursive: true, force: true }));
@@ -60,7 +60,7 @@ describe('fetchRemoteExtend', () => {
 
   it('fetches, extracts, and returns resolved path (mocked fetch)', async () => {
     const srcDir = join(CACHE_ROOT, 'repo-src');
-    const innerDir = join(srcDir, 'my-org-config-v1.0.0', '.agentsbridge', 'rules');
+    const innerDir = join(srcDir, 'my-org-config-v1.0.0', '.agentsmesh', 'rules');
     mkdirSync(innerDir, { recursive: true });
     writeFileSync(join(innerDir, '_root.md'), '---\nroot: true\n---\n# Root\n');
 
@@ -85,7 +85,7 @@ describe('fetchRemoteExtend', () => {
 
     expect(result.resolvedPath).toContain('my-org-config');
     expect(result.version).toBe('v1.0.0');
-    expect(existsSync(join(result.resolvedPath, '.agentsbridge', 'rules', '_root.md'))).toBe(true);
+    expect(existsSync(join(result.resolvedPath, '.agentsmesh', 'rules', '_root.md'))).toBe(true);
     expect(existsSync(join(dirname(result.resolvedPath), 'archive.tar.gz'))).toBe(false);
 
     vi.unstubAllGlobals();
@@ -93,7 +93,7 @@ describe('fetchRemoteExtend', () => {
 
   it('uses cached version when fetch fails (offline fallback)', async () => {
     const srcDir = join(CACHE_ROOT, 'repo-src');
-    const innerDir = join(srcDir, 'org-cache-v1.0.0', '.agentsbridge', 'rules');
+    const innerDir = join(srcDir, 'org-cache-v1.0.0', '.agentsmesh', 'rules');
     mkdirSync(innerDir, { recursive: true });
     writeFileSync(join(innerDir, '_root.md'), '---\nroot: true\n---\n# Cached\n');
 
@@ -136,14 +136,14 @@ describe('fetchRemoteExtend', () => {
       CACHE_ROOT,
       'org-refresh-v1_0_0',
       'org-refresh-v1.0.0',
-      '.agentsbridge',
+      '.agentsmesh',
       'rules',
     );
     mkdirSync(staleTopDir, { recursive: true });
     writeFileSync(join(staleTopDir, '_root.md'), '# Stale cache');
 
     const srcDir = join(CACHE_ROOT, 'repo-refresh');
-    const freshInnerDir = join(srcDir, 'org-refresh-v1.0.0', '.agentsbridge', 'rules');
+    const freshInnerDir = join(srcDir, 'org-refresh-v1.0.0', '.agentsmesh', 'rules');
     mkdirSync(freshInnerDir, { recursive: true });
     writeFileSync(join(freshInnerDir, '_root.md'), '# Fresh remote');
 
@@ -167,7 +167,7 @@ describe('fetchRemoteExtend', () => {
 
     expect(mockFetch).toHaveBeenCalledOnce();
     expect(
-      readFileSync(join(result.resolvedPath, '.agentsbridge', 'rules', '_root.md'), 'utf-8'),
+      readFileSync(join(result.resolvedPath, '.agentsmesh', 'rules', '_root.md'), 'utf-8'),
     ).toContain('Fresh remote');
 
     vi.unstubAllGlobals();
@@ -175,7 +175,7 @@ describe('fetchRemoteExtend', () => {
 
   it('returns cached result when cache pre-populated (offline)', async () => {
     const srcDir = join(CACHE_ROOT, 'repo-offline');
-    const innerDir = join(srcDir, 'org-ext-v2.0.0', '.agentsbridge', 'rules');
+    const innerDir = join(srcDir, 'org-ext-v2.0.0', '.agentsmesh', 'rules');
     mkdirSync(innerDir, { recursive: true });
     writeFileSync(join(innerDir, '_root.md'), '# Cached');
 
@@ -201,7 +201,7 @@ describe('fetchRemoteExtend', () => {
 
   it('adds token to tarball fetch when provided', async () => {
     const srcDir = join(CACHE_ROOT, 'repo-token');
-    const innerDir = join(srcDir, 'org-token-v1.0.0', '.agentsbridge', 'rules');
+    const innerDir = join(srcDir, 'org-token-v1.0.0', '.agentsmesh', 'rules');
     mkdirSync(innerDir, { recursive: true });
     writeFileSync(join(innerDir, '_root.md'), '---\nroot: true\n---\n# Root\n');
 
@@ -237,7 +237,7 @@ describe('fetchRemoteExtend', () => {
     const cacheKey = 'org-fallback-v1_0_0';
     const extractDir = join(CACHE_ROOT, cacheKey);
     const topDir = 'org-fallback-abc123';
-    const innerDir = join(extractDir, topDir, '.agentsbridge', 'rules');
+    const innerDir = join(extractDir, topDir, '.agentsmesh', 'rules');
     mkdirSync(innerDir, { recursive: true });
     writeFileSync(join(innerDir, '_root.md'), '# Cached');
 
@@ -328,16 +328,16 @@ describe('resolveLatestTag', () => {
 });
 
 describe('getCacheDir', () => {
-  it('returns AGENTSBRIDGE_CACHE when set', () => {
+  it('returns AGENTSMESH_CACHE when set', () => {
     const custom = '/custom/cache';
-    process.env.AGENTSBRIDGE_CACHE = custom;
+    process.env.AGENTSMESH_CACHE = custom;
     expect(getCacheDir()).toBe(custom);
-    delete process.env.AGENTSBRIDGE_CACHE;
+    delete process.env.AGENTSMESH_CACHE;
   });
 
-  it('returns ~/.agentsbridge/cache when AGENTSBRIDGE_CACHE not set', () => {
-    delete process.env.AGENTSBRIDGE_CACHE;
+  it('returns ~/.agentsmesh/cache when AGENTSMESH_CACHE not set', () => {
+    delete process.env.AGENTSMESH_CACHE;
     const dir = getCacheDir();
-    expect(dir).toMatch(/\.agentsbridge[\\/]cache$/);
+    expect(dir).toMatch(/\.agentsmesh[\\/]cache$/);
   });
 });

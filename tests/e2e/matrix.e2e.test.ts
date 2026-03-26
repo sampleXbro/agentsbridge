@@ -1,5 +1,5 @@
 /**
- * E2E tests for agentsbridge matrix.
+ * E2E tests for agentsmesh matrix.
  */
 
 import { describe, it, expect, afterEach } from 'vitest';
@@ -57,7 +57,7 @@ features:
   - agents
 `);
     writeFileSync(
-      join(dir, 'agentsbridge.local.yaml'),
+      join(dir, 'agentsmesh.local.yaml'),
       `conversions:
   commands_to_skills:
     codex-cli: false

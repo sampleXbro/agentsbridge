@@ -6,7 +6,7 @@ All fixtures in `tests/e2e/fixtures/` are SYNTHETIC. They are based on documente
 
 ## Action Required (Human)
 
-See `docs/agentsbridge-e2e-human-tasks.md` for fixtures that need replacement with real configs from actual projects.
+See `docs/agentsmesh-e2e-human-tasks.md` for fixtures that need replacement with real configs from actual projects.
 
 ## Running
 

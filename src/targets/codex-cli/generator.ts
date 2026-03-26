@@ -40,7 +40,7 @@ function toSafeCodexRulesContent(body: string): string {
   if (!trimmed) return '';
   if (looksLikeCodexRulesDsl(trimmed)) return `${trimmed}\n`;
   const lines: string[] = [
-    '# agentsbridge: canonical execution rule body is not Codex DSL',
+    '# agentsmesh: canonical execution rule body is not Codex DSL',
     '# The original body is preserved below as comments.',
     '# Replace with Codex rules DSL (for example prefix_rule(...)) to enforce behavior.',
     '#',

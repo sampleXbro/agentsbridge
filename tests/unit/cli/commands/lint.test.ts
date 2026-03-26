@@ -1,5 +1,5 @@
 /**
- * Unit tests for agentsbridge lint command.
+ * Unit tests for agentsmesh lint command.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -13,15 +13,15 @@ const TEST_DIR = join(tmpdir(), 'ab-lint-cmd-test');
 function setupProject(): void {
   mkdirSync(TEST_DIR, { recursive: true });
   writeFileSync(
-    join(TEST_DIR, 'agentsbridge.yaml'),
+    join(TEST_DIR, 'agentsmesh.yaml'),
     `version: 1
 targets: [claude-code, cursor]
 features: [rules]
 `,
   );
-  mkdirSync(join(TEST_DIR, '.agentsbridge', 'rules'), { recursive: true });
+  mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
   writeFileSync(
-    join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+    join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
     `---
 root: true
 description: "Project rules"
@@ -42,9 +42,9 @@ describe('runLintCmd', () => {
   });
 
   it('returns 1 when rules exist but no root rule', async () => {
-    rmSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'));
+    rmSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'));
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', 'rules', 'only.md'),
+      join(TEST_DIR, '.agentsmesh', 'rules', 'only.md'),
       `---
 description: "Only rule"
 ---
@@ -56,12 +56,12 @@ Content`,
 
   it('uses singular "error" and "warning" when exactly 1 of each', async () => {
     writeFileSync(
-      join(TEST_DIR, 'agentsbridge.yaml'),
+      join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1\ntargets: [claude-code]\nfeatures: [rules]\n`,
     );
-    rmSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'));
+    rmSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'));
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', 'rules', 'only.md'),
+      join(TEST_DIR, '.agentsmesh', 'rules', 'only.md'),
       `---\ndescription: "Only rule"\nglobs: lib/**/*.ts\n---\nContent`,
     );
     const code = await runLintCmd({}, TEST_DIR);
@@ -72,7 +72,7 @@ Content`,
     mkdirSync(join(TEST_DIR, 'src'), { recursive: true });
     writeFileSync(join(TEST_DIR, 'src', 'foo.ts'), 'x');
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', 'rules', 'lib-only.md'),
+      join(TEST_DIR, '.agentsmesh', 'rules', 'lib-only.md'),
       `---
 description: "Lib"
 globs: lib/**/*.ts
@@ -89,7 +89,7 @@ Lib rules`,
   });
 
   it('throws when not initialized (no config)', async () => {
-    rmSync(join(TEST_DIR, 'agentsbridge.yaml'));
-    await expect(runLintCmd({}, TEST_DIR)).rejects.toThrow(/agentsbridge\.yaml/);
+    rmSync(join(TEST_DIR, 'agentsmesh.yaml'));
+    await expect(runLintCmd({}, TEST_DIR)).rejects.toThrow(/agentsmesh\.yaml/);
   });
 });

@@ -1,5 +1,5 @@
 /**
- * Template data for agentsbridge init command.
+ * Template data for agentsmesh init command.
  */
 
 const ALL_TARGETS = [
@@ -26,7 +26,7 @@ const ALL_FEATURES = [
 ];
 
 /**
- * Build agentsbridge.yaml content for the given targets.
+ * Build agentsmesh.yaml content for the given targets.
  * @param targets - Target tool IDs to include; uses all targets if empty
  */
 export function buildConfig(targets: string[]): string {

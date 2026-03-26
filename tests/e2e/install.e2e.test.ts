@@ -1,5 +1,5 @@
 /**
- * E2E: agentsbridge install (dist/cli.js).
+ * E2E: agentsmesh install (dist/cli.js).
  */
 
 import { describe, it, expect } from 'vitest';
@@ -13,20 +13,20 @@ describe('install e2e', () => {
     const dir = mkdtempSync(join(tmpdir(), 'ab-e2e-install-sync-empty-'));
     try {
       const proj = join(dir, 'proj');
-      mkdirSync(join(proj, '.agentsbridge', 'rules'), { recursive: true });
+      mkdirSync(join(proj, '.agentsmesh', 'rules'), { recursive: true });
       writeFileSync(
-        join(proj, 'agentsbridge.yaml'),
+        join(proj, 'agentsmesh.yaml'),
         'version: 1\ntargets: [claude-code]\nfeatures: [rules,skills]\nextends: []\n',
       );
       writeFileSync(
-        join(proj, '.agentsbridge', 'rules', '_root.md'),
+        join(proj, '.agentsmesh', 'rules', '_root.md'),
         '---\nroot: true\n---\n# Root\n',
       );
 
       const synced = await runCli('install --sync --force', proj);
       expect(synced.exitCode, synced.stderr).toBe(0);
       expect(synced.stdout + synced.stderr).toContain(
-        'No recorded installs found in .agentsbridge/installs.yaml.',
+        'No recorded installs found in .agentsmesh/installs.yaml.',
       );
     } finally {
       rmSync(dir, { recursive: true, force: true });
@@ -42,17 +42,17 @@ describe('install e2e', () => {
         '---\ndescription: d\n---\n# S1\n',
       );
       const proj = join(dir, 'proj');
-      mkdirSync(join(proj, '.agentsbridge', 'rules'), { recursive: true });
+      mkdirSync(join(proj, '.agentsmesh', 'rules'), { recursive: true });
       writeFileSync(
-        join(proj, 'agentsbridge.yaml'),
+        join(proj, 'agentsmesh.yaml'),
         'version: 1\ntargets: [claude-code]\nfeatures: [rules, skills]\nextends: []\n',
       );
-      writeFileSync(join(proj, '.agentsbridge', 'rules', '_root.md'), '---\nroot: true\n---\n');
+      writeFileSync(join(proj, '.agentsmesh', 'rules', '_root.md'), '---\nroot: true\n---\n');
 
       const skillPath = join(dir, 'up', 'skills', 's1');
       const r = await runCli(`install ${skillPath} --dry-run`, proj);
       expect(r.exitCode, r.stderr).toBe(0);
-      expect(readFileSync(join(proj, 'agentsbridge.yaml'), 'utf8')).toContain('extends: []');
+      expect(readFileSync(join(proj, 'agentsmesh.yaml'), 'utf8')).toContain('extends: []');
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -68,12 +68,12 @@ describe('install e2e', () => {
         'description = "Demo"\nprompt = "Run"\n',
       );
       const proj = join(dir, 'proj');
-      mkdirSync(join(proj, '.agentsbridge', 'rules'), { recursive: true });
+      mkdirSync(join(proj, '.agentsmesh', 'rules'), { recursive: true });
       writeFileSync(
-        join(proj, 'agentsbridge.yaml'),
+        join(proj, 'agentsmesh.yaml'),
         'version: 1\ntargets: [claude-code]\nfeatures: [rules, commands]\nextends: []\n',
       );
-      writeFileSync(join(proj, '.agentsbridge', 'rules', '_root.md'), '---\nroot: true\n---\n');
+      writeFileSync(join(proj, '.agentsmesh', 'rules', '_root.md'), '---\nroot: true\n---\n');
 
       const r = await runCli(
         `install ${upstream} --dry-run --force --extends --target gemini-cli --path .gemini/commands`,
@@ -92,32 +92,32 @@ describe('install e2e', () => {
     const dir = mkdtempSync(join(tmpdir(), 'ab-e2e-install-pack-'));
     try {
       const upstream = join(dir, 'up');
-      mkdirSync(join(upstream, '.agentsbridge', 'skills', 'demo'), { recursive: true });
+      mkdirSync(join(upstream, '.agentsmesh', 'skills', 'demo'), { recursive: true });
       writeFileSync(
-        join(upstream, '.agentsbridge', 'skills', 'demo', 'SKILL.md'),
+        join(upstream, '.agentsmesh', 'skills', 'demo', 'SKILL.md'),
         '---\ndescription: Demo\n---\n# Demo\n',
       );
       writeFileSync(
-        join(upstream, '.agentsbridge', 'mcp.json'),
+        join(upstream, '.agentsmesh', 'mcp.json'),
         JSON.stringify({ mcpServers: { context7: { command: 'npx', args: ['-y', 'ctx'] } } }),
       );
-      writeFileSync(join(upstream, '.agentsbridge', 'ignore'), 'node_modules\ndist\n');
+      writeFileSync(join(upstream, '.agentsmesh', 'ignore'), 'node_modules\ndist\n');
 
       const proj = join(dir, 'proj');
-      mkdirSync(join(proj, '.agentsbridge', 'rules'), { recursive: true });
+      mkdirSync(join(proj, '.agentsmesh', 'rules'), { recursive: true });
       writeFileSync(
-        join(proj, 'agentsbridge.yaml'),
+        join(proj, 'agentsmesh.yaml'),
         'version: 1\ntargets: [claude-code]\nfeatures: [rules,skills,mcp,ignore]\nextends: []\n',
       );
       writeFileSync(
-        join(proj, '.agentsbridge', 'rules', '_root.md'),
+        join(proj, '.agentsmesh', 'rules', '_root.md'),
         '---\nroot: true\n---\n# Root\n',
       );
 
       const r = await runCli(`install ${upstream} --force --name shared-pack`, proj);
       expect(r.exitCode, r.stderr).toBe(0);
       expect(
-        readFileSync(join(proj, '.agentsbridge', 'packs', 'shared-pack', 'ignore'), 'utf8'),
+        readFileSync(join(proj, '.agentsmesh', 'packs', 'shared-pack', 'ignore'), 'utf8'),
       ).toContain('node_modules');
       expect(readFileSync(join(proj, '.mcp.json'), 'utf8')).toContain('context7');
       expect(readFileSync(join(proj, '.claude', 'skills', 'demo', 'SKILL.md'), 'utf8')).toContain(
@@ -133,26 +133,26 @@ describe('install e2e', () => {
     const dir = mkdtempSync(join(tmpdir(), 'ab-e2e-install-extends-'));
     try {
       const upstream = join(dir, 'up');
-      mkdirSync(join(upstream, '.agentsbridge', 'skills', 'demo'), { recursive: true });
+      mkdirSync(join(upstream, '.agentsmesh', 'skills', 'demo'), { recursive: true });
       writeFileSync(
-        join(upstream, '.agentsbridge', 'skills', 'demo', 'SKILL.md'),
+        join(upstream, '.agentsmesh', 'skills', 'demo', 'SKILL.md'),
         '---\ndescription: Demo\n---\n# Demo\n',
       );
 
       const proj = join(dir, 'proj');
-      mkdirSync(join(proj, '.agentsbridge', 'rules'), { recursive: true });
+      mkdirSync(join(proj, '.agentsmesh', 'rules'), { recursive: true });
       writeFileSync(
-        join(proj, 'agentsbridge.yaml'),
+        join(proj, 'agentsmesh.yaml'),
         'version: 1\ntargets: [claude-code]\nfeatures: [rules,skills]\nextends: []\n',
       );
       writeFileSync(
-        join(proj, '.agentsbridge', 'rules', '_root.md'),
+        join(proj, '.agentsmesh', 'rules', '_root.md'),
         '---\nroot: true\n---\n# Root\n',
       );
 
       const r = await runCli(`install ${upstream} --force --extends --name ext-pack`, proj);
       expect(r.exitCode, r.stderr).toBe(0);
-      const yaml = readFileSync(join(proj, 'agentsbridge.yaml'), 'utf8');
+      const yaml = readFileSync(join(proj, 'agentsmesh.yaml'), 'utf8');
       expect(yaml).toContain('name: ext-pack');
       expect(yaml).toContain('features:');
       expect(yaml).toContain('skills');
@@ -172,13 +172,13 @@ describe('install e2e', () => {
       );
 
       const proj = join(dir, 'proj');
-      mkdirSync(join(proj, '.agentsbridge', 'rules'), { recursive: true });
+      mkdirSync(join(proj, '.agentsmesh', 'rules'), { recursive: true });
       writeFileSync(
-        join(proj, 'agentsbridge.yaml'),
+        join(proj, 'agentsmesh.yaml'),
         'version: 1\ntargets: [claude-code]\nfeatures: [rules,agents]\nextends: []\n',
       );
       writeFileSync(
-        join(proj, '.agentsbridge', 'rules', '_root.md'),
+        join(proj, '.agentsmesh', 'rules', '_root.md'),
         '---\nroot: true\n---\n# Root\n',
       );
 
@@ -190,7 +190,7 @@ describe('install e2e', () => {
       expect(readFileSync(join(proj, '.claude', 'agents', 'api-architect.md'), 'utf8')).toContain(
         'Design APIs.',
       );
-      expect(readFileSync(join(proj, '.agentsbridge', 'installs.yaml'), 'utf8')).toContain(
+      expect(readFileSync(join(proj, '.agentsmesh', 'installs.yaml'), 'utf8')).toContain(
         'as: agents',
       );
     } finally {
@@ -229,13 +229,13 @@ describe('install e2e', () => {
         }
 
         const proj = join(dir, 'proj');
-        mkdirSync(join(proj, '.agentsbridge', 'rules'), { recursive: true });
+        mkdirSync(join(proj, '.agentsmesh', 'rules'), { recursive: true });
         writeFileSync(
-          join(proj, 'agentsbridge.yaml'),
+          join(proj, 'agentsmesh.yaml'),
           `version: 1\ntargets: [claude-code]\nfeatures: [rules,${kind}]\nextends: []\n`,
         );
         writeFileSync(
-          join(proj, '.agentsbridge', 'rules', '_root.md'),
+          join(proj, '.agentsmesh', 'rules', '_root.md'),
           '---\nroot: true\n---\n# Root\n',
         );
 
@@ -246,7 +246,7 @@ describe('install e2e', () => {
         expect(r.exitCode, r.stderr).toBe(0);
 
         expect(readFileSync(join(proj, generatedPath), 'utf8')).toContain(expectedText);
-        expect(readFileSync(join(proj, '.agentsbridge', 'installs.yaml'), 'utf8')).toContain(
+        expect(readFileSync(join(proj, '.agentsmesh', 'installs.yaml'), 'utf8')).toContain(
           `as: ${kind}`,
         );
       } finally {
@@ -259,31 +259,31 @@ describe('install e2e', () => {
     const dir = mkdtempSync(join(tmpdir(), 'ab-e2e-install-sync-'));
     try {
       const upstream = join(dir, 'up');
-      mkdirSync(join(upstream, '.agentsbridge', 'skills', 'demo'), { recursive: true });
+      mkdirSync(join(upstream, '.agentsmesh', 'skills', 'demo'), { recursive: true });
       writeFileSync(
-        join(upstream, '.agentsbridge', 'skills', 'demo', 'SKILL.md'),
+        join(upstream, '.agentsmesh', 'skills', 'demo', 'SKILL.md'),
         '---\ndescription: Demo\n---\n# Demo\n',
       );
 
       const proj = join(dir, 'proj');
-      mkdirSync(join(proj, '.agentsbridge', 'rules'), { recursive: true });
+      mkdirSync(join(proj, '.agentsmesh', 'rules'), { recursive: true });
       writeFileSync(
-        join(proj, 'agentsbridge.yaml'),
+        join(proj, 'agentsmesh.yaml'),
         'version: 1\ntargets: [claude-code]\nfeatures: [rules,skills]\nextends: []\n',
       );
       writeFileSync(
-        join(proj, '.agentsbridge', 'rules', '_root.md'),
+        join(proj, '.agentsmesh', 'rules', '_root.md'),
         '---\nroot: true\n---\n# Root\n',
       );
 
       const initial = await runCli(`install ${upstream} --force --name shared-pack`, proj);
       expect(initial.exitCode, initial.stderr).toBe(0);
-      rmSync(join(proj, '.agentsbridge', 'packs'), { recursive: true, force: true });
+      rmSync(join(proj, '.agentsmesh', 'packs'), { recursive: true, force: true });
 
       const synced = await runCli('install --sync --force', proj);
       expect(synced.exitCode, synced.stderr).toBe(0);
       expect(
-        readFileSync(join(proj, '.agentsbridge', 'packs', 'shared-pack', 'pack.yaml'), 'utf8'),
+        readFileSync(join(proj, '.agentsmesh', 'packs', 'shared-pack', 'pack.yaml'), 'utf8'),
       ).toContain('name: shared-pack');
       expect(readFileSync(join(proj, '.claude', 'skills', 'demo', 'SKILL.md'), 'utf8')).toContain(
         '# Demo',

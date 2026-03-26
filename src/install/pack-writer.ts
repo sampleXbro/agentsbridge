@@ -83,7 +83,7 @@ async function writeSettings(canonical: CanonicalFiles, packDir: string): Promis
  * Materialize canonical resources into a pack directory under packsDir.
  * Uses atomic .tmp → rename pattern.
  *
- * @param packsDir - Absolute path to .agentsbridge/packs/
+ * @param packsDir - Absolute path to .agentsmesh/packs/
  * @param packName - Directory name for this pack
  * @param canonical - Canonical files to write (already filtered + picked)
  * @param metadataInput - Pack metadata without content_hash (computed after write)

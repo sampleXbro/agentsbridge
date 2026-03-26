@@ -4,8 +4,8 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { loadCanonicalFiles } from '../../../src/canonical/loader.js';
 
-const TEST_DIR = join(tmpdir(), 'agentsbridge-loader-test');
-const AB_DIR = join(TEST_DIR, '.agentsbridge');
+const TEST_DIR = join(tmpdir(), 'agentsmesh-loader-test');
+const AB_DIR = join(TEST_DIR, '.agentsmesh');
 
 beforeEach(() => {
   mkdirSync(AB_DIR, { recursive: true });
@@ -16,7 +16,7 @@ afterEach(() => {
 });
 
 describe('loadCanonicalFiles', () => {
-  it('returns empty canonical files when .agentsbridge is empty', async () => {
+  it('returns empty canonical files when .agentsmesh is empty', async () => {
     const result = await loadCanonicalFiles(TEST_DIR);
     expect(result.rules).toEqual([]);
     expect(result.commands).toEqual([]);
@@ -28,7 +28,7 @@ describe('loadCanonicalFiles', () => {
     expect(result.ignore).toEqual([]);
   });
 
-  it('loads rules from .agentsbridge/rules', async () => {
+  it('loads rules from .agentsmesh/rules', async () => {
     mkdirSync(join(AB_DIR, 'rules'), { recursive: true });
     writeFileSync(
       join(AB_DIR, 'rules', '_root.md'),
@@ -46,7 +46,7 @@ root: true
     });
   });
 
-  it('loads commands from .agentsbridge/commands', async () => {
+  it('loads commands from .agentsmesh/commands', async () => {
     mkdirSync(join(AB_DIR, 'commands'), { recursive: true });
     writeFileSync(
       join(AB_DIR, 'commands', 'review.md'),
@@ -65,7 +65,7 @@ Review changes.`,
     });
   });
 
-  it('loads agents from .agentsbridge/agents', async () => {
+  it('loads agents from .agentsmesh/agents', async () => {
     mkdirSync(join(AB_DIR, 'agents'), { recursive: true });
     writeFileSync(
       join(AB_DIR, 'agents', 'reviewer.md'),
@@ -83,7 +83,7 @@ System prompt`,
     });
   });
 
-  it('loads skills from .agentsbridge/skills', async () => {
+  it('loads skills from .agentsmesh/skills', async () => {
     mkdirSync(join(AB_DIR, 'skills', 'api-gen'), { recursive: true });
     writeFileSync(
       join(AB_DIR, 'skills', 'api-gen', 'SKILL.md'),
@@ -100,7 +100,7 @@ description: Generate API code
     });
   });
 
-  it('loads mcp from .agentsbridge/mcp.json', async () => {
+  it('loads mcp from .agentsmesh/mcp.json', async () => {
     writeFileSync(
       join(AB_DIR, 'mcp.json'),
       JSON.stringify({
@@ -122,7 +122,7 @@ description: Generate API code
     });
   });
 
-  it('loads permissions from .agentsbridge/permissions.yaml', async () => {
+  it('loads permissions from .agentsmesh/permissions.yaml', async () => {
     writeFileSync(
       join(AB_DIR, 'permissions.yaml'),
       'allow:\n  - Read\n  - Grep\ndeny:\n  - Bash\n',
@@ -133,7 +133,7 @@ description: Generate API code
     expect(result.permissions?.deny).toEqual(['Bash']);
   });
 
-  it('loads hooks from .agentsbridge/hooks.yaml', async () => {
+  it('loads hooks from .agentsmesh/hooks.yaml', async () => {
     writeFileSync(
       join(AB_DIR, 'hooks.yaml'),
       `PostToolUse:
@@ -152,7 +152,7 @@ description: Generate API code
     });
   });
 
-  it('loads ignore from .agentsbridge/ignore', async () => {
+  it('loads ignore from .agentsmesh/ignore', async () => {
     writeFileSync(join(AB_DIR, 'ignore'), 'node_modules\n.env\n# comment\n\nsecrets/');
     const result = await loadCanonicalFiles(TEST_DIR);
     expect(result.ignore).toEqual(['node_modules', '.env', 'secrets/']);
@@ -186,8 +186,8 @@ description: Generate API code
     expect(result.ignore).toEqual(['dist']);
   });
 
-  it('handles non-existent .agentsbridge directory', async () => {
-    const emptyDir = join(tmpdir(), 'agentsbridge-loader-nonexistent');
+  it('handles non-existent .agentsmesh directory', async () => {
+    const emptyDir = join(tmpdir(), 'agentsmesh-loader-nonexistent');
     mkdirSync(emptyDir, { recursive: true });
     const result = await loadCanonicalFiles(emptyDir);
     expect(result.rules).toEqual([]);

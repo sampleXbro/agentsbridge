@@ -11,14 +11,14 @@ import {
   detectLockedFeatureViolations,
 } from '../../../src/config/lock.js';
 
-const TEST_DIR = join(tmpdir(), 'agentsbridge-lock-test');
+const TEST_DIR = join(tmpdir(), 'agentsmesh-lock-test');
 
 beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
 
 describe('readLock', () => {
   it('reads valid lock file', async () => {
-    const abDir = join(TEST_DIR, '.agentsbridge');
+    const abDir = join(TEST_DIR, '.agentsmesh');
     mkdirSync(abDir, { recursive: true });
     writeFileSync(
       join(abDir, '.lock'),
@@ -41,31 +41,31 @@ extends: {}
   });
 
   it('returns null for non-existent lock', async () => {
-    const abDir = join(TEST_DIR, '.agentsbridge');
+    const abDir = join(TEST_DIR, '.agentsmesh');
     mkdirSync(abDir, { recursive: true });
     expect(await readLock(abDir)).toBeNull();
   });
 
-  it('returns null for non-existent .agentsbridge', async () => {
+  it('returns null for non-existent .agentsmesh', async () => {
     expect(await readLock(join(TEST_DIR, 'nope'))).toBeNull();
   });
 
   it('returns null for malformed YAML', async () => {
-    const abDir = join(TEST_DIR, '.agentsbridge');
+    const abDir = join(TEST_DIR, '.agentsmesh');
     mkdirSync(abDir, { recursive: true });
     writeFileSync(join(abDir, '.lock'), 'not valid: yaml: [unclosed');
     expect(await readLock(abDir)).toBeNull();
   });
 
   it('returns null when lock content parses to non-object (scalar)', async () => {
-    const abDir = join(TEST_DIR, '.agentsbridge');
+    const abDir = join(TEST_DIR, '.agentsmesh');
     mkdirSync(abDir, { recursive: true });
     writeFileSync(join(abDir, '.lock'), '"just a string"');
     expect(await readLock(abDir)).toBeNull();
   });
 
   it('reads packs field when present', async () => {
-    const abDir = join(TEST_DIR, '.agentsbridge');
+    const abDir = join(TEST_DIR, '.agentsmesh');
     mkdirSync(abDir, { recursive: true });
     writeFileSync(
       join(abDir, '.lock'),
@@ -83,7 +83,7 @@ packs:
   });
 
   it('defaults packs to empty object when missing', async () => {
-    const abDir = join(TEST_DIR, '.agentsbridge');
+    const abDir = join(TEST_DIR, '.agentsmesh');
     mkdirSync(abDir, { recursive: true });
     writeFileSync(
       join(abDir, '.lock'),
@@ -99,7 +99,7 @@ extends: {}
   });
 
   it('handles lock with non-object checksums or extends', async () => {
-    const abDir = join(TEST_DIR, '.agentsbridge');
+    const abDir = join(TEST_DIR, '.agentsmesh');
     mkdirSync(abDir, { recursive: true });
     writeFileSync(
       join(abDir, '.lock'),
@@ -119,7 +119,7 @@ extends: "invalid"
 
 describe('writeLock', () => {
   it('writes lock file', async () => {
-    const abDir = join(TEST_DIR, '.agentsbridge');
+    const abDir = join(TEST_DIR, '.agentsmesh');
     mkdirSync(abDir, { recursive: true });
     const lock = {
       generatedAt: '2026-03-12T14:30:00Z',
@@ -136,8 +136,8 @@ describe('writeLock', () => {
     expect(content).toContain('rules/_root.md');
   });
 
-  it('creates .agentsbridge if missing', async () => {
-    const abDir = join(TEST_DIR, '.agentsbridge');
+  it('creates .agentsmesh if missing', async () => {
+    const abDir = join(TEST_DIR, '.agentsmesh');
     const lock = {
       generatedAt: '2026-03-12T14:30:00Z',
       generatedBy: 'me',
@@ -152,7 +152,7 @@ describe('writeLock', () => {
 
 describe('buildChecksums', () => {
   it('hashes canonical files', async () => {
-    const abDir = join(TEST_DIR, '.agentsbridge');
+    const abDir = join(TEST_DIR, '.agentsmesh');
     mkdirSync(join(abDir, 'rules'), { recursive: true });
     writeFileSync(join(abDir, 'rules', '_root.md'), '# Rules\nUse TypeScript');
     const sums = await buildChecksums(abDir);
@@ -161,7 +161,7 @@ describe('buildChecksums', () => {
   });
 
   it('includes rules, commands, agents, skills, mcp, permissions, hooks, ignore', async () => {
-    const abDir = join(TEST_DIR, '.agentsbridge');
+    const abDir = join(TEST_DIR, '.agentsmesh');
     mkdirSync(join(abDir, 'rules'), { recursive: true });
     mkdirSync(join(abDir, 'commands'), { recursive: true });
     mkdirSync(join(abDir, 'agents'), { recursive: true });
@@ -187,7 +187,7 @@ describe('buildChecksums', () => {
   });
 
   it('excludes files under packs/ from checksums (tracked separately)', async () => {
-    const abDir = join(TEST_DIR, '.agentsbridge');
+    const abDir = join(TEST_DIR, '.agentsmesh');
     const packRulesDir = join(abDir, 'packs', 'my-pack', 'rules');
     mkdirSync(packRulesDir, { recursive: true });
     writeFileSync(join(packRulesDir, 'rule.md'), '# Pack rule');
@@ -196,7 +196,7 @@ describe('buildChecksums', () => {
   });
 
   it('excludes .lock from checksums', async () => {
-    const abDir = join(TEST_DIR, '.agentsbridge');
+    const abDir = join(TEST_DIR, '.agentsmesh');
     mkdirSync(join(abDir, 'rules'), { recursive: true });
     writeFileSync(join(abDir, 'rules', '_root.md'), 'x');
     writeFileSync(join(abDir, '.lock'), 'dummy');
@@ -204,7 +204,7 @@ describe('buildChecksums', () => {
     expect(sums['.lock']).toBeUndefined();
   });
 
-  it('returns empty object for non-existent .agentsbridge', async () => {
+  it('returns empty object for non-existent .agentsmesh', async () => {
     const sums = await buildChecksums(join(TEST_DIR, 'nope'));
     expect(sums).toEqual({});
   });
@@ -249,8 +249,8 @@ describe('buildPackChecksums', () => {
 describe('buildExtendChecksums', () => {
   it('returns fingerprint per extend name', async () => {
     const extDir = join(TEST_DIR, 'shared');
-    mkdirSync(join(extDir, '.agentsbridge', 'rules'), { recursive: true });
-    writeFileSync(join(extDir, '.agentsbridge', 'rules', '_root.md'), '# Shared\n');
+    mkdirSync(join(extDir, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(join(extDir, '.agentsmesh', 'rules', '_root.md'), '# Shared\n');
     const sums = await buildExtendChecksums([{ name: 'base', resolvedPath: extDir }]);
     expect(sums.base).toMatch(/^local:sha256:[a-f0-9]{64}$/);
   });
@@ -263,10 +263,10 @@ describe('buildExtendChecksums', () => {
   it('different content produces different fingerprints', async () => {
     const ext1 = join(TEST_DIR, 'ext1');
     const ext2 = join(TEST_DIR, 'ext2');
-    mkdirSync(join(ext1, '.agentsbridge', 'rules'), { recursive: true });
-    mkdirSync(join(ext2, '.agentsbridge', 'rules'), { recursive: true });
-    writeFileSync(join(ext1, '.agentsbridge', 'rules', '_root.md'), 'A');
-    writeFileSync(join(ext2, '.agentsbridge', 'rules', '_root.md'), 'B');
+    mkdirSync(join(ext1, '.agentsmesh', 'rules'), { recursive: true });
+    mkdirSync(join(ext2, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(join(ext1, '.agentsmesh', 'rules', '_root.md'), 'A');
+    writeFileSync(join(ext2, '.agentsmesh', 'rules', '_root.md'), 'B');
     const sums = await buildExtendChecksums([
       { name: 'a', resolvedPath: ext1 },
       { name: 'b', resolvedPath: ext2 },

@@ -6,7 +6,7 @@ import { generate } from '../../../src/core/engine.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';
 import type { ValidatedConfig } from '../../../src/config/schema.js';
 
-const TEST_DIR = join(tmpdir(), 'ab-engine-reference-rewrite');
+const TEST_DIR = join(tmpdir(), 'am-engine-reference-rewrite');
 
 function rewriteConfig(targets: ValidatedConfig['targets']): ValidatedConfig {
   return {
@@ -23,15 +23,15 @@ function rewriteCanonical(): CanonicalFiles {
   return {
     rules: [
       {
-        source: join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+        source: join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
         root: true,
         targets: [],
         description: 'Root rule',
         globs: [],
-        body: 'See .agentsbridge/rules/typescript.md, .agentsbridge/commands/review.md, .agentsbridge/agents/reviewer.md, and .agentsbridge/skills/api-gen/references/checklist.md.',
+        body: 'See .agentsmesh/rules/typescript.md, .agentsmesh/commands/review.md, .agentsmesh/agents/reviewer.md, and .agentsmesh/skills/api-gen/references/checklist.md.',
       },
       {
-        source: join(TEST_DIR, '.agentsbridge', 'rules', 'typescript.md'),
+        source: join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'),
         root: false,
         targets: [],
         description: 'TypeScript rule',
@@ -41,16 +41,16 @@ function rewriteCanonical(): CanonicalFiles {
     ],
     commands: [
       {
-        source: join(TEST_DIR, '.agentsbridge', 'commands', 'review.md'),
+        source: join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'),
         name: 'review',
         description: 'Run review',
         allowedTools: [],
-        body: 'Load .agentsbridge/skills/api-gen/SKILL.md.',
+        body: 'Load .agentsmesh/skills/api-gen/SKILL.md.',
       },
     ],
     agents: [
       {
-        source: join(TEST_DIR, '.agentsbridge', 'agents', 'reviewer.md'),
+        source: join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'),
         name: 'reviewer',
         description: 'Reviews code',
         tools: ['Read'],
@@ -62,21 +62,21 @@ function rewriteCanonical(): CanonicalFiles {
         hooks: {},
         skills: [],
         memory: '',
-        body: 'Use .agentsbridge/skills/api-gen/SKILL.md.',
+        body: 'Use .agentsmesh/skills/api-gen/SKILL.md.',
       },
     ],
     skills: [
       {
-        source: join(TEST_DIR, '.agentsbridge', 'skills', 'api-gen', 'SKILL.md'),
+        source: join(TEST_DIR, '.agentsmesh', 'skills', 'api-gen', 'SKILL.md'),
         name: 'api-gen',
         description: 'Generate APIs',
-        body: 'Checklist at .agentsbridge/skills/api-gen/references/checklist.md.',
+        body: 'Checklist at .agentsmesh/skills/api-gen/references/checklist.md.',
         supportingFiles: [
           {
             relativePath: 'references/checklist.md',
             absolutePath: join(
               TEST_DIR,
-              '.agentsbridge',
+              '.agentsmesh',
               'skills',
               'api-gen',
               'references',
@@ -148,7 +148,7 @@ describe('generate reference rewriting', () => {
       const canonical = rewriteCanonical();
       canonical.rules[0] = {
         ...canonical.rules[0]!,
-        body: 'Use .agentsbridge/skills/api-gen/ and .agentsbridge/skills/api-gen/references/.',
+        body: 'Use .agentsmesh/skills/api-gen/ and .agentsmesh/skills/api-gen/references/.',
       };
 
       const results = await generate({
@@ -160,7 +160,7 @@ describe('generate reference rewriting', () => {
       const content = results.find((result) => result.path === outputPath)?.content ?? '';
       expect(content).toContain(expectedSkillDir);
       expect(content).toContain(expectedRefDir);
-      expect(content).not.toContain('.agentsbridge/skills/api-gen/');
+      expect(content).not.toContain('.agentsmesh/skills/api-gen/');
     },
   );
 
@@ -168,7 +168,7 @@ describe('generate reference rewriting', () => {
     const canonical = rewriteCanonical();
     canonical.rules[0] = {
       ...canonical.rules[0]!,
-      body: 'Use .agentsbridge/skills/api-gen/ and .agentsbridge/skills/api-gen/references/.',
+      body: 'Use .agentsmesh/skills/api-gen/ and .agentsmesh/skills/api-gen/references/.',
     };
 
     const results = await generate({
@@ -180,7 +180,7 @@ describe('generate reference rewriting', () => {
     const content = results.find((result) => result.path === 'AGENTS.md')?.content ?? '';
     expect(content).toContain('.cline/skills/api-gen/');
     expect(content).toContain('.cline/skills/api-gen/references/');
-    expect(content).not.toContain('.agentsbridge/skills/api-gen/');
+    expect(content).not.toContain('.agentsmesh/skills/api-gen/');
   });
 
   it('recomputes file status after rewriting generated content', async () => {

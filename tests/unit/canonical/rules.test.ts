@@ -4,8 +4,8 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { parseRules } from '../../../src/canonical/rules.js';
 
-const TEST_DIR = join(tmpdir(), 'agentsbridge-rules-test');
-const RULES_DIR = join(TEST_DIR, '.agentsbridge', 'rules');
+const TEST_DIR = join(tmpdir(), 'agentsmesh-rules-test');
+const RULES_DIR = join(TEST_DIR, '.agentsmesh', 'rules');
 
 beforeEach(() => {
   mkdirSync(RULES_DIR, { recursive: true });

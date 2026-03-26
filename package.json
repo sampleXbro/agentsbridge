@@ -1,5 +1,5 @@
 {
-  "name": "agentsbridge",
+  "name": "agentsmesh",
   "version": "0.2.0",
   "description": "One canonical source for AI coding agent rules, commands, skills, MCP, hooks, and permissions — synced across Claude Code, Cursor, Copilot, Continue, Junie, Gemini CLI, Cline, Codex CLI, and Windsurf.",
   "type": "module",
@@ -9,22 +9,22 @@
     ".": "./dist/cli.js"
   },
   "bin": {
-    "agentsbridge": "./dist/cli.js",
-    "agbr": "./dist/cli.js"
+    "agentsmesh": "./dist/cli.js",
+    "amsh": "./dist/cli.js"
   },
   "engines": {
     "node": ">=20.0.0"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/sampleXbro/agentsbridge.git"
+    "url": "https://github.com/sampleXbro/agentsmesh.git"
   },
-  "homepage": "https://github.com/sampleXbro/agentsbridge#readme",
+  "homepage": "https://github.com/sampleXbro/agentsmesh#readme",
   "bugs": {
-    "url": "https://github.com/sampleXbro/agentsbridge/issues"
+    "url": "https://github.com/sampleXbro/agentsmesh/issues"
   },
   "scripts": {
-    "agentsbridge": "node ./dist/cli.js",
+    "agentsmesh": "node ./dist/cli.js",
     "build": "tsup",
     "pretest": "pnpm build",
     "test": "vitest run",

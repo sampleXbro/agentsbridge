@@ -53,16 +53,16 @@ describe('gemini-cli content contract roundtrip', () => {
     fileContains(policyPath, 'decision = "allow"');
     fileContains(policyPath, 'decision = "deny"');
 
-    rmSync(join(dir, '.agentsbridge'), { recursive: true, force: true });
+    rmSync(join(dir, '.agentsmesh'), { recursive: true, force: true });
 
     const imported = await runCli('import --from gemini-cli', dir);
     expect(imported.exitCode, imported.stderr).toBe(0);
 
-    fileContains(join(dir, '.agentsbridge', 'rules', '_root.md'), '# Standards');
-    fileContains(join(dir, '.agentsbridge', 'commands', 'review.md'), 'Review current changes');
-    fileContains(join(dir, '.agentsbridge', 'agents', 'code-reviewer.md'), 'maxTurns: 10');
-    fileContains(join(dir, '.agentsbridge', 'agents', 'code-reviewer.md'), 'permissionMode: ask');
-    fileContains(join(dir, '.agentsbridge', 'permissions.yaml'), 'allow:');
-    fileContains(join(dir, '.agentsbridge', 'permissions.yaml'), 'deny:');
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), '# Standards');
+    fileContains(join(dir, '.agentsmesh', 'commands', 'review.md'), 'Review current changes');
+    fileContains(join(dir, '.agentsmesh', 'agents', 'code-reviewer.md'), 'maxTurns: 10');
+    fileContains(join(dir, '.agentsmesh', 'agents', 'code-reviewer.md'), 'permissionMode: ask');
+    fileContains(join(dir, '.agentsmesh', 'permissions.yaml'), 'allow:');
+    fileContains(join(dir, '.agentsmesh', 'permissions.yaml'), 'deny:');
   });
 });

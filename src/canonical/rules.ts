@@ -1,5 +1,5 @@
 /**
- * Parse .agentsbridge/rules/*.md into CanonicalRule objects.
+ * Parse .agentsmesh/rules/*.md into CanonicalRule objects.
  */
 
 import { basename } from 'node:path';
@@ -23,7 +23,7 @@ function toStrArray(v: unknown): string[] {
 
 /**
  * Parse all rule files in a rules directory.
- * @param rulesDir - Absolute path to .agentsbridge/rules
+ * @param rulesDir - Absolute path to .agentsmesh/rules
  * @returns Array of parsed CanonicalRule, or [] if dir missing/empty
  */
 export async function parseRules(rulesDir: string): Promise<CanonicalRule[]> {

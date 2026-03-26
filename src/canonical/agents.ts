@@ -1,5 +1,5 @@
 /**
- * Parse .agentsbridge/agents/*.md into CanonicalAgent objects.
+ * Parse .agentsmesh/agents/*.md into CanonicalAgent objects.
  */
 
 import { basename } from 'node:path';
@@ -56,7 +56,7 @@ function toHooks(v: unknown): Hooks {
 
 /**
  * Parse all agent files in an agents directory.
- * @param agentsDir - Absolute path to .agentsbridge/agents
+ * @param agentsDir - Absolute path to .agentsmesh/agents
  * @returns Array of parsed CanonicalAgent, or [] if dir missing/empty
  */
 export async function parseAgents(agentsDir: string): Promise<CanonicalAgent[]> {

@@ -74,14 +74,14 @@ describe('installAsPack', () => {
     await installAsPack(baseArgs);
     expect(mockMaterializePack).toHaveBeenCalledOnce();
     const [packsDir, packName] = mockMaterializePack.mock.calls[0] as unknown[];
-    expect(packsDir).toBe('/project/.agentsbridge/packs');
+    expect(packsDir).toBe('/project/.agentsmesh/packs');
     expect(packName).toBe('my-pack');
   });
 
   it('calls findExistingPack with correct packsDir and source', async () => {
     await installAsPack(baseArgs);
     expect(mockFindExistingPack).toHaveBeenCalledWith(
-      '/project/.agentsbridge/packs',
+      '/project/.agentsmesh/packs',
       'github:org/repo@abc123',
       { target: undefined, as: undefined, features: ['skills'] },
     );
@@ -97,7 +97,7 @@ describe('installAsPack', () => {
     };
     mockFindExistingPack.mockResolvedValue({
       meta: existingMeta,
-      packDir: '/project/.agentsbridge/packs/my-pack',
+      packDir: '/project/.agentsmesh/packs/my-pack',
       name: 'my-pack',
     });
 
@@ -111,7 +111,7 @@ describe('installAsPack', () => {
     expect(mockMergeIntoPack).toHaveBeenCalledOnce();
     expect(mockMaterializePack).not.toHaveBeenCalled();
     expect(mockMergeIntoPack).toHaveBeenCalledWith(
-      '/project/.agentsbridge/packs/my-pack',
+      '/project/.agentsmesh/packs/my-pack',
       existingMeta,
       expect.any(Object),
       ['skills'],
@@ -130,7 +130,7 @@ describe('installAsPack', () => {
     await installAsPack({ ...baseArgs, manualAs: 'agents' });
 
     expect(mockFindExistingPack).toHaveBeenCalledWith(
-      '/project/.agentsbridge/packs',
+      '/project/.agentsmesh/packs',
       baseArgs.sourceForYaml,
       {
         target: undefined,

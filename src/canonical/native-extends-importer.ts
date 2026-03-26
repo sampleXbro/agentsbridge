@@ -24,7 +24,7 @@ const NATIVE_IMPORTERS: Record<string, ImportFn> = {
 };
 
 /**
- * Import native agent format files from repoPath into repoPath/.agentsbridge/.
+ * Import native agent format files from repoPath into repoPath/.agentsmesh/.
  * Uses the registered importer for the given targetName.
  *
  * @param repoPath - Absolute path to the fetched/cloned repo root

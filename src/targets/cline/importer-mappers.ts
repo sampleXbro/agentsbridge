@@ -7,8 +7,8 @@ import {
 import type { ImportFileMapping } from '../import-orchestrator.js';
 import { toGlobsArray } from '../shared-import-helpers.js';
 
-const AGENTSBRIDGE_RULES = '.agentsbridge/rules';
-const AGENTSBRIDGE_COMMANDS = '.agentsbridge/commands';
+const AGENTSMESH_RULES = '.agentsmesh/rules';
+const AGENTSMESH_COMMANDS = '.agentsmesh/commands';
 
 export async function mapClineRuleFile(
   srcPath: string,
@@ -31,7 +31,7 @@ export async function mapClineRuleFile(
   });
   return {
     destPath,
-    toPath: `${AGENTSBRIDGE_RULES}/${name}.md`,
+    toPath: `${AGENTSMESH_RULES}/${name}.md`,
     feature: 'rules',
     content: await serializeImportedRuleWithFallback(destPath, canonicalFm, body),
   };
@@ -73,7 +73,7 @@ export async function mapClineWorkflowFile(
 
   return {
     destPath,
-    toPath: `${AGENTSBRIDGE_COMMANDS}/${name}.md`,
+    toPath: `${AGENTSMESH_COMMANDS}/${name}.md`,
     feature: 'commands',
     content: await serializeImportedCommandWithFallback(
       destPath,

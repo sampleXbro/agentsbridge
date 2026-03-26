@@ -9,13 +9,13 @@ const CLI_PATH = join(process.cwd(), 'dist', 'cli.js');
 
 beforeEach(() => {
   mkdirSync(TEST_DIR, { recursive: true });
-  mkdirSync(join(TEST_DIR, '.agentsbridge', 'rules'), { recursive: true });
+  mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
   writeFileSync(
-    join(TEST_DIR, 'agentsbridge.yaml'),
+    join(TEST_DIR, 'agentsmesh.yaml'),
     'version: 1\ntargets: [claude-code, cursor]\nfeatures: [rules]\n',
   );
   writeFileSync(
-    join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+    join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
     '---\nroot: true\ndescription: "Project rules"\n---\n# Rules\n- Use TypeScript\n',
   );
 });
@@ -25,7 +25,7 @@ afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
 describe('watch', () => {
   it('regenerates once on startup, stays idle, then reacts to source changes', async () => {
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', '.lock'),
+      join(TEST_DIR, '.agentsmesh', '.lock'),
       'generated_at: "2026-03-15T14:00:00Z"\nchecksums: {}\nextends: {}\n',
     );
 
@@ -46,7 +46,7 @@ describe('watch', () => {
     expect(stdout.match(/Regenerated\./g) ?? []).toHaveLength(1);
 
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+      join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
       '---\nroot: true\ndescription: "Updated"\n---\n# Rules\n- Use TypeScript\n- Prefer strict mode\n',
     );
 

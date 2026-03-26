@@ -1,5 +1,5 @@
 /**
- * Parse .agentsbridge/skills/{name}/SKILL.md into CanonicalSkill objects.
+ * Parse .agentsmesh/skills/{name}/SKILL.md into CanonicalSkill objects.
  */
 
 import { basename, join } from 'node:path';
@@ -37,7 +37,7 @@ async function listSupportingFiles(skillDir: string): Promise<SkillSupportingFil
 /**
  * Parse all skill directories under skillsDir.
  * Each skill lives in skillsDir/{name}/SKILL.md.
- * @param skillsDir - Absolute path to .agentsbridge/skills
+ * @param skillsDir - Absolute path to .agentsmesh/skills
  * @returns Array of parsed CanonicalSkill, or [] if dir missing/empty
  */
 /**

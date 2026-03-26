@@ -41,12 +41,12 @@ export function buildCacheKey(provider: string, identifier: string, ref: string)
 }
 
 /**
- * Get default cache directory (~/.agentsbridge/cache or AGENTSBRIDGE_CACHE).
+ * Get default cache directory (~/.agentsmesh/cache or AGENTSMESH_CACHE).
  */
 export function getCacheDir(): string {
-  const env = process.env.AGENTSBRIDGE_CACHE;
+  const env = process.env.AGENTSMESH_CACHE;
   if (env) return env;
-  return join(homedir(), '.agentsbridge', 'cache');
+  return join(homedir(), '.agentsmesh', 'cache');
 }
 
 /**
@@ -76,7 +76,7 @@ export async function fetchRemoteExtend(
 
   const cacheDir = options.cacheDir ?? getCacheDir();
 
-  // Fire-and-forget: sweep entries older than AGENTSBRIDGE_CACHE_MAX_AGE_DAYS (default 30d)
+  // Fire-and-forget: sweep entries older than AGENTSMESH_CACHE_MAX_AGE_DAYS (default 30d)
   // so the cache does not grow unboundedly without user intervention.
   void sweepStaleCache(cacheDir).catch(() => {});
 

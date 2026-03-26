@@ -19,19 +19,19 @@ describe('generate MCP transport variants (integration)', () => {
 
   it('preserves URL-based MCP for Claude and Cursor while filtering Codex to stdio', () => {
     writeFileSync(
-      join(testDir, 'agentsbridge.yaml'),
+      join(testDir, 'agentsmesh.yaml'),
       `version: 1
 targets: [claude-code, cursor, codex-cli]
 features: [rules, mcp]
 `,
     );
-    mkdirSync(join(testDir, '.agentsbridge', 'rules'), { recursive: true });
+    mkdirSync(join(testDir, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(
-      join(testDir, '.agentsbridge', 'rules', '_root.md'),
+      join(testDir, '.agentsmesh', 'rules', '_root.md'),
       '---\nroot: true\n---\n# Root\n',
     );
     writeFileSync(
-      join(testDir, '.agentsbridge', 'mcp.json'),
+      join(testDir, '.agentsmesh', 'mcp.json'),
       `{
   "mcpServers": {
     "local": {

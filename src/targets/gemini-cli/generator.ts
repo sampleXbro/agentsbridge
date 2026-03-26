@@ -99,7 +99,7 @@ export function generateRules(canonical: CanonicalFiles): RulesOutput[] {
     // but Gemini would otherwise rewrite them to `.gemini/skills/...`, causing collisions.
     const compatAgentsContent = root.body
       .trim()
-      .replace(/\.agentsbridge\/skills\//g, '.agents/skills/');
+      .replace(/\.agentsmesh\/skills\//g, '.agents/skills/');
     outputs.push({ path: GEMINI_COMPAT_AGENTS, content: compatAgentsContent });
   }
   return outputs;

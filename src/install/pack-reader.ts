@@ -1,5 +1,5 @@
 /**
- * Read and search pack metadata from .agentsbridge/packs/.
+ * Read and search pack metadata from .agentsmesh/packs/.
  */
 
 import { join } from 'node:path';

@@ -2,7 +2,7 @@
  * Copilot target importer — .github/copilot-instructions.md, .github/copilot/*.instructions.md (legacy),
  * .github/instructions/*.instructions.md, .github/prompts/*.prompt.md, .github/skills/**,
  * .github/agents/*.agent.md, .github/hooks/*.json (and legacy .github/copilot-hooks/*.sh) → canonical
- * .agentsbridge/.
+ * .agentsmesh/.
  */
 
 import { join, basename } from 'node:path';
@@ -23,11 +23,11 @@ import { parseCommandPromptFrontmatter, serializeImportedCommand } from './comma
 import { importHooks } from './hook-parser.js';
 import { importAgents, importSkills } from './agents-skills-helpers.js';
 
-const AGENTSBRIDGE_RULES = '.agentsbridge/rules';
-const AB_COMMANDS = '.agentsbridge/commands';
+const AGENTSMESH_RULES = '.agentsmesh/rules';
+const AB_COMMANDS = '.agentsmesh/commands';
 
 /**
- * Import Copilot rules into canonical .agentsbridge/rules.
+ * Import Copilot rules into canonical .agentsmesh/rules.
  * Sources: .github/copilot-instructions.md (root) and .github/copilot/*.instructions.md.
  * Strips .instructions suffix for slug. Preserves description and globs.
  *
@@ -37,7 +37,7 @@ const AB_COMMANDS = '.agentsbridge/commands';
 export async function importFromCopilot(projectRoot: string): Promise<ImportResult[]> {
   const results: ImportResult[] = [];
   const normalize = await createImportReferenceNormalizer('copilot', projectRoot);
-  const destDir = join(projectRoot, AGENTSBRIDGE_RULES);
+  const destDir = join(projectRoot, AGENTSMESH_RULES);
 
   const instructionsPath = join(projectRoot, COPILOT_INSTRUCTIONS);
   const instructionsContent = await readFileSafe(instructionsPath);
@@ -54,7 +54,7 @@ export async function importFromCopilot(projectRoot: string): Promise<ImportResu
     results.push({
       fromTool: 'copilot',
       fromPath: instructionsPath,
-      toPath: `${AGENTSBRIDGE_RULES}/_root.md`,
+      toPath: `${AGENTSMESH_RULES}/_root.md`,
       feature: 'rules',
     });
   }
@@ -83,7 +83,7 @@ export async function importFromCopilot(projectRoot: string): Promise<ImportResu
         });
         return {
           destPath,
-          toPath: `${AGENTSBRIDGE_RULES}/${destFileName}`,
+          toPath: `${AGENTSMESH_RULES}/${destFileName}`,
           feature: 'rules',
           content: await serializeImportedRuleWithFallback(destPath, canonicalFm, body),
         };
@@ -120,7 +120,7 @@ export async function importFromCopilot(projectRoot: string): Promise<ImportResu
         });
         return {
           destPath,
-          toPath: `${AGENTSBRIDGE_RULES}/${base}.md`,
+          toPath: `${AGENTSMESH_RULES}/${base}.md`,
           feature: 'rules',
           content: await serializeImportedRuleWithFallback(destPath, canonicalFm, body),
         };

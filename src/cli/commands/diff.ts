@@ -1,5 +1,5 @@
 /**
- * agentsbridge diff — show what would change on the next generate.
+ * agentsmesh diff — show what would change on the next generate.
  */
 
 import { loadConfigFromDir } from '../../config/loader.js';

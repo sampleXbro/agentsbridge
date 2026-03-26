@@ -85,7 +85,7 @@ export async function installAsPack(args: InstallAsPackArgs): Promise<void> {
     renameExistingPack,
   } = args;
 
-  const packsDir = join(configDir, '.agentsbridge', 'packs');
+  const packsDir = join(configDir, '.agentsmesh', 'packs');
   const selectedCanonical = applySelection(narrowed, selected);
   const now = new Date().toISOString();
   const parsedTarget = yamlTarget !== undefined ? targetSchema.parse(yamlTarget) : undefined;
@@ -133,7 +133,7 @@ export async function installAsPack(args: InstallAsPackArgs): Promise<void> {
     persistedPick = mergedMeta.pick;
     persistedPath = mergedMeta.path;
     persistedPaths = mergedMeta.paths;
-    logger.success(`Updated pack "${mergedMeta.name}" in .agentsbridge/packs/.`);
+    logger.success(`Updated pack "${mergedMeta.name}" in .agentsmesh/packs/.`);
   } else {
     const collidingMeta = await readPackMetadata(join(packsDir, packName));
     if (collidingMeta) {
@@ -154,7 +154,7 @@ export async function installAsPack(args: InstallAsPackArgs): Promise<void> {
       ...pathScope(pathInRepo),
       ...(manualAs !== undefined && { as: manualAs }),
     });
-    logger.success(`Installed pack "${packName}" to .agentsbridge/packs/.`);
+    logger.success(`Installed pack "${packName}" to .agentsmesh/packs/.`);
   }
 
   await upsertInstallManifestEntry(

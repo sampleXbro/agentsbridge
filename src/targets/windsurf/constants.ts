@@ -9,7 +9,7 @@ export const WINDSURF_RULES_ROOT = '.windsurfrules';
 /** Modular rules directory */
 export const WINDSURF_RULES_DIR = '.windsurf/rules';
 
-/** Ignore file path (agentsbridge legacy / community) */
+/** Ignore file path (agentsmesh legacy / community) */
 export const WINDSURF_IGNORE = '.windsurfignore';
 
 /** Official Windsurf/Codeium ignore file (docs.windsurf.com) */

@@ -22,12 +22,12 @@ import {
   JUNIE_SKILLS_DIR,
 } from './constants.js';
 
-const AB_RULE = '.agentsbridge/rules/_root.md';
-const AB_RULES_DIR = '.agentsbridge/rules';
-const AB_COMMANDS_DIR = '.agentsbridge/commands';
-const AB_AGENTS_DIR = '.agentsbridge/agents';
-const AB_MCP = '.agentsbridge/mcp.json';
-const AB_IGNORE = '.agentsbridge/ignore';
+const AB_RULE = '.agentsmesh/rules/_root.md';
+const AB_RULES_DIR = '.agentsmesh/rules';
+const AB_COMMANDS_DIR = '.agentsmesh/commands';
+const AB_AGENTS_DIR = '.agentsmesh/agents';
+const AB_MCP = '.agentsmesh/mcp.json';
+const AB_IGNORE = '.agentsmesh/ignore';
 
 function readMcpServers(content: string): Record<string, McpServer> {
   const parsed = JSON.parse(content) as Record<string, unknown>;

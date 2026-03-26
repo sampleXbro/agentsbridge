@@ -8,7 +8,7 @@ import type { McpServer } from '../../core/types.js';
 import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/fs.js';
 import { CLINE_MCP_SETTINGS } from './constants.js';
 
-const AGENTSBRIDGE_MCP = '.agentsbridge/mcp.json';
+const AGENTSMESH_MCP = '.agentsmesh/mcp.json';
 
 export function mapClineServerToCanonical(raw: unknown): McpServer | null {
   if (!raw || typeof raw !== 'object') return null;
@@ -67,15 +67,15 @@ export async function importClineMcp(projectRoot: string, results: ImportResult[
       if (server) mcpServers[n] = server;
     }
     if (Object.keys(mcpServers).length > 0) {
-      await mkdirp(join(projectRoot, '.agentsbridge'));
+      await mkdirp(join(projectRoot, '.agentsmesh'));
       await writeFileAtomic(
-        join(projectRoot, AGENTSBRIDGE_MCP),
+        join(projectRoot, AGENTSMESH_MCP),
         JSON.stringify({ mcpServers }, null, 2),
       );
       results.push({
         fromTool: 'cline',
         fromPath: mcpPath,
-        toPath: AGENTSBRIDGE_MCP,
+        toPath: AGENTSMESH_MCP,
         feature: 'mcp',
       });
     }

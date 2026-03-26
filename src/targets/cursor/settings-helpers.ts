@@ -12,9 +12,9 @@ const CURSOR_SETTINGS = '.cursor/settings.json';
 const CURSOR_HOOKS = '.cursor/hooks.json';
 const CURSORIGNORE = '.cursorignore';
 const CURSORINDEXINGIGNORE = '.cursorindexingignore';
-const AB_PERMISSIONS = '.agentsbridge/permissions.yaml';
-const AB_HOOKS = '.agentsbridge/hooks.yaml';
-const AB_IGNORE = '.agentsbridge/ignore';
+const AB_PERMISSIONS = '.agentsmesh/permissions.yaml';
+const AB_HOOKS = '.agentsmesh/hooks.yaml';
+const AB_IGNORE = '.agentsmesh/ignore';
 
 /**
  * Convert Cursor settings.json hooks to canonical hooks.yaml format.

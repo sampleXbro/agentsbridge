@@ -25,13 +25,13 @@ import {
 } from './constants.js';
 import { importWorkflows, importSkills } from './workflows-skills-helpers.js';
 
-const AGENTSBRIDGE_RULES = '.agentsbridge/rules';
-const AGENTSBRIDGE_IGNORE = '.agentsbridge/ignore';
-const AGENTSBRIDGE_HOOKS = '.agentsbridge/hooks.yaml';
-const AGENTSBRIDGE_MCP = '.agentsbridge/mcp.json';
+const AGENTSMESH_RULES = '.agentsmesh/rules';
+const AGENTSMESH_IGNORE = '.agentsmesh/ignore';
+const AGENTSMESH_HOOKS = '.agentsmesh/hooks.yaml';
+const AGENTSMESH_MCP = '.agentsmesh/mcp.json';
 
 /**
- * Import Windsurf config into canonical .agentsbridge/.
+ * Import Windsurf config into canonical .agentsmesh/.
  * Sources: .windsurfrules (root), .windsurf/rules/*.md (rules), .windsurfignore (ignore).
  *
  * @param projectRoot - Project root directory
@@ -41,7 +41,7 @@ export async function importFromWindsurf(projectRoot: string): Promise<ImportRes
   const results: ImportResult[] = [];
   const normalize = await createImportReferenceNormalizer('windsurf', projectRoot);
   const normalizeCodex = await createImportReferenceNormalizer('codex-cli', projectRoot);
-  const destRulesDir = join(projectRoot, AGENTSBRIDGE_RULES);
+  const destRulesDir = join(projectRoot, AGENTSMESH_RULES);
 
   const rootPath = join(projectRoot, WINDSURF_RULES_ROOT);
   const rootContent = await readFileSafe(rootPath);
@@ -54,7 +54,7 @@ export async function importFromWindsurf(projectRoot: string): Promise<ImportRes
     results.push({
       fromTool: 'windsurf',
       fromPath: rootPath,
-      toPath: `${AGENTSBRIDGE_RULES}/_root.md`,
+      toPath: `${AGENTSMESH_RULES}/_root.md`,
       feature: 'rules',
     });
   }
@@ -76,7 +76,7 @@ export async function importFromWindsurf(projectRoot: string): Promise<ImportRes
       results.push({
         fromTool: 'windsurf',
         fromPath: agentsMdPath,
-        toPath: `${AGENTSBRIDGE_RULES}/_root.md`,
+        toPath: `${AGENTSMESH_RULES}/_root.md`,
         feature: 'rules',
       });
     }
@@ -100,7 +100,7 @@ export async function importFromWindsurf(projectRoot: string): Promise<ImportRes
         const destPath = join(destRulesDir, `${ruleName}.md`);
         return {
           destPath,
-          toPath: `${AGENTSBRIDGE_RULES}/${ruleName}.md`,
+          toPath: `${AGENTSMESH_RULES}/${ruleName}.md`,
           feature: 'rules',
           content: await serializeImportedRuleWithFallback(
             destPath,
@@ -132,7 +132,7 @@ export async function importFromWindsurf(projectRoot: string): Promise<ImportRes
         }
         return {
           destPath,
-          toPath: `${AGENTSBRIDGE_RULES}/${name}.md`,
+          toPath: `${AGENTSMESH_RULES}/${name}.md`,
           feature: 'rules',
           content: await serializeImportedRuleWithFallback(
             destPath,
@@ -158,13 +158,13 @@ export async function importFromWindsurf(projectRoot: string): Promise<ImportRes
       if (t && !t.startsWith('#')) patterns.push(t);
     }
     if (patterns.length > 0) {
-      await mkdirp(join(projectRoot, '.agentsbridge'));
-      const destIgnorePath = join(projectRoot, AGENTSBRIDGE_IGNORE);
+      await mkdirp(join(projectRoot, '.agentsmesh'));
+      const destIgnorePath = join(projectRoot, AGENTSMESH_IGNORE);
       await writeFileAtomic(destIgnorePath, patterns.join('\n'));
       results.push({
         fromTool: 'windsurf',
         fromPath: ignorePath,
-        toPath: AGENTSBRIDGE_IGNORE,
+        toPath: AGENTSMESH_IGNORE,
         feature: 'ignore',
       });
     }
@@ -187,13 +187,13 @@ async function importHooks(projectRoot: string, results: ImportResult[]): Promis
     if (!parsed.hooks || typeof parsed.hooks !== 'object' || Array.isArray(parsed.hooks)) return;
     const canonical = windsurfHooksToCanonical(parsed.hooks as Record<string, unknown>);
     if (Object.keys(canonical).length === 0) return;
-    const destPath = join(projectRoot, AGENTSBRIDGE_HOOKS);
+    const destPath = join(projectRoot, AGENTSMESH_HOOKS);
     await mkdirp(dirname(destPath));
     await writeFileAtomic(destPath, yamlStringify(canonical));
     results.push({
       fromTool: 'windsurf',
       fromPath: hooksPath,
-      toPath: AGENTSBRIDGE_HOOKS,
+      toPath: AGENTSMESH_HOOKS,
       feature: 'hooks',
     });
   } catch {
@@ -269,13 +269,13 @@ async function importMcp(projectRoot: string, results: ImportResult[]): Promise<
     try {
       const parsed = JSON.parse(content) as Record<string, unknown>;
       if (!parsed.mcpServers || typeof parsed.mcpServers !== 'object') continue;
-      const destPath = join(projectRoot, AGENTSBRIDGE_MCP);
+      const destPath = join(projectRoot, AGENTSMESH_MCP);
       await mkdirp(dirname(destPath));
       await writeFileAtomic(destPath, JSON.stringify({ mcpServers: parsed.mcpServers }, null, 2));
       results.push({
         fromTool: 'windsurf',
         fromPath: srcPath,
-        toPath: AGENTSBRIDGE_MCP,
+        toPath: AGENTSMESH_MCP,
         feature: 'mcp',
       });
       return;

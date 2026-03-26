@@ -1,5 +1,5 @@
 /**
- * Load all canonical files from .agentsbridge/ into CanonicalFiles.
+ * Load all canonical files from .agentsmesh/ into CanonicalFiles.
  */
 
 import { join } from 'node:path';
@@ -14,14 +14,14 @@ import { parseHooks } from './hooks.js';
 import { parseIgnore } from './ignore.js';
 
 /**
- * Load all canonical files from .agentsbridge/ at the given project root.
+ * Load all canonical files from .agentsmesh/ at the given project root.
  * Missing directories/files yield empty arrays or null as per each parser.
  *
- * @param projectRoot - Absolute path to project root (containing .agentsbridge/)
+ * @param projectRoot - Absolute path to project root (containing .agentsmesh/)
  * @returns CanonicalFiles with all parsed data
  */
 export async function loadCanonicalFiles(projectRoot: string): Promise<CanonicalFiles> {
-  const abDir = join(projectRoot, '.agentsbridge');
+  const abDir = join(projectRoot, '.agentsmesh');
 
   const [rules, commands, agents, skills, mcp, permissions, hooks, ignore] = await Promise.all([
     parseRules(join(abDir, 'rules')),

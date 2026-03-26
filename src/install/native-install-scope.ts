@@ -42,7 +42,7 @@ async function makeStageRoot(repoRoot: string): Promise<{
   stageRoot: string;
   cleanup: () => Promise<void>;
 }> {
-  const stageBase = await mkdtemp(join(tmpdir(), 'ab-install-native-'));
+  const stageBase = await mkdtemp(join(tmpdir(), 'am-install-native-'));
   const stageRoot = join(stageBase, 'repo');
   const cleanup = async (): Promise<void> => {
     await rm(stageBase, { recursive: true, force: true });
@@ -61,30 +61,30 @@ function buildPickFromResults(results: ImportResult[], stageRoot: string): Exten
   let pick: ExtendPick | undefined;
 
   for (const result of results) {
-    if (result.feature === 'rules' && result.toPath.startsWith('.agentsbridge/rules/')) {
+    if (result.feature === 'rules' && result.toPath.startsWith('.agentsmesh/rules/')) {
       pick = {
         ...pick,
         rules: addUnique(pick?.rules, basename(result.toPath, '.md')),
       };
       continue;
     }
-    if (result.feature === 'commands' && result.toPath.startsWith('.agentsbridge/commands/')) {
+    if (result.feature === 'commands' && result.toPath.startsWith('.agentsmesh/commands/')) {
       pick = {
         ...pick,
         commands: addUnique(pick?.commands, basename(result.toPath, '.md')),
       };
       continue;
     }
-    if (result.feature === 'agents' && result.toPath.startsWith('.agentsbridge/agents/')) {
+    if (result.feature === 'agents' && result.toPath.startsWith('.agentsmesh/agents/')) {
       pick = {
         ...pick,
         agents: addUnique(pick?.agents, basename(result.toPath, '.md')),
       };
       continue;
     }
-    if (result.feature === 'skills' && result.toPath.startsWith('.agentsbridge/skills/')) {
+    if (result.feature === 'skills' && result.toPath.startsWith('.agentsmesh/skills/')) {
       const rel = normalizePath(
-        relative(join(stageRoot, '.agentsbridge', 'skills'), join(stageRoot, result.toPath)),
+        relative(join(stageRoot, '.agentsmesh', 'skills'), join(stageRoot, result.toPath)),
       );
       const skillName = rel.split('/')[0];
       if (skillName) {

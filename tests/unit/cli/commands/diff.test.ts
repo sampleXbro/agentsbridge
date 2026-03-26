@@ -1,5 +1,5 @@
 /**
- * Unit tests for agentsbridge diff command.
+ * Unit tests for agentsmesh diff command.
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -13,15 +13,15 @@ const TEST_DIR = join(tmpdir(), 'ab-diff-cmd-test');
 function setupProject(): void {
   mkdirSync(TEST_DIR, { recursive: true });
   writeFileSync(
-    join(TEST_DIR, 'agentsbridge.yaml'),
+    join(TEST_DIR, 'agentsmesh.yaml'),
     `version: 1
 targets: [claude-code, cursor]
 features: [rules]
 `,
   );
-  mkdirSync(join(TEST_DIR, '.agentsbridge', 'rules'), { recursive: true });
+  mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
   writeFileSync(
-    join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+    join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
     `---
 root: true
 description: "Project rules"
@@ -102,7 +102,7 @@ describe('runDiff', () => {
   });
 
   it('shows "No files to generate" when canonical has no rules at all', async () => {
-    rmSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'));
+    rmSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'));
     const logs: string[] = [];
     vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
       logs.push(String(chunk));
@@ -116,9 +116,9 @@ describe('runDiff', () => {
   });
 
   it('generates contextual rule files even when no root rule', async () => {
-    rmSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'));
+    rmSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'));
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', 'rules', 'other.md'),
+      join(TEST_DIR, '.agentsmesh', 'rules', 'other.md'),
       `---
 description: "Other"
 ---

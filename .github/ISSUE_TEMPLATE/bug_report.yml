@@ -37,4 +37,4 @@ body:
   - type: textarea
     id: config
     attributes:
-      label: agentsbridge.yaml (redact secrets)
+      label: agentsmesh.yaml (redact secrets)

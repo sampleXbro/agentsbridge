@@ -1,6 +1,6 @@
 /**
  * Gemini CLI target importer — GEMINI.md, .gemini/rules, .gemini/commands,
- * .gemini/settings.json → canonical .agentsbridge/.
+ * .gemini/settings.json → canonical .agentsmesh/.
  */
 
 import { join, basename, dirname, relative } from 'node:path';
@@ -28,13 +28,13 @@ import {
 import { importGeminiSettings, importGeminiIgnore } from './format-helpers.js';
 import { importGeminiPolicies } from './policies-importer.js';
 
-const AGENTSBRIDGE_RULES = '.agentsbridge/rules';
-const AGENTSBRIDGE_COMMANDS = '.agentsbridge/commands';
-const AGENTSBRIDGE_AGENTS = '.agentsbridge/agents';
-const AGENTSBRIDGE_SKILLS = '.agentsbridge/skills';
+const AGENTSMESH_RULES = '.agentsmesh/rules';
+const AGENTSMESH_COMMANDS = '.agentsmesh/commands';
+const AGENTSMESH_AGENTS = '.agentsmesh/agents';
+const AGENTSMESH_SKILLS = '.agentsmesh/skills';
 
 /**
- * Import Gemini config into canonical .agentsbridge/.
+ * Import Gemini config into canonical .agentsmesh/.
  *
  * @param projectRoot - Project root directory
  * @returns Import results for each imported file
@@ -42,8 +42,8 @@ const AGENTSBRIDGE_SKILLS = '.agentsbridge/skills';
 export async function importFromGemini(projectRoot: string): Promise<ImportResult[]> {
   const results: ImportResult[] = [];
   const normalize = await createImportReferenceNormalizer('gemini-cli', projectRoot);
-  const rulesDir = join(projectRoot, AGENTSBRIDGE_RULES);
-  const commandsDir = join(projectRoot, AGENTSBRIDGE_COMMANDS);
+  const rulesDir = join(projectRoot, AGENTSMESH_RULES);
+  const commandsDir = join(projectRoot, AGENTSMESH_COMMANDS);
 
   const geminiRootPath = join(projectRoot, GEMINI_ROOT);
   const compatAgentsRootPath = join(projectRoot, GEMINI_COMPAT_AGENTS);
@@ -78,7 +78,7 @@ export async function importFromGemini(projectRoot: string): Promise<ImportResul
     results.push({
       fromTool: 'gemini-cli',
       fromPath: rootSourcePath,
-      toPath: `${AGENTSBRIDGE_RULES}/_root.md`,
+      toPath: `${AGENTSMESH_RULES}/_root.md`,
       feature: 'rules',
     });
   }
@@ -118,7 +118,7 @@ export async function importFromGemini(projectRoot: string): Promise<ImportResul
     const rawParsed = parseFrontmatter(content);
     const projectedAgent = parseProjectedAgentSkillFrontmatter(rawParsed.frontmatter, skillName);
     if (projectedAgent) {
-      const agentsDir = join(projectRoot, AGENTSBRIDGE_AGENTS);
+      const agentsDir = join(projectRoot, AGENTSMESH_AGENTS);
       await mkdirp(agentsDir);
       const agentPath = join(agentsDir, `${projectedAgent.name}.md`);
       await writeFileAtomic(
@@ -128,20 +128,20 @@ export async function importFromGemini(projectRoot: string): Promise<ImportResul
       results.push({
         fromTool: 'gemini-cli',
         fromPath: srcPath,
-        toPath: `${AGENTSBRIDGE_AGENTS}/${projectedAgent.name}.md`,
+        toPath: `${AGENTSMESH_AGENTS}/${projectedAgent.name}.md`,
         feature: 'agents',
       });
       continue;
     }
-    const destPath = join(projectRoot, AGENTSBRIDGE_SKILLS, skillName, 'SKILL.md');
+    const destPath = join(projectRoot, AGENTSMESH_SKILLS, skillName, 'SKILL.md');
     const normalized = normalize(content, srcPath, destPath);
-    const skillDir = join(projectRoot, AGENTSBRIDGE_SKILLS, skillName);
+    const skillDir = join(projectRoot, AGENTSMESH_SKILLS, skillName);
     await mkdirp(skillDir);
     await writeFileAtomic(destPath, normalized);
     results.push({
       fromTool: 'gemini-cli',
       fromPath: srcPath,
-      toPath: `${AGENTSBRIDGE_SKILLS}/${skillName}/SKILL.md`,
+      toPath: `${AGENTSMESH_SKILLS}/${skillName}/SKILL.md`,
       feature: 'skills',
     });
     const allSkillFiles = await readDirRecursive(dirname(srcPath));
@@ -156,7 +156,7 @@ export async function importFromGemini(projectRoot: string): Promise<ImportResul
       results.push({
         fromTool: 'gemini-cli',
         fromPath: absPath,
-        toPath: `${AGENTSBRIDGE_SKILLS}/${skillName}/${relPath}`,
+        toPath: `${AGENTSMESH_SKILLS}/${skillName}/${relPath}`,
         feature: 'skills',
       });
     }
@@ -173,7 +173,7 @@ export async function importFromGemini(projectRoot: string): Promise<ImportResul
       const { frontmatter, body } = parseFrontmatter(content);
       const name =
         typeof frontmatter.name === 'string' ? frontmatter.name : basename(srcPath, '.md');
-      const agentsDir = join(projectRoot, AGENTSBRIDGE_AGENTS);
+      const agentsDir = join(projectRoot, AGENTSMESH_AGENTS);
       await mkdirp(agentsDir);
       const destPath = join(agentsDir, `${name}.md`);
       const normalizedBody = normalize(body, srcPath, destPath);
@@ -196,7 +196,7 @@ export async function importFromGemini(projectRoot: string): Promise<ImportResul
       results.push({
         fromTool: 'gemini-cli',
         fromPath: srcPath,
-        toPath: `${AGENTSBRIDGE_AGENTS}/${name}.md`,
+        toPath: `${AGENTSMESH_AGENTS}/${name}.md`,
         feature: 'agents',
       });
     }

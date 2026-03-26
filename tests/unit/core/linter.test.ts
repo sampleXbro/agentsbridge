@@ -6,7 +6,7 @@ import { runLint } from '../../../src/core/linter.js';
 import type { ValidatedConfig } from '../../../src/config/schema.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';
 
-const TEST_DIR = join(tmpdir(), 'agentsbridge-linter-test');
+const TEST_DIR = join(tmpdir(), 'agentsmesh-linter-test');
 
 beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
@@ -45,7 +45,7 @@ describe('runLint', () => {
     const canonical: CanonicalFiles = {
       rules: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
           root: true,
           targets: [],
           description: 'Root',
@@ -70,7 +70,7 @@ describe('runLint', () => {
     const canonical: CanonicalFiles = {
       rules: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'rules', 'typescript.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'),
           root: false,
           targets: [],
           description: 'TS',
@@ -94,7 +94,7 @@ describe('runLint', () => {
 
   it('returns warning when rule globs match 0 files', async () => {
     const config = minimalConfig();
-    const rulesDir = join(TEST_DIR, '.agentsbridge', 'rules');
+    const rulesDir = join(TEST_DIR, '.agentsmesh', 'rules');
     mkdirSync(rulesDir, { recursive: true });
     mkdirSync(join(TEST_DIR, 'src'), { recursive: true });
     writeFileSync(join(TEST_DIR, 'src', 'foo.ts'), 'x');
@@ -135,7 +135,7 @@ describe('runLint', () => {
     const canonical: CanonicalFiles = {
       rules: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'rules', 'only.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'rules', 'only.md'),
           root: false,
           targets: [],
           description: 'Only',
@@ -164,7 +164,7 @@ describe('runLint', () => {
     const canonical: CanonicalFiles = {
       rules: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'rules', 'only.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'rules', 'only.md'),
           root: false,
           targets: [],
           description: 'Only',
@@ -193,7 +193,7 @@ describe('runLint', () => {
     const canonical: CanonicalFiles = {
       rules: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
           root: true,
           targets: [],
           description: 'Root',
@@ -222,7 +222,7 @@ describe('runLint', () => {
       rules: [],
       commands: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'commands', 'review.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'),
           name: 'review',
           description: 'Review code',
           allowedTools: ['Read'],
@@ -256,21 +256,21 @@ describe('runLint', () => {
     expect(hasErrors).toBe(false);
     expect(diagnostics).toContainEqual({
       level: 'warning',
-      file: join(TEST_DIR, '.agentsbridge', 'commands', 'review.md'),
+      file: join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'),
       target: 'cursor',
       message:
         'Cursor command files are plain Markdown; command description and allowed-tools metadata are not projected.',
     });
     expect(diagnostics).toContainEqual({
       level: 'warning',
-      file: '.agentsbridge/mcp.json',
+      file: '.agentsmesh/mcp.json',
       target: 'cursor',
       message:
         'MCP server "remote" uses env vars or URL/header interpolation; Cursor handling may differ from canonical MCP.',
     });
     expect(diagnostics).toContainEqual({
       level: 'warning',
-      file: '.agentsbridge/hooks.yaml',
+      file: '.agentsmesh/hooks.yaml',
       target: 'gemini-cli',
       message:
         'SubagentStart is not supported by gemini-cli; only PreToolUse, PostToolUse, and Notification are projected.',
@@ -279,7 +279,7 @@ describe('runLint', () => {
       diagnostics.some(
         (d) =>
           d.target === 'cursor' &&
-          d.file === '.agentsbridge/permissions.yaml' &&
+          d.file === '.agentsmesh/permissions.yaml' &&
           d.message.includes('Cursor permissions are partial'),
       ),
     ).toBe(true);
@@ -290,7 +290,7 @@ describe('runLint', () => {
     const canonical: CanonicalFiles = {
       rules: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
           root: true,
           targets: [],
           description: 'Root',
@@ -319,7 +319,7 @@ describe('runLint', () => {
     expect(hasErrors).toBe(false);
     expect(diagnostics).toContainEqual({
       level: 'warning',
-      file: '.agentsbridge/mcp.json',
+      file: '.agentsmesh/mcp.json',
       target: 'cursor',
       message:
         'MCP server "ctx" uses env vars or URL/header interpolation; Cursor handling may differ from canonical MCP.',
@@ -331,7 +331,7 @@ describe('runLint', () => {
     const canonical: CanonicalFiles = {
       rules: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
           root: true,
           targets: [],
           description: 'Root',
@@ -361,7 +361,7 @@ describe('runLint', () => {
     expect(hasErrors).toBe(false);
     expect(diagnostics).toContainEqual({
       level: 'warning',
-      file: '.agentsbridge/mcp.json',
+      file: '.agentsmesh/mcp.json',
       target: 'codex-cli',
       message:
         'MCP server "github" has a description, but codex-cli does not project MCP descriptions into .codex/config.toml.',
@@ -373,7 +373,7 @@ describe('runLint', () => {
     const canonical: CanonicalFiles = {
       rules: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
           root: true,
           targets: [],
           description: 'Root',
@@ -381,7 +381,7 @@ describe('runLint', () => {
           body: 'Root',
         },
         {
-          source: join(TEST_DIR, '.agentsbridge', 'rules', 'typescript.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'),
           root: false,
           targets: [],
           description: 'Scoped',
@@ -413,7 +413,7 @@ describe('runLint', () => {
     const canonical: CanonicalFiles = {
       rules: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
           root: true,
           targets: [],
           description: 'Root',
@@ -443,7 +443,7 @@ describe('runLint', () => {
     expect(hasErrors).toBe(false);
     expect(diagnostics).toContainEqual({
       level: 'warning',
-      file: '.agentsbridge/mcp.json',
+      file: '.agentsmesh/mcp.json',
       target: 'junie',
       message:
         'MCP server "remote" uses http transport; Junie project mcp.json currently documents stdio MCP servers only.',

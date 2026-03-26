@@ -1,5 +1,5 @@
 /**
- * agentsbridge lint — validate canonical files against target constraints.
+ * agentsmesh lint — validate canonical files against target constraints.
  */
 
 import { loadConfigFromDir } from '../../config/loader.js';

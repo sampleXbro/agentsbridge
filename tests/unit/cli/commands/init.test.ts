@@ -1,5 +1,5 @@
 /**
- * Unit tests for agentsbridge init (including Smart Init / Story 5.2).
+ * Unit tests for agentsmesh init (including Smart Init / Story 5.2).
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -111,9 +111,9 @@ describe('detectExistingConfigs', () => {
 });
 
 describe('runInit — scaffold (no existing configs)', () => {
-  it('creates agentsbridge.yaml with all targets', async () => {
+  it('creates agentsmesh.yaml with all targets', async () => {
     await runInit(TEST_DIR);
-    const content = readFileSync(join(TEST_DIR, 'agentsbridge.yaml'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'utf-8');
     expect(content).toContain('version: 1');
     expect(content).toContain('claude-code');
     expect(content).toContain('continue');
@@ -122,56 +122,56 @@ describe('runInit — scaffold (no existing configs)', () => {
     expect(content).toContain('rules');
   });
 
-  it('creates .agentsbridge/rules/_root.md', async () => {
+  it('creates .agentsmesh/rules/_root.md', async () => {
     await runInit(TEST_DIR);
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(content).toContain('description');
   });
 
-  it('creates .agentsbridge/rules/example.md', async () => {
+  it('creates .agentsmesh/rules/example.md', async () => {
     await runInit(TEST_DIR);
-    expect(existsSync(join(TEST_DIR, '.agentsbridge', 'rules', 'example.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'rules', 'example.md'))).toBe(true);
   });
 
-  it('creates .agentsbridge/commands/example.md', async () => {
+  it('creates .agentsmesh/commands/example.md', async () => {
     await runInit(TEST_DIR);
-    expect(existsSync(join(TEST_DIR, '.agentsbridge', 'commands', 'example.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'commands', 'example.md'))).toBe(true);
   });
 
-  it('creates .agentsbridge/agents/example.md', async () => {
+  it('creates .agentsmesh/agents/example.md', async () => {
     await runInit(TEST_DIR);
-    expect(existsSync(join(TEST_DIR, '.agentsbridge', 'agents', 'example.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'agents', 'example.md'))).toBe(true);
   });
 
-  it('creates .agentsbridge/skills/example/SKILL.md', async () => {
+  it('creates .agentsmesh/skills/example/SKILL.md', async () => {
     await runInit(TEST_DIR);
-    expect(existsSync(join(TEST_DIR, '.agentsbridge', 'skills', 'example', 'SKILL.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'skills', 'example', 'SKILL.md'))).toBe(true);
   });
 
-  it('creates .agentsbridge/mcp.json', async () => {
+  it('creates .agentsmesh/mcp.json', async () => {
     await runInit(TEST_DIR);
-    expect(existsSync(join(TEST_DIR, '.agentsbridge', 'mcp.json'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'))).toBe(true);
   });
 
-  it('creates .agentsbridge/hooks.yaml', async () => {
+  it('creates .agentsmesh/hooks.yaml', async () => {
     await runInit(TEST_DIR);
-    expect(existsSync(join(TEST_DIR, '.agentsbridge', 'hooks.yaml'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'hooks.yaml'))).toBe(true);
   });
 
-  it('creates .agentsbridge/permissions.yaml', async () => {
+  it('creates .agentsmesh/permissions.yaml', async () => {
     await runInit(TEST_DIR);
-    expect(existsSync(join(TEST_DIR, '.agentsbridge', 'permissions.yaml'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'permissions.yaml'))).toBe(true);
   });
 
-  it('creates .agentsbridge/ignore', async () => {
+  it('creates .agentsmesh/ignore', async () => {
     await runInit(TEST_DIR);
-    expect(existsSync(join(TEST_DIR, '.agentsbridge', 'ignore'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'ignore'))).toBe(true);
   });
 
-  it('creates agentsbridge.local.yaml template', async () => {
+  it('creates agentsmesh.local.yaml template', async () => {
     await runInit(TEST_DIR);
-    const content = readFileSync(join(TEST_DIR, 'agentsbridge.local.yaml'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, 'agentsmesh.local.yaml'), 'utf-8');
     expect(content).toContain('targets');
     expect(content).toContain('overrides');
     expect(content).toContain('conversions');
@@ -181,26 +181,26 @@ describe('runInit — scaffold (no existing configs)', () => {
     writeFileSync(join(TEST_DIR, '.gitignore'), 'node_modules\n');
     await runInit(TEST_DIR);
     const content = readFileSync(join(TEST_DIR, '.gitignore'), 'utf-8');
-    expect(content).toContain('agentsbridge.local.yaml');
+    expect(content).toContain('agentsmesh.local.yaml');
   });
 
   it('creates .gitignore with entries if missing', async () => {
     await runInit(TEST_DIR);
     const content = readFileSync(join(TEST_DIR, '.gitignore'), 'utf-8');
-    expect(content).toContain('agentsbridge.local.yaml');
-    expect(content).toContain('.agentsbridgecache');
+    expect(content).toContain('agentsmesh.local.yaml');
+    expect(content).toContain('.agentsmeshcache');
   });
 
   it('does not duplicate .gitignore entries', async () => {
-    writeFileSync(join(TEST_DIR, '.gitignore'), 'node_modules\nagentsbridge.local.yaml\n');
+    writeFileSync(join(TEST_DIR, '.gitignore'), 'node_modules\nagentsmesh.local.yaml\n');
     await runInit(TEST_DIR);
     const content = readFileSync(join(TEST_DIR, '.gitignore'), 'utf-8');
-    const count = (content.match(/agentsbridge\.local\.yaml/g) ?? []).length;
+    const count = (content.match(/agentsmesh\.local\.yaml/g) ?? []).length;
     expect(count).toBe(1);
   });
 
-  it('throws when agentsbridge.yaml already exists', async () => {
-    writeFileSync(join(TEST_DIR, 'agentsbridge.yaml'), 'version: 1\n');
+  it('throws when agentsmesh.yaml already exists', async () => {
+    writeFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'version: 1\n');
     await expect(runInit(TEST_DIR)).rejects.toThrow(/already initialized/i);
   });
 });
@@ -209,7 +209,7 @@ describe('runInit — existing configs detected, no --yes', () => {
   it('creates scaffold (not imported content) when existing configs but no --yes', async () => {
     writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Rules\n');
     await runInit(TEST_DIR);
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(content).not.toContain('# Rules');
   });
@@ -217,15 +217,15 @@ describe('runInit — existing configs detected, no --yes', () => {
   it('creates all scaffold files when existing configs but no --yes', async () => {
     writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Rules\n');
     await runInit(TEST_DIR);
-    expect(existsSync(join(TEST_DIR, '.agentsbridge', 'commands', 'example.md'))).toBe(true);
-    expect(existsSync(join(TEST_DIR, '.agentsbridge', 'agents', 'example.md'))).toBe(true);
-    expect(existsSync(join(TEST_DIR, '.agentsbridge', 'mcp.json'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'commands', 'example.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'agents', 'example.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'))).toBe(true);
   });
 
-  it('still creates agentsbridge.yaml with all targets when no --yes', async () => {
+  it('still creates agentsmesh.yaml with all targets when no --yes', async () => {
     writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Rules\n');
     await runInit(TEST_DIR);
-    const content = readFileSync(join(TEST_DIR, 'agentsbridge.yaml'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'utf-8');
     expect(content).toContain('version: 1');
     expect(content).toContain('claude-code');
   });
@@ -235,16 +235,16 @@ describe('runInit — Smart Init with --yes flag (Story 5.2)', () => {
   it('auto-imports claude-code when --yes and CLAUDE.md exists', async () => {
     writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# My Rules\n\nUse TDD.');
     await runInit(TEST_DIR, { yes: true });
-    const imported = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const imported = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(imported).toContain('My Rules');
     expect(imported).toContain('Use TDD.');
     expect(imported).toContain('root: true');
   });
 
-  it('creates agentsbridge.yaml with only detected targets when --yes', async () => {
+  it('creates agentsmesh.yaml with only detected targets when --yes', async () => {
     writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Rules\n');
     await runInit(TEST_DIR, { yes: true });
-    const content = readFileSync(join(TEST_DIR, 'agentsbridge.yaml'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'utf-8');
     expect(content).toContain('claude-code');
     expect(content).not.toContain('gemini-cli');
   });
@@ -253,7 +253,7 @@ describe('runInit — Smart Init with --yes flag (Story 5.2)', () => {
     mkdirSync(join(TEST_DIR, '.cursor', 'rules'), { recursive: true });
     writeFileSync(join(TEST_DIR, 'AGENTS.md'), '# Cursor Rules\n\nUse TypeScript.');
     await runInit(TEST_DIR, { yes: true });
-    const imported = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const imported = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(imported).toContain('Cursor Rules');
   });
 
@@ -261,7 +261,7 @@ describe('runInit — Smart Init with --yes flag (Story 5.2)', () => {
     writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Claude Rules\n');
     writeFileSync(join(TEST_DIR, '.windsurfrules'), 'Use TDD.');
     await runInit(TEST_DIR, { yes: true });
-    const config = readFileSync(join(TEST_DIR, 'agentsbridge.yaml'), 'utf-8');
+    const config = readFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'utf-8');
     expect(config).toContain('claude-code');
     expect(config).toContain('windsurf');
     expect(config).not.toContain('gemini-cli');
@@ -270,14 +270,14 @@ describe('runInit — Smart Init with --yes flag (Story 5.2)', () => {
   it('still creates scaffold files (local.yaml, .gitignore) when --yes', async () => {
     writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Rules\n');
     await runInit(TEST_DIR, { yes: true });
-    expect(existsSync(join(TEST_DIR, 'agentsbridge.local.yaml'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, 'agentsmesh.local.yaml'))).toBe(true);
     const gitignore = readFileSync(join(TEST_DIR, '.gitignore'), 'utf-8');
-    expect(gitignore).toContain('agentsbridge.local.yaml');
+    expect(gitignore).toContain('agentsmesh.local.yaml');
   });
 
   it('works with --yes when no existing configs (empty project)', async () => {
     await runInit(TEST_DIR, { yes: true });
-    const content = readFileSync(join(TEST_DIR, 'agentsbridge.yaml'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'utf-8');
     expect(content).toContain('version: 1');
     expect(content).toContain('claude-code');
   });
@@ -286,23 +286,23 @@ describe('runInit — Smart Init with --yes flag (Story 5.2)', () => {
     writeFileSync(join(TEST_DIR, '.gitignore'), 'node_modules');
     await runInit(TEST_DIR);
     const content = readFileSync(join(TEST_DIR, '.gitignore'), 'utf-8');
-    expect(content).toContain('node_modules\nagentsbridge.local.yaml');
+    expect(content).toContain('node_modules\nagentsmesh.local.yaml');
   });
 
   it('--yes with detected but empty tool imports 0 files gracefully', async () => {
     mkdirSync(join(TEST_DIR, '.cursor', 'rules'), { recursive: true });
     await runInit(TEST_DIR, { yes: true });
-    const config = readFileSync(join(TEST_DIR, 'agentsbridge.yaml'), 'utf-8');
+    const config = readFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'utf-8');
     expect(config).toContain('cursor');
-    expect(existsSync(join(TEST_DIR, 'agentsbridge.local.yaml'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, 'agentsmesh.local.yaml'))).toBe(true);
   });
 
   it('does not create scaffold templates when --yes and configs imported', async () => {
     writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Imported Rules\n');
     await runInit(TEST_DIR, { yes: true });
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('Imported Rules');
     // scaffold example files are not created when importing
-    expect(existsSync(join(TEST_DIR, '.agentsbridge', 'commands', 'example.md'))).toBe(false);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'commands', 'example.md'))).toBe(false);
   });
 });

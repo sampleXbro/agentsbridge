@@ -4,14 +4,14 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { hasLockConflict, resolveLockConflict } from '../../../src/core/merger.js';
 
-const TEST_DIR = join(tmpdir(), 'agentsbridge-merger-test');
+const TEST_DIR = join(tmpdir(), 'agentsmesh-merger-test');
 
 beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
 
 describe('hasLockConflict', () => {
   it('returns true when lock contains conflict markers', async () => {
-    const abDir = join(TEST_DIR, '.agentsbridge');
+    const abDir = join(TEST_DIR, '.agentsmesh');
     mkdirSync(abDir, { recursive: true });
     writeFileSync(
       join(abDir, '.lock'),
@@ -28,7 +28,7 @@ checksums:
   });
 
   it('returns false when lock has no conflict markers', async () => {
-    const abDir = join(TEST_DIR, '.agentsbridge');
+    const abDir = join(TEST_DIR, '.agentsmesh');
     mkdirSync(abDir, { recursive: true });
     writeFileSync(
       join(abDir, '.lock'),
@@ -41,7 +41,7 @@ checksums:
   });
 
   it('returns false when lock does not exist', async () => {
-    const abDir = join(TEST_DIR, '.agentsbridge');
+    const abDir = join(TEST_DIR, '.agentsmesh');
     mkdirSync(abDir, { recursive: true });
     expect(await hasLockConflict(abDir)).toBe(false);
   });
@@ -49,7 +49,7 @@ checksums:
 
 describe('resolveLockConflict', () => {
   it('rebuilds lock from current canonical files', async () => {
-    const abDir = join(TEST_DIR, '.agentsbridge');
+    const abDir = join(TEST_DIR, '.agentsmesh');
     mkdirSync(join(abDir, 'rules'), { recursive: true });
     writeFileSync(join(abDir, 'rules', '_root.md'), '# Rules\nUse TypeScript');
     writeFileSync(
@@ -75,7 +75,7 @@ checksums:
   });
 
   it('throws when lock has no conflict', async () => {
-    const abDir = join(TEST_DIR, '.agentsbridge');
+    const abDir = join(TEST_DIR, '.agentsmesh');
     mkdirSync(abDir, { recursive: true });
     writeFileSync(join(abDir, '.lock'), 'checksums:\n  rules/_root.md: "sha256:abc"');
 
@@ -83,21 +83,21 @@ checksums:
   });
 
   it('throws when lock does not exist', async () => {
-    const abDir = join(TEST_DIR, '.agentsbridge');
+    const abDir = join(TEST_DIR, '.agentsmesh');
     mkdirSync(abDir, { recursive: true });
 
     await expect(resolveLockConflict(abDir, '0.1.0')).rejects.toThrow(/no conflict/i);
   });
 
   it('includes extend checksums when config has extends', async () => {
-    const abDir = join(TEST_DIR, '.agentsbridge');
+    const abDir = join(TEST_DIR, '.agentsmesh');
     const baseDir = join(TEST_DIR, 'base-config');
     mkdirSync(join(abDir, 'rules'), { recursive: true });
-    mkdirSync(join(baseDir, '.agentsbridge', 'rules'), { recursive: true });
+    mkdirSync(join(baseDir, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(join(abDir, 'rules', '_root.md'), '# Rules');
-    writeFileSync(join(baseDir, '.agentsbridge', 'rules', '_root.md'), '# Base');
+    writeFileSync(join(baseDir, '.agentsmesh', 'rules', '_root.md'), '# Base');
     writeFileSync(
-      join(TEST_DIR, 'agentsbridge.yaml'),
+      join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1
 targets: [claude-code]
 features: [rules]

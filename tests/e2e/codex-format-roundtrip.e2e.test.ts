@@ -6,22 +6,22 @@ import { runCli } from './helpers/run-cli.js';
 import { fileContains, fileExists, dirTreeExactly, readText } from './helpers/assertions.js';
 
 function writeCanonicalCodexFixture(dir: string): void {
-  mkdirSync(join(dir, '.agentsbridge', 'rules'), { recursive: true });
-  mkdirSync(join(dir, '.agentsbridge', 'commands'), { recursive: true });
-  mkdirSync(join(dir, '.agentsbridge', 'agents'), { recursive: true });
-  mkdirSync(join(dir, '.agentsbridge', 'skills', 'release-checklist', 'scripts'), {
+  mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
+  mkdirSync(join(dir, '.agentsmesh', 'commands'), { recursive: true });
+  mkdirSync(join(dir, '.agentsmesh', 'agents'), { recursive: true });
+  mkdirSync(join(dir, '.agentsmesh', 'skills', 'release-checklist', 'scripts'), {
     recursive: true,
   });
-  mkdirSync(join(dir, '.agentsbridge', 'skills', 'release-checklist', 'references'), {
+  mkdirSync(join(dir, '.agentsmesh', 'skills', 'release-checklist', 'references'), {
     recursive: true,
   });
-  mkdirSync(join(dir, '.agentsbridge', 'skills', 'release-checklist', 'assets'), {
+  mkdirSync(join(dir, '.agentsmesh', 'skills', 'release-checklist', 'assets'), {
     recursive: true,
   });
-  mkdirSync(join(dir, '.agentsbridge', 'skills', 'bug-triage'), { recursive: true });
+  mkdirSync(join(dir, '.agentsmesh', 'skills', 'bug-triage'), { recursive: true });
 
   writeFileSync(
-    join(dir, 'agentsbridge.yaml'),
+    join(dir, 'agentsmesh.yaml'),
     `version: 1
 targets: [codex-cli]
 features: [rules, commands, agents, skills, mcp]
@@ -29,7 +29,7 @@ features: [rules, commands, agents, skills, mcp]
   );
 
   writeFileSync(
-    join(dir, '.agentsbridge', 'rules', '_root.md'),
+    join(dir, '.agentsmesh', 'rules', '_root.md'),
     `---
 root: true
 description: Root guidance
@@ -40,7 +40,7 @@ description: Root guidance
 `,
   );
   writeFileSync(
-    join(dir, '.agentsbridge', 'rules', 'typescript.md'),
+    join(dir, '.agentsmesh', 'rules', 'typescript.md'),
     `---
 description: TypeScript standards
 globs:
@@ -52,7 +52,7 @@ globs:
 `,
   );
   writeFileSync(
-    join(dir, '.agentsbridge', 'rules', 'payments.md'),
+    join(dir, '.agentsmesh', 'rules', 'payments.md'),
     `---
 description: Payments service rules
 globs:
@@ -65,7 +65,7 @@ codex_instruction: override
 `,
   );
   writeFileSync(
-    join(dir, '.agentsbridge', 'rules', 'default.md'),
+    join(dir, '.agentsmesh', 'rules', 'default.md'),
     `---
 description: Command guardrails
 codex_emit: execution
@@ -79,7 +79,7 @@ prefix_rule(
   );
 
   writeFileSync(
-    join(dir, '.agentsbridge', 'commands', 'review.md'),
+    join(dir, '.agentsmesh', 'commands', 'review.md'),
     `---
 description: Review changes
 allowed-tools: [Read, Bash(git diff)]
@@ -89,7 +89,7 @@ Review current changes.
   );
 
   writeFileSync(
-    join(dir, '.agentsbridge', 'agents', 'reviewer.md'),
+    join(dir, '.agentsmesh', 'agents', 'reviewer.md'),
     `---
 description: PR reviewer
 model: gpt-5-codex
@@ -99,7 +99,7 @@ Review code carefully.
 `,
   );
   writeFileSync(
-    join(dir, '.agentsbridge', 'agents', 'pr-explorer.md'),
+    join(dir, '.agentsmesh', 'agents', 'pr-explorer.md'),
     `---
 description: PR explorer
 model: gpt-5.3-codex-spark
@@ -110,7 +110,7 @@ Summarize pull requests.
   );
 
   writeFileSync(
-    join(dir, '.agentsbridge', 'skills', 'release-checklist', 'SKILL.md'),
+    join(dir, '.agentsmesh', 'skills', 'release-checklist', 'SKILL.md'),
     `---
 description: Release checklist helper
 ---
@@ -118,19 +118,19 @@ Run release checklist.
 `,
   );
   writeFileSync(
-    join(dir, '.agentsbridge', 'skills', 'release-checklist', 'scripts', 'validate.sh'),
+    join(dir, '.agentsmesh', 'skills', 'release-checklist', 'scripts', 'validate.sh'),
     '#!/usr/bin/env bash\necho validate\n',
   );
   writeFileSync(
-    join(dir, '.agentsbridge', 'skills', 'release-checklist', 'references', 'release-notes.md'),
+    join(dir, '.agentsmesh', 'skills', 'release-checklist', 'references', 'release-notes.md'),
     '# Release Notes\n',
   );
   writeFileSync(
-    join(dir, '.agentsbridge', 'skills', 'release-checklist', 'assets', 'changelog-template.md'),
+    join(dir, '.agentsmesh', 'skills', 'release-checklist', 'assets', 'changelog-template.md'),
     '# Changelog Template\n',
   );
   writeFileSync(
-    join(dir, '.agentsbridge', 'skills', 'bug-triage', 'SKILL.md'),
+    join(dir, '.agentsmesh', 'skills', 'bug-triage', 'SKILL.md'),
     `---
 description: Bug triage helper
 ---
@@ -139,7 +139,7 @@ Triage incoming bugs.
   );
 
   writeFileSync(
-    join(dir, '.agentsbridge', 'mcp.json'),
+    join(dir, '.agentsmesh', 'mcp.json'),
     `{
   "mcpServers": {
     "context7": {
@@ -205,43 +205,43 @@ describe('codex-cli format contract roundtrip', () => {
     ]);
     fileContains(join(dir, '.agents', 'skills', 'bug-triage', 'SKILL.md'), 'name: bug-triage');
 
-    rmSync(join(dir, '.agentsbridge'), { recursive: true, force: true });
+    rmSync(join(dir, '.agentsmesh'), { recursive: true, force: true });
 
     const importResult = await runCli('import --from codex-cli', dir);
     expect(importResult.exitCode, importResult.stderr).toBe(0);
 
-    fileContains(join(dir, '.agentsbridge', 'rules', '_root.md'), 'root: true');
-    fileContains(join(dir, '.agentsbridge', 'rules', 'src.md'), 'globs:');
-    fileContains(join(dir, '.agentsbridge', 'rules', 'src.md'), '  - src/**');
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'root: true');
+    fileContains(join(dir, '.agentsmesh', 'rules', 'src.md'), 'globs:');
+    fileContains(join(dir, '.agentsmesh', 'rules', 'src.md'), '  - src/**');
     fileContains(
-      join(dir, '.agentsbridge', 'rules', 'services-payments.md'),
+      join(dir, '.agentsmesh', 'rules', 'services-payments.md'),
       'codex_instruction: override',
     );
-    fileContains(join(dir, '.agentsbridge', 'rules', 'services-payments.md'), 'globs:');
+    fileContains(join(dir, '.agentsmesh', 'rules', 'services-payments.md'), 'globs:');
     fileContains(
-      join(dir, '.agentsbridge', 'rules', 'services-payments.md'),
+      join(dir, '.agentsmesh', 'rules', 'services-payments.md'),
       '  - services/payments/**',
     );
-    fileContains(join(dir, '.agentsbridge', 'rules', 'default.md'), 'codex_emit: execution');
-    fileContains(join(dir, '.agentsbridge', 'rules', 'default.md'), 'prefix_rule(');
+    fileContains(join(dir, '.agentsmesh', 'rules', 'default.md'), 'codex_emit: execution');
+    fileContains(join(dir, '.agentsmesh', 'rules', 'default.md'), 'prefix_rule(');
 
-    fileExists(join(dir, '.agentsbridge', 'commands', 'review.md'));
-    fileContains(join(dir, '.agentsbridge', 'agents', 'reviewer.md'), 'name: reviewer');
-    fileContains(join(dir, '.agentsbridge', 'agents', 'pr-explorer.md'), 'name: pr-explorer');
+    fileExists(join(dir, '.agentsmesh', 'commands', 'review.md'));
+    fileContains(join(dir, '.agentsmesh', 'agents', 'reviewer.md'), 'name: reviewer');
+    fileContains(join(dir, '.agentsmesh', 'agents', 'pr-explorer.md'), 'name: pr-explorer');
     fileContains(
-      join(dir, '.agentsbridge', 'skills', 'release-checklist', 'SKILL.md'),
+      join(dir, '.agentsmesh', 'skills', 'release-checklist', 'SKILL.md'),
       'Run release checklist.',
     );
-    fileExists(join(dir, '.agentsbridge', 'skills', 'release-checklist', 'scripts', 'validate.sh'));
+    fileExists(join(dir, '.agentsmesh', 'skills', 'release-checklist', 'scripts', 'validate.sh'));
     fileExists(
-      join(dir, '.agentsbridge', 'skills', 'release-checklist', 'references', 'release-notes.md'),
+      join(dir, '.agentsmesh', 'skills', 'release-checklist', 'references', 'release-notes.md'),
     );
     fileExists(
-      join(dir, '.agentsbridge', 'skills', 'release-checklist', 'assets', 'changelog-template.md'),
+      join(dir, '.agentsmesh', 'skills', 'release-checklist', 'assets', 'changelog-template.md'),
     );
-    fileExists(join(dir, '.agentsbridge', 'skills', 'bug-triage', 'SKILL.md'));
+    fileExists(join(dir, '.agentsmesh', 'skills', 'bug-triage', 'SKILL.md'));
 
-    const mcp = readText(join(dir, '.agentsbridge', 'mcp.json'));
+    const mcp = readText(join(dir, '.agentsmesh', 'mcp.json'));
     expect(mcp).toContain('"context7"');
     expect(mcp).toContain('"command": "npx"');
   });

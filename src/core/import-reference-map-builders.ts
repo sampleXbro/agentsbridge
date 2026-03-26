@@ -8,9 +8,9 @@ import {
   rel,
 } from './import-reference-map-shared.js';
 
-const AB_RULES = '.agentsbridge/rules';
-const AB_COMMANDS = '.agentsbridge/commands';
-const AB_AGENTS = '.agentsbridge/agents';
+const AB_RULES = '.agentsmesh/rules';
+const AB_COMMANDS = '.agentsmesh/commands';
+const AB_AGENTS = '.agentsmesh/agents';
 
 function addCopilotInstructionMapping(refs: Map<string, string>, fromPath: string): void {
   if (fromPath.endsWith('.instructions.md')) {

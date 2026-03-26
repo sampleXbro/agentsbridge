@@ -87,32 +87,29 @@ describe('claude-code doc format roundtrip', () => {
     const generateResult = await runCli('generate --targets claude-code', dir);
     expect(generateResult.exitCode, generateResult.stderr).toBe(0);
 
-    rmSync(join(dir, '.agentsbridge'), { recursive: true, force: true });
+    rmSync(join(dir, '.agentsmesh'), { recursive: true, force: true });
 
     const importResult = await runCli('import --from claude-code', dir);
     expect(importResult.exitCode, importResult.stderr).toBe(0);
 
-    const canonicalRoot = readFileSync(join(dir, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const canonicalRoot = readFileSync(join(dir, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(canonicalRoot).toContain('root: true');
     expect(canonicalRoot).toContain('# Standards');
 
-    const canonicalRule = readFileSync(
-      join(dir, '.agentsbridge', 'rules', 'typescript.md'),
-      'utf-8',
-    );
+    const canonicalRule = readFileSync(join(dir, '.agentsmesh', 'rules', 'typescript.md'), 'utf-8');
     expect(canonicalRule).toContain('root: false');
     expect(canonicalRule).toContain('description: TypeScript specific rules');
     expect(canonicalRule).toContain('globs:');
 
     const canonicalCommand = readFileSync(
-      join(dir, '.agentsbridge', 'commands', 'review.md'),
+      join(dir, '.agentsmesh', 'commands', 'review.md'),
       'utf-8',
     );
     expect(canonicalCommand).toContain('description: Code review');
     expect(canonicalCommand).toContain('allowed-tools:');
 
     const canonicalAgent = readFileSync(
-      join(dir, '.agentsbridge', 'agents', 'code-reviewer.md'),
+      join(dir, '.agentsmesh', 'agents', 'code-reviewer.md'),
       'utf-8',
     );
     expect(canonicalAgent).toContain('description: Code review specialist');
@@ -120,29 +117,29 @@ describe('claude-code doc format roundtrip', () => {
     expect(canonicalAgent).toContain('model: sonnet');
 
     const canonicalSkill = readFileSync(
-      join(dir, '.agentsbridge', 'skills', 'api-generator', 'SKILL.md'),
+      join(dir, '.agentsmesh', 'skills', 'api-generator', 'SKILL.md'),
       'utf-8',
     );
     expect(canonicalSkill).toContain('description: Generate API endpoints');
     expect(canonicalSkill).toContain('# API Generator');
 
     const canonicalPermissions = readFileSync(
-      join(dir, '.agentsbridge', 'permissions.yaml'),
+      join(dir, '.agentsmesh', 'permissions.yaml'),
       'utf-8',
     );
     expect(canonicalPermissions).toContain('allow:');
     expect(canonicalPermissions).toContain('deny:');
 
-    const canonicalHooks = readFileSync(join(dir, '.agentsbridge', 'hooks.yaml'), 'utf-8');
+    const canonicalHooks = readFileSync(join(dir, '.agentsmesh', 'hooks.yaml'), 'utf-8');
     expect(canonicalHooks).toContain('PostToolUse:');
     expect(canonicalHooks).toContain('matcher:');
     expect(canonicalHooks).toContain('command:');
 
     const canonicalMcp = JSON.parse(
-      readFileSync(join(dir, '.agentsbridge', 'mcp.json'), 'utf-8'),
+      readFileSync(join(dir, '.agentsmesh', 'mcp.json'), 'utf-8'),
     ) as Record<string, unknown>;
     expect(canonicalMcp.mcpServers).toBeDefined();
 
-    expect(readFileSync(join(dir, '.agentsbridge', 'ignore'), 'utf-8')).toContain('node_modules');
+    expect(readFileSync(join(dir, '.agentsmesh', 'ignore'), 'utf-8')).toContain('node_modules');
   });
 });

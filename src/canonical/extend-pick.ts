@@ -23,7 +23,7 @@ export function applyExtendPick(
     for (const n of pick.skills) {
       if (!prev.some((s) => s.name === n)) {
         logger.warn(
-          `[agentsbridge] pick name "${n}" not found in skills from extend "${extendName}".`,
+          `[agentsmesh] pick name "${n}" not found in skills from extend "${extendName}".`,
         );
       }
     }
@@ -36,7 +36,7 @@ export function applyExtendPick(
     for (const n of pick.commands) {
       if (!prev.some((c) => c.name === n)) {
         logger.warn(
-          `[agentsbridge] pick name "${n}" not found in commands from extend "${extendName}".`,
+          `[agentsmesh] pick name "${n}" not found in commands from extend "${extendName}".`,
         );
       }
     }
@@ -49,7 +49,7 @@ export function applyExtendPick(
     for (const n of pick.agents) {
       if (!prev.some((a) => a.name === n)) {
         logger.warn(
-          `[agentsbridge] pick name "${n}" not found in agents from extend "${extendName}".`,
+          `[agentsmesh] pick name "${n}" not found in agents from extend "${extendName}".`,
         );
       }
     }
@@ -66,7 +66,7 @@ export function applyExtendPick(
     for (const n of pick.rules) {
       if (!prev.some((r) => stem(r.source) === n)) {
         logger.warn(
-          `[agentsbridge] pick name "${n}" not found in rules from extend "${extendName}".`,
+          `[agentsmesh] pick name "${n}" not found in rules from extend "${extendName}".`,
         );
       }
     }

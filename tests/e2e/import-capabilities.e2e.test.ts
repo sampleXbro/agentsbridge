@@ -18,16 +18,13 @@ describe('import capabilities', () => {
     const result = await runCli('import --from claude-code', dir);
     expect(result.exitCode, result.stderr).toBe(0);
 
-    fileContains(join(dir, '.agentsbridge', 'commands', 'review.md'), 'Run code review');
-    fileContains(
-      join(dir, '.agentsbridge', 'skills', 'api-generator', 'SKILL.md'),
-      'API Generator',
-    );
-    fileContains(join(dir, '.agentsbridge', 'skills', 'api-generator', 'template.ts'), 'Router');
-    fileContains(join(dir, '.agentsbridge', 'permissions.yaml'), 'Bash(curl:*)');
-    fileContains(join(dir, '.agentsbridge', 'hooks.yaml'), 'prettier --write $FILE_PATH');
-    fileContains(join(dir, '.agentsbridge', 'ignore'), '.env');
-    expect(readJson(join(dir, '.agentsbridge', 'mcp.json'))['mcpServers']).toBeTruthy();
+    fileContains(join(dir, '.agentsmesh', 'commands', 'review.md'), 'Run code review');
+    fileContains(join(dir, '.agentsmesh', 'skills', 'api-generator', 'SKILL.md'), 'API Generator');
+    fileContains(join(dir, '.agentsmesh', 'skills', 'api-generator', 'template.ts'), 'Router');
+    fileContains(join(dir, '.agentsmesh', 'permissions.yaml'), 'Bash(curl:*)');
+    fileContains(join(dir, '.agentsmesh', 'hooks.yaml'), 'prettier --write $FILE_PATH');
+    fileContains(join(dir, '.agentsmesh', 'ignore'), '.env');
+    expect(readJson(join(dir, '.agentsmesh', 'mcp.json'))['mcpServers']).toBeTruthy();
   });
 
   it('imports Cursor commands, skills, settings, mcp, and ignore', async () => {
@@ -35,16 +32,16 @@ describe('import capabilities', () => {
     const result = await runCli('import --from cursor', dir);
     expect(result.exitCode, result.stderr).toBe(0);
 
-    fileContains(join(dir, '.agentsbridge', 'commands', 'review.md'), 'Code review workflow');
-    fileContains(join(dir, '.agentsbridge', 'skills', 'debugging', 'SKILL.md'), '# Debugging');
+    fileContains(join(dir, '.agentsmesh', 'commands', 'review.md'), 'Code review workflow');
+    fileContains(join(dir, '.agentsmesh', 'skills', 'debugging', 'SKILL.md'), '# Debugging');
     fileContains(
-      join(dir, '.agentsbridge', 'skills', 'debugging', 'references', 'checklist.md'),
+      join(dir, '.agentsmesh', 'skills', 'debugging', 'references', 'checklist.md'),
       'Reproduce the issue first',
     );
-    fileContains(join(dir, '.agentsbridge', 'permissions.yaml'), 'Bash(curl:*)');
-    fileContains(join(dir, '.agentsbridge', 'hooks.yaml'), 'timeout: 30');
-    fileContains(join(dir, '.agentsbridge', 'ignore'), '*.log');
-    fileContains(join(dir, '.agentsbridge', 'mcp.json'), 'context7');
+    fileContains(join(dir, '.agentsmesh', 'permissions.yaml'), 'Bash(curl:*)');
+    fileContains(join(dir, '.agentsmesh', 'hooks.yaml'), 'timeout: 30');
+    fileContains(join(dir, '.agentsmesh', 'ignore'), '*.log');
+    fileContains(join(dir, '.agentsmesh', 'mcp.json'), 'context7');
   });
 
   it('imports Copilot prompt files, legacy/new instructions, agents, skills, and hooks', async () => {
@@ -52,22 +49,22 @@ describe('import capabilities', () => {
     const result = await runCli('import --from copilot', dir);
     expect(result.exitCode, result.stderr).toBe(0);
 
-    fileContains(join(dir, '.agentsbridge', 'rules', '_root.md'), 'Global Copilot Instructions');
-    fileContains(join(dir, '.agentsbridge', 'rules', 'typescript.md'), 'No `any` types');
-    fileContains(join(dir, '.agentsbridge', 'rules', 'backend.md'), 'src/**/*.ts');
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'Global Copilot Instructions');
+    fileContains(join(dir, '.agentsmesh', 'rules', 'typescript.md'), 'No `any` types');
+    fileContains(join(dir, '.agentsmesh', 'rules', 'backend.md'), 'src/**/*.ts');
     fileContains(
-      join(dir, '.agentsbridge', 'commands', 'review.md'),
+      join(dir, '.agentsmesh', 'commands', 'review.md'),
       'Review the current pull request',
     );
-    fileContains(join(dir, '.agentsbridge', 'commands', 'review.md'), 'Bash(git diff)');
-    fileContains(join(dir, '.agentsbridge', 'agents', 'researcher.md'), 'context7');
-    fileContains(join(dir, '.agentsbridge', 'skills', 'debugging', 'SKILL.md'), '# Debugging');
+    fileContains(join(dir, '.agentsmesh', 'commands', 'review.md'), 'Bash(git diff)');
+    fileContains(join(dir, '.agentsmesh', 'agents', 'researcher.md'), 'context7');
+    fileContains(join(dir, '.agentsmesh', 'skills', 'debugging', 'SKILL.md'), '# Debugging');
     fileContains(
-      join(dir, '.agentsbridge', 'skills', 'debugging', 'references', 'checklist.md'),
+      join(dir, '.agentsmesh', 'skills', 'debugging', 'references', 'checklist.md'),
       'Capture exact repro steps',
     );
-    fileContains(join(dir, '.agentsbridge', 'hooks.yaml'), 'PostToolUse');
-    fileContains(join(dir, '.agentsbridge', 'hooks.yaml'), 'prettier --write');
+    fileContains(join(dir, '.agentsmesh', 'hooks.yaml'), 'PostToolUse');
+    fileContains(join(dir, '.agentsmesh', 'hooks.yaml'), 'prettier --write');
   });
 
   it('imports Continue rules, embedded prompt rules, and mcp', async () => {
@@ -75,11 +72,11 @@ describe('import capabilities', () => {
     const result = await runCli('import --from continue', dir);
     expect(result.exitCode, result.stderr).toBe(0);
 
-    fileContains(join(dir, '.agentsbridge', 'rules', '_root.md'), 'Project standards');
-    fileContains(join(dir, '.agentsbridge', 'rules', 'typescript.md'), 'strict TypeScript');
-    fileContains(join(dir, '.agentsbridge', 'commands', 'review.md'), 'Review the current diff');
-    fileContains(join(dir, '.agentsbridge', 'commands', 'review.md'), 'allowed-tools');
-    fileContains(join(dir, '.agentsbridge', 'mcp.json'), 'context7');
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'Project standards');
+    fileContains(join(dir, '.agentsmesh', 'rules', 'typescript.md'), 'strict TypeScript');
+    fileContains(join(dir, '.agentsmesh', 'commands', 'review.md'), 'Review the current diff');
+    fileContains(join(dir, '.agentsmesh', 'commands', 'review.md'), 'allowed-tools');
+    fileContains(join(dir, '.agentsmesh', 'mcp.json'), 'context7');
   });
 
   it('imports Junie guidelines, commands, agents, project mcp, and .aiignore', async () => {
@@ -87,11 +84,11 @@ describe('import capabilities', () => {
     const result = await runCli('import --from junie', dir);
     expect(result.exitCode, result.stderr).toBe(0);
 
-    fileContains(join(dir, '.agentsbridge', 'rules', '_root.md'), 'Junie Guidelines');
-    fileContains(join(dir, '.agentsbridge', 'commands', 'review.md'), 'Review Junie output');
-    fileContains(join(dir, '.agentsbridge', 'agents', 'security-reviewer.md'), 'Security reviewer');
-    fileContains(join(dir, '.agentsbridge', 'mcp.json'), 'context7');
-    fileContains(join(dir, '.agentsbridge', 'ignore'), '.env');
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'Junie Guidelines');
+    fileContains(join(dir, '.agentsmesh', 'commands', 'review.md'), 'Review Junie output');
+    fileContains(join(dir, '.agentsmesh', 'agents', 'security-reviewer.md'), 'Security reviewer');
+    fileContains(join(dir, '.agentsmesh', 'mcp.json'), 'context7');
+    fileContains(join(dir, '.agentsmesh', 'ignore'), '.env');
   });
 
   it('imports Junie root from .junie/ci-guidelines.md fallback when primary files are absent', async () => {
@@ -101,7 +98,7 @@ describe('import capabilities', () => {
 
     const result = await runCli('import --from junie', dir);
     expect(result.exitCode, result.stderr).toBe(0);
-    fileContains(join(dir, '.agentsbridge', 'rules', '_root.md'), 'CI only fallback');
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'CI only fallback');
   });
 
   it('prefers .junie/guidelines.md over .junie/ci-guidelines.md when both exist', async () => {
@@ -112,7 +109,7 @@ describe('import capabilities', () => {
 
     const result = await runCli('import --from junie', dir);
     expect(result.exitCode, result.stderr).toBe(0);
-    const rootPath = join(dir, '.agentsbridge', 'rules', '_root.md');
+    const rootPath = join(dir, '.agentsmesh', 'rules', '_root.md');
     fileContains(rootPath, 'Preferred guidelines');
   });
 
@@ -121,22 +118,22 @@ describe('import capabilities', () => {
     const result = await runCli('import --from cline', dir);
     expect(result.exitCode, result.stderr).toBe(0);
 
-    fileExists(join(dir, '.agentsbridge', 'rules', '_root.md'));
-    fileContains(join(dir, '.agentsbridge', 'commands', 'review.md'), 'Review workflow');
-    fileContains(join(dir, '.agentsbridge', 'skills', 'debugging', 'SKILL.md'), '# Debugging');
+    fileExists(join(dir, '.agentsmesh', 'rules', '_root.md'));
+    fileContains(join(dir, '.agentsmesh', 'commands', 'review.md'), 'Review workflow');
+    fileContains(join(dir, '.agentsmesh', 'skills', 'debugging', 'SKILL.md'), '# Debugging');
     fileContains(
-      join(dir, '.agentsbridge', 'skills', 'debugging', 'references', 'checklist.md'),
+      join(dir, '.agentsmesh', 'skills', 'debugging', 'references', 'checklist.md'),
       'Reproduce the failure',
     );
-    fileContains(join(dir, '.agentsbridge', 'ignore'), 'node_modules');
-    fileContains(join(dir, '.agentsbridge', 'mcp.json'), 'context7');
+    fileContains(join(dir, '.agentsmesh', 'ignore'), 'node_modules');
+    fileContains(join(dir, '.agentsmesh', 'mcp.json'), 'context7');
   });
 
   it('imports flat .clinerules as the canonical root rule', async () => {
     dir = createTestProject('cline-flat-project');
     const result = await runCli('import --from cline', dir);
     expect(result.exitCode, result.stderr).toBe(0);
-    fileContains(join(dir, '.agentsbridge', 'rules', '_root.md'), 'Flat Cline Rules');
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'Flat Cline Rules');
   });
 
   it('imports Gemini TOML frontmatter, skills, and settings-derived files', async () => {
@@ -144,13 +141,13 @@ describe('import capabilities', () => {
     const result = await runCli('import --from gemini-cli', dir);
     expect(result.exitCode, result.stderr).toBe(0);
 
-    fileContains(join(dir, '.agentsbridge', 'rules', '_root.md'), 'TypeScript strict mode');
-    fileContains(join(dir, '.agentsbridge', 'rules', 'typescript.md'), 'src/**/*.ts');
-    fileContains(join(dir, '.agentsbridge', 'commands', 'review.md'), 'allowed-tools');
-    fileContains(join(dir, '.agentsbridge', 'skills', 'research', 'SKILL.md'), '# Research');
-    fileContains(join(dir, '.agentsbridge', 'mcp.json'), '@upstash/context7-mcp');
-    fileContains(join(dir, '.agentsbridge', 'ignore'), 'node_modules');
-    fileContains(join(dir, '.agentsbridge', 'hooks.yaml'), 'PostToolUse');
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'TypeScript strict mode');
+    fileContains(join(dir, '.agentsmesh', 'rules', 'typescript.md'), 'src/**/*.ts');
+    fileContains(join(dir, '.agentsmesh', 'commands', 'review.md'), 'allowed-tools');
+    fileContains(join(dir, '.agentsmesh', 'skills', 'research', 'SKILL.md'), '# Research');
+    fileContains(join(dir, '.agentsmesh', 'mcp.json'), '@upstash/context7-mcp');
+    fileContains(join(dir, '.agentsmesh', 'ignore'), 'node_modules');
+    fileContains(join(dir, '.agentsmesh', 'hooks.yaml'), 'PostToolUse');
   });
 
   it('imports Codex from AGENTS.md first, plus command-skills, skills, and mcp', async () => {
@@ -158,20 +155,17 @@ describe('import capabilities', () => {
     const result = await runCli('import --from codex-cli', dir);
     expect(result.exitCode, result.stderr).toBe(0);
 
-    const rootRule = readText(join(dir, '.agentsbridge', 'rules', '_root.md'));
+    const rootRule = readText(join(dir, '.agentsmesh', 'rules', '_root.md'));
     expect(rootRule).toContain('Codex Preferred Rules');
     expect(rootRule).not.toContain('Codex Project Rules');
+    fileContains(join(dir, '.agentsmesh', 'commands', 'review.md'), 'Review pull-request changes');
+    fileContains(join(dir, '.agentsmesh', 'commands', 'review.md'), 'Bash(git diff)');
+    fileContains(join(dir, '.agentsmesh', 'skills', 'reviewer', 'SKILL.md'), '# Reviewer');
     fileContains(
-      join(dir, '.agentsbridge', 'commands', 'review.md'),
-      'Review pull-request changes',
-    );
-    fileContains(join(dir, '.agentsbridge', 'commands', 'review.md'), 'Bash(git diff)');
-    fileContains(join(dir, '.agentsbridge', 'skills', 'reviewer', 'SKILL.md'), '# Reviewer');
-    fileContains(
-      join(dir, '.agentsbridge', 'skills', 'reviewer', 'references', 'checklist.md'),
+      join(dir, '.agentsmesh', 'skills', 'reviewer', 'references', 'checklist.md'),
       'Check behavior changes',
     );
-    fileContains(join(dir, '.agentsbridge', 'mcp.json'), 'github-enterprise');
+    fileContains(join(dir, '.agentsmesh', 'mcp.json'), 'github-enterprise');
   });
 
   it('imports Windsurf rules, workflows, skills, hooks, mcp, and ignore', async () => {
@@ -179,19 +173,19 @@ describe('import capabilities', () => {
     const result = await runCli('import --from windsurf', dir);
     expect(result.exitCode, result.stderr).toBe(0);
 
-    fileContains(join(dir, '.agentsbridge', 'rules', '_root.md'), 'Windsurf Rules');
-    fileContains(join(dir, '.agentsbridge', 'rules', 'typescript.md'), 'always_on');
-    fileContains(join(dir, '.agentsbridge', 'commands', 'review.md'), 'Review workflow');
-    fileContains(join(dir, '.agentsbridge', 'skills', 'research', 'SKILL.md'), '# Research');
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'Windsurf Rules');
+    fileContains(join(dir, '.agentsmesh', 'rules', 'typescript.md'), 'always_on');
+    fileContains(join(dir, '.agentsmesh', 'commands', 'review.md'), 'Review workflow');
+    fileContains(join(dir, '.agentsmesh', 'skills', 'research', 'SKILL.md'), '# Research');
     fileContains(
-      join(dir, '.agentsbridge', 'skills', 'research', 'references', 'checklist.md'),
+      join(dir, '.agentsmesh', 'skills', 'research', 'references', 'checklist.md'),
       'Gather official docs',
     );
-    fileContains(join(dir, '.agentsbridge', 'hooks.yaml'), 'PostToolUse');
-    fileContains(join(dir, '.agentsbridge', 'mcp.json'), 'context7');
-    fileContains(join(dir, '.agentsbridge', 'ignore'), 'node_modules');
+    fileContains(join(dir, '.agentsmesh', 'hooks.yaml'), 'PostToolUse');
+    fileContains(join(dir, '.agentsmesh', 'mcp.json'), 'context7');
+    fileContains(join(dir, '.agentsmesh', 'ignore'), 'node_modules');
 
-    const hooks = readYaml(join(dir, '.agentsbridge', 'hooks.yaml'));
+    const hooks = readYaml(join(dir, '.agentsmesh', 'hooks.yaml'));
     expect(hooks).toHaveProperty('PostToolUse');
     expect(hooks['PostToolUse']).toEqual([
       {
@@ -207,7 +201,7 @@ describe('import capabilities', () => {
     const result = await runCli('import --from windsurf', dir);
     expect(result.exitCode, result.stderr).toBe(0);
 
-    fileContains(join(dir, '.agentsbridge', 'rules', '_root.md'), 'Windsurf Fallback Rules');
-    fileContains(join(dir, '.agentsbridge', 'ignore'), '.env');
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'Windsurf Fallback Rules');
+    fileContains(join(dir, '.agentsmesh', 'ignore'), '.env');
   });
 });

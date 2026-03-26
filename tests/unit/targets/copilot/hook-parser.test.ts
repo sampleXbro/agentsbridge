@@ -26,7 +26,7 @@ describe('copilot hook parser helpers', () => {
   });
 
   it('prefers explicit command metadata over shell body parsing', () => {
-    expect(extractWrapperCommand('#!/bin/sh\n# agentsbridge-command: pnpm lint\npnpm test\n')).toBe(
+    expect(extractWrapperCommand('#!/bin/sh\n# agentsmesh-command: pnpm lint\npnpm test\n')).toBe(
       'pnpm lint',
     );
   });
@@ -49,12 +49,12 @@ describe('importHooks', () => {
   });
 
   it('imports JSON copilot hooks and normalizes wrapper scripts into hooks.yaml', async () => {
-    projectRoot = mkdtempSync(join(tmpdir(), 'ab-copilot-hooks-'));
+    projectRoot = mkdtempSync(join(tmpdir(), 'am-copilot-hooks-'));
     const hooksDir = join(projectRoot, '.github', 'hooks');
     mkdirSync(hooksDir, { recursive: true });
 
     writeFileSync(
-      join(hooksDir, 'agentsbridge.json'),
+      join(hooksDir, 'agentsmesh.json'),
       JSON.stringify({
         hooks: {
           preToolUse: [{ bash: './pre.sh', comment: 'Matcher: src/**/*.ts' }],
@@ -62,7 +62,7 @@ describe('importHooks', () => {
         },
       }),
     );
-    writeFileSync(join(hooksDir, 'pre.sh'), '#!/bin/sh\n# agentsbridge-command: pnpm lint\n');
+    writeFileSync(join(hooksDir, 'pre.sh'), '#!/bin/sh\n# agentsmesh-command: pnpm lint\n');
     writeFileSync(
       join(hooksDir, 'prompt.sh'),
       '#!/bin/sh\n# comment\nHOOK_DIR=/tmp/hooks\nset -e\npnpm test --runInBand\n',
@@ -75,7 +75,7 @@ describe('importHooks', () => {
       {
         fromTool: 'copilot',
         fromPath: join(projectRoot, '.github', 'hooks'),
-        toPath: '.agentsbridge/hooks.yaml',
+        toPath: '.agentsmesh/hooks.yaml',
         feature: 'hooks',
       },
     ]);
@@ -86,7 +86,7 @@ describe('importHooks', () => {
   });
 
   it('imports legacy shell wrappers when JSON hooks are absent or invalid', async () => {
-    projectRoot = mkdtempSync(join(tmpdir(), 'ab-copilot-hooks-'));
+    projectRoot = mkdtempSync(join(tmpdir(), 'am-copilot-hooks-'));
     const hooksDir = join(projectRoot, '.github', 'hooks');
     const legacyDir = join(projectRoot, '.github', 'copilot-hooks');
     mkdirSync(hooksDir, { recursive: true });
@@ -105,12 +105,12 @@ describe('importHooks', () => {
   });
 
   it('does not write hooks.yaml when no valid hook commands are found', async () => {
-    projectRoot = mkdtempSync(join(tmpdir(), 'ab-copilot-hooks-'));
+    projectRoot = mkdtempSync(join(tmpdir(), 'am-copilot-hooks-'));
     const hooksDir = join(projectRoot, '.github', 'hooks');
     mkdirSync(hooksDir, { recursive: true });
 
     writeFileSync(
-      join(hooksDir, 'agentsbridge.json'),
+      join(hooksDir, 'agentsmesh.json'),
       JSON.stringify({
         hooks: {
           unsupported: [{ bash: './missing.sh' }],
@@ -122,7 +122,7 @@ describe('importHooks', () => {
     const results = await runImport();
 
     expect(results).toEqual([]);
-    expect(() => readFileSync(join(projectRoot, '.agentsbridge', 'hooks.yaml'), 'utf-8')).toThrow();
+    expect(() => readFileSync(join(projectRoot, '.agentsmesh', 'hooks.yaml'), 'utf-8')).toThrow();
   });
 
   async function runImport() {
@@ -138,7 +138,8 @@ describe('importHooks', () => {
 });
 
 function readHooksYaml(projectRoot: string): Record<string, unknown> {
-  return parseYaml(
-    readFileSync(join(projectRoot, '.agentsbridge', 'hooks.yaml'), 'utf-8'),
-  ) as Record<string, unknown>;
+  return parseYaml(readFileSync(join(projectRoot, '.agentsmesh', 'hooks.yaml'), 'utf-8')) as Record<
+    string,
+    unknown
+  >;
 }

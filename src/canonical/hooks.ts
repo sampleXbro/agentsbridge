@@ -1,5 +1,5 @@
 /**
- * Parse .agentsbridge/hooks.yaml into Hooks.
+ * Parse .agentsmesh/hooks.yaml into Hooks.
  */
 
 import { parse as parseYaml } from 'yaml';
@@ -34,7 +34,7 @@ function toHookEntry(raw: unknown): HookEntry | null {
 
 /**
  * Parse hooks.yaml at the given path.
- * @param hooksPath - Absolute path to .agentsbridge/hooks.yaml
+ * @param hooksPath - Absolute path to .agentsmesh/hooks.yaml
  * @returns Hooks or null if file missing or malformed
  */
 export async function parseHooks(hooksPath: string): Promise<Hooks | null> {

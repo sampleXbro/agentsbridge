@@ -1,5 +1,5 @@
 /**
- * Parse .agentsbridge/commands/*.md into CanonicalCommand objects.
+ * Parse .agentsmesh/commands/*.md into CanonicalCommand objects.
  */
 
 import { basename } from 'node:path';
@@ -30,7 +30,7 @@ function toToolsArray(v: unknown): string[] {
 
 /**
  * Parse all command files in a commands directory.
- * @param commandsDir - Absolute path to .agentsbridge/commands
+ * @param commandsDir - Absolute path to .agentsmesh/commands
  * @returns Array of parsed CanonicalCommand, or [] if dir missing/empty
  */
 export async function parseCommands(commandsDir: string): Promise<CanonicalCommand[]> {

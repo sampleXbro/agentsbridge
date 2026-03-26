@@ -1,5 +1,5 @@
 /**
- * Integration test for agentsbridge import.
+ * Integration test for agentsmesh import.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -14,27 +14,24 @@ const CLI_PATH = join(process.cwd(), 'dist', 'cli.js');
 beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
 
-describe('agentsbridge import (integration)', () => {
-  it('imports CLAUDE.md to .agentsbridge/rules/_root.md', () => {
+describe('agentsmesh import (integration)', () => {
+  it('imports CLAUDE.md to .agentsmesh/rules/_root.md', () => {
     writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Project Rules\n\nUse TypeScript.');
     execSync(`node ${CLI_PATH} import --from claude-code`, { cwd: TEST_DIR });
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(content).toContain('# Project Rules');
     expect(content).toContain('Use TypeScript.');
   });
 
-  it('imports .claude/rules/*.md to .agentsbridge/rules/', () => {
+  it('imports .claude/rules/*.md to .agentsmesh/rules/', () => {
     mkdirSync(join(TEST_DIR, '.claude', 'rules'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, '.claude', 'rules', 'typescript.md'),
       '---\ndescription: TS rules\n---\n\nUse strict mode.',
     );
     execSync(`node ${CLI_PATH} import --from claude-code`, { cwd: TEST_DIR });
-    const content = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'rules', 'typescript.md'),
-      'utf-8',
-    );
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'), 'utf-8');
     expect(content).toContain('description: TS rules');
     expect(content).toContain('Use strict mode.');
   });
@@ -43,7 +40,7 @@ describe('agentsbridge import (integration)', () => {
     writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Root\n\nUse TDD.');
     execSync(`node ${CLI_PATH} import --from claude-code`, { cwd: TEST_DIR });
     writeFileSync(
-      join(TEST_DIR, 'agentsbridge.yaml'),
+      join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1
 targets: [claude-code, cursor]
 features: [rules]
@@ -63,26 +60,23 @@ features: [rules]
     expect(() => execSync(`node ${CLI_PATH} import --from unknown`, { cwd: TEST_DIR })).toThrow();
   });
 
-  it('imports AGENTS.md to .agentsbridge/rules/_root.md (cursor)', () => {
+  it('imports AGENTS.md to .agentsmesh/rules/_root.md (cursor)', () => {
     writeFileSync(join(TEST_DIR, 'AGENTS.md'), '# Cursor Rules\n\nUse TDD.');
     execSync(`node ${CLI_PATH} import --from cursor`, { cwd: TEST_DIR });
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(content).toContain('# Cursor Rules');
     expect(content).toContain('Use TDD.');
   });
 
-  it('imports .cursor/rules/*.mdc to .agentsbridge/rules/ (cursor)', () => {
+  it('imports .cursor/rules/*.mdc to .agentsmesh/rules/ (cursor)', () => {
     mkdirSync(join(TEST_DIR, '.cursor', 'rules'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, '.cursor', 'rules', 'typescript.mdc'),
       '---\ndescription: TS standards\nalwaysApply: false\n---\n\nUse strict mode.',
     );
     execSync(`node ${CLI_PATH} import --from cursor`, { cwd: TEST_DIR });
-    const content = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'rules', 'typescript.md'),
-      'utf-8',
-    );
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'), 'utf-8');
     expect(content).toContain('description: TS standards');
     expect(content).toContain('Use strict mode.');
   });
@@ -91,7 +85,7 @@ features: [rules]
     writeFileSync(join(TEST_DIR, 'AGENTS.md'), '# Root\n\nUse TDD.');
     execSync(`node ${CLI_PATH} import --from cursor`, { cwd: TEST_DIR });
     writeFileSync(
-      join(TEST_DIR, 'agentsbridge.yaml'),
+      join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1
 targets: [claude-code, cursor]
 features: [rules]
@@ -117,9 +111,9 @@ features: [rules]
       [
         '---',
         'description: Review current changes',
-        'x-agentsbridge-kind: command',
-        'x-agentsbridge-name: review',
-        'x-agentsbridge-allowed-tools:',
+        'x-agentsmesh-kind: command',
+        'x-agentsmesh-name: review',
+        'x-agentsmesh-allowed-tools:',
         '  - Read',
         '---',
         '',
@@ -147,7 +141,7 @@ features: [rules]
 
     execSync(`node ${CLI_PATH} import --from continue`, { cwd: TEST_DIR });
     writeFileSync(
-      join(TEST_DIR, 'agentsbridge.yaml'),
+      join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1
 targets: [continue]
 features: [rules, commands, mcp]
@@ -158,12 +152,12 @@ features: [rules, commands, mcp]
     const rootRule = readFileSync(join(TEST_DIR, '.continue', 'rules', '_root.md'), 'utf-8');
     const promptFile = readFileSync(join(TEST_DIR, '.continue', 'prompts', 'review.md'), 'utf-8');
     const mcpJson = readFileSync(
-      join(TEST_DIR, '.continue', 'mcpServers', 'agentsbridge.json'),
+      join(TEST_DIR, '.continue', 'mcpServers', 'agentsmesh.json'),
       'utf-8',
     );
 
     expect(rootRule).toContain('Use TDD.');
-    expect(promptFile).toContain('x-agentsbridge-kind: command');
+    expect(promptFile).toContain('x-agentsmesh-kind: command');
     expect(promptFile).toContain('Review the diff before merge.');
     expect(mcpJson).toContain('context7');
   });
@@ -187,7 +181,7 @@ features: [rules, commands, mcp]
 
     execSync(`node ${CLI_PATH} import --from junie`, { cwd: TEST_DIR });
     writeFileSync(
-      join(TEST_DIR, 'agentsbridge.yaml'),
+      join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1
 targets: [junie]
 features: [rules, mcp, ignore]
@@ -206,7 +200,7 @@ features: [rules, mcp, ignore]
     writeFileSync(join(TEST_DIR, 'codex.md'), '# Codex Rules\n\nUse TDD.');
     execSync(`node ${CLI_PATH} import --from codex-cli`, { cwd: TEST_DIR });
     writeFileSync(
-      join(TEST_DIR, 'agentsbridge.yaml'),
+      join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1
 targets: [codex-cli]
 features: [rules]
@@ -222,7 +216,7 @@ features: [rules]
     writeFileSync(join(TEST_DIR, '.windsurfignore'), 'node_modules/\n');
     execSync(`node ${CLI_PATH} import --from windsurf`, { cwd: TEST_DIR });
     writeFileSync(
-      join(TEST_DIR, 'agentsbridge.yaml'),
+      join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1
 targets: [windsurf]
 features: [rules, ignore]
@@ -258,10 +252,10 @@ features: [rules, ignore]
 
     execSync(`node ${CLI_PATH} import --from windsurf`, { cwd: TEST_DIR });
 
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
-    expect(content).toContain('.agentsbridge/skills/post-feature-qa/');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
+    expect(content).toContain('.agentsmesh/skills/post-feature-qa/');
     expect(content).toContain(
-      '.agentsbridge/skills/post-feature-qa/references/edge-case-checklist.md',
+      '.agentsmesh/skills/post-feature-qa/references/edge-case-checklist.md',
     );
     expect(content).not.toContain('.agents/skills/post-feature-qa/');
   });
@@ -290,10 +284,10 @@ features: [rules, ignore]
 
     execSync(`node ${CLI_PATH} import --from cline`, { cwd: TEST_DIR });
 
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
-    expect(content).toContain('.agentsbridge/skills/post-feature-qa/');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
+    expect(content).toContain('.agentsmesh/skills/post-feature-qa/');
     expect(content).toContain(
-      '.agentsbridge/skills/post-feature-qa/references/edge-case-checklist.md',
+      '.agentsmesh/skills/post-feature-qa/references/edge-case-checklist.md',
     );
     expect(content).not.toContain('.agents/skills/post-feature-qa/');
   });
@@ -321,22 +315,22 @@ features: [rules, ignore]
 
     execSync(`node ${CLI_PATH} import --from claude-code`, { cwd: TEST_DIR });
 
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
-    expect(content).toContain('.agentsbridge/skills/post-feature-qa/');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
+    expect(content).toContain('.agentsmesh/skills/post-feature-qa/');
     expect(content).toContain(
-      '.agentsbridge/skills/post-feature-qa/references/edge-case-checklist.md',
+      '.agentsmesh/skills/post-feature-qa/references/edge-case-checklist.md',
     );
     expect(content).not.toContain('.agents/skills/post-feature-qa/');
   });
 
-  it('imports .github/copilot-instructions.md to .agentsbridge/rules/_root.md (copilot)', () => {
+  it('imports .github/copilot-instructions.md to .agentsmesh/rules/_root.md (copilot)', () => {
     mkdirSync(join(TEST_DIR, '.github'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, '.github', 'copilot-instructions.md'),
       '# Copilot Rules\n\nUse TDD.',
     );
     execSync(`node ${CLI_PATH} import --from copilot`, { cwd: TEST_DIR });
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(content).toContain('# Copilot Rules');
     expect(content).toContain('Use TDD.');
@@ -350,7 +344,7 @@ features: [rules, ignore]
     );
     execSync(`node ${CLI_PATH} import --from copilot`, { cwd: TEST_DIR });
     writeFileSync(
-      join(TEST_DIR, 'agentsbridge.yaml'),
+      join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1
 targets: [copilot]
 features: [rules]
@@ -372,7 +366,7 @@ features: [rules]
     );
     execSync(`node ${CLI_PATH} import --from copilot`, { cwd: TEST_DIR });
     writeFileSync(
-      join(TEST_DIR, 'agentsbridge.yaml'),
+      join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1
 targets: [copilot]
 features: [commands]
@@ -392,7 +386,7 @@ features: [commands]
     );
     execSync(`node ${CLI_PATH} import --from copilot`, { cwd: TEST_DIR });
     writeFileSync(
-      join(TEST_DIR, 'agentsbridge.yaml'),
+      join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1
 targets: [copilot]
 features: [agents]
@@ -409,10 +403,10 @@ features: [agents]
   });
 
   it.each([
-    ['gemini-cli', '.gemini/skills/ab-agent-reviewer/SKILL.md'],
-    ['cline', '.cline/skills/ab-agent-reviewer/SKILL.md'],
-    ['codex-cli', '.agents/skills/ab-agent-reviewer/SKILL.md'],
-    ['windsurf', '.windsurf/skills/ab-agent-reviewer/SKILL.md'],
+    ['gemini-cli', '.gemini/skills/am-agent-reviewer/SKILL.md'],
+    ['cline', '.cline/skills/am-agent-reviewer/SKILL.md'],
+    ['codex-cli', '.agents/skills/am-agent-reviewer/SKILL.md'],
+    ['windsurf', '.windsurf/skills/am-agent-reviewer/SKILL.md'],
   ] as const)(
     'import from %s projected agent skill then generate preserves agent projection',
     (target, projectedPath) => {
@@ -423,21 +417,21 @@ features: [agents]
         fullProjectedPath,
         `---
 description: Reviews code
-x-agentsbridge-kind: agent
-x-agentsbridge-name: reviewer
-x-agentsbridge-tools:
+x-agentsmesh-kind: agent
+x-agentsmesh-name: reviewer
+x-agentsmesh-tools:
   - Read
   - Grep
-x-agentsbridge-model: sonnet
-x-agentsbridge-permission-mode: ask
-x-agentsbridge-max-turns: 10
+x-agentsmesh-model: sonnet
+x-agentsmesh-permission-mode: ask
+x-agentsmesh-max-turns: 10
 ---
 
 You review code.`,
       );
       execSync(`node ${CLI_PATH} import --from ${target}`, { cwd: TEST_DIR });
       writeFileSync(
-        join(TEST_DIR, 'agentsbridge.yaml'),
+        join(TEST_DIR, 'agentsmesh.yaml'),
         `version: 1
 targets: [${target}]
 features: [agents]
@@ -445,21 +439,21 @@ features: [agents]
       );
       execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
       const canonicalAgent = readFileSync(
-        join(TEST_DIR, '.agentsbridge', 'agents', 'reviewer.md'),
+        join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'),
         'utf-8',
       );
       expect(canonicalAgent).toContain('name: reviewer');
       expect(canonicalAgent).toContain('Reviews code');
       const projected = readFileSync(fullProjectedPath, 'utf-8');
-      expect(projected).toContain('x-agentsbridge-kind: agent');
+      expect(projected).toContain('x-agentsmesh-kind: agent');
       expect(projected).toContain('You review code.');
     },
   );
 
-  it('imports GEMINI.md to .agentsbridge/rules/_root.md (gemini-cli)', () => {
+  it('imports GEMINI.md to .agentsmesh/rules/_root.md (gemini-cli)', () => {
     writeFileSync(join(TEST_DIR, 'GEMINI.md'), '# Gemini Rules\n\nUse TDD.');
     execSync(`node ${CLI_PATH} import --from gemini-cli`, { cwd: TEST_DIR });
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(content).toContain('# Gemini Rules');
     expect(content).toContain('Use TDD.');
@@ -469,7 +463,7 @@ features: [agents]
     writeFileSync(join(TEST_DIR, 'GEMINI.md'), '# Gemini Rules\n\nUse TDD.');
     execSync(`node ${CLI_PATH} import --from gemini-cli`, { cwd: TEST_DIR });
     writeFileSync(
-      join(TEST_DIR, 'agentsbridge.yaml'),
+      join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1
 targets: [gemini-cli]
 features: [rules]
@@ -480,11 +474,11 @@ features: [rules]
     expect(geminiMd).toContain('Use TDD.');
   });
 
-  it('imports .clinerules/_root.md to .agentsbridge/rules/_root.md (cline)', () => {
+  it('imports .clinerules/_root.md to .agentsmesh/rules/_root.md (cline)', () => {
     mkdirSync(join(TEST_DIR, '.clinerules'), { recursive: true });
     writeFileSync(join(TEST_DIR, '.clinerules', '_root.md'), '# Cline Rules\n\nUse TDD.');
     execSync(`node ${CLI_PATH} import --from cline`, { cwd: TEST_DIR });
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(content).toContain('# Cline Rules');
     expect(content).toContain('Use TDD.');
@@ -496,7 +490,7 @@ features: [rules]
     writeFileSync(join(TEST_DIR, '.clineignore'), 'node_modules/\n');
     execSync(`node ${CLI_PATH} import --from cline`, { cwd: TEST_DIR });
     writeFileSync(
-      join(TEST_DIR, 'agentsbridge.yaml'),
+      join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1
 targets: [cline]
 features: [rules, ignore]
@@ -552,30 +546,30 @@ features: [rules, ignore]
     execSync(`node ${CLI_PATH} import --from claude-code`, { cwd: TEST_DIR });
 
     // Verify all canonical files were created
-    expect(readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8')).toContain(
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8')).toContain(
       'root: true',
     );
     expect(
-      readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', 'typescript.md'), 'utf-8'),
+      readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'), 'utf-8'),
     ).toContain('TS rules.');
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'), 'utf-8')).toContain(
+      'Review code.',
+    );
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'), 'utf-8')).toContain(
+      'You review.',
+    );
     expect(
-      readFileSync(join(TEST_DIR, '.agentsbridge', 'commands', 'review.md'), 'utf-8'),
-    ).toContain('Review code.');
-    expect(
-      readFileSync(join(TEST_DIR, '.agentsbridge', 'agents', 'reviewer.md'), 'utf-8'),
-    ).toContain('You review.');
-    expect(
-      readFileSync(join(TEST_DIR, '.agentsbridge', 'skills', 'api-gen', 'SKILL.md'), 'utf-8'),
+      readFileSync(join(TEST_DIR, '.agentsmesh', 'skills', 'api-gen', 'SKILL.md'), 'utf-8'),
     ).toContain('Generate APIs.');
-    expect(readFileSync(join(TEST_DIR, '.agentsbridge', 'ignore'), 'utf-8')).toContain('dist');
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'ignore'), 'utf-8')).toContain('dist');
     const mcp = JSON.parse(
-      readFileSync(join(TEST_DIR, '.agentsbridge', 'mcp.json'), 'utf-8'),
+      readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf-8'),
     ) as Record<string, unknown>;
     expect(mcp).toHaveProperty('mcpServers');
-    const perms = readFileSync(join(TEST_DIR, '.agentsbridge', 'permissions.yaml'), 'utf-8');
+    const perms = readFileSync(join(TEST_DIR, '.agentsmesh', 'permissions.yaml'), 'utf-8');
     expect(perms).toContain('Read');
     expect(perms).toContain('WebFetch');
-    const hooks = readFileSync(join(TEST_DIR, '.agentsbridge', 'hooks.yaml'), 'utf-8');
+    const hooks = readFileSync(join(TEST_DIR, '.agentsmesh', 'hooks.yaml'), 'utf-8');
     expect(hooks).toContain('PostToolUse');
     expect(hooks).toContain('prettier');
   });
@@ -595,7 +589,7 @@ features: [rules, ignore]
 
     execSync(`node ${CLI_PATH} import --from claude-code`, { cwd: TEST_DIR });
     writeFileSync(
-      join(TEST_DIR, 'agentsbridge.yaml'),
+      join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1\ntargets: [claude-code, cursor]\nfeatures: [rules, commands, agents]\n`,
     );
     execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });

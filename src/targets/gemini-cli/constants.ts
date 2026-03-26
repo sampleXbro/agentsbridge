@@ -14,7 +14,7 @@ export const GEMINI_COMPAT_AGENTS = 'AGENTS.md';
  * Rules directory — import backward-compat only.
  * Gemini CLI has no native .gemini/rules/ directory (see docs/agent-structures/gemini-cli-project-level-advanced.md).
  * Generator folds non-root rules into GEMINI.md as sections.
- * Importer still reads this dir so users can import old agentsbridge outputs.
+ * Importer still reads this dir so users can import old agentsmesh outputs.
  */
 export const GEMINI_RULES_DIR = '.gemini/rules';
 

@@ -27,10 +27,10 @@ describe('importFromContinue — rules', () => {
     expect(results).toHaveLength(1);
     expect(results[0]).toMatchObject({
       fromTool: 'continue',
-      toPath: '.agentsbridge/rules/_root.md',
+      toPath: '.agentsmesh/rules/_root.md',
       feature: 'rules',
     });
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(content).toContain('Use TypeScript.');
   });
@@ -45,13 +45,10 @@ describe('importFromContinue — rules', () => {
     const results = await importFromContinue(TEST_DIR);
     expect(results).toHaveLength(1);
     expect(results[0]).toMatchObject({
-      toPath: '.agentsbridge/rules/typescript.md',
+      toPath: '.agentsmesh/rules/typescript.md',
       feature: 'rules',
     });
-    const content = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'rules', 'typescript.md'),
-      'utf-8',
-    );
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'), 'utf-8');
     expect(content).toContain('root: false');
     expect(content).toContain('src/**/*.ts');
   });
@@ -65,9 +62,9 @@ describe('importFromContinue — commands', () => {
       [
         '---',
         'description: Review current changes',
-        'x-agentsbridge-kind: command',
-        'x-agentsbridge-name: review',
-        'x-agentsbridge-allowed-tools:',
+        'x-agentsmesh-kind: command',
+        'x-agentsmesh-name: review',
+        'x-agentsmesh-allowed-tools:',
         '  - Read',
         '  - Bash(git diff)',
         '---',
@@ -81,10 +78,10 @@ describe('importFromContinue — commands', () => {
     expect(results).toHaveLength(1);
     expect(results[0]).toMatchObject({
       fromTool: 'continue',
-      toPath: '.agentsbridge/commands/review.md',
+      toPath: '.agentsmesh/commands/review.md',
       feature: 'commands',
     });
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'commands', 'review.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'), 'utf-8');
     expect(content).toContain('description: Review current changes');
     expect(content).toContain('allowed-tools:');
     expect(content).toContain('Bash(git diff)');
@@ -111,10 +108,10 @@ describe('importFromContinue — mcp', () => {
     expect(results).toHaveLength(1);
     expect(results[0]).toMatchObject({
       fromTool: 'continue',
-      toPath: '.agentsbridge/mcp.json',
+      toPath: '.agentsmesh/mcp.json',
       feature: 'mcp',
     });
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'mcp.json'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf-8');
     expect(content).toContain('context7');
     expect(content).toContain('@ctx/mcp');
   });
@@ -135,11 +132,11 @@ describe('importFromContinue — skills', () => {
     const results = await importFromContinue(TEST_DIR);
     expect(results.filter((result) => result.feature === 'skills')).toHaveLength(2);
     expect(
-      readFileSync(join(TEST_DIR, '.agentsbridge', 'skills', 'api-gen', 'SKILL.md'), 'utf-8'),
+      readFileSync(join(TEST_DIR, '.agentsmesh', 'skills', 'api-gen', 'SKILL.md'), 'utf-8'),
     ).toContain('description: API Gen');
     expect(
       readFileSync(
-        join(TEST_DIR, '.agentsbridge', 'skills', 'api-gen', 'references', 'checklist.md'),
+        join(TEST_DIR, '.agentsmesh', 'skills', 'api-gen', 'references', 'checklist.md'),
         'utf-8',
       ),
     ).toContain('# Checklist');

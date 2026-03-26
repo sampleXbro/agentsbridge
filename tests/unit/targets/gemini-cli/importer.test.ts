@@ -16,7 +16,7 @@ import {
   GEMINI_SKILLS_DIR,
 } from '../../../../src/targets/gemini-cli/constants.js';
 
-const TEST_DIR = join(tmpdir(), 'ab-gemini-importer-test');
+const TEST_DIR = join(tmpdir(), 'am-gemini-importer-test');
 
 beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
@@ -27,8 +27,8 @@ describe('importFromGemini', () => {
     const results = await importFromGemini(TEST_DIR);
     expect(results.length).toBe(1);
     expect(results[0]!.fromTool).toBe('gemini-cli');
-    expect(results[0]!.toPath).toBe('.agentsbridge/rules/_root.md');
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    expect(results[0]!.toPath).toBe('.agentsmesh/rules/_root.md');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(content).toContain('# Gemini Rules');
     expect(content).toContain('- Use TDD');
@@ -41,9 +41,9 @@ describe('importFromGemini', () => {
       '---\ndescription: TS rules\nglobs: ["**/*.ts"]\n---\n\nTypeScript guidelines.',
     );
     const results = await importFromGemini(TEST_DIR);
-    const ruleResult = results.find((r) => r.toPath === '.agentsbridge/rules/ts.md');
+    const ruleResult = results.find((r) => r.toPath === '.agentsmesh/rules/ts.md');
     expect(ruleResult).toBeDefined();
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', 'ts.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'ts.md'), 'utf-8');
     expect(content).toContain('root: false');
     expect(content).toContain('description: TS rules');
     expect(content).toContain('globs');
@@ -57,9 +57,9 @@ describe('importFromGemini', () => {
       '---\ndescription: Code review\nallowed-tools: ["Read", "Grep"]\n---\n\nRun code review.',
     );
     const results = await importFromGemini(TEST_DIR);
-    const cmdResult = results.find((r) => r.toPath === '.agentsbridge/commands/review.md');
+    const cmdResult = results.find((r) => r.toPath === '.agentsmesh/commands/review.md');
     expect(cmdResult).toBeDefined();
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'commands', 'review.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'), 'utf-8');
     expect(content).toContain('description: Code review');
     expect(content).toContain('allowed-tools');
     expect(content).toContain('Run code review');
@@ -75,11 +75,11 @@ describe('importFromGemini', () => {
     );
 
     const results = await importFromGemini(TEST_DIR);
-    const cmdResult = results.find((r) => r.toPath === '.agentsbridge/commands/git:commit.md');
+    const cmdResult = results.find((r) => r.toPath === '.agentsmesh/commands/git:commit.md');
     expect(cmdResult).toBeDefined();
 
     const content = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'commands', 'git:commit.md'),
+      join(TEST_DIR, '.agentsmesh', 'commands', 'git:commit.md'),
       'utf-8',
     );
     expect(content).toContain('description');
@@ -94,18 +94,18 @@ describe('importFromGemini', () => {
       '+++\ndescription = "Lint code"\nallowed-tools = ["Read", "Bash"]\n+++\n\nRun lint.',
     );
     const results = await importFromGemini(TEST_DIR);
-    const cmdResult = results.find((r) => r.toPath === '.agentsbridge/commands/lint.md');
+    const cmdResult = results.find((r) => r.toPath === '.agentsmesh/commands/lint.md');
     expect(cmdResult).toBeDefined();
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'commands', 'lint.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'commands', 'lint.md'), 'utf-8');
     expect(content).toContain('description');
     expect(content).toContain('Lint code');
     expect(content).toContain('Run lint');
   });
 
   it('preserves existing canonical allowed-tools when importing generated TOML commands', async () => {
-    mkdirSync(join(TEST_DIR, '.agentsbridge', 'commands'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'commands'), { recursive: true });
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', 'commands', 'review.md'),
+      join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'),
       '---\ndescription: Code review\nallowed-tools:\n  - Read\n  - Grep\n---\n\nOld body.',
     );
     mkdirSync(join(TEST_DIR, GEMINI_COMMANDS_DIR), { recursive: true });
@@ -116,7 +116,7 @@ describe('importFromGemini', () => {
 
     await importFromGemini(TEST_DIR);
 
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'commands', 'review.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'), 'utf-8');
     expect(content).toContain('description: Code review');
     expect(content).toContain('allowed-tools:');
     expect(content).toContain('- Read');
@@ -140,27 +140,27 @@ describe('importFromGemini', () => {
       }),
     );
     const results = await importFromGemini(TEST_DIR);
-    expect(results.some((r) => r.toPath === '.agentsbridge/mcp.json')).toBe(true);
-    expect(results.some((r) => r.toPath === '.agentsbridge/hooks.yaml')).toBe(true);
-    expect(results.some((r) => r.toPath === '.agentsbridge/ignore')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/mcp.json')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/hooks.yaml')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/ignore')).toBe(true);
 
-    const mcp = JSON.parse(readFileSync(join(TEST_DIR, '.agentsbridge', 'mcp.json'), 'utf-8')) as {
+    const mcp = JSON.parse(readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf-8')) as {
       mcpServers: Record<string, unknown>;
     };
     expect(mcp.mcpServers.fs).toBeDefined();
     expect((mcp.mcpServers.fs as { command: string }).command).toBe('npx');
 
-    const hooks = readFileSync(join(TEST_DIR, '.agentsbridge', 'hooks.yaml'), 'utf-8');
+    const hooks = readFileSync(join(TEST_DIR, '.agentsmesh', 'hooks.yaml'), 'utf-8');
     expect(hooks).toContain('PostToolUse');
     expect(hooks).toContain('matcher');
     expect(hooks).toContain('prettier');
 
-    const ignoreContent = readFileSync(join(TEST_DIR, '.agentsbridge', 'ignore'), 'utf-8');
+    const ignoreContent = readFileSync(join(TEST_DIR, '.agentsmesh', 'ignore'), 'utf-8');
     expect(ignoreContent).toContain('node_modules');
     expect(ignoreContent).toContain('dist');
   });
 
-  it('imports .gemini/policies/*.toml into canonical .agentsbridge/permissions.yaml', async () => {
+  it('imports .gemini/policies/*.toml into canonical .agentsmesh/permissions.yaml', async () => {
     mkdirSync(join(TEST_DIR, GEMINI_POLICIES_DIR), { recursive: true });
     writeFileSync(
       join(TEST_DIR, GEMINI_POLICIES_DIR, 'permissions.toml'),
@@ -180,10 +180,10 @@ describe('importFromGemini', () => {
     );
 
     const results = await importFromGemini(TEST_DIR);
-    const permResult = results.find((r) => r.toPath === '.agentsbridge/permissions.yaml');
+    const permResult = results.find((r) => r.toPath === '.agentsmesh/permissions.yaml');
     expect(permResult).toBeDefined();
 
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'permissions.yaml'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'permissions.yaml'), 'utf-8');
     expect(content).toContain('Read');
     expect(content).toContain('Bash(curl:*)');
   });
@@ -202,7 +202,7 @@ describe('importFromGemini', () => {
 
     await importFromGemini(TEST_DIR);
 
-    const hooks = readFileSync(join(TEST_DIR, '.agentsbridge', 'hooks.yaml'), 'utf-8');
+    const hooks = readFileSync(join(TEST_DIR, '.agentsmesh', 'hooks.yaml'), 'utf-8');
     expect(hooks).not.toContain('Notification');
     expect(hooks).toContain('PostToolUse');
     expect(hooks).toContain('echo done');
@@ -216,9 +216,9 @@ describe('importFromGemini', () => {
     writeFileSync(join(TEST_DIR, GEMINI_COMMANDS_DIR, 'bar.md'), '---\n---\n\nBar command');
     const results = await importFromGemini(TEST_DIR);
     expect(results.length).toBe(3);
-    expect(results.some((r) => r.toPath === '.agentsbridge/rules/_root.md')).toBe(true);
-    expect(results.some((r) => r.toPath === '.agentsbridge/rules/foo.md')).toBe(true);
-    expect(results.some((r) => r.toPath === '.agentsbridge/commands/bar.md')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/rules/_root.md')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/rules/foo.md')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/commands/bar.md')).toBe(true);
   });
 
   it('handles malformed TOML frontmatter (unclosed +++ with no close)', async () => {
@@ -228,9 +228,9 @@ describe('importFromGemini', () => {
       '+++\ndescription = "No close delimiter\n\nBody without close.',
     );
     const results = await importFromGemini(TEST_DIR);
-    const rule = results.find((r) => r.toPath === '.agentsbridge/rules/bad-toml.md');
+    const rule = results.find((r) => r.toPath === '.agentsmesh/rules/bad-toml.md');
     expect(rule).toBeDefined();
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', 'bad-toml.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'bad-toml.md'), 'utf-8');
     expect(content).toContain('+++');
   });
 
@@ -241,10 +241,10 @@ describe('importFromGemini', () => {
       '+++\n= this is invalid toml ===\n+++\n\nBody text.',
     );
     const results = await importFromGemini(TEST_DIR);
-    const rule = results.find((r) => r.toPath === '.agentsbridge/rules/invalid-toml.md');
+    const rule = results.find((r) => r.toPath === '.agentsmesh/rules/invalid-toml.md');
     expect(rule).toBeDefined();
     const content = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'rules', 'invalid-toml.md'),
+      join(TEST_DIR, '.agentsmesh', 'rules', 'invalid-toml.md'),
       'utf-8',
     );
     expect(content).toContain('Body text.');
@@ -258,11 +258,11 @@ describe('importFromGemini', () => {
       '---\ndescription: QA checklist\n---\n\nRun QA steps.',
     );
     const results = await importFromGemini(TEST_DIR);
-    const skillResult = results.find((r) => r.toPath === '.agentsbridge/skills/qa/SKILL.md');
+    const skillResult = results.find((r) => r.toPath === '.agentsmesh/skills/qa/SKILL.md');
     expect(skillResult).toBeDefined();
     expect(skillResult!.feature).toBe('skills');
     const content = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'skills', 'qa', 'SKILL.md'),
+      join(TEST_DIR, '.agentsmesh', 'skills', 'qa', 'SKILL.md'),
       'utf-8',
     );
     expect(content).toContain('QA checklist');
@@ -270,28 +270,28 @@ describe('importFromGemini', () => {
   });
 
   it('imports projected agent skills back into canonical agents', async () => {
-    const skillDir = join(TEST_DIR, GEMINI_SKILLS_DIR, 'ab-agent-reviewer');
+    const skillDir = join(TEST_DIR, GEMINI_SKILLS_DIR, 'am-agent-reviewer');
     mkdirSync(skillDir, { recursive: true });
     writeFileSync(
       join(skillDir, 'SKILL.md'),
       [
         '---',
         'description: Review specialist',
-        'x-agentsbridge-kind: agent',
-        'x-agentsbridge-name: reviewer',
-        'x-agentsbridge-tools:',
+        'x-agentsmesh-kind: agent',
+        'x-agentsmesh-name: reviewer',
+        'x-agentsmesh-tools:',
         '  - Read',
         '  - Grep',
-        'x-agentsbridge-disallowed-tools:',
+        'x-agentsmesh-disallowed-tools:',
         '  - Bash(rm -rf *)',
-        'x-agentsbridge-model: gemini-2.5-pro',
-        'x-agentsbridge-permission-mode: ask',
-        'x-agentsbridge-max-turns: 9',
-        'x-agentsbridge-mcp-servers:',
+        'x-agentsmesh-model: gemini-2.5-pro',
+        'x-agentsmesh-permission-mode: ask',
+        'x-agentsmesh-max-turns: 9',
+        'x-agentsmesh-mcp-servers:',
         '  - context7',
-        'x-agentsbridge-skills:',
+        'x-agentsmesh-skills:',
         '  - post-feature-qa',
-        'x-agentsbridge-memory: notes/reviewer.md',
+        'x-agentsmesh-memory: notes/reviewer.md',
         '---',
         '',
         'Review risky changes first.',
@@ -300,11 +300,11 @@ describe('importFromGemini', () => {
 
     const results = await importFromGemini(TEST_DIR);
 
-    expect(results.find((r) => r.toPath === '.agentsbridge/agents/reviewer.md')).toBeDefined();
+    expect(results.find((r) => r.toPath === '.agentsmesh/agents/reviewer.md')).toBeDefined();
     expect(
-      results.find((r) => r.toPath === '.agentsbridge/skills/ab-agent-reviewer/SKILL.md'),
+      results.find((r) => r.toPath === '.agentsmesh/skills/am-agent-reviewer/SKILL.md'),
     ).toBeUndefined();
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'agents', 'reviewer.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'), 'utf-8');
     expect(content).toContain('name: reviewer');
     expect(content).toContain('description: Review specialist');
     expect(content).toContain('model: gemini-2.5-pro');
@@ -318,8 +318,8 @@ describe('importFromGemini', () => {
       writeFileSync(join(skillDir, 'SKILL.md'), `# ${name} skill`);
     }
     const results = await importFromGemini(TEST_DIR);
-    expect(results.some((r) => r.toPath === '.agentsbridge/skills/qa/SKILL.md')).toBe(true);
-    expect(results.some((r) => r.toPath === '.agentsbridge/skills/review/SKILL.md')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/skills/qa/SKILL.md')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/skills/review/SKILL.md')).toBe(true);
   });
 
   it('returns empty when no Gemini config found', async () => {
@@ -331,7 +331,7 @@ describe('importFromGemini', () => {
     writeFileSync(join(TEST_DIR, GEMINI_ROOT), '---\ndescription: Global rules\n---\n\nRoot body');
     const results = await importFromGemini(TEST_DIR);
     expect(results.length).toBe(1);
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(content).toContain('description: Global rules');
     expect(content).toContain('Root body');
@@ -344,9 +344,9 @@ describe('importFromGemini', () => {
       JSON.stringify({ mcpServers: { x: { command: 'echo' } } }),
     );
     const results = await importFromGemini(TEST_DIR);
-    expect(results.some((r) => r.toPath === '.agentsbridge/mcp.json')).toBe(true);
-    expect(results.some((r) => r.toPath === '.agentsbridge/hooks.yaml')).toBe(false);
-    expect(results.some((r) => r.toPath === '.agentsbridge/ignore')).toBe(false);
+    expect(results.some((r) => r.toPath === '.agentsmesh/mcp.json')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/hooks.yaml')).toBe(false);
+    expect(results.some((r) => r.toPath === '.agentsmesh/ignore')).toBe(false);
   });
 
   it('skips empty or invalid settings.json', async () => {
@@ -355,7 +355,7 @@ describe('importFromGemini', () => {
     writeFileSync(join(TEST_DIR, GEMINI_ROOT), 'Root');
     const results = await importFromGemini(TEST_DIR);
     expect(results.length).toBe(1);
-    expect(results[0]!.toPath).toBe('.agentsbridge/rules/_root.md');
+    expect(results[0]!.toPath).toBe('.agentsmesh/rules/_root.md');
   });
 
   it('parses command with allowed-tools as comma-separated string (toToolsArray string branch)', async () => {
@@ -365,10 +365,10 @@ describe('importFromGemini', () => {
       '---\ndescription: Tools as string\nallowed-tools: "Read, Grep, Bash"\n---\n\nUse tools.',
     );
     const results = await importFromGemini(TEST_DIR);
-    const cmdResult = results.find((r) => r.toPath === '.agentsbridge/commands/string-tools.md');
+    const cmdResult = results.find((r) => r.toPath === '.agentsmesh/commands/string-tools.md');
     expect(cmdResult).toBeDefined();
     const content = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'commands', 'string-tools.md'),
+      join(TEST_DIR, '.agentsmesh', 'commands', 'string-tools.md'),
       'utf-8',
     );
     expect(content).toContain('allowed-tools');
@@ -383,12 +383,9 @@ describe('importFromGemini', () => {
       '+++\ndescription = "TOML command"\nallowed-tools = ["Read", "Grep"]\n+++\n\nBody text',
     );
     const results = await importFromGemini(TEST_DIR);
-    const cmdResult = results.find((r) => r.toPath === '.agentsbridge/commands/toml-cmd.md');
+    const cmdResult = results.find((r) => r.toPath === '.agentsmesh/commands/toml-cmd.md');
     expect(cmdResult).toBeDefined();
-    const content = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'commands', 'toml-cmd.md'),
-      'utf-8',
-    );
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'commands', 'toml-cmd.md'), 'utf-8');
     expect(content).toContain('description');
     expect(content).toContain('allowed-tools');
     expect(content).toContain('Body text');

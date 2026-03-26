@@ -43,7 +43,7 @@ function fullCanonical(): CanonicalFiles {
   return {
     rules: [
       {
-        source: join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+        source: join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
         root: true,
         targets: [],
         description: '',
@@ -51,7 +51,7 @@ function fullCanonical(): CanonicalFiles {
         body: '# Project Rules\n\nUse TypeScript strict mode.',
       },
       {
-        source: join(TEST_DIR, '.agentsbridge', 'rules', 'typescript.md'),
+        source: join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'),
         root: false,
         targets: [],
         description: 'TypeScript conventions',
@@ -61,7 +61,7 @@ function fullCanonical(): CanonicalFiles {
     ],
     commands: [
       {
-        source: join(TEST_DIR, '.agentsbridge', 'commands', 'review.md'),
+        source: join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'),
         name: 'review',
         description: 'Run code review',
         allowedTools: ['Read', 'Grep'],
@@ -70,7 +70,7 @@ function fullCanonical(): CanonicalFiles {
     ],
     agents: [
       {
-        source: join(TEST_DIR, '.agentsbridge', 'agents', 'reviewer.md'),
+        source: join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'),
         name: 'reviewer',
         description: 'Code reviewer',
         tools: ['Read', 'Grep'],
@@ -87,7 +87,7 @@ function fullCanonical(): CanonicalFiles {
     ],
     skills: [
       {
-        source: join(TEST_DIR, '.agentsbridge', 'skills', 'qa', 'SKILL.md'),
+        source: join(TEST_DIR, '.agentsmesh', 'skills', 'qa', 'SKILL.md'),
         name: 'qa',
         description: 'QA checklist',
         body: 'Run the full QA checklist before marking done.',
@@ -281,9 +281,9 @@ describe('import: Continue (rules + embedded commands + skills + mcp)', () => {
       [
         '---',
         'description: Review',
-        'x-agentsbridge-kind: command',
-        'x-agentsbridge-name: review',
-        'x-agentsbridge-allowed-tools:',
+        'x-agentsmesh-kind: command',
+        'x-agentsmesh-name: review',
+        'x-agentsmesh-allowed-tools:',
         '  - Read',
         '---',
         '',
@@ -391,7 +391,7 @@ describe('import: Codex CLI (rules only)', () => {
     const results = await importFromCodex(TEST_DIR);
     expect(results).toHaveLength(1);
     expect(results[0]!.feature).toBe('rules');
-    expect(results[0]!.toPath).toBe('.agentsbridge/rules/_root.md');
+    expect(results[0]!.toPath).toBe('.agentsmesh/rules/_root.md');
   });
 
   it('falls back to AGENTS.md when codex.md absent', async () => {
@@ -410,11 +410,11 @@ describe('import: Codex CLI (rules only)', () => {
     );
     const results = await importFromCodex(TEST_DIR);
     expect(results.filter((r) => r.feature === 'rules')).toHaveLength(2);
-    const tsRule = results.find((r) => r.toPath === '.agentsbridge/rules/typescript.md');
+    const tsRule = results.find((r) => r.toPath === '.agentsmesh/rules/typescript.md');
     expect(tsRule).toBeDefined();
   });
 
-  it('imports legacy .codex/rules/*.rules with agentsbridge embed as non-root rules', async () => {
+  it('imports legacy .codex/rules/*.rules with agentsmesh embed as non-root rules', async () => {
     writeFileSync(join(TEST_DIR, 'AGENTS.md'), '# Root\n');
     mkdirSync(join(TEST_DIR, '.codex', 'rules'), { recursive: true });
     writeFileSync(
@@ -427,12 +427,9 @@ describe('import: Codex CLI (rules only)', () => {
     );
     const results = await importFromCodex(TEST_DIR);
     expect(results.filter((r) => r.feature === 'rules')).toHaveLength(2);
-    const tsRule = results.find((r) => r.toPath === '.agentsbridge/rules/typescript.md');
+    const tsRule = results.find((r) => r.toPath === '.agentsmesh/rules/typescript.md');
     expect(tsRule).toBeDefined();
-    const imported = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'rules', 'typescript.md'),
-      'utf-8',
-    );
+    const imported = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'), 'utf-8');
     expect(imported).toContain('Use strict mode.');
     expect(imported).toContain('**/*.ts');
   });
@@ -445,7 +442,7 @@ describe('import: Codex CLI (rules only)', () => {
       'prefix_rule(\n  pattern = ["git"],\n  decision = "allow",\n)\n',
     );
     await importFromCodex(TEST_DIR);
-    const imported = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', 'policy.md'), 'utf-8');
+    const imported = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'policy.md'), 'utf-8');
     expect(imported).toContain('codex_emit: execution');
     expect(imported).toContain('prefix_rule');
   });
@@ -560,14 +557,14 @@ describe('generate: full canonical → all agents produce all supported outputs'
     expect(paths).toEqual([
       '.github/agents/reviewer.agent.md',
       '.github/copilot-instructions.md',
-      '.github/hooks/agentsbridge.json',
+      '.github/hooks/agentsmesh.json',
       '.github/hooks/scripts/posttooluse-0.sh',
       '.github/instructions/typescript.instructions.md',
       '.github/prompts/review.prompt.md',
       '.github/skills/qa/SKILL.md',
     ]);
     const prompt = results.find((r) => r.path === '.github/prompts/review.prompt.md');
-    expect(prompt!.content).toContain('x-agentsbridge-kind: command');
+    expect(prompt!.content).toContain('x-agentsmesh-kind: command');
     expect(prompt!.content).toContain('Review the current PR');
     const agentFile = results.find((r) => r.path === '.github/agents/reviewer.agent.md');
     expect(agentFile!.content).toContain('expert code reviewer');
@@ -607,7 +604,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
     const paths = results.map((r) => r.path).sort();
     expect(paths).toEqual([
       '.cline/mcp_settings.json',
-      '.cline/skills/ab-agent-reviewer/SKILL.md',
+      '.cline/skills/am-agent-reviewer/SKILL.md',
       '.cline/skills/qa/SKILL.md',
       '.clineignore',
       '.clinerules/hooks/posttooluse-0.sh',
@@ -625,7 +622,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
     });
     const paths = results.map((r) => r.path).sort();
     expect(paths).toEqual([
-      '.agents/skills/ab-command-review/SKILL.md',
+      '.agents/skills/am-command-review/SKILL.md',
       '.agents/skills/qa/SKILL.md',
       '.codex/agents/reviewer.toml',
       '.codex/config.toml',
@@ -646,7 +643,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.windsurf/hooks.json',
       '.windsurf/mcp_config.example.json',
       '.windsurf/rules/typescript.md',
-      '.windsurf/skills/ab-agent-reviewer/SKILL.md',
+      '.windsurf/skills/am-agent-reviewer/SKILL.md',
       '.windsurf/skills/qa/SKILL.md',
       '.windsurf/workflows/review.md',
       'AGENTS.md',
@@ -661,7 +658,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
     });
     const paths = results.map((result) => result.path).sort();
     expect(paths).toEqual([
-      '.continue/mcpServers/agentsbridge.json',
+      '.continue/mcpServers/agentsmesh.json',
       '.continue/prompts/review.md',
       '.continue/rules/_root.md',
       '.continue/rules/typescript.md',
@@ -707,7 +704,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
 
     const allPaths = results.map((r) => r.path).sort();
     expect(allPaths).toEqual([
-      '.agents/skills/ab-command-review/SKILL.md',
+      '.agents/skills/am-command-review/SKILL.md',
       '.agents/skills/qa/SKILL.md',
       '.aiignore',
       '.claude/CLAUDE.md',
@@ -718,7 +715,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.claude/skills/qa/SKILL.md',
       '.claudeignore',
       '.cline/mcp_settings.json',
-      '.cline/skills/ab-agent-reviewer/SKILL.md',
+      '.cline/skills/am-agent-reviewer/SKILL.md',
       '.cline/skills/qa/SKILL.md',
       '.clineignore',
       '.clinerules/hooks/posttooluse-0.sh',
@@ -727,7 +724,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.codeiumignore',
       '.codex/agents/reviewer.toml',
       '.codex/config.toml',
-      '.continue/mcpServers/agentsbridge.json',
+      '.continue/mcpServers/agentsmesh.json',
       '.continue/prompts/review.md',
       '.continue/rules/_root.md',
       '.continue/rules/typescript.md',
@@ -748,7 +745,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.geminiignore',
       '.github/agents/reviewer.agent.md',
       '.github/copilot-instructions.md',
-      '.github/hooks/agentsbridge.json',
+      '.github/hooks/agentsmesh.json',
       '.github/hooks/scripts/posttooluse-0.sh',
       '.github/instructions/typescript.instructions.md',
       '.github/prompts/review.prompt.md',
@@ -763,7 +760,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.windsurf/hooks.json',
       '.windsurf/mcp_config.example.json',
       '.windsurf/rules/typescript.md',
-      '.windsurf/skills/ab-agent-reviewer/SKILL.md',
+      '.windsurf/skills/am-agent-reviewer/SKILL.md',
       '.windsurf/skills/qa/SKILL.md',
       '.windsurf/workflows/review.md',
       'AGENTS.md',

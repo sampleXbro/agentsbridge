@@ -27,7 +27,7 @@ describe('addHookScriptAssets', () => {
   });
 
   it('returns existing outputs when no hooks are configured', async () => {
-    const outputs = [{ path: '.github/hooks/agentsbridge.json', content: '{}' }];
+    const outputs = [{ path: '.github/hooks/agentsmesh.json', content: '{}' }];
 
     await expect(addHookScriptAssets('/repo', makeCanonical(null), outputs)).resolves.toEqual(
       outputs,
@@ -35,7 +35,7 @@ describe('addHookScriptAssets', () => {
   });
 
   it('adds wrapper scripts for command hooks', async () => {
-    projectRoot = mkdtempSync(join(tmpdir(), 'ab-copilot-assets-'));
+    projectRoot = mkdtempSync(join(tmpdir(), 'am-copilot-assets-'));
 
     const outputs = await addHookScriptAssets(
       projectRoot,
@@ -50,8 +50,8 @@ describe('addHookScriptAssets', () => {
         path: '.github/hooks/scripts/pretooluse-0.sh',
         content: [
           '#!/usr/bin/env bash',
-          '# agentsbridge-matcher: src/**/*.ts',
-          '# agentsbridge-command: pnpm lint',
+          '# agentsmesh-matcher: src/**/*.ts',
+          '# agentsmesh-command: pnpm lint',
           'set -e',
           'HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"',
           'pnpm lint',
@@ -62,7 +62,7 @@ describe('addHookScriptAssets', () => {
   });
 
   it('copies referenced script assets and rewrites wrapper commands to use HOOK_DIR', async () => {
-    projectRoot = mkdtempSync(join(tmpdir(), 'ab-copilot-assets-'));
+    projectRoot = mkdtempSync(join(tmpdir(), 'am-copilot-assets-'));
     mkdirSync(join(projectRoot, 'scripts'), { recursive: true });
     writeFileSync(join(projectRoot, 'scripts', 'notify.sh'), '#!/bin/sh\necho notified\n');
 
@@ -79,8 +79,8 @@ describe('addHookScriptAssets', () => {
         path: '.github/hooks/scripts/notification-0.sh',
         content: [
           '#!/usr/bin/env bash',
-          '# agentsbridge-matcher: *',
-          '# agentsbridge-command: bash "$HOOK_DIR/scripts/notify.sh" --flag',
+          '# agentsmesh-matcher: *',
+          '# agentsmesh-command: bash "$HOOK_DIR/scripts/notify.sh" --flag',
           'set -e',
           'HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"',
           'bash "$HOOK_DIR/scripts/notify.sh" --flag',
@@ -95,7 +95,7 @@ describe('addHookScriptAssets', () => {
   });
 
   it('skips prompt hooks and missing asset files', async () => {
-    projectRoot = mkdtempSync(join(tmpdir(), 'ab-copilot-assets-'));
+    projectRoot = mkdtempSync(join(tmpdir(), 'am-copilot-assets-'));
 
     const outputs = await addHookScriptAssets(
       projectRoot,
@@ -113,8 +113,8 @@ describe('addHookScriptAssets', () => {
         path: '.github/hooks/scripts/posttooluse-0.sh',
         content: [
           '#!/usr/bin/env bash',
-          '# agentsbridge-matcher: *',
-          '# agentsbridge-command: scripts/missing.sh',
+          '# agentsmesh-matcher: *',
+          '# agentsmesh-command: scripts/missing.sh',
           'set -e',
           'HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"',
           'scripts/missing.sh',
@@ -125,7 +125,7 @@ describe('addHookScriptAssets', () => {
   });
 
   it('leaves non-script commands untouched when they do not match the asset pattern', async () => {
-    projectRoot = mkdtempSync(join(tmpdir(), 'ab-copilot-assets-'));
+    projectRoot = mkdtempSync(join(tmpdir(), 'am-copilot-assets-'));
 
     const outputs = await addHookScriptAssets(
       projectRoot,
@@ -140,8 +140,8 @@ describe('addHookScriptAssets', () => {
         path: '.github/hooks/scripts/notification-0.sh',
         content: [
           '#!/usr/bin/env bash',
-          '# agentsbridge-matcher: *',
-          '# agentsbridge-command: pnpm lint',
+          '# agentsmesh-matcher: *',
+          '# agentsmesh-command: pnpm lint',
           'set -e',
           'HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"',
           'pnpm lint',
@@ -152,7 +152,7 @@ describe('addHookScriptAssets', () => {
   });
 
   it('deduplicates copied assets when multiple hooks reference the same script', async () => {
-    projectRoot = mkdtempSync(join(tmpdir(), 'ab-copilot-assets-'));
+    projectRoot = mkdtempSync(join(tmpdir(), 'am-copilot-assets-'));
     mkdirSync(join(projectRoot, 'scripts'), { recursive: true });
     writeFileSync(join(projectRoot, 'scripts', 'notify.sh'), '#!/bin/sh\necho notified\n');
 
@@ -171,7 +171,7 @@ describe('addHookScriptAssets', () => {
   });
 
   it('does not copy assets that point outside the repo root', async () => {
-    projectRoot = mkdtempSync(join(tmpdir(), 'ab-copilot-assets-'));
+    projectRoot = mkdtempSync(join(tmpdir(), 'am-copilot-assets-'));
 
     const outputs = await addHookScriptAssets(
       projectRoot,
@@ -186,8 +186,8 @@ describe('addHookScriptAssets', () => {
         path: '.github/hooks/scripts/notification-0.sh',
         content: [
           '#!/usr/bin/env bash',
-          '# agentsbridge-matcher: *',
-          '# agentsbridge-command: bash ../outside.sh',
+          '# agentsmesh-matcher: *',
+          '# agentsmesh-command: bash ../outside.sh',
           'set -e',
           'HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"',
           'bash ../outside.sh',

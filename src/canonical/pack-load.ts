@@ -1,5 +1,5 @@
 /**
- * Load canonical resources from materialized packs in .agentsbridge/packs/.
+ * Load canonical resources from materialized packs in .agentsmesh/packs/.
  */
 
 import { join } from 'node:path';
@@ -32,7 +32,7 @@ function emptyCanonical(): CanonicalFiles {
 
 /**
  * Load canonical files from a single pack directory.
- * Calls parsers directly — packs have no .agentsbridge/ nesting.
+ * Calls parsers directly — packs have no .agentsmesh/ nesting.
  *
  * @param packDir - Absolute path to the pack directory (contains rules/, commands/, etc.)
  */
@@ -56,7 +56,7 @@ export async function loadPackCanonical(packDir: string): Promise<CanonicalFiles
  * filters by declared features, applies pick, then merges.
  *
  * @param abDir - Absolute path containing the packs/ directory
- *                (typically the .agentsbridge/ dir, or configDir in tests)
+ *                (typically the .agentsmesh/ dir, or configDir in tests)
  */
 export async function loadPacksCanonical(abDir: string): Promise<CanonicalFiles> {
   const packsDir = join(abDir, 'packs');

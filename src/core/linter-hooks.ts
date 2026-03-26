@@ -8,7 +8,7 @@ export function lintHooks(canonical: CanonicalFiles, target: string): LintDiagno
       .filter((event) => !supported.has(event))
       .map((event) => ({
         level: 'warning' as const,
-        file: '.agentsbridge/hooks.yaml',
+        file: '.agentsmesh/hooks.yaml',
         target,
         message: `${event} is not supported by gemini-cli; only PreToolUse, PostToolUse, and Notification are projected.`,
       }));
@@ -20,7 +20,7 @@ export function lintHooks(canonical: CanonicalFiles, target: string): LintDiagno
       .filter((event) => !supported.has(event))
       .map((event) => ({
         level: 'warning' as const,
-        file: '.agentsbridge/hooks.yaml',
+        file: '.agentsmesh/hooks.yaml',
         target,
         message: `${event} is not supported by Copilot hooks; only PreToolUse, PostToolUse, Notification, and UserPromptSubmit are projected.`,
       }));

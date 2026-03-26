@@ -14,17 +14,14 @@ describe('MCP transport variants', () => {
 
   it('generates remote MCP transports for Claude/Cursor and warns for Cursor/Codex limitations', async () => {
     dir = createTestProject();
-    mkdirSync(join(dir, '.agentsbridge', 'rules'), { recursive: true });
+    mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(
-      join(dir, 'agentsbridge.yaml'),
+      join(dir, 'agentsmesh.yaml'),
       'version: 1\ntargets: [claude-code, cursor, codex-cli]\nfeatures: [rules, mcp]\n',
     );
+    writeFileSync(join(dir, '.agentsmesh', 'rules', '_root.md'), '---\nroot: true\n---\n# Root\n');
     writeFileSync(
-      join(dir, '.agentsbridge', 'rules', '_root.md'),
-      '---\nroot: true\n---\n# Root\n',
-    );
-    writeFileSync(
-      join(dir, '.agentsbridge', 'mcp.json'),
+      join(dir, '.agentsmesh', 'mcp.json'),
       '{\n  "mcpServers": {\n    "local": {\n      "type": "stdio",\n      "command": "npx",\n      "args": ["-y", "@upstash/context7-mcp"],\n      "env": {}\n    },\n    "remote": {\n      "type": "http",\n      "url": "https://example.com/mcp?token=${TOKEN}",\n      "headers": { "Authorization": "Bearer ${TOKEN}" },\n      "env": { "TOKEN": "${TOKEN}" }\n    }\n  }\n}\n',
     );
 

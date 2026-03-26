@@ -1,5 +1,5 @@
 /**
- * agentsbridge import — import config from a tool into canonical .agentsbridge/.
+ * agentsmesh import — import config from a tool into canonical .agentsmesh/.
  */
 
 import { relative } from 'node:path';
@@ -22,7 +22,7 @@ export async function runImport(
   const root = projectRoot ?? process.cwd();
   const from = flags.from;
   if (typeof from !== 'string' || !from) {
-    throw new Error('--from is required. Example: agentsbridge import --from claude-code');
+    throw new Error('--from is required. Example: agentsmesh import --from claude-code');
   }
   const normalized = from.toLowerCase().trim();
   if (!isBuiltinTargetId(normalized)) {
@@ -40,6 +40,6 @@ export async function runImport(
     logger.success(`${fromRel} → ${r.toPath}`);
   }
   logger.info(
-    `Imported ${results.length} file(s). Run 'agentsbridge generate' to sync to other tools.`,
+    `Imported ${results.length} file(s). Run 'agentsmesh generate' to sync to other tools.`,
   );
 }

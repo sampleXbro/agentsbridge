@@ -59,21 +59,21 @@ describe('logger', () => {
     expect(process.stdout.write).not.toHaveBeenCalled();
   });
 
-  it('debug writes when AGENTSBRIDGE_DEBUG=1', () => {
-    const prev = process.env.AGENTSBRIDGE_DEBUG;
-    process.env.AGENTSBRIDGE_DEBUG = '1';
+  it('debug writes when AGENTSMESH_DEBUG=1', () => {
+    const prev = process.env.AGENTSMESH_DEBUG;
+    process.env.AGENTSMESH_DEBUG = '1';
     logger.debug('trace');
     expect(process.stdout.write).toHaveBeenCalledWith(expect.stringContaining('[debug]'));
     expect(process.stdout.write).toHaveBeenCalledWith(expect.stringContaining('trace'));
-    process.env.AGENTSBRIDGE_DEBUG = prev;
+    process.env.AGENTSMESH_DEBUG = prev;
   });
 
-  it('debug does nothing when AGENTSBRIDGE_DEBUG not set', () => {
-    const prev = process.env.AGENTSBRIDGE_DEBUG;
-    delete process.env.AGENTSBRIDGE_DEBUG;
+  it('debug does nothing when AGENTSMESH_DEBUG not set', () => {
+    const prev = process.env.AGENTSMESH_DEBUG;
+    delete process.env.AGENTSMESH_DEBUG;
     vi.mocked(process.stdout.write).mockClear();
     logger.debug('silent');
     expect(process.stdout.write).not.toHaveBeenCalled();
-    if (prev !== undefined) process.env.AGENTSBRIDGE_DEBUG = prev;
+    if (prev !== undefined) process.env.AGENTSMESH_DEBUG = prev;
   });
 });

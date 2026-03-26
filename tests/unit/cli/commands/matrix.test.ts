@@ -1,5 +1,5 @@
 /**
- * Unit tests for agentsbridge matrix command.
+ * Unit tests for agentsmesh matrix command.
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -13,15 +13,15 @@ const TEST_DIR = join(tmpdir(), 'ab-matrix-cmd-test');
 function setupProject(): void {
   mkdirSync(TEST_DIR, { recursive: true });
   writeFileSync(
-    join(TEST_DIR, 'agentsbridge.yaml'),
+    join(TEST_DIR, 'agentsmesh.yaml'),
     `version: 1
 targets: [claude-code, cursor]
 features: [rules]
 `,
   );
-  mkdirSync(join(TEST_DIR, '.agentsbridge', 'rules'), { recursive: true });
+  mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
   writeFileSync(
-    join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+    join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
     `---
 root: true
 description: "Project rules"
@@ -82,7 +82,7 @@ describe('runMatrix', () => {
 
   it('shows "No features enabled" when features list is empty', async () => {
     writeFileSync(
-      join(TEST_DIR, 'agentsbridge.yaml'),
+      join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1\ntargets: [claude-code]\nfeatures: []\n`,
     );
     const logs: string[] = [];
@@ -98,7 +98,7 @@ describe('runMatrix', () => {
   });
 
   it('throws when not initialized (no config)', async () => {
-    rmSync(join(TEST_DIR, 'agentsbridge.yaml'));
-    await expect(runMatrix({}, TEST_DIR)).rejects.toThrow(/agentsbridge\.yaml/);
+    rmSync(join(TEST_DIR, 'agentsmesh.yaml'));
+    await expect(runMatrix({}, TEST_DIR)).rejects.toThrow(/agentsmesh\.yaml/);
   });
 });

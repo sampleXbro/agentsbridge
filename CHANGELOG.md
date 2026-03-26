@@ -6,7 +6,7 @@
 
 - bda10c7: Initial public release of AgentsBridge v0.1.0.
 
-  One canonical `.agentsbridge/` source synced to Claude Code, Cursor, GitHub Copilot, Continue, Junie, Gemini CLI, Cline, Codex CLI, and Windsurf. Includes `init`, `generate`, `import`, `diff`, `lint`, `watch`, `check`, `merge`, `matrix`, and `install` CLI commands with full support for rules, commands, agents, skills, MCP servers, hooks, ignore patterns, permissions, local/remote extends, link rebasing, and lock-file-based collaboration.
+  One canonical `.agentsmesh/` source synced to Claude Code, Cursor, GitHub Copilot, Continue, Junie, Gemini CLI, Cline, Codex CLI, and Windsurf. Includes `init`, `generate`, `import`, `diff`, `lint`, `watch`, `check`, `merge`, `matrix`, and `install` CLI commands with full support for rules, commands, agents, skills, MCP servers, hooks, ignore patterns, permissions, local/remote extends, link rebasing, and lock-file-based collaboration.
 
 All notable changes to this project will be documented in this file.
 
@@ -19,14 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **CLI commands**
 
-- `init` — Scaffold `agentsbridge.yaml`, `.agentsbridge/rules/_root.md`, and `agentsbridge.local.yaml`; auto-detect existing AI tool configs in the project
-- `generate` — Sync canonical `.agentsbridge/` to target tool configs; supports `--targets`, `--dry-run`, `--force`, `--refresh-cache`, `--no-cache`
+- `init` — Scaffold `agentsmesh.yaml`, `.agentsmesh/rules/_root.md`, and `agentsmesh.local.yaml`; auto-detect existing AI tool configs in the project
+- `generate` — Sync canonical `.agentsmesh/` to target tool configs; supports `--targets`, `--dry-run`, `--force`, `--refresh-cache`, `--no-cache`
 - `import --from <target>` — Import existing tool configs into canonical form; supports all 9 targets
 - `diff --targets` — Show unified diff of what the next `generate` would change
 - `lint --targets` — Validate canonical files and target-specific constraints with per-feature diagnostics
-- `watch --targets` — Watch `.agentsbridge/` and regenerate on change with 300 ms debounce; self-generated lock file writes do not retrigger the pipeline
+- `watch --targets` — Watch `.agentsmesh/` and regenerate on change with 300 ms debounce; self-generated lock file writes do not retrigger the pipeline
 - `check` — Verify generated files match the lock file; designed for CI drift detection
-- `merge` — Resolve `.agentsbridge/.lock` conflicts after a git merge
+- `merge` — Resolve `.agentsmesh/.lock` conflicts after a git merge
 - `matrix --targets --verbose` — Show the feature-target compatibility table
 - `install` — Install skills, rules, commands, or agents from a local path or remote GitHub/GitLab/git source; supports `--as`, `--sync`, `--dry-run`, `--force`, `--path`, `--target`, `--name`, `--extends`
 
@@ -40,19 +40,19 @@ rules, commands, agents, skills, mcp, hooks, ignore, permissions
 
 **Config**
 
-- `agentsbridge.yaml` — project config with targets, features, and extends
-- `agentsbridge.local.yaml` — local-only overrides for targets, features, and personal extends (gitignored)
-- `.agentsbridge/` — canonical source directory (source of truth)
-- `.agentsbridge/.lock` — generated-state lock file for `check` and `merge`
+- `agentsmesh.yaml` — project config with targets, features, and extends
+- `agentsmesh.local.yaml` — local-only overrides for targets, features, and personal extends (gitignored)
+- `.agentsmesh/` — canonical source directory (source of truth)
+- `.agentsmesh/.lock` — generated-state lock file for `check` and `merge`
 
 **Extends**
 
 - Local extends (`local:path` or relative path) — merge shared configs from a relative directory
-- Remote extends (`github:org/repo@tag`, `gitlab:group/repo@tag`, `git+ssh://...`) — fetch and cache in `~/.agentsbridge/cache/`
+- Remote extends (`github:org/repo@tag`, `gitlab:group/repo@tag`, `git+ssh://...`) — fetch and cache in `~/.agentsmesh/cache/`
 
 **Link rebasing**
 
-Internal `.agentsbridge/` file references are rewritten to target-relative paths on `generate` and restored to canonical form on `import`, so supporting files and cross-skill links remain correct across all targets
+Internal `.agentsmesh/` file references are rewritten to target-relative paths on `generate` and restored to canonical form on `import`, so supporting files and cross-skill links remain correct across all targets
 
 **Collaboration**
 

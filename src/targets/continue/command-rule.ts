@@ -29,14 +29,14 @@ export function continueCommandRulePath(name: string): string {
 export function serializeCommandRule(command: CanonicalCommand): string {
   const frontmatter: Record<string, unknown> = {
     description: command.description || undefined,
-    'x-agentsbridge-kind': 'command',
-    'x-agentsbridge-name': command.name,
-    'x-agentsbridge-allowed-tools':
+    'x-agentsmesh-kind': 'command',
+    'x-agentsmesh-name': command.name,
+    'x-agentsmesh-allowed-tools':
       command.allowedTools.length > 0 ? command.allowedTools : undefined,
   };
   if (frontmatter.description === undefined) delete frontmatter.description;
-  if (frontmatter['x-agentsbridge-allowed-tools'] === undefined) {
-    delete frontmatter['x-agentsbridge-allowed-tools'];
+  if (frontmatter['x-agentsmesh-allowed-tools'] === undefined) {
+    delete frontmatter['x-agentsmesh-allowed-tools'];
   }
   return serializeFrontmatter(frontmatter, command.body.trim() || '');
 }
@@ -47,14 +47,12 @@ export function parseCommandRuleFrontmatter(
 ): ParsedCommandRule {
   const fileName = basename(filePath, '.md');
   const fromMetadata =
-    typeof frontmatter['x-agentsbridge-name'] === 'string'
-      ? frontmatter['x-agentsbridge-name']
-      : '';
+    typeof frontmatter['x-agentsmesh-name'] === 'string' ? frontmatter['x-agentsmesh-name'] : '';
   const name = (fromMetadata || fileName).trim();
   return {
     name,
     description: typeof frontmatter.description === 'string' ? frontmatter.description : '',
-    allowedTools: toStringArray(frontmatter['x-agentsbridge-allowed-tools']),
+    allowedTools: toStringArray(frontmatter['x-agentsmesh-allowed-tools']),
   };
 }
 

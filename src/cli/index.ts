@@ -154,7 +154,7 @@ function isMainModule(): boolean {
     const invokedResolved = resolve(process.cwd(), invoked);
     return invokedResolved === ourPath || realpathSync(invokedResolved) === realpathSync(ourPath);
   } catch {
-    return invoked.endsWith('cli.js') || invoked.includes('agentsbridge');
+    return invoked.endsWith('cli.js') || invoked.includes('agentsmesh');
   }
 }
 

@@ -18,9 +18,9 @@ import {
   CONTINUE_SKILLS_DIR,
 } from './constants.js';
 
-const AB_RULES = '.agentsbridge/rules';
-const AB_COMMANDS = '.agentsbridge/commands';
-const AB_MCP = '.agentsbridge/mcp.json';
+const AB_RULES = '.agentsmesh/rules';
+const AB_COMMANDS = '.agentsmesh/commands';
+const AB_MCP = '.agentsmesh/mcp.json';
 
 function readMcpServers(content: string, extension: string): Record<string, McpServer> {
   const parsed =

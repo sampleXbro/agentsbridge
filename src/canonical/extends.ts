@@ -65,10 +65,10 @@ function emptyCanonical(): CanonicalFiles {
 
 /**
  * Load canonical files from project, merging extends in order then local.
- * extends[0] → extends[1] → … → local .agentsbridge/
+ * extends[0] → extends[1] → … → local .agentsmesh/
  *
  * @param config - Validated config with extends
- * @param configDir - Absolute path to directory containing agentsbridge.yaml
+ * @param configDir - Absolute path to directory containing agentsmesh.yaml
  * @returns Merged CanonicalFiles and resolved extends (for lock checksums)
  * @throws Error if extend path missing or remote
  */
@@ -90,7 +90,7 @@ export async function loadCanonicalWithExtends(
     merged = mergeCanonicalFiles(merged, picked);
   }
 
-  const packsCanonical = await loadPacksCanonical(join(configDir, '.agentsbridge'));
+  const packsCanonical = await loadPacksCanonical(join(configDir, '.agentsmesh'));
   merged = mergeCanonicalFiles(merged, packsCanonical);
 
   const localCanonical = await loadCanonicalFiles(configDir);

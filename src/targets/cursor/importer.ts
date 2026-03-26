@@ -1,16 +1,16 @@
 /**
- * Cursor target importer — full fidelity import into canonical .agentsbridge/.
+ * Cursor target importer — full fidelity import into canonical .agentsmesh/.
  *
  * Sources imported:
- *   AGENTS.md                    → .agentsbridge/rules/_root.md
- *   .cursor/rules/*.mdc          → .agentsbridge/rules/*.md (alwaysApply → root)
- *   .cursor/commands/*.md        → .agentsbridge/commands/*.md
- *   .cursor/agents/*.md          → .agentsbridge/agents/*.md
- *   .cursor/skills/*.md          → .agentsbridge/skills/{name}/SKILL.md (flat → dir)
- *   .cursor/mcp.json             → .agentsbridge/mcp.json
- *   .cursor/hooks.json           → .agentsbridge/hooks.yaml (hooks)
- *   .cursor/settings.json        → .agentsbridge/permissions.yaml (permissions)
- *   .cursorignore                → .agentsbridge/ignore
+ *   AGENTS.md                    → .agentsmesh/rules/_root.md
+ *   .cursor/rules/*.mdc          → .agentsmesh/rules/*.md (alwaysApply → root)
+ *   .cursor/commands/*.md        → .agentsmesh/commands/*.md
+ *   .cursor/agents/*.md          → .agentsmesh/agents/*.md
+ *   .cursor/skills/*.md          → .agentsmesh/skills/{name}/SKILL.md (flat → dir)
+ *   .cursor/mcp.json             → .agentsmesh/mcp.json
+ *   .cursor/hooks.json           → .agentsmesh/hooks.yaml (hooks)
+ *   .cursor/settings.json        → .agentsmesh/permissions.yaml (permissions)
+ *   .cursorignore                → .agentsmesh/ignore
  */
 
 import { join, dirname } from 'node:path';
@@ -31,13 +31,13 @@ const CURSOR_COMMANDS_DIR = '.cursor/commands';
 const CURSOR_AGENTS_DIR = '.cursor/agents';
 const CURSOR_MCP = '.cursor/mcp.json';
 
-const AB_RULES = '.agentsbridge/rules';
-const AB_COMMANDS = '.agentsbridge/commands';
-const AB_AGENTS = '.agentsbridge/agents';
-const AB_MCP = '.agentsbridge/mcp.json';
+const AB_RULES = '.agentsmesh/rules';
+const AB_COMMANDS = '.agentsmesh/commands';
+const AB_AGENTS = '.agentsmesh/agents';
+const AB_MCP = '.agentsmesh/mcp.json';
 
 /**
- * Import Cursor config into canonical .agentsbridge/.
+ * Import Cursor config into canonical .agentsmesh/.
  * @param projectRoot - Project root directory
  * @returns Import results for each imported file
  */

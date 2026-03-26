@@ -5,16 +5,16 @@ import { tmpdir } from 'node:os';
 import { runInstall } from '../../src/install/run-install.js';
 import { listRelativeFiles, readInstallManifest } from '../helpers/install-test-helpers.js';
 
-const ROOT = join(tmpdir(), 'ab-install-manual-as-skills');
+const ROOT = join(tmpdir(), 'am-install-manual-as-skills');
 
 function seedProject(project: string): void {
-  mkdirSync(join(project, '.agentsbridge', 'rules'), { recursive: true });
+  mkdirSync(join(project, '.agentsmesh', 'rules'), { recursive: true });
   writeFileSync(
-    join(project, 'agentsbridge.yaml'),
+    join(project, 'agentsmesh.yaml'),
     'version: 1\ntargets: [claude-code]\nfeatures: [rules,skills]\nextends: []\n',
   );
   writeFileSync(
-    join(project, '.agentsbridge', 'rules', '_root.md'),
+    join(project, '.agentsmesh', 'rules', '_root.md'),
     '---\nroot: true\n---\n# Root\n',
   );
 }
@@ -48,7 +48,7 @@ describe('install manual --as skills (integration)', () => {
       project,
     );
 
-    expect(listRelativeFiles(join(project, '.agentsbridge', 'packs', 'bulk-skills'))).toEqual([
+    expect(listRelativeFiles(join(project, '.agentsmesh', 'packs', 'bulk-skills'))).toEqual([
       'pack.yaml',
       'skills/qa/SKILL.md',
       'skills/review/SKILL.md',
@@ -60,7 +60,7 @@ describe('install manual --as skills (integration)', () => {
       'skills/review/SKILL.md',
       'skills/review/templates/plan.md',
     ]);
-    expect(readInstallManifest(join(project, '.agentsbridge', 'installs.yaml')).installs).toEqual([
+    expect(readInstallManifest(join(project, '.agentsmesh', 'installs.yaml')).installs).toEqual([
       {
         as: 'skills',
         features: ['skills'],
@@ -84,7 +84,7 @@ describe('install manual --as skills (integration)', () => {
       project,
     );
 
-    expect(listRelativeFiles(join(project, '.agentsbridge', 'packs', 'single-skill'))).toEqual([
+    expect(listRelativeFiles(join(project, '.agentsmesh', 'packs', 'single-skill'))).toEqual([
       'pack.yaml',
       'skills/review/SKILL.md',
       'skills/review/templates/plan.md',
@@ -94,7 +94,7 @@ describe('install manual --as skills (integration)', () => {
       'skills/review/SKILL.md',
       'skills/review/templates/plan.md',
     ]);
-    expect(readInstallManifest(join(project, '.agentsbridge', 'installs.yaml')).installs).toEqual([
+    expect(readInstallManifest(join(project, '.agentsmesh', 'installs.yaml')).installs).toEqual([
       {
         as: 'skills',
         features: ['skills'],
@@ -119,7 +119,7 @@ describe('install manual --as skills (integration)', () => {
       project,
     );
 
-    expect(listRelativeFiles(join(project, '.agentsbridge', 'packs', 'direct-skill'))).toEqual([
+    expect(listRelativeFiles(join(project, '.agentsmesh', 'packs', 'direct-skill'))).toEqual([
       'pack.yaml',
       'skills/review/SKILL.md',
       'skills/review/templates/plan.md',
@@ -129,7 +129,7 @@ describe('install manual --as skills (integration)', () => {
       'skills/review/SKILL.md',
       'skills/review/templates/plan.md',
     ]);
-    expect(readInstallManifest(join(project, '.agentsbridge', 'installs.yaml')).installs).toEqual([
+    expect(readInstallManifest(join(project, '.agentsmesh', 'installs.yaml')).installs).toEqual([
       {
         as: 'skills',
         features: ['skills'],
@@ -161,7 +161,7 @@ describe('install manual --as skills (integration)', () => {
       project,
     );
 
-    expect(listRelativeFiles(join(project, '.agentsbridge', 'packs', 'upstream-skills'))).toEqual([
+    expect(listRelativeFiles(join(project, '.agentsmesh', 'packs', 'upstream-skills'))).toEqual([
       'pack.yaml',
       'skills/qa/SKILL.md',
       'skills/review/SKILL.md',
@@ -173,7 +173,7 @@ describe('install manual --as skills (integration)', () => {
       'skills/review/SKILL.md',
       'skills/review/templates/plan.md',
     ]);
-    expect(readInstallManifest(join(project, '.agentsbridge', 'installs.yaml')).installs).toEqual([
+    expect(readInstallManifest(join(project, '.agentsmesh', 'installs.yaml')).installs).toEqual([
       {
         as: 'skills',
         features: ['skills'],

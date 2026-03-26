@@ -9,7 +9,7 @@ import {
   parseGitlabSource,
 } from '../../../src/config/remote-fetcher.js';
 
-const TEST_ROOT = join(tmpdir(), 'agentsbridge-remote-fetcher-git-test');
+const TEST_ROOT = join(tmpdir(), 'agentsmesh-remote-fetcher-git-test');
 
 function git(args: string[], cwd: string): string {
   return execFileSync('git', args, {
@@ -29,13 +29,13 @@ function createRemoteRepo(root: string, withCanonical = true): string {
   const repoDir = join(root, 'remote-repo');
   mkdirSync(repoDir, { recursive: true });
   if (withCanonical) {
-    mkdirSync(join(repoDir, '.agentsbridge', 'rules'), { recursive: true });
+    mkdirSync(join(repoDir, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(
-      join(repoDir, '.agentsbridge', 'rules', '_root.md'),
+      join(repoDir, '.agentsmesh', 'rules', '_root.md'),
       '---\nroot: true\n---\n# Remote git root\n',
     );
     writeFileSync(
-      join(repoDir, '.agentsbridge', 'permissions.yaml'),
+      join(repoDir, '.agentsmesh', 'permissions.yaml'),
       'allow:\n  - Bash(pnpm build:*)\n  - Bash(pnpm test:*)\n',
     );
   } else {
@@ -121,7 +121,7 @@ describe('fetchRemoteExtend generic git', () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('using cached version'));
   });
 
-  it('fetches and caches a native-format repo without .agentsbridge/ without throwing', async () => {
+  it('fetches and caches a native-format repo without .agentsmesh/ without throwing', async () => {
     const repoDir = createRemoteRepo(TEST_ROOT, /* withCanonical= */ false);
     const cacheDir = join(TEST_ROOT, 'cache-native');
 
@@ -131,7 +131,7 @@ describe('fetchRemoteExtend generic git', () => {
     const { existsSync } = await import('node:fs');
     // Native-format file present in fetched repo
     expect(existsSync(join(result.resolvedPath, 'README.md'))).toBe(true);
-    // No .agentsbridge/ required — detection happens in extends.ts, not here
+    // No .agentsmesh/ required — detection happens in extends.ts, not here
   });
 
   it('returns the same cached path on a second call without re-cloning', async () => {

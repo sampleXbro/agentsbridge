@@ -5,24 +5,24 @@ import { tmpdir } from 'node:os';
 import { runInstall } from '../../src/install/run-install.js';
 import { listRelativeFiles, readInstallManifest } from '../helpers/install-test-helpers.js';
 
-const ROOT = join(tmpdir(), 'ab-install-sync-integration');
+const ROOT = join(tmpdir(), 'am-install-sync-integration');
 
 describe('install --sync (integration)', () => {
   beforeEach(() => {
     rmSync(ROOT, { recursive: true, force: true });
-    mkdirSync(join(ROOT, 'upstream', '.agentsbridge', 'skills', 'demo'), { recursive: true });
-    mkdirSync(join(ROOT, 'project', '.agentsbridge', 'rules'), { recursive: true });
+    mkdirSync(join(ROOT, 'upstream', '.agentsmesh', 'skills', 'demo'), { recursive: true });
+    mkdirSync(join(ROOT, 'project', '.agentsmesh', 'rules'), { recursive: true });
 
     writeFileSync(
-      join(ROOT, 'upstream', '.agentsbridge', 'skills', 'demo', 'SKILL.md'),
+      join(ROOT, 'upstream', '.agentsmesh', 'skills', 'demo', 'SKILL.md'),
       '---\ndescription: Demo skill\n---\n# Demo\n',
     );
     writeFileSync(
-      join(ROOT, 'project', 'agentsbridge.yaml'),
+      join(ROOT, 'project', 'agentsmesh.yaml'),
       'version: 1\ntargets: [claude-code]\nfeatures: [rules, skills]\nextends: []\n',
     );
     writeFileSync(
-      join(ROOT, 'project', '.agentsbridge', 'rules', '_root.md'),
+      join(ROOT, 'project', '.agentsmesh', 'rules', '_root.md'),
       '---\nroot: true\n---\n# Root\n',
     );
   });
@@ -36,11 +36,11 @@ describe('install --sync (integration)', () => {
     const upstream = join(ROOT, 'upstream');
 
     await runInstall({ force: true, name: 'shared-pack' }, [upstream], project);
-    expect(listRelativeFiles(join(project, '.agentsbridge', 'packs', 'shared-pack'))).toEqual([
+    expect(listRelativeFiles(join(project, '.agentsmesh', 'packs', 'shared-pack'))).toEqual([
       'pack.yaml',
       'skills/demo/SKILL.md',
     ]);
-    expect(readInstallManifest(join(project, '.agentsbridge', 'installs.yaml')).installs).toEqual([
+    expect(readInstallManifest(join(project, '.agentsmesh', 'installs.yaml')).installs).toEqual([
       {
         features: ['skills'],
         name: 'shared-pack',
@@ -49,11 +49,11 @@ describe('install --sync (integration)', () => {
       },
     ]);
 
-    rmSync(join(project, '.agentsbridge', 'packs'), { recursive: true, force: true });
+    rmSync(join(project, '.agentsmesh', 'packs'), { recursive: true, force: true });
 
     await runInstall({ sync: true, force: true }, [], project);
 
-    expect(listRelativeFiles(join(project, '.agentsbridge', 'packs', 'shared-pack'))).toEqual([
+    expect(listRelativeFiles(join(project, '.agentsmesh', 'packs', 'shared-pack'))).toEqual([
       'pack.yaml',
       'skills/demo/SKILL.md',
     ]);
@@ -70,7 +70,7 @@ describe('install --sync (integration)', () => {
     const project = join(ROOT, 'project');
     const upstream = join(ROOT, 'upstream');
     writeFileSync(
-      join(project, 'agentsbridge.yaml'),
+      join(project, 'agentsmesh.yaml'),
       'version: 1\ntargets: [claude-code]\nfeatures: [rules, agents]\nextends: []\n',
     );
     mkdirSync(join(upstream, 'agents', 'core'), { recursive: true });
@@ -87,7 +87,7 @@ describe('install --sync (integration)', () => {
       '---\ndescription: Performance optimizer\ntools: Read, Grep, Write\n---\n\nSpeed.\n',
     );
     writeFileSync(
-      join(project, '.agentsbridge', 'installs.yaml'),
+      join(project, '.agentsmesh', 'installs.yaml'),
       [
         'version: 1',
         'installs:',
@@ -108,7 +108,7 @@ describe('install --sync (integration)', () => {
 
     await runInstall({ sync: true, force: true }, [], project);
 
-    expect(listRelativeFiles(join(project, '.agentsbridge', 'packs', 'core-agents'))).toEqual([
+    expect(listRelativeFiles(join(project, '.agentsmesh', 'packs', 'core-agents'))).toEqual([
       'agents/code-archaeologist.md',
       'agents/performance-optimizer.md',
       'pack.yaml',
@@ -118,7 +118,7 @@ describe('install --sync (integration)', () => {
       'agents/code-archaeologist.md',
       'agents/performance-optimizer.md',
     ]);
-    expect(readInstallManifest(join(project, '.agentsbridge', 'installs.yaml')).installs).toEqual([
+    expect(readInstallManifest(join(project, '.agentsmesh', 'installs.yaml')).installs).toEqual([
       {
         as: 'agents',
         features: ['agents'],
@@ -156,7 +156,7 @@ describe('install --sync (integration)', () => {
       '---\ndescription: Quality gates\n---\n# Quality\n',
     );
     writeFileSync(
-      join(project, '.agentsbridge', 'installs.yaml'),
+      join(project, '.agentsmesh', 'installs.yaml'),
       [
         'version: 1',
         'installs:',
@@ -175,7 +175,7 @@ describe('install --sync (integration)', () => {
 
     await runInstall({ sync: true, force: true }, [], project);
 
-    expect(listRelativeFiles(join(project, '.agentsbridge', 'packs', 'engineering-pack'))).toEqual([
+    expect(listRelativeFiles(join(project, '.agentsmesh', 'packs', 'engineering-pack'))).toEqual([
       'pack.yaml',
       'skills/release-manager/SKILL.md',
       'skills/release-manager/references/guide.md',
@@ -185,7 +185,7 @@ describe('install --sync (integration)', () => {
       'skills/release-manager/SKILL.md',
       'skills/release-manager/references/guide.md',
     ]);
-    expect(readInstallManifest(join(project, '.agentsbridge', 'installs.yaml')).installs).toEqual([
+    expect(readInstallManifest(join(project, '.agentsmesh', 'installs.yaml')).installs).toEqual([
       {
         as: 'skills',
         features: ['skills'],
@@ -218,7 +218,7 @@ describe('install --sync (integration)', () => {
       '---\ndescription: Quality gates\n---\n# Quality\n',
     );
     writeFileSync(
-      join(project, '.agentsbridge', 'installs.yaml'),
+      join(project, '.agentsmesh', 'installs.yaml'),
       [
         'version: 1',
         'installs:',
@@ -242,14 +242,12 @@ describe('install --sync (integration)', () => {
       'skills/release-manager/SKILL.md',
       'skills/release-manager/references/guide.md',
     ]);
-    expect(listRelativeFiles(join(project, '.agentsbridge', 'packs', 'release-root-pack'))).toEqual(
-      [
-        'pack.yaml',
-        'skills/release-manager/SKILL.md',
-        'skills/release-manager/references/guide.md',
-      ],
-    );
-    expect(readInstallManifest(join(project, '.agentsbridge', 'installs.yaml')).installs).toEqual([
+    expect(listRelativeFiles(join(project, '.agentsmesh', 'packs', 'release-root-pack'))).toEqual([
+      'pack.yaml',
+      'skills/release-manager/SKILL.md',
+      'skills/release-manager/references/guide.md',
+    ]);
+    expect(readInstallManifest(join(project, '.agentsmesh', 'installs.yaml')).installs).toEqual([
       {
         as: 'skills',
         features: ['skills'],

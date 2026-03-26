@@ -1,5 +1,5 @@
 /**
- * Import `.codex/rules/*.md` and agentsbridge-embedded `.codex/rules/*.rules` into canonical rules.
+ * Import `.codex/rules/*.md` and agentsmesh-embedded `.codex/rules/*.rules` into canonical rules.
  */
 
 import { join, basename } from 'node:path';
@@ -10,7 +10,7 @@ import { serializeImportedRuleWithFallback } from '../import-metadata.js';
 import { CODEX_RULES_DIR } from './constants.js';
 import { tryParseEmbeddedCanonicalFromCodexRules } from './codex-rules-embed.js';
 
-const AB_RULES = '.agentsbridge/rules';
+const AB_RULES = '.agentsmesh/rules';
 
 export async function importCodexNonRootRuleFiles(
   projectRoot: string,

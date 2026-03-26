@@ -1,5 +1,5 @@
 /**
- * agentsbridge merge — resolve git merge conflicts in .agentsbridge/.lock.
+ * agentsmesh merge — resolve git merge conflicts in .agentsmesh/.lock.
  * Rebuilds lock checksums from current canonical files when conflict markers present.
  */
 
@@ -22,7 +22,7 @@ export async function runMerge(
   const root = projectRoot ?? process.cwd();
 
   const { config, configDir } = await loadConfigFromDir(root);
-  const abDir = join(configDir, '.agentsbridge');
+  const abDir = join(configDir, '.agentsmesh');
 
   const hasConflict = await hasLockConflict(abDir);
   if (!hasConflict) {

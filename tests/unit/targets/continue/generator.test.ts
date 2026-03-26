@@ -32,7 +32,7 @@ describe('generateRules (continue)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: 'Project standards',
@@ -40,7 +40,7 @@ describe('generateRules (continue)', () => {
           body: '# Standards\n\nUse TDD.',
         },
         {
-          source: '/proj/.agentsbridge/rules/typescript.md',
+          source: '/proj/.agentsmesh/rules/typescript.md',
           root: false,
           targets: [],
           description: 'TypeScript rules',
@@ -64,7 +64,7 @@ describe('generateRules (continue)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/backend.md',
+          source: '/proj/.agentsmesh/rules/backend.md',
           root: false,
           targets: ['claude-code'],
           description: 'Backend only',
@@ -72,7 +72,7 @@ describe('generateRules (continue)', () => {
           body: 'Use strict TypeScript.',
         },
         {
-          source: '/proj/.agentsbridge/rules/frontend.md',
+          source: '/proj/.agentsmesh/rules/frontend.md',
           root: false,
           targets: ['continue'],
           description: '',
@@ -98,7 +98,7 @@ describe('generateCommands (continue)', () => {
     const canonical = makeCanonical({
       commands: [
         {
-          source: '/proj/.agentsbridge/commands/review.md',
+          source: '/proj/.agentsmesh/commands/review.md',
           name: 'review',
           description: 'Review current changes',
           allowedTools: ['Read', 'Bash(git diff)'],
@@ -111,13 +111,13 @@ describe('generateCommands (continue)', () => {
     expect(results).toHaveLength(1);
     expect(results[0]?.path).toBe(`${CONTINUE_PROMPTS_DIR}/review.md`);
     expect(results[0]?.content).not.toContain('invokable:');
-    expect(results[0]?.content).toContain('x-agentsbridge-kind: command');
-    expect(results[0]?.content).toContain('x-agentsbridge-allowed-tools:');
+    expect(results[0]?.content).toContain('x-agentsmesh-kind: command');
+    expect(results[0]?.content).toContain('x-agentsmesh-allowed-tools:');
   });
 });
 
 describe('generateMcp (continue)', () => {
-  it('writes project mcp servers into .continue/mcpServers/agentsbridge.json', () => {
+  it('writes project mcp servers into .continue/mcpServers/agentsmesh.json', () => {
     const canonical = makeCanonical({
       mcp: {
         mcpServers: {
@@ -152,14 +152,13 @@ describe('generateSkills (continue)', () => {
     const canonical = makeCanonical({
       skills: [
         {
-          source: '/proj/.agentsbridge/skills/api-generator/SKILL.md',
+          source: '/proj/.agentsmesh/skills/api-generator/SKILL.md',
           name: 'api-generator',
           description: 'API Generator',
           body: 'Use `references/route-checklist.md`.',
           supportingFiles: [
             {
-              absolutePath:
-                '/proj/.agentsbridge/skills/api-generator/references/route-checklist.md',
+              absolutePath: '/proj/.agentsmesh/skills/api-generator/references/route-checklist.md',
               relativePath: 'references/route-checklist.md',
               content: '# Checklist',
             },

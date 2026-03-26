@@ -16,9 +16,9 @@ describe('load-canonical-slice (load path)', () => {
     rmSync(ROOT, { recursive: true, force: true });
   });
 
-  it('empty .agentsbridge yields empty canonical (no throw)', async () => {
+  it('empty .agentsmesh yields empty canonical (no throw)', async () => {
     const proj = join(ROOT, 'empty-ab');
-    mkdirSync(join(proj, '.agentsbridge'), { recursive: true });
+    mkdirSync(join(proj, '.agentsmesh'), { recursive: true });
     const c = await loadCanonicalSliceAtPath(proj);
     expect(c.rules.length).toBe(0);
     expect(c.skills.length).toBe(0);
@@ -41,14 +41,14 @@ describe('load-canonical-slice (load path)', () => {
     expect(c.rules.length).toBe(1);
   });
 
-  it('prefers .agentsbridge when present over loose rules/', async () => {
+  it('prefers .agentsmesh when present over loose rules/', async () => {
     const proj = join(ROOT, 'ab');
-    mkdirSync(join(proj, '.agentsbridge', 'rules'), { recursive: true });
-    writeFileSync(join(proj, '.agentsbridge', 'rules', '_root.md'), '---\nroot: true\n---\n');
+    mkdirSync(join(proj, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(join(proj, '.agentsmesh', 'rules', '_root.md'), '---\nroot: true\n---\n');
     mkdirSync(join(proj, 'rules'));
     writeFileSync(join(proj, 'rules', 'orphan.md'), '---\ndescription: d\n---\n');
     const c = await loadCanonicalSliceAtPath(proj);
-    expect(c.rules.some((r) => r.source.includes('.agentsbridge'))).toBe(true);
+    expect(c.rules.some((r) => r.source.includes('.agentsmesh'))).toBe(true);
   });
 
   it('throws when nothing installable', async () => {

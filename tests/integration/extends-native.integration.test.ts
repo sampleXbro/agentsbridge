@@ -8,13 +8,13 @@ const TEST_DIR = join(tmpdir(), 'ab-extends-native-integration');
 
 function makeProject(): string {
   const projectDir = join(TEST_DIR, 'project');
-  mkdirSync(join(projectDir, '.agentsbridge', 'rules'), { recursive: true });
+  mkdirSync(join(projectDir, '.agentsmesh', 'rules'), { recursive: true });
   writeFileSync(
-    join(projectDir, 'agentsbridge.yaml'),
+    join(projectDir, 'agentsmesh.yaml'),
     'version: 1\ntargets: [claude-code]\nfeatures: [rules]\nextends: []\n',
   );
   writeFileSync(
-    join(projectDir, '.agentsbridge', 'rules', '_root.md'),
+    join(projectDir, '.agentsmesh', 'rules', '_root.md'),
     '---\nroot: true\n---\n# Local rule\n',
   );
   return projectDir;
@@ -27,7 +27,7 @@ describe('native format local extends', () => {
   it('imports rules from a CLAUDE.md native-format repo and merges with local', async () => {
     const projectDir = makeProject();
 
-    // Native-format source: has CLAUDE.md and .claude/rules/ but NO .agentsbridge/
+    // Native-format source: has CLAUDE.md and .claude/rules/ but NO .agentsmesh/
     const nativeDir = join(TEST_DIR, 'native-claude');
     mkdirSync(join(nativeDir, '.claude', 'rules'), { recursive: true });
     writeFileSync(join(nativeDir, 'CLAUDE.md'), '---\nroot: true\n---\n# Shared Claude root\n');
@@ -53,7 +53,7 @@ describe('native format local extends', () => {
     expect(canonical.rules.some((r) => r.body.includes('Always sanitize inputs'))).toBe(true);
   });
 
-  it('writes .agentsbridge/ into the native repo dir after first import, second call still returns the imported rules', async () => {
+  it('writes .agentsmesh/ into the native repo dir after first import, second call still returns the imported rules', async () => {
     const projectDir = makeProject();
 
     const nativeDir = join(TEST_DIR, 'native-cache-test');
@@ -72,17 +72,17 @@ describe('native format local extends', () => {
     // First call: detects + imports
     const { canonical: first } = await loadCanonicalWithExtends(config, projectDir);
     // Local project has _root.md with "Local rule" — it wins over the extended _root.
-    // The import still happened (we verify .agentsbridge/ was written below).
+    // The import still happened (we verify .agentsmesh/ was written below).
     expect(first.rules.some((r) => r.body.includes('Local rule'))).toBe(true);
 
-    // Verify .agentsbridge/ was written with exactly the expected files
-    const abDir = join(nativeDir, '.agentsbridge');
+    // Verify .agentsmesh/ was written with exactly the expected files
+    const abDir = join(nativeDir, '.agentsmesh');
     const writtenFiles = (readdirSync(abDir, { recursive: true }) as string[]).sort();
     expect(writtenFiles).toHaveLength(2);
     expect(writtenFiles[0]).toBe('rules');
     expect(writtenFiles[1]).toBe('rules/_root.md');
 
-    // Second call: .agentsbridge/ exists, no re-detection needed
+    // Second call: .agentsmesh/ exists, no re-detection needed
     const { canonical: second } = await loadCanonicalWithExtends(config, projectDir);
     expect(second.rules.some((r) => r.body.includes('Local rule'))).toBe(true);
   });

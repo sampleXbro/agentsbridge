@@ -33,7 +33,7 @@ export function serializeCanonicalRuleToCodexRulesFile(rule: {
     `# ${MARKER}`,
     `${JSON_PREFIX}${metaJson}`,
     '#',
-    '# Embedded canonical rule (agentsbridge) — base64 body between ab-body-b64 markers.',
+    '# Embedded canonical rule (agentsmesh) — base64 body between ab-body-b64 markers.',
     '# Add active Starlark prefix_rule() calls below (uncomment/edit). Docs:',
     '# https://developers.openai.com/codex/rules/',
     '#',
@@ -54,7 +54,7 @@ export function serializeCanonicalRuleToCodexRulesFile(rule: {
   return `${lines.join('\n')}\n`;
 }
 
-/** If this is an agentsbridge-generated `.rules` file, return meta + body; else null. */
+/** If this is an agentsmesh-generated `.rules` file, return meta + body; else null. */
 export function tryParseEmbeddedCanonicalFromCodexRules(content: string): {
   meta: EmbeddedCodexRuleMeta;
   body: string;

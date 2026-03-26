@@ -10,10 +10,10 @@ const mockFetchRemoteExtend = vi.hoisted(() => vi.fn());
 vi.mock('../../../src/config/remote-fetcher.js', () => ({
   parseGithubSource: () => null,
   fetchRemoteExtend: mockFetchRemoteExtend,
-  getCacheDir: () => process.env.AGENTSBRIDGE_CACHE ?? '/tmp/agentsbridge-cache',
+  getCacheDir: () => process.env.AGENTSMESH_CACHE ?? '/tmp/agentsmesh-cache',
 }));
 
-const TEST_ROOT = join(tmpdir(), 'agentsbridge-resolver-test');
+const TEST_ROOT = join(tmpdir(), 'agentsmesh-resolver-test');
 
 beforeEach(() => mkdirSync(TEST_ROOT, { recursive: true }));
 afterEach(() => rmSync(TEST_ROOT, { recursive: true, force: true }));
@@ -94,7 +94,7 @@ describe('resolveExtendPaths', () => {
 
   it('resolves github:org/repo@tag via remote fetcher (mocked)', async () => {
     const mockPath = join(TEST_ROOT, 'cached-gh');
-    mkdirSync(join(mockPath, '.agentsbridge', 'rules'), { recursive: true });
+    mkdirSync(join(mockPath, '.agentsmesh', 'rules'), { recursive: true });
     vi.mocked(fetchRemoteExtend).mockResolvedValue({
       resolvedPath: mockPath,
       version: 'v2.1.0',
@@ -114,7 +114,7 @@ describe('resolveExtendPaths', () => {
 
   it('resolves gitlab:group/project@ref via remote fetcher (mocked)', async () => {
     const mockPath = join(TEST_ROOT, 'cached-gl');
-    mkdirSync(join(mockPath, '.agentsbridge', 'rules'), { recursive: true });
+    mkdirSync(join(mockPath, '.agentsmesh', 'rules'), { recursive: true });
     vi.mocked(fetchRemoteExtend).mockResolvedValue({
       resolvedPath: mockPath,
       version: '3d2f4c8',
@@ -135,7 +135,7 @@ describe('resolveExtendPaths', () => {
 
   it('resolves git+https remotes via remote fetcher (mocked)', async () => {
     const mockPath = join(TEST_ROOT, 'cached-git');
-    mkdirSync(join(mockPath, '.agentsbridge', 'rules'), { recursive: true });
+    mkdirSync(join(mockPath, '.agentsmesh', 'rules'), { recursive: true });
     vi.mocked(fetchRemoteExtend).mockResolvedValue({
       resolvedPath: mockPath,
       version: '9c1d7e0',
@@ -143,7 +143,7 @@ describe('resolveExtendPaths', () => {
     const config = minimalConfig([
       {
         name: 'generic',
-        source: 'git+https://git.example.com/org/agentsbridge-config.git#main',
+        source: 'git+https://git.example.com/org/agentsmesh-config.git#main',
         features: ['rules'],
       },
     ]);
@@ -164,13 +164,13 @@ describe('resolveExtendPaths', () => {
     writeFileSync(join(cacheDir, 'stale-file'), 'should be deleted');
     mkdirSync(join(cacheDir, 'old-extend'), { recursive: true });
     const mockPath = join(TEST_ROOT, 'cached-gh');
-    mkdirSync(join(mockPath, '.agentsbridge', 'rules'), { recursive: true });
+    mkdirSync(join(mockPath, '.agentsmesh', 'rules'), { recursive: true });
     vi.mocked(fetchRemoteExtend).mockResolvedValue({
       resolvedPath: mockPath,
       version: 'v1.0.0',
     });
-    const origEnv = process.env.AGENTSBRIDGE_CACHE;
-    process.env.AGENTSBRIDGE_CACHE = cacheDir;
+    const origEnv = process.env.AGENTSMESH_CACHE;
+    process.env.AGENTSMESH_CACHE = cacheDir;
     try {
       await resolveExtendPaths(
         minimalConfig([{ name: 'gh', source: 'github:org/repo@v1.0.0', features: ['rules'] }]),
@@ -181,7 +181,7 @@ describe('resolveExtendPaths', () => {
       expect(existsSync(join(cacheDir, 'old-extend'))).toBe(false);
       expect(existsSync(cacheDir)).toBe(true);
     } finally {
-      process.env.AGENTSBRIDGE_CACHE = origEnv;
+      process.env.AGENTSMESH_CACHE = origEnv;
     }
   });
 

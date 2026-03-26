@@ -16,7 +16,7 @@ import {
 } from '../../../../src/targets/copilot/constants.js';
 // COPILOT_INSTRUCTIONS_DIR is tested indirectly via importFromCopilot
 
-const TEST_DIR = join(tmpdir(), 'ab-copilot-importer-test');
+const TEST_DIR = join(tmpdir(), 'am-copilot-importer-test');
 
 beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
@@ -29,8 +29,8 @@ describe('importFromCopilot', () => {
     const results = await importFromCopilot(TEST_DIR);
     expect(results.length).toBe(1);
     expect(results[0]!.fromTool).toBe('copilot');
-    expect(results[0]!.toPath).toBe('.agentsbridge/rules/_root.md');
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    expect(results[0]!.toPath).toBe('.agentsmesh/rules/_root.md');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(content).toContain('# Copilot Global Rules');
     expect(content).toContain('- Use TDD');
@@ -44,9 +44,9 @@ describe('importFromCopilot', () => {
       '---\ndescription: Code review guidelines\nglobs: "**/*.ts"\n---\n\nWhen reviewing TypeScript code:\n- Check types.',
     );
     const results = await importFromCopilot(TEST_DIR);
-    const ruleResult = results.find((r) => r.toPath === '.agentsbridge/rules/review.md');
+    const ruleResult = results.find((r) => r.toPath === '.agentsmesh/rules/review.md');
     expect(ruleResult).toBeDefined();
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', 'review.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'review.md'), 'utf-8');
     expect(content).toContain('root: false');
     expect(content).toContain('description: Code review guidelines');
     expect(content).toContain('globs');
@@ -59,7 +59,7 @@ describe('importFromCopilot', () => {
     mkdirSync(copilotDir, { recursive: true });
     writeFileSync(join(copilotDir, 'testing.instructions.md'), '---\n---\n\nTest body');
     const results = await importFromCopilot(TEST_DIR);
-    const ruleResult = results.find((r) => r.toPath === '.agentsbridge/rules/testing.md');
+    const ruleResult = results.find((r) => r.toPath === '.agentsmesh/rules/testing.md');
     expect(ruleResult).toBeDefined();
     expect(results.some((r) => r.toPath.endsWith('.instructions.md'))).toBe(false);
   });
@@ -73,7 +73,7 @@ describe('importFromCopilot', () => {
     );
     const results = await importFromCopilot(TEST_DIR);
     expect(results.length).toBe(1);
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', 'ts.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'ts.md'), 'utf-8');
     expect(content).toContain('globs');
     expect(content).toContain('src/**/*.ts');
   });
@@ -89,8 +89,8 @@ describe('importFromCopilot', () => {
     );
     const results = await importFromCopilot(TEST_DIR);
     expect(results.length).toBe(2);
-    expect(results.some((r) => r.toPath === '.agentsbridge/rules/_root.md')).toBe(true);
-    expect(results.some((r) => r.toPath === '.agentsbridge/rules/foo.md')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/rules/_root.md')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/rules/foo.md')).toBe(true);
   });
 
   it('returns empty when no Copilot config found', async () => {
@@ -106,7 +106,7 @@ describe('importFromCopilot', () => {
     );
     const results = await importFromCopilot(TEST_DIR);
     expect(results.length).toBe(1);
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(content).toContain('description: Global');
     expect(content).toContain('Root body');
@@ -119,7 +119,7 @@ describe('importFromCopilot', () => {
       '---\nroot: true\ndescription: Already has root\n---\n\nRoot content.',
     );
     await importFromCopilot(TEST_DIR);
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(content).toContain('Already has root');
     expect(content).toContain('Root content.');
@@ -133,9 +133,9 @@ describe('importFromCopilot', () => {
       '---\ndescription: No globs\nglobs: ""\n---\n\nBare content.',
     );
     const results = await importFromCopilot(TEST_DIR);
-    const ruleResult = results.find((r) => r.toPath === '.agentsbridge/rules/bare.md');
+    const ruleResult = results.find((r) => r.toPath === '.agentsmesh/rules/bare.md');
     expect(ruleResult).toBeDefined();
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', 'bare.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'bare.md'), 'utf-8');
     expect(content).toContain('description: No globs');
     expect(content).not.toContain('globs:');
   });
@@ -149,9 +149,9 @@ describe('importFromCopilot', () => {
         '---',
         'agent: agent',
         'description: Review changes',
-        'x-agentsbridge-kind: command',
-        'x-agentsbridge-name: review',
-        'x-agentsbridge-allowed-tools:',
+        'x-agentsmesh-kind: command',
+        'x-agentsmesh-name: review',
+        'x-agentsmesh-allowed-tools:',
         '  - Read',
         '  - Bash(git diff)',
         '---',
@@ -162,15 +162,15 @@ describe('importFromCopilot', () => {
     const results = await importFromCopilot(TEST_DIR);
     const commandResult = results.find((r) => r.feature === 'commands');
     expect(commandResult).toBeDefined();
-    expect(commandResult?.toPath).toBe('.agentsbridge/commands/review.md');
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'commands', 'review.md'), 'utf-8');
+    expect(commandResult?.toPath).toBe('.agentsmesh/commands/review.md');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'), 'utf-8');
     expect(content).toContain('description: Review changes');
     expect(content).toContain('allowed-tools');
     expect(content).toContain('Bash(git diff)');
     expect(content).toContain('Review the current pull request.');
   });
 
-  it('imports prompt files without agentsbridge metadata using the filename as command name', async () => {
+  it('imports prompt files without agentsmesh metadata using the filename as command name', async () => {
     const promptsDir = join(TEST_DIR, COPILOT_PROMPTS_DIR);
     mkdirSync(promptsDir, { recursive: true });
     writeFileSync(
@@ -178,10 +178,7 @@ describe('importFromCopilot', () => {
       '---\nagent: agent\ndescription: Explain code\n---\n\nExplain this module.',
     );
     await importFromCopilot(TEST_DIR);
-    const content = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'commands', 'explain.md'),
-      'utf-8',
-    );
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'commands', 'explain.md'), 'utf-8');
     expect(content).toContain('description: Explain code');
     expect(content).toContain('Explain this module.');
     expect(content).not.toContain('allowed-tools');
@@ -189,15 +186,15 @@ describe('importFromCopilot', () => {
 });
 
 describe('importFromCopilot — hooks', () => {
-  it('imports .github/copilot-hooks/*.sh to .agentsbridge/hooks.yaml', async () => {
+  it('imports .github/copilot-hooks/*.sh to .agentsmesh/hooks.yaml', async () => {
     const hooksDir = join(TEST_DIR, '.github', 'copilot-hooks');
     mkdirSync(hooksDir, { recursive: true });
     writeFileSync(join(hooksDir, 'PostToolUse-0.sh'), '#!/bin/bash\nprettier --write "$FILE_PATH"');
     const results = await importFromCopilot(TEST_DIR);
     const hookResult = results.find((r) => r.feature === 'hooks');
     expect(hookResult).toBeDefined();
-    expect(hookResult?.toPath).toBe('.agentsbridge/hooks.yaml');
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'hooks.yaml'), 'utf-8');
+    expect(hookResult?.toPath).toBe('.agentsmesh/hooks.yaml');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'hooks.yaml'), 'utf-8');
     expect(content).toContain('PostToolUse');
     expect(content).toContain('prettier');
   });
@@ -210,7 +207,7 @@ describe('importFromCopilot — hooks', () => {
     const results = await importFromCopilot(TEST_DIR);
     const hookResult = results.find((r) => r.feature === 'hooks');
     expect(hookResult).toBeDefined();
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'hooks.yaml'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'hooks.yaml'), 'utf-8');
     expect(content).toContain('PreToolUse');
     expect(content).toContain('PostToolUse');
   });
@@ -223,7 +220,7 @@ describe('importFromCopilot — hooks', () => {
 
     await importFromCopilot(TEST_DIR);
 
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'hooks.yaml'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'hooks.yaml'), 'utf-8');
     expect(content).toContain('PostToolUse');
     expect(content).toContain('echo post');
     expect(content).not.toContain('echo asset');
@@ -239,10 +236,10 @@ describe('importFromCopilot — .github/instructions/*.md', () => {
       '---\napplyTo: "src/**/*.tsx"\ndescription: React rules\n---\n\nUse functional components.',
     );
     const results = await importFromCopilot(TEST_DIR);
-    const ruleResult = results.find((r) => r.toPath === '.agentsbridge/rules/react.md');
+    const ruleResult = results.find((r) => r.toPath === '.agentsmesh/rules/react.md');
     expect(ruleResult).toBeDefined();
     expect(ruleResult?.fromTool).toBe('copilot');
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', 'react.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'react.md'), 'utf-8');
     expect(content).toContain('description: React rules');
     expect(content).toContain('src/**/*.tsx');
     expect(content).toContain('Use functional components.');
@@ -256,7 +253,7 @@ describe('importFromCopilot — .github/instructions/*.md', () => {
       '---\napplyTo: ["src/**/*.ts", "tests/**/*.ts"]\n---\n\nTS body.',
     );
     await importFromCopilot(TEST_DIR);
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', 'ts.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'ts.md'), 'utf-8');
     expect(content).toContain('globs');
     expect(content).toContain('src/**/*.ts');
   });
@@ -269,8 +266,8 @@ describe('importFromCopilot — .github/instructions/*.md', () => {
     mkdirSync(instDir, { recursive: true });
     writeFileSync(join(instDir, 'new-rule.md'), '---\napplyTo: "*.ts"\n---\n\nNew path rule.');
     const results = await importFromCopilot(TEST_DIR);
-    expect(results.some((r) => r.toPath === '.agentsbridge/rules/review.md')).toBe(true);
-    expect(results.some((r) => r.toPath === '.agentsbridge/rules/new-rule.md')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/rules/review.md')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/rules/new-rule.md')).toBe(true);
   });
 
   it('handles .github/instructions/*.md with no applyTo (no globs in output)', async () => {
@@ -278,14 +275,14 @@ describe('importFromCopilot — .github/instructions/*.md', () => {
     mkdirSync(instDir, { recursive: true });
     writeFileSync(join(instDir, 'bare.md'), '---\ndescription: No globs\n---\n\nBody.');
     await importFromCopilot(TEST_DIR);
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', 'bare.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'bare.md'), 'utf-8');
     expect(content).toContain('description: No globs');
     expect(content).not.toContain('globs:');
   });
 });
 
 describe('importFromCopilot — agents', () => {
-  it('imports .github/agents/*.agent.md into .agentsbridge/agents/*.md', async () => {
+  it('imports .github/agents/*.agent.md into .agentsmesh/agents/*.md', async () => {
     const agentsDir = join(TEST_DIR, COPILOT_AGENTS_DIR);
     mkdirSync(agentsDir, { recursive: true });
     writeFileSync(
@@ -297,8 +294,8 @@ describe('importFromCopilot — agents', () => {
       (r) => r.feature === 'agents' && r.toPath?.includes('reviewer'),
     );
     expect(agentResult).toBeDefined();
-    expect(agentResult?.toPath).toBe('.agentsbridge/agents/reviewer.md');
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'agents', 'reviewer.md'), 'utf-8');
+    expect(agentResult?.toPath).toBe('.agentsmesh/agents/reviewer.md');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'), 'utf-8');
     expect(content).toContain('name: reviewer');
     expect(content).toContain('description: Code reviewer');
     expect(content).toContain('You review code.');
@@ -309,7 +306,7 @@ describe('importFromCopilot — agents', () => {
     mkdirSync(agentsDir, { recursive: true });
     writeFileSync(join(agentsDir, 'helper.agent.md'), '---\n---\n\nHelper body.');
     const results = await importFromCopilot(TEST_DIR);
-    expect(results.some((r) => r.toPath === '.agentsbridge/agents/helper.md')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/agents/helper.md')).toBe(true);
     expect(results.some((r) => r.toPath?.endsWith('.agent.md'))).toBe(false);
   });
 
@@ -321,7 +318,7 @@ describe('importFromCopilot — agents', () => {
       '---\nmcp-servers: [prisma, figma]\n---\n\nUse MCP.',
     );
     await importFromCopilot(TEST_DIR);
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'agents', 'ctx.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'agents', 'ctx.md'), 'utf-8');
     expect(content).toContain('mcpServers');
     expect(content).toContain('prisma');
     expect(content).toContain('figma');
@@ -357,21 +354,21 @@ describe('importFromCopilot — skills', () => {
 
     const results = await importFromCopilot(TEST_DIR);
 
-    expect(results.some((r) => r.toPath === '.agentsbridge/skills/qa/SKILL.md')).toBe(true);
-    expect(
-      results.some((r) => r.toPath === '.agentsbridge/skills/qa/references/checklist.md'),
-    ).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/skills/qa/SKILL.md')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/skills/qa/references/checklist.md')).toBe(
+      true,
+    );
 
     const skillContent = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'skills', 'qa', 'SKILL.md'),
+      join(TEST_DIR, '.agentsmesh', 'skills', 'qa', 'SKILL.md'),
       'utf-8',
     );
     const checklistContent = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'skills', 'qa', 'references', 'checklist.md'),
+      join(TEST_DIR, '.agentsmesh', 'skills', 'qa', 'references', 'checklist.md'),
       'utf-8',
     );
 
-    expect(skillContent).toContain('.agentsbridge/rules/review.md');
-    expect(checklistContent).toContain('.agentsbridge/commands/review.md');
+    expect(skillContent).toContain('.agentsmesh/rules/review.md');
+    expect(checklistContent).toContain('.agentsmesh/commands/review.md');
   });
 });

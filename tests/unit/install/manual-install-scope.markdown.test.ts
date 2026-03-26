@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { stageManualInstallScope } from '../../../src/install/manual-install-scope.js';
 import { listRelativeFiles } from '../../helpers/install-test-helpers.js';
 
-const ROOT = join(tmpdir(), 'ab-manual-install-scope-markdown');
+const ROOT = join(tmpdir(), 'am-manual-install-scope-markdown');
 
 afterEach(() => {
   rmSync(ROOT, { recursive: true, force: true });
@@ -21,7 +21,7 @@ describe('stageManualInstallScope markdown collections', () => {
 
       const staged = await stageManualInstallScope(source, as);
       try {
-        expect(listRelativeFiles(join(staged.discoveryRoot, '.agentsbridge', as))).toEqual([
+        expect(listRelativeFiles(join(staged.discoveryRoot, '.agentsmesh', as))).toEqual([
           `${as}-one.md`,
         ]);
       } finally {
@@ -40,7 +40,7 @@ describe('stageManualInstallScope markdown collections', () => {
 
       const staged = await stageManualInstallScope(source, as);
       try {
-        expect(listRelativeFiles(join(staged.discoveryRoot, '.agentsbridge', as))).toEqual([
+        expect(listRelativeFiles(join(staged.discoveryRoot, '.agentsmesh', as))).toEqual([
           'first.md',
           'second.md',
         ]);
@@ -82,7 +82,7 @@ describe('stageManualInstallScope markdown collections', () => {
       await expect(stageManualInstallScope(source, as)).rejects.toThrow(
         'Manual install found duplicate file name "same.md"',
       );
-      expect(existsSync(join(ROOT, '.agentsbridge'))).toBe(false);
+      expect(existsSync(join(ROOT, '.agentsmesh'))).toBe(false);
     },
   );
 });

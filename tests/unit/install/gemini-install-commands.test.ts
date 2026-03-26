@@ -11,7 +11,7 @@ import {
   isUnderGeminiCommands,
 } from '../../../src/install/gemini-install-commands.js';
 
-const ROOT = join(tmpdir(), 'ab-gemini-install-cmd');
+const ROOT = join(tmpdir(), 'am-gemini-install-cmd');
 
 describe('isUnderGeminiCommands', () => {
   it('matches root and nested command paths', () => {

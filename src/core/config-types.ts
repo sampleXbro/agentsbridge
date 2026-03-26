@@ -16,7 +16,7 @@ export interface ExtendSource {
   features: string[];
 }
 
-/** Validated configuration from agentsbridge.yaml */
+/** Validated configuration from agentsmesh.yaml */
 export interface Config {
   version: number;
   targets: string[];

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { parsePermissions } from '../../../src/canonical/permissions.js';
 
-const TEST_DIR = join(tmpdir(), 'agentsbridge-permissions-test');
+const TEST_DIR = join(tmpdir(), 'agentsmesh-permissions-test');
 
 beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));

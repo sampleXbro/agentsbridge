@@ -22,11 +22,11 @@ describe('stageNativeInstallScope Codex CLI', () => {
     {
       name: 'codex-command-skill-folder',
       target: 'codex-cli',
-      path: '.agents/skills/ab-command-review',
+      path: '.agents/skills/am-command-review',
       files: {
         'AGENTS.md': '# Root\n',
-        '.agents/skills/ab-command-review/SKILL.md':
-          '---\ndescription: Review changes\nx-agentsbridge-kind: command\nx-agentsbridge-name: review\n---\n\nReview diff.\n',
+        '.agents/skills/am-command-review/SKILL.md':
+          '---\ndescription: Review changes\nx-agentsmesh-kind: command\nx-agentsmesh-name: review\n---\n\nReview diff.\n',
       },
       features: ['commands'],
       pick: { commands: ['review'] },

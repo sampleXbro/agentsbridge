@@ -12,7 +12,7 @@ import { lintPermissions } from './linter-permissions.js';
 import { lintHooks } from './linter-hooks.js';
 import { getTargetCatalogEntry, isBuiltinTargetId } from '../targets/target-catalog.js';
 
-const EXCLUDE_DIRS = ['node_modules', '.git', 'dist', 'coverage', '.agentsbridge'];
+const EXCLUDE_DIRS = ['node_modules', '.git', 'dist', 'coverage', '.agentsmesh'];
 
 /**
  * Get project file paths relative to projectRoot, excluding common dirs.

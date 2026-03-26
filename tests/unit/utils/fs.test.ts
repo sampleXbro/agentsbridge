@@ -13,7 +13,7 @@ import {
 } from '../../../src/utils/fs.js';
 import { readlinkSync, lstatSync } from 'node:fs';
 
-const TEST_DIR = join(tmpdir(), 'agentsbridge-test-fs');
+const TEST_DIR = join(tmpdir(), 'agentsmesh-test-fs');
 
 beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
@@ -99,7 +99,7 @@ describe('readDirRecursive', () => {
 describe('ensureCacheSymlink', () => {
   it('creates symlink when link does not exist', async () => {
     const cacheDir = join(TEST_DIR, 'cache');
-    const linkPath = join(TEST_DIR, '.agentsbridgecache');
+    const linkPath = join(TEST_DIR, '.agentsmeshcache');
     mkdirSync(cacheDir, { recursive: true });
     await ensureCacheSymlink(cacheDir, linkPath);
     expect(lstatSync(linkPath).isSymbolicLink()).toBe(true);
@@ -109,7 +109,7 @@ describe('ensureCacheSymlink', () => {
   it('updates symlink when it points to wrong target', async () => {
     const cacheDir = join(TEST_DIR, 'cache');
     const wrongDir = join(TEST_DIR, 'wrong');
-    const linkPath = join(TEST_DIR, '.agentsbridgecache');
+    const linkPath = join(TEST_DIR, '.agentsmeshcache');
     mkdirSync(cacheDir, { recursive: true });
     mkdirSync(wrongDir, { recursive: true });
     await ensureCacheSymlink(wrongDir, linkPath);
@@ -119,7 +119,7 @@ describe('ensureCacheSymlink', () => {
 
   it('leaves existing non-symlink alone', async () => {
     const cacheDir = join(TEST_DIR, 'cache');
-    const linkPath = join(TEST_DIR, '.agentsbridgecache');
+    const linkPath = join(TEST_DIR, '.agentsmeshcache');
     mkdirSync(cacheDir, { recursive: true });
     mkdirSync(linkPath, { recursive: true }); // real dir
     await ensureCacheSymlink(cacheDir, linkPath);

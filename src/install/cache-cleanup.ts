@@ -44,7 +44,7 @@ export async function cleanInstallCache(source: string, cacheDir?: string): Prom
 
 /**
  * Remove all cache entries whose mtime is older than maxAgeMs.
- * Defaults to AGENTSBRIDGE_CACHE_MAX_AGE_DAYS env var (default: 30 days).
+ * Defaults to AGENTSMESH_CACHE_MAX_AGE_DAYS env var (default: 30 days).
  * No-op if the cache directory does not exist or is empty.
  *
  * @param cacheDir - Cache directory to sweep (defaults to getCacheDir())
@@ -53,7 +53,7 @@ export async function cleanInstallCache(source: string, cacheDir?: string): Prom
 export async function sweepStaleCache(cacheDir?: string, maxAgeMs?: number): Promise<void> {
   const dir = cacheDir ?? getCacheDir();
   const threshold =
-    maxAgeMs ?? Number(process.env.AGENTSBRIDGE_CACHE_MAX_AGE_DAYS ?? 30) * 86_400_000;
+    maxAgeMs ?? Number(process.env.AGENTSMESH_CACHE_MAX_AGE_DAYS ?? 30) * 86_400_000;
 
   let entries: string[];
   try {

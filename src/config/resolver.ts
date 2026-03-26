@@ -37,7 +37,7 @@ function isOtherRemoteSource(source: string): boolean {
  * Supported remotes: github:, gitlab:, git+https://..., git+ssh://..., git+file://...
  *
  * @param config - Validated config with extends
- * @param configDir - Absolute path to directory containing agentsbridge.yaml
+ * @param configDir - Absolute path to directory containing agentsmesh.yaml
  * @returns Resolved extends with absolute paths
  * @throws Error if path does not exist or source is unsupported remote
  */
@@ -91,7 +91,7 @@ export async function resolveExtendPaths(
     if (!(await exists(resolvedPath))) {
       throw new Error(
         `Extend "${ext.name}": path does not exist: ${resolvedPath}. ` +
-          `Check extends.source in agentsbridge.yaml.`,
+          `Check extends.source in agentsmesh.yaml.`,
       );
     }
 

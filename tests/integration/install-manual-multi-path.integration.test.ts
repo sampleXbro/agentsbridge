@@ -12,7 +12,7 @@ import { join, relative } from 'node:path';
 import { tmpdir } from 'node:os';
 import { runInstall } from '../../src/install/run-install.js';
 
-const ROOT = join(tmpdir(), 'ab-install-manual-multi-path');
+const ROOT = join(tmpdir(), 'am-install-manual-multi-path');
 
 function listFiles(root: string, base = root): string[] {
   const files: string[] = [];
@@ -29,7 +29,7 @@ describe('manual install multi-path replay (integration)', () => {
     rmSync(ROOT, { recursive: true, force: true });
     mkdirSync(join(ROOT, 'upstream', 'agents', 'core'), { recursive: true });
     mkdirSync(join(ROOT, 'upstream', 'agents', 'universal'), { recursive: true });
-    mkdirSync(join(ROOT, 'project', '.agentsbridge', 'rules'), { recursive: true });
+    mkdirSync(join(ROOT, 'project', '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(
       join(ROOT, 'upstream', 'agents', 'core', 'code-archaeologist.md'),
       '---\ndescription: Code archaeologist\ntools: Read, Grep\n---\n\nDig.\n',
@@ -39,11 +39,11 @@ describe('manual install multi-path replay (integration)', () => {
       '---\ndescription: Documentation specialist\ntools: Read, Write\n---\n\nDocs.\n',
     );
     writeFileSync(
-      join(ROOT, 'project', 'agentsbridge.yaml'),
+      join(ROOT, 'project', 'agentsmesh.yaml'),
       'version: 1\ntargets: [claude-code]\nfeatures: [rules,agents]\nextends: []\n',
     );
     writeFileSync(
-      join(ROOT, 'project', '.agentsbridge', 'rules', '_root.md'),
+      join(ROOT, 'project', '.agentsmesh', 'rules', '_root.md'),
       '---\nroot: true\n---\n# Root\n',
     );
   });
@@ -67,11 +67,12 @@ describe('manual install multi-path replay (integration)', () => {
       project,
     );
 
-    expect(listFiles(join(project, '.agentsbridge', 'packs', 'upstream-agents', 'agents'))).toEqual(
-      ['code-archaeologist.md', 'documentation-specialist.md'],
-    );
+    expect(listFiles(join(project, '.agentsmesh', 'packs', 'upstream-agents', 'agents'))).toEqual([
+      'code-archaeologist.md',
+      'documentation-specialist.md',
+    ]);
 
-    const installs = readFileSync(join(project, '.agentsbridge', 'installs.yaml'), 'utf8');
+    const installs = readFileSync(join(project, '.agentsmesh', 'installs.yaml'), 'utf8');
     expect(installs).toContain('name: upstream-agents');
     expect(installs).toContain('paths:');
     expect(installs).toContain('- agents/core');
@@ -79,14 +80,15 @@ describe('manual install multi-path replay (integration)', () => {
     expect(installs).toContain('- code-archaeologist');
     expect(installs).toContain('- documentation-specialist');
 
-    rmSync(join(project, '.agentsbridge', 'packs'), { recursive: true, force: true });
-    expect(existsSync(join(project, '.agentsbridge', 'packs', 'upstream-agents'))).toBe(false);
+    rmSync(join(project, '.agentsmesh', 'packs'), { recursive: true, force: true });
+    expect(existsSync(join(project, '.agentsmesh', 'packs', 'upstream-agents'))).toBe(false);
 
     await runInstall({ sync: true, force: true }, [], project);
 
-    expect(listFiles(join(project, '.agentsbridge', 'packs', 'upstream-agents', 'agents'))).toEqual(
-      ['code-archaeologist.md', 'documentation-specialist.md'],
-    );
+    expect(listFiles(join(project, '.agentsmesh', 'packs', 'upstream-agents', 'agents'))).toEqual([
+      'code-archaeologist.md',
+      'documentation-specialist.md',
+    ]);
     expect(listFiles(join(project, '.claude', 'agents'))).toEqual([
       'code-archaeologist.md',
       'documentation-specialist.md',

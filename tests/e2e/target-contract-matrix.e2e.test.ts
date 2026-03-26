@@ -45,16 +45,16 @@ function listFiles(dir: string, base = ''): string[] {
 
 function generatedFiles(dir: string): string[] {
   return listFiles(dir)
-    .filter((file) => file !== 'agentsbridge.yaml')
-    .filter((file) => !file.startsWith('.agentsbridge/'))
-    .filter((file) => !file.startsWith('.agentsbridgecache'))
+    .filter((file) => file !== 'agentsmesh.yaml')
+    .filter((file) => !file.startsWith('.agentsmesh/'))
+    .filter((file) => !file.startsWith('.agentsmeshcache'))
     .filter((file) => !file.startsWith('docs/'))
     .sort();
 }
 
 function canonicalFiles(dir: string): string[] {
-  return listFiles(join(dir, '.agentsbridge'))
-    .map((file) => `.agentsbridge/${file}`)
+  return listFiles(join(dir, '.agentsmesh'))
+    .map((file) => `.agentsmesh/${file}`)
     .sort();
 }
 
@@ -67,26 +67,26 @@ function expectNoTargetSpecificPrefixes(content: string): void {
 }
 
 function expectCanonicalizedRoot(content: string): void {
-  expect(content).toContain('.agentsbridge/commands/review.md');
-  expect(content).toContain('.agentsbridge/agents/code-reviewer.md');
-  expect(content).toContain('.agentsbridge/skills/api-generator/SKILL.md');
-  expect(content).toContain('.agentsbridge/skills/api-generator/references/route-checklist.md');
+  expect(content).toContain('.agentsmesh/commands/review.md');
+  expect(content).toContain('.agentsmesh/agents/code-reviewer.md');
+  expect(content).toContain('.agentsmesh/skills/api-generator/SKILL.md');
+  expect(content).toContain('.agentsmesh/skills/api-generator/references/route-checklist.md');
   expectNoTargetSpecificPrefixes(content);
 }
 
 function expectCanonicalizedAgent(content: string): void {
-  expect(content).toContain('.agentsbridge/commands/review.md');
-  expect(content).toContain('.agentsbridge/skills/api-generator/SKILL.md');
-  expect(content).toContain('.agentsbridge/skills/api-generator/template.ts');
-  expect(content).toContain('.agentsbridge/skills/api-generator/references/route-checklist.md');
+  expect(content).toContain('.agentsmesh/commands/review.md');
+  expect(content).toContain('.agentsmesh/skills/api-generator/SKILL.md');
+  expect(content).toContain('.agentsmesh/skills/api-generator/template.ts');
+  expect(content).toContain('.agentsmesh/skills/api-generator/references/route-checklist.md');
   expectNoTargetSpecificPrefixes(content);
 }
 
 function expectCanonicalizedSkill(content: string): void {
-  expect(content).toContain('.agentsbridge/commands/review.md');
-  expect(content).toContain('.agentsbridge/agents/code-reviewer.md');
-  expect(content).toContain('.agentsbridge/skills/api-generator/template.ts');
-  expect(content).toContain('.agentsbridge/skills/api-generator/references');
+  expect(content).toContain('.agentsmesh/commands/review.md');
+  expect(content).toContain('.agentsmesh/agents/code-reviewer.md');
+  expect(content).toContain('.agentsmesh/skills/api-generator/template.ts');
+  expect(content).toContain('.agentsmesh/skills/api-generator/references');
   expectNoTargetSpecificPrefixes(content);
 }
 
@@ -117,7 +117,7 @@ describe('target contract matrix', () => {
     expect(read(dir, agentPath)).toContain(refs.skill);
     expect(read(dir, skillPath)).toContain(refs.command);
     expect(read(dir, skillPath)).toContain(refs.agent);
-    expect(read(dir, skillPath)).not.toContain('.agentsbridge/');
+    expect(read(dir, skillPath)).not.toContain('.agentsmesh/');
 
     if (target === 'cline') {
       expect(read(dir, 'AGENTS.md')).toContain('# Standards');
@@ -131,7 +131,7 @@ describe('target contract matrix', () => {
       );
       expect(read(dir, '.clinerules/hooks/posttooluse-0.sh')).toContain('#!/usr/bin/env bash');
       expect(read(dir, '.clinerules/hooks/posttooluse-0.sh')).toContain(
-        '# agentsbridge-command: prettier --write $FILE_PATH',
+        '# agentsmesh-command: prettier --write $FILE_PATH',
       );
       expect(read(dir, '.cline/mcp_settings.json')).toContain('"mcpServers"');
     }
@@ -146,15 +146,15 @@ describe('target contract matrix', () => {
       const generateResult = await runCli(`generate --targets ${target}`, dir);
       expect(generateResult.exitCode, generateResult.stderr).toBe(0);
 
-      rmSync(join(dir, '.agentsbridge'), { recursive: true, force: true });
+      rmSync(join(dir, '.agentsmesh'), { recursive: true, force: true });
 
       const importResult = await runCli(`import --from ${target}`, dir);
       expect(importResult.exitCode, importResult.stderr).toBe(0);
       expect(canonicalFiles(dir)).toEqual(TARGET_CONTRACTS[target].imported);
 
-      expectCanonicalizedRoot(read(dir, '.agentsbridge/rules/_root.md'));
-      expectCanonicalizedAgent(read(dir, '.agentsbridge/agents/code-reviewer.md'));
-      expectCanonicalizedSkill(read(dir, '.agentsbridge/skills/api-generator/SKILL.md'));
+      expectCanonicalizedRoot(read(dir, '.agentsmesh/rules/_root.md'));
+      expectCanonicalizedAgent(read(dir, '.agentsmesh/agents/code-reviewer.md'));
+      expectCanonicalizedSkill(read(dir, '.agentsmesh/skills/api-generator/SKILL.md'));
     },
   );
 });

@@ -1,5 +1,5 @@
 /**
- * Load canonical slices from a path: .agentsbridge project, partial rules/commands/agents/skills trees.
+ * Load canonical slices from a path: .agentsmesh project, partial rules/commands/agents/skills trees.
  */
 
 import { basename, dirname, join } from 'node:path';
@@ -134,7 +134,7 @@ async function loadSkillsForPartialSlice(sliceRoot: string): Promise<CanonicalSk
  * Load whatever canonical resources exist at sliceRoot (directory).
  */
 export async function loadCanonicalSliceAtPath(sliceRoot: string): Promise<CanonicalFiles> {
-  const ab = join(sliceRoot, '.agentsbridge');
+  const ab = join(sliceRoot, '.agentsmesh');
   if (await exists(ab)) {
     return loadCanonicalFiles(sliceRoot);
   }
@@ -149,7 +149,7 @@ export async function loadCanonicalSliceAtPath(sliceRoot: string): Promise<Canon
   if (isCanonicalSliceEmpty(partial)) {
     throw new Error(
       `No installable resources at ${sliceRoot}. ` +
-        'Expected .agentsbridge/, or rules/, commands/, agents/, or Anthropic-style skills (SKILL.md).',
+        'Expected .agentsmesh/, or rules/, commands/, agents/, or Anthropic-style skills (SKILL.md).',
     );
   }
 

@@ -5,24 +5,24 @@ import { tmpdir } from 'node:os';
 import { findConfigPath, loadConfig, loadConfigFromDir } from '../../../src/config/loader.js';
 import { logger } from '../../../src/utils/logger.js';
 
-const TEST_ROOT = join(tmpdir(), 'agentsbridge-config-test');
+const TEST_ROOT = join(tmpdir(), 'agentsmesh-config-test');
 
 beforeEach(() => mkdirSync(TEST_ROOT, { recursive: true }));
 afterEach(() => rmSync(TEST_ROOT, { recursive: true, force: true }));
 
 describe('findConfigPath', () => {
-  it('returns path when agentsbridge.yaml exists in start dir', async () => {
-    writeFileSync(join(TEST_ROOT, 'agentsbridge.yaml'), 'version: 1');
+  it('returns path when agentsmesh.yaml exists in start dir', async () => {
+    writeFileSync(join(TEST_ROOT, 'agentsmesh.yaml'), 'version: 1');
     const result = await findConfigPath(TEST_ROOT);
-    expect(result).toBe(join(TEST_ROOT, 'agentsbridge.yaml'));
+    expect(result).toBe(join(TEST_ROOT, 'agentsmesh.yaml'));
   });
 
-  it('returns path when agentsbridge.yaml exists in parent dir', async () => {
+  it('returns path when agentsmesh.yaml exists in parent dir', async () => {
     const subDir = join(TEST_ROOT, 'deep', 'nested', 'project');
     mkdirSync(subDir, { recursive: true });
-    writeFileSync(join(TEST_ROOT, 'agentsbridge.yaml'), 'version: 1');
+    writeFileSync(join(TEST_ROOT, 'agentsmesh.yaml'), 'version: 1');
     const result = await findConfigPath(subDir);
-    expect(result).toBe(join(TEST_ROOT, 'agentsbridge.yaml'));
+    expect(result).toBe(join(TEST_ROOT, 'agentsmesh.yaml'));
   });
 
   it('returns null when no config found', async () => {
@@ -31,7 +31,7 @@ describe('findConfigPath', () => {
   });
 
   it('returns null when start dir has no config and no parents', async () => {
-    const orphan = join(tmpdir(), 'agentsbridge-orphan-' + Date.now());
+    const orphan = join(tmpdir(), 'agentsmesh-orphan-' + Date.now());
     mkdirSync(orphan, { recursive: true });
     try {
       const result = await findConfigPath(orphan);
@@ -44,7 +44,7 @@ describe('findConfigPath', () => {
 
 describe('loadConfig', () => {
   it('loads and validates minimal config', async () => {
-    const path = join(TEST_ROOT, 'agentsbridge.yaml');
+    const path = join(TEST_ROOT, 'agentsmesh.yaml');
     writeFileSync(path, 'version: 1');
     const config = await loadConfig(path);
     expect(config.version).toBe(1);
@@ -53,7 +53,7 @@ describe('loadConfig', () => {
   });
 
   it('loads full config', async () => {
-    const path = join(TEST_ROOT, 'agentsbridge.yaml');
+    const path = join(TEST_ROOT, 'agentsmesh.yaml');
     writeFileSync(
       path,
       `
@@ -88,7 +88,7 @@ collaboration:
   });
 
   it('throws on invalid config', async () => {
-    const path = join(TEST_ROOT, 'agentsbridge.yaml');
+    const path = join(TEST_ROOT, 'agentsmesh.yaml');
     writeFileSync(path, 'version: 2');
     await expect(loadConfig(path)).rejects.toThrow(/invalid|version/i);
   });
@@ -100,7 +100,7 @@ collaboration:
 
 describe('loadConfigFromDir', () => {
   it('finds and loads config from start dir', async () => {
-    writeFileSync(join(TEST_ROOT, 'agentsbridge.yaml'), 'version: 1');
+    writeFileSync(join(TEST_ROOT, 'agentsmesh.yaml'), 'version: 1');
     const result = await loadConfigFromDir(TEST_ROOT);
     expect(result.config.version).toBe(1);
     expect(result.configDir).toBe(TEST_ROOT);
@@ -108,14 +108,14 @@ describe('loadConfigFromDir', () => {
 
   it('merges local overrides on top of main config', async () => {
     writeFileSync(
-      join(TEST_ROOT, 'agentsbridge.yaml'),
+      join(TEST_ROOT, 'agentsmesh.yaml'),
       `
 version: 1
 targets: [claude-code, cursor]
 `,
     );
     writeFileSync(
-      join(TEST_ROOT, 'agentsbridge.local.yaml'),
+      join(TEST_ROOT, 'agentsmesh.local.yaml'),
       `
 targets: [claude-code]
 overrides:
@@ -129,12 +129,12 @@ overrides:
   });
 
   it('throws when no config found', async () => {
-    await expect(loadConfigFromDir(TEST_ROOT)).rejects.toThrow(/no agentsbridge\.yaml found/i);
+    await expect(loadConfigFromDir(TEST_ROOT)).rejects.toThrow(/no agentsmesh\.yaml found/i);
   });
 
   it('appends local extends after project extends (merge strategy)', async () => {
     writeFileSync(
-      join(TEST_ROOT, 'agentsbridge.yaml'),
+      join(TEST_ROOT, 'agentsmesh.yaml'),
       `
 version: 1
 extends:
@@ -144,7 +144,7 @@ extends:
 `,
     );
     writeFileSync(
-      join(TEST_ROOT, 'agentsbridge.local.yaml'),
+      join(TEST_ROOT, 'agentsmesh.local.yaml'),
       `
 extends:
   - name: personal
@@ -160,7 +160,7 @@ extends:
 
   it('deep merges overrides (local adds to project overrides)', async () => {
     writeFileSync(
-      join(TEST_ROOT, 'agentsbridge.yaml'),
+      join(TEST_ROOT, 'agentsmesh.yaml'),
       `
 version: 1
 overrides:
@@ -169,7 +169,7 @@ overrides:
 `,
     );
     writeFileSync(
-      join(TEST_ROOT, 'agentsbridge.local.yaml'),
+      join(TEST_ROOT, 'agentsmesh.local.yaml'),
       `
 overrides:
   claude-code:
@@ -185,7 +185,7 @@ overrides:
 
   it('deep merges local conversion overrides', async () => {
     writeFileSync(
-      join(TEST_ROOT, 'agentsbridge.yaml'),
+      join(TEST_ROOT, 'agentsmesh.yaml'),
       `
 version: 1
 conversions:
@@ -197,7 +197,7 @@ conversions:
 `,
     );
     writeFileSync(
-      join(TEST_ROOT, 'agentsbridge.local.yaml'),
+      join(TEST_ROOT, 'agentsmesh.local.yaml'),
       `
 conversions:
   agents_to_skills:
@@ -211,18 +211,15 @@ conversions:
   });
 
   it('local features replace project features', async () => {
-    writeFileSync(
-      join(TEST_ROOT, 'agentsbridge.yaml'),
-      'version: 1\nfeatures: [rules, mcp, hooks]',
-    );
-    writeFileSync(join(TEST_ROOT, 'agentsbridge.local.yaml'), 'features: [rules]');
+    writeFileSync(join(TEST_ROOT, 'agentsmesh.yaml'), 'version: 1\nfeatures: [rules, mcp, hooks]');
+    writeFileSync(join(TEST_ROOT, 'agentsmesh.local.yaml'), 'features: [rules]');
     const result = await loadConfigFromDir(TEST_ROOT);
     expect(result.config.features).toEqual(['rules']);
   });
 
   it('warns when local config is invalid and falls back to project config', async () => {
-    writeFileSync(join(TEST_ROOT, 'agentsbridge.yaml'), 'version: 1\ntargets: [cursor]');
-    writeFileSync(join(TEST_ROOT, 'agentsbridge.local.yaml'), 'version: 2\ntargets: [invalid]');
+    writeFileSync(join(TEST_ROOT, 'agentsmesh.yaml'), 'version: 1\ntargets: [cursor]');
+    writeFileSync(join(TEST_ROOT, 'agentsmesh.local.yaml'), 'version: 2\ntargets: [invalid]');
     const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
 
     try {
@@ -231,7 +228,7 @@ conversions:
       expect(result.config.overrides).toEqual({});
       expect(warnSpy).toHaveBeenCalledTimes(1);
       expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining(join(TEST_ROOT, 'agentsbridge.local.yaml')),
+        expect.stringContaining(join(TEST_ROOT, 'agentsmesh.local.yaml')),
       );
     } finally {
       warnSpy.mockRestore();

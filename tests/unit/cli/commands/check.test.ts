@@ -1,5 +1,5 @@
 /**
- * Unit tests for agentsbridge check command.
+ * Unit tests for agentsmesh check command.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -19,13 +19,13 @@ beforeEach(() => {
 
 describe('runCheck', () => {
   it('returns 0 when checksums match', async () => {
-    writeFileSync(join(TEST_DIR, 'agentsbridge.yaml'), 'version: 1');
-    mkdirSync(join(TEST_DIR, '.agentsbridge', 'rules'), { recursive: true });
+    writeFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'version: 1');
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
     const body = '# Rules';
-    writeFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), body);
+    writeFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), body);
     const h = 'sha256:' + hashContent(body);
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', '.lock'),
+      join(TEST_DIR, '.agentsmesh', '.lock'),
       `generated_at: "2026-01-01T00:00:00Z"
 generated_by: test
 lib_version: "0.1.0"
@@ -39,19 +39,19 @@ extends: {}
   });
 
   it('returns 1 when lock is missing', async () => {
-    writeFileSync(join(TEST_DIR, 'agentsbridge.yaml'), 'version: 1');
-    mkdirSync(join(TEST_DIR, '.agentsbridge', 'rules'), { recursive: true });
-    writeFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), '# Rules');
+    writeFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'version: 1');
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), '# Rules');
     const code = await runCheck({}, TEST_DIR);
     expect(code).toBe(1);
   });
 
   it('returns 1 when checksums mismatch', async () => {
-    writeFileSync(join(TEST_DIR, 'agentsbridge.yaml'), 'version: 1');
-    mkdirSync(join(TEST_DIR, '.agentsbridge', 'rules'), { recursive: true });
-    writeFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), '# Modified');
+    writeFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'version: 1');
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), '# Modified');
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', '.lock'),
+      join(TEST_DIR, '.agentsmesh', '.lock'),
       `generated_at: "2026-01-01T00:00:00Z"
 generated_by: test
 lib_version: "0.1.0"
@@ -65,12 +65,12 @@ extends: {}
   });
 
   it('returns 1 when new file added (not in lock)', async () => {
-    writeFileSync(join(TEST_DIR, 'agentsbridge.yaml'), 'version: 1');
-    mkdirSync(join(TEST_DIR, '.agentsbridge', 'rules'), { recursive: true });
-    writeFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), '# Rules');
-    writeFileSync(join(TEST_DIR, '.agentsbridge', 'rules', 'new.md'), '# New');
+    writeFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'version: 1');
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), '# Rules');
+    writeFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'new.md'), '# New');
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', '.lock'),
+      join(TEST_DIR, '.agentsmesh', '.lock'),
       `generated_at: "2026-01-01T00:00:00Z"
 generated_by: test
 lib_version: "0.1.0"
@@ -85,16 +85,16 @@ extends: {}
 
   it('returns 1 when extend checksum has changed (extendModified path)', async () => {
     const baseDir = join(TEST_DIR, 'base-config');
-    mkdirSync(join(baseDir, '.agentsbridge', 'rules'), { recursive: true });
-    writeFileSync(join(baseDir, '.agentsbridge', 'rules', '_root.md'), '# Base');
+    mkdirSync(join(baseDir, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(join(baseDir, '.agentsmesh', 'rules', '_root.md'), '# Base');
     writeFileSync(
-      join(TEST_DIR, 'agentsbridge.yaml'),
+      join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1\ntargets: [claude-code]\nfeatures: [rules]\nextends:\n  - name: base\n    source: ./base-config\n    features: [rules]\n`,
     );
-    mkdirSync(join(TEST_DIR, '.agentsbridge', 'rules'), { recursive: true });
-    writeFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), '# Local');
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), '# Local');
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', '.lock'),
+      join(TEST_DIR, '.agentsmesh', '.lock'),
       `generated_at: "2026-01-01T00:00:00Z"\ngenerated_by: test\nlib_version: "0.1.0"\nchecksums:\n  rules/_root.md: "sha256:${'a'.repeat(64)}"\nextends:\n  base: "sha256:${'b'.repeat(64)}"\n`,
     );
     const code = await runCheck({}, TEST_DIR);
@@ -102,12 +102,12 @@ extends: {}
   });
 
   it('returns 1 when file removed from canonical', async () => {
-    writeFileSync(join(TEST_DIR, 'agentsbridge.yaml'), 'version: 1');
-    mkdirSync(join(TEST_DIR, '.agentsbridge', 'rules'), { recursive: true });
-    writeFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), '# Rules');
+    writeFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'version: 1');
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), '# Rules');
     const h = 'sha256:' + 'a'.repeat(64);
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', '.lock'),
+      join(TEST_DIR, '.agentsmesh', '.lock'),
       `generated_at: "2026-01-01T00:00:00Z"
 generated_by: test
 lib_version: "0.1.0"
@@ -124,17 +124,17 @@ extends: {}
   it('annotates changed locked features with [LOCKED] in check output', async () => {
     process.env.NO_COLOR = '1';
     writeFileSync(
-      join(TEST_DIR, 'agentsbridge.yaml'),
+      join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1
 collaboration:
   strategy: lock
   lock_features: [rules]
 `,
     );
-    mkdirSync(join(TEST_DIR, '.agentsbridge', 'rules'), { recursive: true });
-    writeFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), '# Modified');
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), '# Modified');
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', '.lock'),
+      join(TEST_DIR, '.agentsmesh', '.lock'),
       `generated_at: "2026-01-01T00:00:00Z"
 generated_by: test
 lib_version: "0.1.0"

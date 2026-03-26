@@ -1,5 +1,5 @@
 /**
- * Build NewExtendEntry for agentsbridge install and write it to agentsbridge.yaml.
+ * Build NewExtendEntry for agentsmesh install and write it to agentsmesh.yaml.
  */
 
 import { join } from 'node:path';
@@ -18,7 +18,7 @@ export interface WriteExtendArgs {
 }
 
 /**
- * Write a new extends entry to agentsbridge.yaml, or log dry-run info.
+ * Write a new extends entry to agentsmesh.yaml, or log dry-run info.
  */
 export async function writeInstallAsExtend(args: WriteExtendArgs): Promise<void> {
   const { configDir, config, entryArgs, dryRun } = args;
@@ -28,9 +28,9 @@ export async function writeInstallAsExtend(args: WriteExtendArgs): Promise<void>
     logger.info(`[dry-run] Would add extend:\n${JSON.stringify(entry, null, 2)}`);
     return;
   }
-  const configPath = join(configDir, 'agentsbridge.yaml');
+  const configPath = join(configDir, 'agentsmesh.yaml');
   await writeAgentsbridgeWithNewExtend(configPath, config, entry);
-  logger.success(`Wrote extends entry "${entry.name}" to agentsbridge.yaml.`);
+  logger.success(`Wrote extends entry "${entry.name}" to agentsmesh.yaml.`);
 }
 
 export function toNewExtendEntry(args: {

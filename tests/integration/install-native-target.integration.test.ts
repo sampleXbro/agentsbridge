@@ -4,13 +4,13 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { runInstall } from '../../src/install/run-install.js';
 
-const ROOT = join(tmpdir(), 'ab-install-native-target-integration');
+const ROOT = join(tmpdir(), 'am-install-native-target-integration');
 
 describe('install native target subtree (integration)', () => {
   beforeEach(() => {
     rmSync(ROOT, { recursive: true, force: true });
     mkdirSync(join(ROOT, 'upstream', '.github', 'instructions'), { recursive: true });
-    mkdirSync(join(ROOT, 'project', '.agentsbridge', 'rules'), { recursive: true });
+    mkdirSync(join(ROOT, 'project', '.agentsmesh', 'rules'), { recursive: true });
 
     writeFileSync(
       join(ROOT, 'upstream', '.github', 'instructions', 'review.instructions.md'),
@@ -18,11 +18,11 @@ describe('install native target subtree (integration)', () => {
     );
 
     writeFileSync(
-      join(ROOT, 'project', 'agentsbridge.yaml'),
+      join(ROOT, 'project', 'agentsmesh.yaml'),
       'version: 1\ntargets: [copilot]\nfeatures: [rules]\nextends: []\n',
     );
     writeFileSync(
-      join(ROOT, 'project', '.agentsbridge', 'rules', '_root.md'),
+      join(ROOT, 'project', '.agentsmesh', 'rules', '_root.md'),
       '---\nroot: true\n---\n# Root\n',
     );
   });
@@ -46,20 +46,13 @@ describe('install native target subtree (integration)', () => {
       project,
     );
 
-    const packRule = join(
-      project,
-      '.agentsbridge',
-      'packs',
-      'copilot-review',
-      'rules',
-      'review.md',
-    );
+    const packRule = join(project, '.agentsmesh', 'packs', 'copilot-review', 'rules', 'review.md');
     expect(existsSync(packRule)).toBe(true);
     expect(readFileSync(packRule, 'utf-8')).toContain('Review TypeScript changes.');
 
     const generatedRule = join(project, '.github', 'instructions', 'review.instructions.md');
     expect(existsSync(generatedRule)).toBe(true);
     expect(readFileSync(generatedRule, 'utf-8')).toContain('Review TypeScript changes.');
-    expect(existsSync(join(upstream, '.agentsbridge'))).toBe(false);
+    expect(existsSync(join(upstream, '.agentsmesh'))).toBe(false);
   });
 });

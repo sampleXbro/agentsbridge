@@ -38,7 +38,7 @@ describe('generateRules (codex-cli)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: 'Project rules',
@@ -60,7 +60,7 @@ describe('generateRules (codex-cli)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -79,7 +79,7 @@ describe('generateRules (codex-cli)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/other.md',
+          source: '/proj/.agentsmesh/rules/other.md',
           root: false,
           targets: [],
           description: '',
@@ -98,7 +98,7 @@ describe('generateRules (codex-cli)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -106,7 +106,7 @@ describe('generateRules (codex-cli)', () => {
           body: '# Root',
         },
         {
-          source: '/proj/.agentsbridge/rules/typescript.md',
+          source: '/proj/.agentsmesh/rules/typescript.md',
           root: false,
           targets: [],
           description: 'TS',
@@ -127,7 +127,7 @@ describe('generateRules (codex-cli)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -135,7 +135,7 @@ describe('generateRules (codex-cli)', () => {
           body: '# Root',
         },
         {
-          source: '/proj/.agentsbridge/rules/typescript.md',
+          source: '/proj/.agentsmesh/rules/typescript.md',
           root: false,
           targets: [],
           description: 'TS',
@@ -155,7 +155,7 @@ describe('generateRules (codex-cli)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -163,7 +163,7 @@ describe('generateRules (codex-cli)', () => {
           body: '# Root',
         },
         {
-          source: '/proj/.agentsbridge/rules/policy.md',
+          source: '/proj/.agentsmesh/rules/policy.md',
           root: false,
           targets: [],
           description: '',
@@ -184,7 +184,7 @@ describe('generateRules (codex-cli)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/policy.md',
+          source: '/proj/.agentsmesh/rules/policy.md',
           root: false,
           targets: [],
           description: '',
@@ -198,7 +198,7 @@ describe('generateRules (codex-cli)', () => {
     expect(results).toHaveLength(1);
     expect(results[0]!.path).toBe(`${CODEX_RULES_DIR}/policy.rules`);
     expect(results[0]!.content).toContain(
-      '# agentsbridge: canonical execution rule body is not Codex DSL',
+      '# agentsmesh: canonical execution rule body is not Codex DSL',
     );
     expect(results[0]!.content).toContain('# # TypeScript Standards');
     expect(results[0]!.content).toContain('# - Use strict mode');
@@ -214,7 +214,7 @@ describe('generateRules (codex-cli)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -233,7 +233,7 @@ describe('generateSkills (codex-cli)', () => {
     const canonical = makeCanonical({
       skills: [
         {
-          source: '/proj/.agentsbridge/skills/my-skill/SKILL.md',
+          source: '/proj/.agentsmesh/skills/my-skill/SKILL.md',
           name: 'my-skill',
           description: 'Does something useful',
           body: 'Follow these steps.',
@@ -252,7 +252,7 @@ describe('generateSkills (codex-cli)', () => {
     const canonical = makeCanonical({
       skills: [
         {
-          source: '/proj/.agentsbridge/skills/tdd/SKILL.md',
+          source: '/proj/.agentsmesh/skills/tdd/SKILL.md',
           name: 'tdd',
           description: 'Test-driven development helper',
           body: 'Write tests first.',
@@ -268,14 +268,14 @@ describe('generateSkills (codex-cli)', () => {
     const canonical = makeCanonical({
       skills: [
         {
-          source: '/proj/.agentsbridge/skills/qa/SKILL.md',
+          source: '/proj/.agentsmesh/skills/qa/SKILL.md',
           name: 'qa',
           description: 'QA skill',
           body: 'Run QA checks.',
           supportingFiles: [
             {
               relativePath: 'references/checklist.md',
-              absolutePath: '/proj/.agentsbridge/skills/qa/references/checklist.md',
+              absolutePath: '/proj/.agentsmesh/skills/qa/references/checklist.md',
               content: '# Checklist\n- item',
             },
           ],
@@ -294,14 +294,14 @@ describe('generateSkills (codex-cli)', () => {
     const canonical = makeCanonical({
       skills: [
         {
-          source: '/proj/.agentsbridge/skills/a/SKILL.md',
+          source: '/proj/.agentsmesh/skills/a/SKILL.md',
           name: 'a',
           description: '',
           body: 'Skill A',
           supportingFiles: [],
         },
         {
-          source: '/proj/.agentsbridge/skills/b/SKILL.md',
+          source: '/proj/.agentsmesh/skills/b/SKILL.md',
           name: 'b',
           description: '',
           body: 'Skill B',
@@ -325,7 +325,7 @@ describe('generateCommands (codex-cli)', () => {
     const canonical = makeCanonical({
       commands: [
         {
-          source: '/proj/.agentsbridge/commands/review.md',
+          source: '/proj/.agentsmesh/commands/review.md',
           name: 'review',
           description: 'Review changes',
           allowedTools: ['Read', 'Bash(git diff)'],
@@ -337,10 +337,10 @@ describe('generateCommands (codex-cli)', () => {
     const results = generateCommands(canonical);
 
     expect(results).toHaveLength(1);
-    expect(results[0]?.path).toBe(`${CODEX_SKILLS_DIR}/ab-command-review/SKILL.md`);
-    expect(results[0]?.content).toContain('x-agentsbridge-kind: command');
-    expect(results[0]?.content).toContain('x-agentsbridge-name: review');
-    expect(results[0]?.content).toContain('x-agentsbridge-allowed-tools:');
+    expect(results[0]?.path).toBe(`${CODEX_SKILLS_DIR}/am-command-review/SKILL.md`);
+    expect(results[0]?.content).toContain('x-agentsmesh-kind: command');
+    expect(results[0]?.content).toContain('x-agentsmesh-name: review');
+    expect(results[0]?.content).toContain('x-agentsmesh-allowed-tools:');
     expect(results[0]?.content).toContain('Bash(git diff)');
     expect(results[0]?.content).toContain('Review the current diff for risk.');
   });
@@ -355,7 +355,7 @@ describe('generateAgents (codex-cli)', () => {
     const canonical = makeCanonical({
       agents: [
         {
-          source: '/proj/.agentsbridge/agents/reviewer.md',
+          source: '/proj/.agentsmesh/agents/reviewer.md',
           name: 'reviewer',
           description: 'Review specialist',
           tools: ['Read', 'Grep'],

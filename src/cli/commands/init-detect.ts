@@ -1,5 +1,5 @@
 /**
- * Detection helpers for agentsbridge init command.
+ * Detection helpers for agentsmesh init command.
  */
 
 import { join } from 'node:path';

@@ -22,8 +22,8 @@ describe('import anatomy variants', () => {
     const result = await runCli('import --from cursor', dir);
 
     expect(result.exitCode).toBe(0);
-    fileContains(join(dir, '.agentsbridge', 'rules', '_root.md'), 'Legacy Cursor rules');
-    const ignore = readText(join(dir, '.agentsbridge', 'ignore'));
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'Legacy Cursor rules');
+    const ignore = readText(join(dir, '.agentsmesh', 'ignore'));
     expect(ignore).toContain('node_modules');
     expect(ignore).toContain('generated');
   });
@@ -36,7 +36,7 @@ describe('import anatomy variants', () => {
     const result = await runCli('import --from gemini-cli', dir);
 
     expect(result.exitCode).toBe(0);
-    fileContains(join(dir, '.agentsbridge', 'rules', '_root.md'), 'Gemini system override');
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'Gemini system override');
   });
 
   it('imports Codex subdirectory AGENTS.md as a scoped canonical rule', async () => {
@@ -47,7 +47,7 @@ describe('import anatomy variants', () => {
     const result = await runCli('import --from codex-cli', dir);
 
     expect(result.exitCode).toBe(0);
-    const scopedRule = readText(join(dir, '.agentsbridge', 'rules', 'src.md'));
+    const scopedRule = readText(join(dir, '.agentsmesh', 'rules', 'src.md'));
     expect(scopedRule).toContain('src/**');
     expect(scopedRule).toContain('Src scoped rules');
   });
@@ -57,15 +57,15 @@ describe('import anatomy variants', () => {
     writeFileSync(join(dir, 'AGENTS.md'), '# Root Codex Rules\n');
     mkdirSync(join(dir, 'src'), { recursive: true });
     writeFileSync(join(dir, 'src', 'AGENTS.md'), '# Src scoped rules\n\nOnly for src.\n');
-    mkdirSync(join(dir, '.agentsbridge', 'rules'), { recursive: true });
-    mkdirSync(join(dir, '.agentsbridge', 'skills', 'ab-command-review'), { recursive: true });
-    mkdirSync(join(dir, '.agentsbridge', 'skills', 'ab-agent-reviewer'), { recursive: true });
+    mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
+    mkdirSync(join(dir, '.agentsmesh', 'skills', 'am-command-review'), { recursive: true });
+    mkdirSync(join(dir, '.agentsmesh', 'skills', 'am-agent-reviewer'), { recursive: true });
     writeFileSync(
-      join(dir, '.agentsbridge', 'rules', '.worktrees-security-collaboration.md'),
+      join(dir, '.agentsmesh', 'rules', '.worktrees-security-collaboration.md'),
       'stale hidden rule\n',
     );
     writeFileSync(
-      join(dir, '.agentsbridge', 'rules', 'tests-e2e-fixtures-codex-project.md'),
+      join(dir, '.agentsmesh', 'rules', 'tests-e2e-fixtures-codex-project.md'),
       'stale fixture rule\n',
     );
     mkdirSync(join(dir, '.worktrees', 'security-collaboration'), { recursive: true });
@@ -78,34 +78,34 @@ describe('import anatomy variants', () => {
       join(dir, 'tests', 'e2e', 'fixtures', 'codex-project', 'AGENTS.md'),
       '# Fixture rules\n',
     );
-    mkdirSync(join(dir, '.agents', 'skills', 'ab-command-review'), { recursive: true });
+    mkdirSync(join(dir, '.agents', 'skills', 'am-command-review'), { recursive: true });
     writeFileSync(
-      join(dir, '.agents', 'skills', 'ab-command-review', 'SKILL.md'),
+      join(dir, '.agents', 'skills', 'am-command-review', 'SKILL.md'),
       [
         '---',
         'description: Review changes',
-        'x-agentsbridge-kind: command',
-        'x-agentsbridge-name: review',
-        'x-agentsbridge-allowed-tools:',
+        'x-agentsmesh-kind: command',
+        'x-agentsmesh-name: review',
+        'x-agentsmesh-allowed-tools:',
         '  - Read',
         '---',
         '',
         'Review the diff.',
       ].join('\n'),
     );
-    mkdirSync(join(dir, '.agents', 'skills', 'ab-agent-reviewer'), { recursive: true });
+    mkdirSync(join(dir, '.agents', 'skills', 'am-agent-reviewer'), { recursive: true });
     writeFileSync(
-      join(dir, '.agents', 'skills', 'ab-agent-reviewer', 'SKILL.md'),
+      join(dir, '.agents', 'skills', 'am-agent-reviewer', 'SKILL.md'),
       [
         '---',
         'description: Reviewer agent',
-        'x-agentsbridge-kind: agent',
-        'x-agentsbridge-name: reviewer',
-        'x-agentsbridge-tools:',
+        'x-agentsmesh-kind: agent',
+        'x-agentsmesh-name: reviewer',
+        'x-agentsmesh-tools:',
         '  - Read',
-        'x-agentsbridge-model: gpt-5-codex',
-        'x-agentsbridge-permission-mode: ask',
-        'x-agentsbridge-max-turns: 7',
+        'x-agentsmesh-model: gpt-5-codex',
+        'x-agentsmesh-permission-mode: ask',
+        'x-agentsmesh-max-turns: 7',
         '---',
         '',
         'Review risky changes first.',
@@ -121,23 +121,23 @@ describe('import anatomy variants', () => {
     const result = await runCli('import --from codex-cli', dir);
 
     expect(result.exitCode).toBe(0);
-    dirFilesExactly(join(dir, '.agentsbridge', 'rules'), ['_root.md', 'src.md']);
-    dirFilesExactly(join(dir, '.agentsbridge', 'commands'), ['review.md']);
-    dirFilesExactly(join(dir, '.agentsbridge', 'agents'), ['reviewer.md']);
-    dirTreeExactly(join(dir, '.agentsbridge', 'skills'), [
+    dirFilesExactly(join(dir, '.agentsmesh', 'rules'), ['_root.md', 'src.md']);
+    dirFilesExactly(join(dir, '.agentsmesh', 'commands'), ['review.md']);
+    dirFilesExactly(join(dir, '.agentsmesh', 'agents'), ['reviewer.md']);
+    dirTreeExactly(join(dir, '.agentsmesh', 'skills'), [
       'qa/',
       'qa/SKILL.md',
       'qa/references/',
       'qa/references/checklist.md',
     ]);
     expect(
-      existsSync(join(dir, '.agentsbridge', 'rules', '.worktrees-security-collaboration.md')),
+      existsSync(join(dir, '.agentsmesh', 'rules', '.worktrees-security-collaboration.md')),
     ).toBe(false);
     expect(
-      existsSync(join(dir, '.agentsbridge', 'rules', 'tests-e2e-fixtures-codex-project.md')),
+      existsSync(join(dir, '.agentsmesh', 'rules', 'tests-e2e-fixtures-codex-project.md')),
     ).toBe(false);
-    expect(existsSync(join(dir, '.agentsbridge', 'skills', 'ab-command-review'))).toBe(false);
-    expect(existsSync(join(dir, '.agentsbridge', 'skills', 'ab-agent-reviewer'))).toBe(false);
+    expect(existsSync(join(dir, '.agentsmesh', 'skills', 'am-command-review'))).toBe(false);
+    expect(existsSync(join(dir, '.agentsmesh', 'skills', 'am-agent-reviewer'))).toBe(false);
   });
 
   it('imports Windsurf subdirectory AGENTS.md as a scoped canonical rule', async () => {
@@ -149,7 +149,7 @@ describe('import anatomy variants', () => {
     const result = await runCli('import --from windsurf', dir);
 
     expect(result.exitCode).toBe(0);
-    const scopedRule = readText(join(dir, '.agentsbridge', 'rules', 'src.md'));
+    const scopedRule = readText(join(dir, '.agentsmesh', 'rules', 'src.md'));
     expect(scopedRule).toContain('src/**');
     expect(scopedRule).toContain('Src windsurf rules');
   });
@@ -159,14 +159,14 @@ describe('import anatomy variants', () => {
     writeFileSync(join(dir, 'AGENTS.md'), '# Root Windsurf Rules\n');
     mkdirSync(join(dir, 'src'), { recursive: true });
     writeFileSync(join(dir, 'src', 'AGENTS.md'), '# Src windsurf rules\n\nOnly for src.\n');
-    mkdirSync(join(dir, '.agentsbridge', 'rules'), { recursive: true });
-    mkdirSync(join(dir, '.agentsbridge', 'skills', 'ab-agent-reviewer'), { recursive: true });
+    mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
+    mkdirSync(join(dir, '.agentsmesh', 'skills', 'am-agent-reviewer'), { recursive: true });
     writeFileSync(
-      join(dir, '.agentsbridge', 'rules', '.worktrees-security-collaboration.md'),
+      join(dir, '.agentsmesh', 'rules', '.worktrees-security-collaboration.md'),
       'stale hidden rule\n',
     );
     writeFileSync(
-      join(dir, '.agentsbridge', 'rules', 'tests-e2e-fixtures-windsurf-project.md'),
+      join(dir, '.agentsmesh', 'rules', 'tests-e2e-fixtures-windsurf-project.md'),
       'stale fixture rule\n',
     );
     mkdirSync(join(dir, '.worktrees', 'security-collaboration'), { recursive: true });
@@ -184,19 +184,19 @@ describe('import anatomy variants', () => {
       join(dir, '.windsurf', 'workflows', 'review.md'),
       '---\ndescription: Review workflow\n---\n\nReview risky changes.\n',
     );
-    mkdirSync(join(dir, '.windsurf', 'skills', 'ab-agent-reviewer'), { recursive: true });
+    mkdirSync(join(dir, '.windsurf', 'skills', 'am-agent-reviewer'), { recursive: true });
     writeFileSync(
-      join(dir, '.windsurf', 'skills', 'ab-agent-reviewer', 'SKILL.md'),
+      join(dir, '.windsurf', 'skills', 'am-agent-reviewer', 'SKILL.md'),
       [
         '---',
         'description: Reviewer agent',
-        'x-agentsbridge-kind: agent',
-        'x-agentsbridge-name: reviewer',
-        'x-agentsbridge-tools:',
+        'x-agentsmesh-kind: agent',
+        'x-agentsmesh-name: reviewer',
+        'x-agentsmesh-tools:',
         '  - Read',
-        'x-agentsbridge-model: sonnet',
-        'x-agentsbridge-permission-mode: ask',
-        'x-agentsbridge-max-turns: 7',
+        'x-agentsmesh-model: sonnet',
+        'x-agentsmesh-permission-mode: ask',
+        'x-agentsmesh-max-turns: 7',
         '---',
         '',
         'Review risky changes first.',
@@ -212,21 +212,21 @@ describe('import anatomy variants', () => {
     const result = await runCli('import --from windsurf', dir);
 
     expect(result.exitCode).toBe(0);
-    dirFilesExactly(join(dir, '.agentsbridge', 'rules'), ['_root.md', 'src.md']);
-    dirFilesExactly(join(dir, '.agentsbridge', 'commands'), ['review.md']);
-    dirFilesExactly(join(dir, '.agentsbridge', 'agents'), ['reviewer.md']);
-    dirTreeExactly(join(dir, '.agentsbridge', 'skills'), [
+    dirFilesExactly(join(dir, '.agentsmesh', 'rules'), ['_root.md', 'src.md']);
+    dirFilesExactly(join(dir, '.agentsmesh', 'commands'), ['review.md']);
+    dirFilesExactly(join(dir, '.agentsmesh', 'agents'), ['reviewer.md']);
+    dirTreeExactly(join(dir, '.agentsmesh', 'skills'), [
       'qa/',
       'qa/SKILL.md',
       'qa/references/',
       'qa/references/checklist.md',
     ]);
     expect(
-      existsSync(join(dir, '.agentsbridge', 'rules', '.worktrees-security-collaboration.md')),
+      existsSync(join(dir, '.agentsmesh', 'rules', '.worktrees-security-collaboration.md')),
     ).toBe(false);
     expect(
-      existsSync(join(dir, '.agentsbridge', 'rules', 'tests-e2e-fixtures-windsurf-project.md')),
+      existsSync(join(dir, '.agentsmesh', 'rules', 'tests-e2e-fixtures-windsurf-project.md')),
     ).toBe(false);
-    expect(existsSync(join(dir, '.agentsbridge', 'skills', 'ab-agent-reviewer'))).toBe(false);
+    expect(existsSync(join(dir, '.agentsmesh', 'skills', 'am-agent-reviewer'))).toBe(false);
   });
 });

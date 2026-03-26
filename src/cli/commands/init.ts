@@ -1,5 +1,5 @@
 /**
- * agentsbridge init — create agentsbridge.yaml and .agentsbridge/ scaffold.
+ * agentsmesh init — create agentsmesh.yaml and .agentsmesh/ scaffold.
  * With --yes: auto-import detected tool configs (Story 5.2 Smart Init).
  */
 
@@ -31,9 +31,9 @@ import {
 } from './init-templates.js';
 import { detectExistingConfigs } from './init-detect.js';
 
-const CONFIG_FILENAME = 'agentsbridge.yaml';
-const LOCAL_CONFIG_FILENAME = 'agentsbridge.local.yaml';
-const GITIGNORE_ENTRIES = ['agentsbridge.local.yaml', '.agentsbridgecache'];
+const CONFIG_FILENAME = 'agentsmesh.yaml';
+const LOCAL_CONFIG_FILENAME = 'agentsmesh.local.yaml';
+const GITIGNORE_ENTRIES = ['agentsmesh.local.yaml', '.agentsmeshcache'];
 
 const IMPORTERS: Record<string, (root: string) => Promise<ImportResult[]>> = {
   'claude-code': importFromClaudeCode,
@@ -64,38 +64,38 @@ async function appendToGitignore(projectRoot: string): Promise<void> {
  * Write template scaffold — one example file per canonical type.
  */
 async function writeScaffold(projectRoot: string): Promise<void> {
-  const ab = (rel: string): string => join(projectRoot, '.agentsbridge', rel);
+  const ab = (rel: string): string => join(projectRoot, '.agentsmesh', rel);
 
   await mkdirp(ab('rules'));
   await writeFileAtomic(ab('rules/_root.md'), TEMPLATE_ROOT_RULE);
-  logger.success('Created .agentsbridge/rules/_root.md');
+  logger.success('Created .agentsmesh/rules/_root.md');
 
   await writeFileAtomic(ab('rules/example.md'), TEMPLATE_EXAMPLE_RULE);
-  logger.success('Created .agentsbridge/rules/example.md');
+  logger.success('Created .agentsmesh/rules/example.md');
 
   await mkdirp(ab('commands'));
   await writeFileAtomic(ab('commands/example.md'), TEMPLATE_EXAMPLE_COMMAND);
-  logger.success('Created .agentsbridge/commands/example.md');
+  logger.success('Created .agentsmesh/commands/example.md');
 
   await mkdirp(ab('agents'));
   await writeFileAtomic(ab('agents/example.md'), TEMPLATE_EXAMPLE_AGENT);
-  logger.success('Created .agentsbridge/agents/example.md');
+  logger.success('Created .agentsmesh/agents/example.md');
 
   await mkdirp(ab('skills/example'));
   await writeFileAtomic(ab('skills/example/SKILL.md'), TEMPLATE_EXAMPLE_SKILL);
-  logger.success('Created .agentsbridge/skills/example/SKILL.md');
+  logger.success('Created .agentsmesh/skills/example/SKILL.md');
 
   await writeFileAtomic(ab('mcp.json'), TEMPLATE_MCP);
-  logger.success('Created .agentsbridge/mcp.json');
+  logger.success('Created .agentsmesh/mcp.json');
 
   await writeFileAtomic(ab('hooks.yaml'), TEMPLATE_HOOKS);
-  logger.success('Created .agentsbridge/hooks.yaml');
+  logger.success('Created .agentsmesh/hooks.yaml');
 
   await writeFileAtomic(ab('permissions.yaml'), TEMPLATE_PERMISSIONS);
-  logger.success('Created .agentsbridge/permissions.yaml');
+  logger.success('Created .agentsmesh/permissions.yaml');
 
   await writeFileAtomic(ab('ignore'), TEMPLATE_IGNORE);
-  logger.success('Created .agentsbridge/ignore');
+  logger.success('Created .agentsmesh/ignore');
 }
 
 export { detectExistingConfigs };
@@ -137,7 +137,7 @@ export async function runInit(projectRoot: string, options: { yes?: boolean } = 
       logger.success(`Created ${CONFIG_FILENAME} (targets: ${existing.join(', ')})`);
     } else {
       logger.info(
-        `Run 'agentsbridge init --yes' to auto-import, or 'agentsbridge import --from <tool>' manually.`,
+        `Run 'agentsmesh init --yes' to auto-import, or 'agentsmesh import --from <tool>' manually.`,
       );
       await writeScaffold(projectRoot);
       await writeFileAtomic(configPath, buildConfig([]));

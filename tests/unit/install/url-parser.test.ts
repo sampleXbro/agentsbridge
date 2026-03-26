@@ -68,13 +68,13 @@ describe('parseGitlabTreeUrl', () => {
 });
 
 describe('parseInstallSource', () => {
-  const base = join(tmpdir(), 'ab-install-parse');
+  const base = join(tmpdir(), 'am-install-parse');
   const cfg = join(base, 'proj');
 
-  it('parses local path with .agentsbridge segment', async () => {
-    mkdirSync(join(cfg, '.agentsbridge', 'skills', 'tdd'), { recursive: true });
-    writeFileSync(join(cfg, 'agentsbridge.yaml'), 'version: 1\n');
-    const p = await parseInstallSource(join(cfg, '.agentsbridge', 'skills', 'tdd'), cfg);
+  it('parses local path with .agentsmesh segment', async () => {
+    mkdirSync(join(cfg, '.agentsmesh', 'skills', 'tdd'), { recursive: true });
+    writeFileSync(join(cfg, 'agentsmesh.yaml'), 'version: 1\n');
+    const p = await parseInstallSource(join(cfg, '.agentsmesh', 'skills', 'tdd'), cfg);
     expect(p.kind).toBe('local');
     expect(p.localRoot).toBe(cfg);
     expect(p.pathInRepo).toBe('skills/tdd');

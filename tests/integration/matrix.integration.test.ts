@@ -1,5 +1,5 @@
 /**
- * Integration test for agentsbridge matrix.
+ * Integration test for agentsmesh matrix.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -14,15 +14,15 @@ const CLI_PATH = join(process.cwd(), 'dist', 'cli.js');
 beforeEach(() => {
   mkdirSync(TEST_DIR, { recursive: true });
   writeFileSync(
-    join(TEST_DIR, 'agentsbridge.yaml'),
+    join(TEST_DIR, 'agentsmesh.yaml'),
     `version: 1
 targets: [claude-code, cursor]
 features: [rules]
 `,
   );
-  mkdirSync(join(TEST_DIR, '.agentsbridge', 'rules'), { recursive: true });
+  mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
   writeFileSync(
-    join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+    join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
     `---
 root: true
 description: "Project rules"
@@ -35,7 +35,7 @@ description: "Project rules"
 
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
 
-describe('agentsbridge matrix (integration)', () => {
+describe('agentsmesh matrix (integration)', () => {
   it('prints compatibility table with rules row', () => {
     const out = execSync(`node ${CLI_PATH} matrix`, { cwd: TEST_DIR, encoding: 'utf-8' });
     expect(out).toContain('Feature');

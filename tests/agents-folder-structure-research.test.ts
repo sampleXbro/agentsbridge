@@ -20,13 +20,13 @@ import { generate } from '../src/core/engine.js';
 import type { CanonicalFiles } from '../src/core/types.js';
 import type { ValidatedConfig } from '../src/config/schema.js';
 
-const TEST_DIR = join(tmpdir(), 'ab-agents-folder-structure-test');
+const TEST_DIR = join(tmpdir(), 'am-agents-folder-structure-test');
 
 function canonicalWithRoot(body: string): CanonicalFiles {
   return {
     rules: [
       {
-        source: join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+        source: join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
         root: true,
         targets: [],
         description: '',
@@ -69,7 +69,7 @@ function fullCanonical(opts: {
 }): CanonicalFiles {
   const rules = [
     {
-      source: join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'),
+      source: join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
       root: true,
       targets: [],
       description: '',
@@ -91,7 +91,7 @@ function fullCanonical(opts: {
     rules,
     commands:
       opts.commands?.map((c) => ({
-        source: join(TEST_DIR, '.agentsbridge', 'commands', `${c.name}.md`),
+        source: join(TEST_DIR, '.agentsmesh', 'commands', `${c.name}.md`),
         name: c.name,
         description: c.description,
         allowedTools: [],
@@ -99,7 +99,7 @@ function fullCanonical(opts: {
       })) ?? [],
     agents:
       opts.agents?.map((a) => ({
-        source: join(TEST_DIR, '.agentsbridge', 'agents', `${a.name}.md`),
+        source: join(TEST_DIR, '.agentsmesh', 'agents', `${a.name}.md`),
         name: a.name,
         description: a.description,
         tools: a.tools ?? [],
@@ -115,7 +115,7 @@ function fullCanonical(opts: {
       })) ?? [],
     skills:
       opts.skills?.map((s) => ({
-        source: join(TEST_DIR, '.agentsbridge', 'skills', s.name, 'SKILL.md'),
+        source: join(TEST_DIR, '.agentsmesh', 'skills', s.name, 'SKILL.md'),
         name: s.name,
         description: s.description,
         body: s.body,
@@ -172,7 +172,7 @@ describe('agents-folder-structure-research: Claude Code (docs §1)', () => {
       rootBody: '# Root',
       nonRootRules: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'rules', 'ts.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'rules', 'ts.md'),
           body: 'Use TypeScript',
           globs: ['**/*.ts'],
           targets: [],
@@ -388,7 +388,7 @@ describe('agents-folder-structure-research: Cursor (docs §2)', () => {
       rootBody: '# Root',
       nonRootRules: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'rules', 'ts.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'rules', 'ts.md'),
           body: 'TypeScript rules',
           globs: ['**/*.ts'],
         },
@@ -551,7 +551,7 @@ describe('agents-folder-structure-research: GitHub Copilot (docs §3)', () => {
       rootBody: '# Root',
       nonRootRules: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'rules', 'style.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'rules', 'style.md'),
           body: 'Follow style guide',
           globs: ['src/**/*.ts'],
         },
@@ -579,7 +579,7 @@ describe('agents-folder-structure-research: GitHub Copilot (docs §3)', () => {
       canonical,
       projectRoot: TEST_DIR,
     });
-    const hookConfig = results.find((x) => x.path === '.github/hooks/agentsbridge.json');
+    const hookConfig = results.find((x) => x.path === '.github/hooks/agentsmesh.json');
     const scriptPaths = results
       .filter((x) => x.path.startsWith('.github/hooks/scripts/'))
       .map((x) => x.path)
@@ -626,7 +626,7 @@ describe('agents-folder-structure-research: GitHub Copilot (docs §3)', () => {
       rootBody: '# Root',
       nonRootRules: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'rules', 'ts.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'rules', 'ts.md'),
           body: 'TypeScript hints',
           globs: ['**/*.ts'],
         },
@@ -668,7 +668,7 @@ describe('agents-folder-structure-research: Gemini CLI (docs §4)', () => {
       rootBody: '# Root',
       nonRootRules: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'rules', 'ts.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'rules', 'ts.md'),
           body: 'TS rules',
           globs: ['**/*.ts'],
         },
@@ -771,7 +771,7 @@ describe('agents-folder-structure-research: Cline (docs §5)', () => {
       rootBody: '# Root',
       nonRootRules: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'rules', 'ts.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'rules', 'ts.md'),
           body: 'TS',
           targets: [],
         },
@@ -882,7 +882,7 @@ describe('agents-folder-structure-research: Codex CLI (docs §6)', () => {
     const canonical: CanonicalFiles = {
       rules: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'rules', 'ts.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'rules', 'ts.md'),
           root: false,
           targets: [],
           description: '',
@@ -943,7 +943,7 @@ describe('agents-folder-structure-research: Windsurf (docs §7)', () => {
       rootBody: '# Root',
       nonRootRules: [
         {
-          source: join(TEST_DIR, '.agentsbridge', 'rules', 'ts.md'),
+          source: join(TEST_DIR, '.agentsmesh', 'rules', 'ts.md'),
           body: 'TS rules',
           targets: [],
         },

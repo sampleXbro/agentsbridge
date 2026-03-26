@@ -4,13 +4,13 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { importFromClaudeCode } from '../../../../src/targets/claude-code/importer.js';
 
-const TEST_DIR = join(tmpdir(), 'agentsbridge-import-claude-test');
+const TEST_DIR = join(tmpdir(), 'agentsmesh-import-claude-test');
 
 beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
 
 describe('importFromClaudeCode — rules', () => {
-  it('imports .claude/CLAUDE.md to .agentsbridge/rules/_root.md (primary path)', async () => {
+  it('imports .claude/CLAUDE.md to .agentsmesh/rules/_root.md (primary path)', async () => {
     mkdirSync(join(TEST_DIR, '.claude'), { recursive: true });
     writeFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), '# Project Rules\n\nUse TypeScript.');
     const results = await importFromClaudeCode(TEST_DIR);
@@ -18,10 +18,10 @@ describe('importFromClaudeCode — rules', () => {
     expect(results[0]).toMatchObject({
       fromTool: 'claude-code',
       fromPath: join(TEST_DIR, '.claude', 'CLAUDE.md'),
-      toPath: '.agentsbridge/rules/_root.md',
+      toPath: '.agentsmesh/rules/_root.md',
       feature: 'rules',
     });
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(content).toContain('# Project Rules');
     expect(content).toContain('Use TypeScript.');
@@ -34,15 +34,15 @@ describe('importFromClaudeCode — rules', () => {
     expect(results[0]).toMatchObject({
       fromTool: 'claude-code',
       fromPath: join(TEST_DIR, 'CLAUDE.md'),
-      toPath: '.agentsbridge/rules/_root.md',
+      toPath: '.agentsmesh/rules/_root.md',
       feature: 'rules',
     });
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(content).toContain('# Legacy Root');
   });
 
-  it('imports .claude/rules/*.md to .agentsbridge/rules/*.md', async () => {
+  it('imports .claude/rules/*.md to .agentsmesh/rules/*.md', async () => {
     mkdirSync(join(TEST_DIR, '.claude', 'rules'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, '.claude', 'rules', 'typescript.md'),
@@ -52,13 +52,10 @@ describe('importFromClaudeCode — rules', () => {
     expect(results).toHaveLength(1);
     expect(results[0]).toMatchObject({
       fromTool: 'claude-code',
-      toPath: '.agentsbridge/rules/typescript.md',
+      toPath: '.agentsmesh/rules/typescript.md',
       feature: 'rules',
     });
-    const content = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'rules', 'typescript.md'),
-      'utf-8',
-    );
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'), 'utf-8');
     expect(content).toContain('root: false');
     expect(content).toContain('description: TS rules');
     expect(content).toContain('Use strict mode.');
@@ -72,7 +69,7 @@ describe('importFromClaudeCode — rules', () => {
     const results = await importFromClaudeCode(TEST_DIR);
     expect(results).toHaveLength(2);
     const paths = results.map((r) => r.toPath).sort();
-    expect(paths).toEqual(['.agentsbridge/rules/_root.md', '.agentsbridge/rules/extra.md']);
+    expect(paths).toEqual(['.agentsmesh/rules/_root.md', '.agentsmesh/rules/extra.md']);
   });
 
   it('returns empty array when no Claude Code config found', async () => {
@@ -84,13 +81,13 @@ describe('importFromClaudeCode — rules', () => {
     mkdirSync(join(TEST_DIR, '.claude'), { recursive: true });
     writeFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'Plain content.');
     await importFromClaudeCode(TEST_DIR);
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toMatch(/---[\s\S]*?root:\s*true/);
   });
 });
 
 describe('importFromClaudeCode — commands', () => {
-  it('imports .claude/commands/*.md to .agentsbridge/commands/*.md', async () => {
+  it('imports .claude/commands/*.md to .agentsmesh/commands/*.md', async () => {
     mkdirSync(join(TEST_DIR, '.claude', 'commands'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, '.claude', 'commands', 'review.md'),
@@ -100,10 +97,10 @@ describe('importFromClaudeCode — commands', () => {
     expect(results).toHaveLength(1);
     expect(results[0]).toMatchObject({
       fromTool: 'claude-code',
-      toPath: '.agentsbridge/commands/review.md',
+      toPath: '.agentsmesh/commands/review.md',
       feature: 'commands',
     });
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'commands', 'review.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'), 'utf-8');
     expect(content).toContain('description: Run code review');
     expect(content).toContain('Review changes.');
   });
@@ -116,12 +113,12 @@ describe('importFromClaudeCode — commands', () => {
     const commandResults = results.filter((r) => r.feature === 'commands');
     expect(commandResults).toHaveLength(2);
     const paths = commandResults.map((r) => r.toPath).sort();
-    expect(paths).toEqual(['.agentsbridge/commands/deploy.md', '.agentsbridge/commands/review.md']);
+    expect(paths).toEqual(['.agentsmesh/commands/deploy.md', '.agentsmesh/commands/review.md']);
   });
 });
 
 describe('importFromClaudeCode — agents', () => {
-  it('imports .claude/agents/*.md to .agentsbridge/agents/*.md', async () => {
+  it('imports .claude/agents/*.md to .agentsmesh/agents/*.md', async () => {
     mkdirSync(join(TEST_DIR, '.claude', 'agents'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, '.claude', 'agents', 'code-reviewer.md'),
@@ -131,11 +128,11 @@ describe('importFromClaudeCode — agents', () => {
     expect(results).toHaveLength(1);
     expect(results[0]).toMatchObject({
       fromTool: 'claude-code',
-      toPath: '.agentsbridge/agents/code-reviewer.md',
+      toPath: '.agentsmesh/agents/code-reviewer.md',
       feature: 'agents',
     });
     const content = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'agents', 'code-reviewer.md'),
+      join(TEST_DIR, '.agentsmesh', 'agents', 'code-reviewer.md'),
       'utf-8',
     );
     expect(content).toContain('name: code-reviewer');
@@ -144,7 +141,7 @@ describe('importFromClaudeCode — agents', () => {
 });
 
 describe('importFromClaudeCode — skills', () => {
-  it('imports .claude/skills/{name}/SKILL.md to .agentsbridge/skills/{name}/SKILL.md', async () => {
+  it('imports .claude/skills/{name}/SKILL.md to .agentsmesh/skills/{name}/SKILL.md', async () => {
     mkdirSync(join(TEST_DIR, '.claude', 'skills', 'api-gen'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, '.claude', 'skills', 'api-gen', 'SKILL.md'),
@@ -154,11 +151,11 @@ describe('importFromClaudeCode — skills', () => {
     expect(results).toHaveLength(1);
     expect(results[0]).toMatchObject({
       fromTool: 'claude-code',
-      toPath: '.agentsbridge/skills/api-gen/SKILL.md',
+      toPath: '.agentsmesh/skills/api-gen/SKILL.md',
       feature: 'skills',
     });
     const content = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'skills', 'api-gen', 'SKILL.md'),
+      join(TEST_DIR, '.agentsmesh', 'skills', 'api-gen', 'SKILL.md'),
       'utf-8',
     );
     expect(content).toContain('Generate REST APIs');
@@ -179,10 +176,10 @@ describe('importFromClaudeCode — skills', () => {
     const skillResults = results.filter((r) => r.feature === 'skills');
     expect(skillResults).toHaveLength(2);
     const paths = skillResults.map((r) => r.toPath).sort();
-    expect(paths).toContain('.agentsbridge/skills/my-skill/SKILL.md');
-    expect(paths).toContain('.agentsbridge/skills/my-skill/template.ts');
+    expect(paths).toContain('.agentsmesh/skills/my-skill/SKILL.md');
+    expect(paths).toContain('.agentsmesh/skills/my-skill/template.ts');
     const ts = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'skills', 'my-skill', 'template.ts'),
+      join(TEST_DIR, '.agentsmesh', 'skills', 'my-skill', 'template.ts'),
       'utf-8',
     );
     expect(ts).toBe('export const x = 1;');
@@ -190,7 +187,7 @@ describe('importFromClaudeCode — skills', () => {
 });
 
 describe('importFromClaudeCode — settings.json decomposition', () => {
-  it('imports mcpServers to .agentsbridge/mcp.json', async () => {
+  it('imports mcpServers to .agentsmesh/mcp.json', async () => {
     mkdirSync(join(TEST_DIR, '.claude'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, '.claude', 'settings.json'),
@@ -208,14 +205,14 @@ describe('importFromClaudeCode — settings.json decomposition', () => {
     const results = await importFromClaudeCode(TEST_DIR);
     const mcpResult = results.find((r) => r.feature === 'mcp');
     expect(mcpResult).toBeDefined();
-    expect(mcpResult?.toPath).toBe('.agentsbridge/mcp.json');
-    const mcp = JSON.parse(readFileSync(join(TEST_DIR, '.agentsbridge', 'mcp.json'), 'utf-8')) as {
+    expect(mcpResult?.toPath).toBe('.agentsmesh/mcp.json');
+    const mcp = JSON.parse(readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf-8')) as {
       mcpServers: Record<string, unknown>;
     };
     expect(mcp.mcpServers.context7).toBeDefined();
   });
 
-  it('imports permissions to .agentsbridge/permissions.yaml', async () => {
+  it('imports permissions to .agentsmesh/permissions.yaml', async () => {
     mkdirSync(join(TEST_DIR, '.claude'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, '.claude', 'settings.json'),
@@ -226,15 +223,15 @@ describe('importFromClaudeCode — settings.json decomposition', () => {
     const results = await importFromClaudeCode(TEST_DIR);
     const permResult = results.find((r) => r.feature === 'permissions');
     expect(permResult).toBeDefined();
-    expect(permResult?.toPath).toBe('.agentsbridge/permissions.yaml');
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'permissions.yaml'), 'utf-8');
+    expect(permResult?.toPath).toBe('.agentsmesh/permissions.yaml');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'permissions.yaml'), 'utf-8');
     expect(content).toContain('allow');
     expect(content).toContain('Read');
     expect(content).toContain('deny');
     expect(content).toContain('WebFetch');
   });
 
-  it('imports hooks to .agentsbridge/hooks.yaml', async () => {
+  it('imports hooks to .agentsmesh/hooks.yaml', async () => {
     mkdirSync(join(TEST_DIR, '.claude'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, '.claude', 'settings.json'),
@@ -252,8 +249,8 @@ describe('importFromClaudeCode — settings.json decomposition', () => {
     const results = await importFromClaudeCode(TEST_DIR);
     const hooksResult = results.find((r) => r.feature === 'hooks');
     expect(hooksResult).toBeDefined();
-    expect(hooksResult?.toPath).toBe('.agentsbridge/hooks.yaml');
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'hooks.yaml'), 'utf-8');
+    expect(hooksResult?.toPath).toBe('.agentsmesh/hooks.yaml');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'hooks.yaml'), 'utf-8');
     expect(content).toContain('PostToolUse');
     expect(content).toContain('Write|Edit');
     expect(content).toContain('prettier');
@@ -304,7 +301,7 @@ describe('importFromClaudeCode — settings.json decomposition', () => {
 });
 
 describe('importFromClaudeCode — .mcp.json', () => {
-  it('imports .mcp.json to .agentsbridge/mcp.json', async () => {
+  it('imports .mcp.json to .agentsmesh/mcp.json', async () => {
     writeFileSync(
       join(TEST_DIR, '.mcp.json'),
       JSON.stringify({
@@ -316,8 +313,8 @@ describe('importFromClaudeCode — .mcp.json', () => {
     const results = await importFromClaudeCode(TEST_DIR);
     const mcpResult = results.find((r) => r.feature === 'mcp');
     expect(mcpResult).toBeDefined();
-    expect(mcpResult?.toPath).toBe('.agentsbridge/mcp.json');
-    const mcp = JSON.parse(readFileSync(join(TEST_DIR, '.agentsbridge', 'mcp.json'), 'utf-8')) as {
+    expect(mcpResult?.toPath).toBe('.agentsmesh/mcp.json');
+    const mcp = JSON.parse(readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf-8')) as {
       mcpServers: Record<string, unknown>;
     };
     expect(mcp.mcpServers.context7).toBeDefined();
@@ -344,7 +341,7 @@ describe('importFromClaudeCode — .mcp.json', () => {
     const results = await importFromClaudeCode(TEST_DIR);
     const mcpResults = results.filter((r) => r.feature === 'mcp');
     expect(mcpResults).toHaveLength(1);
-    const mcp = JSON.parse(readFileSync(join(TEST_DIR, '.agentsbridge', 'mcp.json'), 'utf-8')) as {
+    const mcp = JSON.parse(readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf-8')) as {
       mcpServers: Record<string, unknown>;
     };
     expect(mcp.mcpServers.fromMcpJson).toBeDefined();
@@ -353,16 +350,16 @@ describe('importFromClaudeCode — .mcp.json', () => {
 });
 
 describe('importFromClaudeCode — .claudeignore', () => {
-  it('imports .claudeignore to .agentsbridge/ignore', async () => {
+  it('imports .claudeignore to .agentsmesh/ignore', async () => {
     writeFileSync(join(TEST_DIR, '.claudeignore'), 'node_modules\ndist\n.env\n');
     const results = await importFromClaudeCode(TEST_DIR);
     expect(results).toHaveLength(1);
     expect(results[0]).toMatchObject({
       fromTool: 'claude-code',
-      toPath: '.agentsbridge/ignore',
+      toPath: '.agentsmesh/ignore',
       feature: 'ignore',
     });
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'ignore'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'ignore'), 'utf-8');
     expect(content).toContain('node_modules');
     expect(content).toContain('dist');
     expect(content).toContain('.env');

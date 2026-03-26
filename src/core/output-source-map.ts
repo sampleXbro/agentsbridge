@@ -5,19 +5,19 @@ import { buildReferenceMap } from './reference-map.js';
 import { GEMINI_COMPAT_AGENTS } from '../targets/gemini-cli/constants.js';
 
 function canonicalRulePath(rule: CanonicalFiles['rules'][number]): string {
-  return `.agentsbridge/rules/${rule.source.split('/').pop()!}`;
+  return `.agentsmesh/rules/${rule.source.split('/').pop()!}`;
 }
 
 function canonicalCommandPath(command: CanonicalFiles['commands'][number]): string {
-  return `.agentsbridge/commands/${command.name}.md`;
+  return `.agentsmesh/commands/${command.name}.md`;
 }
 
 function canonicalAgentPath(agent: CanonicalFiles['agents'][number]): string {
-  return `.agentsbridge/agents/${agent.name}.md`;
+  return `.agentsmesh/agents/${agent.name}.md`;
 }
 
 function canonicalSkillPath(skill: CanonicalFiles['skills'][number]): string {
-  return `.agentsbridge/skills/${skill.name}/SKILL.md`;
+  return `.agentsmesh/skills/${skill.name}/SKILL.md`;
 }
 
 function directoryScopedRuleDir(globs: string[]): string | null {
@@ -121,7 +121,7 @@ export function buildOutputSourceMap(
     const skillTargetPath = refs.get(canonicalSkillPath(skill));
     if (skillTargetPath) sourceMap.set(skillTargetPath, skill.source);
     for (const file of skill.supportingFiles) {
-      const canonicalPath = `.agentsbridge/skills/${skill.name}/${file.relativePath.replace(/\\/g, '/')}`;
+      const canonicalPath = `.agentsmesh/skills/${skill.name}/${file.relativePath.replace(/\\/g, '/')}`;
       const targetPath = refs.get(canonicalPath);
       if (targetPath) sourceMap.set(targetPath, file.absolutePath);
     }

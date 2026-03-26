@@ -1,0 +1,45 @@
+# Auto-generated. DO NOT EDIT MANUALLY.
+# Tracks the state of all config files for team conflict resolution.
+
+generated_at: 2026-03-26T08:11:04.186Z
+generated_by: serhii
+lib_version: 0.2.0
+checksums:
+  agents/code-reviewer.md: sha256:dac4e70d506d54a40366839f64e34d2a83a48c4ce2ef96b9bdc7a92258d2a481
+  agents/test-runner.md: sha256:8cc31a3176e5ad2cdabd36fedd75d98f037c93e8bf9e17243a450bedb34ac90e
+  commands/commit.md: sha256:3e6dcc5871ad157c36efe19c162b43cdc0d723a8695fb0d45c1f90cc28fa931c
+  commands/review.md: sha256:ba3053410e7cc3271f41ba329056df07c6ccd2f07e2ed3dda601c56e46a77d54
+  commands/test.md: sha256:a60932b216ff9eb407c2b38e4459ac4b9606a3aed275f4af84a646eb6c2937e7
+  hooks.yaml: sha256:4644543a1a4456ed9593c3f3c4cdaae137d37d1b2fcbe6e66cd27c0cbb18433a
+  ignore: sha256:ffd6a79e49b169b10c1bcbd759394e3d5b1b40ced733fde61479ba28799a5a7f
+  mcp.json: sha256:4269c04f9edf4142cde79d1e45f25958eaca54489cc19ec078eaba887d296018
+  permissions.yaml: sha256:9c22c5221457f6c165a5f135448f3f95fedb8c9339cb9f91998d844184501158
+  rules/_root.md: sha256:9695d2927d493a778a62ce7ee968b72e46df5cd85a7a0ff3813d5253e828f3df
+  rules/typescript.md: sha256:18f52143dfdd3e219a5c6d6c0feb7283fe74cce99458c46dafcd1c3620ad4fba
+  skills/add-agent-target/SKILL.md: sha256:53a76c84b87f7735c53ac5f5e584e55122c09728a14406e7088ea93b5b183406
+  skills/add-agent-target/references/target-addition-checklist.md: sha256:66cd8f5ed4dd21b27e2bf4b34ae749ee301b28a208c83fecffa06748c2d2d61c
+  skills/docs-and-examples/SKILL.md: sha256:b14b6d5d64dc8763c92717feb858d560c253e91e5129131cc7f80f06b65df002
+  skills/homebrew-packaging/SKILL.md: sha256:62c08a9498803b14bb90d57ca6f37cc2bae9e66428ac246e9574b0d57038a849
+  skills/library-testing/SKILL.md: sha256:c2896c3cbb871430a681a10aed85d34009e52bd14212be0e223920408b595ecb
+  skills/package-release-engineering/SKILL.md: sha256:1a642a6ea75149221febcecba5e8dc01c40469225915d1f4b59d6f2dfb3bcaf0
+  skills/post-feature-qa/SKILL.md: sha256:f381105199c64962f50c82c99bd032737e67ce6a569d8e0cb8b497ede996f093
+  skills/post-feature-qa/references/edge-case-checklist.md: sha256:77bb7a50f3dd281003e146a5313a85799603739e049646502904d0b7b8451c70
+  skills/prepare-release/SKILL.md: sha256:3f2431c51df2a0f5a6ff24ca00b3501017771d212a0feace81f01c10fbc77046
+  skills/senior-developer-avoid-any/SKILL.md: sha256:174947b46b24594a849520ec248b12c937d01bf9204ee8f436bfb1be29fa84be
+  skills/senior-manual-qa/SKILL.md: sha256:e81b8c8c80fe8cdfd5e4600cb20d1cbe91e82dd9dd0ecc469a535eecc92c7a9a
+  skills/ts-library-architecture/SKILL.md: sha256:86c38d90fdec873a19b5f2452b2a97064b1f7df3f3fc1a66d4784c30cb2ea2da
+  skills/typescript-pro/SKILL.md: sha256:2543bf9c232a0c535aa516150b2bed21ddb85306021e728a0bf2f72e67660794
+  skills/typescript-pro/references/advanced-types.md: sha256:f7a7d3c04ca62b204105c3a4e561bceae79afec703f3176a8311b0a9b5272fb8
+  skills/typescript-pro/references/configuration.md: sha256:912e324f97f06b66a1dd5d219b2db17694624ea071bf30fbe471892910455028
+  skills/typescript-pro/references/patterns.md: sha256:67c93bad12fa3658237e767de45b1a6025c8474896fe8ed2d2bfc30643ca2e4e
+  skills/typescript-pro/references/type-guards.md: sha256:86f0452f173414a37fd69ecdc663f42ec903b5eb1eaa9a3ebad213780e58b197
+  skills/typescript-pro/references/utility-types.md: sha256:89856b5cfc91cad3f827d882e05ba229d3385adf52c3fa5c57f6cebe8833e5e6
+  skills/typescript-quality-gates/SKILL.md: sha256:b06031cdccc6fe731c20e831a52ab74199bf6b0207dfa771e2522f6a3dd95d6d
+extends:
+  shared-samplexbro-rules: 0b393ecfeb7419d648d4c36203998d11ad3a0fdc
+packs:
+  composiohq-awesome-claude-skills-skills: sha256:6b63e9d8e01c904ed85fcff5dd9e368ab37e68b904b2170454c3104feb82cd3d
+  devsforge-orchestrator-skills: sha256:9228afa4fd2aedaca2403e7c2afbce0c18e4204793ede6e649a777eed9eb3231
+  joeking-ly-claude-skills-arsenal-skills: sha256:63b24277c3d09607506971957d40f95139385193eaf8b02a92d68ca6f8af15ec
+  njengah-claude-code-cheat-sheet-agents: sha256:6b0a573bc4a725d0a5d38d323d19382f7a24bd948885d3555b94cbca47a05cbf
+  onmax-nuxt-skills-skills: sha256:79fdc31ee1c1a35717f82ec23944814a406eb86d9e471123b6ff1785e2f1ecd3

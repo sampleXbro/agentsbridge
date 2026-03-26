@@ -6,14 +6,14 @@ describe('rewriteFileLinks', () => {
     const rewritten = rewriteFileLinks({
       content: [
         'Docs: ../../docs/some-doc.md.',
-        'Command: .agentsbridge/commands/review.md.',
+        'Command: .agentsmesh/commands/review.md.',
         'Markdown: [../../docs/some-doc.md](../../docs/some-doc.md)',
       ].join('\n'),
       projectRoot: '/proj',
-      sourceFile: '/proj/.agentsbridge/rules/_root.md',
+      sourceFile: '/proj/.agentsmesh/rules/_root.md',
       destinationFile: '/proj/CLAUDE.md',
       translatePath: (absolutePath) =>
-        absolutePath === '/proj/.agentsbridge/commands/review.md'
+        absolutePath === '/proj/.agentsmesh/commands/review.md'
           ? '/proj/.claude/commands/review.md'
           : absolutePath,
       pathExists: (absolutePath) =>
@@ -31,7 +31,7 @@ describe('rewriteFileLinks', () => {
     const rewritten = rewriteFileLinks({
       content: 'Missing: ../../docs/missing.md.',
       projectRoot: '/proj',
-      sourceFile: '/proj/.agentsbridge/rules/_root.md',
+      sourceFile: '/proj/.agentsmesh/rules/_root.md',
       destinationFile: '/proj/CLAUDE.md',
       translatePath: (absolutePath) => absolutePath,
       pathExists: () => false,
@@ -45,7 +45,7 @@ describe('rewriteFileLinks', () => {
     const rewritten = rewriteFileLinks({
       content: 'Check also ../../../../docs/agents-folder-structure-research.md.',
       projectRoot: '/proj',
-      sourceFile: '/proj/.agentsbridge/skills/typescript-pro/SKILL.md',
+      sourceFile: '/proj/.agentsmesh/skills/typescript-pro/SKILL.md',
       destinationFile: '/proj/.claude/skills/typescript-pro/SKILL.md',
       translatePath: (absolutePath) => absolutePath,
       pathExists: (absolutePath) =>
@@ -62,7 +62,7 @@ describe('rewriteFileLinks', () => {
         '\n',
       ),
       projectRoot: '/proj',
-      sourceFile: '/proj/.agentsbridge/rules/_root.md',
+      sourceFile: '/proj/.agentsmesh/rules/_root.md',
       destinationFile: '/proj/CLAUDE.md',
       translatePath: (absolutePath) => absolutePath,
       pathExists: (absolutePath) => absolutePath === '/proj/docs/some-doc.md',
@@ -78,17 +78,17 @@ describe('rewriteFileLinks', () => {
       content: 'Use .claude/commands/review.md and docs/some-doc.md.',
       projectRoot: '/proj',
       sourceFile: '/proj/CLAUDE.md',
-      destinationFile: '/proj/.agentsbridge/rules/_root.md',
+      destinationFile: '/proj/.agentsmesh/rules/_root.md',
       translatePath: (absolutePath) =>
         absolutePath === '/proj/.claude/commands/review.md'
-          ? '/proj/.agentsbridge/commands/review.md'
+          ? '/proj/.agentsmesh/commands/review.md'
           : absolutePath,
       pathExists: (absolutePath) =>
-        absolutePath === '/proj/.agentsbridge/commands/review.md' ||
+        absolutePath === '/proj/.agentsmesh/commands/review.md' ||
         absolutePath === '/proj/docs/some-doc.md',
     });
 
-    expect(rewritten.content).toContain('.agentsbridge/commands/review.md');
+    expect(rewritten.content).toContain('.agentsmesh/commands/review.md');
     expect(rewritten.content).toContain('docs/some-doc.md');
     expect(rewritten.missing).toEqual([]);
   });
@@ -98,7 +98,7 @@ describe('rewriteFileLinks', () => {
       content: '# Windsurf via AGENTS.md and CLAUDE.md.',
       projectRoot: '/proj',
       sourceFile: '/proj/AGENTS.md',
-      destinationFile: '/proj/.agentsbridge/rules/_root.md',
+      destinationFile: '/proj/.agentsmesh/rules/_root.md',
       translatePath: (absolutePath) => absolutePath,
       pathExists: (absolutePath) =>
         absolutePath === '/proj/AGENTS.md' || absolutePath === '/proj/CLAUDE.md',
@@ -113,7 +113,7 @@ describe('rewriteFileLinks', () => {
       content: 'globs: ["src/**/*.ts", "tests/**/*.ts"]',
       projectRoot: '/proj',
       sourceFile: '/proj/.github/copilot/ts.instructions.md',
-      destinationFile: '/proj/.agentsbridge/rules/ts.md',
+      destinationFile: '/proj/.agentsmesh/rules/ts.md',
       translatePath: (absolutePath) => absolutePath,
       pathExists: () => false,
     });
@@ -128,7 +128,7 @@ describe('rewriteFileLinks', () => {
     const rewritten = rewriteFileLinks({
       content: 'Legend: ✓ / ✗',
       projectRoot: '/proj',
-      sourceFile: '/proj/.agentsbridge/rules/_root.md',
+      sourceFile: '/proj/.agentsmesh/rules/_root.md',
       destinationFile: '/proj/CLAUDE.md',
       translatePath: (absolutePath) => {
         translated.push(absolutePath);
@@ -149,19 +149,19 @@ describe('rewriteFileLinks', () => {
   it('rewrites absolute in-project paths to project-root-relative target paths', () => {
     const rewritten = rewriteFileLinks({
       content:
-        'Absolute: /proj/.agentsbridge/rules/typescript.md, /proj/.agentsbridge/commands/review.md, /proj/.agentsbridge/skills/api-generator/references/route-checklist.md.',
+        'Absolute: /proj/.agentsmesh/rules/typescript.md, /proj/.agentsmesh/commands/review.md, /proj/.agentsmesh/skills/api-generator/references/route-checklist.md.',
       projectRoot: '/proj',
-      sourceFile: '/proj/.agentsbridge/rules/_root.md',
+      sourceFile: '/proj/.agentsmesh/rules/_root.md',
       destinationFile: '/proj/CLAUDE.md',
       translatePath: (absolutePath) => {
-        if (absolutePath === '/proj/.agentsbridge/rules/typescript.md') {
+        if (absolutePath === '/proj/.agentsmesh/rules/typescript.md') {
           return '/proj/.claude/rules/typescript.md';
         }
-        if (absolutePath === '/proj/.agentsbridge/commands/review.md') {
+        if (absolutePath === '/proj/.agentsmesh/commands/review.md') {
           return '/proj/.claude/commands/review.md';
         }
         if (
-          absolutePath === '/proj/.agentsbridge/skills/api-generator/references/route-checklist.md'
+          absolutePath === '/proj/.agentsmesh/skills/api-generator/references/route-checklist.md'
         ) {
           return '/proj/.claude/skills/api-generator/references/route-checklist.md';
         }
@@ -182,20 +182,20 @@ describe('rewriteFileLinks', () => {
   it('rewrites Windows drive-letter absolute paths when the project root is Windows-style', () => {
     const rewritten = rewriteFileLinks({
       content:
-        'Windows absolute: C:\\proj\\.agentsbridge\\rules\\typescript.md, C:/proj/.agentsbridge/commands/review.md, C:\\proj\\.agentsbridge\\skills\\api-generator\\references\\route-checklist.md.',
+        'Windows absolute: C:\\proj\\.agentsmesh\\rules\\typescript.md, C:/proj/.agentsmesh/commands/review.md, C:\\proj\\.agentsmesh\\skills\\api-generator\\references\\route-checklist.md.',
       projectRoot: 'C:\\proj',
-      sourceFile: 'C:\\proj\\.agentsbridge\\rules\\_root.md',
+      sourceFile: 'C:\\proj\\.agentsmesh\\rules\\_root.md',
       destinationFile: 'C:\\proj\\CLAUDE.md',
       translatePath: (absolutePath) => {
-        if (absolutePath === 'C:\\proj\\.agentsbridge\\rules\\typescript.md') {
+        if (absolutePath === 'C:\\proj\\.agentsmesh\\rules\\typescript.md') {
           return 'C:\\proj\\.claude\\rules\\typescript.md';
         }
-        if (absolutePath === 'C:\\proj\\.agentsbridge\\commands\\review.md') {
+        if (absolutePath === 'C:\\proj\\.agentsmesh\\commands\\review.md') {
           return 'C:\\proj\\.claude\\commands\\review.md';
         }
         if (
           absolutePath ===
-          'C:\\proj\\.agentsbridge\\skills\\api-generator\\references\\route-checklist.md'
+          'C:\\proj\\.agentsmesh\\skills\\api-generator\\references\\route-checklist.md'
         ) {
           return 'C:\\proj\\.claude\\skills\\api-generator\\references\\route-checklist.md';
         }
@@ -218,23 +218,23 @@ describe('rewriteFileLinks', () => {
       content: [
         'Backslash relative: ..\\commands\\review.md, ..\\agents\\code-reviewer.md.',
         'Mixed: ..\\skills/api-generator\\SKILL.md, ..\\..\\docs/some-doc.md.',
-        'Canonical mixed: .agentsbridge\\skills/api-generator\\references\\route-checklist.md.',
+        'Canonical mixed: .agentsmesh\\skills/api-generator\\references\\route-checklist.md.',
       ].join('\n'),
       projectRoot: '/proj',
-      sourceFile: '/proj/.agentsbridge/rules/typescript.md',
+      sourceFile: '/proj/.agentsmesh/rules/typescript.md',
       destinationFile: '/proj/CLAUDE.md',
       translatePath: (absolutePath) => {
-        if (absolutePath === '/proj/.agentsbridge/commands/review.md') {
+        if (absolutePath === '/proj/.agentsmesh/commands/review.md') {
           return '/proj/.claude/commands/review.md';
         }
-        if (absolutePath === '/proj/.agentsbridge/agents/code-reviewer.md') {
+        if (absolutePath === '/proj/.agentsmesh/agents/code-reviewer.md') {
           return '/proj/.claude/agents/code-reviewer.md';
         }
-        if (absolutePath === '/proj/.agentsbridge/skills/api-generator/SKILL.md') {
+        if (absolutePath === '/proj/.agentsmesh/skills/api-generator/SKILL.md') {
           return '/proj/.claude/skills/api-generator/SKILL.md';
         }
         if (
-          absolutePath === '/proj/.agentsbridge/skills/api-generator/references/route-checklist.md'
+          absolutePath === '/proj/.agentsmesh/skills/api-generator/references/route-checklist.md'
         ) {
           return '/proj/.claude/skills/api-generator/references/route-checklist.md';
         }
@@ -268,7 +268,7 @@ describe('rewriteFileLinks', () => {
         'Ref: ../../docs/guide.md:99.',
       ].join('\n'),
       projectRoot: '/proj',
-      sourceFile: '/proj/.agentsbridge/rules/_root.md',
+      sourceFile: '/proj/.agentsmesh/rules/_root.md',
       destinationFile: '/proj/CLAUDE.md',
       translatePath: (absolutePath) => absolutePath,
       pathExists: (absolutePath) =>
@@ -296,7 +296,7 @@ describe('rewriteFileLinks', () => {
     const rewritten = rewriteFileLinks({
       content,
       projectRoot: '/proj',
-      sourceFile: '/proj/.agentsbridge/rules/_root.md',
+      sourceFile: '/proj/.agentsmesh/rules/_root.md',
       destinationFile: '/proj/CLAUDE.md',
       translatePath: (absolutePath) => absolutePath,
       pathExists: (absolutePath) =>
@@ -314,7 +314,7 @@ describe('rewriteFileLinks', () => {
     const rewritten = rewriteFileLinks({
       content: 'Run `../../src/config.ts` to check, but ../../src/config.ts is the real ref.',
       projectRoot: '/proj',
-      sourceFile: '/proj/.agentsbridge/rules/_root.md',
+      sourceFile: '/proj/.agentsmesh/rules/_root.md',
       destinationFile: '/proj/CLAUDE.md',
       translatePath: (absolutePath) => absolutePath,
       pathExists: (absolutePath) => absolutePath === '/proj/src/config.ts',
@@ -334,7 +334,7 @@ describe('rewriteFileLinks', () => {
     const rewritten = rewriteFileLinks({
       content,
       projectRoot: '/proj',
-      sourceFile: '/proj/.agentsbridge/rules/_root.md',
+      sourceFile: '/proj/.agentsmesh/rules/_root.md',
       destinationFile: '/proj/CLAUDE.md',
       translatePath: (absolutePath) => {
         translated.push(absolutePath);
@@ -368,7 +368,7 @@ describe('rewriteFileLinks', () => {
     const rewritten = rewriteFileLinks({
       content,
       projectRoot: '/proj',
-      sourceFile: '/proj/.agentsbridge/rules/_root.md',
+      sourceFile: '/proj/.agentsmesh/rules/_root.md',
       destinationFile: '/proj/CLAUDE.md',
       translatePath: (absolutePath) => {
         translated.push(absolutePath);

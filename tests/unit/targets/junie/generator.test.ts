@@ -37,7 +37,7 @@ describe('generateRules (junie)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: 'Root',
@@ -56,7 +56,7 @@ describe('generateRules (junie)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -64,7 +64,7 @@ describe('generateRules (junie)', () => {
           body: '# Root',
         },
         {
-          source: '/proj/.agentsbridge/rules/typescript.md',
+          source: '/proj/.agentsmesh/rules/typescript.md',
           root: false,
           targets: [],
           description: '',
@@ -83,7 +83,7 @@ describe('generateRules (junie)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -91,7 +91,7 @@ describe('generateRules (junie)', () => {
           body: '# Root',
         },
         {
-          source: '/proj/.agentsbridge/rules/cursor-only.md',
+          source: '/proj/.agentsmesh/rules/cursor-only.md',
           root: false,
           targets: ['cursor'],
           description: '',
@@ -110,7 +110,7 @@ describe('generateCommands (junie)', () => {
     const canonical = makeCanonical({
       commands: [
         {
-          source: '/proj/.agentsbridge/commands/review.md',
+          source: '/proj/.agentsmesh/commands/review.md',
           name: 'review',
           description: 'Review workflow',
           allowedTools: ['Read', 'Bash(git diff)'],
@@ -133,7 +133,7 @@ describe('generateAgents (junie)', () => {
     const canonical = makeCanonical({
       agents: [
         {
-          source: '/proj/.agentsbridge/agents/code-reviewer.md',
+          source: '/proj/.agentsmesh/agents/code-reviewer.md',
           name: 'code-reviewer',
           description: 'Performs code reviews',
           tools: ['Read', 'Grep'],
@@ -191,14 +191,13 @@ describe('generateSkills (junie)', () => {
     const canonical = makeCanonical({
       skills: [
         {
-          source: '/proj/.agentsbridge/skills/api-generator/SKILL.md',
+          source: '/proj/.agentsmesh/skills/api-generator/SKILL.md',
           name: 'api-generator',
           description: 'API Generator',
           body: 'Use `references/route-checklist.md`.',
           supportingFiles: [
             {
-              absolutePath:
-                '/proj/.agentsbridge/skills/api-generator/references/route-checklist.md',
+              absolutePath: '/proj/.agentsmesh/skills/api-generator/references/route-checklist.md',
               relativePath: 'references/route-checklist.md',
               content: '# Checklist',
             },

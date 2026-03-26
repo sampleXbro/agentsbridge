@@ -1,0 +1,10 @@
+# Personal overrides — NOT committed to git
+# Uncomment and customize for your local setup:
+
+# targets:
+#   - claude-code
+#   - cursor
+
+# overrides:
+#   claude-code:
+#     model: opus

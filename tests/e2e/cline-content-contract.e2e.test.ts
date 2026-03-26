@@ -43,14 +43,14 @@ features:
     const generateResult = await runCli('generate --targets cline', projectDir);
     expect(generateResult.exitCode, generateResult.stderr).toBe(0);
     const generatedPaths = listFiles(projectDir)
-      .filter((path) => path !== 'agentsbridge.yaml')
-      .filter((path) => !path.startsWith('.agentsbridge/'))
-      .filter((path) => !path.startsWith('.agentsbridgecache'))
+      .filter((path) => path !== 'agentsmesh.yaml')
+      .filter((path) => !path.startsWith('.agentsmesh/'))
+      .filter((path) => !path.startsWith('.agentsmeshcache'))
       .sort();
     expect(generatedPaths).toEqual([
       '.cline/mcp_settings.json',
-      '.cline/skills/ab-agent-code-reviewer/SKILL.md',
-      '.cline/skills/ab-agent-researcher/SKILL.md',
+      '.cline/skills/am-agent-code-reviewer/SKILL.md',
+      '.cline/skills/am-agent-researcher/SKILL.md',
       '.cline/skills/api-generator/SKILL.md',
       '.cline/skills/api-generator/references/route-checklist.md',
       '.cline/skills/api-generator/template.ts',
@@ -86,18 +86,18 @@ features:
     expect(skillTemplate).toContain("import { z } from 'zod';");
     expect(skillTemplate).toContain('export const createRouteSchema = z.object');
 
-    const projectedReviewer = read(projectDir, '.cline/skills/ab-agent-code-reviewer/SKILL.md');
-    expect(projectedReviewer).toContain('x-agentsbridge-kind: agent');
-    expect(projectedReviewer).toContain('x-agentsbridge-name: code-reviewer');
+    const projectedReviewer = read(projectDir, '.cline/skills/am-agent-code-reviewer/SKILL.md');
+    expect(projectedReviewer).toContain('x-agentsmesh-kind: agent');
+    expect(projectedReviewer).toContain('x-agentsmesh-name: code-reviewer');
     expect(projectedReviewer).toContain('You are a code reviewer.');
-    const projectedResearcher = read(projectDir, '.cline/skills/ab-agent-researcher/SKILL.md');
-    expect(projectedResearcher).toContain('x-agentsbridge-kind: agent');
-    expect(projectedResearcher).toContain('x-agentsbridge-name: researcher');
+    const projectedResearcher = read(projectDir, '.cline/skills/am-agent-researcher/SKILL.md');
+    expect(projectedResearcher).toContain('x-agentsmesh-kind: agent');
+    expect(projectedResearcher).toContain('x-agentsmesh-name: researcher');
 
     const hook = read(projectDir, '.clinerules/hooks/posttooluse-0.sh');
     expect(hook).toContain('#!/usr/bin/env bash');
-    expect(hook).toContain('# agentsbridge-matcher: Write|Edit');
-    expect(hook).toContain('# agentsbridge-command: prettier --write $FILE_PATH');
+    expect(hook).toContain('# agentsmesh-matcher: Write|Edit');
+    expect(hook).toContain('# agentsmesh-command: prettier --write $FILE_PATH');
     expect(hook).toContain('set -e');
 
     const mcp = JSON.parse(read(projectDir, '.cline/mcp_settings.json')) as {

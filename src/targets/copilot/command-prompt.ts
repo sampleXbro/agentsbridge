@@ -30,14 +30,14 @@ export function serializeCommandPrompt(command: CanonicalCommand): string {
   const frontmatter: Record<string, unknown> = {
     agent: 'agent',
     description: command.description || undefined,
-    'x-agentsbridge-kind': 'command',
-    'x-agentsbridge-name': command.name,
-    'x-agentsbridge-allowed-tools':
+    'x-agentsmesh-kind': 'command',
+    'x-agentsmesh-name': command.name,
+    'x-agentsmesh-allowed-tools':
       command.allowedTools.length > 0 ? command.allowedTools : undefined,
   };
   if (frontmatter.description === undefined) delete frontmatter.description;
-  if (frontmatter['x-agentsbridge-allowed-tools'] === undefined) {
-    delete frontmatter['x-agentsbridge-allowed-tools'];
+  if (frontmatter['x-agentsmesh-allowed-tools'] === undefined) {
+    delete frontmatter['x-agentsmesh-allowed-tools'];
   }
   return serializeFrontmatter(frontmatter, command.body.trim() || '');
 }
@@ -47,11 +47,9 @@ export function parseCommandPromptFrontmatter(
   promptPath: string,
 ): ParsedCommandPrompt {
   const nameFromMetadata =
-    typeof frontmatter['x-agentsbridge-name'] === 'string'
-      ? frontmatter['x-agentsbridge-name']
-      : '';
+    typeof frontmatter['x-agentsmesh-name'] === 'string' ? frontmatter['x-agentsmesh-name'] : '';
   const name = (nameFromMetadata || basename(promptPath, '.prompt.md')).trim();
-  const allowedToolsFromMetadata = toStringArray(frontmatter['x-agentsbridge-allowed-tools']);
+  const allowedToolsFromMetadata = toStringArray(frontmatter['x-agentsmesh-allowed-tools']);
   const allowedTools =
     allowedToolsFromMetadata.length > 0
       ? allowedToolsFromMetadata

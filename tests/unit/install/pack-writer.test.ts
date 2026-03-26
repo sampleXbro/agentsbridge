@@ -7,7 +7,7 @@ import { materializePack } from '../../../src/install/pack-writer.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';
 
 let tmpDir: string;
-let srcDir: string; // simulated source (cache / .agentsbridge) dir
+let srcDir: string; // simulated source (cache / .agentsmesh) dir
 let packsDir: string;
 
 beforeEach(() => {

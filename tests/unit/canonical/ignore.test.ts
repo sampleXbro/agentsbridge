@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { parseIgnore } from '../../../src/canonical/ignore.js';
 
-const TEST_DIR = join(tmpdir(), 'agentsbridge-ignore-test');
+const TEST_DIR = join(tmpdir(), 'agentsmesh-ignore-test');
 
 beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));

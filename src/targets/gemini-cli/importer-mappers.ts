@@ -8,8 +8,8 @@ import type { ImportFileMapping } from '../import-orchestrator.js';
 import { toGlobsArray, toToolsArray } from '../shared-import-helpers.js';
 import { parseFlexibleFrontmatter } from './format-helpers.js';
 
-const AGENTSBRIDGE_RULES = '.agentsbridge/rules';
-const AGENTSBRIDGE_COMMANDS = '.agentsbridge/commands';
+const AGENTSMESH_RULES = '.agentsmesh/rules';
+const AGENTSMESH_COMMANDS = '.agentsmesh/commands';
 
 export async function mapGeminiRuleFile(
   srcPath: string,
@@ -30,7 +30,7 @@ export async function mapGeminiRuleFile(
   });
   return {
     destPath,
-    toPath: `${AGENTSBRIDGE_RULES}/${destFileName}`,
+    toPath: `${AGENTSMESH_RULES}/${destFileName}`,
     feature: 'rules',
     content: await serializeImportedRuleWithFallback(destPath, canonicalFm, body),
   };
@@ -55,7 +55,7 @@ export async function mapGeminiCommandFile(
   const allowedTools = fromCamel.length > 0 ? fromCamel : fromKebab;
   return {
     destPath,
-    toPath: `${AGENTSBRIDGE_COMMANDS}/${name}.md`,
+    toPath: `${AGENTSMESH_COMMANDS}/${name}.md`,
     feature: 'commands',
     content: await serializeImportedCommandWithFallback(
       destPath,

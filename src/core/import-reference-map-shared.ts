@@ -9,10 +9,10 @@ import {
   LEGACY_PROJECTED_AGENT_SKILL_PREFIX,
 } from '../targets/projected-agent-skill.js';
 
-const AB_RULES = '.agentsbridge/rules';
-const AB_COMMANDS = '.agentsbridge/commands';
-const AB_AGENTS = '.agentsbridge/agents';
-const AB_SKILLS = '.agentsbridge/skills';
+const AB_RULES = '.agentsmesh/rules';
+const AB_COMMANDS = '.agentsmesh/commands';
+const AB_AGENTS = '.agentsmesh/agents';
+const AB_SKILLS = '.agentsmesh/skills';
 
 export function rel(projectRoot: string, absPath: string): string {
   return relative(projectRoot, absPath).replace(/\\/g, '/');

@@ -4,8 +4,8 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { parseCommands } from '../../../src/canonical/commands.js';
 
-const TEST_DIR = join(tmpdir(), 'agentsbridge-commands-test');
-const COMMANDS_DIR = join(TEST_DIR, '.agentsbridge', 'commands');
+const TEST_DIR = join(tmpdir(), 'agentsmesh-commands-test');
+const COMMANDS_DIR = join(TEST_DIR, '.agentsmesh', 'commands');
 
 beforeEach(() => {
   mkdirSync(COMMANDS_DIR, { recursive: true });

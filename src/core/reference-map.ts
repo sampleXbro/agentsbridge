@@ -38,28 +38,28 @@ export function buildReferenceMap(
 
   for (const rule of canonical.rules) {
     const path = ruleTargetPath(target, rule);
-    if (path) refs.set(`.agentsbridge/rules/${basename(rule.source)}`, path);
+    if (path) refs.set(`.agentsmesh/rules/${basename(rule.source)}`, path);
   }
 
   for (const command of canonical.commands) {
     const path = commandTargetPath(target, command.name, config);
-    if (path) refs.set(`.agentsbridge/commands/${command.name}.md`, path);
+    if (path) refs.set(`.agentsmesh/commands/${command.name}.md`, path);
   }
 
   for (const agent of canonical.agents) {
     const path = agentTargetPath(target, agent.name, config);
-    if (path) refs.set(`.agentsbridge/agents/${agent.name}.md`, path);
+    if (path) refs.set(`.agentsmesh/agents/${agent.name}.md`, path);
   }
 
   const skillDir = SKILL_DIRS[target];
   if (!skillDir) return refs;
 
   for (const skill of canonical.skills) {
-    addDirectoryMapping(refs, `.agentsbridge/skills/${skill.name}`, `${skillDir}/${skill.name}`);
-    refs.set(`.agentsbridge/skills/${skill.name}/SKILL.md`, `${skillDir}/${skill.name}/SKILL.md`);
+    addDirectoryMapping(refs, `.agentsmesh/skills/${skill.name}`, `${skillDir}/${skill.name}`);
+    refs.set(`.agentsmesh/skills/${skill.name}/SKILL.md`, `${skillDir}/${skill.name}/SKILL.md`);
     for (const file of skill.supportingFiles) {
       const relativePath = file.relativePath.replace(/\\/g, '/');
-      const canonicalPath = `.agentsbridge/skills/${skill.name}/${relativePath}`;
+      const canonicalPath = `.agentsmesh/skills/${skill.name}/${relativePath}`;
       const targetPath = `${skillDir}/${skill.name}/${relativePath}`;
       refs.set(canonicalPath, targetPath);
       addSkillDirectoryMappings(refs, canonicalPath, targetPath);

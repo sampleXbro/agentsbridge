@@ -1,11 +1,11 @@
 ---
 name: prepare-release
-description: "Use this skill whenever preparing agentsbridge for an npm release — whether first publish, patch, minor, or major. Triggers on: 'prepare release', 'ready to publish', 'ship version', 'release prep', 'get this to npm', 'bump version', 'cut a release', 'what's needed to publish'. Runs a strict ordered checklist: test suite health → timing hardening → CI/CD presence → community health files → changesets → CHANGELOG quality → package contents → README badges → final gate → generate to targets. Do not skip this or work from memory — execute every phase in order and fix gaps before moving on."
+description: "Use this skill whenever preparing agentsmesh for an npm release — whether first publish, patch, minor, or major. Triggers on: 'prepare release', 'ready to publish', 'ship version', 'release prep', 'get this to npm', 'bump version', 'cut a release', 'what's needed to publish'. Runs a strict ordered checklist: test suite health → timing hardening → CI/CD presence → community health files → changesets → CHANGELOG quality → package contents → README badges → final gate → generate to targets. Do not skip this or work from memory — execute every phase in order and fix gaps before moving on."
 ---
 
 # Prepare Release
 
-You are acting as the release engineer for agentsbridge. Your job is to get the repo into a state that is safe, honest, and ready for `npm publish`. Work through each phase in order. Do not mark a phase complete until you have verified it, not just assumed it.
+You are acting as the release engineer for agentsmesh. Your job is to get the repo into a state that is safe, honest, and ready for `npm publish`. Work through each phase in order. Do not mark a phase complete until you have verified it, not just assumed it.
 
 ## How publishing works
 
@@ -195,7 +195,7 @@ Group under clear subheadings:
 - **CLI commands** — one line per command: what it does, key flags
 - **Supported targets** — comma-separated list
 - **Canonical features** — rules, commands, agents, skills, mcp, hooks, ignore, permissions
-- **Config** — describe `agentsbridge.yaml`, `agentsbridge.local.yaml`, `.agentsbridge/`, `.lock`
+- **Config** — describe `agentsmesh.yaml`, `agentsmesh.local.yaml`, `.agentsmesh/`, `.lock`
 - **Extends** — local and remote forms with example syntax
 - **Link rebasing** — one sentence on what it does
 - **Collaboration** — lock file, `check`, `merge`
@@ -223,7 +223,7 @@ package.json
 README.md
 ```
 
-Source files, test files, fixtures, `.agentsbridge/`, `docs/`, `tasks/`, and `tsconfig.json` must not appear. The `files` field in `package.json` controls this — it should be:
+Source files, test files, fixtures, `.agentsmesh/`, `docs/`, `tasks/`, and `tsconfig.json` must not appear. The `files` field in `package.json` controls this — it should be:
 
 ```json
 "files": ["dist", "README.md", "CHANGELOG.md", "LICENSE"]
@@ -238,9 +238,9 @@ If unexpected files appear in the pack output, add them to `.npmignore` or tight
 The README must have these four badges immediately after the `# AgentsBridge` heading:
 
 ```markdown
-[![CI](https://github.com/sampleXbro/agentsbridge/actions/workflows/ci.yml/badge.svg)](https://github.com/sampleXbro/agentsbridge/actions/workflows/ci.yml)
-[![npm version](https://img.shields.io/npm/v/agentsbridge.svg)](https://www.npmjs.com/package/agentsbridge)
-[![Coverage](https://codecov.io/gh/sampleXbro/agentsbridge/branch/master/graph/badge.svg)](https://codecov.io/gh/sampleXbro/agentsbridge)
+[![CI](https://github.com/sampleXbro/agentsmesh/actions/workflows/ci.yml/badge.svg)](https://github.com/sampleXbro/agentsmesh/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/agentsmesh.svg)](https://www.npmjs.com/package/agentsmesh)
+[![Coverage](https://codecov.io/gh/sampleXbro/agentsmesh/branch/master/graph/badge.svg)](https://codecov.io/gh/sampleXbro/agentsmesh)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 ```
 
@@ -287,7 +287,7 @@ This rewrites to Claude Code, Cursor, Copilot, Gemini CLI, Cline, Codex CLI, Win
 After all phases, produce a release readiness report:
 
 ```markdown
-## Release Readiness — agentsbridge v{version}
+## Release Readiness — agentsmesh v{version}
 
 | Phase | Status | Notes |
 |-------|--------|-------|

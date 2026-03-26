@@ -27,9 +27,9 @@ describe('discoverFromContentRoot', () => {
     expect(r.canonical.rules.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('returns empty features for empty .agentsbridge tree', async () => {
+  it('returns empty features for empty .agentsmesh tree', async () => {
     const proj = join(ROOT, 'empty-ab');
-    mkdirSync(join(proj, '.agentsbridge'), { recursive: true });
+    mkdirSync(join(proj, '.agentsmesh'), { recursive: true });
     const r = await discoverFromContentRoot(proj);
     expect(r.features.length).toBe(0);
     expect(r.implicitPick).toBeUndefined();

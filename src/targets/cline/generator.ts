@@ -129,8 +129,8 @@ function safeEventName(event: string): string {
 function buildHookScript(command: string, matcher: string): string {
   return [
     '#!/usr/bin/env bash',
-    `# agentsbridge-matcher: ${matcher}`,
-    `# agentsbridge-command: ${command}`,
+    `# agentsmesh-matcher: ${matcher}`,
+    `# agentsmesh-command: ${command}`,
     'set -e',
     command,
     '',

@@ -25,14 +25,14 @@ features:
 export function createCanonicalProject(config = FULL_FEATURES_CONFIG): string {
   const dir = createTestProject();
   cpSync(
-    join(process.cwd(), 'tests', 'e2e', 'fixtures', 'canonical-full', '.agentsbridge'),
-    join(dir, '.agentsbridge'),
+    join(process.cwd(), 'tests', 'e2e', 'fixtures', 'canonical-full', '.agentsmesh'),
+    join(dir, '.agentsmesh'),
     { recursive: true },
   );
-  writeFileSync(join(dir, 'agentsbridge.yaml'), config);
+  writeFileSync(join(dir, 'agentsmesh.yaml'), config);
   return dir;
 }
 
 export function writeConfig(dir: string, content: string): void {
-  writeFileSync(join(dir, 'agentsbridge.yaml'), content);
+  writeFileSync(join(dir, 'agentsmesh.yaml'), content);
 }

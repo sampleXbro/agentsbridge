@@ -9,7 +9,7 @@ import type { McpServer } from '../../core/types.js';
 import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/fs.js';
 import { CODEX_CONFIG_TOML } from './constants.js';
 
-const AB_MCP = '.agentsbridge/mcp.json';
+const AB_MCP = '.agentsmesh/mcp.json';
 
 export function mapTomlServerToCanonical(raw: unknown): McpServer | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
@@ -70,7 +70,7 @@ export async function importMcp(projectRoot: string, results: ImportResult[]): P
 
   if (Object.keys(mcpServers).length === 0) return;
 
-  await mkdirp(join(projectRoot, '.agentsbridge'));
+  await mkdirp(join(projectRoot, '.agentsmesh'));
   await writeFileAtomic(join(projectRoot, AB_MCP), JSON.stringify({ mcpServers }, null, 2));
   results.push({
     fromTool: 'codex-cli',

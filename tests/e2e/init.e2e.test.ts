@@ -1,5 +1,5 @@
 /**
- * E2E tests for agentsbridge init.
+ * E2E tests for agentsmesh init.
  */
 
 import { describe, it, expect, afterEach } from 'vitest';
@@ -16,14 +16,14 @@ describe('init', () => {
     if (dir) cleanup(dir);
   });
 
-  it('init in empty dir — run ab init → agentsbridge.yaml exists, .agentsbridge/rules/_root.md exists', async () => {
+  it('init in empty dir — run ab init → agentsmesh.yaml exists, .agentsmesh/rules/_root.md exists', async () => {
     dir = createTestProject();
     const r = await runCli('init', dir);
     expect(r.exitCode).toBe(0);
-    fileExists(join(dir, 'agentsbridge.yaml'));
-    fileExists(join(dir, '.agentsbridge', 'rules', '_root.md'));
-    fileContains(join(dir, 'agentsbridge.yaml'), 'version');
-    fileContains(join(dir, '.agentsbridge', 'rules', '_root.md'), 'root');
+    fileExists(join(dir, 'agentsmesh.yaml'));
+    fileExists(join(dir, '.agentsmesh', 'rules', '_root.md'));
+    fileContains(join(dir, 'agentsmesh.yaml'), 'version');
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'root');
   });
 
   it('init detects Claude config — copy claude fixture, run init → stdout mentions found configs', async () => {
@@ -46,19 +46,19 @@ describe('init', () => {
 
   it('init refuses if config exists — create yaml first → run init → exit 1', async () => {
     dir = createTestProject();
-    writeFileSync(join(dir, 'agentsbridge.yaml'), 'version: 1\n');
+    writeFileSync(join(dir, 'agentsmesh.yaml'), 'version: 1\n');
     const r = await runCli('init', dir);
     expect(r.exitCode).toBe(1);
     expect(r.stderr).toContain('Already initialized');
   });
 
-  it('gitignore updated — run init → .gitignore contains agentsbridge.local.yaml', async () => {
+  it('gitignore updated — run init → .gitignore contains agentsmesh.local.yaml', async () => {
     dir = createTestProject();
     writeFileSync(join(dir, '.gitignore'), 'node_modules\n');
     const r = await runCli('init', dir);
     expect(r.exitCode).toBe(0);
     const gitignore = readFileSync(join(dir, '.gitignore'), 'utf-8');
-    expect(gitignore).toContain('agentsbridge.local.yaml');
+    expect(gitignore).toContain('agentsmesh.local.yaml');
   });
 
   it('init creates .gitignore when missing', async () => {
@@ -66,6 +66,6 @@ describe('init', () => {
     const r = await runCli('init', dir);
     expect(r.exitCode).toBe(0);
     fileExists(join(dir, '.gitignore'));
-    fileContains(join(dir, '.gitignore'), 'agentsbridge.local.yaml');
+    fileContains(join(dir, '.gitignore'), 'agentsmesh.local.yaml');
   });
 });

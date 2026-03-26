@@ -36,9 +36,9 @@ export interface ParsedInstallSource {
   gitPlusBase?: string;
   /** Path inside repo (POSIX). Empty = repo root. */
   pathInRepo: string;
-  /** Local project root (directory containing .agentsbridge or repo root). */
+  /** Local project root (directory containing .agentsmesh or repo root). */
   localRoot?: string;
-  /** Relative source string for agentsbridge.yaml (local paths). */
+  /** Relative source string for agentsmesh.yaml (local paths). */
   localSourceForYaml?: string;
 }
 
@@ -169,7 +169,7 @@ export async function parseInstallSource(
     throw new Error(`Path does not exist: ${absLocal}`);
   }
 
-  const abMarker = `${sep}.agentsbridge${sep}`;
+  const abMarker = `${sep}.agentsmesh${sep}`;
   const idx = absLocal.indexOf(abMarker);
   if (idx >= 0) {
     const root = absLocal.slice(0, idx);

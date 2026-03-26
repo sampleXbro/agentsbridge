@@ -37,7 +37,7 @@ describe('fetchGithubRemoteExtend', () => {
 
     await expect(
       fetchGithubRemoteExtend(
-        { org: 'sampleXbro', repo: 'agentsbridge-acrshmp', tag: 'latest' },
+        { org: 'sampleXbro', repo: 'agentsmesh-acrshmp', tag: 'latest' },
         'shared-rules',
         {},
         '/tmp/cache',
@@ -63,7 +63,7 @@ describe('fetchGithubRemoteExtend', () => {
     });
 
     const result = await fetchGithubRemoteExtend(
-      { org: 'sampleXbro', repo: 'agentsbridge-acrshmp', tag: 'latest' },
+      { org: 'sampleXbro', repo: 'agentsmesh-acrshmp', tag: 'latest' },
       'shared-rules',
       {},
       '/tmp/cache',
@@ -72,7 +72,7 @@ describe('fetchGithubRemoteExtend', () => {
     );
 
     expect(mockFetchGitRemoteExtend).toHaveBeenCalledWith(
-      { url: 'https://github.com/sampleXbro/agentsbridge-acrshmp.git' },
+      { url: 'https://github.com/sampleXbro/agentsmesh-acrshmp.git' },
       'shared-rules',
       {},
       '/tmp/cache',
@@ -101,7 +101,7 @@ describe('fetchGithubRemoteExtend', () => {
       });
 
     const result = await fetchGithubRemoteExtend(
-      { org: 'sampleXbro', repo: 'agentsbridge-acrshmp', tag: 'latest' },
+      { org: 'sampleXbro', repo: 'agentsmesh-acrshmp', tag: 'latest' },
       'shared-rules',
       {},
       '/tmp/cache',
@@ -111,14 +111,14 @@ describe('fetchGithubRemoteExtend', () => {
 
     expect(mockFetchGitRemoteExtend.mock.calls).toEqual([
       [
-        { url: 'https://github.com/sampleXbro/agentsbridge-acrshmp.git' },
+        { url: 'https://github.com/sampleXbro/agentsmesh-acrshmp.git' },
         'shared-rules',
         {},
         '/tmp/cache',
         buildCacheKey,
       ],
       [
-        { url: 'ssh://git@github.com/sampleXbro/agentsbridge-acrshmp.git' },
+        { url: 'ssh://git@github.com/sampleXbro/agentsmesh-acrshmp.git' },
         'shared-rules',
         {},
         '/tmp/cache',
@@ -144,7 +144,7 @@ describe('fetchGithubRemoteExtend', () => {
 
     await expect(
       fetchGithubRemoteExtend(
-        { org: 'sampleXbro', repo: 'agentsbridge-acrshmp', tag: 'latest' },
+        { org: 'sampleXbro', repo: 'agentsmesh-acrshmp', tag: 'latest' },
         'shared-rules',
         { token: 'ghp secret/token' },
         '/tmp/cache',
@@ -156,7 +156,7 @@ describe('fetchGithubRemoteExtend', () => {
     expect(mockFetchGitRemoteExtend.mock.calls).toEqual([
       [
         {
-          url: 'https://x-access-token:ghp%20secret%2Ftoken@github.com/sampleXbro/agentsbridge-acrshmp.git',
+          url: 'https://x-access-token:ghp%20secret%2Ftoken@github.com/sampleXbro/agentsmesh-acrshmp.git',
         },
         'shared-rules',
         { token: 'ghp secret/token' },
@@ -166,7 +166,7 @@ describe('fetchGithubRemoteExtend', () => {
     ]);
   });
 
-  it('returns resolvedPath even when .agentsbridge/ is absent (native format repo)', async () => {
+  it('returns resolvedPath even when .agentsmesh/ is absent (native format repo)', async () => {
     const cacheDir = join(tmpdir(), 'ab-gh-remote-native-test');
     mkdirSync(cacheDir, { recursive: true });
 
@@ -180,7 +180,7 @@ describe('fetchGithubRemoteExtend', () => {
     );
 
     // tar.extract is mocked — instead of real extraction, create the top-level dir manually
-    // so findExtractTopDir returns a result (without .agentsbridge/ inside)
+    // so findExtractTopDir returns a result (without .agentsmesh/ inside)
     mockTarExtract.mockImplementationOnce(async (opts: { cwd: string }) => {
       mkdirSync(join(opts.cwd, 'org-repo-v1.0.0'), { recursive: true });
     });
@@ -196,7 +196,7 @@ describe('fetchGithubRemoteExtend', () => {
 
     expect(result.version).toBe('v1.0.0');
     expect(result.resolvedPath).toContain('org-repo');
-    // No throw — caller handles missing .agentsbridge/
+    // No throw — caller handles missing .agentsmesh/
 
     rmSync(cacheDir, { recursive: true, force: true });
   });
@@ -217,7 +217,7 @@ describe('fetchGithubRemoteExtend', () => {
       async (opts: { cwd: string; filter?: (entryPath: string) => boolean }) => {
         expect(opts.filter?.('../escape.txt')).toBe(false);
         expect(opts.filter?.('/absolute/path.txt')).toBe(false);
-        expect(opts.filter?.('org-repo-v1.0.0/.agentsbridge/rules/_root.md')).toBe(true);
+        expect(opts.filter?.('org-repo-v1.0.0/.agentsmesh/rules/_root.md')).toBe(true);
         mkdirSync(join(opts.cwd, 'org-repo-v1.0.0'), { recursive: true });
       },
     );

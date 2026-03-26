@@ -28,7 +28,7 @@ describe('generateRules (copilot)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: 'Project rules',
@@ -48,7 +48,7 @@ describe('generateRules (copilot)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -97,7 +97,7 @@ describe('generateRules (copilot)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -105,7 +105,7 @@ describe('generateRules (copilot)', () => {
           body: 'Root',
         },
         {
-          source: '/proj/.agentsbridge/rules/typescript.md',
+          source: '/proj/.agentsmesh/rules/typescript.md',
           root: false,
           targets: [],
           description: 'TS rules',
@@ -128,7 +128,7 @@ describe('generateRules (copilot)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -136,7 +136,7 @@ describe('generateRules (copilot)', () => {
           body: 'Root',
         },
         {
-          source: '/proj/.agentsbridge/rules/bare.md',
+          source: '/proj/.agentsmesh/rules/bare.md',
           root: false,
           targets: [],
           description: '',
@@ -232,7 +232,7 @@ describe('generateRules (copilot)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -240,7 +240,7 @@ describe('generateRules (copilot)', () => {
           body: 'Root',
         },
         {
-          source: '/proj/.agentsbridge/rules/cursor-only.md',
+          source: '/proj/.agentsmesh/rules/cursor-only.md',
           root: false,
           targets: ['cursor'],
           description: '',
@@ -274,7 +274,7 @@ describe('generateCommands (copilot)', () => {
     const canonical = makeCanonical({
       commands: [
         {
-          source: '/proj/.agentsbridge/commands/review.md',
+          source: '/proj/.agentsmesh/commands/review.md',
           name: 'review',
           description: 'Review changes',
           allowedTools: ['Read', 'Bash(git diff)'],
@@ -287,8 +287,8 @@ describe('generateCommands (copilot)', () => {
     expect(results[0]?.path).toBe(`${COPILOT_PROMPTS_DIR}/review.prompt.md`);
     expect(results[0]?.content).toContain('agent: agent');
     expect(results[0]?.content).toContain('description: Review changes');
-    expect(results[0]?.content).toContain('x-agentsbridge-kind: command');
-    expect(results[0]?.content).toContain('x-agentsbridge-name: review');
+    expect(results[0]?.content).toContain('x-agentsmesh-kind: command');
+    expect(results[0]?.content).toContain('x-agentsmesh-name: review');
     expect(results[0]?.content).toContain('Bash(git diff)');
     expect(results[0]?.content).toContain('Review the current pull request.');
   });
@@ -303,7 +303,7 @@ describe('generateRules (copilot) — .github/instructions path', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/p/.agentsbridge/rules/_root.md',
+          source: '/p/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -311,7 +311,7 @@ describe('generateRules (copilot) — .github/instructions path', () => {
           body: 'Root body',
         },
         {
-          source: '/p/.agentsbridge/rules/react.md',
+          source: '/p/.agentsmesh/rules/react.md',
           root: false,
           targets: [],
           description: 'React rules',
@@ -332,7 +332,7 @@ describe('generateRules (copilot) — .github/instructions path', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/p/.agentsbridge/rules/_root.md',
+          source: '/p/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -340,7 +340,7 @@ describe('generateRules (copilot) — .github/instructions path', () => {
           body: 'Root',
         },
         {
-          source: '/p/.agentsbridge/rules/ts.md',
+          source: '/p/.agentsmesh/rules/ts.md',
           root: false,
           targets: [],
           description: 'TS',
@@ -358,7 +358,7 @@ describe('generateRules (copilot) — .github/instructions path', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/p/.agentsbridge/rules/_root.md',
+          source: '/p/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -366,7 +366,7 @@ describe('generateRules (copilot) — .github/instructions path', () => {
           body: 'Root',
         },
         {
-          source: '/p/.agentsbridge/rules/general.md',
+          source: '/p/.agentsmesh/rules/general.md',
           root: false,
           targets: [],
           description: 'General',
@@ -392,7 +392,7 @@ describe('generateHooks (copilot)', () => {
     });
     const results = generateHooks(canonical);
     expect(results).toHaveLength(1);
-    expect(results[0]!.path).toBe('.github/hooks/agentsbridge.json');
+    expect(results[0]!.path).toBe('.github/hooks/agentsmesh.json');
     expect(results[0]!.content).toContain('"version": 1');
     expect(results[0]!.content).toContain('"postToolUse"');
     expect(results[0]!.content).toContain('"bash"');

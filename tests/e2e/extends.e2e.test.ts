@@ -10,7 +10,7 @@ describe('extends and local overrides', () => {
   let cacheDir = '';
 
   afterEach(() => {
-    delete process.env.AGENTSBRIDGE_CACHE;
+    delete process.env.AGENTSMESH_CACHE;
     if (dir) cleanup(dir);
     if (cacheDir) cleanup(cacheDir);
     dir = '';
@@ -19,19 +19,19 @@ describe('extends and local overrides', () => {
 
   it('local canonical rules override shared extends', async () => {
     dir = createTestProject();
-    mkdirSync(join(dir, '.agentsbridge', 'rules'), { recursive: true });
-    mkdirSync(join(dir, 'shared', '.agentsbridge', 'rules'), { recursive: true });
+    mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
+    mkdirSync(join(dir, 'shared', '.agentsmesh', 'rules'), { recursive: true });
 
     writeFileSync(
-      join(dir, 'agentsbridge.yaml'),
+      join(dir, 'agentsmesh.yaml'),
       'version: 1\ntargets: [claude-code]\nfeatures: [rules]\nextends:\n  - name: base\n    source: ./shared\n    features: [rules]\n',
     );
     writeFileSync(
-      join(dir, 'shared', '.agentsbridge', 'rules', '_root.md'),
+      join(dir, 'shared', '.agentsmesh', 'rules', '_root.md'),
       '---\nroot: true\n---\n# Shared\n',
     );
     writeFileSync(
-      join(dir, '.agentsbridge', 'rules', '_root.md'),
+      join(dir, '.agentsmesh', 'rules', '_root.md'),
       '---\nroot: true\n---\n# Local wins\n',
     );
 
@@ -41,9 +41,9 @@ describe('extends and local overrides', () => {
     expect(readFileSync(join(dir, '.claude', 'CLAUDE.md'), 'utf-8')).toContain('Local wins');
   });
 
-  it('agentsbridge.local.yaml overrides targets for local generation', async () => {
+  it('agentsmesh.local.yaml overrides targets for local generation', async () => {
     dir = createTestProject('canonical-full');
-    writeFileSync(join(dir, 'agentsbridge.local.yaml'), 'targets: [claude-code]\n');
+    writeFileSync(join(dir, 'agentsmesh.local.yaml'), 'targets: [claude-code]\n');
 
     const result = await runCli('generate', dir);
 
@@ -56,25 +56,25 @@ describe('extends and local overrides', () => {
     dir = createTestProject();
     cacheDir = createTestProject();
     rmSync(cacheDir, { recursive: true, force: true });
-    mkdirSync(join(cacheDir, 'org-repo-v1_0_0', 'org-repo-v1.0.0', '.agentsbridge', 'rules'), {
+    mkdirSync(join(cacheDir, 'org-repo-v1_0_0', 'org-repo-v1.0.0', '.agentsmesh', 'rules'), {
       recursive: true,
     });
-    mkdirSync(join(dir, '.agentsbridge', 'rules'), { recursive: true });
+    mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(
-      join(cacheDir, 'org-repo-v1_0_0', 'org-repo-v1.0.0', '.agentsbridge', 'rules', '_root.md'),
+      join(cacheDir, 'org-repo-v1_0_0', 'org-repo-v1.0.0', '.agentsmesh', 'rules', '_root.md'),
       '---\nroot: true\n---\n# Cached remote\n',
     );
     writeFileSync(
-      join(dir, 'agentsbridge.yaml'),
+      join(dir, 'agentsmesh.yaml'),
       'version: 1\ntargets: [claude-code]\nfeatures: [rules]\nextends:\n  - name: remote-base\n    source: github:org/repo@v1.0.0\n    features: [rules]\n',
     );
-    process.env.AGENTSBRIDGE_CACHE = cacheDir;
+    process.env.AGENTSMESH_CACHE = cacheDir;
 
     const result = await runCli('generate', dir);
 
     expect(result.exitCode).toBe(0);
     expect(readFileSync(join(dir, '.claude', 'CLAUDE.md'), 'utf-8')).toContain('Cached remote');
-    expect(readFileSync(join(dir, '.agentsbridge', '.lock'), 'utf-8')).toContain('remote-base');
+    expect(readFileSync(join(dir, '.agentsmesh', '.lock'), 'utf-8')).toContain('remote-base');
   });
 
   it('refreshes cached github extends when --refresh-cache is used', async () => {
@@ -82,18 +82,18 @@ describe('extends and local overrides', () => {
     cacheDir = createTestProject();
     rmSync(cacheDir, { recursive: true, force: true });
 
-    mkdirSync(join(cacheDir, 'org-repo-v1_0_0', 'org-repo-v1.0.0', '.agentsbridge', 'rules'), {
+    mkdirSync(join(cacheDir, 'org-repo-v1_0_0', 'org-repo-v1.0.0', '.agentsmesh', 'rules'), {
       recursive: true,
     });
     writeFileSync(
-      join(cacheDir, 'org-repo-v1_0_0', 'org-repo-v1.0.0', '.agentsbridge', 'rules', '_root.md'),
+      join(cacheDir, 'org-repo-v1_0_0', 'org-repo-v1.0.0', '.agentsmesh', 'rules', '_root.md'),
       '---\nroot: true\n---\n# Stale remote\n',
     );
 
     const remoteSrc = join(dir, 'remote-src');
-    mkdirSync(join(remoteSrc, 'org-repo-v1.0.0', '.agentsbridge', 'rules'), { recursive: true });
+    mkdirSync(join(remoteSrc, 'org-repo-v1.0.0', '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(
-      join(remoteSrc, 'org-repo-v1.0.0', '.agentsbridge', 'rules', '_root.md'),
+      join(remoteSrc, 'org-repo-v1.0.0', '.agentsmesh', 'rules', '_root.md'),
       '---\nroot: true\n---\n# Refreshed remote\n',
     );
     const tarball = join(dir, 'remote.tar.gz');
@@ -122,14 +122,14 @@ globalThis.fetch = async (input, init) => {
 `,
     );
 
-    mkdirSync(join(dir, '.agentsbridge', 'rules'), { recursive: true });
+    mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(
-      join(dir, 'agentsbridge.yaml'),
+      join(dir, 'agentsmesh.yaml'),
       'version: 1\ntargets: [claude-code]\nfeatures: [rules]\nextends:\n  - name: remote-base\n    source: github:org/repo@v1.0.0\n    features: [rules]\n',
     );
 
     const result = await runCli('generate --refresh-cache', dir, {
-      AGENTSBRIDGE_CACHE: cacheDir,
+      AGENTSMESH_CACHE: cacheDir,
       AB_TEST_TARBALL: tarball,
       NODE_OPTIONS: `--import=${preloadPath}`,
     });
@@ -138,7 +138,7 @@ globalThis.fetch = async (input, init) => {
     expect(readFileSync(join(dir, '.claude', 'CLAUDE.md'), 'utf-8')).toContain('Refreshed remote');
     expect(
       readFileSync(
-        join(cacheDir, 'org-repo-v1_0_0', 'org-repo-v1.0.0', '.agentsbridge', 'rules', '_root.md'),
+        join(cacheDir, 'org-repo-v1_0_0', 'org-repo-v1.0.0', '.agentsmesh', 'rules', '_root.md'),
         'utf-8',
       ),
     ).toContain('Refreshed remote');

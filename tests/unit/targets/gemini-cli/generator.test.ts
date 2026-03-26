@@ -39,7 +39,7 @@ describe('generateRules (gemini-cli)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: 'Project rules',
@@ -59,7 +59,7 @@ describe('generateRules (gemini-cli)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -67,7 +67,7 @@ describe('generateRules (gemini-cli)', () => {
           body: 'Root content',
         },
         {
-          source: '/proj/.agentsbridge/rules/typescript.md',
+          source: '/proj/.agentsmesh/rules/typescript.md',
           root: false,
           targets: [],
           description: 'TS rules',
@@ -94,7 +94,7 @@ describe('generateRules (gemini-cli)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -102,7 +102,7 @@ describe('generateRules (gemini-cli)', () => {
           body: 'Root',
         },
         {
-          source: '/proj/.agentsbridge/rules/cursor-only.md',
+          source: '/proj/.agentsmesh/rules/cursor-only.md',
           root: false,
           targets: ['cursor'],
           description: '',
@@ -119,7 +119,7 @@ describe('generateRules (gemini-cli)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -138,7 +138,7 @@ describe('generateRules (gemini-cli)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: false,
           targets: [],
           description: 'Special rule',
@@ -156,7 +156,7 @@ describe('generateRules (gemini-cli)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/style.md',
+          source: '/proj/.agentsmesh/rules/style.md',
           root: false,
           targets: [],
           description: '',
@@ -174,7 +174,7 @@ describe('generateRules (gemini-cli)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/cursor-only.md',
+          source: '/proj/.agentsmesh/rules/cursor-only.md',
           root: false,
           targets: ['cursor'],
           description: '',
@@ -191,7 +191,7 @@ describe('generateRules (gemini-cli)', () => {
     const canonical = makeCanonical({
       rules: [
         {
-          source: '/proj/.agentsbridge/rules/_root.md',
+          source: '/proj/.agentsmesh/rules/_root.md',
           root: true,
           targets: [],
           description: '',
@@ -199,7 +199,7 @@ describe('generateRules (gemini-cli)', () => {
           body: 'Root content',
         },
         {
-          source: '/proj/.agentsbridge/rules/ts.md',
+          source: '/proj/.agentsmesh/rules/ts.md',
           root: false,
           targets: [],
           description: '',
@@ -268,7 +268,7 @@ describe('generateAgents (gemini-cli)', () => {
     const canonical = makeCanonical({
       agents: [
         {
-          source: '/proj/.agentsbridge/agents/auditor.md',
+          source: '/proj/.agentsmesh/agents/auditor.md',
           name: 'auditor',
           description: 'Security auditor',
           tools: ['read_file', 'grep_search'],
@@ -305,7 +305,7 @@ describe('generateSettings with agents', () => {
     const canonical = makeCanonical({
       agents: [
         {
-          source: '/proj/.agentsbridge/agents/helper.md',
+          source: '/proj/.agentsmesh/agents/helper.md',
           name: 'helper',
           description: 'Helper',
           tools: [],
@@ -333,7 +333,7 @@ describe('generateSkills (gemini-cli)', () => {
     const canonical = makeCanonical({
       skills: [
         {
-          source: '/proj/.agentsbridge/skills/qa/SKILL.md',
+          source: '/proj/.agentsmesh/skills/qa/SKILL.md',
           name: 'qa',
           description: 'QA checklist',
           body: 'Run the QA checklist.',
@@ -352,7 +352,7 @@ describe('generateSkills (gemini-cli)', () => {
     const canonical = makeCanonical({
       skills: [
         {
-          source: '/proj/.agentsbridge/skills/review/SKILL.md',
+          source: '/proj/.agentsmesh/skills/review/SKILL.md',
           name: 'review',
           description: 'Code review',
           body: 'Review code.',
@@ -377,7 +377,7 @@ describe('generateSkills (gemini-cli)', () => {
     const canonical = makeCanonical({
       skills: [
         {
-          source: '/proj/.agentsbridge/skills/simple/SKILL.md',
+          source: '/proj/.agentsmesh/skills/simple/SKILL.md',
           name: 'simple',
           description: '',
           body: 'Simple skill.',
@@ -489,7 +489,7 @@ describe('generateSettings (gemini-cli)', () => {
     const canonical = makeCanonical({
       agents: [
         {
-          source: '/proj/.agentsbridge/agents/helper.md',
+          source: '/proj/.agentsmesh/agents/helper.md',
           name: 'helper',
           description: 'Helper',
           tools: [],

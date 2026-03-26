@@ -55,8 +55,8 @@ function wrapperPath(event: string, index: number): string {
 function buildWrapper(command: string, matcher: string): string {
   return [
     '#!/usr/bin/env bash',
-    `# agentsbridge-matcher: ${matcher}`,
-    `# agentsbridge-command: ${command}`,
+    `# agentsmesh-matcher: ${matcher}`,
+    `# agentsmesh-command: ${command}`,
     'set -e',
     command,
     '',

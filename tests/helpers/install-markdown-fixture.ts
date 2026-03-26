@@ -49,13 +49,13 @@ export function manifestFeatures(kind: MarkdownKind): string[] {
 
 export function seedProject(project: string, kind: MarkdownKind): void {
   const projectFeatures = kind === 'rules' ? ['rules'] : ['rules', kind];
-  mkdirSync(join(project, '.agentsbridge', 'rules'), { recursive: true });
+  mkdirSync(join(project, '.agentsmesh', 'rules'), { recursive: true });
   writeFileSync(
-    join(project, 'agentsbridge.yaml'),
+    join(project, 'agentsmesh.yaml'),
     `version: 1\ntargets: [claude-code]\nfeatures: [${projectFeatures.join(',')}]\nextends: []\n`,
   );
   writeFileSync(
-    join(project, '.agentsbridge', 'rules', '_root.md'),
+    join(project, '.agentsmesh', 'rules', '_root.md'),
     '---\nroot: true\n---\n# Project Root\n',
   );
 }

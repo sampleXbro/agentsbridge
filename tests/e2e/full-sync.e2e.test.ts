@@ -51,7 +51,7 @@ describe('full-sync round trip preservation', () => {
 
       // 3. Nuke the canonical source directory to ensure we reconstruct entirely from targeted files.
       const { rmSync } = await import('node:fs');
-      rmSync(join(dir, '.agentsbridge'), { recursive: true, force: true });
+      rmSync(join(dir, '.agentsmesh'), { recursive: true, force: true });
 
       // 4. Import configurations back to canonical
       const importResult = await runCli(`import --from ${target}`, dir);
@@ -62,18 +62,18 @@ describe('full-sync round trip preservation', () => {
       // --- RULES Preservation ---
       if (!['cline', 'windsurf'].includes(target)) {
         // These targets emit discrete rule files that must be re-imported with content intact
-        const canonicalRules = join(dir, '.agentsbridge', 'rules');
+        const canonicalRules = join(dir, '.agentsmesh', 'rules');
         fileExists(canonicalRules);
       }
       // claude-code and cursor preserve rule body content through the round-trip
       if (target === 'claude-code') {
-        const rootRule = join(dir, '.agentsbridge', 'rules', '_root.md');
+        const rootRule = join(dir, '.agentsmesh', 'rules', '_root.md');
         fileExists(rootRule);
         fileContains(rootRule, '# Standards');
         fileContains(rootRule, 'TypeScript strict');
       }
       if (target === 'cursor') {
-        const tsRule = join(dir, '.agentsbridge', 'rules', 'typescript.md');
+        const tsRule = join(dir, '.agentsmesh', 'rules', 'typescript.md');
         fileExists(tsRule);
         fileContains(tsRule, 'No any');
         fileContains(tsRule, 'Explicit return types');
@@ -81,7 +81,7 @@ describe('full-sync round trip preservation', () => {
 
       // --- COMMANDS Preservation ---
       if (['claude-code', 'gemini-cli'].includes(target)) {
-        const canonicalCommands = join(dir, '.agentsbridge', 'commands');
+        const canonicalCommands = join(dir, '.agentsmesh', 'commands');
         fileExists(canonicalCommands);
         const reviewCmd = join(canonicalCommands, 'review.md');
         fileExists(reviewCmd);
@@ -94,13 +94,13 @@ describe('full-sync round trip preservation', () => {
       // --- SKILLS Preservation ---
       // Note: Cline native representation stores skills logic inside .cline/skills
       if (target === 'cline') {
-        const canonicalSkills = join(dir, '.agentsbridge', 'skills');
+        const canonicalSkills = join(dir, '.agentsmesh', 'skills');
         fileExists(canonicalSkills);
       }
 
       // --- IGNORE Preservation ---
       if (['cline', 'windsurf'].includes(target)) {
-        const ignoreFile = join(dir, '.agentsbridge', 'ignore');
+        const ignoreFile = join(dir, '.agentsmesh', 'ignore');
         fileExists(ignoreFile);
         fileContains(ignoreFile, '.env');
         fileContains(ignoreFile, 'node_modules');
@@ -109,7 +109,7 @@ describe('full-sync round trip preservation', () => {
       // --- MCP Preservation ---
       // Cline & Cursor natively support MCP settings importing
       if (['cline', 'cursor'].includes(target)) {
-        const mcpFile = join(dir, '.agentsbridge', 'mcp.json');
+        const mcpFile = join(dir, '.agentsmesh', 'mcp.json');
         fileExists(mcpFile);
         fileContains(mcpFile, 'context7');
         // server command/args must be preserved, not just the server name

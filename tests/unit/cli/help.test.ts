@@ -15,7 +15,7 @@ describe('printHelp', () => {
     };
     try {
       printHelp();
-      expect(output).toContain('agentsbridge');
+      expect(output).toContain('agentsmesh');
       expect(output).toContain('init');
       expect(output).toContain('generate');
       expect(output).toContain('import');
@@ -38,7 +38,7 @@ describe('printCommandHelp', () => {
     };
     try {
       printCommandHelp('generate');
-      expect(output).toContain('agentsbridge generate');
+      expect(output).toContain('agentsmesh generate');
       expect(output).toContain('Command flags:');
     } finally {
       process.stdout.write = write;
@@ -54,7 +54,7 @@ describe('printCommandHelp', () => {
     };
     try {
       printCommandHelp('install');
-      expect(output).toContain('agentsbridge install');
+      expect(output).toContain('agentsmesh install');
       expect(output).toContain('--path');
       expect(output).toContain('--target');
       expect(output).toContain('--as');

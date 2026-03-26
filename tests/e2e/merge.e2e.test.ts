@@ -1,5 +1,5 @@
 /**
- * E2E tests for agentsbridge merge.
+ * E2E tests for agentsmesh merge.
  */
 
 import { describe, it, expect, afterEach } from 'vitest';
@@ -27,7 +27,7 @@ describe('merge', () => {
     dir = createTestProject('canonical-full');
     await runCli('generate', dir);
     writeFileSync(
-      join(dir, '.agentsbridge', '.lock'),
+      join(dir, '.agentsmesh', '.lock'),
       `<<<<<<< HEAD
 generated_at: "2026-03-12T14:30:00Z"
 generated_by: "alice"

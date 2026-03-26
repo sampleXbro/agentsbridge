@@ -15,7 +15,7 @@ import {
   CODEX_AGENTS_DIR,
 } from '../../../../src/targets/codex-cli/constants.js';
 
-const TEST_DIR = join(tmpdir(), 'ab-codex-importer-test');
+const TEST_DIR = join(tmpdir(), 'am-codex-importer-test');
 const CODEX_SKILLS_FALLBACK_DIR = '.codex/skills';
 
 beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
@@ -28,8 +28,8 @@ describe('importFromCodex: rules', () => {
     const rulesResult = results.find((r) => r.feature === 'rules');
     expect(rulesResult).toBeDefined();
     expect(rulesResult!.fromTool).toBe('codex-cli');
-    expect(rulesResult!.toPath).toBe('.agentsbridge/rules/_root.md');
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    expect(rulesResult!.toPath).toBe('.agentsmesh/rules/_root.md');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(content).toContain('# Rules');
     expect(content).toContain('- Use TypeScript');
@@ -40,7 +40,7 @@ describe('importFromCodex: rules', () => {
     const results = await importFromCodex(TEST_DIR);
     const rulesResult = results.find((r) => r.feature === 'rules');
     expect(rulesResult).toBeDefined();
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(content).toContain('# Agents rules');
   });
@@ -68,10 +68,10 @@ describe('importFromCodex: rules', () => {
 
     await importFromCodex(TEST_DIR);
 
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
-    expect(content).toContain('.agentsbridge/skills/post-feature-qa/');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
+    expect(content).toContain('.agentsmesh/skills/post-feature-qa/');
     expect(content).toContain(
-      '.agentsbridge/skills/post-feature-qa/references/edge-case-checklist.md',
+      '.agentsmesh/skills/post-feature-qa/references/edge-case-checklist.md',
     );
     expect(content).not.toContain('.windsurf/skills/post-feature-qa/');
   });
@@ -81,7 +81,7 @@ describe('importFromCodex: rules', () => {
     writeFileSync(join(TEST_DIR, AGENTS_MD), '# From agents\n');
     const results = await importFromCodex(TEST_DIR);
     expect(results.filter((r) => r.feature === 'rules')).toHaveLength(1);
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'rules', '_root.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('# From agents');
     expect(content).not.toContain('# From codex');
   });
@@ -104,9 +104,9 @@ describe('importFromCodex: skills', () => {
     const skillResult = results.find((r) => r.feature === 'skills');
     expect(skillResult).toBeDefined();
     expect(skillResult!.fromTool).toBe('codex-cli');
-    expect(skillResult!.toPath).toBe('.agentsbridge/skills/my-skill/SKILL.md');
+    expect(skillResult!.toPath).toBe('.agentsmesh/skills/my-skill/SKILL.md');
     const content = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'skills', 'my-skill', 'SKILL.md'),
+      join(TEST_DIR, '.agentsmesh', 'skills', 'my-skill', 'SKILL.md'),
       'utf-8',
     );
     expect(content).toContain('Do the thing.');
@@ -124,7 +124,7 @@ describe('importFromCodex: skills', () => {
     expect(skillResults.length).toBeGreaterThanOrEqual(2);
     expect(skillResults.some((r) => r.toPath.endsWith('checklist.md'))).toBe(true);
     const content = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'skills', 'qa', 'references', 'checklist.md'),
+      join(TEST_DIR, '.agentsmesh', 'skills', 'qa', 'references', 'checklist.md'),
       'utf-8',
     );
     expect(content).toContain('# Checklist');
@@ -162,10 +162,10 @@ describe('importFromCodex: skills', () => {
     const results = await importFromCodex(TEST_DIR);
 
     expect(
-      results.find((r) => r.toPath === '.agentsbridge/skills/fallback-skill/SKILL.md'),
+      results.find((r) => r.toPath === '.agentsmesh/skills/fallback-skill/SKILL.md'),
     ).toBeDefined();
     const content = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'skills', 'fallback-skill', 'SKILL.md'),
+      join(TEST_DIR, '.agentsmesh', 'skills', 'fallback-skill', 'SKILL.md'),
       'utf-8',
     );
     expect(content).toContain('# Fallback skill');
@@ -184,30 +184,30 @@ describe('importFromCodex: skills', () => {
     const results = await importFromCodex(TEST_DIR);
 
     expect(
-      results.find((r) => r.toPath === '.agentsbridge/skills/linked-skill/SKILL.md'),
+      results.find((r) => r.toPath === '.agentsmesh/skills/linked-skill/SKILL.md'),
     ).toBeDefined();
     expect(
-      results.find((r) => r.toPath === '.agentsbridge/skills/linked-skill/README.md'),
+      results.find((r) => r.toPath === '.agentsmesh/skills/linked-skill/README.md'),
     ).toBeDefined();
     const content = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'skills', 'linked-skill', 'SKILL.md'),
+      join(TEST_DIR, '.agentsmesh', 'skills', 'linked-skill', 'SKILL.md'),
       'utf-8',
     );
     expect(content).toContain('# Symlinked skill');
   });
 
   it('imports metadata-tagged command skills back into canonical commands', async () => {
-    const skillDir = join(TEST_DIR, CODEX_SKILLS_DIR, 'ab-command-review');
+    const skillDir = join(TEST_DIR, CODEX_SKILLS_DIR, 'am-command-review');
     mkdirSync(skillDir, { recursive: true });
-    mkdirSync(join(TEST_DIR, '.agentsbridge', 'skills', 'ab-command-review'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'skills', 'am-command-review'), { recursive: true });
     writeFileSync(
       join(skillDir, 'SKILL.md'),
       [
         '---',
         'description: Review changes',
-        'x-agentsbridge-kind: command',
-        'x-agentsbridge-name: review',
-        'x-agentsbridge-allowed-tools:',
+        'x-agentsmesh-kind: command',
+        'x-agentsmesh-name: review',
+        'x-agentsmesh-allowed-tools:',
         '  - Read',
         '  - Bash(git diff)',
         '---',
@@ -220,33 +220,33 @@ describe('importFromCodex: skills', () => {
 
     const commandResult = results.find((r) => r.feature === 'commands');
     expect(commandResult).toBeDefined();
-    expect(commandResult?.toPath).toBe('.agentsbridge/commands/review.md');
+    expect(commandResult?.toPath).toBe('.agentsmesh/commands/review.md');
     expect(results.filter((r) => r.feature === 'skills')).toHaveLength(0);
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'commands', 'review.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'), 'utf-8');
     expect(content).toContain('description: Review changes');
     expect(content).toContain('allowed-tools:');
     expect(content).toContain('Bash(git diff)');
     expect(content).toContain('Review the current diff for risk.');
-    expect(existsSync(join(TEST_DIR, '.agentsbridge', 'skills', 'ab-command-review'))).toBe(false);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'skills', 'am-command-review'))).toBe(false);
   });
 
   it('imports metadata-tagged agent skills back into canonical agents', async () => {
-    const skillDir = join(TEST_DIR, CODEX_SKILLS_DIR, 'ab-agent-reviewer');
+    const skillDir = join(TEST_DIR, CODEX_SKILLS_DIR, 'am-agent-reviewer');
     mkdirSync(skillDir, { recursive: true });
-    mkdirSync(join(TEST_DIR, '.agentsbridge', 'skills', 'ab-agent-reviewer'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'skills', 'am-agent-reviewer'), { recursive: true });
     writeFileSync(
       join(skillDir, 'SKILL.md'),
       [
         '---',
         'description: Review specialist',
-        'x-agentsbridge-kind: agent',
-        'x-agentsbridge-name: reviewer',
-        'x-agentsbridge-tools:',
+        'x-agentsmesh-kind: agent',
+        'x-agentsmesh-name: reviewer',
+        'x-agentsmesh-tools:',
         '  - Read',
         '  - Grep',
-        'x-agentsbridge-model: gpt-5-codex',
-        'x-agentsbridge-permission-mode: ask',
-        'x-agentsbridge-max-turns: 9',
+        'x-agentsmesh-model: gpt-5-codex',
+        'x-agentsmesh-permission-mode: ask',
+        'x-agentsmesh-max-turns: 9',
         '---',
         '',
         'Review risky changes first.',
@@ -256,16 +256,16 @@ describe('importFromCodex: skills', () => {
     const results = await importFromCodex(TEST_DIR);
 
     expect(results.find((r) => r.feature === 'agents')).toBeDefined();
-    expect(results.find((r) => r.toPath === '.agentsbridge/agents/reviewer.md')).toBeDefined();
+    expect(results.find((r) => r.toPath === '.agentsmesh/agents/reviewer.md')).toBeDefined();
     expect(results.filter((r) => r.feature === 'skills')).toHaveLength(0);
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'agents', 'reviewer.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'), 'utf-8');
     expect(content).toContain('name: reviewer');
     expect(content).toContain('model: gpt-5-codex');
     expect(content).toContain('Review risky changes first.');
-    expect(existsSync(join(TEST_DIR, '.agentsbridge', 'skills', 'ab-agent-reviewer'))).toBe(false);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'skills', 'am-agent-reviewer'))).toBe(false);
   });
 
-  it('imports .codex/agents/*.toml into .agentsbridge/agents/*.md', async () => {
+  it('imports .codex/agents/*.toml into .agentsmesh/agents/*.md', async () => {
     writeFileSync(join(TEST_DIR, AGENTS_MD), '# Root\n');
     mkdirSync(join(TEST_DIR, '.codex', 'agents'), { recursive: true });
     writeFileSync(
@@ -284,11 +284,11 @@ describe('importFromCodex: skills', () => {
 
     const results = await importFromCodex(TEST_DIR);
 
-    const agentResult = results.find((r) => r.toPath === '.agentsbridge/agents/pr-explorer.md');
+    const agentResult = results.find((r) => r.toPath === '.agentsmesh/agents/pr-explorer.md');
     expect(agentResult).toBeDefined();
     expect(agentResult!.fromPath).toContain('.codex/agents/pr-explorer.toml');
     const content = readFileSync(
-      join(TEST_DIR, '.agentsbridge', 'agents', 'pr-explorer.md'),
+      join(TEST_DIR, '.agentsmesh', 'agents', 'pr-explorer.md'),
       'utf-8',
     );
     expect(content).toContain('name: pr-explorer');
@@ -304,13 +304,13 @@ describe('importFromCodex: scoped AGENTS filtering', () => {
     writeFileSync(join(TEST_DIR, AGENTS_MD), '# Root Codex Rules\n');
     mkdirSync(join(TEST_DIR, 'src'), { recursive: true });
     writeFileSync(join(TEST_DIR, 'src', 'AGENTS.md'), '# Src Rules\n');
-    mkdirSync(join(TEST_DIR, '.agentsbridge', 'rules'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', 'rules', '.worktrees-security-collaboration.md'),
+      join(TEST_DIR, '.agentsmesh', 'rules', '.worktrees-security-collaboration.md'),
       'stale hidden rule',
     );
     writeFileSync(
-      join(TEST_DIR, '.agentsbridge', 'rules', 'tests-e2e-fixtures-codex-project.md'),
+      join(TEST_DIR, '.agentsmesh', 'rules', 'tests-e2e-fixtures-codex-project.md'),
       'stale fixture rule',
     );
     mkdirSync(join(TEST_DIR, '.worktrees', 'security-collaboration'), { recursive: true });
@@ -331,12 +331,12 @@ describe('importFromCodex: scoped AGENTS filtering', () => {
         .filter((r) => r.feature === 'rules')
         .map((r) => r.toPath)
         .sort(),
-    ).toEqual(['.agentsbridge/rules/_root.md', '.agentsbridge/rules/src.md']);
+    ).toEqual(['.agentsmesh/rules/_root.md', '.agentsmesh/rules/src.md']);
     expect(
-      existsSync(join(TEST_DIR, '.agentsbridge', 'rules', '.worktrees-security-collaboration.md')),
+      existsSync(join(TEST_DIR, '.agentsmesh', 'rules', '.worktrees-security-collaboration.md')),
     ).toBe(false);
     expect(
-      existsSync(join(TEST_DIR, '.agentsbridge', 'rules', 'tests-e2e-fixtures-codex-project.md')),
+      existsSync(join(TEST_DIR, '.agentsmesh', 'rules', 'tests-e2e-fixtures-codex-project.md')),
     ).toBe(false);
   });
 });
@@ -351,8 +351,8 @@ describe('importFromCodex: MCP', () => {
     const mcpResult = results.find((r) => r.feature === 'mcp');
     expect(mcpResult).toBeDefined();
     expect(mcpResult!.fromTool).toBe('codex-cli');
-    expect(mcpResult!.toPath).toBe('.agentsbridge/mcp.json');
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'mcp.json'), 'utf-8');
+    expect(mcpResult!.toPath).toBe('.agentsmesh/mcp.json');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf-8');
     const parsed = JSON.parse(content) as { mcpServers: Record<string, unknown> };
     expect(parsed.mcpServers['my-server']).toBeDefined();
   });
@@ -364,7 +364,7 @@ describe('importFromCodex: MCP', () => {
     writeFileSync(join(TEST_DIR, CODEX_CONFIG_TOML), toml);
     const results = await importFromCodex(TEST_DIR);
     expect(results.find((r) => r.feature === 'mcp')).toBeDefined();
-    const content = readFileSync(join(TEST_DIR, '.agentsbridge', 'mcp.json'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf-8');
     const parsed = JSON.parse(content) as {
       mcpServers: Record<string, { env: Record<string, string> }>;
     };

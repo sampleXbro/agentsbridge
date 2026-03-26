@@ -8,8 +8,8 @@
 ## Setup
 
 ```bash
-git clone https://github.com/sampleXbro/agentsbridge.git
-cd agentsbridge
+git clone https://github.com/sampleXbro/agentsmesh.git
+cd agentsmesh
 pnpm install
 ```
 

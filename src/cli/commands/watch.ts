@@ -1,5 +1,5 @@
 /**
- * agentsbridge watch — watch canonical files and regenerate on change.
+ * agentsmesh watch — watch canonical files and regenerate on change.
  */
 
 import { join, relative } from 'node:path';
@@ -16,7 +16,7 @@ function shouldIgnoreWatchPath(configDir: string, changedPath: string): boolean 
   const relPath = relative(configDir, changedPath).replace(/\\/g, '/');
   // Chokidar can report paths through different resolution layers; use `endsWith`
   // so we reliably ignore lock-file churn regardless of relative prefixing.
-  return relPath.endsWith('.agentsbridge/.lock') || relPath.endsWith('.agentsbridge/.lock.tmp');
+  return relPath.endsWith('.agentsmesh/.lock') || relPath.endsWith('.agentsmesh/.lock.tmp');
 }
 
 /**
@@ -48,12 +48,12 @@ function featureFingerprint(
 
 /**
  * Run the watch command.
- * Watches .agentsbridge/ and agentsbridge.yaml. On change: debounce 300ms, re-run
+ * Watches .agentsmesh/ and agentsmesh.yaml. On change: debounce 300ms, re-run
  * generate, print compact summary, show matrix if features changed.
  * @param flags - CLI flags (targets, verbose)
  * @param projectRoot - Project root (default process.cwd())
  * @returns Object with stop() to stop watching
- * @throws When not initialized (no agentsbridge.yaml)
+ * @throws When not initialized (no agentsmesh.yaml)
  */
 export async function runWatch(
   flags: Record<string, string | boolean>,
@@ -63,9 +63,9 @@ export async function runWatch(
   const { configDir } = await loadConfigFromDir(root);
 
   const paths = [
-    join(configDir, '.agentsbridge'),
-    join(configDir, 'agentsbridge.yaml'),
-    join(configDir, 'agentsbridge.local.yaml'),
+    join(configDir, '.agentsmesh'),
+    join(configDir, 'agentsmesh.yaml'),
+    join(configDir, 'agentsmesh.local.yaml'),
   ];
 
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -141,7 +141,7 @@ export async function runWatch(
     schedule();
   });
 
-  logger.info('Watching .agentsbridge/ and agentsbridge.yaml...');
+  logger.info('Watching .agentsmesh/ and agentsmesh.yaml...');
   pendingRun = run();
   await pendingRun;
   pendingRun = null;

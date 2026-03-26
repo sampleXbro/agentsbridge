@@ -44,8 +44,8 @@ export async function prepareInstallDiscovery(
   const posixPath = pathInRepo.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
   validateTargetMatchesPath(explicitTarget, posixPath);
 
-  const agentsbridgeAtRoot = join(repoRoot, '.agentsbridge');
-  const hasAbRoot = await exists(agentsbridgeAtRoot);
+  const agentsmeshAtRoot = join(repoRoot, '.agentsmesh');
+  const hasAbRoot = await exists(agentsmeshAtRoot);
   const pathHint = posixPath ? targetHintFromNativePath(posixPath) : undefined;
   const detectedTarget =
     !hasAbRoot && !explicitTarget ? ((await detectNativeFormat(repoRoot)) ?? undefined) : undefined;
@@ -59,7 +59,7 @@ export async function prepareInstallDiscovery(
 
   const effectiveTarget = explicitTarget ?? pathHint ?? detectedTarget;
   const shouldStageNativeScope =
-    Boolean(posixPath) && Boolean(effectiveTarget) && !posixPath.startsWith('.agentsbridge');
+    Boolean(posixPath) && Boolean(effectiveTarget) && !posixPath.startsWith('.agentsmesh');
 
   if (!hasAbRoot && effectiveTarget) {
     if (shouldStageNativeScope) {

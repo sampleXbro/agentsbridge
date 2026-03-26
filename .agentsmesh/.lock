@@ -1,9 +1,9 @@
 # Auto-generated. DO NOT EDIT MANUALLY.
 # Tracks the state of all config files for team conflict resolution.
 
-generated_at: 2026-03-26T11:43:08.731Z
+generated_at: 2026-03-26T12:35:16.211Z
 generated_by: serhii
-lib_version: 0.2.1
+lib_version: 0.2.2
 checksums:
   agents/code-reviewer.md: sha256:dac4e70d506d54a40366839f64e34d2a83a48c4ce2ef96b9bdc7a92258d2a481
   agents/test-runner.md: sha256:8cc31a3176e5ad2cdabd36fedd75d98f037c93e8bf9e17243a450bedb34ac90e
@@ -24,7 +24,7 @@ checksums:
   skills/package-release-engineering/SKILL.md: sha256:1a642a6ea75149221febcecba5e8dc01c40469225915d1f4b59d6f2dfb3bcaf0
   skills/post-feature-qa/SKILL.md: sha256:f381105199c64962f50c82c99bd032737e67ce6a569d8e0cb8b497ede996f093
   skills/post-feature-qa/references/edge-case-checklist.md: sha256:77bb7a50f3dd281003e146a5313a85799603739e049646502904d0b7b8451c70
-  skills/prepare-release/SKILL.md: sha256:2a832260abc1c81b6dc52be1a4325a207c67424649c9652f0afd93aaeb02fe67
+  skills/prepare-release/SKILL.md: sha256:27032713b5541cb43c9639a5c10bd6bd154543696840f05114194db3eeb3494c
   skills/senior-developer-avoid-any/SKILL.md: sha256:174947b46b24594a849520ec248b12c937d01bf9204ee8f436bfb1be29fa84be
   skills/senior-manual-qa/SKILL.md: sha256:5f049229906f775b646a3c2e2a450725c656df70d97be162ce18b6cf1f18a398
   skills/ts-library-architecture/SKILL.md: sha256:86c38d90fdec873a19b5f2452b2a97064b1f7df3f3fc1a66d4784c30cb2ea2da

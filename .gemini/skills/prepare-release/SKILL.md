@@ -13,13 +13,13 @@ Publishing is fully automated via changesets. The flow is:
 
 1. All phases below pass locally
 2. Commit the pending `.changeset/*.md` file and push to `master`
-3. `release.yml` triggers — changesets/action detects pending changesets and **opens a "chore: version packages" PR** that bumps `package.json` and updates `CHANGELOG.md`
-4. Review and **merge the version PR** → `release.yml` triggers again — changesets/action sees no pending changesets, runs `pnpm release` (`pnpm build && changeset publish`), and publishes to npm
+3. `publish.yml` triggers — changesets/action detects pending changesets and **opens a "chore: version packages" PR** that bumps `package.json` and updates `CHANGELOG.md`
+4. Review and **merge the version PR** → `publish.yml` triggers again — changesets/action sees no pending changesets, runs `pnpm release` (`pnpm build && changeset publish`), and publishes to npm via npm trusted publishing
 5. GitHub creates a Release and tag automatically
 
 Prerequisites in GitHub repo settings:
 - **Settings → Actions → General → Workflow permissions**: enable "Allow GitHub Actions to create and approve pull requests"
-- **Settings → Secrets → Actions**: `NPM_TOKEN` must be set to a valid npm token with publish rights
+- **npm package settings → Trusted publishers**: add this repository/workflow for the `agentsmesh` package so GitHub Actions OIDC can publish without `NPM_TOKEN`
 
 ---
 
@@ -71,7 +71,7 @@ If any of these are missing or too low, update them now. The watch debounce is 3
 Check that both workflow files exist and are correct:
 
 - `.github/workflows/ci.yml` — runs on every push and PR to `master`
-- `.github/workflows/release.yml` — runs changesets publish flow on push to `master`
+- `.github/workflows/publish.yml` — runs changesets publish flow on push to `master`
 
 ### ci.yml must include these steps in order
 
@@ -86,7 +86,7 @@ Check that both workflow files exist and are correct:
 
 Use Node 22 + pnpm 10 + `cache: pnpm` in `setup-node`. Never run e2e in parallel with build — they share `dist/`. Both workflows must have `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true` at the job level to suppress the Node 20 deprecation warning.
 
-### release.yml must use changesets/action@v1 and trigger on push to master
+### publish.yml must use changesets/action@v1 and trigger on push to master
 
 ```yaml
 on:
@@ -118,6 +118,8 @@ jobs:
           node-version: 22
           cache: pnpm
           registry-url: "https://registry.npmjs.org"
+      - name: Upgrade npm for trusted publishing
+        run: npm install -g npm@latest
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Create release PR or publish
@@ -128,10 +130,9 @@ jobs:
           commit: "chore: version packages"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 ```
 
-The job needs `id-token: write` for npm provenance and `pull-requests: write` to create the version PR. If either file is missing or malformed, create/fix it now.
+The job needs `id-token: write` for npm trusted publishing/provenance and `pull-requests: write` to create the version PR. If either file is missing or malformed, create/fix it now.
 
 ---
 
@@ -174,7 +175,7 @@ If there is no pending changeset file in `.changeset/` (nothing other than `conf
 pnpm changeset
 ```
 
-Follow the prompts: select the bump type (patch/minor/major), write a one-line user-facing summary. Commit the resulting `.changeset/*.md` file. The `release.yml` workflow will consume it on the next push to `master`.
+Follow the prompts: select the bump type (patch/minor/major), write a one-line user-facing summary. Commit the resulting `.changeset/*.md` file. The `publish.yml` workflow will consume it on the next push to `master`.
 
 If a changeset already exists, confirm it describes the changes accurately before proceeding.
 
@@ -304,7 +305,7 @@ After all phases, produce a release readiness report:
 
 ### Remaining actions before publish
 - [ ] Ensure "Allow GitHub Actions to create and approve pull requests" is enabled in repo Settings → Actions → General
-- [ ] Ensure `NPM_TOKEN` secret is set in repo Settings → Secrets → Actions
+- [ ] Ensure npm package trusted publisher settings point to this repository and `.github/workflows/publish.yml`
 - [ ] Ensure `CODECOV_TOKEN` secret is set (for coverage badge)
 - [ ] Push to master → changesets/action opens the "chore: version packages" PR
 - [ ] Review and merge the version PR → changesets/action publishes to npm automatically

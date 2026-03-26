@@ -26,7 +26,7 @@ def convert(pdf_path, output_dir, max_dim=1000):
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
-        print("Usage: .agentsbridge/packs/anthropics-skills-pdf/skills/pdf/scripts/convert_pdf_to_images.py [input pdf] [output directory]")
+        print("Usage: .agentsmesh/packs/anthropics-skills-pdf/skills/pdf/scripts/convert_pdf_to_images.py [input pdf] [output directory]")
         sys.exit(1)
     pdf_path = sys.argv[1]
     output_directory = sys.argv[2]

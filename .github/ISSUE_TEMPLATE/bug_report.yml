@@ -5,7 +5,7 @@ body:
   - type: input
     id: version
     attributes:
-      label: AgentsBridge version
+      label: AgentsMesh version
       placeholder: "0.1.0"
     validations:
       required: true

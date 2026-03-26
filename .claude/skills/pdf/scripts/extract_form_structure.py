@@ -9,7 +9,7 @@ This script analyzes the PDF to find:
 Output: A JSON file with the form structure that can be used to generate
 accurate field coordinates for filling.
 
-Usage: python .agentsbridge/packs/anthropics-skills-pdf/skills/pdf/scripts/extract_form_structure.py <input.pdf> <output.json>
+Usage: python .agentsmesh/packs/anthropics-skills-pdf/skills/pdf/scripts/extract_form_structure.py <input.pdf> <output.json>
 """
 
 import json
@@ -90,7 +90,7 @@ def extract_form_structure(pdf_path):
 
 def main():
     if len(sys.argv) != 3:
-        print("Usage: .agentsbridge/packs/anthropics-skills-pdf/skills/pdf/scripts/extract_form_structure.py <input.pdf> <output.json>")
+        print("Usage: .agentsmesh/packs/anthropics-skills-pdf/skills/pdf/scripts/extract_form_structure.py <input.pdf> <output.json>")
         sys.exit(1)
 
     pdf_path = sys.argv[1]

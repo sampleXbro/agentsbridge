@@ -28,7 +28,7 @@ def create_validation_image(page_number, fields_json_path, input_path, output_pa
 
 if __name__ == "__main__":
     if len(sys.argv) != 5:
-        print("Usage: .agentsbridge/packs/anthropics-skills-pdf/skills/pdf/scripts/create_validation_image.py [page number] [fields.json file] [input image path] [output image path]")
+        print("Usage: .agentsmesh/packs/anthropics-skills-pdf/skills/pdf/scripts/create_validation_image.py [page number] [fields.json file] [input image path] [output image path]")
         sys.exit(1)
     page_number = int(sys.argv[1])
     fields_json_path = sys.argv[2]

@@ -89,7 +89,7 @@ def monkeypatch_pydpf_method():
 
 if __name__ == "__main__":
     if len(sys.argv) != 4:
-        print("Usage: .agentsbridge/packs/anthropics-skills-pdf/skills/pdf/scripts/fill_fillable_fields.py [input pdf] [field_values.json] [output pdf]")
+        print("Usage: .agentsmesh/packs/anthropics-skills-pdf/skills/pdf/scripts/fill_fillable_fields.py [input pdf] [field_values.json] [output pdf]")
         sys.exit(1)
     monkeypatch_pydpf_method()
     input_pdf = sys.argv[1]

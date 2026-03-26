@@ -7,6 +7,7 @@ import { cp, mkdtemp, stat, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { mkdirp, readDirRecursive } from '../utils/fs.js';
 import { isSkillPackLayout } from '../canonical/skill-pack-load.js';
+import { readSkillFrontmatterName, cpFilteredSkill } from './skill-repo-filter.js';
 import type { ManualInstallAs } from './manual-install-mode.js';
 
 export interface ManualInstallScope {
@@ -121,9 +122,11 @@ async function stageSkills(
       ) {
         return;
       }
-      const skillDir = join(destinationDir, basename(sourceRoot));
+      const fmName = await readSkillFrontmatterName(join(sourceRoot, 'SKILL.md'));
+      const skillName = fmName || basename(sourceRoot);
+      const skillDir = join(destinationDir, skillName);
       await mkdirp(destinationDir);
-      await cp(sourceRoot, skillDir, { recursive: true });
+      await cpFilteredSkill(sourceRoot, skillDir);
       return;
     }
     if (await stagePreferredSkills(sourceRoot, destinationDir, options.preferredSkillNames ?? [])) {

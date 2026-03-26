@@ -33,7 +33,7 @@ python release_planner.py --input assets/sample_release_plan.json
 
 ## Scripts Reference
 
-### .agentsmesh/packs/joeking-ly-claude-skills-arsenal-skills/skills/release-manager/changelog_generator.py
+### .gemini/skills/release-manager/changelog_generator.py
 
 Parses conventional commits and generates structured changelogs in multiple formats.
 
@@ -75,7 +75,7 @@ git log --format="%h %s" v1.0.0..HEAD | python changelog_generator.py \
 - Links to commits and PRs
 - Generates release summary statistics
 
-### .agentsmesh/packs/joeking-ly-claude-skills-arsenal-skills/skills/release-manager/version_bumper.py
+### .gemini/skills/release-manager/version_bumper.py
 
 Analyzes commits to determine semantic version bumps according to conventional commits.
 
@@ -113,7 +113,7 @@ git log --oneline $(git describe --tags --abbrev=0)..HEAD | \
 - Custom rules for specific commit types
 - JSON and text output formats
 
-### .agentsmesh/packs/joeking-ly-claude-skills-arsenal-skills/skills/release-manager/release_planner.py
+### .gemini/skills/release-manager/release_planner.py
 
 Assesses release readiness and generates comprehensive release coordination plans.
 
@@ -430,7 +430,7 @@ When extending these scripts:
 
 1. **Maintain backwards compatibility** for existing command-line interfaces
 2. **Add comprehensive tests** for new features
-3. **Update documentation** including this README and .agentsmesh/packs/joeking-ly-claude-skills-arsenal-skills/skills/release-manager/SKILL.md
+3. **Update documentation** including this README and .gemini/skills/release-manager/SKILL.md
 4. **Follow Python standards** (PEP 8, type hints where helpful)
 5. **Use only standard library** to avoid dependencies
 
@@ -440,6 +440,6 @@ This skill is part of the claude-skills repository and follows the same license 
 
 ---
 
-For detailed methodology and background information, see [.agentsmesh/packs/joeking-ly-claude-skills-arsenal-skills/skills/release-manager/SKILL.md](.agentsmesh/packs/joeking-ly-claude-skills-arsenal-skills/skills/release-manager/SKILL.md).
+For detailed methodology and background information, see [.gemini/skills/release-manager/SKILL.md](.gemini/skills/release-manager/SKILL.md).
 For specific workflow guidance, see the [references](.agentsmesh/packs/joeking-ly-claude-skills-arsenal-skills/skills/release-manager/references/) directory.
 For testing the scripts, use the sample data in the [assets](.agentsmesh/packs/joeking-ly-claude-skills-arsenal-skills/skills/release-manager/assets/) directory.

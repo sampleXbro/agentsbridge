@@ -35,6 +35,56 @@ afterEach(() => {
   rmSync(ROOT, { recursive: true, force: true });
 });
 
+describe('install standalone skill repo (integration)', () => {
+  it('installs a repo-root skill using frontmatter name and excludes boilerplate', async () => {
+    const repoDir = join(ROOT, 'code-review-skill');
+    const project = join(ROOT, 'project');
+    mkdirSync(join(repoDir, 'reference'), { recursive: true });
+    mkdirSync(join(repoDir, 'assets'), { recursive: true });
+    writeFileSync(
+      join(repoDir, 'SKILL.md'),
+      '---\nname: code-review-excellence\ndescription: Code review\n---\n\nReview code.\n',
+    );
+    writeFileSync(join(repoDir, 'reference', 'react.md'), '# React guide\n');
+    writeFileSync(join(repoDir, 'assets', 'template.md'), '# Template\n');
+    writeFileSync(join(repoDir, 'README.md'), '# Code Review Skill\n');
+    writeFileSync(join(repoDir, 'LICENSE'), 'MIT\n');
+    writeFileSync(join(repoDir, 'CONTRIBUTING.md'), '# Contributing\n');
+    writeFileSync(join(repoDir, '.gitignore'), 'node_modules\n');
+    seedProject(project);
+
+    await runInstall({ force: true, as: 'skills', name: 'code-review' }, [repoDir], project);
+
+    const packFiles = listRelativeFiles(join(project, '.agentsmesh', 'packs', 'code-review'));
+    expect(packFiles).toEqual([
+      'pack.yaml',
+      'skills/code-review-excellence/SKILL.md',
+      'skills/code-review-excellence/assets/template.md',
+      'skills/code-review-excellence/reference/react.md',
+    ]);
+
+    const generatedFiles = listRelativeFiles(join(project, '.claude'));
+    expect(generatedFiles).toEqual([
+      'CLAUDE.md',
+      'skills/code-review-excellence/SKILL.md',
+      'skills/code-review-excellence/assets/template.md',
+      'skills/code-review-excellence/reference/react.md',
+    ]);
+
+    const manifest = readInstallManifest(join(project, '.agentsmesh', 'installs.yaml'));
+    expect(manifest.installs).toEqual([
+      {
+        as: 'skills',
+        features: ['skills'],
+        name: 'code-review',
+        pick: { skills: ['code-review-excellence'] },
+        source: '../code-review-skill',
+        source_kind: 'local',
+      },
+    ]);
+  });
+});
+
 describe('install manual --as skills (integration)', () => {
   it('bulk installs a folder of skills with exact generated and pack trees', async () => {
     const upstream = join(ROOT, 'upstream', 'skills');

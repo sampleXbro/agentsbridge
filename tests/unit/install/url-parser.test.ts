@@ -4,8 +4,10 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import {
   parseGithubBlobUrl,
+  parseGithubRepoUrl,
   parseGithubTreeUrl,
   parseGitlabBlobUrl,
+  parseGitlabRepoUrl,
   parseGitlabTreeUrl,
   parseInstallSource,
 } from '../../../src/install/url-parser.js';
@@ -67,6 +69,77 @@ describe('parseGitlabTreeUrl', () => {
   });
 });
 
+describe('parseGithubRepoUrl', () => {
+  it('parses bare GitHub repo URL', () => {
+    expect(parseGithubRepoUrl('https://github.com/awesome-skills/code-review-skill')).toEqual({
+      org: 'awesome-skills',
+      repo: 'code-review-skill',
+    });
+  });
+
+  it('strips .git suffix', () => {
+    expect(parseGithubRepoUrl('https://github.com/org/repo.git')).toEqual({
+      org: 'org',
+      repo: 'repo',
+    });
+  });
+
+  it('handles trailing slash', () => {
+    expect(parseGithubRepoUrl('https://github.com/org/repo/')).toEqual({
+      org: 'org',
+      repo: 'repo',
+    });
+  });
+
+  it('returns null for tree URLs', () => {
+    expect(parseGithubRepoUrl('https://github.com/org/repo/tree/main/skills')).toBeNull();
+  });
+
+  it('returns null for blob URLs', () => {
+    expect(parseGithubRepoUrl('https://github.com/org/repo/blob/main/SKILL.md')).toBeNull();
+  });
+
+  it('returns null for non-github hosts', () => {
+    expect(parseGithubRepoUrl('https://gitlab.com/org/repo')).toBeNull();
+  });
+
+  it('returns null for single-segment paths', () => {
+    expect(parseGithubRepoUrl('https://github.com/org')).toBeNull();
+  });
+
+  it('returns null for 3+ path segments', () => {
+    expect(parseGithubRepoUrl('https://github.com/org/repo/something-extra')).toBeNull();
+  });
+});
+
+describe('parseGitlabRepoUrl', () => {
+  it('parses bare GitLab repo URL', () => {
+    expect(parseGitlabRepoUrl('https://gitlab.com/group/project')).toEqual({
+      namespace: 'group',
+      project: 'project',
+    });
+  });
+
+  it('strips .git suffix', () => {
+    expect(parseGitlabRepoUrl('https://gitlab.com/group/project.git')).toEqual({
+      namespace: 'group',
+      project: 'project',
+    });
+  });
+
+  it('returns null for tree URLs', () => {
+    expect(parseGitlabRepoUrl('https://gitlab.com/group/project/-/tree/main/path')).toBeNull();
+  });
+
+  it('returns null for non-gitlab hosts', () => {
+    expect(parseGitlabRepoUrl('https://github.com/org/repo')).toBeNull();
+  });
+
+  it('returns null for single-segment paths', () => {
+    expect(parseGitlabRepoUrl('https://gitlab.com/group')).toBeNull();
+  });
+});
+
 describe('parseInstallSource', () => {
   const base = join(tmpdir(), 'am-install-parse');
   const cfg = join(base, 'proj');
@@ -104,6 +177,33 @@ describe('parseInstallSource', () => {
       org: 'group/subgroup',
       repo: 'project',
       gitRemoteUrl: 'https://gitlab.com/group/subgroup/project.git',
+      pathInRepo: '',
+    });
+  });
+
+  it('parses bare GitHub repo URL as remote install source', async () => {
+    const parsed = await parseInstallSource(
+      'https://github.com/awesome-skills/code-review-skill',
+      cfg,
+    );
+    expect(parsed).toEqual({
+      kind: 'github',
+      rawRef: 'HEAD',
+      org: 'awesome-skills',
+      repo: 'code-review-skill',
+      gitRemoteUrl: 'https://github.com/awesome-skills/code-review-skill.git',
+      pathInRepo: '',
+    });
+  });
+
+  it('parses bare GitLab repo URL as remote install source', async () => {
+    const parsed = await parseInstallSource('https://gitlab.com/group/project', cfg);
+    expect(parsed).toEqual({
+      kind: 'gitlab',
+      rawRef: 'HEAD',
+      org: 'group',
+      repo: 'project',
+      gitRemoteUrl: 'https://gitlab.com/group/project.git',
       pathInRepo: '',
     });
   });

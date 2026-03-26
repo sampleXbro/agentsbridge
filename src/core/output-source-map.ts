@@ -1,8 +1,9 @@
-import { join, normalize as normalizePath } from 'node:path';
+import { dirname, join, normalize as normalizePath } from 'node:path';
 import type { CanonicalFiles } from './types.js';
 import type { ValidatedConfig } from '../config/schema.js';
 import { buildReferenceMap } from './reference-map.js';
 import { GEMINI_COMPAT_AGENTS } from '../targets/gemini-cli/constants.js';
+import { SKILL_DIRS } from './reference-map-targets.js';
 
 function canonicalRulePath(rule: CanonicalFiles['rules'][number]): string {
   return `.agentsmesh/rules/${rule.source.split('/').pop()!}`;
@@ -69,6 +70,37 @@ function ruleOutputPaths(
   return paths;
 }
 
+function addPackSkillPaths(
+  refs: Map<string, string>,
+  target: string,
+  canonical: CanonicalFiles,
+  projectRoot: string,
+): void {
+  const skillDir = SKILL_DIRS[target];
+  if (!skillDir) return;
+
+  const packsPrefix = join(projectRoot, '.agentsmesh', 'packs');
+
+  for (const skill of canonical.skills) {
+    const skillSourceDir = dirname(skill.source);
+    if (!skillSourceDir.startsWith(packsPrefix)) continue;
+
+    const targetSkillDir = normalizePath(join(projectRoot, skillDir, skill.name));
+
+    // Map pack skill directory → target skill directory
+    refs.set(normalizePath(skillSourceDir), targetSkillDir);
+
+    // Map pack SKILL.md → target SKILL.md
+    refs.set(normalizePath(skill.source), normalizePath(join(targetSkillDir, 'SKILL.md')));
+
+    // Map pack supporting files → target supporting files
+    for (const file of skill.supportingFiles) {
+      const targetFilePath = normalizePath(join(targetSkillDir, file.relativePath));
+      refs.set(normalizePath(file.absolutePath), targetFilePath);
+    }
+  }
+}
+
 export function buildArtifactPathMap(
   target: string,
   canonical: CanonicalFiles,
@@ -92,6 +124,8 @@ export function buildArtifactPathMap(
       );
     }
   }
+
+  addPackSkillPaths(refs, target, canonical, projectRoot);
 
   return refs;
 }

@@ -521,3 +521,8 @@
   - current live manifest replay passes in dry-run
   - full suite passed: 143 test files, 1583 tests
   - validation note: `install --sync --dry-run` still wrote pack state during the live check; I restored those workspace side effects afterward so the worktree returned to its pre-check pack state
+
+# Commit Pending Changes
+- [ ] Add untracked files (`src/install/skill-repo-filter.ts`, `tests/unit/core/artifact-path-map-packs.test.ts`)
+- [ ] Run full test suite to verify everything is passing
+- [ ] Commit all changes with a descriptive conventional commit message

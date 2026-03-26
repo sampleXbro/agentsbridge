@@ -2,10 +2,11 @@
  * Normalize persisted install path/pick for manual single-item installs.
  */
 
-import { basename, dirname } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { stat } from 'node:fs/promises';
 import type { ExtendPick } from '../config/schema.js';
 import type { ManualInstallAs } from './manual-install-mode.js';
+import { readSkillFrontmatterName } from './skill-repo-filter.js';
 
 export interface ManualInstallPersistence {
   pathInRepo?: string;
@@ -52,13 +53,14 @@ export async function resolveManualInstallPersistence(args: {
     }
     if (info.isDirectory()) {
       const skillDir = normalizedPath || basename(args.contentRoot);
-      const skillFile = `${args.contentRoot.replace(/\/+$/g, '')}/SKILL.md`;
+      const skillFile = join(args.contentRoot.replace(/\/+$/g, ''), 'SKILL.md');
       try {
         const skillStat = await stat(skillFile);
         if (skillStat.isFile()) {
+          const fmName = await readSkillFrontmatterName(skillFile);
           return {
             pathInRepo: trimDot(dirname(skillDir)),
-            pick: { skills: [basename(skillDir)] },
+            pick: { skills: [fmName || basename(skillDir)] },
           };
         }
       } catch {

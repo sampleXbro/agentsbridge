@@ -6,8 +6,10 @@ import { resolve, relative, sep } from 'node:path';
 import { exists } from '../utils/fs.js';
 import {
   parseGithubBlobUrl,
+  parseGithubRepoUrl,
   parseGithubTreeUrl,
   parseGitlabBlobUrl,
+  parseGitlabRepoUrl,
   parseGitlabTreeUrl,
   parseGitSshGithub,
   parseGitSshGitlab,
@@ -15,8 +17,10 @@ import {
 
 export {
   parseGithubBlobUrl,
+  parseGithubRepoUrl,
   parseGithubTreeUrl,
   parseGitlabBlobUrl,
+  parseGitlabRepoUrl,
   parseGitlabTreeUrl,
   parseGitSshGithub,
   parseGitSshGitlab,
@@ -73,26 +77,48 @@ export async function parseInstallSource(
   }
 
   if (trimmed.startsWith('https://') || trimmed.startsWith('http://')) {
-    const gh = parseGithubTreeUrl(trimmed) ?? parseGithubBlobUrl(trimmed);
-    if (gh) {
+    const ghDetailed = parseGithubTreeUrl(trimmed) ?? parseGithubBlobUrl(trimmed);
+    if (ghDetailed) {
       return {
         kind: 'github',
-        rawRef: gh.ref,
-        org: gh.org,
-        repo: gh.repo,
-        gitRemoteUrl: `https://github.com/${gh.org}/${gh.repo}.git`,
-        pathInRepo: pathFlag || gh.path,
+        rawRef: ghDetailed.ref,
+        org: ghDetailed.org,
+        repo: ghDetailed.repo,
+        gitRemoteUrl: `https://github.com/${ghDetailed.org}/${ghDetailed.repo}.git`,
+        pathInRepo: pathFlag || ghDetailed.path,
       };
     }
-    const gl = parseGitlabTreeUrl(trimmed) ?? parseGitlabBlobUrl(trimmed);
-    if (gl) {
+    const ghBare = parseGithubRepoUrl(trimmed);
+    if (ghBare) {
+      return {
+        kind: 'github',
+        rawRef: 'HEAD',
+        org: ghBare.org,
+        repo: ghBare.repo,
+        gitRemoteUrl: `https://github.com/${ghBare.org}/${ghBare.repo}.git`,
+        pathInRepo: pathFlag,
+      };
+    }
+    const glDetailed = parseGitlabTreeUrl(trimmed) ?? parseGitlabBlobUrl(trimmed);
+    if (glDetailed) {
       return {
         kind: 'gitlab',
-        rawRef: gl.ref,
-        org: gl.namespace,
-        repo: gl.project,
-        gitRemoteUrl: `https://gitlab.com/${gl.namespace}/${gl.project}.git`,
-        pathInRepo: pathFlag || gl.path,
+        rawRef: glDetailed.ref,
+        org: glDetailed.namespace,
+        repo: glDetailed.project,
+        gitRemoteUrl: `https://gitlab.com/${glDetailed.namespace}/${glDetailed.project}.git`,
+        pathInRepo: pathFlag || glDetailed.path,
+      };
+    }
+    const glBare = parseGitlabRepoUrl(trimmed);
+    if (glBare) {
+      return {
+        kind: 'gitlab',
+        rawRef: 'HEAD',
+        org: glBare.namespace,
+        repo: glBare.project,
+        gitRemoteUrl: `https://gitlab.com/${glBare.namespace}/${glBare.project}.git`,
+        pathInRepo: pathFlag,
       };
     }
   }

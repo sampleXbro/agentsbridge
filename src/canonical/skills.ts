@@ -16,6 +16,18 @@ async function readContent(path: string): Promise<string> {
 
 const SKILL_FILE = 'SKILL.md';
 
+/** Directories that are never valid skill supporting content. */
+const EXCLUDED_DIR_PREFIXES = ['.git', 'node_modules'];
+
+/** Sanitize a frontmatter name into a valid directory/skill name. */
+function sanitizeSkillName(raw: string): string {
+  return raw
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 /**
  * List supporting files in a skill directory (all files except SKILL.md).
  * @param skillDir - Absolute path to skill directory
@@ -28,6 +40,9 @@ async function listSupportingFiles(skillDir: string): Promise<SkillSupportingFil
     const raw = absPath.slice(skillDir.length + 1);
     const name = raw.replace(/\\/g, '/');
     if (name === SKILL_FILE || name.endsWith(`/${SKILL_FILE}`)) continue;
+    const firstSegment = name.split('/')[0]!;
+    if (EXCLUDED_DIR_PREFIXES.some((p) => firstSegment === p)) continue;
+    if (name === '.DS_Store' || name.endsWith('/.DS_Store')) continue;
     const content = await readContent(absPath);
     result.push({ relativePath: name, absolutePath: absPath, content });
   }
@@ -49,9 +64,10 @@ export async function parseSkillDirectory(skillDir: string): Promise<CanonicalSk
   if (!content) return null;
   const { frontmatter, body } = parseFrontmatter(content);
   const supportingFiles = await listSupportingFiles(skillDir);
+  const fmName = typeof frontmatter.name === 'string' ? sanitizeSkillName(frontmatter.name) : '';
   return {
     source: skillPath,
-    name: basename(skillDir),
+    name: fmName || basename(skillDir),
     description: typeof frontmatter.description === 'string' ? frontmatter.description : '',
     body,
     supportingFiles,

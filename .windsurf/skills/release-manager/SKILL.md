@@ -276,7 +276,7 @@ else:
 
 #### Documentation Requirements
 - [ ] CHANGELOG.md updated
-- [ ] .agentsmesh/packs/joeking-ly-claude-skills-arsenal-skills/skills/release-manager/README.md reflects new features
+- [ ] .windsurf/skills/release-manager/README.md reflects new features
 - [ ] API documentation generated
 - [ ] Migration guide written for breaking changes
 - [ ] Deployment notes prepared

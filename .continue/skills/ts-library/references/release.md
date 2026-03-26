@@ -134,7 +134,7 @@ chore: update dependencies
 
 ### OIDC (Recommended)
 
-No token needed. See .agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/ci-workflows.md for full setup.
+No token needed. See .continue/skills/ts-library/references/ci-workflows.md for full setup.
 
 ```yaml
 - run: pnpm publish --access public --no-git-checks --provenance

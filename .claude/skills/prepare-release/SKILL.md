@@ -9,15 +9,13 @@ You are acting as the release engineer for agentsmesh. Your job is to get the re
 
 ## How publishing works
 
-Publishing is fully automated via two GitHub Actions workflows. The flow is:
+Publishing is fully automated via changesets. The flow is:
 
 1. All phases below pass locally
 2. Commit the pending `.changeset/*.md` file and push to `master`
 3. `release.yml` triggers — changesets/action detects pending changesets and **opens a "chore: version packages" PR** that bumps `package.json` and updates `CHANGELOG.md`
-4. Review and **merge the version PR** → `release.yml` triggers again — changesets/action sees no pending changesets, runs `pnpm changeset tag` to create git tags, and **creates a GitHub Release** automatically
-5. The GitHub Release creation triggers `publish.yml` — it checks out the release tag, builds, and **publishes to npm** via `pnpm changeset publish`
-
-This two-step flow ensures npm publish only happens after a GitHub Release exists, giving you a gate between tagging and publishing.
+4. Review and **merge the version PR** → `release.yml` triggers again — changesets/action sees no pending changesets, runs `pnpm release` (`pnpm build && changeset publish`), and publishes to npm
+5. GitHub creates a Release and tag automatically
 
 Prerequisites in GitHub repo settings:
 - **Settings → Actions → General → Workflow permissions**: enable "Allow GitHub Actions to create and approve pull requests"
@@ -90,8 +88,6 @@ Use Node 22 + pnpm 10 + `cache: pnpm` in `setup-node`. Never run e2e in parallel
 
 ### release.yml must use changesets/action@v1 and trigger on push to master
 
-Creates version PRs and GitHub releases (no npm publish):
-
 ```yaml
 on:
   push:
@@ -109,6 +105,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -120,64 +117,21 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+          registry-url: "https://registry.npmjs.org"
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Create release PR or GitHub release
+      - name: Create release PR or publish
         uses: changesets/action@v1
         with:
-          publish: pnpm changeset tag
+          publish: pnpm release
           title: "chore: version packages"
           commit: "chore: version packages"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-```
-
-The job needs `contents: write` for tags/releases and `pull-requests: write` to create the version PR. No npm token is needed here.
-
-### publish.yml must trigger on GitHub release creation
-
-Publishes to npm after a GitHub release is created:
-
-```yaml
-on:
-  release:
-    types: [published]
-
-concurrency:
-  group: publish
-  cancel-in-progress: false
-
-jobs:
-  publish:
-    runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.release.tag_name }}
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-          registry-url: "https://registry.npmjs.org"
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      - name: Build
-        run: pnpm build
-      - name: Publish to npm
-        run: pnpm changeset publish
-        env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 ```
 
-The publish job needs `id-token: write` for npm provenance. If any workflow file is missing or malformed, create/fix it now.
+The job needs `id-token: write` for npm provenance and `pull-requests: write` to create the version PR. If either file is missing or malformed, create/fix it now.
 
 ---
 
@@ -353,8 +307,7 @@ After all phases, produce a release readiness report:
 - [ ] Ensure `NPM_TOKEN` secret is set in repo Settings → Secrets → Actions
 - [ ] Ensure `CODECOV_TOKEN` secret is set (for coverage badge)
 - [ ] Push to master → changesets/action opens the "chore: version packages" PR
-- [ ] Review and merge the version PR → changesets/action creates git tags and GitHub Release
-- [ ] GitHub Release creation triggers publish.yml → npm publish happens automatically
+- [ ] Review and merge the version PR → changesets/action publishes to npm automatically
 ```
 
 ---

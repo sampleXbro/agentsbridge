@@ -108,6 +108,62 @@ export function parseGitlabBlobUrl(urlStr: string): {
   }
 }
 
+/** Known GitHub route segments that indicate a non-repo URL (3+ path segments). */
+const GITHUB_ROUTE_WORDS = new Set([
+  'tree',
+  'blob',
+  'commit',
+  'releases',
+  'actions',
+  'issues',
+  'pulls',
+  'settings',
+  'wiki',
+  'discussions',
+  'security',
+  'projects',
+  'packages',
+]);
+
+/** GitHub bare repo: https://github.com/org/repo[.git] */
+export function parseGithubRepoUrl(urlStr: string): { org: string; repo: string } | null {
+  try {
+    const u = new URL(urlStr);
+    if (u.hostname !== 'github.com') return null;
+    const parts = u.pathname
+      .split('/')
+      .filter(Boolean)
+      .map((s) => s.replace(/\.git$/i, ''));
+    if (parts.length < 2) return null;
+    if (parts.length > 2 || GITHUB_ROUTE_WORDS.has(parts[1]!)) return null;
+    const org = parts[0]!;
+    const repo = parts[1]!;
+    return { org, repo };
+  } catch {
+    return null;
+  }
+}
+
+/** GitLab bare repo: https://gitlab.com/namespace/project[.git] */
+export function parseGitlabRepoUrl(urlStr: string): { namespace: string; project: string } | null {
+  try {
+    const u = new URL(urlStr);
+    if (u.hostname !== 'gitlab.com') return null;
+    const parts = u.pathname
+      .split('/')
+      .filter(Boolean)
+      .map((s) => s.replace(/\.git$/i, ''));
+    if (parts.length < 2) return null;
+    if (parts.includes('-')) return null;
+    const project = parts[parts.length - 1]!;
+    const namespace = parts.slice(0, -1).join('/');
+    if (!namespace || !project) return null;
+    return { namespace, project };
+  } catch {
+    return null;
+  }
+}
+
 /** git@github.com:org/repo.git */
 export function parseGitSshGithub(ssh: string): { org: string; repo: string } | null {
   const m = ssh.match(/^git@github\.com:([^/]+)\/(.+?)(?:\.git)?$/i);

@@ -24,42 +24,42 @@ Patterns for authoring high-quality TypeScript libraries, extracted from studyin
 
 | Working on...         | Load file                                                          |
 | --------------------- | ------------------------------------------------------------------ |
-| New project setup     | [.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/project-setup.md](.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/project-setup.md)         |
-| Package exports       | [.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/package-exports.md](.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/package-exports.md)     |
-| tsconfig options      | [.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/typescript-config.md](.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/typescript-config.md) |
-| Build configuration   | [.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/build-tooling.md](.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/build-tooling.md)         |
-| ESLint config         | [.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/eslint-config.md](.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/eslint-config.md)         |
-| API design patterns   | [.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/api-design.md](.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/api-design.md)               |
-| Type inference tricks | [.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/type-patterns.md](.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/type-patterns.md)         |
-| Testing setup         | [.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/testing.md](.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/testing.md)                     |
-| Release workflow      | [.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/release.md](.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/release.md)                     |
-| CI/CD setup           | [.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/ci-workflows.md](.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/ci-workflows.md)           |
+| New project setup     | [.windsurf/skills/ts-library/references/project-setup.md](.windsurf/skills/ts-library/references/project-setup.md)         |
+| Package exports       | [.windsurf/skills/ts-library/references/package-exports.md](.windsurf/skills/ts-library/references/package-exports.md)     |
+| tsconfig options      | [.windsurf/skills/ts-library/references/typescript-config.md](.windsurf/skills/ts-library/references/typescript-config.md) |
+| Build configuration   | [.windsurf/skills/ts-library/references/build-tooling.md](.windsurf/skills/ts-library/references/build-tooling.md)         |
+| ESLint config         | [.windsurf/skills/ts-library/references/eslint-config.md](.windsurf/skills/ts-library/references/eslint-config.md)         |
+| API design patterns   | [.windsurf/skills/ts-library/references/api-design.md](.windsurf/skills/ts-library/references/api-design.md)               |
+| Type inference tricks | [.windsurf/skills/ts-library/references/type-patterns.md](.windsurf/skills/ts-library/references/type-patterns.md)         |
+| Testing setup         | [.windsurf/skills/ts-library/references/testing.md](.windsurf/skills/ts-library/references/testing.md)                     |
+| Release workflow      | [.windsurf/skills/ts-library/references/release.md](.windsurf/skills/ts-library/references/release.md)                     |
+| CI/CD setup           | [.windsurf/skills/ts-library/references/ci-workflows.md](.windsurf/skills/ts-library/references/ci-workflows.md)           |
 
 ## Loading Files
 
 **Consider loading these reference files based on your task:**
 
-- [ ] [.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/project-setup.md](.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/project-setup.md) - if starting a new TypeScript library project
-- [ ] [.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/package-exports.md](.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/package-exports.md) - if configuring package.json exports or dual CJS/ESM
-- [ ] [.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/typescript-config.md](.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/typescript-config.md) - if setting up or modifying tsconfig.json
-- [ ] [.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/build-tooling.md](.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/build-tooling.md) - if configuring tsdown, unbuild, or build scripts
-- [ ] [.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/eslint-config.md](.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/eslint-config.md) - if setting up ESLint for library development
-- [ ] [.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/api-design.md](.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/api-design.md) - if designing public APIs, builder patterns, or plugin systems
-- [ ] [.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/type-patterns.md](.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/type-patterns.md) - if working with advanced TypeScript types or type inference
-- [ ] [.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/testing.md](.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/testing.md) - if setting up vitest or writing tests for library code
-- [ ] [.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/release.md](.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/release.md) - if configuring release workflow or versioning
-- [ ] [.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/ci-workflows.md](.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/ci-workflows.md) - if setting up GitHub Actions or CI/CD pipelines
+- [ ] [.windsurf/skills/ts-library/references/project-setup.md](.windsurf/skills/ts-library/references/project-setup.md) - if starting a new TypeScript library project
+- [ ] [.windsurf/skills/ts-library/references/package-exports.md](.windsurf/skills/ts-library/references/package-exports.md) - if configuring package.json exports or dual CJS/ESM
+- [ ] [.windsurf/skills/ts-library/references/typescript-config.md](.windsurf/skills/ts-library/references/typescript-config.md) - if setting up or modifying tsconfig.json
+- [ ] [.windsurf/skills/ts-library/references/build-tooling.md](.windsurf/skills/ts-library/references/build-tooling.md) - if configuring tsdown, unbuild, or build scripts
+- [ ] [.windsurf/skills/ts-library/references/eslint-config.md](.windsurf/skills/ts-library/references/eslint-config.md) - if setting up ESLint for library development
+- [ ] [.windsurf/skills/ts-library/references/api-design.md](.windsurf/skills/ts-library/references/api-design.md) - if designing public APIs, builder patterns, or plugin systems
+- [ ] [.windsurf/skills/ts-library/references/type-patterns.md](.windsurf/skills/ts-library/references/type-patterns.md) - if working with advanced TypeScript types or type inference
+- [ ] [.windsurf/skills/ts-library/references/testing.md](.windsurf/skills/ts-library/references/testing.md) - if setting up vitest or writing tests for library code
+- [ ] [.windsurf/skills/ts-library/references/release.md](.windsurf/skills/ts-library/references/release.md) - if configuring release workflow or versioning
+- [ ] [.windsurf/skills/ts-library/references/ci-workflows.md](.windsurf/skills/ts-library/references/ci-workflows.md) - if setting up GitHub Actions or CI/CD pipelines
 
 **DO NOT load all files at once.** Load only what's relevant to your current task.
 
 ## New Library Workflow
 
-1. Create project structure → load [.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/project-setup.md](.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/project-setup.md)
-2. Configure `package.json` exports → load [.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/package-exports.md](.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/package-exports.md)
-3. Set up build with tsdown → load [.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/build-tooling.md](.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/build-tooling.md)
+1. Create project structure → load [.windsurf/skills/ts-library/references/project-setup.md](.windsurf/skills/ts-library/references/project-setup.md)
+2. Configure `package.json` exports → load [.windsurf/skills/ts-library/references/package-exports.md](.windsurf/skills/ts-library/references/package-exports.md)
+3. Set up build with tsdown → load [.windsurf/skills/ts-library/references/build-tooling.md](.windsurf/skills/ts-library/references/build-tooling.md)
 4. Verify build: `pnpm build && pnpm pack --dry-run` — check output includes `.mjs`, `.cjs`, `.d.ts`
-5. Add tests → load [.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/testing.md](.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/testing.md)
-6. Configure release → load [.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/release.md](.agentsmesh/packs/onmax-nuxt-skills-skills/skills/ts-library/references/release.md)
+5. Add tests → load [.windsurf/skills/ts-library/references/testing.md](.windsurf/skills/ts-library/references/testing.md)
+6. Configure release → load [.windsurf/skills/ts-library/references/release.md](.windsurf/skills/ts-library/references/release.md)
 
 ## Quick Start
 

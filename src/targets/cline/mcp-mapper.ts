@@ -6,9 +6,7 @@ import { join } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
 import type { McpServer } from '../../core/types.js';
 import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/fs.js';
-import { CLINE_MCP_SETTINGS } from './constants.js';
-
-const AGENTSMESH_MCP = '.agentsmesh/mcp.json';
+import { CLINE_TARGET, CLINE_MCP_SETTINGS, CLINE_CANONICAL_MCP } from './constants.js';
 
 export function mapClineServerToCanonical(raw: unknown): McpServer | null {
   if (!raw || typeof raw !== 'object') return null;
@@ -69,13 +67,13 @@ export async function importClineMcp(projectRoot: string, results: ImportResult[
     if (Object.keys(mcpServers).length > 0) {
       await mkdirp(join(projectRoot, '.agentsmesh'));
       await writeFileAtomic(
-        join(projectRoot, AGENTSMESH_MCP),
+        join(projectRoot, CLINE_CANONICAL_MCP),
         JSON.stringify({ mcpServers }, null, 2),
       );
       results.push({
-        fromTool: 'cline',
+        fromTool: CLINE_TARGET,
         fromPath: mcpPath,
-        toPath: AGENTSMESH_MCP,
+        toPath: CLINE_CANONICAL_MCP,
         feature: 'mcp',
       });
     }

@@ -3,9 +3,7 @@ import { stringify as stringifyYaml } from 'yaml';
 import { join } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
 import { readDirRecursive, readFileSafe, writeFileAtomic, mkdirp } from '../../utils/fs.js';
-import { GEMINI_POLICIES_DIR } from './constants.js';
-
-const AB_PERMISSIONS = '.agentsmesh/permissions.yaml';
+import { GEMINI_TARGET, GEMINI_POLICIES_DIR, GEMINI_CANONICAL_PERMISSIONS } from './constants.js';
 
 function unescapeRegexLiteral(value: string): string {
   // Reverse of escapeRegexLiteral: `\.` -> `.`, `\/` -> `/`, etc.
@@ -121,14 +119,14 @@ export async function importGeminiPolicies(projectRoot: string): Promise<ImportR
   if (allow.length === 0 && deny.length === 0) return results;
 
   await mkdirp(join(projectRoot, '.agentsmesh'));
-  const outPath = join(projectRoot, AB_PERMISSIONS);
+  const outPath = join(projectRoot, GEMINI_CANONICAL_PERMISSIONS);
   const yaml = stringifyYaml({ allow, deny });
   await writeFileAtomic(outPath, yaml.trimEnd() + '\n');
 
   results.push({
-    fromTool: 'gemini-cli',
+    fromTool: GEMINI_TARGET,
     fromPath: join(projectRoot, GEMINI_POLICIES_DIR),
-    toPath: AB_PERMISSIONS,
+    toPath: GEMINI_CANONICAL_PERMISSIONS,
     feature: 'permissions',
   });
 

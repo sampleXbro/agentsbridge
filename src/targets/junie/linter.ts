@@ -1,7 +1,6 @@
 import type { CanonicalFiles, LintDiagnostic } from '../../core/types.js';
 import { validateRules } from '../../core/validate-rules.js';
-
-const TARGET = 'junie';
+import { JUNIE_TARGET } from './constants.js';
 
 export function lintRules(
   canonical: CanonicalFiles,
@@ -10,6 +9,6 @@ export function lintRules(
 ): LintDiagnostic[] {
   return validateRules(canonical, projectRoot, projectFiles).map((diagnostic) => ({
     ...diagnostic,
-    target: TARGET,
+    target: JUNIE_TARGET,
   }));
 }

@@ -19,14 +19,19 @@ import { parseFrontmatter } from '../../utils/markdown.js';
 import { serializeImportedRuleWithFallback } from '../import-metadata.js';
 import { importFileDirectory } from '../import-orchestrator.js';
 import { serializeImportedAgent } from '../projected-agent-skill.js';
-import { CODEX_MD, AGENTS_MD, CODEX_AGENTS_DIR } from './constants.js';
+import {
+  CODEX_TARGET,
+  CODEX_MD,
+  AGENTS_MD,
+  CODEX_AGENTS_DIR,
+  CODEX_CANONICAL_RULES_DIR,
+  CODEX_CANONICAL_AGENTS_DIR,
+} from './constants.js';
 import { importCodexNonRootRuleFiles } from './import-codex-non-root-rules.js';
 import { importMcp } from './mcp-helpers.js';
 import { importSkills } from './skills-helpers.js';
 import { shouldImportScopedAgentsRule, removePathIfExists } from '../scoped-agents-import.js';
 import { parse as parseToml } from 'smol-toml';
-
-const AB_RULES = '.agentsmesh/rules';
 
 /**
  * Import Codex config into canonical .agentsmesh/.
@@ -36,7 +41,7 @@ const AB_RULES = '.agentsmesh/rules';
  */
 export async function importFromCodex(projectRoot: string): Promise<ImportResult[]> {
   const results: ImportResult[] = [];
-  const normalize = await createImportReferenceNormalizer('codex-cli', projectRoot);
+  const normalize = await createImportReferenceNormalizer(CODEX_TARGET, projectRoot);
   const normalizeWindsurf = await createImportReferenceNormalizer('windsurf', projectRoot);
 
   await importRules(projectRoot, results, normalize, normalizeWindsurf);
@@ -53,7 +58,7 @@ async function importAgents(
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
 ): Promise<void> {
   const agentsPath = join(projectRoot, CODEX_AGENTS_DIR);
-  const agentsDestDir = join(projectRoot, '.agentsmesh/agents');
+  const agentsDestDir = join(projectRoot, CODEX_CANONICAL_AGENTS_DIR);
   try {
     const agentFiles = await readDirRecursive(agentsPath);
     const tomlFiles = agentFiles.filter((f) => f.endsWith('.toml'));
@@ -94,9 +99,9 @@ async function importAgents(
       const outContent = serializeImportedAgent(agent, normalizedBody);
       await writeFileAtomic(destPath, outContent);
       results.push({
-        fromTool: 'codex-cli',
+        fromTool: CODEX_TARGET,
         fromPath: srcPath,
-        toPath: `.agentsmesh/agents/${name}.md`,
+        toPath: `${CODEX_CANONICAL_AGENTS_DIR}/${name}.md`,
         feature: 'agents',
       });
     }
@@ -118,7 +123,7 @@ async function importRules(
 
   // Prefer AGENTS.md (official Codex path) over codex.md (legacy/fallback)
   const sourcePath = agentsContent !== null ? agentsPath : codexPath;
-  const destDir = join(projectRoot, AB_RULES);
+  const destDir = join(projectRoot, CODEX_CANONICAL_RULES_DIR);
   const content = agentsContent ?? codexContent;
   if (content !== null) {
     await mkdirp(destDir);
@@ -135,7 +140,7 @@ async function importRules(
     results.push({
       fromTool: 'codex-cli',
       fromPath: sourcePath,
-      toPath: `${AB_RULES}/_root.md`,
+      toPath: `${CODEX_CANONICAL_RULES_DIR}/_root.md`,
       feature: 'rules',
     });
   }
@@ -163,7 +168,7 @@ async function importRules(
         const { frontmatter, body } = parseFrontmatter(normalizeTo(destPath));
         return {
           destPath,
-          toPath: `${AB_RULES}/${ruleName}.md`,
+          toPath: `${CODEX_CANONICAL_RULES_DIR}/${ruleName}.md`,
           feature: 'rules',
           content: await serializeImportedRuleWithFallback(
             destPath,

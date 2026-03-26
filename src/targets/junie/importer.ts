@@ -11,6 +11,7 @@ import {
 import { importFileDirectory } from '../import-orchestrator.js';
 import { toStringArray, toStringRecord } from '../shared-import-helpers.js';
 import {
+  JUNIE_TARGET,
   JUNIE_AGENTS_DIR,
   JUNIE_AGENTS_FALLBACK,
   JUNIE_COMMANDS_DIR,
@@ -19,15 +20,15 @@ import {
   JUNIE_GUIDELINES,
   JUNIE_IGNORE,
   JUNIE_MCP_FILE,
+  JUNIE_RULES_DIR,
   JUNIE_SKILLS_DIR,
+  JUNIE_CANONICAL_ROOT_RULE,
+  JUNIE_CANONICAL_RULES_DIR,
+  JUNIE_CANONICAL_COMMANDS_DIR,
+  JUNIE_CANONICAL_AGENTS_DIR,
+  JUNIE_CANONICAL_MCP,
+  JUNIE_CANONICAL_IGNORE,
 } from './constants.js';
-
-const AB_RULE = '.agentsmesh/rules/_root.md';
-const AB_RULES_DIR = '.agentsmesh/rules';
-const AB_COMMANDS_DIR = '.agentsmesh/commands';
-const AB_AGENTS_DIR = '.agentsmesh/agents';
-const AB_MCP = '.agentsmesh/mcp.json';
-const AB_IGNORE = '.agentsmesh/ignore';
 
 function readMcpServers(content: string): Record<string, McpServer> {
   const parsed = JSON.parse(content) as Record<string, unknown>;
@@ -67,7 +68,7 @@ async function importRules(
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
 ): Promise<void> {
   const sources = [JUNIE_DOT_AGENTS, JUNIE_GUIDELINES, JUNIE_CI_GUIDELINES, JUNIE_AGENTS_FALLBACK];
-  const destPath = join(projectRoot, AB_RULE);
+  const destPath = join(projectRoot, JUNIE_CANONICAL_ROOT_RULE);
 
   for (const relPath of sources) {
     const srcPath = join(projectRoot, relPath);
@@ -85,7 +86,12 @@ async function importRules(
       body,
     );
     await writeFileAtomic(destPath, output);
-    results.push({ fromTool: 'junie', fromPath: srcPath, toPath: AB_RULE, feature: 'rules' });
+    results.push({
+      fromTool: JUNIE_TARGET,
+      fromPath: srcPath,
+      toPath: JUNIE_CANONICAL_ROOT_RULE,
+      feature: 'rules',
+    });
     return;
   }
 }
@@ -95,8 +101,8 @@ async function importNonRootRules(
   results: ImportResult[],
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
 ): Promise<void> {
-  const srcDir = join(projectRoot, '.junie/rules');
-  const destDir = join(projectRoot, AB_RULES_DIR);
+  const srcDir = join(projectRoot, JUNIE_RULES_DIR);
+  const destDir = join(projectRoot, JUNIE_CANONICAL_RULES_DIR);
   results.push(
     ...(await importFileDirectory({
       srcDir,
@@ -121,7 +127,7 @@ async function importNonRootRules(
         );
         return {
           destPath,
-          toPath: `${AB_RULES_DIR}/${name}.md`,
+          toPath: `${JUNIE_CANONICAL_RULES_DIR}/${name}.md`,
           feature: 'rules',
           content: output,
         };
@@ -139,10 +145,15 @@ async function importMcp(projectRoot: string, results: ImportResult[]): Promise<
   if (Object.keys(servers).length === 0) return;
 
   await writeFileAtomic(
-    join(projectRoot, AB_MCP),
+    join(projectRoot, JUNIE_CANONICAL_MCP),
     JSON.stringify({ mcpServers: servers }, null, 2),
   );
-  results.push({ fromTool: 'junie', fromPath: srcPath, toPath: AB_MCP, feature: 'mcp' });
+  results.push({
+    fromTool: JUNIE_TARGET,
+    fromPath: srcPath,
+    toPath: JUNIE_CANONICAL_MCP,
+    feature: 'mcp',
+  });
 }
 
 async function importCommands(
@@ -151,7 +162,7 @@ async function importCommands(
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
 ): Promise<void> {
   const srcDir = join(projectRoot, JUNIE_COMMANDS_DIR);
-  const destDir = join(projectRoot, AB_COMMANDS_DIR);
+  const destDir = join(projectRoot, JUNIE_CANONICAL_COMMANDS_DIR);
   results.push(
     ...(await importFileDirectory({
       srcDir,
@@ -177,7 +188,7 @@ async function importCommands(
         );
         return {
           destPath,
-          toPath: `${AB_COMMANDS_DIR}/${name}.md`,
+          toPath: `${JUNIE_CANONICAL_COMMANDS_DIR}/${name}.md`,
           feature: 'commands',
           content: normalized,
         };
@@ -192,7 +203,7 @@ async function importAgents(
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
 ): Promise<void> {
   const srcDir = join(projectRoot, JUNIE_AGENTS_DIR);
-  const destDir = join(projectRoot, AB_AGENTS_DIR);
+  const destDir = join(projectRoot, JUNIE_CANONICAL_AGENTS_DIR);
   results.push(
     ...(await importFileDirectory({
       srcDir,
@@ -207,7 +218,7 @@ async function importAgents(
         const { frontmatter, body } = parseFrontmatter(normalizeTo(destPath));
         return {
           destPath,
-          toPath: `${AB_AGENTS_DIR}/${name}.md`,
+          toPath: `${JUNIE_CANONICAL_AGENTS_DIR}/${name}.md`,
           feature: 'agents',
           content: serializeFrontmatter(frontmatter, body.trim() || ''),
         };
@@ -221,18 +232,23 @@ async function importIgnore(projectRoot: string, results: ImportResult[]): Promi
   const content = await readFileSafe(srcPath);
   if (content === null) return;
 
-  await writeFileAtomic(join(projectRoot, AB_IGNORE), content.trimEnd());
-  results.push({ fromTool: 'junie', fromPath: srcPath, toPath: AB_IGNORE, feature: 'ignore' });
+  await writeFileAtomic(join(projectRoot, JUNIE_CANONICAL_IGNORE), content.trimEnd());
+  results.push({
+    fromTool: JUNIE_TARGET,
+    fromPath: srcPath,
+    toPath: JUNIE_CANONICAL_IGNORE,
+    feature: 'ignore',
+  });
 }
 
 export async function importFromJunie(projectRoot: string): Promise<ImportResult[]> {
   const results: ImportResult[] = [];
-  const normalize = await createImportReferenceNormalizer('junie', projectRoot);
+  const normalize = await createImportReferenceNormalizer(JUNIE_TARGET, projectRoot);
   await importRules(projectRoot, results, normalize);
   await importNonRootRules(projectRoot, results, normalize);
   await importCommands(projectRoot, results, normalize);
   await importAgents(projectRoot, results, normalize);
-  await importEmbeddedSkills(projectRoot, JUNIE_SKILLS_DIR, 'junie', results, normalize);
+  await importEmbeddedSkills(projectRoot, JUNIE_SKILLS_DIR, JUNIE_TARGET, results, normalize);
   await importMcp(projectRoot, results);
   await importIgnore(projectRoot, results);
   return results;

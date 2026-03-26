@@ -6,9 +6,12 @@ import { join, dirname, basename } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
 import { readFileSafe, readDirRecursive, writeFileAtomic, mkdirp } from '../../utils/fs.js';
 import { stringify as yamlStringify } from 'yaml';
-import { COPILOT_HOOKS_DIR } from './constants.js';
-
-const AB_HOOKS = '.agentsmesh/hooks.yaml';
+import {
+  COPILOT_TARGET,
+  COPILOT_HOOKS_DIR,
+  COPILOT_CANONICAL_HOOKS,
+  COPILOT_LEGACY_HOOKS_DIR,
+} from './constants.js';
 
 export function mapCopilotHookEvent(event: string): string | null {
   switch (event) {
@@ -85,7 +88,7 @@ export async function importHooks(projectRoot: string, results: ImportResult[]):
     }
   }
 
-  const legacyDir = join(projectRoot, '.github', 'copilot-hooks');
+  const legacyDir = join(projectRoot, COPILOT_LEGACY_HOOKS_DIR);
   const legacyFiles = await readDirRecursive(legacyDir).catch(() => []);
   const shFiles = legacyFiles.filter(
     (file) => dirname(file) === legacyDir && /^[^-]+-\d+\.sh$/i.test(basename(file)),
@@ -102,13 +105,13 @@ export async function importHooks(projectRoot: string, results: ImportResult[]):
 
   if (Object.keys(hooks).length === 0) return;
 
-  const destPath = join(projectRoot, AB_HOOKS);
+  const destPath = join(projectRoot, COPILOT_CANONICAL_HOOKS);
   await mkdirp(dirname(destPath));
   await writeFileAtomic(destPath, yamlStringify(hooks));
   results.push({
-    fromTool: 'copilot',
+    fromTool: COPILOT_TARGET,
     fromPath: join(projectRoot, COPILOT_HOOKS_DIR),
-    toPath: AB_HOOKS,
+    toPath: COPILOT_CANONICAL_HOOKS,
     feature: 'hooks',
   });
 }

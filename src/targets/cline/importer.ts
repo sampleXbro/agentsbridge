@@ -15,13 +15,18 @@ import { parseFrontmatter } from '../../utils/markdown.js';
 import { serializeImportedRuleWithFallback } from '../import-metadata.js';
 import { importFileDirectory } from '../import-orchestrator.js';
 import { mapClineRuleFile, mapClineWorkflowFile } from './importer-mappers.js';
-import { CLINE_RULES_DIR, CLINE_IGNORE, CLINE_WORKFLOWS_DIR } from './constants.js';
+import {
+  CLINE_TARGET,
+  CLINE_RULES_DIR,
+  CLINE_IGNORE,
+  CLINE_WORKFLOWS_DIR,
+  CLINE_AGENTS_MD,
+  CLINE_CANONICAL_RULES_DIR,
+  CLINE_CANONICAL_COMMANDS_DIR,
+  CLINE_CANONICAL_IGNORE,
+} from './constants.js';
 import { importClineMcp } from './mcp-mapper.js';
 import { importClineSkills } from './skills-helpers.js';
-
-const AGENTSMESH_RULES = '.agentsmesh/rules';
-const AGENTSMESH_COMMANDS = '.agentsmesh/commands';
-const AGENTSMESH_IGNORE = '.agentsmesh/ignore';
 
 /**
  * Import Cline config into canonical .agentsmesh/.
@@ -33,8 +38,8 @@ const AGENTSMESH_IGNORE = '.agentsmesh/ignore';
  */
 export async function importFromCline(projectRoot: string): Promise<ImportResult[]> {
   const results: ImportResult[] = [];
-  const normalize = await createImportReferenceNormalizer('cline', projectRoot);
-  const destRulesDir = join(projectRoot, AGENTSMESH_RULES);
+  const normalize = await createImportReferenceNormalizer(CLINE_TARGET, projectRoot);
+  const destRulesDir = join(projectRoot, CLINE_CANONICAL_RULES_DIR);
   const clineRulesPath = join(projectRoot, CLINE_RULES_DIR);
 
   // Check if .clinerules is a flat file rather than a directory
@@ -62,7 +67,7 @@ export async function importFromCline(projectRoot: string): Promise<ImportResult
       results.push({
         fromTool: 'cline',
         fromPath: clineRulesRaw,
-        toPath: `${AGENTSMESH_RULES}/_root.md`,
+        toPath: `${CLINE_CANONICAL_RULES_DIR}/_root.md`,
         feature: 'rules',
       });
     }
@@ -73,7 +78,7 @@ export async function importFromCline(projectRoot: string): Promise<ImportResult
     const rootContent = await readFileSafe(rootPath);
     if (rootContent === null) {
       // Prefer AGENTS.md as root when present (cline generates root rule there)
-      const agentsMdPath = join(projectRoot, 'AGENTS.md');
+      const agentsMdPath = join(projectRoot, CLINE_AGENTS_MD);
       const agentsMdContent = await readFileSafe(agentsMdPath);
       if (agentsMdContent !== null) {
         rootSourcePath = agentsMdPath;
@@ -89,7 +94,7 @@ export async function importFromCline(projectRoot: string): Promise<ImportResult
         results.push({
           fromTool: 'cline',
           fromPath: agentsMdPath,
-          toPath: `${AGENTSMESH_RULES}/_root.md`,
+          toPath: `${CLINE_CANONICAL_RULES_DIR}/_root.md`,
           feature: 'rules',
         });
       } else {
@@ -112,7 +117,7 @@ export async function importFromCline(projectRoot: string): Promise<ImportResult
             results.push({
               fromTool: 'cline',
               fromPath: first,
-              toPath: `${AGENTSMESH_RULES}/_root.md`,
+              toPath: `${CLINE_CANONICAL_RULES_DIR}/_root.md`,
               feature: 'rules',
             });
           }
@@ -130,7 +135,7 @@ export async function importFromCline(projectRoot: string): Promise<ImportResult
       results.push({
         fromTool: 'cline',
         fromPath: rootPath,
-        toPath: `${AGENTSMESH_RULES}/_root.md`,
+        toPath: `${CLINE_CANONICAL_RULES_DIR}/_root.md`,
         feature: 'rules',
       });
     }
@@ -161,12 +166,12 @@ export async function importFromCline(projectRoot: string): Promise<ImportResult
     }
     if (patterns.length > 0) {
       await mkdirp(join(projectRoot, '.agentsmesh'));
-      const destIgnorePath = join(projectRoot, AGENTSMESH_IGNORE);
+      const destIgnorePath = join(projectRoot, CLINE_CANONICAL_IGNORE);
       await writeFileAtomic(destIgnorePath, patterns.join('\n'));
       results.push({
         fromTool: 'cline',
         fromPath: ignorePath,
-        toPath: AGENTSMESH_IGNORE,
+        toPath: CLINE_CANONICAL_IGNORE,
         feature: 'ignore',
       });
     }
@@ -176,7 +181,7 @@ export async function importFromCline(projectRoot: string): Promise<ImportResult
 
   // Only import workflows when .clinerules is a directory (not a flat file).
   // When .clinerules is a flat file, .clinerules/workflows is invalid (ENOTDIR).
-  const destCommandsDir = join(projectRoot, AGENTSMESH_COMMANDS);
+  const destCommandsDir = join(projectRoot, CLINE_CANONICAL_COMMANDS_DIR);
   if (!clineRulesIsFile) {
     results.push(
       ...(await importFileDirectory({

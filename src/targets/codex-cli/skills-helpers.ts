@@ -13,11 +13,14 @@ import {
   serializeImportedAgent,
 } from '../projected-agent-skill.js';
 import { removePathIfExists } from '../scoped-agents-import.js';
-import { CODEX_SKILLS_DIR, CODEX_SKILLS_FALLBACK_DIR } from './constants.js';
-
-const AB_COMMANDS = '.agentsmesh/commands';
-const AB_AGENTS = '.agentsmesh/agents';
-const AB_SKILLS = '.agentsmesh/skills';
+import {
+  CODEX_TARGET,
+  CODEX_SKILLS_DIR,
+  CODEX_SKILLS_FALLBACK_DIR,
+  CODEX_CANONICAL_COMMANDS_DIR,
+  CODEX_CANONICAL_AGENTS_DIR,
+  CODEX_CANONICAL_SKILLS_DIR,
+} from './constants.js';
 
 export async function importSkills(
   projectRoot: string,
@@ -44,13 +47,13 @@ export async function importSkills(
       importedAny = true;
 
       const skillName = ent.name;
-      const destSkillPath = join(projectRoot, AB_SKILLS, skillName, 'SKILL.md');
+      const destSkillPath = join(projectRoot, CODEX_CANONICAL_SKILLS_DIR, skillName, 'SKILL.md');
       const normalized = normalize(skillMdContent, skillMdPath, destSkillPath);
       const { frontmatter, body } = parseFrontmatter(normalized);
       const command = parseCommandSkillFrontmatter(frontmatter, ent.name);
       if (command) {
-        await removePathIfExists(join(projectRoot, AB_SKILLS, skillName));
-        const destCommandsDir = join(projectRoot, AB_COMMANDS);
+        await removePathIfExists(join(projectRoot, CODEX_CANONICAL_SKILLS_DIR, skillName));
+        const destCommandsDir = join(projectRoot, CODEX_CANONICAL_COMMANDS_DIR);
         await mkdirp(destCommandsDir);
         const commandPath = join(destCommandsDir, `${command.name}.md`);
         await writeFileAtomic(
@@ -58,17 +61,17 @@ export async function importSkills(
           serializeImportedCommand(command, normalize(body, skillMdPath, commandPath)),
         );
         results.push({
-          fromTool: 'codex-cli',
+          fromTool: CODEX_TARGET,
           fromPath: skillMdPath,
-          toPath: `${AB_COMMANDS}/${command.name}.md`,
+          toPath: `${CODEX_CANONICAL_COMMANDS_DIR}/${command.name}.md`,
           feature: 'commands',
         });
         continue;
       }
       const projectedAgent = parseProjectedAgentSkillFrontmatter(frontmatter, ent.name);
       if (projectedAgent) {
-        await removePathIfExists(join(projectRoot, AB_SKILLS, skillName));
-        const destAgentsDir = join(projectRoot, AB_AGENTS);
+        await removePathIfExists(join(projectRoot, CODEX_CANONICAL_SKILLS_DIR, skillName));
+        const destAgentsDir = join(projectRoot, CODEX_CANONICAL_AGENTS_DIR);
         await mkdirp(destAgentsDir);
         const agentPath = join(destAgentsDir, `${projectedAgent.name}.md`);
         await writeFileAtomic(
@@ -76,15 +79,15 @@ export async function importSkills(
           serializeImportedAgent(projectedAgent, normalize(body, skillMdPath, agentPath)),
         );
         results.push({
-          fromTool: 'codex-cli',
+          fromTool: CODEX_TARGET,
           fromPath: skillMdPath,
-          toPath: `${AB_AGENTS}/${projectedAgent.name}.md`,
+          toPath: `${CODEX_CANONICAL_AGENTS_DIR}/${projectedAgent.name}.md`,
           feature: 'agents',
         });
         continue;
       }
 
-      const destSkillDir = join(projectRoot, AB_SKILLS, skillName);
+      const destSkillDir = join(projectRoot, CODEX_CANONICAL_SKILLS_DIR, skillName);
       await mkdirp(destSkillDir);
       const canonicalFm: Record<string, unknown> = {
         description:
@@ -97,9 +100,9 @@ export async function importSkills(
           : body.trim() || '';
       await writeFileAtomic(destSkillPath, outContent);
       results.push({
-        fromTool: 'codex-cli',
+        fromTool: CODEX_TARGET,
         fromPath: skillMdPath,
-        toPath: `${AB_SKILLS}/${skillName}/SKILL.md`,
+        toPath: `${CODEX_CANONICAL_SKILLS_DIR}/${skillName}/SKILL.md`,
         feature: 'skills',
       });
 
@@ -113,9 +116,9 @@ export async function importSkills(
         await mkdirp(dirname(destPath));
         await writeFileAtomic(destPath, normalize(fileContent, absPath, destPath));
         results.push({
-          fromTool: 'codex-cli',
+          fromTool: CODEX_TARGET,
           fromPath: absPath,
-          toPath: `${AB_SKILLS}/${skillName}/${relPath}`,
+          toPath: `${CODEX_CANONICAL_SKILLS_DIR}/${skillName}/${relPath}`,
           feature: 'skills',
         });
       }

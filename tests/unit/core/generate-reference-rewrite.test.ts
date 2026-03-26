@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { generate } from '../../../src/core/engine.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';
 import type { ValidatedConfig } from '../../../src/config/schema.js';
+import { appendAgentsmeshRootInstructionParagraph } from '../../../src/targets/root-instruction-paragraph.js';
 
 const TEST_DIR = join(tmpdir(), 'am-engine-reference-rewrite');
 
@@ -187,7 +188,9 @@ describe('generate reference rewriting', () => {
     mkdirSync(join(TEST_DIR, '.claude'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, '.claude', 'CLAUDE.md'),
-      'See .claude/rules/typescript.md, .claude/commands/review.md, .claude/agents/reviewer.md, and .claude/skills/api-gen/references/checklist.md.',
+      appendAgentsmeshRootInstructionParagraph(
+        'See .claude/rules/typescript.md, .claude/commands/review.md, .claude/agents/reviewer.md, and .claude/skills/api-gen/references/checklist.md.',
+      ),
     );
 
     const results = await generate({

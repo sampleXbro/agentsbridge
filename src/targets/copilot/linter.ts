@@ -4,8 +4,7 @@
 
 import type { CanonicalFiles, LintDiagnostic } from '../../core/types.js';
 import { validateRules } from '../../core/validate-rules.js';
-
-const TARGET = 'copilot';
+import { COPILOT_TARGET } from './constants.js';
 
 /**
  * Lint rules for Copilot target.
@@ -20,7 +19,7 @@ export function lintRules(
   projectFiles: string[],
 ): LintDiagnostic[] {
   const diags = validateRules(canonical, projectRoot, projectFiles);
-  const targetDiags = diags.map((d) => ({ ...d, target: TARGET }));
+  const targetDiags = diags.map((d) => ({ ...d, target: COPILOT_TARGET }));
   const nonRootWithoutGlobs = canonical.rules.filter(
     (rule) => !rule.root && rule.globs.length === 0,
   );
@@ -29,7 +28,7 @@ export function lintRules(
     ...nonRootWithoutGlobs.map((rule) => ({
       level: 'warning' as const,
       file: rule.source,
-      target: TARGET,
+      target: COPILOT_TARGET,
       message:
         'Copilot path-specific instructions require applyTo globs; non-root rules without globs are not generated.',
     })),

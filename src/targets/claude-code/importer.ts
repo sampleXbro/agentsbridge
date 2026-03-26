@@ -23,20 +23,20 @@ import { serializeImportedRuleWithFallback } from '../import-metadata.js';
 import { importFileDirectory } from '../import-orchestrator.js';
 import { mapClaudeMarkdownFile, mapClaudeRuleFile } from './importer-mappers.js';
 import { importMcpJson, importSettings } from './settings-helpers.js';
-
-const CLAUDE_MD = '.claude/CLAUDE.md';
-const CLAUDE_MD_LEGACY = 'CLAUDE.md';
-const CLAUDE_RULES_DIR = '.claude/rules';
-const CLAUDE_COMMANDS_DIR = '.claude/commands';
-const CLAUDE_AGENTS_DIR = '.claude/agents';
-const CLAUDE_SKILLS_DIR = '.claude/skills';
-const CLAUDEIGNORE = '.claudeignore';
-
-const AB_RULES = '.agentsmesh/rules';
-const AB_COMMANDS = '.agentsmesh/commands';
-const AB_AGENTS = '.agentsmesh/agents';
-const AB_SKILLS = '.agentsmesh/skills';
-const AB_IGNORE = '.agentsmesh/ignore';
+import {
+  CLAUDE_ROOT,
+  CLAUDE_LEGACY_ROOT,
+  CLAUDE_RULES_DIR,
+  CLAUDE_COMMANDS_DIR,
+  CLAUDE_AGENTS_DIR,
+  CLAUDE_SKILLS_DIR,
+  CLAUDE_IGNORE,
+  CLAUDE_CANONICAL_RULES_DIR,
+  CLAUDE_CANONICAL_COMMANDS_DIR,
+  CLAUDE_CANONICAL_AGENTS_DIR,
+  CLAUDE_CANONICAL_SKILLS_DIR,
+  CLAUDE_CANONICAL_IGNORE,
+} from './constants.js';
 
 /**
  * Import Claude Code config into canonical .agentsmesh/.
@@ -63,12 +63,12 @@ async function importRules(
   results: ImportResult[],
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
 ): Promise<void> {
-  const destDir = join(projectRoot, AB_RULES);
+  const destDir = join(projectRoot, CLAUDE_CANONICAL_RULES_DIR);
 
   // Try .claude/CLAUDE.md first (preferred per official docs), then fall back to CLAUDE.md (legacy)
-  const primaryClaudePath = join(projectRoot, CLAUDE_MD);
+  const primaryClaudePath = join(projectRoot, CLAUDE_ROOT);
   const primaryContent = await readFileSafe(primaryClaudePath);
-  const legacyClaudePath = join(projectRoot, CLAUDE_MD_LEGACY);
+  const legacyClaudePath = join(projectRoot, CLAUDE_LEGACY_ROOT);
   const legacyContent = primaryContent === null ? await readFileSafe(legacyClaudePath) : null;
   const claudeContent = primaryContent ?? legacyContent;
   const claudePath = primaryContent !== null ? primaryClaudePath : legacyClaudePath;
@@ -84,7 +84,7 @@ async function importRules(
     results.push({
       fromTool: 'claude-code',
       fromPath: claudePath,
-      toPath: `${AB_RULES}/_root.md`,
+      toPath: `${CLAUDE_CANONICAL_RULES_DIR}/_root.md`,
       feature: 'rules',
     });
   }
@@ -107,7 +107,7 @@ async function importCommands(
   results: ImportResult[],
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
 ): Promise<void> {
-  const destDir = join(projectRoot, AB_COMMANDS);
+  const destDir = join(projectRoot, CLAUDE_CANONICAL_COMMANDS_DIR);
   const commandsDir = join(projectRoot, CLAUDE_COMMANDS_DIR);
   results.push(
     ...(await importFileDirectory({
@@ -127,7 +127,7 @@ async function importAgents(
   results: ImportResult[],
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
 ): Promise<void> {
-  const destDir = join(projectRoot, AB_AGENTS);
+  const destDir = join(projectRoot, CLAUDE_CANONICAL_AGENTS_DIR);
   const agentsDir = join(projectRoot, CLAUDE_AGENTS_DIR);
   results.push(
     ...(await importFileDirectory({
@@ -148,7 +148,7 @@ async function importSkills(
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
 ): Promise<void> {
   const skillsBaseDir = join(projectRoot, CLAUDE_SKILLS_DIR);
-  const destBase = join(projectRoot, AB_SKILLS);
+  const destBase = join(projectRoot, CLAUDE_CANONICAL_SKILLS_DIR);
 
   const allFiles = await readDirRecursive(skillsBaseDir);
   const skillMdFiles = allFiles.filter((f) => f.endsWith('SKILL.md'));
@@ -166,7 +166,7 @@ async function importSkills(
       const destPath = join(destSkillDir, relPath);
       await mkdirp(dirname(destPath));
       await writeFileAtomic(destPath, normalize(fileContent, filePath, destPath));
-      const toPath = `${AB_SKILLS}/${skillName}/${relPath}`;
+      const toPath = `${CLAUDE_CANONICAL_SKILLS_DIR}/${skillName}/${relPath}`;
       results.push({
         fromTool: 'claude-code',
         fromPath: filePath,
@@ -178,16 +178,16 @@ async function importSkills(
 }
 
 async function importIgnore(projectRoot: string, results: ImportResult[]): Promise<void> {
-  const ignorePath = join(projectRoot, CLAUDEIGNORE);
+  const ignorePath = join(projectRoot, CLAUDE_IGNORE);
   const content = await readFileSafe(ignorePath);
   if (content === null) return;
-  const destPath = join(projectRoot, AB_IGNORE);
+  const destPath = join(projectRoot, CLAUDE_CANONICAL_IGNORE);
   await mkdirp(dirname(destPath));
   await writeFileAtomic(destPath, content);
   results.push({
     fromTool: 'claude-code',
     fromPath: ignorePath,
-    toPath: AB_IGNORE,
+    toPath: CLAUDE_CANONICAL_IGNORE,
     feature: 'ignore',
   });
 }

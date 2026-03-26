@@ -44,6 +44,25 @@ describe('generateRules (copilot)', () => {
     expect(main?.content).toContain('- Use TypeScript');
   });
 
+  it('emits .github/copilot-instructions.md even when the root rule body is empty', () => {
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: '/proj/.agentsmesh/rules/_root.md',
+          root: true,
+          targets: [],
+          description: '',
+          globs: [],
+          body: '',
+        },
+      ],
+    });
+    const results = generateRules(canonical);
+    const main = results.find((r) => r.path === '.github/copilot-instructions.md');
+    expect(main).toBeDefined();
+    expect(main?.content).toBe('');
+  });
+
   it('keeps copilot-instructions focused on rules even when commands exist', () => {
     const canonical = makeCanonical({
       rules: [

@@ -7,6 +7,7 @@ import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { runDiff } from '../../../../src/cli/commands/diff.js';
+import { appendAgentsmeshRootInstructionParagraph } from '../../../../src/targets/root-instruction-paragraph.js';
 
 const TEST_DIR = join(tmpdir(), 'am-diff-cmd-test');
 
@@ -72,7 +73,10 @@ describe('runDiff', () => {
   it('shows unchanged when files match', async () => {
     // Write exact content that generator would produce; use claude-code only
     mkdirSync(join(TEST_DIR, '.claude'), { recursive: true });
-    writeFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), '# Rules\n- Use TypeScript');
+    writeFileSync(
+      join(TEST_DIR, '.claude', 'CLAUDE.md'),
+      appendAgentsmeshRootInstructionParagraph('# Rules\n- Use TypeScript'),
+    );
 
     const logs: string[] = [];
     vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {

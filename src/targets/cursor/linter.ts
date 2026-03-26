@@ -4,8 +4,7 @@
 
 import type { CanonicalFiles, LintDiagnostic } from '../../core/types.js';
 import { validateRules } from '../../core/validate-rules.js';
-
-const TARGET = 'cursor';
+import { CURSOR_TARGET } from './constants.js';
 
 /**
  * Lint rules for Cursor target.
@@ -20,5 +19,5 @@ export function lintRules(
   projectFiles: string[],
 ): LintDiagnostic[] {
   const diags = validateRules(canonical, _projectRoot, projectFiles);
-  return diags.map((d) => ({ ...d, target: TARGET }));
+  return diags.map((d) => ({ ...d, target: CURSOR_TARGET }));
 }

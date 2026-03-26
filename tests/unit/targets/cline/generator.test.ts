@@ -55,6 +55,7 @@ describe('generateRules (cline)', () => {
     expect(agentsMd).toBeDefined();
     expect(agentsMd!.content).toContain('# Rules');
     expect(agentsMd!.content).toContain('- Use TypeScript');
+    expect(agentsMd!.content).not.toContain('## AgentsMesh Generation Contract');
     expect(results.find((r) => r.path === `${CLINE_RULES_DIR}/_root.md`)).toBeUndefined();
   });
 

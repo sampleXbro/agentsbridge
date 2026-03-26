@@ -5,6 +5,8 @@ import { tmpdir } from 'node:os';
 import { generate, resolveOutputCollisions } from '../../../src/core/engine.js';
 import type { CanonicalFiles, GenerateResult } from '../../../src/core/types.js';
 import type { ValidatedConfig } from '../../../src/config/schema.js';
+import { appendAgentsmeshRootInstructionParagraph } from '../../../src/targets/root-instruction-paragraph.js';
+import { serializeFrontmatter } from '../../../src/utils/markdown.js';
 
 const TEST_DIR = join(tmpdir(), 'am-engine-test');
 
@@ -108,6 +110,26 @@ describe('generate', () => {
     expect(paths).toContain('AGENTS.md');
   });
 
+  it('decorates only the cursor primary root instruction through the engine', async () => {
+    const body = '# Rules\n- Use TypeScript';
+    const config = minimalConfig({ targets: ['cursor'] });
+    const canonical = canonicalWithRootRule(body);
+
+    const results = await generate({
+      config,
+      canonical,
+      projectRoot: TEST_DIR,
+    });
+
+    const generalMdc = results.find((result) => result.path === '.cursor/rules/general.mdc');
+    const agentsMd = results.find((result) => result.path === 'AGENTS.md');
+
+    expect(generalMdc?.content).toBe(
+      serializeFrontmatter({ alwaysApply: true }, appendAgentsmeshRootInstructionParagraph(body)),
+    );
+    expect(agentsMd?.content).toBe(body);
+  });
+
   it('marks new files as created when they do not exist', async () => {
     const config = minimalConfig();
     const canonical = canonicalWithRootRule('Content');
@@ -140,12 +162,15 @@ describe('generate', () => {
     const body = '# Same';
     mkdirSync(join(TEST_DIR, '.cursor', 'rules'), { recursive: true });
     mkdirSync(join(TEST_DIR, '.claude'), { recursive: true });
-    writeFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), body);
-    const cursorContent = `---
-alwaysApply: true
----
-
-${body}`;
+    writeFileSync(join(TEST_DIR, 'AGENTS.md'), body);
+    writeFileSync(
+      join(TEST_DIR, '.claude', 'CLAUDE.md'),
+      appendAgentsmeshRootInstructionParagraph(body),
+    );
+    const cursorContent = serializeFrontmatter(
+      { alwaysApply: true },
+      appendAgentsmeshRootInstructionParagraph(body),
+    );
     writeFileSync(join(TEST_DIR, '.cursor', 'rules', 'general.mdc'), cursorContent);
     const config = minimalConfig();
     const canonical = canonicalWithRootRule(body);
@@ -155,7 +180,7 @@ ${body}`;
       projectRoot: TEST_DIR,
     });
     const unchanged = results.filter((r) => r.status === 'unchanged');
-    expect(unchanged).toHaveLength(2);
+    expect(unchanged).toHaveLength(3);
   });
 
   it('filters targets when targetFilter is provided', async () => {
@@ -555,7 +580,9 @@ ${body}`;
     });
 
     expect(results.filter((r) => r.path === 'AGENTS.md')).toHaveLength(1);
-    expect(results.find((r) => r.path === 'AGENTS.md')?.content).toBe('# Shared root');
+    expect(results.find((r) => r.path === 'AGENTS.md')?.content).toBe(
+      appendAgentsmeshRootInstructionParagraph('# Shared root'),
+    );
   });
 
   it('prefers codex AGENTS.md when rewritten overlaps differ between codex-cli and windsurf', async () => {
@@ -791,6 +818,7 @@ describe('generate Copilot', () => {
     const paths = results.map((r) => r.path).sort();
     expect(paths).toContain('.github/copilot-instructions.md');
     const copilot = results.find((r) => r.path === '.github/copilot-instructions.md');
+    expect(copilot?.content).toContain('## AgentsMesh Generation Contract');
     expect(copilot?.content).toContain('Use TypeScript');
   });
 
@@ -857,7 +885,7 @@ describe('generate Copilot', () => {
       projectRoot: TEST_DIR,
     });
     const copilot = results.find((r) => r.path === '.github/copilot-instructions.md');
-    expect(copilot?.content).toBe('Root');
+    expect(copilot?.content).toBe(appendAgentsmeshRootInstructionParagraph('Root'));
     const prompt = results.find((r) => r.path === '.github/prompts/review.prompt.md');
     expect(prompt?.content).toContain('x-agentsmesh-kind: command');
     expect(prompt?.content).toContain('Review the code.');
@@ -1061,7 +1089,7 @@ describe('generate Copilot target', () => {
     });
     const mainFile = results.find((r) => r.path === '.github/copilot-instructions.md');
     expect(mainFile).toBeDefined();
-    expect(mainFile!.content).toBe('Root');
+    expect(mainFile!.content).toBe(appendAgentsmeshRootInstructionParagraph('Root'));
     const promptFile = results.find((r) => r.path === '.github/prompts/review.prompt.md');
     expect(promptFile).toBeDefined();
     expect(promptFile!.content).toContain('Review the code.');
@@ -1097,6 +1125,25 @@ describe('generate Copilot target', () => {
   });
 });
 
+describe('generate Continue', () => {
+  it('decorates the primary .continue root rule through the engine', async () => {
+    const config = minimalConfig({
+      targets: ['continue'],
+      features: ['rules'],
+    });
+    const canonical = canonicalWithRootRule('# Rules\n- Use TypeScript');
+    const results = await generate({
+      config,
+      canonical,
+      projectRoot: TEST_DIR,
+    });
+    const root = results.find((r) => r.path === '.continue/rules/_root.md');
+    expect(root).toBeDefined();
+    expect(root?.content).toContain('## AgentsMesh Generation Contract');
+    expect(root?.content).toContain('Use TypeScript');
+  });
+});
+
 describe('generate Gemini CLI', () => {
   it('produces GEMINI.md when gemini-cli target enabled', async () => {
     const config = minimalConfig({
@@ -1111,6 +1158,7 @@ describe('generate Gemini CLI', () => {
     });
     const gemini = results.find((r) => r.path === 'GEMINI.md');
     expect(gemini).toBeDefined();
+    expect(gemini!.content).toContain('## AgentsMesh Generation Contract');
     expect(gemini!.content).toContain('Use TypeScript');
   });
 
@@ -1260,6 +1308,7 @@ describe('generate Cline', () => {
     });
     const root = results.find((r) => r.path === 'AGENTS.md');
     expect(root).toBeDefined();
+    expect(root!.content).toContain('## AgentsMesh Generation Contract');
     expect(root!.content).toContain('Use TypeScript');
   });
 
@@ -1412,6 +1461,7 @@ describe('generate Codex', () => {
     expect(results.find((r) => r.path === 'codex.md')).toBeUndefined();
     const agents = results.find((r) => r.path === 'AGENTS.md');
     expect(agents).toBeDefined();
+    expect(agents!.content).toContain('## AgentsMesh Generation Contract');
     expect(agents!.content).toContain('Use TypeScript');
   });
 
@@ -1576,6 +1626,7 @@ describe('generate Windsurf', () => {
     });
     const root = results.find((r) => r.path === 'AGENTS.md');
     expect(root).toBeDefined();
+    expect(root!.content).toContain('## AgentsMesh Generation Contract');
     expect(root!.content).toContain('# Rules');
     expect(root!.content).toContain('Use TypeScript');
     expect(root!.content).not.toContain('---');

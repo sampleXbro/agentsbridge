@@ -14,17 +14,17 @@ import { serializeImportedRuleWithFallback } from '../import-metadata.js';
 import { importFileDirectory } from '../import-orchestrator.js';
 import { toGlobsArray } from '../shared-import-helpers.js';
 import {
+  COPILOT_TARGET,
   COPILOT_INSTRUCTIONS,
   COPILOT_CONTEXT_DIR,
   COPILOT_INSTRUCTIONS_DIR,
   COPILOT_PROMPTS_DIR,
+  COPILOT_CANONICAL_RULES_DIR,
+  COPILOT_CANONICAL_COMMANDS_DIR,
 } from './constants.js';
 import { parseCommandPromptFrontmatter, serializeImportedCommand } from './command-prompt.js';
 import { importHooks } from './hook-parser.js';
 import { importAgents, importSkills } from './agents-skills-helpers.js';
-
-const AGENTSMESH_RULES = '.agentsmesh/rules';
-const AB_COMMANDS = '.agentsmesh/commands';
 
 /**
  * Import Copilot rules into canonical .agentsmesh/rules.
@@ -36,8 +36,8 @@ const AB_COMMANDS = '.agentsmesh/commands';
  */
 export async function importFromCopilot(projectRoot: string): Promise<ImportResult[]> {
   const results: ImportResult[] = [];
-  const normalize = await createImportReferenceNormalizer('copilot', projectRoot);
-  const destDir = join(projectRoot, AGENTSMESH_RULES);
+  const normalize = await createImportReferenceNormalizer(COPILOT_TARGET, projectRoot);
+  const destDir = join(projectRoot, COPILOT_CANONICAL_RULES_DIR);
 
   const instructionsPath = join(projectRoot, COPILOT_INSTRUCTIONS);
   const instructionsContent = await readFileSafe(instructionsPath);
@@ -54,7 +54,7 @@ export async function importFromCopilot(projectRoot: string): Promise<ImportResu
     results.push({
       fromTool: 'copilot',
       fromPath: instructionsPath,
-      toPath: `${AGENTSMESH_RULES}/_root.md`,
+      toPath: `${COPILOT_CANONICAL_RULES_DIR}/_root.md`,
       feature: 'rules',
     });
   }
@@ -83,7 +83,7 @@ export async function importFromCopilot(projectRoot: string): Promise<ImportResu
         });
         return {
           destPath,
-          toPath: `${AGENTSMESH_RULES}/${destFileName}`,
+          toPath: `${COPILOT_CANONICAL_RULES_DIR}/${destFileName}`,
           feature: 'rules',
           content: await serializeImportedRuleWithFallback(destPath, canonicalFm, body),
         };
@@ -120,7 +120,7 @@ export async function importFromCopilot(projectRoot: string): Promise<ImportResu
         });
         return {
           destPath,
-          toPath: `${AGENTSMESH_RULES}/${base}.md`,
+          toPath: `${COPILOT_CANONICAL_RULES_DIR}/${base}.md`,
           feature: 'rules',
           content: await serializeImportedRuleWithFallback(destPath, canonicalFm, body),
         };
@@ -142,7 +142,7 @@ async function importCommands(
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
 ): Promise<void> {
   const promptsDir = join(projectRoot, COPILOT_PROMPTS_DIR);
-  const destDir = join(projectRoot, AB_COMMANDS);
+  const destDir = join(projectRoot, COPILOT_CANONICAL_COMMANDS_DIR);
   results.push(
     ...(await importFileDirectory({
       srcDir: promptsDir,
@@ -157,7 +157,7 @@ async function importCommands(
         const destPath = join(destDir, `${command.name}.md`);
         return {
           destPath,
-          toPath: `${AB_COMMANDS}/${command.name}.md`,
+          toPath: `${COPILOT_CANONICAL_COMMANDS_DIR}/${command.name}.md`,
           feature: 'commands',
           content: serializeImportedCommand(command, body),
         };

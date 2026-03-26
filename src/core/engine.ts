@@ -21,6 +21,7 @@ import { preferEquivalentCodexAgents } from './output-overlap.js';
 import { rewriteGeneratedReferences } from './reference-rewriter.js';
 import { resolveOutputCollisions, refreshResultStatus } from './engine-collision.js';
 import { generateFeature } from './engine-feature-loop.js';
+import { decoratePrimaryRootInstructions } from './root-instruction-decorator.js';
 import {
   generatePermissionsFeature,
   generateHooksFeature,
@@ -112,9 +113,9 @@ export async function generate(ctx: GenerateContext): Promise<GenerateResult[]> 
     await generateGeminiSettingsFeature(results, targets, canonical, projectRoot);
   }
 
-  const rewrittenResults = rewriteGeneratedReferences(results, canonical, config, projectRoot).map(
-    refreshResultStatus,
-  );
+  const rewrittenResults = rewriteGeneratedReferences(results, canonical, config, projectRoot);
+  const decoratedResults =
+    decoratePrimaryRootInstructions(rewrittenResults).map(refreshResultStatus);
 
-  return resolveOutputCollisions(preferEquivalentCodexAgents(rewrittenResults, canonical, config));
+  return resolveOutputCollisions(preferEquivalentCodexAgents(decoratedResults, canonical, config));
 }

@@ -6,10 +6,11 @@ import {
 } from '../import-metadata.js';
 import type { ImportFileMapping } from '../import-orchestrator.js';
 import { toToolsArray } from '../shared-import-helpers.js';
-
-const AB_RULES = '.agentsmesh/rules';
-const AB_COMMANDS = '.agentsmesh/commands';
-const AB_AGENTS = '.agentsmesh/agents';
+import {
+  CURSOR_CANONICAL_RULES_DIR,
+  CURSOR_CANONICAL_COMMANDS_DIR,
+  CURSOR_CANONICAL_AGENTS_DIR,
+} from './constants.js';
 
 export async function mapCursorRuleFile(
   srcPath: string,
@@ -26,7 +27,7 @@ export async function mapCursorRuleFile(
   delete (canonicalFm as Record<string, unknown>).alwaysApply;
   return {
     destPath,
-    toPath: `${AB_RULES}/${name}.md`,
+    toPath: `${CURSOR_CANONICAL_RULES_DIR}/${name}.md`,
     feature: 'rules',
     content: await serializeImportedRuleWithFallback(destPath, canonicalFm, body),
   };
@@ -45,7 +46,7 @@ export async function mapCursorCommandFile(
     fromCamel.length > 0 ? fromCamel : toToolsArray(frontmatter['allowed-tools']);
   return {
     destPath,
-    toPath: `${AB_COMMANDS}/${name}.md`,
+    toPath: `${CURSOR_CANONICAL_COMMANDS_DIR}/${name}.md`,
     feature: 'commands',
     content: await serializeImportedCommandWithFallback(
       destPath,
@@ -71,7 +72,7 @@ export function mapCursorAgentFile(
   const destPath = join(destDir, `${name}.md`);
   return {
     destPath,
-    toPath: `${AB_AGENTS}/${name}.md`,
+    toPath: `${CURSOR_CANONICAL_AGENTS_DIR}/${name}.md`,
     feature: 'agents',
     content: normalizeTo(destPath),
   };

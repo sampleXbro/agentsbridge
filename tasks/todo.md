@@ -255,6 +255,87 @@
 - [ ] Add/adjust unit tests for gemini-cli generator/importer (namespaced commands + policies roundtrip)
 - [ ] Run `pnpm test` (or targeted vitest suites) and fix any regressions
 
+# Root instruction self-description paragraph
+
+- [x] Add failing tests for generated main instruction files to append the AgentsMesh paragraph once
+- [x] Implement shared paragraph injection with dedupe for primary root instruction outputs
+- [x] Run targeted verification and append review notes
+
+## Review (Root instruction self-description paragraph)
+
+- QA Report — Root instruction self-description paragraph
+- Acceptance criteria:
+  - generated primary root instruction files append the AgentsMesh library paragraph automatically: covered by `tests/unit/targets/claude-code/generator.test.ts`, `tests/unit/targets/continue/generator.test.ts`, `tests/unit/targets/cursor/generator.test.ts`, `tests/unit/targets/copilot/generator.test.ts`, `tests/unit/targets/junie/generator.test.ts`, `tests/unit/targets/gemini-cli/generator.test.ts`, `tests/unit/targets/cline/generator.test.ts`, `tests/unit/targets/codex-cli/generator.test.ts`, and `tests/unit/targets/windsurf/generator.test.ts`
+  - generation does not duplicate the paragraph when the root rule already contains it: covered by `tests/unit/targets/claude-code/generator.test.ts`
+  - shared `AGENTS.md` compatibility outputs no longer conflict when multiple targets generate together: covered by `tests/unit/core/engine.test.ts`, `tests/import-generate-roundtrip.test.ts`, and `tests/integration/generate-reference-rewrite.integration.test.ts`
+- Edge cases covered:
+  - empty root bodies still emit the paragraph for primary root files: covered by `tests/unit/targets/copilot/generator.test.ts`, `tests/unit/targets/gemini-cli/generator.test.ts`, and `tests/unit/targets/cline/generator.test.ts`
+  - existing generated files with the paragraph are treated as unchanged by diff/generate status logic: covered by `tests/unit/core/engine.test.ts`, `tests/unit/core/generate-reference-rewrite.test.ts`, and `tests/unit/cli/commands/diff.test.ts`
+  - compatibility mirrors for Cursor and Gemini yield cleanly during overlapping `AGENTS.md` generation instead of hard-failing: covered by `tests/import-generate-roundtrip.test.ts` and `tests/integration/generate-reference-rewrite.integration.test.ts`
+- Verification:
+  - `pnpm vitest run tests/unit/targets/claude-code/generator.test.ts tests/unit/targets/cursor/generator.test.ts tests/unit/targets/copilot/generator.test.ts tests/unit/targets/junie/generator.test.ts tests/unit/targets/gemini-cli/generator.test.ts tests/unit/targets/cline/generator.test.ts tests/unit/targets/codex-cli/generator.test.ts tests/unit/targets/windsurf/generator.test.ts`
+  - `pnpm vitest run tests/unit/core/engine.test.ts tests/unit/core/generate-reference-rewrite.test.ts tests/import-generate-roundtrip.test.ts tests/integration/import.integration.test.ts`
+  - `pnpm build && pnpm vitest run tests/integration/generate-reference-rewrite.integration.test.ts`
+  - `pnpm test`
+  - `pnpm lint`
+
+# Root instruction centralization refactor
+
+- [x] Add failing tests for engine-level primary root instruction decoration metadata
+- [x] Centralize root instruction decoration in the engine/target registry and remove per-target duplication
+- [x] Run targeted verification, full verification, and append review notes
+
+## Review (Root instruction centralization refactor)
+
+- QA Report — Root instruction centralization refactor
+- Acceptance criteria:
+  - primary root instruction decoration is owned by shared engine/target metadata rather than target-local generator code: covered by `tests/unit/core/engine.test.ts`
+  - generators emit their native/plain root content and the engine decorates only the registered primary root artifact: covered by `tests/unit/targets/claude-code/generator.test.ts`, `tests/unit/targets/continue/generator.test.ts`, `tests/unit/targets/cursor/generator.test.ts`, `tests/unit/targets/copilot/generator.test.ts`, `tests/unit/targets/gemini-cli/generator.test.ts`, `tests/unit/targets/cline/generator.test.ts`, `tests/unit/targets/codex-cli/generator.test.ts`, `tests/unit/targets/junie/generator.test.ts`, and `tests/unit/targets/windsurf/generator.test.ts`
+  - overlapping compatibility mirrors still resolve cleanly after engine-level decoration: covered by `tests/import-generate-roundtrip.test.ts`, `tests/unit/cli/commands/diff.test.ts`, `tests/unit/core/generate-reference-rewrite.test.ts`, and `tests/integration/generate-reference-rewrite.integration.test.ts`
+- Edge cases covered:
+  - Continue and Cursor root files are decorated through engine metadata rather than per-target special casing: covered by `tests/unit/core/engine.test.ts`
+  - Cursor compatibility `AGENTS.md` remains plain while `.cursor/rules/general.mdc` is decorated as the primary root artifact: covered by `tests/unit/core/engine.test.ts`
+  - existing decorated root outputs are reported as `unchanged` when on-disk content already matches the centralized engine output: covered by `tests/unit/core/engine.test.ts`
+- Implementation notes:
+  - added `primaryRootInstructionPath` to target registration in `src/targets/target.interface.ts`
+  - added shared engine pass in `src/core/root-instruction-decorator.ts`
+  - moved root decoration out of target generators and into `src/core/engine.ts`
+  - fixed Cursor metadata to reuse exported `CURSOR_RULES_DIR` from `src/targets/cursor/constants.ts`
+- Verification:
+  - `pnpm vitest run tests/unit/targets/claude-code/generator.test.ts tests/unit/targets/continue/generator.test.ts tests/unit/targets/cursor/generator.test.ts tests/unit/targets/copilot/generator.test.ts tests/unit/targets/gemini-cli/generator.test.ts tests/unit/targets/cline/generator.test.ts tests/unit/targets/codex-cli/generator.test.ts tests/unit/targets/junie/generator.test.ts tests/unit/targets/windsurf/generator.test.ts tests/unit/targets/root-instruction-paragraph.test.ts tests/unit/core/engine.test.ts`
+  - `pnpm vitest run tests/import-generate-roundtrip.test.ts tests/unit/cli/commands/diff.test.ts tests/unit/core/generate-reference-rewrite.test.ts tests/integration/generate-reference-rewrite.integration.test.ts`
+  - `pnpm build`
+  - `pnpm test`
+  - `pnpm lint`
+
+# Target constants consolidation
+
+- [x] Inventory scattered target-specific constants outside `constants.ts`
+- [x] Move target-specific constants into each target's `constants.ts` and update usages
+- [x] Run targeted verification, full verification, and append review notes
+
+## Review (Target constants consolidation)
+
+- QA Report — Target constants consolidation
+- Acceptance criteria:
+  - target-specific module-level constants now live in each target's `constants.ts` instead of being scattered through importers, helpers, generators, and linters: covered by source audit and `rg -n "^const [A-Z0-9_]+ = " src/targets --glob '!**/constants.ts'`
+  - empty or underused target constants modules now own their target paths and canonical import destinations: covered by `src/targets/claude-code/constants.ts`, `src/targets/cursor/constants.ts`, `src/targets/continue/constants.ts`, `src/targets/junie/constants.ts`, `src/targets/gemini-cli/constants.ts`, `src/targets/copilot/constants.ts`, `src/targets/cline/constants.ts`, `src/targets/codex-cli/constants.ts`, and `src/targets/windsurf/constants.ts`
+  - behavior remains unchanged after the constants consolidation: covered by full test/lint/build verification
+- Edge cases covered:
+  - engine metadata for primary root instruction paths still resolves correctly after constants moves: covered by `tests/unit/core/engine.test.ts`
+  - importer-heavy targets still round-trip correctly after moving canonical destination constants into target modules: covered by `tests/import-generate-roundtrip.test.ts` and `tests/integration/import.integration.test.ts`
+  - Windsurf MCP import still recognizes `.windsurf/mcp_config.example.json` after the cleanup: covered by `tests/unit/install/native-install-scope.junie-cline-windsurf-codex.test.ts` and `tests/import-generate-roundtrip.test.ts`
+- Implementation notes:
+  - centralized target ids, native paths, canonical destination paths, and Codex embedded-rule markers into per-target constants modules
+  - updated importers, mappers, helper modules, and linters to consume those constants instead of local module-level declarations
+  - left shared non-target modules like `src/targets/embedded-skill.ts` and `src/targets/root-instruction-paragraph.ts` unchanged because they are not owned by a single target
+- Verification:
+  - `rg -n "^const [A-Z0-9_]+ = " src/targets --glob '!**/constants.ts'`
+  - `pnpm build`
+  - `pnpm lint`
+  - `pnpm vitest run tests/import-generate-roundtrip.test.ts tests/unit/install/native-install-scope.junie-cline-windsurf-codex.test.ts`
+  - `pnpm test`
+
 # Junie structure alignment (project-level advanced)
 
 - [x] Add failing tests for Junie compatibility mirrors generation (`AGENTS.md`, `.junie/guidelines.md`, optional `ci-guidelines.md`)

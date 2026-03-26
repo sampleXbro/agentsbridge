@@ -6,8 +6,7 @@
 
 import { relative } from 'node:path';
 import type { CanonicalFiles, LintDiagnostic } from '../../core/types.js';
-
-const TARGET = 'codex-cli';
+import { CODEX_TARGET } from './constants.js';
 
 /**
  * Lint rules for Codex target.
@@ -34,7 +33,7 @@ export function lintRules(
       {
         level: 'warning',
         file: relative(projectRoot, rules[0]!.source),
-        target: TARGET,
+        target: CODEX_TARGET,
         message: 'Codex needs a root rule to generate AGENTS.md. Add root: true to a rule.',
       },
     ];

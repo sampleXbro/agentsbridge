@@ -53,6 +53,7 @@ describe('generateRules (gemini-cli)', () => {
     const main = results.find((r) => r.path === GEMINI_ROOT);
     expect(main?.content).toContain('# Rules');
     expect(main?.content).toContain('- Use TypeScript');
+    expect(main?.content).not.toContain('## AgentsMesh Generation Contract');
   });
 
   it('appends non-root rules as sections in GEMINI.md', () => {

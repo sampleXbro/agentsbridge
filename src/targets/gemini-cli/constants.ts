@@ -4,6 +4,8 @@
  * .gemini/settings.json, and .geminiignore.
  */
 
+export const GEMINI_TARGET = 'gemini-cli';
+
 /** Root rules file path */
 export const GEMINI_ROOT = 'GEMINI.md';
 
@@ -49,3 +51,12 @@ export const GEMINI_SYSTEM = '.gemini/system.md';
 
 /** Default workspace policies file (emitted when canonical permissions are present). */
 export const GEMINI_DEFAULT_POLICIES_FILE = `${GEMINI_POLICIES_DIR}/permissions.toml`;
+
+export const GEMINI_CANONICAL_RULES_DIR = '.agentsmesh/rules';
+export const GEMINI_CANONICAL_COMMANDS_DIR = '.agentsmesh/commands';
+export const GEMINI_CANONICAL_AGENTS_DIR = '.agentsmesh/agents';
+export const GEMINI_CANONICAL_SKILLS_DIR = '.agentsmesh/skills';
+export const GEMINI_CANONICAL_MCP = '.agentsmesh/mcp.json';
+export const GEMINI_CANONICAL_HOOKS = '.agentsmesh/hooks.yaml';
+export const GEMINI_CANONICAL_IGNORE = '.agentsmesh/ignore';
+export const GEMINI_CANONICAL_PERMISSIONS = '.agentsmesh/permissions.yaml';

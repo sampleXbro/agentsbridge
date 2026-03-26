@@ -4,8 +4,7 @@
 
 import type { CanonicalFiles, LintDiagnostic } from '../../core/types.js';
 import { validateRules } from '../../core/validate-rules.js';
-
-const TARGET = 'gemini-cli';
+import { GEMINI_TARGET } from './constants.js';
 
 /**
  * Lint rules for Gemini CLI target.
@@ -20,5 +19,5 @@ export function lintRules(
   projectFiles: string[],
 ): LintDiagnostic[] {
   const diags = validateRules(canonical, projectRoot, projectFiles);
-  return diags.map((d) => ({ ...d, target: TARGET }));
+  return diags.map((d) => ({ ...d, target: GEMINI_TARGET }));
 }

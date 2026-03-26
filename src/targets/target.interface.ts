@@ -77,6 +77,7 @@ export interface Target {
  */
 export interface TargetGenerators {
   name: string;
+  primaryRootInstructionPath?: string;
   generateRules(c: CanonicalFiles): { path: string; content: string }[];
   generateCommands?(c: CanonicalFiles): { path: string; content: string }[];
   generateAgents?(c: CanonicalFiles): { path: string; content: string }[];

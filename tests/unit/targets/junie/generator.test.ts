@@ -49,6 +49,9 @@ describe('generateRules (junie)', () => {
     const results = generateRules(canonical);
     expect(results.some((r) => r.path === JUNIE_DOT_AGENTS)).toBe(true);
     expect(results.find((r) => r.path === JUNIE_DOT_AGENTS)?.content).toContain('Use TDD.');
+    expect(results.find((r) => r.path === JUNIE_DOT_AGENTS)?.content).not.toContain(
+      '## AgentsMesh Generation Contract',
+    );
     expect(results).toHaveLength(1);
   });
 

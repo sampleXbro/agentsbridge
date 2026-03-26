@@ -5,6 +5,16 @@
 import type { CanonicalFiles } from '../../core/types.js';
 import { getHookCommand, getHookPrompt, hasHookText } from '../../core/hook-command.js';
 import { serializeFrontmatter } from '../../utils/markdown.js';
+import {
+  CLAUDE_ROOT,
+  CLAUDE_RULES_DIR,
+  CLAUDE_COMMANDS_DIR,
+  CLAUDE_AGENTS_DIR,
+  CLAUDE_MCP_JSON,
+  CLAUDE_SKILLS_DIR,
+  CLAUDE_SETTINGS,
+  CLAUDE_IGNORE,
+} from './constants.js';
 
 export interface RulesOutput {
   path: string;
@@ -22,7 +32,7 @@ export function generateRules(canonical: CanonicalFiles): RulesOutput[] {
   const root = canonical.rules.find((r) => r.root);
   if (root) {
     outputs.push({
-      path: '.claude/CLAUDE.md',
+      path: CLAUDE_ROOT,
       content: root.body.trim() ? root.body : '',
     });
   }
@@ -36,7 +46,7 @@ export function generateRules(canonical: CanonicalFiles): RulesOutput[] {
     if (rule.description) frontmatter.description = rule.description;
     if (rule.globs.length > 0) frontmatter.globs = rule.globs;
     const content = serializeFrontmatter(frontmatter, rule.body.trim() || '');
-    outputs.push({ path: `.claude/rules/${slug}.md`, content });
+    outputs.push({ path: `${CLAUDE_RULES_DIR}/${slug}.md`, content });
   }
 
   return outputs;
@@ -55,7 +65,7 @@ export function generateCommands(canonical: CanonicalFiles): RulesOutput[] {
     };
     if (frontmatter['allowed-tools'] === undefined) delete frontmatter['allowed-tools'];
     const content = serializeFrontmatter(frontmatter, cmd.body.trim() || '');
-    return { path: `.claude/commands/${cmd.name}.md`, content };
+    return { path: `${CLAUDE_COMMANDS_DIR}/${cmd.name}.md`, content };
   });
 }
 
@@ -83,7 +93,7 @@ export function generateAgents(canonical: CanonicalFiles): RulesOutput[] {
       if (frontmatter[k] === undefined) delete frontmatter[k];
     });
     const content = serializeFrontmatter(frontmatter, agent.body.trim() || '');
-    return { path: `.claude/agents/${agent.name}.md`, content };
+    return { path: `${CLAUDE_AGENTS_DIR}/${agent.name}.md`, content };
   });
 }
 
@@ -96,7 +106,7 @@ export function generateAgents(canonical: CanonicalFiles): RulesOutput[] {
 export function generateMcp(canonical: CanonicalFiles): RulesOutput[] {
   if (!canonical.mcp || Object.keys(canonical.mcp.mcpServers).length === 0) return [];
   const content = JSON.stringify({ mcpServers: canonical.mcp.mcpServers }, null, 2);
-  return [{ path: '.mcp.json', content }];
+  return [{ path: CLAUDE_MCP_JSON, content }];
 }
 
 /**
@@ -114,13 +124,13 @@ export function generateSkills(canonical: CanonicalFiles): RulesOutput[] {
     if (frontmatter.description === undefined) delete frontmatter.description;
     const skillContent = serializeFrontmatter(frontmatter, skill.body.trim() || '');
     outputs.push({
-      path: `.claude/skills/${skill.name}/SKILL.md`,
+      path: `${CLAUDE_SKILLS_DIR}/${skill.name}/SKILL.md`,
       content: skillContent,
     });
     for (const file of skill.supportingFiles) {
       const relPath = file.relativePath.replace(/\\/g, '/');
       outputs.push({
-        path: `.claude/skills/${skill.name}/${relPath}`,
+        path: `${CLAUDE_SKILLS_DIR}/${skill.name}/${relPath}`,
         content: file.content,
       });
     }
@@ -139,7 +149,7 @@ export function generatePermissions(canonical: CanonicalFiles): RulesOutput[] {
   const { allow, deny } = canonical.permissions;
   if (allow.length === 0 && deny.length === 0) return [];
   const content = JSON.stringify({ permissions: { allow, deny } }, null, 2);
-  return [{ path: '.claude/settings.json', content }];
+  return [{ path: CLAUDE_SETTINGS, content }];
 }
 
 /**
@@ -179,7 +189,7 @@ export function generateHooks(canonical: CanonicalFiles): RulesOutput[] {
   const claudeHooks = toClaudeCodeHooks(canonical.hooks);
   if (Object.keys(claudeHooks).length === 0) return [];
   const content = JSON.stringify({ hooks: claudeHooks }, null, 2);
-  return [{ path: '.claude/settings.json', content }];
+  return [{ path: CLAUDE_SETTINGS, content }];
 }
 
 /**
@@ -191,5 +201,5 @@ export function generateHooks(canonical: CanonicalFiles): RulesOutput[] {
 export function generateIgnore(canonical: CanonicalFiles): RulesOutput[] {
   if (!canonical.ignore || canonical.ignore.length === 0) return [];
   const content = canonical.ignore.join('\n');
-  return [{ path: '.claudeignore', content }];
+  return [{ path: CLAUDE_IGNORE, content }];
 }

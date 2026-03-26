@@ -3,6 +3,8 @@
  * Windsurf uses AGENTS.md (root), .windsurf/rules/*.md (modular), and .codeiumignore.
  */
 
+export const WINDSURF_TARGET = 'windsurf';
+
 /** Root rules file (flat, no frontmatter) */
 export const WINDSURF_RULES_ROOT = '.windsurfrules';
 
@@ -32,3 +34,11 @@ export const WINDSURF_WORKFLOWS_DIR = '.windsurf/workflows';
 
 /** Skills directory (.windsurf/skills/{name}/ → canonical skills) */
 export const WINDSURF_SKILLS_DIR = '.windsurf/skills';
+
+export const WINDSURF_CANONICAL_RULES_DIR = '.agentsmesh/rules';
+export const WINDSURF_CANONICAL_COMMANDS_DIR = '.agentsmesh/commands';
+export const WINDSURF_CANONICAL_AGENTS_DIR = '.agentsmesh/agents';
+export const WINDSURF_CANONICAL_SKILLS_DIR = '.agentsmesh/skills';
+export const WINDSURF_CANONICAL_IGNORE = '.agentsmesh/ignore';
+export const WINDSURF_CANONICAL_HOOKS = '.agentsmesh/hooks.yaml';
+export const WINDSURF_CANONICAL_MCP = '.agentsmesh/mcp.json';

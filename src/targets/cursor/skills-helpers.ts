@@ -5,9 +5,7 @@
 import { join, basename, dirname, relative } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
 import { readFileSafe, readDirRecursive, writeFileAtomic, mkdirp } from '../../utils/fs.js';
-
-const CURSOR_SKILLS_DIR = '.cursor/skills';
-const AB_SKILLS = '.agentsmesh/skills';
+import { CURSOR_SKILLS_DIR, CURSOR_CANONICAL_SKILLS_DIR } from './constants.js';
 
 /**
  * Import Cursor skills. Handles two formats:
@@ -21,7 +19,7 @@ export async function importSkills(
   results: ImportResult[],
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
 ): Promise<void> {
-  const destBase = join(projectRoot, AB_SKILLS);
+  const destBase = join(projectRoot, CURSOR_CANONICAL_SKILLS_DIR);
   const skillsDir = join(projectRoot, CURSOR_SKILLS_DIR);
   const allFiles = await readDirRecursive(skillsDir);
   const mdFiles = allFiles.filter((f) => f.endsWith('.md'));
@@ -46,7 +44,7 @@ export async function importSkills(
       results.push({
         fromTool: 'cursor',
         fromPath: filePath,
-        toPath: `${AB_SKILLS}/${skillName}/${relPath}`,
+        toPath: `${CURSOR_CANONICAL_SKILLS_DIR}/${skillName}/${relPath}`,
         feature: 'skills',
       });
     }
@@ -65,7 +63,7 @@ export async function importSkills(
     results.push({
       fromTool: 'cursor',
       fromPath: srcPath,
-      toPath: `${AB_SKILLS}/${name}/SKILL.md`,
+      toPath: `${CURSOR_CANONICAL_SKILLS_DIR}/${name}/SKILL.md`,
       feature: 'skills',
     });
   }

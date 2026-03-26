@@ -23,18 +23,18 @@ import { importFileDirectory } from '../import-orchestrator.js';
 import { mapCursorAgentFile, mapCursorCommandFile, mapCursorRuleFile } from './importer-mappers.js';
 import { importSettings, importIgnore } from './settings-helpers.js';
 import { importSkills } from './skills-helpers.js';
-
-const AGENTS_MD = 'AGENTS.md';
-const CURSORRULES = '.cursorrules';
-const CURSOR_RULES_DIR = '.cursor/rules';
-const CURSOR_COMMANDS_DIR = '.cursor/commands';
-const CURSOR_AGENTS_DIR = '.cursor/agents';
-const CURSOR_MCP = '.cursor/mcp.json';
-
-const AB_RULES = '.agentsmesh/rules';
-const AB_COMMANDS = '.agentsmesh/commands';
-const AB_AGENTS = '.agentsmesh/agents';
-const AB_MCP = '.agentsmesh/mcp.json';
+import {
+  CURSOR_COMPAT_AGENTS,
+  CURSOR_LEGACY_RULES,
+  CURSOR_RULES_DIR,
+  CURSOR_COMMANDS_DIR,
+  CURSOR_AGENTS_DIR,
+  CURSOR_MCP,
+  CURSOR_CANONICAL_RULES_DIR,
+  CURSOR_CANONICAL_COMMANDS_DIR,
+  CURSOR_CANONICAL_AGENTS_DIR,
+  CURSOR_CANONICAL_MCP,
+} from './constants.js';
 
 /**
  * Import Cursor config into canonical .agentsmesh/.
@@ -61,10 +61,10 @@ async function importRules(
   results: ImportResult[],
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
 ): Promise<void> {
-  const destDir = join(projectRoot, AB_RULES);
+  const destDir = join(projectRoot, CURSOR_CANONICAL_RULES_DIR);
   let rootWritten = false;
 
-  const agentsPath = join(projectRoot, AGENTS_MD);
+  const agentsPath = join(projectRoot, CURSOR_COMPAT_AGENTS);
   const agentsContent = await readFileSafe(agentsPath);
   if (agentsContent !== null) {
     rootWritten = true;
@@ -78,7 +78,7 @@ async function importRules(
     results.push({
       fromTool: 'cursor',
       fromPath: agentsPath,
-      toPath: `${AB_RULES}/_root.md`,
+      toPath: `${CURSOR_CANONICAL_RULES_DIR}/_root.md`,
       feature: 'rules',
     });
   }
@@ -109,7 +109,7 @@ async function importRules(
 
   // Fallback: .cursorrules when no root rule was found from AGENTS.md or alwaysApply:.mdc
   if (!rootWritten) {
-    const cursorRulesPath = join(projectRoot, CURSORRULES);
+    const cursorRulesPath = join(projectRoot, CURSOR_LEGACY_RULES);
     const cursorRulesContent = await readFileSafe(cursorRulesPath);
     if (cursorRulesContent !== null) {
       await mkdirp(destDir);
@@ -123,7 +123,7 @@ async function importRules(
       results.push({
         fromTool: 'cursor',
         fromPath: cursorRulesPath,
-        toPath: `${AB_RULES}/_root.md`,
+        toPath: `${CURSOR_CANONICAL_RULES_DIR}/_root.md`,
         feature: 'rules',
       });
     }
@@ -135,7 +135,7 @@ async function importCommands(
   results: ImportResult[],
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
 ): Promise<void> {
-  const destDir = join(projectRoot, AB_COMMANDS);
+  const destDir = join(projectRoot, CURSOR_CANONICAL_COMMANDS_DIR);
   const commandsDir = join(projectRoot, CURSOR_COMMANDS_DIR);
   results.push(
     ...(await importFileDirectory({
@@ -154,7 +154,7 @@ async function importAgents(
   results: ImportResult[],
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
 ): Promise<void> {
-  const destDir = join(projectRoot, AB_AGENTS);
+  const destDir = join(projectRoot, CURSOR_CANONICAL_AGENTS_DIR);
   const agentsDir = join(projectRoot, CURSOR_AGENTS_DIR);
   results.push(
     ...(await importFileDirectory({
@@ -179,13 +179,13 @@ async function importMcp(projectRoot: string, results: ImportResult[]): Promise<
     return;
   }
   if (!parsed || typeof parsed !== 'object' || !('mcpServers' in (parsed as object))) return;
-  const destPath = join(projectRoot, AB_MCP);
+  const destPath = join(projectRoot, CURSOR_CANONICAL_MCP);
   await mkdirp(dirname(destPath));
   await writeFileAtomic(destPath, content);
   results.push({
     fromTool: 'cursor',
     fromPath: mcpPath,
-    toPath: AB_MCP,
+    toPath: CURSOR_CANONICAL_MCP,
     feature: 'mcp',
   });
 }

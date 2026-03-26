@@ -20,6 +20,14 @@ function isCursorAgents(result: GenerateResult): boolean {
   return result.target === 'cursor' && result.path.endsWith(AGENTS_SUFFIX);
 }
 
+function isGeminiAgents(result: GenerateResult): boolean {
+  return result.target === 'gemini-cli' && result.path.endsWith(AGENTS_SUFFIX);
+}
+
+function isCompatibilityAgents(result: GenerateResult): boolean {
+  return isCursorAgents(result) || isGeminiAgents(result);
+}
+
 function reverseReferenceMap(
   target: string,
   canonical: CanonicalFiles,
@@ -66,6 +74,14 @@ export function preferEquivalentCodexAgents(
   canonical: CanonicalFiles,
   config: ValidatedConfig,
 ): GenerateResult[] {
+  const overlapTargetsByPath = new Map<string, Set<string>>();
+  for (const result of results) {
+    if (!result.path.endsWith(AGENTS_SUFFIX)) continue;
+    const targets = overlapTargetsByPath.get(result.path) ?? new Set<string>();
+    targets.add(result.target);
+    overlapTargetsByPath.set(result.path, targets);
+  }
+
   const codexByPath = new Map<string, GenerateResult>();
   for (const result of results) {
     if (isCodexAgents(result)) codexByPath.set(result.path, result);
@@ -73,9 +89,32 @@ export function preferEquivalentCodexAgents(
 
   const reverseCache = new Map<string, Map<string, string>>();
   return results.filter((result) => {
-    if (!isWindsurfAgents(result) && !isClineAgents(result) && !isCursorAgents(result)) return true;
+    if (isCursorAgents(result)) {
+      const targets = overlapTargetsByPath.get(result.path);
+      if (targets && [...targets].some((target) => target !== 'cursor')) return false;
+    }
+
+    if (isGeminiAgents(result)) {
+      const targets = overlapTargetsByPath.get(result.path);
+      if (
+        targets &&
+        [...targets].some((target) => target !== 'cursor' && target !== 'gemini-cli')
+      ) {
+        return false;
+      }
+    }
+
+    if (
+      !isWindsurfAgents(result) &&
+      !isClineAgents(result) &&
+      !isCursorAgents(result) &&
+      !isGeminiAgents(result)
+    ) {
+      return true;
+    }
     const codexResult = codexByPath.get(result.path);
     if (!codexResult) return true;
+    if (isCompatibilityAgents(result)) return false;
     return !hasEquivalentCanonicalContent(codexResult, result, canonical, config, reverseCache);
   });
 }

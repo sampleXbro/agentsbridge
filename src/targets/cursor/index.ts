@@ -10,10 +10,12 @@ import {
   generateHooks,
   generateIgnore,
 } from './generator.js';
+import { CURSOR_GENERAL_RULE } from './constants.js';
 import { importFromCursor } from './importer.js';
 
 const target: TargetGenerators = {
   name: 'cursor',
+  primaryRootInstructionPath: CURSOR_GENERAL_RULE,
   generateRules,
   generateCommands,
   generateAgents,

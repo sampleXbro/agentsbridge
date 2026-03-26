@@ -14,6 +14,7 @@ import { serializeImportedRuleWithFallback } from '../import-metadata.js';
 import { importFileDirectory } from '../import-orchestrator.js';
 import { removePathIfExists, shouldImportScopedAgentsRule } from '../scoped-agents-import.js';
 import {
+  WINDSURF_TARGET,
   WINDSURF_RULES_ROOT,
   WINDSURF_RULES_DIR,
   WINDSURF_IGNORE,
@@ -22,13 +23,12 @@ import {
   WINDSURF_HOOKS_FILE,
   WINDSURF_MCP_EXAMPLE_FILE,
   WINDSURF_MCP_CONFIG_FILE,
+  WINDSURF_CANONICAL_RULES_DIR,
+  WINDSURF_CANONICAL_IGNORE,
+  WINDSURF_CANONICAL_HOOKS,
+  WINDSURF_CANONICAL_MCP,
 } from './constants.js';
 import { importWorkflows, importSkills } from './workflows-skills-helpers.js';
-
-const AGENTSMESH_RULES = '.agentsmesh/rules';
-const AGENTSMESH_IGNORE = '.agentsmesh/ignore';
-const AGENTSMESH_HOOKS = '.agentsmesh/hooks.yaml';
-const AGENTSMESH_MCP = '.agentsmesh/mcp.json';
 
 /**
  * Import Windsurf config into canonical .agentsmesh/.
@@ -39,9 +39,9 @@ const AGENTSMESH_MCP = '.agentsmesh/mcp.json';
  */
 export async function importFromWindsurf(projectRoot: string): Promise<ImportResult[]> {
   const results: ImportResult[] = [];
-  const normalize = await createImportReferenceNormalizer('windsurf', projectRoot);
+  const normalize = await createImportReferenceNormalizer(WINDSURF_TARGET, projectRoot);
   const normalizeCodex = await createImportReferenceNormalizer('codex-cli', projectRoot);
-  const destRulesDir = join(projectRoot, AGENTSMESH_RULES);
+  const destRulesDir = join(projectRoot, WINDSURF_CANONICAL_RULES_DIR);
 
   const rootPath = join(projectRoot, WINDSURF_RULES_ROOT);
   const rootContent = await readFileSafe(rootPath);
@@ -54,7 +54,7 @@ export async function importFromWindsurf(projectRoot: string): Promise<ImportRes
     results.push({
       fromTool: 'windsurf',
       fromPath: rootPath,
-      toPath: `${AGENTSMESH_RULES}/_root.md`,
+      toPath: `${WINDSURF_CANONICAL_RULES_DIR}/_root.md`,
       feature: 'rules',
     });
   }
@@ -76,7 +76,7 @@ export async function importFromWindsurf(projectRoot: string): Promise<ImportRes
       results.push({
         fromTool: 'windsurf',
         fromPath: agentsMdPath,
-        toPath: `${AGENTSMESH_RULES}/_root.md`,
+        toPath: `${WINDSURF_CANONICAL_RULES_DIR}/_root.md`,
         feature: 'rules',
       });
     }
@@ -100,7 +100,7 @@ export async function importFromWindsurf(projectRoot: string): Promise<ImportRes
         const destPath = join(destRulesDir, `${ruleName}.md`);
         return {
           destPath,
-          toPath: `${AGENTSMESH_RULES}/${ruleName}.md`,
+          toPath: `${WINDSURF_CANONICAL_RULES_DIR}/${ruleName}.md`,
           feature: 'rules',
           content: await serializeImportedRuleWithFallback(
             destPath,
@@ -132,7 +132,7 @@ export async function importFromWindsurf(projectRoot: string): Promise<ImportRes
         }
         return {
           destPath,
-          toPath: `${AGENTSMESH_RULES}/${name}.md`,
+          toPath: `${WINDSURF_CANONICAL_RULES_DIR}/${name}.md`,
           feature: 'rules',
           content: await serializeImportedRuleWithFallback(
             destPath,
@@ -159,12 +159,12 @@ export async function importFromWindsurf(projectRoot: string): Promise<ImportRes
     }
     if (patterns.length > 0) {
       await mkdirp(join(projectRoot, '.agentsmesh'));
-      const destIgnorePath = join(projectRoot, AGENTSMESH_IGNORE);
+      const destIgnorePath = join(projectRoot, WINDSURF_CANONICAL_IGNORE);
       await writeFileAtomic(destIgnorePath, patterns.join('\n'));
       results.push({
         fromTool: 'windsurf',
         fromPath: ignorePath,
-        toPath: AGENTSMESH_IGNORE,
+        toPath: WINDSURF_CANONICAL_IGNORE,
         feature: 'ignore',
       });
     }
@@ -187,13 +187,13 @@ async function importHooks(projectRoot: string, results: ImportResult[]): Promis
     if (!parsed.hooks || typeof parsed.hooks !== 'object' || Array.isArray(parsed.hooks)) return;
     const canonical = windsurfHooksToCanonical(parsed.hooks as Record<string, unknown>);
     if (Object.keys(canonical).length === 0) return;
-    const destPath = join(projectRoot, AGENTSMESH_HOOKS);
+    const destPath = join(projectRoot, WINDSURF_CANONICAL_HOOKS);
     await mkdirp(dirname(destPath));
     await writeFileAtomic(destPath, yamlStringify(canonical));
     results.push({
-      fromTool: 'windsurf',
+      fromTool: WINDSURF_TARGET,
       fromPath: hooksPath,
-      toPath: AGENTSMESH_HOOKS,
+      toPath: WINDSURF_CANONICAL_HOOKS,
       feature: 'hooks',
     });
   } catch {
@@ -269,13 +269,13 @@ async function importMcp(projectRoot: string, results: ImportResult[]): Promise<
     try {
       const parsed = JSON.parse(content) as Record<string, unknown>;
       if (!parsed.mcpServers || typeof parsed.mcpServers !== 'object') continue;
-      const destPath = join(projectRoot, AGENTSMESH_MCP);
+      const destPath = join(projectRoot, WINDSURF_CANONICAL_MCP);
       await mkdirp(dirname(destPath));
       await writeFileAtomic(destPath, JSON.stringify({ mcpServers: parsed.mcpServers }, null, 2));
       results.push({
-        fromTool: 'windsurf',
+        fromTool: WINDSURF_TARGET,
         fromPath: srcPath,
-        toPath: AGENTSMESH_MCP,
+        toPath: WINDSURF_CANONICAL_MCP,
         feature: 'mcp',
       });
       return;

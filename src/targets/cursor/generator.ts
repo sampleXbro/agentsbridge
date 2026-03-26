@@ -5,6 +5,17 @@
 import type { CanonicalFiles } from '../../core/types.js';
 import { getHookCommand, getHookPrompt, hasHookText } from '../../core/hook-command.js';
 import { serializeFrontmatter } from '../../utils/markdown.js';
+import {
+  CURSOR_COMPAT_AGENTS,
+  CURSOR_GENERAL_RULE,
+  CURSOR_RULES_DIR,
+  CURSOR_COMMANDS_DIR,
+  CURSOR_MCP,
+  CURSOR_SKILLS_DIR,
+  CURSOR_AGENTS_DIR,
+  CURSOR_HOOKS,
+  CURSOR_IGNORE,
+} from './constants.js';
 
 export interface RulesOutput {
   path: string;
@@ -23,12 +34,12 @@ export function generateRules(canonical: CanonicalFiles): RulesOutput[] {
   if (root) {
     const body = root.body.trim() ? root.body : '';
     // Emit AGENTS.md as a plain-body compatibility mirror (§3.1 of cursor format doc)
-    outputs.push({ path: 'AGENTS.md', content: body });
+    outputs.push({ path: CURSOR_COMPAT_AGENTS, content: body });
     // Emit .cursor/rules/general.mdc as the primary structured rule (§2.1)
     const frontmatter: Record<string, unknown> = { alwaysApply: true };
     if (root.description) frontmatter.description = root.description;
     const content = serializeFrontmatter(frontmatter, body);
-    outputs.push({ path: '.cursor/rules/general.mdc', content });
+    outputs.push({ path: CURSOR_GENERAL_RULE, content });
   }
 
   const nonRoot = canonical.rules.filter(
@@ -41,7 +52,7 @@ export function generateRules(canonical: CanonicalFiles): RulesOutput[] {
     if (rule.description) frontmatter.description = rule.description;
     if (rule.globs.length > 0) frontmatter.globs = rule.globs;
     const content = serializeFrontmatter(frontmatter, rule.body.trim() || '');
-    outputs.push({ path: `.cursor/rules/${slug}.mdc`, content });
+    outputs.push({ path: `${CURSOR_RULES_DIR}/${slug}.mdc`, content });
   }
 
   return outputs;
@@ -54,7 +65,7 @@ export function generateRules(canonical: CanonicalFiles): RulesOutput[] {
  */
 export function generateCommands(canonical: CanonicalFiles): RulesOutput[] {
   return canonical.commands.map((cmd) => ({
-    path: `.cursor/commands/${cmd.name}.md`,
+    path: `${CURSOR_COMMANDS_DIR}/${cmd.name}.md`,
     content: cmd.body.trim() || '',
   }));
 }
@@ -68,7 +79,7 @@ export function generateCommands(canonical: CanonicalFiles): RulesOutput[] {
 export function generateMcp(canonical: CanonicalFiles): RulesOutput[] {
   if (!canonical.mcp || Object.keys(canonical.mcp.mcpServers).length === 0) return [];
   const content = JSON.stringify({ mcpServers: canonical.mcp.mcpServers }, null, 2);
-  return [{ path: '.cursor/mcp.json', content }];
+  return [{ path: CURSOR_MCP, content }];
 }
 
 /**
@@ -86,10 +97,13 @@ export function generateSkills(canonical: CanonicalFiles): RulesOutput[] {
     };
     if (frontmatter.description === undefined) delete frontmatter.description;
     const content = serializeFrontmatter(frontmatter, skill.body.trim() || '');
-    outputs.push({ path: `.cursor/skills/${skill.name}/SKILL.md`, content });
+    outputs.push({ path: `${CURSOR_SKILLS_DIR}/${skill.name}/SKILL.md`, content });
     for (const file of skill.supportingFiles) {
       const relPath = file.relativePath.replace(/\\/g, '/');
-      outputs.push({ path: `.cursor/skills/${skill.name}/${relPath}`, content: file.content });
+      outputs.push({
+        path: `${CURSOR_SKILLS_DIR}/${skill.name}/${relPath}`,
+        content: file.content,
+      });
     }
   }
   return outputs;
@@ -119,7 +133,7 @@ export function generateAgents(canonical: CanonicalFiles): RulesOutput[] {
       if (frontmatter[k] === undefined) delete frontmatter[k];
     });
     const content = serializeFrontmatter(frontmatter, agent.body.trim() || '');
-    return { path: `.cursor/agents/${agent.name}.md`, content };
+    return { path: `${CURSOR_AGENTS_DIR}/${agent.name}.md`, content };
   });
 }
 
@@ -169,7 +183,7 @@ export function generateHooks(canonical: CanonicalFiles): RulesOutput[] {
   const cursorHooks = toCursorHooks(canonical.hooks);
   if (Object.keys(cursorHooks).length === 0) return [];
   const content = JSON.stringify({ version: 1, hooks: cursorHooks }, null, 2);
-  return [{ path: '.cursor/hooks.json', content }];
+  return [{ path: CURSOR_HOOKS, content }];
 }
 
 /**
@@ -183,5 +197,5 @@ export function generateHooks(canonical: CanonicalFiles): RulesOutput[] {
 export function generateIgnore(canonical: CanonicalFiles): RulesOutput[] {
   if (!canonical.ignore || canonical.ignore.length === 0) return [];
   const content = canonical.ignore.join('\n');
-  return [{ path: '.cursorignore', content }];
+  return [{ path: CURSOR_IGNORE, content }];
 }

@@ -9,10 +9,12 @@ import {
   generateIgnore,
 } from './generator.js';
 import { generateGeminiPermissionsPolicies } from './policies-generator.js';
+import { GEMINI_ROOT } from './constants.js';
 import { importFromGemini } from './importer.js';
 
 const target: TargetGenerators = {
   name: 'gemini-cli',
+  primaryRootInstructionPath: GEMINI_ROOT,
   generateRules,
   generateCommands,
   generateAgents,

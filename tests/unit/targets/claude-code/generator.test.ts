@@ -44,6 +44,7 @@ describe('generateRules (claude-code)', () => {
     expect(results[0]!.path).toBe('.claude/CLAUDE.md');
     expect(results[0]!.content).toContain('# Rules');
     expect(results[0]!.content).toContain('- Use TypeScript');
+    expect(results[0]!.content).not.toContain('## AgentsMesh Generation Contract');
   });
 
   it('non-root rule with description includes it in frontmatter', () => {
@@ -179,7 +180,7 @@ describe('generateRules (claude-code)', () => {
     });
     const results = generateRules(canonical);
     expect(results).toHaveLength(1);
-    expect(results[0]!.content).toBe('First');
+    expect(results[0]!.content).toContain('First');
   });
 });
 

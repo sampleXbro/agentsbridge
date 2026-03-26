@@ -6,8 +6,7 @@
 
 import { relative } from 'node:path';
 import type { CanonicalFiles, LintDiagnostic } from '../../core/types.js';
-
-const TARGET = 'windsurf';
+import { WINDSURF_TARGET } from './constants.js';
 
 /**
  * Lint rules for Windsurf target.
@@ -33,7 +32,7 @@ export function lintRules(
       diags.push({
         level: 'warning',
         file: relative(projectRoot, rules[0]!.source),
-        target: TARGET,
+        target: WINDSURF_TARGET,
         message: 'Windsurf needs a root rule to generate AGENTS.md. Add root: true to a rule.',
       });
     }
@@ -50,7 +49,7 @@ export function lintRules(
     diags.push({
       level: 'warning',
       file: '.agentsmesh',
-      target: TARGET,
+      target: WINDSURF_TARGET,
       message: `Windsurf cannot project these features yet: ${unsupported.join(', ')}.`,
     });
   }

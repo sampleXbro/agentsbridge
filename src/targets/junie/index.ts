@@ -8,10 +8,12 @@ import {
   generateMcp,
   generateIgnore,
 } from './generator.js';
+import { JUNIE_DOT_AGENTS } from './constants.js';
 import { importFromJunie } from './importer.js';
 
 const target: TargetGenerators = {
   name: 'junie',
+  primaryRootInstructionPath: JUNIE_DOT_AGENTS,
   generateRules,
   generateCommands,
   generateAgents,

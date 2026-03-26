@@ -7,10 +7,8 @@ import type { ImportResult } from '../../core/types.js';
 import { readFileSafe, readDirRecursive, writeFileAtomic, mkdirp } from '../../utils/fs.js';
 import { parseFrontmatter } from '../../utils/markdown.js';
 import { serializeImportedRuleWithFallback } from '../import-metadata.js';
-import { CODEX_RULES_DIR } from './constants.js';
+import { CODEX_TARGET, CODEX_RULES_DIR, CODEX_CANONICAL_RULES_DIR } from './constants.js';
 import { tryParseEmbeddedCanonicalFromCodexRules } from './codex-rules-embed.js';
-
-const AB_RULES = '.agentsmesh/rules';
 
 export async function importCodexNonRootRuleFiles(
   projectRoot: string,
@@ -33,9 +31,9 @@ export async function importCodexNonRootRuleFiles(
       const outContent = await serializeImportedRuleWithFallback(destPath, outFm, body);
       await writeFileAtomic(destPath, outContent);
       results.push({
-        fromTool: 'codex-cli',
+        fromTool: CODEX_TARGET,
         fromPath: srcPath,
-        toPath: `${AB_RULES}/${slug}.md`,
+        toPath: `${CODEX_CANONICAL_RULES_DIR}/${slug}.md`,
         feature: 'rules',
       });
     }
@@ -72,9 +70,9 @@ export async function importCodexNonRootRuleFiles(
         await writeFileAtomic(destPath, outContent);
       }
       results.push({
-        fromTool: 'codex-cli',
+        fromTool: CODEX_TARGET,
         fromPath: srcPath,
-        toPath: `${AB_RULES}/${slug}.md`,
+        toPath: `${CODEX_CANONICAL_RULES_DIR}/${slug}.md`,
         feature: 'rules',
       });
     }

@@ -57,6 +57,7 @@ describe('generateRules (continue)', () => {
       `${CONTINUE_RULES_DIR}/typescript.md`,
     ]);
     expect(results[0]?.content).not.toContain('root:');
+    expect(results[0]?.content).not.toContain('## AgentsMesh Generation Contract');
     expect(results[1]?.content).toContain('globs:');
   });
 

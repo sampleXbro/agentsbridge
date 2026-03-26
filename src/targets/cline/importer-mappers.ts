@@ -6,9 +6,7 @@ import {
 } from '../import-metadata.js';
 import type { ImportFileMapping } from '../import-orchestrator.js';
 import { toGlobsArray } from '../shared-import-helpers.js';
-
-const AGENTSMESH_RULES = '.agentsmesh/rules';
-const AGENTSMESH_COMMANDS = '.agentsmesh/commands';
+import { CLINE_CANONICAL_RULES_DIR, CLINE_CANONICAL_COMMANDS_DIR } from './constants.js';
 
 export async function mapClineRuleFile(
   srcPath: string,
@@ -31,7 +29,7 @@ export async function mapClineRuleFile(
   });
   return {
     destPath,
-    toPath: `${AGENTSMESH_RULES}/${name}.md`,
+    toPath: `${CLINE_CANONICAL_RULES_DIR}/${name}.md`,
     feature: 'rules',
     content: await serializeImportedRuleWithFallback(destPath, canonicalFm, body),
   };
@@ -73,7 +71,7 @@ export async function mapClineWorkflowFile(
 
   return {
     destPath,
-    toPath: `${AGENTSMESH_COMMANDS}/${name}.md`,
+    toPath: `${CLINE_CANONICAL_COMMANDS_DIR}/${name}.md`,
     feature: 'commands',
     content: await serializeImportedCommandWithFallback(
       destPath,

@@ -7,10 +7,12 @@ import {
   generateSkills,
   generateMcp,
 } from './generator.js';
+import { AGENTS_MD } from './constants.js';
 import { importFromCodex } from './importer.js';
 
 const target: TargetGenerators = {
   name: 'codex-cli',
+  primaryRootInstructionPath: AGENTS_MD,
   generateRules,
   generateCommands,
   generateAgents,

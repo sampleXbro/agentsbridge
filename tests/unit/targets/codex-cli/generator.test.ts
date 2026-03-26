@@ -53,6 +53,7 @@ describe('generateRules (codex-cli)', () => {
     expect(agents).toBeDefined();
     expect(agents?.content).toContain('# Rules');
     expect(agents?.content).toContain('- Use TypeScript');
+    expect(agents?.content).not.toContain('## AgentsMesh Generation Contract');
   });
 
   it('outputs only AGENTS.md (no codex.md)', () => {

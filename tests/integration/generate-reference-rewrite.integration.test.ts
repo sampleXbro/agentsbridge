@@ -98,7 +98,10 @@ Use .agentsmesh/skills/api-gen/SKILL.md.
     expect(claudeCommand).toContain('.claude/skills/api-gen/SKILL.md');
     expect(claudeAgent).toContain('.claude/skills/api-gen/SKILL.md');
     expect(claudeSkill).toContain('.claude/skills/api-gen/references/checklist.md');
-    expect(claudeRoot).not.toContain('.agentsmesh/');
+    expect(claudeRoot).not.toContain('.agentsmesh/rules/');
+    expect(claudeRoot).not.toContain('.agentsmesh/commands/');
+    expect(claudeRoot).not.toContain('.agentsmesh/agents/');
+    expect(claudeRoot).not.toContain('.agentsmesh/skills/api-gen/');
   });
 
   it('rewrites codex rule references to typescript/AGENTS.md', () => {

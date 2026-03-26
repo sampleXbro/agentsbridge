@@ -6,9 +6,13 @@ import { join, basename, dirname } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
 import { readFileSafe, readDirRecursive, writeFileAtomic, mkdirp } from '../../utils/fs.js';
 import { parseFrontmatter, serializeFrontmatter } from '../../utils/markdown.js';
-import { COPILOT_AGENTS_DIR, COPILOT_SKILLS_DIR } from './constants.js';
-
-const AB_AGENTS = '.agentsmesh/agents';
+import {
+  COPILOT_TARGET,
+  COPILOT_AGENTS_DIR,
+  COPILOT_SKILLS_DIR,
+  COPILOT_CANONICAL_AGENTS_DIR,
+  COPILOT_CANONICAL_SKILLS_DIR,
+} from './constants.js';
 
 /**
  * Import .github/agents/*.agent.md into canonical .agentsmesh/agents/*.md.
@@ -27,7 +31,7 @@ export async function importAgents(
     return;
   }
   const agentFiles = files.filter((f) => f.endsWith('.agent.md'));
-  const destDir = join(projectRoot, AB_AGENTS);
+  const destDir = join(projectRoot, COPILOT_CANONICAL_AGENTS_DIR);
   for (const srcPath of agentFiles) {
     const content = await readFileSafe(srcPath);
     if (!content) continue;
@@ -60,9 +64,9 @@ export async function importAgents(
     const outContent = serializeFrontmatter(canonicalFm, body.trim());
     await writeFileAtomic(destPath, outContent);
     results.push({
-      fromTool: 'copilot',
+      fromTool: COPILOT_TARGET,
       fromPath: srcPath,
-      toPath: `${AB_AGENTS}/${base}.md`,
+      toPath: `${COPILOT_CANONICAL_AGENTS_DIR}/${base}.md`,
       feature: 'agents',
     });
   }
@@ -79,7 +83,7 @@ export async function importSkills(
     const content = await readFileSafe(skillMdPath);
     if (!content) continue;
     const skillName = basename(dirname(skillMdPath));
-    const destSkillDir = join(projectRoot, '.agentsmesh', 'skills', skillName);
+    const destSkillDir = join(projectRoot, COPILOT_CANONICAL_SKILLS_DIR, skillName);
     const allSkillFiles = await readDirRecursive(dirname(skillMdPath));
     for (const absPath of allSkillFiles) {
       const fileContent = await readFileSafe(absPath);
@@ -89,9 +93,9 @@ export async function importSkills(
       await mkdirp(dirname(destPath));
       await writeFileAtomic(destPath, normalize(fileContent, absPath, destPath));
       results.push({
-        fromTool: 'copilot',
+        fromTool: COPILOT_TARGET,
         fromPath: absPath,
-        toPath: `.agentsmesh/skills/${skillName}/${relPath}`,
+        toPath: `${COPILOT_CANONICAL_SKILLS_DIR}/${skillName}/${relPath}`,
         feature: 'skills',
       });
     }

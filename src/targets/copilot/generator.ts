@@ -52,8 +52,11 @@ export function generateRules(canonical: CanonicalFiles): RulesOutput[] {
   const root = canonical.rules.find((r) => r.root);
   const outputs: RulesOutput[] = [];
 
-  if (root?.body.trim()) {
-    outputs.push({ path: COPILOT_INSTRUCTIONS, content: root.body.trim() });
+  if (root) {
+    outputs.push({
+      path: COPILOT_INSTRUCTIONS,
+      content: root.body.trim() || '',
+    });
   }
 
   for (const rule of canonical.rules) {

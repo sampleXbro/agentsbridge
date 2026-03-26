@@ -59,6 +59,7 @@ describe('generateRules (cursor)', () => {
     expect(generalMdc!.content).toContain('alwaysApply: true');
     expect(generalMdc!.content).toContain('# Rules');
     expect(generalMdc!.content).toContain('Use TypeScript');
+    expect(generalMdc!.content).not.toContain('## AgentsMesh Generation Contract');
   });
 
   it('non-root rule with description and globs includes both in frontmatter', () => {

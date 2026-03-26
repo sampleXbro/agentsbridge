@@ -12,15 +12,15 @@ import {
 import { toStringArray, toStringRecord } from '../shared-import-helpers.js';
 import { parseCommandRuleFrontmatter, serializeImportedCommand } from './command-rule.js';
 import {
+  CONTINUE_TARGET,
   CONTINUE_MCP_DIR,
   CONTINUE_PROMPTS_DIR,
   CONTINUE_RULES_DIR,
   CONTINUE_SKILLS_DIR,
+  CONTINUE_CANONICAL_RULES_DIR,
+  CONTINUE_CANONICAL_COMMANDS_DIR,
+  CONTINUE_CANONICAL_MCP,
 } from './constants.js';
-
-const AB_RULES = '.agentsmesh/rules';
-const AB_COMMANDS = '.agentsmesh/commands';
-const AB_MCP = '.agentsmesh/mcp.json';
 
 function readMcpServers(content: string, extension: string): Record<string, McpServer> {
   const parsed =
@@ -52,7 +52,7 @@ function readMcpServers(content: string, extension: string): Record<string, McpS
 
 export async function importFromContinue(projectRoot: string): Promise<ImportResult[]> {
   const results: ImportResult[] = [];
-  const normalize = await createImportReferenceNormalizer('continue', projectRoot);
+  const normalize = await createImportReferenceNormalizer(CONTINUE_TARGET, projectRoot);
   await importRules(projectRoot, results, normalize);
   await importCommands(projectRoot, results, normalize);
   await importEmbeddedSkills(projectRoot, CONTINUE_SKILLS_DIR, 'continue', results, normalize);
@@ -72,7 +72,7 @@ async function importRules(
     const source = await readFileSafe(srcPath);
     if (!source) continue;
     const name = basename(srcPath, '.md');
-    const destPath = join(projectRoot, AB_RULES, `${name}.md`);
+    const destPath = join(projectRoot, CONTINUE_CANONICAL_RULES_DIR, `${name}.md`);
     const { frontmatter, body } = parseFrontmatter(normalize(source, srcPath, destPath));
     const canonicalFrontmatter: Record<string, unknown> = {
       description:
@@ -87,7 +87,7 @@ async function importRules(
     results.push({
       fromTool: 'continue',
       fromPath: srcPath,
-      toPath: `${AB_RULES}/${name}.md`,
+      toPath: `${CONTINUE_CANONICAL_RULES_DIR}/${name}.md`,
       feature: 'rules',
     });
   }
@@ -105,12 +105,12 @@ async function importCommands(
     const source = await readFileSafe(srcPath);
     if (!source) continue;
     const name = basename(srcPath, '.md');
-    const destPath = join(projectRoot, AB_COMMANDS, `${name}.md`);
+    const destPath = join(projectRoot, CONTINUE_CANONICAL_COMMANDS_DIR, `${name}.md`);
     const { frontmatter, body } = parseFrontmatter(normalize(source, srcPath, destPath));
     const command = parseCommandRuleFrontmatter(frontmatter, srcPath);
     const commandName = command.name || name;
 
-    const commandPath = join(projectRoot, AB_COMMANDS, `${commandName}.md`);
+    const commandPath = join(projectRoot, CONTINUE_CANONICAL_COMMANDS_DIR, `${commandName}.md`);
     const content = await serializeImportedCommandWithFallback(
       commandPath,
       {
@@ -125,7 +125,7 @@ async function importCommands(
     results.push({
       fromTool: 'continue',
       fromPath: srcPath,
-      toPath: `${AB_COMMANDS}/${commandName}.md`,
+      toPath: `${CONTINUE_CANONICAL_COMMANDS_DIR}/${commandName}.md`,
       feature: 'commands',
     });
   }
@@ -146,9 +146,14 @@ async function importMcp(projectRoot: string, results: ImportResult[]): Promise<
   }
 
   if (Object.keys(mergedServers).length === 0) return;
-  const destPath = join(projectRoot, AB_MCP);
+  const destPath = join(projectRoot, CONTINUE_CANONICAL_MCP);
   await writeFileAtomic(destPath, JSON.stringify({ mcpServers: mergedServers }, null, 2));
   for (const fromPath of importedFrom) {
-    results.push({ fromTool: 'continue', fromPath, toPath: AB_MCP, feature: 'mcp' });
+    results.push({
+      fromTool: CONTINUE_TARGET,
+      fromPath,
+      toPath: CONTINUE_CANONICAL_MCP,
+      feature: 'mcp',
+    });
   }
 }

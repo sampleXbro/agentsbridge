@@ -7,9 +7,7 @@ import { parse as parseToml } from 'smol-toml';
 import type { ImportResult } from '../../core/types.js';
 import type { McpServer } from '../../core/types.js';
 import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/fs.js';
-import { CODEX_CONFIG_TOML } from './constants.js';
-
-const AB_MCP = '.agentsmesh/mcp.json';
+import { CODEX_TARGET, CODEX_CONFIG_TOML, CODEX_CANONICAL_MCP } from './constants.js';
 
 export function mapTomlServerToCanonical(raw: unknown): McpServer | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
@@ -71,11 +69,14 @@ export async function importMcp(projectRoot: string, results: ImportResult[]): P
   if (Object.keys(mcpServers).length === 0) return;
 
   await mkdirp(join(projectRoot, '.agentsmesh'));
-  await writeFileAtomic(join(projectRoot, AB_MCP), JSON.stringify({ mcpServers }, null, 2));
+  await writeFileAtomic(
+    join(projectRoot, CODEX_CANONICAL_MCP),
+    JSON.stringify({ mcpServers }, null, 2),
+  );
   results.push({
-    fromTool: 'codex-cli',
+    fromTool: CODEX_TARGET,
     fromPath: configPath,
-    toPath: AB_MCP,
+    toPath: CODEX_CANONICAL_MCP,
     feature: 'mcp',
   });
 }

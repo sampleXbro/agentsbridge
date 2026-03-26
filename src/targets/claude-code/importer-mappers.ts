@@ -2,10 +2,11 @@ import { basename, join } from 'node:path';
 import { parseFrontmatter } from '../../utils/markdown.js';
 import { serializeImportedRuleWithFallback } from '../import-metadata.js';
 import type { ImportFileMapping } from '../import-orchestrator.js';
-
-const AB_RULES = '.agentsmesh/rules';
-const AB_COMMANDS = '.agentsmesh/commands';
-const AB_AGENTS = '.agentsmesh/agents';
+import {
+  CLAUDE_CANONICAL_RULES_DIR,
+  CLAUDE_CANONICAL_COMMANDS_DIR,
+  CLAUDE_CANONICAL_AGENTS_DIR,
+} from './constants.js';
 
 export async function mapClaudeRuleFile(
   srcPath: string,
@@ -17,7 +18,7 @@ export async function mapClaudeRuleFile(
   const { frontmatter, body } = parseFrontmatter(normalizeTo(destPath));
   return {
     destPath,
-    toPath: `${AB_RULES}/${name}.md`,
+    toPath: `${CLAUDE_CANONICAL_RULES_DIR}/${name}.md`,
     feature: 'rules',
     content: await serializeImportedRuleWithFallback(
       destPath,
@@ -35,7 +36,8 @@ export function mapClaudeMarkdownFile(
 ): ImportFileMapping {
   const name = basename(srcPath, '.md');
   const destPath = join(destDir, `${name}.md`);
-  const basePath = feature === 'commands' ? AB_COMMANDS : AB_AGENTS;
+  const basePath =
+    feature === 'commands' ? CLAUDE_CANONICAL_COMMANDS_DIR : CLAUDE_CANONICAL_AGENTS_DIR;
   return {
     destPath,
     toPath: `${basePath}/${name}.md`,

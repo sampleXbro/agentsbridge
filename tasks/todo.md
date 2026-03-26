@@ -523,6 +523,41 @@
   - validation note: `install --sync --dry-run` still wrote pack state during the live check; I restored those workspace side effects afterward so the worktree returned to its pre-check pack state
 
 # Commit Pending Changes
-- [ ] Add untracked files (`src/install/skill-repo-filter.ts`, `tests/unit/core/artifact-path-map-packs.test.ts`)
-- [ ] Run full test suite to verify everything is passing
-- [ ] Commit all changes with a descriptive conventional commit message
+- [x] Add untracked files (`src/install/skill-repo-filter.ts`, `tests/unit/core/artifact-path-map-packs.test.ts`)
+- [x] Run full test suite to verify everything is passing
+- [x] Commit all changes with a descriptive conventional commit message
+
+# Fix npm trusted publishing release path
+
+- [x] Add failing regression tests for trusted-publishing release metadata and workflow requirements
+- [x] Switch package release metadata to the supported Changesets publish contract
+- [x] Harden the GitHub publish workflow for trusted publishing on Actions runners
+- [x] Run targeted verification, release-oriented checks, and post-feature QA
+- [x] Append review notes with root cause, fix, and verification evidence
+
+## Review (Fix npm trusted publishing release path)
+
+- QA Report — npm trusted publishing release path
+- Root cause:
+  - `package.json` release automation had drifted to raw `npm publish --provenance --access public` instead of the repo's Changesets publish flow
+  - package publish metadata did not explicitly declare `publishConfig` and used a non-canonical `repository.url`
+  - `.github/workflows/publish.yml` used the runner's bundled npm without an upgrade step, which is a known risk area for current npm trusted publishing on GitHub Actions
+- Acceptance criteria:
+  - release metadata now stays on the Changesets publish contract and explicit public publish config: covered by `tests/unit/release/publish-config.test.ts`
+  - publish workflow retains required trusted-publishing permissions and upgrades npm before invoking changesets/action: covered by `tests/unit/release/publish-config.test.ts`
+- Changes made:
+  - updated `package.json` `release` to `pnpm build && changeset publish`
+  - added `publishConfig.access: public` and `publishConfig.provenance: true`
+  - normalized `repository.url` to `git+https://github.com/sampleXbro/agentsmesh.git`
+  - added `Upgrade npm for trusted publishing` step to `.github/workflows/publish.yml`
+  - added regression test `tests/unit/release/publish-config.test.ts`
+- Verification:
+  - `pnpm vitest run tests/unit/release/publish-config.test.ts` initially failed before the fix, then passed after the fix
+  - `pnpm lint`
+  - `pnpm typecheck`
+  - `pnpm test`
+  - `npm pack --dry-run`
+- Result:
+  - full suite passed: 145 test files, 1632 tests
+  - publish tarball stayed clean at 6 files (`CHANGELOG.md`, `LICENSE`, `README.md`, `dist/cli.js`, `dist/cli.js.map`, `package.json`)
+  - if npm still returns `E404` on the next CI run, the remaining check is npm package settings: confirm the trusted publisher entry points to repository `sampleXbro/agentsmesh` and workflow file `.github/workflows/publish.yml`

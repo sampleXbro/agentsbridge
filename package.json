@@ -17,7 +17,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/sampleXbro/agentsmesh.git"
+    "url": "git+https://github.com/sampleXbro/agentsmesh.git"
   },
   "homepage": "https://github.com/sampleXbro/agentsmesh#readme",
   "bugs": {
@@ -38,7 +38,7 @@
     "typecheck": "tsc --noEmit",
     "changeset": "changeset",
     "version": "changeset version",
-    "release": "pnpm build && npm publish --provenance --access public"
+    "release": "pnpm build && changeset publish"
   },
   "keywords": [
     "ai-rules",
@@ -69,6 +69,10 @@
     "cli"
   ],
   "license": "MIT",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "files": [
     "dist",
     "README.md",

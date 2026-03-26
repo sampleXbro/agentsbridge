@@ -1,4 +1,4 @@
-# Contributing to AgentsBridge
+# Contributing to AgentsMesh
 
 ## Prerequisites
 

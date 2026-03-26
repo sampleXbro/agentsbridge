@@ -2,8 +2,8 @@ build
 dist
 coverage
 pnpm-lock.yaml
-.agentsbridge.local.yaml
-agentsbridge.local.yaml
+.agentsmesh.local.yaml
+agentsmesh.local.yaml
 .worktrees
 .idea
 .vscode/settings.json

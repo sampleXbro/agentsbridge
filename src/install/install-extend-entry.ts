@@ -7,7 +7,7 @@ import type { ExtendPick, ValidatedConfig } from '../config/schema.js';
 import { targetSchema } from '../config/schema.js';
 import type { NewExtendEntry } from './merge-extend-entry.js';
 import { assertExtendNameAvailable } from './merge-extend-entry.js';
-import { writeAgentsbridgeWithNewExtend } from './yaml-writer.js';
+import { writeAgentsmeshWithNewExtend } from './yaml-writer.js';
 import { logger } from '../utils/logger.js';
 
 export interface WriteExtendArgs {
@@ -29,7 +29,7 @@ export async function writeInstallAsExtend(args: WriteExtendArgs): Promise<void>
     return;
   }
   const configPath = join(configDir, 'agentsmesh.yaml');
-  await writeAgentsbridgeWithNewExtend(configPath, config, entry);
+  await writeAgentsmeshWithNewExtend(configPath, config, entry);
   logger.success(`Wrote extends entry "${entry.name}" to agentsmesh.yaml.`);
 }
 

@@ -10,7 +10,7 @@ import { mergeExtendList, type NewExtendEntry } from './merge-extend-entry.js';
 /**
  * Merge extends into config on disk and write YAML.
  */
-export async function writeAgentsbridgeWithNewExtend(
+export async function writeAgentsmeshWithNewExtend(
   configPath: string,
   currentConfig: ValidatedConfig,
   entry: NewExtendEntry,

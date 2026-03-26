@@ -1,4 +1,4 @@
-# AgentsBridge
+# AgentsMesh
 
 [![CI](https://github.com/sampleXbro/agentsmesh/actions/workflows/ci.yml/badge.svg)](https://github.com/sampleXbro/agentsmesh/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/agentsmesh.svg)](https://www.npmjs.com/package/agentsmesh)
@@ -8,7 +8,7 @@
 [![Node.js](https://img.shields.io/node/v/agentsmesh.svg)](https://nodejs.org/)
 [![npm downloads](https://img.shields.io/npm/dm/agentsmesh.svg)](https://www.npmjs.com/package/agentsmesh)
 
-AgentsBridge gives you one canonical AI config in `.agentsmesh/` and syncs it to the tools your team actually uses: Claude Code, Cursor, Copilot, Continue, Junie, Gemini CLI, Cline, Codex CLI, and Windsurf.
+AgentsMesh gives you one canonical AI config in `.agentsmesh/` and syncs it to the tools your team actually uses: Claude Code, Cursor, Copilot, Continue, Junie, Gemini CLI, Cline, Codex CLI, and Windsurf.
 
 The point is simple: keep one source of truth for rules, commands, agents, skills, MCP, hooks, ignore patterns, and permissions, then generate the right format for each tool without hand-editing nine different config layouts.
 
@@ -25,7 +25,7 @@ The point is simple: keep one source of truth for rules, commands, agents, skill
 
 ## What ships today
 
-AgentsBridge already covers the pieces most teams care about in practice:
+AgentsMesh already covers the pieces most teams care about in practice:
 
 - Rules, commands, agents, skills, MCP servers, hooks, ignore patterns, and permissions
 - Bidirectional import/generate flow across 9 supported targets

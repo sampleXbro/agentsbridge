@@ -235,7 +235,7 @@ If unexpected files appear in the pack output, add them to `.npmignore` or tight
 
 ## Phase 7 — README Badges
 
-The README must have these four badges immediately after the `# AgentsBridge` heading:
+The README must have these four badges immediately after the `# AgentsMesh` heading:
 
 ```markdown
 [![CI](https://github.com/sampleXbro/agentsmesh/actions/workflows/ci.yml/badge.svg)](https://github.com/sampleXbro/agentsmesh/actions/workflows/ci.yml)

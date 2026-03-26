@@ -37,7 +37,7 @@ function writeMinimalGeminiCommands(repo: string) {
   writeFileSync(join(repo, '.gemini', 'commands', 'alpha.toml'), 'description = "a"\n');
 }
 
-function writeMinimalAgentsbridge(repo: string) {
+function writeMinimalAgentsmesh(repo: string) {
   mkdirSync(join(repo, '.agentsmesh', 'commands'), { recursive: true });
   writeFileSync(
     join(repo, '.agentsmesh', 'commands', 'keep.md'),
@@ -87,7 +87,7 @@ describe('prepareInstallDiscovery', () => {
 
   it('stages native scope when .agentsmesh already exists', async () => {
     writeMinimalGeminiCommands(ROOT);
-    writeMinimalAgentsbridge(ROOT);
+    writeMinimalAgentsmesh(ROOT);
     const contentRoot = join(ROOT, '.gemini', 'commands');
     const r = await prepareInstallDiscovery(ROOT, contentRoot, '.gemini/commands', {
       explicitTarget: 'gemini-cli',

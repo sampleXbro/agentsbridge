@@ -10,6 +10,6 @@ coverage
 Thumbs.db
 .idea
 .worktrees
-.agentsbridge.local.yaml
-agentsbridge.local.yaml
+.agentsmesh.local.yaml
+agentsmesh.local.yaml
 .vscode/settings.json

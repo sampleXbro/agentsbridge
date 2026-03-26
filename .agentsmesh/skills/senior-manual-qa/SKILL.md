@@ -138,7 +138,7 @@ The report file must contain:
 - coverage and security summary
 - final release verdict
 
-## Agentsbridge Runbook (Project-Specific)
+## Agentsmesh Runbook (Project-Specific)
 
 When testing this repository, run the same end-to-end flow used by senior manual QA in this project:
 

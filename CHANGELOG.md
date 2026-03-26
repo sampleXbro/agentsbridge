@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1
+
+### Changed
+
+- npm publish now triggers after GitHub release is created, decoupling version tagging from package publishing
+
 ## 0.2.0
 
 ### Minor Changes

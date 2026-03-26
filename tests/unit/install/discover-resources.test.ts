@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { discoverFromContentRoot } from '../../../src/install/discover-resources.js';
 
-const ROOT = join(tmpdir(), 'ab-discover-test');
+const ROOT = join(tmpdir(), 'am-discover-test');
 
 describe('discoverFromContentRoot', () => {
   beforeEach(() => {

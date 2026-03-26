@@ -15,7 +15,7 @@ const FIXTURES_DIR = join(process.cwd(), 'tests', 'e2e', 'fixtures');
  * @returns Absolute path to the temp dir
  */
 export function createTestProject(fixtureName?: string): string {
-  const dir = join(tmpdir(), 'ab-e2e-' + randomBytes(8).toString('hex'));
+  const dir = join(tmpdir(), 'am-e2e-' + randomBytes(8).toString('hex'));
   mkdirSync(dir, { recursive: true });
 
   if (fixtureName) {

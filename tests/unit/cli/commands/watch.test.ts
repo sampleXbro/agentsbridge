@@ -10,7 +10,8 @@ import { runWatch } from '../../../../src/cli/commands/watch.js';
 import * as matrixMod from '../../../../src/cli/commands/matrix.js';
 import { logger } from '../../../../src/utils/logger.js';
 
-const TEST_DIR = join(tmpdir(), 'ab-watch-cmd-test');
+import { randomBytes } from 'node:crypto';
+const TEST_DIR = join(tmpdir(), 'am-watch-cmd-test-' + randomBytes(4).toString('hex'));
 
 function setupProject(): void {
   mkdirSync(TEST_DIR, { recursive: true });

@@ -7,7 +7,7 @@ import {
   isCanonicalSliceEmpty,
 } from '../../../src/canonical/load-canonical-slice.js';
 
-const ROOT = join(tmpdir(), 'ab-slice-norm-test');
+const ROOT = join(tmpdir(), 'am-slice-norm-test');
 
 describe('load-canonical-slice (normalize)', () => {
   beforeEach(() => {

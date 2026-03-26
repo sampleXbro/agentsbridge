@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execSync } from 'node:child_process';
 
-const TEST_DIR = join(tmpdir(), 'ab-integration-init');
+const TEST_DIR = join(tmpdir(), 'am-integration-init');
 const CLI_PATH = join(process.cwd(), 'dist', 'cli.js');
 
 beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));

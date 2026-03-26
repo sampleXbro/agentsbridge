@@ -10,7 +10,7 @@ import {
   CONTINUE_SKILLS_DIR,
 } from '../../../../src/targets/continue/constants.js';
 
-const TEST_DIR = join(tmpdir(), 'ab-continue-importer-test');
+const TEST_DIR = join(tmpdir(), 'am-continue-importer-test');
 
 beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));

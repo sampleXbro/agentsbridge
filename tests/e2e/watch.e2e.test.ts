@@ -4,7 +4,7 @@ import { spawn } from 'node:child_process';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
-const TEST_DIR = join(tmpdir(), 'ab-e2e-watch');
+const TEST_DIR = join(tmpdir(), 'am-e2e-watch');
 const CLI_PATH = join(process.cwd(), 'dist', 'cli.js');
 
 beforeEach(() => {

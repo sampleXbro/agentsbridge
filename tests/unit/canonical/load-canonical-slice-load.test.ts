@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { loadCanonicalSliceAtPath } from '../../../src/canonical/load-canonical-slice.js';
 
-const ROOT = join(tmpdir(), 'ab-slice-load-test');
+const ROOT = join(tmpdir(), 'am-slice-load-test');
 
 describe('load-canonical-slice (load path)', () => {
   beforeEach(() => {

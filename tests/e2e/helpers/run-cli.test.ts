@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { runCli } from './run-cli.js';
 
-const TMP_DIR = join(tmpdir(), 'ab-e2e-runcli-' + Date.now());
+const TMP_DIR = join(tmpdir(), 'am-e2e-runcli-' + Date.now());
 
 beforeEach(() => mkdirSync(TMP_DIR, { recursive: true }));
 afterEach(() => rmSync(TMP_DIR, { recursive: true, force: true }));

@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execSync } from 'node:child_process';
 
-const TEST_DIR = join(tmpdir(), 'ab-integration-matrix');
+const TEST_DIR = join(tmpdir(), 'am-integration-matrix');
 const CLI_PATH = join(process.cwd(), 'dist', 'cli.js');
 
 beforeEach(() => {

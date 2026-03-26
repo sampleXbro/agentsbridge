@@ -66,7 +66,7 @@ Run linter.`,
     expect(commands[0]?.allowedTools).toEqual(['Read', 'Grep', 'Glob']);
   });
 
-  it('handles allowed-tools kebab-case', async () => {
+  it('handles allowed-tools kebam-case', async () => {
     writeCommand(
       'fix.md',
       `---

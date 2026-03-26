@@ -10,7 +10,7 @@ describe('generate reference rewriting for windsurf (integration)', () => {
   let testDir = '';
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), 'ab-integration-reference-rewrite-windsurf-'));
+    testDir = mkdtempSync(join(tmpdir(), 'am-integration-reference-rewrite-windsurf-'));
   });
 
   afterEach(() => {

@@ -10,7 +10,7 @@ describe('generate MCP transport variants (integration)', () => {
   let testDir = '';
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), 'ab-integration-mcp-transports-'));
+    testDir = mkdtempSync(join(tmpdir(), 'am-integration-mcp-transports-'));
   });
 
   afterEach(() => {

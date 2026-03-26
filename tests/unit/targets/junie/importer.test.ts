@@ -14,7 +14,7 @@ import {
   JUNIE_SKILLS_DIR,
 } from '../../../../src/targets/junie/constants.js';
 
-const TEST_DIR = join(tmpdir(), 'ab-junie-importer-test');
+const TEST_DIR = join(tmpdir(), 'am-junie-importer-test');
 
 beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));

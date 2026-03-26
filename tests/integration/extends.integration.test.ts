@@ -42,7 +42,7 @@ function createRemoteRepo(root: string): string {
 }
 
 beforeEach(() => {
-  testDir = mkdtempSync(join(tmpdir(), 'ab-extends-integration-'));
+  testDir = mkdtempSync(join(tmpdir(), 'am-extends-integration-'));
   mkdirSync(join(testDir, '.agentsmesh', 'rules'), { recursive: true });
 });
 

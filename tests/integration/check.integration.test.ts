@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execSync } from 'node:child_process';
 
-const TEST_DIR = join(tmpdir(), 'ab-integration-check');
+const TEST_DIR = join(tmpdir(), 'am-integration-check');
 const CLI_PATH = join(process.cwd(), 'dist', 'cli.js');
 
 function setupProject(): void {

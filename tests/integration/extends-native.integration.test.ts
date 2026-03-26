@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { loadCanonicalWithExtends } from '../../src/canonical/extends.js';
 
-const TEST_DIR = join(tmpdir(), 'ab-extends-native-integration');
+const TEST_DIR = join(tmpdir(), 'am-extends-native-integration');
 
 function makeProject(): string {
   const projectDir = join(TEST_DIR, 'project');

@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execSync } from 'node:child_process';
 
-const TEST_DIR = join(tmpdir(), 'ab-integration-generate');
+const TEST_DIR = join(tmpdir(), 'am-integration-generate');
 const CLI_PATH = join(process.cwd(), 'dist', 'cli.js');
 
 beforeEach(() => {
@@ -697,7 +697,7 @@ extends:
   });
 
   it('merges extends: github: remote uses pre-cached tarball (no network)', () => {
-    const cacheDir = join(TEST_DIR, '.ab-cache');
+    const cacheDir = join(TEST_DIR, '.am-cache');
     const cacheKey = 'org-repo-v1_0_0';
     const topDir = 'org-repo-v1.0.0';
     mkdirSync(join(cacheDir, cacheKey, topDir, '.agentsmesh', 'rules'), {

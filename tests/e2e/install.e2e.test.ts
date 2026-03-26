@@ -10,7 +10,7 @@ import { runCli } from './helpers/run-cli.js';
 
 describe('install e2e', () => {
   it('install --sync with no manifest returns clean no-op message', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'ab-e2e-install-sync-empty-'));
+    const dir = mkdtempSync(join(tmpdir(), 'am-e2e-install-sync-empty-'));
     try {
       const proj = join(dir, 'proj');
       mkdirSync(join(proj, '.agentsmesh', 'rules'), { recursive: true });
@@ -34,7 +34,7 @@ describe('install e2e', () => {
   });
 
   it('dry-run leaves extends unchanged', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'ab-e2e-install-'));
+    const dir = mkdtempSync(join(tmpdir(), 'am-e2e-install-'));
     try {
       mkdirSync(join(dir, 'up', 'skills', 's1'), { recursive: true });
       writeFileSync(
@@ -59,7 +59,7 @@ describe('install e2e', () => {
   });
 
   it('dry-run with --target and --path writes gemini-cli target into preview JSON', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'ab-e2e-install-target-'));
+    const dir = mkdtempSync(join(tmpdir(), 'am-e2e-install-target-'));
     try {
       const upstream = join(dir, 'up');
       mkdirSync(join(upstream, '.gemini', 'commands'), { recursive: true });
@@ -89,7 +89,7 @@ describe('install e2e', () => {
   });
 
   it('default install materializes a pack and generates artifacts', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'ab-e2e-install-pack-'));
+    const dir = mkdtempSync(join(tmpdir(), 'am-e2e-install-pack-'));
     try {
       const upstream = join(dir, 'up');
       mkdirSync(join(upstream, '.agentsmesh', 'skills', 'demo'), { recursive: true });
@@ -130,7 +130,7 @@ describe('install e2e', () => {
   });
 
   it('non-dry-run --extends writes extends entry to config', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'ab-e2e-install-extends-'));
+    const dir = mkdtempSync(join(tmpdir(), 'am-e2e-install-extends-'));
     try {
       const upstream = join(dir, 'up');
       mkdirSync(join(upstream, '.agentsmesh', 'skills', 'demo'), { recursive: true });
@@ -162,7 +162,7 @@ describe('install e2e', () => {
   });
 
   it('manual --as agents installs a generic markdown folder', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'ab-e2e-install-manual-as-'));
+    const dir = mkdtempSync(join(tmpdir(), 'am-e2e-install-manual-as-'));
     try {
       const upstream = join(dir, 'up');
       mkdirSync(join(upstream, 'agents', 'universal'), { recursive: true });
@@ -205,7 +205,7 @@ describe('install e2e', () => {
   ] as const)(
     'manual --as %s installs and generates expected output',
     async (kind, itemName, generatedPath, expectedText) => {
-      const dir = mkdtempSync(join(tmpdir(), `ab-e2e-install-manual-${kind}-`));
+      const dir = mkdtempSync(join(tmpdir(), `am-e2e-install-manual-${kind}-`));
       try {
         const upstream = join(dir, 'up');
         if (kind === 'skills') {
@@ -256,7 +256,7 @@ describe('install e2e', () => {
   );
 
   it('install --sync restores deleted packs from the manifest', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'ab-e2e-install-sync-'));
+    const dir = mkdtempSync(join(tmpdir(), 'am-e2e-install-sync-'));
     try {
       const upstream = join(dir, 'up');
       mkdirSync(join(upstream, '.agentsmesh', 'skills', 'demo'), { recursive: true });

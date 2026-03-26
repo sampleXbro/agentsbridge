@@ -11,8 +11,8 @@ describe('codex-rules-embed', () => {
       globs: ['src/**/*.ts'],
       body: 'Use strict mode.\n\nSecond line.',
     });
-    expect(content).toContain('ab-codex-rule:v1');
-    expect(content).toContain('# ab-json:');
+    expect(content).toContain('am-codex-rule:v1');
+    expect(content).toContain('# am-json:');
     expect(content).toContain('prefix_rule(');
     const back = tryParseEmbeddedCanonicalFromCodexRules(content);
     expect(back).not.toBeNull();

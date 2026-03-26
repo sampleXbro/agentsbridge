@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { runDiff } from '../../../../src/cli/commands/diff.js';
 
-const TEST_DIR = join(tmpdir(), 'ab-diff-cmd-test');
+const TEST_DIR = join(tmpdir(), 'am-diff-cmd-test');
 
 function setupProject(): void {
   mkdirSync(TEST_DIR, { recursive: true });

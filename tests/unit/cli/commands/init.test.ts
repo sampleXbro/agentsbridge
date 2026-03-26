@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { runInit, detectExistingConfigs } from '../../../../src/cli/commands/init.js';
 
-const TEST_DIR = join(tmpdir(), 'ab-init-test');
+const TEST_DIR = join(tmpdir(), 'am-init-test');
 
 beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));

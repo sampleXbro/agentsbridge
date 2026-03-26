@@ -26,7 +26,7 @@ import { importFromCodex } from '../src/targets/codex-cli/importer.js';
 import { serializeCanonicalRuleToCodexRulesFile } from '../src/targets/codex-cli/codex-rules-embed.js';
 import { importFromWindsurf } from '../src/targets/windsurf/importer.js';
 
-const TEST_DIR = join(tmpdir(), 'ab-roundtrip-test');
+const TEST_DIR = join(tmpdir(), 'am-roundtrip-test');
 
 function allFeaturesConfig(targets: string[]): ValidatedConfig {
   return {

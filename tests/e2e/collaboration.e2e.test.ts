@@ -41,7 +41,7 @@ describe('collaboration e2e', () => {
   });
 
   it('strategy=lock blocks generate when locked feature changed unless --force', async () => {
-    const dir = makeProject('ab-e2e-collab-lock');
+    const dir = makeProject('am-e2e-collam-lock');
     created.push(dir);
     writeFileSync(
       join(dir, 'agentsmesh.yaml'),
@@ -77,7 +77,7 @@ root: true
   });
 
   it('strategy=lock with empty lock_features does not block generate', async () => {
-    const dir = makeProject('ab-e2e-collab-lock-empty');
+    const dir = makeProject('am-e2e-collam-lock-empty');
     created.push(dir);
     writeFileSync(
       join(dir, 'agentsmesh.yaml'),
@@ -102,7 +102,7 @@ collaboration:
   it.each(['merge', 'last-wins'] as const)(
     'strategy=%s does not enforce lock-feature blocking on generate',
     async (strategy) => {
-      const dir = makeProject(`ab-e2e-collab-${strategy}`);
+      const dir = makeProject(`am-e2e-collam-${strategy}`);
       created.push(dir);
       writeFileSync(
         join(dir, 'agentsmesh.yaml'),
@@ -127,7 +127,7 @@ collaboration:
   );
 
   it('check marks modified, added, and removed locked files with [LOCKED]', async () => {
-    const dir = makeProject('ab-e2e-collab-locked-check');
+    const dir = makeProject('am-e2e-collam-locked-check');
     created.push(dir);
     writeFileSync(
       join(dir, 'agentsmesh.yaml'),

@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawn } from 'node:child_process';
 
-const TEST_DIR = join(tmpdir(), 'ab-integration-watch');
+const TEST_DIR = join(tmpdir(), 'am-integration-watch');
 const CLI_PATH = join(process.cwd(), 'dist', 'cli.js');
 
 function waitForFile(path: string, timeoutMs: number): Promise<void> {

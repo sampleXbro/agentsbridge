@@ -30,7 +30,7 @@ vi.mock('../../../src/canonical/native-extends-importer.js', () => ({
   importNativeToCanonical: mockImport,
 }));
 
-const ROOT = join(tmpdir(), 'ab-prepare-install');
+const ROOT = join(tmpdir(), 'am-prepare-install');
 
 function writeMinimalGeminiCommands(repo: string) {
   mkdirSync(join(repo, '.gemini', 'commands'), { recursive: true });

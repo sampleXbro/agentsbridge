@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { runLintCmd } from '../../../../src/cli/commands/lint.js';
 
-const TEST_DIR = join(tmpdir(), 'ab-lint-cmd-test');
+const TEST_DIR = join(tmpdir(), 'am-lint-cmd-test');
 
 function setupProject(): void {
   mkdirSync(TEST_DIR, { recursive: true });

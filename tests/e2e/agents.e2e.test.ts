@@ -48,7 +48,7 @@ const CANONICAL_AGENTS_DIR = join(
 /**
  * Parse YAML frontmatter from an agent file and return a flat record.
  * Handles both camelCase (permissionMode, maxTurns, disallowedTools)
- * and kebab-case (permission-mode, max-turns, disallowed-tools) keys.
+ * and kebam-case (permission-mode, max-turns, disallowed-tools) keys.
  */
 function parseFm(filePath: string): Record<string, unknown> {
   const raw = readFileSync(filePath, 'utf-8');

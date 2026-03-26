@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { runMatrix } from '../../../../src/cli/commands/matrix.js';
 
-const TEST_DIR = join(tmpdir(), 'ab-matrix-cmd-test');
+const TEST_DIR = join(tmpdir(), 'am-matrix-cmd-test');
 
 function setupProject(): void {
   mkdirSync(TEST_DIR, { recursive: true });

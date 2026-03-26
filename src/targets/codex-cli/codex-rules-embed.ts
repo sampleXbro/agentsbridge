@@ -6,11 +6,11 @@
 
 import { Buffer } from 'node:buffer';
 
-const MARKER = 'ab-codex-rule:v1';
-const JSON_PREFIX = '# ab-json: ';
-const B64_BEGIN = '# ab-body-b64-begin';
-const B64_END = '# ab-body-b64-end';
-const B64_LINE = '# ab64:';
+const MARKER = 'am-codex-rule:v1';
+const JSON_PREFIX = '# am-json: ';
+const B64_BEGIN = '# am-body-b64-begin';
+const B64_END = '# am-body-b64-end';
+const B64_LINE = '# am64:';
 
 export interface EmbeddedCodexRuleMeta {
   description: string;
@@ -33,7 +33,7 @@ export function serializeCanonicalRuleToCodexRulesFile(rule: {
     `# ${MARKER}`,
     `${JSON_PREFIX}${metaJson}`,
     '#',
-    '# Embedded canonical rule (agentsmesh) — base64 body between ab-body-b64 markers.',
+    '# Embedded canonical rule (agentsmesh) — base64 body between am-body-b64 markers.',
     '# Add active Starlark prefix_rule() calls below (uncomment/edit). Docs:',
     '# https://developers.openai.com/codex/rules/',
     '#',

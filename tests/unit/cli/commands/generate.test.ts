@@ -10,7 +10,7 @@ import * as tar from 'tar';
 import { vi } from 'vitest';
 import { runGenerate, ensurePathInsideRoot } from '../../../../src/cli/commands/generate.js';
 
-const TEST_DIR = join(tmpdir(), 'ab-generate-unit');
+const TEST_DIR = join(tmpdir(), 'am-generate-unit');
 
 beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));

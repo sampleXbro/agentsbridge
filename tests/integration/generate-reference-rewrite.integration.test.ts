@@ -10,7 +10,7 @@ describe('generate reference rewriting (integration)', () => {
   let testDir = '';
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), 'ab-integration-reference-rewrite-'));
+    testDir = mkdtempSync(join(tmpdir(), 'am-integration-reference-rewrite-'));
   });
 
   afterEach(() => {

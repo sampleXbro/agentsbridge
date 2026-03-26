@@ -167,7 +167,7 @@ describe('fetchGithubRemoteExtend', () => {
   });
 
   it('returns resolvedPath even when .agentsmesh/ is absent (native format repo)', async () => {
-    const cacheDir = join(tmpdir(), 'ab-gh-remote-native-test');
+    const cacheDir = join(tmpdir(), 'am-gh-remote-native-test');
     mkdirSync(cacheDir, { recursive: true });
 
     // latest tag resolves to v1.0.0; tarball download succeeds
@@ -202,7 +202,7 @@ describe('fetchGithubRemoteExtend', () => {
   });
 
   it('passes a tar extraction filter that rejects zip-slip paths', async () => {
-    const cacheDir = join(tmpdir(), 'ab-gh-remote-zipslip-test');
+    const cacheDir = join(tmpdir(), 'am-gh-remote-zipslip-test');
     mkdirSync(cacheDir, { recursive: true });
 
     vi.stubGlobal(

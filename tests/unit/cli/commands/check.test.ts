@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { hashContent } from '../../../../src/utils/hash.js';
 import { runCheck } from '../../../../src/cli/commands/check.js';
 
-const TEST_DIR = join(tmpdir(), 'ab-check-test');
+const TEST_DIR = join(tmpdir(), 'am-check-test');
 
 beforeEach(() => {
   vi.spyOn(process, 'cwd').mockReturnValue(TEST_DIR);

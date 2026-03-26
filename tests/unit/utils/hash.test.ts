@@ -22,7 +22,7 @@ describe('hashContent', () => {
 });
 
 describe('hashFile', () => {
-  const dir = join(tmpdir(), 'ab-hash-test');
+  const dir = join(tmpdir(), 'am-hash-test');
 
   beforeEach(() => mkdirSync(dir, { recursive: true }));
   afterEach(() => rmSync(dir, { recursive: true, force: true }));

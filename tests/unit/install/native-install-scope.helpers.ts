@@ -29,7 +29,7 @@ function normalizePick(
 }
 
 function makeRoot(name: string): string {
-  const root = join(tmpdir(), `ab-native-install-scope-${name}-${Date.now()}-${roots.length}`);
+  const root = join(tmpdir(), `am-native-install-scope-${name}-${Date.now()}-${roots.length}`);
   roots.push(root);
   mkdirSync(root, { recursive: true });
   return root;

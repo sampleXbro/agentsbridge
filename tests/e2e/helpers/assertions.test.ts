@@ -17,7 +17,7 @@ import {
   assertDirsEquivalent,
 } from './assertions.js';
 
-const TEST_DIR = join(tmpdir(), 'ab-assert-' + randomBytes(4).toString('hex'));
+const TEST_DIR = join(tmpdir(), 'am-assert-' + randomBytes(4).toString('hex'));
 
 describe('fileExists', () => {
   it('passes when file exists', () => {

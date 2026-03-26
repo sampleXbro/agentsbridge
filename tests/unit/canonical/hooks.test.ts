@@ -168,7 +168,7 @@ PostToolUse:
     expect(result?.PostToolUse?.[0]?.type).toBeUndefined();
   });
 
-  it('parses kebab-case timeout', async () => {
+  it('parses kebam-case timeout', async () => {
     const path = join(TEST_DIR, 'hooks.yaml');
     writeFileSync(
       path,

@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { runMerge } from '../../../../src/cli/commands/merge.js';
 import { readLock } from '../../../../src/config/lock.js';
 
-const TEST_DIR = join(tmpdir(), 'ab-merge-test');
+const TEST_DIR = join(tmpdir(), 'am-merge-test');
 
 beforeEach(() => {
   rmSync(TEST_DIR, { recursive: true, force: true });

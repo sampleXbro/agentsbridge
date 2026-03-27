@@ -116,4 +116,44 @@ describe('prepareInstallDiscovery', () => {
     expect(r.discoveryRoot).toBe(contentRoot);
     expect(r.yamlTarget).toBeUndefined();
   });
+
+  it('imports the whole native repo when installing from the repo root', async () => {
+    writeMinimalGeminiCommands(ROOT);
+
+    const r = await prepareInstallDiscovery(ROOT, ROOT, '', {
+      explicitTarget: 'gemini-cli',
+    });
+
+    expect(mockImport).toHaveBeenCalledTimes(1);
+    expect(r.discoveryRoot).not.toBe(ROOT);
+    expect(r.discoveryRoot.endsWith('.gemini/commands')).toBe(false);
+    expect(r.implicitPick).toBeUndefined();
+    expect(r.yamlTarget).toBe('gemini-cli');
+    expect(r.importHappened).toBe(true);
+    await r.cleanup?.();
+  });
+
+  it('uses the repo root for canonical installs with no scoped path', async () => {
+    writeMinimalAgentsmesh(ROOT);
+
+    const r = await prepareInstallDiscovery(ROOT, ROOT, '', {});
+
+    expect(mockImport).not.toHaveBeenCalled();
+    expect(r.discoveryRoot).toBe(ROOT);
+    expect(r.importHappened).toBe(false);
+    expect(r.yamlTarget).toBeUndefined();
+  });
+
+  it('falls back to contentRoot for non-native subpaths when no native target applies', async () => {
+    writeMinimalAgentsmesh(ROOT);
+    mkdirSync(join(ROOT, 'docs', 'rules'), { recursive: true });
+    const contentRoot = join(ROOT, 'docs', 'rules');
+
+    const r = await prepareInstallDiscovery(ROOT, contentRoot, 'docs/rules', {});
+
+    expect(mockImport).not.toHaveBeenCalled();
+    expect(r.discoveryRoot).toBe(contentRoot);
+    expect(r.importHappened).toBe(false);
+    expect(r.yamlTarget).toBeUndefined();
+  });
 });

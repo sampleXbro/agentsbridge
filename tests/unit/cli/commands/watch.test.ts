@@ -11,20 +11,21 @@ import * as matrixMod from '../../../../src/cli/commands/matrix.js';
 import { logger } from '../../../../src/utils/output/logger.js';
 
 import { randomBytes } from 'node:crypto';
-const TEST_DIR = join(tmpdir(), 'am-watch-cmd-test-' + randomBytes(4).toString('hex'));
+let testDir = '';
 
 function setupProject(): void {
-  mkdirSync(TEST_DIR, { recursive: true });
+  testDir = join(tmpdir(), 'am-watch-cmd-test-' + randomBytes(4).toString('hex'));
+  mkdirSync(testDir, { recursive: true });
   writeFileSync(
-    join(TEST_DIR, 'agentsmesh.yaml'),
+    join(testDir, 'agentsmesh.yaml'),
     `version: 1
 targets: [claude-code, cursor]
 features: [rules]
 `,
   );
-  mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
+  mkdirSync(join(testDir, '.agentsmesh', 'rules'), { recursive: true });
   writeFileSync(
-    join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
+    join(testDir, '.agentsmesh', 'rules', '_root.md'),
     `---
 root: true
 description: "Project rules"
@@ -36,31 +37,31 @@ description: "Project rules"
 }
 
 beforeEach(() => setupProject());
-afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
+afterEach(() => rmSync(testDir, { recursive: true, force: true }));
 
 describe('runWatch', () => {
   it('throws when not initialized (no config)', async () => {
-    rmSync(join(TEST_DIR, 'agentsmesh.yaml'));
-    await expect(runWatch({}, TEST_DIR)).rejects.toThrow(/agentsmesh\.yaml/);
+    rmSync(join(testDir, 'agentsmesh.yaml'));
+    await expect(runWatch({}, testDir)).rejects.toThrow(/agentsmesh\.yaml/);
   });
 
   it('starts watching and returns stop function', async () => {
-    const result = await runWatch({}, TEST_DIR);
+    const result = await runWatch({}, testDir);
     expect(result).toBeDefined();
     expect(typeof result?.stop).toBe('function');
     await result!.stop();
   });
 
   it('respects --targets flag', async () => {
-    const result = await runWatch({ targets: 'claude-code' }, TEST_DIR);
+    const result = await runWatch({ targets: 'claude-code' }, testDir);
     expect(result).toBeDefined();
     await result!.stop();
   });
 
   it('stops and clears debounce when stop called during debounce', async () => {
-    const result = await runWatch({}, TEST_DIR);
+    const result = await runWatch({}, testDir);
     writeFileSync(
-      join(TEST_DIR, '.agentsmesh', 'rules', 'other.md'),
+      join(testDir, '.agentsmesh', 'rules', 'other.md'),
       '---\ndescription: ""\n---\n# Other',
     );
     await result!.stop();
@@ -68,9 +69,9 @@ describe('runWatch', () => {
 
   it('calls runMatrix when features change', async () => {
     const runMatrixSpy = vi.spyOn(matrixMod, 'runMatrix').mockResolvedValue(undefined);
-    const result = await runWatch({}, TEST_DIR);
+    const result = await runWatch({}, testDir);
     writeFileSync(
-      join(TEST_DIR, '.agentsmesh', 'rules', 'new.md'),
+      join(testDir, '.agentsmesh', 'rules', 'new.md'),
       '---\ndescription: "New"\n---\n# New',
     );
     await vi.waitFor(() => expect(runMatrixSpy).toHaveBeenCalled(), { timeout: 3000 });
@@ -80,26 +81,26 @@ describe('runWatch', () => {
 
   it('computes fingerprint with permissions', async () => {
     writeFileSync(
-      join(TEST_DIR, 'agentsmesh.yaml'),
+      join(testDir, 'agentsmesh.yaml'),
       `version: 1
 targets: [claude-code]
 features: [rules, permissions]
 `,
     );
-    mkdirSync(join(TEST_DIR, '.agentsmesh'), { recursive: true });
+    mkdirSync(join(testDir, '.agentsmesh'), { recursive: true });
     writeFileSync(
-      join(TEST_DIR, '.agentsmesh', 'permissions.yaml'),
+      join(testDir, '.agentsmesh', 'permissions.yaml'),
       'allow:\n  - Read\n  - Grep\ndeny: []',
     );
-    const result = await runWatch({}, TEST_DIR);
+    const result = await runWatch({}, testDir);
     await result!.stop();
   });
 
   it('calls runMatrix when features change (new rule adds to fingerprint)', async () => {
     const runMatrixSpy = vi.spyOn(matrixMod, 'runMatrix').mockResolvedValue(undefined);
-    const result = await runWatch({}, TEST_DIR);
+    const result = await runWatch({}, testDir);
     writeFileSync(
-      join(TEST_DIR, '.agentsmesh', 'rules', 'new.md'),
+      join(testDir, '.agentsmesh', 'rules', 'new.md'),
       '---\ndescription: "New"\n---\n# New',
     );
     await vi.waitFor(() => expect(runMatrixSpy).toHaveBeenCalled(), { timeout: 3000 });
@@ -110,9 +111,9 @@ features: [rules, permissions]
   it('logs Regenerated when fingerprint unchanged (body-only edit)', async () => {
     const runMatrixSpy = vi.spyOn(matrixMod, 'runMatrix').mockResolvedValue(undefined);
     const infoSpy = vi.spyOn(logger, 'info').mockImplementation(() => {});
-    const result = await runWatch({}, TEST_DIR);
+    const result = await runWatch({}, testDir);
     writeFileSync(
-      join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
+      join(testDir, '.agentsmesh', 'rules', '_root.md'),
       `---
 root: true
 description: "Project rules"
@@ -132,10 +133,10 @@ description: "Project rules"
   it('does not retrigger from its own .agentsmesh/.lock writes while idle', async () => {
     const infoSpy = vi.spyOn(logger, 'info').mockImplementation(() => {});
     writeFileSync(
-      join(TEST_DIR, '.agentsmesh', '.lock'),
+      join(testDir, '.agentsmesh', '.lock'),
       'generated_at: "2026-03-15T14:00:00Z"\nchecksums: {}\nextends: {}\n',
     );
-    const result = await runWatch({}, TEST_DIR);
+    const result = await runWatch({}, testDir);
 
     await vi.waitFor(
       () =>

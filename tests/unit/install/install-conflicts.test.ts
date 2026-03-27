@@ -102,4 +102,44 @@ describe('resolveInstallConflicts', () => {
     });
     expect(sel.ruleSlugs).toEqual([]);
   });
+
+  it('handles command and agent duplicates independently', async () => {
+    vi.mocked(prompts.confirm).mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    const command = {
+      source: '/commands/review.md',
+      name: 'review',
+      description: 'd',
+      allowedTools: [],
+      body: '',
+    };
+    const agent = {
+      source: '/agents/reviewer.md',
+      name: 'reviewer',
+      description: 'd',
+      tools: [],
+      disallowedTools: [],
+      model: '',
+      permissionMode: '',
+      maxTurns: 0,
+      mcpServers: [],
+      hooks: {},
+      skills: [],
+      memory: '',
+      body: '',
+    };
+    const merged = emptyMerged();
+    merged.commands = [{ ...command }];
+    merged.agents = [{ ...agent }];
+
+    const sel = await resolveInstallConflicts(merged, {
+      skills: [],
+      rules: [],
+      commands: [command],
+      agents: [agent],
+    });
+
+    expect(sel.commandNames).toEqual([]);
+    expect(sel.agentNames).toEqual(['reviewer']);
+    expect(prompts.confirm).toHaveBeenCalledTimes(2);
+  });
 });

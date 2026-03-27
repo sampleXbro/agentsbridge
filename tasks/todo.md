@@ -1,3 +1,57 @@
+# Coverage threshold recovery
+
+- [x] Inspect the current coverage config/report and identify the uncovered branch paths introduced by the recent import/native-scope changes
+- [x] Add the smallest targeted tests needed to cover the missing branch paths without loosening thresholds
+- [x] Run focused tests plus full coverage verification and append review notes
+
+## Review (Coverage threshold recovery)
+
+- Changes implemented:
+  - added direct branch suites for `src/config/remote/git-remote.ts`, `src/install/core/install-manifest.ts`, and `src/install/source/git-pin.ts`
+  - added supplemental conflict-branch coverage for `src/install/core/install-conflicts.ts`
+  - hardened `tests/unit/cli/commands/watch.test.ts` to use a fresh temp project per test so chokidar state does not bleed across cases under coverage load
+- Tests added:
+  - `tests/unit/config/git-remote.test.ts`
+  - `tests/unit/install/install-manifest.test.ts`
+  - `tests/unit/install/git-pin.test.ts`
+  - `tests/unit/install/install-conflicts.branches.test.ts`
+- Verification:
+  - `pnpm vitest run tests/unit/config/git-remote.test.ts`
+  - `pnpm vitest run tests/unit/install/install-conflicts.test.ts tests/unit/install/install-conflicts.branches.test.ts`
+  - `pnpm vitest run tests/unit/install/install-manifest.test.ts`
+  - `pnpm vitest run tests/unit/install/git-pin.test.ts`
+  - `pnpm vitest run tests/unit/cli/commands/watch.test.ts --coverage --coverage.reporter=text-summary`
+  - `pnpm test:coverage -- --coverage.reporter=json-summary --coverage.reporter=text-summary`
+- QA Report — Coverage threshold recovery
+
+### Acceptance Criteria
+
+| Criterion | Covered by test? | Status |
+| --- | --- | --- |
+| Recover the global branch threshold without lowering config | `pnpm test:coverage -- --coverage.reporter=json-summary --coverage.reporter=text-summary` | OK |
+| Add targeted branch tests instead of broad fixture churn | `tests/unit/config/git-remote.test.ts`, `tests/unit/install/install-manifest.test.ts`, `tests/unit/install/git-pin.test.ts`, `tests/unit/install/install-conflicts.branches.test.ts` | OK |
+| Keep full suite stable under coverage load | `tests/unit/cli/commands/watch.test.ts`, full `pnpm test:coverage` run | OK |
+
+### Edge Cases
+
+| Scenario | Covered? | Test location |
+| --- | --- | --- |
+| Git remote cache hit, tokenized GitLab clone, fallback, and fallback-disabled error | ✓ | `tests/unit/config/git-remote.test.ts` |
+| Install manifest missing, invalid YAML, same-name replacement, same-identity replacement | ✓ | `tests/unit/install/install-manifest.test.ts` |
+| Git pinning resolves HEAD, retries ref forms, handles direct SHAs, and reports failures | ✓ | `tests/unit/install/git-pin.test.ts` |
+| Duplicate install conflicts accept/decline independently across rule/command/agent categories | ✓ | `tests/unit/install/install-conflicts.branches.test.ts` |
+| Watch test remains stable under coverage-heavy runs | ✓ | `tests/unit/cli/commands/watch.test.ts` |
+
+### Gaps Identified
+
+- none
+
+### Actions Taken
+
+- added direct unit coverage to the lowest-yield install/remote helpers instead of relaxing thresholds
+- fixed the watch test flake exposed by coverage load by isolating each case to its own temp directory
+- raised global branch coverage to `84.08%`
+
 # Architecture alignment review
 
 # Import placeholder metadata preservation

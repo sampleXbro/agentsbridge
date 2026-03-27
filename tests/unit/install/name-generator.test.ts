@@ -50,4 +50,85 @@ describe('suggestExtendName', () => {
 
     expect(name).toBe('upstream-commands');
   });
+
+  it('derives pack names from generic git remotes when no feature hint is provided', () => {
+    const name = suggestExtendName(
+      {
+        kind: 'git',
+        rawRef: 'main',
+        gitRemoteUrl: 'https://git.example.com/team/platform.git',
+      },
+      {},
+      new Set(),
+    );
+
+    expect(name).toBe('team-platform-pack');
+  });
+
+  it('normalizes gitlab namespaces and falls back to local when the root is missing', () => {
+    const gitlab = suggestExtendName(
+      {
+        kind: 'gitlab',
+        rawRef: 'main',
+        org: 'group/subgroup',
+        repo: 'tooling',
+        gitRemoteUrl: 'https://gitlab.com/group/subgroup/tooling.git',
+      },
+      { featureHint: 'skills' },
+      new Set(),
+    );
+    const local = suggestExtendName(
+      {
+        kind: 'local',
+        rawRef: '',
+        pathInRepo: '',
+      },
+      {},
+      new Set(),
+    );
+
+    expect(gitlab).toBe('group-subgroup-tooling-skills');
+    expect(local).toBe('local-pack');
+  });
+
+  it('falls back to generic names on invalid git urls and suffixes collisions', () => {
+    const name = suggestExtendName(
+      {
+        kind: 'git',
+        rawRef: 'main',
+        gitRemoteUrl: 'not a valid git url',
+      },
+      {},
+      new Set(['repo-pack', 'repo-pack-2']),
+    );
+
+    expect(name).toBe('repo-pack-3');
+  });
+
+  it('uses the last segment when a git remote has only one path component', () => {
+    const name = suggestExtendName(
+      {
+        kind: 'git',
+        rawRef: 'main',
+        gitRemoteUrl: 'https://git.example.com/repo.git',
+      },
+      {},
+      new Set(),
+    );
+
+    expect(name).toBe('repo-pack');
+  });
+
+  it('falls back to extend when no local root or remote identifiers are available', () => {
+    const name = suggestExtendName(
+      {
+        kind: 'git',
+        rawRef: 'main',
+      },
+      { featureHint: 'rules' },
+      new Set(),
+    );
+
+    expect(name).toBe('extend-rules');
+  });
 });

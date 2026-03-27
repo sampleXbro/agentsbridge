@@ -189,14 +189,19 @@ describe('runInit — scaffold (no existing configs)', () => {
     const content = readFileSync(join(TEST_DIR, '.gitignore'), 'utf-8');
     expect(content).toContain('agentsmesh.local.yaml');
     expect(content).toContain('.agentsmeshcache');
+    expect(content).toContain('.agentsmesh/.lock.tmp');
   });
 
   it('does not duplicate .gitignore entries', async () => {
-    writeFileSync(join(TEST_DIR, '.gitignore'), 'node_modules\nagentsmesh.local.yaml\n');
+    writeFileSync(
+      join(TEST_DIR, '.gitignore'),
+      'node_modules\nagentsmesh.local.yaml\n.agentsmeshcache\n.agentsmesh/.lock.tmp\n',
+    );
     await runInit(TEST_DIR);
     const content = readFileSync(join(TEST_DIR, '.gitignore'), 'utf-8');
-    const count = (content.match(/agentsmesh\.local\.yaml/g) ?? []).length;
-    expect(count).toBe(1);
+    expect((content.match(/agentsmesh\.local\.yaml/g) ?? []).length).toBe(1);
+    expect((content.match(/\.agentsmeshcache/g) ?? []).length).toBe(1);
+    expect((content.match(/\.agentsmesh\/\.lock\.tmp/g) ?? []).length).toBe(1);
   });
 
   it('throws when agentsmesh.yaml already exists', async () => {

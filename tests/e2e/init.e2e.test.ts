@@ -67,5 +67,7 @@ describe('init', () => {
     expect(r.exitCode).toBe(0);
     fileExists(join(dir, '.gitignore'));
     fileContains(join(dir, '.gitignore'), 'agentsmesh.local.yaml');
+    fileContains(join(dir, '.gitignore'), '.agentsmeshcache');
+    fileContains(join(dir, '.gitignore'), '.agentsmesh/.lock.tmp');
   });
 });

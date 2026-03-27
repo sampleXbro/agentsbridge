@@ -1,19 +1,35 @@
+# Dependencies
 node_modules
+
+# Repo-local (see root /docs policy)
 /docs
+
+# Build & coverage
 dist
 build
 coverage
+
+# Environment & secrets
 .env
 .env.local
 .env.*.local
+
+# Archives & logs
 *.tgz
 *.log
+
+# OS
 .DS_Store
 Thumbs.db
+
+# AgentsMesh — local overrides, cache symlink, transient lock write
 .agentsmesh.local.yaml
 agentsmesh.local.yaml
-.worktrees
 .agentsmeshcache
+.agentsmesh/.lock.tmp
+.worktrees
+
+# IDE (often machine-specific)
 .idea
 .vscode/settings.json
 settings.local.json

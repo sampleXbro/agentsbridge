@@ -33,7 +33,7 @@ import { detectExistingConfigs } from './init-detect.js';
 
 const CONFIG_FILENAME = 'agentsmesh.yaml';
 const LOCAL_CONFIG_FILENAME = 'agentsmesh.local.yaml';
-const GITIGNORE_ENTRIES = ['agentsmesh.local.yaml', '.agentsmeshcache'];
+const GITIGNORE_ENTRIES = ['agentsmesh.local.yaml', '.agentsmeshcache', '.agentsmesh/.lock.tmp'];
 
 const IMPORTERS: Record<string, (root: string) => Promise<ImportResult[]>> = {
   'claude-code': importFromClaudeCode,

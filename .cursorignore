@@ -13,3 +13,5 @@ Thumbs.db
 .agentsmesh.local.yaml
 agentsmesh.local.yaml
 .vscode/settings.json
+# AgentsMesh cache symlink (points outside repo)
+.agentsmeshcache

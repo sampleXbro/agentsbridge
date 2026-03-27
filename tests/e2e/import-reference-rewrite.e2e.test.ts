@@ -65,7 +65,7 @@ describe('import reference normalization', () => {
     copilot: '.agentsmesh/rules/typescript.md',
     'gemini-cli': 'GEMINI.md',
     cline: '.agentsmesh/rules/typescript.md',
-    'codex-cli': '.agentsmesh/rules/src.md',
+    'codex-cli': '.agentsmesh/rules/typescript.md',
     windsurf: '.agentsmesh/rules/typescript.md',
   };
   const expectedAgentCommandRef: Record<string, string> = {

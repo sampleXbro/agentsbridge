@@ -1,4 +1,4 @@
-import { basename, extname, join } from 'node:path';
+import { basename, extname, join, relative } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import type { ImportResult, McpServer } from '../../core/types.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
@@ -68,17 +68,18 @@ async function importRules(
   const files = (await readDirRecursive(join(projectRoot, CONTINUE_RULES_DIR))).filter((file) =>
     file.endsWith('.md'),
   );
+  const rulesRoot = join(projectRoot, CONTINUE_RULES_DIR);
   for (const srcPath of files) {
     const source = await readFileSafe(srcPath);
     if (!source) continue;
-    const name = basename(srcPath, '.md');
-    const destPath = join(projectRoot, CONTINUE_CANONICAL_RULES_DIR, `${name}.md`);
+    const relativePath = relative(rulesRoot, srcPath).replace(/\\/g, '/');
+    const destPath = join(projectRoot, CONTINUE_CANONICAL_RULES_DIR, relativePath);
     const { frontmatter, body } = parseFrontmatter(normalize(source, srcPath, destPath));
     const canonicalFrontmatter: Record<string, unknown> = {
       description:
         typeof frontmatter.description === 'string' ? frontmatter.description : undefined,
       globs: Array.isArray(frontmatter.globs) ? frontmatter.globs : undefined,
-      root: name === '_root',
+      root: relativePath === '_root.md',
     };
     if (canonicalFrontmatter.description === undefined) delete canonicalFrontmatter.description;
     if (canonicalFrontmatter.globs === undefined) delete canonicalFrontmatter.globs;
@@ -87,7 +88,7 @@ async function importRules(
     results.push({
       fromTool: 'continue',
       fromPath: srcPath,
-      toPath: `${CONTINUE_CANONICAL_RULES_DIR}/${name}.md`,
+      toPath: `${CONTINUE_CANONICAL_RULES_DIR}/${relativePath}`,
       feature: 'rules',
     });
   }
@@ -101,16 +102,22 @@ async function importCommands(
   const files = (await readDirRecursive(join(projectRoot, CONTINUE_PROMPTS_DIR))).filter((file) =>
     file.endsWith('.md'),
   );
+  const promptsRoot = join(projectRoot, CONTINUE_PROMPTS_DIR);
   for (const srcPath of files) {
     const source = await readFileSafe(srcPath);
     if (!source) continue;
-    const name = basename(srcPath, '.md');
-    const destPath = join(projectRoot, CONTINUE_CANONICAL_COMMANDS_DIR, `${name}.md`);
+    const relativePath = relative(promptsRoot, srcPath).replace(/\\/g, '/');
+    const destPath = join(projectRoot, CONTINUE_CANONICAL_COMMANDS_DIR, relativePath);
     const { frontmatter, body } = parseFrontmatter(normalize(source, srcPath, destPath));
     const command = parseCommandRuleFrontmatter(frontmatter, srcPath);
-    const commandName = command.name || name;
-
-    const commandPath = join(projectRoot, CONTINUE_CANONICAL_COMMANDS_DIR, `${commandName}.md`);
+    const commandName = command.name || basename(relativePath, '.md');
+    const relativeDir = relativePath.includes('/')
+      ? relativePath.slice(0, relativePath.lastIndexOf('/'))
+      : '';
+    const relativeCommandPath = relativeDir
+      ? `${relativeDir}/${commandName}.md`
+      : `${commandName}.md`;
+    const commandPath = join(projectRoot, CONTINUE_CANONICAL_COMMANDS_DIR, relativeCommandPath);
     const content = await serializeImportedCommandWithFallback(
       commandPath,
       {
@@ -125,7 +132,7 @@ async function importCommands(
     results.push({
       fromTool: 'continue',
       fromPath: srcPath,
-      toPath: `${CONTINUE_CANONICAL_COMMANDS_DIR}/${commandName}.md`,
+      toPath: `${CONTINUE_CANONICAL_COMMANDS_DIR}/${relativeCommandPath}`,
       feature: 'commands',
     });
   }

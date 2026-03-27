@@ -1,4 +1,4 @@
-import { basename, join } from 'node:path';
+import { join } from 'node:path';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
 import {
   serializeImportedCommandWithFallback,
@@ -9,14 +9,14 @@ import { toGlobsArray } from '../import/shared-import-helpers.js';
 import { CLINE_CANONICAL_RULES_DIR, CLINE_CANONICAL_COMMANDS_DIR } from './constants.js';
 
 export async function mapClineRuleFile(
-  srcPath: string,
+  relativePath: string,
   destDir: string,
   normalizeTo: (destinationFile: string) => string,
 ): Promise<ImportFileMapping | null> {
-  if (srcPath.includes('/workflows/')) return null;
-  const name = basename(srcPath, '.md');
-  if (name === '_root') return null;
-  const destPath = join(destDir, `${name}.md`);
+  if (relativePath.includes('/workflows/')) return null;
+  const relativeMdPath = relativePath.replace(/\\/g, '/');
+  if (relativeMdPath === '_root.md') return null;
+  const destPath = join(destDir, relativeMdPath);
   const { frontmatter, body } = parseFrontmatter(normalizeTo(destPath));
   const globs = toGlobsArray(frontmatter.paths ?? frontmatter.globs);
   const canonicalFm: Record<string, unknown> = {
@@ -29,19 +29,18 @@ export async function mapClineRuleFile(
   });
   return {
     destPath,
-    toPath: `${CLINE_CANONICAL_RULES_DIR}/${name}.md`,
+    toPath: `${CLINE_CANONICAL_RULES_DIR}/${relativeMdPath}`,
     feature: 'rules',
     content: await serializeImportedRuleWithFallback(destPath, canonicalFm, body),
   };
 }
 
 export async function mapClineWorkflowFile(
-  srcPath: string,
+  relativePath: string,
   destDir: string,
   normalizeTo: (destinationFile: string) => string,
 ): Promise<ImportFileMapping> {
-  const name = basename(srcPath, '.md');
-  const destPath = join(destDir, `${name}.md`);
+  const destPath = join(destDir, relativePath);
   const { frontmatter, body } = parseFrontmatter(normalizeTo(destPath));
   const hasFrontmatterDescription = Object.prototype.hasOwnProperty.call(
     frontmatter,
@@ -71,7 +70,7 @@ export async function mapClineWorkflowFile(
 
   return {
     destPath,
-    toPath: `${CLINE_CANONICAL_COMMANDS_DIR}/${name}.md`,
+    toPath: `${CLINE_CANONICAL_COMMANDS_DIR}/${relativePath}`,
     feature: 'commands',
     content: await serializeImportedCommandWithFallback(
       destPath,

@@ -1,6 +1,7 @@
-import { basename, join } from 'node:path';
+import { join } from 'node:path';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
 import {
+  serializeImportedAgentWithFallback,
   serializeImportedCommandWithFallback,
   serializeImportedRuleWithFallback,
 } from '../import/import-metadata.js';
@@ -13,13 +14,13 @@ import {
 } from './constants.js';
 
 export async function mapCursorRuleFile(
-  srcPath: string,
+  relativePath: string,
   destDir: string,
   normalizeTo: (destinationFile: string) => string,
   onRootRule: () => void,
 ): Promise<ImportFileMapping> {
-  const name = basename(srcPath, '.mdc');
-  const rawDestPath = join(destDir, `${name}.md`);
+  const rawRelativePath = relativePath.replace(/\.mdc$/i, '.md');
+  const rawDestPath = join(destDir, rawRelativePath);
   const initial = parseFrontmatter(normalizeTo(rawDestPath));
   const isRoot = initial.frontmatter.alwaysApply === true;
   const destPath = isRoot ? join(destDir, '_root.md') : rawDestPath;
@@ -29,26 +30,25 @@ export async function mapCursorRuleFile(
   delete (canonicalFm as Record<string, unknown>).alwaysApply;
   return {
     destPath,
-    toPath: `${CURSOR_CANONICAL_RULES_DIR}/${isRoot ? '_root' : name}.md`,
+    toPath: `${CURSOR_CANONICAL_RULES_DIR}/${isRoot ? '_root.md' : rawRelativePath}`,
     feature: 'rules',
     content: await serializeImportedRuleWithFallback(destPath, canonicalFm, body),
   };
 }
 
 export async function mapCursorCommandFile(
-  srcPath: string,
+  relativePath: string,
   destDir: string,
   normalizeTo: (destinationFile: string) => string,
 ): Promise<ImportFileMapping> {
-  const name = basename(srcPath, '.md');
-  const destPath = join(destDir, `${name}.md`);
+  const destPath = join(destDir, relativePath);
   const { frontmatter, body } = parseFrontmatter(normalizeTo(destPath));
   const fromCamel = toToolsArray(frontmatter.allowedTools);
   const allowedTools =
     fromCamel.length > 0 ? fromCamel : toToolsArray(frontmatter['allowed-tools']);
   return {
     destPath,
-    toPath: `${CURSOR_CANONICAL_COMMANDS_DIR}/${name}.md`,
+    toPath: `${CURSOR_CANONICAL_COMMANDS_DIR}/${relativePath}`,
     feature: 'commands',
     content: await serializeImportedCommandWithFallback(
       destPath,
@@ -65,17 +65,17 @@ export async function mapCursorCommandFile(
   };
 }
 
-export function mapCursorAgentFile(
-  srcPath: string,
+export async function mapCursorAgentFile(
+  relativePath: string,
   destDir: string,
   normalizeTo: (destinationFile: string) => string,
-): ImportFileMapping {
-  const name = basename(srcPath, '.md');
-  const destPath = join(destDir, `${name}.md`);
+): Promise<ImportFileMapping> {
+  const destPath = join(destDir, relativePath);
+  const { frontmatter, body } = parseFrontmatter(normalizeTo(destPath));
   return {
     destPath,
-    toPath: `${CURSOR_CANONICAL_AGENTS_DIR}/${name}.md`,
+    toPath: `${CURSOR_CANONICAL_AGENTS_DIR}/${relativePath}`,
     feature: 'agents',
-    content: normalizeTo(destPath),
+    content: await serializeImportedAgentWithFallback(destPath, frontmatter, body),
   };
 }

@@ -5,12 +5,15 @@
  * .agentsmesh/.
  */
 
-import { join, basename } from 'node:path';
+import { join } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
 import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/filesystem/fs.js';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
-import { serializeImportedRuleWithFallback } from '../import/import-metadata.js';
+import {
+  serializeImportedCommandWithFallback,
+  serializeImportedRuleWithFallback,
+} from '../import/import-metadata.js';
 import { importFileDirectory } from '../import/import-orchestrator.js';
 import { toGlobsArray } from '../import/shared-import-helpers.js';
 import {
@@ -22,7 +25,7 @@ import {
   COPILOT_CANONICAL_RULES_DIR,
   COPILOT_CANONICAL_COMMANDS_DIR,
 } from './constants.js';
-import { parseCommandPromptFrontmatter, serializeImportedCommand } from './command-prompt.js';
+import { parseCommandPromptFrontmatter } from './command-prompt.js';
 import { importHooks } from './hook-parser.js';
 import { importAgents, importSkills } from './agents-skills-helpers.js';
 
@@ -67,8 +70,8 @@ export async function importFromCopilot(projectRoot: string): Promise<ImportResu
       extensions: ['.instructions.md'],
       fromTool: 'copilot',
       normalize,
-      mapEntry: async ({ srcPath, normalizeTo }) => {
-        const destFileName = `${basename(srcPath, '.instructions.md')}.md`;
+      mapEntry: async ({ relativePath, normalizeTo }) => {
+        const destFileName = relativePath.replace(/\.instructions\.md$/i, '.md');
         const destPath = join(destDir, destFileName);
         const { frontmatter, body } = parseFrontmatter(normalizeTo(destPath));
         const globs = toGlobsArray(frontmatter.globs);
@@ -100,11 +103,11 @@ export async function importFromCopilot(projectRoot: string): Promise<ImportResu
       extensions: ['.instructions.md', '.md'],
       fromTool: 'copilot',
       normalize,
-      mapEntry: async ({ srcPath, normalizeTo }) => {
-        const base = srcPath.endsWith('.instructions.md')
-          ? basename(srcPath, '.instructions.md')
-          : basename(srcPath, '.md');
-        const destPath = join(destDir, `${base}.md`);
+      mapEntry: async ({ relativePath, normalizeTo }) => {
+        const relativeMdPath = relativePath.endsWith('.instructions.md')
+          ? relativePath.replace(/\.instructions\.md$/i, '.md')
+          : relativePath;
+        const destPath = join(destDir, relativeMdPath);
         const { frontmatter, body } = parseFrontmatter(normalizeTo(destPath));
         const globs = toGlobsArray(
           frontmatter.applyTo !== undefined ? frontmatter.applyTo : frontmatter.globs,
@@ -120,7 +123,7 @@ export async function importFromCopilot(projectRoot: string): Promise<ImportResu
         });
         return {
           destPath,
-          toPath: `${COPILOT_CANONICAL_RULES_DIR}/${base}.md`,
+          toPath: `${COPILOT_CANONICAL_RULES_DIR}/${relativeMdPath}`,
           feature: 'rules',
           content: await serializeImportedRuleWithFallback(destPath, canonicalFm, body),
         };
@@ -150,16 +153,33 @@ async function importCommands(
       extensions: ['.prompt.md'],
       fromTool: 'copilot',
       normalize,
-      mapEntry: ({ srcPath, content }) => {
-        const previewDest = join(destDir, `${basename(srcPath, '.prompt.md')}.md`);
+      mapEntry: async ({ srcPath, relativePath, content }) => {
+        const previewRelativePath = relativePath.replace(/\.prompt\.md$/i, '.md');
+        const previewDest = join(destDir, previewRelativePath);
         const { frontmatter, body } = parseFrontmatter(normalize(content, srcPath, previewDest));
         const command = parseCommandPromptFrontmatter(frontmatter, srcPath);
-        const destPath = join(destDir, `${command.name}.md`);
+        const relDir = previewRelativePath.includes('/')
+          ? previewRelativePath.slice(0, previewRelativePath.lastIndexOf('/'))
+          : '';
+        const fileName = `${command.name}.md`;
+        const relativeCommandPath = relDir ? `${relDir}/${fileName}` : fileName;
+        const destPath = join(destDir, relativeCommandPath);
         return {
           destPath,
-          toPath: `${COPILOT_CANONICAL_COMMANDS_DIR}/${command.name}.md`,
+          toPath: `${COPILOT_CANONICAL_COMMANDS_DIR}/${relativeCommandPath}`,
           feature: 'commands',
-          content: serializeImportedCommand(command, body),
+          content: await serializeImportedCommandWithFallback(
+            destPath,
+            {
+              description: command.description,
+              hasDescription: Object.prototype.hasOwnProperty.call(frontmatter, 'description'),
+              allowedTools: command.allowedTools,
+              hasAllowedTools:
+                Object.prototype.hasOwnProperty.call(frontmatter, 'tools') ||
+                Object.prototype.hasOwnProperty.call(frontmatter, 'x-agentsmesh-allowed-tools'),
+            },
+            body,
+          ),
         };
       },
     })),

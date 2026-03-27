@@ -67,11 +67,11 @@ export function parseCommandSkillFrontmatter(
 }
 
 export function serializeImportedCommand(command: ParsedCommandSkill, body: string): string {
-  const frontmatter: Record<string, unknown> = {
-    description: command.description || undefined,
-    'allowed-tools': command.allowedTools.length > 0 ? command.allowedTools : undefined,
-  };
-  if (frontmatter.description === undefined) delete frontmatter.description;
-  if (frontmatter['allowed-tools'] === undefined) delete frontmatter['allowed-tools'];
-  return serializeFrontmatter(frontmatter, body.trim() || '');
+  return serializeFrontmatter(
+    {
+      description: command.description,
+      'allowed-tools': command.allowedTools,
+    },
+    body.trim() || '',
+  );
 }

@@ -120,8 +120,8 @@ export function parseProjectedAgentSkillFrontmatter(
 export function serializeImportedAgent(agent: ParsedProjectedAgent, body: string): string {
   const frontmatter: Record<string, unknown> = {
     name: agent.name,
-    description: agent.description || undefined,
-    tools: agent.tools.length > 0 ? agent.tools : undefined,
+    description: agent.description,
+    tools: agent.tools,
     disallowedTools: agent.disallowedTools.length > 0 ? agent.disallowedTools : undefined,
     model: agent.model || undefined,
     permissionMode: agent.permissionMode || undefined,

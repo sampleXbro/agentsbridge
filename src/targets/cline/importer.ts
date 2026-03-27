@@ -152,9 +152,9 @@ export async function importFromCline(projectRoot: string): Promise<ImportResult
         extensions: ['.md'],
         fromTool: 'cline',
         normalize,
-        mapEntry: async ({ srcPath, normalizeTo }) => {
+        mapEntry: async ({ srcPath, relativePath, normalizeTo }) => {
           if (srcPath === rootSourcePath) return null;
-          return mapClineRuleFile(srcPath, destRulesDir, normalizeTo);
+          return mapClineRuleFile(relativePath, destRulesDir, normalizeTo);
         },
       })),
     );
@@ -195,8 +195,8 @@ export async function importFromCline(projectRoot: string): Promise<ImportResult
         extensions: ['.md'],
         fromTool: 'cline',
         normalize,
-        mapEntry: ({ srcPath, normalizeTo }) =>
-          mapClineWorkflowFile(srcPath, destCommandsDir, normalizeTo),
+        mapEntry: ({ relativePath, normalizeTo }) =>
+          mapClineWorkflowFile(relativePath, destCommandsDir, normalizeTo),
       })),
     );
   }

@@ -1,4 +1,4 @@
-import { dirname } from 'node:path';
+import { dirname, relative } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
 import {
   readDirRecursive,
@@ -16,6 +16,7 @@ export interface ImportFileMapping {
 
 export interface ImportFileEntry {
   srcPath: string;
+  relativePath: string;
   content: string;
   normalizeTo: (destinationFile: string, sourceContent?: string) => string;
 }
@@ -43,9 +44,11 @@ export async function importFileDirectory(opts: ImportFileOptions): Promise<Impo
   for (const srcPath of matchedFiles) {
     const content = await readFileSafe(srcPath);
     if (!content) continue;
+    const relativePath = relative(opts.srcDir, srcPath).replace(/\\/g, '/');
 
     const mapping = await opts.mapEntry({
       srcPath,
+      relativePath,
       content,
       normalizeTo: (destinationFile, sourceContent = content) =>
         opts.normalize(sourceContent, srcPath, destinationFile),

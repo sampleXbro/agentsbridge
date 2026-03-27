@@ -2,7 +2,7 @@
  * Copilot agents and skills import helpers.
  */
 
-import { join, basename, dirname } from 'node:path';
+import { join, basename, dirname, relative } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
 import {
   readFileSafe,
@@ -10,7 +10,11 @@ import {
   writeFileAtomic,
   mkdirp,
 } from '../../utils/filesystem/fs.js';
-import { parseFrontmatter, serializeFrontmatter } from '../../utils/text/markdown.js';
+import { parseFrontmatter } from '../../utils/text/markdown.js';
+import {
+  serializeImportedAgentWithFallback,
+  serializeImportedSkillWithFallback,
+} from '../import/import-metadata.js';
 import {
   COPILOT_TARGET,
   COPILOT_AGENTS_DIR,
@@ -40,38 +44,25 @@ export async function importAgents(
   for (const srcPath of agentFiles) {
     const content = await readFileSafe(srcPath);
     if (!content) continue;
-    const base = basename(srcPath, '.agent.md');
-    await mkdirp(destDir);
-    const destPath = join(destDir, `${base}.md`);
+    const relativePath = relative(agentsDir, srcPath).replace(/\\/g, '/');
+    const relativeMdPath = relativePath.replace(/\.agent\.md$/i, '.md');
+    const base = basename(relativeMdPath, '.md');
+    const destPath = join(destDir, relativeMdPath);
+    await mkdirp(dirname(destPath));
     const { frontmatter, body } = parseFrontmatter(normalize(content, srcPath, destPath));
-    const canonicalFm: Record<string, unknown> = {
-      name: typeof frontmatter.name === 'string' ? frontmatter.name : base,
-      description:
-        typeof frontmatter.description === 'string' ? frontmatter.description : undefined,
-      tools: Array.isArray(frontmatter.tools)
-        ? frontmatter.tools.filter((x): x is string => typeof x === 'string')
-        : typeof frontmatter.tools === 'string'
-          ? [frontmatter.tools]
-          : undefined,
-      model: typeof frontmatter.model === 'string' ? frontmatter.model : undefined,
-      mcpServers: Array.isArray(frontmatter['mcp-servers'])
-        ? frontmatter['mcp-servers'].filter((x): x is string => typeof x === 'string')
-        : Array.isArray(frontmatter.mcpServers)
-          ? frontmatter.mcpServers.filter((x): x is string => typeof x === 'string')
-          : undefined,
-      skills: Array.isArray(frontmatter.skills)
-        ? frontmatter.skills.filter((x): x is string => typeof x === 'string')
-        : undefined,
-    };
-    Object.keys(canonicalFm).forEach((k) => {
-      if (canonicalFm[k] === undefined) delete canonicalFm[k];
-    });
-    const outContent = serializeFrontmatter(canonicalFm, body.trim());
+    const outContent = await serializeImportedAgentWithFallback(
+      destPath,
+      {
+        ...frontmatter,
+        name: typeof frontmatter.name === 'string' ? frontmatter.name : base,
+      },
+      body,
+    );
     await writeFileAtomic(destPath, outContent);
     results.push({
       fromTool: COPILOT_TARGET,
       fromPath: srcPath,
-      toPath: `${COPILOT_CANONICAL_AGENTS_DIR}/${base}.md`,
+      toPath: `${COPILOT_CANONICAL_AGENTS_DIR}/${relativeMdPath}`,
       feature: 'agents',
     });
   }
@@ -96,7 +87,18 @@ export async function importSkills(
       const relPath = absPath.slice(dirname(skillMdPath).length + 1).replace(/\\/g, '/');
       const destPath = join(destSkillDir, relPath);
       await mkdirp(dirname(destPath));
-      await writeFileAtomic(destPath, normalize(fileContent, absPath, destPath));
+      const normalized = normalize(fileContent, absPath, destPath);
+      const parsed = relPath === 'SKILL.md' ? parseFrontmatter(normalized) : null;
+      await writeFileAtomic(
+        destPath,
+        relPath === 'SKILL.md'
+          ? await serializeImportedSkillWithFallback(
+              destPath,
+              { ...(parsed?.frontmatter ?? {}), name: skillName },
+              parsed?.body ?? '',
+            )
+          : normalized,
+      );
       results.push({
         fromTool: COPILOT_TARGET,
         fromPath: absPath,

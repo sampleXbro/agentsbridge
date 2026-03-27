@@ -1,10 +1,11 @@
-import { basename, join } from 'node:path';
+import { join } from 'node:path';
 import type { ImportResult, McpServer } from '../../core/types.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
 import { readFileSafe, writeFileAtomic } from '../../utils/filesystem/fs.js';
-import { parseFrontmatter, serializeFrontmatter } from '../../utils/text/markdown.js';
+import { parseFrontmatter } from '../../utils/text/markdown.js';
 import { importEmbeddedSkills } from '../import/embedded-skill.js';
 import {
+  serializeImportedAgentWithFallback,
   serializeImportedCommandWithFallback,
   serializeImportedRuleWithFallback,
 } from '../import/import-metadata.js';
@@ -110,10 +111,8 @@ async function importNonRootRules(
       extensions: ['.md'],
       fromTool: 'junie',
       normalize,
-      mapEntry: async ({ srcPath, normalizeTo }) => {
-        const name = basename(srcPath, '.md');
-        if (!name) return null;
-        const destPath = join(destDir, `${name}.md`);
+      mapEntry: async ({ relativePath, normalizeTo }) => {
+        const destPath = join(destDir, relativePath);
         const { frontmatter, body } = parseFrontmatter(normalizeTo(destPath));
         const output = await serializeImportedRuleWithFallback(
           destPath,
@@ -127,7 +126,7 @@ async function importNonRootRules(
         );
         return {
           destPath,
-          toPath: `${JUNIE_CANONICAL_RULES_DIR}/${name}.md`,
+          toPath: `${JUNIE_CANONICAL_RULES_DIR}/${relativePath}`,
           feature: 'rules',
           content: output,
         };
@@ -170,10 +169,8 @@ async function importCommands(
       extensions: ['.md'],
       fromTool: 'junie',
       normalize,
-      mapEntry: async ({ srcPath, normalizeTo }) => {
-        const name = basename(srcPath, '.md');
-        if (!name) return null;
-        const destPath = join(destDir, `${name}.md`);
+      mapEntry: async ({ relativePath, normalizeTo }) => {
+        const destPath = join(destDir, relativePath);
         const { frontmatter, body } = parseFrontmatter(normalizeTo(destPath));
         const normalized = await serializeImportedCommandWithFallback(
           destPath,
@@ -188,7 +185,7 @@ async function importCommands(
         );
         return {
           destPath,
-          toPath: `${JUNIE_CANONICAL_COMMANDS_DIR}/${name}.md`,
+          toPath: `${JUNIE_CANONICAL_COMMANDS_DIR}/${relativePath}`,
           feature: 'commands',
           content: normalized,
         };
@@ -211,16 +208,14 @@ async function importAgents(
       extensions: ['.md'],
       fromTool: 'junie',
       normalize,
-      mapEntry: ({ srcPath, normalizeTo }) => {
-        const name = basename(srcPath, '.md');
-        if (!name) return null;
-        const destPath = join(destDir, `${name}.md`);
+      mapEntry: async ({ relativePath, normalizeTo }) => {
+        const destPath = join(destDir, relativePath);
         const { frontmatter, body } = parseFrontmatter(normalizeTo(destPath));
         return {
           destPath,
-          toPath: `${JUNIE_CANONICAL_AGENTS_DIR}/${name}.md`,
+          toPath: `${JUNIE_CANONICAL_AGENTS_DIR}/${relativePath}`,
           feature: 'agents',
-          content: serializeFrontmatter(frontmatter, body.trim() || ''),
+          content: await serializeImportedAgentWithFallback(destPath, frontmatter, body),
         };
       },
     })),

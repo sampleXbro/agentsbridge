@@ -14,7 +14,11 @@ import {
   mkdirp,
 } from '../../utils/filesystem/fs.js';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
-import { serializeImportedRuleWithFallback } from '../import/import-metadata.js';
+import {
+  serializeImportedAgentWithFallback,
+  serializeImportedRuleWithFallback,
+  serializeImportedSkillWithFallback,
+} from '../import/import-metadata.js';
 import { importFileDirectory } from '../import/import-orchestrator.js';
 import {
   parseProjectedAgentSkillFrontmatter,
@@ -109,7 +113,8 @@ export async function importFromGemini(projectRoot: string): Promise<ImportResul
       extensions: ['.md'],
       fromTool: 'gemini-cli',
       normalize,
-      mapEntry: ({ srcPath, normalizeTo }) => mapGeminiRuleFile(srcPath, rulesDir, normalizeTo),
+      mapEntry: ({ relativePath, normalizeTo }) =>
+        mapGeminiRuleFile(relativePath, rulesDir, normalizeTo),
     })),
   );
 
@@ -121,8 +126,8 @@ export async function importFromGemini(projectRoot: string): Promise<ImportResul
       extensions: ['.md', '.toml'],
       fromTool: 'gemini-cli',
       normalize,
-      mapEntry: ({ srcPath, normalizeTo }) =>
-        mapGeminiCommandFile(srcPath, commandsDir, normalizeTo, geminiCommandsPath),
+      mapEntry: ({ relativePath, normalizeTo }) =>
+        mapGeminiCommandFile(relativePath, commandsDir, normalizeTo),
     })),
   );
 
@@ -155,7 +160,11 @@ export async function importFromGemini(projectRoot: string): Promise<ImportResul
     const normalized = normalize(content, srcPath, destPath);
     const skillDir = join(projectRoot, GEMINI_CANONICAL_SKILLS_DIR, skillName);
     await mkdirp(skillDir);
-    await writeFileAtomic(destPath, normalized);
+    const { frontmatter, body } = parseFrontmatter(normalized);
+    await writeFileAtomic(
+      destPath,
+      await serializeImportedSkillWithFallback(destPath, { ...frontmatter, name: skillName }, body),
+    );
     results.push({
       fromTool: 'gemini-cli',
       fromPath: srcPath,
@@ -184,37 +193,43 @@ export async function importFromGemini(projectRoot: string): Promise<ImportResul
   try {
     const agentFiles = await readDirRecursive(geminiAgentsPath);
     const agentMdFiles = agentFiles.filter((f) => f.endsWith('.md'));
-    const { serializeFrontmatter } = await import('../../utils/text/markdown.js');
     for (const srcPath of agentMdFiles) {
       const content = await readFileSafe(srcPath);
       if (!content) continue;
       const { frontmatter, body } = parseFrontmatter(content);
-      const name =
-        typeof frontmatter.name === 'string' ? frontmatter.name : basename(srcPath, '.md');
+      const relPath = relative(geminiAgentsPath, srcPath).replace(/\\/g, '/');
+      const relativeMdPath = relPath.replace(/\.md$/i, '.md');
       const agentsDir = join(projectRoot, GEMINI_CANONICAL_AGENTS_DIR);
       await mkdirp(agentsDir);
-      const destPath = join(agentsDir, `${name}.md`);
+      const destPath = join(agentsDir, relativeMdPath);
       const normalizedBody = normalize(body, srcPath, destPath);
-      const outFm: Record<string, unknown> = { name };
-      if (typeof frontmatter.description === 'string') outFm.description = frontmatter.description;
-      if (Array.isArray(frontmatter.tools) && frontmatter.tools.length > 0)
-        outFm.tools = frontmatter.tools;
-      if (typeof frontmatter.model === 'string') outFm.model = frontmatter.model;
-      const maxTurns = frontmatter.maxTurns ?? frontmatter['max-turns'] ?? frontmatter.max_turns;
-      if (typeof maxTurns === 'number') outFm.maxTurns = maxTurns;
-      const pm =
-        frontmatter.permissionMode ?? frontmatter['permission-mode'] ?? frontmatter.permission_mode;
-      if (typeof pm === 'string') outFm.permissionMode = pm;
-      const dt =
-        frontmatter.disallowedTools ??
-        frontmatter['disallowed-tools'] ??
-        frontmatter.disallowed_tools;
-      if (Array.isArray(dt) && dt.length > 0) outFm.disallowedTools = dt;
-      await writeFileAtomic(destPath, serializeFrontmatter(outFm, normalizedBody.trim() || ''));
+      await writeFileAtomic(
+        destPath,
+        await serializeImportedAgentWithFallback(
+          destPath,
+          {
+            ...frontmatter,
+            name:
+              typeof frontmatter.name === 'string'
+                ? frontmatter.name
+                : basename(relativeMdPath, '.md'),
+            maxTurns: frontmatter.maxTurns ?? frontmatter['max-turns'] ?? frontmatter.max_turns,
+            permissionMode:
+              frontmatter.permissionMode ??
+              frontmatter['permission-mode'] ??
+              frontmatter.permission_mode,
+            disallowedTools:
+              frontmatter.disallowedTools ??
+              frontmatter['disallowed-tools'] ??
+              frontmatter.disallowed_tools,
+          },
+          normalizedBody,
+        ),
+      );
       results.push({
         fromTool: 'gemini-cli',
         fromPath: srcPath,
-        toPath: `${GEMINI_CANONICAL_AGENTS_DIR}/${name}.md`,
+        toPath: `${GEMINI_CANONICAL_AGENTS_DIR}/${relativeMdPath}`,
         feature: 'agents',
       });
     }

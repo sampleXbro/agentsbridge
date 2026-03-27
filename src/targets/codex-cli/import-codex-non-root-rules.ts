@@ -2,7 +2,7 @@
  * Import `.codex/rules/*.md` and agentsmesh-embedded `.codex/rules/*.rules` into canonical rules.
  */
 
-import { join, basename } from 'node:path';
+import { join, relative } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
 import {
   readFileSafe,
@@ -28,8 +28,8 @@ export async function importCodexNonRootRuleFiles(
     for (const srcPath of mdFiles) {
       const content = await readFileSafe(srcPath);
       if (!content) continue;
-      const slug = basename(srcPath, '.md');
-      const destPath = join(destDir, `${slug}.md`);
+      const relativePath = relative(codexRulesPath, srcPath).replace(/\\/g, '/');
+      const destPath = join(destDir, relativePath);
       const { frontmatter, body } = parseFrontmatter(normalize(content, srcPath, destPath));
       await mkdirp(destDir);
       const outFm = frontmatter.root === true ? frontmatter : { ...frontmatter, root: false };
@@ -38,7 +38,7 @@ export async function importCodexNonRootRuleFiles(
       results.push({
         fromTool: CODEX_TARGET,
         fromPath: srcPath,
-        toPath: `${CODEX_CANONICAL_RULES_DIR}/${slug}.md`,
+        toPath: `${CODEX_CANONICAL_RULES_DIR}/${relativePath}`,
         feature: 'rules',
       });
     }
@@ -46,8 +46,10 @@ export async function importCodexNonRootRuleFiles(
     for (const srcPath of starlarkFiles) {
       const raw = await readFileSafe(srcPath);
       if (!raw) continue;
-      const slug = basename(srcPath, '.rules');
-      const destPath = join(destDir, `${slug}.md`);
+      const relativePath = relative(codexRulesPath, srcPath)
+        .replace(/\\/g, '/')
+        .replace(/\.rules$/i, '.md');
+      const destPath = join(destDir, relativePath);
       await mkdirp(destDir);
       const embedded = tryParseEmbeddedCanonicalFromCodexRules(raw);
       if (embedded) {
@@ -77,7 +79,7 @@ export async function importCodexNonRootRuleFiles(
       results.push({
         fromTool: CODEX_TARGET,
         fromPath: srcPath,
-        toPath: `${CODEX_CANONICAL_RULES_DIR}/${slug}.md`,
+        toPath: `${CODEX_CANONICAL_RULES_DIR}/${relativePath}`,
         feature: 'rules',
       });
     }

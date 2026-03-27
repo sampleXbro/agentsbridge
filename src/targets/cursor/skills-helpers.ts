@@ -10,6 +10,8 @@ import {
   writeFileAtomic,
   mkdirp,
 } from '../../utils/filesystem/fs.js';
+import { parseFrontmatter } from '../../utils/text/markdown.js';
+import { serializeImportedSkillWithFallback } from '../import/import-metadata.js';
 import { CURSOR_SKILLS_DIR, CURSOR_CANONICAL_SKILLS_DIR } from './constants.js';
 
 /**
@@ -45,7 +47,18 @@ export async function importSkills(
       const relPath = relative(skillDir, filePath);
       const destPath = join(destSkillDir, relPath);
       await mkdirp(dirname(destPath));
-      await writeFileAtomic(destPath, normalize(content, filePath, destPath));
+      const normalized = normalize(content, filePath, destPath);
+      const parsed = relPath === 'SKILL.md' ? parseFrontmatter(normalized) : null;
+      await writeFileAtomic(
+        destPath,
+        relPath === 'SKILL.md'
+          ? await serializeImportedSkillWithFallback(
+              destPath,
+              { ...(parsed?.frontmatter ?? {}), name: skillName },
+              parsed?.body ?? '',
+            )
+          : normalized,
+      );
       results.push({
         fromTool: 'cursor',
         fromPath: filePath,
@@ -64,7 +77,12 @@ export async function importSkills(
     const destSkillDir = join(destBase, name);
     await mkdirp(destSkillDir);
     const destPath = join(destSkillDir, 'SKILL.md');
-    await writeFileAtomic(destPath, normalize(content, srcPath, destPath));
+    const normalized = normalize(content, srcPath, destPath);
+    const { frontmatter, body } = parseFrontmatter(normalized);
+    await writeFileAtomic(
+      destPath,
+      await serializeImportedSkillWithFallback(destPath, { ...frontmatter, name }, body),
+    );
     results.push({
       fromTool: 'cursor',
       fromPath: srcPath,

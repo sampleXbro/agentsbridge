@@ -43,7 +43,7 @@ describe('importFromCursor — rules', () => {
     expect(content).toContain('root: false');
   });
 
-  it('recursively imports nested .cursor/rules/**/*.mdc files', async () => {
+  it('recursively imports nested .cursor/rules/**/*.mdc files preserving directories', async () => {
     mkdirSync(join(TEST_DIR, '.cursor', 'rules', 'frontend'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, '.cursor', 'rules', 'frontend', 'react.mdc'),
@@ -53,10 +53,13 @@ describe('importFromCursor — rules', () => {
     expect(results).toHaveLength(1);
     expect(results[0]).toMatchObject({
       fromTool: 'cursor',
-      toPath: '.agentsmesh/rules/react.md',
+      toPath: '.agentsmesh/rules/frontend/react.md',
       feature: 'rules',
     });
-    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'react.md'), 'utf-8');
+    const content = readFileSync(
+      join(TEST_DIR, '.agentsmesh', 'rules', 'frontend', 'react.md'),
+      'utf-8',
+    );
     expect(content).toContain('description: React rules');
     expect(content).toContain('Use server components carefully.');
     expect(content).toContain('root: false');
@@ -117,6 +120,18 @@ describe('importFromCursor — commands', () => {
     expect(paths).toEqual(['.agentsmesh/commands/deploy.md', '.agentsmesh/commands/review.md']);
   });
 
+  it('adds placeholder command frontmatter when Cursor command files have body only', async () => {
+    mkdirSync(join(TEST_DIR, '.cursor', 'commands'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.cursor', 'commands', 'review.md'), 'Review changes.\n');
+
+    await importFromCursor(TEST_DIR);
+
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'), 'utf-8');
+    expect(content).toContain('description: ""');
+    expect(content).toContain('allowed-tools: []');
+    expect(content).toContain('Review changes.');
+  });
+
   it('preserves existing canonical command metadata when importing body-only generated commands', async () => {
     mkdirSync(join(TEST_DIR, '.agentsmesh', 'commands'), { recursive: true });
     writeFileSync(
@@ -159,6 +174,19 @@ describe('importFromCursor — agents', () => {
     expect(content).toContain('name: code-reviewer');
     expect(content).toContain('You are an expert reviewer.');
   });
+
+  it('adds placeholder agent frontmatter when Cursor agents have body only', async () => {
+    mkdirSync(join(TEST_DIR, '.cursor', 'agents'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.cursor', 'agents', 'reviewer.md'), 'Review risky changes.\n');
+
+    await importFromCursor(TEST_DIR);
+
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'), 'utf-8');
+    expect(content).toContain('name: reviewer');
+    expect(content).toContain('description: ""');
+    expect(content).toContain('tools: []');
+    expect(content).toContain('Review risky changes.');
+  });
 });
 
 describe('importFromCursor — skills (flat format)', () => {
@@ -195,6 +223,21 @@ describe('importFromCursor — skills (flat format)', () => {
       '.agentsmesh/skills/api-gen/SKILL.md',
       '.agentsmesh/skills/tdd/SKILL.md',
     ]);
+  });
+
+  it('adds placeholder skill frontmatter when Cursor skills have body only', async () => {
+    mkdirSync(join(TEST_DIR, '.cursor', 'skills'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.cursor', 'skills', 'qa.md'), 'Run QA.\n');
+
+    await importFromCursor(TEST_DIR);
+
+    const content = readFileSync(
+      join(TEST_DIR, '.agentsmesh', 'skills', 'qa', 'SKILL.md'),
+      'utf-8',
+    );
+    expect(content).toContain('name: qa');
+    expect(content).toContain('description: ""');
+    expect(content).toContain('Run QA.');
   });
 });
 

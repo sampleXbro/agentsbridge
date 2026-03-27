@@ -2,7 +2,7 @@
  * Windsurf workflows and skills import helpers.
  */
 
-import { join, basename } from 'node:path';
+import { join, relative } from 'node:path';
 import { readdir } from 'node:fs/promises';
 import type { ImportResult } from '../../core/types.js';
 import {
@@ -12,7 +12,10 @@ import {
   mkdirp,
 } from '../../utils/filesystem/fs.js';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
-import { serializeImportedCommandWithFallback } from '../import/import-metadata.js';
+import {
+  serializeImportedCommandWithFallback,
+  serializeImportedSkillWithFallback,
+} from '../import/import-metadata.js';
 import {
   parseProjectedAgentSkillFrontmatter,
   serializeImportedAgent,
@@ -55,9 +58,9 @@ export async function importWorkflows(
   for (const srcPath of workflowMdFiles) {
     const content = await readFileSafe(srcPath);
     if (!content) continue;
-    const name = basename(srcPath, '.md');
+    const relativePath = relative(workflowsDir, srcPath).replace(/\\/g, '/');
     await mkdirp(destCommandsDir);
-    const destPath = join(destCommandsDir, `${name}.md`);
+    const destPath = join(destCommandsDir, relativePath);
     const normalized = normalize(content, srcPath, destPath);
     const { frontmatter, body } = parseFrontmatter(normalized);
     const outContent = await serializeImportedCommandWithFallback(
@@ -79,7 +82,7 @@ export async function importWorkflows(
     results.push({
       fromTool: WINDSURF_TARGET,
       fromPath: srcPath,
-      toPath: `${WINDSURF_CANONICAL_COMMANDS_DIR}/${name}.md`,
+      toPath: `${WINDSURF_CANONICAL_COMMANDS_DIR}/${relativePath}`,
       feature: 'commands',
     });
   }
@@ -122,7 +125,15 @@ export async function importSkills(
       const destSkillPath = join(destSkillDir, 'SKILL.md');
       const normalized = normalize(skillContent, skillMdPath, destSkillPath);
       await mkdirp(destSkillDir);
-      await writeFileAtomic(destSkillPath, normalized);
+      const { frontmatter, body } = parseFrontmatter(normalized);
+      await writeFileAtomic(
+        destSkillPath,
+        await serializeImportedSkillWithFallback(
+          destSkillPath,
+          { ...frontmatter, name: ent.name },
+          body,
+        ),
+      );
       results.push({
         fromTool: WINDSURF_TARGET,
         fromPath: skillMdPath,

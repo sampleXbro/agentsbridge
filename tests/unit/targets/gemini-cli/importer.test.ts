@@ -65,7 +65,7 @@ describe('importFromGemini', () => {
     expect(content).toContain('Run code review');
   });
 
-  it('imports nested .gemini/commands/<ns>/*.toml into canonical commands with `:` namespaces', async () => {
+  it('imports nested .gemini/commands/<ns>/*.toml preserving directories', async () => {
     mkdirSync(join(TEST_DIR, GEMINI_COMMANDS_DIR, 'git'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, GEMINI_COMMANDS_DIR, 'git', 'commit.toml'),
@@ -75,11 +75,11 @@ describe('importFromGemini', () => {
     );
 
     const results = await importFromGemini(TEST_DIR);
-    const cmdResult = results.find((r) => r.toPath === '.agentsmesh/commands/git:commit.md');
+    const cmdResult = results.find((r) => r.toPath === '.agentsmesh/commands/git/commit.md');
     expect(cmdResult).toBeDefined();
 
     const content = readFileSync(
-      join(TEST_DIR, '.agentsmesh', 'commands', 'git:commit.md'),
+      join(TEST_DIR, '.agentsmesh', 'commands', 'git', 'commit.md'),
       'utf-8',
     );
     expect(content).toContain('description');
@@ -266,6 +266,22 @@ describe('importFromGemini', () => {
       'utf-8',
     );
     expect(content).toContain('QA checklist');
+    expect(content).toContain('Run QA steps.');
+  });
+
+  it('adds placeholder skill frontmatter when Gemini skills have body only', async () => {
+    const skillDir = join(TEST_DIR, GEMINI_SKILLS_DIR, 'qa');
+    mkdirSync(skillDir, { recursive: true });
+    writeFileSync(join(skillDir, 'SKILL.md'), 'Run QA steps.\n');
+
+    await importFromGemini(TEST_DIR);
+
+    const content = readFileSync(
+      join(TEST_DIR, '.agentsmesh', 'skills', 'qa', 'SKILL.md'),
+      'utf-8',
+    );
+    expect(content).toContain('name: qa');
+    expect(content).toContain('description: ""');
     expect(content).toContain('Run QA steps.');
   });
 

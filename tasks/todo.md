@@ -1,5 +1,65 @@
 # Architecture alignment review
 
+# Import placeholder metadata preservation
+
+- [x] Inspect the shared import pipeline and confirm where canonical metadata headers are currently dropped for imported rules, commands, agents, and skills
+- [x] Add failing regression tests that require placeholder frontmatter on imported canonical files and exact preservation of supporting-file paths
+- [x] Implement shared import serialization so imported canonical files keep their relative structure and synthesize editable placeholder headers when source files omit metadata
+- [x] Run targeted verification plus post-feature QA, then append review notes
+
+## Review (Import placeholder metadata preservation)
+
+- Changes implemented:
+  - added shared canonical import serializers for commands, rules, skills, and agents so body-only imports now get editable placeholder frontmatter instead of raw body-only files
+  - updated `importFileDirectory` to pass source-relative paths and rewired target importers/mappers to preserve nested rule/command/agent paths instead of flattening by basename
+  - applied the placeholder skill/agent serialization across shared embedded-skill imports and the target-specific Claude, Cursor, Copilot, Gemini, Cline, Windsurf, Junie, Continue, and Codex import paths
+  - updated Copilot rule expectations to the new placeholder rule contract (`globs: []` for non-root rules with no scope metadata)
+- Tests added:
+  - `tests/unit/targets/import-metadata.test.ts`
+  - extended `tests/unit/targets/import-orchestrator.test.ts`
+  - extended `tests/unit/targets/cursor/importer.test.ts`
+  - extended `tests/unit/targets/gemini-cli/importer.test.ts`
+- Verification:
+  - `pnpm vitest run tests/unit/targets/import-metadata.test.ts tests/unit/targets/import-orchestrator.test.ts tests/unit/targets/cursor/importer.test.ts tests/unit/targets/gemini-cli/importer.test.ts`
+  - `pnpm vitest run tests/unit/targets/claude-code/importer.test.ts tests/unit/targets/cline/importer.test.ts tests/unit/targets/copilot/importer.test.ts tests/unit/targets/windsurf/importer.test.ts tests/unit/targets/codex-cli/importer.test.ts tests/unit/targets/junie/importer.test.ts tests/unit/targets/continue/importer.test.ts`
+  - `pnpm lint`
+  - `pnpm typecheck`
+  - `pnpm build`
+  - `pnpm vitest run tests/integration/import.integration.test.ts`
+- QA Report — Import placeholder metadata preservation
+
+### Acceptance Criteria
+
+| Criterion | Covered by test? | Status |
+| --- | --- | --- |
+| Imported commands without source frontmatter get editable placeholder headers | `tests/unit/targets/import-metadata.test.ts`, `tests/unit/targets/cursor/importer.test.ts`, `tests/unit/targets/gemini-cli/importer.test.ts` | OK |
+| Imported skills without source frontmatter get editable placeholder headers | `tests/unit/targets/import-metadata.test.ts`, `tests/unit/targets/cursor/importer.test.ts`, `tests/unit/targets/gemini-cli/importer.test.ts`, `tests/unit/targets/copilot/importer.test.ts` | OK |
+| Imported agents without source frontmatter get editable placeholder headers | `tests/unit/targets/import-metadata.test.ts`, `tests/unit/targets/cursor/importer.test.ts`, `tests/unit/targets/copilot/importer.test.ts` | OK |
+| Imported rules preserve canonical metadata shape while adding editable placeholders | `tests/unit/targets/import-metadata.test.ts`, `tests/unit/targets/copilot/importer.test.ts`, `tests/unit/targets/continue/importer.test.ts` | OK |
+| Nested import file structure is preserved instead of flattened | `tests/unit/targets/import-orchestrator.test.ts`, `tests/unit/targets/cursor/importer.test.ts`, `tests/unit/targets/gemini-cli/importer.test.ts` | OK |
+| Dist-backed CLI import/generate flow still works after importer changes | `tests/integration/import.integration.test.ts` | OK |
+
+### Edge Cases
+
+| Scenario | Covered? | Test location |
+| --- | --- | --- |
+| Body-only command import gets placeholders | ✓ | `tests/unit/targets/import-metadata.test.ts` |
+| Body-only skill import gets placeholders | ✓ | `tests/unit/targets/cursor/importer.test.ts`, `tests/unit/targets/gemini-cli/importer.test.ts` |
+| Body-only agent import gets placeholders | ✓ | `tests/unit/targets/cursor/importer.test.ts` |
+| Existing canonical skill metadata survives a body-only re-import | ✓ | `tests/unit/targets/import-metadata.test.ts` |
+| Nested command/rule paths survive import | ✓ | `tests/unit/targets/import-orchestrator.test.ts`, `tests/unit/targets/gemini-cli/importer.test.ts`, `tests/unit/targets/cursor/importer.test.ts` |
+| Cross-target importer regressions after shared serializer changes | ✓ | `tests/unit/targets/claude-code/importer.test.ts`, `tests/unit/targets/cline/importer.test.ts`, `tests/unit/targets/copilot/importer.test.ts`, `tests/unit/targets/windsurf/importer.test.ts`, `tests/unit/targets/codex-cli/importer.test.ts`, `tests/unit/targets/junie/importer.test.ts`, `tests/unit/targets/continue/importer.test.ts` |
+
+### Gaps Identified
+
+- none
+
+### Actions Taken
+
+- added shared fallback serializers for placeholder command/rule/skill/agent metadata
+- changed importer mapping to use source-relative paths for canonical destinations
+- fixed the async Copilot prompt importer regression and recorded the lesson in `tasks/lessons.md`
+
 - [x] Compare the documented architecture in `docs/architecture/` with the current code-domain boundaries and critical flows
 - [x] Inspect the highest-risk seams for boundary drift, orchestration leakage, and structural mismatches
 - [x] Summarize concrete alignment findings, strengths, and low-risk remediation steps

@@ -208,12 +208,13 @@ async function importInstructionMirrors(
   try {
     const files = await readDirRecursive(join(projectRoot, CODEX_INSTRUCTIONS_DIR));
     const instructionFiles = files.filter((file) => file.endsWith('.md'));
+    const instructionsRoot = join(projectRoot, CODEX_INSTRUCTIONS_DIR);
     for (const srcPath of instructionFiles) {
-      const slug = basename(srcPath, '.md');
-      if (slug === '_root') continue;
+      const relativePath = relative(instructionsRoot, srcPath).replace(/\\/g, '/');
+      if (relativePath === '_root.md') continue;
       const content = await readFileSafe(srcPath);
       if (!content) continue;
-      const destPath = join(destDir, `${slug}.md`);
+      const destPath = join(destDir, relativePath);
       const { frontmatter, body } = parseFrontmatter(normalize(content, srcPath, destPath));
       await mkdirp(destDir);
       const outFm = frontmatter.root === true ? frontmatter : { ...frontmatter, root: false };
@@ -222,7 +223,7 @@ async function importInstructionMirrors(
       results.push({
         fromTool: CODEX_TARGET,
         fromPath: srcPath,
-        toPath: `${CODEX_CANONICAL_RULES_DIR}/${slug}.md`,
+        toPath: `${CODEX_CANONICAL_RULES_DIR}/${relativePath}`,
         feature: 'rules',
       });
     }

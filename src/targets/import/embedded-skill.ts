@@ -8,6 +8,7 @@ import {
   writeFileAtomic,
 } from '../../utils/filesystem/fs.js';
 import { parseFrontmatter, serializeFrontmatter } from '../../utils/text/markdown.js';
+import { serializeImportedSkillWithFallback } from './import-metadata.js';
 
 const AB_SKILLS = '.agentsmesh/skills';
 
@@ -67,16 +68,11 @@ export async function importEmbeddedSkills(
     const { frontmatter, body } = parseFrontmatter(
       normalize(sourceSkillContent, sourceSkillFile, destinationSkillFile),
     );
-    const canonicalFrontmatter: Record<string, unknown> = {
-      name: entry.name,
-      description:
-        typeof frontmatter.description === 'string' ? frontmatter.description : undefined,
-    };
-    if (canonicalFrontmatter.description === undefined) delete canonicalFrontmatter.description;
-    const output =
-      Object.keys(canonicalFrontmatter).length > 0
-        ? serializeFrontmatter(canonicalFrontmatter, body.trim() || '')
-        : body.trim() || '';
+    const output = await serializeImportedSkillWithFallback(
+      destinationSkillFile,
+      { ...frontmatter, name: entry.name },
+      body,
+    );
     await mkdirp(destinationSkillDir);
     await writeFileAtomic(destinationSkillFile, output);
     results.push({

@@ -11,11 +11,12 @@ import {
   writeFileAtomic,
   mkdirp,
 } from '../../utils/filesystem/fs.js';
-import { parseFrontmatter, serializeFrontmatter } from '../../utils/text/markdown.js';
+import { parseFrontmatter } from '../../utils/text/markdown.js';
 import {
   parseProjectedAgentSkillFrontmatter,
   serializeImportedAgent,
 } from '../projection/projected-agent-skill.js';
+import { serializeImportedSkillWithFallback } from '../import/import-metadata.js';
 import {
   CLINE_TARGET,
   CLINE_SKILLS_DIR,
@@ -71,15 +72,11 @@ export async function importClineSkills(
     const { frontmatter, body } = parseFrontmatter(normalized);
     const destSkillDir = join(projectRoot, CLINE_CANONICAL_SKILLS_DIR, name);
     await mkdirp(destSkillDir);
-    const canonicalFm: Record<string, unknown> = {
-      description:
-        typeof frontmatter.description === 'string' ? frontmatter.description : undefined,
-    };
-    if (canonicalFm.description === undefined) delete canonicalFm.description;
-    const skillContent =
-      Object.keys(canonicalFm).length > 0
-        ? serializeFrontmatter(canonicalFm, body.trim() || '')
-        : body.trim() || '';
+    const skillContent = await serializeImportedSkillWithFallback(
+      destSkillPath,
+      { ...frontmatter, name },
+      body,
+    );
     await writeFileAtomic(destSkillPath, skillContent);
     results.push({
       fromTool: CLINE_TARGET,

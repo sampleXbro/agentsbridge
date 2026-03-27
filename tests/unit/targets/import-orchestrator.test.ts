@@ -38,8 +38,9 @@ describe('importFileDirectory', () => {
       extensions: ['.md'],
       fromTool: 'cursor',
       normalize,
-      mapEntry: ({ srcPath: inputPath, content, normalizeTo }) => {
+      mapEntry: ({ srcPath: inputPath, relativePath, content, normalizeTo }) => {
         expect(inputPath).toBe(srcPath);
+        expect(relativePath).toBe('fix.md');
         expect(content).toBe('# fix command');
         expect(normalizeTo(destPath)).toBe(`# fix command|${srcPath}|${destPath}`);
         return {
@@ -93,5 +94,25 @@ describe('importFileDirectory', () => {
     expect(mockWriteFileAtomic).not.toHaveBeenCalled();
     expect(mockMkdirp).not.toHaveBeenCalled();
     expect(results).toEqual([]);
+  });
+
+  it('passes nested source-relative paths to the mapper', async () => {
+    const srcDir = '/repo/.cursor/rules';
+    const srcPath = `${srcDir}/frontend/react.mdc`;
+
+    mockReadDirRecursive.mockResolvedValue([srcPath]);
+    mockReadFileSafe.mockResolvedValue('rule body');
+
+    await importFileDirectory({
+      srcDir,
+      destDir: '/repo/.agentsmesh/rules',
+      extensions: ['.mdc'],
+      fromTool: 'cursor',
+      normalize: (content) => content,
+      mapEntry: ({ relativePath }) => {
+        expect(relativePath).toBe('frontend/react.mdc');
+        return null;
+      },
+    });
   });
 });

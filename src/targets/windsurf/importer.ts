@@ -4,7 +4,7 @@
  * .windsurf/rules/*.md preserves frontmatter.
  */
 
-import { join, basename, dirname, relative } from 'node:path';
+import { join, dirname, relative } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
 import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/filesystem/fs.js';
@@ -123,10 +123,9 @@ export async function importFromWindsurf(projectRoot: string): Promise<ImportRes
       extensions: ['.md'],
       fromTool: 'windsurf',
       normalize,
-      mapEntry: async ({ srcPath, normalizeTo }) => {
-        const name = basename(srcPath, '.md');
-        if (name === '_root' && rootContent !== null) return null;
-        const destPath = join(destRulesDir, `${name}.md`);
+      mapEntry: async ({ relativePath, normalizeTo }) => {
+        if (relativePath === '_root.md' && rootContent !== null) return null;
+        const destPath = join(destRulesDir, relativePath);
         const { frontmatter, body } = parseFrontmatter(normalizeTo(destPath));
         const normalizedFrontmatter: Record<string, unknown> = { ...frontmatter };
         if (typeof normalizedFrontmatter.glob === 'string' && normalizedFrontmatter.glob.trim()) {
@@ -135,7 +134,7 @@ export async function importFromWindsurf(projectRoot: string): Promise<ImportRes
         }
         return {
           destPath,
-          toPath: `${WINDSURF_CANONICAL_RULES_DIR}/${name}.md`,
+          toPath: `${WINDSURF_CANONICAL_RULES_DIR}/${relativePath}`,
           feature: 'rules',
           content: await serializeImportedRuleWithFallback(
             destPath,

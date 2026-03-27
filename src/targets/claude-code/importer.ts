@@ -24,7 +24,10 @@ import {
   mkdirp,
 } from '../../utils/filesystem/fs.js';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
-import { serializeImportedRuleWithFallback } from '../import/import-metadata.js';
+import {
+  serializeImportedRuleWithFallback,
+  serializeImportedSkillWithFallback,
+} from '../import/import-metadata.js';
 import { importFileDirectory } from '../import/import-orchestrator.js';
 import { mapClaudeMarkdownFile, mapClaudeRuleFile } from './importer-mappers.js';
 import { importMcpJson, importSettings } from './settings-helpers.js';
@@ -102,7 +105,8 @@ async function importRules(
       extensions: ['.md'],
       fromTool: 'claude-code',
       normalize,
-      mapEntry: ({ srcPath, normalizeTo }) => mapClaudeRuleFile(srcPath, destDir, normalizeTo),
+      mapEntry: ({ relativePath, normalizeTo }) =>
+        mapClaudeRuleFile(relativePath, destDir, normalizeTo),
     })),
   );
 }
@@ -121,8 +125,8 @@ async function importCommands(
       extensions: ['.md'],
       fromTool: 'claude-code',
       normalize,
-      mapEntry: ({ srcPath, normalizeTo }) =>
-        mapClaudeMarkdownFile(srcPath, destDir, 'commands', normalizeTo),
+      mapEntry: ({ relativePath, normalizeTo }) =>
+        mapClaudeMarkdownFile(relativePath, destDir, 'commands', normalizeTo),
     })),
   );
 }
@@ -141,8 +145,8 @@ async function importAgents(
       extensions: ['.md'],
       fromTool: 'claude-code',
       normalize,
-      mapEntry: ({ srcPath, normalizeTo }) =>
-        mapClaudeMarkdownFile(srcPath, destDir, 'agents', normalizeTo),
+      mapEntry: ({ relativePath, normalizeTo }) =>
+        mapClaudeMarkdownFile(relativePath, destDir, 'agents', normalizeTo),
     })),
   );
 }
@@ -170,7 +174,18 @@ async function importSkills(
       const relPath = relative(skillDir, filePath);
       const destPath = join(destSkillDir, relPath);
       await mkdirp(dirname(destPath));
-      await writeFileAtomic(destPath, normalize(fileContent, filePath, destPath));
+      const normalized = normalize(fileContent, filePath, destPath);
+      const parsed = relPath === 'SKILL.md' ? parseFrontmatter(normalized) : null;
+      await writeFileAtomic(
+        destPath,
+        relPath === 'SKILL.md'
+          ? await serializeImportedSkillWithFallback(
+              destPath,
+              parsed?.frontmatter ?? {},
+              parsed?.body ?? '',
+            )
+          : normalized,
+      );
       const toPath = `${CLAUDE_CANONICAL_SKILLS_DIR}/${skillName}/${relPath}`;
       results.push({
         fromTool: 'claude-code',

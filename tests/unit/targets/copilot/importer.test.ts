@@ -137,7 +137,7 @@ describe('importFromCopilot', () => {
     expect(ruleResult).toBeDefined();
     const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'bare.md'), 'utf-8');
     expect(content).toContain('description: No globs');
-    expect(content).not.toContain('globs:');
+    expect(content).toContain('globs: []');
   });
 
   it('imports .github/prompts/*.prompt.md into canonical commands', async () => {
@@ -181,7 +181,7 @@ describe('importFromCopilot', () => {
     const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'commands', 'explain.md'), 'utf-8');
     expect(content).toContain('description: Explain code');
     expect(content).toContain('Explain this module.');
-    expect(content).not.toContain('allowed-tools');
+    expect(content).toContain('allowed-tools: []');
   });
 });
 
@@ -277,7 +277,7 @@ describe('importFromCopilot — .github/instructions/*.md', () => {
     await importFromCopilot(TEST_DIR);
     const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'bare.md'), 'utf-8');
     expect(content).toContain('description: No globs');
-    expect(content).not.toContain('globs:');
+    expect(content).toContain('globs: []');
   });
 });
 

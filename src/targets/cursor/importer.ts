@@ -72,7 +72,7 @@ async function importRules(
       extensions: ['.mdc'],
       fromTool: 'cursor',
       normalize,
-      mapEntry: async ({ srcPath, normalizeTo }) => {
+      mapEntry: async ({ srcPath, relativePath, normalizeTo }) => {
         // When root already written (from AGENTS.md), skip alwaysApply rules to avoid duplicate root
         if (rootWritten) {
           const raw = await readFileSafe(srcPath);
@@ -81,7 +81,7 @@ async function importRules(
             if (frontmatter.alwaysApply === true) return null;
           }
         }
-        return mapCursorRuleFile(srcPath, destDir, normalizeTo, () => {
+        return mapCursorRuleFile(relativePath, destDir, normalizeTo, () => {
           rootWritten = true;
         });
       },
@@ -148,7 +148,8 @@ async function importCommands(
       extensions: ['.md'],
       fromTool: 'cursor',
       normalize,
-      mapEntry: ({ srcPath, normalizeTo }) => mapCursorCommandFile(srcPath, destDir, normalizeTo),
+      mapEntry: ({ relativePath, normalizeTo }) =>
+        mapCursorCommandFile(relativePath, destDir, normalizeTo),
     })),
   );
 }
@@ -167,7 +168,8 @@ async function importAgents(
       extensions: ['.md'],
       fromTool: 'cursor',
       normalize,
-      mapEntry: ({ srcPath, normalizeTo }) => mapCursorAgentFile(srcPath, destDir, normalizeTo),
+      mapEntry: ({ relativePath, normalizeTo }) =>
+        mapCursorAgentFile(relativePath, destDir, normalizeTo),
     })),
   );
 }

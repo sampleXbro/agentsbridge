@@ -1,0 +1,67 @@
+import { describe, expect, it } from 'vitest';
+import type { ValidatedConfig } from '../../../src/config/core/schema.js';
+import {
+  TARGET_IDS,
+  getBuiltinTargetDefinition,
+  getEffectiveTargetSupportLevel,
+  resolveTargetFeatureGenerator,
+} from '../../../src/targets/catalog/builtin-targets.js';
+
+function baseConfig(): ValidatedConfig {
+  return {
+    version: 1,
+    targets: [...TARGET_IDS],
+    features: ['rules', 'commands', 'agents', 'skills', 'mcp', 'hooks', 'ignore', 'permissions'],
+    extends: [],
+    overrides: {},
+    collaboration: { strategy: 'merge', lock_features: [] },
+  };
+}
+
+describe('builtin targets', () => {
+  it('returns built-in target metadata for registered targets', () => {
+    const cursor = getBuiltinTargetDefinition('cursor');
+
+    expect(cursor).toBeDefined();
+    expect(cursor?.generators.primaryRootInstructionPath).toBe('.cursor/rules/general.mdc');
+    expect(cursor?.capabilities.permissions).toBe('partial');
+  });
+
+  it('resolves codex-cli command generation through conversion-aware helpers', () => {
+    const enabled = baseConfig();
+    const disabled: ValidatedConfig = {
+      ...baseConfig(),
+      conversions: { commands_to_skills: { 'codex-cli': false } },
+    };
+
+    expect(resolveTargetFeatureGenerator('codex-cli', 'commands', enabled)).toBeTypeOf('function');
+    expect(resolveTargetFeatureGenerator('codex-cli', 'commands', disabled)).toBeUndefined();
+  });
+
+  it('resolves windsurf agent generation through conversion-aware helpers', () => {
+    const enabled = baseConfig();
+    const disabled: ValidatedConfig = {
+      ...baseConfig(),
+      conversions: { agents_to_skills: { windsurf: false } },
+    };
+
+    expect(resolveTargetFeatureGenerator('windsurf', 'agents', enabled)).toBeTypeOf('function');
+    expect(resolveTargetFeatureGenerator('windsurf', 'agents', disabled)).toBeUndefined();
+  });
+
+  it('reports effective support levels for projected features', () => {
+    const enabled = baseConfig();
+    const disabled: ValidatedConfig = {
+      ...baseConfig(),
+      conversions: {
+        commands_to_skills: { 'codex-cli': false },
+        agents_to_skills: { windsurf: false },
+      },
+    };
+
+    expect(getEffectiveTargetSupportLevel('codex-cli', 'commands', enabled)).toBe('embedded');
+    expect(getEffectiveTargetSupportLevel('codex-cli', 'commands', disabled)).toBe('none');
+    expect(getEffectiveTargetSupportLevel('windsurf', 'agents', enabled)).toBe('embedded');
+    expect(getEffectiveTargetSupportLevel('windsurf', 'agents', disabled)).toBe('none');
+  });
+});

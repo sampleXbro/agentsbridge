@@ -2,7 +2,12 @@ import { parse as parseToml } from 'smol-toml';
 import { stringify as stringifyYaml } from 'yaml';
 import { join } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
-import { readDirRecursive, readFileSafe, writeFileAtomic, mkdirp } from '../../utils/fs.js';
+import {
+  readDirRecursive,
+  readFileSafe,
+  writeFileAtomic,
+  mkdirp,
+} from '../../utils/filesystem/fs.js';
 import { GEMINI_TARGET, GEMINI_POLICIES_DIR, GEMINI_CANONICAL_PERMISSIONS } from './constants.js';
 
 function unescapeRegexLiteral(value: string): string {

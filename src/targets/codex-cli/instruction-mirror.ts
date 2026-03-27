@@ -1,6 +1,6 @@
 import { basename } from 'node:path';
 import type { CanonicalRule } from '../../core/types.js';
-import { serializeFrontmatter } from '../../utils/markdown.js';
+import { serializeFrontmatter } from '../../utils/text/markdown.js';
 import {
   CODEX_INSTRUCTIONS_DIR,
   CODEX_RULE_INDEX_END,

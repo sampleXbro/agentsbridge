@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseFrontmatter, serializeFrontmatter } from '../../../src/utils/markdown.js';
+import { parseFrontmatter, serializeFrontmatter } from '../../../src/utils/text/markdown.js';
 
 describe('parseFrontmatter', () => {
   it('parses YAML frontmatter + body', () => {

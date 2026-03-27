@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { rewriteFileLinks } from '../../../src/core/link-rebaser.js';
+import { rewriteFileLinks } from '../../../src/core/reference/link-rebaser.js';
 
 describe('rewriteFileLinks', () => {
   it('rewrites ordinary project links and translated artifact links to project-root paths', () => {

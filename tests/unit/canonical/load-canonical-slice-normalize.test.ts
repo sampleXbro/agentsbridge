@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import {
   normalizeSlicePath,
   isCanonicalSliceEmpty,
-} from '../../../src/canonical/load-canonical-slice.js';
+} from '../../../src/canonical/load/load-canonical-slice.js';
 
 const ROOT = join(tmpdir(), 'am-slice-norm-test');
 

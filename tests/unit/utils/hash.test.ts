@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { hashContent, hashFile } from '../../../src/utils/hash.js';
+import { hashContent, hashFile } from '../../../src/utils/crypto/hash.js';
 import { writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';

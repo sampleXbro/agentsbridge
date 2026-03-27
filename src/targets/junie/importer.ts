@@ -1,15 +1,15 @@
 import { basename, join } from 'node:path';
 import type { ImportResult, McpServer } from '../../core/types.js';
-import { createImportReferenceNormalizer } from '../../core/import-reference-rewriter.js';
-import { readFileSafe, writeFileAtomic } from '../../utils/fs.js';
-import { parseFrontmatter, serializeFrontmatter } from '../../utils/markdown.js';
-import { importEmbeddedSkills } from '../embedded-skill.js';
+import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
+import { readFileSafe, writeFileAtomic } from '../../utils/filesystem/fs.js';
+import { parseFrontmatter, serializeFrontmatter } from '../../utils/text/markdown.js';
+import { importEmbeddedSkills } from '../import/embedded-skill.js';
 import {
   serializeImportedCommandWithFallback,
   serializeImportedRuleWithFallback,
-} from '../import-metadata.js';
-import { importFileDirectory } from '../import-orchestrator.js';
-import { toStringArray, toStringRecord } from '../shared-import-helpers.js';
+} from '../import/import-metadata.js';
+import { importFileDirectory } from '../import/import-orchestrator.js';
+import { toStringArray, toStringRecord } from '../import/shared-import-helpers.js';
 import {
   JUNIE_TARGET,
   JUNIE_AGENTS_DIR,

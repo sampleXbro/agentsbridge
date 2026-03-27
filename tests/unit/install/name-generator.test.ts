@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { suggestExtendName } from '../../../src/install/name-generator.js';
+import { suggestExtendName } from '../../../src/install/core/name-generator.js';
 
 describe('suggestExtendName', () => {
   it('uses the repo name plus detected feature instead of the first picked item', () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { CanonicalFiles } from '../../../src/core/types.js';
-import { lintHooks } from '../../../src/core/linter-hooks.js';
+import { lintHooks } from '../../../src/core/lint/hooks.js';
 
 function makeCanonical(hooks: CanonicalFiles['hooks']): CanonicalFiles {
   return {

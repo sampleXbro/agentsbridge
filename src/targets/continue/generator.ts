@@ -1,6 +1,6 @@
 import type { CanonicalFiles } from '../../core/types.js';
-import { generateEmbeddedSkills } from '../embedded-skill.js';
-import { serializeFrontmatter } from '../../utils/markdown.js';
+import { generateEmbeddedSkills } from '../import/embedded-skill.js';
+import { serializeFrontmatter } from '../../utils/text/markdown.js';
 import { serializeCommandRule } from './command-rule.js';
 import {
   CONTINUE_MCP_FILE,

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { join } from 'node:path';
-import { buildReferenceMap, isMarkdownLikeOutput } from '../../../src/core/reference-map.js';
+import { buildReferenceMap, isMarkdownLikeOutput } from '../../../src/core/reference/map.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';
-import type { ValidatedConfig } from '../../../src/config/schema.js';
+import type { ValidatedConfig } from '../../../src/config/core/schema.js';
 
 function config(targets: ValidatedConfig['targets']): ValidatedConfig {
   return {

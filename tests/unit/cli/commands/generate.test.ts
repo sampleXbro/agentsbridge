@@ -144,7 +144,7 @@ description: "Only"
     );
 
     await runGenerate({}, TEST_DIR);
-    const { readLock } = await import('../../../../src/config/lock.js');
+    const { readLock } = await import('../../../../src/config/core/lock.js');
     const lock = await readLock(join(TEST_DIR, '.agentsmesh'));
     expect(lock).not.toBeNull();
     expect(lock!.extends).toBeDefined();
@@ -203,7 +203,7 @@ description: "Root"
 
     await runGenerate({}, TEST_DIR);
 
-    const { readLock } = await import('../../../../src/config/lock.js');
+    const { readLock } = await import('../../../../src/config/core/lock.js');
     const lock = await readLock(join(TEST_DIR, '.agentsmesh'));
     expect(lock).not.toBeNull();
   });
@@ -219,7 +219,7 @@ description: "Root"
 
     await runGenerate({}, TEST_DIR);
 
-    const { readLock } = await import('../../../../src/config/lock.js');
+    const { readLock } = await import('../../../../src/config/core/lock.js');
     const lock = await readLock(join(TEST_DIR, '.agentsmesh'));
     expect(lock).not.toBeNull();
     expect(lock!.extends).toBeDefined();
@@ -235,7 +235,7 @@ description: "Root"
 
     await runGenerate({ 'dry-run': true }, TEST_DIR);
 
-    const { readLock } = await import('../../../../src/config/lock.js');
+    const { readLock } = await import('../../../../src/config/core/lock.js');
     const lock = await readLock(join(TEST_DIR, '.agentsmesh'));
     expect(lock).toBeNull();
   });
@@ -385,7 +385,7 @@ description: "Local"
     );
 
     await runGenerate({}, TEST_DIR);
-    const { readLock } = await import('../../../../src/config/lock.js');
+    const { readLock } = await import('../../../../src/config/core/lock.js');
     const lock = await readLock(join(TEST_DIR, '.agentsmesh'));
     expect(lock).not.toBeNull();
     expect(lock!.extends).toBeDefined();

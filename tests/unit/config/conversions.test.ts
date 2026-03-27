@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import type { ValidatedConfig } from '../../../src/config/schema.js';
+import type { ValidatedConfig } from '../../../src/config/core/schema.js';
 import {
   shouldConvertAgentsToSkills,
   shouldConvertCommandsToSkills,
   usesAgentSkillProjection,
   usesCommandSkillProjection,
-} from '../../../src/config/conversions.js';
+} from '../../../src/config/core/conversions.js';
 
 function makeConfig(overrides: Partial<ValidatedConfig> = {}): ValidatedConfig {
   return {

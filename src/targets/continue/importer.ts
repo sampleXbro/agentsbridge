@@ -1,15 +1,15 @@
 import { basename, extname, join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import type { ImportResult, McpServer } from '../../core/types.js';
-import { createImportReferenceNormalizer } from '../../core/import-reference-rewriter.js';
-import { readDirRecursive, readFileSafe, writeFileAtomic } from '../../utils/fs.js';
-import { parseFrontmatter } from '../../utils/markdown.js';
-import { importEmbeddedSkills } from '../embedded-skill.js';
+import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
+import { readDirRecursive, readFileSafe, writeFileAtomic } from '../../utils/filesystem/fs.js';
+import { parseFrontmatter } from '../../utils/text/markdown.js';
+import { importEmbeddedSkills } from '../import/embedded-skill.js';
 import {
   serializeImportedCommandWithFallback,
   serializeImportedRuleWithFallback,
-} from '../import-metadata.js';
-import { toStringArray, toStringRecord } from '../shared-import-helpers.js';
+} from '../import/import-metadata.js';
+import { toStringArray, toStringRecord } from '../import/shared-import-helpers.js';
 import { parseCommandRuleFrontmatter, serializeImportedCommand } from './command-rule.js';
 import {
   CONTINUE_TARGET,

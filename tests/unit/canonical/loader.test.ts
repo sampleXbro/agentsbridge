@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { loadCanonicalFiles } from '../../../src/canonical/loader.js';
+import { loadCanonicalFiles } from '../../../src/canonical/load/loader.js';
 
 const TEST_DIR = join(tmpdir(), 'agentsmesh-loader-test');
 const AB_DIR = join(TEST_DIR, '.agentsmesh');

@@ -1,5 +1,5 @@
 import type { CanonicalCommand } from '../../core/types.js';
-import { serializeFrontmatter } from '../../utils/markdown.js';
+import { serializeFrontmatter } from '../../utils/text/markdown.js';
 
 export const CODEX_COMMAND_SKILL_PREFIX = 'am-command-';
 export const LEGACY_CODEX_COMMAND_SKILL_PREFIX = 'ab-command-';

@@ -71,7 +71,7 @@ describe('importFromCline', () => {
     expect(content).toContain('.env');
   });
 
-  it('imports .cline/mcp_settings.json into .agentsmesh/mcp.json', async () => {
+  it('imports .cline/cline_mcp_settings.json into .agentsmesh/mcp.json', async () => {
     mkdirSync(join(TEST_DIR, '.cline'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, CLINE_MCP_SETTINGS),
@@ -91,7 +91,7 @@ describe('importFromCline', () => {
     expect(mcp.mcpServers.fs.command).toBe('npx');
   });
 
-  it('maps transportType to type when importing mcp_settings.json', async () => {
+  it('maps transportType to type when importing cline_mcp_settings.json', async () => {
     mkdirSync(join(TEST_DIR, '.cline'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, CLINE_MCP_SETTINGS),
@@ -274,7 +274,7 @@ describe('importFromCline', () => {
     expect(results).toEqual([]);
   });
 
-  it('skips malformed mcp_settings.json without crash', async () => {
+  it('skips malformed cline_mcp_settings.json without crash', async () => {
     mkdirSync(join(TEST_DIR, '.cline'), { recursive: true });
     writeFileSync(join(TEST_DIR, CLINE_MCP_SETTINGS), 'not json');
     mkdirSync(join(TEST_DIR, CLINE_RULES_DIR), { recursive: true });

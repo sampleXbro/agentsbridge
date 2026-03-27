@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import {
   filterCanonicalByFeatures,
   loadCanonicalWithExtends,
-} from '../../../src/canonical/extends.js';
+} from '../../../src/canonical/extends/extends.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';
 
 const mockDetect = vi.hoisted(() => vi.fn<[string], Promise<string | null>>());
@@ -17,11 +17,11 @@ const mockImportNative = vi.hoisted(() =>
   vi.fn<[string, string], Promise<[]>>().mockResolvedValue([]),
 );
 
-vi.mock('../../../src/config/native-format-detector.js', () => ({
+vi.mock('../../../src/config/resolve/native-format-detector.js', () => ({
   detectNativeFormat: mockDetect,
   KNOWN_NATIVE_PATHS: ['CLAUDE.md', '.claude/'],
 }));
-vi.mock('../../../src/canonical/native-extends-importer.js', () => ({
+vi.mock('../../../src/canonical/extends/native-extends-importer.js', () => ({
   importNativeToCanonical: mockImportNative,
 }));
 

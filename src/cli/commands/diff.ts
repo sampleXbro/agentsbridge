@@ -2,11 +2,11 @@
  * agentsmesh diff — show what would change on the next generate.
  */
 
-import { loadConfigFromDir } from '../../config/loader.js';
-import { loadCanonicalWithExtends } from '../../canonical/extends.js';
-import { generate as runEngine } from '../../core/engine.js';
+import { loadConfigFromDir } from '../../config/core/loader.js';
+import { loadCanonicalWithExtends } from '../../canonical/extends/extends.js';
+import { generate as runEngine } from '../../core/generate/engine.js';
 import { computeDiff, formatDiffSummary } from '../../core/differ.js';
-import { logger } from '../../utils/logger.js';
+import { logger } from '../../utils/output/logger.js';
 
 /**
  * Run the diff command.

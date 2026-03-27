@@ -1,7 +1,7 @@
 import { basename, join } from 'node:path';
-import { parseFrontmatter } from '../../utils/markdown.js';
-import { serializeImportedRuleWithFallback } from '../import-metadata.js';
-import type { ImportFileMapping } from '../import-orchestrator.js';
+import { parseFrontmatter } from '../../utils/text/markdown.js';
+import { serializeImportedRuleWithFallback } from '../import/import-metadata.js';
+import type { ImportFileMapping } from '../import/import-orchestrator.js';
 import {
   CLAUDE_CANONICAL_RULES_DIR,
   CLAUDE_CANONICAL_COMMANDS_DIR,

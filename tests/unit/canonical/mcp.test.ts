@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { parseMcp } from '../../../src/canonical/mcp.js';
+import { parseMcp } from '../../../src/canonical/features/mcp.js';
 
 const TEST_DIR = join(tmpdir(), 'agentsmesh-mcp-test');
 const MCP_PATH = join(TEST_DIR, '.agentsmesh', 'mcp.json');

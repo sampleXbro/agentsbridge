@@ -5,7 +5,7 @@
 import { join } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
 import type { McpServer } from '../../core/types.js';
-import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/fs.js';
+import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/filesystem/fs.js';
 import { CLINE_TARGET, CLINE_MCP_SETTINGS, CLINE_CANONICAL_MCP } from './constants.js';
 
 export function mapClineServerToCanonical(raw: unknown): McpServer | null {

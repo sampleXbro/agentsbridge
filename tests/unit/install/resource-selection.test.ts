@@ -3,7 +3,7 @@ import {
   buildInstallPick,
   deriveInstallFeatures,
   ensureInstallSelection,
-} from '../../../src/install/install-entry-selection.js';
+} from '../../../src/install/core/install-entry-selection.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';
 
 function files(partial: Partial<CanonicalFiles>): CanonicalFiles {

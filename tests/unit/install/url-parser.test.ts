@@ -10,7 +10,7 @@ import {
   parseGitlabRepoUrl,
   parseGitlabTreeUrl,
   parseInstallSource,
-} from '../../../src/install/url-parser.js';
+} from '../../../src/install/source/url-parser.js';
 
 describe('parseGithubTreeUrl', () => {
   it('parses org repo ref and path', () => {

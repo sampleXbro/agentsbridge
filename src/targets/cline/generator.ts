@@ -1,17 +1,17 @@
 /**
  * Generate Cline config files from canonical sources.
- * Cline uses .clinerules (rules, workflows), .clineignore, .cline/mcp_settings.json, .cline/skills (skills).
+ * Cline uses .clinerules (rules, workflows), .clineignore, .cline/cline_mcp_settings.json, .cline/skills (skills).
  * Supports rules, workflows (from canonical commands), ignore, MCP, skills. Skips agents, hooks, permissions.
  */
 
 import { basename } from 'node:path';
 import type { CanonicalFiles } from '../../core/types.js';
 import { hasHookCommand } from '../../core/hook-command.js';
-import { serializeFrontmatter } from '../../utils/markdown.js';
+import { serializeFrontmatter } from '../../utils/text/markdown.js';
 import {
   projectedAgentSkillDirName,
   serializeProjectedAgentSkill,
-} from '../projected-agent-skill.js';
+} from '../projection/projected-agent-skill.js';
 import {
   CLINE_RULES_DIR,
   CLINE_AGENTS_MD,
@@ -100,7 +100,7 @@ export function generateIgnore(canonical: CanonicalFiles): RulesOutput[] {
 }
 
 /**
- * Generate .cline/mcp_settings.json from canonical MCP config.
+ * Generate .cline/cline_mcp_settings.json from canonical MCP config.
  * Cline uses mcpServers format compatible with canonical.
  *
  * @param canonical - Loaded canonical files

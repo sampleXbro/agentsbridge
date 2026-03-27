@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { loadCanonicalFiles } from '../../src/canonical/loader.js';
+import { loadCanonicalFiles } from '../../src/canonical/load/loader.js';
 import { createCanonicalProject } from './helpers/canonical.js';
 import { runCli } from './helpers/run-cli.js';
 import { cleanup } from './helpers/setup.js';

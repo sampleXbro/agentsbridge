@@ -5,7 +5,7 @@
 import { join, dirname } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
 import { getHookCommand, getHookPrompt, hasHookText } from '../../core/hook-command.js';
-import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/fs.js';
+import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/filesystem/fs.js';
 import { stringify as yamlStringify } from 'yaml';
 import {
   CLAUDE_SETTINGS,

@@ -7,7 +7,7 @@ import {
   targetHintFromNativePath,
   pathSupportsNativePick,
   resolveEffectiveTargetForInstall,
-} from '../../../src/install/native-path-pick.js';
+} from '../../../src/install/native/native-path-pick.js';
 
 describe('targetHintFromNativePath', () => {
   it('prefers longer prefixes', () => {

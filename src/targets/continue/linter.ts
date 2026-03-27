@@ -1,5 +1,5 @@
 import type { CanonicalFiles, LintDiagnostic } from '../../core/types.js';
-import { validateRules } from '../../core/validate-rules.js';
+import { validateRules } from '../../core/lint/validate-rules.js';
 import { CONTINUE_TARGET } from './constants.js';
 
 export function lintRules(

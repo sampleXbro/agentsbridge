@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { runInstall } from '../../src/install/run-install.js';
+import { runInstall } from '../../src/install/run/run-install.js';
 
 const ROOT = join(tmpdir(), 'am-install-native-target-integration');
 

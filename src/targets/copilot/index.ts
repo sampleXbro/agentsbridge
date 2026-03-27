@@ -1,5 +1,4 @@
-import { registerTarget } from '../registry.js';
-import type { TargetGenerators } from '../target.interface.js';
+import type { TargetGenerators } from '../catalog/target.interface.js';
 import {
   generateRules,
   generateCommands,
@@ -10,7 +9,7 @@ import {
 import { COPILOT_INSTRUCTIONS } from './constants.js';
 import { importFromCopilot } from './importer.js';
 
-const target: TargetGenerators = {
+export const target: TargetGenerators = {
   name: 'copilot',
   primaryRootInstructionPath: COPILOT_INSTRUCTIONS,
   generateRules,
@@ -20,5 +19,3 @@ const target: TargetGenerators = {
   generateHooks,
   importFrom: importFromCopilot,
 };
-
-registerTarget(target);

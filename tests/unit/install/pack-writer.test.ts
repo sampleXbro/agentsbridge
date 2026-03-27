@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync, rmSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { stringify as yamlStringify } from 'yaml';
-import { materializePack } from '../../../src/install/pack-writer.js';
+import { materializePack } from '../../../src/install/pack/pack-writer.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';
 
 let tmpDir: string;

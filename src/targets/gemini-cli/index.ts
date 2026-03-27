@@ -1,5 +1,4 @@
-import { registerTarget } from '../registry.js';
-import type { TargetGenerators } from '../target.interface.js';
+import type { TargetGenerators } from '../catalog/target.interface.js';
 import {
   generateRules,
   generateCommands,
@@ -12,7 +11,7 @@ import { generateGeminiPermissionsPolicies } from './policies-generator.js';
 import { GEMINI_ROOT } from './constants.js';
 import { importFromGemini } from './importer.js';
 
-const target: TargetGenerators = {
+export const target: TargetGenerators = {
   name: 'gemini-cli',
   primaryRootInstructionPath: GEMINI_ROOT,
   generateRules,
@@ -24,5 +23,3 @@ const target: TargetGenerators = {
   generatePermissions: generateGeminiPermissionsPolicies,
   importFrom: importFromGemini,
 };
-
-registerTarget(target);

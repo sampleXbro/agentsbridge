@@ -7,7 +7,7 @@ import { mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { runMerge } from '../../../../src/cli/commands/merge.js';
-import { readLock } from '../../../../src/config/lock.js';
+import { readLock } from '../../../../src/config/core/lock.js';
 
 const TEST_DIR = join(tmpdir(), 'am-merge-test');
 

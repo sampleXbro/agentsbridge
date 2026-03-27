@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
 import type { ImportResult } from '../../core/types.js';
 import type { McpServer } from '../../core/types.js';
-import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/fs.js';
+import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/filesystem/fs.js';
 import { CODEX_TARGET, CODEX_CONFIG_TOML, CODEX_CANONICAL_MCP } from './constants.js';
 
 export function mapTomlServerToCanonical(raw: unknown): McpServer | null {

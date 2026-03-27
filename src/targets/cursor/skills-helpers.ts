@@ -4,7 +4,12 @@
 
 import { join, basename, dirname, relative } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
-import { readFileSafe, readDirRecursive, writeFileAtomic, mkdirp } from '../../utils/fs.js';
+import {
+  readFileSafe,
+  readDirRecursive,
+  writeFileAtomic,
+  mkdirp,
+} from '../../utils/filesystem/fs.js';
 import { CURSOR_SKILLS_DIR, CURSOR_CANONICAL_SKILLS_DIR } from './constants.js';
 
 /**

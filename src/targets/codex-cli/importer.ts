@@ -14,12 +14,17 @@
 
 import { join, relative, dirname, basename } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
-import { createImportReferenceNormalizer } from '../../core/import-reference-rewriter.js';
-import { readFileSafe, readDirRecursive, writeFileAtomic, mkdirp } from '../../utils/fs.js';
-import { parseFrontmatter } from '../../utils/markdown.js';
-import { serializeImportedRuleWithFallback } from '../import-metadata.js';
-import { importFileDirectory } from '../import-orchestrator.js';
-import { serializeImportedAgent } from '../projected-agent-skill.js';
+import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
+import {
+  readFileSafe,
+  readDirRecursive,
+  writeFileAtomic,
+  mkdirp,
+} from '../../utils/filesystem/fs.js';
+import { parseFrontmatter } from '../../utils/text/markdown.js';
+import { serializeImportedRuleWithFallback } from '../import/import-metadata.js';
+import { importFileDirectory } from '../import/import-orchestrator.js';
+import { serializeImportedAgent } from '../projection/projected-agent-skill.js';
 import {
   CODEX_TARGET,
   CODEX_MD,
@@ -33,7 +38,10 @@ import { importCodexNonRootRuleFiles } from './import-codex-non-root-rules.js';
 import { stripCodexRuleIndex } from './instruction-mirror.js';
 import { importMcp } from './mcp-helpers.js';
 import { importSkills } from './skills-helpers.js';
-import { shouldImportScopedAgentsRule, removePathIfExists } from '../scoped-agents-import.js';
+import {
+  shouldImportScopedAgentsRule,
+  removePathIfExists,
+} from '../import/scoped-agents-import.js';
 import { parse as parseToml } from 'smol-toml';
 
 /**

@@ -2,12 +2,12 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mkdirSync, rmSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { resolveExtendPaths } from '../../../src/config/resolver.js';
-import { fetchRemoteExtend } from '../../../src/config/remote-fetcher.js';
-import type { ValidatedConfig } from '../../../src/config/schema.js';
+import { resolveExtendPaths } from '../../../src/config/resolve/resolver.js';
+import { fetchRemoteExtend } from '../../../src/config/remote/remote-fetcher.js';
+import type { ValidatedConfig } from '../../../src/config/core/schema.js';
 
 const mockFetchRemoteExtend = vi.hoisted(() => vi.fn());
-vi.mock('../../../src/config/remote-fetcher.js', () => ({
+vi.mock('../../../src/config/remote/remote-fetcher.js', () => ({
   parseGithubSource: () => null,
   fetchRemoteExtend: mockFetchRemoteExtend,
   getCacheDir: () => process.env.AGENTSMESH_CACHE ?? '/tmp/agentsmesh-cache',

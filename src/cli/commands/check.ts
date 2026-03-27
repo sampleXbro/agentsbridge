@@ -4,15 +4,15 @@
  */
 
 import { join } from 'node:path';
-import { loadConfigFromDir } from '../../config/loader.js';
-import { resolveExtendPaths } from '../../config/resolver.js';
+import { loadConfigFromDir } from '../../config/core/loader.js';
+import { resolveExtendPaths } from '../../config/resolve/resolver.js';
 import {
   readLock,
   buildChecksums,
   buildExtendChecksums,
   detectLockedFeatureViolations,
-} from '../../config/lock.js';
-import { logger } from '../../utils/logger.js';
+} from '../../config/core/lock.js';
+import { logger } from '../../utils/output/logger.js';
 
 /**
  * Run the check command.

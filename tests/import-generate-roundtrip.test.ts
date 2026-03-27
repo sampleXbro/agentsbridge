@@ -12,9 +12,9 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { generate } from '../src/core/engine.js';
+import { generate } from '../src/core/generate/engine.js';
 import type { CanonicalFiles } from '../src/core/types.js';
-import type { ValidatedConfig } from '../src/config/schema.js';
+import type { ValidatedConfig } from '../src/config/core/schema.js';
 import { importFromClaudeCode } from '../src/targets/claude-code/importer.js';
 import { importFromCursor } from '../src/targets/cursor/importer.js';
 import { importFromCopilot } from '../src/targets/copilot/importer.js';
@@ -374,7 +374,7 @@ describe('import: Cline (rules + skills + mcp + ignore)', () => {
       '---\ndescription: QA\n---\n\nQA.',
     );
     writeFileSync(
-      join(TEST_DIR, '.cline', 'mcp_settings.json'),
+      join(TEST_DIR, '.cline', 'cline_mcp_settings.json'),
       JSON.stringify({ mcpServers: { ctx: { type: 'stdio', command: 'npx', args: [], env: {} } } }),
     );
     writeFileSync(join(TEST_DIR, '.clineignore'), 'dist\n');
@@ -603,7 +603,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
     });
     const paths = results.map((r) => r.path).sort();
     expect(paths).toEqual([
-      '.cline/mcp_settings.json',
+      '.cline/cline_mcp_settings.json',
       '.cline/skills/am-agent-reviewer/SKILL.md',
       '.cline/skills/qa/SKILL.md',
       '.clineignore',
@@ -714,7 +714,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.claude/settings.json',
       '.claude/skills/qa/SKILL.md',
       '.claudeignore',
-      '.cline/mcp_settings.json',
+      '.cline/cline_mcp_settings.json',
       '.cline/skills/am-agent-reviewer/SKILL.md',
       '.cline/skills/qa/SKILL.md',
       '.clineignore',

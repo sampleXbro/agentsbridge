@@ -8,8 +8,8 @@ import { parse as parseToml } from 'smol-toml';
 import { stringify as stringifyYaml } from 'yaml';
 import type { ImportResult } from '../../core/types.js';
 import { getHookCommand, hasHookCommand } from '../../core/hook-command.js';
-import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/fs.js';
-import { parseFrontmatter } from '../../utils/markdown.js';
+import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/filesystem/fs.js';
+import { parseFrontmatter } from '../../utils/text/markdown.js';
 import {
   GEMINI_SETTINGS,
   GEMINI_IGNORE,

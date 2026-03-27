@@ -5,14 +5,19 @@
 import { join, basename } from 'node:path';
 import { readdir } from 'node:fs/promises';
 import type { ImportResult } from '../../core/types.js';
-import { readFileSafe, readDirRecursive, writeFileAtomic, mkdirp } from '../../utils/fs.js';
-import { parseFrontmatter } from '../../utils/markdown.js';
-import { serializeImportedCommandWithFallback } from '../import-metadata.js';
+import {
+  readFileSafe,
+  readDirRecursive,
+  writeFileAtomic,
+  mkdirp,
+} from '../../utils/filesystem/fs.js';
+import { parseFrontmatter } from '../../utils/text/markdown.js';
+import { serializeImportedCommandWithFallback } from '../import/import-metadata.js';
 import {
   parseProjectedAgentSkillFrontmatter,
   serializeImportedAgent,
-} from '../projected-agent-skill.js';
-import { removePathIfExists } from '../scoped-agents-import.js';
+} from '../projection/projected-agent-skill.js';
+import { removePathIfExists } from '../import/scoped-agents-import.js';
 import {
   WINDSURF_TARGET,
   WINDSURF_WORKFLOWS_DIR,

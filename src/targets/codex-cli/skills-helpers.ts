@@ -5,14 +5,19 @@
 import { readdir } from 'node:fs/promises';
 import { join, relative, dirname } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
-import { readFileSafe, readDirRecursive, writeFileAtomic, mkdirp } from '../../utils/fs.js';
-import { parseFrontmatter, serializeFrontmatter } from '../../utils/markdown.js';
+import {
+  readFileSafe,
+  readDirRecursive,
+  writeFileAtomic,
+  mkdirp,
+} from '../../utils/filesystem/fs.js';
+import { parseFrontmatter, serializeFrontmatter } from '../../utils/text/markdown.js';
 import { parseCommandSkillFrontmatter, serializeImportedCommand } from './command-skill.js';
 import {
   parseProjectedAgentSkillFrontmatter,
   serializeImportedAgent,
-} from '../projected-agent-skill.js';
-import { removePathIfExists } from '../scoped-agents-import.js';
+} from '../projection/projected-agent-skill.js';
+import { removePathIfExists } from '../import/scoped-agents-import.js';
 import {
   CODEX_TARGET,
   CODEX_SKILLS_DIR,

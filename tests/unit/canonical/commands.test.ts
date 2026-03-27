@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { parseCommands } from '../../../src/canonical/commands.js';
+import { parseCommands } from '../../../src/canonical/features/commands.js';
 
 const TEST_DIR = join(tmpdir(), 'agentsmesh-commands-test');
 const COMMANDS_DIR = join(TEST_DIR, '.agentsmesh', 'commands');

@@ -4,7 +4,7 @@
 
 import type { CanonicalFiles } from '../../core/types.js';
 import { getHookCommand, getHookPrompt, hasHookText } from '../../core/hook-command.js';
-import { serializeFrontmatter } from '../../utils/markdown.js';
+import { serializeFrontmatter } from '../../utils/text/markdown.js';
 import {
   CURSOR_COMPAT_AGENTS,
   CURSOR_GENERAL_RULE,

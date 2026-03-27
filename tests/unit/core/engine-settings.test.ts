@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mergeGeminiSettingsJson, mergeSettingsJson } from '../../../src/core/engine-settings.js';
+import { mergeGeminiSettingsJson, mergeSettingsJson } from '../../../src/core/generate/settings.js';
 
 describe('mergeSettingsJson', () => {
   it('treats non-object existing JSON as empty before merging', () => {

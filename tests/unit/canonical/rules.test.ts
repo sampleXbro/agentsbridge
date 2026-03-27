@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { parseRules } from '../../../src/canonical/rules.js';
+import { parseRules } from '../../../src/canonical/features/rules.js';
 
 const TEST_DIR = join(tmpdir(), 'agentsmesh-rules-test');
 const RULES_DIR = join(TEST_DIR, '.agentsmesh', 'rules');

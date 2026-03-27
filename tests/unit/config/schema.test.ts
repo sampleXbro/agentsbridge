@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { configSchema } from '../../../src/config/schema.js';
-import { TARGET_IDS } from '../../../src/targets/target-catalog.js';
+import { configSchema } from '../../../src/config/core/schema.js';
+import { TARGET_IDS } from '../../../src/targets/catalog/target-catalog.js';
 
 describe('configSchema', () => {
   it('validates minimal config', () => {

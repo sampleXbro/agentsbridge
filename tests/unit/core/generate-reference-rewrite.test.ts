@@ -2,10 +2,10 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { generate } from '../../../src/core/engine.js';
+import { generate } from '../../../src/core/generate/engine.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';
-import type { ValidatedConfig } from '../../../src/config/schema.js';
-import { appendAgentsmeshRootInstructionParagraph } from '../../../src/targets/root-instruction-paragraph.js';
+import type { ValidatedConfig } from '../../../src/config/core/schema.js';
+import { appendAgentsmeshRootInstructionParagraph } from '../../../src/targets/projection/root-instruction-paragraph.js';
 
 const TEST_DIR = join(tmpdir(), 'am-engine-reference-rewrite');
 

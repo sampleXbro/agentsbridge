@@ -2,11 +2,11 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { materializePack } from '../../../src/install/pack-writer.js';
-import { loadPacksCanonical } from '../../../src/canonical/pack-load.js';
-import { mergeIntoPack } from '../../../src/install/pack-merge.js';
+import { materializePack } from '../../../src/install/pack/pack-writer.js';
+import { loadPacksCanonical } from '../../../src/canonical/load/pack-load.js';
+import { mergeIntoPack } from '../../../src/install/pack/pack-merge.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';
-import type { PackMetadata } from '../../../src/install/pack-schema.js';
+import type { PackMetadata } from '../../../src/install/pack/pack-schema.js';
 
 let rootDir: string;
 let srcDir: string;

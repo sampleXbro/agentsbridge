@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import {
   inferGeminiCommandNamesFromFiles,
   isUnderGeminiCommands,
-} from '../../../src/install/gemini-install-commands.js';
+} from '../../../src/install/native/gemini-install-commands.js';
 
 const ROOT = join(tmpdir(), 'am-gemini-install-cmd');
 

@@ -1,6 +1,6 @@
 import { basename } from 'node:path';
 import type { CanonicalCommand } from '../../core/types.js';
-import { serializeFrontmatter } from '../../utils/markdown.js';
+import { serializeFrontmatter } from '../../utils/text/markdown.js';
 import { COPILOT_PROMPTS_DIR } from './constants.js';
 
 interface ParsedCommandPrompt {

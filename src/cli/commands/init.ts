@@ -4,8 +4,8 @@
  */
 
 import { join } from 'node:path';
-import { exists, readFileSafe, writeFileAtomic, mkdirp } from '../../utils/fs.js';
-import { logger } from '../../utils/logger.js';
+import { exists, readFileSafe, writeFileAtomic, mkdirp } from '../../utils/filesystem/fs.js';
+import { logger } from '../../utils/output/logger.js';
 import { importFromClaudeCode } from '../../targets/claude-code/importer.js';
 import { importFromCursor } from '../../targets/cursor/importer.js';
 import { importFromCopilot } from '../../targets/copilot/importer.js';

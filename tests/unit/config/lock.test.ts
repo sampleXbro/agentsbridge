@@ -9,7 +9,7 @@ import {
   buildExtendChecksums,
   buildPackChecksums,
   detectLockedFeatureViolations,
-} from '../../../src/config/lock.js';
+} from '../../../src/config/core/lock.js';
 
 const TEST_DIR = join(tmpdir(), 'agentsmesh-lock-test');
 

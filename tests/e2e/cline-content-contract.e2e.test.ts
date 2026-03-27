@@ -48,7 +48,7 @@ features:
       .filter((path) => !path.startsWith('.agentsmeshcache'))
       .sort();
     expect(generatedPaths).toEqual([
-      '.cline/mcp_settings.json',
+      '.cline/cline_mcp_settings.json',
       '.cline/skills/am-agent-code-reviewer/SKILL.md',
       '.cline/skills/am-agent-researcher/SKILL.md',
       '.cline/skills/api-generator/SKILL.md',
@@ -100,7 +100,7 @@ features:
     expect(hook).toContain('# agentsmesh-command: prettier --write $FILE_PATH');
     expect(hook).toContain('set -e');
 
-    const mcp = JSON.parse(read(projectDir, '.cline/mcp_settings.json')) as {
+    const mcp = JSON.parse(read(projectDir, '.cline/cline_mcp_settings.json')) as {
       mcpServers?: Record<string, unknown>;
     };
     expect(mcp.mcpServers).toBeDefined();

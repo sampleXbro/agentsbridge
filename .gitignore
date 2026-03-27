@@ -2,7 +2,11 @@
 node_modules
 
 # Repo-local (see root /docs policy)
-/docs
+/docs/*
+!/docs/adr/
+!/docs/adr/**
+!/docs/architecture/
+!/docs/architecture/**
 
 # Build & coverage
 dist

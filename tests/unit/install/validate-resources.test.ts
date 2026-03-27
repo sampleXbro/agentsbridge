@@ -5,7 +5,7 @@ import {
   validateRule,
   validateSkill,
   ruleSlug,
-} from '../../../src/install/validate-resources.js';
+} from '../../../src/install/core/validate-resources.js';
 import type {
   CanonicalAgent,
   CanonicalCommand,

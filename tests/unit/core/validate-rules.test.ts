@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { validateRules } from '../../../src/core/validate-rules.js';
+import { validateRules } from '../../../src/core/lint/validate-rules.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';
 
 const TEST_DIR = join(tmpdir(), 'am-validate-rules-test');

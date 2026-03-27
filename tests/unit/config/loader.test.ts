@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { findConfigPath, loadConfig, loadConfigFromDir } from '../../../src/config/loader.js';
-import { logger } from '../../../src/utils/logger.js';
+import { findConfigPath, loadConfig, loadConfigFromDir } from '../../../src/config/core/loader.js';
+import { logger } from '../../../src/utils/output/logger.js';
 
 const TEST_ROOT = join(tmpdir(), 'agentsmesh-config-test');
 

@@ -185,7 +185,7 @@ describe('generateIgnore (cline)', () => {
 });
 
 describe('generateMcp (cline)', () => {
-  it('generates .cline/mcp_settings.json when mcp present', () => {
+  it('generates .cline/cline_mcp_settings.json when mcp present', () => {
     const canonical = makeCanonical({
       mcp: {
         mcpServers: {

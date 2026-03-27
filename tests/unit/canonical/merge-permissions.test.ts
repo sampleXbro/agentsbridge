@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mergeCanonicalFiles } from '../../../src/canonical/merge.js';
+import { mergeCanonicalFiles } from '../../../src/canonical/load/merge.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';
 
 function emptyFiles(): CanonicalFiles {

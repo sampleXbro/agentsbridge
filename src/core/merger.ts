@@ -4,15 +4,15 @@
  */
 
 import { dirname, join } from 'node:path';
-import { readFileSafe } from '../utils/fs.js';
+import { readFileSafe } from '../utils/filesystem/fs.js';
 import {
   buildChecksums,
   buildExtendChecksums,
   buildPackChecksums,
   writeLock,
-} from '../config/lock.js';
-import type { ValidatedConfig } from '../config/schema.js';
-import { resolveExtendPaths } from '../config/resolver.js';
+} from '../config/core/lock.js';
+import type { ValidatedConfig } from '../config/core/schema.js';
+import { resolveExtendPaths } from '../config/resolve/resolver.js';
 
 const LOCK_FILENAME = '.lock';
 const CONFLICT_MARKER = '<<<<<<<';

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { narrowDiscoveredForImplicitPick } from '../../../src/install/resource-selection.js';
+import { narrowDiscoveredForImplicitPick } from '../../../src/install/core/resource-selection.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';
 
 function files(partial: Partial<CanonicalFiles>): CanonicalFiles {

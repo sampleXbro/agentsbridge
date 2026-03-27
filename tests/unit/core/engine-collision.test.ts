@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   refreshResultStatus,
   resolveOutputCollisions,
-} from '../../../src/core/engine-collision.js';
+} from '../../../src/core/generate/collision.js';
 import type { GenerateResult } from '../../../src/core/types.js';
 
 function makeResult(overrides: Partial<GenerateResult> = {}): GenerateResult {

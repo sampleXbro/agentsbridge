@@ -1,5 +1,4 @@
-import { registerTarget } from '../registry.js';
-import type { TargetGenerators } from '../target.interface.js';
+import type { TargetGenerators } from '../catalog/target.interface.js';
 import {
   generateRules,
   generateCommands,
@@ -11,7 +10,7 @@ import {
 import { JUNIE_DOT_AGENTS } from './constants.js';
 import { importFromJunie } from './importer.js';
 
-const target: TargetGenerators = {
+export const target: TargetGenerators = {
   name: 'junie',
   primaryRootInstructionPath: JUNIE_DOT_AGENTS,
   generateRules,
@@ -22,5 +21,3 @@ const target: TargetGenerators = {
   generateIgnore,
   importFrom: importFromJunie,
 };
-
-registerTarget(target);

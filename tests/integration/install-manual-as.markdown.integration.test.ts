@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { join } from 'node:path';
 import { rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { runInstall } from '../../src/install/run-install.js';
+import { runInstall } from '../../src/install/run/run-install.js';
 import { listRelativeFiles, readInstallManifest } from '../helpers/install-test-helpers.js';
 import {
   MARKDOWN_CASES,

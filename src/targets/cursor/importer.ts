@@ -15,11 +15,11 @@
 
 import { join, dirname } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
-import { createImportReferenceNormalizer } from '../../core/import-reference-rewriter.js';
-import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/fs.js';
-import { parseFrontmatter } from '../../utils/markdown.js';
-import { serializeImportedRuleWithFallback } from '../import-metadata.js';
-import { importFileDirectory } from '../import-orchestrator.js';
+import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
+import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/filesystem/fs.js';
+import { parseFrontmatter } from '../../utils/text/markdown.js';
+import { serializeImportedRuleWithFallback } from '../import/import-metadata.js';
+import { importFileDirectory } from '../import/import-orchestrator.js';
 import { mapCursorAgentFile, mapCursorCommandFile, mapCursorRuleFile } from './importer-mappers.js';
 import { importSettings, importIgnore } from './settings-helpers.js';
 import { importSkills } from './skills-helpers.js';
@@ -64,25 +64,6 @@ async function importRules(
   const destDir = join(projectRoot, CURSOR_CANONICAL_RULES_DIR);
   let rootWritten = false;
 
-  const agentsPath = join(projectRoot, CURSOR_COMPAT_AGENTS);
-  const agentsContent = await readFileSafe(agentsPath);
-  if (agentsContent !== null) {
-    rootWritten = true;
-    await mkdirp(destDir);
-    const destPath = join(destDir, '_root.md');
-    const { frontmatter, body } = parseFrontmatter(normalize(agentsContent, agentsPath, destPath));
-    const hasRoot = frontmatter.root === true;
-    const outFm = hasRoot ? frontmatter : { ...frontmatter, root: true };
-    const outContent = await serializeImportedRuleWithFallback(destPath, outFm, body);
-    await writeFileAtomic(destPath, outContent);
-    results.push({
-      fromTool: 'cursor',
-      fromPath: agentsPath,
-      toPath: `${CURSOR_CANONICAL_RULES_DIR}/_root.md`,
-      feature: 'rules',
-    });
-  }
-
   const rulesDir = join(projectRoot, CURSOR_RULES_DIR);
   results.push(
     ...(await importFileDirectory({
@@ -106,6 +87,29 @@ async function importRules(
       },
     })),
   );
+
+  if (!rootWritten) {
+    const agentsPath = join(projectRoot, CURSOR_COMPAT_AGENTS);
+    const agentsContent = await readFileSafe(agentsPath);
+    if (agentsContent !== null) {
+      rootWritten = true;
+      await mkdirp(destDir);
+      const destPath = join(destDir, '_root.md');
+      const { frontmatter, body } = parseFrontmatter(
+        normalize(agentsContent, agentsPath, destPath),
+      );
+      const hasRoot = frontmatter.root === true;
+      const outFm = hasRoot ? frontmatter : { ...frontmatter, root: true };
+      const outContent = await serializeImportedRuleWithFallback(destPath, outFm, body);
+      await writeFileAtomic(destPath, outContent);
+      results.push({
+        fromTool: 'cursor',
+        fromPath: agentsPath,
+        toPath: `${CURSOR_CANONICAL_RULES_DIR}/_root.md`,
+        feature: 'rules',
+      });
+    }
+  }
 
   // Fallback: .cursorrules when no root rule was found from AGENTS.md or alwaysApply:.mdc
   if (!rootWritten) {

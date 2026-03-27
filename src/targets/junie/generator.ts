@@ -1,6 +1,6 @@
 import { basename } from 'node:path';
 import type { CanonicalFiles } from '../../core/types.js';
-import { generateEmbeddedSkills } from '../embedded-skill.js';
+import { generateEmbeddedSkills } from '../import/embedded-skill.js';
 import {
   JUNIE_AGENTS_DIR,
   JUNIE_COMMANDS_DIR,

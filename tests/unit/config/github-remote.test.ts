@@ -2,12 +2,12 @@ import { join } from 'node:path';
 import { mkdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fetchGithubRemoteExtend } from '../../../src/config/github-remote.js';
+import { fetchGithubRemoteExtend } from '../../../src/config/remote/github-remote.js';
 
 const mockFetchGitRemoteExtend = vi.hoisted(() => vi.fn());
 const mockTarExtract = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
 
-vi.mock('../../../src/config/git-remote.js', () => ({
+vi.mock('../../../src/config/remote/git-remote.js', () => ({
   fetchGitRemoteExtend: mockFetchGitRemoteExtend,
 }));
 

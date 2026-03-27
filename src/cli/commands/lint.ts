@@ -2,10 +2,10 @@
  * agentsmesh lint — validate canonical files against target constraints.
  */
 
-import { loadConfigFromDir } from '../../config/loader.js';
-import { loadCanonicalWithExtends } from '../../canonical/extends.js';
-import { runLint } from '../../core/linter.js';
-import { logger } from '../../utils/logger.js';
+import { loadConfigFromDir } from '../../config/core/loader.js';
+import { loadCanonicalWithExtends } from '../../canonical/extends/extends.js';
+import { runLint } from '../../core/lint/linter.js';
+import { logger } from '../../utils/output/logger.js';
 
 /**
  * Run the lint command.

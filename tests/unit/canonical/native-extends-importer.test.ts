@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { importNativeToCanonical } from '../../../src/canonical/native-extends-importer.js';
+import { importNativeToCanonical } from '../../../src/canonical/extends/native-extends-importer.js';
 
 const mockClaudeImport = vi.hoisted(() =>
   vi.fn().mockResolvedValue([

@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { stageManualInstallScope } from '../../../src/install/manual-install-scope.js';
+import { stageManualInstallScope } from '../../../src/install/manual/manual-install-scope.js';
 import { listRelativeFiles } from '../../helpers/install-test-helpers.js';
 
 const ROOT = join(tmpdir(), 'am-manual-install-scope-markdown');

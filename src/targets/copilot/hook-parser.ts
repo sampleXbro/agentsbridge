@@ -4,7 +4,12 @@
 
 import { join, dirname, basename } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
-import { readFileSafe, readDirRecursive, writeFileAtomic, mkdirp } from '../../utils/fs.js';
+import {
+  readFileSafe,
+  readDirRecursive,
+  writeFileAtomic,
+  mkdirp,
+} from '../../utils/filesystem/fs.js';
 import { stringify as yamlStringify } from 'yaml';
 import {
   COPILOT_TARGET,

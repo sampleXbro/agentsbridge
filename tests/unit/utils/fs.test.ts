@@ -10,7 +10,7 @@ import {
   readDirRecursive,
   copyDir,
   ensureCacheSymlink,
-} from '../../../src/utils/fs.js';
+} from '../../../src/utils/filesystem/fs.js';
 import { readlinkSync, lstatSync } from 'node:fs';
 
 const TEST_DIR = join(tmpdir(), 'agentsmesh-test-fs');

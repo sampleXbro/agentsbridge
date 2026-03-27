@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { packMetadataSchema } from '../../../src/install/pack-schema.js';
+import { packMetadataSchema } from '../../../src/install/pack/pack-schema.js';
 
 const VALID_PACK: Record<string, unknown> = {
   name: 'org-repo-skills',

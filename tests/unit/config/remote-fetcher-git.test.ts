@@ -7,7 +7,7 @@ import {
   fetchRemoteExtend,
   parseGitSource,
   parseGitlabSource,
-} from '../../../src/config/remote-fetcher.js';
+} from '../../../src/config/remote/remote-fetcher.js';
 
 const TEST_ROOT = join(tmpdir(), 'agentsmesh-remote-fetcher-git-test');
 

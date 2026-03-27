@@ -1,5 +1,4 @@
-import { registerTarget } from '../registry.js';
-import type { TargetGenerators } from '../target.interface.js';
+import type { TargetGenerators } from '../catalog/target.interface.js';
 import {
   generateRules,
   generateWorkflows,
@@ -12,7 +11,7 @@ import {
 import { CLINE_AGENTS_MD } from './constants.js';
 import { importFromCline } from './importer.js';
 
-const target: TargetGenerators = {
+export const target: TargetGenerators = {
   name: 'cline',
   primaryRootInstructionPath: CLINE_AGENTS_MD,
   generateRules,
@@ -24,5 +23,3 @@ const target: TargetGenerators = {
   generateIgnore,
   importFrom: importFromCline,
 };
-
-registerTarget(target);

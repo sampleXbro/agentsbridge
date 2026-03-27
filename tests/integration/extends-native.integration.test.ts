@@ -2,7 +2,7 @@ import { mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { loadCanonicalWithExtends } from '../../src/canonical/extends.js';
+import { loadCanonicalWithExtends } from '../../src/canonical/extends/extends.js';
 
 const TEST_DIR = join(tmpdir(), 'am-extends-native-integration');
 

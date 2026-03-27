@@ -1,5 +1,4 @@
-import { registerTarget } from '../registry.js';
-import type { TargetGenerators } from '../target.interface.js';
+import type { TargetGenerators } from '../catalog/target.interface.js';
 import {
   generateRules,
   generateCommands,
@@ -13,7 +12,7 @@ import {
 import { CLAUDE_ROOT } from './constants.js';
 import { importFromClaudeCode } from './importer.js';
 
-const target: TargetGenerators = {
+export const target: TargetGenerators = {
   name: 'claude-code',
   primaryRootInstructionPath: CLAUDE_ROOT,
   generateRules,
@@ -26,5 +25,3 @@ const target: TargetGenerators = {
   generateIgnore,
   importFrom: importFromClaudeCode,
 };
-
-registerTarget(target);

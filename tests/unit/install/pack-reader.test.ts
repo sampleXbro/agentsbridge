@@ -3,8 +3,12 @@ import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { stringify } from 'yaml';
-import { readPackMetadata, findExistingPack, listPacks } from '../../../src/install/pack-reader.js';
-import type { PackMetadata } from '../../../src/install/pack-schema.js';
+import {
+  readPackMetadata,
+  findExistingPack,
+  listPacks,
+} from '../../../src/install/pack/pack-reader.js';
+import type { PackMetadata } from '../../../src/install/pack/pack-schema.js';
 
 const BASE_META: PackMetadata = {
   name: 'org-repo',

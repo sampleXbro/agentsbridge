@@ -1,12 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import { join } from 'node:path';
 import type { CanonicalFiles, GenerateResult } from '../../../src/core/types.js';
-import type { ValidatedConfig } from '../../../src/config/schema.js';
+import type { ValidatedConfig } from '../../../src/config/core/schema.js';
 
 const mockBuildArtifactPathMap = vi.hoisted(() => vi.fn());
 
-vi.mock('../../../src/core/output-source-map.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../../../src/core/output-source-map.js')>();
+vi.mock('../../../src/core/reference/output-source-map.js', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('../../../src/core/reference/output-source-map.js')>();
   return {
     ...actual,
     buildArtifactPathMap: (
@@ -18,7 +19,7 @@ vi.mock('../../../src/core/output-source-map.js', async (importOriginal) => {
   };
 });
 
-import { rewriteGeneratedReferences } from '../../../src/core/reference-rewriter.js';
+import { rewriteGeneratedReferences } from '../../../src/core/reference/rewriter.js';
 
 function makeConfig(targets: ValidatedConfig['targets']): ValidatedConfig {
   return {

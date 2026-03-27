@@ -7,7 +7,7 @@
 
 import { basename } from 'node:path';
 import type { CanonicalFiles } from '../../core/types.js';
-import { serializeFrontmatter } from '../../utils/markdown.js';
+import { serializeFrontmatter } from '../../utils/text/markdown.js';
 import {
   COPILOT_INSTRUCTIONS,
   COPILOT_HOOKS_DIR,

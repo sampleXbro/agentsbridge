@@ -3,12 +3,12 @@
  */
 
 import { relative } from 'node:path';
-import { logger } from '../../utils/logger.js';
+import { logger } from '../../utils/output/logger.js';
 import {
   TARGET_IDS,
   getTargetCatalogEntry,
   isBuiltinTargetId,
-} from '../../targets/target-catalog.js';
+} from '../../targets/catalog/target-catalog.js';
 
 /**
  * Run the import command.

@@ -4,8 +4,8 @@ import {
   getTarget,
   getAllTargets,
   resetRegistry,
-} from '../../../src/targets/registry.js';
-import type { TargetGenerators } from '../../../src/targets/target.interface.js';
+} from '../../../src/targets/catalog/registry.js';
+import type { TargetGenerators } from '../../../src/targets/catalog/target.interface.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';
 
 const mockGenerators: TargetGenerators = {
@@ -22,6 +22,10 @@ describe('target registry', () => {
   it('registers and retrieves a target', () => {
     registerTarget(mockGenerators);
     expect(getTarget('test-target')).toBe(mockGenerators);
+  });
+
+  it('exposes built-in targets without manual registration', () => {
+    expect(getTarget('claude-code').primaryRootInstructionPath).toBe('.claude/CLAUDE.md');
   });
 
   it('returns all registered targets', () => {

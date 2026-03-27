@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { loadCanonicalSliceAtPath } from '../../../src/canonical/load-canonical-slice.js';
+import { loadCanonicalSliceAtPath } from '../../../src/canonical/load/load-canonical-slice.js';
 
 const ROOT = join(tmpdir(), 'am-slice-load-test');
 

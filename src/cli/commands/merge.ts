@@ -4,10 +4,10 @@
  */
 
 import { join } from 'node:path';
-import { loadConfigFromDir } from '../../config/loader.js';
+import { loadConfigFromDir } from '../../config/core/loader.js';
 import { hasLockConflict, resolveLockConflict } from '../../core/merger.js';
 import { getVersion } from '../version.js';
-import { logger } from '../../utils/logger.js';
+import { logger } from '../../utils/output/logger.js';
 
 /**
  * Run the merge command.

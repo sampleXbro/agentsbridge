@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { resolveInstallConflicts } from '../../../src/install/install-conflicts.js';
-import * as prompts from '../../../src/install/prompts.js';
+import { resolveInstallConflicts } from '../../../src/install/core/install-conflicts.js';
+import * as prompts from '../../../src/install/core/prompts.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';
 
-vi.mock('../../../src/install/prompts.js', () => ({
+vi.mock('../../../src/install/core/prompts.js', () => ({
   confirm: vi.fn(),
 }));
 

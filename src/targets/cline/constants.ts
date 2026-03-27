@@ -1,6 +1,6 @@
 /**
  * Cline target constants.
- * Cline uses .clinerules (rules), .clineignore, .cline/mcp_settings.json, .cline/skills (skills).
+ * Cline uses .clinerules (rules), .clineignore, .cline/cline_mcp_settings.json, .cline/skills (skills).
  */
 
 export const CLINE_TARGET = 'cline';
@@ -12,7 +12,7 @@ export const CLINE_RULES_DIR = '.clinerules';
 export const CLINE_IGNORE = '.clineignore';
 
 /** MCP settings (Cline-specific path) */
-export const CLINE_MCP_SETTINGS = '.cline/mcp_settings.json';
+export const CLINE_MCP_SETTINGS = '.cline/cline_mcp_settings.json';
 
 /** Skills directory prefix */
 export const CLINE_SKILLS_DIR = '.cline/skills';

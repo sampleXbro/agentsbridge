@@ -6,7 +6,7 @@
 
 import type { CanonicalCommand, CanonicalFiles, StdioMcpServer } from '../../core/types.js';
 import { isStdioMcpServer } from '../../core/mcp-servers.js';
-import { serializeFrontmatter } from '../../utils/markdown.js';
+import { serializeFrontmatter } from '../../utils/text/markdown.js';
 import type { CanonicalAgent } from '../../core/types.js';
 import { basename } from 'node:path';
 import {

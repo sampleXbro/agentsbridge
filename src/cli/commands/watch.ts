@@ -4,16 +4,24 @@
 
 import { join, relative } from 'node:path';
 import chokidar from 'chokidar';
-import { loadConfigFromDir } from '../../config/loader.js';
-import { loadCanonicalWithExtends } from '../../canonical/extends.js';
+import { loadConfigFromDir } from '../../config/core/loader.js';
+import { loadCanonicalWithExtends } from '../../canonical/extends/extends.js';
 import { runGenerate } from './generate.js';
 import { runMatrix } from './matrix.js';
-import { logger } from '../../utils/logger.js';
+import { logger } from '../../utils/output/logger.js';
 
 const DEBOUNCE_MS = 300;
 
-function shouldIgnoreWatchPath(configDir: string, changedPath: string): boolean {
-  const relPath = relative(configDir, changedPath).replace(/\\/g, '/');
+function normalizeWatchPath(path: string): string {
+  return path.replace(/\\/g, '/').replace(/\/+$/, '');
+}
+
+function shouldIgnoreWatchPath(
+  configDir: string,
+  changedPath: string,
+  _suppressAgentsmeshDirUntil: number,
+): boolean {
+  const relPath = normalizeWatchPath(relative(configDir, changedPath));
   // Chokidar can report paths through different resolution layers; use `endsWith`
   // so we reliably ignore lock-file churn regardless of relative prefixing.
   return relPath.endsWith('.agentsmesh/.lock') || relPath.endsWith('.agentsmesh/.lock.tmp');
@@ -72,6 +80,7 @@ export async function runWatch(
   let lastFingerprint: string | null = null;
   let stopped = false;
   let pendingRun: Promise<void> | null = null;
+  let suppressAgentsmeshDirUntil = 0;
 
   const run = async (): Promise<void> => {
     if (stopped) return;
@@ -105,7 +114,9 @@ export async function runWatch(
     lastFingerprint = fp;
 
     if (stopped) return;
+    suppressAgentsmeshDirUntil = Date.now() + 500;
     await runGenerate(flags, root, { printMatrix: false });
+    suppressAgentsmeshDirUntil = Date.now() + 500;
 
     if (stopped) return;
     if (featuresChanged) {
@@ -137,8 +148,13 @@ export async function runWatch(
 
   const watcher = chokidar.watch(paths, { ignoreInitial: true });
   watcher.on('all', (_eventName, changedPath) => {
-    if (shouldIgnoreWatchPath(configDir, changedPath)) return;
+    if (shouldIgnoreWatchPath(configDir, changedPath, suppressAgentsmeshDirUntil)) return;
     schedule();
+  });
+
+  await new Promise<void>((resolve, reject) => {
+    watcher.once('ready', resolve);
+    watcher.once('error', reject);
   });
 
   logger.info('Watching .agentsmesh/ and agentsmesh.yaml...');

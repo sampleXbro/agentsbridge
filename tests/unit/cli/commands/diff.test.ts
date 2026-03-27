@@ -7,7 +7,7 @@ import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { runDiff } from '../../../../src/cli/commands/diff.js';
-import { appendAgentsmeshRootInstructionParagraph } from '../../../../src/targets/root-instruction-paragraph.js';
+import { appendAgentsmeshRootInstructionParagraph } from '../../../../src/targets/projection/root-instruction-paragraph.js';
 
 const TEST_DIR = join(tmpdir(), 'am-diff-cmd-test');
 

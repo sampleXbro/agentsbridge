@@ -6,8 +6,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mkdirSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { runInstall } from '../../src/install/run-install.js';
-import { logger } from '../../src/utils/logger.js';
+import { runInstall } from '../../src/install/run/run-install.js';
+import { logger } from '../../src/utils/output/logger.js';
 
 const ROOT = join(tmpdir(), 'am-install-integration');
 

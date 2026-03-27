@@ -6,7 +6,7 @@ import {
   cleanInstallCache,
   cacheKeyFromSource,
   sweepStaleCache,
-} from '../../../src/install/cache-cleanup.js';
+} from '../../../src/install/pack/cache-cleanup.js';
 
 let cacheDir: string;
 

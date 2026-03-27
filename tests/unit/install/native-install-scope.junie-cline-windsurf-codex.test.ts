@@ -102,9 +102,9 @@ describe('stageNativeInstallScope Junie, Cline, and Windsurf', () => {
     {
       name: 'cline-mcp-file',
       target: 'cline',
-      path: '.cline/mcp_settings.json',
+      path: '.cline/cline_mcp_settings.json',
       files: {
-        '.cline/mcp_settings.json': JSON.stringify({
+        '.cline/cline_mcp_settings.json': JSON.stringify({
           mcpServers: { fs: { command: 'npx', args: ['-y', '@mcp/fs'] } },
         }),
       },

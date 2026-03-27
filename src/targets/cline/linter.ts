@@ -3,7 +3,7 @@
  */
 
 import type { CanonicalFiles, LintDiagnostic } from '../../core/types.js';
-import { validateRules } from '../../core/validate-rules.js';
+import { validateRules } from '../../core/lint/validate-rules.js';
 import { CLINE_TARGET } from './constants.js';
 
 /**

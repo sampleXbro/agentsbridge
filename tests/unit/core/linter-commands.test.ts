@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { CanonicalFiles, CanonicalCommand } from '../../../src/core/types.js';
-import { lintCommands } from '../../../src/core/linter-commands.js';
+import { lintCommands } from '../../../src/core/lint/commands.js';
 
 function makeCanonical(commands: CanonicalCommand[]): CanonicalFiles {
   return {

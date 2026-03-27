@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { hashPackContent } from '../../../src/install/pack-hash.js';
+import { hashPackContent } from '../../../src/install/pack/pack-hash.js';
 
 let tmpDir: string;
 

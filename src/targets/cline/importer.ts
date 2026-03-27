@@ -1,6 +1,6 @@
 /**
  * Cline target importer: .clinerules (rules + workflows), .clineignore,
- * .cline/mcp_settings.json, .cline/skills into canonical .agentsmesh/.
+ * .cline/cline_mcp_settings.json, .cline/skills into canonical .agentsmesh/.
  * Cline rules may have no frontmatter; add root: true for _root.md on import.
  * Workflows (.clinerules/workflows/*.md) import as canonical commands.
  * AGENTS.md is used as a root fallback when no _root.md is found in .clinerules/.
@@ -9,11 +9,16 @@
 import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
-import { createImportReferenceNormalizer } from '../../core/import-reference-rewriter.js';
-import { readFileSafe, readDirRecursive, writeFileAtomic, mkdirp } from '../../utils/fs.js';
-import { parseFrontmatter } from '../../utils/markdown.js';
-import { serializeImportedRuleWithFallback } from '../import-metadata.js';
-import { importFileDirectory } from '../import-orchestrator.js';
+import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
+import {
+  readFileSafe,
+  readDirRecursive,
+  writeFileAtomic,
+  mkdirp,
+} from '../../utils/filesystem/fs.js';
+import { parseFrontmatter } from '../../utils/text/markdown.js';
+import { serializeImportedRuleWithFallback } from '../import/import-metadata.js';
+import { importFileDirectory } from '../import/import-orchestrator.js';
 import { mapClineRuleFile, mapClineWorkflowFile } from './importer-mappers.js';
 import {
   CLINE_TARGET,
@@ -30,7 +35,7 @@ import { importClineSkills } from './skills-helpers.js';
 
 /**
  * Import Cline config into canonical .agentsmesh/.
- * Sources: .clinerules (rules), .clineignore (ignore), .cline/mcp_settings.json (mcp),
+ * Sources: .clinerules (rules), .clineignore (ignore), .cline/cline_mcp_settings.json (mcp),
  * .cline/skills (skills).
  *
  * @param projectRoot - Project root directory

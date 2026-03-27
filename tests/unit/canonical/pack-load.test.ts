@@ -3,8 +3,8 @@ import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { stringify as yamlStringify } from 'yaml';
-import { loadPacksCanonical } from '../../../src/canonical/pack-load.js';
-import type { PackMetadata } from '../../../src/install/pack-schema.js';
+import { loadPacksCanonical } from '../../../src/canonical/load/pack-load.js';
+import type { PackMetadata } from '../../../src/install/pack/pack-schema.js';
 
 let tmpDir: string;
 let packsDir: string;

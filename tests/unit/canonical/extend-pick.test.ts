@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { applyExtendPick } from '../../../src/canonical/extend-pick.js';
+import { applyExtendPick } from '../../../src/canonical/extends/extend-pick.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';
-import { logger } from '../../../src/utils/logger.js';
+import { logger } from '../../../src/utils/output/logger.js';
 
 describe('applyExtendPick', () => {
   beforeEach(() => {

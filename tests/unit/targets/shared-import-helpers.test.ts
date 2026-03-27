@@ -4,7 +4,7 @@ import {
   toToolsArray,
   toStringArray,
   toStringRecord,
-} from '../../../src/targets/shared-import-helpers.js';
+} from '../../../src/targets/import/shared-import-helpers.js';
 
 describe('shared-import-helpers', () => {
   describe('toGlobsArray', () => {

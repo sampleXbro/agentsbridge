@@ -10,7 +10,7 @@ import {
   generateIgnore,
 } from '../../../../src/targets/cursor/generator.js';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
-import { serializeFrontmatter } from '../../../../src/utils/markdown.js';
+import { serializeFrontmatter } from '../../../../src/utils/text/markdown.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
   return {

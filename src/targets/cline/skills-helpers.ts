@@ -5,12 +5,17 @@
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
-import { readFileSafe, readDirRecursive, writeFileAtomic, mkdirp } from '../../utils/fs.js';
-import { parseFrontmatter, serializeFrontmatter } from '../../utils/markdown.js';
+import {
+  readFileSafe,
+  readDirRecursive,
+  writeFileAtomic,
+  mkdirp,
+} from '../../utils/filesystem/fs.js';
+import { parseFrontmatter, serializeFrontmatter } from '../../utils/text/markdown.js';
 import {
   parseProjectedAgentSkillFrontmatter,
   serializeImportedAgent,
-} from '../projected-agent-skill.js';
+} from '../projection/projected-agent-skill.js';
 import {
   CLINE_TARGET,
   CLINE_SKILLS_DIR,

@@ -5,7 +5,7 @@ import { createRouter } from './router.js';
 import { printHelp } from './help.js';
 import { printVersion } from './version.js';
 import { handleError } from './error-handler.js';
-import { logger } from '../utils/logger.js';
+import { logger } from '../utils/output/logger.js';
 import { runGenerate } from './commands/generate.js';
 import { runInit } from './commands/init.js';
 import { runImport } from './commands/import.js';

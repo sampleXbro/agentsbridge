@@ -3,10 +3,10 @@ import {
   buildCompatibilityMatrix,
   formatMatrix,
   formatVerboseDetails,
-} from '../../../src/core/matrix.js';
+} from '../../../src/core/matrix/matrix.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';
-import type { ValidatedConfig } from '../../../src/config/schema.js';
-import { TARGET_IDS } from '../../../src/targets/target-catalog.js';
+import type { ValidatedConfig } from '../../../src/config/core/schema.js';
+import { TARGET_IDS } from '../../../src/targets/catalog/target-catalog.js';
 
 const baseConfig: ValidatedConfig = {
   version: 1,

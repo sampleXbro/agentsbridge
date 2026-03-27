@@ -1,5 +1,4 @@
-import { registerTarget } from '../registry.js';
-import type { TargetGenerators } from '../target.interface.js';
+import type { TargetGenerators } from '../catalog/target.interface.js';
 import {
   generateRules,
   generateCommands,
@@ -10,7 +9,7 @@ import {
 import { AGENTS_MD } from './constants.js';
 import { importFromCodex } from './importer.js';
 
-const target: TargetGenerators = {
+export const target: TargetGenerators = {
   name: 'codex-cli',
   primaryRootInstructionPath: AGENTS_MD,
   generateRules,
@@ -20,5 +19,3 @@ const target: TargetGenerators = {
   generateMcp,
   importFrom: importFromCodex,
 };
-
-registerTarget(target);

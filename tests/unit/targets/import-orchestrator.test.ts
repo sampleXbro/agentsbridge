@@ -1,13 +1,13 @@
 import { dirname } from 'node:path';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { importFileDirectory } from '../../../src/targets/import-orchestrator.js';
+import { importFileDirectory } from '../../../src/targets/import/import-orchestrator.js';
 
 const mockReadDirRecursive = vi.hoisted(() => vi.fn());
 const mockReadFileSafe = vi.hoisted(() => vi.fn());
 const mockWriteFileAtomic = vi.hoisted(() => vi.fn());
 const mockMkdirp = vi.hoisted(() => vi.fn());
 
-vi.mock('../../../src/utils/fs.js', () => ({
+vi.mock('../../../src/utils/filesystem/fs.js', () => ({
   readDirRecursive: mockReadDirRecursive,
   readFileSafe: mockReadFileSafe,
   writeFileAtomic: mockWriteFileAtomic,

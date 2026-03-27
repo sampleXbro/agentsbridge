@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { runLint } from '../../../src/core/linter.js';
-import type { ValidatedConfig } from '../../../src/config/schema.js';
+import { runLint } from '../../../src/core/lint/linter.js';
+import type { ValidatedConfig } from '../../../src/config/core/schema.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';
 
 const TEST_DIR = join(tmpdir(), 'agentsmesh-linter-test');

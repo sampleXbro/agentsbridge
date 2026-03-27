@@ -1,6 +1,6 @@
 import { join, relative } from 'node:path';
 import type { CanonicalFiles } from '../../core/types.js';
-import { readFileSafe } from '../../utils/fs.js';
+import { readFileSafe } from '../../utils/filesystem/fs.js';
 import { COPILOT_HOOKS_DIR } from './constants.js';
 import type { RulesOutput } from './generator.js';
 import { hasHookCommand } from './hook-entry.js';

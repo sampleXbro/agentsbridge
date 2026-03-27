@@ -1,3 +1,246 @@
+# Architecture alignment review
+
+- [x] Compare the documented architecture in `docs/architecture/` with the current code-domain boundaries and critical flows
+- [x] Inspect the highest-risk seams for boundary drift, orchestration leakage, and structural mismatches
+- [x] Summarize concrete alignment findings, strengths, and low-risk remediation steps
+- [x] Append review notes with evidence and residual risks
+
+## Review (Architecture alignment review)
+
+- Overall alignment:
+  - the top-level source tree now matches the documented domain map closely: `src/config`, `src/canonical`, `src/core`, `src/install`, `src/targets`, and `src/utils` all have the subdomain structure described in `docs/architecture/overview.md`
+  - the canonical-first runtime shape is real in code: CLI commands load config, load canonical state, then call target-agnostic core generation/import/lint logic, with target adapters under `src/targets/*`
+  - target metadata centralization materially improved alignment: the built-in target catalog now drives ids, import/lint wiring, and most feature-generator dispatch
+- Main misalignments:
+  - `install` still depends upward on `cli` orchestration: `src/install/run/run-install.ts` imports and calls `runGenerate()` from `src/cli/commands/generate.ts`, which reverses the documented dependency direction where CLI coordinates domains rather than domains calling CLI
+  - `install/core` also reaches into `install/run`: `src/install/core/install-discovery.ts` imports `resolveDiscoveredForInstall()` from `src/install/run/run-install-discovery.ts`, so the supposedly lower-level install subdomain depends on the orchestration layer
+  - `core/reference` still contains a large amount of target-native path knowledge directly, via target constants and `switch` statements in `src/core/reference/map-targets.ts`, which conflicts with the documented rule that core should stay target-agnostic outside target metadata
+  - `core/generate` still has a small amount of target-name branching and direct target helper imports in `src/core/generate/optional-features.ts` for Copilot hook assets and Gemini settings handling, so the core/targets seam is improved but not fully normalized
+  - the target metadata contract is only partially normalized: `src/targets/catalog/builtin-targets.ts` still branches on target ids for support and generator routing, and `src/targets/catalog/target.interface.ts` still encodes target-specific method variants like `generateWorkflows` and `generateSettings`
+  - `config/remote` still reaches into `install/pack` for cache cleanup (`src/config/remote/remote-fetcher.ts`), which the architecture docs already call out as acceptable-but-not-ideal cross-domain coupling
+  - several high-churn files still exceed the repo’s 200-line limit, especially target importers/generators plus `src/install/run/run-install.ts`, which weakens the intended “small subdomain modules” maintainability goal even though the folder structure now aligns
+- Lowest-risk remediation path:
+  - extract a domain-level post-install regenerate callback or shared `generateAndPersistArtifacts()` service so `install` no longer imports CLI code
+  - move `run-install-discovery.ts` logic into `install/core` or rename/rehome it so `install/run` becomes a pure orchestration layer
+  - continue moving target path resolution into target descriptors so `core/reference` consumes metadata rather than importing per-target constants and path builders
+  - replace `generateWorkflows` / `generateSettings` with a normalized feature-generator map on built-in target descriptors, then make `resolveTargetFeatureGenerator()` data-driven
+  - extract cache helpers into a neutral cache utility or `config/cache` subdomain so remote fetching does not depend on `install/pack`
+  - keep splitting the remaining oversized target/import/install files by feature boundary rather than by arbitrary line count
+- Verification notes:
+  - this was an analysis-only review against the current source tree and the new `docs/architecture/` set
+  - no tests were added or changed
+
+# Architecture documentation set
+
+- [x] Create `docs/architecture/` overview, container view, flow docs, and domain boundary docs based on the current codebase
+- [x] Add ADRs in the existing `docs/adr/` folder for the core architectural decisions not yet documented
+- [x] Cross-link the new docs so the architecture set is navigable and consistent with the current module structure
+- [x] Run a documentation QA pass and append review notes
+
+## Review (Architecture documentation set)
+
+- Changes implemented:
+  - added `docs/architecture/overview.md` as the architecture entrypoint and index
+  - added `docs/architecture/containers.md` with a C4-lite code-domain view
+  - added critical flow docs for generate, import, install, and watch under `docs/architecture/flows/`
+  - added domain boundary docs for `cli`, `config`, `canonical`, `core`, `install`, `targets`, and `utils` under `docs/architecture/domains/`
+  - added four ADRs in the existing `docs/adr/` folder for canonical source of truth, centralized target descriptors, feature projection policy, and the watch/lock contract
+  - narrowed the root `docs` ignore policy so `docs/architecture/**` and `docs/adr/**` are now trackable without opening the rest of the ignored docs tree
+  - captured the ignore-policy miss in `tasks/lessons.md` so future doc additions verify git visibility first
+- Tests added:
+  - none; this was a documentation-only change
+- Verification:
+  - `find docs/architecture docs/adr -type f -name '*.md' -print0 | xargs -0 wc -l`
+  - `git check-ignore -v docs/architecture/overview.md docs/adr/adr-canonical-source-of-truth.md`
+  - `git diff --check -- .gitignore tasks/lessons.md tasks/todo.md docs/architecture docs/adr`
+  - `pnpm lint`
+  - `pnpm typecheck`
+  - `pnpm test`
+- QA Report — Architecture documentation set
+- Acceptance criteria:
+  - architecture docs exist for overview, container view, flows, and domain boundaries: covered by the new `docs/architecture/` tree
+  - ADRs exist for the main architectural decisions that were previously implicit in code: covered by the new `docs/adr/adr-*.md` files plus the existing pack ADR
+  - documentation is navigable and internally linked: covered by `docs/architecture/overview.md` links to all new sections and ADRs
+  - the new docs are committable and not stranded behind the repo-level `/docs` ignore rule: covered by the narrowed `.gitignore` entries and the successful `git check-ignore` verification
+- Edge cases checked:
+  - all new files remain below the repo's 200-line file limit
+  - no whitespace or patch-format issues were introduced
+  - repo-wide lint, typecheck, and full test suite still pass after the docs plus ignore-policy updates
+- Gaps identified:
+  - no automated markdown link checker is configured in the repo today, so link validity was reviewed manually
+
+# Remaining source-tree reorganization
+
+- [x] Confirm existing tests cover the remaining main folders that still lack subdomain structure
+- [x] Split the remaining top-heavy `src` folders into small subdomain folders with no behavior change
+- [x] Update imports across source and tests
+- [x] Run targeted verification for the moved domains, then `pnpm lint`, `pnpm typecheck`, and `pnpm test`
+- [x] Run post-feature QA and append review notes
+
+## Review (Remaining source-tree reorganization)
+
+- Changes implemented:
+  - split `src/config` into `core/`, `remote/`, and `resolve/`
+  - split `src/utils` into `filesystem/`, `text/`, `output/`, and `crypto/`
+  - split the shared-root part of `src/targets` into `catalog/`, `import/`, and `projection/`
+  - preserved existing per-target folders and the existing `src/cli/commands/` subdomain layout, since those were already structured
+  - updated imports across source and tests so the internal module graph follows the new folder boundaries without changing behavior
+- Tests added:
+  - none; existing config/utils/targets/import/generate/watch coverage already exercised the moved surfaces, so adding duplicate tests was unnecessary
+- Verification:
+  - `pnpm vitest run tests/unit/config tests/unit/utils tests/unit/targets tests/integration/import.integration.test.ts tests/integration/generate.integration.test.ts tests/import-generate-roundtrip.test.ts`
+  - `pnpm lint`
+  - `pnpm typecheck`
+  - `pnpm test`
+- QA Report — Remaining source-tree reorganization
+- Acceptance criteria:
+  - every remaining top-level `src` domain now has meaningful subdomain grouping: covered by the structural changes in `config/`, `utils/`, and `targets/`
+  - config loading, remote fetching, resolver behavior, and lock handling still work after the move: covered by `tests/unit/config/*`, `tests/integration/import.integration.test.ts`, and `tests/integration/generate.integration.test.ts`
+  - utility consumers still resolve filesystem, markdown, hash, glob, and logger helpers correctly after the move: covered by `tests/unit/utils/*` and the passing full suite
+  - target shared metadata/import/projection behavior still works after the move: covered by `tests/unit/targets/*`, `tests/import-generate-roundtrip.test.ts`, and the passing full suite
+- Edge cases checked:
+  - remote config fetchers still resolve GitHub/Git/GitLab sources after being moved under `config/remote/`
+  - target importers still find shared import/projection helpers from their per-target folders
+  - watcher behavior remained stable under the full suite after the wider import-path churn
+- Gaps identified:
+  - none
+
+# Install + canonical folder reorganization
+
+- [x] Confirm existing tests cover the install and canonical domains being reorganized
+- [x] Split `src/install` and `src/canonical` top-level files into smaller domain subfolders with no behavior change
+- [x] Update imports across source and tests
+- [x] Run targeted verification for moved domains, then `pnpm lint`, `pnpm typecheck`, and `pnpm test`
+- [x] Run post-feature QA and append review notes
+
+## Review (Install + canonical folder reorganization)
+
+- Changes implemented:
+  - split `src/canonical` into `features/`, `extends/`, and `load/` so parsers, extend resolution, and canonical loading are no longer mixed in one folder
+  - split `src/install` into `core/`, `manual/`, `native/`, `pack/`, `source/`, and `run/` so install flow helpers, source parsing/fetching, pack persistence, native/manual staging, and top-level orchestration are separated
+  - updated imports across source and tests without changing public behavior or install/canonical contracts
+  - hardened `src/cli/commands/watch.ts` again by waiting for chokidar readiness before the initial generate and normalizing watched paths for ignore checks
+- Tests added:
+  - none; the existing install/canonical/watch suites already covered the moved domains and the watch regression path, so adding duplicate tests was unnecessary
+- Verification:
+  - `pnpm vitest run tests/unit/install tests/unit/canonical tests/integration/install.integration.test.ts tests/integration/install-pack.integration.test.ts tests/integration/install-native-target.integration.test.ts tests/integration/install-sync.integration.test.ts tests/integration/install-manual-multi-path.integration.test.ts tests/integration/extends.integration.test.ts tests/integration/extends-native.integration.test.ts`
+  - `pnpm vitest run tests/unit/cli/commands/watch.test.ts`
+  - `pnpm lint`
+  - `pnpm typecheck`
+  - `pnpm test`
+- QA Report — Install + canonical folder reorganization
+- Acceptance criteria:
+  - install and canonical files are grouped into smaller, human-scalable folders without changing behavior: covered by the targeted install/canonical suite and the passing full `pnpm test` run
+  - import, extend, pack, manual install, native install, and canonical parsing/loading still resolve through the new paths: covered by the targeted install/canonical unit and integration suites listed above
+  - watch mode remains stable after the structural move and does not miss first edits or self-trigger on startup churn: covered by `tests/unit/cli/commands/watch.test.ts` and verified again in the passing full suite
+- Edge cases checked:
+  - native install scoping still works across the full target matrix after moving native helpers
+  - manual install scope, pack read/write/merge, and sync replay still work after moving install orchestration helpers
+  - canonical extends, pack loading, and slice loading still compose correctly after moving feature/load modules
+  - full-suite watch timing remains stable when startup generate and lock writes occur under aggregate test load
+- Gaps identified:
+  - none
+
+# Core folder reorganization
+
+- [x] Confirm existing tests cover the core domains being reorganized
+- [x] Split `src/core` top-level files into smaller domain subfolders with no behavior change
+- [x] Update imports across source and tests
+- [x] Run targeted verification for moved domains, then `pnpm lint`, `pnpm typecheck`, and `pnpm test`
+- [x] Run post-feature QA and append review notes
+
+## Review (Core folder reorganization)
+
+- Changes implemented:
+  - split `src/core` into smaller domain folders: `generate/`, `reference/`, `lint/`, and `matrix/`
+  - kept behavior stable by moving existing modules with minimal logic changes and updating imports across source and tests
+  - hardened `src/cli/commands/watch.ts` ignore handling so self-generated `.agentsmesh/.lock` writes do not retrigger through parent directory watcher events
+- Tests added:
+  - none; existing coverage already exercised the moved domains and the watch behavior, so adding duplicate tests was unnecessary
+- Verification:
+  - `pnpm vitest run tests/unit/core/engine.test.ts tests/unit/core/matrix.test.ts tests/unit/core/reference-map.test.ts tests/unit/core/reference-rewriter.test.ts tests/unit/core/import-reference-rewriter.test.ts tests/unit/core/link-rebaser.test.ts tests/unit/core/link-rebaser-edge-cases.test.ts tests/unit/core/linter.test.ts tests/unit/cli/commands/import.test.ts`
+  - `pnpm vitest run tests/unit/cli/commands/watch.test.ts`
+  - `pnpm lint`
+  - `pnpm typecheck`
+  - `pnpm test`
+- QA Report — Core folder reorganization
+- Acceptance criteria:
+  - core files are grouped into smaller, human-scalable folders without changing public behavior: covered by the targeted core-domain unit suite plus the passing full `pnpm test` run
+  - generate/reference/lint/matrix imports remain correct after the move: covered by `tests/unit/core/engine.test.ts`, `tests/unit/core/matrix.test.ts`, `tests/unit/core/reference-map.test.ts`, `tests/unit/core/reference-rewriter.test.ts`, `tests/unit/core/import-reference-rewriter.test.ts`, and `tests/unit/core/linter.test.ts`
+  - watch mode does not loop on its own lock writes after the reorganization: covered by `tests/unit/cli/commands/watch.test.ts` and verified again inside the full suite
+- Edge cases checked:
+  - reference rewriting still resolves canonical, generated, and pack-origin paths after the path changes
+  - lint helpers still route command, hook, permission, and MCP validation through the moved modules
+  - full-suite watcher timing remains stable when `.agentsmesh` emits parent-directory events during lock writes
+- Gaps identified:
+  - none
+
+# Target architecture refactor
+
+- [x] Add failing tests for unified built-in target metadata and built-in registry fallback
+- [x] Refactor target metadata into a single built-in target source used by registry, catalog, engine, matrix, and reference-map helpers
+- [x] Remove engine side-effect target registration and move target-specific feature routing behind target helpers
+- [x] Run targeted verification for the refactor surface, then broader required tests
+- [x] Run post-feature QA and append review notes
+
+## Review (Target architecture refactor)
+
+- Changes implemented:
+  - added `src/targets/builtin-targets.ts` as the single built-in target descriptor source for ids, capabilities, import messaging, lint hooks, skill dirs, and conversion-aware feature routing
+  - rewired `src/targets/registry.ts` and `src/targets/target-catalog.ts` to derive built-ins from that descriptor source instead of side-effect registration plus a separate static catalog
+  - removed engine-side target registration imports and routed feature generation through `resolveTargetFeatureGenerator(...)`
+  - moved effective support-level calculation into shared target helpers and reused built-in metadata in reference-map root/skill directory lookup
+  - exported target generator objects directly from each target `index.ts` module so composition is explicit
+- Tests added:
+  - `tests/unit/targets/builtin-targets.test.ts`
+  - extended `tests/unit/targets/registry.test.ts` with built-in registry fallback coverage
+- Verification:
+  - `pnpm vitest run tests/unit/targets/builtin-targets.test.ts tests/unit/targets/registry.test.ts`
+  - `pnpm vitest run tests/unit/core/engine.test.ts tests/unit/core/matrix.test.ts tests/unit/core/reference-map.test.ts tests/unit/core/linter.test.ts tests/unit/cli/commands/import.test.ts`
+  - `pnpm lint`
+  - `pnpm typecheck`
+  - `pnpm test`
+- QA Report — Target architecture refactor
+- Acceptance criteria:
+  - unified built-in metadata is the source of truth for target ids and catalog wiring: covered by `tests/unit/targets/builtin-targets.test.ts`, `tests/unit/targets/registry.test.ts`, and `tests/unit/cli/commands/import.test.ts`
+  - engine no longer depends on side-effect target registration and still emits the same outputs: covered by `tests/unit/core/engine.test.ts` and the full `tests/integration/generate.integration.test.ts`
+  - effective capability/projection behavior still matches config conversions: covered by `tests/unit/targets/builtin-targets.test.ts` and `tests/unit/core/matrix.test.ts`
+  - reference rewriting/path mapping still resolves root, command, agent, and skill outputs correctly: covered by `tests/unit/core/reference-map.test.ts` and `tests/unit/core/generate-reference-rewrite.test.ts`
+- Edge cases checked:
+  - built-in targets resolve without manual registration
+  - codex command projection disables cleanly when `commands_to_skills.codex-cli` is `false`
+  - windsurf agent projection disables cleanly when `agents_to_skills.windsurf` is `false`
+  - import/lint/generate continue to honor the same built-in target list after the refactor
+- Gaps identified:
+  - none
+
+# Architecture review — library structural analysis
+
+- [x] Map the current runtime architecture across canonical loading, core engine, config resolution, CLI orchestration, and target adapters
+- [x] Inspect structural hotspots in module boundaries, file sizes, target registration, and test organization
+- [x] Identify the highest-impact architectural gaps with concrete evidence and low-risk remediation options
+- [x] Append review notes with recommendations and residual verification gaps
+
+## Review (Architecture review — library structural analysis)
+
+- Architecture shape:
+  - canonical loading and merge flow is coherent: config loader -> extends resolver -> canonical merge -> engine generation -> CLI persistence/reporting
+  - the main structural risk is not missing layers, but duplicated target knowledge and target-specific branching spread across core, targets, and CLI support code
+- Highest-impact gaps:
+  - target metadata is split between side-effect registry registration and `TARGET_CATALOG`, which increases drift risk for generation/import/lint/matrix/schema updates
+  - core orchestration contains target-name conditionals for conversion and special output families, so the engine owns adapter quirks that should live in target definitions
+  - target path and capability knowledge is duplicated again in reference-map/matrix helpers, making new-target work fan out across many files
+  - install and generate orchestration remain monolithic enough that policy, persistence, and user interaction changes are higher-risk than they need to be
+  - several production files exceed the repo's 200-line limit, concentrated in adapter/import/install paths, which is a maintainability warning more than an immediate bug
+- Lowest-risk remediation path:
+  - introduce one canonical built-in target descriptor per target and derive registry, import/lint catalog, target ids, and capability matrix from it
+  - move conversion and optional-output decisions behind per-target feature handlers/metadata so `core/engine.ts` stops branching on target ids
+  - extract shared post-generate finalization and install pipeline phases without changing behavior
+  - split the largest adapter/import/install modules by feature to reduce blast radius for future changes
+- Verification notes:
+  - review based on source inspection of `src/` and test layout; no functional code changes were made beyond documenting this review in `tasks/todo.md`
+  - no test suite run was needed for this analysis-only pass
+
 # Packs Feature — Local Materialized Installs
 
 # Release 0.2.3 prep
@@ -704,3 +947,95 @@
   - full suite passed: 145 test files, 1632 tests
   - publish tarball stayed clean at 6 files (`CHANGELOG.md`, `LICENSE`, `README.md`, `dist/cli.js`, `dist/cli.js.map`, `package.json`)
   - if npm still returns `E404` on the next CI run, the remaining check is npm package settings: confirm the trusted publisher entry points to repository `sampleXbro/agentsmesh` and workflow file `.github/workflows/publish.yml`
+
+# E2E contract hardening matrix
+
+- [x] Audit the existing e2e helpers, fixture surface, and target capability metadata against the requested contract gaps
+- [x] Add failing exact target-contract coverage for Continue, including exact generated files, exact imported canonical tree, and exact rewritten reference assertions
+- [x] Add generate -> import -> generate `--check` idempotency coverage for every supported target
+- [x] Add install replay e2e coverage for sibling installs from the same source, multi-path replay collapse, remote GitHub `blob/...` and `tree/...` replay narrowing, and `install --sync --dry-run` side-effect freedom
+- [x] Add conversion-off, stale-artifact cleanup, partial-capability subset, hooks round-trip, permissions round-trip, multi-extend precedence, watch expansion, and import-precedence e2e coverage
+- [ ] Add one real validated fixture smoke contract per supported target and update `tests/e2e/README.md` to reflect the synthetic-vs-real split
+- [x] Implement any minimal production fixes required by the new failing e2e coverage
+- [x] Run targeted e2e verification, then `pnpm lint`, `pnpm typecheck`, `pnpm test`, and the post-feature QA pass
+- [x] Append review notes with acceptance coverage, edge cases, verification evidence, and any new lessons learned
+
+## Review (E2E contract hardening matrix)
+
+- Changes implemented:
+  - expanded the exact target-contract matrix to include `continue`, exact generated file lists, exact imported canonical trees, and exact rewritten-reference assertions
+  - added per-target `generate -> import -> generate --check` idempotency coverage across every supported target
+  - added install replay coverage for sibling installs from one source, multi-path replay collapse, GitHub `tree/...` and `blob/...` narrowing replay, and `install --sync --dry-run` side-effect freedom
+  - added new e2e coverage for conversion-off projections, stale-artifact cleanup, partial-capability subset contracts, hooks round-trip, permissions round-trip, multi-extend precedence, watch feature edits, and import precedence
+  - added a `fixtures-real/` smoke lane plus README guidance that separates synthetic fixtures from optional validated real exports
+  - fixed production gaps exposed by the new coverage: dry-run replay forwarding, Windsurf MCP warnings, stale generated artifact cleanup, Cursor and Gemini root-import precedence/normalization, Windsurf scoped-rule regeneration, and Gemini absolute-path cleanup during compat-root import
+- Tests added:
+  - `tests/e2e/install-replay.e2e.test.ts`
+  - `tests/e2e/install-remote.e2e.test.ts`
+  - `tests/e2e/conversion-off.e2e.test.ts`
+  - `tests/e2e/partial-capability-contracts.e2e.test.ts`
+  - `tests/e2e/stale-artifact-cleanup.e2e.test.ts`
+  - `tests/e2e/hooks-roundtrip.e2e.test.ts`
+  - `tests/e2e/permissions-roundtrip.e2e.test.ts`
+  - `tests/e2e/import-precedence.e2e.test.ts`
+  - `tests/e2e/multi-extend-precedence.e2e.test.ts`
+  - `tests/e2e/watch-features.e2e.test.ts`
+  - `tests/e2e/real-fixtures-smoke.e2e.test.ts`
+  - expanded `tests/e2e/target-contract-matrix.e2e.test.ts`
+- Verification:
+  - targeted e2e reruns for the repaired regressions:
+    - `pnpm vitest run --config vitest.e2e.config.ts tests/e2e/generate-reference-rewrite-matrix.e2e.test.ts tests/e2e/import-reference-rewrite.e2e.test.ts`
+    - `pnpm vitest run tests/integration/import.integration.test.ts`
+  - repo gates:
+    - `pnpm build`
+    - `pnpm lint`
+    - `pnpm typecheck`
+    - `pnpm test:e2e`
+    - `pnpm test`
+- QA Report — E2E contract hardening matrix
+- Acceptance criteria:
+  - exact target-contract and rewritten-reference assertions now cover every supported target, including Continue: covered by `tests/e2e/target-contract-matrix.e2e.test.ts`
+  - serializer drift and unstable import normalization are guarded by generate/import/check loops for every supported target: covered by the idempotency block in `tests/e2e/target-contract-matrix.e2e.test.ts`
+  - install replay contracts cover sibling installs, multi-path collapse, GitHub blob/tree narrowing, and dry-run side-effect freedom: covered by `tests/e2e/install-replay.e2e.test.ts` and `tests/e2e/install-remote.e2e.test.ts`
+  - conversion-off, stale cleanup, partial-support subsets, hooks/permissions round-trips, extend precedence, watch regeneration, and import precedence now have dedicated e2e coverage: covered by the new focused e2e files listed above
+- Edge cases checked:
+  - duplicate permission entries, allow+deny ordering, and partial-support re-import behavior for Claude, Cursor, and Gemini
+  - multiple hook events and handlers, timeout rounding, env preservation, quoting, and stable wrapper naming
+  - deterministic warnings for Cursor permissions, Gemini hook subset, Windsurf MCP subset, and Copilot hook subset
+  - stale-file deletion when commands, agents, hooks, MCP, ignore, or permissions are removed from canonical
+  - watch-mode regeneration across edits to commands, skills, MCP, hooks, and permissions without stale output drift
+- Gaps identified:
+  - the repo still does not contain actual human-validated per-target export fixtures, so the new `tests/e2e/real-fixtures-smoke.e2e.test.ts` lane is scaffolded and documented but remains a placeholder until real fixtures are added
+- Lessons learned:
+  - dist-backed e2e helpers execute `dist/cli.js`, so production-behavior fixes must be rebuilt before interpreting targeted e2e failures
+
+# Cline MCP filename contract
+
+- [x] Rename the Cline MCP artifact contract from `.cline/mcp_settings.json` to `.cline/cline_mcp_settings.json` across source, tests, and docs
+- [x] Run targeted Cline generation/import verification and the required repo gates
+- [x] Append review notes with the final contract and verification evidence
+
+## Review (Cline MCP filename contract)
+
+- Changes implemented:
+  - changed the Cline MCP target constant to `.cline/cline_mcp_settings.json`
+  - updated generator, importer, built-in target metadata, stale cleanup, unit tests, integration tests, e2e tests, and docs to use the corrected filename
+  - aligned documented project-structure and Cline target docs with the corrected contract
+- Verification:
+  - `pnpm build`
+  - `pnpm vitest run tests/unit/targets/cline/generator.test.ts tests/unit/targets/cline/importer.test.ts tests/unit/core/engine.test.ts tests/import-generate-roundtrip.test.ts tests/unit/install/native-install-scope.junie-cline-windsurf-codex.test.ts tests/agents-folder-structure-research.test.ts`
+  - `pnpm vitest run --config vitest.e2e.config.ts tests/e2e/cline-content-contract.e2e.test.ts tests/e2e/target-contract-matrix.e2e.test.ts`
+  - `pnpm lint`
+  - `pnpm typecheck`
+  - `pnpm test`
+- QA Report — Cline MCP filename contract
+- Acceptance criteria:
+  - Cline generation emits `.cline/cline_mcp_settings.json`: covered by `tests/unit/targets/cline/generator.test.ts`, `tests/unit/core/engine.test.ts`, and `tests/e2e/cline-content-contract.e2e.test.ts`
+  - Cline import reads `.cline/cline_mcp_settings.json` back into canonical MCP: covered by `tests/unit/targets/cline/importer.test.ts`
+  - cross-target and round-trip contracts stay stable after the rename: covered by `tests/import-generate-roundtrip.test.ts` and `tests/e2e/target-contract-matrix.e2e.test.ts`
+- Edge cases checked:
+  - malformed Cline MCP settings still import safely
+  - native-install scope detection for Cline MCP files still resolves the target correctly
+  - stale generated-output cleanup now deletes the renamed Cline MCP artifact path
+- Gaps identified:
+  - none

@@ -7,12 +7,12 @@
 
 import { join, basename } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
-import { createImportReferenceNormalizer } from '../../core/import-reference-rewriter.js';
-import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/fs.js';
-import { parseFrontmatter } from '../../utils/markdown.js';
-import { serializeImportedRuleWithFallback } from '../import-metadata.js';
-import { importFileDirectory } from '../import-orchestrator.js';
-import { toGlobsArray } from '../shared-import-helpers.js';
+import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
+import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/filesystem/fs.js';
+import { parseFrontmatter } from '../../utils/text/markdown.js';
+import { serializeImportedRuleWithFallback } from '../import/import-metadata.js';
+import { importFileDirectory } from '../import/import-orchestrator.js';
+import { toGlobsArray } from '../import/shared-import-helpers.js';
 import {
   COPILOT_TARGET,
   COPILOT_INSTRUCTIONS,

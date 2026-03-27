@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { discoverFromContentRoot } from '../../../src/install/discover-resources.js';
+import { discoverFromContentRoot } from '../../../src/install/core/discover-resources.js';
 
 const ROOT = join(tmpdir(), 'am-discover-test');
 

@@ -3,9 +3,9 @@ import { parse as parseToml } from 'smol-toml';
 import {
   serializeImportedCommandWithFallback,
   serializeImportedRuleWithFallback,
-} from '../import-metadata.js';
-import type { ImportFileMapping } from '../import-orchestrator.js';
-import { toGlobsArray, toToolsArray } from '../shared-import-helpers.js';
+} from '../import/import-metadata.js';
+import type { ImportFileMapping } from '../import/import-orchestrator.js';
+import { toGlobsArray, toToolsArray } from '../import/shared-import-helpers.js';
 import { parseFlexibleFrontmatter } from './format-helpers.js';
 import { GEMINI_CANONICAL_RULES_DIR, GEMINI_CANONICAL_COMMANDS_DIR } from './constants.js';
 

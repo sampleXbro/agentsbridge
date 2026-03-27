@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   AGENTSMESH_ROOT_INSTRUCTION_PARAGRAPH,
   appendAgentsmeshRootInstructionParagraph,
-} from '../../../src/targets/root-instruction-paragraph.js';
+} from '../../../src/targets/projection/root-instruction-paragraph.js';
 
 describe('appendAgentsmeshRootInstructionParagraph', () => {
   it('appends the headed section to plain content', () => {

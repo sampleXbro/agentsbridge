@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { globMatch, globFilter } from '../../../src/utils/glob.js';
+import { globMatch, globFilter } from '../../../src/utils/text/glob.js';
 
 describe('globMatch', () => {
   // Basic wildcards

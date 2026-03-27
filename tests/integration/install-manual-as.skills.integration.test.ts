@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { runInstall } from '../../src/install/run-install.js';
+import { runInstall } from '../../src/install/run/run-install.js';
 import { listRelativeFiles, readInstallManifest } from '../helpers/install-test-helpers.js';
 
 const ROOT = join(tmpdir(), 'am-install-manual-as-skills');

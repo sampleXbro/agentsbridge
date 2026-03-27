@@ -2,11 +2,11 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { generate, resolveOutputCollisions } from '../../../src/core/engine.js';
+import { generate, resolveOutputCollisions } from '../../../src/core/generate/engine.js';
 import type { CanonicalFiles, GenerateResult } from '../../../src/core/types.js';
-import type { ValidatedConfig } from '../../../src/config/schema.js';
-import { appendAgentsmeshRootInstructionParagraph } from '../../../src/targets/root-instruction-paragraph.js';
-import { serializeFrontmatter } from '../../../src/utils/markdown.js';
+import type { ValidatedConfig } from '../../../src/config/core/schema.js';
+import { appendAgentsmeshRootInstructionParagraph } from '../../../src/targets/projection/root-instruction-paragraph.js';
+import { serializeFrontmatter } from '../../../src/utils/text/markdown.js';
 
 const TEST_DIR = join(tmpdir(), 'am-engine-test');
 
@@ -1367,7 +1367,7 @@ describe('generate Cline', () => {
     expect(ign!.content).toContain('node_modules');
   });
 
-  it('produces .cline/mcp_settings.json when mcp feature enabled', async () => {
+  it('produces .cline/cline_mcp_settings.json when mcp feature enabled', async () => {
     const config = minimalConfig({
       targets: ['cline'],
       features: ['rules', 'mcp'],
@@ -1385,7 +1385,7 @@ describe('generate Cline', () => {
       canonical,
       projectRoot: TEST_DIR,
     });
-    const mcp = results.find((r) => r.path === '.cline/mcp_settings.json');
+    const mcp = results.find((r) => r.path === '.cline/cline_mcp_settings.json');
     expect(mcp).toBeDefined();
     const parsed = JSON.parse(mcp!.content) as Record<string, unknown>;
     expect(parsed.mcpServers).toBeDefined();
@@ -1847,7 +1847,7 @@ describe('generate Windsurf', () => {
     const ignoreFirst = first.find((r) => r.path === '.codeiumignore');
     expect(ignoreFirst?.status).toBe('created');
     // Write both files so second run finds them
-    const { writeFileAtomic } = await import('../../../src/utils/fs.js');
+    const { writeFileAtomic } = await import('../../../src/utils/filesystem/fs.js');
     const { join } = await import('node:path');
     const content = ignoreFirst!.content;
     await writeFileAtomic(join(TEST_DIR, '.codeiumignore'), content);
@@ -1863,7 +1863,7 @@ describe('generate Windsurf', () => {
       ...canonicalWithRootRule('Root'),
       ignore: ['node_modules'],
     };
-    const { writeFileAtomic } = await import('../../../src/utils/fs.js');
+    const { writeFileAtomic } = await import('../../../src/utils/filesystem/fs.js');
     const { join } = await import('node:path');
     await writeFileAtomic(join(TEST_DIR, '.codeiumignore'), 'old content\n');
     const results = await generate({ config, canonical, projectRoot: TEST_DIR });
@@ -1884,7 +1884,7 @@ describe('generate Windsurf', () => {
     const settingsFirst = first.find((r) => r.path === '.gemini/settings.json');
     expect(settingsFirst?.status).toBe('created');
     // Write file so second run finds it
-    const { writeFileAtomic, mkdirp } = await import('../../../src/utils/fs.js');
+    const { writeFileAtomic, mkdirp } = await import('../../../src/utils/filesystem/fs.js');
     const { join } = await import('node:path');
     await mkdirp(join(TEST_DIR, '.gemini'));
     await writeFileAtomic(join(TEST_DIR, '.gemini', 'settings.json'), settingsFirst!.content);
@@ -1920,7 +1920,7 @@ describe('generate Windsurf', () => {
     const first = await generate({ config, canonical, projectRoot: TEST_DIR });
     const mcpFirst = first.find((r) => r.path === '.cursor/mcp.json');
     expect(mcpFirst?.status).toBe('created');
-    const { writeFileAtomic, mkdirp } = await import('../../../src/utils/fs.js');
+    const { writeFileAtomic, mkdirp } = await import('../../../src/utils/filesystem/fs.js');
     await mkdirp(join(TEST_DIR, '.cursor'));
     await writeFileAtomic(join(TEST_DIR, '.cursor', 'mcp.json'), mcpFirst!.content);
     const second = await generate({ config, canonical, projectRoot: TEST_DIR });
@@ -1950,7 +1950,7 @@ describe('generate Windsurf', () => {
     const first = await generate({ config, canonical, projectRoot: TEST_DIR });
     const hooksFirst = first.find((r) => r.path === '.cursor/settings.json');
     if (!hooksFirst) return; // cursor may not support hooks
-    const { writeFileAtomic, mkdirp } = await import('../../../src/utils/fs.js');
+    const { writeFileAtomic, mkdirp } = await import('../../../src/utils/filesystem/fs.js');
     await mkdirp(join(TEST_DIR, '.cursor'));
     await writeFileAtomic(join(TEST_DIR, '.cursor', 'settings.json'), hooksFirst.content);
     const second = await generate({ config, canonical, projectRoot: TEST_DIR });

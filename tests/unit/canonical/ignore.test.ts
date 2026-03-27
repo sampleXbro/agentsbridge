@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { parseIgnore } from '../../../src/canonical/ignore.js';
+import { parseIgnore } from '../../../src/canonical/features/ignore.js';
 
 const TEST_DIR = join(tmpdir(), 'agentsmesh-ignore-test');
 

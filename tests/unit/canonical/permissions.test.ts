@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { parsePermissions } from '../../../src/canonical/permissions.js';
+import { parsePermissions } from '../../../src/canonical/features/permissions.js';
 
 const TEST_DIR = join(tmpdir(), 'agentsmesh-permissions-test');
 

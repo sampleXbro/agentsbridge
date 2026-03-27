@@ -12,7 +12,7 @@ import {
   fetchRemoteExtend,
   getCacheDir,
   resolveLatestTag,
-} from '../../../src/config/remote-fetcher.js';
+} from '../../../src/config/remote/remote-fetcher.js';
 
 const CACHE_ROOT = join(tmpdir(), 'agentsmesh-remote-fetcher-test');
 
@@ -243,7 +243,7 @@ describe('fetchRemoteExtend', () => {
 
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network unreachable')));
 
-    const fsMod = await import('../../../src/utils/fs.js');
+    const fsMod = await import('../../../src/utils/filesystem/fs.js');
     let existsCallCount = 0;
     const existsSpy = vi.spyOn(fsMod, 'exists').mockImplementation(async (path: string) => {
       if (path.includes('org-fallback-v1_0_0')) {

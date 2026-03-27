@@ -1,4 +1,4 @@
-import { logger } from '../utils/logger.js';
+import { logger } from '../utils/output/logger.js';
 
 interface HelpFlag {
   name: string;

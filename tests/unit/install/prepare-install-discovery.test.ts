@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { existsSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { prepareInstallDiscovery } from '../../../src/install/prepare-install-discovery.js';
+import { prepareInstallDiscovery } from '../../../src/install/core/prepare-install-discovery.js';
 
 const mockImport = vi.hoisted(() =>
   vi.fn<[string, string], Promise<unknown[]>>().mockImplementation(async (root: string) => {
@@ -26,7 +26,7 @@ const mockImport = vi.hoisted(() =>
   }),
 );
 
-vi.mock('../../../src/canonical/native-extends-importer.js', () => ({
+vi.mock('../../../src/canonical/extends/native-extends-importer.js', () => ({
   importNativeToCanonical: mockImport,
 }));
 

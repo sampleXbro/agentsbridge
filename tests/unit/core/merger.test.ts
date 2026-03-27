@@ -66,7 +66,7 @@ checksums:
 
     await resolveLockConflict(abDir, '0.1.0');
 
-    const { readLock } = await import('../../../src/config/lock.js');
+    const { readLock } = await import('../../../src/config/core/lock.js');
     const lock = await readLock(abDir);
     expect(lock).not.toBeNull();
     expect(lock!.checksums['rules/_root.md']).toMatch(/^sha256:[a-f0-9]{64}$/);
@@ -119,12 +119,12 @@ checksums:
 `,
     );
 
-    const config = await import('../../../src/config/loader.js').then((m) =>
+    const config = await import('../../../src/config/core/loader.js').then((m) =>
       m.loadConfigFromDir(TEST_DIR).then((r) => r.config),
     );
     await resolveLockConflict(abDir, '0.1.0', config);
 
-    const { readLock } = await import('../../../src/config/lock.js');
+    const { readLock } = await import('../../../src/config/core/lock.js');
     const lock = await readLock(abDir);
     expect(lock).not.toBeNull();
     expect(lock!.extends).toBeDefined();

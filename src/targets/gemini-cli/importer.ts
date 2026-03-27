@@ -3,17 +3,23 @@
  * .gemini/settings.json → canonical .agentsmesh/.
  */
 
+import { realpathSync } from 'node:fs';
 import { join, basename, dirname, relative } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
-import { createImportReferenceNormalizer } from '../../core/import-reference-rewriter.js';
-import { readFileSafe, readDirRecursive, writeFileAtomic, mkdirp } from '../../utils/fs.js';
-import { parseFrontmatter } from '../../utils/markdown.js';
-import { serializeImportedRuleWithFallback } from '../import-metadata.js';
-import { importFileDirectory } from '../import-orchestrator.js';
+import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
+import {
+  readFileSafe,
+  readDirRecursive,
+  writeFileAtomic,
+  mkdirp,
+} from '../../utils/filesystem/fs.js';
+import { parseFrontmatter } from '../../utils/text/markdown.js';
+import { serializeImportedRuleWithFallback } from '../import/import-metadata.js';
+import { importFileDirectory } from '../import/import-orchestrator.js';
 import {
   parseProjectedAgentSkillFrontmatter,
   serializeImportedAgent,
-} from '../projected-agent-skill.js';
+} from '../projection/projected-agent-skill.js';
 import { mapGeminiCommandFile, mapGeminiRuleFile } from './importer-mappers.js';
 import {
   GEMINI_TARGET,
@@ -42,6 +48,7 @@ import { importGeminiPolicies } from './policies-importer.js';
 export async function importFromGemini(projectRoot: string): Promise<ImportResult[]> {
   const results: ImportResult[] = [];
   const normalize = await createImportReferenceNormalizer(GEMINI_TARGET, projectRoot);
+  const normalizeCodex = await createImportReferenceNormalizer('codex-cli', projectRoot);
   const rulesDir = join(projectRoot, GEMINI_CANONICAL_RULES_DIR);
   const commandsDir = join(projectRoot, GEMINI_CANONICAL_COMMANDS_DIR);
 
@@ -57,9 +64,9 @@ export async function importFromGemini(projectRoot: string): Promise<ImportResul
 
   const rootCandidate =
     [
-      { path: geminiRootPath, content: geminiRootContent },
       { path: compatAgentsRootPath, content: compatAgentsRootContent },
       { path: compatInnerRootPath, content: compatInnerRootContent },
+      { path: geminiRootPath, content: geminiRootContent },
       { path: systemPath, content: systemContent },
     ].find((c) => c.content !== null) ?? null;
 
@@ -68,12 +75,23 @@ export async function importFromGemini(projectRoot: string): Promise<ImportResul
   if (rootContent !== null) {
     await mkdirp(rulesDir);
     const destPath = join(rulesDir, '_root.md');
-    const { frontmatter, body } = parseFrontmatter(
-      normalize(rootContent, rootSourcePath, destPath),
+    const compatNormalized =
+      rootSourcePath === compatAgentsRootPath || rootSourcePath === compatInnerRootPath
+        ? normalize(normalizeCodex(rootContent, rootSourcePath, destPath), rootSourcePath, destPath)
+        : normalize(rootContent, rootSourcePath, destPath);
+    const normalizedRoot = stripProjectRootCanonicalPrefix(
+      compatNormalized
+        .replace(/\.agents\/skills\//g, '.agentsmesh/skills/')
+        .replace(/\.agents\\skills\\/g, '.agentsmesh/skills/'),
+      projectRoot,
     );
+    const { frontmatter, body } = parseFrontmatter(normalizedRoot);
     const hasRoot = frontmatter.root === true;
     const outFm = hasRoot ? frontmatter : { ...frontmatter, root: true };
-    const outContent = await serializeImportedRuleWithFallback(destPath, outFm, body);
+    const outContent = stripProjectRootCanonicalPrefix(
+      await serializeImportedRuleWithFallback(destPath, outFm, body),
+      projectRoot,
+    );
     await writeFileAtomic(destPath, outContent);
     results.push({
       fromTool: 'gemini-cli',
@@ -166,7 +184,7 @@ export async function importFromGemini(projectRoot: string): Promise<ImportResul
   try {
     const agentFiles = await readDirRecursive(geminiAgentsPath);
     const agentMdFiles = agentFiles.filter((f) => f.endsWith('.md'));
-    const { serializeFrontmatter } = await import('../../utils/markdown.js');
+    const { serializeFrontmatter } = await import('../../utils/text/markdown.js');
     for (const srcPath of agentMdFiles) {
       const content = await readFileSafe(srcPath);
       if (!content) continue;
@@ -209,4 +227,28 @@ export async function importFromGemini(projectRoot: string): Promise<ImportResul
   results.push(...(await importGeminiPolicies(projectRoot)));
 
   return results;
+}
+
+function stripProjectRootCanonicalPrefix(content: string, projectRoot: string): string {
+  const variants = new Set([
+    projectRoot,
+    projectRoot.replace(/\\/g, '/'),
+    projectRoot.replace(/\//g, '\\'),
+  ]);
+  try {
+    variants.add(realpathSync(projectRoot));
+    variants.add(realpathSync.native(projectRoot));
+  } catch {
+    // Keep direct path variants when realpath lookup fails.
+  }
+
+  const stripped = Array.from(variants).reduce((next, variant) => {
+    const escaped = variant.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return next
+      .replace(new RegExp(`${escaped}[/\\\\]\\.agentsmesh[/\\\\]`, 'g'), '.agentsmesh/')
+      .replaceAll(`${variant}/.agentsmesh`, '.agentsmesh')
+      .replaceAll(`${variant}\\.agentsmesh`, '.agentsmesh');
+  }, content);
+
+  return stripped.replace(/(?:[A-Za-z]:)?[^\s"'`()<>]+[/\\]\.agentsmesh[/\\]/g, '.agentsmesh/');
 }

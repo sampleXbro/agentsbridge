@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { runWatch } from '../../../../src/cli/commands/watch.js';
 import * as matrixMod from '../../../../src/cli/commands/matrix.js';
-import { logger } from '../../../../src/utils/logger.js';
+import { logger } from '../../../../src/utils/output/logger.js';
 
 import { randomBytes } from 'node:crypto';
 const TEST_DIR = join(tmpdir(), 'am-watch-cmd-test-' + randomBytes(4).toString('hex'));

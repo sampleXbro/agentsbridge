@@ -1,6 +1,6 @@
 # Agents E2E Last Run Report
 
-_Generated: 2026-03-27T09:52:05.445Z_
+_Generated: 2026-03-27T18:16:27.109Z_
 
 ## Initial — `.agentsmesh/agents/` (canonical fixture)
 
@@ -150,7 +150,7 @@ Legend: ✓ = native  📝 = embedded  ⚠ = partial  – = not supported
 ### Imported files
 
 ```
-✓ AGENTS.md → .agentsmesh/rules/_root.md
+✓ .cursor/rules/general.mdc → .agentsmesh/rules/_root.md
 ✓ .cursor/rules/typescript.mdc → .agentsmesh/rules/typescript.md
 ✓ .cursor/commands/review.md → .agentsmesh/commands/review.md
 ✓ .cursor/agents/code-reviewer.md → .agentsmesh/agents/code-reviewer.md

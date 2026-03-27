@@ -4,8 +4,13 @@
 
 import { join, basename, dirname } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
-import { readFileSafe, readDirRecursive, writeFileAtomic, mkdirp } from '../../utils/fs.js';
-import { parseFrontmatter, serializeFrontmatter } from '../../utils/markdown.js';
+import {
+  readFileSafe,
+  readDirRecursive,
+  writeFileAtomic,
+  mkdirp,
+} from '../../utils/filesystem/fs.js';
+import { parseFrontmatter, serializeFrontmatter } from '../../utils/text/markdown.js';
 import {
   COPILOT_TARGET,
   COPILOT_AGENTS_DIR,

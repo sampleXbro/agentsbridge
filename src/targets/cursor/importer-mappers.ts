@@ -1,11 +1,11 @@
 import { basename, join } from 'node:path';
-import { parseFrontmatter } from '../../utils/markdown.js';
+import { parseFrontmatter } from '../../utils/text/markdown.js';
 import {
   serializeImportedCommandWithFallback,
   serializeImportedRuleWithFallback,
-} from '../import-metadata.js';
-import type { ImportFileMapping } from '../import-orchestrator.js';
-import { toToolsArray } from '../shared-import-helpers.js';
+} from '../import/import-metadata.js';
+import type { ImportFileMapping } from '../import/import-orchestrator.js';
+import { toToolsArray } from '../import/shared-import-helpers.js';
 import {
   CURSOR_CANONICAL_RULES_DIR,
   CURSOR_CANONICAL_COMMANDS_DIR,
@@ -19,15 +19,17 @@ export async function mapCursorRuleFile(
   onRootRule: () => void,
 ): Promise<ImportFileMapping> {
   const name = basename(srcPath, '.mdc');
-  const destPath = join(destDir, `${name}.md`);
+  const rawDestPath = join(destDir, `${name}.md`);
+  const initial = parseFrontmatter(normalizeTo(rawDestPath));
+  const isRoot = initial.frontmatter.alwaysApply === true;
+  const destPath = isRoot ? join(destDir, '_root.md') : rawDestPath;
   const { frontmatter, body } = parseFrontmatter(normalizeTo(destPath));
-  const isRoot = frontmatter.alwaysApply === true;
   if (isRoot) onRootRule();
   const canonicalFm = { ...frontmatter, root: isRoot };
   delete (canonicalFm as Record<string, unknown>).alwaysApply;
   return {
     destPath,
-    toPath: `${CURSOR_CANONICAL_RULES_DIR}/${name}.md`,
+    toPath: `${CURSOR_CANONICAL_RULES_DIR}/${isRoot ? '_root' : name}.md`,
     feature: 'rules',
     content: await serializeImportedRuleWithFallback(destPath, canonicalFm, body),
   };

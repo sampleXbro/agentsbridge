@@ -4,9 +4,14 @@
 
 import { join, basename } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
-import { readFileSafe, readDirRecursive, writeFileAtomic, mkdirp } from '../../utils/fs.js';
-import { parseFrontmatter } from '../../utils/markdown.js';
-import { serializeImportedRuleWithFallback } from '../import-metadata.js';
+import {
+  readFileSafe,
+  readDirRecursive,
+  writeFileAtomic,
+  mkdirp,
+} from '../../utils/filesystem/fs.js';
+import { parseFrontmatter } from '../../utils/text/markdown.js';
+import { serializeImportedRuleWithFallback } from '../import/import-metadata.js';
 import { CODEX_TARGET, CODEX_RULES_DIR, CODEX_CANONICAL_RULES_DIR } from './constants.js';
 import { tryParseEmbeddedCanonicalFromCodexRules } from './codex-rules-embed.js';
 

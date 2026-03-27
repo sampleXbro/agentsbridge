@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execSync } from 'node:child_process';
@@ -403,13 +403,21 @@ features: [agents]
   });
 
   it.each([
-    ['gemini-cli', '.gemini/skills/am-agent-reviewer/SKILL.md'],
-    ['cline', '.cline/skills/am-agent-reviewer/SKILL.md'],
-    ['codex-cli', '.agents/skills/am-agent-reviewer/SKILL.md'],
-    ['windsurf', '.windsurf/skills/am-agent-reviewer/SKILL.md'],
+    ['gemini-cli', '.gemini/skills/am-agent-reviewer/SKILL.md', '.gemini/agents/reviewer.md'],
+    [
+      'cline',
+      '.cline/skills/am-agent-reviewer/SKILL.md',
+      '.cline/skills/am-agent-reviewer/SKILL.md',
+    ],
+    ['codex-cli', '.agents/skills/am-agent-reviewer/SKILL.md', '.codex/agents/reviewer.toml'],
+    [
+      'windsurf',
+      '.windsurf/skills/am-agent-reviewer/SKILL.md',
+      '.windsurf/skills/am-agent-reviewer/SKILL.md',
+    ],
   ] as const)(
     'import from %s projected agent skill then generate preserves agent projection',
-    (target, projectedPath) => {
+    (target, projectedPath, generatedPath) => {
       mkdirSync(join(TEST_DIR, 'docs'), { recursive: true });
       const fullProjectedPath = join(TEST_DIR, projectedPath);
       mkdirSync(join(fullProjectedPath, '..'), { recursive: true });
@@ -444,9 +452,14 @@ features: [agents]
       );
       expect(canonicalAgent).toContain('name: reviewer');
       expect(canonicalAgent).toContain('Reviews code');
-      const projected = readFileSync(fullProjectedPath, 'utf-8');
-      expect(projected).toContain('x-agentsmesh-kind: agent');
-      expect(projected).toContain('You review code.');
+      const generated = readFileSync(join(TEST_DIR, generatedPath), 'utf-8');
+      expect(generated).toContain('Reviews code');
+      expect(generated).toContain('You review code.');
+      if (generatedPath === projectedPath) {
+        expect(generated).toContain('x-agentsmesh-kind: agent');
+      } else {
+        expect(existsSync(fullProjectedPath)).toBe(false);
+      }
     },
   );
 

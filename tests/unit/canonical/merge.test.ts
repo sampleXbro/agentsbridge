@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mergeCanonicalFiles } from '../../../src/canonical/merge.js';
+import { mergeCanonicalFiles } from '../../../src/canonical/load/merge.js';
 import type {
   CanonicalRule,
   CanonicalCommand,

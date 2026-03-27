@@ -6,7 +6,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { hashContent } from '../../../../src/utils/hash.js';
+import { hashContent } from '../../../../src/utils/crypto/hash.js';
 import { runCheck } from '../../../../src/cli/commands/check.js';
 
 const TEST_DIR = join(tmpdir(), 'am-check-test');

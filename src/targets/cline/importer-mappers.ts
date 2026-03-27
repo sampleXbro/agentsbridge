@@ -1,11 +1,11 @@
 import { basename, join } from 'node:path';
-import { parseFrontmatter } from '../../utils/markdown.js';
+import { parseFrontmatter } from '../../utils/text/markdown.js';
 import {
   serializeImportedCommandWithFallback,
   serializeImportedRuleWithFallback,
-} from '../import-metadata.js';
-import type { ImportFileMapping } from '../import-orchestrator.js';
-import { toGlobsArray } from '../shared-import-helpers.js';
+} from '../import/import-metadata.js';
+import type { ImportFileMapping } from '../import/import-orchestrator.js';
+import { toGlobsArray } from '../import/shared-import-helpers.js';
 import { CLINE_CANONICAL_RULES_DIR, CLINE_CANONICAL_COMMANDS_DIR } from './constants.js';
 
 export async function mapClineRuleFile(

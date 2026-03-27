@@ -82,6 +82,26 @@ export const TARGET_CONTRACTS = {
       '.agentsmesh/skills/api-generator/template.ts',
     ],
   },
+  continue: {
+    generated: [
+      '.continue/mcpServers/agentsmesh.json',
+      '.continue/prompts/review.md',
+      '.continue/rules/_root.md',
+      '.continue/rules/typescript.md',
+      '.continue/skills/api-generator/SKILL.md',
+      '.continue/skills/api-generator/references/route-checklist.md',
+      '.continue/skills/api-generator/template.ts',
+    ],
+    imported: [
+      '.agentsmesh/commands/review.md',
+      '.agentsmesh/mcp.json',
+      '.agentsmesh/rules/_root.md',
+      '.agentsmesh/rules/typescript.md',
+      '.agentsmesh/skills/api-generator/SKILL.md',
+      '.agentsmesh/skills/api-generator/references/route-checklist.md',
+      '.agentsmesh/skills/api-generator/template.ts',
+    ],
+  },
   junie: {
     generated: [
       '.aiignore',
@@ -138,7 +158,7 @@ export const TARGET_CONTRACTS = {
   },
   cline: {
     generated: [
-      '.cline/mcp_settings.json',
+      '.cline/cline_mcp_settings.json',
       '.cline/skills/am-agent-code-reviewer/SKILL.md',
       '.cline/skills/am-agent-researcher/SKILL.md',
       '.cline/skills/api-generator/SKILL.md',
@@ -192,6 +212,7 @@ export const TARGET_CONTRACTS = {
       '.codeiumignore',
       '.windsurf/hooks.json',
       '.windsurf/mcp_config.example.json',
+      '.windsurf/rules/src.md',
       '.windsurf/rules/typescript.md',
       '.windsurf/skills/am-agent-code-reviewer/SKILL.md',
       '.windsurf/skills/am-agent-researcher/SKILL.md',
@@ -223,6 +244,7 @@ export const TARGET_SPECIFIC_PREFIXES = [
   '.claude/',
   '.cursor/',
   '.github/',
+  '.continue/',
   '.junie/',
   '.gemini/',
   '.cline/',

@@ -16,9 +16,9 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { generate } from '../src/core/engine.js';
+import { generate } from '../src/core/generate/engine.js';
 import type { CanonicalFiles } from '../src/core/types.js';
-import type { ValidatedConfig } from '../src/config/schema.js';
+import type { ValidatedConfig } from '../src/config/core/schema.js';
 
 const TEST_DIR = join(tmpdir(), 'am-agents-folder-structure-test');
 
@@ -750,7 +750,7 @@ describe('agents-folder-structure-research: Cline (docs §5)', () => {
   const EXPECTED_PATHS = {
     rulesDir: '.clinerules/', // research: .clinerules/*.md (directory-based)
     ignore: '.clineignore', // research: .clinerules (flat) — we use .clinerules/*.md + .clineignore
-    mcp: '.cline/mcp_settings.json',
+    mcp: '.cline/cline_mcp_settings.json',
     skillsDir: '.cline/skills/',
   };
   // Gaps: .clinerules flat file (legacy) — we use .clinerules/*.md
@@ -815,7 +815,7 @@ describe('agents-folder-structure-research: Cline (docs §5)', () => {
     expect(s!.content).toContain('Debug steps.');
   });
 
-  it('generates .cline/mcp_settings.json for MCP', async () => {
+  it('generates .cline/cline_mcp_settings.json for MCP', async () => {
     const canonical = fullCanonical({
       rootBody: '# Root',
       mcp: {

@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   detectNativeFormat,
   KNOWN_NATIVE_PATHS,
-} from '../../../src/config/native-format-detector.js';
+} from '../../../src/config/resolve/native-format-detector.js';
 
 const TEST_DIR = join(tmpdir(), 'am-native-detect-test');
 

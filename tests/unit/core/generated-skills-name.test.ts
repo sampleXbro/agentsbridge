@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { join } from 'node:path';
-import { generate } from '../../../src/core/engine.js';
+import { generate } from '../../../src/core/generate/engine.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';
-import type { ValidatedConfig } from '../../../src/config/schema.js';
+import type { ValidatedConfig } from '../../../src/config/core/schema.js';
 
 function hasNameInFrontmatter(content: string): boolean {
   if (!content.startsWith('---\n')) return false;

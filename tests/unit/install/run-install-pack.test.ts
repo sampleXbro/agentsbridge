@@ -9,25 +9,25 @@ const mockCleanInstallCache = vi.hoisted(() => vi.fn());
 const mockUpsertInstallManifestEntry = vi.hoisted(() => vi.fn());
 const mockBuildInstallManifestEntry = vi.hoisted(() => vi.fn());
 
-vi.mock('../../../src/install/pack-writer.js', () => ({
+vi.mock('../../../src/install/pack/pack-writer.js', () => ({
   materializePack: mockMaterializePack,
 }));
-vi.mock('../../../src/install/pack-reader.js', () => ({
+vi.mock('../../../src/install/pack/pack-reader.js', () => ({
   findExistingPack: mockFindExistingPack,
   readPackMetadata: mockReadPackMetadata,
 }));
-vi.mock('../../../src/install/pack-merge.js', () => ({
+vi.mock('../../../src/install/pack/pack-merge.js', () => ({
   mergeIntoPack: mockMergeIntoPack,
 }));
-vi.mock('../../../src/install/cache-cleanup.js', () => ({
+vi.mock('../../../src/install/pack/cache-cleanup.js', () => ({
   cleanInstallCache: mockCleanInstallCache,
 }));
-vi.mock('../../../src/install/install-manifest.js', () => ({
+vi.mock('../../../src/install/core/install-manifest.js', () => ({
   upsertInstallManifestEntry: mockUpsertInstallManifestEntry,
   buildInstallManifestEntry: mockBuildInstallManifestEntry,
 }));
 
-import { installAsPack } from '../../../src/install/run-install-pack.js';
+import { installAsPack } from '../../../src/install/run/run-install-pack.js';
 
 function emptyCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
   return {

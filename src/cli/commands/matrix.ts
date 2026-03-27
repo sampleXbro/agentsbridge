@@ -2,10 +2,14 @@
  * agentsmesh matrix — show compatibility matrix for current config.
  */
 
-import { loadConfigFromDir } from '../../config/loader.js';
-import { loadCanonicalWithExtends } from '../../canonical/extends.js';
-import { buildCompatibilityMatrix, formatMatrix, formatVerboseDetails } from '../../core/matrix.js';
-import { logger } from '../../utils/logger.js';
+import { loadConfigFromDir } from '../../config/core/loader.js';
+import { loadCanonicalWithExtends } from '../../canonical/extends/extends.js';
+import {
+  buildCompatibilityMatrix,
+  formatMatrix,
+  formatVerboseDetails,
+} from '../../core/matrix/matrix.js';
+import { logger } from '../../utils/output/logger.js';
 
 /**
  * Run the matrix command.

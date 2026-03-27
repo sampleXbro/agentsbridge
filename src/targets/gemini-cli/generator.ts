@@ -7,7 +7,7 @@
 
 import type { CanonicalFiles } from '../../core/types.js';
 import { getHookCommand, hasHookCommand } from '../../core/hook-command.js';
-import { serializeFrontmatter } from '../../utils/markdown.js';
+import { serializeFrontmatter } from '../../utils/text/markdown.js';
 import {
   GEMINI_ROOT,
   GEMINI_COMPAT_AGENTS,

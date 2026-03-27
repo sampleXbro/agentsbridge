@@ -3,8 +3,8 @@
  */
 
 import { join, resolve, sep } from 'node:path';
-import { loadConfigFromDir } from '../../config/loader.js';
-import { loadCanonicalWithExtends } from '../../canonical/extends.js';
+import { loadConfigFromDir } from '../../config/core/loader.js';
+import { loadCanonicalWithExtends } from '../../canonical/extends/extends.js';
 import {
   buildChecksums,
   buildExtendChecksums,
@@ -12,11 +12,12 @@ import {
   detectLockedFeatureViolations,
   readLock,
   writeLock,
-} from '../../config/lock.js';
-import { getCacheDir } from '../../config/remote-fetcher.js';
-import { generate as runEngine } from '../../core/engine.js';
-import { ensureCacheSymlink, writeFileAtomic } from '../../utils/fs.js';
-import { logger } from '../../utils/logger.js';
+} from '../../config/core/lock.js';
+import { getCacheDir } from '../../config/remote/remote-fetcher.js';
+import { generate as runEngine } from '../../core/generate/engine.js';
+import { cleanupStaleGeneratedOutputs } from '../../core/generate/stale-cleanup.js';
+import { ensureCacheSymlink, writeFileAtomic } from '../../utils/filesystem/fs.js';
+import { logger } from '../../utils/output/logger.js';
 import { getVersion } from '../version.js';
 import { runMatrix } from './matrix.js';
 
@@ -89,6 +90,9 @@ export async function runGenerate(
   const { canonical, resolvedExtends } = await loadCanonicalWithExtends(config, configDir, {
     refreshRemoteCache,
   });
+  const activeTargets = targetFilter
+    ? config.targets.filter((t) => targetFilter.includes(t))
+    : config.targets;
 
   const results = await runEngine({
     config,
@@ -159,6 +163,11 @@ export async function runGenerate(
     const created = results.filter((r) => r.status === 'created').length;
     const updated = results.filter((r) => r.status === 'updated').length;
     const unchanged = results.filter((r) => r.status === 'unchanged').length;
+    await cleanupStaleGeneratedOutputs({
+      projectRoot: configDir,
+      targets: activeTargets,
+      expectedPaths: results.map((result) => result.path),
+    });
     if (created > 0 || updated > 0) {
       logger.info(`Generated: ${created} created, ${updated} updated, ${unchanged} unchanged`);
     } else {

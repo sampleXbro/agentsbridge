@@ -18,6 +18,7 @@ targets:
   - claude-code
   - cursor
   - copilot
+  - continue
   - junie
   - gemini-cli
   - cline
@@ -109,15 +110,17 @@ describe('target contract matrix', () => {
     const rootPath = outputPaths(target).root[0]!;
     const agentPath = outputPaths(target).agent[0]!;
     const skillPath = outputPaths(target).skill[0]!;
-    const refs = expectedRefs(target, rootPath);
+    const refs = expectedRefs(target);
 
     expect(read(dir, rootPath)).toContain(refs.skill);
     expect(read(dir, rootPath)).toContain(refs.checklist);
-    expect(read(dir, agentPath)).toContain(refs.command);
-    expect(read(dir, agentPath)).toContain(refs.skill);
+    if (target !== 'continue') {
+      expect(read(dir, agentPath)).toContain(refs.command);
+      expect(read(dir, agentPath)).toContain(refs.skill);
+    }
     expect(read(dir, skillPath)).toContain(refs.command);
-    expect(read(dir, skillPath)).toContain(refs.agent);
-    expect(read(dir, skillPath)).not.toContain('.agentsmesh/');
+    if (target !== 'continue') expect(read(dir, skillPath)).toContain(refs.agent);
+    if (target !== 'continue') expect(read(dir, skillPath)).not.toContain('.agentsmesh/');
 
     if (target === 'cline') {
       expect(read(dir, 'AGENTS.md')).toContain('# Standards');
@@ -133,7 +136,7 @@ describe('target contract matrix', () => {
       expect(read(dir, '.clinerules/hooks/posttooluse-0.sh')).toContain(
         '# agentsmesh-command: prettier --write $FILE_PATH',
       );
-      expect(read(dir, '.cline/mcp_settings.json')).toContain('"mcpServers"');
+      expect(read(dir, '.cline/cline_mcp_settings.json')).toContain('"mcpServers"');
     }
   });
 
@@ -153,8 +156,26 @@ describe('target contract matrix', () => {
       expect(canonicalFiles(dir)).toEqual(TARGET_CONTRACTS[target].imported);
 
       expectCanonicalizedRoot(read(dir, '.agentsmesh/rules/_root.md'));
-      expectCanonicalizedAgent(read(dir, '.agentsmesh/agents/code-reviewer.md'));
+      if (target !== 'continue') {
+        expectCanonicalizedAgent(read(dir, '.agentsmesh/agents/code-reviewer.md'));
+      }
       expectCanonicalizedSkill(read(dir, '.agentsmesh/skills/api-generator/SKILL.md'));
     },
   );
+
+  it.each(TARGETS)('keeps %s generate -> import -> generate --check idempotent', async (target) => {
+    dir = createCanonicalProject(`version: 1
+targets: [${target}]
+features: [rules, commands, agents, skills, mcp, hooks, ignore, permissions]
+`);
+    if (target === 'gemini-cli') {
+      rmSync(join(dir, '.agentsmesh', 'rules', 'typescript.md'), { force: true });
+    }
+    expect((await runCli(`generate --targets ${target}`, dir)).exitCode).toBe(0);
+    rmSync(join(dir, '.agentsmesh'), { recursive: true, force: true });
+    expect((await runCli(`import --from ${target}`, dir)).exitCode).toBe(0);
+
+    const checkResult = await runCli(`generate --targets ${target} --check`, dir);
+    expect(checkResult.exitCode, `${checkResult.stdout}\n${checkResult.stderr}`).toBe(0);
+  });
 });

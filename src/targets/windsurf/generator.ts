@@ -9,11 +9,11 @@
 import { basename } from 'node:path';
 import type { CanonicalFiles } from '../../core/types.js';
 import { getHookCommand, getHookPrompt, hasHookText } from '../../core/hook-command.js';
-import { serializeFrontmatter } from '../../utils/markdown.js';
+import { serializeFrontmatter } from '../../utils/text/markdown.js';
 import {
   projectedAgentSkillDirName,
   serializeProjectedAgentSkill,
-} from '../projected-agent-skill.js';
+} from '../projection/projected-agent-skill.js';
 import {
   WINDSURF_RULES_DIR,
   CODEIUM_IGNORE,
@@ -82,6 +82,9 @@ export function generateRules(canonical: CanonicalFiles): RulesOutput[] {
 
     const dir = directoryScopedRuleDir(rule.globs);
     if (dir) {
+      if (dir !== slug) {
+        outputs.push({ path: `${WINDSURF_RULES_DIR}/${dir}.md`, content });
+      }
       outputs.push({ path: `${dir}/AGENTS.md`, content: rule.body.trim() || '' });
     }
   }

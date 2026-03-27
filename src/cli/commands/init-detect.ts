@@ -3,7 +3,7 @@
  */
 
 import { join } from 'node:path';
-import { exists } from '../../utils/fs.js';
+import { exists } from '../../utils/filesystem/fs.js';
 
 /** AI tool indicators for detection. */
 export const TOOL_INDICATORS: Array<{ id: string; paths: string[] }> = [

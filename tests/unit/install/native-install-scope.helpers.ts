@@ -2,7 +2,7 @@ import { afterEach, expect } from 'vitest';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { stageNativeInstallScope } from '../../../src/install/native-install-scope.js';
+import { stageNativeInstallScope } from '../../../src/install/native/native-install-scope.js';
 
 interface ScopeCase {
   name: string;

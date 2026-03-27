@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createImportReferenceNormalizer } from '../../../src/core/import-reference-rewriter.js';
+import { createImportReferenceNormalizer } from '../../../src/core/reference/import-rewriter.js';
 
 const TEST_DIR = join(tmpdir(), 'am-import-reference-rewriter-test');
 

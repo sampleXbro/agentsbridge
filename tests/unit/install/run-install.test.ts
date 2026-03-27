@@ -16,40 +16,42 @@ const mockIsGitAvailable = vi.hoisted(() => vi.fn());
 const mockLoggerWarn = vi.hoisted(() => vi.fn());
 const mockMaybeRunInstallSync = vi.hoisted(() => vi.fn());
 
-vi.mock('../../../src/config/loader.js', () => ({ loadConfigFromDir: mockLoadConfigFromDir }));
-vi.mock('../../../src/install/url-parser.js', () => ({
+vi.mock('../../../src/config/core/loader.js', () => ({ loadConfigFromDir: mockLoadConfigFromDir }));
+vi.mock('../../../src/install/source/url-parser.js', () => ({
   parseInstallSource: mockParseInstallSource,
 }));
-vi.mock('../../../src/install/run-install-resolve.js', () => ({
+vi.mock('../../../src/install/run/run-install-resolve.js', () => ({
   resolveInstallResolvedPath: mockResolveInstallResolvedPath,
 }));
-vi.mock('../../../src/utils/fs.js', () => ({ exists: mockExists }));
-vi.mock('../../../src/install/run-install-discovery.js', () => ({
+vi.mock('../../../src/utils/filesystem/fs.js', () => ({ exists: mockExists }));
+vi.mock('../../../src/install/run/run-install-discovery.js', () => ({
   resolveDiscoveredForInstall: mockResolveDiscoveredForInstall,
 }));
-vi.mock('../../../src/canonical/extends.js', () => ({
+vi.mock('../../../src/canonical/extends/extends.js', () => ({
   loadCanonicalWithExtends: mockLoadCanonicalWithExtends,
 }));
-vi.mock('../../../src/install/install-conflicts.js', () => ({
+vi.mock('../../../src/install/core/install-conflicts.js', () => ({
   resolveInstallConflicts: mockResolveInstallConflicts,
 }));
-vi.mock('../../../src/install/name-generator.js', () => ({
+vi.mock('../../../src/install/core/name-generator.js', () => ({
   suggestExtendName: mockSuggestExtendName,
 }));
-vi.mock('../../../src/install/install-extend-entry.js', () => ({
+vi.mock('../../../src/install/core/install-extend-entry.js', () => ({
   writeInstallAsExtend: mockWriteInstallAsExtend,
 }));
-vi.mock('../../../src/install/run-install-pack.js', () => ({ installAsPack: mockInstallAsPack }));
+vi.mock('../../../src/install/run/run-install-pack.js', () => ({
+  installAsPack: mockInstallAsPack,
+}));
 vi.mock('../../../src/cli/commands/generate.js', () => ({ runGenerate: mockRunGenerate }));
-vi.mock('../../../src/install/git-pin.js', () => ({ isGitAvailable: mockIsGitAvailable }));
-vi.mock('../../../src/install/install-sync.js', () => ({
+vi.mock('../../../src/install/source/git-pin.js', () => ({ isGitAvailable: mockIsGitAvailable }));
+vi.mock('../../../src/install/run/install-sync.js', () => ({
   maybeRunInstallSync: mockMaybeRunInstallSync,
 }));
-vi.mock('../../../src/utils/logger.js', () => ({
+vi.mock('../../../src/utils/output/logger.js', () => ({
   logger: { warn: mockLoggerWarn, info: vi.fn(), success: vi.fn() },
 }));
 
-import { runInstall } from '../../../src/install/run-install.js';
+import { runInstall } from '../../../src/install/run/run-install.js';
 
 function canonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
   return {

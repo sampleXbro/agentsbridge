@@ -10,7 +10,7 @@ import {
 } from 'node:fs';
 import { join, relative } from 'node:path';
 import { tmpdir } from 'node:os';
-import { runInstall } from '../../src/install/run-install.js';
+import { runInstall } from '../../src/install/run/run-install.js';
 
 const ROOT = join(tmpdir(), 'am-install-manual-multi-path');
 

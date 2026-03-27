@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { CanonicalFiles } from '../../../src/core/types.js';
-import { lintPermissions } from '../../../src/core/linter-permissions.js';
+import { lintPermissions } from '../../../src/core/lint/permissions.js';
 
 function makeCanonical(permissions: CanonicalFiles['permissions']): CanonicalFiles {
   return {

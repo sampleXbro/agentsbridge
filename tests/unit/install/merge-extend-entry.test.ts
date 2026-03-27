@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { mergeExtendList } from '../../../src/install/merge-extend-entry.js';
-import type { ValidatedConfig } from '../../../src/config/schema.js';
+import { mergeExtendList } from '../../../src/install/core/merge-extend-entry.js';
+import type { ValidatedConfig } from '../../../src/config/core/schema.js';
 
 const baseConfig = (): ValidatedConfig['extends'] => [
   {

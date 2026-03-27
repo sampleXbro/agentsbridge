@@ -6,7 +6,12 @@ import { join } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
 import type { McpServer } from '../../core/types.js';
 import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/filesystem/fs.js';
-import { CLINE_TARGET, CLINE_MCP_SETTINGS, CLINE_CANONICAL_MCP } from './constants.js';
+import {
+  CLINE_TARGET,
+  CLINE_MCP_SETTINGS,
+  CLINE_MCP_SETTINGS_LEGACY,
+  CLINE_CANONICAL_MCP,
+} from './constants.js';
 
 export function mapClineServerToCanonical(raw: unknown): McpServer | null {
   if (!raw || typeof raw !== 'object') return null;
@@ -42,9 +47,23 @@ export function mapClineServerToCanonical(raw: unknown): McpServer | null {
 }
 
 export async function importClineMcp(projectRoot: string, results: ImportResult[]): Promise<void> {
-  const mcpPath = join(projectRoot, CLINE_MCP_SETTINGS);
-  const mcpContent = await readFileSafe(mcpPath);
+  const candidatePaths = [CLINE_MCP_SETTINGS, CLINE_MCP_SETTINGS_LEGACY].map((path) =>
+    join(projectRoot, path),
+  );
+  let mcpPath: string | null = null;
+  let mcpContent: string | null = null;
+
+  for (const candidatePath of candidatePaths) {
+    const candidateContent = await readFileSafe(candidatePath);
+    if (candidateContent !== null) {
+      mcpPath = candidatePath;
+      mcpContent = candidateContent;
+      break;
+    }
+  }
+
   if (mcpContent === null) return;
+  const sourcePath = mcpPath ?? candidatePaths[0]!;
 
   let parsed: Record<string, unknown> | undefined;
   try {
@@ -72,7 +91,7 @@ export async function importClineMcp(projectRoot: string, results: ImportResult[
       );
       results.push({
         fromTool: CLINE_TARGET,
-        fromPath: mcpPath,
+        fromPath: sourcePath,
         toPath: CLINE_CANONICAL_MCP,
         feature: 'mcp',
       });

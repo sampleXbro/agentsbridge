@@ -82,4 +82,26 @@ describe('cline MCP mapper', () => {
     expect(mcp).toContain('"docs"');
     expect(mcp).not.toContain('"invalid"');
   });
+
+  it('imports the legacy .cline/mcp_settings.json path for backward compatibility', async () => {
+    const dir = createTempDir();
+    mkdirSync(join(dir, '.cline'), { recursive: true });
+    writeFileSync(
+      join(dir, '.cline', 'mcp_settings.json'),
+      JSON.stringify({
+        mcpServers: {
+          context7: { command: 'npx', args: ['-y', '@upstash/context7-mcp'] },
+        },
+      }),
+    );
+
+    const results: Array<{ feature: string; toPath: string }> = [];
+    await importClineMcp(dir, results);
+
+    expect(results.map(({ feature, toPath }) => ({ feature, toPath }))).toEqual([
+      { feature: 'mcp', toPath: '.agentsmesh/mcp.json' },
+    ]);
+    const mcp = readFileSync(join(dir, '.agentsmesh', 'mcp.json'), 'utf-8');
+    expect(mcp).toContain('"context7"');
+  });
 });

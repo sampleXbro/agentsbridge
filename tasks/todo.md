@@ -52,6 +52,49 @@
 - fixed the watch test flake exposed by coverage load by isolating each case to its own temp directory
 - raised global branch coverage to `84.08%`
 
+# Cline legacy MCP import compatibility
+
+- [x] Inspect the failing Cline e2e and compare the fixture MCP filename with the importer's supported paths
+- [x] Add regression coverage for legacy `.cline/mcp_settings.json` import behavior
+- [x] Restore backward-compatible Cline MCP import support and rerun targeted verification
+
+## Review (Cline legacy MCP import compatibility)
+
+- Changes implemented:
+  - added a legacy fallback path for Cline MCP imports so the importer accepts both `.cline/cline_mcp_settings.json` and historical `.cline/mcp_settings.json`
+  - kept the generated/native contract on the corrected `cline_mcp_settings.json` path while restoring import compatibility for existing user repos and older fixtures
+- Tests added:
+  - extended `tests/unit/targets/cline/mcp-mapper.test.ts`
+- Verification:
+  - `pnpm vitest run tests/unit/targets/cline/mcp-mapper.test.ts tests/unit/targets/cline/importer.test.ts`
+  - `pnpm exec vitest run --config vitest.e2e.config.ts tests/e2e/import-capabilities.e2e.test.ts`
+  - `pnpm typecheck`
+- QA Report — Cline legacy MCP import compatibility
+
+### Acceptance Criteria
+
+| Criterion | Covered by test? | Status |
+| --- | --- | --- |
+| Importing Cline configs still produces canonical `.agentsmesh/mcp.json` when the repo uses the legacy MCP filename | `tests/unit/targets/cline/mcp-mapper.test.ts`, `tests/e2e/import-capabilities.e2e.test.ts` | OK |
+| Corrected native filename contract remains intact for current Cline generation/import paths | `tests/unit/targets/cline/importer.test.ts` | OK |
+
+### Edge Cases
+
+| Scenario | Covered? | Test location |
+| --- | --- | --- |
+| Legacy `.cline/mcp_settings.json` imports into canonical MCP | ✓ | `tests/unit/targets/cline/mcp-mapper.test.ts` |
+| Standard `.cline/cline_mcp_settings.json` path still imports | ✓ | `tests/unit/targets/cline/importer.test.ts` |
+| Full import-capabilities e2e for Cline passes with rules, workflows, skills, ignore, and MCP | ✓ | `tests/e2e/import-capabilities.e2e.test.ts` |
+
+### Gaps Identified
+
+- none
+
+### Actions Taken
+
+- restored importer fallback for historical Cline MCP filenames
+- reran the exact failing e2e through the e2e Vitest config
+
 # Architecture alignment review
 
 # Import placeholder metadata preservation

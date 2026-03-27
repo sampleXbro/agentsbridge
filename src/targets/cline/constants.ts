@@ -13,6 +13,7 @@ export const CLINE_IGNORE = '.clineignore';
 
 /** MCP settings (Cline-specific path) */
 export const CLINE_MCP_SETTINGS = '.cline/cline_mcp_settings.json';
+export const CLINE_MCP_SETTINGS_LEGACY = '.cline/mcp_settings.json';
 
 /** Skills directory prefix */
 export const CLINE_SKILLS_DIR = '.cline/skills';

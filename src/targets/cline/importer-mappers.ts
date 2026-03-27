@@ -13,7 +13,7 @@ export async function mapClineRuleFile(
   destDir: string,
   normalizeTo: (destinationFile: string) => string,
 ): Promise<ImportFileMapping | null> {
-  if (relativePath.includes('/workflows/')) return null;
+  if (relativePath === 'workflows' || relativePath.startsWith('workflows/')) return null;
   const relativeMdPath = relativePath.replace(/\\/g, '/');
   if (relativeMdPath === '_root.md') return null;
   const destPath = join(destDir, relativeMdPath);

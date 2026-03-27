@@ -22,6 +22,7 @@
 - Verification:
   - `pnpm vitest run tests/unit/targets/import-metadata.test.ts tests/unit/targets/import-orchestrator.test.ts tests/unit/targets/cursor/importer.test.ts tests/unit/targets/gemini-cli/importer.test.ts`
   - `pnpm vitest run tests/unit/targets/claude-code/importer.test.ts tests/unit/targets/cline/importer.test.ts tests/unit/targets/copilot/importer.test.ts tests/unit/targets/windsurf/importer.test.ts tests/unit/targets/codex-cli/importer.test.ts tests/unit/targets/junie/importer.test.ts tests/unit/targets/continue/importer.test.ts`
+  - `pnpm vitest run tests/unit/install/native-install-scope.copilot-continue-gemini.test.ts tests/unit/install/native-install-scope.junie-cline-windsurf-codex.test.ts`
   - `pnpm lint`
   - `pnpm typecheck`
   - `pnpm build`
@@ -59,6 +60,7 @@
 - added shared fallback serializers for placeholder command/rule/skill/agent metadata
 - changed importer mapping to use source-relative paths for canonical destinations
 - fixed the async Copilot prompt importer regression and recorded the lesson in `tasks/lessons.md`
+- fixed downstream native install scope regressions so Gemini keeps namespaced command picks and Cline workflow folders stay command-only
 
 - [x] Compare the documented architecture in `docs/architecture/` with the current code-domain boundaries and critical flows
 - [x] Inspect the highest-risk seams for boundary drift, orchestration leakage, and structural mismatches

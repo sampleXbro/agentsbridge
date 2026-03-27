@@ -69,9 +69,15 @@ function buildPickFromResults(results: ImportResult[], stageRoot: string): Exten
       continue;
     }
     if (result.feature === 'commands' && result.toPath.startsWith('.agentsmesh/commands/')) {
+      const rel = normalizePath(
+        relative(join(stageRoot, '.agentsmesh', 'commands'), join(stageRoot, result.toPath)),
+      );
       pick = {
         ...pick,
-        commands: addUnique(pick?.commands, basename(result.toPath, '.md')),
+        commands: addUnique(
+          pick?.commands,
+          rel.replace(/\.md$/i, '').split('/').filter(Boolean).join(':'),
+        ),
       };
       continue;
     }

@@ -1,7 +1,7 @@
 /**
  * Generate Codex CLI config files from canonical sources.
- * Per codex-cli-project-level-advanced.md: root → `AGENTS.md`; advisory rules → nested
- * `AGENTS.md` / `AGENTS.override.md`; execution policy → `.codex/rules/*.rules` (Starlark).
+ * Root guidance stays in `AGENTS.md`, additional canonical rules get markdown mirrors
+ * in `.codex/instructions/*.md`, and execution policy projects to `.codex/rules/*.rules`.
  */
 
 import type { CanonicalCommand, CanonicalFiles, StdioMcpServer } from '../../core/types.js';
@@ -17,7 +17,11 @@ import {
   CODEX_CONFIG_TOML,
 } from './constants.js';
 import { commandSkillDirName, serializeCommandSkill } from './command-skill.js';
-import { codexAdvisoryInstructionPath } from './codex-rule-paths.js';
+import {
+  appendCodexRuleIndex,
+  codexInstructionMirrorPath,
+  serializeCodexInstructionMirror,
+} from './instruction-mirror.js';
 
 export interface RulesOutput {
   path: string;
@@ -56,34 +60,26 @@ function toSafeCodexRulesContent(body: string): string {
   return `${lines.join('\n')}\n`;
 }
 
-/**
- * Generate AGENTS.md from root rule; advisory non-root → nested instruction files;
- * `codex_emit: execution` → `.codex/rules/{slug}.rules` (Starlark or safe comments).
- *
- * @param canonical - Loaded canonical files
- * @returns AGENTS.md + nested `AGENTS*.md` + optional `.codex/rules/*.rules`
- */
 export function generateRules(canonical: CanonicalFiles): RulesOutput[] {
   const root = canonical.rules.find((r) => r.root);
   const outputs: RulesOutput[] = [];
   if (root) {
-    outputs.push({ path: AGENTS_MD, content: root.body.trim() });
+    outputs.push({ path: AGENTS_MD, content: appendCodexRuleIndex(root.body, canonical.rules) });
   }
 
   for (const rule of canonical.rules) {
     if (rule.root) continue;
-    if (rule.targets.length > 0 && !rule.targets.includes('codex-cli')) continue;
     const slug = basename(rule.source, '.md');
+    if (rule.targets.length > 0 && !rule.targets.includes('codex-cli')) continue;
     if (rule.codexEmit === 'execution') {
       outputs.push({
         path: `${CODEX_RULES_DIR}/${slug}.rules`,
         content: toSafeCodexRulesContent(rule.body),
       });
-      continue;
     }
     outputs.push({
-      path: codexAdvisoryInstructionPath(rule),
-      content: rule.body.trim(),
+      path: codexInstructionMirrorPath(rule),
+      content: serializeCodexInstructionMirror(rule),
     });
   }
 

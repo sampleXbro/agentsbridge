@@ -1,6 +1,7 @@
 import { basename } from 'node:path';
 import { readFileSafe } from '../utils/fs.js';
 import { parseFrontmatter, serializeFrontmatter } from '../utils/markdown.js';
+import { stripAgentsmeshRootInstructionParagraph } from './root-instruction-paragraph.js';
 
 export interface ImportedCommandMetadata {
   description?: string;
@@ -54,11 +55,15 @@ export async function serializeImportedRuleWithFallback(
   body: string,
 ): Promise<string> {
   const existingFrontmatter = await readExistingFrontmatter(destinationPath);
+  const normalizedBody =
+    basename(destinationPath, '.md') === '_root'
+      ? stripAgentsmeshRootInstructionParagraph(body)
+      : body.trim();
   const mergedFrontmatter = serializeCanonicalRuleFrontmatter(
     destinationPath,
     pruneUndefined({ ...existingFrontmatter, ...importedFrontmatter }),
   );
-  return serializeFrontmatter(mergedFrontmatter, body.trim() || '');
+  return serializeFrontmatter(mergedFrontmatter, normalizedBody || '');
 }
 
 export async function serializeImportedCommandWithFallback(

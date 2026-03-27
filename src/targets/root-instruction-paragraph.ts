@@ -46,3 +46,11 @@ export function appendAgentsmeshRootInstructionParagraph(content: string): strin
     ? `${trimmed}\n\n${AGENTSMESH_ROOT_INSTRUCTION_PARAGRAPH}`
     : AGENTSMESH_ROOT_INSTRUCTION_PARAGRAPH;
 }
+
+export function stripAgentsmeshRootInstructionParagraph(content: string): string {
+  return content
+    .replace(`\n\n${AGENTSMESH_ROOT_INSTRUCTION_PARAGRAPH}`, '')
+    .replace(`\n\n${LEGACY_AGENTSMESH_ROOT_INSTRUCTION_SECTION}`, '')
+    .replace(`\n\n${LEGACY_AGENTSMESH_ROOT_INSTRUCTION_PARAGRAPH}`, '')
+    .trim();
+}

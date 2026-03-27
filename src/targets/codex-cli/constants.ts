@@ -21,6 +21,9 @@ export const CODEX_SKILLS_FALLBACK_DIR = '.codex/skills';
 /** Project-level config file (MCP servers and other overrides) */
 export const CODEX_CONFIG_TOML = '.codex/config.toml';
 
+/** Canonical markdown mirrors for additional generated rules */
+export const CODEX_INSTRUCTIONS_DIR = '.codex/instructions';
+
 /** Starlark execution rules (`.rules`) + legacy `.md` import */
 export const CODEX_RULES_DIR = '.codex/rules';
 
@@ -38,3 +41,6 @@ export const CODEX_RULE_EMBED_JSON_PREFIX = '# am-json: ';
 export const CODEX_RULE_EMBED_B64_BEGIN = '# am-body-b64-begin';
 export const CODEX_RULE_EMBED_B64_END = '# am-body-b64-end';
 export const CODEX_RULE_EMBED_B64_LINE = '# am64:';
+
+export const CODEX_RULE_INDEX_START = '<!-- agentsmesh:codex-rule-index:start -->';
+export const CODEX_RULE_INDEX_END = '<!-- agentsmesh:codex-rule-index:end -->';

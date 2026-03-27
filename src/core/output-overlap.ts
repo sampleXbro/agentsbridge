@@ -114,7 +114,9 @@ export function preferEquivalentCodexAgents(
     }
     const codexResult = codexByPath.get(result.path);
     if (!codexResult) return true;
-    if (isCompatibilityAgents(result)) return false;
+    if (isCompatibilityAgents(result) || isWindsurfAgents(result) || isClineAgents(result)) {
+      return false;
+    }
     return !hasEquivalentCanonicalContent(codexResult, result, canonical, config, reverseCache);
   });
 }

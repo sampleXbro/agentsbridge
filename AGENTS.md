@@ -85,6 +85,11 @@
 - **Refer to PRD**: `docs/prd-v2-complete.md` for architecture decisions
 - **Refer to tasks**: `docs/agentsmesh-ai-first-tasks.md` for current task specs
 
+<!-- agentsmesh:codex-rule-index:start -->
+## Additional Rule Files
+- [TypeScript-specific coding standards](.codex/instructions/typescript.md): Applies to `src/**/*.ts`, `tests/**/*.ts`.
+<!-- agentsmesh:codex-rule-index:end -->
+
 ## AgentsMesh Generation Contract
 
 AgentsMesh is a config sync library for AI coding tools. The only canonical source of truth is `.agentsmesh/`; files emitted into target formats such as `AGENTS.md`, `.claude/`, `.cursor/`, `.junie/`, and similar directories are generated artifacts. When making changes, edit canonical config first, then regenerate and verify the target outputs. Preserve the library's bidirectional contract: import native tool config into canonical form, generate back to target-specific layouts, and keep projected or embedded features round-trippable rather than treating them as plain text exports.

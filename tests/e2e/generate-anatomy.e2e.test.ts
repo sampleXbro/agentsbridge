@@ -36,7 +36,7 @@ describe('generate anatomy variants', () => {
     expect(readFileSync(join(dir, '.codeiumignore'), 'utf-8')).toContain('node_modules');
   });
 
-  it('generates Codex nested src/AGENTS.md for scoped advisory rules', async () => {
+  it('generates Codex .codex/instructions/src.md for scoped advisory rules and links it from AGENTS.md', async () => {
     dir = createTestProject();
     mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(
@@ -55,7 +55,8 @@ describe('generate anatomy variants', () => {
     const result = await runCli('generate', dir);
 
     expect(result.exitCode).toBe(0);
-    fileContains(join(dir, 'src', 'AGENTS.md'), 'Use strict mode.');
+    fileContains(join(dir, '.codex', 'instructions', 'src.md'), 'Use strict mode.');
+    fileContains(join(dir, 'AGENTS.md'), '.codex/instructions/src.md');
   });
 
   it('generates Windsurf subdirectory AGENTS.md from scoped canonical rules', async () => {

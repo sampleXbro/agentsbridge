@@ -179,6 +179,9 @@ export async function buildCodexCliImportPaths(
   refs.set('AGENTS.md', `${AB_RULES}/_root.md`);
   refs.set('codex.md', `${AB_RULES}/_root.md`);
   await addScopedAgentsMappings(refs, projectRoot);
+  for (const absPath of await listFiles(projectRoot, '.codex/instructions')) {
+    addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_RULES, '.md');
+  }
   for (const absPath of await listFiles(projectRoot, '.codex/rules')) {
     const relPath = rel(projectRoot, absPath);
     if (relPath.endsWith('.rules')) {

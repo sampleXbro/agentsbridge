@@ -36,13 +36,24 @@ describe('importFromCodex: rules', () => {
   });
 
   it('imports AGENTS.md when codex.md missing', async () => {
-    writeFileSync(join(TEST_DIR, AGENTS_MD), '# Agents rules\n');
+    writeFileSync(
+      join(TEST_DIR, AGENTS_MD),
+      [
+        '# Agents rules',
+        '',
+        '<!-- agentsmesh:codex-rule-index:start -->',
+        '## Additional Rule Files',
+        '- [TypeScript](.codex/instructions/typescript.md): Applies to `src/**/*.ts`.',
+        '<!-- agentsmesh:codex-rule-index:end -->',
+      ].join('\n'),
+    );
     const results = await importFromCodex(TEST_DIR);
     const rulesResult = results.find((r) => r.feature === 'rules');
     expect(rulesResult).toBeDefined();
     const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
     expect(content).toContain('# Agents rules');
+    expect(content).not.toContain('## Additional Rule Files');
   });
 
   it('normalizes windsurf-style skill directory links when importing AGENTS.md', async () => {
@@ -300,10 +311,13 @@ describe('importFromCodex: skills', () => {
 });
 
 describe('importFromCodex: scoped AGENTS filtering', () => {
-  it('imports only intended scoped AGENTS.md files and skips hidden and fixture locations', async () => {
+  it('imports scoped rules from .codex/instructions and skips hidden and fixture locations', async () => {
     writeFileSync(join(TEST_DIR, AGENTS_MD), '# Root Codex Rules\n');
-    mkdirSync(join(TEST_DIR, 'src'), { recursive: true });
-    writeFileSync(join(TEST_DIR, 'src', 'AGENTS.md'), '# Src Rules\n');
+    mkdirSync(join(TEST_DIR, '.codex', 'instructions'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.codex', 'instructions', 'src.md'),
+      '---\ndescription: Src Rules\nglobs:\n  - src/**\n---\n# Src Rules\n',
+    );
     mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, '.agentsmesh', 'rules', '.worktrees-security-collaboration.md'),

@@ -170,11 +170,9 @@ describe('codex-cli format contract roundtrip', () => {
     expect(generateResult.exitCode, generateResult.stderr).toBe(0);
 
     fileContains(join(dir, 'AGENTS.md'), '# Repository expectations');
-    fileContains(join(dir, 'src', 'AGENTS.md'), '# TypeScript Standards');
-    fileContains(
-      join(dir, 'services', 'payments', 'AGENTS.override.md'),
-      '# Payments service rules',
-    );
+    fileContains(join(dir, 'AGENTS.md'), '.codex/instructions/typescript.md');
+    fileContains(join(dir, '.codex', 'instructions', 'typescript.md'), '# TypeScript Standards');
+    fileContains(join(dir, '.codex', 'instructions', 'payments.md'), '# Payments service rules');
 
     fileContains(join(dir, '.codex', 'rules', 'default.rules'), 'prefix_rule(');
     fileContains(join(dir, '.codex', 'rules', 'default.rules'), 'decision = "allow"');
@@ -211,17 +209,11 @@ describe('codex-cli format contract roundtrip', () => {
     expect(importResult.exitCode, importResult.stderr).toBe(0);
 
     fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'root: true');
-    fileContains(join(dir, '.agentsmesh', 'rules', 'src.md'), 'globs:');
-    fileContains(join(dir, '.agentsmesh', 'rules', 'src.md'), '  - src/**');
-    fileContains(
-      join(dir, '.agentsmesh', 'rules', 'services-payments.md'),
-      'codex_instruction: override',
-    );
-    fileContains(join(dir, '.agentsmesh', 'rules', 'services-payments.md'), 'globs:');
-    fileContains(
-      join(dir, '.agentsmesh', 'rules', 'services-payments.md'),
-      '  - services/payments/**',
-    );
+    fileContains(join(dir, '.agentsmesh', 'rules', 'typescript.md'), 'globs:');
+    fileContains(join(dir, '.agentsmesh', 'rules', 'typescript.md'), '  - src/**/*.ts');
+    fileContains(join(dir, '.agentsmesh', 'rules', 'payments.md'), 'codex_instruction: override');
+    fileContains(join(dir, '.agentsmesh', 'rules', 'payments.md'), 'globs:');
+    fileContains(join(dir, '.agentsmesh', 'rules', 'payments.md'), '  - services/payments/**');
     fileContains(join(dir, '.agentsmesh', 'rules', 'default.md'), 'codex_emit: execution');
     fileContains(join(dir, '.agentsmesh', 'rules', 'default.md'), 'prefix_rule(');
 

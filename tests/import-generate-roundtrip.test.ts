@@ -614,7 +614,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
     ]);
   });
 
-  it('Codex CLI generates AGENTS.md + nested advisory AGENTS.md + .codex/agents/*.toml + skills + MCP', async () => {
+  it('Codex CLI generates AGENTS.md + .codex/instructions/*.md + .codex/agents/*.toml + skills + MCP', async () => {
     const results = await generate({
       config: allFeaturesConfig(['codex-cli']),
       canonical,
@@ -626,8 +626,8 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.agents/skills/qa/SKILL.md',
       '.codex/agents/reviewer.toml',
       '.codex/config.toml',
+      '.codex/instructions/typescript.md',
       'AGENTS.md',
-      'typescript/AGENTS.md',
     ]);
   });
 
@@ -724,6 +724,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.codeiumignore',
       '.codex/agents/reviewer.toml',
       '.codex/config.toml',
+      '.codex/instructions/typescript.md',
       '.continue/mcpServers/agentsmesh.json',
       '.continue/prompts/review.md',
       '.continue/rules/_root.md',
@@ -765,7 +766,6 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.windsurf/workflows/review.md',
       'AGENTS.md',
       'GEMINI.md',
-      'typescript/AGENTS.md',
     ]);
   });
 });

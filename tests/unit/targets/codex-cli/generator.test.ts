@@ -54,6 +54,7 @@ describe('generateRules (codex-cli)', () => {
     expect(agents?.content).toContain('# Rules');
     expect(agents?.content).toContain('- Use TypeScript');
     expect(agents?.content).not.toContain('## AgentsMesh Generation Contract');
+    expect(agents?.content).not.toContain('## Additional Rule Files');
   });
 
   it('outputs only AGENTS.md (no codex.md)', () => {
@@ -72,11 +73,11 @@ describe('generateRules (codex-cli)', () => {
     });
     const results = generateRules(canonical);
     expect(results).toHaveLength(1);
-    expect(results[0]?.path).toBe(AGENTS_MD);
-    expect(results[0]?.content).toBe(body);
+    expect(results.find((r) => r.path === AGENTS_MD)?.content).toBe(body);
+    expect(results.find((r) => r.path === '.codex/instructions/_root.md')).toBeUndefined();
   });
 
-  it('emits nested other/AGENTS.md when no root rule (no root AGENTS.md)', () => {
+  it('emits .codex/instructions/other.md when no root rule (no root AGENTS.md)', () => {
     const canonical = makeCanonical({
       rules: [
         {
@@ -91,11 +92,12 @@ describe('generateRules (codex-cli)', () => {
     });
     const results = generateRules(canonical);
     expect(results).toHaveLength(1);
-    expect(results[0]!.path).toBe('other/AGENTS.md');
-    expect(results[0]!.content).toBe('Other rule');
+    expect(results[0]!.path).toBe('.codex/instructions/other.md');
+    expect(results[0]!.content).toContain('root: false');
+    expect(results[0]!.content).toContain('Other rule');
   });
 
-  it('generates src/AGENTS.md for advisory rules with glob prefix', () => {
+  it('generates .codex/instructions/typescript.md for advisory rules and links it from AGENTS.md', () => {
     const canonical = makeCanonical({
       rules: [
         {
@@ -119,12 +121,20 @@ describe('generateRules (codex-cli)', () => {
     const results = generateRules(canonical);
     expect(results).toHaveLength(2);
     expect(results.find((r) => r.path === AGENTS_MD)).toBeDefined();
-    const tsRule = results.find((r) => r.path === 'src/AGENTS.md');
+    const tsRule = results.find((r) => r.path === '.codex/instructions/typescript.md');
     expect(tsRule).toBeDefined();
-    expect(tsRule!.content).toBe('Use strict mode.');
+    expect(tsRule!.content).toContain('description: TS');
+    expect(tsRule!.content).toContain('globs:');
+    expect(tsRule!.content).toContain('src/**/*.ts');
+    expect(tsRule!.content).toContain('Use strict mode.');
+    const agents = results.find((r) => r.path === AGENTS_MD);
+    expect(agents?.content).toContain('## Additional Rule Files');
+    expect(agents?.content).not.toContain('Base project instructions');
+    expect(agents?.content).toContain('(.codex/instructions/typescript.md)');
+    expect(agents?.content).toContain('Applies to `src/**/*.ts`, `tests/**/*.ts`');
   });
 
-  it('emits typescript/AGENTS.md when globs are **/*.ts', () => {
+  it('emits .codex/instructions/typescript.md when globs are **/*.ts', () => {
     const canonical = makeCanonical({
       rules: [
         {
@@ -146,9 +156,9 @@ describe('generateRules (codex-cli)', () => {
       ],
     });
     const results = generateRules(canonical);
-    const scoped = results.find((r) => r.path === 'typescript/AGENTS.md');
+    const scoped = results.find((r) => r.path === '.codex/instructions/typescript.md');
     expect(scoped).toBeDefined();
-    expect(scoped!.content).toBe('Strict types.');
+    expect(scoped!.content).toContain('Strict types.');
   });
 
   it('emits raw Starlark to .rules when codex_emit is execution', () => {
@@ -176,8 +186,15 @@ describe('generateRules (codex-cli)', () => {
     });
     const results = generateRules(canonical);
     const execRule = results.find((r) => r.path === `${CODEX_RULES_DIR}/policy.rules`);
+    const execMirror = results.find((r) => r.path === '.codex/instructions/policy.md');
     expect(execRule).toBeDefined();
     expect(execRule!.content.trim()).toContain('prefix_rule');
+    expect(execMirror).toBeDefined();
+    expect(execMirror!.content).toContain('codex_emit: execution');
+    expect(execMirror!.content).toContain('prefix_rule');
+    expect(results.find((r) => r.path === AGENTS_MD)?.content).toContain(
+      'Enforced in `.codex/rules/policy.rules`',
+    );
   });
 
   it('emits comment-only .rules when execution body is markdown text', () => {
@@ -196,7 +213,7 @@ describe('generateRules (codex-cli)', () => {
       ],
     });
     const results = generateRules(canonical);
-    expect(results).toHaveLength(1);
+    expect(results).toHaveLength(2);
     expect(results[0]!.path).toBe(`${CODEX_RULES_DIR}/policy.rules`);
     expect(results[0]!.content).toContain(
       '# agentsmesh: canonical execution rule body is not Codex DSL',
@@ -205,6 +222,9 @@ describe('generateRules (codex-cli)', () => {
     expect(results[0]!.content).toContain('# - Use strict mode');
     expect(results[0]!.content).toContain('# prefix_rule(');
     expect(results[0]!.content).not.toContain('\nprefix_rule(');
+    expect(results[1]!.path).toBe('.codex/instructions/policy.md');
+    expect(results[1]!.content).toContain('codex_emit: execution');
+    expect(results[1]!.content).toContain('# TypeScript Standards');
   });
 
   it('returns empty when rules array is empty', () => {
@@ -225,7 +245,7 @@ describe('generateRules (codex-cli)', () => {
       ],
     });
     const results = generateRules(canonical);
-    expect(results[0]?.content).toBe('Content');
+    expect(results.find((r) => r.path === AGENTS_MD)?.content).toBe('Content');
   });
 });
 

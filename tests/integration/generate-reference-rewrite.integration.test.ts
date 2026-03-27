@@ -104,7 +104,7 @@ Use .agentsmesh/skills/api-gen/SKILL.md.
     expect(claudeRoot).not.toContain('.agentsmesh/skills/api-gen/');
   });
 
-  it('rewrites codex rule references to typescript/AGENTS.md', () => {
+  it('rewrites codex rule references to .codex/instructions/typescript.md', () => {
     writeFileSync(
       join(testDir, 'agentsmesh.yaml'),
       `version: 1
@@ -135,7 +135,9 @@ Prefer strict mode.
 
     execSync(`node ${CLI_PATH} generate`, { cwd: testDir });
 
-    expect(readFileSync(join(testDir, 'AGENTS.md'), 'utf-8')).toContain('typescript/AGENTS.md');
+    expect(readFileSync(join(testDir, 'AGENTS.md'), 'utf-8')).toContain(
+      '.codex/instructions/typescript.md',
+    );
   });
 
   it('rewrites skill directory references for every target root artifact', () => {

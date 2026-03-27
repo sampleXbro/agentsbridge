@@ -104,7 +104,7 @@ export function outputPaths(target: TargetName): Record<string, string[]> {
                       : target === 'cline'
                         ? '.clinerules/typescript.md'
                         : target === 'codex-cli'
-                          ? 'src/AGENTS.md'
+                          ? '.codex/instructions/typescript.md'
                           : 'src/AGENTS.md',
               ],
     command: [
@@ -175,7 +175,7 @@ export function expectedRefs(target: TargetName, outputPath: string): Record<str
                 : target === 'cline'
                   ? '.clinerules/typescript.md'
                   : target === 'codex-cli'
-                    ? 'src/AGENTS.md'
+                    ? '.codex/instructions/typescript.md'
                     : '.windsurf/rules/typescript.md',
     command:
       target === 'claude-code'

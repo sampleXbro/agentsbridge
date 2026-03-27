@@ -24,12 +24,7 @@ import {
   COPILOT_SKILLS_DIR,
 } from '../targets/copilot/constants.js';
 import { commandSkillDirName } from '../targets/codex-cli/command-skill.js';
-import {
-  AGENTS_MD,
-  CODEX_AGENTS_DIR,
-  CODEX_RULES_DIR,
-  CODEX_SKILLS_DIR,
-} from '../targets/codex-cli/constants.js';
+import { AGENTS_MD, CODEX_AGENTS_DIR, CODEX_SKILLS_DIR } from '../targets/codex-cli/constants.js';
 import { codexAdvisoryInstructionPath } from '../targets/codex-cli/codex-rule-paths.js';
 import {
   CLINE_AGENTS_MD,
@@ -101,7 +96,6 @@ export function ruleTargetPath(
     case 'cline':
       return `${CLINE_RULES_DIR}/${slug}.md`;
     case 'codex-cli':
-      if (rule.codexEmit === 'execution') return `${CODEX_RULES_DIR}/${slug}.rules`;
       return codexAdvisoryInstructionPath(rule);
     case 'windsurf':
       return `${WINDSURF_RULES_DIR}/${slug}.md`;

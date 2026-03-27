@@ -3,6 +3,7 @@ import type { CanonicalFiles } from './types.js';
 import type { ValidatedConfig } from '../config/schema.js';
 import { buildReferenceMap } from './reference-map.js';
 import { GEMINI_COMPAT_AGENTS } from '../targets/gemini-cli/constants.js';
+import { CODEX_RULES_DIR } from '../targets/codex-cli/constants.js';
 import { SKILL_DIRS } from './reference-map-targets.js';
 
 function canonicalRulePath(rule: CanonicalFiles['rules'][number]): string {
@@ -65,6 +66,13 @@ function ruleOutputPaths(
   // participate in source mapping for reference rewriting.
   if (target === 'gemini-cli') {
     paths.push(GEMINI_COMPAT_AGENTS);
+  }
+
+  if (target === 'codex-cli') {
+    if (!rule.root && rule.codexEmit === 'execution') {
+      const slug = rule.source.split('/').pop()!.replace(/\.md$/, '');
+      paths.push(`${CODEX_RULES_DIR}/${slug}.rules`);
+    }
   }
 
   return paths;

@@ -3,6 +3,7 @@
  *
  * Sources imported:
  *   AGENTS.md (preferred) / codex.md (fallback) → .agentsmesh/rules/_root.md
+ *   .codex/instructions/*.md        → .agentsmesh/rules/*.md
  *   .agents/skills/am-command-{name}/SKILL.md   → .agentsmesh/commands/{name}.md
  *   .agents/skills/{name}/SKILL.md → .agentsmesh/skills/{name}/SKILL.md
  *   .codex/config.toml            → .agentsmesh/mcp.json (mcp_servers section)
@@ -26,8 +27,10 @@ import {
   CODEX_AGENTS_DIR,
   CODEX_CANONICAL_RULES_DIR,
   CODEX_CANONICAL_AGENTS_DIR,
+  CODEX_INSTRUCTIONS_DIR,
 } from './constants.js';
 import { importCodexNonRootRuleFiles } from './import-codex-non-root-rules.js';
+import { stripCodexRuleIndex } from './instruction-mirror.js';
 import { importMcp } from './mcp-helpers.js';
 import { importSkills } from './skills-helpers.js';
 import { shouldImportScopedAgentsRule, removePathIfExists } from '../scoped-agents-import.js';
@@ -128,10 +131,11 @@ async function importRules(
   if (content !== null) {
     await mkdirp(destDir);
     const destPath = join(destDir, '_root.md');
+    const stripped = sourcePath === agentsPath ? stripCodexRuleIndex(content) : content;
     const normalizedContent =
       sourcePath === agentsPath
-        ? normalize(normalizeWindsurf(content, sourcePath, destPath), sourcePath, destPath)
-        : normalize(content, sourcePath, destPath);
+        ? normalize(normalizeWindsurf(stripped, sourcePath, destPath), sourcePath, destPath)
+        : normalize(stripped, sourcePath, destPath);
     const { frontmatter, body } = parseFrontmatter(normalizedContent);
     const outFm = frontmatter.root === true ? frontmatter : { ...frontmatter, root: true };
     const outContent = await serializeImportedRuleWithFallback(destPath, outFm, body);
@@ -145,6 +149,7 @@ async function importRules(
     });
   }
 
+  await importInstructionMirrors(projectRoot, destDir, results, normalize);
   results.push(...(await importCodexNonRootRuleFiles(projectRoot, destDir, normalize)));
 
   results.push(
@@ -184,4 +189,36 @@ async function importRules(
       },
     })),
   );
+}
+
+async function importInstructionMirrors(
+  projectRoot: string,
+  destDir: string,
+  results: ImportResult[],
+  normalize: (content: string, sourceFile: string, destinationFile: string) => string,
+): Promise<void> {
+  try {
+    const files = await readDirRecursive(join(projectRoot, CODEX_INSTRUCTIONS_DIR));
+    const instructionFiles = files.filter((file) => file.endsWith('.md'));
+    for (const srcPath of instructionFiles) {
+      const slug = basename(srcPath, '.md');
+      if (slug === '_root') continue;
+      const content = await readFileSafe(srcPath);
+      if (!content) continue;
+      const destPath = join(destDir, `${slug}.md`);
+      const { frontmatter, body } = parseFrontmatter(normalize(content, srcPath, destPath));
+      await mkdirp(destDir);
+      const outFm = frontmatter.root === true ? frontmatter : { ...frontmatter, root: false };
+      const outContent = await serializeImportedRuleWithFallback(destPath, outFm, body);
+      await writeFileAtomic(destPath, outContent);
+      results.push({
+        fromTool: CODEX_TARGET,
+        fromPath: srcPath,
+        toPath: `${CODEX_CANONICAL_RULES_DIR}/${slug}.md`,
+        feature: 'rules',
+      });
+    }
+  } catch {
+    /* CODEX_INSTRUCTIONS_DIR may not exist */
+  }
 }

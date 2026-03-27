@@ -133,7 +133,9 @@ Prefer strict mode.
 
     const result = await runCli('generate', dir);
     expect(result.exitCode).toBe(0);
-    expect(readFileSync(join(dir, 'AGENTS.md'), 'utf-8')).toContain('typescript/AGENTS.md.');
+    expect(readFileSync(join(dir, 'AGENTS.md'), 'utf-8')).toContain(
+      '.codex/instructions/typescript.md',
+    );
   });
 
   it('rewrites skill directory references across all generated root artifacts', async () => {

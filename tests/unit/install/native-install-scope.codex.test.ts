@@ -12,10 +12,13 @@ describe('stageNativeInstallScope Codex CLI', () => {
       pick: { rules: ['_root'] },
     },
     {
-      name: 'codex-scoped-agents-file',
+      name: 'codex-scoped-instructions-file',
       target: 'codex-cli',
-      path: 'src/AGENTS.md',
-      files: { 'src/AGENTS.md': '# Scoped instructions\n' },
+      path: '.codex/instructions/src.md',
+      files: {
+        '.codex/instructions/src.md':
+          '---\ndescription: Src rules\nglobs:\n  - src/**\n---\n# Scoped instructions\n',
+      },
       features: ['rules'],
       pick: { rules: ['src'] },
     },

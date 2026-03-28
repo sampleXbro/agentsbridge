@@ -26,8 +26,8 @@
         "matcher": "Read",
         "hooks": [
           {
-            "type": "command",
-            "command": "Review the file content for any security concerns"
+            "type": "prompt",
+            "prompt": "Review the file content for any security concerns"
           }
         ]
       }

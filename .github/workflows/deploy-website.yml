@@ -1,3 +1,11 @@
+# Publishes `website/dist` to GitHub Pages via Actions.
+#
+# First-time setup (repo admin): Settings → Pages → Build and deployment → Source → GitHub Actions.
+# Until that is saved, actions/configure-pages fails with "Get Pages site failed" / REST 404.
+# Do not set configure-pages `enablement: true` without a personal access token: the action
+# requires a token other than GITHUB_TOKEN to enable Pages via API.
+#
+# Live site: https://samplexbro.github.io/agentsmesh/ (see website/astro.config.mjs `site` + `base`).
 name: Deploy Website
 
 on:

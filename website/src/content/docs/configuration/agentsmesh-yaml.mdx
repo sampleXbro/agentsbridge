@@ -1,0 +1,127 @@
+---
+draft: false
+title: agentsmesh.yaml
+description: Complete reference for agentsmesh.yaml — the main project configuration file for AgentsMesh. Configure targets, features, extends, overrides, and collaboration settings.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+`agentsmesh.yaml` is the main project configuration file. It is created by `agentsmesh init` and committed to the repository.
+
+## Full example
+
+```yaml
+version: 1
+
+# Which tools to generate config for
+targets:
+  - claude-code
+  - cursor
+  - copilot
+  - gemini-cli
+  - cline
+  - codex-cli
+  - windsurf
+  - continue
+  - junie
+
+# Which features to sync (all enabled by default)
+features:
+  - rules
+  - commands
+  - agents
+  - skills
+  - mcp
+  - hooks
+  - ignore
+  - permissions
+
+# Inherit shared config from other sources
+extends:
+  - name: company-standards
+    source: github:my-org/ai-config@v1.0.0
+    features: [rules, commands, permissions]
+
+# Team collaboration settings
+collaboration:
+  strategy: merge
+  lock_features:
+    - mcp
+    - permissions
+
+# Per-target overrides
+overrides:
+  cursor:
+    features: [rules, commands, agents, skills, mcp]
+
+# Feature projection behavior
+conversions:
+  commands_to_skills:
+    codex-cli: true
+  agents_to_skills:
+    cline: true
+    windsurf: true
+```
+
+## Top-level fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `version` | `number` | Yes | Config schema version. Currently `1`. |
+| `targets` | `string[]` | Yes | Tool IDs to generate config for. |
+| `features` | `string[]` | No | Features to sync. Omit to enable all. |
+| `extends` | `array` | No | Shared config sources to inherit from. |
+| `overrides` | `object` | No | Per-target config overrides. |
+| `collaboration` | `object` | No | Team collaboration and lock settings. |
+| `conversions` | `object` | No | Control feature projection per target. |
+
+## targets
+
+Valid target IDs:
+
+```yaml
+targets:
+  - claude-code    # Claude Code (.claude/)
+  - cursor         # Cursor (.cursor/)
+  - copilot        # GitHub Copilot (.github/)
+  - gemini-cli     # Gemini CLI (.gemini/)
+  - cline          # Cline (.cline/)
+  - codex-cli      # Codex CLI (AGENTS.md)
+  - windsurf       # Windsurf (.windsurf/)
+  - continue       # Continue (.continue/)
+  - junie          # Junie (.junie/)
+```
+
+## features
+
+```yaml
+features:
+  - rules        # .agentsmesh/rules/*.md
+  - commands     # .agentsmesh/commands/*.md
+  - agents       # .agentsmesh/agents/*.md
+  - skills       # .agentsmesh/skills/*/SKILL.md
+  - mcp          # .agentsmesh/mcp.json
+  - hooks        # .agentsmesh/hooks.yaml
+  - ignore       # .agentsmesh/ignore
+  - permissions  # .agentsmesh/permissions.yaml
+```
+
+Omitting `features` enables all features. Specifying a subset disables all others.
+
+## overrides
+
+Per-target overrides narrow the features or targets for a specific tool:
+
+```yaml
+overrides:
+  # Only generate rules and MCP for Codex CLI
+  codex-cli:
+    features: [rules, mcp]
+  # Override targets for a specific downstream use (unusual)
+  cursor:
+    features: [rules, commands, agents, mcp, ignore]
+```
+
+<Aside type="note">
+  `overrides` narrow down from the top-level `features`. You cannot add features in overrides that aren't in the top-level `features` list.
+</Aside>

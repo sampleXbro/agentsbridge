@@ -12,6 +12,7 @@ node_modules
 dist
 build
 coverage
+website/.astro/
 
 # Environment & secrets
 .env

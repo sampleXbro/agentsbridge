@@ -1,0 +1,82 @@
+---
+draft: false
+title: Installation
+description: Install AgentsMesh via npm, pnpm, yarn, or run it directly with npx. Requires Node.js 20 or later.
+sidebar:
+  order: 1
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+## Requirements
+
+- **Node.js 20** or later
+- Any package manager: npm, pnpm, or yarn
+
+## Install as a dev dependency
+
+<Tabs>
+  <TabItem label="npm">
+    ```bash
+    npm install -D agentsmesh
+    ```
+  </TabItem>
+  <TabItem label="pnpm">
+    ```bash
+    pnpm add -D agentsmesh
+    ```
+  </TabItem>
+  <TabItem label="yarn">
+    ```bash
+    yarn add -D agentsmesh
+    ```
+  </TabItem>
+</Tabs>
+
+## Run without installing
+
+```bash
+npx agentsmesh --help
+```
+
+## CLI aliases
+
+AgentsMesh installs two aliases:
+
+```bash
+agentsmesh --version   # full name
+amsh --version         # short alias
+```
+
+Both commands are identical. Use whichever you prefer.
+
+## Verify installation
+
+```bash
+agentsmesh --version
+# 0.2.4
+
+agentsmesh --help
+# Usage: agentsmesh <command> [options]
+# ...
+```
+
+<Aside type="note">
+  If you installed locally (not globally), prefix commands with `npx agentsmesh` or add a script to your `package.json`.
+</Aside>
+
+## Add scripts to package.json
+
+```json
+{
+  "scripts": {
+    "sync": "agentsmesh generate",
+    "sync:check": "agentsmesh check",
+    "sync:watch": "agentsmesh watch"
+  }
+}
+```
+
+## Next step
+
+Continue to [Quick Start](/agentsmesh/getting-started/quick-start/) to scaffold your first canonical config directory.

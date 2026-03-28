@@ -1,0 +1,127 @@
+---
+draft: false
+title: Generation Pipeline
+description: How AgentsMesh transforms canonical .agentsmesh/ sources into target-specific config files — the 7-step generation pipeline and import reverse pipeline.
+---
+
+This page documents the internals of the AgentsMesh generation and import pipelines.
+
+## Generation pipeline
+
+When you run `agentsmesh generate`, the CLI executes 7 ordered steps:
+
+### Step 1: Load config
+
+Parse `agentsmesh.yaml`, validate the schema, then merge `agentsmesh.local.yaml` on top. Local overrides narrow targets and features but cannot expand them.
+
+### Step 2: Load canonical sources
+
+Read all files from `.agentsmesh/`:
+- Rules from `rules/*.md`
+- Commands from `commands/*.md`
+- Agents from `agents/*.md`
+- Skills from `skills/*/SKILL.md` + supporting files
+- MCP from `mcp.json`
+- Permissions from `permissions.yaml`
+- Hooks from `hooks.yaml`
+- Ignore patterns from `ignore`
+
+Then resolve `extends` entries — fetch from `~/.agentsmesh/cache/` or remote if not cached. Load installed packs from `.agentsmesh/packs/`. Merge everything: local wins over packs, packs win over extends.
+
+### Step 3: Generate per target
+
+For each enabled target, run target-specific generators:
+
+```
+Canonical config
+      │
+      ├──► Claude Code generator ──► {path, content}[]
+      ├──► Cursor generator      ──► {path, content}[]
+      ├──► Copilot generator     ──► {path, content}[]
+      └──► ...
+```
+
+Each generator produces an array of `{path, content}` pairs in the target's native format. For example, the Cursor generator converts rules to `.mdc` format, the Claude Code generator writes `settings.json` for permissions/hooks/MCP.
+
+### Step 4: Rewrite references
+
+Internal file references are rewritten from canonical paths to target-relative paths:
+
+```
+.agentsmesh/skills/api-gen/template.hbs
+    → .claude/skills/api-gen/template.hbs (for Claude Code)
+    → .cursor/skills/api-gen/template.hbs (for Cursor)
+```
+
+This keeps cross-file links valid in each tool's native directory.
+
+### Step 5: Resolve collisions
+
+Detect overlapping output paths across features. When two features would write to the same file path, the resolution priority is:
+
+1. Native feature output (highest priority)
+2. Embedded/projected output (lower priority — deduplicated away)
+
+### Step 6: Write output
+
+Create target directories if they don't exist. Write all `{path, content}` pairs to disk. Update `.agentsmesh/.lock` with checksums of all written files.
+
+### Step 7: Clean stale files
+
+Compare the list of files just written against the previous lock. Any file that was previously generated but is no longer in the output set is deleted. This prevents stale config from accumulating.
+
+---
+
+## Import pipeline
+
+`agentsmesh import --from <target>` runs the generation pipeline in reverse:
+
+### Step 1: Read tool-specific files
+
+Read the tool's native config format from its directory.
+
+### Step 2: Parse tool format
+
+Convert tool-native format to an intermediate canonical representation:
+- `.cursor/rules/*.mdc` → parse Cursor frontmatter, strip Cursor-specific fields
+- `.claude/settings.json` → extract `mcpServers`, `permissions`, `hooks`
+- `AGENTS.md` → parse embedded sections for rules, commands, agents, skills, MCP
+
+### Step 3: Read embedded metadata
+
+For projected/embedded features, read the AgentsMesh metadata comments to restore original canonical form. For example, a Codex CLI command embedded as a skill is restored to `commands/*.md` format.
+
+### Step 4: Rewrite references
+
+Tool-relative file paths are rewritten to canonical paths:
+```
+.claude/skills/api-gen/template.hbs
+    → .agentsmesh/skills/api-gen/template.hbs
+```
+
+### Step 5: Write canonical files
+
+Write the restored canonical files to `.agentsmesh/`. Existing files are merged — no duplicates, no overwrites without explicit confirmation.
+
+---
+
+## Lock file
+
+`.agentsmesh/.lock` is a JSON file managed by the CLI:
+
+```json
+{
+  "version": 1,
+  "generated": "2026-03-28T10:00:00Z",
+  "files": {
+    ".claude/rules/_root.md": "sha256:abc123...",
+    ".claude/rules/security.md": "sha256:def456...",
+    ".cursor/rules/_root.mdc": "sha256:ghi789...",
+    "..."
+  }
+}
+```
+
+`agentsmesh check` reads this file and compares hashes against what's currently on disk. Any mismatch is reported as drift.
+
+The lock file is committed to git. It should not be edited manually.

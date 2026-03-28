@@ -1,0 +1,61 @@
+---
+draft: false
+title: Local Overrides
+description: agentsmesh.local.yaml is gitignored and lets individual developers narrow their local setup without affecting the shared team config.
+---
+
+`agentsmesh.local.yaml` is gitignored and allows individual developers to customize their local setup without affecting the shared `agentsmesh.yaml` that the rest of the team uses.
+
+## Key constraint
+
+Local overrides can only **narrow** the scope — they cannot add targets or features that `agentsmesh.yaml` doesn't already define.
+
+## Common use cases
+
+### Only generate for the tools you use
+
+```yaml
+# agentsmesh.local.yaml
+targets:
+  - claude-code
+```
+
+If your team uses both Cursor and Claude Code but you only use Claude Code, this prevents generating `.cursor/` files on your machine.
+
+### Skip features you don't need locally
+
+```yaml
+# agentsmesh.local.yaml
+targets:
+  - claude-code
+
+features:
+  - rules
+  - commands
+  - skills
+  - mcp
+```
+
+Omitting `hooks` and `permissions` means they won't be generated locally (but they still generate in CI and for teammates who don't have this file).
+
+### Faster watch mode
+
+```yaml
+# agentsmesh.local.yaml
+targets:
+  - claude-code  # only regenerate Claude Code during watch
+```
+
+With a single target, `agentsmesh watch` regenerates faster.
+
+## gitignore
+
+`agentsmesh init` adds `agentsmesh.local.yaml` to `.gitignore` automatically. If you need to add it manually:
+
+```txt
+agentsmesh.local.yaml
+```
+
+## Merge behavior
+
+When AgentsMesh loads config, it merges local overrides on top of the project config. Local overrides take precedence for `targets` and `features`, but not for `extends`, `collaboration`, or `conversions` — those always come from the committed `agentsmesh.yaml`.

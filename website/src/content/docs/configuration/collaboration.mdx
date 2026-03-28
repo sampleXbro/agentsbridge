@@ -1,0 +1,92 @@
+---
+draft: false
+title: Collaboration Settings
+description: Configure how teams work with generated AgentsMesh config — merge strategies, feature locking, and conflict resolution for multi-developer projects.
+---
+
+The `collaboration` field in `agentsmesh.yaml` controls how generated config is managed across a team.
+
+## Configuration
+
+```yaml
+collaboration:
+  strategy: merge
+  lock_features:
+    - mcp
+    - permissions
+```
+
+## Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `strategy` | `string` | Merge strategy: `merge`, `lock`, or `last-wins`. |
+| `lock_features` | `string[]` | Features protected from accidental regeneration. |
+
+## Strategies
+
+### `merge` (default)
+
+Standard 3-way merge of the lock file. When multiple developers regenerate independently, the lock file can have git merge conflicts.
+
+Resolve them with:
+
+```bash
+agentsmesh merge   # rebuilds lock from current canonical state
+agentsmesh generate
+```
+
+Use this for most teams. It's the safest strategy because drift is always visible in PRs.
+
+### `lock`
+
+Locked features cannot be regenerated without `--force`. Useful for sensitive config like MCP servers and permissions where accidental regeneration could cause security issues.
+
+```yaml
+collaboration:
+  strategy: lock
+  lock_features:
+    - mcp
+    - permissions
+```
+
+With this config, `agentsmesh generate` will refuse to write MCP or permissions config unless `--force` is passed:
+
+```bash
+agentsmesh generate --force   # override lock
+```
+
+### `last-wins`
+
+Always overwrites the lock with the latest state. No conflicts, but less safe — if two developers regenerate from different canonical states, the last one to push wins.
+
+Use this for solo projects or when you don't want to deal with lock conflicts.
+
+## Feature locking in detail
+
+`lock_features` protects specific features from being silently overwritten during `generate`. This is most useful for:
+
+- **`mcp`** — MCP server definitions often contain production endpoints and auth tokens (via env var references). You don't want these accidentally regenerated from an outdated source.
+- **`permissions`** — Permission lists represent security boundaries. Lock them to require explicit `--force` for any change.
+
+```yaml
+collaboration:
+  strategy: merge
+  lock_features:
+    - mcp
+    - permissions
+```
+
+With this, any PR that changes `mcp.json` or `permissions.yaml` must explicitly use `--force` and will be visible in the diff. No silent overwrites.
+
+## CI with collaboration settings
+
+Add `agentsmesh check` to CI to enforce that the checked-in generated files always match the canonical sources:
+
+```yaml
+# .github/workflows/ci.yml
+- name: Verify AI config sync
+  run: npx agentsmesh check
+```
+
+This catches cases where a developer regenerated locally with `--force` but the canonical source wasn't committed.

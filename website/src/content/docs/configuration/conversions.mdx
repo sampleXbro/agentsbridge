@@ -1,0 +1,72 @@
+---
+draft: false
+title: Conversions
+description: Control how AgentsMesh projects features to tools that lack native support — commands to skills, agents to skills, and more.
+---
+
+The `conversions` field in `agentsmesh.yaml` controls how features are projected when a target lacks native support for them.
+
+## Configuration
+
+```yaml
+conversions:
+  commands_to_skills:
+    codex-cli: true     # project commands as skills (default: true)
+    continue: true
+    junie: true
+
+  agents_to_skills:
+    cline: true         # project agents as skills (default: true)
+    windsurf: true
+    junie: true
+    gemini-cli: true
+```
+
+## Why conversions exist
+
+Not all AI tools support all feature types natively. When a tool lacks native support, AgentsMesh can project the feature into a compatible format that the tool understands, while preserving enough metadata to round-trip back to canonical form on import.
+
+**Example:** Codex CLI has no native command support. With `commands_to_skills: { codex-cli: true }`, AgentsMesh embeds each command as an invokable skill in `AGENTS.md` with a special metadata comment. When you later run `agentsmesh import --from codex-cli`, the importer reads the metadata and restores the original `commands/*.md` files.
+
+## `commands_to_skills`
+
+Controls whether commands are projected as skills for tools without native command support.
+
+| Target | Default | Notes |
+|--------|---------|-------|
+| `codex-cli` | `true` | Commands embedded as skills in `AGENTS.md`. |
+| `continue` | `true` | Commands projected as embedded skills. |
+| `junie` | `true` | Commands projected as embedded skills. |
+
+Set to `false` to skip the target entirely (the command is not included in that tool's output):
+
+```yaml
+conversions:
+  commands_to_skills:
+    codex-cli: false   # skip commands for Codex CLI entirely
+```
+
+## `agents_to_skills`
+
+Controls whether agents are projected as skills for tools without native agent support.
+
+| Target | Default | Notes |
+|--------|---------|-------|
+| `cline` | `true` | Agents embedded as skills. |
+| `windsurf` | `true` | Agents embedded as skills. |
+| `junie` | `true` | Agents embedded as skills. |
+| `gemini-cli` | `true` | Agents embedded as skills (partial native support). |
+
+Set to `false` to skip:
+
+```yaml
+conversions:
+  agents_to_skills:
+    cline: false     # skip agents for Cline entirely
+```
+
+## Lossless round-trip guarantee
+
+When `true`, projected features carry embedded AgentsMesh metadata (in YAML comments or special marker sections). This metadata is used by `agentsmesh import` to restore the original canonical form. No data is lost.
+
+When `false`, the feature is silently omitted for that target. It will not round-trip on import — the feature simply won't exist in that tool's output.

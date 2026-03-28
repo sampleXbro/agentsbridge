@@ -1,0 +1,139 @@
+---
+draft: false
+title: Agents
+description: Agents define custom subagents with their own tools, model, permissions, hooks, and skills. Stored in .agentsmesh/agents/ as Markdown files with YAML frontmatter.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Agents define custom subagents — autonomous AI instances with their own scoped toolset, model selection, permission mode, lifecycle hooks, and skill set. They live in `.agentsmesh/agents/` as Markdown files.
+
+## File format
+
+```markdown
+---
+name: code-reviewer
+description: Reviews code changes for quality and security issues
+tools:
+  - Read
+  - Grep
+  - Glob
+  - Bash(git diff)
+  - Bash(git log)
+model: sonnet
+permissionMode: ask
+maxTurns: 10
+mcpServers:
+  - github
+hooks:
+  PreToolUse:
+    - matcher: "Edit|Write"
+      type: command
+      command: "eslint --fix $FILE"
+skills:
+  - security-review
+memory: .context/review-history.md
+---
+
+You are a senior code reviewer. Focus on logic correctness, performance,
+security vulnerabilities, and adherence to project conventions.
+
+Flag issues by severity: Critical, Major, Minor, Suggestion.
+Suggest concrete fixes, not vague recommendations.
+```
+
+## Frontmatter reference
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | `string` | Agent identifier. Used in tool menus and CLI output. |
+| `description` | `string` | Short description shown when selecting agents. |
+| `tools` | `string[]` | Allowed tools. Supports tool names like `Read`, `Grep`, `Bash(cmd)`. |
+| `disallowedTools` | `string[]` | Explicitly denied tools (takes priority over `tools`). |
+| `model` | `string` | Model hint: `sonnet`, `opus`, `haiku`. Tools map this to their native model selector. |
+| `permissionMode` | `string` | How permissions are handled: `ask`, `default`, `none`. |
+| `maxTurns` | `number` | Maximum conversation turns before the agent stops. |
+| `mcpServers` | `string[]` | MCP server names available to this agent (must be defined in `mcp.json`). |
+| `hooks` | `object` | Agent-level lifecycle hooks. Same format as `hooks.yaml`. |
+| `skills` | `string[]` | Skill names (directories in `.agentsmesh/skills/`) available to this agent. |
+| `memory` | `string` | Path to an external memory file the agent reads at startup. |
+
+## Tool-specific behavior
+
+| Tool | Support | Notes |
+|------|---------|-------|
+| Claude Code | Native | Maps directly to Claude Code agent format. |
+| Cursor | Native | Maps to Cursor agent definition format. |
+| Copilot | Native | Maps to Copilot agent definition. |
+| Gemini CLI | Native | Maps to Gemini CLI agent format. |
+| Cline | Embedded | Projected as a skill with metadata for round-trip. |
+| Codex CLI | Native | Maps to Codex CLI agent format. |
+| Windsurf | Embedded | Projected as a skill with metadata. |
+| Continue | — | Not supported. |
+| Junie | Embedded | Projected as a skill with metadata. |
+
+<Aside type="tip">
+  Embedded agents carry metadata so that `agentsmesh import` can restore them from their projected form back to canonical `agents/*.md` format without data loss.
+</Aside>
+
+## Example agents
+
+### Security auditor
+
+```markdown
+---
+name: security-auditor
+description: Audits code for OWASP top 10 vulnerabilities and security anti-patterns
+tools:
+  - Read
+  - Grep
+  - Glob
+model: opus
+permissionMode: ask
+maxTurns: 20
+skills:
+  - owasp-checklist
+---
+
+You are a security engineer conducting a code audit. Focus on:
+- Injection vulnerabilities (SQL, command, LDAP)
+- Authentication and session management flaws
+- Sensitive data exposure
+- Insecure direct object references
+- Security misconfiguration
+
+Report every finding with: file path, line number, severity, and remediation.
+```
+
+### Test writer
+
+```markdown
+---
+name: test-writer
+description: Writes unit and integration tests for changed code
+tools:
+  - Read
+  - Write
+  - Edit
+  - Bash(git diff HEAD~1)
+  - Bash(pnpm test)
+model: sonnet
+permissionMode: default
+maxTurns: 15
+---
+
+You are a test engineer. Given the recent code changes, write comprehensive tests.
+Follow the existing test patterns in the repository.
+Target 90%+ coverage for changed files.
+Run the tests to verify they pass.
+```
+
+## Disabling projection for a target
+
+```yaml
+# agentsmesh.yaml
+conversions:
+  agents_to_skills:
+    cline: false     # skip Cline instead of embedding
+    windsurf: false  # skip Windsurf instead of embedding
+```

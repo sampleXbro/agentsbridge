@@ -1,0 +1,117 @@
+---
+draft: false
+title: agentsmesh init
+description: Scaffold the canonical .agentsmesh/ directory and agentsmesh.yaml. Detects existing AI tool configs and offers to import them.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Scaffold the canonical config directory. Creates `agentsmesh.yaml`, `agentsmesh.local.yaml`, and `.agentsmesh/` with a starter root rule.
+
+## Usage
+
+```bash
+agentsmesh init [flags]
+```
+
+## Flags
+
+| Flag | Description |
+|------|-------------|
+| `--yes` | Auto-import all detected tool configs without prompting. |
+
+## What init creates
+
+Running `agentsmesh init` in a project root creates:
+
+```
+agentsmesh.yaml           # Project configuration (committed)
+agentsmesh.local.yaml     # Local overrides (gitignored)
+.agentsmesh/
+  rules/
+    _root.md              # Starter root rule
+.gitignore                # Updated to exclude agentsmesh.local.yaml
+```
+
+## Auto-detection
+
+During init, AgentsMesh scans the project for existing AI tool configs. If any are found, it prompts you to import them:
+
+- `.claude/` → Claude Code
+- `.cursor/` → Cursor
+- `.github/copilot-instructions.md` → Copilot
+- `.gemini/` → Gemini CLI
+- `.cline/` → Cline
+- `.codex/` → Codex CLI
+- `.windsurf/` → Windsurf
+- `.continue/` → Continue
+- `.junie/` → Junie
+
+## Examples
+
+### Interactive mode
+
+```bash
+agentsmesh init
+```
+
+Prompts for each detected config. You can accept or skip each one individually.
+
+### Auto-import everything
+
+```bash
+agentsmesh init --yes
+```
+
+Imports all detected configs without prompting. Useful for scripted setups or when you want to migrate everything at once.
+
+### New project (no existing configs)
+
+```bash
+agentsmesh init
+# No existing configs detected.
+# Created agentsmesh.yaml
+# Created .agentsmesh/rules/_root.md
+# Updated .gitignore
+
+agentsmesh generate
+```
+
+<Aside type="note">
+  If `.agentsmesh/` already exists, `init` will not overwrite it. It only creates files that don't exist yet.
+</Aside>
+
+## Generated agentsmesh.yaml
+
+The starter config enables all targets and features:
+
+```yaml
+version: 1
+targets:
+  - claude-code
+  - cursor
+  - copilot
+  - gemini-cli
+  - cline
+  - codex-cli
+  - windsurf
+  - continue
+  - junie
+features:
+  - rules
+  - commands
+  - agents
+  - skills
+  - mcp
+  - hooks
+  - ignore
+  - permissions
+```
+
+Edit this to match your team's actual tool usage before running `generate`.
+
+## Next steps
+
+1. Edit `agentsmesh.yaml` to configure your `targets`
+2. Edit `.agentsmesh/rules/_root.md` with your project guidelines
+3. Run `agentsmesh generate`

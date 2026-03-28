@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 40" fill="none">
+  <!-- Mesh/grid icon -->
+  <g transform="translate(4, 8)">
+    <circle cx="0"  cy="0"  r="3" fill="#6366f1"/>
+    <circle cx="12" cy="0"  r="3" fill="#6366f1"/>
+    <circle cx="24" cy="0"  r="3" fill="#6366f1"/>
+    <circle cx="0"  cy="12" r="3" fill="#6366f1"/>
+    <circle cx="12" cy="12" r="3" fill="#818cf8"/>
+    <circle cx="24" cy="12" r="3" fill="#6366f1"/>
+    <circle cx="0"  cy="24" r="3" fill="#6366f1"/>
+    <circle cx="12" cy="24" r="3" fill="#6366f1"/>
+    <circle cx="24" cy="24" r="3" fill="#6366f1"/>
+    <!-- connections -->
+    <line x1="3" y1="0"  x2="9"  y2="0"  stroke="#6366f1" stroke-width="1.5" opacity="0.6"/>
+    <line x1="15" y1="0" x2="21" y2="0"  stroke="#6366f1" stroke-width="1.5" opacity="0.6"/>
+    <line x1="3" y1="12" x2="9"  y2="12" stroke="#6366f1" stroke-width="1.5" opacity="0.6"/>
+    <line x1="15" y1="12" x2="21" y2="12" stroke="#6366f1" stroke-width="1.5" opacity="0.6"/>
+    <line x1="3" y1="24" x2="9"  y2="24" stroke="#6366f1" stroke-width="1.5" opacity="0.6"/>
+    <line x1="15" y1="24" x2="21" y2="24" stroke="#6366f1" stroke-width="1.5" opacity="0.6"/>
+    <line x1="0" y1="3"  x2="0"  y2="9"  stroke="#6366f1" stroke-width="1.5" opacity="0.6"/>
+    <line x1="12" y1="3" x2="12" y2="9"  stroke="#6366f1" stroke-width="1.5" opacity="0.6"/>
+    <line x1="24" y1="3" x2="24" y2="9"  stroke="#6366f1" stroke-width="1.5" opacity="0.6"/>
+    <line x1="0" y1="15" x2="0"  y2="21" stroke="#6366f1" stroke-width="1.5" opacity="0.6"/>
+    <line x1="12" y1="15" x2="12" y2="21" stroke="#6366f1" stroke-width="1.5" opacity="0.6"/>
+    <line x1="24" y1="15" x2="24" y2="21" stroke="#6366f1" stroke-width="1.5" opacity="0.6"/>
+  </g>
+  <!-- Text -->
+  <text x="40" y="26" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="700" fill="#111827">AgentsMesh</text>
+</svg>

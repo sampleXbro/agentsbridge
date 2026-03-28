@@ -1,0 +1,188 @@
+---
+draft: false
+title: Supported Tools Matrix
+description: Complete feature-target compatibility matrix for all 9 AI coding tools supported by AgentsMesh — Claude Code, Cursor, Copilot, Gemini CLI, Cline, Codex CLI, Windsurf, Continue, and Junie.
+---
+
+AgentsMesh supports 9 AI coding tools. This page documents what each tool supports natively, what is embedded/projected, and what is not supported.
+
+## Legend
+
+| Symbol | Meaning |
+|--------|---------|
+| **Native** | Feature maps directly to the tool's own config format. Full fidelity. |
+| **Embedded** | AgentsMesh projects the feature into a compatible format with metadata for lossless round-trip on import. |
+| **Partial** | Limited support — some fields or capabilities may not fully round-trip. |
+| **—** | Not supported. Feature is skipped for this target. |
+
+## Feature matrix
+
+| Feature | Claude Code | Cursor | Copilot | Gemini CLI | Cline | Codex CLI | Windsurf | Continue | Junie |
+|---------|:-----------:|:------:|:-------:|:----------:|:-----:|:---------:|:--------:|:--------:|:-----:|
+| Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native |
+| Commands | Native | Native | Native | Native | Native | Embedded | Native | Embedded | Embedded |
+| Agents | Native | Native | Native | Native | Embedded | Native | Embedded | — | Embedded |
+| Skills | Native | Native | Native | Native | Native | Native | Native | Embedded | Embedded |
+| MCP Servers | Native | Native | — | Native | Native | Native | Partial | Native | Native |
+| Hooks | Native | Native | Partial | Partial | — | — | Native | — | — |
+| Ignore | Native | Native | — | Native | Native | — | Native | — | Native |
+| Permissions | Native | Partial | — | Partial | — | — | — | — | — |
+
+## Tool details
+
+### Claude Code
+
+**Output directory:** `.claude/`
+
+Full native support for all 8 features. The reference implementation for AgentsMesh's canonical format.
+
+| Feature | Format |
+|---------|--------|
+| Rules | `.claude/rules/*.md` |
+| Commands | `.claude/commands/*.md` |
+| Agents | `.claude/agents/*.md` |
+| Skills | `.claude/skills/*/SKILL.md` |
+| MCP Servers | `.claude/settings.json` → `mcpServers` |
+| Hooks | `.claude/settings.json` → `hooks` |
+| Ignore | `.claude/ignore` |
+| Permissions | `.claude/settings.json` → `permissions` |
+
+---
+
+### Cursor
+
+**Output directory:** `.cursor/`
+
+Full native support except permissions (partial).
+
+| Feature | Format | Notes |
+|---------|--------|-------|
+| Rules | `.cursor/rules/*.mdc` | Converted to Cursor's `.mdc` format |
+| Commands | `.cursor/commands/*.md` | |
+| Agents | `.cursor/agents/*.md` | |
+| Skills | `.cursor/skills/*/SKILL.md` | |
+| MCP Servers | `.cursor/mcp.json` | |
+| Hooks | `.cursor/settings.json` → `hooks` | |
+| Ignore | `.cursorignore` | |
+| Permissions | `.cursor/settings.json` | Partial field coverage |
+
+---
+
+### GitHub Copilot
+
+**Output directory:** `.github/`
+
+| Feature | Format | Notes |
+|---------|--------|-------|
+| Rules | `.github/copilot-instructions.md` | All rules merged into one file |
+| Commands | `.github/copilot-instructions.md` | Embedded in instructions |
+| Agents | `.github/agents/*.md` | |
+| Skills | `.github/skills/*/SKILL.md` | |
+| MCP Servers | — | Not supported |
+| Hooks | `.github/copilot-instructions.md` | Partial — text injection only |
+| Ignore | — | Not supported |
+| Permissions | — | Not supported |
+
+---
+
+### Gemini CLI
+
+**Output directory:** `.gemini/`
+
+| Feature | Format | Notes |
+|---------|--------|-------|
+| Rules | `.gemini/rules/*.md` | |
+| Commands | `.gemini/commands/*.md` | |
+| Agents | `.gemini/agents/*.md` | |
+| Skills | `.gemini/skills/*/SKILL.md` | |
+| MCP Servers | `.gemini/settings.json` → `mcpServers` | |
+| Hooks | `.gemini/settings.json` | Partial hook type support |
+| Ignore | `.gemini/ignore` | |
+| Permissions | `.gemini/settings.json` | Partial field coverage |
+
+---
+
+### Cline
+
+**Output directory:** `.cline/`
+
+| Feature | Format | Notes |
+|---------|--------|-------|
+| Rules | `.cline/rules/*.md` | |
+| Commands | `.cline/commands/*.md` | |
+| Agents | `.cline/agents/` | Embedded as skills |
+| Skills | `.cline/skills/*/SKILL.md` | |
+| MCP Servers | `.cline/mcp.json` | |
+| Hooks | — | Not supported |
+| Ignore | `.cline/ignore` | |
+| Permissions | — | Not supported |
+
+---
+
+### Codex CLI
+
+**Output file:** `AGENTS.md`
+
+Codex CLI uses a single `AGENTS.md` file. All features are embedded into this file.
+
+| Feature | Notes |
+|---------|-------|
+| Rules | Embedded with `codexEmit` and `codexInstructionVariant` control |
+| Commands | Embedded as invokable skills with round-trip metadata |
+| Agents | Native agent definitions embedded in `AGENTS.md` |
+| Skills | Embedded skill definitions |
+| MCP Servers | Embedded MCP configuration |
+| Hooks | — Not supported |
+| Ignore | — Not supported |
+| Permissions | — Not supported |
+
+---
+
+### Windsurf
+
+**Output directory:** `.windsurf/`
+
+| Feature | Format | Notes |
+|---------|--------|-------|
+| Rules | `.windsurf/rules/*.md` | `trigger` frontmatter field applied |
+| Commands | `.windsurf/commands/*.md` | |
+| Agents | `.windsurf/` | Embedded as skills |
+| Skills | `.windsurf/skills/*/SKILL.md` | |
+| MCP Servers | `.windsurf/mcp.json` | Partial server type coverage |
+| Hooks | `.windsurf/settings.json` | Full hook support |
+| Ignore | `.windsurfignore` | |
+| Permissions | — | Not supported |
+
+---
+
+### Continue
+
+**Output directory:** `.continue/`
+
+| Feature | Notes |
+|---------|-------|
+| Rules | `.continue/rules/*.md` (frontmatter stripped) |
+| Commands | Embedded as skills |
+| Agents | — Not supported |
+| Skills | Embedded with metadata |
+| MCP Servers | `.continue/config.json` → `mcpServers` |
+| Hooks | — Not supported |
+| Ignore | — Not supported |
+| Permissions | — Not supported |
+
+---
+
+### Junie
+
+**Output directory:** `.junie/`
+
+| Feature | Notes |
+|---------|-------|
+| Rules | `.junie/guidelines.md` (merged) |
+| Commands | Embedded as skills |
+| Agents | Embedded as skills |
+| Skills | Embedded with metadata |
+| MCP Servers | `.junie/mcp.json` |
+| Hooks | — Not supported |
+| Ignore | `.junie/ignore` |
+| Permissions | — Not supported |

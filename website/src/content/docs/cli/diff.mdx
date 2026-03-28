@@ -1,0 +1,79 @@
+---
+draft: false
+title: agentsmesh diff
+description: Show a unified diff of what the next agentsmesh generate would change, without writing any files. Useful for reviewing pending changes before committing.
+---
+
+Show a unified diff of what the next `agentsmesh generate` would change, without writing anything. Use this to review pending changes before committing or to debug unexpected output.
+
+## Usage
+
+```bash
+agentsmesh diff [flags]
+```
+
+## Flags
+
+| Flag | Description |
+|------|-------------|
+| `--targets <csv>` | Limit diff output to specific target IDs. |
+
+## Examples
+
+### Show all pending changes
+
+```bash
+agentsmesh diff
+```
+
+Output shows a unified diff for each file that would be created, modified, or deleted by the next `generate`.
+
+### Show changes for specific targets
+
+```bash
+agentsmesh diff --targets windsurf
+agentsmesh diff --targets claude-code,cursor
+```
+
+## Sample output
+
+```diff
+--- .claude/rules/security.md (current)
++++ .claude/rules/security.md (generated)
+@@ -5,6 +5,8 @@
+ Never log sensitive data.
+ Validate all external inputs.
++Use parameterized queries for all database operations.
++Sanitize HTML output to prevent XSS.
+
+--- .cursor/rules/security.mdc (current)
++++ .cursor/rules/security.mdc (generated)
+@@ -5,6 +5,8 @@
+ Never log sensitive data.
+ Validate all external inputs.
++Use parameterized queries for all database operations.
++Sanitize HTML output to prevent XSS.
+```
+
+## Workflow
+
+`diff` is most useful as a pre-commit review step:
+
+```bash
+# 1. Edit canonical files
+vi .agentsmesh/rules/security.md
+
+# 2. Preview what changes will be generated
+agentsmesh diff
+
+# 3. If it looks correct, generate
+agentsmesh generate
+
+# 4. Commit both canonical and generated files
+git add .agentsmesh/ .claude/ .cursor/
+git commit -m "security: add SQL injection and XSS rules"
+```
+
+## Relationship to `generate --dry-run`
+
+`agentsmesh diff` and `agentsmesh generate --dry-run` produce the same output. They are aliases for the same operation.

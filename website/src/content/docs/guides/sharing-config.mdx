@@ -1,0 +1,134 @@
+---
+draft: false
+title: Sharing Config Across Repositories
+description: Use AgentsMesh extends to pull shared rules, commands, and agents from an organizational config repository into multiple projects.
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+Use `extends` to maintain shared AI tool config in one organizational repository and inherit it across all your projects.
+
+## Setup
+
+### Step 1: Create a shared config repo
+
+Create a repository (e.g., `my-org/ai-config`) with canonical AgentsMesh files:
+
+```
+ai-config/
+  .agentsmesh/
+    rules/
+      _root.md        # Org-wide root rule
+      security.md     # Org-wide security rule
+      typescript.md   # Org-wide TypeScript standards
+    commands/
+      commit.md       # Shared commit command
+      review.md       # Shared review command
+    permissions.yaml  # Org-wide permissions baseline
+  agentsmesh.yaml
+```
+
+Tag releases:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+### Step 2: Reference from each project
+
+In each project's `agentsmesh.yaml`:
+
+```yaml
+extends:
+  - name: org-standards
+    source: github:my-org/ai-config@v1.0.0
+    features: [rules, commands, permissions]
+```
+
+### Step 3: Generate
+
+```bash
+agentsmesh generate
+```
+
+AgentsMesh fetches `my-org/ai-config@v1.0.0` (cached in `~/.agentsmesh/cache/`), merges the shared rules/commands/permissions with the project's local canonical config, and generates output for all targets.
+
+## Merge precedence
+
+Local canonical config always wins over extended sources:
+
+```
+Priority (highest to lowest):
+1. .agentsmesh/ (project-local)
+2. .agentsmesh/packs/ (installed packs)
+3. extends sources (shared org config)
+```
+
+If your project defines a `security.md` rule and the shared repo also defines one, your local version takes precedence.
+
+## Upgrading shared config
+
+When `my-org/ai-config` releases `v2.0.0`:
+
+```yaml
+# Bump the version in each project
+extends:
+  - name: org-standards
+    source: github:my-org/ai-config@v2.0.0
+    features: [rules, commands, permissions]
+```
+
+```bash
+# Refresh cache and regenerate
+agentsmesh generate --refresh-cache
+```
+
+<Aside type="tip">
+  Pin to version tags (`@v2.0.0`) for reproducible builds. Using `@main` means you get the latest on every cache refresh — suitable for development but risky for production projects.
+</Aside>
+
+## Monorepo setup
+
+For monorepos with a shared config directory:
+
+```yaml
+# packages/my-app/agentsmesh.yaml
+extends:
+  - name: workspace-rules
+    source: ../shared-ai-config
+    features: [rules, commands, permissions]
+```
+
+Local path sources don't cache — they're read directly every time.
+
+## Cherry-picking from shared config
+
+If the shared repo has many rules but you only want some:
+
+```yaml
+extends:
+  - name: org-standards
+    source: github:my-org/ai-config@v1.0.0
+    features: [rules]
+    pick:
+      rules: [security, typescript]   # only inherit these two rules
+```
+
+## Delegating all config to shared
+
+For projects that want to inherit everything from the org:
+
+```yaml
+version: 1
+targets:
+  - claude-code
+  - cursor
+
+extends:
+  - name: org-standards
+    source: github:my-org/ai-config@v1.0.0
+    # no features filter — inherit everything
+```
+
+The project has no local canonical config of its own. All rules, commands, etc. come from the shared repo.

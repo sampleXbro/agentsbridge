@@ -1,0 +1,88 @@
+---
+draft: false
+title: Ignore Patterns
+description: The AgentsMesh ignore file uses gitignore syntax to tell AI tools which files and directories to skip when indexing or reading the project.
+---
+
+The `.agentsmesh/ignore` file uses gitignore-style syntax to tell AI tools which files and directories to exclude from indexing, reading, and context loading.
+
+## File format
+
+```
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Build output
+dist
+build
+out
+.next
+.nuxt
+
+# Environment and secrets
+.env
+.env.*
+*.pem
+*.key
+*.cert
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Coverage and caches
+coverage
+.nyc_output
+.cache
+.turbo
+
+# Large generated files
+*.min.js
+*.min.css
+```
+
+## Syntax
+
+The syntax is identical to `.gitignore`:
+
+| Pattern | Matches |
+|---------|---------|
+| `node_modules` | Directory named `node_modules` anywhere in the tree |
+| `*.log` | Any file ending in `.log` |
+| `dist/` | Directory named `dist` at any level |
+| `/build` | Directory named `build` at the root only |
+| `!important.log` | Un-ignore `important.log` (negate a previous pattern) |
+| `src/**/*.test.ts` | All `.test.ts` files under `src/` |
+
+## Why this matters
+
+AI tools use the ignore list to decide what to index into their context and what to suggest in completions. A well-tuned ignore file:
+- Prevents secrets and environment files from leaking into AI context
+- Reduces noise from build artifacts and large generated files
+- Improves response quality by focusing context on source files
+
+## Tool-specific behavior
+
+| Tool | Support | Target location |
+|------|---------|----------------|
+| Claude Code | Native | `.claude/ignore` |
+| Cursor | Native | `.cursorignore` |
+| Copilot | — | Not supported via AgentsMesh. |
+| Gemini CLI | Native | `.gemini/ignore` |
+| Cline | Native | `.cline/ignore` |
+| Codex CLI | — | Not supported. |
+| Windsurf | Native | `.windsurfignore` |
+| Continue | — | Not supported. |
+| Junie | Native | `.junie/ignore` |
+
+## Relationship to `.gitignore`
+
+The AgentsMesh ignore file is separate from `.gitignore`. This lets you have different exclusion rules for AI tools vs. git tracking. For example, you might want git to track `dist/` for a published library, but you don't want `dist/` loaded into AI context.
+
+Common practice is to start with your `.gitignore` patterns and extend them with AI-specific exclusions like minified files, large data files, and auto-generated documentation.

@@ -1,0 +1,141 @@
+---
+draft: false
+title: Hooks
+description: Lifecycle hooks in AgentsMesh trigger shell commands or prompt injections before/after tool use, on notifications, on user prompts, and on subagent lifecycle events.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Hooks let you run shell commands or inject prompts at specific points in the AI tool lifecycle. They live in `.agentsmesh/hooks.yaml`.
+
+## File format
+
+```yaml
+PreToolUse:
+  - matcher: "Edit|Write"
+    type: command
+    command: "eslint --fix $FILE"
+    timeout: 30
+
+PostToolUse:
+  - matcher: "Bash"
+    type: prompt
+    prompt: "Review the command output for security concerns before proceeding."
+
+Notification:
+  - matcher: "*"
+    type: command
+    command: "./scripts/log-notification.sh"
+
+UserPromptSubmit:
+  - matcher: "*"
+    type: command
+    command: "./scripts/prompt-guard.sh"
+```
+
+## Hook event types
+
+| Event | When it fires |
+|-------|--------------|
+| `PreToolUse` | Before a tool call executes. |
+| `PostToolUse` | After a tool call completes. |
+| `Notification` | When the AI sends a notification. |
+| `UserPromptSubmit` | When the user submits a prompt. |
+| `SubagentStart` | When a subagent starts. |
+| `SubagentStop` | When a subagent stops. |
+
+## Hook entry fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `matcher` | `string` | Yes | Regex pattern for which tool or event triggers the hook. Use `*` to match all. |
+| `type` | `string` | Yes | `command` — run a shell command. `prompt` — inject a prompt into the conversation. |
+| `command` | `string` | If `type: command` | Shell command to execute. |
+| `prompt` | `string` | If `type: prompt` | Prompt text to inject. |
+| `timeout` | `number` | No | Timeout in seconds. Default varies by tool. |
+
+## Variable substitution
+
+For `PreToolUse` and `PostToolUse` hooks, the following variables are available in `command`:
+
+| Variable | Description |
+|----------|-------------|
+| `$FILE` | The file path being edited (for Edit/Write tools). |
+| `$TOOL` | The tool name being called. |
+
+<Aside type="note">
+  Variable availability depends on the target tool. Not all tools expose all variables to hook commands. Check the individual tool's documentation for supported variables.
+</Aside>
+
+## Common hook patterns
+
+### Auto-lint on file save
+
+```yaml
+PreToolUse:
+  - matcher: "Edit|Write"
+    type: command
+    command: "npx eslint --fix $FILE"
+    timeout: 30
+```
+
+### Security review on Bash execution
+
+```yaml
+PostToolUse:
+  - matcher: "Bash"
+    type: prompt
+    prompt: "Check the output of the previous command for security issues, unexpected errors, or sensitive data before continuing."
+```
+
+### Prompt injection guard
+
+```yaml
+UserPromptSubmit:
+  - matcher: "*"
+    type: command
+    command: "./scripts/check-prompt-injection.sh"
+    timeout: 5
+```
+
+### Log all notifications
+
+```yaml
+Notification:
+  - matcher: "*"
+    type: command
+    command: "echo \"$(date): $NOTIFICATION\" >> .agentsmesh/notifications.log"
+```
+
+## Tool-specific behavior
+
+| Tool | Support | Notes |
+|------|---------|-------|
+| Claude Code | Native | Full hook support. |
+| Cursor | Native | Full hook support. |
+| Copilot | Partial | Limited hook types supported. |
+| Gemini CLI | Partial | Limited hook types supported. |
+| Cline | — | Not supported. |
+| Codex CLI | — | Not supported. |
+| Windsurf | Native | Full hook support. |
+| Continue | — | Not supported. |
+| Junie | — | Not supported. |
+
+## Agent-level hooks
+
+Hooks can also be defined per-agent in `agents/*.md` frontmatter:
+
+```markdown
+---
+name: safe-editor
+description: Editor agent with pre-commit validation
+hooks:
+  PreToolUse:
+    - matcher: "Edit|Write"
+      type: command
+      command: "npx tsc --noEmit"
+      timeout: 60
+---
+```
+
+Agent-level hooks apply only when that agent is active and override project-level hooks for matching events.

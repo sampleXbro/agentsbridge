@@ -1,0 +1,113 @@
+---
+draft: false
+title: Rules
+description: Rules are markdown files with optional YAML frontmatter that define guidelines for AI coding tools. The root rule is always applied; additional rules can be scoped by target or file pattern.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Rules are the core configuration unit in AgentsMesh. Each rule is a Markdown file with optional YAML frontmatter stored in `.agentsmesh/rules/`.
+
+## The root rule
+
+`_root.md` is the only required file. It is always applied regardless of target, scope, or glob.
+
+```markdown
+---
+root: true
+---
+
+# Project Guidelines
+
+- Write tests before implementation.
+- Max 200 lines per file.
+- Use TypeScript strict mode.
+- Prefer pure functions over classes.
+```
+
+<Aside type="note">
+  The filename `_root.md` is reserved. AgentsMesh always treats it as always-on and required.
+</Aside>
+
+## Additional rules
+
+Additional rules live alongside `_root.md` and can be scoped by target, glob pattern, or left unscoped (applied to all targets).
+
+### Unscoped rule (all targets)
+
+```markdown
+---
+description: Security conventions
+---
+
+Never log sensitive data. Validate all external inputs.
+Use parameterized queries. Avoid `eval()`.
+```
+
+### Target-scoped rule
+
+```markdown
+---
+description: Frontend conventions
+targets: [cursor, claude-code]
+globs: [src/components/**/*.tsx]
+---
+
+Use functional components with hooks. No class components.
+Prefer Tailwind utility classes over custom CSS.
+```
+
+### Codex CLI rule with instruction variant
+
+```markdown
+---
+description: Codex execution rule
+codexEmit: execution
+codexInstructionVariant: override
+---
+
+Always run `pnpm typecheck` before committing.
+```
+
+## Frontmatter reference
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `root` | `boolean` | Always-applied rule. Required for `_root.md`. |
+| `description` | `string` | Human-readable rule name shown in tool menus. |
+| `targets` | `string[]` | Limit rule to specific tools. Empty = all targets. Valid values: `claude-code`, `cursor`, `copilot`, `gemini-cli`, `cline`, `codex-cli`, `windsurf`, `continue`, `junie`. |
+| `globs` | `string[]` | File patterns this rule applies to (tool-dependent). Uses gitignore-style glob syntax. |
+| `trigger` | `string` | Windsurf activation mode: `always_on`, `model_decision`, `glob`, `manual`. |
+| `codexEmit` | `string` | Codex CLI instruction type: `advisory` or `execution`. |
+| `codexInstructionVariant` | `string` | Codex nested instruction format: `default` or `override`. |
+
+## Tool-specific behavior
+
+Rules are mapped to each tool's native format during generation:
+
+| Tool | Native format | Notes |
+|------|--------------|-------|
+| Claude Code | `.claude/rules/*.md` | Frontmatter preserved. |
+| Cursor | `.cursor/rules/*.mdc` | Converted to `.mdc` format with Cursor-specific frontmatter. |
+| Copilot | `.github/copilot-instructions.md` | All rules merged into a single file. |
+| Gemini CLI | `.gemini/rules/*.md` | Frontmatter preserved. |
+| Cline | `.cline/rules/*.md` | Frontmatter preserved. |
+| Codex CLI | `AGENTS.md` | Rules embedded per `codexEmit`/`codexInstructionVariant`. |
+| Windsurf | `.windsurf/rules/*.md` | `trigger` field applied. |
+| Continue | `.continue/rules/*.md` | Frontmatter stripped. |
+| Junie | `.junie/guidelines.md` | All rules merged. |
+
+## File naming
+
+Rule filenames become the rule identifier in tool menus. Use kebab-case descriptive names:
+
+```
+.agentsmesh/rules/
+  _root.md
+  security.md
+  frontend-react.md
+  backend-api.md
+  testing.md
+```
+
+No name collisions are allowed. AgentsMesh lints for duplicate rule names during `agentsmesh lint`.

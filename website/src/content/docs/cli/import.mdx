@@ -1,0 +1,93 @@
+---
+draft: false
+title: agentsmesh import
+description: Import an existing AI tool's configuration into the canonical .agentsmesh/ directory. Supports all 9 tools with lossless round-trip fidelity.
+---
+
+Import an existing tool's native config into the canonical `.agentsmesh/` directory. The import is lossless — internal file references, cross-skill links, and tool-specific metadata are all preserved.
+
+## Usage
+
+```bash
+agentsmesh import --from <target>
+```
+
+## Flags
+
+| Flag | Description |
+|------|-------------|
+| `--from <target>` | Source tool ID to import from. **Required.** |
+
+## Supported targets
+
+| Target ID | Reads from |
+|-----------|-----------|
+| `claude-code` | `.claude/` |
+| `cursor` | `.cursor/` |
+| `copilot` | `.github/copilot-instructions.md` |
+| `gemini-cli` | `.gemini/` |
+| `cline` | `.cline/` |
+| `codex-cli` | `AGENTS.md` |
+| `windsurf` | `.windsurf/` |
+| `continue` | `.continue/` |
+| `junie` | `.junie/` |
+
+## Examples
+
+```bash
+# Import Claude Code configuration
+agentsmesh import --from claude-code
+
+# Import Cursor rules and settings
+agentsmesh import --from cursor
+
+# Import all other supported tools
+agentsmesh import --from copilot
+agentsmesh import --from gemini-cli
+agentsmesh import --from cline
+agentsmesh import --from codex-cli
+agentsmesh import --from windsurf
+agentsmesh import --from continue
+agentsmesh import --from junie
+```
+
+## What import maps
+
+### Claude Code
+
+| Source | Canonical |
+|--------|-----------|
+| `.claude/rules/*.md` | `.agentsmesh/rules/*.md` |
+| `.claude/commands/*.md` | `.agentsmesh/commands/*.md` |
+| `.claude/agents/*.md` | `.agentsmesh/agents/*.md` |
+| `.claude/skills/*/SKILL.md` | `.agentsmesh/skills/*/SKILL.md` |
+| `.claude/settings.json` → `mcpServers` | `.agentsmesh/mcp.json` |
+| `.claude/settings.json` → `permissions` | `.agentsmesh/permissions.yaml` |
+| `.claude/settings.json` → `hooks` | `.agentsmesh/hooks.yaml` |
+| `.claude/ignore` | `.agentsmesh/ignore` |
+
+### Cursor
+
+| Source | Canonical |
+|--------|-----------|
+| `.cursor/rules/*.mdc` | `.agentsmesh/rules/*.md` (frontmatter converted) |
+| `.cursor/commands/*.md` | `.agentsmesh/commands/*.md` |
+| `.cursor/agents/*.md` | `.agentsmesh/agents/*.md` |
+| `.cursor/mcp.json` | `.agentsmesh/mcp.json` |
+| `.cursorignore` | `.agentsmesh/ignore` |
+
+### Embedded features
+
+For tools that received embedded/projected features (e.g., Codex CLI commands projected as skills), the importer reads the embedded AgentsMesh metadata and restores the original canonical format — not the projected wrapper.
+
+## Reference rewriting
+
+During import, AgentsMesh rewrites internal file references:
+- `.claude/skills/api-gen/template.hbs` → `.agentsmesh/skills/api-gen/template.hbs`
+- Tool-relative paths → canonical paths
+
+This keeps cross-references valid after import.
+
+## Import idempotency
+
+Running import twice on the same source is safe. Existing canonical files are merged — no duplicates are created.

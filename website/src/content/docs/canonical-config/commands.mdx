@@ -1,0 +1,107 @@
+---
+draft: false
+title: Commands
+description: Commands are reusable slash-command prompts in AgentsMesh. They map to native slash commands in tools that support them, and are projected as skills in tools that don't.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Commands are reusable prompts that map to slash commands in tools that support them (Claude Code, Cursor, Copilot, Gemini CLI). For tools without native command support (Codex CLI, Windsurf, Continue, Junie), they are projected as invokable skills with embedded metadata for lossless round-trip.
+
+## File format
+
+Commands live in `.agentsmesh/commands/` as Markdown files with YAML frontmatter.
+
+```markdown
+---
+description: Create a conventional commit from current changes
+allowed-tools:
+  - Read
+  - Bash(git status)
+  - Bash(git diff)
+  - Bash(git add)
+  - Bash(git commit)
+---
+
+Review the current git changes. Analyze what was modified and why.
+Draft a conventional commit message (feat/fix/refactor/test/docs/chore scope).
+Stage the relevant files and commit.
+```
+
+The filename (without `.md`) becomes the slash command name. The above file at `commands/commit.md` becomes `/commit` in Claude Code, `/commit` in Cursor, etc.
+
+## Frontmatter reference
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `description` | `string` | Short description shown in command menus. |
+| `allowed-tools` | `string[]` | Tools the command is allowed to use when invoked. Uses the same tool name format as permissions. |
+
+## Tool-specific behavior
+
+| Tool | Support | Format |
+|------|---------|--------|
+| Claude Code | Native | `.claude/commands/*.md` |
+| Cursor | Native | `.cursor/commands/*.md` |
+| Copilot | Native | `.github/copilot-instructions.md` (embedded) |
+| Gemini CLI | Native | `.gemini/commands/*.md` |
+| Cline | Native | `.cline/commands/*.md` |
+| Codex CLI | Embedded | Projected as a skill in `AGENTS.md` with round-trip metadata |
+| Windsurf | Native | `.windsurf/commands/*.md` |
+| Continue | Embedded | Projected as a skill with metadata |
+| Junie | Embedded | Projected as a skill with metadata |
+
+<Aside type="tip">
+  Embedded commands carry AgentsMesh metadata comments so that `agentsmesh import` can restore them to the original `commands/*.md` format without data loss.
+</Aside>
+
+## Example commands
+
+### Code review
+
+```markdown
+---
+description: Review the current diff for code quality, security, and correctness
+allowed-tools:
+  - Read
+  - Grep
+  - Glob
+  - Bash(git diff)
+  - Bash(git log)
+---
+
+Review the current git diff. Check for:
+1. Logic errors and edge cases
+2. Security vulnerabilities (injection, XSS, auth bypasses)
+3. Missing tests
+4. Naming and readability issues
+5. Performance concerns
+
+Provide a structured review with severity levels: Critical, Major, Minor.
+```
+
+### Documentation update
+
+```markdown
+---
+description: Update README and inline docs to reflect recent changes
+allowed-tools:
+  - Read
+  - Edit
+  - Bash(git diff HEAD~1)
+---
+
+Review the recent changes in git. Identify what new features, config options,
+or CLI flags were added. Update README.md and any affected inline documentation
+to reflect these changes. Keep language concise and developer-focused.
+```
+
+## Disabling projection for a target
+
+To prevent commands from being projected as skills on a specific target, use the `conversions` section in `agentsmesh.yaml`:
+
+```yaml
+conversions:
+  commands_to_skills:
+    codex-cli: false   # skip codex-cli instead of embedding
+```

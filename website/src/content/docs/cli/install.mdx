@@ -1,0 +1,119 @@
+---
+draft: false
+title: agentsmesh install
+description: Install rules, commands, agents, or skills from GitHub, GitLab, git URLs, or local paths. Manage community packs and shared organizational config.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Install rules, commands, agents, or skills from remote repositories or local paths. Installed packs are tracked in `.agentsmesh/installs.yaml` and merged into canonical config during generation.
+
+## Usage
+
+```bash
+agentsmesh install <source> [flags]
+agentsmesh install --sync
+```
+
+## Flags
+
+| Flag | Description |
+|------|-------------|
+| `<source>` | GitHub/GitLab URL, git URL, SSH URL, or local path. |
+| `--path <dir>` | Subdirectory within the source repo to install from. |
+| `--target <id>` | Hint for native format auto-discovery (e.g., `claude-code`). |
+| `--as <kind>` | Manual install type: `rules`, `commands`, `agents`, or `skills`. |
+| `--name <id>` | Override the generated install entry name. |
+| `--extends` | Record as an extends entry instead of a materialized pack. |
+| `--sync` | Reinstall missing packs from `.agentsmesh/installs.yaml`. |
+| `--dry-run` | Preview what would be installed without writing. |
+| `--force` | Non-interactive mode: include all resources, skip prompts. |
+
+## Source formats
+
+| Format | Example |
+|--------|---------|
+| GitHub shorthand | `github:org/repo@v1.0.0` |
+| GitHub (no version) | `github:org/repo` |
+| GitLab shorthand | `gitlab:group/repo@main` |
+| Git SSH | `git+ssh://git@github.com/org/repo#main` |
+| Git HTTPS | `git+https://github.com/org/repo#v2.0.0` |
+| Local path | `local:../shared-config` |
+
+## Examples
+
+### Auto-discover and install
+
+```bash
+agentsmesh install github:org/shared-rules@v2.0.0
+```
+
+AgentsMesh clones the repo, detects the config format, and imports everything into `.agentsmesh/`.
+
+### Install from a subdirectory
+
+```bash
+agentsmesh install github:org/repo --path skills --as skills
+```
+
+Only installs from the `skills/` subdirectory, treating contents as skills.
+
+### Cherry-pick with a custom name
+
+```bash
+agentsmesh install github:org/repo --as agents --name team-agents
+```
+
+### Record as an extends entry (linked, not materialized)
+
+```bash
+agentsmesh install github:org/base-config --extends
+```
+
+Instead of copying files, records the source in `agentsmesh.yaml`'s `extends` field. Config is resolved at generate time from cache.
+
+### Reinstall after a fresh clone
+
+```bash
+agentsmesh install --sync
+```
+
+Reads `.agentsmesh/installs.yaml` and reinstalls any packs that are missing from `.agentsmesh/packs/`. Add this to your project `postinstall` script.
+
+### Preview before committing
+
+```bash
+agentsmesh install github:org/repo --dry-run
+```
+
+### Non-interactive (CI/scripts)
+
+```bash
+agentsmesh install github:org/repo --force
+```
+
+Includes all resources, skips all prompts.
+
+## Pack storage
+
+Installed packs are stored in `.agentsmesh/packs/{name}/` and tracked in `.agentsmesh/installs.yaml`:
+
+```yaml
+# .agentsmesh/installs.yaml
+packs:
+  - name: shared-rules
+    source: github:org/shared-rules@v2.0.0
+    installed: 2026-03-01T10:00:00Z
+  - name: team-agents
+    source: github:org/repo
+    path: agents
+    as: agents
+```
+
+<Aside type="tip">
+  Commit `.agentsmesh/installs.yaml` but gitignore `.agentsmesh/packs/` if packs are large. Use `agentsmesh install --sync` to restore packs after cloning.
+</Aside>
+
+## Merge behavior
+
+Installed packs merge with your canonical config during `agentsmesh generate`. If a pack defines a rule with the same name as your canonical rule, the canonical rule takes precedence.

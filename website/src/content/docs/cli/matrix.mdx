@@ -1,0 +1,70 @@
+---
+draft: false
+title: agentsmesh matrix
+description: Display the feature-target compatibility matrix for your current AgentsMesh configuration. Shows which features are supported natively, embedded, or unsupported per tool.
+---
+
+Display the feature-target compatibility matrix for your current configuration. Shows which features are supported natively, embedded as projected skills, or not supported for each configured target.
+
+## Usage
+
+```bash
+agentsmesh matrix [flags]
+```
+
+## Flags
+
+| Flag | Description |
+|------|-------------|
+| `--targets <csv>` | Limit matrix columns to specific target IDs. |
+| `--verbose` | Show detailed feature notes alongside the matrix. |
+
+## Examples
+
+### Show full matrix
+
+```bash
+agentsmesh matrix
+```
+
+### Show matrix for specific targets
+
+```bash
+agentsmesh matrix --targets claude-code,cursor,copilot
+```
+
+### Show matrix with detailed notes
+
+```bash
+agentsmesh matrix --verbose
+```
+
+Shows additional notes explaining embedding behavior, partial support limitations, and conversion settings.
+
+## Sample output
+
+```
+Feature      claude-code  cursor   copilot  gemini-cli  cline  codex-cli  windsurf  continue  junie
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+Rules        native       native   native   native      native  native     native    native    native
+Commands     native       native   native   native      native  embedded   native    embedded  embedded
+Agents       native       native   native   native      embed.  native     embedded  —         embedded
+Skills       native       native   native   native      native  native     native    embedded  embedded
+MCP Servers  native       native   —        native      native  native     partial   native    native
+Hooks        native       native   partial  partial     —       —          native    —         —
+Ignore       native       native   —        native      native  —          native    —         native
+Permissions  native       partial  —        partial     —       —          —         —         —
+```
+
+## Legend
+
+| Symbol | Meaning |
+|--------|---------|
+| `native` | Feature maps directly to the tool's native config format. |
+| `embedded` | Feature is projected as a skill with metadata for lossless round-trip. |
+| `partial` | Limited support — some fields or behaviors may not round-trip. |
+| `—` | Not supported. Feature is skipped for this target. |
+
+## Using the matrix for planning
+
+Before adding a new feature to your canonical config, run `agentsmesh matrix` to understand which tools will receive it natively and which will receive an embedded projection. This helps set expectations for team members using different tools.

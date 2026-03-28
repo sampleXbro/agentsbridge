@@ -83,6 +83,7 @@
 - **Generated artifact tests must be strict**: For generated file structures, assert exact file paths, exact file counts, and exact referenced wrapper/script sets. Do not use loose checks like "at least one file", broad `some(...)`, or prefix-only path assertions when the full output set is known.
 - **Commit format**: conventional commits — `feat|fix|test|refactor(scope): message`
 - **README must stay current**: Any change to CLI commands, flags, config schema, supported targets, or canonical file formats **must** be reflected in `README.md` before the task is marked complete. Treat the README as part of the API surface.
+- **Website docs must stay current**: Any change to CLI commands, flags, config schema, supported targets, canonical file formats, or other user-facing behavior **must** also be reflected in the documentation website (`website/src/content/docs/`). The website is the primary public documentation — treat it with the same rigor as `README.md`.
 - **Refer to PRD**: `docs/prd-v2-complete.md` for architecture decisions
 - **Refer to tasks**: `docs/agentsmesh-ai-first-tasks.md` for current task specs
 

@@ -1,0 +1,65 @@
+/* Brand accents only — Starlight owns gray/white/black semantics (they invert per theme). */
+
+:root[data-theme='light'] {
+  --sl-color-accent-low: #eef2ff;
+  --sl-color-accent: #6366f1;
+  --sl-color-accent-high: #4f46e5;
+}
+
+:root[data-theme='dark'] {
+  --sl-color-accent-low: #1e1b4b;
+  --sl-color-accent: #818cf8;
+  --sl-color-accent-high: #a5b4fc;
+}
+
+/* Hero section enhancements */
+.hero {
+  padding-block: 4rem;
+}
+
+.hero > img {
+  filter: drop-shadow(0 0 2rem rgba(99, 102, 241, 0.3));
+}
+
+/* Feature cards on homepage */
+.card {
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.75rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  border-color: var(--sl-color-accent);
+  box-shadow: 0 0 0 1px var(--sl-color-accent), 0 4px 16px rgba(99, 102, 241, 0.12);
+}
+
+/* Code blocks */
+.expressive-code {
+  border-radius: 0.75rem;
+}
+
+/* Badge styling */
+.badge {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* Aside / callout */
+.starlight-aside {
+  border-radius: 0.5rem;
+}
+
+/* Table improvements */
+.sl-markdown-content table {
+  font-size: 0.875rem;
+}
+
+.sl-markdown-content th {
+  background-color: var(--sl-color-gray-6);
+  font-weight: 600;
+}
+
+/* Sidebar active state */
+[aria-current='page'] {
+  font-weight: 600;
+}

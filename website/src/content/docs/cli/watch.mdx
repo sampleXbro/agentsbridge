@@ -1,0 +1,65 @@
+---
+draft: false
+title: agentsmesh watch
+description: Watch the .agentsmesh/ directory for changes and automatically regenerate on save. Uses a 300ms debounce to batch rapid edits.
+---
+
+Watch the `.agentsmesh/` directory for changes and automatically regenerate on save. Useful during active editing sessions where you want to see changes reflected immediately in tool-specific directories.
+
+## Usage
+
+```bash
+agentsmesh watch [flags]
+```
+
+## Flags
+
+| Flag | Description |
+|------|-------------|
+| `--targets <csv>` | Limit regeneration to specific target IDs. |
+
+## Examples
+
+### Watch and regenerate for all targets
+
+```bash
+agentsmesh watch
+```
+
+Starts a file watcher. Every time a file in `.agentsmesh/` changes, generation runs automatically after a 300ms debounce.
+
+### Watch for specific targets only
+
+```bash
+agentsmesh watch --targets claude-code
+agentsmesh watch --targets cursor,gemini-cli
+```
+
+Only regenerates the specified targets on each change. Faster if you only need output for one or two tools.
+
+## Debounce behavior
+
+The 300ms debounce batches rapid file saves (e.g., when your editor saves multiple files at once or during a search-and-replace). Only one generation runs per edit session, not one per file save.
+
+## Lock file handling
+
+The watch loop ignores its own lock file writes to prevent infinite regeneration cycles. When `generate` writes the `.agentsmesh/.lock` file, the watcher does not trigger a new generation.
+
+## Stopping the watcher
+
+Press `Ctrl+C` to stop the watch loop.
+
+## Typical workflow
+
+```bash
+# Terminal 1: start the watcher
+agentsmesh watch
+
+# Terminal 2: edit canonical files
+vi .agentsmesh/rules/security.md
+# → generation runs automatically in Terminal 1
+
+# When done, commit everything
+git add .agentsmesh/ .claude/ .cursor/
+git commit -m "update security rules"
+```

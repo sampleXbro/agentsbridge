@@ -1,0 +1,126 @@
+---
+draft: false
+title: Adopting AgentsMesh in an Existing Project
+description: Step-by-step guide to adopting AgentsMesh in a project that already has AI tool configs in .claude/, .cursor/, .cline/, and other tool directories.
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+If your project already has AI tool configs scattered across `.claude/`, `.cursor/`, `.cline/`, and so on, this guide walks you through consolidating them under AgentsMesh without losing any existing config.
+
+## Prerequisites
+
+- Node.js 20+
+- The project already has tool configs in one or more tool directories
+
+## Migration steps
+
+<Steps>
+
+1. **Install AgentsMesh**
+
+   ```bash
+   npm install -D agentsmesh
+   ```
+
+2. **Initialize the canonical directory**
+
+   ```bash
+   npx agentsmesh init
+   ```
+
+   AgentsMesh scans the project and prompts you to import each detected config. Use `--yes` to import everything without prompts:
+
+   ```bash
+   npx agentsmesh init --yes
+   ```
+
+3. **Verify the canonical files**
+
+   After import, review what was created:
+
+   ```bash
+   ls .agentsmesh/rules/
+   ls .agentsmesh/commands/
+   ls .agentsmesh/agents/
+   ls .agentsmesh/skills/
+   cat .agentsmesh/mcp.json
+   cat .agentsmesh/permissions.yaml
+   cat .agentsmesh/hooks.yaml
+   ```
+
+   Check that all your rules, commands, agents, and other config came through correctly.
+
+4. **Configure agentsmesh.yaml**
+
+   Set the targets your team actually uses:
+
+   ```yaml
+   version: 1
+   targets:
+     - claude-code
+     - cursor
+     # add others as needed
+   features:
+     - rules
+     - commands
+     - agents
+     - skills
+     - mcp
+     - hooks
+     - ignore
+     - permissions
+   ```
+
+5. **Regenerate for all targets**
+
+   ```bash
+   npx agentsmesh generate
+   ```
+
+   This writes fresh output to each tool directory based on the canonical sources.
+
+6. **Verify nothing unexpected changed**
+
+   ```bash
+   npx agentsmesh diff
+   ```
+
+   The diff should show no changes (since the generated output should match what was imported). If there are differences, review them — they represent normalization that AgentsMesh applied during the round-trip.
+
+7. **Commit everything**
+
+   ```bash
+   git add .agentsmesh/ agentsmesh.yaml .claude/ .cursor/
+   git commit -m "feat: adopt agentsmesh for AI tool config sync"
+   ```
+
+</Steps>
+
+<Aside type="tip">
+  After this migration, `.agentsmesh/` is the only thing you should edit. The tool directories (`.claude/`, `.cursor/`, etc.) are now generated artifacts.
+</Aside>
+
+## What to tell your team
+
+1. Edit `.agentsmesh/` files (not tool directories directly)
+2. Run `npx agentsmesh generate` after editing
+3. Commit both `.agentsmesh/` and the generated tool directories
+4. CI will run `npx agentsmesh check` to catch drift
+
+## Adding more tools later
+
+When a new developer joins who uses a different tool (e.g., Gemini CLI), add it to `agentsmesh.yaml` and generate:
+
+```yaml
+targets:
+  - claude-code
+  - cursor
+  - gemini-cli   # new addition
+```
+
+```bash
+npx agentsmesh generate
+```
+
+Their tool directory (`.gemini/`) is now in sync with the rest of the team.

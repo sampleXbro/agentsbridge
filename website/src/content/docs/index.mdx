@@ -1,0 +1,159 @@
+---
+draft: false
+title: AgentsMesh — One Config. Nine AI Tools.
+description: AgentsMesh maintains a single canonical configuration in .agentsmesh/ and syncs it bidirectionally to Claude Code, Cursor, Copilot, Continue, Junie, Gemini CLI, Cline, Codex CLI, and Windsurf.
+template: splash
+hero:
+  tagline: One canonical source of truth for AI coding tool configuration — synced bidirectionally to Claude Code, Cursor, Copilot, Gemini CLI, Cline, Codex CLI, Windsurf, Continue, and Junie.
+  image:
+    dark: ../../assets/logo-dark.svg
+    light: ../../assets/logo-light.svg
+  actions:
+    - text: Get Started
+      link: /agentsmesh/getting-started/installation/
+      icon: right-arrow
+      variant: primary
+    - text: CLI Reference
+      link: /agentsmesh/cli/
+      icon: open-book
+      variant: secondary
+    - text: View on GitHub
+      link: https://github.com/sampleXbro/agentsmesh
+      icon: github
+      variant: minimal
+---
+
+import { Card, CardGrid, Badge, Aside } from '@astrojs/starlight/components';
+
+<div style="text-align: center; margin: 2rem 0 3rem;">
+  <span style="font-size: 1.1rem; color: var(--sl-color-gray-5);">
+    Requires Node.js 20+  &nbsp;·&nbsp;  MIT License  &nbsp;·&nbsp;  Zero runtime dependencies
+  </span>
+  <br/>
+  <div style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+    <img src="https://img.shields.io/npm/v/agentsmesh.svg" alt="npm version"/>
+    <img src="https://img.shields.io/npm/dm/agentsmesh.svg" alt="npm downloads"/>
+    <img src="https://github.com/sampleXbro/agentsmesh/actions/workflows/ci.yml/badge.svg" alt="CI"/>
+    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"/>
+  </div>
+</div>
+
+## The Problem
+
+Every AI coding tool has its own config format. `.claude/rules/`, `.cursor/rules/`, `.github/copilot-instructions.md`, `.gemini/`, `.cline/`... Change a rule in one place and forget the others. Now your agents behave differently depending on who's editing.
+
+Scale that across a team where some use Cursor, some use Claude Code, and some switch between them — and config drift becomes a real problem.
+
+## The Solution
+
+```bash
+# One directory, all your AI tool config
+.agentsmesh/
+  rules/_root.md     # ← edit here
+  commands/*.md
+  agents/*.md
+  skills/*/SKILL.md
+  mcp.json
+  hooks.yaml
+  permissions.yaml
+  ignore
+```
+
+```bash
+# Generate correct output for every tool
+agentsmesh generate
+
+# Claude Code, Cursor, Copilot, Gemini CLI, Cline,
+# Codex CLI, Windsurf, Continue, and Junie — all in sync.
+```
+
+## Why AgentsMesh
+
+<CardGrid>
+  <Card title="One Source of Truth" icon="pencil">
+    Edit `.agentsmesh/`, generate everywhere. No more copy-pasting rules between tool directories. No more drift.
+  </Card>
+  <Card title="Bidirectional Sync" icon="sync">
+    Import existing tool configs into canonical form, then generate back out. Lossless round-trip — no manual reformatting.
+  </Card>
+  <Card title="CI Drift Detection" icon="warning">
+    `agentsmesh check` exits with code 1 if generated files have drifted from the lock. Catch drift in PRs before it ships.
+  </Card>
+  <Card title="Lossless Projection" icon="puzzle">
+    When a tool lacks native support for a feature, AgentsMesh embeds it with enough metadata to round-trip on re-import. No data loss.
+  </Card>
+  <Card title="Team-Safe Collaboration" icon="group">
+    Lock files track generated state. `agentsmesh merge` resolves conflicts after `git merge`. Collaboration settings prevent accidental overrides.
+  </Card>
+  <Card title="Real Operational Tooling" icon="setting">
+    `diff`, `lint`, `watch`, `check`, `merge`, and `matrix` are first-class commands — not afterthoughts.
+  </Card>
+</CardGrid>
+
+## Supported Tools
+
+| Tool | Rules | Commands | Agents | Skills | MCP | Hooks | Ignore | Permissions |
+|------|:-----:|:--------:|:------:|:------:|:---:|:-----:|:------:|:-----------:|
+| Claude Code | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Cursor | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 〜 |
+| Copilot | ✅ | ✅ | ✅ | ✅ | — | 〜 | — | — |
+| Gemini CLI | ✅ | ✅ | ✅ | ✅ | ✅ | 〜 | ✅ | 〜 |
+| Cline | ✅ | ✅ | 〜 | ✅ | ✅ | — | ✅ | — |
+| Codex CLI | ✅ | 〜 | ✅ | ✅ | ✅ | — | — | — |
+| Windsurf | ✅ | ✅ | 〜 | ✅ | 〜 | ✅ | ✅ | — |
+| Continue | ✅ | 〜 | — | 〜 | ✅ | — | — | — |
+| Junie | ✅ | 〜 | 〜 | 〜 | ✅ | — | ✅ | — |
+
+_✅ Native &nbsp; 〜 Embedded/Partial &nbsp; — Not supported_
+
+See the [full feature matrix](/agentsmesh/reference/supported-tools/) for details.
+
+## Quick Start
+
+```bash
+# Install
+npm install -D agentsmesh
+
+# Scaffold the canonical directory
+npx agentsmesh init
+
+# Edit your root rule
+# vi .agentsmesh/rules/_root.md
+
+# Generate for all configured targets
+npx agentsmesh generate
+```
+
+**Already have tool configs?** Import them first:
+
+```bash
+npx agentsmesh import --from cursor
+npx agentsmesh import --from claude-code
+npx agentsmesh generate
+```
+
+<Aside type="tip">
+  The CLI is available as both `agentsmesh` and the shorter alias `amsh`.
+</Aside>
+
+<script type="application/ld+json" set:html={JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "AgentsMesh",
+  "description": "One canonical source of truth for AI coding tool configuration — synced bidirectionally to Claude Code, Cursor, Copilot, Continue, Junie, Gemini CLI, Cline, Codex CLI, and Windsurf.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Node.js 20+",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "license": "https://opensource.org/licenses/MIT",
+  "url": "https://samplexbro.github.io/agentsmesh/",
+  "downloadUrl": "https://www.npmjs.com/package/agentsmesh",
+  "codeRepository": "https://github.com/sampleXbro/agentsmesh",
+  "author": {
+    "@type": "Person",
+    "name": "sampleXbro"
+  }
+})} />

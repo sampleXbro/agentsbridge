@@ -1,0 +1,81 @@
+---
+draft: false
+title: Local Development Overrides
+description: Use agentsmesh.local.yaml to customize your personal AgentsMesh setup without affecting teammates. Narrow targets, skip features, or tune watch mode.
+---
+
+`agentsmesh.local.yaml` is gitignored and lets you customize your local development setup without affecting the shared `agentsmesh.yaml` the rest of the team uses.
+
+## Creating the file
+
+```bash
+# Create your local overrides file
+touch agentsmesh.local.yaml
+```
+
+`agentsmesh init` creates this file automatically and adds it to `.gitignore`.
+
+## Common patterns
+
+### Only generate for your tool
+
+```yaml
+# agentsmesh.local.yaml
+targets:
+  - claude-code   # I only use Claude Code
+```
+
+Running `agentsmesh generate` locally only writes `.claude/`. CI still generates for all configured targets.
+
+### Skip features you don't need
+
+```yaml
+# agentsmesh.local.yaml
+targets:
+  - claude-code
+
+features:
+  - rules
+  - commands
+  - agents
+  - skills
+  - mcp
+  # omitting: hooks, ignore, permissions
+```
+
+### Speed up watch mode
+
+```yaml
+# agentsmesh.local.yaml
+targets:
+  - claude-code   # only regenerate one target during watch
+```
+
+With a single target, `agentsmesh watch` regenerates significantly faster.
+
+## What local overrides can and cannot do
+
+**Can do:**
+- Narrow `targets` to a subset of what `agentsmesh.yaml` defines
+- Narrow `features` to a subset of what `agentsmesh.yaml` defines
+
+**Cannot do:**
+- Add targets not in `agentsmesh.yaml`
+- Add features not in `agentsmesh.yaml`
+- Override `extends`, `collaboration`, or `conversions`
+
+This prevents local overrides from creating config that the rest of the team doesn't know about.
+
+## Merge behavior
+
+When AgentsMesh loads config, it first reads `agentsmesh.yaml`, then applies `agentsmesh.local.yaml` on top. The local file is strictly a narrowing override — it cannot expand scope.
+
+## Team onboarding note
+
+When onboarding a new developer, suggest they create `agentsmesh.local.yaml` with just their tool:
+
+```bash
+echo "targets:\n  - claude-code" > agentsmesh.local.yaml
+```
+
+This keeps their local generation fast and focused while still letting CI generate for all targets.

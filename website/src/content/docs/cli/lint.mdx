@@ -1,0 +1,88 @@
+---
+draft: false
+title: agentsmesh lint
+description: Validate canonical files against target-specific constraints. Catches frontmatter errors, format violations, and schema issues before generation.
+---
+
+Validate canonical files against target-specific constraints. Each target has its own linting rules — for example, Cursor requires `.mdc` format compliance, Claude Code validates `settings.json` schema, and all targets check for valid frontmatter.
+
+## Usage
+
+```bash
+agentsmesh lint [flags]
+```
+
+## Flags
+
+| Flag | Description |
+|------|-------------|
+| `--targets <csv>` | Limit linting to specific target IDs. |
+
+## Examples
+
+### Lint for all configured targets
+
+```bash
+agentsmesh lint
+```
+
+### Lint for specific targets
+
+```bash
+agentsmesh lint --targets cursor
+agentsmesh lint --targets claude-code,gemini-cli
+```
+
+## What lint checks
+
+### All targets
+
+- Valid YAML frontmatter in all `.md` files
+- No duplicate rule/command/agent names
+- Required fields present (`root: true` in `_root.md`, `description` in agents)
+- Valid `targets` values (must be known target IDs)
+- Valid `globs` patterns (syntactically valid gitignore patterns)
+
+### Claude Code
+
+- `settings.json` schema validation
+- Valid `permissionMode` values (`ask`, `default`, `none`)
+- Valid tool names in `allowed-tools` and `permissions.yaml`
+
+### Cursor
+
+- `.mdc` frontmatter format compliance
+- Valid `trigger` values for Cursor rules
+
+### MCP servers
+
+- Valid JSON in `mcp.json`
+- Required fields per server type (`command` for stdio, `url` for HTTP)
+
+### Hooks
+
+- Valid hook event types (`PreToolUse`, `PostToolUse`, etc.)
+- Required fields (`matcher`, `type`)
+- Valid `type` values (`command`, `prompt`)
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | No lint errors found. |
+| `1` | One or more lint errors. |
+
+## Integrating with CI
+
+Add lint to your CI pipeline alongside `check`:
+
+```yaml
+# .github/workflows/ci.yml
+- name: Lint AgentsMesh config
+  run: npx agentsmesh lint
+
+- name: Check AgentsMesh sync
+  run: npx agentsmesh check
+```
+
+This catches both config errors and drift in the same pipeline.

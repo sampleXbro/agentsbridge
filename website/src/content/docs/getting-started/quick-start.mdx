@@ -1,0 +1,127 @@
+---
+draft: false
+title: Quick Start
+description: Get AgentsMesh running in under 5 minutes — scaffold a new canonical config directory or import your existing AI tool configs.
+sidebar:
+  order: 2
+---
+
+import { Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Choose the path that matches your situation.
+
+## New project
+
+<Steps>
+
+1. **Scaffold the canonical directory**
+
+   ```bash
+   agentsmesh init
+   ```
+
+   This creates:
+   - `agentsmesh.yaml` — project configuration
+   - `agentsmesh.local.yaml` — local overrides (gitignored)
+   - `.agentsmesh/rules/_root.md` — starter root rule
+   - Updates `.gitignore` to exclude `agentsmesh.local.yaml`
+
+2. **Edit your root rule**
+
+   ```bash
+   # Open the root rule in your editor
+   vi .agentsmesh/rules/_root.md
+   ```
+
+   Example root rule:
+
+   ```markdown
+   ---
+   root: true
+   ---
+
+   # Project Guidelines
+
+   - Write tests before implementation.
+   - Max 200 lines per file.
+   - Use TypeScript strict mode.
+   - Prefer pure functions over classes.
+   ```
+
+3. **Configure your targets**
+
+   Open `agentsmesh.yaml` and set the tools your team uses:
+
+   ```yaml
+   version: 1
+   targets:
+     - claude-code
+     - cursor
+   features:
+     - rules
+     - commands
+     - mcp
+   ```
+
+4. **Generate**
+
+   ```bash
+   agentsmesh generate
+   ```
+
+   Output files are written to each tool's native directory (`.claude/`, `.cursor/`, etc.).
+
+</Steps>
+
+## Existing project with tool configs
+
+<Steps>
+
+1. **Initialize**
+
+   ```bash
+   agentsmesh init
+   ```
+
+   AgentsMesh scans for existing configs in `.claude/`, `.cursor/`, `.cline/`, `.junie/`, `.continue/`, `.gemini/`, `.codex/`, `.windsurf/`, and `.github/copilot-instructions.md`. It prompts you to import each one found.
+
+   To auto-import everything without prompts:
+
+   ```bash
+   agentsmesh init --yes
+   ```
+
+2. **Review the canonical files**
+
+   ```bash
+   ls .agentsmesh/rules/
+   ls .agentsmesh/commands/
+   cat .agentsmesh/permissions.yaml
+   ```
+
+3. **Generate for all targets**
+
+   ```bash
+   agentsmesh generate
+   ```
+
+4. **Verify nothing unexpected changed**
+
+   ```bash
+   agentsmesh diff
+   ```
+
+   If the diff looks clean, commit both `.agentsmesh/` and the generated files.
+
+</Steps>
+
+<Aside type="tip">
+  After init, `.agentsmesh/` is the only thing you should edit. Generated files in `.claude/`, `.cursor/`, etc. are artifacts — regenerate them, don't edit them directly.
+</Aside>
+
+## What's next
+
+- Add [rules](/agentsmesh/canonical-config/rules/), [commands](/agentsmesh/canonical-config/commands/), [agents](/agentsmesh/canonical-config/agents/), and [skills](/agentsmesh/canonical-config/skills/)
+- Set up [CI drift detection](/agentsmesh/guides/ci-drift-detection/)
+- [Share config across repositories](/agentsmesh/guides/sharing-config/) with `extends`
+- Browse the full [CLI reference](/agentsmesh/cli/)

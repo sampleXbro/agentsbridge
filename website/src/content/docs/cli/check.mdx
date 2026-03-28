@@ -1,0 +1,68 @@
+---
+draft: false
+title: agentsmesh check
+description: Verify that canonical files still match the lock file. Designed for CI pipelines — exits with code 1 if generated files have drifted from the lock.
+---
+
+Verify that the canonical files still match the lock file (`.agentsmesh/.lock`). Designed for CI pipelines — exits with code 1 if generated files have drifted.
+
+## Usage
+
+```bash
+agentsmesh check
+```
+
+No flags. Returns exit code `0` if everything is in sync, `1` if drift is detected.
+
+## What drift means
+
+Drift occurs when:
+- Someone edited `.agentsmesh/` but forgot to run `agentsmesh generate`
+- Someone edited a generated file (`.claude/`, `.cursor/`, etc.) directly
+- A pull request merged changes to canonical config without regenerating
+
+`agentsmesh check` catches all of these by comparing current file checksums against the stored lock.
+
+## CI integration
+
+```yaml
+# .github/workflows/ci.yml
+- name: Verify AI config is in sync
+  run: npx agentsmesh check
+```
+
+This step fails the build if generated files are out of date with canonical sources.
+
+### Full CI example
+
+```yaml
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - run: npx agentsmesh lint
+      - run: npx agentsmesh check
+```
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | All generated files match the lock. |
+| `1` | Drift detected — one or more files are out of sync. |
+
+## Difference between `check` and `generate --check`
+
+- `agentsmesh check` — fast: reads lock file and checks current file hashes. Does not run the full generation pipeline.
+- `agentsmesh generate --check` — slower: runs the full generation pipeline and compares output to what's on disk. More thorough but takes longer.
+
+For CI pipelines where speed matters, use `agentsmesh check`. Use `generate --check` when you want to verify the full generation path.

@@ -1,0 +1,106 @@
+---
+draft: false
+title: agentsmesh generate
+description: Generate target-specific config files from the canonical .agentsmesh/ directory. Supports dry-run, target filtering, CI check mode, and cache refresh.
+---
+
+Generate target-specific config files from the canonical `.agentsmesh/` directory. This is the primary command you run after editing canonical files.
+
+## Usage
+
+```bash
+agentsmesh generate [flags]
+```
+
+## Flags
+
+| Flag | Description |
+|------|-------------|
+| `--targets <csv>` | Comma-separated list of target IDs to generate for. Defaults to all configured targets. |
+| `--dry-run` | Preview changes without writing any files. |
+| `--check` | Verify sync status only. Exit code 1 if out of sync. |
+| `--force` | Bypass collaboration lock violations. |
+| `--refresh-cache` | Re-fetch remote extends sources before generating. |
+| `--no-cache` | Alias for `--refresh-cache`. |
+
+## Examples
+
+### Generate for all configured targets
+
+```bash
+agentsmesh generate
+```
+
+Reads `agentsmesh.yaml`, loads all canonical sources, and writes output for each enabled target.
+
+### Generate for specific targets only
+
+```bash
+agentsmesh generate --targets claude-code,cursor
+```
+
+Only generates `.claude/` and `.cursor/` output, ignoring other configured targets.
+
+### Preview changes without writing
+
+```bash
+agentsmesh generate --dry-run
+```
+
+Shows a unified diff of what would change without writing any files. Useful before committing or during debugging.
+
+### CI check mode
+
+```bash
+agentsmesh generate --check
+```
+
+Exits 0 if generated files match the lock file. Exits 1 if drift is detected. Use this in CI pipelines instead of `agentsmesh check` when you want the full generation path to be verified.
+
+### Force through locks
+
+```bash
+agentsmesh generate --force
+```
+
+Bypasses `collaboration.lock_features` restrictions. Use when you intentionally need to update locked features like `mcp` or `permissions`.
+
+### Refresh remote extends
+
+```bash
+agentsmesh generate --refresh-cache
+agentsmesh generate --no-cache   # alias
+```
+
+Forces a re-fetch of all remote `extends` sources. Without this flag, AgentsMesh uses the local cache at `~/.agentsmesh/cache/`.
+
+## What generate does
+
+1. **Load config** — parse `agentsmesh.yaml`, merge `agentsmesh.local.yaml`, validate schema.
+2. **Load canonical sources** — read `.agentsmesh/`, resolve extends (cache or remote), load installed packs, merge everything.
+3. **Generate per target** — for each enabled target, run target-specific generators for rules, commands, agents, skills, MCP, hooks, ignore, and permissions.
+4. **Rewrite references** — internal `.agentsmesh/` file paths are rewritten to target-relative paths.
+5. **Resolve collisions** — detect overlapping output paths, prefer native over embedded.
+6. **Write output** — create target directories, write all files, update the lock file.
+7. **Clean stale files** — remove previously generated files no longer in the output set.
+
+## Output locations
+
+| Target | Output directory |
+|--------|----------------|
+| `claude-code` | `.claude/` |
+| `cursor` | `.cursor/` |
+| `copilot` | `.github/` |
+| `gemini-cli` | `.gemini/` |
+| `cline` | `.cline/` |
+| `codex-cli` | `AGENTS.md` |
+| `windsurf` | `.windsurf/` |
+| `continue` | `.continue/` |
+| `junie` | `.junie/` |
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success — all files generated. |
+| `1` | Error or drift detected (with `--check`). |

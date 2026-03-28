@@ -1,0 +1,107 @@
+---
+draft: false
+title: Installing Community Packs
+description: Install shared rules, commands, agents, and skills from public repositories using agentsmesh install. Manage packs with installs.yaml.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Community packs are shared collections of rules, commands, agents, or skills published to GitHub or other git hosts. Use `agentsmesh install` to bring them into your project.
+
+## Installing a pack
+
+```bash
+# Auto-discover everything from a repo
+agentsmesh install github:community/ai-skills@v1.0.0
+
+# Install specific skills from a subdirectory
+agentsmesh install github:my-org/toolbox --path skills --as skills
+
+# Install agents from a specific tag
+agentsmesh install github:my-org/agents@v2.3.0 --as agents
+```
+
+After installation, packs are:
+- Stored in `.agentsmesh/packs/{name}/`
+- Tracked in `.agentsmesh/installs.yaml`
+- Merged into canonical config during `agentsmesh generate`
+
+## Reinstalling after a fresh clone
+
+After cloning a repository that uses packs:
+
+```bash
+agentsmesh install --sync
+```
+
+This reads `.agentsmesh/installs.yaml` and reinstalls any packs missing from `.agentsmesh/packs/`.
+
+### Automate with postinstall
+
+```json
+{
+  "scripts": {
+    "postinstall": "agentsmesh install --sync"
+  }
+}
+```
+
+Now `npm install` automatically restores packs.
+
+## What's in installs.yaml
+
+```yaml
+# .agentsmesh/installs.yaml
+packs:
+  - name: shared-skills
+    source: github:my-org/skills@v1.0.0
+    installed: 2026-03-01T10:00:00Z
+
+  - name: security-agents
+    source: github:my-org/agents
+    path: agents
+    as: agents
+    installed: 2026-02-15T08:30:00Z
+```
+
+Commit this file so teammates can reinstall the same packs.
+
+## Gitignore recommendation
+
+If packs are large, you can gitignore the pack contents and use `--sync` to restore them:
+
+```txt
+# .gitignore
+.agentsmesh/packs/
+```
+
+<Aside type="note">
+  If you gitignore `.agentsmesh/packs/`, make sure your CI pipeline runs `agentsmesh install --sync` before `agentsmesh generate`.
+</Aside>
+
+## Previewing before installing
+
+```bash
+agentsmesh install github:org/repo --dry-run
+```
+
+Shows what would be installed without writing any files.
+
+## Non-interactive installation
+
+For CI or scripts:
+
+```bash
+agentsmesh install github:org/repo --force
+```
+
+Skips all prompts and includes all resources.
+
+## Merge behavior
+
+Pack contents merge with your local canonical config during generation. If a pack defines a rule named `security` and you also have `.agentsmesh/rules/security.md`, your local file takes precedence.
+
+Priority order:
+1. Local `.agentsmesh/` — always wins
+2. Packs (`.agentsmesh/packs/`)
+3. Extended sources (`extends` in `agentsmesh.yaml`)

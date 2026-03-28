@@ -1,0 +1,64 @@
+---
+draft: false
+title: agentsmesh merge
+description: Resolve .agentsmesh/.lock merge conflicts after a git merge. Rebuilds the lock file from the current canonical state.
+---
+
+Resolve `.agentsmesh/.lock` merge conflicts after a `git merge`. Rebuilds the lock file from the current canonical state.
+
+## Usage
+
+```bash
+agentsmesh merge
+```
+
+No flags.
+
+## When to use
+
+Run `agentsmesh merge` after a `git merge` (or `git rebase`) that produces conflicts in `.agentsmesh/.lock`.
+
+The lock file is a JSON file containing checksums of all generated files. When two branches both modify canonical files and both regenerate, the lock files will conflict. Git cannot automatically resolve this.
+
+## Workflow
+
+```bash
+# 1. Pull and merge (lock file has conflicts)
+git pull origin main
+# CONFLICT (.agentsmesh/.lock): Merge conflict in .agentsmesh/.lock
+
+# 2. Resolve canonical source conflicts first (if any)
+# git status will show conflicting .agentsmesh/ files
+# Resolve them manually, then stage
+
+# 3. Rebuild the lock from current canonical state
+agentsmesh merge
+
+# 4. Regenerate to apply merged canonical sources
+agentsmesh generate
+
+# 5. Commit the resolved state
+git add .agentsmesh/.lock .claude/ .cursor/
+git commit -m "merge: resolve agentsmesh config conflicts"
+```
+
+## What merge does
+
+`agentsmesh merge` reads the current canonical files in `.agentsmesh/` (after your manual conflict resolution) and rewrites `.agentsmesh/.lock` with fresh checksums computed from the current state.
+
+It does not modify any canonical or generated files — it only fixes the lock file.
+
+## Collaboration strategies
+
+The merge behavior can be configured in `agentsmesh.yaml`:
+
+```yaml
+collaboration:
+  strategy: merge     # merge | lock | last-wins
+```
+
+| Strategy | Behavior |
+|----------|---------|
+| `merge` | Standard 3-way merge. Use `agentsmesh merge` to resolve lock conflicts. |
+| `lock` | Locked features cannot be regenerated without `--force`. |
+| `last-wins` | Always overwrite the lock with the latest state. No conflicts, but less safe. |

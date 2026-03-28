@@ -1,0 +1,108 @@
+---
+draft: false
+title: Extends
+description: Pull shared rules, commands, agents, and skills from remote repositories, other local projects, or Git URLs using the extends field in agentsmesh.yaml.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+The `extends` field in `agentsmesh.yaml` lets you inherit shared configuration from remote repositories, local paths, or git URLs. Extended config merges with your local canonical config during generation.
+
+## Configuration
+
+```yaml
+extends:
+  # GitHub release tag
+  - name: company-rules
+    source: github:my-org/ai-config@v1.0.0
+    features: [rules, commands]
+
+  # GitLab repo
+  - name: platform-config
+    source: gitlab:infra/ai-standards@v2.3.1
+    features: [rules, permissions]
+
+  # Git SSH
+  - name: private-rules
+    source: git+ssh://git@github.com/org/config.git#main
+    features: [rules]
+
+  # Local directory (monorepo)
+  - name: shared-local
+    source: ../shared-ai-config
+    features: [rules, commands, mcp]
+```
+
+## Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | `string` | Yes | Identifier for this extends entry. Used in error messages. |
+| `source` | `string` | Yes | Source URL or path (see formats below). |
+| `version` | `string` | No | Version tag for remote sources (alternative to `@tag` in source). |
+| `target` | `string` | No | Hint for native format auto-discovery (e.g., `claude-code`). |
+| `features` | `string[]` | No | Which features to inherit. Omit to inherit all. |
+| `path` | `string` | No | Subdirectory within the source to look for config. |
+| `pick` | `object` | No | Cherry-pick specific named resources. |
+
+## Source formats
+
+| Format | Example |
+|--------|---------|
+| GitHub shorthand | `github:org/repo@v1.0.0` |
+| GitHub (latest) | `github:org/repo` |
+| GitLab shorthand | `gitlab:group/repo@main` |
+| Git SSH | `git+ssh://git@github.com/org/repo#main` |
+| Git HTTPS | `git+https://github.com/org/repo.git#v2.0.0` |
+| Local path | `../shared-config` or `local:../shared-config` |
+
+## Cherry-picking specific resources
+
+Use `pick` to inherit only specific named rules, commands, or agents from a source:
+
+```yaml
+extends:
+  - name: selective-rules
+    source: github:org/big-config@v3.0.0
+    features: [rules, commands]
+    pick:
+      rules: [security, performance, testing]
+      commands: [commit, review]
+```
+
+Only the listed items are inherited; everything else in the source is ignored.
+
+## Cache behavior
+
+Remote sources are cached in `~/.agentsmesh/cache/` after the first fetch. Subsequent `generate` runs use the cache.
+
+To force a re-fetch:
+
+```bash
+agentsmesh generate --refresh-cache
+agentsmesh generate --no-cache   # alias
+```
+
+<Aside type="tip">
+  Pin remote sources to a version tag (e.g., `@v1.0.0`) to ensure deterministic builds. Using `@main` or no version means you get the latest on every cache refresh.
+</Aside>
+
+## Merge precedence
+
+When extends sources define resources that conflict with your local canonical config, the merge order is:
+
+1. Local `.agentsmesh/` (highest priority — always wins)
+2. Installed packs (`.agentsmesh/packs/`)
+3. Extended sources (lowest priority)
+
+This means your local overrides always take precedence over shared org config.
+
+## Installing extends via CLI
+
+Instead of manually editing `agentsmesh.yaml`, you can use `agentsmesh install --extends`:
+
+```bash
+agentsmesh install github:org/base-config --extends
+```
+
+This adds the entry to `agentsmesh.yaml` automatically.

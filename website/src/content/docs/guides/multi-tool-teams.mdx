@@ -1,0 +1,109 @@
+---
+draft: false
+title: Supporting Multiple Tools on a Team
+description: Configure AgentsMesh to generate config for every tool your team uses, so Claude Code users and Cursor users share the same rules without manual sync.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+When your team uses multiple AI tools — some on Claude Code, others on Cursor, some who just joined and use Gemini CLI — AgentsMesh ensures everyone shares the same rules, commands, and agents without manual copy-pasting.
+
+## Configuration
+
+```yaml
+# agentsmesh.yaml
+version: 1
+targets:
+  - claude-code
+  - cursor
+  - gemini-cli
+  - copilot
+features:
+  - rules
+  - commands
+  - agents
+  - skills
+  - mcp
+  - hooks
+  - permissions
+  - ignore
+
+collaboration:
+  strategy: merge
+  lock_features:
+    - mcp
+    - permissions
+```
+
+## Workflow
+
+### Editing rules (anyone on the team)
+
+```bash
+# 1. Pull the latest
+git pull
+
+# 2. Edit canonical config
+vi .agentsmesh/rules/security.md
+
+# 3. Preview the changes
+npx agentsmesh diff
+
+# 4. Generate for all targets
+npx agentsmesh generate
+
+# 5. Commit canonical + generated files
+git add .agentsmesh/ .claude/ .cursor/ .gemini/
+git commit -m "security: add XSS prevention rule"
+git push
+```
+
+All team members now have the updated rule in their respective tool directories on next `git pull`.
+
+### When a team member uses a different tool
+
+Say Alice uses Cursor and Bob uses Claude Code. They both edit the same canonical rule:
+
+- Alice sees it in `.cursor/rules/security.mdc`
+- Bob sees it in `.claude/rules/security.md`
+- Both are generated from `.agentsmesh/rules/security.md`
+
+They never need to coordinate on tool-specific files — only on canonical sources.
+
+## Local overrides for individual preference
+
+Each developer can create `agentsmesh.local.yaml` (gitignored) to narrow their local generation:
+
+```yaml
+# Alice's agentsmesh.local.yaml
+targets:
+  - cursor   # Alice only generates Cursor files locally
+```
+
+```yaml
+# Bob's agentsmesh.local.yaml
+targets:
+  - claude-code   # Bob only generates Claude Code files locally
+```
+
+CI generates for all targets and verifies sync. Individuals generate only what they need.
+
+<Aside type="note">
+  Commit the generated files for all targets even if not all team members have local overrides. This ensures the files exist in the repo for teammates who haven't set up AgentsMesh locally yet.
+</Aside>
+
+## Handling tool-specific features
+
+Some features aren't supported by all tools. Use the [feature matrix](/agentsmesh/reference/supported-tools/) to understand what each tool supports.
+
+For tools with partial support, AgentsMesh projects features as embedded skills with metadata, so the round-trip is lossless. Team members using those tools can still benefit from shared commands and agents, just in a different form.
+
+## Adding a new tool
+
+When someone joins the team with a new tool (e.g., Windsurf):
+
+1. Add it to `agentsmesh.yaml`
+2. Run `agentsmesh generate`
+3. Commit the new `.windsurf/` directory
+
+The new developer's tool immediately has all the same rules, commands, and agents as everyone else.

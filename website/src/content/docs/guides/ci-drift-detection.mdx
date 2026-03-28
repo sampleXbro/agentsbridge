@@ -1,0 +1,140 @@
+---
+draft: false
+title: CI Drift Detection
+description: Use agentsmesh check and agentsmesh lint in your CI pipeline to catch config drift and validation errors before they reach production.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Add `agentsmesh check` and `agentsmesh lint` to your CI pipeline to catch config drift and validation errors in every pull request.
+
+## What drift is
+
+**Drift** happens when:
+- Someone edits `.agentsmesh/` but forgets to run `agentsmesh generate`
+- Someone edits a generated file (`.claude/`, `.cursor/`, etc.) directly
+- A PR merges canonical changes without regenerating
+- An `extends` source changes and the project hasn't refreshed
+
+`agentsmesh check` detects all of these by comparing current file hashes against the stored lock.
+
+## Basic CI setup
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  agentsmesh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - run: npm ci
+
+      - name: Lint AgentsMesh config
+        run: npx agentsmesh lint
+
+      - name: Check AgentsMesh sync
+        run: npx agentsmesh check
+```
+
+## What each step catches
+
+### `agentsmesh lint`
+
+Validates canonical config files:
+- Invalid YAML frontmatter
+- Missing required fields
+- Unknown target names
+- Invalid hook event types
+- MCP server schema errors
+- Duplicate rule/command/agent names
+
+Fails with exit code 1 if any lint errors are found.
+
+### `agentsmesh check`
+
+Verifies that generated tool directories match the canonical sources:
+- Compares file hashes against `.agentsmesh/.lock`
+- Fails with exit code 1 if any file has drifted
+
+## Automated fix comment
+
+Add a comment to failing PRs explaining how to fix drift:
+
+```yaml
+- name: Check AgentsMesh sync
+  run: npx agentsmesh check
+  id: check
+
+- name: Comment on drift
+  if: failure() && steps.check.outcome == 'failure'
+  uses: actions/github-script@v7
+  with:
+    script: |
+      github.rest.issues.createComment({
+        issue_number: context.issue.number,
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        body: '**AgentsMesh drift detected.**\n\nRun `npx agentsmesh generate` and commit the updated files.'
+      })
+```
+
+## Full example with caching
+
+```yaml
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Lint AgentsMesh config
+        run: npx agentsmesh lint
+
+      - name: Verify AI config is in sync
+        run: npx agentsmesh check
+```
+
+<Aside type="note">
+  `agentsmesh check` requires the `.agentsmesh/.lock` file to be committed. Make sure `.agentsmesh/.lock` is **not** in your `.gitignore`.
+</Aside>
+
+## Manual fix workflow
+
+When CI fails with drift:
+
+```bash
+# 1. Pull the branch
+git checkout feature/my-changes
+git pull
+
+# 2. Regenerate
+npx agentsmesh generate
+
+# 3. Review what changed
+git diff
+
+# 4. Commit
+git add .agentsmesh/ .claude/ .cursor/
+git commit -m "chore: sync generated AI config"
+git push
+```

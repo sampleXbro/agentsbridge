@@ -1,0 +1,73 @@
+---
+draft: false
+title: Canonical Configuration
+description: The .agentsmesh/ directory is the single source of truth for all AI tool configuration in AgentsMesh. Learn the directory structure and file formats.
+sidebar:
+  label: Overview
+  order: 0
+---
+
+import { FileTree, Aside } from '@astrojs/starlight/components';
+
+The `.agentsmesh/` directory is the **single source of truth** for all your AI tool configuration. Every file here maps to one or more generated outputs in tool-specific directories.
+
+## Directory structure
+
+<FileTree>
+- .agentsmesh/
+  - rules/
+    - _root.md  Root rule (always applied, required)
+    - *.md  Additional scoped rules
+  - commands/
+    - *.md  Slash-command prompts
+  - agents/
+    - *.md  Subagent definitions
+  - skills/
+    - skill-name/
+      - SKILL.md  Skill definition
+      - *.*  Supporting files
+  - mcp.json  MCP server definitions
+  - permissions.yaml  Allow/deny tool lists
+  - hooks.yaml  Lifecycle hooks
+  - ignore  gitignore-style exclusion patterns
+  - installs.yaml  Record of installed packs (managed by CLI)
+  - .lock  Generated state checksums (managed by CLI)
+- agentsmesh.yaml  Project configuration
+- agentsmesh.local.yaml  Local overrides (gitignored)
+</FileTree>
+
+## Feature types
+
+| Feature | File(s) | Description |
+|---------|---------|-------------|
+| [Rules](/agentsmesh/canonical-config/rules/) | `rules/*.md` | Markdown files with optional frontmatter. Scoped by target, glob, or always-on. |
+| [Commands](/agentsmesh/canonical-config/commands/) | `commands/*.md` | Reusable slash-command prompts. |
+| [Agents](/agentsmesh/canonical-config/agents/) | `agents/*.md` | Subagent definitions with tools, model, hooks, and skills. |
+| [Skills](/agentsmesh/canonical-config/skills/) | `skills/{name}/SKILL.md` | Skill directories with definition and supporting files. |
+| [MCP Servers](/agentsmesh/canonical-config/mcp-servers/) | `mcp.json` | Model Context Protocol server definitions. |
+| [Hooks](/agentsmesh/canonical-config/hooks/) | `hooks.yaml` | Lifecycle hooks triggered before/after tool use. |
+| [Ignore Patterns](/agentsmesh/canonical-config/ignore-patterns/) | `ignore` | gitignore-style patterns for AI tools to skip. |
+| [Permissions](/agentsmesh/canonical-config/permissions/) | `permissions.yaml` | Allow/deny lists for tool operations. |
+
+## The generation contract
+
+AgentsMesh enforces a strict separation between **canonical sources** and **generated artifacts**:
+
+- **Canonical sources** live in `.agentsmesh/` — you own and edit these.
+- **Generated artifacts** live in tool directories (`.claude/`, `.cursor/`, etc.) — the CLI writes these; you should not edit them directly.
+
+When you run `agentsmesh generate`, the CLI reads `.agentsmesh/`, applies per-target transformations, and writes the output. The lock file (`.agentsmesh/.lock`) records checksums of the generated state. `agentsmesh check` uses the lock to detect drift.
+
+<Aside type="caution">
+  Never edit generated files directly. If you need to customize per-target output, use `agentsmesh.yaml` overrides or frontmatter fields like `targets` in your canonical files.
+</Aside>
+
+## What goes in `.gitignore`
+
+AgentsMesh updates `.gitignore` during `init`. The following should be gitignored:
+
+```txt
+agentsmesh.local.yaml
+```
+
+Everything else — `.agentsmesh/`, generated tool directories, and `agentsmesh.yaml` — should be committed. Generated files are intentionally committed so that team members who don't use AgentsMesh can still benefit from the configs.

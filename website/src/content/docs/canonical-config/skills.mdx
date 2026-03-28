@@ -1,0 +1,119 @@
+---
+draft: false
+title: Skills
+description: Skills are directories containing a SKILL.md definition and optional supporting files. They are reusable capability bundles referenced by agents and commands.
+---
+
+import { FileTree, Aside } from '@astrojs/starlight/components';
+
+Skills are reusable capability bundles — a `SKILL.md` definition plus any supporting files (templates, reference docs, examples). They live in `.agentsmesh/skills/{name}/` and can be referenced by agents, commands, and directly invoked by users.
+
+## Directory structure
+
+<FileTree>
+- .agentsmesh/skills/
+  - api-generator/
+    - SKILL.md  Skill definition
+    - template.hbs  Handlebars template
+    - examples/
+      - user-api.ts  Example output
+  - security-review/
+    - SKILL.md
+    - owasp-checklist.md  Reference material
+  - commit/
+    - SKILL.md
+</FileTree>
+
+## SKILL.md format
+
+```markdown
+---
+description: Generate REST API endpoints from OpenAPI specs
+---
+
+Given an OpenAPI specification file, generate TypeScript route handlers
+with request validation, error handling, and response typing.
+
+Reference template: [template.hbs](./template.hbs)
+See example: [user-api.ts](./examples/user-api.ts)
+```
+
+## Frontmatter reference
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `description` | `string` | Short description shown in skill menus. |
+
+## Supporting files
+
+Any file placed alongside `SKILL.md` is a supporting file. Supporting files are:
+- Preserved during `agentsmesh generate` — copied to the target skill directory
+- Preserved during `agentsmesh import` — restored from the tool directory
+- Referenced with relative paths in `SKILL.md`
+
+Internal file references (e.g., `[template.hbs](./template.hbs)`) are rewritten from canonical paths to target-relative paths during generation, and restored on import.
+
+<Aside type="note">
+  File references must use relative paths starting with `./`. Absolute paths or paths outside the skill directory are not supported.
+</Aside>
+
+## Tool-specific behavior
+
+| Tool | Support | Notes |
+|------|---------|-------|
+| Claude Code | Native | `.claude/skills/{name}/SKILL.md` |
+| Cursor | Native | `.cursor/skills/{name}/SKILL.md` |
+| Copilot | Native | `.github/skills/{name}/SKILL.md` |
+| Gemini CLI | Native | `.gemini/skills/{name}/SKILL.md` |
+| Cline | Native | `.cline/skills/{name}/SKILL.md` |
+| Codex CLI | Native | Skills embedded in `AGENTS.md` |
+| Windsurf | Native | `.windsurf/skills/{name}/SKILL.md` |
+| Continue | Embedded | Projected with metadata |
+| Junie | Embedded | Projected with metadata |
+
+## Example skills
+
+### Commit skill
+
+```markdown
+---
+description: Create a conventional commit from current changes
+---
+
+Review the staged and unstaged git changes.
+Analyze what was modified and why.
+Draft a conventional commit message following: feat|fix|refactor|test|docs|chore(scope): message
+Stage relevant files and commit.
+```
+
+### Code review skill
+
+```markdown
+---
+description: Perform a structured code review of the current diff
+---
+
+Read the current git diff. For each changed file, evaluate:
+
+1. **Correctness** — logic errors, off-by-one, null handling
+2. **Security** — injections, auth bypasses, data exposure
+3. **Performance** — N+1 queries, blocking operations, memory leaks
+4. **Readability** — naming, complexity, documentation gaps
+
+Output as a structured report grouped by severity: Critical, Major, Minor.
+```
+
+## Referencing skills from agents
+
+```markdown
+---
+name: senior-developer
+description: Senior developer assistant with full tooling
+skills:
+  - commit
+  - security-review
+  - api-generator
+---
+
+You are a senior software engineer...
+```

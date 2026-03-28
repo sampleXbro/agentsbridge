@@ -1,0 +1,114 @@
+---
+draft: false
+title: Permissions
+description: Permissions in AgentsMesh define allow and deny lists for tool operations. Natively supported in Claude Code and partially in Cursor and Gemini CLI.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Permissions control which tools and operations AI agents are allowed or denied. They live in `.agentsmesh/permissions.yaml`.
+
+## File format
+
+```yaml
+allow:
+  - Read
+  - Grep
+  - Glob
+  - Bash(pnpm test:*)
+  - Bash(pnpm build:*)
+  - Bash(git add:*)
+  - Bash(git commit:*)
+  - Bash(git status)
+  - Bash(git diff)
+  - Edit
+  - Write
+
+deny:
+  - WebFetch
+  - Bash(curl:*)
+  - Bash(wget:*)
+  - Bash(rm -rf:*)
+  - Read(.env)
+  - Read(.env.*)
+```
+
+## Pattern syntax
+
+Patterns support wildcards using `:*` suffix for Bash commands:
+
+| Pattern | Matches |
+|---------|---------|
+| `Read` | The Read tool (any file) |
+| `Read(.env)` | Read of `.env` specifically |
+| `Bash(pnpm test:*)` | Any `pnpm test:...` subcommand |
+| `Bash(git:*)` | Any git command |
+| `Bash(rm -rf:*)` | Any `rm -rf ...` command |
+| `WebFetch` | All web fetch operations |
+
+<Aside type="caution">
+  `deny` rules take precedence over `allow` rules. If a pattern appears in both, it is denied.
+</Aside>
+
+## Tool-specific behavior
+
+| Tool | Support | Notes |
+|------|---------|-------|
+| Claude Code | Native | Full allow/deny list support via `settings.json`. |
+| Cursor | Partial | Basic permission support. |
+| Gemini CLI | Partial | Limited permission support. |
+| Copilot | — | Not supported. |
+| Cline | — | Not supported. |
+| Codex CLI | — | Not supported. |
+| Windsurf | — | Not supported. |
+| Continue | — | Not supported. |
+| Junie | — | Not supported. |
+
+## Locking permissions from accidental changes
+
+Permissions often represent security boundaries. Use `collaboration.lock_features` to prevent them from being overwritten:
+
+```yaml
+# agentsmesh.yaml
+collaboration:
+  strategy: merge
+  lock_features:
+    - permissions
+    - mcp
+```
+
+With `permissions` locked, `agentsmesh generate` will not regenerate the permissions config without `--force`.
+
+## Recommended baseline
+
+```yaml
+allow:
+  - Read
+  - Grep
+  - Glob
+  - Edit
+  - Write
+  - Bash(git status)
+  - Bash(git diff)
+  - Bash(git add:*)
+  - Bash(git commit:*)
+  - Bash(git log:*)
+  - Bash(pnpm install:*)
+  - Bash(pnpm build:*)
+  - Bash(pnpm test:*)
+  - Bash(pnpm lint:*)
+  - Bash(pnpm typecheck:*)
+
+deny:
+  - Bash(rm -rf:*)
+  - Bash(curl:*)
+  - Bash(wget:*)
+  - Bash(ssh:*)
+  - Bash(scp:*)
+  - Read(.env)
+  - Read(.env.*)
+  - Read(*.pem)
+  - Read(*.key)
+```
+
+This baseline allows common dev operations while blocking destructive commands and secret file access.

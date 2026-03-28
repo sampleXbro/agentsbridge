@@ -38,7 +38,6 @@ export default defineConfig({
         'src/install/local-source.ts', // local source helper with heavy I/O
         'src/install/native-path-pick-infer.ts', // install inference helper
         'src/install/native-path-pick-infer-copilot.ts', // copilot-specific inference helper
-        'src/install/native-skill-scan.ts', // install scan helper
         'src/install/install-conflicts.ts', // install conflict resolver branch-heavy I/O
         'src/install/install-manifest.ts', // manifest persistence adapter
         'src/install/install-name-generator.ts', // naming helper

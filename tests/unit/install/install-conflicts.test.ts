@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { resolveInstallConflicts } from '../../../src/install/core/install-conflicts.js';
 import * as prompts from '../../../src/install/core/prompts.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';

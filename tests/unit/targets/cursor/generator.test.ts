@@ -620,6 +620,7 @@ describe('generateHooks (cursor)', () => {
         PostToolUse: [
           {
             matcher: 'Write',
+            command: '',
             type: 'prompt' as const,
             prompt: 'Run prettier on the edited file',
           },
@@ -631,7 +632,7 @@ describe('generateHooks (cursor)', () => {
     const parsed = JSON.parse(results[0]!.content) as {
       hooks: { PostToolUse: Array<{ matcher: string; hooks: unknown[] }> };
     };
-    expect(parsed.hooks.PostToolUse[0].hooks[0]).toMatchObject({
+    expect(parsed.hooks.PostToolUse[0]!.hooks[0]!).toMatchObject({
       type: 'prompt',
       prompt: 'Run prettier on the edited file',
     });
@@ -655,13 +656,13 @@ describe('generateHooks (cursor)', () => {
     const parsed = JSON.parse(results[0]!.content) as {
       hooks: { PostToolUse: Array<{ hooks: Array<{ timeout?: number }> }> };
     };
-    expect(parsed.hooks.PostToolUse[0].hooks[0].timeout).toBe(5000);
+    expect(parsed.hooks.PostToolUse[0]!.hooks[0]!.timeout).toBe(5000);
   });
 
   it('returns empty when all hook entries lack command and prompt', () => {
     const canonical = makeCanonical({
       hooks: {
-        PostToolUse: [{ matcher: 'Write', type: 'command' as const }],
+        PostToolUse: [{ matcher: 'Write', command: '', type: 'command' as const }],
       },
     });
     const results = generateHooks(canonical);

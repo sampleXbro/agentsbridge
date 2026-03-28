@@ -19,6 +19,7 @@ import { tmpdir } from 'node:os';
 import { generate } from '../src/core/generate/engine.js';
 import type { CanonicalFiles } from '../src/core/types.js';
 import type { ValidatedConfig } from '../src/config/core/schema.js';
+import type { Hooks } from '../src/core/hook-types.js';
 
 const TEST_DIR = join(tmpdir(), 'am-agents-folder-structure-test');
 
@@ -57,7 +58,7 @@ function fullCanonical(opts: {
     model?: string;
     permissionMode?: string;
     maxTurns?: number;
-    hooks?: Record<string, unknown>;
+    hooks?: Hooks;
     skills?: string[];
     memory?: string;
   }>;
@@ -67,7 +68,7 @@ function fullCanonical(opts: {
   hooks?: CanonicalFiles['hooks'];
   ignore?: string[];
 }): CanonicalFiles {
-  const rules = [
+  const rules: CanonicalFiles['rules'] = [
     {
       source: join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
       root: true,
@@ -1021,7 +1022,12 @@ describe('agents-folder-structure-research: Windsurf (docs §7)', () => {
       rootBody: '# Root',
       mcp: {
         mcpServers: {
-          context7: { type: 'stdio', command: 'npx', args: ['-y', '@upstash/context7-mcp'] },
+          context7: {
+            type: 'stdio',
+            command: 'npx',
+            args: ['-y', '@upstash/context7-mcp'],
+            env: {},
+          },
         },
       },
     });

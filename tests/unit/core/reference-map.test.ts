@@ -137,7 +137,6 @@ describe('buildReferenceMap', () => {
         targets: [],
         description: '',
         globs: ['src/**/*.ts'],
-        trigger: '',
         body: '',
       },
     ];

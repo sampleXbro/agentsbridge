@@ -31,7 +31,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "pnpm build && vitest run --config vitest.e2e.config.ts",
-    "lint": "eslint src/",
+    "lint": "eslint src tests",
     "format": "prettier --write src/",
     "format:check": "prettier --check src/",
     "prepare": "husky",

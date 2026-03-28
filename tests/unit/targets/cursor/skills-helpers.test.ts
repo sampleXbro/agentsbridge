@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { afterEach, describe, expect, it } from 'vitest';
 import { importSkills } from '../../../../src/targets/cursor/skills-helpers.js';
+import type { ImportResult } from '../../../../src/core/result-types.js';
 
 describe('cursor skill import helpers', () => {
   const tempDirs: string[] = [];
@@ -21,7 +22,7 @@ describe('cursor skill import helpers', () => {
 
   it('returns without importing when no Cursor skills directory exists', async () => {
     const dir = createTempDir();
-    const results: Array<{ toPath: string }> = [];
+    const results: ImportResult[] = [];
 
     await importSkills(dir, results, (content) => content);
 
@@ -42,7 +43,7 @@ describe('cursor skill import helpers', () => {
     writeFileSync(join(dir, '.cursor', 'skills', 'qa.md'), 'QA body.');
     writeFileSync(join(dir, '.cursor', 'skills', 'empty.md'), '');
 
-    const results: Array<{ feature: string; toPath: string }> = [];
+    const results: ImportResult[] = [];
     await importSkills(dir, results, (content) => content);
 
     expect(results.map(({ feature, toPath }) => ({ feature, toPath }))).toEqual([

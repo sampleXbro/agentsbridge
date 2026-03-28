@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { afterEach, describe, expect, it } from 'vitest';
 import { importClineSkills } from '../../../../src/targets/cline/skills-helpers.js';
+import type { ImportResult } from '../../../../src/core/result-types.js';
 
 describe('cline skill import helpers', () => {
   const tempDirs: string[] = [];
@@ -21,7 +22,7 @@ describe('cline skill import helpers', () => {
 
   it('returns without importing when no Cline skills directory exists', async () => {
     const dir = createTempDir();
-    const results: Array<{ toPath: string }> = [];
+    const results: ImportResult[] = [];
 
     await importClineSkills(dir, results, (content) => content);
 
@@ -43,7 +44,7 @@ describe('cline skill import helpers', () => {
       ].join('\n'),
     );
 
-    const results: Array<{ feature: string; toPath: string }> = [];
+    const results: ImportResult[] = [];
     await importClineSkills(dir, results, (content) => content);
 
     expect(results.map(({ feature, toPath }) => ({ feature, toPath }))).toEqual([
@@ -71,7 +72,7 @@ describe('cline skill import helpers', () => {
       'ignored nested skill',
     );
 
-    const results: Array<{ feature: string; toPath: string }> = [];
+    const results: ImportResult[] = [];
     await importClineSkills(dir, results, (content) => content);
 
     expect(results.map(({ feature, toPath }) => ({ feature, toPath }))).toEqual([

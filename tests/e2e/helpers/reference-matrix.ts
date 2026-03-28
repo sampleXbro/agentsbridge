@@ -3,7 +3,7 @@ import { join } from 'node:path';
 export { expectedRefs, outputPaths, type TargetName } from './reference-targets.js';
 
 export function appendGenerateReferenceMatrix(dir: string): void {
-  const abs = (...parts: string[]) => join(dir, ...parts);
+  const abs = (...parts: string[]): string => join(dir, ...parts);
   mkdirSync(abs('docs'), { recursive: true });
   writeFileSync(abs('docs', 'some-doc.md'), '# Some Doc\n');
   writeFileSync(abs('docs', 'agents-folder-structure-research.md'), '# Structure Research\n');

@@ -25,10 +25,11 @@ import { importFromCline } from '../src/targets/cline/importer.js';
 import { importFromCodex } from '../src/targets/codex-cli/importer.js';
 import { serializeCanonicalRuleToCodexRulesFile } from '../src/targets/codex-cli/codex-rules-embed.js';
 import { importFromWindsurf } from '../src/targets/windsurf/importer.js';
+import type { BuiltinTargetId } from '../src/targets/catalog/target-ids.js';
 
 const TEST_DIR = join(tmpdir(), 'am-roundtrip-test');
 
-function allFeaturesConfig(targets: string[]): ValidatedConfig {
+function allFeaturesConfig(targets: BuiltinTargetId[]): ValidatedConfig {
   return {
     version: 1,
     targets,
@@ -685,7 +686,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
   });
 
   it('all 9 agents together produce all expected files', async () => {
-    const allTargets = [
+    const allTargets: BuiltinTargetId[] = [
       'claude-code',
       'cursor',
       'copilot',

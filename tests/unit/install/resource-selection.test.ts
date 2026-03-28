@@ -4,21 +4,6 @@ import {
   deriveInstallFeatures,
   ensureInstallSelection,
 } from '../../../src/install/core/install-entry-selection.js';
-import type { CanonicalFiles } from '../../../src/core/types.js';
-
-function files(partial: Partial<CanonicalFiles>): CanonicalFiles {
-  return {
-    rules: [],
-    commands: [],
-    agents: [],
-    skills: [],
-    mcp: null,
-    permissions: null,
-    hooks: null,
-    ignore: [],
-    ...partial,
-  };
-}
 
 describe('resource-selection', () => {
   it('deriveInstallFeatures drops empty array features', () => {

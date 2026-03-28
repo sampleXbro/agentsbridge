@@ -111,4 +111,12 @@ describe('git pin helpers', () => {
       resolveRemoteRefForInstall('HEAD', 'https://example.com/org/repo.git'),
     ).rejects.toThrow(/Invalid ls-remote HEAD line/);
   });
+
+  it('throws error when HEAD cannot be resolved', async () => {
+    queueGitSuccess('\n'); // Empty output
+
+    await expect(
+      resolveRemoteRefForInstall('HEAD', 'https://example.com/org/repo.git'),
+    ).rejects.toThrow('Could not resolve HEAD for https://example.com/org/repo.git');
+  });
 });

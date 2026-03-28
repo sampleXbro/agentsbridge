@@ -6,15 +6,7 @@
 import { join } from 'node:path';
 import { exists, readFileSafe, writeFileAtomic, mkdirp } from '../../utils/filesystem/fs.js';
 import { logger } from '../../utils/output/logger.js';
-import { importFromClaudeCode } from '../../targets/claude-code/importer.js';
-import { importFromCursor } from '../../targets/cursor/importer.js';
-import { importFromCopilot } from '../../targets/copilot/importer.js';
-import { importFromContinue } from '../../targets/continue/importer.js';
-import { importFromJunie } from '../../targets/junie/importer.js';
-import { importFromGemini } from '../../targets/gemini-cli/importer.js';
-import { importFromCline } from '../../targets/cline/importer.js';
-import { importFromCodex } from '../../targets/codex-cli/importer.js';
-import { importFromWindsurf } from '../../targets/windsurf/importer.js';
+import { BUILTIN_TARGETS } from '../../targets/catalog/builtin-targets.js';
 import type { ImportResult } from '../../core/types.js';
 import {
   buildConfig,
@@ -35,17 +27,10 @@ const CONFIG_FILENAME = 'agentsmesh.yaml';
 const LOCAL_CONFIG_FILENAME = 'agentsmesh.local.yaml';
 const GITIGNORE_ENTRIES = ['agentsmesh.local.yaml', '.agentsmeshcache', '.agentsmesh/.lock.tmp'];
 
-const IMPORTERS: Record<string, (root: string) => Promise<ImportResult[]>> = {
-  'claude-code': importFromClaudeCode,
-  cursor: importFromCursor,
-  copilot: importFromCopilot,
-  continue: importFromContinue,
-  junie: importFromJunie,
-  'gemini-cli': importFromGemini,
-  cline: importFromCline,
-  'codex-cli': importFromCodex,
-  windsurf: importFromWindsurf,
-};
+/** Importers derived from target descriptors — no manual registration needed. */
+const IMPORTERS: Record<string, (root: string) => Promise<ImportResult[]>> = Object.fromEntries(
+  BUILTIN_TARGETS.map((d) => [d.id, (root: string) => d.generators.importFrom(root)]),
+);
 
 /**
  * Append entries to .gitignore if not already present.

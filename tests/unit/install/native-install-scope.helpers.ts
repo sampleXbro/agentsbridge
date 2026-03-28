@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { stageNativeInstallScope } from '../../../src/install/native/native-install-scope.js';
 
-interface ScopeCase {
+export interface ScopeCase {
   name: string;
   target: string;
   path: string;

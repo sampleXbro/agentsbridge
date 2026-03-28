@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { loadCanonicalWithExtends } from '../../src/canonical/extends/extends.js';
+import type { ValidatedConfig } from '../../src/config/core/schema.js';
 
 const TEST_DIR = join(tmpdir(), 'am-extends-native-integration');
 
@@ -18,6 +19,18 @@ function makeProject(): string {
     '---\nroot: true\n---\n# Local rule\n',
   );
   return projectDir;
+}
+
+function makeConfig(overrides: Partial<ValidatedConfig> = {}): ValidatedConfig {
+  return {
+    version: 1,
+    targets: ['claude-code'],
+    features: ['rules'],
+    extends: [],
+    overrides: {},
+    collaboration: { strategy: 'merge', lock_features: [] },
+    ...overrides,
+  };
 }
 
 beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
@@ -36,14 +49,9 @@ describe('native format local extends', () => {
       '---\ndescription: Security rule\n---\n# Always sanitize inputs\n',
     );
 
-    const config = {
-      version: 1 as const,
-      targets: ['claude-code'],
-      features: ['rules'],
+    const config = makeConfig({
       extends: [{ name: 'shared', source: join('..', 'native-claude'), features: ['rules'] }],
-      overrides: {},
-      collaboration: { strategy: 'merge' as const, lock_features: [] },
-    };
+    });
 
     const { canonical } = await loadCanonicalWithExtends(config, projectDir);
 
@@ -60,14 +68,9 @@ describe('native format local extends', () => {
     mkdirSync(nativeDir, { recursive: true });
     writeFileSync(join(nativeDir, 'CLAUDE.md'), '---\nroot: true\n---\n# Repo root\n');
 
-    const config = {
-      version: 1 as const,
-      targets: ['claude-code'],
-      features: ['rules'],
+    const config = makeConfig({
       extends: [{ name: 'repo', source: join('..', 'native-cache-test'), features: ['rules'] }],
-      overrides: {},
-      collaboration: { strategy: 'merge' as const, lock_features: [] },
-    };
+    });
 
     // First call: detects + imports
     const { canonical: first } = await loadCanonicalWithExtends(config, projectDir);
@@ -94,14 +97,9 @@ describe('native format local extends', () => {
     mkdirSync(emptyDir, { recursive: true });
     writeFileSync(join(emptyDir, 'README.md'), '# Nothing here\n');
 
-    const config = {
-      version: 1 as const,
-      targets: ['claude-code'],
-      features: ['rules'],
+    const config = makeConfig({
       extends: [{ name: 'empty', source: join('..', 'empty-repo'), features: ['rules'] }],
-      overrides: {},
-      collaboration: { strategy: 'merge' as const, lock_features: [] },
-    };
+    });
 
     const err = await loadCanonicalWithExtends(config, projectDir).catch((e: unknown) => e);
     expect(err).toBeInstanceOf(Error);
@@ -120,14 +118,9 @@ describe('native format local extends', () => {
       '---\ndescription: Style guide\n---\n# Use tabs\n',
     );
 
-    const config = {
-      version: 1 as const,
-      targets: ['claude-code'],
-      features: ['rules'],
+    const config = makeConfig({
       extends: [{ name: 'cursor-base', source: join('..', 'native-cursor'), features: ['rules'] }],
-      overrides: {},
-      collaboration: { strategy: 'merge' as const, lock_features: [] },
-    };
+    });
 
     const { canonical } = await loadCanonicalWithExtends(config, projectDir);
     expect(canonical.rules.some((r) => r.body.includes('Use tabs'))).toBe(true);

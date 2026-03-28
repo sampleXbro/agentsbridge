@@ -14,9 +14,7 @@ import {
 } from '../../../../src/targets/windsurf/generator.js';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
 import {
-  WINDSURF_RULES_ROOT,
   WINDSURF_RULES_DIR,
-  WINDSURF_IGNORE,
   CODEIUM_IGNORE,
   WINDSURF_WORKFLOWS_DIR,
   WINDSURF_SKILLS_DIR,

@@ -1,8 +1,8 @@
 import { describe, it } from 'vitest';
-import { expectScope } from './native-install-scope.helpers.js';
+import { expectScope, type ScopeCase } from './native-install-scope.helpers.js';
 
 describe('stageNativeInstallScope Codex CLI', () => {
-  it.each([
+  const cases: ScopeCase[] = [
     {
       name: 'codex-root',
       target: 'codex-cli',
@@ -67,5 +67,7 @@ describe('stageNativeInstallScope Codex CLI', () => {
       },
       features: ['mcp'],
     },
-  ])('$name', expectScope);
+  ];
+
+  it.each(cases)('$name', expectScope);
 });

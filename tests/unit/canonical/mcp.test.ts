@@ -3,6 +3,7 @@ import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { parseMcp } from '../../../src/canonical/features/mcp.js';
+import type { StdioMcpServer } from '../../../src/core/mcp-types.js';
 
 const TEST_DIR = join(tmpdir(), 'agentsmesh-mcp-test');
 const MCP_PATH = join(TEST_DIR, '.agentsmesh', 'mcp.json');
@@ -77,7 +78,7 @@ describe('parseMcp', () => {
 }`);
     const result = await parseMcp(MCP_PATH);
     expect(Object.keys(result?.mcpServers ?? {})).toHaveLength(2);
-    expect(result?.mcpServers.filesystem?.command).toBe('npx');
+    expect((result?.mcpServers.filesystem as StdioMcpServer | undefined)?.command).toBe('npx');
     expect(result?.mcpServers.github?.env).toEqual({ GITHUB_TOKEN: '$GITHUB_TOKEN' });
   });
 
@@ -166,7 +167,7 @@ describe('parseMcp', () => {
   }
 }`);
     const result = await parseMcp(MCP_PATH);
-    expect(result?.mcpServers.minimal?.args).toEqual([]);
+    expect((result?.mcpServers.minimal as StdioMcpServer | undefined)?.args).toEqual([]);
     expect(result?.mcpServers.minimal?.env).toEqual({});
   });
 

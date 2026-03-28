@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { rewriteFileLinks } from '../../../src/core/reference/link-rebaser.js';
 
-function noopInput(content: string) {
+type RewriteInput = Parameters<typeof rewriteFileLinks>[0];
+
+function noopInput(content: string): {
+  input: RewriteInput;
+  translated: string[];
+  checked: string[];
+} {
   const translated: string[] = [];
   const checked: string[] = [];
   return {
@@ -24,7 +30,7 @@ function noopInput(content: string) {
   };
 }
 
-function rewriteInput(content: string, existingPaths: string[]) {
+function rewriteInput(content: string, existingPaths: string[]): RewriteInput {
   const pathSet = new Set(existingPaths);
   return {
     content,

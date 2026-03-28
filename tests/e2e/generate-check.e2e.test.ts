@@ -3,7 +3,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { cleanup, createTestProject } from './helpers/setup.js';
 import { runCli } from './helpers/run-cli.js';
-import { fileExists, fileNotExists } from './helpers/assertions.js';
+import { fileNotExists } from './helpers/assertions.js';
 
 describe('generate --check', () => {
   let dir = '';

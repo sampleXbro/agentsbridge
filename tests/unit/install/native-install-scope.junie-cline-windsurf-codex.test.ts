@@ -1,8 +1,8 @@
 import { describe, it } from 'vitest';
-import { expectScope } from './native-install-scope.helpers.js';
+import { expectScope, type ScopeCase } from './native-install-scope.helpers.js';
 
 describe('stageNativeInstallScope Junie, Cline, and Windsurf', () => {
-  it.each([
+  const cases: ScopeCase[] = [
     {
       name: 'junie-root',
       target: 'junie',
@@ -165,5 +165,7 @@ describe('stageNativeInstallScope Junie, Cline, and Windsurf', () => {
       files: { '.windsurfignore': 'node_modules/\n' },
       features: ['ignore'],
     },
-  ])('$name', expectScope);
+  ];
+
+  it.each(cases)('$name', expectScope);
 });

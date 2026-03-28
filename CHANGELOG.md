@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.5
+
+### Patch Changes
+
+- f7a4afd: Expand the project README, add `ROADMAP.md`, and fix the sample Claude Code PostToolUse hook to use `type: prompt` with a `prompt` field instead of an invalid command-style hook after reads.
+
 ## 0.2.4
 
 ### Patch Changes

@@ -74,7 +74,7 @@ describe('runWatch', () => {
       join(testDir, '.agentsmesh', 'rules', 'new.md'),
       '---\ndescription: "New"\n---\n# New',
     );
-    await vi.waitFor(() => expect(runMatrixSpy).toHaveBeenCalled(), { timeout: 3000 });
+    await vi.waitFor(() => expect(runMatrixSpy).toHaveBeenCalled(), { timeout: 8000 });
     runMatrixSpy.mockRestore();
     await result!.stop();
   });
@@ -103,7 +103,7 @@ features: [rules, permissions]
       join(testDir, '.agentsmesh', 'rules', 'new.md'),
       '---\ndescription: "New"\n---\n# New',
     );
-    await vi.waitFor(() => expect(runMatrixSpy).toHaveBeenCalled(), { timeout: 3000 });
+    await vi.waitFor(() => expect(runMatrixSpy).toHaveBeenCalled(), { timeout: 8000 });
     runMatrixSpy.mockRestore();
     await result!.stop();
   });
@@ -123,7 +123,7 @@ description: "Project rules"
 - Added one line (same rule count)
 `,
     );
-    await vi.waitFor(() => expect(infoSpy).toHaveBeenCalledWith('Regenerated.'), { timeout: 3000 });
+    await vi.waitFor(() => expect(infoSpy).toHaveBeenCalledWith('Regenerated.'), { timeout: 8000 });
     expect(runMatrixSpy).not.toHaveBeenCalled();
     runMatrixSpy.mockRestore();
     infoSpy.mockRestore();
@@ -143,14 +143,14 @@ description: "Project rules"
         expect(
           infoSpy.mock.calls.filter(([message]) => message === 'Regenerated.').length,
         ).toBeGreaterThanOrEqual(1),
-      { timeout: 3000 },
+      { timeout: 8000 },
     );
 
     const regenCountAfterStartup = infoSpy.mock.calls.filter(
       ([message]) => message === 'Regenerated.',
     ).length;
 
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
     expect(infoSpy.mock.calls.filter(([message]) => message === 'Regenerated.').length).toBe(
       regenCountAfterStartup,

@@ -8,7 +8,6 @@
   <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-strict-blue.svg" alt="TypeScript"></a>
   <a href="https://nodejs.org/"><img src="https://img.shields.io/node/v/agentsmesh.svg" alt="Node.js"></a>
   <a href="https://www.npmjs.com/package/agentsmesh"><img src="https://img.shields.io/npm/dm/agentsmesh.svg" alt="npm downloads"></a>
-  <a href="https://github.com/sampleXbro/agentsmesh/stargazers"><img src="https://img.shields.io/github/stars/sampleXbro/agentsmesh?style=social" alt="GitHub Stars"></a>
   <a href="https://samplexbro.github.io/agentsmesh"><img src="https://img.shields.io/badge/docs-website-brightgreen.svg" alt="Docs"></a>
   <a href="https://github.com/sampleXbro/agentsmesh/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome"></a>
 </p>

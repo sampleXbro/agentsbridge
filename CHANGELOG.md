@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.9
+
+### Patch Changes
+
+- Add **Roo Code** as a supported target (`.roo/` rules, commands, skills, MCP, and `.rooignore`).
+
 ## 0.2.8
 
 ### Patch Changes

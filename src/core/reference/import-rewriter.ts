@@ -14,6 +14,7 @@ const IMPORT_REFERENCE_TARGETS = [
   'cline',
   'codex-cli',
   'windsurf',
+  'roo-code',
 ] as const;
 
 function pathVariants(path: string): string[] {

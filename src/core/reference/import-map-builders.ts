@@ -1,6 +1,13 @@
 import { basename } from 'node:path';
 import { JUNIE_DOT_AGENTS, JUNIE_GUIDELINES } from '../../targets/junie/constants.js';
 import {
+  ROO_CODE_ROOT_RULE,
+  ROO_CODE_ROOT_RULE_FALLBACK,
+  ROO_CODE_RULES_DIR,
+  ROO_CODE_COMMANDS_DIR,
+  ROO_CODE_SKILLS_DIR,
+} from '../../targets/roo-code/constants.js';
+import {
   ANTIGRAVITY_RULES_ROOT,
   ANTIGRAVITY_RULES_ROOT_LEGACY,
   ANTIGRAVITY_RULES_DIR,
@@ -244,5 +251,31 @@ export async function buildAntigravityImportPaths(
   }
   for (const absPath of await listFiles(projectRoot, ANTIGRAVITY_SKILLS_DIR)) {
     addSkillLikeMapping(refs, rel(projectRoot, absPath), ANTIGRAVITY_SKILLS_DIR);
+  }
+}
+
+export async function buildRooCodeImportPaths(
+  refs: Map<string, string>,
+  projectRoot: string,
+): Promise<void> {
+  refs.set(ROO_CODE_ROOT_RULE, `${AB_RULES}/_root.md`);
+  refs.set(ROO_CODE_ROOT_RULE_FALLBACK, `${AB_RULES}/_root.md`);
+  for (const absPath of await listFiles(projectRoot, ROO_CODE_RULES_DIR)) {
+    const relPath = rel(projectRoot, absPath);
+    if (relPath === ROO_CODE_ROOT_RULE) continue;
+    addSimpleFileMapping(refs, relPath, AB_RULES, '.md');
+  }
+  // Per-mode rule dirs (.roo/rules-{mode}/) → canonical rules
+  for (const absPath of await listFiles(projectRoot, '.roo')) {
+    const relPath = rel(projectRoot, absPath);
+    if (/^\.roo\/rules-[^/]+\/.+\.md$/.test(relPath)) {
+      addSimpleFileMapping(refs, relPath, AB_RULES, '.md');
+    }
+  }
+  for (const absPath of await listFiles(projectRoot, ROO_CODE_COMMANDS_DIR)) {
+    addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_COMMANDS, '.md');
+  }
+  for (const absPath of await listFiles(projectRoot, ROO_CODE_SKILLS_DIR)) {
+    addSkillLikeMapping(refs, rel(projectRoot, absPath), ROO_CODE_SKILLS_DIR);
   }
 }

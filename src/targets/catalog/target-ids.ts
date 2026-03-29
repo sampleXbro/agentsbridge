@@ -20,6 +20,7 @@ export const TARGET_IDS = [
   'codex-cli',
   'windsurf',
   'antigravity',
+  'roo-code',
 ] as const;
 
 export type BuiltinTargetId = (typeof TARGET_IDS)[number];

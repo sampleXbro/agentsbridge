@@ -9,6 +9,7 @@ import { descriptor as cline } from '../../../src/targets/cline/index.js';
 import { descriptor as codexCli } from '../../../src/targets/codex-cli/index.js';
 import { descriptor as windsurf } from '../../../src/targets/windsurf/index.js';
 import { descriptor as antigravity } from '../../../src/targets/antigravity/index.js';
+import { descriptor as rooCode } from '../../../src/targets/roo-code/index.js';
 import { TARGET_IDS } from '../../../src/targets/catalog/target-ids.js';
 import type { ValidatedConfig } from '../../../src/config/core/schema.js';
 import type { CanonicalRule } from '../../../src/core/types.js';
@@ -230,6 +231,7 @@ describe('descriptor metadata', () => {
     codexCli,
     windsurf,
     antigravity,
+    rooCode,
   ];
 
   const allFeatureKeys = [
@@ -243,9 +245,9 @@ describe('descriptor metadata', () => {
     'permissions',
   ] as const;
 
-  it('all 10 descriptors have ids matching TARGET_IDS', () => {
+  it('all 11 descriptors have ids matching TARGET_IDS', () => {
     const descriptorIds = allDescriptors.map((d) => d.id);
-    expect(descriptorIds).toHaveLength(10);
+    expect(descriptorIds).toHaveLength(11);
     for (const id of descriptorIds) {
       expect(TARGET_IDS).toContain(id);
     }

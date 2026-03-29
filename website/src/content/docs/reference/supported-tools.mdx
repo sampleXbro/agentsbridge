@@ -1,10 +1,10 @@
 ---
 draft: false
 title: Supported Tools Matrix
-description: Complete feature-target compatibility matrix for all 10 AI coding tools supported by AgentsMesh — Claude Code, Cursor, Copilot, Gemini CLI, Cline, Codex CLI, Windsurf, Continue, Junie, and Antigravity.
+description: Complete feature-target compatibility matrix for all 11 AI coding tools supported by AgentsMesh — Claude Code, Cursor, Copilot, Gemini CLI, Cline, Codex CLI, Windsurf, Continue, Junie, Antigravity, and Roo Code.
 ---
 
-AgentsMesh supports 10 AI coding tools. This page documents what each tool supports natively, what is embedded/projected, and what is not supported.
+AgentsMesh supports 11 AI coding tools. This page documents what each tool supports natively, what is embedded/projected, and what is not supported.
 
 ## Legend
 
@@ -17,16 +17,16 @@ AgentsMesh supports 10 AI coding tools. This page documents what each tool suppo
 
 ## Feature matrix
 
-| Feature | Claude Code | Cursor | Copilot | Gemini CLI | Cline | Codex CLI | Windsurf | Continue | Junie | Antigravity |
-|---------|:-----------:|:------:|:-------:|:----------:|:-----:|:---------:|:--------:|:--------:|:-----:|:-----------:|
-| Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
-| Commands | Native | Native | Native | Native | Native | Embedded | Native | Embedded | Embedded | Partial |
-| Agents | Native | Native | Native | Native | Embedded | Native | Embedded | — | Embedded | — |
-| Skills | Native | Native | Native | Native | Native | Native | Native | Embedded | Embedded | Native |
-| MCP Servers | Native | Native | — | Native | Native | Native | Partial | Native | Native | — |
-| Hooks | Native | Native | Partial | Partial | — | — | Native | — | — | — |
-| Ignore | Native | Native | — | Native | Native | — | Native | — | Native | — |
-| Permissions | Native | Partial | — | Partial | — | — | — | — | — | — |
+| Feature | Claude Code | Cursor | Copilot | Gemini CLI | Cline | Codex CLI | Windsurf | Continue | Junie | Antigravity | Roo Code |
+|---------|:-----------:|:------:|:-------:|:----------:|:-----:|:---------:|:--------:|:--------:|:-----:|:-----------:|:--------:|
+| Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
+| Commands | Native | Native | Native | Native | Native | Embedded | Native | Embedded | Embedded | Partial | Native |
+| Agents | Native | Native | Native | Native | Embedded | Native | Embedded | — | Embedded | — | — |
+| Skills | Native | Native | Native | Native | Native | Native | Native | Embedded | Embedded | Native | Native |
+| MCP Servers | Native | Native | — | Native | Native | Native | Partial | Native | Native | — | Native |
+| Hooks | Native | Native | Partial | Partial | — | — | Native | — | — | — | — |
+| Ignore | Native | Native | — | Native | Native | — | Native | — | Native | — | Native |
+| Permissions | Native | Partial | — | Partial | — | — | — | — | — | — | — |
 
 ## Tool details
 
@@ -204,4 +204,23 @@ Antigravity uses a rules-first model with native skill support. Commands map to 
 | MCP Servers | — | Unclear project-file contract in public docs |
 | Hooks | — | Not supported |
 | Ignore | — | Not supported (only `.gitignore` per docs) |
+| Permissions | — | Not supported |
+
+---
+
+### Roo Code
+
+**Output directory:** `.roo/`
+
+Roo Code supports native rules, commands, skills, MCP, and ignore. Per-mode rule directories (`.roo/rules-{mode}/`) are imported as regular canonical rules and are not generated back out on generate.
+
+| Feature | Format | Notes |
+|---------|--------|-------|
+| Rules | `.roo/rules/*.md` | Root rule emits as `.roo/rules/00-root.md` (alphabetically first); fallback import from `.roorules` |
+| Commands | `.roo/commands/*.md` | `description` frontmatter preserved |
+| Agents | — | Sub-agents are runtime-only (Boomerang Tasks); no project config surface |
+| Skills | `.roo/skills/*/SKILL.md` | Native format with `name`, `description`, `modeSlugs` frontmatter |
+| MCP Servers | `.roo/mcp.json` → `mcpServers` | Supports stdio and HTTP/SSE transports |
+| Hooks | — | No hook system in Roo Code |
+| Ignore | `.rooignore` | gitignore syntax |
 | Permissions | — | Not supported |

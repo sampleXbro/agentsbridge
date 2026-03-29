@@ -80,16 +80,16 @@ That's it. Your `.agentsmesh/` directory is now the single source of truth, and 
 
 ## Supported Tools
 
-| Feature       | Claude Code | Cursor  | Copilot | Gemini CLI | Cline   | Codex CLI | Windsurf | Continue | Junie    | Antigravity |
-|---------------|:-----------:|:-------:|:-------:|:----------:|:-------:|:---------:|:--------:|:--------:|:--------:|:-----------:|
-| Rules         | Native      | Native  | Native  | Native     | Native  | Native    | Native   | Native   | Native   | Native      |
-| Commands      | Native      | Native  | Native  | Native     | Native  | Embedded  | Native   | Embedded | Embedded | Partial     |
-| Agents        | Native      | Native  | Native  | Native     | Embedded| Native    | Embedded | --       | Embedded | --          |
-| Skills        | Native      | Native  | Native  | Native     | Native  | Native    | Native   | Embedded | Embedded | Native      |
-| MCP Servers   | Native      | Native  | --      | Native     | Native  | Native    | Partial  | Native   | Native   | --          |
-| Hooks         | Native      | Native  | Partial | Partial    | --      | --        | Native   | --       | --       | --          |
-| Ignore        | Native      | Native  | --      | Native     | Native  | --        | Native   | --       | Native   | --          |
-| Permissions   | Native      | Partial | --      | Partial    | --      | --        | --       | --       | --       | --          |
+| Feature       | Claude Code | Cursor  | Copilot | Gemini CLI | Cline   | Codex CLI | Windsurf | Continue | Junie    | Antigravity | Roo Code |
+|---------------|:-----------:|:-------:|:-------:|:----------:|:-------:|:---------:|:--------:|:--------:|:--------:|:-----------:|:--------:|
+| Rules         | Native      | Native  | Native  | Native     | Native  | Native    | Native   | Native   | Native   | Native      | Native   |
+| Commands      | Native      | Native  | Native  | Native     | Native  | Embedded  | Native   | Embedded | Embedded | Partial     | Native   |
+| Agents        | Native      | Native  | Native  | Native     | Embedded| Native    | Embedded | --       | Embedded | --          | --       |
+| Skills        | Native      | Native  | Native  | Native     | Native  | Native    | Native   | Embedded | Embedded | Native      | Native   |
+| MCP Servers   | Native      | Native  | --      | Native     | Native  | Native    | Partial  | Native   | Native   | --          | Native   |
+| Hooks         | Native      | Native  | Partial | Partial    | --      | --        | Native   | --       | --       | --          | --       |
+| Ignore        | Native      | Native  | --      | Native     | Native  | --        | Native   | --       | Native   | --          | Native   |
+| Permissions   | Native      | Partial | --      | Partial    | --      | --        | --       | --       | --       | --          | --       |
 
 See the [full feature matrix docs](https://samplexbro.github.io/agentsmesh/reference/supported-tools/) for details on native vs. embedded support.
 

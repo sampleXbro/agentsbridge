@@ -111,6 +111,7 @@ const SCOPED_AGENTS_SKIP_DIRS = new Set([
   '.github',
   '.junie',
   '.windsurf',
+  '.roo',
 ]);
 
 export async function addScopedAgentsMappings(

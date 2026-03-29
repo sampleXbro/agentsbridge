@@ -219,6 +219,38 @@ describe('import capabilities', () => {
     );
   });
 
+  it('imports Roo Code rules, commands, skills, mcp, and .rooignore', async () => {
+    dir = createTestProject('roo-code-project');
+    const result = await runCli('import --from roo-code', dir);
+    expect(result.exitCode, result.stderr).toBe(0);
+
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'Project Instructions');
+    fileContains(join(dir, '.agentsmesh', 'rules', 'typescript.md'), 'strict mode');
+    fileContains(join(dir, '.agentsmesh', 'rules', 'testing.md'), 'TDD');
+    fileContains(join(dir, '.agentsmesh', 'commands', 'review.md'), 'Review all changed files');
+    fileContains(join(dir, '.agentsmesh', 'commands', 'test.md'), 'full test suite');
+    fileContains(
+      join(dir, '.agentsmesh', 'skills', 'typescript-pro', 'SKILL.md'),
+      'typescript-pro',
+    );
+    fileContains(
+      join(dir, '.agentsmesh', 'skills', 'typescript-pro', 'references', 'advanced-types.md'),
+      'Conditional Types',
+    );
+    expect(readJson(join(dir, '.agentsmesh', 'mcp.json'))['mcpServers']).toBeTruthy();
+    fileContains(join(dir, '.agentsmesh', 'ignore'), '.env');
+  });
+
+  it('imports Roo Code root from .roorules fallback when .roo/rules/ is absent', async () => {
+    dir = createTestProject('canonical-no-config');
+    writeFileSync(join(dir, '.roorules'), '# Flat root rule\n\nUse minimal edits.');
+
+    const result = await runCli('import --from roo-code', dir);
+    expect(result.exitCode, result.stderr).toBe(0);
+
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'Flat root rule');
+  });
+
   it('imports Windsurf fallback root and ignore when only AGENTS.md and .codeiumignore exist', async () => {
     dir = createTestProject('windsurf-agents-project');
     const result = await runCli('import --from windsurf', dir);

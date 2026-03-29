@@ -675,6 +675,44 @@ features: [rules, commands, agents, skills, mcp, ignore]
     fileNotContains(join(dir, '.junie', 'agents', 'code-reviewer.md'), 'name: code-reviewer');
   });
 
+  it('generates Roo Code rules, commands, skills, mcp, and ignore with doc-aligned formats', async () => {
+    dir = createCanonicalProject(`version: 1
+targets: [roo-code]
+features: [rules, commands, skills, mcp, ignore]
+`);
+    const result = await runCli('generate --targets roo-code', dir);
+    expect(result.exitCode, result.stderr).toBe(0);
+
+    // Root rule emitted as .roo/rules/00-root.md — plain markdown, no frontmatter.
+    fileContains(join(dir, '.roo', 'rules', '00-root.md'), '# Standards');
+    fileNotContains(join(dir, '.roo', 'rules', '00-root.md'), 'root: true');
+    fileNotContains(join(dir, '.roo', 'rules', '00-root.md'), '\n---\n');
+
+    // Non-root rules are plain markdown without canonical frontmatter.
+    fileContains(join(dir, '.roo', 'rules', 'typescript.md'), '# TypeScript');
+    fileNotContains(join(dir, '.roo', 'rules', 'typescript.md'), 'globs:');
+    fileNotContains(join(dir, '.roo', 'rules', 'typescript.md'), 'targets:');
+
+    // Commands include description frontmatter.
+    fileContains(join(dir, '.roo', 'commands', 'review.md'), 'description: Code review');
+    fileContains(join(dir, '.roo', 'commands', 'review.md'), 'Review current changes for quality.');
+
+    // Skills use native SKILL.md format with required frontmatter.
+    fileContains(join(dir, '.roo', 'skills', 'api-generator', 'SKILL.md'), 'name: api-generator');
+    fileContains(
+      join(dir, '.roo', 'skills', 'api-generator', 'SKILL.md'),
+      'description: Generate API endpoints',
+    );
+
+    // MCP follows .roo/mcp.json shape.
+    const mcp = readJson(join(dir, '.roo', 'mcp.json'));
+    expect(mcp).toHaveProperty('mcpServers');
+    expect(mcp).toHaveProperty('mcpServers.context7.command', 'npx');
+
+    // Ignore file is emitted as .rooignore.
+    fileContains(join(dir, '.rooignore'), '.env');
+  });
+
   it('generates Antigravity rules, workflows, and skills with doc-aligned formats', async () => {
     dir = createCanonicalProject(`version: 1
 targets: [antigravity]

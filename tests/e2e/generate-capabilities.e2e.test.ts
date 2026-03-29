@@ -532,7 +532,7 @@ features: [rules, commands, skills, mcp]
       'prompts/',
       'prompts/review.md',
       'rules/',
-      'rules/_root.md',
+      'rules/general.md',
       'rules/typescript.md',
       'skills/',
       'skills/api-generator/',

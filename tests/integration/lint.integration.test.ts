@@ -74,7 +74,7 @@ Lib rules
     const out = execSync(`node ${CLI_PATH} lint 2>&1`, {
       cwd: TEST_DIR,
       encoding: 'utf-8',
-      shell: '/bin/zsh',
+      shell: '/bin/sh',
     });
     expect(out).toContain('match 0 files');
     expect(out).toContain('warning');

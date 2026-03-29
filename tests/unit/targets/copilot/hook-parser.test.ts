@@ -125,7 +125,14 @@ describe('importHooks', () => {
     expect(() => readFileSync(join(projectRoot, '.agentsmesh', 'hooks.yaml'), 'utf-8')).toThrow();
   });
 
-  async function runImport() {
+  async function runImport(): Promise<
+    Array<{
+      fromTool: string;
+      fromPath: string;
+      toPath: string;
+      feature: string;
+    }>
+  > {
     const results: Array<{
       fromTool: string;
       fromPath: string;

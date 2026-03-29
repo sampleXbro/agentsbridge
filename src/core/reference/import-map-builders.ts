@@ -1,6 +1,14 @@
 import { basename } from 'node:path';
 import { JUNIE_DOT_AGENTS, JUNIE_GUIDELINES } from '../../targets/junie/constants.js';
 import {
+  ANTIGRAVITY_RULES_ROOT,
+  ANTIGRAVITY_RULES_ROOT_LEGACY,
+  ANTIGRAVITY_RULES_DIR,
+  ANTIGRAVITY_WORKFLOWS_DIR,
+  ANTIGRAVITY_SKILLS_DIR,
+} from '../../targets/antigravity/constants.js';
+import { CONTINUE_ROOT_RULE, CONTINUE_ROOT_RULE_LEGACY } from '../../targets/continue/constants.js';
+import {
   addScopedAgentsMappings,
   addSimpleFileMapping,
   addSkillLikeMapping,
@@ -87,8 +95,12 @@ export async function buildContinueImportPaths(
   refs: Map<string, string>,
   projectRoot: string,
 ): Promise<void> {
+  refs.set(CONTINUE_ROOT_RULE, `${AB_RULES}/_root.md`);
+  refs.set(CONTINUE_ROOT_RULE_LEGACY, `${AB_RULES}/_root.md`);
   for (const absPath of await listFiles(projectRoot, '.continue/rules')) {
-    addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_RULES, '.md');
+    const relPath = rel(projectRoot, absPath);
+    if (relPath === CONTINUE_ROOT_RULE || relPath === CONTINUE_ROOT_RULE_LEGACY) continue;
+    addSimpleFileMapping(refs, relPath, AB_RULES, '.md');
   }
   for (const absPath of await listFiles(projectRoot, '.continue/prompts')) {
     refs.set(rel(projectRoot, absPath), `${AB_COMMANDS}/${basename(absPath, '.md')}.md`);
@@ -213,5 +225,24 @@ export async function buildWindsurfImportPaths(
   }
   for (const absPath of await listFiles(projectRoot, '.windsurf/skills')) {
     addSkillLikeMapping(refs, rel(projectRoot, absPath), '.windsurf/skills');
+  }
+}
+
+export async function buildAntigravityImportPaths(
+  refs: Map<string, string>,
+  projectRoot: string,
+): Promise<void> {
+  refs.set(ANTIGRAVITY_RULES_ROOT, `${AB_RULES}/_root.md`);
+  refs.set(ANTIGRAVITY_RULES_ROOT_LEGACY, `${AB_RULES}/_root.md`);
+  for (const absPath of await listFiles(projectRoot, ANTIGRAVITY_RULES_DIR)) {
+    const relPath = rel(projectRoot, absPath);
+    if (relPath === ANTIGRAVITY_RULES_ROOT || relPath === ANTIGRAVITY_RULES_ROOT_LEGACY) continue;
+    addSimpleFileMapping(refs, relPath, AB_RULES, '.md');
+  }
+  for (const absPath of await listFiles(projectRoot, ANTIGRAVITY_WORKFLOWS_DIR)) {
+    addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_COMMANDS, '.md');
+  }
+  for (const absPath of await listFiles(projectRoot, ANTIGRAVITY_SKILLS_DIR)) {
+    addSkillLikeMapping(refs, rel(projectRoot, absPath), ANTIGRAVITY_SKILLS_DIR);
   }
 }

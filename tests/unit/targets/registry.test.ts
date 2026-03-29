@@ -1,17 +1,45 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
   registerTarget,
+  registerTargetDescriptor,
   getTarget,
+  getDescriptor,
   getAllTargets,
+  getAllDescriptors,
   resetRegistry,
 } from '../../../src/targets/catalog/registry.js';
 import type { TargetGenerators } from '../../../src/targets/catalog/target.interface.js';
+import type { TargetDescriptor } from '../../../src/targets/catalog/target-descriptor.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';
 
 const mockGenerators: TargetGenerators = {
   name: 'test-target',
   generateRules: (_c: CanonicalFiles) => [],
   importFrom: async () => [],
+};
+
+const mockDescriptor: TargetDescriptor = {
+  id: 'plugin-target',
+  generators: mockGenerators,
+  capabilities: {
+    rules: 'native',
+    commands: 'none',
+    agents: 'none',
+    skills: 'none',
+    mcp: 'none',
+    hooks: 'none',
+    ignore: 'none',
+    permissions: 'none',
+  },
+  emptyImportMessage: 'No plugin config found.',
+  lintRules: null,
+  paths: {
+    rulePath: (slug) => `.plugin/rules/${slug}.md`,
+    commandPath: () => null,
+    agentPath: () => null,
+  },
+  buildImportPaths: async () => {},
+  detectionPaths: ['.plugin'],
 };
 
 describe('target registry', () => {
@@ -44,5 +72,48 @@ describe('target registry', () => {
     registerTarget(mockGenerators);
     resetRegistry();
     expect(getAllTargets()).toHaveLength(0);
+  });
+
+  it('registers and retrieves a full descriptor', () => {
+    registerTargetDescriptor(mockDescriptor);
+    expect(getDescriptor('plugin-target')).toBe(mockDescriptor);
+  });
+
+  it('getTarget resolves generators from registered descriptor', () => {
+    registerTargetDescriptor(mockDescriptor);
+    expect(getTarget('plugin-target')).toBe(mockGenerators);
+  });
+
+  it('getDescriptor returns built-in descriptors', () => {
+    const claude = getDescriptor('claude-code');
+    expect(claude).toBeDefined();
+    expect(claude?.capabilities.rules).toBe('native');
+    expect(claude?.detectionPaths).toContain('CLAUDE.md');
+  });
+
+  it('getDescriptor returns undefined for unknown target', () => {
+    expect(getDescriptor('nonexistent')).toBeUndefined();
+  });
+
+  it('getAllDescriptors returns only plugin descriptors', () => {
+    registerTargetDescriptor(mockDescriptor);
+    expect(getAllDescriptors()).toHaveLength(1);
+    expect(getAllDescriptors()[0]).toBe(mockDescriptor);
+  });
+
+  it('resetRegistry clears descriptors too', () => {
+    registerTargetDescriptor(mockDescriptor);
+    resetRegistry();
+    expect(getAllDescriptors()).toHaveLength(0);
+  });
+
+  it('plugin descriptor overrides built-in for getDescriptor', () => {
+    const override: TargetDescriptor = {
+      ...mockDescriptor,
+      id: 'claude-code',
+      emptyImportMessage: 'Custom plugin override.',
+    };
+    registerTargetDescriptor(override);
+    expect(getDescriptor('claude-code')?.emptyImportMessage).toBe('Custom plugin override.');
   });
 });

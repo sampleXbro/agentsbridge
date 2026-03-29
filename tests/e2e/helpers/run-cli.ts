@@ -29,7 +29,7 @@ export async function runCli(
   const argList = args.trim().split(/\s+/).filter(Boolean);
   const env = { ...process.env, ...extraEnv, NO_COLOR: '1' };
 
-  return new Promise<RunCliResult>((resolve, reject) => {
+  return new Promise<RunCliResult>((resolve, _reject) => {
     let proc: ChildProcess | null = null;
     const timer = setTimeout(() => {
       proc?.kill('SIGTERM');

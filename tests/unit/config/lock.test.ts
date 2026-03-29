@@ -127,6 +127,7 @@ describe('writeLock', () => {
       libVersion: '0.1.0',
       checksums: { 'rules/_root.md': 'sha256:abc' },
       extends: {},
+      packs: {},
     };
     await writeLock(abDir, lock);
     const content = await import('node:fs/promises').then((fs) =>
@@ -144,6 +145,7 @@ describe('writeLock', () => {
       libVersion: '0.1.0',
       checksums: {},
       extends: {},
+      packs: {},
     };
     await writeLock(abDir, lock);
     expect(await readLock(abDir)).not.toBeNull();

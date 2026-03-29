@@ -109,15 +109,24 @@ function loadCanonicalAgents(): Record<string, AgentExpectation> {
 }
 
 const AGENTS = loadCanonicalAgents();
-const AGENT_NAMES = Object.keys(AGENTS);
+type AgentName = keyof typeof AGENTS;
+const AGENT_NAMES = Object.keys(AGENTS) as AgentName[];
+
+function getAgent(name: AgentName): AgentExpectation {
+  const agent = AGENTS[name];
+  if (!agent) {
+    throw new Error(`Missing canonical agent fixture: ${name}`);
+  }
+  return agent;
+}
 
 /**
  * Assert that an agent file (target-format or canonical) contains all expected
  * fields from the canonical fixture for the given agent name.
  */
-function assertAllAgentFields(filePath: string, name: string): void {
+function assertAllAgentFields(filePath: string, name: AgentName): void {
   fileExists(filePath);
-  const agent = AGENTS[name];
+  const agent = getAgent(name);
   const fm = parseFm(filePath);
   const raw = readFileSync(filePath, 'utf-8');
 
@@ -166,9 +175,9 @@ function projectedAgentSkillPath(target: string, name: string): string {
   }
 }
 
-function assertProjectedAgentFields(filePath: string, name: string): void {
+function assertProjectedAgentFields(filePath: string, name: AgentName): void {
   fileExists(filePath);
-  const agent = AGENTS[name];
+  const agent = getAgent(name);
   const fm = parseFm(filePath);
   const raw = readFileSync(filePath, 'utf-8');
 
@@ -245,7 +254,7 @@ describe('agents: generate from canonical fixture', () => {
     for (const name of AGENT_NAMES) {
       const agentPath = join(dir, '.github', 'agents', `${name}.agent.md`);
       fileExists(agentPath);
-      const agent = AGENTS[name];
+      const agent = getAgent(name);
       fileContains(agentPath, agent.description);
       fileContains(agentPath, agent.bodySnippet);
     }
@@ -277,7 +286,7 @@ describe('agents: generate from canonical fixture', () => {
       const agentPath = join(dir, '.codex', 'agents', `${name}.toml`);
       fileExists(agentPath);
       const content = readFileSync(agentPath, 'utf-8');
-      const agent = AGENTS[name];
+      const agent = getAgent(name);
       expect(content).toContain(`name = "${name}"`);
       expect(content).toContain(agent.description);
       expect(content).toContain(agent.model);
@@ -313,7 +322,7 @@ describe('agents: import back to canonical', () => {
   for (const name of AGENT_NAMES) {
     it(`claude-code: importing ${name} from .claude/agents/ produces canonical with all fields`, async () => {
       dir = createTestProject();
-      const agent = AGENTS[name];
+      const agent = getAgent(name);
 
       // Reconstruct the native agent file from canonical fixture data.
       mkdirSync(join(dir, '.claude', 'agents'), { recursive: true });
@@ -348,7 +357,7 @@ describe('agents: import back to canonical', () => {
   for (const name of AGENT_NAMES) {
     it(`cursor: importing ${name} from .cursor/agents/ produces canonical with all fields`, async () => {
       dir = createTestProject();
-      const agent = AGENTS[name];
+      const agent = getAgent(name);
 
       mkdirSync(join(dir, '.cursor', 'agents'), { recursive: true });
       const canonicalContent = readFileSync(join(CANONICAL_AGENTS_DIR, `${name}.md`), 'utf-8');
@@ -397,7 +406,7 @@ describe('agents: import back to canonical', () => {
     for (const name of AGENT_NAMES) {
       const canonicalPath = join(dir, '.agentsmesh', 'agents', `${name}.md`);
       fileExists(canonicalPath);
-      const agent = AGENTS[name];
+      const agent = getAgent(name);
       const raw = readFileSync(canonicalPath, 'utf-8');
       expect(raw).toContain(agent.description);
       expect(raw).toContain(agent.model);
@@ -444,7 +453,7 @@ describe('agents: import back to canonical', () => {
       const path = join(dir, '.agentsmesh', 'agents', `${name}.md`);
       fileExists(path);
       const raw = readFileSync(path, 'utf-8');
-      const agent = AGENTS[name];
+      const agent = getAgent(name);
       expect(raw).toContain(agent.description);
       expect(raw).toContain(agent.model);
       expect(raw).toContain(agent.bodySnippet);
@@ -489,7 +498,7 @@ describe('agents: round-trip (generate → import → compare with canonical fix
 
         const fm = parseFm(canonicalPath);
         const raw = readFileSync(canonicalPath, 'utf-8');
-        const agent = AGENTS[name];
+        const agent = getAgent(name);
 
         // description
         const desc = String(fm.description ?? '');
@@ -569,7 +578,7 @@ describe('agents: round-trip (generate → import → compare with canonical fix
       fileExists(canonicalPath);
       const fm = parseFm(canonicalPath);
       const raw = readFileSync(canonicalPath, 'utf-8');
-      const agent = AGENTS[name];
+      const agent = getAgent(name);
 
       expect(String(fm.description ?? ''), `${name}: description`).toBe(agent.description);
       expect(String(fm.model ?? ''), `${name}: model`).toBe(agent.model);
@@ -731,7 +740,7 @@ describe('agents: file manifest (written to tests/e2e/agents-last-run.md)', () =
     lines.push(`#### Agents in \`.github/agents/*.agent.md\`\n`);
     if (existsSync(copilotAgentsDir)) {
       for (const name of AGENT_NAMES) {
-        const agent = AGENTS[name];
+        const agent = getAgent(name);
         const agentPath = join(copilotAgentsDir, `${name}.agent.md`);
         if (existsSync(agentPath)) {
           const content = readFileSync(agentPath, 'utf-8');
@@ -782,7 +791,7 @@ describe('agents: file manifest (written to tests/e2e/agents-last-run.md)', () =
           const agentPath = join(agentDir, `${name}${ext}`);
           if (existsSync(agentPath)) {
             const content = readFileSync(agentPath, 'utf-8');
-            const agent = AGENTS[name];
+            const agent = getAgent(name);
             lines.push(`  - **${name}**: ✓ \`${relative(manifestDir, agentPath)}\``);
             lines.push(`    - description : ${content.includes(agent.description) ? '✓' : '✗'}`);
             lines.push(`    - body snippet: ${content.includes(agent.bodySnippet) ? '✓' : '✗'}`);
@@ -798,6 +807,6 @@ describe('agents: file manifest (written to tests/e2e/agents-last-run.md)', () =
     // ── WRITE REPORT ──────────────────────────────────────────────────────
     const report = lines.join('\n');
     writeFileSync(REPORT_PATH, report, 'utf-8');
-    console.log(`\nReport written to ${relative(process.cwd(), REPORT_PATH)}`);
+    process.stderr.write(`\nReport written to ${relative(process.cwd(), REPORT_PATH)}\n`);
   });
 });

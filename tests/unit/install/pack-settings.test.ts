@@ -6,6 +6,7 @@ import { materializePack } from '../../../src/install/pack/pack-writer.js';
 import { loadPacksCanonical } from '../../../src/canonical/load/pack-load.js';
 import { mergeIntoPack } from '../../../src/install/pack/pack-merge.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';
+import type { StdioMcpServer } from '../../../src/core/mcp-types.js';
 import type { PackMetadata } from '../../../src/install/pack/pack-schema.js';
 
 let rootDir: string;
@@ -117,7 +118,7 @@ describe('pack settings persistence', () => {
 
     const loaded = await loadPacksCanonical(rootDir);
 
-    expect(loaded.mcp?.mcpServers.context7?.command).toBe('npx');
+    expect((loaded.mcp?.mcpServers.context7 as StdioMcpServer | undefined)?.command).toBe('npx');
     expect(loaded.permissions).toEqual({ allow: ['Read'], deny: ['Bash(rm:*)'] });
     expect(loaded.hooks?.PostToolUse?.[0]?.command).toBe('prettier --write $FILE_PATH');
     expect(loaded.ignore).toEqual(['node_modules', 'dist']);

@@ -357,7 +357,13 @@ describe('generateSkills (gemini-cli)', () => {
           name: 'review',
           description: 'Code review',
           body: 'Review code.',
-          supportingFiles: [{ relativePath: 'scripts/helper.sh', content: '#!/bin/sh\necho hi' }],
+          supportingFiles: [
+            {
+              relativePath: 'scripts/helper.sh',
+              absolutePath: '/proj/.agentsmesh/skills/review/scripts/helper.sh',
+              content: '#!/bin/sh\necho hi',
+            },
+          ],
         },
       ],
     });
@@ -443,7 +449,9 @@ describe('generateSettings (gemini-cli)', () => {
   it('skips PostToolUse entries that lack command (entries.length === 0 after filter)', () => {
     const canonical = makeCanonical({
       hooks: {
-        PostToolUse: [{ matcher: 'Write', type: 'prompt' as const, prompt: 'Check this' }],
+        PostToolUse: [
+          { matcher: 'Write', command: '', type: 'prompt' as const, prompt: 'Check this' },
+        ],
       },
     });
     const results = generateSettings(canonical);

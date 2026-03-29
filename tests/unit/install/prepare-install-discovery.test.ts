@@ -7,23 +7,26 @@ import { existsSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { prepareInstallDiscovery } from '../../../src/install/core/prepare-install-discovery.js';
+import type { ImportResult } from '../../../src/core/result-types.js';
 
 const mockImport = vi.hoisted(() =>
-  vi.fn<[string, string], Promise<unknown[]>>().mockImplementation(async (root: string) => {
-    mkdirSync(join(root, '.agentsmesh', 'commands'), { recursive: true });
-    writeFileSync(
-      join(root, '.agentsmesh', 'commands', 'alpha.md'),
-      '---\ndescription: a\n---\nAlpha\n',
-    );
-    return [
-      {
-        fromTool: 'gemini-cli',
-        fromPath: join(root, '.gemini', 'commands', 'alpha.toml'),
-        toPath: '.agentsmesh/commands/alpha.md',
-        feature: 'commands',
-      },
-    ];
-  }),
+  vi
+    .fn<(root: string, targetName: string) => Promise<ImportResult[]>>()
+    .mockImplementation(async (root: string) => {
+      mkdirSync(join(root, '.agentsmesh', 'commands'), { recursive: true });
+      writeFileSync(
+        join(root, '.agentsmesh', 'commands', 'alpha.md'),
+        '---\ndescription: a\n---\nAlpha\n',
+      );
+      return [
+        {
+          fromTool: 'gemini-cli',
+          fromPath: join(root, '.gemini', 'commands', 'alpha.toml'),
+          toPath: '.agentsmesh/commands/alpha.md',
+          feature: 'commands',
+        },
+      ];
+    }),
 );
 
 vi.mock('../../../src/canonical/extends/native-extends-importer.js', () => ({
@@ -32,12 +35,12 @@ vi.mock('../../../src/canonical/extends/native-extends-importer.js', () => ({
 
 const ROOT = join(tmpdir(), 'am-prepare-install');
 
-function writeMinimalGeminiCommands(repo: string) {
+function writeMinimalGeminiCommands(repo: string): void {
   mkdirSync(join(repo, '.gemini', 'commands'), { recursive: true });
   writeFileSync(join(repo, '.gemini', 'commands', 'alpha.toml'), 'description = "a"\n');
 }
 
-function writeMinimalAgentsmesh(repo: string) {
+function writeMinimalAgentsmesh(repo: string): void {
   mkdirSync(join(repo, '.agentsmesh', 'commands'), { recursive: true });
   writeFileSync(
     join(repo, '.agentsmesh', 'commands', 'keep.md'),

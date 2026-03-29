@@ -12,6 +12,7 @@ function makeConfig(overrides: Partial<ValidatedConfig> = {}): ValidatedConfig {
     version: 1,
     targets: ['claude-code'],
     features: ['rules'],
+    extends: [],
     overrides: {},
     collaboration: { strategy: 'merge', lock_features: [] },
     ...overrides,

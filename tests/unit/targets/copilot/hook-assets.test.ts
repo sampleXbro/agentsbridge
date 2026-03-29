@@ -102,7 +102,7 @@ describe('addHookScriptAssets', () => {
       makeCanonical({
         PostToolUse: [
           { matcher: '*', command: 'scripts/missing.sh', type: 'command' },
-          { matcher: '*', prompt: 'Explain the tool result', type: 'prompt' },
+          { matcher: '*', command: '', prompt: 'Explain the tool result', type: 'prompt' },
         ],
       }),
       [],

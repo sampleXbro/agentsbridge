@@ -6,6 +6,7 @@ import {
   importClineMcp,
   mapClineServerToCanonical,
 } from '../../../../src/targets/cline/mcp-mapper.js';
+import type { ImportResult } from '../../../../src/core/result-types.js';
 
 describe('cline MCP mapper', () => {
   const tempDirs: string[] = [];
@@ -44,7 +45,7 @@ describe('cline MCP mapper', () => {
     const invalidDir = createTempDir();
     mkdirSync(join(invalidDir, '.cline'), { recursive: true });
     writeFileSync(join(invalidDir, '.cline', 'cline_mcp_settings.json'), '{invalid');
-    const invalidResults: Array<{ feature: string }> = [];
+    const invalidResults: ImportResult[] = [];
     await importClineMcp(invalidDir, invalidResults);
     expect(invalidResults).toEqual([]);
 
@@ -54,7 +55,7 @@ describe('cline MCP mapper', () => {
       join(emptyDir, '.cline', 'cline_mcp_settings.json'),
       JSON.stringify({ mcpServers: {} }),
     );
-    const emptyResults: Array<{ feature: string }> = [];
+    const emptyResults: ImportResult[] = [];
     await importClineMcp(emptyDir, emptyResults);
     expect(emptyResults).toEqual([]);
   });
@@ -72,7 +73,7 @@ describe('cline MCP mapper', () => {
       }),
     );
 
-    const results: Array<{ feature: string; toPath: string }> = [];
+    const results: ImportResult[] = [];
     await importClineMcp(dir, results);
 
     expect(results.map(({ feature, toPath }) => ({ feature, toPath }))).toEqual([
@@ -95,7 +96,7 @@ describe('cline MCP mapper', () => {
       }),
     );
 
-    const results: Array<{ feature: string; toPath: string }> = [];
+    const results: ImportResult[] = [];
     await importClineMcp(dir, results);
 
     expect(results.map(({ feature, toPath }) => ({ feature, toPath }))).toEqual([

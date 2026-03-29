@@ -1,10 +1,10 @@
 ---
 draft: false
 title: Supported Tools Matrix
-description: Complete feature-target compatibility matrix for all 9 AI coding tools supported by AgentsMesh — Claude Code, Cursor, Copilot, Gemini CLI, Cline, Codex CLI, Windsurf, Continue, and Junie.
+description: Complete feature-target compatibility matrix for all 10 AI coding tools supported by AgentsMesh — Claude Code, Cursor, Copilot, Gemini CLI, Cline, Codex CLI, Windsurf, Continue, Junie, and Antigravity.
 ---
 
-AgentsMesh supports 9 AI coding tools. This page documents what each tool supports natively, what is embedded/projected, and what is not supported.
+AgentsMesh supports 10 AI coding tools. This page documents what each tool supports natively, what is embedded/projected, and what is not supported.
 
 ## Legend
 
@@ -17,16 +17,16 @@ AgentsMesh supports 9 AI coding tools. This page documents what each tool suppor
 
 ## Feature matrix
 
-| Feature | Claude Code | Cursor | Copilot | Gemini CLI | Cline | Codex CLI | Windsurf | Continue | Junie |
-|---------|:-----------:|:------:|:-------:|:----------:|:-----:|:---------:|:--------:|:--------:|:-----:|
-| Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native |
-| Commands | Native | Native | Native | Native | Native | Embedded | Native | Embedded | Embedded |
-| Agents | Native | Native | Native | Native | Embedded | Native | Embedded | — | Embedded |
-| Skills | Native | Native | Native | Native | Native | Native | Native | Embedded | Embedded |
-| MCP Servers | Native | Native | — | Native | Native | Native | Partial | Native | Native |
-| Hooks | Native | Native | Partial | Partial | — | — | Native | — | — |
-| Ignore | Native | Native | — | Native | Native | — | Native | — | Native |
-| Permissions | Native | Partial | — | Partial | — | — | — | — | — |
+| Feature | Claude Code | Cursor | Copilot | Gemini CLI | Cline | Codex CLI | Windsurf | Continue | Junie | Antigravity |
+|---------|:-----------:|:------:|:-------:|:----------:|:-----:|:---------:|:--------:|:--------:|:-----:|:-----------:|
+| Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
+| Commands | Native | Native | Native | Native | Native | Embedded | Native | Embedded | Embedded | Partial |
+| Agents | Native | Native | Native | Native | Embedded | Native | Embedded | — | Embedded | — |
+| Skills | Native | Native | Native | Native | Native | Native | Native | Embedded | Embedded | Native |
+| MCP Servers | Native | Native | — | Native | Native | Native | Partial | Native | Native | — |
+| Hooks | Native | Native | Partial | Partial | — | — | Native | — | — | — |
+| Ignore | Native | Native | — | Native | Native | — | Native | — | Native | — |
+| Permissions | Native | Partial | — | Partial | — | — | — | — | — | — |
 
 ## Tool details
 
@@ -161,7 +161,7 @@ Codex CLI uses a single `AGENTS.md` file. All features are embedded into this fi
 
 | Feature | Notes |
 |---------|-------|
-| Rules | `.continue/rules/*.md` (frontmatter stripped) |
+| Rules | `.continue/rules/*.md` (frontmatter stripped); root emits as `.continue/rules/general.md` (canonical remains `.agentsmesh/rules/_root.md`) |
 | Commands | Embedded as skills |
 | Agents | — Not supported |
 | Skills | Embedded with metadata |
@@ -186,3 +186,22 @@ Codex CLI uses a single `AGENTS.md` file. All features are embedded into this fi
 | Hooks | — Not supported |
 | Ignore | `.junie/ignore` |
 | Permissions | — Not supported |
+
+---
+
+### Antigravity
+
+**Output directory:** `.agents/`
+
+Antigravity uses a rules-first model with native skill support. Commands map to workflows (experimental path per public docs).
+
+| Feature | Format | Notes |
+|---------|--------|-------|
+| Rules | `.agents/rules/*.md` | Plain markdown; root instructions emit as `.agents/rules/general.md` (canonical remains `.agentsmesh/rules/_root.md`) |
+| Commands | `.agents/workflows/*.md` | Partial — workflow path is experimental/inferred |
+| Agents | — | No documented project file surface |
+| Skills | `.agents/skills/*/SKILL.md` | Native open-standard format with YAML frontmatter |
+| MCP Servers | — | Unclear project-file contract in public docs |
+| Hooks | — | Not supported |
+| Ignore | — | Not supported (only `.gitignore` per docs) |
+| Permissions | — | Not supported |

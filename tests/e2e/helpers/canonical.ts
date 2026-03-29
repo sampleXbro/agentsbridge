@@ -11,6 +11,7 @@ targets:
   - cline
   - codex-cli
   - windsurf
+  - antigravity
 features:
   - rules
   - commands

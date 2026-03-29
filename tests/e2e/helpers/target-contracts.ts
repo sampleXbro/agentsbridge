@@ -86,7 +86,7 @@ export const TARGET_CONTRACTS = {
     generated: [
       '.continue/mcpServers/agentsmesh.json',
       '.continue/prompts/review.md',
-      '.continue/rules/_root.md',
+      '.continue/rules/general.md',
       '.continue/rules/typescript.md',
       '.continue/skills/api-generator/SKILL.md',
       '.continue/skills/api-generator/references/route-checklist.md',

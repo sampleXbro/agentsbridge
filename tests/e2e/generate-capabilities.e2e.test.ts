@@ -532,7 +532,7 @@ features: [rules, commands, skills, mcp]
       'prompts/',
       'prompts/review.md',
       'rules/',
-      'rules/_root.md',
+      'rules/general.md',
       'rules/typescript.md',
       'skills/',
       'skills/api-generator/',
@@ -542,12 +542,12 @@ features: [rules, commands, skills, mcp]
       'skills/api-generator/template.ts',
     ]);
 
-    fileContains(join(dir, '.continue', 'rules', '_root.md'), '# Standards');
+    fileContains(join(dir, '.continue', 'rules', 'general.md'), '# Standards');
     fileContains(
-      join(dir, '.continue', 'rules', '_root.md'),
+      join(dir, '.continue', 'rules', 'general.md'),
       'description: Project-wide coding standards',
     );
-    fileNotContains(join(dir, '.continue', 'rules', '_root.md'), 'root:');
+    fileNotContains(join(dir, '.continue', 'rules', 'general.md'), 'root:');
 
     fileContains(
       join(dir, '.continue', 'rules', 'typescript.md'),
@@ -673,5 +673,42 @@ features: [rules, commands, agents, skills, mcp, ignore]
     fileNotContains(join(dir, '.junie', 'commands', 'review.md'), 'allowed-tools:');
     fileContains(join(dir, '.junie', 'agents', 'code-reviewer.md'), 'You are a code reviewer.');
     fileNotContains(join(dir, '.junie', 'agents', 'code-reviewer.md'), 'name: code-reviewer');
+  });
+
+  it('generates Antigravity rules, workflows, and skills with doc-aligned formats', async () => {
+    dir = createCanonicalProject(`version: 1
+targets: [antigravity]
+features: [rules, commands, skills]
+`);
+    const result = await runCli('generate --targets antigravity', dir);
+    expect(result.exitCode, result.stderr).toBe(0);
+
+    // Root rule is emitted as plain markdown without frontmatter.
+    fileContains(join(dir, '.agents', 'rules', 'general.md'), '# Standards');
+    fileNotContains(join(dir, '.agents', 'rules', 'general.md'), 'root: true');
+    fileNotContains(join(dir, '.agents', 'rules', 'general.md'), '---');
+
+    // Non-root rules are plain markdown without canonical frontmatter.
+    fileContains(join(dir, '.agents', 'rules', 'typescript.md'), '# TypeScript');
+    fileNotContains(join(dir, '.agents', 'rules', 'typescript.md'), 'globs:');
+
+    // Commands map to .agents/workflows/ as plain markdown.
+    fileContains(join(dir, '.agents', 'workflows', 'review.md'), 'Review current changes');
+    fileNotContains(join(dir, '.agents', 'workflows', 'review.md'), 'allowed-tools:');
+    fileNotContains(join(dir, '.agents', 'workflows', 'review.md'), 'x-agentsmesh');
+
+    // Skills use native Antigravity SKILL.md format with required frontmatter.
+    fileContains(
+      join(dir, '.agents', 'skills', 'api-generator', 'SKILL.md'),
+      'name: api-generator',
+    );
+    fileContains(
+      join(dir, '.agents', 'skills', 'api-generator', 'SKILL.md'),
+      'description: Generate API endpoints',
+    );
+    fileContains(
+      join(dir, '.agents', 'skills', 'api-generator', 'references', 'route-checklist.md'),
+      'response schema',
+    );
   });
 });

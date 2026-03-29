@@ -6,7 +6,7 @@ import importPlugin from 'eslint-plugin-import';
 export default [
   eslint.configs.recommended,
   {
-    files: ['src/**/*.ts'],
+    files: ['src/**/*.ts', 'tests/**/*.ts'],
     languageOptions: {
       parser: tsparser,
       parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
@@ -15,6 +15,12 @@ export default [
         console: 'readonly',
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
+        fetch: 'readonly',
+        URL: 'readonly',
+        TextDecoder: 'readonly',
+        document: 'readonly',
+        Buffer: 'readonly',
+        NodeJS: 'readonly',
       },
     },
     plugins: {
@@ -24,7 +30,7 @@ export default [
     rules: {
       'no-unused-vars': 'off', // use @typescript-eslint/no-unused-vars
       '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       '@typescript-eslint/explicit-function-return-type': [
         'warn',
         { allowExpressions: true },
@@ -37,6 +43,6 @@ export default [
     },
   },
   {
-    ignores: ['dist/', 'coverage/', 'node_modules/', '*.config.*'],
+    ignores: ['dist/', 'coverage/', 'node_modules/', '*.config.*', 'website/dist/', 'website/.astro/'],
   },
 ];

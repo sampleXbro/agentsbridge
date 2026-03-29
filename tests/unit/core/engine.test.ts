@@ -1137,7 +1137,7 @@ describe('generate Continue', () => {
       canonical,
       projectRoot: TEST_DIR,
     });
-    const root = results.find((r) => r.path === '.continue/rules/_root.md');
+    const root = results.find((r) => r.path === '.continue/rules/general.md');
     expect(root).toBeDefined();
     expect(root?.content).toContain('## AgentsMesh Generation Contract');
     expect(root?.content).toContain('Use TypeScript');

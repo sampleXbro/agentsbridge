@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -17,7 +17,9 @@ async function waitFor(check: () => void, timeoutMs = 8000): Promise<void> {
     try {
       check();
       return;
-    } catch {}
+    } catch {
+      // Continue waiting
+    }
     await new Promise((resolve) => setTimeout(resolve, 200));
   }
   check();

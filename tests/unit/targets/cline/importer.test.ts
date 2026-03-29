@@ -88,7 +88,7 @@ describe('importFromCline', () => {
       mcpServers: Record<string, { command: string }>;
     };
     expect(mcp.mcpServers.fs).toBeDefined();
-    expect(mcp.mcpServers.fs.command).toBe('npx');
+    expect(mcp.mcpServers.fs!.command).toBe('npx');
   });
 
   it('maps transportType to type when importing cline_mcp_settings.json', async () => {
@@ -106,7 +106,7 @@ describe('importFromCline', () => {
     const mcp = JSON.parse(readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf-8')) as {
       mcpServers: Record<string, { type: string; command: string }>;
     };
-    expect(mcp.mcpServers.server.type).toBe('stdio');
+    expect(mcp.mcpServers.server!.type).toBe('stdio');
   });
 
   it('imports .cline/skills/*/SKILL.md into .agentsmesh/skills/*/SKILL.md', async () => {
@@ -263,7 +263,7 @@ describe('importFromCline', () => {
     mkdirSync(join(TEST_DIR, CLINE_RULES_DIR), { recursive: true });
     writeFileSync(join(TEST_DIR, CLINE_RULES_DIR, '_root.md'), '# Cline Root\n');
     writeFileSync(join(TEST_DIR, 'AGENTS.md'), '# Different AGENTS.md\n');
-    const results = await importFromCline(TEST_DIR);
+    await importFromCline(TEST_DIR);
     const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('# Cline Root');
     expect(content).not.toContain('# Different AGENTS.md');

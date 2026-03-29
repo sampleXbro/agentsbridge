@@ -97,7 +97,7 @@ export function dirTreeExactly(dir: string, expectedRelativeEntries: string[]): 
  * Assert file content matches snapshot. Uses Vitest's toMatchSnapshot.
  * Call from within a test: expect(content).toMatchSnapshot(snapshotName)
  */
-export function fileMatchesSnapshot(path: string, snapshotName: string): string {
+export function fileMatchesSnapshot(path: string, _snapshotName: string): string {
   fileExists(path);
   const content = readFileSync(path, 'utf-8');
   return content;
@@ -111,7 +111,12 @@ export function validYaml(path: string): void {
   try {
     parseYaml(readFileSync(path, 'utf-8'));
   } catch (err) {
-    throw new Error(`Invalid YAML at ${path}: ${err instanceof Error ? err.message : String(err)}`);
+    throw new Error(
+      `Invalid YAML at ${path}: ${err instanceof Error ? err.message : String(err)}`,
+      {
+        cause: err,
+      },
+    );
   }
 }
 
@@ -123,7 +128,12 @@ export function validJson(path: string): void {
   try {
     JSON.parse(readFileSync(path, 'utf-8'));
   } catch (err) {
-    throw new Error(`Invalid JSON at ${path}: ${err instanceof Error ? err.message : String(err)}`);
+    throw new Error(
+      `Invalid JSON at ${path}: ${err instanceof Error ? err.message : String(err)}`,
+      {
+        cause: err,
+      },
+    );
   }
 }
 

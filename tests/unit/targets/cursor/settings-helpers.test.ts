@@ -7,6 +7,7 @@ import {
   importIgnore,
   importSettings,
 } from '../../../../src/targets/cursor/settings-helpers.js';
+import type { ImportResult } from '../../../../src/core/result-types.js';
 
 describe('cursor settings helpers', () => {
   const tempDirs: string[] = [];
@@ -67,7 +68,7 @@ describe('cursor settings helpers', () => {
       }),
     );
 
-    const results: Array<{ feature: string; toPath: string }> = [];
+    const results: ImportResult[] = [];
     await importSettings(dir, results);
 
     expect(results.map(({ feature, toPath }) => ({ feature, toPath }))).toEqual([
@@ -94,7 +95,7 @@ describe('cursor settings helpers', () => {
       }),
     );
 
-    const results: Array<{ feature: string; toPath: string }> = [];
+    const results: ImportResult[] = [];
     await importSettings(dir, results);
 
     expect(results.map(({ feature, toPath }) => ({ feature, toPath }))).toEqual([
@@ -111,7 +112,7 @@ describe('cursor settings helpers', () => {
     writeFileSync(join(dir, '.cursorignore'), 'dist\n\nnode_modules\n');
     writeFileSync(join(dir, '.cursorindexingignore'), 'node_modules\ncoverage\n');
 
-    const results: Array<{ feature: string; toPath: string }> = [];
+    const results: ImportResult[] = [];
     await importIgnore(dir, results);
 
     expect(results.map(({ feature, toPath }) => ({ feature, toPath }))).toEqual([

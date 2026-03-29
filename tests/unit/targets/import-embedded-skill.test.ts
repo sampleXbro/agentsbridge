@@ -6,6 +6,7 @@ import {
   generateEmbeddedSkills,
   importEmbeddedSkills,
 } from '../../../src/targets/import/embedded-skill.js';
+import type { ImportResult } from '../../../src/core/result-types.js';
 
 describe('embedded skill helpers', () => {
   const tempDirs: string[] = [];
@@ -52,12 +53,12 @@ describe('embedded skill helpers', () => {
     );
 
     expect(outputs).toHaveLength(2);
-    expect(outputs[0]).toMatchObject({
+    expect(outputs[0]!).toMatchObject({
       path: '.continue/skills/review/SKILL.md',
     });
-    expect(outputs[0].content).toContain('name: review');
-    expect(outputs[0].content).not.toContain('description:');
-    expect(outputs[1]).toMatchObject({
+    expect(outputs[0]!.content).toContain('name: review');
+    expect(outputs[0]!.content).not.toContain('description:');
+    expect(outputs[1]!).toMatchObject({
       path: '.continue/skills/review/references/guide.md',
       content: '# Guide\n',
     });
@@ -65,7 +66,7 @@ describe('embedded skill helpers', () => {
 
   it('returns without changes when the native skills directory is absent', async () => {
     const dir = createTempDir();
-    const results: Array<{ toPath: string }> = [];
+    const results: ImportResult[] = [];
 
     await importEmbeddedSkills(dir, '.continue/skills', 'continue', results, (content) => content);
 
@@ -84,7 +85,7 @@ describe('embedded skill helpers', () => {
     );
     writeFileSync(join(dir, '.continue', 'skills', 'draft', 'notes.md'), 'no skill file');
 
-    const results: Array<{ feature: string; toPath: string }> = [];
+    const results: ImportResult[] = [];
     await importEmbeddedSkills(dir, '.continue/skills', 'continue', results, (content) => content);
 
     expect(results.map(({ feature, toPath }) => ({ feature, toPath }))).toEqual([

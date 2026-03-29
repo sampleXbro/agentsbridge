@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { stringify as yamlStringify, parse as yamlParse } from 'yaml';
+import { parse as yamlParse } from 'yaml';
 import { mergeIntoPack } from '../../../src/install/pack/pack-merge.js';
 import type { PackMetadata } from '../../../src/install/pack/pack-schema.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';

@@ -7,6 +7,7 @@ import {
   importMcpJson,
   importSettings,
 } from '../../../../src/targets/claude-code/settings-helpers.js';
+import type { ImportResult } from '../../../../src/core/result-types.js';
 
 describe('claude settings helpers', () => {
   const tempDirs: string[] = [];
@@ -50,7 +51,7 @@ describe('claude settings helpers', () => {
     mkdirSync(invalidDir, { recursive: true });
     writeFileSync(join(invalidDir, '.mcp.json'), '{invalid');
 
-    const invalidResults: Array<{ feature: string }> = [];
+    const invalidResults: ImportResult[] = [];
     await importMcpJson(invalidDir, invalidResults);
     expect(invalidResults).toEqual([]);
 
@@ -60,7 +61,7 @@ describe('claude settings helpers', () => {
       JSON.stringify({ mcpServers: { docs: { command: 'npx', args: ['-y'] } } }),
     );
 
-    const results: Array<{ feature: string; toPath: string }> = [];
+    const results: ImportResult[] = [];
     await importMcpJson(dir, results);
 
     expect(results.map(({ feature, toPath }) => ({ feature, toPath }))).toEqual([
@@ -87,7 +88,7 @@ describe('claude settings helpers', () => {
       ),
     );
 
-    const firstResults: Array<{ feature: string; toPath: string }> = [];
+    const firstResults: ImportResult[] = [];
     await importSettings(dir, firstResults);
     expect(firstResults.map(({ feature, toPath }) => ({ feature, toPath }))).toEqual([
       { feature: 'mcp', toPath: '.agentsmesh/mcp.json' },

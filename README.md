@@ -12,7 +12,7 @@
   <a href="https://github.com/sampleXbro/agentsmesh/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome"></a>
 </p>
 
-AgentsMesh maintains a single canonical configuration in `.agentsmesh/` and syncs it bidirectionally to Claude Code, Cursor, Copilot, Continue, Junie, Gemini CLI, Cline, Codex CLI, and Windsurf. Rules, commands, agents, skills, MCP servers, hooks, ignore patterns, and permissions -- all from one source of truth.
+AgentsMesh maintains a single canonical configuration in `.agentsmesh/` and syncs it bidirectionally to Claude Code, Cursor, Copilot, Continue, Junie, Gemini CLI, Cline, Codex CLI, Windsurf, and Antigravity. Rules, commands, agents, skills, MCP servers, hooks, ignore patterns, and permissions -- all from one source of truth.
 
 > **Full documentation: [samplexbro.github.io/agentsmesh](https://samplexbro.github.io/agentsmesh)**
 
@@ -80,18 +80,20 @@ That's it. Your `.agentsmesh/` directory is now the single source of truth, and 
 
 ## Supported Tools
 
-| Feature       | Claude Code | Cursor  | Copilot | Gemini CLI | Cline   | Codex CLI | Windsurf | Continue | Junie    |
-|---------------|:-----------:|:-------:|:-------:|:----------:|:-------:|:---------:|:--------:|:--------:|:--------:|
-| Rules         | Native      | Native  | Native  | Native     | Native  | Native    | Native   | Native   | Native   |
-| Commands      | Native      | Native  | Native  | Native     | Native  | Embedded  | Native   | Embedded | Embedded |
-| Agents        | Native      | Native  | Native  | Native     | Embedded| Native    | Embedded | --       | Embedded |
-| Skills        | Native      | Native  | Native  | Native     | Native  | Native    | Native   | Embedded | Embedded |
-| MCP Servers   | Native      | Native  | --      | Native     | Native  | Native    | Partial  | Native   | Native   |
-| Hooks         | Native      | Native  | Partial | Partial    | --      | --        | Native   | --       | --       |
-| Ignore        | Native      | Native  | --      | Native     | Native  | --        | Native   | --       | Native   |
-| Permissions   | Native      | Partial | --      | Partial    | --      | --        | --       | --       | --       |
+| Feature       | Claude Code | Cursor  | Copilot | Gemini CLI | Cline   | Codex CLI | Windsurf | Continue | Junie    | Antigravity |
+|---------------|:-----------:|:-------:|:-------:|:----------:|:-------:|:---------:|:--------:|:--------:|:--------:|:-----------:|
+| Rules         | Native      | Native  | Native  | Native     | Native  | Native    | Native   | Native   | Native   | Native      |
+| Commands      | Native      | Native  | Native  | Native     | Native  | Embedded  | Native   | Embedded | Embedded | Partial     |
+| Agents        | Native      | Native  | Native  | Native     | Embedded| Native    | Embedded | --       | Embedded | --          |
+| Skills        | Native      | Native  | Native  | Native     | Native  | Native    | Native   | Embedded | Embedded | Native      |
+| MCP Servers   | Native      | Native  | --      | Native     | Native  | Native    | Partial  | Native   | Native   | --          |
+| Hooks         | Native      | Native  | Partial | Partial    | --      | --        | Native   | --       | --       | --          |
+| Ignore        | Native      | Native  | --      | Native     | Native  | --        | Native   | --       | Native   | --          |
+| Permissions   | Native      | Partial | --      | Partial    | --      | --        | --       | --       | --       | --          |
 
 See the [full feature matrix docs](https://samplexbro.github.io/agentsmesh/reference/supported-tools/) for details on native vs. embedded support.
+
+**Note:** The canonical root rule always lives at `.agentsmesh/rules/_root.md`. Some targets write that content to a tool-specific main file named `general` (for example `.continue/rules/general.md` and `.agents/rules/general.md` for Antigravity) instead of `_root.md` on disk.
 
 ---
 

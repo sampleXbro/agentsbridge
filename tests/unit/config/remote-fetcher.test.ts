@@ -226,7 +226,7 @@ describe('fetchRemoteExtend', () => {
       String(c[0]).includes('tarball'),
     );
     expect(tarballCall).toBeDefined();
-    expect(tarballCall[1]?.headers).toMatchObject({
+    expect(tarballCall![1]?.headers).toMatchObject({
       Authorization: 'Bearer ghp_secret',
     });
 

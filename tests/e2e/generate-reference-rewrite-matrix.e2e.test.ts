@@ -21,6 +21,10 @@ const TARGETS: TargetName[] = [
   'windsurf',
 ];
 
+function requiredPaths(paths: readonly string[]): string[] {
+  return [...paths];
+}
+
 function readGenerated(dir: string, path: string): string {
   const absPath = join(dir, path);
   fileExists(absPath);
@@ -85,7 +89,7 @@ describe('generate reference rewrite matrix', () => {
 
     const outputs = outputPaths(target);
 
-    for (const path of outputs.root) {
+    for (const path of requiredPaths(outputs.root)) {
       const content = readGenerated(dir, path);
       const refs = expectedRefs(target, path);
       assertExternalRefs(content);
@@ -104,7 +108,7 @@ describe('generate reference rewrite matrix', () => {
       assertRewritten(content, refs, dir);
     }
 
-    for (const path of outputs.rule) {
+    for (const path of requiredPaths(outputs.rule)) {
       const content = readGenerated(dir, path);
       const refs = expectedRefs(target, path);
       expect(content).toContain(refs.rootRule);
@@ -117,7 +121,7 @@ describe('generate reference rewrite matrix', () => {
       assertRewritten(content, refs, dir);
     }
 
-    for (const path of outputs.command) {
+    for (const path of requiredPaths(outputs.command)) {
       const content = readGenerated(dir, path);
       const refs = expectedRefs(target, path);
       expect(content).toContain(refs.rule);
@@ -130,7 +134,7 @@ describe('generate reference rewrite matrix', () => {
       assertRewritten(content, refs, dir);
     }
 
-    for (const path of outputs.agent) {
+    for (const path of requiredPaths(outputs.agent)) {
       const content = readGenerated(dir, path);
       const refs = expectedRefs(target, path);
       expect(content).toContain(refs.command);
@@ -142,7 +146,7 @@ describe('generate reference rewrite matrix', () => {
       assertRewritten(content, refs, dir);
     }
 
-    for (const path of outputs.skill) {
+    for (const path of requiredPaths(outputs.skill)) {
       const content = readGenerated(dir, path);
       const refs = expectedRefs(target, path);
       expect(content).toContain(refs.rootRule);
@@ -156,7 +160,7 @@ describe('generate reference rewrite matrix', () => {
       assertRewritten(content, refs, dir);
     }
 
-    for (const path of outputs.template) {
+    for (const path of requiredPaths(outputs.template)) {
       const content = readGenerated(dir, path);
       const refs = expectedRefs(target, path);
       expect(content).toContain(refs.rootRule);

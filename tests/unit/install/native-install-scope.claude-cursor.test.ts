@@ -1,8 +1,8 @@
 import { describe, it } from 'vitest';
-import { expectScope } from './native-install-scope.helpers.js';
+import { expectScope, type ScopeCase } from './native-install-scope.helpers.js';
 
 describe('stageNativeInstallScope Claude Code and Cursor', () => {
-  it.each([
+  const cases: ScopeCase[] = [
     {
       name: 'claude-root',
       target: 'claude-code',
@@ -167,5 +167,7 @@ describe('stageNativeInstallScope Claude Code and Cursor', () => {
       files: { '.cursorignore': 'coverage\n' },
       features: ['ignore'],
     },
-  ])('$name', expectScope);
+  ];
+
+  it.each(cases)('$name', expectScope);
 });

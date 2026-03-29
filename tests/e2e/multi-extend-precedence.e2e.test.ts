@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { afterEach, describe, expect, it } from 'vitest';
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createTestProject, cleanup } from './helpers/setup.js';
 import { runCli } from './helpers/run-cli.js';
@@ -41,7 +41,11 @@ function writeCanonicalSource(
   );
   writeFileSync(
     join(root, '.agentsmesh', 'mcp.json'),
-    JSON.stringify({ mcpServers: { context7: { command: mcp, args: [] } } }, null, 2),
+    JSON.stringify(
+      { mcpServers: { context7: { type: 'stdio', command: mcp, args: [], env: {} } } },
+      null,
+      2,
+    ),
   );
 }
 
@@ -116,7 +120,7 @@ describe('multi-extend precedence e2e', () => {
     expect(settings.hooks.PostToolUse).toEqual([
       { matcher: 'Write', hooks: [{ type: 'command', command: 'echo project' }] },
     ]);
-    expect(mcp.mcpServers.context7.command).toBe('project-mcp');
+    expect(mcp.mcpServers.context7?.command).toBe('project-mcp');
     expect(readFileSync(join(project, '.agentsmesh', '.lock'), 'utf-8')).toContain('remote-base');
     expect(readFileSync(join(project, '.agentsmesh', '.lock'), 'utf-8')).toContain('shared-base');
   });

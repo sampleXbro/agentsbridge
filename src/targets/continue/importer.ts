@@ -22,6 +22,10 @@ import {
   CONTINUE_CANONICAL_MCP,
 } from './constants.js';
 
+function isContinueRootRuleRelativePath(relativePath: string): boolean {
+  return relativePath === 'general.md' || relativePath === '_root.md';
+}
+
 function readMcpServers(content: string, extension: string): Record<string, McpServer> {
   const parsed =
     extension === '.json'
@@ -73,13 +77,16 @@ async function importRules(
     const source = await readFileSafe(srcPath);
     if (!source) continue;
     const relativePath = relative(rulesRoot, srcPath).replace(/\\/g, '/');
-    const destPath = join(projectRoot, CONTINUE_CANONICAL_RULES_DIR, relativePath);
+    const canonicalRelative = isContinueRootRuleRelativePath(relativePath)
+      ? '_root.md'
+      : relativePath;
+    const destPath = join(projectRoot, CONTINUE_CANONICAL_RULES_DIR, canonicalRelative);
     const { frontmatter, body } = parseFrontmatter(normalize(source, srcPath, destPath));
     const canonicalFrontmatter: Record<string, unknown> = {
       description:
         typeof frontmatter.description === 'string' ? frontmatter.description : undefined,
       globs: Array.isArray(frontmatter.globs) ? frontmatter.globs : undefined,
-      root: relativePath === '_root.md',
+      root: isContinueRootRuleRelativePath(relativePath),
     };
     if (canonicalFrontmatter.description === undefined) delete canonicalFrontmatter.description;
     if (canonicalFrontmatter.globs === undefined) delete canonicalFrontmatter.globs;
@@ -88,7 +95,7 @@ async function importRules(
     results.push({
       fromTool: 'continue',
       fromPath: srcPath,
-      toPath: `${CONTINUE_CANONICAL_RULES_DIR}/${relativePath}`,
+      toPath: `${CONTINUE_CANONICAL_RULES_DIR}/${canonicalRelative}`,
       feature: 'rules',
     });
   }

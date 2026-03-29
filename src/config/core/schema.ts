@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { TARGET_IDS } from '../../targets/catalog/builtin-targets.js';
+import { TARGET_IDS } from '../../targets/catalog/target-ids.js';
 
 const VALID_FEATURES = [
   'rules',

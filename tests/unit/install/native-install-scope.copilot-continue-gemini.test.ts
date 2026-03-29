@@ -1,8 +1,8 @@
 import { describe, it } from 'vitest';
-import { expectScope } from './native-install-scope.helpers.js';
+import { expectScope, type ScopeCase } from './native-install-scope.helpers.js';
 
 describe('stageNativeInstallScope Copilot, Continue, and Gemini CLI', () => {
-  it.each([
+  const cases: ScopeCase[] = [
     {
       name: 'copilot-root',
       target: 'copilot',
@@ -80,7 +80,7 @@ describe('stageNativeInstallScope Copilot, Continue, and Gemini CLI', () => {
       name: 'continue-rules-folder',
       target: 'continue',
       path: '.continue/rules',
-      files: { '.continue/rules/_root.md': '---\nname: Root\n---\n\nUse TS.\n' },
+      files: { '.continue/rules/general.md': '---\nname: Root\n---\n\nUse TS.\n' },
       features: ['rules'],
       pick: { rules: ['_root'] },
     },
@@ -181,5 +181,7 @@ describe('stageNativeInstallScope Copilot, Continue, and Gemini CLI', () => {
       },
       features: ['permissions'],
     },
-  ])('$name', expectScope);
+  ];
+
+  it.each(cases)('$name', expectScope);
 });

@@ -75,7 +75,7 @@ describe('last target markdown reference round trips', () => {
     const generateResult = await runCli('generate --targets continue', dir);
     expect(generateResult.exitCode, generateResult.stderr).toBe(0);
 
-    const rootPath = join(dir, '.continue', 'rules', '_root.md');
+    const rootPath = join(dir, '.continue', 'rules', 'general.md');
     const commandPath = join(dir, '.continue', 'prompts', 'review.md');
     const skillPath = join(dir, '.continue', 'skills', 'api-gen', 'SKILL.md');
     fileExists(rootPath);
@@ -85,7 +85,7 @@ describe('last target markdown reference round trips', () => {
     const generatedRoot = readFileSync(rootPath, 'utf-8');
     const generatedCommand = readFileSync(commandPath, 'utf-8');
 
-    expect(generatedRoot).toContain('.continue/rules/_root.md');
+    expect(generatedRoot).toContain('.continue/rules/general.md');
     expect(generatedRoot).toContain('.continue/rules/typescript.md');
     expect(generatedRoot).toContain('.continue/prompts/review.md');
     expect(generatedRoot).toContain('.continue/skills/api-gen/SKILL.md');
@@ -93,7 +93,7 @@ describe('last target markdown reference round trips', () => {
     expect(generatedRoot).not.toContain('../../docs/some-doc.md');
     expect(generatedRoot).not.toContain('.agentsmesh/skills/');
 
-    expect(generatedCommand).toContain('.continue/rules/_root.md');
+    expect(generatedCommand).toContain('.continue/rules/general.md');
     expect(generatedCommand).toContain('.continue/skills/api-gen/SKILL.md');
     expect(generatedCommand).toContain('docs/some-doc.md');
     expect(generatedCommand).not.toContain('../../docs/some-doc.md');

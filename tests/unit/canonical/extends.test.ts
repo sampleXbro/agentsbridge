@@ -11,10 +11,12 @@ import {
   loadCanonicalWithExtends,
 } from '../../../src/canonical/extends/extends.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';
+import type { ImportResult } from '../../../src/core/result-types.js';
+import type { ValidatedConfig } from '../../../src/config/core/schema.js';
 
-const mockDetect = vi.hoisted(() => vi.fn<[string], Promise<string | null>>());
+const mockDetect = vi.hoisted(() => vi.fn<(repoPath: string) => Promise<string | null>>());
 const mockImportNative = vi.hoisted(() =>
-  vi.fn<[string, string], Promise<[]>>().mockResolvedValue([]),
+  vi.fn<(repoPath: string, targetName: string) => Promise<ImportResult[]>>().mockResolvedValue([]),
 );
 
 vi.mock('../../../src/config/resolve/native-format-detector.js', () => ({
@@ -37,6 +39,18 @@ function minimalCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFil
     permissions: null,
     hooks: null,
     ignore: [],
+    ...overrides,
+  };
+}
+
+function makeConfig(overrides: Partial<ValidatedConfig> = {}): ValidatedConfig {
+  return {
+    version: 1,
+    targets: ['claude-code'],
+    features: ['rules'],
+    extends: [],
+    overrides: {},
+    collaboration: { strategy: 'merge', lock_features: [] },
     ...overrides,
   };
 }
@@ -217,14 +231,7 @@ root: true
   });
 
   it('returns local only when no extends', async () => {
-    const config = {
-      version: 1 as const,
-      targets: ['claude-code'],
-      features: ['rules'],
-      extends: [],
-      overrides: {},
-      collaboration: { strategy: 'merge' as const, lock_features: [] },
-    };
+    const config = makeConfig();
     const { canonical, resolvedExtends } = await loadCanonicalWithExtends(config, PROJECT_DIR);
     expect(resolvedExtends).toHaveLength(0);
     expect(canonical.rules).toHaveLength(1);
@@ -248,10 +255,7 @@ description: shared
 # Shared rule`,
     );
 
-    const config = {
-      version: 1 as const,
-      targets: ['claude-code'],
-      features: ['rules'],
+    const config = makeConfig({
       extends: [
         {
           name: 'base',
@@ -259,9 +263,7 @@ description: shared
           features: ['rules'],
         },
       ],
-      overrides: {},
-      collaboration: { strategy: 'merge' as const, lock_features: [] },
-    };
+    });
     const { canonical, resolvedExtends } = await loadCanonicalWithExtends(config, PROJECT_DIR);
     expect(resolvedExtends).toHaveLength(1);
     expect(resolvedExtends[0]?.name).toBe('base');
@@ -272,14 +274,9 @@ description: shared
   });
 
   it('throws when extend path does not exist', async () => {
-    const config = {
-      version: 1 as const,
-      targets: ['claude-code'],
-      features: ['rules'],
+    const config = makeConfig({
       extends: [{ name: 'missing', source: './does-not-exist', features: ['rules'] }],
-      overrides: {},
-      collaboration: { strategy: 'merge' as const, lock_features: [] },
-    };
+    });
     await expect(loadCanonicalWithExtends(config, PROJECT_DIR)).rejects.toThrow(/does not exist/);
   });
 
@@ -295,14 +292,9 @@ description: shared
       return [];
     });
 
-    const config = {
-      version: 1 as const,
-      targets: ['claude-code'],
-      features: ['rules'],
+    const config = makeConfig({
       extends: [{ name: 'base', source: join('..', 'shared'), features: ['rules'] }],
-      overrides: {},
-      collaboration: { strategy: 'merge' as const, lock_features: [] },
-    };
+    });
 
     const { canonical } = await loadCanonicalWithExtends(config, PROJECT_DIR);
     expect(mockDetect).toHaveBeenCalledWith(SHARED_DIR);
@@ -322,9 +314,7 @@ description: shared
       return [];
     });
 
-    const config = {
-      version: 1 as const,
-      targets: ['claude-code'],
+    const config = makeConfig({
       features: ['skills'],
       extends: [
         {
@@ -334,9 +324,7 @@ description: shared
           features: ['skills'],
         },
       ],
-      overrides: {},
-      collaboration: { strategy: 'merge' as const, lock_features: [] },
-    };
+    });
 
     const { canonical } = await loadCanonicalWithExtends(config, PROJECT_DIR);
     expect(mockDetect).not.toHaveBeenCalled();
@@ -348,14 +336,9 @@ description: shared
     mockDetect.mockResolvedValue(null);
     mockImportNative.mockResolvedValue([]);
 
-    const config = {
-      version: 1 as const,
-      targets: ['claude-code'],
-      features: ['rules'],
+    const config = makeConfig({
       extends: [{ name: 'unknown-base', source: join('..', 'shared'), features: ['rules'] }],
-      overrides: {},
-      collaboration: { strategy: 'merge' as const, lock_features: [] },
-    };
+    });
 
     await expect(loadCanonicalWithExtends(config, PROJECT_DIR)).rejects.toThrow(
       /No supported agent configuration found/,
@@ -370,9 +353,7 @@ description: shared
       '---\ndescription: alpha skill\n---\n# Alpha\n',
     );
 
-    const config = {
-      version: 1 as const,
-      targets: ['claude-code'],
+    const config = makeConfig({
       features: ['skills'],
       extends: [
         {
@@ -382,9 +363,7 @@ description: shared
           features: ['skills'],
         },
       ],
-      overrides: {},
-      collaboration: { strategy: 'merge' as const, lock_features: [] },
-    };
+    });
 
     const { canonical } = await loadCanonicalWithExtends(config, PROJECT_DIR);
     expect(canonical.skills.some((s) => s.name === 'alpha')).toBe(true);
@@ -403,9 +382,7 @@ description: shared
       return [];
     });
 
-    const config = {
-      version: 1 as const,
-      targets: ['claude-code'],
+    const config = makeConfig({
       features: ['commands'],
       extends: [
         {
@@ -416,9 +393,7 @@ description: shared
           features: ['commands'],
         },
       ],
-      overrides: {},
-      collaboration: { strategy: 'merge' as const, lock_features: [] },
-    };
+    });
 
     const { canonical } = await loadCanonicalWithExtends(config, PROJECT_DIR);
     expect(mockImportNative).toHaveBeenCalledWith(SHARED_DIR, 'gemini-cli');
@@ -434,9 +409,7 @@ description: shared
       '---\ndescription: existing\n---\n# Existing\n',
     );
 
-    const config = {
-      version: 1 as const,
-      targets: ['claude-code'],
+    const config = makeConfig({
       features: ['commands'],
       extends: [
         {
@@ -447,9 +420,7 @@ description: shared
           features: ['commands'],
         },
       ],
-      overrides: {},
-      collaboration: { strategy: 'merge' as const, lock_features: [] },
-    };
+    });
 
     const { canonical } = await loadCanonicalWithExtends(config, PROJECT_DIR);
     expect(mockImportNative).not.toHaveBeenCalled();
@@ -476,14 +447,9 @@ description: shared
       ].join('\n'),
     );
 
-    const config = {
-      version: 1 as const,
-      targets: ['claude-code'],
+    const config = makeConfig({
       features: ['rules', 'skills'],
-      extends: [],
-      overrides: {},
-      collaboration: { strategy: 'merge' as const, lock_features: [] },
-    };
+    });
     const { canonical } = await loadCanonicalWithExtends(config, PROJECT_DIR);
     expect(canonical.skills.some((s) => s.name === 'pack-skill')).toBe(true);
     expect(canonical.rules.some((r) => r.body.includes('Local root'))).toBe(true);
@@ -498,14 +464,9 @@ description: shared
     );
     mockDetect.mockResolvedValue('claude-code'); // would be wrong if called
 
-    const config = {
-      version: 1 as const,
-      targets: ['claude-code'],
-      features: ['rules'],
+    const config = makeConfig({
       extends: [{ name: 'base', source: join('..', 'shared'), features: ['rules'] }],
-      overrides: {},
-      collaboration: { strategy: 'merge' as const, lock_features: [] },
-    };
+    });
 
     await loadCanonicalWithExtends(config, PROJECT_DIR);
     expect(mockDetect).not.toHaveBeenCalled();

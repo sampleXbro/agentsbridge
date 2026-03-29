@@ -6,6 +6,7 @@ import {
   importAgents,
   importSkills,
 } from '../../../../src/targets/copilot/agents-skills-helpers.js';
+import type { ImportResult } from '../../../../src/core/result-types.js';
 
 describe('copilot agent and skill import helpers', () => {
   const tempDirs: string[] = [];
@@ -24,7 +25,7 @@ describe('copilot agent and skill import helpers', () => {
 
   it('returns without importing agents when the native agents directory is absent', async () => {
     const dir = createTempDir();
-    const results: Array<{ toPath: string }> = [];
+    const results: ImportResult[] = [];
 
     await importAgents(dir, results, (content) => content);
 
@@ -40,7 +41,7 @@ describe('copilot agent and skill import helpers', () => {
     );
     writeFileSync(join(dir, '.github', 'agents', 'empty.agent.md'), '');
 
-    const results: Array<{ feature: string; toPath: string }> = [];
+    const results: ImportResult[] = [];
     await importAgents(dir, results, (content) => content);
 
     expect(results.map(({ feature, toPath }) => ({ feature, toPath }))).toEqual([
@@ -60,7 +61,7 @@ describe('copilot agent and skill import helpers', () => {
     );
     writeFileSync(join(dir, '.github', 'skills', 'release', 'references', 'guide.md'), '# Guide\n');
 
-    const results: Array<{ feature: string; toPath: string }> = [];
+    const results: ImportResult[] = [];
     await importSkills(dir, results, (content) => content);
 
     expect(results.map(({ feature, toPath }) => ({ feature, toPath }))).toEqual([

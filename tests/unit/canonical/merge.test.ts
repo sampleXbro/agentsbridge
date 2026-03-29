@@ -7,6 +7,7 @@ import type {
   CanonicalSkill,
   CanonicalFiles,
   McpConfig,
+  StdioMcpServer,
   Permissions,
   Hooks,
 } from '../../../src/core/types.js';
@@ -165,7 +166,7 @@ describe('mergeCanonicalFiles', () => {
     expect(result.mcp).not.toBeNull();
     const servers = (result.mcp as McpConfig).mcpServers;
     expect(Object.keys(servers).sort()).toEqual(['baseOnly', 'localOnly', 'shared']);
-    expect(servers['shared']?.args).toEqual(['shared-local']);
+    expect((servers['shared'] as StdioMcpServer | undefined)?.args).toEqual(['shared-local']);
   });
 
   it('merges permissions: union allow, union deny, overlay deny wins', () => {

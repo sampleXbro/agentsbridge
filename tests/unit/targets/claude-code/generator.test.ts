@@ -272,7 +272,7 @@ describe('generateAgents (claude-code)', () => {
           permissionMode: 'default',
           maxTurns: 5,
           mcpServers: ['context7'],
-          hooks: { PostToolUse: [{ matcher: 'Write', hooks: [] }] },
+          hooks: { PostToolUse: [{ matcher: 'Write', command: 'fmt', type: 'command' }] },
           skills: ['lint'],
           memory: '.memory/reviewer.md',
           body: 'Body1',
@@ -531,7 +531,7 @@ describe('generateHooks (claude-code)', () => {
   it('returns empty when all hook entries lack command and prompt', () => {
     const canonical = makeCanonical({
       hooks: {
-        PostToolUse: [{ matcher: 'Write', type: 'command' as const }],
+        PostToolUse: [{ matcher: 'Write', command: '', type: 'command' as const }],
       },
     });
     expect(generateHooks(canonical)).toEqual([]);
@@ -591,7 +591,9 @@ describe('generateHooks (claude-code)', () => {
   it('generates prompt-type hooks using prompt field (lines 159-160 branch)', () => {
     const canonical = makeCanonical({
       hooks: {
-        PostToolUse: [{ matcher: 'Write', type: 'prompt' as const, prompt: 'Review this file' }],
+        PostToolUse: [
+          { matcher: 'Write', command: '', type: 'prompt' as const, prompt: 'Review this file' },
+        ],
       },
     });
     const results = generateHooks(canonical);

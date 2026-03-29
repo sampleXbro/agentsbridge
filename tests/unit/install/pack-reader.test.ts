@@ -42,9 +42,11 @@ describe('readPackMetadata', () => {
     const packDir = join(tmpDir, 'my-pack');
     writePackYaml(packDir, BASE_META);
     const result = await readPackMetadata(packDir);
-    expect(result.name).toBe('org-repo');
-    expect(result.source).toBe('github:org/repo@abc123');
-    expect(result.features).toEqual(['skills']);
+    expect(result).not.toBeNull();
+    const metadata = result!;
+    expect(metadata.name).toBe('org-repo');
+    expect(metadata.source).toBe('github:org/repo@abc123');
+    expect(metadata.features).toEqual(['skills']);
   });
 
   it('returns null when pack.yaml does not exist', async () => {

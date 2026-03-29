@@ -1,3 +1,193 @@
+# TypeScript error repair pass
+
+- [x] Run `pnpm typecheck` and capture the full current TypeScript error set
+- [x] Add or update failing tests first for any behavior-sensitive fixes discovered during the repair pass
+- [x] Fix the TypeScript errors with minimal source changes and no `any`
+- [x] Run verification plus post-feature QA and append review notes
+
+## Review (TypeScript error repair pass)
+
+- Changes implemented:
+  - no source fixes were required; `pnpm typecheck` returned clean on the current workspace state
+  - kept the repair pass non-invasive and limited repo edits to this tracker entry
+- Tests added:
+  - none
+- Verification:
+  - `pnpm typecheck`
+  - `pnpm lint`
+  - `pnpm build`
+  - `pnpm test`
+- QA Report — TypeScript error repair pass
+
+### Acceptance Criteria
+
+| Criterion | Covered by test? | Status |
+| --- | --- | --- |
+| Reproduce the current TypeScript compiler state | `pnpm typecheck` | OK |
+| Fix all current TypeScript errors in the workspace | `pnpm typecheck` reported zero errors, so no fixes were necessary | OK |
+| Prove the workspace remains healthy after the pass | `pnpm lint`, `pnpm build`, `pnpm test` | OK |
+
+### Edge Cases
+
+| Scenario | Covered? | Test location |
+| --- | --- | --- |
+| TypeScript checker has no current diagnostics | ✓ | `pnpm typecheck` |
+| Build still succeeds from the same workspace state | ✓ | `pnpm build` |
+| Full suite still passes after verification run | ✓ | `pnpm test` |
+
+### Gaps Identified
+
+- none
+
+### Actions Taken
+
+- confirmed there are no current TypeScript compiler errors to repair
+- ran the standard repo QA gates to avoid reporting a false clean state
+
+# Warning cleanup pass
+
+- [x] Reproduce the current warning set from the repo toolchain
+- [x] Add or update tests first if any warning fix changes behavior
+- [x] Fix the reproducible warnings with minimal source changes
+- [x] Run verification plus post-feature QA and append review notes
+
+## Review (Warning cleanup pass)
+
+- Changes implemented:
+  - widened `pnpm lint` to cover both `src` and `tests`, matching the ESLint file globs so unused vars and warning-level issues in tests are no longer invisible to the default lint command
+  - ignored generated website build output (`website/dist/`, `website/.astro/`) in ESLint so workspace-wide linting does not report noise from generated artifacts
+  - removed unused imports/locals and added missing explicit return types in the affected test helpers and test files
+  - replaced the test-only `console.log` with `process.stderr.write` and attached caught errors as `cause` when rethrowing helper validation failures
+  - cleaned fixture/test strings that tripped `no-useless-escape`
+- Tests added:
+  - none
+- Verification:
+  - `pnpm lint`
+  - `pnpm typecheck`
+  - `pnpm build`
+  - `pnpm test`
+- QA Report — Warning cleanup pass
+
+### Acceptance Criteria
+
+| Criterion | Covered by test? | Status |
+| --- | --- | --- |
+| Reproduce the current warning/error set from the active lint rules | `pnpm lint` after widening the script to `eslint src tests` | OK |
+| Remove warning-class issues such as unused vars and missing explicit return types from the reproducible set | `pnpm lint` | OK |
+| Keep the workspace healthy after cleanup | `pnpm typecheck`, `pnpm build`, `pnpm test` | OK |
+
+### Edge Cases
+
+| Scenario | Covered? | Test location |
+| --- | --- | --- |
+| Test files are included in the default lint surface | ✓ | `pnpm lint` |
+| Generated website output no longer pollutes workspace-wide linting | ✓ | `eslint.config.js` ignore entries plus `pnpm lint` |
+| Validation helpers preserve caught error context when rethrowing | ✓ | `tests/e2e/helpers/assertions.ts`, `pnpm test` |
+
+### Gaps Identified
+
+- none
+
+### Actions Taken
+
+- fixed the current warning set instead of muting rules
+- aligned the lint command with the repo’s ESLint target scope so the cleanup is enforced going forward
+
+# ResolvedExtend TS2741 follow-up
+
+- [x] Reproduce the remaining `ResolvedExtend` TS2741 error and identify every offending object shape
+- [x] Add or update tests first if the fix changes resolver behavior
+- [x] Fix the missing required field with a type-safe minimal change
+- [x] Run verification and append review notes
+
+## Review (ResolvedExtend TS2741 follow-up)
+
+- Changes implemented:
+  - fixed the `ResolvedExtend` fixture in `tests/unit/canonical/extend-load.test.ts` by supplying the required `features` field instead of weakening the production type
+  - tightened the same test file’s mocked canonical/import shapes so it is valid under standalone TypeScript checking, not only under Vitest runtime execution
+- Tests added:
+  - none
+- Verification:
+  - `pnpm exec tsc --noEmit --pretty false --strict --target ES2022 --module NodeNext --moduleResolution NodeNext --esModuleInterop --skipLibCheck --noUncheckedIndexedAccess tests/unit/canonical/extend-load.test.ts`
+  - `pnpm exec eslint tests/unit/canonical/extend-load.test.ts`
+  - `pnpm vitest run tests/unit/canonical/extend-load.test.ts`
+  - `pnpm lint`
+  - `pnpm typecheck`
+  - `pnpm test`
+- QA Report — ResolvedExtend TS2741 follow-up
+
+### Acceptance Criteria
+
+| Criterion | Covered by test? | Status |
+| --- | --- | --- |
+| Remove the remaining `ResolvedExtend` TS2741 from the affected file | standalone `tsc` on `tests/unit/canonical/extend-load.test.ts` | OK |
+| Keep the production `ResolvedExtend` contract strict | fixed fixture shape instead of changing `src/config/resolve/resolver.ts` | OK |
+| Prove the workspace still passes normal verification | `pnpm lint`, `pnpm typecheck`, `pnpm test` | OK |
+
+### Edge Cases
+
+| Scenario | Covered? | Test location |
+| --- | --- | --- |
+| Editor-only test typing errors not covered by repo `tsconfig` | ✓ | standalone `tsc` on `tests/unit/canonical/extend-load.test.ts` |
+| Extend-load mock canonical data matches real runtime contracts | ✓ | `tests/unit/canonical/extend-load.test.ts` |
+
+### Gaps Identified
+
+- none
+
+### Actions Taken
+
+- fixed the reported test fixture type hole at the source
+- validated the touched test file with standalone TypeScript because repo `tsconfig` excludes test files
+
+# Test TypeScript cleanup pass
+
+- [x] Reproduce the complete current TypeScript diagnostic set across `tests/**`
+- [x] Add or update tests first if any fix changes behavior
+- [x] Fix the reproducible test-only TypeScript errors with minimal type-safe changes
+- [x] Run standalone test-tree TypeScript verification plus repo QA and append review notes
+
+## Review (Test TypeScript cleanup pass)
+
+- Changes implemented:
+  - repaired stale test fixtures and helpers across `tests/**` to match the current canonical contracts for hooks, MCP servers, install manifests, parsed install sources, skill supporting files, and target descriptor path callbacks
+  - added typed config/build helpers where array literals were widening to `string[]` or `never[]`, and tightened Vitest mock signatures to current `vi.fn<fn>()` usage
+  - updated import-helper tests to use real `ImportResult[]` payloads, added the missing required fields for editor-only standalone checks, and aligned one `install-sync` runtime assertion with the newer manifest entry shape
+- Tests added:
+  - none
+- Verification:
+  - `pnpm exec tsc --noEmit --pretty false --strict --target ES2022 --module NodeNext --moduleResolution NodeNext --esModuleInterop --skipLibCheck --noUncheckedIndexedAccess tests/**/*.ts`
+  - `pnpm lint`
+  - `pnpm typecheck`
+  - `pnpm vitest run tests/unit/install/install-sync.test.ts`
+  - `pnpm test`
+- QA Report — Test TypeScript cleanup pass
+
+### Acceptance Criteria
+
+| Criterion | Covered by test? | Status |
+| --- | --- | --- |
+| Reproduce the editor-only TypeScript diagnostics across the full test tree | standalone `tsc` on `tests/**/*.ts` | OK |
+| Remove the reproducible test-only TypeScript errors without weakening production types | touched test fixtures/helpers only; production contracts stayed strict | OK |
+| Prove the repo still passes its normal QA gates after the cleanup | `pnpm lint`, `pnpm typecheck`, `pnpm test` | OK |
+
+### Edge Cases
+
+| Scenario | Covered? | Test location |
+| --- | --- | --- |
+| Tests excluded from repo `tsconfig.json` still compile under standalone TypeScript | ✓ | standalone `tsc` on `tests/**/*.ts` |
+| Hook/MCP/install fixtures reflect current union and schema requirements | ✓ | `tests/unit/targets/*`, `tests/unit/install/*`, `tests/unit/canonical/*` |
+| Runtime expectations still match widened typed fixture payloads | ✓ | `tests/unit/install/install-sync.test.ts`, full `pnpm test` |
+
+### Gaps Identified
+
+- none
+
+### Actions Taken
+
+- cleared the full standalone TypeScript error set across `tests/**`
+- reran the full suite after static cleanup and fixed the one runtime expectation drift caught by QA
+
 # Coverage threshold recovery
 
 - [x] Inspect the current coverage config/report and identify the uncovered branch paths introduced by the recent import/native-scope changes

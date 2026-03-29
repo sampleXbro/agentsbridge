@@ -149,7 +149,7 @@ features: [rules, commands, mcp]
     );
     execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
 
-    const rootRule = readFileSync(join(TEST_DIR, '.continue', 'rules', '_root.md'), 'utf-8');
+    const rootRule = readFileSync(join(TEST_DIR, '.continue', 'rules', 'general.md'), 'utf-8');
     const promptFile = readFileSync(join(TEST_DIR, '.continue', 'prompts', 'review.md'), 'utf-8');
     const mcpJson = readFileSync(
       join(TEST_DIR, '.continue', 'mcpServers', 'agentsmesh.json'),

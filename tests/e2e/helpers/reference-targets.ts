@@ -12,6 +12,15 @@ export type TargetName =
   | 'codex-cli'
   | 'windsurf';
 
+interface OutputPathGroups {
+  root: string[];
+  rule: string[];
+  command: string[];
+  agent: string[];
+  skill: string[];
+  template: string[];
+}
+
 function skillDir(target: TargetName): string {
   switch (target) {
     case 'claude-code':
@@ -35,7 +44,7 @@ function skillDir(target: TargetName): string {
   }
 }
 
-export function outputPaths(target: TargetName): Record<string, string[]> {
+export function outputPaths(target: TargetName): OutputPathGroups {
   const commandSkill = `${skillDir('codex-cli')}/${commandSkillDirName('review')}/SKILL.md`;
   const agentSkill =
     target === 'codex-cli'
@@ -51,7 +60,7 @@ export function outputPaths(target: TargetName): Record<string, string[]> {
           : target === 'copilot'
             ? ['.github/copilot-instructions.md']
             : target === 'continue'
-              ? ['.continue/rules/_root.md']
+              ? ['.continue/rules/general.md']
               : target === 'junie'
                 ? ['.junie/AGENTS.md']
                 : ['AGENTS.md'],
@@ -128,7 +137,7 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
           : target === 'copilot'
             ? '.github/copilot-instructions.md'
             : target === 'continue'
-              ? '.continue/rules/_root.md'
+              ? '.continue/rules/general.md'
               : target === 'junie'
                 ? '.junie/AGENTS.md'
                 : 'AGENTS.md';

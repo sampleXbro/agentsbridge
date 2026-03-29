@@ -60,7 +60,7 @@ export function outputPaths(target: TargetName): OutputPathGroups {
           : target === 'copilot'
             ? ['.github/copilot-instructions.md']
             : target === 'continue'
-              ? ['.continue/rules/_root.md']
+              ? ['.continue/rules/general.md']
               : target === 'junie'
                 ? ['.junie/AGENTS.md']
                 : ['AGENTS.md'],
@@ -137,7 +137,7 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
           : target === 'copilot'
             ? '.github/copilot-instructions.md'
             : target === 'continue'
-              ? '.continue/rules/_root.md'
+              ? '.continue/rules/general.md'
               : target === 'junie'
                 ? '.junie/AGENTS.md'
                 : 'AGENTS.md';

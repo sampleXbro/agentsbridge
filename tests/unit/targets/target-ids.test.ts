@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { TARGET_IDS, isBuiltinTargetId } from '../../../src/targets/catalog/target-ids.js';
 
 describe('TARGET_IDS', () => {
-  it('contains exactly the 9 known target IDs', () => {
+  it('contains exactly the 10 known target IDs', () => {
     expect([...TARGET_IDS]).toStrictEqual([
       'claude-code',
       'cursor',
@@ -13,6 +13,7 @@ describe('TARGET_IDS', () => {
       'cline',
       'codex-cli',
       'windsurf',
+      'antigravity',
     ]);
   });
 });

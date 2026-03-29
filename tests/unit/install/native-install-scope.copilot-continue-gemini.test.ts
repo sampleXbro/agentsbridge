@@ -80,7 +80,7 @@ describe('stageNativeInstallScope Copilot, Continue, and Gemini CLI', () => {
       name: 'continue-rules-folder',
       target: 'continue',
       path: '.continue/rules',
-      files: { '.continue/rules/_root.md': '---\nname: Root\n---\n\nUse TS.\n' },
+      files: { '.continue/rules/general.md': '---\nname: Root\n---\n\nUse TS.\n' },
       features: ['rules'],
       pick: { rules: ['_root'] },
     },

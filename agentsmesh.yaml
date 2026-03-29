@@ -9,6 +9,7 @@ targets:
   - windsurf
   - continue
   - junie
+  - antigravity
 features:
   - rules
   - commands

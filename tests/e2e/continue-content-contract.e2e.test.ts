@@ -48,7 +48,7 @@ features:
       'skills/api-generator/template.ts',
     ]);
 
-    const rootRule = read(projectDir, '.continue/rules/_root.md');
+    const rootRule = read(projectDir, '.continue/rules/general.md');
     expect(rootRule).toContain('description: Project-wide coding standards');
     expect(rootRule).toContain('# Standards');
     expect(rootRule).not.toContain('root:');

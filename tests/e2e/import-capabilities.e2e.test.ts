@@ -196,6 +196,29 @@ describe('import capabilities', () => {
     ]);
   });
 
+  it('imports Antigravity rules, workflows, and skills', async () => {
+    dir = createTestProject('antigravity-project');
+    const result = await runCli('import --from antigravity', dir);
+    expect(result.exitCode, result.stderr).toBe(0);
+
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'Project Rules');
+    fileContains(join(dir, '.agentsmesh', 'rules', 'typescript.md'), 'strict TypeScript');
+    fileContains(join(dir, '.agentsmesh', 'rules', 'testing.md'), 'failing tests first');
+    fileContains(
+      join(dir, '.agentsmesh', 'commands', 'review.md'),
+      'Review the current change set',
+    );
+    fileContains(join(dir, '.agentsmesh', 'commands', 'test.md'), 'full test suite');
+    fileContains(
+      join(dir, '.agentsmesh', 'skills', 'typescript-pro', 'SKILL.md'),
+      'typescript-pro',
+    );
+    fileContains(
+      join(dir, '.agentsmesh', 'skills', 'typescript-pro', 'references', 'advanced-types.md'),
+      'discriminated unions',
+    );
+  });
+
   it('imports Windsurf fallback root and ignore when only AGENTS.md and .codeiumignore exist', async () => {
     dir = createTestProject('windsurf-agents-project');
     const result = await runCli('import --from windsurf', dir);

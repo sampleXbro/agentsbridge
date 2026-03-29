@@ -23,9 +23,9 @@ export interface RulesOutput {
 }
 
 /**
- * Generate .cursor/rules/_root.mdc from root rule + .cursor/rules/{slug}.mdc from non-root rules.
+ * Generate .cursor/rules/general.mdc from root rule + .cursor/rules/{slug}.mdc from non-root rules.
  * @param canonical - Loaded canonical files
- * @returns _root.mdc (alwaysApply: true) + one .mdc per contextual rule (alwaysApply: false)
+ * @returns general.mdc (alwaysApply: true) + one .mdc per contextual rule (alwaysApply: false)
  */
 export function generateRules(canonical: CanonicalFiles): RulesOutput[] {
   const outputs: RulesOutput[] = [];

@@ -25,6 +25,7 @@ import { importFromCline } from '../src/targets/cline/importer.js';
 import { importFromCodex } from '../src/targets/codex-cli/importer.js';
 import { serializeCanonicalRuleToCodexRulesFile } from '../src/targets/codex-cli/codex-rules-embed.js';
 import { importFromWindsurf } from '../src/targets/windsurf/importer.js';
+import { importFromAntigravity } from '../src/targets/antigravity/importer.js';
 import type { BuiltinTargetId } from '../src/targets/catalog/target-ids.js';
 
 const TEST_DIR = join(tmpdir(), 'am-roundtrip-test');
@@ -272,7 +273,7 @@ describe('import: Continue (rules + embedded commands + skills + mcp)', () => {
     mkdirSync(join(TEST_DIR, '.continue', 'prompts'), { recursive: true });
     mkdirSync(join(TEST_DIR, '.continue', 'skills', 'api-gen', 'references'), { recursive: true });
     mkdirSync(join(TEST_DIR, '.continue', 'mcpServers'), { recursive: true });
-    writeFileSync(join(TEST_DIR, '.continue', 'rules', '_root.md'), '# Root\n');
+    writeFileSync(join(TEST_DIR, '.continue', 'rules', 'general.md'), '# Root\n');
     writeFileSync(
       join(TEST_DIR, '.continue', 'rules', 'typescript.md'),
       '---\nglobs:\n  - "**/*.ts"\n---\n\nTS rules',
@@ -499,6 +500,25 @@ describe('import: Windsurf (rules + workflows + skills + hooks + mcp + ignore)',
   });
 });
 
+describe('import: Antigravity (rules, workflows, skills)', () => {
+  it('imports rules, workflows as commands, and skills', async () => {
+    mkdirSync(join(TEST_DIR, '.agents', 'rules'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.agents', 'rules', '_root.md'), '# Root\n\nProject rules.');
+    writeFileSync(join(TEST_DIR, '.agents', 'rules', 'ts.md'), '# TypeScript\n\nStrict mode.');
+    mkdirSync(join(TEST_DIR, '.agents', 'workflows'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.agents', 'workflows', 'deploy.md'), '# Deploy\n\nDeploy steps.');
+    mkdirSync(join(TEST_DIR, '.agents', 'skills', 'qa'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.agents', 'skills', 'qa', 'SKILL.md'),
+      '---\ndescription: QA\n---\n\nQA.',
+    );
+
+    const results = await importFromAntigravity(TEST_DIR);
+    const features = [...new Set(results.map((r) => r.feature))].sort();
+    expect(features).toEqual(['commands', 'rules', 'skills']);
+  });
+});
+
 // ── GENERATE TESTS: from full canonical, verify all outputs for each agent ──
 
 describe('generate: full canonical → all agents produce all supported outputs', () => {
@@ -661,7 +681,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
     expect(paths).toEqual([
       '.continue/mcpServers/agentsmesh.json',
       '.continue/prompts/review.md',
-      '.continue/rules/_root.md',
+      '.continue/rules/general.md',
       '.continue/rules/typescript.md',
       '.continue/skills/qa/SKILL.md',
     ]);
@@ -685,7 +705,22 @@ describe('generate: full canonical → all agents produce all supported outputs'
     ]);
   });
 
-  it('all 9 agents together produce all expected files', async () => {
+  it('Antigravity generates rules + workflows + skills', async () => {
+    const results = await generate({
+      config: allFeaturesConfig(['antigravity']),
+      canonical,
+      projectRoot: TEST_DIR,
+    });
+    const paths = results.map((r) => r.path).sort();
+    expect(paths).toEqual([
+      '.agents/rules/general.md',
+      '.agents/rules/typescript.md',
+      '.agents/skills/qa/SKILL.md',
+      '.agents/workflows/review.md',
+    ]);
+  });
+
+  it('all 10 agents together produce all expected files', async () => {
     const allTargets: BuiltinTargetId[] = [
       'claude-code',
       'cursor',
@@ -696,6 +731,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
       'cline',
       'codex-cli',
       'windsurf',
+      'antigravity',
     ];
     const results = await generate({
       config: allFeaturesConfig(allTargets),
@@ -705,8 +741,11 @@ describe('generate: full canonical → all agents produce all supported outputs'
 
     const allPaths = results.map((r) => r.path).sort();
     expect(allPaths).toEqual([
+      '.agents/rules/general.md',
+      '.agents/rules/typescript.md',
       '.agents/skills/am-command-review/SKILL.md',
       '.agents/skills/qa/SKILL.md',
+      '.agents/workflows/review.md',
       '.aiignore',
       '.claude/CLAUDE.md',
       '.claude/agents/reviewer.md',
@@ -728,7 +767,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.codex/instructions/typescript.md',
       '.continue/mcpServers/agentsmesh.json',
       '.continue/prompts/review.md',
-      '.continue/rules/_root.md',
+      '.continue/rules/general.md',
       '.continue/rules/typescript.md',
       '.continue/skills/qa/SKILL.md',
       '.cursor/agents/reviewer.md',

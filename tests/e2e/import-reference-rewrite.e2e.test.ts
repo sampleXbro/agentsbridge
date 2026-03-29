@@ -224,3 +224,54 @@ describe('import reference normalization', () => {
     },
   );
 });
+
+describe('import reference normalization — antigravity', () => {
+  let dir = '';
+
+  afterEach(() => {
+    if (dir) cleanup(dir);
+    dir = '';
+  });
+
+  it('normalizes imported references for antigravity using the canonical-full fixture', async () => {
+    dir = createTestProject('canonical-full');
+    appendReferenceVariants(dir);
+
+    const generateResult = await runCli('generate --targets antigravity', dir);
+    expect(generateResult.exitCode, generateResult.stderr).toBe(0);
+
+    rmSync(join(dir, '.agentsmesh'), { recursive: true, force: true });
+
+    const importResult = await runCli('import --from antigravity', dir);
+    expect(importResult.exitCode, importResult.stderr).toBe(0);
+
+    const rootPath = join(dir, '.agentsmesh', 'rules', '_root.md');
+    const commandPath = join(dir, '.agentsmesh', 'commands', 'review.md');
+    const skillPath = join(dir, '.agentsmesh', 'skills', 'api-generator', 'SKILL.md');
+
+    fileExists(rootPath);
+    fileExists(commandPath);
+    fileExists(skillPath);
+
+    const rootContent = readFileSync(rootPath, 'utf-8');
+    const commandContent = readFileSync(commandPath, 'utf-8');
+    const skillContent = readFileSync(skillPath, 'utf-8');
+
+    // References must be rewritten from .agents/ back to canonical .agentsmesh/ form
+    expect(rootContent).toContain('.agentsmesh/rules/typescript.md');
+    expect(rootContent).toContain('.agentsmesh/commands/review.md');
+    expect(rootContent).toContain('.agentsmesh/skills/api-generator/SKILL.md');
+    expect(rootContent).not.toContain('.agents/rules/');
+    expect(rootContent).not.toContain('.agents/skills/');
+    expect(rootContent).not.toContain('.agents/workflows/');
+    expect(rootContent).toContain('✓ / ✗');
+    assertExternalRefs(rootContent);
+    assertDocs(rootContent);
+
+    expect(commandContent).toContain('.agentsmesh/skills/api-generator/SKILL.md');
+    expect(commandContent).not.toContain('.agents/');
+
+    expect(skillContent).toContain('.agentsmesh/rules/typescript.md');
+    expect(skillContent).not.toContain('.agents/');
+  });
+});

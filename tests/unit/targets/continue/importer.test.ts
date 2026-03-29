@@ -16,7 +16,26 @@ beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
 
 describe('importFromContinue — rules', () => {
-  it('imports .continue/rules/_root.md as the canonical root rule', async () => {
+  it('imports .continue/rules/general.md as the canonical root rule', async () => {
+    mkdirSync(join(TEST_DIR, CONTINUE_RULES_DIR), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, CONTINUE_RULES_DIR, 'general.md'),
+      '---\nname: Project Rules\n---\n\nUse TypeScript.',
+    );
+
+    const results = await importFromContinue(TEST_DIR);
+    expect(results).toHaveLength(1);
+    expect(results[0]).toMatchObject({
+      fromTool: 'continue',
+      toPath: '.agentsmesh/rules/_root.md',
+      feature: 'rules',
+    });
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
+    expect(content).toContain('root: true');
+    expect(content).toContain('Use TypeScript.');
+  });
+
+  it('imports legacy .continue/rules/_root.md as the canonical root rule', async () => {
     mkdirSync(join(TEST_DIR, CONTINUE_RULES_DIR), { recursive: true });
     writeFileSync(
       join(TEST_DIR, CONTINUE_RULES_DIR, '_root.md'),

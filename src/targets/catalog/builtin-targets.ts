@@ -16,6 +16,7 @@ import { descriptor as geminiCli } from '../gemini-cli/index.js';
 import { descriptor as cline } from '../cline/index.js';
 import { descriptor as codexCli } from '../codex-cli/index.js';
 import { descriptor as windsurf } from '../windsurf/index.js';
+import { descriptor as antigravity } from '../antigravity/index.js';
 
 type TargetFeature = keyof TargetCapabilities | 'settings';
 type TargetGenerator = (canonical: CanonicalFiles) => { path: string; content: string }[];
@@ -33,6 +34,7 @@ export const BUILTIN_TARGETS: readonly TargetDescriptor[] = [
   cline,
   codexCli,
   windsurf,
+  antigravity,
 ];
 
 // Re-export from target-ids.ts for backward compatibility

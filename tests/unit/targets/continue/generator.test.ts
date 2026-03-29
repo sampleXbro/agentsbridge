@@ -9,6 +9,7 @@ import {
 import {
   CONTINUE_MCP_FILE,
   CONTINUE_PROMPTS_DIR,
+  CONTINUE_ROOT_RULE,
   CONTINUE_RULES_DIR,
   CONTINUE_SKILLS_DIR,
 } from '../../../../src/targets/continue/constants.js';
@@ -53,7 +54,7 @@ describe('generateRules (continue)', () => {
     const results = generateRules(canonical);
     expect(results).toHaveLength(2);
     expect(results.map((result) => result.path).sort()).toEqual([
-      `${CONTINUE_RULES_DIR}/_root.md`,
+      CONTINUE_ROOT_RULE,
       `${CONTINUE_RULES_DIR}/typescript.md`,
     ]);
     expect(results[0]?.content).not.toContain('root:');

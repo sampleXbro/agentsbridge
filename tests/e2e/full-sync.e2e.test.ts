@@ -28,6 +28,7 @@ describe('full-sync round trip preservation', () => {
     'windsurf',
     'copilot',
     'gemini-cli',
+    'antigravity',
   ];
 
   for (const target of TARGETS_SUPPORTING_IMPORT) {

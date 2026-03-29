@@ -2,7 +2,7 @@
  * Agent folder structure tests — aligned with docs/agents-folder-structure-research.md
  *
  * Verifies that each agent generates the expected project paths per the research doc.
- * Covers all 7 agents: Claude Code, Cursor, Copilot, Gemini CLI, Cline, Codex CLI, Windsurf.
+ * Covers all 8 agents: Claude Code, Cursor, Copilot, Gemini CLI, Cline, Codex CLI, Windsurf, Antigravity.
  *
  * Implementation gaps (research doc paths we intentionally don't generate):
  * - Claude: .claude/settings.local.json (user-specific)
@@ -1053,6 +1053,84 @@ describe('agents-folder-structure-research: Windsurf (docs §7)', () => {
  * Windsurf: .windsurfrules/.windsurfignore (legacy), subdirectory AGENTS.md
  */
 
+describe('agents-folder-structure-research: Antigravity (docs §8)', () => {
+  const EXPECTED_PATHS = {
+    rootRule: '.agents/rules/general.md', // generated main instructions; canonical stays rules/_root.md
+    rulesDir: '.agents/rules/', // research: .agents/rules/*.md
+    workflowsDir: '.agents/workflows/', // research: .agents/workflows/*.md (experimental path)
+    skillsDir: '.agents/skills/', // research: .agents/skills/<name>/SKILL.md
+  };
+  // Gaps: no agents folder, no MCP file, no hooks, no ignore (only .gitignore per docs)
+
+  it('generates .agents/rules/general.md from root rule (plain body, no frontmatter)', async () => {
+    const results = await generate({
+      config: config({ targets: ['antigravity'], features: ['rules'] }),
+      canonical: canonicalWithRoot('# Antigravity Root'),
+      projectRoot: TEST_DIR,
+    });
+    const root = results.find((x) => x.path === EXPECTED_PATHS.rootRule);
+    expect(root).toBeDefined();
+    expect(root!.content).toContain('Antigravity Root');
+    expect(root!.content).not.toContain('root: true');
+    expect(root!.content).not.toContain('---');
+  });
+
+  it('generates .agents/rules/*.md for non-root rules', async () => {
+    const canonical = fullCanonical({
+      rootBody: '# Root',
+      nonRootRules: [
+        {
+          source: join(TEST_DIR, '.agentsmesh', 'rules', 'ts.md'),
+          body: 'TS rules',
+          targets: [],
+        },
+      ],
+    });
+    const results = await generate({
+      config: config({ targets: ['antigravity'], features: ['rules'] }),
+      canonical,
+      projectRoot: TEST_DIR,
+    });
+    const tsRule = results.find((x) => x.path === '.agents/rules/ts.md');
+    expect(tsRule).toBeDefined();
+  });
+
+  it('generates .agents/workflows/*.md from commands', async () => {
+    const canonical = fullCanonical({
+      rootBody: '# Root',
+      commands: [{ name: 'review', description: 'Review', body: 'Review steps.' }],
+    });
+    const results = await generate({
+      config: config({ targets: ['antigravity'], features: ['rules', 'commands'] }),
+      canonical,
+      projectRoot: TEST_DIR,
+    });
+    const workflow = results.find((x) => x.path === '.agents/workflows/review.md');
+    expect(workflow).toBeDefined();
+    expect(workflow!.content).toContain('Review steps.');
+    expect(workflow!.content).not.toContain('allowed-tools:');
+    expect(workflow!.content).not.toContain('x-agentsmesh');
+  });
+
+  it('generates .agents/skills/*/SKILL.md with YAML frontmatter', async () => {
+    const canonical = fullCanonical({
+      rootBody: '# Root',
+      skills: [{ name: 'typescript-pro', description: 'TypeScript skill', body: 'Use TS.' }],
+    });
+    const results = await generate({
+      config: config({ targets: ['antigravity'], features: ['rules', 'skills'] }),
+      canonical,
+      projectRoot: TEST_DIR,
+    });
+    const skill = results.find(
+      (x) => x.path === `${EXPECTED_PATHS.skillsDir}typescript-pro/SKILL.md`,
+    );
+    expect(skill).toBeDefined();
+    expect(skill!.content).toContain('name: typescript-pro');
+    expect(skill!.content).toContain('TypeScript skill');
+  });
+});
+
 describe('agents-folder-structure-research: cross-tool matrix (docs quick matrix)', () => {
   it('each agent produces its primary project instruction file when rules enabled', async () => {
     const canonical = canonicalWithRoot('# Cross-tool root rule');
@@ -1064,6 +1142,7 @@ describe('agents-folder-structure-research: cross-tool matrix (docs quick matrix
       'cline',
       'codex-cli',
       'windsurf',
+      'antigravity',
     ] as const;
     const primaryPaths: Record<(typeof targets)[number], string> = {
       'claude-code': '.claude/CLAUDE.md',
@@ -1073,6 +1152,7 @@ describe('agents-folder-structure-research: cross-tool matrix (docs quick matrix
       cline: 'AGENTS.md',
       'codex-cli': 'AGENTS.md',
       windsurf: 'AGENTS.md',
+      antigravity: '.agents/rules/general.md',
     };
     for (const target of targets) {
       const results = await generate({

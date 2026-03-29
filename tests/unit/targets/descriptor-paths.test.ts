@@ -8,6 +8,7 @@ import { descriptor as geminiCli } from '../../../src/targets/gemini-cli/index.j
 import { descriptor as cline } from '../../../src/targets/cline/index.js';
 import { descriptor as codexCli } from '../../../src/targets/codex-cli/index.js';
 import { descriptor as windsurf } from '../../../src/targets/windsurf/index.js';
+import { descriptor as antigravity } from '../../../src/targets/antigravity/index.js';
 import { TARGET_IDS } from '../../../src/targets/catalog/target-ids.js';
 import type { ValidatedConfig } from '../../../src/config/core/schema.js';
 import type { CanonicalRule } from '../../../src/core/types.js';
@@ -84,6 +85,11 @@ describe('descriptor.paths.rulePath', () => {
     const rule = makeRule('example');
     expect(windsurf.paths.rulePath('example', rule)).toBe('.windsurf/rules/example.md');
   });
+
+  it('antigravity: returns .agents/rules/{slug}.md', () => {
+    const rule = makeRule('example');
+    expect(antigravity.paths.rulePath('example', rule)).toBe('.agents/rules/example.md');
+  });
 });
 
 describe('descriptor.paths.commandPath', () => {
@@ -137,6 +143,10 @@ describe('descriptor.paths.commandPath', () => {
 
   it('windsurf: returns .windsurf/workflows/{name}.md', () => {
     expect(windsurf.paths.commandPath('deploy', config)).toBe('.windsurf/workflows/deploy.md');
+  });
+
+  it('antigravity: returns .agents/workflows/{name}.md', () => {
+    expect(antigravity.paths.commandPath('deploy', config)).toBe('.agents/workflows/deploy.md');
   });
 });
 
@@ -202,6 +212,10 @@ describe('descriptor.paths.agentPath', () => {
     });
     expect(windsurf.paths.agentPath('reviewer', configWithConversionOff)).toBeNull();
   });
+
+  it('antigravity: returns null (agents: none)', () => {
+    expect(antigravity.paths.agentPath('reviewer', config)).toBeNull();
+  });
 });
 
 describe('descriptor metadata', () => {
@@ -215,6 +229,7 @@ describe('descriptor metadata', () => {
     cline,
     codexCli,
     windsurf,
+    antigravity,
   ];
 
   const allFeatureKeys = [
@@ -228,9 +243,9 @@ describe('descriptor metadata', () => {
     'permissions',
   ] as const;
 
-  it('all 9 descriptors have ids matching TARGET_IDS', () => {
+  it('all 10 descriptors have ids matching TARGET_IDS', () => {
     const descriptorIds = allDescriptors.map((d) => d.id);
-    expect(descriptorIds).toHaveLength(9);
+    expect(descriptorIds).toHaveLength(10);
     for (const id of descriptorIds) {
       expect(TARGET_IDS).toContain(id);
     }

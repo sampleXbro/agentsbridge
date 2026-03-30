@@ -1,5 +1,17 @@
 version: 1
 installs:
+  - name: alirezarezvani-claude-skills-skills
+    source: github:alirezarezvani/claude-skills@110348f4b2a66d856bc474a1f3f304ab93a50853
+    version: 110348f4b2a66d856bc474a1f3f304ab93a50853
+    source_kind: github
+    features:
+      - skills
+    pick:
+      skills:
+        - code-reviewer
+    target: claude-code
+    path: engineering-team
+    as: skills
   - name: composiohq-awesome-claude-skills-skills
     source: github:ComposioHQ/awesome-claude-skills@27904475d1270d8395acf07691966267d5abda2d
     version: 27904475d1270d8395acf07691966267d5abda2d

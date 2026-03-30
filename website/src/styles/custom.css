@@ -12,9 +12,9 @@
   --sl-color-accent-high: #a5b4fc;
 }
 
-/* Hero section enhancements */
+/* Hero section enhancements — tighter so homepage catalog fits above the fold */
 .hero {
-  padding-block: 4rem;
+  padding-block: 2.5rem;
 }
 
 .hero > img {
@@ -42,6 +42,28 @@
 .badge {
   font-weight: 600;
   letter-spacing: 0.02em;
+}
+
+/*
+ * Homepage hero badges: MDX inserts whitespace text nodes between tags; as flex items they
+ * pick up line-height and throw off alignment (first badge looks shifted / “margin bottom”).
+ */
+.am-hero-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
+  margin-top: auto;
+  font-size: 0;
+  line-height: 0;
+}
+
+.am-hero-badges img {
+  display: block;
+  height: 20px;
+  width: auto;
+  margin-top: auto;
 }
 
 /* Aside / callout */

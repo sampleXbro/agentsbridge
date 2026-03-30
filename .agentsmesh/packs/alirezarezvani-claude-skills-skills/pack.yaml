@@ -1,0 +1,15 @@
+name: alirezarezvani-claude-skills-skills
+source: github:alirezarezvani/claude-skills@110348f4b2a66d856bc474a1f3f304ab93a50853
+version: 110348f4b2a66d856bc474a1f3f304ab93a50853
+source_kind: github
+installed_at: 2026-03-30T12:15:18.309Z
+updated_at: 2026-03-30T12:15:18.309Z
+features:
+  - skills
+pick:
+  skills:
+    - code-reviewer
+target: claude-code
+path: engineering-team
+as: skills
+content_hash: sha256:343398a678251a447d73e7b45d577e620e727e10e45c34f01208f3b42ed2c8db

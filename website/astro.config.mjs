@@ -22,7 +22,11 @@ export default defineConfig({
       editLink: {
         baseUrl: 'https://github.com/sampleXbro/agentsmesh/edit/master/website/',
       },
-      customCss: ['./src/styles/custom.css'],
+      customCss: [
+        './src/styles/custom.css',
+        './src/styles/catalog-explorer.css',
+        './src/styles/catalog-explorer-table.css',
+      ],
       head: [
         {
           tag: 'meta',

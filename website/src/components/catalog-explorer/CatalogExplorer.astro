@@ -1,0 +1,112 @@
+---
+import { skills } from '../../content/data/skills';
+import { agents } from '../../content/data/agents';
+import { commands } from '../../content/data/commands';
+import { toCatalogRows } from '../../lib/catalog-rows';
+
+const payload = {
+  skills: toCatalogRows(skills),
+  agents: toCatalogRows(agents),
+  commands: toCatalogRows(commands),
+};
+const catalogJson = JSON.stringify(payload);
+---
+
+<section class="am-catalog-explorer" aria-label="Popular skills, agents, and commands">
+  <div class="am-catalog-inner">
+    <div class="am-catalog-copy-block">
+      <label class="am-catalog-copy-label" for="am-catalog-copy-field">
+        Install skills, agents and commands with ease
+      </label>
+      <div class="am-catalog-copy-row">
+        <input
+          id="am-catalog-copy-field"
+          type="text"
+          readonly
+          class="am-catalog-copy-input"
+          data-am-copy-input
+          value="pnpm install agentsmesh"
+          spellcheck="false"
+        />
+        <button
+          type="button"
+          class="am-catalog-copy-btn"
+          data-am-copy-btn
+          aria-label="Copy install command line to clipboard"
+        >
+          <span data-am-copy-label>Copy</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="am-catalog-tabs" role="tablist" aria-label="Catalog category">
+      <button
+        type="button"
+        role="tab"
+        aria-selected="true"
+        aria-controls="am-catalog-browse"
+        data-am-tab="skills"
+        id="am-tab-skills"
+      >
+        Skills
+      </button>
+      <button
+        type="button"
+        role="tab"
+        aria-selected="false"
+        aria-controls="am-catalog-browse"
+        data-am-tab="agents"
+        id="am-tab-agents"
+      >
+        Agents
+      </button>
+      <button
+        type="button"
+        role="tab"
+        aria-selected="false"
+        aria-controls="am-catalog-browse"
+        data-am-tab="commands"
+        id="am-tab-commands"
+      >
+        Commands
+      </button>
+    </div>
+
+    <div class="am-catalog-search-wrap">
+      <label class="am-catalog-search-label" for="am-catalog-search-field">Search</label>
+      <input
+        id="am-catalog-search-field"
+        type="search"
+        class="am-catalog-search"
+        data-am-search
+        placeholder="Filter the table — type to narrow rows"
+        autocomplete="off"
+        aria-controls="am-catalog-browse"
+      />
+    </div>
+
+    <div
+      id="am-catalog-browse"
+      class="am-catalog-table-wrap"
+      data-am-table-wrap
+      role="region"
+      aria-label="Catalog items"
+    >
+    </div>
+
+    <p class="am-catalog-live" data-am-live aria-live="polite"></p>
+  </div>
+
+  <script type="application/json" id="am-catalog-json" set:html={catalogJson} />
+</section>
+
+<script>
+  import { mountCatalogExplorer } from './catalog-explorer-client';
+
+  const jsonEl = document.getElementById('am-catalog-json');
+  const root = jsonEl?.closest('.am-catalog-explorer');
+  if (jsonEl?.textContent && root) {
+    const data = JSON.parse(jsonEl.textContent) as import('./catalog-explorer-client').CatalogPayload;
+    mountCatalogExplorer(root, data);
+  }
+</script>

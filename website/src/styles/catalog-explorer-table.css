@@ -1,0 +1,181 @@
+/* Virtual browse: one table, sticky thead, fixed col % (~3 body rows visible) */
+.am-catalog-table-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.5rem;
+  background: var(--sl-color-bg-nav);
+  text-align: left;
+  overflow: hidden;
+}
+
+.am-catalog-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  table-layout: fixed;
+}
+
+.am-catalog-table-scroll {
+  flex-shrink: 0;
+  overflow-x: auto;
+  overflow-y: auto;
+  border-top: 1px solid var(--sl-color-gray-5);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
+}
+
+.am-catalog-table-scroll--virtual {
+  border-top: none;
+}
+
+.am-catalog-thead-sticky th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--sl-color-gray-6);
+  box-shadow: 0 1px 0 var(--sl-color-gray-5);
+}
+
+.am-catalog-table thead {
+  background: var(--sl-color-gray-6);
+}
+
+.am-catalog-table th {
+  padding: 0.5rem 1.1rem;
+  font-weight: 600;
+  text-align: left;
+  border-bottom: 1px solid var(--sl-color-gray-5);
+}
+
+.am-catalog-table td {
+  padding: 0 1.1rem;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--sl-color-gray-6);
+}
+
+/*
+ * Catalog lives inside `.sl-markdown-content`; Starlight/prose table rules often zero
+ * `padding-inline-start` on the first column — restore symmetric horizontal padding.
+ */
+.am-catalog-explorer .am-catalog-table th,
+.am-catalog-explorer .am-catalog-table td {
+  padding-inline: 1.1rem;
+}
+
+.am-catalog-explorer .am-catalog-table thead th {
+  padding-block: 0.5rem;
+}
+
+.am-catalog-explorer .am-catalog-table tbody td {
+  padding-block: 0;
+}
+
+.am-catalog-explorer .am-catalog-table td.am-catalog-vspacer-cell {
+  padding: 0 !important;
+}
+
+.am-catalog-explorer .am-catalog-table td.am-catalog-table-empty {
+  padding: 1rem 1.1rem;
+}
+
+.am-col-title {
+  width: 26%;
+}
+
+.am-col-desc {
+  width: 54%;
+}
+
+.am-col-link {
+  width: 20%;
+}
+
+.am-catalog-td-title {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.am-catalog-td-desc {
+  color: var(--sl-color-gray-2);
+  line-height: 1.35;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.am-catalog-td-link {
+  white-space: nowrap;
+}
+
+.am-catalog-src-link {
+  color: var(--sl-color-accent-high);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.am-catalog-tr {
+  cursor: pointer;
+  height: 52px;
+  min-height: 52px;
+  max-height: 52px;
+  box-sizing: border-box;
+}
+
+.am-catalog-tr:hover,
+.am-catalog-tr:focus {
+  outline: none;
+  background: var(--sl-color-accent-low);
+}
+
+.am-catalog-tr--selected {
+  background: var(--sl-color-accent-low);
+  box-shadow: inset 3px 0 0 0 var(--sl-color-accent);
+}
+
+.am-catalog-vspacer-cell {
+  padding: 0 !important;
+  border: none !important;
+  line-height: 0;
+  font-size: 0;
+  vertical-align: top;
+}
+
+.am-catalog-table-empty {
+  padding: 1rem 1.1rem;
+  text-align: center;
+  color: var(--sl-color-gray-3);
+  font-style: italic;
+}
+
+.am-catalog-live {
+  min-height: 1.25rem;
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  color: var(--sl-color-gray-3);
+  text-align: center;
+}
+
+/* Keep virtual body as a real table on small screens (card layout breaks spacer rows) */
+@media (max-width: 768px) {
+  .am-catalog-table-scroll .am-catalog-table--body tr {
+    display: table-row;
+  }
+
+  .am-catalog-table-scroll .am-catalog-table--body td {
+    display: table-cell;
+  }
+
+  .am-catalog-table-scroll .am-catalog-table--body td::before {
+    content: none !important;
+  }
+
+  .am-catalog-table-scroll {
+    overflow-x: auto;
+  }
+}

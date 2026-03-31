@@ -1,10 +1,10 @@
 ---
 draft: false
-title: AgentsMesh — One Config. Every Target.
-description: AgentsMesh keeps a single canonical configuration under .agentsmesh/ and syncs it bidirectionally to the AI coding tools you enable. See the supported tools matrix for native vs embedded feature coverage per target.
+title: AgentsMesh — One Config for Every AI Coding Tool
+description: Open-source CLI that syncs AI coding assistant configuration across Claude Code, Cursor, Copilot, Gemini CLI, Windsurf, and more. One canonical .agentsmesh/ directory, bidirectional import/generate, community skill registry, and CI drift detection.
 template: splash
 hero:
-  tagline: One canonical source of truth under .agentsmesh/ — import native tool configs, generate target outputs, and keep teams aligned. Which features map how for each tool is documented in the supported tools matrix.
+  tagline: One canonical .agentsmesh/ directory replaces scattered tool configs. Import what you have, generate for every tool you use, install community skills — and let CI catch drift before it ships.
   image:
     dark: ../../assets/logo-dark.svg
     light: ../../assets/logo-light.svg
@@ -13,7 +13,7 @@ hero:
       link: /agentsmesh/getting-started/installation/
       icon: right-arrow
       variant: primary
-    - text: Supported tools matrix
+    - text: Supported Tools
       link: /agentsmesh/reference/supported-tools/
       icon: document
       variant: secondary
@@ -71,6 +71,12 @@ agentsmesh generate
   <Card title="Bidirectional Sync" icon="sync">
     Import existing tool configs into canonical form, then generate back out. Lossless round-trip — no manual reformatting.
   </Card>
+  <Card title="Install from Anywhere" icon="puzzle">
+    `agentsmesh install` pulls skills, rules, agents, and commands from GitHub, GitLab, git URLs, or local paths. Packs are tracked in `installs.yaml` and restored on `--sync` after a fresh clone.
+  </Card>
+  <Card title="Community Skill Registry" icon="star">
+    Browse and install curated skills, agents, and commands from the built-in catalog. Share your own packs by publishing a repo — no registry signup required.
+  </Card>
   <Card title="CI Drift Detection" icon="warning">
     `agentsmesh check` exits with code 1 if generated files have drifted from the lock. Catch drift in PRs before it ships.
   </Card>
@@ -85,9 +91,26 @@ agentsmesh generate
   </Card>
 </CardGrid>
 
-## Tool compatibility
+## Install community skills in seconds
 
-Targets differ in what they support natively versus what AgentsMesh embeds or projects for round-trip import. The **[supported tools matrix](/agentsmesh/reference/supported-tools/)** is the source of truth for rules, commands, agents, skills, MCP, hooks, ignore patterns, and permissions — per tool, with the full legend.
+```bash
+# Install a skill pack from GitHub
+agentsmesh install github:my-org/ai-skills@v1.0.0
+
+# Install specific rules from a subdirectory
+agentsmesh install github:team/standards --path rules --as rules
+
+# Restore all packs after a fresh clone
+agentsmesh install --sync
+```
+
+Installed packs live in `.agentsmesh/packs/`, are tracked in `.agentsmesh/installs.yaml`, and merge into canonical config on every `generate`. See the [install docs](/agentsmesh/cli/install/) and the [community packs guide](/agentsmesh/guides/community-packs/) for details.
+
+## Broad tool coverage
+
+AgentsMesh grows with the ecosystem. New AI coding tools ship frequently, and AgentsMesh adds support for each one — with native mappings where the tool allows and lossless embedded projections where it doesn't.
+
+Check the **[supported tools matrix](/agentsmesh/reference/supported-tools/)** for the full per-tool breakdown of rules, commands, agents, skills, MCP, hooks, ignore, and permissions.
 
 For a generated view from your local install, run [`agentsmesh matrix`](/agentsmesh/cli/matrix/) and compare with the docs matrix when upgrading.
 
@@ -123,7 +146,7 @@ npx agentsmesh generate
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   "name": "AgentsMesh",
-  "description": "Canonical AI coding assistant configuration under .agentsmesh/ with bidirectional import and generate across enabled targets; see the supported tools matrix for per-target feature coverage.",
+  "description": "Open-source CLI that syncs AI coding assistant configuration across every major tool — Claude Code, Cursor, Copilot, Gemini CLI, Windsurf, and more. One canonical .agentsmesh/ directory with bidirectional import, generate, community skill registry, and CI drift detection.",
   "applicationCategory": "DeveloperApplication",
   "operatingSystem": "Node.js 20+",
   "offers": {

@@ -28,24 +28,24 @@
   "hooks": {
     "BeforeTool": [
       {
-        "matcher": "Edit|Write",
+        "matcher": "Bash",
         "hooks": [
           {
             "name": "BeforeTool-1",
             "type": "command",
-            "command": "eslint --fix"
+            "command": "echo \"Running: $(jq -r '.tool_input.command' < /dev/stdin)\""
           }
         ]
       }
     ],
     "AfterTool": [
       {
-        "matcher": "Read",
+        "matcher": "Edit|Write",
         "hooks": [
           {
             "name": "AfterTool-1",
             "type": "command",
-            "command": "Review the file content for any security concerns"
+            "command": "jq -r '.tool_input.file_path' | xargs eslint --fix"
           }
         ]
       }

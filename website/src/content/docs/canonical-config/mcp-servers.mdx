@@ -98,17 +98,7 @@ Use `$VAR_NAME` syntax for environment variables. They are resolved at runtime b
 
 ## Tool-specific behavior
 
-| Tool | Support | Notes |
-|------|---------|-------|
-| Claude Code | Native | `.claude/settings.json` `mcpServers` field. |
-| Cursor | Native | `.cursor/mcp.json`. |
-| Copilot | — | Not supported. |
-| Gemini CLI | Native | `.gemini/settings.json` `mcpServers`. |
-| Cline | Native | `.cline/mcp.json`. |
-| Codex CLI | Native | `AGENTS.md` embedded MCP config. |
-| Windsurf | Partial | Windsurf has limited MCP server support. |
-| Continue | Native | `.continue/config.json` `mcpServers`. |
-| Junie | Native | `.junie/mcp.json`. |
+See the **MCP Servers** row in the [supported tools matrix](/agentsmesh/reference/supported-tools/) for per-target support levels (native, partial, or unsupported).
 
 ## Locking MCP servers from accidental changes
 

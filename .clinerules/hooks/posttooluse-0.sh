@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# agentsmesh-matcher: Read
-# agentsmesh-command: Review the file content for any security concerns
+# agentsmesh-matcher: Edit|Write
+# agentsmesh-command: jq -r '.tool_input.file_path' | xargs eslint --fix
 set -e
-Review the file content for any security concerns
+jq -r '.tool_input.file_path' | xargs eslint --fix

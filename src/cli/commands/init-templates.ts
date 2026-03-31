@@ -2,17 +2,7 @@
  * Template data for agentsmesh init command.
  */
 
-const ALL_TARGETS = [
-  'claude-code',
-  'cursor',
-  'copilot',
-  'continue',
-  'junie',
-  'gemini-cli',
-  'cline',
-  'codex-cli',
-  'windsurf',
-];
+import { TARGET_IDS } from '../../targets/catalog/target-ids.js';
 
 const ALL_FEATURES = [
   'rules',
@@ -30,7 +20,7 @@ const ALL_FEATURES = [
  * @param targets - Target tool IDs to include; uses all targets if empty
  */
 export function buildConfig(targets: string[]): string {
-  const targetList = (targets.length > 0 ? targets : ALL_TARGETS).map((t) => `  - ${t}`).join('\n');
+  const targetList = (targets.length > 0 ? targets : TARGET_IDS).map((t) => `  - ${t}`).join('\n');
   const featureList = ALL_FEATURES.map((f) => `  - ${f}`).join('\n');
   return `version: 1\ntargets:\n${targetList}\nfeatures:\n${featureList}\n`;
 }

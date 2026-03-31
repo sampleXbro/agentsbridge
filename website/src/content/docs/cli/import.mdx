@@ -1,7 +1,7 @@
 ---
 draft: false
 title: agentsmesh import
-description: Import an existing AI tool's configuration into the canonical .agentsmesh/ directory. Supports all 9 tools with lossless round-trip fidelity.
+description: Import an existing AI tool's configuration into the canonical .agentsmesh/ directory. Supports all targets with lossless round-trip fidelity.
 ---
 
 Import an existing tool's native config into the canonical `.agentsmesh/` directory. The import is lossless — internal file references, cross-skill links, and tool-specific metadata are all preserved.
@@ -31,6 +31,8 @@ agentsmesh import --from <target>
 | `windsurf` | `.windsurf/` |
 | `continue` | `.continue/` |
 | `junie` | `.junie/` |
+| `antigravity` | `.agents/` |
+| `roo-code` | `.roo/` |
 
 ## Examples
 
@@ -49,6 +51,8 @@ agentsmesh import --from codex-cli
 agentsmesh import --from windsurf
 agentsmesh import --from continue
 agentsmesh import --from junie
+agentsmesh import --from antigravity
+agentsmesh import --from roo-code
 ```
 
 ## What import maps

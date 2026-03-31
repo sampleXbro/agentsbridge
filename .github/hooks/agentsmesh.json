@@ -5,14 +5,14 @@
       {
         "type": "command",
         "bash": "./scripts/pretooluse-0.sh",
-        "comment": "Matcher: Edit|Write"
+        "comment": "Matcher: Bash"
       }
     ],
     "postToolUse": [
       {
         "type": "command",
         "bash": "./scripts/posttooluse-0.sh",
-        "comment": "Matcher: Read"
+        "comment": "Matcher: Edit|Write"
       }
     ]
   }

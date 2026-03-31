@@ -1,9 +1,15 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import seoRobotsIntegration from './integrations/seo-robots.mjs';
+import { absoluteFromBase, getSiteOrigin } from './site-url.mjs';
+
+const site = getSiteOrigin();
+const ogImage = absoluteFromBase('/og-image.png');
 
 export default defineConfig({
-  site: 'https://samplexbro.github.io',
+  site,
+  trailingSlash: 'always',
   base: '/agentsmesh',
   integrations: [
     starlight({
@@ -30,7 +36,7 @@ export default defineConfig({
       head: [
         {
           tag: 'meta',
-          attrs: { property: 'og:image', content: 'https://samplexbro.github.io/agentsmesh/og-image.png' },
+          attrs: { property: 'og:image', content: ogImage },
         },
         {
           tag: 'meta',
@@ -38,7 +44,7 @@ export default defineConfig({
         },
         {
           tag: 'meta',
-          attrs: { name: 'twitter:image', content: 'https://samplexbro.github.io/agentsmesh/og-image.png' },
+          attrs: { name: 'twitter:image', content: ogImage },
         },
         {
           tag: 'meta',
@@ -117,5 +123,6 @@ export default defineConfig({
         },
       ],
     }),
+    seoRobotsIntegration(() => getSiteOrigin()),
   ],
 });

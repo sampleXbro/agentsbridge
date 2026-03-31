@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://samplexbro.github.io/agentsmesh/sitemap-index.xml

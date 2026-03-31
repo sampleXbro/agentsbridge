@@ -12,22 +12,22 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Edit|Write",
+        "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
-            "command": "eslint --fix"
+            "command": "echo \"Running: $(jq -r '.tool_input.command' < /dev/stdin)\""
           }
         ]
       }
     ],
     "PostToolUse": [
       {
-        "matcher": "Read",
+        "matcher": "Edit|Write",
         "hooks": [
           {
-            "type": "prompt",
-            "prompt": "Review the file content for any security concerns"
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path' | xargs eslint --fix"
           }
         ]
       }

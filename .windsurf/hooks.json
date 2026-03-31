@@ -2,13 +2,13 @@
   "hooks": {
     "pre_tool_use": [
       {
-        "command": "eslint --fix",
+        "command": "echo \"Running: $(jq -r '.tool_input.command' < /dev/stdin)\"",
         "show_output": true
       }
     ],
     "post_tool_use": [
       {
-        "command": "Review the file content for any security concerns",
+        "command": "jq -r '.tool_input.file_path' | xargs eslint --fix",
         "show_output": true
       }
     ]

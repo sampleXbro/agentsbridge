@@ -1,8 +1,9 @@
 PreToolUse:
+  - matcher: Bash
+    type: command
+    command: "echo \"Running: $(jq -r '.tool_input.command' < /dev/stdin)\""
+PostToolUse:
   - matcher: Edit|Write
     type: command
-    command: eslint --fix
-PostToolUse:
-  - matcher: Read
-    type: prompt
-    prompt: Review the file content for any security concerns
+    command: "jq -r '.tool_input.file_path' | xargs eslint --fix"
+

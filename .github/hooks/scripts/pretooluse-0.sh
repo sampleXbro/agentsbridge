@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# agentsmesh-matcher: Edit|Write
-# agentsmesh-command: eslint --fix
+# agentsmesh-matcher: Bash
+# agentsmesh-command: echo "Running: $(jq -r '.tool_input.command' < /dev/stdin)"
 set -e
 HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-eslint --fix
+echo "Running: $(jq -r '.tool_input.command' < /dev/stdin)"

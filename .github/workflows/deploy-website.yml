@@ -6,6 +6,10 @@
 # requires a token other than GITHUB_TOKEN to enable Pages via API.
 #
 # Live site: https://samplexbro.github.io/agentsmesh/ (see website/astro.config.mjs `site` + `base`).
+#
+# SEO: set repository variable DEPLOY_SITE_URL to the exact origin you want indexed
+# (HTTPS, no trailing slash), e.g. https://samplexbro.github.io or your custom domain.
+# Configure DNS or CDN to 301 the non-canonical hostname (www ↔ apex) to that URL.
 name: Deploy Website
 
 on:
@@ -53,6 +57,8 @@ jobs:
 
       - name: Build website
         working-directory: website
+        env:
+          DEPLOY_SITE_URL: ${{ vars.DEPLOY_SITE_URL }}
         run: pnpm run build
 
       - name: Upload Pages artifact

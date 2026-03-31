@@ -7,8 +7,9 @@
 #
 # Live site: https://samplexbro.github.io/agentsmesh/ (see website/astro.config.mjs `site` + `base`).
 #
-# SEO: set repository variable DEPLOY_SITE_URL to the exact origin you want indexed
-# (HTTPS, no trailing slash), e.g. https://samplexbro.github.io or your custom domain.
+# SEO: set repository variable DEPLOY_SITE_URL to the exact public site URL
+# you want indexed, e.g. https://samplexbro.github.io/agentsmesh/ or
+# https://docs.agentsmesh.dev/. Custom-domain builds emit CNAME automatically.
 # Configure DNS or CDN to 301 the non-canonical hostname (www ↔ apex) to that URL.
 name: Deploy Website
 
@@ -54,6 +55,10 @@ jobs:
       - name: Install dependencies
         working-directory: website
         run: pnpm install --frozen-lockfile
+
+      - name: Run website tests
+        working-directory: website
+        run: pnpm test
 
       - name: Build website
         working-directory: website

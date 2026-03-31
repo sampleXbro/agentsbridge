@@ -2,15 +2,16 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import seoRobotsIntegration from './integrations/seo-robots.mjs';
-import { absoluteFromBase, getSiteOrigin } from './site-url.mjs';
+import { absoluteFromBase, fromBase, getSiteBase, getSiteOrigin, resolveDeploySite } from './site-url.mjs';
 
+const deploySite = resolveDeploySite();
 const site = getSiteOrigin();
 const ogImage = absoluteFromBase('/og-image.png');
 
 export default defineConfig({
   site,
   trailingSlash: 'always',
-  base: '/agentsmesh',
+  base: getSiteBase(),
   integrations: [
     starlight({
       title: 'AgentsMesh',
@@ -52,7 +53,7 @@ export default defineConfig({
         },
         {
           tag: 'link',
-          attrs: { rel: 'icon', href: '/agentsmesh/favicon.svg', type: 'image/svg+xml' },
+          attrs: { rel: 'icon', href: fromBase('/favicon.svg'), type: 'image/svg+xml' },
         },
       ],
       sidebar: [
@@ -123,6 +124,6 @@ export default defineConfig({
         },
       ],
     }),
-    seoRobotsIntegration(() => getSiteOrigin()),
+    seoRobotsIntegration(() => deploySite.publicUrl),
   ],
 });

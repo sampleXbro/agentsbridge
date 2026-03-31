@@ -10,15 +10,15 @@ hero:
     light: ../../assets/logo-light.svg
   actions:
     - text: Get Started
-      link: /agentsmesh/getting-started/installation/
+      link: ./getting-started/installation/
       icon: right-arrow
       variant: primary
     - text: Supported Tools
-      link: /agentsmesh/reference/supported-tools/
+      link: ./reference/supported-tools/
       icon: document
       variant: secondary
     - text: CLI Reference
-      link: /agentsmesh/cli/
+      link: ./cli/
       icon: open-book
       variant: secondary
 ---
@@ -63,6 +63,10 @@ Scale that across a team where people use different tools — and keeping instru
 agentsmesh generate
 ```
 
+AgentsMesh is for teams that want one durable source of truth for AI coding tool configuration instead of maintaining a parallel set of prompts, rules, agents, and MCP settings in every editor. The canonical `.agentsmesh/` directory is plain text, versioned with the repo, easy to review in pull requests, and safe to evolve as new tools enter the stack.
+
+That matters when one developer works in Cursor, another uses Claude Code, a reviewer checks changes in Copilot, and CI still needs a reliable answer to "are the generated tool files still in sync?" AgentsMesh gives you one editing surface, one lock-checked output set, and one import/generate workflow that keeps those environments aligned.
+
 ## Why AgentsMesh
 
 <CardGrid>
@@ -105,15 +109,15 @@ agentsmesh install github:team/standards --path rules --as rules
 agentsmesh install --sync
 ```
 
-Installed packs live in `.agentsmesh/packs/`, are tracked in `.agentsmesh/installs.yaml`, and merge into canonical config on every `generate`. See the [install docs](/agentsmesh/cli/install/) and the [community packs guide](/agentsmesh/guides/community-packs/) for details.
+Installed packs live in `.agentsmesh/packs/`, are tracked in `.agentsmesh/installs.yaml`, and merge into canonical config on every `generate`. See the [install docs](./cli/install/) and the [community packs guide](./guides/community-packs/) for details.
 
 ## Broad tool coverage
 
 AgentsMesh grows with the ecosystem. New AI coding tools ship frequently, and AgentsMesh adds support for each one — with native mappings where the tool allows and lossless embedded projections where it doesn't.
 
-Check the **[supported tools matrix](/agentsmesh/reference/supported-tools/)** for the full per-tool breakdown of rules, commands, agents, skills, MCP, hooks, ignore, and permissions.
+Check the **[supported tools matrix](./reference/supported-tools/)** for the full per-tool breakdown of rules, commands, agents, skills, MCP, hooks, ignore, and permissions.
 
-For a generated view from your local install, run [`agentsmesh matrix`](/agentsmesh/cli/matrix/) and compare with the docs matrix when upgrading.
+For a generated view from your local install, run [`agentsmesh matrix`](./cli/matrix/) and compare with the docs matrix when upgrading.
 
 ## Quick Start
 

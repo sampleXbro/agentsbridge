@@ -1,3 +1,59 @@
+# Website SEO hardening pass
+
+- [x] Reproduce the current website SEO artifact/output state and confirm root causes for the reported issues
+- [x] Add failing tests first for deploy URL parsing and generated SEO artifacts (`robots.txt`, canonical URL/base handling, custom-domain `CNAME`)
+- [x] Implement the minimal website config/build changes to fix the reproducible issues
+- [x] Improve crawlable homepage copy to address the low text-to-code warning without changing product meaning
+- [x] Run website verification plus post-feature QA and append review notes
+
+## Review (Website SEO hardening pass)
+
+- Changes implemented:
+  - replaced the website’s hardcoded GitHub Pages path assumptions with a single resolved `DEPLOY_SITE_URL` contract that derives origin, base path, public URLs, and optional custom-domain `CNAME` output from one source of truth
+  - expanded the SEO build integration so it always writes `robots.txt` and writes `CNAME` automatically for custom-domain deployments
+  - converted hardcoded `/agentsmesh/...` doc links to base-agnostic relative links so the docs build works both on the current GitHub Pages project URL and on a root custom domain
+  - added more crawlable homepage copy to improve the low text-to-code ratio without changing the product positioning
+  - added website unit tests and wired them into `website/package.json` plus the deploy workflow so the SEO behavior is enforced in automation
+- Tests added:
+  - `website/site-url.test.mjs`
+  - `website/integrations/seo-robots.test.mjs`
+- Verification:
+  - `node --test website/site-url.test.mjs website/integrations/seo-robots.test.mjs`
+  - `node ./node_modules/astro/astro.js build` (in `website/`)
+  - `DEPLOY_SITE_URL=https://docs.agentsmesh.dev/ node ./node_modules/astro/astro.js build` (in `website/`)
+  - `rg -n 'href="/agentsmesh/|src="/agentsmesh/|https://docs.agentsmesh.dev/agentsmesh' website/dist -g '*.html'`
+  - inspected generated `website/dist/robots.txt` and custom-domain `website/dist/CNAME`
+- QA Report — Website SEO hardening pass
+
+### Acceptance Criteria
+
+| Criterion | Covered by test? | Status |
+| --- | --- | --- |
+| Deploy URL handling supports both GitHub Pages project paths and root custom domains | `website/site-url.test.mjs`, default/custom Astro builds | OK |
+| SEO artifact generation emits the correct `robots.txt` and optional `CNAME` from the same deploy URL | `website/integrations/seo-robots.test.mjs`, custom-domain Astro build | OK |
+| Internal docs links remain valid when the website base path changes | default/custom Astro builds plus no `/agentsmesh/` matches in custom-domain HTML output | OK |
+| Homepage ships more crawlable explanatory copy to help the text-to-code warning | updated `website/src/content/docs/index.mdx`, verified in Astro build output | OK |
+| Website deploy automation exercises the new SEO tests before building | `website/package.json`, `.github/workflows/deploy-website.yml` | OK |
+
+### Edge Cases
+
+| Scenario | Covered? | Test location |
+| --- | --- | --- |
+| Project-site deployment under `/agentsmesh` keeps the base path in canonical URLs and sitemap links | ✓ | `website/site-url.test.mjs` |
+| Root custom-domain deployment drops the `/agentsmesh` path entirely | ✓ | `website/site-url.test.mjs`, custom `astro build` |
+| GitHub Pages host does not emit an unnecessary `CNAME` file | ✓ | `website/site-url.test.mjs`, default `astro build` |
+| Custom-domain host emits `CNAME` and root sitemap URL | ✓ | `website/integrations/seo-robots.test.mjs`, custom `astro build` |
+| Built HTML for a root custom domain contains no stale `/agentsmesh` href/src references | ✓ | `rg -n 'href="/agentsmesh/|src="/agentsmesh/|https://docs.agentsmesh.dev/agentsmesh' website/dist -g '*.html'` |
+
+### Gaps Identified
+
+- none in the implemented website changes; the live site still needs `DEPLOY_SITE_URL` pointed at a root custom domain plus DNS hostname redirection for the SEO report to stop seeing the GitHub Pages project-path redirect
+
+### Actions Taken
+
+- proved the current GitHub Pages project-path build already generated `robots.txt`, then fixed the underlying deploy contract so the site can also ship from a root custom domain where root-level SEO files and non-redirected status codes are possible
+- protected the new behavior with unit tests and deploy-workflow coverage instead of leaving it as a one-off config tweak
+
 # TypeScript error repair pass
 
 - [x] Run `pnpm typecheck` and capture the full current TypeScript error set
@@ -218,6 +274,13 @@
 
 | Criterion | Covered by test? | Status |
 | --- | --- | --- |
+
+# Website SEO issue repair pass
+
+- [ ] Reproduce the current website SEO output and confirm which issues are fixable in-repo vs blocked by hosting/domain constraints
+- [ ] Add failing tests first for the website SEO artifacts and URL behavior we can enforce from the repo
+- [ ] Implement the minimal website/deploy changes to fix the reproducible SEO issues
+- [ ] Run verification plus post-feature QA and append review notes
 | Recover the global branch threshold without lowering config | `pnpm test:coverage -- --coverage.reporter=json-summary --coverage.reporter=text-summary` | OK |
 | Add targeted branch tests instead of broad fixture churn | `tests/unit/config/git-remote.test.ts`, `tests/unit/install/install-manifest.test.ts`, `tests/unit/install/git-pin.test.ts`, `tests/unit/install/install-conflicts.branches.test.ts` | OK |
 | Keep full suite stable under coverage load | `tests/unit/cli/commands/watch.test.ts`, full `pnpm test:coverage` run | OK |

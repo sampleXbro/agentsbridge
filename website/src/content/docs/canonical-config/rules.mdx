@@ -75,7 +75,7 @@ Always run `pnpm typecheck` before committing.
 |-------|------|-------------|
 | `root` | `boolean` | Always-applied rule. Required for `_root.md`. |
 | `description` | `string` | Human-readable rule name shown in tool menus. |
-| `targets` | `string[]` | Limit rule to specific tools. Empty = all targets. See the [supported tools matrix](/agentsmesh/reference/supported-tools/) for valid IDs. |
+| `targets` | `string[]` | Limit rule to specific tools. Empty = all targets. See the [supported tools matrix](../reference/supported-tools/) for valid IDs. |
 | `globs` | `string[]` | File patterns this rule applies to (tool-dependent). Uses gitignore-style glob syntax. |
 | `trigger` | `string` | Windsurf activation mode: `always_on`, `model_decision`, `glob`, `manual`. |
 | `codexEmit` | `string` | Codex CLI instruction type: `advisory` or `execution`. |
@@ -83,7 +83,7 @@ Always run `pnpm typecheck` before committing.
 
 ## Tool-specific behavior
 
-Rules are mapped to each tool's native format during generation. See the **Rules** row in the [supported tools matrix](/agentsmesh/reference/supported-tools/) for per-target support levels and the [generate output locations](/agentsmesh/cli/generate/#output-locations) for target directory mappings.
+Rules are mapped to each tool's native format during generation. See the **Rules** row in the [supported tools matrix](../reference/supported-tools/) for per-target support levels and the [generate output locations](../cli/generate/#output-locations) for target directory mappings.
 
 ## File naming
 

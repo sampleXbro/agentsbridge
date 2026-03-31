@@ -60,17 +60,7 @@ Suggest concrete fixes, not vague recommendations.
 
 ## Tool-specific behavior
 
-| Tool | Support | Notes |
-|------|---------|-------|
-| Claude Code | Native | Maps directly to Claude Code agent format. |
-| Cursor | Native | Maps to Cursor agent definition format. |
-| Copilot | Native | Maps to Copilot agent definition. |
-| Gemini CLI | Native | Maps to Gemini CLI agent format. |
-| Cline | Embedded | Projected as a skill with metadata for round-trip. |
-| Codex CLI | Native | Maps to Codex CLI agent format. |
-| Windsurf | Embedded | Projected as a skill with metadata. |
-| Continue | — | Not supported. |
-| Junie | Embedded | Projected as a skill with metadata. |
+See the **Agents** row in the [supported tools matrix](/agentsmesh/reference/supported-tools/) for per-target support levels (native, embedded, or unsupported).
 
 <Aside type="tip">
   Embedded agents carry metadata so that `agentsmesh import` can restore them from their projected form back to canonical `agents/*.md` format without data loss.

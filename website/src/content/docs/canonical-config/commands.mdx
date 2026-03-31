@@ -39,17 +39,7 @@ The filename (without `.md`) becomes the slash command name. The above file at `
 
 ## Tool-specific behavior
 
-| Tool | Support | Format |
-|------|---------|--------|
-| Claude Code | Native | `.claude/commands/*.md` |
-| Cursor | Native | `.cursor/commands/*.md` |
-| Copilot | Native | `.github/copilot-instructions.md` (embedded) |
-| Gemini CLI | Native | `.gemini/commands/*.md` |
-| Cline | Native | `.cline/commands/*.md` |
-| Codex CLI | Embedded | Projected as a skill in `AGENTS.md` with round-trip metadata |
-| Windsurf | Native | `.windsurf/commands/*.md` |
-| Continue | Embedded | Projected as a skill with metadata |
-| Junie | Embedded | Projected as a skill with metadata |
+See the **Commands** row in the [supported tools matrix](/agentsmesh/reference/supported-tools/) for per-target support levels (native, embedded, or unsupported).
 
 <Aside type="tip">
   Embedded commands carry AgentsMesh metadata comments so that `agentsmesh import` can restore them to the original `commands/*.md` format without data loss.

@@ -21,7 +21,7 @@ Based on community feedback, GitHub issue analysis, and AgentsMesh's existing st
 | Local overrides (`local.yaml`) | Shipped  | Frequently requested                           |
 | Link rebasing                  | Shipped  | Frequently requested                           |
 | `matrix` command               | Shipped  | Not available in most tools                    |
-| 11 targets                     | Shipped  | Claude Code, Cursor, Copilot, Gemini CLI, Cline, Codex CLI, Windsurf, Continue, Junie, Antigravity, Roo Code |
+| Broad target coverage          | Shipped  | See [supported tools matrix](https://samplexbro.github.io/agentsmesh/reference/supported-tools/) for the full list |
 | Community catalog (website)    | Shipped  | Skills, agents, commands explorer on homepage  |
 | Pack install + sync            | Shipped  | `install`, `install --sync`, `installs.yaml`   |
 

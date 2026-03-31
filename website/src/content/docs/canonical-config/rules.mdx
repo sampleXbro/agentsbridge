@@ -75,7 +75,7 @@ Always run `pnpm typecheck` before committing.
 |-------|------|-------------|
 | `root` | `boolean` | Always-applied rule. Required for `_root.md`. |
 | `description` | `string` | Human-readable rule name shown in tool menus. |
-| `targets` | `string[]` | Limit rule to specific tools. Empty = all targets. Valid values: `claude-code`, `cursor`, `copilot`, `gemini-cli`, `cline`, `codex-cli`, `windsurf`, `continue`, `junie`. |
+| `targets` | `string[]` | Limit rule to specific tools. Empty = all targets. See the [supported tools matrix](/agentsmesh/reference/supported-tools/) for valid IDs. |
 | `globs` | `string[]` | File patterns this rule applies to (tool-dependent). Uses gitignore-style glob syntax. |
 | `trigger` | `string` | Windsurf activation mode: `always_on`, `model_decision`, `glob`, `manual`. |
 | `codexEmit` | `string` | Codex CLI instruction type: `advisory` or `execution`. |
@@ -83,19 +83,7 @@ Always run `pnpm typecheck` before committing.
 
 ## Tool-specific behavior
 
-Rules are mapped to each tool's native format during generation:
-
-| Tool | Native format | Notes |
-|------|--------------|-------|
-| Claude Code | `.claude/rules/*.md` | Frontmatter preserved. |
-| Cursor | `.cursor/rules/*.mdc` | Converted to `.mdc` format with Cursor-specific frontmatter. |
-| Copilot | `.github/copilot-instructions.md` | All rules merged into a single file. |
-| Gemini CLI | `.gemini/rules/*.md` | Frontmatter preserved. |
-| Cline | `.cline/rules/*.md` | Frontmatter preserved. |
-| Codex CLI | `AGENTS.md` | Rules embedded per `codexEmit`/`codexInstructionVariant`. |
-| Windsurf | `.windsurf/rules/*.md` | `trigger` field applied. |
-| Continue | `.continue/rules/*.md` | Frontmatter stripped. |
-| Junie | `.junie/guidelines.md` | All rules merged. |
+Rules are mapped to each tool's native format during generation. See the **Rules** row in the [supported tools matrix](/agentsmesh/reference/supported-tools/) for per-target support levels and the [generate output locations](/agentsmesh/cli/generate/#output-locations) for target directory mappings.
 
 ## File naming
 

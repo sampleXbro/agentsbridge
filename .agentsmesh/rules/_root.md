@@ -6,87 +6,68 @@ root: true
 
 ## Session Start
 
-- **Always** read `tasks/lessons.md` at the beginning of each session before doing any work
-- Apply relevant lessons to the current task
+- Read `tasks/lessons.md` before doing any work. Apply relevant lessons.
 
-## Workflow Orchestration
+## Workflow
 
-### 1. Plan Node Default
+### Planning
 
-- Enter plan mode for ANY non-trivial task (3+ steps or architectural decisions)
-- If something goes sideways, STOP and re-plan immediately - don't keep pushing
-- Use plan mode for verification steps, not just building
-- Write detailed specs upfront to reduce ambiguity
+- Enter plan mode for any non-trivial task (3+ steps or architectural decisions). Write plan to `tasks/todo.md`.
+- If something goes sideways, STOP and re-plan — don't keep pushing.
+- Check in before starting implementation. Mark items complete as you go.
 
-### 2. Subagent Strategy
+### Subagents
 
-- Use subagents liberally to keep main context window clean
-- Offload research, exploration, and parallel analysis to subagents
-- For complex problems, throw more compute at it via subagents
-- One tack per subagent for focused execution
+- Use subagents liberally for research, exploration, and parallel analysis. One tack per subagent.
 
-### 3. Self-Improvement Loop
+### Lessons
 
-- **When to amend** `tasks/lessons.md`: whenever something turns out wrong — user correction, test failure, CI failure, code review feedback, or any other signal that a mistake was made
-- **How to amend**: add a bullet with (1) what went wrong, (2) the root cause, (3) a rule that prevents the same mistake
-- **Best practice for AI agents**: updating lessons is the primary way to persist learning across sessions; agents lack long-term memory, so `tasks/lessons.md` is the project-specific memory that reduces repeated mistakes
-- Write rules for yourself that prevent the same mistake
-- Ruthlessly iterate on these lessons until mistake rate drops
-- Review lessons at session start for relevant project
+- **When**: user correction, test failure, CI failure, code review feedback, or any other mistake signal.
+- **How**: add a bullet to `tasks/lessons.md` with (1) what went wrong, (2) root cause, (3) a rule that prevents recurrence.
+- This is the primary cross-session memory — ruthlessly iterate until mistake rate drops.
 
-### 4. Verification Before Done
+### Verification
 
-- Never mark a task complete without proving it works
-- **After every feature/story completion**: Use the `post-feature-qa` skill (`.agentsmesh/skills/post-feature-qa/`) — run the QA checklist, ensure tests cover edge cases and implementation aligns with the story, fix gaps before marking done
-- Diff behavior between main and your changes when relevant
+- Never mark a task complete without proving it works — run tests, check logs, demonstrate correctness.
+- After every feature/story: use `post-feature-qa` skill (`.agentsmesh/skills/post-feature-qa/`).
 - Ask yourself: "Would a staff engineer approve this?"
-- Run tests, check logs, demonstrate correctness
 
-### 5. Demand Elegance (Balanced)
+### Elegance
 
 - For non-trivial changes: pause and ask "is there a more elegant way?"
-- If a fix feels hacky: "Knowing everything I know now, implement the elegant solution"
-- Skip this for simple, obvious fixes - don't over-engineer
-- Challenge your own work before presenting it
+- Skip this for simple, obvious fixes — don't over-engineer.
 
-### 6. Autonomous Bug Fixing
+### Bug Fixing
 
-- When given a bug report: just fix it. Don't ask for hand-holding
-- Point at logs, errors, failing tests - then resolve them
-- Zero context switching required from the user
-- Go fix failing CI tests without being told how
-
-## Task Management
-
-1. **Plan First**: Write plan to `tasks/todo.md` with checkable items
-2. **Verify Plan**: Check in before starting implementation
-3. **Track Progress**: Mark items complete as you go
-4. **Explain Changes**: High-level summary at each step
-5. **Document Results**: Add review section to `tasks/todo.md`
-6. **Capture Lessons**: Update `tasks/lessons.md` after corrections — see "When to amend" and "How to amend" in Self-Improvement Loop above
+- When given a bug report: just fix it. Find root cause, point at logs/errors, resolve. Zero hand-holding.
 
 ## Skills
 
-- **post-feature-qa** (`.agentsmesh/skills/post-feature-qa/`) — Apply after every feature or story implementation. Act as senior QA: verify test coverage for all edge cases and story alignment; produce QA report; fix gaps before claiming complete.
-- **add-agent-target** (`.agentsmesh/skills/add-agent-target/`) — Use when adding support for a new AI agent target. Requires current official-doc research, full import/generate implementation, rich realistic fixtures, complete unit/integration/e2e coverage, docs updates, and final QA.
+- **post-feature-qa** — Apply after every feature/story. Senior QA: verify edge-case coverage and story alignment.
+- **add-agent-target** — Use when adding a new AI agent target. Covers research, implementation, fixtures, full test coverage, docs.
 
 ## Core Principles
 
-- **Simplicity First**: Make every change as simple as possible. Impact minimal code.
+- **Simplicity**: Make every change as simple as possible. Only touch what's necessary.
 - **No Laziness**: Find root causes. No temporary fixes. Senior developer standards.
-- **Minimal Impact**: Changes should only touch what's necessary. Avoid introducing bugs.
 
-## Project-Specific Rules
+## Project Rules
 
-- **TDD mandatory**: Write failing tests FIRST, then implement. No exceptions.
+- **TDD mandatory**: Write failing tests FIRST, then implement.
 - **Max file size**: 200 lines. Split by responsibility if larger.
 - **No classes unless stateful**: Prefer pure functions + types.
 - **No `any`**: Use `unknown` + narrowing.
 - **Config source of truth**: `.agentsmesh/` directory. Generated files are artifacts.
 - **Test naming**: `{module}.test.ts` colocated with source. Integration tests in `tests/integration/`.
-- **Generated artifact tests must be strict**: For generated file structures, assert exact file paths, exact file counts, and exact referenced wrapper/script sets. Do not use loose checks like "at least one file", broad `some(...)`, or prefix-only path assertions when the full output set is known.
+- **Generated artifact tests must be strict**: Assert exact file paths, exact file counts, and exact referenced wrapper/script sets. No loose checks (`some(...)`, prefix-only, "at least one").
 - **Commit format**: conventional commits — `feat|fix|test|refactor(scope): message`
-- **README must stay current**: Any change to CLI commands, flags, config schema, supported targets, or canonical file formats **must** be reflected in `README.md` before the task is marked complete. Treat the README as part of the API surface.
-- **Website docs must stay current**: Any change to CLI commands, flags, config schema, supported targets, canonical file formats, or other user-facing behavior **must** also be reflected in the documentation website (`website/src/content/docs/`). The website is the primary public documentation — treat it with the same rigor as `README.md`.
+- **Docs must stay current**: Any change to CLI commands, flags, config schema, supported targets, or canonical file formats **must** be reflected in both `README.md` and the website (`website/src/content/docs/`) before the task is marked complete.
+- **Target data single source of truth** — do **not** hardcode target lists or support levels outside this chain:
+  1. `src/targets/catalog/target-ids.ts` (`TARGET_IDS`) = canonical target ID list. Each target's `capabilities` in `src/targets/<name>/index.ts` = feature support levels.
+  2. `src/core/matrix/data.ts` (`SUPPORT_MATRIX`) = built dynamically from descriptors. Never hardcode.
+  3. `website/src/content/docs/reference/supported-tools.mdx` = **single docs page** for per-target support. All other pages link here — no duplicate tables.
+  4. `README.md` matrix must stay in sync with code capabilities.
+  5. No hardcoded target counts or enumerations on homepage, CLI overview, or other pages. Use generic language and link to the matrix.
+  6. Adding/changing a target: update `target-ids.ts` + descriptor → `supported-tools.mdx` → `README.md` matrix. No other docs pages should need changes.
 - **Refer to PRD**: `docs/prd-v2-complete.md` for architecture decisions
 - **Refer to tasks**: `docs/agentsmesh-ai-first-tasks.md` for current task specs

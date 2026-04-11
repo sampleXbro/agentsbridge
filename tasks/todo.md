@@ -1,3 +1,15 @@
+# Root Paragraph Canonical Authoring Pass
+
+- [x] Capture the exact canonical file and format contract for rules, commands, agents, skills, hooks, MCP, permissions, and ignore from init templates and parsers
+- [x] Update root paragraph tests to enforce authoring-focused wording and legacy upgrade behavior
+- [x] Update the shared generator text, regenerate root artifacts, and run targeted plus full verification
+
+# Root Paragraph Installed-Usage Pass
+
+- [x] Capture the exact installed-repo usage surface: config files, canonical item locations, init/import/install/generate, and maintenance commands
+- [x] Update root paragraph tests for the installed-usage wording and legacy upgrade behavior
+- [x] Update the shared generator text, regenerate root artifacts, and rerun verification
+
 # Website SEO hardening pass
 
 - [x] Reproduce the current website SEO artifact/output state and confirm root causes for the reported issues

@@ -1,5 +1,13 @@
 # Changelog
 
+## Next version
+
+### Patch Changes
+
+- Replace the appended **AgentsMesh Generation Contract** root paragraph with an installed-repo guide: `agentsmesh.yaml` / `agentsmesh.local.yaml`, what lives under `.agentsmesh`, `init` / `import` / `install` / `generate`, and maintenance commands (`diff`, `lint`, `check`, `watch`, `matrix`, `merge`).
+- Treat prior shipped contract wordings (v3–v7 bodies under the same heading) as legacy forms so append/strip upgrades cleanly without duplicate sections.
+- Match **AGENTS.md** to the new contract line; regenerate root instruction snippets across generated target outputs.
+
 ## 0.2.10
 
 ### Patch Changes

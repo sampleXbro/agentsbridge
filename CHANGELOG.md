@@ -7,6 +7,7 @@
 - Replace the appended **AgentsMesh Generation Contract** root paragraph with an installed-repo guide: `agentsmesh.yaml` / `agentsmesh.local.yaml`, what lives under `.agentsmesh`, `init` / `import` / `install` / `generate`, and maintenance commands (`diff`, `lint`, `check`, `watch`, `matrix`, `merge`).
 - Treat prior shipped contract wordings (v3–v7 bodies under the same heading) as legacy forms so append/strip upgrades cleanly without duplicate sections.
 - Match **AGENTS.md** to the new contract line; regenerate root instruction snippets across generated target outputs.
+- `agentsmesh init --yes` now adds the same example canonical files as a normal `init`, but only for categories that import left empty (skip `rules/example.md` when any rule file exists, same idea for commands, agents, skills, and root-only files like `mcp.json`).
 
 ## 0.2.10
 
@@ -36,7 +37,7 @@
 
 ### Patch Changes
 
-- f7a4afd: Expand the project README, add `ROADMAP.md`, and fix the sample Claude Code PostToolUse hook to use `type: prompt` with a `prompt` field instead of an invalid command-style hook after reads.
+- f7a4afd: Expand the project README, and fix the sample Claude Code PostToolUse hook to use `type: prompt` with a `prompt` field instead of an invalid command-style hook after reads.
 
 ## 0.2.4
 

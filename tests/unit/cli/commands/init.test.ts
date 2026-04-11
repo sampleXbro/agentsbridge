@@ -300,14 +300,82 @@ describe('runInit — Smart Init with --yes flag (Story 5.2)', () => {
     const config = readFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'utf-8');
     expect(config).toContain('cursor');
     expect(existsSync(join(TEST_DIR, 'agentsmesh.local.yaml'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'rules', 'example.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'commands', 'example.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'))).toBe(true);
   });
 
-  it('does not create scaffold templates when --yes and configs imported', async () => {
+  it('fills empty canonical dirs with examples when --yes after import', async () => {
     writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Imported Rules\n');
     await runInit(TEST_DIR, { yes: true });
     const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('Imported Rules');
-    // scaffold example files are not created when importing
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'rules', 'example.md'))).toBe(false);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'commands', 'example.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'agents', 'example.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'skills', 'example', 'SKILL.md'))).toBe(true);
+  });
+
+  it('does not create commands example when --yes and commands were imported', async () => {
+    writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Rules\n');
+    mkdirSync(join(TEST_DIR, '.claude', 'commands'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.claude', 'commands', 'ship.md'),
+      '---\ndescription: Ship\n---\n\nRun release.',
+    );
+    await runInit(TEST_DIR, { yes: true });
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'commands', 'ship.md'))).toBe(true);
     expect(existsSync(join(TEST_DIR, '.agentsmesh', 'commands', 'example.md'))).toBe(false);
+  });
+
+  it('does not create agents example when --yes and agents were imported', async () => {
+    writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Rules\n');
+    mkdirSync(join(TEST_DIR, '.claude', 'agents'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.claude', 'agents', 'reviewer.md'),
+      '---\ndescription: Reviewer\n---\n\nReview code.',
+    );
+    await runInit(TEST_DIR, { yes: true });
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'agents', 'example.md'))).toBe(false);
+  });
+
+  it('does not create skills example when --yes and skills were imported', async () => {
+    writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Rules\n');
+    mkdirSync(join(TEST_DIR, '.claude', 'skills', 'lint-fix'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.claude', 'skills', 'lint-fix', 'SKILL.md'),
+      '---\nname: lint-fix\ndescription: Lint\n---\n\n# Skill\n',
+    );
+    await runInit(TEST_DIR, { yes: true });
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'skills', 'lint-fix', 'SKILL.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'skills', 'example', 'SKILL.md'))).toBe(false);
+  });
+
+  it('does not replace mcp.json with starter template when import wrote MCP', async () => {
+    writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Rules\n');
+    writeFileSync(
+      join(TEST_DIR, '.mcp.json'),
+      JSON.stringify({ mcpServers: { echo: { command: 'echo', args: [] } } }, null, 2),
+    );
+    await runInit(TEST_DIR, { yes: true });
+    const mcp = readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf-8');
+    expect(mcp).toContain('"echo"');
+    expect(mcp).toContain('echo');
+  });
+
+  it('adds _root but not rules example when --yes imports only scoped claude rules', async () => {
+    mkdirSync(join(TEST_DIR, '.claude', 'rules'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.claude', 'rules', 'typescript.md'),
+      '---\ndescription: TS\nglobs: ["src/**/*.ts"]\n---\n\nStrict types.',
+    );
+    await runInit(TEST_DIR, { yes: true });
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'rules', 'example.md'))).toBe(false);
+    const root = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
+    expect(root).toContain('root: true');
+    expect(root).toContain('Project Rules');
   });
 });

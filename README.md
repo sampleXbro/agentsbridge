@@ -108,14 +108,6 @@ The documentation site covers everything in detail:
 - **[Guides](https://samplexbro.github.io/agentsmesh/guides/existing-project/)** -- adopting in existing projects, multi-tool teams, sharing config, CI drift detection, community packs
 - **[Reference](https://samplexbro.github.io/agentsmesh/reference/generation-pipeline/)** -- how the generation pipeline works
 
----
-
-## Roadmap
-
-See [ROADMAP.md](ROADMAP.md) for planned features and release timeline.
-
----
-
 ## Contributing
 
 Contributions are welcome. Keep changes small, test them, and prefer editing canonical `.agentsmesh/` sources over generated files.

@@ -1,27 +1,16 @@
 /**
  * agentsmesh init — create agentsmesh.yaml and .agentsmesh/ scaffold.
- * With --yes: auto-import detected tool configs (Story 5.2 Smart Init).
+ * With --yes: auto-import detected configs, then add example scaffold only where canonical paths stayed empty.
  */
 
 import { join } from 'node:path';
-import { exists, readFileSafe, writeFileAtomic, mkdirp } from '../../utils/filesystem/fs.js';
+import { exists, readFileSafe, writeFileAtomic } from '../../utils/filesystem/fs.js';
 import { logger } from '../../utils/output/logger.js';
 import { BUILTIN_TARGETS } from '../../targets/catalog/builtin-targets.js';
 import type { ImportResult } from '../../core/types.js';
-import {
-  buildConfig,
-  LOCAL_TEMPLATE,
-  TEMPLATE_ROOT_RULE,
-  TEMPLATE_EXAMPLE_RULE,
-  TEMPLATE_EXAMPLE_COMMAND,
-  TEMPLATE_EXAMPLE_AGENT,
-  TEMPLATE_EXAMPLE_SKILL,
-  TEMPLATE_MCP,
-  TEMPLATE_HOOKS,
-  TEMPLATE_PERMISSIONS,
-  TEMPLATE_IGNORE,
-} from './init-templates.js';
+import { buildConfig, LOCAL_TEMPLATE } from './init-templates.js';
 import { detectExistingConfigs } from './init-detect.js';
+import { writeScaffoldFull, writeScaffoldGapFill } from './init-scaffold.js';
 
 const CONFIG_FILENAME = 'agentsmesh.yaml';
 const LOCAL_CONFIG_FILENAME = 'agentsmesh.local.yaml';
@@ -43,44 +32,6 @@ async function appendToGitignore(projectRoot: string): Promise<void> {
   if (toAdd.length === 0) return;
   const suffix = current.endsWith('\n') || current === '' ? '' : '\n';
   await writeFileAtomic(gitignorePath, current + suffix + toAdd.join('\n') + '\n');
-}
-
-/**
- * Write template scaffold — one example file per canonical type.
- */
-async function writeScaffold(projectRoot: string): Promise<void> {
-  const ab = (rel: string): string => join(projectRoot, '.agentsmesh', rel);
-
-  await mkdirp(ab('rules'));
-  await writeFileAtomic(ab('rules/_root.md'), TEMPLATE_ROOT_RULE);
-  logger.success('Created .agentsmesh/rules/_root.md');
-
-  await writeFileAtomic(ab('rules/example.md'), TEMPLATE_EXAMPLE_RULE);
-  logger.success('Created .agentsmesh/rules/example.md');
-
-  await mkdirp(ab('commands'));
-  await writeFileAtomic(ab('commands/example.md'), TEMPLATE_EXAMPLE_COMMAND);
-  logger.success('Created .agentsmesh/commands/example.md');
-
-  await mkdirp(ab('agents'));
-  await writeFileAtomic(ab('agents/example.md'), TEMPLATE_EXAMPLE_AGENT);
-  logger.success('Created .agentsmesh/agents/example.md');
-
-  await mkdirp(ab('skills/example'));
-  await writeFileAtomic(ab('skills/example/SKILL.md'), TEMPLATE_EXAMPLE_SKILL);
-  logger.success('Created .agentsmesh/skills/example/SKILL.md');
-
-  await writeFileAtomic(ab('mcp.json'), TEMPLATE_MCP);
-  logger.success('Created .agentsmesh/mcp.json');
-
-  await writeFileAtomic(ab('hooks.yaml'), TEMPLATE_HOOKS);
-  logger.success('Created .agentsmesh/hooks.yaml');
-
-  await writeFileAtomic(ab('permissions.yaml'), TEMPLATE_PERMISSIONS);
-  logger.success('Created .agentsmesh/permissions.yaml');
-
-  await writeFileAtomic(ab('ignore'), TEMPLATE_IGNORE);
-  logger.success('Created .agentsmesh/ignore');
 }
 
 export { detectExistingConfigs };
@@ -118,18 +69,20 @@ export async function runInit(projectRoot: string, options: { yes?: boolean } = 
         logger.info(`Imported ${totalImported} file(s) from ${existing.length} tool(s).`);
       }
 
+      await writeScaffoldGapFill(projectRoot);
+
       await writeFileAtomic(configPath, buildConfig(existing));
       logger.success(`Created ${CONFIG_FILENAME} (targets: ${existing.join(', ')})`);
     } else {
       logger.info(
         `Run 'agentsmesh init --yes' to auto-import, or 'agentsmesh import --from <tool>' manually.`,
       );
-      await writeScaffold(projectRoot);
+      await writeScaffoldFull(projectRoot);
       await writeFileAtomic(configPath, buildConfig([]));
       logger.success(`Created ${CONFIG_FILENAME}`);
     }
   } else {
-    await writeScaffold(projectRoot);
+    await writeScaffoldFull(projectRoot);
     await writeFileAtomic(configPath, buildConfig([]));
     logger.success(`Created ${CONFIG_FILENAME}`);
   }

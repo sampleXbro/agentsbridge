@@ -4,6 +4,12 @@
 - [x] Update the `## Next version` section so it covers every post-`v0.2.10` user-facing change without internal noise
 - [x] Recheck the changelog diff for completeness and consistency with the existing Keep a Changelog style
 
+# Publish workflow npm fix
+
+- [x] Confirm whether `npm install -g npm@latest` is still required for npm trusted publishing in the GitHub release workflow
+- [x] Remove or replace the brittle npm self-upgrade step in the publish workflow and update the mirrored release skill docs
+- [x] Verify the workflow/docs diff and note the release lesson from the CI failure
+
 # Release 0.3.4 prep
 
 - [x] Run release verification gates in order: `test`, `typecheck`, `lint`, and release-specific checks for watch timing guards

@@ -1,3 +1,17 @@
+# Changelog update
+
+- [x] Review commits since `v0.2.10` and group them into user-facing release notes for `CHANGELOG.md`
+- [x] Update the `## Next version` section so it covers every post-`v0.2.10` user-facing change without internal noise
+- [x] Recheck the changelog diff for completeness and consistency with the existing Keep a Changelog style
+
+# Release 0.3.4 prep
+
+- [x] Run release verification gates in order: `test`, `typecheck`, `lint`, and release-specific checks for watch timing guards
+- [x] Audit release automation, community health files, changesets config, package contents, and README badge requirements
+- [x] Reconcile the requested `0.3.4` version with the current unreleased change scope and update release metadata/files needed for a safe publish path
+- [x] Run the final release gate (`test`, `typecheck`, `lint`, `test:coverage`, `build`, `test:e2e`) and summarize any remaining blockers
+- Resolved: applied the minor versioning step, so the workspace now targets `0.3.0`.
+
 # AGENTS collision preference
 
 - [x] Reproduce the `AGENTS.md` collision between `codex-cli` and `kiro`, then define a deterministic "richest file wins" rule

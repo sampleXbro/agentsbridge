@@ -54,12 +54,9 @@ describe('trusted publishing release config', () => {
         expect.objectContaining({
           uses: 'actions/setup-node@v4',
           with: expect.objectContaining({
+            'node-version': 24,
             'registry-url': 'https://registry.npmjs.org',
           }),
-        }),
-        expect.objectContaining({
-          name: 'Upgrade npm for trusted publishing',
-          run: 'npm install -g npm@latest',
         }),
         expect.objectContaining({
           name: 'Create release PR or publish',

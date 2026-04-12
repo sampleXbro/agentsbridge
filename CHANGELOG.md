@@ -2,6 +2,17 @@
 
 ## Next version
 
+## 0.3.1 - 2026-04-12
+
+### Changed
+
+- Refresh direct and transitive dependencies to patched releases, including guarded `pnpm` overrides for vulnerable `vite`, `picomatch`, and `brace-expansion` ranges pulled in through the toolchain.
+
+### Fixed
+
+- Remove the brittle `npm install -g npm@latest` step from the npm trusted-publishing workflow and run the publish job on Node 24 so release automation uses a bundled npm that already satisfies trusted-publishing requirements.
+- Harden `watch` command unit-test wait budgets after the Vitest upgrade so the full suite stays stable under slower CI and coverage runs.
+
 ## 0.3.0 - 2026-04-12
 
 ### Added

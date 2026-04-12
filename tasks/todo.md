@@ -10,6 +10,18 @@
 - [x] Remove or replace the brittle npm self-upgrade step in the publish workflow and update the mirrored release skill docs
 - [x] Verify the workflow/docs diff and note the release lesson from the CI failure
 
+# Dependency vulnerability update
+
+- [x] Capture the current vulnerable dependency set and map each advisory to the minimal direct package update or override needed
+- [x] Update package versions and lockfile to remove the reported advisories with the smallest compatible changes
+- [x] Rerun audit plus repo verification (`test`, `typecheck`, `lint`, and targeted release-config checks) and record any remaining unavoidable advisories
+
+# Release 0.3.1 patch
+
+- [x] Update release metadata so the current workspace targets `0.3.1` and the changelog accurately describes the patch contents
+- [x] Recheck the release diff and package dry-run output for the `0.3.1` tarball
+- [x] Commit the full `0.3.1` patch set with a conventional release-prep message
+
 # Release 0.3.4 prep
 
 - [x] Run release verification gates in order: `test`, `typecheck`, `lint`, and release-specific checks for watch timing guards

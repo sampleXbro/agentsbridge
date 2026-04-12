@@ -21,10 +21,15 @@ function baseConfig(): ValidatedConfig {
 describe('builtin targets', () => {
   it('returns built-in target metadata for registered targets', () => {
     const cursor = getBuiltinTargetDefinition('cursor');
+    const kiro = getBuiltinTargetDefinition('kiro');
 
     expect(cursor).toBeDefined();
     expect(cursor?.generators.primaryRootInstructionPath).toBe('.cursor/rules/general.mdc');
     expect(cursor?.capabilities.permissions).toBe('partial');
+    expect(kiro?.generators.primaryRootInstructionPath).toBe('AGENTS.md');
+    expect(kiro?.capabilities.rules).toBe('native');
+    expect(kiro?.capabilities.commands).toBe('none');
+    expect(kiro?.capabilities.hooks).toBe('native');
   });
 
   it('resolves codex-cli command generation through conversion-aware helpers', () => {

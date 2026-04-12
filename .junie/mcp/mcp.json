@@ -1,25 +1,21 @@
 {
-  "mcpServers": {
-    "context7": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "-y",
-        "@upstash/context7-mcp"
-      ],
-      "env": {}
-    },
-    "github": {
-      "description": "GitHub MCP server for repo operations",
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-github"
-      ],
-      "env": {
-        "GITHUB_TOKEN": "$GITHUB_TOKEN"
-      }
+    "mcpServers": {
+        "context7": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@upstash/context7-mcp"
+            ]
+        },
+        "github": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-github"
+            ],
+            "env": {
+                "GITHUB_TOKEN": "$GITHUB_TOKEN"
+            }
+        }
     }
-  }
 }

@@ -1,5 +1,8 @@
 import type { GenerateResult } from '../types.js';
 
+const AGENTS_SUFFIX = 'AGENTS.md';
+const CODEX_TARGET = 'codex-cli';
+
 function statusRank(status: GenerateResult['status']): number {
   switch (status) {
     case 'created':
@@ -11,6 +14,50 @@ function statusRank(status: GenerateResult['status']): number {
     case 'skipped':
       return 0;
   }
+}
+
+function mergeDuplicateMetadata(preferred: GenerateResult, other: GenerateResult): GenerateResult {
+  if (statusRank(other.status) <= statusRank(preferred.status)) return preferred;
+  return {
+    ...preferred,
+    status: other.status,
+    currentContent: other.currentContent ?? preferred.currentContent,
+  };
+}
+
+function trimmedContent(content: string): string {
+  return content.trim();
+}
+
+function richerAgentsResult(left: GenerateResult, right: GenerateResult): GenerateResult | null {
+  if (!left.path.endsWith(AGENTS_SUFFIX) || left.path !== right.path) return null;
+
+  const leftTrimmed = trimmedContent(left.content);
+  const rightTrimmed = trimmedContent(right.content);
+  if (!leftTrimmed || !rightTrimmed) return null;
+
+  const leftContainsRight = leftTrimmed.includes(rightTrimmed);
+  const rightContainsLeft = rightTrimmed.includes(leftTrimmed);
+
+  if (leftContainsRight === rightContainsLeft) return null;
+  return leftContainsRight
+    ? mergeDuplicateMetadata(left, right)
+    : mergeDuplicateMetadata(right, left);
+}
+
+function richerCodexAgentsResult(
+  left: GenerateResult,
+  right: GenerateResult,
+): GenerateResult | null {
+  if (!left.path.endsWith(AGENTS_SUFFIX) || left.path !== right.path) return null;
+
+  const codex = left.target === CODEX_TARGET ? left : right.target === CODEX_TARGET ? right : null;
+  const other = codex === left ? right : left;
+  if (!codex) return null;
+
+  return trimmedContent(codex.content).length > trimmedContent(other.content).length
+    ? mergeDuplicateMetadata(codex, other)
+    : null;
 }
 
 /**
@@ -32,18 +79,22 @@ export function resolveOutputCollisions(results: GenerateResult[]): GenerateResu
 
     const existing = deduped[existingIdx]!;
     if (existing.content !== result.content) {
+      const richer = richerAgentsResult(existing, result);
+      if (richer) {
+        deduped[existingIdx] = richer;
+        continue;
+      }
+      const richerCodex = richerCodexAgentsResult(existing, result);
+      if (richerCodex) {
+        deduped[existingIdx] = richerCodex;
+        continue;
+      }
       throw new Error(
         `Conflicting generated outputs for ${result.path}: ${existing.target} and ${result.target} produce different content.`,
       );
     }
 
-    if (statusRank(result.status) > statusRank(existing.status)) {
-      deduped[existingIdx] = {
-        ...existing,
-        status: result.status,
-        currentContent: result.currentContent ?? existing.currentContent,
-      };
-    }
+    deduped[existingIdx] = mergeDuplicateMetadata(existing, result);
   }
 
   return deduped;

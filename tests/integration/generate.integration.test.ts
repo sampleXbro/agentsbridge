@@ -289,6 +289,84 @@ features: [rules, mcp]
     expect(cursorMcp).toContain('npx');
   });
 
+  it('generates Kiro steering, hooks, mcp, and ignore', () => {
+    writeFileSync(
+      join(TEST_DIR, 'agentsmesh.yaml'),
+      `version: 1
+targets: [kiro]
+features: [rules, skills, mcp, hooks, ignore]
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'),
+      `---
+root: false
+description: "TypeScript specific rules"
+globs:
+  - src/**/*.ts
+---
+# TypeScript
+Use strict mode.
+`,
+    );
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'skills', 'debugging', 'references'), {
+      recursive: true,
+    });
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'skills', 'debugging', 'SKILL.md'),
+      `---
+name: debugging
+description: Debug production failures
+---
+# Debugging
+Start with logs.
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'skills', 'debugging', 'references', 'checklist.md'),
+      '# Checklist\n',
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'mcp.json'),
+      `{
+  "mcpServers": {
+    "context7": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"],
+      "env": {}
+    }
+  }
+}`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'hooks.yaml'),
+      `UserPromptSubmit:
+  - matcher: "*"
+    type: prompt
+    prompt: Capture intent before acting.
+`,
+    );
+    writeFileSync(join(TEST_DIR, '.agentsmesh', 'ignore'), '.env\ndist/\n');
+
+    execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
+
+    expect(readFileSync(join(TEST_DIR, 'AGENTS.md'), 'utf-8')).toContain('Use TypeScript');
+    expect(readFileSync(join(TEST_DIR, '.kiro', 'steering', 'typescript.md'), 'utf-8')).toContain(
+      'fileMatchPattern: src/**/*.ts',
+    );
+    expect(
+      readFileSync(join(TEST_DIR, '.kiro', 'skills', 'debugging', 'SKILL.md'), 'utf-8'),
+    ).toContain('Debug production failures');
+    expect(
+      readFileSync(join(TEST_DIR, '.kiro', 'hooks', 'user-prompt-submit-1.kiro.hook'), 'utf-8'),
+    ).toContain('Capture intent before acting.');
+    expect(readFileSync(join(TEST_DIR, '.kiro', 'settings', 'mcp.json'), 'utf-8')).toContain(
+      'context7',
+    );
+    expect(readFileSync(join(TEST_DIR, '.kiroignore'), 'utf-8')).toContain('dist/');
+  });
+
   it('generates permissions files when permissions feature enabled', () => {
     writeFileSync(
       join(TEST_DIR, 'agentsmesh.yaml'),

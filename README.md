@@ -1,18 +1,16 @@
-<h1 align="center">AgentsMesh</h1>
+# AgentsMesh
 
-<p align="center">
-  <a href="https://github.com/sampleXbro/agentsmesh/actions/workflows/ci.yml"><img src="https://github.com/sampleXbro/agentsmesh/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://www.npmjs.com/package/agentsmesh"><img src="https://img.shields.io/npm/v/agentsmesh.svg" alt="npm version"></a>
-  <a href="https://codecov.io/gh/sampleXbro/agentsmesh"><img src="https://codecov.io/gh/sampleXbro/agentsmesh/branch/master/graph/badge.svg" alt="Coverage"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
-  <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-strict-blue.svg" alt="TypeScript"></a>
-  <a href="https://nodejs.org/"><img src="https://img.shields.io/node/v/agentsmesh.svg" alt="Node.js"></a>
-  <a href="https://www.npmjs.com/package/agentsmesh"><img src="https://img.shields.io/npm/dm/agentsmesh.svg" alt="npm downloads"></a>
-  <a href="https://samplexbro.github.io/agentsmesh"><img src="https://img.shields.io/badge/docs-website-brightgreen.svg" alt="Docs"></a>
-  <a href="https://github.com/sampleXbro/agentsmesh/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome"></a>
-</p>
+[![CI](https://github.com/sampleXbro/agentsmesh/actions/workflows/ci.yml/badge.svg)](https://github.com/sampleXbro/agentsmesh/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/agentsmesh.svg)](https://www.npmjs.com/package/agentsmesh)
+[![Coverage](https://codecov.io/gh/sampleXbro/agentsmesh/branch/master/graph/badge.svg)](https://codecov.io/gh/sampleXbro/agentsmesh)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue.svg)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/node/v/agentsmesh.svg)](https://nodejs.org/)
+[![npm downloads](https://img.shields.io/npm/dm/agentsmesh.svg)](https://www.npmjs.com/package/agentsmesh)
+[![Docs](https://img.shields.io/badge/docs-website-brightgreen.svg)](https://samplexbro.github.io/agentsmesh)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/sampleXbro/agentsmesh/pulls)
 
-AgentsMesh maintains a single canonical configuration in `.agentsmesh/` and syncs it bidirectionally to Claude Code, Cursor, Copilot, Continue, Junie, Gemini CLI, Cline, Codex CLI, Windsurf, Antigravity, and Roo Code. Rules, commands, agents, skills, MCP servers, hooks, ignore patterns, and permissions -- all from one source of truth.
+AgentsMesh maintains a single canonical configuration in `.agentsmesh/` and syncs it bidirectionally to Claude Code, Cursor, Copilot, Continue, Junie, Kiro, Gemini CLI, Cline, Codex CLI, Windsurf, Antigravity, and Roo Code. Rules, commands, agents, skills, MCP servers, hooks, ignore patterns, and permissions -- all from one source of truth.
 
 > **Full documentation: [samplexbro.github.io/agentsmesh](https://samplexbro.github.io/agentsmesh)**
 
@@ -80,16 +78,16 @@ That's it. Your `.agentsmesh/` directory is now the single source of truth, and 
 
 ## Supported Tools
 
-| Feature       | Claude Code | Cursor  | Copilot | Gemini CLI | Cline   | Codex CLI | Windsurf | Continue | Junie    | Antigravity | Roo Code |
-|---------------|:-----------:|:-------:|:-------:|:----------:|:-------:|:---------:|:--------:|:--------:|:--------:|:-----------:|:--------:|
-| Rules         | Native      | Native  | Native  | Native     | Native  | Native    | Native   | Native   | Native   | Native      | Native   |
-| Commands      | Native      | Native  | Native  | Native     | Native  | Embedded  | Native   | Embedded | Embedded | Partial     | Native   |
-| Agents        | Native      | Native  | Native  | Native     | Embedded| Native    | Embedded | --       | Embedded | --          | --       |
-| Skills        | Native      | Native  | Native  | Native     | Native  | Native    | Native   | Embedded | Embedded | Native      | Native   |
-| MCP Servers   | Native      | Native  | --      | Native     | Native  | Native    | Partial  | Native   | Native   | --          | Native   |
-| Hooks         | Native      | Native  | Partial | Partial    | --      | --        | Native   | --       | --       | --          | --       |
-| Ignore        | Native      | Native  | --      | Native     | Native  | --        | Native   | --       | Native   | --          | Native   |
-| Permissions   | Native      | Partial | --      | Partial    | --      | --        | --       | --       | --       | --          | --       |
+| Feature       | Claude Code | Cursor  | Copilot | Continue | Junie    | Kiro   | Gemini CLI | Cline   | Codex CLI | Windsurf | Antigravity | Roo Code |
+|---------------|:-----------:|:-------:|:-------:|:--------:|:--------:|:------:|:----------:|:-------:|:---------:|:--------:|:-----------:|:--------:|
+| Rules         | Native      | Native  | Native  | Native   | Native   | Native | Native     | Native  | Native    | Native   | Native      | Native   |
+| Commands      | Native      | Native  | Native  | Embedded | Embedded | --     | Native     | Native  | Embedded  | Native   | Partial     | Native   |
+| Agents        | Native      | Native  | Native  | --       | Embedded | --     | Native     | Embedded| Native    | Embedded | --          | --       |
+| Skills        | Native      | Native  | Native  | Embedded | Embedded | Native | Native     | Native  | Native    | Native   | Native      | Native   |
+| MCP Servers   | Native      | Native  | --      | Native   | Native   | Native | Native     | Native  | Native    | Partial  | --          | Native   |
+| Hooks         | Native      | Native  | Partial | --       | --       | Native | Partial    | --      | --        | Native   | --          | --       |
+| Ignore        | Native      | Native  | --      | --       | Native   | Native | Native     | Native  | --        | Native   | --          | Native   |
+| Permissions   | Native      | Partial | --      | --       | --       | --     | Partial    | --      | --        | --       | --          | --       |
 
 See the [full feature matrix docs](https://samplexbro.github.io/agentsmesh/reference/supported-tools/) for details on native vs. embedded support.
 
@@ -107,14 +105,6 @@ The documentation site covers everything in detail:
 - **[Configuration](https://samplexbro.github.io/agentsmesh/configuration/agentsmesh-yaml/)** -- agentsmesh.yaml, local overrides, extends, collaboration, conversions
 - **[Guides](https://samplexbro.github.io/agentsmesh/guides/existing-project/)** -- adopting in existing projects, multi-tool teams, sharing config, CI drift detection, community packs
 - **[Reference](https://samplexbro.github.io/agentsmesh/reference/generation-pipeline/)** -- how the generation pipeline works
-
----
-
-## Roadmap
-
-See [ROADMAP.md](ROADMAP.md) for planned features and release timeline.
-
----
 
 ## Contributing
 

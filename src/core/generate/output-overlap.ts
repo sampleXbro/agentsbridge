@@ -24,6 +24,10 @@ function isGeminiAgents(result: GenerateResult): boolean {
   return result.target === 'gemini-cli' && result.path.endsWith(AGENTS_SUFFIX);
 }
 
+function isKiroAgents(result: GenerateResult): boolean {
+  return result.target === 'kiro' && result.path.endsWith(AGENTS_SUFFIX);
+}
+
 function isCompatibilityAgents(result: GenerateResult): boolean {
   return isCursorAgents(result) || isGeminiAgents(result);
 }
@@ -69,6 +73,21 @@ function hasEquivalentCanonicalContent(
   return normalizeContent(left.content, leftRefs) === normalizeContent(right.content, rightRefs);
 }
 
+function hasCanonicalSupersetContent(
+  richer: GenerateResult,
+  plainer: GenerateResult,
+  canonical: CanonicalFiles,
+  config: ValidatedConfig,
+  cache: Map<string, Map<string, string>>,
+): boolean {
+  const richerRefs = reverseReferenceMap(richer.target, canonical, config, cache);
+  const plainerRefs = reverseReferenceMap(plainer.target, canonical, config, cache);
+  const richerContent = normalizeContent(richer.content, richerRefs).trim();
+  const plainerContent = normalizeContent(plainer.content, plainerRefs).trim();
+
+  return richerContent.length > plainerContent.length && richerContent.includes(plainerContent);
+}
+
 export function preferEquivalentCodexAgents(
   results: GenerateResult[],
   canonical: CanonicalFiles,
@@ -108,7 +127,8 @@ export function preferEquivalentCodexAgents(
       !isWindsurfAgents(result) &&
       !isClineAgents(result) &&
       !isCursorAgents(result) &&
-      !isGeminiAgents(result)
+      !isGeminiAgents(result) &&
+      !isKiroAgents(result)
     ) {
       return true;
     }
@@ -117,6 +137,9 @@ export function preferEquivalentCodexAgents(
     if (isCompatibilityAgents(result) || isWindsurfAgents(result) || isClineAgents(result)) {
       return false;
     }
-    return !hasEquivalentCanonicalContent(codexResult, result, canonical, config, reverseCache);
+    return !(
+      hasEquivalentCanonicalContent(codexResult, result, canonical, config, reverseCache) ||
+      hasCanonicalSupersetContent(codexResult, result, canonical, config, reverseCache)
+    );
   });
 }

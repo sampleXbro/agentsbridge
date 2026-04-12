@@ -11,6 +11,7 @@ targets:
   - junie
   - antigravity
   - roo-code
+  - kiro
 features:
   - rules
   - commands

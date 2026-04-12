@@ -16,11 +16,21 @@ const ALL_FEATURES = [
 ];
 
 /**
+ * Starter targets intentionally exclude codex-cli.
+ * Codex appends an AGENTS.md rule index when additional canonical rules exist,
+ * which makes the out-of-the-box starter scaffold conflict with other AGENTS.md-based targets.
+ * Users can opt into codex-cli by adding it to agentsmesh.yaml after init.
+ */
+export const DEFAULT_INIT_TARGETS = TARGET_IDS.filter((target) => target !== 'codex-cli');
+
+/**
  * Build agentsmesh.yaml content for the given targets.
- * @param targets - Target tool IDs to include; uses all targets if empty
+ * @param targets - Target tool IDs to include; uses the starter target set if empty
  */
 export function buildConfig(targets: string[]): string {
-  const targetList = (targets.length > 0 ? targets : TARGET_IDS).map((t) => `  - ${t}`).join('\n');
+  const targetList = (targets.length > 0 ? targets : DEFAULT_INIT_TARGETS)
+    .map((t) => `  - ${t}`)
+    .join('\n');
   const featureList = ALL_FEATURES.map((f) => `  - ${f}`).join('\n');
   return `version: 1\ntargets:\n${targetList}\nfeatures:\n${featureList}\n`;
 }

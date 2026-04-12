@@ -18,7 +18,7 @@ agentsmesh init [flags]
 
 | Flag | Description |
 |------|-------------|
-| `--yes` | Auto-import all detected tool configs without prompting. |
+| `--yes` | Auto-import all detected tool configs, then add starter examples only under empty canonical folders (skip categories import already filled). |
 
 ## What init creates
 
@@ -46,6 +46,7 @@ During init, AgentsMesh scans the project for existing AI tool configs. If any a
 - `.windsurf/` → Windsurf
 - `.continue/` → Continue
 - `.junie/` → Junie
+- `.kiro/` → Kiro
 - `.agents/` → Antigravity
 - `.roo/` → Roo Code
 
@@ -65,7 +66,7 @@ Prompts for each detected config. You can accept or skip each one individually.
 agentsmesh init --yes
 ```
 
-Imports all detected configs without prompting. Useful for scripted setups or when you want to migrate everything at once.
+Imports all detected configs without prompting, then writes the same starter files as a plain `init` **only** where a canonical folder is still empty (for example `commands/example.md` if nothing was imported under `commands/`). Useful for scripted setups or when you want to migrate everything at once without losing starter templates for unused features.
 
 ### New project (no existing configs)
 
@@ -85,7 +86,7 @@ agentsmesh generate
 
 ## Generated agentsmesh.yaml
 
-The starter config enables all targets and features:
+The starter config enables a conflict-free default target set plus all features:
 
 ```yaml
 version: 1
@@ -93,12 +94,12 @@ targets:
   - claude-code
   - cursor
   - copilot
-  - gemini-cli
-  - cline
-  - codex-cli
-  - windsurf
   - continue
   - junie
+  - kiro
+  - gemini-cli
+  - cline
+  - windsurf
   - antigravity
   - roo-code
 features:
@@ -111,6 +112,8 @@ features:
   - ignore
   - permissions
 ```
+
+`codex-cli` is supported, but not enabled by default in the starter config because its generated `AGENTS.md` rule index can conflict with the shared `AGENTS.md` mirrors emitted by other default targets. Add it manually when your project needs Codex output.
 
 Edit this to match your team's actual tool usage before running `generate`.
 

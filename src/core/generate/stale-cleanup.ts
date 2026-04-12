@@ -34,6 +34,10 @@ const TARGET_MANAGED_OUTPUTS: Record<string, ManagedScope> = {
     dirs: ['.junie/agents', '.junie/commands', '.junie/rules', '.junie/skills'],
     files: ['.aiignore', '.junie/AGENTS.md', '.junie/mcp/mcp.json'],
   },
+  kiro: {
+    dirs: ['.kiro/hooks', '.kiro/skills', '.kiro/steering'],
+    files: ['AGENTS.md', '.kiro/settings/mcp.json', '.kiroignore'],
+  },
   'gemini-cli': {
     dirs: ['.gemini/agents', '.gemini/commands', '.gemini/skills'],
     files: [

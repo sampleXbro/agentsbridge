@@ -4,6 +4,7 @@ import { descriptor as cursor } from '../../../src/targets/cursor/index.js';
 import { descriptor as copilot } from '../../../src/targets/copilot/index.js';
 import { descriptor as continueTarget } from '../../../src/targets/continue/index.js';
 import { descriptor as junie } from '../../../src/targets/junie/index.js';
+import { descriptor as kiro } from '../../../src/targets/kiro/index.js';
 import { descriptor as geminiCli } from '../../../src/targets/gemini-cli/index.js';
 import { descriptor as cline } from '../../../src/targets/cline/index.js';
 import { descriptor as codexCli } from '../../../src/targets/codex-cli/index.js';
@@ -66,6 +67,11 @@ describe('descriptor.paths.rulePath', () => {
     expect(junie.paths.rulePath('example', rule)).toBe('.junie/rules/example.md');
   });
 
+  it('kiro: returns .kiro/steering/{slug}.md', () => {
+    const rule = makeRule('example');
+    expect(kiro.paths.rulePath('example', rule)).toBe('.kiro/steering/example.md');
+  });
+
   it('gemini-cli: always returns GEMINI.md regardless of slug', () => {
     const rule = makeRule('example');
     expect(geminiCli.paths.rulePath('example', rule)).toBe('GEMINI.md');
@@ -114,6 +120,10 @@ describe('descriptor.paths.commandPath', () => {
 
   it('junie: returns .junie/commands/{name}.md', () => {
     expect(junie.paths.commandPath('deploy', config)).toBe('.junie/commands/deploy.md');
+  });
+
+  it('kiro: returns null (commands unsupported)', () => {
+    expect(kiro.paths.commandPath('deploy', config)).toBeNull();
   });
 
   it('gemini-cli simple: returns .gemini/commands/{name}.toml', () => {
@@ -174,6 +184,10 @@ describe('descriptor.paths.agentPath', () => {
     expect(junie.paths.agentPath('reviewer', config)).toBe('.junie/agents/reviewer.md');
   });
 
+  it('kiro: returns null (agents unsupported)', () => {
+    expect(kiro.paths.agentPath('reviewer', config)).toBeNull();
+  });
+
   it('gemini-cli default (conversion OFF): returns .gemini/agents/{name}.md', () => {
     expect(geminiCli.paths.agentPath('reviewer', config)).toBe('.gemini/agents/reviewer.md');
   });
@@ -226,6 +240,7 @@ describe('descriptor metadata', () => {
     copilot,
     continueTarget,
     junie,
+    kiro,
     geminiCli,
     cline,
     codexCli,
@@ -245,9 +260,9 @@ describe('descriptor metadata', () => {
     'permissions',
   ] as const;
 
-  it('all 11 descriptors have ids matching TARGET_IDS', () => {
+  it('all 12 descriptors have ids matching TARGET_IDS', () => {
     const descriptorIds = allDescriptors.map((d) => d.id);
-    expect(descriptorIds).toHaveLength(11);
+    expect(descriptorIds).toHaveLength(12);
     for (const id of descriptorIds) {
       expect(TARGET_IDS).toContain(id);
     }

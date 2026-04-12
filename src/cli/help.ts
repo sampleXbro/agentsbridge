@@ -24,7 +24,13 @@ const COMMANDS: HelpCommand[] = [
     usage: 'agentsmesh init [flags]',
     description:
       'Create agentsmesh.yaml, agentsmesh.local.yaml, and canonical .agentsmesh scaffold',
-    flags: [{ name: '--yes', description: 'Auto-import detected tool configs without prompting' }],
+    flags: [
+      {
+        name: '--yes',
+        description:
+          'Auto-import detected tool configs, then add example scaffold only under empty canonical paths',
+      },
+    ],
   },
   {
     name: 'generate',

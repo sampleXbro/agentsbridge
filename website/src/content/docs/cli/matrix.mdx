@@ -44,16 +44,16 @@ Shows additional notes explaining embedding behavior, partial support limitation
 ## Sample output
 
 ```
-Feature      claude-code  cursor   copilot  gemini-cli  cline  codex-cli  windsurf  continue  junie
-───────────────────────────────────────────────────────────────────────────────────────────────────────
-Rules        native       native   native   native      native  native     native    native    native
-Commands     native       native   native   native      native  embedded   native    embedded  embedded
-Agents       native       native   native   native      embed.  native     embedded  —         embedded
-Skills       native       native   native   native      native  native     native    embedded  embedded
-MCP Servers  native       native   —        native      native  native     partial   native    native
-Hooks        native       native   partial  partial     —       —          native    —         —
-Ignore       native       native   —        native      native  —          native    —         native
-Permissions  native       partial  —        partial     —       —          —         —         —
+Feature      claude-code  cursor   copilot  continue  junie  kiro   gemini-cli  cline  codex-cli  windsurf
+───────────────────────────────────────────────────────────────────────────────────────────────────────────
+Rules        native       native   native   native    native native native      native native     native
+Commands     native       native   native   embedded  embedded —    native      native embedded   native
+Agents       native       native   native   —         embedded —    native      embed. native     embedded
+Skills       native       native   native   embedded  embedded native native      native native     native
+MCP Servers  native       native   —        native    native native native      native native     partial
+Hooks        native       native   partial  —         —      native partial     —      —          native
+Ignore       native       native   —        —         native native native      native —          native
+Permissions  native       partial  —        —         —      —      partial     —      —          —
 ```
 
 ## Legend

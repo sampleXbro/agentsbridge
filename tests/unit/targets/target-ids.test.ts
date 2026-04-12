@@ -2,13 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { TARGET_IDS, isBuiltinTargetId } from '../../../src/targets/catalog/target-ids.js';
 
 describe('TARGET_IDS', () => {
-  it('contains exactly the 11 known target IDs', () => {
+  it('contains exactly the 12 known target IDs', () => {
     expect([...TARGET_IDS]).toStrictEqual([
       'claude-code',
       'cursor',
       'copilot',
       'continue',
       'junie',
+      'kiro',
       'gemini-cli',
       'cline',
       'codex-cli',

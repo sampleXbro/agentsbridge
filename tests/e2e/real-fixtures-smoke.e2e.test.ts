@@ -10,6 +10,7 @@ const TARGETS = [
   'copilot',
   'continue',
   'junie',
+  'kiro',
   'gemini-cli',
   'cline',
   'codex-cli',

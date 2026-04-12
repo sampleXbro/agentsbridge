@@ -26,5 +26,17 @@ export function lintHooks(canonical: CanonicalFiles, target: string): LintDiagno
       }));
   }
 
+  if (target === 'kiro') {
+    const supported = new Set(['PreToolUse', 'PostToolUse', 'UserPromptSubmit', 'SubagentStop']);
+    return Object.keys(canonical.hooks)
+      .filter((event) => !supported.has(event))
+      .map((event) => ({
+        level: 'warning' as const,
+        file: '.agentsmesh/hooks.yaml',
+        target,
+        message: `${event} is not supported by Kiro hooks; only PreToolUse, PostToolUse, UserPromptSubmit, and SubagentStop are projected.`,
+      }));
+  }
+
   return [];
 }

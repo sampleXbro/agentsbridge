@@ -1,0 +1,14 @@
+{
+  "name": "post-tool-use 1",
+  "version": "1",
+  "when": {
+    "type": "postToolUse",
+    "tools": [
+      "Edit|Write"
+    ]
+  },
+  "then": {
+    "type": "shellCommand",
+    "command": "jq -r '.tool_input.file_path' | xargs eslint --fix"
+  }
+}

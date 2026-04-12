@@ -1,0 +1,14 @@
+{
+  "name": "pre-tool-use 1",
+  "version": "1",
+  "when": {
+    "type": "preToolUse",
+    "tools": [
+      "Bash"
+    ]
+  },
+  "then": {
+    "type": "shellCommand",
+    "command": "echo \"Running: $(jq -r '.tool_input.command' < /dev/stdin)\""
+  }
+}

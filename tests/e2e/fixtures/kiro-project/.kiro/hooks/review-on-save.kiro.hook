@@ -1,0 +1,13 @@
+{
+  "name": "Review on save",
+  "description": "Review the latest changes after file writes",
+  "version": "1",
+  "when": {
+    "type": "preToolUse",
+    "tools": ["write"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Review the latest changes."
+  }
+}

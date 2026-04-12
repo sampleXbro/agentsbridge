@@ -675,6 +675,69 @@ features: [rules, commands, agents, skills, mcp, ignore]
     fileNotContains(join(dir, '.junie', 'agents', 'code-reviewer.md'), 'name: code-reviewer');
   });
 
+  it('generates Kiro rules, skills, hooks, mcp, and ignore with doc-aligned formats', async () => {
+    dir = createCanonicalProject(`version: 1
+targets: [kiro]
+features: [rules, skills, mcp, hooks, ignore]
+`);
+    const result = await runCli('generate --targets kiro', dir);
+    expect(result.exitCode, result.stderr).toBe(0);
+
+    dirTreeExactly(dir, [
+      '.agentsmesh/',
+      '.agentsmesh/.lock',
+      '.agentsmesh/agents/',
+      '.agentsmesh/agents/code-reviewer.md',
+      '.agentsmesh/agents/researcher.md',
+      '.agentsmesh/commands/',
+      '.agentsmesh/commands/review.md',
+      '.agentsmesh/hooks.yaml',
+      '.agentsmesh/ignore',
+      '.agentsmesh/mcp.json',
+      '.agentsmesh/permissions.yaml',
+      '.agentsmesh/rules/',
+      '.agentsmesh/rules/_root.md',
+      '.agentsmesh/rules/typescript.md',
+      '.agentsmesh/skills/',
+      '.agentsmesh/skills/api-generator/',
+      '.agentsmesh/skills/api-generator/SKILL.md',
+      '.agentsmesh/skills/api-generator/references/',
+      '.agentsmesh/skills/api-generator/references/route-checklist.md',
+      '.agentsmesh/skills/api-generator/template.ts',
+      '.agentsmeshcache',
+      '.kiro/',
+      '.kiro/hooks/',
+      '.kiro/hooks/post-tool-use-1.kiro.hook',
+      '.kiro/settings/',
+      '.kiro/settings/mcp.json',
+      '.kiro/skills/',
+      '.kiro/skills/api-generator/',
+      '.kiro/skills/api-generator/SKILL.md',
+      '.kiro/skills/api-generator/references/',
+      '.kiro/skills/api-generator/references/route-checklist.md',
+      '.kiro/skills/api-generator/template.ts',
+      '.kiro/steering/',
+      '.kiro/steering/typescript.md',
+      '.kiroignore',
+      'AGENTS.md',
+      'agentsmesh.yaml',
+    ]);
+
+    fileContains(join(dir, 'AGENTS.md'), '# Standards');
+    fileNotContains(join(dir, 'AGENTS.md'), 'root: true');
+    fileContains(join(dir, '.kiro', 'steering', 'typescript.md'), 'inclusion: fileMatch');
+    fileContains(join(dir, '.kiro', 'steering', 'typescript.md'), 'fileMatchPattern: src/**/*.ts');
+    fileContains(join(dir, '.kiro', 'skills', 'api-generator', 'SKILL.md'), 'name: api-generator');
+    fileContains(join(dir, '.kiro', 'hooks', 'post-tool-use-1.kiro.hook'), '"type": "postToolUse"');
+    fileContains(join(dir, '.kiro', 'hooks', 'post-tool-use-1.kiro.hook'), 'prettier --write');
+    const mcp = readJson(join(dir, '.kiro', 'settings', 'mcp.json'));
+    expect(mcp).toHaveProperty('mcpServers');
+    expect(mcp).toHaveProperty('mcpServers.context7.command', 'npx');
+    fileContains(join(dir, '.kiroignore'), '.env');
+    fileNotExists(join(dir, '.kiro', 'commands'));
+    fileNotExists(join(dir, '.kiro', 'agents'));
+  });
+
   it('generates Roo Code rules, commands, skills, mcp, and ignore with doc-aligned formats', async () => {
     dir = createCanonicalProject(`version: 1
 targets: [roo-code]

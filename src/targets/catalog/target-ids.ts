@@ -15,6 +15,7 @@ export const TARGET_IDS = [
   'copilot',
   'continue',
   'junie',
+  'kiro',
   'gemini-cli',
   'cline',
   'codex-cli',

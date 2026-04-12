@@ -2,7 +2,7 @@
  * Agent folder structure tests — aligned with docs/agents-folder-structure-research.md
  *
  * Verifies that each agent generates the expected project paths per the research doc.
- * Covers all 8 agents: Claude Code, Cursor, Copilot, Gemini CLI, Cline, Codex CLI, Windsurf, Antigravity.
+ * Covers Claude Code, Cursor, Copilot, Gemini CLI, Cline, Codex CLI, Windsurf, Antigravity, and Kiro.
  *
  * Implementation gaps (research doc paths we intentionally don't generate):
  * - Claude: .claude/settings.local.json (user-specific)
@@ -917,6 +917,106 @@ describe('agents-folder-structure-research: Codex CLI (docs §6)', () => {
   });
 });
 
+describe('agents-folder-structure-research: Kiro (docs §8)', () => {
+  const EXPECTED_PATHS = {
+    agentsMd: 'AGENTS.md',
+    steeringDir: '.kiro/steering/',
+    skillsDir: '.kiro/skills/',
+    hooksDir: '.kiro/hooks/',
+    mcp: '.kiro/settings/mcp.json',
+    ignore: '.kiroignore',
+  };
+
+  it('generates AGENTS.md from the root rule', async () => {
+    const results = await generate({
+      config: config({ targets: ['kiro'], features: ['rules'] }),
+      canonical: canonicalWithRoot('# Kiro Root'),
+      projectRoot: TEST_DIR,
+    });
+    const root = results.find((x) => x.path === EXPECTED_PATHS.agentsMd);
+    expect(root).toBeDefined();
+    expect(root!.content).toContain('Kiro Root');
+  });
+
+  it('generates .kiro/steering/*.md for non-root rules with steering frontmatter', async () => {
+    const canonical = fullCanonical({
+      rootBody: '# Root',
+      nonRootRules: [
+        {
+          source: join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'),
+          body: 'Use strict TypeScript.',
+          globs: ['src/**/*.ts'],
+          targets: [],
+        },
+      ],
+    });
+    const results = await generate({
+      config: config({ targets: ['kiro'], features: ['rules'] }),
+      canonical,
+      projectRoot: TEST_DIR,
+    });
+    const rule = results.find((x) => x.path === '.kiro/steering/typescript.md');
+    expect(rule).toBeDefined();
+    expect(rule!.content).toContain('inclusion: fileMatch');
+    expect(rule!.content).toContain('fileMatchPattern: src/**/*.ts');
+  });
+
+  it('generates .kiro/skills/{name}/SKILL.md for skills', async () => {
+    const canonical = fullCanonical({
+      rootBody: '# Root',
+      skills: [{ name: 'debugging', description: 'Debug issues', body: 'Review logs first.' }],
+    });
+    const results = await generate({
+      config: config({ targets: ['kiro'], features: ['rules', 'skills'] }),
+      canonical,
+      projectRoot: TEST_DIR,
+    });
+    const skill = results.find((x) => x.path === '.kiro/skills/debugging/SKILL.md');
+    expect(skill).toBeDefined();
+    expect(skill!.content).toContain('Review logs first.');
+  });
+
+  it('generates .kiro/hooks/*.kiro.hook from canonical hooks', async () => {
+    const canonical = fullCanonical({
+      rootBody: '# Root',
+      hooks: {
+        UserPromptSubmit: [{ matcher: '*', prompt: 'Capture intent.', type: 'prompt' }],
+      },
+    });
+    const results = await generate({
+      config: config({ targets: ['kiro'], features: ['rules', 'hooks'] }),
+      canonical,
+      projectRoot: TEST_DIR,
+    });
+    const hook = results.find((x) => x.path === '.kiro/hooks/user-prompt-submit-1.kiro.hook');
+    expect(hook).toBeDefined();
+    expect(hook!.content).toContain('"type": "promptSubmit"');
+    expect(hook!.content).toContain('Capture intent.');
+  });
+
+  it('generates .kiro/settings/mcp.json and .kiroignore', async () => {
+    const canonical = fullCanonical({
+      rootBody: '# Root',
+      mcp: {
+        mcpServers: {
+          ctx: { type: 'stdio', command: 'npx', args: ['-y', 'ctx'], env: {} },
+        },
+      },
+      ignore: ['dist', '.env'],
+    });
+    const results = await generate({
+      config: config({ targets: ['kiro'], features: ['rules', 'mcp', 'ignore'] }),
+      canonical,
+      projectRoot: TEST_DIR,
+    });
+    const mcp = results.find((x) => x.path === EXPECTED_PATHS.mcp);
+    const ignore = results.find((x) => x.path === EXPECTED_PATHS.ignore);
+    expect(mcp).toBeDefined();
+    expect(ignore).toBeDefined();
+    expect(ignore!.content).toContain('dist');
+  });
+});
+
 describe('agents-folder-structure-research: Windsurf (docs §7)', () => {
   const EXPECTED_PATHS = {
     agentsMd: 'AGENTS.md', // research: AGENTS.md (documented root instructions file)
@@ -1050,6 +1150,7 @@ describe('agents-folder-structure-research: Windsurf (docs §7)', () => {
  * Gemini:  .gemini/.env, .gemini/system.md, .gemini/sandbox-* (skills now supported)
  * Cline:   .clinerules flat file (legacy — we use .clinerules/*.md)
  * Codex:   nested `AGENTS.md` / `AGENTS.override.md` for advisory rules; `.rules` only for `codex_emit: execution` (§11 in codex-cli-project-level-advanced.md)
+ * Kiro: no repo-native commands or agents directory for IDE-first support
  * Windsurf: .windsurfrules/.windsurfignore (legacy), subdirectory AGENTS.md
  */
 
@@ -1138,6 +1239,7 @@ describe('agents-folder-structure-research: cross-tool matrix (docs quick matrix
       'claude-code',
       'cursor',
       'copilot',
+      'kiro',
       'gemini-cli',
       'cline',
       'codex-cli',
@@ -1148,6 +1250,7 @@ describe('agents-folder-structure-research: cross-tool matrix (docs quick matrix
       'claude-code': '.claude/CLAUDE.md',
       cursor: '.cursor/rules/general.mdc',
       copilot: '.github/copilot-instructions.md',
+      kiro: 'AGENTS.md',
       'gemini-cli': 'GEMINI.md',
       cline: 'AGENTS.md',
       'codex-cli': 'AGENTS.md',

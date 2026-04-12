@@ -17,6 +17,7 @@ describe('targetHintFromNativePath', () => {
     expect(targetHintFromNativePath('.github/instructions/foo')).toBe('copilot');
     expect(targetHintFromNativePath('.github/prompts')).toBe('copilot');
     expect(targetHintFromNativePath('.gemini/commands')).toBe('gemini-cli');
+    expect(targetHintFromNativePath('.kiro/steering/typescript.md')).toBe('kiro');
     expect(targetHintFromNativePath('.claude/rules/ts')).toBe('claude-code');
   });
 
@@ -39,6 +40,7 @@ describe('targetHintFromNativePath', () => {
 describe('pathSupportsNativePick', () => {
   it('matches hint to target', () => {
     expect(pathSupportsNativePick('.cursor/rules', 'cursor')).toBe(true);
+    expect(pathSupportsNativePick('.kiro/skills', 'kiro')).toBe(true);
     expect(pathSupportsNativePick('.cursor/rules', 'gemini-cli')).toBe(false);
   });
 

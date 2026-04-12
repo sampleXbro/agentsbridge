@@ -1,6 +1,11 @@
 import { basename } from 'node:path';
 import { JUNIE_DOT_AGENTS, JUNIE_GUIDELINES } from '../../targets/junie/constants.js';
 import {
+  KIRO_AGENTS_MD,
+  KIRO_STEERING_DIR,
+  KIRO_SKILLS_DIR,
+} from '../../targets/kiro/constants.js';
+import {
   ROO_CODE_ROOT_RULE,
   ROO_CODE_ROOT_RULE_FALLBACK,
   ROO_CODE_RULES_DIR,
@@ -135,6 +140,19 @@ export async function buildJunieImportPaths(
   }
   for (const absPath of await listFiles(projectRoot, '.junie/skills')) {
     addSkillLikeMapping(refs, rel(projectRoot, absPath), '.junie/skills');
+  }
+}
+
+export async function buildKiroImportPaths(
+  refs: Map<string, string>,
+  projectRoot: string,
+): Promise<void> {
+  refs.set(KIRO_AGENTS_MD, `${AB_RULES}/_root.md`);
+  for (const absPath of await listFiles(projectRoot, KIRO_STEERING_DIR)) {
+    addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_RULES, '.md');
+  }
+  for (const absPath of await listFiles(projectRoot, KIRO_SKILLS_DIR)) {
+    addSkillLikeMapping(refs, rel(projectRoot, absPath), KIRO_SKILLS_DIR);
   }
 }
 

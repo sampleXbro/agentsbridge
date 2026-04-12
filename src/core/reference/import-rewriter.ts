@@ -10,6 +10,7 @@ const IMPORT_REFERENCE_TARGETS = [
   'copilot',
   'continue',
   'junie',
+  'kiro',
   'gemini-cli',
   'cline',
   'codex-cli',

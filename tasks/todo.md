@@ -1,3 +1,62 @@
+# AGENTS collision preference
+
+- [x] Reproduce the `AGENTS.md` collision between `codex-cli` and `kiro`, then define a deterministic "richest file wins" rule
+- [x] Add failing unit and e2e coverage for superset `AGENTS.md` collisions and preserve hard failures for incompatible overlaps
+- [x] Implement shared-output collision resolution for richer `AGENTS.md` files and rerun verification plus post-feature QA
+
+## Review (AGENTS collision preference)
+
+- Changes implemented:
+  - taught shared output collision resolution to keep the richer `AGENTS.md` when one candidate is a strict superset of the other
+  - added a narrow Codex-specific fallback for `AGENTS.md` collisions so `codex-cli` wins over plainer targets such as `kiro` when the Codex output is strictly longer
+  - extended the pre-collision overlap pass to treat Kiro as another shared `AGENTS.md` producer when comparing Codex overlaps
+- Tests added:
+  - `tests/unit/core/engine-collision.test.ts`
+  - `tests/unit/core/engine.test.ts`
+  - `tests/e2e/generate-collisions.e2e.test.ts`
+- Verification:
+  - `pnpm vitest run tests/unit/core/engine-collision.test.ts tests/unit/core/engine.test.ts`
+  - `pnpm build && pnpm vitest run --config vitest.e2e.config.ts tests/e2e/generate-collisions.e2e.test.ts`
+  - `pnpm lint`
+  - `pnpm typecheck`
+  - `pnpm test`
+- QA Report — AGENTS collision preference
+  - Acceptance criteria: `codex-cli` and `kiro` no longer fail generation when Codex emits the richer `AGENTS.md`, while incompatible non-Codex overlaps still error. Status: OK.
+  - Edge cases: identical duplicates still dedupe, strict superset raw `AGENTS.md` collisions are preserved, and incompatible `AGENTS.md` overlaps such as `cline` vs `windsurf` still fail fast. Status: OK.
+  - Gaps identified: none from the covered unit/integration/e2e verification.
+
+# Kiro target support
+
+- [x] Confirm the Kiro IDE file contract from `docs/agent-structures/kiro-project-level-advanced.md` and official Kiro docs, then map supported features and touchpoints
+- [x] Add failing tests for the Kiro target catalog, generator/importer behavior, matrix/docs wiring, and exact generated/imported paths
+- [x] Implement the Kiro target with native rules, skills, MCP, hooks, and ignore support plus CLI/catalog wiring
+- [x] Add realistic Kiro e2e fixtures and extend integration/e2e/docs coverage for generate/import/matrix/init flows
+- [x] Run targeted verification, apply `post-feature-qa`, then finish with full repo verification
+
+## Review (Kiro target support)
+
+- Changes implemented:
+  - added a native Kiro target with project-level `AGENTS.md`, `.kiro/steering`, `.kiro/skills`, `.kiro/hooks`, `.kiro/settings/mcp.json`, and `.kiroignore` generation/import/lint coverage
+  - wired Kiro into the builtin catalog, support matrix, native-format detection, native extends import, reference rewriting, install path picking, and stale-artifact cleanup
+  - added realistic Kiro fixture coverage across unit, integration, e2e, and docs-backed structure tests
+  - updated README and website reference/CLI docs to list Kiro support and the exact capability surface
+  - hardened `init` so the starter target set stays conflict-free by default while leaving `codex-cli` opt-in for projects that want Codex output
+- Tests added:
+  - `tests/unit/targets/kiro/generator.test.ts`
+  - `tests/unit/targets/kiro/importer.test.ts`
+  - `tests/e2e/fixtures/kiro-project/*`
+  - Kiro coverage additions in matrix, import, generate, smoke, and capability suites
+- Verification:
+  - `pnpm build`
+  - `pnpm lint`
+  - `pnpm typecheck`
+  - `pnpm test`
+  - `pnpm test:e2e`
+- QA Report — Kiro target support
+  - Acceptance criteria: Kiro project structure is supported for generate/import, documented in the support matrix/docs, and covered by strict unit/integration/e2e tests. Status: OK.
+  - Edge cases: Kiro hooks keep only supported lifecycle events, import normalizes steering frontmatter into canonical trigger/glob metadata, and the default `init -> generate` path remains conflict-free after adding Kiro. Status: OK.
+  - Gaps identified: none after the full passing verification run.
+
 # Root Paragraph Canonical Authoring Pass
 
 - [x] Capture the exact canonical file and format contract for rules, commands, agents, skills, hooks, MCP, permissions, and ignore from init templates and parsers
@@ -159,6 +218,17 @@
 ### Actions Taken
 
 - fixed the current warning set instead of muting rules
+
+# Build repair pass
+
+- [x] Resolve the merge markers in `src/core/generate/output-overlap.ts` without reverting unrelated Kiro work
+- [x] Run `pnpm build` and confirm the library builds successfully
+
+# Failing test repair pass
+
+- [ ] Reproduce the currently failing test and identify the exact assertion or runtime error
+- [ ] Fix the underlying regression with the smallest change that preserves the current Kiro/Codex collision contract
+- [ ] Rerun the failing test, adjacent collision coverage, and `pnpm build`
 - aligned the lint command with the repo’s ESLint target scope so the cleanup is enforced going forward
 
 # ResolvedExtend TS2741 follow-up

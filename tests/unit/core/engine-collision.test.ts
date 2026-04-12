@@ -54,4 +54,30 @@ describe('engine collision helpers', () => {
       }),
     ]);
   });
+
+  it('prefers the richer AGENTS.md when one output is a strict superset of the other', () => {
+    const base = '# Project Rules\n\nUse TypeScript.\n';
+    const richer = `${base}\n## Additional Rule Files\n- [typescript](.codex/instructions/typescript.md)\n`;
+
+    const results = resolveOutputCollisions([
+      makeResult({
+        target: 'kiro',
+        path: 'AGENTS.md',
+        content: base,
+      }),
+      makeResult({
+        target: 'codex-cli',
+        path: 'AGENTS.md',
+        content: richer,
+      }),
+    ]);
+
+    expect(results).toEqual([
+      makeResult({
+        target: 'codex-cli',
+        path: 'AGENTS.md',
+        content: richer,
+      }),
+    ]);
+  });
 });

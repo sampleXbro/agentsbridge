@@ -6,7 +6,7 @@ description: Commands are reusable slash-command prompts in AgentsMesh. They map
 
 import { Aside } from '@astrojs/starlight/components';
 
-Commands are reusable prompts that map to slash commands in tools that support them (Claude Code, Cursor, Copilot, Gemini CLI). For tools without native command support (Codex CLI, Windsurf, Continue, Junie), they are projected as invokable skills with embedded metadata for lossless round-trip.
+Commands are reusable prompts that map to slash commands in tools that support them (Claude Code, Cursor, Copilot, Gemini CLI, Cline, Windsurf, Roo Code). For tools without native command support, check the matrix: some targets embed commands for round-trip fidelity (Codex CLI, Continue, Junie), while others currently skip command generation entirely (Kiro).
 
 ## File format
 

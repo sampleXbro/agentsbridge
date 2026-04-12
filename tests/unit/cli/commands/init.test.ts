@@ -111,14 +111,16 @@ describe('detectExistingConfigs', () => {
 });
 
 describe('runInit — scaffold (no existing configs)', () => {
-  it('creates agentsmesh.yaml with all targets', async () => {
+  it('creates agentsmesh.yaml with the starter target set', async () => {
     await runInit(TEST_DIR);
     const content = readFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'utf-8');
     expect(content).toContain('version: 1');
     expect(content).toContain('claude-code');
     expect(content).toContain('continue');
     expect(content).toContain('junie');
+    expect(content).toContain('kiro');
     expect(content).toContain('cursor');
+    expect(content).not.toContain('codex-cli');
     expect(content).toContain('rules');
   });
 
@@ -227,12 +229,14 @@ describe('runInit — existing configs detected, no --yes', () => {
     expect(existsSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'))).toBe(true);
   });
 
-  it('still creates agentsmesh.yaml with all targets when no --yes', async () => {
+  it('still creates agentsmesh.yaml with the starter target set when no --yes', async () => {
     writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Rules\n');
     await runInit(TEST_DIR);
     const content = readFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'utf-8');
     expect(content).toContain('version: 1');
     expect(content).toContain('claude-code');
+    expect(content).toContain('kiro');
+    expect(content).not.toContain('codex-cli');
   });
 });
 

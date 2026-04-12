@@ -29,6 +29,8 @@ const PATH_PREFIX_TO_TARGET: { prefix: string; target: string }[] = [
   { prefix: '.junie/rules', target: 'junie' },
   { prefix: '.junie/agents', target: 'junie' },
   { prefix: '.junie/skills', target: 'junie' },
+  { prefix: '.kiro/steering', target: 'kiro' },
+  { prefix: '.kiro/skills', target: 'kiro' },
   { prefix: '.cline/skills', target: 'cline' },
   { prefix: '.clinerules/workflows', target: 'cline' },
   { prefix: '.windsurf/rules', target: 'windsurf' },

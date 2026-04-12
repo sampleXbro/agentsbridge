@@ -46,6 +46,7 @@ During init, AgentsMesh scans the project for existing AI tool configs. If any a
 - `.windsurf/` → Windsurf
 - `.continue/` → Continue
 - `.junie/` → Junie
+- `.kiro/` → Kiro
 - `.agents/` → Antigravity
 - `.roo/` → Roo Code
 
@@ -85,7 +86,7 @@ agentsmesh generate
 
 ## Generated agentsmesh.yaml
 
-The starter config enables all targets and features:
+The starter config enables a conflict-free default target set plus all features:
 
 ```yaml
 version: 1
@@ -93,12 +94,12 @@ targets:
   - claude-code
   - cursor
   - copilot
-  - gemini-cli
-  - cline
-  - codex-cli
-  - windsurf
   - continue
   - junie
+  - kiro
+  - gemini-cli
+  - cline
+  - windsurf
   - antigravity
   - roo-code
 features:
@@ -111,6 +112,8 @@ features:
   - ignore
   - permissions
 ```
+
+`codex-cli` is supported, but not enabled by default in the starter config because its generated `AGENTS.md` rule index can conflict with the shared `AGENTS.md` mirrors emitted by other default targets. Add it manually when your project needs Codex output.
 
 Edit this to match your team's actual tool usage before running `generate`.
 

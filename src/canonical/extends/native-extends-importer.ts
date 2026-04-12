@@ -8,6 +8,7 @@ import { importFromWindsurf } from '../../targets/windsurf/importer.js';
 import { importFromCline } from '../../targets/cline/importer.js';
 import { importFromContinue } from '../../targets/continue/importer.js';
 import { importFromJunie } from '../../targets/junie/importer.js';
+import { importFromKiro } from '../../targets/kiro/importer.js';
 
 type ImportFn = (projectRoot: string) => Promise<ImportResult[]>;
 
@@ -21,6 +22,7 @@ const NATIVE_IMPORTERS: Record<string, ImportFn> = {
   cline: importFromCline,
   continue: importFromContinue,
   junie: importFromJunie,
+  kiro: importFromKiro,
 };
 
 /**

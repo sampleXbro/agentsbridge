@@ -91,6 +91,24 @@ describe('import capabilities', () => {
     fileContains(join(dir, '.agentsmesh', 'ignore'), '.env');
   });
 
+  it('imports Kiro AGENTS, steering, skills, hooks, project mcp, and .kiroignore', async () => {
+    dir = createTestProject('kiro-project');
+    const result = await runCli('import --from kiro', dir);
+    expect(result.exitCode, result.stderr).toBe(0);
+
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'Kiro Workspace');
+    fileContains(join(dir, '.agentsmesh', 'rules', 'typescript.md'), 'src/**/*.ts');
+    fileContains(join(dir, '.agentsmesh', 'skills', 'debugging', 'SKILL.md'), '# Debugging');
+    fileContains(
+      join(dir, '.agentsmesh', 'skills', 'debugging', 'references', 'checklist.md'),
+      'Reproduce the issue first',
+    );
+    fileContains(join(dir, '.agentsmesh', 'hooks.yaml'), 'PreToolUse');
+    fileContains(join(dir, '.agentsmesh', 'hooks.yaml'), 'Review the latest changes.');
+    fileContains(join(dir, '.agentsmesh', 'mcp.json'), 'context7');
+    fileContains(join(dir, '.agentsmesh', 'ignore'), '.env');
+  });
+
   it('imports Junie root from .junie/ci-guidelines.md fallback when primary files are absent', async () => {
     dir = createTestProject();
     mkdirSync(join(dir, '.junie'), { recursive: true });

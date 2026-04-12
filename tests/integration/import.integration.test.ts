@@ -196,6 +196,61 @@ features: [rules, mcp, ignore]
     expect(readFileSync(join(TEST_DIR, '.aiignore'), 'utf-8')).toContain('node_modules/');
   });
 
+  it('imports Kiro AGENTS, steering, hooks, mcp, and ignore then regenerates Kiro artifacts', () => {
+    mkdirSync(join(TEST_DIR, '.kiro', 'steering'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.kiro', 'hooks'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.kiro', 'settings'), { recursive: true });
+    writeFileSync(join(TEST_DIR, 'AGENTS.md'), '# Kiro Rules\n\nUse TDD.');
+    writeFileSync(
+      join(TEST_DIR, '.kiro', 'steering', 'typescript.md'),
+      '---\ninclusion: fileMatch\nfileMatchPattern: src/**/*.ts\n---\n\nUse strict TypeScript.\n',
+    );
+    writeFileSync(
+      join(TEST_DIR, '.kiro', 'hooks', 'review-on-save.kiro.hook'),
+      JSON.stringify({
+        name: 'Review on save',
+        version: '1',
+        when: { type: 'preToolUse', tools: ['write'] },
+        then: { type: 'askAgent', prompt: 'Review the latest changes.' },
+      }),
+    );
+    writeFileSync(
+      join(TEST_DIR, '.kiro', 'settings', 'mcp.json'),
+      JSON.stringify(
+        {
+          mcpServers: {
+            context7: { command: 'npx', args: ['-y', '@upstash/context7-mcp'], env: {} },
+          },
+        },
+        null,
+        2,
+      ),
+    );
+    writeFileSync(join(TEST_DIR, '.kiroignore'), '.env\nnode_modules/\n');
+
+    execSync(`node ${CLI_PATH} import --from kiro`, { cwd: TEST_DIR });
+    writeFileSync(
+      join(TEST_DIR, 'agentsmesh.yaml'),
+      `version: 1
+targets: [kiro]
+features: [rules, skills, mcp, hooks, ignore]
+`,
+    );
+    execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
+
+    expect(readFileSync(join(TEST_DIR, 'AGENTS.md'), 'utf-8')).toContain('Use TDD.');
+    expect(readFileSync(join(TEST_DIR, '.kiro', 'steering', 'typescript.md'), 'utf-8')).toContain(
+      'fileMatchPattern: src/**/*.ts',
+    );
+    expect(
+      readFileSync(join(TEST_DIR, '.kiro', 'hooks', 'pre-tool-use-1.kiro.hook'), 'utf-8'),
+    ).toContain('Review the latest changes.');
+    expect(readFileSync(join(TEST_DIR, '.kiro', 'settings', 'mcp.json'), 'utf-8')).toContain(
+      'context7',
+    );
+    expect(readFileSync(join(TEST_DIR, '.kiroignore'), 'utf-8')).toContain('node_modules/');
+  });
+
   it('import from codex-cli then generate produces only AGENTS.md', () => {
     writeFileSync(join(TEST_DIR, 'codex.md'), '# Codex Rules\n\nUse TDD.');
     execSync(`node ${CLI_PATH} import --from codex-cli`, { cwd: TEST_DIR });

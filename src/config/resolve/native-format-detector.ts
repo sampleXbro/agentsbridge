@@ -59,6 +59,10 @@ const TARGET_SIGNATURES: TargetSignature[] = [
     target: 'junie',
     paths: ['.junie', '.junie/guidelines.md'],
   },
+  {
+    target: 'kiro',
+    paths: ['.kiro', '.kiro/steering', '.kiro/settings/mcp.json'],
+  },
 ];
 
 /**

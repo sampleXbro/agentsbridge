@@ -19,6 +19,7 @@ const mockWindsurfImport = vi.hoisted(() => vi.fn().mockResolvedValue([]));
 const mockClineImport = vi.hoisted(() => vi.fn().mockResolvedValue([]));
 const mockContinueImport = vi.hoisted(() => vi.fn().mockResolvedValue([]));
 const mockJunieImport = vi.hoisted(() => vi.fn().mockResolvedValue([]));
+const mockKiroImport = vi.hoisted(() => vi.fn().mockResolvedValue([]));
 
 vi.mock('../../../src/targets/claude-code/importer.js', () => ({
   importFromClaudeCode: mockClaudeImport,
@@ -46,6 +47,9 @@ vi.mock('../../../src/targets/continue/importer.js', () => ({
 }));
 vi.mock('../../../src/targets/junie/importer.js', () => ({
   importFromJunie: mockJunieImport,
+}));
+vi.mock('../../../src/targets/kiro/importer.js', () => ({
+  importFromKiro: mockKiroImport,
 }));
 
 describe('importNativeToCanonical', () => {
@@ -94,6 +98,11 @@ describe('importNativeToCanonical', () => {
   it('dispatches to junie importer', async () => {
     await importNativeToCanonical('/repo', 'junie');
     expect(mockJunieImport).toHaveBeenCalledWith('/repo');
+  });
+
+  it('dispatches to kiro importer', async () => {
+    await importNativeToCanonical('/repo', 'kiro');
+    expect(mockKiroImport).toHaveBeenCalledWith('/repo');
   });
 
   it('throws for unknown target name', async () => {

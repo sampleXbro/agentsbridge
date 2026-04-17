@@ -1,7 +1,18 @@
-import type { TargetGenerators } from '../catalog/target.interface.js';
-import type { TargetDescriptor } from '../catalog/target-descriptor.js';
-import { generateRules, generateWorkflows, generateSkills } from './generator.js';
+import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
+import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
 import {
+  generateRules,
+  generateWorkflows,
+  generateSkills,
+  generateMcp,
+  renderAntigravityGlobalInstructions,
+} from './generator.js';
+import {
+  ANTIGRAVITY_GLOBAL_MCP_CONFIG,
+  ANTIGRAVITY_GLOBAL_ROOT,
+  ANTIGRAVITY_GLOBAL_SKILLS_DIR,
+  ANTIGRAVITY_GLOBAL_WORKFLOWS_DIR,
+  ANTIGRAVITY_MCP_CONFIG,
   ANTIGRAVITY_RULES_ROOT,
   ANTIGRAVITY_RULES_DIR,
   ANTIGRAVITY_WORKFLOWS_DIR,
@@ -16,7 +27,72 @@ export const target: TargetGenerators = {
   generateRules,
   generateCommands: generateWorkflows,
   generateSkills,
+  generateMcp,
   importFrom: importFromAntigravity,
+};
+
+const project: TargetLayout = {
+  rootInstructionPath: ANTIGRAVITY_RULES_ROOT,
+  skillDir: '.agents/skills',
+  rewriteGeneratedPath(path) {
+    if (path === ANTIGRAVITY_MCP_CONFIG) return null;
+    return path;
+  },
+  paths: {
+    rulePath(slug, _rule) {
+      return `${ANTIGRAVITY_RULES_DIR}/${slug}.md`;
+    },
+    commandPath(name, _config) {
+      return `${ANTIGRAVITY_WORKFLOWS_DIR}/${name}.md`;
+    },
+    agentPath(_name, _config) {
+      return null;
+    },
+  },
+};
+
+const global: TargetLayout = {
+  rootInstructionPath: ANTIGRAVITY_GLOBAL_ROOT,
+  renderPrimaryRootInstruction: renderAntigravityGlobalInstructions,
+  skillDir: ANTIGRAVITY_GLOBAL_SKILLS_DIR,
+  managedOutputs: {
+    dirs: [ANTIGRAVITY_GLOBAL_SKILLS_DIR, ANTIGRAVITY_GLOBAL_WORKFLOWS_DIR],
+    files: [ANTIGRAVITY_GLOBAL_ROOT, ANTIGRAVITY_GLOBAL_MCP_CONFIG],
+  },
+  rewriteGeneratedPath(path) {
+    if (path === ANTIGRAVITY_RULES_ROOT) return ANTIGRAVITY_GLOBAL_ROOT;
+    if (path.startsWith(`${ANTIGRAVITY_RULES_DIR}/`)) return null;
+    if (path.startsWith('.agents/skills/')) {
+      return path.replace('.agents/skills', ANTIGRAVITY_GLOBAL_SKILLS_DIR);
+    }
+    if (path.startsWith(`${ANTIGRAVITY_WORKFLOWS_DIR}/`)) {
+      return path.replace(ANTIGRAVITY_WORKFLOWS_DIR, ANTIGRAVITY_GLOBAL_WORKFLOWS_DIR);
+    }
+    if (path === ANTIGRAVITY_MCP_CONFIG) return ANTIGRAVITY_GLOBAL_MCP_CONFIG;
+    return path;
+  },
+  paths: {
+    rulePath(_slug, _rule) {
+      return ANTIGRAVITY_GLOBAL_ROOT;
+    },
+    commandPath(name, _config) {
+      return `${ANTIGRAVITY_GLOBAL_WORKFLOWS_DIR}/${name}.md`;
+    },
+    agentPath(_name, _config) {
+      return null;
+    },
+  },
+};
+
+const globalCapabilities: TargetCapabilities = {
+  rules: 'native',
+  commands: 'partial',
+  agents: 'none',
+  skills: 'native',
+  mcp: 'native',
+  hooks: 'none',
+  ignore: 'none',
+  permissions: 'none',
 };
 
 export const descriptor = {
@@ -35,19 +111,18 @@ export const descriptor = {
   emptyImportMessage:
     'No Antigravity config found (.agents/rules/, .agents/skills/, or .agents/workflows/).',
   lintRules,
-  skillDir: '.agents/skills',
-  paths: {
-    rulePath(slug, _rule) {
-      return `${ANTIGRAVITY_RULES_DIR}/${slug}.md`;
-    },
-    commandPath(name, _config) {
-      return `${ANTIGRAVITY_WORKFLOWS_DIR}/${name}.md`;
-    },
-    agentPath(_name, _config) {
-      return null;
-    },
-  },
+  project,
+  global,
+  globalCapabilities,
+  skillDir: project.skillDir,
+  paths: project.paths,
   buildImportPaths: buildAntigravityImportPaths,
+  globalDetectionPaths: [
+    '.gemini/antigravity/GEMINI.md',
+    '.gemini/antigravity/skills',
+    '.gemini/antigravity/workflows',
+    '.gemini/antigravity/mcp_config.json',
+  ],
   detectionPaths: [
     '.agents/rules/general.md',
     '.agents/rules/',

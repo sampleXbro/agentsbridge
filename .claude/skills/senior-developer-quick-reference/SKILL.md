@@ -3,6 +3,8 @@ name: senior-developer-quick-reference
 description: When to use which senior-developer skill; senior engineer mindset index
 ---
 
+## Purpose
+
 Operate as a senior engineer with full access and autonomy to get things done efficiently and correctly.
 
 **Use the right skill for the task:**

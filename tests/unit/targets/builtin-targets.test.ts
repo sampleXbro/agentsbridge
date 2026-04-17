@@ -69,4 +69,22 @@ describe('builtin targets', () => {
     expect(getEffectiveTargetSupportLevel('windsurf', 'agents', enabled)).toBe('embedded');
     expect(getEffectiveTargetSupportLevel('windsurf', 'agents', disabled)).toBe('none');
   });
+
+  it('reports scope-specific support levels for global mode', () => {
+    const config = baseConfig();
+
+    expect(getEffectiveTargetSupportLevel('claude-code', 'ignore', config, 'global')).toBe(
+      'native',
+    );
+    expect(getEffectiveTargetSupportLevel('antigravity', 'mcp', config, 'global')).toBe('native');
+    expect(getEffectiveTargetSupportLevel('antigravity', 'commands', config, 'global')).toBe(
+      'partial',
+    );
+    expect(getEffectiveTargetSupportLevel('cursor', 'rules', config, 'global')).toBe('native');
+    expect(getEffectiveTargetSupportLevel('cursor', 'hooks', config, 'global')).toBe('native');
+    expect(getEffectiveTargetSupportLevel('cursor', 'ignore', config, 'global')).toBe('native');
+    expect(getEffectiveTargetSupportLevel('cursor', 'skills', config, 'global')).toBe('native');
+    expect(getEffectiveTargetSupportLevel('cursor', 'commands', config, 'global')).toBe('native');
+    expect(getEffectiveTargetSupportLevel('codex-cli', 'rules', config, 'global')).toBe('native');
+  });
 });

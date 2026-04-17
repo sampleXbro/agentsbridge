@@ -127,7 +127,7 @@ Insecure patterns:
 - CI pipelines that intentionally suppress Go updates.
 
 Detection hints:
-- Inspect CI (`.github/workflows`, `gitlab-ci.yml`, etc.) for `go-version:` or toolchain setup.
+- Inspect CI (`../../../../.github/workflows`, `gitlab-ci.yml`, etc.) for `go-version:` or toolchain setup.
 - Inspect Dockerfiles for `FROM golang:` tags.
 - Inspect `go.mod` `go` directive and any toolchain pinning.
 

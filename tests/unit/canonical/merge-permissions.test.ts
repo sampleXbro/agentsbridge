@@ -37,6 +37,7 @@ describe('mergeCanonicalFiles permissions dedup', () => {
     expect(result.permissions).toEqual({
       allow: ['Read', 'Bash(pnpm test:*)', 'Bash(git add:*)', 'Bash(pnpm build:*)'],
       deny: ['WebFetch', 'Bash(curl:*)', 'Read(./secrets/**)'],
+      ask: [],
     });
   });
 });

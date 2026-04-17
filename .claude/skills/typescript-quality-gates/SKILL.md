@@ -3,6 +3,8 @@ name: typescript-quality-gates
 description: Use when validating build quality, tsconfig rules, declaration output, linting, package integrity, or CI gates for a TypeScript library.
 ---
 
+## Purpose
+
 # TypeScript Quality Gates
 
 You are responsible for enforcing high-confidence quality gates for a production TypeScript library.
@@ -78,7 +80,7 @@ Check:
 - broken export paths
 - mismatched ESM/CJS entrypoints
 - hidden reliance on ts-node or test-only runtime behavior
-- declaration output that references `src/` internals
+- declaration output that references `../../../src/` internals
 - publishing unnecessary fixtures, screenshots, or test artifacts
 - broad `any` in public API without explicit justification
 - unstable inferred return types in exported functions

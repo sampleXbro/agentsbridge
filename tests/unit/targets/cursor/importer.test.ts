@@ -504,3 +504,33 @@ describe('importFromCursor — full fidelity', () => {
     );
   });
 });
+
+describe('importFromCursor — global exports', () => {
+  it('returns empty when no global Cursor artifacts exist under home', async () => {
+    expect(await importFromCursor(TEST_DIR, { scope: 'global' })).toEqual([]);
+  });
+
+  it('imports Cursor global exports and ~/.cursor tooling into canonical .agentsmesh/', async () => {
+    mkdirSync(join(TEST_DIR, '.agentsmesh-exports', 'cursor'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.cursor', 'skills', 'demo'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.agentsmesh-exports', 'cursor', 'user-rules.md'), '# U\n');
+    writeFileSync(
+      join(TEST_DIR, '.cursor', 'mcp.json'),
+      JSON.stringify({ mcpServers: { a: { command: 'npx', args: [] } } }),
+    );
+    writeFileSync(
+      join(TEST_DIR, '.cursor', 'skills', 'demo', 'SKILL.md'),
+      '---\nname: demo\ndescription: D\n---\nHi',
+    );
+
+    const results = await importFromCursor(TEST_DIR, { scope: 'global' });
+    expect(results.map((r) => r.feature).sort()).toEqual(['mcp', 'rules', 'skills'].sort());
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf8')).toContain(
+      '# U',
+    );
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf8')).toContain('mcpServers');
+    expect(
+      readFileSync(join(TEST_DIR, '.agentsmesh', 'skills', 'demo', 'SKILL.md'), 'utf8'),
+    ).toContain('Hi');
+  });
+});

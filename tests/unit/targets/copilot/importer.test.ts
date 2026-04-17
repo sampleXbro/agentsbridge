@@ -368,7 +368,7 @@ describe('importFromCopilot — skills', () => {
       'utf-8',
     );
 
-    expect(skillContent).toContain('.agentsmesh/rules/review.md');
-    expect(checklistContent).toContain('.agentsmesh/commands/review.md');
+    expect(skillContent).toContain('../../rules/review.md');
+    expect(checklistContent).toContain('../../../commands/review.md');
   });
 });

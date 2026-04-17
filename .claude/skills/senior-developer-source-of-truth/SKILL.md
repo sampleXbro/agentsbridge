@@ -3,6 +3,8 @@ name: senior-developer-source-of-truth
 description: Treat code and live systems as the ultimate source of truth
 ---
 
+## Purpose
+
 ## Source of Truth: Trust Code, Not Docs
 
 **All documentation might be outdated.** The only source of truth:
@@ -24,7 +26,7 @@ Code: `const TOKEN_EXPIRY = 3600; // 1 hour`
 **Applies to:** All `.md` files, READMEs, notes, guides, in-code comments, JSDoc, docstrings, ADRs, Confluence, Jira, wikis, any written documentation.
 
 **Documentation lives everywhere.** Don't assume docs are only in workspace notes/. Check multiple locations:
-- Workspace: notes/, docs/, README files
+- Workspace: notes/, ../../../docs/, README files
 - User's home: ~/Documents/Documentation/, ~/Documents/Notes/
 - Project-specific: .md files, ADRs, wikis
 - In-code: comments, JSDoc, docstrings

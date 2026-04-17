@@ -207,6 +207,34 @@ describe('buildCompatibilityMatrix', () => {
     expect(agentsRow?.support['gemini-cli']).toBe('native');
   });
 
+  it('uses global support levels when requested', () => {
+    const config: ValidatedConfig = {
+      ...baseConfig,
+      targets: ['claude-code', 'antigravity', 'cursor', 'codex-cli'],
+      features: ['rules', 'skills', 'mcp', 'ignore'],
+    };
+    const canonical: CanonicalFiles = {
+      ...emptyCanonical,
+      rules: [{ source: 'a', root: true, targets: [], description: '', globs: [], body: '' }],
+      skills: [{ source: 's', name: 'review', description: '', body: '', supportingFiles: [] }],
+      mcp: { mcpServers: { docs: { type: 'stdio', command: 'npx', args: [], env: {} } } },
+      ignore: ['dist'],
+    };
+
+    const rows = buildCompatibilityMatrix(config, canonical, 'global');
+    const rulesRow = rows.find((row) => row.feature === 'rules');
+    const skillsRow = rows.find((row) => row.feature.startsWith('skills'));
+    const mcpRow = rows.find((row) => row.feature.startsWith('mcp'));
+    const ignoreRow = rows.find((row) => row.feature === 'ignore');
+
+    expect(rulesRow?.support.antigravity).toBe('native');
+    expect(rulesRow?.support.cursor).toBe('native');
+    expect(skillsRow?.support.cursor).toBe('native');
+    expect(mcpRow?.support.antigravity).toBe('native');
+    expect(mcpRow?.support.cursor).toBe('native');
+    expect(ignoreRow?.support['claude-code']).toBe('native');
+  });
+
   it('hooks with count and partial support', () => {
     const config: ValidatedConfig = { ...baseConfig, features: ['hooks'] };
     const canonical: CanonicalFiles = {

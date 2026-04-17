@@ -5,7 +5,7 @@
 import { join } from 'node:path';
 import type { ValidatedConfig } from '../../config/core/schema.js';
 import { loadCanonicalWithExtends } from '../../canonical/extends/extends.js';
-import { loadConfigFromDir } from '../../config/core/loader.js';
+import { loadScopedConfig } from '../../config/core/scope.js';
 import { logger } from '../../utils/output/logger.js';
 import { exists } from '../../utils/filesystem/fs.js';
 import { runGenerate } from '../../cli/commands/generate.js';
@@ -51,33 +51,37 @@ export async function runInstall(
     explicitAs,
     nameOverride,
   } = readInstallFlags(flags);
+  const scope = flags.global === true ? 'global' : 'project';
   const sourceArg = args[0]?.trim();
-  if (
-    await maybeRunInstallSync({
-      sync,
-      projectRoot,
-      loadConfigDir: async (root) => (await loadConfigFromDir(root)).configDir,
-      reinstall: async (entry) => {
-        const replayPaths = entry.paths && entry.paths.length > 0 ? entry.paths : [entry.path];
-        for (const replayPath of replayPaths) {
-          await runInstall(
-            {
-              ...(force ? { force: true } : {}),
-              ...(dryRun ? { 'dry-run': true } : {}),
-              name: entry.name,
-              ...(entry.target ? { target: entry.target } : {}),
-              ...(replayPath ? { path: replayPath } : {}),
-              ...(entry.as ? { as: entry.as } : {}),
-            },
-            [entry.source],
-            projectRoot,
-            { features: entry.features, pick: entry.pick },
-          );
-        }
-      },
-    })
-  ) {
-    return;
+  if (sync) {
+    const { context } = await loadScopedConfig(projectRoot, scope);
+    if (
+      await maybeRunInstallSync({
+        sync,
+        canonicalDir: context.canonicalDir,
+        reinstall: async (entry) => {
+          const replayPaths = entry.paths && entry.paths.length > 0 ? entry.paths : [entry.path];
+          for (const replayPath of replayPaths) {
+            await runInstall(
+              {
+                ...(force ? { force: true } : {}),
+                ...(dryRun ? { 'dry-run': true } : {}),
+                ...(scope === 'global' ? { global: true } : {}),
+                name: entry.name,
+                ...(entry.target ? { target: entry.target } : {}),
+                ...(replayPath ? { path: replayPath } : {}),
+                ...(entry.as ? { as: entry.as } : {}),
+              },
+              [entry.source],
+              projectRoot,
+              { features: entry.features, pick: entry.pick },
+            );
+          }
+        },
+      })
+    ) {
+      return;
+    }
   }
 
   if (!sourceArg) {
@@ -89,8 +93,8 @@ export async function runInstall(
   if (!tty && !force && !dryRun) {
     throw new Error('Non-interactive terminal: use --force or --dry-run for agentsmesh install.');
   }
-  const { config, configDir } = await loadConfigFromDir(projectRoot);
-  const parsed = await parseInstallSource(sourceArg, configDir, explicitPath);
+  const { config, context } = await loadScopedConfig(projectRoot, scope);
+  const parsed = await parseInstallSource(sourceArg, context.configDir, explicitPath);
   if (parsed.kind !== 'local' && !(await isGitAvailable())) {
     throw new Error('git is required for remote installs. Please install git and try again.');
   }
@@ -136,7 +140,12 @@ export async function runInstall(
       commands: commandsPool.length,
       agents: agentsPool.length,
     };
-    const { canonical: merged } = await loadCanonicalWithExtends(config, configDir);
+    const { canonical: merged } = await loadCanonicalWithExtends(
+      config,
+      context.configDir,
+      {},
+      context.canonicalDir,
+    );
     const selected =
       !force && !dryRun && tty
         ? await resolveInstallConflicts(merged, {
@@ -174,7 +183,7 @@ export async function runInstall(
     });
     if (useExtends) {
       await writeInstallAsExtend({
-        configDir,
+        configDir: context.configDir,
         config,
         entryArgs: {
           name: entryName,
@@ -190,11 +199,13 @@ export async function runInstall(
       if (dryRun) return;
     } else {
       if (dryRun) {
-        logger.info(`[dry-run] Would install pack "${entryName}" to .agentsmesh/packs/.`);
+        logger.info(
+          `[dry-run] Would install pack "${entryName}" to ${scope === 'global' ? '~/.agentsmesh/packs/.' : '.agentsmesh/packs/.'}`,
+        );
         return;
       }
       await installAsPack({
-        configDir,
+        canonicalDir: context.canonicalDir,
         packName: entryName,
         narrowed: effectiveNarrowed,
         selected,
@@ -209,9 +220,11 @@ export async function runInstall(
         renameExistingPack: nameOverride === '',
       });
     }
-    const genCode = await runGenerate({}, configDir);
+    const genCode = await runGenerate(scope === 'global' ? { global: true } : {}, context.rootBase);
     if (genCode !== 0) {
-      logger.warn('Generate failed after install. Fix the issue and run agentsmesh generate.');
+      logger.warn(
+        `Generate failed after install. Fix the issue and run agentsmesh generate${scope === 'global' ? ' --global' : ''}.`,
+      );
     }
   } finally {
     if (prep.cleanup) {

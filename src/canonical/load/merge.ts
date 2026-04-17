@@ -77,7 +77,8 @@ function mergePermissions(
   if (!base && !overlay) return null;
   const allow = mergeUniqueStrings(base?.allow ?? [], overlay?.allow ?? []);
   const deny = mergeUniqueStrings(base?.deny ?? [], overlay?.deny ?? []);
-  return { allow, deny };
+  const ask = mergeUniqueStrings(base?.ask ?? [], overlay?.ask ?? []);
+  return { allow, deny, ask };
 }
 
 function mergeUniqueStrings(base: string[], overlay: string[]): string[] {

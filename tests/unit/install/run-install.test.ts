@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi, afterEach } from 'vitest';
 import type { CanonicalFiles } from '../../../src/core/types.js';
 
-const mockLoadConfigFromDir = vi.hoisted(() => vi.fn());
+const mockLoadScopedConfig = vi.hoisted(() => vi.fn());
 const mockParseInstallSource = vi.hoisted(() => vi.fn());
 const mockResolveInstallResolvedPath = vi.hoisted(() => vi.fn());
 const mockExists = vi.hoisted(() => vi.fn());
@@ -16,7 +16,7 @@ const mockIsGitAvailable = vi.hoisted(() => vi.fn());
 const mockLoggerWarn = vi.hoisted(() => vi.fn());
 const mockMaybeRunInstallSync = vi.hoisted(() => vi.fn());
 
-vi.mock('../../../src/config/core/loader.js', () => ({ loadConfigFromDir: mockLoadConfigFromDir }));
+vi.mock('../../../src/config/core/scope.js', () => ({ loadScopedConfig: mockLoadScopedConfig }));
 vi.mock('../../../src/install/source/url-parser.js', () => ({
   parseInstallSource: mockParseInstallSource,
 }));
@@ -79,7 +79,15 @@ const CONFIG = {
 beforeEach(() => {
   Object.defineProperty(process.stdin, 'isTTY', { value: true, configurable: true });
   vi.clearAllMocks();
-  mockLoadConfigFromDir.mockResolvedValue({ config: CONFIG, configDir: '/project' });
+  mockLoadScopedConfig.mockResolvedValue({
+    config: CONFIG,
+    context: {
+      scope: 'project',
+      rootBase: '/project',
+      configDir: '/project',
+      canonicalDir: '/project/.agentsmesh',
+    },
+  });
   mockParseInstallSource.mockResolvedValue({
     kind: 'local',
     pathInRepo: '',
@@ -157,7 +165,7 @@ describe('runInstall', () => {
     await expect(runInstall({ sync: true }, [], '/project')).rejects.toThrow(
       'Non-interactive terminal',
     );
-    expect(mockMaybeRunInstallSync).toHaveBeenCalledTimes(2);
+    expect(mockMaybeRunInstallSync).toHaveBeenCalledTimes(1);
     expect(mockParseInstallSource).not.toHaveBeenCalled();
     expect(mockResolveInstallResolvedPath).not.toHaveBeenCalled();
     expect(mockResolveDiscoveredForInstall).not.toHaveBeenCalled();
@@ -178,7 +186,7 @@ describe('runInstall', () => {
     expect(mockInstallAsPack).toHaveBeenCalledOnce();
     expect(mockInstallAsPack).toHaveBeenCalledWith(
       expect.objectContaining({
-        configDir: '/project',
+        canonicalDir: '/project/.agentsmesh',
         packName: 'demo-pack',
         sourceForYaml: '../upstream',
         entryFeatures: ['skills', 'mcp', 'ignore'],
@@ -191,6 +199,27 @@ describe('runInstall', () => {
     await runInstall({ force: true, extends: true }, ['../upstream'], '/project');
     expect(mockWriteInstallAsExtend).toHaveBeenCalledOnce();
     expect(mockInstallAsPack).not.toHaveBeenCalled();
+  });
+
+  it('installs into ~/.agentsmesh and regenerates with --global', async () => {
+    mockLoadScopedConfig.mockResolvedValue({
+      config: CONFIG,
+      context: {
+        scope: 'global',
+        rootBase: '/home/user',
+        configDir: '/home/user/.agentsmesh',
+        canonicalDir: '/home/user/.agentsmesh',
+      },
+    });
+
+    await runInstall({ force: true, global: true }, ['../upstream'], '/project');
+
+    expect(mockInstallAsPack).toHaveBeenCalledWith(
+      expect.objectContaining({
+        canonicalDir: '/home/user/.agentsmesh',
+      }),
+    );
+    expect(mockRunGenerate).toHaveBeenCalledWith({ global: true }, '/home/user');
   });
 
   it('throws when git is unavailable for remote installs', async () => {

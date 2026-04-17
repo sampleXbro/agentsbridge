@@ -17,6 +17,7 @@ export function validateRules(
   canonical: CanonicalFiles,
   projectRoot: string,
   projectFiles: string[],
+  options: { checkGlobMatches?: boolean } = {},
 ): Omit<LintDiagnostic, 'target'>[] {
   const diags: Omit<LintDiagnostic, 'target'>[] = [];
   const { rules } = canonical;
@@ -30,6 +31,10 @@ export function validateRules(
       file: relative(projectRoot, rules[0]!.source),
       message: 'Rules exist but no root rule (_root.md or root: true). Add a root rule.',
     });
+  }
+
+  if (options.checkGlobMatches === false) {
+    return diags;
   }
 
   for (const rule of rules) {

@@ -18,8 +18,20 @@ import {
   ANTIGRAVITY_RULES_DIR,
   ANTIGRAVITY_WORKFLOWS_DIR,
   ANTIGRAVITY_SKILLS_DIR,
+  ANTIGRAVITY_GLOBAL_ROOT,
+  ANTIGRAVITY_GLOBAL_SKILLS_DIR,
+  ANTIGRAVITY_GLOBAL_MCP_CONFIG,
 } from '../../targets/antigravity/constants.js';
+import {
+  CLINE_GLOBAL_RULES_DIR,
+  CLINE_GLOBAL_WORKFLOWS_DIR,
+  CLINE_SKILLS_DIR,
+  CLINE_MCP_SETTINGS,
+} from '../../targets/cline/constants.js';
 import { CONTINUE_ROOT_RULE, CONTINUE_ROOT_RULE_LEGACY } from '../../targets/continue/constants.js';
+import { CURSOR_MCP } from '../../targets/cursor/constants.js';
+import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
+import { CLAUDE_CANONICAL_HOOKS, CLAUDE_HOOKS_JSON } from '../../targets/claude-code/constants.js';
 import {
   addScopedAgentsMappings,
   addSimpleFileMapping,
@@ -43,10 +55,19 @@ function addCopilotInstructionMapping(refs: Map<string, string>, fromPath: strin
 export async function buildClaudeCodeImportPaths(
   refs: Map<string, string>,
   projectRoot: string,
+  scope: TargetLayoutScope = 'project',
 ): Promise<void> {
   // Root instruction files — explicit mappings (not inside a scannable subdirectory)
   refs.set('.claude/CLAUDE.md', `${AB_RULES}/_root.md`);
-  refs.set('CLAUDE.md', `${AB_RULES}/_root.md`);
+  refs.set(CLAUDE_HOOKS_JSON, CLAUDE_CANONICAL_HOOKS);
+  if (scope === 'project') {
+    refs.set('CLAUDE.md', `${AB_RULES}/_root.md`);
+  }
+  if (scope === 'global') {
+    for (const absPath of await listFiles(projectRoot, '.agents/skills')) {
+      addSkillLikeMapping(refs, rel(projectRoot, absPath), '.agents/skills');
+    }
+  }
   for (const absPath of await listFiles(projectRoot, '.claude/rules')) {
     addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_RULES, '.md');
   }
@@ -64,7 +85,25 @@ export async function buildClaudeCodeImportPaths(
 export async function buildCursorImportPaths(
   refs: Map<string, string>,
   projectRoot: string,
+  scope: TargetLayoutScope = 'project',
 ): Promise<void> {
+  if (scope === 'global') {
+    refs.set(CURSOR_MCP, '.agentsmesh/mcp.json');
+    refs.set('.cursor/AGENTS.md', `${AB_RULES}/_root.md`);
+    for (const absPath of await listFiles(projectRoot, '.cursor/rules')) {
+      addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_RULES, '.mdc');
+    }
+    for (const absPath of await listFiles(projectRoot, '.cursor/commands')) {
+      addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_COMMANDS, '.md');
+    }
+    for (const absPath of await listFiles(projectRoot, '.cursor/agents')) {
+      addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_AGENTS, '.md');
+    }
+    for (const absPath of await listFiles(projectRoot, '.cursor/skills')) {
+      addSkillLikeMapping(refs, rel(projectRoot, absPath), '.cursor/skills');
+    }
+    return;
+  }
   // AGENTS.md is the cursor root compatibility mirror (§3.1 of cursor format doc)
   refs.set('AGENTS.md', `${AB_RULES}/_root.md`);
   for (const absPath of await listFiles(projectRoot, '.cursor/rules')) {
@@ -106,6 +145,7 @@ export async function buildCopilotImportPaths(
 export async function buildContinueImportPaths(
   refs: Map<string, string>,
   projectRoot: string,
+  scope: TargetLayoutScope = 'project',
 ): Promise<void> {
   refs.set(CONTINUE_ROOT_RULE, `${AB_RULES}/_root.md`);
   refs.set(CONTINUE_ROOT_RULE_LEGACY, `${AB_RULES}/_root.md`);
@@ -119,6 +159,11 @@ export async function buildContinueImportPaths(
   }
   for (const absPath of await listFiles(projectRoot, '.continue/skills')) {
     addSkillLikeMapping(refs, rel(projectRoot, absPath), '.continue/skills');
+  }
+  if (scope === 'global') {
+    for (const absPath of await listFiles(projectRoot, '.agents/skills')) {
+      addSkillLikeMapping(refs, rel(projectRoot, absPath), '.agents/skills');
+    }
   }
 }
 
@@ -187,7 +232,22 @@ export async function buildGeminiCliImportPaths(
 export async function buildClineImportPaths(
   refs: Map<string, string>,
   projectRoot: string,
+  scope: TargetLayoutScope = 'project',
 ): Promise<void> {
+  if (scope === 'global') {
+    for (const absPath of await listFiles(projectRoot, CLINE_GLOBAL_RULES_DIR)) {
+      addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_RULES, '.md');
+    }
+    for (const absPath of await listFiles(projectRoot, CLINE_GLOBAL_WORKFLOWS_DIR)) {
+      addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_COMMANDS, '.md');
+    }
+    for (const absPath of await listFiles(projectRoot, CLINE_SKILLS_DIR)) {
+      addSkillLikeMapping(refs, rel(projectRoot, absPath), CLINE_SKILLS_DIR);
+    }
+    refs.set(CLINE_MCP_SETTINGS, '.agentsmesh/mcp.json');
+    return;
+  }
+
   // Explicit root mapping (excluded from directory scan below)
   refs.set('.clinerules/_root.md', `${AB_RULES}/_root.md`);
   for (const absPath of await listFiles(projectRoot, '.clinerules')) {
@@ -212,12 +272,20 @@ export async function buildClineImportPaths(
 export async function buildCodexCliImportPaths(
   refs: Map<string, string>,
   projectRoot: string,
+  scope: TargetLayoutScope = 'project',
 ): Promise<void> {
-  refs.set('AGENTS.md', `${AB_RULES}/_root.md`);
-  refs.set('codex.md', `${AB_RULES}/_root.md`);
-  await addScopedAgentsMappings(refs, projectRoot);
-  for (const absPath of await listFiles(projectRoot, '.codex/instructions')) {
-    addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_RULES, '.md');
+  if (scope === 'global') {
+    refs.set('.codex/AGENTS.md', `${AB_RULES}/_root.md`);
+    refs.set('.codex/AGENTS.override.md', `${AB_RULES}/_root.md`);
+  } else {
+    refs.set('AGENTS.md', `${AB_RULES}/_root.md`);
+    refs.set('codex.md', `${AB_RULES}/_root.md`);
+    await addScopedAgentsMappings(refs, projectRoot);
+  }
+  if (scope === 'project') {
+    for (const absPath of await listFiles(projectRoot, '.codex/instructions')) {
+      addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_RULES, '.md');
+    }
   }
   for (const absPath of await listFiles(projectRoot, '.codex/rules')) {
     const relPath = rel(projectRoot, absPath);
@@ -256,7 +324,17 @@ export async function buildWindsurfImportPaths(
 export async function buildAntigravityImportPaths(
   refs: Map<string, string>,
   projectRoot: string,
+  scope: TargetLayoutScope = 'project',
 ): Promise<void> {
+  if (scope === 'global') {
+    refs.set(ANTIGRAVITY_GLOBAL_ROOT, `${AB_RULES}/_root.md`);
+    for (const absPath of await listFiles(projectRoot, ANTIGRAVITY_GLOBAL_SKILLS_DIR)) {
+      addSkillLikeMapping(refs, rel(projectRoot, absPath), ANTIGRAVITY_GLOBAL_SKILLS_DIR);
+    }
+    refs.set(ANTIGRAVITY_GLOBAL_MCP_CONFIG, '.agentsmesh/mcp.json');
+    return;
+  }
+
   refs.set(ANTIGRAVITY_RULES_ROOT, `${AB_RULES}/_root.md`);
   refs.set(ANTIGRAVITY_RULES_ROOT_LEGACY, `${AB_RULES}/_root.md`);
   for (const absPath of await listFiles(projectRoot, ANTIGRAVITY_RULES_DIR)) {

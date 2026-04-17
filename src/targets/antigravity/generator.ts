@@ -2,6 +2,8 @@ import { basename } from 'node:path';
 import type { CanonicalFiles } from '../../core/types.js';
 import { generateEmbeddedSkills } from '../import/embedded-skill.js';
 import {
+  ANTIGRAVITY_GLOBAL_ROOT,
+  ANTIGRAVITY_MCP_CONFIG,
   ANTIGRAVITY_RULES_ROOT,
   ANTIGRAVITY_RULES_DIR,
   ANTIGRAVITY_WORKFLOWS_DIR,
@@ -50,3 +52,40 @@ export function generateWorkflows(canonical: CanonicalFiles): AntigravityOutput[
 export function generateSkills(canonical: CanonicalFiles): AntigravityOutput[] {
   return generateEmbeddedSkills(canonical, ANTIGRAVITY_SKILLS_DIR);
 }
+
+export function generateMcp(canonical: CanonicalFiles): AntigravityOutput[] {
+  if (!canonical.mcp || Object.keys(canonical.mcp.mcpServers).length === 0) return [];
+  return [
+    {
+      path: ANTIGRAVITY_MCP_CONFIG,
+      content: JSON.stringify({ mcpServers: canonical.mcp.mcpServers }, null, 2),
+    },
+  ];
+}
+
+export function renderAntigravityGlobalInstructions(canonical: CanonicalFiles): string {
+  const root = canonical.rules.find((rule) => rule.root);
+  const nonRootRules = canonical.rules.filter((rule) => {
+    if (rule.root) return false;
+    return rule.targets.length === 0 || rule.targets.includes('antigravity');
+  });
+
+  const sections: string[] = [];
+  if (root?.body.trim()) {
+    sections.push(root.body.trim());
+  }
+
+  for (const rule of nonRootRules) {
+    const parts: string[] = [];
+    if (rule.description) {
+      parts.push(`## ${rule.description}`);
+      parts.push('');
+    }
+    parts.push(rule.body.trim());
+    sections.push(parts.filter(Boolean).join('\n'));
+  }
+
+  return sections.filter(Boolean).join('\n\n---\n\n');
+}
+
+export { ANTIGRAVITY_GLOBAL_ROOT };

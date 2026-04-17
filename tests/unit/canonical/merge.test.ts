@@ -189,6 +189,7 @@ describe('mergeCanonicalFiles', () => {
     const p = result.permissions as Permissions;
     expect(p.allow.sort()).toEqual(['Grep', 'Read', 'Write']);
     expect(p.deny.sort()).toEqual(['Bash(rm)', 'Read(secrets)']);
+    expect(p.ask ?? []).toEqual([]);
   });
 
   it('merges ignore patterns as union', () => {
@@ -254,7 +255,7 @@ describe('mergeCanonicalFiles', () => {
       permissions: { allow: ['Read'], deny: [] },
     };
     const result = mergeCanonicalFiles(base, overlay);
-    expect(result.permissions).toEqual({ allow: ['Read'], deny: [] });
+    expect(result.permissions).toEqual({ allow: ['Read'], deny: [], ask: [] });
   });
 
   it('base permissions with overlay null yields base', () => {
@@ -264,7 +265,7 @@ describe('mergeCanonicalFiles', () => {
     };
     const overlay = { ...emptyFiles(), permissions: null };
     const result = mergeCanonicalFiles(base, overlay);
-    expect(result.permissions).toEqual({ allow: ['Read'], deny: ['Bash(rm)'] });
+    expect(result.permissions).toEqual({ allow: ['Read'], deny: ['Bash(rm)'], ask: [] });
   });
 
   it('base null mcp with overlay mcp yields overlay', () => {

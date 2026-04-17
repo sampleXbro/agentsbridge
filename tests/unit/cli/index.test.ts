@@ -54,4 +54,11 @@ describe('parseArgs', () => {
     expect(result.flags.sync).toBe(true);
     expect(result.flags.as).toBe('agents');
   });
+
+  it('parses the --global flag for scoped commands', () => {
+    const result = parseArgs(['generate', '--global', '--targets', 'claude-code']);
+    expect(result.command).toBe('generate');
+    expect(result.flags.global).toBe(true);
+    expect(result.flags.targets).toBe('claude-code');
+  });
 });

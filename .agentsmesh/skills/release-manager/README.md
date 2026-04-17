@@ -440,6 +440,6 @@ This skill is part of the claude-skills repository and follows the same license 
 
 ---
 
-For detailed methodology and background information, see [.agentsmesh/skills/release-manager/SKILL.md](.agentsmesh/skills/release-manager/SKILL.md).
-For specific workflow guidance, see the [references](.agentsmesh/packs/joeking-ly-claude-skills-arsenal-skills/skills/release-manager/references/) directory.
-For testing the scripts, use the sample data in the [assets](.agentsmesh/packs/joeking-ly-claude-skills-arsenal-skills/skills/release-manager/assets/) directory.
+For detailed methodology and background information, see [SKILL.md](SKILL.md).
+For specific workflow guidance, see the [references](references/) directory.
+For testing the scripts, use the sample data in the [assets](assets/) directory.

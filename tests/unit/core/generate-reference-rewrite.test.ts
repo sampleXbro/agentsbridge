@@ -107,38 +107,23 @@ describe('generate reference rewriting', () => {
     });
 
     expect(results.find((result) => result.path === '.claude/CLAUDE.md')?.content).toContain(
-      '.claude/rules/typescript.md',
+      'rules/typescript.md',
     );
     expect(results.find((result) => result.path === '.claude/CLAUDE.md')?.content).toContain(
-      '.claude/commands/review.md',
+      'commands/review.md',
     );
     expect(
       results.find((result) => result.path === '.cursor/rules/general.mdc')?.content,
-    ).toContain('.cursor/rules/typescript.mdc');
+    ).toContain('typescript.mdc');
     expect(
       results.find((result) => result.path === '.cursor/rules/general.mdc')?.content,
-    ).toContain('.cursor/commands/review.md');
+    ).toContain('../commands/review.md');
   });
 
   it.each([
-    [
-      'claude-code',
-      '.claude/CLAUDE.md',
-      '.claude/skills/api-gen/',
-      '.claude/skills/api-gen/references/',
-    ],
-    [
-      'cursor',
-      '.cursor/rules/general.mdc',
-      '.cursor/skills/api-gen/',
-      '.cursor/skills/api-gen/references/',
-    ],
-    [
-      'copilot',
-      '.github/copilot-instructions.md',
-      '.github/skills/api-gen/',
-      '.github/skills/api-gen/references/',
-    ],
+    ['claude-code', '.claude/CLAUDE.md', 'skills/api-gen/', 'skills/api-gen/references/'],
+    ['cursor', '.cursor/rules/general.mdc', '../skills/api-gen/', '../skills/api-gen/references/'],
+    ['copilot', '.github/copilot-instructions.md', 'skills/api-gen/', 'skills/api-gen/references/'],
     ['gemini-cli', 'GEMINI.md', '.gemini/skills/api-gen/', '.gemini/skills/api-gen/references/'],
     ['cline', 'AGENTS.md', '.cline/skills/api-gen/', '.cline/skills/api-gen/references/'],
     ['codex-cli', 'AGENTS.md', '.agents/skills/api-gen/', '.agents/skills/api-gen/references/'],
@@ -184,12 +169,93 @@ describe('generate reference rewriting', () => {
     expect(content).not.toContain('.agentsmesh/skills/api-gen/');
   });
 
+  it.each([
+    // windsurf: root aggregates to .codeium/windsurf/memories/, skills under .codeium/windsurf/skills/
+    [
+      'windsurf',
+      '.codeium/windsurf/memories/global_rules.md',
+      '../skills/api-gen/',
+      '../skills/api-gen/references/',
+    ],
+    // copilot: root at .copilot/copilot-instructions.md, skills under .copilot/skills/
+    [
+      'copilot',
+      '.copilot/copilot-instructions.md',
+      'skills/api-gen/',
+      'skills/api-gen/references/',
+    ],
+    // cursor: same path structure in global mode; root at .cursor/rules/general.mdc
+    ['cursor', '.cursor/rules/general.mdc', '../skills/api-gen/', '../skills/api-gen/references/'],
+    // claude-code: same path structure in global mode; root at .claude/CLAUDE.md
+    ['claude-code', '.claude/CLAUDE.md', 'skills/api-gen/', 'skills/api-gen/references/'],
+    // gemini-cli: root aggregates to .gemini/GEMINI.md, skills under .gemini/skills/
+    ['gemini-cli', '.gemini/GEMINI.md', 'skills/api-gen/', 'skills/api-gen/references/'],
+  ] as const)(
+    'rewrites skill directory references in global mode root output for %s',
+    async (target, outputPath, expectedSkillDir, expectedRefDir) => {
+      const canonical = rewriteCanonical();
+      canonical.rules[0] = {
+        ...canonical.rules[0]!,
+        body: 'Use .agentsmesh/skills/api-gen/ and .agentsmesh/skills/api-gen/references/.',
+      };
+
+      const results = await generate({
+        config: rewriteConfig([target]),
+        canonical,
+        projectRoot: TEST_DIR,
+        scope: 'global',
+      });
+
+      const content = results.find((result) => result.path === outputPath)?.content ?? '';
+      expect(content).toContain(expectedSkillDir);
+      expect(content).toContain(expectedRefDir);
+      expect(content).not.toContain('.agentsmesh/skills/api-gen/');
+    },
+  );
+
+  it.each([
+    ['kiro', 'codex-cli'],
+    ['claude-code', 'codex-cli'],
+    ['windsurf', 'codex-cli'],
+    ['cursor', 'codex-cli'],
+    ['copilot', 'codex-cli'],
+    ['gemini-cli', 'codex-cli'],
+    ['cline'],
+    ['continue'],
+  ] as const)(
+    'rewrites skill directory references correctly in .agents/skills/ mirror for %s',
+    async (...targetArgs) => {
+      const targets = targetArgs as unknown as string[];
+      const canonical = rewriteCanonical();
+      canonical.skills[0] = {
+        ...canonical.skills[0]!,
+        body: 'Use .agentsmesh/skills/api-gen/ and .agentsmesh/skills/api-gen/references/.',
+      };
+
+      const results = await generate({
+        config: rewriteConfig(targets as ValidatedConfig['targets']),
+        canonical,
+        projectRoot: TEST_DIR,
+        scope: 'global',
+      });
+
+      const mirrorResult = results.find((r) => r.path === '.agents/skills/api-gen/SKILL.md');
+      expect(mirrorResult).toBeDefined();
+      const content = mirrorResult!.content;
+      // Self-referencing skill dir becomes './' (correct shortest relative path).
+      // The references/ subdir should be just 'references/', not '../../../<target>/skills/.../references/'.
+      expect(content).toContain('references/');
+      expect(content).not.toContain('.agentsmesh/');
+      expect(content).not.toContain('../../../');
+    },
+  );
+
   it('recomputes file status after rewriting generated content', async () => {
     mkdirSync(join(TEST_DIR, '.claude'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, '.claude', 'CLAUDE.md'),
       appendAgentsmeshRootInstructionParagraph(
-        'See .claude/rules/typescript.md, .claude/commands/review.md, .claude/agents/reviewer.md, and .claude/skills/api-gen/references/checklist.md.',
+        'See rules/typescript.md, commands/review.md, agents/reviewer.md, and skills/api-gen/references/checklist.md.',
       ),
     );
 

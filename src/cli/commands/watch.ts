@@ -4,7 +4,7 @@
 
 import { join, relative } from 'node:path';
 import chokidar from 'chokidar';
-import { loadConfigFromDir } from '../../config/core/loader.js';
+import { loadScopedConfig } from '../../config/core/scope.js';
 import { loadCanonicalWithExtends } from '../../canonical/extends/extends.js';
 import { runGenerate } from './generate.js';
 import { runMatrix } from './matrix.js';
@@ -17,14 +17,19 @@ function normalizeWatchPath(path: string): string {
 }
 
 function shouldIgnoreWatchPath(
-  configDir: string,
+  canonicalDir: string,
   changedPath: string,
   _suppressAgentsmeshDirUntil: number,
 ): boolean {
-  const relPath = normalizeWatchPath(relative(configDir, changedPath));
+  const relPath = normalizeWatchPath(relative(canonicalDir, changedPath));
   // Chokidar can report paths through different resolution layers; use `endsWith`
   // so we reliably ignore lock-file churn regardless of relative prefixing.
-  return relPath.endsWith('.agentsmesh/.lock') || relPath.endsWith('.agentsmesh/.lock.tmp');
+  return (
+    relPath === '.lock' ||
+    relPath === '.lock.tmp' ||
+    relPath.endsWith('/.lock') ||
+    relPath.endsWith('/.lock.tmp')
+  );
 }
 
 /**
@@ -68,12 +73,13 @@ export async function runWatch(
   projectRoot?: string,
 ): Promise<{ stop: () => Promise<void> }> {
   const root = projectRoot ?? process.cwd();
-  const { configDir } = await loadConfigFromDir(root);
+  const scope = flags.global === true ? 'global' : 'project';
+  const { context } = await loadScopedConfig(root, scope);
 
   const paths = [
-    join(configDir, '.agentsmesh'),
-    join(configDir, 'agentsmesh.yaml'),
-    join(configDir, 'agentsmesh.local.yaml'),
+    context.canonicalDir,
+    join(context.configDir, 'agentsmesh.yaml'),
+    join(context.configDir, 'agentsmesh.local.yaml'),
   ];
 
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -85,8 +91,13 @@ export async function runWatch(
   const run = async (): Promise<void> => {
     if (stopped) return;
     debounceTimer = null;
-    const { config, configDir: dir } = await loadConfigFromDir(root);
-    const { canonical } = await loadCanonicalWithExtends(config, dir);
+    const { config, context: activeContext } = await loadScopedConfig(root, scope);
+    const { canonical } = await loadCanonicalWithExtends(
+      config,
+      activeContext.configDir,
+      {},
+      activeContext.canonicalDir,
+    );
 
     const mcpServerCount = canonical.mcp ? Object.keys(canonical.mcp.mcpServers).length : 0;
     const permissionsCount = canonical.permissions
@@ -148,7 +159,8 @@ export async function runWatch(
 
   const watcher = chokidar.watch(paths, { ignoreInitial: true });
   watcher.on('all', (_eventName, changedPath) => {
-    if (shouldIgnoreWatchPath(configDir, changedPath, suppressAgentsmeshDirUntil)) return;
+    if (shouldIgnoreWatchPath(context.canonicalDir, changedPath, suppressAgentsmeshDirUntil))
+      return;
     schedule();
   });
 
@@ -157,7 +169,11 @@ export async function runWatch(
     watcher.once('error', reject);
   });
 
-  logger.info('Watching .agentsmesh/ and agentsmesh.yaml...');
+  logger.info(
+    scope === 'global'
+      ? 'Watching ~/.agentsmesh/ and agentsmesh.yaml...'
+      : 'Watching .agentsmesh/ and agentsmesh.yaml...',
+  );
   pendingRun = run();
   await pendingRun;
   pendingRun = null;

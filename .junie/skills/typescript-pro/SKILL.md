@@ -34,11 +34,11 @@ Load detailed guidance based on context:
 
 | Topic          | Reference                      | Load When                                                    |
 | -------------- | ------------------------------ | ------------------------------------------------------------ |
-| Advanced Types | `.junie/skills/typescript-pro/references/advanced-types.md` | Generics, conditional types, mapped types, template literals |
-| Type Guards    | `.junie/skills/typescript-pro/references/type-guards.md`    | Type narrowing, discriminated unions, assertion functions    |
-| Utility Types  | `.junie/skills/typescript-pro/references/utility-types.md`  | Partial, Pick, Omit, Record, custom utilities                |
-| Configuration  | `.junie/skills/typescript-pro/references/configuration.md`  | tsconfig options, strict mode, project references            |
-| Patterns       | `.junie/skills/typescript-pro/references/patterns.md`       | Builder pattern, factory pattern, type-safe APIs             |
+| Advanced Types | `references/advanced-types.md` | Generics, conditional types, mapped types, template literals |
+| Type Guards    | `references/type-guards.md`    | Type narrowing, discriminated unions, assertion functions    |
+| Utility Types  | `references/utility-types.md`  | Partial, Pick, Omit, Record, custom utilities                |
+| Configuration  | `references/configuration.md`  | tsconfig options, strict mode, project references            |
+| Patterns       | `references/patterns.md`       | Builder pattern, factory pattern, type-safe APIs             |
 
 ## Constraints
 

@@ -90,7 +90,10 @@ const cmdHandlers: Record<
   },
   init: async (flags, _args) => {
     void _args;
-    await runInit(process.cwd(), { yes: flags.yes === true });
+    await runInit(process.cwd(), {
+      yes: flags.yes === true,
+      global: flags.global === true,
+    });
   },
   import: (flags, _args) => {
     void _args;

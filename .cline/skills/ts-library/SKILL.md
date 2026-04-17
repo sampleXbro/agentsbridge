@@ -24,42 +24,42 @@ Patterns for authoring high-quality TypeScript libraries, extracted from studyin
 
 | Working on...         | Load file                                                          |
 | --------------------- | ------------------------------------------------------------------ |
-| New project setup     | [.cline/skills/ts-library/references/project-setup.md](.cline/skills/ts-library/references/project-setup.md)         |
-| Package exports       | [.cline/skills/ts-library/references/package-exports.md](.cline/skills/ts-library/references/package-exports.md)     |
-| tsconfig options      | [.cline/skills/ts-library/references/typescript-config.md](.cline/skills/ts-library/references/typescript-config.md) |
-| Build configuration   | [.cline/skills/ts-library/references/build-tooling.md](.cline/skills/ts-library/references/build-tooling.md)         |
-| ESLint config         | [.cline/skills/ts-library/references/eslint-config.md](.cline/skills/ts-library/references/eslint-config.md)         |
-| API design patterns   | [.cline/skills/ts-library/references/api-design.md](.cline/skills/ts-library/references/api-design.md)               |
-| Type inference tricks | [.cline/skills/ts-library/references/type-patterns.md](.cline/skills/ts-library/references/type-patterns.md)         |
-| Testing setup         | [.cline/skills/ts-library/references/testing.md](.cline/skills/ts-library/references/testing.md)                     |
-| Release workflow      | [.cline/skills/ts-library/references/release.md](.cline/skills/ts-library/references/release.md)                     |
-| CI/CD setup           | [.cline/skills/ts-library/references/ci-workflows.md](.cline/skills/ts-library/references/ci-workflows.md)           |
+| New project setup     | [references/project-setup.md](references/project-setup.md)         |
+| Package exports       | [references/package-exports.md](references/package-exports.md)     |
+| tsconfig options      | [references/typescript-config.md](references/typescript-config.md) |
+| Build configuration   | [references/build-tooling.md](references/build-tooling.md)         |
+| ESLint config         | [references/eslint-config.md](references/eslint-config.md)         |
+| API design patterns   | [references/api-design.md](references/api-design.md)               |
+| Type inference tricks | [references/type-patterns.md](references/type-patterns.md)         |
+| Testing setup         | [references/testing.md](references/testing.md)                     |
+| Release workflow      | [references/release.md](references/release.md)                     |
+| CI/CD setup           | [references/ci-workflows.md](references/ci-workflows.md)           |
 
 ## Loading Files
 
 **Consider loading these reference files based on your task:**
 
-- [ ] [.cline/skills/ts-library/references/project-setup.md](.cline/skills/ts-library/references/project-setup.md) - if starting a new TypeScript library project
-- [ ] [.cline/skills/ts-library/references/package-exports.md](.cline/skills/ts-library/references/package-exports.md) - if configuring package.json exports or dual CJS/ESM
-- [ ] [.cline/skills/ts-library/references/typescript-config.md](.cline/skills/ts-library/references/typescript-config.md) - if setting up or modifying tsconfig.json
-- [ ] [.cline/skills/ts-library/references/build-tooling.md](.cline/skills/ts-library/references/build-tooling.md) - if configuring tsdown, unbuild, or build scripts
-- [ ] [.cline/skills/ts-library/references/eslint-config.md](.cline/skills/ts-library/references/eslint-config.md) - if setting up ESLint for library development
-- [ ] [.cline/skills/ts-library/references/api-design.md](.cline/skills/ts-library/references/api-design.md) - if designing public APIs, builder patterns, or plugin systems
-- [ ] [.cline/skills/ts-library/references/type-patterns.md](.cline/skills/ts-library/references/type-patterns.md) - if working with advanced TypeScript types or type inference
-- [ ] [.cline/skills/ts-library/references/testing.md](.cline/skills/ts-library/references/testing.md) - if setting up vitest or writing tests for library code
-- [ ] [.cline/skills/ts-library/references/release.md](.cline/skills/ts-library/references/release.md) - if configuring release workflow or versioning
-- [ ] [.cline/skills/ts-library/references/ci-workflows.md](.cline/skills/ts-library/references/ci-workflows.md) - if setting up GitHub Actions or CI/CD pipelines
+- [ ] [references/project-setup.md](references/project-setup.md) - if starting a new TypeScript library project
+- [ ] [references/package-exports.md](references/package-exports.md) - if configuring package.json exports or dual CJS/ESM
+- [ ] [references/typescript-config.md](references/typescript-config.md) - if setting up or modifying tsconfig.json
+- [ ] [references/build-tooling.md](references/build-tooling.md) - if configuring tsdown, unbuild, or build scripts
+- [ ] [references/eslint-config.md](references/eslint-config.md) - if setting up ESLint for library development
+- [ ] [references/api-design.md](references/api-design.md) - if designing public APIs, builder patterns, or plugin systems
+- [ ] [references/type-patterns.md](references/type-patterns.md) - if working with advanced TypeScript types or type inference
+- [ ] [references/testing.md](references/testing.md) - if setting up vitest or writing tests for library code
+- [ ] [references/release.md](references/release.md) - if configuring release workflow or versioning
+- [ ] [references/ci-workflows.md](references/ci-workflows.md) - if setting up GitHub Actions or CI/CD pipelines
 
 **DO NOT load all files at once.** Load only what's relevant to your current task.
 
 ## New Library Workflow
 
-1. Create project structure → load [.cline/skills/ts-library/references/project-setup.md](.cline/skills/ts-library/references/project-setup.md)
-2. Configure `package.json` exports → load [.cline/skills/ts-library/references/package-exports.md](.cline/skills/ts-library/references/package-exports.md)
-3. Set up build with tsdown → load [.cline/skills/ts-library/references/build-tooling.md](.cline/skills/ts-library/references/build-tooling.md)
+1. Create project structure → load [references/project-setup.md](references/project-setup.md)
+2. Configure `package.json` exports → load [references/package-exports.md](references/package-exports.md)
+3. Set up build with tsdown → load [references/build-tooling.md](references/build-tooling.md)
 4. Verify build: `pnpm build && pnpm pack --dry-run` — check output includes `.mjs`, `.cjs`, `.d.ts`
-5. Add tests → load [.cline/skills/ts-library/references/testing.md](.cline/skills/ts-library/references/testing.md)
-6. Configure release → load [.cline/skills/ts-library/references/release.md](.cline/skills/ts-library/references/release.md)
+5. Add tests → load [references/testing.md](references/testing.md)
+6. Configure release → load [references/release.md](references/release.md)
 
 ## Quick Start
 

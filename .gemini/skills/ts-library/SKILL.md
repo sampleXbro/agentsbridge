@@ -24,42 +24,42 @@ Patterns for authoring high-quality TypeScript libraries, extracted from studyin
 
 | Working on...         | Load file                                                          |
 | --------------------- | ------------------------------------------------------------------ |
-| New project setup     | [.gemini/skills/ts-library/references/project-setup.md](.gemini/skills/ts-library/references/project-setup.md)         |
-| Package exports       | [.gemini/skills/ts-library/references/package-exports.md](.gemini/skills/ts-library/references/package-exports.md)     |
-| tsconfig options      | [.gemini/skills/ts-library/references/typescript-config.md](.gemini/skills/ts-library/references/typescript-config.md) |
-| Build configuration   | [.gemini/skills/ts-library/references/build-tooling.md](.gemini/skills/ts-library/references/build-tooling.md)         |
-| ESLint config         | [.gemini/skills/ts-library/references/eslint-config.md](.gemini/skills/ts-library/references/eslint-config.md)         |
-| API design patterns   | [.gemini/skills/ts-library/references/api-design.md](.gemini/skills/ts-library/references/api-design.md)               |
-| Type inference tricks | [.gemini/skills/ts-library/references/type-patterns.md](.gemini/skills/ts-library/references/type-patterns.md)         |
-| Testing setup         | [.gemini/skills/ts-library/references/testing.md](.gemini/skills/ts-library/references/testing.md)                     |
-| Release workflow      | [.gemini/skills/ts-library/references/release.md](.gemini/skills/ts-library/references/release.md)                     |
-| CI/CD setup           | [.gemini/skills/ts-library/references/ci-workflows.md](.gemini/skills/ts-library/references/ci-workflows.md)           |
+| New project setup     | [references/project-setup.md](references/project-setup.md)         |
+| Package exports       | [references/package-exports.md](references/package-exports.md)     |
+| tsconfig options      | [references/typescript-config.md](references/typescript-config.md) |
+| Build configuration   | [references/build-tooling.md](references/build-tooling.md)         |
+| ESLint config         | [references/eslint-config.md](references/eslint-config.md)         |
+| API design patterns   | [references/api-design.md](references/api-design.md)               |
+| Type inference tricks | [references/type-patterns.md](references/type-patterns.md)         |
+| Testing setup         | [references/testing.md](references/testing.md)                     |
+| Release workflow      | [references/release.md](references/release.md)                     |
+| CI/CD setup           | [references/ci-workflows.md](references/ci-workflows.md)           |
 
 ## Loading Files
 
 **Consider loading these reference files based on your task:**
 
-- [ ] [.gemini/skills/ts-library/references/project-setup.md](.gemini/skills/ts-library/references/project-setup.md) - if starting a new TypeScript library project
-- [ ] [.gemini/skills/ts-library/references/package-exports.md](.gemini/skills/ts-library/references/package-exports.md) - if configuring package.json exports or dual CJS/ESM
-- [ ] [.gemini/skills/ts-library/references/typescript-config.md](.gemini/skills/ts-library/references/typescript-config.md) - if setting up or modifying tsconfig.json
-- [ ] [.gemini/skills/ts-library/references/build-tooling.md](.gemini/skills/ts-library/references/build-tooling.md) - if configuring tsdown, unbuild, or build scripts
-- [ ] [.gemini/skills/ts-library/references/eslint-config.md](.gemini/skills/ts-library/references/eslint-config.md) - if setting up ESLint for library development
-- [ ] [.gemini/skills/ts-library/references/api-design.md](.gemini/skills/ts-library/references/api-design.md) - if designing public APIs, builder patterns, or plugin systems
-- [ ] [.gemini/skills/ts-library/references/type-patterns.md](.gemini/skills/ts-library/references/type-patterns.md) - if working with advanced TypeScript types or type inference
-- [ ] [.gemini/skills/ts-library/references/testing.md](.gemini/skills/ts-library/references/testing.md) - if setting up vitest or writing tests for library code
-- [ ] [.gemini/skills/ts-library/references/release.md](.gemini/skills/ts-library/references/release.md) - if configuring release workflow or versioning
-- [ ] [.gemini/skills/ts-library/references/ci-workflows.md](.gemini/skills/ts-library/references/ci-workflows.md) - if setting up GitHub Actions or CI/CD pipelines
+- [ ] [references/project-setup.md](references/project-setup.md) - if starting a new TypeScript library project
+- [ ] [references/package-exports.md](references/package-exports.md) - if configuring package.json exports or dual CJS/ESM
+- [ ] [references/typescript-config.md](references/typescript-config.md) - if setting up or modifying tsconfig.json
+- [ ] [references/build-tooling.md](references/build-tooling.md) - if configuring tsdown, unbuild, or build scripts
+- [ ] [references/eslint-config.md](references/eslint-config.md) - if setting up ESLint for library development
+- [ ] [references/api-design.md](references/api-design.md) - if designing public APIs, builder patterns, or plugin systems
+- [ ] [references/type-patterns.md](references/type-patterns.md) - if working with advanced TypeScript types or type inference
+- [ ] [references/testing.md](references/testing.md) - if setting up vitest or writing tests for library code
+- [ ] [references/release.md](references/release.md) - if configuring release workflow or versioning
+- [ ] [references/ci-workflows.md](references/ci-workflows.md) - if setting up GitHub Actions or CI/CD pipelines
 
 **DO NOT load all files at once.** Load only what's relevant to your current task.
 
 ## New Library Workflow
 
-1. Create project structure → load [.gemini/skills/ts-library/references/project-setup.md](.gemini/skills/ts-library/references/project-setup.md)
-2. Configure `package.json` exports → load [.gemini/skills/ts-library/references/package-exports.md](.gemini/skills/ts-library/references/package-exports.md)
-3. Set up build with tsdown → load [.gemini/skills/ts-library/references/build-tooling.md](.gemini/skills/ts-library/references/build-tooling.md)
+1. Create project structure → load [references/project-setup.md](references/project-setup.md)
+2. Configure `package.json` exports → load [references/package-exports.md](references/package-exports.md)
+3. Set up build with tsdown → load [references/build-tooling.md](references/build-tooling.md)
 4. Verify build: `pnpm build && pnpm pack --dry-run` — check output includes `.mjs`, `.cjs`, `.d.ts`
-5. Add tests → load [.gemini/skills/ts-library/references/testing.md](.gemini/skills/ts-library/references/testing.md)
-6. Configure release → load [.gemini/skills/ts-library/references/release.md](.gemini/skills/ts-library/references/release.md)
+5. Add tests → load [references/testing.md](references/testing.md)
+6. Configure release → load [references/release.md](references/release.md)
 
 ## Quick Start
 

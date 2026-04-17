@@ -12,11 +12,16 @@ Import an existing tool's native config into the canonical `.agentsmesh/` direct
 agentsmesh import --from <target>
 ```
 
+```bash
+agentsmesh import --global --from claude-code
+```
+
 ## Flags
 
 | Flag | Description |
 |------|-------------|
 | `--from <target>` | Source tool ID to import from. **Required.** |
+| `--global` | Import from user-level tool paths into `~/.agentsmesh/` (`claude-code`, `antigravity`, `codex-cli`; `cursor` reads `~/.cursor/{rules/,AGENTS.md,mcp.json,hooks.json,cursorignore,skills/,agents/,commands/}` and legacy `~/.agentsmesh-exports/cursor/user-rules.md` when present). |
 
 ## Supported targets
 
@@ -40,6 +45,9 @@ agentsmesh import --from <target>
 ```bash
 # Import Claude Code configuration
 agentsmesh import --from claude-code
+
+# Import Claude Code global configuration from ~/.claude/ into ~/.agentsmesh/
+agentsmesh import --global --from claude-code
 
 # Import Cursor rules and settings
 agentsmesh import --from cursor
@@ -71,6 +79,47 @@ agentsmesh import --from roo-code
 | `.claude/settings.json` → `permissions` | `.agentsmesh/permissions.yaml` |
 | `.claude/settings.json` → `hooks` | `.agentsmesh/hooks.yaml` |
 | `.claude/ignore` | `.agentsmesh/ignore` |
+
+### Claude Code global mode
+
+When you pass `--global`, Claude Code imports from the documented user-level paths instead of the current project:
+
+| Source | Canonical |
+|--------|-----------|
+| `~/.claude/CLAUDE.md` | `~/.agentsmesh/rules/_root.md` |
+| `~/.claude/agents/*.md` | `~/.agentsmesh/agents/*.md` |
+| `~/.claude/skills/*/SKILL.md` | `~/.agentsmesh/skills/*/SKILL.md` |
+| `~/.claude/commands/*.md` | `~/.agentsmesh/commands/*.md` |
+| `~/.claude/settings.json` → `permissions` / fallback `mcpServers` | `~/.agentsmesh/permissions.yaml`, `~/.agentsmesh/mcp.json` |
+| `~/.claude/hooks.json` → hooks | `~/.agentsmesh/hooks.yaml` (when present; otherwise hooks may still be read from `settings.json`) |
+| `~/.claude.json` → `mcpServers` | `~/.agentsmesh/mcp.json` |
+| `~/.claudeignore` | `~/.agentsmesh/ignore` |
+| `~/.agents/skills/*/SKILL.md` | `~/.agentsmesh/skills/*/SKILL.md` (compatibility mirror when present) |
+
+### Antigravity global mode
+
+| Source | Canonical |
+|--------|-----------|
+| `~/.gemini/GEMINI.md` | `~/.agentsmesh/rules/_root.md` |
+| `~/.gemini/antigravity/skills/**/SKILL.md` | `~/.agentsmesh/skills/**/SKILL.md` |
+| `~/.gemini/antigravity/mcp_config.json` | `~/.agentsmesh/mcp.json` |
+
+Project-only paths such as `.agents/workflows/` are not scanned in global mode.
+
+### Codex CLI global mode
+
+| Source | Canonical |
+|--------|-----------|
+| `~/.codex/AGENTS.override.md` (if present) or `~/.codex/AGENTS.md` | `~/.agentsmesh/rules/_root.md` |
+| `~/.codex/config.toml` → `mcp_servers` | `~/.agentsmesh/mcp.json` |
+| `~/.codex/agents/*.toml` | `~/.agentsmesh/agents/*.md` |
+| `~/.agents/skills/**/SKILL.md` | `~/.agentsmesh/skills/**/SKILL.md` |
+
+Global import does **not** recurse nested `AGENTS.md` files under `$HOME`.
+
+### Cursor global mode
+
+Global import reads `~/.cursor/rules/*.mdc` first, then falls back to legacy `~/.agentsmesh-exports/cursor/user-rules.md` or `~/.cursor/AGENTS.md`, and reads MCP, hooks, ignore, skills, agents, and commands from `~/.cursor/`.
 
 ### Cursor
 

@@ -24,7 +24,7 @@ Finding files in unknown directories, searching without exact location, discover
 
 **Phase 1: Discovery**
 
-1. **Find and read relevant notes/docs** - Search across workspace (notes/, docs/, README), ~/Documents/Documentation/, ~/Documents/Notes/, and project .md files. Use as context only; verify against actual code.
+1. **Find and read relevant notes/docs** - Search across workspace (notes/, ../../../docs/, README), ~/Documents/Documentation/, ~/Documents/Notes/, and project .md files. Use as context only; verify against actual code.
 
 2. **Read additional documentation** - API docs, Confluence, Jira, wikis, official docs, in-code comments. Use for initial context; verify against actual code.
 

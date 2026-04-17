@@ -44,7 +44,7 @@ function emptyCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles
 }
 
 const baseArgs = {
-  configDir: '/project',
+  canonicalDir: '/project/.agentsmesh',
   packName: 'my-pack',
   narrowed: emptyCanonical(),
   selected: { skillNames: [], ruleSlugs: [], commandNames: [], agentNames: [] },
@@ -150,7 +150,7 @@ describe('installAsPack', () => {
   it('updates the install manifest after materializing a pack', async () => {
     await installAsPack(baseArgs);
     expect(mockUpsertInstallManifestEntry).toHaveBeenCalledWith(
-      '/project',
+      '/project/.agentsmesh',
       expect.objectContaining({
         name: 'my-pack',
         source: 'github:org/repo@abc123',

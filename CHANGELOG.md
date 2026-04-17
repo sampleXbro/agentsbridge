@@ -1,6 +1,18 @@
 # Changelog
 
-## Next version
+## 0.4.0 - 2026-04-17
+
+### Added
+
+- **Global mode** (`--global`, canonical `~/.agentsmesh/`) for **all** built-in targets — Claude Code, Cursor, Copilot, Continue, Junie, Kiro, Gemini CLI, Cline, Codex CLI, Windsurf, Antigravity, and Roo Code. Each target has a `descriptor.global` layout with project→user path rewriting, import/generate alignment where applicable, optional `~/.agents/skills/` mirroring when Codex CLI is not a global target, reference/link rewriting, and tests (including `generate-reference-rewrite` and global path rebase coverage).
+- Contributor skill **`add-global-mode-target`** (`.agents/skills/` and mirrored agent skill dirs) for scoped work when extending or validating **one** target’s global-mode behavior at a time.
+- Comprehensive structure validation test coverage for all 12 targets in both project and global modes (24 test suites, 39 global mode tests, 100% pass rate).
+- Shared validation helpers library (`tests/unit/targets/validation-helpers.ts`) with reusable helpers for JSON, Markdown, YAML, frontmatter, and file structure validation.
+- Global mode test coverage for all targets verifying correct path transformations and feature support in user-level configurations.
+
+### Changed
+
+- **Documentation:** README quick start adds a **personal global config** section; CLI reference pages (`init`, `import`, `generate`, `install`, `diff`, `lint`, `watch`, `check`, `merge`, `matrix`, overview) document `--global` behavior and link to the [supported tools matrix](https://samplexbro.github.io/agentsmesh/reference/supported-tools/#global-mode). Antigravity global paths are documented as `~/.gemini/antigravity/GEMINI.md` (distinct from Gemini CLI’s `~/.gemini/GEMINI.md`).
 
 ## 0.3.1 - 2026-04-12
 

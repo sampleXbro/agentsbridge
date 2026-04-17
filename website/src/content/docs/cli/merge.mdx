@@ -12,11 +12,19 @@ Resolve `.agentsmesh/.lock` merge conflicts after a `git merge`. Rebuilds the lo
 agentsmesh merge
 ```
 
-No flags.
+```bash
+agentsmesh merge --global
+```
+
+## Flags
+
+| Flag | Description |
+|------|-------------|
+| `--global` | Resolve conflicts in `~/.agentsmesh/.lock`. |
 
 ## When to use
 
-Run `agentsmesh merge` after a `git merge` (or `git rebase`) that produces conflicts in `.agentsmesh/.lock`.
+Run `agentsmesh merge` after a `git merge` (or `git rebase`) that produces conflicts in `.agentsmesh/.lock`. Use `agentsmesh merge --global` for conflicts in `~/.agentsmesh/.lock`.
 
 The lock file is a JSON file containing checksums of all generated files. When two branches both modify canonical files and both regenerate, the lock files will conflict. Git cannot automatically resolve this.
 
@@ -44,7 +52,7 @@ git commit -m "merge: resolve agentsmesh config conflicts"
 
 ## What merge does
 
-`agentsmesh merge` reads the current canonical files in `.agentsmesh/` (after your manual conflict resolution) and rewrites `.agentsmesh/.lock` with fresh checksums computed from the current state.
+`agentsmesh merge` reads the current canonical files in `.agentsmesh/` (or `~/.agentsmesh/` with `--global`) and rewrites the matching lock file with fresh checksums computed from the current state.
 
 It does not modify any canonical or generated files — it only fixes the lock file.
 

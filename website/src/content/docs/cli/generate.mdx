@@ -17,6 +17,7 @@ agentsmesh generate [flags]
 | Flag | Description |
 |------|-------------|
 | `--targets <csv>` | Comma-separated list of target IDs to generate for. Defaults to all configured targets. |
+| `--global` | Generate user-level config from `~/.agentsmesh/` instead of project-local config (e.g. `claude-code`, `antigravity`, `codex-cli`; Cursor writes full `~/.cursor/` global surfaces including `rules/`, `AGENTS.md`, hooks, ignore, MCP, skills, agents, commands). |
 | `--dry-run` | Preview changes without writing any files. |
 | `--check` | Verify sync status only. Exit code 1 if out of sync. |
 | `--force` | Bypass collaboration lock violations. |
@@ -40,6 +41,17 @@ agentsmesh generate --targets claude-code,cursor
 ```
 
 Only generates `.claude/` and `.cursor/` output, ignoring other configured targets.
+
+### Generate global user-level config
+
+```bash
+agentsmesh init --global
+agentsmesh generate --global --targets claude-code,antigravity,codex-cli,cursor
+```
+
+Reads canonical files from `~/.agentsmesh/` and writes user-level outputs per target (for example Claude Code under `~/.claude/` including `hooks.json`, `~/.claudeignore`, skills under `~/.claude/skills/` and mirrored to `~/.agents/skills/` only when Codex is not also a global target, optional `output-styles/` when `outputStyle: true`, plus `~/.claude.json` for MCP; Antigravity under `~/.gemini/antigravity/`; Codex CLI under `~/.codex/` plus `~/.agents/skills/`; and Cursor under `~/.cursor/` with `rules/*.mdc`, aggregated `AGENTS.md`, MCP, hooks, `cursorignore`, skills, agents, and commands). See the [supported tools matrix](../reference/supported-tools#global-mode) for the full global-mode map.
+
+The rest of the maintenance commands (`install`, `diff`, `lint`, `watch`, `check`, `merge`, and `matrix`) also accept `--global` and operate on the same `~/.agentsmesh/` canonical root.
 
 ### Preview changes without writing
 
@@ -77,7 +89,7 @@ Forces a re-fetch of all remote `extends` sources. Without this flag, AgentsMesh
 ## What generate does
 
 1. **Load config** — parse `agentsmesh.yaml`, merge `agentsmesh.local.yaml`, validate schema.
-2. **Load canonical sources** — read `.agentsmesh/`, resolve extends (cache or remote), load installed packs, merge everything.
+2. **Load canonical sources** — read `.agentsmesh/` (or `~/.agentsmesh/` with `--global`), resolve extends (cache or remote), load installed packs, merge everything.
 3. **Generate per target** — for each enabled target, run target-specific generators for rules, commands, agents, skills, MCP, hooks, ignore, and permissions.
 4. **Rewrite references** — internal `.agentsmesh/` file paths are rewritten to target-relative paths.
 5. **Resolve collisions** — detect overlapping output paths, prefer native over embedded.

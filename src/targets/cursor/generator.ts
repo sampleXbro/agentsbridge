@@ -7,6 +7,7 @@ import { getHookCommand, getHookPrompt, hasHookText } from '../../core/hook-comm
 import { serializeFrontmatter } from '../../utils/text/markdown.js';
 import {
   CURSOR_COMPAT_AGENTS,
+  CURSOR_DOT_CURSOR_AGENTS,
   CURSOR_GENERAL_RULE,
   CURSOR_RULES_DIR,
   CURSOR_COMMANDS_DIR,
@@ -55,7 +56,42 @@ export function generateRules(canonical: CanonicalFiles): RulesOutput[] {
     outputs.push({ path: `${CURSOR_RULES_DIR}/${slug}.mdc`, content });
   }
 
+  const aggregate = renderCursorGlobalUserRules(canonical);
+  if (aggregate.trim()) {
+    outputs.push({ path: CURSOR_DOT_CURSOR_AGENTS, content: aggregate });
+  }
+
   return outputs;
+}
+
+export function renderCursorGlobalUserRules(canonical: CanonicalFiles): string {
+  const root = canonical.rules.find((rule) => rule.root);
+  const nonRootRules = canonical.rules.filter(
+    (rule) => !rule.root && (rule.targets.length === 0 || rule.targets.includes('cursor')),
+  );
+  const sections: string[] = [];
+
+  if (root?.body.trim()) {
+    sections.push(root.body.trim());
+  }
+
+  for (const rule of nonRootRules) {
+    const parts: string[] = [];
+    parts.push(
+      `## ${rule.description || rule.source.split('/').pop()?.replace(/\.md$/, '') || 'Rule'}`,
+    );
+    if (rule.globs.length > 0) {
+      parts.push('');
+      parts.push(`Applies to: ${rule.globs.map((glob) => `\`${glob}\``).join(', ')}`);
+    }
+    if (rule.body.trim()) {
+      parts.push('');
+      parts.push(rule.body.trim());
+    }
+    sections.push(parts.join('\n'));
+  }
+
+  return sections.filter(Boolean).join('\n\n---\n\n');
 }
 
 /**

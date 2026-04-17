@@ -6,6 +6,7 @@
 
 import { join, dirname, relative } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
+import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
 import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/filesystem/fs.js';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
@@ -37,10 +38,15 @@ import { importWorkflows, importSkills } from './workflows-skills-helpers.js';
  * Import Windsurf config into canonical .agentsmesh/.
  * Sources: .windsurfrules (root), .windsurf/rules/*.md (rules), .windsurfignore (ignore).
  *
- * @param projectRoot - Project root directory
+ * @param projectRoot - Project root directory (repo root, or user home for global scope)
+ * @param options - When `scope` is `global`, skips recursive nested `AGENTS.md` discovery under `projectRoot`.
  * @returns Import results for each imported file
  */
-export async function importFromWindsurf(projectRoot: string): Promise<ImportResult[]> {
+export async function importFromWindsurf(
+  projectRoot: string,
+  options?: { scope?: TargetLayoutScope },
+): Promise<ImportResult[]> {
+  const layoutScope: TargetLayoutScope = options?.scope ?? 'project';
   const results: ImportResult[] = [];
   const normalize = await createImportReferenceNormalizer(WINDSURF_TARGET, projectRoot);
   const normalizeCodex = await createImportReferenceNormalizer('codex-cli', projectRoot);
@@ -85,35 +91,37 @@ export async function importFromWindsurf(projectRoot: string): Promise<ImportRes
     }
   }
 
-  results.push(
-    ...(await importFileDirectory({
-      srcDir: projectRoot,
-      destDir: destRulesDir,
-      extensions: ['AGENTS.md'],
-      fromTool: 'windsurf',
-      normalize,
-      mapEntry: async ({ srcPath, normalizeTo }) => {
-        const relDir = relative(projectRoot, dirname(srcPath)).replace(/\\/g, '/');
-        if (!relDir || relDir === '.' || !srcPath.endsWith('/AGENTS.md')) return null;
-        const ruleName = relDir.replace(/\//g, '-');
-        if (!shouldImportScopedAgentsRule(relDir)) {
-          await removePathIfExists(join(destRulesDir, `${ruleName}.md`));
-          return null;
-        }
-        const destPath = join(destRulesDir, `${ruleName}.md`);
-        return {
-          destPath,
-          toPath: `${WINDSURF_CANONICAL_RULES_DIR}/${ruleName}.md`,
-          feature: 'rules',
-          content: await serializeImportedRuleWithFallback(
+  if (layoutScope !== 'global') {
+    results.push(
+      ...(await importFileDirectory({
+        srcDir: projectRoot,
+        destDir: destRulesDir,
+        extensions: ['AGENTS.md'],
+        fromTool: 'windsurf',
+        normalize,
+        mapEntry: async ({ srcPath, normalizeTo }) => {
+          const relDir = relative(projectRoot, dirname(srcPath)).replace(/\\/g, '/');
+          if (!relDir || relDir === '.' || !srcPath.endsWith('/AGENTS.md')) return null;
+          const ruleName = relDir.replace(/\//g, '-');
+          if (!shouldImportScopedAgentsRule(relDir)) {
+            await removePathIfExists(join(destRulesDir, `${ruleName}.md`));
+            return null;
+          }
+          const destPath = join(destRulesDir, `${ruleName}.md`);
+          return {
             destPath,
-            { root: false, globs: [`${relDir}/**`] },
-            normalizeTo(destPath),
-          ),
-        };
-      },
-    })),
-  );
+            toPath: `${WINDSURF_CANONICAL_RULES_DIR}/${ruleName}.md`,
+            feature: 'rules',
+            content: await serializeImportedRuleWithFallback(
+              destPath,
+              { root: false, globs: [`${relDir}/**`] },
+              normalizeTo(destPath),
+            ),
+          };
+        },
+      })),
+    );
+  }
 
   const rulesDir = join(projectRoot, WINDSURF_RULES_DIR);
   results.push(

@@ -3,7 +3,6 @@
  */
 
 import type { CanonicalFiles } from '../../core/types.js';
-import { getHookCommand, getHookPrompt, hasHookText } from '../../core/hook-command.js';
 import { serializeFrontmatter } from '../../utils/text/markdown.js';
 import {
   CLAUDE_ROOT,
@@ -15,6 +14,7 @@ import {
   CLAUDE_SETTINGS,
   CLAUDE_IGNORE,
 } from './constants.js';
+import { buildClaudeHooksObjectFromCanonical } from './hooks-format.js';
 
 export interface RulesOutput {
   path: string;
@@ -92,7 +92,9 @@ export function generateAgents(canonical: CanonicalFiles): RulesOutput[] {
     Object.keys(frontmatter).forEach((k) => {
       if (frontmatter[k] === undefined) delete frontmatter[k];
     });
-    const content = serializeFrontmatter(frontmatter, agent.body.trim() || '');
+    const rawBody = agent.body.trim() || '';
+    const body = /^##\s*Role\b/m.test(rawBody) ? rawBody : `## Role\n\n${rawBody}`;
+    const content = serializeFrontmatter(frontmatter, body);
     return { path: `${CLAUDE_AGENTS_DIR}/${agent.name}.md`, content };
   });
 }
@@ -122,7 +124,12 @@ export function generateSkills(canonical: CanonicalFiles): RulesOutput[] {
       description: skill.description || undefined,
     };
     if (frontmatter.description === undefined) delete frontmatter.description;
-    const skillContent = serializeFrontmatter(frontmatter, skill.body.trim() || '');
+    const rawSkillBody = skill.body.trim() || '';
+    const skillBody =
+      !rawSkillBody || /^##\s*Purpose\b/m.test(rawSkillBody)
+        ? rawSkillBody
+        : `## Purpose\n\n${rawSkillBody}`;
+    const skillContent = serializeFrontmatter(frontmatter, skillBody);
     outputs.push({
       path: `${CLAUDE_SKILLS_DIR}/${skill.name}/SKILL.md`,
       content: skillContent,
@@ -147,35 +154,10 @@ export function generateSkills(canonical: CanonicalFiles): RulesOutput[] {
 export function generatePermissions(canonical: CanonicalFiles): RulesOutput[] {
   if (!canonical.permissions) return [];
   const { allow, deny } = canonical.permissions;
-  if (allow.length === 0 && deny.length === 0) return [];
-  const content = JSON.stringify({ permissions: { allow, deny } }, null, 2);
+  const ask = canonical.permissions.ask ?? [];
+  if (allow.length === 0 && deny.length === 0 && ask.length === 0) return [];
+  const content = JSON.stringify({ permissions: { allow, deny, ask } }, null, 2);
   return [{ path: CLAUDE_SETTINGS, content }];
-}
-
-/**
- * Convert canonical Hooks to Claude Code settings.json hooks format.
- * Claude Code: { event: [{ matcher, hooks: [{ type, command?, prompt?, timeout? }] }] }
- */
-function toClaudeCodeHooks(hooks: import('../../core/types.js').Hooks): Record<string, unknown> {
-  const result: Record<string, unknown> = {};
-  for (const [event, entries] of Object.entries(hooks)) {
-    if (!Array.isArray(entries)) continue;
-    const translated: Array<{ matcher: string; hooks: unknown[] }> = [];
-    for (const e of entries) {
-      if (!hasHookText(e)) continue;
-      const command = getHookCommand(e);
-      const prompt = getHookPrompt(e);
-      const value = e.type === 'prompt' ? prompt || command : command || prompt;
-      const hookItem: Record<string, unknown> = {
-        type: e.type === 'prompt' ? 'prompt' : 'command',
-        [e.type === 'prompt' ? 'prompt' : 'command']: value,
-      };
-      if (e.timeout !== undefined) hookItem.timeout = e.timeout;
-      translated.push({ matcher: e.matcher, hooks: [hookItem] });
-    }
-    if (translated.length > 0) result[event] = translated;
-  }
-  return result;
 }
 
 /**
@@ -186,7 +168,7 @@ function toClaudeCodeHooks(hooks: import('../../core/types.js').Hooks): Record<s
  */
 export function generateHooks(canonical: CanonicalFiles): RulesOutput[] {
   if (!canonical.hooks || Object.keys(canonical.hooks).length === 0) return [];
-  const claudeHooks = toClaudeCodeHooks(canonical.hooks);
+  const claudeHooks = buildClaudeHooksObjectFromCanonical(canonical);
   if (Object.keys(claudeHooks).length === 0) return [];
   const content = JSON.stringify({ hooks: claudeHooks }, null, 2);
   return [{ path: CLAUDE_SETTINGS, content }];

@@ -5,6 +5,7 @@ import type {
   LintDiagnostic,
 } from '../../core/types.js';
 import type { ValidatedConfig } from '../../config/core/schema.js';
+import type { TargetLayoutScope } from './target-descriptor.js';
 
 /** Feature support level for a given target */
 export type SupportLevel = 'native' | 'embedded' | 'partial' | 'none';
@@ -90,6 +91,6 @@ export interface TargetGenerators {
   generateWorkflows?(c: CanonicalFiles): { path: string; content: string }[];
   /** gemini-cli uses generateSettings for .gemini/settings.json */
   generateSettings?(c: CanonicalFiles): { path: string; content: string }[];
-  importFrom(projectRoot: string): Promise<ImportResult[]>;
+  importFrom(projectRoot: string, options?: { scope?: TargetLayoutScope }): Promise<ImportResult[]>;
   lint?(files: CanonicalFiles): LintDiagnostic[];
 }

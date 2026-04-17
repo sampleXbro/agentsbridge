@@ -313,7 +313,7 @@ describe('rewriteFileLinks edge cases', () => {
             : abs,
         pathExists: (abs: string) => abs === '/proj/.claude/skills/api-gen/template.ts',
       });
-      expect(result.content).toBe('See .claude/skills/api-gen/template.ts for the implementation.');
+      expect(result.content).toBe('See template.ts for the implementation.');
     });
 
     it('does not resolve bare filename without extension', () => {

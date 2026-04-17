@@ -34,7 +34,10 @@ description: "Project rules"
 }
 
 beforeEach(() => setupProject());
-afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
+afterEach(() => {
+  vi.unstubAllEnvs();
+  rmSync(TEST_DIR, { recursive: true, force: true });
+});
 
 describe('runDiff', () => {
   it('shows diff when .claude/CLAUDE.md would be created', async () => {
@@ -141,5 +144,44 @@ description: "Other"
     // Non-root rules now generate .claude/rules/*.md and .cursor/rules/*.mdc
     expect(output).toContain('other');
     expect(output).not.toContain('.claude/CLAUDE.md');
+  });
+
+  it('diffs Claude global outputs from ~/.agentsmesh when --global is set', async () => {
+    vi.stubEnv('HOME', TEST_DIR);
+    vi.stubEnv('USERPROFILE', TEST_DIR);
+    const workspace = `${TEST_DIR}-workspace`;
+    rmSync(workspace, { recursive: true, force: true });
+    mkdirSync(workspace, { recursive: true });
+
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'agentsmesh.yaml'),
+      `version: 1
+targets: [claude-code]
+features: [rules]
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
+      `---
+root: true
+description: "Global rules"
+---
+# Global Rules
+`,
+    );
+
+    const logs: string[] = [];
+    vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
+      logs.push(String(chunk));
+      return true;
+    });
+
+    await runDiff({ global: true }, workspace);
+
+    const output = logs.join('');
+    expect(output).toContain('.claude/CLAUDE.md (current)');
+    expect(output).toContain('.claude/CLAUDE.md (generated)');
+    expect(output).toContain('Global Rules');
   });
 });

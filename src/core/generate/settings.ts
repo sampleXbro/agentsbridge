@@ -12,6 +12,10 @@ export function mergeSettingsJson(existing: string, newContent: string): string 
   const merged = { ...base };
   if (incoming.permissions !== undefined) merged.permissions = incoming.permissions;
   if (incoming.hooks !== undefined) merged.hooks = incoming.hooks;
+  const perms = merged.permissions;
+  if (perms && typeof perms === 'object' && !Array.isArray(perms) && !('ask' in perms)) {
+    (perms as Record<string, unknown>).ask = [];
+  }
   return JSON.stringify(merged, null, 2);
 }
 

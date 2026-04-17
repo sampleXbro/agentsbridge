@@ -3,6 +3,8 @@ name: security-best-practices
 description: Perform language and framework specific security best-practice reviews and suggest improvements. Trigger only when the user explicitly requests security best practices guidance, a security review/report, or secure-by-default coding help. Trigger only for supported languages (python, javascript/typescript, go). Do not trigger for general code review, debugging, or non-security tasks.
 ---
 
+## Purpose
+
 # Security Best Practices
 
 ## Overview
@@ -34,7 +36,7 @@ From there it can operate in a few ways.
 ## Workflow Decision Tree
 
 - If the language/framework is unclear, inspect the repo to determine it and list your evidence.
-- If matching guidance exists in `.claude/skills/security-best-practices/references/`, load only the relevant files and follow their instructions.
+- If matching guidance exists in `references/`, load only the relevant files and follow their instructions.
 - If no matching guidance exists, consider if you know any well known security best practices for the chosen language and or frameworks, but if asked to generate a report, let the user know that concrete guidance is not available (you can still generate the report or detect for sure critical vulnerabilities)
 
 # Overrides

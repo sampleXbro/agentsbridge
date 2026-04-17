@@ -9,7 +9,12 @@
  * TargetDescriptor that gets registered at runtime.
  */
 
-import type { CanonicalFiles, CanonicalRule, LintDiagnostic } from '../../core/types.js';
+import type {
+  CanonicalFiles,
+  CanonicalRule,
+  GenerateResult,
+  LintDiagnostic,
+} from '../../core/types.js';
 import type { TargetCapabilities, TargetGenerators } from './target.interface.js';
 
 /**
@@ -33,14 +38,51 @@ export interface TargetPathResolvers {
   agentPath(name: string, config: unknown): string | null;
 }
 
+export interface TargetManagedOutputs {
+  dirs: readonly string[];
+  files: readonly string[];
+}
+
+export interface TargetLayout {
+  /** Primary root instruction artifact for this scope, if any. */
+  readonly rootInstructionPath?: string;
+  /**
+   * Extra generated paths that should receive the same AgentsMesh root appendix as
+   * `rootInstructionPath` (for example Cursor `AGENTS.md` / `.cursor/AGENTS.md`, Gemini `AGENTS.md`).
+   */
+  readonly additionalRootDecorationPaths?: readonly string[];
+  /** Optional renderer for scope-specific primary root instruction content. */
+  readonly renderPrimaryRootInstruction?: (canonical: CanonicalFiles) => string;
+  /** Target-native skills directory for this scope, if any. */
+  readonly skillDir?: string;
+  /** Files/directories agentsmesh fully manages for stale cleanup. */
+  readonly managedOutputs?: TargetManagedOutputs;
+  /** Optional path rewriter for scope-specific generated outputs. Return null to skip emission. */
+  readonly rewriteGeneratedPath?: (path: string) => string | null;
+  /**
+   * Optional mirror hook. Called after rewriteGeneratedPath resolves the primary path.
+   * Returns an additional path to emit the same content to, or null to skip mirroring.
+   */
+  readonly mirrorGlobalPath?: (path: string, activeTargets: readonly string[]) => string | null;
+  /** Path resolvers for this scope. */
+  readonly paths: TargetPathResolvers;
+}
+
+export type TargetLayoutScope = 'project' | 'global';
+
 /** Import-path builder: populates refs with (target path -> canonical path) mappings. */
-export type ImportPathBuilder = (refs: Map<string, string>, projectRoot: string) => Promise<void>;
+export type ImportPathBuilder = (
+  refs: Map<string, string>,
+  projectRoot: string,
+  scope?: TargetLayoutScope,
+) => Promise<void>;
 
 /** Rule linter function signature. */
 export type RuleLinter = (
   canonical: CanonicalFiles,
   projectRoot: string,
   projectFiles: string[],
+  options?: { scope?: TargetLayoutScope },
 ) => LintDiagnostic[];
 
 /**
@@ -54,16 +96,39 @@ export interface TargetDescriptor {
   readonly generators: TargetGenerators;
   /** Feature support levels */
   readonly capabilities: TargetCapabilities;
+  /** Optional global-scope feature support levels when they differ from project mode */
+  readonly globalCapabilities?: TargetCapabilities;
   /** Message shown when import finds nothing for this target */
   readonly emptyImportMessage: string;
   /** Optional linter for canonical files */
   readonly lintRules: RuleLinter | null;
-  /** Target-native skills directory, e.g. '.claude/skills' */
+  /** Project-scope target layout metadata */
+  readonly project: TargetLayout;
+  /** Optional future global-scope target layout metadata */
+  readonly global?: TargetLayout;
+  /**
+   * Declares which embedded-capability features support user-configured conversion.
+   * When the corresponding conversion is disabled in config, the feature generator is skipped.
+   */
+  readonly supportsConversion?: { readonly commands?: true; readonly agents?: true };
+  /**
+   * Optional hook for generating scope-specific extras beyond the standard feature loop.
+   * Called once per target after all standard features are processed.
+   */
+  readonly generateScopeExtras?: (
+    canonical: CanonicalFiles,
+    projectRoot: string,
+    scope: TargetLayoutScope,
+    enabledFeatures: ReadonlySet<string>,
+  ) => Promise<GenerateResult[]>;
+  /** @deprecated Use project.skillDir */
   readonly skillDir?: string;
-  /** Path resolvers for the output reference map */
-  readonly paths: TargetPathResolvers;
+  /** @deprecated Use project.paths */
+  readonly paths?: TargetPathResolvers;
   /** Import reference map builder */
   readonly buildImportPaths: ImportPathBuilder;
   /** Filesystem paths used to detect this target during `init` */
   readonly detectionPaths: readonly string[];
+  /** Optional filesystem paths used to detect this target in global scope during `init --global` */
+  readonly globalDetectionPaths?: readonly string[];
 }

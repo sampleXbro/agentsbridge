@@ -2,7 +2,7 @@
  * Unit tests for agentsmesh merge command.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -14,6 +14,10 @@ const TEST_DIR = join(tmpdir(), 'am-merge-test');
 beforeEach(() => {
   rmSync(TEST_DIR, { recursive: true, force: true });
   mkdirSync(TEST_DIR, { recursive: true });
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
 });
 
 function setupProject(): void {
@@ -78,5 +82,40 @@ checksums:
     mkdirSync(TEST_DIR, { recursive: true });
 
     await expect(runMerge({}, TEST_DIR)).rejects.toThrow(/no agentsmesh\.yaml found/i);
+  });
+
+  it('resolves ~/.agentsmesh/.lock when --global is set', async () => {
+    vi.stubEnv('HOME', TEST_DIR);
+    vi.stubEnv('USERPROFILE', TEST_DIR);
+    const workspace = `${TEST_DIR}-workspace`;
+    rmSync(workspace, { recursive: true, force: true });
+    mkdirSync(workspace, { recursive: true });
+
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'agentsmesh.yaml'),
+      'version: 1\ntargets: [claude-code]\nfeatures: [rules]\n',
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
+      '---\nroot: true\n---\n# Global Rules',
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', '.lock'),
+      `<<<<<<< HEAD
+checksums:
+  rules/_root.md: "sha256:aaa"
+=======
+checksums:
+  rules/_root.md: "sha256:bbb"
+>>>>>>> branch
+`,
+    );
+
+    await runMerge({ global: true }, workspace);
+
+    const lock = await readLock(join(TEST_DIR, '.agentsmesh'));
+    expect(lock).not.toBeNull();
+    expect(lock!.checksums['rules/_root.md']).toMatch(/^sha256:[a-f0-9]{64}$/);
   });
 });

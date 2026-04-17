@@ -19,7 +19,7 @@ import type { ManualInstallAs } from '../manual/manual-install-mode.js';
 import { exists } from '../../utils/filesystem/fs.js';
 
 export interface InstallAsPackArgs {
-  configDir: string;
+  canonicalDir: string;
   packName: string;
   narrowed: CanonicalFiles;
   selected: {
@@ -70,7 +70,7 @@ function applySelection(
  */
 export async function installAsPack(args: InstallAsPackArgs): Promise<void> {
   const {
-    configDir,
+    canonicalDir,
     packName,
     narrowed,
     selected,
@@ -85,7 +85,7 @@ export async function installAsPack(args: InstallAsPackArgs): Promise<void> {
     renameExistingPack,
   } = args;
 
-  const packsDir = join(configDir, '.agentsmesh', 'packs');
+  const packsDir = join(canonicalDir, 'packs');
   const selectedCanonical = applySelection(narrowed, selected);
   const now = new Date().toISOString();
   const parsedTarget = yamlTarget !== undefined ? targetSchema.parse(yamlTarget) : undefined;
@@ -158,7 +158,7 @@ export async function installAsPack(args: InstallAsPackArgs): Promise<void> {
   }
 
   await upsertInstallManifestEntry(
-    configDir,
+    canonicalDir,
     buildInstallManifestEntry({
       name: persistedName,
       source: sourceForYaml,

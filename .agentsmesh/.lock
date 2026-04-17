@@ -1,9 +1,9 @@
 # Auto-generated. DO NOT EDIT MANUALLY.
 # Tracks the state of all config files for team conflict resolution.
 
-generated_at: 2026-04-12T11:05:50.341Z
+generated_at: 2026-04-17T10:35:30.947Z
 generated_by: serhii
-lib_version: 0.2.10
+lib_version: 0.3.1
 checksums:
   agents/code-debugger.md: sha256:707132841c606f117c83491d53ce101be0117eb50abe2861bcf93bdd45a56daf
   agents/code-documenter.md: sha256:faa66b16d2e86578985e817d60e6705ae0e34a716c1f5c29411739a6d659fb96
@@ -24,6 +24,8 @@ checksums:
   rules/typescript.md: sha256:18f52143dfdd3e219a5c6d6c0feb7283fe74cce99458c46dafcd1c3620ad4fba
   skills/add-agent-target/SKILL.md: sha256:53a76c84b87f7735c53ac5f5e584e55122c09728a14406e7088ea93b5b183406
   skills/add-agent-target/references/target-addition-checklist.md: sha256:66cd8f5ed4dd21b27e2bf4b34ae749ee301b28a208c83fecffa06748c2d2d61c
+  skills/add-global-mode-target/SKILL.md: sha256:4ea80acf946ead7ac9eff0032380b8260992f8df6f9e38fb462430194e58832a
+  skills/add-global-mode-target/references/global-mode-target-checklist.md: sha256:61f8827978f90ee079e2dfd426ef25b17e77c71d9f79c5f81ebc700379f6fafc
   skills/changelog-generator/SKILL.md: sha256:7c98dc3ec82002e156690b39e8bf8f63cba8a07cb3c8f5d7207c41999a2d356a
   skills/docs-and-examples/SKILL.md: sha256:cff2b06fb63325ba76d1a3ab903d2fe8946379e219795374afb7ba55e4204f01
   skills/homebrew-packaging/SKILL.md: sha256:29cf86866ad27cc195fc5398e204cc30ef242186a9904b2b26fd084b6d312627
@@ -33,7 +35,7 @@ checksums:
   skills/post-feature-qa/references/edge-case-checklist.md: sha256:77bb7a50f3dd281003e146a5313a85799603739e049646502904d0b7b8451c70
   skills/prepare-release/SKILL.md: sha256:7daabdac3707eec8629eb30f13ca32091401eeee89110891f09c677e10d5fbee
   skills/quality-gates/SKILL.md: sha256:0959ff54fcfb830aea12bfdb06dc8f1ace181125b32c75635a77e8fb3cbcd184
-  skills/release-manager/README.md: sha256:9e291d299387ef2c31461b1b55695ad5be66076c001a8e152bc0dad686d2d8ae
+  skills/release-manager/README.md: sha256:b790f3b04deb02ac027921fe04754149f868a7023759e62b5bd59bac6f4c1c73
   skills/release-manager/SKILL.md: sha256:412b20d63685de5379506dfdf27446ba8650c56801f2ced3c0c4277da6542244
   skills/release-manager/assets/sample_commits.json: sha256:83a0b9c9bcb198e18bc6943a98610c8b1f4cd827d7b82806b8e1b4b531dc6f9b
   skills/release-manager/assets/sample_git_log.txt: sha256:8de6b9810ff92d673ea497612026efa32f1805c285bd92b7c8818f59c15d2107

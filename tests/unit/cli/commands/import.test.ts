@@ -7,11 +7,15 @@ import { mkdirSync, writeFileSync, rmSync, readFileSync, existsSync } from 'node
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { runImport } from '../../../../src/cli/commands/import.js';
+import { vi } from 'vitest';
 
 const TEST_DIR = join(tmpdir(), 'am-import-cmd-test');
 
 beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
-afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
+afterEach(() => {
+  vi.unstubAllEnvs();
+  rmSync(TEST_DIR, { recursive: true, force: true });
+});
 
 describe('runImport', () => {
   it('throws when --from is missing', async () => {
@@ -36,6 +40,70 @@ describe('runImport', () => {
     await runImport({ from: 'claude-code' }, TEST_DIR);
     const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'ts.md'), 'utf-8');
     expect(content).toContain('# TS');
+  });
+
+  it('imports Claude global config from the user home root when --global is set', async () => {
+    vi.stubEnv('HOME', TEST_DIR);
+    vi.stubEnv('USERPROFILE', TEST_DIR);
+
+    mkdirSync(join(TEST_DIR, '.claude', 'agents'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), '# Global Root\n');
+    writeFileSync(
+      join(TEST_DIR, '.claude', 'settings.json'),
+      JSON.stringify({ permissions: { allow: ['Read(*)'], deny: ['Write(/etc/**)'] } }, null, 2),
+    );
+    writeFileSync(
+      join(TEST_DIR, '.claude.json'),
+      JSON.stringify(
+        { mcpServers: { docs: { command: 'npx', args: ['-y', '@docs/mcp'] } } },
+        null,
+        2,
+      ),
+    );
+
+    await runImport({ from: 'claude-code', global: true }, join(TEST_DIR, 'worktree'));
+
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8')).toContain(
+      '# Global Root',
+    );
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'permissions.yaml'), 'utf-8')).toContain(
+      'Read(*)',
+    );
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf-8')).toContain(
+      '"mcpServers"',
+    );
+  });
+
+  it('imports Antigravity global config from documented ~/.gemini paths', async () => {
+    vi.stubEnv('HOME', TEST_DIR);
+    vi.stubEnv('USERPROFILE', TEST_DIR);
+
+    mkdirSync(join(TEST_DIR, '.gemini', 'antigravity', 'skills', 'review'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.gemini', 'antigravity', 'GEMINI.md'), '# Antigravity Root\n');
+    writeFileSync(
+      join(TEST_DIR, '.gemini', 'antigravity', 'skills', 'review', 'SKILL.md'),
+      '# Review\n',
+    );
+    writeFileSync(
+      join(TEST_DIR, '.gemini', 'antigravity', 'mcp_config.json'),
+      JSON.stringify(
+        { mcpServers: { docs: { command: 'npx', args: ['-y', '@docs/mcp'] } } },
+        null,
+        2,
+      ),
+    );
+
+    await runImport({ from: 'antigravity', global: true }, join(TEST_DIR, 'worktree'));
+
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8')).toContain(
+      '# Antigravity Root',
+    );
+    expect(
+      readFileSync(join(TEST_DIR, '.agentsmesh', 'skills', 'review', 'SKILL.md'), 'utf-8'),
+    ).toContain('# Review');
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf-8')).toContain(
+      '"mcpServers"',
+    );
   });
 
   it('succeeds with no files when nothing to import', async () => {
@@ -67,6 +135,76 @@ describe('runImport', () => {
     expect(existsSync(join(TEST_DIR, '.agentsmesh'))).toBe(false);
   });
 
+  it('imports Cursor global rules from ~/.cursor/rules/general.mdc when --global is set', async () => {
+    vi.stubEnv('HOME', TEST_DIR);
+    vi.stubEnv('USERPROFILE', TEST_DIR);
+
+    mkdirSync(join(TEST_DIR, '.cursor', 'rules'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.cursor', 'rules', 'general.mdc'),
+      '---\nalwaysApply: true\ndescription: G\n---\n# Cursor Global\n',
+    );
+
+    await runImport({ from: 'cursor', global: true }, join(TEST_DIR, 'worktree'));
+
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf8')).toContain(
+      'Cursor Global',
+    );
+  });
+
+  it('imports Cursor global mcp from ~/.cursor/mcp.json when --global is set', async () => {
+    vi.stubEnv('HOME', TEST_DIR);
+    vi.stubEnv('USERPROFILE', TEST_DIR);
+
+    mkdirSync(join(TEST_DIR, '.cursor'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.cursor', 'mcp.json'),
+      JSON.stringify({ mcpServers: { docs: { command: 'npx', args: [] } } }, null, 2),
+    );
+
+    await runImport({ from: 'cursor', global: true }, join(TEST_DIR, 'worktree'));
+
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf8')).toContain('mcpServers');
+  });
+
+  it('imports Cursor global artifacts from ~/.agentsmesh-exports/cursor and ~/.cursor when --global is set', async () => {
+    vi.stubEnv('HOME', TEST_DIR);
+    vi.stubEnv('USERPROFILE', TEST_DIR);
+
+    mkdirSync(join(TEST_DIR, '.agentsmesh-exports', 'cursor'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.cursor', 'skills', 'demo'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.cursor', 'agents'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh-exports', 'cursor', 'user-rules.md'),
+      '# Exported rules\n\nUse care.',
+    );
+    writeFileSync(
+      join(TEST_DIR, '.cursor', 'mcp.json'),
+      JSON.stringify({ mcpServers: { z: { command: 'npx', args: [] } } }, null, 2),
+    );
+    writeFileSync(
+      join(TEST_DIR, '.cursor', 'skills', 'demo', 'SKILL.md'),
+      '---\nname: demo\ndescription: D\n---\nBody',
+    );
+    writeFileSync(
+      join(TEST_DIR, '.cursor', 'agents', 'reviewer.md'),
+      '---\nname: reviewer\ndescription: R\n---\nAgent body',
+    );
+
+    await runImport({ from: 'cursor', global: true }, join(TEST_DIR, 'worktree'));
+
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf8')).toContain(
+      'Exported rules',
+    );
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf8')).toContain('mcpServers');
+    expect(
+      readFileSync(join(TEST_DIR, '.agentsmesh', 'skills', 'demo', 'SKILL.md'), 'utf8'),
+    ).toContain('Body');
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'), 'utf8')).toContain(
+      'Agent body',
+    );
+  });
+
   it('imports from codex-cli when codex.md exists', async () => {
     writeFileSync(join(TEST_DIR, 'codex.md'), '# Codex Rules\n');
     await runImport({ from: 'codex-cli' }, TEST_DIR);
@@ -88,6 +226,73 @@ describe('runImport', () => {
     await runImport({ from: 'codex-cli' }, TEST_DIR);
     const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('# From agents');
+  });
+
+  it('prefers ~/.codex/AGENTS.override.md over AGENTS.md when importing codex-cli globally', async () => {
+    vi.stubEnv('HOME', TEST_DIR);
+    vi.stubEnv('USERPROFILE', TEST_DIR);
+
+    mkdirSync(join(TEST_DIR, '.codex'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.codex', 'AGENTS.md'), '# From agents\n');
+    writeFileSync(join(TEST_DIR, '.codex', 'AGENTS.override.md'), '# From override\n');
+
+    await runImport({ from: 'codex-cli', global: true }, join(TEST_DIR, 'worktree'));
+
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf8')).toContain(
+      'From override',
+    );
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf8')).not.toContain(
+      'From agents',
+    );
+  });
+
+  it('imports Codex global config from ~/.codex and ~/.agents when --global is set', async () => {
+    vi.stubEnv('HOME', TEST_DIR);
+    vi.stubEnv('USERPROFILE', TEST_DIR);
+
+    mkdirSync(join(TEST_DIR, '.codex', 'agents'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.agents', 'skills', 'review'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.codex', 'AGENTS.md'), '# Codex Global\n');
+    writeFileSync(
+      join(TEST_DIR, '.codex', 'config.toml'),
+      `[mcp_servers.docs]
+command = "npx"
+args = ["-y", "@docs/mcp"]
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.codex', 'agents', 'reviewer.toml'),
+      `name = "reviewer"
+description = "Reviewer"
+developer_instructions = '''
+Review carefully.
+'''
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agents', 'skills', 'review', 'SKILL.md'),
+      `---
+name: review
+description: Review changes
+---
+Review carefully.
+`,
+    );
+
+    await runImport({ from: 'codex-cli', global: true }, join(TEST_DIR, 'worktree'));
+
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8')).toContain(
+      '# Codex Global',
+    );
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf-8')).toContain(
+      '"mcpServers"',
+    );
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'), 'utf-8')).toContain(
+      'Review carefully.',
+    );
+    expect(
+      readFileSync(join(TEST_DIR, '.agentsmesh', 'skills', 'review', 'SKILL.md'), 'utf-8'),
+    ).toContain('Review carefully.');
   });
 
   it('succeeds with no files when nothing to import (codex-cli)', async () => {

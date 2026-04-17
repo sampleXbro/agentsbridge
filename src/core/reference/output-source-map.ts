@@ -1,10 +1,29 @@
-import { dirname, join, normalize as normalizePath } from 'node:path';
+import { join, normalize as normalizePath } from 'node:path';
 import type { CanonicalFiles } from '../types.js';
 import type { ValidatedConfig } from '../../config/core/schema.js';
 import { buildReferenceMap } from './map.js';
 import { GEMINI_COMPAT_AGENTS } from '../../targets/gemini-cli/constants.js';
 import { CODEX_RULES_DIR } from '../../targets/codex-cli/constants.js';
-import { SKILL_DIRS } from './map-targets.js';
+import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
+import { addPackSkillArtifactMappings } from './pack-skill-artifact-paths.js';
+import { getTargetLayout } from '../../targets/catalog/builtin-targets.js';
+
+function addGlobalSkillMirrorSourceEntry(
+  target: string,
+  scope: TargetLayoutScope,
+  primaryOutputPath: string,
+  source: string,
+  sourceMap: Map<string, string>,
+  activeTargets: readonly string[] | undefined,
+): void {
+  if (scope !== 'global') return;
+  const layout = getTargetLayout(target, scope);
+  if (!layout?.mirrorGlobalPath) return;
+  const mirrorPath = layout.mirrorGlobalPath(primaryOutputPath, activeTargets ?? []);
+  if (mirrorPath !== null && mirrorPath !== primaryOutputPath) {
+    sourceMap.set(mirrorPath, source);
+  }
+}
 
 function canonicalRulePath(rule: CanonicalFiles['rules'][number]): string {
   return `.agentsmesh/rules/${rule.source.split('/').pop()!}`;
@@ -40,6 +59,7 @@ function ruleOutputPaths(
   target: string,
   rule: CanonicalFiles['rules'][number],
   refs: Map<string, string>,
+  scope: TargetLayoutScope,
 ): string[] {
   const paths: string[] = [];
   const targetPath = refs.get(canonicalRulePath(rule));
@@ -49,11 +69,11 @@ function ruleOutputPaths(
     paths.push(copilotInstructionsPath(rule));
   }
 
-  if ((target === 'cline' || target === 'cursor') && rule.root) {
+  if ((target === 'cline' || target === 'cursor') && rule.root && scope === 'project') {
     paths.push('AGENTS.md');
   }
 
-  if (target === 'windsurf') {
+  if (target === 'windsurf' && scope === 'project') {
     if (rule.root) {
       paths.push('AGENTS.md');
     } else {
@@ -78,46 +98,19 @@ function ruleOutputPaths(
   return paths;
 }
 
-function addPackSkillPaths(
-  refs: Map<string, string>,
-  target: string,
-  canonical: CanonicalFiles,
-  projectRoot: string,
-): void {
-  const skillDir = SKILL_DIRS[target];
-  if (!skillDir) return;
-
-  const packsPrefix = join(projectRoot, '.agentsmesh', 'packs');
-
-  for (const skill of canonical.skills) {
-    const skillSourceDir = dirname(skill.source);
-    if (!skillSourceDir.startsWith(packsPrefix)) continue;
-
-    const targetSkillDir = normalizePath(join(projectRoot, skillDir, skill.name));
-
-    // Map pack skill directory → target skill directory
-    refs.set(normalizePath(skillSourceDir), targetSkillDir);
-
-    // Map pack SKILL.md → target SKILL.md
-    refs.set(normalizePath(skill.source), normalizePath(join(targetSkillDir, 'SKILL.md')));
-
-    // Map pack supporting files → target supporting files
-    for (const file of skill.supportingFiles) {
-      const targetFilePath = normalizePath(join(targetSkillDir, file.relativePath));
-      refs.set(normalizePath(file.absolutePath), targetFilePath);
-    }
-  }
-}
-
 export function buildArtifactPathMap(
   target: string,
   canonical: CanonicalFiles,
   config: ValidatedConfig,
   projectRoot: string,
   destinationPath?: string,
+  options?: {
+    scope?: TargetLayoutScope;
+  },
 ): Map<string, string> {
+  const scope = options?.scope ?? 'project';
   const refs = new Map(
-    [...buildReferenceMap(target, canonical, config)].map(([canonicalPath, targetPath]) => [
+    [...buildReferenceMap(target, canonical, config, scope)].map(([canonicalPath, targetPath]) => [
       normalizePath(join(projectRoot, canonicalPath)),
       normalizePath(join(projectRoot, targetPath)),
     ]),
@@ -133,7 +126,7 @@ export function buildArtifactPathMap(
     }
   }
 
-  addPackSkillPaths(refs, target, canonical, projectRoot);
+  addPackSkillArtifactMappings(refs, target, canonical, projectRoot, scope);
 
   return refs;
 }
@@ -142,12 +135,14 @@ export function buildOutputSourceMap(
   target: string,
   canonical: CanonicalFiles,
   config: ValidatedConfig,
+  scope: TargetLayoutScope = 'project',
+  activeTargets?: readonly string[],
 ): Map<string, string> {
-  const refs = buildReferenceMap(target, canonical, config);
+  const refs = buildReferenceMap(target, canonical, config, scope);
   const sourceMap = new Map<string, string>();
 
   for (const rule of canonical.rules) {
-    for (const targetPath of ruleOutputPaths(target, rule, refs)) {
+    for (const targetPath of ruleOutputPaths(target, rule, refs, scope)) {
       sourceMap.set(targetPath, rule.source);
     }
   }
@@ -161,11 +156,31 @@ export function buildOutputSourceMap(
   }
   for (const skill of canonical.skills) {
     const skillTargetPath = refs.get(canonicalSkillPath(skill));
-    if (skillTargetPath) sourceMap.set(skillTargetPath, skill.source);
+    if (skillTargetPath) {
+      sourceMap.set(skillTargetPath, skill.source);
+      addGlobalSkillMirrorSourceEntry(
+        target,
+        scope,
+        skillTargetPath,
+        skill.source,
+        sourceMap,
+        activeTargets,
+      );
+    }
     for (const file of skill.supportingFiles) {
       const canonicalPath = `.agentsmesh/skills/${skill.name}/${file.relativePath.replace(/\\/g, '/')}`;
       const targetPath = refs.get(canonicalPath);
-      if (targetPath) sourceMap.set(targetPath, file.absolutePath);
+      if (targetPath) {
+        sourceMap.set(targetPath, file.absolutePath);
+        addGlobalSkillMirrorSourceEntry(
+          target,
+          scope,
+          targetPath,
+          file.absolutePath,
+          sourceMap,
+          activeTargets,
+        );
+      }
     }
   }
 

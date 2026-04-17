@@ -45,12 +45,12 @@ function sameInstallIdentity(a: InstallManifestEntry, b: InstallManifestEntry): 
   );
 }
 
-function manifestPath(configDir: string): string {
-  return join(configDir, '.agentsmesh', 'installs.yaml');
+function manifestPath(canonicalDir: string): string {
+  return join(canonicalDir, 'installs.yaml');
 }
 
-export async function readInstallManifest(configDir: string): Promise<InstallManifestEntry[]> {
-  const content = await readFileSafe(manifestPath(configDir));
+export async function readInstallManifest(canonicalDir: string): Promise<InstallManifestEntry[]> {
+  const content = await readFileSafe(manifestPath(canonicalDir));
   if (content === null) return [];
   try {
     return installManifestSchema.parse(parseYaml(content) as unknown).installs;
@@ -60,16 +60,16 @@ export async function readInstallManifest(configDir: string): Promise<InstallMan
 }
 
 export async function upsertInstallManifestEntry(
-  configDir: string,
+  canonicalDir: string,
   entry: InstallManifestEntry,
 ): Promise<void> {
-  const installs = await readInstallManifest(configDir);
+  const installs = await readInstallManifest(canonicalDir);
   const next = installs.filter(
     (install) => install.name !== entry.name && !sameInstallIdentity(install, entry),
   );
   next.push(entry);
   await writeFileAtomic(
-    manifestPath(configDir),
+    manifestPath(canonicalDir),
     yamlStringify({ version: 1, installs: next.sort((a, b) => a.name.localeCompare(b.name)) }),
   );
 }

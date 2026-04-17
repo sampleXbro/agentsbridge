@@ -17,7 +17,10 @@ export function lintRules(
   canonical: CanonicalFiles,
   _projectRoot: string,
   projectFiles: string[],
+  options?: { scope?: 'project' | 'global' },
 ): LintDiagnostic[] {
-  const diags = validateRules(canonical, _projectRoot, projectFiles);
+  const diags = validateRules(canonical, _projectRoot, projectFiles, {
+    checkGlobMatches: options?.scope !== 'global',
+  });
   return diags.map((d) => ({ ...d, target: CURSOR_TARGET }));
 }

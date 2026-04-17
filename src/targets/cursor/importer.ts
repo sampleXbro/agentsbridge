@@ -15,6 +15,7 @@
 
 import { join, dirname } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
+import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
 import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/filesystem/fs.js';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
@@ -23,6 +24,7 @@ import { importFileDirectory } from '../import/import-orchestrator.js';
 import { mapCursorAgentFile, mapCursorCommandFile, mapCursorRuleFile } from './importer-mappers.js';
 import { importSettings, importIgnore } from './settings-helpers.js';
 import { importSkills } from './skills-helpers.js';
+import { importFromCursorGlobalExports } from './import-global-exports.js';
 import {
   CURSOR_COMPAT_AGENTS,
   CURSOR_LEGACY_RULES,
@@ -41,7 +43,13 @@ import {
  * @param projectRoot - Project root directory
  * @returns Import results for each imported file
  */
-export async function importFromCursor(projectRoot: string): Promise<ImportResult[]> {
+export async function importFromCursor(
+  projectRoot: string,
+  options: { scope?: TargetLayoutScope } = {},
+): Promise<ImportResult[]> {
+  if (options.scope === 'global') {
+    return importFromCursorGlobalExports(projectRoot);
+  }
   const results: ImportResult[] = [];
   const normalize = await createImportReferenceNormalizer('cursor', projectRoot);
 

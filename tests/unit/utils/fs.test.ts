@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdirSync, writeFileSync, rmSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import {
@@ -93,6 +93,15 @@ describe('readDirRecursive', () => {
 
   it('returns empty array for non-existent directory', async () => {
     expect(await readDirRecursive(join(TEST_DIR, 'nope'))).toEqual([]);
+  });
+
+  it('terminates on directory symlink back to an ancestor', async () => {
+    const base = join(TEST_DIR, 'cycle-tree');
+    mkdirSync(join(base, 'sub'), { recursive: true });
+    writeFileSync(join(base, 'sub', 'leaf.txt'), 'x');
+    symlinkSync(base, join(base, 'sub', 'back'), 'dir');
+    const files = await readDirRecursive(base);
+    expect(files.sort()).toEqual([join(base, 'sub', 'leaf.txt')].sort());
   });
 });
 

@@ -5,6 +5,7 @@
 import { relative } from 'node:path';
 import type { CanonicalFiles, LintDiagnostic } from '../types.js';
 import type { ValidatedConfig } from '../../config/core/schema.js';
+import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
 import { readDirRecursive } from '../../utils/filesystem/fs.js';
 import { lintCommands } from './commands.js';
 import { lintMcp } from './mcp.js';
@@ -39,7 +40,9 @@ export async function runLint(
   canonical: CanonicalFiles,
   projectRoot: string,
   targetFilter?: string[],
+  options: { scope?: TargetLayoutScope } = {},
 ): Promise<{ diagnostics: LintDiagnostic[]; hasErrors: boolean }> {
+  const scope = options.scope ?? 'project';
   const targets = targetFilter
     ? config.targets.filter((t) => targetFilter.includes(t))
     : config.targets;
@@ -50,12 +53,12 @@ export async function runLint(
   const hasHooks = config.features.includes('hooks');
 
   const diagnostics: LintDiagnostic[] = [];
-  const projectFiles = await getProjectFiles(projectRoot);
+  const projectFiles = scope === 'global' ? [] : await getProjectFiles(projectRoot);
 
   for (const target of targets) {
     const linter = isBuiltinTargetId(target) ? getTargetCatalogEntry(target).lintRules : null;
     if (hasRules && linter) {
-      diagnostics.push(...linter(canonical, projectRoot, projectFiles));
+      diagnostics.push(...linter(canonical, projectRoot, projectFiles, { scope }));
     }
     if (hasCommands) {
       diagnostics.push(...lintCommands(canonical, target));

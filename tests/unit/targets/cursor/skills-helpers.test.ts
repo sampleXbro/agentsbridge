@@ -58,4 +58,20 @@ describe('cursor skill import helpers', () => {
       'name: qa',
     );
   });
+
+  it('imports skills from an alternate relative directory (global export tree)', async () => {
+    const dir = createTempDir();
+    mkdirSync(join(dir, '.agentsmesh-exports', 'cursor', 'skills', 'demo'), { recursive: true });
+    writeFileSync(
+      join(dir, '.agentsmesh-exports', 'cursor', 'skills', 'demo', 'SKILL.md'),
+      '---\ndescription: Demo\n---\n\nBody.',
+    );
+    const results: ImportResult[] = [];
+    await importSkills(dir, results, (content) => content, '.agentsmesh-exports/cursor/skills');
+
+    expect(results).toHaveLength(1);
+    expect(readFileSync(join(dir, '.agentsmesh', 'skills', 'demo', 'SKILL.md'), 'utf-8')).toContain(
+      'Body.',
+    );
+  });
 });

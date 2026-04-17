@@ -11,10 +11,11 @@ type RuleLinter = (
   canonical: CanonicalFiles,
   projectRoot: string,
   projectFiles: string[],
+  options?: { scope?: 'project' | 'global' },
 ) => LintDiagnostic[];
 
 interface TargetCatalogEntry {
-  importFrom: (root: string) => Promise<ImportResult[]>;
+  importFrom: (root: string, options?: { scope?: 'project' | 'global' }) => Promise<ImportResult[]>;
   emptyImportMessage: string;
   lintRules: RuleLinter | null;
   capabilities: TargetCapabilities;

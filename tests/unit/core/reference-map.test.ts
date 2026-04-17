@@ -77,6 +77,150 @@ describe('buildReferenceMap', () => {
     );
   });
 
+  it('maps Claude global skill references using the global descriptor layout', () => {
+    const refs = buildReferenceMap('claude-code', canonical(), config(['claude-code']), 'global');
+
+    expect(refs.get('.agentsmesh/skills/post-feature-qa')).toBe('.claude/skills/post-feature-qa');
+    expect(refs.get('.agentsmesh/skills/add-agent-target/references/checklist.md')).toBe(
+      '.claude/skills/add-agent-target/references/checklist.md',
+    );
+  });
+
+  it('maps Antigravity global rule and skill references to native home paths', () => {
+    const can = canonical();
+    can.rules = [
+      {
+        source: '/proj/.agentsmesh/rules/_root.md',
+        root: true,
+        targets: [],
+        description: '',
+        globs: [],
+        body: '',
+      },
+      {
+        source: '/proj/.agentsmesh/rules/typescript.md',
+        root: false,
+        targets: [],
+        description: '',
+        globs: [],
+        body: '',
+      },
+    ];
+    const refs = buildReferenceMap('antigravity', can, config(['antigravity']), 'global');
+
+    expect(refs.get('.agentsmesh/rules/_root.md')).toBe('.gemini/antigravity/GEMINI.md');
+    expect(refs.get('.agentsmesh/rules/typescript.md')).toBe('.gemini/antigravity/GEMINI.md');
+    expect(refs.get('.agentsmesh/skills/post-feature-qa/SKILL.md')).toBe(
+      '.gemini/antigravity/skills/post-feature-qa/SKILL.md',
+    );
+  });
+
+  it('maps Antigravity global command references to workflow paths', () => {
+    const can = canonical();
+    can.commands = [
+      {
+        source: '/proj/.agentsmesh/commands/deploy.md',
+        name: 'deploy',
+        description: 'Deploy workflow',
+        allowedTools: [],
+        body: 'Run deployment steps.',
+      },
+      {
+        source: '/proj/.agentsmesh/commands/review.md',
+        name: 'review',
+        description: 'Review workflow',
+        allowedTools: [],
+        body: 'Review the diff.',
+      },
+    ];
+    const refs = buildReferenceMap('antigravity', can, config(['antigravity']), 'global');
+
+    expect(refs.get('.agentsmesh/commands/deploy.md')).toBe(
+      '.gemini/antigravity/workflows/deploy.md',
+    );
+    expect(refs.get('.agentsmesh/commands/review.md')).toBe(
+      '.gemini/antigravity/workflows/review.md',
+    );
+  });
+
+  it('maps Cursor global exports to the manual export tree', () => {
+    const can = canonical();
+    can.rules = [
+      {
+        source: '/proj/.agentsmesh/rules/_root.md',
+        root: true,
+        targets: [],
+        description: '',
+        globs: [],
+        body: '',
+      },
+      {
+        source: '/proj/.agentsmesh/rules/typescript.md',
+        root: false,
+        targets: [],
+        description: '',
+        globs: ['src/**/*.ts'],
+        body: '',
+      },
+    ];
+    can.agents = [
+      {
+        source: '/proj/.agentsmesh/agents/reviewer.md',
+        name: 'reviewer',
+        description: '',
+        tools: [],
+        disallowedTools: [],
+        model: '',
+        permissionMode: '',
+        maxTurns: 0,
+        mcpServers: [],
+        hooks: {},
+        skills: [],
+        memory: '',
+        body: '',
+      },
+    ];
+    const cfg = config(['cursor']);
+    cfg.features = ['rules', 'agents', 'skills'];
+    const refs = buildReferenceMap('cursor', can, cfg, 'global');
+
+    expect(refs.get('.agentsmesh/rules/_root.md')).toBe('.cursor/rules/general.mdc');
+    expect(refs.get('.agentsmesh/rules/typescript.md')).toBe('.cursor/rules/typescript.mdc');
+    expect(refs.get('.agentsmesh/skills/post-feature-qa/SKILL.md')).toBe(
+      '.cursor/skills/post-feature-qa/SKILL.md',
+    );
+    expect(refs.get('.agentsmesh/agents/reviewer.md')).toBe('.cursor/agents/reviewer.md');
+  });
+
+  it('maps Codex global instructions to ~/.codex while keeping skills under ~/.agents', () => {
+    const can = canonical();
+    can.rules = [
+      {
+        source: '/proj/.agentsmesh/rules/_root.md',
+        root: true,
+        targets: [],
+        description: '',
+        globs: [],
+        body: '',
+      },
+      {
+        source: '/proj/.agentsmesh/rules/policy.md',
+        root: false,
+        targets: [],
+        description: '',
+        globs: [],
+        body: '',
+      },
+    ];
+    const refs = buildReferenceMap('codex-cli', can, config(['codex-cli']), 'global');
+
+    expect(refs.get('.agentsmesh/rules/_root.md')).toBe('.codex/AGENTS.md');
+    expect(refs.get('.agentsmesh/rules/policy.md')).toBe('.codex/AGENTS.md');
+    expect(refs.get('.agentsmesh/skills/post-feature-qa/SKILL.md')).toBe(
+      '.agents/skills/post-feature-qa/SKILL.md',
+    );
+  });
+
   it('maps command references for windsurf to workflow paths', () => {
     const can = canonical();
     can.commands = [

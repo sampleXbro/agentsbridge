@@ -175,10 +175,8 @@ describe('importFromWindsurf', () => {
     await importFromWindsurf(TEST_DIR);
 
     const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
-    expect(content).toContain('.agentsmesh/skills/post-feature-qa/');
-    expect(content).toContain(
-      '.agentsmesh/skills/post-feature-qa/references/edge-case-checklist.md',
-    );
+    expect(content).toContain('../skills/post-feature-qa/');
+    expect(content).toContain('../skills/post-feature-qa/references/edge-case-checklist.md');
     expect(content).not.toContain('.agents/skills/post-feature-qa/');
   });
 
@@ -481,5 +479,19 @@ describe('importFromWindsurf — skills', () => {
     expect(
       existsSync(join(TEST_DIR, '.agentsmesh', 'rules', 'tests-e2e-fixtures-windsurf-project.md')),
     ).toBe(false);
+  });
+
+  it('global scope skips recursive nested AGENTS.md under project root', async () => {
+    writeFileSync(join(TEST_DIR, 'AGENTS.md'), '# Root\n');
+    mkdirSync(join(TEST_DIR, 'src'), { recursive: true });
+    writeFileSync(join(TEST_DIR, 'src', 'AGENTS.md'), '# Src\n');
+
+    const globalResults = await importFromWindsurf(TEST_DIR, { scope: 'global' });
+    expect(
+      globalResults
+        .filter((r) => r.feature === 'rules')
+        .map((r) => r.toPath)
+        .sort(),
+    ).toEqual(['.agentsmesh/rules/_root.md']);
   });
 });

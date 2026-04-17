@@ -6,9 +6,9 @@ Generates comprehensive code review reports by combining PR analysis
 and code quality findings into structured, actionable reports.
 
 Usage:
-    python .github/skills/code-reviewer/scripts/review_report_generator.py /path/to/repo
-    python .github/skills/code-reviewer/scripts/review_report_generator.py . --pr-analysis pr_results.json --quality-analysis quality_results.json
-    python .github/skills/code-reviewer/scripts/review_report_generator.py /path/to/repo --format markdown --output review.md
+    python review_report_generator.py /path/to/repo
+    python review_report_generator.py . --pr-analysis pr_results.json --quality-analysis quality_results.json
+    python review_report_generator.py /path/to/repo --format markdown --output review.md
 """
 
 import argparse
@@ -49,10 +49,10 @@ def load_json_file(filepath: str) -> Optional[Dict]:
 
 
 def run_pr_analyzer(repo_path: Path) -> Dict:
-    """Run .github/skills/code-reviewer/scripts/pr_analyzer.py and return results."""
-    script_path = Path(__file__).parent / ".github/skills/code-reviewer/scripts/pr_analyzer.py"
+    """Run pr_analyzer.py and return results."""
+    script_path = Path(__file__).parent / "pr_analyzer.py"
     if not script_path.exists():
-        return {"status": "error", "message": ".github/skills/code-reviewer/scripts/pr_analyzer.py not found"}
+        return {"status": "error", "message": "pr_analyzer.py not found"}
 
     try:
         result = subprocess.run(
@@ -69,10 +69,10 @@ def run_pr_analyzer(repo_path: Path) -> Dict:
 
 
 def run_quality_checker(repo_path: Path) -> Dict:
-    """Run .github/skills/code-reviewer/scripts/code_quality_checker.py and return results."""
-    script_path = Path(__file__).parent / ".github/skills/code-reviewer/scripts/code_quality_checker.py"
+    """Run code_quality_checker.py and return results."""
+    script_path = Path(__file__).parent / "code_quality_checker.py"
     if not script_path.exists():
-        return {"status": "error", "message": ".github/skills/code-reviewer/scripts/code_quality_checker.py not found"}
+        return {"status": "error", "message": "code_quality_checker.py not found"}
 
     try:
         result = subprocess.run(

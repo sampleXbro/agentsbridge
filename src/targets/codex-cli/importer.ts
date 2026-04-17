@@ -14,6 +14,7 @@
 
 import { join, relative, dirname, basename } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
+import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
 import {
   readFileSafe,
@@ -29,6 +30,8 @@ import {
   CODEX_TARGET,
   CODEX_MD,
   AGENTS_MD,
+  CODEX_GLOBAL_AGENTS_MD,
+  CODEX_GLOBAL_AGENTS_OVERRIDE_MD,
   CODEX_AGENTS_DIR,
   CODEX_CANONICAL_RULES_DIR,
   CODEX_CANONICAL_AGENTS_DIR,
@@ -47,15 +50,24 @@ import { parse as parseToml } from 'smol-toml';
 /**
  * Import Codex config into canonical .agentsmesh/.
  *
- * @param projectRoot - Project root directory
+ * @param projectRoot - Project root directory (repo root, or user home for global scope)
+ * @param options - When `scope` is `global`, skips recursive nested `AGENTS.md` discovery under `projectRoot` (must not scan the entire home directory).
  * @returns Import results for each imported file
  */
-export async function importFromCodex(projectRoot: string): Promise<ImportResult[]> {
+export async function importFromCodex(
+  projectRoot: string,
+  options?: { scope?: TargetLayoutScope },
+): Promise<ImportResult[]> {
+  const layoutScope: TargetLayoutScope = options?.scope ?? 'project';
   const results: ImportResult[] = [];
-  const normalize = await createImportReferenceNormalizer(CODEX_TARGET, projectRoot);
-  const normalizeWindsurf = await createImportReferenceNormalizer('windsurf', projectRoot);
+  const normalize = await createImportReferenceNormalizer(CODEX_TARGET, projectRoot, layoutScope);
+  const normalizeWindsurf = await createImportReferenceNormalizer(
+    'windsurf',
+    projectRoot,
+    layoutScope,
+  );
 
-  await importRules(projectRoot, results, normalize, normalizeWindsurf);
+  await importRules(projectRoot, results, normalize, normalizeWindsurf, layoutScope);
   await importSkills(projectRoot, results, normalize);
   await importAgents(projectRoot, results, normalize);
   await importMcp(projectRoot, results);
@@ -126,22 +138,43 @@ async function importRules(
   results: ImportResult[],
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
   normalizeWindsurf: (content: string, sourceFile: string, destinationFile: string) => string,
+  layoutScope: TargetLayoutScope,
 ): Promise<void> {
   const codexPath = join(projectRoot, CODEX_MD);
   const agentsPath = join(projectRoot, AGENTS_MD);
-  const agentsContent = await readFileSafe(agentsPath);
-  const codexContent = await readFileSafe(codexPath);
+  const globalOverridePath = join(projectRoot, CODEX_GLOBAL_AGENTS_OVERRIDE_MD);
+  const globalAgentsPath = join(projectRoot, CODEX_GLOBAL_AGENTS_MD);
 
-  // Prefer AGENTS.md (official Codex path) over codex.md (legacy/fallback)
-  const sourcePath = agentsContent !== null ? agentsPath : codexPath;
+  const globalOverrideContent =
+    layoutScope === 'global' ? await readFileSafe(globalOverridePath) : null;
+  const globalAgentsContent =
+    layoutScope === 'global' ? await readFileSafe(globalAgentsPath) : null;
+  const agentsContent = layoutScope === 'project' ? await readFileSafe(agentsPath) : null;
+  const codexContent = layoutScope === 'project' ? await readFileSafe(codexPath) : null;
+
+  const sourcePath =
+    globalOverrideContent !== null
+      ? globalOverridePath
+      : globalAgentsContent !== null
+        ? globalAgentsPath
+        : agentsContent !== null
+          ? agentsPath
+          : codexPath;
   const destDir = join(projectRoot, CODEX_CANONICAL_RULES_DIR);
-  const content = agentsContent ?? codexContent;
+  const content = globalOverrideContent ?? globalAgentsContent ?? agentsContent ?? codexContent;
   if (content !== null) {
     await mkdirp(destDir);
     const destPath = join(destDir, '_root.md');
-    const stripped = sourcePath === agentsPath ? stripCodexRuleIndex(content) : content;
+    const stripped =
+      sourcePath === agentsPath ||
+      sourcePath === globalAgentsPath ||
+      sourcePath === globalOverridePath
+        ? stripCodexRuleIndex(content)
+        : content;
     const normalizedContent =
-      sourcePath === agentsPath
+      sourcePath === agentsPath ||
+      sourcePath === globalAgentsPath ||
+      sourcePath === globalOverridePath
         ? normalize(normalizeWindsurf(stripped, sourcePath, destPath), sourcePath, destPath)
         : normalize(stripped, sourcePath, destPath);
     const { frontmatter, body } = parseFrontmatter(normalizedContent);
@@ -160,43 +193,46 @@ async function importRules(
   await importInstructionMirrors(projectRoot, destDir, results, normalize);
   results.push(...(await importCodexNonRootRuleFiles(projectRoot, destDir, normalize)));
 
-  results.push(
-    ...(await importFileDirectory({
-      srcDir: projectRoot,
-      destDir,
-      extensions: ['AGENTS.md', 'AGENTS.override.md'],
-      fromTool: 'codex-cli',
-      normalize,
-      mapEntry: async ({ srcPath, normalizeTo }) => {
-        const relDir = relative(projectRoot, dirname(srcPath)).replace(/\\/g, '/');
-        const isOverride = srcPath.endsWith('/AGENTS.override.md');
-        if (!relDir || relDir === '.') return null;
-        if (!isOverride && !srcPath.endsWith('/AGENTS.md')) return null;
-        const ruleName = relDir.replace(/\//g, '-');
-        if (!shouldImportScopedAgentsRule(relDir)) {
-          await removePathIfExists(join(destDir, `${ruleName}.md`));
-          return null;
-        }
-        const destPath = join(destDir, `${ruleName}.md`);
-        const { frontmatter, body } = parseFrontmatter(normalizeTo(destPath));
-        return {
-          destPath,
-          toPath: `${CODEX_CANONICAL_RULES_DIR}/${ruleName}.md`,
-          feature: 'rules',
-          content: await serializeImportedRuleWithFallback(
+  // Global scope uses `projectRoot === homedir()`; never recurse the whole home tree for nested AGENTS.md.
+  if (layoutScope !== 'global') {
+    results.push(
+      ...(await importFileDirectory({
+        srcDir: projectRoot,
+        destDir,
+        extensions: ['AGENTS.md', 'AGENTS.override.md'],
+        fromTool: 'codex-cli',
+        normalize,
+        mapEntry: async ({ srcPath, normalizeTo }) => {
+          const relDir = relative(projectRoot, dirname(srcPath)).replace(/\\/g, '/');
+          const isOverride = srcPath.endsWith('/AGENTS.override.md');
+          if (!relDir || relDir === '.') return null;
+          if (!isOverride && !srcPath.endsWith('/AGENTS.md')) return null;
+          const ruleName = relDir.replace(/\//g, '-');
+          if (!shouldImportScopedAgentsRule(relDir)) {
+            await removePathIfExists(join(destDir, `${ruleName}.md`));
+            return null;
+          }
+          const destPath = join(destDir, `${ruleName}.md`);
+          const { frontmatter, body } = parseFrontmatter(normalizeTo(destPath));
+          return {
             destPath,
-            {
-              ...frontmatter,
-              root: false,
-              globs: [`${relDir}/**`],
-              ...(isOverride ? { codex_instruction: 'override' } : {}),
-            },
-            body,
-          ),
-        };
-      },
-    })),
-  );
+            toPath: `${CODEX_CANONICAL_RULES_DIR}/${ruleName}.md`,
+            feature: 'rules',
+            content: await serializeImportedRuleWithFallback(
+              destPath,
+              {
+                ...frontmatter,
+                root: false,
+                globs: [`${relDir}/**`],
+                ...(isOverride ? { codex_instruction: 'override' } : {}),
+              },
+              body,
+            ),
+          };
+        },
+      })),
+    );
+  }
 }
 
 async function importInstructionMirrors(

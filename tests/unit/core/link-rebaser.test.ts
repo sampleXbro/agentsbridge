@@ -52,7 +52,7 @@ describe('rewriteFileLinks', () => {
         absolutePath === '/proj/docs/agents-folder-structure-research.md',
     });
 
-    expect(rewritten.content).toBe('Check also docs/agents-folder-structure-research.md.');
+    expect(rewritten.content).toBe('Check also ../../../docs/agents-folder-structure-research.md.');
     expect(rewritten.missing).toEqual([]);
   });
 
@@ -88,8 +88,8 @@ describe('rewriteFileLinks', () => {
         absolutePath === '/proj/docs/some-doc.md',
     });
 
-    expect(rewritten.content).toContain('.agentsmesh/commands/review.md');
-    expect(rewritten.content).toContain('docs/some-doc.md');
+    expect(rewritten.content).toContain('../commands/review.md');
+    expect(rewritten.content).toContain('../../docs/some-doc.md');
     expect(rewritten.missing).toEqual([]);
   });
 

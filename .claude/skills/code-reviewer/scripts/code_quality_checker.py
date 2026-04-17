@@ -6,9 +6,9 @@ Analyzes source code for quality issues, code smells, complexity metrics,
 and SOLID principle violations.
 
 Usage:
-    python .claude/skills/code-reviewer/scripts/code_quality_checker.py /path/to/file.py
-    python .claude/skills/code-reviewer/scripts/code_quality_checker.py /path/to/directory --recursive
-    python .claude/skills/code-reviewer/scripts/code_quality_checker.py . --language typescript --json
+    python code_quality_checker.py /path/to/file.py
+    python code_quality_checker.py /path/to/directory --recursive
+    python code_quality_checker.py . --language typescript --json
 """
 
 import argparse
@@ -258,7 +258,7 @@ def check_code_smells(content: str, functions: List[Dict], classes: List[Dict]) 
             })
 
     # Magic numbers
-    magic_pattern = r"\b(?<![.agentsmesh/packs/alirezarezvani-claude-skills-skills/skills/code-reviewer/scripts"\'])\d{3,}\b(?!\.\d)"
+    magic_pattern = r"\b(?<![."\'])\d{3,}\b(?!\.\d)"
     for i, line in enumerate(content.split("\n"), 1):
         if line.strip().startswith(("#", "//", "import", "from")):
             continue

@@ -3,6 +3,8 @@ name: docs-and-examples
 description: Use when writing or updating README content, API examples, installation instructions, migration notes, or developer-facing documentation for a TypeScript library.
 ---
 
+## Purpose
+
 # Docs and Examples
 
 You are responsible for documentation quality for a TypeScript library.

@@ -3,6 +3,8 @@ name: senior-developer-research-first-protocol
 description: Follow an 8-step research-first protocol before making changes
 ---
 
+## Purpose
+
 ## Research-First Protocol
 
 **Why:** Understanding prevents broken integrations, unintended side effects, wasted time fixing symptoms instead of root causes.
@@ -24,7 +26,7 @@ Finding files in unknown directories, searching without exact location, discover
 
 **Phase 1: Discovery**
 
-1. **Find and read relevant notes/docs** - Search across workspace (notes/, docs/, README), ~/Documents/Documentation/, ~/Documents/Notes/, and project .md files. Use as context only; verify against actual code.
+1. **Find and read relevant notes/docs** - Search across workspace (notes/, ../../../docs/, README), ~/Documents/Documentation/, ~/Documents/Notes/, and project .md files. Use as context only; verify against actual code.
 
 2. **Read additional documentation** - API docs, Confluence, Jira, wikis, official docs, in-code comments. Use for initial context; verify against actual code.
 

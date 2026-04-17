@@ -6,8 +6,11 @@ export function lintRules(
   canonical: CanonicalFiles,
   projectRoot: string,
   projectFiles: string[],
+  options?: { scope?: 'project' | 'global' },
 ): LintDiagnostic[] {
-  return validateRules(canonical, projectRoot, projectFiles).map((diagnostic) => ({
+  return validateRules(canonical, projectRoot, projectFiles, {
+    checkGlobMatches: options?.scope !== 'global',
+  }).map((diagnostic) => ({
     ...diagnostic,
     target: ANTIGRAVITY_TARGET,
   }));

@@ -27,6 +27,7 @@ agentsmesh install --sync
 | `--extends` | Record as an extends entry instead of a materialized pack. |
 | `--sync` | Reinstall missing packs from `.agentsmesh/installs.yaml`. |
 | `--dry-run` | Preview what would be installed without writing. |
+| `--global` | Install into `~/.agentsmesh/` and regenerate user-level outputs. |
 | `--force` | Non-interactive mode: include all resources, skip prompts. |
 
 ## Source formats
@@ -79,6 +80,15 @@ agentsmesh install --sync
 ```
 
 Reads `.agentsmesh/installs.yaml` and reinstalls any packs that are missing from `.agentsmesh/packs/`. Add this to your project `postinstall` script.
+
+### Install into global mode
+
+```bash
+agentsmesh install --global github:org/shared-rules
+agentsmesh install --global --sync
+```
+
+In global mode, install state lives in `~/.agentsmesh/installs.yaml` and packs are materialized in `~/.agentsmesh/packs/`.
 
 ### Preview before committing
 

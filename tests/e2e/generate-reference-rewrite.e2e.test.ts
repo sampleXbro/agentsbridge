@@ -80,24 +80,24 @@ tools: [Read]
     const cursorRoot = readFileSync(join(dir, '.cursor', 'rules', 'general.mdc'), 'utf-8');
     const secondRun = await runCli('generate', dir);
 
-    expect(claudeRoot).toContain('.claude/rules/typescript.md');
-    expect(claudeRoot).toContain('.claude/commands/review.md');
-    expect(claudeRoot).toContain('.claude/agents/reviewer.md');
-    expect(claudeRoot).toContain('.claude/skills/api-gen/references/checklist.md');
-    expect(claudeRoot).toContain('docs/some-doc.md');
-    expect(cursorRoot).toContain('.cursor/rules/typescript.mdc');
-    expect(cursorRoot).toContain('.cursor/commands/review.md');
-    expect(cursorRoot).toContain('.cursor/agents/reviewer.md');
-    expect(cursorRoot).toContain('.cursor/skills/api-gen/references/checklist.md');
-    expect(cursorRoot).toContain('docs/some-doc.md');
+    expect(claudeRoot).toContain('rules/typescript.md');
+    expect(claudeRoot).toContain('commands/review.md');
+    expect(claudeRoot).toContain('agents/reviewer.md');
+    expect(claudeRoot).toContain('skills/api-gen/references/checklist.md');
+    expect(claudeRoot).toContain('../docs/some-doc.md');
+    expect(cursorRoot).toContain('typescript.mdc');
+    expect(cursorRoot).toContain('../commands/review.md');
+    expect(cursorRoot).toContain('../agents/reviewer.md');
+    expect(cursorRoot).toContain('../skills/api-gen/references/checklist.md');
+    expect(cursorRoot).toContain('../../docs/some-doc.md');
     expect(readFileSync(join(dir, '.claude', 'commands', 'review.md'), 'utf-8')).toContain(
-      'docs/some-doc.md',
+      '../../docs/some-doc.md',
     );
     expect(readFileSync(join(dir, '.claude', 'agents', 'reviewer.md'), 'utf-8')).toContain(
-      'docs/some-doc.md',
+      '../../docs/some-doc.md',
     );
     expect(readFileSync(join(dir, '.claude', 'skills', 'api-gen', 'SKILL.md'), 'utf-8')).toContain(
-      'docs/some-doc.md',
+      '../../../docs/some-doc.md',
     );
     expect(secondRun.exitCode).toBe(0);
     expect(secondRun.stdout + secondRun.stderr).toMatch(/unchanged/);
@@ -162,17 +162,15 @@ Prefer strict mode.
     expect(result.exitCode).toBe(0);
 
     expect(readFileSync(join(dir, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
-      '.claude/skills/post-feature-qa/',
+      'skills/post-feature-qa/',
     );
     expect(readFileSync(join(dir, '.cursor', 'rules', 'general.mdc'), 'utf-8')).toContain(
-      '.cursor/skills/post-feature-qa/',
+      '../skills/post-feature-qa/',
     );
     expect(readFileSync(join(dir, '.github', 'copilot-instructions.md'), 'utf-8')).toContain(
-      '.github/skills/post-feature-qa/',
+      'skills/post-feature-qa/',
     );
-    expect(readFileSync(join(dir, 'GEMINI.md'), 'utf-8')).toContain(
-      '.gemini/skills/post-feature-qa/',
-    );
+    expect(readFileSync(join(dir, 'GEMINI.md'), 'utf-8')).toContain('skills/post-feature-qa/');
     // AGENTS.md: codex-cli wins (cline and cursor are filtered as equivalent)
     expect(readFileSync(join(dir, 'AGENTS.md'), 'utf-8')).toContain(
       '.agents/skills/post-feature-qa/',
@@ -233,8 +231,8 @@ See .agentsmesh/rules/typescript.md and ../../docs/roadmap.md.
       join(dir, '.github', 'instructions', 'typescript.instructions.md'),
       'utf-8',
     );
-    expect(instructions).toContain('.github/instructions/typescript.instructions.md');
-    expect(instructions).toContain('docs/roadmap.md');
+    expect(instructions).toContain('typescript.instructions.md');
+    expect(instructions).toContain('../../docs/roadmap.md');
     expect(instructions).not.toContain('../../docs/roadmap.md');
   });
 });

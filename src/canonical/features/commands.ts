@@ -12,6 +12,10 @@ import { parseFrontmatter } from '../../utils/text/markdown.js';
  * @param v - Raw value from YAML (e.g. "Read, Grep" or ["Read", "Grep"])
  * @returns Normalized string array
  */
+function toBool(v: unknown): boolean {
+  return v === true || v === 'true' || v === 1 || v === '1';
+}
+
 function toToolsArray(v: unknown): string[] {
   if (Array.isArray(v)) {
     return v
@@ -50,6 +54,7 @@ export async function parseCommands(commandsDir: string): Promise<CanonicalComma
       name,
       description: typeof frontmatter.description === 'string' ? frontmatter.description : '',
       allowedTools,
+      outputStyle: toBool(frontmatter.outputStyle) || toBool(frontmatter['output-style']),
       body,
     });
   }

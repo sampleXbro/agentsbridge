@@ -48,12 +48,12 @@ The watch tests are timing-sensitive and reliably flake on CI runners slower tha
 
 | File | What to check | Safe CI value |
 |------|--------------|---------------|
-| `tests/unit/cli/commands/watch.test.ts` | `vi.waitFor` timeout args | ≥ 3000 ms |
-| `tests/unit/cli/commands/watch.test.ts` | idle stability `setTimeout` | ≥ 2000 ms |
-| `tests/integration/watch.integration.test.ts` | startup `waitForFile` timeout | ≥ 15000 ms |
-| `tests/integration/watch.integration.test.ts` | post-change `setTimeout` | ≥ 1500 ms |
-| `tests/e2e/watch.e2e.test.ts` | startup `setTimeout` | ≥ 3000 ms |
-| `tests/e2e/watch.e2e.test.ts` | post-change `setTimeout` | ≥ 1500 ms |
+| `../../../tests/unit/cli/commands/watch.test.ts` | `vi.waitFor` timeout args | ≥ 3000 ms |
+| `../../../tests/unit/cli/commands/watch.test.ts` | idle stability `setTimeout` | ≥ 2000 ms |
+| `../../../tests/integration/watch.integration.test.ts` | startup `waitForFile` timeout | ≥ 15000 ms |
+| `../../../tests/integration/watch.integration.test.ts` | post-change `setTimeout` | ≥ 1500 ms |
+| `../../../tests/e2e/watch.e2e.test.ts` | startup `setTimeout` | ≥ 3000 ms |
+| `../../../tests/e2e/watch.e2e.test.ts` | post-change `setTimeout` | ≥ 1500 ms |
 
 Also verify `vitest.config.ts` has global guards:
 
@@ -70,8 +70,8 @@ If any of these are missing or too low, update them now. The watch debounce is 3
 
 Check that both workflow files exist and are correct:
 
-- `.github/workflows/ci.yml` — runs on every push and PR to `master`
-- `.github/workflows/publish.yml` — runs changesets publish flow on push to `master`
+- `../../../.github/workflows/ci.yml` — runs on every push and PR to `master`
+- `../../../.github/workflows/publish.yml` — runs changesets publish flow on push to `master`
 
 ### ci.yml must include these steps in order
 
@@ -82,9 +82,9 @@ Check that both workflow files exist and are correct:
 5. `pnpm test`
 6. `pnpm test:coverage` with Codecov upload (`fail_ci_if_error: false` so fork PRs don't break)
 7. `pnpm build`
-8. `pnpm test:e2e` — must come after build; e2e runs `dist/cli.js`
+8. `pnpm test:e2e` — must come after build; e2e runs `../../../dist/cli.js`
 
-Use Node 22 + pnpm 10 + `cache: pnpm` in `setup-node`. Never run e2e in parallel with build — they share `dist/`. Both workflows must have `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true` at the job level to suppress the Node 20 deprecation warning.
+Use Node 22 + pnpm 10 + `cache: pnpm` in `setup-node`. Never run e2e in parallel with build — they share `../../../dist/`. Both workflows must have `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true` at the job level to suppress the Node 20 deprecation warning.
 
 ### publish.yml must use changesets/action@v1 and trigger on push to master
 
@@ -144,10 +144,10 @@ These must exist. Check each one:
 |------|----------------|
 | `SECURITY.md` | Supported versions table, private advisory link, response SLA |
 | `CONTRIBUTING.md` | Prerequisites, dev commands, TDD rule, commit format, PR checklist |
-| `.github/ISSUE_TEMPLATE/bug_report.yml` | version, node, repro, expected behavior fields |
-| `.github/ISSUE_TEMPLATE/feature_request.yml` | problem + solution fields |
-| `.github/ISSUE_TEMPLATE/config.yml` | `blank_issues_enabled: false`, security advisory link |
-| `.github/pull_request_template.md` | type-of-change checklist, TDD + CI + changeset checkboxes |
+| `../../../.github/ISSUE_TEMPLATE/bug_report.yml` | version, node, repro, expected behavior fields |
+| `../../../.github/ISSUE_TEMPLATE/feature_request.yml` | problem + solution fields |
+| `../../../.github/ISSUE_TEMPLATE/config.yml` | `blank_issues_enabled: false`, security advisory link |
+| `../../../.github/pull_request_template.md` | type-of-change checklist, TDD + CI + changeset checkboxes |
 
 If any are missing, create them. Keep them short and factual — no marketing copy.
 
@@ -157,7 +157,7 @@ If any are missing, create them. Keep them short and factual — no marketing co
 
 Verify changesets is configured correctly:
 
-1. `.changeset/config.json` exists with `"access": "public"` and `"baseBranch": "master"`
+1. `../../../.changeset/config.json` exists with `"access": "public"` and `"baseBranch": "master"`
 2. `@changesets/cli` is in `devDependencies` in `package.json`
 3. `package.json` has these scripts:
    ```json
@@ -169,7 +169,7 @@ Verify changesets is configured correctly:
 
 ### Changeset for this release
 
-If there is no pending changeset file in `.changeset/` (nothing other than `config.json`):
+If there is no pending changeset file in `../../../.changeset/` (nothing other than `config.json`):
 
 ```bash
 pnpm changeset
@@ -196,7 +196,7 @@ Group under clear subheadings:
 - **CLI commands** — one line per command: what it does, key flags
 - **Supported targets** — comma-separated list
 - **Canonical features** — rules, commands, agents, skills, mcp, hooks, ignore, permissions
-- **Config** — describe `agentsmesh.yaml`, `agentsmesh.local.yaml`, `.agentsmesh/`, `.lock`
+- **Config** — describe `agentsmesh.yaml`, `agentsmesh.local.yaml`, `../../../.agentsmesh/`, `.lock`
 - **Extends** — local and remote forms with example syntax
 - **Link rebasing** — one sentence on what it does
 - **Collaboration** — lock file, `check`, `merge`
@@ -224,7 +224,7 @@ package.json
 README.md
 ```
 
-Source files, test files, fixtures, `.agentsmesh/`, `docs/`, `tasks/`, and `tsconfig.json` must not appear. The `files` field in `package.json` controls this — it should be:
+Source files, test files, fixtures, `../../../.agentsmesh/`, `../../../docs/`, `../../../tasks/`, and `tsconfig.json` must not appear. The `files` field in `package.json` controls this — it should be:
 
 ```json
 "files": ["dist", "README.md", "CHANGELOG.md", "LICENSE"]

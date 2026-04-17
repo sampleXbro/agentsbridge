@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { runWatch } from '../../../../src/cli/commands/watch.js';
@@ -37,7 +37,10 @@ description: "Project rules"
 }
 
 beforeEach(() => setupProject());
-afterEach(() => rmSync(testDir, { recursive: true, force: true }));
+afterEach(() => {
+  vi.unstubAllEnvs();
+  rmSync(testDir, { recursive: true, force: true });
+});
 
 describe('runWatch', () => {
   it('throws when not initialized (no config)', async () => {
@@ -160,5 +163,44 @@ description: "Project rules"
 
     infoSpy.mockRestore();
     await result!.stop();
+  });
+
+  it('watches ~/.agentsmesh and generates global outputs when --global is set', async () => {
+    vi.stubEnv('HOME', testDir);
+    vi.stubEnv('USERPROFILE', testDir);
+    const workspace = `${testDir}-workspace`;
+    rmSync(workspace, { recursive: true, force: true });
+    mkdirSync(workspace, { recursive: true });
+
+    mkdirSync(join(testDir, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(
+      join(testDir, '.agentsmesh', 'agentsmesh.yaml'),
+      `version: 1
+targets: [claude-code]
+features: [rules]
+`,
+    );
+    writeFileSync(
+      join(testDir, '.agentsmesh', 'rules', '_root.md'),
+      `---
+root: true
+description: "Global rules"
+---
+# Global Rules
+`,
+    );
+
+    const result = await runWatch({ global: true }, workspace);
+    await vi.waitFor(() => expect(existsSync(join(testDir, '.claude', 'CLAUDE.md'))).toBe(true), {
+      timeout: 12000,
+    });
+    await vi.waitFor(
+      () =>
+        expect(readFileSync(join(testDir, '.claude', 'CLAUDE.md'), 'utf8')).toContain(
+          'Global Rules',
+        ),
+      { timeout: 12000 },
+    );
+    await result.stop();
   });
 });

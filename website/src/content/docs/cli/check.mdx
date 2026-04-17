@@ -12,7 +12,15 @@ Verify that the canonical files still match the lock file (`.agentsmesh/.lock`).
 agentsmesh check
 ```
 
-No flags. Returns exit code `0` if everything is in sync, `1` if drift is detected.
+```bash
+agentsmesh check --global
+```
+
+## Flags
+
+| Flag | Description |
+|------|-------------|
+| `--global` | Check `~/.agentsmesh/.lock` instead of the current project lock. |
 
 ## What drift means
 
@@ -32,6 +40,8 @@ Drift occurs when:
 ```
 
 This step fails the build if generated files are out of date with canonical sources.
+
+For user-level config checks, run `npx agentsmesh check --global` on a machine that owns the home-level AgentsMesh config.
 
 ### Full CI example
 

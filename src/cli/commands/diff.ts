@@ -2,7 +2,7 @@
  * agentsmesh diff — show what would change on the next generate.
  */
 
-import { loadConfigFromDir } from '../../config/core/loader.js';
+import { loadScopedConfig } from '../../config/core/scope.js';
 import { loadCanonicalWithExtends } from '../../canonical/extends/extends.js';
 import { generate as runEngine } from '../../core/generate/engine.js';
 import { computeDiff, formatDiffSummary } from '../../core/differ.js';
@@ -18,6 +18,7 @@ export async function runDiff(
   projectRoot?: string,
 ): Promise<void> {
   const root = projectRoot ?? process.cwd();
+  const scope = flags.global === true ? 'global' : 'project';
   const targetStr = flags.targets;
   const targetFilter =
     typeof targetStr === 'string' && targetStr
@@ -27,13 +28,19 @@ export async function runDiff(
           .filter(Boolean)
       : undefined;
 
-  const { config, configDir } = await loadConfigFromDir(root);
-  const { canonical } = await loadCanonicalWithExtends(config, configDir);
+  const { config, context } = await loadScopedConfig(root, scope);
+  const { canonical } = await loadCanonicalWithExtends(
+    config,
+    context.configDir,
+    {},
+    context.canonicalDir,
+  );
 
   const results = await runEngine({
     config,
     canonical,
-    projectRoot: configDir,
+    projectRoot: context.rootBase,
+    scope,
     targetFilter,
   });
 

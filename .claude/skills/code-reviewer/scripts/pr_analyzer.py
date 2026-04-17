@@ -6,9 +6,9 @@ Analyzes pull request changes for review complexity, risk assessment,
 and generates review priorities.
 
 Usage:
-    python .claude/skills/code-reviewer/scripts/pr_analyzer.py /path/to/repo
-    python .claude/skills/code-reviewer/scripts/pr_analyzer.py . --base main --head feature-branch
-    python .claude/skills/code-reviewer/scripts/pr_analyzer.py /path/to/repo --json
+    python pr_analyzer.py /path/to/repo
+    python pr_analyzer.py . --base main --head feature-branch
+    python pr_analyzer.py /path/to/repo --json
 """
 
 import argparse

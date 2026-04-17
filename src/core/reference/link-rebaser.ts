@@ -1,4 +1,4 @@
-import { pathApi, normalizeForProject, stripTrailingPunctuation } from '../path-helpers.js';
+import { normalizeForProject, stripTrailingPunctuation } from '../path-helpers.js';
 import {
   PATH_TOKEN,
   LINE_NUMBER_SUFFIX,
@@ -7,6 +7,7 @@ import {
   isGlobAdjacent,
   protectedRanges,
 } from './link-rebaser-helpers.js';
+import { formatLinkPathForDestination } from './link-rebaser-output.js';
 
 export interface RewriteFileLinksInput {
   content: string;
@@ -20,23 +21,6 @@ export interface RewriteFileLinksInput {
 export interface RewriteFileLinksResult {
   content: string;
   missing: string[];
-}
-
-function toProjectRootPath(
-  projectRoot: string,
-  absolutePath: string,
-  keepSlash: boolean,
-): string | null {
-  const api = pathApi(projectRoot);
-  const relPath = api
-    .relative(
-      normalizeForProject(projectRoot, projectRoot),
-      normalizeForProject(projectRoot, absolutePath),
-    )
-    .replace(/\\/g, '/');
-  if (relPath.startsWith('..')) return null;
-  const rewritten = relPath.length > 0 ? relPath : '.';
-  return keepSlash && !rewritten.endsWith('/') ? `${rewritten}/` : rewritten;
 }
 
 export function rewriteFileLinks(input: RewriteFileLinksInput): RewriteFileLinksResult {
@@ -79,7 +63,12 @@ export function rewriteFileLinks(input: RewriteFileLinksInput): RewriteFileLinks
       return match;
     }
 
-    const rewritten = toProjectRootPath(input.projectRoot, translatedPath, candidate.endsWith('/'));
+    const rewritten = formatLinkPathForDestination(
+      input.projectRoot,
+      input.destinationFile,
+      translatedPath,
+      candidate.endsWith('/'),
+    );
     if (!rewritten) return match;
     return `${rewritten}${lineNumSuffix}${suffix}`;
   });

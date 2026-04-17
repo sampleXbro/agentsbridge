@@ -8,6 +8,7 @@ import {
   KIRO_AGENTS_MD,
   KIRO_STEERING_DIR,
   KIRO_SKILLS_DIR,
+  KIRO_AGENTS_DIR,
   KIRO_MCP_FILE,
   KIRO_HOOKS_DIR,
   KIRO_IGNORE,
@@ -72,6 +73,22 @@ export function generateHooks(canonical: CanonicalFiles): KiroOutput[] {
     path: `${KIRO_HOOKS_DIR}/${hook.name}`,
     content: hook.content,
   }));
+}
+
+export function generateAgents(canonical: CanonicalFiles): KiroOutput[] {
+  return canonical.agents.map((agent) => {
+    const frontmatter: Record<string, unknown> = {
+      name: agent.name,
+      description: agent.description,
+      tools: agent.tools.length > 0 ? agent.tools : undefined,
+      model: agent.model || undefined,
+    };
+    Object.keys(frontmatter).forEach((k) => {
+      if (frontmatter[k] === undefined) delete frontmatter[k];
+    });
+    const content = serializeFrontmatter(frontmatter, agent.body.trim() || '');
+    return { path: `${KIRO_AGENTS_DIR}/${agent.name}.md`, content };
+  });
 }
 
 export function generateIgnore(canonical: CanonicalFiles): KiroOutput[] {

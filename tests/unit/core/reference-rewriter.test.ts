@@ -20,6 +20,7 @@ vi.mock('../../../src/core/reference/output-source-map.js', async (importOrigina
 });
 
 import { rewriteGeneratedReferences } from '../../../src/core/reference/rewriter.js';
+import { resolveOutputCollisions } from '../../../src/core/generate/collision.js';
 
 function makeConfig(targets: ValidatedConfig['targets']): ValidatedConfig {
   return {
@@ -157,11 +158,227 @@ describe('rewriteGeneratedReferences', () => {
       projectRoot,
     );
 
-    expect(rewritten[0]!.content).toContain('.claude/rules/typescript.md');
-    expect(rewritten[0]!.content).toContain('.claude/commands/review.md');
-    expect(rewritten[0]!.content).toContain('.claude/agents/reviewer.md');
-    expect(rewritten[0]!.content).toContain('.claude/skills/api-gen/references/checklist.md');
-    expect(rewritten[1]!.content).toContain('.claude/skills/api-gen/SKILL.md');
+    expect(rewritten[0]!.content).toContain('rules/typescript.md');
+    expect(rewritten[0]!.content).toContain('commands/review.md');
+    expect(rewritten[0]!.content).toContain('agents/reviewer.md');
+    expect(rewritten[0]!.content).toContain('skills/api-gen/references/checklist.md');
+    expect(rewritten[1]!.content).toContain('../skills/api-gen/SKILL.md');
+  });
+
+  it('rewrites canonical links to Claude global paths when generation runs in global scope', () => {
+    const homeRoot = '/home/tester';
+    const results: GenerateResult[] = [
+      {
+        target: 'claude-code',
+        path: '.claude/CLAUDE.md',
+        content:
+          'See .agentsmesh/rules/typescript.md and .agentsmesh/skills/api-gen/references/checklist.md.',
+        status: 'created',
+      },
+      {
+        target: 'claude-code',
+        path: '.claude/rules/typescript.md',
+        content: '',
+        status: 'created',
+      },
+      {
+        target: 'claude-code',
+        path: '.claude/skills/api-gen/SKILL.md',
+        content: '',
+        status: 'created',
+      },
+      {
+        target: 'claude-code',
+        path: '.claude/skills/api-gen/references/checklist.md',
+        content: '',
+        status: 'created',
+      },
+    ];
+
+    const rewritten = rewriteGeneratedReferences(
+      results,
+      makeCanonical(join(homeRoot, '.agentsmesh')),
+      makeConfig(['claude-code']),
+      homeRoot,
+      'global',
+    );
+
+    expect(rewritten[0]!.content).toContain('rules/typescript.md');
+    expect(rewritten[0]!.content).toContain('skills/api-gen/references/checklist.md');
+  });
+
+  it('rewrites canonical links to Antigravity global paths when generation runs in global scope', () => {
+    const homeRoot = '/home/tester';
+    const results: GenerateResult[] = [
+      {
+        target: 'antigravity',
+        path: '.gemini/antigravity/GEMINI.md',
+        content:
+          'See .agentsmesh/rules/typescript.md and .agentsmesh/skills/api-gen/references/checklist.md.',
+        status: 'created',
+      },
+      {
+        target: 'antigravity',
+        path: '.gemini/antigravity/skills/api-gen/SKILL.md',
+        content: '',
+        status: 'created',
+      },
+      {
+        target: 'antigravity',
+        path: '.gemini/antigravity/skills/api-gen/references/checklist.md',
+        content: '',
+        status: 'created',
+      },
+    ];
+
+    const rewritten = rewriteGeneratedReferences(
+      results,
+      makeCanonical(join(homeRoot, '.agentsmesh')),
+      makeConfig(['antigravity']),
+      homeRoot,
+      'global',
+    );
+
+    expect(rewritten[0]!.content).toContain('GEMINI.md');
+    expect(rewritten[0]!.content).toContain('skills/api-gen/references/checklist.md');
+  });
+
+  it('rewrites canonical links to Cursor global paths when generation runs in global scope', () => {
+    const homeRoot = '/home/tester';
+    const results: GenerateResult[] = [
+      {
+        target: 'cursor',
+        path: '.cursor/rules/general.mdc',
+        content:
+          'See .agentsmesh/agents/reviewer.md and .agentsmesh/skills/api-gen/references/checklist.md.',
+        status: 'created',
+      },
+      {
+        target: 'cursor',
+        path: '.cursor/agents/reviewer.md',
+        content: '',
+        status: 'created',
+      },
+      {
+        target: 'cursor',
+        path: '.cursor/skills/api-gen/SKILL.md',
+        content: '',
+        status: 'created',
+      },
+      {
+        target: 'cursor',
+        path: '.cursor/skills/api-gen/references/checklist.md',
+        content: '',
+        status: 'created',
+      },
+    ];
+
+    const rewritten = rewriteGeneratedReferences(
+      results,
+      makeCanonical(join(homeRoot, '.agentsmesh')),
+      makeConfig(['cursor']),
+      homeRoot,
+      'global',
+    );
+
+    expect(rewritten[0]!.content).toContain('../agents/reviewer.md');
+    expect(rewritten[0]!.content).toContain('../skills/api-gen/references/checklist.md');
+  });
+
+  it('rewrites canonical links to Codex global paths when generation runs in global scope', () => {
+    const homeRoot = '/home/tester';
+    const results: GenerateResult[] = [
+      {
+        target: 'codex-cli',
+        path: '.codex/AGENTS.md',
+        content: 'See .agentsmesh/rules/typescript.md and .agentsmesh/skills/api-gen/SKILL.md.',
+        status: 'created',
+      },
+      {
+        target: 'codex-cli',
+        path: '.agents/skills/api-gen/SKILL.md',
+        content: '',
+        status: 'created',
+      },
+    ];
+
+    const rewritten = rewriteGeneratedReferences(
+      results,
+      makeCanonical(join(homeRoot, '.agentsmesh')),
+      makeConfig(['codex-cli']),
+      homeRoot,
+      'global',
+    );
+
+    expect(rewritten[0]!.content).toContain('AGENTS.md');
+    expect(rewritten[0]!.content).toContain('../.agents/skills/api-gen/SKILL.md');
+  });
+
+  it('aligns Cline .agents/skills mirror rewrites with codex-cli when both targets are active (global)', () => {
+    const homeRoot = '/home/tester';
+    const canonical = makeCanonical(homeRoot);
+    const skill = canonical.skills[0]!;
+    skill.supportingFiles.push({
+      relativePath: 'scripts/frontend_scaffolder.py',
+      absolutePath: join(
+        homeRoot,
+        '.agentsmesh',
+        'skills',
+        'api-gen',
+        'scripts',
+        'frontend_scaffolder.py',
+      ),
+      content: '# See .agentsmesh/skills/api-gen/SKILL.md for setup.\n',
+    });
+
+    const sharedPath = '.agents/skills/api-gen/scripts/frontend_scaffolder.py';
+    const results: GenerateResult[] = [
+      {
+        target: 'codex-cli',
+        path: sharedPath,
+        content: skill.supportingFiles[1]!.content,
+        status: 'created',
+      },
+      {
+        target: 'cline',
+        path: '.cline/skills/api-gen/scripts/frontend_scaffolder.py',
+        content: skill.supportingFiles[1]!.content,
+        status: 'created',
+      },
+      {
+        target: 'cline',
+        path: sharedPath,
+        content: skill.supportingFiles[1]!.content,
+        status: 'created',
+      },
+      {
+        target: 'codex-cli',
+        path: '.agents/skills/api-gen/SKILL.md',
+        content: '',
+        status: 'created',
+      },
+      {
+        target: 'cline',
+        path: '.cline/skills/api-gen/SKILL.md',
+        content: '',
+        status: 'created',
+      },
+    ];
+
+    const activeTargets = ['codex-cli', 'cline'] as const;
+    const rewritten = rewriteGeneratedReferences(
+      results,
+      canonical,
+      makeConfig([...activeTargets]),
+      homeRoot,
+      'global',
+      activeTargets,
+    );
+
+    const codex = rewritten.find((r) => r.target === 'codex-cli' && r.path === sharedPath);
+    const clineMirror = rewritten.find((r) => r.target === 'cline' && r.path === sharedPath);
+    expect(codex?.content).toBe(clineMirror?.content);
+    expect(() => resolveOutputCollisions(rewritten)).not.toThrow();
   });
 
   it('leaves unmapped codex non-root rule references unchanged', () => {
@@ -233,7 +450,7 @@ describe('rewriteGeneratedReferences', () => {
       projectRoot,
     );
 
-    expect(rewritten[0]!.content).toContain('.github/instructions/typescript.instructions.md');
+    expect(rewritten[0]!.content).toContain('typescript.instructions.md');
   });
 
   it('rewrites absolute canonical paths through the generated artifact map', () => {
@@ -278,7 +495,7 @@ describe('rewriteGeneratedReferences', () => {
     );
 
     expect(rewritten[0]!.content).toBe(
-      'Absolute: .claude/rules/typescript.md, .claude/commands/review.md, .claude/skills/api-gen/references/checklist.md.',
+      'Absolute: rules/typescript.md, commands/review.md, skills/api-gen/references/checklist.md.',
     );
   });
 
@@ -327,7 +544,7 @@ describe('rewriteGeneratedReferences', () => {
 
     expect(rewritten[0]!.content).toContain('.windsurf/skills/api-gen/');
     expect(rewritten[0]!.content).toContain('.windsurf/skills/api-gen/references/');
-    expect(rewritten[1]!.content).toContain('.windsurf/skills/api-gen/SKILL.md');
+    expect(rewritten[1]!.content).toContain('../.windsurf/skills/api-gen/SKILL.md');
   });
 
   it('reuses one artifact map for multiple outputs of the same target', () => {
@@ -355,6 +572,84 @@ describe('rewriteGeneratedReferences', () => {
     );
 
     expect(mockBuildArtifactPathMap).toHaveBeenCalledTimes(1);
+  });
+
+  it('rewrites pack-absolute references/ and assets/ links in a generated skill README to sibling paths', () => {
+    const projectRoot = '/proj';
+    const packSkillRoot = join(
+      projectRoot,
+      '.agentsmesh',
+      'packs',
+      'arsenal',
+      'skills',
+      'release-manager',
+    );
+    const canonical: CanonicalFiles = {
+      rules: [],
+      commands: [],
+      agents: [],
+      skills: [
+        {
+          source: join(packSkillRoot, 'SKILL.md'),
+          name: 'release-manager',
+          description: '',
+          body: '',
+          supportingFiles: [
+            {
+              relativePath: 'README.md',
+              absolutePath: join(packSkillRoot, 'README.md'),
+              content: '',
+            },
+            {
+              relativePath: 'references/guide.md',
+              absolutePath: join(packSkillRoot, 'references', 'guide.md'),
+              content: '',
+            },
+            {
+              relativePath: 'assets/sample.txt',
+              absolutePath: join(packSkillRoot, 'assets', 'sample.txt'),
+              content: '',
+            },
+          ],
+        },
+      ],
+      mcp: null,
+      permissions: null,
+      hooks: null,
+      ignore: [],
+    };
+
+    const packRefs = '.agentsmesh/packs/arsenal/skills/release-manager/references/';
+    const packAssets = '.agentsmesh/packs/arsenal/skills/release-manager/assets/';
+    const results: GenerateResult[] = [
+      {
+        target: 'claude-code',
+        path: '.claude/skills/release-manager/README.md',
+        content: `See [references](${packRefs}) and [assets](${packAssets}).`,
+        status: 'created',
+      },
+      {
+        target: 'claude-code',
+        path: '.claude/skills/release-manager/references/guide.md',
+        content: '',
+        status: 'created',
+      },
+      {
+        target: 'claude-code',
+        path: '.claude/skills/release-manager/assets/sample.txt',
+        content: '',
+        status: 'created',
+      },
+    ];
+
+    const rewritten = rewriteGeneratedReferences(
+      results,
+      canonical,
+      makeConfig(['claude-code']),
+      projectRoot,
+    );
+
+    expect(rewritten[0]!.content).toBe('See [references](references/) and [assets](assets/).');
   });
 
   it('skips rewriting non-markdown outputs even when they map to canonical sources', () => {

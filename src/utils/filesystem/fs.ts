@@ -15,6 +15,7 @@ import {
   unlink,
   lstat,
   readlink,
+  realpath,
 } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { constants } from 'node:fs';
@@ -90,17 +91,38 @@ export async function mkdirp(path: string): Promise<void> {
 
 /**
  * List all files recursively under dir. Returns absolute paths only.
+ * Skips revisiting the same real directory (breaks symlink cycles).
  * @param dir - Directory to scan
  * @returns Array of absolute file paths
  */
-export async function readDirRecursive(dir: string): Promise<string[]> {
+export async function readDirRecursive(dir: string, visited?: Set<string>): Promise<string[]> {
+  let canonicalDir: string;
+  try {
+    canonicalDir = await realpath(dir);
+  } catch (err) {
+    const e = err as ErrnoLike;
+    if (e.code === 'ENOENT' || e.code === 'ENOTDIR' || e.code === 'ELOOP') return [];
+    throw new Error(`Failed to read directory ${dir}: ${e.message}. Check permissions.`, {
+      cause: err,
+    });
+  }
+  const seen = visited ?? new Set<string>();
+  if (seen.has(canonicalDir)) return [];
+  seen.add(canonicalDir);
   try {
     const entries = await readdir(dir, { withFileTypes: true });
     const files: string[] = [];
     for (const ent of entries) {
       const full = join(dir, ent.name);
-      if (ent.isDirectory()) {
-        files.push(...(await readDirRecursive(full)));
+      const walkChild =
+        ent.isDirectory() ||
+        (ent.isSymbolicLink() &&
+          (await stat(full).then(
+            (s) => s.isDirectory(),
+            () => false,
+          )));
+      if (walkChild) {
+        files.push(...(await readDirRecursive(full, seen)));
       } else {
         files.push(full);
       }

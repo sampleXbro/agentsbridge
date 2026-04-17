@@ -3,8 +3,7 @@
  * Verifies canonical files match the lock file.
  */
 
-import { join } from 'node:path';
-import { loadConfigFromDir } from '../../config/core/loader.js';
+import { loadScopedConfig } from '../../config/core/scope.js';
 import { resolveExtendPaths } from '../../config/resolve/resolver.js';
 import {
   readLock,
@@ -24,11 +23,11 @@ export async function runCheck(
   flags: Record<string, string | boolean>,
   projectRoot?: string,
 ): Promise<number> {
-  void flags;
   const root = projectRoot ?? process.cwd();
+  const scope = flags.global === true ? 'global' : 'project';
 
-  const { config, configDir } = await loadConfigFromDir(root);
-  const abDir = join(configDir, '.agentsmesh');
+  const { config, context } = await loadScopedConfig(root, scope);
+  const abDir = context.canonicalDir;
 
   const lock = await readLock(abDir);
   if (lock === null) {
@@ -37,7 +36,7 @@ export async function runCheck(
   }
 
   const current = await buildChecksums(abDir);
-  const resolvedExtends = await resolveExtendPaths(config, configDir);
+  const resolvedExtends = await resolveExtendPaths(config, context.configDir);
   const currentExtends =
     resolvedExtends.length > 0 ? await buildExtendChecksums(resolvedExtends) : {};
 

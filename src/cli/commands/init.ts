@@ -11,15 +11,24 @@ import type { ImportResult } from '../../core/types.js';
 import { buildConfig, LOCAL_TEMPLATE } from './init-templates.js';
 import { detectExistingConfigs } from './init-detect.js';
 import { writeScaffoldFull, writeScaffoldGapFill } from './init-scaffold.js';
+import { resolveScopeContext, type ConfigScope } from '../../config/core/scope.js';
+import type { BuiltinTargetId } from '../../targets/catalog/target-ids.js';
 
 const CONFIG_FILENAME = 'agentsmesh.yaml';
 const LOCAL_CONFIG_FILENAME = 'agentsmesh.local.yaml';
 const GITIGNORE_ENTRIES = ['agentsmesh.local.yaml', '.agentsmeshcache', '.agentsmesh/.lock.tmp'];
 
 /** Importers derived from target descriptors — no manual registration needed. */
-const IMPORTERS: Record<string, (root: string) => Promise<ImportResult[]>> = Object.fromEntries(
-  BUILTIN_TARGETS.map((d) => [d.id, (root: string) => d.generators.importFrom(root)]),
-);
+const IMPORTERS: Record<string, (root: string, scope: ConfigScope) => Promise<ImportResult[]>> =
+  Object.fromEntries(
+    BUILTIN_TARGETS.map((d) => [
+      d.id,
+      (root: string, scope: ConfigScope) => d.generators.importFrom(root, { scope }),
+    ]),
+  );
+const GLOBAL_INIT_TARGETS: BuiltinTargetId[] = BUILTIN_TARGETS.filter(
+  (target) => target.global !== undefined,
+).map((target) => target.id as BuiltinTargetId);
 
 /**
  * Append entries to .gitignore if not already present.
@@ -42,13 +51,25 @@ export { detectExistingConfigs };
  * @param options - Optional flags: yes (auto-import without prompting)
  * @throws Error if already initialized
  */
-export async function runInit(projectRoot: string, options: { yes?: boolean } = {}): Promise<void> {
-  const configPath = join(projectRoot, CONFIG_FILENAME);
+export async function runInit(
+  projectRoot: string,
+  options: { yes?: boolean; global?: boolean } = {},
+): Promise<void> {
+  const scope: ConfigScope = options.global === true ? 'global' : 'project';
+  const context = resolveScopeContext(projectRoot, scope);
+  const configPath = join(context.configDir, CONFIG_FILENAME);
   if (await exists(configPath)) {
     throw new Error(`Already initialized. ${CONFIG_FILENAME} exists. Remove it first to re-init.`);
   }
 
-  const existing = await detectExistingConfigs(projectRoot);
+  const detected = await detectExistingConfigs(context.rootBase, scope);
+  const existing =
+    scope === 'global'
+      ? detected.filter((target): target is BuiltinTargetId =>
+          GLOBAL_INIT_TARGETS.includes(target as BuiltinTargetId),
+        )
+      : detected;
+  const defaultTargets = scope === 'global' ? GLOBAL_INIT_TARGETS : undefined;
 
   if (existing.length > 0) {
     logger.info(`Found existing configurations: ${existing.join(', ')}`);
@@ -59,9 +80,9 @@ export async function runInit(projectRoot: string, options: { yes?: boolean } = 
       for (const toolId of existing) {
         const importerFn = IMPORTERS[toolId];
         if (!importerFn) continue;
-        const results = await importerFn(projectRoot);
+        const results = await importerFn(context.rootBase, scope);
         for (const r of results) {
-          logger.success(`  ${r.fromPath.replace(projectRoot + '/', '')} → ${r.toPath}`);
+          logger.success(`  ${r.fromPath.replace(context.rootBase + '/', '')} → ${r.toPath}`);
         }
         totalImported += results.length;
       }
@@ -69,28 +90,30 @@ export async function runInit(projectRoot: string, options: { yes?: boolean } = 
         logger.info(`Imported ${totalImported} file(s) from ${existing.length} tool(s).`);
       }
 
-      await writeScaffoldGapFill(projectRoot);
+      await writeScaffoldGapFill(context.canonicalDir);
 
-      await writeFileAtomic(configPath, buildConfig(existing));
+      await writeFileAtomic(configPath, buildConfig(existing, defaultTargets));
       logger.success(`Created ${CONFIG_FILENAME} (targets: ${existing.join(', ')})`);
     } else {
       logger.info(
         `Run 'agentsmesh init --yes' to auto-import, or 'agentsmesh import --from <tool>' manually.`,
       );
-      await writeScaffoldFull(projectRoot);
-      await writeFileAtomic(configPath, buildConfig([]));
+      await writeScaffoldFull(context.canonicalDir);
+      await writeFileAtomic(configPath, buildConfig([], defaultTargets));
       logger.success(`Created ${CONFIG_FILENAME}`);
     }
   } else {
-    await writeScaffoldFull(projectRoot);
-    await writeFileAtomic(configPath, buildConfig([]));
+    await writeScaffoldFull(context.canonicalDir);
+    await writeFileAtomic(configPath, buildConfig([], defaultTargets));
     logger.success(`Created ${CONFIG_FILENAME}`);
   }
 
-  const localPath = join(projectRoot, LOCAL_CONFIG_FILENAME);
+  const localPath = join(context.configDir, LOCAL_CONFIG_FILENAME);
   await writeFileAtomic(localPath, LOCAL_TEMPLATE);
   logger.success(`Created ${LOCAL_CONFIG_FILENAME}`);
 
-  await appendToGitignore(projectRoot);
-  logger.success('Updated .gitignore');
+  if (scope === 'project') {
+    await appendToGitignore(projectRoot);
+    logger.success('Updated .gitignore');
+  }
 }

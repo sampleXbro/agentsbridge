@@ -94,5 +94,24 @@ describe('buildArtifactPathMap with pack skills', () => {
     const targetDir = normalize(join(ROOT, '.claude/skills/code-review'));
 
     expect(map.get(packDir)).toBe(targetDir);
+    expect(map.get(`${packDir}/`)).toBe(`${targetDir}/`);
+  });
+
+  it('maps pack supporting subdirectories (e.g. reference/, assets/) with trailing slash', () => {
+    const map = buildArtifactPathMap('claude-code', packSkill(), config(), ROOT);
+
+    const packRefDir = normalize(
+      join(ROOT, '.agentsmesh/packs/my-pack/skills/code-review/reference'),
+    );
+    const targetRefDir = normalize(join(ROOT, '.claude/skills/code-review/reference'));
+    expect(map.get(packRefDir)).toBe(targetRefDir);
+    expect(map.get(`${packRefDir}/`)).toBe(`${targetRefDir}/`);
+
+    const packAssetsDir = normalize(
+      join(ROOT, '.agentsmesh/packs/my-pack/skills/code-review/assets'),
+    );
+    const targetAssetsDir = normalize(join(ROOT, '.claude/skills/code-review/assets'));
+    expect(map.get(packAssetsDir)).toBe(targetAssetsDir);
+    expect(map.get(`${packAssetsDir}/`)).toBe(`${targetAssetsDir}/`);
   });
 });

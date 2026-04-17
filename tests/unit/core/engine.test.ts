@@ -103,14 +103,15 @@ describe('generate', () => {
       canonical,
       projectRoot: TEST_DIR,
     });
-    expect(results).toHaveLength(3);
+    expect(results).toHaveLength(4);
     const paths = results.map((r) => r.path).sort();
     expect(paths).toContain('.claude/CLAUDE.md');
     expect(paths).toContain('.cursor/rules/general.mdc');
+    expect(paths).toContain('.cursor/AGENTS.md');
     expect(paths).toContain('AGENTS.md');
   });
 
-  it('decorates only the cursor primary root instruction through the engine', async () => {
+  it('decorates all Cursor root instruction surfaces through the engine', async () => {
     const body = '# Rules\n- Use TypeScript';
     const config = minimalConfig({ targets: ['cursor'] });
     const canonical = canonicalWithRootRule(body);
@@ -123,11 +124,12 @@ describe('generate', () => {
 
     const generalMdc = results.find((result) => result.path === '.cursor/rules/general.mdc');
     const agentsMd = results.find((result) => result.path === 'AGENTS.md');
+    const cursorAgentsMd = results.find((result) => result.path === '.cursor/AGENTS.md');
+    const appended = appendAgentsmeshRootInstructionParagraph(body);
 
-    expect(generalMdc?.content).toBe(
-      serializeFrontmatter({ alwaysApply: true }, appendAgentsmeshRootInstructionParagraph(body)),
-    );
-    expect(agentsMd?.content).toBe(body);
+    expect(generalMdc?.content).toBe(serializeFrontmatter({ alwaysApply: true }, appended));
+    expect(agentsMd?.content).toBe(appended);
+    expect(cursorAgentsMd?.content).toBe(appended);
   });
 
   it('marks new files as created when they do not exist', async () => {
@@ -139,7 +141,7 @@ describe('generate', () => {
       projectRoot: TEST_DIR,
     });
     const created = results.filter((r) => r.status === 'created');
-    expect(created).toHaveLength(3);
+    expect(created).toHaveLength(4);
   });
 
   it('marks files as updated when content differs', async () => {
@@ -162,16 +164,12 @@ describe('generate', () => {
     const body = '# Same';
     mkdirSync(join(TEST_DIR, '.cursor', 'rules'), { recursive: true });
     mkdirSync(join(TEST_DIR, '.claude'), { recursive: true });
-    writeFileSync(join(TEST_DIR, 'AGENTS.md'), body);
-    writeFileSync(
-      join(TEST_DIR, '.claude', 'CLAUDE.md'),
-      appendAgentsmeshRootInstructionParagraph(body),
-    );
-    const cursorContent = serializeFrontmatter(
-      { alwaysApply: true },
-      appendAgentsmeshRootInstructionParagraph(body),
-    );
+    const onDiskAppended = appendAgentsmeshRootInstructionParagraph(body);
+    writeFileSync(join(TEST_DIR, 'AGENTS.md'), onDiskAppended);
+    writeFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), onDiskAppended);
+    const cursorContent = serializeFrontmatter({ alwaysApply: true }, onDiskAppended);
     writeFileSync(join(TEST_DIR, '.cursor', 'rules', 'general.mdc'), cursorContent);
+    writeFileSync(join(TEST_DIR, '.cursor', 'AGENTS.md'), onDiskAppended);
     const config = minimalConfig();
     const canonical = canonicalWithRootRule(body);
     const results = await generate({
@@ -180,7 +178,7 @@ describe('generate', () => {
       projectRoot: TEST_DIR,
     });
     const unchanged = results.filter((r) => r.status === 'unchanged');
-    expect(unchanged).toHaveLength(3);
+    expect(unchanged).toHaveLength(4);
   });
 
   it('filters targets when targetFilter is provided', async () => {
@@ -231,8 +229,9 @@ describe('generate', () => {
     expect(paths).toContain('.cursor/commands/review.md');
     expect(paths).toContain('.claude/CLAUDE.md');
     expect(paths).toContain('.cursor/rules/general.mdc');
+    expect(paths).toContain('.cursor/AGENTS.md');
     expect(paths).toContain('AGENTS.md');
-    expect(results).toHaveLength(5);
+    expect(results).toHaveLength(6);
   });
 
   it('skips commands when features does not include commands', async () => {
@@ -542,7 +541,7 @@ describe('generate', () => {
     const claudePerm = results.find((r) => r.path === '.claude/settings.json');
     expect(claudePerm).toBeDefined();
     const parsed = JSON.parse(claudePerm!.content) as Record<string, unknown>;
-    expect(parsed.permissions).toEqual({ allow: ['Read'], deny: [] });
+    expect(parsed.permissions).toEqual({ allow: ['Read'], deny: [], ask: [] });
     expect(parsed.hooks).toBeDefined();
     expect((parsed.hooks as Record<string, unknown>).PostToolUse).toBeDefined();
   });
@@ -563,7 +562,7 @@ describe('generate', () => {
     const claudePerm = results.find((r) => r.path === '.claude/settings.json');
     expect(claudePerm).toBeDefined();
     const parsed = JSON.parse(claudePerm!.content) as Record<string, unknown>;
-    expect(parsed.permissions).toEqual({ allow: ['Read'], deny: [] });
+    expect(parsed.permissions).toEqual({ allow: ['Read'], deny: [], ask: [] });
   });
 
   it('deduplicates identical AGENTS.md outputs from codex-cli and windsurf', async () => {
@@ -711,7 +710,7 @@ describe('generate hooks', () => {
     const claudeSettings = results.find((r) => r.path === '.claude/settings.json');
     expect(claudeSettings).toBeDefined();
     const parsed = JSON.parse(claudeSettings!.content) as Record<string, unknown>;
-    expect(parsed.permissions).toEqual({ allow: ['Read'], deny: [] });
+    expect(parsed.permissions).toEqual({ allow: ['Read'], deny: [], ask: [] });
     expect(parsed.hooks).toBeDefined();
     const hooks = parsed.hooks as Record<string, unknown>;
     expect(hooks.PostToolUse).toBeDefined();
@@ -735,7 +734,11 @@ describe('generate hooks', () => {
     const claudeSettings = results.find((r) => r.path === '.claude/settings.json');
     expect(claudeSettings).toBeDefined();
     const claudeParsed = JSON.parse(claudeSettings!.content) as Record<string, unknown>;
-    expect(claudeParsed.permissions).toEqual({ allow: ['Bash(pnpm test)'], deny: [] });
+    expect(claudeParsed.permissions).toEqual({
+      allow: ['Bash(pnpm test)'],
+      deny: [],
+      ask: [],
+    });
     expect(claudeParsed.hooks).toBeDefined();
     expect((claudeParsed.hooks as Record<string, unknown>).PostToolUse).toBeDefined();
     // Cursor: no native permissions file; hooks in .cursor/hooks.json
@@ -1144,6 +1147,35 @@ describe('generate Continue', () => {
   });
 });
 
+describe('generate Cursor root appendix', () => {
+  it('decorates general.mdc, workspace AGENTS.md, and .cursor/AGENTS.md', async () => {
+    const config = minimalConfig({ targets: ['cursor'], features: ['rules'] });
+    const canonical: CanonicalFiles = {
+      ...canonicalWithRootRule('# Root\n'),
+      rules: [
+        canonicalWithRootRule('# Root\n').rules[0]!,
+        {
+          source: join(TEST_DIR, '.agentsmesh', 'rules', 'extra.md'),
+          root: false,
+          targets: ['cursor'],
+          description: 'Extra',
+          globs: [],
+          body: 'Extra body.',
+        },
+      ],
+    };
+    const results = await generate({ config, canonical, projectRoot: TEST_DIR });
+    const general = results.find((r) => r.path === '.cursor/rules/general.mdc');
+    const agents = results.find((r) => r.path === 'AGENTS.md');
+    const cursorAgents = results.find((r) => r.path === '.cursor/AGENTS.md');
+    for (const file of [general, agents, cursorAgents]) {
+      expect(file).toBeDefined();
+      expect(file!.content).toContain('## AgentsMesh Generation Contract');
+      expect(file!.content).toContain('agentsmesh.yaml');
+    }
+  });
+});
+
 describe('generate Gemini CLI', () => {
   it('produces GEMINI.md when gemini-cli target enabled', async () => {
     const config = minimalConfig({
@@ -1160,6 +1192,10 @@ describe('generate Gemini CLI', () => {
     expect(gemini).toBeDefined();
     expect(gemini!.content).toContain('## AgentsMesh Generation Contract');
     expect(gemini!.content).toContain('Use TypeScript');
+    const compatAgents = results.find((r) => r.path === 'AGENTS.md');
+    expect(compatAgents).toBeDefined();
+    expect(compatAgents!.content).toContain('## AgentsMesh Generation Contract');
+    expect(compatAgents!.content).toContain('Use TypeScript');
   });
 
   it('folds non-root rules as sections into GEMINI.md (no .gemini/rules/ dir)', async () => {

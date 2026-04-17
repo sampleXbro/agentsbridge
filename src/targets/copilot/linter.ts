@@ -17,8 +17,11 @@ export function lintRules(
   canonical: CanonicalFiles,
   projectRoot: string,
   projectFiles: string[],
+  options?: { scope?: 'project' | 'global' },
 ): LintDiagnostic[] {
-  const diags = validateRules(canonical, projectRoot, projectFiles);
+  const diags = validateRules(canonical, projectRoot, projectFiles, {
+    checkGlobMatches: options?.scope !== 'global',
+  });
   const targetDiags = diags.map((d) => ({ ...d, target: COPILOT_TARGET }));
   const nonRootWithoutGlobs = canonical.rules.filter(
     (rule) => !rule.root && rule.globs.length === 0,

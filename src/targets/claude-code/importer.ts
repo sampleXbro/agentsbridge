@@ -30,7 +30,7 @@ import {
 } from '../import/import-metadata.js';
 import { importFileDirectory } from '../import/import-orchestrator.js';
 import { mapClaudeMarkdownFile, mapClaudeRuleFile } from './importer-mappers.js';
-import { importMcpJson, importSettings } from './settings-helpers.js';
+import { importClaudeHooksJson, importMcpJson, importSettings } from './settings-helpers.js';
 import {
   CLAUDE_ROOT,
   CLAUDE_LEGACY_ROOT,
@@ -45,21 +45,27 @@ import {
   CLAUDE_CANONICAL_SKILLS_DIR,
   CLAUDE_CANONICAL_IGNORE,
 } from './constants.js';
+import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 
 /**
  * Import Claude Code config into canonical .agentsmesh/.
  * @param projectRoot - Project root directory
  * @returns Import results for each imported file
  */
-export async function importFromClaudeCode(projectRoot: string): Promise<ImportResult[]> {
+export async function importFromClaudeCode(
+  projectRoot: string,
+  options: { scope?: TargetLayoutScope } = {},
+): Promise<ImportResult[]> {
+  const scope = options.scope ?? 'project';
   const results: ImportResult[] = [];
-  const normalize = await createImportReferenceNormalizer('claude-code', projectRoot);
+  const normalize = await createImportReferenceNormalizer('claude-code', projectRoot, scope);
 
-  await importRules(projectRoot, results, normalize);
+  await importRules(projectRoot, results, normalize, scope);
   await importCommands(projectRoot, results, normalize);
   await importAgents(projectRoot, results, normalize);
   await importSkills(projectRoot, results, normalize);
-  await importMcpJson(projectRoot, results);
+  await importMcpJson(projectRoot, results, scope);
+  await importClaudeHooksJson(projectRoot, results);
   await importSettings(projectRoot, results);
   await importIgnore(projectRoot, results);
 
@@ -70,6 +76,7 @@ async function importRules(
   projectRoot: string,
   results: ImportResult[],
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
+  scope: TargetLayoutScope,
 ): Promise<void> {
   const destDir = join(projectRoot, CLAUDE_CANONICAL_RULES_DIR);
 
@@ -77,7 +84,8 @@ async function importRules(
   const primaryClaudePath = join(projectRoot, CLAUDE_ROOT);
   const primaryContent = await readFileSafe(primaryClaudePath);
   const legacyClaudePath = join(projectRoot, CLAUDE_LEGACY_ROOT);
-  const legacyContent = primaryContent === null ? await readFileSafe(legacyClaudePath) : null;
+  const legacyContent =
+    scope === 'project' && primaryContent === null ? await readFileSafe(legacyClaudePath) : null;
   const claudeContent = primaryContent ?? legacyContent;
   const claudePath = primaryContent !== null ? primaryClaudePath : legacyClaudePath;
 

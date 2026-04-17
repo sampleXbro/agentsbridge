@@ -3,6 +3,8 @@ name: ts-library-architecture
 description: Use when designing or refactoring the structure, public API, packaging model, or runtime compatibility of a TypeScript library published to npm.
 ---
 
+## Purpose
+
 # TS Library Architecture
 
 You are an architecture specialist for TypeScript libraries intended for long-term public distribution.

@@ -87,17 +87,17 @@ Use .agentsmesh/skills/api-gen/SKILL.md.
       'utf-8',
     );
 
-    expect(claudeRoot).toContain('.claude/rules/typescript.md');
-    expect(claudeRoot).toContain('.claude/commands/review.md');
-    expect(claudeRoot).toContain('.claude/agents/reviewer.md');
-    expect(claudeRoot).toContain('.claude/skills/api-gen/references/checklist.md');
-    expect(cursorRoot).toContain('.cursor/rules/typescript.mdc');
-    expect(cursorRoot).toContain('.cursor/commands/review.md');
-    expect(cursorRoot).toContain('.cursor/agents/reviewer.md');
-    expect(cursorRoot).toContain('.cursor/skills/api-gen/references/checklist.md');
-    expect(claudeCommand).toContain('.claude/skills/api-gen/SKILL.md');
-    expect(claudeAgent).toContain('.claude/skills/api-gen/SKILL.md');
-    expect(claudeSkill).toContain('.claude/skills/api-gen/references/checklist.md');
+    expect(claudeRoot).toContain('rules/typescript.md');
+    expect(claudeRoot).toContain('commands/review.md');
+    expect(claudeRoot).toContain('agents/reviewer.md');
+    expect(claudeRoot).toContain('skills/api-gen/references/checklist.md');
+    expect(cursorRoot).toContain('typescript.mdc');
+    expect(cursorRoot).toContain('../commands/review.md');
+    expect(cursorRoot).toContain('../agents/reviewer.md');
+    expect(cursorRoot).toContain('../skills/api-gen/references/checklist.md');
+    expect(claudeCommand).toContain('../skills/api-gen/SKILL.md');
+    expect(claudeAgent).toContain('../skills/api-gen/SKILL.md');
+    expect(claudeSkill).toContain('references/checklist.md');
     expect(claudeRoot).not.toContain('.agentsmesh/rules/');
     expect(claudeRoot).not.toContain('.agentsmesh/commands/');
     expect(claudeRoot).not.toContain('.agentsmesh/agents/');
@@ -170,13 +170,13 @@ Use .agentsmesh/skills/post-feature-qa/ and .agentsmesh/skills/post-feature-qa/r
     execSync(`node ${CLI_PATH} generate`, { cwd: testDir });
 
     expect(readFileSync(join(testDir, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
-      '.claude/skills/post-feature-qa/',
+      'skills/post-feature-qa/',
     );
     expect(readFileSync(join(testDir, '.cursor', 'rules', 'general.mdc'), 'utf-8')).toContain(
-      '.cursor/skills/post-feature-qa/',
+      '../skills/post-feature-qa/',
     );
     expect(readFileSync(join(testDir, '.github', 'copilot-instructions.md'), 'utf-8')).toContain(
-      '.github/skills/post-feature-qa/',
+      'skills/post-feature-qa/',
     );
     expect(readFileSync(join(testDir, 'GEMINI.md'), 'utf-8')).toContain(
       '.gemini/skills/post-feature-qa/',

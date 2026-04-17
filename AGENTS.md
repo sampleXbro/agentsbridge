@@ -41,6 +41,7 @@
 
 - **post-feature-qa** — Apply after every feature/story. Senior QA: verify edge-case coverage and story alignment.
 - **add-agent-target** — Use when adding a new AI agent target. Covers research, implementation, fixtures, full test coverage, docs.
+- **add-global-mode-target** — Use when adding or extending **global mode** (`--global`, `~/.agentsmesh/`) for an existing target. Covers descriptor.global wiring, import/generate paths, reference rewriting, tests, and matrix docs.
 
 ## Core Principles
 

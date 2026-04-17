@@ -105,6 +105,7 @@ const SCOPED_AGENTS_SKIP_DIRS = new Set([
   '.claude',
   '.clinerules',
   '.cline',
+  '.codex',
   '.continue',
   '.cursor',
   '.gemini',

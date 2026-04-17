@@ -16,6 +16,7 @@ agentsmesh lint [flags]
 
 | Flag | Description |
 |------|-------------|
+| `--global` | Lint canonical home config under `~/.agentsmesh/`. |
 | `--targets <csv>` | Limit linting to specific target IDs. |
 
 ## Examples
@@ -31,6 +32,12 @@ agentsmesh lint
 ```bash
 agentsmesh lint --targets cursor
 agentsmesh lint --targets claude-code,gemini-cli
+```
+
+### Lint home-level config
+
+```bash
+agentsmesh lint --global --targets claude-code
 ```
 
 ## What lint checks

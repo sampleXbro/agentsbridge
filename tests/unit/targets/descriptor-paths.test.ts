@@ -184,8 +184,8 @@ describe('descriptor.paths.agentPath', () => {
     expect(junie.paths.agentPath('reviewer', config)).toBe('.junie/agents/reviewer.md');
   });
 
-  it('kiro: returns null (agents unsupported)', () => {
-    expect(kiro.paths.agentPath('reviewer', config)).toBeNull();
+  it('kiro: returns .kiro/agents/{name}.md', () => {
+    expect(kiro.paths.agentPath('reviewer', config)).toBe('.kiro/agents/reviewer.md');
   });
 
   it('gemini-cli default (conversion OFF): returns .gemini/agents/{name}.md', () => {

@@ -4,6 +4,7 @@
 
 import { relative } from 'node:path';
 import { logger } from '../../utils/output/logger.js';
+import { resolveScopeContext } from '../../config/core/scope.js';
 import {
   TARGET_IDS,
   getTargetCatalogEntry,
@@ -28,18 +29,20 @@ export async function runImport(
   if (!isBuiltinTargetId(normalized)) {
     throw new Error(`Unknown --from "${from}". Supported: ${TARGET_IDS.join(', ')}.`);
   }
+  const scope = flags.global === true ? 'global' : 'project';
+  const context = resolveScopeContext(root, scope);
 
   const target = getTargetCatalogEntry(normalized);
-  const results = await target.importFrom(root);
+  const results = await target.importFrom(context.rootBase, { scope });
   if (results.length === 0) {
     logger.info(target.emptyImportMessage);
     return;
   }
   for (const r of results) {
-    const fromRel = relative(root, r.fromPath);
+    const fromRel = relative(context.rootBase, r.fromPath);
     logger.success(`${fromRel} → ${r.toPath}`);
   }
   logger.info(
-    `Imported ${results.length} file(s). Run 'agentsmesh generate' to sync to other tools.`,
+    `Imported ${results.length} file(s). Run 'agentsmesh generate${scope === 'global' ? ' --global' : ''}' to sync to other tools.`,
   );
 }

@@ -202,7 +202,11 @@ describe('agents-folder-structure-research: Claude Code (docs §1)', () => {
     });
     const s = results.find((x) => x.path === EXPECTED_PATHS.settings);
     expect(s).toBeDefined();
-    expect(JSON.parse(s!.content).permissions).toEqual({ allow: ['Read'], deny: [] });
+    expect(JSON.parse(s!.content).permissions).toEqual({
+      allow: ['Read'],
+      deny: [],
+      ask: [],
+    });
   });
 
   it('generates .mcp.json for MCP config', async () => {

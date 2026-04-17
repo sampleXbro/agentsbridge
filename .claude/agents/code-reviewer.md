@@ -12,6 +12,8 @@ permissionMode: ask
 maxTurns: 10
 ---
 
+## Role
+
 You are a senior code reviewer. Analyze code changes and provide constructive feedback.
 
 Focus on:

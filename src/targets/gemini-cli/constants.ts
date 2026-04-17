@@ -60,3 +60,12 @@ export const GEMINI_CANONICAL_MCP = '.agentsmesh/mcp.json';
 export const GEMINI_CANONICAL_HOOKS = '.agentsmesh/hooks.yaml';
 export const GEMINI_CANONICAL_IGNORE = '.agentsmesh/ignore';
 export const GEMINI_CANONICAL_PERMISSIONS = '.agentsmesh/permissions.yaml';
+
+// Global mode paths (user-level ~/.gemini/)
+export const GEMINI_GLOBAL_ROOT = '.gemini/GEMINI.md';
+export const GEMINI_GLOBAL_COMPAT_AGENTS = '.gemini/AGENTS.md';
+export const GEMINI_GLOBAL_SETTINGS = '.gemini/settings.json';
+export const GEMINI_GLOBAL_COMMANDS_DIR = '.gemini/commands';
+export const GEMINI_GLOBAL_SKILLS_DIR = '.gemini/skills';
+export const GEMINI_GLOBAL_AGENTS_DIR = '.gemini/agents';
+export const GEMINI_GLOBAL_AGENTS_SKILLS_DIR = '.agents/skills';

@@ -8,6 +8,7 @@ describe('mergeSettingsJson', () => {
         {
           permissions: {
             allow: ['Read'],
+            ask: [],
           },
         },
         null,

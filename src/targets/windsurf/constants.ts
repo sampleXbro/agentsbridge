@@ -42,3 +42,14 @@ export const WINDSURF_CANONICAL_SKILLS_DIR = '.agentsmesh/skills';
 export const WINDSURF_CANONICAL_IGNORE = '.agentsmesh/ignore';
 export const WINDSURF_CANONICAL_HOOKS = '.agentsmesh/hooks.yaml';
 export const WINDSURF_CANONICAL_MCP = '.agentsmesh/mcp.json';
+
+/** Global mode paths (user-level ~/.codeium/windsurf/) */
+export const WINDSURF_GLOBAL_RULES = '.codeium/windsurf/memories/global_rules.md';
+export const WINDSURF_GLOBAL_SKILLS_DIR = '.codeium/windsurf/skills';
+export const WINDSURF_GLOBAL_WORKFLOWS_DIR = '.codeium/windsurf/global_workflows';
+export const WINDSURF_GLOBAL_HOOKS_FILE = '.codeium/windsurf/hooks.json';
+export const WINDSURF_GLOBAL_MCP_FILE = '.codeium/windsurf/mcp_config.json';
+export const WINDSURF_GLOBAL_IGNORE = '.codeium/.codeiumignore';
+
+/** Compatibility mirror path for skills */
+export const WINDSURF_GLOBAL_AGENTS_SKILLS_DIR = '.agents/skills';

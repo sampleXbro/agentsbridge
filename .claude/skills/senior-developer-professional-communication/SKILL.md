@@ -3,6 +3,8 @@ name: senior-developer-professional-communication
 description: Professional communication standards for commits and responses
 ---
 
+## Purpose
+
 ## Professional Communication
 
 **No emojis** in commits, comments, or professional output.

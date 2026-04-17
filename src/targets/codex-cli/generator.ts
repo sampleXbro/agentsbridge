@@ -86,6 +86,32 @@ export function generateRules(canonical: CanonicalFiles): RulesOutput[] {
   return outputs;
 }
 
+export function renderCodexGlobalInstructions(canonical: CanonicalFiles): string {
+  const root = canonical.rules.find((rule) => rule.root);
+  const nonRootRules = canonical.rules.filter((rule) => {
+    if (rule.root) return false;
+    if (rule.codexEmit === 'execution') return false;
+    return rule.targets.length === 0 || rule.targets.includes('codex-cli');
+  });
+
+  const sections: string[] = [];
+  if (root?.body.trim()) {
+    sections.push(root.body.trim());
+  }
+
+  for (const rule of nonRootRules) {
+    const parts: string[] = [];
+    if (rule.description) {
+      parts.push(`## ${rule.description}`);
+      parts.push('');
+    }
+    parts.push(rule.body.trim());
+    sections.push(parts.filter(Boolean).join('\n'));
+  }
+
+  return sections.filter(Boolean).join('\n\n---\n\n');
+}
+
 /**
  * Generate .agents/skills/{name}/SKILL.md and supporting files from canonical skills.
  * Uses the standard agentskills.io format also shared with Claude Code and Cline.

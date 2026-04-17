@@ -25,9 +25,10 @@ export async function importSkills(
   projectRoot: string,
   results: ImportResult[],
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
+  skillsRelDir: string = CURSOR_SKILLS_DIR,
 ): Promise<void> {
   const destBase = join(projectRoot, CURSOR_CANONICAL_SKILLS_DIR);
-  const skillsDir = join(projectRoot, CURSOR_SKILLS_DIR);
+  const skillsDir = join(projectRoot, skillsRelDir);
   const allFiles = await readDirRecursive(skillsDir);
   const mdFiles = allFiles.filter((f) => f.endsWith('.md'));
 

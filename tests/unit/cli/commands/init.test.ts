@@ -2,7 +2,7 @@
  * Unit tests for agentsmesh init (including Smart Init / Story 5.2).
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -11,7 +11,10 @@ import { runInit, detectExistingConfigs } from '../../../../src/cli/commands/ini
 const TEST_DIR = join(tmpdir(), 'am-init-test');
 
 beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
-afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
+afterEach(() => {
+  vi.unstubAllEnvs();
+  rmSync(TEST_DIR, { recursive: true, force: true });
+});
 
 describe('detectExistingConfigs', () => {
   it('returns empty when no AI configs present', async () => {
@@ -381,5 +384,22 @@ describe('runInit — Smart Init with --yes flag (Story 5.2)', () => {
     const root = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(root).toContain('root: true');
     expect(root).toContain('Project Rules');
+  });
+});
+
+describe('runInit — global mode', () => {
+  it('creates canonical home config under ~/.agentsmesh when global is set', async () => {
+    const homeDir = join(TEST_DIR, 'home');
+    mkdirSync(homeDir, { recursive: true });
+    vi.stubEnv('HOME', homeDir);
+    vi.stubEnv('USERPROFILE', homeDir);
+
+    const options = { global: true };
+    await runInit(join(TEST_DIR, 'workspace'), options);
+
+    expect(existsSync(join(homeDir, '.agentsmesh', 'agentsmesh.yaml'))).toBe(true);
+    expect(existsSync(join(homeDir, '.agentsmesh', 'rules', '_root.md'))).toBe(true);
+    expect(existsSync(join(homeDir, '.agentsmesh', 'agentsmesh.local.yaml'))).toBe(true);
+    expect(existsSync(join(homeDir, '.gitignore'))).toBe(false);
   });
 });

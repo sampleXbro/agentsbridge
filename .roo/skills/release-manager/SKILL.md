@@ -276,7 +276,7 @@ else:
 
 #### Documentation Requirements
 - [ ] CHANGELOG.md updated
-- [ ] .roo/skills/release-manager/README.md reflects new features
+- [ ] README.md reflects new features
 - [ ] API documentation generated
 - [ ] Migration guide written for breaking changes
 - [ ] Deployment notes prepared

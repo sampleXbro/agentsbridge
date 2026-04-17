@@ -18,6 +18,7 @@ agentsmesh init [flags]
 
 | Flag | Description |
 |------|-------------|
+| `--global` | Initialize canonical home config under `~/.agentsmesh/`. |
 | `--yes` | Auto-import all detected tool configs, then add starter examples only under empty canonical folders (skip categories import already filled). |
 
 ## What init creates
@@ -31,6 +32,16 @@ agentsmesh.local.yaml     # Local overrides (gitignored)
   rules/
     _root.md              # Starter root rule
 .gitignore                # Updated to exclude agentsmesh.local.yaml
+```
+
+Running `agentsmesh init --global` creates the same canonical structure under `~/.agentsmesh/`:
+
+```
+~/.agentsmesh/
+  agentsmesh.yaml
+  agentsmesh.local.yaml
+  rules/
+    _root.md
 ```
 
 ## Auto-detection
@@ -67,6 +78,16 @@ agentsmesh init --yes
 ```
 
 Imports all detected configs without prompting, then writes the same starter files as a plain `init` **only** where a canonical folder is still empty (for example `commands/example.md` if nothing was imported under `commands/`). Useful for scripted setups or when you want to migrate everything at once without losing starter templates for unused features.
+
+### Initialize global config
+
+```bash
+agentsmesh init --global
+agentsmesh import --global --from claude-code
+agentsmesh generate --global
+```
+
+Global init uses `~/.agentsmesh/` as the canonical home-level source of truth. Choose targets in `agentsmesh.yaml` that support global mode (for example `claude-code`, `antigravity`, `codex-cli`, `cursor`); see the [supported tools matrix](../reference/supported-tools#global-mode).
 
 ### New project (no existing configs)
 

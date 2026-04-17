@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { normalize as normalizePath } from 'node:path';
 import { buildImportReferenceMap } from './import-map.js';
 import { rewriteFileLinks } from './link-rebaser.js';
+import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
 
 const IMPORT_REFERENCE_TARGETS = [
   'claude-code',
@@ -36,11 +37,12 @@ function pathVariants(path: string): string[] {
 export async function createImportReferenceNormalizer(
   target: string,
   projectRoot: string,
+  scope: TargetLayoutScope = 'project',
 ): Promise<(content: string, sourceFile: string, destinationFile: string) => string> {
   const refs = new Map<string, string>();
   const targets = Array.from(new Set([target, ...IMPORT_REFERENCE_TARGETS]));
   for (const candidate of targets) {
-    const candidateRefs = await buildImportReferenceMap(candidate, projectRoot);
+    const candidateRefs = await buildImportReferenceMap(candidate, projectRoot, scope);
     for (const [targetPath, canonicalPath] of candidateRefs.entries()) {
       refs.set(targetPath, canonicalPath);
     }

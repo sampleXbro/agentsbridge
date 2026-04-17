@@ -11,6 +11,8 @@ export const CODEX_MD = 'codex.md';
 
 /** Shared GitHub Agents format — AGENTS.md is the primary per official docs */
 export const AGENTS_MD = 'AGENTS.md';
+export const CODEX_GLOBAL_AGENTS_MD = '.codex/AGENTS.md';
+export const CODEX_GLOBAL_AGENTS_OVERRIDE_MD = '.codex/AGENTS.override.md';
 
 /** Skills directory (repo-level, scanned from CWD up to repo root) */
 export const CODEX_SKILLS_DIR = '.agents/skills';

@@ -27,6 +27,13 @@ export const CLINE_AGENTS_MD = 'AGENTS.md';
 /** Hooks directory (.clinerules/hooks/*.sh → canonical hooks) */
 export const CLINE_HOOKS_DIR = '.clinerules/hooks';
 
+/** Global rules directory: ~/Documents/Cline/Rules/ */
+export const CLINE_GLOBAL_RULES_DIR = 'Documents/Cline/Rules';
+/** Global workflows directory: ~/Documents/Cline/Workflows/ */
+export const CLINE_GLOBAL_WORKFLOWS_DIR = 'Documents/Cline/Workflows';
+/** Global hooks directory: ~/Documents/Cline/Hooks/ */
+export const CLINE_GLOBAL_HOOKS_DIR = 'Documents/Cline/Hooks';
+
 export const CLINE_CANONICAL_RULES_DIR = '.agentsmesh/rules';
 export const CLINE_CANONICAL_COMMANDS_DIR = '.agentsmesh/commands';
 export const CLINE_CANONICAL_IGNORE = '.agentsmesh/ignore';

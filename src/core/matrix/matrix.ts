@@ -6,8 +6,9 @@ import { basename } from 'node:path';
 import type { CanonicalFiles, CompatibilityRow, SupportLevel } from '../types.js';
 import type { ValidatedConfig } from '../../config/core/schema.js';
 import type { TargetCapabilities } from '../../targets/catalog/target.interface.js';
+import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
 import { getEffectiveTargetSupportLevel } from '../../targets/catalog/builtin-targets.js';
-import { SUPPORT_MATRIX, LEVEL_SYMBOL } from './data.js';
+import { LEVEL_SYMBOL, coloredSymbol } from './data.js';
 
 /**
  * Build compatibility rows for enabled features.
@@ -18,14 +19,12 @@ import { SUPPORT_MATRIX, LEVEL_SYMBOL } from './data.js';
 export function buildCompatibilityMatrix(
   config: ValidatedConfig,
   canonical: CanonicalFiles,
+  scope: TargetLayoutScope = 'project',
 ): CompatibilityRow[] {
   const rows: CompatibilityRow[] = [];
   const targets = config.targets;
 
   for (const featureId of config.features) {
-    const supportMap = SUPPORT_MATRIX[featureId];
-    if (!supportMap) continue;
-
     let label: string;
     let count: number;
 
@@ -72,11 +71,12 @@ export function buildCompatibilityMatrix(
 
     const support: Record<string, SupportLevel> = {};
     for (const t of targets) {
-      const level =
-        supportMap[t] === undefined
-          ? 'none'
-          : getEffectiveTargetSupportLevel(t, featureId as keyof TargetCapabilities, config);
-      support[t] = level;
+      support[t] = getEffectiveTargetSupportLevel(
+        t,
+        featureId as keyof TargetCapabilities,
+        config,
+        scope,
+      );
     }
 
     rows.push({ feature: label, count, support });
@@ -95,44 +95,91 @@ function countHooks(hooks: CanonicalFiles['hooks']): number {
 }
 
 /**
- * Format compatibility matrix as ASCII table.
+ * Format compatibility matrix as ASCII table with colors.
  * @param rows - Compatibility rows from buildCompatibilityMatrix
  * @param targets - Target IDs for column order
  * @returns Formatted string
  */
 export function formatMatrix(rows: CompatibilityRow[], targets: string[]): string {
+  const noColor = process.env.NO_COLOR !== undefined && process.env.NO_COLOR !== '';
+
+  // ANSI color codes
+  const colors = {
+    cyan: '\x1b[36m',
+    magenta: '\x1b[35m',
+    bold: '\x1b[1m',
+    dim: '\x1b[2m',
+    green: '\x1b[32m',
+    blue: '\x1b[34m',
+    yellow: '\x1b[33m',
+    reset: '\x1b[0m',
+  };
+
+  const c = (code: string, text: string): string =>
+    noColor ? text : `${code}${text}${colors.reset}`;
+
+  // Helper to get visible length (excluding ANSI codes)
+  const visibleLength = (s: string): number => {
+    // Strip ANSI SGR sequences (ESC [ ... m)
+    // eslint-disable-next-line no-control-regex -- intentional match on ANSI escape byte
+    return s.replace(/\u001b\[[0-9;]*m/g, '').length;
+  };
+
+  // Helper to pad text accounting for ANSI codes
+  const padWithColor = (s: string, targetWidth: number): string => {
+    const visible = visibleLength(s);
+    const padding = Math.max(0, targetWidth - visible);
+    return s + ' '.repeat(padding);
+  };
+
   const maxTargetLen = Math.max(12, ...targets.map((t) => t.length));
   const targetLabels = targets.map((t) => (t === 'claude-code' ? 'Claude' : t));
   const colWidth = Math.max(8, maxTargetLen);
   const featWidth = Math.max(12, ...rows.map((r) => r.feature.length));
 
-  const pad = (s: string, w: number): string => s.padEnd(w);
-  const border = (chars: string[]): string => '┌' + chars.join('┬') + '┐';
-  const sep = (chars: string[]): string => '├' + chars.join('┼') + '┤';
-  const bottom = (chars: string[]): string => '└' + chars.join('┴') + '┘';
+  // Box drawing with colors
+  const border = (widths: number[]): string =>
+    c(colors.dim, '┌' + widths.map((w) => '─'.repeat(w)).join('┬') + '┐');
+  const sep = (widths: number[]): string =>
+    c(colors.dim, '├' + widths.map((w) => '─'.repeat(w)).join('┼') + '┤');
+  const bottom = (widths: number[]): string =>
+    c(colors.dim, '└' + widths.map((w) => '─'.repeat(w)).join('┴') + '┘');
 
   const cols = [featWidth, ...targets.map(() => colWidth)];
-  const top = border(cols.map((w) => '─'.repeat(w)));
-  const bot = bottom(cols.map((w) => '─'.repeat(w)));
+  const top = border(cols);
 
-  const headerCells = [pad('Feature', featWidth), ...targetLabels.map((l) => pad(l, colWidth))];
-  const header = border(headerCells.map((c, i) => c.padEnd(cols[i]!)));
-  const headerSep = sep(cols.map((w) => '─'.repeat(w)));
+  // Header with bold cyan
+  const headerCells = [
+    padWithColor(c(colors.bold + colors.cyan, 'Feature'), featWidth),
+    ...targetLabels.map((l) => padWithColor(c(colors.bold + colors.magenta, l), colWidth)),
+  ];
+  const header = c(colors.dim, '│') + headerCells.join(c(colors.dim, '│')) + c(colors.dim, '│');
+  const headerSep = sep(cols);
 
   const bodyRows = rows.map((r) => {
-    const cells = [pad(r.feature, featWidth)];
+    const cells = [padWithColor(c(colors.cyan, r.feature), featWidth)];
     for (const t of targets) {
-      const sym = LEVEL_SYMBOL[r.support[t] ?? 'none'];
-      cells.push(pad(`  ${sym}  `, colWidth));
+      const level = r.support[t] ?? 'none';
+      const sym = noColor ? LEVEL_SYMBOL[level] : coloredSymbol(level);
+      cells.push(padWithColor(`  ${sym}  `, colWidth));
     }
-    return sep(
-      cells.map((c, i) => (c.length > cols[i]! ? c.slice(0, cols[i]) : c.padEnd(cols[i]!))),
-    );
+    return c(colors.dim, '│') + cells.join(c(colors.dim, '│')) + c(colors.dim, '│');
   });
+
+  const bot = bottom(cols);
 
   const lines = [top, header, headerSep, ...bodyRows, bot];
   lines.push('');
-  lines.push('Legend: ✓ = native  📝 = embedded  ⚠ = partial  – = not supported');
+
+  // Colorful legend
+  const legendItems = [
+    c(colors.green, '✓') + ' = native',
+    c(colors.blue, '◆') + ' = embedded',
+    c(colors.yellow, '◐') + ' = partial',
+    c(colors.dim, '–') + ' = not supported',
+  ];
+  lines.push(c(colors.bold, 'Legend: ') + legendItems.join('  '));
+
   return lines.join('\n');
 }
 

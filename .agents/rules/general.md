@@ -2,13 +2,13 @@
 
 ## Session Start
 
-- Read `tasks/lessons.md` before doing any work. Apply relevant lessons.
+- Read `../../tasks/lessons.md` before doing any work. Apply relevant lessons.
 
 ## Workflow
 
 ### Planning
 
-- Enter plan mode for any non-trivial task (3+ steps or architectural decisions). Write plan to `tasks/todo.md`.
+- Enter plan mode for any non-trivial task (3+ steps or architectural decisions). Write plan to `../../tasks/todo.md`.
 - If something goes sideways, STOP and re-plan — don't keep pushing.
 - Check in before starting implementation. Mark items complete as you go.
 
@@ -19,13 +19,13 @@
 ### Lessons
 
 - **When**: user correction, test failure, CI failure, code review feedback, or any other mistake signal.
-- **How**: add a bullet to `tasks/lessons.md` with (1) what went wrong, (2) root cause, (3) a rule that prevents recurrence.
+- **How**: add a bullet to `../../tasks/lessons.md` with (1) what went wrong, (2) root cause, (3) a rule that prevents recurrence.
 - This is the primary cross-session memory — ruthlessly iterate until mistake rate drops.
 
 ### Verification
 
 - Never mark a task complete without proving it works — run tests, check logs, demonstrate correctness.
-- After every feature/story: use `post-feature-qa` skill (`.agents/skills/post-feature-qa/`).
+- After every feature/story: use `post-feature-qa` skill (`../skills/post-feature-qa/`).
 - Ask yourself: "Would a staff engineer approve this?"
 
 ### Elegance
@@ -53,19 +53,19 @@
 - **Max file size**: 200 lines. Split by responsibility if larger.
 - **No classes unless stateful**: Prefer pure functions + types.
 - **No `any`**: Use `unknown` + narrowing.
-- **Config source of truth**: `.agentsmesh/` directory. Generated files are artifacts.
-- **Test naming**: `{module}.test.ts` colocated with source. Integration tests in `tests/integration/`.
+- **Config source of truth**: `../../.agentsmesh/` directory. Generated files are artifacts.
+- **Test naming**: `{module}.test.ts` colocated with source. Integration tests in `../../tests/integration/`.
 - **Generated artifact tests must be strict**: Assert exact file paths, exact file counts, and exact referenced wrapper/script sets. No loose checks (`some(...)`, prefix-only, "at least one").
 - **Commit format**: conventional commits — `feat|fix|test|refactor(scope): message`
-- **Docs must stay current**: Any change to CLI commands, flags, config schema, supported targets, or canonical file formats **must** be reflected in both `README.md` and the website (`website/src/content/docs/`) before the task is marked complete.
+- **Docs must stay current**: Any change to CLI commands, flags, config schema, supported targets, or canonical file formats **must** be reflected in both `README.md` and the website (`../../website/src/content/docs/`) before the task is marked complete.
 - **Target data single source of truth** — do **not** hardcode target lists or support levels outside this chain:
-  1. `src/targets/catalog/target-ids.ts` (`TARGET_IDS`) = canonical target ID list. Each target's `capabilities` in `src/targets/<name>/index.ts` = feature support levels.
-  2. `src/core/matrix/data.ts` (`SUPPORT_MATRIX`) = built dynamically from descriptors. Never hardcode.
-  3. `website/src/content/docs/reference/supported-tools.mdx` = **single docs page** for per-target support. All other pages link here — no duplicate tables.
+  1. `../../src/targets/catalog/target-ids.ts` (`TARGET_IDS`) = canonical target ID list. Each target's `capabilities` in `../../src/targets/<name>/index.ts` = feature support levels.
+  2. `../../src/core/matrix/data.ts` (`SUPPORT_MATRIX`) = built dynamically from descriptors. Never hardcode.
+  3. `../../website/src/content/docs/reference/supported-tools.mdx` = **single docs page** for per-target support. All other pages link here — no duplicate tables.
   4. `README.md` matrix must stay in sync with code capabilities.
   5. No hardcoded target counts or enumerations on homepage, CLI overview, or other pages. Use generic language and link to the matrix.
   6. Adding/changing a target: update `target-ids.ts` + descriptor → `supported-tools.mdx` → `README.md` matrix. No other docs pages should need changes.
-- **Refer to PRD**: `docs/prd-v2-complete.md` for architecture decisions
+- **Refer to PRD**: `../../docs/prd-v2-complete.md` for architecture decisions
 - **Refer to tasks**: `docs/agentsmesh-ai-first-tasks.md` for current task specs
 
 ## AgentsMesh Generation Contract

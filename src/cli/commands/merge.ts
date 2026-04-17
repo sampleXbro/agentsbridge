@@ -3,8 +3,7 @@
  * Rebuilds lock checksums from current canonical files when conflict markers present.
  */
 
-import { join } from 'node:path';
-import { loadConfigFromDir } from '../../config/core/loader.js';
+import { loadScopedConfig } from '../../config/core/scope.js';
 import { hasLockConflict, resolveLockConflict } from '../../core/merger.js';
 import { getVersion } from '../version.js';
 import { logger } from '../../utils/output/logger.js';
@@ -18,11 +17,11 @@ export async function runMerge(
   flags: Record<string, string | boolean>,
   projectRoot?: string,
 ): Promise<void> {
-  void flags;
   const root = projectRoot ?? process.cwd();
+  const scope = flags.global === true ? 'global' : 'project';
 
-  const { config, configDir } = await loadConfigFromDir(root);
-  const abDir = join(configDir, '.agentsmesh');
+  const { config, context } = await loadScopedConfig(root, scope);
+  const abDir = context.canonicalDir;
 
   const hasConflict = await hasLockConflict(abDir);
   if (!hasConflict) {

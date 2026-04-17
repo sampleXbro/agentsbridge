@@ -7,7 +7,7 @@ description: Use when adding support for a new AI agent target to agentsmesh. Co
 
 Use this skill when the task is to add a new supported agent target to this repository.
 
-Read `.roo/skills/add-agent-target/references/target-addition-checklist.md` before editing code. Treat it as the minimum touchpoint list, not an exhaustive substitute for reading the implementation.
+Read `references/target-addition-checklist.md` before editing code. Treat it as the minimum touchpoint list, not an exhaustive substitute for reading the implementation.
 
 ## Non-Negotiable Requirements
 
@@ -25,8 +25,8 @@ Read `.roo/skills/add-agent-target/references/target-addition-checklist.md` befo
 - Update compatibility matrix behavior and docs to reflect native, embedded, partial, or unsupported features.
 - Update init detection and import empty-state messaging for the new target when native files exist.
 - Reuse existing capability-focused tests where possible; extend them instead of duplicating assertions across multiple files.
-- Preserve the canonical `.agentsmesh/` contract. If the target cannot represent a feature natively, model that explicitly instead of inventing fake native output.
-- Ensure every internal file link/reference inside generated or imported `.md` artifacts is convertible through the shared reference-rewrite pipeline, just like the existing targets. Do not ship a new target unless canonical `.agentsmesh/...` references round-trip cleanly across that target’s Markdown surfaces.
+- Preserve the canonical `../../../.agentsmesh/` contract. If the target cannot represent a feature natively, model that explicitly instead of inventing fake native output.
+- Ensure every internal file link/reference inside generated or imported `.md` artifacts is convertible through the shared reference-rewrite pipeline, just like the existing targets. Do not ship a new target unless canonical `../../../.agentsmesh/...` references round-trip cleanly across that target’s Markdown surfaces.
 - Run the full verification stack before claiming completion.
 - Run the local `post-feature-qa` skill before marking the task done.
 
@@ -44,7 +44,7 @@ Read `.roo/skills/add-agent-target/references/target-addition-checklist.md` befo
    - Find the current official docs.
    - Confirm the exact on-disk file paths, frontmatter keys, JSON/TOML shape, and any legacy/fallback paths still in use.
    - Confirm the exact runtime surface you are targeting. For MCP, verify whether the target reads project files, user-home config, app settings, or remote connectors, and do not project one surface's setup rules onto another.
-   - For Codex specifically: treat `codex-cli` project files like `.codex/config.toml` separately from Codex desktop/chat sessions, which use app/session-managed tools and connectors instead of repo config.
+   - For Codex specifically: treat `codex-cli` project files like `../../../.codex/config.toml` separately from Codex desktop/chat sessions, which use app/session-managed tools and connectors instead of repo config.
    - Record the source links in the docs you update.
 
 2. Map native capabilities to the canonical model.
@@ -59,12 +59,12 @@ Read `.roo/skills/add-agent-target/references/target-addition-checklist.md` befo
    - Add or extend full-sync coverage if the target supports import.
 
 4. Add realistic fixtures before implementation is complete.
-   - Create a target fixture directory under `tests/e2e/fixtures/`.
+   - Create a target fixture directory under `../../../tests/e2e/fixtures/`.
    - Include realistic root instructions, scoped rules, commands/workflows, skills, agents, settings, ignore files, and supporting files where the target supports them.
    - Use content that looks like a real repo and preserves the branches the importer must parse.
 
 5. Implement target support.
-   - Add `src/targets/<target>/constants.ts`, `generator.ts`, `importer.ts`, and `linter.ts` as needed.
+   - Add `../../../src/targets/<target>/constants.ts`, `generator.ts`, `importer.ts`, and `linter.ts` as needed.
    - Wire the target into config validation, CLI import/init flows, matrix support, and any feature filtering.
    - Add or extend reference-map/import-normalization handling for every Markdown artifact path the target emits or imports, including shared root files and embedded command/agent projections.
    - Keep the implementation simple and explicit. Prefer pure translation functions over target-specific special cases scattered through the codebase.

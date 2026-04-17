@@ -27,8 +27,11 @@ export const DEFAULT_INIT_TARGETS = TARGET_IDS.filter((target) => target !== 'co
  * Build agentsmesh.yaml content for the given targets.
  * @param targets - Target tool IDs to include; uses the starter target set if empty
  */
-export function buildConfig(targets: string[]): string {
-  const targetList = (targets.length > 0 ? targets : DEFAULT_INIT_TARGETS)
+export function buildConfig(
+  targets: readonly string[],
+  defaultTargets: readonly string[] = DEFAULT_INIT_TARGETS,
+): string {
+  const targetList = (targets.length > 0 ? targets : defaultTargets)
     .map((t) => `  - ${t}`)
     .join('\n');
   const featureList = ALL_FEATURES.map((f) => `  - ${f}`).join('\n');
@@ -134,8 +137,12 @@ export const TEMPLATE_PERMISSIONS = `# Tool permission allow/deny lists
 # deny:
 #   - Bash(rm -rf:*)
 #   - Bash(git push --force:*)
+#
+# ask:
+#   - Write(/tmp/**)
 allow: []
 deny: []
+ask: []
 `;
 
 export const TEMPLATE_IGNORE = `# Patterns ignored by all configured AI tools (gitignore syntax)

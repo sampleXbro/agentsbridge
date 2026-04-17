@@ -1,6 +1,6 @@
 # Agents E2E Last Run Report
 
-_Generated: 2026-04-11T17:54:31.451Z_
+_Generated: 2026-04-17T08:51:56.882Z_
 
 ## Initial — `.agentsmesh/agents/` (canonical fixture)
 
@@ -106,6 +106,7 @@ Imported 12 file(s). Run 'agentsmesh generate' to sync to other tools.
 ✓ created AGENTS.md
 ✓ created .cursor/rules/general.mdc
 ✓ created .cursor/rules/typescript.mdc
+✓ created .cursor/AGENTS.md
 ✓ created .cursor/commands/review.md
 ✓ created .cursor/agents/code-reviewer.md
 ✓ created .cursor/agents/researcher.md
@@ -115,7 +116,7 @@ Imported 12 file(s). Run 'agentsmesh generate' to sync to other tools.
 ✓ created .cursor/mcp.json
 ✓ created .cursor/hooks.json
 ✓ created .cursorignore
-Generated: 12 created, 0 updated, 0 unchanged
+Generated: 13 created, 0 updated, 0 unchanged
 ┌───────────────┬────────────┐
 ┌Feature        ┬cursor      ┐
 ├───────────────┼────────────┤

@@ -8,10 +8,10 @@ import { logger } from '../../utils/output/logger.js';
 import { readInstallManifest, type InstallManifestEntry } from '../core/install-manifest.js';
 
 export async function syncInstalledPacks(args: {
-  configDir: string;
+  canonicalDir: string;
   reinstall: (entry: InstallManifestEntry) => Promise<void>;
 }): Promise<void> {
-  const installs = await readInstallManifest(args.configDir);
+  const installs = await readInstallManifest(args.canonicalDir);
   if (installs.length === 0) {
     logger.info('No recorded installs found in .agentsmesh/installs.yaml.');
     return;
@@ -19,7 +19,7 @@ export async function syncInstalledPacks(args: {
 
   const missing = [];
   for (const entry of installs) {
-    const packDir = join(args.configDir, '.agentsmesh', 'packs', entry.name);
+    const packDir = join(args.canonicalDir, 'packs', entry.name);
     if (!(await exists(packDir))) {
       missing.push(entry);
     }
@@ -38,12 +38,10 @@ export async function syncInstalledPacks(args: {
 
 export async function maybeRunInstallSync(args: {
   sync: boolean;
-  projectRoot: string;
-  loadConfigDir: (projectRoot: string) => Promise<string>;
+  canonicalDir: string;
   reinstall: (entry: InstallManifestEntry) => Promise<void>;
 }): Promise<boolean> {
   if (!args.sync) return false;
-  const configDir = await args.loadConfigDir(args.projectRoot);
-  await syncInstalledPacks({ configDir, reinstall: args.reinstall });
+  await syncInstalledPacks({ canonicalDir: args.canonicalDir, reinstall: args.reinstall });
   return true;
 }

@@ -16,6 +16,7 @@ agentsmesh diff [flags]
 
 | Flag | Description |
 |------|-------------|
+| `--global` | Diff outputs generated from `~/.agentsmesh/` instead of the current project. |
 | `--targets <csv>` | Limit diff output to specific target IDs. |
 
 ## Examples
@@ -33,6 +34,12 @@ Output shows a unified diff for each file that would be created, modified, or de
 ```bash
 agentsmesh diff --targets windsurf
 agentsmesh diff --targets claude-code,cursor
+```
+
+### Diff home-level global outputs
+
+```bash
+agentsmesh diff --global --targets claude-code
 ```
 
 ## Sample output

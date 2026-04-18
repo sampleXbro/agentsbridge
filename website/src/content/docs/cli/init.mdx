@@ -30,9 +30,23 @@ agentsmesh.yaml           # Project configuration (committed)
 agentsmesh.local.yaml     # Local overrides (gitignored)
 .agentsmesh/
   rules/
-    _root.md              # Starter root rule
+    _root.md              # Starter root rule (included in generation)
+    _example.md           # Example rule template (excluded from generation)
+  commands/
+    _example.md           # Example command template (excluded from generation)
+  agents/
+    _example.md           # Example agent template (excluded from generation)
+  skills/
+    _example/
+      SKILL.md            # Example skill template (excluded from generation)
+  mcp.json
+  hooks.yaml
+  permissions.yaml
+  ignore
 .gitignore                # Updated to exclude agentsmesh.local.yaml
 ```
+
+Files and directories prefixed with `_` are excluded from generation — they exist only as reference templates. The sole exception is `_root.md`, which is always included as the project-wide root rule.
 
 Running `agentsmesh init --global` creates the same canonical structure under `~/.agentsmesh/`:
 
@@ -77,7 +91,7 @@ Prompts for each detected config. You can accept or skip each one individually.
 agentsmesh init --yes
 ```
 
-Imports all detected configs without prompting, then writes the same starter files as a plain `init` **only** where a canonical folder is still empty (for example `commands/example.md` if nothing was imported under `commands/`). Useful for scripted setups or when you want to migrate everything at once without losing starter templates for unused features.
+Imports all detected configs without prompting, then writes the same starter files as a plain `init` **only** where a canonical folder is still empty (for example `commands/_example.md` if nothing was imported under `commands/`). Useful for scripted setups or when you want to migrate everything at once without losing starter templates for unused features.
 
 ### Initialize global config
 

@@ -251,4 +251,12 @@ Body`,
     const agents = await parseAgents(AGENTS_DIR);
     expect(agents).toHaveLength(1);
   });
+
+  it('skips _example.md and other underscore-prefixed files', async () => {
+    writeAgent('_example.md', `---\ndescription: Example agent\n---\n\nDo not generate.`);
+    writeAgent('real.md', `---\ndescription: Real agent\n---\n\nGenerate this.`);
+    const agents = await parseAgents(AGENTS_DIR);
+    expect(agents).toHaveLength(1);
+    expect(agents[0]?.description).toBe('Real agent');
+  });
 });

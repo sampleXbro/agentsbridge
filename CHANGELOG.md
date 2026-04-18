@@ -2,6 +2,10 @@
 
 ## 0.4.0 - 2026-04-17
 
+### Changed
+
+- **Init scaffold:** example files created by `agentsmesh init` are now prefixed with `_` (`_example.md`, `skills/_example/SKILL.md`). Files and directories with a `_` prefix are excluded from generation, so the starter templates serve as visible reference only and do not produce tool-specific output. `_root.md` remains the sole `_`-prefixed file that is always included in generation.
+
 ### Added
 
 - **Global mode** (`--global`, canonical `~/.agentsmesh/`) for **all** built-in targets — Claude Code, Cursor, Copilot, Continue, Junie, Kiro, Gemini CLI, Cline, Codex CLI, Windsurf, Antigravity, and Roo Code. Each target has a `descriptor.global` layout with project→user path rewriting, import/generate alignment where applicable, optional `~/.agents/skills/` mirroring when Codex CLI is not a global target, reference/link rewriting, and tests (including `generate-reference-rewrite` and global path rebase coverage).

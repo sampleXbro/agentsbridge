@@ -34,6 +34,7 @@ async function hasAnyImportedSkill(canonicalDir: string): Promise<boolean> {
   const entries = await readdir(skillsRoot, { withFileTypes: true });
   for (const e of entries) {
     if (!e.isDirectory()) continue;
+    if (e.name.startsWith('_')) continue;
     if (await exists(join(skillsRoot, e.name, 'SKILL.md'))) return true;
   }
   return false;
@@ -47,23 +48,23 @@ export async function writeScaffoldFull(canonicalDir: string): Promise<void> {
   await mkdirp(rulesDir);
   await writeFileAtomic(join(rulesDir, '_root.md'), TEMPLATE_ROOT_RULE);
   logger.success('Created .agentsmesh/rules/_root.md');
-  await writeFileAtomic(join(rulesDir, 'example.md'), TEMPLATE_EXAMPLE_RULE);
-  logger.success('Created .agentsmesh/rules/example.md');
+  await writeFileAtomic(join(rulesDir, '_example.md'), TEMPLATE_EXAMPLE_RULE);
+  logger.success('Created .agentsmesh/rules/_example.md');
 
   const commandsDir = ab(canonicalDir, 'commands');
   await mkdirp(commandsDir);
-  await writeFileAtomic(join(commandsDir, 'example.md'), TEMPLATE_EXAMPLE_COMMAND);
-  logger.success('Created .agentsmesh/commands/example.md');
+  await writeFileAtomic(join(commandsDir, '_example.md'), TEMPLATE_EXAMPLE_COMMAND);
+  logger.success('Created .agentsmesh/commands/_example.md');
 
   const agentsDir = ab(canonicalDir, 'agents');
   await mkdirp(agentsDir);
-  await writeFileAtomic(join(agentsDir, 'example.md'), TEMPLATE_EXAMPLE_AGENT);
-  logger.success('Created .agentsmesh/agents/example.md');
+  await writeFileAtomic(join(agentsDir, '_example.md'), TEMPLATE_EXAMPLE_AGENT);
+  logger.success('Created .agentsmesh/agents/_example.md');
 
-  const skillDir = ab(canonicalDir, join('skills', 'example'));
+  const skillDir = ab(canonicalDir, join('skills', '_example'));
   await mkdirp(skillDir);
   await writeFileAtomic(join(skillDir, 'SKILL.md'), TEMPLATE_EXAMPLE_SKILL);
-  logger.success('Created .agentsmesh/skills/example/SKILL.md');
+  logger.success('Created .agentsmesh/skills/_example/SKILL.md');
 
   await writeFileAtomic(ab(canonicalDir, 'mcp.json'), TEMPLATE_MCP);
   logger.success('Created .agentsmesh/mcp.json');
@@ -87,8 +88,8 @@ export async function writeScaffoldGapFill(canonicalDir: string): Promise<void> 
   if (rulesMd === 0) {
     await writeFileAtomic(rootPath, TEMPLATE_ROOT_RULE);
     logger.success('Created .agentsmesh/rules/_root.md');
-    await writeFileAtomic(join(rulesDir, 'example.md'), TEMPLATE_EXAMPLE_RULE);
-    logger.success('Created .agentsmesh/rules/example.md');
+    await writeFileAtomic(join(rulesDir, '_example.md'), TEMPLATE_EXAMPLE_RULE);
+    logger.success('Created .agentsmesh/rules/_example.md');
   } else if (!hasRoot) {
     await writeFileAtomic(rootPath, TEMPLATE_ROOT_RULE);
     logger.success('Created .agentsmesh/rules/_root.md');
@@ -97,22 +98,22 @@ export async function writeScaffoldGapFill(canonicalDir: string): Promise<void> 
   const commandsDir = ab(canonicalDir, 'commands');
   if ((await countMdFiles(commandsDir)) === 0) {
     await mkdirp(commandsDir);
-    await writeFileAtomic(join(commandsDir, 'example.md'), TEMPLATE_EXAMPLE_COMMAND);
-    logger.success('Created .agentsmesh/commands/example.md');
+    await writeFileAtomic(join(commandsDir, '_example.md'), TEMPLATE_EXAMPLE_COMMAND);
+    logger.success('Created .agentsmesh/commands/_example.md');
   }
 
   const agentsDir = ab(canonicalDir, 'agents');
   if ((await countMdFiles(agentsDir)) === 0) {
     await mkdirp(agentsDir);
-    await writeFileAtomic(join(agentsDir, 'example.md'), TEMPLATE_EXAMPLE_AGENT);
-    logger.success('Created .agentsmesh/agents/example.md');
+    await writeFileAtomic(join(agentsDir, '_example.md'), TEMPLATE_EXAMPLE_AGENT);
+    logger.success('Created .agentsmesh/agents/_example.md');
   }
 
   if (!(await hasAnyImportedSkill(canonicalDir))) {
-    const skillDir = ab(canonicalDir, join('skills', 'example'));
+    const skillDir = ab(canonicalDir, join('skills', '_example'));
     await mkdirp(skillDir);
     await writeFileAtomic(join(skillDir, 'SKILL.md'), TEMPLATE_EXAMPLE_SKILL);
-    logger.success('Created .agentsmesh/skills/example/SKILL.md');
+    logger.success('Created .agentsmesh/skills/_example/SKILL.md');
   }
 
   const mcpPath = ab(canonicalDir, 'mcp.json');

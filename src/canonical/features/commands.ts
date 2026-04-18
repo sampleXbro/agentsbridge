@@ -39,7 +39,7 @@ function toToolsArray(v: unknown): string[] {
  */
 export async function parseCommands(commandsDir: string): Promise<CanonicalCommand[]> {
   const files = await readDirRecursive(commandsDir);
-  const mdFiles = files.filter((f) => f.endsWith('.md'));
+  const mdFiles = files.filter((f) => f.endsWith('.md') && !basename(f).startsWith('_'));
   const commands: CanonicalCommand[] = [];
   for (const path of mdFiles) {
     const content = await readFileSafe(path);

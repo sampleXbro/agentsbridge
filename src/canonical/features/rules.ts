@@ -28,7 +28,11 @@ function toStrArray(v: unknown): string[] {
  */
 export async function parseRules(rulesDir: string): Promise<CanonicalRule[]> {
   const files = await readDirRecursive(rulesDir);
-  const mdFiles = files.filter((f) => f.endsWith('.md'));
+  const mdFiles = files.filter((f) => {
+    if (!f.endsWith('.md')) return false;
+    const name = basename(f, '.md');
+    return name === '_root' || !name.startsWith('_');
+  });
   const rules: CanonicalRule[] = [];
   for (const path of mdFiles) {
     const content = await readFileSafe(path);

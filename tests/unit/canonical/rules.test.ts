@@ -177,6 +177,22 @@ Body`,
     });
   });
 
+  it('skips _example.md (underscore-prefixed files, not _root)', async () => {
+    writeRule('_example.md', `---\ndescription: Example rule\n---\n\nDo not generate.`);
+    writeRule('real.md', `---\ndescription: Real rule\n---\n\nGenerate this.`);
+    const rules = await parseRules(RULES_DIR);
+    expect(rules).toHaveLength(1);
+    expect(rules[0]?.description).toBe('Real rule');
+  });
+
+  it('still parses _root.md despite underscore prefix', async () => {
+    writeRule('_root.md', `---\nroot: true\ndescription: Root\n---\n\nRoot body.`);
+    writeRule('_example.md', `---\ndescription: Example\n---\n\nSkip me.`);
+    const rules = await parseRules(RULES_DIR);
+    expect(rules).toHaveLength(1);
+    expect(rules[0]?.root).toBe(true);
+  });
+
   it('ignores non-.md files', async () => {
     writeRule(
       'typescript.md',

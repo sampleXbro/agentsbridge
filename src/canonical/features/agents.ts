@@ -65,7 +65,7 @@ function toHooks(v: unknown): Hooks {
  */
 export async function parseAgents(agentsDir: string): Promise<CanonicalAgent[]> {
   const files = await readDirRecursive(agentsDir);
-  const mdFiles = files.filter((f) => f.endsWith('.md'));
+  const mdFiles = files.filter((f) => f.endsWith('.md') && !basename(f).startsWith('_'));
   const agents: CanonicalAgent[] = [];
   for (const path of mdFiles) {
     const content = await readFileSafe(path);

@@ -134,7 +134,7 @@ export const descriptor = {
     agents: 'embedded',
     skills: 'native',
     mcp: 'native',
-    hooks: 'none',
+    hooks: 'native',
     ignore: 'native',
     permissions: 'none',
   },

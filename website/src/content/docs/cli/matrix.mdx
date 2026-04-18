@@ -40,7 +40,7 @@ agentsmesh matrix --targets claude-code,cursor,copilot
 agentsmesh matrix --verbose
 ```
 
-Shows additional notes explaining embedding behavior, partial support limitations, and conversion settings.
+Shows per-file details for the canonical features present in the current project.
 
 ### Show the global-mode matrix
 
@@ -51,26 +51,30 @@ agentsmesh matrix --global
 ## Sample output
 
 ```
-Feature      claude-code  cursor   copilot  continue  junie  kiro   gemini-cli  cline  codex-cli  windsurf
-───────────────────────────────────────────────────────────────────────────────────────────────────────────
-Rules        native       native   native   native    native native native      native native     native
-Commands     native       native   native   embedded  embedded —    native      native embedded   native
-Agents       native       native   native   —         embedded —    native      embed. native     embedded
-Skills       native       native   native   embedded  embedded native native      native native     native
-MCP Servers  native       native   —        native    native native native      native native     partial
-Hooks        native       native   partial  —         —      native partial     —      —          native
-Ignore       native       native   —        —         native native native      native —          native
-Permissions  native       partial  —        —         —      —      partial     —      —          —
+┌────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┐
+│Feature     │Claude      │cursor      │copilot     │continue    │junie       │kiro        │gemini-cli  │cline       │codex-cli   │windsurf    │antigravity │roo-code    │
+├────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┤
+│rules       │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │
+│commands    │  ✓         │  ✓         │  ✓         │  ◆         │  ◆         │  –         │  ✓         │  ✓         │  ◆         │  ✓         │  ◐         │  ✓         │
+│agents      │  ✓         │  ✓         │  ✓         │  –         │  ◆         │  ✓         │  ✓         │  ◆         │  ✓         │  ◆         │  –         │  –         │
+│skills      │  ✓         │  ✓         │  ✓         │  ◆         │  ◆         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │
+│mcp         │  ✓         │  ✓         │  –         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ◐         │  –         │  ✓         │
+│hooks       │  ✓         │  ✓         │  ◐         │  –         │  –         │  ✓         │  ◐         │  ✓         │  –         │  ✓         │  –         │  –         │
+│ignore      │  ✓         │  ✓         │  –         │  –         │  ✓         │  ✓         │  ✓         │  ✓         │  –         │  ✓         │  –         │  ✓         │
+│permissions │  ✓         │  ◐         │  –         │  –         │  –         │  –         │  ◐         │  –         │  –         │  –         │  –         │  –         │
+└────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┘
+
+Legend: ✓ = native  ◆ = embedded  ◐ = partial  – = not supported
 ```
 
 ## Legend
 
 | Symbol | Meaning |
 |--------|---------|
-| `native` | Feature maps directly to the tool's native config format. |
-| `embedded` | Feature is projected as a skill with metadata for lossless round-trip. |
-| `partial` | Limited support — some fields or behaviors may not round-trip. |
-| `—` | Not supported. Feature is skipped for this target. |
+| `✓` | Feature maps directly to the tool's native config format. |
+| `◆` | Feature is projected as a skill with metadata for lossless round-trip. |
+| `◐` | Limited support — some fields or behaviors may not round-trip. |
+| `–` | Not supported. Feature is skipped for this target. |
 
 ## Using the matrix for planning
 

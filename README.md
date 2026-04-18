@@ -105,16 +105,16 @@ agentsmesh generate --global
 Global mode uses `~/.agentsmesh/` as the canonical source of truth instead of a project-local `.agentsmesh/`. **All** built-in targets support `--global`; `agentsmesh generate --global` writes user-level outputs for whichever targets are enabled in `agentsmesh.yaml`. Typical paths include:
 
 - **Claude Code** — `~/.claude/CLAUDE.md` (with `# Global Instructions` framing), `~/.claude/settings.json` (permissions), `~/.claude/hooks.json` (hooks), `~/.claude/agents/`, `~/.claude/skills/`, optional mirror to `~/.agents/skills/` when Codex is **not** also a global target (otherwise Codex owns `~/.agents/skills/`), `~/.claude/commands/`, optional `~/.claude/output-styles/` when `outputStyle: true` on an agent or command, `~/.claudeignore`, and `~/.claude.json` for MCP
-- **Antigravity** — `~/.gemini/antigravity/GEMINI.md`, `~/.gemini/antigravity/skills/`, and `~/.gemini/antigravity/mcp_config.json` (commands/workflows are not emitted in global mode)
-- **Codex CLI** — `~/.codex/AGENTS.md`, `~/.codex/config.toml`, `~/.codex/agents/*.toml`, `~/.codex/rules/*.rules` when rules use execution semantics, and `~/.agents/skills/` for skills
-- **Copilot** — `~/.copilot/copilot-instructions.md`, `~/.copilot/agents/*.agent.md`, `~/.copilot/skills/`, `~/.copilot/prompts/*.prompt.md`, optional mirror to `~/.agents/skills/` when Codex is **not** also a global target
 - **Cursor** — `~/.cursor/rules/*.mdc`, `~/.cursor/AGENTS.md` (aggregate), `~/.cursor/mcp.json`, `~/.cursor/hooks.json`, `~/.cursorignore`, plus skills, agents, and commands under `~/.cursor/`; legacy `~/.agentsmesh-exports/cursor/user-rules.md` is still read on import when present; `agentsmesh import --global --from cursor` maps those paths back into `~/.agentsmesh/`
+- **Copilot** — `~/.copilot/copilot-instructions.md`, `~/.copilot/agents/*.agent.md`, `~/.copilot/skills/`, `~/.copilot/prompts/*.prompt.md`, optional mirror to `~/.agents/skills/` when Codex is **not** also a global target
 - **Continue** — `~/.continue/rules/`, `~/.continue/prompts/`, `~/.continue/skills/`, `~/.continue/mcpServers/agentsmesh.json`, optional mirror to `~/.agents/skills/` for embedded skill content
-- **Cline** — `~/Documents/Cline/Rules/`, `~/Documents/Cline/Workflows/`, `~/Documents/Cline/Hooks/`, `~/.cline/skills/`, `~/.cline/cline_mcp_settings.json`, `~/.clineignore`, optional mirror to `~/.agents/skills/`
-- **Gemini CLI** — `~/.gemini/GEMINI.md`, `~/.gemini/AGENTS.md` (compatibility aggregate), `~/.gemini/settings.json` (includes MCP and hooks), `~/.gemini/commands/*.toml`, `~/.gemini/skills/`, `~/.gemini/agents/*.md` (experimental), optional mirror to `~/.agents/skills/` when Codex is **not** also a global target
 - **Junie** — `~/.junie/AGENTS.md` (aggregate), `~/.junie/skills/`, `~/.junie/agents/*.md`, `~/.junie/commands/*.md`, `~/.junie/mcp/mcp.json`, optional mirror to `~/.agents/skills/` when Codex is **not** also a global target
 - **Kiro** — `~/.kiro/steering/AGENTS.md` (aggregate), `~/.kiro/steering/*.md` (per-rule files), `~/.kiro/agents/*.md`, `~/.kiro/skills/`, `~/.kiro/settings/mcp.json`, `~/.kiro/settings/kiroignore`, optional mirror to `~/.agents/skills/` when Codex is **not** also a global target
+- **Gemini CLI** — `~/.gemini/GEMINI.md`, `~/.gemini/AGENTS.md` (compatibility aggregate), `~/.gemini/settings.json` (includes MCP and hooks), `~/.gemini/commands/*.toml`, `~/.gemini/skills/`, `~/.gemini/agents/*.md` (experimental), optional mirror to `~/.agents/skills/` when Codex is **not** also a global target
+- **Cline** — `~/Documents/Cline/Rules/`, `~/Documents/Cline/Workflows/`, `~/Documents/Cline/Hooks/`, `~/.cline/skills/`, `~/.cline/cline_mcp_settings.json`, `~/.clineignore`, optional mirror to `~/.agents/skills/`
+- **Codex CLI** — `~/.codex/AGENTS.md`, `~/.codex/config.toml`, `~/.codex/agents/*.toml`, `~/.codex/rules/*.rules` when rules use execution semantics, and `~/.agents/skills/` for skills
 - **Windsurf** — `~/.codeium/windsurf/memories/global_rules.md`, `~/.codeium/windsurf/skills/`, `~/.codeium/windsurf/global_workflows/`, `~/.codeium/windsurf/hooks.json`, `~/.codeium/windsurf/mcp_config.json`, `~/.codeium/.codeiumignore`, optional mirror to `~/.agents/skills/` when Codex is **not** also a global target
+- **Antigravity** — `~/.gemini/antigravity/GEMINI.md`, `~/.gemini/antigravity/skills/`, `~/.gemini/antigravity/workflows/`, and `~/.gemini/antigravity/mcp_config.json`
 - **Roo Code** — `~/.roo/AGENTS.md` (compatibility aggregate), `~/.roo/rules/*.md`, `~/.roo/commands/*.md`, `~/.roo/skills/`, `~/mcp_settings.json`, `~/.rooignore`, optional mirror to `~/.agents/skills/` when Codex is **not** also a global target
 
 See the [supported tools matrix](https://samplexbro.github.io/agentsmesh/reference/supported-tools/#global-mode) for project vs global capability notes per target.
@@ -129,10 +129,10 @@ That's it. Your `.agentsmesh/` directory is now the single source of truth, and 
 |---------------|:-----------:|:-------:|:-------:|:--------:|:--------:|:------:|:----------:|:-------:|:---------:|:--------:|:-----------:|:--------:|
 | Rules         | Native      | Native  | Native  | Native   | Native   | Native | Native     | Native  | Native    | Native   | Native      | Native   |
 | Commands      | Native      | Native  | Native  | Embedded | Embedded | --     | Native     | Native  | Embedded  | Native   | Partial     | Native   |
-| Agents        | Native      | Native  | Native  | --       | Embedded | --     | Native     | Embedded| Native    | Embedded | --          | --       |
+| Agents        | Native      | Native  | Native  | --       | Embedded | Native | Native     | Embedded| Native    | Embedded | --          | --       |
 | Skills        | Native      | Native  | Native  | Embedded | Embedded | Native | Native     | Native  | Native    | Native   | Native      | Native   |
 | MCP Servers   | Native      | Native  | --      | Native   | Native   | Native | Native     | Native  | Native    | Partial  | --          | Native   |
-| Hooks         | Native      | Native  | Partial | --       | --       | Native | Partial    | --      | --        | Native   | --          | --       |
+| Hooks         | Native      | Native  | Partial | --       | --       | Native | Partial    | Native  | --        | Native   | --          | --       |
 | Ignore        | Native      | Native  | --      | --       | Native   | Native | Native     | Native  | --        | Native   | --          | Native   |
 | Permissions   | Native      | Partial | --      | --       | --       | --     | Partial    | --      | --        | --       | --          | --       |
 

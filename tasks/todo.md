@@ -1,28 +1,40 @@
-# Generated Markdown Link Rebasing
+# Compatibility Matrix Alignment
 
 ## Goal
 
-Ensure every generated Markdown file, including `.cursor/AGENTS.md`, participates in the shared link rebaser and does not leak canonical `.agentsmesh/skills/...` references.
+Make the README and website compatibility matrices match the current implementation source of truth.
 
 ## Plan
 
-- [x] Add failing regression for `.cursor/AGENTS.md` exact relative skill directory links.
-- [x] Fix output-source mapping so layout-declared additional root Markdown outputs are rewritten.
-- [x] Fix shared formatter so nested generated Markdown uses explicit `./` descendant links.
-- [x] Regenerate/verify live generated Cursor output.
-- [x] Run targeted tests, lint/typecheck/build gates, and post-feature QA.
+- [x] Extract the current target capability matrix from code descriptors.
+- [x] Compare implementation output with README and website docs.
+- [x] Update docs or tests for any drift found, keeping the supported-tools page as the single detailed docs table.
+- [x] Verify with targeted matrix/docs tests plus lint/typecheck/build as appropriate.
+- [x] Run post-feature QA and record evidence.
 
 ## Notes
 
-- Reported leak: `.cursor/AGENTS.md` contains `.agentsmesh/skills/post-feature-qa/`; expected `./skills/post-feature-qa/`.
+- Source of truth: `src/targets/catalog/target-ids.ts` and target descriptor `capabilities`.
+- Docs that must align: `README.md` and `website/src/content/docs/reference/supported-tools.mdx`.
 
 ## QA Report
 
 | Criterion | Evidence | Status |
 | --- | --- | --- |
-| `.cursor/AGENTS.md` receives shared link rebasing | `tests/unit/core/generate-reference-rewrite-root-mirrors.test.ts` requires `./skills/post-feature-qa/` exactly | OK |
-| Additional root Markdown mirrors are source-mapped generically | `src/core/reference/output-source-map.ts` maps `additionalRootDecorationPaths` for root rules | OK |
-| Nested generated Markdown uses explicit current-directory links | `tests/unit/core/link-rebaser-output.test.ts` covers `./commands/...`, `./skills/...`, and `./references/...` formatting | OK |
-| Live generated artifact is corrected | `node dist/cli.js generate` updated `.cursor/AGENTS.md`; grep shows `./skills/post-feature-qa/` and no `.agentsmesh/skills/` in generated target dirs | OK |
-| Broad regression surface remains green | `pnpm lint`, `pnpm typecheck`, `pnpm test` (224 files / 2400 tests), targeted integration/e2e suites | OK |
-| Post-feature QA completed | Acceptance criteria and edge cases checked against `.agents/skills/post-feature-qa/SKILL.md` workflow | OK |
+| README feature matrix matches descriptor capabilities | `tests/unit/core/matrix-docs.test.ts` parses `README.md` and compares each cell to `SUPPORT_MATRIX` | OK |
+| Website feature matrix matches descriptor capabilities | `tests/unit/core/matrix-docs.test.ts` parses `website/src/content/docs/reference/supported-tools.mdx` and compares each cell to `SUPPORT_MATRIX` | OK |
+| Cline hook support reflects implementation | `tests/unit/core/matrix.test.ts` asserts Cline has a hook generator, project capability is `native`, and matrix output is `native` | OK |
+| Kiro agent support is documented as native | README and supported-tools docs now match `src/targets/kiro/index.ts`; covered by docs matrix test | OK |
+| Antigravity global workflows are documented | README and supported-tools global docs include `~/.gemini/antigravity/workflows/`; covered by docs test | OK |
+| Global docs table follows canonical target order | `tests/unit/core/matrix-docs.test.ts` checks the website global table order against `TARGET_IDS` | OK |
+| CLI matrix sample matches current formatter | `website/src/content/docs/cli/matrix.mdx` uses the boxed symbol table and all 12 targets; covered by docs test | OK |
+| Stale website path details were cleaned up | Supported-tools/import docs updated for Claude ignore, Copilot prompts/hooks, Gemini paths, Cline paths/hooks, Codex native paths, Continue MCP, Junie MCP/ignore | OK |
+| Typecheck gate stays clean | Fixed regex capture narrowing in `src/core/reference/validate-generated-markdown-links.ts` after `pnpm typecheck` surfaced `TS2532` | OK |
+
+## Verification
+
+- `pnpm exec vitest run tests/unit/core/matrix.test.ts tests/unit/core/matrix-docs.test.ts tests/unit/targets/descriptor-paths.test.ts tests/unit/targets/target-ids.test.ts tests/unit/targets/builtin-targets.test.ts tests/unit/cli/commands/matrix.test.ts`
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm test` (226 files / 2432 tests)
+- `pnpm --dir website build`

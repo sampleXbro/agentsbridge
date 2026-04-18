@@ -28,7 +28,7 @@ function isOffsetInRanges(
 export function parseMarkdownLinkDestination(raw: string): string {
   let s = raw.trim();
   const withTitle = /^(.*?)\s+(["'])([\s\S]*?)\2\s*$/.exec(s);
-  if (withTitle) s = withTitle[1].trim();
+  if (withTitle?.[1] !== undefined) s = withTitle[1].trim();
   if (s.startsWith('<') && s.endsWith('>')) s = s.slice(1, -1).trim();
   return s;
 }

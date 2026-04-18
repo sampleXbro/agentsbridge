@@ -7,6 +7,10 @@ import {
 import type { CanonicalFiles } from '../../../src/core/types.js';
 import type { ValidatedConfig } from '../../../src/config/core/schema.js';
 import { TARGET_IDS } from '../../../src/targets/catalog/target-catalog.js';
+import {
+  getTargetCapabilities,
+  resolveTargetFeatureGenerator,
+} from '../../../src/targets/catalog/builtin-targets.js';
 
 const baseConfig: ValidatedConfig = {
   version: 1,
@@ -334,6 +338,28 @@ describe('buildCompatibilityMatrix', () => {
     const rows = buildCompatibilityMatrix(config, canonical);
     const row = rows.find((r) => r.feature === 'rules');
     expect(row?.support['unknown-tool']).toBe('none');
+  });
+
+  it('reports Cline project hooks as native because the target emits hook scripts', () => {
+    const config: ValidatedConfig = {
+      ...baseConfig,
+      targets: ['cline'],
+      features: ['hooks'],
+    };
+    const canonical: CanonicalFiles = {
+      ...emptyCanonical,
+      hooks: {
+        PostToolUse: [{ matcher: 'Edit', command: 'pnpm lint' }],
+      },
+    };
+
+    expect(resolveTargetFeatureGenerator('cline', 'hooks')).toBeDefined();
+    expect(getTargetCapabilities('cline')?.hooks).toBe('native');
+
+    const row = buildCompatibilityMatrix(config, canonical).find((r) =>
+      r.feature.startsWith('hooks'),
+    );
+    expect(row?.support.cline).toBe('native');
   });
 });
 

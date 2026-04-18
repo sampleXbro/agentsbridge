@@ -22,16 +22,16 @@ With `--global`, the canonical directory is `~/.agentsmesh/` and CLI commands re
 | Target | Global generate writes | Global import reads |
 |--------|------------------------|---------------------|
 | Claude Code | `~/.claude/**` (including `CLAUDE.md`, `settings.json`, `hooks.json`, `skills/`, `agents/`, `commands/`, `output-styles/`), `~/.claude.json`, `~/.claudeignore`, mirrored skills under `~/.agents/skills/` | Same user-level paths (hooks prefer `~/.claude/hooks.json` when present) |
-| Antigravity | `~/.gemini/antigravity/GEMINI.md`, `~/.gemini/antigravity/skills/`, `~/.gemini/antigravity/mcp_config.json` | Same paths (workflows/commands are not emitted globally) |
-| Codex CLI | `~/.codex/AGENTS.md`, `~/.codex/config.toml`, `~/.codex/agents/*.toml`, `~/.codex/rules/*.rules` for execution rules, `~/.agents/skills/` | `~/.codex/AGENTS.override.md` preferred over `AGENTS.md`; `~/.codex/config.toml`, agents, rules, `~/.agents/skills/` (no whole-home nested `AGENTS.md` scan) |
-| Copilot | `~/.copilot/copilot-instructions.md`, `~/.copilot/agents/*.agent.md`, `~/.copilot/skills/`, `~/.copilot/prompts/*.prompt.md`, mirrored skills under `~/.agents/skills/` | Same user-level paths |
 | Cursor | `~/.cursor/rules/*.mdc`, `~/.cursor/AGENTS.md`, `~/.cursor/mcp.json`, `~/.cursor/hooks.json`, `~/.cursorignore`, `~/.cursor/{skills/,agents/,commands/}` | Same paths when present; legacy `~/.agentsmesh-exports/cursor/user-rules.md` is still imported if no structured rules are found first |
-| Cline | `~/Documents/Cline/Rules/*.md`, `~/Documents/Cline/Workflows/*.md`, `~/Documents/Cline/Hooks/`, `~/.cline/skills/*/SKILL.md`, `~/.cline/cline_mcp_settings.json`, `~/.clineignore`, mirrored skills under `~/.agents/skills/` | Same user-level paths |
+| Copilot | `~/.copilot/copilot-instructions.md`, `~/.copilot/agents/*.agent.md`, `~/.copilot/skills/`, `~/.copilot/prompts/*.prompt.md`, mirrored skills under `~/.agents/skills/` | Same user-level paths |
 | Continue | `~/.continue/rules/*.md`, `~/.continue/prompts/*.md`, `~/.continue/skills/`, `~/.continue/mcpServers/agentsmesh.json`, mirror under `~/.agents/skills/` for embedded skills | Same user-level paths |
-| Gemini CLI | `~/.gemini/GEMINI.md`, `~/.gemini/AGENTS.md`, `~/.gemini/settings.json`, `~/.gemini/commands/*.toml`, `~/.gemini/skills/`, `~/.gemini/agents/`, optional mirror to `~/.agents/skills/` | Same paths (policies/ignore not emitted in global mode) |
 | Junie | `~/.junie/AGENTS.md`, `~/.junie/commands/`, `~/.junie/agents/`, `~/.junie/skills/`, `~/.junie/mcp/mcp.json`, optional mirror to `~/.agents/skills/` | Same user-level paths |
 | Kiro | `~/.kiro/steering/AGENTS.md`, `~/.kiro/steering/*.md`, `~/.kiro/agents/`, `~/.kiro/skills/`, `~/.kiro/settings/mcp.json`, `~/.kiro/settings/kiroignore`, optional mirror to `~/.agents/skills/` | Same paths (hooks not emitted globally) |
+| Gemini CLI | `~/.gemini/GEMINI.md`, `~/.gemini/AGENTS.md`, `~/.gemini/settings.json`, `~/.gemini/commands/*.toml`, `~/.gemini/skills/`, `~/.gemini/agents/`, optional mirror to `~/.agents/skills/` | Same paths (policies/ignore not emitted in global mode) |
+| Cline | `~/Documents/Cline/Rules/*.md`, `~/Documents/Cline/Workflows/*.md`, `~/Documents/Cline/Hooks/`, `~/.cline/skills/*/SKILL.md`, `~/.cline/cline_mcp_settings.json`, `~/.clineignore`, mirrored skills under `~/.agents/skills/` | Same user-level paths |
+| Codex CLI | `~/.codex/AGENTS.md`, `~/.codex/config.toml`, `~/.codex/agents/*.toml`, `~/.codex/rules/*.rules` for execution rules, `~/.agents/skills/` | `~/.codex/AGENTS.override.md` preferred over `AGENTS.md`; `~/.codex/config.toml`, agents, rules, `~/.agents/skills/` (no whole-home nested `AGENTS.md` scan) |
 | Windsurf | `~/.codeium/windsurf/memories/global_rules.md`, `~/.codeium/windsurf/skills/`, `~/.codeium/windsurf/global_workflows/`, `~/.codeium/windsurf/hooks.json`, `~/.codeium/windsurf/mcp_config.json`, `~/.codeium/.codeiumignore`, optional mirror to `~/.agents/skills/` | Same user-level paths |
+| Antigravity | `~/.gemini/antigravity/GEMINI.md`, `~/.gemini/antigravity/skills/`, `~/.gemini/antigravity/workflows/`, `~/.gemini/antigravity/mcp_config.json` | Same user-level paths |
 | Roo Code | `~/.roo/AGENTS.md`, `~/.roo/rules/`, `~/.roo/commands/`, `~/.roo/skills/`, `~/mcp_settings.json` (home-level MCP file), `~/.rooignore`, optional mirror to `~/.agents/skills/` | Same paths |
 
 ## Feature matrix
@@ -40,10 +40,10 @@ With `--global`, the canonical directory is `~/.agentsmesh/` and CLI commands re
 |---------|:-----------:|:------:|:-------:|:--------:|:-----:|:-----:|:----------:|:-----:|:---------:|:--------:|:-----------:|:--------:|
 | Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
 | Commands | Native | Native | Native | Embedded | Embedded | — | Native | Native | Embedded | Native | Partial | Native |
-| Agents | Native | Native | Native | — | Embedded | — | Native | Embedded | Native | Embedded | — | — |
+| Agents | Native | Native | Native | — | Embedded | Native | Native | Embedded | Native | Embedded | — | — |
 | Skills | Native | Native | Native | Embedded | Embedded | Native | Native | Native | Native | Native | Native | Native |
 | MCP Servers | Native | Native | — | Native | Native | Native | Native | Native | Native | Partial | — | Native |
-| Hooks | Native | Native | Partial | — | — | Native | Partial | — | — | Native | — | — |
+| Hooks | Native | Native | Partial | — | — | Native | Partial | Native | — | Native | — | — |
 | Ignore | Native | Native | — | — | Native | Native | Native | Native | — | Native | — | Native |
 | Permissions | Native | Partial | — | — | — | — | Partial | — | — | — | — | — |
 
@@ -63,7 +63,7 @@ Full native support for all 8 features. The reference implementation for AgentsM
 | Skills | `.claude/skills/*/SKILL.md` |
 | MCP Servers | `.claude/settings.json` → `mcpServers` |
 | Hooks | `.claude/settings.json` → `hooks` |
-| Ignore | `.claude/ignore` |
+| Ignore | `.claudeignore` |
 | Permissions | `.claude/settings.json` → `permissions` |
 
 Global mode is fully supported for Claude Code: canonical `~/.agentsmesh/` drives user-level outputs under `~/.claude/`, `~/.claude.json`, and `~/.claudeignore`. Hooks emit to `~/.claude/hooks.json` (project mode keeps hooks in `settings.json`). Skills emit to `~/.claude/skills/` and, when **`codex-cli` is not** among global targets, a compatibility mirror under `~/.agents/skills/` (if Codex is enabled globally it already owns that tree, so Claude does not duplicate there). Agents or commands with frontmatter `outputStyle: true` also emit `~/.claude/output-styles/agent-{name}.md` or `command-{name}.md`. Root rules render under `# Global Instructions` in `~/.claude/CLAUDE.md`. See [Global mode](#global-mode) for all targets.
@@ -98,11 +98,11 @@ Full native support except permissions (partial).
 | Feature | Format | Notes |
 |---------|--------|-------|
 | Rules | `.github/copilot-instructions.md` | All rules merged into one file |
-| Commands | `.github/copilot-instructions.md` | Embedded in instructions |
-| Agents | `.github/agents/*.md` | |
+| Commands | `.github/prompts/*.prompt.md` | Native prompt files |
+| Agents | `.github/agents/*.agent.md` | |
 | Skills | `.github/skills/*/SKILL.md` | |
 | MCP Servers | — | Not supported |
-| Hooks | `.github/copilot-instructions.md` | Partial — text injection only |
+| Hooks | `.github/hooks/agentsmesh.json` plus `.github/hooks/scripts/*.sh` | Partial hook event mapping |
 | Ignore | — | Not supported |
 | Permissions | — | Not supported |
 
@@ -116,13 +116,13 @@ Full native support except permissions (partial).
 
 | Feature | Format | Notes |
 |---------|--------|-------|
-| Rules | `.gemini/rules/*.md` | |
-| Commands | `.gemini/commands/*.md` | |
+| Rules | `GEMINI.md`, `AGENTS.md` | Non-root rules are folded into `GEMINI.md`; `AGENTS.md` is a compatibility mirror |
+| Commands | `.gemini/commands/*.toml` | |
 | Agents | `.gemini/agents/*.md` | |
 | Skills | `.gemini/skills/*/SKILL.md` | |
 | MCP Servers | `.gemini/settings.json` → `mcpServers` | |
 | Hooks | `.gemini/settings.json` | Partial hook type support |
-| Ignore | `.gemini/ignore` | |
+| Ignore | `.geminiignore` | |
 | Permissions | `.gemini/settings.json` | Partial field coverage |
 
 **Global mode:** writes `~/.gemini/GEMINI.md` (root instructions), `~/.gemini/AGENTS.md` (compatibility aggregate), `~/.gemini/settings.json` (includes MCP and hooks), `~/.gemini/commands/*.toml`, `~/.gemini/skills/`, `~/.gemini/agents/*.md` (experimental), with optional mirror to `~/.agents/skills/` when Codex is not also a global target. Policies and ignore files are not emitted in global mode.
@@ -131,17 +131,17 @@ Full native support except permissions (partial).
 
 ### Cline
 
-**Output directory:** `.cline/`
+**Output directory:** `.clinerules/` plus `.cline/`
 
 | Feature | Format | Notes |
 |---------|--------|-------|
-| Rules | `.cline/rules/*.md` | |
-| Commands | `.cline/commands/*.md` | |
-| Agents | `.cline/agents/` | Embedded as skills |
+| Rules | `AGENTS.md`, `.clinerules/*.md` | Root rule mirrors to `AGENTS.md`; non-root rules use `.clinerules/` |
+| Commands | `.clinerules/workflows/*.md` | Workflows |
+| Agents | `.cline/skills/_ab-agent-*/SKILL.md` | Embedded as skills |
 | Skills | `.cline/skills/*/SKILL.md` | |
-| MCP Servers | `.cline/mcp.json` | |
-| Hooks | — | Not supported |
-| Ignore | `.cline/ignore` | |
+| MCP Servers | `.cline/cline_mcp_settings.json` | |
+| Hooks | `.clinerules/hooks/*.sh` | Native hook scripts |
+| Ignore | `.clineignore` | |
 | Permissions | — | Not supported |
 
 **Global mode:** writes rules to `~/Documents/Cline/Rules/*.md`, commands to `~/Documents/Cline/Workflows/*.md`, hooks to `~/Documents/Cline/Hooks/`, skills to `~/.cline/skills/` with a compatibility mirror under `~/.agents/skills/`, MCP to `~/.cline/cline_mcp_settings.json`, and ignore to `~/.clineignore`. `agentsmesh import --global --from cline` reads those same paths back to canonical.
@@ -152,15 +152,15 @@ Full native support except permissions (partial).
 
 **Output file:** `AGENTS.md`
 
-Codex CLI uses a single `AGENTS.md` file. All features are embedded into this file.
+Codex CLI uses `AGENTS.md` for primary instructions, `.codex/` for native agents and MCP, and shared `.agents/skills/` for skills.
 
 | Feature | Notes |
 |---------|-------|
-| Rules | Embedded with `codexEmit` and `codexInstructionVariant` control |
+| Rules | `AGENTS.md`, `.codex/instructions/*.md`, optional `.codex/rules/*.rules` for execution rules |
 | Commands | Embedded as invokable skills with round-trip metadata |
-| Agents | Native agent definitions embedded in `AGENTS.md` |
-| Skills | Embedded skill definitions |
-| MCP Servers | Embedded MCP configuration |
+| Agents | `.codex/agents/*.toml` |
+| Skills | `.agents/skills/*/SKILL.md` |
+| MCP Servers | `.codex/config.toml` |
 | Hooks | — Not supported |
 | Ignore | — Not supported |
 | Permissions | — Not supported |
@@ -200,7 +200,7 @@ Windsurf uses a split surface: root instructions in `AGENTS.md`, modular rules i
 | Commands | Embedded as skills |
 | Agents | — Not supported |
 | Skills | Embedded with metadata |
-| MCP Servers | `.continue/config.json` → `mcpServers` |
+| MCP Servers | `.continue/mcpServers/agentsmesh.json` → `mcpServers` |
 | Hooks | — Not supported |
 | Ignore | — Not supported |
 | Permissions | — Not supported |
@@ -217,9 +217,9 @@ Windsurf uses a split surface: root instructions in `AGENTS.md`, modular rules i
 | Commands | Embedded as skills |
 | Agents | Embedded as skills |
 | Skills | Embedded with metadata |
-| MCP Servers | `.junie/mcp.json` |
+| MCP Servers | `.junie/mcp/mcp.json` |
 | Hooks | — Not supported |
-| Ignore | `.junie/ignore` |
+| Ignore | `.aiignore` |
 | Permissions | — Not supported |
 
 **Global mode:** `~/.junie/`
@@ -275,7 +275,7 @@ Antigravity uses a rules-first model with native skill support. Commands map to 
 | Ignore | — | Not supported (only `.gitignore` per docs) |
 | Permissions | — | Not supported |
 
-**Global mode:** writes `~/.gemini/antigravity/GEMINI.md`, `~/.gemini/antigravity/skills/`, and `~/.gemini/antigravity/mcp_config.json`. Workflows/commands are not emitted globally.
+**Global mode:** writes `~/.gemini/antigravity/GEMINI.md`, `~/.gemini/antigravity/skills/`, `~/.gemini/antigravity/workflows/`, and `~/.gemini/antigravity/mcp_config.json`.
 
 ---
 

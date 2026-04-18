@@ -138,3 +138,41 @@ export function protectedRanges(content: string): Array<[number, number]> {
   }
   return ranges;
 }
+
+/**
+ * Suffix-strip fallback for tool-specific root-relative paths (e.g. `.codex/skills/figma/references/file.md`).
+ *
+ * Progressively strips leading path segments and checks whether the remaining suffix
+ * exists as a descendant of the destination file's directory. Returns the absolute
+ * destination path on the first match, or null if nothing is found.
+ *
+ * Minimum 2 remaining suffix segments prevents bare-filename false positives.
+ */
+export function resolveByDestinationSuffixStrip(
+  token: string,
+  projectRoot: string,
+  destinationFile: string,
+  pathExists: (absolutePath: string) => boolean,
+): string | null {
+  const api = pathApi(projectRoot);
+  const normalizedToken = normalizeSeparators(token);
+
+  if (!ROOT_RELATIVE_PREFIXES.some((prefix) => normalizedToken.startsWith(prefix))) {
+    return null;
+  }
+
+  const segments = normalizedToken.split('/').filter((s) => s.length > 0);
+  // Need ≥3 segments (prefix + dir + file) to avoid bare-filename false positives.
+  if (segments.length < 3) return null;
+
+  const destFilePath = normalizeForProject(projectRoot, destinationFile);
+  const destDir = api.dirname(destFilePath);
+
+  for (let i = 1; i <= segments.length - 1; i++) {
+    const suffix = segments.slice(i).join('/');
+    const candidate = normalizeForProject(projectRoot, api.join(destDir, suffix));
+    if (candidate === destFilePath) continue;
+    if (pathExists(candidate)) return candidate;
+  }
+  return null;
+}

@@ -1,19 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import { formatLinkPathForDestination } from '../../../src/core/reference/link-rebaser-output.js';
 
+const EXPLICIT_CURRENT_DIR = { explicitCurrentDirLinks: true };
+
 describe('formatLinkPathForDestination', () => {
   it('uses paths relative to the destination file directory under the project root', () => {
     const root = '/proj';
     const dest = '/proj/.claude/CLAUDE.md';
     const target = '/proj/.claude/commands/review.md';
-    expect(formatLinkPathForDestination(root, dest, target, false)).toBe('commands/review.md');
+    expect(formatLinkPathForDestination(root, dest, target, false, EXPLICIT_CURRENT_DIR)).toBe(
+      './commands/review.md',
+    );
   });
 
   it('uses parent segments when the target lives outside the destination directory', () => {
     const root = '/proj';
     const dest = '/proj/.claude/commands/review.md';
     const target = '/proj/.claude/skills/api-gen/SKILL.md';
-    expect(formatLinkPathForDestination(root, dest, target, false)).toBe(
+    expect(formatLinkPathForDestination(root, dest, target, false, EXPLICIT_CURRENT_DIR)).toBe(
       '../skills/api-gen/SKILL.md',
     );
   });
@@ -22,7 +26,7 @@ describe('formatLinkPathForDestination', () => {
     const root = '/proj';
     const dest = '/other/notes.md';
     const target = '/proj/.claude/commands/review.md';
-    expect(formatLinkPathForDestination(root, dest, target, false)).toBe(
+    expect(formatLinkPathForDestination(root, dest, target, false, EXPLICIT_CURRENT_DIR)).toBe(
       '.claude/commands/review.md',
     );
   });
@@ -31,7 +35,9 @@ describe('formatLinkPathForDestination', () => {
     const root = '/proj';
     const dest = '/proj/.claude/CLAUDE.md';
     const target = '/proj/.claude/skills/qa';
-    expect(formatLinkPathForDestination(root, dest, target, true)).toBe('skills/qa/');
+    expect(formatLinkPathForDestination(root, dest, target, true, EXPLICIT_CURRENT_DIR)).toBe(
+      './skills/qa/',
+    );
   });
 
   it('computes correct relative link in global mode when dest and target share a common prefix', () => {
@@ -39,7 +45,7 @@ describe('formatLinkPathForDestination', () => {
     const root = '/proj';
     const dest = '/proj/.codeium/windsurf/memories/global_rules.md';
     const target = '/proj/.codeium/windsurf/skills/api-gen/SKILL.md';
-    expect(formatLinkPathForDestination(root, dest, target, false)).toBe(
+    expect(formatLinkPathForDestination(root, dest, target, false, EXPLICIT_CURRENT_DIR)).toBe(
       '../skills/api-gen/SKILL.md',
     );
   });
@@ -49,7 +55,7 @@ describe('formatLinkPathForDestination', () => {
     const root = '/proj';
     const dest = '/proj/.cursor/rules/general.mdc';
     const target = '/proj/.cursor/skills/api-gen/SKILL.md';
-    expect(formatLinkPathForDestination(root, dest, target, false)).toBe(
+    expect(formatLinkPathForDestination(root, dest, target, false, EXPLICIT_CURRENT_DIR)).toBe(
       '../skills/api-gen/SKILL.md',
     );
   });
@@ -59,7 +65,9 @@ describe('formatLinkPathForDestination', () => {
     const root = '/proj';
     const dest = '/proj/.copilot/copilot-instructions.md';
     const target = '/proj/.copilot/skills/api-gen/SKILL.md';
-    expect(formatLinkPathForDestination(root, dest, target, false)).toBe('skills/api-gen/SKILL.md');
+    expect(formatLinkPathForDestination(root, dest, target, false, EXPLICIT_CURRENT_DIR)).toBe(
+      './skills/api-gen/SKILL.md',
+    );
   });
 
   it('produces shortest relative link for deeply nested source and target', () => {
@@ -67,6 +75,8 @@ describe('formatLinkPathForDestination', () => {
     const root = '/proj';
     const dest = '/proj/.claude/skills/api-gen/references/checklist.md';
     const target = '/proj/.claude/skills/api-gen/SKILL.md';
-    expect(formatLinkPathForDestination(root, dest, target, false)).toBe('../SKILL.md');
+    expect(formatLinkPathForDestination(root, dest, target, false, EXPLICIT_CURRENT_DIR)).toBe(
+      '../SKILL.md',
+    );
   });
 });

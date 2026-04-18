@@ -4,6 +4,7 @@ import {
   TARGET_IDS,
   getBuiltinTargetDefinition,
   getEffectiveTargetSupportLevel,
+  rewriteGeneratedOutputPath,
   resolveTargetFeatureGenerator,
 } from '../../../src/targets/catalog/builtin-targets.js';
 
@@ -86,5 +87,31 @@ describe('builtin targets', () => {
     expect(getEffectiveTargetSupportLevel('cursor', 'skills', config, 'global')).toBe('native');
     expect(getEffectiveTargetSupportLevel('cursor', 'commands', config, 'global')).toBe('native');
     expect(getEffectiveTargetSupportLevel('codex-cli', 'rules', config, 'global')).toBe('native');
+  });
+
+  it('rewrites generated output paths through scope-specific target layouts', () => {
+    expect(
+      rewriteGeneratedOutputPath('claude-code', '.claude/rules/typescript.md', 'project'),
+    ).toBe('.claude/rules/typescript.md');
+    expect(rewriteGeneratedOutputPath('claude-code', '.claude/rules/typescript.md', 'global')).toBe(
+      '.claude/rules/typescript.md',
+    );
+    expect(rewriteGeneratedOutputPath('claude-code', '.mcp.json', 'global')).toBe('.claude.json');
+
+    expect(
+      rewriteGeneratedOutputPath('copilot', '.github/prompts/review.prompt.md', 'global'),
+    ).toBe('.copilot/prompts/review.prompt.md');
+    expect(
+      rewriteGeneratedOutputPath(
+        'copilot',
+        '.github/instructions/typescript.instructions.md',
+        'global',
+      ),
+    ).toBeNull();
+
+    expect(rewriteGeneratedOutputPath('gemini-cli', '.geminiignore', 'global')).toBeNull();
+    expect(
+      rewriteGeneratedOutputPath('antigravity', '.agents/rules/typescript.md', 'global'),
+    ).toBeNull();
   });
 });

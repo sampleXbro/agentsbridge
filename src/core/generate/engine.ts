@@ -10,6 +10,7 @@ import {
 } from '../../targets/catalog/builtin-targets.js';
 import { preferEquivalentCodexAgents } from './output-overlap.js';
 import { rewriteGeneratedReferences } from '../reference/rewriter.js';
+import { validateGeneratedMarkdownLinks } from '../reference/validate-generated-markdown-links.js';
 import { resolveOutputCollisions, refreshResultStatus } from './collision.js';
 import { generateFeature } from './feature-loop.js';
 import { decoratePrimaryRootInstructions } from './root-instruction-decorator.js';
@@ -113,6 +114,8 @@ export async function generate(ctx: GenerateContext): Promise<GenerateResult[]> 
     scope,
     targets,
   );
+
+  validateGeneratedMarkdownLinks(rewrittenResults, projectRoot);
 
   return resolveOutputCollisions(
     preferEquivalentCodexAgents(rewrittenResults.map(refreshResultStatus), canonical, config),

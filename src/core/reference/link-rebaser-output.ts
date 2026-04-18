@@ -6,6 +6,10 @@
 import { dirname } from 'node:path';
 import { WINDOWS_ABSOLUTE_PATH, pathApi, normalizeForProject } from '../path-helpers.js';
 
+export interface FormatLinkPathOptions {
+  explicitCurrentDirLinks?: boolean;
+}
+
 function isUnderProjectRoot(projectRoot: string, absolutePath: string): boolean {
   const api = pathApi(projectRoot);
   const root = normalizeForProject(projectRoot, projectRoot);
@@ -42,8 +46,10 @@ export function formatLinkPathForDestination(
   destinationFile: string,
   absoluteTargetPath: string,
   keepSlash: boolean,
+  options: FormatLinkPathOptions = {},
 ): string | null {
   const api = pathApi(projectRoot);
+  const root = normalizeForProject(projectRoot, projectRoot);
   const destFile = normalizeForProject(projectRoot, destinationFile);
   const target = normalizeForProject(projectRoot, absoluteTargetPath);
 
@@ -68,8 +74,16 @@ export function formatLinkPathForDestination(
     return toProjectRootRelative(projectRoot, target, keepSlash);
   }
 
-  if (rel === '' || rel === '.') rel = '.';
-  else if (rel.startsWith('./')) rel = rel.slice(2);
+  if (rel === '' || rel === '.') {
+    rel = '.';
+  } else if (
+    options.explicitCurrentDirLinks === true &&
+    destDir !== root &&
+    !rel.startsWith('../') &&
+    !rel.startsWith('./')
+  ) {
+    rel = `./${rel}`;
+  }
 
   if (keepSlash && !rel.endsWith('/')) return `${rel}/`;
   return rel;

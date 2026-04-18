@@ -111,9 +111,9 @@ If the target emits markdown-like files in global mode:
 
 If the target supports global generation from installed packs:
 
-- `agentsmesh install --global <source>` materializes packs into `~../../../../.agentsmesh/packs/`
-- `agentsmesh install --global --sync` replays `~../../../../.agentsmesh/installs.yaml`
-- `agentsmesh watch --global` regenerates the target from `~../../../../.agentsmesh/`
+- `agentsmesh install --global <source>` materializes packs into `~/.agentsmesh/packs/`
+- `agentsmesh install --global --sync` replays `~/.agentsmesh/installs.yaml`
+- `agentsmesh watch --global` regenerates the target from `~/.agentsmesh/`
 - `agentsmesh check --global` and `merge --global` keep the home lock flow healthy
 
 ## 5. Review Questions

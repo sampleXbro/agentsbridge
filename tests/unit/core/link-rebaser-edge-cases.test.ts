@@ -43,6 +43,22 @@ function rewriteInput(content: string, existingPaths: string[]): RewriteInput {
 }
 
 describe('rewriteFileLinks edge cases', () => {
+  describe('home-relative paths (~/)', () => {
+    it('does not partially rewrite ~/.agentsmesh (avoids ~/../.agentsmesh)', () => {
+      const content =
+        'Global install uses ~/.agentsmesh/rules/example.md or ~/.agentsmesh/skills/foo/.';
+      const input = rewriteInput(content, ['/proj/.agentsmesh/rules/example.md']);
+      const result = rewriteFileLinks(input);
+      expect(result.content).toBe(content);
+    });
+
+    it('does not partially rewrite ~/.cursor paths', () => {
+      const content = 'See ~/.cursor/rules/bar.md';
+      const input = rewriteInput(content, ['/proj/.cursor/rules/bar.md']);
+      expect(rewriteFileLinks(input).content).toBe(content);
+    });
+  });
+
   describe('external reference protection', () => {
     it('protects data URIs', () => {
       const { input, translated } = noopInput('![img](data:image/png;base64,abc123)');

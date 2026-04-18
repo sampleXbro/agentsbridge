@@ -170,13 +170,13 @@ Use .agentsmesh/skills/post-feature-qa/ and .agentsmesh/skills/post-feature-qa/r
     execSync(`node ${CLI_PATH} generate`, { cwd: testDir });
 
     expect(readFileSync(join(testDir, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
-      'skills/post-feature-qa/',
+      './skills/post-feature-qa/',
     );
     expect(readFileSync(join(testDir, '.cursor', 'rules', 'general.mdc'), 'utf-8')).toContain(
       '../skills/post-feature-qa/',
     );
     expect(readFileSync(join(testDir, '.github', 'copilot-instructions.md'), 'utf-8')).toContain(
-      'skills/post-feature-qa/',
+      './skills/post-feature-qa/',
     );
     expect(readFileSync(join(testDir, 'GEMINI.md'), 'utf-8')).toContain(
       '.gemini/skills/post-feature-qa/',

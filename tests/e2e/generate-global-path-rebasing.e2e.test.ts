@@ -150,7 +150,7 @@ You are a security expert.
         'Use TypeScript strict mode',
       );
       fileExists(join(homeDir, '.codeium', 'windsurf', 'skills', 'security-audit', 'SKILL.md'));
-      fileExists(join(homeDir, '.codeium', 'windsurf', 'workflows', 'audit.md'));
+      fileExists(join(homeDir, '.codeium', 'windsurf', 'global_workflows', 'audit.md'));
     });
 
     it('generates Gemini CLI files in ~/.gemini/', async () => {
@@ -160,7 +160,7 @@ You are a security expert.
       fileExists(join(homeDir, '.gemini', 'GEMINI.md'));
       fileContains(join(homeDir, '.gemini', 'GEMINI.md'), 'Use TypeScript strict mode');
       fileExists(join(homeDir, '.gemini', 'skills', 'security-audit', 'SKILL.md'));
-      fileExists(join(homeDir, '.gemini', 'workflows', 'audit.md'));
+      fileExists(join(homeDir, '.gemini', 'commands', 'audit.toml'));
       fileExists(join(homeDir, '.gemini', 'agents', 'security-expert.md'));
     });
 
@@ -200,16 +200,16 @@ You are a security expert.
       const r = await runCli('generate --global --targets roo-code', projectDir);
       expect(r.exitCode).toBe(0);
 
-      fileExists(join(homeDir, '.roo-code', 'skills', 'security-audit', 'SKILL.md'));
+      fileExists(join(homeDir, '.roo', 'skills', 'security-audit', 'SKILL.md'));
     });
 
     it('generates Codex CLI files in ~/.codex/', async () => {
       const r = await runCli('generate --global --targets codex-cli', projectDir);
       expect(r.exitCode).toBe(0);
 
-      fileExists(join(homeDir, '.codex', 'config.toml'));
-      const config = readFileSync(join(homeDir, '.codex', 'config.toml'), 'utf-8');
-      expect(config).toContain('Use TypeScript strict mode');
+      fileExists(join(homeDir, '.codex', 'AGENTS.md'));
+      const instructions = readFileSync(join(homeDir, '.codex', 'AGENTS.md'), 'utf-8');
+      expect(instructions).toContain('Use TypeScript strict mode');
       fileExists(join(homeDir, '.codex', 'agents', 'security-expert.toml'));
     });
   });
@@ -230,8 +230,8 @@ features: [rules, skills]
 root: true
 ---
 # Root
-See skill: #[[file:.agentsmesh/skills/api-gen/SKILL.md]]
-Reference: #[[file:.agentsmesh/skills/api-gen/references/template.ts]]
+See skill: .agentsmesh/skills/api-gen/SKILL.md
+Reference: .agentsmesh/skills/api-gen/references/template.ts
 `,
       );
       mkdirSync(join(homeDir, '.agentsmesh', 'skills', 'api-gen', 'references'), {
@@ -243,7 +243,7 @@ Reference: #[[file:.agentsmesh/skills/api-gen/references/template.ts]]
 description: API generation
 ---
 # API Gen
-Template: #[[file:.agentsmesh/skills/api-gen/references/template.ts]]
+Template: .agentsmesh/skills/api-gen/references/template.ts
 `,
       );
       writeFileSync(
@@ -446,7 +446,7 @@ root: true
 
       const r = await runCli('generate --global', projectDir);
       expect(r.exitCode).not.toBe(0);
-      expect(r.stderr).toMatch(/error|fail|cannot|ENOENT/i);
+      expect(r.stderr).toMatch(/error|fail|cannot|ENOENT|not found/i);
     });
 
     it('reports error when target does not support global mode', async () => {

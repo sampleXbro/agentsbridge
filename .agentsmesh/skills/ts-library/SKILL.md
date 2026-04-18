@@ -22,18 +22,18 @@ Patterns for authoring high-quality TypeScript libraries, extracted from studyin
 
 ## Quick Reference
 
-| Working on...         | Load file                                                          |
-| --------------------- | ------------------------------------------------------------------ |
-| New project setup     | [.agentsmesh/skills/ts-library/references/project-setup.md](.agentsmesh/skills/ts-library/references/project-setup.md)         |
-| Package exports       | [.agentsmesh/skills/ts-library/references/package-exports.md](.agentsmesh/skills/ts-library/references/package-exports.md)     |
+| Working on...         | Load file                                                                                                                     |
+| --------------------- |-------------------------------------------------------------------------------------------------------------------------------|
+| New project setup     | [.agentsmesh/skills/ts-library/references/project-setup.md](.agentsmesh/skills/ts-library/references/project-setup.md)                  |
+| Package exports       | [.agentsmesh/skills/ts-library/references/package-exports.md](.agentsmesh/skills/ts-library/references/package-exports.md)    |
 | tsconfig options      | [.agentsmesh/skills/ts-library/references/typescript-config.md](.agentsmesh/skills/ts-library/references/typescript-config.md) |
-| Build configuration   | [.agentsmesh/skills/ts-library/references/build-tooling.md](.agentsmesh/skills/ts-library/references/build-tooling.md)         |
-| ESLint config         | [.agentsmesh/skills/ts-library/references/eslint-config.md](.agentsmesh/skills/ts-library/references/eslint-config.md)         |
-| API design patterns   | [.agentsmesh/skills/ts-library/references/api-design.md](.agentsmesh/skills/ts-library/references/api-design.md)               |
-| Type inference tricks | [.agentsmesh/skills/ts-library/references/type-patterns.md](.agentsmesh/skills/ts-library/references/type-patterns.md)         |
-| Testing setup         | [.agentsmesh/skills/ts-library/references/testing.md](.agentsmesh/skills/ts-library/references/testing.md)                     |
-| Release workflow      | [.agentsmesh/skills/ts-library/references/release.md](.agentsmesh/skills/ts-library/references/release.md)                     |
-| CI/CD setup           | [.agentsmesh/skills/ts-library/references/ci-workflows.md](.agentsmesh/skills/ts-library/references/ci-workflows.md)           |
+| Build configuration   | [.agentsmesh/skills/ts-library/references/build-tooling.md](.agentsmesh/skills/ts-library/references/build-tooling.md)        |
+| ESLint config         | [.agentsmesh/skills/ts-library/references/eslint-config.md](.agentsmesh/skills/ts-library/references/eslint-config.md)        |
+| API design patterns   | [.agentsmesh/skills/ts-library/references/api-design.md](.agentsmesh/skills/ts-library/references/api-design.md)              |
+| Type inference tricks | [.agentsmesh/skills/ts-library/references/type-patterns.md](.agentsmesh/skills/ts-library/references/type-patterns.md)        |
+| Testing setup         | [.agentsmesh/skills/ts-library/references/testing.md](.agentsmesh/skills/ts-library/references/testing.md)                    |
+| Release workflow      | [.agentsmesh/skills/ts-library/references/release.md](.agentsmesh/skills/ts-library/references/release.md)                    |
+| CI/CD setup           | [.agentsmesh/skills/ts-library/references/ci-workflows.md](.agentsmesh/skills/ts-library/references/ci-workflows.md)          |
 
 ## Loading Files
 

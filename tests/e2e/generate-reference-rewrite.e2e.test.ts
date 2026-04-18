@@ -50,7 +50,7 @@ Prefer strict mode.
       `---
 description: Review
 	---
-	Load .agentsmesh/skills/api-gen/SKILL.md and ../docs/some-doc.md.
+	Load .agentsmesh/skills/api-gen/SKILL.md and ../../docs/some-doc.md.
 	`,
     );
     writeFileSync(
@@ -60,7 +60,7 @@ name: reviewer
 description: Reviews code
 tools: [Read]
 	---
-	Use .agentsmesh/skills/api-gen/SKILL.md and ../docs/some-doc.md.
+	Use .agentsmesh/skills/api-gen/SKILL.md and ../../docs/some-doc.md.
 	`,
     );
     writeFileSync(
@@ -162,13 +162,13 @@ Prefer strict mode.
     expect(result.exitCode).toBe(0);
 
     expect(readFileSync(join(dir, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
-      'skills/post-feature-qa/',
+      './skills/post-feature-qa/',
     );
     expect(readFileSync(join(dir, '.cursor', 'rules', 'general.mdc'), 'utf-8')).toContain(
       '../skills/post-feature-qa/',
     );
     expect(readFileSync(join(dir, '.github', 'copilot-instructions.md'), 'utf-8')).toContain(
-      'skills/post-feature-qa/',
+      './skills/post-feature-qa/',
     );
     expect(readFileSync(join(dir, 'GEMINI.md'), 'utf-8')).toContain('skills/post-feature-qa/');
     // AGENTS.md: codex-cli wins (cline and cursor are filtered as equivalent)
@@ -233,6 +233,6 @@ See .agentsmesh/rules/typescript.md and ../../docs/roadmap.md.
     );
     expect(instructions).toContain('typescript.instructions.md');
     expect(instructions).toContain('../../docs/roadmap.md');
-    expect(instructions).not.toContain('../../docs/roadmap.md');
+    expect(instructions).not.toContain('.agentsmesh/rules/typescript.md');
   });
 });

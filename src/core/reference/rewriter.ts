@@ -1,3 +1,20 @@
+/**
+ * Reference rewriting for generated outputs — **project and global scope share one pipeline**.
+ *
+ * **Engine (single implementation):** {@link rewriteFileLinks} and `formatLinkPathForDestination`
+ * (`link-rebaser.ts`, `link-rebaser-output.ts`). There is no separate global rewriter.
+ *
+ * **What scope changes:** only the canonical→output **path maps** — `buildReferenceMap`,
+ * `buildOutputSourceMap`, and `buildArtifactPathMap` (see `map.ts`, `output-source-map.ts`).
+ * Those maps encode where each tool writes files under project vs `~` global layouts.
+ *
+ * **Exception:** In global mode, outputs under `.agents/skills/` use Codex’s artifact map
+ * (`artifactMapTargetForResult`) so relative links match the shared Codex global skill directory;
+ * everything else uses the result’s target map as usual.
+ *
+ * Import uses the same {@link rewriteFileLinks} engine with paths from `import-map` builders
+ * instead of generate-time maps.
+ */
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { CanonicalFiles, GenerateResult } from '../types.js';
@@ -29,7 +46,8 @@ function sourceMapCacheKey(target: string, activeTargets: readonly string[] | un
   return `${target}\0${(activeTargets ?? []).join(',')}`;
 }
 
-function collectPlannedPaths(projectRoot: string, results: GenerateResult[]): Set<string> {
+/** Paths that will exist after this generate run (outputs plus ancestor dirs). */
+export function collectPlannedPaths(projectRoot: string, results: GenerateResult[]): Set<string> {
   const planned = new Set<string>();
   for (const result of results) {
     const absolutePath = join(projectRoot, result.path);
@@ -103,6 +121,7 @@ export function rewriteGeneratedReferences(
       destinationFile: join(projectRoot, result.path),
       translatePath: (absolutePath) => artifactMap.get(absolutePath) ?? absolutePath,
       pathExists: (absolutePath) => plannedPaths.has(absolutePath) || existsSync(absolutePath),
+      explicitCurrentDirLinks: true,
     });
 
     return rewritten.content === result.content

@@ -7,6 +7,7 @@ import {
   generateSkills,
   generateMcp,
   generateIgnore,
+  renderJunieGlobalInstructions,
 } from './generator.js';
 import {
   JUNIE_DOT_AGENTS,
@@ -61,6 +62,7 @@ const project: TargetLayout = {
 
 const global: TargetLayout = {
   rootInstructionPath: JUNIE_GLOBAL_AGENTS_MD,
+  renderPrimaryRootInstruction: renderJunieGlobalInstructions,
   skillDir: JUNIE_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [

@@ -1,9 +1,9 @@
 # Auto-generated. DO NOT EDIT MANUALLY.
 # Tracks the state of all config files for team conflict resolution.
 
-generated_at: 2026-04-17T10:35:30.947Z
+generated_at: 2026-04-18T07:17:23.878Z
 generated_by: serhii
-lib_version: 0.3.1
+lib_version: 0.4.0
 checksums:
   agents/code-debugger.md: sha256:707132841c606f117c83491d53ce101be0117eb50abe2861bcf93bdd45a56daf
   agents/code-documenter.md: sha256:faa66b16d2e86578985e817d60e6705ae0e34a716c1f5c29411739a6d659fb96
@@ -20,7 +20,7 @@ checksums:
   ignore: sha256:9bd184903aee9e824fcd475e965103a8ef5efe5d5e98b0e7e275fb8017c4fc0e
   mcp.json: sha256:4269c04f9edf4142cde79d1e45f25958eaca54489cc19ec078eaba887d296018
   permissions.yaml: sha256:9c22c5221457f6c165a5f135448f3f95fedb8c9339cb9f91998d844184501158
-  rules/_root.md: sha256:59aa3f817487ff1053f0718589c0b075b6f97a17b32435563ca30c9555a499aa
+  rules/_root.md: sha256:57c33cc2bdc52e7467f644d91ff15a3f40cac24e3d4b15d44589c95ad0fc4bba
   rules/typescript.md: sha256:18f52143dfdd3e219a5c6d6c0feb7283fe74cce99458c46dafcd1c3620ad4fba
   skills/add-agent-target/SKILL.md: sha256:53a76c84b87f7735c53ac5f5e584e55122c09728a14406e7088ea93b5b183406
   skills/add-agent-target/references/target-addition-checklist.md: sha256:66cd8f5ed4dd21b27e2bf4b34ae749ee301b28a208c83fecffa06748c2d2d61c
@@ -86,7 +86,7 @@ checksums:
   skills/senior-developer-source-of-truth/SKILL.md: sha256:78bedb504e16f123fbbbfecaf90323d3d9defd6f1d1a752df1ba73e7a5b220e7
   skills/senior-developer-tool-and-command-execution/SKILL.md: sha256:20059b5be8cee1f6e4830987a60f171540e93ae223205ac5f32f52202eb821b2
   skills/senior-manual-qa/SKILL.md: sha256:416ac8cc4392b243c180519ad627ddc848f83603d1cf46a4660c654e160ecdb0
-  skills/ts-library/SKILL.md: sha256:483a285d46d032a36f741d8f5f026ab174b9e714c6be4c50058f2e65ef5b3004
+  skills/ts-library/SKILL.md: sha256:10c642f554e8af92c75f6a2fdbb403a1222dcdfeeb67c5ef120d5cbbed6df227
   skills/ts-library/build/tooling.md: sha256:aa7b200a095d1b4b4f18a6a05d309d9470a5c8f5c3a06743d6cbc7596fd5e32c
   skills/ts-library/patterns/api.md: sha256:c5818923481131861d7413bd8b0459886e85eda57264265c179eafe177ba1ee0
   skills/ts-library/patterns/types.md: sha256:222a510c39f34bef5b8024a99a62aa4492bb887d81330adccd004b0e1b838b5d
@@ -122,4 +122,3 @@ packs:
   devsforge-orchestrator-skills: sha256:9228afa4fd2aedaca2403e7c2afbce0c18e4204793ede6e649a777eed9eb3231
   joeking-ly-claude-skills-arsenal-skills: sha256:63b24277c3d09607506971957d40f95139385193eaf8b02a92d68ca6f8af15ec
   njengah-claude-code-cheat-sheet-agents: sha256:6b0a573bc4a725d0a5d38d323d19382f7a24bd948885d3555b94cbca47a05cbf
-  onmax-nuxt-skills-skills: sha256:79fdc31ee1c1a35717f82ec23944814a406eb86d9e471123b6ff1785e2f1ecd3

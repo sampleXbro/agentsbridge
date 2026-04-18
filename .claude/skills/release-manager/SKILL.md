@@ -278,7 +278,7 @@ else:
 
 #### Documentation Requirements
 - [ ] CHANGELOG.md updated
-- [ ] README.md reflects new features
+- [ ] ./README.md reflects new features
 - [ ] API documentation generated
 - [ ] Migration guide written for breaking changes
 - [ ] Deployment notes prepared

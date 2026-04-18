@@ -255,7 +255,7 @@ describe('generate reference rewriting', () => {
     writeFileSync(
       join(TEST_DIR, '.claude', 'CLAUDE.md'),
       appendAgentsmeshRootInstructionParagraph(
-        'See rules/typescript.md, commands/review.md, agents/reviewer.md, and skills/api-gen/references/checklist.md.',
+        'See ./rules/typescript.md, ./commands/review.md, ./agents/reviewer.md, and ./skills/api-gen/references/checklist.md.',
       ),
     );
 

@@ -55,6 +55,10 @@ function copilotInstructionsPath(rule: CanonicalFiles['rules'][number]): string 
   return `.github/instructions/${slug}.instructions.md`;
 }
 
+function pushUnique(paths: string[], path: string | undefined): void {
+  if (path && !paths.includes(path)) paths.push(path);
+}
+
 function ruleOutputPaths(
   target: string,
   rule: CanonicalFiles['rules'][number],
@@ -63,35 +67,42 @@ function ruleOutputPaths(
 ): string[] {
   const paths: string[] = [];
   const targetPath = refs.get(canonicalRulePath(rule));
-  if (targetPath) paths.push(targetPath);
+  pushUnique(paths, targetPath);
+
+  if (rule.root) {
+    const layout = getTargetLayout(target, scope);
+    for (const mirrorPath of layout?.additionalRootDecorationPaths ?? []) {
+      pushUnique(paths, mirrorPath);
+    }
+  }
 
   if (target === 'copilot' && !rule.root && rule.globs.length > 0) {
-    paths.push(copilotInstructionsPath(rule));
+    pushUnique(paths, copilotInstructionsPath(rule));
   }
 
   if ((target === 'cline' || target === 'cursor') && rule.root && scope === 'project') {
-    paths.push('AGENTS.md');
+    pushUnique(paths, 'AGENTS.md');
   }
 
   if (target === 'windsurf' && scope === 'project') {
     if (rule.root) {
-      paths.push('AGENTS.md');
+      pushUnique(paths, 'AGENTS.md');
     } else {
       const dir = directoryScopedRuleDir(rule.globs);
-      if (dir) paths.push(`${dir}/AGENTS.md`);
+      if (dir) pushUnique(paths, `${dir}/AGENTS.md`);
     }
   }
 
   // Gemini AGENTS.md compatibility mirror is generated from root rule content and must
   // participate in source mapping for reference rewriting.
   if (target === 'gemini-cli') {
-    paths.push(GEMINI_COMPAT_AGENTS);
+    pushUnique(paths, GEMINI_COMPAT_AGENTS);
   }
 
   if (target === 'codex-cli') {
     if (!rule.root && rule.codexEmit === 'execution') {
       const slug = rule.source.split('/').pop()!.replace(/\.md$/, '');
-      paths.push(`${CODEX_RULES_DIR}/${slug}.rules`);
+      pushUnique(paths, `${CODEX_RULES_DIR}/${slug}.rules`);
     }
   }
 

@@ -495,7 +495,7 @@ describe('rewriteGeneratedReferences', () => {
     );
 
     expect(rewritten[0]!.content).toBe(
-      'Absolute: rules/typescript.md, commands/review.md, skills/api-gen/references/checklist.md.',
+      'Absolute: ./rules/typescript.md, ./commands/review.md, ./skills/api-gen/references/checklist.md.',
     );
   });
 
@@ -649,7 +649,7 @@ describe('rewriteGeneratedReferences', () => {
       projectRoot,
     );
 
-    expect(rewritten[0]!.content).toBe('See [references](references/) and [assets](assets/).');
+    expect(rewritten[0]!.content).toBe('See [references](./references/) and [assets](./assets/).');
   });
 
   it('skips rewriting non-markdown outputs even when they map to canonical sources', () => {

@@ -6,9 +6,9 @@ Analyzes source code for quality issues, code smells, complexity metrics,
 and SOLID principle violations.
 
 Usage:
-    python code_quality_checker.py /path/to/file.py
-    python code_quality_checker.py /path/to/directory --recursive
-    python code_quality_checker.py . --language typescript --json
+    python ./code_quality_checker.py /path/to/file.py
+    python ./code_quality_checker.py /path/to/directory --recursive
+    python ./code_quality_checker.py . --language typescript --json
 """
 
 import argparse

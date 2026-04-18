@@ -352,6 +352,208 @@ describe('rewriteFileLinks', () => {
     expect(checked).toEqual([]);
   });
 
+  describe('suffix-strip resolution for tool-specific root-relative paths', () => {
+    it('rewrites tool-prefixed root-relative path by checking if suffix exists in destination tree', () => {
+      // A skill SKILL.md contains .codex/skills/figma/references/file.md (original tool path).
+      // The file will exist in the generated destination tree at references/figma-tools.md
+      // relative to the destination SKILL.md — no artifact map needed.
+      const rewritten = rewriteFileLinks({
+        content: 'See also .codex/skills/figma/references/figma-tools.md for usage.',
+        projectRoot: '/proj',
+        sourceFile: '/proj/.agentsmesh/packs/my-pack/skills/figma/SKILL.md',
+        destinationFile: '/proj/.claude/skills/figma/SKILL.md',
+        translatePath: (absolutePath) => absolutePath,
+        pathExists: (absolutePath) =>
+          absolutePath === '/proj/.claude/skills/figma/references/figma-tools.md',
+        explicitCurrentDirLinks: true,
+      });
+
+      expect(rewritten.content).toBe('See also ./references/figma-tools.md for usage.');
+      expect(rewritten.missing).toEqual([]);
+    });
+
+    it('rewrites link with different tool prefix (.claude/) when target exists in destination tree', () => {
+      const rewritten = rewriteFileLinks({
+        content: 'Reference: .claude/skills/ts-pro/references/ts-checklist.md.',
+        projectRoot: '/proj',
+        sourceFile: '/proj/.agentsmesh/packs/ts-pack/skills/ts-pro/SKILL.md',
+        destinationFile: '/proj/.cursor/skills/ts-pro/SKILL.md',
+        translatePath: (absolutePath) => absolutePath,
+        pathExists: (absolutePath) =>
+          absolutePath === '/proj/.cursor/skills/ts-pro/references/ts-checklist.md',
+        explicitCurrentDirLinks: true,
+      });
+
+      expect(rewritten.content).toBe('Reference: ./references/ts-checklist.md.');
+      expect(rewritten.missing).toEqual([]);
+    });
+
+    it('works for manually-added canonical skills — not only installed packs', () => {
+      // Same logic applies when SKILL.md lives in .agentsmesh/skills/ (not a pack).
+      const rewritten = rewriteFileLinks({
+        content: 'See .agents/skills/figma/references/figma-tools.md.',
+        projectRoot: '/proj',
+        sourceFile: '/proj/.agentsmesh/skills/figma/SKILL.md',
+        destinationFile: '/proj/.claude/skills/figma/SKILL.md',
+        translatePath: (absolutePath) => absolutePath,
+        pathExists: (absolutePath) =>
+          absolutePath === '/proj/.claude/skills/figma/references/figma-tools.md',
+        explicitCurrentDirLinks: true,
+      });
+
+      expect(rewritten.content).toBe('See ./references/figma-tools.md.');
+      expect(rewritten.missing).toEqual([]);
+    });
+
+    it('does not strip to bare filename — requires ≥2 suffix segments', () => {
+      // .codex/file.md has only 2 segments; stripping leaves a bare filename.
+      // The fallback helper returns null immediately in this case.
+      const rewritten = rewriteFileLinks({
+        content: 'Short: .codex/file.md.',
+        projectRoot: '/proj',
+        sourceFile: '/proj/.agentsmesh/packs/my-pack/skills/figma/SKILL.md',
+        destinationFile: '/proj/.claude/skills/figma/SKILL.md',
+        translatePath: (absolutePath) => absolutePath,
+        // Even if file.md happens to exist in the dest dir, it must NOT be matched.
+        pathExists: (absolutePath) => absolutePath === '/proj/.claude/skills/figma/file.md',
+        explicitCurrentDirLinks: true,
+      });
+
+      expect(rewritten.content).toBe('Short: .codex/file.md.');
+    });
+
+    it('leaves link unchanged when suffix is not found anywhere in the destination tree', () => {
+      const rewritten = rewriteFileLinks({
+        content: 'Missing: .codex/skills/figma/references/nonexistent.md.',
+        projectRoot: '/proj',
+        sourceFile: '/proj/.agentsmesh/packs/my-pack/skills/figma/SKILL.md',
+        destinationFile: '/proj/.claude/skills/figma/SKILL.md',
+        translatePath: (absolutePath) => absolutePath,
+        pathExists: () => false,
+        explicitCurrentDirLinks: true,
+      });
+
+      expect(rewritten.content).toBe('Missing: .codex/skills/figma/references/nonexistent.md.');
+    });
+
+    it('main loop handles primary path before suffix-strip fallback is reached', () => {
+      // The primary root-relative path exists on disk → main loop resolves it.
+      // The suffix-strip fallback is not triggered.
+      const rewritten = rewriteFileLinks({
+        content: 'Link: .codex/skills/figma/references/file.md.',
+        projectRoot: '/proj',
+        sourceFile: '/proj/.agentsmesh/packs/my-pack/skills/figma/SKILL.md',
+        destinationFile: '/proj/.codex/skills/figma/SKILL.md',
+        translatePath: (absolutePath) => absolutePath,
+        pathExists: (absolutePath) =>
+          absolutePath === '/proj/.codex/skills/figma/references/file.md',
+        explicitCurrentDirLinks: true,
+      });
+
+      expect(rewritten.content).toBe('Link: ./references/file.md.');
+      expect(rewritten.missing).toEqual([]);
+    });
+
+    it('prefers destination-tree suffix-strip over cross-tree existingFallback when another target artifact has same path', () => {
+      // Real scenario: canonical SKILL.md contains .agents/skills/ts-library/references/project-setup.md
+      // .agents/ artifact EXISTS on disk (generated for codex-cli), but the gemini destination tree
+      // ALSO has the file at references/project-setup.md — dest-tree wins.
+      const rewritten = rewriteFileLinks({
+        content:
+          '| Setup | [.agents/skills/ts-library/references/project-setup.md](.agents/skills/ts-library/references/project-setup.md) |',
+        projectRoot: '/proj',
+        sourceFile: '/proj/.agentsmesh/skills/ts-library/SKILL.md',
+        destinationFile: '/proj/.gemini/skills/ts-library/SKILL.md',
+        translatePath: (absolutePath) => absolutePath,
+        pathExists: (absolutePath) =>
+          // .agents/ path exists on disk (another target's artifact)
+          absolutePath === '/proj/.agents/skills/ts-library/references/project-setup.md' ||
+          // destination tree also has the file — this must win
+          absolutePath === '/proj/.gemini/skills/ts-library/references/project-setup.md',
+        explicitCurrentDirLinks: true,
+      });
+
+      expect(rewritten.content).toBe(
+        '| Setup | [./references/project-setup.md](./references/project-setup.md) |',
+      );
+      expect(rewritten.missing).toEqual([]);
+    });
+
+    it('falls back to existingFallback when suffix-strip finds nothing in destination tree', () => {
+      // If the dest tree does NOT have the file, the original existingFallback still fires.
+      const rewritten = rewriteFileLinks({
+        content: 'See .agents/skills/ts-library/references/project-setup.md.',
+        projectRoot: '/proj',
+        sourceFile: '/proj/.agentsmesh/skills/ts-library/SKILL.md',
+        destinationFile: '/proj/.gemini/skills/ts-library/SKILL.md',
+        translatePath: (absolutePath) => absolutePath,
+        // Only the .agents/ artifact exists — dest tree does NOT have the file.
+        pathExists: (absolutePath) =>
+          absolutePath === '/proj/.agents/skills/ts-library/references/project-setup.md',
+        explicitCurrentDirLinks: true,
+      });
+
+      // existingFallback fires: relative path from dest to the .agents/ artifact
+      expect(rewritten.content).toBe(
+        'See ../../../.agents/skills/ts-library/references/project-setup.md.',
+      );
+      expect(rewritten.missing).toEqual([]);
+    });
+
+    describe('global mode (projectRoot = homedir)', () => {
+      it('rewrites tool-prefixed path when destination is under home directory', () => {
+        // In global mode rootBase = homedir(), so destinationFile is under ~/
+        const rewritten = rewriteFileLinks({
+          content: 'See .agents/skills/ts-library/references/project-setup.md.',
+          projectRoot: '/home/user',
+          sourceFile: '/home/user/.agentsmesh/skills/ts-library/SKILL.md',
+          destinationFile: '/home/user/.gemini/skills/ts-library/SKILL.md',
+          translatePath: (absolutePath) => absolutePath,
+          pathExists: (absolutePath) =>
+            absolutePath === '/home/user/.gemini/skills/ts-library/references/project-setup.md',
+          explicitCurrentDirLinks: true,
+        });
+
+        expect(rewritten.content).toBe('See ./references/project-setup.md.');
+        expect(rewritten.missing).toEqual([]);
+      });
+
+      it('prefers destination-tree over cross-tree global artifact when both exist under homedir', () => {
+        // Global Codex CLI generates to ~/.agents/; suffix-strip to ~/.gemini/ must win.
+        const rewritten = rewriteFileLinks({
+          content: 'See .agents/skills/ts-library/references/project-setup.md.',
+          projectRoot: '/home/user',
+          sourceFile: '/home/user/.agentsmesh/skills/ts-library/SKILL.md',
+          destinationFile: '/home/user/.gemini/skills/ts-library/SKILL.md',
+          translatePath: (absolutePath) => absolutePath,
+          pathExists: (absolutePath) =>
+            absolutePath === '/home/user/.agents/skills/ts-library/references/project-setup.md' ||
+            absolutePath === '/home/user/.gemini/skills/ts-library/references/project-setup.md',
+          explicitCurrentDirLinks: true,
+        });
+
+        expect(rewritten.content).toBe('See ./references/project-setup.md.');
+        expect(rewritten.missing).toEqual([]);
+      });
+
+      it('leaves link unchanged in global mode when suffix not found in destination tree', () => {
+        const rewritten = rewriteFileLinks({
+          content: 'Missing: .agents/skills/ts-library/references/nonexistent.md.',
+          projectRoot: '/home/user',
+          sourceFile: '/home/user/.agentsmesh/skills/ts-library/SKILL.md',
+          destinationFile: '/home/user/.gemini/skills/ts-library/SKILL.md',
+          translatePath: (absolutePath) => absolutePath,
+          pathExists: () => false,
+          explicitCurrentDirLinks: true,
+        });
+
+        expect(rewritten.content).toBe(
+          'Missing: .agents/skills/ts-library/references/nonexistent.md.',
+        );
+      });
+    });
+  });
+
   it('ignores external URI-like and SCP-style refs that are not project file paths', () => {
     const translated: string[] = [];
     const checked: string[] = [];

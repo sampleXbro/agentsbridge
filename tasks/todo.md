@@ -1,56 +1,28 @@
-# Test Coverage for Target Generation
+# Generated Markdown Link Rebasing
 
 ## Goal
-Add comprehensive test coverage for all target files that generate the library, ensuring file structure and content correctness according to docs/agent-structures specifications.
 
-## Status: ✅ COMPLETE
-
-### Project Mode: ✅ COMPLETE
-- **All project-level structure validation tests passing**
-- All 11 targets have comprehensive structure validation tests
-- Tests validate: file structure, paths, content format, JSON/YAML/TOML correctness, frontmatter, etc.
-
-### Global Mode: ✅ COMPLETE
-- **All 12 targets have passing global mode structure validation tests**
-- **39 global mode tests passing** (100% pass rate)
-- Tests validate: correct global paths, no canonical references, proper content aggregation
-- Pattern established and working for all targets
-
-### Overall Test Suite
-- **2477 out of 2478 tests passing** (99.96% pass rate)
-- 1 flaky watch test (known timing issue under load, not related to this work)
-- All structure validation tests (project + global) passing
+Ensure every generated Markdown file, including `.cursor/AGENTS.md`, participates in the shared link rebaser and does not leak canonical `.agentsmesh/skills/...` references.
 
 ## Plan
 
-### Phase 1: Audit Current Coverage
-- [x] Review existing test structure
-- [x] Identify targets with missing/incomplete tests
-- [x] Review agent-structures docs for validation requirements
+- [x] Add failing regression for `.cursor/AGENTS.md` exact relative skill directory links.
+- [x] Fix output-source mapping so layout-declared additional root Markdown outputs are rewritten.
+- [x] Fix shared formatter so nested generated Markdown uses explicit `./` descendant links.
+- [x] Regenerate/verify live generated Cursor output.
+- [x] Run targeted tests, lint/typecheck/build gates, and post-feature QA.
 
-### Phase 2: Create Structure Validation Helpers
-- [x] Create shared test helpers for JSON schema validation
-- [x] Create shared test helpers for Markdown structure validation
-- [x] Create shared test helpers for YAML/frontmatter validation
-- [x] Add fixtures for each target's expected structures
+## Notes
 
-### Phase 3: Add Missing Generator Tests
-For each target (antigravity, claude-code, cline, codex-cli, continue, copilot, cursor, gemini-cli, junie, kiro, roo-code, windsurf):
-- [x] Test project-level file generation (structure, paths, content format)
-- [x] Test global-level file generation (structure, paths, content format) - COMPLETE ✅
-- [x] Validate JSON files against expected schemas (mcp.json, hooks.json, settings.json, etc.)
-- [x] Validate Markdown files (rules, skills, agents, commands)
-- [x] Validate YAML/frontmatter in .mdc files
-- [x] Test file path correctness per target spec
-- [x] Test content rewriting (references, paths)
+- Reported leak: `.cursor/AGENTS.md` contains `.agentsmesh/skills/post-feature-qa/`; expected `./skills/post-feature-qa/`.
 
-### Phase 4: Integration Tests
-- [x] Add end-to-end generation tests that verify complete target output
-- [x] Test cross-target consistency where applicable
-- [x] Verify generated files can be imported back correctly
-- [x] Fixed all structure validation test failures by matching actual target APIs
+## QA Report
 
-### Phase 5: Verification
-- [x] Run full test suite - ALL 2439 TESTS PASSING ✅
-- [x] Check coverage report
-- [x] Update lessons.md with findings
+| Criterion | Evidence | Status |
+| --- | --- | --- |
+| `.cursor/AGENTS.md` receives shared link rebasing | `tests/unit/core/generate-reference-rewrite-root-mirrors.test.ts` requires `./skills/post-feature-qa/` exactly | OK |
+| Additional root Markdown mirrors are source-mapped generically | `src/core/reference/output-source-map.ts` maps `additionalRootDecorationPaths` for root rules | OK |
+| Nested generated Markdown uses explicit current-directory links | `tests/unit/core/link-rebaser-output.test.ts` covers `./commands/...`, `./skills/...`, and `./references/...` formatting | OK |
+| Live generated artifact is corrected | `node dist/cli.js generate` updated `.cursor/AGENTS.md`; grep shows `./skills/post-feature-qa/` and no `.agentsmesh/skills/` in generated target dirs | OK |
+| Broad regression surface remains green | `pnpm lint`, `pnpm typecheck`, `pnpm test` (224 files / 2400 tests), targeted integration/e2e suites | OK |
+| Post-feature QA completed | Acceptance criteria and edge cases checked against `.agents/skills/post-feature-qa/SKILL.md` workflow | OK |

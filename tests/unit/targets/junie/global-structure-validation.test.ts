@@ -73,6 +73,44 @@ describe('junie global mode structure validation', () => {
       expect(ruleFile.content).toContain('Global Rules');
       validateNoCanonicalPaths(ruleFile.content);
     });
+
+    it('aggregates root and scoped rules into one global AGENTS.md', async () => {
+      setupTestDir();
+      const canonical = makeCanonical({
+        rules: [
+          {
+            source: join(TEST_DIR, '.agentsmesh/rules/_root.md'),
+            root: true,
+            targets: [],
+            description: 'Root rules',
+            globs: [],
+            body: '# Global Rules\n\nUse TypeScript.',
+          },
+          {
+            source: join(TEST_DIR, '.agentsmesh/rules/security.md'),
+            root: false,
+            targets: [],
+            description: 'Security rules',
+            globs: ['src/**/*.ts'],
+            body: '# Security\n\nNo hardcoded secrets.',
+          },
+        ],
+      });
+
+      const files = await generate({
+        config: makeConfig(),
+        canonical,
+        projectRoot: TEST_DIR,
+        scope: 'global',
+      });
+
+      const ruleFiles = files.filter((file) => file.path === '.junie/AGENTS.md');
+      expect(ruleFiles).toHaveLength(1);
+      expect(ruleFiles[0]!.content).toContain('Global Rules');
+      expect(ruleFiles[0]!.content).toContain('Security rules');
+      expect(ruleFiles[0]!.content).toContain('No hardcoded secrets');
+      validateNoCanonicalPaths(ruleFiles[0]!.content);
+    });
   });
 
   describe('Global skills generation', () => {

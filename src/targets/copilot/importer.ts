@@ -34,7 +34,8 @@ import {
 } from './constants.js';
 import { parseCommandPromptFrontmatter } from './command-prompt.js';
 import { importHooks } from './hook-parser.js';
-import { importAgents, importSkills } from './agents-skills-helpers.js';
+import { importAgents } from './agents-skills-helpers.js';
+import { importSkills } from './skills-adapter.js';
 
 /**
  * Import Copilot rules into canonical .agentsmesh/rules.

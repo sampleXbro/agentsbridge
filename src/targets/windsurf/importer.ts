@@ -32,7 +32,8 @@ import {
   WINDSURF_CANONICAL_HOOKS,
   WINDSURF_CANONICAL_MCP,
 } from './constants.js';
-import { importWorkflows, importSkills } from './workflows-skills-helpers.js';
+import { importWorkflows } from './workflows-skills-helpers.js';
+import { importSkills } from './skills-adapter.js';
 
 /**
  * Import Windsurf config into canonical .agentsmesh/.

@@ -31,7 +31,7 @@ import {
   CLINE_CANONICAL_IGNORE,
 } from './constants.js';
 import { importClineMcp } from './mcp-mapper.js';
-import { importClineSkills } from './skills-helpers.js';
+import { importClineSkills } from './skills-adapter.js';
 
 /**
  * Import Cline config into canonical .agentsmesh/.

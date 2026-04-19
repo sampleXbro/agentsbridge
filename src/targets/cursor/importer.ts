@@ -23,7 +23,7 @@ import { serializeImportedRuleWithFallback } from '../import/import-metadata.js'
 import { importFileDirectory } from '../import/import-orchestrator.js';
 import { mapCursorAgentFile, mapCursorCommandFile, mapCursorRuleFile } from './importer-mappers.js';
 import { importSettings, importIgnore } from './settings-helpers.js';
-import { importSkills } from './skills-helpers.js';
+import { importSkills } from './skills-adapter.js';
 import { importFromCursorGlobalExports } from './import-global-exports.js';
 import {
   CURSOR_COMPAT_AGENTS,

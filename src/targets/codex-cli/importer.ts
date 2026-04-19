@@ -40,7 +40,7 @@ import {
 import { importCodexNonRootRuleFiles } from './import-codex-non-root-rules.js';
 import { stripCodexRuleIndex } from './instruction-mirror.js';
 import { importMcp } from './mcp-helpers.js';
-import { importSkills } from './skills-helpers.js';
+import { importSkills } from './skills-adapter.js';
 import {
   shouldImportScopedAgentsRule,
   removePathIfExists,

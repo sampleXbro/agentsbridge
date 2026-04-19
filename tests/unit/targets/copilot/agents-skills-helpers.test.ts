@@ -1,14 +1,11 @@
-import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { afterEach, describe, expect, it } from 'vitest';
-import {
-  importAgents,
-  importSkills,
-} from '../../../../src/targets/copilot/agents-skills-helpers.js';
+import { importAgents } from '../../../../src/targets/copilot/agents-skills-helpers.js';
 import type { ImportResult } from '../../../../src/core/result-types.js';
 
-describe('copilot agent and skill import helpers', () => {
+describe('copilot agent import helpers', () => {
   const tempDirs: string[] = [];
 
   afterEach(() => {
@@ -50,29 +47,5 @@ describe('copilot agent and skill import helpers', () => {
     expect(
       readFileSync(join(dir, '.agentsmesh', 'agents', 'frontend', 'reviewer.md'), 'utf-8'),
     ).toContain('name: reviewer');
-  });
-
-  it('imports native Copilot skills with supporting files', async () => {
-    const dir = createTempDir();
-    mkdirSync(join(dir, '.github', 'skills', 'release', 'references'), { recursive: true });
-    writeFileSync(
-      join(dir, '.github', 'skills', 'release', 'SKILL.md'),
-      '---\ndescription: Release\n---\n\nUse references/guide.md.',
-    );
-    writeFileSync(join(dir, '.github', 'skills', 'release', 'references', 'guide.md'), '# Guide\n');
-
-    const results: ImportResult[] = [];
-    await importSkills(dir, results, (content) => content);
-
-    expect(results.map(({ feature, toPath }) => ({ feature, toPath }))).toEqual([
-      { feature: 'skills', toPath: '.agentsmesh/skills/release/SKILL.md' },
-      { feature: 'skills', toPath: '.agentsmesh/skills/release/references/guide.md' },
-    ]);
-    expect(
-      readFileSync(join(dir, '.agentsmesh', 'skills', 'release', 'SKILL.md'), 'utf-8'),
-    ).toContain('description: Release');
-    expect(
-      existsSync(join(dir, '.agentsmesh', 'skills', 'release', 'references', 'guide.md')),
-    ).toBe(true);
   });
 });

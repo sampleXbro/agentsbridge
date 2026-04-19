@@ -1,9 +1,8 @@
 /**
- * Windsurf workflows and skills import helpers.
+ * Windsurf workflows import helpers.
  */
 
 import { join, relative } from 'node:path';
-import { readdir } from 'node:fs/promises';
 import type { ImportResult } from '../../core/types.js';
 import {
   readFileSafe,
@@ -12,22 +11,11 @@ import {
   mkdirp,
 } from '../../utils/filesystem/fs.js';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
-import {
-  serializeImportedCommandWithFallback,
-  serializeImportedSkillWithFallback,
-} from '../import/import-metadata.js';
-import {
-  parseProjectedAgentSkillFrontmatter,
-  serializeImportedAgent,
-} from '../projection/projected-agent-skill.js';
-import { removePathIfExists } from '../import/scoped-agents-import.js';
+import { serializeImportedCommandWithFallback } from '../import/import-metadata.js';
 import {
   WINDSURF_TARGET,
   WINDSURF_WORKFLOWS_DIR,
-  WINDSURF_SKILLS_DIR,
   WINDSURF_CANONICAL_COMMANDS_DIR,
-  WINDSURF_CANONICAL_AGENTS_DIR,
-  WINDSURF_CANONICAL_SKILLS_DIR,
 } from './constants.js';
 
 function toStringArray(value: unknown): string[] {
@@ -85,79 +73,5 @@ export async function importWorkflows(
       toPath: `${WINDSURF_CANONICAL_COMMANDS_DIR}/${relativePath}`,
       feature: 'commands',
     });
-  }
-}
-
-export async function importSkills(
-  projectRoot: string,
-  results: ImportResult[],
-  normalize: (content: string, sourceFile: string, destinationFile: string) => string,
-): Promise<void> {
-  const windsurfSkillsBaseDir = join(projectRoot, WINDSURF_SKILLS_DIR);
-  try {
-    const skillEntries = await readdir(windsurfSkillsBaseDir, { withFileTypes: true });
-    for (const ent of skillEntries) {
-      if (!ent.isDirectory()) continue;
-      const skillPath = join(windsurfSkillsBaseDir, ent.name);
-      const skillMdPath = join(skillPath, 'SKILL.md');
-      const skillContent = await readFileSafe(skillMdPath);
-      if (!skillContent) continue;
-      const rawParsed = parseFrontmatter(skillContent);
-      const projectedAgent = parseProjectedAgentSkillFrontmatter(rawParsed.frontmatter, ent.name);
-      if (projectedAgent) {
-        await removePathIfExists(join(projectRoot, WINDSURF_CANONICAL_SKILLS_DIR, ent.name));
-        const destAgentsDir = join(projectRoot, WINDSURF_CANONICAL_AGENTS_DIR);
-        await mkdirp(destAgentsDir);
-        const agentPath = join(destAgentsDir, `${projectedAgent.name}.md`);
-        await writeFileAtomic(
-          agentPath,
-          serializeImportedAgent(projectedAgent, normalize(rawParsed.body, skillMdPath, agentPath)),
-        );
-        results.push({
-          fromTool: WINDSURF_TARGET,
-          fromPath: skillMdPath,
-          toPath: `${WINDSURF_CANONICAL_AGENTS_DIR}/${projectedAgent.name}.md`,
-          feature: 'agents',
-        });
-        continue;
-      }
-      const destSkillDir = join(projectRoot, WINDSURF_CANONICAL_SKILLS_DIR, ent.name);
-      const destSkillPath = join(destSkillDir, 'SKILL.md');
-      const normalized = normalize(skillContent, skillMdPath, destSkillPath);
-      await mkdirp(destSkillDir);
-      const { frontmatter, body } = parseFrontmatter(normalized);
-      await writeFileAtomic(
-        destSkillPath,
-        await serializeImportedSkillWithFallback(
-          destSkillPath,
-          { ...frontmatter, name: ent.name },
-          body,
-        ),
-      );
-      results.push({
-        fromTool: WINDSURF_TARGET,
-        fromPath: skillMdPath,
-        toPath: `${WINDSURF_CANONICAL_SKILLS_DIR}/${ent.name}/SKILL.md`,
-        feature: 'skills',
-      });
-      const allSkillFiles = await readDirRecursive(skillPath);
-      for (const absPath of allSkillFiles) {
-        if (absPath === skillMdPath) continue;
-        const relPath = absPath.slice(skillPath.length + 1).replace(/\\/g, '/');
-        const supportContent = await readFileSafe(absPath);
-        if (supportContent === null) continue;
-        const destSupportPath = join(destSkillDir, relPath);
-        await mkdirp(join(destSupportPath, '..'));
-        await writeFileAtomic(destSupportPath, normalize(supportContent, absPath, destSupportPath));
-        results.push({
-          fromTool: WINDSURF_TARGET,
-          fromPath: absPath,
-          toPath: `${WINDSURF_CANONICAL_SKILLS_DIR}/${ent.name}/${relPath}`,
-          feature: 'skills',
-        });
-      }
-    }
-  } catch {
-    // .windsurf/skills/ doesn't exist — skip
   }
 }

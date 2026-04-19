@@ -34,7 +34,7 @@ import {
   CURSOR_HOOKS,
   CURSOR_IGNORE,
 } from './constants.js';
-import { importSkills } from './skills-helpers.js';
+import { importSkills } from './skills-adapter.js';
 import { mapCursorAgentFile, mapCursorCommandFile, mapCursorRuleFile } from './importer-mappers.js';
 import { importSettings, importIgnore } from './settings-helpers.js';
 

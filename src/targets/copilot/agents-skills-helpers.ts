@@ -1,5 +1,5 @@
 /**
- * Copilot agents and skills import helpers.
+ * Copilot agents import helpers.
  */
 
 import { join, basename, dirname, relative } from 'node:path';
@@ -11,17 +11,8 @@ import {
   mkdirp,
 } from '../../utils/filesystem/fs.js';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
-import {
-  serializeImportedAgentWithFallback,
-  serializeImportedSkillWithFallback,
-} from '../import/import-metadata.js';
-import {
-  COPILOT_TARGET,
-  COPILOT_AGENTS_DIR,
-  COPILOT_SKILLS_DIR,
-  COPILOT_CANONICAL_AGENTS_DIR,
-  COPILOT_CANONICAL_SKILLS_DIR,
-} from './constants.js';
+import { serializeImportedAgentWithFallback } from '../import/import-metadata.js';
+import { COPILOT_TARGET, COPILOT_AGENTS_DIR, COPILOT_CANONICAL_AGENTS_DIR } from './constants.js';
 
 /**
  * Import .github/agents/*.agent.md into canonical .agentsmesh/agents/*.md.
@@ -66,47 +57,5 @@ export async function importAgents(
       toPath: `${COPILOT_CANONICAL_AGENTS_DIR}/${relativeMdPath}`,
       feature: 'agents',
     });
-  }
-}
-
-export async function importSkills(
-  projectRoot: string,
-  results: ImportResult[],
-  normalize: (content: string, sourceFile: string, destinationFile: string) => string,
-  skillsDirRel: string = COPILOT_SKILLS_DIR,
-): Promise<void> {
-  const skillFiles = await readDirRecursive(join(projectRoot, skillsDirRel)).catch(() => []);
-  const skillMdFiles = skillFiles.filter((path) => path.endsWith('/SKILL.md'));
-  for (const skillMdPath of skillMdFiles) {
-    const content = await readFileSafe(skillMdPath);
-    if (!content) continue;
-    const skillName = basename(dirname(skillMdPath));
-    const destSkillDir = join(projectRoot, COPILOT_CANONICAL_SKILLS_DIR, skillName);
-    const allSkillFiles = await readDirRecursive(dirname(skillMdPath));
-    for (const absPath of allSkillFiles) {
-      const fileContent = await readFileSafe(absPath);
-      if (fileContent === null) continue;
-      const relPath = absPath.slice(dirname(skillMdPath).length + 1).replace(/\\/g, '/');
-      const destPath = join(destSkillDir, relPath);
-      await mkdirp(dirname(destPath));
-      const normalized = normalize(fileContent, absPath, destPath);
-      const parsed = relPath === 'SKILL.md' ? parseFrontmatter(normalized) : null;
-      await writeFileAtomic(
-        destPath,
-        relPath === 'SKILL.md'
-          ? await serializeImportedSkillWithFallback(
-              destPath,
-              { ...(parsed?.frontmatter ?? {}), name: skillName },
-              parsed?.body ?? '',
-            )
-          : normalized,
-      );
-      results.push({
-        fromTool: COPILOT_TARGET,
-        fromPath: absPath,
-        toPath: `${COPILOT_CANONICAL_SKILLS_DIR}/${skillName}/${relPath}`,
-        feature: 'skills',
-      });
-    }
   }
 }

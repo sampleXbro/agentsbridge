@@ -19,6 +19,7 @@ import {
 } from './constants.js';
 import { importFromCodex } from './importer.js';
 import { lintRules } from './linter.js';
+import { lintMcp } from './lint.js';
 import { buildCodexCliImportPaths } from '../../core/reference/import-map-builders.js';
 import { shouldConvertCommandsToSkills } from '../../config/core/conversions.js';
 import { codexAdvisoryInstructionPath } from './codex-rule-paths.js';
@@ -114,6 +115,9 @@ export const descriptor = {
   emptyImportMessage: 'No Codex config found (codex.md or AGENTS.md).',
   supportsConversion: { commands: true },
   lintRules,
+  lint: {
+    mcp: lintMcp,
+  },
   project,
   global,
   globalCapabilities,

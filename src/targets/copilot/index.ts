@@ -24,6 +24,7 @@ import { importFromCopilot } from './importer.js';
 import { lintRules } from './linter.js';
 import { buildCopilotImportPaths } from '../../core/reference/import-map-builders.js';
 import { commandPromptPath } from './command-prompt.js';
+import { lintCommands, lintHooks } from './lint.js';
 
 export const target: TargetGenerators = {
   name: 'copilot',
@@ -146,6 +147,10 @@ export const descriptor = {
   emptyImportMessage:
     'No Copilot config found (.github/copilot-instructions.md, .github/copilot or .github/instructions, .github/prompts, .github/skills, .github/agents, or .github/hooks).',
   lintRules,
+  lint: {
+    commands: lintCommands,
+    hooks: lintHooks,
+  },
   project,
   global,
   globalCapabilities,

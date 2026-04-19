@@ -24,6 +24,7 @@ import {
 } from './constants.js';
 import { importFromCline } from './importer.js';
 import { lintRules } from './linter.js';
+import { lintCommands } from './lint.js';
 import { buildClineImportPaths } from '../../core/reference/import-map-builders.js';
 import { shouldConvertAgentsToSkills } from '../../config/core/conversions.js';
 import { projectedAgentSkillDirName } from '../projection/projected-agent-skill.js';
@@ -142,6 +143,9 @@ export const descriptor = {
     'No Cline config found (.clinerules, .clineignore, .cline/cline_mcp_settings.json, or .cline/skills).',
   supportsConversion: { agents: true },
   lintRules,
+  lint: {
+    commands: lintCommands,
+  },
   project,
   global: globalLayout,
   globalCapabilities,

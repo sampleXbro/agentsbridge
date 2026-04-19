@@ -85,6 +85,19 @@ export type RuleLinter = (
   options?: { scope?: TargetLayoutScope },
 ) => LintDiagnostic[];
 
+/** Feature-specific lint hook signature. */
+export type FeatureLinter = (canonical: CanonicalFiles, options?: unknown) => LintDiagnostic[];
+
+/** Optional per-feature lint hooks for target-specific validation. */
+export interface TargetLintHooks {
+  readonly commands?: FeatureLinter;
+  readonly mcp?: FeatureLinter;
+  readonly permissions?: FeatureLinter;
+  readonly hooks?: FeatureLinter;
+  readonly ignore?: FeatureLinter;
+  readonly settings?: FeatureLinter;
+}
+
 /**
  * Full self-describing target descriptor.
  * Bundles everything needed to generate, import, lint, and detect a target.
@@ -102,6 +115,8 @@ export interface TargetDescriptor {
   readonly emptyImportMessage: string;
   /** Optional linter for canonical files */
   readonly lintRules: RuleLinter | null;
+  /** Optional per-feature lint hooks */
+  readonly lint?: TargetLintHooks;
   /** Project-scope target layout metadata */
   readonly project: TargetLayout;
   /** Optional future global-scope target layout metadata */

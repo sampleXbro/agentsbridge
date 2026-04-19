@@ -10,6 +10,7 @@ import {
 } from './generator.js';
 import { importFromKiro } from './importer.js';
 import { lintRules } from './linter.js';
+import { lintHooks } from './lint.js';
 import { buildKiroImportPaths } from '../../core/reference/import-map-builders.js';
 import {
   KIRO_TARGET,
@@ -146,6 +147,9 @@ export const descriptor = {
   emptyImportMessage:
     'No Kiro config found (AGENTS.md, .kiro/steering, .kiro/skills, .kiro/agents, .kiro/hooks, .kiro/settings/mcp.json, or .kiroignore).',
   lintRules,
+  lint: {
+    hooks: lintHooks,
+  },
   project,
   global,
   globalCapabilities,

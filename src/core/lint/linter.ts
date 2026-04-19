@@ -56,21 +56,38 @@ export async function runLint(
   const projectFiles = scope === 'global' ? [] : await getProjectFiles(projectRoot);
 
   for (const target of targets) {
-    const linter = isBuiltinTargetId(target) ? getTargetCatalogEntry(target).lintRules : null;
-    if (hasRules && linter) {
-      diagnostics.push(...linter(canonical, projectRoot, projectFiles, { scope }));
+    const descriptor = isBuiltinTargetId(target) ? getTargetCatalogEntry(target) : null;
+
+    if (hasRules && descriptor?.lintRules) {
+      diagnostics.push(...descriptor.lintRules(canonical, projectRoot, projectFiles, { scope }));
     }
     if (hasCommands) {
-      diagnostics.push(...lintCommands(canonical, target));
+      if (descriptor?.lint?.commands) {
+        diagnostics.push(...descriptor.lint.commands(canonical));
+      } else {
+        diagnostics.push(...lintCommands(canonical, target));
+      }
     }
     if (hasMcp) {
-      diagnostics.push(...lintMcp(canonical, target));
+      if (descriptor?.lint?.mcp) {
+        diagnostics.push(...descriptor.lint.mcp(canonical));
+      } else {
+        diagnostics.push(...lintMcp(canonical, target));
+      }
     }
     if (hasPermissions) {
-      diagnostics.push(...lintPermissions(canonical, target));
+      if (descriptor?.lint?.permissions) {
+        diagnostics.push(...descriptor.lint.permissions(canonical));
+      } else {
+        diagnostics.push(...lintPermissions(canonical, target));
+      }
     }
     if (hasHooks) {
-      diagnostics.push(...lintHooks(canonical, target));
+      if (descriptor?.lint?.hooks) {
+        diagnostics.push(...descriptor.lint.hooks(canonical));
+      } else {
+        diagnostics.push(...lintHooks(canonical, target));
+      }
     }
   }
 

@@ -30,6 +30,7 @@ import {
 import { importFromCursor } from './importer.js';
 import { lintRules } from './linter.js';
 import { buildCursorImportPaths } from '../../core/reference/import-map-builders.js';
+import { lintCommands, lintMcp, lintPermissions } from './lint.js';
 
 export const target: TargetGenerators = {
   name: 'cursor',
@@ -144,6 +145,11 @@ export const descriptor = {
   emptyImportMessage:
     'No Cursor config found (AGENTS.md or .cursor/rules/*.mdc; with --global: ~/.cursor/{rules/*.mdc,AGENTS.md,mcp.json,hooks.json,cursorignore,skills/,agents/,commands/} and legacy ~/.agentsmesh-exports/cursor/user-rules.md).',
   lintRules,
+  lint: {
+    commands: lintCommands,
+    mcp: lintMcp,
+    permissions: lintPermissions,
+  },
   project,
   global,
   globalCapabilities,

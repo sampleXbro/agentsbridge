@@ -26,6 +26,7 @@ import {
 } from './constants.js';
 import { importFromJunie } from './importer.js';
 import { lintRules } from './linter.js';
+import { lintMcp } from './lint.js';
 import { buildJunieImportPaths } from '../../core/reference/import-map-builders.js';
 
 export const target: TargetGenerators = {
@@ -146,6 +147,9 @@ export const descriptor = {
   emptyImportMessage:
     'No Junie config found (.junie/guidelines.md, .junie/AGENTS.md, .junie/skills, .junie/mcp/mcp.json, or .aiignore).',
   lintRules,
+  lint: {
+    mcp: lintMcp,
+  },
   project,
   global,
   globalCapabilities,

@@ -28,6 +28,7 @@ import { lintRules } from './linter.js';
 import { buildGeminiCliImportPaths } from '../../core/reference/import-map-builders.js';
 import { shouldConvertAgentsToSkills } from '../../config/core/conversions.js';
 import { projectedAgentSkillDirName } from '../projection/projected-agent-skill.js';
+import { lintCommands, lintHooks } from './lint.js';
 
 export const target: TargetGenerators = {
   name: 'gemini-cli',
@@ -175,6 +176,10 @@ export const descriptor = {
   emptyImportMessage:
     'No Gemini CLI config found (GEMINI.md or .gemini/rules, .gemini/commands, .gemini/settings.json).',
   lintRules,
+  lint: {
+    commands: lintCommands,
+    hooks: lintHooks,
+  },
   project,
   global,
   globalCapabilities,

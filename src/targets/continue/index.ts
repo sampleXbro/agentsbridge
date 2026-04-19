@@ -10,6 +10,7 @@ import {
 } from './constants.js';
 import { importFromContinue } from './importer.js';
 import { lintRules } from './linter.js';
+import { lintCommands } from './lint.js';
 import { continueCommandRulePath } from './command-rule.js';
 import { buildContinueImportPaths } from '../../core/reference/import-map-builders.js';
 
@@ -97,6 +98,9 @@ export const descriptor = {
   emptyImportMessage:
     'No Continue config found (.continue/rules/*.md, .continue/skills, or .continue/mcpServers/*).',
   lintRules,
+  lint: {
+    commands: lintCommands,
+  },
   project,
   global: globalLayout,
   skillDir: project.skillDir,

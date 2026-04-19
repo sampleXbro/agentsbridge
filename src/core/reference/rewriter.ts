@@ -22,22 +22,47 @@ import type { ValidatedConfig } from '../../config/core/schema.js';
 import { rewriteFileLinks } from './link-rebaser.js';
 import { buildArtifactPathMap, buildOutputSourceMap } from './output-source-map.js';
 import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
-
-const CODEX_CLI = 'codex-cli';
+import { getBuiltinTargetDefinition } from '../../targets/catalog/builtin-targets.js';
 
 /**
- * Any result placed under `.agents/skills/` in global mode must use codex-cli's artifact map
- * because `.agents/skills/` is codex-cli's global skillDir. Using the originating target's map
- * (e.g. kiro → `.kiro/skills/`) would produce wrong relative links from the `.agents/skills/`
- * destination (e.g. `../../../.kiro/skills/x/references/` instead of `references/`).
+ * Find the owner of a shared artifact path from active targets.
+ * Returns the target ID that owns the path, or null if no owner is found.
+ */
+function findSharedArtifactOwner(
+  path: string,
+  activeTargets: readonly string[] | undefined,
+): string | null {
+  if (!activeTargets) return null;
+
+  for (const targetId of activeTargets) {
+    const descriptor = getBuiltinTargetDefinition(targetId);
+    if (!descriptor?.sharedArtifacts) continue;
+
+    for (const [pathPrefix, role] of Object.entries(descriptor.sharedArtifacts)) {
+      if (role === 'owner' && path.startsWith(pathPrefix)) {
+        return targetId;
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Any result placed under a shared artifact path in global mode must use the owner's artifact map.
+ * Falls back to codex-cli for `.agents/skills/` for backward compatibility.
  */
 function artifactMapTargetForResult(
   result: GenerateResult,
   scope: TargetLayoutScope,
-  _activeTargets: readonly string[] | undefined,
+  activeTargets: readonly string[] | undefined,
 ): string {
-  if (scope === 'global' && result.path.startsWith('.agents/skills/')) {
-    return CODEX_CLI;
+  if (scope === 'global') {
+    const owner = findSharedArtifactOwner(result.path, activeTargets);
+    if (owner) return owner;
+    // Fallback for backward compatibility
+    if (result.path.startsWith('.agents/skills/')) {
+      return 'codex-cli';
+    }
   }
   return result.target;
 }

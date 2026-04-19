@@ -124,6 +124,9 @@ export const descriptor = {
   skillDir: project.skillDir,
   paths: project.paths,
   buildImportPaths: buildCodexCliImportPaths,
+  sharedArtifacts: {
+    '.agents/skills/': 'owner',
+  },
   globalDetectionPaths: [
     '.codex/AGENTS.md',
     '.codex/AGENTS.override.md',

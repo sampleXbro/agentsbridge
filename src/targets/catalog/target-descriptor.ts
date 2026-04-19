@@ -146,4 +146,10 @@ export interface TargetDescriptor {
   readonly detectionPaths: readonly string[];
   /** Optional filesystem paths used to detect this target in global scope during `init --global` */
   readonly globalDetectionPaths?: readonly string[];
+  /**
+   * Declares which shared artifact paths this target owns or consumes.
+   * Used by the reference rewriter to select the correct artifact map for shared outputs.
+   * Example: codex-cli owns '.agents/skills/', copilot consumes it in global mode.
+   */
+  readonly sharedArtifacts?: { readonly [pathPrefix: string]: 'owner' | 'consumer' };
 }

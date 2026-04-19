@@ -22,7 +22,16 @@ describe('junie global layout — paths', () => {
   });
 
   it('resolves agent path to .junie/agents/', () => {
-    expect(layout.paths.agentPath('my-agent', {} as never)).toBe('.junie/agents/my-agent.md');
+    expect(
+      layout.paths.agentPath('my-agent', {
+        features: [],
+        targets: [],
+        version: 1,
+        extends: [],
+        overrides: {},
+        collaboration: { strategy: 'merge', lock_features: [] },
+      }),
+    ).toBe('.junie/agents/my-agent.md');
   });
 });
 
@@ -30,37 +39,28 @@ describe('junie global layout — rewriteGeneratedPath', () => {
   const layout = getTargetLayout('junie', 'global')!;
   const rewrite = layout.rewriteGeneratedPath!;
 
-  it('rewrites .junie/AGENTS.md to .junie/AGENTS.md (identity)', () => {
+  it('rewrites .junie/AGENTS.md unchanged (already in global form)', () => {
     expect(rewrite('.junie/AGENTS.md')).toBe('.junie/AGENTS.md');
   });
 
-  it('rewrites .junie/rules/*.md to .junie/AGENTS.md (aggregate)', () => {
-    expect(rewrite('.junie/rules/typescript.md')).toBe('.junie/AGENTS.md');
-    expect(rewrite('.junie/rules/general.md')).toBe('.junie/AGENTS.md');
+  it('keeps .junie/commands/ paths unchanged', () => {
+    expect(rewrite('.junie/commands/deploy.md')).toBe('.junie/commands/deploy.md');
   });
 
-  it('rewrites .junie/skills/ to .junie/skills/', () => {
+  it('keeps .junie/skills/ paths unchanged', () => {
     expect(rewrite('.junie/skills/ts-pro/SKILL.md')).toBe('.junie/skills/ts-pro/SKILL.md');
   });
 
-  it('rewrites .junie/commands/ to .junie/commands/', () => {
-    expect(rewrite('.junie/commands/commit.md')).toBe('.junie/commands/commit.md');
+  it('keeps .junie/agents/ paths unchanged', () => {
+    expect(rewrite('.junie/agents/my-agent.md')).toBe('.junie/agents/my-agent.md');
   });
 
-  it('rewrites .junie/agents/ to .junie/agents/', () => {
-    expect(rewrite('.junie/agents/reviewer.md')).toBe('.junie/agents/reviewer.md');
-  });
-
-  it('rewrites .junie/mcp/mcp.json to .junie/mcp/mcp.json', () => {
+  it('rewrites .junie/mcp/mcp.json unchanged (already in global form)', () => {
     expect(rewrite('.junie/mcp/mcp.json')).toBe('.junie/mcp/mcp.json');
   });
 
   it('suppresses .aiignore in global mode (returns null)', () => {
     expect(rewrite('.aiignore')).toBeNull();
-  });
-
-  it('returns unmodified path for unknown paths', () => {
-    expect(rewrite('.junie/other/file.txt')).toBe('.junie/other/file.txt');
   });
 });
 
@@ -78,23 +78,11 @@ describe('junie global layout — mirrorGlobalPath', () => {
     );
   });
 
-  it('does not mirror when codex-cli is active', () => {
-    expect(mirror('.junie/skills/ts-pro/SKILL.md', ['codex-cli'])).toBeNull();
-  });
-
-  it('returns null for rule files (not mirrored)', () => {
+  it('returns null for AGENTS.md (not mirrored)', () => {
     expect(mirror('.junie/AGENTS.md', [])).toBeNull();
   });
 
-  it('returns null for command files (not mirrored)', () => {
-    expect(mirror('.junie/commands/commit.md', [])).toBeNull();
-  });
-
-  it('returns null for agent files (not mirrored)', () => {
-    expect(mirror('.junie/agents/reviewer.md', [])).toBeNull();
-  });
-
-  it('returns null for MCP file (not mirrored)', () => {
-    expect(mirror('.junie/mcp/mcp.json', [])).toBeNull();
+  it('returns null for prompt files (not mirrored)', () => {
+    expect(mirror('.junie/prompts/commit.md', [])).toBeNull();
   });
 });

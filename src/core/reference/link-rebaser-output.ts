@@ -65,6 +65,17 @@ export function formatLinkPathForDestination(
   }
 
   let rel = api.relative(destDir, target).replace(/\\/g, '/');
+  const destDirFwd = destDir.replace(/\\/g, '/');
+  const targetFwd = target.replace(/\\/g, '/');
+  /** Antigravity (and similar) emit rules under `.agents/…` while canonical lives under `.agentsmesh/…`. */
+  if (
+    rel.startsWith('..') &&
+    targetFwd.includes('/.agentsmesh/') &&
+    destDirFwd.includes('/.agents/') &&
+    !destDirFwd.includes('/.agentsmesh/')
+  ) {
+    return toProjectRootRelative(projectRoot, target, keepSlash);
+  }
   if (api.isAbsolute(rel) || WINDOWS_ABSOLUTE_PATH.test(rel)) {
     return toProjectRootRelative(projectRoot, target, keepSlash);
   }

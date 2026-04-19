@@ -21,9 +21,11 @@ agentsmesh import --global --from claude-code
 | Flag | Description |
 |------|-------------|
 | `--from <target>` | Source tool ID to import from. **Required.** |
-| `--global` | Import from user-level tool paths into `~/.agentsmesh/` (`claude-code`, `antigravity`, `codex-cli`; `cursor` reads `~/.cursor/{rules/,AGENTS.md,mcp.json,hooks.json,cursorignore,skills/,agents/,commands/}` and legacy `~/.agentsmesh-exports/cursor/user-rules.md` when present). |
+| `--global` | Import from user-level tool paths into `~/.agentsmesh/`. See the global-mode sections below for target-specific paths and current importer caveats. |
 
 ## Supported targets
+
+The table below lists project-scope import roots. With `--global`, AgentsMesh uses the user-level paths documented in the global-mode sections below.
 
 | Target ID | Reads from |
 |-----------|-----------|
@@ -100,11 +102,39 @@ When you pass `--global`, Claude Code imports from the documented user-level pat
 
 | Source | Canonical |
 |--------|-----------|
-| `~/.gemini/GEMINI.md` | `~/.agentsmesh/rules/_root.md` |
+| `~/.gemini/antigravity/GEMINI.md` | `~/.agentsmesh/rules/_root.md` |
 | `~/.gemini/antigravity/skills/**/SKILL.md` | `~/.agentsmesh/skills/**/SKILL.md` |
 | `~/.gemini/antigravity/mcp_config.json` | `~/.agentsmesh/mcp.json` |
 
 Project-only paths such as `.agents/workflows/` are not scanned in global mode.
+
+### Cline global mode
+
+`agentsmesh generate --global --targets cline` writes rules and workflows to `~/Documents/Cline/`. The current importer still reads Cline's project-style paths under `$HOME`:
+
+| Source | Canonical |
+|--------|-----------|
+| `~/.clinerules` or `~/.clinerules/*.md` | `~/.agentsmesh/rules/*.md` |
+| `~/.clinerules/workflows/*.md` | `~/.agentsmesh/commands/*.md` |
+| `~/.cline/skills/*/SKILL.md` | `~/.agentsmesh/skills/*/SKILL.md` |
+| `~/.cline/cline_mcp_settings.json` | `~/.agentsmesh/mcp.json` |
+| `~/.clineignore` | `~/.agentsmesh/ignore` |
+
+Generated hook scripts under `~/Documents/Cline/Hooks/` are not imported back into `hooks.yaml` yet.
+
+### Windsurf global mode
+
+`agentsmesh generate --global --targets windsurf` writes native user-level files under `~/.codeium/windsurf/`. The current importer still reads Windsurf's project-style paths under `$HOME`:
+
+| Source | Canonical |
+|--------|-----------|
+| `~/.windsurfrules` or `~/AGENTS.md` | `~/.agentsmesh/rules/_root.md` |
+| `~/.windsurf/rules/*.md` | `~/.agentsmesh/rules/*.md` |
+| `~/.windsurf/workflows/*.md` | `~/.agentsmesh/commands/*.md` |
+| `~/.windsurf/skills/*/SKILL.md` | `~/.agentsmesh/skills/*/SKILL.md` |
+| `~/.windsurf/hooks.json` | `~/.agentsmesh/hooks.yaml` |
+| `~/.windsurf/mcp_config.json` | `~/.agentsmesh/mcp.json` |
+| `~/.windsurfignore` or `~/.codeiumignore` | `~/.agentsmesh/ignore` |
 
 ### Codex CLI global mode
 

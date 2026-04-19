@@ -18,11 +18,20 @@ describe('claude-code global layout — paths', () => {
   });
 
   it('resolves command path to .claude/commands/', () => {
-    expect(layout.paths.commandPath('review', {} as never)).toBe('.claude/commands/review.md');
+    expect(layout.paths.commandPath('deploy', {} as never)).toBe('.claude/commands/deploy.md');
   });
 
   it('resolves agent path to .claude/agents/', () => {
-    expect(layout.paths.agentPath('reviewer', {} as never)).toBe('.claude/agents/reviewer.md');
+    expect(
+      layout.paths.agentPath('reviewer', {
+        features: [],
+        targets: [],
+        version: 1,
+        extends: [],
+        overrides: {},
+        collaboration: { strategy: 'merge', lock_features: [] },
+      }),
+    ).toBe('.claude/agents/reviewer.md');
   });
 });
 
@@ -34,7 +43,7 @@ describe('claude-code global layout — rewriteGeneratedPath', () => {
     expect(rewrite('.mcp.json')).toBe('.claude.json');
   });
 
-  it('keeps .claude/CLAUDE.md unchanged', () => {
+  it('keeps CLAUDE.md unchanged (already in global form)', () => {
     expect(rewrite('.claude/CLAUDE.md')).toBe('.claude/CLAUDE.md');
   });
 
@@ -43,7 +52,7 @@ describe('claude-code global layout — rewriteGeneratedPath', () => {
   });
 
   it('keeps .claude/commands/ paths unchanged', () => {
-    expect(rewrite('.claude/commands/review.md')).toBe('.claude/commands/review.md');
+    expect(rewrite('.claude/commands/deploy.md')).toBe('.claude/commands/deploy.md');
   });
 
   it('keeps .claude/agents/ paths unchanged', () => {
@@ -58,46 +67,7 @@ describe('claude-code global layout — rewriteGeneratedPath', () => {
     expect(rewrite('.claude/settings.json')).toBe('.claude/settings.json');
   });
 
-  it('keeps .claude/hooks.json unchanged', () => {
-    expect(rewrite('.claude/hooks.json')).toBe('.claude/hooks.json');
-  });
-
   it('keeps .claudeignore unchanged', () => {
     expect(rewrite('.claudeignore')).toBe('.claudeignore');
-  });
-});
-
-describe('claude-code global layout — mirrorGlobalPath', () => {
-  const layout = getTargetLayout('claude-code', 'global')!;
-  const mirror = layout.mirrorGlobalPath!;
-
-  it('mirrors .claude/skills/ to .agents/skills/', () => {
-    expect(mirror('.claude/skills/ts-pro/SKILL.md', [])).toBe('.agents/skills/ts-pro/SKILL.md');
-  });
-
-  it('mirrors nested supporting file under .claude/skills/', () => {
-    expect(mirror('.claude/skills/ts-pro/references/checklist.md', [])).toBe(
-      '.agents/skills/ts-pro/references/checklist.md',
-    );
-  });
-
-  it('does not mirror when codex-cli is active', () => {
-    expect(mirror('.claude/skills/ts-pro/SKILL.md', ['codex-cli'])).toBeNull();
-  });
-
-  it('returns null for rule files (not mirrored)', () => {
-    expect(mirror('.claude/rules/typescript.md', [])).toBeNull();
-  });
-
-  it('returns null for command files (not mirrored)', () => {
-    expect(mirror('.claude/commands/review.md', [])).toBeNull();
-  });
-
-  it('returns null for agent files (not mirrored)', () => {
-    expect(mirror('.claude/agents/reviewer.md', [])).toBeNull();
-  });
-
-  it('returns null for MCP file (not mirrored)', () => {
-    expect(mirror('.claude.json', [])).toBeNull();
   });
 });

@@ -47,7 +47,7 @@ const project: TargetLayout = {
   additionalRootDecorationPaths: [GEMINI_COMPAT_AGENTS],
   skillDir: '.gemini/skills',
   managedOutputs: {
-    dirs: ['.gemini/agents', '.gemini/commands', '.gemini/skills'],
+    dirs: ['.gemini/agents', '.gemini/commands', '.gemini/skills', '.agents/skills'],
     files: [
       'AGENTS.md',
       'GEMINI.md',
@@ -55,6 +55,14 @@ const project: TargetLayout = {
       '.gemini/policies/permissions.toml',
       '.geminiignore',
     ],
+  },
+  // `AGENTS.md` rewrites skill links to `.agents/skills/…` for cross-tool compatibility; mirror
+  // project skills there so link validation and consumers see real files (same as global layout).
+  mirrorGlobalPath(path, activeTargets) {
+    if (path.startsWith('.gemini/skills/') && !activeTargets.includes('codex-cli')) {
+      return path.replace(/^\.gemini\/skills\//, '.agents/skills/');
+    }
+    return null;
   },
   paths: {
     rulePath(_slug, _rule) {

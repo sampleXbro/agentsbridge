@@ -31,8 +31,9 @@ export async function importAgents(
   projectRoot: string,
   results: ImportResult[],
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
+  agentsDirRel: string = COPILOT_AGENTS_DIR,
 ): Promise<void> {
-  const agentsDir = join(projectRoot, COPILOT_AGENTS_DIR);
+  const agentsDir = join(projectRoot, agentsDirRel);
   let files: string[];
   try {
     files = await readDirRecursive(agentsDir);
@@ -72,8 +73,9 @@ export async function importSkills(
   projectRoot: string,
   results: ImportResult[],
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
+  skillsDirRel: string = COPILOT_SKILLS_DIR,
 ): Promise<void> {
-  const skillFiles = await readDirRecursive(join(projectRoot, COPILOT_SKILLS_DIR)).catch(() => []);
+  const skillFiles = await readDirRecursive(join(projectRoot, skillsDirRel)).catch(() => []);
   const skillMdFiles = skillFiles.filter((path) => path.endsWith('/SKILL.md'));
   for (const skillMdPath of skillMdFiles) {
     const content = await readFileSafe(skillMdPath);

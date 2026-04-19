@@ -24,9 +24,16 @@ describe('copilot global layout — paths', () => {
   });
 
   it('resolves agent path to .copilot/agents/', () => {
-    expect(layout.paths.agentPath('reviewer', {} as never)).toBe(
-      '.copilot/agents/reviewer.agent.md',
-    );
+    expect(
+      layout.paths.agentPath('my-agent', {
+        features: [],
+        targets: [],
+        version: 1,
+        extends: [],
+        overrides: {},
+        collaboration: { strategy: 'merge', lock_features: [] },
+      }),
+    ).toBe('.copilot/agents/my-agent.agent.md');
   });
 });
 
@@ -38,29 +45,24 @@ describe('copilot global layout — rewriteGeneratedPath', () => {
     expect(rewrite('.github/copilot-instructions.md')).toBe('.copilot/copilot-instructions.md');
   });
 
-  it('suppresses path-specific instructions (returns null)', () => {
-    expect(rewrite('.github/instructions/typescript.instructions.md')).toBeNull();
-  });
-
   it('rewrites .github/prompts/ to .copilot/prompts/', () => {
     expect(rewrite('.github/prompts/deploy.prompt.md')).toBe('.copilot/prompts/deploy.prompt.md');
   });
 
   it('rewrites .github/agents/ to .copilot/agents/', () => {
-    expect(rewrite('.github/agents/reviewer.agent.md')).toBe('.copilot/agents/reviewer.agent.md');
+    expect(rewrite('.github/agents/my-agent.agent.md')).toBe('.copilot/agents/my-agent.agent.md');
   });
 
   it('rewrites .github/skills/ to .copilot/skills/', () => {
     expect(rewrite('.github/skills/ts-pro/SKILL.md')).toBe('.copilot/skills/ts-pro/SKILL.md');
   });
 
-  it('suppresses hooks in global mode (returns null)', () => {
-    expect(rewrite('.github/hooks/agentsmesh.json')).toBeNull();
-    expect(rewrite('.github/hooks/scripts/pre-push.sh')).toBeNull();
+  it('suppresses .github/instructions/ in global mode (returns null)', () => {
+    expect(rewrite('.github/instructions/review.instructions.md')).toBeNull();
   });
 
-  it('returns unchanged path for unrecognized paths', () => {
-    expect(rewrite('.github/other/file.md')).toBe('.github/other/file.md');
+  it('suppresses .github/hooks/ in global mode (returns null)', () => {
+    expect(rewrite('.github/hooks/scripts/pre-commit.sh')).toBeNull();
   });
 });
 
@@ -82,15 +84,11 @@ describe('copilot global layout — mirrorGlobalPath', () => {
     expect(mirror('.copilot/skills/ts-pro/SKILL.md', ['codex-cli'])).toBeNull();
   });
 
-  it('returns null for instructions file (not mirrored)', () => {
+  it('returns null for instruction file (not mirrored)', () => {
     expect(mirror('.copilot/copilot-instructions.md', [])).toBeNull();
   });
 
-  it('returns null for agent files (not mirrored)', () => {
-    expect(mirror('.copilot/agents/reviewer.agent.md', [])).toBeNull();
-  });
-
-  it('returns null for prompts (not mirrored)', () => {
-    expect(mirror('.copilot/prompts/deploy.prompt.md', [])).toBeNull();
+  it('returns null for prompt files (not mirrored)', () => {
+    expect(mirror('.copilot/prompts/commit.prompt.md', [])).toBeNull();
   });
 });

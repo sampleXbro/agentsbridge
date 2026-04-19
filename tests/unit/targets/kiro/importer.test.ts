@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { importFromKiro } from '../../../../src/targets/kiro/importer.js';
 import {
   KIRO_AGENTS_MD,
+  KIRO_AGENTS_DIR,
   KIRO_STEERING_DIR,
   KIRO_SKILLS_DIR,
   KIRO_MCP_FILE,
@@ -46,6 +47,23 @@ describe('importFromKiro — rules', () => {
     expect(content).toContain('globs:');
     expect(content).toContain('src/**/*.ts');
     expect(content).toContain('description: TypeScript rules');
+  });
+});
+
+describe('importFromKiro — agents', () => {
+  it('imports .kiro/agents/*.md into canonical agents', async () => {
+    mkdirSync(join(TEST_DIR, KIRO_AGENTS_DIR), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, KIRO_AGENTS_DIR, 'review-bot.md'),
+      '---\nname: review-bot\ndescription: Review\n---\n\nBody.',
+    );
+
+    const results = await importFromKiro(TEST_DIR);
+
+    expect(results.some((r) => r.toPath === '.agentsmesh/agents/review-bot.md')).toBe(true);
+    expect(
+      readFileSync(join(TEST_DIR, '.agentsmesh', 'agents', 'review-bot.md'), 'utf-8'),
+    ).toContain('Review');
   });
 });
 

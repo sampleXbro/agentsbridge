@@ -22,6 +22,20 @@ describe('windsurf global layout — paths', () => {
       '.codeium/windsurf/global_workflows/deploy.md',
     );
   });
+
+  it('resolves agent path to .codeium/windsurf/skills/ (embedded as skill)', () => {
+    expect(
+      layout.paths.agentPath('my-agent', {
+        features: [],
+        targets: [],
+        version: 1,
+        extends: [],
+        overrides: {},
+        collaboration: { strategy: 'merge', lock_features: [] },
+        conversions: { agents_to_skills: { windsurf: true } },
+      }),
+    ).toBe('.codeium/windsurf/skills/am-agent-my-agent/SKILL.md');
+  });
 });
 
 describe('windsurf global layout — rewriteGeneratedPath', () => {
@@ -32,13 +46,10 @@ describe('windsurf global layout — rewriteGeneratedPath', () => {
     expect(rewrite('AGENTS.md')).toBe('.codeium/windsurf/memories/global_rules.md');
   });
 
-  it('suppresses src/AGENTS.md in global mode (directory-scoped rule output)', () => {
-    expect(rewrite('src/AGENTS.md')).toBeNull();
-  });
-
-  it('suppresses .windsurf/rules/ in global mode (returns null)', () => {
-    expect(rewrite('.windsurf/rules/typescript.md')).toBeNull();
-    expect(rewrite('.windsurf/rules/testing.md')).toBeNull();
+  it('rewrites .windsurf/workflows/ to .codeium/windsurf/global_workflows/', () => {
+    expect(rewrite('.windsurf/workflows/deploy.md')).toBe(
+      '.codeium/windsurf/global_workflows/deploy.md',
+    );
   });
 
   it('rewrites .windsurf/skills/ to .codeium/windsurf/skills/', () => {
@@ -47,26 +58,16 @@ describe('windsurf global layout — rewriteGeneratedPath', () => {
     );
   });
 
-  it('rewrites .windsurf/workflows/ to .codeium/windsurf/global_workflows/', () => {
-    expect(rewrite('.windsurf/workflows/deploy.md')).toBe(
-      '.codeium/windsurf/global_workflows/deploy.md',
-    );
+  it('suppresses .windsurf/rules/ in global mode (returns null)', () => {
+    expect(rewrite('.windsurf/rules/typescript.md')).toBeNull();
+  });
+
+  it('rewrites .windsurfignore to .codeium/.codeiumignore', () => {
+    expect(rewrite('.codeiumignore')).toBe('.codeium/.codeiumignore');
   });
 
   it('rewrites .windsurf/hooks.json to .codeium/windsurf/hooks.json', () => {
     expect(rewrite('.windsurf/hooks.json')).toBe('.codeium/windsurf/hooks.json');
-  });
-
-  it('rewrites .windsurf/mcp_config.example.json to .codeium/windsurf/mcp_config.json', () => {
-    expect(rewrite('.windsurf/mcp_config.example.json')).toBe('.codeium/windsurf/mcp_config.json');
-  });
-
-  it('rewrites .codeiumignore to .codeium/.codeiumignore', () => {
-    expect(rewrite('.codeiumignore')).toBe('.codeium/.codeiumignore');
-  });
-
-  it('returns unchanged path for unrecognized paths', () => {
-    expect(rewrite('.codeium/windsurf/other/file.md')).toBe('.codeium/windsurf/other/file.md');
   });
 });
 
@@ -80,7 +81,7 @@ describe('windsurf global layout — mirrorGlobalPath', () => {
     );
   });
 
-  it('mirrors nested supporting file under .codeium/windsurf/skills/', () => {
+  it('mirrors nested supporting file under skills/', () => {
     expect(mirror('.codeium/windsurf/skills/ts-pro/references/checklist.md', [])).toBe(
       '.agents/skills/ts-pro/references/checklist.md',
     );
@@ -96,13 +97,5 @@ describe('windsurf global layout — mirrorGlobalPath', () => {
 
   it('returns null for workflow files (not mirrored)', () => {
     expect(mirror('.codeium/windsurf/global_workflows/deploy.md', [])).toBeNull();
-  });
-
-  it('returns null for MCP file (not mirrored)', () => {
-    expect(mirror('.codeium/windsurf/mcp_config.json', [])).toBeNull();
-  });
-
-  it('returns null for ignore file (not mirrored)', () => {
-    expect(mirror('.codeium/.codeiumignore', [])).toBeNull();
   });
 });

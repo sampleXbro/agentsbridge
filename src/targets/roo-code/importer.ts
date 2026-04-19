@@ -1,6 +1,7 @@
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { ImportResult, McpServer } from '../../core/types.js';
+import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
 import { readFileSafe, writeFileAtomic } from '../../utils/filesystem/fs.js';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
@@ -20,6 +21,8 @@ import {
   ROO_CODE_COMMANDS_DIR,
   ROO_CODE_SKILLS_DIR,
   ROO_CODE_MCP_FILE,
+  ROO_CODE_GLOBAL_MCP_FILE,
+  ROO_CODE_GLOBAL_AGENTS_MD,
   ROO_CODE_IGNORE,
   ROO_CODE_CANONICAL_ROOT_RULE,
   ROO_CODE_CANONICAL_RULES_DIR,
@@ -64,9 +67,13 @@ async function importRootRule(
   projectRoot: string,
   results: ImportResult[],
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
+  scope: TargetLayoutScope,
 ): Promise<void> {
   const destPath = join(projectRoot, ROO_CODE_CANONICAL_ROOT_RULE);
-  const sources = [ROO_CODE_ROOT_RULE, ROO_CODE_ROOT_RULE_FALLBACK];
+  const sources =
+    scope === 'global'
+      ? [ROO_CODE_GLOBAL_AGENTS_MD, ROO_CODE_ROOT_RULE, ROO_CODE_ROOT_RULE_FALLBACK]
+      : [ROO_CODE_ROOT_RULE, ROO_CODE_ROOT_RULE_FALLBACK];
 
   for (const relPath of sources) {
     const srcPath = join(projectRoot, relPath);
@@ -227,8 +234,15 @@ async function importCommands(
   );
 }
 
-async function importMcp(projectRoot: string, results: ImportResult[]): Promise<void> {
-  const srcPath = join(projectRoot, ROO_CODE_MCP_FILE);
+async function importMcp(
+  projectRoot: string,
+  results: ImportResult[],
+  scope: TargetLayoutScope,
+): Promise<void> {
+  const srcPath =
+    scope === 'global'
+      ? join(projectRoot, ROO_CODE_GLOBAL_MCP_FILE)
+      : join(projectRoot, ROO_CODE_MCP_FILE);
   const content = await readFileSafe(srcPath);
   if (content === null) return;
 
@@ -261,15 +275,19 @@ async function importIgnore(projectRoot: string, results: ImportResult[]): Promi
   });
 }
 
-export async function importFromRooCode(projectRoot: string): Promise<ImportResult[]> {
+export async function importFromRooCode(
+  projectRoot: string,
+  options: { scope?: TargetLayoutScope } = {},
+): Promise<ImportResult[]> {
+  const scope = options.scope ?? 'project';
   const results: ImportResult[] = [];
-  const normalize = await createImportReferenceNormalizer(ROO_CODE_TARGET, projectRoot);
-  await importRootRule(projectRoot, results, normalize);
+  const normalize = await createImportReferenceNormalizer(ROO_CODE_TARGET, projectRoot, scope);
+  await importRootRule(projectRoot, results, normalize, scope);
   await importNonRootRules(projectRoot, results, normalize);
   await importPerModeRules(projectRoot, results, normalize);
   await importCommands(projectRoot, results, normalize);
   await importEmbeddedSkills(projectRoot, ROO_CODE_SKILLS_DIR, ROO_CODE_TARGET, results, normalize);
-  await importMcp(projectRoot, results);
+  await importMcp(projectRoot, results, scope);
   await importIgnore(projectRoot, results);
   return results;
 }

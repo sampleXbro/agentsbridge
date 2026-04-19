@@ -30,6 +30,7 @@ export const TARGET_CONTRACTS = {
   },
   cursor: {
     generated: [
+      '.cursor/AGENTS.md',
       '.cursor/agents/code-reviewer.md',
       '.cursor/agents/researcher.md',
       '.cursor/commands/review.md',
@@ -130,6 +131,9 @@ export const TARGET_CONTRACTS = {
   },
   'gemini-cli': {
     generated: [
+      '.agents/skills/api-generator/SKILL.md',
+      '.agents/skills/api-generator/references/route-checklist.md',
+      '.agents/skills/api-generator/template.ts',
       '.gemini/agents/code-reviewer.md',
       '.gemini/agents/researcher.md',
       '.gemini/commands/review.toml',
@@ -238,6 +242,72 @@ export const TARGET_CONTRACTS = {
       '.agentsmesh/skills/api-generator/template.ts',
     ],
   },
+  antigravity: {
+    generated: [
+      '.agents/rules/general.md',
+      '.agents/rules/typescript.md',
+      '.agents/skills/api-generator/SKILL.md',
+      '.agents/skills/api-generator/references/route-checklist.md',
+      '.agents/skills/api-generator/template.ts',
+      '.agents/workflows/review.md',
+    ],
+    imported: [
+      '.agentsmesh/commands/review.md',
+      '.agentsmesh/rules/_root.md',
+      '.agentsmesh/rules/typescript.md',
+      '.agentsmesh/skills/api-generator/SKILL.md',
+      '.agentsmesh/skills/api-generator/references/route-checklist.md',
+      '.agentsmesh/skills/api-generator/template.ts',
+    ],
+  },
+  'roo-code': {
+    generated: [
+      '.roo/commands/review.md',
+      '.roo/mcp.json',
+      '.roo/rules/00-root.md',
+      '.roo/rules/typescript.md',
+      '.roo/skills/api-generator/SKILL.md',
+      '.roo/skills/api-generator/references/route-checklist.md',
+      '.roo/skills/api-generator/template.ts',
+      '.rooignore',
+    ],
+    imported: [
+      '.agentsmesh/commands/review.md',
+      '.agentsmesh/ignore',
+      '.agentsmesh/mcp.json',
+      '.agentsmesh/rules/_root.md',
+      '.agentsmesh/rules/typescript.md',
+      '.agentsmesh/skills/api-generator/SKILL.md',
+      '.agentsmesh/skills/api-generator/references/route-checklist.md',
+      '.agentsmesh/skills/api-generator/template.ts',
+    ],
+  },
+  kiro: {
+    generated: [
+      '.kiro/agents/code-reviewer.md',
+      '.kiro/agents/researcher.md',
+      '.kiro/hooks/post-tool-use-1.kiro.hook',
+      '.kiro/settings/mcp.json',
+      '.kiro/skills/api-generator/SKILL.md',
+      '.kiro/skills/api-generator/references/route-checklist.md',
+      '.kiro/skills/api-generator/template.ts',
+      '.kiro/steering/typescript.md',
+      '.kiroignore',
+      'AGENTS.md',
+    ],
+    imported: [
+      '.agentsmesh/agents/code-reviewer.md',
+      '.agentsmesh/agents/researcher.md',
+      '.agentsmesh/hooks.yaml',
+      '.agentsmesh/ignore',
+      '.agentsmesh/mcp.json',
+      '.agentsmesh/rules/_root.md',
+      '.agentsmesh/rules/typescript.md',
+      '.agentsmesh/skills/api-generator/SKILL.md',
+      '.agentsmesh/skills/api-generator/references/route-checklist.md',
+      '.agentsmesh/skills/api-generator/template.ts',
+    ],
+  },
 } as const;
 
 export const TARGET_SPECIFIC_PREFIXES = [
@@ -250,4 +320,6 @@ export const TARGET_SPECIFIC_PREFIXES = [
   '.cline/',
   '.agents/',
   '.windsurf/',
+  '.roo/',
+  '.kiro/',
 ] as const;

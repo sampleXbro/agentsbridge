@@ -1,3 +1,7 @@
+---
+description: Create a conventional commit/s from current changes
+---
+
 Review the current git changes (staged and unstaged) and:
 
 1. **Analyze changes** — Understand what was modified (files, scope, intent)

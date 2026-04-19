@@ -116,3 +116,18 @@ describe('gemini-cli global layout — mirrorGlobalPath', () => {
     expect(mirror('.gemini/agents/reviewer.md', [])).toBeNull();
   });
 });
+
+describe('gemini-cli project layout — mirrorGlobalPath', () => {
+  const layout = getTargetLayout('gemini-cli', 'project')!;
+  const mirror = layout.mirrorGlobalPath!;
+
+  it('mirrors .gemini/skills/ to .agents/skills/', () => {
+    expect(mirror('.gemini/skills/api-generator/SKILL.md', [])).toBe(
+      '.agents/skills/api-generator/SKILL.md',
+    );
+  });
+
+  it('does not mirror when codex-cli is active', () => {
+    expect(mirror('.gemini/skills/api-generator/SKILL.md', ['codex-cli'])).toBeNull();
+  });
+});

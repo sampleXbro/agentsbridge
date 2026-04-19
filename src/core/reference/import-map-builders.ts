@@ -2,8 +2,13 @@ import { basename } from 'node:path';
 import { JUNIE_DOT_AGENTS, JUNIE_GUIDELINES } from '../../targets/junie/constants.js';
 import {
   KIRO_AGENTS_MD,
+  KIRO_AGENTS_DIR,
   KIRO_STEERING_DIR,
   KIRO_SKILLS_DIR,
+  KIRO_GLOBAL_STEERING_DIR,
+  KIRO_GLOBAL_STEERING_AGENTS_MD,
+  KIRO_GLOBAL_SKILLS_DIR,
+  KIRO_GLOBAL_AGENTS_DIR,
 } from '../../targets/kiro/constants.js';
 import {
   ROO_CODE_ROOT_RULE,
@@ -11,6 +16,11 @@ import {
   ROO_CODE_RULES_DIR,
   ROO_CODE_COMMANDS_DIR,
   ROO_CODE_SKILLS_DIR,
+  ROO_CODE_GLOBAL_AGENTS_MD,
+  ROO_CODE_GLOBAL_RULES_DIR,
+  ROO_CODE_GLOBAL_COMMANDS_DIR,
+  ROO_CODE_GLOBAL_SKILLS_DIR,
+  ROO_CODE_GLOBAL_MCP_FILE,
 } from '../../targets/roo-code/constants.js';
 import {
   ANTIGRAVITY_RULES_ROOT,
@@ -191,13 +201,32 @@ export async function buildJunieImportPaths(
 export async function buildKiroImportPaths(
   refs: Map<string, string>,
   projectRoot: string,
+  scope: TargetLayoutScope = 'project',
 ): Promise<void> {
+  if (scope === 'global') {
+    refs.set(KIRO_GLOBAL_STEERING_AGENTS_MD, `${AB_RULES}/_root.md`);
+    for (const absPath of await listFiles(projectRoot, KIRO_GLOBAL_STEERING_DIR)) {
+      const relPath = rel(projectRoot, absPath);
+      if (relPath === KIRO_GLOBAL_STEERING_AGENTS_MD) continue;
+      addSimpleFileMapping(refs, relPath, AB_RULES, '.md');
+    }
+    for (const absPath of await listFiles(projectRoot, KIRO_GLOBAL_SKILLS_DIR)) {
+      addSkillLikeMapping(refs, rel(projectRoot, absPath), KIRO_GLOBAL_SKILLS_DIR);
+    }
+    for (const absPath of await listFiles(projectRoot, KIRO_GLOBAL_AGENTS_DIR)) {
+      addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_AGENTS, '.md');
+    }
+    return;
+  }
   refs.set(KIRO_AGENTS_MD, `${AB_RULES}/_root.md`);
   for (const absPath of await listFiles(projectRoot, KIRO_STEERING_DIR)) {
     addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_RULES, '.md');
   }
   for (const absPath of await listFiles(projectRoot, KIRO_SKILLS_DIR)) {
     addSkillLikeMapping(refs, rel(projectRoot, absPath), KIRO_SKILLS_DIR);
+  }
+  for (const absPath of await listFiles(projectRoot, KIRO_AGENTS_DIR)) {
+    addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_AGENTS, '.md');
   }
 }
 
@@ -353,7 +382,22 @@ export async function buildAntigravityImportPaths(
 export async function buildRooCodeImportPaths(
   refs: Map<string, string>,
   projectRoot: string,
+  scope: TargetLayoutScope = 'project',
 ): Promise<void> {
+  if (scope === 'global') {
+    refs.set(ROO_CODE_GLOBAL_AGENTS_MD, `${AB_RULES}/_root.md`);
+    for (const absPath of await listFiles(projectRoot, ROO_CODE_GLOBAL_RULES_DIR)) {
+      addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_RULES, '.md');
+    }
+    for (const absPath of await listFiles(projectRoot, ROO_CODE_GLOBAL_COMMANDS_DIR)) {
+      addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_COMMANDS, '.md');
+    }
+    for (const absPath of await listFiles(projectRoot, ROO_CODE_GLOBAL_SKILLS_DIR)) {
+      addSkillLikeMapping(refs, rel(projectRoot, absPath), ROO_CODE_GLOBAL_SKILLS_DIR);
+    }
+    refs.set(ROO_CODE_GLOBAL_MCP_FILE, '.agentsmesh/mcp.json');
+    return;
+  }
   refs.set(ROO_CODE_ROOT_RULE, `${AB_RULES}/_root.md`);
   refs.set(ROO_CODE_ROOT_RULE_FALLBACK, `${AB_RULES}/_root.md`);
   for (const absPath of await listFiles(projectRoot, ROO_CODE_RULES_DIR)) {

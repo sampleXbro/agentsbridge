@@ -1,6 +1,6 @@
 # Agents E2E Last Run Report
 
-_Generated: 2026-04-17T08:51:56.882Z_
+_Generated: 2026-04-19T14:53:16.159Z_
 
 ## Initial — `.agentsmesh/agents/` (canonical fixture)
 
@@ -35,19 +35,19 @@ _Generated: 2026-04-17T08:51:56.882Z_
 ✓ created .claudeignore
 Generated: 11 created, 0 updated, 0 unchanged
 ┌───────────────┬────────────┐
-┌Feature        ┬Claude      ┐
+│Feature        │Claude      │
 ├───────────────┼────────────┤
-├rules          ┼  ✓         ┤
-├commands (1)   ┼  ✓         ┤
-├agents (2)     ┼  ✓         ┤
-├skills (1)     ┼  ✓         ┤
-├mcp (1 servers)┼  ✓         ┤
-├hooks (1)      ┼  ✓         ┤
-├ignore         ┼  ✓         ┤
-├permissions    ┼  ✓         ┤
+│rules          │  ✓         │
+│commands (1)   │  ✓         │
+│agents (2)     │  ✓         │
+│skills (1)     │  ✓         │
+│mcp (1 servers)│  ✓         │
+│hooks (1)      │  ✓         │
+│ignore         │  ✓         │
+│permissions    │  ✓         │
 └───────────────┴────────────┘
 
-Legend: ✓ = native  📝 = embedded  ⚠ = partial  – = not supported
+Legend: ✓ = native  ◆ = embedded  ◐ = partial  – = not supported
 ```
 
 #### Agent files in `.claude/agents/`
@@ -118,19 +118,19 @@ Imported 12 file(s). Run 'agentsmesh generate' to sync to other tools.
 ✓ created .cursorignore
 Generated: 13 created, 0 updated, 0 unchanged
 ┌───────────────┬────────────┐
-┌Feature        ┬cursor      ┐
+│Feature        │cursor      │
 ├───────────────┼────────────┤
-├rules          ┼  ✓         ┤
-├commands (1)   ┼  ✓         ┤
-├agents (2)     ┼  ✓         ┤
-├skills (1)     ┼  ✓         ┤
-├mcp (1 servers)┼  ✓         ┤
-├hooks (1)      ┼  ✓         ┤
-├ignore         ┼  ✓         ┤
-├permissions    ┼  ⚠         ┤
+│rules          │  ✓         │
+│commands (1)   │  ✓         │
+│agents (2)     │  ✓         │
+│skills (1)     │  ✓         │
+│mcp (1 servers)│  ✓         │
+│hooks (1)      │  ✓         │
+│ignore         │  ✓         │
+│permissions    │  ◐         │
 └───────────────┴────────────┘
 
-Legend: ✓ = native  📝 = embedded  ⚠ = partial  – = not supported
+Legend: ✓ = native  ◆ = embedded  ◐ = partial  – = not supported
 ```
 
 #### Agent files in `.cursor/agents/`
@@ -197,19 +197,19 @@ Imported 11 file(s). Run 'agentsmesh generate' to sync to other tools.
 ✓ created .github/hooks/scripts/posttooluse-0.sh
 Generated: 10 created, 0 updated, 0 unchanged
 ┌───────────────┬────────────┐
-┌Feature        ┬copilot     ┐
+│Feature        │copilot     │
 ├───────────────┼────────────┤
-├rules          ┼  ✓         ┤
-├commands (1)   ┼  ✓         ┤
-├agents (2)     ┼  ✓         ┤
-├skills (1)     ┼  ✓         ┤
-├mcp (1 servers)┼  –         ┤
-├hooks (1)      ┼  ⚠         ┤
-├ignore         ┼  –         ┤
-├permissions    ┼  –         ┤
+│rules          │  ✓         │
+│commands (1)   │  ✓         │
+│agents (2)     │  ✓         │
+│skills (1)     │  ✓         │
+│mcp (1 servers)│  –         │
+│hooks (1)      │  ◐         │
+│ignore         │  –         │
+│permissions    │  –         │
 └───────────────┴────────────┘
 
-Legend: ✓ = native  📝 = embedded  ⚠ = partial  – = not supported
+Legend: ✓ = native  ◆ = embedded  ◐ = partial  – = not supported
 ```
 
 #### Agents in `.github/agents/*.agent.md`

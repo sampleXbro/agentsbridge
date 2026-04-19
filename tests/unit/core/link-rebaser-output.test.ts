@@ -79,4 +79,13 @@ describe('formatLinkPathForDestination', () => {
       '../SKILL.md',
     );
   });
+
+  it('uses project-root-relative when linking from Antigravity `.agents/rules` into `.agentsmesh`', () => {
+    const root = '/tmp/proj';
+    const dest = '/tmp/proj/.agents/rules/general.md';
+    const target = '/tmp/proj/.agentsmesh/agents/code-reviewer.md';
+    expect(formatLinkPathForDestination(root, dest, target, false, EXPLICIT_CURRENT_DIR)).toBe(
+      '.agentsmesh/agents/code-reviewer.md',
+    );
+  });
 });

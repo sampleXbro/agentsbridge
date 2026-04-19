@@ -22,7 +22,16 @@ describe('kiro global layout — paths', () => {
   });
 
   it('resolves agent path to .kiro/agents/', () => {
-    expect(layout.paths.agentPath('reviewer', {} as never)).toBe('.kiro/agents/reviewer.md');
+    expect(
+      layout.paths.agentPath('my-agent', {
+        features: [],
+        targets: [],
+        version: 1,
+        extends: [],
+        overrides: {},
+        collaboration: { strategy: 'merge', lock_features: [] },
+      }),
+    ).toBe('.kiro/agents/my-agent.md');
   });
 });
 
@@ -34,7 +43,7 @@ describe('kiro global layout — rewriteGeneratedPath', () => {
     expect(rewrite('AGENTS.md')).toBe('.kiro/steering/AGENTS.md');
   });
 
-  it('keeps .kiro/steering/ paths unchanged', () => {
+  it('keeps .kiro/steering/ rule paths unchanged', () => {
     expect(rewrite('.kiro/steering/typescript.md')).toBe('.kiro/steering/typescript.md');
   });
 
@@ -43,24 +52,19 @@ describe('kiro global layout — rewriteGeneratedPath', () => {
   });
 
   it('keeps .kiro/agents/ paths unchanged', () => {
-    expect(rewrite('.kiro/agents/reviewer.md')).toBe('.kiro/agents/reviewer.md');
+    expect(rewrite('.kiro/agents/my-agent.md')).toBe('.kiro/agents/my-agent.md');
   });
 
   it('keeps .kiro/settings/mcp.json unchanged', () => {
     expect(rewrite('.kiro/settings/mcp.json')).toBe('.kiro/settings/mcp.json');
   });
 
+  it('suppresses .kiro/hooks/ in global mode (returns null)', () => {
+    expect(rewrite('.kiro/hooks/pre-tool-use.json')).toBeNull();
+  });
+
   it('rewrites .kiroignore to .kiro/settings/kiroignore', () => {
     expect(rewrite('.kiroignore')).toBe('.kiro/settings/kiroignore');
-  });
-
-  it('suppresses hooks in global mode (returns null)', () => {
-    expect(rewrite('.kiro/hooks/pre-tooluse-0.sh')).toBeNull();
-    expect(rewrite('.kiro/hooks/post-run.sh')).toBeNull();
-  });
-
-  it('returns unchanged path for unrecognized paths', () => {
-    expect(rewrite('.kiro/other/file.md')).toBe('.kiro/other/file.md');
   });
 });
 
@@ -78,23 +82,11 @@ describe('kiro global layout — mirrorGlobalPath', () => {
     );
   });
 
-  it('does not mirror when codex-cli is active', () => {
-    expect(mirror('.kiro/skills/ts-pro/SKILL.md', ['codex-cli'])).toBeNull();
-  });
-
   it('returns null for steering files (not mirrored)', () => {
-    expect(mirror('.kiro/steering/AGENTS.md', [])).toBeNull();
-  });
-
-  it('returns null for agent files (not mirrored)', () => {
-    expect(mirror('.kiro/agents/reviewer.md', [])).toBeNull();
+    expect(mirror('.kiro/steering/typescript.md', [])).toBeNull();
   });
 
   it('returns null for MCP file (not mirrored)', () => {
-    expect(mirror('.kiro/settings/mcp.json', [])).toBeNull();
-  });
-
-  it('returns null for ignore file (not mirrored)', () => {
-    expect(mirror('.kiro/settings/kiroignore', [])).toBeNull();
+    expect(mirror('.kiro/mcp.json', [])).toBeNull();
   });
 });

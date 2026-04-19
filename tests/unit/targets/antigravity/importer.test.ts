@@ -8,6 +8,7 @@ import {
   ANTIGRAVITY_RULES_DIR,
   ANTIGRAVITY_WORKFLOWS_DIR,
   ANTIGRAVITY_SKILLS_DIR,
+  ANTIGRAVITY_GLOBAL_WORKFLOWS_DIR,
 } from '../../../../src/targets/antigravity/constants.js';
 
 const TEST_DIR = join(tmpdir(), 'am-antigravity-importer-test');
@@ -128,9 +129,14 @@ describe('importFromAntigravity — skills', () => {
 });
 
 describe('importFromAntigravity — global scope', () => {
-  it('imports ~/.gemini/antigravity/GEMINI.md, global skills, and mcp_config.json only (no project workflows)', async () => {
+  it('imports ~/.gemini/antigravity/GEMINI.md, global workflows, skills, and mcp_config.json (not project .agents/workflows)', async () => {
     mkdirSync(join(TEST_DIR, '.gemini', 'antigravity', 'skills', 'review'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.gemini', 'antigravity', 'workflows'), { recursive: true });
     writeFileSync(join(TEST_DIR, '.gemini', 'antigravity', 'GEMINI.md'), '# Global root\n');
+    writeFileSync(
+      join(TEST_DIR, '.gemini', 'antigravity', 'workflows', 'review.md'),
+      '---\ndescription: Review workflow\n---\n\nReview the diff.',
+    );
     writeFileSync(
       join(TEST_DIR, '.gemini', 'antigravity', 'skills', 'review', 'SKILL.md'),
       '---\ndescription: Review\n---\n# Skill body',
@@ -144,9 +150,17 @@ describe('importFromAntigravity — global scope', () => {
 
     const results = await importFromAntigravity(TEST_DIR, { scope: 'global' });
 
-    expect(results.some((r) => r.feature === 'commands')).toBe(false);
+    expect(
+      results.some(
+        (r) => r.feature === 'commands' && r.fromPath.includes(ANTIGRAVITY_GLOBAL_WORKFLOWS_DIR),
+      ),
+    ).toBe(true);
+    expect(results.some((r) => r.fromPath.includes('.agents/workflows'))).toBe(false);
     expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8')).toContain(
       'Global root',
+    );
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'), 'utf-8')).toContain(
+      'Review the diff',
     );
     expect(
       readFileSync(join(TEST_DIR, '.agentsmesh', 'skills', 'review', 'SKILL.md'), 'utf-8'),

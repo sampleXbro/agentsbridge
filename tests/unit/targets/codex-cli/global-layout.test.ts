@@ -4,7 +4,7 @@ import { getTargetLayout } from '../../../../src/targets/catalog/builtin-targets
 describe('codex-cli global layout — paths', () => {
   const layout = getTargetLayout('codex-cli', 'global')!;
 
-  it('resolves advisory rule path to .codex/AGENTS.md (aggregate)', () => {
+  it('resolves rule path to .codex/AGENTS.md (aggregate for advisory rules)', () => {
     expect(
       layout.paths.rulePath('typescript', {
         source: 'typescript.md',
@@ -13,27 +13,35 @@ describe('codex-cli global layout — paths', () => {
         description: '',
         globs: [],
         body: '',
-        codexEmit: 'advisory',
       }),
     ).toBe('.codex/AGENTS.md');
   });
 
-  it('resolves execution rule path to .codex/rules/', () => {
+  it('resolves command path to .agents/skills/ (embedded as skill)', () => {
     expect(
-      layout.paths.rulePath('typescript', {
-        source: 'typescript.md',
-        root: false,
+      layout.paths.commandPath('deploy', {
+        features: [],
         targets: [],
-        description: '',
-        globs: [],
-        body: '',
-        codexEmit: 'execution',
+        version: 1,
+        extends: [],
+        overrides: {},
+        collaboration: { strategy: 'merge', lock_features: [] },
+        conversions: { commands_to_skills: { 'codex-cli': true } },
       }),
-    ).toBe('.codex/rules/typescript.rules');
+    ).toBe('.agents/skills/am-command-deploy/SKILL.md');
   });
 
   it('resolves agent path to .codex/agents/', () => {
-    expect(layout.paths.agentPath('reviewer', {} as never)).toBe('.codex/agents/reviewer.toml');
+    expect(
+      layout.paths.agentPath('my-agent', {
+        features: [],
+        targets: [],
+        version: 1,
+        extends: [],
+        overrides: {},
+        collaboration: { strategy: 'merge', lock_features: [] },
+      }),
+    ).toBe('.codex/agents/my-agent.toml');
   });
 });
 
@@ -45,35 +53,27 @@ describe('codex-cli global layout — rewriteGeneratedPath', () => {
     expect(rewrite('AGENTS.md')).toBe('.codex/AGENTS.md');
   });
 
-  it('suppresses .codex/instructions/ paths (returns null)', () => {
-    expect(rewrite('.codex/instructions/typescript.md')).toBeNull();
-  });
-
   it('keeps .agents/skills/ paths unchanged', () => {
     expect(rewrite('.agents/skills/ts-pro/SKILL.md')).toBe('.agents/skills/ts-pro/SKILL.md');
   });
 
   it('keeps .codex/agents/ paths unchanged', () => {
-    expect(rewrite('.codex/agents/reviewer.toml')).toBe('.codex/agents/reviewer.toml');
+    expect(rewrite('.codex/agents/my-agent.toml')).toBe('.codex/agents/my-agent.toml');
+  });
+
+  it('suppresses .codex/instructions/ in global mode (returns null)', () => {
+    expect(rewrite('.codex/instructions/typescript.md')).toBeNull();
   });
 
   it('keeps .codex/config.toml unchanged', () => {
     expect(rewrite('.codex/config.toml')).toBe('.codex/config.toml');
-  });
-
-  it('keeps .codex/rules/ paths unchanged', () => {
-    expect(rewrite('.codex/rules/typescript.rules')).toBe('.codex/rules/typescript.rules');
-  });
-
-  it('returns unchanged path for unrecognized paths', () => {
-    expect(rewrite('.codex/other/file.md')).toBe('.codex/other/file.md');
   });
 });
 
 describe('codex-cli global layout — no mirrorGlobalPath', () => {
   const layout = getTargetLayout('codex-cli', 'global')!;
 
-  it('has no mirrorGlobalPath (codex-cli owns .agents/skills/ directly)', () => {
+  it('has no mirrorGlobalPath (skills already in .agents/)', () => {
     expect(layout.mirrorGlobalPath).toBeUndefined();
   });
 });

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { SUPPORT_MATRIX } from '../../../src/core/matrix/data.js';
+import { SUPPORT_MATRIX, SUPPORT_MATRIX_GLOBAL } from '../../../src/core/matrix/data.js';
 import { TARGET_IDS } from '../../../src/targets/catalog/target-ids.js';
 
 const ROOT = process.cwd();
@@ -38,8 +38,17 @@ const LEVEL_LABELS = {
   none: '—',
 } as const;
 
-function parseFeatureMatrix(markdown: string): Record<string, Record<string, string>> {
-  const lines = markdown.split('\n');
+function parseFeatureMatrix(
+  markdown: string,
+  afterHeading?: string,
+): Record<string, Record<string, string>> {
+  let body = markdown;
+  if (afterHeading !== undefined) {
+    const h = body.indexOf(afterHeading);
+    expect(h).toBeGreaterThanOrEqual(0);
+    body = body.slice(h);
+  }
+  const lines = body.split('\n');
   const headerIndex = lines.findIndex((line) => line.startsWith('| Feature '));
   expect(headerIndex).toBeGreaterThanOrEqual(0);
   const headers = splitTableRow(lines[headerIndex]!);
@@ -63,15 +72,14 @@ function splitTableRow(line: string): string[] {
     .map((cell) => cell.trim().replace(/--/g, '—'));
 }
 
-function expectedRows(): Record<string, Record<string, string>> {
+function expectedRows(
+  matrix: typeof SUPPORT_MATRIX = SUPPORT_MATRIX,
+): Record<string, Record<string, string>> {
   return Object.fromEntries(
     FEATURES.map(([label, feature]) => [
       label,
       Object.fromEntries(
-        TARGET_IDS.map((target) => [
-          TARGET_LABELS[target],
-          LEVEL_LABELS[SUPPORT_MATRIX[feature][target]],
-        ]),
+        TARGET_IDS.map((target) => [TARGET_LABELS[target], LEVEL_LABELS[matrix[feature][target]]]),
       ),
     ]),
   );
@@ -81,9 +89,22 @@ describe('compatibility matrix docs', () => {
   it.each([
     ['README', 'README.md'],
     ['website supported-tools page', 'website/src/content/docs/reference/supported-tools.mdx'],
-  ])('%s feature matrix matches target capabilities', (_name, relativePath) => {
+  ])('%s project feature matrix matches target capabilities', (_name, relativePath) => {
     const markdown = readFileSync(join(ROOT, relativePath), 'utf-8');
-    expect(parseFeatureMatrix(markdown)).toEqual(expectedRows());
+    const heading = relativePath === 'README.md' ? undefined : '## Feature matrix (project scope)';
+    expect(parseFeatureMatrix(markdown, heading)).toEqual(expectedRows(SUPPORT_MATRIX));
+  });
+
+  it.each([
+    ['README', 'README.md'],
+    ['website supported-tools page', 'website/src/content/docs/reference/supported-tools.mdx'],
+  ])('%s global feature matrix matches descriptor.globalCapabilities', (_name, relativePath) => {
+    const markdown = readFileSync(join(ROOT, relativePath), 'utf-8');
+    const heading =
+      relativePath === 'README.md'
+        ? '### Global scope (`agentsmesh matrix --global`)'
+        : '## Feature matrix (global scope)';
+    expect(parseFeatureMatrix(markdown, heading)).toEqual(expectedRows(SUPPORT_MATRIX_GLOBAL));
   });
 
   it('documents Antigravity global workflows wherever global paths are listed', () => {

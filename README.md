@@ -125,6 +125,8 @@ That's it. Your `.agentsmesh/` directory is now the single source of truth, and 
 
 ## Supported Tools
 
+### Project scope (`agentsmesh generate`)
+
 | Feature       | Claude Code | Cursor  | Copilot | Continue | Junie    | Kiro   | Gemini CLI | Cline   | Codex CLI | Windsurf | Antigravity | Roo Code |
 |---------------|:-----------:|:-------:|:-------:|:--------:|:--------:|:------:|:----------:|:-------:|:---------:|:--------:|:-----------:|:--------:|
 | Rules         | Native      | Native  | Native  | Native   | Native   | Native | Native     | Native  | Native    | Native   | Native      | Native   |
@@ -136,7 +138,20 @@ That's it. Your `.agentsmesh/` directory is now the single source of truth, and 
 | Ignore        | Native      | Native  | --      | --       | Native   | Native | Native     | Native  | --        | Native   | --          | Native   |
 | Permissions   | Native      | Partial | --      | --       | --       | --     | Partial    | --      | --        | --       | --          | --       |
 
-See the [full feature matrix docs](https://samplexbro.github.io/agentsmesh/reference/supported-tools/) for details on native vs. embedded support.
+### Global scope (`agentsmesh matrix --global`)
+
+| Feature       | Claude Code | Cursor  | Copilot | Continue | Junie    | Kiro   | Gemini CLI | Cline   | Codex CLI | Windsurf | Antigravity | Roo Code |
+|---------------|:-----------:|:-------:|:-------:|:--------:|:--------:|:------:|:----------:|:-------:|:---------:|:--------:|:-----------:|:--------:|
+| Rules         | Native      | Native  | Native  | Native   | Native   | Native | Native     | Native  | Native    | Native   | Native      | Native   |
+| Commands      | Native      | Native  | Native  | Native   | Native   | --     | Native     | Native  | Embedded  | Native   | Partial     | Native   |
+| Agents        | Native      | Native  | Native  | --       | Native   | Native | Native     | Embedded| Native    | Embedded | --          | --       |
+| Skills        | Native      | Native  | Native  | Native   | Native   | Native | Native     | Native  | Native    | Native   | Native      | Native   |
+| MCP Servers   | Native      | Native  | --      | Native   | Native   | Native | Native     | Native  | Native    | Native   | Native      | Native   |
+| Hooks         | Native      | Native  | --      | --       | --       | --     | Partial    | Native  | --        | Native   | --          | --       |
+| Ignore        | Native      | Native  | --      | --       | --       | Native | --         | Native  | --        | Native   | --          | Native   |
+| Permissions   | Native      | --      | --      | --       | --       | --     | --         | --      | --        | --       | --          | --       |
+
+See the [full feature matrix docs](https://samplexbro.github.io/agentsmesh/reference/supported-tools/) for details on native vs. embedded support and global paths.
 
 **Note:** The canonical root rule always lives at `.agentsmesh/rules/_root.md`. Some targets write that content to a tool-specific main file named `general` (for example `.continue/rules/general.md` and `.agents/rules/general.md` for Antigravity) instead of `_root.md` on disk.
 

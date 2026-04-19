@@ -17,7 +17,7 @@ AgentsMesh supports every major AI coding tool. This page documents what each to
 
 ## Global mode
 
-With `--global`, the canonical directory is `~/.agentsmesh/` and CLI commands resolve user-level paths from `$HOME`. **Every** built-in target implements global mode (`descriptor.global`); the feature matrix below describes **project** defaults, and the global-mode table plus each tool section document user-level paths and limitations.
+With `--global`, the canonical directory is `~/.agentsmesh/` and CLI commands resolve user-level paths from `$HOME`. **Every** built-in target implements global mode (`descriptor.global`). The **project** and **global** feature matrices below match `SUPPORT_MATRIX` and `SUPPORT_MATRIX_GLOBAL` in `src/core/matrix/data.ts` (built from each target’s `capabilities` vs `globalCapabilities ?? capabilities`). The [Global mode](#global-mode) paths table and each tool section document user-level paths and limitations.
 
 | Target | Global generate writes | Global import reads |
 |--------|------------------------|---------------------|
@@ -28,13 +28,15 @@ With `--global`, the canonical directory is `~/.agentsmesh/` and CLI commands re
 | Junie | `~/.junie/AGENTS.md`, `~/.junie/commands/`, `~/.junie/agents/`, `~/.junie/skills/`, `~/.junie/mcp/mcp.json`, optional mirror to `~/.agents/skills/` | Same user-level paths |
 | Kiro | `~/.kiro/steering/AGENTS.md`, `~/.kiro/steering/*.md`, `~/.kiro/agents/`, `~/.kiro/skills/`, `~/.kiro/settings/mcp.json`, `~/.kiro/settings/kiroignore`, optional mirror to `~/.agents/skills/` | Same paths (hooks not emitted globally) |
 | Gemini CLI | `~/.gemini/GEMINI.md`, `~/.gemini/AGENTS.md`, `~/.gemini/settings.json`, `~/.gemini/commands/*.toml`, `~/.gemini/skills/`, `~/.gemini/agents/`, optional mirror to `~/.agents/skills/` | Same paths (policies/ignore not emitted in global mode) |
-| Cline | `~/Documents/Cline/Rules/*.md`, `~/Documents/Cline/Workflows/*.md`, `~/Documents/Cline/Hooks/`, `~/.cline/skills/*/SKILL.md`, `~/.cline/cline_mcp_settings.json`, `~/.clineignore`, mirrored skills under `~/.agents/skills/` | Same user-level paths |
+| Cline | `~/Documents/Cline/Rules/*.md`, `~/Documents/Cline/Workflows/*.md`, `~/Documents/Cline/Hooks/`, `~/.cline/skills/*/SKILL.md`, `~/.cline/cline_mcp_settings.json`, `~/.clineignore`, mirrored skills under `~/.agents/skills/` | Current importer reads Cline project-style paths under `$HOME` (`~/.clinerules`, `~/.cline/skills/`, `~/.cline/cline_mcp_settings.json`, `~/.clineignore`); generated hook scripts are not imported back yet |
 | Codex CLI | `~/.codex/AGENTS.md`, `~/.codex/config.toml`, `~/.codex/agents/*.toml`, `~/.codex/rules/*.rules` for execution rules, `~/.agents/skills/` | `~/.codex/AGENTS.override.md` preferred over `AGENTS.md`; `~/.codex/config.toml`, agents, rules, `~/.agents/skills/` (no whole-home nested `AGENTS.md` scan) |
-| Windsurf | `~/.codeium/windsurf/memories/global_rules.md`, `~/.codeium/windsurf/skills/`, `~/.codeium/windsurf/global_workflows/`, `~/.codeium/windsurf/hooks.json`, `~/.codeium/windsurf/mcp_config.json`, `~/.codeium/.codeiumignore`, optional mirror to `~/.agents/skills/` | Same user-level paths |
+| Windsurf | `~/.codeium/windsurf/memories/global_rules.md`, `~/.codeium/windsurf/skills/`, `~/.codeium/windsurf/global_workflows/`, `~/.codeium/windsurf/hooks.json`, `~/.codeium/windsurf/mcp_config.json`, `~/.codeium/.codeiumignore`, optional mirror to `~/.agents/skills/` | Current importer reads Windsurf project-style paths under `$HOME` (`~/.windsurfrules` or `~/AGENTS.md`, `~/.windsurf/`, `~/.windsurfignore` or `~/.codeiumignore`) |
 | Antigravity | `~/.gemini/antigravity/GEMINI.md`, `~/.gemini/antigravity/skills/`, `~/.gemini/antigravity/workflows/`, `~/.gemini/antigravity/mcp_config.json` | Same user-level paths |
 | Roo Code | `~/.roo/AGENTS.md`, `~/.roo/rules/`, `~/.roo/commands/`, `~/.roo/skills/`, `~/mcp_settings.json` (home-level MCP file), `~/.rooignore`, optional mirror to `~/.agents/skills/` | Same paths |
 
-## Feature matrix
+## Feature matrix (project scope)
+
+Catalog defaults for a repo-local `agentsmesh generate` (see `descriptor.capabilities`).
 
 | Feature | Claude Code | Cursor | Copilot | Continue | Junie | Kiro | Gemini CLI | Cline | Codex CLI | Windsurf | Antigravity | Roo Code |
 |---------|:-----------:|:------:|:-------:|:--------:|:-----:|:-----:|:----------:|:-----:|:---------:|:--------:|:-----------:|:--------:|
@@ -46,6 +48,21 @@ With `--global`, the canonical directory is `~/.agentsmesh/` and CLI commands re
 | Hooks | Native | Native | Partial | — | — | Native | Partial | Native | — | Native | — | — |
 | Ignore | Native | Native | — | — | Native | Native | Native | Native | — | Native | — | Native |
 | Permissions | Native | Partial | — | — | — | — | Partial | — | — | — | — | — |
+
+## Feature matrix (global scope)
+
+Catalog defaults for `agentsmesh matrix --global` / `agentsmesh generate --global` (see `descriptor.globalCapabilities` when present).
+
+| Feature | Claude Code | Cursor | Copilot | Continue | Junie | Kiro | Gemini CLI | Cline | Codex CLI | Windsurf | Antigravity | Roo Code |
+|---------|:-----------:|:------:|:-------:|:--------:|:-----:|:-----:|:----------:|:-----:|:---------:|:--------:|:-----------:|:--------:|
+| Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
+| Commands | Native | Native | Native | Native | Native | — | Native | Native | Embedded | Native | Partial | Native |
+| Agents | Native | Native | Native | — | Native | Native | Native | Embedded | Native | Embedded | — | — |
+| Skills | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
+| MCP Servers | Native | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native |
+| Hooks | Native | Native | — | — | — | — | Partial | Native | — | Native | — | — |
+| Ignore | Native | Native | — | — | — | Native | — | Native | — | Native | — | Native |
+| Permissions | Native | — | — | — | — | — | — | — | — | — | — | — |
 
 ## Tool details
 
@@ -83,7 +100,7 @@ Full native support except permissions (partial).
 | Agents | `.cursor/agents/*.md` | |
 | Skills | `.cursor/skills/*/SKILL.md` | |
 | MCP Servers | `.cursor/mcp.json` | |
-| Hooks | `.cursor/settings.json` → `hooks` | |
+| Hooks | `.cursor/hooks.json` | Cursor uses a standalone hooks file (not `settings.json`) |
 | Ignore | `.cursorignore` | |
 | Permissions | `.cursor/settings.json` | Partial field coverage |
 
@@ -144,7 +161,7 @@ Full native support except permissions (partial).
 | Ignore | `.clineignore` | |
 | Permissions | — | Not supported |
 
-**Global mode:** writes rules to `~/Documents/Cline/Rules/*.md`, commands to `~/Documents/Cline/Workflows/*.md`, hooks to `~/Documents/Cline/Hooks/`, skills to `~/.cline/skills/` with a compatibility mirror under `~/.agents/skills/`, MCP to `~/.cline/cline_mcp_settings.json`, and ignore to `~/.clineignore`. `agentsmesh import --global --from cline` reads those same paths back to canonical.
+**Global mode:** writes rules to `~/Documents/Cline/Rules/*.md`, commands to `~/Documents/Cline/Workflows/*.md`, hooks to `~/Documents/Cline/Hooks/`, skills to `~/.cline/skills/` with a compatibility mirror under `~/.agents/skills/`, MCP to `~/.cline/cline_mcp_settings.json`, and ignore to `~/.clineignore`. `agentsmesh import --global --from cline` currently reads Cline's project-style import paths under `$HOME` (`~/.clinerules`, `~/.cline/skills/`, `~/.cline/cline_mcp_settings.json`, `~/.clineignore`). Hook shell scripts under `~/Documents/Cline/Hooks/` are generated in global mode but are not yet imported back into `hooks.yaml`.
 
 ---
 
@@ -175,7 +192,7 @@ Codex CLI uses `AGENTS.md` for primary instructions, `.codex/` for native agents
 
 Windsurf uses a split surface: root instructions in `AGENTS.md`, modular rules in `.windsurf/rules/`, workflows in `.windsurf/workflows/`, skills in `.windsurf/skills/`, hooks in `.windsurf/hooks.json`, MCP in `.windsurf/mcp_config.example.json`, and ignore patterns in `.codeiumignore`.
 
-**Global mode:** `~/.codeium/windsurf/memories/global_rules.md` (aggregate), `~/.codeium/windsurf/skills/`, `~/.codeium/windsurf/global_workflows/`, `~/.codeium/windsurf/hooks.json`, `~/.codeium/windsurf/mcp_config.json`, `~/.codeium/.codeiumignore`, optional mirror to `~/.agents/skills/` when Codex is not also a global target.
+**Global mode:** `~/.codeium/windsurf/memories/global_rules.md` (aggregate), `~/.codeium/windsurf/skills/`, `~/.codeium/windsurf/global_workflows/`, `~/.codeium/windsurf/hooks.json`, `~/.codeium/windsurf/mcp_config.json`, `~/.codeium/.codeiumignore`, optional mirror to `~/.agents/skills/` when Codex is not also a global target. `agentsmesh import --global --from windsurf` currently reads Windsurf's project-style import paths under `$HOME` (`~/.windsurfrules` or `~/AGENTS.md`, `~/.windsurf/`, `~/.windsurfignore` or `~/.codeiumignore`).
 
 | Feature | Format | Notes |
 |---------|--------|-------|

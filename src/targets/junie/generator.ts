@@ -1,6 +1,7 @@
 import { basename } from 'node:path';
 import type { CanonicalFiles } from '../../core/types.js';
 import { generateEmbeddedSkills } from '../import/embedded-skill.js';
+import { serializeFrontmatter } from '../../utils/text/markdown.js';
 import {
   JUNIE_AGENTS_DIR,
   JUNIE_COMMANDS_DIR,
@@ -52,18 +53,35 @@ export function generateMcp(canonical: CanonicalFiles): JunieOutput[] {
 
 export function generateCommands(canonical: CanonicalFiles): JunieOutput[] {
   return canonical.commands.map((command) => {
+    const frontmatter: Record<string, unknown> = {
+      description: command.description || undefined,
+    };
+    if (frontmatter.description === undefined) delete frontmatter.description;
     return {
       path: `${JUNIE_COMMANDS_DIR}/${command.name}.md`,
-      content: command.body.trim() || '',
+      content: serializeFrontmatter(frontmatter, command.body.trim() || ''),
     };
   });
 }
 
 export function generateAgents(canonical: CanonicalFiles): JunieOutput[] {
-  return canonical.agents.map((agent) => ({
-    path: `${JUNIE_AGENTS_DIR}/${agent.name}.md`,
-    content: agent.body.trim() || '',
-  }));
+  return canonical.agents.map((agent) => {
+    const frontmatter: Record<string, unknown> = {
+      name: agent.name,
+      description: agent.description || undefined,
+      tools: agent.tools.length > 0 ? agent.tools : undefined,
+      disallowedTools: agent.disallowedTools.length > 0 ? agent.disallowedTools : undefined,
+      model: agent.model || undefined,
+      skills: agent.skills.length > 0 ? agent.skills : undefined,
+    };
+    Object.keys(frontmatter).forEach((key) => {
+      if (frontmatter[key] === undefined) delete frontmatter[key];
+    });
+    return {
+      path: `${JUNIE_AGENTS_DIR}/${agent.name}.md`,
+      content: serializeFrontmatter(frontmatter, agent.body.trim() || ''),
+    };
+  });
 }
 
 export function generateIgnore(canonical: CanonicalFiles): JunieOutput[] {

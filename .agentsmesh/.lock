@@ -1,7 +1,7 @@
 # Auto-generated. DO NOT EDIT MANUALLY.
 # Tracks the state of all config files for team conflict resolution.
 
-generated_at: 2026-04-18T08:08:46.905Z
+generated_at: 2026-04-19T14:56:00.849Z
 generated_by: serhii
 lib_version: 0.4.0
 checksums:
@@ -23,7 +23,7 @@ checksums:
   rules/_root.md: sha256:57c33cc2bdc52e7467f644d91ff15a3f40cac24e3d4b15d44589c95ad0fc4bba
   rules/typescript.md: sha256:18f52143dfdd3e219a5c6d6c0feb7283fe74cce99458c46dafcd1c3620ad4fba
   skills/add-agent-target/SKILL.md: sha256:53a76c84b87f7735c53ac5f5e584e55122c09728a14406e7088ea93b5b183406
-  skills/add-agent-target/references/target-addition-checklist.md: sha256:66cd8f5ed4dd21b27e2bf4b34ae749ee301b28a208c83fecffa06748c2d2d61c
+  skills/add-agent-target/references/target-addition-checklist.md: sha256:086ea7fb96820014222d451c73090ffcbda2ba66d416ec7c6ac043a5d58e247b
   skills/add-global-mode-target/SKILL.md: sha256:4ea80acf946ead7ac9eff0032380b8260992f8df6f9e38fb462430194e58832a
   skills/add-global-mode-target/references/global-mode-target-checklist.md: sha256:61f8827978f90ee079e2dfd426ef25b17e77c71d9f79c5f81ebc700379f6fafc
   skills/changelog-generator/SKILL.md: sha256:7c98dc3ec82002e156690b39e8bf8f63cba8a07cb3c8f5d7207c41999a2d356a

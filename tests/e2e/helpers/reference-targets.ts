@@ -10,7 +10,10 @@ export type TargetName =
   | 'gemini-cli'
   | 'cline'
   | 'codex-cli'
-  | 'windsurf';
+  | 'windsurf'
+  | 'antigravity'
+  | 'roo-code'
+  | 'kiro';
 
 interface OutputPathGroups {
   root: string[];
@@ -41,6 +44,12 @@ function skillDir(target: TargetName): string {
       return '.agents/skills';
     case 'windsurf':
       return '.windsurf/skills';
+    case 'antigravity':
+      return '.agents/skills';
+    case 'roo-code':
+      return '.roo/skills';
+    case 'kiro':
+      return '.kiro/skills';
   }
 }
 
@@ -63,7 +72,11 @@ export function outputPaths(target: TargetName): OutputPathGroups {
               ? ['.continue/rules/general.md']
               : target === 'junie'
                 ? ['.junie/AGENTS.md']
-                : ['AGENTS.md'],
+                : target === 'antigravity'
+                  ? ['.agents/rules/general.md']
+                  : target === 'roo-code'
+                    ? ['.roo/rules/00-root.md']
+                    : ['AGENTS.md'],
     rule:
       target === 'copilot'
         ? ['.github/instructions/typescript.instructions.md']
@@ -84,7 +97,13 @@ export function outputPaths(target: TargetName): OutputPathGroups {
                           ? '.clinerules/typescript.md'
                           : target === 'codex-cli'
                             ? '.codex/instructions/typescript.md'
-                            : 'src/AGENTS.md',
+                            : target === 'kiro'
+                              ? '.kiro/steering/typescript.md'
+                              : target === 'antigravity'
+                                ? '.agents/rules/typescript.md'
+                                : target === 'roo-code'
+                                  ? '.roo/rules/typescript.md'
+                                  : 'src/AGENTS.md',
                 ],
     command: [
       target === 'claude-code'
@@ -97,13 +116,19 @@ export function outputPaths(target: TargetName): OutputPathGroups {
               ? '.continue/prompts/review.md'
               : target === 'junie'
                 ? '.junie/commands/review.md'
-                : target === 'gemini-cli'
-                  ? '.gemini/commands/review.toml'
-                  : target === 'cline'
-                    ? '.clinerules/workflows/review.md'
-                    : target === 'windsurf'
-                      ? '.windsurf/workflows/review.md'
-                      : commandSkill,
+                : target === 'kiro'
+                  ? '.kiro/steering/typescript.md'
+                  : target === 'gemini-cli'
+                    ? '.gemini/commands/review.toml'
+                    : target === 'cline'
+                      ? '.clinerules/workflows/review.md'
+                      : target === 'windsurf'
+                        ? '.windsurf/workflows/review.md'
+                        : target === 'antigravity'
+                          ? '.agents/workflows/review.md'
+                          : target === 'roo-code'
+                            ? '.roo/commands/review.md'
+                            : commandSkill,
     ],
     agent: [
       target === 'claude-code'
@@ -114,9 +139,11 @@ export function outputPaths(target: TargetName): OutputPathGroups {
             ? '.github/agents/code-reviewer.agent.md'
             : target === 'junie'
               ? '.junie/agents/code-reviewer.md'
-              : target === 'gemini-cli'
-                ? '.gemini/agents/code-reviewer.md'
-                : agentSkill,
+              : target === 'kiro'
+                ? '.kiro/agents/code-reviewer.md'
+                : target === 'gemini-cli'
+                  ? '.gemini/agents/code-reviewer.md'
+                  : agentSkill,
     ],
     skill: [`${skillDir(target)}/api-generator/SKILL.md`],
     template: [`${skillDir(target)}/api-generator/template.ts`],
@@ -127,7 +154,7 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
   const skills = skillDir(target);
   const geminiCompatSkills =
     path === 'AGENTS.md' && target === 'gemini-cli' ? '.agents/skills' : skills;
-  const rootRule =
+  let rootRule =
     target === 'gemini-cli'
       ? 'GEMINI.md'
       : target === 'claude-code'
@@ -140,25 +167,41 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
               ? '.continue/rules/general.md'
               : target === 'junie'
                 ? '.junie/AGENTS.md'
-                : 'AGENTS.md';
+                : target === 'kiro'
+                  ? 'AGENTS.md'
+                  : target === 'antigravity'
+                    ? '.agents/rules/general.md'
+                    : target === 'roo-code'
+                      ? '.roo/rules/00-root.md'
+                      : 'AGENTS.md';
+  // From `src/AGENTS.md`, the rewriter points at repo-root AGENTS as `../AGENTS.md`.
+  if (target === 'windsurf' && path === 'src/AGENTS.md') {
+    rootRule = '../AGENTS.md';
+  }
   const rule =
     target === 'continue'
       ? '.continue/rules/typescript.md'
       : target === 'junie'
         ? '.junie/rules/typescript.md'
-        : target === 'gemini-cli'
-          ? 'GEMINI.md'
-          : target === 'cline'
-            ? '.clinerules/typescript.md'
-            : target === 'codex-cli'
-              ? '.codex/instructions/typescript.md'
-              : target === 'windsurf'
-                ? '.windsurf/rules/typescript.md'
-                : target === 'copilot'
-                  ? '.github/instructions/typescript.instructions.md'
-                  : target === 'cursor'
-                    ? '.cursor/rules/typescript.mdc'
-                    : '.claude/rules/typescript.md';
+        : target === 'kiro'
+          ? '.kiro/steering/typescript.md'
+          : target === 'gemini-cli'
+            ? 'GEMINI.md'
+            : target === 'cline'
+              ? '.clinerules/typescript.md'
+              : target === 'codex-cli'
+                ? '.codex/instructions/typescript.md'
+                : target === 'windsurf'
+                  ? '.windsurf/rules/typescript.md'
+                  : target === 'antigravity'
+                    ? '.agents/rules/typescript.md'
+                    : target === 'roo-code'
+                      ? '.roo/rules/typescript.md'
+                      : target === 'copilot'
+                        ? '.github/instructions/typescript.instructions.md'
+                        : target === 'cursor'
+                          ? '.cursor/rules/typescript.mdc'
+                          : '.claude/rules/typescript.md';
   const checklist = `${geminiCompatSkills}/api-generator/references/route-checklist.md`;
   return {
     rootRule,
@@ -174,13 +217,19 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
               ? '.continue/prompts/review.md'
               : target === 'junie'
                 ? '.junie/commands/review.md'
-                : target === 'gemini-cli'
-                  ? '.gemini/commands/review.toml'
-                  : target === 'cline'
-                    ? '.clinerules/workflows/review.md'
-                    : target === 'codex-cli'
-                      ? `.agents/skills/${commandSkillDirName('review')}/SKILL.md`
-                      : '.windsurf/workflows/review.md',
+                : target === 'kiro'
+                  ? '.kiro/steering/typescript.md'
+                  : target === 'gemini-cli'
+                    ? '.gemini/commands/review.toml'
+                    : target === 'cline'
+                      ? '.clinerules/workflows/review.md'
+                      : target === 'codex-cli'
+                        ? `.agents/skills/${commandSkillDirName('review')}/SKILL.md`
+                        : target === 'antigravity'
+                          ? '.agents/workflows/review.md'
+                          : target === 'roo-code'
+                            ? '.roo/commands/review.md'
+                            : '.windsurf/workflows/review.md',
     agent:
       target === 'claude-code'
         ? '.claude/agents/code-reviewer.md'
@@ -190,11 +239,13 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
             ? '.github/agents/code-reviewer.agent.md'
             : target === 'junie'
               ? '.junie/agents/code-reviewer.md'
-              : target === 'gemini-cli'
-                ? '.gemini/agents/code-reviewer.md'
-                : target === 'codex-cli'
-                  ? '.codex/agents/code-reviewer.toml'
-                  : `${skills}/${projectedAgentSkillDirName('code-reviewer')}/SKILL.md`,
+              : target === 'kiro'
+                ? '.kiro/agents/code-reviewer.md'
+                : target === 'gemini-cli'
+                  ? '.gemini/agents/code-reviewer.md'
+                  : target === 'codex-cli'
+                    ? '.codex/agents/code-reviewer.toml'
+                    : `${skills}/${projectedAgentSkillDirName('code-reviewer')}/SKILL.md`,
     skill: `${geminiCompatSkills}/api-generator/SKILL.md`,
     template: `${geminiCompatSkills}/api-generator/template.ts`,
     checklist,

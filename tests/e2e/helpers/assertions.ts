@@ -1,32 +1,19 @@
-/**
- * E2E assertion helpers for file/dir checks.
- */
-
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 
-/**
- * Assert file exists. Throws if missing.
- */
 export function fileExists(path: string): void {
   if (!existsSync(path)) {
     throw new Error(`Expected file to exist: ${path}`);
   }
 }
 
-/**
- * Assert file does not exist. Throws if it exists.
- */
 export function fileNotExists(path: string): void {
   if (existsSync(path)) {
     throw new Error(`Expected file to not exist: ${path}`);
   }
 }
 
-/**
- * Assert file content contains substring.
- */
 export function fileContains(path: string, substring: string): void {
   fileExists(path);
   const content = readFileSync(path, 'utf-8');
@@ -35,9 +22,6 @@ export function fileContains(path: string, substring: string): void {
   }
 }
 
-/**
- * Assert file content does not contain substring.
- */
 export function fileNotContains(path: string, substring: string): void {
   fileExists(path);
   const content = readFileSync(path, 'utf-8');
@@ -93,19 +77,6 @@ export function dirTreeExactly(dir: string, expectedRelativeEntries: string[]): 
   }
 }
 
-/**
- * Assert file content matches snapshot. Uses Vitest's toMatchSnapshot.
- * Call from within a test: expect(content).toMatchSnapshot(snapshotName)
- */
-export function fileMatchesSnapshot(path: string, _snapshotName: string): string {
-  fileExists(path);
-  const content = readFileSync(path, 'utf-8');
-  return content;
-}
-
-/**
- * Assert file is valid YAML (parses without error).
- */
 export function validYaml(path: string): void {
   fileExists(path);
   try {
@@ -120,9 +91,6 @@ export function validYaml(path: string): void {
   }
 }
 
-/**
- * Assert file is valid JSON (parses without error).
- */
 export function validJson(path: string): void {
   fileExists(path);
   try {

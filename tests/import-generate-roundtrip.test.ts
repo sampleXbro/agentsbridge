@@ -602,6 +602,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
     });
     const paths = results.map((r) => r.path).sort();
     expect(paths).toEqual([
+      '.agents/skills/qa/SKILL.md',
       '.gemini/agents/reviewer.md',
       '.gemini/commands/review.toml',
       '.gemini/policies/permissions.toml',

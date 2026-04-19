@@ -14,6 +14,7 @@ import {
   readJson,
   readText,
 } from './helpers/assertions.js';
+import { markdownFrontmatter } from './helpers/file-shape.js';
 
 describe('generate capabilities', () => {
   let dir = '';
@@ -665,14 +666,18 @@ features: [rules, commands, agents, skills, mcp, ignore]
     expect(mcp).toHaveProperty('mcpServers');
     expect(mcp).toHaveProperty('mcpServers.context7.command', 'npx');
 
-    // Compatibility mirrors (commands/agents) are emitted as markdown instructions.
+    // Compatibility mirrors (commands/agents) are emitted as frontmatter-backed markdown.
     fileContains(
       join(dir, '.junie', 'commands', 'review.md'),
       'Review current changes for quality.',
     );
-    fileNotContains(join(dir, '.junie', 'commands', 'review.md'), 'allowed-tools:');
+    expect(markdownFrontmatter(join(dir, '.junie', 'commands', 'review.md')).description).toBe(
+      'Code review',
+    );
     fileContains(join(dir, '.junie', 'agents', 'code-reviewer.md'), 'You are a code reviewer.');
-    fileNotContains(join(dir, '.junie', 'agents', 'code-reviewer.md'), 'name: code-reviewer');
+    expect(markdownFrontmatter(join(dir, '.junie', 'agents', 'code-reviewer.md')).name).toBe(
+      'code-reviewer',
+    );
   });
 
   it('generates Kiro rules, skills, hooks, mcp, and ignore with doc-aligned formats', async () => {

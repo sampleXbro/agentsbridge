@@ -2,11 +2,12 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    testTimeout: 15_000,
+    testTimeout: 60_000,
     hookTimeout: 10_000,
     include: [
       'tests/unit/**/*.test.ts',
       'tests/integration/**/*.test.ts',
+      'tests/e2e/**/*.test.ts',
       'tests/agents-folder-structure-research.test.ts',
       'tests/import-generate-roundtrip.test.ts',
     ],

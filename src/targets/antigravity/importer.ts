@@ -19,6 +19,7 @@ import {
   ANTIGRAVITY_SKILLS_DIR,
   ANTIGRAVITY_GLOBAL_ROOT,
   ANTIGRAVITY_GLOBAL_SKILLS_DIR,
+  ANTIGRAVITY_GLOBAL_WORKFLOWS_DIR,
   ANTIGRAVITY_GLOBAL_MCP_CONFIG,
   ANTIGRAVITY_CANONICAL_ROOT_RULE,
   ANTIGRAVITY_CANONICAL_RULES_DIR,
@@ -102,8 +103,11 @@ async function importWorkflows(
   projectRoot: string,
   results: ImportResult[],
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
+  scope: TargetLayoutScope,
 ): Promise<void> {
-  const srcDir = join(projectRoot, ANTIGRAVITY_WORKFLOWS_DIR);
+  const workflowsRel =
+    scope === 'global' ? ANTIGRAVITY_GLOBAL_WORKFLOWS_DIR : ANTIGRAVITY_WORKFLOWS_DIR;
+  const srcDir = join(projectRoot, workflowsRel);
   const destDir = join(projectRoot, ANTIGRAVITY_CANONICAL_COMMANDS_DIR);
   results.push(
     ...(await importFileDirectory({
@@ -169,10 +173,10 @@ export async function importFromAntigravity(
   await importRootRule(projectRoot, results, normalize, scope);
   if (scope === 'project') {
     await importNonRootRules(projectRoot, results, normalize);
-    await importWorkflows(projectRoot, results, normalize);
   } else {
     await importMcp(projectRoot, results);
   }
+  await importWorkflows(projectRoot, results, normalize, scope);
   await importEmbeddedSkills(
     projectRoot,
     scope === 'global' ? ANTIGRAVITY_GLOBAL_SKILLS_DIR : ANTIGRAVITY_SKILLS_DIR,

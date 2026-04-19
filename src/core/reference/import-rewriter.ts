@@ -16,6 +16,7 @@ const IMPORT_REFERENCE_TARGETS = [
   'cline',
   'codex-cli',
   'windsurf',
+  'antigravity',
   'roo-code',
 ] as const;
 

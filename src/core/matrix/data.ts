@@ -1,5 +1,7 @@
 import type { SupportLevel } from '../types.js';
-import { TARGET_IDS, TARGET_CATALOG } from '../../targets/catalog/target-catalog.js';
+import type { TargetCapabilities } from '../../targets/catalog/target.interface.js';
+import { TARGET_IDS } from '../../targets/catalog/target-ids.js';
+import { getBuiltinTargetDefinition } from '../../targets/catalog/builtin-targets.js';
 
 const FEATURE_IDS = [
   'rules',
@@ -10,17 +12,32 @@ const FEATURE_IDS = [
   'hooks',
   'ignore',
   'permissions',
-] as const;
+] as const satisfies ReadonlyArray<keyof TargetCapabilities>;
 
-/** PRD-defined support: feature -> target -> level */
-export const SUPPORT_MATRIX: Record<string, Record<string, SupportLevel>> = Object.fromEntries(
-  FEATURE_IDS.map((feature) => [
-    feature,
-    Object.fromEntries(
-      TARGET_IDS.map((target) => [target, TARGET_CATALOG[target].capabilities[feature]]),
-    ),
-  ]),
-) as Record<string, Record<string, SupportLevel>>;
+function buildSupportMatrix(
+  scope: 'project' | 'global',
+): Record<string, Record<string, SupportLevel>> {
+  return Object.fromEntries(
+    FEATURE_IDS.map((feature) => [
+      feature,
+      Object.fromEntries(
+        TARGET_IDS.map((targetId) => {
+          const d = getBuiltinTargetDefinition(targetId);
+          const caps =
+            scope === 'global' ? (d?.globalCapabilities ?? d?.capabilities) : d?.capabilities;
+          const level = (caps?.[feature] ?? 'none') as SupportLevel;
+          return [targetId, level];
+        }),
+      ),
+    ]),
+  ) as Record<string, Record<string, SupportLevel>>;
+}
+
+/** Project-scope catalog levels (`descriptor.capabilities`). */
+export const SUPPORT_MATRIX = buildSupportMatrix('project');
+
+/** Global-scope catalog levels (`descriptor.globalCapabilities ?? descriptor.capabilities`). */
+export const SUPPORT_MATRIX_GLOBAL = buildSupportMatrix('global');
 
 export const LEVEL_SYMBOL: Record<SupportLevel, string> = {
   native: '✓',

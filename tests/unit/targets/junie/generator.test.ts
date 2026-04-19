@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
+import { parseFrontmatter } from '../../../../src/utils/text/markdown.js';
 import {
   generateRules,
   generateCommands,
@@ -125,9 +126,10 @@ describe('generateCommands (junie)', () => {
     const results = generateCommands(canonical);
     expect(results).toHaveLength(1);
     expect(results[0]?.path).toBe(`${JUNIE_COMMANDS_DIR}/review.md`);
-    expect(results[0]?.content).not.toContain('description:');
+    const parsed = parseFrontmatter(results[0]?.content ?? '');
+    expect(parsed.frontmatter.description).toBe('Review workflow');
     expect(results[0]?.content).not.toContain('allowed-tools:');
-    expect(results[0]?.content).toContain('Review the current diff.');
+    expect(parsed.body).toContain('Review the current diff.');
   });
 });
 
@@ -156,10 +158,12 @@ describe('generateAgents (junie)', () => {
     const results = generateAgents(canonical);
     expect(results).toHaveLength(1);
     expect(results[0]?.path).toBe(`${JUNIE_AGENTS_DIR}/code-reviewer.md`);
-    expect(results[0]?.content).not.toContain('description:');
-    expect(results[0]?.content).not.toContain('tools:');
-    expect(results[0]?.content).not.toContain('model:');
-    expect(results[0]?.content).toContain('Review changes and call out risks.');
+    const parsed = parseFrontmatter(results[0]?.content ?? '');
+    expect(parsed.frontmatter.name).toBe('code-reviewer');
+    expect(parsed.frontmatter.description).toBe('Performs code reviews');
+    expect(parsed.frontmatter.tools).toEqual(['Read', 'Grep']);
+    expect(parsed.frontmatter.model).toBe('gpt-5');
+    expect(parsed.body).toContain('Review changes and call out risks.');
   });
 });
 

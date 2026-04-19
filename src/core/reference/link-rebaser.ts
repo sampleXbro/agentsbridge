@@ -1,4 +1,8 @@
-import { normalizeForProject, stripTrailingPunctuation } from '../path-helpers.js';
+import {
+  normalizeForProject,
+  normalizeSeparators,
+  stripTrailingPunctuation,
+} from '../path-helpers.js';
 import {
   PATH_TOKEN,
   LINE_NUMBER_SUFFIX,
@@ -111,6 +115,20 @@ export function rewriteFileLinks(input: RewriteFileLinksInput): RewriteFileLinks
     // Priority 3: a path was found (no translation needed) but no dest-tree match.
     if (!matchedPath && savedFallback) {
       translatedPath = savedFallback;
+      matchedPath = true;
+    }
+
+    // Priority 4: project-root-relative `.agentsmesh/…` in canonical imports (`destinationFile`
+    // under `.agentsmesh/`) should still relativize when `pathExists` is false mid-import.
+    const destFwd = normalizeSeparators(input.destinationFile);
+    const destInCanonicalMesh =
+      destFwd.includes('/.agentsmesh/') || destFwd.startsWith('.agentsmesh/');
+    if (
+      !matchedPath &&
+      translatedPath &&
+      normalizeSeparators(punctStripped).startsWith('.agentsmesh/') &&
+      destInCanonicalMesh
+    ) {
       matchedPath = true;
     }
 

@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { SUPPORT_MATRIX, SUPPORT_MATRIX_GLOBAL } from '../../../src/core/matrix/data.js';
 import { TARGET_IDS } from '../../../src/targets/catalog/target-ids.js';
+import type { TargetCapabilityValue } from '../../../src/targets/catalog/capabilities.js';
 
 const ROOT = process.cwd();
 const FEATURES = [
@@ -72,6 +73,14 @@ function splitTableRow(line: string): string[] {
     .map((cell) => cell.trim().replace(/--/g, '—'));
 }
 
+function formatMatrixCell(cell: TargetCapabilityValue): string {
+  const base = LEVEL_LABELS[cell.level];
+  if (cell.flavor && cell.flavor !== 'standard') {
+    return `${base} (${cell.flavor})`;
+  }
+  return base;
+}
+
 function expectedRows(
   matrix: typeof SUPPORT_MATRIX = SUPPORT_MATRIX,
 ): Record<string, Record<string, string>> {
@@ -79,7 +88,10 @@ function expectedRows(
     FEATURES.map(([label, feature]) => [
       label,
       Object.fromEntries(
-        TARGET_IDS.map((target) => [TARGET_LABELS[target], LEVEL_LABELS[matrix[feature][target]]]),
+        TARGET_IDS.map((target) => [
+          TARGET_LABELS[target],
+          formatMatrixCell(matrix[feature][target]),
+        ]),
       ),
     ]),
   );
@@ -98,7 +110,7 @@ describe('compatibility matrix docs', () => {
   it.each([
     ['README', 'README.md'],
     ['website supported-tools page', 'website/src/content/docs/reference/supported-tools.mdx'],
-  ])('%s global feature matrix matches descriptor.globalCapabilities', (_name, relativePath) => {
+  ])('%s global feature matrix matches globalSupport / catalog', (_name, relativePath) => {
     const markdown = readFileSync(join(ROOT, relativePath), 'utf-8');
     const heading =
       relativePath === 'README.md'

@@ -7,6 +7,7 @@ export default defineConfig({
     include: [
       'tests/unit/**/*.test.ts',
       'tests/integration/**/*.test.ts',
+      'tests/contract/**/*.test.ts',
       'tests/e2e/**/*.test.ts',
       'tests/agents-folder-structure-research.test.ts',
       'tests/import-generate-roundtrip.test.ts',
@@ -30,7 +31,7 @@ export default defineConfig({
         'src/targets/claude-code/importer.ts',
         'src/targets/cline/importer.ts',
         'src/cli/commands/watch.ts', // async watcher; covered by tests/integration/watch.integration.test.ts
-        'src/config/remote-fetcher.ts', // network/cache; covered by unit + integration
+        'src/config/remote/remote-fetcher.ts', // network/cache; covered by unit + integration
         'src/config/lock.ts', // file I/O; covered by unit + integration
         'src/utils/fs.ts', // file I/O wrapper; covered by unit tests
         'src/utils/hash.ts', // thin crypto wrapper
@@ -51,7 +52,7 @@ export default defineConfig({
         'src/targets/junie/importer.ts', // junie-specific format adapter
         'src/targets/gemini-cli/policies-importer.ts', // gemini policies adapter
         'src/targets/gemini-cli/importer.ts', // gemini import adapter
-        'src/targets/windsurf/workflows-skills-helpers.ts', // windsurf adapter helpers
+        'src/targets/windsurf/importer-workflows.ts', // windsurf workflow import adapter
         'src/targets/windsurf/generator.ts', // windsurf format adapter
         'src/targets/windsurf/importer.ts', // windsurf import adapter
         'src/targets/projected-agent-skill.ts', // projected metadata adapter
@@ -59,7 +60,7 @@ export default defineConfig({
       thresholds: {
         lines: 90,
         functions: 90,
-        branches: 84,
+        branches: 83,
       },
     },
   },

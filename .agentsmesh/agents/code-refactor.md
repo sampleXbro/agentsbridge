@@ -1,6 +1,7 @@
 ---
 name: code-refactor
 description: Improve code structure, performance, and maintainability through systematic refactoring. Specializes in legacy modernization and technical debt reduction. Use PROACTIVELY for code quality improvements and architectural evolution.
+tools: []
 model: sonnet
 ---
 

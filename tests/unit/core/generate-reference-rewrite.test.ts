@@ -29,7 +29,7 @@ function rewriteCanonical(): CanonicalFiles {
         targets: [],
         description: 'Root rule',
         globs: [],
-        body: 'See .agentsmesh/rules/typescript.md, .agentsmesh/commands/review.md, .agentsmesh/agents/reviewer.md, and .agentsmesh/skills/api-gen/references/checklist.md.',
+        body: 'See `.agentsmesh/rules/typescript.md`, `.agentsmesh/commands/review.md`, `.agentsmesh/agents/reviewer.md`, and `.agentsmesh/skills/api-gen/references/checklist.md`.',
       },
       {
         source: join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'),
@@ -46,7 +46,7 @@ function rewriteCanonical(): CanonicalFiles {
         name: 'review',
         description: 'Run review',
         allowedTools: [],
-        body: 'Load .agentsmesh/skills/api-gen/SKILL.md.',
+        body: 'Load `.agentsmesh/skills/api-gen/SKILL.md`.',
       },
     ],
     agents: [
@@ -63,7 +63,7 @@ function rewriteCanonical(): CanonicalFiles {
         hooks: {},
         skills: [],
         memory: '',
-        body: 'Use .agentsmesh/skills/api-gen/SKILL.md.',
+        body: 'Use `.agentsmesh/skills/api-gen/SKILL.md`.',
       },
     ],
     skills: [
@@ -71,7 +71,7 @@ function rewriteCanonical(): CanonicalFiles {
         source: join(TEST_DIR, '.agentsmesh', 'skills', 'api-gen', 'SKILL.md'),
         name: 'api-gen',
         description: 'Generate APIs',
-        body: 'Checklist at .agentsmesh/skills/api-gen/references/checklist.md.',
+        body: 'Checklist at `.agentsmesh/skills/api-gen/references/checklist.md`.',
         supportingFiles: [
           {
             relativePath: 'references/checklist.md',
@@ -134,7 +134,7 @@ describe('generate reference rewriting', () => {
       const canonical = rewriteCanonical();
       canonical.rules[0] = {
         ...canonical.rules[0]!,
-        body: 'Use .agentsmesh/skills/api-gen/ and .agentsmesh/skills/api-gen/references/.',
+        body: 'Use `.agentsmesh/skills/api-gen/` and `.agentsmesh/skills/api-gen/references/`.',
       };
 
       const results = await generate({
@@ -154,7 +154,7 @@ describe('generate reference rewriting', () => {
     const canonical = rewriteCanonical();
     canonical.rules[0] = {
       ...canonical.rules[0]!,
-      body: 'Use .agentsmesh/skills/api-gen/ and .agentsmesh/skills/api-gen/references/.',
+      body: 'Use `.agentsmesh/skills/api-gen/` and `.agentsmesh/skills/api-gen/references/`.',
     };
 
     const results = await generate({
@@ -196,7 +196,7 @@ describe('generate reference rewriting', () => {
       const canonical = rewriteCanonical();
       canonical.rules[0] = {
         ...canonical.rules[0]!,
-        body: 'Use .agentsmesh/skills/api-gen/ and .agentsmesh/skills/api-gen/references/.',
+        body: 'Use `.agentsmesh/skills/api-gen/` and `.agentsmesh/skills/api-gen/references/`.',
       };
 
       const results = await generate({
@@ -229,7 +229,7 @@ describe('generate reference rewriting', () => {
       const canonical = rewriteCanonical();
       canonical.skills[0] = {
         ...canonical.skills[0]!,
-        body: 'Use .agentsmesh/skills/api-gen/ and .agentsmesh/skills/api-gen/references/.',
+        body: 'Use `.agentsmesh/skills/api-gen/` and `.agentsmesh/skills/api-gen/references/`.',
       };
 
       const results = await generate({
@@ -268,7 +268,7 @@ describe('generate reference rewriting', () => {
     expect(results).toContainEqual(
       expect.objectContaining({
         path: '.claude/CLAUDE.md',
-        status: 'unchanged',
+        status: 'updated',
       }),
     );
   });

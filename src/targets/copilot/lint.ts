@@ -23,5 +23,9 @@ export function lintHooks(canonical: CanonicalFiles): LintDiagnostic[] {
   const supportedSet = new Set(supported);
   return Object.keys(canonical.hooks)
     .filter((event) => !supportedSet.has(event as never))
-    .map((event) => createUnsupportedHookWarning(event, 'copilot', supported));
+    .map((event) =>
+      createUnsupportedHookWarning(event, 'copilot', supported, {
+        unsupportedBy: 'Copilot hooks',
+      }),
+    );
 }

@@ -3,13 +3,14 @@ import type { TargetDescriptor, TargetLayout } from '../catalog/target-descripto
 import type { ValidatedConfig } from '../../config/core/schema.js';
 import {
   generateRules,
-  generateWorkflows,
+  generateCommands,
   generateAgents,
   generateSkills,
   generateMcp,
   generateIgnore,
   generateHooks,
 } from './generator.js';
+import { cap } from '../catalog/capabilities.js';
 import {
   CLINE_AGENTS_MD,
   CLINE_RULES_DIR,
@@ -33,7 +34,7 @@ export const target: TargetGenerators = {
   name: 'cline',
   primaryRootInstructionPath: CLINE_AGENTS_MD,
   generateRules,
-  generateWorkflows,
+  generateCommands,
   generateAgents,
   generateSkills,
   generateMcp,
@@ -117,7 +118,7 @@ const globalLayout: TargetLayout = {
 
 const globalCapabilities: TargetCapabilities = {
   rules: 'native',
-  commands: 'native',
+  commands: cap('native', 'workflows'),
   agents: 'embedded',
   skills: 'native',
   mcp: 'native',
@@ -131,7 +132,7 @@ export const descriptor = {
   generators: target,
   capabilities: {
     rules: 'native',
-    commands: 'native',
+    commands: cap('native', 'workflows'),
     agents: 'embedded',
     skills: 'native',
     mcp: 'native',
@@ -147,18 +148,20 @@ export const descriptor = {
     commands: lintCommands,
   },
   project,
-  global: globalLayout,
-  globalCapabilities,
+  globalSupport: {
+    capabilities: globalCapabilities,
+    detectionPaths: [
+      CLINE_GLOBAL_RULES_DIR,
+      CLINE_GLOBAL_WORKFLOWS_DIR,
+      CLINE_GLOBAL_HOOKS_DIR,
+      CLINE_SKILLS_DIR,
+      CLINE_MCP_SETTINGS,
+      CLINE_IGNORE,
+    ],
+    layout: globalLayout,
+  },
   skillDir: project.skillDir,
   paths: project.paths,
   buildImportPaths: buildClineImportPaths,
   detectionPaths: ['.clinerules', '.cline'],
-  globalDetectionPaths: [
-    CLINE_GLOBAL_RULES_DIR,
-    CLINE_GLOBAL_WORKFLOWS_DIR,
-    CLINE_GLOBAL_HOOKS_DIR,
-    CLINE_SKILLS_DIR,
-    CLINE_MCP_SETTINGS,
-    CLINE_IGNORE,
-  ],
 } satisfies TargetDescriptor;

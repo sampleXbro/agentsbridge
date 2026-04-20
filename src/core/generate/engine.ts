@@ -8,7 +8,7 @@ import {
   getBuiltinTargetDefinition,
   resolveTargetFeatureGenerator,
 } from '../../targets/catalog/builtin-targets.js';
-import { preferEquivalentCodexAgents } from './output-overlap.js';
+import { preferEquivalentCodexAgents } from '../../targets/catalog/agents-md-overlap.js';
 import { rewriteGeneratedReferences } from '../reference/rewriter.js';
 import { validateGeneratedMarkdownLinks } from '../reference/validate-generated-markdown-links.js';
 import { resolveOutputCollisions, refreshResultStatus } from './collision.js';
@@ -52,22 +52,50 @@ export async function generate(ctx: GenerateContext): Promise<GenerateResult[]> 
 
   const results: GenerateResult[] = [];
 
-  await generateFeature(results, targets, canonical, projectRoot, hasRules, scope, (target) =>
-    resolveTargetFeatureGenerator(target, 'rules', config),
+  await generateFeature(
+    results,
+    targets,
+    canonical,
+    projectRoot,
+    hasRules,
+    scope,
+    'rules',
+    (target) => resolveTargetFeatureGenerator(target, 'rules', config),
   );
 
-  await generateFeature(results, targets, canonical, projectRoot, hasCommands, scope, (target) =>
-    resolveTargetFeatureGenerator(target, 'commands', config),
+  await generateFeature(
+    results,
+    targets,
+    canonical,
+    projectRoot,
+    hasCommands,
+    scope,
+    'commands',
+    (target) => resolveTargetFeatureGenerator(target, 'commands', config),
   );
 
-  await generateFeature(results, targets, canonical, projectRoot, hasAgents, scope, (target) =>
-    resolveTargetFeatureGenerator(target, 'agents', config),
+  await generateFeature(
+    results,
+    targets,
+    canonical,
+    projectRoot,
+    hasAgents,
+    scope,
+    'agents',
+    (target) => resolveTargetFeatureGenerator(target, 'agents', config),
   );
 
-  await generateFeature(results, targets, canonical, projectRoot, hasSkills, scope, (target) =>
-    resolveTargetFeatureGenerator(target, 'skills', config),
+  await generateFeature(
+    results,
+    targets,
+    canonical,
+    projectRoot,
+    hasSkills,
+    scope,
+    'skills',
+    (target) => resolveTargetFeatureGenerator(target, 'skills', config),
   );
-  await generateFeature(results, targets, canonical, projectRoot, hasMcp, scope, (target) =>
+  await generateFeature(results, targets, canonical, projectRoot, hasMcp, scope, 'mcp', (target) =>
     resolveTargetFeatureGenerator(target, 'mcp', config),
   );
 
@@ -77,23 +105,26 @@ export async function generate(ctx: GenerateContext): Promise<GenerateResult[]> 
   }
 
   // Hooks: merges with any pending permissions result for same path
-  if (hasHooks) await generateHooksFeature(results, targets, canonical, projectRoot, scope);
+  if (hasHooks) await generateHooksFeature(results, targets, canonical, projectRoot, scope, config);
 
-  await generateFeature(results, targets, canonical, projectRoot, hasIgnore, scope, (target) =>
-    resolveTargetFeatureGenerator(target, 'ignore', config),
+  await generateFeature(
+    results,
+    targets,
+    canonical,
+    projectRoot,
+    hasIgnore,
+    scope,
+    'ignore',
+    (target) => resolveTargetFeatureGenerator(target, 'ignore', config),
   );
 
   // Per-target scope extras (e.g. Claude Code output-styles in global mode)
   const enabledFeatures = new Set(config.features);
   for (const target of targets) {
     const descriptor = getBuiltinTargetDefinition(target);
-    if (descriptor?.generateScopeExtras) {
-      const extras = await descriptor.generateScopeExtras(
-        canonical,
-        projectRoot,
-        scope,
-        enabledFeatures,
-      );
+    const scopeExtras = descriptor?.globalSupport?.scopeExtras ?? descriptor?.generateScopeExtras;
+    if (scopeExtras) {
+      const extras = await scopeExtras(canonical, projectRoot, scope, enabledFeatures);
       results.push(...extras);
     }
   }

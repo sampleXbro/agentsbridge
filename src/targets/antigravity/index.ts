@@ -1,8 +1,9 @@
 import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
 import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
+import { cap } from '../catalog/capabilities.js';
 import {
   generateRules,
-  generateWorkflows,
+  generateCommands,
   generateSkills,
   generateMcp,
   renderAntigravityGlobalInstructions,
@@ -25,7 +26,7 @@ export const target: TargetGenerators = {
   name: 'antigravity',
   primaryRootInstructionPath: ANTIGRAVITY_RULES_ROOT,
   generateRules,
-  generateCommands: generateWorkflows,
+  generateCommands,
   generateSkills,
   generateMcp,
   importFrom: importFromAntigravity,
@@ -86,7 +87,7 @@ const global: TargetLayout = {
 
 const globalCapabilities: TargetCapabilities = {
   rules: 'native',
-  commands: 'partial',
+  commands: cap('partial', 'workflows'),
   agents: 'none',
   skills: 'native',
   mcp: 'native',
@@ -100,7 +101,7 @@ export const descriptor = {
   generators: target,
   capabilities: {
     rules: 'native',
-    commands: 'partial',
+    commands: cap('partial', 'workflows'),
     agents: 'none',
     skills: 'native',
     mcp: 'none',
@@ -112,17 +113,19 @@ export const descriptor = {
     'No Antigravity config found (.agents/rules/, .agents/skills/, or .agents/workflows/).',
   lintRules,
   project,
-  global,
-  globalCapabilities,
+  globalSupport: {
+    capabilities: globalCapabilities,
+    detectionPaths: [
+      '.gemini/antigravity/GEMINI.md',
+      '.gemini/antigravity/skills',
+      '.gemini/antigravity/workflows',
+      '.gemini/antigravity/mcp_config.json',
+    ],
+    layout: global,
+  },
   skillDir: project.skillDir,
   paths: project.paths,
   buildImportPaths: buildAntigravityImportPaths,
-  globalDetectionPaths: [
-    '.gemini/antigravity/GEMINI.md',
-    '.gemini/antigravity/skills',
-    '.gemini/antigravity/workflows',
-    '.gemini/antigravity/mcp_config.json',
-  ],
   detectionPaths: [
     '.agents/rules/general.md',
     '.agents/rules/',

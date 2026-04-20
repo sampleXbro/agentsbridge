@@ -2,10 +2,10 @@ import { join, normalize as normalizePath } from 'node:path';
 import type { CanonicalFiles } from '../types.js';
 import type { ValidatedConfig } from '../../config/core/schema.js';
 import { buildReferenceMap } from './map.js';
-import { GEMINI_COMPAT_AGENTS } from '../../targets/gemini-cli/constants.js';
-import { CODEX_RULES_DIR } from '../../targets/codex-cli/constants.js';
 import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
 import { addPackSkillArtifactMappings } from './pack-skill-artifact-paths.js';
+import { applyCopilotInstructionArtifactRefs } from '../../targets/catalog/copilot-instruction-artifacts.js';
+import { extraRuleOutputPaths } from '../../targets/catalog/rule-output-extra-paths.js';
 import { getTargetLayout } from '../../targets/catalog/builtin-targets.js';
 
 function addGlobalSkillMirrorSourceEntry(
@@ -25,10 +25,6 @@ function addGlobalSkillMirrorSourceEntry(
   }
 }
 
-function canonicalRulePath(rule: CanonicalFiles['rules'][number]): string {
-  return `.agentsmesh/rules/${rule.source.split('/').pop()!}`;
-}
-
 function canonicalCommandPath(command: CanonicalFiles['commands'][number]): string {
   return `.agentsmesh/commands/${command.name}.md`;
 }
@@ -39,74 +35,6 @@ function canonicalAgentPath(agent: CanonicalFiles['agents'][number]): string {
 
 function canonicalSkillPath(skill: CanonicalFiles['skills'][number]): string {
   return `.agentsmesh/skills/${skill.name}/SKILL.md`;
-}
-
-function directoryScopedRuleDir(globs: string[]): string | null {
-  if (globs.length === 0) return null;
-  const dirs = globs
-    .map((glob) => glob.split('/')[0] ?? '')
-    .filter((segment) => /^[A-Za-z0-9._-]+$/.test(segment));
-  if (dirs.length !== globs.length) return null;
-  return dirs.every((dir) => dir === dirs[0]) ? dirs[0]! : null;
-}
-
-function copilotInstructionsPath(rule: CanonicalFiles['rules'][number]): string {
-  const slug = rule.source.split('/').pop()!.replace(/\.md$/, '');
-  return `.github/instructions/${slug}.instructions.md`;
-}
-
-function pushUnique(paths: string[], path: string | undefined): void {
-  if (path && !paths.includes(path)) paths.push(path);
-}
-
-function ruleOutputPaths(
-  target: string,
-  rule: CanonicalFiles['rules'][number],
-  refs: Map<string, string>,
-  scope: TargetLayoutScope,
-): string[] {
-  const paths: string[] = [];
-  const targetPath = refs.get(canonicalRulePath(rule));
-  pushUnique(paths, targetPath);
-
-  if (rule.root) {
-    const layout = getTargetLayout(target, scope);
-    for (const mirrorPath of layout?.additionalRootDecorationPaths ?? []) {
-      pushUnique(paths, mirrorPath);
-    }
-  }
-
-  if (target === 'copilot' && !rule.root && rule.globs.length > 0) {
-    pushUnique(paths, copilotInstructionsPath(rule));
-  }
-
-  if ((target === 'cline' || target === 'cursor') && rule.root && scope === 'project') {
-    pushUnique(paths, 'AGENTS.md');
-  }
-
-  if (target === 'windsurf' && scope === 'project') {
-    if (rule.root) {
-      pushUnique(paths, 'AGENTS.md');
-    } else {
-      const dir = directoryScopedRuleDir(rule.globs);
-      if (dir) pushUnique(paths, `${dir}/AGENTS.md`);
-    }
-  }
-
-  // Gemini AGENTS.md compatibility mirror is generated from root rule content and must
-  // participate in source mapping for reference rewriting.
-  if (target === 'gemini-cli') {
-    pushUnique(paths, GEMINI_COMPAT_AGENTS);
-  }
-
-  if (target === 'codex-cli') {
-    if (!rule.root && rule.codexEmit === 'execution') {
-      const slug = rule.source.split('/').pop()!.replace(/\.md$/, '');
-      pushUnique(paths, `${CODEX_RULES_DIR}/${slug}.rules`);
-    }
-  }
-
-  return paths;
 }
 
 export function buildArtifactPathMap(
@@ -127,15 +55,7 @@ export function buildArtifactPathMap(
     ]),
   );
 
-  if (target === 'copilot' && destinationPath?.startsWith('.github/instructions/')) {
-    for (const rule of canonical.rules) {
-      if (rule.root || rule.globs.length === 0) continue;
-      refs.set(
-        normalizePath(join(projectRoot, canonicalRulePath(rule))),
-        normalizePath(join(projectRoot, copilotInstructionsPath(rule))),
-      );
-    }
-  }
+  applyCopilotInstructionArtifactRefs(target, refs, projectRoot, destinationPath, canonical);
 
   addPackSkillArtifactMappings(refs, target, canonical, projectRoot, scope);
 
@@ -153,7 +73,7 @@ export function buildOutputSourceMap(
   const sourceMap = new Map<string, string>();
 
   for (const rule of canonical.rules) {
-    for (const targetPath of ruleOutputPaths(target, rule, refs, scope)) {
+    for (const targetPath of extraRuleOutputPaths(target, rule, refs, scope)) {
       sourceMap.set(targetPath, rule.source);
     }
   }

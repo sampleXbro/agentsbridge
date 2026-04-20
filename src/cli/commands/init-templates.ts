@@ -2,7 +2,7 @@
  * Template data for agentsmesh init command.
  */
 
-import { TARGET_IDS } from '../../targets/catalog/target-ids.js';
+import { starterInitTargetIds } from '../../targets/catalog/init-starter-targets.js';
 
 const ALL_FEATURES = [
   'rules',
@@ -21,7 +21,7 @@ const ALL_FEATURES = [
  * which makes the out-of-the-box starter scaffold conflict with other AGENTS.md-based targets.
  * Users can opt into codex-cli by adding it to agentsmesh.yaml after init.
  */
-export const DEFAULT_INIT_TARGETS = TARGET_IDS.filter((target) => target !== 'codex-cli');
+export const DEFAULT_INIT_TARGETS = starterInitTargetIds();
 
 /**
  * Build agentsmesh.yaml content for the given targets.

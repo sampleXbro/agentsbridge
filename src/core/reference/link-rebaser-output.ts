@@ -4,6 +4,7 @@
  */
 
 import { dirname } from 'node:path';
+import { expandResolvedPaths, resolveProjectPath } from './link-rebaser-helpers.js';
 import { WINDOWS_ABSOLUTE_PATH, pathApi, normalizeForProject } from '../path-helpers.js';
 
 export interface FormatLinkPathOptions {
@@ -98,4 +99,77 @@ export function formatLinkPathForDestination(
 
   if (keepSlash && !rel.endsWith('/')) return `${rel}/`;
   return rel;
+}
+
+/** Lower tier = better: same-directory `./…` before `../…`, before project-root-relative. */
+function formattedLinkTier(formatted: string): number {
+  if (formatted.startsWith('./')) return 0;
+  if (formatted.startsWith('../')) return 1;
+  return 2;
+}
+
+/** Negative if `a` is a strictly better (shorter / more local) link string than `b`. */
+export function compareFormattedLinks(a: string, b: string): number {
+  const ta = formattedLinkTier(a);
+  const tb = formattedLinkTier(b);
+  if (ta !== tb) return ta - tb;
+  const ua = (a.match(/\.\.\//g) ?? []).length;
+  const ub = (b.match(/\.\.\//g) ?? []).length;
+  if (ua !== ub) return ua - ub;
+  return a.length - b.length;
+}
+
+function linkResolvesToTarget(
+  projectRoot: string,
+  destinationFile: string,
+  formatted: string,
+  expectedAbsolute: string,
+): boolean {
+  const exp = normalizeForProject(projectRoot, expectedAbsolute);
+  const probe = formatted.replace(/\/$/, '');
+  for (const c of resolveProjectPath(probe, projectRoot, destinationFile)) {
+    for (const e of expandResolvedPaths(projectRoot, c)) {
+      if (normalizeForProject(projectRoot, e) === exp) return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Among absolute targets that exist on disk (or in the generate plan), pick the formatted
+ * relative path that stays closest to the destination file (`./…` before long `../…` chains
+ * or project-root-relative links).
+ */
+export function pickShortestValidatedFormattedLink(
+  projectRoot: string,
+  destinationFile: string,
+  absoluteTargets: readonly string[],
+  keepSlash: boolean,
+  options: FormatLinkPathOptions,
+  pathExists: (absolutePath: string) => boolean,
+): string | null {
+  let best: string | null = null;
+  const seen = new Set<string>();
+
+  for (const abs of absoluteTargets) {
+    const norm = normalizeForProject(projectRoot, abs);
+    if (seen.has(norm)) continue;
+    seen.add(norm);
+    if (!pathExists(norm)) continue;
+
+    const formatted = formatLinkPathForDestination(
+      projectRoot,
+      destinationFile,
+      norm,
+      keepSlash,
+      options,
+    );
+    if (formatted === null) continue;
+    if (!linkResolvesToTarget(projectRoot, destinationFile, formatted, norm)) continue;
+
+    if (best === null || compareFormattedLinks(formatted, best) < 0) {
+      best = formatted;
+    }
+  }
+  return best;
 }

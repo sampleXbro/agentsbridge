@@ -33,17 +33,30 @@ export function createCommandMetadataWarning(
 }
 
 /**
+ * Format a list for prose: "a", "a and b", or "a, b, and c".
+ */
+function formatOxfordComma(items: readonly string[]): string {
+  if (items.length === 0) return '';
+  if (items.length === 1) return items[0]!;
+  if (items.length === 2) return `${items[0]} and ${items[1]}`;
+  return `${items.slice(0, -1).join(', ')}, and ${items[items.length - 1]!}`;
+}
+
+/**
  * Create a warning for unsupported hook events.
+ * @param unsupportedBy - Phrase after "is not supported by" (defaults to `target`, e.g. "Copilot hooks").
  */
 export function createUnsupportedHookWarning(
   event: string,
   target: string,
   supportedEvents: readonly string[],
+  options?: { unsupportedBy?: string },
 ): LintDiagnostic {
-  const supported = supportedEvents.join(', ');
+  const by = options?.unsupportedBy ?? target;
+  const supported = formatOxfordComma(supportedEvents);
   return createWarning(
     '.agentsmesh/hooks.yaml',
     target,
-    `${event} is not supported by ${target}; only ${supported} are projected.`,
+    `${event} is not supported by ${by}; only ${supported} are projected.`,
   );
 }

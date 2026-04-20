@@ -64,7 +64,7 @@ Read `./references/target-addition-checklist.md` before editing code. Treat it a
    - Use content that looks like a real repo and preserves the branches the importer must parse.
 
 5. Implement target support.
-   - Add `../../../src/targets/<target>/constants.ts`, `generator.ts`, `importer.ts`, and `linter.ts` as needed.
+   - Add `src/targets/<target>/constants.ts`, `generator.ts`, `importer.ts`, and `linter.ts` as needed.
    - Wire the target into config validation, CLI import/init flows, matrix support, and any feature filtering.
    - Add or extend reference-map/import-normalization handling for every Markdown artifact path the target emits or imports, including shared root files and embedded command/agent projections.
    - Keep the implementation simple and explicit. Prefer pure translation functions over target-specific special cases scattered through the codebase.

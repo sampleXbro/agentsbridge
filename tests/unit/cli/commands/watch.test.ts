@@ -5,38 +5,22 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
-import { runWatch } from '../../../../src/cli/commands/watch.js';
 import * as matrixMod from '../../../../src/cli/commands/matrix.js';
 import { logger } from '../../../../src/utils/output/logger.js';
+import {
+  createWatchTestDir,
+  writeMinimalWatchProject,
+  runWatch,
+  watchWaitTimeoutMs,
+  watchStabilityDelayMs,
+} from '../../../harness/watch.js';
 
-import { randomBytes } from 'node:crypto';
 let testDir = '';
 
-function setupProject(): void {
-  testDir = join(tmpdir(), 'am-watch-cmd-test-' + randomBytes(4).toString('hex'));
-  mkdirSync(testDir, { recursive: true });
-  writeFileSync(
-    join(testDir, 'agentsmesh.yaml'),
-    `version: 1
-targets: [claude-code, cursor]
-features: [rules]
-`,
-  );
-  mkdirSync(join(testDir, '.agentsmesh', 'rules'), { recursive: true });
-  writeFileSync(
-    join(testDir, '.agentsmesh', 'rules', '_root.md'),
-    `---
-root: true
-description: "Project rules"
----
-# Rules
-- Use TypeScript
-`,
-  );
-}
-
-beforeEach(() => setupProject());
+beforeEach(() => {
+  testDir = createWatchTestDir();
+  writeMinimalWatchProject(testDir);
+});
 afterEach(() => {
   vi.unstubAllEnvs();
   rmSync(testDir, { recursive: true, force: true });
@@ -77,7 +61,9 @@ describe('runWatch', () => {
       join(testDir, '.agentsmesh', 'rules', 'new.md'),
       '---\ndescription: "New"\n---\n# New',
     );
-    await vi.waitFor(() => expect(runMatrixSpy).toHaveBeenCalled(), { timeout: 12000 });
+    await vi.waitFor(() => expect(runMatrixSpy).toHaveBeenCalled(), {
+      timeout: watchWaitTimeoutMs(),
+    });
     runMatrixSpy.mockRestore();
     await result!.stop();
   });
@@ -106,7 +92,9 @@ features: [rules, permissions]
       join(testDir, '.agentsmesh', 'rules', 'new.md'),
       '---\ndescription: "New"\n---\n# New',
     );
-    await vi.waitFor(() => expect(runMatrixSpy).toHaveBeenCalled(), { timeout: 12000 });
+    await vi.waitFor(() => expect(runMatrixSpy).toHaveBeenCalled(), {
+      timeout: watchWaitTimeoutMs(),
+    });
     runMatrixSpy.mockRestore();
     await result!.stop();
   });
@@ -127,7 +115,7 @@ description: "Project rules"
 `,
     );
     await vi.waitFor(() => expect(infoSpy).toHaveBeenCalledWith('Regenerated.'), {
-      timeout: 12000,
+      timeout: watchWaitTimeoutMs(),
     });
     expect(runMatrixSpy).not.toHaveBeenCalled();
     runMatrixSpy.mockRestore();
@@ -148,14 +136,14 @@ description: "Project rules"
         expect(
           infoSpy.mock.calls.filter(([message]) => message === 'Regenerated.').length,
         ).toBeGreaterThanOrEqual(1),
-      { timeout: 12000 },
+      { timeout: watchWaitTimeoutMs() },
     );
 
     const regenCountAfterStartup = infoSpy.mock.calls.filter(
       ([message]) => message === 'Regenerated.',
     ).length;
 
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, watchStabilityDelayMs()));
 
     expect(infoSpy.mock.calls.filter(([message]) => message === 'Regenerated.').length).toBe(
       regenCountAfterStartup,
@@ -192,14 +180,14 @@ description: "Global rules"
 
     const result = await runWatch({ global: true }, workspace);
     await vi.waitFor(() => expect(existsSync(join(testDir, '.claude', 'CLAUDE.md'))).toBe(true), {
-      timeout: 12000,
+      timeout: watchWaitTimeoutMs(),
     });
     await vi.waitFor(
       () =>
         expect(readFileSync(join(testDir, '.claude', 'CLAUDE.md'), 'utf8')).toContain(
           'Global Rules',
         ),
-      { timeout: 12000 },
+      { timeout: watchWaitTimeoutMs() },
     );
     await result.stop();
   });

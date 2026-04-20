@@ -41,7 +41,7 @@
 
 - **post-feature-qa** — Apply after every feature/story. Senior QA: verify edge-case coverage and story alignment.
 - **add-agent-target** — Use when adding a new AI agent target. Covers research, implementation, fixtures, full test coverage, docs.
-- **add-global-mode-target** — Use when adding or extending **global mode** (`--global`, `~/.agentsmesh/`) for an existing target. Covers descriptor.global wiring, import/generate paths, reference rewriting, tests, and matrix docs.
+- **add-global-mode-target** — Use when adding or extending **global mode** (`--global`, `.agentsmesh/`) for an existing target. Covers descriptor.global wiring, import/generate paths, reference rewriting, tests, and matrix docs.
 
 
 ## Core Principles
@@ -51,6 +51,10 @@
 
 ## Project Rules
 
+- **Architecture baseline**: Read `docs/architecture/review.md` before architectural or multi-file changes.
+- **Core flow to preserve**: canonical `.agentsmesh/` content -> descriptor-driven generation/import (`src/targets/<id>/index.ts`) -> shared reference rewrite/lock checks -> strict artifact verification.
+- **Scale limitations to account for**: avoid target-name hardcoding in shared/core code, avoid duplicated per-target helper logic, and keep capability variance expressed in descriptors (not ad-hoc generator branches).
+- **Global mode discipline**: treat global support as one cohesive contract (layout + capabilities + detection + scope extras), not scattered one-off hooks.
 - **TDD mandatory**: Write failing tests FIRST, then implement.
 - **Max file size**: 200 lines. Split by responsibility if larger.
 - **No classes unless stateful**: Prefer pure functions + types.

@@ -8,6 +8,7 @@ import {
   getAllDescriptors,
   resetRegistry,
 } from '../../../src/targets/catalog/registry.js';
+import { TARGET_IDS } from '../../../src/targets/catalog/target-ids.js';
 import type { TargetGenerators } from '../../../src/targets/catalog/target.interface.js';
 import type { TargetDescriptor } from '../../../src/targets/catalog/target-descriptor.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';
@@ -17,6 +18,12 @@ const mockGenerators: TargetGenerators = {
   generateRules: (_c: CanonicalFiles) => [],
   importFrom: async () => [],
 };
+
+const mockPathResolvers = {
+  rulePath: (slug: string) => `.plugin/rules/${slug}.md`,
+  commandPath: () => null,
+  agentPath: () => null,
+} as const;
 
 const mockDescriptor: TargetDescriptor = {
   id: 'plugin-target',
@@ -33,10 +40,8 @@ const mockDescriptor: TargetDescriptor = {
   },
   emptyImportMessage: 'No plugin config found.',
   lintRules: null,
-  paths: {
-    rulePath: (slug) => `.plugin/rules/${slug}.md`,
-    commandPath: () => null,
-    agentPath: () => null,
+  project: {
+    paths: mockPathResolvers,
   },
   buildImportPaths: async () => {},
   detectionPaths: ['.plugin'],
@@ -115,5 +120,35 @@ describe('target registry', () => {
     };
     registerTargetDescriptor(override);
     expect(getDescriptor('claude-code')?.emptyImportMessage).toBe('Custom plugin override.');
+  });
+
+  it('plugin descriptor mock has required project layout field', () => {
+    expect(mockDescriptor.project).toBeDefined();
+    expect(typeof mockDescriptor.project.paths.rulePath).toBe('function');
+  });
+});
+
+describe('builtin target invariants', () => {
+  it.each(TARGET_IDS)(
+    'target %s has globalSupport.detectionPaths when globalSupport is set',
+    (id) => {
+      const desc = getDescriptor(id);
+      if (desc?.globalSupport) {
+        expect(desc.globalSupport.detectionPaths).toBeDefined();
+        expect(desc.globalSupport.detectionPaths.length).toBeGreaterThan(0);
+      }
+    },
+  );
+
+  it.each(TARGET_IDS)('target %s has non-empty detectionPaths', (id) => {
+    const desc = getDescriptor(id);
+    expect(desc?.detectionPaths).toBeDefined();
+    expect(desc!.detectionPaths.length).toBeGreaterThan(0);
+  });
+
+  it.each(TARGET_IDS)('target %s has a non-empty emptyImportMessage', (id) => {
+    const desc = getDescriptor(id);
+    expect(typeof desc?.emptyImportMessage).toBe('string');
+    expect(desc!.emptyImportMessage.length).toBeGreaterThan(0);
   });
 });

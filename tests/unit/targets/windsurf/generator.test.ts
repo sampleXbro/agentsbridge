@@ -7,7 +7,7 @@ import {
   generateRules,
   generateIgnore,
   generateAgents,
-  generateWorkflows,
+  generateCommands,
   generateSkills,
   generateMcp,
   generateHooks,
@@ -355,7 +355,7 @@ describe('generateIgnore (windsurf)', () => {
   });
 });
 
-describe('generateWorkflows (windsurf)', () => {
+describe('generateCommands (windsurf)', () => {
   it('generates markdown .windsurf/workflows/{name}.md with description intro + body', () => {
     const canonical = makeCanonical({
       commands: [
@@ -368,7 +368,7 @@ describe('generateWorkflows (windsurf)', () => {
         },
       ],
     });
-    const results = generateWorkflows(canonical);
+    const results = generateCommands(canonical);
     expect(results).toHaveLength(1);
     expect(results[0]?.path).toBe(`${WINDSURF_WORKFLOWS_DIR}/deploy.md`);
     expect(results[0]?.content).toContain('Deploy the app');
@@ -376,7 +376,7 @@ describe('generateWorkflows (windsurf)', () => {
   });
 
   it('returns empty array when no commands', () => {
-    expect(generateWorkflows(makeCanonical())).toEqual([]);
+    expect(generateCommands(makeCanonical())).toEqual([]);
   });
 });
 

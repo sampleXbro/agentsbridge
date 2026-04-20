@@ -19,10 +19,10 @@ Use this as a concrete audit list when adding a target.
 - `../../../../src/cli/commands/import.ts`
 - `../../../../src/cli/commands/init.ts`
 - `../../../../src/core/matrix/matrix.ts`
-- `../../../../src/targets/<target>/constants.ts`
-- `../../../../src/targets/<target>/generator.ts`
-- `../../../../src/targets/<target>/importer.ts`
-- `../../../../src/targets/<target>/linter.ts`
+- `src/targets/<target>/constants.ts`
+- `src/targets/<target>/generator.ts`
+- `src/targets/<target>/importer.ts`
+- `src/targets/<target>/linter.ts`
 
 ## Documentation Touchpoints
 
@@ -33,8 +33,8 @@ Use this as a concrete audit list when adding a target.
 
 ## Unit Tests
 
-- `../../../../tests/unit/targets/<target>/generator.test.ts`
-- `../../../../tests/unit/targets/<target>/importer.test.ts`
+- `tests/unit/targets/<target>/generator.test.ts`
+- `tests/unit/targets/<target>/importer.test.ts`
 - `../../../../tests/unit/core/engine.test.ts` when target wiring changes generation behavior
 - `../../../../tests/unit/core/matrix.test.ts` when support levels change
 - `../../../../tests/unit/config/schema.test.ts` when target ids change
@@ -56,7 +56,7 @@ Use this as a concrete audit list when adding a target.
 
 ## Fixture Requirements
 
-- Add `../../../../tests/e2e/fixtures/<target>-project/`
+- Add `tests/e2e/fixtures/<target>-project/`
 - Include realistic root instructions
 - Include scoped rules or equivalent
 - Include commands/workflows if supported

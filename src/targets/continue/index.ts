@@ -94,7 +94,6 @@ export const descriptor = {
     ignore: 'none',
     permissions: 'none',
   },
-  globalCapabilities,
   emptyImportMessage:
     'No Continue config found (.continue/rules/*.md, .continue/skills, or .continue/mcpServers/*).',
   lintRules,
@@ -102,15 +101,18 @@ export const descriptor = {
     commands: lintCommands,
   },
   project,
-  global: globalLayout,
+  globalSupport: {
+    capabilities: globalCapabilities,
+    detectionPaths: [
+      CONTINUE_RULES_DIR,
+      CONTINUE_PROMPTS_DIR,
+      '.continue/mcpServers',
+      CONTINUE_SKILLS_DIR,
+    ],
+    layout: globalLayout,
+  },
   skillDir: project.skillDir,
   paths: project.paths,
   buildImportPaths: buildContinueImportPaths,
   detectionPaths: ['.continue/rules', '.continue/skills', '.continue/mcpServers'],
-  globalDetectionPaths: [
-    CONTINUE_RULES_DIR,
-    CONTINUE_PROMPTS_DIR,
-    '.continue/mcpServers',
-    CONTINUE_SKILLS_DIR,
-  ],
 } satisfies TargetDescriptor;

@@ -116,7 +116,7 @@ main (v1.2.3) ← hotfix/security-patch → main (v1.2.4)
    
    # Security scan
    npm audit
-   bandit -r ../../../../src/
+   bandit -r src/
    ```
 
 4. **Deploy to Staging**

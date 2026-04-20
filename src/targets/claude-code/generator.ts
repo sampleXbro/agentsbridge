@@ -3,6 +3,7 @@
  */
 
 import type { CanonicalFiles } from '../../core/types.js';
+import type { GenerateFeatureContext } from '../catalog/target.interface.js';
 import { serializeFrontmatter } from '../../utils/text/markdown.js';
 import {
   CLAUDE_ROOT,
@@ -13,6 +14,7 @@ import {
   CLAUDE_SKILLS_DIR,
   CLAUDE_SETTINGS,
   CLAUDE_IGNORE,
+  CLAUDE_HOOKS_JSON,
 } from './constants.js';
 import { buildClaudeHooksObjectFromCanonical } from './hooks-format.js';
 
@@ -166,10 +168,16 @@ export function generatePermissions(canonical: CanonicalFiles): RulesOutput[] {
  * @param canonical - Loaded canonical files
  * @returns Array with single .claude/settings.json output, or [] if no hooks
  */
-export function generateHooks(canonical: CanonicalFiles): RulesOutput[] {
+export function generateHooks(
+  canonical: CanonicalFiles,
+  ctx?: GenerateFeatureContext,
+): RulesOutput[] {
   if (!canonical.hooks || Object.keys(canonical.hooks).length === 0) return [];
   const claudeHooks = buildClaudeHooksObjectFromCanonical(canonical);
   if (Object.keys(claudeHooks).length === 0) return [];
+  if (ctx?.scope === 'global') {
+    return [{ path: CLAUDE_HOOKS_JSON, content: JSON.stringify(claudeHooks, null, 2) }];
+  }
   const content = JSON.stringify({ hooks: claudeHooks }, null, 2);
   return [{ path: CLAUDE_SETTINGS, content }];
 }

@@ -119,21 +119,23 @@ export const descriptor = {
     mcp: lintMcp,
   },
   project,
-  global,
-  globalCapabilities,
+  globalSupport: {
+    capabilities: globalCapabilities,
+    detectionPaths: [
+      '.codex/AGENTS.md',
+      '.codex/AGENTS.override.md',
+      '.codex/config.toml',
+      '.codex/agents',
+      '.codex/rules',
+      '.agents/skills',
+    ],
+    layout: global,
+  },
   skillDir: project.skillDir,
   paths: project.paths,
   buildImportPaths: buildCodexCliImportPaths,
   sharedArtifacts: {
     '.agents/skills/': 'owner',
   },
-  globalDetectionPaths: [
-    '.codex/AGENTS.md',
-    '.codex/AGENTS.override.md',
-    '.codex/config.toml',
-    '.codex/agents',
-    '.codex/rules',
-    '.agents/skills',
-  ],
   detectionPaths: ['codex.md'],
 } satisfies TargetDescriptor;

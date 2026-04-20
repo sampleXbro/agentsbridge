@@ -35,7 +35,7 @@ features: [rules, skills]
 root: true
 description: Root rule
 ---
-Use .agentsmesh/skills/post-feature-qa/ and .agentsmesh/skills/post-feature-qa/references/.
+Use [.agentsmesh/skills/post-feature-qa/](.agentsmesh/skills/post-feature-qa/) and [.agentsmesh/skills/post-feature-qa/references/](.agentsmesh/skills/post-feature-qa/references/).
 `,
     );
     writeFileSync(join(testDir, '.agentsmesh', 'skills', 'post-feature-qa', 'SKILL.md'), '# QA\n');

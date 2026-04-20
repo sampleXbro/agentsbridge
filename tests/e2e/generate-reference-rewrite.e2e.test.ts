@@ -29,12 +29,14 @@ features: [rules, commands, agents, skills]
     mkdirSync(join(dir, 'docs'), { recursive: true });
     writeFileSync(
       join(dir, '.agentsmesh', 'rules', '_root.md'),
-      `---
-root: true
-description: Root rule
-	---
-	See .agentsmesh/rules/typescript.md, .agentsmesh/commands/review.md, .agentsmesh/agents/reviewer.md, .agentsmesh/skills/api-gen/references/checklist.md, and ../../docs/some-doc.md.
-	`,
+      [
+        '---',
+        'root: true',
+        'description: Root rule',
+        '\t---',
+        '\tSee `.agentsmesh/rules/typescript.md`, `.agentsmesh/commands/review.md`, `.agentsmesh/agents/reviewer.md`, `.agentsmesh/skills/api-gen/references/checklist.md`, and `../../docs/some-doc.md`.',
+        '\t',
+      ].join('\n'),
     );
     writeFileSync(
       join(dir, '.agentsmesh', 'rules', 'typescript.md'),
@@ -47,25 +49,29 @@ Prefer strict mode.
     );
     writeFileSync(
       join(dir, '.agentsmesh', 'commands', 'review.md'),
-      `---
-description: Review
-	---
-	Load .agentsmesh/skills/api-gen/SKILL.md and ../../docs/some-doc.md.
-	`,
+      [
+        '---',
+        'description: Review',
+        '\t---',
+        '\tLoad `.agentsmesh/skills/api-gen/SKILL.md` and `../../docs/some-doc.md`.',
+        '\t',
+      ].join('\n'),
     );
     writeFileSync(
       join(dir, '.agentsmesh', 'agents', 'reviewer.md'),
-      `---
-name: reviewer
-description: Reviews code
-tools: [Read]
-	---
-	Use .agentsmesh/skills/api-gen/SKILL.md and ../../docs/some-doc.md.
-	`,
+      [
+        '---',
+        'name: reviewer',
+        'description: Reviews code',
+        'tools: [Read]',
+        '\t---',
+        '\tUse `.agentsmesh/skills/api-gen/SKILL.md` and `../../docs/some-doc.md`.',
+        '\t',
+      ].join('\n'),
     );
     writeFileSync(
       join(dir, '.agentsmesh', 'skills', 'api-gen', 'SKILL.md'),
-      '# API Gen\n\nChecklist: .agentsmesh/skills/api-gen/references/checklist.md. Docs: ../../../docs/some-doc.md.\n',
+      '# API Gen\n\nChecklist: `.agentsmesh/skills/api-gen/references/checklist.md`. Docs: `../../../docs/some-doc.md`.\n',
     );
     writeFileSync(
       join(dir, '.agentsmesh', 'skills', 'api-gen', 'references', 'checklist.md'),
@@ -115,12 +121,13 @@ features: [rules]
     mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(
       join(dir, '.agentsmesh', 'rules', '_root.md'),
-      `---
-root: true
-description: Root rule
----
-Keep .agentsmesh/rules/typescript.md.
-`,
+      [
+        '---',
+        'root: true',
+        'description: Root rule',
+        '---',
+        'Keep `.agentsmesh/rules/typescript.md`.',
+      ].join('\n'),
     );
     writeFileSync(
       join(dir, '.agentsmesh', 'rules', 'typescript.md'),
@@ -150,7 +157,7 @@ Prefer strict mode.
     });
     writeFileSync(
       join(dir, '.agentsmesh', 'rules', '_root.md'),
-      '---\nroot: true\ndescription: Root rule\n---\nUse .agentsmesh/skills/post-feature-qa/ and .agentsmesh/skills/post-feature-qa/references/.\n',
+      '---\nroot: true\ndescription: Root rule\n---\nUse [.agentsmesh/skills/post-feature-qa/](.agentsmesh/skills/post-feature-qa/) and [.agentsmesh/skills/post-feature-qa/references/](.agentsmesh/skills/post-feature-qa/references/).\n',
     );
     writeFileSync(join(dir, '.agentsmesh', 'skills', 'post-feature-qa', 'SKILL.md'), '# QA\n');
     writeFileSync(
@@ -189,7 +196,7 @@ Prefer strict mode.
     });
     writeFileSync(
       join(dir, '.agentsmesh', 'rules', '_root.md'),
-      '---\nroot: true\ndescription: Root rule\n---\nUse .agentsmesh/skills/post-feature-qa/ and .agentsmesh/skills/post-feature-qa/references/.\n',
+      '---\nroot: true\ndescription: Root rule\n---\nUse [.agentsmesh/skills/post-feature-qa/](.agentsmesh/skills/post-feature-qa/) and [.agentsmesh/skills/post-feature-qa/references/](.agentsmesh/skills/post-feature-qa/references/).\n',
     );
     writeFileSync(join(dir, '.agentsmesh', 'skills', 'post-feature-qa', 'SKILL.md'), '# QA\n');
     writeFileSync(
@@ -215,12 +222,13 @@ Prefer strict mode.
     mkdirSync(join(dir, 'docs'), { recursive: true });
     writeFileSync(
       join(dir, '.agentsmesh', 'rules', 'typescript.md'),
-      `---
-description: TypeScript rule
-globs: [src/**/*.ts]
----
-See .agentsmesh/rules/typescript.md and ../../docs/roadmap.md.
-`,
+      [
+        '---',
+        'description: TypeScript rule',
+        'globs: [src/**/*.ts]',
+        '---',
+        'See `.agentsmesh/rules/typescript.md` and `../../docs/roadmap.md`.',
+      ].join('\n'),
     );
     writeFileSync(join(dir, 'docs', 'roadmap.md'), '# Roadmap\n');
 

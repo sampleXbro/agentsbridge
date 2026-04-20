@@ -48,7 +48,13 @@ export const target: TargetGenerators = {
 
 const project: TargetLayout = {
   rootInstructionPath: CURSOR_GENERAL_RULE,
-  additionalRootDecorationPaths: [CURSOR_COMPAT_AGENTS, CURSOR_DOT_CURSOR_AGENTS],
+  outputFamilies: [
+    {
+      id: 'root-mirrors',
+      kind: 'additional',
+      explicitPaths: [CURSOR_COMPAT_AGENTS, CURSOR_DOT_CURSOR_AGENTS],
+    },
+  ],
   skillDir: '.cursor/skills',
   managedOutputs: {
     dirs: ['.cursor/agents', '.cursor/commands', '.cursor/rules', '.cursor/skills'],
@@ -69,7 +75,13 @@ const project: TargetLayout = {
 
 const global: TargetLayout = {
   rootInstructionPath: CURSOR_GENERAL_RULE,
-  additionalRootDecorationPaths: [CURSOR_COMPAT_AGENTS, CURSOR_DOT_CURSOR_AGENTS],
+  outputFamilies: [
+    {
+      id: 'root-mirrors',
+      kind: 'additional',
+      explicitPaths: [CURSOR_COMPAT_AGENTS, CURSOR_DOT_CURSOR_AGENTS],
+    },
+  ],
   skillDir: CURSOR_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [
@@ -151,21 +163,23 @@ export const descriptor = {
     permissions: lintPermissions,
   },
   project,
-  global,
-  globalCapabilities,
+  globalSupport: {
+    capabilities: globalCapabilities,
+    detectionPaths: [
+      CURSOR_GENERAL_RULE,
+      CURSOR_DOT_CURSOR_AGENTS,
+      CURSOR_MCP,
+      CURSOR_HOOKS,
+      CURSOR_IGNORE,
+      CURSOR_SKILLS_DIR,
+      CURSOR_GLOBAL_AGENTS_DIR,
+      CURSOR_COMMANDS_DIR,
+      CURSOR_GLOBAL_USER_RULES,
+    ],
+    layout: global,
+  },
   skillDir: project.skillDir,
   paths: project.paths,
   buildImportPaths: buildCursorImportPaths,
-  globalDetectionPaths: [
-    CURSOR_GENERAL_RULE,
-    CURSOR_DOT_CURSOR_AGENTS,
-    CURSOR_MCP,
-    CURSOR_HOOKS,
-    CURSOR_IGNORE,
-    CURSOR_SKILLS_DIR,
-    CURSOR_GLOBAL_AGENTS_DIR,
-    CURSOR_COMMANDS_DIR,
-    CURSOR_GLOBAL_USER_RULES,
-  ],
   detectionPaths: ['.cursor/rules', '.cursor/mcp.json'],
 } satisfies TargetDescriptor;

@@ -17,7 +17,7 @@ AgentsMesh supports every major AI coding tool. This page documents what each to
 
 ## Global mode
 
-With `--global`, the canonical directory is `~/.agentsmesh/` and CLI commands resolve user-level paths from `$HOME`. **Every** built-in target implements global mode (`descriptor.global`). The **project** and **global** feature matrices below match `SUPPORT_MATRIX` and `SUPPORT_MATRIX_GLOBAL` in `src/core/matrix/data.ts` (built from each target’s `capabilities` vs `globalCapabilities ?? capabilities`). The [Global mode](#global-mode) paths table and each tool section document user-level paths and limitations.
+With `--global`, the canonical directory is `~/.agentsmesh/` and CLI commands resolve user-level paths from `$HOME`. **Every** built-in target implements global mode (`descriptor.globalSupport`). The **project** and **global** feature matrices below match `SUPPORT_MATRIX` and `SUPPORT_MATRIX_GLOBAL` in `src/core/matrix/data.ts` (normalized from each target’s capabilities vs `globalSupport.capabilities`). The [Global mode](#global-mode) paths table and each tool section document user-level paths and limitations.
 
 | Target | Global generate writes | Global import reads |
 |--------|------------------------|---------------------|
@@ -38,31 +38,35 @@ With `--global`, the canonical directory is `~/.agentsmesh/` and CLI commands re
 
 Catalog defaults for a repo-local `agentsmesh generate` (see `descriptor.capabilities`).
 
+<!-- agentsmesh:support-matrix:project -->
 | Feature | Claude Code | Cursor | Copilot | Continue | Junie | Kiro | Gemini CLI | Cline | Codex CLI | Windsurf | Antigravity | Roo Code |
-|---------|:-----------:|:------:|:-------:|:--------:|:-----:|:-----:|:----------:|:-----:|:---------:|:--------:|:-----------:|:--------:|
+|---|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
 | Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
-| Commands | Native | Native | Native | Embedded | Embedded | — | Native | Native | Embedded | Native | Partial | Native |
+| Commands | Native | Native | Native | Embedded | Embedded | — | Native | Native (workflows) | Embedded | Native (workflows) | Partial (workflows) | Native |
 | Agents | Native | Native | Native | — | Embedded | Native | Native | Embedded | Native | Embedded | — | — |
 | Skills | Native | Native | Native | Embedded | Embedded | Native | Native | Native | Native | Native | Native | Native |
 | MCP Servers | Native | Native | — | Native | Native | Native | Native | Native | Native | Partial | — | Native |
 | Hooks | Native | Native | Partial | — | — | Native | Partial | Native | — | Native | — | — |
-| Ignore | Native | Native | — | — | Native | Native | Native | Native | — | Native | — | Native |
+| Ignore | Native | Native | — | — | Native | Native | Native (settings-embedded) | Native | — | Native | — | Native |
 | Permissions | Native | Partial | — | — | — | — | Partial | — | — | — | — | — |
+<!-- /agentsmesh:support-matrix:project -->
 
 ## Feature matrix (global scope)
 
-Catalog defaults for `agentsmesh matrix --global` / `agentsmesh generate --global` (see `descriptor.globalCapabilities` when present).
+Catalog defaults for `agentsmesh matrix --global` / `agentsmesh generate --global` (see `descriptor.globalSupport.capabilities` when present).
 
+<!-- agentsmesh:support-matrix:global -->
 | Feature | Claude Code | Cursor | Copilot | Continue | Junie | Kiro | Gemini CLI | Cline | Codex CLI | Windsurf | Antigravity | Roo Code |
-|---------|:-----------:|:------:|:-------:|:--------:|:-----:|:-----:|:----------:|:-----:|:---------:|:--------:|:-----------:|:--------:|
+|---|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
 | Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
-| Commands | Native | Native | Native | Native | Native | — | Native | Native | Embedded | Native | Partial | Native |
+| Commands | Native | Native | Native | Native | Native | — | Native | Native (workflows) | Embedded | Native (workflows) | Partial (workflows) | Native |
 | Agents | Native | Native | Native | — | Native | Native | Native | Embedded | Native | Embedded | — | — |
 | Skills | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
 | MCP Servers | Native | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native |
 | Hooks | Native | Native | — | — | — | — | Partial | Native | — | Native | — | — |
 | Ignore | Native | Native | — | — | — | Native | — | Native | — | Native | — | Native |
 | Permissions | Native | — | — | — | — | — | — | — | — | — | — | — |
+<!-- /agentsmesh:support-matrix:global -->
 
 ## Tool details
 

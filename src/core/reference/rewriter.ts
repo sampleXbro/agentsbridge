@@ -1,7 +1,8 @@
 /**
  * Reference rewriting for generated outputs — **project and global scope share one pipeline**.
  *
- * **Engine (single implementation):** {@link rewriteFileLinks} and `formatLinkPathForDestination`
+ * **Engine (single implementation):** {@link rewriteFileLinks} chooses the shortest validated
+ * relative link via `pickShortestValidatedFormattedLink` / `formatLinkPathForDestination`
  * (`link-rebaser.ts`, `link-rebaser-output.ts`). There is no separate global rewriter.
  *
  * **What scope changes:** only the canonical→output **path maps** — `buildReferenceMap`,
@@ -22,7 +23,12 @@ import type { ValidatedConfig } from '../../config/core/schema.js';
 import { rewriteFileLinks } from './link-rebaser.js';
 import { buildArtifactPathMap, buildOutputSourceMap } from './output-source-map.js';
 import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
-import { getBuiltinTargetDefinition } from '../../targets/catalog/builtin-targets.js';
+import {
+  getBuiltinTargetDefinition,
+  getTargetLayout,
+} from '../../targets/catalog/builtin-targets.js';
+import { resolveRewriteFamilyId } from '../../targets/catalog/layout-outputs.js';
+import { ownerTargetIdForSharedPath } from '../../targets/catalog/shared-artifact-owner.js';
 
 /**
  * Find the owner of a shared artifact path from active targets.
@@ -59,10 +65,8 @@ function artifactMapTargetForResult(
   if (scope === 'global') {
     const owner = findSharedArtifactOwner(result.path, activeTargets);
     if (owner) return owner;
-    // Fallback for backward compatibility
-    if (result.path.startsWith('.agents/skills/')) {
-      return 'codex-cli';
-    }
+    const catalogOwner = ownerTargetIdForSharedPath(result.path);
+    if (catalogOwner) return catalogOwner;
   }
   return result.target;
 }
@@ -92,8 +96,10 @@ function artifactCacheKey(
   scope: TargetLayoutScope,
   activeTargets: readonly string[] | undefined,
 ): string {
-  if (result.target === 'copilot' && result.path.startsWith('.github/instructions/')) {
-    return `${result.target}:instructions`;
+  const layout = getTargetLayout(result.target, scope);
+  const familyId = resolveRewriteFamilyId(layout, result.path);
+  if (familyId !== 'default') {
+    return `${result.target}:${familyId}`;
   }
   const via = artifactMapTargetForResult(result, scope, activeTargets);
   return via === result.target ? result.target : `${result.target}~via~${via}`;
@@ -147,6 +153,7 @@ export function rewriteGeneratedReferences(
       translatePath: (absolutePath) => artifactMap.get(absolutePath) ?? absolutePath,
       pathExists: (absolutePath) => plannedPaths.has(absolutePath) || existsSync(absolutePath),
       explicitCurrentDirLinks: true,
+      rewriteBarePathTokens: true,
     });
 
     return rewritten.content === result.content

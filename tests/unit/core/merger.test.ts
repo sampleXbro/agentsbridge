@@ -89,6 +89,66 @@ checksums:
     await expect(resolveLockConflict(abDir, '0.1.0')).rejects.toThrow(/no conflict/i);
   });
 
+  it('falls back to USERNAME when USER is unset', async () => {
+    const abDir = join(TEST_DIR, '.agentsmesh');
+    mkdirSync(join(abDir, 'rules'), { recursive: true });
+    writeFileSync(join(abDir, 'rules', '_root.md'), '# Rules');
+    writeFileSync(
+      join(abDir, '.lock'),
+      `<<<<<<< HEAD
+checksums: {}
+=======
+checksums: {}
+>>>>>>> branch
+`,
+    );
+
+    const prevUser = process.env['USER'];
+    const prevUsername = process.env['USERNAME'];
+    delete process.env['USER'];
+    process.env['USERNAME'] = 'winuser';
+    try {
+      await resolveLockConflict(abDir, '0.1.0');
+      const { readLock } = await import('../../../src/config/core/lock.js');
+      const lock = await readLock(abDir);
+      expect(lock!.generatedBy).toBe('winuser');
+    } finally {
+      if (prevUser === undefined) delete process.env['USER'];
+      else process.env['USER'] = prevUser;
+      if (prevUsername === undefined) delete process.env['USERNAME'];
+      else process.env['USERNAME'] = prevUsername;
+    }
+  });
+
+  it('falls back to "unknown" when neither USER nor USERNAME is set', async () => {
+    const abDir = join(TEST_DIR, '.agentsmesh');
+    mkdirSync(join(abDir, 'rules'), { recursive: true });
+    writeFileSync(join(abDir, 'rules', '_root.md'), '# Rules');
+    writeFileSync(
+      join(abDir, '.lock'),
+      `<<<<<<< HEAD
+checksums: {}
+=======
+checksums: {}
+>>>>>>> branch
+`,
+    );
+
+    const prevUser = process.env['USER'];
+    const prevUsername = process.env['USERNAME'];
+    delete process.env['USER'];
+    delete process.env['USERNAME'];
+    try {
+      await resolveLockConflict(abDir, '0.1.0');
+      const { readLock } = await import('../../../src/config/core/lock.js');
+      const lock = await readLock(abDir);
+      expect(lock!.generatedBy).toBe('unknown');
+    } finally {
+      if (prevUser !== undefined) process.env['USER'] = prevUser;
+      if (prevUsername !== undefined) process.env['USERNAME'] = prevUsername;
+    }
+  });
+
   it('includes extend checksums when config has extends', async () => {
     const abDir = join(TEST_DIR, '.agentsmesh');
     const baseDir = join(TEST_DIR, 'base-config');

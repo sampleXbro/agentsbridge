@@ -8,7 +8,8 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import * as tar from 'tar';
 import { vi } from 'vitest';
-import { runGenerate, ensurePathInsideRoot } from '../../../../src/cli/commands/generate.js';
+import { runGenerate } from '../../../../src/cli/commands/generate.js';
+import { ensurePathInsideRoot } from '../../../../src/cli/commands/generate-path.js';
 
 const TEST_DIR = join(tmpdir(), 'am-generate-unit');
 

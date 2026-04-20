@@ -1,7 +1,7 @@
 import type { GenerateResult } from '../types.js';
+import { CODEX_CLI_TARGET_ID } from '../../targets/catalog/target-ids.js';
 
 const AGENTS_SUFFIX = 'AGENTS.md';
-const CODEX_TARGET = 'codex-cli';
 
 function statusRank(status: GenerateResult['status']): number {
   switch (status) {
@@ -51,7 +51,12 @@ function richerCodexAgentsResult(
 ): GenerateResult | null {
   if (!left.path.endsWith(AGENTS_SUFFIX) || left.path !== right.path) return null;
 
-  const codex = left.target === CODEX_TARGET ? left : right.target === CODEX_TARGET ? right : null;
+  const codex =
+    left.target === CODEX_CLI_TARGET_ID
+      ? left
+      : right.target === CODEX_CLI_TARGET_ID
+        ? right
+        : null;
   const other = codex === left ? right : left;
   if (!codex) return null;
 

@@ -39,7 +39,13 @@ describe('target layout metadata', () => {
     expect(getTargetLayout('cursor')).toEqual(
       expect.objectContaining({
         rootInstructionPath: '.cursor/rules/general.mdc',
-        additionalRootDecorationPaths: ['AGENTS.md', '.cursor/AGENTS.md'],
+        outputFamilies: [
+          {
+            id: 'root-mirrors',
+            kind: 'additional',
+            explicitPaths: ['AGENTS.md', '.cursor/AGENTS.md'],
+          },
+        ],
       }),
     );
   });
@@ -48,7 +54,7 @@ describe('target layout metadata', () => {
     expect(getTargetLayout('gemini-cli')).toEqual(
       expect.objectContaining({
         rootInstructionPath: 'GEMINI.md',
-        additionalRootDecorationPaths: ['AGENTS.md'],
+        outputFamilies: [{ id: 'compat-agents', kind: 'additional', explicitPaths: ['AGENTS.md'] }],
       }),
     );
   });
@@ -127,7 +133,13 @@ describe('target layout metadata', () => {
     expect(getTargetLayout('cursor', 'global')).toEqual(
       expect.objectContaining({
         rootInstructionPath: '.cursor/rules/general.mdc',
-        additionalRootDecorationPaths: ['AGENTS.md', '.cursor/AGENTS.md'],
+        outputFamilies: [
+          {
+            id: 'root-mirrors',
+            kind: 'additional',
+            explicitPaths: ['AGENTS.md', '.cursor/AGENTS.md'],
+          },
+        ],
         skillDir: '.cursor/skills',
         managedOutputs: {
           dirs: ['.cursor/rules', '.cursor/commands', '.cursor/agents', '.cursor/skills'],

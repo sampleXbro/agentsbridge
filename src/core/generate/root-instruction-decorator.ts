@@ -2,10 +2,11 @@ import type { CanonicalFiles, GenerateResult } from '../types.js';
 import { appendAgentsmeshRootInstructionParagraph } from '../../targets/projection/root-instruction-paragraph.js';
 import type { TargetLayout, TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
 import { getTargetLayout } from '../../targets/catalog/builtin-targets.js';
+import { getAdditionalRootDecorationPaths } from '../../targets/catalog/layout-outputs.js';
 
 function rootDecorationPaths(layout: TargetLayout | undefined): readonly string[] {
   if (!layout?.rootInstructionPath) return [];
-  return [layout.rootInstructionPath, ...(layout.additionalRootDecorationPaths ?? [])];
+  return [layout.rootInstructionPath, ...getAdditionalRootDecorationPaths(layout)];
 }
 
 export function decoratePrimaryRootInstructions(

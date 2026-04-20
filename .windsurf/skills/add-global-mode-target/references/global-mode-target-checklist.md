@@ -42,14 +42,14 @@ If the shared foundation is missing, stop and handle that separately. This skill
 
 ### Target-local
 
-- `../../../../src/targets/<target>/index.ts`
+- `src/targets/<target>/index.ts`
   - add or update `descriptor.global`
   - define `rootInstructionPath`, `skillDir`, `managedOutputs`, and `paths`
-- `../../../../src/targets/<target>/constants.ts`
+- `src/targets/<target>/constants.ts`
   - add global-path constants if the target module needs explicit names
-- `../../../../src/targets/<target>/generator.ts`
+- `src/targets/<target>/generator.ts`
   - only if global mode changes feature emission shape, not just root location
-- `../../../../src/targets/<target>/importer.ts`
+- `src/targets/<target>/importer.ts`
   - only if import from global paths is supported
 
 ### Shared, only if required
@@ -137,6 +137,6 @@ Ask these before calling the work done:
 
 Recommended while iterating:
 
-- targeted unit tests for `../../../../src/targets/<target>/...`
+- targeted unit tests for `src/targets/<target>/...`
 - targeted integration tests for affected CLI/global-scope flows
 - targeted e2e tests when the target has realistic fixture coverage

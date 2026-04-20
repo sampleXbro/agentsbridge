@@ -1,7 +1,8 @@
 import type { SupportLevel } from '../types.js';
 import type { TargetCapabilities } from '../../targets/catalog/target.interface.js';
+import type { TargetCapabilityValue } from '../../targets/catalog/capabilities.js';
 import { TARGET_IDS } from '../../targets/catalog/target-ids.js';
-import { getBuiltinTargetDefinition } from '../../targets/catalog/builtin-targets.js';
+import { getTargetCapabilities } from '../../targets/catalog/builtin-targets.js';
 
 const FEATURE_IDS = [
   'rules',
@@ -16,27 +17,25 @@ const FEATURE_IDS = [
 
 function buildSupportMatrix(
   scope: 'project' | 'global',
-): Record<string, Record<string, SupportLevel>> {
+): Record<string, Record<string, TargetCapabilityValue>> {
   return Object.fromEntries(
     FEATURE_IDS.map((feature) => [
       feature,
       Object.fromEntries(
         TARGET_IDS.map((targetId) => {
-          const d = getBuiltinTargetDefinition(targetId);
-          const caps =
-            scope === 'global' ? (d?.globalCapabilities ?? d?.capabilities) : d?.capabilities;
-          const level = (caps?.[feature] ?? 'none') as SupportLevel;
-          return [targetId, level];
+          const caps = getTargetCapabilities(targetId, scope);
+          const cell = caps?.[feature];
+          return [targetId, cell ?? { level: 'none' as const }];
         }),
       ),
     ]),
-  ) as Record<string, Record<string, SupportLevel>>;
+  ) as Record<string, Record<string, TargetCapabilityValue>>;
 }
 
-/** Project-scope catalog levels (`descriptor.capabilities`). */
+/** Project-scope catalog levels (`descriptor.capabilities`), normalized with optional flavors. */
 export const SUPPORT_MATRIX = buildSupportMatrix('project');
 
-/** Global-scope catalog levels (`descriptor.globalCapabilities ?? descriptor.capabilities`). */
+/** Global-scope catalog levels (`globalSupport` / legacy global caps), normalized. */
 export const SUPPORT_MATRIX_GLOBAL = buildSupportMatrix('global');
 
 export const LEVEL_SYMBOL: Record<SupportLevel, string> = {

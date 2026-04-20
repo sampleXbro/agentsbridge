@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { CanonicalFiles, CanonicalCommand } from '../../../src/core/types.js';
-import { lintCommands } from '../../../src/core/lint/commands.js';
+import { lintCommands as lintCopilotCommands } from '../../../src/targets/copilot/lint.js';
+import { lintCommands as lintCursorCommands } from '../../../src/targets/cursor/lint.js';
+import { lintCommands as lintGeminiCommands } from '../../../src/targets/gemini-cli/lint.js';
+import { lintCommands as lintContinueCommands } from '../../../src/targets/continue/lint.js';
+import { lintCommands as lintClineCommands } from '../../../src/targets/cline/lint.js';
+import { lintCommands as lintWindsurfCommands } from '../../../src/targets/windsurf/lint.js';
 
 function makeCanonical(commands: CanonicalCommand[]): CanonicalFiles {
   return {
@@ -26,15 +31,14 @@ function makeCommand(overrides: Partial<CanonicalCommand> = {}): CanonicalComman
   };
 }
 
-describe('lintCommands', () => {
+describe('per-target lint.commands hooks', () => {
   it('returns no diagnostics when there are no commands', () => {
-    expect(lintCommands(makeCanonical([]), 'copilot')).toEqual([]);
+    expect(lintCopilotCommands(makeCanonical([]))).toEqual([]);
   });
 
   it('warns when copilot commands define allowed-tools', () => {
-    const diagnostics = lintCommands(
+    const diagnostics = lintCopilotCommands(
       makeCanonical([makeCommand({ allowedTools: ['Bash(git diff)'] })]),
-      'copilot',
     );
 
     expect(diagnostics).toHaveLength(1);
@@ -42,9 +46,8 @@ describe('lintCommands', () => {
   });
 
   it('warns when cursor commands carry descriptions', () => {
-    const diagnostics = lintCommands(
+    const diagnostics = lintCursorCommands(
       makeCanonical([makeCommand({ description: 'Review code' })]),
-      'cursor',
     );
 
     expect(diagnostics).toHaveLength(1);
@@ -52,18 +55,16 @@ describe('lintCommands', () => {
   });
 
   it('warns when cursor commands carry allowed-tools without descriptions', () => {
-    const diagnostics = lintCommands(
+    const diagnostics = lintCursorCommands(
       makeCanonical([makeCommand({ allowedTools: ['Read'] })]),
-      'cursor',
     );
 
     expect(diagnostics).toHaveLength(1);
   });
 
   it('warns when gemini-cli commands carry allowed-tools', () => {
-    const diagnostics = lintCommands(
+    const diagnostics = lintGeminiCommands(
       makeCanonical([makeCommand({ allowedTools: ['Read'] })]),
-      'gemini-cli',
     );
 
     expect(diagnostics).toHaveLength(1);
@@ -71,9 +72,8 @@ describe('lintCommands', () => {
   });
 
   it('warns when continue commands carry allowed-tools', () => {
-    const diagnostics = lintCommands(
+    const diagnostics = lintContinueCommands(
       makeCanonical([makeCommand({ allowedTools: ['Read'] })]),
-      'continue',
     );
 
     expect(diagnostics).toHaveLength(1);
@@ -81,9 +81,8 @@ describe('lintCommands', () => {
   });
 
   it('warns when cline workflows carry descriptions', () => {
-    const diagnostics = lintCommands(
+    const diagnostics = lintClineCommands(
       makeCanonical([makeCommand({ description: 'Review code' })]),
-      'cline',
     );
 
     expect(diagnostics).toHaveLength(1);
@@ -91,21 +90,11 @@ describe('lintCommands', () => {
   });
 
   it('warns when windsurf workflows carry allowed-tools without descriptions', () => {
-    const diagnostics = lintCommands(
+    const diagnostics = lintWindsurfCommands(
       makeCanonical([makeCommand({ allowedTools: ['Read'] })]),
-      'windsurf',
     );
 
     expect(diagnostics).toHaveLength(1);
     expect(diagnostics[0]?.message).toContain('windsurf workflow files are plain Markdown');
-  });
-
-  it('does not warn when the target can project the command metadata', () => {
-    const diagnostics = lintCommands(
-      makeCanonical([makeCommand({ description: 'Review code', allowedTools: ['Read'] })]),
-      'claude-code',
-    );
-
-    expect(diagnostics).toEqual([]);
   });
 });

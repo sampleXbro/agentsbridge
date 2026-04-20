@@ -78,7 +78,7 @@ export function generateRules(canonical: CanonicalFiles): RulesOutput[] {
  * @param canonical - Loaded canonical files
  * @returns Array of workflow file outputs, or [] if no commands
  */
-export function generateWorkflows(canonical: CanonicalFiles): RulesOutput[] {
+export function generateCommands(canonical: CanonicalFiles): RulesOutput[] {
   return canonical.commands.map((cmd) => {
     const desc = cmd.description.trim();
     const body = cmd.body.trim();

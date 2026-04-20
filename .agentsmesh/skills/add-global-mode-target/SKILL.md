@@ -7,7 +7,7 @@ description: Use when adding global mode support for one existing agentsmesh tar
 
 Use this skill when the task is to add global mode support for one existing target after you have a target-specific document that describes the native global file paths and behavior.
 
-Read `.agentsmesh/skills/add-global-mode-target/references/global-mode-target-checklist.md` before editing code. Treat it as the minimum implementation and QA checklist.
+Read `references/global-mode-target-checklist.md` before editing code. Treat it as the minimum implementation and QA checklist.
 
 ## When To Use
 

@@ -1,6 +1,7 @@
 ---
 name: code-documenter
 description: Create comprehensive technical documentation, API docs, and inline code comments. Specializes in documentation generation, maintenance, and accessibility. Use PROACTIVELY for documentation tasks and knowledge management.
+tools: []
 model: sonnet
 ---
 

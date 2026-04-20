@@ -13,6 +13,7 @@ import {
   resolveByDestinationSuffixStrip,
 } from './link-rebaser-helpers.js';
 import { formatLinkPathForDestination } from './link-rebaser-output.js';
+import { shouldRewritePathToken } from './link-token-context.js';
 
 export interface RewriteFileLinksInput {
   content: string;
@@ -22,6 +23,7 @@ export interface RewriteFileLinksInput {
   translatePath: (absolutePath: string) => string;
   pathExists: (absolutePath: string) => boolean;
   explicitCurrentDirLinks?: boolean;
+  rewriteBarePathTokens?: boolean;
 }
 
 export interface RewriteFileLinksResult {
@@ -59,6 +61,17 @@ export function rewriteFileLinks(input: RewriteFileLinksInput): RewriteFileLinks
   const protectedRefRanges = protectedRanges(input.content);
   const content = input.content.replace(PATH_TOKEN, (match, offset, fullContent) => {
     if (protectedRefRanges.some(([start, end]) => offset >= start && offset < end)) return match;
+    if (
+      !shouldRewritePathToken(
+        fullContent,
+        offset,
+        offset + match.length,
+        match,
+        input.rewriteBarePathTokens === true,
+      )
+    ) {
+      return match;
+    }
     if (isTildeHomeRelativePathToken(fullContent, offset, match)) return match;
     if (isGlobAdjacent(fullContent, offset, offset + match.length)) return match;
     const { candidate: punctStripped, suffix } = stripTrailingPunctuation(match);

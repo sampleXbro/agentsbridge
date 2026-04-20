@@ -1,15 +1,14 @@
 import { join } from 'node:path';
 import type { CanonicalFiles, GenerateResult } from '../types.js';
+import type { ValidatedConfig } from '../../config/core/schema.js';
 import { readFileSafe } from '../../utils/filesystem/fs.js';
-import { addHookScriptAssets } from '../../targets/copilot/hook-assets.js';
-import { GEMINI_SETTINGS } from '../../targets/gemini-cli/constants.js';
 import {
+  getBuiltinTargetDefinition,
   resolveTargetFeatureGenerator,
   rewriteGeneratedOutputPath,
 } from '../../targets/catalog/builtin-targets.js';
-import { CLAUDE_HOOKS_JSON } from '../../targets/claude-code/constants.js';
-import { buildClaudeHooksObjectFromCanonical } from '../../targets/claude-code/hooks-format.js';
-import { computeStatus } from './feature-loop.js';
+import { GEMINI_SETTINGS } from '../../targets/gemini-cli/constants.js';
+import { computeStatus, featureContext } from './feature-loop.js';
 import { SETTINGS_JSON_PATHS, mergeSettingsJson, mergeGeminiSettingsJson } from './settings.js';
 import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
 
@@ -48,29 +47,17 @@ export async function generateHooksFeature(
   canonical: CanonicalFiles,
   projectRoot: string,
   scope: TargetLayoutScope,
+  config: ValidatedConfig,
 ): Promise<void> {
   for (const target of targets) {
-    if (target === 'claude-code' && scope === 'global') {
-      const hooksObj = buildClaudeHooksObjectFromCanonical(canonical);
-      if (Object.keys(hooksObj).length === 0) continue;
-      const resolvedPath = CLAUDE_HOOKS_JSON;
-      const existing = await readFileSafe(join(projectRoot, resolvedPath));
-      const content = JSON.stringify(hooksObj, null, 2);
-      results.push({
-        target,
-        path: resolvedPath,
-        content,
-        currentContent: existing ?? undefined,
-        status: computeStatus(existing, content),
-      });
-      continue;
-    }
-    const gen = resolveTargetFeatureGenerator(target, 'hooks');
+    const gen = resolveTargetFeatureGenerator(target, 'hooks', config);
     if (!gen) continue;
-    const outputs =
-      target === 'copilot'
-        ? await addHookScriptAssets(projectRoot, canonical, gen(canonical))
-        : gen(canonical);
+    const ctx = featureContext(target, 'hooks', scope);
+    let outputs = [...gen(canonical, ctx)];
+    const post = getBuiltinTargetDefinition(target)?.postProcessHookOutputs;
+    if (post) {
+      outputs = [...(await post(projectRoot, canonical, outputs))];
+    }
     for (const out of outputs) {
       const resolvedPath = rewriteGeneratedOutputPath(target, out.path, scope);
       if (resolvedPath === null) continue;
@@ -106,10 +93,9 @@ export async function generateGeminiSettingsFeature(
   scope: TargetLayoutScope,
 ): Promise<void> {
   for (const target of targets) {
-    if (target !== 'gemini-cli') continue;
-    const gen = resolveTargetFeatureGenerator(target, 'settings');
-    if (!gen) continue;
-    const outputs = gen(canonical);
+    const emit = getBuiltinTargetDefinition(target)?.emitScopedSettings;
+    if (!emit) continue;
+    const outputs = emit(canonical, scope);
     if (outputs.length === 0) continue;
     for (const out of outputs) {
       const resolvedPath = rewriteGeneratedOutputPath(target, out.path, scope);

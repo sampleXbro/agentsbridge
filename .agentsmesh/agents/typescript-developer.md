@@ -1,6 +1,7 @@
 ---
 name: typescript-developer
 description: Build type-safe applications with advanced TypeScript features, generics, and strict type checking. Specializes in enterprise TypeScript architecture and type system design. Use PROACTIVELY for complex type safety requirements.
+tools: []
 model: sonnet
 ---
 

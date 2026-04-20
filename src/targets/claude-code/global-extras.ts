@@ -1,6 +1,6 @@
 /**
  * Claude Code global-scope extras: output-styles generation.
- * Implements the generateScopeExtras descriptor hook.
+ * Implements `globalSupport.scopeExtras` for Claude Code.
  */
 
 import { join } from 'node:path';

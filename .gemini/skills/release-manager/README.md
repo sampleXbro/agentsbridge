@@ -33,7 +33,7 @@ python release_planner.py --input assets/sample_release_plan.json
 
 ## Scripts Reference
 
-### ./changelog_generator.py
+### changelog_generator.py
 
 Parses conventional commits and generates structured changelogs in multiple formats.
 
@@ -75,7 +75,7 @@ git log --format="%h %s" v1.0.0..HEAD | python changelog_generator.py \
 - Links to commits and PRs
 - Generates release summary statistics
 
-### ./version_bumper.py
+### version_bumper.py
 
 Analyzes commits to determine semantic version bumps according to conventional commits.
 
@@ -113,7 +113,7 @@ git log --oneline $(git describe --tags --abbrev=0)..HEAD | \
 - Custom rules for specific commit types
 - JSON and text output formats
 
-### ./release_planner.py
+### release_planner.py
 
 Assesses release readiness and generates comprehensive release coordination plans.
 
@@ -430,7 +430,7 @@ When extending these scripts:
 
 1. **Maintain backwards compatibility** for existing command-line interfaces
 2. **Add comprehensive tests** for new features
-3. **Update documentation** including this README and ./SKILL.md
+3. **Update documentation** including this README and SKILL.md
 4. **Follow Python standards** (PEP 8, type hints where helpful)
 5. **Use only standard library** to avoid dependencies
 

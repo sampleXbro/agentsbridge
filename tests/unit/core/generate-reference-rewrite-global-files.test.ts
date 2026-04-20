@@ -28,8 +28,8 @@ function canonical(): CanonicalFiles {
         description: 'Root rule',
         globs: [],
         body: [
-          'See .agentsmesh/skills/api-gen/SKILL.md.',
-          'Reference .agentsmesh/skills/api-gen/references/checklist.md.',
+          'See `.agentsmesh/skills/api-gen/SKILL.md`.',
+          'Reference `.agentsmesh/skills/api-gen/references/checklist.md`.',
         ].join('\n'),
       },
     ],
@@ -40,7 +40,7 @@ function canonical(): CanonicalFiles {
         source: join(TEST_DIR, '.agentsmesh', 'skills', 'api-gen', 'SKILL.md'),
         name: 'api-gen',
         description: 'Generate APIs',
-        body: 'Template at .agentsmesh/skills/api-gen/references/checklist.md.',
+        body: 'Template at `.agentsmesh/skills/api-gen/references/checklist.md`.',
         supportingFiles: [
           {
             relativePath: 'references/checklist.md',

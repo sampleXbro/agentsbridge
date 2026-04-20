@@ -7,10 +7,6 @@ import type { CanonicalFiles, LintDiagnostic } from '../types.js';
 import type { ValidatedConfig } from '../../config/core/schema.js';
 import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
 import { readDirRecursive } from '../../utils/filesystem/fs.js';
-import { lintCommands } from './commands.js';
-import { lintMcp } from './mcp.js';
-import { lintPermissions } from './permissions.js';
-import { lintHooks } from './hooks.js';
 import { getTargetCatalogEntry, isBuiltinTargetId } from '../../targets/catalog/target-catalog.js';
 
 const EXCLUDE_DIRS = ['node_modules', '.git', 'dist', 'coverage', '.agentsmesh'];
@@ -31,7 +27,7 @@ async function getProjectFiles(projectRoot: string): Promise<string[]> {
  * Run lint across all enabled targets.
  * @param config - Validated config
  * @param canonical - Loaded canonical files
- * @param projectRoot - Project root (for glob matching)
+ * @param projectRoot - Project root for glob matching
  * @param targetFilter - Optional target filter (e.g. from --targets)
  * @returns All diagnostics, and whether any are errors
  */
@@ -61,33 +57,17 @@ export async function runLint(
     if (hasRules && descriptor?.lintRules) {
       diagnostics.push(...descriptor.lintRules(canonical, projectRoot, projectFiles, { scope }));
     }
-    if (hasCommands) {
-      if (descriptor?.lint?.commands) {
-        diagnostics.push(...descriptor.lint.commands(canonical));
-      } else {
-        diagnostics.push(...lintCommands(canonical, target));
-      }
+    if (hasCommands && descriptor?.lint?.commands) {
+      diagnostics.push(...descriptor.lint.commands(canonical));
     }
-    if (hasMcp) {
-      if (descriptor?.lint?.mcp) {
-        diagnostics.push(...descriptor.lint.mcp(canonical));
-      } else {
-        diagnostics.push(...lintMcp(canonical, target));
-      }
+    if (hasMcp && descriptor?.lint?.mcp) {
+      diagnostics.push(...descriptor.lint.mcp(canonical));
     }
-    if (hasPermissions) {
-      if (descriptor?.lint?.permissions) {
-        diagnostics.push(...descriptor.lint.permissions(canonical));
-      } else {
-        diagnostics.push(...lintPermissions(canonical, target));
-      }
+    if (hasPermissions && descriptor?.lint?.permissions) {
+      diagnostics.push(...descriptor.lint.permissions(canonical));
     }
-    if (hasHooks) {
-      if (descriptor?.lint?.hooks) {
-        diagnostics.push(...descriptor.lint.hooks(canonical));
-      } else {
-        diagnostics.push(...lintHooks(canonical, target));
-      }
+    if (hasHooks && descriptor?.lint?.hooks) {
+      diagnostics.push(...descriptor.lint.hooks(canonical));
     }
   }
 

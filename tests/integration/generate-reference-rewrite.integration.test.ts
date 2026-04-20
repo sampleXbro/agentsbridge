@@ -33,12 +33,13 @@ features: [rules, commands, agents, skills]
     });
     writeFileSync(
       join(testDir, '.agentsmesh', 'rules', '_root.md'),
-      `---
-root: true
-description: Root rule
----
-See .agentsmesh/rules/typescript.md, .agentsmesh/commands/review.md, .agentsmesh/agents/reviewer.md, and .agentsmesh/skills/api-gen/references/checklist.md.
-`,
+      [
+        '---',
+        'root: true',
+        'description: Root rule',
+        '---',
+        'See `.agentsmesh/rules/typescript.md`, `.agentsmesh/commands/review.md`, `.agentsmesh/agents/reviewer.md`, and `.agentsmesh/skills/api-gen/references/checklist.md`.',
+      ].join('\n'),
     );
     writeFileSync(
       join(testDir, '.agentsmesh', 'rules', 'typescript.md'),
@@ -51,25 +52,24 @@ Prefer strict mode.
     );
     writeFileSync(
       join(testDir, '.agentsmesh', 'commands', 'review.md'),
-      `---
-description: Review
----
-Load .agentsmesh/skills/api-gen/SKILL.md.
-`,
+      ['---', 'description: Review', '---', 'Load `.agentsmesh/skills/api-gen/SKILL.md`.'].join(
+        '\n',
+      ),
     );
     writeFileSync(
       join(testDir, '.agentsmesh', 'agents', 'reviewer.md'),
-      `---
-name: reviewer
-description: Reviews code
-tools: [Read]
----
-Use .agentsmesh/skills/api-gen/SKILL.md.
-`,
+      [
+        '---',
+        'name: reviewer',
+        'description: Reviews code',
+        'tools: [Read]',
+        '---',
+        'Use `.agentsmesh/skills/api-gen/SKILL.md`.',
+      ].join('\n'),
     );
     writeFileSync(
       join(testDir, '.agentsmesh', 'skills', 'api-gen', 'SKILL.md'),
-      '# API Gen\n\nChecklist: .agentsmesh/skills/api-gen/references/checklist.md.\n',
+      '# API Gen\n\nChecklist: `.agentsmesh/skills/api-gen/references/checklist.md`.\n',
     );
     writeFileSync(
       join(testDir, '.agentsmesh', 'skills', 'api-gen', 'references', 'checklist.md'),
@@ -115,12 +115,13 @@ features: [rules]
     mkdirSync(join(testDir, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(
       join(testDir, '.agentsmesh', 'rules', '_root.md'),
-      `---
-root: true
-description: Root rule
----
-Keep .agentsmesh/rules/typescript.md.
-`,
+      [
+        '---',
+        'root: true',
+        'description: Root rule',
+        '---',
+        'Keep `.agentsmesh/rules/typescript.md`.',
+      ].join('\n'),
     );
     writeFileSync(
       join(testDir, '.agentsmesh', 'rules', 'typescript.md'),
@@ -158,7 +159,7 @@ features: [rules, skills]
 root: true
 description: Root rule
 ---
-Use .agentsmesh/skills/post-feature-qa/ and .agentsmesh/skills/post-feature-qa/references/.
+Use [.agentsmesh/skills/post-feature-qa/](.agentsmesh/skills/post-feature-qa/) and [.agentsmesh/skills/post-feature-qa/references/](.agentsmesh/skills/post-feature-qa/references/).
 `,
     );
     writeFileSync(join(testDir, '.agentsmesh', 'skills', 'post-feature-qa', 'SKILL.md'), '# QA\n');
@@ -186,6 +187,40 @@ Use .agentsmesh/skills/post-feature-qa/ and .agentsmesh/skills/post-feature-qa/r
     );
   });
 
+  it('leaves bare scripts/ directory prose unchanged when scripts/ exists on disk', () => {
+    writeFileSync(
+      join(testDir, 'agentsmesh.yaml'),
+      `version: 1
+targets: [cursor]
+features: [skills]
+`,
+    );
+    mkdirSync(join(testDir, '.agentsmesh', 'skills', 'link-rebaser-prose', 'references'), {
+      recursive: true,
+    });
+    mkdirSync(join(testDir, 'scripts'), { recursive: true });
+    writeFileSync(join(testDir, 'scripts', '.gitkeep'), '');
+    writeFileSync(
+      join(testDir, '.agentsmesh', 'skills', 'link-rebaser-prose', 'SKILL.md'),
+      [
+        '---',
+        'name: link-rebaser-prose',
+        'description: Prose regression',
+        '---',
+        'Look for a scripts/ directory and README index.',
+      ].join('\n'),
+    );
+
+    execSync(`node ${CLI_PATH} generate`, { cwd: testDir });
+
+    const out = readFileSync(
+      join(testDir, '.cursor', 'skills', 'link-rebaser-prose', 'SKILL.md'),
+      'utf-8',
+    );
+    expect(out).toContain('scripts/ directory');
+    expect(out).not.toContain('../../../scripts/');
+  });
+
   it('rewrites skill directory references in cline AGENTS.md root artifact', () => {
     writeFileSync(
       join(testDir, 'agentsmesh.yaml'),
@@ -204,7 +239,7 @@ features: [rules, skills]
 root: true
 description: Root rule
 ---
-Use .agentsmesh/skills/post-feature-qa/ and .agentsmesh/skills/post-feature-qa/references/.
+Use [.agentsmesh/skills/post-feature-qa/](.agentsmesh/skills/post-feature-qa/) and [.agentsmesh/skills/post-feature-qa/references/](.agentsmesh/skills/post-feature-qa/references/).
 `,
     );
     writeFileSync(join(testDir, '.agentsmesh', 'skills', 'post-feature-qa', 'SKILL.md'), '# QA\n');

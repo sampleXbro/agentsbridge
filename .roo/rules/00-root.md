@@ -41,7 +41,7 @@
 
 - **post-feature-qa** — Apply after every feature/story. Senior QA: verify edge-case coverage and story alignment.
 - **add-agent-target** — Use when adding a new AI agent target. Covers research, implementation, fixtures, full test coverage, docs.
-- **add-global-mode-target** — Use when adding or extending **global mode** (`--global`, `~/.agentsmesh/`) for an existing target. Covers descriptor.global wiring, import/generate paths, reference rewriting, tests, and matrix docs.
+- **add-global-mode-target** — Use when adding or extending **global mode** (`--global`, `../../.agentsmesh/`) for an existing target. Covers descriptor.global wiring, import/generate paths, reference rewriting, tests, and matrix docs.
 
 
 ## Core Principles
@@ -51,6 +51,10 @@
 
 ## Project Rules
 
+- **Architecture baseline**: Read `../../docs/architecture/review.md` before architectural or multi-file changes.
+- **Core flow to preserve**: canonical `../../.agentsmesh/` content -> descriptor-driven generation/import (`src/targets/<id>/index.ts`) -> shared reference rewrite/lock checks -> strict artifact verification.
+- **Scale limitations to account for**: avoid target-name hardcoding in shared/core code, avoid duplicated per-target helper logic, and keep capability variance expressed in descriptors (not ad-hoc generator branches).
+- **Global mode discipline**: treat global support as one cohesive contract (layout + capabilities + detection + scope extras), not scattered one-off hooks.
 - **TDD mandatory**: Write failing tests FIRST, then implement.
 - **Max file size**: 200 lines. Split by responsibility if larger.
 - **No classes unless stateful**: Prefer pure functions + types.
@@ -61,7 +65,7 @@
 - **Commit format**: conventional commits — `feat|fix|test|refactor(scope): message`
 - **Docs must stay current**: Any change to CLI commands, flags, config schema, supported targets, or canonical file formats **must** be reflected in both `README.md` and the website (`../../website/src/content/docs/`) before the task is marked complete.
 - **Target data single source of truth** — do **not** hardcode target lists or support levels outside this chain:
-  1. `../../src/targets/catalog/target-ids.ts` (`TARGET_IDS`) = canonical target ID list. Each target's `capabilities` in `../../src/targets/<name>/index.ts` = feature support levels.
+  1. `../../src/targets/catalog/target-ids.ts` (`TARGET_IDS`) = canonical target ID list. Each target's `capabilities` in `src/targets/<name>/index.ts` = feature support levels.
   2. `../../src/core/matrix/data.ts` (`SUPPORT_MATRIX`) = built dynamically from descriptors. Never hardcode.
   3. `../../website/src/content/docs/reference/supported-tools.mdx` = **single docs page** for per-target support. All other pages link here — no duplicate tables.
   4. `README.md` matrix must stay in sync with code capabilities.

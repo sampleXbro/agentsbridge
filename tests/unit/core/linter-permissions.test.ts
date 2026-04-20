@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { CanonicalFiles } from '../../../src/core/types.js';
-import { lintPermissions } from '../../../src/core/lint/permissions.js';
+import { lintPermissions as lintCursorPermissions } from '../../../src/targets/cursor/lint.js';
 
 function makeCanonical(permissions: CanonicalFiles['permissions']): CanonicalFiles {
   return {
@@ -15,42 +15,28 @@ function makeCanonical(permissions: CanonicalFiles['permissions']): CanonicalFil
   };
 }
 
-describe('lintPermissions', () => {
+describe('cursor lint.permissions hook', () => {
   it('returns no diagnostics when permissions are missing', () => {
-    expect(lintPermissions(makeCanonical(null), 'cursor')).toEqual([]);
-  });
-
-  it('returns no diagnostics for non-cursor targets', () => {
-    expect(
-      lintPermissions(
-        makeCanonical({
-          allow: ['Read'],
-          deny: [],
-        }),
-        'claude-code',
-      ),
-    ).toEqual([]);
+    expect(lintCursorPermissions(makeCanonical(null))).toEqual([]);
   });
 
   it('returns no diagnostics when cursor permissions are empty', () => {
     expect(
-      lintPermissions(
+      lintCursorPermissions(
         makeCanonical({
           allow: [],
           deny: [],
         }),
-        'cursor',
       ),
     ).toEqual([]);
   });
 
   it('warns when cursor permissions contain allow or deny entries', () => {
-    const diagnostics = lintPermissions(
+    const diagnostics = lintCursorPermissions(
       makeCanonical({
         allow: [],
         deny: ['Bash(rm -rf:*)'],
       }),
-      'cursor',
     );
 
     expect(diagnostics).toHaveLength(1);

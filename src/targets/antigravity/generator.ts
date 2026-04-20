@@ -36,7 +36,7 @@ export function generateRules(canonical: CanonicalFiles): AntigravityOutput[] {
   return outputs;
 }
 
-export function generateWorkflows(canonical: CanonicalFiles): AntigravityOutput[] {
+export function generateCommands(canonical: CanonicalFiles): AntigravityOutput[] {
   return canonical.commands.map((cmd) => {
     const intro = cmd.description.trim();
     const body = cmd.body.trim();

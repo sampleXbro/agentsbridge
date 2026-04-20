@@ -25,6 +25,7 @@ import { lintRules } from './linter.js';
 import { buildCopilotImportPaths } from '../../core/reference/import-map-builders.js';
 import { commandPromptPath } from './command-prompt.js';
 import { lintCommands, lintHooks } from './lint.js';
+import { addHookScriptAssets } from './hook-assets.js';
 
 export const target: TargetGenerators = {
   name: 'copilot',
@@ -39,6 +40,7 @@ export const target: TargetGenerators = {
 
 const project: TargetLayout = {
   rootInstructionPath: COPILOT_INSTRUCTIONS,
+  outputFamilies: [{ id: 'instructions', kind: 'additional', pathPrefix: '.github/instructions/' }],
   skillDir: '.github/skills',
   managedOutputs: {
     dirs: [
@@ -151,19 +153,23 @@ export const descriptor = {
     commands: lintCommands,
     hooks: lintHooks,
   },
+  postProcessHookOutputs: async (projectRoot, canonical, outputs) =>
+    addHookScriptAssets(projectRoot, canonical, [...outputs]),
   project,
-  global,
-  globalCapabilities,
+  globalSupport: {
+    capabilities: globalCapabilities,
+    detectionPaths: [
+      COPILOT_GLOBAL_INSTRUCTIONS,
+      COPILOT_GLOBAL_AGENTS_DIR,
+      COPILOT_GLOBAL_SKILLS_DIR,
+      COPILOT_GLOBAL_PROMPTS_DIR,
+      COPILOT_GLOBAL_AGENTS_SKILLS_DIR,
+    ],
+    layout: global,
+  },
   skillDir: project.skillDir,
   paths: project.paths,
   buildImportPaths: buildCopilotImportPaths,
-  globalDetectionPaths: [
-    COPILOT_GLOBAL_INSTRUCTIONS,
-    COPILOT_GLOBAL_AGENTS_DIR,
-    COPILOT_GLOBAL_SKILLS_DIR,
-    COPILOT_GLOBAL_PROMPTS_DIR,
-    COPILOT_GLOBAL_AGENTS_SKILLS_DIR,
-  ],
   detectionPaths: [
     '.github/copilot-instructions.md',
     '.github/copilot',

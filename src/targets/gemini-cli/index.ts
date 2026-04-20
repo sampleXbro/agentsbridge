@@ -6,9 +6,9 @@ import {
   generateCommands,
   generateAgents,
   generateSkills,
-  generateSettings,
   generateIgnore,
 } from './generator.js';
+import { cap } from '../catalog/capabilities.js';
 import { generateGeminiPermissionsPolicies } from './policies-generator.js';
 import {
   GEMINI_ROOT,
@@ -29,6 +29,7 @@ import { buildGeminiCliImportPaths } from '../../core/reference/import-map-build
 import { shouldConvertAgentsToSkills } from '../../config/core/conversions.js';
 import { projectedAgentSkillDirName } from '../projection/projected-agent-skill.js';
 import { lintCommands, lintHooks } from './lint.js';
+import { emitScopedGeminiSettings } from './scoped-settings-emit.js';
 
 export const target: TargetGenerators = {
   name: 'gemini-cli',
@@ -37,7 +38,6 @@ export const target: TargetGenerators = {
   generateCommands,
   generateAgents,
   generateSkills,
-  generateSettings,
   generateIgnore,
   generatePermissions: generateGeminiPermissionsPolicies,
   importFrom: importFromGemini,
@@ -45,7 +45,9 @@ export const target: TargetGenerators = {
 
 const project: TargetLayout = {
   rootInstructionPath: GEMINI_ROOT,
-  additionalRootDecorationPaths: [GEMINI_COMPAT_AGENTS],
+  outputFamilies: [
+    { id: 'compat-agents', kind: 'additional', explicitPaths: [GEMINI_COMPAT_AGENTS] },
+  ],
   skillDir: '.gemini/skills',
   managedOutputs: {
     dirs: ['.gemini/agents', '.gemini/commands', '.gemini/skills', '.agents/skills'],
@@ -88,7 +90,9 @@ const project: TargetLayout = {
 
 const global: TargetLayout = {
   rootInstructionPath: GEMINI_GLOBAL_ROOT,
-  additionalRootDecorationPaths: [GEMINI_GLOBAL_COMPAT_AGENTS],
+  outputFamilies: [
+    { id: 'compat-agents', kind: 'additional', explicitPaths: [GEMINI_GLOBAL_COMPAT_AGENTS] },
+  ],
   skillDir: GEMINI_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [GEMINI_GLOBAL_COMMANDS_DIR, GEMINI_GLOBAL_SKILLS_DIR, GEMINI_GLOBAL_AGENTS_DIR],
@@ -170,7 +174,7 @@ export const descriptor = {
     skills: 'native',
     mcp: 'native',
     hooks: 'partial',
-    ignore: 'native',
+    ignore: cap('native', 'settings-embedded'),
     permissions: 'partial',
   },
   emptyImportMessage:
@@ -180,19 +184,22 @@ export const descriptor = {
     commands: lintCommands,
     hooks: lintHooks,
   },
+  emitScopedSettings: emitScopedGeminiSettings,
   project,
-  global,
-  globalCapabilities,
+  globalSupport: {
+    capabilities: globalCapabilities,
+    detectionPaths: [
+      GEMINI_GLOBAL_ROOT,
+      GEMINI_GLOBAL_COMPAT_AGENTS,
+      GEMINI_GLOBAL_SETTINGS,
+      GEMINI_GLOBAL_COMMANDS_DIR,
+      GEMINI_GLOBAL_SKILLS_DIR,
+      GEMINI_GLOBAL_AGENTS_DIR,
+    ],
+    layout: global,
+  },
   skillDir: project.skillDir,
   paths: project.paths,
   buildImportPaths: buildGeminiCliImportPaths,
-  globalDetectionPaths: [
-    GEMINI_GLOBAL_ROOT,
-    GEMINI_GLOBAL_COMPAT_AGENTS,
-    GEMINI_GLOBAL_SETTINGS,
-    GEMINI_GLOBAL_COMMANDS_DIR,
-    GEMINI_GLOBAL_SKILLS_DIR,
-    GEMINI_GLOBAL_AGENTS_DIR,
-  ],
   detectionPaths: ['GEMINI.md', '.gemini'],
 } satisfies TargetDescriptor;

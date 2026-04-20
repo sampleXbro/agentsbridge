@@ -354,7 +354,7 @@ describe('buildCompatibilityMatrix', () => {
     };
 
     expect(resolveTargetFeatureGenerator('cline', 'hooks')).toBeDefined();
-    expect(getTargetCapabilities('cline')?.hooks).toBe('native');
+    expect(getTargetCapabilities('cline')?.hooks.level).toBe('native');
 
     const row = buildCompatibilityMatrix(config, canonical).find((r) =>
       r.feature.startsWith('hooks'),

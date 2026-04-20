@@ -11,5 +11,7 @@ export function lintHooks(canonical: CanonicalFiles): LintDiagnostic[] {
   const supportedSet = new Set(supported);
   return Object.keys(canonical.hooks)
     .filter((event) => !supportedSet.has(event as never))
-    .map((event) => createUnsupportedHookWarning(event, 'kiro', supported));
+    .map((event) =>
+      createUnsupportedHookWarning(event, 'kiro', supported, { unsupportedBy: 'Kiro hooks' }),
+    );
 }

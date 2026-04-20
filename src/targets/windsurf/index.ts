@@ -3,13 +3,14 @@ import type { TargetDescriptor, TargetLayout } from '../catalog/target-descripto
 import type { ValidatedConfig } from '../../config/core/schema.js';
 import {
   generateRules,
-  generateWorkflows,
+  generateCommands,
   generateAgents,
   generateSkills,
   generateIgnore,
   generateMcp,
   generateHooks,
 } from './generator.js';
+import { cap } from '../catalog/capabilities.js';
 import {
   WINDSURF_AGENTS_MD,
   WINDSURF_RULES_DIR,
@@ -37,7 +38,7 @@ export const target: TargetGenerators = {
   name: 'windsurf',
   primaryRootInstructionPath: WINDSURF_AGENTS_MD,
   generateRules,
-  generateWorkflows,
+  generateCommands,
   generateAgents,
   generateSkills,
   generateMcp,
@@ -139,7 +140,7 @@ const global: TargetLayout = {
 
 const globalCapabilities: TargetCapabilities = {
   rules: 'native',
-  commands: 'native',
+  commands: cap('native', 'workflows'),
   agents: 'embedded',
   skills: 'native',
   mcp: 'native',
@@ -153,7 +154,7 @@ export const descriptor = {
   generators: target,
   capabilities: {
     rules: 'native',
-    commands: 'native',
+    commands: cap('native', 'workflows'),
     agents: 'embedded',
     skills: 'native',
     mcp: 'partial',
@@ -170,18 +171,20 @@ export const descriptor = {
     mcp: lintMcp,
   },
   project,
-  global,
-  globalCapabilities,
+  globalSupport: {
+    capabilities: globalCapabilities,
+    detectionPaths: [
+      WINDSURF_GLOBAL_RULES,
+      WINDSURF_GLOBAL_SKILLS_DIR,
+      WINDSURF_GLOBAL_WORKFLOWS_DIR,
+      WINDSURF_GLOBAL_HOOKS_FILE,
+      WINDSURF_GLOBAL_MCP_FILE,
+      WINDSURF_GLOBAL_IGNORE,
+    ],
+    layout: global,
+  },
   skillDir: project.skillDir,
   paths: project.paths,
   buildImportPaths: buildWindsurfImportPaths,
-  globalDetectionPaths: [
-    WINDSURF_GLOBAL_RULES,
-    WINDSURF_GLOBAL_SKILLS_DIR,
-    WINDSURF_GLOBAL_WORKFLOWS_DIR,
-    WINDSURF_GLOBAL_HOOKS_FILE,
-    WINDSURF_GLOBAL_MCP_FILE,
-    WINDSURF_GLOBAL_IGNORE,
-  ],
   detectionPaths: ['.windsurfrules', '.windsurf'],
 } satisfies TargetDescriptor;

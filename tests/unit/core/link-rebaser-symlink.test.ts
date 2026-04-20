@@ -19,7 +19,7 @@ describe('rewriteFileLinks with symlinked roots', () => {
       const canonicalPath = join(linkRoot, '.agentsmesh', 'skills', 'api-gen', 'SKILL.md');
       const targetPath = join(linkRoot, '.claude', 'skills', 'api-gen', 'SKILL.md');
       const result = rewriteFileLinks({
-        content: 'Use .agentsmesh/skills/api-gen/SKILL.md.',
+        content: 'Use `.agentsmesh/skills/api-gen/SKILL.md`.',
         projectRoot: linkRoot,
         sourceFile: join(linkRoot, '.agentsmesh', 'rules', '_root.md'),
         destinationFile: join(linkRoot, '.claude', 'CLAUDE.md'),
@@ -28,7 +28,7 @@ describe('rewriteFileLinks with symlinked roots', () => {
         explicitCurrentDirLinks: true,
       });
 
-      expect(result.content).toBe('Use ./skills/api-gen/SKILL.md.');
+      expect(result.content).toBe('Use `./skills/api-gen/SKILL.md`.');
       expect(result.missing).toEqual([]);
     } finally {
       rmSync(tempRoot, { recursive: true, force: true });

@@ -127,29 +127,33 @@ That's it. Your `.agentsmesh/` directory is now the single source of truth, and 
 
 ### Project scope (`agentsmesh generate`)
 
-| Feature       | Claude Code | Cursor  | Copilot | Continue | Junie    | Kiro   | Gemini CLI | Cline   | Codex CLI | Windsurf | Antigravity | Roo Code |
-|---------------|:-----------:|:-------:|:-------:|:--------:|:--------:|:------:|:----------:|:-------:|:---------:|:--------:|:-----------:|:--------:|
-| Rules         | Native      | Native  | Native  | Native   | Native   | Native | Native     | Native  | Native    | Native   | Native      | Native   |
-| Commands      | Native      | Native  | Native  | Embedded | Embedded | --     | Native     | Native  | Embedded  | Native   | Partial     | Native   |
-| Agents        | Native      | Native  | Native  | --       | Embedded | Native | Native     | Embedded| Native    | Embedded | --          | --       |
-| Skills        | Native      | Native  | Native  | Embedded | Embedded | Native | Native     | Native  | Native    | Native   | Native      | Native   |
-| MCP Servers   | Native      | Native  | --      | Native   | Native   | Native | Native     | Native  | Native    | Partial  | --          | Native   |
-| Hooks         | Native      | Native  | Partial | --       | --       | Native | Partial    | Native  | --        | Native   | --          | --       |
-| Ignore        | Native      | Native  | --      | --       | Native   | Native | Native     | Native  | --        | Native   | --          | Native   |
-| Permissions   | Native      | Partial | --      | --       | --       | --     | Partial    | --      | --        | --       | --          | --       |
+<!-- agentsmesh:support-matrix:project -->
+| Feature | Claude Code | Cursor | Copilot | Continue | Junie | Kiro | Gemini CLI | Cline | Codex CLI | Windsurf | Antigravity | Roo Code |
+|---|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
+| Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
+| Commands | Native | Native | Native | Embedded | Embedded | — | Native | Native (workflows) | Embedded | Native (workflows) | Partial (workflows) | Native |
+| Agents | Native | Native | Native | — | Embedded | Native | Native | Embedded | Native | Embedded | — | — |
+| Skills | Native | Native | Native | Embedded | Embedded | Native | Native | Native | Native | Native | Native | Native |
+| MCP Servers | Native | Native | — | Native | Native | Native | Native | Native | Native | Partial | — | Native |
+| Hooks | Native | Native | Partial | — | — | Native | Partial | Native | — | Native | — | — |
+| Ignore | Native | Native | — | — | Native | Native | Native (settings-embedded) | Native | — | Native | — | Native |
+| Permissions | Native | Partial | — | — | — | — | Partial | — | — | — | — | — |
+<!-- /agentsmesh:support-matrix:project -->
 
 ### Global scope (`agentsmesh matrix --global`)
 
-| Feature       | Claude Code | Cursor  | Copilot | Continue | Junie    | Kiro   | Gemini CLI | Cline   | Codex CLI | Windsurf | Antigravity | Roo Code |
-|---------------|:-----------:|:-------:|:-------:|:--------:|:--------:|:------:|:----------:|:-------:|:---------:|:--------:|:-----------:|:--------:|
-| Rules         | Native      | Native  | Native  | Native   | Native   | Native | Native     | Native  | Native    | Native   | Native      | Native   |
-| Commands      | Native      | Native  | Native  | Native   | Native   | --     | Native     | Native  | Embedded  | Native   | Partial     | Native   |
-| Agents        | Native      | Native  | Native  | --       | Native   | Native | Native     | Embedded| Native    | Embedded | --          | --       |
-| Skills        | Native      | Native  | Native  | Native   | Native   | Native | Native     | Native  | Native    | Native   | Native      | Native   |
-| MCP Servers   | Native      | Native  | --      | Native   | Native   | Native | Native     | Native  | Native    | Native   | Native      | Native   |
-| Hooks         | Native      | Native  | --      | --       | --       | --     | Partial    | Native  | --        | Native   | --          | --       |
-| Ignore        | Native      | Native  | --      | --       | --       | Native | --         | Native  | --        | Native   | --          | Native   |
-| Permissions   | Native      | --      | --      | --       | --       | --     | --         | --      | --        | --       | --          | --       |
+<!-- agentsmesh:support-matrix:global -->
+| Feature | Claude Code | Cursor | Copilot | Continue | Junie | Kiro | Gemini CLI | Cline | Codex CLI | Windsurf | Antigravity | Roo Code |
+|---|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
+| Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
+| Commands | Native | Native | Native | Native | Native | — | Native | Native (workflows) | Embedded | Native (workflows) | Partial (workflows) | Native |
+| Agents | Native | Native | Native | — | Native | Native | Native | Embedded | Native | Embedded | — | — |
+| Skills | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
+| MCP Servers | Native | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native |
+| Hooks | Native | Native | — | — | — | — | Partial | Native | — | Native | — | — |
+| Ignore | Native | Native | — | — | — | Native | — | Native | — | Native | — | Native |
+| Permissions | Native | — | — | — | — | — | — | — | — | — | — | — |
+<!-- /agentsmesh:support-matrix:global -->
 
 See the [full feature matrix docs](https://samplexbro.github.io/agentsmesh/reference/supported-tools/) for details on native vs. embedded support and global paths.
 

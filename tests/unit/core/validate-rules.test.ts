@@ -113,4 +113,44 @@ describe('validateRules', () => {
     const warnings = diags.filter((d) => d.message.includes('match 0 files'));
     expect(warnings).toHaveLength(1);
   });
+
+  it('skips glob matching entirely when checkGlobMatches is false', () => {
+    const rules = [
+      {
+        source: join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
+        root: true,
+        targets: [],
+        description: 'Root',
+        globs: [] as string[],
+        body: 'Root',
+      },
+      {
+        source: join(TEST_DIR, '.agentsmesh', 'rules', 'lib-only.md'),
+        root: false,
+        targets: [],
+        description: 'Lib',
+        globs: ['lib/**/*.ts'],
+        body: 'Lib',
+      },
+    ];
+    const diags = validateRules(canonical(rules), TEST_DIR, [], { checkGlobMatches: false });
+    expect(diags).toEqual([]);
+  });
+
+  it('checkGlobMatches=false still reports missing root', () => {
+    const rules = [
+      {
+        source: join(TEST_DIR, '.agentsmesh', 'rules', 'ts.md'),
+        root: false,
+        targets: [],
+        description: 'TS',
+        globs: ['**/*.ts'],
+        body: 'TS rules',
+      },
+    ];
+    const diags = validateRules(canonical(rules), TEST_DIR, [], { checkGlobMatches: false });
+    expect(diags).toHaveLength(1);
+    expect(diags[0]?.level).toBe('error');
+    expect(diags[0]?.message).toContain('no root rule');
+  });
 });

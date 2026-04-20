@@ -25,6 +25,11 @@ const ROOT_RELATIVE_PREFIXES = [
   '.windsurf/',
   '.roo/',
 ];
+
+export function isRootRelativePathToken(token: string): boolean {
+  const normalizedToken = normalizeSeparators(token);
+  return ROOT_RELATIVE_PREFIXES.some((prefix) => normalizedToken.startsWith(prefix));
+}
 const NON_REWRITABLE_BARE_FILES = new Set([
   'AGENTS.md',
   'CLAUDE.md',
@@ -79,7 +84,7 @@ export function resolveProjectPath(
       ? [sourceRelativePath, fallbackPath]
       : [sourceRelativePath];
   }
-  if (ROOT_RELATIVE_PREFIXES.some((prefix) => normalizedToken.startsWith(prefix))) {
+  if (isRootRelativePathToken(normalizedToken)) {
     return [normalizeForProject(projectRoot, api.join(normalizedProjectRoot, normalizedToken))];
   }
   if (normalizedToken.includes('/')) {
@@ -157,7 +162,7 @@ export function resolveByDestinationSuffixStrip(
   const api = pathApi(projectRoot);
   const normalizedToken = normalizeSeparators(token);
 
-  if (!ROOT_RELATIVE_PREFIXES.some((prefix) => normalizedToken.startsWith(prefix))) {
+  if (!isRootRelativePathToken(normalizedToken)) {
     return null;
   }
 

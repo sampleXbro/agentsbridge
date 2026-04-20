@@ -13,7 +13,7 @@ Read `./references/global-mode-target-checklist.md` before editing code. Treat i
 
 ## When To Use
 
-- The target already exists in `../../../src/targets/<target>/`
+- The target already exists in `src/targets/<target>/`
 - You have a target doc with native global paths or global behavior
 - The repository-wide global-mode foundation already exists (`init|install|generate|import|diff|lint|watch|check|merge|matrix --global`)
 - The work is scoped to one target at a time
@@ -56,7 +56,7 @@ Use `add-agent-target` for new targets. Use this skill only for the per-target g
    - Record whether import from global files is meaningful and lossless.
 
 2. Cross-check the live target implementation.
-   - Read `../../../src/targets/<target>/index.ts`, `constants.ts`, `generator.ts`, `importer.ts`, and `linter.ts`.
+   - Read `src/targets/<target>/index.ts`, `constants.ts`, `generator.ts`, `importer.ts`, and `linter.ts`.
    - Identify the current project layout in `descriptor.project`.
    - Identify where global behavior can reuse the same structure and where it cannot.
 
@@ -91,7 +91,7 @@ Use `add-agent-target` for new targets. Use this skill only for the per-target g
 ## Required Touchpoints
 
 - Target descriptor and layout metadata:
-  `../../../src/targets/<target>/index.ts`
+  `src/targets/<target>/index.ts`
 - Shared target lookup/path helpers:
   `../../../src/targets/catalog/builtin-targets.ts`
   `../../../src/core/reference/map-targets.ts`

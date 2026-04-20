@@ -1,3 +1,18 @@
+# Round-Trip Test Repair Plan
+
+Goal: make all tests pass, with project-mode and global-mode round trips matching the structure documented in `docs/agent-structures/`.
+
+Plan:
+- [x] Read `tasks/lessons.md`, architecture review, current task notes, and relevant skills.
+- [x] Identify failing round-trip coverage by running targeted project/global e2e and contract tests from a fresh build.
+- [x] Compare failures against `docs/agent-structures/*-{project,global}-level-*` before changing implementation or expectations.
+- [x] Add or tighten failing tests first for any uncovered round-trip gap.
+- [x] Implement the smallest descriptor/import/generate/reference-rewrite fix that restores project and global round trips.
+- [x] Run targeted verification, then `pnpm lint`, `pnpm typecheck`, `pnpm build`, and `pnpm test`.
+- [x] Run `post-feature-qa` and record any new lesson if a failure or correction reveals one.
+
+---
+
 # Global Mode Test Coverage Plan
 
 ## Current Task: Matrix and Website Docs Sync

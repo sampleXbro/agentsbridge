@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { formatLinkPathForDestination } from '../../../src/core/reference/link-rebaser-output.js';
+import {
+  formatLinkPathForDestination,
+  pickShortestValidatedFormattedLink,
+} from '../../../src/core/reference/link-rebaser-output.js';
 
 const EXPLICIT_CURRENT_DIR = { explicitCurrentDirLinks: true };
 
@@ -78,6 +81,24 @@ describe('formatLinkPathForDestination', () => {
     expect(formatLinkPathForDestination(root, dest, target, false, EXPLICIT_CURRENT_DIR)).toBe(
       '../SKILL.md',
     );
+  });
+
+  it('prefers ./… over a long ../… chain when both absolute targets exist', () => {
+    const root = '/proj';
+    const dest = '/proj/.gemini/skills/ts-library/SKILL.md';
+    const geminiRef = '/proj/.gemini/skills/ts-library/references/project-setup.md';
+    const agentsRef = '/proj/.agents/skills/ts-library/references/project-setup.md';
+    const pathExists = (p: string): boolean => p === geminiRef || p === agentsRef;
+    expect(
+      pickShortestValidatedFormattedLink(
+        root,
+        dest,
+        [agentsRef, geminiRef],
+        false,
+        EXPLICIT_CURRENT_DIR,
+        pathExists,
+      ),
+    ).toBe('./references/project-setup.md');
   });
 
   it('uses project-root-relative when linking from Antigravity `.agents/rules` into `.agentsmesh`', () => {

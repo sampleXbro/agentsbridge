@@ -1,10 +1,15 @@
-import type { CanonicalFiles, SupportLevel } from '../../core/types.js';
+import type { SupportLevel } from '../../core/types.js';
 import type { ValidatedConfig } from '../../config/core/schema.js';
 import {
   shouldConvertAgentsToSkills,
   shouldConvertCommandsToSkills,
 } from '../../config/core/conversions.js';
-import type { TargetCapabilities } from './target.interface.js';
+import type { FeatureGeneratorFn, TargetCapabilities } from './target.interface.js';
+import {
+  type CapabilityFeatureKey,
+  normalizeTargetCapabilities,
+  type TargetCapabilityValue,
+} from './capabilities.js';
 import type {
   TargetDescriptor,
   TargetLayout,
@@ -25,8 +30,7 @@ import { descriptor as windsurf } from '../windsurf/index.js';
 import { descriptor as antigravity } from '../antigravity/index.js';
 import { descriptor as rooCode } from '../roo-code/index.js';
 
-type TargetFeature = keyof TargetCapabilities | 'settings';
-type TargetGenerator = (canonical: CanonicalFiles) => { path: string; content: string }[];
+type TargetFeature = keyof TargetCapabilities;
 
 /** @deprecated Use TargetDescriptor from target-descriptor.ts instead */
 export type BuiltinTargetDefinition = TargetDescriptor;
@@ -65,13 +69,16 @@ export function getBuiltinTargetDefinition(target: string): TargetDescriptor | u
 export function getTargetCapabilities(
   target: string,
   scope: TargetLayoutScope = 'project',
-): TargetCapabilities | undefined {
+): Record<CapabilityFeatureKey, TargetCapabilityValue> | undefined {
   const descriptor = getBuiltinTargetDefinition(target);
   if (!descriptor) return undefined;
-  if (scope === 'global') {
-    return descriptor.globalCapabilities ?? descriptor.capabilities;
-  }
-  return descriptor.capabilities;
+  const raw =
+    scope === 'global'
+      ? (descriptor.globalSupport?.capabilities ??
+        descriptor.globalCapabilities ??
+        descriptor.capabilities)
+      : descriptor.capabilities;
+  return normalizeTargetCapabilities(raw);
 }
 
 export function getTargetDetectionPaths(
@@ -81,7 +88,7 @@ export function getTargetDetectionPaths(
   const descriptor = getBuiltinTargetDefinition(target);
   if (!descriptor) return [];
   if (scope === 'global') {
-    return descriptor.globalDetectionPaths ?? [];
+    return descriptor.globalSupport?.detectionPaths ?? descriptor.globalDetectionPaths ?? [];
   }
   return descriptor.detectionPaths;
 }
@@ -92,7 +99,10 @@ export function getTargetLayout(
 ): TargetLayout | undefined {
   const descriptor = getBuiltinTargetDefinition(target);
   if (!descriptor) return undefined;
-  return scope === 'project' ? descriptor.project : descriptor.global;
+  if (scope === 'global') {
+    return descriptor.globalSupport?.layout ?? descriptor.global;
+  }
+  return descriptor.project;
 }
 
 export function getTargetPrimaryRootInstructionPath(
@@ -132,7 +142,7 @@ export function getEffectiveTargetSupportLevel(
   config: ValidatedConfig,
   scope: TargetLayoutScope = 'project',
 ): SupportLevel {
-  const baseLevel = getTargetCapabilities(target, scope)?.[feature] ?? 'none';
+  const baseLevel = getTargetCapabilities(target, scope)?.[feature]?.level ?? 'none';
   if (baseLevel !== 'embedded') return baseLevel;
   const descriptor = getBuiltinTargetDefinition(target);
   if (feature === 'commands' && descriptor?.supportsConversion?.commands) {
@@ -148,7 +158,7 @@ export function resolveTargetFeatureGenerator(
   target: string,
   feature: TargetFeature,
   config?: ValidatedConfig,
-): TargetGenerator | undefined {
+): FeatureGeneratorFn | undefined {
   const descriptor = getBuiltinTargetDefinition(target);
   const generators = descriptor?.generators;
   if (!generators) return undefined;
@@ -164,7 +174,7 @@ export function resolveTargetFeatureGenerator(
       ) {
         return undefined;
       }
-      return generators.generateWorkflows ?? generators.generateCommands;
+      return generators.generateCommands;
     case 'agents':
       if (
         config &&
@@ -184,7 +194,5 @@ export function resolveTargetFeatureGenerator(
       return generators.generateHooks;
     case 'ignore':
       return generators.generateIgnore;
-    case 'settings':
-      return generators.generateSettings;
   }
 }

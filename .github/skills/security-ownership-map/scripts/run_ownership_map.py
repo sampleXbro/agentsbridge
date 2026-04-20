@@ -11,7 +11,7 @@ from pathlib import Path
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Run ./build_ownership_map.py with sensible defaults."
+        description="Run build_ownership_map.py with sensible defaults."
     )
     parser.add_argument("--repo", default=".", help="Path to the git repo (default: .)")
     parser.add_argument(

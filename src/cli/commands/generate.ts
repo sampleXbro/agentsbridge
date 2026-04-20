@@ -2,7 +2,7 @@
  * agentsmesh generate — produce target files from canonical sources.
  */
 
-import { join, resolve, sep } from 'node:path';
+import { join } from 'node:path';
 import { loadScopedConfig } from '../../config/core/scope.js';
 import { loadCanonicalWithExtends } from '../../canonical/extends/extends.js';
 import {
@@ -20,20 +20,10 @@ import { ensureCacheSymlink, writeFileAtomic } from '../../utils/filesystem/fs.j
 import { logger } from '../../utils/output/logger.js';
 import { getVersion } from '../version.js';
 import { runMatrix } from './matrix.js';
+import { ensurePathInsideRoot } from './generate-path.js';
 
 interface RunGenerateOptions {
   printMatrix?: boolean;
-}
-
-export function ensurePathInsideRoot(
-  rootDir: string,
-  relativePath: string,
-  target: string,
-): string {
-  const rootAbs = resolve(rootDir);
-  const outputAbs = resolve(rootDir, relativePath);
-  if (outputAbs === rootAbs || outputAbs.startsWith(`${rootAbs}${sep}`)) return outputAbs;
-  throw new Error(`Unsafe generated output path for ${target}: ${relativePath}`);
 }
 
 /**

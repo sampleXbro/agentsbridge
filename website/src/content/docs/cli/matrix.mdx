@@ -6,7 +6,7 @@ description: Display the feature-target compatibility matrix for your current Ag
 
 Display the feature-target compatibility matrix for your current configuration. Shows which features are supported natively, embedded as projected skills, or not supported for each configured target.
 
-**Project vs global:** Without `--global`, each cell reflects **project** catalog levels (`descriptor.capabilities`) combined with your `agentsmesh.yaml` conversion settings. With `--global`, cells use **global** catalog levels (`descriptor.globalCapabilities` when present, otherwise the same as project). Those catalog tables are the source of truth for documentation — see the [Supported tools reference](../reference/supported-tools/) (**Feature matrix (project scope)** and **Feature matrix (global scope)**). The `SUPPORT_MATRIX` and `SUPPORT_MATRIX_GLOBAL` exports in `src/core/matrix/data.ts` match those tables.
+**Project vs global:** Without `--global`, each cell reflects **project** catalog levels (`descriptor.capabilities`) combined with your `agentsmesh.yaml` conversion settings. With `--global`, cells use **global** catalog levels (`descriptor.globalSupport.capabilities` when present, otherwise the same as project). Those catalog tables are the source of truth for documentation — see the [Supported tools reference](../reference/supported-tools/) (**Feature matrix (project scope)** and **Feature matrix (global scope)**). The `SUPPORT_MATRIX` and `SUPPORT_MATRIX_GLOBAL` exports in `src/core/matrix/data.ts` match those tables.
 
 ## Usage
 

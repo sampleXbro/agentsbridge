@@ -9,7 +9,7 @@ import {
   generateMcp,
   generateAgents,
   generateSkills,
-  generateWorkflows,
+  generateCommands,
   generateHooks,
 } from '../../../../src/targets/cline/generator.js';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
@@ -314,7 +314,7 @@ describe('generateAgents (cline)', () => {
   });
 });
 
-describe('generateWorkflows (cline)', () => {
+describe('generateCommands (cline)', () => {
   it('generates markdown with description as intro paragraph when description present', () => {
     const canonical = makeCanonical({
       commands: [
@@ -327,7 +327,7 @@ describe('generateWorkflows (cline)', () => {
         },
       ],
     });
-    const results = generateWorkflows(canonical);
+    const results = generateCommands(canonical);
     expect(results.length).toBe(1);
     expect(results[0]!.path).toBe(`${CLINE_WORKFLOWS_DIR}/deploy.md`);
     expect(results[0]!.content).toBe('Deploy workflow\n\nRun deploy steps.');
@@ -345,7 +345,7 @@ describe('generateWorkflows (cline)', () => {
         },
       ],
     });
-    const results = generateWorkflows(canonical);
+    const results = generateCommands(canonical);
     expect(results[0]!.content).toBe('Run deploy steps.');
   });
 
@@ -361,7 +361,7 @@ describe('generateWorkflows (cline)', () => {
         },
       ],
     });
-    const results = generateWorkflows(canonical);
+    const results = generateCommands(canonical);
     expect(results[0]!.content).toBe('Describe only');
   });
 
@@ -377,12 +377,12 @@ describe('generateWorkflows (cline)', () => {
         },
       ],
     });
-    const results = generateWorkflows(canonical);
+    const results = generateCommands(canonical);
     expect(results[0]!.content).toBe('');
   });
 
   it('returns empty when no commands', () => {
-    expect(generateWorkflows(makeCanonical())).toEqual([]);
+    expect(generateCommands(makeCanonical())).toEqual([]);
   });
 });
 

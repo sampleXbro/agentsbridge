@@ -428,19 +428,19 @@ Maintain the current state of each task here. Update when a task moves.
 
 | Task | Status | Owner | PR |
 | --- | --- | --- | --- |
-| P0-1 Sweep hardcoded target names | not-started | — | — |
-| P0-2 Shared skill-import pipeline | not-started | — | — |
-| P0-3 File-size compliance | not-started | — | — |
-| P1-1 Capability flavor | not-started | — | — |
-| P1-2 `globalSupport` shape | not-started | — | — |
-| P1-3 Output-family registry | not-started | — | — |
-| P1-4 Matrix codegen + drift gate | not-started | — | — |
-| P1-5 Detection-path collector | not-started | — | — |
-| P2-1 Target contract matrix | not-started | — | — |
-| P2-2 Watch harness | not-started | — | — |
-| P2-3 Public library export | not-started | — | — |
-| P2-4 Plugin regression test | not-started | — | — |
-| P2-5 Coverage closure | not-started | — | — |
+| P0-1 Sweep hardcoded target names | done | — | — |
+| P0-2 Shared skill-import pipeline | done | — | — |
+| P0-3 File-size compliance | done | — | — |
+| P1-1 Capability flavor | done | — | — |
+| P1-2 `globalSupport` shape | done | — | — |
+| P1-3 Output-family registry | done | — | — |
+| P1-4 Matrix codegen + drift gate | done | — | — |
+| P1-5 Detection-path collector | done | — | — |
+| P2-1 Target contract matrix | done | — | — |
+| P2-2 Watch harness | done | — | — |
+| P2-3 Public library export | done | — | — |
+| P2-4 Plugin regression test | done | — | — |
+| P2-5 Coverage closure | partial | — | `tasks/coverage-gaps.md`; branch gate 84% until gap tests → 87% |
 
 ---
 

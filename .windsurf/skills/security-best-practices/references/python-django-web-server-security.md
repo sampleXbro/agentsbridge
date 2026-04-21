@@ -562,7 +562,7 @@ Required:
 Insecure patterns:
 
 * `open(os.path.join(MEDIA_ROOT, request.GET["path"]))`
-* Download endpoints that take `?file=../../../../.cursor/skills/...` style parameters.
+* Download endpoints that take `?file=.cursor/skills/...` style parameters.
 * Misconfigured `MEDIA_ROOT == STATIC_ROOT`.
 
 Detection hints:

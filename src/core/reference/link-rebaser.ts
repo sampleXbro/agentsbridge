@@ -1,6 +1,7 @@
 import {
   normalizeForProject,
   normalizeSeparators,
+  pathApi,
   stripTrailingPunctuation,
 } from '../path-helpers.js';
 import {
@@ -12,8 +13,10 @@ import {
   protectedRanges,
   resolveByDestinationSuffixStrip,
 } from './link-rebaser-helpers.js';
-import { formatLinkPathForDestination } from './link-rebaser-output.js';
+import { formatLinkPathForDestination, isUnderAgentsMesh } from './link-rebaser-output.js';
+import { shouldSkipGlobalNonMeshLink } from './link-rebaser-scope.js';
 import { shouldRewritePathToken } from './link-token-context.js';
+import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
 
 export interface RewriteFileLinksInput {
   content: string;
@@ -24,6 +27,10 @@ export interface RewriteFileLinksInput {
   pathExists: (absolutePath: string) => boolean;
   explicitCurrentDirLinks?: boolean;
   rewriteBarePathTokens?: boolean;
+  /** `global`: leave links unchanged when they resolve outside `.agentsmesh/`. */
+  scope?: TargetLayoutScope;
+  /** For project scope: distinguish directory targets without a trailing slash in the link. */
+  pathIsDirectory?: (absolutePath: string) => boolean;
 }
 
 export interface RewriteFileLinksResult {
@@ -56,6 +63,21 @@ function isTildeHomeRelativePathToken(
   return false;
 }
 
+function isMarkdownLinkDestinationToken(
+  fullContent: string,
+  matchOffset: number,
+  matchText: string,
+): boolean {
+  if (matchOffset <= 0 || fullContent[matchOffset - 1] !== '(') return false;
+  const closeIndex = matchOffset + matchText.length;
+  const after = fullContent[closeIndex];
+  if (after !== ')' && after !== '#' && after !== '?' && after !== ' ' && after !== '\t') {
+    return false;
+  }
+  const beforeParen = fullContent[matchOffset - 2];
+  return beforeParen === ']';
+}
+
 export function rewriteFileLinks(input: RewriteFileLinksInput): RewriteFileLinksResult {
   const missing = new Set<string>();
   const protectedRefRanges = protectedRanges(input.content);
@@ -81,13 +103,27 @@ export function rewriteFileLinks(input: RewriteFileLinksInput): RewriteFileLinks
     const candidate = lineNumMatch ? punctStripped.slice(0, lineNumMatch.index) : punctStripped;
     const lineNumSuffix = lineNumMatch ? lineNumMatch[0] : '';
     if (!candidate) return match;
+    if (
+      shouldSkipGlobalNonMeshLink({
+        scope: input.scope,
+        projectRoot: input.projectRoot,
+        sourceFile: input.sourceFile,
+        candidate,
+      })
+    ) {
+      return match;
+    }
 
     let translatedPath: string | null = null;
     let matchedPath = false;
+    /** Pre-`translatePath` absolute path when the main loop picks a translated artifact (for global skip). */
+    let resolvedBeforeTranslate: string | null = null;
     // Saved during the main loop but committed only after suffix-strip (priority 3).
     let savedFallback: string | null = null;
+    let savedFallbackResolvedBeforeTranslate: string | null = null;
     for (const resolvedPath of resolveProjectPath(candidate, input.projectRoot, input.sourceFile)) {
       let existingFallback: string | null = null;
+      let existingFallbackResolvedBeforeTranslate: string | null = null;
       for (const candidatePath of expandResolvedPaths(input.projectRoot, resolvedPath)) {
         const normalizedResolvedPath = normalizeForProject(input.projectRoot, candidatePath);
         const normalizedTranslatedPath = normalizeForProject(
@@ -98,17 +134,20 @@ export function rewriteFileLinks(input: RewriteFileLinksInput): RewriteFileLinks
         const translatedExists = input.pathExists(normalizedTranslatedPath);
         if (translatedExists && normalizedTranslatedPath !== normalizedResolvedPath) {
           translatedPath = normalizedTranslatedPath;
+          resolvedBeforeTranslate = normalizedResolvedPath;
           matchedPath = true;
           break;
         }
         if ((resolvedExists || translatedExists) && !existingFallback) {
           existingFallback = normalizedTranslatedPath;
+          existingFallbackResolvedBeforeTranslate = normalizedResolvedPath;
         }
         if (!translatedPath) translatedPath = normalizedTranslatedPath;
       }
       // Save but do not commit yet — suffix-strip (priority 2) gets to run first.
       if (!matchedPath && existingFallback && !savedFallback) {
         savedFallback = existingFallback;
+        savedFallbackResolvedBeforeTranslate = existingFallbackResolvedBeforeTranslate;
       }
       if (matchedPath) break;
     }
@@ -128,6 +167,9 @@ export function rewriteFileLinks(input: RewriteFileLinksInput): RewriteFileLinks
     // Priority 3: a path was found (no translation needed) but no dest-tree match.
     if (!matchedPath && savedFallback) {
       translatedPath = savedFallback;
+      if (savedFallbackResolvedBeforeTranslate) {
+        resolvedBeforeTranslate = savedFallbackResolvedBeforeTranslate;
+      }
       matchedPath = true;
     }
 
@@ -150,12 +192,58 @@ export function rewriteFileLinks(input: RewriteFileLinksInput): RewriteFileLinks
       return match;
     }
 
+    const normalizedCandidate = normalizeSeparators(candidate);
+    const targetIsDirectory =
+      candidate.endsWith('/') || input.pathIsDirectory?.(translatedPath) === true;
+    if (
+      targetIsDirectory &&
+      !normalizedCandidate.includes('/') &&
+      !normalizedCandidate.includes('\\')
+    ) {
+      // Bare folder names (e.g. `test`, `.agentsmesh`) should not be interpreted as links.
+      // Keep handling for explicit path forms like `.agentsmesh/` or `/test`.
+      return match;
+    }
+
+    if (resolvedBeforeTranslate === null) {
+      let normTok = normalizeSeparators(punctStripped);
+      if (normTok.startsWith('agentsmesh/')) {
+        normTok = `.${normTok}`;
+      }
+      if (normTok.startsWith('.agentsmesh/') || normTok.includes('/.agentsmesh/')) {
+        const api = pathApi(input.projectRoot);
+        const root = normalizeForProject(input.projectRoot, input.projectRoot);
+        const stripped = normTok.replace(/^\.\//, '');
+        resolvedBeforeTranslate = normalizeForProject(input.projectRoot, api.join(root, stripped));
+      }
+    }
+
+    if (input.scope === 'global') {
+      const tokenFwd = normalizeSeparators(punctStripped);
+      const tokenReferencesMesh =
+        tokenFwd.startsWith('.agentsmesh/') || tokenFwd.includes('/.agentsmesh/');
+      const sourceOutsideMesh =
+        resolvedBeforeTranslate !== null
+          ? !isUnderAgentsMesh(input.projectRoot, resolvedBeforeTranslate)
+          : !tokenReferencesMesh && !isUnderAgentsMesh(input.projectRoot, translatedPath);
+      if (sourceOutsideMesh) {
+        return match;
+      }
+    }
+
+    const forceRelative = isMarkdownLinkDestinationToken(fullContent, offset, candidate);
     const rewritten = formatLinkPathForDestination(
       input.projectRoot,
       input.destinationFile,
       translatedPath,
       candidate.endsWith('/'),
-      { explicitCurrentDirLinks: input.explicitCurrentDirLinks },
+      {
+        explicitCurrentDirLinks: input.explicitCurrentDirLinks === true || forceRelative,
+        scope: input.scope ?? 'project',
+        pathIsDirectory: input.pathIsDirectory,
+        logicalMeshSourceAbsolute: targetIsDirectory ? null : resolvedBeforeTranslate,
+        forceRelative,
+      },
     );
     if (!rewritten) return match;
     return `${rewritten}${lineNumSuffix}${suffix}`;

@@ -124,10 +124,10 @@ Every defect must include:
 Create a markdown report file for every manual QA run.
 
 Default path and naming:
-- Directory: `../../../tasks/reports/qa/`
+- Directory: `tasks/reports/qa/`
 - Filename: `qa-report-YYYY-MM-DD.md`
 
-If `../../../tasks/reports/qa/` does not exist, create it.
+If `tasks/reports/qa/` does not exist, create it.
 If a report already exists for the same date, append a numeric suffix:
 - `qa-report-YYYY-MM-DD-2.md`
 - `qa-report-YYYY-MM-DD-3.md`
@@ -153,10 +153,10 @@ When testing this repository, run the same end-to-end flow used by senior manual
 7. `pnpm audit --audit-level=high`
 
 Manual scenarios to include:
-- `node ../../../dist/cli.js --help`
-- `node ../../../dist/cli.js --version`
-- `node ../../../dist/cli.js generate` in directory without config (must fail clearly)
-- `node ../../../dist/cli.js foobar` (unknown command handling)
+- `node dist/cli.js --help`
+- `node dist/cli.js --version`
+- `node dist/cli.js generate` in directory without config (must fail clearly)
+- `node dist/cli.js foobar` (unknown command handling)
 - init -> generate -> check happy path in temp project
 - canonical drift then `check` (must detect conflict)
 - lint with rules but no root rule (must fail with explicit guidance)
@@ -169,38 +169,38 @@ Manual scenarios to include:
 - install must be validated end to end across scope variants: single item, list/path-scoped install, and amend/merge additional items from the same repository into an existing install
 
 Must-have command coverage (all CLI commands):
-- `node ../../../dist/cli.js init --yes` (or explicit no-yes flow) in temp project
-- `node ../../../dist/cli.js generate --targets <targets>`
-- `node ../../../dist/cli.js generate --dry-run`
-- `node ../../../dist/cli.js generate --check`
-- `node ../../../dist/cli.js generate --force` (lock strategy scenario)
-- `node ../../../dist/cli.js generate --refresh-cache` or `--no-cache`
-- `node ../../../dist/cli.js import --from <target>`
-- `node ../../../dist/cli.js install <source>` happy path
-- `node ../../../dist/cli.js install --sync` (with and without manifest)
-- `node ../../../dist/cli.js install <source> --dry-run --path <dir> --as <kind>`
-- `node ../../../dist/cli.js diff --targets <targets>`
-- `node ../../../dist/cli.js lint --targets <targets>`
-- `node ../../../dist/cli.js watch` (start, regen on change, clean stop)
-- `node ../../../dist/cli.js check`
-- `node ../../../dist/cli.js merge` (no conflict and conflict-resolution cases)
-- `node ../../../dist/cli.js matrix --targets <targets> --verbose`
+- `node dist/cli.js init --yes` (or explicit no-yes flow) in temp project
+- `node dist/cli.js generate --targets <targets>`
+- `node dist/cli.js generate --dry-run`
+- `node dist/cli.js generate --check`
+- `node dist/cli.js generate --force` (lock strategy scenario)
+- `node dist/cli.js generate --refresh-cache` or `--no-cache`
+- `node dist/cli.js import --from <target>`
+- `node dist/cli.js install <source>` happy path
+- `node dist/cli.js install --sync` (with and without manifest)
+- `node dist/cli.js install <source> --dry-run --path <dir> --as <kind>`
+- `node dist/cli.js diff --targets <targets>`
+- `node dist/cli.js lint --targets <targets>`
+- `node dist/cli.js watch` (start, regen on change, clean stop)
+- `node dist/cli.js check`
+- `node dist/cli.js merge` (no conflict and conflict-resolution cases)
+- `node dist/cli.js matrix --targets <targets> --verbose`
 
 Must-have install coverage (all supported install pathways):
 
 - Install modes:
-  - `node ../../../dist/cli.js install <source>` (default pack materialization path)
-  - `node ../../../dist/cli.js install <source> --extends` (writes extends entry mode)
-  - `node ../../../dist/cli.js install --sync` with no manifest (clean no-op output)
-  - `node ../../../dist/cli.js install --sync` with missing pack(s) in manifest (reinstall path)
+  - `node dist/cli.js install <source>` (default pack materialization path)
+  - `node dist/cli.js install <source> --extends` (writes extends entry mode)
+  - `node dist/cli.js install --sync` with no manifest (clean no-op output)
+  - `node dist/cli.js install --sync` with missing pack(s) in manifest (reinstall path)
 - Resource scope variants:
-  - `node ../../../dist/cli.js install <source> --as skills`
-  - `node ../../../dist/cli.js install <source> --as rules`
-  - `node ../../../dist/cli.js install <source> --as commands`
-  - `node ../../../dist/cli.js install <source> --as agents`
-  - `node ../../../dist/cli.js install <source> --path <dir>` (subdirectory slice)
-  - `node ../../../dist/cli.js install <source> --target <id>` (native-target discovery override)
-  - `node ../../../dist/cli.js install <source> --name <id>` (explicit pack/entry naming)
+  - `node dist/cli.js install <source> --as skills`
+  - `node dist/cli.js install <source> --as rules`
+  - `node dist/cli.js install <source> --as commands`
+  - `node dist/cli.js install <source> --as agents`
+  - `node dist/cli.js install <source> --path <dir>` (subdirectory slice)
+  - `node dist/cli.js install <source> --target <id>` (native-target discovery override)
+  - `node dist/cli.js install <source> --name <id>` (explicit pack/entry naming)
 - Source format matrix:
   - Local path source (relative and absolute path variants)
   - GitHub tree URL source
@@ -279,7 +279,7 @@ Before declaring QA complete:
 - [ ] Test plan is documented.
 - [ ] Required quality gates executed.
 - [ ] Manual edge-case matrix executed.
-- [ ] QA markdown report file is created in `../../../tasks/reports/qa/`.
+- [ ] QA markdown report file is created in `tasks/reports/qa/`.
 - [ ] Findings include reproducible evidence.
 - [ ] Coverage and security status reported.
 - [ ] Workspace state checked/restored as needed.

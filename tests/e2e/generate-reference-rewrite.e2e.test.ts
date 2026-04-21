@@ -90,20 +90,20 @@ Prefer strict mode.
     expect(claudeRoot).toContain('commands/review.md');
     expect(claudeRoot).toContain('agents/reviewer.md');
     expect(claudeRoot).toContain('skills/api-gen/references/checklist.md');
-    expect(claudeRoot).toContain('../docs/some-doc.md');
+    expect(claudeRoot).toContain('docs/some-doc.md');
     expect(cursorRoot).toContain('typescript.mdc');
     expect(cursorRoot).toContain('../commands/review.md');
     expect(cursorRoot).toContain('../agents/reviewer.md');
     expect(cursorRoot).toContain('../skills/api-gen/references/checklist.md');
-    expect(cursorRoot).toContain('../../docs/some-doc.md');
+    expect(cursorRoot).toContain('docs/some-doc.md');
     expect(readFileSync(join(dir, '.claude', 'commands', 'review.md'), 'utf-8')).toContain(
-      '../../docs/some-doc.md',
+      'docs/some-doc.md',
     );
     expect(readFileSync(join(dir, '.claude', 'agents', 'reviewer.md'), 'utf-8')).toContain(
-      '../../docs/some-doc.md',
+      'docs/some-doc.md',
     );
     expect(readFileSync(join(dir, '.claude', 'skills', 'api-gen', 'SKILL.md'), 'utf-8')).toContain(
-      '../../../docs/some-doc.md',
+      'docs/some-doc.md',
     );
     expect(secondRun.exitCode).toBe(0);
     expect(secondRun.stdout + secondRun.stderr).toMatch(/unchanged/);
@@ -169,19 +169,17 @@ Prefer strict mode.
     expect(result.exitCode).toBe(0);
 
     expect(readFileSync(join(dir, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
-      './skills/post-feature-qa/',
+      'skills/post-feature-qa/',
     );
     expect(readFileSync(join(dir, '.cursor', 'rules', 'general.mdc'), 'utf-8')).toContain(
-      '../skills/post-feature-qa/',
+      'skills/post-feature-qa/',
     );
     expect(readFileSync(join(dir, '.github', 'copilot-instructions.md'), 'utf-8')).toContain(
-      './skills/post-feature-qa/',
+      'skills/post-feature-qa/',
     );
     expect(readFileSync(join(dir, 'GEMINI.md'), 'utf-8')).toContain('skills/post-feature-qa/');
     // AGENTS.md: codex-cli wins (cline and cursor are filtered as equivalent)
-    expect(readFileSync(join(dir, 'AGENTS.md'), 'utf-8')).toContain(
-      '.agents/skills/post-feature-qa/',
-    );
+    expect(readFileSync(join(dir, 'AGENTS.md'), 'utf-8')).toContain('skills/post-feature-qa/');
   });
 
   it('rewrites skill directory references for windsurf root artifacts', async () => {
@@ -207,9 +205,7 @@ Prefer strict mode.
     const result = await runCli('generate', dir);
     expect(result.exitCode).toBe(0);
 
-    expect(readFileSync(join(dir, 'AGENTS.md'), 'utf-8')).toContain(
-      '.windsurf/skills/post-feature-qa/',
-    );
+    expect(readFileSync(join(dir, 'AGENTS.md'), 'utf-8')).toContain('skills/post-feature-qa/');
   });
 
   it('rewrites Copilot .github/instructions rule outputs to root-relative links', async () => {
@@ -240,7 +236,7 @@ Prefer strict mode.
       'utf-8',
     );
     expect(instructions).toContain('typescript.instructions.md');
-    expect(instructions).toContain('../../docs/roadmap.md');
+    expect(instructions).toContain('docs/roadmap.md');
     expect(instructions).not.toContain('.agentsmesh/rules/typescript.md');
   });
 });

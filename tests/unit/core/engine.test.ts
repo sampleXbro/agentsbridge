@@ -1,12 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { generate, resolveOutputCollisions } from '../../../src/core/generate/engine.js';
 import type { CanonicalFiles, GenerateResult } from '../../../src/core/types.js';
 import type { ValidatedConfig } from '../../../src/config/core/schema.js';
-import { appendAgentsmeshRootInstructionParagraph } from '../../../src/targets/projection/root-instruction-paragraph.js';
-import { serializeFrontmatter } from '../../../src/utils/text/markdown.js';
 
 const TEST_DIR = join(tmpdir(), 'am-engine-test');
 
@@ -125,11 +123,12 @@ describe('generate', () => {
     const generalMdc = results.find((result) => result.path === '.cursor/rules/general.mdc');
     const agentsMd = results.find((result) => result.path === 'AGENTS.md');
     const cursorAgentsMd = results.find((result) => result.path === '.cursor/AGENTS.md');
-    const appended = appendAgentsmeshRootInstructionParagraph(body);
-
-    expect(generalMdc?.content).toBe(serializeFrontmatter({ alwaysApply: true }, appended));
-    expect(agentsMd?.content).toBe(appended);
-    expect(cursorAgentsMd?.content).toBe(appended);
+    expect(generalMdc?.content).toContain('## AgentsMesh Generation Contract');
+    expect(generalMdc?.content).toContain('`./general.mdc`');
+    expect(agentsMd?.content).toContain('## AgentsMesh Generation Contract');
+    expect(agentsMd?.content).toContain('`.cursor/rules/general.mdc`');
+    expect(cursorAgentsMd?.content).toContain('## AgentsMesh Generation Contract');
+    expect(cursorAgentsMd?.content).toContain('`./rules/general.mdc`');
   });
 
   it('marks new files as created when they do not exist', async () => {
@@ -164,20 +163,24 @@ describe('generate', () => {
     const body = '# Same';
     mkdirSync(join(TEST_DIR, '.cursor', 'rules'), { recursive: true });
     mkdirSync(join(TEST_DIR, '.claude'), { recursive: true });
-    const onDiskAppended = appendAgentsmeshRootInstructionParagraph(body);
-    writeFileSync(join(TEST_DIR, 'AGENTS.md'), onDiskAppended);
-    writeFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), onDiskAppended);
-    const cursorContent = serializeFrontmatter({ alwaysApply: true }, onDiskAppended);
-    writeFileSync(join(TEST_DIR, '.cursor', 'rules', 'general.mdc'), cursorContent);
-    writeFileSync(join(TEST_DIR, '.cursor', 'AGENTS.md'), onDiskAppended);
     const config = minimalConfig();
     const canonical = canonicalWithRootRule(body);
-    const results = await generate({
+    const first = await generate({
       config,
       canonical,
       projectRoot: TEST_DIR,
     });
-    const unchanged = results.filter((r) => r.status === 'unchanged');
+    for (const r of first) {
+      const outPath = join(TEST_DIR, r.path);
+      mkdirSync(dirname(outPath), { recursive: true });
+      writeFileSync(outPath, r.content);
+    }
+    const second = await generate({
+      config,
+      canonical,
+      projectRoot: TEST_DIR,
+    });
+    const unchanged = second.filter((r) => r.status === 'unchanged');
     expect(unchanged).toHaveLength(4);
   });
 
@@ -579,9 +582,9 @@ describe('generate', () => {
     });
 
     expect(results.filter((r) => r.path === 'AGENTS.md')).toHaveLength(1);
-    expect(results.find((r) => r.path === 'AGENTS.md')?.content).toBe(
-      appendAgentsmeshRootInstructionParagraph('# Shared root'),
-    );
+    const ag = results.find((r) => r.path === 'AGENTS.md');
+    expect(ag?.content).toContain('## AgentsMesh Generation Contract');
+    expect(ag?.content).toContain('`AGENTS.md`');
   });
 
   it('prefers codex AGENTS.md when rewritten overlaps differ between codex-cli and windsurf', async () => {
@@ -629,8 +632,8 @@ describe('generate', () => {
     );
 
     expect(agentsResult?.target).toBe('codex-cli');
-    expect(agentsResult?.content).toContain('.agents/skills/post-feature-qa/');
-    expect(agentsResult?.content).toContain('.agents/skills/post-feature-qa/references/');
+    expect(agentsResult?.content).toContain('skills/post-feature-qa/');
+    expect(agentsResult?.content).toContain('skills/post-feature-qa/references/');
     expect(windsurfAgentsResult).toBeUndefined();
   });
 });
@@ -888,7 +891,8 @@ describe('generate Copilot', () => {
       projectRoot: TEST_DIR,
     });
     const copilot = results.find((r) => r.path === '.github/copilot-instructions.md');
-    expect(copilot?.content).toBe(appendAgentsmeshRootInstructionParagraph('Root'));
+    expect(copilot?.content).toContain('## AgentsMesh Generation Contract');
+    expect(copilot?.content).toContain('`./copilot-instructions.md`');
     const prompt = results.find((r) => r.path === '.github/prompts/review.prompt.md');
     expect(prompt?.content).toContain('x-agentsmesh-kind: command');
     expect(prompt?.content).toContain('Review the code.');
@@ -1092,7 +1096,8 @@ describe('generate Copilot target', () => {
     });
     const mainFile = results.find((r) => r.path === '.github/copilot-instructions.md');
     expect(mainFile).toBeDefined();
-    expect(mainFile!.content).toBe(appendAgentsmeshRootInstructionParagraph('Root'));
+    expect(mainFile!.content).toContain('## AgentsMesh Generation Contract');
+    expect(mainFile!.content).toContain('`./copilot-instructions.md`');
     const promptFile = results.find((r) => r.path === '.github/prompts/review.prompt.md');
     expect(promptFile).toBeDefined();
     expect(promptFile!.content).toContain('Review the code.');

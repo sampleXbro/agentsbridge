@@ -542,8 +542,8 @@ describe('rewriteGeneratedReferences', () => {
       projectRoot,
     );
 
-    expect(rewritten[0]!.content).toContain('.windsurf/skills/api-gen/');
-    expect(rewritten[0]!.content).toContain('.windsurf/skills/api-gen/references/');
+    expect(rewritten[0]!.content).toContain('skills/api-gen/');
+    expect(rewritten[0]!.content).toContain('skills/api-gen/references/');
     expect(rewritten[1]!.content).toContain('../.windsurf/skills/api-gen/SKILL.md');
   });
 

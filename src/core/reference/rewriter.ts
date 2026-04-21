@@ -13,10 +13,14 @@
  * (`artifactMapTargetForResult`) so relative links match the shared Codex global skill directory;
  * everything else uses the result’s target map as usual.
  *
+ * **Link rebasing:** In project scope, {@link rewriteFileLinks} uses `.agentsmesh`-aware rules
+ * (file-relative inside mesh, mesh-root paths for directories, project-root-relative outside mesh).
+ * In global scope, links that resolve outside `.agentsmesh/` are left unchanged.
+ *
  * Import uses the same {@link rewriteFileLinks} engine with paths from `import-map` builders
  * instead of generate-time maps.
  */
-import { existsSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { CanonicalFiles, GenerateResult } from '../types.js';
 import type { ValidatedConfig } from '../../config/core/schema.js';
@@ -154,6 +158,14 @@ export function rewriteGeneratedReferences(
       pathExists: (absolutePath) => plannedPaths.has(absolutePath) || existsSync(absolutePath),
       explicitCurrentDirLinks: true,
       rewriteBarePathTokens: true,
+      scope,
+      pathIsDirectory: (absolutePath) => {
+        try {
+          return statSync(absolutePath).isDirectory();
+        } catch {
+          return false;
+        }
+      },
     });
 
     return rewritten.content === result.content

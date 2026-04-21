@@ -14,7 +14,7 @@ When a feature, story, or task has been implemented, you MUST run this QA pass b
 - You just finished implementing a story or task
 - You completed a feature and are about to commit or open a PR
 - The user says "feature is done", "story complete", or "ready for review"
-- You are about to mark checklist items complete in `../../../tasks/todo.md` or similar
+- You are about to mark checklist items complete in `tasks/todo.md` or similar
 - Before any "verification complete" or "acceptance criteria verified" claim
 
 ## Core Workflow
@@ -23,8 +23,8 @@ When a feature, story, or task has been implemented, you MUST run this QA pass b
 
 - Find the story or feature spec. Common locations:
   - `ruleforge-prd.md` (or similar PRD)
-  - `../../../tasks/todo.md`
-  - `../../../docs/`, `specs/`, or ticket/issue description
+  - `tasks/todo.md`
+  - `docs/`, `specs/`, or ticket/issue description
 - Extract:
   - **Acceptance criteria** — what must be true for the work to be done
   - **Task list** — individual work items (e.g. 2.1.1, 2.1.2)
@@ -66,7 +66,7 @@ Apply this systematically to each field or function you implemented.
 ### 5. Run Verification
 
 - Run the test suite: `pnpm test` (or equivalent)
-- **Integration tests**: Run `pnpm build && pnpm test` — integration tests in `../../../tests/integration/` require the built dist
+- **Integration tests**: Run `pnpm build && pnpm test` — integration tests in `tests/integration/` require the built dist
 - Run lint: `pnpm lint`
 - Optionally: `pnpm test --coverage` and check coverage for new code
 - Fix any failures before claiming complete

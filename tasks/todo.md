@@ -13,6 +13,20 @@ Plan:
 
 ---
 
+# Link Rebaser Requirements Alignment Plan
+
+Goal: review the current link rebasing implementation and tests as a senior architect, then make the smallest code/test changes needed so behavior matches `docs/link-rebaser-requirements.md`.
+
+Plan:
+- [x] Read lessons, architecture notes, link rebaser requirements, implementation, and current tests.
+- [x] Map each documented requirement to existing implementation behavior and test coverage.
+- [x] Add failing regression tests first for any uncovered or misaligned requirement.
+- [x] Implement the smallest link rebasing fix that preserves existing target-reference behavior.
+- [x] Run targeted link rebaser/reference rewrite tests, then lint/typecheck/build as appropriate.
+- [x] Run post-feature QA before final status and record a lesson if a failure reveals a reusable rule.
+
+---
+
 # Global Mode Test Coverage Plan
 
 ## Current Task: Matrix and Website Docs Sync

@@ -30,6 +30,25 @@ export function isRootRelativePathToken(token: string): boolean {
   const normalizedToken = normalizeSeparators(token);
   return ROOT_RELATIVE_PREFIXES.some((prefix) => normalizedToken.startsWith(prefix));
 }
+
+/** Top-level segments under `.agentsmesh/` when links omit the `.agentsmesh/` prefix (project scope). */
+const MESH_ROOT_RELATIVE_FIRST_SEGMENTS = new Set([
+  'skills',
+  'rules',
+  'commands',
+  'agents',
+  'packs',
+]);
+
+function isMeshRootRelativePathToken(normalizedToken: string): boolean {
+  const t = normalizeSeparators(normalizedToken).replace(/^\.\//, '');
+  if (t.startsWith('../') || t.startsWith('/')) return false;
+  if (WINDOWS_ABSOLUTE_PATH.test(t)) return false;
+  if (/^[a-zA-Z]:/.test(t)) return false;
+  if (isRootRelativePathToken(t)) return false;
+  const first = t.split('/').filter((s) => s.length > 0)[0];
+  return first !== undefined && MESH_ROOT_RELATIVE_FIRST_SEGMENTS.has(first);
+}
 const NON_REWRITABLE_BARE_FILES = new Set([
   'AGENTS.md',
   'CLAUDE.md',
@@ -88,13 +107,25 @@ export function resolveProjectPath(
     return [normalizeForProject(projectRoot, api.join(normalizedProjectRoot, normalizedToken))];
   }
   if (normalizedToken.includes('/')) {
-    return [
-      normalizeForProject(projectRoot, api.join(normalizedProjectRoot, normalizedToken)),
-      normalizeForProject(
-        projectRoot,
-        api.join(api.dirname(normalizedSourceFile), normalizedToken),
-      ),
-    ];
+    const meshRoot = normalizeForProject(
+      projectRoot,
+      api.join(normalizedProjectRoot, '.agentsmesh'),
+    );
+    const fromMesh = isMeshRootRelativePathToken(normalizedToken)
+      ? normalizeForProject(projectRoot, api.join(meshRoot, normalizedToken))
+      : null;
+    const fromProjectRoot = normalizeForProject(
+      projectRoot,
+      api.join(normalizedProjectRoot, normalizedToken),
+    );
+    const fromSourceDir = normalizeForProject(
+      projectRoot,
+      api.join(api.dirname(normalizedSourceFile), normalizedToken),
+    );
+    if (fromMesh !== null) {
+      return [fromMesh, fromProjectRoot, fromSourceDir];
+    }
+    return [fromProjectRoot, fromSourceDir];
   }
   if (NON_REWRITABLE_BARE_FILES.has(normalizedToken)) return [];
   if (normalizedToken.includes('.')) {

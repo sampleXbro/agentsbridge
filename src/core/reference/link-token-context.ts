@@ -1,5 +1,6 @@
 import { normalizeSeparators, stripTrailingPunctuation } from '../path-helpers.js';
 import { LINE_NUMBER_SUFFIX, isRootRelativePathToken } from './link-rebaser-helpers.js';
+import type { TokenContext } from './link-output-kinds.js';
 
 function markdownBracketLabelDuplicatesDestination(
   fullContent: string,
@@ -18,6 +19,24 @@ function markdownBracketLabelDuplicatesDestination(
     j++;
   }
   return dest === labelPathText;
+}
+
+/**
+ * Returns the syntactic role of the token at [start, end) within `fullContent`.
+ * Used to select the appropriate formatting strategy in `formatLinkPathForDestination`.
+ */
+export function getTokenContext(fullContent: string, start: number, end: number): TokenContext {
+  const before = start > 0 ? fullContent[start - 1] : '';
+  const after = end < fullContent.length ? fullContent[end] : '';
+  if (before === '`' && after === '`') return { role: 'inline-code' };
+  if (before === '<' && after === '>') return { role: 'bracketed' };
+  if ((before === "'" && after === "'") || (before === '"' && after === '"')) {
+    return { role: 'quoted' };
+  }
+  if (before === '@') return { role: 'at-prefix' };
+  if (before === '(') return { role: 'markdown-link-dest' };
+  if (before === '[' && after === ']') return { role: 'bracket-label' };
+  return { role: 'bare-prose' };
 }
 
 /**

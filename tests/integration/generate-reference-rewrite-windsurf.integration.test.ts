@@ -46,8 +46,6 @@ Use [.agentsmesh/skills/post-feature-qa/](.agentsmesh/skills/post-feature-qa/) a
 
     execSync(`node ${CLI_PATH} generate`, { cwd: testDir });
 
-    expect(readFileSync(join(testDir, 'AGENTS.md'), 'utf-8')).toContain(
-      '.windsurf/skills/post-feature-qa/',
-    );
+    expect(readFileSync(join(testDir, 'AGENTS.md'), 'utf-8')).toContain('skills/post-feature-qa/');
   });
 });

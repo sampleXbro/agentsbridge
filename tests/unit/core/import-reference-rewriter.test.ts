@@ -77,13 +77,13 @@ describe('createImportReferenceNormalizer', () => {
     );
 
     expect(normalized).toContain('Plain: typescript.md.');
-    expect(normalized).toContain('Markdown: [typescript.md](typescript.md).');
+    expect(normalized).toContain('Markdown: [typescript.md](./typescript.md).');
     expect(normalized).toContain('Mention: @../commands/review.md.');
     expect(normalized).toContain('Quoted: "../agents/reviewer.md".');
     expect(normalized).toContain('Parenthesized: (../skills/api-gen/SKILL.md).');
     expect(normalized).toContain('<../skills/api-gen/references/checklist.md>.');
     expect(normalized).toContain(
-      'Dir: ../skills/api-gen/references and ../skills/api-gen/references/.',
+      'Dir: ../skills/api-gen/references and skills/api-gen/references/.',
     );
   });
 
@@ -95,7 +95,9 @@ describe('createImportReferenceNormalizer', () => {
       join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
     );
 
-    expect(normalized).toBe('Use ../skills/api-gen/references/checklist.md and typescript.md.');
+    expect(normalized).toBe(
+      'Use .claude/skills/api-gen/references/checklist.md and .claude/rules/typescript.md.',
+    );
   });
 
   it('normalizes Antigravity global paths back to canonical paths during global import', async () => {
@@ -119,7 +121,9 @@ describe('createImportReferenceNormalizer', () => {
       join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
     );
 
-    expect(normalized).toBe('Use _root.md and ../skills/api-gen/references/checklist.md.');
+    expect(normalized).toBe(
+      'Use .gemini/antigravity/GEMINI.md and .gemini/antigravity/skills/api-gen/references/checklist.md.',
+    );
   });
 
   it('normalizes Codex global paths back to canonical paths during global import', async () => {
@@ -134,7 +138,7 @@ describe('createImportReferenceNormalizer', () => {
     );
 
     expect(normalized).toBe(
-      'Use _root.md and ../skills/post-feature-qa/references/edge-case-checklist.md.',
+      'Use .codex/AGENTS.md and .agents/skills/post-feature-qa/references/edge-case-checklist.md.',
     );
   });
 
@@ -147,7 +151,7 @@ describe('createImportReferenceNormalizer', () => {
     );
 
     expect(normalized).toBe(
-      'Use ../skills/api-gen/references/checklist.md from ../skills/api-gen/references/.',
+      'Use ../skills/api-gen/references/checklist.md from skills/api-gen/references/.',
     );
   });
 
@@ -254,7 +258,7 @@ describe('createImportReferenceNormalizer', () => {
     );
 
     expect(normalized).toBe(
-      'Use `../skills/post-feature-qa/` and `../skills/post-feature-qa/references/edge-case-checklist.md`.',
+      'Use `skills/post-feature-qa/` and `../skills/post-feature-qa/references/edge-case-checklist.md`.',
     );
   });
 
@@ -267,7 +271,7 @@ describe('createImportReferenceNormalizer', () => {
     );
 
     expect(normalized).toBe(
-      'Use `../skills/post-feature-qa/` and `../skills/post-feature-qa/references/edge-case-checklist.md`.',
+      'Use `skills/post-feature-qa/` and `../skills/post-feature-qa/references/edge-case-checklist.md`.',
     );
   });
 
@@ -280,7 +284,7 @@ describe('createImportReferenceNormalizer', () => {
     );
 
     expect(normalized).toBe(
-      'Use `../skills/post-feature-qa/` and `../skills/post-feature-qa/references/edge-case-checklist.md`.',
+      'Use `skills/post-feature-qa/` and `../skills/post-feature-qa/references/edge-case-checklist.md`.',
     );
   });
 
@@ -293,7 +297,7 @@ describe('createImportReferenceNormalizer', () => {
     );
 
     expect(normalized).toBe(
-      'Use `../skills/post-feature-qa/` and `../skills/post-feature-qa/references/edge-case-checklist.md`.',
+      'Use `skills/post-feature-qa/` and `../skills/post-feature-qa/references/edge-case-checklist.md`.',
     );
   });
 

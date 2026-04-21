@@ -134,7 +134,7 @@ Detection hints:
 Fix:
 
 * Build artifacts with `vite build`.
-* Serve `../../../../dist/` with hardened hosting (CDN/static server) or integrate into your backend server as static assets.
+* Serve `dist/` with hardened hosting (CDN/static server) or integrate into your backend server as static assets.
 
 Notes:
 

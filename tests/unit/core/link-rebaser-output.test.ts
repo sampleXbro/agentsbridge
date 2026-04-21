@@ -5,23 +5,24 @@ import {
 } from '../../../src/core/reference/link-rebaser-output.js';
 
 const EXPLICIT_CURRENT_DIR = { explicitCurrentDirLinks: true };
+const LEGACY = { explicitCurrentDirLinks: true, scope: 'global' as const };
 
 describe('formatLinkPathForDestination', () => {
-  it('uses paths relative to the destination file directory under the project root', () => {
+  it('in project scope uses project-root-relative paths for targets outside `.agentsmesh/`', () => {
     const root = '/proj';
     const dest = '/proj/.claude/CLAUDE.md';
     const target = '/proj/.claude/commands/review.md';
     expect(formatLinkPathForDestination(root, dest, target, false, EXPLICIT_CURRENT_DIR)).toBe(
-      './commands/review.md',
+      '.claude/commands/review.md',
     );
   });
 
-  it('uses parent segments when the target lives outside the destination directory', () => {
+  it('in project scope uses project-root-relative paths for sibling tool paths outside `.agentsmesh/`', () => {
     const root = '/proj';
     const dest = '/proj/.claude/commands/review.md';
     const target = '/proj/.claude/skills/api-gen/SKILL.md';
     expect(formatLinkPathForDestination(root, dest, target, false, EXPLICIT_CURRENT_DIR)).toBe(
-      '../skills/api-gen/SKILL.md',
+      '.claude/skills/api-gen/SKILL.md',
     );
   });
 
@@ -34,12 +35,12 @@ describe('formatLinkPathForDestination', () => {
     );
   });
 
-  it('appends a trailing slash for directory targets when keepSlash is true', () => {
+  it('in project scope uses project-root-relative paths for directory targets outside `.agentsmesh/`', () => {
     const root = '/proj';
     const dest = '/proj/.claude/CLAUDE.md';
     const target = '/proj/.claude/skills/qa';
     expect(formatLinkPathForDestination(root, dest, target, true, EXPLICIT_CURRENT_DIR)).toBe(
-      './skills/qa/',
+      '.claude/skills/qa/',
     );
   });
 
@@ -48,7 +49,7 @@ describe('formatLinkPathForDestination', () => {
     const root = '/proj';
     const dest = '/proj/.codeium/windsurf/memories/global_rules.md';
     const target = '/proj/.codeium/windsurf/skills/api-gen/SKILL.md';
-    expect(formatLinkPathForDestination(root, dest, target, false, EXPLICIT_CURRENT_DIR)).toBe(
+    expect(formatLinkPathForDestination(root, dest, target, false, LEGACY)).toBe(
       '../skills/api-gen/SKILL.md',
     );
   });
@@ -58,7 +59,7 @@ describe('formatLinkPathForDestination', () => {
     const root = '/proj';
     const dest = '/proj/.cursor/rules/general.mdc';
     const target = '/proj/.cursor/skills/api-gen/SKILL.md';
-    expect(formatLinkPathForDestination(root, dest, target, false, EXPLICIT_CURRENT_DIR)).toBe(
+    expect(formatLinkPathForDestination(root, dest, target, false, LEGACY)).toBe(
       '../skills/api-gen/SKILL.md',
     );
   });
@@ -68,22 +69,19 @@ describe('formatLinkPathForDestination', () => {
     const root = '/proj';
     const dest = '/proj/.copilot/copilot-instructions.md';
     const target = '/proj/.copilot/skills/api-gen/SKILL.md';
-    expect(formatLinkPathForDestination(root, dest, target, false, EXPLICIT_CURRENT_DIR)).toBe(
+    expect(formatLinkPathForDestination(root, dest, target, false, LEGACY)).toBe(
       './skills/api-gen/SKILL.md',
     );
   });
 
-  it('produces shortest relative link for deeply nested source and target', () => {
-    // skill file referencing another skill file
+  it('in global scope produces shortest relative link for deeply nested source and target', () => {
     const root = '/proj';
     const dest = '/proj/.claude/skills/api-gen/references/checklist.md';
     const target = '/proj/.claude/skills/api-gen/SKILL.md';
-    expect(formatLinkPathForDestination(root, dest, target, false, EXPLICIT_CURRENT_DIR)).toBe(
-      '../SKILL.md',
-    );
+    expect(formatLinkPathForDestination(root, dest, target, false, LEGACY)).toBe('../SKILL.md');
   });
 
-  it('prefers ./… over a long ../… chain when both absolute targets exist', () => {
+  it('prefers ./… over a long ../… chain when both absolute targets exist (global scope)', () => {
     const root = '/proj';
     const dest = '/proj/.gemini/skills/ts-library/SKILL.md';
     const geminiRef = '/proj/.gemini/skills/ts-library/references/project-setup.md';
@@ -95,18 +93,27 @@ describe('formatLinkPathForDestination', () => {
         dest,
         [agentsRef, geminiRef],
         false,
-        EXPLICIT_CURRENT_DIR,
+        LEGACY,
         pathExists,
       ),
     ).toBe('./references/project-setup.md');
   });
 
-  it('uses project-root-relative when linking from Antigravity `.agents/rules` into `.agentsmesh`', () => {
+  it('uses relative file paths when linking from Antigravity `.agents/rules` into `.agentsmesh`', () => {
     const root = '/tmp/proj';
     const dest = '/tmp/proj/.agents/rules/general.md';
     const target = '/tmp/proj/.agentsmesh/agents/code-reviewer.md';
     expect(formatLinkPathForDestination(root, dest, target, false, EXPLICIT_CURRENT_DIR)).toBe(
-      '.agentsmesh/agents/code-reviewer.md',
+      '../../.agentsmesh/agents/code-reviewer.md',
+    );
+  });
+
+  it('in project scope uses mesh-root paths for a directory under `.agentsmesh/`', () => {
+    const root = '/proj';
+    const dest = '/proj/.claude/skills/foo/SKILL.md';
+    const target = '/proj/.agentsmesh/skills/bar';
+    expect(formatLinkPathForDestination(root, dest, target, true, EXPLICIT_CURRENT_DIR)).toBe(
+      'skills/bar/',
     );
   });
 });

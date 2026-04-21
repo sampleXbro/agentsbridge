@@ -1,7 +1,7 @@
 # Auto-generated. DO NOT EDIT MANUALLY.
 # Tracks the state of all config files for team conflict resolution.
 
-generated_at: 2026-04-20T20:02:59.080Z
+generated_at: 2026-04-21T09:17:42.049Z
 generated_by: serhii
 lib_version: 0.4.0
 checksums:
@@ -20,7 +20,7 @@ checksums:
   ignore: sha256:9bd184903aee9e824fcd475e965103a8ef5efe5d5e98b0e7e275fb8017c4fc0e
   mcp.json: sha256:4269c04f9edf4142cde79d1e45f25958eaca54489cc19ec078eaba887d296018
   permissions.yaml: sha256:6e1f0e074c5970b2ca9175f63008b2edb752a0ed6657ee4790700035606e7303
-  rules/_root.md: sha256:f914aa9d0c685a7b0a85b0c90b01a18fd8a13c560aea722203acb5c793cb666e
+  rules/_root.md: sha256:610362ef02e11242b944df80a4faa0ed20db7c988fdfd0e070f643285826b5e7
   rules/typescript.md: sha256:18f52143dfdd3e219a5c6d6c0feb7283fe74cce99458c46dafcd1c3620ad4fba
   skills/add-agent-target/SKILL.md: sha256:71bbd5cbda3a4a08f647ce314bfdcfa702c639d63fc4b43b85c5eeb149fc0a58
   skills/add-agent-target/references/target-addition-checklist.md: sha256:086ea7fb96820014222d451c73090ffcbda2ba66d416ec7c6ac043a5d58e247b

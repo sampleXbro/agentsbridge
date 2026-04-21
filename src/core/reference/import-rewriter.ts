@@ -1,4 +1,4 @@
-import { existsSync, realpathSync } from 'node:fs';
+import { existsSync, realpathSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { normalize as normalizePath } from 'node:path';
 import { buildImportReferenceMap } from './import-map.js';
@@ -70,5 +70,13 @@ export async function createImportReferenceNormalizer(
       },
       explicitCurrentDirLinks: false,
       rewriteBarePathTokens: true,
+      scope,
+      pathIsDirectory: (absolutePath) => {
+        try {
+          return statSync(absolutePath).isDirectory();
+        } catch {
+          return false;
+        }
+      },
     }).content;
 }

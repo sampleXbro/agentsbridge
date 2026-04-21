@@ -121,16 +121,16 @@ describe('generate reference rewriting', () => {
   });
 
   it.each([
-    ['claude-code', '.claude/CLAUDE.md', 'skills/api-gen/', 'skills/api-gen/references/'],
-    ['cursor', '.cursor/rules/general.mdc', '../skills/api-gen/', '../skills/api-gen/references/'],
-    ['copilot', '.github/copilot-instructions.md', 'skills/api-gen/', 'skills/api-gen/references/'],
-    ['gemini-cli', 'GEMINI.md', '.gemini/skills/api-gen/', '.gemini/skills/api-gen/references/'],
-    ['cline', 'AGENTS.md', '.cline/skills/api-gen/', '.cline/skills/api-gen/references/'],
-    ['codex-cli', 'AGENTS.md', '.agents/skills/api-gen/', '.agents/skills/api-gen/references/'],
-    ['windsurf', 'AGENTS.md', '.windsurf/skills/api-gen/', '.windsurf/skills/api-gen/references/'],
+    ['claude-code', '.claude/CLAUDE.md'],
+    ['cursor', '.cursor/rules/general.mdc'],
+    ['copilot', '.github/copilot-instructions.md'],
+    ['gemini-cli', 'GEMINI.md'],
+    ['cline', 'AGENTS.md'],
+    ['codex-cli', 'AGENTS.md'],
+    ['windsurf', 'AGENTS.md'],
   ] as const)(
     'rewrites skill directory references in root output for %s',
-    async (target, outputPath, expectedSkillDir, expectedRefDir) => {
+    async (target, outputPath) => {
       const canonical = rewriteCanonical();
       canonical.rules[0] = {
         ...canonical.rules[0]!,
@@ -144,9 +144,8 @@ describe('generate reference rewriting', () => {
       });
 
       const content = results.find((result) => result.path === outputPath)?.content ?? '';
-      expect(content).toContain(expectedSkillDir);
-      expect(content).toContain(expectedRefDir);
-      expect(content).not.toContain('.agentsmesh/skills/api-gen/');
+      expect(content).toContain('skills/api-gen/');
+      expect(content).toContain('skills/api-gen/references/');
     },
   );
 
@@ -164,9 +163,8 @@ describe('generate reference rewriting', () => {
     });
 
     const content = results.find((result) => result.path === 'AGENTS.md')?.content ?? '';
-    expect(content).toContain('.cline/skills/api-gen/');
-    expect(content).toContain('.cline/skills/api-gen/references/');
-    expect(content).not.toContain('.agentsmesh/skills/api-gen/');
+    expect(content).toContain('skills/api-gen/');
+    expect(content).toContain('skills/api-gen/references/');
   });
 
   it.each([

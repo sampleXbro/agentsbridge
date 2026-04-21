@@ -52,9 +52,7 @@ describe('rewriteFileLinks', () => {
         absolutePath === '/proj/docs/agents-folder-structure-research.md',
     });
 
-    expect(rewritten.content).toBe(
-      'Check also `../../../docs/agents-folder-structure-research.md`.',
-    );
+    expect(rewritten.content).toBe('Check also `docs/agents-folder-structure-research.md`.');
     expect(rewritten.missing).toEqual([]);
   });
 
@@ -95,7 +93,26 @@ describe('rewriteFileLinks', () => {
     expect(rewritten.missing).toEqual([]);
   });
 
-  it('rewrites target-native links back to canonical project-root paths on import', () => {
+  it('uses relative destinations for markdown links to folders', () => {
+    const rewritten = rewriteFileLinks({
+      content: 'Use [references](.agentsmesh/skills/ts-library/references/).',
+      projectRoot: '/proj',
+      sourceFile: '/proj/.agentsmesh/rules/_root.md',
+      destinationFile: '/proj/.claude/skills/ts-library/SKILL.md',
+      translatePath: (absolutePath) =>
+        absolutePath === '/proj/.agentsmesh/skills/ts-library/references'
+          ? '/proj/.claude/skills/ts-library/references'
+          : absolutePath,
+      pathExists: (absolutePath) => absolutePath === '/proj/.claude/skills/ts-library/references',
+      explicitCurrentDirLinks: true,
+      rewriteBarePathTokens: true,
+    });
+
+    expect(rewritten.content).toBe('Use [references](./references/).');
+    expect(rewritten.missing).toEqual([]);
+  });
+
+  it('rewrites target-native links back to canonical relative paths on import', () => {
     const rewritten = rewriteFileLinks({
       content: 'Use `.claude/commands/review.md` and `docs/some-doc.md`.',
       projectRoot: '/proj',
@@ -110,8 +127,8 @@ describe('rewriteFileLinks', () => {
         absolutePath === '/proj/docs/some-doc.md',
     });
 
-    expect(rewritten.content).toContain('../commands/review.md');
-    expect(rewritten.content).toContain('../../docs/some-doc.md');
+    expect(rewritten.content).toContain('`../commands/review.md`');
+    expect(rewritten.content).toContain('docs/some-doc.md');
     expect(rewritten.missing).toEqual([]);
   });
 
@@ -188,6 +205,32 @@ describe('rewriteFileLinks', () => {
       'Prose dirs (no rewrite): scripts/ docs/ references/. Canonical: .claude/commands/review.md.',
     );
     expect(rewritten.missing).toEqual([]);
+  });
+
+  it('preserves .agentsmesh/ anchor and rewrites /dir to project-root-relative', () => {
+    // .agentsmesh  (no trailing slash) — bare name, stays unchanged
+    // .agentsmesh/ (with slash)        — well-known anchor, preserved as-is (not collapsed to ./)
+    // /test                            — absolute-looking token, rewritten to project-root-relative `test`
+    const rewritten = rewriteFileLinks({
+      content: 'Mention `.agentsmesh` and `test`, but keep `.agentsmesh/` and `/test` as links.',
+      projectRoot: '/proj',
+      sourceFile: '/proj/.agentsmesh/rules/_root.md',
+      destinationFile: '/proj/CLAUDE.md',
+      translatePath: (absolutePath) => absolutePath,
+      pathExists: (absolutePath) =>
+        absolutePath === '/proj/.agentsmesh' ||
+        absolutePath === '/proj/test' ||
+        absolutePath === '/proj/.agentsmesh/' ||
+        absolutePath === '/proj/test/',
+      pathIsDirectory: (absolutePath) =>
+        absolutePath === '/proj/.agentsmesh' || absolutePath === '/proj/test',
+      rewriteBarePathTokens: true,
+    });
+
+    expect(rewritten.content).toContain('`.agentsmesh`'); // bare name unchanged
+    expect(rewritten.content).toContain('`test`'); // bare name unchanged
+    expect(rewritten.content).toContain('`.agentsmesh/`'); // anchor preserved (was incorrectly ./  before)
+    expect(rewritten.content).not.toContain('`/test`'); // absolute /test → project-root-relative test
   });
 
   it('rewrites absolute in-project paths to project-root-relative target paths', () => {
@@ -412,7 +455,9 @@ describe('rewriteFileLinks', () => {
         explicitCurrentDirLinks: true,
       });
 
-      expect(rewritten.content).toBe('See also `./references/figma-tools.md` for usage.');
+      expect(rewritten.content).toBe(
+        'See also `.claude/skills/figma/references/figma-tools.md` for usage.',
+      );
       expect(rewritten.missing).toEqual([]);
     });
 
@@ -428,7 +473,9 @@ describe('rewriteFileLinks', () => {
         explicitCurrentDirLinks: true,
       });
 
-      expect(rewritten.content).toBe('Reference: `./references/ts-checklist.md`.');
+      expect(rewritten.content).toBe(
+        'Reference: `.cursor/skills/ts-pro/references/ts-checklist.md`.',
+      );
       expect(rewritten.missing).toEqual([]);
     });
 
@@ -445,7 +492,7 @@ describe('rewriteFileLinks', () => {
         explicitCurrentDirLinks: true,
       });
 
-      expect(rewritten.content).toBe('See `./references/figma-tools.md`.');
+      expect(rewritten.content).toBe('See `.claude/skills/figma/references/figma-tools.md`.');
       expect(rewritten.missing).toEqual([]);
     });
 
@@ -494,7 +541,7 @@ describe('rewriteFileLinks', () => {
         explicitCurrentDirLinks: true,
       });
 
-      expect(rewritten.content).toBe('Link: `./references/file.md`.');
+      expect(rewritten.content).toBe('Link: `.codex/skills/figma/references/file.md`.');
       expect(rewritten.missing).toEqual([]);
     });
 
@@ -518,7 +565,7 @@ describe('rewriteFileLinks', () => {
       });
 
       expect(rewritten.content).toBe(
-        '| Setup | [./references/project-setup.md](./references/project-setup.md) |',
+        '| Setup | [.gemini/skills/ts-library/references/project-setup.md](./references/project-setup.md) |',
       );
       expect(rewritten.missing).toEqual([]);
     });
@@ -557,16 +604,15 @@ describe('rewriteFileLinks', () => {
         explicitCurrentDirLinks: true,
       });
 
-      // existingFallback fires: relative path from dest to the .agents/ artifact
+      // Project scope: outside `.agentsmesh/` → project-root-relative to the .agents/ artifact
       expect(rewritten.content).toBe(
-        'See `../../../.agents/skills/ts-library/references/project-setup.md`.',
+        'See `.agents/skills/ts-library/references/project-setup.md`.',
       );
       expect(rewritten.missing).toEqual([]);
     });
 
     describe('global mode (projectRoot = homedir)', () => {
-      it('rewrites tool-prefixed path when destination is under home directory', () => {
-        // In global mode rootBase = homedir(), so destinationFile is under ~/
+      it('leaves paths unchanged when they resolve outside `.agentsmesh/`', () => {
         const rewritten = rewriteFileLinks({
           content: 'See `.agents/skills/ts-library/references/project-setup.md`.',
           projectRoot: '/home/user',
@@ -576,14 +622,16 @@ describe('rewriteFileLinks', () => {
           pathExists: (absolutePath) =>
             absolutePath === '/home/user/.gemini/skills/ts-library/references/project-setup.md',
           explicitCurrentDirLinks: true,
+          scope: 'global',
         });
 
-        expect(rewritten.content).toBe('See `./references/project-setup.md`.');
+        expect(rewritten.content).toBe(
+          'See `.agents/skills/ts-library/references/project-setup.md`.',
+        );
         expect(rewritten.missing).toEqual([]);
       });
 
-      it('prefers destination-tree over cross-tree global artifact when both exist under homedir', () => {
-        // Global Codex CLI generates to ~/.agents/; suffix-strip to ~/.gemini/ must win.
+      it('does not rewrite when multiple candidates exist outside `.agentsmesh/`', () => {
         const rewritten = rewriteFileLinks({
           content: 'See `.agents/skills/ts-library/references/project-setup.md`.',
           projectRoot: '/home/user',
@@ -594,9 +642,12 @@ describe('rewriteFileLinks', () => {
             absolutePath === '/home/user/.agents/skills/ts-library/references/project-setup.md' ||
             absolutePath === '/home/user/.gemini/skills/ts-library/references/project-setup.md',
           explicitCurrentDirLinks: true,
+          scope: 'global',
         });
 
-        expect(rewritten.content).toBe('See `./references/project-setup.md`.');
+        expect(rewritten.content).toBe(
+          'See `.agents/skills/ts-library/references/project-setup.md`.',
+        );
         expect(rewritten.missing).toEqual([]);
       });
 
@@ -609,6 +660,7 @@ describe('rewriteFileLinks', () => {
           translatePath: (absolutePath) => absolutePath,
           pathExists: () => false,
           explicitCurrentDirLinks: true,
+          scope: 'global',
         });
 
         expect(rewritten.content).toBe(

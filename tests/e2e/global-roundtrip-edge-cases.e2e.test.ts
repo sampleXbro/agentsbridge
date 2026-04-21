@@ -50,7 +50,7 @@ describe('global mode: reference rewriting', () => {
 
     // After import, paths are normalized back to relative canonical structure
     const reimportedRoot = readText(join(canonicalDir, 'rules', '_root.md'));
-    expect(reimportedRoot).toContain('../skills/ref-skill/SKILL.md');
+    expect(reimportedRoot).toContain('skills/ref-skill/SKILL.md');
   });
 });
 

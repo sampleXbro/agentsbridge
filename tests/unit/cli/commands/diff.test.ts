@@ -76,9 +76,10 @@ describe('runDiff', () => {
   it('shows unchanged when files match', async () => {
     // Write exact content that generator would produce; use claude-code only
     mkdirSync(join(TEST_DIR, '.claude'), { recursive: true });
+    const onDisk = appendAgentsmeshRootInstructionParagraph('# Rules\n- Use TypeScript');
     writeFileSync(
       join(TEST_DIR, '.claude', 'CLAUDE.md'),
-      appendAgentsmeshRootInstructionParagraph('# Rules\n- Use TypeScript'),
+      onDisk.replace('`rules/_root.md`', '`./CLAUDE.md`'),
     );
 
     const logs: string[] = [];

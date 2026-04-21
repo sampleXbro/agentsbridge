@@ -78,8 +78,8 @@ Use `add-agent-target` for new targets. Use this skill only for the per-target g
    - Do not re-architect CLI scope handling unless the target proves a real shared gap.
 
 6. Update docs and matrix surfaces.
-   - Update `README.md` and `../../../website/src/content/docs/reference/supported-tools.mdx` if support levels or notes change.
-   - Update `../../../docs/plan-global-mode.md` if the target behavior clarifies the implementation contract.
+   - Update `README.md` and `website/src/content/docs/reference/supported-tools.mdx` if support levels or notes change.
+   - Update `docs/plan-global-mode.md` if the target behavior clarifies the implementation contract.
 
 7. Verify and QA.
    - Run targeted tests during iteration.
@@ -91,16 +91,16 @@ Use `add-agent-target` for new targets. Use this skill only for the per-target g
 - Target descriptor and layout metadata:
   `src/targets/<target>/index.ts`
 - Shared target lookup/path helpers:
-  `../../../src/targets/catalog/builtin-targets.ts`
-  `../../../src/core/reference/map-targets.ts`
-  `../../../src/core/reference/map.ts`
+  `src/targets/catalog/builtin-targets.ts`
+  `src/core/reference/map-targets.ts`
+  `src/core/reference/map.ts`
 - If the target imports or rewrites links in global scope:
-  `../../../src/core/reference/rewriter.ts`
-  `../../../src/core/reference/output-source-map.ts`
-  `../../../src/core/reference/import-rewriter.ts`
-  `../../../src/core/reference/import-map-builders.ts`
+  `src/core/reference/rewriter.ts`
+  `src/core/reference/output-source-map.ts`
+  `src/core/reference/import-rewriter.ts`
+  `src/core/reference/import-map-builders.ts`
 - If managed output ownership changes:
-  `../../../src/core/generate/stale-cleanup.ts`
+  `src/core/generate/stale-cleanup.ts`
 - If the target needs command-surface proof:
   `tests/unit/cli/commands/*.test.ts`
   `tests/integration/*global*.test.ts`

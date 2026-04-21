@@ -141,26 +141,30 @@ describe('import reference normalization', () => {
       expect(
         rootContent.includes('(../skills/api-generator/SKILL.md)') ||
           rootContent.includes('(./skills/api-generator/SKILL.md)') ||
-          rootContent.includes('(.agentsmesh/skills/api-generator/SKILL.md)'),
+          rootContent.includes('(.agentsmesh/skills/api-generator/SKILL.md)') ||
+          rootContent.includes('(skills/api-generator/SKILL.md)'),
       ).toBe(true);
       expect(
         rootContent.includes('<../skills/api-generator/template.ts>') ||
           rootContent.includes('<./skills/api-generator/template.ts>') ||
-          rootContent.includes('<.agentsmesh/skills/api-generator/template.ts>'),
+          rootContent.includes('<.agentsmesh/skills/api-generator/template.ts>') ||
+          rootContent.includes('<skills/api-generator/template.ts>'),
       ).toBe(true);
       expect(
         rootContent.includes('../skills/api-generator/references and') ||
           rootContent.includes('./skills/api-generator/references and') ||
-          rootContent.includes('.agentsmesh/skills/api-generator/references and'),
+          rootContent.includes('.agentsmesh/skills/api-generator/references and') ||
+          rootContent.includes('skills/api-generator/references and'),
       ).toBe(true);
       expect(
         rootContent.includes('../skills/api-generator/references/.') ||
           rootContent.includes('./skills/api-generator/references/.') ||
-          rootContent.includes('.agentsmesh/skills/api-generator/references/.'),
+          rootContent.includes('.agentsmesh/skills/api-generator/references/.') ||
+          rootContent.includes('skills/api-generator/references/.'),
       ).toBe(true);
       expect(rootContent).toContain('✓ / ✗');
       expect(rootContent).toContain(`${mdSelfName}:42`);
-      expect(rootContent).toContain('`../../docs/some-doc.md`');
+      expect(rootContent).toContain('`docs/some-doc.md`');
       expect(rootContent).toContain('```\n../../docs/some-doc.md\n```');
       expect(rootContent).toContain('~~~\n../../docs/some-doc.md\n~~~');
       assertExternalRefs(rootContent);
@@ -184,7 +188,8 @@ describe('import reference normalization', () => {
       expect(
         commandContent.includes('(../skills/api-generator/references/)') ||
           commandContent.includes('(./skills/api-generator/references/)') ||
-          commandContent.includes('(.agentsmesh/skills/api-generator/references/)'),
+          commandContent.includes('(.agentsmesh/skills/api-generator/references/)') ||
+          commandContent.includes('(skills/api-generator/references/)'),
       ).toBe(true);
       expect(commandContent).toContain('✓ / ✗');
       assertDocs(commandContent);
@@ -219,20 +224,28 @@ describe('import reference normalization', () => {
       expect(agentContent).not.toContain(join(dir, '.agentsmesh', 'commands', 'review.md'));
       assertPortable(agentContent, targetPrefix[target]);
 
-      const ruleFromSkill =
-        target === 'gemini-cli' ? '../../../GEMINI.md' : '../../rules/typescript.md';
+      const ruleFromSkill = target === 'gemini-cli' ? 'GEMINI.md' : '../../rules/typescript.md';
+      const ruleMarkdownFromSkill =
+        target === 'gemini-cli'
+          ? `[GEMINI.md](../../../GEMINI.md)`
+          : `[${ruleFromSkill}](${ruleFromSkill})`;
       expect(skillContent).toContain(ruleFromSkill);
-      expect(skillContent).toContain(`[${ruleFromSkill}](${ruleFromSkill})`);
+      expect(skillContent).toContain(ruleMarkdownFromSkill);
       expect(
         skillContent.includes(`@${ruleFromSkill}`) ||
           /@\.\.\/.*(?:typescript|GEMINI|instructions)/i.test(skillContent),
       ).toBe(true);
       expect(
-        skillContent.includes('"references/"') || skillContent.includes('"./references/"'),
+        skillContent.includes('"references/"') ||
+          skillContent.includes('"./references/"') ||
+          skillContent.includes('"skills/api-generator/references/"'),
       ).toBe(true);
       expect(
         skillContent.includes('(references/route-checklist.md)') ||
-          skillContent.includes('(.agentsmesh/skills/api-generator/references/route-checklist.md)'),
+          skillContent.includes(
+            '(.agentsmesh/skills/api-generator/references/route-checklist.md)',
+          ) ||
+          skillContent.includes('(skills/api-generator/references/route-checklist.md)'),
       ).toBe(true);
       expect(skillContent).toMatch(/Relative:.*template\.ts/);
       expect(skillContent).toContain('✓ / ✗');
@@ -256,7 +269,8 @@ describe('import reference normalization', () => {
       expect(templateContent).toMatch(/references\/route-checklist\.md/);
       expect(
         templateContent.includes('(references/)') ||
-          templateContent.includes('(.agentsmesh/skills/api-generator/references/)'),
+          templateContent.includes('(.agentsmesh/skills/api-generator/references/)') ||
+          templateContent.includes('(skills/api-generator/references/)'),
       ).toBe(true);
       expect(templateContent).toContain('✓ / ✗');
       expect(templateContent).toContain('../SKILL.md');

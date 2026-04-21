@@ -78,7 +78,7 @@ Check:
 - broken export paths
 - mismatched ESM/CJS entrypoints
 - hidden reliance on ts-node or test-only runtime behavior
-- declaration output that references `../../../src/` internals
+- declaration output that references `src/` internals
 - publishing unnecessary fixtures, screenshots, or test artifacts
 - broad `any` in public API without explicit justification
 - unstable inferred return types in exported functions

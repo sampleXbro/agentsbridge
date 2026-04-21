@@ -54,14 +54,14 @@ If the shared foundation is missing, stop and handle that separately. This skill
 
 ### Shared, only if required
 
-- `../../../../src/targets/catalog/builtin-targets.ts`
-- `../../../../src/core/reference/map-targets.ts`
-- `../../../../src/core/reference/map.ts`
-- `../../../../src/core/reference/rewriter.ts`
-- `../../../../src/core/reference/output-source-map.ts`
-- `../../../../src/core/reference/import-rewriter.ts`
-- `../../../../src/core/reference/import-map-builders.ts`
-- `../../../../src/core/generate/stale-cleanup.ts`
+- `src/targets/catalog/builtin-targets.ts`
+- `src/core/reference/map-targets.ts`
+- `src/core/reference/map.ts`
+- `src/core/reference/rewriter.ts`
+- `src/core/reference/output-source-map.ts`
+- `src/core/reference/import-rewriter.ts`
+- `src/core/reference/import-map-builders.ts`
+- `src/core/generate/stale-cleanup.ts`
 - CLI global-scope flows if the target participates in command-specific handling
   - prove the target works through the existing `--global` flows instead of adding target-specific CLI branches unless unavoidable
 

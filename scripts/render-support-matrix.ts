@@ -30,6 +30,7 @@ const TARGET_LABELS: Record<string, string> = {
 
 const FEATURE_ROWS: [string, keyof typeof SUPPORT_MATRIX][] = [
   ['Rules', 'rules'],
+  ['Additional Rules', 'additionalRules'],
   ['Commands', 'commands'],
   ['Agents', 'agents'],
   ['Skills', 'skills'],

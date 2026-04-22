@@ -17,6 +17,7 @@ export interface TargetCapabilityValue {
 
 export type CapabilityFeatureKey =
   | 'rules'
+  | 'additionalRules'
   | 'commands'
   | 'agents'
   | 'skills'
@@ -44,6 +45,7 @@ export function normalizeTargetCapabilities(
 ): Record<CapabilityFeatureKey, TargetCapabilityValue> {
   return {
     rules: normalizeCapabilityValue(caps.rules),
+    additionalRules: normalizeCapabilityValue(caps.additionalRules),
     commands: normalizeCapabilityValue(caps.commands),
     agents: normalizeCapabilityValue(caps.agents),
     skills: normalizeCapabilityValue(caps.skills),

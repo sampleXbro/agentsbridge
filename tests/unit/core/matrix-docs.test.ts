@@ -8,6 +8,7 @@ import type { TargetCapabilityValue } from '../../../src/targets/catalog/capabil
 const ROOT = process.cwd();
 const FEATURES = [
   ['Rules', 'rules'],
+  ['Additional Rules', 'additionalRules'],
   ['Commands', 'commands'],
   ['Agents', 'agents'],
   ['Skills', 'skills'],
@@ -158,6 +159,8 @@ describe('compatibility matrix docs', () => {
       expect(cliDocs).toContain(target);
     }
     expect(cliDocs).toContain('Legend: ✓ = native  ◆ = embedded  ◐ = partial  – = not supported');
+    expect(cliDocs).toContain('additional rules');
+    expect(cliDocs).toContain('metadata for round-trip import');
     expect(cliDocs).not.toContain('| `native` |');
   });
 });

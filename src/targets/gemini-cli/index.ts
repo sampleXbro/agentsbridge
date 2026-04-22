@@ -155,6 +155,7 @@ const global: TargetLayout = {
 
 const globalCapabilities: TargetCapabilities = {
   rules: 'native',
+  additionalRules: 'embedded',
   commands: 'native',
   agents: 'native',
   skills: 'native',
@@ -169,6 +170,7 @@ export const descriptor = {
   generators: target,
   capabilities: {
     rules: 'native',
+    additionalRules: 'embedded',
     commands: 'native',
     agents: 'native',
     skills: 'native',

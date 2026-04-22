@@ -1,3 +1,16 @@
+# Current Task: Additional Rules Matrix Row
+
+Goal: show managed embedded additional-rule support in every support matrix without changing the root rules capability meaning.
+
+Plan:
+- [x] Read lessons, docs skill, matrix data/rendering paths, and current embedded-rule target usage.
+- [x] Add failing coverage for a generated `Additional Rules` matrix row in README/website and CLI matrix output.
+- [x] Implement one shared additional-rule support map for project/global docs and CLI rows.
+- [x] Regenerate support matrices and update docs language where needed.
+- [x] Run focused matrix/docs verification, lint/typecheck, website build, then post-feature QA.
+
+---
+
 # Current Task: Managed Embedding Documentation
 
 Goal: document one AgentsMesh-managed embedding contract for all targets and publish it in the website docs.

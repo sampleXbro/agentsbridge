@@ -73,6 +73,70 @@ describe('buildCompatibilityMatrix', () => {
     expect(rulesRow?.support['codex-cli']).toBe('native');
   });
 
+  it('includes embedded support levels for additional rules', () => {
+    const config: ValidatedConfig = {
+      ...baseConfig,
+      targets: ['claude-code', 'cursor', 'gemini-cli', 'codex-cli', 'junie', 'antigravity'],
+      features: ['rules'],
+    };
+    const canonical: CanonicalFiles = {
+      ...emptyCanonical,
+      rules: [
+        { source: 'root', root: true, targets: [], description: '', globs: [], body: '' },
+        {
+          source: 'rules/typescript.md',
+          root: false,
+          targets: [],
+          description: 'TS rules',
+          globs: ['src/**/*.ts'],
+          body: 'Use strict TS.',
+        },
+      ],
+    };
+
+    const rows = buildCompatibilityMatrix(config, canonical);
+    const additionalRulesRow = rows.find((r) => r.feature === 'additional rules (1)');
+
+    expect(additionalRulesRow).toBeDefined();
+    expect(additionalRulesRow?.support['claude-code']).toBe('native');
+    expect(additionalRulesRow?.support.cursor).toBe('embedded');
+    expect(additionalRulesRow?.support['gemini-cli']).toBe('embedded');
+    expect(additionalRulesRow?.support['codex-cli']).toBe('native');
+    expect(additionalRulesRow?.support.junie).toBe('native');
+    expect(additionalRulesRow?.support.antigravity).toBe('native');
+  });
+
+  it('uses global embedded support levels for additional rules', () => {
+    const config: ValidatedConfig = {
+      ...baseConfig,
+      targets: ['cursor', 'gemini-cli', 'codex-cli', 'junie', 'antigravity'],
+      features: ['rules'],
+    };
+    const canonical: CanonicalFiles = {
+      ...emptyCanonical,
+      rules: [
+        { source: 'root', root: true, targets: [], description: '', globs: [], body: '' },
+        {
+          source: 'rules/typescript.md',
+          root: false,
+          targets: [],
+          description: 'TS rules',
+          globs: ['src/**/*.ts'],
+          body: 'Use strict TS.',
+        },
+      ],
+    };
+
+    const rows = buildCompatibilityMatrix(config, canonical, 'global');
+    const additionalRulesRow = rows.find((r) => r.feature === 'additional rules (1)');
+
+    expect(additionalRulesRow?.support.cursor).toBe('embedded');
+    expect(additionalRulesRow?.support['gemini-cli']).toBe('embedded');
+    expect(additionalRulesRow?.support['codex-cli']).toBe('embedded');
+    expect(additionalRulesRow?.support.junie).toBe('embedded');
+    expect(additionalRulesRow?.support.antigravity).toBe('embedded');
+  });
+
   it('shows permissions as partial for cursor', () => {
     const config: ValidatedConfig = { ...baseConfig, features: ['permissions'] };
     const canonical: CanonicalFiles = {

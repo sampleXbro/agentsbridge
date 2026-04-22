@@ -16,7 +16,15 @@ export type SupportLevel = 'native' | 'embedded' | 'partial' | 'none';
  * String levels are accepted for authoring; `getTargetCapabilities` normalizes to objects.
  */
 export type TargetCapabilities = Record<
-  'rules' | 'commands' | 'agents' | 'skills' | 'mcp' | 'hooks' | 'ignore' | 'permissions',
+  | 'rules'
+  | 'additionalRules'
+  | 'commands'
+  | 'agents'
+  | 'skills'
+  | 'mcp'
+  | 'hooks'
+  | 'ignore'
+  | 'permissions',
   TargetCapabilityInput
 >;
 

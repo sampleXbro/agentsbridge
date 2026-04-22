@@ -75,6 +75,15 @@ The marker metadata restores the rule description, globs, and target scoping. Th
 | `agentsmesh:embedded-rule` | One additional rule inside `embedded-rules`. | Restored to `.agentsmesh/<source>`. |
 | `agentsmesh:codex-rule-index` | Generated Codex index of additional instruction files. | Stripped on Codex import. |
 
+## Matrix reporting
+
+The support matrices separate root rule support from additional rule projection:
+
+- **Rules** describes root-rule support and the target's general rule capability.
+- **Additional Rules** describes how non-root `rules/*.md` files are projected.
+
+When the **Additional Rules** row says **Embedded**, AgentsMesh writes those non-root rules into an aggregate/root instruction file with managed metadata. When it says **Native**, the target gets separate rule files in its own rule format. **Partial** means the target has an aggregate global surface that does not have the full managed-block round-trip contract.
+
 ## Generate flow
 
 1. Load canonical content from `.agentsmesh/`, installed packs, and extends.

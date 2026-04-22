@@ -6,6 +6,7 @@ import { getTargetCapabilities } from '../../targets/catalog/builtin-targets.js'
 
 const FEATURE_IDS = [
   'rules',
+  'additionalRules',
   'commands',
   'agents',
   'skills',

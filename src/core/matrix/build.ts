@@ -71,6 +71,26 @@ export function buildCompatibilityMatrix(
     }
 
     rows.push({ feature: label, count, support });
+
+    if (featureId === 'rules') {
+      const additionalRules = canonical.rules.filter((rule) => !rule.root);
+      if (additionalRules.length > 0) {
+        const additionalSupport: Record<string, SupportLevel> = {};
+        for (const t of targets) {
+          additionalSupport[t] = getEffectiveTargetSupportLevel(
+            t,
+            'additionalRules',
+            config,
+            scope,
+          );
+        }
+        rows.push({
+          feature: `additional rules (${additionalRules.length})`,
+          count: additionalRules.length,
+          support: additionalSupport,
+        });
+      }
+    }
   }
 
   return rows;

@@ -52,21 +52,22 @@ agentsmesh matrix --global
 
 ## Sample output
 
-Column headers match the `targets` list in your `agentsmesh.yaml` (here: every built-in target). Feature labels include counts when your canonical tree has items (for example `commands (2)`). Set `NO_COLOR=1` to print plain symbols without ANSI colors. The block below illustrates **project-scope** catalog symbols for that full target list.
+Column headers match the `targets` list in your `agentsmesh.yaml` (here: every built-in target). Feature labels include counts when your canonical tree has items (for example `commands (2)` or `additional rules (1)`). Set `NO_COLOR=1` to print plain symbols without ANSI colors. The block below illustrates **project-scope** catalog symbols for that full target list.
 
 ```
-┌────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┐
-│Feature     │Claude      │cursor      │copilot     │continue    │junie       │kiro        │gemini-cli  │cline       │codex-cli   │windsurf    │antigravity │roo-code    │
-├────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┤
-│rules       │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │
-│commands    │  ✓         │  ✓         │  ✓         │  ◆         │  ◆         │  –         │  ✓         │  ✓         │  ◆         │  ✓         │  ◐         │  ✓         │
-│agents      │  ✓         │  ✓         │  ✓         │  –         │  ◆         │  ✓         │  ✓         │  ◆         │  ✓         │  ◆         │  –         │  –         │
-│skills      │  ✓         │  ✓         │  ✓         │  ◆         │  ◆         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │
-│mcp         │  ✓         │  ✓         │  –         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ◐         │  –         │  ✓         │
-│hooks       │  ✓         │  ✓         │  ◐         │  –         │  –         │  ✓         │  ◐         │  ✓         │  –         │  ✓         │  –         │  –         │
-│ignore      │  ✓         │  ✓         │  –         │  –         │  ✓         │  ✓         │  ✓         │  ✓         │  –         │  ✓         │  –         │  ✓         │
-│permissions │  ✓         │  ◐         │  –         │  –         │  –         │  –         │  ◐         │  –         │  –         │  –         │  –         │  –         │
-└────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┘
+┌────────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┐
+│Feature         │Claude      │cursor      │copilot     │continue    │junie       │kiro        │gemini-cli  │cline       │codex-cli   │windsurf    │antigravity │roo-code    │
+├────────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┤
+│rules           │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │
+│additional rules│  ✓         │  ◆         │  ✓         │  ✓         │  ✓         │  ✓         │  ◆         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │
+│commands        │  ✓         │  ✓         │  ✓         │  ◆         │  ◆         │  –         │  ✓         │  ✓         │  ◆         │  ✓         │  ◐         │  ✓         │
+│agents          │  ✓         │  ✓         │  ✓         │  –         │  ◆         │  ✓         │  ✓         │  ◆         │  ✓         │  ◆         │  –         │  –         │
+│skills          │  ✓         │  ✓         │  ✓         │  ◆         │  ◆         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │
+│mcp             │  ✓         │  ✓         │  –         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ◐         │  –         │  ✓         │
+│hooks           │  ✓         │  ✓         │  ◐         │  –         │  –         │  ✓         │  ◐         │  ✓         │  –         │  ✓         │  –         │  –         │
+│ignore          │  ✓         │  ✓         │  –         │  –         │  ✓         │  ✓         │  ✓         │  ✓         │  –         │  ✓         │  –         │  ✓         │
+│permissions     │  ✓         │  ◐         │  –         │  –         │  –         │  –         │  ◐         │  –         │  –         │  –         │  –         │  –         │
+└────────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┘
 
 Legend: ✓ = native  ◆ = embedded  ◐ = partial  – = not supported
 ```
@@ -76,7 +77,7 @@ Legend: ✓ = native  ◆ = embedded  ◐ = partial  – = not supported
 | Symbol | Meaning |
 |--------|---------|
 | `✓` | Feature maps directly to the tool's native config format. |
-| `◆` | Feature is projected as a skill with metadata for lossless round-trip. |
+| `◆` | Feature is projected into a compatible format with metadata for round-trip import. |
 | `◐` | Limited support — some fields or behaviors may not round-trip. |
 | `–` | Not supported. Feature is skipped for this target. |
 

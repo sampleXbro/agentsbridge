@@ -61,6 +61,19 @@ Marker metadata must be stable and canonical. Prefer paths relative to
 Documentation codegen blocks, such as support-matrix markers, use the same
 namespace idea but are not target-agent artifacts.
 
+## Matrix reporting
+
+Support matrices intentionally split rule support into two rows:
+
+- `Rules` is the root/general rules capability.
+- `Additional Rules` is the projection capability for non-root
+  `.agentsmesh/rules/*.md` files.
+
+`Additional Rules = Embedded` means the target uses managed embedded metadata
+for at least one scope. `Native` means non-root rules are written to separate
+target-native rule files. `Partial` means the target has an aggregate surface
+without the full managed embedded-rule round-trip contract.
+
 ## Generation flow
 
 1. Load canonical files from `.agentsmesh/`, packs, and extends.

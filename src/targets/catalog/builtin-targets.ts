@@ -166,6 +166,8 @@ export function resolveTargetFeatureGenerator(
   switch (feature) {
     case 'rules':
       return generators.generateRules;
+    case 'additionalRules':
+      return undefined;
     case 'commands':
       if (
         config &&

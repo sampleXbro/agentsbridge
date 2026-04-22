@@ -131,6 +131,7 @@ That's it. Your `.agentsmesh/` directory is now the single source of truth, and 
 | Feature | Claude Code | Cursor | Copilot | Continue | Junie | Kiro | Gemini CLI | Cline | Codex CLI | Windsurf | Antigravity | Roo Code |
 |---|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
 | Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
+| Additional Rules | Native | Embedded | Native | Native | Native | Native | Embedded | Native | Native | Native | Native | Native |
 | Commands | Native | Native | Native | Embedded | Embedded | — | Native | Native (workflows) | Embedded | Native (workflows) | Partial (workflows) | Native |
 | Agents | Native | Native | Native | — | Embedded | Native | Native | Embedded | Native | Embedded | — | — |
 | Skills | Native | Native | Native | Embedded | Embedded | Native | Native | Native | Native | Native | Native | Native |
@@ -146,6 +147,7 @@ That's it. Your `.agentsmesh/` directory is now the single source of truth, and 
 | Feature | Claude Code | Cursor | Copilot | Continue | Junie | Kiro | Gemini CLI | Cline | Codex CLI | Windsurf | Antigravity | Roo Code |
 |---|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
 | Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
+| Additional Rules | Native | Embedded | Native | Native | Embedded | Native | Embedded | Native | Embedded | Partial | Embedded | Native |
 | Commands | Native | Native | Native | Native | Native | — | Native | Native (workflows) | Embedded | Native (workflows) | Partial (workflows) | Native |
 | Agents | Native | Native | Native | — | Native | Native | Native | Embedded | Native | Embedded | — | — |
 | Skills | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |

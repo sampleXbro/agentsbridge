@@ -44,6 +44,23 @@ describe('agentsmesh matrix (integration)', () => {
     expect(out).toMatch(/[✓✓]/);
   });
 
+  it('prints additional rules row when non-root rules exist', () => {
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'),
+      `---
+description: "TypeScript"
+globs: ["src/**/*.ts"]
+---
+Use strict TypeScript.
+`,
+    );
+
+    const out = execSync(`node ${CLI_PATH} matrix`, { cwd: TEST_DIR, encoding: 'utf-8' });
+
+    expect(out).toContain('additional rules (1)');
+    expect(out.split('\n').find((line) => line.includes('additional rules'))).toContain('◆');
+  });
+
   it('respects --targets filter', () => {
     const out = execSync(`node ${CLI_PATH} matrix --targets claude-code`, {
       cwd: TEST_DIR,

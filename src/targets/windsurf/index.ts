@@ -140,6 +140,7 @@ const global: TargetLayout = {
 
 const globalCapabilities: TargetCapabilities = {
   rules: 'native',
+  additionalRules: 'partial',
   commands: cap('native', 'workflows'),
   agents: 'embedded',
   skills: 'native',
@@ -154,6 +155,7 @@ export const descriptor = {
   generators: target,
   capabilities: {
     rules: 'native',
+    additionalRules: 'native',
     commands: cap('native', 'workflows'),
     agents: 'embedded',
     skills: 'native',

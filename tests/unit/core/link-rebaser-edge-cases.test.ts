@@ -150,7 +150,7 @@ describe('rewriteFileLinks edge cases', () => {
         translatePath: (abs: string) => abs,
         pathExists: (abs: string) => abs === 'C:\\proj\\src\\handler.ts',
       });
-      expect(result.content).toBe('Path: `src/handler.ts`');
+      expect(result.content).toBe('Path: `C:\\proj\\src\\handler.ts`');
     });
   });
 
@@ -215,6 +215,65 @@ describe('rewriteFileLinks edge cases', () => {
       const lines = result.content.split('\n');
       expect(lines[1]).toBe('../../docs/guide.md');
       expect(lines[3]).toBe('../../docs/guide.md');
+    });
+  });
+
+  describe('AgentsMesh managed block protection', () => {
+    it('does not rewrite paths inside root generation contract blocks', () => {
+      const content = [
+        'Before ../../docs/guide.md',
+        '<!-- agentsmesh:root-generation-contract:start -->',
+        'Keep ../../docs/guide.md literal.',
+        '<!-- agentsmesh:root-generation-contract:end -->',
+        'After ../../docs/guide.md',
+      ].join('\n');
+      const result = rewriteFileLinks({
+        content,
+        projectRoot: '/proj',
+        sourceFile: '/proj/.agentsmesh/rules/_root.md',
+        destinationFile: '/proj/CLAUDE.md',
+        translatePath: (abs: string) =>
+          abs === '/proj/docs/guide.md' ? '/proj/output/guide.md' : abs,
+        pathExists: (abs: string) =>
+          abs === '/proj/docs/guide.md' || abs === '/proj/output/guide.md',
+        rewriteBarePathTokens: true,
+      });
+      expect(result.content).toContain('Before output/guide.md');
+      expect(result.content).toContain('Keep ../../docs/guide.md literal.');
+      expect(result.content).toContain('After output/guide.md');
+    });
+
+    it('does not rewrite paths inside embedded rule blocks', () => {
+      const content = [
+        'Before ../../docs/guide.md',
+        '<!-- agentsmesh:embedded-rules:start -->',
+        '<!-- agentsmesh:embedded-rule:start {"source":"rules/typescript.md","description":"TS rules","globs":["src/**/*.ts"],"targets":[]} -->',
+        'Keep ../../docs/guide.md and rules/typescript.md literal.',
+        '<!-- agentsmesh:embedded-rule:end -->',
+        '<!-- agentsmesh:embedded-rules:end -->',
+        'After ../../docs/guide.md',
+      ].join('\n');
+      const result = rewriteFileLinks({
+        content,
+        projectRoot: '/proj',
+        sourceFile: '/proj/.agentsmesh/rules/_root.md',
+        destinationFile: '/proj/GEMINI.md',
+        translatePath: (abs: string) =>
+          abs === '/proj/docs/guide.md' ? '/proj/output/guide.md' : abs,
+        pathExists: (abs: string) =>
+          abs === '/proj/docs/guide.md' ||
+          abs === '/proj/output/guide.md' ||
+          abs === '/proj/.agentsmesh/rules/typescript.md',
+        rewriteBarePathTokens: true,
+      });
+
+      expect(result.content).toContain('Before output/guide.md');
+      expect(result.content).toContain(
+        '<!-- agentsmesh:embedded-rule:start {"source":"rules/typescript.md"',
+      );
+      expect(result.content).toContain('Keep ../../docs/guide.md and rules/typescript.md literal.');
+      expect(result.content).toContain('After output/guide.md');
+      expect(result.content).not.toContain('"source":"GEMINI.md"');
     });
   });
 
@@ -448,7 +507,7 @@ describe('rewriteFileLinks edge cases', () => {
             p === '/proj/.agentsmesh/commands/review.md' ? '/proj/.claude/commands/review.md' : p,
           pathExists: (p) => p === '/proj/.claude/commands/review.md',
         });
-        expect(result.content).toBe('See `.claude/commands/review.md` for details.');
+        expect(result.content).toBe('See `.agentsmesh/commands/review.md` for details.');
       });
 
       it('rewrites relative path inside backtick span', () => {
@@ -513,7 +572,7 @@ describe('rewriteFileLinks edge cases', () => {
             p === '/proj/.agentsmesh/commands/review.md' ? '/proj/.claude/commands/review.md' : p,
           pathExists: (p) => p === '/proj/.claude/commands/review.md',
         });
-        expect(result.content).toBe('Run @.claude/commands/review.md now.');
+        expect(result.content).toBe('Run @.agentsmesh/commands/review.md now.');
       });
     });
 

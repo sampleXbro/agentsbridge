@@ -76,7 +76,7 @@ describe('target contract matrix (in-process)', () => {
     await getTargetCatalogEntry(target).importFrom(dir, { scope: 'project' });
     expect(canonicalPathsOnDisk(dir)).toEqual([...TARGET_CONTRACTS[target].imported]);
     const root = readFileSync(join(dir, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
-    expect(root).toContain('../commands/review.md');
+    expect(root).toContain('.agentsmesh/commands/review.md');
     expectNoTargetSpecificPrefixes(root);
   });
 

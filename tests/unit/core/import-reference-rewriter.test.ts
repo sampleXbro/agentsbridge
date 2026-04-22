@@ -87,7 +87,7 @@ describe('createImportReferenceNormalizer', () => {
     );
   });
 
-  it('normalizes Claude global paths back to canonical paths during global import', async () => {
+  it('normalizes Claude global target prose paths back to canonical paths', async () => {
     const normalize = await createImportReferenceNormalizer('claude-code', TEST_DIR, 'global');
     const normalized = normalize(
       'Use .claude/skills/api-gen/references/checklist.md and .claude/rules/typescript.md.',
@@ -95,12 +95,10 @@ describe('createImportReferenceNormalizer', () => {
       join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
     );
 
-    expect(normalized).toBe(
-      'Use .claude/skills/api-gen/references/checklist.md and .claude/rules/typescript.md.',
-    );
+    expect(normalized).toBe('Use ../skills/api-gen/references/checklist.md and typescript.md.');
   });
 
-  it('normalizes Antigravity global paths back to canonical paths during global import', async () => {
+  it('normalizes Antigravity global target prose paths back to canonical paths', async () => {
     mkdirSync(join(TEST_DIR, '.gemini', 'antigravity', 'skills', 'api-gen', 'references'), {
       recursive: true,
     });
@@ -121,12 +119,10 @@ describe('createImportReferenceNormalizer', () => {
       join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
     );
 
-    expect(normalized).toBe(
-      'Use .gemini/antigravity/GEMINI.md and .gemini/antigravity/skills/api-gen/references/checklist.md.',
-    );
+    expect(normalized).toBe('Use _root.md and ../skills/api-gen/references/checklist.md.');
   });
 
-  it('normalizes Codex global paths back to canonical paths during global import', async () => {
+  it('normalizes Codex global target prose paths back to canonical paths', async () => {
     mkdirSync(join(TEST_DIR, '.codex'), { recursive: true });
     writeFileSync(join(TEST_DIR, '.codex', 'AGENTS.md'), '# Root\n');
 
@@ -138,8 +134,46 @@ describe('createImportReferenceNormalizer', () => {
     );
 
     expect(normalized).toBe(
-      'Use .codex/AGENTS.md and .agents/skills/post-feature-qa/references/edge-case-checklist.md.',
+      'Use _root.md and ../skills/post-feature-qa/references/edge-case-checklist.md.',
     );
+  });
+
+  it('leaves true non-mesh global prose and markdown links unchanged', async () => {
+    mkdirSync(join(TEST_DIR, '.claude'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.claude', 'local-note.md'), '# Local\n');
+
+    const normalize = await createImportReferenceNormalizer('claude-code', TEST_DIR, 'global');
+    const normalized = normalize(
+      'Local prose .claude/local-note.md and [note](./local-note.md).',
+      join(TEST_DIR, '.claude', 'CLAUDE.md'),
+      join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
+    );
+
+    expect(normalized).toBe('Local prose .claude/local-note.md and [note](./local-note.md).');
+  });
+
+  it('normalizes Claude global markdown destinations back to canonical relative links', async () => {
+    const normalize = await createImportReferenceNormalizer('claude-code', TEST_DIR, 'global');
+    const normalized = normalize(
+      'Use [skill](./skills/api-gen/SKILL.md) and [checklist](./skills/api-gen/references/checklist.md).',
+      join(TEST_DIR, '.claude', 'CLAUDE.md'),
+      join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
+    );
+
+    expect(normalized).toBe(
+      'Use [skill](../skills/api-gen/SKILL.md) and [checklist](../skills/api-gen/references/checklist.md).',
+    );
+  });
+
+  it('preserves .agentsmesh prose anchors during global import', async () => {
+    const normalize = await createImportReferenceNormalizer('claude-code', TEST_DIR, 'global');
+    const normalized = normalize(
+      'Keep `.agentsmesh/skills/api-gen/SKILL.md` as the canonical anchor.',
+      join(TEST_DIR, '.claude', 'CLAUDE.md'),
+      join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
+    );
+
+    expect(normalized).toBe('Keep `.agentsmesh/skills/api-gen/SKILL.md` as the canonical anchor.');
   });
 
   it('prefers longer path matches before parent directory mappings', async () => {

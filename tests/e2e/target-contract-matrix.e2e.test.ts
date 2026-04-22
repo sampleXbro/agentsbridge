@@ -124,14 +124,18 @@ function expectAnyPathTail(content: string, fullPath: string): void {
 }
 
 function expectCanonicalizedRoot(content: string): void {
-  // Import normalizer emits paths relative to `.agentsmesh/rules/_root.md`
-  expect(content).toContain('../commands/review.md');
+  // Prose/structured canonical anchors remain readable; markdown destinations are relative.
+  expect(content).toContain('.agentsmesh/commands/review.md');
   expect(
-    content.includes('../agents/code-reviewer.md') ||
+    content.includes('.agentsmesh/agents/code-reviewer.md') ||
+      content.includes('../agents/code-reviewer.md') ||
       content.includes('../../.agentsmesh/agents/code-reviewer.md') ||
       content.includes('agents/code-reviewer.md'),
   ).toBe(true);
-  expect(content).toContain('../skills/api-generator/SKILL.md');
+  expect(
+    content.includes('.agentsmesh/skills/api-generator/SKILL.md') ||
+      content.includes('../skills/api-generator/SKILL.md'),
+  ).toBe(true);
   expect(content).toContain('../skills/api-generator/references/route-checklist.md');
   expectNoTargetSpecificPrefixes(content);
 }
@@ -204,16 +208,6 @@ describe('target contract matrix', () => {
     if (!TARGETS_WITHOUT_AGENT_OUTPUT.has(target)) {
       expectAnyPathTail(read(dir, skillPath), refs.agent);
     }
-    if (
-      target !== 'continue' &&
-      target !== 'gemini-cli' &&
-      target !== 'antigravity' &&
-      target !== 'roo-code' &&
-      target !== 'kiro'
-    ) {
-      expect(read(dir, skillPath)).not.toContain('.agentsmesh/');
-    }
-
     if (target === 'cline') {
       expect(read(dir, 'AGENTS.md')).toContain('# Standards');
       expect(read(dir, '.clinerules/typescript.md')).toContain(

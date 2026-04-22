@@ -49,6 +49,7 @@ sequenceDiagram
 - `--check` does not write files
 - `--dry-run` reports planned writes without touching the filesystem
 - feature generation is target-capability-aware and routed through built-in target metadata
+- embedded generated content follows the shared managed-block contract in `docs/architecture/managed-embedding.md`
 
 ## Failure points
 

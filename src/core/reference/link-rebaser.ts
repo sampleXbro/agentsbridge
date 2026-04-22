@@ -3,19 +3,23 @@ import {
   normalizeSeparators,
   pathApi,
   stripTrailingPunctuation,
+  WINDOWS_ABSOLUTE_PATH,
 } from '../path-helpers.js';
 import {
   PATH_TOKEN,
   LINE_NUMBER_SUFFIX,
-  resolveProjectPath,
-  expandResolvedPaths,
   isGlobAdjacent,
+  isRootRelativePathToken,
   protectedRanges,
-  resolveByDestinationSuffixStrip,
 } from './link-rebaser-helpers.js';
 import { formatLinkPathForDestination, isUnderAgentsMesh } from './link-rebaser-output.js';
-import { shouldSkipGlobalNonMeshLink } from './link-rebaser-scope.js';
-import { shouldRewritePathToken } from './link-token-context.js';
+import { resolveLinkTarget } from './link-rebaser-resolution.js';
+import {
+  isMarkdownLinkDestinationToken,
+  isRelativePathToken,
+  isTildeHomeRelativePathToken,
+} from './link-token-guards.js';
+import { getTokenContext, shouldRewritePathToken } from './link-token-context.js';
 import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
 
 export interface RewriteFileLinksInput {
@@ -36,46 +40,6 @@ export interface RewriteFileLinksInput {
 export interface RewriteFileLinksResult {
   content: string;
   missing: string[];
-}
-
-/**
- * PATH_TOKEN often does not include `~/`; rewriting only `.agentsmesh/…` or `/.agentsmesh/…` corrupts docs
- * into `~/../.agentsmesh/…` or eats the slash (`~.agentsmesh`). Skip when this token belongs to a
- * POSIX home-relative path (`~/…`).
- */
-function isTildeHomeRelativePathToken(
-  fullContent: string,
-  matchOffset: number,
-  matchText: string,
-): boolean {
-  // `~/…` then token begins at `.agentsmesh` / `.cursor` (after `~/`)
-  if (
-    matchOffset >= 2 &&
-    fullContent[matchOffset - 2] === '~' &&
-    fullContent[matchOffset - 1] === '/'
-  ) {
-    return true;
-  }
-  // `~/…` then token begins at `/` (`/.agentsmesh…`) — slash is included in match, offset is 1 after `~`
-  if (matchOffset >= 1 && fullContent[matchOffset - 1] === '~' && matchText.startsWith('/')) {
-    return true;
-  }
-  return false;
-}
-
-function isMarkdownLinkDestinationToken(
-  fullContent: string,
-  matchOffset: number,
-  matchText: string,
-): boolean {
-  if (matchOffset <= 0 || fullContent[matchOffset - 1] !== '(') return false;
-  const closeIndex = matchOffset + matchText.length;
-  const after = fullContent[closeIndex];
-  if (after !== ')' && after !== '#' && after !== '?' && after !== ' ' && after !== '\t') {
-    return false;
-  }
-  const beforeParen = fullContent[matchOffset - 2];
-  return beforeParen === ']';
 }
 
 export function rewriteFileLinks(input: RewriteFileLinksInput): RewriteFileLinksResult {
@@ -103,89 +67,24 @@ export function rewriteFileLinks(input: RewriteFileLinksInput): RewriteFileLinks
     const candidate = lineNumMatch ? punctStripped.slice(0, lineNumMatch.index) : punctStripped;
     const lineNumSuffix = lineNumMatch ? lineNumMatch[0] : '';
     if (!candidate) return match;
-    if (
-      shouldSkipGlobalNonMeshLink({
-        scope: input.scope,
-        projectRoot: input.projectRoot,
-        sourceFile: input.sourceFile,
-        candidate,
-      })
-    ) {
+    const tokenContext = getTokenContext(fullContent, offset, offset + candidate.length);
+    if (tokenContext.role !== 'markdown-link-dest' && WINDOWS_ABSOLUTE_PATH.test(candidate)) {
       return match;
     }
-
-    let translatedPath: string | null = null;
-    let matchedPath = false;
-    /** Pre-`translatePath` absolute path when the main loop picks a translated artifact (for global skip). */
-    let resolvedBeforeTranslate: string | null = null;
-    // Saved during the main loop but committed only after suffix-strip (priority 3).
-    let savedFallback: string | null = null;
-    let savedFallbackResolvedBeforeTranslate: string | null = null;
-    for (const resolvedPath of resolveProjectPath(candidate, input.projectRoot, input.sourceFile)) {
-      let existingFallback: string | null = null;
-      let existingFallbackResolvedBeforeTranslate: string | null = null;
-      for (const candidatePath of expandResolvedPaths(input.projectRoot, resolvedPath)) {
-        const normalizedResolvedPath = normalizeForProject(input.projectRoot, candidatePath);
-        const normalizedTranslatedPath = normalizeForProject(
-          input.projectRoot,
-          input.translatePath(normalizedResolvedPath),
-        );
-        const resolvedExists = input.pathExists(normalizedResolvedPath);
-        const translatedExists = input.pathExists(normalizedTranslatedPath);
-        if (translatedExists && normalizedTranslatedPath !== normalizedResolvedPath) {
-          translatedPath = normalizedTranslatedPath;
-          resolvedBeforeTranslate = normalizedResolvedPath;
-          matchedPath = true;
-          break;
-        }
-        if ((resolvedExists || translatedExists) && !existingFallback) {
-          existingFallback = normalizedTranslatedPath;
-          existingFallbackResolvedBeforeTranslate = normalizedResolvedPath;
-        }
-        if (!translatedPath) translatedPath = normalizedTranslatedPath;
-      }
-      // Save but do not commit yet — suffix-strip (priority 2) gets to run first.
-      if (!matchedPath && existingFallback && !savedFallback) {
-        savedFallback = existingFallback;
-        savedFallbackResolvedBeforeTranslate = existingFallbackResolvedBeforeTranslate;
-      }
-      if (matchedPath) break;
-    }
-    // Priority 2: file exists in the destination file's directory tree.
-    if (!matchedPath) {
-      const destCandidate = resolveByDestinationSuffixStrip(
-        candidate,
-        input.projectRoot,
-        input.destinationFile,
-        input.pathExists,
-      );
-      if (destCandidate) {
-        translatedPath = destCandidate;
-        matchedPath = true;
-      }
-    }
-    // Priority 3: a path was found (no translation needed) but no dest-tree match.
-    if (!matchedPath && savedFallback) {
-      translatedPath = savedFallback;
-      if (savedFallbackResolvedBeforeTranslate) {
-        resolvedBeforeTranslate = savedFallbackResolvedBeforeTranslate;
-      }
-      matchedPath = true;
-    }
-
-    // Priority 4: project-root-relative `.agentsmesh/…` in canonical imports (`destinationFile`
-    // under `.agentsmesh/`) should still relativize when `pathExists` is false mid-import.
-    const destFwd = normalizeSeparators(input.destinationFile);
-    const destInCanonicalMesh =
-      destFwd.includes('/.agentsmesh/') || destFwd.startsWith('.agentsmesh/');
-    if (
-      !matchedPath &&
-      translatedPath &&
-      normalizeSeparators(punctStripped).startsWith('.agentsmesh/') &&
-      destInCanonicalMesh
-    ) {
-      matchedPath = true;
-    }
+    const {
+      translatedPath,
+      resolvedBeforeTranslate: initialResolvedBeforeTranslate,
+      matchedPath,
+    } = resolveLinkTarget({
+      candidate,
+      rawToken: punctStripped,
+      projectRoot: input.projectRoot,
+      sourceFile: input.sourceFile,
+      destinationFile: input.destinationFile,
+      translatePath: input.translatePath,
+      pathExists: input.pathExists,
+    });
+    let resolvedBeforeTranslate = initialResolvedBeforeTranslate;
 
     if (!matchedPath || !translatedPath) {
       if (translatedPath) missing.add(translatedPath);
@@ -222,16 +121,43 @@ export function rewriteFileLinks(input: RewriteFileLinksInput): RewriteFileLinks
       const tokenFwd = normalizeSeparators(punctStripped);
       const tokenReferencesMesh =
         tokenFwd.startsWith('.agentsmesh/') || tokenFwd.includes('/.agentsmesh/');
-      const sourceOutsideMesh =
-        resolvedBeforeTranslate !== null
-          ? !isUnderAgentsMesh(input.projectRoot, resolvedBeforeTranslate)
-          : !tokenReferencesMesh && !isUnderAgentsMesh(input.projectRoot, translatedPath);
-      if (sourceOutsideMesh) {
+      const tokenCanUseGlobalStandard =
+        isRootRelativePathToken(tokenFwd) || isRelativePathToken(tokenFwd);
+      const resolvedIsMesh =
+        resolvedBeforeTranslate !== null &&
+        isUnderAgentsMesh(input.projectRoot, resolvedBeforeTranslate);
+      const translatedIsMesh = isUnderAgentsMesh(input.projectRoot, translatedPath);
+      if (
+        !tokenCanUseGlobalStandard &&
+        !tokenReferencesMesh &&
+        !resolvedIsMesh &&
+        !translatedIsMesh
+      ) {
         return match;
       }
     }
 
-    const forceRelative = isMarkdownLinkDestinationToken(fullContent, offset, candidate);
+    const api = pathApi(input.projectRoot);
+    const destAbsolute = normalizeForProject(input.projectRoot, input.destinationFile);
+    const targetAbsolute = normalizeForProject(input.projectRoot, translatedPath);
+    const destFromRoot = normalizeSeparators(api.relative(input.projectRoot, destAbsolute));
+    const targetFromRoot = normalizeSeparators(api.relative(input.projectRoot, targetAbsolute));
+    const destTop = destFromRoot.split('/').filter(Boolean)[0] ?? '';
+    const targetTop = targetFromRoot.split('/').filter(Boolean)[0] ?? '';
+
+    const tokenIsCanonicalMesh = normalizeSeparators(candidate).startsWith('.agentsmesh/');
+    const preferRelativeProseInSameSurface =
+      !tokenIsCanonicalMesh &&
+      !targetIsDirectory &&
+      destTop.length > 0 &&
+      destTop === targetTop &&
+      destTop.startsWith('.') &&
+      destTop !== '.agentsmesh';
+
+    const forceRelative =
+      preferRelativeProseInSameSurface ||
+      tokenContext.role === 'markdown-link-dest' ||
+      isMarkdownLinkDestinationToken(fullContent, offset, candidate);
     const rewritten = formatLinkPathForDestination(
       input.projectRoot,
       input.destinationFile,
@@ -243,6 +169,8 @@ export function rewriteFileLinks(input: RewriteFileLinksInput): RewriteFileLinks
         pathIsDirectory: input.pathIsDirectory,
         logicalMeshSourceAbsolute: targetIsDirectory ? null : resolvedBeforeTranslate,
         forceRelative,
+        tokenContext,
+        originalToken: candidate,
       },
     );
     if (!rewritten) return match;

@@ -4,11 +4,10 @@
 //
 // Assertions per target:
 //   1. generate() returns at least one file.
-//   2. No generated file content leaks the canonical .agentsmesh/ prefix.
-//   3. If the global layout declares rootInstructionPath, it is emitted.
-//   4. If the layout agentPath is declared null (agent suppression),
+//   2. If the global layout declares rootInstructionPath, it is emitted.
+//   3. If the layout agentPath is declared null (agent suppression),
 //      no agent files surface in the output.
-//   5. Every generated file has a non-empty path and string content.
+//   4. Every generated file has a non-empty path and string content.
 import { describe, expect, it } from 'vitest';
 import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -132,11 +131,6 @@ describe('global-mode structure matrix', () => {
           expect(typeof f.path).toBe('string');
           expect(f.path.length).toBeGreaterThan(0);
           expect(typeof f.content === 'string' || Buffer.isBuffer(f.content)).toBe(true);
-          if (typeof f.content === 'string' && /\.(md|mdx|toml|json|yaml|yml)$/i.test(f.path)) {
-            expect(f.content, `${target} leaked canonical path in ${f.path}`).not.toMatch(
-              /\.agentsmesh\//,
-            );
-          }
         }
 
         const layout = getTargetLayout(target, 'global');

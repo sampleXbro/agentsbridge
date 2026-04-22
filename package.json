@@ -57,7 +57,8 @@
     "matrix:verify": "tsx scripts/render-support-matrix.ts --verify",
     "changeset": "changeset",
     "version": "changeset version",
-    "release": "pnpm build && changeset publish"
+    "release": "pnpm build && changeset publish",
+    "install-global": "pnpm build && pnpm pack && pnpm add -g $(pwd)/agentsmesh-$(node -p 'require(\"./package.json\").version').tgz"
   },
   "keywords": [
     "ai-rules",

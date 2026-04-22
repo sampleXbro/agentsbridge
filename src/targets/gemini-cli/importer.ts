@@ -9,6 +9,7 @@ import { createImportReferenceNormalizer } from '../../core/reference/import-rew
 import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/filesystem/fs.js';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
 import { serializeImportedRuleWithFallback } from '../import/import-metadata.js';
+import { splitEmbeddedRulesToCanonical } from '../import/embedded-rules.js';
 import { importFileDirectory } from '../import/import-orchestrator.js';
 import { mapGeminiCommandFile, mapGeminiRuleFile } from './importer-mappers.js';
 import {
@@ -63,10 +64,20 @@ export async function importFromGemini(projectRoot: string): Promise<ImportResul
   if (rootContent !== null) {
     await mkdirp(rulesDir);
     const destPath = join(rulesDir, '_root.md');
-    const compatNormalized =
+    const compatContent =
       rootSourcePath === compatAgentsRootPath || rootSourcePath === compatInnerRootPath
-        ? normalize(normalizeCodex(rootContent, rootSourcePath, destPath), rootSourcePath, destPath)
-        : normalize(rootContent, rootSourcePath, destPath);
+        ? normalizeCodex(rootContent, rootSourcePath, destPath)
+        : rootContent;
+    const split = await splitEmbeddedRulesToCanonical({
+      content: compatContent,
+      projectRoot,
+      rulesDir: GEMINI_CANONICAL_RULES_DIR,
+      sourcePath: rootSourcePath,
+      fromTool: 'gemini-cli',
+      normalize,
+    });
+    results.push(...split.results);
+    const compatNormalized = normalize(split.rootContent, rootSourcePath, destPath);
     const normalizedRoot = stripProjectRootCanonicalPrefix(
       compatNormalized
         .replace(/\.agents\/skills\//g, '.agentsmesh/skills/')

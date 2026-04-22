@@ -21,6 +21,30 @@ function markdownBracketLabelDuplicatesDestination(
   return dest === labelPathText;
 }
 
+function isMarkdownReferenceDefinitionDestination(
+  fullContent: string,
+  start: number,
+  end: number,
+): boolean {
+  const lineStart = fullContent.lastIndexOf('\n', start - 1) + 1;
+  const prefix = fullContent.slice(lineStart, start);
+  if (!/^\s*\[[^\]\n]+\]:\s*<?\s*$/.test(prefix)) return false;
+  const after = end < fullContent.length ? fullContent[end] : '';
+  return (
+    after === '' ||
+    after === '\n' ||
+    after === '\r' ||
+    after === '>' ||
+    after === ' ' ||
+    after === '\t' ||
+    after === '"' ||
+    after === "'" ||
+    after === ':' ||
+    after === '#' ||
+    after === '?'
+  );
+}
+
 /**
  * Returns the syntactic role of the token at [start, end) within `fullContent`.
  * Used to select the appropriate formatting strategy in `formatLinkPathForDestination`.
@@ -29,12 +53,15 @@ export function getTokenContext(fullContent: string, start: number, end: number)
   const before = start > 0 ? fullContent[start - 1] : '';
   const after = end < fullContent.length ? fullContent[end] : '';
   if (before === '`' && after === '`') return { role: 'inline-code' };
+  if (isMarkdownReferenceDefinitionDestination(fullContent, start, end)) {
+    return { role: 'markdown-link-dest' };
+  }
   if (before === '<' && after === '>') return { role: 'bracketed' };
   if ((before === "'" && after === "'") || (before === '"' && after === '"')) {
     return { role: 'quoted' };
   }
   if (before === '@') return { role: 'at-prefix' };
-  if (before === '(') return { role: 'markdown-link-dest' };
+  if (before === '(' && fullContent[start - 2] === ']') return { role: 'markdown-link-dest' };
   if (before === '[' && after === ']') return { role: 'bracket-label' };
   return { role: 'bare-prose' };
 }
@@ -54,8 +81,10 @@ export function shouldRewritePathToken(
   const { candidate: punctStripped } = stripTrailingPunctuation(matchText);
   const candidate = punctStripped.replace(LINE_NUMBER_SUFFIX, '');
   const normalizedCandidate = normalizeSeparators(candidate);
+  const candidateEnd = start + candidate.length;
   const before = fullContent[start - 1];
   const after = fullContent[end];
+  if (isMarkdownReferenceDefinitionDestination(fullContent, start, candidateEnd)) return true;
   if (
     (before === "'" && after === "'") ||
     (before === '"' && after === '"') ||

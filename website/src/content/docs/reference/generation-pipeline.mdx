@@ -43,6 +43,8 @@ Canonical config
 
 Each generator produces an array of `{path, content}` pairs in the target's native format. For example, the Cursor generator converts rules to `.mdc` format, the Claude Code generator writes `settings.json` for permissions/hooks/MCP.
 
+When a target needs to fold canonical content into a larger instruction file, the generator writes an [AgentsMesh managed block](./managed-embedding/) instead of ad hoc inline text. Managed blocks are the shared marker contract that prevents duplicate appends and lets import restore embedded content.
+
 ### Step 4: Rewrite references
 
 Internal file references are rewritten from canonical paths to target-relative paths:
@@ -54,6 +56,8 @@ Internal file references are rewritten from canonical paths to target-relative p
 ```
 
 This keeps cross-file links valid in each tool's native directory.
+
+Generated-only managed blocks and canonical embedded payloads are protected from rewriting when their contents must stay literal.
 
 ### Step 5: Resolve collisions
 
@@ -90,6 +94,8 @@ Convert tool-native format to an intermediate canonical representation:
 ### Step 3: Read embedded metadata
 
 For projected/embedded features, read the AgentsMesh metadata comments to restore original canonical form. For example, a Codex CLI command embedded as a skill is restored to `commands/*.md` format.
+
+For aggregate instruction files, managed blocks such as `agentsmesh:embedded-rules` are split back into their original canonical files. See [Managed Embedding](./managed-embedding/) for the marker format and round-trip rules.
 
 ### Step 4: Rewrite references
 

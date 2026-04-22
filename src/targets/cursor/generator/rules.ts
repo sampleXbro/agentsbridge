@@ -1,5 +1,6 @@
 import type { CanonicalFiles } from '../../../core/types.js';
 import { serializeFrontmatter } from '../../../utils/text/markdown.js';
+import { appendEmbeddedRulesBlock } from '../../projection/managed-blocks.js';
 import {
   CURSOR_COMPAT_AGENTS,
   CURSOR_DOT_CURSOR_AGENTS,
@@ -50,24 +51,10 @@ export function renderCursorGlobalUserRules(canonical: CanonicalFiles): string {
   const sections: string[] = [];
 
   if (root?.body.trim()) {
-    sections.push(root.body.trim());
+    sections.push(appendEmbeddedRulesBlock(root.body, nonRootRules));
+  } else if (nonRootRules.length > 0) {
+    sections.push(appendEmbeddedRulesBlock('', nonRootRules));
   }
 
-  for (const rule of nonRootRules) {
-    const parts: string[] = [];
-    parts.push(
-      `## ${rule.description || rule.source.split('/').pop()?.replace(/\.md$/, '') || 'Rule'}`,
-    );
-    if (rule.globs.length > 0) {
-      parts.push('');
-      parts.push(`Applies to: ${rule.globs.map((glob) => `\`${glob}\``).join(', ')}`);
-    }
-    if (rule.body.trim()) {
-      parts.push('');
-      parts.push(rule.body.trim());
-    }
-    sections.push(parts.join('\n'));
-  }
-
-  return sections.filter(Boolean).join('\n\n---\n\n');
+  return sections.filter(Boolean).join('\n\n');
 }

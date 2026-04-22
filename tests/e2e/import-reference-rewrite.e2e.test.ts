@@ -121,23 +121,40 @@ describe('import reference normalization', () => {
       // `.agentsmesh/rules/typescript.md` file from the root context alone.
       const mdSelfName = ruleName;
       const escapedRule = mdSelfName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const ruleMdSelf = new RegExp(`\\[(?:\\./)?${escapedRule}\\]\\((?:\\./)?${escapedRule}\\)`);
+      const ruleMdSelf =
+        target === 'gemini-cli'
+          ? /\[(?:\.agentsmesh\/rules\/typescript\.md|(?:\.\/)?(?:typescript\.md|GEMINI\.md))\]\((?:\.\/)?GEMINI\.md\)/
+          : new RegExp(
+              `\\[(?:\\.agentsmesh/rules/typescript\\.md|(?:\\./)?${escapedRule})\\]\\((?:\\./)?${escapedRule}\\)`,
+            );
       expect(rootContent).toContain(mdSelfName);
-      expect(rootContent).toContain('../commands/review.md');
-      expect(rootContent).toMatch(/agents[/\\]code-reviewer\.md/);
-      expect(rootContent).toContain('../skills/api-generator/SKILL.md');
-      expect(rootContent).toContain('../skills/api-generator/template.ts');
-      expect(rootContent).toMatch(ruleMdSelf);
-      expect(rootContent).toContain(
-        '[../skills/api-generator/references/route-checklist.md](../skills/api-generator/references/route-checklist.md)',
-      );
+      expect(rootContent).toContain('.agentsmesh/commands/review.md');
+      expect(rootContent).toContain('.agentsmesh/agents/code-reviewer.md');
       expect(
-        rootContent.includes('@../commands/review.md') ||
+        rootContent.includes('.agentsmesh/skills/api-generator/SKILL.md') ||
+          rootContent.includes('../skills/api-generator/SKILL.md'),
+      ).toBe(true);
+      expect(
+        rootContent.includes('.agentsmesh/skills/api-generator/template.ts') ||
+          rootContent.includes('../skills/api-generator/template.ts'),
+      ).toBe(true);
+      expect(rootContent).toMatch(ruleMdSelf);
+      expect(
+        rootContent.includes(
+          '[.agentsmesh/skills/api-generator/references/route-checklist.md](../skills/api-generator/references/route-checklist.md)',
+        ) ||
+          rootContent.includes(
+            '[../skills/api-generator/references/route-checklist.md](../skills/api-generator/references/route-checklist.md)',
+          ),
+      ).toBe(true);
+      expect(
+        rootContent.includes('@.agentsmesh/commands/review.md') ||
+          rootContent.includes('@../commands/review.md') ||
           rootContent.includes('@./commands/review.md') ||
           rootContent.includes('@./prompts/review.prompt.md') ||
           rootContent.includes('@../prompts/review.prompt.md'),
       ).toBe(true);
-      expect(rootContent).toMatch(/"[^"]*agents[^"]*code-reviewer\.md"/);
+      expect(rootContent).toContain('".agentsmesh/agents/code-reviewer.md"');
       expect(
         rootContent.includes('(../skills/api-generator/SKILL.md)') ||
           rootContent.includes('(./skills/api-generator/SKILL.md)') ||
@@ -163,8 +180,12 @@ describe('import reference normalization', () => {
           rootContent.includes('skills/api-generator/references/.'),
       ).toBe(true);
       expect(rootContent).toContain('✓ / ✗');
-      expect(rootContent).toContain(`${mdSelfName}:42`);
-      expect(rootContent).toContain('`docs/some-doc.md`');
+      expect(
+        rootContent.includes(`${mdSelfName}:42`) || rootContent.includes('typescript.md:42'),
+      ).toBe(true);
+      expect(
+        rootContent.includes('`/docs/some-doc.md`') || rootContent.includes('`docs/some-doc.md`'),
+      ).toBe(true);
       expect(rootContent).toContain('```\n../../docs/some-doc.md\n```');
       expect(rootContent).toContain('~~~\n../../docs/some-doc.md\n~~~');
       assertExternalRefs(rootContent);
@@ -175,16 +196,19 @@ describe('import reference normalization', () => {
       );
       assertPortable(rootContent, targetPrefix[target]);
 
-      expect(commandContent).toContain('../skills/api-generator/template.ts');
+      expect(commandContent).toContain('.agentsmesh/skills/api-generator/template.ts');
       expect(commandContent).toContain(
-        '[../skills/api-generator/template.ts](../skills/api-generator/template.ts)',
+        '[.agentsmesh/skills/api-generator/template.ts](../skills/api-generator/template.ts)',
       );
       expect(
-        commandContent.includes('@../skills/api-generator/SKILL.md') ||
+        commandContent.includes('@.agentsmesh/skills/api-generator/SKILL.md') ||
+          commandContent.includes('@../skills/api-generator/SKILL.md') ||
           commandContent.includes('@../../.cline/skills/api-generator/SKILL.md') ||
           commandContent.includes('@../api-generator/SKILL.md'),
       ).toBe(true);
-      expect(commandContent).toContain('"../skills/api-generator/references/route-checklist.md"');
+      expect(commandContent).toContain(
+        '".agentsmesh/skills/api-generator/references/route-checklist.md"',
+      );
       expect(
         commandContent.includes('(../skills/api-generator/references/)') ||
           commandContent.includes('(./skills/api-generator/references/)') ||
@@ -202,11 +226,12 @@ describe('import reference normalization', () => {
 
       const cmdRel = '../commands/review.md';
       expect(agentContent).toContain(cmdRel);
-      expect(agentContent).toContain(`[${cmdRel}](${cmdRel})`);
+      expect(agentContent).toContain(`[.agentsmesh/commands/review.md](${cmdRel})`);
       const structuredAtOk =
         target === 'cline'
           ? /Structured:[^\n]*@\S+/.test(agentContent)
-          : agentContent.includes(`@${cmdRel}`) ||
+          : agentContent.includes('@.agentsmesh/commands/review.md') ||
+            agentContent.includes(`@${cmdRel}`) ||
             /@\.\.\/prompts\/review\.prompt\.md/.test(agentContent) ||
             /@\.\.\/commands\/review\.toml/.test(agentContent) ||
             /@\.\.\/\.\.\/workflows\/review\.md/.test(agentContent) ||
@@ -217,8 +242,8 @@ describe('import reference normalization', () => {
             /@\.\.\/\.\.\/\.cline\//.test(agentContent) ||
             /@\.clinerules\//.test(agentContent);
       expect(structuredAtOk).toBe(true);
-      expect(agentContent).toContain(`"${cmdRel}"`);
-      expect(agentContent).toContain(`(${cmdRel})`);
+      expect(agentContent).toContain('".agentsmesh/commands/review.md"');
+      expect(agentContent).toContain('(.agentsmesh/commands/review.md)');
       expect(agentContent).toContain('✓ / ✗');
       assertDocs(agentContent);
       expect(agentContent).not.toContain(join(dir, '.agentsmesh', 'commands', 'review.md'));
@@ -227,16 +252,18 @@ describe('import reference normalization', () => {
       const ruleFromSkill = target === 'gemini-cli' ? 'GEMINI.md' : '../../rules/typescript.md';
       const ruleMarkdownFromSkill =
         target === 'gemini-cli'
-          ? `[GEMINI.md](../../../GEMINI.md)`
-          : `[${ruleFromSkill}](${ruleFromSkill})`;
+          ? `[.agentsmesh/rules/typescript.md](../../../GEMINI.md)`
+          : `[.agentsmesh/rules/typescript.md](${ruleFromSkill})`;
       expect(skillContent).toContain(ruleFromSkill);
       expect(skillContent).toContain(ruleMarkdownFromSkill);
       expect(
-        skillContent.includes(`@${ruleFromSkill}`) ||
+        skillContent.includes('@.agentsmesh/rules/typescript.md') ||
+          skillContent.includes(`@${ruleFromSkill}`) ||
           /@\.\.\/.*(?:typescript|GEMINI|instructions)/i.test(skillContent),
       ).toBe(true);
       expect(
-        skillContent.includes('"references/"') ||
+        skillContent.includes('".agentsmesh/skills/api-generator/references/"') ||
+          skillContent.includes('"references/"') ||
           skillContent.includes('"./references/"') ||
           skillContent.includes('"skills/api-generator/references/"'),
       ).toBe(true);
@@ -256,11 +283,14 @@ describe('import reference normalization', () => {
       assertPortable(skillContent, targetPrefix[target]);
 
       expect(templateContent).toContain('../../commands/review.md');
-      expect(templateContent).toContain('[../../commands/review.md](../../commands/review.md)');
+      expect(templateContent).toContain(
+        '[.agentsmesh/commands/review.md](../../commands/review.md)',
+      );
       const templateAtOk =
         target === 'cline'
           ? /\/\/ Structured: @\S+/.test(templateContent)
-          : templateContent.includes('@../../commands/review.md') ||
+          : templateContent.includes('@.agentsmesh/commands/review.md') ||
+            templateContent.includes('@../../commands/review.md') ||
             templateContent.includes('@../../prompts/review.prompt.md') ||
             templateContent.includes('@../../commands/review.toml') ||
             templateContent.includes('@../../workflows/review.md') ||
@@ -314,9 +344,9 @@ describe('import reference normalization — antigravity', () => {
     const skillContent = readFileSync(skillPath, 'utf-8');
 
     expect(rootContent).toContain('typescript.md');
-    expect(rootContent).toContain('../commands/review.md');
-    expect(rootContent).toMatch(/agents[/\\]code-reviewer\.md/);
-    expect(rootContent).toContain('../skills/api-generator/SKILL.md');
+    expect(rootContent).toContain('.agentsmesh/commands/review.md');
+    expect(rootContent).toContain('.agentsmesh/agents/code-reviewer.md');
+    expect(rootContent).toContain('.agentsmesh/skills/api-generator/SKILL.md');
     expect(rootContent).not.toContain('.agents/rules/');
     expect(rootContent).not.toContain('.agents/skills/');
     expect(rootContent).not.toContain('.agents/workflows/');
@@ -324,7 +354,7 @@ describe('import reference normalization — antigravity', () => {
     assertExternalRefs(rootContent);
     assertDocs(rootContent);
 
-    expect(commandContent).toContain('../skills/api-generator/SKILL.md');
+    expect(commandContent).toContain('.agentsmesh/skills/api-generator/SKILL.md');
     expect(commandContent).not.toContain('.agents/');
 
     expect(skillContent).toContain('../../rules/typescript.md');

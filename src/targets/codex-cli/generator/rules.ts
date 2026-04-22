@@ -1,5 +1,6 @@
 import type { CanonicalFiles } from '../../../core/types.js';
 import { basename } from 'node:path';
+import { appendEmbeddedRulesBlock } from '../../projection/managed-blocks.js';
 import { AGENTS_MD, CODEX_RULES_DIR } from '../constants.js';
 import {
   appendCodexRuleIndex,
@@ -74,20 +75,5 @@ export function renderCodexGlobalInstructions(canonical: CanonicalFiles): string
     return rule.targets.length === 0 || rule.targets.includes('codex-cli');
   });
 
-  const sections: string[] = [];
-  if (root?.body.trim()) {
-    sections.push(root.body.trim());
-  }
-
-  for (const rule of nonRootRules) {
-    const parts: string[] = [];
-    if (rule.description) {
-      parts.push(`## ${rule.description}`);
-      parts.push('');
-    }
-    parts.push(rule.body.trim());
-    sections.push(parts.filter(Boolean).join('\n'));
-  }
-
-  return sections.filter(Boolean).join('\n\n---\n\n');
+  return appendEmbeddedRulesBlock(root?.body.trim() ?? '', nonRootRules);
 }

@@ -370,6 +370,39 @@ describe('importFromCodex: global scope', () => {
     expect(globalResults.some((r) => r.toPath === '.agentsmesh/rules/packages-api.md')).toBe(false);
     expect(globalResults.some((r) => r.toPath === '.agentsmesh/rules/_root.md')).toBe(true);
   });
+
+  it('splits managed embedded rules from global AGENTS.md', async () => {
+    mkdirSync(join(TEST_DIR, '.codex'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.codex', 'AGENTS.md'),
+      [
+        '# Codex home root',
+        '',
+        'Root guidance.',
+        '',
+        '<!-- agentsmesh:embedded-rules:start -->',
+        '<!-- agentsmesh:embedded-rule:start {"source":"rules/typescript.md","description":"TS rules","globs":["src/**/*.ts"],"targets":[]} -->',
+        '## TS rules',
+        '',
+        'Use strict TS.',
+        '<!-- agentsmesh:embedded-rule:end -->',
+        '<!-- agentsmesh:embedded-rules:end -->',
+      ].join('\n'),
+    );
+
+    const results = await importFromCodex(TEST_DIR, { scope: 'global' });
+
+    expect(results.some((r) => r.toPath === '.agentsmesh/rules/_root.md')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/rules/typescript.md')).toBe(true);
+    const root = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
+    expect(root).toContain('Root guidance.');
+    expect(root).not.toContain('Use strict TS.');
+    const ts = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'), 'utf-8');
+    expect(ts).toContain('description: TS rules');
+    expect(ts).toContain('src/**/*.ts');
+    expect(ts).toContain('Use strict TS.');
+    expect(ts).not.toContain('## TS rules');
+  });
 });
 
 describe('importFromCodex: MCP', () => {

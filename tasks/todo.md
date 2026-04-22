@@ -1,3 +1,113 @@
+# Current Task: Managed Embedding Documentation
+
+Goal: document one AgentsMesh-managed embedding contract for all targets and publish it in the website docs.
+
+Plan:
+- [x] Read lessons, docs skill, current docs layout, and existing generation/rules docs.
+- [x] Add a repo architecture document that defines the managed embedding lifecycle and marker rules.
+- [x] Add a website reference page with the same user-facing contract and examples.
+- [x] Cross-link the new page from generation pipeline/rules docs and the website sidebar.
+- [x] Run docs-focused verification and post-feature QA.
+
+---
+
+# Current Task: Embedded Additional Rules Audit
+
+Goal: make aggregate additional-rule embedding consistent across targets, preserve managed marker metadata during reference rewriting, and prevent old inline rule sections from reappearing in generated artifacts.
+
+Plan:
+- [x] Read lessons and architecture notes; inspect current generated artifacts and Cursor/Gemini aggregate renderers.
+- [x] Add failing tests for embedded marker source preservation, separator-free embedded blocks, and Cursor aggregate output using managed embedded rules.
+- [x] Protect managed embedded-rule blocks from reference rewriting and remove the stray separator from rule rendering.
+- [x] Update Cursor aggregate generation/import fallback to use the shared embedded-rule block path instead of the old “Applies to” inline format.
+- [x] Run focused tests, lint/typecheck/build as appropriate, then run post-feature QA.
+
+---
+
+# Current Task: Managed Root Contract and Embedded Rule Blocks
+
+Goal: wrap AgentsMesh-owned root contract text and aggregate non-root rule projections in managed markers so generated links inside owned text stay stable and import/generate round-trips do not duplicate sections.
+
+Plan:
+- [x] Read lessons, architecture review, and current root decoration/import code.
+- [x] Add failing tests for managed root contract markers, protected contract link text, and embedded non-root rule round-trip import.
+- [x] Implement shared managed-block helpers for root contract and embedded rules without target-specific parsing scattered through importers.
+- [x] Update aggregate rule generators/renderers to emit embedded-rule blocks for non-root rules where they are folded into root instruction files.
+- [x] Update import paths to split embedded rules back to canonical files and strip generated-only contract text.
+- [x] Run focused tests, lint/typecheck/build as appropriate, then post-feature QA.
+
+---
+
+# Current Task: Link Rebase Demo Regression Test
+
+Goal: fix the remaining demo-skill link rebasing issues and add a sandboxed generate test that checks every generated Markdown link in both project and global mode.
+
+Plan:
+- [x] Add a failing generate-level regression test that builds the demo skill in a temp project/home for project and global scope.
+- [x] Fix reference-style Markdown destination rebasing so generated links match inline Markdown behavior.
+- [x] Restore any gate-blocking generated-contract drift uncovered by the test run.
+- [x] Run focused tests, lint/typecheck/build as appropriate, and project/global generation checks.
+- [x] Run `post-feature-qa` and record any new lesson from failures.
+
+---
+
+# Current Task: Demo Skill for Link Rebasing Edge Cases
+
+Goal: add a canonical demo skill that intentionally contains link-rebasing edge cases, generate project-mode artifacts, and run a global-mode check in an isolated home so converted links can be inspected without touching real global config.
+
+Plan:
+- [x] Create `.agentsmesh/skills/link-rebase-edge-cases/` with `SKILL.md` plus supporting files that exercise canonical, relative, target-native, markdown, reference-style, URI, glob, line-suffix, and anchor links.
+- [x] Generate project-mode artifacts from the real repo and inspect representative target outputs.
+- [x] Generate global-mode artifacts from an isolated temporary `HOME` seeded with the same canonical skill and inspect representative global outputs.
+- [x] Run focused validation and `post-feature-qa`; record any failure lessons. Project and global generation passed; isolated global `--check`, Claude project `--check`, focused link-rebaser test, and lint passed. Full project `generate --check` remains blocked by pre-existing shared `AGENTS.md` root-instruction drift unrelated to the demo skill.
+
+---
+
+# Current Task: Global `.agentsmesh` Link Rebase Parity
+
+Goal: ensure `scope: 'global'` uses the same `.agentsmesh` link rebasing behavior as project mode for canonical files, while keeping global mode's documented behavior of leaving non-mesh links alone.
+
+Plan:
+- [x] Reproduce/verify the current mismatch with focused link-rebaser and global reference rewrite tests.
+- [x] Audit the shared resolver/formatter paths that branch on `scope: 'global'`.
+- [x] Add or tighten failing tests first for `.agentsmesh` project/global parity.
+- [x] Implement the smallest shared fix without target-specific branches.
+- [ ] Run focused tests, lint/typecheck/build as appropriate, then `post-feature-qa`. Focused tests, lint, typecheck, build, and targeted e2e passed; full `pnpm test` is blocked by pre-existing dirty root-instruction paragraph failures in `tests/unit/core/engine.test.ts`.
+
+---
+
+# Global Target Link Rebaser Fix Plan
+
+Goal: fix global and project reference rewriting so target-native prose links like `.codex/skills/...` rewrite to the currently generated target surface, and non-markdown relative prose links normalize to the library's accepted standard links while markdown destinations stay clickable relative links.
+
+Plan:
+- [x] Reproduce the current behavior with focused failing unit tests for target-native prose links and relative prose links in project/global scopes.
+- [x] Audit the resolver and artifact maps to find why project suffix-strip behavior is blocked in global mode.
+- [x] Implement the smallest shared rebaser change, keeping target-specific path knowledge in descriptors/maps.
+- [x] Update strict generate/import/e2e expectations where the standard-link contract changes.
+- [x] Run focused reference/global tests, then lint, typecheck, build, full tests, and focused e2e. Focused tests, lint, typecheck, build, full tests, full e2e, and final focused e2e are passing.
+- [x] Run `post-feature-qa` and record lessons for any failure signal.
+
+---
+
+# Global Link Rebaser Alignment Plan
+
+Goal: make global-mode reference rewriting match `docs/architecture/link-rebaser-vision.md`, especially the `scope: 'global'` compatibility clause: non-mesh links stay unchanged and global behavior still preserves prose anchors.
+
+Plan:
+- [x] Read `tasks/lessons.md`, `docs/architecture/link-rebaser-vision.md`, and global-mode rebaser/generation tests.
+- [x] Audit global generate/import reference behavior for prose anchors, markdown link destinations, and non-mesh links.
+- [x] Add failing tests for global prose `.agentsmesh/` preservation and global markdown destination-relative rewriting.
+- [x] Update the shared formatter so global scope applies anchor preservation while retaining the existing non-mesh skip behavior.
+- [x] Update global unit expectations to distinguish prose references from markdown links.
+- [x] Add import-side global markdown normalization coverage and fix the global non-mesh skip if needed.
+- [x] Update global e2e expectations to distinguish prose references from markdown links.
+- [x] Run focused global/reference tests.
+- [x] Run lint, typecheck, build, full tests, and e2e as appropriate.
+- [x] Run `post-feature-qa` and record lessons for any failure signal.
+
+---
+
 # Round-Trip Test Repair Plan
 
 Goal: make all tests pass, with project-mode and global-mode round trips matching the structure documented in `docs/agent-structures/`.

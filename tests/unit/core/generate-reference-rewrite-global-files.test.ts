@@ -65,7 +65,7 @@ function canonical(): CanonicalFiles {
 }
 
 describe('global generated file reference rewriting', () => {
-  it('rewrites canonical skill file references in Claude global outputs', async () => {
+  it('preserves canonical skill file references in Claude global prose output', async () => {
     const results = await generate({
       config: config(),
       canonical: canonical(),
@@ -77,10 +77,34 @@ describe('global generated file reference rewriting', () => {
     const skill =
       results.find((result) => result.path === '.claude/skills/api-gen/SKILL.md')?.content ?? '';
 
-    expect(root).toContain('./skills/api-gen/SKILL.md');
-    expect(root).toContain('./skills/api-gen/references/checklist.md');
-    expect(root).not.toContain('.agentsmesh/skills/api-gen/');
-    expect(skill).toContain('references/checklist.md');
-    expect(skill).not.toContain('.agentsmesh/skills/api-gen/');
+    expect(root).toContain('`.agentsmesh/skills/api-gen/SKILL.md`');
+    expect(root).toContain('`.agentsmesh/skills/api-gen/references/checklist.md`');
+    expect(skill).toContain('`.agentsmesh/skills/api-gen/references/checklist.md`');
+  });
+
+  it('rewrites canonical markdown destinations in Claude global outputs', async () => {
+    const linked = canonical();
+    linked.rules[0] = {
+      ...linked.rules[0]!,
+      body: 'See [skill](.agentsmesh/skills/api-gen/SKILL.md).',
+    };
+    linked.skills[0] = {
+      ...linked.skills[0]!,
+      body: 'Template at [checklist](.agentsmesh/skills/api-gen/references/checklist.md).',
+    };
+
+    const results = await generate({
+      config: config(),
+      canonical: linked,
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const root = results.find((result) => result.path === '.claude/CLAUDE.md')?.content ?? '';
+    const skill =
+      results.find((result) => result.path === '.claude/skills/api-gen/SKILL.md')?.content ?? '';
+
+    expect(root).toContain('[skill](./skills/api-gen/SKILL.md)');
+    expect(skill).toContain('[checklist](./references/checklist.md)');
   });
 });

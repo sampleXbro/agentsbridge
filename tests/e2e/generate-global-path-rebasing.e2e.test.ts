@@ -232,6 +232,8 @@ root: true
 # Root
 See skill: .agentsmesh/skills/api-gen/SKILL.md
 Reference: .agentsmesh/skills/api-gen/references/template.ts
+Open [skill](.agentsmesh/skills/api-gen/SKILL.md)
+Open [template](.agentsmesh/skills/api-gen/references/template.ts)
 `,
       );
       mkdirSync(join(homeDir, '.agentsmesh', 'skills', 'api-gen', 'references'), {
@@ -244,6 +246,7 @@ description: API generation
 ---
 # API Gen
 Template: .agentsmesh/skills/api-gen/references/template.ts
+Open [template](.agentsmesh/skills/api-gen/references/template.ts)
 `,
       );
       writeFileSync(
@@ -252,7 +255,7 @@ Template: .agentsmesh/skills/api-gen/references/template.ts
       );
     });
 
-    it('rewrites canonical references to global paths in root file', async () => {
+    it('preserves prose anchors and rewrites markdown destinations in root file', async () => {
       const r = await runCli('generate --global', projectDir);
       expect(r.exitCode).toBe(0);
 
@@ -260,13 +263,13 @@ Template: .agentsmesh/skills/api-gen/references/template.ts
       fileExists(claudeMd);
       const content = readFileSync(claudeMd, 'utf-8');
 
-      // References should be rewritten to relative paths from ~/.claude/
-      expect(content).toContain('skills/api-gen/SKILL.md');
-      expect(content).toContain('skills/api-gen/references/template.ts');
-      expect(content).not.toContain('.agentsmesh/');
+      expect(content).toContain('See skill: .agentsmesh/skills/api-gen/SKILL.md');
+      expect(content).toContain('Reference: .agentsmesh/skills/api-gen/references/template.ts');
+      expect(content).toContain('[skill](./skills/api-gen/SKILL.md)');
+      expect(content).toContain('[template](./skills/api-gen/references/template.ts)');
     });
 
-    it('rewrites canonical references to global paths in skill file', async () => {
+    it('preserves prose anchors and rewrites markdown destinations in skill file', async () => {
       const r = await runCli('generate --global', projectDir);
       expect(r.exitCode).toBe(0);
 
@@ -274,9 +277,8 @@ Template: .agentsmesh/skills/api-gen/references/template.ts
       fileExists(skillMd);
       const content = readFileSync(skillMd, 'utf-8');
 
-      // Reference should be rewritten to relative path from skill directory
-      expect(content).toContain('references/template.ts');
-      expect(content).not.toContain('.agentsmesh/');
+      expect(content).toContain('Template: .agentsmesh/skills/api-gen/references/template.ts');
+      expect(content).toContain('[template](./references/template.ts)');
     });
   });
 

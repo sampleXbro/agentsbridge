@@ -8,7 +8,6 @@ import {
   exists,
 } from '../../utils/filesystem/fs.js';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
-import { serializeImportedRuleWithFallback } from '../import/import-metadata.js';
 import { importFileDirectory } from '../import/import-orchestrator.js';
 import {
   CURSOR_GLOBAL_USER_RULES,
@@ -25,6 +24,7 @@ import {
   CURSOR_HOOKS,
   CURSOR_IGNORE,
 } from './constants.js';
+import { importCursorRootFile } from './import-root-helpers.js';
 import { mapCursorAgentFile, mapCursorCommandFile, mapCursorRuleFile } from './importer-mappers.js';
 
 export const CURSOR_TARGET = 'cursor';
@@ -93,21 +93,13 @@ export async function importGlobalUserRules(
   const srcPath = join(projectRoot, CURSOR_GLOBAL_USER_RULES);
   const raw = await readFileSafe(srcPath);
   if (raw === null || raw.trim() === '') return false;
-  const destDir = join(projectRoot, CURSOR_CANONICAL_RULES_DIR);
-  await mkdirp(destDir);
-  const destPath = join(destDir, '_root.md');
-  const normalized = normalize(raw.trim(), srcPath, destPath);
-  const { frontmatter, body } = parseFrontmatter(normalized);
-  const outFm = frontmatter.root === true ? frontmatter : { ...frontmatter, root: true };
-  const outContent = await serializeImportedRuleWithFallback(destPath, outFm, body);
-  await writeFileAtomic(destPath, outContent);
-  results.push({
-    fromTool: CURSOR_TARGET,
-    fromPath: srcPath,
-    toPath: `${CURSOR_CANONICAL_RULES_DIR}/_root.md`,
-    feature: 'rules',
+  return importCursorRootFile({
+    projectRoot,
+    results,
+    sourcePath: srcPath,
+    content: raw.trim(),
+    normalize,
   });
-  return true;
 }
 
 export async function importGlobalDotCursorAgents(
@@ -118,21 +110,13 @@ export async function importGlobalDotCursorAgents(
   const srcPath = join(projectRoot, CURSOR_DOT_CURSOR_AGENTS);
   const raw = await readFileSafe(srcPath);
   if (raw === null || raw.trim() === '') return false;
-  const destDir = join(projectRoot, CURSOR_CANONICAL_RULES_DIR);
-  await mkdirp(destDir);
-  const destPath = join(destDir, '_root.md');
-  const normalized = normalize(raw.trim(), srcPath, destPath);
-  const { frontmatter, body } = parseFrontmatter(normalized);
-  const outFm = frontmatter.root === true ? frontmatter : { ...frontmatter, root: true };
-  const outContent = await serializeImportedRuleWithFallback(destPath, outFm, body);
-  await writeFileAtomic(destPath, outContent);
-  results.push({
-    fromTool: CURSOR_TARGET,
-    fromPath: srcPath,
-    toPath: `${CURSOR_CANONICAL_RULES_DIR}/_root.md`,
-    feature: 'rules',
+  return importCursorRootFile({
+    projectRoot,
+    results,
+    sourcePath: srcPath,
+    content: raw.trim(),
+    normalize,
   });
-  return true;
 }
 
 export async function importGlobalMcp(projectRoot: string, results: ImportResult[]): Promise<void> {

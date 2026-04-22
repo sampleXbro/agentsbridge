@@ -28,11 +28,11 @@ const EMPTY_README = `# Fixture
 const EMPTY_MDX = `---
 title: Fixture
 ---
-<!-- agentsmesh:support-matrix:project -->
-<!-- /agentsmesh:support-matrix:project -->
+{/* agentsmesh:support-matrix:project:start */}
+{/* agentsmesh:support-matrix:project:end */}
 
-<!-- agentsmesh:support-matrix:global -->
-<!-- /agentsmesh:support-matrix:global -->
+{/* agentsmesh:support-matrix:global:start */}
+{/* agentsmesh:support-matrix:global:end */}
 `;
 
 let tmpRoot: string;
@@ -121,8 +121,12 @@ describe('matrix codegen', () => {
 });
 
 function extractBlock(text: string, kind: 'project' | 'global'): string {
-  const start = `<!-- agentsmesh:support-matrix:${kind} -->`;
-  const end = `<!-- /agentsmesh:support-matrix:${kind} -->`;
+  const htmlStart = `<!-- agentsmesh:support-matrix:${kind} -->`;
+  const htmlEnd = `<!-- /agentsmesh:support-matrix:${kind} -->`;
+  const mdxStart = `{/* agentsmesh:support-matrix:${kind}:start */}`;
+  const mdxEnd = `{/* agentsmesh:support-matrix:${kind}:end */}`;
+  const start = text.includes(htmlStart) ? htmlStart : mdxStart;
+  const end = text.includes(htmlEnd) ? htmlEnd : mdxEnd;
   const a = text.indexOf(start);
   const b = text.indexOf(end);
   if (a < 0 || b < 0) throw new Error(`markers missing for ${kind}`);

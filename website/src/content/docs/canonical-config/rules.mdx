@@ -85,6 +85,8 @@ Always run `pnpm typecheck` before committing.
 
 Rules are mapped to each tool's native format during generation. See the **Rules** row in the [supported tools matrix](../reference/supported-tools/) for per-target support levels and the [generate output locations](../cli/generate/#output-locations) for target directory mappings.
 
+Some targets fold additional rules into a root or aggregate instruction file. In those cases AgentsMesh wraps each embedded rule in a [managed embedding block](../reference/managed-embedding/) so repeated generation does not append duplicates and import can restore the rule to `.agentsmesh/rules/*.md`.
+
 ## File naming
 
 Rule filenames become the rule identifier in tool menus. Use kebab-case descriptive names:

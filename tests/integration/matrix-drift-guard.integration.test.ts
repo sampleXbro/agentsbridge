@@ -46,8 +46,13 @@ function runVerify(root: string): { status: number; stderr: string; stdout: stri
 
 function injectDrift(filePath: string, marker: string): void {
   const content = readFileSync(filePath, 'utf-8');
-  const start = `<!-- agentsmesh:support-matrix:${marker} -->`;
-  const end = `<!-- /agentsmesh:support-matrix:${marker} -->`;
+  const isMdx = filePath.endsWith('.mdx');
+  const start = isMdx
+    ? `{/* agentsmesh:support-matrix:${marker}:start */}`
+    : `<!-- agentsmesh:support-matrix:${marker} -->`;
+  const end = isMdx
+    ? `{/* agentsmesh:support-matrix:${marker}:end */}`
+    : `<!-- /agentsmesh:support-matrix:${marker} -->`;
   const a = content.indexOf(start);
   const b = content.indexOf(end);
   if (a < 0 || b < 0) throw new Error(`markers missing for ${marker} in ${filePath}`);

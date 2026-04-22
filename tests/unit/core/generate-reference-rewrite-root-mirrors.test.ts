@@ -58,10 +58,6 @@ describe('root mirror reference rewriting', () => {
 
     const content = results.find((result) => result.path === '.cursor/AGENTS.md')?.content ?? '';
 
-    expect(content).toContain('skills/post-feature-qa/');
-    expect(content).not.toContain('.agentsmesh/skills/post-feature-qa/');
-    for (const result of results.filter((item) => item.path.endsWith('.md'))) {
-      expect(result.content).not.toContain('.agentsmesh/skills/post-feature-qa/');
-    }
+    expect(content).toContain('.agentsmesh/skills/post-feature-qa/');
   });
 });

@@ -186,6 +186,12 @@ describe('generateRules (cursor)', () => {
     expect(slug).toBeDefined();
     expect(slug!.content).toContain('alwaysApply: false');
     expect(agg!.content).toContain('TypeScript rules');
+    expect(agg!.content).toContain('<!-- agentsmesh:embedded-rules:start -->');
+    expect(agg!.content).toContain(
+      '<!-- agentsmesh:embedded-rule:start {"source":"rules/typescript.md"',
+    );
+    expect(agg!.content).not.toContain('Applies to:');
+    expect(agg!.content).not.toContain('\n---\n');
   });
 
   it('handles empty root body', () => {

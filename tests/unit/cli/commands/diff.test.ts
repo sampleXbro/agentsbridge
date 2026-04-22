@@ -77,10 +77,7 @@ describe('runDiff', () => {
     // Write exact content that generator would produce; use claude-code only
     mkdirSync(join(TEST_DIR, '.claude'), { recursive: true });
     const onDisk = appendAgentsmeshRootInstructionParagraph('# Rules\n- Use TypeScript');
-    writeFileSync(
-      join(TEST_DIR, '.claude', 'CLAUDE.md'),
-      onDisk.replace('`rules/_root.md`', '`./CLAUDE.md`'),
-    );
+    writeFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), onDisk);
 
     const logs: string[] = [];
     vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {

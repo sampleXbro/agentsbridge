@@ -55,10 +55,8 @@ function assertRewritten(content: string, refs: Record<string, string>, dir: str
   ).toBe(true);
   // `template.ts` matrix appendix is `//` comments only — not link-delimited; skip canonical-path prose checks.
   if (!content.includes('// Plain:')) {
-    expect(prose).not.toContain('.agentsmesh/');
     expect(prose).not.toContain('.agentsmesh\\');
-    // Canonical `../../docs/…` may remain in the matrix fixture prose; generated links use
-    // destination-relative `../docs/…` or `./…` from tool roots — both are acceptable.
+    // Prose project-root references use explicit `/docs/...`; fenced blocks stay unchanged.
     expect(prose).not.toContain('..\\..\\docs\\some-doc.md');
     expect(prose).not.toContain(join(dir, '.agentsmesh'));
   }
@@ -89,6 +87,7 @@ function expectToolPathOrDotRelative(content: string, ref: string): void {
   }
   for (let n = 1; n <= Math.min(4, parts.length); n++) {
     const tail = parts.slice(-n).join('/');
+    variants.add(tail);
     variants.add(`./${tail}`);
     variants.add(`../${tail}`);
   }
@@ -165,6 +164,7 @@ function expectMarkdownSelfLink(content: string, ref: string): void {
 
 function expectAngleTemplate(content: string, templateRef: string): void {
   const variants = new Set<string>([templateRef]);
+  variants.add('.agentsmesh/skills/api-generator/template.ts');
   if (templateRef.startsWith('.')) {
     for (const d of deepRelativeToolPaths(templateRef)) {
       variants.add(d);
@@ -194,8 +194,7 @@ function expectAngleTemplate(content: string, templateRef: string): void {
 }
 
 function assertCodeProtection(content: string, _refs: Record<string, string>): void {
-  // Inline docs path is destination-relative (e.g. `../docs/some-doc.md` from `.claude/`), not repo-root `docs/...`.
-  expect(content).toMatch(/`(?:\.\.\/)+docs\/some-doc\.md`|`docs\/some-doc\.md`/);
+  expect(content).toMatch(/`\/docs\/some-doc\.md`|`docs\/some-doc\.md`/);
   expect(content).toContain('```\n../../docs/some-doc.md\n```');
   expect(content).toContain('~~~\n../../docs/some-doc.md\n~~~');
   expect(content).toMatch(/Line ref:[^\n]*:42/);
@@ -231,11 +230,17 @@ describe('generate reference rewrite matrix', () => {
       expectToolPathOrDotRelative(content, refs.checklist);
       expectMarkdownSelfLink(content, refs.rule);
       const cmdRest = refs.command.replace(/^\.[^/]+\//, '');
-      const cmdVariants = [refs.command, `./${cmdRest}`, `../${cmdRest}`];
+      const cmdVariants = [
+        refs.command,
+        `./${cmdRest}`,
+        `../${cmdRest}`,
+        '.agentsmesh/commands/review.md',
+      ];
       expect(cmdVariants.some((c) => content.includes(`@${c}`))).toBe(true);
       const agentRest = refs.agent.replace(/^\.[^/]+\//, '');
       const agentParts = agentRest.split('/').filter(Boolean);
       const agentCandidates = new Set<string>([refs.agent, `./${agentRest}`, `../${agentRest}`]);
+      agentCandidates.add('.agentsmesh/agents/code-reviewer.md');
       for (let n = 1; n <= Math.min(4, agentParts.length); n++) {
         const tail = agentParts.slice(-n).join('/');
         agentCandidates.add(`./${tail}`);
@@ -251,8 +256,9 @@ describe('generate reference rewrite matrix', () => {
         skillCandidates.add(`../${tail}`);
       }
       const parenHit = [...skillCandidates].some((s) => content.includes(`(${s})`));
+      const canonicalParenHit = content.includes('(.agentsmesh/skills/api-generator/SKILL.md)');
       const tickHit = [...skillCandidates].some((s) => content.includes(`\`${s}\``));
-      expect(parenHit || tickHit).toBe(true);
+      expect(parenHit || canonicalParenHit || tickHit).toBe(true);
       expectAngleTemplate(content, refs.template);
       assertRewritten(content, refs, dir);
     }
@@ -304,7 +310,7 @@ describe('generate reference rewrite matrix', () => {
       expectToolPathOrDotRelative(content, refs.template);
       expectToolPathOrDotRelative(content, refs.checklist);
       expectToolPathOrDotRelative(content, refs.referencesDir);
-      expect(content).toMatch(/docs\/some-doc\.md/);
+      expect(content).toMatch(/\/docs\/some-doc\.md|docs\/some-doc\.md/);
       assertRewritten(content, refs, dir);
     }
 
@@ -314,7 +320,7 @@ describe('generate reference rewrite matrix', () => {
       expectToolPathOrDotRelative(content, refs.command);
       expectToolPathOrDotRelative(content, refs.checklist);
       expectToolPathOrDotRelative(content, refs.referencesDir);
-      expect(content).toMatch(/docs\/some-doc\.md/);
+      expect(content).toMatch(/\/docs\/some-doc\.md|docs\/some-doc\.md/);
       assertRewritten(content, refs, dir);
     }
   });

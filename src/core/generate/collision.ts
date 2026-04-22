@@ -40,9 +40,7 @@ function richerAgentsResult(left: GenerateResult, right: GenerateResult): Genera
   const rightContainsLeft = rightTrimmed.includes(leftTrimmed);
 
   if (leftContainsRight === rightContainsLeft) return null;
-  return leftContainsRight
-    ? mergeDuplicateMetadata(left, right)
-    : mergeDuplicateMetadata(right, left);
+  return leftContainsRight ? left : right;
 }
 
 function richerCodexAgentsResult(
@@ -60,9 +58,7 @@ function richerCodexAgentsResult(
   const other = codex === left ? right : left;
   if (!codex) return null;
 
-  return trimmedContent(codex.content).length > trimmedContent(other.content).length
-    ? mergeDuplicateMetadata(codex, other)
-    : null;
+  return trimmedContent(codex.content).length > trimmedContent(other.content).length ? codex : null;
 }
 
 /**

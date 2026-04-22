@@ -533,4 +533,35 @@ describe('importFromCursor — global exports', () => {
       readFileSync(join(TEST_DIR, '.agentsmesh', 'skills', 'demo', 'SKILL.md'), 'utf8'),
     ).toContain('Hi');
   });
+
+  it('splits embedded additional rules from ~/.cursor/AGENTS.md aggregate fallback', async () => {
+    mkdirSync(join(TEST_DIR, '.cursor'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.cursor', 'AGENTS.md'),
+      [
+        '# Root',
+        '',
+        '<!-- agentsmesh:embedded-rules:start -->',
+        '<!-- agentsmesh:embedded-rule:start {"source":"rules/typescript.md","description":"TS rules","globs":["src/**/*.ts"],"targets":["cursor"]} -->',
+        '## TS rules',
+        'Use strict TS.',
+        '<!-- agentsmesh:embedded-rule:end -->',
+        '<!-- agentsmesh:embedded-rules:end -->',
+      ].join('\n'),
+    );
+
+    const results = await importFromCursor(TEST_DIR, { scope: 'global' });
+
+    expect(results.map((r) => r.toPath).sort()).toEqual(
+      ['.agentsmesh/rules/_root.md', '.agentsmesh/rules/typescript.md'].sort(),
+    );
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf8')).toContain(
+      '# Root',
+    );
+    const tsRule = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'), 'utf8');
+    expect(tsRule).toContain('description: TS rules');
+    expect(tsRule).toContain('src/**/*.ts');
+    expect(tsRule).toContain('Use strict TS.');
+    expect(tsRule).not.toContain('<!-- agentsmesh:embedded-rules:start -->');
+  });
 });

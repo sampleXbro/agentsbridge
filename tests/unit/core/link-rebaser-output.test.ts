@@ -5,7 +5,11 @@ import {
 } from '../../../src/core/reference/link-rebaser-output.js';
 
 const EXPLICIT_CURRENT_DIR = { explicitCurrentDirLinks: true };
-const LEGACY = { explicitCurrentDirLinks: true, scope: 'global' as const };
+const GLOBAL_MARKDOWN_DESTINATION = {
+  explicitCurrentDirLinks: true,
+  scope: 'global' as const,
+  forceRelative: true,
+};
 
 describe('formatLinkPathForDestination', () => {
   it('in project scope uses project-root-relative paths for targets outside `.agentsmesh/`', () => {
@@ -44,41 +48,55 @@ describe('formatLinkPathForDestination', () => {
     );
   });
 
-  it('computes correct relative link in global mode when dest and target share a common prefix', () => {
+  it('uses project-root standard paths for global prose links', () => {
+    const root = '/proj';
+    const dest = '/proj/.claude/skills/api-gen/SKILL.md';
+    const target = '/proj/.claude/skills/api-gen/references/checklist.md';
+    expect(
+      formatLinkPathForDestination(root, dest, target, false, {
+        explicitCurrentDirLinks: true,
+        scope: 'global',
+      }),
+    ).toBe('.claude/skills/api-gen/references/checklist.md');
+  });
+
+  it('computes correct relative markdown link in global mode when dest and target share a common prefix', () => {
     // windsurf global: dest at .codeium/windsurf/memories/, target under .codeium/windsurf/skills/
     const root = '/proj';
     const dest = '/proj/.codeium/windsurf/memories/global_rules.md';
     const target = '/proj/.codeium/windsurf/skills/api-gen/SKILL.md';
-    expect(formatLinkPathForDestination(root, dest, target, false, LEGACY)).toBe(
-      '../skills/api-gen/SKILL.md',
-    );
+    expect(
+      formatLinkPathForDestination(root, dest, target, false, GLOBAL_MARKDOWN_DESTINATION),
+    ).toBe('../skills/api-gen/SKILL.md');
   });
 
-  it('computes correct relative link in global mode for sibling directories', () => {
+  it('computes correct relative markdown link in global mode for sibling directories', () => {
     // cursor global: dest at .cursor/rules/, target under .cursor/skills/
     const root = '/proj';
     const dest = '/proj/.cursor/rules/general.mdc';
     const target = '/proj/.cursor/skills/api-gen/SKILL.md';
-    expect(formatLinkPathForDestination(root, dest, target, false, LEGACY)).toBe(
-      '../skills/api-gen/SKILL.md',
-    );
+    expect(
+      formatLinkPathForDestination(root, dest, target, false, GLOBAL_MARKDOWN_DESTINATION),
+    ).toBe('../skills/api-gen/SKILL.md');
   });
 
-  it('computes correct relative link in global mode for same-level reference', () => {
+  it('computes correct relative markdown link in global mode for same-level reference', () => {
     // copilot global: dest at .copilot/, target under .copilot/skills/
     const root = '/proj';
     const dest = '/proj/.copilot/copilot-instructions.md';
     const target = '/proj/.copilot/skills/api-gen/SKILL.md';
-    expect(formatLinkPathForDestination(root, dest, target, false, LEGACY)).toBe(
-      './skills/api-gen/SKILL.md',
-    );
+    expect(
+      formatLinkPathForDestination(root, dest, target, false, GLOBAL_MARKDOWN_DESTINATION),
+    ).toBe('./skills/api-gen/SKILL.md');
   });
 
-  it('in global scope produces shortest relative link for deeply nested source and target', () => {
+  it('in global markdown destinations produces shortest relative link for deeply nested source and target', () => {
     const root = '/proj';
     const dest = '/proj/.claude/skills/api-gen/references/checklist.md';
     const target = '/proj/.claude/skills/api-gen/SKILL.md';
-    expect(formatLinkPathForDestination(root, dest, target, false, LEGACY)).toBe('../SKILL.md');
+    expect(
+      formatLinkPathForDestination(root, dest, target, false, GLOBAL_MARKDOWN_DESTINATION),
+    ).toBe('../SKILL.md');
   });
 
   it('prefers ./… over a long ../… chain when both absolute targets exist (global scope)', () => {
@@ -93,7 +111,7 @@ describe('formatLinkPathForDestination', () => {
         dest,
         [agentsRef, geminiRef],
         false,
-        LEGACY,
+        GLOBAL_MARKDOWN_DESTINATION,
         pathExists,
       ),
     ).toBe('./references/project-setup.md');

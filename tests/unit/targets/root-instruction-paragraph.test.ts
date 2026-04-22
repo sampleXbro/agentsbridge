@@ -31,7 +31,9 @@ describe('appendAgentsmeshRootInstructionParagraph', () => {
   it('appends the headed section to plain content', () => {
     const result = appendAgentsmeshRootInstructionParagraph('First');
     expect(result).toContain('First');
+    expect(result).toContain('<!-- agentsmesh:root-generation-contract:start -->');
     expect(result).toContain('## AgentsMesh Generation Contract');
+    expect(result).toContain('<!-- agentsmesh:root-generation-contract:end -->');
     expect(result).toContain(CURRENT_BODY_SNIPPET);
     expect(result).not.toContain('.agentsmesh/');
   });
@@ -42,6 +44,21 @@ describe('appendAgentsmeshRootInstructionParagraph', () => {
     );
     expect(result.split(CURRENT_BODY_SNIPPET)).toHaveLength(2);
     expect(result.match(/## AgentsMesh Generation Contract/g)).toHaveLength(1);
+  });
+
+  it('replaces an existing managed contract block instead of appending another', () => {
+    const existing = [
+      'First',
+      '<!-- agentsmesh:root-generation-contract:start -->',
+      '## AgentsMesh Generation Contract',
+      '',
+      'Old generated text with .agentsmesh/rules/example.md',
+      '<!-- agentsmesh:root-generation-contract:end -->',
+    ].join('\n');
+    const result = appendAgentsmeshRootInstructionParagraph(existing);
+    expect(result.match(/agentsmesh:root-generation-contract:start/g)).toHaveLength(1);
+    expect(result).toContain(CURRENT_BODY_SNIPPET);
+    expect(result).not.toContain('Old generated text');
   });
 
   it('upgrades the v1 legacy paragraph without a heading', () => {

@@ -85,21 +85,15 @@ describe('last target markdown reference round trips', () => {
     const generatedRoot = readFileSync(rootPath, 'utf-8');
     const generatedCommand = readFileSync(commandPath, 'utf-8');
 
-    expect(generatedRoot).toMatch(
-      /\.continue\/rules\/general\.md|\.\/rules\/general\.md|\.\/general\.md/,
-    );
-    expect(generatedRoot).toMatch(/\.\/rules\/typescript\.md|\.\/typescript\.md/);
-    expect(generatedRoot).toContain('./prompts/review.md');
-    expect(generatedRoot).toContain('./skills/api-gen/SKILL.md');
-    expect(generatedRoot).toMatch(/docs\/some-doc\.md/);
-    expect(generatedRoot).not.toContain('.agentsmesh/skills/');
+    expect(generatedRoot).toContain('.agentsmesh/rules/_root.md');
+    expect(generatedRoot).toContain('.agentsmesh/rules/typescript.md');
+    expect(generatedRoot).toContain('.agentsmesh/commands/review.md');
+    expect(generatedRoot).toContain('.agentsmesh/skills/api-gen/SKILL.md');
+    expect(generatedRoot).toContain('docs/some-doc.md');
 
-    expect(generatedCommand).toMatch(
-      /\.continue\/rules\/general\.md|\.\/rules\/general\.md|\.\/general\.md/,
-    );
-    expect(generatedCommand).toContain('./skills/api-gen/SKILL.md');
-    expect(generatedCommand).toMatch(/docs\/some-doc\.md/);
-    expect(generatedCommand).not.toContain('.agentsmesh/skills/');
+    expect(generatedCommand).toContain('.agentsmesh/rules/_root.md');
+    expect(generatedCommand).toContain('.agentsmesh/skills/api-gen/SKILL.md');
+    expect(generatedCommand).toContain('docs/some-doc.md');
 
     rmSync(join(dir, '.agentsmesh'), { recursive: true, force: true });
 
@@ -138,12 +132,11 @@ describe('last target markdown reference round trips', () => {
     fileExists(skillPath);
 
     const generatedAgents = readFileSync(agentsPath, 'utf-8');
-    expect(generatedAgents).toContain('./AGENTS.md');
-    expect(generatedAgents).toContain('./rules/typescript.md');
-    expect(generatedAgents).toContain('./commands/review.md');
-    expect(generatedAgents).toContain('./skills/api-gen/SKILL.md');
-    expect(generatedAgents).toMatch(/docs\/some-doc\.md/);
-    expect(generatedAgents).not.toContain('.agentsmesh/skills/');
+    expect(generatedAgents).toContain('.agentsmesh/rules/_root.md');
+    expect(generatedAgents).toContain('.agentsmesh/rules/typescript.md');
+    expect(generatedAgents).toContain('.agentsmesh/commands/review.md');
+    expect(generatedAgents).toContain('.agentsmesh/skills/api-gen/SKILL.md');
+    expect(generatedAgents).toContain('docs/some-doc.md');
 
     rmSync(join(dir, '.agentsmesh'), { recursive: true, force: true });
 

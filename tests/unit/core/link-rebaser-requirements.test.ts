@@ -13,7 +13,7 @@ describe('rewriteFileLinks requirements alignment', () => {
       rewriteBarePathTokens: true,
     });
 
-    expect(rewritten.content).toBe('Delegate to `../../.agentsmesh/agents/reviewer.md`.');
+    expect(rewritten.content).toBe('Delegate to `.agentsmesh/agents/reviewer.md`.');
     expect(rewritten.missing).toEqual([]);
   });
 
@@ -30,11 +30,11 @@ describe('rewriteFileLinks requirements alignment', () => {
       rewriteBarePathTokens: true,
     });
 
-    expect(rewritten.content).toBe('Use `.claude/skills/qa/` for shared QA routines.');
+    expect(rewritten.content).toBe('Use `.agentsmesh/skills/qa/` for shared QA routines.');
     expect(rewritten.missing).toEqual([]);
   });
 
-  it('does not check or convert global-mode links that resolve outside `.agentsmesh`', () => {
+  it('normalizes relative global-mode prose links to project-root standard links', () => {
     const translated: string[] = [];
     const checked: string[] = [];
 
@@ -54,10 +54,10 @@ describe('rewriteFileLinks requirements alignment', () => {
       scope: 'global',
     });
 
-    expect(rewritten.content).toBe('Project docs stay untouched: `../../docs/guide.md`.');
+    expect(rewritten.content).toBe('Project docs stay untouched: `docs/guide.md`.');
     expect(rewritten.missing).toEqual([]);
-    expect(translated).toEqual([]);
-    expect(checked).toEqual([]);
+    expect(translated).toEqual(['/home/user/docs/guide.md']);
+    expect(checked).toEqual(['/home/user/docs/guide.md', '/home/user/docs/guide.md']);
   });
 
   it('still rewrites markdown folder destinations as relative links', () => {

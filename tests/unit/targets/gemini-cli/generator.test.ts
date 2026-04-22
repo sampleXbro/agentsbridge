@@ -85,8 +85,13 @@ describe('generateRules (gemini-cli)', () => {
     expect(results[0]!.content).toContain('Root content');
     // Non-root rule body is embedded as a section
     expect(results[0]!.content).toContain('Use strict TS.');
-    // Sections are separated
-    expect(results[0]!.content).toContain('---');
+    expect(results[0]!.content).toContain('<!-- agentsmesh:embedded-rules:start -->');
+    expect(results[0]!.content).toContain(
+      '<!-- agentsmesh:embedded-rule:start {"source":"rules/typescript.md"',
+    );
+    expect(results[0]!.content).toContain('<!-- agentsmesh:embedded-rule:end -->');
+    expect(results[0]!.content).toContain('<!-- agentsmesh:embedded-rules:end -->');
+    expect(results[0]!.content).not.toContain('\n---\n<!-- agentsmesh:embedded-rule:start');
     // No separate .gemini/rules/ file
     expect(results.some((r) => r.path.includes('.gemini/rules/'))).toBe(false);
   });

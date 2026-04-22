@@ -9,6 +9,7 @@ import {
 } from '../../utils/filesystem/fs.js';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
 import { serializeImportedRuleWithFallback } from '../import/import-metadata.js';
+import { splitEmbeddedRulesToCanonical } from '../import/embedded-rules.js';
 import { importFileDirectory } from '../import/import-orchestrator.js';
 import {
   shouldImportScopedAgentsRule,
@@ -64,12 +65,25 @@ export async function importCodexRules(
       sourcePath === globalOverridePath
         ? stripCodexRuleIndex(content)
         : content;
+    const split = await splitEmbeddedRulesToCanonical({
+      content: stripped,
+      projectRoot,
+      rulesDir: CODEX_CANONICAL_RULES_DIR,
+      sourcePath,
+      fromTool: 'codex-cli',
+      normalize,
+    });
+    results.push(...split.results);
     const normalizedContent =
       sourcePath === agentsPath ||
       sourcePath === globalAgentsPath ||
       sourcePath === globalOverridePath
-        ? normalize(normalizeWindsurf(stripped, sourcePath, destPath), sourcePath, destPath)
-        : normalize(stripped, sourcePath, destPath);
+        ? normalize(
+            normalizeWindsurf(split.rootContent, sourcePath, destPath),
+            sourcePath,
+            destPath,
+          )
+        : normalize(split.rootContent, sourcePath, destPath);
     const { frontmatter, body } = parseFrontmatter(normalizedContent);
     const outFm = frontmatter.root === true ? frontmatter : { ...frontmatter, root: true };
     const outContent = await serializeImportedRuleWithFallback(destPath, outFm, body);

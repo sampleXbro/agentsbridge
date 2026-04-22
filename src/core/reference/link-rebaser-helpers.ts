@@ -64,6 +64,10 @@ const EXTERNAL_REF_PATTERNS = [
   /\/\/[A-Za-z0-9][\w.-]*\.[A-Za-z]{2,}[^\s<>()\]]*/g,
 ];
 const FENCED_CODE_BLOCK = /^(?:```|~~~)[^\n]*\n[\s\S]*?^(?:```|~~~)/gm;
+const ROOT_GENERATION_CONTRACT_BLOCK =
+  /<!-- agentsmesh:root-generation-contract:start -->[\s\S]*?<!-- agentsmesh:root-generation-contract:end -->/g;
+const EMBEDDED_RULES_BLOCK =
+  /<!-- agentsmesh:embedded-rules:start -->[\s\S]*?<!-- agentsmesh:embedded-rules:end -->/g;
 
 export const PATH_TOKEN =
   /(?:\.\.[\\/]|\.\/|\.\\|\/[A-Za-z0-9._-]|[A-Za-z]:[\\/][A-Za-z0-9._-]|\.agentsmesh[\\/]|\.claude[\\/]|\.cursor[\\/]|\.github[\\/]|\.continue[\\/]|\.junie[\\/]|\.kiro[\\/]|\.gemini[\\/]|\.clinerules[\\/]|\.cline[\\/]|\.codex[\\/]|\.agents[\\/]|\.windsurf[\\/]|\.roo[\\/]|(?:[A-Za-z0-9._-]+[\\/])+|[A-Za-z0-9._-]+\.[A-Za-z0-9._-]+)[A-Za-z0-9._@%+~:\\/-]*/g;
@@ -98,8 +102,7 @@ export function resolveProjectPath(
       api.join(api.dirname(normalizedSourceFile), normalizedToken),
     );
     const fallbackPath = rootFallbackPath(normalizedToken, normalizedProjectRoot);
-    const relativeToRoot = api.relative(normalizedProjectRoot, sourceRelativePath);
-    return relativeToRoot.startsWith('..') && fallbackPath && fallbackPath !== sourceRelativePath
+    return fallbackPath && fallbackPath !== sourceRelativePath
       ? [sourceRelativePath, fallbackPath]
       : [sourceRelativePath];
   }
@@ -172,43 +175,11 @@ export function protectedRanges(content: string): Array<[number, number]> {
   for (const match of content.matchAll(FENCED_CODE_BLOCK)) {
     ranges.push([match.index ?? 0, (match.index ?? 0) + match[0].length]);
   }
+  for (const match of content.matchAll(ROOT_GENERATION_CONTRACT_BLOCK)) {
+    ranges.push([match.index ?? 0, (match.index ?? 0) + match[0].length]);
+  }
+  for (const match of content.matchAll(EMBEDDED_RULES_BLOCK)) {
+    ranges.push([match.index ?? 0, (match.index ?? 0) + match[0].length]);
+  }
   return ranges;
-}
-
-/**
- * Suffix-strip fallback for tool-specific root-relative paths (e.g. `.codex/skills/figma/references/file.md`).
- *
- * Progressively strips leading path segments and checks whether the remaining suffix
- * exists as a descendant of the destination file's directory. Returns the absolute
- * destination path on the first match, or null if nothing is found.
- *
- * Minimum 2 remaining suffix segments prevents bare-filename false positives.
- */
-export function resolveByDestinationSuffixStrip(
-  token: string,
-  projectRoot: string,
-  destinationFile: string,
-  pathExists: (absolutePath: string) => boolean,
-): string | null {
-  const api = pathApi(projectRoot);
-  const normalizedToken = normalizeSeparators(token);
-
-  if (!isRootRelativePathToken(normalizedToken)) {
-    return null;
-  }
-
-  const segments = normalizedToken.split('/').filter((s) => s.length > 0);
-  // Need ≥3 segments (prefix + dir + file) to avoid bare-filename false positives.
-  if (segments.length < 3) return null;
-
-  const destFilePath = normalizeForProject(projectRoot, destinationFile);
-  const destDir = api.dirname(destFilePath);
-
-  for (let i = 1; i <= segments.length - 1; i++) {
-    const suffix = segments.slice(i).join('/');
-    const candidate = normalizeForProject(projectRoot, api.join(destDir, suffix));
-    if (candidate === destFilePath) continue;
-    if (pathExists(candidate)) return candidate;
-  }
-  return null;
 }

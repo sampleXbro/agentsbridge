@@ -33,13 +33,13 @@ describe('global mode: reference rewriting', () => {
     const gen = await runCli('generate --global --targets claude-code', projectDir);
     expect(gen.exitCode).toBe(0);
 
-    // Canonical links must be rewritten to global paths in generated files
+    // Markdown destinations must be rewritten to global generated paths.
     const rootContent = readText(join(homeDir, '.claude', 'CLAUDE.md'));
-    expect(rootContent).toContain('skills/ref-skill/SKILL.md');
+    expect(rootContent).toContain('[skill](./skills/ref-skill/SKILL.md)');
     expect(rootContent).not.toContain('.agentsmesh/');
 
     const skillContent = readText(join(homeDir, '.claude', 'skills', 'ref-skill', 'SKILL.md'));
-    expect(skillContent).toContain('references/guide.md');
+    expect(skillContent).toContain('[ref](./references/guide.md)');
     expect(skillContent).not.toContain('.agentsmesh/');
 
     rmSync(canonicalDir, { recursive: true, force: true });
@@ -48,9 +48,13 @@ describe('global mode: reference rewriting', () => {
     const imp = await runCli('import --global --from claude-code', projectDir);
     expect(imp.exitCode).toBe(0);
 
-    // After import, paths are normalized back to relative canonical structure
+    // After import, paths are normalized back to exact canonical-relative destinations.
     const reimportedRoot = readText(join(canonicalDir, 'rules', '_root.md'));
-    expect(reimportedRoot).toContain('skills/ref-skill/SKILL.md');
+    expect(reimportedRoot).toContain('[skill](../skills/ref-skill/SKILL.md)');
+    expect(reimportedRoot).not.toContain('[skill](./skills/ref-skill/SKILL.md)');
+
+    const reimportedSkill = readText(join(canonicalDir, 'skills', 'ref-skill', 'SKILL.md'));
+    expect(reimportedSkill).toContain('[ref](./references/guide.md)');
   });
 });
 

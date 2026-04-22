@@ -4,6 +4,7 @@ import { createImportReferenceNormalizer } from '../../core/reference/import-rew
 import { readFileSafe, writeFileAtomic } from '../../utils/filesystem/fs.js';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
 import { importEmbeddedSkills } from '../import/embedded-skill.js';
+import { splitEmbeddedRulesToCanonical } from '../import/embedded-rules.js';
 import { serializeImportedRuleWithFallback } from '../import/import-metadata.js';
 import { importFileDirectory } from '../import/import-orchestrator.js';
 import {
@@ -36,7 +37,16 @@ async function importRules(
     const srcPath = join(projectRoot, relPath);
     const content = await readFileSafe(srcPath);
     if (content === null) continue;
-    const { frontmatter, body } = parseFrontmatter(normalize(content, srcPath, destPath));
+    const split = await splitEmbeddedRulesToCanonical({
+      content,
+      projectRoot,
+      rulesDir: JUNIE_CANONICAL_RULES_DIR,
+      sourcePath: srcPath,
+      fromTool: JUNIE_TARGET,
+      normalize,
+    });
+    results.push(...split.results);
+    const { frontmatter, body } = parseFrontmatter(normalize(split.rootContent, srcPath, destPath));
     const output = await serializeImportedRuleWithFallback(
       destPath,
       {

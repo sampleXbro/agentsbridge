@@ -9,6 +9,7 @@ import {
   serializeImportedRuleWithFallback,
   serializeImportedCommandWithFallback,
 } from '../import/import-metadata.js';
+import { splitEmbeddedRulesToCanonical } from '../import/embedded-rules.js';
 import { importFileDirectory } from '../import/import-orchestrator.js';
 import {
   ANTIGRAVITY_TARGET,
@@ -47,7 +48,16 @@ async function importRootRule(
   if (content === null) return;
 
   const destPath = join(projectRoot, ANTIGRAVITY_CANONICAL_ROOT_RULE);
-  const { body } = parseFrontmatter(normalize(content, srcPath, destPath));
+  const split = await splitEmbeddedRulesToCanonical({
+    content,
+    projectRoot,
+    rulesDir: ANTIGRAVITY_CANONICAL_RULES_DIR,
+    sourcePath: srcPath,
+    fromTool: ANTIGRAVITY_TARGET,
+    normalize,
+  });
+  results.push(...split.results);
+  const { body } = parseFrontmatter(normalize(split.rootContent, srcPath, destPath));
   const output = await serializeImportedRuleWithFallback(destPath, { root: true }, body);
   await mkdirp(join(projectRoot, ANTIGRAVITY_CANONICAL_RULES_DIR));
   await writeFileAtomic(destPath, output);

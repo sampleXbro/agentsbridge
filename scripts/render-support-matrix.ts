@@ -46,6 +46,28 @@ const LEVEL_LABELS: Record<SupportLevel, string> = {
   none: '—',
 };
 
+const README_MARKERS = {
+  project: {
+    start: '<!-- agentsmesh:support-matrix:project -->',
+    end: '<!-- /agentsmesh:support-matrix:project -->',
+  },
+  global: {
+    start: '<!-- agentsmesh:support-matrix:global -->',
+    end: '<!-- /agentsmesh:support-matrix:global -->',
+  },
+} as const;
+
+const MDX_MARKERS = {
+  project: {
+    start: '{/* agentsmesh:support-matrix:project:start */}',
+    end: '{/* agentsmesh:support-matrix:project:end */}',
+  },
+  global: {
+    start: '{/* agentsmesh:support-matrix:global:start */}',
+    end: '{/* agentsmesh:support-matrix:global:end */}',
+  },
+} as const;
+
 function cellLabel(c: TargetCapabilityValue): string {
   const base = LEVEL_LABELS[c.level];
   if (c.flavor && c.flavor !== 'standard') {
@@ -85,15 +107,15 @@ function renderReadme(): void {
   const projBlock = buildMarkdownTable(SUPPORT_MATRIX);
   text = replaceBetweenMarkers(
     text,
-    '<!-- agentsmesh:support-matrix:project -->',
-    '<!-- /agentsmesh:support-matrix:project -->',
+    README_MARKERS.project.start,
+    README_MARKERS.project.end,
     projBlock,
   );
   const globBlock = buildMarkdownTable(SUPPORT_MATRIX_GLOBAL);
   text = replaceBetweenMarkers(
     text,
-    '<!-- agentsmesh:support-matrix:global -->',
-    '<!-- /agentsmesh:support-matrix:global -->',
+    README_MARKERS.global.start,
+    README_MARKERS.global.end,
     globBlock,
   );
   writeFileSync(path, text);
@@ -103,33 +125,27 @@ function renderWebsiteMdx(): void {
   const path = join(ROOT, 'website/src/content/docs/reference/supported-tools.mdx');
   let text = readFileSync(path, 'utf-8');
   const projBlock = buildMarkdownTable(SUPPORT_MATRIX);
-  text = replaceBetweenMarkers(
-    text,
-    '<!-- agentsmesh:support-matrix:project -->',
-    '<!-- /agentsmesh:support-matrix:project -->',
-    projBlock,
-  );
+  text = replaceBetweenMarkers(text, MDX_MARKERS.project.start, MDX_MARKERS.project.end, projBlock);
   const globBlock = buildMarkdownTable(SUPPORT_MATRIX_GLOBAL);
-  text = replaceBetweenMarkers(
-    text,
-    '<!-- agentsmesh:support-matrix:global -->',
-    '<!-- /agentsmesh:support-matrix:global -->',
-    globBlock,
-  );
+  text = replaceBetweenMarkers(text, MDX_MARKERS.global.start, MDX_MARKERS.global.end, globBlock);
   writeFileSync(path, text);
 }
 
-function expectedDocument(source: string, globalMatrix: typeof SUPPORT_MATRIX_GLOBAL): string {
+function expectedDocument(
+  source: string,
+  globalMatrix: typeof SUPPORT_MATRIX_GLOBAL,
+  markers: typeof README_MARKERS,
+): string {
   let t = replaceBetweenMarkers(
     source,
-    '<!-- agentsmesh:support-matrix:project -->',
-    '<!-- /agentsmesh:support-matrix:project -->',
+    markers.project.start,
+    markers.project.end,
     buildMarkdownTable(SUPPORT_MATRIX),
   );
   t = replaceBetweenMarkers(
     t,
-    '<!-- agentsmesh:support-matrix:global -->',
-    '<!-- /agentsmesh:support-matrix:global -->',
+    markers.global.start,
+    markers.global.end,
     buildMarkdownTable(globalMatrix),
   );
   return t;
@@ -143,8 +159,8 @@ if (verify) {
   const readme = readFileSync(readmePath, 'utf-8');
   const mdx = readFileSync(mdxPath, 'utf-8');
   if (
-    readme !== expectedDocument(readme, SUPPORT_MATRIX_GLOBAL) ||
-    mdx !== expectedDocument(mdx, SUPPORT_MATRIX_GLOBAL)
+    readme !== expectedDocument(readme, SUPPORT_MATRIX_GLOBAL, README_MARKERS) ||
+    mdx !== expectedDocument(mdx, SUPPORT_MATRIX_GLOBAL, MDX_MARKERS)
   ) {
     process.stderr.write(
       'matrix:verify failed: README or supported-tools.mdx does not match SUPPORT_MATRIX.\nRun pnpm matrix:generate\n',

@@ -1,6 +1,6 @@
 {
   "name": "agentsmesh",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "One canonical source for AI coding agent rules, commands, skills, MCP, hooks, and permissions — synced across Claude Code, Cursor, Copilot, Continue, Junie, Gemini CLI, Cline, Codex CLI, Windsurf, Antigravity, and Roo Code.",
   "type": "module",
   "main": "./dist/cli.js",

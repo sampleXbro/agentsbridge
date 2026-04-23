@@ -11,6 +11,11 @@ export const ROO_CODE_SKILLS_DIR = `${ROO_CODE_DIR}/skills`;
 export const ROO_CODE_MCP_FILE = `${ROO_CODE_DIR}/mcp.json`;
 export const ROO_CODE_IGNORE = '.rooignore';
 
+/** Project-level custom modes file (canonical agents → Roo custom modes). */
+export const ROO_CODE_MODES_FILE = '.roomodes';
+/** Global-level custom modes file (~/.roo/settings/custom_modes.yaml). */
+export const ROO_CODE_GLOBAL_MODES_FILE = 'settings/custom_modes.yaml';
+
 // Global-level paths (~/.roo/)
 export const ROO_CODE_GLOBAL_DIR = '.roo';
 export const ROO_CODE_GLOBAL_RULES_DIR = `${ROO_CODE_GLOBAL_DIR}/rules`;

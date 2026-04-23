@@ -132,9 +132,9 @@ That's it. Your `.agentsmesh/` directory is now the single source of truth, and 
 |---|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
 | Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
 | Additional Rules | Native | Embedded | Native | Native | Native | Native | Embedded | Native | Native | Native | Native | Native |
-| Commands | Native | Native | Native | Embedded | Embedded | — | Native | Native (workflows) | Embedded | Native (workflows) | Partial (workflows) | Native |
-| Agents | Native | Native | Native | — | Embedded | Native | Native | Embedded | Native | Embedded | — | — |
-| Skills | Native | Native | Native | Embedded | Embedded | Native | Native | Native | Native | Native | Native | Native |
+| Commands | Native | Native | Native | Embedded | Native | — | Native | Native (workflows) | Embedded | Native (workflows) | Partial (workflows) | Native |
+| Agents | Native | Native | Native | — | Native | Native | Native | Embedded | Native | Embedded | — | Partial |
+| Skills | Native | Native | Native | Embedded | Native | Native | Native | Native | Native | Native | Native | Native |
 | MCP Servers | Native | Native | — | Native | Native | Native | Native | Native | Native | Partial | — | Native |
 | Hooks | Native | Native | Partial | — | — | Native | Partial | Native | — | Native | — | — |
 | Ignore | Native | Native | — | — | Native | Native | Native (settings-embedded) | Native | — | Native | — | Native |
@@ -149,9 +149,9 @@ That's it. Your `.agentsmesh/` directory is now the single source of truth, and 
 | Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
 | Additional Rules | Native | Embedded | Native | Native | Embedded | Native | Embedded | Native | Embedded | Partial | Embedded | Native |
 | Commands | Native | Native | Native | Native | Native | — | Native | Native (workflows) | Embedded | Native (workflows) | Partial (workflows) | Native |
-| Agents | Native | Native | Native | — | Native | Native | Native | Embedded | Native | Embedded | — | — |
+| Agents | Native | Native | Native | — | Native | Native | Native | Embedded | Native | Embedded | — | Partial |
 | Skills | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
-| MCP Servers | Native | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native |
+| MCP Servers | Native | Native | — | Native | Native | Native | Native | Native | Native | Partial | Native | Native |
 | Hooks | Native | Native | — | — | — | — | Partial | Native | — | Native | — | — |
 | Ignore | Native | Native | — | — | — | Native | — | Native | — | Native | — | Native |
 | Permissions | Native | — | — | — | — | — | — | — | — | — | — | — |

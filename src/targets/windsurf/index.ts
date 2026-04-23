@@ -54,7 +54,6 @@ const project: TargetLayout = {
     dirs: ['.windsurf/rules', '.windsurf/skills', '.windsurf/workflows'],
     files: [
       'AGENTS.md',
-      'src/AGENTS.md',
       '.codeiumignore',
       '.windsurf/hooks.json',
       '.windsurf/mcp_config.example.json',
@@ -144,7 +143,7 @@ const globalCapabilities: TargetCapabilities = {
   commands: cap('native', 'workflows'),
   agents: 'embedded',
   skills: 'native',
-  mcp: 'native',
+  mcp: 'partial',
   hooks: 'native',
   ignore: 'native',
   permissions: 'none',

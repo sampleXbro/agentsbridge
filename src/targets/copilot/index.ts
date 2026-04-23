@@ -6,6 +6,7 @@ import {
   generateAgents,
   generateSkills,
   generateHooks,
+  renderCopilotGlobalInstructions,
 } from './generator.js';
 import {
   COPILOT_INSTRUCTIONS,
@@ -19,6 +20,8 @@ import {
   COPILOT_GLOBAL_SKILLS_DIR,
   COPILOT_GLOBAL_PROMPTS_DIR,
   COPILOT_GLOBAL_AGENTS_SKILLS_DIR,
+  COPILOT_GLOBAL_AGENTS_MD,
+  COPILOT_GLOBAL_CLAUDE_SKILLS_DIR,
 } from './constants.js';
 import { importFromCopilot } from './importer.js';
 import { lintRules } from './linter.js';
@@ -26,6 +29,7 @@ import { buildCopilotImportPaths } from '../../core/reference/import-map-builder
 import { commandPromptPath } from './command-prompt.js';
 import { lintCommands, lintHooks } from './lint.js';
 import { addHookScriptAssets } from './hook-assets.js';
+import { generateCopilotGlobalExtras } from './scope-extras.js';
 
 export const target: TargetGenerators = {
   name: 'copilot',
@@ -67,6 +71,10 @@ const project: TargetLayout = {
 
 const global: TargetLayout = {
   rootInstructionPath: COPILOT_GLOBAL_INSTRUCTIONS,
+  renderPrimaryRootInstruction: renderCopilotGlobalInstructions,
+  outputFamilies: [
+    { id: 'compat-agents', kind: 'additional', explicitPaths: [COPILOT_GLOBAL_AGENTS_MD] },
+  ],
   skillDir: COPILOT_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [
@@ -74,8 +82,9 @@ const global: TargetLayout = {
       COPILOT_GLOBAL_SKILLS_DIR,
       COPILOT_GLOBAL_PROMPTS_DIR,
       COPILOT_GLOBAL_AGENTS_SKILLS_DIR,
+      COPILOT_GLOBAL_CLAUDE_SKILLS_DIR,
     ],
-    files: [COPILOT_GLOBAL_INSTRUCTIONS],
+    files: [COPILOT_GLOBAL_INSTRUCTIONS, COPILOT_GLOBAL_AGENTS_MD],
   },
   rewriteGeneratedPath(path) {
     // Transform project-level .github/ paths to global ~/.copilot/ paths
@@ -83,8 +92,8 @@ const global: TargetLayout = {
       return COPILOT_GLOBAL_INSTRUCTIONS;
     }
     if (path.startsWith(`${COPILOT_INSTRUCTIONS_DIR}/`)) {
-      // Path-specific instructions don't exist in global mode - merge into single file
-      return null;
+      // Glob-scoped instructions aggregate into the single root instructions file in global mode
+      return COPILOT_GLOBAL_INSTRUCTIONS;
     }
     if (path.startsWith(`${COPILOT_PROMPTS_DIR}/`)) {
       return path.replace(`${COPILOT_PROMPTS_DIR}/`, `${COPILOT_GLOBAL_PROMPTS_DIR}/`);
@@ -102,9 +111,10 @@ const global: TargetLayout = {
     return path;
   },
   mirrorGlobalPath(path, activeTargets) {
-    // Mirror ~/.copilot/skills/ to ~/.agents/skills/ unless codex-cli already owns it
-    if (path.startsWith('.copilot/skills/') && !activeTargets.includes('codex-cli')) {
-      return path.replace(/^\.copilot\/skills\//, '.agents/skills/');
+    // Mirror ~/.copilot/skills/ to ~/.agents/skills/ and ~/.claude/skills/ unless codex-cli owns it
+    if (path.startsWith(`${COPILOT_GLOBAL_SKILLS_DIR}/`) && !activeTargets.includes('codex-cli')) {
+      const rel = path.slice(COPILOT_GLOBAL_SKILLS_DIR.length + 1);
+      return [`.agents/skills/${rel}`, `${COPILOT_GLOBAL_CLAUDE_SKILLS_DIR}/${rel}`];
     }
     return null;
   },
@@ -162,12 +172,14 @@ export const descriptor = {
     capabilities: globalCapabilities,
     detectionPaths: [
       COPILOT_GLOBAL_INSTRUCTIONS,
+      COPILOT_GLOBAL_AGENTS_MD,
       COPILOT_GLOBAL_AGENTS_DIR,
       COPILOT_GLOBAL_SKILLS_DIR,
       COPILOT_GLOBAL_PROMPTS_DIR,
       COPILOT_GLOBAL_AGENTS_SKILLS_DIR,
     ],
     layout: global,
+    scopeExtras: generateCopilotGlobalExtras,
   },
   skillDir: project.skillDir,
   paths: project.paths,

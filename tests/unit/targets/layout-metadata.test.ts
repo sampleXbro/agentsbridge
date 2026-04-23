@@ -237,7 +237,11 @@ describe('target layout metadata', () => {
         skillDir: '.continue/skills',
         managedOutputs: {
           dirs: ['.continue/rules', '.continue/prompts', '.continue/skills', '.agents/skills'],
-          files: ['.continue/mcpServers/agentsmesh.json'],
+          files: [
+            '.continue/mcpServers/agentsmesh.json',
+            '.continue/AGENTS.md',
+            '.continue/config.yaml',
+          ],
         },
         paths: expect.objectContaining({
           rulePath: expect.any(Function),

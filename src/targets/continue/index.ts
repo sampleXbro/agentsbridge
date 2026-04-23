@@ -7,12 +7,15 @@ import {
   CONTINUE_PROMPTS_DIR,
   CONTINUE_MCP_FILE,
   CONTINUE_SKILLS_DIR,
+  CONTINUE_GLOBAL_AGENTS_MD,
+  CONTINUE_GLOBAL_CONFIG,
 } from './constants.js';
 import { importFromContinue } from './importer.js';
 import { lintRules } from './linter.js';
 import { lintCommands } from './lint.js';
 import { continueCommandRulePath } from './command-rule.js';
 import { buildContinueImportPaths } from '../../core/reference/import-map-builders.js';
+import { generateContinueScopeExtras } from './scope-extras.js';
 
 export const target: TargetGenerators = {
   name: 'continue',
@@ -46,10 +49,13 @@ const project: TargetLayout = {
 
 const globalLayout: TargetLayout = {
   rootInstructionPath: CONTINUE_ROOT_RULE,
+  outputFamilies: [
+    { id: 'compat-agents', kind: 'additional', explicitPaths: [CONTINUE_GLOBAL_AGENTS_MD] },
+  ],
   skillDir: CONTINUE_SKILLS_DIR,
   managedOutputs: {
     dirs: [CONTINUE_RULES_DIR, CONTINUE_PROMPTS_DIR, CONTINUE_SKILLS_DIR, '.agents/skills'],
-    files: [CONTINUE_MCP_FILE],
+    files: [CONTINUE_MCP_FILE, CONTINUE_GLOBAL_AGENTS_MD, CONTINUE_GLOBAL_CONFIG],
   },
   mirrorGlobalPath(path, _activeTargets) {
     if (path.startsWith(`${CONTINUE_SKILLS_DIR}/`)) {
@@ -112,6 +118,7 @@ export const descriptor = {
       CONTINUE_SKILLS_DIR,
     ],
     layout: globalLayout,
+    scopeExtras: generateContinueScopeExtras,
   },
   skillDir: project.skillDir,
   paths: project.paths,

@@ -73,7 +73,10 @@ export interface TargetLayout {
    * Optional mirror hook. Called after rewriteGeneratedPath resolves the primary path.
    * Returns an additional path to emit the same content to, or null to skip mirroring.
    */
-  readonly mirrorGlobalPath?: (path: string, activeTargets: readonly string[]) => string | null;
+  readonly mirrorGlobalPath?: (
+    path: string,
+    activeTargets: readonly string[],
+  ) => string | readonly string[] | null;
   /** Path resolvers for this scope. */
   readonly paths: TargetPathResolvers;
 }

@@ -1,11 +1,20 @@
+import { join, basename } from 'node:path';
+import { stringify as yamlStringify } from 'yaml';
 import type { TargetGenerators, TargetCapabilities } from '../catalog/target.interface.js';
-import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
+import type {
+  TargetDescriptor,
+  TargetLayout,
+  ScopeExtrasFn,
+} from '../catalog/target-descriptor.js';
+import type { GenerateResult } from '../../core/types.js';
+import { readFileSafe } from '../../utils/filesystem/fs.js';
 import {
   generateRules,
   generateCommands,
   generateSkills,
   generateMcp,
   generateIgnore,
+  generateAgents,
 } from './generator.js';
 import {
   ROO_CODE_ROOT_RULE,
@@ -14,6 +23,7 @@ import {
   ROO_CODE_SKILLS_DIR,
   ROO_CODE_MCP_FILE,
   ROO_CODE_IGNORE,
+  ROO_CODE_MODES_FILE,
   ROO_CODE_GLOBAL_RULES_DIR,
   ROO_CODE_GLOBAL_COMMANDS_DIR,
   ROO_CODE_GLOBAL_SKILLS_DIR,
@@ -21,6 +31,7 @@ import {
   ROO_CODE_GLOBAL_IGNORE,
   ROO_CODE_GLOBAL_AGENTS_MD,
   ROO_CODE_GLOBAL_AGENTS_SKILLS_DIR,
+  ROO_CODE_GLOBAL_MODES_FILE,
 } from './constants.js';
 import { importFromRooCode } from './importer.js';
 import { lintRules } from './linter.js';
@@ -34,6 +45,7 @@ export const target: TargetGenerators = {
   generateSkills,
   generateMcp,
   generateIgnore,
+  generateAgents,
   importFrom: importFromRooCode,
 };
 
@@ -42,7 +54,7 @@ const project: TargetLayout = {
   skillDir: '.roo/skills',
   managedOutputs: {
     dirs: ['.roo/rules', '.roo/commands', '.roo/skills'],
-    files: ['.roo/mcp.json', '.rooignore'],
+    files: ['.roo/mcp.json', '.rooignore', '.roorules', ROO_CODE_MODES_FILE],
   },
   paths: {
     rulePath(slug, _rule) {
@@ -57,6 +69,42 @@ const project: TargetLayout = {
   },
 };
 
+function computeStatus(existing: string | null, content: string): GenerateResult['status'] {
+  if (existing === null) return 'created';
+  if (existing !== content) return 'updated';
+  return 'unchanged';
+}
+
+const generateRooGlobalExtras: ScopeExtrasFn = async (
+  canonical,
+  projectRoot,
+  scope,
+  enabledFeatures,
+) => {
+  if (scope !== 'global') return [];
+  if (!enabledFeatures.has('agents') || canonical.agents.length === 0) return [];
+
+  const customModes = canonical.agents.map((agent) => {
+    const slug = basename(agent.source, '.md');
+    const mode: Record<string, unknown> = { slug, name: agent.name };
+    if (agent.description) mode.description = agent.description;
+    if (agent.body.trim()) mode.roleDefinition = agent.body.trim();
+    return mode;
+  });
+
+  const content = yamlStringify({ customModes });
+  const existing = await readFileSafe(join(projectRoot, ROO_CODE_GLOBAL_MODES_FILE));
+  return [
+    {
+      target: 'roo-code',
+      path: ROO_CODE_GLOBAL_MODES_FILE,
+      content,
+      currentContent: existing ?? undefined,
+      status: computeStatus(existing, content),
+    },
+  ];
+};
+
 const global: TargetLayout = {
   rootInstructionPath: ROO_CODE_GLOBAL_AGENTS_MD,
   skillDir: ROO_CODE_GLOBAL_SKILLS_DIR,
@@ -67,12 +115,21 @@ const global: TargetLayout = {
       ROO_CODE_GLOBAL_SKILLS_DIR,
       ROO_CODE_GLOBAL_AGENTS_SKILLS_DIR,
     ],
-    files: [ROO_CODE_GLOBAL_AGENTS_MD, ROO_CODE_GLOBAL_MCP_FILE, ROO_CODE_GLOBAL_IGNORE],
+    files: [
+      ROO_CODE_GLOBAL_AGENTS_MD,
+      ROO_CODE_GLOBAL_MCP_FILE,
+      ROO_CODE_GLOBAL_IGNORE,
+      ROO_CODE_GLOBAL_MODES_FILE,
+    ],
   },
   rewriteGeneratedPath(path) {
     // Transform project-level paths to global ~/.roo/ paths
     if (path === ROO_CODE_ROOT_RULE) {
       return ROO_CODE_GLOBAL_AGENTS_MD;
+    }
+    if (path === ROO_CODE_MODES_FILE) {
+      // Suppress .roomodes in global mode; scopeExtras emits settings/custom_modes.yaml instead
+      return null;
     }
     if (path.startsWith(`${ROO_CODE_RULES_DIR}/`)) {
       return path.replace(`${ROO_CODE_RULES_DIR}/`, `${ROO_CODE_GLOBAL_RULES_DIR}/`);
@@ -93,8 +150,8 @@ const global: TargetLayout = {
   },
   mirrorGlobalPath(path, activeTargets) {
     // Mirror ~/.roo/skills/ to ~/.agents/skills/ unless codex-cli already owns it
-    if (path.startsWith('.roo/skills/') && !activeTargets.includes('codex-cli')) {
-      return path.replace(/^\.roo\/skills\//, '.agents/skills/');
+    if (path.startsWith(`${ROO_CODE_GLOBAL_SKILLS_DIR}/`) && !activeTargets.includes('codex-cli')) {
+      return `.agents/skills/${path.slice(ROO_CODE_GLOBAL_SKILLS_DIR.length + 1)}`;
     }
     return null;
   },
@@ -115,7 +172,7 @@ const globalCapabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'native',
   commands: 'native',
-  agents: 'none',
+  agents: 'partial',
   skills: 'native',
   mcp: 'native',
   hooks: 'none',
@@ -130,7 +187,7 @@ export const descriptor = {
     rules: 'native',
     additionalRules: 'native',
     commands: 'native',
-    agents: 'none',
+    agents: 'partial',
     skills: 'native',
     mcp: 'native',
     hooks: 'none',
@@ -150,8 +207,10 @@ export const descriptor = {
       ROO_CODE_GLOBAL_MCP_FILE,
       ROO_CODE_GLOBAL_IGNORE,
       ROO_CODE_GLOBAL_AGENTS_MD,
+      ROO_CODE_GLOBAL_MODES_FILE,
     ],
     layout: global,
+    scopeExtras: generateRooGlobalExtras,
   },
   skillDir: project.skillDir,
   paths: project.paths,
@@ -163,5 +222,6 @@ export const descriptor = {
     '.roo/mcp.json',
     '.rooignore',
     '.roorules',
+    ROO_CODE_MODES_FILE,
   ],
 } satisfies TargetDescriptor;

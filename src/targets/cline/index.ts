@@ -47,7 +47,7 @@ const project: TargetLayout = {
   rootInstructionPath: CLINE_AGENTS_MD,
   skillDir: '.cline/skills',
   managedOutputs: {
-    dirs: ['.cline/skills', '.clinerules/hooks', '.clinerules/workflows'],
+    dirs: ['.cline/skills', '.clinerules', '.clinerules/hooks', '.clinerules/workflows'],
     files: [
       'AGENTS.md',
       '.cline/cline_mcp_settings.json',

@@ -82,13 +82,26 @@ describe('global mode round-trip: Copilot', () => {
     );
     fileExists(join(homeDir, '.agents', 'skills', 'copilot-skill', 'references', 'guide.md'));
 
-    // 5. Prompts/commands (docs: ~/.copilot/prompts/*.prompt.md)
+    // 5. AGENTS.md compat mirror (docs: ~/.copilot/AGENTS.md)
+    fileExists(join(homeDir, '.copilot', 'AGENTS.md'));
+    fileContains(join(homeDir, '.copilot', 'AGENTS.md'), 'Copilot instructions');
+
+    // 6. .claude/skills mirror (docs: ~/.claude/skills/ — COPILOT_GLOBAL_CLAUDE_SKILLS_DIR)
+    fileExists(join(homeDir, '.claude', 'skills', 'copilot-skill', 'SKILL.md'));
+    fileContains(
+      join(homeDir, '.claude', 'skills', 'copilot-skill', 'SKILL.md'),
+      'Helps with Copilot',
+    );
+    fileExists(join(homeDir, '.claude', 'skills', 'copilot-skill', 'references', 'guide.md'));
+
+    // 7. Prompts/commands (docs: ~/.copilot/prompts/*.prompt.md)
     fileExists(join(homeDir, '.copilot', 'prompts', 'explain.prompt.md'));
     fileContains(join(homeDir, '.copilot', 'prompts', 'explain.prompt.md'), 'Explain the code');
     expect(
       markdownFrontmatter(join(homeDir, '.copilot', 'prompts', 'explain.prompt.md')).description,
     ).toBe('Explain');
     dirFilesExactly(join(homeDir, '.copilot'), [
+      'AGENTS.md',
       'agents/explainer.agent.md',
       'copilot-instructions.md',
       'prompts/explain.prompt.md',
@@ -96,6 +109,10 @@ describe('global mode round-trip: Copilot', () => {
       'skills/copilot-skill/references/guide.md',
     ]);
     dirFilesExactly(join(homeDir, '.agents'), [
+      'skills/copilot-skill/SKILL.md',
+      'skills/copilot-skill/references/guide.md',
+    ]);
+    dirFilesExactly(join(homeDir, '.claude'), [
       'skills/copilot-skill/SKILL.md',
       'skills/copilot-skill/references/guide.md',
     ]);

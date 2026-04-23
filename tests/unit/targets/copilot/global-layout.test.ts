@@ -57,8 +57,10 @@ describe('copilot global layout — rewriteGeneratedPath', () => {
     expect(rewrite('.github/skills/ts-pro/SKILL.md')).toBe('.copilot/skills/ts-pro/SKILL.md');
   });
 
-  it('suppresses .github/instructions/ in global mode (returns null)', () => {
-    expect(rewrite('.github/instructions/review.instructions.md')).toBeNull();
+  it('aggregates .github/instructions/ into root instructions in global mode', () => {
+    expect(rewrite('.github/instructions/review.instructions.md')).toBe(
+      '.copilot/copilot-instructions.md',
+    );
   });
 
   it('suppresses .github/hooks/ in global mode (returns null)', () => {
@@ -70,14 +72,18 @@ describe('copilot global layout — mirrorGlobalPath', () => {
   const layout = getTargetLayout('copilot', 'global')!;
   const mirror = layout.mirrorGlobalPath!;
 
-  it('mirrors .copilot/skills/ to .agents/skills/', () => {
-    expect(mirror('.copilot/skills/ts-pro/SKILL.md', [])).toBe('.agents/skills/ts-pro/SKILL.md');
+  it('mirrors .copilot/skills/ to .agents/skills/ and .claude/skills/', () => {
+    expect(mirror('.copilot/skills/ts-pro/SKILL.md', [])).toEqual([
+      '.agents/skills/ts-pro/SKILL.md',
+      '.claude/skills/ts-pro/SKILL.md',
+    ]);
   });
 
   it('mirrors nested supporting file under .copilot/skills/', () => {
-    expect(mirror('.copilot/skills/ts-pro/references/checklist.md', [])).toBe(
+    expect(mirror('.copilot/skills/ts-pro/references/checklist.md', [])).toEqual([
       '.agents/skills/ts-pro/references/checklist.md',
-    );
+      '.claude/skills/ts-pro/references/checklist.md',
+    ]);
   });
 
   it('does not mirror when codex-cli is active', () => {

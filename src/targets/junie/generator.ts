@@ -1,5 +1,6 @@
 import { basename } from 'node:path';
-import type { CanonicalFiles } from '../../core/types.js';
+import type { CanonicalFiles, McpServer } from '../../core/types.js';
+import { isStdioMcpServer } from '../../core/mcp-servers.js';
 import { generateEmbeddedSkills } from '../import/embedded-skill.js';
 import { appendEmbeddedRulesBlock } from '../projection/managed-blocks.js';
 import { serializeFrontmatter } from '../../utils/text/markdown.js';
@@ -42,14 +43,29 @@ export function generateRules(canonical: CanonicalFiles): JunieOutput[] {
   return outputs;
 }
 
+function toJunieMcpServer(server: McpServer): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  if (server.description) out.description = server.description;
+  // Omit type when it is 'stdio' — Junie's implied default
+  if (server.type !== 'stdio') out.type = server.type;
+  if (isStdioMcpServer(server)) {
+    out.command = server.command;
+    out.args = server.args;
+  } else {
+    out.url = server.url;
+    if (Object.keys(server.headers).length > 0) out.headers = server.headers;
+  }
+  // Omit env when empty — Junie omits it by default
+  if (Object.keys(server.env).length > 0) out.env = server.env;
+  return out;
+}
+
 export function generateMcp(canonical: CanonicalFiles): JunieOutput[] {
   if (!canonical.mcp || Object.keys(canonical.mcp.mcpServers).length === 0) return [];
-  return [
-    {
-      path: JUNIE_MCP_FILE,
-      content: JSON.stringify({ mcpServers: canonical.mcp.mcpServers }, null, 2),
-    },
-  ];
+  const servers = Object.fromEntries(
+    Object.entries(canonical.mcp.mcpServers).map(([name, srv]) => [name, toJunieMcpServer(srv)]),
+  );
+  return [{ path: JUNIE_MCP_FILE, content: JSON.stringify({ mcpServers: servers }, null, 2) }];
 }
 
 export function generateCommands(canonical: CanonicalFiles): JunieOutput[] {

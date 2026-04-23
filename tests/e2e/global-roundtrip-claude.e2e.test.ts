@@ -99,11 +99,8 @@ describe('global mode round-trip: Claude Code', () => {
     fileExists(join(homeDir, '.agents', 'skills', 'test-skill', 'references', 'checklist.md'));
 
     // 5b. Output-styles (descriptor.generateScopeExtras → ~/.claude/output-styles/, managedOutputs dir)
-    fileExists(join(homeDir, '.claude', 'output-styles', 'command-review.md'));
-    fileContains(
-      join(homeDir, '.claude', 'output-styles', 'command-review.md'),
-      'Review code quality',
-    );
+    fileExists(join(homeDir, '.claude', 'output-styles', 'review.md'));
+    fileContains(join(homeDir, '.claude', 'output-styles', 'review.md'), 'Review code quality');
 
     // 6. Agents (docs: ~/.claude/agents/*.md)
     fileExists(join(homeDir, '.claude', 'agents', 'reviewer.md'));
@@ -139,7 +136,7 @@ describe('global mode round-trip: Claude Code', () => {
       'agents/reviewer.md',
       'commands/review.md',
       'hooks.json',
-      'output-styles/command-review.md',
+      'output-styles/review.md',
       'rules/typescript.md',
       'settings.json',
       'skills/test-skill/SKILL.md',

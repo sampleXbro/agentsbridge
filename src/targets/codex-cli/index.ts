@@ -139,5 +139,12 @@ export const descriptor = {
   sharedArtifacts: {
     '.agents/skills/': 'owner',
   },
-  detectionPaths: ['codex.md'],
+  detectionPaths: [
+    'codex.md',
+    'AGENTS.md',
+    'AGENTS.override.md',
+    '.codex/config.toml',
+    '.codex/agents',
+    '.codex/rules',
+  ],
 } satisfies TargetDescriptor;

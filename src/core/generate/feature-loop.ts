@@ -59,8 +59,9 @@ export async function generateFeature(
       });
       const layout = getTargetLayout(target, scope);
       if (layout?.mirrorGlobalPath) {
-        const mirrorPath = layout.mirrorGlobalPath(resolvedPath, targets);
-        if (mirrorPath !== null) {
+        const raw = layout.mirrorGlobalPath(resolvedPath, targets);
+        const mirrorPaths = raw === null ? [] : Array.isArray(raw) ? raw : [raw];
+        for (const mirrorPath of mirrorPaths) {
           const existingMirror = await readFileSafe(join(projectRoot, mirrorPath));
           results.push({
             target,

@@ -39,7 +39,7 @@ export async function generateClaudeGlobalExtras(
       if (!agent.outputStyle) continue;
       const fm = { name: agent.name, description: agent.description || undefined };
       const content = serializeFrontmatter(fm, agent.body.trim());
-      const path = `${CLAUDE_OUTPUT_STYLES_DIR}/agent-${agent.name}.md`;
+      const path = `${CLAUDE_OUTPUT_STYLES_DIR}/${agent.name}.md`;
       const existing = await readFileSafe(join(projectRoot, path));
       results.push({
         target: 'claude-code',
@@ -56,7 +56,7 @@ export async function generateClaudeGlobalExtras(
       if (!cmd.outputStyle) continue;
       const fm = { name: cmd.name, description: cmd.description || undefined };
       const content = serializeFrontmatter(fm, cmd.body.trim());
-      const path = `${CLAUDE_OUTPUT_STYLES_DIR}/command-${cmd.name}.md`;
+      const path = `${CLAUDE_OUTPUT_STYLES_DIR}/${cmd.name}.md`;
       const existing = await readFileSafe(join(projectRoot, path));
       results.push({
         target: 'claude-code',

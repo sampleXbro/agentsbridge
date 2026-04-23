@@ -9,6 +9,9 @@ export const CONTINUE_ROOT_RULE = `${CONTINUE_RULES_DIR}/general.md`;
 export const CONTINUE_ROOT_RULE_LEGACY = `${CONTINUE_RULES_DIR}/_root.md`;
 export const CONTINUE_SKILLS_DIR = '.continue/skills';
 
+export const CONTINUE_GLOBAL_AGENTS_MD = '.continue/AGENTS.md';
+export const CONTINUE_GLOBAL_CONFIG = '.continue/config.yaml';
+
 export const CONTINUE_CANONICAL_RULES_DIR = '.agentsmesh/rules';
 export const CONTINUE_CANONICAL_COMMANDS_DIR = '.agentsmesh/commands';
 export const CONTINUE_CANONICAL_MCP = '.agentsmesh/mcp.json';

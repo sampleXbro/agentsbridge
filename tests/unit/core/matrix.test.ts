@@ -179,10 +179,10 @@ describe('buildCompatibilityMatrix', () => {
     expect(rows.find((r) => r.feature.startsWith('skills'))?.feature).toBe('skills (1)');
     expect(rows.find((r) => r.feature.startsWith('commands'))?.support['copilot']).toBe('native');
     expect(rows.find((r) => r.feature.startsWith('commands'))?.support.continue).toBe('embedded');
-    expect(rows.find((r) => r.feature.startsWith('commands'))?.support.junie).toBe('embedded');
+    expect(rows.find((r) => r.feature.startsWith('commands'))?.support.junie).toBe('native');
     expect(rows.find((r) => r.feature.startsWith('commands'))?.support.kiro).toBe('none');
     expect(rows.find((r) => r.feature.startsWith('skills'))?.support.continue).toBe('embedded');
-    expect(rows.find((r) => r.feature.startsWith('skills'))?.support.junie).toBe('embedded');
+    expect(rows.find((r) => r.feature.startsWith('skills'))?.support.junie).toBe('native');
     expect(rows.find((r) => r.feature.startsWith('skills'))?.support.kiro).toBe('native');
     expect(rows.find((r) => r.feature.startsWith('commands'))?.support['codex-cli']).toBe(
       'embedded',

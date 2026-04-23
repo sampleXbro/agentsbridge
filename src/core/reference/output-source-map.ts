@@ -19,9 +19,12 @@ function addGlobalSkillMirrorSourceEntry(
   if (scope !== 'global') return;
   const layout = getTargetLayout(target, scope);
   if (!layout?.mirrorGlobalPath) return;
-  const mirrorPath = layout.mirrorGlobalPath(primaryOutputPath, activeTargets ?? []);
-  if (mirrorPath !== null && mirrorPath !== primaryOutputPath) {
-    sourceMap.set(mirrorPath, source);
+  const raw = layout.mirrorGlobalPath(primaryOutputPath, activeTargets ?? []);
+  const mirrorPaths = raw === null ? [] : Array.isArray(raw) ? raw : [raw];
+  for (const mirrorPath of mirrorPaths) {
+    if (mirrorPath !== primaryOutputPath) {
+      sourceMap.set(mirrorPath, source);
+    }
   }
 }
 

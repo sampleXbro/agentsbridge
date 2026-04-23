@@ -126,8 +126,8 @@ const global: TargetLayout = {
   },
   mirrorGlobalPath(path, activeTargets) {
     // Mirror ~/.gemini/skills/ to ~/.agents/skills/ unless codex-cli already owns it
-    if (path.startsWith('.gemini/skills/') && !activeTargets.includes('codex-cli')) {
-      return path.replace(/^\.gemini\/skills\//, '.agents/skills/');
+    if (path.startsWith(`${GEMINI_GLOBAL_SKILLS_DIR}/`) && !activeTargets.includes('codex-cli')) {
+      return `.agents/skills/${path.slice(GEMINI_GLOBAL_SKILLS_DIR.length + 1)}`;
     }
     return null;
   },

@@ -10,6 +10,7 @@ export const rooCodeContract: TargetPathContract = {
     '.roo/skills/api-generator/references/route-checklist.md',
     '.roo/skills/api-generator/template.ts',
     '.rooignore',
+    '.roomodes',
   ],
   imported: [
     '.agentsmesh/commands/review.md',

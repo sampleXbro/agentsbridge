@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { runCli } from './helpers/run-cli.js';
 import {
   fileExists,
+  fileNotExists,
   fileContains,
   readText,
   validJson,
@@ -19,6 +20,7 @@ describe('global mode round-trip: Roo Code', () => {
     const { homeDir, canonicalDir, projectDir } = env;
     mkdirSync(join(canonicalDir, 'rules'), { recursive: true });
     mkdirSync(join(canonicalDir, 'commands'), { recursive: true });
+    mkdirSync(join(canonicalDir, 'agents'), { recursive: true });
     mkdirSync(join(canonicalDir, 'skills', 'roo-skill'), { recursive: true });
     mkdirSync(join(canonicalDir, 'skills', 'roo-skill', 'references'), { recursive: true });
 
@@ -35,6 +37,10 @@ describe('global mode round-trip: Roo Code', () => {
       '---\ndescription: Build\n---\n# Build\nBuild the project\n',
     );
     writeFileSync(
+      join(canonicalDir, 'agents', 'coder.md'),
+      '---\ndescription: Code assistant\n---\n# Coder\nWrite clean code\n',
+    );
+    writeFileSync(
       join(canonicalDir, 'skills', 'roo-skill', 'SKILL.md'),
       '---\ndescription: Roo skill\n---\n# Roo\nSkill body\n',
     );
@@ -49,7 +55,7 @@ describe('global mode round-trip: Roo Code', () => {
     writeFileSync(join(canonicalDir, 'ignore'), 'dist\n');
     writeFileSync(
       join(canonicalDir, 'agentsmesh.yaml'),
-      'version: 1\ntargets: [roo-code]\nfeatures: [rules, commands, skills, mcp, ignore]\n',
+      'version: 1\ntargets: [roo-code]\nfeatures: [rules, commands, skills, mcp, ignore, agents]\n',
     );
 
     const gen = await runCli('generate --global --targets roo-code', projectDir);
@@ -94,6 +100,14 @@ describe('global mode round-trip: Roo Code', () => {
     // 7. Ignore (docs: ~/.rooignore)
     fileExists(join(homeDir, '.rooignore'));
     fileContains(join(homeDir, '.rooignore'), 'dist');
+
+    // 8. agents → settings/custom_modes.yaml (global scope suppresses .roomodes)
+    fileNotExists(join(homeDir, '.roomodes'));
+    fileExists(join(homeDir, 'settings', 'custom_modes.yaml'));
+    fileContains(join(homeDir, 'settings', 'custom_modes.yaml'), 'customModes');
+    fileContains(join(homeDir, 'settings', 'custom_modes.yaml'), 'coder');
+    fileContains(join(homeDir, 'settings', 'custom_modes.yaml'), 'Code assistant');
+
     dirFilesExactly(join(homeDir, '.roo'), [
       'AGENTS.md',
       'commands/build.md',
@@ -207,7 +221,20 @@ describe('global mode round-trip: Continue', () => {
     fileExists(join(homeDir, '.agents', 'skills', 'continue-skill', 'SKILL.md'));
     fileContains(join(homeDir, '.agents', 'skills', 'continue-skill', 'SKILL.md'), 'Skill body');
     fileExists(join(homeDir, '.agents', 'skills', 'continue-skill', 'references', 'context.md'));
+
+    // 7. AGENTS.md compat mirror (docs: ~/.continue/AGENTS.md)
+    fileExists(join(homeDir, '.continue', 'AGENTS.md'));
+    fileContains(join(homeDir, '.continue', 'AGENTS.md'), 'Continue instructions');
+
+    // 8. config.yaml aggregates rules/prompts/mcpServers
+    fileExists(join(homeDir, '.continue', 'config.yaml'));
+    fileContains(join(homeDir, '.continue', 'config.yaml'), 'rules');
+    fileContains(join(homeDir, '.continue', 'config.yaml'), 'prompts');
+    fileContains(join(homeDir, '.continue', 'config.yaml'), 'mcpServers');
+
     dirFilesExactly(join(homeDir, '.continue'), [
+      'AGENTS.md',
+      'config.yaml',
       'mcpServers/agentsmesh.json',
       'prompts/explain.md',
       'rules/general.md',

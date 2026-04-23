@@ -168,11 +168,18 @@ describe('generateAgents (junie)', () => {
 });
 
 describe('generateMcp (junie)', () => {
-  it('writes Junie project-level mcp.json', () => {
+  it('writes Junie project-level mcp.json in minimal native format', () => {
     const canonical = makeCanonical({
       mcp: {
         mcpServers: {
           context7: { type: 'stdio', command: 'npx', args: ['-y', '@ctx/mcp'], env: {} },
+          github: {
+            type: 'stdio',
+            command: 'npx',
+            args: ['-y', '@gh/mcp'],
+            env: { GITHUB_TOKEN: '$TOKEN' },
+            description: 'GitHub',
+          },
         },
       },
     });
@@ -180,7 +187,17 @@ describe('generateMcp (junie)', () => {
     const results = generateMcp(canonical);
     expect(results).toHaveLength(1);
     expect(results[0]?.path).toBe(JUNIE_MCP_FILE);
-    expect(results[0]?.content).toContain('context7');
+    const parsed = JSON.parse(results[0]!.content) as Record<string, unknown>;
+    const servers = (parsed as { mcpServers: Record<string, Record<string, unknown>> }).mcpServers;
+    // type 'stdio' is omitted (default); empty env is omitted
+    expect(servers['context7']).toEqual({ command: 'npx', args: ['-y', '@ctx/mcp'] });
+    // non-empty env and description are preserved
+    expect(servers['github']).toEqual({
+      description: 'GitHub',
+      command: 'npx',
+      args: ['-y', '@gh/mcp'],
+      env: { GITHUB_TOKEN: '$TOKEN' },
+    });
   });
 });
 

@@ -107,7 +107,7 @@ describe('builtin targets', () => {
         '.github/instructions/typescript.instructions.md',
         'global',
       ),
-    ).toBeNull();
+    ).toBe('.copilot/copilot-instructions.md');
 
     expect(rewriteGeneratedOutputPath('gemini-cli', '.geminiignore', 'global')).toBeNull();
     expect(

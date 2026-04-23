@@ -117,6 +117,8 @@ export function rewriteFileLinks(input: RewriteFileLinksInput): RewriteFileLinks
       }
     }
 
+    const api = pathApi(input.projectRoot);
+
     if (input.scope === 'global') {
       const tokenFwd = normalizeSeparators(punctStripped);
       const tokenReferencesMesh =
@@ -127,10 +129,24 @@ export function rewriteFileLinks(input: RewriteFileLinksInput): RewriteFileLinks
         resolvedBeforeTranslate !== null &&
         isUnderAgentsMesh(input.projectRoot, resolvedBeforeTranslate);
       const translatedIsMesh = isUnderAgentsMesh(input.projectRoot, translatedPath);
-      // No actual translation occurred — leave non-mesh links alone to avoid cross-surface rebasing.
+      // No actual translation occurred — leave the link unchanged only when the resolved path
+      // lives in the same top-level surface as the source file (e.g. both in .claude/).
+      // This prevents cross-surface rebasing during import without suppressing project-root
+      // normalization when generating from .agentsmesh/ to a tool file.
       const noTranslation = resolvedBeforeTranslate === translatedPath;
       if (noTranslation && !translatedIsMesh && !resolvedIsMesh && !tokenReferencesMesh) {
-        return match;
+        const sourceFromRoot = normalizeSeparators(
+          api.relative(input.projectRoot, normalizeForProject(input.projectRoot, input.sourceFile)),
+        );
+        const sourceTop = sourceFromRoot.split('/').filter(Boolean)[0] ?? '';
+        const resolvedFromRoot =
+          resolvedBeforeTranslate !== null
+            ? normalizeSeparators(api.relative(input.projectRoot, resolvedBeforeTranslate))
+            : '';
+        const resolvedTop = resolvedFromRoot.split('/').filter(Boolean)[0] ?? '';
+        if (sourceTop.length > 0 && sourceTop === resolvedTop) {
+          return match;
+        }
       }
       if (
         !tokenCanUseGlobalStandard &&
@@ -141,8 +157,6 @@ export function rewriteFileLinks(input: RewriteFileLinksInput): RewriteFileLinks
         return match;
       }
     }
-
-    const api = pathApi(input.projectRoot);
     const destAbsolute = normalizeForProject(input.projectRoot, input.destinationFile);
     const targetAbsolute = normalizeForProject(input.projectRoot, translatedPath);
     const destFromRoot = normalizeSeparators(api.relative(input.projectRoot, destAbsolute));

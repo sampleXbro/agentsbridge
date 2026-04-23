@@ -130,7 +130,7 @@ export async function readDirRecursive(dir: string, visited?: Set<string>): Prom
     return files;
   } catch (err) {
     const e = err as ErrnoLike;
-    if (e.code === 'ENOENT' || e.code === 'ENOTDIR') return [];
+    if (e.code === 'ENOENT' || e.code === 'ENOTDIR' || e.code === 'EACCES') return [];
     throw new Error(`Failed to read directory ${dir}: ${e.message}. Check permissions.`, {
       cause: err,
     });

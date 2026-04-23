@@ -127,6 +127,11 @@ export function rewriteFileLinks(input: RewriteFileLinksInput): RewriteFileLinks
         resolvedBeforeTranslate !== null &&
         isUnderAgentsMesh(input.projectRoot, resolvedBeforeTranslate);
       const translatedIsMesh = isUnderAgentsMesh(input.projectRoot, translatedPath);
+      // No actual translation occurred — leave non-mesh links alone to avoid cross-surface rebasing.
+      const noTranslation = resolvedBeforeTranslate === translatedPath;
+      if (noTranslation && !translatedIsMesh && !resolvedIsMesh && !tokenReferencesMesh) {
+        return match;
+      }
       if (
         !tokenCanUseGlobalStandard &&
         !tokenReferencesMesh &&

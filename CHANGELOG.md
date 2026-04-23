@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0
+
+### Minor Changes
+
+- ec5e3a6: **Breaking (descriptor authors):** Built-in targets now declare global mode under `globalSupport` (capabilities, detection paths, layout, optional `scopeExtras`) instead of separate `global`, `globalCapabilities`, and `globalDetectionPaths` fields. Command/workflow and Gemini settings generation are modeled with capability **flavors** on the canonical generators; Copilot/Cursor root mirrors use `layout.outputFamilies` for rewrite cache keys.
+
+  **CLI / docs:** `pnpm matrix:generate` refreshes README and website support-matrix blocks from the catalog; `pnpm matrix:verify` fails on drift (also runs in CI). Init detection uses `collectDetectionPaths` from the catalog.
+
+- ec5e3a6: Add public library entry points (`./engine`, `./canonical`, `./targets`) for programmatic use, introduce the parametrized target contract matrix under `tests/contract/`, and document coverage exclusions in `tasks/coverage-gaps.md`.
+
 ## 0.4.1 - 2026-04-23
 
 ### Added

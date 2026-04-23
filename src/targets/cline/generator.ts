@@ -126,9 +126,10 @@ function safeEventName(event: string): string {
   return event.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
 }
 
-function buildHookScript(command: string, matcher: string): string {
+function buildHookScript(event: string, command: string, matcher: string): string {
   return [
     '#!/usr/bin/env bash',
+    `# agentsmesh-event: ${event}`,
     `# agentsmesh-matcher: ${matcher}`,
     `# agentsmesh-command: ${command}`,
     'set -e',
@@ -154,7 +155,7 @@ export function generateHooks(canonical: CanonicalFiles): RulesOutput[] {
       if (!hasHookCommand(entry)) continue;
       outputs.push({
         path: `${CLINE_HOOKS_DIR}/${safeEventName(event)}-${index}.sh`,
-        content: buildHookScript(entry.command, entry.matcher),
+        content: buildHookScript(event, entry.command, entry.matcher),
       });
       index++;
     }

@@ -40,8 +40,6 @@ export const COPILOT_GLOBAL_INSTRUCTIONS = '.copilot/copilot-instructions.md';
 export const COPILOT_GLOBAL_AGENTS_DIR = '.copilot/agents';
 export const COPILOT_GLOBAL_SKILLS_DIR = '.copilot/skills';
 export const COPILOT_GLOBAL_PROMPTS_DIR = '.copilot/prompts';
-export const COPILOT_GLOBAL_MCP = '.copilot/mcp.json';
-export const COPILOT_GLOBAL_CONFIG = '.copilot/config.json';
 export const COPILOT_GLOBAL_AGENTS_MD = '.copilot/AGENTS.md';
 
 /** Compatibility mirror paths for skills */

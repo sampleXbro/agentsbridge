@@ -33,6 +33,7 @@ import {
   ROO_CODE_GLOBAL_AGENTS_SKILLS_DIR,
   ROO_CODE_GLOBAL_MODES_FILE,
 } from './constants.js';
+import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromRooCode } from './importer.js';
 import { lintRules } from './linter.js';
 import { buildRooCodeImportPaths } from '../../core/reference/import-map-builders.js';
@@ -149,11 +150,7 @@ const global: TargetLayout = {
     return path;
   },
   mirrorGlobalPath(path, activeTargets) {
-    // Mirror ~/.roo/skills/ to ~/.agents/skills/ unless codex-cli already owns it
-    if (path.startsWith(`${ROO_CODE_GLOBAL_SKILLS_DIR}/`) && !activeTargets.includes('codex-cli')) {
-      return `.agents/skills/${path.slice(ROO_CODE_GLOBAL_SKILLS_DIR.length + 1)}`;
-    }
-    return null;
+    return mirrorSkillsToAgents(path, ROO_CODE_GLOBAL_SKILLS_DIR, activeTargets);
   },
   paths: {
     rulePath(slug, _rule) {

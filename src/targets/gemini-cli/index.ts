@@ -30,6 +30,7 @@ import { shouldConvertAgentsToSkills } from '../../config/core/conversions.js';
 import { projectedAgentSkillDirName } from '../projection/projected-agent-skill.js';
 import { lintCommands, lintHooks } from './lint.js';
 import { emitScopedGeminiSettings } from './scoped-settings-emit.js';
+import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 
 export const target: TargetGenerators = {
   name: 'gemini-cli',
@@ -62,10 +63,7 @@ const project: TargetLayout = {
   // `AGENTS.md` rewrites skill links to `.agents/skills/…` for cross-tool compatibility; mirror
   // project skills there so link validation and consumers see real files (same as global layout).
   mirrorGlobalPath(path, activeTargets) {
-    if (path.startsWith('.gemini/skills/') && !activeTargets.includes('codex-cli')) {
-      return path.replace(/^\.gemini\/skills\//, '.agents/skills/');
-    }
-    return null;
+    return mirrorSkillsToAgents(path, '.gemini/skills', activeTargets);
   },
   paths: {
     rulePath(_slug, _rule) {
@@ -125,11 +123,7 @@ const global: TargetLayout = {
     return path;
   },
   mirrorGlobalPath(path, activeTargets) {
-    // Mirror ~/.gemini/skills/ to ~/.agents/skills/ unless codex-cli already owns it
-    if (path.startsWith(`${GEMINI_GLOBAL_SKILLS_DIR}/`) && !activeTargets.includes('codex-cli')) {
-      return `.agents/skills/${path.slice(GEMINI_GLOBAL_SKILLS_DIR.length + 1)}`;
-    }
-    return null;
+    return mirrorSkillsToAgents(path, GEMINI_GLOBAL_SKILLS_DIR, activeTargets);
   },
   paths: {
     rulePath(_slug, _rule) {

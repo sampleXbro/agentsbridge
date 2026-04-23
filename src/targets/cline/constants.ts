@@ -34,6 +34,7 @@ export const CLINE_GLOBAL_WORKFLOWS_DIR = 'Documents/Cline/Workflows';
 /** Global hooks directory: ~/Documents/Cline/Hooks/ */
 export const CLINE_GLOBAL_HOOKS_DIR = 'Documents/Cline/Hooks';
 
+export const CLINE_CANONICAL_HOOKS = '.agentsmesh/hooks.yaml';
 export const CLINE_CANONICAL_RULES_DIR = '.agentsmesh/rules';
 export const CLINE_CANONICAL_COMMANDS_DIR = '.agentsmesh/commands';
 export const CLINE_CANONICAL_IGNORE = '.agentsmesh/ignore';

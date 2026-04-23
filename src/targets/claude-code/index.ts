@@ -16,6 +16,7 @@ import {
   CLAUDE_MCP_JSON,
   CLAUDE_ROOT,
 } from './constants.js';
+import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { renderClaudeGlobalPrimaryInstructions } from './global-instructions.js';
 import { generateClaudeGlobalExtras } from './global-extras.js';
 import { importFromClaudeCode } from './importer.js';
@@ -82,11 +83,7 @@ const global: TargetLayout = {
     return path;
   },
   mirrorGlobalPath(path, activeTargets) {
-    // Mirror ~/.claude/skills/ to ~/.agents/skills/ unless codex-cli already owns that dir
-    if (path.startsWith('.claude/skills/') && !activeTargets.includes('codex-cli')) {
-      return path.replace(/^\.claude\/skills\//, '.agents/skills/');
-    }
-    return null;
+    return mirrorSkillsToAgents(path, '.claude/skills', activeTargets);
   },
   paths: project.paths,
 };

@@ -24,6 +24,7 @@ import {
   JUNIE_GLOBAL_AGENTS_SKILLS_DIR,
   JUNIE_SKILLS_DIR,
 } from './constants.js';
+import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromJunie } from './importer.js';
 import { lintRules } from './linter.js';
 import { lintMcp } from './lint.js';
@@ -101,11 +102,7 @@ const global: TargetLayout = {
     return path;
   },
   mirrorGlobalPath(path, activeTargets) {
-    // Mirror ~/.junie/skills/ to ~/.agents/skills/ unless codex-cli already owns it
-    if (path.startsWith('.junie/skills/') && !activeTargets.includes('codex-cli')) {
-      return path.replace(/^\.junie\/skills\//, '.agents/skills/');
-    }
-    return null;
+    return mirrorSkillsToAgents(path, '.junie/skills', activeTargets);
   },
   paths: {
     rulePath(_slug, _rule) {

@@ -27,6 +27,7 @@ import {
   WINDSURF_GLOBAL_IGNORE,
   WINDSURF_GLOBAL_AGENTS_SKILLS_DIR,
 } from './constants.js';
+import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromWindsurf } from './importer.js';
 import { lintRules } from './linter.js';
 import { lintCommands, lintMcp } from './lint.js';
@@ -116,11 +117,7 @@ const global: TargetLayout = {
     return path;
   },
   mirrorGlobalPath(path, activeTargets) {
-    // Mirror ~/.codeium/windsurf/skills/ to ~/.agents/skills/ unless codex-cli already owns it
-    if (path.startsWith('.codeium/windsurf/skills/') && !activeTargets.includes('codex-cli')) {
-      return path.replace(/^\.codeium\/windsurf\/skills\//, '.agents/skills/');
-    }
-    return null;
+    return mirrorSkillsToAgents(path, '.codeium/windsurf/skills', activeTargets);
   },
   paths: {
     rulePath(_slug, _rule) {

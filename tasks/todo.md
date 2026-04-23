@@ -80,14 +80,14 @@ Column key (same for every table):
 | ✅ CLOSED | gemini-cli / global | `.gemini/skills/` mirror uses stable constant-based pattern. | Fixed — `mirrorGlobalPath` now uses `GEMINI_GLOBAL_SKILLS_DIR` constant. | P0 | `src/targets/gemini-cli/index.ts` |
 | ✅ CLOSED | copilot / global | `~/.claude/skills/` compat mirror listed in doc §3. | Fixed — `mirrorGlobalPath` now returns `['.agents/skills/…', '.claude/skills/…']`. | P1 | `src/targets/copilot/index.ts` |
 | ❌ FALSE ALARM | cursor / global | `.agents/skills/` mirror toggled by compat flag. | Consistent with all other targets — `!activeTargets.includes('codex-cli')` is the shared convention. | P1 | `src/targets/cursor/index.ts` |
-| 🔲 OPEN (P2) | cross-target | Duplicate `!activeTargets.includes('codex-cli')` checks across 6+ targets. | Could be centralised; low risk as-is. | P2 | various `mirrorGlobalPath` |
+| ✅ CLOSED | cross-target | Duplicate `!activeTargets.includes('codex-cli')` checks across 6+ targets. | Fixed — extracted to `mirrorSkillsToAgents()` in `src/targets/catalog/skill-mirror.ts`; all 8 simple targets updated. | P2 | `src/targets/catalog/skill-mirror.ts` |
 
 ### 2.5 MCP
 
 | Status | Target / Scope | Expected (per doc) | Actual (in code) | Sev | File:line |
 |---|---|---|---|---|---|
 | ❌ FALSE ALARM | antigravity / project | Doc §3.3 warns against undocumented project-level MCP path. | `rewriteGeneratedPath` returns `null` for `ANTIGRAVITY_MCP_CONFIG` in project scope → not emitted. `capabilities.mcp = 'none'` for project. | P0 | `src/targets/antigravity/index.ts` |
-| 🔲 OPEN (P1) | copilot / project | Constants `COPILOT_GLOBAL_MCP`, `COPILOT_GLOBAL_CONFIG` exist but unused. | `capabilities.mcp = 'none'` for both scopes is intentional; unused constants are dead code — delete or document. | P1 | `src/targets/copilot/constants.ts:43-44` |
+| ✅ CLOSED | copilot / project | Constants `COPILOT_GLOBAL_MCP`, `COPILOT_GLOBAL_CONFIG` exist but unused. | Fixed — deleted both constants from `constants.ts`. | P1 | `src/targets/copilot/constants.ts` |
 | ✅ CLOSED | windsurf / both | `mcp` `partial` (project) vs `native` (global) was unexplained asymmetry. | Fixed — global now also `partial`. | P1 | `src/targets/windsurf/index.ts` |
 
 ### 2.6 Permissions
@@ -98,7 +98,7 @@ No canonical-sourced gaps found.
 
 | Status | Target / Scope | Expected (per doc) | Actual (in code) | Sev | File:line |
 |---|---|---|---|---|---|
-| 🔲 OPEN (P1, known) | cline / global | Global hooks round-trip from `~/Documents/Cline/Hooks/`. | Importer does not read from this dir. Documented as known gap. | P1 | `src/targets/cline/importer.ts` |
+| ✅ CLOSED | cline / global | Global hooks round-trip from `~/Documents/Cline/Hooks/`. | Fixed — `importClineHooks` reads from both `CLINE_HOOKS_DIR` and `CLINE_GLOBAL_HOOKS_DIR`; generator now embeds `# agentsmesh-event:` for round-trip. | P1 | `src/targets/cline/hook-importer.ts` |
 
 ### 2.8 Ignore
 
@@ -112,8 +112,8 @@ No canonical-sourced gaps found.
 
 | Status | Target / Scope | Issue | Fix direction |
 |---|---|---|---|
-| 🔲 OPEN (P2) | junie / project | `commands: 'embedded'`, `agents: 'embedded'`, `skills: 'embedded'` — but doc frames all three as compat mirrors, not native. | Relabel to `partial` or `embedded` with explicit "mirror-only" flavor. |
-| 🔲 OPEN (P2) | junie / global | `additionalRules: 'embedded'` — actual behavior aggregates into `AGENTS.md`. | Relabel or document that `embedded` here means "folded into aggregate". |
+| ❌ FALSE ALARM | junie / project | `commands: 'embedded'`, `agents: 'embedded'`, `skills: 'embedded'` — audit claim was wrong. | Verified: project capabilities are all `'native'` (`commands`, `agents`, `skills`). |
+| ❌ FALSE ALARM | junie / global | `additionalRules: 'embedded'` — actual behavior aggregates into `AGENTS.md`. | `'embedded'` is correct by design: all rules fold into the single AGENTS.md aggregate. |
 | ✅ CLOSED | windsurf | `mcp` = `partial` (project) vs `native` (global) was asymmetric. | Aligned — both now `partial`. |
 
 ---
@@ -147,7 +147,7 @@ If any of these should become canonical, extend `src/core/canonical-types.ts` an
 | Status | Area | Issue | Action |
 |---|---|---|---|
 | ✅ CLOSED | Root-rule name | Some docs referenced `_root.md` for the root rule; canonical output is `general.md` for some targets. | Already consistent in supported-tools.mdx. |
-| 🔲 OPEN | `~/` expansion contract | Global-level docs use `~/.foo/...` but don't explain that the engine uses `homedir()` as `projectRoot`. | Add a single cross-cutting note in a CLI or architecture doc. |
+| ✅ CLOSED | `~/` expansion contract | Global-level docs use `~/.foo/...` but don't explain that the engine uses `homedir()` as `projectRoot`. | Fixed — added "Global mode path resolution" section to `website/src/content/docs/cli/generate.mdx`. |
 | 🔲 OPEN | claude-code project doc | Lists `agent-memory/` and `settings.local.json` as "official" but excludes them from generation. | Relabel clearly as "user-maintained, not emitted". |
 | 🔲 OPEN | copilot project doc | §5.1-5.3 call compat mirrors optional but §8 shows them in default layout. | Label as optional in §8. |
 | ✅ CLOSED | roo-code agents | Docs said agents `—`; now `Partial` with `.roomodes` and `settings/custom_modes.yaml`. | Updated in supported-tools.mdx and README. |
@@ -165,10 +165,10 @@ If any of these should become canonical, extend `src/core/canonical-types.ts` an
 | kiro | A− | A− | Solid on canonical features; non-canonical gaps moved to §5. |
 | gemini-cli | A− | A− | Mirror pattern stabilised. |
 | windsurf | A− | A− | MCP capability aligned; nested AGENTS.md cleanup fixed. |
-| junie | B | B | Capability labels still mask mirror-only semantics (cosmetic). |
+| junie | A− | A− | Capability label audit resolved as false alarms; all native. |
 | codex-cli | A− | A− | Detection paths expanded. |
-| cline | B+ | B | Hook round-trip absent (documented known gap). |
-| copilot | B+ | B+ | Unused MCP constants (P1); all generation gaps closed. |
+| cline | A− | A− | Hook round-trip implemented; both project and global dirs. |
+| copilot | A− | A− | Unused MCP constants deleted; all generation gaps closed. |
 | continue | A− | A− | All generation gaps closed. |
 | cursor | A− | A− | Detection false alarms resolved; cursor global paths correct by design. |
 | antigravity | B+ | B+ | MCP project emission false alarm resolved. |
@@ -178,8 +178,6 @@ If any of these should become canonical, extend `src/core/canonical-types.ts` an
 
 ## 8. Remaining open items (priority order)
 
-1. **copilot unused MCP constants** (P1) — delete `COPILOT_GLOBAL_MCP` / `COPILOT_GLOBAL_CONFIG` from `constants.ts` or wire them up.
-2. **Cross-target mirrorGlobalPath duplication** (P2) — centralise the `!activeTargets.includes('codex-cli')` guard.
-3. **Junie capability labels** (P2) — `commands/agents/skills: 'embedded'` vs mirror-only semantics.
-4. **Cline global hooks round-trip** (P1, known) — importer does not read `~/Documents/Cline/Hooks/`.
-5. **`~/` expansion doc note** — add one sentence in CLI or architecture docs.
+1. **`~/` expansion doc note** — add one sentence in CLI or architecture docs.
+
+> All prior items are ✅ CLOSED: copilot MCP constants deleted, mirrorGlobalPath extracted to `src/targets/catalog/skill-mirror.ts`, junie labels resolved as false alarms, cline global hook round-trip implemented.

@@ -27,6 +27,7 @@ import {
   CURSOR_SETTINGS,
   CURSOR_SKILLS_DIR,
 } from './constants.js';
+import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromCursor } from './importer.js';
 import { lintRules } from './linter.js';
 import { buildCursorImportPaths } from '../../core/reference/import-map-builders.js';
@@ -112,10 +113,7 @@ const global: TargetLayout = {
     return path;
   },
   mirrorGlobalPath(path, activeTargets) {
-    if (path.startsWith(`${CURSOR_SKILLS_DIR}/`) && !activeTargets.includes('codex-cli')) {
-      return path.replace(/^\.cursor\/skills\//, '.agents/skills/');
-    }
-    return null;
+    return mirrorSkillsToAgents(path, CURSOR_SKILLS_DIR, activeTargets);
   },
   paths: {
     rulePath(slug, _rule) {

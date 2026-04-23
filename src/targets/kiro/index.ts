@@ -8,6 +8,7 @@ import {
   generateHooks,
   generateIgnore,
 } from './generator.js';
+import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromKiro } from './importer.js';
 import { lintRules } from './linter.js';
 import { lintHooks } from './lint.js';
@@ -101,11 +102,7 @@ const global: TargetLayout = {
     return path;
   },
   mirrorGlobalPath(path, activeTargets) {
-    // Mirror ~/.kiro/skills/ to ~/.agents/skills/ unless codex-cli already owns it
-    if (path.startsWith('.kiro/skills/') && !activeTargets.includes('codex-cli')) {
-      return path.replace(/^\.kiro\/skills\//, '.agents/skills/');
-    }
-    return null;
+    return mirrorSkillsToAgents(path, '.kiro/skills', activeTargets);
   },
   paths: {
     rulePath(slug, _rule) {

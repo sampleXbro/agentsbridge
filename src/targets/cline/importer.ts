@@ -22,6 +22,7 @@ import {
 } from './constants.js';
 import { importClineMcp } from './mcp-mapper.js';
 import { importClineSkills } from './skills-adapter.js';
+import { importClineHooks } from './hook-importer.js';
 
 /**
  * Import Cline config into canonical .agentsmesh/.
@@ -76,6 +77,7 @@ export async function importFromCline(projectRoot: string): Promise<ImportResult
   }
 
   await importClineSkills(projectRoot, results, normalize);
+  await importClineHooks(projectRoot, results);
 
   return results;
 }

@@ -177,6 +177,14 @@ Body.`,
     expect(skills[0]?.name).toBe('my-dir-name');
   });
 
+  it('skips _example and other underscore-prefixed skill directories', async () => {
+    writeSkill('_example', `---\ndescription: Example skill\n---\n\nDo not generate.`);
+    writeSkill('real-skill', `---\ndescription: Real skill\n---\n\nGenerate this.`);
+    const skills = await parseSkills(SKILLS_DIR);
+    expect(skills).toHaveLength(1);
+    expect(skills[0]?.name).toBe('real-skill');
+  });
+
   it('parses multiple skills', async () => {
     writeSkill(
       'a',

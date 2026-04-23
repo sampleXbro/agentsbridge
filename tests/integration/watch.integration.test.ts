@@ -3,13 +3,18 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
+import { writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
 import { spawn } from 'node:child_process';
+import {
+  createWatchTestDir,
+  writeMinimalWatchProject,
+  watchWaitTimeoutMs,
+} from '../harness/watch.js';
 
-const TEST_DIR = join(tmpdir(), 'am-integration-watch');
 const CLI_PATH = join(process.cwd(), 'dist', 'cli.js');
+
+let TEST_DIR = '';
 
 function waitForFile(path: string, timeoutMs: number): Promise<void> {
   const start = Date.now();
@@ -33,30 +38,15 @@ function waitForFile(path: string, timeoutMs: number): Promise<void> {
 }
 
 beforeEach(() => {
-  mkdirSync(TEST_DIR, { recursive: true });
-  writeFileSync(
-    join(TEST_DIR, 'agentsmesh.yaml'),
-    `version: 1
-targets: [claude-code, cursor]
-features: [rules]
-`,
-  );
-  mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
-  writeFileSync(
-    join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
-    `---
-root: true
-description: "Project rules"
----
-# Rules
-- Use TypeScript
-`,
-  );
+  TEST_DIR = createWatchTestDir();
+  writeMinimalWatchProject(TEST_DIR);
 });
 
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
 
 describe('agentsmesh watch (integration)', () => {
+  const fileWaitMs = (): number => watchWaitTimeoutMs() + 3_000;
+
   it('generates on startup and watches for changes', async () => {
     const child = spawn('node', [CLI_PATH, 'watch'], {
       cwd: TEST_DIR,
@@ -67,7 +57,7 @@ describe('agentsmesh watch (integration)', () => {
     child.stdout?.on('data', (chunk: Buffer) => chunks.push(chunk));
     child.stderr?.on('data', (chunk: Buffer) => chunks.push(chunk));
 
-    await waitForFile(join(TEST_DIR, '.claude', 'CLAUDE.md'), 15_000);
+    await waitForFile(join(TEST_DIR, '.claude', 'CLAUDE.md'), fileWaitMs());
 
     expect(readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
       'Use TypeScript',
@@ -108,7 +98,7 @@ description: "Updated"
     child.stdout?.on('data', (chunk: Buffer) => chunks.push(chunk));
     child.stderr?.on('data', (chunk: Buffer) => chunks.push(chunk));
 
-    await waitForFile(join(TEST_DIR, '.claude', 'CLAUDE.md'), 15_000);
+    await waitForFile(join(TEST_DIR, '.claude', 'CLAUDE.md'), fileWaitMs());
 
     expect(readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
       'Use TypeScript',

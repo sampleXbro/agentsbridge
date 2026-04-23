@@ -308,10 +308,8 @@ features: [rules, ignore]
     execSync(`node ${CLI_PATH} import --from windsurf`, { cwd: TEST_DIR });
 
     const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
-    expect(content).toContain('.agentsmesh/skills/post-feature-qa/');
-    expect(content).toContain(
-      '.agentsmesh/skills/post-feature-qa/references/edge-case-checklist.md',
-    );
+    expect(content).toContain('../skills/post-feature-qa/');
+    expect(content).toContain('../skills/post-feature-qa/references/edge-case-checklist.md');
     expect(content).not.toContain('.agents/skills/post-feature-qa/');
   });
 
@@ -340,10 +338,8 @@ features: [rules, ignore]
     execSync(`node ${CLI_PATH} import --from cline`, { cwd: TEST_DIR });
 
     const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
-    expect(content).toContain('.agentsmesh/skills/post-feature-qa/');
-    expect(content).toContain(
-      '.agentsmesh/skills/post-feature-qa/references/edge-case-checklist.md',
-    );
+    expect(content).toContain('../skills/post-feature-qa/');
+    expect(content).toContain('../skills/post-feature-qa/references/edge-case-checklist.md');
     expect(content).not.toContain('.agents/skills/post-feature-qa/');
   });
 
@@ -371,10 +367,8 @@ features: [rules, ignore]
     execSync(`node ${CLI_PATH} import --from claude-code`, { cwd: TEST_DIR });
 
     const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
-    expect(content).toContain('.agentsmesh/skills/post-feature-qa/');
-    expect(content).toContain(
-      '.agentsmesh/skills/post-feature-qa/references/edge-case-checklist.md',
-    );
+    expect(content).toContain('../skills/post-feature-qa/');
+    expect(content).toContain('../skills/post-feature-qa/references/edge-case-checklist.md');
     expect(content).not.toContain('.agents/skills/post-feature-qa/');
   });
 
@@ -565,7 +559,8 @@ features: [rules, ignore]
 `,
     );
     execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
-    const rootContent = readFileSync(join(TEST_DIR, '.clinerules', '_root.md'), 'utf-8');
+    // Cline writes the root rule to AGENTS.md, not .clinerules/_root.md
+    const rootContent = readFileSync(join(TEST_DIR, 'AGENTS.md'), 'utf-8');
     expect(rootContent).toContain('Use TDD.');
     const ignoreContent = readFileSync(join(TEST_DIR, '.clineignore'), 'utf-8');
     expect(ignoreContent).toContain('node_modules/');

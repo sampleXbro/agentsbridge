@@ -27,6 +27,7 @@ deny:
     expect(result).toEqual({
       allow: ['Read', 'Grep', 'Write'],
       deny: ['Bash'],
+      ask: [],
     });
   });
 
@@ -43,6 +44,7 @@ allow:
     expect(result).toEqual({
       allow: ['Read'],
       deny: [],
+      ask: [],
     });
   });
 
@@ -59,6 +61,7 @@ deny:
     expect(result).toEqual({
       allow: [],
       deny: ['Bash'],
+      ask: [],
     });
   });
 
@@ -69,6 +72,7 @@ deny:
     expect(result).toEqual({
       allow: [],
       deny: [],
+      ask: [],
     });
   });
 
@@ -103,6 +107,7 @@ deny:
     expect(result).toEqual({
       allow: ['Read', 'Grep'],
       deny: ['Bash'],
+      ask: [],
     });
   });
 
@@ -113,6 +118,26 @@ deny:
     expect(result).toEqual({
       allow: [],
       deny: [],
+      ask: [],
+    });
+  });
+
+  it('parses ask array', async () => {
+    const path = join(TEST_DIR, 'permissions.yaml');
+    writeFileSync(
+      path,
+      `
+allow: []
+deny: []
+ask:
+  - Write(/tmp/**)
+`,
+    );
+    const result = await parsePermissions(path);
+    expect(result).toEqual({
+      allow: [],
+      deny: [],
+      ask: ['Write(/tmp/**)'],
     });
   });
 });

@@ -11,7 +11,7 @@ from pathlib import Path
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Run .cline/skills/security-ownership-map/scripts/build_ownership_map.py with sensible defaults."
+        description="Run build_ownership_map.py with sensible defaults."
     )
     parser.add_argument("--repo", default=".", help="Path to the git repo (default: .)")
     parser.add_argument(
@@ -139,7 +139,7 @@ def main() -> int:
         print("networkx is required. Install with: pip install networkx", file=sys.stderr)
         return 2
 
-    script_path = Path(__file__).resolve().parent / ".cline/skills/security-ownership-map/scripts/build_ownership_map.py"
+    script_path = Path(__file__).resolve().parent / "./build_ownership_map.py"
     cmd = [
         sys.executable,
         str(script_path),

@@ -8,12 +8,15 @@ import { getHookCommand, getHookPrompt, hasHookText } from '../../core/hook-comm
 import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/filesystem/fs.js';
 import { stringify as yamlStringify } from 'yaml';
 import {
+  CLAUDE_GLOBAL_MCP_JSON,
+  CLAUDE_HOOKS_JSON,
   CLAUDE_SETTINGS,
   CLAUDE_MCP_JSON,
   CLAUDE_CANONICAL_MCP,
   CLAUDE_CANONICAL_PERMISSIONS,
   CLAUDE_CANONICAL_HOOKS,
 } from './constants.js';
+import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 
 /**
  * Convert Claude Code settings.json hooks format to canonical hooks.yaml format.
@@ -48,8 +51,45 @@ export function claudeHooksToCanonical(hooks: Record<string, unknown>): Record<s
   return result;
 }
 
-export async function importMcpJson(projectRoot: string, results: ImportResult[]): Promise<void> {
-  const mcpPath = join(projectRoot, CLAUDE_MCP_JSON);
+/**
+ * Import ~/.claude/hooks.json into canonical hooks.yaml when present.
+ * @returns true when hooks were written from the standalone file
+ */
+export async function importClaudeHooksJson(
+  projectRoot: string,
+  results: ImportResult[],
+): Promise<boolean> {
+  const hooksPath = join(projectRoot, CLAUDE_HOOKS_JSON);
+  const content = await readFileSafe(hooksPath);
+  if (content === null) return false;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content) as unknown;
+  } catch {
+    return false;
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return false;
+  const canonicalHooks = claudeHooksToCanonical(parsed as Record<string, unknown>);
+  if (Object.keys(canonicalHooks).length === 0) return false;
+  const hooksContent = yamlStringify(canonicalHooks);
+  const destPath = join(projectRoot, CLAUDE_CANONICAL_HOOKS);
+  await mkdirp(dirname(destPath));
+  await writeFileAtomic(destPath, hooksContent);
+  results.push({
+    fromTool: 'claude-code',
+    fromPath: hooksPath,
+    toPath: CLAUDE_CANONICAL_HOOKS,
+    feature: 'hooks',
+  });
+  return true;
+}
+
+export async function importMcpJson(
+  projectRoot: string,
+  results: ImportResult[],
+  scope: TargetLayoutScope = 'project',
+): Promise<void> {
+  const mcpPath = join(projectRoot, scope === 'global' ? CLAUDE_GLOBAL_MCP_JSON : CLAUDE_MCP_JSON);
   const content = await readFileSafe(mcpPath);
   if (content === null) return;
 
@@ -75,6 +115,9 @@ export async function importMcpJson(projectRoot: string, results: ImportResult[]
 }
 
 export async function importSettings(projectRoot: string, results: ImportResult[]): Promise<void> {
+  const hooksFromStandaloneFile = results.some(
+    (r) => r.feature === 'hooks' && r.fromPath.replace(/\\/g, '/').endsWith(CLAUDE_HOOKS_JSON),
+  );
   const settingsPath = join(projectRoot, CLAUDE_SETTINGS);
   const content = await readFileSafe(settingsPath);
   if (!content) return;
@@ -109,8 +152,11 @@ export async function importSettings(projectRoot: string, results: ImportResult[
     const deny = Array.isArray(perms.deny)
       ? (perms.deny as string[]).filter((s) => typeof s === 'string')
       : [];
-    if (allow.length > 0 || deny.length > 0) {
-      const permContent = yamlStringify({ allow, deny });
+    const ask = Array.isArray(perms.ask)
+      ? (perms.ask as string[]).filter((s) => typeof s === 'string')
+      : [];
+    if (allow.length > 0 || deny.length > 0 || ask.length > 0) {
+      const permContent = yamlStringify({ allow, deny, ask });
       const destPath = join(projectRoot, CLAUDE_CANONICAL_PERMISSIONS);
       await mkdirp(dirname(destPath));
       await writeFileAtomic(destPath, permContent);
@@ -124,7 +170,12 @@ export async function importSettings(projectRoot: string, results: ImportResult[
   }
 
   const rawHooks = settings.hooks;
-  if (rawHooks && typeof rawHooks === 'object' && !Array.isArray(rawHooks)) {
+  if (
+    !hooksFromStandaloneFile &&
+    rawHooks &&
+    typeof rawHooks === 'object' &&
+    !Array.isArray(rawHooks)
+  ) {
     const canonicalHooks = claudeHooksToCanonical(rawHooks as Record<string, unknown>);
     if (Object.keys(canonicalHooks).length > 0) {
       const hooksContent = yamlStringify(canonicalHooks);

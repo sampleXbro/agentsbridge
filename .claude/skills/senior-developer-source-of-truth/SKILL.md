@@ -3,6 +3,8 @@ name: senior-developer-source-of-truth
 description: Treat code and live systems as the ultimate source of truth
 ---
 
+## Purpose
+
 ## Source of Truth: Trust Code, Not Docs
 
 **All documentation might be outdated.** The only source of truth:

@@ -3,6 +3,8 @@ name: post-feature-qa
 description: "Apply after EVERY feature implementation, story completion, or task finish. Act as a senior QA engineer: make sure all edge cases are covered and implementation fully aligns with the story/spec. Use whenever you complete a story, ship a feature, or before marking a task done or opening a PR. Do not skip this — run the QA checklist before claiming work is complete."
 ---
 
+## Purpose
+
 # Post-Feature QA — Senior QA Engineer Mode
 
 When a feature, story, or task has been implemented, you MUST run this QA pass before marking it complete. Acting as a senior QA engineer, verify test coverage and story alignment. Never claim work is done without this review.
@@ -43,7 +45,7 @@ If any criterion has no corresponding test, add the test.
 
 ### 3. Edge Case Checklist
 
-Load `.claude/skills/post-feature-qa/references/edge-case-checklist.md` for a full reference. For every public API, config schema, or behavior:
+Load `./references/edge-case-checklist.md` for a full reference. For every public API, config schema, or behavior:
 
 - **Valid inputs**: minimal valid, full valid, optional fields omitted
 - **Invalid types**: wrong type (string vs number, array vs object, etc.)

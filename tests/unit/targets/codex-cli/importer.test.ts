@@ -80,10 +80,8 @@ describe('importFromCodex: rules', () => {
     await importFromCodex(TEST_DIR);
 
     const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
-    expect(content).toContain('.agentsmesh/skills/post-feature-qa/');
-    expect(content).toContain(
-      '.agentsmesh/skills/post-feature-qa/references/edge-case-checklist.md',
-    );
+    expect(content).toContain('../skills/post-feature-qa/');
+    expect(content).toContain('../skills/post-feature-qa/references/edge-case-checklist.md');
     expect(content).not.toContain('.windsurf/skills/post-feature-qa/');
   });
 
@@ -352,6 +350,58 @@ describe('importFromCodex: scoped AGENTS filtering', () => {
     expect(
       existsSync(join(TEST_DIR, '.agentsmesh', 'rules', 'tests-e2e-fixtures-codex-project.md')),
     ).toBe(false);
+  });
+});
+
+describe('importFromCodex: global scope', () => {
+  it('skips nested AGENTS.md discovery under project root (global uses homedir as root)', async () => {
+    mkdirSync(join(TEST_DIR, '.codex'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.codex', 'AGENTS.md'), '# Codex home root\n');
+    writeFileSync(join(TEST_DIR, AGENTS_MD), '# Root\n');
+    mkdirSync(join(TEST_DIR, 'packages', 'api'), { recursive: true });
+    writeFileSync(join(TEST_DIR, 'packages', 'api', 'AGENTS.md'), '# Scoped\n');
+
+    const projectResults = await importFromCodex(TEST_DIR);
+    expect(projectResults.some((r) => r.toPath === '.agentsmesh/rules/packages-api.md')).toBe(true);
+
+    rmSync(join(TEST_DIR, '.agentsmesh'), { recursive: true, force: true });
+
+    const globalResults = await importFromCodex(TEST_DIR, { scope: 'global' });
+    expect(globalResults.some((r) => r.toPath === '.agentsmesh/rules/packages-api.md')).toBe(false);
+    expect(globalResults.some((r) => r.toPath === '.agentsmesh/rules/_root.md')).toBe(true);
+  });
+
+  it('splits managed embedded rules from global AGENTS.md', async () => {
+    mkdirSync(join(TEST_DIR, '.codex'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.codex', 'AGENTS.md'),
+      [
+        '# Codex home root',
+        '',
+        'Root guidance.',
+        '',
+        '<!-- agentsmesh:embedded-rules:start -->',
+        '<!-- agentsmesh:embedded-rule:start {"source":"rules/typescript.md","description":"TS rules","globs":["src/**/*.ts"],"targets":[]} -->',
+        '## TS rules',
+        '',
+        'Use strict TS.',
+        '<!-- agentsmesh:embedded-rule:end -->',
+        '<!-- agentsmesh:embedded-rules:end -->',
+      ].join('\n'),
+    );
+
+    const results = await importFromCodex(TEST_DIR, { scope: 'global' });
+
+    expect(results.some((r) => r.toPath === '.agentsmesh/rules/_root.md')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/rules/typescript.md')).toBe(true);
+    const root = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
+    expect(root).toContain('Root guidance.');
+    expect(root).not.toContain('Use strict TS.');
+    const ts = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'), 'utf-8');
+    expect(ts).toContain('description: TS rules');
+    expect(ts).toContain('src/**/*.ts');
+    expect(ts).toContain('Use strict TS.');
+    expect(ts).not.toContain('## TS rules');
   });
 });
 

@@ -3,6 +3,8 @@ name: homebrew-packaging
 description: Use when preparing or maintaining Homebrew distribution for a CLI associated with a TypeScript library, including formula updates, archive naming, checksums, and release compatibility.
 ---
 
+## Purpose
+
 # Homebrew Packaging
 
 You are responsible for Homebrew distribution of a CLI or executable package that may be implemented in TypeScript/Node.

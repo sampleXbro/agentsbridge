@@ -1,7 +1,7 @@
 import type { GenerateResult } from '../types.js';
+import { CODEX_CLI_TARGET_ID } from '../../targets/catalog/target-ids.js';
 
 const AGENTS_SUFFIX = 'AGENTS.md';
-const CODEX_TARGET = 'codex-cli';
 
 function statusRank(status: GenerateResult['status']): number {
   switch (status) {
@@ -40,9 +40,7 @@ function richerAgentsResult(left: GenerateResult, right: GenerateResult): Genera
   const rightContainsLeft = rightTrimmed.includes(leftTrimmed);
 
   if (leftContainsRight === rightContainsLeft) return null;
-  return leftContainsRight
-    ? mergeDuplicateMetadata(left, right)
-    : mergeDuplicateMetadata(right, left);
+  return leftContainsRight ? left : right;
 }
 
 function richerCodexAgentsResult(
@@ -51,13 +49,16 @@ function richerCodexAgentsResult(
 ): GenerateResult | null {
   if (!left.path.endsWith(AGENTS_SUFFIX) || left.path !== right.path) return null;
 
-  const codex = left.target === CODEX_TARGET ? left : right.target === CODEX_TARGET ? right : null;
+  const codex =
+    left.target === CODEX_CLI_TARGET_ID
+      ? left
+      : right.target === CODEX_CLI_TARGET_ID
+        ? right
+        : null;
   const other = codex === left ? right : left;
   if (!codex) return null;
 
-  return trimmedContent(codex.content).length > trimmedContent(other.content).length
-    ? mergeDuplicateMetadata(codex, other)
-    : null;
+  return trimmedContent(codex.content).length > trimmedContent(other.content).length ? codex : null;
 }
 
 /**

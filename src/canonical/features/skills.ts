@@ -84,6 +84,7 @@ export async function parseSkills(skillsDir: string): Promise<CanonicalSkill[]> 
   const skills: CanonicalSkill[] = [];
   for (const ent of entries) {
     if (!ent.isDirectory()) continue;
+    if (ent.name.startsWith('_')) continue;
     const skillDir = join(skillsDir, ent.name);
     const skillPath = join(skillDir, SKILL_FILE);
     const content = await readFileSafe(skillPath);

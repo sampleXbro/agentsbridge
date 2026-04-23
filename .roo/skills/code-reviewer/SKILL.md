@@ -130,7 +130,7 @@ python scripts/review_report_generator.py . \
 ## Reference Guides
 
 ### Code Review Checklist
-`.roo/skills/code-reviewer/references/code_review_checklist.md`
+`./references/code_review_checklist.md`
 
 Systematic checklists covering:
 - Pre-review checks (build, tests, PR hygiene)
@@ -142,7 +142,7 @@ Systematic checklists covering:
 - Language-specific checks
 
 ### Coding Standards
-`.roo/skills/code-reviewer/references/coding_standards.md`
+`./references/coding_standards.md`
 
 Language-specific standards for:
 - TypeScript (type annotations, null safety, async/await)
@@ -153,7 +153,7 @@ Language-specific standards for:
 - Kotlin (null safety, data classes, coroutines)
 
 ### Common Antipatterns
-`.roo/skills/code-reviewer/references/common_antipatterns.md`
+`./references/common_antipatterns.md`
 
 Antipattern catalog with examples and fixes:
 - Structural (god class, long method, deep nesting)

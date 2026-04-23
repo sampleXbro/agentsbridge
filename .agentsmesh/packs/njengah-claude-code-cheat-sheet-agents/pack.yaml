@@ -2,8 +2,8 @@ name: njengah-claude-code-cheat-sheet-agents
 source: github:Njengah/claude-code-cheat-sheet@94fbfc0040b11e16070d895c7282a6028d35e89c
 version: 94fbfc0040b11e16070d895c7282a6028d35e89c
 source_kind: github
-installed_at: 2026-03-23T13:31:49.523Z
-updated_at: 2026-03-23T13:31:49.523Z
+installed_at: 2026-04-17T19:36:18.464Z
+updated_at: 2026-04-17T19:36:18.464Z
 features:
   - agents
 pick:

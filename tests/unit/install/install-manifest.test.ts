@@ -15,6 +15,10 @@ function makeConfigDir(name: string): string {
   return dir;
 }
 
+function canonicalDir(configDir: string): string {
+  return join(configDir, '.agentsmesh');
+}
+
 afterEach(() => {
   rmSync(join(tmpdir(), 'agentsmesh-install-manifest-missing'), { recursive: true, force: true });
   rmSync(join(tmpdir(), 'agentsmesh-install-manifest-valid'), { recursive: true, force: true });
@@ -27,7 +31,7 @@ describe('readInstallManifest', () => {
   it('returns an empty list when the manifest file is missing', async () => {
     const configDir = makeConfigDir('missing');
 
-    await expect(readInstallManifest(configDir)).resolves.toEqual([]);
+    await expect(readInstallManifest(canonicalDir(configDir))).resolves.toEqual([]);
   });
 
   it('returns parsed installs for a valid manifest and [] for invalid content', async () => {
@@ -47,7 +51,7 @@ installs:
 `,
     );
 
-    await expect(readInstallManifest(validDir)).resolves.toEqual([
+    await expect(readInstallManifest(canonicalDir(validDir))).resolves.toEqual([
       {
         name: 'review-pack',
         source: 'github:org/repo@v1',
@@ -61,7 +65,7 @@ installs:
 
     const invalidDir = makeConfigDir('invalid');
     writeFileSync(join(invalidDir, '.agentsmesh', 'installs.yaml'), 'version: 2\ninstalls: nope\n');
-    await expect(readInstallManifest(invalidDir)).resolves.toEqual([]);
+    await expect(readInstallManifest(canonicalDir(invalidDir))).resolves.toEqual([]);
   });
 });
 
@@ -84,7 +88,7 @@ installs:
     );
 
     await upsertInstallManifestEntry(
-      configDir,
+      canonicalDir(configDir),
       buildInstallManifestEntry({
         name: 'alpha',
         source: 'github:org/alpha@v2',
@@ -95,7 +99,7 @@ installs:
       }),
     );
 
-    await expect(readInstallManifest(configDir)).resolves.toEqual([
+    await expect(readInstallManifest(canonicalDir(configDir))).resolves.toEqual([
       {
         name: 'alpha',
         source: 'github:org/alpha@v2',
@@ -133,7 +137,7 @@ installs:
     );
 
     await upsertInstallManifestEntry(
-      configDir,
+      canonicalDir(configDir),
       buildInstallManifestEntry({
         name: 'renamed-pack',
         source: 'git+https://example.com/org/repo.git#main',
@@ -145,7 +149,7 @@ installs:
       }),
     );
 
-    await expect(readInstallManifest(configDir)).resolves.toEqual([
+    await expect(readInstallManifest(canonicalDir(configDir))).resolves.toEqual([
       {
         name: 'keep-me',
         source: 'github:org/other@v1',

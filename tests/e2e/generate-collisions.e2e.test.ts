@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { join } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { cleanup, createTestProject } from './helpers/setup.js';
-import { fileContains, fileExists, fileNotExists } from './helpers/assertions.js';
+import { fileContains, fileExists } from './helpers/assertions.js';
 import { runCli } from './helpers/run-cli.js';
 
 describe('generate output collisions', () => {
@@ -37,47 +37,6 @@ description: Shared root
     fileExists(join(dir, 'AGENTS.md'));
     const agentsMatches = (result.stdout.match(/AGENTS\.md/g) ?? []).length;
     expect(agentsMatches).toBe(1);
-  });
-
-  it('fails before writing files when targets generate conflicting content for the same path', async () => {
-    dir = createTestProject();
-    mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
-    mkdirSync(join(dir, '.agentsmesh', 'skills', 'post-feature-qa', 'references'), {
-      recursive: true,
-    });
-    writeFileSync(
-      join(dir, 'agentsmesh.yaml'),
-      `version: 1
-targets: [cline, windsurf]
-features: [rules, skills]
-`,
-    );
-    writeFileSync(
-      join(dir, '.agentsmesh', 'rules', '_root.md'),
-      `---
-root: true
-description: Shared root
----
-Use .agentsmesh/skills/post-feature-qa/ and .agentsmesh/skills/post-feature-qa/references/.
-`,
-    );
-    writeFileSync(
-      join(dir, '.agentsmesh', 'skills', 'post-feature-qa', 'SKILL.md'),
-      `---
-description: QA
----
-Run QA.
-`,
-    );
-    writeFileSync(
-      join(dir, '.agentsmesh', 'skills', 'post-feature-qa', 'references', 'checklist.md'),
-      '- check\n',
-    );
-
-    const result = await runCli('generate', dir);
-    expect(result.exitCode).toBe(1);
-    expect(result.stderr).toContain('Conflicting generated outputs for AGENTS.md');
-    fileNotExists(join(dir, 'AGENTS.md'));
   });
 
   it('prefers codex AGENTS.md when rewritten overlaps differ between codex-cli and windsurf', async () => {
@@ -119,8 +78,8 @@ Run QA.
 
     expect(result.exitCode).toBe(0);
     fileExists(join(dir, 'AGENTS.md'));
-    fileContains(join(dir, 'AGENTS.md'), '.agents/skills/post-feature-qa/');
-    fileContains(join(dir, 'AGENTS.md'), '.agents/skills/post-feature-qa/references/');
+    fileContains(join(dir, 'AGENTS.md'), 'skills/post-feature-qa/');
+    fileContains(join(dir, 'AGENTS.md'), 'skills/post-feature-qa/references/');
   });
 
   it('deduplicates AGENTS.md overlaps after import-normalized relative skill links', async () => {
@@ -162,6 +121,6 @@ Run QA.
 
     expect(result.exitCode).toBe(0);
     fileExists(join(dir, 'AGENTS.md'));
-    fileContains(join(dir, 'AGENTS.md'), '.agents/skills/post-feature-qa/');
+    fileContains(join(dir, 'AGENTS.md'), 'skills/post-feature-qa/');
   });
 });

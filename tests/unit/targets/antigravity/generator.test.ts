@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
 import {
   generateRules,
-  generateWorkflows,
+  generateCommands,
   generateSkills,
 } from '../../../../src/targets/antigravity/generator.js';
 import {
@@ -118,7 +118,7 @@ describe('generateRules (antigravity)', () => {
   });
 });
 
-describe('generateWorkflows (antigravity)', () => {
+describe('generateCommands (antigravity)', () => {
   it('projects canonical commands into .agents/workflows/{name}.md as plain markdown', () => {
     const canonical = makeCanonical({
       commands: [
@@ -131,7 +131,7 @@ describe('generateWorkflows (antigravity)', () => {
         },
       ],
     });
-    const results = generateWorkflows(canonical);
+    const results = generateCommands(canonical);
     expect(results).toHaveLength(1);
     expect(results[0]?.path).toBe(`${ANTIGRAVITY_WORKFLOWS_DIR}/review.md`);
     expect(results[0]?.content).toContain('Review the current diff.');
@@ -140,7 +140,7 @@ describe('generateWorkflows (antigravity)', () => {
   });
 
   it('returns empty array when no commands exist', () => {
-    expect(generateWorkflows(makeCanonical())).toHaveLength(0);
+    expect(generateCommands(makeCanonical())).toHaveLength(0);
   });
 
   it('includes description as intro when body does not start with it', () => {
@@ -155,7 +155,7 @@ describe('generateWorkflows (antigravity)', () => {
         },
       ],
     });
-    const results = generateWorkflows(canonical);
+    const results = generateCommands(canonical);
     expect(results[0]?.content).toContain('Run tests before merging');
     expect(results[0]?.content).toContain('pnpm test');
   });

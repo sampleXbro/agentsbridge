@@ -4,22 +4,33 @@
 
 import { join } from 'node:path';
 import { exists } from '../../utils/filesystem/fs.js';
-import { BUILTIN_TARGETS } from '../../targets/catalog/builtin-targets.js';
+import type { ConfigScope } from '../../config/core/scope.js';
+import { collectDetectionPaths } from '../../targets/catalog/detection.js';
 
-/** AI tool indicators for detection — derived from target descriptors. */
-export const TOOL_INDICATORS: Array<{ id: string; paths: string[] }> = BUILTIN_TARGETS.map((d) => ({
-  id: d.id,
-  paths: [...d.detectionPaths],
-}));
+function toolIndicators(scope: ConfigScope): Array<{ id: string; paths: string[] }> {
+  const byId = new Map<string, string[]>();
+  for (const { target, path } of collectDetectionPaths(scope)) {
+    const prev = byId.get(target) ?? [];
+    prev.push(path);
+    byId.set(target, prev);
+  }
+  return [...byId.entries()].map(([id, paths]) => ({ id, paths }));
+}
+
+/** AI tool indicators for detection — derived from {@link collectDetectionPaths}. */
+export const TOOL_INDICATORS: Array<{ id: string; paths: string[] }> = toolIndicators('project');
 
 /**
  * Detect existing AI tool configs in the project.
  * @param projectRoot - Project root directory
  * @returns Array of tool IDs that have configs
  */
-export async function detectExistingConfigs(projectRoot: string): Promise<string[]> {
+export async function detectExistingConfigs(
+  projectRoot: string,
+  scope: ConfigScope = 'project',
+): Promise<string[]> {
   const found: string[] = [];
-  for (const { id, paths } of TOOL_INDICATORS) {
+  for (const { id, paths } of toolIndicators(scope)) {
     for (const p of paths) {
       const full = join(projectRoot, p);
       if (await exists(full)) {

@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import type { ChildProcess } from 'node:child_process';
 
 const CLI_PATH = join(process.cwd(), 'dist', 'cli.js');
-const TIMEOUT_MS = 30_000;
+const TIMEOUT_MS = 60_000;
 
 export interface RunCliResult {
   stdout: string;

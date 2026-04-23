@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { CanonicalFiles } from '../../../src/core/types.js';
-import { lintHooks } from '../../../src/core/lint/hooks.js';
+import { lintHooks as lintGeminiHooks } from '../../../src/targets/gemini-cli/lint.js';
+import { lintHooks as lintCopilotHooks } from '../../../src/targets/copilot/lint.js';
+import { lintHooks as lintKiroHooks } from '../../../src/targets/kiro/lint.js';
 
 function makeCanonical(hooks: CanonicalFiles['hooks']): CanonicalFiles {
   return {
@@ -15,30 +17,28 @@ function makeCanonical(hooks: CanonicalFiles['hooks']): CanonicalFiles {
   };
 }
 
-describe('lintHooks', () => {
+describe('per-target lint.hooks hooks', () => {
   it('returns no diagnostics when hooks are missing', () => {
-    expect(lintHooks(makeCanonical(null), 'gemini-cli')).toEqual([]);
+    expect(lintGeminiHooks(makeCanonical(null))).toEqual([]);
   });
 
   it('returns no diagnostics for supported gemini-cli events', () => {
     expect(
-      lintHooks(
+      lintGeminiHooks(
         makeCanonical({
           PreToolUse: [{ matcher: '*', command: 'echo pre' }],
           PostToolUse: [{ matcher: '*', command: 'echo post' }],
           Notification: [{ matcher: '*', command: 'echo note' }],
         }),
-        'gemini-cli',
       ),
     ).toEqual([]);
   });
 
   it('warns for unsupported gemini-cli hook events', () => {
-    const diagnostics = lintHooks(
+    const diagnostics = lintGeminiHooks(
       makeCanonical({
         SubagentStop: [{ matcher: '*', command: 'echo stop' }],
       }),
-      'gemini-cli',
     );
 
     expect(diagnostics).toHaveLength(1);
@@ -46,25 +46,24 @@ describe('lintHooks', () => {
   });
 
   it('warns for unsupported copilot hook events', () => {
-    const diagnostics = lintHooks(
+    const diagnostics = lintCopilotHooks(
       makeCanonical({
         SubagentStart: [{ matcher: '*', command: 'echo start' }],
       }),
-      'copilot',
     );
 
     expect(diagnostics).toHaveLength(1);
     expect(diagnostics[0]?.message).toContain('UserPromptSubmit');
   });
 
-  it('returns no diagnostics for unrelated targets', () => {
-    expect(
-      lintHooks(
-        makeCanonical({
-          SubagentStart: [{ matcher: '*', command: 'echo start' }],
-        }),
-        'claude-code',
-      ),
-    ).toEqual([]);
+  it('warns for unsupported kiro hook events', () => {
+    const diagnostics = lintKiroHooks(
+      makeCanonical({
+        Notification: [{ matcher: '*', command: 'echo note' }],
+      }),
+    );
+
+    expect(diagnostics).toHaveLength(1);
+    expect(diagnostics[0]?.message).toContain('Kiro hooks');
   });
 });

@@ -58,6 +58,20 @@ describe('fetchRemoteExtend', () => {
     await expect(fetchRemoteExtend('github:org/repo@', 'ext1')).rejects.toThrow(/Invalid github/);
   });
 
+  it('throws "Invalid gitlab:" for malformed gitlab source', async () => {
+    await expect(fetchRemoteExtend('gitlab:', 'ext1')).rejects.toThrow(/Invalid gitlab: source/);
+  });
+
+  it('throws "Invalid git+" for malformed git+ source', async () => {
+    await expect(fetchRemoteExtend('git+', 'ext1')).rejects.toThrow(/Invalid git\+ source/);
+  });
+
+  it('throws generic "Invalid remote source" with usage hint for unknown scheme', async () => {
+    await expect(fetchRemoteExtend('unknown:bar', 'ext1')).rejects.toThrow(
+      /Invalid remote source.*github:org\/repo@tag/,
+    );
+  });
+
   it('fetches, extracts, and returns resolved path (mocked fetch)', async () => {
     const srcDir = join(CACHE_ROOT, 'repo-src');
     const innerDir = join(srcDir, 'my-org-config-v1.0.0', '.agentsmesh', 'rules');

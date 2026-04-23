@@ -10,7 +10,6 @@ installs:
       skills:
         - code-reviewer
     target: claude-code
-    path: engineering-team
     as: skills
   - name: composiohq-awesome-claude-skills-skills
     source: github:ComposioHQ/awesome-claude-skills@27904475d1270d8395acf07691966267d5abda2d

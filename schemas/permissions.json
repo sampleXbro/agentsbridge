@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "allow": {
+      "default": [],
+      "description": "Tool calls to allow without confirmation",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "deny": {
+      "default": [],
+      "description": "Tool calls to always deny",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ask": {
+      "default": [],
+      "description": "Tool calls to confirm before running",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "allow",
+    "deny",
+    "ask"
+  ],
+  "additionalProperties": false,
+  "description": "AgentsMesh permissions config (.agentsmesh/permissions.yaml)",
+  "title": "agentsmesh-permissions.yaml"
+}

@@ -33,6 +33,10 @@ function toStrArray(v: unknown): string[] {
  * @param v - Raw value from YAML
  * @returns Number or 0 if invalid
  */
+function toBool(v: unknown): boolean {
+  return v === true || v === 'true' || v === 1 || v === '1';
+}
+
 function toInt(v: unknown): number {
   if (typeof v === 'number' && Number.isInteger(v) && v >= 0) return v;
   if (typeof v === 'string') {
@@ -61,7 +65,7 @@ function toHooks(v: unknown): Hooks {
  */
 export async function parseAgents(agentsDir: string): Promise<CanonicalAgent[]> {
   const files = await readDirRecursive(agentsDir);
-  const mdFiles = files.filter((f) => f.endsWith('.md'));
+  const mdFiles = files.filter((f) => f.endsWith('.md') && !basename(f).startsWith('_'));
   const agents: CanonicalAgent[] = [];
   for (const path of mdFiles) {
     const content = await readFileSafe(path);
@@ -99,6 +103,7 @@ export async function parseAgents(agentsDir: string): Promise<CanonicalAgent[]> 
       hooks: toHooks(frontmatter.hooks),
       skills,
       memory: typeof frontmatter.memory === 'string' ? frontmatter.memory : '',
+      outputStyle: toBool(frontmatter.outputStyle) || toBool(frontmatter['output-style']),
       body,
     });
   }

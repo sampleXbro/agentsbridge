@@ -3,6 +3,8 @@ name: senior-developer-research-first-protocol
 description: Follow an 8-step research-first protocol before making changes
 ---
 
+## Purpose
+
 ## Research-First Protocol
 
 **Why:** Understanding prevents broken integrations, unintended side effects, wasted time fixing symptoms instead of root causes.

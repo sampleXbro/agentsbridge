@@ -8,12 +8,16 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import * as tar from 'tar';
 import { vi } from 'vitest';
-import { runGenerate, ensurePathInsideRoot } from '../../../../src/cli/commands/generate.js';
+import { runGenerate } from '../../../../src/cli/commands/generate.js';
+import { ensurePathInsideRoot } from '../../../../src/cli/commands/generate-path.js';
 
 const TEST_DIR = join(tmpdir(), 'am-generate-unit');
 
 beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
-afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
+afterEach(() => {
+  vi.unstubAllEnvs();
+  rmSync(TEST_DIR, { recursive: true, force: true });
+});
 
 describe('runGenerate', () => {
   it('rejects output paths that escape project root', () => {
@@ -31,6 +35,402 @@ describe('runGenerate', () => {
   it('rejects the deprecated --features flag', async () => {
     await expect(runGenerate({ features: 'rules' }, TEST_DIR)).rejects.toThrow(
       /--features is no longer supported/i,
+    );
+  });
+
+  it('generates Claude global outputs under the user home root when --global is set', async () => {
+    vi.stubEnv('HOME', TEST_DIR);
+    vi.stubEnv('USERPROFILE', TEST_DIR);
+
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'agentsmesh.yaml'),
+      `version: 1
+targets: [claude-code]
+features: [rules, mcp, permissions, ignore, skills, hooks]
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
+      `---
+root: true
+description: "Root"
+---
+# Global Root
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'mcp.json'),
+      JSON.stringify(
+        { mcpServers: { docs: { command: 'npx', args: ['-y', '@docs/mcp'] } } },
+        null,
+        2,
+      ),
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'permissions.yaml'),
+      `allow:
+  - Read(*)
+deny:
+  - Write(/etc/**)
+`,
+    );
+    writeFileSync(join(TEST_DIR, '.agentsmesh', 'ignore'), 'dist\n');
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'skills', 'demo'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'skills', 'demo', 'SKILL.md'),
+      '---\nname: demo\ndescription: Demo skill\n---\nBody.\n',
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'hooks.yaml'),
+      `PostToolUse:
+  - matcher: "Write"
+    command: "echo ok"
+    type: command
+`,
+    );
+
+    await runGenerate({ global: true }, TEST_DIR, { printMatrix: false });
+
+    expect(readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
+      '# Global Instructions',
+    );
+    expect(readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
+      '# Global Root',
+    );
+    expect(readFileSync(join(TEST_DIR, '.claude', 'settings.json'), 'utf-8')).toContain(
+      '"permissions"',
+    );
+    expect(readFileSync(join(TEST_DIR, '.claude.json'), 'utf-8')).toContain('"mcpServers"');
+    expect(readFileSync(join(TEST_DIR, '.claudeignore'), 'utf-8')).toContain('dist');
+    expect(readFileSync(join(TEST_DIR, '.claude', 'hooks.json'), 'utf-8')).toContain('PostToolUse');
+    expect(existsSync(join(TEST_DIR, '.agents', 'skills', 'demo', 'SKILL.md'))).toBe(true);
+    expect(
+      readFileSync(join(TEST_DIR, '.claude', 'skills', 'demo', 'SKILL.md'), 'utf-8'),
+    ).toContain('name: demo');
+  });
+
+  it('does not conflict on ~/.agents/skills when global targets include both claude-code and codex-cli', async () => {
+    vi.stubEnv('HOME', TEST_DIR);
+    vi.stubEnv('USERPROFILE', TEST_DIR);
+
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'agentsmesh.yaml'),
+      `version: 1
+targets: [claude-code, codex-cli]
+features: [rules, skills]
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
+      `---
+root: true
+---
+# Root
+`,
+    );
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'skills', 'senior-frontend'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'skills', 'senior-frontend', 'SKILL.md'),
+      '---\nname: senior-frontend\ndescription: FE\n---\n## Purpose\n\nBody.\n',
+    );
+
+    await expect(runGenerate({ global: true }, TEST_DIR, { printMatrix: false })).resolves.toBe(0);
+    expect(existsSync(join(TEST_DIR, '.claude', 'skills', 'senior-frontend', 'SKILL.md'))).toBe(
+      true,
+    );
+    expect(existsSync(join(TEST_DIR, '.agents', 'skills', 'senior-frontend', 'SKILL.md'))).toBe(
+      true,
+    );
+  });
+
+  it('generates Antigravity global outputs under documented ~/.gemini paths', async () => {
+    vi.stubEnv('HOME', TEST_DIR);
+    vi.stubEnv('USERPROFILE', TEST_DIR);
+
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'skills', 'review'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'commands'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'agentsmesh.yaml'),
+      `version: 1
+targets: [antigravity]
+features: [rules, skills, mcp, commands]
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
+      `---
+root: true
+---
+# Global Antigravity
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'),
+      `---
+description: "TypeScript"
+---
+Use strict types.
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'skills', 'review', 'SKILL.md'),
+      `---
+name: review
+description: Review changes
+---
+Review carefully.
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'mcp.json'),
+      JSON.stringify(
+        { mcpServers: { docs: { command: 'npx', args: ['-y', '@docs/mcp'] } } },
+        null,
+        2,
+      ),
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'commands', 'ship.md'),
+      `---
+description: ship
+---
+ship it
+`,
+    );
+
+    await runGenerate({ global: true }, TEST_DIR, { printMatrix: false });
+
+    expect(readFileSync(join(TEST_DIR, '.gemini', 'antigravity', 'GEMINI.md'), 'utf-8')).toContain(
+      'Use strict types.',
+    );
+    expect(
+      readFileSync(
+        join(TEST_DIR, '.gemini', 'antigravity', 'skills', 'review', 'SKILL.md'),
+        'utf-8',
+      ),
+    ).toContain('Review carefully.');
+    expect(
+      readFileSync(join(TEST_DIR, '.gemini', 'antigravity', 'mcp_config.json'), 'utf-8'),
+    ).toContain('"mcpServers"');
+    expect(existsSync(join(TEST_DIR, '.agents', 'workflows', 'ship.md'))).toBe(false);
+  });
+
+  it('generates Cursor global ~/.cursor/rules, ~/.cursor/AGENTS.md aggregate, and ~/.cursor tooling paths', async () => {
+    vi.stubEnv('HOME', TEST_DIR);
+    vi.stubEnv('USERPROFILE', TEST_DIR);
+
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'skills', 'review'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'agents'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'commands'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'agentsmesh.yaml'),
+      `version: 1
+targets: [cursor]
+features: [rules, skills, agents, mcp, commands]
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
+      `---
+root: true
+---
+# Cursor Global
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'),
+      `---
+description: "TypeScript"
+globs: ["src/**/*.ts"]
+---
+Use strict types.
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'skills', 'review', 'SKILL.md'),
+      `---
+name: review
+description: Review changes
+---
+Review carefully.
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'),
+      `---
+name: reviewer
+description: Reviewer
+---
+Review carefully.
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'mcp.json'),
+      JSON.stringify(
+        { mcpServers: { docs: { command: 'npx', args: ['-y', '@docs/mcp'] } } },
+        null,
+        2,
+      ),
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'commands', 'ship.md'),
+      `---
+description: ship
+---
+ship it
+`,
+    );
+
+    await runGenerate({ global: true }, TEST_DIR, { printMatrix: false });
+
+    expect(readFileSync(join(TEST_DIR, '.cursor', 'rules', 'general.mdc'), 'utf-8')).toContain(
+      'Cursor Global',
+    );
+    expect(readFileSync(join(TEST_DIR, '.cursor', 'AGENTS.md'), 'utf-8')).toContain(
+      'Use strict types.',
+    );
+    expect(readFileSync(join(TEST_DIR, '.cursor', 'mcp.json'), 'utf-8')).toContain('"mcpServers"');
+    expect(
+      readFileSync(join(TEST_DIR, '.cursor', 'skills', 'review', 'SKILL.md'), 'utf-8'),
+    ).toContain('Review carefully.');
+    expect(readFileSync(join(TEST_DIR, '.cursor', 'agents', 'reviewer.md'), 'utf-8')).toContain(
+      'Review carefully.',
+    );
+    expect(readFileSync(join(TEST_DIR, '.cursor', 'commands', 'ship.md'), 'utf-8')).toContain(
+      'ship it',
+    );
+    expect(readFileSync(join(TEST_DIR, '.cursor', 'rules', 'typescript.mdc'), 'utf-8')).toContain(
+      'Use strict types.',
+    );
+  });
+
+  it('generates Codex global outputs under ~/.codex and ~/.agents', async () => {
+    vi.stubEnv('HOME', TEST_DIR);
+    vi.stubEnv('USERPROFILE', TEST_DIR);
+
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'skills', 'review'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'agents'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'commands'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'agentsmesh.yaml'),
+      `version: 1
+targets: [codex-cli]
+features: [rules, commands, skills, agents, mcp]
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
+      `---
+root: true
+---
+# Codex Global
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'rules', 'policy.md'),
+      `---
+description: "Policy"
+---
+Keep diffs small.
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'skills', 'review', 'SKILL.md'),
+      `---
+name: review
+description: Review changes
+---
+Review carefully.
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'),
+      `---
+name: reviewer
+description: Reviewer
+---
+Review carefully.
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'mcp.json'),
+      JSON.stringify(
+        { mcpServers: { docs: { command: 'npx', args: ['-y', '@docs/mcp'] } } },
+        null,
+        2,
+      ),
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'commands', 'ship.md'),
+      `---
+description: ship
+---
+ship it
+`,
+    );
+
+    await runGenerate({ global: true }, TEST_DIR, { printMatrix: false });
+
+    expect(readFileSync(join(TEST_DIR, '.codex', 'AGENTS.md'), 'utf-8')).toContain(
+      'Keep diffs small.',
+    );
+    expect(readFileSync(join(TEST_DIR, '.codex', 'config.toml'), 'utf-8')).toContain(
+      '[mcp_servers.docs]',
+    );
+    expect(readFileSync(join(TEST_DIR, '.codex', 'agents', 'reviewer.toml'), 'utf-8')).toContain(
+      'name = "reviewer"',
+    );
+    expect(
+      readFileSync(join(TEST_DIR, '.agents', 'skills', 'review', 'SKILL.md'), 'utf-8'),
+    ).toContain('Review carefully.');
+    expect(
+      readFileSync(join(TEST_DIR, '.agents', 'skills', 'am-command-ship', 'SKILL.md'), 'utf-8'),
+    ).toContain('ship it');
+    expect(existsSync(join(TEST_DIR, '.codex', 'instructions', 'policy.md'))).toBe(false);
+  });
+
+  it('generates Codex global execution rules into ~/.codex/rules on --global', async () => {
+    vi.stubEnv('HOME', TEST_DIR);
+    vi.stubEnv('USERPROFILE', TEST_DIR);
+
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'agentsmesh.yaml'),
+      `version: 1
+targets: [codex-cli]
+features: [rules]
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
+      `---
+root: true
+---
+# Root
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'rules', 'policy.md'),
+      `---
+description: "Policy"
+codex_emit: execution
+---
+prefix_rule(
+  pattern = ["git", "status"],
+  decision = "allow",
+)
+`,
+    );
+
+    await runGenerate({ global: true }, TEST_DIR, { printMatrix: false });
+
+    expect(readFileSync(join(TEST_DIR, '.codex', 'rules', 'policy.rules'), 'utf8')).toContain(
+      'prefix_rule',
     );
   });
 
@@ -487,5 +887,122 @@ packs: {}
 
     await expect(runGenerate({ force: true }, TEST_DIR, { printMatrix: false })).resolves.toBe(0);
     expect(existsSync(join(TEST_DIR, '.claude', 'CLAUDE.md'))).toBe(true);
+  });
+
+  it('generates Copilot global outputs under the user home root when --global is set', async () => {
+    vi.stubEnv('HOME', TEST_DIR);
+    vi.stubEnv('USERPROFILE', TEST_DIR);
+
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'agentsmesh.yaml'),
+      `version: 1
+targets: [copilot]
+features: [rules, commands, agents, skills]
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
+      `---
+root: true
+description: "Root"
+---
+# Global Root
+`,
+    );
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'commands'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'commands', 'test.md'),
+      `---
+name: test
+description: Test command
+---
+Test body
+`,
+    );
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'agents'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'),
+      `---
+name: reviewer
+description: Code reviewer
+---
+Review code carefully
+`,
+    );
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'skills', 'demo'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'skills', 'demo', 'SKILL.md'),
+      '---\nname: demo\ndescription: Demo skill\n---\nBody.\n',
+    );
+
+    await runGenerate({ global: true }, TEST_DIR, { printMatrix: false });
+
+    expect(existsSync(join(TEST_DIR, '.copilot', 'copilot-instructions.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.copilot', 'prompts', 'test.prompt.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.copilot', 'agents', 'reviewer.agent.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.copilot', 'skills', 'demo', 'SKILL.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.agents', 'skills', 'demo', 'SKILL.md'))).toBe(true);
+  });
+
+  it('generates Kiro global outputs under the user home root when --global is set', async () => {
+    vi.stubEnv('HOME', TEST_DIR);
+    vi.stubEnv('USERPROFILE', TEST_DIR);
+
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'agentsmesh.yaml'),
+      `version: 1
+targets: [kiro]
+features: [rules, agents, skills, mcp, ignore]
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
+      `---
+root: true
+description: "Root"
+---
+# Global Root
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'),
+      `---
+description: "TypeScript rules"
+---
+Use strict mode
+`,
+    );
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'agents'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'),
+      `---
+name: reviewer
+description: Code reviewer
+---
+Review code carefully
+`,
+    );
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'skills', 'demo'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'skills', 'demo', 'SKILL.md'),
+      '---\nname: demo\ndescription: Demo skill\n---\nBody.\n',
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'mcp.json'),
+      JSON.stringify({ mcpServers: { test: { command: 'test' } } }, null, 2),
+    );
+    writeFileSync(join(TEST_DIR, '.agentsmesh', 'ignore'), 'node_modules\n*.log\n');
+
+    await runGenerate({ global: true }, TEST_DIR, { printMatrix: false });
+
+    expect(existsSync(join(TEST_DIR, '.kiro', 'steering', 'AGENTS.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.kiro', 'steering', 'typescript.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.kiro', 'agents', 'reviewer.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.kiro', 'skills', 'demo', 'SKILL.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.kiro', 'settings', 'mcp.json'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.kiro', 'settings', 'kiroignore'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.agents', 'skills', 'demo', 'SKILL.md'))).toBe(true);
   });
 });

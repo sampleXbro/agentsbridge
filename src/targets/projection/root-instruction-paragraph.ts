@@ -1,3 +1,10 @@
+import {
+  replaceManagedBlock,
+  ROOT_CONTRACT_END,
+  ROOT_CONTRACT_START,
+  stripManagedBlock,
+} from './managed-blocks.js';
+
 /** Body v1: original text with `.agentsmesh/` substring. */
 const ROOT_INSTRUCTION_BODY_V1 =
   "AgentsMesh is a config sync library for AI coding tools. The only canonical source of truth is `.agentsmesh/`; files emitted into target formats such as `AGENTS.md`, `.claude/`, `.cursor/`, `.junie/`, and similar directories are generated artifacts. When making changes, edit canonical config first, then regenerate and verify the target outputs. Preserve the library's bidirectional contract: import native tool config into canonical form, generate back to target-specific layouts, and keep projected or embedded features round-trippable rather than treating them as plain text exports.";
@@ -71,9 +78,11 @@ const AGENTSMESH_CONTRACT_WITH_V7_BODY = `## AgentsMesh Generation Contract
 
 ${ROOT_INSTRUCTION_BODY_V7}`;
 
-export const AGENTSMESH_ROOT_INSTRUCTION_PARAGRAPH = `## AgentsMesh Generation Contract
+export const AGENTSMESH_ROOT_INSTRUCTION_PARAGRAPH = `${ROOT_CONTRACT_START}
+## AgentsMesh Generation Contract
 
-${ROOT_INSTRUCTION_BODY}`;
+${ROOT_INSTRUCTION_BODY}
+${ROOT_CONTRACT_END}`;
 
 function normalizeWhitespace(value: string): string {
   return value.replace(/\s+/g, ' ').trim();
@@ -94,6 +103,14 @@ const LEGACY_FORMS = [
 
 export function appendAgentsmeshRootInstructionParagraph(content: string): string {
   const trimmed = content.trim();
+  if (trimmed.includes(ROOT_CONTRACT_START) && trimmed.includes(ROOT_CONTRACT_END)) {
+    return replaceManagedBlock(
+      trimmed,
+      ROOT_CONTRACT_START,
+      ROOT_CONTRACT_END,
+      AGENTSMESH_ROOT_INSTRUCTION_PARAGRAPH,
+    );
+  }
   const norm = normalizeWhitespace(trimmed);
   if (norm.includes(normalizeWhitespace(AGENTSMESH_ROOT_INSTRUCTION_PARAGRAPH))) {
     return trimmed;
@@ -109,7 +126,7 @@ export function appendAgentsmeshRootInstructionParagraph(content: string): strin
 }
 
 export function stripAgentsmeshRootInstructionParagraph(content: string): string {
-  let result = content;
+  let result = stripManagedBlock(content, ROOT_CONTRACT_START, ROOT_CONTRACT_END);
   result = result.replace(`\n\n${AGENTSMESH_ROOT_INSTRUCTION_PARAGRAPH}`, '');
   for (const legacy of LEGACY_FORMS) {
     result = result.replace(`\n\n${legacy}`, '');

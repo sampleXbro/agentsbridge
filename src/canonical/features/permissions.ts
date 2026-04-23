@@ -19,7 +19,7 @@ function ensureStringArray(val: unknown): string[] {
 export async function parsePermissions(permissionsPath: string): Promise<Permissions | null> {
   const content = await readFileSafe(permissionsPath);
   if (content === null) return null;
-  if (!content.trim()) return { allow: [], deny: [] };
+  if (!content.trim()) return { allow: [], deny: [], ask: [] };
   let parsed: unknown;
   try {
     parsed = parseYaml(content) as unknown;
@@ -30,5 +30,6 @@ export async function parsePermissions(permissionsPath: string): Promise<Permiss
   const obj = parsed as Record<string, unknown>;
   const allow = ensureStringArray(obj.allow);
   const deny = ensureStringArray(obj.deny);
-  return { allow, deny };
+  const ask = ensureStringArray(obj.ask);
+  return { allow, deny, ask };
 }

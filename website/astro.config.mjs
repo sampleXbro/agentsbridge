@@ -120,6 +120,7 @@ export default defineConfig({
           items: [
             { label: 'Supported Tools Matrix', slug: 'reference/supported-tools' },
             { label: 'Generation Pipeline', slug: 'reference/generation-pipeline' },
+            { label: 'Managed Embedding', slug: 'reference/managed-embedding' },
           ],
         },
       ],

@@ -27,3 +27,9 @@ decision = "allow"
 priority = 104
 toolName = "run_shell_command"
 commandPrefix = "node -e \"console.log\\(['.windsurfrules', 'AGENTS.md'].sort\\(\\)\\)\""
+
+[[rule]]
+decision = "allow"
+priority = 105
+toolName = "run_shell_command"
+commandPrefix = "node -e \"console.log\\(['.windsurfrules', 'AGENTS.md'].sort\\(\\)\\)\""

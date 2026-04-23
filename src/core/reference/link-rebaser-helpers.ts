@@ -20,10 +20,35 @@ const ROOT_RELATIVE_PREFIXES = [
   '.gemini/',
   '.clinerules/',
   '.cline/',
+  '.codex/',
   '.agents/',
   '.windsurf/',
   '.roo/',
 ];
+
+export function isRootRelativePathToken(token: string): boolean {
+  const normalizedToken = normalizeSeparators(token);
+  return ROOT_RELATIVE_PREFIXES.some((prefix) => normalizedToken.startsWith(prefix));
+}
+
+/** Top-level segments under `.agentsmesh/` when links omit the `.agentsmesh/` prefix (project scope). */
+const MESH_ROOT_RELATIVE_FIRST_SEGMENTS = new Set([
+  'skills',
+  'rules',
+  'commands',
+  'agents',
+  'packs',
+]);
+
+function isMeshRootRelativePathToken(normalizedToken: string): boolean {
+  const t = normalizeSeparators(normalizedToken).replace(/^\.\//, '');
+  if (t.startsWith('../') || t.startsWith('/')) return false;
+  if (WINDOWS_ABSOLUTE_PATH.test(t)) return false;
+  if (/^[a-zA-Z]:/.test(t)) return false;
+  if (isRootRelativePathToken(t)) return false;
+  const first = t.split('/').filter((s) => s.length > 0)[0];
+  return first !== undefined && MESH_ROOT_RELATIVE_FIRST_SEGMENTS.has(first);
+}
 const NON_REWRITABLE_BARE_FILES = new Set([
   'AGENTS.md',
   'CLAUDE.md',
@@ -39,9 +64,13 @@ const EXTERNAL_REF_PATTERNS = [
   /\/\/[A-Za-z0-9][\w.-]*\.[A-Za-z]{2,}[^\s<>()\]]*/g,
 ];
 const FENCED_CODE_BLOCK = /^(?:```|~~~)[^\n]*\n[\s\S]*?^(?:```|~~~)/gm;
+const ROOT_GENERATION_CONTRACT_BLOCK =
+  /<!-- agentsmesh:root-generation-contract:start -->[\s\S]*?<!-- agentsmesh:root-generation-contract:end -->/g;
+const EMBEDDED_RULES_BLOCK =
+  /<!-- agentsmesh:embedded-rules:start -->[\s\S]*?<!-- agentsmesh:embedded-rules:end -->/g;
 
 export const PATH_TOKEN =
-  /(?:\.\.[\\/]|\.\/|\.\\|\/[A-Za-z0-9._-]|[A-Za-z]:[\\/][A-Za-z0-9._-]|\.agentsmesh[\\/]|\.claude[\\/]|\.cursor[\\/]|\.github[\\/]|\.continue[\\/]|\.junie[\\/]|\.kiro[\\/]|\.gemini[\\/]|\.clinerules[\\/]|\.cline[\\/]|\.agents[\\/]|\.windsurf[\\/]|\.roo[\\/]|(?:[A-Za-z0-9._-]+[\\/])+|[A-Za-z0-9._-]+\.[A-Za-z0-9._-]+)[A-Za-z0-9._@%+~:\\/-]*/g;
+  /(?:\.\.[\\/]|\.\/|\.\\|\/[A-Za-z0-9._-]|[A-Za-z]:[\\/][A-Za-z0-9._-]|\.agentsmesh[\\/]|\.claude[\\/]|\.cursor[\\/]|\.github[\\/]|\.continue[\\/]|\.junie[\\/]|\.kiro[\\/]|\.gemini[\\/]|\.clinerules[\\/]|\.cline[\\/]|\.codex[\\/]|\.agents[\\/]|\.windsurf[\\/]|\.roo[\\/]|(?:[A-Za-z0-9._-]+[\\/])+|[A-Za-z0-9._-]+\.[A-Za-z0-9._-]+)[A-Za-z0-9._@%+~:\\/-]*/g;
 export const LINE_NUMBER_SUFFIX = /(?::(\d+)){1,2}$/;
 
 export function resolveProjectPath(
@@ -73,22 +102,33 @@ export function resolveProjectPath(
       api.join(api.dirname(normalizedSourceFile), normalizedToken),
     );
     const fallbackPath = rootFallbackPath(normalizedToken, normalizedProjectRoot);
-    const relativeToRoot = api.relative(normalizedProjectRoot, sourceRelativePath);
-    return relativeToRoot.startsWith('..') && fallbackPath && fallbackPath !== sourceRelativePath
+    return fallbackPath && fallbackPath !== sourceRelativePath
       ? [sourceRelativePath, fallbackPath]
       : [sourceRelativePath];
   }
-  if (ROOT_RELATIVE_PREFIXES.some((prefix) => normalizedToken.startsWith(prefix))) {
+  if (isRootRelativePathToken(normalizedToken)) {
     return [normalizeForProject(projectRoot, api.join(normalizedProjectRoot, normalizedToken))];
   }
   if (normalizedToken.includes('/')) {
-    return [
-      normalizeForProject(projectRoot, api.join(normalizedProjectRoot, normalizedToken)),
-      normalizeForProject(
-        projectRoot,
-        api.join(api.dirname(normalizedSourceFile), normalizedToken),
-      ),
-    ];
+    const meshRoot = normalizeForProject(
+      projectRoot,
+      api.join(normalizedProjectRoot, '.agentsmesh'),
+    );
+    const fromMesh = isMeshRootRelativePathToken(normalizedToken)
+      ? normalizeForProject(projectRoot, api.join(meshRoot, normalizedToken))
+      : null;
+    const fromProjectRoot = normalizeForProject(
+      projectRoot,
+      api.join(normalizedProjectRoot, normalizedToken),
+    );
+    const fromSourceDir = normalizeForProject(
+      projectRoot,
+      api.join(api.dirname(normalizedSourceFile), normalizedToken),
+    );
+    if (fromMesh !== null) {
+      return [fromMesh, fromProjectRoot, fromSourceDir];
+    }
+    return [fromProjectRoot, fromSourceDir];
   }
   if (NON_REWRITABLE_BARE_FILES.has(normalizedToken)) return [];
   if (normalizedToken.includes('.')) {
@@ -133,6 +173,12 @@ export function protectedRanges(content: string): Array<[number, number]> {
     }
   }
   for (const match of content.matchAll(FENCED_CODE_BLOCK)) {
+    ranges.push([match.index ?? 0, (match.index ?? 0) + match[0].length]);
+  }
+  for (const match of content.matchAll(ROOT_GENERATION_CONTRACT_BLOCK)) {
+    ranges.push([match.index ?? 0, (match.index ?? 0) + match[0].length]);
+  }
+  for (const match of content.matchAll(EMBEDDED_RULES_BLOCK)) {
     ranges.push([match.index ?? 0, (match.index ?? 0) + match[0].length]);
   }
   return ranges;

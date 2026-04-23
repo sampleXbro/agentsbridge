@@ -18,7 +18,7 @@ Use this as a concrete audit list when adding a target.
 - `src/cli/help.ts`
 - `src/cli/commands/import.ts`
 - `src/cli/commands/init.ts`
-- `src/core/matrix.ts`
+- `src/core/matrix/matrix.ts`
 - `src/targets/<target>/constants.ts`
 - `src/targets/<target>/generator.ts`
 - `src/targets/<target>/importer.ts`

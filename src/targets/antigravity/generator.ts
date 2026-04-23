@@ -1,7 +1,10 @@
 import { basename } from 'node:path';
 import type { CanonicalFiles } from '../../core/types.js';
 import { generateEmbeddedSkills } from '../import/embedded-skill.js';
+import { appendEmbeddedRulesBlock } from '../projection/managed-blocks.js';
 import {
+  ANTIGRAVITY_GLOBAL_ROOT,
+  ANTIGRAVITY_MCP_CONFIG,
   ANTIGRAVITY_RULES_ROOT,
   ANTIGRAVITY_RULES_DIR,
   ANTIGRAVITY_WORKFLOWS_DIR,
@@ -34,7 +37,7 @@ export function generateRules(canonical: CanonicalFiles): AntigravityOutput[] {
   return outputs;
 }
 
-export function generateWorkflows(canonical: CanonicalFiles): AntigravityOutput[] {
+export function generateCommands(canonical: CanonicalFiles): AntigravityOutput[] {
   return canonical.commands.map((cmd) => {
     const intro = cmd.description.trim();
     const body = cmd.body.trim();
@@ -50,3 +53,25 @@ export function generateWorkflows(canonical: CanonicalFiles): AntigravityOutput[
 export function generateSkills(canonical: CanonicalFiles): AntigravityOutput[] {
   return generateEmbeddedSkills(canonical, ANTIGRAVITY_SKILLS_DIR);
 }
+
+export function generateMcp(canonical: CanonicalFiles): AntigravityOutput[] {
+  if (!canonical.mcp || Object.keys(canonical.mcp.mcpServers).length === 0) return [];
+  return [
+    {
+      path: ANTIGRAVITY_MCP_CONFIG,
+      content: JSON.stringify({ mcpServers: canonical.mcp.mcpServers }, null, 2),
+    },
+  ];
+}
+
+export function renderAntigravityGlobalInstructions(canonical: CanonicalFiles): string {
+  const root = canonical.rules.find((rule) => rule.root);
+  const nonRootRules = canonical.rules.filter((rule) => {
+    if (rule.root) return false;
+    return rule.targets.length === 0 || rule.targets.includes('antigravity');
+  });
+
+  return appendEmbeddedRulesBlock(root?.body.trim() ?? '', nonRootRules);
+}
+
+export { ANTIGRAVITY_GLOBAL_ROOT };

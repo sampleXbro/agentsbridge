@@ -3,6 +3,8 @@ name: senior-developer-scripts-and-automation-growth
 description: Grow workspace capabilities by creating reusable scripts
 ---
 
+## Purpose
+
 ## Scripts & Automation Growth
 
 The workspace should get smarter over time. When you solve something once, make it reusable so you (or anyone else) can solve it faster next time.

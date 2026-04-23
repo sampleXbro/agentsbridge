@@ -78,7 +78,7 @@ export function generateRules(canonical: CanonicalFiles): RulesOutput[] {
  * @param canonical - Loaded canonical files
  * @returns Array of workflow file outputs, or [] if no commands
  */
-export function generateWorkflows(canonical: CanonicalFiles): RulesOutput[] {
+export function generateCommands(canonical: CanonicalFiles): RulesOutput[] {
   return canonical.commands.map((cmd) => {
     const desc = cmd.description.trim();
     const body = cmd.body.trim();
@@ -126,9 +126,10 @@ function safeEventName(event: string): string {
   return event.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
 }
 
-function buildHookScript(command: string, matcher: string): string {
+function buildHookScript(event: string, command: string, matcher: string): string {
   return [
     '#!/usr/bin/env bash',
+    `# agentsmesh-event: ${event}`,
     `# agentsmesh-matcher: ${matcher}`,
     `# agentsmesh-command: ${command}`,
     'set -e',
@@ -154,7 +155,7 @@ export function generateHooks(canonical: CanonicalFiles): RulesOutput[] {
       if (!hasHookCommand(entry)) continue;
       outputs.push({
         path: `${CLINE_HOOKS_DIR}/${safeEventName(event)}-${index}.sh`,
-        content: buildHookScript(entry.command, entry.matcher),
+        content: buildHookScript(event, entry.command, entry.matcher),
       });
       index++;
     }

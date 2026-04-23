@@ -37,6 +37,8 @@ export interface CanonicalCommand {
   description: string;
   /** Tool permissions: ["Read", "Grep", "Bash(git diff)"] */
   allowedTools: string[];
+  /** When true, also emit ~/.claude/output-styles/{name}.md in Claude global mode */
+  outputStyle?: boolean;
   body: string;
 }
 
@@ -65,6 +67,8 @@ export interface CanonicalAgent {
   memory: string;
   /** System prompt (markdown body) */
   body: string;
+  /** When true, also emit ~/.claude/output-styles/{name}.md in Claude global mode */
+  outputStyle?: boolean;
 }
 
 /** Supporting file for a skill */
@@ -87,10 +91,12 @@ export interface CanonicalSkill {
   supportingFiles: SkillSupportingFile[];
 }
 
-/** Permission allow/deny lists */
+/** Permission allow/deny/ask lists */
 export interface Permissions {
   allow: string[];
   deny: string[];
+  /** Present in parsed YAML; omitted in some legacy fixtures */
+  ask?: string[];
 }
 
 /** Ignore patterns (gitignore syntax lines) */

@@ -2,8 +2,8 @@ name: composiohq-awesome-claude-skills-skills
 source: github:ComposioHQ/awesome-claude-skills@27904475d1270d8395acf07691966267d5abda2d
 version: 27904475d1270d8395acf07691966267d5abda2d
 source_kind: github
-installed_at: 2026-03-23T13:31:42.669Z
-updated_at: 2026-03-23T13:31:42.669Z
+installed_at: 2026-04-17T19:35:40.258Z
+updated_at: 2026-04-17T19:35:40.258Z
 features:
   - skills
 pick:

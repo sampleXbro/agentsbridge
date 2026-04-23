@@ -44,6 +44,26 @@ function mapHookEvent(event: string): string | null {
 }
 
 /**
+ * Render all canonical rules into a single copilot-instructions.md for global mode.
+ * Root rule body first, then non-root rules appended as sections.
+ */
+export function renderCopilotGlobalInstructions(canonical: CanonicalFiles): string {
+  const parts: string[] = [];
+  const root = canonical.rules.find((r) => r.root);
+  if (root?.body.trim()) parts.push(root.body.trim());
+  for (const rule of canonical.rules) {
+    if (rule.root) continue;
+    if (rule.targets.length > 0 && !rule.targets.includes('copilot')) continue;
+    const body = rule.body.trim();
+    if (!body) continue;
+    const header = rule.description ? `## ${rule.description}` : null;
+    if (header) parts.push(`${header}\n\n${body}`);
+    else parts.push(body);
+  }
+  return parts.join('\n\n');
+}
+
+/**
  * Build .github/copilot-instructions.md from the canonical root rule.
  * @param canonical - Loaded canonical files
  * @returns Array with copilot-instructions.md output, or [] if no root rule

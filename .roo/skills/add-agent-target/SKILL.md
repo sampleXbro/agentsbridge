@@ -7,7 +7,7 @@ description: Use when adding support for a new AI agent target to agentsmesh. Co
 
 Use this skill when the task is to add a new supported agent target to this repository.
 
-Read `.roo/skills/add-agent-target/references/target-addition-checklist.md` before editing code. Treat it as the minimum touchpoint list, not an exhaustive substitute for reading the implementation.
+Read `./references/target-addition-checklist.md` before editing code. Treat it as the minimum touchpoint list, not an exhaustive substitute for reading the implementation.
 
 ## Non-Negotiable Requirements
 

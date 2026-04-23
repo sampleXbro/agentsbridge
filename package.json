@@ -1,12 +1,27 @@
 {
   "name": "agentsmesh",
-  "version": "0.3.1",
+  "version": "0.4.1",
   "description": "One canonical source for AI coding agent rules, commands, skills, MCP, hooks, and permissions — synced across Claude Code, Cursor, Copilot, Continue, Junie, Gemini CLI, Cline, Codex CLI, Windsurf, Antigravity, and Roo Code.",
   "type": "module",
   "main": "./dist/cli.js",
   "author": "sampleXbro",
   "exports": {
-    ".": "./dist/cli.js"
+    ".": "./dist/cli.js",
+    "./engine": {
+      "types": "./dist/engine.d.ts",
+      "import": "./dist/engine.js",
+      "default": "./dist/engine.js"
+    },
+    "./canonical": {
+      "types": "./dist/canonical.d.ts",
+      "import": "./dist/canonical.js",
+      "default": "./dist/canonical.js"
+    },
+    "./targets": {
+      "types": "./dist/targets.d.ts",
+      "import": "./dist/targets.js",
+      "default": "./dist/targets.js"
+    }
   },
   "bin": {
     "agentsmesh": "./dist/cli.js",
@@ -28,6 +43,8 @@
     "build": "tsup",
     "pretest": "pnpm build",
     "test": "vitest run",
+    "test:contract": "vitest run tests/contract",
+    "flake:check": "tsx scripts/flake-check.ts",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "pnpm build && vitest run --config vitest.e2e.config.ts",
@@ -36,9 +53,13 @@
     "format:check": "prettier --check src/",
     "prepare": "husky",
     "typecheck": "tsc --noEmit",
+    "schemas:generate": "tsx scripts/generate-schemas.ts",
+    "matrix:generate": "tsx scripts/render-support-matrix.ts",
+    "matrix:verify": "tsx scripts/render-support-matrix.ts --verify",
     "changeset": "changeset",
     "version": "changeset version",
-    "release": "pnpm build && changeset publish"
+    "release": "pnpm build && changeset publish",
+    "install-global": "pnpm build && pnpm pack && pnpm add -g $(pwd)/agentsmesh-$(node -p 'require(\"./package.json\").version').tgz"
   },
   "keywords": [
     "ai-rules",
@@ -77,6 +98,7 @@
   },
   "files": [
     "dist",
+    "schemas",
     "README.md",
     "CHANGELOG.md",
     "LICENSE"
@@ -94,6 +116,7 @@
     "lint-staged": "^16.4.0",
     "prettier": "^3.8.2",
     "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^4.1.4"
   },

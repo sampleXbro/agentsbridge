@@ -1,0 +1,248 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "number",
+      "const": 1
+    },
+    "targets": {
+      "default": [
+        "claude-code",
+        "cursor",
+        "copilot",
+        "continue",
+        "junie",
+        "kiro",
+        "gemini-cli",
+        "cline",
+        "codex-cli",
+        "windsurf",
+        "antigravity",
+        "roo-code"
+      ],
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "claude-code",
+          "cursor",
+          "copilot",
+          "continue",
+          "junie",
+          "kiro",
+          "gemini-cli",
+          "cline",
+          "codex-cli",
+          "windsurf",
+          "antigravity",
+          "roo-code"
+        ]
+      }
+    },
+    "features": {
+      "default": [
+        "rules",
+        "commands",
+        "agents",
+        "skills",
+        "mcp",
+        "hooks",
+        "ignore",
+        "permissions"
+      ],
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "rules",
+          "commands",
+          "agents",
+          "skills",
+          "mcp",
+          "hooks",
+          "ignore",
+          "permissions"
+        ]
+      }
+    },
+    "extends": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string",
+            "enum": [
+              "claude-code",
+              "cursor",
+              "copilot",
+              "continue",
+              "junie",
+              "kiro",
+              "gemini-cli",
+              "cline",
+              "codex-cli",
+              "windsurf",
+              "antigravity",
+              "roo-code"
+            ]
+          },
+          "features": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "rules",
+                "commands",
+                "agents",
+                "skills",
+                "mcp",
+                "hooks",
+                "ignore",
+                "permissions"
+              ]
+            }
+          },
+          "path": {
+            "type": "string"
+          },
+          "pick": {
+            "type": "object",
+            "properties": {
+              "skills": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "commands": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "rules": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "agents": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "name",
+          "source",
+          "features"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "overrides": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string"
+        },
+        "additionalProperties": {}
+      }
+    },
+    "collaboration": {
+      "default": {
+        "strategy": "merge",
+        "lock_features": []
+      },
+      "type": "object",
+      "properties": {
+        "strategy": {
+          "default": "merge",
+          "type": "string",
+          "enum": [
+            "merge",
+            "lock",
+            "last-wins"
+          ]
+        },
+        "lock_features": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "strategy",
+        "lock_features"
+      ],
+      "additionalProperties": false
+    },
+    "conversions": {
+      "type": "object",
+      "properties": {
+        "commands_to_skills": {
+          "type": "object",
+          "properties": {
+            "codex-cli": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "agents_to_skills": {
+          "type": "object",
+          "properties": {
+            "gemini-cli": {
+              "type": "boolean"
+            },
+            "cline": {
+              "type": "boolean"
+            },
+            "codex-cli": {
+              "type": "boolean"
+            },
+            "windsurf": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "version",
+    "targets",
+    "features",
+    "extends",
+    "overrides",
+    "collaboration"
+  ],
+  "additionalProperties": false,
+  "title": "agentsmesh.yaml",
+  "description": "AgentsMesh configuration file (agentsmesh.yaml / agentsmesh.local.yaml)"
+}

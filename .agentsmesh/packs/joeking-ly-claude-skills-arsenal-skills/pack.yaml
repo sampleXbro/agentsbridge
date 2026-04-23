@@ -2,8 +2,8 @@ name: joeking-ly-claude-skills-arsenal-skills
 source: github:joeking-ly/claude-skills-arsenal@0f5b3804660487c5aab1baea0d9981608b959b91
 version: 0f5b3804660487c5aab1baea0d9981608b959b91
 source_kind: github
-installed_at: 2026-03-23T13:31:47.472Z
-updated_at: 2026-03-23T13:31:47.472Z
+installed_at: 2026-04-17T19:36:04.339Z
+updated_at: 2026-04-17T19:36:04.339Z
 features:
   - skills
 pick:

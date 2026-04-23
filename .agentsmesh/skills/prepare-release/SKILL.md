@@ -196,7 +196,7 @@ Group under clear subheadings:
 - **CLI commands** — one line per command: what it does, key flags
 - **Supported targets** — comma-separated list
 - **Canonical features** — rules, commands, agents, skills, mcp, hooks, ignore, permissions
-- **Config** — describe `agentsmesh.yaml`, `agentsmesh.local.yaml`, `.agentsmesh/`, `.lock`
+- **Config** — describe `agentsmesh.yaml`, `agentsmesh.local.yaml`, `../../`, `.lock`
 - **Extends** — local and remote forms with example syntax
 - **Link rebasing** — one sentence on what it does
 - **Collaboration** — lock file, `check`, `merge`
@@ -224,7 +224,7 @@ package.json
 README.md
 ```
 
-Source files, test files, fixtures, `.agentsmesh/`, `docs/`, `tasks/`, and `tsconfig.json` must not appear. The `files` field in `package.json` controls this — it should be:
+Source files, test files, fixtures, `../../`, `docs/`, `tasks/`, and `tsconfig.json` must not appear. The `files` field in `package.json` controls this — it should be:
 
 ```json
 "files": ["dist", "README.md", "CHANGELOG.md", "LICENSE"]

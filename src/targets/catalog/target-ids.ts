@@ -26,6 +26,9 @@ export const TARGET_IDS = [
 
 export type BuiltinTargetId = (typeof TARGET_IDS)[number];
 
+/** Codex CLI id — shared skill dirs and AGENTS.md collision policy reference this explicitly. */
+export const CODEX_CLI_TARGET_ID = 'codex-cli' satisfies BuiltinTargetId;
+
 export function isBuiltinTargetId(value: string): value is BuiltinTargetId {
   return (TARGET_IDS as readonly string[]).includes(value);
 }

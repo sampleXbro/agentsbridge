@@ -43,6 +43,30 @@ export default [
     },
   },
   {
+    files: ['tests/unit/**/*.test.ts', 'tests/integration/**/*.test.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '../../../src/cli/commands/watch.js',
+              message: 'Import watch via tests/harness/watch.js',
+            },
+            {
+              name: '../../../../src/cli/commands/watch.js',
+              message: 'Import watch via tests/harness/watch.js',
+            },
+            {
+              name: '../../src/cli/commands/watch.js',
+              message: 'Import watch via tests/harness/watch.js',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     ignores: ['dist/', 'coverage/', 'node_modules/', '*.config.*', 'website/dist/', 'website/.astro/'],
   },
 ];

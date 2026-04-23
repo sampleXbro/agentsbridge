@@ -35,7 +35,7 @@ features: [rules, skills]
 root: true
 description: Root rule
 ---
-Use .agentsmesh/skills/post-feature-qa/ and .agentsmesh/skills/post-feature-qa/references/.
+Use [.agentsmesh/skills/post-feature-qa/](.agentsmesh/skills/post-feature-qa/) and [.agentsmesh/skills/post-feature-qa/references/](.agentsmesh/skills/post-feature-qa/references/).
 `,
     );
     writeFileSync(join(testDir, '.agentsmesh', 'skills', 'post-feature-qa', 'SKILL.md'), '# QA\n');
@@ -46,8 +46,6 @@ Use .agentsmesh/skills/post-feature-qa/ and .agentsmesh/skills/post-feature-qa/r
 
     execSync(`node ${CLI_PATH} generate`, { cwd: testDir });
 
-    expect(readFileSync(join(testDir, 'AGENTS.md'), 'utf-8')).toContain(
-      '.windsurf/skills/post-feature-qa/',
-    );
+    expect(readFileSync(join(testDir, 'AGENTS.md'), 'utf-8')).toContain('skills/post-feature-qa/');
   });
 });

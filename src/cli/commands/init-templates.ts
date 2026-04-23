@@ -2,7 +2,7 @@
  * Template data for agentsmesh init command.
  */
 
-import { TARGET_IDS } from '../../targets/catalog/target-ids.js';
+import { starterInitTargetIds } from '../../targets/catalog/init-starter-targets.js';
 
 const ALL_FEATURES = [
   'rules',
@@ -21,18 +21,21 @@ const ALL_FEATURES = [
  * which makes the out-of-the-box starter scaffold conflict with other AGENTS.md-based targets.
  * Users can opt into codex-cli by adding it to agentsmesh.yaml after init.
  */
-export const DEFAULT_INIT_TARGETS = TARGET_IDS.filter((target) => target !== 'codex-cli');
+export const DEFAULT_INIT_TARGETS = starterInitTargetIds();
 
 /**
  * Build agentsmesh.yaml content for the given targets.
  * @param targets - Target tool IDs to include; uses the starter target set if empty
  */
-export function buildConfig(targets: string[]): string {
-  const targetList = (targets.length > 0 ? targets : DEFAULT_INIT_TARGETS)
+export function buildConfig(
+  targets: readonly string[],
+  defaultTargets: readonly string[] = DEFAULT_INIT_TARGETS,
+): string {
+  const targetList = (targets.length > 0 ? targets : defaultTargets)
     .map((t) => `  - ${t}`)
     .join('\n');
   const featureList = ALL_FEATURES.map((f) => `  - ${f}`).join('\n');
-  return `version: 1\ntargets:\n${targetList}\nfeatures:\n${featureList}\n`;
+  return `# yaml-language-server: $schema=https://unpkg.com/agentsmesh/schemas/agentsmesh.json\nversion: 1\ntargets:\n${targetList}\nfeatures:\n${featureList}\n`;
 }
 
 // ─── Canonical file templates ─────────────────────────────────────────────────
@@ -134,8 +137,12 @@ export const TEMPLATE_PERMISSIONS = `# Tool permission allow/deny lists
 # deny:
 #   - Bash(rm -rf:*)
 #   - Bash(git push --force:*)
+#
+# ask:
+#   - Write(/tmp/**)
 allow: []
 deny: []
+ask: []
 `;
 
 export const TEMPLATE_IGNORE = `# Patterns ignored by all configured AI tools (gitignore syntax)
@@ -147,7 +154,8 @@ export const TEMPLATE_IGNORE = `# Patterns ignored by all configured AI tools (g
 # coverage/
 `;
 
-export const LOCAL_TEMPLATE = `# Personal overrides — NOT committed to git
+export const LOCAL_TEMPLATE = `# yaml-language-server: $schema=https://unpkg.com/agentsmesh/schemas/agentsmesh.json
+# Personal overrides — NOT committed to git
 # Uncomment and customize for your local setup:
 
 # targets:

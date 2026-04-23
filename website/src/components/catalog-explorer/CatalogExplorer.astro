@@ -18,8 +18,9 @@ const catalogJson = JSON.stringify(payload);
       <label class="am-catalog-copy-label" for="am-catalog-copy-field">
         Install skills, agents and commands with ease
       </label>
-      <div class="am-catalog-copy-row">
-        <input
+      <!-- No whitespace between grid children — avoids anonymous flex items and uneven gaps. -->
+      <div class="am-catalog-copy-row"
+        ><input
           id="am-catalog-copy-field"
           type="text"
           readonly
@@ -27,8 +28,14 @@ const catalogJson = JSON.stringify(payload);
           data-am-copy-input
           value="pnpm install agentsmesh"
           spellcheck="false"
-        />
-        <button
+        /><label
+          class="am-catalog-global-label"
+          title="Add --global for user-level ~/.agentsmesh/ (pnpm) or agentsmesh install --global (CLI)."
+          ><input
+            type="checkbox"
+            data-am-install-global
+            aria-label="Add --global flag for user-level install"
+          /><span>Global</span></label><button
           type="button"
           class="am-catalog-copy-btn"
           data-am-copy-btn

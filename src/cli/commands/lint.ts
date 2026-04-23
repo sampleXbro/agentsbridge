@@ -2,7 +2,7 @@
  * agentsmesh lint — validate canonical files against target constraints.
  */
 
-import { loadConfigFromDir } from '../../config/core/loader.js';
+import { loadScopedConfig } from '../../config/core/scope.js';
 import { loadCanonicalWithExtends } from '../../canonical/extends/extends.js';
 import { runLint } from '../../core/lint/linter.js';
 import { logger } from '../../utils/output/logger.js';
@@ -18,6 +18,7 @@ export async function runLintCmd(
   projectRoot?: string,
 ): Promise<number> {
   const root = projectRoot ?? process.cwd();
+  const scope = flags.global === true ? 'global' : 'project';
   const targetStr = flags.targets;
   const targetFilter =
     typeof targetStr === 'string' && targetStr
@@ -27,10 +28,21 @@ export async function runLintCmd(
           .filter(Boolean)
       : undefined;
 
-  const { config, configDir } = await loadConfigFromDir(root);
-  const { canonical } = await loadCanonicalWithExtends(config, configDir);
+  const { config, context } = await loadScopedConfig(root, scope);
+  const { canonical } = await loadCanonicalWithExtends(
+    config,
+    context.configDir,
+    {},
+    context.canonicalDir,
+  );
 
-  const { diagnostics, hasErrors } = await runLint(config, canonical, configDir, targetFilter);
+  const { diagnostics, hasErrors } = await runLint(
+    config,
+    canonical,
+    context.configDir,
+    targetFilter,
+    { scope },
+  );
 
   if (diagnostics.length === 0) {
     logger.success('All checks passed.');

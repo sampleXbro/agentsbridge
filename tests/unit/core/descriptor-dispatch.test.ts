@@ -55,6 +55,11 @@ describe('ruleTargetPath', () => {
     const rule = makeRule('example');
     expect(ruleTargetPath('claude-code', rule)).toBe('.claude/rules/example.md');
   });
+
+  it('returns null when the requested scope layout is missing', () => {
+    const rule = makeRule('example');
+    expect(ruleTargetPath('claude-code', rule, 'global')).toBe('.claude/rules/example.md');
+  });
 });
 
 describe('commandTargetPath', () => {
@@ -78,6 +83,12 @@ describe('agentTargetPath', () => {
 
   it('delegates to descriptor for claude-code target', () => {
     expect(agentTargetPath('claude-code', 'reviewer', baseConfig())).toBe(
+      '.claude/agents/reviewer.md',
+    );
+  });
+
+  it('delegates to the Claude global descriptor layout when requested', () => {
+    expect(agentTargetPath('claude-code', 'reviewer', baseConfig(), 'global')).toBe(
       '.claude/agents/reviewer.md',
     );
   });

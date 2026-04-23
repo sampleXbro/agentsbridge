@@ -1,4 +1,5 @@
 import { basename } from 'node:path';
+import { stringify as yamlStringify } from 'yaml';
 import type { CanonicalFiles } from '../../core/types.js';
 import { generateEmbeddedSkills } from '../import/embedded-skill.js';
 import { serializeFrontmatter } from '../../utils/text/markdown.js';
@@ -10,6 +11,7 @@ import {
   ROO_CODE_SKILLS_DIR,
   ROO_CODE_MCP_FILE,
   ROO_CODE_IGNORE,
+  ROO_CODE_MODES_FILE,
 } from './constants.js';
 
 export interface RooCodeOutput {
@@ -69,4 +71,16 @@ export function generateIgnore(canonical: CanonicalFiles): RooCodeOutput[] {
 
 export function generateSkills(canonical: CanonicalFiles): RooCodeOutput[] {
   return generateEmbeddedSkills(canonical, ROO_CODE_SKILLS_DIR);
+}
+
+export function generateAgents(canonical: CanonicalFiles): RooCodeOutput[] {
+  if (canonical.agents.length === 0) return [];
+  const customModes = canonical.agents.map((agent) => {
+    const slug = basename(agent.source, '.md');
+    const mode: Record<string, unknown> = { slug, name: agent.name };
+    if (agent.description) mode.description = agent.description;
+    if (agent.body.trim()) mode.roleDefinition = agent.body.trim();
+    return mode;
+  });
+  return [{ path: ROO_CODE_MODES_FILE, content: yamlStringify({ customModes }) }];
 }

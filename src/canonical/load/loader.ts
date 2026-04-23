@@ -1,5 +1,5 @@
 /**
- * Load all canonical files from .agentsmesh/ into CanonicalFiles.
+ * Load all canonical files from a canonical directory into CanonicalFiles.
  */
 
 import { join } from 'node:path';
@@ -12,26 +12,32 @@ import { parseMcp } from '../features/mcp.js';
 import { parsePermissions } from '../features/permissions.js';
 import { parseHooks } from '../features/hooks.js';
 import { parseIgnore } from '../features/ignore.js';
+import { exists } from '../../utils/filesystem/fs.js';
 
 /**
- * Load all canonical files from .agentsmesh/ at the given project root.
+ * Load all canonical files from a canonical directory or project root.
  * Missing directories/files yield empty arrays or null as per each parser.
  *
- * @param projectRoot - Absolute path to project root (containing .agentsmesh/)
+ * @param canonicalDirOrProjectRoot - Absolute path to canonical directory or project root
  * @returns CanonicalFiles with all parsed data
  */
-export async function loadCanonicalFiles(projectRoot: string): Promise<CanonicalFiles> {
-  const abDir = join(projectRoot, '.agentsmesh');
+export async function loadCanonicalFiles(
+  canonicalDirOrProjectRoot: string,
+): Promise<CanonicalFiles> {
+  const nestedCanonicalDir = join(canonicalDirOrProjectRoot, '.agentsmesh');
+  const canonicalDir = (await exists(nestedCanonicalDir))
+    ? nestedCanonicalDir
+    : canonicalDirOrProjectRoot;
 
   const [rules, commands, agents, skills, mcp, permissions, hooks, ignore] = await Promise.all([
-    parseRules(join(abDir, 'rules')),
-    parseCommands(join(abDir, 'commands')),
-    parseAgents(join(abDir, 'agents')),
-    parseSkills(join(abDir, 'skills')),
-    parseMcp(join(abDir, 'mcp.json')),
-    parsePermissions(join(abDir, 'permissions.yaml')),
-    parseHooks(join(abDir, 'hooks.yaml')),
-    parseIgnore(join(abDir, 'ignore')),
+    parseRules(join(canonicalDir, 'rules')),
+    parseCommands(join(canonicalDir, 'commands')),
+    parseAgents(join(canonicalDir, 'agents')),
+    parseSkills(join(canonicalDir, 'skills')),
+    parseMcp(join(canonicalDir, 'mcp.json')),
+    parsePermissions(join(canonicalDir, 'permissions.yaml')),
+    parseHooks(join(canonicalDir, 'hooks.yaml')),
+    parseIgnore(join(canonicalDir, 'ignore')),
   ]);
 
   return {

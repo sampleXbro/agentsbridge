@@ -1,6 +1,7 @@
 ---
 name: code-standards-enforcer
 description: Enforce coding standards, style guides, and architectural patterns across projects. Specializes in linting configuration, code review automation, and team consistency. Use PROACTIVELY for code quality gates and CI/CD pipeline integration.
+tools: []
 model: sonnet
 ---
 

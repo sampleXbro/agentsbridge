@@ -1,5 +1,6 @@
 import type { CanonicalFiles, ImportResult, LintDiagnostic } from '../../core/types.js';
 import type { TargetCapabilities } from './target.interface.js';
+import type { TargetLintHooks } from './target-descriptor.js';
 import {
   BUILTIN_TARGETS,
   TARGET_IDS,
@@ -11,12 +12,14 @@ type RuleLinter = (
   canonical: CanonicalFiles,
   projectRoot: string,
   projectFiles: string[],
+  options?: { scope?: 'project' | 'global' },
 ) => LintDiagnostic[];
 
 interface TargetCatalogEntry {
-  importFrom: (root: string) => Promise<ImportResult[]>;
+  importFrom: (root: string, options?: { scope?: 'project' | 'global' }) => Promise<ImportResult[]>;
   emptyImportMessage: string;
   lintRules: RuleLinter | null;
+  lint?: TargetLintHooks;
   capabilities: TargetCapabilities;
 }
 
@@ -29,6 +32,7 @@ export const TARGET_CATALOG: Record<BuiltinTargetId, TargetCatalogEntry> = Objec
       importFrom: target.generators.importFrom,
       emptyImportMessage: target.emptyImportMessage,
       lintRules: target.lintRules,
+      lint: target.lint,
       capabilities: target.capabilities,
     },
   ]),

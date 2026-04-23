@@ -50,4 +50,55 @@ describe('detectExistingConfigs', () => {
     const claudeCodeMatches = result.filter((id) => id === 'claude-code');
     expect(claudeCodeMatches).toHaveLength(1);
   });
+
+  it('detects Antigravity and Codex from global home paths when scope is global', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'agentsmesh-test-'));
+    await mkdir(join(dir, '.gemini', 'antigravity', 'skills'), { recursive: true });
+    await mkdir(join(dir, '.codex', 'agents'), { recursive: true });
+    await writeFile(join(dir, '.gemini', 'antigravity', 'GEMINI.md'), '');
+    await writeFile(join(dir, '.codex', 'AGENTS.md'), '');
+
+    const result = await detectExistingConfigs(dir, 'global');
+    expect(result).toContain('antigravity');
+    expect(result).toContain('codex-cli');
+  });
+
+  it('does not infer Cursor global config when ~/.cursor/rules has no general.mdc', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'agentsmesh-test-'));
+    await mkdir(join(dir, '.cursor', 'rules'), { recursive: true });
+    await writeFile(
+      join(dir, '.cursor', 'rules', 'typescript.mdc'),
+      '---\nalwaysApply: false\n---\n',
+    );
+
+    const result = await detectExistingConfigs(dir, 'global');
+    expect(result).not.toContain('cursor');
+  });
+
+  it('detects Cursor from ~/.cursor/mcp.json when scope is global', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'agentsmesh-test-'));
+    await mkdir(join(dir, '.cursor'), { recursive: true });
+    await writeFile(join(dir, '.cursor', 'mcp.json'), '{}');
+
+    const result = await detectExistingConfigs(dir, 'global');
+    expect(result).toContain('cursor');
+  });
+
+  it('detects Cursor from library global export path when scope is global', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'agentsmesh-test-'));
+    await mkdir(join(dir, '.agentsmesh-exports', 'cursor'), { recursive: true });
+    await writeFile(join(dir, '.agentsmesh-exports', 'cursor', 'user-rules.md'), '# U\n');
+
+    const result = await detectExistingConfigs(dir, 'global');
+    expect(result).toContain('cursor');
+  });
+
+  it('detects Cursor from ~/.cursor/rules/general.mdc when scope is global', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'agentsmesh-test-'));
+    await mkdir(join(dir, '.cursor', 'rules'), { recursive: true });
+    await writeFile(join(dir, '.cursor', 'rules', 'general.mdc'), '---\nalwaysApply: true\n---\n');
+
+    const result = await detectExistingConfigs(dir, 'global');
+    expect(result).toContain('cursor');
+  });
 });

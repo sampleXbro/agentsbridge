@@ -4,9 +4,13 @@
 
 import type { CanonicalFiles, GenerateResult } from '../types.js';
 import type { ValidatedConfig } from '../../config/core/schema.js';
-import { resolveTargetFeatureGenerator } from '../../targets/catalog/builtin-targets.js';
-import { preferEquivalentCodexAgents } from './output-overlap.js';
+import {
+  getBuiltinTargetDefinition,
+  resolveTargetFeatureGenerator,
+} from '../../targets/catalog/builtin-targets.js';
+import { preferEquivalentCodexAgents } from '../../targets/catalog/agents-md-overlap.js';
 import { rewriteGeneratedReferences } from '../reference/rewriter.js';
+import { validateGeneratedMarkdownLinks } from '../reference/validate-generated-markdown-links.js';
 import { resolveOutputCollisions, refreshResultStatus } from './collision.js';
 import { generateFeature } from './feature-loop.js';
 import { decoratePrimaryRootInstructions } from './root-instruction-decorator.js';
@@ -15,11 +19,13 @@ import {
   generateHooksFeature,
   generateGeminiSettingsFeature,
 } from './optional-features.js';
+import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
 
 export interface GenerateContext {
   config: ValidatedConfig;
   canonical: CanonicalFiles;
   projectRoot: string;
+  scope?: TargetLayoutScope;
   targetFilter?: string[];
 }
 
@@ -31,7 +37,7 @@ export { resolveOutputCollisions };
  * @returns GenerateResult[] with status per file
  */
 export async function generate(ctx: GenerateContext): Promise<GenerateResult[]> {
-  const { config, canonical, projectRoot, targetFilter } = ctx;
+  const { config, canonical, projectRoot, scope = 'project', targetFilter } = ctx;
   const targets = targetFilter
     ? config.targets.filter((t) => targetFilter.includes(t))
     : config.targets;
@@ -46,43 +52,103 @@ export async function generate(ctx: GenerateContext): Promise<GenerateResult[]> 
 
   const results: GenerateResult[] = [];
 
-  await generateFeature(results, targets, canonical, projectRoot, hasRules, (target) =>
-    resolveTargetFeatureGenerator(target, 'rules', config),
+  await generateFeature(
+    results,
+    targets,
+    canonical,
+    projectRoot,
+    hasRules,
+    scope,
+    'rules',
+    (target) => resolveTargetFeatureGenerator(target, 'rules', config),
   );
 
-  await generateFeature(results, targets, canonical, projectRoot, hasCommands, (target) =>
-    resolveTargetFeatureGenerator(target, 'commands', config),
+  await generateFeature(
+    results,
+    targets,
+    canonical,
+    projectRoot,
+    hasCommands,
+    scope,
+    'commands',
+    (target) => resolveTargetFeatureGenerator(target, 'commands', config),
   );
 
-  await generateFeature(results, targets, canonical, projectRoot, hasAgents, (target) =>
-    resolveTargetFeatureGenerator(target, 'agents', config),
+  await generateFeature(
+    results,
+    targets,
+    canonical,
+    projectRoot,
+    hasAgents,
+    scope,
+    'agents',
+    (target) => resolveTargetFeatureGenerator(target, 'agents', config),
   );
 
-  await generateFeature(results, targets, canonical, projectRoot, hasSkills, (target) =>
-    resolveTargetFeatureGenerator(target, 'skills', config),
+  await generateFeature(
+    results,
+    targets,
+    canonical,
+    projectRoot,
+    hasSkills,
+    scope,
+    'skills',
+    (target) => resolveTargetFeatureGenerator(target, 'skills', config),
   );
-  await generateFeature(results, targets, canonical, projectRoot, hasMcp, (target) =>
+  await generateFeature(results, targets, canonical, projectRoot, hasMcp, scope, 'mcp', (target) =>
     resolveTargetFeatureGenerator(target, 'mcp', config),
   );
 
   // Permissions: same pattern but merges with existing settings.json
-  if (hasPermissions) await generatePermissionsFeature(results, targets, canonical, projectRoot);
+  if (hasPermissions) {
+    await generatePermissionsFeature(results, targets, canonical, projectRoot, scope);
+  }
 
   // Hooks: merges with any pending permissions result for same path
-  if (hasHooks) await generateHooksFeature(results, targets, canonical, projectRoot);
+  if (hasHooks) await generateHooksFeature(results, targets, canonical, projectRoot, scope, config);
 
-  await generateFeature(results, targets, canonical, projectRoot, hasIgnore, (target) =>
-    resolveTargetFeatureGenerator(target, 'ignore', config),
+  await generateFeature(
+    results,
+    targets,
+    canonical,
+    projectRoot,
+    hasIgnore,
+    scope,
+    'ignore',
+    (target) => resolveTargetFeatureGenerator(target, 'ignore', config),
   );
+
+  // Per-target scope extras (e.g. Claude Code output-styles in global mode)
+  const enabledFeatures = new Set(config.features);
+  for (const target of targets) {
+    const descriptor = getBuiltinTargetDefinition(target);
+    const scopeExtras = descriptor?.globalSupport?.scopeExtras ?? descriptor?.generateScopeExtras;
+    if (scopeExtras) {
+      const extras = await scopeExtras(canonical, projectRoot, scope, enabledFeatures);
+      results.push(...extras);
+    }
+  }
 
   // Gemini settings: when mcp, ignore, hooks, or agents (experimental.enableAgents) enabled
   if (hasMcp || hasIgnore || hasHooks || hasAgents) {
-    await generateGeminiSettingsFeature(results, targets, canonical, projectRoot);
+    await generateGeminiSettingsFeature(results, targets, canonical, projectRoot, scope);
   }
 
-  const rewrittenResults = rewriteGeneratedReferences(results, canonical, config, projectRoot);
-  const decoratedResults =
-    decoratePrimaryRootInstructions(rewrittenResults).map(refreshResultStatus);
+  // Decoration must run before reference rewriting so that renderPrimaryRootInstruction output
+  // (which uses canonical body verbatim) gets its canonical paths rewritten to target paths.
+  const decoratedResults = decoratePrimaryRootInstructions(results, canonical, scope);
+  const rewrittenResults = rewriteGeneratedReferences(
+    decoratedResults,
+    canonical,
+    config,
+    projectRoot,
+    scope,
+    targets,
+  );
 
-  return resolveOutputCollisions(preferEquivalentCodexAgents(decoratedResults, canonical, config));
+  validateGeneratedMarkdownLinks(rewrittenResults, projectRoot);
+
+  return resolveOutputCollisions(
+    preferEquivalentCodexAgents(rewrittenResults.map(refreshResultStatus), canonical, config),
+  );
 }

@@ -9,8 +9,24 @@
  * TargetDescriptor that gets registered at runtime.
  */
 
-import type { CanonicalFiles, CanonicalRule, LintDiagnostic } from '../../core/types.js';
+import type {
+  CanonicalFiles,
+  CanonicalRule,
+  GenerateResult,
+  LintDiagnostic,
+} from '../../core/types.js';
+import type { ValidatedConfig } from '../../config/core/schema.js';
 import type { TargetCapabilities, TargetGenerators } from './target.interface.js';
+
+/** Declared output families for reference rewriting and decoration (architecture P1-3). */
+export interface TargetOutputFamily {
+  readonly id: string;
+  readonly kind: 'primary' | 'mirror' | 'additional';
+  /** Match generated paths under this prefix (e.g. Copilot `.github/instructions/`). */
+  readonly pathPrefix?: string;
+  /** Explicit paths for additional root mirrors (Cursor, Gemini compat). */
+  readonly explicitPaths?: readonly string[];
+}
 
 /**
  * Path resolvers for the output reference map.
@@ -23,25 +39,93 @@ import type { TargetCapabilities, TargetGenerators } from './target.interface.js
 export interface TargetPathResolvers {
   /** Output path for a non-root, non-filtered rule. */
   rulePath(slug: string, rule: CanonicalRule): string;
-  /** Output path for a command. Null suppresses generation.
-   *  Config is typed as `unknown` to avoid a circular dependency with schema.ts.
-   *  Implementations receive ValidatedConfig at runtime. */
-  commandPath(name: string, config: unknown): string | null;
-  /** Output path for an agent. Null suppresses generation.
-   *  Config is typed as `unknown` to avoid a circular dependency with schema.ts.
-   *  Implementations receive ValidatedConfig at runtime. */
-  agentPath(name: string, config: unknown): string | null;
+  /** Output path for a command. Null suppresses generation. */
+  commandPath(name: string, config: ValidatedConfig): string | null;
+  /** Output path for an agent. Null suppresses generation. */
+  agentPath(name: string, config: ValidatedConfig): string | null;
+}
+
+export interface TargetManagedOutputs {
+  dirs: readonly string[];
+  files: readonly string[];
+}
+
+export interface TargetLayout {
+  /** Primary root instruction artifact for this scope, if any. */
+  readonly rootInstructionPath?: string;
+  /**
+   * Extra generated paths that should receive the same AgentsMesh root appendix as
+   * `rootInstructionPath` (for example Cursor `AGENTS.md` / `.cursor/AGENTS.md`, Gemini `AGENTS.md`).
+   * @deprecated Prefer `outputFamilies` with `kind: 'additional'`.
+   */
+  readonly additionalRootDecorationPaths?: readonly string[];
+  /** Output families for rewrite cache keys and root decoration (see `layout-outputs.ts`). */
+  readonly outputFamilies?: readonly TargetOutputFamily[];
+  /** Optional renderer for scope-specific primary root instruction content. */
+  readonly renderPrimaryRootInstruction?: (canonical: CanonicalFiles) => string;
+  /** Target-native skills directory for this scope, if any. */
+  readonly skillDir?: string;
+  /** Files/directories agentsmesh fully manages for stale cleanup. */
+  readonly managedOutputs?: TargetManagedOutputs;
+  /** Optional path rewriter for scope-specific generated outputs. Return null to skip emission. */
+  readonly rewriteGeneratedPath?: (path: string) => string | null;
+  /**
+   * Optional mirror hook. Called after rewriteGeneratedPath resolves the primary path.
+   * Returns an additional path to emit the same content to, or null to skip mirroring.
+   */
+  readonly mirrorGlobalPath?: (
+    path: string,
+    activeTargets: readonly string[],
+  ) => string | readonly string[] | null;
+  /** Path resolvers for this scope. */
+  readonly paths: TargetPathResolvers;
+}
+
+export type TargetLayoutScope = 'project' | 'global';
+
+/** Scope extras hook (e.g. Claude Code global output-styles). */
+export type ScopeExtrasFn = (
+  canonical: CanonicalFiles,
+  projectRoot: string,
+  scope: TargetLayoutScope,
+  enabledFeatures: ReadonlySet<string>,
+) => Promise<GenerateResult[]>;
+
+/** Single block for global-mode support (replaces scattered global* fields). */
+export interface GlobalTargetSupport {
+  readonly capabilities: TargetCapabilities;
+  readonly detectionPaths: readonly string[];
+  readonly layout: TargetLayout;
+  readonly scopeExtras?: ScopeExtrasFn;
 }
 
 /** Import-path builder: populates refs with (target path -> canonical path) mappings. */
-export type ImportPathBuilder = (refs: Map<string, string>, projectRoot: string) => Promise<void>;
+export type ImportPathBuilder = (
+  refs: Map<string, string>,
+  projectRoot: string,
+  scope?: TargetLayoutScope,
+) => Promise<void>;
 
 /** Rule linter function signature. */
 export type RuleLinter = (
   canonical: CanonicalFiles,
   projectRoot: string,
   projectFiles: string[],
+  options?: { scope?: TargetLayoutScope },
 ) => LintDiagnostic[];
+
+/** Feature-specific lint hook signature. */
+export type FeatureLinter = (canonical: CanonicalFiles, options?: unknown) => LintDiagnostic[];
+
+/** Optional per-feature lint hooks for target-specific validation. */
+export interface TargetLintHooks {
+  readonly commands?: FeatureLinter;
+  readonly mcp?: FeatureLinter;
+  readonly permissions?: FeatureLinter;
+  readonly hooks?: FeatureLinter;
+  readonly ignore?: FeatureLinter;
+  readonly settings?: FeatureLinter;
+}
 
 /**
  * Full self-describing target descriptor.
@@ -54,16 +138,59 @@ export interface TargetDescriptor {
   readonly generators: TargetGenerators;
   /** Feature support levels */
   readonly capabilities: TargetCapabilities;
+  /** Consolidated global-mode metadata (preferred over bare `global*` fields). */
+  readonly globalSupport?: GlobalTargetSupport;
+  /** Optional global-scope feature support levels when they differ from project mode */
+  readonly globalCapabilities?: TargetCapabilities;
   /** Message shown when import finds nothing for this target */
   readonly emptyImportMessage: string;
   /** Optional linter for canonical files */
   readonly lintRules: RuleLinter | null;
-  /** Target-native skills directory, e.g. '.claude/skills' */
+  /** Optional per-feature lint hooks */
+  readonly lint?: TargetLintHooks;
+  /** Project-scope target layout metadata */
+  readonly project: TargetLayout;
+  /** Optional global-scope layout (use `globalSupport.layout` when `globalSupport` is set). */
+  readonly global?: TargetLayout;
+  /**
+   * Declares which embedded-capability features support user-configured conversion.
+   * When the corresponding conversion is disabled in config, the feature generator is skipped.
+   */
+  readonly supportsConversion?: { readonly commands?: true; readonly agents?: true };
+  /**
+   * Optional hook for generating scope-specific extras beyond the standard feature loop.
+   * Prefer `globalSupport.scopeExtras` for global-only extras.
+   */
+  readonly generateScopeExtras?: ScopeExtrasFn;
+  /** @deprecated Use project.skillDir */
   readonly skillDir?: string;
-  /** Path resolvers for the output reference map */
-  readonly paths: TargetPathResolvers;
+  /** @deprecated Use project.paths */
+  readonly paths?: TargetPathResolvers;
   /** Import reference map builder */
   readonly buildImportPaths: ImportPathBuilder;
   /** Filesystem paths used to detect this target during `init` */
   readonly detectionPaths: readonly string[];
+  /** Optional filesystem paths used to detect this target in global scope during `init --global` */
+  readonly globalDetectionPaths?: readonly string[];
+  /**
+   * Declares which shared artifact paths this target owns or consumes.
+   * Used by the reference rewriter to select the correct artifact map for shared outputs.
+   * Example: codex-cli owns '.agents/skills/', copilot consumes it in global mode.
+   */
+  readonly sharedArtifacts?: { readonly [pathPrefix: string]: 'owner' | 'consumer' };
+  /**
+   * Optional native settings sidecar (e.g. Gemini `.gemini/settings.json` when embedded features are on).
+   */
+  readonly emitScopedSettings?: (
+    canonical: CanonicalFiles,
+    scope: TargetLayoutScope,
+  ) => readonly { readonly path: string; readonly content: string }[];
+  /**
+   * Async post-pass for hook generator outputs (e.g. Copilot hook script assets under `.github/hooks/`).
+   */
+  readonly postProcessHookOutputs?: (
+    projectRoot: string,
+    canonical: CanonicalFiles,
+    outputs: readonly { readonly path: string; readonly content: string }[],
+  ) => Promise<readonly { readonly path: string; readonly content: string }[]>;
 }

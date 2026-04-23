@@ -3,6 +3,8 @@ name: prepare-release
 description: "Use this skill whenever preparing agentsmesh for an npm release — whether first publish, patch, minor, or major. Triggers on: 'prepare release', 'ready to publish', 'ship version', 'release prep', 'get this to npm', 'bump version', 'cut a release', 'what's needed to publish'. Runs a strict ordered checklist: test suite health → timing hardening → CI/CD presence → community health files → changesets → CHANGELOG quality → package contents → README badges → final gate → generate to targets. Do not skip this or work from memory — execute every phase in order and fix gaps before moving on."
 ---
 
+## Purpose
+
 # Prepare Release
 
 You are acting as the release engineer for agentsmesh. Your job is to get the repo into a state that is safe, honest, and ready for `npm publish`. Work through each phase in order. Do not mark a phase complete until you have verified it, not just assumed it.

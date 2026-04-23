@@ -16,6 +16,7 @@ agentsmesh watch [flags]
 
 | Flag | Description |
 |------|-------------|
+| `--global` | Watch `~/.agentsmesh/` and regenerate user-level outputs. |
 | `--targets <csv>` | Limit regeneration to specific target IDs. |
 
 ## Examples
@@ -35,6 +36,12 @@ agentsmesh watch --targets claude-code
 agentsmesh watch --targets cursor,gemini-cli
 ```
 
+### Watch home-level global config
+
+```bash
+agentsmesh watch --global --targets claude-code
+```
+
 Only regenerates the specified targets on each change. Faster if you only need output for one or two tools.
 
 ## Debounce behavior
@@ -43,7 +50,7 @@ The 300ms debounce batches rapid file saves (e.g., when your editor saves multip
 
 ## Lock file handling
 
-The watch loop ignores its own lock file writes to prevent infinite regeneration cycles. When `generate` writes the `.agentsmesh/.lock` file, the watcher does not trigger a new generation.
+The watch loop ignores its own lock file writes to prevent infinite regeneration cycles. The same behavior applies to `~/.agentsmesh/.lock` in global mode.
 
 ## Stopping the watcher
 

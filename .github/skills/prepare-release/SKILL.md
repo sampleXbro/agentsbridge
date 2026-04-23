@@ -70,8 +70,8 @@ If any of these are missing or too low, update them now. The watch debounce is 3
 
 Check that both workflow files exist and are correct:
 
-- `.github/workflows/ci.yml` — runs on every push and PR to `master`
-- `.github/workflows/publish.yml` — runs changesets publish flow on push to `master`
+- `../../workflows/ci.yml` — runs on every push and PR to `master`
+- `../../workflows/publish.yml` — runs changesets publish flow on push to `master`
 
 ### ci.yml must include these steps in order
 
@@ -115,9 +115,11 @@ jobs:
           version: 10
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
           cache: pnpm
           registry-url: "https://registry.npmjs.org"
+      - name: Upgrade npm for trusted publishing
+        run: npm install -g npm@latest
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Create release PR or publish
@@ -130,7 +132,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-The job needs `id-token: write` for npm trusted publishing/provenance and `pull-requests: write` to create the version PR. Prefer a GitHub-hosted Node version that already bundles a compliant npm for trusted publishing (currently the npm docs example uses Node 24) instead of self-upgrading npm in the workflow. Only add an explicit npm install when you need a specific documented version the runner cannot provide directly. If either file is missing or malformed, create/fix it now.
+The job needs `id-token: write` for npm trusted publishing/provenance and `pull-requests: write` to create the version PR. If either file is missing or malformed, create/fix it now.
 
 ---
 
@@ -142,10 +144,10 @@ These must exist. Check each one:
 |------|----------------|
 | `SECURITY.md` | Supported versions table, private advisory link, response SLA |
 | `CONTRIBUTING.md` | Prerequisites, dev commands, TDD rule, commit format, PR checklist |
-| `.github/ISSUE_TEMPLATE/bug_report.yml` | version, node, repro, expected behavior fields |
-| `.github/ISSUE_TEMPLATE/feature_request.yml` | problem + solution fields |
-| `.github/ISSUE_TEMPLATE/config.yml` | `blank_issues_enabled: false`, security advisory link |
-| `.github/pull_request_template.md` | type-of-change checklist, TDD + CI + changeset checkboxes |
+| `../../ISSUE_TEMPLATE/bug_report.yml` | version, node, repro, expected behavior fields |
+| `../../ISSUE_TEMPLATE/feature_request.yml` | problem + solution fields |
+| `../../ISSUE_TEMPLATE/config.yml` | `blank_issues_enabled: false`, security advisory link |
+| `../../pull_request_template.md` | type-of-change checklist, TDD + CI + changeset checkboxes |
 
 If any are missing, create them. Keep them short and factual — no marketing copy.
 

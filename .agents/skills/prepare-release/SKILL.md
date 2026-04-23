@@ -115,9 +115,11 @@ jobs:
           version: 10
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
           cache: pnpm
           registry-url: "https://registry.npmjs.org"
+      - name: Upgrade npm for trusted publishing
+        run: npm install -g npm@latest
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Create release PR or publish
@@ -130,7 +132,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-The job needs `id-token: write` for npm trusted publishing/provenance and `pull-requests: write` to create the version PR. Prefer a GitHub-hosted Node version that already bundles a compliant npm for trusted publishing (currently the npm docs example uses Node 24) instead of self-upgrading npm in the workflow. Only add an explicit npm install when you need a specific documented version the runner cannot provide directly. If either file is missing or malformed, create/fix it now.
+The job needs `id-token: write` for npm trusted publishing/provenance and `pull-requests: write` to create the version PR. If either file is missing or malformed, create/fix it now.
 
 ---
 

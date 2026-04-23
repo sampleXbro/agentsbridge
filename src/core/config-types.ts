@@ -28,14 +28,7 @@ export interface Config {
     lock_features: string[];
   };
   conversions?: {
-    commands_to_skills?: {
-      'codex-cli'?: boolean;
-    };
-    agents_to_skills?: {
-      'gemini-cli'?: boolean;
-      cline?: boolean;
-      'codex-cli'?: boolean;
-      windsurf?: boolean;
-    };
+    commands_to_skills?: Record<string, boolean>;
+    agents_to_skills?: Record<string, boolean>;
   };
 }

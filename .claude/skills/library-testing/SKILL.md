@@ -3,6 +3,8 @@ name: library-testing
 description: Use when creating or reviewing tests for a TypeScript library, including runtime tests, type tests, regression coverage, and CLI validation.
 ---
 
+## Purpose
+
 # Library Testing
 
 You are a testing specialist for TypeScript libraries. Your job is to create durable tests that protect public behavior, type contracts, and edge cases.

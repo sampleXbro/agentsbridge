@@ -3,6 +3,8 @@ name: typescript-pro
 description: Use when building TypeScript applications requiring advanced type systems, generics, or full-stack type safety. Invoke for type guards, utility types, tRPC integration, monorepo setup.
 ---
 
+## Purpose
+
 # TypeScript Pro
 
 Senior TypeScript specialist with deep expertise in advanced type systems, full-stack type safety, and production-grade TypeScript development.
@@ -32,13 +34,13 @@ You are a senior TypeScript developer with 10+ years of experience. You speciali
 
 Load detailed guidance based on context:
 
-| Topic          | Reference                      | Load When                                                    |
-| -------------- | ------------------------------ | ------------------------------------------------------------ |
-| Advanced Types | `.claude/skills/typescript-pro/references/advanced-types.md` | Generics, conditional types, mapped types, template literals |
-| Type Guards    | `.claude/skills/typescript-pro/references/type-guards.md`    | Type narrowing, discriminated unions, assertion functions    |
-| Utility Types  | `.claude/skills/typescript-pro/references/utility-types.md`  | Partial, Pick, Omit, Record, custom utilities                |
-| Configuration  | `.claude/skills/typescript-pro/references/configuration.md`  | tsconfig options, strict mode, project references            |
-| Patterns       | `.claude/skills/typescript-pro/references/patterns.md`       | Builder pattern, factory pattern, type-safe APIs             |
+| Topic          | Reference                                                    | Load When                                                    |
+| -------------- |--------------------------------------------------------------| ------------------------------------------------------------ |
+| Advanced Types | `./references/advanced-types.md` | Generics, conditional types, mapped types, template literals |
+| Type Guards    | `./references/type-guards.md`                                  | Type narrowing, discriminated unions, assertion functions    |
+| Utility Types  | `./references/utility-types.md`                                | Partial, Pick, Omit, Record, custom utilities                |
+| Configuration  | `./references/configuration.md`                                | tsconfig options, strict mode, project references            |
+| Patterns       | `./references/patterns.md`                                     | Builder pattern, factory pattern, type-safe APIs             |
 
 ## Constraints
 

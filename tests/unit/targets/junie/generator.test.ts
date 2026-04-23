@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
+import { parseFrontmatter } from '../../../../src/utils/text/markdown.js';
 import {
   generateRules,
   generateCommands,
@@ -125,9 +126,10 @@ describe('generateCommands (junie)', () => {
     const results = generateCommands(canonical);
     expect(results).toHaveLength(1);
     expect(results[0]?.path).toBe(`${JUNIE_COMMANDS_DIR}/review.md`);
-    expect(results[0]?.content).not.toContain('description:');
+    const parsed = parseFrontmatter(results[0]?.content ?? '');
+    expect(parsed.frontmatter.description).toBe('Review workflow');
     expect(results[0]?.content).not.toContain('allowed-tools:');
-    expect(results[0]?.content).toContain('Review the current diff.');
+    expect(parsed.body).toContain('Review the current diff.');
   });
 });
 
@@ -156,19 +158,28 @@ describe('generateAgents (junie)', () => {
     const results = generateAgents(canonical);
     expect(results).toHaveLength(1);
     expect(results[0]?.path).toBe(`${JUNIE_AGENTS_DIR}/code-reviewer.md`);
-    expect(results[0]?.content).not.toContain('description:');
-    expect(results[0]?.content).not.toContain('tools:');
-    expect(results[0]?.content).not.toContain('model:');
-    expect(results[0]?.content).toContain('Review changes and call out risks.');
+    const parsed = parseFrontmatter(results[0]?.content ?? '');
+    expect(parsed.frontmatter.name).toBe('code-reviewer');
+    expect(parsed.frontmatter.description).toBe('Performs code reviews');
+    expect(parsed.frontmatter.tools).toEqual(['Read', 'Grep']);
+    expect(parsed.frontmatter.model).toBe('gpt-5');
+    expect(parsed.body).toContain('Review changes and call out risks.');
   });
 });
 
 describe('generateMcp (junie)', () => {
-  it('writes Junie project-level mcp.json', () => {
+  it('writes Junie project-level mcp.json in minimal native format', () => {
     const canonical = makeCanonical({
       mcp: {
         mcpServers: {
           context7: { type: 'stdio', command: 'npx', args: ['-y', '@ctx/mcp'], env: {} },
+          github: {
+            type: 'stdio',
+            command: 'npx',
+            args: ['-y', '@gh/mcp'],
+            env: { GITHUB_TOKEN: '$TOKEN' },
+            description: 'GitHub',
+          },
         },
       },
     });
@@ -176,7 +187,17 @@ describe('generateMcp (junie)', () => {
     const results = generateMcp(canonical);
     expect(results).toHaveLength(1);
     expect(results[0]?.path).toBe(JUNIE_MCP_FILE);
-    expect(results[0]?.content).toContain('context7');
+    const parsed = JSON.parse(results[0]!.content) as Record<string, unknown>;
+    const servers = (parsed as { mcpServers: Record<string, Record<string, unknown>> }).mcpServers;
+    // type 'stdio' is omitted (default); empty env is omitted
+    expect(servers['context7']).toEqual({ command: 'npx', args: ['-y', '@ctx/mcp'] });
+    // non-empty env and description are preserved
+    expect(servers['github']).toEqual({
+      description: 'GitHub',
+      command: 'npx',
+      args: ['-y', '@gh/mcp'],
+      env: { GITHUB_TOKEN: '$TOKEN' },
+    });
   });
 });
 

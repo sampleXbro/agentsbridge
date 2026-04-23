@@ -1,6 +1,7 @@
 ---
 name: code-security-auditor
 description: Comprehensive security analysis and vulnerability detection for codebases. Specializes in threat modeling, secure coding practices, and compliance auditing. Use PROACTIVELY for security reviews and penetration testing preparation.
+tools: []
 model: sonnet
 ---
 

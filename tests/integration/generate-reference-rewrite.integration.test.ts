@@ -33,12 +33,13 @@ features: [rules, commands, agents, skills]
     });
     writeFileSync(
       join(testDir, '.agentsmesh', 'rules', '_root.md'),
-      `---
-root: true
-description: Root rule
----
-See .agentsmesh/rules/typescript.md, .agentsmesh/commands/review.md, .agentsmesh/agents/reviewer.md, and .agentsmesh/skills/api-gen/references/checklist.md.
-`,
+      [
+        '---',
+        'root: true',
+        'description: Root rule',
+        '---',
+        'See `.agentsmesh/rules/typescript.md`, `.agentsmesh/commands/review.md`, `.agentsmesh/agents/reviewer.md`, and `.agentsmesh/skills/api-gen/references/checklist.md`.',
+      ].join('\n'),
     );
     writeFileSync(
       join(testDir, '.agentsmesh', 'rules', 'typescript.md'),
@@ -51,25 +52,24 @@ Prefer strict mode.
     );
     writeFileSync(
       join(testDir, '.agentsmesh', 'commands', 'review.md'),
-      `---
-description: Review
----
-Load .agentsmesh/skills/api-gen/SKILL.md.
-`,
+      ['---', 'description: Review', '---', 'Load `.agentsmesh/skills/api-gen/SKILL.md`.'].join(
+        '\n',
+      ),
     );
     writeFileSync(
       join(testDir, '.agentsmesh', 'agents', 'reviewer.md'),
-      `---
-name: reviewer
-description: Reviews code
-tools: [Read]
----
-Use .agentsmesh/skills/api-gen/SKILL.md.
-`,
+      [
+        '---',
+        'name: reviewer',
+        'description: Reviews code',
+        'tools: [Read]',
+        '---',
+        'Use `.agentsmesh/skills/api-gen/SKILL.md`.',
+      ].join('\n'),
     );
     writeFileSync(
       join(testDir, '.agentsmesh', 'skills', 'api-gen', 'SKILL.md'),
-      '# API Gen\n\nChecklist: .agentsmesh/skills/api-gen/references/checklist.md.\n',
+      '# API Gen\n\nChecklist: `.agentsmesh/skills/api-gen/references/checklist.md`.\n',
     );
     writeFileSync(
       join(testDir, '.agentsmesh', 'skills', 'api-gen', 'references', 'checklist.md'),
@@ -87,21 +87,17 @@ Use .agentsmesh/skills/api-gen/SKILL.md.
       'utf-8',
     );
 
-    expect(claudeRoot).toContain('.claude/rules/typescript.md');
-    expect(claudeRoot).toContain('.claude/commands/review.md');
-    expect(claudeRoot).toContain('.claude/agents/reviewer.md');
-    expect(claudeRoot).toContain('.claude/skills/api-gen/references/checklist.md');
-    expect(cursorRoot).toContain('.cursor/rules/typescript.mdc');
-    expect(cursorRoot).toContain('.cursor/commands/review.md');
-    expect(cursorRoot).toContain('.cursor/agents/reviewer.md');
-    expect(cursorRoot).toContain('.cursor/skills/api-gen/references/checklist.md');
-    expect(claudeCommand).toContain('.claude/skills/api-gen/SKILL.md');
-    expect(claudeAgent).toContain('.claude/skills/api-gen/SKILL.md');
-    expect(claudeSkill).toContain('.claude/skills/api-gen/references/checklist.md');
-    expect(claudeRoot).not.toContain('.agentsmesh/rules/');
-    expect(claudeRoot).not.toContain('.agentsmesh/commands/');
-    expect(claudeRoot).not.toContain('.agentsmesh/agents/');
-    expect(claudeRoot).not.toContain('.agentsmesh/skills/api-gen/');
+    expect(claudeRoot).toContain('.agentsmesh/rules/typescript.md');
+    expect(claudeRoot).toContain('.agentsmesh/commands/review.md');
+    expect(claudeRoot).toContain('.agentsmesh/agents/reviewer.md');
+    expect(claudeRoot).toContain('.agentsmesh/skills/api-gen/references/checklist.md');
+    expect(cursorRoot).toContain('.agentsmesh/rules/typescript.md');
+    expect(cursorRoot).toContain('.agentsmesh/commands/review.md');
+    expect(cursorRoot).toContain('.agentsmesh/agents/reviewer.md');
+    expect(cursorRoot).toContain('.agentsmesh/skills/api-gen/references/checklist.md');
+    expect(claudeCommand).toContain('.agentsmesh/skills/api-gen/SKILL.md');
+    expect(claudeAgent).toContain('.agentsmesh/skills/api-gen/SKILL.md');
+    expect(claudeSkill).toContain('references/checklist.md');
   });
 
   it('rewrites codex rule references to .codex/instructions/typescript.md', () => {
@@ -115,12 +111,13 @@ features: [rules]
     mkdirSync(join(testDir, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(
       join(testDir, '.agentsmesh', 'rules', '_root.md'),
-      `---
-root: true
-description: Root rule
----
-Keep .agentsmesh/rules/typescript.md.
-`,
+      [
+        '---',
+        'root: true',
+        'description: Root rule',
+        '---',
+        'Keep `.agentsmesh/rules/typescript.md`.',
+      ].join('\n'),
     );
     writeFileSync(
       join(testDir, '.agentsmesh', 'rules', 'typescript.md'),
@@ -158,7 +155,7 @@ features: [rules, skills]
 root: true
 description: Root rule
 ---
-Use .agentsmesh/skills/post-feature-qa/ and .agentsmesh/skills/post-feature-qa/references/.
+Use [.agentsmesh/skills/post-feature-qa/](.agentsmesh/skills/post-feature-qa/) and [.agentsmesh/skills/post-feature-qa/references/](.agentsmesh/skills/post-feature-qa/references/).
 `,
     );
     writeFileSync(join(testDir, '.agentsmesh', 'skills', 'post-feature-qa', 'SKILL.md'), '# QA\n');
@@ -170,20 +167,50 @@ Use .agentsmesh/skills/post-feature-qa/ and .agentsmesh/skills/post-feature-qa/r
     execSync(`node ${CLI_PATH} generate`, { cwd: testDir });
 
     expect(readFileSync(join(testDir, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
-      '.claude/skills/post-feature-qa/',
+      'skills/post-feature-qa/',
     );
     expect(readFileSync(join(testDir, '.cursor', 'rules', 'general.mdc'), 'utf-8')).toContain(
-      '.cursor/skills/post-feature-qa/',
+      'skills/post-feature-qa/',
     );
     expect(readFileSync(join(testDir, '.github', 'copilot-instructions.md'), 'utf-8')).toContain(
-      '.github/skills/post-feature-qa/',
+      'skills/post-feature-qa/',
     );
-    expect(readFileSync(join(testDir, 'GEMINI.md'), 'utf-8')).toContain(
-      '.gemini/skills/post-feature-qa/',
+    expect(readFileSync(join(testDir, 'GEMINI.md'), 'utf-8')).toContain('skills/post-feature-qa/');
+    expect(readFileSync(join(testDir, 'AGENTS.md'), 'utf-8')).toContain('skills/post-feature-qa/');
+  });
+
+  it('leaves bare scripts/ directory prose unchanged when scripts/ exists on disk', () => {
+    writeFileSync(
+      join(testDir, 'agentsmesh.yaml'),
+      `version: 1
+targets: [cursor]
+features: [skills]
+`,
     );
-    expect(readFileSync(join(testDir, 'AGENTS.md'), 'utf-8')).toContain(
-      '.agents/skills/post-feature-qa/',
+    mkdirSync(join(testDir, '.agentsmesh', 'skills', 'link-rebaser-prose', 'references'), {
+      recursive: true,
+    });
+    mkdirSync(join(testDir, 'scripts'), { recursive: true });
+    writeFileSync(join(testDir, 'scripts', '.gitkeep'), '');
+    writeFileSync(
+      join(testDir, '.agentsmesh', 'skills', 'link-rebaser-prose', 'SKILL.md'),
+      [
+        '---',
+        'name: link-rebaser-prose',
+        'description: Prose regression',
+        '---',
+        'Look for a scripts/ directory and README index.',
+      ].join('\n'),
     );
+
+    execSync(`node ${CLI_PATH} generate`, { cwd: testDir });
+
+    const out = readFileSync(
+      join(testDir, '.cursor', 'skills', 'link-rebaser-prose', 'SKILL.md'),
+      'utf-8',
+    );
+    expect(out).toContain('scripts/ directory');
+    expect(out).not.toContain('../../../scripts/');
   });
 
   it('rewrites skill directory references in cline AGENTS.md root artifact', () => {
@@ -204,7 +231,7 @@ features: [rules, skills]
 root: true
 description: Root rule
 ---
-Use .agentsmesh/skills/post-feature-qa/ and .agentsmesh/skills/post-feature-qa/references/.
+Use [.agentsmesh/skills/post-feature-qa/](.agentsmesh/skills/post-feature-qa/) and [.agentsmesh/skills/post-feature-qa/references/](.agentsmesh/skills/post-feature-qa/references/).
 `,
     );
     writeFileSync(join(testDir, '.agentsmesh', 'skills', 'post-feature-qa', 'SKILL.md'), '# QA\n');
@@ -215,8 +242,6 @@ Use .agentsmesh/skills/post-feature-qa/ and .agentsmesh/skills/post-feature-qa/r
 
     execSync(`node ${CLI_PATH} generate`, { cwd: testDir });
 
-    expect(readFileSync(join(testDir, 'AGENTS.md'), 'utf-8')).toContain(
-      '.cline/skills/post-feature-qa/',
-    );
+    expect(readFileSync(join(testDir, 'AGENTS.md'), 'utf-8')).toContain('skills/post-feature-qa/');
   });
 });

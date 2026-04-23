@@ -34,6 +34,48 @@ describe('importFromGemini', () => {
     expect(content).toContain('- Use TDD');
   });
 
+  it('splits managed embedded rules from GEMINI.md into canonical non-root rules', async () => {
+    writeFileSync(
+      join(TEST_DIR, GEMINI_ROOT),
+      [
+        '# Gemini Rules',
+        '',
+        'Root guidance.',
+        '',
+        '<!-- agentsmesh:embedded-rules:start -->',
+        '<!-- agentsmesh:embedded-rule:start {"source":"rules/typescript.md","description":"TS rules","globs":["src/**/*.ts"],"targets":[]} -->',
+        '## TS rules',
+        '',
+        'Use strict TS.',
+        '<!-- agentsmesh:embedded-rule:end -->',
+        '<!-- agentsmesh:embedded-rules:end -->',
+        '',
+        '<!-- agentsmesh:root-generation-contract:start -->',
+        '## AgentsMesh Generation Contract',
+        '',
+        'Use `.agentsmesh/rules/typescript.md` without rewriting this managed text.',
+        '<!-- agentsmesh:root-generation-contract:end -->',
+      ].join('\n'),
+    );
+
+    const results = await importFromGemini(TEST_DIR);
+
+    expect(results.some((r) => r.toPath === '.agentsmesh/rules/_root.md')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/rules/typescript.md')).toBe(true);
+
+    const root = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
+    expect(root).toContain('Root guidance.');
+    expect(root).not.toContain('Use strict TS.');
+    expect(root).not.toContain('AgentsMesh Generation Contract');
+
+    const ts = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'), 'utf-8');
+    expect(ts).toContain('root: false');
+    expect(ts).toContain('description: TS rules');
+    expect(ts).toContain('src/**/*.ts');
+    expect(ts).toContain('Use strict TS.');
+    expect(ts).not.toContain('## TS rules');
+  });
+
   it('imports .gemini/rules/*.md into canonical rules', async () => {
     mkdirSync(join(TEST_DIR, GEMINI_RULES_DIR), { recursive: true });
     writeFileSync(

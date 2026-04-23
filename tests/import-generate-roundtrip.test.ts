@@ -556,6 +556,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
     });
     const paths = results.map((r) => r.path).sort();
     expect(paths).toEqual([
+      '.cursor/AGENTS.md',
       '.cursor/agents/reviewer.md',
       '.cursor/commands/review.md',
       '.cursor/hooks.json',
@@ -601,6 +602,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
     });
     const paths = results.map((r) => r.path).sort();
     expect(paths).toEqual([
+      '.agents/skills/qa/SKILL.md',
       '.gemini/agents/reviewer.md',
       '.gemini/commands/review.toml',
       '.gemini/policies/permissions.toml',
@@ -770,6 +772,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.continue/rules/general.md',
       '.continue/rules/typescript.md',
       '.continue/skills/qa/SKILL.md',
+      '.cursor/AGENTS.md',
       '.cursor/agents/reviewer.md',
       '.cursor/commands/review.md',
       '.cursor/hooks.json',

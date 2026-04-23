@@ -1,9 +1,8 @@
 PreToolUse:
   - matcher: Bash
-    type: command
     command: "echo \"Running: $(jq -r '.tool_input.command' < /dev/stdin)\""
+    type: command
 PostToolUse:
   - matcher: Edit|Write
+    command: jq -r '.tool_input.file_path' | xargs eslint --fix
     type: command
-    command: "jq -r '.tool_input.file_path' | xargs eslint --fix"
-

@@ -1,11 +1,34 @@
 import { join } from 'node:path';
 import type { CanonicalFiles, GenerateResult } from '../types.js';
 import { readFileSafe } from '../../utils/filesystem/fs.js';
+import {
+  getTargetCapabilities,
+  getTargetLayout,
+  rewriteGeneratedOutputPath,
+} from '../../targets/catalog/builtin-targets.js';
+import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
+import type { CapabilityFeatureKey } from '../../targets/catalog/capabilities.js';
+import type {
+  FeatureGeneratorFn,
+  GenerateFeatureContext,
+} from '../../targets/catalog/target.interface.js';
 
 export function computeStatus(existing: string | null, content: string): GenerateResult['status'] {
   if (existing === null) return 'created';
   if (existing !== content) return 'updated';
   return 'unchanged';
+}
+
+export function featureContext(
+  target: string,
+  feature: CapabilityFeatureKey,
+  scope: TargetLayoutScope,
+): GenerateFeatureContext {
+  const caps = getTargetCapabilities(target, scope);
+  return {
+    capability: caps?.[feature] ?? { level: 'none' },
+    scope,
+  };
 }
 
 export async function generateFeature(
@@ -14,23 +37,41 @@ export async function generateFeature(
   canonical: CanonicalFiles,
   projectRoot: string,
   enabled: boolean,
-  getGen: (
-    target: string,
-  ) => ((c: CanonicalFiles) => { path: string; content: string }[]) | undefined,
+  scope: TargetLayoutScope,
+  feature: CapabilityFeatureKey,
+  getGen: (target: string) => FeatureGeneratorFn | undefined,
 ): Promise<void> {
   if (!enabled) return;
   for (const target of targets) {
     const gen = getGen(target);
     if (!gen) continue;
-    for (const out of gen(canonical)) {
-      const existing = await readFileSafe(join(projectRoot, out.path));
+    const ctx = featureContext(target, feature, scope);
+    for (const out of gen(canonical, ctx)) {
+      const resolvedPath = rewriteGeneratedOutputPath(target, out.path, scope);
+      if (resolvedPath === null) continue;
+      const existing = await readFileSafe(join(projectRoot, resolvedPath));
       results.push({
         target,
-        path: out.path,
+        path: resolvedPath,
         content: out.content,
         currentContent: existing ?? undefined,
         status: computeStatus(existing, out.content),
       });
+      const layout = getTargetLayout(target, scope);
+      if (layout?.mirrorGlobalPath) {
+        const raw = layout.mirrorGlobalPath(resolvedPath, targets);
+        const mirrorPaths = raw === null ? [] : Array.isArray(raw) ? raw : [raw];
+        for (const mirrorPath of mirrorPaths) {
+          const existingMirror = await readFileSafe(join(projectRoot, mirrorPath));
+          results.push({
+            target,
+            path: mirrorPath,
+            content: out.content,
+            currentContent: existingMirror ?? undefined,
+            status: computeStatus(existingMirror, out.content),
+          });
+        }
+      }
     }
   }
 }

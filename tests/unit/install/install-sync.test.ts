@@ -36,11 +36,11 @@ describe('install-sync', () => {
       mockReadInstallManifest.mockResolvedValue([]);
 
       await syncInstalledPacks({
-        configDir: '/test',
+        canonicalDir: '/test/.agentsmesh',
         reinstall: vi.fn(),
       });
 
-      expect(mockReadInstallManifest).toHaveBeenCalledWith('/test');
+      expect(mockReadInstallManifest).toHaveBeenCalledWith('/test/.agentsmesh');
       expect(mockLoggerInfo).toHaveBeenCalledWith(
         'No recorded installs found in .agentsmesh/installs.yaml.',
       );
@@ -52,7 +52,7 @@ describe('install-sync', () => {
       mockExists.mockResolvedValue(true);
 
       await syncInstalledPacks({
-        configDir: '/test',
+        canonicalDir: '/test/.agentsmesh',
         reinstall: vi.fn(),
       });
 
@@ -72,7 +72,7 @@ describe('install-sync', () => {
         .mockResolvedValueOnce(true); // existing-pack
 
       await syncInstalledPacks({
-        configDir: '/test',
+        canonicalDir: '/test/.agentsmesh',
         reinstall: mockReinstall,
       });
 
@@ -100,7 +100,7 @@ describe('install-sync', () => {
       mockExists.mockResolvedValue(false); // All packs missing
 
       await syncInstalledPacks({
-        configDir: '/test',
+        canonicalDir: '/test/.agentsmesh',
         reinstall: mockReinstall,
       });
 
@@ -118,8 +118,7 @@ describe('install-sync', () => {
     it('returns false when sync is false', async () => {
       const result = await maybeRunInstallSync({
         sync: false,
-        projectRoot: '/project',
-        loadConfigDir: vi.fn(),
+        canonicalDir: '/config/.agentsmesh',
         reinstall: vi.fn(),
       });
 
@@ -127,17 +126,14 @@ describe('install-sync', () => {
     });
 
     it('calls syncInstalledPacks when sync is true', async () => {
-      const mockLoadConfigDir = vi.fn().mockResolvedValue('/config');
       const mockReinstall = vi.fn();
 
       await maybeRunInstallSync({
         sync: true,
-        projectRoot: '/project',
-        loadConfigDir: mockLoadConfigDir,
+        canonicalDir: '/config/.agentsmesh',
         reinstall: mockReinstall,
       });
 
-      expect(mockLoadConfigDir).toHaveBeenCalledWith('/project');
       // Verify the function was called by checking the mock implementation
       expect(mockReinstall).toBeDefined();
     });
@@ -145,8 +141,7 @@ describe('install-sync', () => {
     it('returns true when sync is true', async () => {
       const result = await maybeRunInstallSync({
         sync: true,
-        projectRoot: '/project',
-        loadConfigDir: vi.fn().mockResolvedValue('/config'),
+        canonicalDir: '/config/.agentsmesh',
         reinstall: vi.fn(),
       });
 

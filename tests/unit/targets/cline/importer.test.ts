@@ -255,7 +255,7 @@ describe('importFromCline', () => {
     );
     await importFromCline(TEST_DIR);
     const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
-    expect(content).toContain('.agentsmesh/skills/review/SKILL.md');
+    expect(content).toContain('../skills/review/SKILL.md');
     expect(content).not.toContain('.cline/skills/review/SKILL.md');
   });
 

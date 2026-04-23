@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "mcpServers": {
+      "default": {},
+      "description": "Map of server name to server configuration",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "description": {
+                "description": "Human-readable description of this MCP server",
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "const": "stdio",
+                "description": "stdio transport — launches a local process"
+              },
+              "env": {
+                "default": {},
+                "description": "Environment variables",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "command": {
+                "type": "string",
+                "description": "Executable to run"
+              },
+              "args": {
+                "default": [],
+                "description": "Command-line arguments",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "type",
+              "env",
+              "command",
+              "args"
+            ],
+            "additionalProperties": false,
+            "description": "stdio MCP server (local process)"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "description": {
+                "description": "Human-readable description of this MCP server",
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "const": "url",
+                "description": "url transport — connects to a remote HTTP/SSE endpoint"
+              },
+              "env": {
+                "default": {},
+                "description": "Environment variables",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": "Remote endpoint URL"
+              },
+              "headers": {
+                "default": {},
+                "description": "HTTP headers",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "type",
+              "env",
+              "url",
+              "headers"
+            ],
+            "additionalProperties": false,
+            "description": "URL-based MCP server (HTTP/SSE)"
+          }
+        ],
+        "description": "MCP server configuration"
+      }
+    }
+  },
+  "required": [
+    "mcpServers"
+  ],
+  "additionalProperties": false,
+  "description": "AgentsMesh MCP server config (.agentsmesh/mcp.json)",
+  "title": "agentsmesh-mcp.json"
+}

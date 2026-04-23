@@ -48,9 +48,10 @@ describe('generateRules (cursor)', () => {
       ignore: [],
     };
     const results = generateRules(canonical);
-    expect(results).toHaveLength(2);
+    expect(results).toHaveLength(3);
     const agentsMd = results.find((r) => r.path === 'AGENTS.md');
     const generalMdc = results.find((r) => r.path === '.cursor/rules/general.mdc');
+    const dotAgents = results.find((r) => r.path === '.cursor/AGENTS.md');
     expect(agentsMd).toBeDefined();
     expect(agentsMd!.content).toContain('# Rules');
     expect(agentsMd!.content).toContain('Use TypeScript');
@@ -60,6 +61,8 @@ describe('generateRules (cursor)', () => {
     expect(generalMdc!.content).toContain('# Rules');
     expect(generalMdc!.content).toContain('Use TypeScript');
     expect(generalMdc!.content).not.toContain('## AgentsMesh Generation Contract');
+    expect(dotAgents).toBeDefined();
+    expect(dotAgents!.content).toContain('# Rules');
   });
 
   it('non-root rule with description and globs includes both in frontmatter', () => {
@@ -113,8 +116,10 @@ describe('generateRules (cursor)', () => {
       ],
     });
     const results = generateRules(canonical);
-    expect(results).toHaveLength(1);
-    expect(results[0]!.path).toBe('.cursor/rules/cursor-only.mdc');
+    expect(results).toHaveLength(2);
+    expect(results.map((r) => r.path).sort()).toEqual(
+      ['.cursor/AGENTS.md', '.cursor/rules/cursor-only.mdc'].sort(),
+    );
   });
 
   it('non-root rule with no description and no globs has only alwaysApply in frontmatter', () => {
@@ -154,7 +159,7 @@ describe('generateRules (cursor)', () => {
     expect(results).toHaveLength(0);
   });
 
-  it('returns no AGENTS.md/general.mdc but does generate .cursor/rules/{slug}.mdc for non-root rules', () => {
+  it('returns no AGENTS.md/general.mdc but does generate .cursor/rules/{slug}.mdc and aggregate .cursor/AGENTS.md for non-root rules', () => {
     const canonical: CanonicalFiles = {
       rules: [
         {
@@ -175,9 +180,18 @@ describe('generateRules (cursor)', () => {
       ignore: [],
     };
     const results = generateRules(canonical);
-    expect(results).toHaveLength(1);
-    expect(results[0]!.path).toBe('.cursor/rules/typescript.mdc');
-    expect(results[0]!.content).toContain('alwaysApply: false');
+    expect(results).toHaveLength(2);
+    const slug = results.find((r) => r.path === '.cursor/rules/typescript.mdc');
+    const agg = results.find((r) => r.path === '.cursor/AGENTS.md');
+    expect(slug).toBeDefined();
+    expect(slug!.content).toContain('alwaysApply: false');
+    expect(agg!.content).toContain('TypeScript rules');
+    expect(agg!.content).toContain('<!-- agentsmesh:embedded-rules:start -->');
+    expect(agg!.content).toContain(
+      '<!-- agentsmesh:embedded-rule:start {"source":"rules/typescript.md"',
+    );
+    expect(agg!.content).not.toContain('Applies to:');
+    expect(agg!.content).not.toContain('\n---\n');
   });
 
   it('handles empty root body', () => {
@@ -231,8 +245,10 @@ describe('generateRules (cursor)', () => {
       ],
     });
     const results = generateRules(canonical);
-    expect(results).toHaveLength(1);
-    expect(results[0]!.content).toContain('description: No body rule');
+    expect(results).toHaveLength(2);
+    const slug = results.find((r) => r.path === '.cursor/rules/empty-body.mdc');
+    expect(slug!.content).toContain('description: No body rule');
+    expect(results.find((r) => r.path === '.cursor/AGENTS.md')).toBeDefined();
   });
 
   it('maps trigger: always_on to alwaysApply: true for non-root rule', () => {

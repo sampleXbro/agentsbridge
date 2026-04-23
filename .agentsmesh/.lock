@@ -1,40 +1,49 @@
 # Auto-generated. DO NOT EDIT MANUALLY.
 # Tracks the state of all config files for team conflict resolution.
 
-generated_at: 2026-04-12T11:05:50.341Z
+generated_at: 2026-04-23T08:44:15.345Z
 generated_by: serhii
-lib_version: 0.2.10
+lib_version: 0.4.0
 checksums:
-  agents/code-debugger.md: sha256:707132841c606f117c83491d53ce101be0117eb50abe2861bcf93bdd45a56daf
-  agents/code-documenter.md: sha256:faa66b16d2e86578985e817d60e6705ae0e34a716c1f5c29411739a6d659fb96
-  agents/code-refactor.md: sha256:908783b7e6f6398de32366cfcfeb07efd278924a8ad42d28e5bdf87bae99454b
+  agents/code-debugger.md: sha256:dcbf5dc2242b943edee53346eff39ccaf2abc496e3375b1f13577e046a63fadc
+  agents/code-documenter.md: sha256:a19a55b62a2ae9de7d264ef862516b2022e0d18e54234199ed8e9045e495ee88
+  agents/code-refactor.md: sha256:fda6d60e8b8ad7aea6be68677b79c36e4eabc085872c105b53c2339a8b6f5bc0
   agents/code-reviewer.md: sha256:dac4e70d506d54a40366839f64e34d2a83a48c4ce2ef96b9bdc7a92258d2a481
-  agents/code-security-auditor.md: sha256:93b4598bd1c28c848ed6d61b181913715f641c923eb187b5cfefca5b835481d8
-  agents/code-standards-enforcer.md: sha256:e06bf7fa7b4a19d803563813647e97f902c3603adf69198b5179eb6e4ba8ce08
+  agents/code-security-auditor.md: sha256:53dc48a92c315e0ffffdc821de364d13fda15ec5090a6648af830655e83f14f0
+  agents/code-standards-enforcer.md: sha256:5d8ebdb924dfeb88d1c5bc78afdf5ff178370063e2dea64c8404fc51c227c25b
   agents/test-runner.md: sha256:8cc31a3176e5ad2cdabd36fedd75d98f037c93e8bf9e17243a450bedb34ac90e
-  agents/typescript-developer.md: sha256:bba192ad3af209e25e2bc709330ca1883ed8f3b30ffa7e0f1b533f243ada4188
+  agents/typescript-developer.md: sha256:401776230018dd34a71c569383ed41ee84ce48b9cd1c29ea804a6fd0c68aa225
   commands/commit.md: sha256:3e6dcc5871ad157c36efe19c162b43cdc0d723a8695fb0d45c1f90cc28fa931c
   commands/review.md: sha256:ba3053410e7cc3271f41ba329056df07c6ccd2f07e2ed3dda601c56e46a77d54
   commands/test.md: sha256:a60932b216ff9eb407c2b38e4459ac4b9606a3aed275f4af84a646eb6c2937e7
-  hooks.yaml: sha256:9b2d2f11f9fe2bb7abd3b9dddc77df9ba9bda292aa5a6109c468b2dbff19ba2c
+  hooks.yaml: sha256:e26c4cf2a8cb3fd38fb5209dfa735249210b649e47625689aef7140639a84b34
   ignore: sha256:9bd184903aee9e824fcd475e965103a8ef5efe5d5e98b0e7e275fb8017c4fc0e
   mcp.json: sha256:4269c04f9edf4142cde79d1e45f25958eaca54489cc19ec078eaba887d296018
-  permissions.yaml: sha256:9c22c5221457f6c165a5f135448f3f95fedb8c9339cb9f91998d844184501158
-  rules/_root.md: sha256:59aa3f817487ff1053f0718589c0b075b6f97a17b32435563ca30c9555a499aa
+  permissions.yaml: sha256:6e1f0e074c5970b2ca9175f63008b2edb752a0ed6657ee4790700035606e7303
+  rules/_root.md: sha256:610362ef02e11242b944df80a4faa0ed20db7c988fdfd0e070f643285826b5e7
   rules/typescript.md: sha256:18f52143dfdd3e219a5c6d6c0feb7283fe74cce99458c46dafcd1c3620ad4fba
-  skills/add-agent-target/SKILL.md: sha256:53a76c84b87f7735c53ac5f5e584e55122c09728a14406e7088ea93b5b183406
-  skills/add-agent-target/references/target-addition-checklist.md: sha256:66cd8f5ed4dd21b27e2bf4b34ae749ee301b28a208c83fecffa06748c2d2d61c
+  skills/add-agent-target/SKILL.md: sha256:71bbd5cbda3a4a08f647ce314bfdcfa702c639d63fc4b43b85c5eeb149fc0a58
+  skills/add-agent-target/references/target-addition-checklist.md: sha256:086ea7fb96820014222d451c73090ffcbda2ba66d416ec7c6ac043a5d58e247b
+  skills/add-global-mode-target/SKILL.md: sha256:de775123ddac9f010cc4ea3abc6b519245bdbbd22b4c34f2115abb04399feb14
+  skills/add-global-mode-target/references/global-mode-target-checklist.md: sha256:61f8827978f90ee079e2dfd426ef25b17e77c71d9f79c5f81ebc700379f6fafc
   skills/changelog-generator/SKILL.md: sha256:7c98dc3ec82002e156690b39e8bf8f63cba8a07cb3c8f5d7207c41999a2d356a
+  skills/code-reviewer/SKILL.md: sha256:c168c5a56d0b6a55b110e9988c0db80f42a19d5c793b064b70783f8b7d293dfd
+  skills/code-reviewer/references/code_review_checklist.md: sha256:846dbd15ebbba70f8142879efe72aecf79ca1bd7a1b27a19364d1e8989a478c0
+  skills/code-reviewer/references/coding_standards.md: sha256:702010dd97df3cbdd67928e209a72725629908dd4635ba00947fb715352eba8b
+  skills/code-reviewer/references/common_antipatterns.md: sha256:4370210aa18b2b3fc908ec25ada7a6b677350bf6e250cc91d5946119df12bb76
+  skills/code-reviewer/scripts/code_quality_checker.py: sha256:dfb5146145f950ff2882d3e7c8c573d62ed2b1912ce78cb7a71463f7aa1bcc96
+  skills/code-reviewer/scripts/pr_analyzer.py: sha256:ced1ebc860269807f93749f04526981c47ae2512807c4a4fdc5cf500a207cb53
+  skills/code-reviewer/scripts/review_report_generator.py: sha256:9507bf76ab19c18feac70746554e104a96f03cf51bf82c6c18cf7a53bedc7719
   skills/docs-and-examples/SKILL.md: sha256:cff2b06fb63325ba76d1a3ab903d2fe8946379e219795374afb7ba55e4204f01
   skills/homebrew-packaging/SKILL.md: sha256:29cf86866ad27cc195fc5398e204cc30ef242186a9904b2b26fd084b6d312627
   skills/library-testing/SKILL.md: sha256:0a86dba8ff1199e7a1e4365e6ba704409e30433427b9541440dd12388d22b61c
   skills/package-release-engineering/SKILL.md: sha256:8faf0e41dbb50534527bc003738364bcea42022304601797816e07220875b93d
-  skills/post-feature-qa/SKILL.md: sha256:f381105199c64962f50c82c99bd032737e67ce6a569d8e0cb8b497ede996f093
+  skills/post-feature-qa/SKILL.md: sha256:4dd35d952ba767ede6f7297c5a922eb89f1a7b845f6f3803f76e996ed9c67a3a
   skills/post-feature-qa/references/edge-case-checklist.md: sha256:77bb7a50f3dd281003e146a5313a85799603739e049646502904d0b7b8451c70
-  skills/prepare-release/SKILL.md: sha256:7daabdac3707eec8629eb30f13ca32091401eeee89110891f09c677e10d5fbee
+  skills/prepare-release/SKILL.md: sha256:6296fc73134ae2e0aef28a0574cbb33e837de16c104343e61c2bab4fe47d426d
   skills/quality-gates/SKILL.md: sha256:0959ff54fcfb830aea12bfdb06dc8f1ace181125b32c75635a77e8fb3cbcd184
-  skills/release-manager/README.md: sha256:9e291d299387ef2c31461b1b55695ad5be66076c001a8e152bc0dad686d2d8ae
-  skills/release-manager/SKILL.md: sha256:412b20d63685de5379506dfdf27446ba8650c56801f2ced3c0c4277da6542244
+  skills/release-manager/README.md: sha256:a9743dd563d62fa68c726aded2ab783e6f756627ed787b7291c7e0a76b94417d
+  skills/release-manager/SKILL.md: sha256:6a931844e7275fd03077cd94fe24a5929f9bc7bad4de2c9d30ebd5c5662855ca
   skills/release-manager/assets/sample_commits.json: sha256:83a0b9c9bcb198e18bc6943a98610c8b1f4cd827d7b82806b8e1b4b531dc6f9b
   skills/release-manager/assets/sample_git_log.txt: sha256:8de6b9810ff92d673ea497612026efa32f1805c285bd92b7c8818f59c15d2107
   skills/release-manager/assets/sample_git_log_full.txt: sha256:e003097525fb381aa6717d090d2a24f51e6b3ed26493d62f95e80d0631256197
@@ -49,7 +58,7 @@ checksums:
   skills/release-manager/release_planner.py: sha256:508c8747a97fe08346750172be3d44f83559c8fe719f4024988de09ff71db05a
   skills/release-manager/version_bumper.py: sha256:1423be76d7376cee055ef47bcf6fd5f0f7d0b444e2f807cfb8dcc9dd11dddf11
   skills/security-best-practices/LICENSE.txt: sha256:4dd13869245e356246a5b770723247bbb80a8f07a181d1d3d873a1734297cdb9
-  skills/security-best-practices/SKILL.md: sha256:370a0ad3450787f3330003fbaa39c9ff2298c775dc1f188735dd9e4492ca0c55
+  skills/security-best-practices/SKILL.md: sha256:de86488e59e63131276ac6b03e1475cff02e3f92261db6549b209c1800d90dc4
   skills/security-best-practices/agents/openai.yaml: sha256:6e9c6f2edce448eb2b589f81ad6e3f722665021785513bcbfd0bf7b86b529171
   skills/security-best-practices/references/golang-general-backend-security.md: sha256:a73c47c34497b120672d48411fe51dc90d426a571801a0b3f649e2ce4ec658b4
   skills/security-best-practices/references/javascript-express-web-server-security.md: sha256:427835cbb5be7ba96172ea6ca9af80ddd4419c833e9ebf870996740c80d8406c
@@ -62,13 +71,13 @@ checksums:
   skills/security-best-practices/references/python-fastapi-web-server-security.md: sha256:2dde9ea2fdbbc1eb137bf08087b9711b0b8fdd9d010e16ed3a11adce73423b14
   skills/security-best-practices/references/python-flask-web-server-security.md: sha256:9606d69190c04c167fdeac57e61297547a57b0542fd89dede36f355970446929
   skills/security-ownership-map/LICENSE.txt: sha256:4dd13869245e356246a5b770723247bbb80a8f07a181d1d3d873a1734297cdb9
-  skills/security-ownership-map/SKILL.md: sha256:b64414e18fa6c96e876945b91a494f829dc68558c70430a02c0f45bc5f3be0f2
+  skills/security-ownership-map/SKILL.md: sha256:c297cedde69f645834ea7672c205b0704df1e0ddee299f7919fcb394c94530aa
   skills/security-ownership-map/agents/openai.yaml: sha256:40877a3cdb1753aa187fc85a83bc138a866a1edb74165e009c885cfb6a16e433
   skills/security-ownership-map/references/neo4j-import.md: sha256:176d0ef2ed3588530ed65ccda7cb30ae322e4cbec5c374dba5d1685e2bb9dd02
   skills/security-ownership-map/scripts/build_ownership_map.py: sha256:c0454c47c7eb001b6e247cd7e473df1b28a3a148a2dca6b2fe88a74a7602cc9b
   skills/security-ownership-map/scripts/community_maintainers.py: sha256:95adec5458cc85b41d0ae7965b0a17e4e8eaa6aaab274459324580d9a91cc3cc
   skills/security-ownership-map/scripts/query_ownership.py: sha256:0f8d1a1ac3ef807a9b66939a8cdfd02564f4cda018489a3664d37f8c3a7b1b93
-  skills/security-ownership-map/scripts/run_ownership_map.py: sha256:d44bb498febc36da5b58f2d7f4917e073cfbcafa85b76419352e73b16dc4ca80
+  skills/security-ownership-map/scripts/run_ownership_map.py: sha256:362b547d6133659eb5c4fe889b8b930bea790f31e412f3198671baae09eec692
   skills/senior-developer-autonomous-execution/SKILL.md: sha256:c40434815bd6ccc02bb40c06301615b9f4acf273ea452c5b2ac3225aee09a09b
   skills/senior-developer-avoid-any/SKILL.md: sha256:174947b46b24594a849520ec248b12c937d01bf9204ee8f436bfb1be29fa84be
   skills/senior-developer-configuration-and-credentials/SKILL.md: sha256:3708bced8f25ed2a017af817f613677b6bebba0656d208d86c9f2234f050d45b
@@ -84,7 +93,7 @@ checksums:
   skills/senior-developer-source-of-truth/SKILL.md: sha256:78bedb504e16f123fbbbfecaf90323d3d9defd6f1d1a752df1ba73e7a5b220e7
   skills/senior-developer-tool-and-command-execution/SKILL.md: sha256:20059b5be8cee1f6e4830987a60f171540e93ae223205ac5f32f52202eb821b2
   skills/senior-manual-qa/SKILL.md: sha256:416ac8cc4392b243c180519ad627ddc848f83603d1cf46a4660c654e160ecdb0
-  skills/ts-library/SKILL.md: sha256:483a285d46d032a36f741d8f5f026ab174b9e714c6be4c50058f2e65ef5b3004
+  skills/ts-library/SKILL.md: sha256:1171b14eac5e5fc55ac16a992b27282acc16382d96163aba8d39573a17ab80c5
   skills/ts-library/build/tooling.md: sha256:aa7b200a095d1b4b4f18a6a05d309d9470a5c8f5c3a06743d6cbc7596fd5e32c
   skills/ts-library/patterns/api.md: sha256:c5818923481131861d7413bd8b0459886e85eda57264265c179eafe177ba1ee0
   skills/ts-library/patterns/types.md: sha256:222a510c39f34bef5b8024a99a62aa4492bb887d81330adccd004b0e1b838b5d
@@ -94,7 +103,7 @@ checksums:
   skills/ts-library/references/eslint-config.md: sha256:e370b7948b50c24ddfd3103a4e05921fd0dd2471946fd4bd95232335ee70900a
   skills/ts-library/references/package-exports.md: sha256:cfa2d91bd56972e4985ae8c550b6001aca0f85390b6d0124652def40bec79da4
   skills/ts-library/references/project-setup.md: sha256:2c48c69f958dbc84d435513df0b8ba0d1d507b72d8eb3033c3413f70875ee18b
-  skills/ts-library/references/release.md: sha256:6d559044cc56f653fc8390f0972d603a5328ddb11444e776e10ae30eeb70fbca
+  skills/ts-library/references/release.md: sha256:30a4aa9c9edfcaa73de34ddddb95359239305569aaa3eaa601dcba386c956db4
   skills/ts-library/references/testing.md: sha256:d83a631377a801db6a47440eec4d26ca454ea1355c231ec57537d6cddebaf860
   skills/ts-library/references/type-patterns.md: sha256:222a510c39f34bef5b8024a99a62aa4492bb887d81330adccd004b0e1b838b5d
   skills/ts-library/references/typescript-config.md: sha256:ce9ef4c2aac48d3caf5632eaab185e28c07374a7ee5a45474c2e39508796272f
@@ -105,7 +114,7 @@ checksums:
   skills/ts-library/workflows/release.md: sha256:30a4aa9c9edfcaa73de34ddddb95359239305569aaa3eaa601dcba386c956db4
   skills/ts-library/workflows/testing.md: sha256:d83a631377a801db6a47440eec4d26ca454ea1355c231ec57537d6cddebaf860
   skills/ts-library-architecture/SKILL.md: sha256:e5a237d28609388c8b8721a85e10f74fb6926d06df8da0deb9faa13959074420
-  skills/typescript-pro/SKILL.md: sha256:2543bf9c232a0c535aa516150b2bed21ddb85306021e728a0bf2f72e67660794
+  skills/typescript-pro/SKILL.md: sha256:65683a3114aee4f16ccf32194b82cd57ad465f5f3fea48be980c14c7a5ee410a
   skills/typescript-pro/references/advanced-types.md: sha256:f7a7d3c04ca62b204105c3a4e561bceae79afec703f3176a8311b0a9b5272fb8
   skills/typescript-pro/references/configuration.md: sha256:912e324f97f06b66a1dd5d219b2db17694624ea071bf30fbe471892910455028
   skills/typescript-pro/references/patterns.md: sha256:67c93bad12fa3658237e767de45b1a6025c8474896fe8ed2d2bfc30643ca2e4e
@@ -120,4 +129,3 @@ packs:
   devsforge-orchestrator-skills: sha256:9228afa4fd2aedaca2403e7c2afbce0c18e4204793ede6e649a777eed9eb3231
   joeking-ly-claude-skills-arsenal-skills: sha256:63b24277c3d09607506971957d40f95139385193eaf8b02a92d68ca6f8af15ec
   njengah-claude-code-cheat-sheet-agents: sha256:6b0a573bc4a725d0a5d38d323d19382f7a24bd948885d3555b94cbca47a05cbf
-  onmax-nuxt-skills-skills: sha256:79fdc31ee1c1a35717f82ec23944814a406eb86d9e471123b6ff1785e2f1ecd3

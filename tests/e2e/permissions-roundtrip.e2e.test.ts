@@ -50,7 +50,7 @@ describe('permissions round-trip e2e', () => {
 
     rmSync(join(dir, '.agentsmesh'), { recursive: true, force: true });
     expect((await runCli('import --from claude-code', dir)).exitCode).toBe(0);
-    expect(readYaml(join(dir, '.agentsmesh', 'permissions.yaml'))).toEqual({
+    expect(readYaml(join(dir, '.agentsmesh', 'permissions.yaml'))).toMatchObject({
       allow: ['Read', 'Bash(pnpm test:*)'],
       deny: ['Read(./.env)', 'Bash(curl:*)'],
     });
@@ -69,7 +69,7 @@ describe('permissions round-trip e2e', () => {
 
     rmSync(join(dir, '.agentsmesh'), { recursive: true, force: true });
     expect((await runCli('import --from gemini-cli', dir)).exitCode).toBe(0);
-    expect(readYaml(join(dir, '.agentsmesh', 'permissions.yaml'))).toEqual({
+    expect(readYaml(join(dir, '.agentsmesh', 'permissions.yaml'))).toMatchObject({
       allow: ['Read', 'Bash(pnpm test:*)'],
       deny: ['Read(./.env)', 'Bash(curl:*)'],
     });

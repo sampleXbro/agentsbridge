@@ -76,6 +76,7 @@ export async function loadCanonicalWithExtends(
   config: ValidatedConfig,
   configDir: string,
   options: { refreshRemoteCache?: boolean } = {},
+  canonicalDir = join(configDir, '.agentsmesh'),
 ): Promise<{ canonical: CanonicalFiles; resolvedExtends: ResolvedExtend[] }> {
   const resolvedExtends = await resolveExtendPaths(config, configDir, {
     refreshCache: options.refreshRemoteCache === true,
@@ -90,10 +91,10 @@ export async function loadCanonicalWithExtends(
     merged = mergeCanonicalFiles(merged, picked);
   }
 
-  const packsCanonical = await loadPacksCanonical(join(configDir, '.agentsmesh'));
+  const packsCanonical = await loadPacksCanonical(canonicalDir);
   merged = mergeCanonicalFiles(merged, packsCanonical);
 
-  const localCanonical = await loadCanonicalFiles(configDir);
+  const localCanonical = await loadCanonicalFiles(canonicalDir);
   merged = mergeCanonicalFiles(merged, localCanonical);
 
   return { canonical: merged, resolvedExtends };

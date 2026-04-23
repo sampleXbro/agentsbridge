@@ -2,7 +2,7 @@
  * Unit tests for agentsmesh check command.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -15,6 +15,10 @@ beforeEach(() => {
   vi.spyOn(process, 'cwd').mockReturnValue(TEST_DIR);
   rmSync(TEST_DIR, { recursive: true, force: true });
   mkdirSync(TEST_DIR, { recursive: true });
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
 });
 
 describe('runCheck', () => {
@@ -160,5 +164,36 @@ packs: {}
     }
 
     expect(output).toContain('rules/_root.md was modified [LOCKED]');
+  });
+
+  it('reads ~/.agentsmesh/.lock when --global is set', async () => {
+    vi.stubEnv('HOME', TEST_DIR);
+    vi.stubEnv('USERPROFILE', TEST_DIR);
+    const workspace = `${TEST_DIR}-workspace`;
+    rmSync(workspace, { recursive: true, force: true });
+    mkdirSync(workspace, { recursive: true });
+
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'agentsmesh.yaml'),
+      'version: 1\ntargets: [claude-code]\nfeatures: [rules]\n',
+    );
+    const body = '# Global Rules';
+    writeFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), body);
+    const h = 'sha256:' + hashContent(body);
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', '.lock'),
+      `generated_at: "2026-01-01T00:00:00Z"
+generated_by: test
+lib_version: "0.1.0"
+checksums:
+  rules/_root.md: "${h}"
+extends: {}
+packs: {}
+`,
+    );
+
+    const code = await runCheck({ global: true }, workspace);
+    expect(code).toBe(0);
   });
 });

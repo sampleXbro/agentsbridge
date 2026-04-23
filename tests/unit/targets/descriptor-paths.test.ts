@@ -184,8 +184,8 @@ describe('descriptor.paths.agentPath', () => {
     expect(junie.paths.agentPath('reviewer', config)).toBe('.junie/agents/reviewer.md');
   });
 
-  it('kiro: returns null (agents unsupported)', () => {
-    expect(kiro.paths.agentPath('reviewer', config)).toBeNull();
+  it('kiro: returns .kiro/agents/{name}.md', () => {
+    expect(kiro.paths.agentPath('reviewer', config)).toBe('.kiro/agents/reviewer.md');
   });
 
   it('gemini-cli default (conversion OFF): returns .gemini/agents/{name}.md', () => {
@@ -262,13 +262,7 @@ describe('descriptor metadata', () => {
 
   it('all 12 descriptors have ids matching TARGET_IDS', () => {
     const descriptorIds = allDescriptors.map((d) => d.id);
-    expect(descriptorIds).toHaveLength(12);
-    for (const id of descriptorIds) {
-      expect(TARGET_IDS).toContain(id);
-    }
-    for (const id of TARGET_IDS) {
-      expect(descriptorIds).toContain(id);
-    }
+    expect(descriptorIds).toStrictEqual([...TARGET_IDS]);
   });
 
   it('all descriptors have non-empty detectionPaths', () => {

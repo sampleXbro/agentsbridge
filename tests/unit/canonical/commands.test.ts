@@ -137,6 +137,14 @@ Body only.`,
     });
   });
 
+  it('skips _example.md and other underscore-prefixed files', async () => {
+    writeCommand('_example.md', `---\ndescription: Example command\n---\n\nDo not generate.`);
+    writeCommand('real.md', `---\ndescription: Real command\n---\n\nGenerate this.`);
+    const commands = await parseCommands(COMMANDS_DIR);
+    expect(commands).toHaveLength(1);
+    expect(commands[0]?.description).toBe('Real command');
+  });
+
   it('ignores non-.md files', async () => {
     writeCommand(
       'review.md',

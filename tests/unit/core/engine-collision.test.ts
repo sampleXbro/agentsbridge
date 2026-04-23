@@ -55,6 +55,15 @@ describe('engine collision helpers', () => {
     ]);
   });
 
+  it('throws when two targets produce different non-mergeable AGENTS.md', () => {
+    expect(() =>
+      resolveOutputCollisions([
+        makeResult({ path: 'AGENTS.md', target: 'cline', content: 'foo\n' }),
+        makeResult({ path: 'AGENTS.md', target: 'windsurf', content: 'bar\n' }),
+      ]),
+    ).toThrow(/Conflicting generated outputs/);
+  });
+
   it('prefers the richer AGENTS.md when one output is a strict superset of the other', () => {
     const base = '# Project Rules\n\nUse TypeScript.\n';
     const richer = `${base}\n## Additional Rule Files\n- [typescript](.codex/instructions/typescript.md)\n`;

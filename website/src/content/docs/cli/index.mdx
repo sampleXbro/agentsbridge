@@ -28,7 +28,7 @@ amsh --help
 
 <CardGrid>
   <Card title="init" icon="add-document">
-    Scaffold the canonical `.agentsmesh/` directory and `agentsmesh.yaml`. Detects and optionally imports existing tool configs.
+    Scaffold the canonical `.agentsmesh/` directory or `~/.agentsmesh/`. Detects and optionally imports existing tool configs.
     [→ init docs](./init/)
   </Card>
   <Card title="generate" icon="rocket">
@@ -52,7 +52,7 @@ amsh --help
     [→ lint docs](./lint/)
   </Card>
   <Card title="watch" icon="refresh">
-    Watch `.agentsmesh/` for changes and auto-regenerate on save.
+    Watch project or home canonical config and auto-regenerate on save.
     [→ watch docs](./watch/)
   </Card>
   <Card title="check" icon="warning">
@@ -75,6 +75,12 @@ amsh --help
 # Initial setup
 agentsmesh init
 agentsmesh generate
+
+# Personal/global setup
+agentsmesh init --global
+agentsmesh import --global --from claude-code
+# Also: antigravity, codex-cli, cursor (~/.cursor/ rules, AGENTS.md, MCP, hooks, ignore, skills, agents, commands; legacy ~/.agentsmesh-exports/cursor/user-rules.md on import)
+agentsmesh generate --global
 
 # Day-to-day editing
 # 1. Edit .agentsmesh/ files

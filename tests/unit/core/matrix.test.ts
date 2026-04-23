@@ -7,6 +7,10 @@ import {
 import type { CanonicalFiles } from '../../../src/core/types.js';
 import type { ValidatedConfig } from '../../../src/config/core/schema.js';
 import { TARGET_IDS } from '../../../src/targets/catalog/target-catalog.js';
+import {
+  getTargetCapabilities,
+  resolveTargetFeatureGenerator,
+} from '../../../src/targets/catalog/builtin-targets.js';
 
 const baseConfig: ValidatedConfig = {
   version: 1,
@@ -69,6 +73,70 @@ describe('buildCompatibilityMatrix', () => {
     expect(rulesRow?.support['codex-cli']).toBe('native');
   });
 
+  it('includes embedded support levels for additional rules', () => {
+    const config: ValidatedConfig = {
+      ...baseConfig,
+      targets: ['claude-code', 'cursor', 'gemini-cli', 'codex-cli', 'junie', 'antigravity'],
+      features: ['rules'],
+    };
+    const canonical: CanonicalFiles = {
+      ...emptyCanonical,
+      rules: [
+        { source: 'root', root: true, targets: [], description: '', globs: [], body: '' },
+        {
+          source: 'rules/typescript.md',
+          root: false,
+          targets: [],
+          description: 'TS rules',
+          globs: ['src/**/*.ts'],
+          body: 'Use strict TS.',
+        },
+      ],
+    };
+
+    const rows = buildCompatibilityMatrix(config, canonical);
+    const additionalRulesRow = rows.find((r) => r.feature === 'additional rules (1)');
+
+    expect(additionalRulesRow).toBeDefined();
+    expect(additionalRulesRow?.support['claude-code']).toBe('native');
+    expect(additionalRulesRow?.support.cursor).toBe('embedded');
+    expect(additionalRulesRow?.support['gemini-cli']).toBe('embedded');
+    expect(additionalRulesRow?.support['codex-cli']).toBe('native');
+    expect(additionalRulesRow?.support.junie).toBe('native');
+    expect(additionalRulesRow?.support.antigravity).toBe('native');
+  });
+
+  it('uses global embedded support levels for additional rules', () => {
+    const config: ValidatedConfig = {
+      ...baseConfig,
+      targets: ['cursor', 'gemini-cli', 'codex-cli', 'junie', 'antigravity'],
+      features: ['rules'],
+    };
+    const canonical: CanonicalFiles = {
+      ...emptyCanonical,
+      rules: [
+        { source: 'root', root: true, targets: [], description: '', globs: [], body: '' },
+        {
+          source: 'rules/typescript.md',
+          root: false,
+          targets: [],
+          description: 'TS rules',
+          globs: ['src/**/*.ts'],
+          body: 'Use strict TS.',
+        },
+      ],
+    };
+
+    const rows = buildCompatibilityMatrix(config, canonical, 'global');
+    const additionalRulesRow = rows.find((r) => r.feature === 'additional rules (1)');
+
+    expect(additionalRulesRow?.support.cursor).toBe('embedded');
+    expect(additionalRulesRow?.support['gemini-cli']).toBe('embedded');
+    expect(additionalRulesRow?.support['codex-cli']).toBe('embedded');
+    expect(additionalRulesRow?.support.junie).toBe('embedded');
+    expect(additionalRulesRow?.support.antigravity).toBe('embedded');
+  });
+
   it('shows permissions as partial for cursor', () => {
     const config: ValidatedConfig = { ...baseConfig, features: ['permissions'] };
     const canonical: CanonicalFiles = {
@@ -111,10 +179,10 @@ describe('buildCompatibilityMatrix', () => {
     expect(rows.find((r) => r.feature.startsWith('skills'))?.feature).toBe('skills (1)');
     expect(rows.find((r) => r.feature.startsWith('commands'))?.support['copilot']).toBe('native');
     expect(rows.find((r) => r.feature.startsWith('commands'))?.support.continue).toBe('embedded');
-    expect(rows.find((r) => r.feature.startsWith('commands'))?.support.junie).toBe('embedded');
+    expect(rows.find((r) => r.feature.startsWith('commands'))?.support.junie).toBe('native');
     expect(rows.find((r) => r.feature.startsWith('commands'))?.support.kiro).toBe('none');
     expect(rows.find((r) => r.feature.startsWith('skills'))?.support.continue).toBe('embedded');
-    expect(rows.find((r) => r.feature.startsWith('skills'))?.support.junie).toBe('embedded');
+    expect(rows.find((r) => r.feature.startsWith('skills'))?.support.junie).toBe('native');
     expect(rows.find((r) => r.feature.startsWith('skills'))?.support.kiro).toBe('native');
     expect(rows.find((r) => r.feature.startsWith('commands'))?.support['codex-cli']).toBe(
       'embedded',
@@ -205,6 +273,34 @@ describe('buildCompatibilityMatrix', () => {
     expect(commandsRow?.support.cline).toBe('native');
     expect(agentsRow?.support.windsurf).toBe('none');
     expect(agentsRow?.support['gemini-cli']).toBe('native');
+  });
+
+  it('uses global support levels when requested', () => {
+    const config: ValidatedConfig = {
+      ...baseConfig,
+      targets: ['claude-code', 'antigravity', 'cursor', 'codex-cli'],
+      features: ['rules', 'skills', 'mcp', 'ignore'],
+    };
+    const canonical: CanonicalFiles = {
+      ...emptyCanonical,
+      rules: [{ source: 'a', root: true, targets: [], description: '', globs: [], body: '' }],
+      skills: [{ source: 's', name: 'review', description: '', body: '', supportingFiles: [] }],
+      mcp: { mcpServers: { docs: { type: 'stdio', command: 'npx', args: [], env: {} } } },
+      ignore: ['dist'],
+    };
+
+    const rows = buildCompatibilityMatrix(config, canonical, 'global');
+    const rulesRow = rows.find((row) => row.feature === 'rules');
+    const skillsRow = rows.find((row) => row.feature.startsWith('skills'));
+    const mcpRow = rows.find((row) => row.feature.startsWith('mcp'));
+    const ignoreRow = rows.find((row) => row.feature === 'ignore');
+
+    expect(rulesRow?.support.antigravity).toBe('native');
+    expect(rulesRow?.support.cursor).toBe('native');
+    expect(skillsRow?.support.cursor).toBe('native');
+    expect(mcpRow?.support.antigravity).toBe('native');
+    expect(mcpRow?.support.cursor).toBe('native');
+    expect(ignoreRow?.support['claude-code']).toBe('native');
   });
 
   it('hooks with count and partial support', () => {
@@ -306,6 +402,28 @@ describe('buildCompatibilityMatrix', () => {
     const rows = buildCompatibilityMatrix(config, canonical);
     const row = rows.find((r) => r.feature === 'rules');
     expect(row?.support['unknown-tool']).toBe('none');
+  });
+
+  it('reports Cline project hooks as native because the target emits hook scripts', () => {
+    const config: ValidatedConfig = {
+      ...baseConfig,
+      targets: ['cline'],
+      features: ['hooks'],
+    };
+    const canonical: CanonicalFiles = {
+      ...emptyCanonical,
+      hooks: {
+        PostToolUse: [{ matcher: 'Edit', command: 'pnpm lint' }],
+      },
+    };
+
+    expect(resolveTargetFeatureGenerator('cline', 'hooks')).toBeDefined();
+    expect(getTargetCapabilities('cline')?.hooks.level).toBe('native');
+
+    const row = buildCompatibilityMatrix(config, canonical).find((r) =>
+      r.feature.startsWith('hooks'),
+    );
+    expect(row?.support.cline).toBe('native');
   });
 });
 

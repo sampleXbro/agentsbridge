@@ -2,7 +2,7 @@
  * Unit tests for agentsmesh lint command.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -33,7 +33,10 @@ description: "Project rules"
 }
 
 beforeEach(() => setupProject());
-afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
+afterEach(() => {
+  vi.unstubAllEnvs();
+  rmSync(TEST_DIR, { recursive: true, force: true });
+});
 
 describe('runLintCmd', () => {
   it('returns 0 when all checks pass', async () => {
@@ -91,5 +94,35 @@ Lib rules`,
   it('throws when not initialized (no config)', async () => {
     rmSync(join(TEST_DIR, 'agentsmesh.yaml'));
     await expect(runLintCmd({}, TEST_DIR)).rejects.toThrow(/agentsmesh\.yaml/);
+  });
+
+  it('lints canonical home config when --global is set', async () => {
+    vi.stubEnv('HOME', TEST_DIR);
+    vi.stubEnv('USERPROFILE', TEST_DIR);
+    const workspace = `${TEST_DIR}-workspace`;
+    rmSync(workspace, { recursive: true, force: true });
+    mkdirSync(workspace, { recursive: true });
+
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'agentsmesh.yaml'),
+      `version: 1
+targets: [claude-code]
+features: [rules]
+`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
+      `---
+root: true
+description: "Global rules"
+---
+# Rules
+- Use TypeScript
+`,
+    );
+
+    const code = await runLintCmd({ global: true }, workspace);
+    expect(code).toBe(0);
   });
 });

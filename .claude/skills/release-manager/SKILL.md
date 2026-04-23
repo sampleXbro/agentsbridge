@@ -3,6 +3,8 @@ name: release-manager
 description: Release Manager
 ---
 
+## Purpose
+
 # Release Manager
 
 **Tier:** POWERFUL  
@@ -276,7 +278,7 @@ else:
 
 #### Documentation Requirements
 - [ ] CHANGELOG.md updated
-- [ ] .claude/skills/release-manager/README.md reflects new features
+- [ ] README.md reflects new features
 - [ ] API documentation generated
 - [ ] Migration guide written for breaking changes
 - [ ] Deployment notes prepared

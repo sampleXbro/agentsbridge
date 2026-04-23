@@ -18,8 +18,8 @@ import {
   TEMPLATE_IGNORE,
 } from './init-templates.js';
 
-function ab(projectRoot: string, rel: string): string {
-  return join(projectRoot, '.agentsmesh', rel);
+function ab(canonicalDir: string, rel: string): string {
+  return join(canonicalDir, rel);
 }
 
 async function countMdFiles(dir: string): Promise<number> {
@@ -28,12 +28,13 @@ async function countMdFiles(dir: string): Promise<number> {
   return entries.filter((e) => e.isFile() && e.name.endsWith('.md')).length;
 }
 
-async function hasAnyImportedSkill(projectRoot: string): Promise<boolean> {
-  const skillsRoot = ab(projectRoot, 'skills');
+async function hasAnyImportedSkill(canonicalDir: string): Promise<boolean> {
+  const skillsRoot = ab(canonicalDir, 'skills');
   if (!(await exists(skillsRoot))) return false;
   const entries = await readdir(skillsRoot, { withFileTypes: true });
   for (const e of entries) {
     if (!e.isDirectory()) continue;
+    if (e.name.startsWith('_')) continue;
     if (await exists(join(skillsRoot, e.name, 'SKILL.md'))) return true;
   }
   return false;
@@ -42,44 +43,44 @@ async function hasAnyImportedSkill(projectRoot: string): Promise<boolean> {
 /**
  * Write full example scaffold (fresh init, no prior import).
  */
-export async function writeScaffoldFull(projectRoot: string): Promise<void> {
-  const rulesDir = ab(projectRoot, 'rules');
+export async function writeScaffoldFull(canonicalDir: string): Promise<void> {
+  const rulesDir = ab(canonicalDir, 'rules');
   await mkdirp(rulesDir);
   await writeFileAtomic(join(rulesDir, '_root.md'), TEMPLATE_ROOT_RULE);
   logger.success('Created .agentsmesh/rules/_root.md');
-  await writeFileAtomic(join(rulesDir, 'example.md'), TEMPLATE_EXAMPLE_RULE);
-  logger.success('Created .agentsmesh/rules/example.md');
+  await writeFileAtomic(join(rulesDir, '_example.md'), TEMPLATE_EXAMPLE_RULE);
+  logger.success('Created .agentsmesh/rules/_example.md');
 
-  const commandsDir = ab(projectRoot, 'commands');
+  const commandsDir = ab(canonicalDir, 'commands');
   await mkdirp(commandsDir);
-  await writeFileAtomic(join(commandsDir, 'example.md'), TEMPLATE_EXAMPLE_COMMAND);
-  logger.success('Created .agentsmesh/commands/example.md');
+  await writeFileAtomic(join(commandsDir, '_example.md'), TEMPLATE_EXAMPLE_COMMAND);
+  logger.success('Created .agentsmesh/commands/_example.md');
 
-  const agentsDir = ab(projectRoot, 'agents');
+  const agentsDir = ab(canonicalDir, 'agents');
   await mkdirp(agentsDir);
-  await writeFileAtomic(join(agentsDir, 'example.md'), TEMPLATE_EXAMPLE_AGENT);
-  logger.success('Created .agentsmesh/agents/example.md');
+  await writeFileAtomic(join(agentsDir, '_example.md'), TEMPLATE_EXAMPLE_AGENT);
+  logger.success('Created .agentsmesh/agents/_example.md');
 
-  const skillDir = ab(projectRoot, join('skills', 'example'));
+  const skillDir = ab(canonicalDir, join('skills', '_example'));
   await mkdirp(skillDir);
   await writeFileAtomic(join(skillDir, 'SKILL.md'), TEMPLATE_EXAMPLE_SKILL);
-  logger.success('Created .agentsmesh/skills/example/SKILL.md');
+  logger.success('Created .agentsmesh/skills/_example/SKILL.md');
 
-  await writeFileAtomic(ab(projectRoot, 'mcp.json'), TEMPLATE_MCP);
+  await writeFileAtomic(ab(canonicalDir, 'mcp.json'), TEMPLATE_MCP);
   logger.success('Created .agentsmesh/mcp.json');
-  await writeFileAtomic(ab(projectRoot, 'hooks.yaml'), TEMPLATE_HOOKS);
+  await writeFileAtomic(ab(canonicalDir, 'hooks.yaml'), TEMPLATE_HOOKS);
   logger.success('Created .agentsmesh/hooks.yaml');
-  await writeFileAtomic(ab(projectRoot, 'permissions.yaml'), TEMPLATE_PERMISSIONS);
+  await writeFileAtomic(ab(canonicalDir, 'permissions.yaml'), TEMPLATE_PERMISSIONS);
   logger.success('Created .agentsmesh/permissions.yaml');
-  await writeFileAtomic(ab(projectRoot, 'ignore'), TEMPLATE_IGNORE);
+  await writeFileAtomic(ab(canonicalDir, 'ignore'), TEMPLATE_IGNORE);
   logger.success('Created .agentsmesh/ignore');
 }
 
 /**
  * After `init --yes` import: add template files only where import left a category empty.
  */
-export async function writeScaffoldGapFill(projectRoot: string): Promise<void> {
-  const rulesDir = ab(projectRoot, 'rules');
+export async function writeScaffoldGapFill(canonicalDir: string): Promise<void> {
+  const rulesDir = ab(canonicalDir, 'rules');
   const rulesMd = await countMdFiles(rulesDir);
   const rootPath = join(rulesDir, '_root.md');
   const hasRoot = await exists(rootPath);
@@ -87,50 +88,50 @@ export async function writeScaffoldGapFill(projectRoot: string): Promise<void> {
   if (rulesMd === 0) {
     await writeFileAtomic(rootPath, TEMPLATE_ROOT_RULE);
     logger.success('Created .agentsmesh/rules/_root.md');
-    await writeFileAtomic(join(rulesDir, 'example.md'), TEMPLATE_EXAMPLE_RULE);
-    logger.success('Created .agentsmesh/rules/example.md');
+    await writeFileAtomic(join(rulesDir, '_example.md'), TEMPLATE_EXAMPLE_RULE);
+    logger.success('Created .agentsmesh/rules/_example.md');
   } else if (!hasRoot) {
     await writeFileAtomic(rootPath, TEMPLATE_ROOT_RULE);
     logger.success('Created .agentsmesh/rules/_root.md');
   }
 
-  const commandsDir = ab(projectRoot, 'commands');
+  const commandsDir = ab(canonicalDir, 'commands');
   if ((await countMdFiles(commandsDir)) === 0) {
     await mkdirp(commandsDir);
-    await writeFileAtomic(join(commandsDir, 'example.md'), TEMPLATE_EXAMPLE_COMMAND);
-    logger.success('Created .agentsmesh/commands/example.md');
+    await writeFileAtomic(join(commandsDir, '_example.md'), TEMPLATE_EXAMPLE_COMMAND);
+    logger.success('Created .agentsmesh/commands/_example.md');
   }
 
-  const agentsDir = ab(projectRoot, 'agents');
+  const agentsDir = ab(canonicalDir, 'agents');
   if ((await countMdFiles(agentsDir)) === 0) {
     await mkdirp(agentsDir);
-    await writeFileAtomic(join(agentsDir, 'example.md'), TEMPLATE_EXAMPLE_AGENT);
-    logger.success('Created .agentsmesh/agents/example.md');
+    await writeFileAtomic(join(agentsDir, '_example.md'), TEMPLATE_EXAMPLE_AGENT);
+    logger.success('Created .agentsmesh/agents/_example.md');
   }
 
-  if (!(await hasAnyImportedSkill(projectRoot))) {
-    const skillDir = ab(projectRoot, join('skills', 'example'));
+  if (!(await hasAnyImportedSkill(canonicalDir))) {
+    const skillDir = ab(canonicalDir, join('skills', '_example'));
     await mkdirp(skillDir);
     await writeFileAtomic(join(skillDir, 'SKILL.md'), TEMPLATE_EXAMPLE_SKILL);
-    logger.success('Created .agentsmesh/skills/example/SKILL.md');
+    logger.success('Created .agentsmesh/skills/_example/SKILL.md');
   }
 
-  const mcpPath = ab(projectRoot, 'mcp.json');
+  const mcpPath = ab(canonicalDir, 'mcp.json');
   if (!(await exists(mcpPath))) {
     await writeFileAtomic(mcpPath, TEMPLATE_MCP);
     logger.success('Created .agentsmesh/mcp.json');
   }
-  const hooksPath = ab(projectRoot, 'hooks.yaml');
+  const hooksPath = ab(canonicalDir, 'hooks.yaml');
   if (!(await exists(hooksPath))) {
     await writeFileAtomic(hooksPath, TEMPLATE_HOOKS);
     logger.success('Created .agentsmesh/hooks.yaml');
   }
-  const permsPath = ab(projectRoot, 'permissions.yaml');
+  const permsPath = ab(canonicalDir, 'permissions.yaml');
   if (!(await exists(permsPath))) {
     await writeFileAtomic(permsPath, TEMPLATE_PERMISSIONS);
     logger.success('Created .agentsmesh/permissions.yaml');
   }
-  const ignorePath = ab(projectRoot, 'ignore');
+  const ignorePath = ab(canonicalDir, 'ignore');
   if (!(await exists(ignorePath))) {
     await writeFileAtomic(ignorePath, TEMPLATE_IGNORE);
     logger.success('Created .agentsmesh/ignore');

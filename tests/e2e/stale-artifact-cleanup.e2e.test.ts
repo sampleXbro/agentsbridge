@@ -57,6 +57,20 @@ describe('stale artifact cleanup e2e', () => {
       canonicalPath: '.agentsmesh/permissions.yaml',
       stale: ['.gemini/policies/permissions.toml'],
     },
+    {
+      label: 'cline rules dir',
+      target: 'cline',
+      features: '[rules]',
+      canonicalPath: '.agentsmesh/rules/typescript.md',
+      stale: ['.clinerules/typescript.md'],
+    },
+    {
+      label: 'roo-code agents',
+      target: 'roo-code',
+      features: '[rules, agents]',
+      canonicalPath: '.agentsmesh/agents',
+      stale: ['.roomodes'],
+    },
   ])(
     'deletes stale %s artifacts after canonical removal',
     async ({ target, features, canonicalPath, stale }) => {

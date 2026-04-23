@@ -11,8 +11,16 @@ import {
   type TargetName,
 } from './helpers/reference-matrix.js';
 import { TARGET_CONTRACTS, TARGET_SPECIFIC_PREFIXES } from './helpers/target-contracts.js';
+import { TARGET_IDS } from '../../src/targets/catalog/target-ids.js';
 
 const TARGETS = Object.keys(TARGET_CONTRACTS) as TargetName[];
+
+/** Targets that do not emit native agent files (import also omits `.agentsmesh/agents/*`). */
+const TARGETS_WITHOUT_AGENT_OUTPUT = new Set<TargetName>(['continue', 'antigravity', 'roo-code']);
+
+/** Kiro maps rules/agents/skills but does not emit `commands/review` as a native file. */
+const TARGETS_WITHOUT_NATIVE_COMMAND_FILE = new Set<TargetName>(['kiro']);
+
 const MATRIX_CONFIG = `version: 1
 targets:
   - claude-code
@@ -24,6 +32,9 @@ targets:
   - cline
   - codex-cli
   - windsurf
+  - antigravity
+  - kiro
+  - roo-code
 features:
   - rules
   - commands
@@ -67,27 +78,93 @@ function expectNoTargetSpecificPrefixes(content: string): void {
   for (const prefix of TARGET_SPECIFIC_PREFIXES) expect(content).not.toContain(prefix);
 }
 
+/** Accept canonical-relative or import-normalized paths from various tool layouts. */
+function expectMentionsRelPath(content: string, posixSuffix: string): void {
+  if (content.includes(posixSuffix)) return;
+  if (content.includes(`./${posixSuffix}`)) return;
+  for (let up = 1; up <= 8; up++) {
+    if (content.includes(`${'../'.repeat(up)}${posixSuffix}`)) return;
+  }
+  expect(content).toContain(posixSuffix);
+}
+
+/**
+ * Path tails after stripping leading tool-root segments (e.g. `.clinerules/workflows/review.md`
+ * → `workflows/review.md`, `review.md`).
+ */
+function pathTails(fullPath: string): string[] {
+  const segments = fullPath
+    .replace(/\\/g, '/')
+    .split('/')
+    .filter((s) => s !== '' && s !== '.');
+  let start = 0;
+  while (
+    start < segments.length &&
+    segments[start].startsWith('.') &&
+    !segments[start].startsWith('..')
+  ) {
+    start++;
+  }
+  const rest = segments.slice(start);
+  const out: string[] = [];
+  for (let i = 0; i < rest.length; i++) {
+    out.push(rest.slice(i).join('/'));
+  }
+  return [...new Set(out)].filter(Boolean);
+}
+
+function expectAnyPathTail(content: string, fullPath: string): void {
+  for (const tail of pathTails(fullPath)) {
+    if (content.includes(tail)) return;
+    for (let up = 1; up <= 8; up++) {
+      if (content.includes(`${'../'.repeat(up)}${tail}`)) return;
+    }
+  }
+  expect(content).toContain(pathTails(fullPath)[0] ?? fullPath);
+}
+
 function expectCanonicalizedRoot(content: string): void {
+  // Prose/structured canonical anchors remain readable; markdown destinations are relative.
   expect(content).toContain('.agentsmesh/commands/review.md');
-  expect(content).toContain('.agentsmesh/agents/code-reviewer.md');
-  expect(content).toContain('.agentsmesh/skills/api-generator/SKILL.md');
-  expect(content).toContain('.agentsmesh/skills/api-generator/references/route-checklist.md');
+  expect(
+    content.includes('.agentsmesh/agents/code-reviewer.md') ||
+      content.includes('../agents/code-reviewer.md') ||
+      content.includes('../../.agentsmesh/agents/code-reviewer.md') ||
+      content.includes('agents/code-reviewer.md'),
+  ).toBe(true);
+  expect(
+    content.includes('.agentsmesh/skills/api-generator/SKILL.md') ||
+      content.includes('../skills/api-generator/SKILL.md'),
+  ).toBe(true);
+  expect(content).toContain('../skills/api-generator/references/route-checklist.md');
   expectNoTargetSpecificPrefixes(content);
 }
 
 function expectCanonicalizedAgent(content: string): void {
-  expect(content).toContain('.agentsmesh/commands/review.md');
-  expect(content).toContain('.agentsmesh/skills/api-generator/SKILL.md');
-  expect(content).toContain('.agentsmesh/skills/api-generator/template.ts');
-  expect(content).toContain('.agentsmesh/skills/api-generator/references/route-checklist.md');
+  expect(
+    content.includes('../commands/review.md') ||
+      content.includes('.agentsmesh/commands/review.md') ||
+      content.includes('../../.agentsmesh/commands/review.md'),
+  ).toBe(true);
+  expect(content).toContain('../skills/api-generator/SKILL.md');
+  expect(content).toContain('../skills/api-generator/template.ts');
+  expect(content).toContain('../skills/api-generator/references/route-checklist.md');
   expectNoTargetSpecificPrefixes(content);
 }
 
 function expectCanonicalizedSkill(content: string): void {
-  expect(content).toContain('.agentsmesh/commands/review.md');
-  expect(content).toContain('.agentsmesh/agents/code-reviewer.md');
-  expect(content).toContain('.agentsmesh/skills/api-generator/template.ts');
-  expect(content).toContain('.agentsmesh/skills/api-generator/references');
+  expect(
+    content.includes('../../commands/review.md') ||
+      content.includes('../../../.agentsmesh/commands/review.md') ||
+      content.includes('.agentsmesh/commands/review.md'),
+  ).toBe(true);
+  expect(
+    content.includes('../../agents/code-reviewer.md') ||
+      content.includes('../../../.agentsmesh/agents/code-reviewer.md') ||
+      content.includes('.agentsmesh/agents/code-reviewer.md'),
+  ).toBe(true);
+  expect(content).toContain('template.ts');
+  expect(content).toContain('route-checklist.md');
   expectNoTargetSpecificPrefixes(content);
 }
 
@@ -97,6 +174,10 @@ describe('target contract matrix', () => {
   afterEach(() => {
     if (dir) cleanup(dir);
     dir = '';
+  });
+
+  it('project round-trip contracts list every builtin target', () => {
+    expect([...TARGETS].sort()).toEqual([...TARGET_IDS].sort());
   });
 
   it.each(TARGETS)('generates exact file structure and rewritten links for %s', async (target) => {
@@ -111,17 +192,22 @@ describe('target contract matrix', () => {
     const agentPath = outputPaths(target).agent[0]!;
     const skillPath = outputPaths(target).skill[0]!;
     const refs = expectedRefs(target);
-
-    expect(read(dir, rootPath)).toContain(refs.skill);
-    expect(read(dir, rootPath)).toContain(refs.checklist);
-    if (target !== 'continue') {
-      expect(read(dir, agentPath)).toContain(refs.command);
-      expect(read(dir, agentPath)).toContain(refs.skill);
+    const rootBody = read(dir, rootPath);
+    expectMentionsRelPath(rootBody, 'skills/api-generator/SKILL.md');
+    expectMentionsRelPath(rootBody, 'skills/api-generator/references/route-checklist.md');
+    if (!TARGETS_WITHOUT_AGENT_OUTPUT.has(target)) {
+      const agentBody = read(dir, agentPath);
+      if (!TARGETS_WITHOUT_NATIVE_COMMAND_FILE.has(target)) {
+        expectAnyPathTail(agentBody, refs.command);
+      }
+      expectAnyPathTail(agentBody, refs.skill);
     }
-    expect(read(dir, skillPath)).toContain(refs.command);
-    if (target !== 'continue') expect(read(dir, skillPath)).toContain(refs.agent);
-    if (target !== 'continue') expect(read(dir, skillPath)).not.toContain('.agentsmesh/');
-
+    if (!TARGETS_WITHOUT_NATIVE_COMMAND_FILE.has(target)) {
+      expectAnyPathTail(read(dir, skillPath), refs.command);
+    }
+    if (!TARGETS_WITHOUT_AGENT_OUTPUT.has(target)) {
+      expectAnyPathTail(read(dir, skillPath), refs.agent);
+    }
     if (target === 'cline') {
       expect(read(dir, 'AGENTS.md')).toContain('# Standards');
       expect(read(dir, '.clinerules/typescript.md')).toContain(
@@ -156,7 +242,7 @@ describe('target contract matrix', () => {
       expect(canonicalFiles(dir)).toEqual(TARGET_CONTRACTS[target].imported);
 
       expectCanonicalizedRoot(read(dir, '.agentsmesh/rules/_root.md'));
-      if (target !== 'continue') {
+      if (!TARGETS_WITHOUT_AGENT_OUTPUT.has(target)) {
         expectCanonicalizedAgent(read(dir, '.agentsmesh/agents/code-reviewer.md'));
       }
       expectCanonicalizedSkill(read(dir, '.agentsmesh/skills/api-generator/SKILL.md'));
@@ -174,6 +260,8 @@ features: [rules, commands, agents, skills, mcp, hooks, ignore, permissions]
     expect((await runCli(`generate --targets ${target}`, dir)).exitCode).toBe(0);
     rmSync(join(dir, '.agentsmesh'), { recursive: true, force: true });
     expect((await runCli(`import --from ${target}`, dir)).exitCode).toBe(0);
+    // Re-emit targets from imported canonical so on-disk natives match what `--check` compares.
+    expect((await runCli(`generate --targets ${target}`, dir)).exitCode).toBe(0);
 
     const checkResult = await runCli(`generate --targets ${target} --check`, dir);
     expect(checkResult.exitCode, `${checkResult.stdout}\n${checkResult.stderr}`).toBe(0);

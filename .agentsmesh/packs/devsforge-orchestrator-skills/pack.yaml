@@ -2,8 +2,8 @@ name: devsforge-orchestrator-skills
 source: github:devsforge/orchestrator@a4cbcf2503595b83f3fdc66ddb6d1905d7bef51f
 version: a4cbcf2503595b83f3fdc66ddb6d1905d7bef51f
 source_kind: github
-installed_at: 2026-03-23T13:31:44.480Z
-updated_at: 2026-03-23T13:31:44.480Z
+installed_at: 2026-04-17T19:35:47.384Z
+updated_at: 2026-04-17T19:35:47.384Z
 features:
   - skills
 pick:

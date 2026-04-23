@@ -8,6 +8,8 @@ export type CatalogPayload = {
 };
 
 const DEFAULT_CMD = 'pnpm install agentsmesh';
+/** User-level CLI install (`pnpm add --global` is the supported global form). */
+const DEFAULT_CMD_GLOBAL = 'pnpm add --global agentsmesh';
 const TARGET = 'claude-code';
 const COPY_UI_MS = 2200;
 const LIVE_ACK_MS = 2500;
@@ -23,8 +25,13 @@ function shellSingleQuoted(url: string): string {
   return url.replace(/'/g, `'\\''`);
 }
 
-function installCommand(link: string, asKind: TabId): string {
-  return `agentsmesh install '${shellSingleQuoted(link)}' --target ${TARGET} --as ${asKind}`;
+function installCommand(link: string, asKind: TabId, global: boolean): string {
+  const globalFlag = global ? ' --global' : '';
+  return `agentsmesh install${globalFlag} '${shellSingleQuoted(link)}' --target ${TARGET} --as ${asKind}`;
+}
+
+function defaultLibCommand(global: boolean): string {
+  return global ? DEFAULT_CMD_GLOBAL : DEFAULT_CMD;
 }
 
 function tabRows(data: CatalogPayload, tab: TabId): CatalogRow[] {
@@ -40,14 +47,18 @@ export function mountCatalogExplorer(root: HTMLElement, data: CatalogPayload): v
   const copyInput = root.querySelector<HTMLInputElement>('[data-am-copy-input]');
   const copyBtn = root.querySelector<HTMLButtonElement>('[data-am-copy-btn]');
   const copyLabel = root.querySelector<HTMLElement>('[data-am-copy-label]');
+  const installGlobalEl = root.querySelector<HTMLInputElement>('[data-am-install-global]');
   const search = root.querySelector<HTMLInputElement>('[data-am-search]');
   const tableWrap = root.querySelector<HTMLElement>('[data-am-table-wrap]');
   const live = root.querySelector<HTMLElement>('[data-am-live]');
   const tabButtons = root.querySelectorAll<HTMLButtonElement>('[data-am-tab]');
 
-  if (!copyInput || !copyBtn || !copyLabel || !search || !tableWrap || !live) return;
+  if (!copyInput || !copyBtn || !copyLabel || !installGlobalEl || !search || !tableWrap || !live)
+    return;
 
   let tab: TabId = 'skills';
+  let installGlobal = installGlobalEl.checked;
+  let lastPicked: CatalogRow | null = null;
   let liveTimer: ReturnType<typeof setTimeout> | undefined;
   let copyUiTimer: ReturnType<typeof setTimeout> | undefined;
   let searchTimer: ReturnType<typeof setTimeout> | undefined;
@@ -76,7 +87,16 @@ export function mountCatalogExplorer(root: HTMLElement, data: CatalogPayload): v
   }
 
   function applyPick(row: CatalogRow): void {
-    copyInput.value = installCommand(row.l, tab);
+    lastPicked = row;
+    copyInput.value = installCommand(row.l, tab, installGlobal);
+  }
+
+  function refreshCommandLine(): void {
+    if (lastPicked) {
+      copyInput.value = installCommand(lastPicked.l, tab, installGlobal);
+    } else {
+      copyInput.value = defaultLibCommand(installGlobal);
+    }
   }
 
   function clearSearchDebounce(): void {
@@ -111,7 +131,8 @@ export function mountCatalogExplorer(root: HTMLElement, data: CatalogPayload): v
 
   function setTab(next: TabId): void {
     tab = next;
-    copyInput.value = DEFAULT_CMD;
+    lastPicked = null;
+    copyInput.value = defaultLibCommand(installGlobal);
     search.value = '';
     clearSearchDebounce();
     setLiveMessage('');
@@ -143,6 +164,11 @@ export function mountCatalogExplorer(root: HTMLElement, data: CatalogPayload): v
     );
   });
 
+  installGlobalEl.addEventListener('change', () => {
+    installGlobal = installGlobalEl.checked;
+    refreshCommandLine();
+  });
+
   search.addEventListener('input', scheduleSearchTable);
   tabButtons.forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -151,5 +177,6 @@ export function mountCatalogExplorer(root: HTMLElement, data: CatalogPayload): v
     });
   });
 
+  copyInput.value = defaultLibCommand(installGlobal);
   applyTable();
 }

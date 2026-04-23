@@ -43,7 +43,7 @@ If any criterion has no corresponding test, add the test.
 
 ### 3. Edge Case Checklist
 
-Load `.github/skills/post-feature-qa/references/edge-case-checklist.md` for a full reference. For every public API, config schema, or behavior:
+Load `./references/edge-case-checklist.md` for a full reference. For every public API, config schema, or behavior:
 
 - **Valid inputs**: minimal valid, full valid, optional fields omitted
 - **Invalid types**: wrong type (string vs number, array vs object, etc.)

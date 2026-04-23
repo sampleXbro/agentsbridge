@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "propertyNames": {
+    "type": "string"
+  },
+  "additionalProperties": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "properties": {
+        "matcher": {
+          "type": "string",
+          "description": "Tool name pattern to match (e.g. \"Edit|Write\", \"Bash\", \"*\")"
+        },
+        "command": {
+          "type": "string",
+          "description": "Shell command to run"
+        },
+        "type": {
+          "description": "Hook entry type",
+          "type": "string",
+          "enum": [
+            "command",
+            "prompt"
+          ]
+        },
+        "timeout": {
+          "description": "Timeout in milliseconds",
+          "type": "number"
+        },
+        "prompt": {
+          "description": "Prompt text (when type is prompt)",
+          "type": "string"
+        }
+      },
+      "required": [
+        "matcher",
+        "command"
+      ],
+      "additionalProperties": false,
+      "description": "A single lifecycle hook entry"
+    }
+  },
+  "description": "AgentsMesh lifecycle hooks (.agentsmesh/hooks.yaml)",
+  "title": "agentsmesh-hooks.yaml"
+}

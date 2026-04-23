@@ -124,24 +124,10 @@ function mergeLocalConfig(
   return merged as ValidatedConfig;
 }
 
-/**
- * Find config from dir, load it, merge agentsmesh.local.yaml if present.
- * Merge strategy (PRD 3.2): targets/features replace; overrides deep merge; extends append.
- * @param startDir - Directory to start searching from
- * @returns Config and directory containing agentsmesh.yaml
- * @throws Error if no config found
- */
-export async function loadConfigFromDir(
-  startDir: string,
+export async function loadConfigFromExactDir(
+  configDir: string,
 ): Promise<{ config: ValidatedConfig; configDir: string }> {
-  const configPath = await findConfigPath(startDir);
-  if (configPath === null) {
-    throw new Error(
-      `No agentsmesh.yaml found from ${startDir}. Run 'agentsmesh init' to create one.`,
-    );
-  }
-
-  const configDir = dirname(configPath);
+  const configPath = join(configDir, CONFIG_FILENAME);
   let config = await loadConfig(configPath);
 
   const localPath = join(configDir, LOCAL_CONFIG_FILENAME);
@@ -163,4 +149,23 @@ export async function loadConfigFromDir(
   }
 
   return { config, configDir };
+}
+
+/**
+ * Find config from dir, load it, merge agentsmesh.local.yaml if present.
+ * Merge strategy (PRD 3.2): targets/features replace; overrides deep merge; extends append.
+ * @param startDir - Directory to start searching from
+ * @returns Config and directory containing agentsmesh.yaml
+ * @throws Error if no config found
+ */
+export async function loadConfigFromDir(
+  startDir: string,
+): Promise<{ config: ValidatedConfig; configDir: string }> {
+  const configPath = await findConfigPath(startDir);
+  if (configPath === null) {
+    throw new Error(
+      `No agentsmesh.yaml found from ${startDir}. Run 'agentsmesh init' to create one.`,
+    );
+  }
+  return loadConfigFromExactDir(dirname(configPath));
 }

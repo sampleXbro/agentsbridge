@@ -1,5 +1,6 @@
 import { basename, join } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
+import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
 import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/filesystem/fs.js';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
@@ -8,6 +9,7 @@ import {
   serializeImportedRuleWithFallback,
   serializeImportedCommandWithFallback,
 } from '../import/import-metadata.js';
+import { splitEmbeddedRulesToCanonical } from '../import/embedded-rules.js';
 import { importFileDirectory } from '../import/import-orchestrator.js';
 import {
   ANTIGRAVITY_TARGET,
@@ -16,28 +18,46 @@ import {
   ANTIGRAVITY_RULES_DIR,
   ANTIGRAVITY_WORKFLOWS_DIR,
   ANTIGRAVITY_SKILLS_DIR,
+  ANTIGRAVITY_GLOBAL_ROOT,
+  ANTIGRAVITY_GLOBAL_SKILLS_DIR,
+  ANTIGRAVITY_GLOBAL_WORKFLOWS_DIR,
+  ANTIGRAVITY_GLOBAL_MCP_CONFIG,
   ANTIGRAVITY_CANONICAL_ROOT_RULE,
   ANTIGRAVITY_CANONICAL_RULES_DIR,
   ANTIGRAVITY_CANONICAL_COMMANDS_DIR,
+  ANTIGRAVITY_CANONICAL_MCP,
 } from './constants.js';
 
 async function importRootRule(
   projectRoot: string,
   results: ImportResult[],
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
+  scope: TargetLayoutScope,
 ): Promise<void> {
-  const primary = join(projectRoot, ANTIGRAVITY_RULES_ROOT);
+  const primary =
+    scope === 'global'
+      ? join(projectRoot, ANTIGRAVITY_GLOBAL_ROOT)
+      : join(projectRoot, ANTIGRAVITY_RULES_ROOT);
   const legacy = join(projectRoot, ANTIGRAVITY_RULES_ROOT_LEGACY);
   let srcPath = primary;
   let content = await readFileSafe(primary);
-  if (content === null) {
+  if (scope === 'project' && content === null) {
     srcPath = legacy;
     content = await readFileSafe(legacy);
   }
   if (content === null) return;
 
   const destPath = join(projectRoot, ANTIGRAVITY_CANONICAL_ROOT_RULE);
-  const { body } = parseFrontmatter(normalize(content, srcPath, destPath));
+  const split = await splitEmbeddedRulesToCanonical({
+    content,
+    projectRoot,
+    rulesDir: ANTIGRAVITY_CANONICAL_RULES_DIR,
+    sourcePath: srcPath,
+    fromTool: ANTIGRAVITY_TARGET,
+    normalize,
+  });
+  results.push(...split.results);
+  const { body } = parseFrontmatter(normalize(split.rootContent, srcPath, destPath));
   const output = await serializeImportedRuleWithFallback(destPath, { root: true }, body);
   await mkdirp(join(projectRoot, ANTIGRAVITY_CANONICAL_RULES_DIR));
   await writeFileAtomic(destPath, output);
@@ -93,8 +113,11 @@ async function importWorkflows(
   projectRoot: string,
   results: ImportResult[],
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
+  scope: TargetLayoutScope,
 ): Promise<void> {
-  const srcDir = join(projectRoot, ANTIGRAVITY_WORKFLOWS_DIR);
+  const workflowsRel =
+    scope === 'global' ? ANTIGRAVITY_GLOBAL_WORKFLOWS_DIR : ANTIGRAVITY_WORKFLOWS_DIR;
+  const srcDir = join(projectRoot, workflowsRel);
   const destDir = join(projectRoot, ANTIGRAVITY_CANONICAL_COMMANDS_DIR);
   results.push(
     ...(await importFileDirectory({
@@ -128,15 +151,45 @@ async function importWorkflows(
   );
 }
 
-export async function importFromAntigravity(projectRoot: string): Promise<ImportResult[]> {
+async function importMcp(projectRoot: string, results: ImportResult[]): Promise<void> {
+  const mcpPath = join(projectRoot, ANTIGRAVITY_GLOBAL_MCP_CONFIG);
+  const content = await readFileSafe(mcpPath);
+  if (!content) return;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    return;
+  }
+  if (!parsed || typeof parsed !== 'object' || !('mcpServers' in (parsed as object))) return;
+  const destPath = join(projectRoot, ANTIGRAVITY_CANONICAL_MCP);
+  await mkdirp(join(projectRoot, '.agentsmesh'));
+  await writeFileAtomic(destPath, content);
+  results.push({
+    fromTool: ANTIGRAVITY_TARGET,
+    fromPath: mcpPath,
+    toPath: ANTIGRAVITY_CANONICAL_MCP,
+    feature: 'mcp',
+  });
+}
+
+export async function importFromAntigravity(
+  projectRoot: string,
+  options: { scope?: TargetLayoutScope } = {},
+): Promise<ImportResult[]> {
+  const scope = options.scope ?? 'project';
   const results: ImportResult[] = [];
-  const normalize = await createImportReferenceNormalizer(ANTIGRAVITY_TARGET, projectRoot);
-  await importRootRule(projectRoot, results, normalize);
-  await importNonRootRules(projectRoot, results, normalize);
-  await importWorkflows(projectRoot, results, normalize);
+  const normalize = await createImportReferenceNormalizer(ANTIGRAVITY_TARGET, projectRoot, scope);
+  await importRootRule(projectRoot, results, normalize, scope);
+  if (scope === 'project') {
+    await importNonRootRules(projectRoot, results, normalize);
+  } else {
+    await importMcp(projectRoot, results);
+  }
+  await importWorkflows(projectRoot, results, normalize, scope);
   await importEmbeddedSkills(
     projectRoot,
-    ANTIGRAVITY_SKILLS_DIR,
+    scope === 'global' ? ANTIGRAVITY_GLOBAL_SKILLS_DIR : ANTIGRAVITY_SKILLS_DIR,
     ANTIGRAVITY_TARGET,
     results,
     normalize,

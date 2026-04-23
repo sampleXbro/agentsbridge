@@ -5,21 +5,41 @@ import type {
   LintDiagnostic,
 } from '../../core/types.js';
 import type { ValidatedConfig } from '../../config/core/schema.js';
+import type { TargetLayoutScope } from './target-descriptor.js';
+import type { TargetCapabilityInput, TargetCapabilityValue } from './capabilities.js';
 
 /** Feature support level for a given target */
 export type SupportLevel = 'native' | 'embedded' | 'partial' | 'none';
 
-/** Capabilities of a target tool */
-export interface TargetCapabilities {
-  rules: SupportLevel;
-  commands: SupportLevel;
-  agents: SupportLevel;
-  skills: SupportLevel;
-  mcp: SupportLevel;
-  hooks: SupportLevel;
-  ignore: SupportLevel;
-  permissions: SupportLevel;
+/**
+ * Capabilities of a target tool — each feature has a level and optional serialization flavor.
+ * String levels are accepted for authoring; `getTargetCapabilities` normalizes to objects.
+ */
+export type TargetCapabilities = Record<
+  | 'rules'
+  | 'additionalRules'
+  | 'commands'
+  | 'agents'
+  | 'skills'
+  | 'mcp'
+  | 'hooks'
+  | 'ignore'
+  | 'permissions',
+  TargetCapabilityInput
+>;
+
+/** Optional context passed to feature generators (flavor-aware targets). */
+export interface GenerateFeatureContext {
+  readonly capability: TargetCapabilityValue;
+  readonly scope: TargetLayoutScope;
 }
+
+export type FeatureGeneratorOutput = { path: string; content: string };
+
+export type FeatureGeneratorFn = (
+  canonical: CanonicalFiles,
+  ctx?: GenerateFeatureContext,
+) => FeatureGeneratorOutput[];
 
 /** Context passed to generate() */
 export interface GenerateContext {
@@ -78,18 +98,14 @@ export interface Target {
 export interface TargetGenerators {
   name: string;
   primaryRootInstructionPath?: string;
-  generateRules(c: CanonicalFiles): { path: string; content: string }[];
-  generateCommands?(c: CanonicalFiles): { path: string; content: string }[];
-  generateAgents?(c: CanonicalFiles): { path: string; content: string }[];
-  generateSkills?(c: CanonicalFiles): { path: string; content: string }[];
-  generateMcp?(c: CanonicalFiles): { path: string; content: string }[];
-  generatePermissions?(c: CanonicalFiles): { path: string; content: string }[];
-  generateHooks?(c: CanonicalFiles): { path: string; content: string }[];
-  generateIgnore?(c: CanonicalFiles): { path: string; content: string }[];
-  /** cline and windsurf use generateWorkflows instead of generateCommands */
-  generateWorkflows?(c: CanonicalFiles): { path: string; content: string }[];
-  /** gemini-cli uses generateSettings for .gemini/settings.json */
-  generateSettings?(c: CanonicalFiles): { path: string; content: string }[];
-  importFrom(projectRoot: string): Promise<ImportResult[]>;
+  generateRules: FeatureGeneratorFn;
+  generateCommands?: FeatureGeneratorFn;
+  generateAgents?: FeatureGeneratorFn;
+  generateSkills?: FeatureGeneratorFn;
+  generateMcp?: FeatureGeneratorFn;
+  generatePermissions?: FeatureGeneratorFn;
+  generateHooks?: FeatureGeneratorFn;
+  generateIgnore?: FeatureGeneratorFn;
+  importFrom(projectRoot: string, options?: { scope?: TargetLayoutScope }): Promise<ImportResult[]>;
   lint?(files: CanonicalFiles): LintDiagnostic[];
 }

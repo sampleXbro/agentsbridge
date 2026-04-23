@@ -559,7 +559,8 @@ features: [rules, ignore]
 `,
     );
     execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
-    const rootContent = readFileSync(join(TEST_DIR, '.clinerules', '_root.md'), 'utf-8');
+    // Cline writes the root rule to AGENTS.md, not .clinerules/_root.md
+    const rootContent = readFileSync(join(TEST_DIR, 'AGENTS.md'), 'utf-8');
     expect(rootContent).toContain('Use TDD.');
     const ignoreContent = readFileSync(join(TEST_DIR, '.clineignore'), 'utf-8');
     expect(ignoreContent).toContain('node_modules/');

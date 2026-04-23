@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { parse as yamlParse } from 'yaml';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
 import {
   generateRules,
@@ -6,6 +7,7 @@ import {
   generateMcp,
   generateIgnore,
   generateSkills,
+  generateAgents,
 } from '../../../../src/targets/roo-code/generator.js';
 import {
   ROO_CODE_ROOT_RULE,
@@ -14,6 +16,7 @@ import {
   ROO_CODE_MCP_FILE,
   ROO_CODE_IGNORE,
   ROO_CODE_SKILLS_DIR,
+  ROO_CODE_MODES_FILE,
 } from '../../../../src/targets/roo-code/constants.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
@@ -216,6 +219,104 @@ describe('generateIgnore (roo-code)', () => {
 
   it('returns empty array when no ignore patterns', () => {
     expect(generateIgnore(makeCanonical())).toEqual([]);
+  });
+});
+
+describe('generateAgents (roo-code)', () => {
+  it('converts agents to customModes YAML in .roomodes', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          source: '/proj/.agentsmesh/agents/code-reviewer.md',
+          name: 'Code Reviewer',
+          description: 'Reviews code for quality',
+          body: 'You are an expert code reviewer.',
+          tools: [],
+          allowedTools: [],
+          disallowedTools: [],
+        },
+      ],
+    });
+    const results = generateAgents(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(ROO_CODE_MODES_FILE);
+    const parsed = yamlParse(results[0].content) as { customModes: Array<Record<string, unknown>> };
+    expect(Array.isArray(parsed.customModes)).toBe(true);
+    expect(parsed.customModes).toHaveLength(1);
+    expect(parsed.customModes[0].slug).toBe('code-reviewer');
+    expect(parsed.customModes[0].name).toBe('Code Reviewer');
+    expect(parsed.customModes[0].description).toBe('Reviews code for quality');
+    expect(parsed.customModes[0].roleDefinition).toBe('You are an expert code reviewer.');
+  });
+
+  it('produces slug from source basename without extension', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          source: '/proj/.agentsmesh/agents/test-writer.md',
+          name: 'Test Writer',
+          description: '',
+          body: 'Write tests.',
+          tools: [],
+          allowedTools: [],
+          disallowedTools: [],
+        },
+      ],
+    });
+    const results = generateAgents(canonical);
+    const content = results[0].content;
+    expect(content).toContain('slug: test-writer');
+  });
+
+  it('omits description when empty', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          source: '/proj/.agentsmesh/agents/helper.md',
+          name: 'Helper',
+          description: '',
+          body: 'Help.',
+          tools: [],
+          allowedTools: [],
+          disallowedTools: [],
+        },
+      ],
+    });
+    const results = generateAgents(canonical);
+    expect(results[0].content).not.toContain('description:');
+  });
+
+  it('returns empty array when no agents', () => {
+    expect(generateAgents(makeCanonical())).toEqual([]);
+  });
+
+  it('converts multiple agents to multiple customModes', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          source: '/proj/.agentsmesh/agents/reviewer.md',
+          name: 'Reviewer',
+          description: 'Reviews',
+          body: 'Review code.',
+          tools: [],
+          allowedTools: [],
+          disallowedTools: [],
+        },
+        {
+          source: '/proj/.agentsmesh/agents/writer.md',
+          name: 'Writer',
+          description: 'Writes',
+          body: 'Write code.',
+          tools: [],
+          allowedTools: [],
+          disallowedTools: [],
+        },
+      ],
+    });
+    const results = generateAgents(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0].content).toContain('reviewer');
+    expect(results[0].content).toContain('writer');
   });
 });
 

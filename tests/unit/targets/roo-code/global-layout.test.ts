@@ -53,6 +53,10 @@ describe('roo-code global layout — rewriteGeneratedPath', () => {
   it('keeps .rooignore unchanged', () => {
     expect(rewrite('.rooignore')).toBe('.rooignore');
   });
+
+  it('suppresses .roomodes in global mode (returns null)', () => {
+    expect(rewrite('.roomodes')).toBeNull();
+  });
 });
 
 describe('roo-code global layout — mirrorGlobalPath', () => {

@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string"
+    },
+    "source_kind": {
+      "type": "string",
+      "enum": [
+        "github",
+        "gitlab",
+        "git",
+        "local"
+      ]
+    },
+    "installed_at": {
+      "type": "string"
+    },
+    "updated_at": {
+      "type": "string"
+    },
+    "features": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "rules",
+          "commands",
+          "agents",
+          "skills",
+          "mcp",
+          "hooks",
+          "ignore",
+          "permissions"
+        ]
+      }
+    },
+    "pick": {
+      "type": "object",
+      "properties": {
+        "skills": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "agents": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "target": {
+      "type": "string",
+      "enum": [
+        "claude-code",
+        "cursor",
+        "copilot",
+        "continue",
+        "junie",
+        "kiro",
+        "gemini-cli",
+        "cline",
+        "codex-cli",
+        "windsurf",
+        "antigravity",
+        "roo-code"
+      ]
+    },
+    "path": {
+      "type": "string"
+    },
+    "paths": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "as": {
+      "type": "string",
+      "enum": [
+        "rules",
+        "commands",
+        "agents",
+        "skills"
+      ]
+    },
+    "content_hash": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "source",
+    "source_kind",
+    "installed_at",
+    "updated_at",
+    "features",
+    "content_hash"
+  ],
+  "additionalProperties": false,
+  "title": "agentsmesh-pack.yaml",
+  "description": "AgentsMesh pack metadata (.agentsmesh/packs/{name}/pack.yaml)"
+}

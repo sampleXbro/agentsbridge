@@ -35,7 +35,7 @@ export function buildConfig(
     .map((t) => `  - ${t}`)
     .join('\n');
   const featureList = ALL_FEATURES.map((f) => `  - ${f}`).join('\n');
-  return `version: 1\ntargets:\n${targetList}\nfeatures:\n${featureList}\n`;
+  return `# yaml-language-server: $schema=https://unpkg.com/agentsmesh/schemas/agentsmesh.json\nversion: 1\ntargets:\n${targetList}\nfeatures:\n${featureList}\n`;
 }
 
 // ─── Canonical file templates ─────────────────────────────────────────────────
@@ -154,7 +154,8 @@ export const TEMPLATE_IGNORE = `# Patterns ignored by all configured AI tools (g
 # coverage/
 `;
 
-export const LOCAL_TEMPLATE = `# Personal overrides — NOT committed to git
+export const LOCAL_TEMPLATE = `# yaml-language-server: $schema=https://unpkg.com/agentsmesh/schemas/agentsmesh.json
+# Personal overrides — NOT committed to git
 # Uncomment and customize for your local setup:
 
 # targets:

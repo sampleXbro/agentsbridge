@@ -1,6 +1,7 @@
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { loadConfigFromDir, loadConfigFromExactDir } from './loader.js';
+import { ConfigNotFoundError } from '../../core/errors.js';
 import type { ValidatedConfig } from './schema.js';
 
 export type ConfigScope = 'project' | 'global';
@@ -58,6 +59,19 @@ export async function loadScopedConfig(
   }
 
   const context = resolveScopeContext(startDir, scope);
-  const { config } = await loadConfigFromExactDir(context.configDir);
-  return { config, context };
+  try {
+    const { config } = await loadConfigFromExactDir(context.configDir);
+    return { config, context };
+  } catch (err) {
+    if (err instanceof ConfigNotFoundError) {
+      throw new ConfigNotFoundError(err.path, {
+        cause: err,
+        message:
+          `agentsmesh.yaml not found at ${err.path} (global scope). ` +
+          `Run 'agentsmesh init --global' to create it under ~/.agentsmesh, ` +
+          `or drop the --global flag to operate on the current project.`,
+      });
+    }
+    throw err;
+  }
 }

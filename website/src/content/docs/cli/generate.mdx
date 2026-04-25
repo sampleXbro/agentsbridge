@@ -118,6 +118,8 @@ Forces a re-fetch of all remote `extends` sources. Without this flag, AgentsMesh
 When `--global` is used, AgentsMesh sets the project root to the user's home directory (`homedir()`).
 All target path constants — such as `.cursor/rules/`, `.claude/skills/`, or `Documents/Cline/Hooks/` — are relative to that root, so they resolve to the expected `~/`-prefixed locations (e.g. `~/.cursor/rules/`, `~/.claude/skills/`).
 
+If `~/.agentsmesh/agentsmesh.yaml` does not exist, `--global` commands fail with a scope-aware error pointing at the missing path and suggesting `agentsmesh init --global` (or dropping the flag to operate on the current project). The check applies uniformly to `generate`, `import`, `lint`, `check`, `diff`, `watch`, and `matrix`.
+
 ## Exit codes
 
 | Code | Meaning |

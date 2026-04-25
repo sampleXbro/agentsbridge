@@ -168,4 +168,22 @@ export const COMMANDS: HelpCommand[] = [
       { name: '--verbose', description: 'Include expanded feature details in matrix output' },
     ],
   },
+  {
+    name: 'target',
+    usage: 'agentsmesh target scaffold <id> [--name <displayName>] [--force]',
+    description: 'Generate a new target skeleton (files, tests, fixture) under src/targets/<id>/.',
+    flags: [
+      { name: '--name <displayName>', description: 'Human-readable name (defaults to id)' },
+      { name: '--force', description: 'Overwrite existing files' },
+    ],
+  },
+  {
+    name: 'plugin',
+    usage: 'agentsmesh plugin <add|list|remove|info> [args] [flags]',
+    description: 'Manage plugin-provided targets (npm packages exporting a TargetDescriptor).',
+    flags: [
+      { name: '--version <v>', description: 'Pin plugin version (add)' },
+      { name: '--id <id>', description: 'Override derived plugin id (add)' },
+    ],
+  },
 ];

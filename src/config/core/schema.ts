@@ -44,26 +44,41 @@ const collaborationSchema = z.object({
   lock_features: z.array(z.string()).default([]),
 });
 
+const conversionValueSchema = z.union([
+  z.boolean(),
+  z.object({ project: z.boolean().optional(), global: z.boolean().optional() }).strict(),
+]);
+
 const conversionsSchema = z
   .object({
     commands_to_skills: z
       .object({
-        'codex-cli': z.boolean().optional(),
+        'codex-cli': conversionValueSchema.optional(),
       })
-      .strict()
+      .passthrough()
       .optional(),
     agents_to_skills: z
       .object({
-        'gemini-cli': z.boolean().optional(),
-        cline: z.boolean().optional(),
-        'codex-cli': z.boolean().optional(),
-        windsurf: z.boolean().optional(),
+        'gemini-cli': conversionValueSchema.optional(),
+        cline: conversionValueSchema.optional(),
+        'codex-cli': conversionValueSchema.optional(),
+        windsurf: conversionValueSchema.optional(),
       })
-      .strict()
+      .passthrough()
       .optional(),
   })
   .strict()
   .optional();
+
+export const pluginEntrySchema = z
+  .object({
+    id: z.string().regex(/^[a-z][a-z0-9-]*$/),
+    source: z.string(),
+    version: z.string().optional(),
+  })
+  .strict();
+
+export type PluginEntry = z.infer<typeof pluginEntrySchema>;
 
 /** Zod schema for agentsmesh.yaml config validation */
 export const configSchema = z.object({
@@ -74,6 +89,8 @@ export const configSchema = z.object({
   overrides: z.record(z.string(), z.record(z.string(), z.unknown())).default({}),
   collaboration: collaborationSchema.default({ strategy: 'merge', lock_features: [] }),
   conversions: conversionsSchema,
+  plugins: z.array(pluginEntrySchema).default([]),
+  pluginTargets: z.array(z.string().regex(/^[a-z][a-z0-9-]*$/)).default([]),
 });
 
 export type ValidatedConfig = z.infer<typeof configSchema>;

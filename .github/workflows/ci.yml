@@ -7,7 +7,59 @@ on:
     branches: [master]
 
 jobs:
-  ci:
+  quality:
+    name: Quality (Node ${{ matrix.node-version }} on ${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            node-version: 20
+          - os: ubuntu-latest
+            node-version: 22
+          - os: ubuntu-latest
+            node-version: 24
+          - os: windows-latest
+            node-version: 22
+          - os: macos-latest
+            node-version: 22
+    runs-on: ${{ matrix.os }}
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        if: matrix.os == 'ubuntu-latest' && matrix.node-version == 22
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit and integration tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+      - name: E2E tests
+        if: matrix.os != 'windows-latest'
+        run: pnpm test:e2e
+
+  coverage:
+    name: Coverage & contract checks
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -29,15 +81,6 @@ jobs:
       - name: Audit production dependencies
         run: pnpm audit --prod --audit-level=high
 
-      - name: Lint
-        run: pnpm lint
-
-      - name: Typecheck
-        run: pnpm typecheck
-
-      - name: Unit and integration tests
-        run: pnpm test
-
       - name: Contract matrix
         run: pnpm test:contract
 
@@ -54,8 +97,56 @@ jobs:
           files: coverage/lcov.info
           fail_ci_if_error: false
 
+  smoke:
+    name: Post-pack smoke test
+    needs: quality
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Build
         run: pnpm build
 
-      - name: E2E tests
-        run: pnpm test:e2e
+      - name: Pack tarball
+        run: pnpm pack
+
+      - name: Install packed tarball globally
+        run: npm install -g ./agentsmesh-*.tgz
+
+      - name: Verify CLI entrypoints
+        run: |
+          agentsmesh --version
+          agentsmesh --help
+          amsh --version
+
+      - name: Verify init scaffold in clean temp project
+        run: |
+          set -eux
+          SMOKE_DIR=$(mktemp -d)
+          cd "$SMOKE_DIR"
+          agentsmesh init --yes
+          test -f agentsmesh.yaml
+          test -d .agentsmesh
+
+      - name: publint (package metadata)
+        run: pnpm publint
+
+      - name: arethetypeswrong (types resolution under node16/bundler)
+        run: pnpm attw
+
+      - name: Consumer smoke (strict-mode TS import from packed tarball)
+        run: ./scripts/consumer-smoke.sh

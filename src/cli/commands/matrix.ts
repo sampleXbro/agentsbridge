@@ -9,6 +9,7 @@ import {
   formatMatrix,
   formatVerboseDetails,
 } from '../../core/matrix/matrix.js';
+import { bootstrapPlugins } from '../../plugins/bootstrap-plugins.js';
 import { logger } from '../../utils/output/logger.js';
 
 /**
@@ -32,6 +33,7 @@ export async function runMatrix(
       : undefined;
 
   const { config, context } = await loadScopedConfig(root, scope);
+  await bootstrapPlugins(config, root);
   const { canonical } = await loadCanonicalWithExtends(
     config,
     context.configDir,
@@ -39,7 +41,7 @@ export async function runMatrix(
     context.canonicalDir,
   );
 
-  const targets = targetFilter ?? config.targets;
+  const targets = targetFilter ?? [...config.targets, ...(config.pluginTargets ?? [])];
   const rows = buildCompatibilityMatrix(config, canonical, scope);
 
   if (rows.length === 0) {

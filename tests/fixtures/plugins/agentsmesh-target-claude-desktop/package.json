@@ -1,0 +1,26 @@
+{
+  "name": "agentsmesh-target-claude-desktop",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "AgentsMesh plugin for Claude Desktop configuration sync",
+  "author": "Your Team",
+  "license": "MIT",
+  "main": "index.js",
+  "keywords": [
+    "agentsmesh",
+    "claude-desktop",
+    "plugin",
+    "agent-config",
+    "sync"
+  ],
+  "peerDependencies": {
+    "agentsmesh": ">=0.6"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourorg/agentsmesh-target-claude-desktop.git"
+  }
+}

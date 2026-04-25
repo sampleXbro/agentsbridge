@@ -16,6 +16,8 @@ import { runWatch } from './commands/watch.js';
 import { runCheck } from './commands/check.js';
 import { runMerge } from './commands/merge.js';
 import { runInstall } from './commands/install.js';
+import { runPlugin } from './commands/plugin.js';
+import { runTarget } from './commands/target.js';
 
 export interface ParseResult {
   command: string;
@@ -35,8 +37,10 @@ export function parseArgs(argv: string[]): ParseResult {
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]!;
-    if (arg === '--version') return { command: 'version', flags: {}, args: [] };
-    if (arg === '--help') return { command: 'help', flags: {}, args: [] };
+    // Global --version / --help only apply before the command token is seen
+    if (command === 'help' && arg === '--version')
+      return { command: 'version', flags: {}, args: [] };
+    if (command === 'help' && arg === '--help') return { command: 'help', flags: {}, args: [] };
     if (arg.startsWith('--')) {
       const name = arg.slice(2);
       const next = argv[i + 1];
@@ -68,6 +72,8 @@ const CMDS = [
   'merge',
   'matrix',
   'install',
+  'plugin',
+  'target',
 ] as const;
 
 function stub(name: string) {
@@ -131,6 +137,14 @@ const cmdHandlers: Record<
     process.on('SIGTERM', stop);
   },
   install: (flags, args) => runInstall(flags, args, process.cwd()),
+  plugin: async (flags, args) => {
+    const code = await runPlugin(flags, args, process.cwd());
+    if (code !== 0) process.exit(code);
+  },
+  target: async (flags, args) => {
+    const code = await runTarget(flags, args, process.cwd());
+    if (code !== 0) process.exit(code);
+  },
 };
 const router = createRouter(cmdHandlers);
 

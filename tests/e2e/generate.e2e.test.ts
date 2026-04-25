@@ -129,7 +129,7 @@ describe('generate', () => {
     dir = createTestProject('canonical-no-config');
     const r = await runCli('generate', dir);
     expect(r.exitCode).toBe(1);
-    expect(r.stderr).toContain('No agentsmesh.yaml');
+    expect(r.stderr).toMatch(/agentsmesh\.yaml not found/);
   });
 
   it('generate with no root rule — no crash, no files created', async () => {

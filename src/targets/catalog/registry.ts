@@ -5,7 +5,13 @@ import { BUILTIN_TARGETS } from './builtin-targets.js';
 const descriptorRegistry = new Map<string, TargetDescriptor>();
 const legacyRegistry = new Map<string, TargetGenerators>();
 
-const builtinDescriptors = new Map<string, TargetDescriptor>(BUILTIN_TARGETS.map((d) => [d.id, d]));
+let _builtinDescriptors: Map<string, TargetDescriptor> | undefined;
+function builtinDescriptors(): Map<string, TargetDescriptor> {
+  if (!_builtinDescriptors) {
+    _builtinDescriptors = new Map(BUILTIN_TARGETS.map((d) => [d.id, d]));
+  }
+  return _builtinDescriptors;
+}
 
 /** Register a full target descriptor (for plugins). */
 export function registerTargetDescriptor(descriptor: TargetDescriptor): void {
@@ -19,7 +25,7 @@ export function registerTarget(target: TargetGenerators): void {
 
 /** Look up a full descriptor by target ID. */
 export function getDescriptor(name: string): TargetDescriptor | undefined {
-  return descriptorRegistry.get(name) ?? builtinDescriptors.get(name);
+  return descriptorRegistry.get(name) ?? builtinDescriptors().get(name);
 }
 
 /** Look up generators by target name. Falls through descriptors → legacy. */

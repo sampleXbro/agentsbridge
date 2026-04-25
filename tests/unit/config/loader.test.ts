@@ -129,7 +129,7 @@ overrides:
   });
 
   it('throws when no config found', async () => {
-    await expect(loadConfigFromDir(TEST_ROOT)).rejects.toThrow(/no agentsmesh\.yaml found/i);
+    await expect(loadConfigFromDir(TEST_ROOT)).rejects.toThrow(/agentsmesh\.yaml not found/i);
   });
 
   it('appends local extends after project extends (merge strategy)', async () => {

@@ -11,6 +11,23 @@ export {
   getAllDescriptors,
 } from '../targets/catalog/registry.js';
 
+export type {
+  TargetDescriptor,
+  TargetLayout,
+  TargetLayoutScope,
+  TargetOutputFamily,
+  TargetPathResolvers,
+  TargetManagedOutputs,
+  TargetLintHooks,
+  FeatureLinter,
+  RuleLinter,
+  ScopeExtrasFn,
+  ImportPathBuilder,
+  GlobalTargetSupport,
+} from '../targets/catalog/target-descriptor.js';
+
+export type { TargetCapabilities, TargetGenerators } from '../targets/catalog/target.interface.js';
+
 export function getTargetCatalog(): readonly TargetDescriptor[] {
   return BUILTIN_TARGETS;
 }

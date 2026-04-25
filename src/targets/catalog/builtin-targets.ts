@@ -16,6 +16,8 @@ import type {
   TargetLayoutScope,
   TargetManagedOutputs,
 } from './target-descriptor.js';
+import { getDescriptor } from './registry.js';
+import { assertSharedArtifactOwnersUnique } from './shared-artifact-owner.js';
 import { TARGET_IDS, type BuiltinTargetId, isBuiltinTargetId } from './target-ids.js';
 import { descriptor as claudeCode } from '../claude-code/index.js';
 import { descriptor as cursor } from '../cursor/index.js';
@@ -54,6 +56,9 @@ export const BUILTIN_TARGETS: readonly TargetDescriptor[] = [
 let _builtinTargetsMap: Map<string, TargetDescriptor> | undefined;
 function builtinTargetsMap(): Map<string, TargetDescriptor> {
   if (!_builtinTargetsMap) {
+    // Fail fast if two builtins claim the same/overlapping shared-artifact owner
+    // prefix — would otherwise silently depend on iteration order in the rewriter.
+    assertSharedArtifactOwnersUnique(BUILTIN_TARGETS);
     _builtinTargetsMap = new Map(BUILTIN_TARGETS.map((d) => [d.id, d]));
   }
   return _builtinTargetsMap;
@@ -70,7 +75,7 @@ export function getTargetCapabilities(
   target: string,
   scope: TargetLayoutScope = 'project',
 ): Record<CapabilityFeatureKey, TargetCapabilityValue> | undefined {
-  const descriptor = getBuiltinTargetDefinition(target);
+  const descriptor = getBuiltinTargetDefinition(target) ?? getDescriptor(target);
   if (!descriptor) return undefined;
   const raw =
     scope === 'global'
@@ -85,7 +90,7 @@ export function getTargetDetectionPaths(
   target: string,
   scope: TargetLayoutScope = 'project',
 ): readonly string[] {
-  const descriptor = getBuiltinTargetDefinition(target);
+  const descriptor = getBuiltinTargetDefinition(target) ?? getDescriptor(target);
   if (!descriptor) return [];
   if (scope === 'global') {
     return descriptor.globalSupport?.detectionPaths ?? descriptor.globalDetectionPaths ?? [];
@@ -97,7 +102,7 @@ export function getTargetLayout(
   target: string,
   scope: TargetLayoutScope = 'project',
 ): TargetLayout | undefined {
-  const descriptor = getBuiltinTargetDefinition(target);
+  const descriptor = getBuiltinTargetDefinition(target) ?? getDescriptor(target);
   if (!descriptor) return undefined;
   if (scope === 'global') {
     return descriptor.globalSupport?.layout ?? descriptor.global;
@@ -144,12 +149,12 @@ export function getEffectiveTargetSupportLevel(
 ): SupportLevel {
   const baseLevel = getTargetCapabilities(target, scope)?.[feature]?.level ?? 'none';
   if (baseLevel !== 'embedded') return baseLevel;
-  const descriptor = getBuiltinTargetDefinition(target);
+  const descriptor = getBuiltinTargetDefinition(target) ?? getDescriptor(target);
   if (feature === 'commands' && descriptor?.supportsConversion?.commands) {
-    return shouldConvertCommandsToSkills(config, target) ? 'embedded' : 'none';
+    return shouldConvertCommandsToSkills(config, target, true, scope) ? 'embedded' : 'none';
   }
   if (feature === 'agents' && descriptor?.supportsConversion?.agents) {
-    return shouldConvertAgentsToSkills(config, target) ? 'embedded' : 'none';
+    return shouldConvertAgentsToSkills(config, target, true, scope) ? 'embedded' : 'none';
   }
   return baseLevel;
 }
@@ -158,8 +163,9 @@ export function resolveTargetFeatureGenerator(
   target: string,
   feature: TargetFeature,
   config?: ValidatedConfig,
+  scope: TargetLayoutScope = 'project',
 ): FeatureGeneratorFn | undefined {
-  const descriptor = getBuiltinTargetDefinition(target);
+  const descriptor = getBuiltinTargetDefinition(target) ?? getDescriptor(target);
   const generators = descriptor?.generators;
   if (!generators) return undefined;
 
@@ -172,7 +178,7 @@ export function resolveTargetFeatureGenerator(
       if (
         config &&
         descriptor?.supportsConversion?.commands &&
-        !shouldConvertCommandsToSkills(config, target)
+        !shouldConvertCommandsToSkills(config, target, true, scope)
       ) {
         return undefined;
       }
@@ -181,7 +187,7 @@ export function resolveTargetFeatureGenerator(
       if (
         config &&
         descriptor?.supportsConversion?.agents &&
-        !shouldConvertAgentsToSkills(config, target)
+        !shouldConvertAgentsToSkills(config, target, true, scope)
       ) {
         return undefined;
       }

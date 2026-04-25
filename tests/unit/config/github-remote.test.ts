@@ -214,10 +214,17 @@ describe('fetchGithubRemoteExtend', () => {
     );
 
     mockTarExtract.mockImplementationOnce(
-      async (opts: { cwd: string; filter?: (entryPath: string) => boolean }) => {
+      async (opts: {
+        cwd: string;
+        strict?: boolean;
+        filter?: (entryPath: string, entry?: { type?: string }) => boolean;
+      }) => {
+        expect(opts.strict).toBe(true);
         expect(opts.filter?.('../escape.txt')).toBe(false);
         expect(opts.filter?.('/absolute/path.txt')).toBe(false);
         expect(opts.filter?.('org-repo-v1.0.0/.agentsmesh/rules/_root.md')).toBe(true);
+        expect(opts.filter?.('org-repo-v1.0.0/link', { type: 'SymbolicLink' })).toBe(false);
+        expect(opts.filter?.('org-repo-v1.0.0/hardlink', { type: 'Link' })).toBe(false);
         mkdirSync(join(opts.cwd, 'org-repo-v1.0.0'), { recursive: true });
       },
     );

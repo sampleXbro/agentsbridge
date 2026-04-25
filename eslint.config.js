@@ -67,6 +67,17 @@ export default [
     },
   },
   {
-    ignores: ['dist/', 'coverage/', 'node_modules/', '*.config.*', 'website/dist/', 'website/.astro/'],
+    ignores: [
+      'dist/',
+      'coverage/',
+      'node_modules/',
+      '*.config.*',
+      'website/dist/',
+      'website/.astro/',
+      // Plugin fixtures simulate third-party packages; they intentionally use
+      // CommonJS shapes and underscore-prefixed unused parameters that match
+      // real-world plugin authors' code, not project source-style rules.
+      'tests/fixtures/**/*.js',
+    ],
   },
 ];

@@ -7,6 +7,7 @@ import {
   resolveTargetFeatureGenerator,
   rewriteGeneratedOutputPath,
 } from '../../targets/catalog/builtin-targets.js';
+import { getDescriptor } from '../../targets/catalog/registry.js';
 import { GEMINI_SETTINGS } from '../../targets/gemini-cli/constants.js';
 import { computeStatus, featureContext } from './feature-loop.js';
 import { SETTINGS_JSON_PATHS, mergeSettingsJson, mergeGeminiSettingsJson } from './settings.js';
@@ -20,11 +21,24 @@ export async function generatePermissionsFeature(
   scope: TargetLayoutScope,
 ): Promise<void> {
   for (const target of targets) {
-    const gen = resolveTargetFeatureGenerator(target, 'permissions');
+    const gen =
+      resolveTargetFeatureGenerator(target, 'permissions', undefined, scope) ??
+      getDescriptor(target)?.generators.generatePermissions;
     if (!gen) continue;
     for (const out of gen(canonical)) {
-      const resolvedPath = rewriteGeneratedOutputPath(target, out.path, scope);
-      if (resolvedPath === null) continue;
+      let resolvedPath = rewriteGeneratedOutputPath(target, out.path, scope);
+      if (resolvedPath === null) {
+        const desc = getDescriptor(target);
+        if (!desc) continue;
+        const layout =
+          scope === 'global'
+            ? (desc.globalSupport?.layout ?? desc.global ?? desc.project)
+            : desc.project;
+        resolvedPath = layout.rewriteGeneratedPath
+          ? layout.rewriteGeneratedPath(out.path)
+          : out.path;
+        if (resolvedPath === null) continue;
+      }
       const existing = await readFileSafe(join(projectRoot, resolvedPath));
       const content =
         existing !== null && SETTINGS_JSON_PATHS.includes(resolvedPath)
@@ -50,17 +64,31 @@ export async function generateHooksFeature(
   config: ValidatedConfig,
 ): Promise<void> {
   for (const target of targets) {
-    const gen = resolveTargetFeatureGenerator(target, 'hooks', config);
+    const gen =
+      resolveTargetFeatureGenerator(target, 'hooks', config, scope) ??
+      getDescriptor(target)?.generators.generateHooks;
     if (!gen) continue;
     const ctx = featureContext(target, 'hooks', scope);
     let outputs = [...gen(canonical, ctx)];
-    const post = getBuiltinTargetDefinition(target)?.postProcessHookOutputs;
+    const descriptor = getBuiltinTargetDefinition(target) ?? getDescriptor(target);
+    const post = descriptor?.postProcessHookOutputs;
     if (post) {
       outputs = [...(await post(projectRoot, canonical, outputs))];
     }
     for (const out of outputs) {
-      const resolvedPath = rewriteGeneratedOutputPath(target, out.path, scope);
-      if (resolvedPath === null) continue;
+      let resolvedPath = rewriteGeneratedOutputPath(target, out.path, scope);
+      if (resolvedPath === null) {
+        const desc = getDescriptor(target);
+        if (!desc) continue;
+        const layout =
+          scope === 'global'
+            ? (desc.globalSupport?.layout ?? desc.global ?? desc.project)
+            : desc.project;
+        resolvedPath = layout.rewriteGeneratedPath
+          ? layout.rewriteGeneratedPath(out.path)
+          : out.path;
+        if (resolvedPath === null) continue;
+      }
       const existing = await readFileSafe(join(projectRoot, resolvedPath));
       let content = out.content;
       if (SETTINGS_JSON_PATHS.includes(resolvedPath)) {
@@ -85,7 +113,7 @@ export async function generateHooksFeature(
   }
 }
 
-export async function generateGeminiSettingsFeature(
+export async function generateScopedSettingsFeature(
   results: GenerateResult[],
   targets: string[],
   canonical: CanonicalFiles,
@@ -93,13 +121,25 @@ export async function generateGeminiSettingsFeature(
   scope: TargetLayoutScope,
 ): Promise<void> {
   for (const target of targets) {
-    const emit = getBuiltinTargetDefinition(target)?.emitScopedSettings;
+    const descriptor = getBuiltinTargetDefinition(target) ?? getDescriptor(target);
+    const emit = descriptor?.emitScopedSettings;
     if (!emit) continue;
     const outputs = emit(canonical, scope);
     if (outputs.length === 0) continue;
     for (const out of outputs) {
-      const resolvedPath = rewriteGeneratedOutputPath(target, out.path, scope);
-      if (resolvedPath === null) continue;
+      let resolvedPath = rewriteGeneratedOutputPath(target, out.path, scope);
+      if (resolvedPath === null) {
+        const desc = getDescriptor(target);
+        if (!desc) continue;
+        const layout =
+          scope === 'global'
+            ? (desc.globalSupport?.layout ?? desc.global ?? desc.project)
+            : desc.project;
+        resolvedPath = layout.rewriteGeneratedPath
+          ? layout.rewriteGeneratedPath(out.path)
+          : out.path;
+        if (resolvedPath === null) continue;
+      }
       const existing = await readFileSafe(join(projectRoot, resolvedPath));
       const content =
         existing !== null && resolvedPath === GEMINI_SETTINGS

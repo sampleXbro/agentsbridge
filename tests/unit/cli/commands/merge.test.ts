@@ -81,7 +81,7 @@ checksums:
     rmSync(TEST_DIR, { recursive: true, force: true });
     mkdirSync(TEST_DIR, { recursive: true });
 
-    await expect(runMerge({}, TEST_DIR)).rejects.toThrow(/no agentsmesh\.yaml found/i);
+    await expect(runMerge({}, TEST_DIR)).rejects.toThrow(/agentsmesh\.yaml not found/i);
   });
 
   it('resolves ~/.agentsmesh/.lock when --global is set', async () => {

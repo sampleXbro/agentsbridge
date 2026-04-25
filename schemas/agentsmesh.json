@@ -207,31 +207,143 @@
           "type": "object",
           "properties": {
             "codex-cli": {
-              "type": "boolean"
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "project": {
+                      "type": "boolean"
+                    },
+                    "global": {
+                      "type": "boolean"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ]
             }
           },
-          "additionalProperties": false
+          "additionalProperties": {}
         },
         "agents_to_skills": {
           "type": "object",
           "properties": {
             "gemini-cli": {
-              "type": "boolean"
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "project": {
+                      "type": "boolean"
+                    },
+                    "global": {
+                      "type": "boolean"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ]
             },
             "cline": {
-              "type": "boolean"
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "project": {
+                      "type": "boolean"
+                    },
+                    "global": {
+                      "type": "boolean"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ]
             },
             "codex-cli": {
-              "type": "boolean"
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "project": {
+                      "type": "boolean"
+                    },
+                    "global": {
+                      "type": "boolean"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ]
             },
             "windsurf": {
-              "type": "boolean"
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "project": {
+                      "type": "boolean"
+                    },
+                    "global": {
+                      "type": "boolean"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ]
             }
           },
-          "additionalProperties": false
+          "additionalProperties": {}
         }
       },
       "additionalProperties": false
+    },
+    "plugins": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "source": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "source"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "pluginTargets": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*$"
+      }
     }
   },
   "required": [
@@ -240,7 +352,9 @@
     "features",
     "extends",
     "overrides",
-    "collaboration"
+    "collaboration",
+    "plugins",
+    "pluginTargets"
   ],
   "additionalProperties": false,
   "title": "agentsmesh.yaml",

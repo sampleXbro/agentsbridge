@@ -59,6 +59,10 @@
 - **`--global` commands now throw a scope-aware error when `~/.agentsmesh/agentsmesh.yaml` is missing.** The message points at the exact missing path and suggests `agentsmesh init --global` to create the global canonical root, or dropping `--global` to operate on the current project. Applies uniformly to `generate`, `import`, `lint`, `check`, `diff`, `watch`, and `matrix`. Previously a generic "config not found" error left first-time global users guessing. Covered by `tests/unit/config/scope.test.ts`.
 - **`ConfigNotFoundError` constructor accepts an optional `message` override** (`{ cause?, message? }`) so wrappers can supply scope-aware copy without losing the typed error class, `code`, or `path`. Existing callers that pass only `path` (and optional `cause`) are unchanged.
 
+### Removed
+
+- **Native Windows support deferred to a later release.** `package.json` now declares `"os": ["darwin", "linux"]`, the CI matrix dropped `windows-latest`, and the README's Install section calls this out with WSL2 as a workaround. The deferral path and re-enablement checklist are tracked in `docs/roadmap.md` under "Windows support (deferred)". Three POSIX-correctness fixes that landed in this release as defense-in-depth — `installs.yaml` `source` field always written as POSIX (`src/install/source/parse-install-local.ts`), plugin file-URL conversion via `fileURLToPath` instead of `URL.pathname` (`src/plugins/load-plugin.ts`), and `path.join` used in the canonical extend-load test expectations — already pave the way for the eventual re-enablement.
+
 ### Fixed
 
 - **`TS7016` on root import** — `import { ... } from 'agentsmesh'` previously resolved to `./dist/cli.js`, which was built with `dts: false`. Root exports now point at the typed library barrel, and `attw` + `publint` + consumer-smoke guards prevent regression.

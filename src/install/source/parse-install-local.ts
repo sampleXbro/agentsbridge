@@ -16,7 +16,8 @@ export function localParsedFromAbsPath(
     const root = absLocal.slice(0, idx);
     const after = absLocal.slice(idx + abMarker.length);
     const pathFromAb = toPosix(after.replace(/\\/g, '/')).replace(/^\/+/, '');
-    const localSource = relative(configDir, root) || '.';
+    // POSIX-normalize so installs.yaml stays portable across Windows/POSIX clones.
+    const localSource = toPosix(relative(configDir, root)) || '.';
     return {
       kind: 'local',
       rawRef: '',
@@ -28,7 +29,7 @@ export function localParsedFromAbsPath(
     };
   }
 
-  const localSource = relative(configDir, absLocal) || '.';
+  const localSource = toPosix(relative(configDir, absLocal)) || '.';
   return {
     kind: 'local',
     rawRef: '',

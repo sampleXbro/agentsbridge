@@ -3,7 +3,7 @@
  */
 
 import { resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { validateDescriptor } from '../targets/catalog/target-descriptor.schema.js';
 import { registerTargetDescriptor } from '../targets/catalog/registry.js';
 import type { TargetDescriptor } from '../targets/catalog/target-descriptor.js';
@@ -32,9 +32,12 @@ async function importPluginModule(
     source.startsWith('../') ||
     source.startsWith('/')
   ) {
-    // Local file: resolve against project root and convert to file URL
+    // Local file: resolve against project root and convert to file URL.
+    // Use fileURLToPath (not URL.pathname) so Windows drive-prefixed paths
+    // like `file:///C:/...` round-trip correctly — URL.pathname leaves the
+    // leading slash before `C:` which is not a valid filesystem path.
     const resolved = source.startsWith('file:')
-      ? new URL(source).pathname
+      ? fileURLToPath(source)
       : resolve(projectRoot, source);
     importTarget = pathToFileURL(resolved).href;
   } else {

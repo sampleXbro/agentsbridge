@@ -38,7 +38,7 @@ Edit once — generate `CLAUDE.md`, `AGENTS.md`, `.cursor/rules`, `.github/copil
 
 ## Install
 
-Requires **Node.js 20+**.
+Requires **Node.js 20+**. Supported platforms: **Linux** and **macOS**. Native Windows support is deferred — track [the Windows support roadmap entry](docs/roadmap.md) for status. WSL2 works as a workaround.
 
 ```bash
 npm install -D agentsmesh       # or: pnpm add -D / yarn add -D

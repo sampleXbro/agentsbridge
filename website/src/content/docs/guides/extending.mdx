@@ -1,0 +1,171 @@
+---
+title: Extending AgentsMesh
+description: Add new AI tool targets via the scaffolder or the plugin system.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+AgentsMesh ships support for the most popular AI coding tools, but the ecosystem keeps growing. Two paths let you extend coverage without waiting for a core release:
+
+- **Target scaffold** — generate a new built-in target skeleton and contribute it upstream.
+- **Plugin system** — ship a standalone npm package that adds a target at runtime, no fork required.
+
+<Aside type="tip">
+  For a full plugin development walkthrough — global mode, conversions, lint hooks, scoped settings, and more — see the **[Building Plugins](../building-plugins/)** guide.
+</Aside>
+
+---
+
+## Target Scaffold
+
+The scaffolder emits the 10 files needed to integrate a new target into the AgentsMesh source tree.
+
+```bash
+agentsmesh target scaffold foo-ide
+agentsmesh target scaffold foo-ide --name "Foo IDE"
+agentsmesh target scaffold foo-ide --name "Foo IDE" --force   # overwrite existing files
+```
+
+### What gets generated
+
+For `agentsmesh target scaffold foo-ide`:
+
+| File | Purpose |
+|------|---------|
+| `src/targets/foo-ide/constants.ts` | Path and ID constants (project + global) |
+| `src/targets/foo-ide/index.ts` | Full `TargetDescriptor` with project + global layouts, capabilities, conversion support, lint hooks |
+| `src/targets/foo-ide/generator.ts` | `generateRules()` stub |
+| `src/targets/foo-ide/importer.ts` | `importFrom()` stub |
+| `src/targets/foo-ide/linter.ts` | `lintRules()` using shared validator |
+| `src/targets/foo-ide/lint.ts` | Per-feature lint hooks stub |
+| `src/core/reference/import-maps/foo-ide.ts` | Import path mapper |
+| `tests/unit/targets/foo-ide/generator.test.ts` | Generator unit tests |
+| `tests/unit/targets/foo-ide/importer.test.ts` | Importer unit tests |
+| `tests/e2e/fixtures/foo-ide-project/AGENTS.md` | E2E fixture |
+
+The generated descriptor includes:
+- **Global layout** with `rewriteGeneratedPath` for `--global` support
+- **`globalCapabilities`** and **`globalDetectionPaths`**
+- **`supportsConversion`** for commands and agents
+- **Per-feature lint hooks** stub (`lint.ts`)
+
+### Post-scaffold steps
+
+The CLI prints the exact next steps after scaffolding:
+
+1. Add `'foo-ide'` to `TARGET_IDS` in `src/targets/catalog/target-ids.ts`
+2. Add the descriptor import and entry in `src/targets/catalog/builtin-targets.ts`
+3. Export the import-map from `src/core/reference/import-maps/index.ts`
+4. Run `pnpm typecheck && pnpm test -- tests/unit/targets/foo-ide`
+5. Run `pnpm schemas:generate && pnpm matrix:generate`
+6. Fill in the `TODO(agentsmesh-scaffold)` markers in `src/targets/foo-ide/`
+
+---
+
+## Plugin System
+
+Plugins are npm packages (or local paths) that export one or more `TargetDescriptor` objects. AgentsMesh loads them at runtime — no fork, no core PR required. Plugins have full parity with built-in targets: global mode, feature conversions, scoped settings, hook post-processing, and per-feature lint hooks all work the same way.
+
+### Publishing a plugin
+
+A plugin package must export a `descriptor` (or `descriptors` array, or `default`) that satisfies the `TargetDescriptor` interface:
+
+```js
+// agentsmesh-target-foo-ide/index.js
+export const descriptor = {
+  id: 'foo-ide',
+  generators: {
+    name: 'foo-ide',
+    generateRules(canonical) {
+      return canonical.rules.map((rule) => ({
+        path: `.foo-ide/${rule.slug}.md`,
+        content: rule.body,
+      }));
+    },
+    async importFrom(_projectRoot, _options) {
+      return [];
+    },
+  },
+  capabilities: {
+    rules: 'native',
+    additionalRules: 'none',
+    commands: 'none',
+    agents: 'none',
+    skills: 'none',
+    mcp: 'none',
+    hooks: 'none',
+    ignore: 'none',
+    permissions: 'none',
+  },
+  emptyImportMessage: 'No Foo IDE config found.',
+  lintRules: null,
+  project: {
+    paths: {
+      rulePath: (slug) => `.foo-ide/${slug}.md`,
+      commandPath: () => null,
+      agentPath: () => null,
+    },
+  },
+  buildImportPaths: async () => {},
+  detectionPaths: ['.foo-ide'],
+};
+```
+
+In `package.json`, declare `agentsmesh` as a peer dependency:
+
+```json
+{
+  "name": "agentsmesh-target-foo-ide",
+  "type": "module",
+  "peerDependencies": {
+    "agentsmesh": ">=0.6"
+  }
+}
+```
+
+### Consuming a plugin
+
+```bash
+# Add plugin from npm
+agentsmesh plugin add agentsmesh-target-foo-ide
+
+# Add from a local path (useful during development)
+agentsmesh plugin add ./path/to/agentsmesh-target-foo-ide
+
+# List all configured plugins and their load status
+agentsmesh plugin list
+
+# Show descriptor details
+agentsmesh plugin info foo-ide
+
+# Remove a plugin
+agentsmesh plugin remove foo-ide
+```
+
+After adding, `agentsmesh generate` runs the plugin's generators alongside built-in targets. Plugin targets also appear in `agentsmesh lint` and `agentsmesh matrix` output.
+
+### How it works
+
+`agentsmesh plugin add` registers the plugin in `agentsmesh.yaml`:
+
+```yaml
+plugins:
+  - id: foo-ide
+    source: agentsmesh-target-foo-ide
+
+pluginTargets:
+  - foo-ide
+```
+
+At generate time, AgentsMesh dynamically imports each plugin, validates the exported descriptor with a Zod schema, and registers it in the target registry. Invalid descriptors are warned and skipped — one bad plugin does not block other targets.
+
+---
+
+## Known Limitations
+
+- **Plugin registry/discovery** — no centralized index of community-published plugins yet.
+- **SEA (single-binary) + plugins** — dynamic `import()` of npm packages needs special handling in the single-executable build.
+
+<Aside type="note">
+  Previous limitations around `import --from`, hardcoded target lists, conversion config, and plugin parity with built-in targets have been resolved. See the [Building Plugins](../building-plugins/) guide for the full plugin feature set.
+</Aside>

@@ -12,9 +12,16 @@ export function coverageScale(): number {
   return process.env['COVERAGE'] === '1' ? 1.5 : 1;
 }
 
-/** Default `vi.waitFor` timeout for watch assertions (12s, ×1.5 under coverage). */
+/**
+ * Default `vi.waitFor` timeout for watch assertions (45s, ×1.5 under coverage = 67.5s).
+ * Isolated runs finish in ~5s; full-suite under coverage instrumentation
+ * pushes individual `runMatrix` awaits well past 36s. Coverage timer churn
+ * compounds with the chokidar 300ms debounce and the actual generate pass.
+ * Generous headroom is the correct trade-off here — a slow CI gate is
+ * cheaper than an intermittent red.
+ */
 export function watchWaitTimeoutMs(): number {
-  return Math.round(12_000 * coverageScale());
+  return Math.round(45_000 * coverageScale());
 }
 
 /** Idle stability window after watcher events (3s, ×1.5 under coverage). */

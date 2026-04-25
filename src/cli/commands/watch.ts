@@ -27,8 +27,12 @@ function shouldIgnoreWatchPath(
   return (
     relPath === '.lock' ||
     relPath === '.lock.tmp' ||
+    relPath === '.generate.lock' ||
     relPath.endsWith('/.lock') ||
-    relPath.endsWith('/.lock.tmp')
+    relPath.endsWith('/.lock.tmp') ||
+    relPath.endsWith('/.generate.lock') ||
+    relPath.includes('/.generate.lock/') ||
+    relPath.startsWith('.generate.lock/')
   );
 }
 

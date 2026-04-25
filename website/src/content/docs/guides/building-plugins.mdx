@@ -1,0 +1,422 @@
+---
+title: Building Plugins
+description: Step-by-step guide to building, testing, and publishing AgentsMesh plugin targets that have full parity with built-in targets.
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Plugins are npm packages that add new AI tool targets to AgentsMesh at runtime. They export a `TargetDescriptor` object — the same interface that built-in targets use — and get the same capabilities: generation, import, linting, global mode, conversions, scoped settings, and hook post-processing.
+
+This guide walks through building a plugin from scratch.
+
+## Project setup
+
+Create a new npm package. The conventional name is `agentsmesh-target-<id>`:
+
+```bash
+mkdir agentsmesh-target-foo-ide
+cd agentsmesh-target-foo-ide
+npm init -y
+```
+
+Set `"type": "module"` and declare `agentsmesh` as a peer dependency in `package.json`:
+
+```json
+{
+  "name": "agentsmesh-target-foo-ide",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "peerDependencies": {
+    "agentsmesh": ">=0.6"
+  }
+}
+```
+
+## The TargetDescriptor
+
+Every plugin exports a `descriptor` object that tells AgentsMesh how to generate, import, lint, and detect the target. Here is the full interface with all available fields:
+
+### Required fields
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `id` | `string` | Unique target ID (lowercase, hyphens only: `^[a-z][a-z0-9-]*$`) |
+| `generators` | `TargetGenerators` | Feature generator functions |
+| `capabilities` | `TargetCapabilities` | Feature support levels for project scope |
+| `emptyImportMessage` | `string` | Shown when `import --from` finds nothing |
+| `lintRules` | `function \| null` | Rule linter callback, or null to skip |
+| `project` | `TargetLayout` | Project-scope layout (paths, managed outputs) |
+| `buildImportPaths` | `function` | Import reference map builder |
+| `detectionPaths` | `string[]` | Paths used to detect this target during `init` |
+
+### Optional fields
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `globalCapabilities` | `TargetCapabilities` | Feature support levels for global scope (if different from project) |
+| `global` | `TargetLayout` | Global-scope layout with `rewriteGeneratedPath` |
+| `globalDetectionPaths` | `string[]` | Paths to detect this target in global scope |
+| `supportsConversion` | `{ commands?: true, agents?: true }` | Enables user-configurable feature projection |
+| `lint` | `TargetLintHooks` | Per-feature lint hooks (`commands`, `mcp`, `permissions`, `hooks`, `ignore`) |
+| `generateScopeExtras` | `function` | Generate additional outputs beyond the standard feature loop |
+| `sharedArtifacts` | `Record<string, 'owner' \| 'consumer'>` | Declares ownership of shared output paths |
+| `emitScopedSettings` | `function` | Emit native settings sidecar files |
+| `postProcessHookOutputs` | `function` | Async post-pass for hook generator outputs |
+
+## Minimal plugin
+
+The simplest working plugin generates rule files:
+
+```js
+// index.js
+export const descriptor = {
+  id: 'foo-ide',
+  generators: {
+    name: 'foo-ide',
+    generateRules(canonical) {
+      return canonical.rules.map((rule) => ({
+        path: `.foo-ide/${rule.slug}.md`,
+        content: rule.body,
+      }));
+    },
+    async importFrom() {
+      return [];
+    },
+  },
+  capabilities: {
+    rules: 'native',
+    additionalRules: 'none',
+    commands: 'none',
+    agents: 'none',
+    skills: 'none',
+    mcp: 'none',
+    hooks: 'none',
+    ignore: 'none',
+    permissions: 'none',
+  },
+  emptyImportMessage: 'No Foo IDE config found.',
+  lintRules: null,
+  project: {
+    paths: {
+      rulePath: (slug) => `.foo-ide/${slug}.md`,
+      commandPath: () => null,
+      agentPath: () => null,
+    },
+  },
+  buildImportPaths: async () => {},
+  detectionPaths: ['.foo-ide'],
+};
+```
+
+## Feature generators
+
+The `generators` object can include any combination of feature generators. Each receives the parsed canonical files and returns an array of `{ path, content }` outputs:
+
+```js
+generators: {
+  name: 'foo-ide',
+
+  // Required
+  generateRules(canonical) { /* ... */ },
+  async importFrom(projectRoot, options) { /* ... */ },
+
+  // Optional feature generators
+  generateCommands(canonical) { /* ... */ },
+  generateAgents(canonical) { /* ... */ },
+  generateSkills(canonical) { /* ... */ },
+  generateMcp(canonical) { /* ... */ },
+  generatePermissions(canonical) { /* ... */ },
+  generateHooks(canonical) { /* ... */ },
+  generateIgnore(canonical) { /* ... */ },
+
+  // Optional lint hook on generators (legacy)
+  lint(canonical) { /* return LintDiagnostic[] */ },
+},
+```
+
+For each generator you implement, set the corresponding capability to `'native'`, `'embedded'`, or `'partial'` so AgentsMesh knows the feature is supported.
+
+### Capability levels
+
+| Level | Meaning |
+|-------|---------|
+| `'native'` | The tool has first-class support for this feature |
+| `'embedded'` | AgentsMesh projects the feature with metadata for round-trip |
+| `'partial'` | Supported with limitations |
+| `'none'` | Not supported — generator is skipped |
+
+Capabilities can also be objects with a `level` and optional `flavor`:
+
+```js
+capabilities: {
+  agents: { level: 'embedded', flavor: 'markdown' },
+},
+```
+
+## Global mode
+
+To support `agentsmesh generate --global`, add a `global` layout and optionally `globalCapabilities` and `globalDetectionPaths`:
+
+```js
+export const descriptor = {
+  // ...project fields...
+
+  global: {
+    rootInstructionPath: '~/.foo-ide/ROOT.md',
+    skillDir: '~/.foo-ide/skills',
+    paths: {
+      rulePath: (slug) => `~/.foo-ide/rules/${slug}.md`,
+      commandPath: (name) => `~/.foo-ide/commands/${name}.md`,
+      agentPath: (name) => `~/.foo-ide/agents/${name}.md`,
+    },
+    rewriteGeneratedPath(path) {
+      if (path.startsWith('.foo-ide/')) {
+        return '~/.foo-ide/' + path.slice('.foo-ide/'.length);
+      }
+      return path;
+    },
+  },
+
+  // Different capabilities for global scope (optional)
+  globalCapabilities: {
+    rules: 'native',
+    additionalRules: 'none',
+    commands: 'embedded',
+    agents: 'embedded',
+    skills: 'native',
+    mcp: 'native',
+    hooks: 'none',
+    ignore: 'native',
+    permissions: 'none',
+  },
+
+  globalDetectionPaths: ['~/.foo-ide', '~/.foo-ide/ROOT.md'],
+};
+```
+
+<Aside type="tip">
+  `rewriteGeneratedPath` is required for global mode — it transforms project-level paths (`.foo-ide/...`) into user-level paths (`~/.foo-ide/...`).
+</Aside>
+
+### Output families
+
+Declare output families for reference rewriting and root decoration:
+
+```js
+project: {
+  outputFamilies: [
+    { id: 'rules', kind: 'primary', pathPrefix: '.foo-ide/rules/' },
+    { id: 'commands', kind: 'additional', pathPrefix: '.foo-ide/commands/' },
+    { id: 'agents', kind: 'additional', pathPrefix: '.foo-ide/agents/' },
+  ],
+  // ...
+},
+```
+
+### Managed outputs
+
+Declare which directories and files are fully managed by AgentsMesh, so stale artifacts are cleaned up on `generate`:
+
+```js
+project: {
+  managedOutputs: {
+    dirs: ['.foo-ide/rules', '.foo-ide/commands', '.foo-ide/agents'],
+    files: ['.foo-ide/ROOT.md', '.foo-ide/mcp.json', '.fooignore'],
+  },
+  // ...
+},
+```
+
+## Feature conversions
+
+If your target lacks native support for commands or agents but can represent them as skills, declare `supportsConversion`:
+
+```js
+export const descriptor = {
+  // ...
+  supportsConversion: { commands: true, agents: true },
+  capabilities: {
+    commands: 'embedded',   // projected as skills
+    agents: 'embedded',     // projected as skills
+  },
+};
+```
+
+Users can then configure this in `agentsmesh.yaml`. Values can be a boolean (both scopes) or a per-scope object:
+
+```yaml
+conversions:
+  commands_to_skills:
+    foo-ide: true           # both scopes (default when supportsConversion.commands is true)
+  agents_to_skills:
+    foo-ide:                # per-scope control
+      project: true
+      global: false
+```
+
+When `supportsConversion.commands` is declared and the user has not set an explicit override, the conversion defaults to enabled. See the [Conversions](../../configuration/conversions/) reference for the full syntax.
+
+## Per-feature lint hooks
+
+Add target-specific validation for individual features:
+
+```js
+export const descriptor = {
+  // ...
+  lint: {
+    commands(canonical, options) {
+      const issues = [];
+      for (const cmd of canonical.commands) {
+        if (!cmd.description) {
+          issues.push({
+            level: 'warning',
+            file: cmd.source || '',
+            target: 'foo-ide',
+            message: `Command '${cmd.name}' is missing a description`,
+          });
+        }
+      }
+      return issues;
+    },
+    mcp(canonical, options) { /* ... */ },
+    permissions(canonical, options) { /* ... */ },
+    hooks(canonical, options) { /* ... */ },
+    ignore(canonical, options) { /* ... */ },
+  },
+};
+```
+
+The `options` parameter includes `{ scope: 'project' | 'global' }` so hooks can differentiate between scopes.
+
+## Scoped settings
+
+If your tool has a native settings file (like Gemini's `settings.json`), emit it with `emitScopedSettings`:
+
+```js
+export const descriptor = {
+  // ...
+  emitScopedSettings(canonical, scope) {
+    const settings = {
+      version: 1,
+      featureCount: canonical.rules.length,
+    };
+    const prefix = scope === 'global' ? '~/.foo-ide' : '.foo-ide';
+    return [{ path: `${prefix}/settings.json`, content: JSON.stringify(settings, null, 2) }];
+  },
+};
+```
+
+## Hook post-processing
+
+If your tool needs to generate additional files alongside hooks (like wrapper scripts), use `postProcessHookOutputs`:
+
+```js
+export const descriptor = {
+  // ...
+  async postProcessHookOutputs(projectRoot, canonical, outputs) {
+    const processed = [...outputs];
+    for (const output of outputs) {
+      if (output.path.endsWith('.json')) {
+        processed.push({
+          path: output.path.replace('.json', '.wrapper.sh'),
+          content: '#!/bin/sh\nexec "$@"\n',
+        });
+      }
+    }
+    return processed;
+  },
+};
+```
+
+## Scope extras
+
+Generate additional outputs beyond the standard feature loop with `generateScopeExtras`:
+
+```js
+export const descriptor = {
+  // ...
+  async generateScopeExtras(canonical, projectRoot, scope, enabledFeatures) {
+    const results = [];
+    if (scope === 'global' && enabledFeatures.has('rules')) {
+      results.push({
+        path: '~/.foo-ide/scope-info.txt',
+        content: `scope=${scope}`,
+      });
+    }
+    return results;
+  },
+};
+```
+
+## Shared artifacts
+
+If your target generates files into a shared path (like `.agents/skills/`), declare ownership:
+
+```js
+export const descriptor = {
+  // ...
+  sharedArtifacts: {
+    '.foo-ide/skills/': 'owner',
+  },
+};
+```
+
+Use `'owner'` if your target controls writes to that prefix, or `'consumer'` if you only read from it.
+
+Only one target may declare `'owner'` for a given prefix. If two targets claim the same prefix — or one prefix is a path-prefix of another (e.g. `.agents/` and `.agents/skills/`) — AgentsMesh fails fast at startup with an error naming both targets and both prefixes. Resolve by changing one role to `'consumer'` or by namespacing the prefix.
+
+## Testing your plugin
+
+### Local development
+
+During development, add the plugin from a local path:
+
+```bash
+agentsmesh plugin add ./path/to/agentsmesh-target-foo-ide
+agentsmesh generate --dry-run   # preview without writing
+agentsmesh generate             # generate for real
+```
+
+### Validation
+
+AgentsMesh validates every plugin descriptor with a Zod schema at load time. Invalid descriptors are warned and skipped — one bad plugin does not block other targets.
+
+Common validation errors:
+- `id` must match `^[a-z][a-z0-9-]*$`
+- `generators.generateRules` and `generators.importFrom` are required
+- Capability levels must be `'native'`, `'embedded'`, `'partial'`, or `'none'`
+
+### Verify with matrix and lint
+
+```bash
+# Confirm your target appears in the matrix
+agentsmesh matrix
+
+# Run lint to check all targets including plugins
+agentsmesh lint
+```
+
+## Publishing
+
+1. Ensure `"type": "module"` and `"peerDependencies"` are set in `package.json`
+2. Export `descriptor` (or `descriptors` array, or `default`) from your main entry point
+3. Publish to npm:
+
+```bash
+npm publish
+```
+
+Users install with:
+
+```bash
+agentsmesh plugin add agentsmesh-target-foo-ide
+agentsmesh generate
+```
+
+## Complete example
+
+For a comprehensive example covering every `TargetDescriptor` field, see the [rich-plugin test fixture](https://github.com/sampleXbro/agentsmesh/blob/master/tests/fixtures/plugins/rich-plugin/index.js) in the AgentsMesh source. It exercises all 8 feature generators, per-feature lint hooks, project and global layouts, output families, shared artifacts, scope extras, scoped settings, hook post-processing, and conversion support.

@@ -8,6 +8,7 @@ import {
   getBuiltinTargetDefinition,
   resolveTargetFeatureGenerator,
 } from '../../targets/catalog/builtin-targets.js';
+import { getDescriptor } from '../../targets/catalog/registry.js';
 import { preferEquivalentCodexAgents } from '../../targets/catalog/agents-md-overlap.js';
 import { rewriteGeneratedReferences } from '../reference/rewriter.js';
 import { validateGeneratedMarkdownLinks } from '../reference/validate-generated-markdown-links.js';
@@ -17,7 +18,7 @@ import { decoratePrimaryRootInstructions } from './root-instruction-decorator.js
 import {
   generatePermissionsFeature,
   generateHooksFeature,
-  generateGeminiSettingsFeature,
+  generateScopedSettingsFeature,
 } from './optional-features.js';
 import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
 
@@ -38,9 +39,15 @@ export { resolveOutputCollisions };
  */
 export async function generate(ctx: GenerateContext): Promise<GenerateResult[]> {
   const { config, canonical, projectRoot, scope = 'project', targetFilter } = ctx;
-  const targets = targetFilter
-    ? config.targets.filter((t) => targetFilter.includes(t))
-    : config.targets;
+  const allTargets = [...config.targets, ...(config.pluginTargets ?? [])];
+  const targets = targetFilter ? allTargets.filter((t) => targetFilter.includes(t)) : allTargets;
+
+  function resolveGen(
+    target: string,
+    feature: Parameters<typeof resolveTargetFeatureGenerator>[1],
+  ): ReturnType<typeof resolveTargetFeatureGenerator> {
+    return resolveTargetFeatureGenerator(target, feature, config, scope);
+  }
   const hasRules = config.features.includes('rules');
   const hasCommands = config.features.includes('commands');
   const hasAgents = config.features.includes('agents');
@@ -60,7 +67,7 @@ export async function generate(ctx: GenerateContext): Promise<GenerateResult[]> 
     hasRules,
     scope,
     'rules',
-    (target) => resolveTargetFeatureGenerator(target, 'rules', config),
+    (target) => resolveGen(target, 'rules'),
   );
 
   await generateFeature(
@@ -71,7 +78,7 @@ export async function generate(ctx: GenerateContext): Promise<GenerateResult[]> 
     hasCommands,
     scope,
     'commands',
-    (target) => resolveTargetFeatureGenerator(target, 'commands', config),
+    (target) => resolveGen(target, 'commands'),
   );
 
   await generateFeature(
@@ -82,7 +89,7 @@ export async function generate(ctx: GenerateContext): Promise<GenerateResult[]> 
     hasAgents,
     scope,
     'agents',
-    (target) => resolveTargetFeatureGenerator(target, 'agents', config),
+    (target) => resolveGen(target, 'agents'),
   );
 
   await generateFeature(
@@ -93,10 +100,10 @@ export async function generate(ctx: GenerateContext): Promise<GenerateResult[]> 
     hasSkills,
     scope,
     'skills',
-    (target) => resolveTargetFeatureGenerator(target, 'skills', config),
+    (target) => resolveGen(target, 'skills'),
   );
   await generateFeature(results, targets, canonical, projectRoot, hasMcp, scope, 'mcp', (target) =>
-    resolveTargetFeatureGenerator(target, 'mcp', config),
+    resolveGen(target, 'mcp'),
   );
 
   // Permissions: same pattern but merges with existing settings.json
@@ -115,13 +122,13 @@ export async function generate(ctx: GenerateContext): Promise<GenerateResult[]> 
     hasIgnore,
     scope,
     'ignore',
-    (target) => resolveTargetFeatureGenerator(target, 'ignore', config),
+    (target) => resolveGen(target, 'ignore'),
   );
 
   // Per-target scope extras (e.g. Claude Code output-styles in global mode)
   const enabledFeatures = new Set(config.features);
   for (const target of targets) {
-    const descriptor = getBuiltinTargetDefinition(target);
+    const descriptor = getBuiltinTargetDefinition(target) ?? getDescriptor(target);
     const scopeExtras = descriptor?.globalSupport?.scopeExtras ?? descriptor?.generateScopeExtras;
     if (scopeExtras) {
       const extras = await scopeExtras(canonical, projectRoot, scope, enabledFeatures);
@@ -129,9 +136,9 @@ export async function generate(ctx: GenerateContext): Promise<GenerateResult[]> 
     }
   }
 
-  // Gemini settings: when mcp, ignore, hooks, or agents (experimental.enableAgents) enabled
-  if (hasMcp || hasIgnore || hasHooks || hasAgents) {
-    await generateGeminiSettingsFeature(results, targets, canonical, projectRoot, scope);
+  // Scoped settings: target-specific sidecars (e.g. Gemini settings.json, plugin settings)
+  if (hasMcp || hasIgnore || hasHooks || hasAgents || hasPermissions) {
+    await generateScopedSettingsFeature(results, targets, canonical, projectRoot, scope);
   }
 
   // Decoration must run before reference rewriting so that renderPrimaryRootInstruction output

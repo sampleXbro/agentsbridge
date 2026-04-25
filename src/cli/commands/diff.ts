@@ -6,6 +6,7 @@ import { loadScopedConfig } from '../../config/core/scope.js';
 import { loadCanonicalWithExtends } from '../../canonical/extends/extends.js';
 import { generate as runEngine } from '../../core/generate/engine.js';
 import { computeDiff, formatDiffSummary } from '../../core/differ.js';
+import { bootstrapPlugins } from '../../plugins/bootstrap-plugins.js';
 import { logger } from '../../utils/output/logger.js';
 
 /**
@@ -29,6 +30,7 @@ export async function runDiff(
       : undefined;
 
   const { config, context } = await loadScopedConfig(root, scope);
+  await bootstrapPlugins(config, root);
   const { canonical } = await loadCanonicalWithExtends(
     config,
     context.configDir,

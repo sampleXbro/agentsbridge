@@ -1,0 +1,346 @@
+---
+draft: false
+title: Programmatic API
+description: AgentsMesh as a typed ESM library — load config, generate, lint, diff, check, import, register plugins, and the full error taxonomy. Drive every CLI capability from a script, IDE extension, or CI runner.
+---
+
+AgentsMesh ships as a typed ESM library alongside the CLI. Every CLI capability — `generate`, `import`, `lint`, `diff`, `check` — is exposed as a function you can call from a script, CI workflow, IDE extension, or another tool.
+
+Available since **v0.6**. Requires Node.js 20+.
+
+## Entrypoints
+
+| Subpath | Use when |
+| --- | --- |
+| `agentsmesh` | Full surface in one import — runtime functions, error classes, canonical types, target-descriptor types. |
+| `agentsmesh/engine` | Generation, import, lint, diff, check + error taxonomy + config loaders + the types those functions need. |
+| `agentsmesh/canonical` | `loadCanonical`, `loadCanonicalFiles`, and the canonical domain types. |
+| `agentsmesh/targets` | Built-in catalog (`getTargetCatalog`, `getAllDescriptors`, `getDescriptor`), `registerTargetDescriptor` for plugins, and target-descriptor types. |
+
+Every entrypoint resolves to a real `.d.ts` under strict TypeScript — there is no `TS7016: Could not find a declaration file` for any public symbol. The `tests/consumer-smoke/` job in CI installs the packed tarball into a clean strict-mode TS project on every push and `tsc --noEmit`s every export below.
+
+## Quick start — the canonical 4-line pattern
+
+```ts
+import { loadConfig, loadCanonical, generate } from 'agentsmesh';
+
+const { config } = await loadConfig(process.cwd());
+const canonical = await loadCanonical(process.cwd());
+const results = await generate({ config, canonical, projectRoot: process.cwd() });
+```
+
+`results` is an array of `{ target, path, content, status }` — exactly what the CLI would write, but no files have been written yet. Inspect, transform, or write them yourself.
+
+## Loading config
+
+### `loadConfig(projectRoot)`
+
+Searches upward from `projectRoot` for `agentsmesh.yaml`, parses it, validates against the Zod schema, merges `agentsmesh.local.yaml` if present, and returns a typed `ValidatedConfig`.
+
+```ts
+import { loadConfig, type ValidatedConfig } from 'agentsmesh';
+
+const { config, configDir } = await loadConfig(process.cwd());
+const typed: ValidatedConfig = config;
+console.log(typed.targets, typed.features);
+```
+
+Throws `ConfigNotFoundError` (code `AM_CONFIG_NOT_FOUND`) when nothing is found, or `ConfigValidationError` (code `AM_CONFIG_INVALID`) with a list of issues when validation fails.
+
+### `loadConfigFromDirectory(configDir)`
+
+Like `loadConfig` but does not search upward — reads `<configDir>/agentsmesh.yaml` directly. Used by global scope where the canonical directory is `~/.agentsmesh/`.
+
+## Loading canonical content
+
+### `loadCanonical(projectRoot)`
+
+Loads the entire `.agentsmesh/` tree into a typed `CanonicalFiles` value. Pass a project root (the directory that contains `.agentsmesh/`) or the canonical directory itself — both shapes are accepted.
+
+```ts
+import { loadCanonical, type CanonicalFiles } from 'agentsmesh';
+
+const canonical: CanonicalFiles = await loadCanonical(process.cwd());
+console.log(canonical.rules.length, 'rules');
+console.log(canonical.skills.map((s) => s.name));
+```
+
+`loadCanonicalFiles` is exported as a compatibility alias.
+
+## Generation
+
+### `generate(ctx)`
+
+Runs the generation pipeline and returns the planned output set. **Does not write files** — the CLI's `generate` command wraps this with the process lock and atomic-write step.
+
+```ts
+import {
+  generate,
+  type GenerateContext,
+  type GenerateResult,
+} from 'agentsmesh';
+
+const ctx: GenerateContext = {
+  config,
+  canonical,
+  projectRoot: process.cwd(),
+  scope: 'project',         // or 'global'
+  // targetFilter: ['cursor'], // optional whitelist
+};
+
+const results: GenerateResult[] = await generate(ctx);
+for (const r of results) {
+  console.log(`${r.status} ${r.target} ${r.path}`);
+}
+```
+
+Each `GenerateResult` carries `target`, `path` (relative to `projectRoot`), `content`, `currentContent`, and `status` (`'created' | 'updated' | 'unchanged' | 'skipped'`).
+
+### `resolveOutputCollisions(results)`
+
+When two targets emit the same output path with the same content (e.g. Codex CLI and Antigravity both produce `AGENTS.md`), this collapses them into one result. The CLI calls it automatically; expose it for tools that compose multiple `generate()` runs.
+
+## Import
+
+### `importFrom(target, opts)`
+
+Imports a tool's native config back into canonical form on disk under `.agentsmesh/`. Returns one `ImportResult` per file imported.
+
+```ts
+import { importFrom, type ImportResult } from 'agentsmesh';
+
+const results: ImportResult[] = await importFrom('claude-code', {
+  root: process.cwd(),
+  scope: 'project', // or 'global' for ~/.claude/
+});
+
+for (const r of results) {
+  console.log(`imported ${r.fromPath} → ${r.toPath}`);
+}
+```
+
+`target` is a built-in target ID. For plugin-provided targets, use the target's own importer via `getDescriptor(target).generators.importFrom(...)`.
+
+## Lint
+
+### `lint(opts)`
+
+Runs target-specific linters across all enabled targets and returns structured diagnostics. Pure: no I/O, no logging.
+
+```ts
+import { lint, type LintOptions, type LintResult } from 'agentsmesh';
+
+const result: LintResult = await lint({
+  config,
+  canonical,
+  projectRoot: process.cwd(),
+  scope: 'project',
+  // targetFilter: ['cursor'], // optional whitelist
+});
+
+if (result.hasErrors) {
+  for (const d of result.diagnostics.filter((x) => x.level === 'error')) {
+    console.error(`${d.file} (${d.target}): ${d.message}`);
+  }
+  process.exit(1);
+}
+```
+
+`LintDiagnostic` is `{ level: 'error' | 'warning'; file: string; target: string; message: string }`.
+
+## Diff
+
+### `diff(ctx)`
+
+Calls `generate(ctx)` internally and returns both the raw results and unified diffs against on-disk content. Equivalent to the CLI's `diff` command minus the formatting.
+
+```ts
+import { diff, formatDiffSummary } from 'agentsmesh';
+
+const { results, diffs, summary } = await diff(ctx);
+
+for (const d of diffs) {
+  process.stdout.write(d.patch);
+}
+console.log(formatDiffSummary(summary));
+```
+
+`summary` is `{ new: number; updated: number; unchanged: number; deleted: number }`.
+
+### `computeDiff(results)`
+
+Pure helper for callers that already have generate results in hand. Useful when you want to display drift without re-running generation.
+
+```ts
+import { computeDiff } from 'agentsmesh';
+
+const results = await generate(ctx);
+const { diffs, summary } = computeDiff(results);
+```
+
+## Check (lock-sync)
+
+### `check(opts)`
+
+Compares the lock file at `<canonicalDir>/.lock` against the current canonical state and resolved extends. Pure: no logging, no exit codes — returns a structured `LockSyncReport`.
+
+```ts
+import { check, type LockSyncReport } from 'agentsmesh';
+
+const report: LockSyncReport = await check({
+  config,
+  configDir: process.cwd(),
+  canonicalDir: `${process.cwd()}/.agentsmesh`,
+});
+
+if (!report.hasLock) {
+  console.error('Not initialized — run agentsmesh generate first.');
+  process.exit(1);
+}
+
+if (!report.inSync) {
+  console.error('Drift detected:');
+  for (const p of report.modified) console.error(`  modified: ${p}`);
+  for (const p of report.added) console.error(`  added: ${p}`);
+  for (const p of report.removed) console.error(`  removed: ${p}`);
+  for (const p of report.extendsModified) console.error(`  extend changed: ${p}`);
+  process.exit(1);
+}
+```
+
+`LockSyncReport.lockedViolations` is the subset of changes that violate `collaboration.lock_features` — useful for distinguishing "drift the team allows" from "drift that should fail CI".
+
+## Plugin registration
+
+### `registerTargetDescriptor(descriptor)`
+
+Registers a custom target at runtime. Plugins ship one of these as their default export. See [Building Plugins](../guides/building-plugins/) for the full descriptor contract.
+
+```ts
+import { registerTargetDescriptor, type TargetDescriptor } from 'agentsmesh';
+
+const myDescriptor: TargetDescriptor = { /* ... */ };
+registerTargetDescriptor(myDescriptor);
+```
+
+After registration, the descriptor participates in `generate`, `importFrom`, `lint`, the supported-tools matrix, and global-mode resolution exactly like a built-in.
+
+### Catalog inspection
+
+```ts
+import { getTargetCatalog, getDescriptor, getAllDescriptors } from 'agentsmesh';
+
+const builtins = getTargetCatalog();   // readonly built-in array (12 today)
+const plugins = getAllDescriptors();   // registered plugin descriptors
+const cursor = getDescriptor('cursor'); // single lookup, builtins or plugins
+```
+
+`getTargetCatalog()` returns built-ins; `getAllDescriptors()` returns the plugin registry. `getDescriptor(id)` resolves either side.
+
+## Error taxonomy
+
+All public errors inherit from `AgentsMeshError` and carry a stable `code` field (`AgentsMeshErrorCode`). Branch on the class or on `err.code` — never on message strings.
+
+```ts
+import {
+  AgentsMeshError,
+  ConfigNotFoundError,
+  ConfigValidationError,
+  TargetNotFoundError,
+  ImportError,
+  GenerationError,
+  RemoteFetchError,
+  LockAcquisitionError,
+  FileSystemError,
+  type AgentsMeshErrorCode,
+} from 'agentsmesh';
+
+try {
+  await loadConfig(process.cwd());
+} catch (err) {
+  if (err instanceof ConfigNotFoundError) {
+    console.error(`config missing at ${err.path}`);
+    process.exit(2);
+  }
+  if (err instanceof AgentsMeshError) {
+    console.error(`agentsmesh error (${err.code}): ${err.message}`);
+    process.exit(1);
+  }
+  throw err;
+}
+```
+
+| Class | `code` | Thrown when |
+| --- | --- | --- |
+| `ConfigNotFoundError` | `AM_CONFIG_NOT_FOUND` | `agentsmesh.yaml` is missing. In `--global` scope the message points at `~/.agentsmesh/agentsmesh.yaml` and suggests `agentsmesh init --global`. |
+| `ConfigValidationError` | `AM_CONFIG_INVALID` | YAML parses but fails Zod validation. Carries `issues: readonly string[]`. |
+| `TargetNotFoundError` | `AM_TARGET_NOT_FOUND` | A target ID is referenced but neither built-in nor registered. |
+| `ImportError` | `AM_IMPORT_FAILED` | An importer failed to read or parse a target's native config. |
+| `GenerationError` | `AM_GENERATION_FAILED` | A target's generator threw, or output collisions could not be resolved. |
+| `RemoteFetchError` | `AM_REMOTE_FETCH_FAILED` | A remote `extends:` source could not be fetched (network, 404, hash mismatch). |
+| `LockAcquisitionError` | `AM_LOCK_ACQUISITION_FAILED` | Another process holds `.agentsmesh/.generate.lock` and the retry budget is exhausted. Carries `lockPath` and `holder`. |
+| `FileSystemError` | `AM_FILESYSTEM` | Atomic write or directory operation failed. Carries `path` and optional `errnoCode` (e.g. `'EISDIR'`). |
+
+`ConfigNotFoundError`'s constructor accepts an optional `message` override (`{ cause?, message? }`) so wrappers can supply scope-aware copy without losing the typed class, `code`, or `path`. Existing callers that pass only `path` (and optional `cause`) are unchanged.
+
+## Canonical types
+
+Imported from `agentsmesh` or `agentsmesh/canonical`. These mirror the on-disk `.agentsmesh/` shape:
+
+```ts
+import type {
+  CanonicalFiles,
+  CanonicalRule,
+  CanonicalCommand,
+  CanonicalAgent,
+  CanonicalSkill,
+  SkillSupportingFile,
+  Permissions,
+  IgnorePatterns,
+  McpServer,
+  StdioMcpServer,
+  UrlMcpServer,
+  McpConfig,
+  Hooks,
+  HookEntry,
+} from 'agentsmesh';
+```
+
+`McpServer` is a discriminated union of `StdioMcpServer` and `UrlMcpServer` — narrow with the `transport` field. `CanonicalSkill.supportingFiles` carries the skill's full file tree (`relativePath`, `absolutePath`, `content`).
+
+## Target-descriptor types
+
+For plugin authors and tools that introspect target capabilities. Imported from `agentsmesh` or `agentsmesh/targets`:
+
+```ts
+import type {
+  TargetDescriptor,
+  TargetLayout,
+  TargetLayoutScope,
+  TargetOutputFamily,
+  TargetPathResolvers,
+  TargetManagedOutputs,
+  TargetLintHooks,
+  FeatureLinter,
+  RuleLinter,
+  ScopeExtrasFn,
+  ImportPathBuilder,
+  GlobalTargetSupport,
+  TargetCapabilities,
+  TargetGenerators,
+} from 'agentsmesh';
+```
+
+The full descriptor contract — including which fields are required vs optional, the `globalSupport` block shape, and `sharedArtifacts` semantics — is documented in [Building Plugins](../guides/building-plugins/).
+
+## Stability
+
+The exports listed on this page are the supported public API. Anything imported via deep paths (`agentsmesh/dist/...`, `agentsmesh/src/...`) is internal and may change without notice.
+
+A formal **semver freeze** of the entire surface is planned for **v1.0**. Until then, the project is pre-1.0 and breaking changes follow the changelog. Three CI gates protect the contract on every push:
+
+- **`publint`** — package metadata sanity (exports ordering, `files`, module type)
+- **`@arethetypeswrong/cli`** with the `esm-only` profile — verifies every entrypoint resolves to types under both `node16 (from ESM)` and `bundler` module resolution
+- **`tests/consumer-smoke/`** — packs the tarball, installs it into a throwaway strict-mode TS project, and `tsc --noEmit`s every public symbol — catches `TS7016` and type-resolution regressions that packaging-metadata checks miss
+
+You can run the same gates locally with `pnpm publint`, `pnpm attw`, and `pnpm consumer-smoke`. The runtime behaviour is covered by `tests/integration/programmatic-api.integration.test.ts`, which exercises every function and every error class with strict assertions on every release.

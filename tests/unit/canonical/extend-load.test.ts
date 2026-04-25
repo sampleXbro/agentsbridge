@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { join } from 'node:path';
 import { loadCanonicalForExtend } from '../../../src/canonical/extends/extend-load.js';
 import { exists } from '../../../src/utils/filesystem/fs.js';
 import { logger } from '../../../src/utils/output/logger.js';
@@ -92,7 +93,9 @@ describe('extend-load', () => {
 
       const result = await loadCanonicalForExtend(baseExtend);
 
-      expect(mockExists).toHaveBeenCalledWith('/path/to/extend/.agentsmesh');
+      // Use path.join in expectations: production uses join() to produce
+      // platform-correct paths for filesystem ops; tests must match.
+      expect(mockExists).toHaveBeenCalledWith(join('/path/to/extend', '.agentsmesh'));
       expect(mockLoadCanonicalFiles).toHaveBeenCalledWith('/path/to/extend');
       expect(result).toEqual(mockFiles);
     });
@@ -172,7 +175,7 @@ describe('extend-load', () => {
       mockExists.mockResolvedValue(false);
 
       await expect(loadCanonicalForExtend(extendWithPath)).rejects.toThrow(
-        'Extend "test-extend": path does not exist: /path/to/extend/subdir',
+        `Extend "test-extend": path does not exist: ${join('/path/to/extend', 'subdir')}`,
       );
     });
 
@@ -212,7 +215,9 @@ describe('extend-load', () => {
 
       const result = await loadCanonicalForExtend(extendWithPath);
 
-      expect(mockNormalizeSlicePath).toHaveBeenCalledWith('/path/to/extend/subdir');
+      // Production uses join(base, ext.path) — Windows produces backslashes.
+      expect(mockNormalizeSlicePath).toHaveBeenCalledWith(join('/path/to/extend', 'subdir'));
+      // Mock returned the POSIX sliceRoot above, so this assertion matches the mock value verbatim.
       expect(mockLoadCanonicalSliceAtPath).toHaveBeenCalledWith('/path/to/extend/subdir');
       expect(result).toEqual(mockSlice);
     });

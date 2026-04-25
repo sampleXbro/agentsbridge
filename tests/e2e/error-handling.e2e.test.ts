@@ -15,11 +15,11 @@ describe('error-handling', () => {
     if (dir) cleanup(dir);
   });
 
-  it('no config file — run generate in empty dir → exit 1, stderr contains "No agentsmesh.yaml"', async () => {
+  it('no config file — run generate in empty dir → exit 1, stderr mentions missing agentsmesh.yaml', async () => {
     dir = createTestProject();
     const r = await runCli('generate', dir);
     expect(r.exitCode).toBe(1);
-    expect(r.stderr).toContain('No agentsmesh.yaml');
+    expect(r.stderr).toMatch(/agentsmesh\.yaml not found/);
   });
 
   it('invalid YAML — write broken YAML → exit 1, stderr contains parse error', async () => {

@@ -1,12 +1,17 @@
 {
   "name": "agentsmesh",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "One canonical source for AI coding agent rules, commands, skills, MCP, hooks, and permissions — synced across Claude Code, Cursor, Copilot, Continue, Junie, Gemini CLI, Cline, Codex CLI, Windsurf, Antigravity, and Roo Code.",
   "type": "module",
-  "main": "./dist/cli.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "author": "sampleXbro",
   "exports": {
-    ".": "./dist/cli.js",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
     "./engine": {
       "types": "./dist/engine.d.ts",
       "import": "./dist/engine.js",
@@ -30,6 +35,10 @@
   "engines": {
     "node": ">=20.0.0"
   },
+  "os": [
+    "darwin",
+    "linux"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/sampleXbro/agentsmesh.git"
@@ -59,6 +68,9 @@
     "changeset": "changeset",
     "version": "changeset version",
     "release": "pnpm build && changeset publish",
+    "publint": "publint",
+    "attw": "attw --pack . --profile esm-only",
+    "consumer-smoke": "./scripts/consumer-smoke.sh",
     "install-global": "pnpm build && pnpm pack && pnpm add -g $(pwd)/agentsmesh-$(node -p 'require(\"./package.json\").version').tgz"
   },
   "keywords": [
@@ -104,6 +116,7 @@
     "LICENSE"
   ],
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.2",
     "@changesets/cli": "^2.27.12",
     "@eslint/js": "^10.0.1",
     "@types/node": "^25.6.0",
@@ -115,6 +128,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "prettier": "^3.8.2",
+    "publint": "^0.3.18",
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",

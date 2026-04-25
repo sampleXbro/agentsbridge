@@ -4,20 +4,24 @@ title: Conversions
 description: Control how AgentsMesh projects features to tools that lack native support — commands to skills, agents to skills, and more.
 ---
 
-The `conversions` field in `agentsmesh.yaml` controls how features are projected when a target lacks native support for them.
+The `conversions` field in `agentsmesh.yaml` controls how features are projected when a target lacks native support for them. This works for both built-in and plugin targets.
 
 ## Configuration
+
+Each conversion value can be either a **boolean** (applies to both project and global scope) or a **per-scope object**:
 
 ```yaml
 conversions:
   commands_to_skills:
-    codex-cli: true     # project commands as skills (default: true)
+    codex-cli: true       # both scopes — project commands as skills (default: true)
     continue: true
     junie: true
 
   agents_to_skills:
-    cline: true         # project agents as skills (default: true)
-    windsurf: true
+    cline: true           # both scopes
+    windsurf:             # per-scope: convert in project mode, skip in global
+      project: true
+      global: false
     junie: true
     gemini-cli: true
 ```
@@ -64,6 +68,40 @@ conversions:
   agents_to_skills:
     cline: false     # skip agents for Cline entirely
 ```
+
+## Per-scope conversions
+
+When you need different behavior for project and global mode, use an object instead of a boolean:
+
+```yaml
+conversions:
+  commands_to_skills:
+    codex-cli:
+      project: true    # convert commands in project mode
+      global: false    # skip commands in global mode
+```
+
+If a scope key is omitted, the builtin default applies for that scope. For example, `{ project: false }` disables project-scope conversion but leaves global-scope at its default (which for `codex-cli` is `true`).
+
+A plain boolean (`true` / `false`) applies to both scopes — it's shorthand for `{ project: <value>, global: <value> }`.
+
+## Plugin targets
+
+Conversions work with plugin targets the same way they work with built-in targets. Any plugin that declares `supportsConversion` in its descriptor can be configured here:
+
+```yaml
+plugins:
+  - id: foo-ide
+    source: agentsmesh-target-foo-ide
+
+conversions:
+  commands_to_skills:
+    foo-ide: true       # works for any plugin target ID
+  agents_to_skills:
+    foo-ide: true
+```
+
+When a plugin declares `supportsConversion: { commands: true }` and the user has not set an explicit override, the conversion defaults to `true`. Set to `false` to disable it.
 
 ## Lossless round-trip guarantee
 

@@ -86,7 +86,14 @@ export async function fetchGithubRemoteExtend(
     await tar.extract({
       file: tarPath,
       cwd: extractDir,
-      filter: (entryPath: string) => !isZipSlipPath(entryPath),
+      strict: true,
+      filter: (entryPath, entry) => {
+        if (isZipSlipPath(entryPath)) return false;
+        if (entry && 'type' in entry && (entry.type === 'Link' || entry.type === 'SymbolicLink')) {
+          return false;
+        }
+        return true;
+      },
     });
   } finally {
     await rm(tarPath, { force: true }).catch(() => {});

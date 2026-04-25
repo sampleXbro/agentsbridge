@@ -10,6 +10,7 @@ import {
   rename,
   readdir,
   copyFile,
+  rm,
   stat,
   symlink,
   unlink,
@@ -19,6 +20,7 @@ import {
 } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { constants } from 'node:fs';
+import { FileSystemError } from '../../core/errors.js';
 
 const UTF8_BOM = '\uFEFF';
 
@@ -39,9 +41,10 @@ export async function readFileSafe(path: string): Promise<string | null> {
   } catch (err) {
     const e = err as ErrnoLike;
     if (e.code === 'ENOENT') return null;
-    throw new Error(
+    throw new FileSystemError(
+      path,
       `Failed to read ${path}: ${e.message}. Ensure the file exists and is readable.`,
-      { cause: err },
+      { cause: err, errnoCode: e.code },
     );
   }
 }
@@ -55,15 +58,32 @@ export async function readFileSafe(path: string): Promise<string | null> {
 export async function writeFileAtomic(path: string, content: string): Promise<void> {
   const dir = dirname(path);
   await mkdir(dir, { recursive: true });
+  try {
+    const info = await lstat(path);
+    if (info.isDirectory()) {
+      throw new FileSystemError(
+        path,
+        `Failed to write ${path}: target exists and is a directory. Remove it or choose a different path.`,
+        { errnoCode: 'EISDIR' },
+      );
+    }
+  } catch (err) {
+    if (err instanceof FileSystemError) throw err;
+    const e = err as ErrnoLike;
+    if (e.code !== 'ENOENT') throw err;
+  }
   const tmpPath = `${path}.tmp`;
   try {
     await writeFile(tmpPath, content, 'utf-8');
     await rename(tmpPath, path);
   } catch (err) {
+    await rm(tmpPath, { force: true }).catch(() => {});
     const e = err as ErrnoLike;
-    throw new Error(`Failed to write ${path}: ${e.message}. Check permissions and disk space.`, {
-      cause: err,
-    });
+    throw new FileSystemError(
+      path,
+      `Failed to write ${path}: ${e.message}. Check permissions and disk space.`,
+      { cause: err, errnoCode: e.code },
+    );
   }
 }
 
@@ -102,9 +122,11 @@ export async function readDirRecursive(dir: string, visited?: Set<string>): Prom
   } catch (err) {
     const e = err as ErrnoLike;
     if (e.code === 'ENOENT' || e.code === 'ENOTDIR' || e.code === 'ELOOP') return [];
-    throw new Error(`Failed to read directory ${dir}: ${e.message}. Check permissions.`, {
-      cause: err,
-    });
+    throw new FileSystemError(
+      dir,
+      `Failed to read directory ${dir}: ${e.message}. Check permissions.`,
+      { cause: err, errnoCode: e.code },
+    );
   }
   const seen = visited ?? new Set<string>();
   if (seen.has(canonicalDir)) return [];
@@ -131,9 +153,11 @@ export async function readDirRecursive(dir: string, visited?: Set<string>): Prom
   } catch (err) {
     const e = err as ErrnoLike;
     if (e.code === 'ENOENT' || e.code === 'ENOTDIR' || e.code === 'EACCES') return [];
-    throw new Error(`Failed to read directory ${dir}: ${e.message}. Check permissions.`, {
-      cause: err,
-    });
+    throw new FileSystemError(
+      dir,
+      `Failed to read directory ${dir}: ${e.message}. Check permissions.`,
+      { cause: err, errnoCode: e.code },
+    );
   }
 }
 

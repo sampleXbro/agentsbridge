@@ -15,9 +15,9 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'AgentsMesh',
-      tagline: 'One config. Nine AI coding tools. Zero drift.',
+      tagline: 'One config. Every AI coding tool. Zero drift.',
       description:
-        'AgentsMesh maintains a single canonical configuration in .agentsmesh/ and syncs it bidirectionally to Claude Code, Cursor, Copilot, Continue, Junie, Gemini CLI, Cline, Codex CLI, and Windsurf.',
+        'AgentsMesh maintains a single canonical configuration in .agentsmesh/ and syncs it bidirectionally to every major AI coding tool — Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf, and more.',
       logo: {
         light: './src/assets/logo-light.svg',
         dark: './src/assets/logo-dark.svg',
@@ -112,6 +112,7 @@ export default defineConfig({
             { label: 'Sharing Config Across Repos', slug: 'guides/sharing-config' },
             { label: 'CI Drift Detection', slug: 'guides/ci-drift-detection' },
             { label: 'Community Packs', slug: 'guides/community-packs' },
+            { label: 'Building Plugins', slug: 'guides/building-plugins' },
             { label: 'Local Dev Overrides', slug: 'guides/local-overrides' },
           ],
         },
@@ -121,6 +122,7 @@ export default defineConfig({
             { label: 'Supported Tools Matrix', slug: 'reference/supported-tools' },
             { label: 'Generation Pipeline', slug: 'reference/generation-pipeline' },
             { label: 'Managed Embedding', slug: 'reference/managed-embedding' },
+            { label: 'Programmatic API', slug: 'reference/programmatic-api' },
           ],
         },
       ],

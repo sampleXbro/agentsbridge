@@ -115,23 +115,20 @@ describe('compatibility matrix docs', () => {
     const markdown = readFileSync(join(ROOT, relativePath), 'utf-8');
     const heading =
       relativePath === 'README.md'
-        ? '### Global scope (`agentsmesh matrix --global`)'
+        ? '### Global scope (`agentsmesh generate --global`)'
         : '## Feature matrix (global scope)';
     expect(parseFeatureMatrix(markdown, heading)).toEqual(expectedRows(SUPPORT_MATRIX_GLOBAL));
   });
 
-  it('documents Antigravity global workflows wherever global paths are listed', () => {
-    const readme = readFileSync(join(ROOT, 'README.md'), 'utf-8');
+  it('documents Antigravity global workflows in the authoritative supported-tools page', () => {
     const supportedTools = readFileSync(
       join(ROOT, 'website/src/content/docs/reference/supported-tools.mdx'),
       'utf-8',
     );
 
-    for (const doc of [readme, supportedTools]) {
-      expect(doc).toContain('~/.gemini/antigravity/workflows/');
-      expect(doc).not.toContain('commands/workflows are not emitted');
-      expect(doc).not.toContain('Workflows/commands are not emitted');
-    }
+    expect(supportedTools).toContain('~/.gemini/antigravity/workflows/');
+    expect(supportedTools).not.toContain('commands/workflows are not emitted');
+    expect(supportedTools).not.toContain('Workflows/commands are not emitted');
   });
 
   it('keeps the website global-mode table in canonical target order', () => {

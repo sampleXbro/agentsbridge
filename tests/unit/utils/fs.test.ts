@@ -53,6 +53,24 @@ describe('writeFileAtomic', () => {
     await writeFileAtomic(path, 'second');
     expect(await readFileSafe(path)).toBe('second');
   });
+
+  it('refuses to write when target path is an existing directory', async () => {
+    const path = join(TEST_DIR, 'existing-dir');
+    mkdirSync(path, { recursive: true });
+    await expect(writeFileAtomic(path, 'x')).rejects.toThrow(/is a directory/);
+  });
+
+  it('cleans up .tmp sidecar if write fails', async () => {
+    const dirAsFile = join(TEST_DIR, 'blocks-tmp');
+    // Create a directory at the .tmp path so writeFile fails.
+    mkdirSync(`${dirAsFile}.tmp`, { recursive: true });
+    await expect(writeFileAtomic(dirAsFile, 'x')).rejects.toThrow(/Failed to write/);
+    // The .tmp path still exists as the pre-created dir, but no orphaned file is left behind.
+    // Also validate the happy path: no .tmp orphan after a successful write.
+    const happy = join(TEST_DIR, 'happy.txt');
+    await writeFileAtomic(happy, 'ok');
+    expect(await exists(`${happy}.tmp`)).toBe(false);
+  });
 });
 
 describe('exists', () => {

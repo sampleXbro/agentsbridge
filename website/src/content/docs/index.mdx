@@ -1,10 +1,10 @@
 ---
 draft: false
-title: AgentsMesh — One Config for Every AI Coding Tool
-description: Open-source CLI that syncs AI coding assistant configuration across Claude Code, Cursor, Copilot, Gemini CLI, Windsurf, and more. One canonical .agentsmesh/ directory, bidirectional import/generate, community skill registry, and CI drift detection.
+title: AgentsMesh — One AI Coding Config for Every Tool
+description: Open-source CLI that syncs a single `.agentsmesh/` directory to every major AI coding tool — Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf, Continue, Cline, Kiro, Codex CLI, Junie, Roo Code, Antigravity, and more as they ship. Project + global mode, bidirectional import/generate, plugin system, community packs, CI drift detection.
 template: splash
 hero:
-  tagline: One canonical .agentsmesh/ directory replaces scattered tool configs. Import what you have, generate for every tool you use, install community skills — and let CI catch drift before it ships.
+  tagline: One canonical .agentsmesh/ directory — synced to every major AI coding tool. Project and global mode, bidirectional import, plugin system, community packs, and CI drift detection. Replace scattered `CLAUDE.md`, `.cursor/rules`, `.github/copilot-instructions.md`, `.gemini/settings.json`, and the rest with one source of truth.
   image:
     dark: ../../assets/logo-dark.svg
     light: ../../assets/logo-light.svg
@@ -17,9 +17,9 @@ hero:
       link: ./reference/supported-tools/
       icon: document
       variant: secondary
-    - text: CLI Reference
-      link: ./cli/
-      icon: open-book
+    - text: Building Plugins
+      link: ./guides/building-plugins/
+      icon: puzzle
       variant: secondary
 ---
 
@@ -37,18 +37,18 @@ import SoftwareApplicationJsonLd from '../../components/SoftwareApplicationJsonL
   <div class="am-hero-badges"><img src="https://img.shields.io/npm/v/agentsmesh?style=flat-square" alt="npm version" /><img src="https://img.shields.io/npm/dm/agentsmesh?style=flat-square" alt="npm downloads" /><img src="https://github.com/sampleXbro/agentsmesh/actions/workflows/ci.yml/badge.svg" alt="CI" /><img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="License: MIT" /></div>
 </div>
 
-## The Problem
+## The problem — every AI coding tool has its own config
 
-Every AI coding assistant has its own config layout and filenames. Change a rule in one place and forget the others, and behavior drifts between editors and workflows.
+Claude Code reads `CLAUDE.md`. Cursor wants `.cursor/rules/*.mdc`. GitHub Copilot expects `.github/copilot-instructions.md`. Gemini CLI looks at `GEMINI.md` and `.gemini/settings.json`. Windsurf needs `.windsurf/rules/`. Codex CLI uses `AGENTS.md` and `.codex/config.toml`. Every tool adds its own layout for rules, commands, agents, skills, MCP servers, hooks, ignore files, and permissions.
 
-Scale that across a team where people use different tools — and keeping instructions, skills, and automation aligned becomes a maintenance problem.
+Change a rule in one place, forget the others, and behavior drifts between editors. Scale that across a team where one developer uses Cursor, another Claude Code, a reviewer Copilot — and keeping instructions aligned becomes a maintenance problem.
 
-## The Solution
+## The solution — one canonical directory, every tool
 
 ```bash
-# One directory, all your AI tool config
 .agentsmesh/
-  rules/_root.md     # ← edit here
+  rules/_root.md       # ← edit once
+  rules/*.md
   commands/*.md
   agents/*.md
   skills/*/SKILL.md
@@ -59,92 +59,129 @@ Scale that across a team where people use different tools — and keeping instru
 ```
 
 ```bash
-# Generate outputs for every target in your config
-agentsmesh generate
+agentsmesh generate    # produces CLAUDE.md, .cursor/rules/, .github/copilot-instructions.md,
+                       # .gemini/settings.json, .windsurf/rules/, AGENTS.md, .codex/config.toml,
+                       # .kiro/steering/, .cline/, .junie/, .roo/, .agents/, and more
 ```
 
-AgentsMesh is for teams that want one durable source of truth for AI coding tool configuration instead of maintaining a parallel set of prompts, rules, agents, and MCP settings in every editor. The canonical `.agentsmesh/` directory is plain text, versioned with the repo, easy to review in pull requests, and safe to evolve as new tools enter the stack.
-
-That matters when one developer works in Cursor, another uses Claude Code, a reviewer checks changes in Copilot, and CI still needs a reliable answer to "are the generated tool files still in sync?" AgentsMesh gives you one editing surface, one lock-checked output set, and one import/generate workflow that keeps those environments aligned.
+AgentsMesh gives teams one editing surface, one lock-checked output set, and one import/generate workflow that keeps every environment aligned — with **bidirectional sync** so you can adopt it on existing projects without losing work.
 
 ## Why AgentsMesh
 
 <CardGrid>
   <Card title="One Source of Truth" icon="pencil">
-    Edit `.agentsmesh/`, generate everywhere. No more copy-pasting rules between tool directories. No more drift.
+    Edit `.agentsmesh/`, generate for every tool. No more copy-pasting rules between `.claude/`, `.cursor/`, `.github/`, `.gemini/`, `.windsurf/`, and `.codex/` directories.
   </Card>
   <Card title="Bidirectional Sync" icon="sync">
-    Import existing tool configs into canonical form, then generate back out. Lossless round-trip — no manual reformatting.
+    Import existing tool configs into canonical form, then generate back out. Lossless round-trip, no manual reformatting.
   </Card>
-  <Card title="Install from Anywhere" icon="puzzle">
-    `agentsmesh install` pulls skills, rules, agents, and commands from GitHub, GitLab, git URLs, or local paths. Packs are tracked in `installs.yaml` and restored on `--sync` after a fresh clone.
+  <Card title="Global Mode" icon="laptop">
+    `agentsmesh generate --global` syncs user-level config from `~/.agentsmesh/` to `~/.claude/`, `~/.cursor/`, `~/.codex/`, and every other supported tool. Project and plugin targets both supported.
   </Card>
-  <Card title="Community Skill Registry" icon="star">
-    Browse and install curated skills, agents, and commands from the built-in catalog. Share your own packs by publishing a repo — no registry signup required.
+  <Card title="Plugin System" icon="puzzle">
+    Add new AI tools via standalone npm packages — no fork, no core PR. Plugins have full parity with built-ins: global mode, feature conversions, scoped settings, per-feature lint hooks.
   </Card>
   <Card title="CI Drift Detection" icon="warning">
-    `agentsmesh check` exits with code 1 if generated files have drifted from the lock. Catch drift in PRs before it ships.
-  </Card>
-  <Card title="Lossless Projection" icon="puzzle">
-    When a tool lacks native support for a feature, AgentsMesh embeds it with enough metadata to round-trip on re-import. No data loss.
+    `agentsmesh check` exits with code 1 if generated files drifted from the lock. Catch drift in PRs before it ships.
   </Card>
   <Card title="Team-Safe Collaboration" icon="group">
-    Lock files track generated state. `agentsmesh merge` resolves conflicts after `git merge`. Collaboration settings prevent accidental overrides.
+    Lock files track generated state. `agentsmesh merge` resolves `.lock` conflicts after `git merge`. Collaboration settings (`lock_features`, `strategy`) prevent accidental overrides.
+  </Card>
+  <Card title="Lossless Projection" icon="puzzle">
+    When a tool lacks native support for a feature, AgentsMesh embeds it with metadata to round-trip on re-import. No data loss.
+  </Card>
+  <Card title="Community Packs" icon="star">
+    `agentsmesh install github:org/pack` pulls skills, rules, agents, and commands from GitHub, GitLab, git URLs, or local paths. Tracked in `installs.yaml`, restored on `--sync` after a fresh clone.
   </Card>
   <Card title="Real Operational Tooling" icon="setting">
-    `diff`, `lint`, `watch`, `check`, `merge`, and `matrix` are first-class commands — not afterthoughts.
+    `diff`, `lint`, `watch`, `check`, `merge`, and `matrix` are first-class commands — not afterthoughts. All accept `--targets` and `--global`.
+  </Card>
+  <Card title="Growing tool coverage" icon="list-format">
+    Works with Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf, Continue, Cline, Kiro, Codex CLI, Junie, Roo Code, Antigravity — and new AI coding tools are added as the ecosystem grows.
+  </Card>
+  <Card title="Programmatic API" icon="seti:typescript">
+    Typed ESM library — `import { generate, importFrom, loadCanonical, registerTargetDescriptor } from 'agentsmesh'`. Drive generation from scripts, IDE extensions, MCP servers, or CI without spawning the CLI. [Reference →](./reference/programmatic-api/)
   </Card>
 </CardGrid>
 
-## Install community skills in seconds
+## Quick start
+
+### New project
 
 ```bash
-# Install a skill pack from GitHub
-agentsmesh install github:my-org/ai-skills@v1.0.0
-
-# Install specific rules from a subdirectory
-agentsmesh install github:team/standards --path rules --as rules
-
-# Restore all packs after a fresh clone
-agentsmesh install --sync
-```
-
-Installed packs live in `.agentsmesh/packs/`, are tracked in `.agentsmesh/installs.yaml`, and merge into canonical config on every `generate`. See the [install docs](./cli/install/) and the [community packs guide](./guides/community-packs/) for details.
-
-## Broad tool coverage
-
-AgentsMesh grows with the ecosystem. New AI coding tools ship frequently, and AgentsMesh adds support for each one — with native mappings where the tool allows and lossless embedded projections where it doesn't.
-
-Check the **[supported tools matrix](./reference/supported-tools/)** for the full per-tool breakdown of rules, commands, agents, skills, MCP, hooks, ignore, and permissions.
-
-For a generated view from your local install, run [`agentsmesh matrix`](./cli/matrix/) and compare with the docs matrix when upgrading.
-
-## Quick Start
-
-```bash
-# Install
 npm install -D agentsmesh
-
-# Scaffold the canonical directory
 npx agentsmesh init
-
-# Edit your root rule
-# vi .agentsmesh/rules/_root.md
-
-# Generate for all configured targets
+# edit .agentsmesh/rules/_root.md
 npx agentsmesh generate
 ```
 
-**Already have tool configs?** Import them first:
+### Existing project — adopt with one import
 
 ```bash
-npx agentsmesh import --from cursor
-npx agentsmesh import --from claude-code
+npx agentsmesh import --from cursor       # or claude-code, copilot, codex-cli, gemini-cli, ...
 npx agentsmesh generate
+```
+
+### Personal global config
+
+```bash
+npx agentsmesh init --global
+npx agentsmesh import --global --from claude-code
+npx agentsmesh generate --global          # writes to ~/.claude/, ~/.cursor/, etc.
 ```
 
 <Aside type="tip">
   The CLI is available as both `agentsmesh` and the shorter alias `amsh`.
 </Aside>
+
+## Three ways to use AgentsMesh
+
+### 1. Team config (project mode)
+
+```bash
+agentsmesh init
+agentsmesh generate                       # outputs to .claude/, .cursor/, .github/, etc.
+agentsmesh check                          # CI gate — exit 1 on drift
+```
+
+One `.agentsmesh/` directory in your repo, committed with code. Every developer on the team gets the same rules, skills, agents, and MCP servers regardless of which tool they use. See the [multi-tool teams guide](./guides/multi-tool-teams/) for patterns.
+
+### 2. Personal setup (global mode)
+
+```bash
+agentsmesh init --global
+agentsmesh import --global --from claude-code
+agentsmesh generate --global              # syncs to ~/.claude/, ~/.cursor/, ~/.codex/, ...
+```
+
+One `~/.agentsmesh/` directory for your personal tooling across every repo. Every built-in target and every plugin supports global mode. See the [supported tools matrix](./reference/supported-tools/#global-mode) for per-tool paths.
+
+### 3. Extensibility (plugins)
+
+```bash
+agentsmesh plugin add agentsmesh-target-my-tool
+agentsmesh plugin list                    # show registered plugins + load status
+agentsmesh generate                       # plugins run alongside built-ins
+```
+
+Plugins are npm packages that export a `TargetDescriptor`. Full parity with built-in targets: project + global mode, feature conversions, scoped settings, per-feature lint hooks, and hook post-processing. See the [Building Plugins](./guides/building-plugins/) guide for a complete walkthrough.
+
+## Broad tool coverage
+
+AgentsMesh ships native support for every major AI coding tool — with native mappings where the tool allows, and lossless embedded projections where it doesn't:
+
+**Claude Code** (`CLAUDE.md`, `.claude/agents/`, `.claude/skills/`, `.claude/commands/`, `.claude/settings.json`, `.claude/hooks.json`) · **Cursor** (`.cursor/rules/*.mdc`, `AGENTS.md`, `.cursor/mcp.json`) · **GitHub Copilot** (`.github/copilot-instructions.md`, `.github/agents/`, `.github/prompts/`) · **Gemini CLI** (`GEMINI.md`, `.gemini/settings.json`, `.gemini/commands/*.toml`) · **Windsurf** (`.windsurf/rules/`, `.windsurf/workflows/`, `.windsurf/mcp_config.json`) · **Continue** (`.continue/rules/`, `.continue/prompts/`, `.continue/config.yaml`) · **Cline** (`.clinerules/`, `.cline/skills/`, MCP, hooks) · **Kiro** (`.kiro/steering/`, `.kiro/skills/`, `.kiro/hooks/`) · **Codex CLI** (`AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`) · **Junie** (`AGENTS.md`, `.junie/agents/`, `.junie/commands/`, `.junie/skills/`) · **Roo Code** (`.roo/rules/`, `.roomodes`, `.roo/commands/`) · **Antigravity** (`.agents/rules/general.md`, `.agents/skills/`, `.agents/workflows/`)
+
+All with support for **rules, commands, agents, skills, MCP servers, hooks, ignore patterns, and permissions**. See the **[full feature matrix](./reference/supported-tools/)** for native vs. embedded support per tool, or run [`agentsmesh matrix`](./cli/matrix/) locally to see what your config produces.
+
+## Install community skills in seconds
+
+```bash
+agentsmesh install github:my-org/ai-skills@v1.0.0
+agentsmesh install github:team/standards --path rules --as rules
+agentsmesh install --sync                 # restore packs after a fresh clone
+```
+
+Installed packs live in `.agentsmesh/packs/`, are tracked in `.agentsmesh/installs.yaml`, and merge into canonical config on every `generate`. See the [install docs](./cli/install/) and [community packs guide](./guides/community-packs/).
 
 <SoftwareApplicationJsonLd />

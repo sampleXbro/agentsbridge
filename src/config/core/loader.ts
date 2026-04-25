@@ -6,6 +6,7 @@ import { parse as parseYaml } from 'yaml';
 import { join, dirname, resolve } from 'node:path';
 import { readFileSafe, exists } from '../../utils/filesystem/fs.js';
 import { logger } from '../../utils/output/logger.js';
+import { ConfigNotFoundError, ConfigValidationError } from '../../core/errors.js';
 import { configSchema, type ValidatedConfig } from './schema.js';
 
 const CONFIG_FILENAME = 'agentsmesh.yaml';
@@ -41,18 +42,14 @@ export async function findConfigPath(startDir: string): Promise<string | null> {
 export async function loadConfig(configPath: string): Promise<ValidatedConfig> {
   const content = await readFileSafe(configPath);
   if (content === null) {
-    throw new Error(
-      `Config file not found: ${configPath}. Create agentsmesh.yaml in project root.`,
-    );
+    throw new ConfigNotFoundError(configPath);
   }
 
   const raw = parseYaml(content) as unknown;
   const result = configSchema.safeParse(raw);
   if (!result.success) {
-    const issues = result.error.issues.map((i) => i.message).join('; ');
-    throw new Error(`Invalid config at ${configPath}: ${issues}. Fix the YAML and try again.`, {
-      cause: result.error,
-    });
+    const issues = result.error.issues.map((i) => i.message);
+    throw new ConfigValidationError(configPath, issues, { cause: result.error });
   }
   return result.data;
 }
@@ -163,9 +160,7 @@ export async function loadConfigFromDir(
 ): Promise<{ config: ValidatedConfig; configDir: string }> {
   const configPath = await findConfigPath(startDir);
   if (configPath === null) {
-    throw new Error(
-      `No agentsmesh.yaml found from ${startDir}. Run 'agentsmesh init' to create one.`,
-    );
+    throw new ConfigNotFoundError(join(startDir, CONFIG_FILENAME));
   }
   return loadConfigFromExactDir(dirname(configPath));
 }

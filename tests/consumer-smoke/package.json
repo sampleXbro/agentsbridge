@@ -1,0 +1,7 @@
+{
+  "name": "agentsmesh-consumer-smoke",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Consumer smoke test — simulates a downstream TS project importing agentsmesh from an installed npm tarball. Catches TS7016 and missing type exports before they hit npm."
+}

@@ -13,7 +13,7 @@ export function buildCompatibilityMatrix(
   scope: TargetLayoutScope = 'project',
 ): CompatibilityRow[] {
   const rows: CompatibilityRow[] = [];
-  const targets = config.targets;
+  const targets = [...config.targets, ...(config.pluginTargets ?? [])];
 
   for (const featureId of config.features) {
     let label: string;

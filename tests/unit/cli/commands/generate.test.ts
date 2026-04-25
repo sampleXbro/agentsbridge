@@ -698,6 +698,64 @@ description: "Root"
     }
   });
 
+  it('global mode prefixes log paths with ~/ so users cannot mistake them for project writes', async () => {
+    // The rootBase for scope='global' is homedir(), so writes go to ~/<path>.
+    // The log must reflect that — a raw `.claude/settings.json` looks project-local.
+    vi.stubEnv('HOME', TEST_DIR);
+    vi.stubEnv('USERPROFILE', TEST_DIR);
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'agentsmesh.yaml'),
+      `version: 1\ntargets: [claude-code]\nfeatures: [rules]\n`,
+    );
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
+      `---\nroot: true\ndescription: "Root"\n---\n# Root\n`,
+    );
+
+    let output = '';
+    const write = process.stdout.write.bind(process.stdout);
+    process.stdout.write = (chunk: string | Uint8Array) => {
+      output += String(chunk);
+      return true;
+    };
+    try {
+      await expect(runGenerate({ global: true }, TEST_DIR, { printMatrix: false })).resolves.toBe(
+        0,
+      );
+      expect(output).toMatch(/created ~\/\.claude\/CLAUDE\.md/);
+      expect(output).not.toMatch(/(?<!~\/)\.claude\/CLAUDE\.md/);
+    } finally {
+      process.stdout.write = write;
+    }
+  });
+
+  it('project mode logs paths without the ~/ prefix', async () => {
+    writeFileSync(
+      join(TEST_DIR, 'agentsmesh.yaml'),
+      `version: 1\ntargets: [claude-code]\nfeatures: [rules]\n`,
+    );
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
+      `---\nroot: true\ndescription: "Root"\n---\n# Root\n`,
+    );
+
+    let output = '';
+    const write = process.stdout.write.bind(process.stdout);
+    process.stdout.write = (chunk: string | Uint8Array) => {
+      output += String(chunk);
+      return true;
+    };
+    try {
+      await expect(runGenerate({}, TEST_DIR, { printMatrix: false })).resolves.toBe(0);
+      expect(output).toMatch(/created \.claude\/CLAUDE\.md/);
+      expect(output).not.toMatch(/~\/\.claude\/CLAUDE\.md/);
+    } finally {
+      process.stdout.write = write;
+    }
+  });
+
   it('unchanged summary skips "Generated:" log when all files unchanged', async () => {
     writeFileSync(
       join(TEST_DIR, 'agentsmesh.yaml'),

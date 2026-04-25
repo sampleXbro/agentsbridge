@@ -6,6 +6,8 @@ import {
   getTargetLayout,
   rewriteGeneratedOutputPath,
 } from '../../targets/catalog/builtin-targets.js';
+import { getDescriptor } from '../../targets/catalog/registry.js';
+import { normalizeTargetCapabilities } from '../../targets/catalog/capabilities.js';
 import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
 import type { CapabilityFeatureKey } from '../../targets/catalog/capabilities.js';
 import type {
@@ -24,7 +26,18 @@ export function featureContext(
   feature: CapabilityFeatureKey,
   scope: TargetLayoutScope,
 ): GenerateFeatureContext {
-  const caps = getTargetCapabilities(target, scope);
+  let caps = getTargetCapabilities(target, scope);
+  if (!caps) {
+    // Fall back to registry for plugin targets
+    const desc = getDescriptor(target);
+    if (desc) {
+      const rawCaps =
+        scope === 'global'
+          ? (desc.globalSupport?.capabilities ?? desc.globalCapabilities ?? desc.capabilities)
+          : desc.capabilities;
+      caps = normalizeTargetCapabilities(rawCaps);
+    }
+  }
   return {
     capability: caps?.[feature] ?? { level: 'none' },
     scope,
@@ -47,8 +60,20 @@ export async function generateFeature(
     if (!gen) continue;
     const ctx = featureContext(target, feature, scope);
     for (const out of gen(canonical, ctx)) {
-      const resolvedPath = rewriteGeneratedOutputPath(target, out.path, scope);
-      if (resolvedPath === null) continue;
+      // rewriteGeneratedOutputPath returns null for unknown targets — fall back to registry
+      let resolvedPath = rewriteGeneratedOutputPath(target, out.path, scope);
+      if (resolvedPath === null) {
+        const desc = getDescriptor(target);
+        if (!desc) continue;
+        const layout =
+          scope === 'global'
+            ? (desc.globalSupport?.layout ?? desc.global ?? desc.project)
+            : desc.project;
+        resolvedPath = layout.rewriteGeneratedPath
+          ? layout.rewriteGeneratedPath(out.path)
+          : out.path;
+        if (resolvedPath === null) continue;
+      }
       const existing = await readFileSafe(join(projectRoot, resolvedPath));
       results.push({
         target,
@@ -57,7 +82,16 @@ export async function generateFeature(
         currentContent: existing ?? undefined,
         status: computeStatus(existing, out.content),
       });
-      const layout = getTargetLayout(target, scope);
+      let layout = getTargetLayout(target, scope);
+      if (!layout) {
+        const desc = getDescriptor(target);
+        layout =
+          desc !== undefined
+            ? scope === 'global'
+              ? (desc.globalSupport?.layout ?? desc.global ?? desc.project)
+              : desc.project
+            : undefined;
+      }
       if (layout?.mirrorGlobalPath) {
         const raw = layout.mirrorGlobalPath(resolvedPath, targets);
         const mirrorPaths = raw === null ? [] : Array.isArray(raw) ? raw : [raw];

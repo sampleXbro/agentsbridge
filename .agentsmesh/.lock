@@ -1,7 +1,7 @@
 # Auto-generated. DO NOT EDIT MANUALLY.
 # Tracks the state of all config files for team conflict resolution.
 
-generated_at: 2026-04-26T07:44:22.062Z
+generated_at: 2026-04-26T15:40:29.218Z
 generated_by: serhii
 lib_version: 0.6.0
 checksums:
@@ -40,7 +40,7 @@ checksums:
   skills/package-release-engineering/SKILL.md: sha256:8faf0e41dbb50534527bc003738364bcea42022304601797816e07220875b93d
   skills/post-feature-qa/SKILL.md: sha256:4dd35d952ba767ede6f7297c5a922eb89f1a7b845f6f3803f76e996ed9c67a3a
   skills/post-feature-qa/references/edge-case-checklist.md: sha256:77bb7a50f3dd281003e146a5313a85799603739e049646502904d0b7b8451c70
-  skills/prepare-release/SKILL.md: sha256:6296fc73134ae2e0aef28a0574cbb33e837de16c104343e61c2bab4fe47d426d
+  skills/prepare-release/SKILL.md: sha256:c2877ea97c1b57bf74aec63a5dbe8126aa8858f865aaa730f892cd9ccbccbace
   skills/quality-gates/SKILL.md: sha256:0959ff54fcfb830aea12bfdb06dc8f1ace181125b32c75635a77e8fb3cbcd184
   skills/release-manager/README.md: sha256:a9743dd563d62fa68c726aded2ab783e6f756627ed787b7291c7e0a76b94417d
   skills/release-manager/SKILL.md: sha256:6a931844e7275fd03077cd94fe24a5929f9bc7bad4de2c9d30ebd5c5662855ca

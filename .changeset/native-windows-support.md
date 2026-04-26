@@ -1,0 +1,13 @@
+---
+'agentsmesh': minor
+---
+
+Native Windows support is now first-class. `windows-latest` × Node 22 joins `ubuntu-latest` × Node 20/22/24 and `macos-latest` × Node 22 in the CI quality matrix, the `os: ["darwin", "linux"]` restriction is removed from `package.json`, and the README/website call out Linux, macOS, and Windows as equally supported platforms.
+
+The install/pack persistence layer is now separator-agnostic: `installs.yaml` `source`/`path`/`paths` and `pack.yaml` local-source fields are always serialized as POSIX through the new `src/install/core/portable-paths.ts` helper, regardless of the host separator. `agentsmesh install <local-path>` parses Windows paths (including cross-drive sources and `.agentsmesh/` segments split by backslashes) into portable manifest entries, and legacy manifests written on Windows are normalized on read so existing repos converge without migration. `agentsmesh import --from windsurf` and `--from codex-cli` now detect nested `AGENTS.md` / `AGENTS.override.md` via `basename(srcPath)`; the previous `srcPath.endsWith('/AGENTS.md')` check silently skipped nested rules on Windows because `readDirRecursive` returns native separators. `scripts/flake-check.ts` resolves `pnpm.cmd` on `win32`, and `tests/helpers/node-bin.ts` is the single source for `node_modules/.bin/<name>` shim resolution across platforms.
+
+A new Windows path-safety contract (`src/utils/filesystem/windows-path-safety.ts` plus `tests/contract/windows-path-safety.matrix.test.ts`) asserts that every generated artifact path emitted by every builtin target — in both project and global scope — survives a Windows clone/checkout/write cycle. Reserved device names (case-insensitive `CON`/`PRN`/`AUX`/`NUL`/`COM1-9`/`LPT1-9`), reserved characters (`<>:"|?*` plus ASCII control chars), trailing dots/spaces, and case-only collisions on default NTFS / APFS volumes are now regression-locked across 48 contract assertions.
+
+`agentsmesh lint` warns when `hooks.yaml` is non-empty for `cline` or `copilot`, because both targets emit `.sh` wrapper scripts (`.clinerules/hooks/*.sh`, `.github/hooks/scripts/*.sh`) with `#!/usr/bin/env bash` headers that need a POSIX shell (git-bash or WSL) to execute on Windows. Other targets (claude-code, cursor, windsurf, kiro, gemini-cli) embed the user's `command` string directly into JSON config and stay fully portable. The Windows portability story for hooks is documented in `website/src/content/docs/canonical-config/hooks.mdx`.
+
+Also fixed: `tests/integration/lint.integration.test.ts` stops hardcoding `shell: '/bin/sh'` plus `2>&1` for stderr capture (which ENOENTed on Windows runners) — it now spawns `process.execPath` via `spawnSync` and concatenates the captured streams.

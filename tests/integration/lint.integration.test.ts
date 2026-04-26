@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { execSync } from 'node:child_process';
+import { execSync, spawnSync } from 'node:child_process';
 
 const TEST_DIR = join(tmpdir(), 'am-integration-lint');
 const CLI_PATH = join(process.cwd(), 'dist', 'cli.js');
@@ -70,12 +70,12 @@ globs: lib/**/*.ts
 Lib rules
 `,
     );
-    // Warnings go to stderr; merge with stdout to capture
-    const out = execSync(`node ${CLI_PATH} lint 2>&1`, {
+    // Warnings go to stderr; capture both streams without relying on a POSIX shell.
+    const result = spawnSync(process.execPath, [CLI_PATH, 'lint'], {
       cwd: TEST_DIR,
       encoding: 'utf-8',
-      shell: '/bin/sh',
     });
+    const out = `${result.stdout}${result.stderr}`;
     expect(out).toContain('match 0 files');
     expect(out).toContain('warning');
   });

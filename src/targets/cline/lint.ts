@@ -16,3 +16,18 @@ export function lintCommands(canonical: CanonicalFiles): LintDiagnostic[] {
       ),
     );
 }
+
+export function lintHooks(canonical: CanonicalFiles): LintDiagnostic[] {
+  if (!canonical.hooks) return [];
+  const hasEntries = Object.values(canonical.hooks).some(
+    (entries) => Array.isArray(entries) && entries.length > 0,
+  );
+  if (!hasEntries) return [];
+  return [
+    createWarning(
+      '.agentsmesh/hooks.yaml',
+      'cline',
+      'cline hooks are emitted as .clinerules/hooks/*.sh wrapper scripts with a `#!/usr/bin/env bash` header; they require a POSIX shell (git-bash or WSL) to execute on Windows.',
+    ),
+  ];
+}

@@ -9,6 +9,7 @@ import type { CanonicalFiles } from '../../core/types.js';
 import type { PackMetadata } from './pack-schema.js';
 import { writeFileAtomic, exists, mkdirp } from '../../utils/filesystem/fs.js';
 import { hashPackContent } from './pack-hash.js';
+import { normalizePersistedInstallPaths } from '../core/portable-paths.js';
 
 type PackMetadataInput = Omit<PackMetadata, 'content_hash'>;
 
@@ -116,7 +117,10 @@ export async function materializePack(
   const contentHash = await hashPackContent(tmpDir);
 
   // Write pack.yaml
-  const metadata: PackMetadata = { ...metadataInput, content_hash: contentHash };
+  const metadata: PackMetadata = normalizePersistedInstallPaths({
+    ...metadataInput,
+    content_hash: contentHash,
+  });
   await writeFileAtomic(join(tmpDir, 'pack.yaml'), yamlStringify(metadata));
 
   // Atomic rename to final

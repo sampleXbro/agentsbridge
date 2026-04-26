@@ -11,10 +11,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SUPPORT_MATRIX, SUPPORT_MATRIX_GLOBAL } from '../../src/core/matrix/data.js';
+import { resolveNodeBin } from '../helpers/node-bin.js';
 
 const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const SCRIPT = join(REPO_ROOT, 'scripts', 'render-support-matrix.ts');
-const TSX = join(REPO_ROOT, 'node_modules', '.bin', 'tsx');
+const TSX = resolveNodeBin(REPO_ROOT, 'tsx');
 
 const EMPTY_README = `# Fixture
 

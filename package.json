@@ -35,10 +35,6 @@
   "engines": {
     "node": ">=20.0.0"
   },
-  "os": [
-    "darwin",
-    "linux"
-  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/sampleXbro/agentsmesh.git"

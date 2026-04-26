@@ -6,10 +6,11 @@
 import { spawnSync } from 'node:child_process';
 
 const RUNS = 20;
+const PNPM = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
 let failed = false;
 
 for (let i = 0; i < RUNS; i++) {
-  const r = spawnSync('pnpm', ['exec', 'vitest', 'run', 'tests/unit', 'tests/contract'], {
+  const r = spawnSync(PNPM, ['exec', 'vitest', 'run', 'tests/unit', 'tests/contract'], {
     stdio: 'inherit',
     cwd: process.cwd(),
     shell: false,

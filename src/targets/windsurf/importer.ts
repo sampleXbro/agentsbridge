@@ -4,7 +4,7 @@
  * .windsurf/rules/*.md preserves frontmatter.
  */
 
-import { join, dirname, relative } from 'node:path';
+import { basename, join, dirname, relative } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
 import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
@@ -97,7 +97,7 @@ export async function importFromWindsurf(
         normalize,
         mapEntry: async ({ srcPath, normalizeTo }) => {
           const relDir = relative(projectRoot, dirname(srcPath)).replace(/\\/g, '/');
-          if (!relDir || relDir === '.' || !srcPath.endsWith('/AGENTS.md')) return null;
+          if (!relDir || relDir === '.' || basename(srcPath) !== 'AGENTS.md') return null;
           const ruleName = relDir.replace(/\//g, '-');
           if (!shouldImportScopedAgentsRule(relDir)) {
             await removePathIfExists(join(destRulesDir, `${ruleName}.md`));

@@ -111,6 +111,12 @@ Notification:
 
 See the **Hooks** row in the [supported tools matrix](../reference/supported-tools/) for per-target support levels (native, partial, or unsupported).
 
+## Windows portability
+
+For most targets (claude-code, cursor, windsurf, kiro, gemini-cli) the canonical `command` string is embedded verbatim in the target's JSON config and executed by the agent at runtime, so a portable command (`pnpm test`, `npx eslint $FILE`) works identically on Linux, macOS, and Windows.
+
+**Cline and Copilot are different**: their native hook contracts are shell wrapper files. AgentsMesh emits them as `.clinerules/hooks/*.sh` and `.github/hooks/scripts/*.sh` with a `#!/usr/bin/env bash` header. These wrappers will not execute on Windows without a POSIX shell (git-bash or WSL). `agentsmesh lint` warns when hooks are configured for either target. If your team includes Windows developers, prefer claude-code, cursor, or windsurf hook routing, or supply a POSIX shell on the Windows machines.
+
 ## Agent-level hooks
 
 Hooks can also be defined per-agent in `agents/*.md` frontmatter:

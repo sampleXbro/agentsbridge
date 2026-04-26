@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { join, normalize } from 'node:path';
+// `ROOT = '/proj'` is a synthetic POSIX root, so `pathApi(ROOT)` resolves to
+// posix in production. Using the host's `node:path` (win32 on Windows) would
+// produce backslash keys that never match the posix lookups. Using posix
+// directly keeps inputs and assertions consistent across platforms.
+import { posix } from 'node:path';
+const join = posix.join;
+const normalize = posix.normalize;
 import { buildArtifactPathMap } from '../../../src/core/reference/output-source-map.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';
 import type { ValidatedConfig } from '../../../src/config/core/schema.js';

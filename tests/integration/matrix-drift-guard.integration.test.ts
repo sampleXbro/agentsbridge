@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { execFileSync } from 'node:child_process';
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -19,11 +19,19 @@ const MDX_REL = join('website', 'src', 'content', 'docs', 'reference', 'supporte
 
 let tmpRoot: string;
 
+function copyWithLfEndings(from: string, to: string): void {
+  // Windows checkouts with `core.autocrlf=true` (the default) leave CRLF on
+  // disk. The renderer inserts LF-only blocks between markers, so a CRLF
+  // baseline always diverges from the expected document and `--verify` would
+  // fail before we even check drift. Normalize on copy.
+  writeFileSync(to, readFileSync(from, 'utf-8').replace(/\r\n/g, '\n'));
+}
+
 beforeEach(() => {
   tmpRoot = mkdtempSync(join(tmpdir(), 'am-matrix-drift-'));
-  copyFileSync(join(REPO_ROOT, 'README.md'), join(tmpRoot, 'README.md'));
+  copyWithLfEndings(join(REPO_ROOT, 'README.md'), join(tmpRoot, 'README.md'));
   mkdirSync(join(tmpRoot, 'website', 'src', 'content', 'docs', 'reference'), { recursive: true });
-  copyFileSync(join(REPO_ROOT, MDX_REL), join(tmpRoot, MDX_REL));
+  copyWithLfEndings(join(REPO_ROOT, MDX_REL), join(tmpRoot, MDX_REL));
 });
 
 afterEach(() => rmSync(tmpRoot, { recursive: true, force: true }));

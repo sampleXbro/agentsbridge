@@ -178,8 +178,6 @@ export const descriptor = {
     ],
     layout: global,
   },
-  skillDir: project.skillDir,
-  paths: project.paths,
   buildImportPaths: buildCursorImportPaths,
   detectionPaths: ['.cursor/rules', '.cursor/mcp.json'],
 } satisfies TargetDescriptor;

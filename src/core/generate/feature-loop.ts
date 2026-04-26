@@ -21,6 +21,58 @@ export function computeStatus(existing: string | null, content: string): Generat
   return 'unchanged';
 }
 
+export function resolveGeneratedOutputPath(
+  target: string,
+  path: string,
+  scope: TargetLayoutScope,
+): string | null {
+  let resolvedPath = rewriteGeneratedOutputPath(target, path, scope);
+  if (resolvedPath !== null) return resolvedPath;
+
+  const desc = getDescriptor(target);
+  if (!desc) return null;
+  const layout = scope === 'global' ? desc.globalSupport?.layout : desc.project;
+  if (!layout) return null;
+  resolvedPath = layout.rewriteGeneratedPath ? layout.rewriteGeneratedPath(path) : path;
+  return resolvedPath;
+}
+
+export async function emitGeneratedOutput(
+  results: GenerateResult[],
+  target: string,
+  out: { readonly path: string; readonly content: string },
+  projectRoot: string,
+  scope: TargetLayoutScope,
+  options?: {
+    readonly mergeContent?: (
+      existing: string | null,
+      pending: GenerateResult | undefined,
+      newContent: string,
+      resolvedPath: string,
+    ) => string;
+  },
+): Promise<string | null> {
+  const resolvedPath = resolveGeneratedOutputPath(target, out.path, scope);
+  if (resolvedPath === null) return null;
+
+  const existing = await readFileSafe(join(projectRoot, resolvedPath));
+  const pendingIdx = results.findIndex((r) => r.path === resolvedPath && r.target === target);
+  const pendingResult = pendingIdx >= 0 ? results[pendingIdx] : undefined;
+  const content =
+    options?.mergeContent?.(existing, pendingResult, out.content, resolvedPath) ?? out.content;
+  if (pendingIdx >= 0) {
+    results.splice(pendingIdx, 1);
+  }
+  results.push({
+    target,
+    path: resolvedPath,
+    content,
+    currentContent: existing ?? undefined,
+    status: computeStatus(existing, content),
+  });
+  return resolvedPath;
+}
+
 export function featureContext(
   target: string,
   feature: CapabilityFeatureKey,
@@ -33,7 +85,7 @@ export function featureContext(
     if (desc) {
       const rawCaps =
         scope === 'global'
-          ? (desc.globalSupport?.capabilities ?? desc.globalCapabilities ?? desc.capabilities)
+          ? (desc.globalSupport?.capabilities ?? desc.capabilities)
           : desc.capabilities;
       caps = normalizeTargetCapabilities(rawCaps);
     }
@@ -60,35 +112,15 @@ export async function generateFeature(
     if (!gen) continue;
     const ctx = featureContext(target, feature, scope);
     for (const out of gen(canonical, ctx)) {
-      // rewriteGeneratedOutputPath returns null for unknown targets — fall back to registry
-      let resolvedPath = rewriteGeneratedOutputPath(target, out.path, scope);
-      if (resolvedPath === null) {
-        const desc = getDescriptor(target);
-        if (!desc) continue;
-        const layout =
-          scope === 'global'
-            ? (desc.globalSupport?.layout ?? desc.global ?? desc.project)
-            : desc.project;
-        resolvedPath = layout.rewriteGeneratedPath
-          ? layout.rewriteGeneratedPath(out.path)
-          : out.path;
-        if (resolvedPath === null) continue;
-      }
-      const existing = await readFileSafe(join(projectRoot, resolvedPath));
-      results.push({
-        target,
-        path: resolvedPath,
-        content: out.content,
-        currentContent: existing ?? undefined,
-        status: computeStatus(existing, out.content),
-      });
+      const resolvedPath = await emitGeneratedOutput(results, target, out, projectRoot, scope);
+      if (resolvedPath === null) continue;
       let layout = getTargetLayout(target, scope);
       if (!layout) {
         const desc = getDescriptor(target);
         layout =
           desc !== undefined
             ? scope === 'global'
-              ? (desc.globalSupport?.layout ?? desc.global ?? desc.project)
+              ? desc.globalSupport?.layout
               : desc.project
             : undefined;
       }

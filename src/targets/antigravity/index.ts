@@ -125,8 +125,6 @@ export const descriptor = {
     ],
     layout: global,
   },
-  skillDir: project.skillDir,
-  paths: project.paths,
   buildImportPaths: buildAntigravityImportPaths,
   detectionPaths: [
     '.agents/rules/general.md',

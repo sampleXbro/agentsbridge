@@ -13,23 +13,45 @@ Available since **v0.6**. Requires Node.js 20+.
 | Subpath | Use when |
 | --- | --- |
 | `agentsmesh` | Full surface in one import — runtime functions, error classes, canonical types, target-descriptor types. |
-| `agentsmesh/engine` | Generation, import, lint, diff, check + error taxonomy + config loaders + the types those functions need. |
-| `agentsmesh/canonical` | `loadCanonical`, `loadCanonicalFiles`, and the canonical domain types. |
+| `agentsmesh/engine` | Generation, import, lint, diff, check + error taxonomy + `loadProjectContext` + config loaders + the types those functions need. |
+| `agentsmesh/canonical` | `loadCanonical`, `loadCanonicalFiles`, `LoadCanonicalOptions`, and the canonical domain types. |
 | `agentsmesh/targets` | Built-in catalog (`getTargetCatalog`, `getAllDescriptors`, `getDescriptor`), `registerTargetDescriptor` for plugins, and target-descriptor types. |
 
 Every entrypoint resolves to a real `.d.ts` under strict TypeScript — there is no `TS7016: Could not find a declaration file` for any public symbol. The `tests/consumer-smoke/` job in CI installs the packed tarball into a clean strict-mode TS project on every push and `tsc --noEmit`s every export below.
 
-## Quick start — the canonical 4-line pattern
+## Quick start — CLI-parity generation
 
 ```ts
-import { loadConfig, loadCanonical, generate } from 'agentsmesh';
+import { loadProjectContext, generate } from 'agentsmesh';
 
-const { config } = await loadConfig(process.cwd());
-const canonical = await loadCanonical(process.cwd());
-const results = await generate({ config, canonical, projectRoot: process.cwd() });
+const project = await loadProjectContext(process.cwd());
+const results = await generate(project);
 ```
 
-`results` is an array of `{ target, path, content, status }` — exactly what the CLI would write, but no files have been written yet. Inspect, transform, or write them yourself.
+`loadProjectContext()` mirrors the CLI setup path: it loads scoped config, bootstraps plugin descriptors, merges `extends`, installed packs, and local `.agentsmesh/` content, then returns an object directly usable by `generate`, `lint`, and `diff`. `results` is an array of `{ target, path, content, status }` — exactly what the CLI would write, but no files have been written yet. Inspect, transform, or write them yourself.
+
+## Loading project context
+
+### `loadProjectContext(projectRoot, options?)`
+
+Loads the same execution context the CLI uses and returns `{ config, canonical, projectRoot, scope, configDir, canonicalDir }`.
+
+```ts
+import {
+  loadProjectContext,
+  type ProjectContext,
+  type LoadProjectContextOptions,
+} from 'agentsmesh';
+
+const options: LoadProjectContextOptions = {
+  scope: 'project',          // or 'global'
+  refreshRemoteCache: false, // set true to refetch remote extends
+};
+
+const ctx: ProjectContext = await loadProjectContext(process.cwd(), options);
+```
+
+Use this helper for scripts that should match CLI output for real projects using plugins, packs, or `extends`.
 
 ## Loading config
 
@@ -53,19 +75,20 @@ Like `loadConfig` but does not search upward — reads `<configDir>/agentsmesh.y
 
 ## Loading canonical content
 
-### `loadCanonical(projectRoot)`
+### `loadCanonical(projectRoot, options?)`
 
-Loads the entire `.agentsmesh/` tree into a typed `CanonicalFiles` value. Pass a project root (the directory that contains `.agentsmesh/`) or the canonical directory itself — both shapes are accepted.
+Loads canonical content into a typed `CanonicalFiles` value. When an `agentsmesh.yaml` can be found, it matches CLI generation by merging `extends`, installed packs, and local `.agentsmesh/` content. Pass a project root (the directory that contains `.agentsmesh/`) or the canonical directory itself — both shapes are accepted.
 
 ```ts
-import { loadCanonical, type CanonicalFiles } from 'agentsmesh';
+import { loadCanonical, type CanonicalFiles, type LoadCanonicalOptions } from 'agentsmesh';
 
-const canonical: CanonicalFiles = await loadCanonical(process.cwd());
+const options: LoadCanonicalOptions = { refreshRemoteCache: false };
+const canonical: CanonicalFiles = await loadCanonical(process.cwd(), options);
 console.log(canonical.rules.length, 'rules');
 console.log(canonical.skills.map((s) => s.name));
 ```
 
-`loadCanonicalFiles` is exported as a compatibility alias.
+Pass `{ config, configDir }` when you already loaded config and want to avoid searching again. Set `includeExtends: false`, or call `loadCanonicalFiles(projectRoot)`, for a local-only `.agentsmesh/` read that intentionally skips `extends` and packs.
 
 ## Generation
 
@@ -119,7 +142,7 @@ for (const r of results) {
 }
 ```
 
-`target` is a built-in target ID. For plugin-provided targets, use the target's own importer via `getDescriptor(target).generators.importFrom(...)`.
+`target` can be either a built-in target ID or a registered plugin descriptor ID. Register plugins first with `registerTargetDescriptor()` or by loading project context for a config that declares plugins.
 
 ## Lint
 
@@ -214,7 +237,7 @@ if (!report.inSync) {
 
 ### `registerTargetDescriptor(descriptor)`
 
-Registers a custom target at runtime. Plugins ship one of these as their default export. See [Building Plugins](../guides/building-plugins/) for the full descriptor contract.
+Registers a custom target at runtime after validating it against the same descriptor schema used for plugin packages. Plugins ship one of these as their default export. See [Building Plugins](../guides/building-plugins/) for the full descriptor contract.
 
 ```ts
 import { registerTargetDescriptor, type TargetDescriptor } from 'agentsmesh';
@@ -230,12 +253,12 @@ After registration, the descriptor participates in `generate`, `importFrom`, `li
 ```ts
 import { getTargetCatalog, getDescriptor, getAllDescriptors } from 'agentsmesh';
 
-const builtins = getTargetCatalog();   // readonly built-in array (12 today)
+const builtins = getTargetCatalog();   // immutable copy of built-in descriptors
 const plugins = getAllDescriptors();   // registered plugin descriptors
 const cursor = getDescriptor('cursor'); // single lookup, builtins or plugins
 ```
 
-`getTargetCatalog()` returns built-ins; `getAllDescriptors()` returns the plugin registry. `getDescriptor(id)` resolves either side.
+`getTargetCatalog()` returns an immutable copy of the built-in catalog, so consumer mutations cannot corrupt later descriptor lookups. `getAllDescriptors()` returns the plugin registry. `getDescriptor(id)` resolves either side.
 
 ## Error taxonomy
 

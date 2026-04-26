@@ -31,6 +31,7 @@ import { projectedAgentSkillDirName } from '../projection/projected-agent-skill.
 import { lintCommands, lintHooks } from './lint.js';
 import { emitScopedGeminiSettings } from './scoped-settings-emit.js';
 import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
+import { mergeGeminiSettingsJson } from '../../core/generate/settings.js';
 
 export const target: TargetGenerators = {
   name: 'gemini-cli',
@@ -49,6 +50,9 @@ const project: TargetLayout = {
   outputFamilies: [
     { id: 'compat-agents', kind: 'additional', explicitPaths: [GEMINI_COMPAT_AGENTS] },
   ],
+  extraRuleOutputPaths() {
+    return [GEMINI_COMPAT_AGENTS];
+  },
   skillDir: '.gemini/skills',
   managedOutputs: {
     dirs: ['.gemini/agents', '.gemini/commands', '.gemini/skills', '.agents/skills'],
@@ -91,6 +95,9 @@ const global: TargetLayout = {
   outputFamilies: [
     { id: 'compat-agents', kind: 'additional', explicitPaths: [GEMINI_GLOBAL_COMPAT_AGENTS] },
   ],
+  extraRuleOutputPaths() {
+    return [GEMINI_GLOBAL_COMPAT_AGENTS];
+  },
   skillDir: GEMINI_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [GEMINI_GLOBAL_COMMANDS_DIR, GEMINI_GLOBAL_SKILLS_DIR, GEMINI_GLOBAL_AGENTS_DIR],
@@ -181,6 +188,12 @@ export const descriptor = {
     hooks: lintHooks,
   },
   emitScopedSettings: emitScopedGeminiSettings,
+  mergeGeneratedOutputContent(existing, pending, newContent, resolvedPath) {
+    const base = pending?.content ?? existing;
+    return base !== null && resolvedPath === GEMINI_SETTINGS
+      ? mergeGeminiSettingsJson(base, newContent)
+      : null;
+  },
   project,
   globalSupport: {
     capabilities: globalCapabilities,
@@ -194,8 +207,6 @@ export const descriptor = {
     ],
     layout: global,
   },
-  skillDir: project.skillDir,
-  paths: project.paths,
   buildImportPaths: buildGeminiCliImportPaths,
   detectionPaths: ['GEMINI.md', '.gemini'],
 } satisfies TargetDescriptor;

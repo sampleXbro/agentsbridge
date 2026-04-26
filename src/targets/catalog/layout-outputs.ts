@@ -5,12 +5,9 @@ export function getAdditionalRootDecorationPaths(
   layout: TargetLayout | undefined,
 ): readonly string[] {
   if (!layout) return [];
-  if (layout.outputFamilies?.length) {
-    return layout.outputFamilies
-      .filter((f) => f.kind === 'additional')
-      .flatMap((f) => [...(f.explicitPaths ?? [])]);
-  }
-  return [...(layout.additionalRootDecorationPaths ?? [])];
+  return (layout.outputFamilies ?? [])
+    .filter((f) => f.kind === 'additional')
+    .flatMap((f) => [...(f.explicitPaths ?? [])]);
 }
 
 /** Stable family id for reference rewrite cache keys (per-output-family maps). */

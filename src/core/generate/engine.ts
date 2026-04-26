@@ -129,7 +129,7 @@ export async function generate(ctx: GenerateContext): Promise<GenerateResult[]> 
   const enabledFeatures = new Set(config.features);
   for (const target of targets) {
     const descriptor = getBuiltinTargetDefinition(target) ?? getDescriptor(target);
-    const scopeExtras = descriptor?.globalSupport?.scopeExtras ?? descriptor?.generateScopeExtras;
+    const scopeExtras = descriptor?.globalSupport?.scopeExtras;
     if (scopeExtras) {
       const extras = await scopeExtras(canonical, projectRoot, scope, enabledFeatures);
       results.push(...extras);

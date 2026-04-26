@@ -45,7 +45,7 @@ For `agentsmesh target scaffold foo-ide`:
 
 The generated descriptor includes:
 - **Global layout** with `rewriteGeneratedPath` for `--global` support
-- **`globalCapabilities`** and **`globalDetectionPaths`**
+- **`globalSupport`** with global capabilities, detection paths, and layout
 - **`supportsConversion`** for commands and agents
 - **Per-feature lint hooks** stub (`lint.ts`)
 
@@ -157,7 +157,7 @@ pluginTargets:
   - foo-ide
 ```
 
-At generate time, AgentsMesh dynamically imports each plugin, validates the exported descriptor with a Zod schema, and registers it in the target registry. Invalid descriptors are warned and skipped — one bad plugin does not block other targets.
+At generate time, AgentsMesh dynamically imports each plugin, validates the exported descriptor with a Zod schema, and registers it in the target registry. Invalid descriptors are warned and skipped — one bad plugin does not block other targets. Validation also checks that every non-`none` capability has a matching generator, or `emitScopedSettings` for settings-backed features.
 
 ---
 

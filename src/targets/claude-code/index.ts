@@ -135,8 +135,6 @@ export const descriptor = {
     layout: global,
     scopeExtras: generateClaudeGlobalExtras,
   },
-  skillDir: project.skillDir,
-  paths: project.paths,
   buildImportPaths: buildClaudeCodeImportPaths,
   detectionPaths: ['CLAUDE.md', '.claude/rules', '.claude/commands'],
 } satisfies TargetDescriptor;

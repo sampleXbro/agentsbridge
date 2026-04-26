@@ -13,7 +13,7 @@ import { markdownFrontmatter, markdownHasNoFrontmatter } from './helpers/file-sh
 import { useGlobalEnv } from './helpers/global-roundtrip-setup.js';
 
 /**
- * Global Antigravity layout (descriptor.global + constants):
+ * Global Antigravity layout (descriptor.globalSupport + constants):
  * - Rules: single ~/.gemini/antigravity/GEMINI.md (named canonical rules are merged on generate)
  * - Commands: ~/.gemini/antigravity/workflows/*.md
  * - Skills: ~/.gemini/antigravity/skills/<name>/SKILL.md

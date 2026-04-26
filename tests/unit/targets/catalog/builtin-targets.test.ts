@@ -69,9 +69,9 @@ describe('getTargetCapabilities', () => {
     expect(globalCaps!.rules).toBeDefined();
   });
 
-  it('falls back to globalCapabilities when globalSupport.capabilities is absent', () => {
+  it('falls back to project capabilities when globalSupport is absent', () => {
     const desc = makeMinimalDescriptor('test-global-caps-fallback', {
-      globalCapabilities: {
+      capabilities: {
         rules: 'partial',
         additionalRules: 'none',
         commands: 'none',
@@ -82,7 +82,7 @@ describe('getTargetCapabilities', () => {
         ignore: 'none',
         permissions: 'none',
       },
-    } as Partial<TargetDescriptor>);
+    });
     registerTargetDescriptor(desc);
     const caps = getTargetCapabilities('test-global-caps-fallback', 'global');
     expect(caps).toBeDefined();
@@ -114,10 +114,26 @@ describe('getTargetDetectionPaths', () => {
     expect(paths.length).toBeGreaterThan(0);
   });
 
-  it('falls back to globalDetectionPaths when globalSupport.detectionPaths absent', () => {
+  it('returns global detection paths from globalSupport only', () => {
     const desc = makeMinimalDescriptor('test-det-paths-fallback', {
-      globalDetectionPaths: ['~/.test-tool/config'],
-    } as Partial<TargetDescriptor>);
+      globalSupport: {
+        capabilities: {
+          rules: 'native',
+          additionalRules: 'none',
+          commands: 'none',
+          agents: 'none',
+          skills: 'none',
+          mcp: 'none',
+          hooks: 'none',
+          ignore: 'none',
+          permissions: 'none',
+        },
+        detectionPaths: ['~/.test-tool/config'],
+        layout: {
+          paths: { rulePath: (s: string) => s, commandPath: () => null, agentPath: () => null },
+        },
+      },
+    });
     registerTargetDescriptor(desc);
     const paths = getTargetDetectionPaths('test-det-paths-fallback', 'global');
     expect(paths).toContain('~/.test-tool/config');
@@ -144,15 +160,14 @@ describe('getTargetLayout', () => {
     expect(layout).toBeDefined();
   });
 
-  it('falls back to descriptor.global when globalSupport.layout absent', () => {
+  it('returns undefined for global layout when globalSupport is absent', () => {
     const fakeLayout = {
       paths: { rulePath: (s: string) => s, commandPath: () => null, agentPath: () => null },
     };
-    const desc = makeMinimalDescriptor('test-global-layout-fallback', {
-      global: fakeLayout,
-    } as Partial<TargetDescriptor>);
+    const desc = makeMinimalDescriptor('test-global-layout-fallback');
     registerTargetDescriptor(desc);
-    expect(getTargetLayout('test-global-layout-fallback', 'global')).toBe(fakeLayout);
+    void fakeLayout;
+    expect(getTargetLayout('test-global-layout-fallback', 'global')).toBeUndefined();
   });
 
   it('returns undefined for unknown target', () => {

@@ -38,6 +38,11 @@ export const target: TargetGenerators = {
 
 const project: TargetLayout = {
   rootInstructionPath: AGENTS_MD,
+  extraRuleOutputPaths(rule) {
+    if (rule.root || rule.codexEmit !== 'execution') return [];
+    const slug = rule.source.split('/').pop()!.replace(/\.md$/, '');
+    return [`${CODEX_RULES_DIR}/${slug}.rules`];
+  },
   skillDir: '.agents/skills',
   managedOutputs: {
     dirs: ['.agents/skills', '.codex/agents', '.codex/instructions'],
@@ -61,6 +66,11 @@ const project: TargetLayout = {
 const global: TargetLayout = {
   rootInstructionPath: CODEX_GLOBAL_AGENTS_MD,
   renderPrimaryRootInstruction: renderCodexGlobalInstructions,
+  extraRuleOutputPaths(rule) {
+    if (rule.root || rule.codexEmit !== 'execution') return [];
+    const slug = rule.source.split('/').pop()!.replace(/\.md$/, '');
+    return [`${CODEX_RULES_DIR}/${slug}.rules`];
+  },
   skillDir: CODEX_SKILLS_DIR,
   managedOutputs: {
     dirs: ['.agents/skills', '.codex/agents', '.codex/rules'],
@@ -133,8 +143,6 @@ export const descriptor = {
     ],
     layout: global,
   },
-  skillDir: project.skillDir,
-  paths: project.paths,
   buildImportPaths: buildCodexCliImportPaths,
   sharedArtifacts: {
     '.agents/skills/': 'owner',

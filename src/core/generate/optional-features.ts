@@ -1,17 +1,34 @@
-import { join } from 'node:path';
 import type { CanonicalFiles, GenerateResult } from '../types.js';
 import type { ValidatedConfig } from '../../config/core/schema.js';
-import { readFileSafe } from '../../utils/filesystem/fs.js';
 import {
   getBuiltinTargetDefinition,
   resolveTargetFeatureGenerator,
-  rewriteGeneratedOutputPath,
 } from '../../targets/catalog/builtin-targets.js';
 import { getDescriptor } from '../../targets/catalog/registry.js';
-import { GEMINI_SETTINGS } from '../../targets/gemini-cli/constants.js';
-import { computeStatus, featureContext } from './feature-loop.js';
-import { SETTINGS_JSON_PATHS, mergeSettingsJson, mergeGeminiSettingsJson } from './settings.js';
+import { emitGeneratedOutput, featureContext } from './feature-loop.js';
+import { SETTINGS_JSON_PATHS, mergeSettingsJson } from './settings.js';
 import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
+
+function mergeOutputContent(
+  target: string,
+  existing: string | null,
+  pending: GenerateResult | undefined,
+  newContent: string,
+  resolvedPath: string,
+): string {
+  const descriptor = getBuiltinTargetDefinition(target) ?? getDescriptor(target);
+  const merged = descriptor?.mergeGeneratedOutputContent?.(
+    existing,
+    pending,
+    newContent,
+    resolvedPath,
+  );
+  if (merged !== null && merged !== undefined) return merged;
+  const base = pending?.content ?? existing;
+  return base !== null && SETTINGS_JSON_PATHS.includes(resolvedPath)
+    ? mergeSettingsJson(base, newContent)
+    : newContent;
+}
 
 export async function generatePermissionsFeature(
   results: GenerateResult[],
@@ -26,30 +43,9 @@ export async function generatePermissionsFeature(
       getDescriptor(target)?.generators.generatePermissions;
     if (!gen) continue;
     for (const out of gen(canonical)) {
-      let resolvedPath = rewriteGeneratedOutputPath(target, out.path, scope);
-      if (resolvedPath === null) {
-        const desc = getDescriptor(target);
-        if (!desc) continue;
-        const layout =
-          scope === 'global'
-            ? (desc.globalSupport?.layout ?? desc.global ?? desc.project)
-            : desc.project;
-        resolvedPath = layout.rewriteGeneratedPath
-          ? layout.rewriteGeneratedPath(out.path)
-          : out.path;
-        if (resolvedPath === null) continue;
-      }
-      const existing = await readFileSafe(join(projectRoot, resolvedPath));
-      const content =
-        existing !== null && SETTINGS_JSON_PATHS.includes(resolvedPath)
-          ? mergeSettingsJson(existing, out.content)
-          : out.content;
-      results.push({
-        target,
-        path: resolvedPath,
-        content,
-        currentContent: existing ?? undefined,
-        status: computeStatus(existing, content),
+      await emitGeneratedOutput(results, target, out, projectRoot, scope, {
+        mergeContent: (existing, pending, newContent, resolvedPath) =>
+          mergeOutputContent(target, existing, pending, newContent, resolvedPath),
       });
     }
   }
@@ -76,38 +72,9 @@ export async function generateHooksFeature(
       outputs = [...(await post(projectRoot, canonical, outputs))];
     }
     for (const out of outputs) {
-      let resolvedPath = rewriteGeneratedOutputPath(target, out.path, scope);
-      if (resolvedPath === null) {
-        const desc = getDescriptor(target);
-        if (!desc) continue;
-        const layout =
-          scope === 'global'
-            ? (desc.globalSupport?.layout ?? desc.global ?? desc.project)
-            : desc.project;
-        resolvedPath = layout.rewriteGeneratedPath
-          ? layout.rewriteGeneratedPath(out.path)
-          : out.path;
-        if (resolvedPath === null) continue;
-      }
-      const existing = await readFileSafe(join(projectRoot, resolvedPath));
-      let content = out.content;
-      if (SETTINGS_JSON_PATHS.includes(resolvedPath)) {
-        const pendingIdx = results.findIndex((r) => r.path === resolvedPath && r.target === target);
-        const pendingResult = pendingIdx >= 0 ? results[pendingIdx] : undefined;
-        const base = pendingResult?.content ?? existing;
-        if (base !== null) {
-          content = mergeSettingsJson(base, out.content);
-        }
-        if (pendingIdx >= 0) {
-          results.splice(pendingIdx, 1);
-        }
-      }
-      results.push({
-        target,
-        path: resolvedPath,
-        content,
-        currentContent: existing ?? undefined,
-        status: computeStatus(existing, content),
+      await emitGeneratedOutput(results, target, out, projectRoot, scope, {
+        mergeContent: (existing, pending, newContent, resolvedPath) =>
+          mergeOutputContent(target, existing, pending, newContent, resolvedPath),
       });
     }
   }
@@ -127,30 +94,9 @@ export async function generateScopedSettingsFeature(
     const outputs = emit(canonical, scope);
     if (outputs.length === 0) continue;
     for (const out of outputs) {
-      let resolvedPath = rewriteGeneratedOutputPath(target, out.path, scope);
-      if (resolvedPath === null) {
-        const desc = getDescriptor(target);
-        if (!desc) continue;
-        const layout =
-          scope === 'global'
-            ? (desc.globalSupport?.layout ?? desc.global ?? desc.project)
-            : desc.project;
-        resolvedPath = layout.rewriteGeneratedPath
-          ? layout.rewriteGeneratedPath(out.path)
-          : out.path;
-        if (resolvedPath === null) continue;
-      }
-      const existing = await readFileSafe(join(projectRoot, resolvedPath));
-      const content =
-        existing !== null && resolvedPath === GEMINI_SETTINGS
-          ? mergeGeminiSettingsJson(existing, out.content)
-          : out.content;
-      results.push({
-        target,
-        path: resolvedPath,
-        content,
-        currentContent: existing ?? undefined,
-        status: computeStatus(existing, content),
+      await emitGeneratedOutput(results, target, out, projectRoot, scope, {
+        mergeContent: (existing, pending, newContent, resolvedPath) =>
+          mergeOutputContent(target, existing, pending, newContent, resolvedPath),
       });
     }
   }

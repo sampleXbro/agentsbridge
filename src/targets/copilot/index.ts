@@ -45,6 +45,11 @@ export const target: TargetGenerators = {
 const project: TargetLayout = {
   rootInstructionPath: COPILOT_INSTRUCTIONS,
   outputFamilies: [{ id: 'instructions', kind: 'additional', pathPrefix: '.github/instructions/' }],
+  extraRuleOutputPaths(rule) {
+    if (rule.root || rule.globs.length === 0) return [];
+    const slug = rule.source.split('/').pop()!.replace(/\.md$/, '');
+    return [`${COPILOT_INSTRUCTIONS_DIR}/${slug}.instructions.md`];
+  },
   skillDir: '.github/skills',
   managedOutputs: {
     dirs: [
@@ -181,8 +186,6 @@ export const descriptor = {
     layout: global,
     scopeExtras: generateCopilotGlobalExtras,
   },
-  skillDir: project.skillDir,
-  paths: project.paths,
   buildImportPaths: buildCopilotImportPaths,
   detectionPaths: [
     '.github/copilot-instructions.md',

@@ -22,6 +22,28 @@ function makeDescriptor(id: string): TargetDescriptor {
   return {
     id,
     generators: makeLegacyTarget(id),
+    capabilities: {
+      rules: 'native',
+      additionalRules: 'none',
+      commands: 'none',
+      agents: 'none',
+      skills: 'none',
+      mcp: 'none',
+      hooks: 'none',
+      ignore: 'none',
+      permissions: 'none',
+    },
+    emptyImportMessage: `No ${id} config found.`,
+    lintRules: null,
+    project: {
+      paths: {
+        rulePath: (slug: string) => `.plugin/${slug}.md`,
+        commandPath: () => null,
+        agentPath: () => null,
+      },
+    },
+    buildImportPaths: async () => {},
+    detectionPaths: ['.plugin'],
   } as unknown as TargetDescriptor;
 }
 
@@ -41,7 +63,7 @@ describe('registerTarget / getTarget (legacy path)', () => {
     const desc = makeDescriptor('shared-id');
     registerTarget(legacy);
     registerTargetDescriptor(desc);
-    expect(getTarget('shared-id')).toBe(desc.generators);
+    expect(getTarget('shared-id').name).toBe(desc.generators.name);
   });
 
   it('getTarget throws for completely unknown target', () => {
@@ -95,6 +117,19 @@ describe('getAllDescriptors', () => {
   it('is cleared by resetRegistry', () => {
     registerTargetDescriptor(makeDescriptor('plugin-c'));
     resetRegistry();
+    expect(getAllDescriptors()).toHaveLength(0);
+  });
+
+  it('validates descriptors before registration', () => {
+    expect(() =>
+      registerTargetDescriptor({
+        ...makeDescriptor('invalid-plugin'),
+        capabilities: {
+          ...makeDescriptor('invalid-plugin').capabilities,
+          commands: 'native',
+        },
+      }),
+    ).toThrow(/generateCommands/);
     expect(getAllDescriptors()).toHaveLength(0);
   });
 });

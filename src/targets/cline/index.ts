@@ -162,8 +162,6 @@ export const descriptor = {
     ],
     layout: globalLayout,
   },
-  skillDir: project.skillDir,
-  paths: project.paths,
   buildImportPaths: buildClineImportPaths,
   detectionPaths: ['.clinerules', '.cline'],
 } satisfies TargetDescriptor;

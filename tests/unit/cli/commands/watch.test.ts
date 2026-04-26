@@ -27,6 +27,12 @@ afterEach(() => {
 });
 
 describe('runWatch', () => {
+  async function waitForInitialGenerate(): Promise<void> {
+    await vi.waitFor(() => expect(existsSync(join(testDir, '.claude', 'CLAUDE.md'))).toBe(true), {
+      timeout: watchWaitTimeoutMs(),
+    });
+  }
+
   it('throws when not initialized (no config)', async () => {
     rmSync(join(testDir, 'agentsmesh.yaml'));
     await expect(runWatch({}, testDir)).rejects.toThrow(/agentsmesh\.yaml/);
@@ -54,20 +60,6 @@ describe('runWatch', () => {
     await result!.stop();
   });
 
-  it('calls runMatrix when features change', async () => {
-    const runMatrixSpy = vi.spyOn(matrixMod, 'runMatrix').mockResolvedValue(undefined);
-    const result = await runWatch({}, testDir);
-    writeFileSync(
-      join(testDir, '.agentsmesh', 'rules', 'new.md'),
-      '---\ndescription: "New"\n---\n# New',
-    );
-    await vi.waitFor(() => expect(runMatrixSpy).toHaveBeenCalled(), {
-      timeout: watchWaitTimeoutMs(),
-    });
-    runMatrixSpy.mockRestore();
-    await result!.stop();
-  });
-
   it('computes fingerprint with permissions', async () => {
     writeFileSync(
       join(testDir, 'agentsmesh.yaml'),
@@ -88,15 +80,26 @@ features: [rules, permissions]
   it('calls runMatrix when features change (new rule adds to fingerprint)', async () => {
     const runMatrixSpy = vi.spyOn(matrixMod, 'runMatrix').mockResolvedValue(undefined);
     const result = await runWatch({}, testDir);
-    writeFileSync(
-      join(testDir, '.agentsmesh', 'rules', 'new.md'),
-      '---\ndescription: "New"\n---\n# New',
-    );
-    await vi.waitFor(() => expect(runMatrixSpy).toHaveBeenCalled(), {
-      timeout: watchWaitTimeoutMs(),
-    });
-    runMatrixSpy.mockRestore();
-    await result!.stop();
+    try {
+      await waitForInitialGenerate();
+      const newRulePath = join(testDir, '.agentsmesh', 'rules', 'new.md');
+      const writeNewRule = (): void =>
+        writeFileSync(newRulePath, `---\ndescription: "New"\n---\n# New\n${Date.now()}`);
+      writeNewRule();
+      const retryWrite = globalThis.setInterval(() => {
+        if (runMatrixSpy.mock.calls.length === 0) writeNewRule();
+      }, 1_000);
+      try {
+        await vi.waitFor(() => expect(runMatrixSpy).toHaveBeenCalled(), {
+          timeout: watchWaitTimeoutMs(),
+        });
+      } finally {
+        globalThis.clearInterval(retryWrite);
+      }
+    } finally {
+      runMatrixSpy.mockRestore();
+      await result!.stop();
+    }
   });
 
   it('logs Regenerated when fingerprint unchanged (body-only edit)', async () => {

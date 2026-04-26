@@ -195,8 +195,7 @@ AgentsMesh is also importable as a typed ESM library, so you can drive every CLI
 
 ```ts
 import {
-  loadConfig,
-  loadCanonical,
+  loadProjectContext,
   generate,
   lint,
   diff,
@@ -209,30 +208,24 @@ import {
   type TargetDescriptor,
 } from 'agentsmesh';
 
-// Canonical 4-line generate pattern: load config → load canonical → call engine.
-const { config } = await loadConfig(process.cwd());
-const canonical = await loadCanonical(process.cwd());
-const results: GenerateResult[] = await generate({
-  config,
-  canonical,
-  projectRoot: process.cwd(),
-  scope: 'project',
-});
+// CLI-parity generate pattern: config, plugins, extends, packs, then generation.
+const project = await loadProjectContext(process.cwd());
+const results: GenerateResult[] = await generate(project);
 
 // Lint — pure, returns structured diagnostics + hasErrors.
-const lintResult: LintResult = await lint({ config, canonical, projectRoot: process.cwd() });
+const lintResult: LintResult = await lint(project);
 
 // Diff — runs generate internally, returns unified diffs + summary.
-const { diffs, summary } = await diff({ config, canonical, projectRoot: process.cwd() });
+const { diffs, summary } = await diff(project);
 
 // Check — lock-file vs current canonical drift report.
 const drift: LockSyncReport = await check({
-  config,
-  configDir: process.cwd(),
-  canonicalDir: `${process.cwd()}/.agentsmesh`,
+  config: project.config,
+  configDir: project.configDir,
+  canonicalDir: project.canonicalDir,
 });
 
-// Import a tool's native config back into canonical form (writes to disk).
+// Import a built-in or registered plugin target back into canonical form.
 await importFrom('claude-code', { root: process.cwd() });
 
 // Register a custom target descriptor at runtime (same shape plugins ship).
@@ -243,8 +236,8 @@ registerTargetDescriptor(myDescriptor);
 Subpath imports are available when you want narrower bundles:
 
 ```ts
-import { generate, lint, diff, check, loadConfig } from 'agentsmesh/engine';
-import { loadCanonical } from 'agentsmesh/canonical';
+import { generate, lint, diff, check, loadProjectContext } from 'agentsmesh/engine';
+import { loadCanonical, loadCanonicalFiles } from 'agentsmesh/canonical';
 import { getAllDescriptors } from 'agentsmesh/targets';
 ```
 

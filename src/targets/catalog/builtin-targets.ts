@@ -79,9 +79,7 @@ export function getTargetCapabilities(
   if (!descriptor) return undefined;
   const raw =
     scope === 'global'
-      ? (descriptor.globalSupport?.capabilities ??
-        descriptor.globalCapabilities ??
-        descriptor.capabilities)
+      ? (descriptor.globalSupport?.capabilities ?? descriptor.capabilities)
       : descriptor.capabilities;
   return normalizeTargetCapabilities(raw);
 }
@@ -93,7 +91,7 @@ export function getTargetDetectionPaths(
   const descriptor = getBuiltinTargetDefinition(target) ?? getDescriptor(target);
   if (!descriptor) return [];
   if (scope === 'global') {
-    return descriptor.globalSupport?.detectionPaths ?? descriptor.globalDetectionPaths ?? [];
+    return descriptor.globalSupport?.detectionPaths ?? [];
   }
   return descriptor.detectionPaths;
 }
@@ -105,7 +103,7 @@ export function getTargetLayout(
   const descriptor = getBuiltinTargetDefinition(target) ?? getDescriptor(target);
   if (!descriptor) return undefined;
   if (scope === 'global') {
-    return descriptor.globalSupport?.layout ?? descriptor.global;
+    return descriptor.globalSupport?.layout;
   }
   return descriptor.project;
 }

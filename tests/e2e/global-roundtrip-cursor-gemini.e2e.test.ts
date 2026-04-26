@@ -76,7 +76,7 @@ describe('global mode round-trip: Cursor', () => {
       'Testing',
     );
 
-    // 2. AGENTS.md compatibility (docs: ~/.cursor/AGENTS.md — additionalRootDecorationPaths)
+    // 2. AGENTS.md compatibility (docs: ~/.cursor/AGENTS.md — outputFamilies)
     fileExists(join(homeDir, '.cursor', 'AGENTS.md'));
     fileContains(join(homeDir, '.cursor', 'AGENTS.md'), 'Use strict types');
     markdownHasNoFrontmatter(join(homeDir, '.cursor', 'AGENTS.md'));

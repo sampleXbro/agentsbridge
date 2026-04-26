@@ -209,8 +209,6 @@ export const descriptor = {
     layout: global,
     scopeExtras: generateRooGlobalExtras,
   },
-  skillDir: project.skillDir,
-  paths: project.paths,
   buildImportPaths: buildRooCodeImportPaths,
   detectionPaths: [
     '.roo/rules',

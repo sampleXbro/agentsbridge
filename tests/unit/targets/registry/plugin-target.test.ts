@@ -53,6 +53,7 @@ const pluginDescriptor: TargetDescriptor = {
   generators: pluginGenerators,
   capabilities: {
     rules: { level: 'native' },
+    additionalRules: { level: 'none' },
     commands: { level: 'none' },
     agents: { level: 'none' },
     skills: { level: 'none' },

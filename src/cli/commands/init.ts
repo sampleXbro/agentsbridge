@@ -27,7 +27,7 @@ const IMPORTERS: Record<string, (root: string, scope: ConfigScope) => Promise<Im
     ]),
   );
 const GLOBAL_INIT_TARGETS: BuiltinTargetId[] = BUILTIN_TARGETS.filter(
-  (target) => target.global !== undefined,
+  (target) => target.globalSupport !== undefined,
 ).map((target) => target.id as BuiltinTargetId);
 
 /**

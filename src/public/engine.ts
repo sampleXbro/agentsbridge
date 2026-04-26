@@ -20,9 +20,11 @@ export {
 export type { AgentsMeshErrorCode } from '../core/errors.js';
 
 import type { ImportResult } from '../core/types.js';
-import { getTargetCatalogEntry } from '../targets/catalog/target-catalog.js';
-import type { BuiltinTargetId } from '../targets/catalog/target-ids.js';
+import { TargetNotFoundError } from '../core/errors.js';
 import { loadConfigFromDir, loadConfigFromExactDir } from '../config/core/loader.js';
+import { loadScopedConfig } from '../config/core/scope.js';
+import { loadCanonicalWithExtends } from '../canonical/extends/extends.js';
+import { bootstrapPlugins } from '../plugins/bootstrap-plugins.js';
 import { runLint as runLintInternal } from '../core/lint/linter.js';
 import { generate as runGenerate } from '../core/generate/engine.js';
 import { computeDiff as computeDiffInternal, formatDiffSummary } from '../core/differ.js';
@@ -35,6 +37,8 @@ import type { CanonicalFiles, GenerateResult, LintDiagnostic } from '../core/typ
 import type { ValidatedConfig } from '../config/core/schema.js';
 import type { TargetLayoutScope } from '../targets/catalog/target-descriptor.js';
 import type { ComputeDiffResult } from '../core/differ.js';
+import { getDescriptor, getAllDescriptors } from '../targets/catalog/registry.js';
+import { TARGET_IDS } from '../targets/catalog/target-ids.js';
 
 export type { ValidatedConfig } from '../config/core/schema.js';
 export type { TargetLayoutScope } from '../targets/catalog/target-descriptor.js';
@@ -44,10 +48,16 @@ export type { ComputeDiffResult, DiffEntry, DiffSummary } from '../core/differ.j
 export { formatDiffSummary };
 
 export async function importFrom(
-  target: BuiltinTargetId,
+  target: string,
   opts: { root: string; scope?: 'project' | 'global' },
 ): Promise<ImportResult[]> {
-  return getTargetCatalogEntry(target).importFrom(opts.root, { scope: opts.scope ?? 'project' });
+  const descriptor = getDescriptor(target);
+  if (!descriptor) {
+    throw new TargetNotFoundError(target, {
+      supported: [...TARGET_IDS, ...getAllDescriptors().map((d) => d.id)],
+    });
+  }
+  return descriptor.generators.importFrom(opts.root, { scope: opts.scope ?? 'project' });
 }
 
 /**
@@ -73,6 +83,52 @@ export async function loadConfigFromDirectory(
   configDir: string,
 ): Promise<{ config: ValidatedConfig; configDir: string }> {
   return loadConfigFromExactDir(configDir);
+}
+
+export interface LoadProjectContextOptions {
+  /** Defaults to `'project'`. Use `'global'` to load `~/.agentsmesh/`. */
+  readonly scope?: TargetLayoutScope;
+  /** Refresh remote extend cache before loading canonical content. */
+  readonly refreshRemoteCache?: boolean;
+}
+
+export interface ProjectContext {
+  readonly config: ValidatedConfig;
+  readonly canonical: CanonicalFiles;
+  /** Root base used for generated paths: project config dir or user home for global scope. */
+  readonly projectRoot: string;
+  readonly scope: TargetLayoutScope;
+  readonly configDir: string;
+  readonly canonicalDir: string;
+}
+
+/**
+ * Load the same execution context the CLI uses: scoped config, plugin
+ * descriptors, extends, packs, and local canonical content. The returned object
+ * is directly usable as a `GenerateContext` because it contains
+ * `{ config, canonical, projectRoot, scope }`.
+ */
+export async function loadProjectContext(
+  projectRoot: string,
+  options: LoadProjectContextOptions = {},
+): Promise<ProjectContext> {
+  const scope = options.scope ?? 'project';
+  const { config, context } = await loadScopedConfig(projectRoot, scope);
+  await bootstrapPlugins(config, projectRoot);
+  const { canonical } = await loadCanonicalWithExtends(
+    config,
+    context.configDir,
+    { refreshRemoteCache: options.refreshRemoteCache === true },
+    context.canonicalDir,
+  );
+  return {
+    config,
+    canonical,
+    projectRoot: context.rootBase,
+    scope,
+    configDir: context.configDir,
+    canonicalDir: context.canonicalDir,
+  };
 }
 
 export interface LintOptions {

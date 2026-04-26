@@ -1,3 +1,4 @@
+import { basename } from 'node:path';
 import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
 import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
 import type { ValidatedConfig } from '../../config/core/schema.js';
@@ -40,7 +41,7 @@ const project: TargetLayout = {
   rootInstructionPath: AGENTS_MD,
   extraRuleOutputPaths(rule) {
     if (rule.root || rule.codexEmit !== 'execution') return [];
-    const slug = rule.source.split('/').pop()!.replace(/\.md$/, '');
+    const slug = basename(rule.source, '.md');
     return [`${CODEX_RULES_DIR}/${slug}.rules`];
   },
   skillDir: '.agents/skills',
@@ -68,7 +69,7 @@ const global: TargetLayout = {
   renderPrimaryRootInstruction: renderCodexGlobalInstructions,
   extraRuleOutputPaths(rule) {
     if (rule.root || rule.codexEmit !== 'execution') return [];
-    const slug = rule.source.split('/').pop()!.replace(/\.md$/, '');
+    const slug = basename(rule.source, '.md');
     return [`${CODEX_RULES_DIR}/${slug}.rules`];
   },
   skillDir: CODEX_SKILLS_DIR,

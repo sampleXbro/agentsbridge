@@ -2,12 +2,13 @@
  * Claude Code global ~/.claude/CLAUDE.md framing (strategy doc §1).
  */
 
+import { basename } from 'node:path';
 import type { CanonicalFiles } from '../../core/types.js';
 
 function ruleSectionTitle(rule: { description: string; source: string }): string {
   const d = rule.description.trim();
   if (d) return d;
-  const base = rule.source.split('/').pop() ?? 'rule';
+  const base = basename(rule.source) || 'rule';
   return base.replace(/\.md$/i, '') || 'Rule';
 }
 

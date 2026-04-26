@@ -2,6 +2,7 @@
  * Descriptor-driven extra rule→output paths for reference source mapping.
  */
 
+import { basename } from 'node:path';
 import type { CanonicalFiles } from '../../core/types.js';
 import type { TargetLayoutScope } from './target-descriptor.js';
 import { getTargetLayout } from './builtin-targets.js';
@@ -21,7 +22,7 @@ export function extraRuleOutputPaths(
   scope: TargetLayoutScope,
 ): string[] {
   const paths: string[] = [];
-  const targetPath = refs.get(`.agentsmesh/rules/${rule.source.split('/').pop()!}`);
+  const targetPath = refs.get(`.agentsmesh/rules/${basename(rule.source)}`);
   pushUnique(paths, targetPath);
 
   const layout = getTargetLayout(target, scope);

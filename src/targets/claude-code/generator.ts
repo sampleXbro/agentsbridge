@@ -2,6 +2,7 @@
  * Generate Claude Code config files from canonical sources.
  */
 
+import { basename } from 'node:path';
 import type { CanonicalFiles } from '../../core/types.js';
 import type { GenerateFeatureContext } from '../catalog/target.interface.js';
 import { serializeFrontmatter } from '../../utils/text/markdown.js';
@@ -43,7 +44,7 @@ export function generateRules(canonical: CanonicalFiles): RulesOutput[] {
     (r) => !r.root && (r.targets.length === 0 || r.targets.includes('claude-code')),
   );
   for (const rule of nonRoot) {
-    const slug = rule.source.split('/').pop()!.replace(/\.md$/, '');
+    const slug = basename(rule.source, '.md');
     const frontmatter: Record<string, unknown> = {};
     if (rule.description) frontmatter.description = rule.description;
     if (rule.globs.length > 0) frontmatter.globs = rule.globs;

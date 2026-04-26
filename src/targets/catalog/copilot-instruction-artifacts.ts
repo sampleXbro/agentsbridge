@@ -2,15 +2,15 @@
  * Copilot `.github/instructions/` artifact path rewriting for reference maps.
  */
 
-import { join, normalize as normalizePath } from 'node:path';
+import { basename, join, normalize as normalizePath } from 'node:path';
 import type { CanonicalFiles } from '../../core/types.js';
 
 function canonicalRulePath(rule: CanonicalFiles['rules'][number]): string {
-  return `.agentsmesh/rules/${rule.source.split('/').pop()!}`;
+  return `.agentsmesh/rules/${basename(rule.source)}`;
 }
 
 function copilotInstructionsPath(rule: CanonicalFiles['rules'][number]): string {
-  const slug = rule.source.split('/').pop()!.replace(/\.md$/, '');
+  const slug = basename(rule.source, '.md');
   return `.github/instructions/${slug}.instructions.md`;
 }
 

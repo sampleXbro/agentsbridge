@@ -161,7 +161,15 @@ export async function runWatch(
     debounceTimer = setTimeout(scheduleRun, DEBOUNCE_MS);
   };
 
-  const watcher = chokidar.watch(paths, { ignoreInitial: true });
+  // Native fs.watch on Windows (ReadDirectoryChangesW) misses events for files
+  // created in just-watched subdirectories, especially under the AppData\Local\Temp
+  // short-name path used by GitHub Actions runners. Force polling there so the
+  // watcher reliably observes new canonical files. macOS/Linux keep the native
+  // watcher for low-latency event delivery.
+  const watcher = chokidar.watch(paths, {
+    ignoreInitial: true,
+    usePolling: process.platform === 'win32',
+  });
   watcher.on('all', (_eventName, changedPath) => {
     if (shouldIgnoreWatchPath(context.canonicalDir, changedPath, suppressAgentsmeshDirUntil))
       return;

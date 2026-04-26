@@ -1,3 +1,4 @@
+import { basename } from 'node:path';
 import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
 import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
 import {
@@ -47,7 +48,7 @@ const project: TargetLayout = {
   outputFamilies: [{ id: 'instructions', kind: 'additional', pathPrefix: '.github/instructions/' }],
   extraRuleOutputPaths(rule) {
     if (rule.root || rule.globs.length === 0) return [];
-    const slug = rule.source.split('/').pop()!.replace(/\.md$/, '');
+    const slug = basename(rule.source, '.md');
     return [`${COPILOT_INSTRUCTIONS_DIR}/${slug}.instructions.md`];
   },
   skillDir: '.github/skills',

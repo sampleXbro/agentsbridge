@@ -149,8 +149,13 @@ export function expandResolvedPaths(projectRoot: string, resolvedPath: string): 
   try {
     const realPaths = [realpathSync(resolvedPath), realpathSync.native(resolvedPath)];
     for (const realPath of realPaths) {
+      // Push (not unshift): prefer the caller's projectRoot-shaped path so
+      // `path.relative(projectRoot, target)` stays lexically correct. On Windows,
+      // `realpathSync.native` expands DOS short names (`RUNNER~1` → `runneradmin`),
+      // and putting that ahead of the original detaches the resolved path from
+      // a `RUNNER~1`-shaped projectRoot, breaking project-root relativization.
       if (realPath !== resolvedPath && !expanded.includes(realPath)) {
-        expanded.unshift(realPath);
+        expanded.push(realPath);
       }
     }
   } catch {

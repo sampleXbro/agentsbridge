@@ -33,7 +33,15 @@ function readGenerated(dir: string, path: string): string {
 }
 
 function stripProtectedRegions(text: string): string {
-  return text.replace(/^(?:```|~~~)[^\n]*\n[\s\S]*?^(?:```|~~~)/gm, '');
+  return (
+    text
+      .replace(/^(?:```|~~~)[^\n]*\n[\s\S]*?^(?:```|~~~)/gm, '')
+      // Windows absolute paths (`C:\...`) are intentionally skipped by the rewriter
+      // (`WINDOWS_ABSOLUTE_PATH` guard in link-rebaser). They legitimately contain
+      // `\.agentsmesh\` substrings, which the not-toContain assertions below would
+      // otherwise flag as "leftover canonical path."
+      .replace(/[A-Za-z]:[\\/][^\s,<>"'`]+/g, '')
+  );
 }
 
 function assertRewritten(content: string, refs: Record<string, string>, dir: string): void {

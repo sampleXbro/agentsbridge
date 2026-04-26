@@ -33,6 +33,9 @@ function runVerify(root: string): { status: number; stderr: string; stdout: stri
     const stdout = execFileSync(TSX, [SCRIPT, '--verify'], {
       env: { ...process.env, AGENTSMESH_MATRIX_ROOT: root },
       encoding: 'utf-8',
+      // `tsx` resolves to `tsx.cmd` on Windows; Node refuses to invoke `.cmd`
+      // files via execFileSync without a shell. Static args make this safe.
+      shell: process.platform === 'win32',
     });
     return { status: 0, stderr: '', stdout };
   } catch (e) {

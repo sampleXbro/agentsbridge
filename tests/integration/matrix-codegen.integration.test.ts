@@ -58,6 +58,10 @@ function runRenderer(
     const stdout = execFileSync(TSX, [SCRIPT, ...args], {
       env: { ...process.env, AGENTSMESH_MATRIX_ROOT: root },
       encoding: 'utf-8',
+      // `tsx` resolves to `tsx.cmd` on Windows; Node's execFileSync refuses
+      // to invoke `.cmd` files directly since 17.x. The args here are static
+      // (no user input), so `shell: true` is safe.
+      shell: process.platform === 'win32',
     });
     return { status: 0, stderr: '', stdout };
   } catch (e) {

@@ -82,7 +82,9 @@ Body.`,
     expect(skills[0]?.supportingFiles).toHaveLength(2);
     const paths = skills[0]?.supportingFiles.map((f) => f.relativePath).sort() ?? [];
     expect(paths).toContain('template.ts');
-    expect(paths).toContain(join('subdir', 'helper.js'));
+    // `parseSkills` POSIX-normalizes `relativePath` regardless of platform —
+    // see `src/canonical/features/skills.ts` `name = raw.replace(/\\/g, '/')`.
+    expect(paths).toContain('subdir/helper.js');
     const template = skills[0]?.supportingFiles.find((f) => f.relativePath === 'template.ts');
     expect(template?.absolutePath).toContain('template.ts');
   });

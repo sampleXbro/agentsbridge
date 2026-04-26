@@ -17,7 +17,11 @@ describe('Windows package support metadata', () => {
   });
 
   it('runs the quality matrix on Windows with Node 22', () => {
-    const workflow = readFileSync(join(REPO_ROOT, '.github', 'workflows', 'ci.yml'), 'utf-8');
+    // Normalize CRLF: Windows checkouts may convert LF to CRLF via core.autocrlf.
+    const workflow = readFileSync(
+      join(REPO_ROOT, '.github', 'workflows', 'ci.yml'),
+      'utf-8',
+    ).replace(/\r\n/g, '\n');
 
     expect(workflow).toContain(`- os: windows-latest
             node-version: 22`);

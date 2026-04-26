@@ -70,18 +70,21 @@ beforeEach(() => {
 });
 
 describe('installAsPack', () => {
+  // `path.join` produces native separators on Windows; match either form.
+  const packsDirPattern = /[\\/]project[\\/]\.agentsmesh[\\/]packs$/;
+
   it('calls materializePack when no existing pack', async () => {
     await installAsPack(baseArgs);
     expect(mockMaterializePack).toHaveBeenCalledOnce();
     const [packsDir, packName] = mockMaterializePack.mock.calls[0] as unknown[];
-    expect(packsDir).toBe('/project/.agentsmesh/packs');
+    expect(typeof packsDir === 'string' && packsDirPattern.test(packsDir)).toBe(true);
     expect(packName).toBe('my-pack');
   });
 
   it('calls findExistingPack with correct packsDir and source', async () => {
     await installAsPack(baseArgs);
     expect(mockFindExistingPack).toHaveBeenCalledWith(
-      '/project/.agentsmesh/packs',
+      expect.stringMatching(packsDirPattern),
       'github:org/repo@abc123',
       { target: undefined, as: undefined, features: ['skills'] },
     );
@@ -130,7 +133,7 @@ describe('installAsPack', () => {
     await installAsPack({ ...baseArgs, manualAs: 'agents' });
 
     expect(mockFindExistingPack).toHaveBeenCalledWith(
-      '/project/.agentsmesh/packs',
+      expect.stringMatching(packsDirPattern),
       baseArgs.sourceForYaml,
       {
         target: undefined,

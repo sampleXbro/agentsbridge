@@ -611,32 +611,35 @@ root: true
       );
     });
 
-    it('generates files correctly when global root is a symlink', () => {
-      const realDir = join(HOME_DIR, 'real-claude');
-      const symlinkDir = join(HOME_DIR, '.claude');
+    it.skipIf(process.platform === 'win32')(
+      'generates files correctly when global root is a symlink',
+      () => {
+        const realDir = join(HOME_DIR, 'real-claude');
+        const symlinkDir = join(HOME_DIR, '.claude');
 
-      mkdirSync(realDir, { recursive: true });
+        mkdirSync(realDir, { recursive: true });
 
-      try {
-        execSync(`ln -s ${realDir} ${symlinkDir}`, { stdio: 'ignore' });
-      } catch {
-        // Skip test if symlink creation fails (e.g., Windows without permissions)
-        return;
-      }
+        try {
+          execSync(`ln -s ${realDir} ${symlinkDir}`, { stdio: 'ignore' });
+        } catch {
+          // Skip test if symlink creation fails (e.g., Windows without permissions)
+          return;
+        }
 
-      execSync(`node ${CLI_PATH} generate --global`, {
-        cwd: PROJECT_DIR,
-        env: { ...process.env, HOME: HOME_DIR, USERPROFILE: HOME_DIR },
-      });
+        execSync(`node ${CLI_PATH} generate --global`, {
+          cwd: PROJECT_DIR,
+          env: { ...process.env, HOME: HOME_DIR, USERPROFILE: HOME_DIR },
+        });
 
-      // Files should be accessible through the symlink
-      const claudeMd = join(symlinkDir, 'CLAUDE.md');
-      expect(existsSync(claudeMd)).toBe(true);
+        // Files should be accessible through the symlink
+        const claudeMd = join(symlinkDir, 'CLAUDE.md');
+        expect(existsSync(claudeMd)).toBe(true);
 
-      // And also through the real directory
-      const realClaudeMd = join(realDir, 'CLAUDE.md');
-      expect(existsSync(realClaudeMd)).toBe(true);
-    });
+        // And also through the real directory
+        const realClaudeMd = join(realDir, 'CLAUDE.md');
+        expect(existsSync(realClaudeMd)).toBe(true);
+      },
+    );
 
     it('handles symlinked skill directories', () => {
       // Create a real skill in canonical location

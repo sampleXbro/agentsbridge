@@ -1,5 +1,4 @@
 import { statSync } from 'node:fs';
-import { join } from 'node:path';
 import type { GenerateResult } from '../types.js';
 import { pathApi, normalizeForProject, stripTrailingPunctuation } from '../path-helpers.js';
 import {
@@ -117,7 +116,10 @@ export function findBrokenMarkdownLinks(
 
   for (const result of results) {
     if (!isMarkdownLikeOutput(result.path)) continue;
-    const destinationAbs = normalizeForProject(projectRoot, join(projectRoot, result.path));
+    const destinationAbs = normalizeForProject(
+      projectRoot,
+      pathApi(projectRoot).join(projectRoot, result.path),
+    );
     const protectedR = protectedRanges(result.content);
 
     const visitDestination = (raw: string, matchIndex: number): void => {

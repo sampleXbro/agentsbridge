@@ -21,8 +21,8 @@
  * instead of generate-time maps.
  */
 import { existsSync, statSync } from 'node:fs';
-import { dirname, join } from 'node:path';
 import type { CanonicalFiles, GenerateResult } from '../types.js';
+import { pathApi } from '../path-helpers.js';
 import type { ValidatedConfig } from '../../config/core/schema.js';
 import { rewriteFileLinks } from './link-rebaser.js';
 import { buildArtifactPathMap, buildOutputSourceMap } from './output-source-map.js';
@@ -81,15 +81,20 @@ function sourceMapCacheKey(target: string, activeTargets: readonly string[] | un
 
 /** Paths that will exist after this generate run (outputs plus ancestor dirs). */
 export function collectPlannedPaths(projectRoot: string, results: GenerateResult[]): Set<string> {
+  // Match the link rebaser: pick the path API from the projectRoot format so
+  // that synthetic POSIX projectRoots in unit tests, and Windows-native
+  // projectRoots in real runs, both produce keys that match the validator's
+  // candidate lookups.
+  const api = pathApi(projectRoot);
   const planned = new Set<string>();
   for (const result of results) {
-    const absolutePath = join(projectRoot, result.path);
+    const absolutePath = api.join(projectRoot, result.path);
     planned.add(absolutePath);
-    let current = dirname(absolutePath);
+    let current = api.dirname(absolutePath);
     while (current.startsWith(projectRoot) && !planned.has(current)) {
       planned.add(current);
       if (current === projectRoot) break;
-      current = dirname(current);
+      current = api.dirname(current);
     }
   }
   return planned;
@@ -153,7 +158,7 @@ export function rewriteGeneratedReferences(
       content: result.content,
       projectRoot,
       sourceFile,
-      destinationFile: join(projectRoot, result.path),
+      destinationFile: pathApi(projectRoot).join(projectRoot, result.path),
       translatePath: (absolutePath) => artifactMap.get(absolutePath) ?? absolutePath,
       pathExists: (absolutePath) => plannedPaths.has(absolutePath) || existsSync(absolutePath),
       explicitCurrentDirLinks: true,

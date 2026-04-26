@@ -27,9 +27,11 @@ describe('runGenerate', () => {
   });
 
   it('accepts output paths under project root', () => {
-    expect(ensurePathInsideRoot('/repo', '.codex/config.toml', 'codex-cli')).toContain(
-      '/repo/.codex/config.toml',
-    );
+    // `ensurePathInsideRoot` returns a platform-native path; normalize for the
+    // POSIX-style assertion so it works on both Linux/macOS and Windows.
+    expect(
+      ensurePathInsideRoot('/repo', '.codex/config.toml', 'codex-cli').replace(/\\/g, '/'),
+    ).toContain('/repo/.codex/config.toml');
   });
 
   it('rejects the deprecated --features flag', async () => {

@@ -16,7 +16,10 @@ vi.mock('tar', () => ({
 }));
 
 function buildCacheKey(provider: string, identifier: string, ref: string): string {
-  return `${provider}:${identifier}:${ref}`;
+  // Avoid `:` in the path: it's reserved on Windows filenames (NTFS alternate
+  // streams) and the cache key is used directly as a directory name.
+  const safe = (value: string): string => value.replace(/[^a-zA-Z0-9_-]/g, '_');
+  return `${safe(provider)}__${safe(identifier)}__${safe(ref)}`;
 }
 
 afterEach(() => {

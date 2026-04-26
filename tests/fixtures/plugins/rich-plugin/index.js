@@ -18,6 +18,8 @@
 
 /* eslint-disable no-unused-vars */
 
+import { basename } from 'node:path';
+
 export const descriptor = {
   id: 'rich-plugin',
 
@@ -36,7 +38,9 @@ export const descriptor = {
         });
       }
       for (const rule of canonical.rules.filter((r) => !r.root)) {
-        const slug = rule.source.split('/').pop().replace(/\.md$/, '');
+        // Use platform-aware basename: `rule.source` uses native separators on
+        // Windows, so `split('/')` would return the entire absolute path.
+        const slug = basename(rule.source, '.md');
         results.push({
           path: `.rich/rules/${slug}.md`,
           content: `# ${rule.description}\n\n${rule.body}`,

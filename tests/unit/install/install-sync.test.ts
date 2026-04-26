@@ -56,7 +56,10 @@ describe('install-sync', () => {
         reinstall: vi.fn(),
       });
 
-      expect(mockExists).toHaveBeenCalledWith('/test/.agentsmesh/packs/test-pack');
+      // `path.join` produces native separators on Windows; assert via stringContaining.
+      expect(mockExists).toHaveBeenCalledWith(
+        expect.stringMatching(/[\\/]test[\\/]\.agentsmesh[\\/]packs[\\/]test-pack$/),
+      );
       expect(mockLoggerInfo).toHaveBeenCalledWith('All recorded packs are already installed.');
     });
 
@@ -76,8 +79,12 @@ describe('install-sync', () => {
         reinstall: mockReinstall,
       });
 
-      expect(mockExists).toHaveBeenCalledWith('/test/.agentsmesh/packs/missing-pack');
-      expect(mockExists).toHaveBeenCalledWith('/test/.agentsmesh/packs/existing-pack');
+      expect(mockExists).toHaveBeenCalledWith(
+        expect.stringMatching(/[\\/]test[\\/]\.agentsmesh[\\/]packs[\\/]missing-pack$/),
+      );
+      expect(mockExists).toHaveBeenCalledWith(
+        expect.stringMatching(/[\\/]test[\\/]\.agentsmesh[\\/]packs[\\/]existing-pack$/),
+      );
       expect(mockReinstall).toHaveBeenCalledWith(
         makeEntry({ name: 'missing-pack', source: '../missing' }),
       );

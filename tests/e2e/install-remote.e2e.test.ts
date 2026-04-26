@@ -25,7 +25,11 @@ function writeProject(root: string): string {
   return project;
 }
 
-describe('install remote github replay e2e', () => {
+// The test stubs `git` and `fetch` via a Node script with mode 0o755 on disk.
+// Windows ignores POSIX exec bits and looks for `.exe`/`.cmd`, so the stub
+// can't be invoked there. The behavior under test is platform-independent —
+// keep coverage on Linux/macOS.
+describe.skipIf(process.platform === 'win32')('install remote github replay e2e', () => {
   let root = '';
 
   afterEach(() => {

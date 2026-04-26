@@ -1,5 +1,6 @@
-import { dirname, join, normalize as normalizePath } from 'node:path';
+import { dirname } from 'node:path';
 import type { CanonicalFiles } from '../types.js';
+import { pathApi } from '../path-helpers.js';
 import { getTargetSkillDir } from '../../targets/catalog/builtin-targets.js';
 import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
 
@@ -7,9 +8,10 @@ function addPackAbsoluteDirMapping(
   refs: Map<string, string>,
   fromAbs: string,
   toAbs: string,
+  api: typeof import('node:path').posix,
 ): void {
-  const fromNorm = normalizePath(fromAbs);
-  const toNorm = normalizePath(toAbs);
+  const fromNorm = api.normalize(fromAbs);
+  const toNorm = api.normalize(toAbs);
   refs.set(fromNorm, toNorm);
   refs.set(`${fromNorm}/`, `${toNorm}/`);
 }
@@ -42,28 +44,32 @@ export function addPackSkillArtifactMappings(
   const skillDir = getTargetSkillDir(target, scope);
   if (!skillDir) return;
 
-  const packsPrefix = join(projectRoot, '.agentsmesh', 'packs');
+  // Match the rewriter: pick the path API from the projectRoot format so the
+  // same path appears identical in keys and lookups regardless of runtime OS.
+  const api = pathApi(projectRoot);
+  const packsPrefix = api.join(projectRoot, '.agentsmesh', 'packs');
 
   for (const skill of canonical.skills) {
     const skillSourceDir = dirname(skill.source);
     if (!skillSourceDir.startsWith(packsPrefix)) continue;
 
-    const targetSkillDir = normalizePath(join(projectRoot, skillDir, skill.name));
+    const targetSkillDir = api.normalize(api.join(projectRoot, skillDir, skill.name));
 
-    addPackAbsoluteDirMapping(refs, skillSourceDir, targetSkillDir);
+    addPackAbsoluteDirMapping(refs, skillSourceDir, targetSkillDir, api);
 
-    refs.set(normalizePath(skill.source), normalizePath(join(targetSkillDir, 'SKILL.md')));
+    refs.set(api.normalize(skill.source), api.normalize(api.join(targetSkillDir, 'SKILL.md')));
 
     for (const file of skill.supportingFiles) {
-      const targetFilePath = normalizePath(join(targetSkillDir, file.relativePath));
-      refs.set(normalizePath(file.absolutePath), targetFilePath);
+      const targetFilePath = api.normalize(api.join(targetSkillDir, file.relativePath));
+      refs.set(api.normalize(file.absolutePath), targetFilePath);
     }
 
     for (const relPrefix of skillSupportingDirPrefixes(skill.supportingFiles)) {
       addPackAbsoluteDirMapping(
         refs,
-        join(skillSourceDir, relPrefix),
-        join(targetSkillDir, relPrefix),
+        api.join(skillSourceDir, relPrefix),
+        api.join(targetSkillDir, relPrefix),
+        api,
       );
     }
   }

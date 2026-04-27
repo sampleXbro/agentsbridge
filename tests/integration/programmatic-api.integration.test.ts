@@ -293,6 +293,43 @@ description: Pack rule
     expect(context.configDir).toBe(projectRoot);
     expect(context.canonicalDir).toBe(canonicalDir);
   });
+
+  it('falls back to local canonical when no agentsmesh.yaml exists (catch path)', async () => {
+    // No agentsmesh.yaml at all — `loadConfigFromDir` throws ConfigNotFoundError,
+    // and `loadCanonical` should fall back to `loadCanonicalFiles(projectRoot)`.
+    const projectRoot = join(TEST_ROOT, 'load-canonical-no-config');
+    mkdirSync(join(projectRoot, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(
+      join(projectRoot, '.agentsmesh', 'rules', '_root.md'),
+      '---\nroot: true\ndescription: "Local only"\n---\n# local\n',
+    );
+    const canonical = await loadCanonical(projectRoot);
+    expect(canonical.rules).toHaveLength(1);
+    expect(canonical.rules[0]?.description).toBe('Local only');
+  });
+
+  it('falls back to overridden canonicalDir when no agentsmesh.yaml exists', async () => {
+    // Same fallback path but with explicit `canonicalDir` override.
+    const projectRoot = join(TEST_ROOT, 'load-canonical-no-config-override');
+    const altCanonicalDir = join(projectRoot, 'custom-mesh');
+    mkdirSync(join(altCanonicalDir, 'rules'), { recursive: true });
+    writeFileSync(
+      join(altCanonicalDir, 'rules', '_root.md'),
+      '---\nroot: true\ndescription: "Custom mesh"\n---\n# custom\n',
+    );
+    const canonical = await loadCanonical(projectRoot, { canonicalDir: altCanonicalDir });
+    expect(canonical.rules).toHaveLength(1);
+    expect(canonical.rules[0]?.description).toBe('Custom mesh');
+  });
+
+  it('rethrows non-ConfigNotFound errors from loadConfigFromDir', async () => {
+    // A malformed agentsmesh.yaml triggers ConfigValidationError, which must
+    // bubble up — the catch path only swallows ConfigNotFoundError.
+    const projectRoot = join(TEST_ROOT, 'load-canonical-malformed');
+    mkdirSync(join(projectRoot, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(join(projectRoot, 'agentsmesh.yaml'), 'version: "not-a-number"\n');
+    await expect(loadCanonical(projectRoot)).rejects.toThrow(ConfigValidationError);
+  });
 });
 
 describe('Programmatic API — generate', () => {
@@ -458,6 +495,32 @@ alwaysApply: false
     expect(readFileSync(join(dir, '.agentsmesh', 'rules', 'plugin.md'), 'utf-8')).toBe(
       '# Imported from plugin\n',
     );
+  });
+
+  it('throws TargetNotFoundError for an unknown target ID', async () => {
+    const dir = join(TEST_ROOT, 'import-unknown-target');
+    mkdirSync(dir, { recursive: true });
+    await expect(
+      importFrom('definitely-not-a-real-target', { root: dir, scope: 'project' }),
+    ).rejects.toBeInstanceOf(TargetNotFoundError);
+  });
+
+  it('TargetNotFoundError surfaces the supported target list (builtins + plugins)', async () => {
+    const dir = join(TEST_ROOT, 'import-unknown-target-list');
+    mkdirSync(dir, { recursive: true });
+    registerTargetDescriptor(makeTestPluginDescriptor('plugin-for-supported-list'));
+    let captured: TargetNotFoundError | null = null;
+    try {
+      await importFrom('still-unknown-target', { root: dir, scope: 'project' });
+    } catch (err) {
+      captured = err as TargetNotFoundError;
+    }
+    expect(captured).toBeInstanceOf(TargetNotFoundError);
+    expect(captured?.code).toBe('AM_TARGET_NOT_FOUND');
+    expect(captured?.target).toBe('still-unknown-target');
+    // The message must list both builtins (cursor) and registered plugins.
+    expect(captured?.message).toContain('cursor');
+    expect(captured?.message).toContain('plugin-for-supported-list');
   });
 });
 

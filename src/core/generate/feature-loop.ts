@@ -7,7 +7,6 @@ import {
   rewriteGeneratedOutputPath,
 } from '../../targets/catalog/builtin-targets.js';
 import { getDescriptor } from '../../targets/catalog/registry.js';
-import { normalizeTargetCapabilities } from '../../targets/catalog/capabilities.js';
 import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
 import type { CapabilityFeatureKey } from '../../targets/catalog/capabilities.js';
 import type {
@@ -78,18 +77,9 @@ export function featureContext(
   feature: CapabilityFeatureKey,
   scope: TargetLayoutScope,
 ): GenerateFeatureContext {
-  let caps = getTargetCapabilities(target, scope);
-  if (!caps) {
-    // Fall back to registry for plugin targets
-    const desc = getDescriptor(target);
-    if (desc) {
-      const rawCaps =
-        scope === 'global'
-          ? (desc.globalSupport?.capabilities ?? desc.capabilities)
-          : desc.capabilities;
-      caps = normalizeTargetCapabilities(rawCaps);
-    }
-  }
+  // `getTargetCapabilities` already falls back to the plugin registry via
+  // `getDescriptor`, so no further fallback is needed here.
+  const caps = getTargetCapabilities(target, scope);
   return {
     capability: caps?.[feature] ?? { level: 'none' },
     scope,
@@ -114,16 +104,9 @@ export async function generateFeature(
     for (const out of gen(canonical, ctx)) {
       const resolvedPath = await emitGeneratedOutput(results, target, out, projectRoot, scope);
       if (resolvedPath === null) continue;
-      let layout = getTargetLayout(target, scope);
-      if (!layout) {
-        const desc = getDescriptor(target);
-        layout =
-          desc !== undefined
-            ? scope === 'global'
-              ? desc.globalSupport?.layout
-              : desc.project
-            : undefined;
-      }
+      // `getTargetLayout` already falls back to the plugin registry via
+      // `getDescriptor`, so no separate descriptor lookup is needed.
+      const layout = getTargetLayout(target, scope);
       if (layout?.mirrorGlobalPath) {
         const raw = layout.mirrorGlobalPath(resolvedPath, targets);
         const mirrorPaths = raw === null ? [] : Array.isArray(raw) ? raw : [raw];

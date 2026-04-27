@@ -98,7 +98,7 @@ describe('global mode round-trip: Claude Code', () => {
     fileContains(join(homeDir, '.agents', 'skills', 'test-skill', 'SKILL.md'), 'Does testing');
     fileExists(join(homeDir, '.agents', 'skills', 'test-skill', 'references', 'checklist.md'));
 
-    // 5b. Output-styles (descriptor.generateScopeExtras → ~/.claude/output-styles/, managedOutputs dir)
+    // 5b. Output-styles (descriptor.globalSupport.scopeExtras → ~/.claude/output-styles/, managedOutputs dir)
     fileExists(join(homeDir, '.claude', 'output-styles', 'review.md'));
     fileContains(join(homeDir, '.claude', 'output-styles', 'review.md'), 'Review code quality');
 

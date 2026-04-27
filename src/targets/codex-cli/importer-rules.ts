@@ -1,4 +1,4 @@
-import { dirname, join, relative } from 'node:path';
+import { basename, dirname, join, relative } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
 import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 import {
@@ -110,9 +110,10 @@ export async function importCodexRules(
         normalize,
         mapEntry: async ({ srcPath, normalizeTo }) => {
           const relDir = relative(projectRoot, dirname(srcPath)).replace(/\\/g, '/');
-          const isOverride = srcPath.endsWith('/AGENTS.override.md');
+          const fileName = basename(srcPath);
+          const isOverride = fileName === 'AGENTS.override.md';
           if (!relDir || relDir === '.') return null;
-          if (!isOverride && !srcPath.endsWith('/AGENTS.md')) return null;
+          if (!isOverride && fileName !== 'AGENTS.md') return null;
           const ruleName = relDir.replace(/\//g, '-');
           if (!shouldImportScopedAgentsRule(relDir)) {
             await removePathIfExists(join(destDir, `${ruleName}.md`));

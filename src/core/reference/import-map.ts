@@ -1,4 +1,4 @@
-import { getBuiltinTargetDefinition } from '../../targets/catalog/builtin-targets.js';
+import { getDescriptor } from '../../targets/catalog/registry.js';
 import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
 
 export async function buildImportReferenceMap(
@@ -7,7 +7,7 @@ export async function buildImportReferenceMap(
   scope: TargetLayoutScope = 'project',
 ): Promise<Map<string, string>> {
   const refs = new Map<string, string>();
-  const def = getBuiltinTargetDefinition(target);
+  const def = getDescriptor(target);
   if (def) {
     await def.buildImportPaths(refs, projectRoot, scope);
   }

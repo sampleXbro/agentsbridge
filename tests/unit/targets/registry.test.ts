@@ -30,6 +30,7 @@ const mockDescriptor: TargetDescriptor = {
   generators: mockGenerators,
   capabilities: {
     rules: 'native',
+    additionalRules: 'none',
     commands: 'none',
     agents: 'none',
     skills: 'none',
@@ -81,12 +82,15 @@ describe('target registry', () => {
 
   it('registers and retrieves a full descriptor', () => {
     registerTargetDescriptor(mockDescriptor);
-    expect(getDescriptor('plugin-target')).toBe(mockDescriptor);
+    expect(getDescriptor('plugin-target')).toMatchObject({
+      id: 'plugin-target',
+      emptyImportMessage: 'No plugin config found.',
+    });
   });
 
   it('getTarget resolves generators from registered descriptor', () => {
     registerTargetDescriptor(mockDescriptor);
-    expect(getTarget('plugin-target')).toBe(mockGenerators);
+    expect(getTarget('plugin-target').name).toBe(mockGenerators.name);
   });
 
   it('getDescriptor returns built-in descriptors', () => {
@@ -103,7 +107,7 @@ describe('target registry', () => {
   it('getAllDescriptors returns only plugin descriptors', () => {
     registerTargetDescriptor(mockDescriptor);
     expect(getAllDescriptors()).toHaveLength(1);
-    expect(getAllDescriptors()[0]).toBe(mockDescriptor);
+    expect(getAllDescriptors()[0]?.id).toBe('plugin-target');
   });
 
   it('resetRegistry clears descriptors too', () => {

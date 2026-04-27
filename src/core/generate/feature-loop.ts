@@ -7,7 +7,6 @@ import {
   rewriteGeneratedOutputPath,
 } from '../../targets/catalog/builtin-targets.js';
 import { getDescriptor } from '../../targets/catalog/registry.js';
-import { normalizeTargetCapabilities } from '../../targets/catalog/capabilities.js';
 import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
 import type { CapabilityFeatureKey } from '../../targets/catalog/capabilities.js';
 import type {
@@ -21,23 +20,66 @@ export function computeStatus(existing: string | null, content: string): Generat
   return 'unchanged';
 }
 
+export function resolveGeneratedOutputPath(
+  target: string,
+  path: string,
+  scope: TargetLayoutScope,
+): string | null {
+  let resolvedPath = rewriteGeneratedOutputPath(target, path, scope);
+  if (resolvedPath !== null) return resolvedPath;
+
+  const desc = getDescriptor(target);
+  if (!desc) return null;
+  const layout = scope === 'global' ? desc.globalSupport?.layout : desc.project;
+  if (!layout) return null;
+  resolvedPath = layout.rewriteGeneratedPath ? layout.rewriteGeneratedPath(path) : path;
+  return resolvedPath;
+}
+
+export async function emitGeneratedOutput(
+  results: GenerateResult[],
+  target: string,
+  out: { readonly path: string; readonly content: string },
+  projectRoot: string,
+  scope: TargetLayoutScope,
+  options?: {
+    readonly mergeContent?: (
+      existing: string | null,
+      pending: GenerateResult | undefined,
+      newContent: string,
+      resolvedPath: string,
+    ) => string;
+  },
+): Promise<string | null> {
+  const resolvedPath = resolveGeneratedOutputPath(target, out.path, scope);
+  if (resolvedPath === null) return null;
+
+  const existing = await readFileSafe(join(projectRoot, resolvedPath));
+  const pendingIdx = results.findIndex((r) => r.path === resolvedPath && r.target === target);
+  const pendingResult = pendingIdx >= 0 ? results[pendingIdx] : undefined;
+  const content =
+    options?.mergeContent?.(existing, pendingResult, out.content, resolvedPath) ?? out.content;
+  if (pendingIdx >= 0) {
+    results.splice(pendingIdx, 1);
+  }
+  results.push({
+    target,
+    path: resolvedPath,
+    content,
+    currentContent: existing ?? undefined,
+    status: computeStatus(existing, content),
+  });
+  return resolvedPath;
+}
+
 export function featureContext(
   target: string,
   feature: CapabilityFeatureKey,
   scope: TargetLayoutScope,
 ): GenerateFeatureContext {
-  let caps = getTargetCapabilities(target, scope);
-  if (!caps) {
-    // Fall back to registry for plugin targets
-    const desc = getDescriptor(target);
-    if (desc) {
-      const rawCaps =
-        scope === 'global'
-          ? (desc.globalSupport?.capabilities ?? desc.globalCapabilities ?? desc.capabilities)
-          : desc.capabilities;
-      caps = normalizeTargetCapabilities(rawCaps);
-    }
-  }
+  // `getTargetCapabilities` already falls back to the plugin registry via
+  // `getDescriptor`, so no further fallback is needed here.
+  const caps = getTargetCapabilities(target, scope);
   return {
     capability: caps?.[feature] ?? { level: 'none' },
     scope,
@@ -60,38 +102,11 @@ export async function generateFeature(
     if (!gen) continue;
     const ctx = featureContext(target, feature, scope);
     for (const out of gen(canonical, ctx)) {
-      // rewriteGeneratedOutputPath returns null for unknown targets — fall back to registry
-      let resolvedPath = rewriteGeneratedOutputPath(target, out.path, scope);
-      if (resolvedPath === null) {
-        const desc = getDescriptor(target);
-        if (!desc) continue;
-        const layout =
-          scope === 'global'
-            ? (desc.globalSupport?.layout ?? desc.global ?? desc.project)
-            : desc.project;
-        resolvedPath = layout.rewriteGeneratedPath
-          ? layout.rewriteGeneratedPath(out.path)
-          : out.path;
-        if (resolvedPath === null) continue;
-      }
-      const existing = await readFileSafe(join(projectRoot, resolvedPath));
-      results.push({
-        target,
-        path: resolvedPath,
-        content: out.content,
-        currentContent: existing ?? undefined,
-        status: computeStatus(existing, out.content),
-      });
-      let layout = getTargetLayout(target, scope);
-      if (!layout) {
-        const desc = getDescriptor(target);
-        layout =
-          desc !== undefined
-            ? scope === 'global'
-              ? (desc.globalSupport?.layout ?? desc.global ?? desc.project)
-              : desc.project
-            : undefined;
-      }
+      const resolvedPath = await emitGeneratedOutput(results, target, out, projectRoot, scope);
+      if (resolvedPath === null) continue;
+      // `getTargetLayout` already falls back to the plugin registry via
+      // `getDescriptor`, so no separate descriptor lookup is needed.
+      const layout = getTargetLayout(target, scope);
       if (layout?.mirrorGlobalPath) {
         const raw = layout.mirrorGlobalPath(resolvedPath, targets);
         const mirrorPaths = raw === null ? [] : Array.isArray(raw) ? raw : [raw];

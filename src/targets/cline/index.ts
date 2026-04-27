@@ -25,7 +25,7 @@ import {
 } from './constants.js';
 import { importFromCline } from './importer.js';
 import { lintRules } from './linter.js';
-import { lintCommands } from './lint.js';
+import { lintCommands, lintHooks } from './lint.js';
 import { buildClineImportPaths } from '../../core/reference/import-map-builders.js';
 import { shouldConvertAgentsToSkills } from '../../config/core/conversions.js';
 import { projectedAgentSkillDirName } from '../projection/projected-agent-skill.js';
@@ -148,6 +148,7 @@ export const descriptor = {
   lintRules,
   lint: {
     commands: lintCommands,
+    hooks: lintHooks,
   },
   project,
   globalSupport: {
@@ -162,8 +163,6 @@ export const descriptor = {
     ],
     layout: globalLayout,
   },
-  skillDir: project.skillDir,
-  paths: project.paths,
   buildImportPaths: buildClineImportPaths,
   detectionPaths: ['.clinerules', '.cline'],
 } satisfies TargetDescriptor;

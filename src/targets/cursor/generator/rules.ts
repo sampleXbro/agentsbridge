@@ -1,3 +1,4 @@
+import { basename } from 'node:path';
 import type { CanonicalFiles } from '../../../core/types.js';
 import { serializeFrontmatter } from '../../../utils/text/markdown.js';
 import { appendEmbeddedRulesBlock } from '../../projection/managed-blocks.js';
@@ -26,7 +27,7 @@ export function generateRules(canonical: CanonicalFiles): RulesOutput[] {
     (r) => !r.root && (r.targets.length === 0 || r.targets.includes('cursor')),
   );
   for (const rule of nonRoot) {
-    const slug = rule.source.split('/').pop()!.replace(/\.md$/, '');
+    const slug = basename(rule.source, '.md');
     const alwaysApply = rule.trigger === 'always_on' ? true : false;
     const frontmatter: Record<string, unknown> = { alwaysApply };
     if (rule.description) frontmatter.description = rule.description;

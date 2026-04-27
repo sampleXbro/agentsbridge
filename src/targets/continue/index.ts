@@ -120,8 +120,6 @@ export const descriptor = {
     layout: globalLayout,
     scopeExtras: generateContinueScopeExtras,
   },
-  skillDir: project.skillDir,
-  paths: project.paths,
   buildImportPaths: buildContinueImportPaths,
   detectionPaths: ['.continue/rules', '.continue/skills', '.continue/mcpServers'],
 } satisfies TargetDescriptor;

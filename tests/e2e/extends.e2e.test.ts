@@ -77,32 +77,38 @@ describe('extends and local overrides', () => {
     expect(readFileSync(join(dir, '.agentsmesh', '.lock'), 'utf-8')).toContain('remote-base');
   });
 
-  it('refreshes cached github extends when --refresh-cache is used', async () => {
-    dir = createTestProject();
-    cacheDir = createTestProject();
-    rmSync(cacheDir, { recursive: true, force: true });
+  // Uses NODE_OPTIONS=--import=<file> to mock `fetch`. Windows path quoting
+  // for NODE_OPTIONS doesn't pass the preload path cleanly, so the mock never
+  // runs and the install hits real github.com — which CI runners block.
+  // The behavior under test is platform-independent; skip on Windows.
+  it.skipIf(process.platform === 'win32')(
+    'refreshes cached github extends when --refresh-cache is used',
+    async () => {
+      dir = createTestProject();
+      cacheDir = createTestProject();
+      rmSync(cacheDir, { recursive: true, force: true });
 
-    mkdirSync(join(cacheDir, 'org-repo-v1_0_0', 'org-repo-v1.0.0', '.agentsmesh', 'rules'), {
-      recursive: true,
-    });
-    writeFileSync(
-      join(cacheDir, 'org-repo-v1_0_0', 'org-repo-v1.0.0', '.agentsmesh', 'rules', '_root.md'),
-      '---\nroot: true\n---\n# Stale remote\n',
-    );
+      mkdirSync(join(cacheDir, 'org-repo-v1_0_0', 'org-repo-v1.0.0', '.agentsmesh', 'rules'), {
+        recursive: true,
+      });
+      writeFileSync(
+        join(cacheDir, 'org-repo-v1_0_0', 'org-repo-v1.0.0', '.agentsmesh', 'rules', '_root.md'),
+        '---\nroot: true\n---\n# Stale remote\n',
+      );
 
-    const remoteSrc = join(dir, 'remote-src');
-    mkdirSync(join(remoteSrc, 'org-repo-v1.0.0', '.agentsmesh', 'rules'), { recursive: true });
-    writeFileSync(
-      join(remoteSrc, 'org-repo-v1.0.0', '.agentsmesh', 'rules', '_root.md'),
-      '---\nroot: true\n---\n# Refreshed remote\n',
-    );
-    const tarball = join(dir, 'remote.tar.gz');
-    await tar.c({ file: tarball, gzip: true, cwd: remoteSrc }, ['org-repo-v1.0.0']);
+      const remoteSrc = join(dir, 'remote-src');
+      mkdirSync(join(remoteSrc, 'org-repo-v1.0.0', '.agentsmesh', 'rules'), { recursive: true });
+      writeFileSync(
+        join(remoteSrc, 'org-repo-v1.0.0', '.agentsmesh', 'rules', '_root.md'),
+        '---\nroot: true\n---\n# Refreshed remote\n',
+      );
+      const tarball = join(dir, 'remote.tar.gz');
+      await tar.c({ file: tarball, gzip: true, cwd: remoteSrc }, ['org-repo-v1.0.0']);
 
-    const preloadPath = join(dir, 'mock-fetch.mjs');
-    writeFileSync(
-      preloadPath,
-      `import { readFile } from 'node:fs/promises';
+      const preloadPath = join(dir, 'mock-fetch.mjs');
+      writeFileSync(
+        preloadPath,
+        `import { readFile } from 'node:fs/promises';
 
 const originalFetch = globalThis.fetch.bind(globalThis);
 globalThis.fetch = async (input, init) => {
@@ -120,27 +126,30 @@ globalThis.fetch = async (input, init) => {
   return originalFetch(input, init);
 };
 `,
-    );
+      );
 
-    mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
-    writeFileSync(
-      join(dir, 'agentsmesh.yaml'),
-      'version: 1\ntargets: [claude-code]\nfeatures: [rules]\nextends:\n  - name: remote-base\n    source: github:org/repo@v1.0.0\n    features: [rules]\n',
-    );
+      mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
+      writeFileSync(
+        join(dir, 'agentsmesh.yaml'),
+        'version: 1\ntargets: [claude-code]\nfeatures: [rules]\nextends:\n  - name: remote-base\n    source: github:org/repo@v1.0.0\n    features: [rules]\n',
+      );
 
-    const result = await runCli('generate --refresh-cache', dir, {
-      AGENTSMESH_CACHE: cacheDir,
-      AB_TEST_TARBALL: tarball,
-      NODE_OPTIONS: `--import=${preloadPath}`,
-    });
+      const result = await runCli('generate --refresh-cache', dir, {
+        AGENTSMESH_CACHE: cacheDir,
+        AB_TEST_TARBALL: tarball,
+        NODE_OPTIONS: `--import=${preloadPath}`,
+      });
 
-    expect(result.exitCode).toBe(0);
-    expect(readFileSync(join(dir, '.claude', 'CLAUDE.md'), 'utf-8')).toContain('Refreshed remote');
-    expect(
-      readFileSync(
-        join(cacheDir, 'org-repo-v1_0_0', 'org-repo-v1.0.0', '.agentsmesh', 'rules', '_root.md'),
-        'utf-8',
-      ),
-    ).toContain('Refreshed remote');
-  });
+      expect(result.exitCode).toBe(0);
+      expect(readFileSync(join(dir, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
+        'Refreshed remote',
+      );
+      expect(
+        readFileSync(
+          join(cacheDir, 'org-repo-v1_0_0', 'org-repo-v1.0.0', '.agentsmesh', 'rules', '_root.md'),
+          'utf-8',
+        ),
+      ).toContain('Refreshed remote');
+    },
+  );
 });

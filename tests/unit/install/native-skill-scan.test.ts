@@ -78,7 +78,12 @@ describe('skillNamesFromNativeSkillDir', () => {
     expect(result).toEqual(['.md', 'scanRoot']);
   });
 
-  it('normalizes path separators', async () => {
+  it('handles backslash-separated paths according to the runtime platform', async () => {
+    // On Windows, `\` is the native separator and these paths resolve correctly,
+    // yielding the per-skill names. On POSIX, `\` is a literal character and the
+    // basenames don't separate, yielding an empty result. Both shapes are
+    // expected platform behavior — the production code uses `node:path` which
+    // is platform-aware.
     mockReadDirRecursive.mockResolvedValue([
       'C:\\scanRoot\\skill1\\SKILL.md',
       'C:\\scanRoot\\skill2\\SKILL.md',
@@ -86,7 +91,11 @@ describe('skillNamesFromNativeSkillDir', () => {
 
     const result = await skillNamesFromNativeSkillDir('C:\\scanRoot');
 
-    expect(result).toEqual([]);
+    if (process.platform === 'win32') {
+      expect(result).toEqual(['skill1', 'skill2']);
+    } else {
+      expect(result).toEqual([]);
+    }
   });
 
   it('sorts results alphabetically', async () => {

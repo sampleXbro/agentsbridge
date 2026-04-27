@@ -34,6 +34,7 @@ import {
   getTargetCatalog,
   importFrom,
   lint,
+  loadProjectContext,
   loadCanonical,
   loadCanonicalFiles,
   loadConfig,
@@ -45,6 +46,7 @@ import {
   type GenerateResult,
   type LintResult,
   type LockSyncReport,
+  type ProjectContext,
   type TargetDescriptor,
   type ValidatedConfig,
 } from '../../src/public/index.js';
@@ -80,6 +82,46 @@ description: "Project rules"
   return { projectRoot, canonicalDir };
 }
 
+function makeTestPluginDescriptor(
+  id: string,
+  overrides: Partial<TargetDescriptor> = {},
+): TargetDescriptor {
+  const descriptor: TargetDescriptor = {
+    id,
+    generators: {
+      name: id,
+      generateRules: () => [{ path: `.test-plugin/${id}.md`, content: `# ${id}` }],
+      importFrom: async () => [],
+    },
+    capabilities: {
+      rules: 'native',
+      additionalRules: 'none',
+      commands: 'none',
+      agents: 'none',
+      skills: 'none',
+      mcp: 'none',
+      hooks: 'none',
+      ignore: 'none',
+      permissions: 'none',
+    },
+    emptyImportMessage: `no ${id} config`,
+    lintRules: null,
+    project: {
+      rootInstructionPath: `.test-plugin/${id}.md`,
+      managedOutputs: { dirs: [], files: [`.test-plugin/${id}.md`] },
+      paths: {
+        rulePath: () => `.test-plugin/${id}.md`,
+        commandPath: () => null,
+        agentPath: () => null,
+      },
+    },
+    buildImportPaths: async () => {},
+    detectionPaths: ['.test-plugin'],
+    ...overrides,
+  };
+  return descriptor;
+}
+
 beforeEach(() => {
   mkdirSync(TEST_ROOT, { recursive: true });
 });
@@ -92,6 +134,7 @@ describe('Programmatic API — entrypoint shape', () => {
   it('every runtime function is callable and every error class is constructible', () => {
     expect(typeof generate).toBe('function');
     expect(typeof importFrom).toBe('function');
+    expect(typeof loadProjectContext).toBe('function');
     expect(typeof loadCanonical).toBe('function');
     expect(typeof loadCanonicalFiles).toBe('function');
     expect(typeof loadConfig).toBe('function');
@@ -168,11 +211,124 @@ describe('Programmatic API — loadCanonical', () => {
     expect(canonical.rules[0]?.body).toContain('Use TypeScript');
   });
 
-  it('loadCanonicalFiles is the same loader (compatibility alias)', async () => {
-    const { projectRoot } = createMinimalProject('load-canonical-alias');
+  it('loadCanonicalFiles reads local canonical content without extends or packs', async () => {
+    const { projectRoot } = createMinimalProject('load-canonical-local-only');
     const a = await loadCanonical(projectRoot);
     const b = await loadCanonicalFiles(projectRoot);
     expect(b.rules).toHaveLength(a.rules.length);
+  });
+
+  it('loadCanonical rejects partial preloaded config options', async () => {
+    const { projectRoot } = createMinimalProject('load-canonical-option-pairs');
+    const { config } = await loadConfig(projectRoot);
+    await expect(loadCanonical(projectRoot, { config })).rejects.toThrow(
+      /both config and configDir/,
+    );
+    await expect(loadCanonical(projectRoot, { configDir: projectRoot })).rejects.toThrow(
+      /both config and configDir/,
+    );
+  });
+
+  it('loadCanonical and loadProjectContext include extends and packs like the CLI', async () => {
+    const { projectRoot, canonicalDir } = createMinimalProject('load-merged-canonical');
+    mkdirSync(join(projectRoot, 'shared', '.agentsmesh', 'rules'), { recursive: true });
+    mkdirSync(join(canonicalDir, 'packs', 'review-pack', 'rules'), { recursive: true });
+    writeFileSync(
+      join(projectRoot, 'agentsmesh.yaml'),
+      `version: 1
+targets: [claude-code]
+features: [rules]
+extends:
+  - name: shared
+    source: ./shared
+    features: [rules]
+`,
+    );
+    writeFileSync(
+      join(projectRoot, 'shared', '.agentsmesh', 'rules', 'shared.md'),
+      `---
+description: Shared rule
+---
+# Shared
+`,
+    );
+    writeFileSync(
+      join(canonicalDir, 'packs', 'review-pack', 'pack.yaml'),
+      `name: review-pack
+source: local
+source_kind: local
+installed_at: "2026-04-26T00:00:00Z"
+updated_at: "2026-04-26T00:00:00Z"
+features: [rules]
+content_hash: "sha256:review"
+`,
+    );
+    writeFileSync(
+      join(canonicalDir, 'packs', 'review-pack', 'rules', 'pack.md'),
+      `---
+description: Pack rule
+---
+# Pack
+`,
+    );
+
+    const localOnly = await loadCanonicalFiles(projectRoot);
+    const explicitLocal = await loadCanonical(projectRoot, { includeExtends: false });
+    const merged = await loadCanonical(projectRoot);
+    const context: ProjectContext = await loadProjectContext(projectRoot);
+
+    expect(localOnly.rules.map((r) => r.description).sort()).toEqual(['Project rules']);
+    expect(explicitLocal.rules.map((r) => r.description).sort()).toEqual(['Project rules']);
+    expect(merged.rules.map((r) => r.description).sort()).toEqual([
+      'Pack rule',
+      'Project rules',
+      'Shared rule',
+    ]);
+    expect(context.canonical.rules.map((r) => r.description).sort()).toEqual([
+      'Pack rule',
+      'Project rules',
+      'Shared rule',
+    ]);
+    expect(context.projectRoot).toBe(projectRoot);
+    expect(context.configDir).toBe(projectRoot);
+    expect(context.canonicalDir).toBe(canonicalDir);
+  });
+
+  it('falls back to local canonical when no agentsmesh.yaml exists (catch path)', async () => {
+    // No agentsmesh.yaml at all — `loadConfigFromDir` throws ConfigNotFoundError,
+    // and `loadCanonical` should fall back to `loadCanonicalFiles(projectRoot)`.
+    const projectRoot = join(TEST_ROOT, 'load-canonical-no-config');
+    mkdirSync(join(projectRoot, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(
+      join(projectRoot, '.agentsmesh', 'rules', '_root.md'),
+      '---\nroot: true\ndescription: "Local only"\n---\n# local\n',
+    );
+    const canonical = await loadCanonical(projectRoot);
+    expect(canonical.rules).toHaveLength(1);
+    expect(canonical.rules[0]?.description).toBe('Local only');
+  });
+
+  it('falls back to overridden canonicalDir when no agentsmesh.yaml exists', async () => {
+    // Same fallback path but with explicit `canonicalDir` override.
+    const projectRoot = join(TEST_ROOT, 'load-canonical-no-config-override');
+    const altCanonicalDir = join(projectRoot, 'custom-mesh');
+    mkdirSync(join(altCanonicalDir, 'rules'), { recursive: true });
+    writeFileSync(
+      join(altCanonicalDir, 'rules', '_root.md'),
+      '---\nroot: true\ndescription: "Custom mesh"\n---\n# custom\n',
+    );
+    const canonical = await loadCanonical(projectRoot, { canonicalDir: altCanonicalDir });
+    expect(canonical.rules).toHaveLength(1);
+    expect(canonical.rules[0]?.description).toBe('Custom mesh');
+  });
+
+  it('rethrows non-ConfigNotFound errors from loadConfigFromDir', async () => {
+    // A malformed agentsmesh.yaml triggers ConfigValidationError, which must
+    // bubble up — the catch path only swallows ConfigNotFoundError.
+    const projectRoot = join(TEST_ROOT, 'load-canonical-malformed');
+    mkdirSync(join(projectRoot, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(join(projectRoot, 'agentsmesh.yaml'), 'version: "not-a-number"\n');
+    await expect(loadCanonical(projectRoot)).rejects.toThrow(ConfigValidationError);
   });
 });
 
@@ -249,27 +405,13 @@ description: "Project rules"
       { path: '.test-plugin/plugin.md', content: '# emitted by test plugin' },
     ];
 
-    const fakeDescriptor = {
-      id: 'test-plugin-target',
+    const fakeDescriptor = makeTestPluginDescriptor('test-plugin-target', {
       generators: {
         name: 'test-plugin-target',
         primaryRootInstructionPath: '.test-plugin/plugin.md',
         generateRules: () => generatedFiles,
         importFrom: async () => [],
       },
-      capabilities: {
-        rules: 'native',
-        additionalRules: 'none',
-        commands: 'none',
-        agents: 'none',
-        skills: 'none',
-        mcp: 'none',
-        hooks: 'none',
-        ignore: 'none',
-        permissions: 'none',
-      },
-      emptyImportMessage: 'no test plugin config',
-      lintRules: null,
       project: {
         rootInstructionPath: '.test-plugin/plugin.md',
         skillDir: '.test-plugin/skills',
@@ -280,15 +422,7 @@ description: "Project rules"
           agentPath: () => null,
         },
       },
-      skillDir: '.test-plugin/skills',
-      paths: {
-        rulePath: () => '.test-plugin/plugin.md',
-        commandPath: () => null,
-        agentPath: () => null,
-      },
-      buildImportPaths: () => ({}),
-      detectionPaths: ['.test-plugin'],
-    } as unknown as TargetDescriptor;
+    });
 
     registerTargetDescriptor(fakeDescriptor);
 
@@ -328,6 +462,65 @@ alwaysApply: false
     const rulePath = join(dir, '.agentsmesh', 'rules', 'sample.md');
     expect(existsSync(rulePath)).toBe(true);
     expect(readFileSync(rulePath, 'utf-8')).toContain('pattern X');
+  });
+
+  it('imports through registered plugin descriptors', async () => {
+    const dir = join(TEST_ROOT, 'plugin-import-flow');
+    mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
+    const pluginDescriptor = makeTestPluginDescriptor('test-plugin-import', {
+      generators: {
+        name: 'test-plugin-import',
+        generateRules: () => [],
+        importFrom: async (projectRoot: string) => {
+          const toPath = join(projectRoot, '.agentsmesh', 'rules', 'plugin.md');
+          writeFileSync(toPath, '# Imported from plugin\n');
+          return [
+            {
+              fromTool: 'test-plugin-import',
+              fromPath: join(projectRoot, '.test-plugin', 'plugin.md'),
+              toPath: '.agentsmesh/rules/plugin.md',
+              feature: 'rules',
+            },
+          ];
+        },
+      },
+    });
+    registerTargetDescriptor(pluginDescriptor);
+
+    const results = await importFrom('test-plugin-import', { root: dir, scope: 'project' });
+
+    expect(results).toHaveLength(1);
+    expect(results[0]?.fromTool).toBe('test-plugin-import');
+    expect(results[0]?.toPath).toBe('.agentsmesh/rules/plugin.md');
+    expect(readFileSync(join(dir, '.agentsmesh', 'rules', 'plugin.md'), 'utf-8')).toBe(
+      '# Imported from plugin\n',
+    );
+  });
+
+  it('throws TargetNotFoundError for an unknown target ID', async () => {
+    const dir = join(TEST_ROOT, 'import-unknown-target');
+    mkdirSync(dir, { recursive: true });
+    await expect(
+      importFrom('definitely-not-a-real-target', { root: dir, scope: 'project' }),
+    ).rejects.toBeInstanceOf(TargetNotFoundError);
+  });
+
+  it('TargetNotFoundError surfaces the supported target list (builtins + plugins)', async () => {
+    const dir = join(TEST_ROOT, 'import-unknown-target-list');
+    mkdirSync(dir, { recursive: true });
+    registerTargetDescriptor(makeTestPluginDescriptor('plugin-for-supported-list'));
+    let captured: TargetNotFoundError | null = null;
+    try {
+      await importFrom('still-unknown-target', { root: dir, scope: 'project' });
+    } catch (err) {
+      captured = err as TargetNotFoundError;
+    }
+    expect(captured).toBeInstanceOf(TargetNotFoundError);
+    expect(captured?.code).toBe('AM_TARGET_NOT_FOUND');
+    expect(captured?.target).toBe('still-unknown-target');
+    // The message must list both builtins (cursor) and registered plugins.
+    expect(captured?.message).toContain('cursor');
+    expect(captured?.message).toContain('plugin-for-supported-list');
   });
 });
 
@@ -447,6 +640,37 @@ describe('Programmatic API — catalog inspection', () => {
       .map((d) => d.id)
       .sort();
     expect(ids).toEqual([...TARGET_IDS].sort());
+  });
+
+  it('getTargetCatalog does not expose the live built-in array for mutation', () => {
+    const originalIds = getTargetCatalog().map((d) => d.id);
+    const returned = getTargetCatalog() as TargetDescriptor[];
+    try {
+      returned.push(makeTestPluginDescriptor('mutated-plugin'));
+    } catch {
+      // A frozen returned array is also acceptable; the important contract is no leak.
+    }
+    expect(getTargetCatalog().map((d) => d.id)).toEqual(originalIds);
+  });
+
+  it('getTargetCatalog does not expose live descriptor objects for mutation', () => {
+    const original = getTargetCatalog()[0];
+    expect(original).toBeDefined();
+    const originalId = original!.id;
+    const originalRules = original!.capabilities.rules;
+    const returned = getTargetCatalog() as unknown as {
+      id: string;
+      capabilities: { rules: string };
+    }[];
+    try {
+      returned[0]!.id = 'mutated-target';
+      returned[0]!.capabilities.rules = 'none';
+    } catch {
+      // Frozen descriptors are acceptable; the important contract is no leak.
+    }
+    const fresh = getTargetCatalog()[0];
+    expect(fresh?.id).toBe(originalId);
+    expect(fresh?.capabilities.rules).toEqual(originalRules);
   });
 
   it('getDescriptor returns undefined for unknown IDs and a typed descriptor for known IDs', () => {

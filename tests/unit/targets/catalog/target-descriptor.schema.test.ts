@@ -47,6 +47,33 @@ describe('targetDescriptorSchema', () => {
     expect(() => validateDescriptor(minimalDescriptor)).not.toThrow();
   });
 
+  it('rejects legacy global descriptor fields in plugin descriptors', () => {
+    expect(() =>
+      validateDescriptor({
+        ...minimalDescriptor,
+        globalCapabilities: minimalDescriptor.capabilities,
+      }),
+    ).toThrow(/globalSupport/);
+    expect(() =>
+      validateDescriptor({
+        ...minimalDescriptor,
+        globalDetectionPaths: ['.legacy'],
+      }),
+    ).toThrow(/globalSupport/);
+    expect(() =>
+      validateDescriptor({
+        ...minimalDescriptor,
+        global: minimalDescriptor.project,
+      }),
+    ).toThrow(/globalSupport/);
+    expect(() =>
+      validateDescriptor({
+        ...minimalDescriptor,
+        generateScopeExtras: async () => [],
+      }),
+    ).toThrow(/globalSupport/);
+  });
+
   it('rejects descriptor missing id', () => {
     const { id: _id, ...noId } = minimalDescriptor;
     void _id;
@@ -89,6 +116,48 @@ describe('targetDescriptorSchema', () => {
     ).not.toThrow();
   });
 
+  it('rejects non-none capabilities without a matching generator or sidecar emitter', () => {
+    expect(() =>
+      validateDescriptor({
+        ...minimalDescriptor,
+        capabilities: {
+          ...minimalDescriptor.capabilities,
+          commands: 'native',
+        },
+      }),
+    ).toThrow(/generateCommands/);
+  });
+
+  it('rejects global non-none capabilities without a matching implementation path', () => {
+    expect(() =>
+      validateDescriptor({
+        ...minimalDescriptor,
+        globalSupport: {
+          capabilities: {
+            ...minimalDescriptor.capabilities,
+            hooks: 'partial',
+          },
+          detectionPaths: ['.test-global'],
+          layout: minimalDescriptor.project,
+        },
+      }),
+    ).toThrow(/generateHooks/);
+  });
+
+  it('accepts settings-backed capabilities when a scoped settings emitter exists', () => {
+    expect(() =>
+      validateDescriptor({
+        ...minimalDescriptor,
+        capabilities: {
+          ...minimalDescriptor.capabilities,
+          mcp: 'native',
+          hooks: 'partial',
+        },
+        emitScopedSettings: () => [],
+      }),
+    ).not.toThrow();
+  });
+
   it('rejects null lintRules replaced with non-function non-null', () => {
     expect(() =>
       validateDescriptor({
@@ -108,17 +177,17 @@ describe('targetDescriptorSchema', () => {
     expect(descriptor.project.rootInstructionPath).toBe('.rich/ROOT.md');
     expect(descriptor.project.skillDir).toBe('.rich/skills');
     expect(descriptor.project.outputFamilies).toHaveLength(3);
-    expect(descriptor.global.rootInstructionPath).toBe('.rich/ROOT.md');
-    expect(descriptor.global.renderPrimaryRootInstruction).toBeTypeOf('function');
-    expect(descriptor.globalCapabilities.rules).toBe('native');
-    expect(descriptor.globalDetectionPaths).toHaveLength(3);
+    expect(descriptor.globalSupport.layout.rootInstructionPath).toBe('.rich/ROOT.md');
+    expect(descriptor.globalSupport.layout.renderPrimaryRootInstruction).toBeTypeOf('function');
+    expect(descriptor.globalSupport.capabilities.rules).toBe('native');
+    expect(descriptor.globalSupport.detectionPaths).toHaveLength(3);
     expect(descriptor.lint.commands).toBeTypeOf('function');
     expect(descriptor.lint.mcp).toBeTypeOf('function');
     expect(descriptor.lint.permissions).toBeTypeOf('function');
     expect(descriptor.lint.hooks).toBeTypeOf('function');
     expect(descriptor.lint.ignore).toBeTypeOf('function');
     expect(descriptor.supportsConversion).toEqual({ commands: true, agents: true });
-    expect(descriptor.generateScopeExtras).toBeTypeOf('function');
+    expect(descriptor.globalSupport.scopeExtras).toBeTypeOf('function');
     expect(descriptor.sharedArtifacts).toEqual({ '.rich/skills/': 'owner' });
     expect(descriptor.emitScopedSettings).toBeTypeOf('function');
     expect(descriptor.postProcessHookOutputs).toBeTypeOf('function');

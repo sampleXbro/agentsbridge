@@ -14,6 +14,7 @@ import {
   CODEX_CONFIG_TOML,
   CODEX_AGENTS_DIR,
 } from '../../../../src/targets/codex-cli/constants.js';
+import { toPosixPath } from '../../../helpers/posix-path.js';
 
 const TEST_DIR = join(tmpdir(), 'am-codex-importer-test');
 const CODEX_SKILLS_FALLBACK_DIR = '.codex/skills';
@@ -295,7 +296,7 @@ describe('importFromCodex: skills', () => {
 
     const agentResult = results.find((r) => r.toPath === '.agentsmesh/agents/pr-explorer.md');
     expect(agentResult).toBeDefined();
-    expect(agentResult!.fromPath).toContain('.codex/agents/pr-explorer.toml');
+    expect(toPosixPath(agentResult!.fromPath)).toContain('.codex/agents/pr-explorer.toml');
     const content = readFileSync(
       join(TEST_DIR, '.agentsmesh', 'agents', 'pr-explorer.md'),
       'utf-8',

@@ -57,14 +57,12 @@ Every plugin exports a `descriptor` object that tells AgentsMesh how to generate
 
 | Field | Type | Purpose |
 |-------|------|---------|
-| `globalCapabilities` | `TargetCapabilities` | Feature support levels for global scope (if different from project) |
-| `global` | `TargetLayout` | Global-scope layout with `rewriteGeneratedPath` |
-| `globalDetectionPaths` | `string[]` | Paths to detect this target in global scope |
+| `globalSupport` | `{ capabilities, detectionPaths, layout, scopeExtras? }` | Global-scope support as one cohesive contract |
 | `supportsConversion` | `{ commands?: true, agents?: true }` | Enables user-configurable feature projection |
 | `lint` | `TargetLintHooks` | Per-feature lint hooks (`commands`, `mcp`, `permissions`, `hooks`, `ignore`) |
-| `generateScopeExtras` | `function` | Generate additional outputs beyond the standard feature loop |
 | `sharedArtifacts` | `Record<string, 'owner' \| 'consumer'>` | Declares ownership of shared output paths |
 | `emitScopedSettings` | `function` | Emit native settings sidecar files |
+| `mergeGeneratedOutputContent` | `function` | Merge generated content into an existing/pending output |
 | `postProcessHookOutputs` | `function` | Async post-pass for hook generator outputs |
 
 ## Minimal plugin
@@ -138,7 +136,7 @@ generators: {
 },
 ```
 
-For each generator you implement, set the corresponding capability to `'native'`, `'embedded'`, or `'partial'` so AgentsMesh knows the feature is supported.
+For each feature you advertise as `'native'`, `'embedded'`, or `'partial'`, provide the corresponding generator so AgentsMesh can actually emit that feature. Settings-backed features (`mcp`, `hooks`, `ignore`, `permissions`) may instead be satisfied by `emitScopedSettings`.
 
 ### Capability levels
 
@@ -159,42 +157,38 @@ capabilities: {
 
 ## Global mode
 
-To support `agentsmesh generate --global`, add a `global` layout and optionally `globalCapabilities` and `globalDetectionPaths`:
+To support `agentsmesh generate --global`, add `globalSupport` with capabilities, detection paths, and a global layout:
 
 ```js
 export const descriptor = {
   // ...project fields...
 
-  global: {
-    rootInstructionPath: '~/.foo-ide/ROOT.md',
-    skillDir: '~/.foo-ide/skills',
-    paths: {
-      rulePath: (slug) => `~/.foo-ide/rules/${slug}.md`,
-      commandPath: (name) => `~/.foo-ide/commands/${name}.md`,
-      agentPath: (name) => `~/.foo-ide/agents/${name}.md`,
+  globalSupport: {
+    capabilities: {
+      rules: 'native',
+      additionalRules: 'none',
+      commands: 'embedded',
+      agents: 'embedded',
+      skills: 'native',
+      mcp: 'native',
+      hooks: 'none',
+      ignore: 'native',
+      permissions: 'none',
     },
-    rewriteGeneratedPath(path) {
-      if (path.startsWith('.foo-ide/')) {
-        return '~/.foo-ide/' + path.slice('.foo-ide/'.length);
-      }
-      return path;
+    detectionPaths: ['.foo-ide', '.foo-ide/ROOT.md'],
+    layout: {
+      rootInstructionPath: '.foo-ide/ROOT.md',
+      skillDir: '.foo-ide/skills',
+      paths: {
+        rulePath: (slug) => `.foo-ide/rules/${slug}.md`,
+        commandPath: (name) => `.foo-ide/commands/${name}.md`,
+        agentPath: (name) => `.foo-ide/agents/${name}.md`,
+      },
+      rewriteGeneratedPath(path) {
+        return path;
+      },
     },
   },
-
-  // Different capabilities for global scope (optional)
-  globalCapabilities: {
-    rules: 'native',
-    additionalRules: 'none',
-    commands: 'embedded',
-    agents: 'embedded',
-    skills: 'native',
-    mcp: 'native',
-    hooks: 'none',
-    ignore: 'native',
-    permissions: 'none',
-  },
-
-  globalDetectionPaths: ['~/.foo-ide', '~/.foo-ide/ROOT.md'],
 };
 ```
 
@@ -334,20 +328,23 @@ export const descriptor = {
 
 ## Scope extras
 
-Generate additional outputs beyond the standard feature loop with `generateScopeExtras`:
+Generate additional global outputs beyond the standard feature loop with `globalSupport.scopeExtras`:
 
 ```js
 export const descriptor = {
   // ...
-  async generateScopeExtras(canonical, projectRoot, scope, enabledFeatures) {
-    const results = [];
-    if (scope === 'global' && enabledFeatures.has('rules')) {
-      results.push({
-        path: '~/.foo-ide/scope-info.txt',
-        content: `scope=${scope}`,
-      });
-    }
-    return results;
+  globalSupport: {
+    // ...
+    async scopeExtras(canonical, projectRoot, scope, enabledFeatures) {
+      const results = [];
+      if (scope === 'global' && enabledFeatures.has('rules')) {
+        results.push({
+          path: '.foo-ide/scope-info.txt',
+          content: `scope=${scope}`,
+        });
+      }
+      return results;
+    },
   },
 };
 ```
@@ -389,6 +386,7 @@ Common validation errors:
 - `id` must match `^[a-z][a-z0-9-]*$`
 - `generators.generateRules` and `generators.importFrom` are required
 - Capability levels must be `'native'`, `'embedded'`, `'partial'`, or `'none'`
+- Non-`none` capabilities must have their matching generator, or `emitScopedSettings` for settings-backed features (`mcp`, `hooks`, `ignore`, `permissions`)
 
 ### Verify with matrix and lint
 

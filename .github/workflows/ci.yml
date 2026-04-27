@@ -21,9 +21,8 @@ jobs:
             node-version: 24
           - os: macos-latest
             node-version: 22
-          # Windows support is deferred — see README "Supported platforms".
-          # Re-enable once cross-platform path persistence (installs.yaml,
-          # canonical source paths) and tsx.cmd resolution are addressed.
+          - os: windows-latest
+            node-version: 22
     runs-on: ${{ matrix.os }}
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true

@@ -8,6 +8,7 @@ export {
   importFrom,
   loadConfig,
   loadConfigFromDirectory,
+  loadProjectContext,
   lint,
   diff,
   check,
@@ -22,6 +23,8 @@ export type {
   LintDiagnostic,
   LintOptions,
   LintResult,
+  LoadProjectContextOptions,
+  ProjectContext,
   ValidatedConfig,
   TargetLayoutScope,
   CheckLockSyncOptions,
@@ -61,6 +64,7 @@ export type {
   McpConfig,
   Hooks,
   HookEntry,
+  LoadCanonicalOptions,
 } from './canonical.js';
 
 export {
@@ -85,6 +89,9 @@ export type {
   ScopeExtrasFn,
   ImportPathBuilder,
   GlobalTargetSupport,
+  ExtraRuleOutputContext,
+  ExtraRuleOutputResolver,
+  GeneratedOutputMerger,
   TargetCapabilities,
   TargetGenerators,
 } from './targets.js';

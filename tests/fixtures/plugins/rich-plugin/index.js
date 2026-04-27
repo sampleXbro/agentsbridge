@@ -7,9 +7,9 @@
  *   renderPrimaryRootInstruction, rewriteGeneratedPath, mirrorGlobalPath
  * - Import path mapping (buildImportPaths)
  * - Capability levels (native, embedded, partial, none, object form)
- * - globalCapabilities + globalDetectionPaths
+ * - globalSupport
  * - supportsConversion (commands + agents)
- * - generateScopeExtras
+ * - globalSupport.scopeExtras
  * - sharedArtifacts ownership declaration
  * - emitScopedSettings native settings sidecar
  * - postProcessHookOutputs async hook post-processing
@@ -17,6 +17,8 @@
  */
 
 /* eslint-disable no-unused-vars */
+
+import { basename } from 'node:path';
 
 export const descriptor = {
   id: 'rich-plugin',
@@ -36,7 +38,9 @@ export const descriptor = {
         });
       }
       for (const rule of canonical.rules.filter((r) => !r.root)) {
-        const slug = rule.source.split('/').pop().replace(/\.md$/, '');
+        // Use platform-aware basename: `rule.source` uses native separators on
+        // Windows, so `split('/')` would return the entire absolute path.
+        const slug = basename(rule.source, '.md');
         results.push({
           path: `.rich/rules/${slug}.md`,
           content: `# ${rule.description}\n\n${rule.body}`,
@@ -130,27 +134,6 @@ export const descriptor = {
     ignore: 'native',
     permissions: 'partial',
   },
-
-  // ──── Global Capabilities (can differ from project) ────────────────────────
-  globalCapabilities: {
-    rules: 'native',
-    additionalRules: 'none',
-    commands: 'embedded',
-    agents: 'embedded',
-    skills: 'none',
-    mcp: 'native',
-    hooks: 'native',
-    ignore: 'native',
-    permissions: 'native',
-  },
-
-  // ──── Global Detection Paths ───────────────────────────────────────────────
-  // Relative to $HOME when scope === 'global' (no leading `~/`).
-  globalDetectionPaths: [
-    '.rich',
-    '.rich/ROOT.md',
-    '.richignore',
-  ],
 
   // ──── Per-feature Lint Hooks ───────────────────────────────────────────────
   lint: {
@@ -270,55 +253,66 @@ export const descriptor = {
     },
   },
 
-  // ──── Global Layout (different from project) ──────────────────────────────
-  // Paths are written relative to the scope's rootBase — which is $HOME in
-  // global mode, project dir in project mode. Do NOT prefix with `~/`; the
-  // engine does not expand tilde.
-  global: {
-    rootInstructionPath: '.rich/ROOT.md',
-    skillDir: '.rich/skills',
-    outputFamilies: [
-      { id: 'rules', kind: 'primary', pathPrefix: '.rich/rules/' },
-      { id: 'agents', kind: 'additional', pathPrefix: '.rich/agents/' },
-    ],
-    renderPrimaryRootInstruction(canonical) {
-      const rootRule = canonical.rules.find((r) => r.root);
-      if (!rootRule) return '';
-      return `# Rich Plugin Global\n\n${rootRule.body}\n\n<!-- managed by agentsmesh -->`;
-    },
-    paths: {
-      rulePath(slug, _rule) {
-        return `.rich/rules/${slug}.md`;
-      },
-      commandPath(name, _config) {
-        return `.rich/commands/${name}.md`;
-      },
-      agentPath(name, _config) {
-        return `.rich/agents/${name}.md`;
-      },
-    },
-    rewriteGeneratedPath(path) {
-      // Example rewrite: keep the same relative shape for global mode.
-      // Real plugins can remap paths here (e.g. `.claude/` → `.claude-global/`).
-      return path;
-    },
-  },
-
   // ──── Shared Artifacts ─────────────────────────────────────────────────────
   sharedArtifacts: {
     '.rich/skills/': 'owner',
   },
 
-  // ──── Scope Extras ─────────────────────────────────────────────────────────
-  async generateScopeExtras(canonical, _projectRoot, scope, enabledFeatures) {
-    const results = [];
-    if (scope === 'global' && enabledFeatures.has('rules')) {
-      results.push({
-        path: '.rich/scope-info.txt',
-        content: `scope=${scope}\nfeatures=${[...enabledFeatures].join(',')}`,
-      });
-    }
-    return results;
+  // ──── Global Support ──────────────────────────────────────────────────────
+  globalSupport: {
+    capabilities: {
+      rules: 'native',
+      additionalRules: 'none',
+      commands: 'embedded',
+      agents: 'embedded',
+      skills: 'none',
+      mcp: 'native',
+      hooks: 'native',
+      ignore: 'native',
+      permissions: 'native',
+    },
+    detectionPaths: [
+      '.rich',
+      '.rich/ROOT.md',
+      '.richignore',
+    ],
+    layout: {
+      rootInstructionPath: '.rich/ROOT.md',
+      skillDir: '.rich/skills',
+      outputFamilies: [
+        { id: 'rules', kind: 'primary', pathPrefix: '.rich/rules/' },
+        { id: 'agents', kind: 'additional', pathPrefix: '.rich/agents/' },
+      ],
+      renderPrimaryRootInstruction(canonical) {
+        const rootRule = canonical.rules.find((r) => r.root);
+        if (!rootRule) return '';
+        return `# Rich Plugin Global\n\n${rootRule.body}\n\n<!-- managed by agentsmesh -->`;
+      },
+      paths: {
+        rulePath(slug, _rule) {
+          return `.rich/rules/${slug}.md`;
+        },
+        commandPath(name, _config) {
+          return `.rich/commands/${name}.md`;
+        },
+        agentPath(name, _config) {
+          return `.rich/agents/${name}.md`;
+        },
+      },
+      rewriteGeneratedPath(path) {
+        return path;
+      },
+    },
+    async scopeExtras(canonical, _projectRoot, scope, enabledFeatures) {
+      const results = [];
+      if (scope === 'global' && enabledFeatures.has('rules')) {
+        results.push({
+          path: '.rich/scope-info.txt',
+          content: `scope=${scope}\nfeatures=${[...enabledFeatures].join(',')}`,
+        });
+      }
+      return results;
+    },
   },
 
   // ──── Scoped Settings Sidecar ──────────────────────────────────────────────

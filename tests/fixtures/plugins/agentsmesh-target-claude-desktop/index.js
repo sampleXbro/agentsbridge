@@ -185,24 +185,37 @@ export const descriptor = {
     },
   },
 
-  /**
-   * Global mode: Claude Desktop config lives at ~/.claude/, not project-local.
-   */
-  global: {
-    paths: {
-      rulePath(_slug, _rule) {
-        return '~/.claude/claude.json';
-      },
-      agentPath(_name, _config) {
-        return '~/.claude/claude.json';
-      },
+  globalSupport: {
+    capabilities: {
+      rules: 'native',
+      additionalRules: 'none',
+      commands: 'none',
+      agents: 'native',
+      skills: 'none',
+      mcp: 'none',
+      hooks: 'none',
+      ignore: 'none',
+      permissions: 'none',
     },
-    rewriteGeneratedPath(path) {
-      // Transform project paths to global home paths
-      if (path === '.claude/claude.json') {
-        return '~/.claude/claude.json';
-      }
-      return path;
+    detectionPaths: ['~/.claude/claude.json'],
+    layout: {
+      paths: {
+        rulePath(_slug, _rule) {
+          return '~/.claude/claude.json';
+        },
+        commandPath(_name, _config) {
+          return null;
+        },
+        agentPath(_name, _config) {
+          return '~/.claude/claude.json';
+        },
+      },
+      rewriteGeneratedPath(path) {
+        if (path === '.claude/claude.json') {
+          return '~/.claude/claude.json';
+        }
+        return path;
+      },
     },
   },
 

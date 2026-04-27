@@ -70,8 +70,10 @@ function toStringArray(v: unknown): string[] {
 }
 
 function bodyWithoutFrontmatter(raw: string): string {
-  const match = raw.match(/^---\n[\s\S]*?\n---\n*/);
-  return (match ? raw.slice(match[0].length) : raw).trim();
+  // Normalize CRLF (Windows checkouts via core.autocrlf) so the regex matches.
+  const normalized = raw.replace(/\r\n/g, '\n');
+  const match = normalized.match(/^---\n[\s\S]*?\n---\n*/);
+  return (match ? normalized.slice(match[0].length) : normalized).trim();
 }
 
 function extractBodySnippet(raw: string): string {

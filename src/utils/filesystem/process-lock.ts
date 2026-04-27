@@ -10,7 +10,7 @@
  * older than `staleMs`, we evict it and retry.
  */
 
-import { mkdir, readFile, writeFile, rm } from 'node:fs/promises';
+import { mkdir, readFile, writeFile, rm, stat } from 'node:fs/promises';
 import { rmSync } from 'node:fs';
 import { hostname } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -19,6 +19,12 @@ import { LockAcquisitionError } from '../../core/errors.js';
 const DEFAULT_STALE_MS = 60_000;
 const DEFAULT_RETRIES = 30;
 const DEFAULT_RETRY_DELAY_MS = 200;
+// `tryAcquire` does `mkdir(lockPath)` then `writeFile(holder.json)`. Between
+// those two calls, a competing acquirer can see the lock dir without metadata.
+// Treat such a dir as held (not orphaned) for this grace window so the in-flight
+// owner gets a chance to finish writing `holder.json`. Older missing-metadata
+// dirs are still evicted as orphaned.
+const YOUNG_LOCK_GRACE_MS = 2_000;
 
 interface LockMetadata {
   pid: number;
@@ -61,14 +67,15 @@ export async function acquireProcessLock(
     if (acquired) return acquired;
 
     const existing = await inspectLock(lockPath);
-    if (isStale(existing, stale)) {
+    if (existing !== 'young' && isStale(existing, stale)) {
       await rm(lockPath, { recursive: true, force: true }).catch(() => {});
       // Stale eviction is bookkeeping, not a wait — try again without consuming retry budget.
       continue;
     }
 
     if (attempt >= retries) {
-      throw new LockAcquisitionError(lockPath, describeHolder(existing));
+      const holder = existing === 'young' ? null : existing;
+      throw new LockAcquisitionError(lockPath, describeHolder(holder));
     }
     attempt++;
     await sleep(delay);
@@ -115,13 +122,25 @@ async function tryAcquire(lockPath: string): Promise<LockRelease | null> {
   };
 }
 
-async function inspectLock(lockPath: string): Promise<LockMetadata | null> {
+async function inspectLock(lockPath: string): Promise<LockMetadata | 'young' | null> {
   try {
     const raw = await readFile(join(lockPath, 'holder.json'), 'utf-8');
     const parsed = JSON.parse(raw) as unknown;
     if (!isLockMetadata(parsed)) return null;
     return parsed;
   } catch {
+    // holder.json is missing or unreadable. The lock dir is either still
+    // bootstrapping its metadata (young) or genuinely orphaned (old).
+    // Allow negative `ageMs` because under suite-load the directory's mtime
+    // can be a hair ahead of `Date.now()` due to FS-vs-clock resolution skew;
+    // such a dir is by definition young.
+    try {
+      const info = await stat(lockPath);
+      const ageMs = Date.now() - info.mtimeMs;
+      if (ageMs < YOUNG_LOCK_GRACE_MS) return 'young';
+    } catch {
+      // lockPath gone — treat as null so the next tryAcquire can mkdir.
+    }
     return null;
   }
 }

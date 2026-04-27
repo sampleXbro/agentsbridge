@@ -35,10 +35,6 @@
   "engines": {
     "node": ">=20.0.0"
   },
-  "os": [
-    "darwin",
-    "linux"
-  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/sampleXbro/agentsmesh.git"
@@ -55,7 +51,7 @@
     "test:contract": "vitest run tests/contract",
     "flake:check": "tsx scripts/flake-check.ts",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
+    "test:coverage": "COVERAGE=1 vitest run --coverage",
     "test:e2e": "pnpm build && vitest run --config vitest.e2e.config.ts",
     "lint": "eslint src tests",
     "format": "prettier --write src/",

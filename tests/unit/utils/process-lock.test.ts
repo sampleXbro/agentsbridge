@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdirSync, rmSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync, existsSync, utimesSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import {
@@ -101,12 +101,34 @@ describe('acquireProcessLock', () => {
     expect(existsSync(lockPath)).toBe(false);
   });
 
-  it('treats unreadable lock metadata as stale', async () => {
+  it('treats an aged orphaned lock dir (no holder.json) as stale and evicts it', async () => {
     const lockPath = join(TEST_DIR, '.generate.lock');
     mkdirSync(lockPath, { recursive: true });
-    // No holder.json file — unreadable metadata is treated as stale.
+    // Age the lock dir past the young-lock grace window so it qualifies as orphaned.
+    const aged = new Date(Date.now() - 10_000);
+    utimesSync(lockPath, aged, aged);
     const release = await acquireProcessLock(lockPath, { retries: 0, retryDelayMs: 5 });
     expect(existsSync(join(lockPath, 'holder.json'))).toBe(true);
     await release();
+  });
+
+  it('does NOT evict a young lock dir whose holder.json has not been written yet', async () => {
+    // Reproduces the race that broke `generate-process-lock.integration.test.ts`:
+    // process A succeeds at `mkdir(lockPath)` but has not yet `writeFile(holder.json)`,
+    // and process B must NOT treat that brief window as a stale lock.
+    const lockPath = join(TEST_DIR, '.generate.lock');
+    mkdirSync(lockPath, { recursive: true });
+    // No holder.json — but the dir was just created, so the lock is "young" and held.
+
+    const acquireAttempt = acquireProcessLock(lockPath, {
+      retries: 1,
+      retryDelayMs: 20,
+      staleMs: 60_000,
+    });
+
+    // Within the young grace window the lock dir must survive. Acquire must
+    // exhaust its retries and reject — never evict the dir nor double-acquire.
+    await expect(acquireAttempt).rejects.toBeInstanceOf(LockAcquisitionError);
+    expect(existsSync(lockPath)).toBe(true);
   });
 });

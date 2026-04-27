@@ -161,8 +161,6 @@ export const descriptor = {
     ],
     layout: global,
   },
-  skillDir: project.skillDir,
-  paths: project.paths,
   buildImportPaths: buildJunieImportPaths,
   detectionPaths: [
     '.junie/guidelines.md',

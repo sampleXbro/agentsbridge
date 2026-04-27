@@ -245,8 +245,9 @@ describe('runInstall', () => {
     });
     mockExists.mockResolvedValue(false);
 
+    // The error message embeds a `path.join` result, which uses native separators.
     await expect(runInstall({ force: true }, ['../upstream'], '/project')).rejects.toThrow(
-      'Install path does not exist: /upstream/missing',
+      /Install path does not exist:\s*[\\/]upstream[\\/]missing/,
     );
   });
 

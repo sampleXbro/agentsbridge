@@ -162,8 +162,6 @@ export const descriptor = {
     ],
     layout: global,
   },
-  skillDir: project.skillDir,
-  paths: project.paths,
   buildImportPaths: buildKiroImportPaths,
   detectionPaths: [
     KIRO_STEERING_DIR,

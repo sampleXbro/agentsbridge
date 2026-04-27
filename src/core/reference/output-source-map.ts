@@ -1,7 +1,7 @@
-import { join, normalize as normalizePath } from 'node:path';
 import type { CanonicalFiles } from '../types.js';
 import type { ValidatedConfig } from '../../config/core/schema.js';
 import { buildReferenceMap } from './map.js';
+import { pathApi } from '../path-helpers.js';
 import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
 import { addPackSkillArtifactMappings } from './pack-skill-artifact-paths.js';
 import { applyCopilotInstructionArtifactRefs } from '../../targets/catalog/copilot-instruction-artifacts.js';
@@ -51,10 +51,15 @@ export function buildArtifactPathMap(
   },
 ): Map<string, string> {
   const scope = options?.scope ?? 'project';
+  // The rewriter uses `pathApi(projectRoot)` to pick win32/posix from the
+  // path FORMAT, not the host platform. Use the same API here so map keys
+  // match the lookups even when projectRoot is a synthetic POSIX path on a
+  // Windows runner (or vice versa).
+  const api = pathApi(projectRoot);
   const refs = new Map(
     [...buildReferenceMap(target, canonical, config, scope)].map(([canonicalPath, targetPath]) => [
-      normalizePath(join(projectRoot, canonicalPath)),
-      normalizePath(join(projectRoot, targetPath)),
+      api.normalize(api.join(projectRoot, canonicalPath)),
+      api.normalize(api.join(projectRoot, targetPath)),
     ]),
   );
 

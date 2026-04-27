@@ -78,9 +78,12 @@ describe('native format local extends', () => {
     // The import still happened (we verify .agentsmesh/ was written below).
     expect(first.rules.some((r) => r.body.includes('Local rule'))).toBe(true);
 
-    // Verify .agentsmesh/ was written with exactly the expected files
+    // Verify .agentsmesh/ was written with exactly the expected files.
+    // `readdirSync(..., { recursive: true })` returns native separators on Windows.
     const abDir = join(nativeDir, '.agentsmesh');
-    const writtenFiles = (readdirSync(abDir, { recursive: true }) as string[]).sort();
+    const writtenFiles = (readdirSync(abDir, { recursive: true }) as string[])
+      .map((p) => p.replace(/\\/g, '/'))
+      .sort();
     expect(writtenFiles).toHaveLength(2);
     expect(writtenFiles[0]).toBe('rules');
     expect(writtenFiles[1]).toBe('rules/_root.md');

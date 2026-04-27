@@ -13,6 +13,7 @@ import {
   JUNIE_MCP_FILE,
   JUNIE_SKILLS_DIR,
 } from '../../../../src/targets/junie/constants.js';
+import { toPosixPath } from '../../../helpers/posix-path.js';
 
 const TEST_DIR = join(tmpdir(), 'am-junie-importer-test');
 
@@ -59,7 +60,7 @@ describe('importFromJunie — rules', () => {
     writeFileSync(join(TEST_DIR, JUNIE_AGENTS_FALLBACK), '# Fallback\n');
     const results = await importFromJunie(TEST_DIR);
     expect(results).toHaveLength(1);
-    expect(results[0]?.fromPath).toContain(JUNIE_AGENTS_FALLBACK);
+    expect(toPosixPath(results[0]?.fromPath ?? '')).toContain(JUNIE_AGENTS_FALLBACK);
   });
 
   it('falls back to .junie/ci-guidelines.md when AGENTS.md and guidelines.md are absent', async () => {
@@ -67,7 +68,7 @@ describe('importFromJunie — rules', () => {
     writeFileSync(join(TEST_DIR, JUNIE_CI_GUIDELINES), '# CI Guidelines\n');
     const results = await importFromJunie(TEST_DIR);
     expect(results).toHaveLength(1);
-    expect(results[0]?.fromPath).toContain(JUNIE_CI_GUIDELINES);
+    expect(toPosixPath(results[0]?.fromPath ?? '')).toContain(JUNIE_CI_GUIDELINES);
   });
 });
 

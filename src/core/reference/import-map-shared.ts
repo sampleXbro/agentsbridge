@@ -1,4 +1,5 @@
 import { basename, dirname, join, relative } from 'node:path';
+import { readdir, stat } from 'node:fs/promises';
 import { readDirRecursive } from '../../utils/filesystem/fs.js';
 import {
   CODEX_COMMAND_SKILL_PREFIX,
@@ -99,27 +100,83 @@ export function addSkillLikeMapping(
   }
 }
 
-/** Paths that are target root artifacts, not scoped rules. Must not overwrite explicit mappings. */
-const SCOPED_AGENTS_SKIP_DIRS = new Set([
-  '.agents',
-  '.claude',
-  '.clinerules',
-  '.cline',
-  '.codex',
-  '.continue',
-  '.cursor',
-  '.gemini',
-  '.github',
-  '.junie',
-  '.windsurf',
-  '.roo',
-]);
+function firstPathSegment(path: string): string {
+  return path.split('/').filter(Boolean)[0] ?? '';
+}
+
+let targetRootSegmentsCache: ReadonlySet<string> | undefined;
+
+async function targetRootSegments(): Promise<ReadonlySet<string>> {
+  if (targetRootSegmentsCache !== undefined) return targetRootSegmentsCache;
+  const { BUILTIN_TARGETS } = await import('../../targets/catalog/builtin-targets.js');
+  const roots = new Set<string>();
+  for (const descriptor of BUILTIN_TARGETS) {
+    for (const path of [
+      descriptor.project.rootInstructionPath,
+      descriptor.project.skillDir,
+      ...(descriptor.project.managedOutputs?.dirs ?? []),
+      ...(descriptor.project.managedOutputs?.files ?? []),
+      ...descriptor.detectionPaths,
+      descriptor.globalSupport?.layout.rootInstructionPath,
+      descriptor.globalSupport?.layout.skillDir,
+      ...(descriptor.globalSupport?.layout.managedOutputs?.dirs ?? []),
+      ...(descriptor.globalSupport?.layout.managedOutputs?.files ?? []),
+      ...(descriptor.globalSupport?.detectionPaths ?? []),
+    ]) {
+      if (path !== undefined) {
+        const segment = firstPathSegment(path);
+        if (segment.startsWith('.')) roots.add(segment);
+      }
+    }
+  }
+  targetRootSegmentsCache = roots;
+  return roots;
+}
+
+function hasHiddenSegment(relPath: string): boolean {
+  return relPath.split('/').some((segment) => segment.startsWith('.'));
+}
+
+async function listScopedAgentsFiles(projectRoot: string): Promise<string[]> {
+  const files: string[] = [];
+  const targetRootSegmentsSet = await targetRootSegments();
+
+  async function walk(relDir: string): Promise<void> {
+    const absDir = join(projectRoot, relDir);
+    const entries = await readdir(absDir, { withFileTypes: true }).catch(() => []);
+    for (const entry of entries) {
+      const relPath = relDir ? `${relDir}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) {
+        if (targetRootSegmentsSet.has(entry.name) || hasHiddenSegment(relPath)) continue;
+        await walk(relPath);
+        continue;
+      }
+      if (
+        entry.isSymbolicLink() &&
+        (await stat(join(projectRoot, relPath)).then(
+          (info) => info.isDirectory(),
+          () => false,
+        ))
+      ) {
+        if (targetRootSegmentsSet.has(entry.name) || hasHiddenSegment(relPath)) continue;
+        await walk(relPath);
+        continue;
+      }
+      if (entry.name === 'AGENTS.md' || entry.name === 'AGENTS.override.md') {
+        files.push(join(projectRoot, relPath));
+      }
+    }
+  }
+
+  await walk('');
+  return files;
+}
 
 export async function addScopedAgentsMappings(
   refs: Map<string, string>,
   projectRoot: string,
 ): Promise<void> {
-  const files = await listFiles(projectRoot, '.');
+  const files = await listScopedAgentsFiles(projectRoot);
   for (const absPath of files) {
     const relPath = rel(projectRoot, absPath);
     const isNestedAgents =
@@ -130,7 +187,7 @@ export async function addScopedAgentsMappings(
       relPath.endsWith('/AGENTS.override.md') && relPath !== 'AGENTS.override.md';
     if (!isNestedAgents && !isNestedOverride) continue;
     const parentDir = dirname(relPath);
-    if (SCOPED_AGENTS_SKIP_DIRS.has(parentDir)) continue;
+    if (hasHiddenSegment(parentDir)) continue;
     const ruleName = parentDir.replace(/\//g, '-');
     refs.set(relPath, `${AB_RULES}/${ruleName}.md`);
   }

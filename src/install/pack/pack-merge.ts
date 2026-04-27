@@ -10,6 +10,7 @@ import type { PackMetadata } from './pack-schema.js';
 import type { ExtendPick } from '../../config/core/schema.js';
 import { writeFileAtomic, mkdirp } from '../../utils/filesystem/fs.js';
 import { hashPackContent } from './pack-hash.js';
+import { normalizePersistedInstallPaths } from '../core/portable-paths.js';
 
 export interface PackMetadataRefresh {
   source: string;
@@ -162,7 +163,7 @@ export async function mergeIntoPack(
   const contentHash = await hashPackContent(packDir);
   const updatedAt = new Date().toISOString();
 
-  const updatedMeta: PackMetadata = {
+  const updatedMeta: PackMetadata = normalizePersistedInstallPaths({
     ...existingMeta,
     source: refresh?.source ?? existingMeta.source,
     ...(refresh?.version !== undefined
@@ -185,7 +186,7 @@ export async function mergeIntoPack(
         : {}),
     updated_at: updatedAt,
     content_hash: contentHash,
-  };
+  });
 
   await writeFileAtomic(join(packDir, 'pack.yaml'), yamlStringify(updatedMeta));
   return updatedMeta;

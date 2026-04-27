@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { join } from 'node:path';
 
 const execFileMock = vi.hoisted(() => vi.fn<ExecFileLike>());
 const mkdirMock = vi.hoisted(() => vi.fn<(path: string, options?: object) => Promise<void>>());
@@ -98,7 +99,7 @@ describe('fetchGitRemoteExtend', () => {
     );
 
     expect(result).toEqual({
-      resolvedPath: '/tmp/cache/git__file____tmp_example_git__HEAD/repo',
+      resolvedPath: join('/tmp/cache/git__file____tmp_example_git__HEAD/repo'),
       version: 'cached-sha',
     });
     expect(execFileMock).toHaveBeenCalledOnce();
@@ -129,16 +130,16 @@ describe('fetchGitRemoteExtend', () => {
     expect(execFileMock.mock.calls[0]?.[1]).toEqual([
       'clone',
       'https://oauth2:secret%20token@gitlab.com/team/subteam/project.git',
-      '/tmp/cache/gitlab__team_subteam_project__release_v1.tmp/repo',
+      join('/tmp/cache/gitlab__team_subteam_project__release_v1.tmp/repo'),
     ]);
     expect(execFileMock.mock.calls[1]?.[1]).toEqual(['checkout', 'release/v1']);
     expect(result).toEqual({
-      resolvedPath: '/tmp/cache/gitlab__team_subteam_project__release_v1/repo',
+      resolvedPath: join('/tmp/cache/gitlab__team_subteam_project__release_v1/repo'),
       version: 'fresh-sha',
     });
     expect(renameMock).toHaveBeenCalledWith(
-      '/tmp/cache/gitlab__team_subteam_project__release_v1.tmp',
-      '/tmp/cache/gitlab__team_subteam_project__release_v1',
+      join('/tmp/cache/gitlab__team_subteam_project__release_v1.tmp'),
+      join('/tmp/cache/gitlab__team_subteam_project__release_v1'),
     );
   });
 
@@ -162,13 +163,13 @@ describe('fetchGitRemoteExtend', () => {
       [
         'clone',
         'ssh://git@gitlab.com/team/project.git',
-        '/tmp/cache/gitlab__team_project__HEAD.tmp/repo',
+        join('/tmp/cache/gitlab__team_project__HEAD.tmp/repo'),
       ],
       expect.any(Object),
       expect.any(Function),
     );
     expect(result).toEqual({
-      resolvedPath: '/tmp/cache/gitlab__team_project__HEAD/repo',
+      resolvedPath: join('/tmp/cache/gitlab__team_project__HEAD/repo'),
       version: 'cached-sha',
     });
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('using cached version'));

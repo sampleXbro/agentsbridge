@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { extendPickSchema, featureSchema, targetSchema } from '../../config/core/schema.js';
 import { readFileSafe, writeFileAtomic } from '../../utils/filesystem/fs.js';
 import { manualInstallAsSchema, type ManualInstallAs } from '../manual/manual-install-mode.js';
+import { normalizePersistedInstallPaths } from './portable-paths.js';
 
 const installManifestEntrySchema = z.object({
   name: z.string().min(1),
@@ -53,7 +54,9 @@ export async function readInstallManifest(canonicalDir: string): Promise<Install
   const content = await readFileSafe(manifestPath(canonicalDir));
   if (content === null) return [];
   try {
-    return installManifestSchema.parse(parseYaml(content) as unknown).installs;
+    return installManifestSchema
+      .parse(parseYaml(content) as unknown)
+      .installs.map((entry) => normalizePersistedInstallPaths(entry));
   } catch {
     return [];
   }
@@ -63,11 +66,13 @@ export async function upsertInstallManifestEntry(
   canonicalDir: string,
   entry: InstallManifestEntry,
 ): Promise<void> {
+  const normalizedEntry = normalizePersistedInstallPaths(entry);
   const installs = await readInstallManifest(canonicalDir);
   const next = installs.filter(
-    (install) => install.name !== entry.name && !sameInstallIdentity(install, entry),
+    (install) =>
+      install.name !== normalizedEntry.name && !sameInstallIdentity(install, normalizedEntry),
   );
-  next.push(entry);
+  next.push(normalizedEntry);
   await writeFileAtomic(
     manifestPath(canonicalDir),
     yamlStringify({ version: 1, installs: next.sort((a, b) => a.name.localeCompare(b.name)) }),
@@ -86,16 +91,18 @@ export function buildInstallManifestEntry(args: {
   paths?: string[];
   as?: ManualInstallAs;
 }): InstallManifestEntry {
-  return installManifestEntrySchema.parse({
-    name: args.name,
-    source: args.source,
-    version: args.version,
-    source_kind: args.sourceKind,
-    features: args.features,
-    pick: args.pick,
-    target: args.target,
-    path: args.path,
-    paths: args.paths,
-    as: args.as,
-  });
+  return normalizePersistedInstallPaths(
+    installManifestEntrySchema.parse({
+      name: args.name,
+      source: args.source,
+      version: args.version,
+      source_kind: args.sourceKind,
+      features: args.features,
+      pick: args.pick,
+      target: args.target,
+      path: args.path,
+      paths: args.paths,
+      as: args.as,
+    }),
+  );
 }

@@ -28,6 +28,16 @@ export interface TargetOutputFamily {
   readonly explicitPaths?: readonly string[];
 }
 
+export interface ExtraRuleOutputContext {
+  readonly refs: ReadonlyMap<string, string>;
+  readonly scope: TargetLayoutScope;
+}
+
+export type ExtraRuleOutputResolver = (
+  rule: CanonicalFiles['rules'][number],
+  context: ExtraRuleOutputContext,
+) => readonly string[];
+
 /**
  * Path resolvers for the output reference map.
  * Each method returns a relative output path, or null to skip.
@@ -53,14 +63,10 @@ export interface TargetManagedOutputs {
 export interface TargetLayout {
   /** Primary root instruction artifact for this scope, if any. */
   readonly rootInstructionPath?: string;
-  /**
-   * Extra generated paths that should receive the same AgentsMesh root appendix as
-   * `rootInstructionPath` (for example Cursor `AGENTS.md` / `.cursor/AGENTS.md`, Gemini `AGENTS.md`).
-   * @deprecated Prefer `outputFamilies` with `kind: 'additional'`.
-   */
-  readonly additionalRootDecorationPaths?: readonly string[];
   /** Output families for rewrite cache keys and root decoration (see `layout-outputs.ts`). */
   readonly outputFamilies?: readonly TargetOutputFamily[];
+  /** Additional generated rule paths that share source ownership for reference rewriting. */
+  readonly extraRuleOutputPaths?: ExtraRuleOutputResolver;
   /** Optional renderer for scope-specific primary root instruction content. */
   readonly renderPrimaryRootInstruction?: (canonical: CanonicalFiles) => string;
   /** Target-native skills directory for this scope, if any. */
@@ -117,6 +123,13 @@ export type RuleLinter = (
 /** Feature-specific lint hook signature. */
 export type FeatureLinter = (canonical: CanonicalFiles, options?: unknown) => LintDiagnostic[];
 
+export type GeneratedOutputMerger = (
+  existing: string | null,
+  pending: GenerateResult | undefined,
+  newContent: string,
+  resolvedPath: string,
+) => string | null;
+
 /** Optional per-feature lint hooks for target-specific validation. */
 export interface TargetLintHooks {
   readonly commands?: FeatureLinter;
@@ -138,10 +151,8 @@ export interface TargetDescriptor {
   readonly generators: TargetGenerators;
   /** Feature support levels */
   readonly capabilities: TargetCapabilities;
-  /** Consolidated global-mode metadata (preferred over bare `global*` fields). */
+  /** Consolidated global-mode metadata. */
   readonly globalSupport?: GlobalTargetSupport;
-  /** Optional global-scope feature support levels when they differ from project mode */
-  readonly globalCapabilities?: TargetCapabilities;
   /** Message shown when import finds nothing for this target */
   readonly emptyImportMessage: string;
   /** Optional linter for canonical files */
@@ -150,28 +161,15 @@ export interface TargetDescriptor {
   readonly lint?: TargetLintHooks;
   /** Project-scope target layout metadata */
   readonly project: TargetLayout;
-  /** Optional global-scope layout (use `globalSupport.layout` when `globalSupport` is set). */
-  readonly global?: TargetLayout;
   /**
    * Declares which embedded-capability features support user-configured conversion.
    * When the corresponding conversion is disabled in config, the feature generator is skipped.
    */
   readonly supportsConversion?: { readonly commands?: true; readonly agents?: true };
-  /**
-   * Optional hook for generating scope-specific extras beyond the standard feature loop.
-   * Prefer `globalSupport.scopeExtras` for global-only extras.
-   */
-  readonly generateScopeExtras?: ScopeExtrasFn;
-  /** @deprecated Use project.skillDir */
-  readonly skillDir?: string;
-  /** @deprecated Use project.paths */
-  readonly paths?: TargetPathResolvers;
   /** Import reference map builder */
   readonly buildImportPaths: ImportPathBuilder;
   /** Filesystem paths used to detect this target during `init` */
   readonly detectionPaths: readonly string[];
-  /** Optional filesystem paths used to detect this target in global scope during `init --global` */
-  readonly globalDetectionPaths?: readonly string[];
   /**
    * Declares which shared artifact paths this target owns or consumes.
    * Used by the reference rewriter to select the correct artifact map for shared outputs.
@@ -185,6 +183,8 @@ export interface TargetDescriptor {
     canonical: CanonicalFiles,
     scope: TargetLayoutScope,
   ) => readonly { readonly path: string; readonly content: string }[];
+  /** Optional target-specific merge strategy for generated outputs. */
+  readonly mergeGeneratedOutputContent?: GeneratedOutputMerger;
   /**
    * Async post-pass for hook generator outputs (e.g. Copilot hook script assets under `.github/hooks/`).
    */

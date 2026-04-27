@@ -1,3 +1,4 @@
+import { basename } from 'node:path';
 import type { CanonicalFiles } from '../../core/types.js';
 import { generateEmbeddedSkills } from '../import/embedded-skill.js';
 import { serializeFrontmatter } from '../../utils/text/markdown.js';
@@ -31,7 +32,7 @@ export function generateRules(canonical: CanonicalFiles): ContinueOutput[] {
     if (rule.root) continue;
     if (rule.targets.length > 0 && !rule.targets.includes('continue')) continue;
 
-    const slug = rule.source.split('/').pop()!.replace(/\.md$/, '');
+    const slug = basename(rule.source, '.md');
     const frontmatter: Record<string, unknown> = {};
     if (rule.description) frontmatter.description = rule.description;
     if (rule.globs.length > 0) frontmatter.globs = rule.globs;

@@ -1,42 +1,43 @@
-import { relative, sep } from 'node:path';
+import {
+  normalizeInstallPathField,
+  normalizeLocalSourceForYaml,
+  pathApiFor,
+  toPosixPath,
+} from '../core/portable-paths.js';
 import type { ParsedInstallSource } from './install-source-types.js';
-
-function toPosix(p: string): string {
-  return p.split(sep).join('/');
-}
 
 export function localParsedFromAbsPath(
   absLocal: string,
   configDir: string,
   pathFlag: string,
 ): ParsedInstallSource {
-  const abMarker = `${sep}.agentsmesh${sep}`;
-  const idx = absLocal.indexOf(abMarker);
+  const pathApi = pathApiFor(absLocal, configDir);
+  const normalizedAbsLocal = pathApi.normalize(absLocal);
+  const normalizedConfigDir = pathApi.normalize(configDir);
+  const normalizedPathFlag = normalizeInstallPathField(pathFlag);
+  const abMarker = `${pathApi.sep}.agentsmesh${pathApi.sep}`;
+  const idx = normalizedAbsLocal.indexOf(abMarker);
   if (idx >= 0) {
-    const root = absLocal.slice(0, idx);
-    const after = absLocal.slice(idx + abMarker.length);
-    const pathFromAb = toPosix(after.replace(/\\/g, '/')).replace(/^\/+/, '');
+    const root = normalizedAbsLocal.slice(0, idx);
+    const after = normalizedAbsLocal.slice(idx + abMarker.length);
+    const pathFromAb = normalizeInstallPathField(after);
     // POSIX-normalize so installs.yaml stays portable across Windows/POSIX clones.
-    const localSource = toPosix(relative(configDir, root)) || '.';
+    const localSource = toPosixPath(pathApi.relative(normalizedConfigDir, root)) || '.';
     return {
       kind: 'local',
       rawRef: '',
-      pathInRepo: pathFlag || pathFromAb.replace(/\.md$/i, '').replace(/\/$/, ''),
+      pathInRepo: normalizedPathFlag || pathFromAb.replace(/\.md$/i, '').replace(/\/$/, ''),
       localRoot: root,
-      localSourceForYaml: localSource.startsWith('..')
-        ? localSource
-        : `./${localSource}`.replace(/^\.\/\./, '.'),
+      localSourceForYaml: normalizeLocalSourceForYaml(localSource),
     };
   }
 
-  const localSource = toPosix(relative(configDir, absLocal)) || '.';
+  const localSource = toPosixPath(pathApi.relative(normalizedConfigDir, normalizedAbsLocal)) || '.';
   return {
     kind: 'local',
     rawRef: '',
-    pathInRepo: pathFlag,
-    localRoot: absLocal,
-    localSourceForYaml: localSource.startsWith('..')
-      ? localSource
-      : `./${localSource}`.replace(/^\.\/\./, '.'),
+    pathInRepo: normalizedPathFlag,
+    localRoot: normalizedAbsLocal,
+    localSourceForYaml: normalizeLocalSourceForYaml(localSource),
   };
 }

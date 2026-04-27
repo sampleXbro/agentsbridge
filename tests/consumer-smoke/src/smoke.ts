@@ -14,6 +14,7 @@ import {
   loadCanonicalFiles,
   loadConfig,
   loadConfigFromDirectory,
+  loadProjectContext,
   registerTargetDescriptor,
   getDescriptor,
   getAllDescriptors,
@@ -39,6 +40,9 @@ import type {
   GenerateContext,
   GenerateResult,
   ImportResult,
+  LoadCanonicalOptions,
+  LoadProjectContextOptions,
+  ProjectContext,
   AgentsMeshErrorCode,
   ValidatedConfig,
   TargetLayoutScope,
@@ -75,6 +79,9 @@ import type {
   ScopeExtrasFn,
   ImportPathBuilder,
   GlobalTargetSupport,
+  ExtraRuleOutputContext,
+  ExtraRuleOutputResolver,
+  GeneratedOutputMerger,
   TargetCapabilities,
   TargetGenerators,
 } from 'agentsmesh';
@@ -86,8 +93,12 @@ import {
   diff as diffFromSub,
   check as checkFromSub,
   loadConfig as loadConfigFromSub,
+  loadProjectContext as loadProjectContextFromSub,
 } from 'agentsmesh/engine';
-import { loadCanonical as loadCanonicalFromSub } from 'agentsmesh/canonical';
+import {
+  loadCanonical as loadCanonicalFromSub,
+  loadCanonicalFiles as loadCanonicalFilesFromSub,
+} from 'agentsmesh/canonical';
 import { getAllDescriptors as getAllFromSub } from 'agentsmesh/targets';
 
 async function exerciseRuntime(): Promise<void> {
@@ -101,6 +112,8 @@ async function exerciseRuntime(): Promise<void> {
   void configSub;
 
   const canonical: CanonicalFiles = await loadCanonical('/tmp/noop');
+  const canonicalOptions: LoadCanonicalOptions = { includeExtends: false };
+  const canonicalLocal: CanonicalFiles = await loadCanonical('/tmp/noop', canonicalOptions);
 
   const ctx: GenerateContext = {
     config,
@@ -114,7 +127,11 @@ async function exerciseRuntime(): Promise<void> {
 
   const _fromSub: GenerateResult[] = await generateFromSub(ctx);
   const _canonicalFromSub: CanonicalFiles = await loadCanonicalFromSub('/tmp/noop');
+  const _canonicalFilesFromSub: CanonicalFiles = await loadCanonicalFilesFromSub('/tmp/noop');
   const _descriptorsFromSub: readonly TargetDescriptor[] = getAllFromSub();
+  const projectOptions: LoadProjectContextOptions = { scope: 'project' };
+  const projectContext: ProjectContext = await loadProjectContext('/tmp/noop', projectOptions);
+  const projectContextFromSub: ProjectContext = await loadProjectContextFromSub('/tmp/noop');
 
   const _imported: ImportResult[] = await importFrom('claude-code', {
     root: '/tmp/noop',
@@ -160,7 +177,11 @@ async function exerciseRuntime(): Promise<void> {
 
   void _fromSub;
   void _canonicalFromSub;
+  void _canonicalFilesFromSub;
   void _descriptorsFromSub;
+  void canonicalLocal;
+  void projectContext;
+  void projectContextFromSub;
   void _resolved;
   void _imported;
   void _canonical2;
@@ -235,9 +256,21 @@ function exerciseTargetTypes(
   _scopeExtras: ScopeExtrasFn,
   _importPath: ImportPathBuilder,
   _globalSupport: GlobalTargetSupport,
+  _extraRuleContext: ExtraRuleOutputContext,
+  _extraRuleResolver: ExtraRuleOutputResolver,
+  _outputMerger: GeneratedOutputMerger,
   _capabilities: TargetCapabilities,
   _generators: TargetGenerators,
 ): void {
+  void _descriptor.globalSupport;
+  // @ts-expect-error Legacy global fields are intentionally not public plugin API.
+  void _descriptor.global;
+  // @ts-expect-error Legacy global fields are intentionally not public plugin API.
+  void _descriptor.globalCapabilities;
+  // @ts-expect-error Legacy global fields are intentionally not public plugin API.
+  void _descriptor.globalDetectionPaths;
+  // @ts-expect-error Legacy global fields are intentionally not public plugin API.
+  void _descriptor.generateScopeExtras;
   void _descriptor;
   void _layout;
   void _scope;
@@ -250,6 +283,9 @@ function exerciseTargetTypes(
   void _scopeExtras;
   void _importPath;
   void _globalSupport;
+  void _extraRuleContext;
+  void _extraRuleResolver;
+  void _outputMerger;
   void _capabilities;
   void _generators;
 }

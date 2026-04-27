@@ -1,6 +1,7 @@
 import type { TargetGenerators } from './target.interface.js';
 import type { TargetDescriptor } from './target-descriptor.js';
 import { BUILTIN_TARGETS } from './builtin-targets.js';
+import { validateDescriptor } from './target-descriptor.schema.js';
 
 const descriptorRegistry = new Map<string, TargetDescriptor>();
 const legacyRegistry = new Map<string, TargetGenerators>();
@@ -15,7 +16,8 @@ function builtinDescriptors(): Map<string, TargetDescriptor> {
 
 /** Register a full target descriptor (for plugins). */
 export function registerTargetDescriptor(descriptor: TargetDescriptor): void {
-  descriptorRegistry.set(descriptor.id, descriptor);
+  const validated = validateDescriptor(descriptor);
+  descriptorRegistry.set(validated.id, validated);
 }
 
 /** Register generators only (backward compat). */

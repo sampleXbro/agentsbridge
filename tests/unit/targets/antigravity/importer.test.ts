@@ -10,6 +10,7 @@ import {
   ANTIGRAVITY_SKILLS_DIR,
   ANTIGRAVITY_GLOBAL_WORKFLOWS_DIR,
 } from '../../../../src/targets/antigravity/constants.js';
+import { toPosixPath } from '../../../helpers/posix-path.js';
 
 const TEST_DIR = join(tmpdir(), 'am-antigravity-importer-test');
 
@@ -152,10 +153,12 @@ describe('importFromAntigravity — global scope', () => {
 
     expect(
       results.some(
-        (r) => r.feature === 'commands' && r.fromPath.includes(ANTIGRAVITY_GLOBAL_WORKFLOWS_DIR),
+        (r) =>
+          r.feature === 'commands' &&
+          toPosixPath(r.fromPath).includes(ANTIGRAVITY_GLOBAL_WORKFLOWS_DIR),
       ),
     ).toBe(true);
-    expect(results.some((r) => r.fromPath.includes('.agents/workflows'))).toBe(false);
+    expect(results.some((r) => toPosixPath(r.fromPath).includes('.agents/workflows'))).toBe(false);
     expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8')).toContain(
       'Global root',
     );

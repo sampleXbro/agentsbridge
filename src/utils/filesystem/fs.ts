@@ -18,11 +18,72 @@ import {
   readlink,
   realpath,
 } from 'node:fs/promises';
-import { dirname, join, resolve } from 'node:path';
+import { basename, dirname, extname, join, resolve } from 'node:path';
 import { constants } from 'node:fs';
 import { FileSystemError } from '../../core/errors.js';
 
 const UTF8_BOM = '\uFEFF';
+
+/**
+ * Text-like extensions whose payload must use LF line endings on disk so
+ * generated artifacts are byte-stable across Windows/Linux/macOS hosts
+ * so generated artifacts are byte-stable across platforms. Anything outside
+ * this set is treated as opaque.
+ */
+const TEXT_EXTENSIONS = new Set<string>([
+  '.md',
+  '.mdc',
+  '.mdx',
+  '.markdown',
+  '.txt',
+  '.json',
+  '.jsonc',
+  '.yaml',
+  '.yml',
+  '.toml',
+  '.ini',
+  '.sh',
+  '.bash',
+  '.zsh',
+  '.ps1',
+  '.js',
+  '.mjs',
+  '.cjs',
+  '.ts',
+  '.tsx',
+  '.html',
+  '.css',
+]);
+
+/** Dotfile basenames (no extension) that contain text and should be LF-normalized. */
+const TEXT_DOTFILES = new Set<string>([
+  '.gitignore',
+  '.cursorignore',
+  '.cursorindexingignore',
+  '.aiignore',
+  '.agentignore',
+  '.clineignore',
+  '.geminiignore',
+  '.codeiumignore',
+  '.continueignore',
+  '.copilotignore',
+  '.windsurfignore',
+  '.junieignore',
+  '.kiroignore',
+  '.rooignore',
+  '.antigravityignore',
+]);
+
+function shouldNormalizeLineEndings(path: string): boolean {
+  const ext = extname(path).toLowerCase();
+  if (ext.length > 0) return TEXT_EXTENSIONS.has(ext);
+  const base = basename(path).toLowerCase();
+  return TEXT_DOTFILES.has(base);
+}
+
+function normalizeLineEndings(content: string): string {
+  return content.replace(/\r\n?/g, '\n');
+}
 
 interface ErrnoLike {
   code?: string;
@@ -73,8 +134,9 @@ export async function writeFileAtomic(path: string, content: string): Promise<vo
     if (e.code !== 'ENOENT') throw err;
   }
   const tmpPath = `${path}.tmp`;
+  const payload = shouldNormalizeLineEndings(path) ? normalizeLineEndings(content) : content;
   try {
-    await writeFile(tmpPath, content, 'utf-8');
+    await writeFile(tmpPath, payload, 'utf-8');
     await rename(tmpPath, path);
   } catch (err) {
     await rm(tmpPath, { force: true }).catch(() => {});

@@ -51,14 +51,16 @@ The generated descriptor includes:
 
 ### Post-scaffold steps
 
-The CLI prints the exact next steps after scaffolding:
+The catalog is auto-discovered at build time, so adding a new target does **not** require manual edits to `target-ids.ts`, `builtin-targets.ts`, or the import-maps barrel. The CLI prints the exact next steps:
 
-1. Add `'foo-ide'` to `TARGET_IDS` in `src/targets/catalog/target-ids.ts`
-2. Add the descriptor import and entry in `src/targets/catalog/builtin-targets.ts`
-3. Export the import-map from `src/core/reference/import-maps/index.ts`
-4. Run `pnpm typecheck && pnpm test -- tests/unit/targets/foo-ide`
-5. Run `pnpm schemas:generate && pnpm matrix:generate`
-6. Fill in the `TODO(agentsmesh-scaffold)` markers in `src/targets/foo-ide/`
+1. Run `pnpm catalog:generate` — auto-discovers the new target and updates the IDs list, descriptor imports, and import-map barrel between sentinel comments. Also runs as part of `pnpm build` via the `prebuild` hook.
+2. Fill in the `TODO(agentsmesh-scaffold)` markers in `src/targets/foo-ide/`.
+3. Run `pnpm typecheck && pnpm test -- tests/unit/targets/foo-ide`.
+4. Run `pnpm schemas:generate && pnpm matrix:generate`.
+
+<Aside type="note">
+  How auto-discovery works: `scripts/generate-target-catalog.ts` scans `src/targets/<dir>/index.ts`, validates that each exports `descriptor`, and patches the AUTO-GENERATED regions of `builtin-targets.ts` and `import-maps/index.ts`. To remove a target, delete its directory and rerun the script. Drift can be checked in CI with `pnpm catalog:generate -- --verify`.
+</Aside>
 
 ---
 

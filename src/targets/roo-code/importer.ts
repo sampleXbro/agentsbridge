@@ -3,107 +3,23 @@ import { join } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
 import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
-import { readFileSafe, writeFileAtomic } from '../../utils/filesystem/fs.js';
-import { parseFrontmatter } from '../../utils/text/markdown.js';
 import { importEmbeddedSkills } from '../import/embedded-skill.js';
-import { serializeImportedRuleWithFallback } from '../import/import-metadata.js';
 import { importFileDirectory } from '../import/import-orchestrator.js';
-import {
-  importRooCommands,
-  importRooIgnore,
-  importRooMcp,
-} from './importer-commands-mcp-ignore.js';
+import { runDescriptorImport } from '../import/descriptor-import-runner.js';
+import { rooNonRootRuleMapper } from './import-mappers.js';
 import {
   ROO_CODE_TARGET,
   ROO_CODE_DIR,
-  ROO_CODE_ROOT_RULE,
-  ROO_CODE_ROOT_RULE_FALLBACK,
-  ROO_CODE_RULES_DIR,
   ROO_CODE_SKILLS_DIR,
-  ROO_CODE_GLOBAL_AGENTS_MD,
-  ROO_CODE_CANONICAL_ROOT_RULE,
   ROO_CODE_CANONICAL_RULES_DIR,
 } from './constants.js';
+import { descriptor } from './index.js';
 
-async function importRootRule(
-  projectRoot: string,
-  results: ImportResult[],
-  normalize: (content: string, sourceFile: string, destinationFile: string) => string,
-  scope: TargetLayoutScope,
-): Promise<void> {
-  const destPath = join(projectRoot, ROO_CODE_CANONICAL_ROOT_RULE);
-  const sources =
-    scope === 'global'
-      ? [ROO_CODE_GLOBAL_AGENTS_MD, ROO_CODE_ROOT_RULE, ROO_CODE_ROOT_RULE_FALLBACK]
-      : [ROO_CODE_ROOT_RULE, ROO_CODE_ROOT_RULE_FALLBACK];
-
-  for (const relPath of sources) {
-    const srcPath = join(projectRoot, relPath);
-    const content = await readFileSafe(srcPath);
-    if (content === null) continue;
-    const { frontmatter, body } = parseFrontmatter(normalize(content, srcPath, destPath));
-    const output = await serializeImportedRuleWithFallback(
-      destPath,
-      {
-        root: true,
-        description:
-          typeof frontmatter.description === 'string' ? frontmatter.description : undefined,
-        globs: Array.isArray(frontmatter.globs) ? frontmatter.globs : undefined,
-      },
-      body,
-    );
-    await writeFileAtomic(destPath, output);
-    results.push({
-      fromTool: ROO_CODE_TARGET,
-      fromPath: srcPath,
-      toPath: ROO_CODE_CANONICAL_ROOT_RULE,
-      feature: 'rules',
-    });
-    return;
-  }
-}
-
-async function importNonRootRules(
-  projectRoot: string,
-  results: ImportResult[],
-  normalize: (content: string, sourceFile: string, destinationFile: string) => string,
-): Promise<void> {
-  const srcDir = join(projectRoot, ROO_CODE_RULES_DIR);
-  const destDir = join(projectRoot, ROO_CODE_CANONICAL_RULES_DIR);
-  const rootRuleName = '00-root.md';
-
-  results.push(
-    ...(await importFileDirectory({
-      srcDir,
-      destDir,
-      extensions: ['.md'],
-      fromTool: ROO_CODE_TARGET,
-      normalize,
-      mapEntry: async ({ relativePath, normalizeTo }) => {
-        if (relativePath === rootRuleName) return null;
-        const destPath = join(destDir, relativePath);
-        const { frontmatter, body } = parseFrontmatter(normalizeTo(destPath));
-        const output = await serializeImportedRuleWithFallback(
-          destPath,
-          {
-            root: false,
-            description:
-              typeof frontmatter.description === 'string' ? frontmatter.description : undefined,
-            globs: Array.isArray(frontmatter.globs) ? frontmatter.globs : undefined,
-          },
-          body,
-        );
-        return {
-          destPath,
-          toPath: `${ROO_CODE_CANONICAL_RULES_DIR}/${relativePath}`,
-          feature: 'rules',
-          content: output,
-        };
-      },
-    })),
-  );
-}
-
+/**
+ * Roo can ship rule directories named `rules-<mode>`; the set is dynamic, so it
+ * stays imperative. Each discovered directory is funneled through the same
+ * non-root rule mapper used by the descriptor's primary rules spec.
+ */
 async function importPerModeRules(
   projectRoot: string,
   results: ImportResult[],
@@ -116,40 +32,28 @@ async function importPerModeRules(
   } catch {
     return;
   }
-
   const modeRuleDirs = entries
     .filter((e) => e.isDirectory() && e.name.startsWith('rules-'))
     .map((e) => e.name);
-
+  const destDir = join(projectRoot, ROO_CODE_CANONICAL_RULES_DIR);
   for (const dirName of modeRuleDirs) {
-    const srcDir = join(rooDir, dirName);
-    const destDir = join(projectRoot, ROO_CODE_CANONICAL_RULES_DIR);
     results.push(
       ...(await importFileDirectory({
-        srcDir,
+        srcDir: join(rooDir, dirName),
         destDir,
         extensions: ['.md'],
         fromTool: ROO_CODE_TARGET,
         normalize,
-        mapEntry: async ({ relativePath, normalizeTo }) => {
-          const destPath = join(destDir, relativePath);
-          const { frontmatter, body } = parseFrontmatter(normalizeTo(destPath));
-          const output = await serializeImportedRuleWithFallback(
-            destPath,
-            {
-              root: false,
-              description:
-                typeof frontmatter.description === 'string' ? frontmatter.description : undefined,
-              globs: Array.isArray(frontmatter.globs) ? frontmatter.globs : undefined,
-            },
-            body,
-          );
-          return {
-            destPath,
-            toPath: `${ROO_CODE_CANONICAL_RULES_DIR}/${relativePath}`,
-            feature: 'rules',
-            content: output,
-          };
+        mapEntry: async ({ srcPath, relativePath, content, normalizeTo }) => {
+          const mapping = await rooNonRootRuleMapper({
+            absolutePath: srcPath,
+            relativePath,
+            content,
+            destDir,
+            normalizeTo,
+          });
+          if (!mapping) return null;
+          return { ...mapping, feature: 'rules' };
         },
       })),
     );
@@ -163,12 +67,8 @@ export async function importFromRooCode(
   const scope = options.scope ?? 'project';
   const results: ImportResult[] = [];
   const normalize = await createImportReferenceNormalizer(ROO_CODE_TARGET, projectRoot, scope);
-  await importRootRule(projectRoot, results, normalize, scope);
-  await importNonRootRules(projectRoot, results, normalize);
+  results.push(...(await runDescriptorImport(descriptor, projectRoot, scope, { normalize })));
   await importPerModeRules(projectRoot, results, normalize);
-  await importRooCommands(projectRoot, results, normalize);
   await importEmbeddedSkills(projectRoot, ROO_CODE_SKILLS_DIR, ROO_CODE_TARGET, results, normalize);
-  await importRooMcp(projectRoot, results, scope);
-  await importRooIgnore(projectRoot, results);
   return results;
 }

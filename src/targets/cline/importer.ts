@@ -1,9 +1,12 @@
 /**
  * Cline target importer: .clinerules (rules + workflows), .clineignore,
  * .cline/cline_mcp_settings.json, .cline/skills into canonical .agentsmesh/.
- * Cline rules may have no frontmatter; add root: true for _root.md on import.
- * Workflows (.clinerules/workflows/*.md) import as canonical commands.
- * AGENTS.md is used as a root fallback when no _root.md is found in .clinerules/.
+ *
+ * Kept imperative on purpose. Cline's `.clinerules` may be a flat FILE or a
+ * DIRECTORY, and workflows must be skipped in the file case — that runtime
+ * branch is not declarable through `runDescriptorImport`. The MCP parser
+ * also handles the legacy `transportType` field (project-only target — no
+ * scope variance, so no descriptor-level scope-leakage to absorb).
  */
 
 import { join } from 'node:path';

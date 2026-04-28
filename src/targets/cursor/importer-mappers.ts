@@ -26,14 +26,42 @@ export async function mapCursorRuleFile(
   const destPath = isRoot ? join(destDir, '_root.md') : rawDestPath;
   const { frontmatter, body } = parseFrontmatter(normalizeTo(destPath));
   if (isRoot) onRootRule();
-  const canonicalFm = { ...frontmatter, root: isRoot };
-  delete (canonicalFm as Record<string, unknown>).alwaysApply;
+  const canonicalFm: Record<string, unknown> = { ...frontmatter, root: isRoot };
+  delete canonicalFm.alwaysApply;
+  if (!isRoot) {
+    const trigger = deriveCursorTrigger(frontmatter);
+    if (trigger !== null) canonicalFm.trigger = trigger;
+  }
   return {
     destPath,
     toPath: `${CURSOR_CANONICAL_RULES_DIR}/${isRoot ? '_root.md' : rawRelativePath}`,
     feature: 'rules',
     content: await serializeImportedRuleWithFallback(destPath, canonicalFm, body),
   };
+}
+
+/**
+ * Cursor rule activation modes (https://cursor.com/docs/rules#rule-file-format):
+ *   alwaysApply: true                            → always_on
+ *   alwaysApply: false + non-empty globs         → glob (auto-attached)
+ *   alwaysApply: false + non-empty description   → model_decision (agent-requested)
+ *   alwaysApply: false + neither                 → manual (@-mention only)
+ *
+ * The manual case matters because forwarding a manual
+ * Cursor rule into a target that loads every rule unconditionally inverts the
+ * activation from "never" to "always". Capturing `trigger: 'manual'` in the
+ * canonical lets `lintRuleScopeInversion` warn before generation silently does
+ * the wrong thing for non-Cursor targets.
+ */
+function deriveCursorTrigger(
+  frontmatter: Record<string, unknown>,
+): 'glob' | 'model_decision' | 'manual' | null {
+  if (frontmatter.alwaysApply !== false) return null;
+  const globs = Array.isArray(frontmatter.globs) ? frontmatter.globs : [];
+  if (globs.length > 0) return 'glob';
+  const description = typeof frontmatter.description === 'string' ? frontmatter.description : '';
+  if (description.trim().length > 0) return 'model_decision';
+  return 'manual';
 }
 
 export async function mapCursorCommandFile(

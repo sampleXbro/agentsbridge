@@ -50,8 +50,8 @@ describe('agentsmesh target scaffold (e2e)', () => {
   it('prints next steps after scaffolding', async () => {
     const result = await runCli('target scaffold e2e-steps', tmpDir);
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('TARGET_IDS');
-    expect(result.stdout).toContain('builtin-targets.ts');
+    expect(result.stdout).toContain('catalog:generate');
+    expect(result.stdout).not.toContain('TARGET_IDS');
   });
 
   it('fails with exit code 1 on invalid id', async () => {

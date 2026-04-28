@@ -1,34 +1,24 @@
 /**
  * Standalone target ID constants.
  *
- * Extracted from builtin-targets.ts to break a circular type dependency:
- * schema.ts → builtin-targets.ts → descriptors → ValidatedConfig → schema.ts
+ * Re-exports from the auto-generated `builtin-target-ids-generated.ts`
+ * (run by `prebuild` / `pnpm verify:catalog`).
  *
- * When adding a new target, add its ID here AND its descriptor to
- * BUILTIN_TARGETS in builtin-targets.ts. A compile-time assertion
- * in builtin-targets.ts ensures they stay in sync.
+ * Kept as a separate module to break a circular type dependency:
+ * `schema.ts → builtin-targets.ts → descriptors → ValidatedConfig → schema.ts`.
+ * Only descriptor-free constants live here; the full descriptor array lives in
+ * `builtin-targets.ts`.
  */
 
-export const TARGET_IDS = [
-  'claude-code',
-  'cursor',
-  'copilot',
-  'continue',
-  'junie',
-  'kiro',
-  'gemini-cli',
-  'cline',
-  'codex-cli',
-  'windsurf',
-  'antigravity',
-  'roo-code',
-] as const;
+import {
+  BUILTIN_TARGET_IDS,
+  type BuiltinTargetId,
+  isBuiltinTargetId,
+} from './builtin-target-ids-generated.js';
 
-export type BuiltinTargetId = (typeof TARGET_IDS)[number];
+export const TARGET_IDS = BUILTIN_TARGET_IDS;
+export type { BuiltinTargetId };
+export { isBuiltinTargetId };
 
 /** Codex CLI id — shared skill dirs and AGENTS.md collision policy reference this explicitly. */
 export const CODEX_CLI_TARGET_ID = 'codex-cli' satisfies BuiltinTargetId;
-
-export function isBuiltinTargetId(value: string): value is BuiltinTargetId {
-  return (TARGET_IDS as readonly string[]).includes(value);
-}

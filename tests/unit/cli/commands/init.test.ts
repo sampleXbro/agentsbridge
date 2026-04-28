@@ -197,6 +197,21 @@ describe('runInit — scaffold (no existing configs)', () => {
     expect(content).toContain('.agentsmesh/.lock.tmp');
   });
 
+  it('gitignores .agentsmesh/packs/ — packs are materialized from installs.yaml', async () => {
+    await runInit(TEST_DIR);
+    const content = readFileSync(join(TEST_DIR, '.gitignore'), 'utf-8');
+    expect(content).toContain('.agentsmesh/packs/');
+  });
+
+  it('does NOT gitignore generated target folders — they are committed for fresh-clone UX', async () => {
+    await runInit(TEST_DIR);
+    const content = readFileSync(join(TEST_DIR, '.gitignore'), 'utf-8');
+    // Spot-check: a few representative target output paths must NOT be in the default .gitignore
+    for (const target of ['.claude/', '.cursor/', '.github/copilot-instructions.md', '.gemini/']) {
+      expect(content).not.toContain(target);
+    }
+  });
+
   it('does not duplicate .gitignore entries', async () => {
     writeFileSync(
       join(TEST_DIR, '.gitignore'),

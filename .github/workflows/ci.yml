@@ -92,6 +92,9 @@ jobs:
       - name: Contract matrix
         run: pnpm test:contract
 
+      - name: Builtin target catalog drift guard
+        run: pnpm catalog:verify
+
       - name: Support matrix docs match catalog
         run: pnpm matrix:verify
 

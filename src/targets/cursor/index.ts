@@ -13,6 +13,8 @@ import {
 import {
   CURSOR_COMPAT_AGENTS,
   CURSOR_AGENTS_DIR,
+  CURSOR_CANONICAL_AGENTS_DIR,
+  CURSOR_CANONICAL_COMMANDS_DIR,
   CURSOR_COMMANDS_DIR,
   CURSOR_DOT_CURSOR_AGENTS,
   CURSOR_GENERAL_RULE,
@@ -29,6 +31,7 @@ import {
 } from './constants.js';
 import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromCursor } from './importer.js';
+import { cursorAgentMapper, cursorCommandMapper } from './import-mappers.js';
 import { lintRules } from './linter.js';
 import { buildCursorImportPaths } from '../../core/reference/import-map-builders.js';
 import { lintCommands, lintMcp, lintPermissions } from './lint.js';
@@ -178,6 +181,30 @@ export const descriptor = {
     ],
     layout: global,
   },
+  importer: {
+    // Project-only declarable features. Rules/mcp/skills/settings/ignore stay
+    // imperative (see importer.ts). Ignore in particular merges
+    // `.cursorignore` + `.cursorindexingignore` into a deduped list, which
+    // the runner's `flatFile` mode does not model. Global scope dispatches to
+    // a separate code path.
+    commands: {
+      feature: 'commands',
+      mode: 'directory',
+      source: { project: [CURSOR_COMMANDS_DIR] },
+      canonicalDir: CURSOR_CANONICAL_COMMANDS_DIR,
+      extensions: ['.md'],
+      map: cursorCommandMapper,
+    },
+    agents: {
+      feature: 'agents',
+      mode: 'directory',
+      source: { project: [CURSOR_AGENTS_DIR] },
+      canonicalDir: CURSOR_CANONICAL_AGENTS_DIR,
+      extensions: ['.md'],
+      map: cursorAgentMapper,
+    },
+  },
   buildImportPaths: buildCursorImportPaths,
   detectionPaths: ['.cursor/rules', '.cursor/mcp.json'],
+  preservesManualActivation: true,
 } satisfies TargetDescriptor;

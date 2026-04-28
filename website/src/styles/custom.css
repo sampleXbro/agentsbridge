@@ -14,11 +14,57 @@
 
 /* Hero section enhancements — tighter so homepage catalog fits above the fold */
 .hero {
-  padding-block: 2.5rem;
+  padding-block: 0.75rem;
+}
+
+.hero h1 {
+  font-size: 3.5rem;
+  line-height: 1.05;
+}
+
+.hero .tagline {
+  font-size: 1.125rem;
+  line-height: 1.55;
 }
 
 .hero > img {
   filter: drop-shadow(0 0 2rem rgba(99, 102, 241, 0.3));
+}
+
+.am-homepage-catalog {
+  margin-block: -0.25rem 2rem;
+}
+
+.am-homepage-catalog h2 {
+  margin-block: 0 0.35rem;
+  text-align: center;
+}
+
+.am-homepage-catalog-intro {
+  max-width: 48rem;
+  margin: 0 auto 1rem;
+  color: var(--sl-color-gray-3);
+  text-align: center;
+}
+
+.am-homepage-catalog .am-catalog-explorer {
+  margin-top: 0;
+  margin-bottom: 1.75rem;
+}
+
+@media (max-width: 50rem) {
+  .hero > img {
+    display: none;
+  }
+
+  .hero h1 {
+    font-size: 2.25rem;
+  }
+
+  .hero .tagline {
+    font-size: 0.95rem;
+    line-height: 1.45;
+  }
 }
 
 /* Feature cards on homepage */

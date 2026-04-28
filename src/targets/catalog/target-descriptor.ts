@@ -17,6 +17,7 @@ import type {
 } from '../../core/types.js';
 import type { ValidatedConfig } from '../../config/core/schema.js';
 import type { TargetCapabilities, TargetGenerators } from './target.interface.js';
+import type { TargetImporterDescriptor } from './import-descriptor.js';
 
 /** Declared output families for reference rewriting and decoration (architecture P1-3). */
 export interface TargetOutputFamily {
@@ -166,6 +167,15 @@ export interface TargetDescriptor {
    * When the corresponding conversion is disabled in config, the feature generator is skipped.
    */
   readonly supportsConversion?: { readonly commands?: true; readonly agents?: true };
+  /**
+   * Optional descriptor-driven importer block. When present, the shared
+   * `runDescriptorImport` orchestrator handles scan + map for each declared
+   * feature (with scope variance expressed as data, eliminating
+   * `if (scope === 'global')` branches in importer bodies). Targets with
+   * irreducibly custom parsing keep `generators.importFrom` and may delegate
+   * declarable parts of their flow to the runner.
+   */
+  readonly importer?: TargetImporterDescriptor;
   /** Import reference map builder */
   readonly buildImportPaths: ImportPathBuilder;
   /** Filesystem paths used to detect this target during `init` */
@@ -193,4 +203,10 @@ export interface TargetDescriptor {
     canonical: CanonicalFiles,
     outputs: readonly { readonly path: string; readonly content: string }[],
   ) => Promise<readonly { readonly path: string; readonly content: string }[]>;
+  /**
+   * When true, the target preserves manual-only activation semantics (e.g.
+   * Cursor's `alwaysApply: false` without globs/description). Targets without
+   * this flag get a lint warning when canonical rules have `trigger: 'manual'`.
+   */
+  readonly preservesManualActivation?: boolean;
 }

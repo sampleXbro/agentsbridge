@@ -17,8 +17,12 @@ import {
   ANTIGRAVITY_RULES_ROOT,
   ANTIGRAVITY_RULES_DIR,
   ANTIGRAVITY_WORKFLOWS_DIR,
+  ANTIGRAVITY_CANONICAL_COMMANDS_DIR,
+  ANTIGRAVITY_CANONICAL_MCP,
+  ANTIGRAVITY_CANONICAL_RULES_DIR,
 } from './constants.js';
 import { importFromAntigravity } from './importer.js';
+import { nonRootRuleMapper, workflowMapper } from './import-mappers.js';
 import { lintRules } from './linter.js';
 import { buildAntigravityImportPaths } from '../../core/reference/import-map-builders.js';
 
@@ -124,6 +128,39 @@ export const descriptor = {
       '.gemini/antigravity/mcp_config.json',
     ],
     layout: global,
+  },
+  importer: {
+    rules: {
+      // Project-only directory scan; root rule + global-aggregated rules
+      // (which collapse into the single .gemini/antigravity/GEMINI.md) are
+      // handled imperatively in importer.ts.
+      feature: 'rules',
+      mode: 'directory',
+      source: { project: [ANTIGRAVITY_RULES_DIR] },
+      canonicalDir: ANTIGRAVITY_CANONICAL_RULES_DIR,
+      extensions: ['.md'],
+      map: nonRootRuleMapper,
+    },
+    commands: {
+      feature: 'commands',
+      mode: 'directory',
+      source: {
+        project: [ANTIGRAVITY_WORKFLOWS_DIR],
+        global: [ANTIGRAVITY_GLOBAL_WORKFLOWS_DIR],
+      },
+      canonicalDir: ANTIGRAVITY_CANONICAL_COMMANDS_DIR,
+      extensions: ['.md'],
+      map: workflowMapper,
+    },
+    mcp: {
+      // MCP is global-only; project-scope generation is suppressed. Source file
+      // is copied verbatim (the file is already canonical-shaped JSON).
+      feature: 'mcp',
+      mode: 'flatFile',
+      source: { global: [ANTIGRAVITY_GLOBAL_MCP_CONFIG] },
+      canonicalDir: '.agentsmesh',
+      canonicalFilename: ANTIGRAVITY_CANONICAL_MCP,
+    },
   },
   buildImportPaths: buildAntigravityImportPaths,
   detectionPaths: [

@@ -9,6 +9,9 @@ import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.
 import { readDirRecursive } from '../../utils/filesystem/fs.js';
 import { getTargetCatalogEntry, isBuiltinTargetId } from '../../targets/catalog/target-catalog.js';
 import { getDescriptor } from '../../targets/catalog/registry.js';
+import { lintSilentFeatureDrops } from './shared/silent-drop-guard.js';
+import { lintHookScriptReferences } from './shared/hook-script-references.js';
+import { lintRuleScopeInversion } from './shared/rule-scope-inversion.js';
 
 const EXCLUDE_DIRS = ['node_modules', '.git', 'dist', 'coverage', '.agentsmesh'];
 
@@ -55,6 +58,39 @@ export async function runLint(
     const descriptor = isBuiltinTargetId(target)
       ? getTargetCatalogEntry(target)
       : getDescriptor(target);
+
+    if (descriptor?.capabilities) {
+      diagnostics.push(
+        ...lintSilentFeatureDrops({
+          target,
+          capabilities: descriptor.capabilities,
+          canonical,
+          enabledFeatures: config.features,
+        }),
+      );
+    }
+
+    if (hasHooks) {
+      const fullDescForHooks = getDescriptor(target);
+      diagnostics.push(
+        ...lintHookScriptReferences({
+          target,
+          canonical,
+          hasScriptProjection: fullDescForHooks?.postProcessHookOutputs !== undefined,
+        }),
+      );
+    }
+
+    if (hasRules) {
+      const fullDescForRules = getDescriptor(target);
+      diagnostics.push(
+        ...lintRuleScopeInversion({
+          target,
+          canonical,
+          preservesManualActivation: fullDescForRules?.preservesManualActivation === true,
+        }),
+      );
+    }
 
     if (hasRules && descriptor?.lintRules) {
       diagnostics.push(...descriptor.lintRules(canonical, projectRoot, projectFiles, { scope }));

@@ -98,12 +98,10 @@ export async function writeTargetScaffold(opts: ScaffoldOptions): Promise<Scaffo
 
   // ── Post-steps ────────────────────────────────────────────────────────────
   const postSteps = [
-    `1. Add '${id}' to TARGET_IDS in src/targets/catalog/target-ids.ts`,
-    `2. Add descriptor import + entry to src/targets/catalog/builtin-targets.ts`,
-    `3. Add export to src/core/reference/import-maps/index.ts`,
-    `4. Run: pnpm typecheck && pnpm test -- tests/unit/targets/${id}`,
-    `5. Run: pnpm schemas:generate && pnpm matrix:generate`,
-    `6. Fill in TODO(agentsmesh-scaffold) markers in src/targets/${id}/`,
+    `1. Run: pnpm catalog:generate  (auto-discovers the new target — updates IDs, descriptors, and import-map barrel)`,
+    `2. Fill in TODO(agentsmesh-scaffold) markers in src/targets/${id}/`,
+    `3. Run: pnpm typecheck && pnpm test -- tests/unit/targets/${id}`,
+    `4. Run: pnpm schemas:generate && pnpm matrix:generate`,
   ];
 
   return { written, skipped, postSteps };

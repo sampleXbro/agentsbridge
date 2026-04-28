@@ -45,8 +45,11 @@
   },
   "scripts": {
     "agentsmesh": "node ./dist/cli.js",
+    "prebuild": "tsx scripts/generate-target-catalog.ts",
     "build": "tsup",
     "pretest": "pnpm build",
+    "catalog:generate": "tsx scripts/generate-target-catalog.ts",
+    "catalog:verify": "tsx scripts/generate-target-catalog.ts --verify",
     "test": "vitest run",
     "test:contract": "vitest run tests/contract",
     "flake:check": "tsx scripts/flake-check.ts",
@@ -67,7 +70,7 @@
     "publint": "publint",
     "attw": "attw --pack . --profile esm-only",
     "consumer-smoke": "./scripts/consumer-smoke.sh",
-    "install-global": "pnpm build && pnpm pack && pnpm add -g $(pwd)/agentsmesh-$(node -p 'require(\"./package.json\").version').tgz"
+    "install-global": "rm -f agentsmesh-*.tgz && pnpm build && pnpm pack && export PNPM_HOME=${PNPM_HOME:-$HOME/Library/pnpm} && export PATH=$PNPM_HOME:$PATH && pnpm add -g $(pwd)/agentsmesh-$(node -p 'require(\"./package.json\").version').tgz"
   },
   "keywords": [
     "ai-rules",

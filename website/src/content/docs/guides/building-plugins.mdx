@@ -155,6 +155,70 @@ capabilities: {
 },
 ```
 
+## Descriptor-driven importer (optional)
+
+Instead of hand-writing `generators.importFrom`, you can declare an `importer:` block on the descriptor. The shared runner walks each feature in canonical order, resolves scope-specific source paths, and dispatches to the right helper. **Features whose `source` omits the active scope are silently skipped** — no `if (scope === 'global')` branches in your code.
+
+```js
+const descriptor = {
+  // … other fields …
+  importer: {
+    rules: {
+      feature: 'rules',
+      mode: 'directory',
+      source: { project: ['.foo-ide/rules'], global: ['.foo-ide/rules'] },
+      canonicalDir: '.agentsmesh/rules',
+      extensions: ['.md'],
+      preset: 'rule',
+    },
+    commands: {
+      feature: 'commands',
+      mode: 'directory',
+      source: { project: ['.foo-ide/commands'] },          // project-only — runner skips in global
+      canonicalDir: '.agentsmesh/commands',
+      extensions: ['.md'],
+      preset: 'command',
+    },
+    mcp: {
+      feature: 'mcp',
+      mode: 'mcpJson',
+      source: { project: ['.foo-ide/mcp.json'], global: ['.foo-ide/mcp.json'] },
+      canonicalDir: '.agentsmesh',
+      canonicalFilename: '.agentsmesh/mcp.json',
+    },
+    ignore: {
+      feature: 'ignore',
+      mode: 'flatFile',
+      source: { project: ['.foo-ideignore'] },
+      canonicalDir: '.agentsmesh',
+      canonicalFilename: '.agentsmesh/ignore',
+    },
+  },
+  generators: {
+    // …
+    async importFrom(projectRoot, options) {
+      const { runDescriptorImport } = await import('agentsmesh/targets');
+      return runDescriptorImport(descriptor, projectRoot, options?.scope ?? 'project');
+    },
+  },
+};
+```
+
+### Modes
+
+| Mode | Use it for | Required spec fields |
+|------|------------|----------------------|
+| `singleFile` | Root rule with a fallback chain (`AGENTS.md`, `CLAUDE.md`, …) | `canonicalRootFilename`, optional `markAsRoot` |
+| `directory` | Recursive scan of a target directory | `extensions`, `preset` (`rule` / `command` / `agent`) or custom `map` |
+| `flatFile` | Verbatim copy of a single file (e.g. `.gitignore`-style) | `canonicalFilename` |
+| `mcpJson` | Parse and re-emit `mcpServers` JSON | `canonicalFilename` |
+
+### Custom mappers
+
+If a target's frontmatter doesn't fit the built-in `preset`, supply your own `map` (or `frontmatterRemap` for small field translations). The mapper receives `{ relativePath, absolutePath, content, destDir, normalizeTo }` and returns `{ destPath, toPath, content }` (or `null` to skip).
+
+Targets with non-declarable parsing (embedded rule splitters, native config files in TOML/YAML) keep `generators.importFrom` for the imperative bits and call `runDescriptorImport(descriptor, projectRoot, scope)` for everything declarable.
+
 ## Global mode
 
 To support `agentsmesh generate --global`, add `globalSupport` with capabilities, detection paths, and a global layout:

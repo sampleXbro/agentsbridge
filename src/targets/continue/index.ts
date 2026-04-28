@@ -9,8 +9,11 @@ import {
   CONTINUE_SKILLS_DIR,
   CONTINUE_GLOBAL_AGENTS_MD,
   CONTINUE_GLOBAL_CONFIG,
+  CONTINUE_CANONICAL_RULES_DIR,
+  CONTINUE_CANONICAL_COMMANDS_DIR,
 } from './constants.js';
 import { importFromContinue } from './importer.js';
+import { continueCommandMapper, continueRuleMapper } from './import-mappers.js';
 import { lintRules } from './linter.js';
 import { lintCommands } from './lint.js';
 import { continueCommandRulePath } from './command-rule.js';
@@ -119,6 +122,24 @@ export const descriptor = {
     ],
     layout: globalLayout,
     scopeExtras: generateContinueScopeExtras,
+  },
+  importer: {
+    rules: {
+      feature: 'rules',
+      mode: 'directory',
+      source: { project: [CONTINUE_RULES_DIR], global: [CONTINUE_RULES_DIR] },
+      canonicalDir: CONTINUE_CANONICAL_RULES_DIR,
+      extensions: ['.md'],
+      map: continueRuleMapper,
+    },
+    commands: {
+      feature: 'commands',
+      mode: 'directory',
+      source: { project: [CONTINUE_PROMPTS_DIR], global: [CONTINUE_PROMPTS_DIR] },
+      canonicalDir: CONTINUE_CANONICAL_COMMANDS_DIR,
+      extensions: ['.md'],
+      map: continueCommandMapper,
+    },
   },
   buildImportPaths: buildContinueImportPaths,
   detectionPaths: ['.continue/rules', '.continue/skills', '.continue/mcpServers'],

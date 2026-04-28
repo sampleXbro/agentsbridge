@@ -8,15 +8,27 @@ const jsonLd = {
   '@type': 'SoftwareApplication',
   name: 'AgentsMesh',
   description:
-    'Open-source CLI that syncs AI coding assistant configuration across every major tool — Claude Code, Cursor, Copilot, Gemini CLI, Windsurf, and more. One canonical .agentsmesh/ directory with bidirectional import, generate, community skill registry, and CI drift detection.',
+    'Open-source AI coding config sync CLI and TypeScript library for Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf, Codex CLI, and more. One canonical .agentsmesh directory manages rules, MCP servers, hooks, skills, agents, permissions, project and global config, CI drift checks, packs, plugins, and typed automation.',
   applicationCategory: 'DeveloperApplication',
-  operatingSystem: 'Node.js 20+',
+  applicationSubCategory: 'Developer tool',
+  operatingSystem: ['macOS', 'Linux', 'Windows'],
+  runtimePlatform: 'Node.js 20+',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   license: 'https://opensource.org/licenses/MIT',
   url: docsRoot,
   downloadUrl: 'https://www.npmjs.com/package/agentsmesh',
   codeRepository: 'https://github.com/sampleXbro/agentsmesh',
   author: { '@type': 'Person', name: 'sampleXbro' },
+  keywords:
+    'AI coding config sync, Claude Code config, Cursor rules, Copilot instructions, MCP server config, AI agent rules, developer tools',
+  featureList: [
+    'Canonical .agentsmesh configuration directory',
+    'Bidirectional import and generate for AI coding tools',
+    'Project and global AI assistant config sync',
+    'MCP server, hook, permission, skill, and agent projection',
+    'CI drift detection with diff, lint, check, watch, and merge commands',
+    'Community packs, runtime plugins, and typed ESM API',
+  ],
 };
 ---
 

@@ -6,26 +6,25 @@ import { parseFrontmatter } from '../../utils/text/markdown.js';
 import { importEmbeddedSkills } from '../import/embedded-skill.js';
 import { splitEmbeddedRulesToCanonical } from '../import/embedded-rules.js';
 import { serializeImportedRuleWithFallback } from '../import/import-metadata.js';
-import { importFileDirectory } from '../import/import-orchestrator.js';
+import { runDescriptorImport } from '../import/descriptor-import-runner.js';
 import {
   JUNIE_TARGET,
   JUNIE_AGENTS_FALLBACK,
   JUNIE_DOT_AGENTS,
   JUNIE_CI_GUIDELINES,
   JUNIE_GUIDELINES,
-  JUNIE_RULES_DIR,
   JUNIE_SKILLS_DIR,
   JUNIE_CANONICAL_ROOT_RULE,
   JUNIE_CANONICAL_RULES_DIR,
 } from './constants.js';
-import {
-  importJunieAgents,
-  importJunieCommands,
-  importJunieIgnore,
-  importJunieMcp,
-} from './importer-commands-agents-mcp-ignore.js';
+import { descriptor } from './index.js';
 
-async function importRules(
+/**
+ * Junie's root rule supports four candidate paths and may carry embedded
+ * non-root rules that need splitting; this stays imperative because the
+ * descriptor singleFile mode does not (yet) cover splitter post-processing.
+ */
+async function importRootRule(
   projectRoot: string,
   results: ImportResult[],
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
@@ -68,53 +67,11 @@ async function importRules(
   }
 }
 
-async function importNonRootRules(
-  projectRoot: string,
-  results: ImportResult[],
-  normalize: (content: string, sourceFile: string, destinationFile: string) => string,
-): Promise<void> {
-  const srcDir = join(projectRoot, JUNIE_RULES_DIR);
-  const destDir = join(projectRoot, JUNIE_CANONICAL_RULES_DIR);
-  results.push(
-    ...(await importFileDirectory({
-      srcDir,
-      destDir,
-      extensions: ['.md'],
-      fromTool: 'junie',
-      normalize,
-      mapEntry: async ({ relativePath, normalizeTo }) => {
-        const destPath = join(destDir, relativePath);
-        const { frontmatter, body } = parseFrontmatter(normalizeTo(destPath));
-        const output = await serializeImportedRuleWithFallback(
-          destPath,
-          {
-            root: false,
-            description:
-              typeof frontmatter.description === 'string' ? frontmatter.description : undefined,
-            globs: Array.isArray(frontmatter.globs) ? frontmatter.globs : undefined,
-          },
-          body,
-        );
-        return {
-          destPath,
-          toPath: `${JUNIE_CANONICAL_RULES_DIR}/${relativePath}`,
-          feature: 'rules',
-          content: output,
-        };
-      },
-    })),
-  );
-}
-
 export async function importFromJunie(projectRoot: string): Promise<ImportResult[]> {
   const results: ImportResult[] = [];
   const normalize = await createImportReferenceNormalizer(JUNIE_TARGET, projectRoot);
-  await importRules(projectRoot, results, normalize);
-  await importNonRootRules(projectRoot, results, normalize);
-  await importJunieCommands(projectRoot, results, normalize);
-  await importJunieAgents(projectRoot, results, normalize);
+  await importRootRule(projectRoot, results, normalize);
+  results.push(...(await runDescriptorImport(descriptor, projectRoot, 'project', { normalize })));
   await importEmbeddedSkills(projectRoot, JUNIE_SKILLS_DIR, JUNIE_TARGET, results, normalize);
-  await importJunieMcp(projectRoot, results);
-  await importJunieIgnore(projectRoot, results);
   return results;
 }

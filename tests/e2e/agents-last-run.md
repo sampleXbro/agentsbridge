@@ -1,6 +1,6 @@
 # Agents E2E Last Run Report
 
-_Generated: 2026-04-27T07:45:53.094Z_
+_Generated: 2026-04-28T07:56:35.464Z_
 
 ## Initial — `.agentsmesh/agents/` (canonical fixture)
 
@@ -74,13 +74,13 @@ Legend: ✓ = native  ◆ = embedded  ◐ = partial  – = not supported
 ✓ .claude/commands/review.md → .agentsmesh/commands/review.md
 ✓ .claude/agents/code-reviewer.md → .agentsmesh/agents/code-reviewer.md
 ✓ .claude/agents/researcher.md → .agentsmesh/agents/researcher.md
+✓ .mcp.json → .agentsmesh/mcp.json
+✓ .claudeignore → .agentsmesh/ignore
 ✓ .claude/skills/api-generator/SKILL.md → .agentsmesh/skills/api-generator/SKILL.md
 ✓ .claude/skills/api-generator/references/route-checklist.md → .agentsmesh/skills/api-generator/references/route-checklist.md
 ✓ .claude/skills/api-generator/template.ts → .agentsmesh/skills/api-generator/template.ts
-✓ .mcp.json → .agentsmesh/mcp.json
 ✓ .claude/settings.json → .agentsmesh/permissions.yaml
 ✓ .claude/settings.json → .agentsmesh/hooks.yaml
-✓ .claudeignore → .agentsmesh/ignore
 Imported 12 file(s). Run 'agentsmesh generate' to sync to other tools.
 ```
 

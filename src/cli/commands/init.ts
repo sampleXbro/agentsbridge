@@ -16,7 +16,17 @@ import type { BuiltinTargetId } from '../../targets/catalog/target-ids.js';
 
 const CONFIG_FILENAME = 'agentsmesh.yaml';
 const LOCAL_CONFIG_FILENAME = 'agentsmesh.local.yaml';
-const GITIGNORE_ENTRIES = ['agentsmesh.local.yaml', '.agentsmeshcache', '.agentsmesh/.lock.tmp'];
+// Packs are materialized derivatives of installs.yaml — same model as node_modules.
+// `agentsmesh install --sync` reproduces them deterministically post-clone.
+// Generated target folders (.claude/, .cursor/, .github/, .gemini/, etc.) are NOT
+// in this list — they are committed by default so fresh clones have AI configs
+// available without a build step. Use `agentsmesh check` in CI to detect drift.
+const GITIGNORE_ENTRIES = [
+  'agentsmesh.local.yaml',
+  '.agentsmeshcache',
+  '.agentsmesh/.lock.tmp',
+  '.agentsmesh/packs/',
+];
 
 /** Importers derived from target descriptors — no manual registration needed. */
 const IMPORTERS: Record<string, (root: string, scope: ConfigScope) => Promise<ImportResult[]>> =

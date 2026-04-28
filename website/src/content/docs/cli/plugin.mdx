@@ -1,0 +1,112 @@
+---
+draft: false
+title: agentsmesh plugin
+description: Manage AgentsMesh plugin targets — install, list, inspect, and remove third-party AI tool descriptors that ship as standalone npm packages with full built-in parity.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Manage runtime plugin targets. Plugins are npm packages (or local paths) that export a `TargetDescriptor` and add support for new AI coding tools without forking AgentsMesh. Plugins have full parity with built-in targets — project + global mode, feature conversions, scoped settings, hook post-processing, and per-feature lint hooks.
+
+## Subcommands
+
+| Subcommand | Purpose |
+|---|---|
+| `add <source> [--version <v>] [--id <id>]` | Register a plugin in `agentsmesh.yaml`. |
+| `list` | Show all configured plugins and load status. |
+| `info <id>` | Print descriptor details for a loaded plugin. |
+| `remove <id>` | Remove a plugin from `agentsmesh.yaml`. |
+
+## `agentsmesh plugin add`
+
+Register a plugin in `agentsmesh.yaml` so AgentsMesh loads it on every command.
+
+```bash
+# From npm
+agentsmesh plugin add agentsmesh-target-foo-ide
+
+# From npm with explicit version
+agentsmesh plugin add agentsmesh-target-foo-ide --version 1.2.0
+
+# From a local path (useful during development)
+agentsmesh plugin add ./packages/agentsmesh-target-foo-ide
+
+# Override the id (defaults to the package name with the agentsmesh-target- prefix stripped)
+agentsmesh plugin add my-internal-plugin --id foo-ide
+```
+
+After `add`, install the package and enable the target in `agentsmesh.yaml`:
+
+```bash
+npm install agentsmesh-target-foo-ide
+```
+
+```yaml
+# agentsmesh.yaml
+plugins:
+  - id: foo-ide
+    source: agentsmesh-target-foo-ide
+
+pluginTargets:
+  - foo-ide
+
+targets:
+  - foo-ide
+```
+
+## `agentsmesh plugin list`
+
+```bash
+agentsmesh plugin list
+```
+
+Reports each configured plugin with its source, optional pinned version, and load status (`loaded`, `failed`, or `disabled`). Use this after `add` to confirm the plugin resolved correctly.
+
+## `agentsmesh plugin info <id>`
+
+```bash
+agentsmesh plugin info foo-ide
+```
+
+Prints the loaded descriptor's id, capabilities, project paths, global paths (if `globalSupport` is set), conversion flags, and detection paths. Useful for verifying the plugin's contract matches expectations.
+
+## `agentsmesh plugin remove <id>`
+
+```bash
+agentsmesh plugin remove foo-ide
+```
+
+Removes the plugin entry from `agentsmesh.yaml`. Does not uninstall the npm package.
+
+## How plugins are loaded
+
+At every command, AgentsMesh reads the `plugins` block in `agentsmesh.yaml`, dynamically imports each registered package, validates the exported descriptor against the Zod schema, and registers it in the target registry. Invalid descriptors are warned and skipped — one bad plugin does not block other targets or built-in generation.
+
+A descriptor is valid if every `native` / `embedded` / `partial` capability has a matching generator on `descriptor.generators`, or `emitScopedSettings` for settings-backed features (hooks, permissions, ignore patterns).
+
+<Aside type="tip">
+  To build a plugin from scratch, see the [Building Plugins guide](../../guides/building-plugins/). To scaffold a new built-in target instead, see [`agentsmesh target`](../target/).
+</Aside>
+
+## Common workflows
+
+```bash
+# Discover what an installed plugin actually exposes
+agentsmesh plugin add agentsmesh-target-foo-ide
+npm install agentsmesh-target-foo-ide
+agentsmesh plugin info foo-ide
+
+# Pin to a specific version for reproducibility in CI
+agentsmesh plugin add agentsmesh-target-foo-ide --version 1.2.0
+
+# Local development against an unpublished plugin
+agentsmesh plugin add ./packages/my-plugin --id foo-ide
+```
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| 0 | Success |
+| 1 | Plugin load or config write error |
+| 2 | Bad usage (missing argument or unknown subcommand) |

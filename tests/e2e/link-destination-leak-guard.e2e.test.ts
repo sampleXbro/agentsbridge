@@ -49,12 +49,37 @@ interface Leak {
   readonly snippet: string;
 }
 
+/**
+ * Skip walking project-internal directories that are not generated artifacts:
+ * - `.agentsmesh` is canonical source (excluded from leak detection by the
+ *   downstream filter anyway, so we save a recursive descent).
+ * - `.agentsmeshcache` is the remote-extends cache; on Windows runners it can
+ *   be mutated/cleaned mid-walk by an exiting CLI process, producing TOCTOU
+ *   ENOENT errors between `readdirSync` and `statSync`.
+ *
+ * Also tolerates entries that disappear between the two syscalls — the goal
+ * is leak detection over generated rules dirs, not exhaustive enumeration.
+ */
+const SKIP_WALK_DIRS = new Set(['.agentsmesh', '.agentsmeshcache', 'node_modules', '.git']);
+
 function listFilesRecursive(root: string): string[] {
   const out: string[] = [];
   function walk(dir: string): void {
-    for (const entry of readdirSync(dir)) {
+    let entries: string[];
+    try {
+      entries = readdirSync(dir);
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      if (SKIP_WALK_DIRS.has(entry)) continue;
       const full = join(dir, entry);
-      const info = statSync(full);
+      let info;
+      try {
+        info = statSync(full);
+      } catch {
+        continue;
+      }
       if (info.isDirectory()) walk(full);
       else out.push(full);
     }

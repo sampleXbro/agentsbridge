@@ -142,12 +142,13 @@ describe('writeTargetScaffold', () => {
     );
   });
 
-  it('postSteps contains the two manual edits + schemas:generate + matrix:generate', async () => {
+  it('postSteps contains catalog:generate + schemas:generate + matrix:generate', async () => {
     const result = await writeTargetScaffold({ id: 'ps-test', projectRoot: tmpDir });
     const steps = result.postSteps.join('\n');
-    expect(steps).toContain('TARGET_IDS');
-    expect(steps).toContain('builtin-targets.ts');
+    expect(steps).toContain('catalog:generate');
     expect(steps).toContain('schemas:generate');
     expect(steps).toContain('matrix:generate');
+    expect(steps).not.toContain('TARGET_IDS');
+    expect(steps).not.toContain('builtin-targets.ts');
   });
 });

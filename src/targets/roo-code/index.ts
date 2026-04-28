@@ -18,6 +18,7 @@ import {
 } from './generator.js';
 import {
   ROO_CODE_ROOT_RULE,
+  ROO_CODE_ROOT_RULE_FALLBACK,
   ROO_CODE_RULES_DIR,
   ROO_CODE_COMMANDS_DIR,
   ROO_CODE_SKILLS_DIR,
@@ -32,9 +33,14 @@ import {
   ROO_CODE_GLOBAL_AGENTS_MD,
   ROO_CODE_GLOBAL_AGENTS_SKILLS_DIR,
   ROO_CODE_GLOBAL_MODES_FILE,
+  ROO_CODE_CANONICAL_RULES_DIR,
+  ROO_CODE_CANONICAL_COMMANDS_DIR,
+  ROO_CODE_CANONICAL_MCP,
+  ROO_CODE_CANONICAL_IGNORE,
 } from './constants.js';
 import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromRooCode } from './importer.js';
+import { rooCommandMapper, rooNonRootRuleMapper } from './import-mappers.js';
 import { lintRules } from './linter.js';
 import { buildRooCodeImportPaths } from '../../core/reference/import-map-builders.js';
 
@@ -208,6 +214,58 @@ export const descriptor = {
     ],
     layout: global,
     scopeExtras: generateRooGlobalExtras,
+  },
+  importer: {
+    rules: [
+      {
+        // Root rule: prefer global AGENTS.md, then `.roo/rules/00-root.md`, then flat `.roorules`.
+        feature: 'rules',
+        mode: 'singleFile',
+        source: {
+          project: [ROO_CODE_ROOT_RULE, ROO_CODE_ROOT_RULE_FALLBACK],
+          global: [ROO_CODE_GLOBAL_AGENTS_MD, ROO_CODE_ROOT_RULE, ROO_CODE_ROOT_RULE_FALLBACK],
+        },
+        canonicalDir: ROO_CODE_CANONICAL_RULES_DIR,
+        canonicalRootFilename: '_root.md',
+        markAsRoot: true,
+        // Drop Roo-specific frontmatter fields; keep only canonical ones.
+        frontmatterRemap: ({ description, globs }) => ({
+          description: typeof description === 'string' ? description : undefined,
+          globs: Array.isArray(globs) ? globs : undefined,
+        }),
+      },
+      {
+        // Non-root rule directory scan (skips `00-root.md`, handled above).
+        feature: 'rules',
+        mode: 'directory',
+        source: { project: [ROO_CODE_RULES_DIR], global: [ROO_CODE_GLOBAL_RULES_DIR] },
+        canonicalDir: ROO_CODE_CANONICAL_RULES_DIR,
+        extensions: ['.md'],
+        map: rooNonRootRuleMapper,
+      },
+    ],
+    commands: {
+      feature: 'commands',
+      mode: 'directory',
+      source: { project: [ROO_CODE_COMMANDS_DIR], global: [ROO_CODE_GLOBAL_COMMANDS_DIR] },
+      canonicalDir: ROO_CODE_CANONICAL_COMMANDS_DIR,
+      extensions: ['.md'],
+      map: rooCommandMapper,
+    },
+    mcp: {
+      feature: 'mcp',
+      mode: 'mcpJson',
+      source: { project: [ROO_CODE_MCP_FILE], global: [ROO_CODE_GLOBAL_MCP_FILE] },
+      canonicalDir: '.agentsmesh',
+      canonicalFilename: ROO_CODE_CANONICAL_MCP,
+    },
+    ignore: {
+      feature: 'ignore',
+      mode: 'flatFile',
+      source: { project: [ROO_CODE_IGNORE], global: [ROO_CODE_GLOBAL_IGNORE] },
+      canonicalDir: '.agentsmesh',
+      canonicalFilename: ROO_CODE_CANONICAL_IGNORE,
+    },
   },
   buildImportPaths: buildRooCodeImportPaths,
   detectionPaths: [

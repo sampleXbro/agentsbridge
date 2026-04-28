@@ -1,10 +1,13 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import type { TargetDescriptor } from '../../../../src/targets/catalog/target-descriptor.js';
+import type { ValidatedConfig } from '../../../../src/config/core/schema.js';
 import {
   getTargetCapabilities,
   getTargetDetectionPaths,
   getTargetLayout,
   getBuiltinTargetDefinition,
+  getEffectiveTargetSupportLevel,
+  resolveTargetFeatureGenerator,
   rewriteGeneratedOutputPath,
 } from '../../../../src/targets/catalog/builtin-targets.js';
 import {
@@ -187,5 +190,45 @@ describe('rewriteGeneratedOutputPath', () => {
     expect(rewriteGeneratedOutputPath('test-no-rewrite', 'rules/test.md', 'project')).toBe(
       'rules/test.md',
     );
+  });
+});
+
+describe('capability resolution lockstep (gap #5 — single conversion guard)', () => {
+  function configWithAgentsConversion(target: string, value: boolean): ValidatedConfig {
+    return {
+      version: 1,
+      targets: [target],
+      features: ['rules', 'agents'],
+      extends: [],
+      overrides: {},
+      collaboration: { strategy: 'merge', lock_features: [] },
+      conversions: { agents_to_skills: { [target]: value } },
+    } as unknown as ValidatedConfig;
+  }
+
+  it('cline agents: support level and generator agree when conversion is disabled', () => {
+    const config = configWithAgentsConversion('cline', false);
+    expect(getEffectiveTargetSupportLevel('cline', 'agents', config)).toBe('none');
+    expect(resolveTargetFeatureGenerator('cline', 'agents', config)).toBeUndefined();
+  });
+
+  it('cline agents: support level and generator agree when conversion is enabled', () => {
+    const config = configWithAgentsConversion('cline', true);
+    expect(getEffectiveTargetSupportLevel('cline', 'agents', config)).toBe('embedded');
+    expect(resolveTargetFeatureGenerator('cline', 'agents', config)).toBeDefined();
+  });
+
+  it('codex-cli commands: support level and generator agree when conversion is disabled', () => {
+    const config = {
+      version: 1,
+      targets: ['codex-cli'],
+      features: ['rules', 'commands'],
+      extends: [],
+      overrides: {},
+      collaboration: { strategy: 'merge', lock_features: [] },
+      conversions: { commands_to_skills: { 'codex-cli': false } },
+    } as unknown as ValidatedConfig;
+    expect(getEffectiveTargetSupportLevel('codex-cli', 'commands', config)).toBe('none');
+    expect(resolveTargetFeatureGenerator('codex-cli', 'commands', config)).toBeUndefined();
   });
 });

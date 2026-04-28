@@ -1,7 +1,7 @@
 ---
 draft: false
 title: CLI Reference
-description: Complete reference for all AgentsMesh CLI commands — init, generate, import, install, diff, lint, watch, check, merge, and matrix.
+description: Complete reference for all AgentsMesh CLI commands — init, generate, import, install, diff, lint, watch, check, merge, matrix, plugin, and target. Both project and global mode supported.
 sidebar:
   label: Overview
   order: 0
@@ -66,6 +66,14 @@ amsh --help
   <Card title="matrix" icon="information">
     Display the feature-target compatibility matrix for your config.
     [→ matrix docs](./matrix/)
+  </Card>
+  <Card title="plugin" icon="puzzle">
+    Manage runtime plugin targets — add, list, info, and remove third-party `TargetDescriptor` packages.
+    [→ plugin docs](./plugin/)
+  </Card>
+  <Card title="target" icon="add-document">
+    Scaffold a new built-in target. Generates the descriptor, generators, importer, linter, tests, and fixtures.
+    [→ target docs](./target/)
   </Card>
 </CardGrid>
 

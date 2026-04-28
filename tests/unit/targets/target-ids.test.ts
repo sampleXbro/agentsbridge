@@ -3,20 +3,22 @@ import { TARGET_IDS, isBuiltinTargetId } from '../../../src/targets/catalog/targ
 
 describe('TARGET_IDS', () => {
   it('contains exactly the 12 known target IDs', () => {
-    expect([...TARGET_IDS]).toStrictEqual([
-      'claude-code',
-      'cursor',
-      'copilot',
-      'continue',
-      'junie',
-      'kiro',
-      'gemini-cli',
-      'cline',
-      'codex-cli',
-      'windsurf',
-      'antigravity',
-      'roo-code',
-    ]);
+    expect([...TARGET_IDS].sort()).toStrictEqual(
+      [
+        'antigravity',
+        'claude-code',
+        'cline',
+        'codex-cli',
+        'continue',
+        'copilot',
+        'cursor',
+        'gemini-cli',
+        'junie',
+        'kiro',
+        'roo-code',
+        'windsurf',
+      ].sort(),
+    );
   });
 });
 

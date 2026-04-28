@@ -260,6 +260,10 @@ describe('descriptor.project.paths.agentPath', () => {
 });
 
 describe('descriptor metadata', () => {
+  // Per-target list (NOT BUILTIN_TARGETS): importing each descriptor directly
+  // here would otherwise re-trigger the catalog mid-evaluation and leave some
+  // BUILTIN_TARGETS slots `undefined` under vitest's module loader. Drift is
+  // caught separately by tests/unit/targets/catalog/builtin-catalog.test.ts.
   const allDescriptors = [
     claudeCode,
     cursor,
@@ -286,9 +290,9 @@ describe('descriptor metadata', () => {
     'permissions',
   ] as const;
 
-  it('all 12 descriptors have ids matching TARGET_IDS', () => {
+  it('every descriptor id is present in TARGET_IDS', () => {
     const descriptorIds = allDescriptors.map((d) => d.id);
-    expect(descriptorIds).toStrictEqual([...TARGET_IDS]);
+    expect([...descriptorIds].sort()).toStrictEqual([...TARGET_IDS].sort());
   });
 
   it('all descriptors have non-empty detectionPaths', () => {

@@ -1,28 +1,34 @@
 import { basename, join } from 'node:path';
-import type { ImportResult } from '../../core/types.js';
+import type { Hooks, ImportResult } from '../../core/types.js';
 import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
 import { importEmbeddedSkills } from '../import/embedded-skill.js';
 import { importFileDirectory } from '../import/import-orchestrator.js';
+import { runDescriptorImport } from '../import/descriptor-import-runner.js';
 import { serializeImportedRuleWithFallback } from '../import/import-metadata.js';
 import { toGlobsArray } from '../import/shared-import-helpers.js';
-import { readFileSafe, writeFileAtomic } from '../../utils/filesystem/fs.js';
+import {
+  mkdirp,
+  readDirRecursive,
+  readFileSafe,
+  writeFileAtomic,
+} from '../../utils/filesystem/fs.js';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
+import { parseKiroHookFile, serializeCanonicalHooks } from './hook-format.js';
 import {
   KIRO_TARGET,
   KIRO_AGENTS_MD,
   KIRO_GLOBAL_STEERING_AGENTS_MD,
+  KIRO_HOOKS_DIR,
   KIRO_STEERING_DIR,
   KIRO_SKILLS_DIR,
+  KIRO_CANONICAL_HOOKS,
   KIRO_CANONICAL_ROOT_RULE,
   KIRO_CANONICAL_RULES_DIR,
 } from './constants.js';
-import {
-  importKiroAgents,
-  importKiroHooks,
-  importKiroIgnore,
-  importKiroMcp,
-} from './importer-agents-mcp-hooks-ignore.js';
+import { descriptor } from './index.js';
+
+type Normalize = (content: string, sourceFile: string, destinationFile: string) => string;
 
 function canonicalRuleMeta(frontmatter: Record<string, unknown>): Record<string, unknown> {
   const inclusion = typeof frontmatter.inclusion === 'string' ? frontmatter.inclusion : '';
@@ -37,19 +43,17 @@ function canonicalRuleMeta(frontmatter: Record<string, unknown>): Record<string,
   return meta;
 }
 
+/** Root rule prefers the active scope's AGENTS.md, then falls back to the other scope. */
 async function importRoot(
   projectRoot: string,
   results: ImportResult[],
-  normalize: ReturnType<typeof createImportReferenceNormalizer> extends Promise<infer T>
-    ? T
-    : never,
+  normalize: Normalize,
   scope: TargetLayoutScope,
 ): Promise<void> {
   const candidates =
     scope === 'global'
       ? [KIRO_GLOBAL_STEERING_AGENTS_MD, KIRO_AGENTS_MD]
       : [KIRO_AGENTS_MD, KIRO_GLOBAL_STEERING_AGENTS_MD];
-
   for (const rel of candidates) {
     const srcPath = join(projectRoot, rel);
     const content = await readFileSafe(srcPath);
@@ -70,23 +74,23 @@ async function importRoot(
   }
 }
 
-async function importRules(
+/** Steering rules carry Kiro-specific `inclusion`/`fileMatchPattern` keys, and must skip the AGENTS.md root entry. */
+async function importNonRootRules(
   projectRoot: string,
   results: ImportResult[],
-  normalize: ReturnType<typeof createImportReferenceNormalizer> extends Promise<infer T>
-    ? T
-    : never,
+  normalize: Normalize,
 ): Promise<void> {
+  const destDir = join(projectRoot, KIRO_CANONICAL_RULES_DIR);
   results.push(
     ...(await importFileDirectory({
       srcDir: join(projectRoot, KIRO_STEERING_DIR),
-      destDir: join(projectRoot, KIRO_CANONICAL_RULES_DIR),
+      destDir,
       extensions: ['.md'],
       fromTool: KIRO_TARGET,
       normalize,
       mapEntry: async ({ relativePath, normalizeTo }) => {
         if (basename(relativePath) === 'AGENTS.md') return null;
-        const destPath = join(projectRoot, KIRO_CANONICAL_RULES_DIR, relativePath);
+        const destPath = join(destDir, relativePath);
         const { frontmatter, body } = parseFrontmatter(normalizeTo(destPath));
         return {
           destPath,
@@ -103,6 +107,28 @@ async function importRules(
   );
 }
 
+/** Kiro hooks live in `.kiro.hook` files with a custom JSON schema; not declarable through the runner. */
+async function importHooks(projectRoot: string, results: ImportResult[]): Promise<void> {
+  const hooks: Hooks = {};
+  for (const absPath of await readDirRecursive(join(projectRoot, KIRO_HOOKS_DIR))) {
+    if (!absPath.endsWith('.kiro.hook')) continue;
+    const parsed = parseKiroHookFile((await readFileSafe(absPath)) ?? '');
+    if (!parsed) continue;
+    hooks[parsed.event] ??= [];
+    hooks[parsed.event]!.push(parsed.entry);
+  }
+  if (Object.keys(hooks).length === 0) return;
+  const destPath = join(projectRoot, KIRO_CANONICAL_HOOKS);
+  await mkdirp(join(projectRoot, '.agentsmesh'));
+  await writeFileAtomic(destPath, serializeCanonicalHooks(hooks));
+  results.push({
+    fromTool: KIRO_TARGET,
+    fromPath: join(projectRoot, KIRO_HOOKS_DIR),
+    toPath: KIRO_CANONICAL_HOOKS,
+    feature: 'hooks',
+  });
+}
+
 export async function importFromKiro(
   projectRoot: string,
   options: { scope?: TargetLayoutScope } = {},
@@ -111,11 +137,9 @@ export async function importFromKiro(
   const results: ImportResult[] = [];
   const normalize = await createImportReferenceNormalizer(KIRO_TARGET, projectRoot, scope);
   await importRoot(projectRoot, results, normalize, scope);
-  await importRules(projectRoot, results, normalize);
-  await importKiroAgents(projectRoot, results, normalize);
+  await importNonRootRules(projectRoot, results, normalize);
+  results.push(...(await runDescriptorImport(descriptor, projectRoot, scope, { normalize })));
   await importEmbeddedSkills(projectRoot, KIRO_SKILLS_DIR, KIRO_TARGET, results, normalize);
-  await importKiroMcp(projectRoot, results, scope);
-  await importKiroHooks(projectRoot, results);
-  await importKiroIgnore(projectRoot, results, scope);
+  if (scope === 'project') await importHooks(projectRoot, results);
   return results;
 }

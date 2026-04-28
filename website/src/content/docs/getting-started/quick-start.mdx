@@ -24,7 +24,7 @@ Choose the path that matches your situation.
    - `agentsmesh.yaml` — project configuration
    - `agentsmesh.local.yaml` — local overrides (gitignored)
    - `.agentsmesh/rules/_root.md` — starter root rule
-   - Updates `.gitignore` to exclude `agentsmesh.local.yaml`
+   - Updates `.gitignore` to exclude `agentsmesh.local.yaml`, `.agentsmeshcache`, `.agentsmesh/.lock.tmp`, and `.agentsmesh/packs/` (see [What to commit](#what-to-commit-and-what-to-gitignore))
 
 2. **Edit your root rule**
 
@@ -120,6 +120,26 @@ Choose the path that matches your situation.
 <Aside type="tip">
   After init, `.agentsmesh/` is the only thing you should edit. Generated files in `.claude/`, `.cursor/`, etc. are artifacts — regenerate them, don't edit them directly.
 </Aside>
+
+## What to commit and what to gitignore
+
+`agentsmesh init` writes the recommended `.gitignore` entries. The defaults are deliberate:
+
+| Path | In git? | Why |
+|---|---|---|
+| `.agentsmesh/` (canonical) | **commit** | The source of truth — must be in git. |
+| `.agentsmesh/.lock` | **commit** | Drift detection contract. `agentsmesh check` compares against this. |
+| `.agentsmesh/packs/` | **gitignore** | Materialized from `installs.yaml`. Same model as `node_modules` — `agentsmesh install --sync` reproduces them deterministically post-clone. |
+| `agentsmesh.local.yaml` | **gitignore** | Per-developer overrides. |
+| `.agentsmesh/.lock.tmp` | **gitignore** | Transient. |
+| `.agentsmeshcache` | **gitignore** | Remote-extends cache. |
+| Generated tool folders (`.claude/`, `.cursor/`, `.github/`, `.gemini/`, `CLAUDE.md`, `AGENTS.md`, etc.) | **commit** | AI tools read these at runtime. Committing means a fresh clone has working AI configs without a build step. `agentsmesh check` in CI catches drift. |
+
+<Aside type="note">
+  Why generated configs stay committed: same reason `package-lock.json` does. They're deterministic build output that downstream consumers (in this case, the AI tool itself) read directly. Gitignoring them breaks fresh-clone UX and makes `agentsmesh check` meaningless. PR reviewers also benefit from seeing the projected diff in the format Claude/Cursor/Copilot will actually consume.
+</Aside>
+
+If your team has a strong reason to gitignore generated configs (monorepo size, regenerate-on-checkout hooks), add the target-specific entries manually — but expect to wire `agentsmesh generate` into your post-checkout flow.
 
 ## What's next
 

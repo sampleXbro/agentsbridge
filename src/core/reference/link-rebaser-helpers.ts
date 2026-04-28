@@ -8,37 +8,14 @@ import {
   isAbsoluteForProject,
   rootFallbackPath,
 } from '../path-helpers.js';
-
-const ROOT_RELATIVE_PREFIXES = [
-  '.agentsmesh/',
-  '.claude/',
-  '.cursor/',
-  '.github/',
-  '.continue/',
-  '.junie/',
-  '.kiro/',
-  '.gemini/',
-  '.clinerules/',
-  '.cline/',
-  '.codex/',
-  '.agents/',
-  '.windsurf/',
-  '.roo/',
-];
+import { getLinkFormatRegistry } from './link-format-registry.js';
 
 export function isRootRelativePathToken(token: string): boolean {
   const normalizedToken = normalizeSeparators(token);
-  return ROOT_RELATIVE_PREFIXES.some((prefix) => normalizedToken.startsWith(prefix));
+  return getLinkFormatRegistry().rootRelativePrefixes.some((prefix) =>
+    normalizedToken.startsWith(prefix),
+  );
 }
-
-/** Top-level segments under `.agentsmesh/` when links omit the `.agentsmesh/` prefix (project scope). */
-const MESH_ROOT_RELATIVE_FIRST_SEGMENTS = new Set([
-  'skills',
-  'rules',
-  'commands',
-  'agents',
-  'packs',
-]);
 
 function isMeshRootRelativePathToken(normalizedToken: string): boolean {
   const t = normalizeSeparators(normalizedToken).replace(/^\.\//, '');
@@ -47,7 +24,7 @@ function isMeshRootRelativePathToken(normalizedToken: string): boolean {
   if (/^[a-zA-Z]:/.test(t)) return false;
   if (isRootRelativePathToken(t)) return false;
   const first = t.split('/').filter((s) => s.length > 0)[0];
-  return first !== undefined && MESH_ROOT_RELATIVE_FIRST_SEGMENTS.has(first);
+  return first !== undefined && getLinkFormatRegistry().meshRootSegments.has(first);
 }
 const NON_REWRITABLE_BARE_FILES = new Set([
   'AGENTS.md',
@@ -57,12 +34,6 @@ const NON_REWRITABLE_BARE_FILES = new Set([
   '.windsurfrules',
   '.cursorrules',
 ]);
-const EXTERNAL_REF_PATTERNS = [
-  /\b[A-Za-z][A-Za-z0-9+.-]+:[^\s<>()\]]+/g,
-  /\b[\w.-]+@[\w.-]+:[^\s<>()\]]+/g,
-  /\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g,
-  /\/\/[A-Za-z0-9][\w.-]*\.[A-Za-z]{2,}[^\s<>()\]]*/g,
-];
 const FENCED_CODE_BLOCK = /^(?:```|~~~)[^\n]*\n[\s\S]*?^(?:```|~~~)/gm;
 const ROOT_GENERATION_CONTRACT_BLOCK =
   /<!-- agentsmesh:root-generation-contract:start -->[\s\S]*?<!-- agentsmesh:root-generation-contract:end -->/g;
@@ -172,8 +143,12 @@ export function isGlobAdjacent(content: string, start: number, end: number): boo
 
 export function protectedRanges(content: string): Array<[number, number]> {
   const ranges: Array<[number, number]> = [];
-  for (const pattern of EXTERNAL_REF_PATTERNS) {
-    for (const match of content.matchAll(pattern)) {
+  for (const pattern of getLinkFormatRegistry().protectedSchemes) {
+    // Plugin-supplied schemes may omit the global flag; matchAll requires it.
+    const globalPattern = pattern.flags.includes('g')
+      ? pattern
+      : new RegExp(pattern.source, `${pattern.flags}g`);
+    for (const match of content.matchAll(globalPattern)) {
       ranges.push([match.index ?? 0, (match.index ?? 0) + match[0].length]);
     }
   }

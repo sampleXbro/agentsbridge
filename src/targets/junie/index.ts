@@ -23,6 +23,11 @@ import {
   JUNIE_GLOBAL_MCP_FILE,
   JUNIE_GLOBAL_AGENTS_SKILLS_DIR,
   JUNIE_SKILLS_DIR,
+  JUNIE_CANONICAL_RULES_DIR,
+  JUNIE_CANONICAL_COMMANDS_DIR,
+  JUNIE_CANONICAL_AGENTS_DIR,
+  JUNIE_CANONICAL_MCP,
+  JUNIE_CANONICAL_IGNORE,
 } from './constants.js';
 import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromJunie } from './importer.js';
@@ -160,6 +165,46 @@ export const descriptor = {
       JUNIE_GLOBAL_MCP_FILE,
     ],
     layout: global,
+  },
+  importer: {
+    rules: {
+      feature: 'rules',
+      mode: 'directory',
+      source: { project: ['.junie/rules'] },
+      canonicalDir: JUNIE_CANONICAL_RULES_DIR,
+      extensions: ['.md'],
+      preset: 'rule',
+    },
+    commands: {
+      feature: 'commands',
+      mode: 'directory',
+      source: { project: ['.junie/commands'] },
+      canonicalDir: JUNIE_CANONICAL_COMMANDS_DIR,
+      extensions: ['.md'],
+      preset: 'command',
+    },
+    agents: {
+      feature: 'agents',
+      mode: 'directory',
+      source: { project: ['.junie/agents'] },
+      canonicalDir: JUNIE_CANONICAL_AGENTS_DIR,
+      extensions: ['.md'],
+      preset: 'agent',
+    },
+    mcp: {
+      feature: 'mcp',
+      mode: 'mcpJson',
+      source: { project: [JUNIE_MCP_FILE] },
+      canonicalDir: '.agentsmesh',
+      canonicalFilename: JUNIE_CANONICAL_MCP,
+    },
+    ignore: {
+      feature: 'ignore',
+      mode: 'flatFile',
+      source: { project: [JUNIE_IGNORE] },
+      canonicalDir: '.agentsmesh',
+      canonicalFilename: JUNIE_CANONICAL_IGNORE,
+    },
   },
   buildImportPaths: buildJunieImportPaths,
   detectionPaths: [

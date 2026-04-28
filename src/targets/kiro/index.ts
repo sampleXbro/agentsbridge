@@ -29,6 +29,9 @@ import {
   KIRO_GLOBAL_MCP_FILE,
   KIRO_GLOBAL_IGNORE,
   KIRO_GLOBAL_AGENTS_SKILLS_DIR,
+  KIRO_CANONICAL_AGENTS_DIR,
+  KIRO_CANONICAL_MCP,
+  KIRO_CANONICAL_IGNORE,
 } from './constants.js';
 
 export const target: TargetGenerators = {
@@ -161,6 +164,30 @@ export const descriptor = {
       KIRO_GLOBAL_IGNORE,
     ],
     layout: global,
+  },
+  importer: {
+    agents: {
+      feature: 'agents',
+      mode: 'directory',
+      source: { project: [KIRO_AGENTS_DIR], global: [KIRO_AGENTS_DIR] },
+      canonicalDir: KIRO_CANONICAL_AGENTS_DIR,
+      extensions: ['.md'],
+      preset: 'agent',
+    },
+    mcp: {
+      feature: 'mcp',
+      mode: 'mcpJson',
+      source: { project: [KIRO_MCP_FILE], global: [KIRO_GLOBAL_MCP_FILE] },
+      canonicalDir: '.agentsmesh',
+      canonicalFilename: KIRO_CANONICAL_MCP,
+    },
+    ignore: {
+      feature: 'ignore',
+      mode: 'flatFile',
+      source: { project: [KIRO_IGNORE], global: [KIRO_GLOBAL_IGNORE] },
+      canonicalDir: '.agentsmesh',
+      canonicalFilename: KIRO_CANONICAL_IGNORE,
+    },
   },
   buildImportPaths: buildKiroImportPaths,
   detectionPaths: [

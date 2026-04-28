@@ -78,18 +78,18 @@
     "target": {
       "type": "string",
       "enum": [
+        "antigravity",
         "claude-code",
-        "cursor",
-        "copilot",
-        "continue",
-        "junie",
-        "kiro",
-        "gemini-cli",
         "cline",
         "codex-cli",
-        "windsurf",
-        "antigravity",
-        "roo-code"
+        "continue",
+        "copilot",
+        "cursor",
+        "gemini-cli",
+        "junie",
+        "kiro",
+        "roo-code",
+        "windsurf"
       ]
     },
     "path": {

@@ -1,7 +1,12 @@
 /**
  * Windsurf target importer — .windsurfrules, .windsurf/rules/*.md, .windsurfignore → canonical.
- * .windsurfrules is flat (no frontmatter); we add root: true on import.
- * .windsurf/rules/*.md preserves frontmatter.
+ *
+ * Kept fully imperative. The root rule is plain-text (no frontmatter) with a
+ * codex-normalized AGENTS.md fallback; nested AGENTS.md files are scoped
+ * scanned with prune-on-disable behavior (`removePathIfExists`); ignore parsing
+ * strips comments + falls back from `.windsurfignore` to `.codeiumignore`;
+ * workflows / skills / hooks / mcp use Windsurf-specific parsers. None of
+ * these patterns are expressible through the descriptor runner's modes.
  */
 
 import { basename, join, dirname, relative } from 'node:path';

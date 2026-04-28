@@ -13,6 +13,7 @@ import {
   COPILOT_INSTRUCTIONS,
   COPILOT_INSTRUCTIONS_DIR,
   COPILOT_AGENTS_DIR,
+  COPILOT_CONTEXT_DIR,
   COPILOT_PROMPTS_DIR,
   COPILOT_SKILLS_DIR,
   COPILOT_HOOKS_DIR,
@@ -23,8 +24,17 @@ import {
   COPILOT_GLOBAL_AGENTS_SKILLS_DIR,
   COPILOT_GLOBAL_AGENTS_MD,
   COPILOT_GLOBAL_CLAUDE_SKILLS_DIR,
+  COPILOT_CANONICAL_AGENTS_DIR,
+  COPILOT_CANONICAL_COMMANDS_DIR,
+  COPILOT_CANONICAL_RULES_DIR,
 } from './constants.js';
 import { importFromCopilot } from './importer.js';
+import {
+  copilotAgentMapper,
+  copilotCommandMapper,
+  copilotLegacyRuleMapper,
+  copilotNewRuleMapper,
+} from './import-mappers.js';
 import { lintRules } from './linter.js';
 import { buildCopilotImportPaths } from '../../core/reference/import-map-builders.js';
 import { commandPromptPath } from './command-prompt.js';
@@ -186,6 +196,54 @@ export const descriptor = {
     ],
     layout: global,
     scopeExtras: generateCopilotGlobalExtras,
+  },
+  importer: {
+    rules: [
+      {
+        // Root: scope-aware singleFile.
+        feature: 'rules',
+        mode: 'singleFile',
+        source: { project: [COPILOT_INSTRUCTIONS], global: [COPILOT_GLOBAL_INSTRUCTIONS] },
+        canonicalDir: COPILOT_CANONICAL_RULES_DIR,
+        canonicalRootFilename: '_root.md',
+        markAsRoot: true,
+      },
+      {
+        // Legacy `.github/copilot/*.instructions.md` — project only.
+        feature: 'rules',
+        mode: 'directory',
+        source: { project: [COPILOT_CONTEXT_DIR] },
+        canonicalDir: COPILOT_CANONICAL_RULES_DIR,
+        extensions: ['.instructions.md'],
+        map: copilotLegacyRuleMapper,
+      },
+      {
+        // New `.github/instructions/*.{instructions.md,md}` — project only,
+        // uses `applyTo` instead of `globs`.
+        feature: 'rules',
+        mode: 'directory',
+        source: { project: [COPILOT_INSTRUCTIONS_DIR] },
+        canonicalDir: COPILOT_CANONICAL_RULES_DIR,
+        extensions: ['.instructions.md', '.md'],
+        map: copilotNewRuleMapper,
+      },
+    ],
+    commands: {
+      feature: 'commands',
+      mode: 'directory',
+      source: { project: [COPILOT_PROMPTS_DIR], global: [COPILOT_GLOBAL_PROMPTS_DIR] },
+      canonicalDir: COPILOT_CANONICAL_COMMANDS_DIR,
+      extensions: ['.prompt.md'],
+      map: copilotCommandMapper,
+    },
+    agents: {
+      feature: 'agents',
+      mode: 'directory',
+      source: { project: [COPILOT_AGENTS_DIR], global: [COPILOT_GLOBAL_AGENTS_DIR] },
+      canonicalDir: COPILOT_CANONICAL_AGENTS_DIR,
+      extensions: ['.agent.md'],
+      map: copilotAgentMapper,
+    },
   },
   buildImportPaths: buildCopilotImportPaths,
   detectionPaths: [

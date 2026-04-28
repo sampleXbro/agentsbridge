@@ -53,7 +53,7 @@ import { generateRules } from './generator.js';
 import { importFrom${pascal} } from './importer.js';
 import { lintRules } from './linter.js';
 import { lintHooks } from './lint.js';
-import { build${pascal}ImportPaths } from '../../core/reference/import-maps/${v.id}.js';
+import { build${pascal}ImportPaths } from '../../core/reference/import-map-builders.js';
 import {
   ${p}_TARGET,
   ${p}_DIR,

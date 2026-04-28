@@ -1,0 +1,78 @@
+---
+draft: false
+title: agentsmesh target
+description: Scaffold a new built-in target for AgentsMesh — generates the descriptor, generator, importer, linter, tests, and fixtures so the new target is auto-discovered at build time.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Manage built-in target development. Currently exposes one subcommand — `scaffold` — which generates the full file structure for a new target so the catalog auto-discovery can pick it up at build time.
+
+## Subcommands
+
+| Subcommand | Purpose |
+|---|---|
+| `scaffold <id> [--name <displayName>] [--force]` | Emit the 10-file skeleton for a new built-in target. |
+
+## `agentsmesh target scaffold`
+
+```bash
+# Scaffold a new built-in target
+agentsmesh target scaffold foo-ide
+
+# With a human-readable display name
+agentsmesh target scaffold foo-ide --name "Foo IDE"
+
+# Overwrite existing files (use with care)
+agentsmesh target scaffold foo-ide --name "Foo IDE" --force
+```
+
+### What gets generated
+
+| File | Purpose |
+|------|---------|
+| `src/targets/foo-ide/constants.ts` | Path and ID constants (project + global) |
+| `src/targets/foo-ide/index.ts` | Full `TargetDescriptor` with project + global layouts, capabilities, conversion support, lint hooks |
+| `src/targets/foo-ide/generator.ts` | `generateRules()` stub |
+| `src/targets/foo-ide/importer.ts` | `importFrom()` stub |
+| `src/targets/foo-ide/linter.ts` | `lintRules()` using shared validator |
+| `src/targets/foo-ide/lint.ts` | Per-feature lint hooks stub |
+| `src/core/reference/import-maps/foo-ide.ts` | Import path mapper |
+| `tests/unit/targets/foo-ide/generator.test.ts` | Generator unit tests |
+| `tests/unit/targets/foo-ide/importer.test.ts` | Importer unit tests |
+| `tests/e2e/fixtures/foo-ide-project/AGENTS.md` | E2E fixture |
+
+### Post-scaffold steps
+
+The CLI prints these next steps after a successful scaffold:
+
+1. **Run `pnpm catalog:generate`** — auto-discovers the new target. Updates `builtin-target-ids-generated.ts`, the descriptor imports + array in `builtin-targets.ts`, and the import-map barrel in `import-maps/index.ts`. Also runs as part of `pnpm build` via the `prebuild` hook.
+2. Fill in the `TODO(agentsmesh-scaffold)` markers in `src/targets/foo-ide/`.
+3. Run `pnpm typecheck && pnpm test -- tests/unit/targets/foo-ide`.
+4. Run `pnpm schemas:generate && pnpm matrix:generate`.
+
+<Aside type="note">
+  No manual edits to `target-ids.ts`, `builtin-targets.ts`, or `import-maps/index.ts` are required — the catalog generator patches them between sentinel comments. To remove a target, delete its directory and rerun `pnpm catalog:generate`. CI can guard against drift with `pnpm catalog:generate -- --verify`.
+</Aside>
+
+### Validation
+
+The scaffold rejects:
+
+- **Invalid ids** — must match `/^[a-z][a-z0-9-]*$/` (lowercase letters, digits, hyphens; start with a letter).
+- **Existing built-in ids** — to avoid silently shadowing a real target.
+
+### Built-in target vs plugin
+
+- **Use `agentsmesh target scaffold`** when you want to contribute the new target upstream into the AgentsMesh repo.
+- **Use [`agentsmesh plugin add`](../plugin/)** when you want to ship the target as a standalone npm package without a fork or core PR.
+
+Both paths produce targets with full feature parity — same descriptor schema, same capability levels, same lint hooks, same global-mode support.
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| 0 | Success |
+| 1 | Validation error (invalid id, target already exists) |
+| 2 | Bad usage (missing positional argument) |

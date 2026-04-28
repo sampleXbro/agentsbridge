@@ -1,21 +1,31 @@
-# Windows Support — Hooks/Permissions/MCP
+# Plan: rulesync issue parity in agentsmesh
 
-## Goal
+Goal: ensure agentsmesh covers the behaviour described in 13 verified rulesync issues with regression tests, and close real gaps with TDD.
 
-Audit whether generated hook, permission, and MCP artifacts work the same on Windows as macOS, and surface a lint warning for the only real cross-platform gap.
+## Verified rulesync issues (from GitHub MCP)
 
-## Findings
+- #4 OpenHands CLI (open) — defer to plugin path; document
+- #900 link rewriting (open) — covered by link-rebaser; add e2e leak guard
+- #1515 Cursor manual rule cross-target inversion (closed) — verify Cursor `alwaysApply: false` no globs/desc → claude-code does not become always-on
+- #1317 hook scripts not copied (open) — only Copilot covers; gap for claude-code/cursor/windsurf/cline
+- #1418/1420/1422/1417/1547 permissions backlog — silent drop on most targets, no lint signal
+- #329 plugin marketplace (open) — partially covered by extends/install (Git)
+- #1403 npm-distributed skills (open) — defer; not implemented
+- #1239 Windows/CRLF drift (open, BUG) — paths normalized; LF normalization on write missing
+- #1247 global sync regression (closed) — verify global mode multi-target distribution
 
-- **Permissions**: pure JSON pass-through (`.claude/settings.json`). No platform difference. Pattern semantics are the agent tool's responsibility, not agentsmesh's.
-- **MCP**: every target serializes `command`/`args` verbatim to JSON/TOML. No `npx` → `npx.cmd` rewrite, but every major MCP client resolves shims itself. No platform difference at the agentsmesh layer.
-- **Hooks (claude-code/cursor/windsurf/kiro/gemini-cli)**: the user's `command` is embedded as a string in the target's config; the agent runs it. No platform difference at the agentsmesh layer.
-- **Hooks (cline & copilot)**: agentsmesh emits `.sh` wrapper files with `#!/usr/bin/env bash`. **Real Windows gap** — they need git-bash/WSL to execute.
+## Implementation order (TDD)
 
-## Plan
+1. **#900 link leak guard** — e2e test that grepping all generated artifacts across all 12 targets finds zero `.agentsmesh/` substring inside markdown link destinations
+2. **#1515 cross-target rule scope** — test that a Cursor manual rule (alwaysApply: false, no globs, no description) is either dropped or marked manual when emitted to claude-code
+3. **#1247 global multi-target** — sanity test that `--global` emits per-target paths for several targets in one run
+4. **#1239 CRLF byte-stability** — failing test that canonical `.md` content with CRLF writes byte-identical output to LF input; implement LF normalization in `writeFileAtomic` for text files
+5. **#1317 hook script projection** — failing tests that referenced hook script files are projected for claude-code/cursor/windsurf/cline; implement script-asset projection or add lint warning
+6. **#1418/1420/1422/1417/1547 permissions silent drop** — failing test that lint emits warning when canonical `permissions.yaml` is non-empty and target has `none` permissions support; implement diagnostic
+7. **Quality gates** — `pnpm typecheck`, `pnpm lint`, `pnpm test`; fix all gates
+8. **Update lessons** — record any mistakes encountered
 
-- [x] Add failing tests in `tests/unit/core/linter-hooks.test.ts` for new cline `lintHooks` and the new copilot Windows-shell warning.
-- [x] Implement `lintHooks` in `src/targets/cline/lint.ts`; wire it into the cline descriptor (`src/targets/cline/index.ts`).
-- [x] Extend `src/targets/copilot/lint.ts` `lintHooks` to also emit the Windows-shell warning when hooks are present.
-- [x] Update existing copilot unsupported-event test to filter for the relevant diagnostic (since hooks present now also emits the shell warning).
-- [x] Add a Windows portability paragraph to `website/src/content/docs/canonical-config/hooks.mdx`.
-- [x] Run typecheck, lint, full unit/integration suite, build, and e2e. 3205 + 401 passing.
+## Deferred (architectural; need design discussion)
+
+- #4 OpenHands as built-in target (full add-agent-target workflow) — currently document plugin path only
+- #1403 npm-source for `agentsmesh install` (new source kind, registry resolution)

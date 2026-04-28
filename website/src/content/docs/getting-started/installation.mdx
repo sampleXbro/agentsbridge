@@ -11,8 +11,12 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 ## Requirements
 
 - **Node.js 20** or later
-- Linux, macOS, or Windows
+- Linux, macOS, or **Windows** (native, not WSL)
 - Any package manager: npm, pnpm, or yarn
+
+<Aside type="tip">
+  **Windows support** is first-class: paths are normalized internally so generated configs and `installs.yaml` are portable across platforms. Watch mode uses polling on Windows because `ReadDirectoryChangesW` can miss just-created files in tmpdirs. CI runs the full test suite on Linux, macOS, and Windows.
+</Aside>
 
 ## Install as a dev dependency
 
@@ -55,7 +59,7 @@ Both commands are identical. Use whichever you prefer.
 
 ```bash
 agentsmesh --version
-# 0.2.4
+# 0.7.0
 
 agentsmesh --help
 # Usage: agentsmesh <command> [options]
@@ -65,6 +69,18 @@ agentsmesh --help
 <Aside type="note">
   If you installed locally (not globally), prefix commands with `npx agentsmesh` or add a script to your `package.json`.
 </Aside>
+
+## IDE autocomplete via JSON Schema
+
+Every canonical config file ships with a generated JSON Schema, so VS Code, JetBrains, and other editors give you autocomplete and validation out of the box. `agentsmesh init` writes the appropriate `# yaml-language-server: $schema=...` directive (or `$schema` field for JSON) into each file:
+
+| Config file | Schema location (in your `node_modules`) |
+|---|---|
+| `agentsmesh.yaml` / `agentsmesh.local.yaml` | `agentsmesh/schemas/agentsmesh.json` |
+| `.agentsmesh/hooks.yaml` | `agentsmesh/schemas/hooks.json` |
+| `.agentsmesh/permissions.yaml` | `agentsmesh/schemas/permissions.json` |
+| `.agentsmesh/mcp.json` | `agentsmesh/schemas/mcp.json` |
+| `.agentsmesh/packs/*/pack.json` | `agentsmesh/schemas/pack.json` |
 
 ## Add scripts to package.json
 

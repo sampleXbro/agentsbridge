@@ -7,6 +7,36 @@ import { absoluteFromBase, fromBase, getSiteBase, getSiteOrigin, resolveDeploySi
 const deploySite = resolveDeploySite();
 const site = getSiteOrigin();
 const ogImage = absoluteFromBase('/og-image.png');
+const docsRoot = absoluteFromBase('/');
+
+const websiteJsonLd = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'AgentsMesh',
+  alternateName: 'AgentsMesh — AI Coding Config Sync',
+  url: docsRoot,
+  description:
+    'Open-source AI coding config sync CLI and TypeScript library. One canonical .agentsmesh directory generates native configs for Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf, Codex CLI, Continue, Cline, Kiro, Junie, Roo Code, and Antigravity.',
+  inLanguage: 'en-US',
+  publisher: {
+    '@type': 'Organization',
+    name: 'AgentsMesh',
+    url: docsRoot,
+    logo: {
+      '@type': 'ImageObject',
+      url: ogImage,
+    },
+  },
+});
+
+const organizationJsonLd = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'AgentsMesh',
+  url: docsRoot,
+  logo: ogImage,
+  sameAs: ['https://github.com/sampleXbro/agentsmesh', 'https://www.npmjs.com/package/agentsmesh'],
+});
 
 export default defineConfig({
   site,
@@ -17,7 +47,7 @@ export default defineConfig({
       title: 'AgentsMesh',
       tagline: 'One config. Every AI coding tool. Zero drift.',
       description:
-        'AgentsMesh maintains a single canonical configuration in .agentsmesh/ and syncs it bidirectionally to every major AI coding tool — Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf, and more.',
+        'AgentsMesh is an open-source AI coding config sync CLI and TypeScript library for Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf, Codex CLI, and more.',
       logo: {
         light: './src/assets/logo-light.svg',
         dark: './src/assets/logo-dark.svg',
@@ -54,6 +84,16 @@ export default defineConfig({
         {
           tag: 'link',
           attrs: { rel: 'icon', href: fromBase('/favicon.svg'), type: 'image/svg+xml' },
+        },
+        {
+          tag: 'script',
+          attrs: { type: 'application/ld+json' },
+          content: websiteJsonLd,
+        },
+        {
+          tag: 'script',
+          attrs: { type: 'application/ld+json' },
+          content: organizationJsonLd,
         },
       ],
       sidebar: [
@@ -92,6 +132,8 @@ export default defineConfig({
             { label: 'check', slug: 'cli/check' },
             { label: 'merge', slug: 'cli/merge' },
             { label: 'matrix', slug: 'cli/matrix' },
+            { label: 'plugin', slug: 'cli/plugin' },
+            { label: 'target', slug: 'cli/target' },
           ],
         },
         {
@@ -113,6 +155,7 @@ export default defineConfig({
             { label: 'CI Drift Detection', slug: 'guides/ci-drift-detection' },
             { label: 'Community Packs', slug: 'guides/community-packs' },
             { label: 'Building Plugins', slug: 'guides/building-plugins' },
+            { label: 'Extending AgentsMesh', slug: 'guides/extending' },
             { label: 'Local Dev Overrides', slug: 'guides/local-overrides' },
           ],
         },

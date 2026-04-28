@@ -14,6 +14,7 @@ import {
   GEMINI_ROOT,
   GEMINI_COMPAT_AGENTS,
   GEMINI_COMMANDS_DIR,
+  GEMINI_RULES_DIR,
   GEMINI_AGENTS_DIR,
   GEMINI_GLOBAL_ROOT,
   GEMINI_GLOBAL_COMPAT_AGENTS,
@@ -22,8 +23,11 @@ import {
   GEMINI_GLOBAL_SKILLS_DIR,
   GEMINI_GLOBAL_AGENTS_DIR,
   GEMINI_SETTINGS,
+  GEMINI_CANONICAL_RULES_DIR,
+  GEMINI_CANONICAL_COMMANDS_DIR,
 } from './constants.js';
 import { importFromGemini } from './importer.js';
+import { geminiCommandMapper, geminiRuleMapper } from './import-mappers.js';
 import { lintRules } from './linter.js';
 import { buildGeminiCliImportPaths } from '../../core/reference/import-map-builders.js';
 import { shouldConvertAgentsToSkills } from '../../config/core/conversions.js';
@@ -206,6 +210,24 @@ export const descriptor = {
       GEMINI_GLOBAL_AGENTS_DIR,
     ],
     layout: global,
+  },
+  importer: {
+    rules: {
+      feature: 'rules',
+      mode: 'directory',
+      source: { project: [GEMINI_RULES_DIR] },
+      canonicalDir: GEMINI_CANONICAL_RULES_DIR,
+      extensions: ['.md'],
+      map: geminiRuleMapper,
+    },
+    commands: {
+      feature: 'commands',
+      mode: 'directory',
+      source: { project: [GEMINI_COMMANDS_DIR] },
+      canonicalDir: GEMINI_CANONICAL_COMMANDS_DIR,
+      extensions: ['.md', '.toml'],
+      map: geminiCommandMapper,
+    },
   },
   buildImportPaths: buildGeminiCliImportPaths,
   detectionPaths: ['GEMINI.md', '.gemini'],

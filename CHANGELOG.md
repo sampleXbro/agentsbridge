@@ -1,5 +1,48 @@
 # Changelog
 
+## 0.9.0
+
+### Minor Changes
+
+- b3f702d: Adds three new `agentsmesh lint` diagnostics, a recommended `.gitignore` policy for materialized packs, and a one-step `agentsmesh target-scaffold` workflow.
+
+  Added:
+  - New lint diagnostics, all emitted as warnings (do not change `lint`'s exit code):
+    - `silent-drop-guard` flags canonical content a target would otherwise drop without trace based on its capability map.
+    - `hook-script-references` warns when a hook command references a script path for any target whose generator does not copy hook scripts into its output. **All built-in targets except Copilot fall under this rule today.** Existing hook configs that reference local script paths (e.g. `./scripts/pre-commit.sh`) will surface a new warning per matching target on the first lint after upgrade. The script must already exist relative to the hook execution directory or the generated config will fail at runtime — the diagnostic just makes the gap visible.
+    - `rule-scope-inversion` catches manual-activation rules whose scope contradicts the target's projection rules.
+      All three are wired into `runLint` for every target via descriptor capabilities; no existing rule has been removed and no diagnostic is upgraded to error severity.
+  - `agentsmesh init` now writes `.agentsmesh/packs/` into `.gitignore` alongside `agentsmesh.local.yaml`, `.agentsmeshcache`, and `.agentsmesh/.lock.tmp`, and skips entries already covered by a broader pre-existing pattern (e.g. an existing `.agentsmesh/` line covers `.agentsmesh/packs/`). Materialized packs are treated like `node_modules` — `installs.yaml` is committed and `agentsmesh install --sync` reproduces the tree deterministically post-clone.
+  - `agentsmesh target-scaffold` post-steps collapse the previous three-edit sequence into one `pnpm catalog:generate` invocation, backed by a new auto-discovered builtin-target catalog (`scripts/generate-target-catalog.ts` + `pnpm catalog:verify` drift guard in CI).
+
+  Changed:
+  - The `agentsmesh.json` and `pack.json` schemas now list `targets` enums alphabetically. Schema consumers that pin order will see a one-time diff; values are unchanged.
+  - README documents the commit-vs-gitignore convention for generated tool folders and clarifies native Windows support (no WSL).
+
+  Internal:
+  - Per-target importers (`antigravity`, `claude-code`, `continue`, `copilot`, `cursor`, `gemini-cli`, `junie`, `kiro`, `roo-code`) migrated to the descriptor-driven import runner with mapper functions extracted into `import-mappers.ts` to keep `index.ts` ↔ `importer.ts` cycles out of the TDZ.
+  - New shared link-format registry (`src/core/reference/link-format-registry.ts`) consolidates per-target link rendering rules.
+  - `writeFileAtomic` now refuses to follow a pre-existing symlink at the target path (closes a TOCTOU window where a swapped symlink could redirect writes outside the project tree).
+  - `agentsmesh plugin add` now warns that plugins load as trusted Node.js modules with full process privileges.
+
+### Patch Changes
+
+- 08ef1b0: Security hardening and correctness fixes across install, generate, reference rewriting, plugin loading, and caching subsystems.
+
+  Fixed:
+  - `agentsmesh install --path` now rejects paths that traverse outside the install source root, closing a directory-escape vulnerability where `--path ../../outside` could read files outside the fetched source.
+  - Pack names are validated as single directory segments before materialization — values containing path separators (e.g. `../../escape`) are rejected, preventing writes outside `.agentsmesh/packs/`.
+  - `writeFileAtomic` now checks the `.tmp` staging path for symlinks before writing, closing a TOCTOU window where a symlink at `${path}.tmp` could redirect writes to an attacker-controlled location.
+  - `agentsmesh generate --targets` now validates filter values against configured targets and errors on unknown names. Previously a misspelled target silently produced zero outputs and `--check` reported success, allowing CI to pass while checking nothing.
+  - Project-scope skill mirrors now receive source-map entries for reference rewriting. Previously only global-scope mirrors were mapped, leaving Markdown links inside project-mirrored skill files unrewritten.
+  - Plugin targets declaring `sharedArtifacts` are now recognized during global reference rewriting. Previously only builtin target descriptors were consulted, so plugin-owned shared paths could be rebased through the wrong artifact map.
+  - `runDescriptorImport` is now exported from `agentsmesh/targets` as documented in the plugin guide.
+  - Importer fallback sources are now tried when configured primary files are absent on disk, not only when the primary source list is empty.
+  - `flatFile` and `mcpJson` import modes now honor `canonicalDir` when `canonicalFilename` is a bare filename, matching the documented directory-plus-filename contract for plugin descriptor authors.
+  - Rule path mapping uses POSIX `basename` with backslash normalization instead of host `node:path`, preventing broken slugs when Windows-shaped canonical paths appear on a POSIX host.
+  - Relative `file:` plugin sources now resolve against `projectRoot` instead of the filesystem root.
+  - Remote cache keys now preserve dots and use double-separator delimiters so distinct refs like `v1.0.0` and `v1_0_0` no longer collide. Existing cached entries will be re-fetched once after upgrade.
+
 ## 0.8.0
 
 ### Minor Changes

@@ -1,6 +1,6 @@
 <div align="center">
 
-# AgentsMesh — AI Coding Config Sync for Every Tool
+# AgentsMesh — One `.agentsmesh/` Directory for Every AI Coding Tool
 
 [![CI](https://github.com/sampleXbro/agentsmesh/actions/workflows/ci.yml/badge.svg)](https://github.com/sampleXbro/agentsmesh/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/agentsmesh.svg)](https://www.npmjs.com/package/agentsmesh)
@@ -12,99 +12,189 @@
 [![Docs](https://img.shields.io/badge/docs-website-brightgreen.svg)](https://samplexbro.github.io/agentsmesh)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/sampleXbro/agentsmesh/pulls)
 
-**AgentsMesh is an open-source CLI and TypeScript library for AI coding configuration sync. One canonical `.agentsmesh/` directory manages rules, prompts, commands, agents, skills, MCP servers, hooks, ignore files, and permissions across every major AI coding tool.**
-
-Edit once and generate `CLAUDE.md`, `AGENTS.md`, `.cursor/rules`, `.github/copilot-instructions.md`, `.gemini/settings.json`, `.windsurf/rules`, `.codex/config.toml`, `.kiro/steering`, and more from the same source. Import existing Claude Code, Cursor, Copilot, Gemini CLI, Windsurf, Codex CLI, and other configs back into canonical form without losing round-trip metadata.
-
-**Works with** Claude Code · Cursor · GitHub Copilot · Gemini CLI · Windsurf · Continue · Cline · Kiro · Codex CLI · Junie · Roo Code · Antigravity — plus plugin targets. See the [full feature matrix](https://samplexbro.github.io/agentsmesh/reference/supported-tools/).
-
 </div>
+
+AI coding assistants now ship with their own configuration formats — `CLAUDE.md`, `AGENTS.md`, `.cursor/rules/*.mdc`, `.github/copilot-instructions.md`, `.gemini/settings.json`, `.windsurf/rules/*.md`, `.codex/config.toml`, `.kiro/steering/*.md`, and more. Maintaining the same rules, prompts, MCP servers, hooks, and permissions across all of them by hand causes config drift fast.
+
+**AgentsMesh** is an open-source CLI and TypeScript library that fixes this. You write canonical rules, commands, agents, skills, MCP, hooks, ignore files, and permissions once in `.agentsmesh/`, then `agentsmesh generate` projects them out as native config for every supported assistant. `agentsmesh import` brings existing tool configs back into canonical form, and `agentsmesh check` catches drift in CI.
 
 > **Full documentation: [samplexbro.github.io/agentsmesh](https://samplexbro.github.io/agentsmesh)**
 
 ---
 
+## Before / After
+
+**Before — fragmented assistant-native config in one repo:**
+
+```text
+CLAUDE.md
+AGENTS.md
+.cursor/rules/*.mdc
+.github/copilot-instructions.md
+.gemini/settings.json
+.windsurf/rules/*.md
+.codex/config.toml
+.kiro/steering/*.md
+```
+
+**After — one canonical source, generated everywhere:**
+
+```text
+.agentsmesh/
+  rules/
+    _root.md
+  commands/
+  agents/
+  skills/
+  mcp.json
+  hooks.yaml
+  permissions.yaml
+  ignore
+```
+
+```bash
+npx agentsmesh generate
+```
+
+The native files above are still emitted — AgentsMesh writes them for you from `.agentsmesh/`. Edit canonical sources, regenerate, and every tool stays in sync.
+
+---
+
+## 60-second quickstart
+
+Requires Node.js 20+. Works on Linux, macOS, and Windows (native, not WSL).
+
+```bash
+npx agentsmesh init       # scaffold .agentsmesh/ + agentsmesh.yaml
+npx agentsmesh generate   # produce native configs for every enabled tool
+npx agentsmesh check      # CI-friendly drift gate against .agentsmesh/.lock
+```
+
+- **`init`** — creates `agentsmesh.yaml`, `agentsmesh.local.yaml`, and the canonical `.agentsmesh/` directory.
+- **`generate`** — writes `CLAUDE.md`, `AGENTS.md`, `.cursor/`, `.github/copilot-instructions.md`, etc. from canonical sources.
+- **`check`** — exits non-zero if generated files have drifted from `.agentsmesh/.lock`. Drop into CI.
+
+Prefer a local install? `npm install -D agentsmesh` (also `pnpm add -D` / `yarn add -D`). The CLI ships as `agentsmesh` and the shorter alias `amsh`.
+
+---
+
+## Safe adoption in an existing repository
+
+If your repo already has `.cursor/`, `.claude/`, `.github/copilot-instructions.md`, or other native files, you don't have to delete them. The recommended flow imports them into `.agentsmesh/` first, lets you preview the projection, and only then trusts `generate`.
+
+```bash
+npx agentsmesh import --from cursor   # or claude-code, copilot, codex-cli, gemini-cli, windsurf, ...
+npx agentsmesh diff                   # patch-style preview of what generate would change
+npx agentsmesh generate               # write native configs (back) from canonical
+npx agentsmesh check                  # add to CI to detect drift
+```
+
+What this gets you:
+
+- `import` reads existing tool configs and writes equivalent canonical files into `.agentsmesh/` — round-trip metadata is preserved so re-import doesn't lose information.
+- `diff` shows the unified patch every output file would receive, so you can review before any write.
+- `check` reads `.agentsmesh/.lock` and fails the build if the canonical sources and the generated files disagree.
+
+`import --from` accepts the built-in target IDs: `claude-code`, `cursor`, `copilot`, `codex-cli`, `gemini-cli`, `windsurf`, `continue`, `cline`, `kiro`, `junie`, `roo-code`, `antigravity`. Plugin targets are valid too.
+
+---
+
+## Demo
+
+<!-- TODO: Add terminal demo GIF showing init → generate → diff → check. -->
+
+A quick sample of the canonical → native projection:
+
+```bash
+npx agentsmesh init
+find .agentsmesh -maxdepth 2 -type f      # see the canonical scaffold
+npx agentsmesh generate
+npx agentsmesh diff                       # preview future changes
+npx agentsmesh check                      # CI-style drift gate
+```
+
+On macOS/Linux you can also run `tree .agentsmesh` if you have `tree` installed.
+
+---
+
+## Supported AI coding tools
+
+AgentsMesh currently generates native config for every major AI coding assistant — Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf, Continue, Cline, Kiro, Codex CLI, Junie, Roo Code, Antigravity — plus plugin targets you can ship as standalone npm packages. Each tool's native vs. embedded support per feature is tracked in the [supported tools matrix](https://samplexbro.github.io/agentsmesh/reference/supported-tools/). The full matrix table is also embedded [further down this README](#supported-tools--feature-matrix).
+
+---
+
 ## Why developers use AgentsMesh
 
-- **Unify AI coding rules** across Claude Code, Cursor, Copilot, Gemini CLI, Windsurf, Codex CLI, and mixed-tool teams.
-- **Adopt existing projects safely** with bidirectional `import` and `generate` instead of rewriting every tool config by hand.
-- **Sync personal global config** from `~/.agentsmesh/` to user-level assistant folders such as `~/.claude/`, `~/.cursor/`, and `~/.codex/`.
-- **Standardize MCP, hooks, permissions, skills, and agents** where tools support them natively, with metadata-backed projections where they do not.
-- **Catch config drift in CI** with lock-file checks, diffs, linting, and merge recovery built for team workflows.
-- **Share and extend configuration** with community packs, remote `extends`, runtime plugins, and a typed programmatic API.
+- **Bidirectional sync** — `import` reads existing tool configs into `.agentsmesh/`; `generate` projects them back out. Round-trips are loss-free, so adopting AgentsMesh in an existing repo never throws away data.
+- **Automatic link rebasing** — references like `.agentsmesh/skills/foo/SKILL.md` are rewritten to target-relative paths in every generated artifact, so cross-file links stay valid from `.claude/`, `.cursor/`, `.github/`, `.codex/`, and the rest.
+- **Managed embedding with round-trip metadata** — when a target has no native slot for a feature (e.g. commands in Codex CLI, agents in Cline), AgentsMesh embeds it with frontmatter that survives the next `import`. No silent data loss; the full feature-by-feature breakdown lives in the [supported tools matrix](https://samplexbro.github.io/agentsmesh/reference/supported-tools/).
+- **Team-safe collaboration** — `agentsmesh check` is a CI drift gate against `.agentsmesh/.lock`, `agentsmesh diff` previews changes, `agentsmesh merge` rebuilds the lock after three-way Git conflicts, and `lock_features` + per-feature `strategy` prevent accidental overrides.
+- **Global mode** — `~/.agentsmesh/` syncs personal AI config to `~/.claude/`, `~/.cursor/`, `~/.codex/`, `~/.windsurf/`, and other user-level folders. Every CLI command accepts `--global`.
+- **Extensible** — community packs (`agentsmesh install ...`), remote `extends`, runtime plugins (`agentsmesh plugin add`), schema-validated config files, and a typed programmatic API for scripts, IDE extensions, and CI.
 
 ---
 
-## Install
+## Why not just `AGENTS.md`?
 
-Requires **Node.js 20+**. Supported platforms: **Linux**, **macOS**, and **Windows** (native, not WSL).
+[`AGENTS.md`](https://agents.md) is great as a shared, human-readable instruction file. AgentsMesh uses `AGENTS.md` natively where the target supports it (Codex CLI, Cursor, Copilot, Junie, Windsurf, …) and treats it as a first-class output, not a competitor.
 
-```bash
-npm install -D agentsmesh       # or: pnpm add -D / yarn add -D
-npx agentsmesh --help           # run without installing
-```
+The reason `AGENTS.md` alone is not enough: most AI coding assistants expose configuration surfaces beyond a single instruction markdown file, and those surfaces don't all overlap.
 
-CLI aliases: `agentsmesh` and `amsh`.
+- **Cursor** has `.cursor/rules/*.mdc` (with frontmatter scopes), `.cursorignore`, MCP config, and hooks.
+- **Claude Code** has `CLAUDE.md`, `.claude/agents/`, `.claude/skills/`, `.claude/commands/`, `.claude/settings.json`, hooks, and permissions.
+- **GitHub Copilot** has `.github/copilot-instructions.md`, `.github/instructions/*.instructions.md`, agents, prompts, and (partial) hooks.
+- **Gemini CLI** has `GEMINI.md`, `.gemini/settings.json` (MCP + hooks), `.gemini/commands/*.toml`, and agents.
+- **Codex CLI** has `AGENTS.md` plus `.codex/config.toml`, `.codex/agents/*.toml`, and `.codex/rules/`.
+- **Windsurf**, **Continue**, **Cline**, **Kiro**, **Junie**, **Roo Code**, **Antigravity** each have their own native rules, workflows, MCP servers, skills, and ignore files.
 
-> **Windows notes:** All paths are normalized internally so generated configs and `installs.yaml` are portable across platforms. Watch mode uses polling on Windows because `ReadDirectoryChangesW` can miss just-created files in tmpdirs. CI runs the full test suite on Linux, macOS, and Windows.
-
----
-
-## Quick start
-
-### New project
-
-```bash
-agentsmesh init                 # scaffold .agentsmesh/
-# edit .agentsmesh/rules/_root.md
-agentsmesh generate             # produce configs for every enabled tool
-```
-
-### Existing project — adopt with one import
-
-```bash
-agentsmesh import --from cursor       # or claude-code, copilot, codex-cli, ...
-agentsmesh generate
-```
-
-### Personal global config
-
-```bash
-agentsmesh init --global
-agentsmesh import --global --from claude-code
-agentsmesh generate --global          # writes to ~/.claude/, ~/.cursor/, etc.
-```
+AgentsMesh canonicalizes all of these — rules, commands, agents, skills, MCP servers, hooks, ignore patterns, permissions — so you don't pick one tool's surface as the lowest common denominator. When a tool has no native slot for a feature, AgentsMesh embeds it with round-trip metadata instead of dropping it.
 
 ---
 
-## High-demand features
+## Core concepts
 
-### AI coding config sync for every tool
+`.agentsmesh/` is the canonical source of truth. Generated tool files are artifacts. The directory contains:
 
-AgentsMesh generates native configuration for every major AI coding assistant. Each tool's files are produced from a single `.agentsmesh/` directory with support for **rules, commands, agents, skills, MCP servers, hooks, ignore patterns, and permissions**:
+- `rules/_root.md` — the root rule every target projects (typically becomes `CLAUDE.md`, `AGENTS.md`, `.cursor/rules/_root.mdc`, etc.).
+- `rules/*.md` — additional scoped rules.
+- `commands/*.md` — reusable slash-style prompts/commands.
+- `agents/*.md` — agent definitions (where the target supports them).
+- `skills/<name>/SKILL.md` (+ supporting files) — composable skills.
+- `mcp.json` — MCP server definitions.
+- `hooks.yaml` — pre/post tool hooks.
+- `permissions.yaml` — allow/deny rules where the target supports them.
+- `ignore` — paths the assistant should not read or modify.
 
-| Tool | Main files generated |
-|------|---------------------|
-| **Claude Code** | `CLAUDE.md`, `.claude/agents/`, `.claude/skills/`, `.claude/commands/`, `.claude/settings.json`, `.claude/hooks.json`, MCP via `.claude.json` |
-| **Cursor** | `.cursor/rules/*.mdc`, `AGENTS.md`, `.cursor/mcp.json`, `.cursor/hooks.json`, `.cursorignore` |
-| **GitHub Copilot** | `.github/copilot-instructions.md`, `.github/instructions/*.instructions.md`, `.github/agents/`, `.github/prompts/` |
-| **Gemini CLI** | `GEMINI.md`, `.gemini/settings.json` (MCP + hooks), `.gemini/commands/*.toml`, `.gemini/agents/` |
-| **Windsurf** | `.windsurf/rules/*.md`, `.windsurf/workflows/`, `.windsurf/mcp_config.json`, `.windsurf/hooks.json` |
-| **Continue** | `.continue/rules/`, `.continue/prompts/`, `.continue/mcpServers/`, `.continue/config.yaml` |
-| **Cline** | `.clinerules/`, `.cline/skills/`, `.cline/cline_mcp_settings.json`, hooks |
-| **Kiro** | `.kiro/steering/`, `.kiro/skills/`, `.kiro/hooks/*.kiro.hook`, `.kiro/settings/mcp.json` |
-| **Codex CLI** | `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/rules/` |
-| **Junie** | `AGENTS.md`, `.junie/agents/`, `.junie/commands/`, `.junie/skills/`, `.junie/mcp/mcp.json` |
-| **Roo Code** | `.roo/rules/`, `.roomodes` (agents → custom modes), `.roo/commands/`, `.roo/skills/` |
-| **Antigravity** | `.agents/rules/general.md`, `.agents/skills/`, `.agents/workflows/`, `.agents/mcp_config.json` |
+Configuration:
 
-When a tool lacks native support for a feature, AgentsMesh embeds it with round-trip metadata — no data loss on re-import. See the [supported tools matrix](https://samplexbro.github.io/agentsmesh/reference/supported-tools/) for per-tool native vs. embedded breakdown.
+- `agentsmesh.yaml` — selects which targets and features are enabled.
+- `agentsmesh.local.yaml` — per-developer overrides (gitignored by default).
+- `.agentsmesh/.lock` — drift-detection lock file consumed by `agentsmesh check`.
 
-### Bidirectional import and lossless generate
+Detailed contracts: [Canonical Config](https://samplexbro.github.io/agentsmesh/canonical-config/) · [Generation pipeline](https://samplexbro.github.io/agentsmesh/reference/generation-pipeline/).
 
-Use `agentsmesh import --from <tool>` to migrate existing AI tool configs into canonical `.agentsmesh/` files, then `agentsmesh generate` to project them back out. Managed embedding, reference rewriting, and lock metadata preserve projected features so commands, agents, and skills can round-trip even when a target stores them differently.
+---
 
-### Global mode for personal AI assistant config
+## CLI usage
+
+```bash
+agentsmesh init [--global] [--yes]
+agentsmesh generate [--global] [--targets <csv>] [--check] [--dry-run] [--force] [--refresh-cache]
+agentsmesh import --from <target> [--global]
+agentsmesh diff [--global] [--targets <csv>]
+agentsmesh lint [--global] [--targets <csv>]
+agentsmesh watch [--global] [--targets <csv>]
+agentsmesh check [--global]
+agentsmesh merge [--global]
+agentsmesh matrix [--global] [--targets <csv>] [--verbose]
+agentsmesh install <source> [--sync] [--path <dir>] [--target <id>] [--as <kind>] [--name <id>] [--extends] [--dry-run] [--global] [--force]
+agentsmesh plugin add|list|remove|info [--version <v>] [--id <id>]
+agentsmesh target scaffold <id> [--name <displayName>] [--force]
+```
+
+`agentsmesh --help` prints the same surface; `agentsmesh <cmd> --help` is also supported.
+
+### Global mode (personal AI assistant config)
 
 `.agentsmesh/` at the project level is for teams. `~/.agentsmesh/` at the home level is for personal setup across every repo you touch:
 
@@ -114,7 +204,7 @@ agentsmesh import --global --from claude-code
 agentsmesh generate --global   # writes ~/.claude/CLAUDE.md, ~/.cursor/, ~/.codex/, ~/.windsurf/, etc.
 ```
 
-Every built-in target and every plugin supports global mode. Every CLI command (`diff`, `lint`, `watch`, `check`, `merge`, `matrix`) accepts `--global`. [Global mode paths per tool →](https://samplexbro.github.io/agentsmesh/reference/supported-tools/#global-mode)
+Every built-in target with a global layout supports global mode. Every CLI command (`diff`, `lint`, `watch`, `check`, `merge`, `matrix`) accepts `--global`. [Global mode paths per tool →](https://samplexbro.github.io/agentsmesh/reference/supported-tools/#global-mode)
 
 ### Plugins for new AI coding tools
 
@@ -130,12 +220,12 @@ Plugins have full parity with built-in targets: project + global layouts, featur
 
 ### Team-safe collaboration & CI drift detection
 
-- **`agentsmesh check`** — CI gate that exits 1 if generated files drifted from the lock
-- **`agentsmesh diff`** — preview what the next `generate` would change
-- **`agentsmesh lint`** — validate canonical config against target-specific constraints
-- **`agentsmesh watch`** — regenerate target files on save during local editing
-- **`agentsmesh merge`** — recover from three-way `.lock` conflicts after `git merge`
-- **Collaboration config** — `lock_features` and `strategy` prevent accidental overrides
+- **`agentsmesh check`** — CI gate that exits 1 if generated files drifted from the lock.
+- **`agentsmesh diff`** — preview what the next `generate` would change.
+- **`agentsmesh lint`** — validate canonical config against target-specific constraints.
+- **`agentsmesh watch`** — regenerate target files on save during local editing.
+- **`agentsmesh merge`** — recover from three-way `.lock` conflicts after `git merge`.
+- **Collaboration config** — `lock_features` and `strategy` prevent accidental overrides.
 
 ### Community packs and shared config
 
@@ -167,13 +257,6 @@ Why generated configs stay committed: the same reason `package-lock.json` does. 
 
 If your team has a strong reason to gitignore generated configs (e.g., monorepo size concerns, regenerate-on-checkout hooks), add the target-specific entries manually — but expect to wire `agentsmesh generate` into your post-checkout flow.
 
-### Extending AgentsMesh
-
-- **`agentsmesh target scaffold foo-ide`** — generate a built-in target skeleton (10 files: descriptor, generators, importer, linter, tests, fixtures) with global mode, conversion support, and lint hooks pre-wired. The catalog is auto-discovered at build time (`pnpm catalog:generate`) — no manual edits to `target-ids.ts`, `builtin-targets.ts`, or the import-map barrel.
-- **`agentsmesh plugin add <pkg>`** — load third-party npm packages as runtime targets with full built-in parity. Supports `agentsmesh plugin list`, `info`, and `remove`.
-
-[Extending guide →](https://samplexbro.github.io/agentsmesh/guides/extending/) · [Building plugins →](https://samplexbro.github.io/agentsmesh/guides/building-plugins/)
-
 ### Schema-validated configs (IDE autocomplete)
 
 Every config file ships with a generated JSON Schema, so VS Code, JetBrains, and other editors give you autocomplete and validation out of the box:
@@ -190,45 +273,7 @@ Every config file ships with a generated JSON Schema, so VS Code, JetBrains, and
 
 ---
 
-## Supported tools — feature matrix
-
-### Project scope (`agentsmesh generate`)
-
-<!-- agentsmesh:support-matrix:project -->
-| Feature | Antigravity | Claude Code | Cline | Codex CLI | Continue | Copilot | Cursor | Gemini CLI | Junie | Kiro | Roo Code | Windsurf |
-|---|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
-| Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
-| Additional Rules | Native | Native | Native | Native | Native | Native | Embedded | Embedded | Native | Native | Native | Native |
-| Commands | Partial (workflows) | Native | Native (workflows) | Embedded | Embedded | Native | Native | Native | Native | — | Native | Native (workflows) |
-| Agents | — | Native | Embedded | Native | — | Native | Native | Native | Native | Native | Partial | Embedded |
-| Skills | Native | Native | Native | Native | Embedded | Native | Native | Native | Native | Native | Native | Native |
-| MCP Servers | — | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Partial |
-| Hooks | — | Native | Native | — | — | Partial | Native | Partial | — | Native | — | Native |
-| Ignore | — | Native | Native | — | — | — | Native | Native (settings-embedded) | Native | Native | Native | Native |
-| Permissions | — | Native | — | — | — | — | Partial | Partial | — | — | — | — |
-<!-- /agentsmesh:support-matrix:project -->
-
-### Global scope (`agentsmesh generate --global`)
-
-<!-- agentsmesh:support-matrix:global -->
-| Feature | Antigravity | Claude Code | Cline | Codex CLI | Continue | Copilot | Cursor | Gemini CLI | Junie | Kiro | Roo Code | Windsurf |
-|---|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
-| Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
-| Additional Rules | Embedded | Native | Native | Embedded | Native | Native | Embedded | Embedded | Embedded | Native | Native | Partial |
-| Commands | Partial (workflows) | Native | Native (workflows) | Embedded | Native | Native | Native | Native | Native | — | Native | Native (workflows) |
-| Agents | — | Native | Embedded | Native | — | Native | Native | Native | Native | Native | Partial | Embedded |
-| Skills | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
-| MCP Servers | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Partial |
-| Hooks | — | Native | Native | — | — | — | Native | Partial | — | — | — | Native |
-| Ignore | — | Native | Native | — | — | — | Native | — | — | Native | Native | Native |
-| Permissions | — | Native | — | — | — | — | — | — | — | — | — | — |
-<!-- /agentsmesh:support-matrix:global -->
-
-See the [full feature matrix docs](https://samplexbro.github.io/agentsmesh/reference/supported-tools/) for native vs. embedded support details and per-tool global paths.
-
----
-
-## Programmatic API
+## TypeScript / Programmatic API
 
 AgentsMesh is also importable as a typed ESM library, so you can drive every CLI capability — `generate`, `import`, `lint`, `diff`, `check` — from scripts, IDE extensions, MCP servers, or CI without spawning the CLI. Public entrypoints: `agentsmesh` (full surface), `agentsmesh/engine`, `agentsmesh/canonical`, `agentsmesh/targets`.
 
@@ -283,6 +328,44 @@ import { getAllDescriptors } from 'agentsmesh/targets';
 ```
 
 Every public symbol resolves to a real `.d.ts` under strict TypeScript. Full reference in the [programmatic API docs](https://samplexbro.github.io/agentsmesh/reference/programmatic-api/) — entrypoint table, every function signature, the typed error taxonomy, and the canonical/target type lists. ESM-only; requires Node.js 20+.
+
+---
+
+## Supported tools — feature matrix
+
+### Project scope (`agentsmesh generate`)
+
+<!-- agentsmesh:support-matrix:project -->
+| Feature | Antigravity | Claude Code | Cline | Codex CLI | Continue | Copilot | Cursor | Gemini CLI | Junie | Kiro | Roo Code | Windsurf |
+|---|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
+| Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
+| Additional Rules | Native | Native | Native | Native | Native | Native | Embedded | Embedded | Native | Native | Native | Native |
+| Commands | Partial (workflows) | Native | Native (workflows) | Embedded | Embedded | Native | Native | Native | Native | — | Native | Native (workflows) |
+| Agents | — | Native | Embedded | Native | — | Native | Native | Native | Native | Native | Partial | Embedded |
+| Skills | Native | Native | Native | Native | Embedded | Native | Native | Native | Native | Native | Native | Native |
+| MCP Servers | — | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Partial |
+| Hooks | — | Native | Native | — | — | Partial | Native | Partial | — | Native | — | Native |
+| Ignore | — | Native | Native | — | — | — | Native | Native (settings-embedded) | Native | Native | Native | Native |
+| Permissions | — | Native | — | — | — | — | Partial | Partial | — | — | — | — |
+<!-- /agentsmesh:support-matrix:project -->
+
+### Global scope (`agentsmesh generate --global`)
+
+<!-- agentsmesh:support-matrix:global -->
+| Feature | Antigravity | Claude Code | Cline | Codex CLI | Continue | Copilot | Cursor | Gemini CLI | Junie | Kiro | Roo Code | Windsurf |
+|---|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
+| Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
+| Additional Rules | Embedded | Native | Native | Embedded | Native | Native | Embedded | Embedded | Embedded | Native | Native | Partial |
+| Commands | Partial (workflows) | Native | Native (workflows) | Embedded | Native | Native | Native | Native | Native | — | Native | Native (workflows) |
+| Agents | — | Native | Embedded | Native | — | Native | Native | Native | Native | Native | Partial | Embedded |
+| Skills | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
+| MCP Servers | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Partial |
+| Hooks | — | Native | Native | — | — | — | Native | Partial | — | — | — | Native |
+| Ignore | — | Native | Native | — | — | — | Native | — | — | Native | Native | Native |
+| Permissions | — | Native | — | — | — | — | — | — | — | — | — | — |
+<!-- /agentsmesh:support-matrix:global -->
+
+See the [full feature matrix docs](https://samplexbro.github.io/agentsmesh/reference/supported-tools/) for native vs. embedded support details and per-tool global paths.
 
 ---
 

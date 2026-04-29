@@ -1,23 +1,26 @@
-# Plan: full test run and failure fixes
+# Plan: Launch readiness improvements (README, package.json, launch issues)
 
-Goal: run the complete test suite, identify any failing tests, and fix real regressions without disturbing unrelated worktree changes.
+Goal: Improve the first-30-second impression for developers discovering AgentsMesh, without inventing unsupported commands or flags.
+
+## CLI audit (verified against `src/cli/`)
+
+- Top-level commands: `init`, `generate`, `import`, `diff`, `lint`, `watch`, `check`, `merge`, `matrix`, `install`, `plugin`, `target`
+- Bin aliases: `agentsmesh`, `amsh`
+- Verified flags: `--global`, `--targets <csv>`, `--check`, `--dry-run`, `--force`, `--from <target>`, `--yes`
+- `init`, `generate`, `check`, `diff`, `import` all real and behave as the prompt expects
+- `npx agentsmesh ...` and `pnpm dlx agentsmesh ...` both supported via the npm `bin` field
 
 ## Checklist
 
-- [x] Run `pnpm test` and capture the failure surface.
-- [x] Attribute failures to current code, existing dirty changes, or test flake using targeted reproduction.
-- [x] For real regressions, add or adjust failing coverage first where needed, then implement the smallest fix.
-- [x] Run targeted tests for fixed areas.
-- [x] Run full verification gates (`pnpm test`, plus lint/typecheck if code changes touch TypeScript).
-- [x] Run post-feature QA before marking complete.
-
-## Previous Plan Snapshot
-
-The prior working plan in this file concerned rulesync issue parity and is intentionally preserved here for context:
-
-- #900 link leak guard
-- #1515 cross-target rule scope
-- #1247 global multi-target
-- #1239 CRLF byte-stability
-- #1317 hook script projection
-- #1418/#1420/#1422/#1417/#1547 permissions silent drop diagnostics
+- [x] Audit CLI commands and flags
+- [ ] Restructure `README.md`:
+  - [ ] Problem-first opening (no hype)
+  - [ ] Before / After section near the top
+  - [ ] 60-second quickstart (init → generate → check)
+  - [ ] Safe adoption flow for existing repos (import → diff → generate → check)
+  - [ ] "Why not just AGENTS.md?" section
+  - [ ] Terminal demo section with TODO placeholder for GIF
+  - [ ] Preserve high-demand features, matrix, programmatic API, contributing
+- [ ] Update `package.json` `homepage` to docs site
+- [ ] Create `tasks/launch-issues/` with 5 markdown issue stubs
+- [ ] Run lint + typecheck + relevant tests

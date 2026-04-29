@@ -59,14 +59,16 @@ async function runScaffold(
   if (result.written.length > 0) {
     for (const p of result.written) {
       const rel = p.startsWith(projectRoot) ? p.slice(projectRoot.length + 1) : p;
-      logger.success(`created ${rel}`);
+      logger.success(`created ${rel.replaceAll('\\', '/')}`);
     }
   }
 
   if (result.skipped.length > 0) {
     for (const p of result.skipped) {
       const rel = p.startsWith(projectRoot) ? p.slice(projectRoot.length + 1) : p;
-      logger.warn(`skipped ${rel} (already exists — use --force to overwrite)`);
+      logger.warn(
+        `skipped ${rel.replaceAll('\\', '/')} (already exists — use --force to overwrite)`,
+      );
     }
   }
 

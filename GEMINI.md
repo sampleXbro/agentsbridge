@@ -71,6 +71,7 @@
   4. `README.md` matrix must stay in sync with code capabilities.
   5. No hardcoded target counts or enumerations on homepage, CLI overview, or other pages. Use generic language and link to the matrix.
   6. Adding/changing a target: update `target-ids.ts` + descriptor → `supported-tools.mdx` → `README.md` matrix. No other docs pages should need changes.
+- **CLI display paths must use forward slashes**: Any CLI output displaying file paths to users must normalize with `.replaceAll('\\', '/')` before printing. Tests assert forward-slash paths unconditionally; native `node:path` separators leak platform differences into output.
 - **Refer to PRD**: `docs/prd-v2-complete.md` for architecture decisions
 - **Refer to tasks**: `docs/agentsmesh-ai-first-tasks.md` for current task specs
 

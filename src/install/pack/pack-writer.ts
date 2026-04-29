@@ -90,12 +90,27 @@ async function writeSettings(canonical: CanonicalFiles, packDir: string): Promis
  * @param metadataInput - Pack metadata without content_hash (computed after write)
  * @returns Full PackMetadata including content_hash
  */
+function validatePackName(name: string): void {
+  if (
+    name.includes('/') ||
+    name.includes('\\') ||
+    name === '..' ||
+    name === '.' ||
+    name.includes('\0')
+  ) {
+    throw new Error(
+      `Invalid pack name "${name}". Pack names must be a single directory segment without path separators.`,
+    );
+  }
+}
+
 export async function materializePack(
   packsDir: string,
   packName: string,
   canonical: CanonicalFiles,
   metadataInput: PackMetadataInput,
 ): Promise<PackMetadata> {
+  validatePackName(packName);
   const tmpDir = join(packsDir, `${packName}.tmp`);
   const finalDir = join(packsDir, packName);
 

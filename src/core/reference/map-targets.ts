@@ -1,4 +1,4 @@
-import { basename } from 'node:path';
+import { posix } from 'node:path';
 import type { CanonicalFiles } from '../types.js';
 import type { ValidatedConfig } from '../../config/core/schema.js';
 import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
@@ -16,7 +16,7 @@ export function ruleTargetPath(
   }
   if (rule.targets.length > 0 && !rule.targets.includes(target)) return null;
 
-  const slug = basename(rule.source, '.md');
+  const slug = posix.basename(rule.source.replace(/\\/g, '/'), '.md');
   return layout.paths.rulePath(slug, rule);
 }
 

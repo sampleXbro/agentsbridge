@@ -71,6 +71,9 @@ async function runPluginAdd(
   }
 
   logger.success(`Plugin '${id}' added to agentsmesh.yaml`);
+  logger.warn(
+    'Plugins load as trusted Node.js modules and run with full process privileges. Only install plugins from sources you trust.',
+  );
   logger.info(`Next: npm install ${source}${version !== undefined ? `@${version}` : '@latest'}`);
   logger.info(`Then add '${id}' to pluginTargets in agentsmesh.yaml to enable it.`);
   return 0;
@@ -212,4 +215,9 @@ function printPluginHelp(): void {
   logger.info('Flags (add):');
   logger.info('  --version <v>  Pin plugin version');
   logger.info('  --id <id>      Override derived plugin id');
+  logger.info('');
+  logger.info(
+    'Note: plugins load as trusted Node.js modules and run with full process privileges.',
+  );
+  logger.info('  Only install plugins from sources you trust.');
 }

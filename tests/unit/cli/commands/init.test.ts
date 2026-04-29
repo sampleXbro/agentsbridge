@@ -224,6 +224,33 @@ describe('runInit — scaffold (no existing configs)', () => {
     expect((content.match(/\.agentsmesh\/\.lock\.tmp/g) ?? []).length).toBe(1);
   });
 
+  it('does not append .agentsmesh/* children when a broader .agentsmesh/ entry already exists', async () => {
+    writeFileSync(join(TEST_DIR, '.gitignore'), 'node_modules\n.agentsmesh/\n');
+    await runInit(TEST_DIR);
+    const content = readFileSync(join(TEST_DIR, '.gitignore'), 'utf-8');
+    expect((content.match(/\.agentsmesh\/\.lock\.tmp/g) ?? []).length).toBe(0);
+    expect((content.match(/\.agentsmesh\/packs\//g) ?? []).length).toBe(0);
+    // But entries outside the broader pattern still get appended.
+    expect(content).toContain('agentsmesh.local.yaml');
+    expect(content).toContain('.agentsmeshcache');
+  });
+
+  it('treats a bare .agentsmesh entry as covering descendants', async () => {
+    writeFileSync(join(TEST_DIR, '.gitignore'), '.agentsmesh\n');
+    await runInit(TEST_DIR);
+    const content = readFileSync(join(TEST_DIR, '.gitignore'), 'utf-8');
+    expect((content.match(/\.agentsmesh\/\.lock\.tmp/g) ?? []).length).toBe(0);
+    expect((content.match(/\.agentsmesh\/packs\//g) ?? []).length).toBe(0);
+  });
+
+  it('skips comment-only and blank lines when checking existing gitignore entries', async () => {
+    writeFileSync(join(TEST_DIR, '.gitignore'), '# managed by tooling\n\nnode_modules\n');
+    await runInit(TEST_DIR);
+    const content = readFileSync(join(TEST_DIR, '.gitignore'), 'utf-8');
+    expect(content).toContain('agentsmesh.local.yaml');
+    expect(content).toContain('.agentsmesh/packs/');
+  });
+
   it('throws when agentsmesh.yaml already exists', async () => {
     writeFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'version: 1\n');
     await expect(runInit(TEST_DIR)).rejects.toThrow(/already initialized/i);

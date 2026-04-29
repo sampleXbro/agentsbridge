@@ -22,18 +22,18 @@ afterEach(() => {
 describe('cacheKeyFromSource', () => {
   it('builds github cache key from source string', () => {
     const key = cacheKeyFromSource('github:org/repo@abc123');
-    expect(key).toBe('org-repo-abc123');
+    expect(key).toBe('org--repo--abc123');
   });
 
   it('builds gitlab cache key from source string', () => {
     const key = cacheKeyFromSource('gitlab:ns/project@abc123');
-    expect(key).toBe('gitlab_ns_project_abc123');
+    expect(key).toBe('gitlab__ns_project__abc123');
   });
 
   it('builds git cache key from source string', () => {
     const key = cacheKeyFromSource('git+https://example.com/org/repo.git#abc123');
     // provider=git, identifier=url, ref=abc123
-    expect(key).toMatch(/^git_/);
+    expect(key).toMatch(/^git__/);
     expect(key).toContain('abc123');
   });
 
@@ -127,7 +127,7 @@ describe('sweepStaleCache', () => {
 
 describe('cleanInstallCache', () => {
   it('removes the cache entry directory', async () => {
-    const entryDir = join(cacheDir, 'org-repo-abc123');
+    const entryDir = join(cacheDir, 'org--repo--abc123');
     mkdirSync(entryDir, { recursive: true });
     expect(existsSync(entryDir)).toBe(true);
 

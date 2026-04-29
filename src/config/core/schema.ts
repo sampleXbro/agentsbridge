@@ -70,6 +70,9 @@ const conversionsSchema = z
   .strict()
   .optional();
 
+// Plugins load via dynamic `import()` and execute as trusted Node.js modules
+// with full process privileges (filesystem, network, child processes). The CLI
+// does not sandbox plugin code. Only register plugins from sources you trust.
 export const pluginEntrySchema = z
   .object({
     id: z.string().regex(/^[a-z][a-z0-9-]*$/),

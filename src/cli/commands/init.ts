@@ -3,7 +3,7 @@
  * With --yes: auto-import detected configs, then add example scaffold only where canonical paths stayed empty.
  */
 
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import { exists, readFileSafe, writeFileAtomic } from '../../utils/filesystem/fs.js';
 import { logger } from '../../utils/output/logger.js';
 import { BUILTIN_TARGETS } from '../../targets/catalog/builtin-targets.js';
@@ -41,13 +41,38 @@ const GLOBAL_INIT_TARGETS: BuiltinTargetId[] = BUILTIN_TARGETS.filter(
 ).map((target) => target.id as BuiltinTargetId);
 
 /**
- * Append entries to .gitignore if not already present.
+ * Append entries to .gitignore unless an existing entry already covers them.
+ *
+ * Coverage rules: an existing line covers a candidate when it is the same
+ * string (after trim) or when it is a broader pattern that ignores the
+ * candidate's parent directory (e.g. `.agentsmesh/` covers `.agentsmesh/.lock.tmp`
+ * and `.agentsmesh/packs/`). This prevents redundant child entries when users
+ * already gitignore the whole canonical tree.
  */
+function isCoveredByExisting(candidate: string, existing: ReadonlySet<string>): boolean {
+  if (existing.has(candidate)) return true;
+  // A broader entry like `.agentsmesh/` or `.agentsmesh` covers any descendant.
+  let parent = candidate.replace(/\/$/, '');
+  while (parent.includes('/')) {
+    parent = parent.slice(0, parent.lastIndexOf('/'));
+    if (parent === '') break;
+    if (existing.has(parent) || existing.has(`${parent}/`) || existing.has(`${parent}/**`)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 async function appendToGitignore(projectRoot: string): Promise<void> {
   const gitignorePath = join(projectRoot, '.gitignore');
   const current = (await readFileSafe(gitignorePath)) ?? '';
-  const lines = new Set(current.split('\n').map((s) => s.trim()));
-  const toAdd = GITIGNORE_ENTRIES.filter((e) => !lines.has(e));
+  const lines = new Set(
+    current
+      .split('\n')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0 && !s.startsWith('#')),
+  );
+  const toAdd = GITIGNORE_ENTRIES.filter((e) => !isCoveredByExisting(e, lines));
   if (toAdd.length === 0) return;
   const suffix = current.endsWith('\n') || current === '' ? '' : '\n';
   await writeFileAtomic(gitignorePath, current + suffix + toAdd.join('\n') + '\n');
@@ -92,7 +117,9 @@ export async function runInit(
         if (!importerFn) continue;
         const results = await importerFn(context.rootBase, scope);
         for (const r of results) {
-          logger.success(`  ${r.fromPath.replace(context.rootBase + '/', '')} → ${r.toPath}`);
+          const fromDisplay = relative(context.rootBase, r.fromPath).replaceAll('\\', '/');
+          const toDisplay = r.toPath.replaceAll('\\', '/');
+          logger.success(`  ${fromDisplay} → ${toDisplay}`);
         }
         totalImported += results.length;
       }

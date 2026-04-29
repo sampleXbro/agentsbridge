@@ -24,3 +24,17 @@ Goal: Improve the first-30-second impression for developers discovering AgentsMe
 - [ ] Update `package.json` `homepage` to docs site
 - [ ] Create `tasks/launch-issues/` with 5 markdown issue stubs
 - [ ] Run lint + typecheck + relevant tests
+
+---
+
+# Plan: Entire-library code review
+
+Goal: Review the AgentsMesh TypeScript library end to end for correctness, scalability, code quality, and contract drift.
+
+## Checklist
+
+- [x] Gather baseline context: lessons, architecture review, package scripts, repo status
+- [x] Run native gates and code-review helper scripts where they execute cleanly
+- [x] Review public API, CLI routing, config/canonical loading, generate/import, reference rewriting, install, plugins, target descriptors, and tests
+- [x] Verify candidate issues with exact source references and avoid reporting speculative items
+- [x] Deliver prioritized findings with residual test/verification notes

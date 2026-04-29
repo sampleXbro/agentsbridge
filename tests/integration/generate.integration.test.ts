@@ -776,7 +776,7 @@ extends:
 
   it('merges extends: github: remote uses pre-cached tarball (no network)', () => {
     const cacheDir = join(TEST_DIR, '.am-cache');
-    const cacheKey = 'org-repo-v1_0_0';
+    const cacheKey = 'org--repo--v1.0.0';
     const topDir = 'org-repo-v1.0.0';
     mkdirSync(join(cacheDir, cacheKey, topDir, '.agentsmesh', 'rules'), {
       recursive: true,

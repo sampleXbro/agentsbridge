@@ -99,6 +99,15 @@ export async function runGenerate(
     context.canonicalDir,
   );
   const allTargets = [...config.targets, ...(config.pluginTargets ?? [])];
+  if (targetFilter) {
+    const unknown = targetFilter.filter((t) => !allTargets.includes(t));
+    if (unknown.length > 0) {
+      throw new Error(
+        `Unknown target(s) in --targets: ${unknown.join(', ')}. ` +
+          `Available: ${allTargets.join(', ')}`,
+      );
+    }
+  }
   const activeTargets = targetFilter
     ? allTargets.filter((t) => targetFilter.includes(t))
     : allTargets;

@@ -12,7 +12,7 @@
  * runner for the declarable parts of their flow.
  */
 
-import { dirname, join } from 'node:path';
+import { dirname, join, posix } from 'node:path';
 import type { ImportResult, McpServer } from '../../core/types.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
 import { mkdirp, readFileSafe, writeFileAtomic } from '../../utils/filesystem/fs.js';
@@ -120,6 +120,12 @@ async function runDirectory(
   return results;
 }
 
+function resolveCanonicalFilePath(spec: ImportFeatureSpec): string {
+  const filename = spec.canonicalFilename!;
+  if (filename.includes('/') || filename.includes('\\')) return filename;
+  return posix.join(spec.canonicalDir, filename);
+}
+
 async function runFlatFile(
   spec: ImportFeatureSpec,
   sources: readonly string[],
@@ -129,14 +135,15 @@ async function runFlatFile(
   if (!spec.canonicalFilename) {
     throw new Error(`flatFile spec for ${spec.feature} must set canonicalFilename`);
   }
+  const canonicalPath = resolveCanonicalFilePath(spec);
   for (const rel of sources) {
     const srcPath = join(projectRoot, rel);
     const content = await readFileSafe(srcPath);
     if (content === null) continue;
-    const destPath = join(projectRoot, spec.canonicalFilename);
+    const destPath = join(projectRoot, canonicalPath);
     await mkdirp(dirname(destPath));
     await writeFileAtomic(destPath, content.trimEnd());
-    return [{ fromTool, fromPath: srcPath, toPath: spec.canonicalFilename, feature: spec.feature }];
+    return [{ fromTool, fromPath: srcPath, toPath: canonicalPath, feature: spec.feature }];
   }
   return [];
 }
@@ -188,18 +195,38 @@ async function runMcpJson(
   if (!spec.canonicalFilename) {
     throw new Error(`mcpJson spec for ${spec.feature} must set canonicalFilename`);
   }
+  const canonicalPath = resolveCanonicalFilePath(spec);
   for (const rel of sources) {
     const srcPath = join(projectRoot, rel);
     const content = await readFileSafe(srcPath);
     if (content === null) continue;
     const servers = parseMcpJson(content);
     if (Object.keys(servers).length === 0) return [];
-    const destPath = join(projectRoot, spec.canonicalFilename);
+    const destPath = join(projectRoot, canonicalPath);
     await mkdirp(dirname(destPath));
     await writeFileAtomic(destPath, JSON.stringify({ mcpServers: servers }, null, 2));
-    return [{ fromTool, fromPath: srcPath, toPath: spec.canonicalFilename, feature: spec.feature }];
+    return [{ fromTool, fromPath: srcPath, toPath: canonicalPath, feature: spec.feature }];
   }
   return [];
+}
+
+function dispatchSpec(
+  spec: ImportFeatureSpec,
+  sources: readonly string[],
+  projectRoot: string,
+  fromTool: string,
+  normalize: ContentNormalizer,
+): Promise<ImportResult[]> {
+  switch (spec.mode) {
+    case 'singleFile':
+      return runSingleFile(spec, sources, projectRoot, fromTool, normalize);
+    case 'directory':
+      return runDirectory(spec, sources, projectRoot, fromTool, normalize);
+    case 'flatFile':
+      return runFlatFile(spec, sources, projectRoot, fromTool);
+    case 'mcpJson':
+      return runMcpJson(spec, sources, projectRoot, fromTool);
+  }
 }
 
 async function runSpec(
@@ -211,18 +238,15 @@ async function runSpec(
 ): Promise<ImportResult[]> {
   const primary = resolveScopedSources(spec.source, scope);
   const fallback = resolveScopedSources(spec.fallbacks, scope);
-  const sources = primary.length > 0 ? primary : fallback;
-  if (sources.length === 0) return [];
-  switch (spec.mode) {
-    case 'singleFile':
-      return runSingleFile(spec, sources, projectRoot, fromTool, normalize);
-    case 'directory':
-      return runDirectory(spec, sources, projectRoot, fromTool, normalize);
-    case 'flatFile':
-      return runFlatFile(spec, sources, projectRoot, fromTool);
-    case 'mcpJson':
-      return runMcpJson(spec, sources, projectRoot, fromTool);
+  if (primary.length === 0 && fallback.length === 0) return [];
+  if (primary.length > 0) {
+    const results = await dispatchSpec(spec, primary, projectRoot, fromTool, normalize);
+    if (results.length > 0) return results;
   }
+  if (fallback.length > 0) {
+    return dispatchSpec(spec, fallback, projectRoot, fromTool, normalize);
+  }
+  return [];
 }
 
 function specsForFeature(

@@ -27,10 +27,8 @@ import type { ValidatedConfig } from '../../config/core/schema.js';
 import { rewriteFileLinks } from './link-rebaser.js';
 import { buildArtifactPathMap, buildOutputSourceMap } from './output-source-map.js';
 import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
-import {
-  getBuiltinTargetDefinition,
-  getTargetLayout,
-} from '../../targets/catalog/builtin-targets.js';
+import { getTargetLayout } from '../../targets/catalog/builtin-targets.js';
+import { getDescriptor } from '../../targets/catalog/registry.js';
 import { resolveRewriteFamilyId } from '../../targets/catalog/layout-outputs.js';
 import { ownerTargetIdForSharedPath } from '../../targets/catalog/shared-artifact-owner.js';
 
@@ -45,7 +43,7 @@ function findSharedArtifactOwner(
   if (!activeTargets) return null;
 
   for (const targetId of activeTargets) {
-    const descriptor = getBuiltinTargetDefinition(targetId);
+    const descriptor = getDescriptor(targetId);
     if (!descriptor?.sharedArtifacts) continue;
 
     for (const [pathPrefix, role] of Object.entries(descriptor.sharedArtifacts)) {

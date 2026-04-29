@@ -18,6 +18,8 @@ export {
   getAllDescriptors,
 } from '../targets/catalog/registry.js';
 
+export { runDescriptorImport } from '../targets/import/descriptor-import-runner.js';
+
 export type {
   TargetDescriptor,
   TargetLayout,

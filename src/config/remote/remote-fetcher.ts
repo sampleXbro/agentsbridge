@@ -32,12 +32,13 @@ export interface FetchRemoteOptions {
 }
 
 export function buildCacheKey(provider: string, identifier: string, ref: string): string {
-  const safe = (value: string): string => value.replace(/[^a-zA-Z0-9_-]/g, '_');
+  const safe = (value: string): string =>
+    value.replace(/[^a-zA-Z0-9_.-]/g, '_').replace(/^\.+/, '_');
   if (provider === 'github') {
     const [org, repo] = identifier.split('/', 2);
-    if (org && repo) return `${safe(org)}-${safe(repo)}-${safe(ref)}`;
+    if (org && repo) return `${safe(org)}--${safe(repo)}--${safe(ref)}`;
   }
-  return `${safe(provider)}_${safe(identifier)}_${safe(ref)}`;
+  return `${safe(provider)}__${safe(identifier)}__${safe(ref)}`;
 }
 
 /**

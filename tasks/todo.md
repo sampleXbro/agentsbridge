@@ -1,31 +1,23 @@
-# Plan: rulesync issue parity in agentsmesh
+# Plan: full test run and failure fixes
 
-Goal: ensure agentsmesh covers the behaviour described in 13 verified rulesync issues with regression tests, and close real gaps with TDD.
+Goal: run the complete test suite, identify any failing tests, and fix real regressions without disturbing unrelated worktree changes.
 
-## Verified rulesync issues (from GitHub MCP)
+## Checklist
 
-- #4 OpenHands CLI (open) — defer to plugin path; document
-- #900 link rewriting (open) — covered by link-rebaser; add e2e leak guard
-- #1515 Cursor manual rule cross-target inversion (closed) — verify Cursor `alwaysApply: false` no globs/desc → claude-code does not become always-on
-- #1317 hook scripts not copied (open) — only Copilot covers; gap for claude-code/cursor/windsurf/cline
-- #1418/1420/1422/1417/1547 permissions backlog — silent drop on most targets, no lint signal
-- #329 plugin marketplace (open) — partially covered by extends/install (Git)
-- #1403 npm-distributed skills (open) — defer; not implemented
-- #1239 Windows/CRLF drift (open, BUG) — paths normalized; LF normalization on write missing
-- #1247 global sync regression (closed) — verify global mode multi-target distribution
+- [x] Run `pnpm test` and capture the failure surface.
+- [x] Attribute failures to current code, existing dirty changes, or test flake using targeted reproduction.
+- [x] For real regressions, add or adjust failing coverage first where needed, then implement the smallest fix.
+- [x] Run targeted tests for fixed areas.
+- [x] Run full verification gates (`pnpm test`, plus lint/typecheck if code changes touch TypeScript).
+- [x] Run post-feature QA before marking complete.
 
-## Implementation order (TDD)
+## Previous Plan Snapshot
 
-1. **#900 link leak guard** — e2e test that grepping all generated artifacts across all 12 targets finds zero `.agentsmesh/` substring inside markdown link destinations
-2. **#1515 cross-target rule scope** — test that a Cursor manual rule (alwaysApply: false, no globs, no description) is either dropped or marked manual when emitted to claude-code
-3. **#1247 global multi-target** — sanity test that `--global` emits per-target paths for several targets in one run
-4. **#1239 CRLF byte-stability** — failing test that canonical `.md` content with CRLF writes byte-identical output to LF input; implement LF normalization in `writeFileAtomic` for text files
-5. **#1317 hook script projection** — failing tests that referenced hook script files are projected for claude-code/cursor/windsurf/cline; implement script-asset projection or add lint warning
-6. **#1418/1420/1422/1417/1547 permissions silent drop** — failing test that lint emits warning when canonical `permissions.yaml` is non-empty and target has `none` permissions support; implement diagnostic
-7. **Quality gates** — `pnpm typecheck`, `pnpm lint`, `pnpm test`; fix all gates
-8. **Update lessons** — record any mistakes encountered
+The prior working plan in this file concerned rulesync issue parity and is intentionally preserved here for context:
 
-## Deferred (architectural; need design discussion)
-
-- #4 OpenHands as built-in target (full add-agent-target workflow) — currently document plugin path only
-- #1403 npm-source for `agentsmesh install` (new source kind, registry resolution)
+- #900 link leak guard
+- #1515 cross-target rule scope
+- #1247 global multi-target
+- #1239 CRLF byte-stability
+- #1317 hook script projection
+- #1418/#1420/#1422/#1417/#1547 permissions silent drop diagnostics

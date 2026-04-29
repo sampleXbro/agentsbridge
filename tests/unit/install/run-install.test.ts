@@ -237,6 +237,18 @@ describe('runInstall', () => {
     ).rejects.toThrow('git is required for remote installs');
   });
 
+  it('throws when pathInRepo escapes the source root', async () => {
+    mockParseInstallSource.mockResolvedValue({
+      kind: 'local',
+      pathInRepo: '../../outside',
+      localRoot: '/upstream',
+    });
+
+    await expect(runInstall({ force: true }, ['../upstream'], '/project')).rejects.toThrow(
+      /escapes the source root/,
+    );
+  });
+
   it('throws when the requested install path does not exist', async () => {
     mockParseInstallSource.mockResolvedValue({
       kind: 'local',

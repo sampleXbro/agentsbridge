@@ -2,7 +2,7 @@
  * agentsmesh install orchestration.
  */
 
-import { join } from 'node:path';
+import { join, normalize } from 'node:path';
 import { loadScopedConfig } from '../../config/core/scope.js';
 import { exists } from '../../utils/filesystem/fs.js';
 import { resolveInstallResolvedPath } from './run-install-resolve.js';
@@ -82,12 +82,15 @@ export async function runInstall(
     sourceArg,
   );
   const pathInRepo = parsed.pathInRepo.replace(/^\/+|\/+$/g, '');
-  const contentRoot = pathInRepo ? join(resolvedPath, pathInRepo) : resolvedPath;
-  if (pathInRepo && !contentRoot.startsWith(resolvedPath + '/') && contentRoot !== resolvedPath) {
-    throw new Error(
-      `Install --path "${parsed.pathInRepo}" escapes the source root. Path must stay within the source.`,
-    );
+  if (pathInRepo) {
+    const normalized = normalize(pathInRepo).replace(/\\/g, '/');
+    if (normalized === '..' || normalized.startsWith('../')) {
+      throw new Error(
+        `Install --path "${parsed.pathInRepo}" escapes the source root. Path must stay within the source.`,
+      );
+    }
   }
+  const contentRoot = pathInRepo ? join(resolvedPath, pathInRepo) : resolvedPath;
   if (!(await exists(contentRoot))) {
     throw new Error(`Install path does not exist: ${contentRoot}`);
   }

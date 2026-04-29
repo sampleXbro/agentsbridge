@@ -36,9 +36,8 @@ async function importPluginModule(
     // Use fileURLToPath (not URL.pathname) so Windows drive-prefixed paths
     // like `file:///C:/...` round-trip correctly — URL.pathname leaves the
     // leading slash before `C:` which is not a valid filesystem path.
-    const resolved = source.startsWith('file:')
-      ? fileURLToPath(source)
-      : resolve(projectRoot, source);
+    const raw = source.startsWith('file:') ? fileURLToPath(source) : source;
+    const resolved = resolve(projectRoot, raw);
     importTarget = pathToFileURL(resolved).href;
   } else {
     // npm package: Node resolves from the consuming project's node_modules

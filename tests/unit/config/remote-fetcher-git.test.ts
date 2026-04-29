@@ -85,7 +85,7 @@ describe('fetchRemoteExtend generic git', () => {
 
     expect(result.version).toMatch(/^[0-9a-f]{40}$/);
     expect(result.resolvedPath).not.toBe(repoDir);
-    expect(result.resolvedPath).toContain('git_file');
+    expect(result.resolvedPath).toContain('git__file');
   });
 
   it('reuses the cached clone when refresh is not requested', async () => {

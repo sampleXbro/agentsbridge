@@ -207,6 +207,16 @@ describe('materializePack', () => {
     expect(existsSync(join(packsDir, 'test-pack'))).toBe(true);
   });
 
+  it('rejects pack names with path separators', async () => {
+    const canonical = makeCanonical();
+    await expect(
+      materializePack(packsDir, '../../escape', canonical, { ...BASE_META, features: ['rules'] }),
+    ).rejects.toThrow(/Invalid pack name/);
+    await expect(
+      materializePack(packsDir, 'foo/bar', canonical, { ...BASE_META, features: ['rules'] }),
+    ).rejects.toThrow(/Invalid pack name/);
+  });
+
   it('does not create subdirs for features with no resources', async () => {
     const rulePath = writeRule('x', 'body');
     const canonical = makeCanonical({

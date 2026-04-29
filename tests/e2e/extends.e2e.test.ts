@@ -56,12 +56,12 @@ describe('extends and local overrides', () => {
     dir = createTestProject();
     cacheDir = createTestProject();
     rmSync(cacheDir, { recursive: true, force: true });
-    mkdirSync(join(cacheDir, 'org-repo-v1_0_0', 'org-repo-v1.0.0', '.agentsmesh', 'rules'), {
+    mkdirSync(join(cacheDir, 'org--repo--v1.0.0', 'org-repo-v1.0.0', '.agentsmesh', 'rules'), {
       recursive: true,
     });
     mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(
-      join(cacheDir, 'org-repo-v1_0_0', 'org-repo-v1.0.0', '.agentsmesh', 'rules', '_root.md'),
+      join(cacheDir, 'org--repo--v1.0.0', 'org-repo-v1.0.0', '.agentsmesh', 'rules', '_root.md'),
       '---\nroot: true\n---\n# Cached remote\n',
     );
     writeFileSync(
@@ -88,11 +88,11 @@ describe('extends and local overrides', () => {
       cacheDir = createTestProject();
       rmSync(cacheDir, { recursive: true, force: true });
 
-      mkdirSync(join(cacheDir, 'org-repo-v1_0_0', 'org-repo-v1.0.0', '.agentsmesh', 'rules'), {
+      mkdirSync(join(cacheDir, 'org--repo--v1.0.0', 'org-repo-v1.0.0', '.agentsmesh', 'rules'), {
         recursive: true,
       });
       writeFileSync(
-        join(cacheDir, 'org-repo-v1_0_0', 'org-repo-v1.0.0', '.agentsmesh', 'rules', '_root.md'),
+        join(cacheDir, 'org--repo--v1.0.0', 'org-repo-v1.0.0', '.agentsmesh', 'rules', '_root.md'),
         '---\nroot: true\n---\n# Stale remote\n',
       );
 
@@ -146,7 +146,14 @@ globalThis.fetch = async (input, init) => {
       );
       expect(
         readFileSync(
-          join(cacheDir, 'org-repo-v1_0_0', 'org-repo-v1.0.0', '.agentsmesh', 'rules', '_root.md'),
+          join(
+            cacheDir,
+            'org--repo--v1.0.0',
+            'org-repo-v1.0.0',
+            '.agentsmesh',
+            'rules',
+            '_root.md',
+          ),
           'utf-8',
         ),
       ).toContain('Refreshed remote');

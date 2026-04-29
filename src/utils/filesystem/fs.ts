@@ -113,6 +113,13 @@ export async function readFileSafe(path: string): Promise<string | null> {
 /**
  * Write content atomically (write to .tmp, then rename).
  * Creates parent directories.
+ *
+ * Symlink safety: refuses to follow a pre-existing symlink at `path`. Without
+ * this guard, an attacker with write access to the parent directory could swap
+ * `path` for a symlink between the lstat check and the rename, redirecting the
+ * write to an arbitrary destination (e.g. `~/.ssh/authorized_keys`). On detect,
+ * the existing symlink is unlinked so the new file lands at the intended path.
+ *
  * @param path - Target file path
  * @param content - Content to write
  */
@@ -128,6 +135,14 @@ export async function writeFileAtomic(path: string, content: string): Promise<vo
         { errnoCode: 'EISDIR' },
       );
     }
+    if (info.isSymbolicLink()) {
+      // Drop the symlink so the rename below lands at `path` itself, not at the
+      // link target. This closes the TOCTOU window where a symlink could be
+      // swapped in between guard and rename to redirect writes outside the tree.
+      await unlink(path).catch((e: unknown) => {
+        if ((e as ErrnoLike).code !== 'ENOENT') throw e;
+      });
+    }
   } catch (err) {
     if (err instanceof FileSystemError) throw err;
     const e = err as ErrnoLike;
@@ -136,7 +151,15 @@ export async function writeFileAtomic(path: string, content: string): Promise<vo
   const tmpPath = `${path}.tmp`;
   const payload = shouldNormalizeLineEndings(path) ? normalizeLineEndings(content) : content;
   try {
-    await writeFile(tmpPath, payload, 'utf-8');
+    try {
+      const tmpInfo = await lstat(tmpPath);
+      if (tmpInfo.isSymbolicLink()) {
+        await unlink(tmpPath);
+      }
+    } catch (tmpErr) {
+      if ((tmpErr as ErrnoLike).code !== 'ENOENT') throw tmpErr;
+    }
+    await writeFile(tmpPath, payload, { encoding: 'utf-8', flag: 'w' });
     await rename(tmpPath, path);
   } catch (err) {
     await rm(tmpPath, { force: true }).catch(() => {});

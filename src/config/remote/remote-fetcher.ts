@@ -4,6 +4,7 @@
 
 import { join } from 'node:path';
 import { homedir } from 'node:os';
+import { createHash } from 'node:crypto';
 import { fetchGitRemoteExtend } from './git-remote.js';
 import { fetchGithubRemoteExtend, resolveLatestTag } from './github-remote.js';
 import {
@@ -31,13 +32,27 @@ export interface FetchRemoteOptions {
   allowOfflineFallback?: boolean;
 }
 
+const MAX_CACHE_KEY_LENGTH = 80;
+
 export function buildCacheKey(provider: string, identifier: string, ref: string): string {
-  const safe = (value: string): string => value.replace(/[^a-zA-Z0-9_-]/g, '_');
+  const safe = (value: string): string =>
+    value.replace(/[^a-zA-Z0-9_.-]/g, '_').replace(/^\.+/, '_');
+  let key: string;
   if (provider === 'github') {
     const [org, repo] = identifier.split('/', 2);
-    if (org && repo) return `${safe(org)}-${safe(repo)}-${safe(ref)}`;
+    if (org && repo) {
+      key = `${safe(org)}--${safe(repo)}--${safe(ref)}`;
+    } else {
+      key = `${safe(provider)}__${safe(identifier)}__${safe(ref)}`;
+    }
+  } else {
+    key = `${safe(provider)}__${safe(identifier)}__${safe(ref)}`;
   }
-  return `${safe(provider)}_${safe(identifier)}_${safe(ref)}`;
+  if (key.length > MAX_CACHE_KEY_LENGTH) {
+    const hash = createHash('sha256').update(key).digest('hex').slice(0, 16);
+    key = `${key.slice(0, MAX_CACHE_KEY_LENGTH - 18)}--${hash}`;
+  }
+  return key;
 }
 
 /**

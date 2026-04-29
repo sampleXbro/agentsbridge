@@ -55,9 +55,8 @@ export async function runLint(
   const projectFiles = scope === 'global' ? [] : await getProjectFiles(projectRoot);
 
   for (const target of targets) {
-    const descriptor = isBuiltinTargetId(target)
-      ? getTargetCatalogEntry(target)
-      : getDescriptor(target);
+    const fullDesc = getDescriptor(target);
+    const descriptor = isBuiltinTargetId(target) ? getTargetCatalogEntry(target) : fullDesc;
 
     if (descriptor?.capabilities) {
       diagnostics.push(
@@ -71,23 +70,21 @@ export async function runLint(
     }
 
     if (hasHooks) {
-      const fullDescForHooks = getDescriptor(target);
       diagnostics.push(
         ...lintHookScriptReferences({
           target,
           canonical,
-          hasScriptProjection: fullDescForHooks?.postProcessHookOutputs !== undefined,
+          hasScriptProjection: fullDesc?.postProcessHookOutputs !== undefined,
         }),
       );
     }
 
     if (hasRules) {
-      const fullDescForRules = getDescriptor(target);
       diagnostics.push(
         ...lintRuleScopeInversion({
           target,
           canonical,
-          preservesManualActivation: fullDescForRules?.preservesManualActivation === true,
+          preservesManualActivation: fullDesc?.preservesManualActivation === true,
         }),
       );
     }
@@ -95,8 +92,6 @@ export async function runLint(
     if (hasRules && descriptor?.lintRules) {
       diagnostics.push(...descriptor.lintRules(canonical, projectRoot, projectFiles, { scope }));
     }
-    // generators.lint: optional per-target diagnostic hook defined on TargetGenerators
-    const fullDesc = getDescriptor(target);
     if (fullDesc?.generators.lint) {
       diagnostics.push(...fullDesc.generators.lint(canonical));
     }

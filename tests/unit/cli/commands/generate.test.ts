@@ -804,9 +804,9 @@ description: "Root"
 # Root
 `,
     );
-    await runGenerate({ targets: 'nonexistent-target' }, TEST_DIR);
-    expect(existsSync(join(TEST_DIR, '.claude', 'CLAUDE.md'))).toBe(false);
-    expect(existsSync(join(TEST_DIR, '.cursor', 'rules', '_root.mdc'))).toBe(false);
+    await expect(runGenerate({ targets: 'nonexistent-target' }, TEST_DIR)).rejects.toThrow(
+      /Unknown target\(s\) in --targets/,
+    );
   });
 
   it('writes lock with extend checksums when extends present', async () => {

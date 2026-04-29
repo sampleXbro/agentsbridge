@@ -414,3 +414,25 @@ describe('runDescriptorImport — scope variance (Gap #3 absorption)', () => {
     ]);
   });
 });
+
+describe('runDescriptorImport — bare canonicalFilename joined with canonicalDir', () => {
+  it('flatFile with bare filename resolves via canonicalDir', async () => {
+    writeFile('.testignore', 'dist\n');
+    const descriptor = descriptorWith({
+      importer: {
+        ignore: {
+          feature: 'ignore',
+          mode: 'flatFile',
+          source: { project: ['.testignore'] },
+          canonicalDir: '.agentsmesh',
+          canonicalFilename: 'ignore',
+        },
+      },
+    });
+    const results = await runDescriptorImport(descriptor, projectRoot, 'project', {
+      normalize: (c) => c,
+    });
+    expect(results[0]?.toPath).toBe('.agentsmesh/ignore');
+    expect(read('.agentsmesh/ignore')).toBe('dist');
+  });
+});

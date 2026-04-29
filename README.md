@@ -222,7 +222,7 @@ Plugins have full parity with built-in targets: project + global layouts, featur
 
 - **`agentsmesh check`** — CI gate that exits 1 if generated files drifted from the lock.
 - **`agentsmesh diff`** — preview what the next `generate` would change.
-- **`agentsmesh lint`** — validate canonical config against target-specific constraints.
+- **`agentsmesh lint`** — validate canonical config against target-specific constraints; also surfaces cross-target warnings (`silent-drop-guard`, `hook-script-references`, `rule-scope-inversion`) for content a target would silently drop or mishandle. [Lint reference →](https://samplexbro.github.io/agentsmesh/cli/lint/)
 - **`agentsmesh watch`** — regenerate target files on save during local editing.
 - **`agentsmesh merge`** — recover from three-way `.lock` conflicts after `git merge`.
 - **Collaboration config** — `lock_features` and `strategy` prevent accidental overrides.

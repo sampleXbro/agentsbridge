@@ -72,6 +72,16 @@ agentsmesh lint --global --targets claude-code
 - Required fields (`matcher`, `type`)
 - Valid `type` values (`command`, `prompt`)
 
+### Cross-target diagnostics (warnings)
+
+These checks run against every configured target and are emitted as warnings — they do not fail `lint`'s exit code, but they surface contract gaps that would silently bite at generation time.
+
+- **`silent-drop-guard`** — flags canonical content (rules, commands, agents, skills, hooks, permissions, ignore) that a target would drop without trace because its capability for that feature is `none` (or `partial` in cases where the dropped subset is detectable). Lets you see what each target will actually emit before running generate.
+- **`hook-script-references`** — when a hook command references a script path (e.g. `./scripts/pre-commit.sh`), warns for every target that does not copy hook scripts into its generated tree (currently every target except Copilot). The script must already exist relative to the hook execution directory or the generated config will fail at runtime.
+- **`rule-scope-inversion`** — flags canonical rules whose activation scope (`globs:` / `alwaysApply:`) contradicts a target whose projection rules force always-on (or vice versa), so you don't end up with a rule that silently always activates on a target that should respect manual scoping (e.g. Cursor `manual` rules).
+
+These run automatically. Existing configs may surface new warnings on first lint after upgrading — particularly `hook-script-references` for any non-Copilot target whose hook commands reference scripts.
+
 ## Exit codes
 
 | Code | Meaning |

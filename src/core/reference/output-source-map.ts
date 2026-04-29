@@ -8,7 +8,7 @@ import { applyCopilotInstructionArtifactRefs } from '../../targets/catalog/copil
 import { extraRuleOutputPaths } from '../../targets/catalog/rule-output-extra-paths.js';
 import { getTargetLayout } from '../../targets/catalog/builtin-targets.js';
 
-function addGlobalSkillMirrorSourceEntry(
+function addSkillMirrorSourceEntry(
   target: string,
   scope: TargetLayoutScope,
   primaryOutputPath: string,
@@ -16,7 +16,6 @@ function addGlobalSkillMirrorSourceEntry(
   sourceMap: Map<string, string>,
   activeTargets: readonly string[] | undefined,
 ): void {
-  if (scope !== 'global') return;
   const layout = getTargetLayout(target, scope);
   if (!layout?.mirrorGlobalPath) return;
   const raw = layout.mirrorGlobalPath(primaryOutputPath, activeTargets ?? []);
@@ -97,7 +96,7 @@ export function buildOutputSourceMap(
     const skillTargetPath = refs.get(canonicalSkillPath(skill));
     if (skillTargetPath) {
       sourceMap.set(skillTargetPath, skill.source);
-      addGlobalSkillMirrorSourceEntry(
+      addSkillMirrorSourceEntry(
         target,
         scope,
         skillTargetPath,
@@ -111,7 +110,7 @@ export function buildOutputSourceMap(
       const targetPath = refs.get(canonicalPath);
       if (targetPath) {
         sourceMap.set(targetPath, file.absolutePath);
-        addGlobalSkillMirrorSourceEntry(
+        addSkillMirrorSourceEntry(
           target,
           scope,
           targetPath,

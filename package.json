@@ -70,7 +70,7 @@
     "publint": "publint",
     "attw": "attw --pack . --profile esm-only",
     "consumer-smoke": "./scripts/consumer-smoke.sh",
-    "install-global": "rm -f agentsmesh-*.tgz && pnpm build && pnpm pack && export PNPM_HOME=${PNPM_HOME:-$HOME/Library/pnpm} && export PATH=$PNPM_HOME:$PATH && pnpm add -g $(pwd)/agentsmesh-$(node -p 'require(\"./package.json\").version').tgz"
+    "install-global": "rm -f agentsmesh-*.tgz && pnpm build && pnpm pack && export PNPM_HOME=${PNPM_HOME:-$HOME/Library/pnpm} && export PATH=$PNPM_HOME:$PATH && (pnpm remove -g agentsmesh 2>/dev/null || true) && pnpm add -g $(pwd)/agentsmesh-*.tgz"
   },
   "keywords": [
     "ai-rules",

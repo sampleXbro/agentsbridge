@@ -1,31 +1,26 @@
-# Plan: rulesync issue parity in agentsmesh
+# Plan: Launch readiness improvements (README, package.json, launch issues)
 
-Goal: ensure agentsmesh covers the behaviour described in 13 verified rulesync issues with regression tests, and close real gaps with TDD.
+Goal: Improve the first-30-second impression for developers discovering AgentsMesh, without inventing unsupported commands or flags.
 
-## Verified rulesync issues (from GitHub MCP)
+## CLI audit (verified against `src/cli/`)
 
-- #4 OpenHands CLI (open) — defer to plugin path; document
-- #900 link rewriting (open) — covered by link-rebaser; add e2e leak guard
-- #1515 Cursor manual rule cross-target inversion (closed) — verify Cursor `alwaysApply: false` no globs/desc → claude-code does not become always-on
-- #1317 hook scripts not copied (open) — only Copilot covers; gap for claude-code/cursor/windsurf/cline
-- #1418/1420/1422/1417/1547 permissions backlog — silent drop on most targets, no lint signal
-- #329 plugin marketplace (open) — partially covered by extends/install (Git)
-- #1403 npm-distributed skills (open) — defer; not implemented
-- #1239 Windows/CRLF drift (open, BUG) — paths normalized; LF normalization on write missing
-- #1247 global sync regression (closed) — verify global mode multi-target distribution
+- Top-level commands: `init`, `generate`, `import`, `diff`, `lint`, `watch`, `check`, `merge`, `matrix`, `install`, `plugin`, `target`
+- Bin aliases: `agentsmesh`, `amsh`
+- Verified flags: `--global`, `--targets <csv>`, `--check`, `--dry-run`, `--force`, `--from <target>`, `--yes`
+- `init`, `generate`, `check`, `diff`, `import` all real and behave as the prompt expects
+- `npx agentsmesh ...` and `pnpm dlx agentsmesh ...` both supported via the npm `bin` field
 
-## Implementation order (TDD)
+## Checklist
 
-1. **#900 link leak guard** — e2e test that grepping all generated artifacts across all 12 targets finds zero `.agentsmesh/` substring inside markdown link destinations
-2. **#1515 cross-target rule scope** — test that a Cursor manual rule (alwaysApply: false, no globs, no description) is either dropped or marked manual when emitted to claude-code
-3. **#1247 global multi-target** — sanity test that `--global` emits per-target paths for several targets in one run
-4. **#1239 CRLF byte-stability** — failing test that canonical `.md` content with CRLF writes byte-identical output to LF input; implement LF normalization in `writeFileAtomic` for text files
-5. **#1317 hook script projection** — failing tests that referenced hook script files are projected for claude-code/cursor/windsurf/cline; implement script-asset projection or add lint warning
-6. **#1418/1420/1422/1417/1547 permissions silent drop** — failing test that lint emits warning when canonical `permissions.yaml` is non-empty and target has `none` permissions support; implement diagnostic
-7. **Quality gates** — `pnpm typecheck`, `pnpm lint`, `pnpm test`; fix all gates
-8. **Update lessons** — record any mistakes encountered
-
-## Deferred (architectural; need design discussion)
-
-- #4 OpenHands as built-in target (full add-agent-target workflow) — currently document plugin path only
-- #1403 npm-source for `agentsmesh install` (new source kind, registry resolution)
+- [x] Audit CLI commands and flags
+- [ ] Restructure `README.md`:
+  - [ ] Problem-first opening (no hype)
+  - [ ] Before / After section near the top
+  - [ ] 60-second quickstart (init → generate → check)
+  - [ ] Safe adoption flow for existing repos (import → diff → generate → check)
+  - [ ] "Why not just AGENTS.md?" section
+  - [ ] Terminal demo section with TODO placeholder for GIF
+  - [ ] Preserve high-demand features, matrix, programmatic API, contributing
+- [ ] Update `package.json` `homepage` to docs site
+- [ ] Create `tasks/launch-issues/` with 5 markdown issue stubs
+- [ ] Run lint + typecheck + relevant tests

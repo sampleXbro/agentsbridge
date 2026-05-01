@@ -16,6 +16,7 @@ import { dirname, join, posix } from 'node:path';
 import type { ImportResult, McpServer } from '../../core/types.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
 import { mkdirp, readFileSafe, writeFileAtomic } from '../../utils/filesystem/fs.js';
+import { writeMcpWithMerge } from './mcp-merge.js';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
 import { toStringArray, toStringRecord } from './shared-import-helpers.js';
 import { serializeImportedRuleWithFallback } from './import-metadata.js';
@@ -200,11 +201,9 @@ async function runMcpJson(
     const srcPath = join(projectRoot, rel);
     const content = await readFileSafe(srcPath);
     if (content === null) continue;
-    const servers = parseMcpJson(content);
-    if (Object.keys(servers).length === 0) return [];
-    const destPath = join(projectRoot, canonicalPath);
-    await mkdirp(dirname(destPath));
-    await writeFileAtomic(destPath, JSON.stringify({ mcpServers: servers }, null, 2));
+    const imported = parseMcpJson(content);
+    if (Object.keys(imported).length === 0) return [];
+    await writeMcpWithMerge(projectRoot, canonicalPath, imported);
     return [{ fromTool, fromPath: srcPath, toPath: canonicalPath, feature: spec.feature }];
   }
   return [];

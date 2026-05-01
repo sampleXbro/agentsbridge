@@ -6,7 +6,8 @@ import { join } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
 import type { ImportResult } from '../../core/types.js';
 import type { McpServer } from '../../core/types.js';
-import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/filesystem/fs.js';
+import { readFileSafe } from '../../utils/filesystem/fs.js';
+import { writeMcpWithMerge } from '../import/mcp-merge.js';
 import { CODEX_TARGET, CODEX_CONFIG_TOML, CODEX_CANONICAL_MCP } from './constants.js';
 
 export function mapTomlServerToCanonical(raw: unknown): McpServer | null {
@@ -68,11 +69,7 @@ export async function importMcp(projectRoot: string, results: ImportResult[]): P
 
   if (Object.keys(mcpServers).length === 0) return;
 
-  await mkdirp(join(projectRoot, '.agentsmesh'));
-  await writeFileAtomic(
-    join(projectRoot, CODEX_CANONICAL_MCP),
-    JSON.stringify({ mcpServers }, null, 2),
-  );
+  await writeMcpWithMerge(projectRoot, CODEX_CANONICAL_MCP, mcpServers);
   results.push({
     fromTool: CODEX_TARGET,
     fromPath: configPath,

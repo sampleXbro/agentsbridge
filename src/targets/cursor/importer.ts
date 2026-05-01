@@ -18,12 +18,14 @@
  * (`importFromCursorGlobalExports`) — entirely different on-disk layout.
  */
 
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
+import type { McpServer } from '../../core/types.js';
 import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
-import { mkdirp, readFileSafe, writeFileAtomic } from '../../utils/filesystem/fs.js';
+import { readFileSafe } from '../../utils/filesystem/fs.js';
 import { runDescriptorImport } from '../import/descriptor-import-runner.js';
+import { writeMcpWithMerge } from '../import/mcp-merge.js';
 import { importCursorRules } from './importer-rules.js';
 import { importIgnore, importSettings } from './settings-helpers.js';
 import { importSkills } from './skills-adapter.js';
@@ -42,9 +44,8 @@ async function importMcp(projectRoot: string, results: ImportResult[]): Promise<
     return;
   }
   if (!parsed || typeof parsed !== 'object' || !('mcpServers' in (parsed as object))) return;
-  const destPath = join(projectRoot, CURSOR_CANONICAL_MCP);
-  await mkdirp(dirname(destPath));
-  await writeFileAtomic(destPath, content);
+  const servers = (parsed as Record<string, unknown>).mcpServers as Record<string, McpServer>;
+  await writeMcpWithMerge(projectRoot, CURSOR_CANONICAL_MCP, servers);
   results.push({
     fromTool: 'cursor',
     fromPath: mcpPath,

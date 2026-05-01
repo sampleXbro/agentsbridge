@@ -27,6 +27,19 @@ Goal: Improve the first-30-second impression for developers discovering AgentsMe
 
 ---
 
+# Plan: Logo Asset Refresh
+
+Goal: Create a polished AgentsMesh logo family from one deterministic vector source, with a few practical rendered sizes for docs, social previews, and package branding.
+
+## Checklist
+
+- [x] Inspect existing logo/favicon usage
+- [x] Replace website logo SVGs and favicon with the refreshed mark
+- [x] Add rendered PNG sizes from the SVG source
+- [x] Verify asset dimensions and render output
+
+---
+
 # Plan: Entire-library code review
 
 Goal: Review the AgentsMesh TypeScript library end to end for correctness, scalability, code quality, and contract drift.

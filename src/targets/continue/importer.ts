@@ -2,9 +2,10 @@ import { extname, join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import type { ImportResult, McpServer } from '../../core/types.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
-import { readDirRecursive, readFileSafe, writeFileAtomic } from '../../utils/filesystem/fs.js';
+import { readDirRecursive, readFileSafe } from '../../utils/filesystem/fs.js';
 import { importEmbeddedSkills } from '../import/embedded-skill.js';
 import { runDescriptorImport } from '../import/descriptor-import-runner.js';
+import { writeMcpWithMerge } from '../import/mcp-merge.js';
 import { toStringArray, toStringRecord } from '../import/shared-import-helpers.js';
 import {
   CONTINUE_TARGET,
@@ -55,10 +56,7 @@ async function importMcp(projectRoot: string, results: ImportResult[]): Promise<
     importedFrom.push(srcPath);
   }
   if (Object.keys(merged).length === 0) return;
-  await writeFileAtomic(
-    join(projectRoot, CONTINUE_CANONICAL_MCP),
-    JSON.stringify({ mcpServers: merged }, null, 2),
-  );
+  await writeMcpWithMerge(projectRoot, CONTINUE_CANONICAL_MCP, merged);
   for (const fromPath of importedFrom) {
     results.push({
       fromTool: CONTINUE_TARGET,

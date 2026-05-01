@@ -316,6 +316,48 @@ describe('runDescriptorImport — mcpJson mode', () => {
     expect(written.mcpServers.remote!.type).toBe('http');
   });
 
+  it('merges imported servers with existing canonical mcp.json', async () => {
+    writeFile(
+      '.agentsmesh/mcp.json',
+      JSON.stringify({
+        mcpServers: {
+          existing: { type: 'stdio', command: 'keep-me', args: [], env: {} },
+          shared: { type: 'stdio', command: 'old-cmd', args: [], env: {} },
+        },
+      }),
+    );
+    writeFile(
+      '.test/mcp.json',
+      JSON.stringify({
+        mcpServers: {
+          shared: { command: 'new-cmd', args: ['--flag'] },
+          added: { url: 'https://example.com/new' },
+        },
+      }),
+    );
+    const descriptor = descriptorWith({
+      importer: {
+        mcp: {
+          feature: 'mcp',
+          mode: 'mcpJson',
+          source: { project: ['.test/mcp.json'] },
+          canonicalDir: '.agentsmesh',
+          canonicalFilename: '.agentsmesh/mcp.json',
+        },
+      },
+    });
+    await runDescriptorImport(descriptor, projectRoot, 'project', {
+      normalize: (c) => c,
+    });
+    const written = JSON.parse(read('.agentsmesh/mcp.json')) as {
+      mcpServers: Record<string, { type: string; command?: string }>;
+    };
+    expect(Object.keys(written.mcpServers).sort()).toEqual(['added', 'existing', 'shared']);
+    expect(written.mcpServers.existing!.command).toBe('keep-me');
+    expect(written.mcpServers.shared!.command).toBe('new-cmd');
+    expect(written.mcpServers.added!.type).toBe('http');
+  });
+
   it('writes nothing when the JSON has no valid servers', async () => {
     writeFile('.test/mcp.json', '{}');
     const descriptor = descriptorWith({

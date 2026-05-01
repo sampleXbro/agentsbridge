@@ -1,11 +1,8 @@
 /**
  * Sequential `agentsmesh import --from <target>` behavior across targets.
  *
- * Import does not deep-merge native configs: each run writes canonical files with
- * `writeFileAtomic`. Overlapping canonical paths are last-import-wins; disjoint paths accumulate.
- *
- * This matches `mergeCanonicalFiles` semantics for named items (overlay wins) but differs from
- * extends-merge for MCP (import replaces the whole `.agentsmesh/mcp.json` file).
+ * Overlapping canonical paths are last-import-wins; disjoint paths accumulate.
+ * MCP servers are merged by name across sequential imports (imported wins on conflict).
  *
  * Global scope (`import --global`): `resolveScopeContext` uses `homedir()` for both `rootBase`
  * and canonical output (`~/.agentsmesh`), regardless of cwd. Project scope writes under `<cwd>/.agentsmesh`.
@@ -122,7 +119,7 @@ describe('import: multi-target sequential merge (integration)', () => {
     );
   });
 
-  it('last import replaces the whole .agentsmesh/mcp.json (no server-level merge across imports)', () => {
+  it('sequential imports merge MCP servers by name (imported wins on conflict)', () => {
     writeFileSync(
       join(TEST_DIR, '.mcp.json'),
       JSON.stringify({
@@ -146,7 +143,7 @@ describe('import: multi-target sequential merge (integration)', () => {
     const after = JSON.parse(readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf-8')) as {
       mcpServers: Record<string, unknown>;
     };
-    expect(Object.keys(after.mcpServers).sort()).toEqual(['fromCursor']);
+    expect(Object.keys(after.mcpServers).sort()).toEqual(['fromClaude', 'fromCursor']);
 
     rmSync(join(TEST_DIR, '.agentsmesh'), { recursive: true, force: true });
 
@@ -155,7 +152,7 @@ describe('import: multi-target sequential merge (integration)', () => {
     const after2 = JSON.parse(readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf-8')) as {
       mcpServers: Record<string, unknown>;
     };
-    expect(Object.keys(after2.mcpServers).sort()).toEqual(['fromClaude']);
+    expect(Object.keys(after2.mcpServers).sort()).toEqual(['fromClaude', 'fromCursor']);
   });
 
   it('last import wins for .agentsmesh/ignore when both targets contribute ignore patterns', () => {

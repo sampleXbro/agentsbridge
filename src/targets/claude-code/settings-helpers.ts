@@ -4,8 +4,10 @@
 
 import { join, dirname } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
+import type { McpServer } from '../../core/types.js';
 import { getHookCommand, getHookPrompt, hasHookText } from '../../core/hook-command.js';
 import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/filesystem/fs.js';
+import { writeMcpWithMerge } from '../import/mcp-merge.js';
 import { stringify as yamlStringify } from 'yaml';
 import {
   CLAUDE_GLOBAL_MCP_JSON,
@@ -101,10 +103,8 @@ export async function importMcpJson(
   }
 
   if (parsed.mcpServers && typeof parsed.mcpServers === 'object') {
-    const mcpContent = JSON.stringify({ mcpServers: parsed.mcpServers }, null, 2);
-    const destPath = join(projectRoot, CLAUDE_CANONICAL_MCP);
-    await mkdirp(dirname(destPath));
-    await writeFileAtomic(destPath, mcpContent);
+    const servers = parsed.mcpServers as Record<string, McpServer>;
+    await writeMcpWithMerge(projectRoot, CLAUDE_CANONICAL_MCP, servers);
     results.push({
       fromTool: 'claude-code',
       fromPath: mcpPath,
@@ -131,10 +131,8 @@ export async function importSettings(projectRoot: string, results: ImportResult[
 
   const alreadyImportedMcp = results.some((r) => r.feature === 'mcp');
   if (!alreadyImportedMcp && settings.mcpServers && typeof settings.mcpServers === 'object') {
-    const mcpContent = JSON.stringify({ mcpServers: settings.mcpServers }, null, 2);
-    const destPath = join(projectRoot, CLAUDE_CANONICAL_MCP);
-    await mkdirp(dirname(destPath));
-    await writeFileAtomic(destPath, mcpContent);
+    const mcpServers = settings.mcpServers as Record<string, McpServer>;
+    await writeMcpWithMerge(projectRoot, CLAUDE_CANONICAL_MCP, mcpServers);
     results.push({
       fromTool: 'claude-code',
       fromPath: settingsPath,

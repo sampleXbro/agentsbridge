@@ -18,6 +18,8 @@ describe('targetHintFromNativePath', () => {
     expect(targetHintFromNativePath('.github/prompts')).toBe('copilot');
     expect(targetHintFromNativePath('.gemini/commands')).toBe('gemini-cli');
     expect(targetHintFromNativePath('.kiro/steering/typescript.md')).toBe('kiro');
+    expect(targetHintFromNativePath('.kilo/agents/reviewer.md')).toBe('kilo-code');
+    expect(targetHintFromNativePath('.kilocode/workflows/review.md')).toBe('kilo-code');
     expect(targetHintFromNativePath('.claude/rules/ts')).toBe('claude-code');
   });
 
@@ -29,6 +31,7 @@ describe('targetHintFromNativePath', () => {
   it('handles exact matches', () => {
     expect(targetHintFromNativePath('.github/copilot-instructions.md')).toBe('copilot');
     expect(targetHintFromNativePath('.codex')).toBe('codex-cli');
+    expect(targetHintFromNativePath('.kilocodeignore')).toBe('kilo-code');
   });
 
   it('normalizes path separators', () => {

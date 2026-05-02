@@ -58,7 +58,11 @@ describe('createImportReferenceNormalizer', () => {
     rmSync(TEST_DIR, { recursive: true, force: true });
   });
 
-  it('normalizes target-specific paths across common token wrappers', async () => {
+  it('normalizes target-specific paths to canonical anchors across common token wrappers', async () => {
+    // After the canonical-anchor → colocated-target rewrite contract, the
+    // import direction (target-rooted token, canonical destination) projects
+    // the reference to the canonical anchor form `.agentsmesh/...` so imported
+    // canonical content matches hand-authored canonical content.
     const normalize = await createImportReferenceNormalizer('claude-code', TEST_DIR);
     const content = [
       'Plain: .claude/rules/typescript.md.',
@@ -76,14 +80,17 @@ describe('createImportReferenceNormalizer', () => {
       join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
     );
 
-    expect(normalized).toContain('Plain: typescript.md.');
-    expect(normalized).toContain('Markdown: [typescript.md](./typescript.md).');
-    expect(normalized).toContain('Mention: @../commands/review.md.');
-    expect(normalized).toContain('Quoted: "../agents/reviewer.md".');
-    expect(normalized).toContain('Parenthesized: (../skills/api-gen/SKILL.md).');
-    expect(normalized).toContain('<../skills/api-gen/references/checklist.md>.');
+    expect(normalized).toContain('Plain: .agentsmesh/rules/typescript.md.');
+    // Markdown link destinations stay destination-relative; only the link text
+    // (a `bracket-label` reading context) and prose tokens take the canonical
+    // anchor form.
+    expect(normalized).toContain('Markdown: [.agentsmesh/rules/typescript.md](./typescript.md).');
+    expect(normalized).toContain('Mention: @.agentsmesh/commands/review.md.');
+    expect(normalized).toContain('Quoted: ".agentsmesh/agents/reviewer.md".');
+    expect(normalized).toContain('Parenthesized: (.agentsmesh/skills/api-gen/SKILL.md).');
+    expect(normalized).toContain('<.agentsmesh/skills/api-gen/references/checklist.md>.');
     expect(normalized).toContain(
-      'Dir: ../skills/api-gen/references and skills/api-gen/references/.',
+      'Dir: .agentsmesh/skills/api-gen/references and .agentsmesh/skills/api-gen/references/.',
     );
   });
 
@@ -95,7 +102,9 @@ describe('createImportReferenceNormalizer', () => {
       join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
     );
 
-    expect(normalized).toBe('Use ../skills/api-gen/references/checklist.md and typescript.md.');
+    expect(normalized).toBe(
+      'Use .agentsmesh/skills/api-gen/references/checklist.md and .agentsmesh/rules/typescript.md.',
+    );
   });
 
   it('normalizes Antigravity global target prose paths back to canonical paths', async () => {
@@ -119,7 +128,9 @@ describe('createImportReferenceNormalizer', () => {
       join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
     );
 
-    expect(normalized).toBe('Use _root.md and ../skills/api-gen/references/checklist.md.');
+    expect(normalized).toBe(
+      'Use .agentsmesh/rules/_root.md and .agentsmesh/skills/api-gen/references/checklist.md.',
+    );
   });
 
   it('normalizes Codex global target prose paths back to canonical paths', async () => {
@@ -134,7 +145,7 @@ describe('createImportReferenceNormalizer', () => {
     );
 
     expect(normalized).toBe(
-      'Use _root.md and ../skills/post-feature-qa/references/edge-case-checklist.md.',
+      'Use .agentsmesh/rules/_root.md and .agentsmesh/skills/post-feature-qa/references/edge-case-checklist.md.',
     );
   });
 
@@ -185,7 +196,7 @@ describe('createImportReferenceNormalizer', () => {
     );
 
     expect(normalized).toBe(
-      'Use ../skills/api-gen/references/checklist.md from skills/api-gen/references/.',
+      'Use .agentsmesh/skills/api-gen/references/checklist.md from .agentsmesh/skills/api-gen/references/.',
     );
   });
 
@@ -205,7 +216,7 @@ describe('createImportReferenceNormalizer', () => {
 
     expect(normalized).toContain('Relative: ../commands/review.md');
     expect(normalized).toContain('Absolute: /tmp/project/.agentsmesh/commands/review.md');
-    expect(normalized).toContain('Target: ../commands/review.md');
+    expect(normalized).toContain('Target: .agentsmesh/commands/review.md');
   });
 
   it('normalizes target-specific inline-code file references while preserving fenced code blocks', async () => {
@@ -218,7 +229,7 @@ describe('createImportReferenceNormalizer', () => {
       join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
     );
 
-    expect(normalized).toContain('Inline: `../commands/review.md`.');
+    expect(normalized).toContain('Inline: `.agentsmesh/commands/review.md`.');
     expect(normalized).toContain('```\n.claude/commands/review.md\n```');
   });
 
@@ -233,7 +244,7 @@ describe('createImportReferenceNormalizer', () => {
       join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
     );
 
-    expect(normalized).toBe('See typescript.md.');
+    expect(normalized).toBe('See .agentsmesh/rules/typescript.md.');
   });
 
   it('normalizes .clinerules/_root.md reference to canonical _root.md path', async () => {
@@ -247,7 +258,7 @@ describe('createImportReferenceNormalizer', () => {
       join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'),
     );
 
-    expect(normalized).toBe('See _root.md for global rules.');
+    expect(normalized).toBe('See .agentsmesh/rules/_root.md for global rules.');
   });
 
   it('normalizes cline paths when source file is AGENTS.md (fallback import)', async () => {
@@ -263,8 +274,8 @@ describe('createImportReferenceNormalizer', () => {
       join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
     );
 
-    expect(normalized).toContain('typescript.md');
-    expect(normalized).toContain('../skills/qa/SKILL.md');
+    expect(normalized).toContain('.agentsmesh/rules/typescript.md');
+    expect(normalized).toContain('.agentsmesh/skills/qa/SKILL.md');
     expect(normalized).not.toContain('.clinerules/typescript.md');
     expect(normalized).not.toContain('.cline/skills/qa/SKILL.md');
   });
@@ -280,7 +291,7 @@ describe('createImportReferenceNormalizer', () => {
       join(TEST_DIR, '.agentsmesh', 'skills', 'api-generator', 'SKILL.md'),
     );
 
-    expect(normalized).toBe('Canonical: ../../rules/src.md.');
+    expect(normalized).toBe('Canonical: .agentsmesh/rules/src.md.');
   });
 
   it('normalizes codex-cli skill directory references back to canonical skill directories', async () => {
@@ -292,7 +303,7 @@ describe('createImportReferenceNormalizer', () => {
     );
 
     expect(normalized).toBe(
-      'Use `skills/post-feature-qa/` and `../skills/post-feature-qa/references/edge-case-checklist.md`.',
+      'Use `.agentsmesh/skills/post-feature-qa/` and `.agentsmesh/skills/post-feature-qa/references/edge-case-checklist.md`.',
     );
   });
 
@@ -305,7 +316,7 @@ describe('createImportReferenceNormalizer', () => {
     );
 
     expect(normalized).toBe(
-      'Use `skills/post-feature-qa/` and `../skills/post-feature-qa/references/edge-case-checklist.md`.',
+      'Use `.agentsmesh/skills/post-feature-qa/` and `.agentsmesh/skills/post-feature-qa/references/edge-case-checklist.md`.',
     );
   });
 
@@ -318,7 +329,7 @@ describe('createImportReferenceNormalizer', () => {
     );
 
     expect(normalized).toBe(
-      'Use `skills/post-feature-qa/` and `../skills/post-feature-qa/references/edge-case-checklist.md`.',
+      'Use `.agentsmesh/skills/post-feature-qa/` and `.agentsmesh/skills/post-feature-qa/references/edge-case-checklist.md`.',
     );
   });
 
@@ -331,7 +342,7 @@ describe('createImportReferenceNormalizer', () => {
     );
 
     expect(normalized).toBe(
-      'Use `skills/post-feature-qa/` and `../skills/post-feature-qa/references/edge-case-checklist.md`.',
+      'Use `.agentsmesh/skills/post-feature-qa/` and `.agentsmesh/skills/post-feature-qa/references/edge-case-checklist.md`.',
     );
   });
 
@@ -349,9 +360,9 @@ describe('createImportReferenceNormalizer', () => {
       join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
     );
 
-    expect(normalized).toContain('Backslash: ../commands/review.md.');
-    expect(normalized).toContain('Mixed: ../agents/reviewer.md.');
-    expect(normalized).toContain('Skill: ../skills/api-gen/references/checklist.md.');
+    expect(normalized).toContain('Backslash: .agentsmesh/commands/review.md.');
+    expect(normalized).toContain('Mixed: .agentsmesh/agents/reviewer.md.');
+    expect(normalized).toContain('Skill: .agentsmesh/skills/api-gen/references/checklist.md.');
   });
 
   it('normalizes cursor target-specific paths to canonical form', async () => {
@@ -376,8 +387,8 @@ describe('createImportReferenceNormalizer', () => {
     );
 
     expect(normalized).toContain('typescript.md.');
-    expect(normalized).toContain('../commands/review.md.');
-    expect(normalized).toContain('../skills/api-gen/SKILL.md.');
+    expect(normalized).toContain('.agentsmesh/commands/review.md.');
+    expect(normalized).toContain('.agentsmesh/skills/api-gen/SKILL.md.');
   });
 
   it('normalizes copilot target-specific paths to canonical form', async () => {
@@ -411,9 +422,9 @@ describe('createImportReferenceNormalizer', () => {
 
     expect(normalized).toContain('typescript.md.');
     expect(normalized).toContain('_root.md.');
-    expect(normalized).toContain('../commands/review.md.');
-    expect(normalized).toContain('../agents/reviewer.md.');
-    expect(normalized).toContain('../skills/api-gen/SKILL.md.');
+    expect(normalized).toContain('.agentsmesh/commands/review.md.');
+    expect(normalized).toContain('.agentsmesh/agents/reviewer.md.');
+    expect(normalized).toContain('.agentsmesh/skills/api-gen/SKILL.md.');
   });
 
   it('normalizes gemini-cli target-specific paths to canonical form', async () => {
@@ -438,8 +449,8 @@ describe('createImportReferenceNormalizer', () => {
     );
 
     expect(normalized).toContain('typescript.md.');
-    expect(normalized).toContain('../commands/review.md.');
-    expect(normalized).toContain('../skills/api-gen/SKILL.md.');
+    expect(normalized).toContain('.agentsmesh/commands/review.md.');
+    expect(normalized).toContain('.agentsmesh/skills/api-gen/SKILL.md.');
   });
 
   it('normalizes windsurf target-specific paths to canonical form', async () => {
@@ -464,7 +475,7 @@ describe('createImportReferenceNormalizer', () => {
     );
 
     expect(normalized).toContain('typescript.md.');
-    expect(normalized).toContain('../commands/review.md.');
-    expect(normalized).toContain('../skills/api-gen/SKILL.md.');
+    expect(normalized).toContain('.agentsmesh/commands/review.md.');
+    expect(normalized).toContain('.agentsmesh/skills/api-gen/SKILL.md.');
   });
 });

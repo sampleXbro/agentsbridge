@@ -8,6 +8,7 @@ import { copilotContract } from './copilot.js';
 import { cursorContract } from './cursor.js';
 import { geminiCliContract } from './gemini-cli.js';
 import { junieContract } from './junie.js';
+import { kiloCodeContract } from './kilo-code.js';
 import { kiroContract } from './kiro.js';
 import { rooCodeContract } from './roo-code.js';
 import { windsurfContract } from './windsurf.js';
@@ -28,6 +29,8 @@ export const TARGET_SPECIFIC_PREFIXES = [
   '.windsurf/',
   '.roo/',
   '.kiro/',
+  '.kilo/',
+  '.kilocode/',
 ] as const;
 
 export const TARGET_CONTRACTS: TargetContractMap = {
@@ -43,6 +46,7 @@ export const TARGET_CONTRACTS: TargetContractMap = {
   antigravity: antigravityContract,
   'roo-code': rooCodeContract,
   kiro: kiroContract,
+  'kilo-code': kiloCodeContract,
 };
 
 export function contractForTarget(id: BuiltinTargetId): TargetContractMap[BuiltinTargetId] {

@@ -65,7 +65,7 @@ function canonical(): CanonicalFiles {
 }
 
 describe('global generated file reference rewriting', () => {
-  it('preserves canonical skill file references in Claude global prose output', async () => {
+  it('rewrites canonical skill file references to colocated Claude paths in global prose output', async () => {
     const results = await generate({
       config: config(),
       canonical: canonical(),
@@ -77,9 +77,12 @@ describe('global generated file reference rewriting', () => {
     const skill =
       results.find((result) => result.path === '.claude/skills/api-gen/SKILL.md')?.content ?? '';
 
-    expect(root).toContain('`.agentsmesh/skills/api-gen/SKILL.md`');
-    expect(root).toContain('`.agentsmesh/skills/api-gen/references/checklist.md`');
-    expect(skill).toContain('`.agentsmesh/skills/api-gen/references/checklist.md`');
+    // Canonical anchors in inline-code project to the colocated `.claude/...`
+    // paths so AI agents reading the generated artifact can navigate without
+    // traversing back into the canonical mesh tree.
+    expect(root).toContain('`.claude/skills/api-gen/SKILL.md`');
+    expect(root).toContain('`.claude/skills/api-gen/references/checklist.md`');
+    expect(skill).toContain('`.claude/skills/api-gen/references/checklist.md`');
   });
 
   it('rewrites canonical markdown destinations in Claude global outputs', async () => {

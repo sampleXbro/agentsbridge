@@ -1,5 +1,7 @@
 # Lessons Learned
 
+- **Do not add broad non-Markdown gates to link rebasing without checking supporting-file fixtures**: `pnpm test` failed in `generate-reference-rewrite-matrix.e2e.test.ts` after I skipped rewriting every non-Markdown generated artifact. Root cause: I inferred the contract from a narrow unit test, but the richer e2e matrix intentionally rewrites path references inside generated supporting files such as `template.ts` comments. Rule: before adding extension-level skip gates in `rewriteGeneratedReferences()`, inspect/run the reference-rewrite matrix; protecting executable string literals requires token/comment-aware logic, not a blanket non-Markdown output skip.
+
 - **Social preview text must be visually checked after rasterization**: The first refreshed `og-image.png` rendered at the correct 1200x630 size but clipped the subtitle on the right. Root cause: the SVG text width was estimated by eye instead of verified in the final raster output. Rule: after changing Open Graph or logo raster assets, inspect the rendered PNG and keep all text comfortably inside the visible canvas.
 
 - **Do not mix `require` with top-level `await` in inline Node render scripts**: A logo asset render command failed with `ERR_AMBIGUOUS_MODULE_SYNTAX` because the heredoc used CommonJS `require('sharp')` and top-level `await` together under Node 24. Root cause: Node could not infer whether the inline script was CommonJS or ESM. Rule: for inline Node scripts that use top-level `await`, use ESM `import` syntax; otherwise wrap CommonJS code in an async IIFE.

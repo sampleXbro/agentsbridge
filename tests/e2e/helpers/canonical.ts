@@ -12,6 +12,7 @@ targets:
   - codex-cli
   - windsurf
   - antigravity
+  - kilo-code
 features:
   - rules
   - commands

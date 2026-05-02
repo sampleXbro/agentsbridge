@@ -1,18 +1,17 @@
 import { existsSync, realpathSync, statSync } from 'node:fs';
-import { join } from 'node:path';
-import { normalize as normalizePath } from 'node:path';
+import { pathApi } from '../path-helpers.js';
 import { buildImportReferenceMap } from './import-map.js';
 import { rewriteFileLinks } from './link-rebaser.js';
 import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
 import { TARGET_IDS } from '../../targets/catalog/target-ids.js';
 
-function pathVariants(path: string): string[] {
-  const variants = [normalizePath(path)];
+function pathVariants(api: ReturnType<typeof pathApi>, path: string): string[] {
+  const variants = [api.normalize(path)];
   if (!existsSync(path)) return variants;
   try {
     const realPaths = [realpathSync(path), realpathSync.native(path)];
     for (const realPath of realPaths) {
-      const normalized = normalizePath(realPath);
+      const normalized = api.normalize(realPath);
       if (!variants.includes(normalized)) variants.push(normalized);
     }
   } catch {
@@ -26,6 +25,7 @@ export async function createImportReferenceNormalizer(
   projectRoot: string,
   scope: TargetLayoutScope = 'project',
 ): Promise<(content: string, sourceFile: string, destinationFile: string) => string> {
+  const api = pathApi(projectRoot);
   const refs = new Map<string, string>();
   const targets = Array.from(new Set([target, ...TARGET_IDS]));
   for (const candidate of targets) {
@@ -36,8 +36,8 @@ export async function createImportReferenceNormalizer(
   }
   const artifactMap = new Map<string, string>();
   for (const [targetPath, canonicalPath] of refs.entries()) {
-    const canonicalAbsPath = normalizePath(join(projectRoot, canonicalPath));
-    for (const variant of pathVariants(join(projectRoot, targetPath))) {
+    const canonicalAbsPath = api.normalize(api.join(projectRoot, canonicalPath));
+    for (const variant of pathVariants(api, api.join(projectRoot, targetPath))) {
       artifactMap.set(variant, canonicalAbsPath);
     }
   }
@@ -45,10 +45,10 @@ export async function createImportReferenceNormalizer(
   /** Import will materialize these canonical paths; treat as existing so links prefer ./… under .agentsmesh/. */
   const canonicalDestAbs = new Set<string>();
   for (const canonicalPath of new Set(refs.values())) {
-    const abs = normalizePath(join(projectRoot, canonicalPath));
+    const abs = api.normalize(api.join(projectRoot, canonicalPath));
     canonicalDestAbs.add(abs);
-    for (const variant of pathVariants(abs)) {
-      canonicalDestAbs.add(normalizePath(variant));
+    for (const variant of pathVariants(api, abs)) {
+      canonicalDestAbs.add(api.normalize(variant));
     }
   }
 
@@ -60,7 +60,7 @@ export async function createImportReferenceNormalizer(
       destinationFile,
       translatePath: (absolutePath) => artifactMap.get(absolutePath) ?? absolutePath,
       pathExists: (absolutePath) => {
-        const normalized = normalizePath(absolutePath);
+        const normalized = api.normalize(absolutePath);
         return (
           artifactMap.has(absolutePath) ||
           artifactMap.has(normalized) ||

@@ -63,6 +63,21 @@ const TARGET_SIGNATURES: TargetSignature[] = [
     target: 'kiro',
     paths: ['.kiro', '.kiro/steering', '.kiro/settings/mcp.json'],
   },
+  {
+    target: 'kilo-code',
+    paths: [
+      '.kilo',
+      '.kilo/rules',
+      '.kilo/commands',
+      '.kilo/agents',
+      '.kilo/skills',
+      '.kilocodeignore',
+      '.kilocode',
+      '.kilocodemodes',
+      'kilo.jsonc',
+      'kilo.json',
+    ],
+  },
 ];
 
 /**

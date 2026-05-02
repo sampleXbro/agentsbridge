@@ -17,7 +17,11 @@ function qaExists(p: string): boolean {
 
 describe('rewriteFileLinks markdown edge cases', () => {
   describe('project scope', () => {
-    it('leaves markdown destinations with surrounding whitespace unchanged', () => {
+    it('rewrites markdown destinations with surrounding whitespace to the colocated target counterpart', () => {
+      // Whitespace inside `()` is not parsed as a markdown link destination by
+      // strict CommonMark, so the token falls through to the prose path. With
+      // the canonical-anchor → colocated-target contract, the bare
+      // `.agentsmesh/skills/qa/` rewrites to `.claude/skills/qa/`.
       const result = rewriteFileLinks({
         content: 'Open [QA](  .agentsmesh/skills/qa/  ).',
         projectRoot,
@@ -30,7 +34,7 @@ describe('rewriteFileLinks markdown edge cases', () => {
         explicitCurrentDirLinks: true,
       });
 
-      expect(result.content).toBe('Open [QA](  .agentsmesh/skills/qa/  ).');
+      expect(result.content).toBe('Open [QA](  .claude/skills/qa/  ).');
     });
 
     it('rewrites markdown destination while preserving a link title', () => {
@@ -64,7 +68,10 @@ describe('rewriteFileLinks markdown edge cases', () => {
       expect(result.content).toBe('![Checklist](./references/checklist.md)');
     });
 
-    it('preserves `.agentsmesh/` anchors in markdown autolink-like bracketed context', () => {
+    it('rewrites bracketed autolink-like `.agentsmesh/` anchors to colocated target counterparts', () => {
+      // The deeper `.agentsmesh/skills/qa/references/` directory has no per-target
+      // counterpart in this fixture, so it stays anchored at the canonical mesh
+      // path. The translated `.agentsmesh/skills/qa/` projects to `.claude/skills/qa/`.
       const result = rewriteFileLinks({
         content: 'See <.agentsmesh/skills/qa/> and <.agentsmesh/skills/qa/references/>.',
         projectRoot,
@@ -76,7 +83,7 @@ describe('rewriteFileLinks markdown edge cases', () => {
       });
 
       expect(result.content).toBe(
-        'See <.agentsmesh/skills/qa/> and <.agentsmesh/skills/qa/references/>.',
+        'See <.claude/skills/qa/> and <.agentsmesh/skills/qa/references/>.',
       );
     });
 

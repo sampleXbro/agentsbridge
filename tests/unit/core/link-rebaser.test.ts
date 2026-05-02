@@ -22,7 +22,9 @@ describe('rewriteFileLinks', () => {
     });
 
     expect(rewritten.content).toContain('Docs: `docs/some-doc.md`.');
-    expect(rewritten.content).toContain('Command: `.agentsmesh/commands/review.md`.');
+    // Canonical `.agentsmesh/commands/review.md` reference projects to the
+    // colocated `.claude/commands/review.md` target counterpart.
+    expect(rewritten.content).toContain('Command: `.claude/commands/review.md`.');
     expect(rewritten.content).toContain('[some doc](docs/some-doc.md)');
     expect(rewritten.missing).toEqual([]);
   });
@@ -89,7 +91,7 @@ describe('rewriteFileLinks', () => {
       explicitCurrentDirLinks: true,
     });
 
-    expect(rewritten.content).toBe('Markdown: [./typescript.md](./typescript.md)');
+    expect(rewritten.content).toBe('Markdown: [.agentsmesh/rules/typescript.md](./typescript.md)');
     expect(rewritten.missing).toEqual([]);
   });
 
@@ -157,7 +159,7 @@ describe('rewriteFileLinks', () => {
         absolutePath === '/proj/docs/some-doc.md',
     });
 
-    expect(rewritten.content).toContain('`../commands/review.md`');
+    expect(rewritten.content).toContain('`.agentsmesh/commands/review.md`');
     expect(rewritten.content).toContain('docs/some-doc.md');
     expect(rewritten.missing).toEqual([]);
   });
@@ -215,7 +217,7 @@ describe('rewriteFileLinks', () => {
     expect(checked).toEqual([]);
   });
 
-  it('leaves bare prose directory names alone while rewriting canonical file paths', () => {
+  it('leaves bare prose directory names alone while rewriting canonical file paths to colocated targets', () => {
     const rewritten = rewriteFileLinks({
       content:
         'Prose dirs (no rewrite): scripts/ docs/ references/. Canonical: .agentsmesh/commands/review.md.',
@@ -232,7 +234,7 @@ describe('rewriteFileLinks', () => {
     });
 
     expect(rewritten.content).toBe(
-      'Prose dirs (no rewrite): scripts/ docs/ references/. Canonical: .agentsmesh/commands/review.md.',
+      'Prose dirs (no rewrite): scripts/ docs/ references/. Canonical: .claude/commands/review.md.',
     );
     expect(rewritten.missing).toEqual([]);
   });
@@ -371,8 +373,9 @@ describe('rewriteFileLinks', () => {
     expect(rewritten.content).toContain(
       'Mixed: `.claude/skills/api-generator/SKILL.md`, `docs/some-doc.md`.',
     );
+    // Canonical `.agentsmesh/...` reference projects to the colocated target counterpart.
     expect(rewritten.content).toContain(
-      'Canonical mixed: `.agentsmesh/skills/api-generator/references/route-checklist.md`.',
+      'Canonical mixed: `.claude/skills/api-generator/references/route-checklist.md`.',
     );
     expect(rewritten.missing).toEqual([]);
   });
@@ -596,7 +599,7 @@ describe('rewriteFileLinks', () => {
       expect(rewritten.missing).toEqual([]);
     });
 
-    it('rewrites markdown link text when it is the same path token as the destination', () => {
+    it('rewrites markdown link text from canonical anchor to destination-relative while keeping destination relative', () => {
       const rewritten = rewriteFileLinks({
         content:
           '- [ ] [.agentsmesh/skills/ts-library/references/ci-workflows.md](./references/ci-workflows.md) - if CI',
@@ -612,7 +615,7 @@ describe('rewriteFileLinks', () => {
         explicitCurrentDirLinks: true,
       });
       expect(rewritten.content).toBe(
-        '- [ ] [.agentsmesh/skills/ts-library/references/ci-workflows.md](./references/ci-workflows.md) - if CI',
+        '- [ ] [./references/ci-workflows.md](./references/ci-workflows.md) - if CI',
       );
     });
 

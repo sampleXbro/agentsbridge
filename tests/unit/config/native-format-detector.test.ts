@@ -86,6 +86,16 @@ describe('detectNativeFormat', () => {
     expect(await detectNativeFormat(TEST_DIR)).toBe('kiro');
   });
 
+  it('detects kilo-code from .kilo directory', async () => {
+    mkdir('.kilo/rules');
+    expect(await detectNativeFormat(TEST_DIR)).toBe('kilo-code');
+  });
+
+  it('detects kilo-code from legacy .kilocodemodes file', async () => {
+    touch('.kilocodemodes');
+    expect(await detectNativeFormat(TEST_DIR)).toBe('kilo-code');
+  });
+
   it('picks highest-scoring target when multiple present', async () => {
     // claude-code has 3 matches; cursor has 1
     touch('CLAUDE.md');
@@ -116,7 +126,7 @@ describe('detectNativeFormat', () => {
   });
 
   it('KNOWN_NATIVE_PATHS contains one representative path per supported target', () => {
-    expect(KNOWN_NATIVE_PATHS).toHaveLength(10);
+    expect(KNOWN_NATIVE_PATHS).toHaveLength(11);
     expect(KNOWN_NATIVE_PATHS[0]).toBe('CLAUDE.md');
     expect(KNOWN_NATIVE_PATHS[1]).toBe('.cursorrules');
     expect(KNOWN_NATIVE_PATHS[2]).toBe('.github/copilot-instructions.md');
@@ -127,5 +137,6 @@ describe('detectNativeFormat', () => {
     expect(KNOWN_NATIVE_PATHS[7]).toBe('.continue');
     expect(KNOWN_NATIVE_PATHS[8]).toBe('.junie');
     expect(KNOWN_NATIVE_PATHS[9]).toBe('.kiro');
+    expect(KNOWN_NATIVE_PATHS[10]).toBe('.kilo');
   });
 });

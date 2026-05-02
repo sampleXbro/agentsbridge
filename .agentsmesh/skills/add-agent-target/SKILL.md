@@ -67,7 +67,7 @@ Use this skill when the task is to add a brand-new supported agent target to thi
 8. **Matrix and docs** — §8. Run `pnpm schemas:generate && pnpm matrix:generate` and update `website/src/content/docs/reference/supported-tools.mdx`.
 9. **Verification** — §9. Run the full stack (see below). All must pass.
 
-Refer to `references/target-addition-checklist.md` for the concrete audit list of touchpoints, tests, fixtures, and edge cases.
+Refer to `.agentsmesh/skills/add-agent-target/references/target-addition-checklist.md` for the concrete audit list of touchpoints, tests, fixtures, and edge cases.
 
 ## Required Verification
 

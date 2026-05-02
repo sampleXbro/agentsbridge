@@ -86,15 +86,15 @@ Prefer strict mode.
     const cursorRoot = readFileSync(join(dir, '.cursor', 'rules', 'general.mdc'), 'utf-8');
     const secondRun = await runCli('generate', dir);
 
-    expect(claudeRoot).toContain('.agentsmesh/rules/typescript.md');
-    expect(claudeRoot).toContain('.agentsmesh/commands/review.md');
-    expect(claudeRoot).toContain('.agentsmesh/agents/reviewer.md');
-    expect(claudeRoot).toContain('.agentsmesh/skills/api-gen/references/checklist.md');
+    expect(claudeRoot).toContain('./rules/typescript.md');
+    expect(claudeRoot).toContain('./commands/review.md');
+    expect(claudeRoot).toContain('./agents/reviewer.md');
+    expect(claudeRoot).toContain('./skills/api-gen/references/checklist.md');
     expect(claudeRoot).toContain('docs/some-doc.md');
-    expect(cursorRoot).toContain('.agentsmesh/rules/typescript.md');
-    expect(cursorRoot).toContain('.agentsmesh/commands/review.md');
-    expect(cursorRoot).toContain('.agentsmesh/agents/reviewer.md');
-    expect(cursorRoot).toContain('.agentsmesh/skills/api-gen/references/checklist.md');
+    expect(cursorRoot).toContain('typescript.mdc');
+    expect(cursorRoot).toContain('commands/review.md');
+    expect(cursorRoot).toContain('agents/reviewer.md');
+    expect(cursorRoot).toContain('skills/api-gen/references/checklist.md');
     expect(cursorRoot).toContain('docs/some-doc.md');
     expect(readFileSync(join(dir, '.claude', 'commands', 'review.md'), 'utf-8')).toContain(
       'docs/some-doc.md',
@@ -235,7 +235,7 @@ Prefer strict mode.
       join(dir, '.github', 'instructions', 'typescript.instructions.md'),
       'utf-8',
     );
-    expect(instructions).toContain('.agentsmesh/rules/typescript.md');
+    expect(instructions).toContain('./typescript.instructions.md');
     expect(instructions).toContain('docs/roadmap.md');
   });
 });

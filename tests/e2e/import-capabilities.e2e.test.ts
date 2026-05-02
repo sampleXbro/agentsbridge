@@ -269,6 +269,97 @@ describe('import capabilities', () => {
     fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'Flat root rule');
   });
 
+  it('imports Kilo Code AGENTS.md, rules, commands, agents, skills, .kilo/mcp.json, and .kilocodeignore', async () => {
+    dir = createTestProject('kilo-code-project');
+    const result = await runCli('import --from kilo-code', dir);
+    expect(result.exitCode, result.stderr).toBe(0);
+
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'Kilo Code Project Guide');
+    fileContains(join(dir, '.agentsmesh', 'rules', 'typescript.md'), 'Strict mode is mandatory');
+    fileContains(join(dir, '.agentsmesh', 'rules', 'testing.md'), 'behaviour-driven test names');
+    fileContains(
+      join(dir, '.agentsmesh', 'commands', 'review.md'),
+      'Review the currently staged changes',
+    );
+    fileContains(join(dir, '.agentsmesh', 'commands', 'commit.md'), 'type(scope): message');
+
+    // First-class agents round-trip with description and body.
+    fileContains(
+      join(dir, '.agentsmesh', 'agents', 'code-reviewer.md'),
+      'You are an expert code reviewer',
+    );
+    fileContains(
+      join(dir, '.agentsmesh', 'agents', 'code-reviewer.md'),
+      'description: Review code for quality',
+    );
+    fileContains(
+      join(dir, '.agentsmesh', 'agents', 'researcher.md'),
+      'You are a research specialist',
+    );
+
+    // Skills round-trip with supporting files.
+    fileContains(
+      join(dir, '.agentsmesh', 'skills', 'api-generator', 'SKILL.md'),
+      'name: api-generator',
+    );
+    fileContains(
+      join(dir, '.agentsmesh', 'skills', 'api-generator', 'references', 'route-checklist.md'),
+      'Route Checklist',
+    );
+
+    // MCP and ignore.
+    expect(readJson(join(dir, '.agentsmesh', 'mcp.json'))['mcpServers']).toBeTruthy();
+    fileContains(join(dir, '.agentsmesh', 'ignore'), '.env');
+  });
+
+  it('imports legacy Kilo Code config (.kilocode/ + .kilocodemodes) into canonical', async () => {
+    dir = createTestProject('canonical-no-config');
+    mkdirSync(join(dir, '.kilocode', 'rules'), { recursive: true });
+    writeFileSync(join(dir, '.kilocode', 'rules', 'tdd.md'), '# TDD\n\nWrite failing tests first.');
+    mkdirSync(join(dir, '.kilocode', 'workflows'), { recursive: true });
+    writeFileSync(
+      join(dir, '.kilocode', 'workflows', 'plan-phase.md'),
+      '---\ndescription: Plan a delivery phase\n---\n\nGather context, then plan.',
+    );
+    writeFileSync(
+      join(dir, '.kilocodemodes'),
+      [
+        'customModes:',
+        '  - slug: gsd-mapper',
+        '    name: GSD Mapper',
+        '    description: Maps the codebase',
+        '    roleDefinition: |',
+        '      You map structures.',
+        '',
+      ].join('\n'),
+    );
+    writeFileSync(
+      join(dir, '.kilocode', 'mcp.json'),
+      JSON.stringify({
+        mcpServers: { 'legacy-server': { command: 'python', args: ['s.py'] } },
+      }),
+    );
+    writeFileSync(join(dir, '.kilocodeignore'), '.env\nnode_modules/\n');
+
+    const result = await runCli('import --from kilo-code', dir);
+    expect(result.exitCode, result.stderr).toBe(0);
+
+    fileContains(join(dir, '.agentsmesh', 'rules', 'tdd.md'), 'Write failing tests first');
+    fileContains(
+      join(dir, '.agentsmesh', 'commands', 'plan-phase.md'),
+      'Gather context, then plan.',
+    );
+    fileContains(
+      join(dir, '.agentsmesh', 'agents', 'gsd-mapper.md'),
+      'description: Maps the codebase',
+    );
+    fileContains(join(dir, '.agentsmesh', 'agents', 'gsd-mapper.md'), 'You map structures.');
+    expect(readJson(join(dir, '.agentsmesh', 'mcp.json'))['mcpServers']).toHaveProperty(
+      'legacy-server',
+    );
+    fileContains(join(dir, '.agentsmesh', 'ignore'), '.env');
+  });
+
   it('imports Windsurf fallback root and ignore when only AGENTS.md and .codeiumignore exist', async () => {
     dir = createTestProject('windsurf-agents-project');
     const result = await runCli('import --from windsurf', dir);

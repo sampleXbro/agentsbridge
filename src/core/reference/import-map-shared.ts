@@ -1,5 +1,6 @@
-import { basename, dirname, join, relative } from 'node:path';
+import { basename, posix } from 'node:path';
 import { readdir, stat } from 'node:fs/promises';
+import { pathApi } from '../path-helpers.js';
 import { readDirRecursive } from '../../utils/filesystem/fs.js';
 import {
   CODEX_COMMAND_SKILL_PREFIX,
@@ -16,11 +17,11 @@ const AB_AGENTS = '.agentsmesh/agents';
 const AB_SKILLS = '.agentsmesh/skills';
 
 export function rel(projectRoot: string, absPath: string): string {
-  return relative(projectRoot, absPath).replace(/\\/g, '/');
+  return pathApi(projectRoot).relative(projectRoot, absPath).replace(/\\/g, '/');
 }
 
 export async function listFiles(projectRoot: string, dir: string): Promise<string[]> {
-  return readDirRecursive(join(projectRoot, dir)).catch(() => []);
+  return readDirRecursive(pathApi(projectRoot).join(projectRoot, dir)).catch(() => []);
 }
 
 export function addDirectoryMapping(refs: Map<string, string>, from: string, to: string): void {
@@ -34,12 +35,12 @@ function addAncestorMappings(
   toPath: string,
   stopDir: string,
 ): void {
-  let fromDir = dirname(fromPath);
-  let toDir = dirname(toPath);
+  let fromDir = posix.dirname(fromPath);
+  let toDir = posix.dirname(toPath);
   while (fromDir !== stopDir && fromDir !== '.') {
     addDirectoryMapping(refs, fromDir, toDir);
-    fromDir = dirname(fromDir);
-    toDir = dirname(toDir);
+    fromDir = posix.dirname(fromDir);
+    toDir = posix.dirname(toDir);
   }
 }
 
@@ -140,9 +141,10 @@ function hasHiddenSegment(relPath: string): boolean {
 async function listScopedAgentsFiles(projectRoot: string): Promise<string[]> {
   const files: string[] = [];
   const targetRootSegmentsSet = await targetRootSegments();
+  const api = pathApi(projectRoot);
 
   async function walk(relDir: string): Promise<void> {
-    const absDir = join(projectRoot, relDir);
+    const absDir = api.join(projectRoot, relDir);
     const entries = await readdir(absDir, { withFileTypes: true }).catch(() => []);
     for (const entry of entries) {
       const relPath = relDir ? `${relDir}/${entry.name}` : entry.name;
@@ -153,7 +155,7 @@ async function listScopedAgentsFiles(projectRoot: string): Promise<string[]> {
       }
       if (
         entry.isSymbolicLink() &&
-        (await stat(join(projectRoot, relPath)).then(
+        (await stat(api.join(projectRoot, relPath)).then(
           (info) => info.isDirectory(),
           () => false,
         ))
@@ -163,7 +165,7 @@ async function listScopedAgentsFiles(projectRoot: string): Promise<string[]> {
         continue;
       }
       if (entry.name === 'AGENTS.md' || entry.name === 'AGENTS.override.md') {
-        files.push(join(projectRoot, relPath));
+        files.push(api.join(projectRoot, relPath));
       }
     }
   }
@@ -186,7 +188,7 @@ export async function addScopedAgentsMappings(
     const isNestedOverride =
       relPath.endsWith('/AGENTS.override.md') && relPath !== 'AGENTS.override.md';
     if (!isNestedAgents && !isNestedOverride) continue;
-    const parentDir = dirname(relPath);
+    const parentDir = posix.dirname(relPath);
     if (hasHiddenSegment(parentDir)) continue;
     const ruleName = parentDir.replace(/\//g, '-');
     refs.set(relPath, `${AB_RULES}/${ruleName}.md`);

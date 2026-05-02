@@ -255,7 +255,7 @@ Open [template](.agentsmesh/skills/api-gen/references/template.ts)
       );
     });
 
-    it('preserves prose anchors and rewrites markdown destinations in root file', async () => {
+    it('rewrites prose anchors and markdown destinations in root file', async () => {
       const r = await runCli('generate --global', projectDir);
       expect(r.exitCode).toBe(0);
 
@@ -263,13 +263,13 @@ Open [template](.agentsmesh/skills/api-gen/references/template.ts)
       fileExists(claudeMd);
       const content = readFileSync(claudeMd, 'utf-8');
 
-      expect(content).toContain('See skill: .agentsmesh/skills/api-gen/SKILL.md');
-      expect(content).toContain('Reference: .agentsmesh/skills/api-gen/references/template.ts');
+      expect(content).toContain('See skill: .claude/skills/api-gen/SKILL.md');
+      expect(content).toContain('Reference: .claude/skills/api-gen/references/template.ts');
       expect(content).toContain('[skill](./skills/api-gen/SKILL.md)');
       expect(content).toContain('[template](./skills/api-gen/references/template.ts)');
     });
 
-    it('preserves prose anchors and rewrites markdown destinations in skill file', async () => {
+    it('rewrites prose anchors and markdown destinations in skill file', async () => {
       const r = await runCli('generate --global', projectDir);
       expect(r.exitCode).toBe(0);
 
@@ -277,7 +277,7 @@ Open [template](.agentsmesh/skills/api-gen/references/template.ts)
       fileExists(skillMd);
       const content = readFileSync(skillMd, 'utf-8');
 
-      expect(content).toContain('Template: .agentsmesh/skills/api-gen/references/template.ts');
+      expect(content).toContain('Template: .claude/skills/api-gen/references/template.ts');
       expect(content).toContain('[template](./references/template.ts)');
     });
   });

@@ -35,6 +35,7 @@ targets:
   - antigravity
   - kiro
   - roo-code
+  - kilo-code
 features:
   - rules
   - commands
@@ -123,8 +124,13 @@ function expectAnyPathTail(content: string, fullPath: string): void {
   expect(content).toContain(pathTails(fullPath)[0] ?? fullPath);
 }
 
+/**
+ * Canonical files imported back from a target should anchor at `.agentsmesh/`
+ * for prose/inline-code references (both destination and target are under the
+ * mesh, so the root-anchor rule applies). Markdown link destinations stay
+ * destination-relative because renderers resolve URLs from the file location.
+ */
 function expectCanonicalizedRoot(content: string): void {
-  // Prose/structured canonical anchors remain readable; markdown destinations are relative.
   expect(content).toContain('.agentsmesh/commands/review.md');
   expect(
     content.includes('.agentsmesh/agents/code-reviewer.md') ||
@@ -132,37 +138,23 @@ function expectCanonicalizedRoot(content: string): void {
       content.includes('../../.agentsmesh/agents/code-reviewer.md') ||
       content.includes('agents/code-reviewer.md'),
   ).toBe(true);
-  expect(
-    content.includes('.agentsmesh/skills/api-generator/SKILL.md') ||
-      content.includes('../skills/api-generator/SKILL.md'),
-  ).toBe(true);
+  expect(content).toContain('.agentsmesh/skills/api-generator/SKILL.md');
+  // Markdown destinations stay destination-relative (URL resolution semantics).
   expect(content).toContain('../skills/api-generator/references/route-checklist.md');
   expectNoTargetSpecificPrefixes(content);
 }
 
 function expectCanonicalizedAgent(content: string): void {
-  expect(
-    content.includes('../commands/review.md') ||
-      content.includes('.agentsmesh/commands/review.md') ||
-      content.includes('../../.agentsmesh/commands/review.md'),
-  ).toBe(true);
-  expect(content).toContain('../skills/api-generator/SKILL.md');
-  expect(content).toContain('../skills/api-generator/template.ts');
-  expect(content).toContain('../skills/api-generator/references/route-checklist.md');
+  expect(content).toContain('.agentsmesh/commands/review.md');
+  expect(content).toContain('.agentsmesh/skills/api-generator/SKILL.md');
+  expect(content).toContain('.agentsmesh/skills/api-generator/template.ts');
+  expect(content).toContain('skills/api-generator/references/route-checklist.md');
   expectNoTargetSpecificPrefixes(content);
 }
 
 function expectCanonicalizedSkill(content: string): void {
-  expect(
-    content.includes('../../commands/review.md') ||
-      content.includes('../../../.agentsmesh/commands/review.md') ||
-      content.includes('.agentsmesh/commands/review.md'),
-  ).toBe(true);
-  expect(
-    content.includes('../../agents/code-reviewer.md') ||
-      content.includes('../../../.agentsmesh/agents/code-reviewer.md') ||
-      content.includes('.agentsmesh/agents/code-reviewer.md'),
-  ).toBe(true);
+  expect(content).toContain('.agentsmesh/commands/review.md');
+  expect(content).toContain('.agentsmesh/agents/code-reviewer.md');
   expect(content).toContain('template.ts');
   expect(content).toContain('route-checklist.md');
   expectNoTargetSpecificPrefixes(content);

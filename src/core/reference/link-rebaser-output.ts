@@ -4,12 +4,12 @@
  */
 
 import { expandResolvedPaths, resolveProjectPath } from './link-rebaser-helpers.js';
-import { normalizeForProject, normalizeSeparators } from '../path-helpers.js';
+import { normalizeForProject, pathApi } from '../path-helpers.js';
 import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
 import {
   formatLinkPathForDestinationLegacy,
   isUnderAgentsMesh,
-  shouldPreserveAgentsMeshAnchor,
+  isReadingContextOptions,
   toAgentsMeshRootRelative,
   toProjectRootReference,
   type FormatLinkPathOptions,
@@ -35,8 +35,23 @@ export function formatLinkPathForDestination(
   const scope: TargetLayoutScope = options.scope ?? 'project';
   const target = normalizeForProject(projectRoot, absoluteTargetPath);
 
-  if (shouldPreserveAgentsMeshAnchor(projectRoot, destinationFile, options)) {
-    return normalizeSeparators(options.originalToken ?? '');
+  // Import-direction symmetry: when both destination and target live inside
+  // `.agentsmesh/` (the canonical mesh tree) but the original token came from
+  // a target-specific path (e.g. `.claude/commands/review.md`), prefer the
+  // canonical anchor form `.agentsmesh/commands/review.md`. This keeps imported
+  // canonical content visually consistent with hand-authored canonical content,
+  // which always references other canonical files via `.agentsmesh/...`.
+  if (
+    isReadingContextOptions(options) &&
+    isUnderAgentsMesh(projectRoot, destinationFile) &&
+    isUnderAgentsMesh(projectRoot, target)
+  ) {
+    const api = pathApi(projectRoot);
+    const root = normalizeForProject(projectRoot, projectRoot);
+    const rel = api.relative(root, target).replace(/\\/g, '/');
+    if (!rel.startsWith('..') && rel.length > 0) {
+      return keepSlash && !rel.endsWith('/') ? `${rel}/` : rel;
+    }
   }
 
   if (options.forceRelative) {

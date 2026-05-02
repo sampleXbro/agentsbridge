@@ -28,7 +28,7 @@ describe('rewriteFileLinks with symlinked roots', () => {
         explicitCurrentDirLinks: true,
       });
 
-      expect(result.content).toBe('Use `.agentsmesh/skills/api-gen/SKILL.md`.');
+      expect(result.content).toBe('Use `./skills/api-gen/SKILL.md`.');
       expect(result.missing).toEqual([]);
     } finally {
       rmSync(tempRoot, { recursive: true, force: true });

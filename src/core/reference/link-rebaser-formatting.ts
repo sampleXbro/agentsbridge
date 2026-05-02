@@ -1,11 +1,5 @@
-import { dirname } from 'node:path';
 import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
-import {
-  WINDOWS_ABSOLUTE_PATH,
-  normalizeForProject,
-  normalizeSeparators,
-  pathApi,
-} from '../path-helpers.js';
+import { WINDOWS_ABSOLUTE_PATH, normalizeForProject, pathApi } from '../path-helpers.js';
 import type { RewrittenLink, TokenContext } from './link-output-kinds.js';
 
 export interface FormatLinkPathOptions {
@@ -18,7 +12,7 @@ export interface FormatLinkPathOptions {
   logicalMeshSourceAbsolute?: string | null;
 }
 
-function isReadingContext(context: TokenContext | undefined): boolean {
+export function isReadingContext(context: TokenContext | undefined): boolean {
   return (
     context === undefined ||
     context.role === 'inline-code' ||
@@ -28,6 +22,10 @@ function isReadingContext(context: TokenContext | undefined): boolean {
     context.role === 'bracket-label' ||
     context.role === 'bare-prose'
   );
+}
+
+export function isReadingContextOptions(options: FormatLinkPathOptions): boolean {
+  return isReadingContext(options.tokenContext);
 }
 
 export function isUnderProjectRoot(projectRoot: string, absolutePath: string): boolean {
@@ -84,16 +82,6 @@ function toProjectRootRelative(
   return keepSlash && !rewritten.endsWith('/') ? `${rewritten}/` : rewritten;
 }
 
-export function shouldPreserveAgentsMeshAnchor(
-  _projectRoot: string,
-  _destinationFile: string,
-  options: FormatLinkPathOptions,
-): boolean {
-  if (!isReadingContext(options.tokenContext)) return false;
-  if (options.originalToken === undefined) return false;
-  return normalizeSeparators(options.originalToken).startsWith('.agentsmesh/');
-}
-
 export function toProjectRootReference(
   projectRoot: string,
   absolutePath: string,
@@ -119,7 +107,7 @@ export function formatLinkPathForDestinationLegacy(
   if (!isUnderProjectRoot(projectRoot, target)) {
     return toProjectRootReference(projectRoot, target, keepSlash)?.text ?? null;
   }
-  const destDir = normalizeForProject(projectRoot, dirname(destFile));
+  const destDir = normalizeForProject(projectRoot, api.dirname(destFile));
   if (!isUnderProjectRoot(projectRoot, destDir) && destDir !== root) {
     return toProjectRootReference(projectRoot, target, keepSlash)?.text ?? null;
   }

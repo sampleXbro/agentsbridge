@@ -9,6 +9,7 @@ import { importFromCline } from '../../targets/cline/importer.js';
 import { importFromContinue } from '../../targets/continue/importer.js';
 import { importFromJunie } from '../../targets/junie/importer.js';
 import { importFromKiro } from '../../targets/kiro/importer.js';
+import { importFromKiloCode } from '../../targets/kilo-code/importer.js';
 
 type ImportFn = (projectRoot: string) => Promise<ImportResult[]>;
 
@@ -23,6 +24,7 @@ const NATIVE_IMPORTERS: Record<string, ImportFn> = {
   continue: importFromContinue,
   junie: importFromJunie,
   kiro: importFromKiro,
+  'kilo-code': importFromKiloCode,
 };
 
 /**

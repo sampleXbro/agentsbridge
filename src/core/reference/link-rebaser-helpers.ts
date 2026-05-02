@@ -1,5 +1,5 @@
 import { existsSync, realpathSync } from 'node:fs';
-import { isAbsolute, win32 } from 'node:path';
+import { win32 } from 'node:path';
 import {
   WINDOWS_ABSOLUTE_PATH,
   pathApi,
@@ -61,7 +61,7 @@ export function resolveProjectPath(
     }
     return [windowsToken];
   }
-  if (isAbsolute(token)) {
+  if (api.isAbsolute(token)) {
     const absoluteToken = normalizeForProject(projectRoot, token);
     if (absoluteToken.startsWith(normalizedProjectRoot) || existsSync(token))
       return [absoluteToken];

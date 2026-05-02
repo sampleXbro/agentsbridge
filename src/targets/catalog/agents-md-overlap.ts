@@ -34,6 +34,10 @@ function isKiroAgents(result: GenerateResult): boolean {
   return result.target === 'kiro' && result.path.endsWith(AGENTS_SUFFIX);
 }
 
+function isKiloCodeAgents(result: GenerateResult): boolean {
+  return result.target === 'kilo-code' && result.path.endsWith(AGENTS_SUFFIX);
+}
+
 function isCompatibilityAgents(result: GenerateResult): boolean {
   return isCursorAgents(result) || isGeminiAgents(result);
 }
@@ -134,7 +138,8 @@ export function preferEquivalentCodexAgents(
       !isClineAgents(result) &&
       !isCursorAgents(result) &&
       !isGeminiAgents(result) &&
-      !isKiroAgents(result)
+      !isKiroAgents(result) &&
+      !isKiloCodeAgents(result)
     ) {
       return true;
     }

@@ -26,7 +26,7 @@ export const COMMANDS: HelpCommand[] = [
       {
         name: '--global',
         description:
-          'Initialize canonical home config under ~/.agentsmesh/ (global targets include claude-code, antigravity, codex-cli, cursor, gemini-cli)',
+          'Initialize canonical home config under ~/.agentsmesh/ (global targets include claude-code, antigravity, codex-cli, cursor, gemini-cli, kilo-code)',
       },
       {
         name: '--yes',
@@ -43,7 +43,7 @@ export const COMMANDS: HelpCommand[] = [
       {
         name: '--global',
         description:
-          'Generate user-level config from ~/.agentsmesh/ (e.g. claude-code, antigravity, codex-cli, gemini-cli; Cursor writes ~/.cursor/rules, ~/.cursor/AGENTS.md, hooks, ignore, MCP, skills, agents, commands; legacy ~/.agentsmesh-exports/cursor/user-rules.md is import-only)',
+          'Generate user-level config from ~/.agentsmesh/ (e.g. claude-code, antigravity, codex-cli, gemini-cli, kilo-code; Cursor writes ~/.cursor/rules, ~/.cursor/AGENTS.md, hooks, ignore, MCP, skills, agents, commands; legacy ~/.agentsmesh-exports/cursor/user-rules.md is import-only)',
       },
       { name: '--targets <csv>', description: 'Limit generation to target IDs (comma-separated)' },
       { name: '--check', description: 'Check drift only; exit non-zero when out of sync' },
@@ -62,7 +62,7 @@ export const COMMANDS: HelpCommand[] = [
       {
         name: '--global',
         description:
-          'Import from user-level paths into ~/.agentsmesh/ (claude-code, antigravity, codex-cli, gemini-cli; cursor reads ~/.cursor/{rules,AGENTS.md,mcp.json,hooks.json,cursorignore,skills,agents,commands} and legacy ~/.agentsmesh-exports/cursor/user-rules.md)',
+          'Import from user-level paths into ~/.agentsmesh/ (claude-code, antigravity, codex-cli, gemini-cli, kilo-code; cursor reads ~/.cursor/{rules,AGENTS.md,mcp.json,hooks.json,cursorignore,skills,agents,commands} and legacy ~/.agentsmesh-exports/cursor/user-rules.md)',
       },
     ],
   },

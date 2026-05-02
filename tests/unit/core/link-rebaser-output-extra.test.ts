@@ -6,7 +6,7 @@ import {
 } from '../../../src/core/reference/link-rebaser-output.js';
 
 describe('formatLinkPathForDestination — extra branches', () => {
-  it('preserves agentsmesh anchor when shouldPreserveAgentsMeshAnchor is true (returns originalToken)', () => {
+  it('formats inline-code .agentsmesh/ token as destination-relative', () => {
     const root = '/proj';
     const dest = '/proj/.claude/CLAUDE.md';
     const target = '/proj/.agentsmesh/skills/foo/SKILL.md';
@@ -14,7 +14,7 @@ describe('formatLinkPathForDestination — extra branches', () => {
       tokenContext: { role: 'inline-code', start: 0, end: 0, line: '', source: '' } as never,
       originalToken: '.agentsmesh/skills/foo/SKILL.md',
     });
-    expect(result).toBe('.agentsmesh/skills/foo/SKILL.md');
+    expect(result).toBe('../.agentsmesh/skills/foo/SKILL.md');
   });
 
   it('uses forceRelative path when forceRelative=true (project scope)', () => {

@@ -15,6 +15,7 @@ export const BUILTIN_TARGET_IDS = [
   'cursor',
   'gemini-cli',
   'junie',
+  'kilo-code',
   'kiro',
   'roo-code',
   'windsurf',

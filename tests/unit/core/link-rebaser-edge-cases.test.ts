@@ -497,7 +497,11 @@ describe('rewriteFileLinks edge cases', () => {
     });
 
     describe('backtick inline code is rewritten', () => {
-      it('rewrites path inside backtick span', () => {
+      it('rewrites canonical path inside backtick span to colocated target counterpart', () => {
+        // When a `.agentsmesh/...` reference resolves to a generated tool
+        // counterpart on disk, the rebaser projects the inline-code prose to
+        // the target-rooted path so AI agents reading the generated artifact
+        // can navigate without traversing back into the canonical source tree.
         const result = rewriteFileLinks({
           content: 'See `.agentsmesh/commands/review.md` for details.',
           projectRoot: '/proj',
@@ -507,7 +511,7 @@ describe('rewriteFileLinks edge cases', () => {
             p === '/proj/.agentsmesh/commands/review.md' ? '/proj/.claude/commands/review.md' : p,
           pathExists: (p) => p === '/proj/.claude/commands/review.md',
         });
-        expect(result.content).toBe('See `.agentsmesh/commands/review.md` for details.');
+        expect(result.content).toBe('See `.claude/commands/review.md` for details.');
       });
 
       it('rewrites relative path inside backtick span', () => {
@@ -562,7 +566,7 @@ describe('rewriteFileLinks edge cases', () => {
     });
 
     describe('@-prefixed tool paths', () => {
-      it('rewrites @.agentsmesh/commands path outside explicit delimiters', () => {
+      it('rewrites @.agentsmesh/commands path to the colocated target counterpart', () => {
         const result = rewriteFileLinks({
           content: 'Run @.agentsmesh/commands/review.md now.',
           projectRoot: '/proj',
@@ -572,7 +576,7 @@ describe('rewriteFileLinks edge cases', () => {
             p === '/proj/.agentsmesh/commands/review.md' ? '/proj/.claude/commands/review.md' : p,
           pathExists: (p) => p === '/proj/.claude/commands/review.md',
         });
-        expect(result.content).toBe('Run @.agentsmesh/commands/review.md now.');
+        expect(result.content).toBe('Run @.claude/commands/review.md now.');
       });
     });
 

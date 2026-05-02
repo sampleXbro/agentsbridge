@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.10.0
+
+### Minor Changes
+
+- c4fb261: Add `kilo-code` as a new built-in target. Kilo Code is a multi-surface AI coding platform (VS Code extension, JetBrains plugin, CLI, cloud agent) and a fork of Roo Code (which is a fork of Cline).
+
+  Generation always uses Kilo's new layout: `AGENTS.md` (root), `.kilo/rules/`, `.kilo/commands/`, `.kilo/agents/` (first-class subagents), `.kilo/skills/`, `.kilo/mcp.json`, and `.kilocodeignore`. Import covers BOTH the new layout and Kilo's legacy layout (`.kilocode/`, `.kilocodemodes`) so existing kilo / Roo-era projects round-trip cleanly.
+
+  Capabilities (project + global):
+  - `rules`, `additionalRules`, `commands`, `agents`, `skills`, `mcp`, `ignore`: native
+  - `hooks`: none — Kilo Code has no user-facing lifecycle hook system; canonical hooks emit a lint warning.
+  - `permissions`: none — Kilo permissions live in `kilo.jsonc`, which agentsmesh does not generate in v1; canonical permissions emit a lint warning.
+
+  Global mode generates under `~/.kilo/` (`AGENTS.md`, `rules/`, `commands/`, `agents/`, `skills/`, `mcp.json`) plus `~/.kilocodeignore`, and mirrors skills into `~/.agents/skills/` for cross-tool compatibility (suppressed when `codex-cli` is also active).
+
+  Use `agentsmesh import --from kilo-code` to migrate existing Kilo projects (new or legacy layout) into canonical `.agentsmesh/`, then `agentsmesh generate --targets kilo-code` to project them back as the documented new layout.
+
+- 5d6cfbb: Sequential `agentsmesh import --from <target>` runs now merge MCP servers by name into `.agentsmesh/mcp.json` instead of replacing the whole file. Existing canonical entries are preserved and the imported set wins on name collision, so a `claude-code` import followed by a `cursor` import keeps both targets' servers in canonical state.
+
+  Affects every importer that writes `mcp.json`: `claude-code` (`.claude/settings.json` + `.mcp.json` + `~/.claude/.mcp.json`), `codex-cli` (`config.toml`), `continue`, `cursor`, and any descriptor-driven importer using `mode: 'mcpJson'`. The previous behavior — last import overwrites the file and silently drops earlier servers — is gone.
+
+  Also fixed: a build-time regression where `writeMcpWithMerge` was referenced by five importers without the backing module being shipped, breaking `tsc --noEmit` for consumers building from source.
+
 ## 0.9.0
 
 ### Minor Changes

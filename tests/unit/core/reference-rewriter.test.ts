@@ -162,7 +162,7 @@ describe('rewriteGeneratedReferences', () => {
     expect(rewritten[0]!.content).toContain('commands/review.md');
     expect(rewritten[0]!.content).toContain('agents/reviewer.md');
     expect(rewritten[0]!.content).toContain('skills/api-gen/references/checklist.md');
-    expect(rewritten[1]!.content).toContain('.agentsmesh/skills/api-gen/SKILL.md');
+    expect(rewritten[1]!.content).toContain('../skills/api-gen/SKILL.md');
   });
 
   it('rewrites canonical markdown destinations to Claude global paths', () => {
@@ -377,8 +377,9 @@ describe('rewriteGeneratedReferences', () => {
       'global',
     );
 
-    expect(rewritten[0]!.content).toContain('.agentsmesh/agents/reviewer.md');
-    expect(rewritten[0]!.content).toContain('.agentsmesh/skills/api-gen/references/checklist.md');
+    // Canonical anchors project to the colocated cursor counterparts.
+    expect(rewritten[0]!.content).toContain('.cursor/agents/reviewer.md');
+    expect(rewritten[0]!.content).toContain('.cursor/skills/api-gen/references/checklist.md');
   });
 
   it('aligns Cline .agents/skills mirror rewrites with codex-cli when both targets are active (global)', () => {
@@ -517,7 +518,7 @@ describe('rewriteGeneratedReferences', () => {
       projectRoot,
     );
 
-    expect(rewritten[0]!.content).toContain('.agentsmesh/rules/typescript.md');
+    expect(rewritten[0]!.content).toContain('./typescript.instructions.md');
   });
 
   it('rewrites absolute canonical paths through the generated artifact map', () => {
@@ -611,7 +612,8 @@ describe('rewriteGeneratedReferences', () => {
 
     expect(rewritten[0]!.content).toContain('skills/api-gen/');
     expect(rewritten[0]!.content).toContain('skills/api-gen/references/');
-    expect(rewritten[1]!.content).toContain('.agentsmesh/skills/api-gen/SKILL.md');
+    // Canonical anchor projects to the colocated windsurf skill counterpart.
+    expect(rewritten[1]!.content).toContain('.windsurf/skills/api-gen/SKILL.md');
   });
 
   it('reuses one artifact map for multiple outputs of the same target', () => {
@@ -719,7 +721,7 @@ describe('rewriteGeneratedReferences', () => {
     expect(rewritten[0]!.content).toBe('See [references](./references/) and [assets](./assets/).');
   });
 
-  it('skips rewriting non-markdown outputs even when they map to canonical sources', () => {
+  it('leaves non-markdown outputs unchanged when the referenced target is not planned', () => {
     const projectRoot = '/proj';
     const canonical = makeCanonical(projectRoot);
     canonical.skills[0] = {

@@ -370,8 +370,7 @@ describe('rich-plugin — full generation with content verification', () => {
     expect(rootMd).toContain('[conv-ref]: ./rules/conventions.md');
     // External link unchanged
     expect(rootMd).toContain('[CommonMark](https://commonmark.org/)');
-    // Code span unchanged
-    expect(rootMd).toContain('`.agentsmesh/rules/_root.md`');
+    expect(rootMd).toContain('`./ROOT.md`');
     // Fenced code block paths unchanged
     expect(rootMd).toContain('cat .agentsmesh/rules/security.md');
     // Root generation contract appended

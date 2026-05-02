@@ -254,7 +254,7 @@ describe('import reference normalization', () => {
       const ruleFromSkill = target === 'gemini-cli' ? 'GEMINI.md' : '../../rules/typescript.md';
       const ruleMarkdownFromSkill =
         target === 'gemini-cli'
-          ? `[.agentsmesh/rules/typescript.md](../../../GEMINI.md)`
+          ? `[GEMINI.md](../../../GEMINI.md)`
           : `[.agentsmesh/rules/typescript.md](${ruleFromSkill})`;
       expect(skillContent).toContain(ruleFromSkill);
       expect(skillContent).toContain(ruleMarkdownFromSkill);

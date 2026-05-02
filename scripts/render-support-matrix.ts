@@ -26,6 +26,7 @@ const TARGET_LABELS: Record<string, string> = {
   windsurf: 'Windsurf',
   antigravity: 'Antigravity',
   'roo-code': 'Roo Code',
+  'kilo-code': 'Kilo Code',
 };
 
 const FEATURE_ROWS: [string, keyof typeof SUPPORT_MATRIX][] = [

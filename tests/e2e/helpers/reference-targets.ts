@@ -13,7 +13,8 @@ export type TargetName =
   | 'windsurf'
   | 'antigravity'
   | 'roo-code'
-  | 'kiro';
+  | 'kiro'
+  | 'kilo-code';
 
 interface OutputPathGroups {
   root: string[];
@@ -50,6 +51,8 @@ function skillDir(target: TargetName): string {
       return '.roo/skills';
     case 'kiro':
       return '.kiro/skills';
+    case 'kilo-code':
+      return '.kilo/skills';
   }
 }
 
@@ -76,7 +79,9 @@ export function outputPaths(target: TargetName): OutputPathGroups {
                   ? ['.agents/rules/general.md']
                   : target === 'roo-code'
                     ? ['.roo/rules/00-root.md']
-                    : ['AGENTS.md'],
+                    : target === 'kilo-code'
+                      ? ['AGENTS.md']
+                      : ['AGENTS.md'],
     rule:
       target === 'copilot'
         ? ['.github/instructions/typescript.instructions.md']
@@ -103,7 +108,9 @@ export function outputPaths(target: TargetName): OutputPathGroups {
                                 ? '.agents/rules/typescript.md'
                                 : target === 'roo-code'
                                   ? '.roo/rules/typescript.md'
-                                  : 'src/AGENTS.md',
+                                  : target === 'kilo-code'
+                                    ? '.kilo/rules/typescript.md'
+                                    : 'src/AGENTS.md',
                 ],
     command: [
       target === 'claude-code'
@@ -128,7 +135,9 @@ export function outputPaths(target: TargetName): OutputPathGroups {
                           ? '.agents/workflows/review.md'
                           : target === 'roo-code'
                             ? '.roo/commands/review.md'
-                            : commandSkill,
+                            : target === 'kilo-code'
+                              ? '.kilo/commands/review.md'
+                              : commandSkill,
     ],
     agent: [
       target === 'claude-code'
@@ -143,7 +152,9 @@ export function outputPaths(target: TargetName): OutputPathGroups {
                 ? '.kiro/agents/code-reviewer.md'
                 : target === 'gemini-cli'
                   ? '.gemini/agents/code-reviewer.md'
-                  : agentSkill,
+                  : target === 'kilo-code'
+                    ? '.kilo/agents/code-reviewer.md'
+                    : agentSkill,
     ],
     skill: [`${skillDir(target)}/api-generator/SKILL.md`],
     template: [`${skillDir(target)}/api-generator/template.ts`],
@@ -173,7 +184,9 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
                     ? '.agents/rules/general.md'
                     : target === 'roo-code'
                       ? '.roo/rules/00-root.md'
-                      : 'AGENTS.md';
+                      : target === 'kilo-code'
+                        ? 'AGENTS.md'
+                        : 'AGENTS.md';
   // From `src/AGENTS.md`, the rewriter points at repo-root AGENTS as `../AGENTS.md`.
   if (target === 'windsurf' && path === 'src/AGENTS.md') {
     rootRule = '../AGENTS.md';
@@ -201,7 +214,9 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
                         ? '.github/instructions/typescript.instructions.md'
                         : target === 'cursor'
                           ? '.cursor/rules/typescript.mdc'
-                          : '.claude/rules/typescript.md';
+                          : target === 'kilo-code'
+                            ? '.kilo/rules/typescript.md'
+                            : '.claude/rules/typescript.md';
   const checklist = `${geminiCompatSkills}/api-generator/references/route-checklist.md`;
   return {
     rootRule,
@@ -229,7 +244,9 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
                           ? '.agents/workflows/review.md'
                           : target === 'roo-code'
                             ? '.roo/commands/review.md'
-                            : '.windsurf/workflows/review.md',
+                            : target === 'kilo-code'
+                              ? '.kilo/commands/review.md'
+                              : '.windsurf/workflows/review.md',
     agent:
       target === 'claude-code'
         ? '.claude/agents/code-reviewer.md'
@@ -245,7 +262,9 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
                   ? '.gemini/agents/code-reviewer.md'
                   : target === 'codex-cli'
                     ? '.codex/agents/code-reviewer.toml'
-                    : `${skills}/${projectedAgentSkillDirName('code-reviewer')}/SKILL.md`,
+                    : target === 'kilo-code'
+                      ? '.kilo/agents/code-reviewer.md'
+                      : `${skills}/${projectedAgentSkillDirName('code-reviewer')}/SKILL.md`,
     skill: `${geminiCompatSkills}/api-generator/SKILL.md`,
     template: `${geminiCompatSkills}/api-generator/template.ts`,
     checklist,

@@ -87,16 +87,16 @@ Prefer strict mode.
       'utf-8',
     );
 
-    expect(claudeRoot).toContain('.agentsmesh/rules/typescript.md');
-    expect(claudeRoot).toContain('.agentsmesh/commands/review.md');
-    expect(claudeRoot).toContain('.agentsmesh/agents/reviewer.md');
-    expect(claudeRoot).toContain('.agentsmesh/skills/api-gen/references/checklist.md');
-    expect(cursorRoot).toContain('.agentsmesh/rules/typescript.md');
-    expect(cursorRoot).toContain('.agentsmesh/commands/review.md');
-    expect(cursorRoot).toContain('.agentsmesh/agents/reviewer.md');
-    expect(cursorRoot).toContain('.agentsmesh/skills/api-gen/references/checklist.md');
-    expect(claudeCommand).toContain('.agentsmesh/skills/api-gen/SKILL.md');
-    expect(claudeAgent).toContain('.agentsmesh/skills/api-gen/SKILL.md');
+    expect(claudeRoot).toContain('./rules/typescript.md');
+    expect(claudeRoot).toContain('./commands/review.md');
+    expect(claudeRoot).toContain('./agents/reviewer.md');
+    expect(claudeRoot).toContain('./skills/api-gen/references/checklist.md');
+    expect(cursorRoot).toContain('typescript.mdc');
+    expect(cursorRoot).toContain('commands/review.md');
+    expect(cursorRoot).toContain('agents/reviewer.md');
+    expect(cursorRoot).toContain('skills/api-gen/references/checklist.md');
+    expect(claudeCommand).toContain('../skills/api-gen/SKILL.md');
+    expect(claudeAgent).toContain('../skills/api-gen/SKILL.md');
     expect(claudeSkill).toContain('references/checklist.md');
   });
 

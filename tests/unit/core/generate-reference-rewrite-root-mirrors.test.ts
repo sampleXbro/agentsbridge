@@ -58,6 +58,7 @@ describe('root mirror reference rewriting', () => {
 
     const content = results.find((result) => result.path === '.cursor/AGENTS.md')?.content ?? '';
 
-    expect(content).toContain('.agentsmesh/skills/post-feature-qa/');
+    // Canonical anchor projects to the colocated `.cursor/...` skill directory.
+    expect(content).toContain('.cursor/skills/post-feature-qa/');
   });
 });

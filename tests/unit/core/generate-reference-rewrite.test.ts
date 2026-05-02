@@ -107,17 +107,17 @@ describe('generate reference rewriting', () => {
     });
 
     expect(results.find((result) => result.path === '.claude/CLAUDE.md')?.content).toContain(
-      '.agentsmesh/rules/typescript.md',
+      './rules/typescript.md',
     );
     expect(results.find((result) => result.path === '.claude/CLAUDE.md')?.content).toContain(
-      '.agentsmesh/commands/review.md',
+      './commands/review.md',
     );
     expect(
       results.find((result) => result.path === '.cursor/rules/general.mdc')?.content,
-    ).toContain('.agentsmesh/rules/typescript.md');
+    ).toContain('typescript.md');
     expect(
       results.find((result) => result.path === '.cursor/rules/general.mdc')?.content,
-    ).toContain('.agentsmesh/commands/review.md');
+    ).toContain('commands/review.md');
   });
 
   it.each([
@@ -168,14 +168,14 @@ describe('generate reference rewriting', () => {
   });
 
   it.each([
-    ['windsurf', '.codeium/windsurf/memories/global_rules.md'],
-    ['copilot', '.copilot/copilot-instructions.md'],
-    ['cursor', '.cursor/rules/general.mdc'],
-    ['claude-code', '.claude/CLAUDE.md'],
-    ['gemini-cli', '.gemini/GEMINI.md'],
+    ['windsurf', '.codeium/windsurf/memories/global_rules.md', '.codeium/windsurf/skills/api-gen/'],
+    ['copilot', '.copilot/copilot-instructions.md', '.copilot/skills/api-gen/'],
+    ['cursor', '.cursor/rules/general.mdc', '.cursor/skills/api-gen/'],
+    ['claude-code', '.claude/CLAUDE.md', '.claude/skills/api-gen/'],
+    ['gemini-cli', '.gemini/GEMINI.md', '.gemini/skills/api-gen/'],
   ] as const)(
-    'preserves skill directory prose references in global mode root output for %s',
-    async (target, outputPath) => {
+    'rewrites skill directory prose references to colocated target paths in global mode root output for %s',
+    async (target, outputPath, expectedSkillDir) => {
       const canonical = rewriteCanonical();
       canonical.rules[0] = {
         ...canonical.rules[0]!,
@@ -190,8 +190,8 @@ describe('generate reference rewriting', () => {
       });
 
       const content = results.find((result) => result.path === outputPath)?.content ?? '';
-      expect(content).toContain('`.agentsmesh/skills/api-gen/`');
-      expect(content).toContain('`.agentsmesh/skills/api-gen/references/`');
+      expect(content).toContain(`\`${expectedSkillDir}\``);
+      expect(content).toContain(`\`${expectedSkillDir}references/\``);
     },
   );
 
@@ -251,8 +251,10 @@ describe('generate reference rewriting', () => {
       const mirrorResult = results.find((r) => r.path === '.agents/skills/api-gen/SKILL.md');
       expect(mirrorResult).toBeDefined();
       const content = mirrorResult!.content;
-      expect(content).toContain('`.agentsmesh/skills/api-gen/`');
-      expect(content).toContain('`.agentsmesh/skills/api-gen/references/`');
+      // Mirror artifacts share the `.agents/skills/api-gen/` location, so the
+      // canonical reference projects to that colocated path.
+      expect(content).toContain('`.agents/skills/api-gen/`');
+      expect(content).toContain('`.agents/skills/api-gen/references/`');
       expect(content).not.toContain('../../../');
     },
   );

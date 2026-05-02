@@ -13,7 +13,6 @@ import {
   formatLinkPathForDestinationLegacy,
   isUnderAgentsMesh,
   isUnderProjectRoot,
-  shouldPreserveAgentsMeshAnchor,
   toAgentsMeshRootRelative,
   toProjectRootReference,
 } from '../../../src/core/reference/link-rebaser-formatting.js';
@@ -302,51 +301,6 @@ describe('link-rebaser-formatting branch coverage', () => {
 
     it('does not double trailing slash if rel already ends with /', () => {
       expect(toAgentsMeshRootRelative('/proj', '/proj/.agentsmesh/rules/', true)).toBe('rules/');
-    });
-  });
-
-  describe('shouldPreserveAgentsMeshAnchor', () => {
-    it('returns true for reading context with .agentsmesh/ originalToken', () => {
-      expect(
-        shouldPreserveAgentsMeshAnchor('/proj', '/proj/CLAUDE.md', {
-          tokenContext: { role: 'inline-code' },
-          originalToken: '.agentsmesh/rules/_root.md',
-        }),
-      ).toBe(true);
-    });
-
-    it('returns false in non-reading context (markdown-link-dest)', () => {
-      expect(
-        shouldPreserveAgentsMeshAnchor('/proj', '/proj/CLAUDE.md', {
-          tokenContext: { role: 'markdown-link-dest' },
-          originalToken: '.agentsmesh/rules/_root.md',
-        }),
-      ).toBe(false);
-    });
-
-    it('returns false when originalToken is undefined', () => {
-      expect(
-        shouldPreserveAgentsMeshAnchor('/proj', '/proj/CLAUDE.md', {
-          tokenContext: { role: 'inline-code' },
-        }),
-      ).toBe(false);
-    });
-
-    it('returns false when originalToken is not anchored at .agentsmesh/', () => {
-      expect(
-        shouldPreserveAgentsMeshAnchor('/proj', '/proj/CLAUDE.md', {
-          tokenContext: { role: 'inline-code' },
-          originalToken: 'docs/x.md',
-        }),
-      ).toBe(false);
-    });
-
-    it('treats undefined tokenContext as a reading context', () => {
-      expect(
-        shouldPreserveAgentsMeshAnchor('/proj', '/proj/CLAUDE.md', {
-          originalToken: '.agentsmesh/rules/_root.md',
-        }),
-      ).toBe(true);
     });
   });
 

@@ -13,11 +13,11 @@ describe('rewriteFileLinks requirements alignment', () => {
       rewriteBarePathTokens: true,
     });
 
-    expect(rewritten.content).toBe('Delegate to `.agentsmesh/agents/reviewer.md`.');
+    expect(rewritten.content).toBe('Delegate to `../../.agentsmesh/agents/reviewer.md`.');
     expect(rewritten.missing).toEqual([]);
   });
 
-  it('uses target-root paths for non-markdown folder links sourced from `.agentsmesh`', () => {
+  it('rewrites non-markdown folder links sourced from `.agentsmesh` to the colocated target counterpart', () => {
     const rewritten = rewriteFileLinks({
       content: 'Use `.agentsmesh/skills/qa/` for shared QA routines.',
       projectRoot: '/proj',
@@ -30,7 +30,7 @@ describe('rewriteFileLinks requirements alignment', () => {
       rewriteBarePathTokens: true,
     });
 
-    expect(rewritten.content).toBe('Use `.agentsmesh/skills/qa/` for shared QA routines.');
+    expect(rewritten.content).toBe('Use `.claude/skills/qa/` for shared QA routines.');
     expect(rewritten.missing).toEqual([]);
   });
 

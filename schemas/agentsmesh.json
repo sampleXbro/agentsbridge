@@ -17,6 +17,7 @@
         "cursor",
         "gemini-cli",
         "junie",
+        "kilo-code",
         "kiro",
         "roo-code",
         "windsurf"
@@ -34,6 +35,7 @@
           "cursor",
           "gemini-cli",
           "junie",
+          "kilo-code",
           "kiro",
           "roo-code",
           "windsurf"
@@ -93,6 +95,7 @@
               "cursor",
               "gemini-cli",
               "junie",
+              "kilo-code",
               "kiro",
               "roo-code",
               "windsurf"

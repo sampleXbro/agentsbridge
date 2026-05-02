@@ -99,6 +99,19 @@ describe('formatLinkPathForDestination', () => {
     ).toBe('../SKILL.md');
   });
 
+  it('uses the project-root path format for Windows-style destination-relative links', () => {
+    const root = 'C:\\proj';
+    const dest = 'C:\\proj\\.claude\\commands\\review.md';
+    const target = 'C:\\proj\\.claude\\skills\\api-gen\\SKILL.md';
+
+    expect(
+      formatLinkPathForDestination(root, dest, target, false, {
+        explicitCurrentDirLinks: true,
+        forceRelative: true,
+      }),
+    ).toBe('../skills/api-gen/SKILL.md');
+  });
+
   it('prefers ./… over a long ../… chain when both absolute targets exist (global scope)', () => {
     const root = '/proj';
     const dest = '/proj/.gemini/skills/ts-library/SKILL.md';

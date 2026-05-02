@@ -13,6 +13,7 @@ targets:
   - antigravity
   - kiro
   - roo-code
+  - kilo-code
 features:
   - rules
   - commands

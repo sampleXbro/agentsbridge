@@ -21,7 +21,6 @@ import {
 } from '../../../src/core/reference/link-rebaser-output.js';
 import {
   formatLinkPathForDestinationLegacy,
-  shouldPreserveAgentsMeshAnchor,
   toAgentsMeshRootRelative,
   toProjectRootReference,
 } from '../../../src/core/reference/link-rebaser-formatting.js';
@@ -185,8 +184,7 @@ describe('link-rebaser-helpers — extra uncovered branches', () => {
 });
 
 describe('link-rebaser-output — extra uncovered branches', () => {
-  it('formatLinkPathForDestination: shouldPreserveAgentsMeshAnchor short-circuits and returns original token (line 39)', () => {
-    // tokenContext with reading-context role + originalToken starts with `.agentsmesh/` → preserved.
+  it('formatLinkPathForDestination: inline-code .agentsmesh/ token uses normal formatting path', () => {
     const out = formatLinkPathForDestination(
       '/proj',
       '/proj/CLAUDE.md',
@@ -208,7 +206,7 @@ describe('link-rebaser-output — extra uncovered branches', () => {
       false,
       { forceRelative: true },
     );
-    expect(out).toBe('x.md');
+    expect(out).toBe('.agentsmesh/rules/x.md');
   });
 
   it('formatLinkPathForDestination: global scope + destination outside .agentsmesh → toProjectRootReference null when target outside project', () => {
@@ -230,7 +228,7 @@ describe('link-rebaser-output — extra uncovered branches', () => {
       '/proj/.agentsmesh/skills/foo',
       true,
     );
-    expect(out).toBe('skills/foo/');
+    expect(out).toBe('.agentsmesh/skills/foo/');
   });
 
   it('formatLinkPathForDestination: logicalMeshSourceAbsolute branch picks logical mesh path when target is outside mesh', () => {
@@ -284,32 +282,6 @@ describe('link-rebaser-output — extra uncovered branches', () => {
 });
 
 describe('link-rebaser-formatting — extra uncovered branches', () => {
-  it('shouldPreserveAgentsMeshAnchor: returns false when originalToken absent (line 38 cond-expr)', () => {
-    expect(
-      shouldPreserveAgentsMeshAnchor('/proj', '/proj/CLAUDE.md', {
-        tokenContext: { role: 'inline-code' },
-      }),
-    ).toBe(false);
-  });
-
-  it('shouldPreserveAgentsMeshAnchor: returns false when token is not under .agentsmesh', () => {
-    expect(
-      shouldPreserveAgentsMeshAnchor('/proj', '/proj/CLAUDE.md', {
-        tokenContext: { role: 'inline-code' },
-        originalToken: 'src/foo.ts',
-      }),
-    ).toBe(false);
-  });
-
-  it('shouldPreserveAgentsMeshAnchor: returns false when role is markdown-link-dest (not reading)', () => {
-    expect(
-      shouldPreserveAgentsMeshAnchor('/proj', '/proj/CLAUDE.md', {
-        tokenContext: { role: 'markdown-link-dest' },
-        originalToken: '.agentsmesh/rules/x.md',
-      }),
-    ).toBe(false);
-  });
-
   it('formatLinkPathForDestinationLegacy: target outside project root → uses projectRoot reference', () => {
     const out = formatLinkPathForDestinationLegacy(
       '/proj',

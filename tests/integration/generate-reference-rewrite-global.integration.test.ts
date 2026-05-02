@@ -57,7 +57,7 @@ Prose anchor: \`.agentsmesh/skills/qa/\`.\nMarkdown link: [QA](.agentsmesh/skill
     });
 
     const out = readFileSync(join(homeDir, '.claude', 'CLAUDE.md'), 'utf-8');
-    expect(out).toContain('Prose anchor: `.agentsmesh/skills/qa/`.');
+    expect(out).toContain('Prose anchor: `.claude/skills/qa/`.');
     expect(out).toContain('Markdown link: [QA](./skills/qa/).');
   });
 });

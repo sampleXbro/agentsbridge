@@ -781,6 +781,60 @@ features: [rules, commands, skills, mcp, ignore]
     fileContains(join(dir, '.rooignore'), '.env');
   });
 
+  it('generates Kilo Code rules, commands, agents, skills, mcp, and ignore with new-layout paths', async () => {
+    dir = createCanonicalProject(`version: 1
+targets: [kilo-code]
+features: [rules, commands, agents, skills, mcp, ignore]
+`);
+    const result = await runCli('generate --targets kilo-code', dir);
+    expect(result.exitCode, result.stderr).toBe(0);
+
+    // Root rule emitted as AGENTS.md (kilo's documented portable root).
+    fileContains(join(dir, 'AGENTS.md'), '# Standards');
+    fileNotContains(join(dir, 'AGENTS.md'), 'root: true');
+
+    // Non-root rules go to .kilo/rules/<slug>.md with frontmatter when description/globs present.
+    fileContains(join(dir, '.kilo', 'rules', 'typescript.md'), '# TypeScript');
+
+    // Commands include description frontmatter only (no allowed-tools projection).
+    fileContains(join(dir, '.kilo', 'commands', 'review.md'), 'description: Code review');
+    fileContains(
+      join(dir, '.kilo', 'commands', 'review.md'),
+      'Review current changes for quality.',
+    );
+    fileNotContains(join(dir, '.kilo', 'commands', 'review.md'), 'allowed-tools');
+    fileNotContains(join(dir, '.kilo', 'commands', 'review.md'), 'allowedTools');
+
+    // Native first-class agents at .kilo/agents/<slug>.md with mode: subagent frontmatter.
+    fileContains(join(dir, '.kilo', 'agents', 'code-reviewer.md'), 'mode: subagent');
+    fileContains(
+      join(dir, '.kilo', 'agents', 'code-reviewer.md'),
+      'description: Code review specialist',
+    );
+    fileContains(join(dir, '.kilo', 'agents', 'researcher.md'), 'mode: subagent');
+
+    // Skills use SKILL.md with frontmatter and supporting files.
+    fileContains(join(dir, '.kilo', 'skills', 'api-generator', 'SKILL.md'), 'name: api-generator');
+    fileContains(
+      join(dir, '.kilo', 'skills', 'api-generator', 'SKILL.md'),
+      'description: Generate API endpoints',
+    );
+    fileExists(join(dir, '.kilo', 'skills', 'api-generator', 'references', 'route-checklist.md'));
+
+    // MCP at .kilo/mcp.json with mcpServers wrapper.
+    const mcp = readJson(join(dir, '.kilo', 'mcp.json'));
+    expect(mcp).toHaveProperty('mcpServers');
+    expect(mcp).toHaveProperty('mcpServers.context7.command', 'npx');
+
+    // Ignore uses .kilocodeignore (legacy filename, only natively-loaded ignore in kilo).
+    fileContains(join(dir, '.kilocodeignore'), '.env');
+    fileNotExists(join(dir, '.kiloignore'));
+
+    // Hooks and permissions are NOT projected (capabilities: 'none').
+    fileNotExists(join(dir, '.kilo', 'hooks'));
+    fileNotExists(join(dir, 'kilo.jsonc'));
+  });
+
   it('generates Antigravity rules, workflows, and skills with doc-aligned formats', async () => {
     dir = createCanonicalProject(`version: 1
 targets: [antigravity]

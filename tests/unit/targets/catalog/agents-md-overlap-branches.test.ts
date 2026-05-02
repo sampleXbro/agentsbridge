@@ -152,6 +152,30 @@ describe('preferEquivalentCodexAgents — branch coverage', () => {
     expect(out.map((r) => r.target).sort()).toEqual(['codex-cli', 'kiro']);
   });
 
+  it('drops kilo-code AGENTS.md when codex AGENTS.md has equivalent content', () => {
+    const out = preferEquivalentCodexAgents(
+      [
+        makeResult({ target: 'codex-cli', path: 'AGENTS.md', content: '# Kilo' }),
+        makeResult({ target: 'kilo-code', path: 'AGENTS.md', content: '# Kilo' }),
+      ],
+      emptyCanonical(),
+      config,
+    );
+    expect(out.map((r) => r.target)).toEqual(['codex-cli']);
+  });
+
+  it('keeps kilo-code AGENTS.md when codex content differs', () => {
+    const out = preferEquivalentCodexAgents(
+      [
+        makeResult({ target: 'codex-cli', path: 'AGENTS.md', content: '# Codex' }),
+        makeResult({ target: 'kilo-code', path: 'AGENTS.md', content: '# Kilo' }),
+      ],
+      emptyCanonical(),
+      config,
+    );
+    expect(out.map((r) => r.target).sort()).toEqual(['codex-cli', 'kilo-code']);
+  });
+
   it('keeps non-overlap targets even when AGENTS.md from those targets', () => {
     const out = preferEquivalentCodexAgents(
       [makeResult({ target: 'claude-code', path: 'AGENTS.md', content: 'x' })],

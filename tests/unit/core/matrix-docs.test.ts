@@ -31,6 +31,7 @@ const TARGET_LABELS: Record<string, string> = {
   windsurf: 'Windsurf',
   antigravity: 'Antigravity',
   'roo-code': 'Roo Code',
+  'kilo-code': 'Kilo Code',
 };
 
 const LEVEL_LABELS = {

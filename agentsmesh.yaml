@@ -12,6 +12,7 @@ targets:
   - antigravity
   - roo-code
   - kiro
+  - kilo-code
 features:
   - rules
   - commands
@@ -33,11 +34,6 @@ extends:
       - hooks
       - permissions
 
-overrides:
-  cursor:
-    extra_setting: value
-  claude-code:
-    extra_setting: value
 collaboration:
   strategy: merge
   lock_features:

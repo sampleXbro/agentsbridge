@@ -8,6 +8,7 @@ export { buildCopilotImportPaths } from './copilot.js';
 export { buildCursorImportPaths } from './cursor.js';
 export { buildGeminiCliImportPaths } from './gemini-cli.js';
 export { buildJunieImportPaths } from './junie.js';
+export { buildKiloCodeImportPaths } from './kilo-code.js';
 export { buildKiroImportPaths } from './kiro.js';
 export { buildRooCodeImportPaths } from './roo-code.js';
 export { buildWindsurfImportPaths } from './windsurf.js';

@@ -67,6 +67,24 @@ export default [
     },
   },
   {
+    files: ['src/core/reference/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'node:path',
+              importNames: ['join', 'relative', 'normalize', 'isAbsolute', 'dirname', 'resolve'],
+              message:
+                'These node:path APIs are host-platform-aware and silently no-op the artifact map on Windows runners with POSIX-shaped roots (see tasks/lessons.md L180). Use pathApi(projectRoot) from src/core/path-helpers.ts. The `posix`, `win32`, and `basename` exports are still allowed for explicit POSIX-only operations on canonical strings.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     ignores: [
       'dist/',
       'coverage/',

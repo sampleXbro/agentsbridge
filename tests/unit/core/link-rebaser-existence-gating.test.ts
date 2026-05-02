@@ -13,14 +13,10 @@ import { rewriteFileLinks } from '../../../src/core/reference/link-rebaser.js';
  * root-relative.
  *
  * Notes on the WHEN-EXISTS shape (what changes when a target IS present):
- *  - Canonical `.agentsmesh/...` tokens inside reading contexts (inline-code,
- *    quoted, prose) are deliberately preserved as-is for readability —
- *    `shouldPreserveAgentsMeshAnchor` in `link-rebaser-formatting.ts`. So
- *    "rewritten" for those tokens means "kept canonical, not corrupted".
- *  - The same canonical token inside a markdown link destination is rewritten
- *    to a clickable destination-relative path.
+ *  - All tokens (including canonical `.agentsmesh/...` in reading contexts)
+ *    are rewritten to destination-relative paths when their target exists.
  *  - Absolute paths and root-relative paths are always rewritten to relative
- *    when they resolve (no canonical-preserve exception).
+ *    when they resolve.
  *
  * The tests below pin the EXISTENCE GATE in isolation: each case runs the same
  * content against four existence states (canonical-only, translated-only, both,

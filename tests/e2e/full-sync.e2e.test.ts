@@ -29,6 +29,7 @@ describe('full-sync round trip preservation', () => {
     'copilot',
     'gemini-cli',
     'antigravity',
+    'kilo-code',
   ];
 
   for (const target of TARGETS_SUPPORTING_IMPORT) {
@@ -79,9 +80,23 @@ describe('full-sync round trip preservation', () => {
         fileContains(tsRule, 'No any');
         fileContains(tsRule, 'Explicit return types');
       }
+      if (target === 'kilo-code') {
+        const rootRule = join(dir, '.agentsmesh', 'rules', '_root.md');
+        fileExists(rootRule);
+        fileContains(rootRule, '# Standards');
+        const tsRule = join(dir, '.agentsmesh', 'rules', 'typescript.md');
+        fileExists(tsRule);
+        fileContains(tsRule, '# TypeScript');
+        // First-class agent round-trip preserves description and body.
+        fileExists(join(dir, '.agentsmesh', 'agents', 'code-reviewer.md'));
+        fileContains(
+          join(dir, '.agentsmesh', 'agents', 'code-reviewer.md'),
+          'description: Code review specialist',
+        );
+      }
 
       // --- COMMANDS Preservation ---
-      if (['claude-code', 'gemini-cli'].includes(target)) {
+      if (['claude-code', 'gemini-cli', 'kilo-code'].includes(target)) {
         const canonicalCommands = join(dir, '.agentsmesh', 'commands');
         fileExists(canonicalCommands);
         const reviewCmd = join(canonicalCommands, 'review.md');
@@ -93,14 +108,20 @@ describe('full-sync round trip preservation', () => {
       }
 
       // --- SKILLS Preservation ---
-      // Note: Cline native representation stores skills logic inside .cline/skills
-      if (target === 'cline') {
+      if (['cline', 'kilo-code'].includes(target)) {
         const canonicalSkills = join(dir, '.agentsmesh', 'skills');
         fileExists(canonicalSkills);
+        if (target === 'kilo-code') {
+          fileExists(join(canonicalSkills, 'api-generator', 'SKILL.md'));
+          fileContains(
+            join(canonicalSkills, 'api-generator', 'SKILL.md'),
+            'Generate API endpoints',
+          );
+        }
       }
 
       // --- IGNORE Preservation ---
-      if (['cline', 'windsurf'].includes(target)) {
+      if (['cline', 'windsurf', 'kilo-code'].includes(target)) {
         const ignoreFile = join(dir, '.agentsmesh', 'ignore');
         fileExists(ignoreFile);
         fileContains(ignoreFile, '.env');
@@ -108,8 +129,8 @@ describe('full-sync round trip preservation', () => {
       }
 
       // --- MCP Preservation ---
-      // Cline & Cursor natively support MCP settings importing
-      if (['cline', 'cursor'].includes(target)) {
+      // Cline, Cursor, Kilo Code natively support MCP settings importing
+      if (['cline', 'cursor', 'kilo-code'].includes(target)) {
         const mcpFile = join(dir, '.agentsmesh', 'mcp.json');
         fileExists(mcpFile);
         fileContains(mcpFile, 'context7');

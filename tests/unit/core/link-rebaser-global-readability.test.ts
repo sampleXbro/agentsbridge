@@ -33,7 +33,11 @@ function runParityCase(root: string, scope: 'project' | 'global', item: ParityCa
 }
 
 describe('link-rebaser global readability contract', () => {
-  it('preserves .agentsmesh prose anchors in global generated output', () => {
+  it('rewrites .agentsmesh prose anchors to colocated target paths in global generated output', () => {
+    // Updated contract (2026-05): when a `.agentsmesh/...` token resolves to a
+    // generated global counterpart that exists on disk, the rebaser projects
+    // to the target-colocated path so the link resolves at the destination
+    // location instead of forcing the reader back into `.agentsmesh/`.
     const result = rewriteFileLinks({
       content: 'Use `.agentsmesh/skills/qa/` for shared QA routines.',
       projectRoot: homeRoot,
@@ -47,7 +51,7 @@ describe('link-rebaser global readability contract', () => {
       scope: 'global',
     });
 
-    expect(result.content).toBe('Use `.agentsmesh/skills/qa/` for shared QA routines.');
+    expect(result.content).toBe('Use `.claude/skills/qa/` for shared QA routines.');
     expect(result.missing).toEqual([]);
   });
 

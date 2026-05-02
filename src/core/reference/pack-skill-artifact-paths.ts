@@ -1,4 +1,4 @@
-import { dirname } from 'node:path';
+import { posix } from 'node:path';
 import type { CanonicalFiles } from '../types.js';
 import { pathApi } from '../path-helpers.js';
 import { getTargetSkillDir } from '../../targets/catalog/builtin-targets.js';
@@ -8,7 +8,7 @@ function addPackAbsoluteDirMapping(
   refs: Map<string, string>,
   fromAbs: string,
   toAbs: string,
-  api: typeof import('node:path').posix,
+  api: ReturnType<typeof pathApi>,
 ): void {
   const fromNorm = api.normalize(fromAbs);
   const toNorm = api.normalize(toAbs);
@@ -22,10 +22,10 @@ function skillSupportingDirPrefixes(
   const dirs = new Set<string>();
   for (const { relativePath } of supportingFiles) {
     const posixPath = relativePath.replace(/\\/g, '/');
-    let d = dirname(posixPath);
+    let d = posix.dirname(posixPath);
     while (d !== '.' && d.length > 0) {
       dirs.add(d);
-      const next = dirname(d);
+      const next = posix.dirname(d);
       if (next === d) break;
       d = next;
     }
@@ -50,7 +50,7 @@ export function addPackSkillArtifactMappings(
   const packsPrefix = api.join(projectRoot, '.agentsmesh', 'packs');
 
   for (const skill of canonical.skills) {
-    const skillSourceDir = dirname(skill.source);
+    const skillSourceDir = api.dirname(skill.source);
     if (!skillSourceDir.startsWith(packsPrefix)) continue;
 
     const targetSkillDir = api.normalize(api.join(projectRoot, skillDir, skill.name));

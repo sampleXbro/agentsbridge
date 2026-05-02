@@ -13,6 +13,7 @@ export const GLOBAL_ROUNDTRIP_E2E_TARGET_IDS = [
   'cursor',
   'gemini-cli',
   'junie',
+  'kilo-code',
   'kiro',
   'roo-code',
   'windsurf',

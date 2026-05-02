@@ -1,9 +1,3 @@
-/**
- * Readability acceptance tests for the link rebaser — §5 of docs/architecture/link-rebaser-vision.md.
- *
- * These tests assert that well-known anchors (`.agentsmesh/`) are preserved in generated output
- * rather than collapsed to ambiguous `./` or `./...` forms.
- */
 import { describe, expect, it } from 'vitest';
 import { rewriteFileLinks } from '../../../src/core/reference/link-rebaser.js';
 
@@ -11,14 +5,12 @@ const projectRoot = '/proj';
 const sourceFile = '/proj/.agentsmesh/skills/add-agent-target/SKILL.md';
 const destinationFile = '/proj/.claude/skills/add-agent-target/SKILL.md';
 
-/** Identity translate — the mesh root itself has no artifact mapping. */
 const identityTranslate = (p: string): string => p;
 
-/** Only `.agentsmesh` exists on disk for these anchor-preservation tests. */
 const meshRootExists = (p: string): boolean =>
   p === '/proj/.agentsmesh' || p === '/proj/.agentsmesh/';
 
-describe('link-rebaser anchor preservation (I1)', () => {
+describe('link-rebaser readability (I1)', () => {
   describe('.agentsmesh/ root directory in inline-code prose', () => {
     it('preserves .agentsmesh/ when the token IS the mesh root directory', () => {
       const result = rewriteFileLinks({
@@ -67,7 +59,11 @@ describe('link-rebaser anchor preservation (I1)', () => {
       );
     });
 
-    it('preserves .agentsmesh skill directory prose instead of retargeting it to generated tool roots', () => {
+    it('rewrites .agentsmesh skill directory prose to the colocated target counterpart', () => {
+      // Updated contract (2026-05): when a `.agentsmesh/...` token resolves to a
+      // generated tool counterpart on disk (translated path under another root),
+      // the rebaser projects the canonical anchor to the target-rooted form so
+      // the link resolves at the destination location.
       const result = rewriteFileLinks({
         content: 'Use `.agentsmesh/skills/qa/` for shared QA routines.',
         projectRoot,
@@ -79,10 +75,10 @@ describe('link-rebaser anchor preservation (I1)', () => {
         rewriteBarePathTokens: true,
       });
 
-      expect(result.content).toBe('Use `.agentsmesh/skills/qa/` for shared QA routines.');
+      expect(result.content).toBe('Use `.claude/skills/qa/` for shared QA routines.');
     });
 
-    it('preserves .agentsmesh file prose instead of using destination-relative output', () => {
+    it('rewrites .agentsmesh file prose to destination-relative path', () => {
       const result = rewriteFileLinks({
         content: 'Load `.agentsmesh/skills/api-gen/SKILL.md`.',
         projectRoot,
@@ -95,7 +91,62 @@ describe('link-rebaser anchor preservation (I1)', () => {
         pathExists: (p) => p === '/proj/.claude/skills/api-gen/SKILL.md',
       });
 
-      expect(result.content).toBe('Load `.agentsmesh/skills/api-gen/SKILL.md`.');
+      expect(result.content).toBe('Load `../api-gen/SKILL.md`.');
+    });
+
+    it('rewrites a deep .agentsmesh/skills/<pack>/references/<file> reference to destination-relative path across every target', () => {
+      const probe = (rewritten: string): string => `Refer to \`${rewritten}\` for the audit list.`;
+      const inputContent = probe(
+        '.agentsmesh/skills/add-agent-target/references/target-addition-checklist.md',
+      );
+      const checklistMesh =
+        '/proj/.agentsmesh/skills/add-agent-target/references/target-addition-checklist.md';
+      const cases: Array<{
+        destination: string;
+        targetPath: string;
+        expectedToken: string;
+      }> = [
+        {
+          destination: '/proj/.claude/skills/add-agent-target/SKILL.md',
+          targetPath:
+            '/proj/.claude/skills/add-agent-target/references/target-addition-checklist.md',
+          expectedToken: 'references/target-addition-checklist.md',
+        },
+        {
+          destination: '/proj/.junie/skills/add-agent-target/SKILL.md',
+          targetPath:
+            '/proj/.junie/skills/add-agent-target/references/target-addition-checklist.md',
+          expectedToken: 'references/target-addition-checklist.md',
+        },
+        {
+          destination: '/proj/.kilo/skills/add-agent-target/SKILL.md',
+          targetPath: '/proj/.kilo/skills/add-agent-target/references/target-addition-checklist.md',
+          expectedToken: 'references/target-addition-checklist.md',
+        },
+        {
+          destination: '/proj/.agents/skills/add-agent-target/SKILL.md',
+          targetPath:
+            '/proj/.agents/skills/add-agent-target/references/target-addition-checklist.md',
+          expectedToken: 'references/target-addition-checklist.md',
+        },
+        {
+          destination: '/proj/.github/skills/add-agent-target/SKILL.md',
+          targetPath:
+            '/proj/.github/skills/add-agent-target/references/target-addition-checklist.md',
+          expectedToken: 'references/target-addition-checklist.md',
+        },
+      ];
+      for (const { destination, targetPath, expectedToken } of cases) {
+        const result = rewriteFileLinks({
+          content: inputContent,
+          projectRoot,
+          sourceFile,
+          destinationFile: destination,
+          translatePath: (p) => (p === checklistMesh ? targetPath : p),
+          pathExists: (p) => p === targetPath,
+        });
+        expect(result.content, destination).toBe(probe(expectedToken));
+      }
     });
   });
 

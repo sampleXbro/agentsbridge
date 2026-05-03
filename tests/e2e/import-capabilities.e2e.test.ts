@@ -368,4 +368,18 @@ describe('import capabilities', () => {
     fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'Windsurf Fallback Rules');
     fileContains(join(dir, '.agentsmesh', 'ignore'), '.env');
   });
+
+  it('imports Goose .goosehints, skills, and .gooseignore', async () => {
+    dir = createTestProject('goose-project');
+    const result = await runCli('import --from goose', dir);
+    expect(result.exitCode, result.stderr).toBe(0);
+
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'Project Instructions');
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'root: true');
+    fileContains(join(dir, '.agentsmesh', 'ignore'), '.env');
+    fileContains(join(dir, '.agentsmesh', 'ignore'), 'node_modules/');
+    fileExists(join(dir, '.agentsmesh', 'skills', 'debugging', 'SKILL.md'));
+    fileContains(join(dir, '.agentsmesh', 'skills', 'debugging', 'SKILL.md'), 'name: debugging');
+    fileExists(join(dir, '.agentsmesh', 'skills', 'debugging', 'references', 'checklist.md'));
+  });
 });

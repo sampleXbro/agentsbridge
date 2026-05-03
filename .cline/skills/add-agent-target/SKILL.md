@@ -31,6 +31,7 @@ Use this skill when the task is to add a brand-new supported agent target to thi
 - Prefer official docs and other primary sources. Use vendor examples or source code only when official docs are incomplete, and call that out explicitly.
 - Separate the target product from the current assistant runtime before making format decisions. Do not confuse a generated target like `codex-cli` with Codex desktop/chat, or local CLI MCP config with app-managed connectors.
 - Capture the target's real capability map for every canonical feature: rules, additionalRules, commands, agents, skills, mcp, hooks, ignore, permissions.
+- When a feature is `none` but `skills` is `native` or `embedded`, evaluate whether `supportsConversion` should project that feature as skills. If the target reads skill bundles, commands and agents with no native surface should be projected as skills via `supportsConversion: { commands: true, agents: true }` and registered in `src/config/core/conversions.ts` with `DEFAULT_*_TO_SKILLS`. Do not add lint warnings for features that are projected as skills — only warn for features that are truly dropped.
 - Start from `agentsmesh target scaffold <id>` when building a built-in target. Do not hand-write the 10 skeleton files the scaffold produces.
 - Write failing tests first for every new behavior. Do not implement first and backfill later.
 - Add unit, integration, and e2e coverage for the complete import and generate flow, including global scope when applicable.
@@ -60,7 +61,8 @@ Use this skill when the task is to add a brand-new supported agent target to thi
 1. **Research** — §1 of the playbook. Answer every research-checklist item from primary sources before writing code.
 2. **Scaffold** — §2 of the playbook. Run `pnpm exec agentsmesh target scaffold <id>`, then register the id in the three catalog files listed there.
 3. **Constants and capabilities** — §3. Fill in paths and capability levels for both project and global scope.
-4. **Tests first** — §4. Add realistic fixtures under `tests/e2e/fixtures/<id>-project/` and write failing unit/integration/e2e tests.
+4. **Conversion eligibility** — For each feature marked `none` in capabilities, check if the target supports skills (`native` or `embedded`). If so, add `supportsConversion` to the descriptor for those features, register defaults in `src/config/core/conversions.ts`, and omit lint warnings for those features (they become `embedded` via skill projection). Only emit lint warnings for features that are truly dropped with no fallback.
+5. **Tests first** — §4. Add realistic fixtures under `tests/e2e/fixtures/<id>-project/` and write failing unit/integration/e2e tests.
 5. **Implement generators, importers, and reference maps** — §5. Feature-by-feature, using existing targets as reference implementations.
 6. **Global mode** — §6. Fill in `descriptor.global`, `rewriteGeneratedPath`, and any `skillMirror` or `sharedArtifacts` needs.
 7. **Plugin packaging** — §7. Only if shipping as an external plugin rather than a built-in.

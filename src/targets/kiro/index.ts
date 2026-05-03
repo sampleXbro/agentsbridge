@@ -1,7 +1,9 @@
 import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
 import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
+import { commandSkillDirName } from '../codex-cli/command-skill.js';
 import {
   generateRules,
+  generateCommands,
   generateAgents,
   generateSkills,
   generateMcp,
@@ -38,6 +40,7 @@ export const target: TargetGenerators = {
   name: KIRO_TARGET,
   primaryRootInstructionPath: KIRO_AGENTS_MD,
   generateRules,
+  generateCommands,
   generateAgents,
   generateSkills,
   generateMcp,
@@ -57,8 +60,8 @@ const project: TargetLayout = {
     rulePath(slug, _rule) {
       return `${KIRO_STEERING_DIR}/${slug}.md`;
     },
-    commandPath(_name, _config) {
-      return null;
+    commandPath(name) {
+      return `${KIRO_SKILLS_DIR}/${commandSkillDirName(name)}/SKILL.md`;
     },
     agentPath(name, _config) {
       return `${KIRO_AGENTS_DIR}/${name}.md`;
@@ -111,8 +114,8 @@ const global: TargetLayout = {
     rulePath(slug, _rule) {
       return `${KIRO_GLOBAL_STEERING_DIR}/${slug}.md`;
     },
-    commandPath(_name, _config) {
-      return null;
+    commandPath(name) {
+      return `${KIRO_SKILLS_DIR}/${commandSkillDirName(name)}/SKILL.md`;
     },
     agentPath(name, _config) {
       return `${KIRO_GLOBAL_AGENTS_DIR}/${name}.md`;
@@ -148,6 +151,7 @@ export const descriptor = {
   },
   emptyImportMessage:
     'No Kiro config found (AGENTS.md, .kiro/steering, .kiro/skills, .kiro/agents, .kiro/hooks, .kiro/settings/mcp.json, or .kiroignore).',
+  supportsConversion: { commands: true },
   lintRules,
   lint: {
     hooks: lintHooks,

@@ -1,6 +1,10 @@
 import { basename } from 'node:path';
 import type { CanonicalFiles } from '../../core/types.js';
 import { generateEmbeddedSkills } from '../import/embedded-skill.js';
+import {
+  projectedAgentSkillDirName,
+  serializeProjectedAgentSkill,
+} from '../projection/projected-agent-skill.js';
 import { serializeFrontmatter } from '../../utils/text/markdown.js';
 import { serializeCommandRule } from './command-rule.js';
 import {
@@ -60,6 +64,13 @@ export function generateMcp(canonical: CanonicalFiles): ContinueOutput[] {
       content: JSON.stringify({ mcpServers: canonical.mcp.mcpServers }, null, 2),
     },
   ];
+}
+
+export function generateAgents(canonical: CanonicalFiles): ContinueOutput[] {
+  return canonical.agents.map((agent) => ({
+    path: `${CONTINUE_SKILLS_DIR}/${projectedAgentSkillDirName(agent.name)}/SKILL.md`,
+    content: serializeProjectedAgentSkill(agent),
+  }));
 }
 
 export function generateSkills(canonical: CanonicalFiles): ContinueOutput[] {

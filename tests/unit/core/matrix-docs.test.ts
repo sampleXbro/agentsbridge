@@ -23,6 +23,7 @@ const TARGET_LABELS: Record<string, string> = {
   cursor: 'Cursor',
   copilot: 'Copilot',
   continue: 'Continue',
+  goose: 'Goose',
   junie: 'Junie',
   kiro: 'Kiro',
   'gemini-cli': 'Gemini CLI',
@@ -32,6 +33,7 @@ const TARGET_LABELS: Record<string, string> = {
   antigravity: 'Antigravity',
   'roo-code': 'Roo Code',
   'kilo-code': 'Kilo Code',
+  opencode: 'OpenCode',
 };
 
 const LEVEL_LABELS = {

@@ -9,8 +9,19 @@ import {
 } from '../../utils/filesystem/fs.js';
 import { parseFrontmatter, serializeFrontmatter } from '../../utils/text/markdown.js';
 import { serializeImportedSkillWithFallback } from './import-metadata.js';
+import {
+  parseProjectedAgentSkillFrontmatter,
+  serializeImportedAgent,
+} from '../projection/projected-agent-skill.js';
+import {
+  parseCommandSkillFrontmatter,
+  serializeImportedCommand,
+} from '../codex-cli/command-skill.js';
+import { removePathIfExists } from './scoped-agents-import.js';
 
 const AB_SKILLS = '.agentsmesh/skills';
+const AB_COMMANDS = '.agentsmesh/commands';
+const AB_AGENTS = '.agentsmesh/agents';
 
 export interface EmbeddedSkillOutput {
   path: string;
@@ -68,6 +79,45 @@ export async function importEmbeddedSkills(
     const { frontmatter, body } = parseFrontmatter(
       normalize(sourceSkillContent, sourceSkillFile, destinationSkillFile),
     );
+
+    const projectedCommand = parseCommandSkillFrontmatter(frontmatter, entry.name);
+    if (projectedCommand) {
+      await removePathIfExists(join(projectRoot, AB_SKILLS, entry.name));
+      const destDir = join(projectRoot, AB_COMMANDS);
+      await mkdirp(destDir);
+      const commandPath = join(destDir, `${projectedCommand.name}.md`);
+      await writeFileAtomic(
+        commandPath,
+        serializeImportedCommand(projectedCommand, normalize(body, sourceSkillFile, commandPath)),
+      );
+      results.push({
+        fromTool,
+        fromPath: sourceSkillFile,
+        toPath: `${AB_COMMANDS}/${projectedCommand.name}.md`,
+        feature: 'commands',
+      });
+      continue;
+    }
+
+    const projectedAgent = parseProjectedAgentSkillFrontmatter(frontmatter, entry.name);
+    if (projectedAgent) {
+      await removePathIfExists(join(projectRoot, AB_SKILLS, entry.name));
+      const destDir = join(projectRoot, AB_AGENTS);
+      await mkdirp(destDir);
+      const agentPath = join(destDir, `${projectedAgent.name}.md`);
+      await writeFileAtomic(
+        agentPath,
+        serializeImportedAgent(projectedAgent, normalize(body, sourceSkillFile, agentPath)),
+      );
+      results.push({
+        fromTool,
+        fromPath: sourceSkillFile,
+        toPath: `${AB_AGENTS}/${projectedAgent.name}.md`,
+        feature: 'agents',
+      });
+      continue;
+    }
+
     const output = await serializeImportedSkillWithFallback(
       destinationSkillFile,
       { ...frontmatter, name: entry.name },

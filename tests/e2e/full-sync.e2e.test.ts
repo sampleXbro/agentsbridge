@@ -30,6 +30,7 @@ describe('full-sync round trip preservation', () => {
     'gemini-cli',
     'antigravity',
     'kilo-code',
+    'opencode',
   ];
 
   for (const target of TARGETS_SUPPORTING_IMPORT) {

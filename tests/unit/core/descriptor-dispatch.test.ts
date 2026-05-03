@@ -118,8 +118,10 @@ describe('agentTargetPath', () => {
     expect(agentTargetPath('unknown-target', 'reviewer', baseConfig())).toBeNull();
   });
 
-  it('returns null for continue target which has no agent support', () => {
-    expect(agentTargetPath('continue', 'reviewer', baseConfig())).toBeNull();
+  it('returns projected agent skill path for continue target', () => {
+    expect(agentTargetPath('continue', 'reviewer', baseConfig())).toBe(
+      '.continue/skills/am-agent-reviewer/SKILL.md',
+    );
   });
 
   it('delegates to descriptor for claude-code target', () => {

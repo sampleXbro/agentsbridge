@@ -14,9 +14,11 @@ export const BUILTIN_TARGET_IDS = [
   'copilot',
   'cursor',
   'gemini-cli',
+  'goose',
   'junie',
   'kilo-code',
   'kiro',
+  'opencode',
   'roo-code',
   'windsurf',
 ] as const;

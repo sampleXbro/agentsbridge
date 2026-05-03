@@ -16,9 +16,11 @@
         "copilot",
         "cursor",
         "gemini-cli",
+        "goose",
         "junie",
         "kilo-code",
         "kiro",
+        "opencode",
         "roo-code",
         "windsurf"
       ],
@@ -34,9 +36,11 @@
           "copilot",
           "cursor",
           "gemini-cli",
+          "goose",
           "junie",
           "kilo-code",
           "kiro",
+          "opencode",
           "roo-code",
           "windsurf"
         ]
@@ -94,9 +98,11 @@
               "copilot",
               "cursor",
               "gemini-cli",
+              "goose",
               "junie",
               "kilo-code",
               "kiro",
+              "opencode",
               "roo-code",
               "windsurf"
             ]

@@ -3,6 +3,8 @@ import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.
 
 const DEFAULT_COMMANDS_TO_SKILLS: Record<string, boolean> = {
   'codex-cli': true,
+  goose: true,
+  kiro: true,
 };
 
 const DEFAULT_AGENTS_TO_SKILLS: Record<string, boolean> = {
@@ -10,6 +12,9 @@ const DEFAULT_AGENTS_TO_SKILLS: Record<string, boolean> = {
   cline: true,
   'codex-cli': false, // native .codex/agents/*.toml per agent-structures
   windsurf: true,
+  goose: true,
+  antigravity: true,
+  continue: true,
 };
 
 export function usesCommandSkillProjection(target: string): boolean {

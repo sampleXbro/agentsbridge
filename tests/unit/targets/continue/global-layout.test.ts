@@ -40,8 +40,10 @@ describe('continue global layout — paths', () => {
     expect(layout.paths.commandPath('deploy', {} as never)).toBe('.continue/prompts/deploy.md');
   });
 
-  it('suppresses agent path (returns null)', () => {
-    expect(layout.paths.agentPath('my-agent', {} as never)).toBeNull();
+  it('returns projected agent skill path', () => {
+    expect(layout.paths.agentPath('my-agent', {} as never)).toBe(
+      '.continue/skills/am-agent-my-agent/SKILL.md',
+    );
   });
 });
 

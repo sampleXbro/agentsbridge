@@ -10,7 +10,7 @@ description: Professional communication standards for commits and responses
 <examples>
 ❌ 🔧 Fix auth issues ✨
 ✅ Fix authentication middleware timeout handling
-</examples>
+<examples>
 
 **Commit messages:** Concise, technically descriptive. Explain WHAT changed and WHY. Use proper technical terminology.
 
@@ -19,6 +19,6 @@ description: Professional communication standards for commits and responses
 <examples>
 ❌ "I'm going to try to fix this by exploring different approaches..."
 ✅ [Fix first, then report] "Fixed authentication timeout in auth.ts:234 by increasing session expiry window"
-</examples>
+<examples>
 
 ---

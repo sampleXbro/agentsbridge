@@ -13,6 +13,8 @@ targets:
   - roo-code
   - kiro
   - kilo-code
+  - opencode
+  - goose
 features:
   - rules
   - commands

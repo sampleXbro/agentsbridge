@@ -7,9 +7,11 @@ export { buildContinueImportPaths } from './continue.js';
 export { buildCopilotImportPaths } from './copilot.js';
 export { buildCursorImportPaths } from './cursor.js';
 export { buildGeminiCliImportPaths } from './gemini-cli.js';
+export { buildGooseImportPaths } from './goose.js';
 export { buildJunieImportPaths } from './junie.js';
 export { buildKiloCodeImportPaths } from './kilo-code.js';
 export { buildKiroImportPaths } from './kiro.js';
+export { buildOpencodeImportPaths } from './opencode.js';
 export { buildRooCodeImportPaths } from './roo-code.js';
 export { buildWindsurfImportPaths } from './windsurf.js';
 // </auto-generated:import-map-exports>

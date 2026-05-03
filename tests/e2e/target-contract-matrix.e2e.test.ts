@@ -16,10 +16,19 @@ import { TARGET_IDS } from '../../src/targets/catalog/target-ids.js';
 const TARGETS = Object.keys(TARGET_CONTRACTS) as TargetName[];
 
 /** Targets that do not emit native agent files (import also omits `.agentsmesh/agents/*`). */
-const TARGETS_WITHOUT_AGENT_OUTPUT = new Set<TargetName>(['continue', 'antigravity', 'roo-code']);
+const TARGETS_WITHOUT_AGENT_OUTPUT = new Set<TargetName>(['roo-code']);
 
-/** Kiro maps rules/agents/skills but does not emit `commands/review` as a native file. */
-const TARGETS_WITHOUT_NATIVE_COMMAND_FILE = new Set<TargetName>(['kiro']);
+/** Targets whose agents are projected skills (no cross-references in agent body). */
+const TARGETS_WITH_PROJECTED_AGENTS = new Set<TargetName>([
+  'cline',
+  'windsurf',
+  'goose',
+  'antigravity',
+  'continue',
+]);
+
+/** Targets whose commands are projected skills (no cross-references in command body). */
+const TARGETS_WITH_PROJECTED_COMMANDS = new Set<TargetName>(['codex-cli', 'goose', 'kiro']);
 
 const MATRIX_CONFIG = `version: 1
 targets:
@@ -27,6 +36,7 @@ targets:
   - cursor
   - copilot
   - continue
+  - goose
   - junie
   - gemini-cli
   - cline
@@ -36,6 +46,7 @@ targets:
   - kiro
   - roo-code
   - kilo-code
+  - opencode
 features:
   - rules
   - commands
@@ -187,17 +198,15 @@ describe('target contract matrix', () => {
     const rootBody = read(dir, rootPath);
     expectMentionsRelPath(rootBody, 'skills/api-generator/SKILL.md');
     expectMentionsRelPath(rootBody, 'skills/api-generator/references/route-checklist.md');
-    if (!TARGETS_WITHOUT_AGENT_OUTPUT.has(target)) {
+    if (!TARGETS_WITHOUT_AGENT_OUTPUT.has(target) && !TARGETS_WITH_PROJECTED_AGENTS.has(target)) {
       const agentBody = read(dir, agentPath);
-      if (!TARGETS_WITHOUT_NATIVE_COMMAND_FILE.has(target)) {
-        expectAnyPathTail(agentBody, refs.command);
-      }
+      expectAnyPathTail(agentBody, refs.command);
       expectAnyPathTail(agentBody, refs.skill);
     }
-    if (!TARGETS_WITHOUT_NATIVE_COMMAND_FILE.has(target)) {
+    if (!TARGETS_WITH_PROJECTED_COMMANDS.has(target)) {
       expectAnyPathTail(read(dir, skillPath), refs.command);
     }
-    if (!TARGETS_WITHOUT_AGENT_OUTPUT.has(target)) {
+    if (!TARGETS_WITHOUT_AGENT_OUTPUT.has(target) && !TARGETS_WITH_PROJECTED_AGENTS.has(target)) {
       expectAnyPathTail(read(dir, skillPath), refs.agent);
     }
     if (target === 'cline') {

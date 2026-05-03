@@ -6,6 +6,7 @@ export const kiroContract: TargetPathContract = {
     '.kiro/agents/researcher.md',
     '.kiro/hooks/post-tool-use-1.kiro.hook',
     '.kiro/settings/mcp.json',
+    '.kiro/skills/am-command-review/SKILL.md',
     '.kiro/skills/api-generator/SKILL.md',
     '.kiro/skills/api-generator/references/route-checklist.md',
     '.kiro/skills/api-generator/template.ts',
@@ -16,6 +17,7 @@ export const kiroContract: TargetPathContract = {
   imported: [
     '.agentsmesh/agents/code-reviewer.md',
     '.agentsmesh/agents/researcher.md',
+    '.agentsmesh/commands/review.md',
     '.agentsmesh/hooks.yaml',
     '.agentsmesh/ignore',
     '.agentsmesh/mcp.json',

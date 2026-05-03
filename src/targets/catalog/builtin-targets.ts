@@ -32,9 +32,11 @@ import { descriptor as continueTarget } from '../continue/index.js';
 import { descriptor as copilot } from '../copilot/index.js';
 import { descriptor as cursor } from '../cursor/index.js';
 import { descriptor as geminiCli } from '../gemini-cli/index.js';
+import { descriptor as goose } from '../goose/index.js';
 import { descriptor as junie } from '../junie/index.js';
 import { descriptor as kiloCode } from '../kilo-code/index.js';
 import { descriptor as kiro } from '../kiro/index.js';
+import { descriptor as opencode } from '../opencode/index.js';
 import { descriptor as rooCode } from '../roo-code/index.js';
 import { descriptor as windsurf } from '../windsurf/index.js';
 // </auto-generated:builtin-target-imports>
@@ -61,9 +63,11 @@ export const BUILTIN_TARGETS: readonly TargetDescriptor[] = [
   copilot,
   cursor,
   geminiCli,
+  goose,
   junie,
   kiloCode,
   kiro,
+  opencode,
   rooCode,
   windsurf,
 ];
@@ -180,6 +184,22 @@ function isFeatureSuppressedByConversion(
   return false;
 }
 
+function isConversionUpgrading(
+  descriptor: TargetDescriptor | undefined,
+  feature: keyof TargetCapabilities,
+  config: ValidatedConfig | undefined,
+  scope: TargetLayoutScope,
+): boolean {
+  if (!descriptor || !config) return false;
+  if (feature === 'commands' && descriptor.supportsConversion?.commands) {
+    return shouldConvertCommandsToSkills(config, descriptor.id, true, scope);
+  }
+  if (feature === 'agents' && descriptor.supportsConversion?.agents) {
+    return shouldConvertAgentsToSkills(config, descriptor.id, true, scope);
+  }
+  return false;
+}
+
 export function getEffectiveTargetSupportLevel(
   target: string,
   feature: keyof TargetCapabilities,
@@ -187,8 +207,11 @@ export function getEffectiveTargetSupportLevel(
   scope: TargetLayoutScope = 'project',
 ): SupportLevel {
   const baseLevel = getTargetCapabilities(target, scope)?.[feature]?.level ?? 'none';
-  if (baseLevel !== 'embedded') return baseLevel;
   const descriptor = getBuiltinTargetDefinition(target) ?? getDescriptor(target);
+  if (baseLevel === 'none' && isConversionUpgrading(descriptor, feature, config, scope)) {
+    return 'embedded';
+  }
+  if (baseLevel !== 'embedded') return baseLevel;
   return isFeatureSuppressedByConversion(descriptor, feature, config, scope) ? 'none' : baseLevel;
 }
 

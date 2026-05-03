@@ -35,6 +35,7 @@ import { descriptor as geminiCli } from '../gemini-cli/index.js';
 import { descriptor as junie } from '../junie/index.js';
 import { descriptor as kiloCode } from '../kilo-code/index.js';
 import { descriptor as kiro } from '../kiro/index.js';
+import { descriptor as opencode } from '../opencode/index.js';
 import { descriptor as rooCode } from '../roo-code/index.js';
 import { descriptor as windsurf } from '../windsurf/index.js';
 // </auto-generated:builtin-target-imports>
@@ -64,6 +65,7 @@ export const BUILTIN_TARGETS: readonly TargetDescriptor[] = [
   junie,
   kiloCode,
   kiro,
+  opencode,
   rooCode,
   windsurf,
 ];

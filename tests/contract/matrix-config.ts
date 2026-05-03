@@ -14,6 +14,7 @@ targets:
   - kiro
   - roo-code
   - kilo-code
+  - opencode
 features:
   - rules
   - commands

@@ -10,6 +10,7 @@ export { buildGeminiCliImportPaths } from './gemini-cli.js';
 export { buildJunieImportPaths } from './junie.js';
 export { buildKiloCodeImportPaths } from './kilo-code.js';
 export { buildKiroImportPaths } from './kiro.js';
+export { buildOpencodeImportPaths } from './opencode.js';
 export { buildRooCodeImportPaths } from './roo-code.js';
 export { buildWindsurfImportPaths } from './windsurf.js';
 // </auto-generated:import-map-exports>

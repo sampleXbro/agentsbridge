@@ -10,6 +10,7 @@ import { geminiCliContract } from './gemini-cli.js';
 import { junieContract } from './junie.js';
 import { kiloCodeContract } from './kilo-code.js';
 import { kiroContract } from './kiro.js';
+import { opencodeContract } from './opencode.js';
 import { rooCodeContract } from './roo-code.js';
 import { windsurfContract } from './windsurf.js';
 import type { TargetContractMap } from './types.js';
@@ -31,6 +32,7 @@ export const TARGET_SPECIFIC_PREFIXES = [
   '.kiro/',
   '.kilo/',
   '.kilocode/',
+  '.opencode/',
 ] as const;
 
 export const TARGET_CONTRACTS: TargetContractMap = {
@@ -47,6 +49,7 @@ export const TARGET_CONTRACTS: TargetContractMap = {
   'roo-code': rooCodeContract,
   kiro: kiroContract,
   'kilo-code': kiloCodeContract,
+  opencode: opencodeContract,
 };
 
 export function contractForTarget(id: BuiltinTargetId): TargetContractMap[BuiltinTargetId] {

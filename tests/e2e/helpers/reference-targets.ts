@@ -14,7 +14,8 @@ export type TargetName =
   | 'antigravity'
   | 'roo-code'
   | 'kiro'
-  | 'kilo-code';
+  | 'kilo-code'
+  | 'opencode';
 
 interface OutputPathGroups {
   root: string[];
@@ -53,6 +54,8 @@ function skillDir(target: TargetName): string {
       return '.kiro/skills';
     case 'kilo-code':
       return '.kilo/skills';
+    case 'opencode':
+      return '.opencode/skills';
   }
 }
 
@@ -110,7 +113,9 @@ export function outputPaths(target: TargetName): OutputPathGroups {
                                   ? '.roo/rules/typescript.md'
                                   : target === 'kilo-code'
                                     ? '.kilo/rules/typescript.md'
-                                    : 'src/AGENTS.md',
+                                    : target === 'opencode'
+                                      ? '.opencode/rules/typescript.md'
+                                      : 'src/AGENTS.md',
                 ],
     command: [
       target === 'claude-code'
@@ -137,7 +142,9 @@ export function outputPaths(target: TargetName): OutputPathGroups {
                             ? '.roo/commands/review.md'
                             : target === 'kilo-code'
                               ? '.kilo/commands/review.md'
-                              : commandSkill,
+                              : target === 'opencode'
+                                ? '.opencode/commands/review.md'
+                                : commandSkill,
     ],
     agent: [
       target === 'claude-code'
@@ -154,7 +161,9 @@ export function outputPaths(target: TargetName): OutputPathGroups {
                   ? '.gemini/agents/code-reviewer.md'
                   : target === 'kilo-code'
                     ? '.kilo/agents/code-reviewer.md'
-                    : agentSkill,
+                    : target === 'opencode'
+                      ? '.opencode/agents/code-reviewer.md'
+                      : agentSkill,
     ],
     skill: [`${skillDir(target)}/api-generator/SKILL.md`],
     template: [`${skillDir(target)}/api-generator/template.ts`],
@@ -216,7 +225,9 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
                           ? '.cursor/rules/typescript.mdc'
                           : target === 'kilo-code'
                             ? '.kilo/rules/typescript.md'
-                            : '.claude/rules/typescript.md';
+                            : target === 'opencode'
+                              ? '.opencode/rules/typescript.md'
+                              : '.claude/rules/typescript.md';
   const checklist = `${geminiCompatSkills}/api-generator/references/route-checklist.md`;
   return {
     rootRule,
@@ -246,7 +257,9 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
                             ? '.roo/commands/review.md'
                             : target === 'kilo-code'
                               ? '.kilo/commands/review.md'
-                              : '.windsurf/workflows/review.md',
+                              : target === 'opencode'
+                                ? '.opencode/commands/review.md'
+                                : '.windsurf/workflows/review.md',
     agent:
       target === 'claude-code'
         ? '.claude/agents/code-reviewer.md'
@@ -264,7 +277,9 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
                     ? '.codex/agents/code-reviewer.toml'
                     : target === 'kilo-code'
                       ? '.kilo/agents/code-reviewer.md'
-                      : `${skills}/${projectedAgentSkillDirName('code-reviewer')}/SKILL.md`,
+                      : target === 'opencode'
+                        ? '.opencode/agents/code-reviewer.md'
+                        : `${skills}/${projectedAgentSkillDirName('code-reviewer')}/SKILL.md`,
     skill: `${geminiCompatSkills}/api-generator/SKILL.md`,
     template: `${geminiCompatSkills}/api-generator/template.ts`,
     checklist,

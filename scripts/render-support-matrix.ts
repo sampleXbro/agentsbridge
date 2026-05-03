@@ -27,6 +27,7 @@ const TARGET_LABELS: Record<string, string> = {
   antigravity: 'Antigravity',
   'roo-code': 'Roo Code',
   'kilo-code': 'Kilo Code',
+  opencode: 'OpenCode',
 };
 
 const FEATURE_ROWS: [string, keyof typeof SUPPORT_MATRIX][] = [

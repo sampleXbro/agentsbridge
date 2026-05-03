@@ -13,6 +13,7 @@ targets:
   - windsurf
   - antigravity
   - kilo-code
+  - opencode
 features:
   - rules
   - commands

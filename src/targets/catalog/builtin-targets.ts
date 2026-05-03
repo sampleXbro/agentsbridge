@@ -32,6 +32,7 @@ import { descriptor as continueTarget } from '../continue/index.js';
 import { descriptor as copilot } from '../copilot/index.js';
 import { descriptor as cursor } from '../cursor/index.js';
 import { descriptor as geminiCli } from '../gemini-cli/index.js';
+import { descriptor as goose } from '../goose/index.js';
 import { descriptor as junie } from '../junie/index.js';
 import { descriptor as kiloCode } from '../kilo-code/index.js';
 import { descriptor as kiro } from '../kiro/index.js';
@@ -62,6 +63,7 @@ export const BUILTIN_TARGETS: readonly TargetDescriptor[] = [
   copilot,
   cursor,
   geminiCli,
+  goose,
   junie,
   kiloCode,
   kiro,

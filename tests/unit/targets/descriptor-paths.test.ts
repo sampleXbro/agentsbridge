@@ -13,6 +13,7 @@ import { descriptor as antigravity } from '../../../src/targets/antigravity/inde
 import { descriptor as rooCode } from '../../../src/targets/roo-code/index.js';
 import { descriptor as kiloCode } from '../../../src/targets/kilo-code/index.js';
 import { descriptor as opencode } from '../../../src/targets/opencode/index.js';
+import { descriptor as goose } from '../../../src/targets/goose/index.js';
 import { TARGET_IDS } from '../../../src/targets/catalog/target-ids.js';
 import type { ValidatedConfig } from '../../../src/config/core/schema.js';
 import type { CanonicalRule } from '../../../src/core/types.js';
@@ -281,6 +282,7 @@ describe('descriptor metadata', () => {
     rooCode,
     kiloCode,
     opencode,
+    goose,
   ];
 
   const allFeatureKeys = [

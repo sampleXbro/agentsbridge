@@ -871,4 +871,59 @@ features: [rules, commands, skills]
       'response schema',
     );
   });
+
+  it('generates Goose .goosehints, skills, and .gooseignore', async () => {
+    dir = createCanonicalProject(`version: 1
+targets: [goose]
+features: [rules, skills, ignore]
+`);
+    const result = await runCli('generate --targets goose', dir);
+    expect(result.exitCode, result.stderr).toBe(0);
+
+    dirTreeExactly(dir, [
+      '.agents/',
+      '.agents/skills/',
+      '.agents/skills/api-generator/',
+      '.agents/skills/api-generator/SKILL.md',
+      '.agents/skills/api-generator/references/',
+      '.agents/skills/api-generator/references/route-checklist.md',
+      '.agents/skills/api-generator/template.ts',
+      '.agentsmesh/',
+      '.agentsmesh/.lock',
+      '.agentsmesh/agents/',
+      '.agentsmesh/agents/code-reviewer.md',
+      '.agentsmesh/agents/researcher.md',
+      '.agentsmesh/commands/',
+      '.agentsmesh/commands/review.md',
+      '.agentsmesh/hooks.yaml',
+      '.agentsmesh/ignore',
+      '.agentsmesh/mcp.json',
+      '.agentsmesh/permissions.yaml',
+      '.agentsmesh/rules/',
+      '.agentsmesh/rules/_root.md',
+      '.agentsmesh/rules/typescript.md',
+      '.agentsmesh/skills/',
+      '.agentsmesh/skills/api-generator/',
+      '.agentsmesh/skills/api-generator/SKILL.md',
+      '.agentsmesh/skills/api-generator/references/',
+      '.agentsmesh/skills/api-generator/references/route-checklist.md',
+      '.agentsmesh/skills/api-generator/template.ts',
+      '.agentsmeshcache',
+      '.goosehints',
+      '.gooseignore',
+      'agentsmesh.yaml',
+    ]);
+
+    fileContains(join(dir, '.goosehints'), '# Standards');
+    fileNotContains(join(dir, '.goosehints'), 'root: true');
+    fileContains(
+      join(dir, '.agents', 'skills', 'api-generator', 'SKILL.md'),
+      'name: api-generator',
+    );
+    fileContains(
+      join(dir, '.agents', 'skills', 'api-generator', 'references', 'route-checklist.md'),
+      'response schema',
+    );
+    fileContains(join(dir, '.gooseignore'), '.env');
+  });
 });

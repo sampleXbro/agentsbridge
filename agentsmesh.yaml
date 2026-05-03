@@ -14,6 +14,7 @@ targets:
   - kiro
   - kilo-code
   - opencode
+  - goose
 features:
   - rules
   - commands

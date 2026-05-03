@@ -10,6 +10,7 @@ import { geminiCliContract } from './gemini-cli.js';
 import { junieContract } from './junie.js';
 import { kiloCodeContract } from './kilo-code.js';
 import { kiroContract } from './kiro.js';
+import { gooseContract } from './goose.js';
 import { opencodeContract } from './opencode.js';
 import { rooCodeContract } from './roo-code.js';
 import { windsurfContract } from './windsurf.js';
@@ -40,6 +41,7 @@ export const TARGET_CONTRACTS: TargetContractMap = {
   cursor: cursorContract,
   copilot: copilotContract,
   continue: continueContract,
+  goose: gooseContract,
   junie: junieContract,
   'gemini-cli': geminiCliContract,
   cline: clineContract,

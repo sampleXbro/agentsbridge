@@ -15,6 +15,7 @@ targets:
   - roo-code
   - kilo-code
   - opencode
+  - goose
 features:
   - rules
   - commands

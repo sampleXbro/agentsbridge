@@ -16,10 +16,15 @@ import { TARGET_IDS } from '../../src/targets/catalog/target-ids.js';
 const TARGETS = Object.keys(TARGET_CONTRACTS) as TargetName[];
 
 /** Targets that do not emit native agent files (import also omits `.agentsmesh/agents/*`). */
-const TARGETS_WITHOUT_AGENT_OUTPUT = new Set<TargetName>(['continue', 'antigravity', 'roo-code']);
+const TARGETS_WITHOUT_AGENT_OUTPUT = new Set<TargetName>([
+  'continue',
+  'antigravity',
+  'goose',
+  'roo-code',
+]);
 
-/** Kiro maps rules/agents/skills but does not emit `commands/review` as a native file. */
-const TARGETS_WITHOUT_NATIVE_COMMAND_FILE = new Set<TargetName>(['kiro']);
+/** Targets that do not emit native command files. */
+const TARGETS_WITHOUT_NATIVE_COMMAND_FILE = new Set<TargetName>(['kiro', 'goose']);
 
 const MATRIX_CONFIG = `version: 1
 targets:
@@ -27,6 +32,7 @@ targets:
   - cursor
   - copilot
   - continue
+  - goose
   - junie
   - gemini-cli
   - cline

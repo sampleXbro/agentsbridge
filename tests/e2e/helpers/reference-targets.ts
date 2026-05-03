@@ -6,6 +6,7 @@ export type TargetName =
   | 'cursor'
   | 'copilot'
   | 'continue'
+  | 'goose'
   | 'junie'
   | 'gemini-cli'
   | 'cline'
@@ -43,6 +44,8 @@ function skillDir(target: TargetName): string {
     case 'cline':
       return '.cline/skills';
     case 'codex-cli':
+      return '.agents/skills';
+    case 'goose':
       return '.agents/skills';
     case 'windsurf':
       return '.windsurf/skills';
@@ -84,7 +87,9 @@ export function outputPaths(target: TargetName): OutputPathGroups {
                     ? ['.roo/rules/00-root.md']
                     : target === 'kilo-code'
                       ? ['AGENTS.md']
-                      : ['AGENTS.md'],
+                      : target === 'goose'
+                        ? ['.goosehints']
+                        : ['AGENTS.md'],
     rule:
       target === 'copilot'
         ? ['.github/instructions/typescript.instructions.md']

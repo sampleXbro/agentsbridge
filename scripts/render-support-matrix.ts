@@ -18,6 +18,7 @@ const TARGET_LABELS: Record<string, string> = {
   cursor: 'Cursor',
   copilot: 'Copilot',
   continue: 'Continue',
+  goose: 'Goose',
   junie: 'Junie',
   kiro: 'Kiro',
   'gemini-cli': 'Gemini CLI',

@@ -148,6 +148,7 @@ export const descriptor = {
   },
   emptyImportMessage:
     'No Kiro config found (AGENTS.md, .kiro/steering, .kiro/skills, .kiro/agents, .kiro/hooks, .kiro/settings/mcp.json, or .kiroignore).',
+  supportsConversion: { commands: true },
   lintRules,
   lint: {
     hooks: lintHooks,

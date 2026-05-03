@@ -17,7 +17,7 @@ import { generateRules, generateSkills, generateIgnore } from './generator.js';
 import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromGoose } from './importer.js';
 import { lintRules } from './linter.js';
-import { lintHooks, lintPermissions, lintMcp, lintCommands } from './lint.js';
+import { lintHooks, lintPermissions, lintMcp } from './lint.js';
 import { buildGooseImportPaths } from '../../core/reference/import-map-builders.js';
 import {
   GOOSE_TARGET,
@@ -113,8 +113,8 @@ export const descriptor = {
     hooks: lintHooks,
     permissions: lintPermissions,
     mcp: lintMcp,
-    commands: lintCommands,
   },
+  supportsConversion: { commands: true, agents: true },
   project,
   globalSupport: {
     capabilities,

@@ -1,8 +1,9 @@
 /**
  * Goose-specific lint hooks.
  *
- * Goose does not support commands, agents, hooks, MCP (project-level),
- * or permissions as standalone config files.
+ * Goose does not support hooks, MCP (project-level), or permissions
+ * as standalone config files. Commands and agents are projected as
+ * skills via supportsConversion.
  */
 
 import type { CanonicalFiles, LintDiagnostic } from '../../core/types.js';
@@ -44,28 +45,6 @@ export function lintMcp(canonical: CanonicalFiles): LintDiagnostic[] {
       '.agentsmesh/mcp.json',
       'goose',
       'Goose MCP extensions are configured globally in ~/.config/goose/config.yaml; project-level MCP is not projected.',
-    ),
-  ];
-}
-
-export function lintCommands(canonical: CanonicalFiles): LintDiagnostic[] {
-  if (canonical.commands.length === 0) return [];
-  return [
-    createWarning(
-      '.agentsmesh/commands',
-      'goose',
-      'Goose slash commands are recipe-based in config.yaml; canonical commands are not projected.',
-    ),
-  ];
-}
-
-export function lintAgents(canonical: CanonicalFiles): LintDiagnostic[] {
-  if (canonical.agents.length === 0) return [];
-  return [
-    createWarning(
-      '.agentsmesh/agents',
-      'goose',
-      'Goose has no first-class agent config files; canonical agents are not projected.',
     ),
   ];
 }

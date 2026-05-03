@@ -117,6 +117,7 @@ export const descriptor = {
   },
   emptyImportMessage:
     'No Antigravity config found (.agents/rules/, .agents/skills/, or .agents/workflows/).',
+  supportsConversion: { agents: true },
   lintRules,
   project,
   globalSupport: {

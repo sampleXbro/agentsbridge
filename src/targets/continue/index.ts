@@ -107,6 +107,7 @@ export const descriptor = {
   },
   emptyImportMessage:
     'No Continue config found (.continue/rules/*.md, .continue/skills, or .continue/mcpServers/*).',
+  supportsConversion: { agents: true },
   lintRules,
   lint: {
     commands: lintCommands,

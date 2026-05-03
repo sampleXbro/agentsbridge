@@ -14,6 +14,7 @@ Every item must have a primary-source link before coding starts:
 - Frontmatter keys and schema per feature
 - Legacy or fallback paths still in use
 - Capability map — for each canonical feature, one of: `native`, `embedded`, `partial`, `none`
+- Conversion eligibility — for each `none` feature, can it be projected as a skill? (see below)
 - MCP scope (project file, user-home config, app-managed connector, unsupported)
 
 ## Code Touchpoints
@@ -33,6 +34,13 @@ Target implementation (scaffold produces these; fill in):
 - `src/targets/<id>/linter.ts` — rule linter (often thin wrapper over shared `validateRules`)
 - `src/targets/<id>/lint.ts` — per-feature lint hooks (commands, mcp, permissions, hooks, ignore)
 - `src/core/reference/import-maps/<id>.ts` — canonical ↔ target reference path map
+
+Conversion eligibility (when `commands` or `agents` is `none` but `skills` is `native` or `embedded`):
+
+- `src/targets/<id>/index.ts` — add `supportsConversion: { commands: true, agents: true }` (only the features that are `none`)
+- `src/config/core/conversions.ts` — add the target to `DEFAULT_COMMANDS_TO_SKILLS` and/or `DEFAULT_AGENTS_TO_SKILLS` with `true`
+- Do NOT add lint warnings for converted features — they are projected as skills, not dropped
+- Only add lint warnings for features that are truly unsupported (no native support AND no skill fallback, e.g. hooks, permissions, MCP when project-only)
 
 Shared code to audit, not usually modify:
 
@@ -139,5 +147,6 @@ Before marking complete, every command must exit 0:
 - Did you add rich fixtures instead of placeholders?
 - Did you register the id in all three catalog files (`target-ids.ts`, `builtin-targets.ts`, `import-maps/index.ts`)?
 - Did you include global mode, or document the decision to omit it?
+- Did you check conversion eligibility for `none` features — could commands/agents be projected as skills instead of dropped?
 - Did you update `supported-tools.mdx` with per-target detail?
 - Did every verification command pass?

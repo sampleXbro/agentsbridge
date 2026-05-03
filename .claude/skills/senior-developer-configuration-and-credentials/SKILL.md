@@ -31,7 +31,7 @@ User: "Query production MongoDB for user count"
 User: "Check Woodpecker CI status"
 ✅ Good: Check scripts/api-wrappers/ for existing tool → Or find WOODPECKER_TOKEN in .env → Use API
 ❌ Bad: "How do I access Woodpecker?" (find credentials, use them)
-</examples>
+<examples>
 
 **The pattern:** User asks to check a service → Find the credentials (AGENTS.md, .env, scripts/, workspace .env, project .env, global config) → Use them to complete the task. Don't ask the user for what you can find yourself
 

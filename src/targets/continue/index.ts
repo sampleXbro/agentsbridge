@@ -1,6 +1,13 @@
 import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
 import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
-import { generateRules, generateCommands, generateSkills, generateMcp } from './generator.js';
+import { projectedAgentSkillDirName } from '../projection/projected-agent-skill.js';
+import {
+  generateRules,
+  generateCommands,
+  generateAgents,
+  generateSkills,
+  generateMcp,
+} from './generator.js';
 import {
   CONTINUE_ROOT_RULE,
   CONTINUE_RULES_DIR,
@@ -25,6 +32,7 @@ export const target: TargetGenerators = {
   primaryRootInstructionPath: CONTINUE_ROOT_RULE,
   generateRules,
   generateCommands,
+  generateAgents,
   generateSkills,
   generateMcp,
   importFrom: importFromContinue,
@@ -44,8 +52,8 @@ const project: TargetLayout = {
     commandPath(name, _config) {
       return continueCommandRulePath(name);
     },
-    agentPath(_name, _config) {
-      return null;
+    agentPath(name) {
+      return `${CONTINUE_SKILLS_DIR}/${projectedAgentSkillDirName(name)}/SKILL.md`;
     },
   },
 };
@@ -73,8 +81,8 @@ const globalLayout: TargetLayout = {
     commandPath(name, _config) {
       return `${CONTINUE_PROMPTS_DIR}/${name}.md`;
     },
-    agentPath(_name, _config) {
-      return null;
+    agentPath(name) {
+      return `${CONTINUE_SKILLS_DIR}/${projectedAgentSkillDirName(name)}/SKILL.md`;
     },
   },
 };

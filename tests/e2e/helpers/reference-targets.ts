@@ -63,7 +63,6 @@ function skillDir(target: TargetName): string {
 }
 
 export function outputPaths(target: TargetName): OutputPathGroups {
-  const commandSkill = `${skillDir('codex-cli')}/${commandSkillDirName('review')}/SKILL.md`;
   const agentSkill =
     target === 'codex-cli'
       ? '.codex/agents/code-reviewer.toml'
@@ -149,7 +148,7 @@ export function outputPaths(target: TargetName): OutputPathGroups {
                               ? '.kilo/commands/review.md'
                               : target === 'opencode'
                                 ? '.opencode/commands/review.md'
-                                : commandSkill,
+                                : `${skillDir(target)}/${commandSkillDirName('review')}/SKILL.md`,
     ],
     agent: [
       target === 'claude-code'

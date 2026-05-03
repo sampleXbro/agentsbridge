@@ -135,8 +135,10 @@ describe('descriptor.project.paths.commandPath', () => {
     expect(junie.project.paths.commandPath('deploy', config)).toBe('.junie/commands/deploy.md');
   });
 
-  it('kiro: returns null (commands unsupported)', () => {
-    expect(kiro.project.paths.commandPath('deploy', config)).toBeNull();
+  it('kiro: returns projected command skill path', () => {
+    expect(kiro.project.paths.commandPath('deploy', config)).toBe(
+      '.kiro/skills/am-command-deploy/SKILL.md',
+    );
   });
 
   it('gemini-cli simple: returns .gemini/commands/{name}.toml', () => {
@@ -201,8 +203,10 @@ describe('descriptor.project.paths.agentPath', () => {
     );
   });
 
-  it('continue: returns null (agents: none)', () => {
-    expect(continueTarget.project.paths.agentPath('reviewer', config)).toBeNull();
+  it('continue: returns projected agent skill path', () => {
+    expect(continueTarget.project.paths.agentPath('reviewer', config)).toBe(
+      '.continue/skills/am-agent-reviewer/SKILL.md',
+    );
   });
 
   it('junie: returns .junie/agents/{name}.md', () => {
@@ -257,8 +261,10 @@ describe('descriptor.project.paths.agentPath', () => {
     expect(windsurf.project.paths.agentPath('reviewer', configWithConversionOff)).toBeNull();
   });
 
-  it('antigravity: returns null (agents: none)', () => {
-    expect(antigravity.project.paths.agentPath('reviewer', config)).toBeNull();
+  it('antigravity: returns projected agent skill path', () => {
+    expect(antigravity.project.paths.agentPath('reviewer', config)).toBe(
+      '.agents/skills/am-agent-reviewer/SKILL.md',
+    );
   });
 });
 

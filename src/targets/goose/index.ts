@@ -13,7 +13,15 @@
 
 import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
 import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
-import { generateRules, generateSkills, generateIgnore } from './generator.js';
+import { commandSkillDirName } from '../codex-cli/command-skill.js';
+import { projectedAgentSkillDirName } from '../projection/projected-agent-skill.js';
+import {
+  generateRules,
+  generateCommands,
+  generateAgents,
+  generateSkills,
+  generateIgnore,
+} from './generator.js';
 import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromGoose } from './importer.js';
 import { lintRules } from './linter.js';
@@ -35,6 +43,8 @@ export const target: TargetGenerators = {
   name: GOOSE_TARGET,
   primaryRootInstructionPath: GOOSE_ROOT_FILE,
   generateRules,
+  generateCommands,
+  generateAgents,
   generateSkills,
   generateIgnore,
   importFrom: importFromGoose,
@@ -51,11 +61,11 @@ const project: TargetLayout = {
     rulePath(_slug) {
       return GOOSE_ROOT_FILE;
     },
-    commandPath() {
-      return null;
+    commandPath(name) {
+      return `${GOOSE_SKILLS_DIR}/${commandSkillDirName(name)}/SKILL.md`;
     },
-    agentPath() {
-      return null;
+    agentPath(name) {
+      return `${GOOSE_SKILLS_DIR}/${projectedAgentSkillDirName(name)}/SKILL.md`;
     },
   },
 };
@@ -82,11 +92,11 @@ const globalLayout: TargetLayout = {
     rulePath(_slug) {
       return GOOSE_GLOBAL_ROOT_FILE;
     },
-    commandPath() {
-      return null;
+    commandPath(name) {
+      return `${GOOSE_GLOBAL_SKILLS_DIR}/${commandSkillDirName(name)}/SKILL.md`;
     },
-    agentPath() {
-      return null;
+    agentPath(name) {
+      return `${GOOSE_GLOBAL_SKILLS_DIR}/${projectedAgentSkillDirName(name)}/SKILL.md`;
     },
   },
 };

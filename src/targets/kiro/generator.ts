@@ -1,6 +1,7 @@
 import { basename } from 'node:path';
 import type { CanonicalFiles, CanonicalRule } from '../../core/types.js';
 import { generateEmbeddedSkills } from '../import/embedded-skill.js';
+import { commandSkillDirName, serializeCommandSkill } from '../codex-cli/command-skill.js';
 import { serializeFrontmatter } from '../../utils/text/markdown.js';
 import { generateKiroHooks } from './hook-format.js';
 import {
@@ -51,6 +52,13 @@ export function generateRules(canonical: CanonicalFiles): KiroOutput[] {
     });
   }
   return outputs;
+}
+
+export function generateCommands(canonical: CanonicalFiles): KiroOutput[] {
+  return canonical.commands.map((command) => ({
+    path: `${KIRO_SKILLS_DIR}/${commandSkillDirName(command.name)}/SKILL.md`,
+    content: serializeCommandSkill(command),
+  }));
 }
 
 export function generateSkills(canonical: CanonicalFiles): KiroOutput[] {

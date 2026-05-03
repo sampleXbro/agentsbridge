@@ -184,6 +184,22 @@ function isFeatureSuppressedByConversion(
   return false;
 }
 
+function isConversionUpgrading(
+  descriptor: TargetDescriptor | undefined,
+  feature: keyof TargetCapabilities,
+  config: ValidatedConfig | undefined,
+  scope: TargetLayoutScope,
+): boolean {
+  if (!descriptor || !config) return false;
+  if (feature === 'commands' && descriptor.supportsConversion?.commands) {
+    return shouldConvertCommandsToSkills(config, descriptor.id, true, scope);
+  }
+  if (feature === 'agents' && descriptor.supportsConversion?.agents) {
+    return shouldConvertAgentsToSkills(config, descriptor.id, true, scope);
+  }
+  return false;
+}
+
 export function getEffectiveTargetSupportLevel(
   target: string,
   feature: keyof TargetCapabilities,
@@ -191,8 +207,11 @@ export function getEffectiveTargetSupportLevel(
   scope: TargetLayoutScope = 'project',
 ): SupportLevel {
   const baseLevel = getTargetCapabilities(target, scope)?.[feature]?.level ?? 'none';
-  if (baseLevel !== 'embedded') return baseLevel;
   const descriptor = getBuiltinTargetDefinition(target) ?? getDescriptor(target);
+  if (baseLevel === 'none' && isConversionUpgrading(descriptor, feature, config, scope)) {
+    return 'embedded';
+  }
+  if (baseLevel !== 'embedded') return baseLevel;
   return isFeatureSuppressedByConversion(descriptor, feature, config, scope) ? 'none' : baseLevel;
 }
 

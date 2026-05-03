@@ -262,7 +262,9 @@ describe('target layout metadata', () => {
       }),
     ).toBe('.continue/rules/typescript.md');
     expect(layout!.paths.commandPath('commit', {} as never)).toBe('.continue/prompts/commit.md');
-    expect(layout!.paths.agentPath('my-agent', {} as never)).toBeNull();
+    expect(layout!.paths.agentPath('my-agent', {} as never)).toBe(
+      '.continue/skills/am-agent-my-agent/SKILL.md',
+    );
   });
 
   it('lists Continue global detection paths', () => {

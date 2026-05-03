@@ -3,6 +3,10 @@ import type { CanonicalFiles } from '../../core/types.js';
 import { generateEmbeddedSkills } from '../import/embedded-skill.js';
 import { appendEmbeddedRulesBlock } from '../projection/managed-blocks.js';
 import {
+  projectedAgentSkillDirName,
+  serializeProjectedAgentSkill,
+} from '../projection/projected-agent-skill.js';
+import {
   ANTIGRAVITY_GLOBAL_ROOT,
   ANTIGRAVITY_MCP_CONFIG,
   ANTIGRAVITY_RULES_ROOT,
@@ -62,6 +66,13 @@ export function generateMcp(canonical: CanonicalFiles): AntigravityOutput[] {
       content: JSON.stringify({ mcpServers: canonical.mcp.mcpServers }, null, 2),
     },
   ];
+}
+
+export function generateAgents(canonical: CanonicalFiles): AntigravityOutput[] {
+  return canonical.agents.map((agent) => ({
+    path: `${ANTIGRAVITY_SKILLS_DIR}/${projectedAgentSkillDirName(agent.name)}/SKILL.md`,
+    content: serializeProjectedAgentSkill(agent),
+  }));
 }
 
 export function renderAntigravityGlobalInstructions(canonical: CanonicalFiles): string {

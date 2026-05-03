@@ -1,0 +1,24 @@
+{
+  "mcp": {
+    "context7": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@upstash/context7-mcp"
+      ]
+    },
+    "github": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "environment": {
+        "GITHUB_TOKEN": "$GITHUB_TOKEN"
+      },
+      "description": "GitHub MCP server for repo operations"
+    }
+  }
+}

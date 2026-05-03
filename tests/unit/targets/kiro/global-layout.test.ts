@@ -17,8 +17,10 @@ describe('kiro global layout — paths', () => {
     ).toBe('.kiro/steering/typescript.md');
   });
 
-  it('suppresses command path (returns null)', () => {
-    expect(layout.paths.commandPath('deploy', {} as never)).toBeNull();
+  it('returns projected command skill path', () => {
+    expect(layout.paths.commandPath('deploy', {} as never)).toBe(
+      '.kiro/skills/am-command-deploy/SKILL.md',
+    );
   });
 
   it('resolves agent path to .kiro/agents/', () => {

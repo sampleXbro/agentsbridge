@@ -685,6 +685,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.continue/prompts/review.md',
       '.continue/rules/general.md',
       '.continue/rules/typescript.md',
+      '.continue/skills/am-agent-reviewer/SKILL.md',
       '.continue/skills/qa/SKILL.md',
     ]);
   });
@@ -717,6 +718,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
     expect(paths).toEqual([
       '.agents/rules/general.md',
       '.agents/rules/typescript.md',
+      '.agents/skills/am-agent-reviewer/SKILL.md',
       '.agents/skills/qa/SKILL.md',
       '.agents/workflows/review.md',
     ]);
@@ -745,6 +747,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
     expect(allPaths).toEqual([
       '.agents/rules/general.md',
       '.agents/rules/typescript.md',
+      '.agents/skills/am-agent-reviewer/SKILL.md',
       '.agents/skills/am-command-review/SKILL.md',
       '.agents/skills/qa/SKILL.md',
       '.agents/workflows/review.md',
@@ -771,6 +774,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.continue/prompts/review.md',
       '.continue/rules/general.md',
       '.continue/rules/typescript.md',
+      '.continue/skills/am-agent-reviewer/SKILL.md',
       '.continue/skills/qa/SKILL.md',
       '.cursor/AGENTS.md',
       '.cursor/agents/reviewer.md',

@@ -23,8 +23,10 @@ describe('antigravity global layout — paths', () => {
     );
   });
 
-  it('suppresses agent path (returns null)', () => {
-    expect(layout.paths.agentPath('reviewer', {} as never)).toBeNull();
+  it('returns projected agent skill path', () => {
+    expect(layout.paths.agentPath('reviewer', {} as never)).toBe(
+      '.agents/skills/am-agent-reviewer/SKILL.md',
+    );
   });
 });
 

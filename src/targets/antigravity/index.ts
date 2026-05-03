@@ -1,9 +1,11 @@
 import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
 import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
 import { cap } from '../catalog/capabilities.js';
+import { projectedAgentSkillDirName } from '../projection/projected-agent-skill.js';
 import {
   generateRules,
   generateCommands,
+  generateAgents,
   generateSkills,
   generateMcp,
   renderAntigravityGlobalInstructions,
@@ -16,6 +18,7 @@ import {
   ANTIGRAVITY_MCP_CONFIG,
   ANTIGRAVITY_RULES_ROOT,
   ANTIGRAVITY_RULES_DIR,
+  ANTIGRAVITY_SKILLS_DIR,
   ANTIGRAVITY_WORKFLOWS_DIR,
   ANTIGRAVITY_CANONICAL_COMMANDS_DIR,
   ANTIGRAVITY_CANONICAL_MCP,
@@ -31,6 +34,7 @@ export const target: TargetGenerators = {
   primaryRootInstructionPath: ANTIGRAVITY_RULES_ROOT,
   generateRules,
   generateCommands,
+  generateAgents,
   generateSkills,
   generateMcp,
   importFrom: importFromAntigravity,
@@ -50,8 +54,8 @@ const project: TargetLayout = {
     commandPath(name, _config) {
       return `${ANTIGRAVITY_WORKFLOWS_DIR}/${name}.md`;
     },
-    agentPath(_name, _config) {
-      return null;
+    agentPath(name) {
+      return `${ANTIGRAVITY_SKILLS_DIR}/${projectedAgentSkillDirName(name)}/SKILL.md`;
     },
   },
 };
@@ -83,8 +87,8 @@ const global: TargetLayout = {
     commandPath(name, _config) {
       return `${ANTIGRAVITY_GLOBAL_WORKFLOWS_DIR}/${name}.md`;
     },
-    agentPath(_name, _config) {
-      return null;
+    agentPath(name) {
+      return `${ANTIGRAVITY_SKILLS_DIR}/${projectedAgentSkillDirName(name)}/SKILL.md`;
     },
   },
 };

@@ -30,6 +30,7 @@ const TARGET_LABELS: Record<string, string> = {
   'roo-code': 'Roo Code',
   'kilo-code': 'Kilo Code',
   opencode: 'OpenCode',
+  warp: 'Warp',
   zed: 'Zed',
 };
 

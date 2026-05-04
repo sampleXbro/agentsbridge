@@ -23,6 +23,7 @@
         "kiro",
         "opencode",
         "roo-code",
+        "warp",
         "windsurf",
         "zed"
       ],
@@ -45,6 +46,7 @@
           "kiro",
           "opencode",
           "roo-code",
+          "warp",
           "windsurf",
           "zed"
         ]
@@ -109,6 +111,7 @@
               "kiro",
               "opencode",
               "roo-code",
+              "warp",
               "windsurf",
               "zed"
             ]

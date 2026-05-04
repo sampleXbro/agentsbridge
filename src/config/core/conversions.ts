@@ -6,6 +6,7 @@ const DEFAULT_COMMANDS_TO_SKILLS: Record<string, boolean> = {
   'codex-cli': true,
   goose: true,
   kiro: true,
+  warp: true,
 };
 
 const DEFAULT_AGENTS_TO_SKILLS: Record<string, boolean> = {
@@ -17,6 +18,7 @@ const DEFAULT_AGENTS_TO_SKILLS: Record<string, boolean> = {
   goose: true,
   antigravity: true,
   continue: true,
+  warp: true,
 };
 
 export function usesCommandSkillProjection(target: string): boolean {

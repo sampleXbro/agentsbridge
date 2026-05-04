@@ -39,6 +39,7 @@ import { descriptor as kiloCode } from '../kilo-code/index.js';
 import { descriptor as kiro } from '../kiro/index.js';
 import { descriptor as opencode } from '../opencode/index.js';
 import { descriptor as rooCode } from '../roo-code/index.js';
+import { descriptor as warp } from '../warp/index.js';
 import { descriptor as windsurf } from '../windsurf/index.js';
 import { descriptor as zed } from '../zed/index.js';
 // </auto-generated:builtin-target-imports>
@@ -72,6 +73,7 @@ export const BUILTIN_TARGETS: readonly TargetDescriptor[] = [
   kiro,
   opencode,
   rooCode,
+  warp,
   windsurf,
   zed,
 ];

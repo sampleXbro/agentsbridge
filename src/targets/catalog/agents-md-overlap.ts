@@ -38,6 +38,10 @@ function isKiloCodeAgents(result: GenerateResult): boolean {
   return result.target === 'kilo-code' && result.path.endsWith(AGENTS_SUFFIX);
 }
 
+function isWarpAgents(result: GenerateResult): boolean {
+  return result.target === 'warp' && result.path.endsWith(AGENTS_SUFFIX);
+}
+
 function isCompatibilityAgents(result: GenerateResult): boolean {
   return isCursorAgents(result) || isGeminiAgents(result);
 }
@@ -139,13 +143,19 @@ export function preferEquivalentCodexAgents(
       !isCursorAgents(result) &&
       !isGeminiAgents(result) &&
       !isKiroAgents(result) &&
-      !isKiloCodeAgents(result)
+      !isKiloCodeAgents(result) &&
+      !isWarpAgents(result)
     ) {
       return true;
     }
     const codexResult = codexByPath.get(result.path);
     if (!codexResult) return true;
-    if (isCompatibilityAgents(result) || isWindsurfAgents(result) || isClineAgents(result)) {
+    if (
+      isCompatibilityAgents(result) ||
+      isWindsurfAgents(result) ||
+      isClineAgents(result) ||
+      isWarpAgents(result)
+    ) {
       return false;
     }
     return !(

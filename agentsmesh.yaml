@@ -17,6 +17,7 @@ targets:
   - goose
   - amp
   - zed
+  - warp
 features:
   - rules
   - commands

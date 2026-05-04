@@ -21,6 +21,7 @@ export const BUILTIN_TARGET_IDS = [
   'kiro',
   'opencode',
   'roo-code',
+  'warp',
   'windsurf',
   'zed',
 ] as const;

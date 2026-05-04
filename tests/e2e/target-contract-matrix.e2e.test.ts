@@ -23,6 +23,7 @@ const TARGETS_WITH_PROJECTED_AGENTS = new Set<TargetName>([
   'amp',
   'cline',
   'windsurf',
+  'warp',
   'goose',
   'antigravity',
   'continue',
@@ -34,6 +35,7 @@ const TARGETS_WITH_PROJECTED_COMMANDS = new Set<TargetName>([
   'codex-cli',
   'goose',
   'kiro',
+  'warp',
   'zed',
 ]);
 
@@ -58,6 +60,7 @@ targets:
   - roo-code
   - kilo-code
   - opencode
+  - warp
   - zed
 features:
   - rules

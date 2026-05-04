@@ -908,6 +908,25 @@ features: [rules, mcp]
     fileContains(join(dir, '.zed', 'settings.json'), 'context7');
   });
 
+  it('generates Warp AGENTS.md, skills, and .mcp.json', async () => {
+    dir = createCanonicalProject(`version: 1
+targets: [warp]
+features: [rules, skills, mcp]
+`);
+    const result = await runCli('generate --targets warp', dir);
+    expect(result.exitCode, result.stderr).toBe(0);
+
+    fileContains(join(dir, 'AGENTS.md'), '# Standards');
+    fileNotContains(join(dir, 'AGENTS.md'), 'root: true');
+    fileContains(join(dir, '.warp', 'skills', 'api-generator', 'SKILL.md'), 'name: api-generator');
+    fileContains(
+      join(dir, '.warp', 'skills', 'api-generator', 'references', 'route-checklist.md'),
+      'response schema',
+    );
+    fileContains(join(dir, '.mcp.json'), 'mcpServers');
+    fileContains(join(dir, '.mcp.json'), 'context7');
+  });
+
   it('generates Goose .goosehints, skills, and .gooseignore', async () => {
     dir = createCanonicalProject(`version: 1
 targets: [goose]

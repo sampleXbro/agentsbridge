@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.12.0
+
+### Minor Changes
+
+- 11c0d58: feat(amp): add Amp (Sourcegraph) as a new built-in target
+
+  Amp is a coding agent by Sourcegraph (ampcode.com). This adds full project and global mode support:
+  - **Rules**: `AGENTS.md` (root + embedded additional rules)
+  - **Skills**: `.agents/skills/*/SKILL.md` skill bundles (shared path with Codex CLI, consumer role)
+  - **MCP**: `.amp/settings.json` under `amp.mcpServers` key with settings merge
+  - **Global mode**: `~/.config/amp/AGENTS.md`, `~/.config/amp/skills/`, `~/.config/amp/settings.json`
+  - Commands and agents projected as skills via `supportsConversion`
+  - Lint warnings for unsupported features (hooks, ignore, permissions)
+
+- fa8e208: feat(warp): add Warp as a new built-in target
+
+  Warp is an agentic development environment by Warp.dev. This adds project and global mode support:
+  - **Rules**: `AGENTS.md` (root + embedded additional rules); legacy `WARP.md` supported on import
+  - **Skills**: `.warp/skills/` with YAML frontmatter skill bundles
+  - **MCP**: `.mcp.json` at project root (standard format, shared with Claude Code)
+  - **Commands/Agents**: projected as skills via `supportsConversion`
+  - **Global mode**: `~/.warp/skills/` (skills only — global rules are UI-managed via Warp Drive)
+  - Lint warnings for unsupported features (hooks, ignore, permissions)
+
+- bfc0a57: feat(zed): add Zed as a new built-in target
+
+  Zed is a modern code editor with a built-in AI assistant (zed.dev). This adds project and global mode support:
+  - **Rules**: `.rules` (root + embedded additional rules in a single file)
+  - **MCP**: `.zed/settings.json` under `context_servers` key with settings merge
+  - **Global mode**: `~/.config/zed/settings.json` (MCP only — no global rules file)
+  - Lint warnings for unsupported features (hooks, ignore, permissions)
+
 ## 0.11.0
 
 ### Minor Changes

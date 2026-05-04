@@ -14,6 +14,7 @@ const ROOT =
   process.env.AGENTSMESH_MATRIX_ROOT ?? join(dirname(fileURLToPath(import.meta.url)), '..');
 
 const TARGET_LABELS: Record<string, string> = {
+  amp: 'Amp',
   'claude-code': 'Claude Code',
   cursor: 'Cursor',
   copilot: 'Copilot',
@@ -29,6 +30,8 @@ const TARGET_LABELS: Record<string, string> = {
   'roo-code': 'Roo Code',
   'kilo-code': 'Kilo Code',
   opencode: 'OpenCode',
+  warp: 'Warp',
+  zed: 'Zed',
 };
 
 const FEATURE_ROWS: [string, keyof typeof SUPPORT_MATRIX][] = [

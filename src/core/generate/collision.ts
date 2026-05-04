@@ -58,7 +58,10 @@ function richerCodexAgentsResult(
   const other = codex === left ? right : left;
   if (!codex) return null;
 
-  return trimmedContent(codex.content).length > trimmedContent(other.content).length ? codex : null;
+  const codexLen = trimmedContent(codex.content).length;
+  const otherLen = trimmedContent(other.content).length;
+  if (codexLen === otherLen) return null;
+  return codexLen > otherLen ? codex : other;
 }
 
 /**

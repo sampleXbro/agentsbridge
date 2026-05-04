@@ -4,6 +4,7 @@
  */
 
 export const GLOBAL_ROUNDTRIP_E2E_TARGET_IDS = [
+  'amp',
   'antigravity',
   'claude-code',
   'cline',
@@ -18,5 +19,7 @@ export const GLOBAL_ROUNDTRIP_E2E_TARGET_IDS = [
   'kiro',
   'opencode',
   'roo-code',
+  'warp',
   'windsurf',
+  'zed',
 ] as const;

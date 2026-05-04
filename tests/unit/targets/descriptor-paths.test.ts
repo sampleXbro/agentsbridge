@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { descriptor as amp } from '../../../src/targets/amp/index.js';
 import { descriptor as claudeCode } from '../../../src/targets/claude-code/index.js';
 import { descriptor as cursor } from '../../../src/targets/cursor/index.js';
 import { descriptor as copilot } from '../../../src/targets/copilot/index.js';
@@ -14,6 +15,8 @@ import { descriptor as rooCode } from '../../../src/targets/roo-code/index.js';
 import { descriptor as kiloCode } from '../../../src/targets/kilo-code/index.js';
 import { descriptor as opencode } from '../../../src/targets/opencode/index.js';
 import { descriptor as goose } from '../../../src/targets/goose/index.js';
+import { descriptor as warp } from '../../../src/targets/warp/index.js';
+import { descriptor as zed } from '../../../src/targets/zed/index.js';
 import { TARGET_IDS } from '../../../src/targets/catalog/target-ids.js';
 import type { ValidatedConfig } from '../../../src/config/core/schema.js';
 import type { CanonicalRule } from '../../../src/core/types.js';
@@ -274,6 +277,7 @@ describe('descriptor metadata', () => {
   // BUILTIN_TARGETS slots `undefined` under vitest's module loader. Drift is
   // caught separately by tests/unit/targets/catalog/builtin-catalog.test.ts.
   const allDescriptors = [
+    amp,
     claudeCode,
     cursor,
     copilot,
@@ -289,6 +293,8 @@ describe('descriptor metadata', () => {
     kiloCode,
     opencode,
     goose,
+    warp,
+    zed,
   ];
 
   const allFeatureKeys = [

@@ -6,6 +6,7 @@
  * `schema.ts → descriptors → ValidatedConfig → schema.ts` cycle.
  */
 export const BUILTIN_TARGET_IDS = [
+  'amp',
   'antigravity',
   'claude-code',
   'cline',
@@ -20,7 +21,9 @@ export const BUILTIN_TARGET_IDS = [
   'kiro',
   'opencode',
   'roo-code',
+  'warp',
   'windsurf',
+  'zed',
 ] as const;
 
 export type BuiltinTargetId = (typeof BUILTIN_TARGET_IDS)[number];

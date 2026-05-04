@@ -369,6 +369,42 @@ describe('import capabilities', () => {
     fileContains(join(dir, '.agentsmesh', 'ignore'), '.env');
   });
 
+  it('imports Amp AGENTS.md, skills, and MCP from .amp/settings.json', async () => {
+    dir = createTestProject('amp-project');
+    const result = await runCli('import --from amp', dir);
+    expect(result.exitCode, result.stderr).toBe(0);
+
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'Project Instructions');
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'root: true');
+    fileExists(join(dir, '.agentsmesh', 'skills', 'debugging', 'SKILL.md'));
+    fileContains(join(dir, '.agentsmesh', 'skills', 'debugging', 'SKILL.md'), 'name: debugging');
+    fileExists(join(dir, '.agentsmesh', 'skills', 'debugging', 'references', 'checklist.md'));
+    fileContains(join(dir, '.agentsmesh', 'mcp.json'), 'filesystem');
+  });
+
+  it('imports Zed .rules and MCP from .zed/settings.json', async () => {
+    dir = createTestProject('zed-project');
+    const result = await runCli('import --from zed', dir);
+    expect(result.exitCode, result.stderr).toBe(0);
+
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'Project Instructions');
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'root: true');
+    fileContains(join(dir, '.agentsmesh', 'mcp.json'), 'filesystem');
+  });
+
+  it('imports Warp AGENTS.md, skills, and MCP from .mcp.json', async () => {
+    dir = createTestProject('warp-project');
+    const result = await runCli('import --from warp', dir);
+    expect(result.exitCode, result.stderr).toBe(0);
+
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'Project Instructions');
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'root: true');
+    fileExists(join(dir, '.agentsmesh', 'skills', 'debugging', 'SKILL.md'));
+    fileContains(join(dir, '.agentsmesh', 'skills', 'debugging', 'SKILL.md'), 'name: debugging');
+    fileExists(join(dir, '.agentsmesh', 'skills', 'debugging', 'references', 'checklist.md'));
+    fileContains(join(dir, '.agentsmesh', 'mcp.json'), 'filesystem');
+  });
+
   it('imports Goose .goosehints, skills, and .gooseignore', async () => {
     dir = createTestProject('goose-project');
     const result = await runCli('import --from goose', dir);

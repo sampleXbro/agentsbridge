@@ -75,10 +75,17 @@
 - **Refer to PRD**: `docs/prd-v2-complete.md` for architecture decisions
 - **Refer to tasks**: `docs/agentsmesh-ai-first-tasks.md` for current task specs
 
-<!-- agentsmesh:codex-rule-index:start -->
-## Additional Rule Files
-- [TypeScript-specific coding standards](.codex/instructions/typescript.md): Applies to `src/**/*.ts`, `tests/**/*.ts`.
-<!-- agentsmesh:codex-rule-index:end -->
+<!-- agentsmesh:embedded-rules:start -->
+<!-- agentsmesh:embedded-rule:start {"source":"rules/typescript.md","description":"TypeScript-specific coding standards","globs":["src/**/*.ts","tests/**/*.ts"],"targets":[]} -->
+## TypeScript-specific coding standards
+# TypeScript Standards
+
+- Use strict mode
+- Prefer `unknown` over `any`
+- Use explicit return types for public functions
+- Prefer `interface` over `type` for object shapes
+<!-- agentsmesh:embedded-rule:end -->
+<!-- agentsmesh:embedded-rules:end -->
 
 <!-- agentsmesh:root-generation-contract:start -->
 ## AgentsMesh Generation Contract

@@ -1,4 +1,5 @@
 import type { BuiltinTargetId } from '../../../src/targets/catalog/target-ids.js';
+import { ampContract } from './amp.js';
 import { antigravityContract } from './antigravity.js';
 import { claudeCodeContract } from './claude-code.js';
 import { clineContract } from './cline.js';
@@ -14,12 +15,15 @@ import { gooseContract } from './goose.js';
 import { opencodeContract } from './opencode.js';
 import { rooCodeContract } from './roo-code.js';
 import { windsurfContract } from './windsurf.js';
+import { warpContract } from './warp.js';
+import { zedContract } from './zed.js';
 import type { TargetContractMap } from './types.js';
 
 export type { TargetPathContract, TargetContractMap } from './types.js';
 
 /** Same prefixes as e2e reference matrix (generated files must not leak these). */
 export const TARGET_SPECIFIC_PREFIXES = [
+  '.amp/',
   '.claude/',
   '.cursor/',
   '.github/',
@@ -34,9 +38,12 @@ export const TARGET_SPECIFIC_PREFIXES = [
   '.kilo/',
   '.kilocode/',
   '.opencode/',
+  '.warp/',
+  '.zed/',
 ] as const;
 
 export const TARGET_CONTRACTS: TargetContractMap = {
+  amp: ampContract,
   'claude-code': claudeCodeContract,
   cursor: cursorContract,
   copilot: copilotContract,
@@ -52,6 +59,8 @@ export const TARGET_CONTRACTS: TargetContractMap = {
   kiro: kiroContract,
   'kilo-code': kiloCodeContract,
   opencode: opencodeContract,
+  warp: warpContract,
+  zed: zedContract,
 };
 
 export function contractForTarget(id: BuiltinTargetId): TargetContractMap[BuiltinTargetId] {

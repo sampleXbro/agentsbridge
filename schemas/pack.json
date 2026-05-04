@@ -78,6 +78,7 @@
     "target": {
       "type": "string",
       "enum": [
+        "amp",
         "antigravity",
         "claude-code",
         "cline",
@@ -92,7 +93,9 @@
         "kiro",
         "opencode",
         "roo-code",
-        "windsurf"
+        "warp",
+        "windsurf",
+        "zed"
       ]
     },
     "path": {

@@ -75,9 +75,9 @@ describe('generate', () => {
   it('throws when multiple results target the same path with different content', () => {
     const results: GenerateResult[] = [
       {
-        target: 'codex-cli',
+        target: 'cline',
         path: 'AGENTS.md',
-        content: 'Codex body',
+        content: 'Cline body',
         status: 'created',
       },
       {

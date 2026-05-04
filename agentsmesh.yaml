@@ -15,6 +15,9 @@ targets:
   - kilo-code
   - opencode
   - goose
+  - amp
+  - zed
+  - warp
 features:
   - rules
   - commands

@@ -1,6 +1,7 @@
 /** Shared agentsmesh.yaml for parametrized contract tests (matches e2e target-contract-matrix). */
 export const MATRIX_CONFIG = `version: 1
 targets:
+  - amp
   - claude-code
   - cursor
   - copilot

@@ -8,6 +8,7 @@
     },
     "targets": {
       "default": [
+        "amp",
         "antigravity",
         "claude-code",
         "cline",
@@ -28,6 +29,7 @@
       "items": {
         "type": "string",
         "enum": [
+          "amp",
           "antigravity",
           "claude-code",
           "cline",
@@ -90,6 +92,7 @@
           "target": {
             "type": "string",
             "enum": [
+              "amp",
               "antigravity",
               "claude-code",
               "cline",

@@ -1,4 +1,5 @@
 import type { BuiltinTargetId } from '../../../src/targets/catalog/target-ids.js';
+import { ampContract } from './amp.js';
 import { antigravityContract } from './antigravity.js';
 import { claudeCodeContract } from './claude-code.js';
 import { clineContract } from './cline.js';
@@ -20,6 +21,7 @@ export type { TargetPathContract, TargetContractMap } from './types.js';
 
 /** Same prefixes as e2e reference matrix (generated files must not leak these). */
 export const TARGET_SPECIFIC_PREFIXES = [
+  '.amp/',
   '.claude/',
   '.cursor/',
   '.github/',
@@ -37,6 +39,7 @@ export const TARGET_SPECIFIC_PREFIXES = [
 ] as const;
 
 export const TARGET_CONTRACTS: TargetContractMap = {
+  amp: ampContract,
   'claude-code': claudeCodeContract,
   cursor: cursorContract,
   copilot: copilotContract,

@@ -4,6 +4,7 @@
  */
 
 export const GLOBAL_ROUNDTRIP_E2E_TARGET_IDS = [
+  'amp',
   'antigravity',
   'claude-code',
   'cline',

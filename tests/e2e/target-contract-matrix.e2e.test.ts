@@ -20,6 +20,7 @@ const TARGETS_WITHOUT_AGENT_OUTPUT = new Set<TargetName>(['roo-code']);
 
 /** Targets whose agents are projected skills (no cross-references in agent body). */
 const TARGETS_WITH_PROJECTED_AGENTS = new Set<TargetName>([
+  'amp',
   'cline',
   'windsurf',
   'goose',
@@ -28,10 +29,11 @@ const TARGETS_WITH_PROJECTED_AGENTS = new Set<TargetName>([
 ]);
 
 /** Targets whose commands are projected skills (no cross-references in command body). */
-const TARGETS_WITH_PROJECTED_COMMANDS = new Set<TargetName>(['codex-cli', 'goose', 'kiro']);
+const TARGETS_WITH_PROJECTED_COMMANDS = new Set<TargetName>(['amp', 'codex-cli', 'goose', 'kiro']);
 
 const MATRIX_CONFIG = `version: 1
 targets:
+  - amp
   - claude-code
   - cursor
   - copilot

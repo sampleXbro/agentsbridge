@@ -2,6 +2,7 @@ import { commandSkillDirName } from '../../../src/targets/codex-cli/command-skil
 import { projectedAgentSkillDirName } from '../../../src/targets/projection/projected-agent-skill.js';
 
 export type TargetName =
+  | 'amp'
   | 'claude-code'
   | 'cursor'
   | 'copilot'
@@ -43,6 +44,8 @@ function skillDir(target: TargetName): string {
       return '.gemini/skills';
     case 'cline':
       return '.cline/skills';
+    case 'amp':
+      return '.agents/skills';
     case 'codex-cli':
       return '.agents/skills';
     case 'goose':

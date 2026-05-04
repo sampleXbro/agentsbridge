@@ -78,6 +78,7 @@
     "target": {
       "type": "string",
       "enum": [
+        "amp",
         "antigravity",
         "claude-code",
         "cline",

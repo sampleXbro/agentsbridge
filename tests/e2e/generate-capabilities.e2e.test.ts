@@ -872,6 +872,28 @@ features: [rules, commands, skills]
     );
   });
 
+  it('generates Amp AGENTS.md, skills, and .amp/settings.json', async () => {
+    dir = createCanonicalProject(`version: 1
+targets: [amp]
+features: [rules, skills, mcp]
+`);
+    const result = await runCli('generate --targets amp', dir);
+    expect(result.exitCode, result.stderr).toBe(0);
+
+    fileContains(join(dir, 'AGENTS.md'), '# Standards');
+    fileNotContains(join(dir, 'AGENTS.md'), 'root: true');
+    fileContains(
+      join(dir, '.agents', 'skills', 'api-generator', 'SKILL.md'),
+      'name: api-generator',
+    );
+    fileContains(
+      join(dir, '.agents', 'skills', 'api-generator', 'references', 'route-checklist.md'),
+      'response schema',
+    );
+    fileContains(join(dir, '.amp', 'settings.json'), 'amp.mcpServers');
+    fileContains(join(dir, '.amp', 'settings.json'), 'context7');
+  });
+
   it('generates Goose .goosehints, skills, and .gooseignore', async () => {
     dir = createCanonicalProject(`version: 1
 targets: [goose]

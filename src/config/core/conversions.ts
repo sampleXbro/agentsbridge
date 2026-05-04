@@ -2,12 +2,14 @@ import type { ValidatedConfig } from './schema.js';
 import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
 
 const DEFAULT_COMMANDS_TO_SKILLS: Record<string, boolean> = {
+  amp: true,
   'codex-cli': true,
   goose: true,
   kiro: true,
 };
 
 const DEFAULT_AGENTS_TO_SKILLS: Record<string, boolean> = {
+  amp: true,
   'gemini-cli': false, // native .gemini/agents/*.md per agent-structures
   cline: true,
   'codex-cli': false, // native .codex/agents/*.toml per agent-structures

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { TARGET_IDS, isBuiltinTargetId } from '../../../src/targets/catalog/target-ids.js';
 
 describe('TARGET_IDS', () => {
-  it('contains exactly the 16 known target IDs', () => {
+  it('contains exactly the 17 known target IDs', () => {
     expect([...TARGET_IDS].sort()).toStrictEqual(
       [
         'amp',
@@ -21,6 +21,7 @@ describe('TARGET_IDS', () => {
         'opencode',
         'roo-code',
         'windsurf',
+        'zed',
       ].sort(),
     );
   });

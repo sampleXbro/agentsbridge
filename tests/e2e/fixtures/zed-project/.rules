@@ -1,0 +1,7 @@
+# Project Instructions
+
+Follow the project coding standards. Keep changes focused and well-tested.
+Use TypeScript strict mode and prefer explicit return types.
+
+When reviewing code, check for proper error handling and edge cases.
+Avoid introducing breaking changes without documenting them.

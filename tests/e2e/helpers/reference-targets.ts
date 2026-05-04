@@ -17,7 +17,8 @@ export type TargetName =
   | 'roo-code'
   | 'kiro'
   | 'kilo-code'
-  | 'opencode';
+  | 'opencode'
+  | 'zed';
 
 interface OutputPathGroups {
   root: string[];
@@ -62,6 +63,8 @@ function skillDir(target: TargetName): string {
       return '.kilo/skills';
     case 'opencode':
       return '.opencode/skills';
+    case 'zed':
+      return '.zed/skills';
   }
 }
 
@@ -91,7 +94,9 @@ export function outputPaths(target: TargetName): OutputPathGroups {
                       ? ['AGENTS.md']
                       : target === 'goose'
                         ? ['.goosehints']
-                        : ['AGENTS.md'],
+                        : target === 'zed'
+                          ? ['.rules']
+                          : ['AGENTS.md'],
     rule:
       target === 'copilot'
         ? ['.github/instructions/typescript.instructions.md']
@@ -202,7 +207,9 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
                       ? '.roo/rules/00-root.md'
                       : target === 'kilo-code'
                         ? 'AGENTS.md'
-                        : 'AGENTS.md';
+                        : target === 'zed'
+                          ? '.rules'
+                          : 'AGENTS.md';
   // From `src/AGENTS.md`, the rewriter points at repo-root AGENTS as `../AGENTS.md`.
   if (target === 'windsurf' && path === 'src/AGENTS.md') {
     rootRule = '../AGENTS.md';

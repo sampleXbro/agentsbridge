@@ -16,7 +16,7 @@ import { TARGET_IDS } from '../../src/targets/catalog/target-ids.js';
 const TARGETS = Object.keys(TARGET_CONTRACTS) as TargetName[];
 
 /** Targets that do not emit native agent files (import also omits `.agentsmesh/agents/*`). */
-const TARGETS_WITHOUT_AGENT_OUTPUT = new Set<TargetName>(['roo-code']);
+const TARGETS_WITHOUT_AGENT_OUTPUT = new Set<TargetName>(['roo-code', 'zed']);
 
 /** Targets whose agents are projected skills (no cross-references in agent body). */
 const TARGETS_WITH_PROJECTED_AGENTS = new Set<TargetName>([
@@ -29,7 +29,16 @@ const TARGETS_WITH_PROJECTED_AGENTS = new Set<TargetName>([
 ]);
 
 /** Targets whose commands are projected skills (no cross-references in command body). */
-const TARGETS_WITH_PROJECTED_COMMANDS = new Set<TargetName>(['amp', 'codex-cli', 'goose', 'kiro']);
+const TARGETS_WITH_PROJECTED_COMMANDS = new Set<TargetName>([
+  'amp',
+  'codex-cli',
+  'goose',
+  'kiro',
+  'zed',
+]);
+
+/** Targets that do not emit any skill artifacts (no `.agentsmesh/skills/*` after round-trip). */
+const TARGETS_WITHOUT_SKILL_OUTPUT = new Set<TargetName>(['zed']);
 
 const MATRIX_CONFIG = `version: 1
 targets:
@@ -49,6 +58,7 @@ targets:
   - roo-code
   - kilo-code
   - opencode
+  - zed
 features:
   - rules
   - commands
@@ -248,7 +258,9 @@ describe('target contract matrix', () => {
       if (!TARGETS_WITHOUT_AGENT_OUTPUT.has(target)) {
         expectCanonicalizedAgent(read(dir, '.agentsmesh/agents/code-reviewer.md'));
       }
-      expectCanonicalizedSkill(read(dir, '.agentsmesh/skills/api-generator/SKILL.md'));
+      if (!TARGETS_WITHOUT_SKILL_OUTPUT.has(target)) {
+        expectCanonicalizedSkill(read(dir, '.agentsmesh/skills/api-generator/SKILL.md'));
+      }
     },
   );
 

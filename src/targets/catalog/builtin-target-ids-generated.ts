@@ -22,6 +22,7 @@ export const BUILTIN_TARGET_IDS = [
   'opencode',
   'roo-code',
   'windsurf',
+  'zed',
 ] as const;
 
 export type BuiltinTargetId = (typeof BUILTIN_TARGET_IDS)[number];

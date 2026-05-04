@@ -23,7 +23,8 @@
         "kiro",
         "opencode",
         "roo-code",
-        "windsurf"
+        "windsurf",
+        "zed"
       ],
       "type": "array",
       "items": {
@@ -44,7 +45,8 @@
           "kiro",
           "opencode",
           "roo-code",
-          "windsurf"
+          "windsurf",
+          "zed"
         ]
       }
     },
@@ -107,7 +109,8 @@
               "kiro",
               "opencode",
               "roo-code",
-              "windsurf"
+              "windsurf",
+              "zed"
             ]
           },
           "features": {

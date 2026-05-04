@@ -20,4 +20,5 @@ export const GLOBAL_ROUNDTRIP_E2E_TARGET_IDS = [
   'opencode',
   'roo-code',
   'windsurf',
+  'zed',
 ] as const;

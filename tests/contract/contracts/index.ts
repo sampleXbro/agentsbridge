@@ -15,6 +15,7 @@ import { gooseContract } from './goose.js';
 import { opencodeContract } from './opencode.js';
 import { rooCodeContract } from './roo-code.js';
 import { windsurfContract } from './windsurf.js';
+import { zedContract } from './zed.js';
 import type { TargetContractMap } from './types.js';
 
 export type { TargetPathContract, TargetContractMap } from './types.js';
@@ -36,6 +37,7 @@ export const TARGET_SPECIFIC_PREFIXES = [
   '.kilo/',
   '.kilocode/',
   '.opencode/',
+  '.zed/',
 ] as const;
 
 export const TARGET_CONTRACTS: TargetContractMap = {
@@ -55,6 +57,7 @@ export const TARGET_CONTRACTS: TargetContractMap = {
   kiro: kiroContract,
   'kilo-code': kiloCodeContract,
   opencode: opencodeContract,
+  zed: zedContract,
 };
 
 export function contractForTarget(id: BuiltinTargetId): TargetContractMap[BuiltinTargetId] {

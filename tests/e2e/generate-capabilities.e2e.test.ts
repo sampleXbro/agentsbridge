@@ -894,6 +894,20 @@ features: [rules, skills, mcp]
     fileContains(join(dir, '.amp', 'settings.json'), 'context7');
   });
 
+  it('generates Zed .rules and .zed/settings.json', async () => {
+    dir = createCanonicalProject(`version: 1
+targets: [zed]
+features: [rules, mcp]
+`);
+    const result = await runCli('generate --targets zed', dir);
+    expect(result.exitCode, result.stderr).toBe(0);
+
+    fileContains(join(dir, '.rules'), '# Standards');
+    fileNotContains(join(dir, '.rules'), 'root: true');
+    fileContains(join(dir, '.zed', 'settings.json'), 'context_servers');
+    fileContains(join(dir, '.zed', 'settings.json'), 'context7');
+  });
+
   it('generates Goose .goosehints, skills, and .gooseignore', async () => {
     dir = createCanonicalProject(`version: 1
 targets: [goose]

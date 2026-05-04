@@ -40,6 +40,7 @@ import { descriptor as kiro } from '../kiro/index.js';
 import { descriptor as opencode } from '../opencode/index.js';
 import { descriptor as rooCode } from '../roo-code/index.js';
 import { descriptor as windsurf } from '../windsurf/index.js';
+import { descriptor as zed } from '../zed/index.js';
 // </auto-generated:builtin-target-imports>
 
 type TargetFeature = keyof TargetCapabilities;
@@ -72,6 +73,7 @@ export const BUILTIN_TARGETS: readonly TargetDescriptor[] = [
   opencode,
   rooCode,
   windsurf,
+  zed,
 ];
 // </auto-generated:builtin-targets-array>
 

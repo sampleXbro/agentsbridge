@@ -15,4 +15,5 @@ export { buildKiroImportPaths } from './kiro.js';
 export { buildOpencodeImportPaths } from './opencode.js';
 export { buildRooCodeImportPaths } from './roo-code.js';
 export { buildWindsurfImportPaths } from './windsurf.js';
+export { buildZedImportPaths } from './zed.js';
 // </auto-generated:import-map-exports>

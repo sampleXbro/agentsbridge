@@ -24,6 +24,7 @@ import { runWatch } from './commands/watch.js';
 import { runCheck } from './commands/check.js';
 import { runMerge } from './commands/merge.js';
 import { runInstall } from './commands/install.js';
+import { renderInstall } from './renderers/install.js';
 import { runPlugin } from './commands/plugin.js';
 import { renderPlugin } from './renderers/plugin.js';
 import { runTarget } from './commands/target.js';
@@ -154,7 +155,10 @@ const cmdHandlers: Record<
     process.on('SIGINT', stop);
     process.on('SIGTERM', stop);
   },
-  install: (flags, args) => runInstall(flags, args, process.cwd()),
+  install: async (flags, args) => {
+    const result = await runInstall(flags, args, process.cwd());
+    renderInstall(result);
+  },
   plugin: async (flags, args) => {
     let result;
     try {

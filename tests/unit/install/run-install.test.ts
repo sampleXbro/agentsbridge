@@ -152,7 +152,11 @@ describe('runInstall', () => {
   it('does not require a source when --sync is set', async () => {
     mockMaybeRunInstallSync.mockResolvedValue(true);
 
-    await expect(runInstall({ sync: true, force: true }, [], '/project')).resolves.toBeUndefined();
+    const result = await runInstall({ sync: true, force: true }, [], '/project');
+    expect(result).toEqual({
+      exitCode: 0,
+      data: { source: '', mode: 'sync', installed: [], skipped: [], dryRun: false },
+    });
     expect(mockMaybeRunInstallSync).toHaveBeenCalledOnce();
     expect(mockParseInstallSource).not.toHaveBeenCalled();
     expect(mockResolveInstallResolvedPath).not.toHaveBeenCalled();

@@ -13,13 +13,23 @@ import { readInstallFlags } from '../core/install-flags.js';
 import { resolveInstallDiscovery } from '../core/install-discovery.js';
 import { type InstallReplayScope } from './install-replay.js';
 import { resolveManualInstallPersistence } from '../manual/manual-install-persistence.js';
-import { executeRunInstallPoolsAndWrite } from './run-install-execute.js';
+import {
+  executeRunInstallPoolsAndWrite,
+  type InstallExecuteResult,
+} from './run-install-execute.js';
+import type { InstallData } from '../../cli/command-result.js';
+
+export interface InstallCommandResult {
+  exitCode: number;
+  data: InstallData;
+}
+
 export async function runInstall(
   flags: Record<string, string | boolean>,
   args: string[],
   projectRoot: string,
   replay?: InstallReplayScope,
-): Promise<void> {
+): Promise<InstallCommandResult> {
   const {
     sync,
     dryRun,
@@ -34,6 +44,8 @@ export async function runInstall(
   const sourceArg = args[0]?.trim();
   if (sync) {
     const { context } = await loadScopedConfig(projectRoot, scope);
+    const syncInstalled: InstallExecuteResult['installed'] = [];
+    const syncSkipped: InstallExecuteResult['skipped'] = [];
     if (
       await maybeRunInstallSync({
         sync,
@@ -41,7 +53,7 @@ export async function runInstall(
         reinstall: async (entry) => {
           const replayPaths = entry.paths && entry.paths.length > 0 ? entry.paths : [entry.path];
           for (const replayPath of replayPaths) {
-            await runInstall(
+            const result = await runInstall(
               {
                 ...(force ? { force: true } : {}),
                 ...(dryRun ? { 'dry-run': true } : {}),
@@ -55,11 +67,22 @@ export async function runInstall(
               projectRoot,
               { features: entry.features, pick: entry.pick },
             );
+            syncInstalled.push(...result.data.installed);
+            syncSkipped.push(...result.data.skipped);
           }
         },
       })
     ) {
-      return;
+      return {
+        exitCode: 0,
+        data: {
+          source: '',
+          mode: 'sync' as const,
+          installed: syncInstalled,
+          skipped: syncSkipped,
+          dryRun,
+        },
+      };
     }
   }
 
@@ -108,7 +131,7 @@ export async function runInstall(
     replayPick: replay?.pick,
   });
   try {
-    await executeRunInstallPoolsAndWrite({
+    const executeResult = await executeRunInstallPoolsAndWrite({
       scope,
       force,
       dryRun,
@@ -129,6 +152,16 @@ export async function runInstall(
       narrowed,
       discoveredFeatures,
     });
+    return {
+      exitCode: 0,
+      data: {
+        source: sourceArg,
+        mode: 'install' as const,
+        installed: executeResult.installed,
+        skipped: executeResult.skipped,
+        dryRun,
+      },
+    };
   } finally {
     if (prep.cleanup) {
       await prep.cleanup();

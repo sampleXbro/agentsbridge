@@ -104,7 +104,9 @@ const cmdHandlers: Record<
   ...Object.fromEntries(CMDS.map((c) => [c, stub(c)])),
   generate: async (flags, _args) => {
     void _args;
-    const result = await runGenerate(flags);
+    const result = await runGenerate(flags, undefined, {
+      printMatrix: flags.json !== true,
+    });
     handleResult('generate', result, flags, () => renderGenerate(result));
   },
   init: async (flags, _args) => {

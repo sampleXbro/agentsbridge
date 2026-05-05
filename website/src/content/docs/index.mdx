@@ -45,7 +45,7 @@ import SoftwareApplicationJsonLd from '../../components/SoftwareApplicationJsonL
 
 ## AI coding config should not drift between tools
 
-Every AI coding assistant ships a different configuration surface. Claude Code reads `CLAUDE.md` and `.claude/settings.json`. Cursor uses `.cursor/rules/*.mdc`. GitHub Copilot reads `.github/copilot-instructions.md` and prompts. Gemini CLI, Windsurf, Continue, Cline, Kiro, Codex CLI, Junie, Roo Code, and Antigravity each add their own files for rules, commands, agents, skills, MCP servers, hooks, ignore patterns, or permissions.
+Every AI coding assistant ships a different configuration surface. Claude Code reads `CLAUDE.md` and `.claude/settings.json`. Cursor uses `.cursor/rules/*.mdc`. GitHub Copilot reads `.github/copilot-instructions.md` and prompts. Gemini CLI, Windsurf, Continue, Cline, Kiro, Codex CLI, Junie, Roo Code, Antigravity, Amp, Zed, and Warp each add their own files for rules, commands, agents, skills, MCP servers, hooks, ignore patterns, or permissions.
 
 AgentsMesh turns that spread into one editable source of truth. Put the real project instructions in `.agentsmesh/`, then generate native files for every enabled tool. Import goes the other direction, so existing tool configs can be adopted without starting from scratch.
 

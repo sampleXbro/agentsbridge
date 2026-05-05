@@ -85,7 +85,7 @@ Prefer a local install? `npm install -D agentsmesh` (also `pnpm add -D` / `yarn 
 If your repo already has `.cursor/`, `.claude/`, `.github/copilot-instructions.md`, or other native files, you don't have to delete them. The recommended flow imports them into `.agentsmesh/` first, lets you preview the projection, and only then trusts `generate`.
 
 ```bash
-npx agentsmesh import --from cursor   # or claude-code, copilot, codex-cli, gemini-cli, windsurf, ...
+npx agentsmesh import --from cursor   # or claude-code, copilot, codex-cli, gemini-cli, windsurf, amp, zed, warp, ...
 npx agentsmesh diff                   # patch-style preview of what generate would change
 npx agentsmesh generate               # write native configs (back) from canonical
 npx agentsmesh check                  # add to CI to detect drift
@@ -121,7 +121,7 @@ On macOS/Linux you can also run `tree .agentsmesh` if you have `tree` installed.
 
 ## Supported AI coding tools
 
-AgentsMesh currently generates native config for every major AI coding assistant — Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf, Continue, Cline, Kiro, Codex CLI, Junie, Roo Code, Antigravity — plus plugin targets you can ship as standalone npm packages. Each tool's native vs. embedded support per feature is tracked in the [supported tools matrix](https://samplexbro.github.io/agentsmesh/reference/supported-tools/). The full matrix table is also embedded [further down this README](#supported-tools--feature-matrix).
+AgentsMesh currently generates native config for every major AI coding assistant — Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf, Continue, Cline, Kiro, Codex CLI, Junie, Roo Code, Antigravity, Amp, Zed, Warp — plus plugin targets you can ship as standalone npm packages. Each tool's native vs. embedded support per feature is tracked in the [supported tools matrix](https://samplexbro.github.io/agentsmesh/reference/supported-tools/). The full matrix table is also embedded [further down this README](#supported-tools--feature-matrix).
 
 ---
 
@@ -147,7 +147,7 @@ The reason `AGENTS.md` alone is not enough: most AI coding assistants expose con
 - **GitHub Copilot** has `.github/copilot-instructions.md`, `.github/instructions/*.instructions.md`, agents, prompts, and (partial) hooks.
 - **Gemini CLI** has `GEMINI.md`, `.gemini/settings.json` (MCP + hooks), `.gemini/commands/*.toml`, and agents.
 - **Codex CLI** has `AGENTS.md` plus `.codex/config.toml`, `.codex/agents/*.toml`, and `.codex/rules/`.
-- **Windsurf**, **Continue**, **Cline**, **Kiro**, **Junie**, **Roo Code**, **Antigravity** each have their own native rules, workflows, MCP servers, skills, and ignore files.
+- **Windsurf**, **Continue**, **Cline**, **Kiro**, **Junie**, **Roo Code**, **Antigravity**, **Amp**, **Zed**, **Warp** each have their own native rules, workflows, MCP servers, skills, and ignore files.
 
 AgentsMesh canonicalizes all of these — rules, commands, agents, skills, MCP servers, hooks, ignore patterns, permissions — so you don't pick one tool's surface as the lowest common denominator. When a tool has no native slot for a feature, AgentsMesh embeds it with round-trip metadata instead of dropping it.
 

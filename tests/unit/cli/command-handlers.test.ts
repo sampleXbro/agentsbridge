@@ -16,6 +16,8 @@ import { renderLint } from '../../../src/cli/renderers/lint.js';
 import { renderCheck } from '../../../src/cli/renderers/check.js';
 import { renderMerge } from '../../../src/cli/renderers/merge.js';
 import { renderMatrix } from '../../../src/cli/renderers/matrix.js';
+import { runConvert } from '../../../src/cli/commands/convert.js';
+import { renderConvert } from '../../../src/cli/renderers/convert.js';
 import { handleResult } from '../../../src/cli/json-handler.js';
 
 vi.mock('../../../src/cli/commands/generate.js', () => ({ runGenerate: vi.fn() }));
@@ -34,6 +36,8 @@ vi.mock('../../../src/cli/renderers/lint.js', () => ({ renderLint: vi.fn() }));
 vi.mock('../../../src/cli/renderers/check.js', () => ({ renderCheck: vi.fn() }));
 vi.mock('../../../src/cli/renderers/merge.js', () => ({ renderMerge: vi.fn() }));
 vi.mock('../../../src/cli/renderers/matrix.js', () => ({ renderMatrix: vi.fn() }));
+vi.mock('../../../src/cli/commands/convert.js', () => ({ runConvert: vi.fn() }));
+vi.mock('../../../src/cli/renderers/convert.js', () => ({ renderConvert: vi.fn() }));
 vi.mock('../../../src/cli/json-handler.js', () => ({ handleResult: vi.fn() }));
 
 describe('cmdHandlers', () => {
@@ -93,6 +97,16 @@ describe('cmdHandlers', () => {
     data: { targets: ['cursor'], features: [] },
     verboseDetails: 'details',
   };
+  const convertResult = {
+    exitCode: 0,
+    data: {
+      from: 'claude-code',
+      to: 'cursor',
+      mode: 'convert' as const,
+      files: [],
+      summary: { created: 0, updated: 0, unchanged: 0 },
+    },
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -104,6 +118,7 @@ describe('cmdHandlers', () => {
     vi.mocked(runCheck).mockResolvedValue(checkResult);
     vi.mocked(runMerge).mockResolvedValue(mergeResult);
     vi.mocked(runMatrix).mockResolvedValue(matrixResult);
+    vi.mocked(runConvert).mockResolvedValue(convertResult);
     vi.mocked(handleResult).mockImplementation((_command, _result, flags, render) => {
       if (flags.json !== true) render();
     });
@@ -163,5 +178,18 @@ describe('cmdHandlers', () => {
 
     expect(renderMatrix).toHaveBeenNthCalledWith(1, matrixResult, { verbose: true });
     expect(renderMatrix).toHaveBeenNthCalledWith(2, matrixResult, { verbose: false });
+  });
+
+  it('delegates convert to runConvert and renderConvert', async () => {
+    await cmdHandlers.convert({ from: 'claude-code', to: 'cursor' }, []);
+
+    expect(runConvert).toHaveBeenCalledWith({ from: 'claude-code', to: 'cursor' });
+    expect(handleResult).toHaveBeenCalledWith(
+      'convert',
+      convertResult,
+      { from: 'claude-code', to: 'cursor' },
+      expect.any(Function),
+    );
+    expect(renderConvert).toHaveBeenCalledWith(convertResult);
   });
 });

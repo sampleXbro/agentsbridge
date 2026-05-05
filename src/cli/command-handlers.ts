@@ -23,6 +23,8 @@ import { runPlugin } from './commands/plugin.js';
 import { renderPlugin } from './renderers/plugin.js';
 import { runTarget } from './commands/target.js';
 import { renderTarget } from './renderers/target.js';
+import { runConvert } from './commands/convert.js';
+import { renderConvert } from './renderers/convert.js';
 
 export const cmdHandlers: Record<
   string,
@@ -101,5 +103,10 @@ export const cmdHandlers: Record<
   target: async (flags, args) => {
     const result = await runTarget(flags, args, process.cwd());
     handleResult('target', result, flags, () => renderTarget(result));
+  },
+  convert: async (flags, _args) => {
+    void _args;
+    const result = await runConvert(flags);
+    handleResult('convert', result, flags, () => renderConvert(result));
   },
 };

@@ -1,6 +1,5 @@
 import { handleResult } from './json-handler.js';
 import { emitJson } from './json-output.js';
-import { logger } from '../utils/output/logger.js';
 import { runGenerate } from './commands/generate.js';
 import { renderGenerate } from './renderers/generate.js';
 import { runInit } from './commands/init.js';
@@ -25,34 +24,10 @@ import { renderPlugin } from './renderers/plugin.js';
 import { runTarget } from './commands/target.js';
 import { renderTarget } from './renderers/target.js';
 
-const CMDS = [
-  'init',
-  'generate',
-  'import',
-  'diff',
-  'lint',
-  'watch',
-  'check',
-  'merge',
-  'matrix',
-  'install',
-  'plugin',
-  'target',
-] as const;
-
-function stub(name: string) {
-  return async (flags: Record<string, string | boolean>, _args: string[]) => {
-    void flags;
-    void _args;
-    logger.info(`Not implemented yet: ${name}`);
-  };
-}
-
 export const cmdHandlers: Record<
   string,
   (flags: Record<string, string | boolean>, args: string[]) => Promise<void>
 > = {
-  ...Object.fromEntries(CMDS.map((c) => [c, stub(c)])),
   generate: async (flags, _args) => {
     void _args;
     const result = await runGenerate(flags, undefined, {
@@ -105,6 +80,7 @@ export const cmdHandlers: Record<
     if (flags.json === true) {
       emitJson('watch', { success: false, error: '--json is not supported with watch' });
       process.exit(1);
+      return;
     }
     const handle = await runWatch(flags);
     const stop = (): void => {

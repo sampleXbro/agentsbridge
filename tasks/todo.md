@@ -1,4 +1,13 @@
-# Current Task: Link Rebaser — Surgical Hardening (lessons-180)
+# Current Task: Raise JSON CLI Branch Patch Coverage
+
+1. [x] Inspect new CLI command/result/rendering contracts and current unit-test helpers without touching unrelated dirty files.
+2. [x] Add focused failing tests for JSON/text branch behavior in `src/cli/command-handlers.ts` and renderer modules listed by Codecov.
+3. [x] Cover renderer edge/error states for plugin, target, check, init, lint, install, diff, import, and merge output paths.
+4. [x] Run targeted unit coverage for the touched CLI tests and verify missing patch lines are materially reduced.
+5. [x] Run `pnpm typecheck`, `pnpm lint`, and targeted/full tests as practical.
+6. [x] Apply `post-feature-qa` before marking complete.
+
+# Previous Task: Link Rebaser — Surgical Hardening (lessons-180)
 
 1. [x] Add ESLint scoped guard banning risky `node:path` imports in `src/core/reference/**` via `importNames` (join, relative, normalize, isAbsolute, dirname, resolve). Allows `posix`, `win32`, `basename`.
 2. [x] Replace risky `node:path` imports with `pathApi(projectRoot)` in 4 files: `import-rewriter.ts`, `import-map-shared.ts`, `pack-skill-artifact-paths.ts`, `link-rebaser-helpers.ts`. Lint clean; 4867 unit tests green.

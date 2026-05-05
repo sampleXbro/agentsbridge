@@ -5,9 +5,14 @@
 import { loadScopedConfig } from '../../config/core/scope.js';
 import { loadCanonicalWithExtends } from '../../canonical/extends/extends.js';
 import { generate as runEngine } from '../../core/generate/engine.js';
-import { computeDiff, formatDiffSummary } from '../../core/differ.js';
+import { computeDiff } from '../../core/differ.js';
 import { bootstrapPlugins } from '../../plugins/bootstrap-plugins.js';
-import { logger } from '../../utils/output/logger.js';
+import type { DiffData } from '../command-result.js';
+
+export interface DiffCommandResult {
+  exitCode: number;
+  data: DiffData;
+}
 
 /**
  * Run the diff command.
@@ -17,7 +22,7 @@ import { logger } from '../../utils/output/logger.js';
 export async function runDiff(
   flags: Record<string, string | boolean>,
   projectRoot?: string,
-): Promise<void> {
+): Promise<DiffCommandResult> {
   const root = projectRoot ?? process.cwd();
   const scope = flags.global === true ? 'global' : 'project';
   const targetStr = flags.targets;
@@ -47,13 +52,36 @@ export async function runDiff(
   });
 
   if (results.length === 0) {
-    logger.info('No files to generate (no root rule or rules feature disabled).');
-    return;
+    return {
+      exitCode: 0,
+      data: {
+        files: [],
+        patches: [],
+        summary: { created: 0, updated: 0, unchanged: 0, deleted: 0 },
+      },
+    };
   }
 
   const { diffs, summary } = computeDiff(results);
-  for (const d of diffs) {
-    process.stdout.write(d.patch);
-  }
-  logger.info(formatDiffSummary(summary));
+  const files = results
+    .filter((r) => r.status !== 'unchanged' && r.status !== 'skipped')
+    .map((r) => ({
+      path: r.path,
+      target: r.target,
+      status: r.status as 'created' | 'updated' | 'deleted',
+    }));
+
+  return {
+    exitCode: 0,
+    data: {
+      files,
+      patches: diffs.map((d) => ({ path: d.path, patch: d.patch })),
+      summary: {
+        created: summary.new,
+        updated: summary.updated,
+        unchanged: summary.unchanged,
+        deleted: summary.deleted,
+      },
+    },
+  };
 }

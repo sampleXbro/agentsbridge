@@ -27,7 +27,7 @@ export interface ImportData {
 export interface DiffData {
   files: Array<{ path: string; target: string; status: 'created' | 'updated' | 'deleted' }>;
   patches: Array<{ path: string; patch: string }>;
-  summary: { created: number; updated: number; deleted: number };
+  summary: { created: number; updated: number; unchanged: number; deleted: number };
 }
 
 export interface LintData {

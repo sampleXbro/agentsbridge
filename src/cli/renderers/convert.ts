@@ -1,10 +1,5 @@
 import { logger } from '../../utils/output/logger.js';
-import type { ConvertData } from '../command-result.js';
-
-interface ConvertCommandResult {
-  exitCode: number;
-  data: ConvertData;
-}
+import type { ConvertCommandResult } from '../commands/convert.js';
 
 export function renderConvert(result: ConvertCommandResult): void {
   const { data } = result;

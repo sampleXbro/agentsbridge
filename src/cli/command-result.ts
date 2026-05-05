@@ -105,3 +105,11 @@ export interface TargetData {
   skipped: string[];
   postSteps: string[];
 }
+
+export interface ConvertData {
+  from: string;
+  to: string;
+  mode: 'convert' | 'dry-run';
+  files: Array<{ path: string; target: string; status: 'created' | 'updated' | 'unchanged' }>;
+  summary: { created: number; updated: number; unchanged: number };
+}

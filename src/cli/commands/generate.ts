@@ -5,38 +5,26 @@
 import { join } from 'node:path';
 import { loadScopedConfig } from '../../config/core/scope.js';
 import { loadCanonicalWithExtends } from '../../canonical/extends/extends.js';
-import {
-  buildChecksums,
-  buildExtendChecksums,
-  buildPackChecksums,
-  detectLockedFeatureViolations,
-  readLock,
-  writeLock,
-} from '../../config/core/lock.js';
-import { getCacheDir } from '../../config/remote/remote-fetcher.js';
+import { buildChecksums, detectLockedFeatureViolations, readLock } from '../../config/core/lock.js';
 import { generate as runEngine } from '../../core/generate/engine.js';
 import { cleanupStaleGeneratedOutputs } from '../../core/generate/stale-cleanup.js';
-import { ensureCacheSymlink, writeFileAtomic } from '../../utils/filesystem/fs.js';
+import { writeFileAtomic } from '../../utils/filesystem/fs.js';
 import { acquireProcessLock } from '../../utils/filesystem/process-lock.js';
 import { bootstrapPlugins } from '../../plugins/bootstrap-plugins.js';
 import { logger } from '../../utils/output/logger.js';
-import { getVersion } from '../version.js';
-import { runMatrix } from './matrix.js';
-import { renderMatrix } from '../renderers/matrix.js';
 import { ensurePathInsideRoot } from './generate-path.js';
+import { writeLockFile } from './generate-lock.js';
+import type { GenerateData } from '../command-result.js';
+import type { ResolvedExtend } from '../../config/resolve/resolver.js';
+import type { GenerateResult } from '../../core/result-types.js';
 
-interface RunGenerateOptions {
-  printMatrix?: boolean;
+export interface GenerateCommandResult {
+  exitCode: number;
+  data: GenerateData;
 }
 
-/**
- * Format a generated-output path for user-facing log lines.
- * In global mode the path is resolved against the user home directory, not the
- * project root — prefix with `~/` so users don't misread a log line like
- * `✓ updated .claude/settings.json` as a project-local write.
- */
-function formatDisplayPath(scope: 'project' | 'global', relPath: string): string {
-  return scope === 'global' ? `~/${relPath}` : relPath;
+export interface RunGenerateOptions {
+  printMatrix?: boolean;
 }
 
 /**
@@ -48,7 +36,7 @@ export async function runGenerate(
   flags: Record<string, string | boolean>,
   projectRoot?: string,
   options: RunGenerateOptions = {},
-): Promise<number> {
+): Promise<GenerateCommandResult> {
   if (flags.features !== undefined) {
     throw new Error('--features is no longer supported. Configure features in agentsmesh.yaml.');
   }
@@ -67,6 +55,8 @@ export async function runGenerate(
           .map((s) => s.trim())
           .filter(Boolean)
       : undefined;
+
+  const mode: GenerateData['mode'] = checkOnly ? 'check' : dryRun ? 'dry-run' : 'generate';
 
   const { config, context } = await loadScopedConfig(root, scope);
   await bootstrapPlugins(config, root);
@@ -122,117 +112,155 @@ export async function runGenerate(
   });
 
   if (results.length === 0) {
-    logger.info('No files to generate (no root rule or rules feature disabled).');
-    if (checkOnly) {
-      logger.success('Generated files are in sync.');
-      return 0;
-    }
-    if (!dryRun) {
-      const emptyRelease = await acquireProcessLock(join(context.canonicalDir, '.generate.lock'));
-      try {
-        const checksums = await buildChecksums(context.canonicalDir);
-        const extendChecksums =
-          resolvedExtends.length > 0 ? await buildExtendChecksums(resolvedExtends) : {};
-        const packChecksums = await buildPackChecksums(join(context.canonicalDir, 'packs'));
-        const generatedBy = process.env['USER'] ?? process.env['USERNAME'] ?? 'unknown';
-        await writeLock(context.canonicalDir, {
-          generatedAt: new Date().toISOString(),
-          generatedBy,
-          libVersion: getVersion(),
-          checksums,
-          extends: extendChecksums,
-          packs: packChecksums,
-        });
-        try {
-          await ensureCacheSymlink(getCacheDir(), join(context.configDir, '.agentsmeshcache'));
-        } catch (err) {
-          logger.warn(
-            `Could not create .agentsmeshcache symlink: ${err instanceof Error ? err.message : String(err)}`,
-          );
-        }
-      } finally {
-        await emptyRelease();
-      }
-    }
-    if (options.printMatrix !== false) {
-      const matrixResult = await runMatrix(flags, root);
-      renderMatrix(matrixResult, { verbose: flags.verbose === true });
-    }
-    return 0;
+    return handleEmptyResults({
+      mode,
+      scope,
+      dryRun,
+      context,
+      resolvedExtends,
+      flags,
+      root,
+      options,
+    });
   }
 
   if (checkOnly) {
-    const drifted = results.filter((r) => r.status !== 'unchanged');
-    if (drifted.length === 0) {
-      logger.success('Generated files are in sync.');
-      return 0;
-    }
-    for (const r of drifted) {
-      logger.error(`[check] ${r.status} ${formatDisplayPath(scope, r.path)} (${r.target})`);
-    }
-    logger.error("Generated files are out of sync. Run 'agentsmesh generate' to update them.");
-    return 1;
+    return buildCheckResult(results, scope);
   }
+
+  return handleGenerateOrDryRun({
+    results,
+    dryRun,
+    scope,
+    mode,
+    context,
+    activeTargets,
+    resolvedExtends,
+    flags,
+    root,
+    options,
+  });
+}
+
+/* ----- helpers ----- */
+
+interface EmptyResultsArgs {
+  mode: GenerateData['mode'];
+  scope: 'project' | 'global';
+  dryRun: boolean;
+  context: { canonicalDir: string; configDir: string; rootBase: string };
+  resolvedExtends: ResolvedExtend[];
+  flags: Record<string, string | boolean>;
+  root: string;
+  options: RunGenerateOptions;
+}
+
+async function handleEmptyResults(args: EmptyResultsArgs): Promise<GenerateCommandResult> {
+  const { mode, scope, dryRun, context, resolvedExtends, flags, root, options } = args;
+
+  if (mode === 'check') {
+    return { exitCode: 0, data: { scope, mode, files: [], summary: buildSummary([]) } };
+  }
+
+  if (!dryRun) {
+    await writeLockFile(context, resolvedExtends);
+  }
+
+  if (options.printMatrix !== false) {
+    const { runMatrix } = await import('./matrix.js');
+    const { renderMatrix } = await import('../renderers/matrix.js');
+    const matrixResult = await runMatrix(flags, root);
+    renderMatrix(matrixResult, { verbose: flags.verbose === true });
+  }
+
+  return { exitCode: 0, data: { scope, mode, files: [], summary: buildSummary([]) } };
+}
+
+function buildCheckResult(
+  results: GenerateResult[],
+  scope: 'project' | 'global',
+): GenerateCommandResult {
+  const actionable = results.filter((r) => r.status !== 'skipped');
+  const drifted = actionable.filter((r) => r.status !== 'unchanged');
+  const files = actionable.map((r) => ({
+    path: r.path,
+    target: r.target,
+    status: r.status as 'created' | 'updated' | 'unchanged',
+  }));
+  const exitCode = drifted.length === 0 ? 0 : 1;
+  return { exitCode, data: { scope, mode: 'check', files, summary: buildSummary(actionable) } };
+}
+
+interface GenerateOrDryRunArgs {
+  results: GenerateResult[];
+  dryRun: boolean;
+  scope: 'project' | 'global';
+  mode: GenerateData['mode'];
+  context: { canonicalDir: string; configDir: string; rootBase: string };
+  activeTargets: string[];
+  resolvedExtends: ResolvedExtend[];
+  flags: Record<string, string | boolean>;
+  root: string;
+  options: RunGenerateOptions;
+}
+
+async function handleGenerateOrDryRun(args: GenerateOrDryRunArgs): Promise<GenerateCommandResult> {
+  const {
+    results,
+    dryRun,
+    scope,
+    mode,
+    context,
+    activeTargets,
+    resolvedExtends,
+    flags,
+    root,
+    options,
+  } = args;
 
   const release = dryRun
     ? null
     : await acquireProcessLock(join(context.canonicalDir, '.generate.lock'));
   try {
-    for (const r of results) {
-      if (dryRun) {
-        logger.info(`[dry-run] ${r.status} ${formatDisplayPath(scope, r.path)} (${r.target})`);
-      } else if (r.status === 'created' || r.status === 'updated') {
-        const fullPath = ensurePathInsideRoot(context.rootBase, r.path, r.target);
-        await writeFileAtomic(fullPath, r.content);
-        logger.success(`${r.status} ${formatDisplayPath(scope, r.path)}`);
-      }
-    }
-
     if (!dryRun) {
-      const created = results.filter((r) => r.status === 'created').length;
-      const updated = results.filter((r) => r.status === 'updated').length;
-      const unchanged = results.filter((r) => r.status === 'unchanged').length;
+      for (const r of results) {
+        if (r.status === 'created' || r.status === 'updated') {
+          const fullPath = ensurePathInsideRoot(context.rootBase, r.path, r.target);
+          await writeFileAtomic(fullPath, r.content);
+        }
+      }
       await cleanupStaleGeneratedOutputs({
         projectRoot: context.rootBase,
         targets: activeTargets,
         expectedPaths: results.map((result) => result.path),
         scope,
       });
-      if (created > 0 || updated > 0) {
-        logger.info(`Generated: ${created} created, ${updated} updated, ${unchanged} unchanged`);
-      } else {
-        logger.info(`Nothing changed. (${unchanged} unchanged)`);
-      }
-
-      const checksums = await buildChecksums(context.canonicalDir);
-      const extendChecksums =
-        resolvedExtends.length > 0 ? await buildExtendChecksums(resolvedExtends) : {};
-      const packChecksums = await buildPackChecksums(join(context.canonicalDir, 'packs'));
-      const generatedBy = process.env['USER'] ?? process.env['USERNAME'] ?? 'unknown';
-      await writeLock(context.canonicalDir, {
-        generatedAt: new Date().toISOString(),
-        generatedBy,
-        libVersion: getVersion(),
-        checksums,
-        extends: extendChecksums,
-        packs: packChecksums,
-      });
-      try {
-        await ensureCacheSymlink(getCacheDir(), join(context.configDir, '.agentsmeshcache'));
-      } catch (err) {
-        logger.warn(
-          `Could not create .agentsmeshcache symlink: ${err instanceof Error ? err.message : String(err)}`,
-        );
-      }
+      await writeLockFile(context, resolvedExtends);
     }
   } finally {
     if (release) await release();
   }
 
   if (options.printMatrix !== false) {
+    const { runMatrix } = await import('./matrix.js');
+    const { renderMatrix } = await import('../renderers/matrix.js');
     const matrixResult = await runMatrix(flags, root);
     renderMatrix(matrixResult, { verbose: flags.verbose === true });
   }
 
-  return 0;
+  const actionable = results.filter((r) => r.status !== 'skipped');
+  const files = actionable.map((r) => ({
+    path: r.path,
+    target: r.target,
+    status: r.status as 'created' | 'updated' | 'unchanged',
+  }));
+  return { exitCode: 0, data: { scope, mode, files, summary: buildSummary(actionable) } };
+}
+
+function buildSummary(results: Array<{ status: string }>): GenerateData['summary'] {
+  return {
+    created: results.filter((r) => r.status === 'created').length,
+    updated: results.filter((r) => r.status === 'updated').length,
+    unchanged: results.filter((r) => r.status === 'unchanged').length,
+  };
 }

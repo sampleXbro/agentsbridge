@@ -43,6 +43,7 @@ vi.mock('../../../src/install/run/run-install-pack.js', () => ({
   installAsPack: mockInstallAsPack,
 }));
 vi.mock('../../../src/cli/commands/generate.js', () => ({ runGenerate: mockRunGenerate }));
+vi.mock('../../../src/cli/renderers/generate.js', () => ({ renderGenerate: vi.fn() }));
 vi.mock('../../../src/install/source/git-pin.js', () => ({ isGitAvailable: mockIsGitAvailable }));
 vi.mock('../../../src/install/run/install-sync.js', () => ({
   maybeRunInstallSync: mockMaybeRunInstallSync,
@@ -126,7 +127,15 @@ beforeEach(() => {
   mockSuggestExtendName.mockReturnValue('demo-pack');
   mockWriteInstallAsExtend.mockResolvedValue(undefined);
   mockInstallAsPack.mockResolvedValue(undefined);
-  mockRunGenerate.mockResolvedValue(0);
+  mockRunGenerate.mockResolvedValue({
+    exitCode: 0,
+    data: {
+      scope: 'project',
+      mode: 'generate',
+      files: [],
+      summary: { created: 0, updated: 0, unchanged: 0 },
+    },
+  });
   mockIsGitAvailable.mockResolvedValue(true);
   mockMaybeRunInstallSync.mockResolvedValue(false);
 });
@@ -288,7 +297,15 @@ describe('runInstall', () => {
   });
 
   it('warns when generate fails after a successful install', async () => {
-    mockRunGenerate.mockResolvedValue(1);
+    mockRunGenerate.mockResolvedValue({
+      exitCode: 1,
+      data: {
+        scope: 'project',
+        mode: 'generate',
+        files: [],
+        summary: { created: 0, updated: 0, unchanged: 0 },
+      },
+    });
     await runInstall({ force: true }, ['../upstream'], '/project');
     expect(mockLoggerWarn).toHaveBeenCalledWith(
       'Generate failed after install. Fix the issue and run agentsmesh generate.',

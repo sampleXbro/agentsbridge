@@ -7,6 +7,7 @@ import { printVersion } from './version.js';
 import { handleError } from './error-handler.js';
 import { logger } from '../utils/output/logger.js';
 import { runGenerate } from './commands/generate.js';
+import { renderGenerate } from './renderers/generate.js';
 import { runInit } from './commands/init.js';
 import { runImport } from './commands/import.js';
 import { runDiff } from './commands/diff.js';
@@ -97,8 +98,9 @@ const cmdHandlers: Record<
   ...Object.fromEntries(CMDS.map((c) => [c, stub(c)])),
   generate: async (flags, _args) => {
     void _args;
-    const code = await runGenerate(flags);
-    if (code !== 0) process.exit(code);
+    const result = await runGenerate(flags);
+    renderGenerate(result);
+    if (result.exitCode !== 0) process.exit(result.exitCode);
   },
   init: async (flags, _args) => {
     void _args;

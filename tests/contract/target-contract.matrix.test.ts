@@ -39,7 +39,9 @@ describe('target contract matrix (in-process)', () => {
     async (target) => {
       dir = createCanonicalProject(MATRIX_CONFIG);
       appendGenerateReferenceMatrix(dir);
-      expect(await runGenerate({ targets: target }, dir, { printMatrix: false })).toBe(0);
+      expect((await runGenerate({ targets: target }, dir, { printMatrix: false })).exitCode).toBe(
+        0,
+      );
       expect(generatedPathsOnDisk(dir)).toEqual([...TARGET_CONTRACTS[target].generated]);
 
       const { config, context } = await loadScopedConfig(dir, 'project');
@@ -71,7 +73,7 @@ describe('target contract matrix (in-process)', () => {
   it.each(TARGET_IDS)('import round-trip paths for %s', async (target) => {
     dir = createCanonicalProject(MATRIX_CONFIG);
     appendGenerateReferenceMatrix(dir);
-    expect(await runGenerate({ targets: target }, dir, { printMatrix: false })).toBe(0);
+    expect((await runGenerate({ targets: target }, dir, { printMatrix: false })).exitCode).toBe(0);
     rmSync(join(dir, '.agentsmesh'), { recursive: true, force: true });
     await getTargetCatalogEntry(target).importFrom(dir, { scope: 'project' });
     expect(canonicalPathsOnDisk(dir)).toEqual([...TARGET_CONTRACTS[target].imported]);
@@ -88,23 +90,23 @@ features: [rules, commands, agents, skills, mcp, hooks, ignore, permissions]
     if (target === 'gemini-cli') {
       rmSync(join(dir, '.agentsmesh', 'rules', 'typescript.md'), { force: true });
     }
-    expect(await runGenerate({ targets: target }, dir, { printMatrix: false })).toBe(0);
+    expect((await runGenerate({ targets: target }, dir, { printMatrix: false })).exitCode).toBe(0);
     rmSync(join(dir, '.agentsmesh'), { recursive: true, force: true });
     await getTargetCatalogEntry(target).importFrom(dir, { scope: 'project' });
-    expect(await runGenerate({ targets: target }, dir, { printMatrix: false })).toBe(0);
-    expect(await runGenerate({ targets: target, check: true }, dir, { printMatrix: false })).toBe(
-      0,
-    );
+    expect((await runGenerate({ targets: target }, dir, { printMatrix: false })).exitCode).toBe(0);
+    expect(
+      (await runGenerate({ targets: target, check: true }, dir, { printMatrix: false })).exitCode,
+    ).toBe(0);
   });
 
   it('removes stale files under managed output (cursor)', async () => {
     const target: BuiltinTargetId = 'cursor';
     dir = createCanonicalProject(MATRIX_CONFIG);
     appendGenerateReferenceMatrix(dir);
-    expect(await runGenerate({ targets: target }, dir, { printMatrix: false })).toBe(0);
+    expect((await runGenerate({ targets: target }, dir, { printMatrix: false })).exitCode).toBe(0);
     const stale = join(dir, '.cursor', 'agents', 'stale-contract-junk.md');
     writeFileSync(stale, '---\nname: stale\n---\n# Stale');
-    expect(await runGenerate({ targets: target }, dir, { printMatrix: false })).toBe(0);
+    expect((await runGenerate({ targets: target }, dir, { printMatrix: false })).exitCode).toBe(0);
     expect(existsSync(stale)).toBe(false);
   });
 
@@ -114,7 +116,7 @@ targets: [gemini-cli, windsurf]
 features: [rules, commands, agents, skills, mcp, hooks, ignore, permissions]
 `);
     appendGenerateReferenceMatrix(dir);
-    expect(await runGenerate({}, dir, { printMatrix: false })).toBe(0);
+    expect((await runGenerate({}, dir, { printMatrix: false })).exitCode).toBe(0);
     expect(existsSync(join(dir, 'AGENTS.md'))).toBe(true);
   });
 });

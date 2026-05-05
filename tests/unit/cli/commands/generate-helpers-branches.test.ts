@@ -64,36 +64,36 @@ describe('runGenerate — target filter parsing', () => {
   it('accepts a single-target string filter (split/trim/filter Boolean → 1 entry)', async () => {
     writeMinimalProject('[rules]', '[claude-code, codex-cli]');
     // printMatrix:false so the matrix command does not pollute coverage paths.
-    const code = await runGenerate({ targets: 'claude-code', 'dry-run': true }, TEST_DIR, {
+    const result = await runGenerate({ targets: 'claude-code', 'dry-run': true }, TEST_DIR, {
       printMatrix: false,
     });
-    expect(code).toBe(0);
+    expect(result.exitCode).toBe(0);
   });
 
   it('accepts comma-separated filter with whitespace and trailing commas', async () => {
     writeMinimalProject('[rules]', '[claude-code, codex-cli]');
-    const code = await runGenerate(
+    const result = await runGenerate(
       { targets: '  claude-code , codex-cli ,', 'dry-run': true },
       TEST_DIR,
       { printMatrix: false },
     );
-    expect(code).toBe(0);
+    expect(result.exitCode).toBe(0);
   });
 
   it('treats empty string targets as "no filter" (typeof check guards)', async () => {
     writeMinimalProject('[rules]', '[claude-code]');
-    const code = await runGenerate({ targets: '', 'dry-run': true }, TEST_DIR, {
+    const result = await runGenerate({ targets: '', 'dry-run': true }, TEST_DIR, {
       printMatrix: false,
     });
-    expect(code).toBe(0);
+    expect(result.exitCode).toBe(0);
   });
 
   it('treats targets=true (boolean flag) as no filter', async () => {
     writeMinimalProject('[rules]', '[claude-code]');
-    const code = await runGenerate({ targets: true, 'dry-run': true }, TEST_DIR, {
+    const result = await runGenerate({ targets: true, 'dry-run': true }, TEST_DIR, {
       printMatrix: false,
     });
-    expect(code).toBe(0);
+    expect(result.exitCode).toBe(0);
   });
 });
 
@@ -173,8 +173,8 @@ description: Root
 `,
     );
 
-    const code = await runGenerate({ force: true }, TEST_DIR, { printMatrix: false });
-    expect(code).toBe(0);
+    const result = await runGenerate({ force: true }, TEST_DIR, { printMatrix: false });
+    expect(result.exitCode).toBe(0);
   });
 });
 
@@ -198,8 +198,8 @@ description: Root
 `,
     );
 
-    const code = await runGenerate({ check: true }, TEST_DIR, { printMatrix: false });
-    expect(code).toBe(1);
+    const result = await runGenerate({ check: true }, TEST_DIR, { printMatrix: false });
+    expect(result.exitCode).toBe(1);
   });
 
   it('returns 0 when no files would be generated and --check is set', async () => {
@@ -212,7 +212,7 @@ targets: [claude-code]
 features: []
 `,
     );
-    const code = await runGenerate({ check: true }, TEST_DIR, { printMatrix: false });
-    expect(code).toBe(0);
+    const result = await runGenerate({ check: true }, TEST_DIR, { printMatrix: false });
+    expect(result.exitCode).toBe(0);
   });
 });

@@ -60,8 +60,8 @@ describe('plugin flow integration', () => {
 
     // Dynamically import runGenerate to avoid top-level side effects
     const { runGenerate } = await import('../../src/cli/commands/generate.js');
-    const code = await runGenerate({}, tmpDir, { printMatrix: false });
-    expect(code).toBe(0);
+    const result = await runGenerate({}, tmpDir, { printMatrix: false });
+    expect(result.exitCode).toBe(0);
 
     const pluginMdExists = await fileExists(join(tmpDir, 'PLUGIN.md'));
     expect(pluginMdExists).toBe(true);

@@ -13,6 +13,7 @@ import { runDiff } from './commands/diff.js';
 import { runLintCmd } from './commands/lint.js';
 import { renderLint } from './renderers/lint.js';
 import { renderCheck } from './renderers/check.js';
+import { renderMerge } from './renderers/merge.js';
 import { runMatrix } from './commands/matrix.js';
 import { runWatch } from './commands/watch.js';
 import { runCheck } from './commands/check.js';
@@ -123,9 +124,10 @@ const cmdHandlers: Record<
     renderCheck(result);
     if (result.exitCode !== 0) process.exit(result.exitCode);
   },
-  merge: (flags, _args) => {
+  merge: async (flags, _args) => {
     void _args;
-    return runMerge(flags);
+    const result = await runMerge(flags);
+    renderMerge(result);
   },
   matrix: (flags, args) => {
     void args;

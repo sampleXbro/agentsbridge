@@ -2,9 +2,7 @@
  * Extra branch coverage tests for src/cli/commands/plugin.ts.
  * Targets ternaries / conditional-expression branches not covered by
  * tests/unit/cli/commands/plugin*.test.ts:
- *   - line ~69, 84, 88, 126, 144, 148, 159, 165, 191
- * Specifically: undefined-value paths, version!==undefined formatting, fallback id
- * derivation, success vs error message paths.
+ *   - version handling, id derivation, error propagation, empty subcommand.
  */
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtemp, rm } from 'node:fs/promises';
@@ -47,19 +45,22 @@ afterEach(async () => {
 describe('runPlugin add — version branch', () => {
   it('formats hint with @latest when version is undefined', async () => {
     mockWritePluginEntry.mockResolvedValueOnce(undefined);
-    const code = await runPlugin({}, ['add', 'pkg-no-version'], tmpDir);
-    expect(code).toBe(0);
-    // No version flag → version remains undefined; the success branch chooses '@latest'
+    const result = await runPlugin({}, ['add', 'pkg-no-version'], tmpDir);
+    expect(result.exitCode).toBe(0);
+    // No version flag → writePluginEntry gets version: undefined
     expect(mockWritePluginEntry).toHaveBeenCalledWith(
       tmpDir,
       expect.objectContaining({ version: undefined }),
     );
+    if (result.data.subcommand === 'add') {
+      expect(result.data.version).toBe('latest');
+    }
   });
 
   it('passes version literal exactly when --version is a string', async () => {
     mockWritePluginEntry.mockResolvedValueOnce(undefined);
-    const code = await runPlugin({ version: '0.0.1' }, ['add', 'pkg'], tmpDir);
-    expect(code).toBe(0);
+    const result = await runPlugin({ version: '0.0.1' }, ['add', 'pkg'], tmpDir);
+    expect(result.exitCode).toBe(0);
     expect(mockWritePluginEntry).toHaveBeenCalledWith(
       tmpDir,
       expect.objectContaining({ version: '0.0.1' }),
@@ -68,19 +69,17 @@ describe('runPlugin add — version branch', () => {
 
   it('treats --version as a boolean (no string) → undefined version, @latest hint branch', async () => {
     mockWritePluginEntry.mockResolvedValueOnce(undefined);
-    const code = await runPlugin({ version: true }, ['add', 'pkg'], tmpDir);
-    expect(code).toBe(0);
+    const result = await runPlugin({ version: true }, ['add', 'pkg'], tmpDir);
+    expect(result.exitCode).toBe(0);
     expect(mockWritePluginEntry).toHaveBeenCalledWith(
       tmpDir,
       expect.objectContaining({ version: undefined }),
     );
   });
 
-  it('formats writePluginEntry error with non-Error value (String(err) branch)', async () => {
-    // throwing a non-Error literal exercises the `: String(err)` ternary branch
+  it('propagates writePluginEntry error', async () => {
     mockWritePluginEntry.mockRejectedValueOnce('plain-string-error');
-    const code = await runPlugin({}, ['add', 'some-pkg'], tmpDir);
-    expect(code).toBe(1);
+    await expect(runPlugin({}, ['add', 'some-pkg'], tmpDir)).rejects.toBe('plain-string-error');
   });
 });
 
@@ -93,8 +92,11 @@ describe('runPlugin list — version display branch', () => {
       entry: { id: 'no-ver-plugin', source: 'pkg' },
       descriptors: [{ id: 'no-ver-plugin', emptyImportMessage: 'm' }],
     });
-    const code = await runPlugin({}, ['list'], tmpDir);
-    expect(code).toBe(0);
+    const result = await runPlugin({}, ['list'], tmpDir);
+    expect(result.exitCode).toBe(0);
+    if (result.data.subcommand === 'list') {
+      expect(result.data.plugins[0]!.version).toBeUndefined();
+    }
   });
 
   it('renders @version segment when entry.version is defined', async () => {
@@ -105,34 +107,39 @@ describe('runPlugin list — version display branch', () => {
       entry: { id: 'with-ver', source: 'pkg', version: '2.1.0' },
       descriptors: [{ id: 'with-ver', emptyImportMessage: 'm' }],
     });
-    const code = await runPlugin({}, ['list'], tmpDir);
-    expect(code).toBe(0);
+    const result = await runPlugin({}, ['list'], tmpDir);
+    expect(result.exitCode).toBe(0);
+    if (result.data.subcommand === 'list') {
+      expect(result.data.plugins[0]!.version).toBe('2.1.0');
+    }
   });
 
   it('handles missing plugins array (??[] branch) by treating as empty', async () => {
     mockReadScopedConfigRaw.mockResolvedValueOnce({});
-    const code = await runPlugin({}, ['list'], tmpDir);
-    expect(code).toBe(0);
+    const result = await runPlugin({}, ['list'], tmpDir);
+    expect(result.exitCode).toBe(0);
+    if (result.data.subcommand === 'list') {
+      expect(result.data.plugins).toEqual([]);
+    }
   });
 
-  it('formats readScopedConfigRaw error with non-Error value (String(err) branch)', async () => {
+  it('propagates readScopedConfigRaw error on list', async () => {
     mockReadScopedConfigRaw.mockRejectedValueOnce({ raw: 'object-error' });
-    const code = await runPlugin({}, ['list'], tmpDir);
-    expect(code).toBe(1);
+    await expect(runPlugin({}, ['list'], tmpDir)).rejects.toEqual({ raw: 'object-error' });
   });
 });
 
 describe('runPlugin remove — error formatting branch', () => {
-  it('formats removePluginEntry error with non-Error value', async () => {
+  it('propagates removePluginEntry error', async () => {
     mockRemovePluginEntry.mockRejectedValueOnce('disk-fail');
-    const code = await runPlugin({}, ['remove', 'foo'], tmpDir);
-    expect(code).toBe(1);
+    await expect(runPlugin({}, ['remove', 'foo'], tmpDir)).rejects.toBe('disk-fail');
   });
 
-  it('returns 0 with success message when entry is removed', async () => {
+  it('returns 0 with found: true when entry is removed', async () => {
     mockRemovePluginEntry.mockResolvedValueOnce(true);
-    const code = await runPlugin({}, ['remove', 'foo'], tmpDir);
-    expect(code).toBe(0);
+    const result = await runPlugin({}, ['remove', 'foo'], tmpDir);
+    expect(result.exitCode).toBe(0);
+    expect(result.data).toEqual({ subcommand: 'remove', id: 'foo', found: true });
   });
 });
 
@@ -145,8 +152,11 @@ describe('runPlugin info — version display + error formatting branches', () =>
       entry: { id: 'p', source: 'pkg', version: '1.0.0' },
       descriptors: [{ id: 'p', emptyImportMessage: 'no-config' }],
     });
-    const code = await runPlugin({}, ['info', 'p'], tmpDir);
-    expect(code).toBe(0);
+    const result = await runPlugin({}, ['info', 'p'], tmpDir);
+    expect(result.exitCode).toBe(0);
+    if (result.data.subcommand === 'info') {
+      expect(result.data.version).toBe('1.0.0');
+    }
   });
 
   it('formats info source line without @version when version is undefined', async () => {
@@ -157,36 +167,39 @@ describe('runPlugin info — version display + error formatting branches', () =>
       entry: { id: 'p', source: 'pkg' },
       descriptors: [],
     });
-    const code = await runPlugin({}, ['info', 'p'], tmpDir);
-    expect(code).toBe(0);
+    const result = await runPlugin({}, ['info', 'p'], tmpDir);
+    expect(result.exitCode).toBe(0);
+    if (result.data.subcommand === 'info') {
+      expect(result.data.version).toBeUndefined();
+    }
   });
 
   it('handles missing plugins array (??[] branch) when finding entry', async () => {
     mockReadScopedConfigRaw.mockResolvedValueOnce({});
-    const code = await runPlugin({}, ['info', 'never'], tmpDir);
-    expect(code).toBe(1);
+    const result = await runPlugin({}, ['info', 'never'], tmpDir);
+    expect(result.exitCode).toBe(1);
   });
 
-  it('formats readScopedConfigRaw error with non-Error value', async () => {
+  it('propagates readScopedConfigRaw error on info', async () => {
     mockReadScopedConfigRaw.mockRejectedValueOnce(123);
-    const code = await runPlugin({}, ['info', 'p'], tmpDir);
-    expect(code).toBe(1);
+    await expect(runPlugin({}, ['info', 'p'], tmpDir)).rejects.toBe(123);
   });
 
-  it('formats loadPlugin error with non-Error value', async () => {
+  it('returns exitCode 1 when loadPlugin throws', async () => {
     mockReadScopedConfigRaw.mockResolvedValueOnce({
       plugins: [{ id: 'p', source: 'pkg' }],
     });
     mockLoadPlugin.mockRejectedValueOnce('module-not-found');
-    const code = await runPlugin({}, ['info', 'p'], tmpDir);
-    expect(code).toBe(1);
+    const result = await runPlugin({}, ['info', 'p'], tmpDir);
+    expect(result.exitCode).toBe(1);
   });
 });
 
 describe('runPlugin — empty subcommand branch', () => {
-  it('treats empty-string subcommand as missing (prints help, returns 0)', async () => {
-    const code = await runPlugin({}, [''], tmpDir);
-    expect(code).toBe(0);
+  it('treats empty-string subcommand as missing (showHelp, returns 0)', async () => {
+    const result = await runPlugin({}, [''], tmpDir);
+    expect(result.exitCode).toBe(0);
+    expect(result.showHelp).toBe(true);
   });
 });
 

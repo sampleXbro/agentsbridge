@@ -105,32 +105,69 @@ describe('removePluginEntry', () => {
 });
 
 describe('runPlugin', () => {
-  it('plugin list does not throw when no plugins configured', async () => {
+  it('plugin list returns structured data with empty plugins', async () => {
     await writeConfig({ version: 1, targets: [], plugins: [] });
-    // Should succeed
-    const code = await runPlugin({}, ['list'], tmpDir);
-    expect(code).toBe(0);
+    const result = await runPlugin({}, ['list'], tmpDir);
+    expect(result.exitCode).toBe(0);
+    expect(result.data.subcommand).toBe('list');
+    if (result.data.subcommand === 'list') {
+      expect(result.data.plugins).toEqual([]);
+    }
   });
 
   it('plugin info <unknown-id> returns exit code 1', async () => {
     await writeConfig({ version: 1, targets: [], plugins: [] });
-    const code = await runPlugin({}, ['info', 'nonexistent-id'], tmpDir);
-    expect(code).toBe(1);
+    const result = await runPlugin({}, ['info', 'nonexistent-id'], tmpDir);
+    expect(result.exitCode).toBe(1);
   });
 
-  it('plugin remove <unknown-id> returns 0 with a warning', async () => {
+  it('plugin remove <unknown-id> returns 0 with found: false', async () => {
     await writeConfig({ version: 1, targets: [], plugins: [] });
-    const code = await runPlugin({}, ['remove', 'nonexistent-id'], tmpDir);
-    expect(code).toBe(0);
+    const result = await runPlugin({}, ['remove', 'nonexistent-id'], tmpDir);
+    expect(result.exitCode).toBe(0);
+    expect(result.data).toEqual({ subcommand: 'remove', id: 'nonexistent-id', found: false });
   });
 
-  it('unknown subcommand returns 2', async () => {
-    const code = await runPlugin({}, ['unknown-subcommand'], tmpDir);
-    expect(code).toBe(2);
+  it('unknown subcommand throws', async () => {
+    await expect(runPlugin({}, ['unknown-subcommand'], tmpDir)).rejects.toThrow(
+      'Unknown plugin subcommand: unknown-subcommand',
+    );
   });
 
-  it('no subcommand returns 0', async () => {
-    const code = await runPlugin({}, [], tmpDir);
-    expect(code).toBe(0);
+  it('no subcommand returns exitCode 0 with showHelp', async () => {
+    const result = await runPlugin({}, [], tmpDir);
+    expect(result.exitCode).toBe(0);
+    expect(result.showHelp).toBe(true);
+    expect(result.data).toEqual({ subcommand: 'list', plugins: [] });
+  });
+
+  it('plugin add returns structured data', async () => {
+    await writeConfig({ version: 1, targets: [] });
+    const result = await runPlugin({ version: '2.0.0' }, ['add', 'my-pkg'], tmpDir);
+    expect(result.exitCode).toBe(0);
+    expect(result.data).toEqual({
+      subcommand: 'add',
+      id: 'my-pkg',
+      package: 'my-pkg',
+      version: '2.0.0',
+    });
+  });
+
+  it('plugin add with no source throws', async () => {
+    await expect(runPlugin({}, ['add'], tmpDir)).rejects.toThrow(
+      'Usage: agentsmesh plugin add <source>',
+    );
+  });
+
+  it('plugin remove with no id throws', async () => {
+    await expect(runPlugin({}, ['remove'], tmpDir)).rejects.toThrow(
+      'Usage: agentsmesh plugin remove <id>',
+    );
+  });
+
+  it('plugin info with no id throws', async () => {
+    await expect(runPlugin({}, ['info'], tmpDir)).rejects.toThrow(
+      'Usage: agentsmesh plugin info <id>',
+    );
   });
 });

@@ -25,6 +25,7 @@ import { runCheck } from './commands/check.js';
 import { runMerge } from './commands/merge.js';
 import { runInstall } from './commands/install.js';
 import { runPlugin } from './commands/plugin.js';
+import { renderPlugin } from './renderers/plugin.js';
 import { runTarget } from './commands/target.js';
 
 export interface ParseResult {
@@ -154,8 +155,15 @@ const cmdHandlers: Record<
   },
   install: (flags, args) => runInstall(flags, args, process.cwd()),
   plugin: async (flags, args) => {
-    const code = await runPlugin(flags, args, process.cwd());
-    if (code !== 0) process.exit(code);
+    let result;
+    try {
+      result = await runPlugin(flags, args, process.cwd());
+    } catch (err) {
+      logger.error(err instanceof Error ? err.message : String(err));
+      process.exit(2);
+    }
+    renderPlugin(result);
+    if (result.exitCode !== 0) process.exit(result.exitCode);
   },
   target: async (flags, args) => {
     const code = await runTarget(flags, args, process.cwd());

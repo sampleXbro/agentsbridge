@@ -74,7 +74,7 @@ export interface PluginAddData {
 
 export interface PluginListData {
   subcommand: 'list';
-  plugins: Array<{ id: string; package: string; version?: string }>;
+  plugins: Array<{ id: string; package: string; version?: string; status?: string; targets?: string }>;
 }
 
 export interface PluginRemoveData {

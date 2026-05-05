@@ -11,6 +11,7 @@ import { runInit } from './commands/init.js';
 import { runImport } from './commands/import.js';
 import { runDiff } from './commands/diff.js';
 import { runLintCmd } from './commands/lint.js';
+import { renderLint } from './renderers/lint.js';
 import { runMatrix } from './commands/matrix.js';
 import { runWatch } from './commands/watch.js';
 import { runCheck } from './commands/check.js';
@@ -111,8 +112,9 @@ const cmdHandlers: Record<
   },
   lint: async (flags, _args) => {
     void _args;
-    const code = await runLintCmd(flags);
-    if (code !== 0) process.exit(code);
+    const result = await runLintCmd(flags);
+    renderLint(result);
+    if (result.exitCode !== 0) process.exit(result.exitCode);
   },
   check: async (flags, _args) => {
     void _args;

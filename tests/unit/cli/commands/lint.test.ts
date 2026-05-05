@@ -39,12 +39,16 @@ afterEach(() => {
 });
 
 describe('runLintCmd', () => {
-  it('returns 0 when all checks pass', async () => {
-    const code = await runLintCmd({}, TEST_DIR);
-    expect(code).toBe(0);
+  it('returns exitCode 0 and empty diagnostics when all checks pass', async () => {
+    const result = await runLintCmd({}, TEST_DIR);
+    expect(result.exitCode).toBe(0);
+    expect(result.data).toHaveProperty('diagnostics');
+    expect(result.data).toHaveProperty('summary');
+    expect(result.data.diagnostics).toEqual([]);
+    expect(result.data.summary).toEqual({ errors: 0, warnings: 0 });
   });
 
-  it('returns 1 when rules exist but no root rule', async () => {
+  it('returns exitCode 1 with error diagnostics when rules exist but no root rule', async () => {
     rmSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'));
     writeFileSync(
       join(TEST_DIR, '.agentsmesh', 'rules', 'only.md'),
@@ -53,11 +57,18 @@ description: "Only rule"
 ---
 Content`,
     );
-    const code = await runLintCmd({}, TEST_DIR);
-    expect(code).toBe(1);
+    const result = await runLintCmd({}, TEST_DIR);
+    expect(result.exitCode).toBe(1);
+    expect(result.data.summary.errors).toBeGreaterThan(0);
+    expect(result.data.diagnostics[0]).toMatchObject({
+      level: 'error',
+      file: expect.any(String),
+      target: expect.any(String),
+      message: expect.any(String),
+    });
   });
 
-  it('uses singular "error" and "warning" when exactly 1 of each', async () => {
+  it('populates diagnostics with correct structure for singular error and warning', async () => {
     writeFileSync(
       join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1\ntargets: [claude-code]\nfeatures: [rules]\n`,
@@ -67,11 +78,12 @@ Content`,
       join(TEST_DIR, '.agentsmesh', 'rules', 'only.md'),
       `---\ndescription: "Only rule"\nglobs: lib/**/*.ts\n---\nContent`,
     );
-    const code = await runLintCmd({}, TEST_DIR);
-    expect(code).toBe(1);
+    const result = await runLintCmd({}, TEST_DIR);
+    expect(result.exitCode).toBe(1);
+    expect(result.data.summary.errors).toBeGreaterThanOrEqual(1);
   });
 
-  it('returns 0 when only warnings (globs match 0 files)', async () => {
+  it('returns exitCode 0 when only warnings (globs match 0 files)', async () => {
     mkdirSync(join(TEST_DIR, 'src'), { recursive: true });
     writeFileSync(join(TEST_DIR, 'src', 'foo.ts'), 'x');
     writeFileSync(
@@ -82,13 +94,17 @@ globs: lib/**/*.ts
 ---
 Lib rules`,
     );
-    const code = await runLintCmd({}, TEST_DIR);
-    expect(code).toBe(0);
+    const result = await runLintCmd({}, TEST_DIR);
+    expect(result.exitCode).toBe(0);
+    expect(result.data.summary.warnings).toBeGreaterThan(0);
+    expect(result.data.summary.errors).toBe(0);
   });
 
   it('respects --targets filter', async () => {
-    const code = await runLintCmd({ targets: 'claude-code' }, TEST_DIR);
-    expect(code).toBe(0);
+    const result = await runLintCmd({ targets: 'claude-code' }, TEST_DIR);
+    expect(result.exitCode).toBe(0);
+    expect(result.data.diagnostics).toEqual([]);
+    expect(result.data.summary).toEqual({ errors: 0, warnings: 0 });
   });
 
   it('throws when not initialized (no config)', async () => {
@@ -122,7 +138,9 @@ description: "Global rules"
 `,
     );
 
-    const code = await runLintCmd({ global: true }, workspace);
-    expect(code).toBe(0);
+    const result = await runLintCmd({ global: true }, workspace);
+    expect(result.exitCode).toBe(0);
+    expect(result.data.diagnostics).toEqual([]);
+    expect(result.data.summary).toEqual({ errors: 0, warnings: 0 });
   });
 });

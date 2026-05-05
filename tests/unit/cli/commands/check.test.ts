@@ -38,19 +38,23 @@ checksums:
 extends: {}
 `,
     );
-    const code = await runCheck({}, TEST_DIR);
-    expect(code).toBe(0);
+    const result = await runCheck({}, TEST_DIR);
+    expect(result.exitCode).toBe(0);
+    expect(result.data.hasLock).toBe(true);
+    expect(result.data.inSync).toBe(true);
   });
 
-  it('returns 1 when lock is missing', async () => {
+  it('returns exitCode 1 when lock is missing', async () => {
     writeFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'version: 1');
     mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), '# Rules');
-    const code = await runCheck({}, TEST_DIR);
-    expect(code).toBe(1);
+    const result = await runCheck({}, TEST_DIR);
+    expect(result.exitCode).toBe(1);
+    expect(result.data.hasLock).toBe(false);
+    expect(result.data.inSync).toBe(false);
   });
 
-  it('returns 1 when checksums mismatch', async () => {
+  it('returns exitCode 1 when checksums mismatch', async () => {
     writeFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'version: 1');
     mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), '# Modified');
@@ -64,11 +68,14 @@ checksums:
 extends: {}
 `,
     );
-    const code = await runCheck({}, TEST_DIR);
-    expect(code).toBe(1);
+    const result = await runCheck({}, TEST_DIR);
+    expect(result.exitCode).toBe(1);
+    expect(result.data.hasLock).toBe(true);
+    expect(result.data.inSync).toBe(false);
+    expect(result.data.modified).toContain('rules/_root.md');
   });
 
-  it('returns 1 when new file added (not in lock)', async () => {
+  it('returns exitCode 1 when new file added (not in lock)', async () => {
     writeFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'version: 1');
     mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), '# Rules');
@@ -83,11 +90,12 @@ checksums:
 extends: {}
 `,
     );
-    const code = await runCheck({}, TEST_DIR);
-    expect(code).toBe(1);
+    const result = await runCheck({}, TEST_DIR);
+    expect(result.exitCode).toBe(1);
+    expect(result.data.added).toContain('rules/new.md');
   });
 
-  it('returns 1 when extend checksum has changed (extendModified path)', async () => {
+  it('returns exitCode 1 when extend checksum has changed (extendModified path)', async () => {
     const baseDir = join(TEST_DIR, 'base-config');
     mkdirSync(join(baseDir, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(join(baseDir, '.agentsmesh', 'rules', '_root.md'), '# Base');
@@ -101,11 +109,12 @@ extends: {}
       join(TEST_DIR, '.agentsmesh', '.lock'),
       `generated_at: "2026-01-01T00:00:00Z"\ngenerated_by: test\nlib_version: "0.1.0"\nchecksums:\n  rules/_root.md: "sha256:${'a'.repeat(64)}"\nextends:\n  base: "sha256:${'b'.repeat(64)}"\n`,
     );
-    const code = await runCheck({}, TEST_DIR);
-    expect(code).toBe(1);
+    const result = await runCheck({}, TEST_DIR);
+    expect(result.exitCode).toBe(1);
+    expect(result.data.extendsModified.length).toBeGreaterThan(0);
   });
 
-  it('returns 1 when file removed from canonical', async () => {
+  it('returns exitCode 1 when file removed from canonical', async () => {
     writeFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'version: 1');
     mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), '# Rules');
@@ -121,12 +130,12 @@ checksums:
 extends: {}
 `,
     );
-    const code = await runCheck({}, TEST_DIR);
-    expect(code).toBe(1);
+    const result = await runCheck({}, TEST_DIR);
+    expect(result.exitCode).toBe(1);
+    expect(result.data.removed).toContain('rules/removed.md');
   });
 
-  it('annotates changed locked features with [LOCKED] in check output', async () => {
-    process.env.NO_COLOR = '1';
+  it('includes lockedViolations in data when locked features are modified', async () => {
     writeFileSync(
       join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1
@@ -149,21 +158,10 @@ packs: {}
 `,
     );
 
-    let output = '';
-    const write = process.stderr.write.bind(process.stderr);
-    process.stderr.write = (chunk: string | Uint8Array) => {
-      output += String(chunk);
-      return true;
-    };
-    try {
-      const code = await runCheck({}, TEST_DIR);
-      expect(code).toBe(1);
-    } finally {
-      process.stderr.write = write;
-      delete process.env.NO_COLOR;
-    }
-
-    expect(output).toContain('rules/_root.md was modified [LOCKED]');
+    const result = await runCheck({}, TEST_DIR);
+    expect(result.exitCode).toBe(1);
+    expect(result.data.lockedViolations).toContain('rules/_root.md');
+    expect(result.data.modified).toContain('rules/_root.md');
   });
 
   it('reads ~/.agentsmesh/.lock when --global is set', async () => {
@@ -193,7 +191,9 @@ packs: {}
 `,
     );
 
-    const code = await runCheck({ global: true }, workspace);
-    expect(code).toBe(0);
+    const result = await runCheck({ global: true }, workspace);
+    expect(result.exitCode).toBe(0);
+    expect(result.data.hasLock).toBe(true);
+    expect(result.data.inSync).toBe(true);
   });
 });

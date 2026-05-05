@@ -12,6 +12,7 @@ import { runImport } from './commands/import.js';
 import { runDiff } from './commands/diff.js';
 import { runLintCmd } from './commands/lint.js';
 import { renderLint } from './renderers/lint.js';
+import { renderCheck } from './renderers/check.js';
 import { runMatrix } from './commands/matrix.js';
 import { runWatch } from './commands/watch.js';
 import { runCheck } from './commands/check.js';
@@ -118,8 +119,9 @@ const cmdHandlers: Record<
   },
   check: async (flags, _args) => {
     void _args;
-    const code = await runCheck(flags);
-    if (code !== 0) process.exit(code);
+    const result = await runCheck(flags);
+    renderCheck(result);
+    if (result.exitCode !== 0) process.exit(result.exitCode);
   },
   merge: (flags, _args) => {
     void _args;

@@ -5,7 +5,9 @@ import { createRouter } from './router.js';
 import { printHelp } from './help.js';
 import { printVersion } from './version.js';
 import { handleError } from './error-handler.js';
-import { logger } from '../utils/output/logger.js';
+import { handleResult } from './json-handler.js';
+import { emitJson } from './json-output.js';
+import { logger, muteLogger } from '../utils/output/logger.js';
 import { runGenerate } from './commands/generate.js';
 import { renderGenerate } from './renderers/generate.js';
 import { runInit } from './commands/init.js';
@@ -103,8 +105,7 @@ const cmdHandlers: Record<
   generate: async (flags, _args) => {
     void _args;
     const result = await runGenerate(flags);
-    renderGenerate(result);
-    if (result.exitCode !== 0) process.exit(result.exitCode);
+    handleResult('generate', result, flags, () => renderGenerate(result));
   },
   init: async (flags, _args) => {
     void _args;
@@ -112,42 +113,46 @@ const cmdHandlers: Record<
       yes: flags.yes === true,
       global: flags.global === true,
     });
-    renderInit(result);
+    handleResult('init', result, flags, () => renderInit(result));
   },
   import: async (flags, _args) => {
     void _args;
     const result = await runImport(flags);
-    renderImport(result);
+    handleResult('import', result, flags, () => renderImport(result));
   },
   diff: async (flags, _args) => {
     void _args;
     const result = await runDiff(flags);
-    renderDiff(result);
+    handleResult('diff', result, flags, () => renderDiff(result));
   },
   lint: async (flags, _args) => {
     void _args;
     const result = await runLintCmd(flags);
-    renderLint(result);
-    if (result.exitCode !== 0) process.exit(result.exitCode);
+    handleResult('lint', result, flags, () => renderLint(result));
   },
   check: async (flags, _args) => {
     void _args;
     const result = await runCheck(flags);
-    renderCheck(result);
-    if (result.exitCode !== 0) process.exit(result.exitCode);
+    handleResult('check', result, flags, () => renderCheck(result));
   },
   merge: async (flags, _args) => {
     void _args;
     const result = await runMerge(flags);
-    renderMerge(result);
+    handleResult('merge', result, flags, () => renderMerge(result));
   },
   matrix: async (flags, args) => {
     void args;
     const result = await runMatrix(flags);
-    renderMatrix(result, { verbose: flags.verbose === true });
+    handleResult('matrix', result, flags, () =>
+      renderMatrix(result, { verbose: flags.verbose === true }),
+    );
   },
   watch: async (flags, _args) => {
     void _args;
+    if (flags.json === true) {
+      emitJson('watch', { success: false, error: '--json is not supported with watch' });
+      process.exit(1);
+    }
     const handle = await runWatch(flags);
     const stop = (): void => {
       void handle.stop().then(() => process.exit(0));
@@ -156,30 +161,39 @@ const cmdHandlers: Record<
     process.on('SIGTERM', stop);
   },
   install: async (flags, args) => {
+    if (flags.json === true) flags.force = true;
     const result = await runInstall(flags, args, process.cwd());
-    renderInstall(result);
+    handleResult('install', result, flags, () => renderInstall(result));
   },
   plugin: async (flags, args) => {
     let result;
     try {
       result = await runPlugin(flags, args, process.cwd());
     } catch (err) {
+      if (flags.json === true) {
+        const msg = err instanceof Error ? err.message : String(err);
+        emitJson('plugin', { success: false, error: msg });
+        process.exit(2);
+      }
       logger.error(err instanceof Error ? err.message : String(err));
       process.exit(2);
     }
-    renderPlugin(result);
-    if (result.exitCode !== 0) process.exit(result.exitCode);
+    handleResult('plugin', result, flags, () => renderPlugin(result));
   },
   target: async (flags, args) => {
     let result;
     try {
       result = await runTarget(flags, args, process.cwd());
     } catch (err) {
+      if (flags.json === true) {
+        const msg = err instanceof Error ? err.message : String(err);
+        emitJson('target', { success: false, error: msg });
+        process.exit(2);
+      }
       logger.error(err instanceof Error ? err.message : String(err));
       process.exit(2);
     }
-    renderTarget(result);
-    if (result.exitCode !== 0) process.exit(result.exitCode);
+    handleResult('target', result, flags, () => renderTarget(result));
   },
 };
 const router = createRouter(cmdHandlers);
@@ -195,6 +209,8 @@ async function main(parsed: ParseResult): Promise<void> {
     printVersion();
     return;
   }
+
+  if (flags.json === true) muteLogger();
 
   await router.route(command, flags, args);
 }
@@ -216,6 +232,8 @@ if (isMainModule()) {
   main(parsed).catch((err) =>
     handleError(err instanceof Error ? err : new Error(String(err)), {
       verbose: parsed.flags.verbose === true,
+      json: parsed.flags.json === true,
+      command: parsed.command,
     }),
   );
 }

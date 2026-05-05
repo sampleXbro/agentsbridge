@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { logger } from '../../../src/utils/output/logger.js';
+import { logger, muteLogger, unmuteLogger } from '../../../src/utils/output/logger.js';
 
 describe('logger', () => {
   beforeEach(() => {
@@ -75,5 +75,24 @@ describe('logger', () => {
     logger.debug('silent');
     expect(process.stdout.write).not.toHaveBeenCalled();
     if (prev !== undefined) process.env.AGENTSMESH_DEBUG = prev;
+  });
+
+  it('muteLogger suppresses all output', () => {
+    muteLogger();
+    logger.info('muted-info');
+    logger.warn('muted-warn');
+    logger.error('muted-error');
+    logger.success('muted-success');
+    logger.table([['a', 'b']]);
+    expect(process.stdout.write).not.toHaveBeenCalled();
+    expect(process.stderr.write).not.toHaveBeenCalled();
+    unmuteLogger();
+  });
+
+  it('unmuteLogger restores output', () => {
+    muteLogger();
+    unmuteLogger();
+    logger.info('restored');
+    expect(process.stdout.write).toHaveBeenCalled();
   });
 });

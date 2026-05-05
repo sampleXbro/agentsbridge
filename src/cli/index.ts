@@ -27,6 +27,7 @@ import { runInstall } from './commands/install.js';
 import { runPlugin } from './commands/plugin.js';
 import { renderPlugin } from './renderers/plugin.js';
 import { runTarget } from './commands/target.js';
+import { renderTarget } from './renderers/target.js';
 
 export interface ParseResult {
   command: string;
@@ -166,8 +167,15 @@ const cmdHandlers: Record<
     if (result.exitCode !== 0) process.exit(result.exitCode);
   },
   target: async (flags, args) => {
-    const code = await runTarget(flags, args, process.cwd());
-    if (code !== 0) process.exit(code);
+    let result;
+    try {
+      result = await runTarget(flags, args, process.cwd());
+    } catch (err) {
+      logger.error(err instanceof Error ? err.message : String(err));
+      process.exit(2);
+    }
+    renderTarget(result);
+    if (result.exitCode !== 0) process.exit(result.exitCode);
   },
 };
 const router = createRouter(cmdHandlers);

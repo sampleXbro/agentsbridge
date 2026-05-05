@@ -3,46 +3,53 @@
  * Currently: scaffold <id> [--name <displayName>] [--force]
  */
 
-import { logger } from '../../utils/output/logger.js';
+import type { TargetData } from '../command-result.js';
 import { writeTargetScaffold } from './target-scaffold/writer.js';
+
+export interface TargetCommandResult {
+  exitCode: number;
+  data: TargetData;
+  showHelp?: boolean;
+  error?: string;
+}
 
 /**
  * Run the target command.
  * @param flags - CLI flags
  * @param args  - Positional args (subcommand + subcommand args)
  * @param projectRoot - Project root (process.cwd())
- * @returns Exit code: 0 success, 1 validation error, 2 bad usage
+ * @returns Structured result with exit code and data
  */
 export async function runTarget(
   flags: Record<string, string | boolean>,
   args: string[],
   projectRoot: string,
-): Promise<number> {
+): Promise<TargetCommandResult> {
   const subcommand = args[0];
 
   if (subcommand === undefined || subcommand === '') {
-    printTargetHelp();
-    return 0;
+    return {
+      exitCode: 0,
+      data: { id: '', written: [], skipped: [], postSteps: [] },
+      showHelp: true,
+    };
   }
 
   if (subcommand === 'scaffold') {
     return runScaffold(flags, args.slice(1), projectRoot);
   }
 
-  logger.error(`Unknown target subcommand: ${subcommand}`);
-  printTargetHelp();
-  return 2;
+  throw new Error(`Unknown target subcommand: ${subcommand}`);
 }
 
 async function runScaffold(
   flags: Record<string, string | boolean>,
   args: string[],
   projectRoot: string,
-): Promise<number> {
+): Promise<TargetCommandResult> {
   const id = args[0];
   if (!id) {
-    logger.error('Usage: agentsmesh target scaffold <id> [--name <displayName>] [--force]');
-    return 2;
+    throw new Error('Usage: agentsmesh target scaffold <id> [--name <displayName>] [--force]');
   }
 
   const displayName = typeof flags.name === 'string' ? flags.name : undefined;
@@ -52,44 +59,25 @@ async function runScaffold(
   try {
     result = await writeTargetScaffold({ id, displayName, projectRoot, force });
   } catch (err) {
-    logger.error(err instanceof Error ? err.message : String(err));
-    return 1;
+    return {
+      exitCode: 1,
+      data: { id, written: [], skipped: [], postSteps: [] },
+      error: err instanceof Error ? err.message : String(err),
+    };
   }
 
-  if (result.written.length > 0) {
-    for (const p of result.written) {
-      const rel = p.startsWith(projectRoot) ? p.slice(projectRoot.length + 1) : p;
-      logger.success(`created ${rel.replaceAll('\\', '/')}`);
-    }
-  }
-
-  if (result.skipped.length > 0) {
-    for (const p of result.skipped) {
-      const rel = p.startsWith(projectRoot) ? p.slice(projectRoot.length + 1) : p;
-      logger.warn(
-        `skipped ${rel.replaceAll('\\', '/')} (already exists — use --force to overwrite)`,
-      );
-    }
-  }
-
-  if (result.written.length > 0) {
-    logger.info('');
-    logger.info('Next steps:');
-    for (const step of result.postSteps) {
-      logger.info(`  ${step}`);
-    }
-  }
-
-  return 0;
+  return {
+    exitCode: 0,
+    data: {
+      id,
+      written: result.written.map((p) => relativize(p, projectRoot)),
+      skipped: result.skipped.map((p) => relativize(p, projectRoot)),
+      postSteps: result.postSteps,
+    },
+  };
 }
 
-function printTargetHelp(): void {
-  logger.info('Usage: agentsmesh target <subcommand> [args] [flags]');
-  logger.info('');
-  logger.info('Subcommands:');
-  logger.info('  scaffold <id>  Generate a new target skeleton (files, tests, fixture)');
-  logger.info('');
-  logger.info('Flags (scaffold):');
-  logger.info('  --name <displayName>  Human-readable name (defaults to id)');
-  logger.info('  --force               Overwrite existing files');
+function relativize(filePath: string, projectRoot: string): string {
+  const rel = filePath.startsWith(projectRoot) ? filePath.slice(projectRoot.length + 1) : filePath;
+  return rel.replaceAll('\\', '/');
 }

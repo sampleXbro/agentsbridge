@@ -74,7 +74,13 @@ export interface PluginAddData {
 
 export interface PluginListData {
   subcommand: 'list';
-  plugins: Array<{ id: string; package: string; version?: string; status?: string; targets?: string }>;
+  plugins: Array<{
+    id: string;
+    package: string;
+    version?: string;
+    status?: string;
+    targets?: string;
+  }>;
 }
 
 export interface PluginRemoveData {
@@ -97,4 +103,5 @@ export interface TargetData {
   id: string;
   written: string[];
   skipped: string[];
+  postSteps: string[];
 }

@@ -9,6 +9,7 @@ import { logger } from '../utils/output/logger.js';
 import { runGenerate } from './commands/generate.js';
 import { renderGenerate } from './renderers/generate.js';
 import { runInit } from './commands/init.js';
+import { renderInit } from './renderers/init.js';
 import { runImport } from './commands/import.js';
 import { runDiff } from './commands/diff.js';
 import { runLintCmd } from './commands/lint.js';
@@ -104,10 +105,11 @@ const cmdHandlers: Record<
   },
   init: async (flags, _args) => {
     void _args;
-    await runInit(process.cwd(), {
+    const result = await runInit(process.cwd(), {
       yes: flags.yes === true,
       global: flags.global === true,
     });
+    renderInit(result);
   },
   import: async (flags, _args) => {
     void _args;

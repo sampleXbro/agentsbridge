@@ -13,7 +13,9 @@ export interface InitData {
   scope: 'project' | 'global';
   configFile: string;
   localConfigFile: string;
+  detectedConfigs: string[];
   imported: Array<{ from: string; to: string }>;
+  importedToolCount: number;
   scaffoldType: 'full' | 'gap-fill' | 'none';
   gitignoreUpdated: boolean;
 }

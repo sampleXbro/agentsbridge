@@ -3,7 +3,6 @@
  */
 
 import { relative } from 'node:path';
-import { logger } from '../../utils/output/logger.js';
 import { resolveScopeContext, loadScopedConfig } from '../../config/core/scope.js';
 import {
   TARGET_IDS,
@@ -12,30 +11,33 @@ import {
 } from '../../targets/catalog/target-catalog.js';
 import { getDescriptor } from '../../targets/catalog/registry.js';
 import { bootstrapPlugins } from '../../plugins/bootstrap-plugins.js';
+import type { ImportData } from '../command-result.js';
 
-function formatImportResults(
+export interface ImportCommandResult {
+  exitCode: number;
+  data: ImportData;
+}
+
+function mapResults(
   results: readonly { fromPath: string; toPath: string }[],
   rootBase: string,
-  scope: string,
-): void {
-  for (const r of results) {
-    const fromRel = relative(rootBase, r.fromPath);
-    logger.success(`${fromRel} → ${r.toPath}`);
-  }
-  logger.info(
-    `Imported ${results.length} file(s). Run 'agentsmesh generate${scope === 'global' ? ' --global' : ''}' to sync to other tools.`,
-  );
+): Array<{ from: string; to: string }> {
+  return results.map((r) => ({
+    from: relative(rootBase, r.fromPath).replaceAll('\\', '/'),
+    to: r.toPath,
+  }));
 }
 
 /**
  * Run the import command.
  * @param flags - CLI flags (from)
  * @param projectRoot - Project root (default process.cwd())
+ * @returns Structured import result with exit code and file mapping data
  */
 export async function runImport(
   flags: Record<string, string | boolean>,
   projectRoot?: string,
-): Promise<void> {
+): Promise<ImportCommandResult> {
   const root = projectRoot ?? process.cwd();
   const from = flags.from;
   if (typeof from !== 'string' || !from) {
@@ -48,12 +50,14 @@ export async function runImport(
     const context = resolveScopeContext(root, scope);
     const target = getTargetCatalogEntry(normalized);
     const results = await target.importFrom(context.rootBase, { scope });
-    if (results.length === 0) {
-      logger.info(target.emptyImportMessage);
-      return;
-    }
-    formatImportResults(results, context.rootBase, scope);
-    return;
+    return {
+      exitCode: 0,
+      data: {
+        scope,
+        target: normalized,
+        files: mapResults(results, context.rootBase),
+      },
+    };
   }
 
   let config;
@@ -76,9 +80,12 @@ export async function runImport(
   }
 
   const results = await descriptor.generators.importFrom(context.rootBase, { scope });
-  if (results.length === 0) {
-    logger.info(descriptor.emptyImportMessage);
-    return;
-  }
-  formatImportResults(results, context.rootBase, scope);
+  return {
+    exitCode: 0,
+    data: {
+      scope,
+      target: normalized,
+      files: mapResults(results, context.rootBase),
+    },
+  };
 }

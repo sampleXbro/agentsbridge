@@ -27,6 +27,6 @@ describe('import CLI', () => {
     dir = createTestProject();
     const r = await runCli('import --from claude-code', dir);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout + r.stderr).toMatch(/No Claude|config found|found/i);
+    expect(r.stdout + r.stderr).toMatch(/Nothing to import from/i);
   });
 });

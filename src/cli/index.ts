@@ -13,6 +13,7 @@ import { runDiff } from './commands/diff.js';
 import { runLintCmd } from './commands/lint.js';
 import { renderLint } from './renderers/lint.js';
 import { renderCheck } from './renderers/check.js';
+import { renderImport } from './renderers/import.js';
 import { renderDiff } from './renderers/diff.js';
 import { renderMerge } from './renderers/merge.js';
 import { runMatrix } from './commands/matrix.js';
@@ -106,9 +107,10 @@ const cmdHandlers: Record<
       global: flags.global === true,
     });
   },
-  import: (flags, _args) => {
+  import: async (flags, _args) => {
     void _args;
-    return runImport(flags);
+    const result = await runImport(flags);
+    renderImport(result);
   },
   diff: async (flags, _args) => {
     void _args;

@@ -4,6 +4,7 @@
  */
 
 import type { TargetData } from '../command-result.js';
+import { CliUsageError } from '../cli-error.js';
 import { writeTargetScaffold } from './target-scaffold/writer.js';
 
 export interface TargetCommandResult {
@@ -39,7 +40,7 @@ export async function runTarget(
     return runScaffold(flags, args.slice(1), projectRoot);
   }
 
-  throw new Error(`Unknown target subcommand: ${subcommand}`);
+  throw new CliUsageError(`Unknown target subcommand: ${subcommand}`);
 }
 
 async function runScaffold(
@@ -49,7 +50,9 @@ async function runScaffold(
 ): Promise<TargetCommandResult> {
   const id = args[0];
   if (!id) {
-    throw new Error('Usage: agentsmesh target scaffold <id> [--name <displayName>] [--force]');
+    throw new CliUsageError(
+      'Usage: agentsmesh target scaffold <id> [--name <displayName>] [--force]',
+    );
   }
 
   const displayName = typeof flags.name === 'string' ? flags.name : undefined;

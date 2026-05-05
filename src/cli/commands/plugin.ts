@@ -9,6 +9,7 @@ import {
   writePluginEntry,
   removePluginEntry,
 } from '../../plugins/plugin-config.js';
+import { CliUsageError } from '../cli-error.js';
 import type { PluginData } from '../command-result.js';
 
 export interface PluginCommandResult {
@@ -45,7 +46,7 @@ export async function runPlugin(
     case 'info':
       return runPluginInfo(args.slice(1), projectRoot);
     default:
-      throw new Error(`Unknown plugin subcommand: ${subcommand}`);
+      throw new CliUsageError(`Unknown plugin subcommand: ${subcommand}`);
   }
 }
 
@@ -56,7 +57,7 @@ async function runPluginAdd(
 ): Promise<PluginCommandResult> {
   const source = args[0];
   if (!source) {
-    throw new Error('Usage: agentsmesh plugin add <source> [--version <v>] [--id <id>]');
+    throw new CliUsageError('Usage: agentsmesh plugin add <source> [--version <v>] [--id <id>]');
   }
 
   const version = typeof flags.version === 'string' ? flags.version : 'latest';
@@ -79,7 +80,13 @@ async function runPluginList(projectRoot: string): Promise<PluginCommandResult> 
   const config = await readScopedConfigRaw(projectRoot);
   const entries = config.plugins ?? [];
 
-  const plugins: Array<{ id: string; package: string; version?: string; status?: string; targets?: string }> = [];
+  const plugins: Array<{
+    id: string;
+    package: string;
+    version?: string;
+    status?: string;
+    targets?: string;
+  }> = [];
   for (const entry of entries) {
     let status = '✗';
     let targets = '';
@@ -102,26 +109,20 @@ async function runPluginList(projectRoot: string): Promise<PluginCommandResult> 
   return { exitCode: 0, data: { subcommand: 'list', plugins } };
 }
 
-async function runPluginRemove(
-  args: string[],
-  projectRoot: string,
-): Promise<PluginCommandResult> {
+async function runPluginRemove(args: string[], projectRoot: string): Promise<PluginCommandResult> {
   const id = args[0];
   if (!id) {
-    throw new Error('Usage: agentsmesh plugin remove <id>');
+    throw new CliUsageError('Usage: agentsmesh plugin remove <id>');
   }
 
   const removed = await removePluginEntry(projectRoot, id);
   return { exitCode: 0, data: { subcommand: 'remove', id, found: removed } };
 }
 
-async function runPluginInfo(
-  args: string[],
-  projectRoot: string,
-): Promise<PluginCommandResult> {
+async function runPluginInfo(args: string[], projectRoot: string): Promise<PluginCommandResult> {
   const id = args[0];
   if (!id) {
-    throw new Error('Usage: agentsmesh plugin info <id>');
+    throw new CliUsageError('Usage: agentsmesh plugin info <id>');
   }
 
   const config = await readScopedConfigRaw(projectRoot);
@@ -139,7 +140,13 @@ async function runPluginInfo(
   } catch {
     return {
       exitCode: 1,
-      data: { subcommand: 'info', id, package: entry.source, version: entry.version, descriptors: [] },
+      data: {
+        subcommand: 'info',
+        id,
+        package: entry.source,
+        version: entry.version,
+        descriptors: [],
+      },
     };
   }
 

@@ -17,11 +17,18 @@ export interface ConvertCommandResult {
   data: ConvertData;
 }
 
+function shouldSymlink(name: string, isDirectory: boolean): boolean {
+  if (name === '.agentsmesh') return false;
+  if (name.startsWith('.')) return true;
+  if (!isDirectory) return true;
+  return false;
+}
+
 function createTempProjectRoot(projectRoot: string): string {
   const tempDir = mkdtempSync(join(tmpdir(), 'am-convert-'));
   const entries = readdirSync(projectRoot, { withFileTypes: true });
   for (const entry of entries) {
-    if (entry.name === '.agentsmesh') continue;
+    if (!shouldSymlink(entry.name, entry.isDirectory())) continue;
     const src = join(projectRoot, entry.name);
     const dest = join(tempDir, entry.name);
     symlinkSync(src, dest, entry.isDirectory() ? 'dir' : 'file');

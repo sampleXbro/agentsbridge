@@ -78,7 +78,8 @@ features: [rules, permissions]
   });
 
   it('calls runMatrix when features change (new rule adds to fingerprint)', async () => {
-    const runMatrixSpy = vi.spyOn(matrixMod, 'runMatrix').mockResolvedValue(undefined);
+    const mockResult = { exitCode: 0, data: { targets: [], features: [] } };
+    const runMatrixSpy = vi.spyOn(matrixMod, 'runMatrix').mockResolvedValue(mockResult);
     const result = await runWatch({}, testDir);
     try {
       await waitForInitialGenerate();
@@ -103,7 +104,8 @@ features: [rules, permissions]
   });
 
   it('logs Regenerated when fingerprint unchanged (body-only edit)', async () => {
-    const runMatrixSpy = vi.spyOn(matrixMod, 'runMatrix').mockResolvedValue(undefined);
+    const mockResult = { exitCode: 0, data: { targets: [], features: [] } };
+    const runMatrixSpy = vi.spyOn(matrixMod, 'runMatrix').mockResolvedValue(mockResult);
     const infoSpy = vi.spyOn(logger, 'info').mockImplementation(() => {});
     const result = await runWatch({}, testDir);
     writeFileSync(

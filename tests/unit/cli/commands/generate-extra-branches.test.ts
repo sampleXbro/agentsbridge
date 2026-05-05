@@ -39,7 +39,7 @@ describe('runGenerate — extra branches', () => {
     writeMinimalProject();
     vi.stubEnv('USER', '');
     vi.stubEnv('USERNAME', 'fallback-user');
-    const code = await runGenerate({}, testDir, { printMatrix: false });
+    const { exitCode: code } = await runGenerate({}, testDir, { printMatrix: false });
     expect(code).toBe(0);
   });
 
@@ -47,7 +47,7 @@ describe('runGenerate — extra branches', () => {
     writeMinimalProject();
     vi.stubEnv('USER', '');
     vi.stubEnv('USERNAME', '');
-    const code = await runGenerate({}, testDir, { printMatrix: false });
+    const { exitCode: code } = await runGenerate({}, testDir, { printMatrix: false });
     expect(code).toBe(0);
   });
 
@@ -67,7 +67,7 @@ collaboration:
       join(testDir, '.agentsmesh', 'rules', '_root.md'),
       `---\nroot: true\ndescription: r\n---\n# r\n`,
     );
-    const code = await runGenerate({}, testDir, { printMatrix: false });
+    const { exitCode: code } = await runGenerate({}, testDir, { printMatrix: false });
     expect(code).toBe(0);
   });
 
@@ -87,7 +87,7 @@ collaboration:
       join(testDir, '.agentsmesh', 'rules', '_root.md'),
       `---\nroot: true\ndescription: r\n---\n# r\n`,
     );
-    const code = await runGenerate({}, testDir, { printMatrix: false });
+    const { exitCode: code } = await runGenerate({}, testDir, { printMatrix: false });
     expect(code).toBe(0);
   });
 
@@ -111,7 +111,7 @@ collaboration:
     // First generate populates lock.
     await runGenerate({}, testDir, { printMatrix: false });
     // Second generate (no edits) — checksums identical, violations.length === 0 path.
-    const code = await runGenerate({}, testDir, { printMatrix: false });
+    const { exitCode: code } = await runGenerate({}, testDir, { printMatrix: false });
     expect(code).toBe(0);
   });
 
@@ -124,7 +124,7 @@ targets: [claude-code]
 features: []
 `,
     );
-    const code = await runGenerate({ check: true }, testDir, { printMatrix: false });
+    const { exitCode: code } = await runGenerate({ check: true }, testDir, { printMatrix: false });
     expect(code).toBe(0);
   });
 
@@ -137,13 +137,17 @@ targets: [claude-code]
 features: []
 `,
     );
-    const code = await runGenerate({ 'dry-run': true }, testDir, { printMatrix: false });
+    const { exitCode: code } = await runGenerate({ 'dry-run': true }, testDir, {
+      printMatrix: false,
+    });
     expect(code).toBe(0);
   });
 
   it('dry-run with results writes nothing but logs (line 171 dry-run arm)', async () => {
     writeMinimalProject();
-    const code = await runGenerate({ 'dry-run': true }, testDir, { printMatrix: false });
+    const { exitCode: code } = await runGenerate({ 'dry-run': true }, testDir, {
+      printMatrix: false,
+    });
     expect(code).toBe(0);
   });
 
@@ -152,7 +156,9 @@ features: []
     const original = process.cwd();
     process.chdir(testDir);
     try {
-      const code = await runGenerate({ 'dry-run': true }, undefined, { printMatrix: false });
+      const { exitCode: code } = await runGenerate({ 'dry-run': true }, undefined, {
+        printMatrix: false,
+      });
       expect(code).toBe(0);
     } finally {
       process.chdir(original);
@@ -161,15 +167,19 @@ features: []
 
   it('refresh-cache flag triggers refreshRemoteCache true (line 60 arm)', async () => {
     writeMinimalProject();
-    const code = await runGenerate({ 'refresh-cache': true, 'dry-run': true }, testDir, {
-      printMatrix: false,
-    });
+    const { exitCode: code } = await runGenerate(
+      { 'refresh-cache': true, 'dry-run': true },
+      testDir,
+      {
+        printMatrix: false,
+      },
+    );
     expect(code).toBe(0);
   });
 
   it('no-cache flag (alias) triggers refreshRemoteCache true (line 60 right OR arm)', async () => {
     writeMinimalProject();
-    const code = await runGenerate({ 'no-cache': true, 'dry-run': true }, testDir, {
+    const { exitCode: code } = await runGenerate({ 'no-cache': true, 'dry-run': true }, testDir, {
       printMatrix: false,
     });
     expect(code).toBe(0);
@@ -191,9 +201,13 @@ features: [rules]
     );
     vi.stubEnv('HOME', testDir);
     vi.stubEnv('USERPROFILE', testDir);
-    const code = await runGenerate({ global: true, 'dry-run': true }, join(testDir, 'worktree'), {
-      printMatrix: false,
-    });
+    const { exitCode: code } = await runGenerate(
+      { global: true, 'dry-run': true },
+      join(testDir, 'worktree'),
+      {
+        printMatrix: false,
+      },
+    );
     expect(code).toBe(0);
   });
 });

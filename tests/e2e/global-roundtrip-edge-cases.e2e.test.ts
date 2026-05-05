@@ -71,7 +71,7 @@ describe('global mode: error handling', () => {
 
     const imp = await runCli('import --global --from claude-code', projectDir);
     expect(imp.exitCode).toBe(0);
-    expect(imp.stdout + imp.stderr).toMatch(/No Claude|config found|0 file/i);
+    expect(imp.stdout + imp.stderr).toMatch(/Nothing to import from/i);
   });
 
   it('generate --global fails when HOME is not set', async () => {

@@ -41,21 +41,19 @@ afterEach(async () => {
 });
 
 describe('runPlugin add', () => {
-  it('returns 2 when no source arg is given', async () => {
-    const code = await runPlugin({}, ['add'], tmpDir);
-    expect(code).toBe(2);
+  it('throws when no source arg is given', async () => {
+    await expect(runPlugin({}, ['add'], tmpDir)).rejects.toThrow('Usage:');
   });
 
-  it('returns 1 when writePluginEntry throws', async () => {
+  it('propagates writePluginEntry errors', async () => {
     mockWritePluginEntry.mockRejectedValueOnce(new Error('disk full'));
-    const code = await runPlugin({}, ['add', 'my-pkg'], tmpDir);
-    expect(code).toBe(1);
+    await expect(runPlugin({}, ['add', 'my-pkg'], tmpDir)).rejects.toThrow('disk full');
   });
 
   it('passes --version flag to writePluginEntry', async () => {
     mockWritePluginEntry.mockResolvedValueOnce(undefined);
-    const code = await runPlugin({ version: '2.0.0' }, ['add', 'my-pkg'], tmpDir);
-    expect(code).toBe(0);
+    const result = await runPlugin({ version: '2.0.0' }, ['add', 'my-pkg'], tmpDir);
+    expect(result.exitCode).toBe(0);
     expect(mockWritePluginEntry).toHaveBeenCalledWith(
       tmpDir,
       expect.objectContaining({ version: '2.0.0' }),
@@ -64,8 +62,8 @@ describe('runPlugin add', () => {
 
   it('passes --id override flag to writePluginEntry', async () => {
     mockWritePluginEntry.mockResolvedValueOnce(undefined);
-    const code = await runPlugin({ id: 'custom-id' }, ['add', 'my-pkg'], tmpDir);
-    expect(code).toBe(0);
+    const result = await runPlugin({ id: 'custom-id' }, ['add', 'my-pkg'], tmpDir);
+    expect(result.exitCode).toBe(0);
     expect(mockWritePluginEntry).toHaveBeenCalledWith(
       tmpDir,
       expect.objectContaining({ id: 'custom-id' }),
@@ -92,8 +90,8 @@ describe('runPlugin add', () => {
 
   it('handles scoped package without slash in name', async () => {
     mockWritePluginEntry.mockResolvedValueOnce(undefined);
-    const code = await runPlugin({}, ['add', '@no-slash'], tmpDir);
-    expect(code).toBe(0);
+    const result = await runPlugin({}, ['add', '@no-slash'], tmpDir);
+    expect(result.exitCode).toBe(0);
     expect(mockWritePluginEntry).toHaveBeenCalledWith(
       tmpDir,
       expect.objectContaining({ id: 'no-slash' }),
@@ -111,10 +109,9 @@ describe('runPlugin add', () => {
 });
 
 describe('runPlugin list', () => {
-  it('returns 1 when readScopedConfigRaw throws', async () => {
+  it('propagates readScopedConfigRaw errors', async () => {
     mockReadScopedConfigRaw.mockRejectedValueOnce(new Error('parse error'));
-    const code = await runPlugin({}, ['list'], tmpDir);
-    expect(code).toBe(1);
+    await expect(runPlugin({}, ['list'], tmpDir)).rejects.toThrow('parse error');
   });
 
   it('returns 0 and marks plugin failed when loadPlugin throws', async () => {
@@ -122,8 +119,11 @@ describe('runPlugin list', () => {
       plugins: [{ id: 'bad-plugin', source: 'nonexistent-pkg', version: '1.0.0' }],
     });
     mockLoadPlugin.mockRejectedValueOnce(new Error('cannot find module'));
-    const code = await runPlugin({}, ['list'], tmpDir);
-    expect(code).toBe(0);
+    const result = await runPlugin({}, ['list'], tmpDir);
+    expect(result.exitCode).toBe(0);
+    if (result.data.subcommand === 'list') {
+      expect(result.data.plugins[0]!.status).toBe('✗');
+    }
   });
 
   it('returns 0 with successfully loaded plugin descriptors', async () => {
@@ -134,8 +134,11 @@ describe('runPlugin list', () => {
       entry: { id: 'good-plugin', source: 'some-pkg' },
       descriptors: [{ id: 'good-plugin', emptyImportMessage: 'None.' }],
     });
-    const code = await runPlugin({}, ['list'], tmpDir);
-    expect(code).toBe(0);
+    const result = await runPlugin({}, ['list'], tmpDir);
+    expect(result.exitCode).toBe(0);
+    if (result.data.subcommand === 'list') {
+      expect(result.data.plugins[0]!.status).toBe('✓');
+    }
   });
 
   it('shows "(0 descriptors)" when plugin loads with empty descriptors', async () => {
@@ -146,34 +149,33 @@ describe('runPlugin list', () => {
       entry: { id: 'empty-plugin', source: 'some-pkg' },
       descriptors: [],
     });
-    const code = await runPlugin({}, ['list'], tmpDir);
-    expect(code).toBe(0);
+    const result = await runPlugin({}, ['list'], tmpDir);
+    expect(result.exitCode).toBe(0);
+    if (result.data.subcommand === 'list') {
+      expect(result.data.plugins[0]!.status).toBe('✓ (0 descriptors)');
+    }
   });
 });
 
 describe('runPlugin remove', () => {
-  it('returns 2 when no id arg is given', async () => {
-    const code = await runPlugin({}, ['remove'], tmpDir);
-    expect(code).toBe(2);
+  it('throws when no id arg is given', async () => {
+    await expect(runPlugin({}, ['remove'], tmpDir)).rejects.toThrow('Usage:');
   });
 
-  it('returns 1 when removePluginEntry throws', async () => {
+  it('propagates removePluginEntry errors', async () => {
     mockRemovePluginEntry.mockRejectedValueOnce(new Error('write error'));
-    const code = await runPlugin({}, ['remove', 'some-plugin'], tmpDir);
-    expect(code).toBe(1);
+    await expect(runPlugin({}, ['remove', 'some-plugin'], tmpDir)).rejects.toThrow('write error');
   });
 });
 
 describe('runPlugin info', () => {
-  it('returns 2 when no id arg is given', async () => {
-    const code = await runPlugin({}, ['info'], tmpDir);
-    expect(code).toBe(2);
+  it('throws when no id arg is given', async () => {
+    await expect(runPlugin({}, ['info'], tmpDir)).rejects.toThrow('Usage:');
   });
 
-  it('returns 1 when readScopedConfigRaw throws', async () => {
+  it('propagates readScopedConfigRaw errors', async () => {
     mockReadScopedConfigRaw.mockRejectedValueOnce(new Error('read error'));
-    const code = await runPlugin({}, ['info', 'some-plugin'], tmpDir);
-    expect(code).toBe(1);
+    await expect(runPlugin({}, ['info', 'some-plugin'], tmpDir)).rejects.toThrow('read error');
   });
 
   it('returns 1 when loadPlugin throws', async () => {
@@ -181,11 +183,11 @@ describe('runPlugin info', () => {
       plugins: [{ id: 'my-plugin', source: 'some-pkg' }],
     });
     mockLoadPlugin.mockRejectedValueOnce(new Error('load error'));
-    const code = await runPlugin({}, ['info', 'my-plugin'], tmpDir);
-    expect(code).toBe(1);
+    const result = await runPlugin({}, ['info', 'my-plugin'], tmpDir);
+    expect(result.exitCode).toBe(1);
   });
 
-  it('returns 0 and logs all descriptors on success', async () => {
+  it('returns 0 and provides all descriptors on success', async () => {
     mockReadScopedConfigRaw.mockResolvedValueOnce({
       plugins: [{ id: 'my-plugin', source: 'some-pkg', version: '1.0.0' }],
     });
@@ -196,7 +198,10 @@ describe('runPlugin info', () => {
         { id: 'my-plugin-extra', emptyImportMessage: 'Extra.' },
       ],
     });
-    const code = await runPlugin({}, ['info', 'my-plugin'], tmpDir);
-    expect(code).toBe(0);
+    const result = await runPlugin({}, ['info', 'my-plugin'], tmpDir);
+    expect(result.exitCode).toBe(0);
+    if (result.data.subcommand === 'info') {
+      expect(result.data.descriptors).toHaveLength(2);
+    }
   });
 });

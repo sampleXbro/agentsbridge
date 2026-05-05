@@ -14,6 +14,7 @@ export const GLOBAL_FLAGS: HelpFlag[] = [
   { name: '--help', description: 'Show this help output and exit' },
   { name: '--version', description: 'Print CLI version and exit' },
   { name: '--verbose', description: 'Show full error details on failure' },
+  { name: '--json', description: 'Output machine-readable JSON (single envelope to stdout)' },
 ];
 
 export const COMMANDS: HelpCommand[] = [
@@ -106,7 +107,8 @@ export const COMMANDS: HelpCommand[] = [
       },
       {
         name: '--force',
-        description: 'Non-interactive mode; include invalid resources and skip selection prompts',
+        description:
+          'Non-interactive mode; include invalid resources and skip selection prompts (implied by --json)',
       },
     ],
   },

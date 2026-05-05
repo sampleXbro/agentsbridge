@@ -7,7 +7,9 @@ import chokidar from 'chokidar';
 import { loadScopedConfig } from '../../config/core/scope.js';
 import { loadCanonicalWithExtends } from '../../canonical/extends/extends.js';
 import { runGenerate } from './generate.js';
+import { renderGenerate } from '../renderers/generate.js';
 import { runMatrix } from './matrix.js';
+import { renderMatrix } from '../renderers/matrix.js';
 import { logger } from '../../utils/output/logger.js';
 
 const DEBOUNCE_MS = 300;
@@ -130,12 +132,14 @@ export async function runWatch(
 
     if (stopped) return;
     suppressAgentsmeshDirUntil = Date.now() + 500;
-    await runGenerate(flags, root, { printMatrix: false });
+    const genResult = await runGenerate(flags, root, { printMatrix: false });
+    renderGenerate(genResult);
     suppressAgentsmeshDirUntil = Date.now() + 500;
 
     if (stopped) return;
     if (featuresChanged) {
-      await runMatrix(flags, root);
+      const matrixResult = await runMatrix(flags, root);
+      renderMatrix(matrixResult, { verbose: flags.verbose === true });
     } else {
       logger.info('Regenerated.');
     }

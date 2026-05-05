@@ -1,10 +1,10 @@
 /**
  * Senior-QA edge-case coverage for `runCheck`. Complements `check.test.ts`
  * by exercising scenarios the existing suite does not pin:
- *   - all drift buckets reported in one invocation (output formatting)
- *   - `[LOCKED]` annotation on added and removed paths (not just modified)
+ *   - all drift buckets reported in one invocation (structured data)
+ *   - `lockedViolations` includes added and removed paths (not just modified)
  *   - lock from a previous version (pre-`packs` field) loads cleanly
- *   - malformed YAML lock is treated as missing (returns 1, not throws)
+ *   - malformed YAML lock is treated as missing (returns exitCode 1)
  *   - check with --global on a workspace without ~/.agentsmesh fails clearly
  */
 
@@ -27,24 +27,8 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-function captureStderr(): { read: () => string; restore: () => void } {
-  let out = '';
-  const original = process.stderr.write.bind(process.stderr);
-  process.stderr.write = (chunk: string | Uint8Array): boolean => {
-    out += String(chunk);
-    return true;
-  };
-  return {
-    read: () => out,
-    restore: () => {
-      process.stderr.write = original;
-    },
-  };
-}
-
-describe('runCheck — multi-drift output formatting', () => {
-  it('reports modified, added, removed, AND extendsModified in one pass with [LOCKED] suffix on locked items only', async () => {
-    process.env.NO_COLOR = '1';
+describe('runCheck — multi-drift structured data', () => {
+  it('reports modified, added, removed, AND extendsModified with lockedViolations for locked items only', async () => {
     const baseDir = join(TEST_DIR, 'shared-base');
     mkdirSync(join(baseDir, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(join(baseDir, '.agentsmesh', 'rules', '_root.md'), '# Base v2');
@@ -85,29 +69,23 @@ packs: {}
 `,
     );
 
-    const cap = captureStderr();
-    let exit: number;
-    try {
-      exit = await runCheck({}, TEST_DIR);
-    } finally {
-      cap.restore();
-      delete process.env.NO_COLOR;
-    }
+    const result = await runCheck({}, TEST_DIR);
 
-    expect(exit).toBe(1);
-    const out = cap.read();
-    expect(out).toContain('Conflict detected');
-    expect(out).toContain('extend "base" was modified');
+    expect(result.exitCode).toBe(1);
+    expect(result.data.extendsModified).toContain('base');
+    expect(result.data.modified).toContain('rules/_root.md');
+    expect(result.data.modified).toContain('mcp.json');
+    expect(result.data.added).toContain('rules/added.md');
+    expect(result.data.removed).toContain('rules/removed.md');
     // Locked annotations: rules/* under lock_features.
-    expect(out).toContain('rules/_root.md was modified [LOCKED]');
-    expect(out).toContain('rules/added.md was added [LOCKED]');
-    expect(out).toContain('rules/removed.md was removed [LOCKED]');
-    // Non-locked drift remains visible but unannotated.
-    expect(out).toMatch(/mcp\.json was modified(?! \[LOCKED\])/);
+    expect(result.data.lockedViolations).toContain('rules/_root.md');
+    expect(result.data.lockedViolations).toContain('rules/added.md');
+    expect(result.data.lockedViolations).toContain('rules/removed.md');
+    // mcp.json is NOT a locked feature.
+    expect(result.data.lockedViolations).not.toContain('mcp.json');
   });
 
-  it('annotates [LOCKED] on added paths within hooks/permissions lock_features', async () => {
-    process.env.NO_COLOR = '1';
+  it('includes locked added paths within hooks/permissions lock_features', async () => {
     writeFileSync(
       join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1
@@ -136,18 +114,12 @@ packs: {}
 `,
     );
 
-    const cap = captureStderr();
-    let exit: number;
-    try {
-      exit = await runCheck({}, TEST_DIR);
-    } finally {
-      cap.restore();
-      delete process.env.NO_COLOR;
-    }
-    expect(exit).toBe(1);
-    const out = cap.read();
-    expect(out).toContain('permissions.yaml was added [LOCKED]');
-    expect(out).toContain('hooks.yaml was removed [LOCKED]');
+    const result = await runCheck({}, TEST_DIR);
+    expect(result.exitCode).toBe(1);
+    expect(result.data.added).toContain('permissions.yaml');
+    expect(result.data.removed).toContain('hooks.yaml');
+    expect(result.data.lockedViolations).toContain('permissions.yaml');
+    expect(result.data.lockedViolations).toContain('hooks.yaml');
   });
 });
 
@@ -172,8 +144,10 @@ checksums:
 extends: {}
 `, // <- intentionally no `packs:` field
     );
-    const exit = await runCheck({}, TEST_DIR);
-    expect(exit).toBe(0);
+    const result = await runCheck({}, TEST_DIR);
+    expect(result.exitCode).toBe(0);
+    expect(result.data.hasLock).toBe(true);
+    expect(result.data.inSync).toBe(true);
   });
 
   it('treats a malformed YAML lock as "no lock" and exits 1', async () => {
@@ -185,15 +159,9 @@ extends: {}
     writeFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), '# x');
     writeFileSync(join(TEST_DIR, '.agentsmesh', '.lock'), 'this is: not valid: yaml: [unclosed');
 
-    const cap = captureStderr();
-    let exit: number;
-    try {
-      exit = await runCheck({}, TEST_DIR);
-    } finally {
-      cap.restore();
-    }
-    expect(exit).toBe(1);
-    expect(cap.read()).toContain('Not initialized for collaboration');
+    const result = await runCheck({}, TEST_DIR);
+    expect(result.exitCode).toBe(1);
+    expect(result.data.hasLock).toBe(false);
   });
 });
 

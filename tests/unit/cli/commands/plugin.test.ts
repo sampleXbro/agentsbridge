@@ -128,10 +128,11 @@ describe('runPlugin', () => {
     expect(result.data).toEqual({ subcommand: 'remove', id: 'nonexistent-id', found: false });
   });
 
-  it('unknown subcommand throws', async () => {
-    await expect(runPlugin({}, ['unknown-subcommand'], tmpDir)).rejects.toThrow(
-      'Unknown plugin subcommand: unknown-subcommand',
-    );
+  it('unknown subcommand returns exit code 2 with error', async () => {
+    const result = await runPlugin({}, ['unknown-subcommand'], tmpDir);
+    expect(result.exitCode).toBe(2);
+    expect(result.error).toBe('Unknown plugin subcommand: unknown-subcommand');
+    expect(result.showHelp).toBe(true);
   });
 
   it('no subcommand returns exitCode 0 with showHelp', async () => {

@@ -6,6 +6,9 @@ import { logger } from '../../utils/output/logger.js';
 import type { PluginCommandResult } from '../commands/plugin.js';
 
 export function renderPlugin(result: PluginCommandResult): void {
+  if (result.error) {
+    logger.error(result.error);
+  }
   if (result.showHelp) {
     printPluginHelp();
     return;
@@ -39,7 +42,15 @@ function renderAdd(id: string, pkg: string, version: string): void {
   logger.info(`Then add '${id}' to pluginTargets in agentsmesh.yaml to enable it.`);
 }
 
-function renderList(plugins: Array<{ id: string; package: string; version?: string; status?: string; targets?: string }>): void {
+function renderList(
+  plugins: Array<{
+    id: string;
+    package: string;
+    version?: string;
+    status?: string;
+    targets?: string;
+  }>,
+): void {
   if (plugins.length === 0) {
     logger.info('No plugins configured. Use: agentsmesh plugin add <source>');
     return;
@@ -63,7 +74,12 @@ function renderRemove(id: string, found: boolean): void {
 }
 
 function renderInfo(
-  data: { id: string; package: string; version?: string; descriptors: Array<{ id: string; description: string }> },
+  data: {
+    id: string;
+    package: string;
+    version?: string;
+    descriptors: Array<{ id: string; description: string }>;
+  },
   exitCode: number,
 ): void {
   if (exitCode !== 0 && data.package === '') {
@@ -72,9 +88,7 @@ function renderInfo(
   }
 
   if (exitCode !== 0) {
-    logger.error(
-      `Failed to load plugin '${data.id}'`,
-    );
+    logger.error(`Failed to load plugin '${data.id}'`);
     return;
   }
 

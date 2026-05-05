@@ -30,7 +30,11 @@ export function renderInit(result: InitCommandResult): void {
   }
 
   // Config file creation
-  logger.success(`Created ${data.configFile}`);
+  const targetsSuffix =
+    data.imported.length > 0 && data.detectedConfigs.length > 0
+      ? ` (targets: ${data.detectedConfigs.join(', ')})`
+      : '';
+  logger.success(`Created ${data.configFile}${targetsSuffix}`);
 
   // Local config creation
   logger.success(`Created ${data.localConfigFile}`);

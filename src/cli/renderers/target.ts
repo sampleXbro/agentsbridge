@@ -6,13 +6,11 @@ import { logger } from '../../utils/output/logger.js';
 import type { TargetCommandResult } from '../commands/target.js';
 
 export function renderTarget(result: TargetCommandResult): void {
-  if (result.showHelp) {
-    printTargetHelp();
-    return;
-  }
-
   if (result.error) {
     logger.error(result.error);
+  }
+  if (result.showHelp) {
+    printTargetHelp();
     return;
   }
 

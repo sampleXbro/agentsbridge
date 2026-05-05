@@ -33,10 +33,11 @@ describe('runTarget', () => {
     expect(result.showHelp).toBe(true);
   });
 
-  it('throws on unknown subcommand', async () => {
-    await expect(runTarget({}, ['bogus'], tmpDir)).rejects.toThrow(
-      'Unknown target subcommand: bogus',
-    );
+  it('returns exit code 2 with error on unknown subcommand', async () => {
+    const result = await runTarget({}, ['bogus'], tmpDir);
+    expect(result.exitCode).toBe(2);
+    expect(result.error).toBe('Unknown target subcommand: bogus');
+    expect(result.showHelp).toBe(true);
   });
 
   it('throws when scaffold has no id', async () => {

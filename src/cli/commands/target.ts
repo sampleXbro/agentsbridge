@@ -40,7 +40,12 @@ export async function runTarget(
     return runScaffold(flags, args.slice(1), projectRoot);
   }
 
-  throw new CliUsageError(`Unknown target subcommand: ${subcommand}`);
+  return {
+    exitCode: 2,
+    data: { id: '', written: [], skipped: [], postSteps: [] },
+    showHelp: true,
+    error: `Unknown target subcommand: ${subcommand}`,
+  };
 }
 
 async function runScaffold(

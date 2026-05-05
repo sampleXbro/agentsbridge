@@ -107,7 +107,8 @@ export const COMMANDS: HelpCommand[] = [
       },
       {
         name: '--force',
-        description: 'Non-interactive mode; include invalid resources and skip selection prompts',
+        description:
+          'Non-interactive mode; include invalid resources and skip selection prompts (implied by --json)',
       },
     ],
   },

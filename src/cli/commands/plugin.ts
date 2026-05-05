@@ -16,6 +16,7 @@ export interface PluginCommandResult {
   exitCode: number;
   data: PluginData;
   showHelp?: boolean;
+  error?: string;
 }
 
 /**
@@ -46,7 +47,12 @@ export async function runPlugin(
     case 'info':
       return runPluginInfo(args.slice(1), projectRoot);
     default:
-      throw new CliUsageError(`Unknown plugin subcommand: ${subcommand}`);
+      return {
+        exitCode: 2,
+        data: { subcommand: 'list', plugins: [] },
+        showHelp: true,
+        error: `Unknown plugin subcommand: ${subcommand}`,
+      };
   }
 }
 

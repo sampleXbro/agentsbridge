@@ -196,6 +196,20 @@ agentsmesh target scaffold <id> [--name <displayName>] [--force]
 
 `agentsmesh --help` prints the same surface; `agentsmesh <cmd> --help` is also supported.
 
+### Machine-readable output
+
+All commands support `--json` for CI pipelines and scripting:
+
+```bash
+agentsmesh lint --json
+# {"success":true,"command":"lint","data":{"diagnostics":[],"summary":{"errors":0,"warnings":0}}}
+
+agentsmesh generate --check --json
+# {"success":false,"command":"generate","error":"Command 'generate' failed","data":{"scope":"project","mode":"check","files":[...],...}}
+```
+
+Every command emits a single JSON envelope to stdout: `{ success, command, data?, error? }`. Human output is fully suppressed. Exit codes are preserved. `--json` is not supported with `watch`.
+
 ### Global mode (personal AI assistant config)
 
 `.agentsmesh/` at the project level is for teams. `~/.agentsmesh/` at the home level is for personal setup across every repo you touch:

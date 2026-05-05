@@ -39,65 +39,43 @@ afterEach(() => {
 });
 
 describe('runMatrix', () => {
-  it('prints compatibility matrix for current config', async () => {
-    const logs: string[] = [];
-    vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
-      logs.push(String(chunk));
-      return true;
-    });
+  it('returns structured data with targets and features', async () => {
+    const result = await runMatrix({}, TEST_DIR);
 
-    await runMatrix({}, TEST_DIR);
+    expect(result.exitCode).toBe(0);
+    expect(result.data.targets).toContain('claude-code');
+    expect(result.data.targets).toContain('cursor');
+    expect(result.data.features.length).toBeGreaterThan(0);
+    expect(result.data.features[0]).toHaveProperty('name');
+    expect(result.data.features[0]).toHaveProperty('support');
+  });
 
-    const output = logs.join('');
-    expect(output).toContain('Feature');
-    expect(output).toContain('rules');
-    expect(output).toContain('Legend');
-    expect(output).toMatch(/[✓⚠📝–]/u);
+  it('includes rules feature in structured output', async () => {
+    const result = await runMatrix({}, TEST_DIR);
+
+    const rulesFeature = result.data.features.find((f) => f.name === 'rules');
+    expect(rulesFeature).toBeDefined();
+    expect(rulesFeature!.support).toHaveProperty('claude-code');
+    expect(rulesFeature!.support).toHaveProperty('cursor');
   });
 
   it('respects --targets filter', async () => {
-    const logs: string[] = [];
-    vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
-      logs.push(String(chunk));
-      return true;
-    });
+    const result = await runMatrix({ targets: 'claude-code' }, TEST_DIR);
 
-    await runMatrix({ targets: 'claude-code' }, TEST_DIR);
-
-    const output = logs.join('');
-    expect(output).toContain('rules');
-    expect(output).toContain('Claude');
+    expect(result.exitCode).toBe(0);
+    expect(result.data.targets).toEqual(['claude-code']);
   });
 
-  it('includes per-file details with --verbose', async () => {
-    const logs: string[] = [];
-    vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
-      logs.push(String(chunk));
-      return true;
-    });
-
-    await runMatrix({ verbose: true }, TEST_DIR);
-
-    const output = logs.join('');
-    expect(output).toContain('rules');
-    expect(output).toContain('_root.md');
-  });
-
-  it('shows "No features enabled" when features list is empty', async () => {
+  it('returns empty features when features list is empty', async () => {
     writeFileSync(
       join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1\ntargets: [claude-code]\nfeatures: []\n`,
     );
-    const logs: string[] = [];
-    vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
-      logs.push(String(chunk));
-      return true;
-    });
 
-    await runMatrix({}, TEST_DIR);
+    const result = await runMatrix({}, TEST_DIR);
 
-    const output = logs.join('');
-    expect(output).toContain('No features enabled');
+    expect(result.exitCode).toBe(0);
+    expect(result.data.features).toEqual([]);
   });
 
   it('throws when not initialized (no config)', async () => {
@@ -105,7 +83,7 @@ describe('runMatrix', () => {
     await expect(runMatrix({}, TEST_DIR)).rejects.toThrow(/agentsmesh\.yaml/);
   });
 
-  it('prints matrix for canonical home config when --global is set', async () => {
+  it('returns matrix for canonical home config when --global is set', async () => {
     vi.stubEnv('HOME', TEST_DIR);
     vi.stubEnv('USERPROFILE', TEST_DIR);
     const workspace = `${TEST_DIR}-workspace`;
@@ -130,16 +108,12 @@ description: "Global rules"
 `,
     );
 
-    const logs: string[] = [];
-    vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
-      logs.push(String(chunk));
-      return true;
-    });
+    const result = await runMatrix({ global: true }, workspace);
 
-    await runMatrix({ global: true }, workspace);
-
-    const output = logs.join('');
-    expect(output).toContain('Claude');
-    expect(output).toContain('rules');
+    expect(result.exitCode).toBe(0);
+    expect(result.data.targets).toContain('claude-code');
+    expect(result.data.features.length).toBeGreaterThan(0);
+    const rulesFeature = result.data.features.find((f) => f.name === 'rules');
+    expect(rulesFeature).toBeDefined();
   });
 });

@@ -8,6 +8,7 @@ import { loadScopedConfig } from '../../config/core/scope.js';
 import { loadCanonicalWithExtends } from '../../canonical/extends/extends.js';
 import { runGenerate } from './generate.js';
 import { runMatrix } from './matrix.js';
+import { renderMatrix } from '../renderers/matrix.js';
 import { logger } from '../../utils/output/logger.js';
 
 const DEBOUNCE_MS = 300;
@@ -135,7 +136,8 @@ export async function runWatch(
 
     if (stopped) return;
     if (featuresChanged) {
-      await runMatrix(flags, root);
+      const matrixResult = await runMatrix(flags, root);
+      renderMatrix(matrixResult, { verbose: flags.verbose === true });
     } else {
       logger.info('Regenerated.');
     }

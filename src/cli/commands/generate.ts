@@ -22,6 +22,7 @@ import { bootstrapPlugins } from '../../plugins/bootstrap-plugins.js';
 import { logger } from '../../utils/output/logger.js';
 import { getVersion } from '../version.js';
 import { runMatrix } from './matrix.js';
+import { renderMatrix } from '../renderers/matrix.js';
 import { ensurePathInsideRoot } from './generate-path.js';
 
 interface RunGenerateOptions {
@@ -154,7 +155,8 @@ export async function runGenerate(
       }
     }
     if (options.printMatrix !== false) {
-      await runMatrix(flags, root);
+      const matrixResult = await runMatrix(flags, root);
+      renderMatrix(matrixResult, { verbose: flags.verbose === true });
     }
     return 0;
   }
@@ -228,7 +230,8 @@ export async function runGenerate(
   }
 
   if (options.printMatrix !== false) {
-    await runMatrix(flags, root);
+    const matrixResult = await runMatrix(flags, root);
+    renderMatrix(matrixResult, { verbose: flags.verbose === true });
   }
 
   return 0;

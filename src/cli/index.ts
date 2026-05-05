@@ -16,6 +16,7 @@ import { renderCheck } from './renderers/check.js';
 import { renderDiff } from './renderers/diff.js';
 import { renderMerge } from './renderers/merge.js';
 import { runMatrix } from './commands/matrix.js';
+import { renderMatrix } from './renderers/matrix.js';
 import { runWatch } from './commands/watch.js';
 import { runCheck } from './commands/check.js';
 import { runMerge } from './commands/merge.js';
@@ -131,9 +132,10 @@ const cmdHandlers: Record<
     const result = await runMerge(flags);
     renderMerge(result);
   },
-  matrix: (flags, args) => {
+  matrix: async (flags, args) => {
     void args;
-    return runMatrix(flags);
+    const result = await runMatrix(flags);
+    renderMatrix(result, { verbose: flags.verbose === true });
   },
   watch: async (flags, _args) => {
     void _args;

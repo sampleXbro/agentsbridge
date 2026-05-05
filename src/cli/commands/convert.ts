@@ -1,6 +1,6 @@
 import { mkdirSync, mkdtempSync, readdirSync, rmSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import { TARGET_IDS, isBuiltinTargetId } from '../../targets/catalog/target-catalog.js';
 import { getDescriptor } from '../../targets/catalog/registry.js';
 import { loadCanonicalFiles } from '../../canonical/load/loader.js';
@@ -35,6 +35,8 @@ export async function runConvert(
   projectRoot?: string,
 ): Promise<ConvertCommandResult> {
   const root = projectRoot ?? process.cwd();
+  const scope = flags.global === true ? 'global' : 'project';
+  const base = scope === 'global' ? homedir() : root;
   const from = flags.from;
   const to = flags.to;
 
@@ -83,9 +85,9 @@ export async function runConvert(
   const dryRun = flags['dry-run'] === true;
   const mode: ConvertData['mode'] = dryRun ? 'dry-run' : 'convert';
 
-  const tempDir = createTempProjectRoot(root);
+  const tempDir = createTempProjectRoot(base);
   try {
-    await fromDescriptor.generators.importFrom(tempDir, { scope: 'project' });
+    await fromDescriptor.generators.importFrom(tempDir, { scope });
 
     const canonical = await loadCanonicalFiles(tempDir);
 
@@ -98,15 +100,15 @@ export async function runConvert(
     const results = await runEngine({
       config,
       canonical,
-      projectRoot: root,
-      scope: 'project',
+      projectRoot: base,
+      scope,
       targetFilter: [toNorm],
     });
 
     if (!dryRun) {
       for (const r of results) {
         if (r.status === 'created' || r.status === 'updated') {
-          const fullPath = ensurePathInsideRoot(root, r.path, r.target);
+          const fullPath = ensurePathInsideRoot(base, r.path, r.target);
           await writeFileAtomic(fullPath, r.content);
         }
       }

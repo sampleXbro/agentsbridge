@@ -122,4 +122,20 @@ describe('convert CLI (e2e)', () => {
     expect(r.exitCode).toBe(0);
     expect(r.stdout + r.stderr).toMatch(/no files found/i);
   });
+
+  it('converts global claude-code config to cursor with --global', async () => {
+    dir = createTestProject();
+    mkdirSync(join(dir, '.claude', 'rules'), { recursive: true });
+    writeFileSync(join(dir, '.claude', 'CLAUDE.md'), '# Global Root\n');
+    writeFileSync(join(dir, '.claude', 'rules', 'testing.md'), '# Testing\n');
+
+    const r = await runCli('convert --from claude-code --to cursor --global', dir, {
+      HOME: dir,
+      USERPROFILE: dir,
+    });
+
+    expect(r.exitCode).toBe(0);
+    fileExists(join(dir, '.cursor', 'rules'));
+    fileNotExists(join(dir, '.agentsmesh'));
+  });
 });

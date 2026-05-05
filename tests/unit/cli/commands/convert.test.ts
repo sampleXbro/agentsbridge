@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -7,7 +7,10 @@ import { runConvert } from '../../../../src/cli/commands/convert.js';
 const TEST_DIR = join(tmpdir(), 'am-convert-cmd-test');
 
 beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
-afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
+afterEach(() => {
+  vi.unstubAllEnvs();
+  rmSync(TEST_DIR, { recursive: true, force: true });
+});
 
 describe('runConvert', () => {
   it('throws when --from is missing', async () => {
@@ -112,5 +115,48 @@ describe('runConvert', () => {
     await runConvert({ from: 'claude-code', to: 'cursor' }, TEST_DIR);
 
     expect(readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8')).toContain('# Keep me');
+  });
+
+  it('converts global claude-code config to cursor', async () => {
+    vi.stubEnv('HOME', TEST_DIR);
+    vi.stubEnv('USERPROFILE', TEST_DIR);
+
+    mkdirSync(join(TEST_DIR, '.claude', 'rules'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), '# Global Root\n');
+    writeFileSync(join(TEST_DIR, '.claude', 'rules', 'testing.md'), '# Testing\n');
+
+    const result = await runConvert(
+      { from: 'claude-code', to: 'cursor', global: true },
+      join(TEST_DIR, 'worktree'),
+    );
+
+    expect(result.exitCode).toBe(0);
+    expect(result.data.from).toBe('claude-code');
+    expect(result.data.to).toBe('cursor');
+    expect(result.data.files.length).toBeGreaterThan(0);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh'))).toBe(false);
+  });
+
+  it('converts global cursor config to claude-code', async () => {
+    vi.stubEnv('HOME', TEST_DIR);
+    vi.stubEnv('USERPROFILE', TEST_DIR);
+
+    mkdirSync(join(TEST_DIR, '.cursor', 'rules'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.cursor', 'rules', 'general.mdc'),
+      '---\nalwaysApply: true\ndescription: G\n---\n# Cursor Global\n',
+    );
+
+    const result = await runConvert(
+      { from: 'cursor', to: 'claude-code', global: true },
+      join(TEST_DIR, 'worktree'),
+    );
+
+    expect(result.exitCode).toBe(0);
+    expect(result.data.files.length).toBeGreaterThan(0);
+
+    expect(readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
+      'Cursor Global',
+    );
   });
 });

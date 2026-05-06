@@ -138,4 +138,96 @@ describe('convert CLI (e2e)', () => {
     fileExists(join(dir, '.cursor', 'rules'));
     fileNotExists(join(dir, '.agentsmesh'));
   });
+
+  it('running convert twice on same project succeeds', async () => {
+    dir = createTestProject('claude-code-project');
+    const r1 = await runCli('convert --from claude-code --to cursor', dir);
+    expect(r1.exitCode).toBe(0);
+
+    const r2 = await runCli('convert --from claude-code --to cursor', dir);
+    expect(r2.exitCode).toBe(0);
+  });
+
+  it('converts multi-feature fixture (rules + commands + agents + skills + mcp + hooks + permissions + ignore)', async () => {
+    dir = createTestProject('claude-code-project');
+    const r = await runCli('convert --from claude-code --to cursor --json', dir);
+
+    expect(r.exitCode).toBe(0);
+    const envelope = JSON.parse(r.stdout) as {
+      data: { files: Array<{ path: string }> };
+    };
+    const paths = envelope.data.files.map((f: { path: string }) => f.path);
+
+    expect(paths.some((p: string) => p.includes('rules/'))).toBe(true);
+    expect(paths.some((p: string) => p.includes('commands/'))).toBe(true);
+    expect(paths.some((p: string) => p.includes('agents/'))).toBe(true);
+    expect(paths.some((p: string) => p.includes('skills/'))).toBe(true);
+    expect(paths.some((p: string) => p.includes('mcp.json'))).toBe(true);
+  });
+
+  it('--global --dry-run does not write files', async () => {
+    dir = createTestProject();
+    mkdirSync(join(dir, '.claude'), { recursive: true });
+    writeFileSync(join(dir, '.claude', 'CLAUDE.md'), '# Global\n');
+
+    const r = await runCli('convert --from claude-code --to cursor --global --dry-run', dir, {
+      HOME: dir,
+      USERPROFILE: dir,
+    });
+
+    expect(r.exitCode).toBe(0);
+    expect(r.stdout + r.stderr).toContain('[dry-run]');
+    expect(existsSync(join(dir, '.cursor'))).toBe(false);
+  });
+
+  it('--global --json returns structured envelope', async () => {
+    dir = createTestProject();
+    mkdirSync(join(dir, '.claude'), { recursive: true });
+    writeFileSync(join(dir, '.claude', 'CLAUDE.md'), '# Global\n');
+
+    const r = await runCli('convert --from claude-code --to cursor --global --json', dir, {
+      HOME: dir,
+      USERPROFILE: dir,
+    });
+
+    expect(r.exitCode).toBe(0);
+    const envelope = JSON.parse(r.stdout) as {
+      command: string;
+      success: boolean;
+      data: { from: string; to: string };
+    };
+    expect(envelope.command).toBe('convert');
+    expect(envelope.success).toBe(true);
+  });
+
+  it('--global preserves existing ~/.agentsmesh', async () => {
+    dir = createTestProject();
+    mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(
+      join(dir, '.agentsmesh', 'rules', '_root.md'),
+      '---\nroot: true\n---\n# Global canonical\n',
+    );
+    mkdirSync(join(dir, '.claude'), { recursive: true });
+    writeFileSync(join(dir, '.claude', 'CLAUDE.md'), '# Root\n');
+
+    const r = await runCli('convert --from claude-code --to cursor --global', dir, {
+      HOME: dir,
+      USERPROFILE: dir,
+    });
+
+    expect(r.exitCode).toBe(0);
+    const preserved = readFileSync(join(dir, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
+    expect(preserved).toContain('# Global canonical');
+  });
+
+  it('--global with empty home produces exit 0', async () => {
+    dir = createTestProject();
+    const r = await runCli('convert --from claude-code --to cursor --global', dir, {
+      HOME: dir,
+      USERPROFILE: dir,
+    });
+
+    expect(r.exitCode).toBe(0);
+    expect(r.stdout + r.stderr).toMatch(/no files found/i);
+  });
 });

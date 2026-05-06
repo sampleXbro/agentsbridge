@@ -216,6 +216,16 @@ describe('orchestrateHandlers.import', () => {
     expect(out.errors).toEqual([]);
   });
 
+  it('rejects dry_run with VALIDATION_FAILED', async () => {
+    await expect(
+      orchestrateHandlers.import(ctx, { from: 'cursor', dry_run: true }),
+    ).rejects.toMatchObject({
+      code: 'VALIDATION_FAILED',
+      message: expect.stringContaining('dry_run is not supported for import'),
+    });
+    expect(mockImportFrom).not.toHaveBeenCalled();
+  });
+
   it('throws VALIDATION_FAILED for unknown target', async () => {
     const { TargetNotFoundError } = await import('../../../../src/public/index.js');
     mockImportFrom.mockRejectedValue(new TargetNotFoundError('unknown-target'));
@@ -245,7 +255,8 @@ describe('orchestrateHandlers.convert', () => {
       { from: 'cursor', to: 'claude-code', 'dry-run': false },
       '/project',
     );
-    expect(out.written).toBe(3);
+    expect(out.filesAffected).toBe(3);
+    expect(out.dryRun).toBe(false);
     expect(out.errors).toEqual([]);
     expect(out.warnings).toEqual([]);
   });

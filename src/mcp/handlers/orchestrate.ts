@@ -60,7 +60,8 @@ export interface ImportHandlerResult {
 }
 
 export interface ConvertHandlerResult {
-  written: number;
+  filesAffected: number;
+  dryRun: boolean;
   warnings: string[];
   errors: string[];
 }
@@ -202,6 +203,12 @@ export const orchestrateHandlers = {
     ctx: McpContext,
     input: { from: string; features?: string[]; dry_run?: boolean },
   ): Promise<ImportHandlerResult> {
+    if (input.dry_run === true) {
+      throw new McpError(
+        'VALIDATION_FAILED',
+        'dry_run is not supported for import — the engine writes files directly. Use diff to preview changes instead.',
+      );
+    }
     try {
       const results = await engineImportFrom(input.from, {
         root: ctx.projectRoot,
@@ -242,7 +249,8 @@ export const orchestrateHandlers = {
       };
       const result = await runConvert(flags, ctx.projectRoot);
       return {
-        written: result.data.summary.created + result.data.summary.updated,
+        filesAffected: result.data.summary.created + result.data.summary.updated,
+        dryRun: input.dry_run === true,
         warnings: [],
         errors: [],
       };

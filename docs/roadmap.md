@@ -45,6 +45,7 @@ Current release: **v0.6.0**
 | **Warp target**                     | v0.11   | Native `AGENTS.md` (legacy `WARP.md`), `.warp/skills/`, `.mcp.json`, commands/agents → skills, global skills only   |
 | **`--json` flag on all commands**   | v0.12   | Machine-readable JSON envelope on every command; muted human output; `watch` rejected; CI/IDE/MCP-ready              |
 | **`convert` command**              | v0.12   | `agentsmesh convert --from <source> --to <target>` — direct tool-to-tool conversion via temp-dir import→generate pipeline; `--dry-run`, `--json`, `--global` support |
+| **MCP Server (Self-Serve)**        | Shipped | `agentsmesh mcp` — stdio MCP server exposing 41 tools + 16 resources for canonical CRUD and orchestration; seeded on `agentsmesh init`; path-traversal guards, `_root.md` protection, resource limits; [reference page](/reference/mcp-server/) |
 
 ---
 
@@ -130,16 +131,9 @@ Goals:
 - `agentsmesh install @registry/pack-name` shorthand
 - Skill-level browsing (not just pack-level) to match how Claude Code skills are discovered today
 
-### 8. MCP Server (Self-Serve)
+### ~~8. MCP Server (Self-Serve)~~ — Shipped
 
-Expose AgentsMesh as an MCP tool so AI agents can self-configure. Demand is meaningfully higher than it was 12 months ago — teams building agentic workflows ask for this regularly, and it pairs naturally with the Programmatic API.
-
-Goals:
-
-- Implement MCP server with CRUD operations for rules, commands, agents, skills
-- Let agents introspect their own configuration
-- Enable "AI configures AI" workflows
-- Ships as a separate entry point; built on the Programmatic API shipped in v0.6
+`agentsmesh mcp` exposes canonical `.agentsmesh/` configuration as an MCP server over stdio. AI agents can introspect rules, commands, agents, skills, and settings, and trigger `generate`, `lint`, `check`, `diff`, `import`, and `convert` — all within the conversation. Seeded automatically by `agentsmesh init`. See the [MCP Server reference page](/reference/mcp-server/).
 
 ### 9. `migrate` Command
 
@@ -258,7 +252,7 @@ These are common failure modes in AI config tooling, extracted from community bu
 - `migrate` command
 - `.gitattributes` auto-generation + `gitignore` command
 - Skills/pack registry — full publish workflow, ratings, versioning
-- MCP server (self-serve)
+- ~~MCP server (self-serve)~~ — shipped
 - `agentsmesh install @registry/...` shorthand
 
 ### v1.0 — Polish & Integration
@@ -284,7 +278,7 @@ These are common failure modes in AI config tooling, extracted from community bu
 1. Plugin system (nobody in this space has this)
 2. Target scaffolder (nobody in this space has this either)
 3. `.gitattributes` auto-generation (nobody has this)
-4. MCP server for self-configuration
+4. ~~MCP server for self-configuration~~ — shipped
 5. Full community registry with publishing (skills-first)
 
 ### If the goal is team/enterprise value

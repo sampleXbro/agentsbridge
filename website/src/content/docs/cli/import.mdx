@@ -176,3 +176,7 @@ This keeps cross-references valid after import.
 ## Import idempotency
 
 Running import twice on the same source is safe. Existing canonical files are merged — no duplicates are created.
+
+## Post-import: MCP server entry
+
+After importing from a tool that manages MCP servers (e.g. `claude-code`, `cursor`, `gemini-cli`), the AgentsMesh self-serve MCP server entry is seeded into `.agentsmesh/mcp.json` if it is not already present. This ensures the [MCP Server](/reference/mcp-server/) entry survives import round-trips and is always available after generation.

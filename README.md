@@ -133,6 +133,7 @@ AgentsMesh currently generates native config for every major AI coding assistant
 - **Team-safe collaboration** — `agentsmesh check` is a CI drift gate against `.agentsmesh/.lock`, `agentsmesh diff` previews changes, `agentsmesh merge` rebuilds the lock after three-way Git conflicts, and `lock_features` + per-feature `strategy` prevent accidental overrides.
 - **Global mode** — `~/.agentsmesh/` syncs personal AI config to `~/.claude/`, `~/.cursor/`, `~/.codex/`, `~/.windsurf/`, and other user-level folders. Every CLI command accepts `--global`.
 - **Extensible** — community packs (`agentsmesh install ...`), remote `extends`, runtime plugins (`agentsmesh plugin add`), schema-validated config files, and a typed programmatic API for scripts, IDE extensions, and CI.
+- **Self-serve MCP server** — `agentsmesh mcp` exposes canonical configuration as an MCP tool so AI agents can introspect rules, commands, agents, and skills, and trigger `generate` — all within the conversation. Seeded automatically by `agentsmesh init`.
 
 ---
 

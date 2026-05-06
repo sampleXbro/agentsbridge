@@ -1,0 +1,53 @@
+---
+draft: false
+title: agentsmesh mcp
+description: Start the AgentsMesh self-serve MCP server over stdio. Exposes canonical .agentsmesh/ config to AI agents as tools and resources.
+---
+
+Start the AgentsMesh self-serve MCP server over stdio. Exposes rules, commands, agents, skills, settings, and orchestration operations to any MCP-compatible AI agent.
+
+## Usage
+
+```bash
+agentsmesh mcp
+```
+
+The server is intended to be started by an MCP host (Claude Code, Cursor, Gemini CLI, etc.) — not invoked directly in a shell. The host passes the project working directory via `cwd` in the MCP entry.
+
+## Flags
+
+None. The server reads `projectRoot` from `process.cwd()` at startup.
+
+## MCP entry
+
+`agentsmesh init` seeds `.agentsmesh/mcp.json` with the following entry. Run `agentsmesh generate` to project it into each target's native MCP config file.
+
+```json
+{
+  "mcpServers": {
+    "agentsmesh": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "agentsmesh", "mcp"]
+    }
+  }
+}
+```
+
+For faster startup after installing `agentsmesh` as a dev dependency:
+
+```json
+{
+  "mcpServers": {
+    "agentsmesh": {
+      "type": "stdio",
+      "command": "agentsmesh",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+## Reference
+
+For the complete tools reference, resources, error codes, security notes, and troubleshooting, see the [MCP Server reference page](/reference/mcp-server/).

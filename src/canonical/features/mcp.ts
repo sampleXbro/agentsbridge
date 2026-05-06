@@ -46,7 +46,65 @@ function parseServer(raw: unknown): McpServer | null {
 }
 
 /**
+ * Strip single-line (//) and block JS-style comments from a JSONC string
+ * while preserving string literal contents (e.g. URLs containing "//").
+ */
+function stripJsonComments(text: string): string {
+  let result = '';
+  let i = 0;
+  const len = text.length;
+  while (i < len) {
+    const ch = text[i];
+    // Inside a JSON string literal — copy verbatim until closing quote
+    if (ch === '"') {
+      result += ch;
+      i++;
+      while (i < len) {
+        const sc = text[i];
+        result += sc;
+        if (sc === '\\') {
+          // Escaped character — copy next char too
+          i++;
+          if (i < len) {
+            result += text[i];
+          }
+        } else if (sc === '"') {
+          break;
+        }
+        i++;
+      }
+      i++;
+      continue;
+    }
+    // Block comment /* ... */
+    if (ch === '/' && text[i + 1] === '*') {
+      i += 2;
+      while (i < len) {
+        if (text[i] === '*' && text[i + 1] === '/') {
+          i += 2;
+          break;
+        }
+        i++;
+      }
+      continue;
+    }
+    // Single-line comment // ...
+    if (ch === '/' && text[i + 1] === '/') {
+      i += 2;
+      while (i < len && text[i] !== '\n') {
+        i++;
+      }
+      continue;
+    }
+    result += ch;
+    i++;
+  }
+  return result;
+}
+
+/**
  * Parse mcp.json at the given path.
+ * Supports JSONC (JSON with comments) via comment stripping.
  * @param mcpPath - Absolute path to .agentsmesh/mcp.json
  * @returns McpConfig or null if file missing, malformed, or lacks mcpServers
  */
@@ -55,7 +113,7 @@ export async function parseMcp(mcpPath: string): Promise<McpConfig | null> {
   if (!content) return null;
   let parsed: unknown;
   try {
-    parsed = JSON.parse(content) as unknown;
+    parsed = JSON.parse(stripJsonComments(content)) as unknown;
   } catch {
     return null;
   }

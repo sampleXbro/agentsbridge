@@ -25,6 +25,7 @@ import { runTarget } from './commands/target.js';
 import { renderTarget } from './renderers/target.js';
 import { runConvert } from './commands/convert.js';
 import { renderConvert } from './renderers/convert.js';
+import { runMcp } from './commands/mcp.js';
 
 export const cmdHandlers: Record<
   string,
@@ -108,5 +109,8 @@ export const cmdHandlers: Record<
     void _args;
     const result = await runConvert(flags);
     handleResult('convert', result, flags, () => renderConvert(result));
+  },
+  mcp: async (flags, args) => {
+    await runMcp(flags, args);
   },
 };

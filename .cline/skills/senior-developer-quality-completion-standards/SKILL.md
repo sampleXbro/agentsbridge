@@ -3,6 +3,8 @@ name: senior-developer-quality-completion-standards
 description: Define quality and completion standards for engineering work
 ---
 
+## Purpose
+
 ## Quality & Completion Standards
 
 **Task is complete ONLY when all related issues are resolved.**

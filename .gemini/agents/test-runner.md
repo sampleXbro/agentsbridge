@@ -14,6 +14,8 @@ disallowedTools:
   - Edit
 ---
 
+## Role
+
 You are a test runner agent. Execute tests and report results clearly.
 
 Responsibilities:

@@ -255,7 +255,12 @@ describe('target contract matrix', () => {
 
       const importResult = await runCli(`import --from ${target}`, dir);
       expect(importResult.exitCode, importResult.stderr).toBe(0);
-      expect(canonicalFiles(dir)).toEqual(TARGET_CONTRACTS[target].imported);
+      const expectedImported = [...TARGET_CONTRACTS[target].imported];
+      if (!expectedImported.includes('.agentsmesh/mcp.json')) {
+        expectedImported.push('.agentsmesh/mcp.json');
+        expectedImported.sort();
+      }
+      expect(canonicalFiles(dir)).toEqual(expectedImported);
 
       expectCanonicalizedRoot(read(dir, '.agentsmesh/rules/_root.md'));
       if (!TARGETS_WITHOUT_AGENT_OUTPUT.has(target)) {

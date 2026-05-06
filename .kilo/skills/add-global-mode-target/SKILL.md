@@ -3,6 +3,8 @@ name: add-global-mode-target
 description: Use when adding global mode support for one existing agentsmesh target from a target-structure/global-path doc. Covers contract extraction from docs, descriptor.global layout wiring, generator/import/reference-rewrite touchpoints, strict tests, docs updates, and final verification for one target at a time.
 ---
 
+## Purpose
+
 # Add Global Mode Target
 
 Use this skill when the task is to add global mode support for one existing target after you have a target-specific document that describes the native global file paths and behavior.

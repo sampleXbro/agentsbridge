@@ -15,6 +15,8 @@ x-agentsmesh-model: haiku
 x-agentsmesh-max-turns: 5
 ---
 
+## Role
+
 You are a test runner agent. Execute tests and report results clearly.
 
 Responsibilities:

@@ -50,7 +50,7 @@ def load_json_file(filepath: str) -> Optional[Dict]:
 
 def run_pr_analyzer(repo_path: Path) -> Dict:
     """Run pr_analyzer.py and return results."""
-    script_path = Path(__file__).parent / "pr_analyzer.py"
+    script_path = Path(__file__).parent / ".agentsmesh/skills/code-reviewer/scripts/pr_analyzer.py"
     if not script_path.exists():
         return {"status": "error", "message": "pr_analyzer.py not found"}
 
@@ -70,7 +70,7 @@ def run_pr_analyzer(repo_path: Path) -> Dict:
 
 def run_quality_checker(repo_path: Path) -> Dict:
     """Run code_quality_checker.py and return results."""
-    script_path = Path(__file__).parent / "code_quality_checker.py"
+    script_path = Path(__file__).parent / ".agentsmesh/skills/code-reviewer/scripts/code_quality_checker.py"
     if not script_path.exists():
         return {"status": "error", "message": "code_quality_checker.py not found"}
 

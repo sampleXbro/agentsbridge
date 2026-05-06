@@ -134,6 +134,7 @@
     "vitest": "^4.1.4"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "chokidar": "^5.0.0",
     "diff": "8.0.4",
     "smol-toml": "^1.6.1",

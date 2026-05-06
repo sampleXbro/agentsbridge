@@ -1,0 +1,230 @@
+---
+draft: false
+title: MCP Server (Self-Serve)
+description: AgentsMesh exposes itself as an MCP server so AI agents can introspect and mutate their own canonical configuration — rules, commands, agents, skills, settings, and orchestration — all over stdio.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+AgentsMesh ships a built-in MCP server that lets AI agents read and write the canonical `.agentsmesh/` directory directly. Agents can list rules, create commands, update permissions, and trigger `generate` — without leaving the conversation.
+
+## Quick start
+
+`agentsmesh init` seeds `.agentsmesh/mcp.json` with the server entry automatically. The seeded entry looks like:
+
+```json
+{
+  "mcpServers": {
+    "agentsmesh": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "agentsmesh", "mcp"]
+    }
+  }
+}
+```
+
+After init, run `agentsmesh generate` to project the entry into each target's native MCP config file (e.g. `.claude/settings.json`, `.cursor/mcp.json`, `.gemini/settings.json`).
+
+## Configuration
+
+Three deployment forms are supported:
+
+| Form | When to use |
+|------|-------------|
+| `npx -y agentsmesh mcp` | Zero-install default. Seeded on `init`. Works on any machine with Node.js. |
+| `command: "agentsmesh"` | Recommended after `npm install -D agentsmesh`. Faster startup; no network round-trip. |
+| Global install | Air-gapped or shared machines. `npm install -g agentsmesh` then use `command: "agentsmesh"`. |
+
+**Recommended form** (after adding `agentsmesh` as a dev dependency):
+
+```json
+{
+  "mcpServers": {
+    "agentsmesh": {
+      "type": "stdio",
+      "command": "agentsmesh",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+The server reads `projectRoot` from the process working directory at startup. No configuration flags are accepted; the MCP host controls the working directory via the `cwd` field in the MCP server entry when needed.
+
+## Tools reference
+
+### Canonical reads (8)
+
+| Tool | Description |
+|------|-------------|
+| `list_rules` | List rules with summary metadata |
+| `get_rule` | Get a single rule by name |
+| `list_commands` | List commands with summary metadata |
+| `get_command` | Get a single command by name |
+| `list_agents` | List agents with summary metadata |
+| `get_agent` | Get a single agent by name |
+| `list_skills` | List skills |
+| `get_skill` | Get one skill (frontmatter + body + supporting filenames) |
+
+### Skill file read (1)
+
+| Tool | Description |
+|------|-------------|
+| `get_skill_file` | Read a skill supporting file by skill name and relative path |
+
+### Settings reads (5)
+
+| Tool | Description |
+|------|-------------|
+| `get_config` | Read `agentsmesh.yaml` |
+| `list_mcp_servers` | List MCP servers in canonical `mcp.json` |
+| `get_permissions` | Read `permissions.yaml` |
+| `get_hooks` | Read `hooks.yaml` |
+| `get_ignore` | Read ignore patterns |
+
+### Capabilities (2)
+
+| Tool | Description |
+|------|-------------|
+| `list_target_capabilities` | List the support matrix for all targets |
+| `get_target_capabilities` | Get capabilities for a specific target ID |
+
+### Canonical mutations (12)
+
+| Tool | Description |
+|------|-------------|
+| `create_rule` | Create a new rule |
+| `update_rule` | Update a rule (replace or merge) |
+| `delete_rule` | Delete a rule |
+| `create_command` | Create a new command |
+| `update_command` | Update a command |
+| `delete_command` | Delete a command |
+| `create_agent` | Create a new agent |
+| `update_agent` | Update an agent |
+| `delete_agent` | Delete an agent |
+| `create_skill` | Create a skill with optional supporting files |
+| `update_skill` | Update a skill (`supportingFiles`: string = write, null = delete) |
+| `delete_skill` | Delete a skill |
+
+### Settings mutations (7)
+
+| Tool | Description |
+|------|-------------|
+| `update_config` | Update `agentsmesh.yaml` (replace or merge) |
+| `add_mcp_server` | Add an MCP server entry to `.agentsmesh/mcp.json` |
+| `update_mcp_server` | Update an MCP server entry (replace or merge) |
+| `remove_mcp_server` | Remove an MCP server entry |
+| `update_permissions` | Update `permissions.yaml` (replace or append) |
+| `update_hooks` | Replace `hooks.yaml` content |
+| `update_ignore` | Update ignore patterns (replace or append) |
+
+### Orchestration (6)
+
+| Tool | Description |
+|------|-------------|
+| `generate` | Generate target-native config from canonical |
+| `lint` | Lint canonical files |
+| `check` | Detect drift between canonical and lockfile |
+| `diff` | Preview generation changes |
+| `import` | Import another tool's config into canonical |
+| `convert` | Convert directly from one tool to another |
+
+All mutation tools and orchestration tools accept an optional `dry_run: true` parameter that returns the planned changes without writing to disk.
+
+## Resources reference
+
+The server exposes 16 readable resources, derived from the tools that have a `resourceUri`:
+
+| URI | Mapped tool |
+|-----|-------------|
+| `agentsmesh://canonical/rules` | `list_rules` |
+| `agentsmesh://canonical/rules/{name}` | `get_rule` |
+| `agentsmesh://canonical/commands` | `list_commands` |
+| `agentsmesh://canonical/commands/{name}` | `get_command` |
+| `agentsmesh://canonical/agents` | `list_agents` |
+| `agentsmesh://canonical/agents/{name}` | `get_agent` |
+| `agentsmesh://canonical/skills` | `list_skills` |
+| `agentsmesh://canonical/skills/{name}` | `get_skill` |
+| `agentsmesh://canonical/skills/{name}/files/{path}` | `get_skill_file` |
+| `agentsmesh://config` | `get_config` |
+| `agentsmesh://canonical/mcp` | `list_mcp_servers` |
+| `agentsmesh://canonical/permissions` | `get_permissions` |
+| `agentsmesh://canonical/hooks` | `get_hooks` |
+| `agentsmesh://canonical/ignore` | `get_ignore` |
+| `agentsmesh://capabilities` | `list_target_capabilities` |
+| `agentsmesh://capabilities/{targetId}` | `get_target_capabilities` |
+
+## Error codes
+
+All tool errors return a structured envelope `{ code, message, details? }`.
+
+| Code | Meaning |
+|------|---------|
+| `NOT_FOUND` | The requested item does not exist |
+| `ALREADY_EXISTS` | A create was attempted for a name that already exists |
+| `VALIDATION_FAILED` | Input did not pass schema validation |
+| `INVALID_NAME` | Name contains disallowed characters or is reserved |
+| `PATH_TRAVERSAL` | A path argument attempted to escape the canonical directory |
+| `PROTECTED_FILE` | The target file (`_root.md`) cannot be deleted |
+| `LOCK_HELD` | The generate lock is held by another process |
+| `NO_PROJECT` | No `agentsmesh.yaml` was found in the working directory |
+| `IO_ERROR` | A filesystem read or write failed |
+| `LIMIT_EXCEEDED` | A content or file-count limit was reached |
+
+## Security
+
+The MCP server relies on the host trust boundary — no authentication is built in. The host process (Claude Code, Cursor, etc.) controls which servers agents may invoke.
+
+Guards in place:
+
+- **Path-traversal protection** — all paths are resolved relative to `.agentsmesh/` and rejected if they escape it.
+- **`_root.md` protection** — the root rule cannot be deleted.
+- **Resource limits** — individual file writes are capped to prevent runaway mutations.
+- **No absolute paths in error messages** — `McpError` refuses to leak filesystem paths to the agent.
+
+<Aside type="caution">
+  The server operates on your project's canonical directory. Any agent with access to this MCP server can modify rules, agents, skills, and trigger generation. Grant access only to trusted agents.
+</Aside>
+
+## Troubleshooting
+
+**Server does not appear in the tool list**
+
+The MCP entry was seeded into `.agentsmesh/mcp.json` but you must run `agentsmesh generate` to project it into each target's native settings file. Run `generate`, then restart your AI tool.
+
+**`NO_PROJECT` error when calling any tool**
+
+The server process started in a directory without `agentsmesh.yaml`. Set the `cwd` field in the MCP server entry to your project root, or start your AI tool from the project root.
+
+**`LOCK_HELD` on `generate`**
+
+Another process (e.g. `agentsmesh watch` or a parallel `generate`) holds the generate lock. Wait for it to finish or check for stale lock files in `.agentsmesh/`.
+
+**`npx` form is slow to start**
+
+`npx -y agentsmesh mcp` downloads the package on first use and caches it. For faster startup, install `agentsmesh` as a dev dependency and switch the entry to `command: "agentsmesh", args: ["mcp"]`.
+
+**`PATH_TRAVERSAL` error**
+
+A skill or file path argument contained `..` or an absolute path. Use only relative paths within the skill directory.
+
+## Migrating existing projects
+
+If your project already has `.agentsmesh/mcp.json` and you want to add the self-serve server entry manually:
+
+```json
+{
+  "mcpServers": {
+    "agentsmesh": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "agentsmesh", "mcp"]
+    }
+  }
+}
+```
+
+Then run `agentsmesh generate` to project the entry.
+
+Alternatively, re-running `agentsmesh init` on an existing project will inject the entry if it is absent, without overwriting other canonical files.

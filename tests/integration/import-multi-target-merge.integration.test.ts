@@ -143,7 +143,11 @@ describe('import: multi-target sequential merge (integration)', () => {
     const after = JSON.parse(readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf-8')) as {
       mcpServers: Record<string, unknown>;
     };
-    expect(Object.keys(after.mcpServers).sort()).toEqual(['fromClaude', 'fromCursor']);
+    expect(Object.keys(after.mcpServers).sort()).toEqual([
+      'agentsmesh',
+      'fromClaude',
+      'fromCursor',
+    ]);
 
     rmSync(join(TEST_DIR, '.agentsmesh'), { recursive: true, force: true });
 
@@ -152,7 +156,11 @@ describe('import: multi-target sequential merge (integration)', () => {
     const after2 = JSON.parse(readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf-8')) as {
       mcpServers: Record<string, unknown>;
     };
-    expect(Object.keys(after2.mcpServers).sort()).toEqual(['fromClaude', 'fromCursor']);
+    expect(Object.keys(after2.mcpServers).sort()).toEqual([
+      'agentsmesh',
+      'fromClaude',
+      'fromCursor',
+    ]);
   });
 
   it('last import wins for .agentsmesh/ignore when both targets contribute ignore patterns', () => {

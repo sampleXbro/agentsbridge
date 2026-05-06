@@ -11,6 +11,7 @@ import {
 } from '../../targets/catalog/target-catalog.js';
 import { getDescriptor } from '../../targets/catalog/registry.js';
 import { bootstrapPlugins } from '../../plugins/bootstrap-plugins.js';
+import { seedAgentsmeshMcpEntry } from './seed-mcp-entry.js';
 import type { ImportData } from '../command-result.js';
 
 export interface ImportCommandResult {
@@ -50,6 +51,7 @@ export async function runImport(
     const context = resolveScopeContext(root, scope);
     const target = getTargetCatalogEntry(normalized);
     const results = await target.importFrom(context.rootBase, { scope });
+    if (results.length > 0) await seedAgentsmeshMcpEntry(context.rootBase);
     return {
       exitCode: 0,
       data: {
@@ -80,6 +82,7 @@ export async function runImport(
   }
 
   const results = await descriptor.generators.importFrom(context.rootBase, { scope });
+  if (results.length > 0) await seedAgentsmeshMcpEntry(context.rootBase);
   return {
     exitCode: 0,
     data: {

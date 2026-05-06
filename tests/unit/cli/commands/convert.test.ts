@@ -117,6 +117,13 @@ describe('runConvert', () => {
     expect(readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8')).toContain('# Keep me');
   });
 
+  it('skips non-dot directories during temp dir creation', async () => {
+    mkdirSync(join(TEST_DIR, 'node_modules'), { recursive: true });
+    writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Root\n');
+    const result = await runConvert({ from: 'claude-code', to: 'cursor' }, TEST_DIR);
+    expect(result.exitCode).toBe(0);
+  });
+
   it('normalizes uppercase target names', async () => {
     writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Root\n');
     const result = await runConvert({ from: 'CLAUDE-CODE', to: 'CURSOR' }, TEST_DIR);
@@ -145,6 +152,26 @@ describe('runConvert', () => {
     const result = await runConvert({ from: 'claude-code', to: 'cursor' }, TEST_DIR);
     expect(result.exitCode).toBe(0);
     expect(result.data.files).toEqual([]);
+  });
+
+  it('throws for unknown --from after plugin bootstrap succeeds', async () => {
+    writeFileSync(
+      join(TEST_DIR, 'agentsmesh.yaml'),
+      'version: 1\ntargets: [claude-code]\nfeatures: [rules]\n',
+    );
+    await expect(
+      runConvert({ from: 'nonexistent-plugin', to: 'cursor' }, TEST_DIR),
+    ).rejects.toThrow(/unknown.*from/i);
+  });
+
+  it('throws for unknown --to after plugin bootstrap succeeds', async () => {
+    writeFileSync(
+      join(TEST_DIR, 'agentsmesh.yaml'),
+      'version: 1\ntargets: [claude-code]\nfeatures: [rules]\n',
+    );
+    await expect(
+      runConvert({ from: 'cursor', to: 'nonexistent-plugin' }, TEST_DIR),
+    ).rejects.toThrow(/unknown.*to/i);
   });
 
   it('cleans up temp dir even when validation throws', async () => {

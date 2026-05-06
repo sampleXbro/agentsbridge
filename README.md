@@ -183,6 +183,7 @@ Detailed contracts: [Canonical Config](https://samplexbro.github.io/agentsmesh/c
 agentsmesh init [--global] [--yes]
 agentsmesh generate [--global] [--targets <csv>] [--check] [--dry-run] [--force] [--refresh-cache]
 agentsmesh import --from <target> [--global]
+agentsmesh convert --from <target> --to <target> [--global] [--dry-run]
 agentsmesh diff [--global] [--targets <csv>]
 agentsmesh lint [--global] [--targets <csv>]
 agentsmesh watch [--global] [--targets <csv>]
@@ -389,7 +390,7 @@ See the [full feature matrix docs](https://samplexbro.github.io/agentsmesh/refer
 
 - **[Getting Started](https://samplexbro.github.io/agentsmesh/getting-started/installation/)** — installation, quick start
 - **[Canonical Config](https://samplexbro.github.io/agentsmesh/canonical-config/)** — rules, commands, agents, skills, MCP, hooks, ignore, permissions
-- **[CLI Reference](https://samplexbro.github.io/agentsmesh/cli/)** — `init`, `generate`, `import`, `install`, `diff`, `lint`, `watch`, `check`, `merge`, `matrix`, `plugin`, `target`
+- **[CLI Reference](https://samplexbro.github.io/agentsmesh/cli/)** — `init`, `generate`, `import`, `convert`, `install`, `diff`, `lint`, `watch`, `check`, `merge`, `matrix`, `plugin`, `target`
 - **[Configuration](https://samplexbro.github.io/agentsmesh/configuration/agentsmesh-yaml/)** — `agentsmesh.yaml`, local overrides, extends, collaboration, conversions
 - **[Guides](https://samplexbro.github.io/agentsmesh/guides/existing-project/)** — adopting in existing projects · multi-tool teams · sharing config · CI drift detection · community packs · **building plugins**
 - **[Reference](https://samplexbro.github.io/agentsmesh/reference/generation-pipeline/)** — supported tools matrix · generation pipeline · managed embedding

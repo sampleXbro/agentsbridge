@@ -68,6 +68,17 @@ export const COMMANDS: HelpCommand[] = [
     ],
   },
   {
+    name: 'convert',
+    usage: 'agentsmesh convert --from <target> --to <target> [flags]',
+    description: 'Convert configuration directly from one tool to another',
+    flags: [
+      { name: '--from <target>', description: 'Source tool ID to convert from (required)' },
+      { name: '--to <target>', description: 'Destination tool ID to convert to (required)' },
+      { name: '--global', description: 'Convert user-level config (use home directory paths)' },
+      { name: '--dry-run', description: 'Preview conversion without writing files' },
+    ],
+  },
+  {
     name: 'install',
     usage: 'agentsmesh install <source> [flags]',
     description: 'Install canonical resources from local/remote sources',

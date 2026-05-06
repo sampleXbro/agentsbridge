@@ -125,6 +125,7 @@ export default defineConfig({
             { label: 'init', slug: 'cli/init' },
             { label: 'generate', slug: 'cli/generate' },
             { label: 'import', slug: 'cli/import' },
+            { label: 'convert', slug: 'cli/convert' },
             { label: 'install', slug: 'cli/install' },
             { label: 'diff', slug: 'cli/diff' },
             { label: 'lint', slug: 'cli/lint' },

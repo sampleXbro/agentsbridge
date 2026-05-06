@@ -19,6 +19,15 @@
         "GITHUB_TOKEN": "$GITHUB_TOKEN"
       },
       "description": "GitHub MCP server for repo operations"
+    },
+    "agentsmesh": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "agentsmesh",
+        "mcp"
+      ]
     }
   }
 }

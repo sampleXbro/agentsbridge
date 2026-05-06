@@ -1,6 +1,6 @@
 # Agents E2E Last Run Report
 
-_Generated: 2026-05-06T07:30:29.044Z_
+_Generated: 2026-05-06T18:01:03.144Z_
 
 ## Initial — `.agentsmesh/agents/` (canonical fixture)
 
@@ -112,7 +112,7 @@ Imported 12 file(s). Run 'agentsmesh generate' to sync to other tools.
 │commands (1)        │  ✓         │
 │agents (2)          │  ✓         │
 │skills (1)          │  ✓         │
-│mcp (1 servers)     │  ✓         │
+│mcp (2 servers)     │  ✓         │
 │hooks (1)           │  ✓         │
 │ignore              │  ✓         │
 │permissions         │  ◐         │
@@ -195,7 +195,7 @@ Imported 11 file(s). Run 'agentsmesh generate' to sync to other tools.
 │commands (1)        │  ✓         │
 │agents (2)          │  ✓         │
 │skills (1)          │  ✓         │
-│mcp (1 servers)     │  –         │
+│mcp (2 servers)     │  –         │
 │hooks (1)           │  ◐         │
 │ignore              │  –         │
 │permissions         │  –         │

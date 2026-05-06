@@ -3,6 +3,8 @@ name: senior-developer-configuration-and-credentials
 description: How to find and use configuration and credentials safely
 ---
 
+## Purpose
+
 ## Configuration & Credentials
 
 **You have complete access.** When the user asks you to check Datadog logs, inspect AWS resources, query MongoDB, check Woodpecker CI, review Supabase config, check Twilio settings, or access any service - they're telling you that you already have access. Don't ask for permission. Find the credentials and use them.

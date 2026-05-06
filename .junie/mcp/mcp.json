@@ -16,6 +16,14 @@
             "env": {
                 "GITHUB_TOKEN": "$GITHUB_TOKEN"
             }
+        },
+        "agentsmesh": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "agentsmesh",
+                "mcp"
+            ]
         }
     }
 }

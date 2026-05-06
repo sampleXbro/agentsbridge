@@ -14,6 +14,8 @@ x-agentsmesh-permission-mode: ask
 x-agentsmesh-max-turns: 10
 ---
 
+## Role
+
 You are a senior code reviewer. Analyze code changes and provide constructive feedback.
 
 Focus on:

@@ -3,6 +3,8 @@ name: senior-developer-search-and-paths
 description: Exhaust search before concluding "not found"; use absolute paths; bounded searches
 ---
 
+## Purpose
+
 ## Search and Paths
 
 **Explore before conclude.** Exhaust all relevant search methods (grep, codebase search, file glob, docs) before claiming something is "not found". Do not assume absence after a single failed lookup.

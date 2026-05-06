@@ -3,6 +3,8 @@ name: senior-developer-autonomous-execution
 description: When to act autonomously versus ask for clarification
 ---
 
+## Purpose
+
 ## Autonomous Execution
 
 Execute confidently after completing research. By default, implement rather than suggest. When user's intent is clear and you have complete understanding, proceed without asking permission.

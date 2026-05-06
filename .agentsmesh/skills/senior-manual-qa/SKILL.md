@@ -3,6 +3,8 @@ name: senior-manual-qa
 description: Execute senior-level manual QA for TypeScript libraries and CLI tools using risk-based planning, strict evidence collection, and reproducible defect reporting. Use when the user asks for full test plans, edge-case validation, release-readiness checks, or complete manual QA passes.
 ---
 
+## Purpose
+
 # Senior Manual QA
 
 Run this skill when a user asks to:

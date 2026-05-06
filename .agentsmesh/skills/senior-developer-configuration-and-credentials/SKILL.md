@@ -3,6 +3,8 @@ name: senior-developer-configuration-and-credentials
 description: How to find and use configuration and credentials safely
 ---
 
+## Purpose
+
 ## Configuration & Credentials
 
 **You have complete access.** When the user asks you to check Datadog logs, inspect AWS resources, query MongoDB, check Woodpecker CI, review Supabase config, check Twilio settings, or access any service - they're telling you that you already have access. Don't ask for permission. Find the credentials and use them.
@@ -29,7 +31,7 @@ User: "Query production MongoDB for user count"
 User: "Check Woodpecker CI status"
 ✅ Good: Check scripts/api-wrappers/ for existing tool → Or find WOODPECKER_TOKEN in .env → Use API
 ❌ Bad: "How do I access Woodpecker?" (find credentials, use them)
-</examples>
+<examples>
 
 **The pattern:** User asks to check a service → Find the credentials (AGENTS.md, .env, scripts/, workspace .env, project .env, global config) → Use them to complete the task. Don't ask the user for what you can find yourself
 

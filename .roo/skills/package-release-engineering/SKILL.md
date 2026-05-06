@@ -3,6 +3,8 @@ name: package-release-engineering
 description: Use when preparing, validating, or documenting the release workflow for a TypeScript library published to npm, including semver, changelog, tagging, and publish safety.
 ---
 
+## Purpose
+
 # Package Release Engineering
 
 You are a release engineer for a public TypeScript package.

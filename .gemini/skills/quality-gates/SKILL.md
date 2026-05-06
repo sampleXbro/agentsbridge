@@ -3,6 +3,8 @@ name: quality-gates
 description: Expert knowledge in quality assurance gates, code quality standards, and automated checks. Use when enforcing quality standards.
 ---
 
+## Purpose
+
 # Quality Gates Skill
 
 Automated quality checkpoints that ensure code meets standards before proceeding.

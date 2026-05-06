@@ -5,3 +5,4 @@ allow:
   - Bash(npx vitest:*)
   - Bash(node -e "console.log\(['.windsurfrules', 'AGENTS.md'].sort\(\)\)":*)
 deny: []
+ask: []

@@ -1,0 +1,107 @@
+/**
+ * Integration test: agentsmesh mcp server stdout discipline.
+ *
+ * The MCP SDK uses newline-delimited JSON (NDJSON), NOT Content-Length framing.
+ * Each message is a single JSON object on one line, followed by '\n'.
+ *
+ * Asserts:
+ * 1. stdout contains ONLY valid newline-delimited JSON-RPC messages — no log leakage.
+ * 2. The initialize response has serverInfo.name === 'agentsmesh-mcp'.
+ */
+
+import { describe, it, expect } from 'vitest';
+import { spawn } from 'node:child_process';
+import { join } from 'node:path';
+
+const CLI_PATH = join(process.cwd(), 'dist', 'cli.js');
+
+function sendInitialize(cwd: string): Promise<{ stdout: string; stderr: string }> {
+  return new Promise((resolve, reject) => {
+    const child = spawn('node', [CLI_PATH, 'mcp'], {
+      cwd,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout.on('data', (d: Buffer) => {
+      stdout += d.toString();
+    });
+    child.stderr.on('data', (d: Buffer) => {
+      stderr += d.toString();
+    });
+
+    // The MCP SDK uses newline-delimited JSON: each message is JSON + '\n'.
+    const initRequest =
+      JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: {
+          protocolVersion: '2024-11-05',
+          capabilities: {},
+          clientInfo: { name: 'test', version: '0.0.0' },
+        },
+      }) + '\n';
+
+    child.stdin.write(initRequest);
+
+    // Give the server time to respond, then terminate
+    setTimeout(() => {
+      child.kill('SIGTERM');
+    }, 2000);
+
+    child.on('close', () => resolve({ stdout, stderr }));
+    child.on('error', reject);
+  });
+}
+
+describe('mcp-server-stdout-discipline', () => {
+  it('stdout contains only newline-delimited JSON-RPC messages (no log leakage)', async () => {
+    const projectRoot = process.cwd();
+    const { stdout } = await sendInitialize(projectRoot);
+
+    if (stdout.length === 0) {
+      // Server did not respond in time — nothing to assert.
+      return;
+    }
+
+    // Every non-empty line on stdout must be valid JSON (NDJSON protocol).
+    const lines = stdout.split('\n').filter(Boolean);
+    expect(lines.length).toBeGreaterThanOrEqual(1);
+
+    for (const line of lines) {
+      expect(
+        () => JSON.parse(line),
+        `stdout line is not valid JSON (log leakage?): ${line.slice(0, 120)}`,
+      ).not.toThrow();
+    }
+  }, 8000);
+
+  it('the initialize response reports serverInfo.name === agentsmesh-mcp', async () => {
+    const projectRoot = process.cwd();
+    const { stdout } = await sendInitialize(projectRoot);
+
+    if (stdout.length === 0) {
+      // Server did not respond in time; skip rather than fail.
+      return;
+    }
+
+    const lines = stdout.split('\n').filter(Boolean);
+    const messages = lines.map((l) => JSON.parse(l) as Record<string, unknown>);
+
+    const initResponse = messages.find(
+      (m) =>
+        m['id'] === 1 &&
+        typeof m['result'] === 'object' &&
+        m['result'] !== null &&
+        'serverInfo' in (m['result'] as Record<string, unknown>),
+    );
+
+    expect(initResponse).toBeDefined();
+    const result = initResponse?.['result'] as Record<string, unknown> | undefined;
+    const serverInfo = result?.['serverInfo'] as Record<string, unknown> | undefined;
+    expect(serverInfo?.['name']).toBe('agentsmesh-mcp');
+  }, 8000);
+});

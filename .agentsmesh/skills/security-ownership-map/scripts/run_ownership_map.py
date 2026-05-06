@@ -139,7 +139,7 @@ def main() -> int:
         print("networkx is required. Install with: pip install networkx", file=sys.stderr)
         return 2
 
-    script_path = Path(__file__).resolve().parent / "build_ownership_map.py"
+    script_path = Path(__file__).resolve().parent / ".agentsmesh/skills/security-ownership-map/scripts/build_ownership_map.py"
     cmd = [
         sys.executable,
         str(script_path),

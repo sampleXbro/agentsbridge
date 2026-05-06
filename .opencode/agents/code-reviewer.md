@@ -10,6 +10,8 @@ tools:
   - Bash(git log)
 ---
 
+## Role
+
 You are a senior code reviewer. Analyze code changes and provide constructive feedback.
 
 Focus on:

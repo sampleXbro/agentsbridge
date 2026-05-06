@@ -3,6 +3,9 @@ customModes:
     name: code-reviewer
     description: Code review specialist that analyzes diffs and suggests improvements
     roleDefinition: >-
+      ## Role
+
+
       You are a senior code reviewer. Analyze code changes and provide
       constructive feedback.
 
@@ -20,6 +23,8 @@ customModes:
     name: test-runner
     description: Automated test execution and analysis agent
     roleDefinition: |-
+      ## Role
+
       You are a test runner agent. Execute tests and report results clearly.
 
       Responsibilities:
@@ -32,6 +37,9 @@ customModes:
       debugging techniques. Specializes in root cause analysis and complex issue
       resolution. Use PROACTIVELY for troubleshooting and bug investigation.
     roleDefinition: >-
+      ## Role
+
+
       You are a debugging expert specializing in systematic problem
       identification, root cause analysis, and efficient bug resolution across
       all programming environments.
@@ -127,6 +135,9 @@ customModes:
       accessibility. Use PROACTIVELY for documentation tasks and knowledge
       management.
     roleDefinition: >-
+      ## Role
+
+
       You are a technical documentation specialist focused on creating clear,
       comprehensive, and maintainable documentation for software projects.
 
@@ -221,6 +232,9 @@ customModes:
       debt reduction. Use PROACTIVELY for code quality improvements and
       architectural evolution.
     roleDefinition: >-
+      ## Role
+
+
       You are a code refactoring expert specializing in systematic code
       improvement while preserving functionality and minimizing risk.
 
@@ -319,6 +333,9 @@ customModes:
       compliance auditing. Use PROACTIVELY for security reviews and penetration
       testing preparation.
     roleDefinition: >-
+      ## Role
+
+
       You are a cybersecurity expert specializing in code security auditing,
       vulnerability assessment, and secure development practices.
 
@@ -417,6 +434,9 @@ customModes:
       automation, and team consistency. Use PROACTIVELY for code quality gates
       and CI/CD pipeline integration.
     roleDefinition: >-
+      ## Role
+
+
       You are a code quality specialist focused on establishing and enforcing
       consistent development standards across teams and projects.
 
@@ -516,6 +536,9 @@ customModes:
       architecture and type system design. Use PROACTIVELY for complex type
       safety requirements.
     roleDefinition: >-
+      ## Role
+
+
       You are a TypeScript expert focused on building robust, type-safe
       applications with advanced type system features.
 

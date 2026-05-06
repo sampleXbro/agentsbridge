@@ -3,6 +3,8 @@ name: release-manager
 description: Release Manager
 ---
 
+## Purpose
+
 # Release Manager
 
 **Tier:** POWERFUL  

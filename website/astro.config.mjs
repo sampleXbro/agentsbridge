@@ -135,6 +135,7 @@ export default defineConfig({
             { label: 'matrix', slug: 'cli/matrix' },
             { label: 'plugin', slug: 'cli/plugin' },
             { label: 'target', slug: 'cli/target' },
+            { label: 'mcp', slug: 'cli/mcp' },
           ],
         },
         {
@@ -167,6 +168,7 @@ export default defineConfig({
             { label: 'Generation Pipeline', slug: 'reference/generation-pipeline' },
             { label: 'Managed Embedding', slug: 'reference/managed-embedding' },
             { label: 'Programmatic API', slug: 'reference/programmatic-api' },
+            { label: 'MCP Server', slug: 'reference/mcp-server' },
           ],
         },
       ],

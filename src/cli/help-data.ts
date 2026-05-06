@@ -199,4 +199,10 @@ export const COMMANDS: HelpCommand[] = [
       { name: '--id <id>', description: 'Override derived plugin id (add)' },
     ],
   },
+  {
+    name: 'mcp',
+    usage: 'agentsmesh mcp',
+    description: 'Start the agentsmesh MCP server (stdio)',
+    flags: [],
+  },
 ];

@@ -3,6 +3,8 @@ name: add-agent-target
 description: Use when adding support for a new AI agent target to agentsmesh. Covers official format research, canonical mapping, importer/generator/linter work, realistic fixtures, unit/integration/e2e coverage, matrix/docs updates, and final verification. Includes both project and global mode from day one.
 ---
 
+## Purpose
+
 # Add Agent Target
 
 Use this skill when the task is to add a brand-new supported agent target to this repository (built-in) or as an external plugin package.

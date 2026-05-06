@@ -3,6 +3,8 @@ name: post-feature-qa
 description: "Apply after EVERY feature implementation, story completion, or task finish. Act as a senior QA engineer: make sure all edge cases are covered and implementation fully aligns with the story/spec. Use whenever you complete a story, ship a feature, or before marking a task done or opening a PR. Do not skip this — run the QA checklist before claiming work is complete."
 ---
 
+## Purpose
+
 # Post-Feature QA — Senior QA Engineer Mode
 
 When a feature, story, or task has been implemented, you MUST run this QA pass before marking it complete. Acting as a senior QA engineer, verify test coverage and story alignment. Never claim work is done without this review.

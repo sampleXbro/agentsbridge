@@ -9,6 +9,7 @@ import { tmpdir } from 'node:os';
 import * as tar from 'tar';
 import { vi } from 'vitest';
 import { runGenerate } from '../../../../src/cli/commands/generate.js';
+import { renderGenerate } from '../../../../src/cli/renderers/generate.js';
 import { ensurePathInsideRoot } from '../../../../src/cli/commands/generate-path.js';
 
 const TEST_DIR = join(tmpdir(), 'am-generate-unit');
@@ -92,7 +93,8 @@ deny:
 `,
     );
 
-    await runGenerate({ global: true }, TEST_DIR, { printMatrix: false });
+    const result = await runGenerate({ global: true }, TEST_DIR, { printMatrix: false });
+    expect(result.exitCode).toBe(0);
 
     expect(readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
       '# Global Instructions',
@@ -138,7 +140,8 @@ root: true
       '---\nname: senior-frontend\ndescription: FE\n---\n## Purpose\n\nBody.\n',
     );
 
-    await expect(runGenerate({ global: true }, TEST_DIR, { printMatrix: false })).resolves.toBe(0);
+    const result = await runGenerate({ global: true }, TEST_DIR, { printMatrix: false });
+    expect(result.exitCode).toBe(0);
     expect(existsSync(join(TEST_DIR, '.claude', 'skills', 'senior-frontend', 'SKILL.md'))).toBe(
       true,
     );
@@ -484,7 +487,8 @@ description: "Root"
       return true;
     };
     try {
-      await runGenerate({ 'dry-run': true }, TEST_DIR);
+      const result = await runGenerate({ 'dry-run': true }, TEST_DIR);
+      renderGenerate(result);
       expect(output).toMatch(/dry-run|created|updated/);
     } finally {
       process.stdout.write = write;
@@ -577,7 +581,8 @@ description: "Root"
       return true;
     };
     try {
-      await runGenerate({}, TEST_DIR);
+      const result1 = await runGenerate({}, TEST_DIR);
+      renderGenerate(result1);
       expect(output).toMatch(/created|updated|unchanged/);
       writeFileSync(
         join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
@@ -589,7 +594,8 @@ description: "Root"
 `,
       );
       output = '';
-      await runGenerate({}, TEST_DIR);
+      const result2 = await runGenerate({}, TEST_DIR);
+      renderGenerate(result2);
       expect(output).toMatch(/updated|unchanged/);
     } finally {
       process.stdout.write = write;
@@ -659,7 +665,9 @@ features: [mcp]
       return true;
     };
     try {
-      await expect(runGenerate({ check: true }, TEST_DIR)).resolves.toBe(0);
+      const result = await runGenerate({ check: true }, TEST_DIR);
+      expect(result.exitCode).toBe(0);
+      renderGenerate(result);
       expect(output).toContain('Generated files are in sync.');
     } finally {
       process.stdout.write = write;
@@ -692,7 +700,9 @@ description: "Root"
       return true;
     };
     try {
-      await expect(runGenerate({ check: true }, TEST_DIR)).resolves.toBe(1);
+      const result = await runGenerate({ check: true }, TEST_DIR);
+      expect(result.exitCode).toBe(1);
+      renderGenerate(result);
       expect(output).toContain('[check] created .claude/CLAUDE.md (claude-code)');
       expect(output).toContain('Generated files are out of sync.');
     } finally {
@@ -722,9 +732,9 @@ description: "Root"
       return true;
     };
     try {
-      await expect(runGenerate({ global: true }, TEST_DIR, { printMatrix: false })).resolves.toBe(
-        0,
-      );
+      const result = await runGenerate({ global: true }, TEST_DIR, { printMatrix: false });
+      expect(result.exitCode).toBe(0);
+      renderGenerate(result);
       expect(output).toMatch(/created ~\/\.claude\/CLAUDE\.md/);
       expect(output).not.toMatch(/(?<!~\/)\.claude\/CLAUDE\.md/);
     } finally {
@@ -750,7 +760,9 @@ description: "Root"
       return true;
     };
     try {
-      await expect(runGenerate({}, TEST_DIR, { printMatrix: false })).resolves.toBe(0);
+      const result = await runGenerate({}, TEST_DIR, { printMatrix: false });
+      expect(result.exitCode).toBe(0);
+      renderGenerate(result);
       expect(output).toMatch(/created \.claude\/CLAUDE\.md/);
       expect(output).not.toMatch(/~\/\.claude\/CLAUDE\.md/);
     } finally {
@@ -778,7 +790,8 @@ description: "Root"
       return true;
     };
     try {
-      await runGenerate({}, TEST_DIR);
+      const result = await runGenerate({}, TEST_DIR);
+      renderGenerate(result);
       const output = logs.join('');
       expect(output).not.toContain('Generated:');
     } finally {
@@ -945,7 +958,8 @@ packs: {}
       /Locked feature violation/i,
     );
 
-    await expect(runGenerate({ force: true }, TEST_DIR, { printMatrix: false })).resolves.toBe(0);
+    const result = await runGenerate({ force: true }, TEST_DIR, { printMatrix: false });
+    expect(result.exitCode).toBe(0);
     expect(existsSync(join(TEST_DIR, '.claude', 'CLAUDE.md'))).toBe(true);
   });
 

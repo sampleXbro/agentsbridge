@@ -19,71 +19,40 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-function captureStreams(): { out: string[]; err: string[]; restore: () => void } {
-  const out: string[] = [];
-  const err: string[] = [];
-  const stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation((chunk) => {
-    out.push(typeof chunk === 'string' ? chunk : chunk.toString('utf-8'));
-    return true;
-  });
-  const stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation((chunk) => {
-    err.push(typeof chunk === 'string' ? chunk : chunk.toString('utf-8'));
-    return true;
-  });
-  return {
-    out,
-    err,
-    restore: () => {
-      stdoutSpy.mockRestore();
-      stderrSpy.mockRestore();
-    },
-  };
-}
-
 describe('runTarget', () => {
-  it('prints help and returns 0 when no subcommand is given', async () => {
-    const { out, restore } = captureStreams();
-    const code = await runTarget({}, [], tmpDir);
-    restore();
-    expect(code).toBe(0);
-    const all = out.join('');
-    expect(all).toContain('Usage: agentsmesh target');
-    expect(all).toContain('scaffold');
+  it('returns showHelp and exitCode 0 when no subcommand is given', async () => {
+    const result = await runTarget({}, [], tmpDir);
+    expect(result.exitCode).toBe(0);
+    expect(result.showHelp).toBe(true);
+    expect(result.data.id).toBe('');
   });
 
-  it('prints help when subcommand is empty string', async () => {
-    const { out, restore } = captureStreams();
-    const code = await runTarget({}, [''], tmpDir);
-    restore();
-    expect(code).toBe(0);
-    expect(out.join('')).toContain('Usage: agentsmesh target');
+  it('returns showHelp when subcommand is empty string', async () => {
+    const result = await runTarget({}, [''], tmpDir);
+    expect(result.exitCode).toBe(0);
+    expect(result.showHelp).toBe(true);
   });
 
-  it('returns 2 and prints help on unknown subcommand', async () => {
-    const { out, err, restore } = captureStreams();
-    const code = await runTarget({}, ['bogus'], tmpDir);
-    restore();
-    expect(code).toBe(2);
-    expect(err.join('')).toContain('Unknown target subcommand: bogus');
-    expect(out.join('')).toContain('Usage: agentsmesh target');
+  it('returns exit code 2 with error on unknown subcommand', async () => {
+    const result = await runTarget({}, ['bogus'], tmpDir);
+    expect(result.exitCode).toBe(2);
+    expect(result.error).toBe('Unknown target subcommand: bogus');
+    expect(result.showHelp).toBe(true);
   });
 
-  it('returns 2 when scaffold has no id', async () => {
-    const { err, restore } = captureStreams();
-    const code = await runTarget({}, ['scaffold'], tmpDir);
-    restore();
-    expect(code).toBe(2);
-    expect(err.join('')).toContain('Usage: agentsmesh target scaffold');
+  it('throws when scaffold has no id', async () => {
+    await expect(runTarget({}, ['scaffold'], tmpDir)).rejects.toThrow(
+      'Usage: agentsmesh target scaffold',
+    );
   });
 
-  it('returns 0 and writes scaffold for fresh id', async () => {
-    const { out, restore } = captureStreams();
-    const code = await runTarget({}, ['scaffold', 'foo-bar'], tmpDir);
-    restore();
-    expect(code).toBe(0);
-    const allOut = out.join('');
-    expect(allOut).toContain('created src/targets/foo-bar/constants.ts');
-    expect(allOut).toContain('Next steps:');
+  it('returns exitCode 0 and written files for fresh id', async () => {
+    const result = await runTarget({}, ['scaffold', 'foo-bar'], tmpDir);
+    expect(result.exitCode).toBe(0);
+    expect(result.data.id).toBe('foo-bar');
+    expect(result.data.written.length).toBeGreaterThan(0);
+    expect(result.data.written).toContain('src/targets/foo-bar/constants.ts');
+    expect(result.data.postSteps.length).toBeGreaterThan(0);
   });
 
   it('honors --name and --force flags', async () => {
@@ -92,21 +61,17 @@ describe('runTarget', () => {
     mkdirSync(targetDir, { recursive: true });
     writeFileSync(join(targetDir, 'constants.ts'), '// existing');
 
-    const { out, restore } = captureStreams();
-    const code = await runTarget(
+    const result = await runTarget(
       { name: 'Named Tool', force: true },
       ['scaffold', 'named-tool'],
       tmpDir,
     );
-    restore();
-    expect(code).toBe(0);
-    const allOut = out.join('');
-    expect(allOut).toContain('created src/targets/named-tool/constants.ts');
-    expect(allOut).not.toContain('skipped');
+    expect(result.exitCode).toBe(0);
+    expect(result.data.written).toContain('src/targets/named-tool/constants.ts');
+    expect(result.data.skipped).toHaveLength(0);
   });
 
-  it('reports skipped files (no force) and omits Next steps when nothing was written', async () => {
-    // Pre-create ALL the files so nothing is written
+  it('reports skipped files (no force) when files exist', async () => {
     const id = 'skip-only';
     const expectedRels = [
       `src/targets/${id}/constants.ts`,
@@ -126,48 +91,39 @@ describe('runTarget', () => {
       writeFileSync(full, '// pre-existing');
     }
 
-    const { out, err, restore } = captureStreams();
-    const code = await runTarget({}, ['scaffold', id], tmpDir);
-    restore();
-    expect(code).toBe(0);
-    const allErr = err.join('');
-    expect(allErr).toContain('skipped');
-    expect(out.join('')).not.toContain('Next steps:');
+    const result = await runTarget({}, ['scaffold', id], tmpDir);
+    expect(result.exitCode).toBe(0);
+    expect(result.data.written).toHaveLength(0);
+    expect(result.data.skipped.length).toBeGreaterThan(0);
+    expect(result.data.postSteps.length).toBeGreaterThan(0);
   });
 
-  it('returns 1 and logs error when scaffold rejects an invalid id', async () => {
-    const { err, restore } = captureStreams();
-    const code = await runTarget({}, ['scaffold', 'INVALID_ID'], tmpDir);
-    restore();
-    expect(code).toBe(1);
-    expect(err.join('')).toMatch(/Invalid target id/);
+  it('returns exitCode 1 with error when scaffold rejects an invalid id', async () => {
+    const result = await runTarget({}, ['scaffold', 'INVALID_ID'], tmpDir);
+    expect(result.exitCode).toBe(1);
+    expect(result.error).toMatch(/Invalid target id/);
   });
 
-  it('returns 1 and logs error when id matches an existing built-in', async () => {
-    const { err, restore } = captureStreams();
-    const code = await runTarget({}, ['scaffold', 'cursor'], tmpDir);
-    restore();
-    expect(code).toBe(1);
-    expect(err.join('')).toMatch(/already exists as a built-in/);
+  it('returns exitCode 1 with error when id matches an existing built-in', async () => {
+    const result = await runTarget({}, ['scaffold', 'cursor'], tmpDir);
+    expect(result.exitCode).toBe(1);
+    expect(result.error).toMatch(/already exists as a built-in/);
   });
 
   it('treats a non-string flag.name as undefined display name', async () => {
-    const { restore } = captureStreams();
     // Pass boolean for `name` — should be treated as undefined
-    const code = await runTarget({ name: true }, ['scaffold', 'name-not-string'], tmpDir);
-    restore();
-    expect(code).toBe(0);
+    const result = await runTarget({ name: true }, ['scaffold', 'name-not-string'], tmpDir);
+    expect(result.exitCode).toBe(0);
   });
 
-  it('treats absolute returned paths (no projectRoot prefix) gracefully when reporting', async () => {
-    // This exercises the rel branch where p.startsWith(projectRoot) is true.
-    const { out, restore } = captureStreams();
-    const code = await runTarget({}, ['scaffold', 'rel-test'], tmpDir);
-    restore();
-    expect(code).toBe(0);
-    const allOut = out.join('');
-    // Path should be relative to projectRoot — without leading slash
-    expect(allOut).toMatch(/created src\/targets\/rel-test\/constants\.ts/);
-    expect(allOut).not.toContain(`${tmpDir}/src/targets/rel-test/constants.ts`);
+  it('returns relative forward-slash paths in written array', async () => {
+    const result = await runTarget({}, ['scaffold', 'rel-test'], tmpDir);
+    expect(result.exitCode).toBe(0);
+    expect(result.data.written).toContain('src/targets/rel-test/constants.ts');
+    // Should not contain absolute path
+    for (const p of result.data.written) {
+      expect(p).not.toContain(tmpDir);
+      expect(p).not.toContain('\\');
+    }
   });
 });

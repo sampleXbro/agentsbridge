@@ -44,7 +44,10 @@ checksums:
 `,
     );
 
-    await runMerge({}, TEST_DIR);
+    const result = await runMerge({}, TEST_DIR);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.data).toEqual({ hadConflict: true, resolved: true });
 
     const abDir = join(TEST_DIR, '.agentsmesh');
     const lock = await readLock(abDir);
@@ -53,12 +56,15 @@ checksums:
     expect(lock!.checksums['rules/_root.md']).toMatch(/^sha256:[a-f0-9]{64}$/);
   });
 
-  it('does not modify lock when no conflict markers', async () => {
+  it('returns no-conflict data when no conflict markers', async () => {
     setupProject();
     const originalContent = 'checksums:\n  rules/_root.md: "sha256:abc"\nextends: {}';
     writeFileSync(join(TEST_DIR, '.agentsmesh', '.lock'), originalContent);
 
-    await runMerge({}, TEST_DIR);
+    const result = await runMerge({}, TEST_DIR);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.data).toEqual({ hadConflict: false, resolved: false });
 
     const content = readFileSync(join(TEST_DIR, '.agentsmesh', '.lock'), 'utf-8');
     expect(content).toContain('sha256:abc');
@@ -72,7 +78,12 @@ checksums:
     );
     const config = readFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'utf-8');
     expect(config).toContain('version: 1');
-    await runMerge({}, TEST_DIR);
+
+    const result = await runMerge({}, TEST_DIR);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.data).toEqual({ hadConflict: true, resolved: true });
+
     const lock = await readLock(join(TEST_DIR, '.agentsmesh'));
     expect(lock).not.toBeNull();
   });
@@ -112,7 +123,10 @@ checksums:
 `,
     );
 
-    await runMerge({ global: true }, workspace);
+    const result = await runMerge({ global: true }, workspace);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.data).toEqual({ hadConflict: true, resolved: true });
 
     const lock = await readLock(join(TEST_DIR, '.agentsmesh'));
     expect(lock).not.toBeNull();

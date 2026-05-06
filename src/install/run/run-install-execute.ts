@@ -2,6 +2,7 @@ import type { ValidatedConfig } from '../../config/core/schema.js';
 import { loadCanonicalWithExtends } from '../../canonical/extends/extends.js';
 import { logger } from '../../utils/output/logger.js';
 import { runGenerate } from '../../cli/commands/generate.js';
+import { renderGenerate } from '../../cli/renderers/generate.js';
 import {
   hasInstallableResources,
   resolveAgentPool,
@@ -21,6 +22,7 @@ import { writeInstallAsExtend } from '../core/install-extend-entry.js';
 import { installAsPack } from './run-install-pack.js';
 import { selectInstallEntryName } from '../core/install-name.js';
 import { applyReplayInstallScope, type InstallReplayScope } from './install-replay.js';
+import { buildInstalledList, buildSkippedList } from './run-install-result.js';
 import type { ParsedInstallSource } from '../source/parse-install-source.js';
 import type { ManualInstallPersistence } from '../manual/manual-install-persistence.js';
 import type { ManualInstallAs } from '../manual/manual-install-mode.js';
@@ -50,7 +52,14 @@ export interface RunInstallExecuteArgs {
   discoveredFeatures: string[];
 }
 
-export async function executeRunInstallPoolsAndWrite(args: RunInstallExecuteArgs): Promise<void> {
+export interface InstallExecuteResult {
+  installed: Array<{ kind: string; name: string; path: string }>;
+  skipped: Array<{ kind: string; name: string; reason: string }>;
+}
+
+export async function executeRunInstallPoolsAndWrite(
+  args: RunInstallExecuteArgs,
+): Promise<InstallExecuteResult> {
   const {
     scope,
     force,
@@ -133,6 +142,10 @@ export async function executeRunInstallPoolsAndWrite(args: RunInstallExecuteArgs
     entryFeatures,
     nameOverride,
   });
+
+  const installed = buildInstalledList(selected, entryName);
+  const skipped = buildSkippedList(skillsPool, rulesPool, commandsPool, agentsPool, selected);
+
   if (useExtends) {
     await writeInstallAsExtend({
       configDir: context.configDir,
@@ -148,13 +161,13 @@ export async function executeRunInstallPoolsAndWrite(args: RunInstallExecuteArgs
       },
       dryRun,
     });
-    if (dryRun) return;
+    if (dryRun) return { installed, skipped };
   } else {
     if (dryRun) {
       logger.info(
         `[dry-run] Would install pack "${entryName}" to ${scope === 'global' ? '~/.agentsmesh/packs/.' : '.agentsmesh/packs/.'}`,
       );
-      return;
+      return { installed, skipped };
     }
     await installAsPack({
       canonicalDir: context.canonicalDir,
@@ -172,10 +185,12 @@ export async function executeRunInstallPoolsAndWrite(args: RunInstallExecuteArgs
       renameExistingPack: nameOverride === '',
     });
   }
-  const genCode = await runGenerate(scope === 'global' ? { global: true } : {}, context.rootBase);
-  if (genCode !== 0) {
+  const genResult = await runGenerate(scope === 'global' ? { global: true } : {}, context.rootBase);
+  renderGenerate(genResult);
+  if (genResult.exitCode !== 0) {
     logger.warn(
       `Generate failed after install. Fix the issue and run agentsmesh generate${scope === 'global' ? ' --global' : ''}.`,
     );
   }
+  return { installed, skipped };
 }

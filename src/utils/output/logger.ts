@@ -8,6 +8,16 @@ const C = {
   reset: '\x1b[0m',
 };
 
+let muted = false;
+
+export function muteLogger(): void {
+  muted = true;
+}
+
+export function unmuteLogger(): void {
+  muted = false;
+}
+
 function noColor(): boolean {
   return process.env.NO_COLOR !== undefined && process.env.NO_COLOR !== '';
 }
@@ -23,23 +33,29 @@ function pad(str: string, width: number): string {
 
 export const logger = {
   info(msg: string): void {
+    if (muted) return;
     process.stdout.write(c(C.cyan, msg) + '\n');
   },
   warn(msg: string): void {
+    if (muted) return;
     process.stderr.write(c(C.yellow, '⚠ ') + msg + '\n');
   },
   error(msg: string): void {
+    if (muted) return;
     process.stderr.write(c(C.red, '✗ ') + msg + '\n');
   },
   success(msg: string): void {
+    if (muted) return;
     process.stdout.write(c(C.green, '✓ ') + msg + '\n');
   },
   debug(msg: string): void {
+    if (muted) return;
     if (process.env.AGENTSMESH_DEBUG === '1') {
       process.stdout.write(c(C.cyan, '[debug] ') + msg + '\n');
     }
   },
   table(rows: string[][]): void {
+    if (muted) return;
     if (rows.length === 0) return;
     const cols = rows[0]!.length;
     const widths: number[] = [];

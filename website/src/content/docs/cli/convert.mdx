@@ -1,0 +1,75 @@
+---
+draft: false
+title: agentsmesh convert
+description: Convert AI tool configuration directly from one tool to another without going through canonical setup.
+---
+
+Convert configuration from one AI tool to another in a single command. No `.agentsmesh/` directory is created — the output goes directly to the destination tool's native location.
+
+Internally, `convert` chains the existing import and generate pipelines via a temporary directory. Source tool files are read, translated to canonical format in memory, then written out in the destination tool's format.
+
+## Usage
+
+```bash
+agentsmesh convert --from <source> --to <target>
+```
+
+```bash
+agentsmesh convert --from cursor --to claude-code
+agentsmesh convert --from claude-code --to windsurf --global
+```
+
+## Flags
+
+| Flag | Description |
+|------|-------------|
+| `--from <target>` | Source tool ID to convert from. **Required.** |
+| `--to <target>` | Destination tool ID to convert to. **Required.** |
+| `--global` | Convert user-level config (reads from and writes to home directory paths). |
+| `--dry-run` | Preview what would be written without creating any files. |
+| `--json` | Output machine-readable JSON envelope. |
+
+## Examples
+
+```bash
+# Migrate from Cursor to Claude Code
+agentsmesh convert --from cursor --to claude-code
+
+# Migrate from Claude Code to Windsurf
+agentsmesh convert --from claude-code --to windsurf
+
+# Preview what a conversion would produce
+agentsmesh convert --from claude-code --to cursor --dry-run
+
+# Convert global (user-level) config
+agentsmesh convert --from claude-code --to warp --global
+
+# Machine-readable output for scripting
+agentsmesh convert --from cursor --to claude-code --json
+```
+
+## How it works
+
+1. A temporary directory is created with symlinks to the source tool's files.
+2. The source target's importer reads the native config and writes canonical files to the temp directory.
+3. Canonical files are loaded from the temp directory into memory.
+4. The generate engine produces output files for the destination target.
+5. Output files are written to the real project (or home) directory.
+6. The temporary directory is cleaned up.
+
+The real `.agentsmesh/` directory is never created, read, or modified. If one already exists, it is left untouched.
+
+## convert vs import + generate
+
+| | `convert` | `import` + `generate` |
+|---|---|---|
+| Creates `.agentsmesh/`? | No | Yes |
+| Steps | One command | Two commands + `agentsmesh.yaml` setup |
+| Use case | Quick migration, trying AgentsMesh | Full canonical workflow |
+| Canonical editing? | Not supported | Full editing between import and generate |
+
+Use `convert` for one-shot migrations. Use `import` + `generate` when you want to maintain a canonical source of truth.
+
+## Supported targets
+
+All builtin targets and plugin-provided targets are supported as both source and destination. See the [supported tools matrix](/reference/supported-tools/) for the full list.

@@ -5,7 +5,6 @@
 
 import { join, relative } from 'node:path';
 import { exists, readFileSafe, writeFileAtomic } from '../../utils/filesystem/fs.js';
-import { logger } from '../../utils/output/logger.js';
 import { BUILTIN_TARGETS } from '../../targets/catalog/builtin-targets.js';
 import type { ImportResult } from '../../core/types.js';
 import { buildConfig, LOCAL_TEMPLATE } from './init-templates.js';
@@ -13,6 +12,12 @@ import { detectExistingConfigs } from './init-detect.js';
 import { writeScaffoldFull, writeScaffoldGapFill } from './init-scaffold.js';
 import { resolveScopeContext, type ConfigScope } from '../../config/core/scope.js';
 import type { BuiltinTargetId } from '../../targets/catalog/target-ids.js';
+import type { InitData } from '../command-result.js';
+
+export interface InitCommandResult {
+  exitCode: number;
+  data: InitData;
+}
 
 const CONFIG_FILENAME = 'agentsmesh.yaml';
 const LOCAL_CONFIG_FILENAME = 'agentsmesh.local.yaml';
@@ -63,7 +68,7 @@ function isCoveredByExisting(candidate: string, existing: ReadonlySet<string>): 
   return false;
 }
 
-async function appendToGitignore(projectRoot: string): Promise<void> {
+async function appendToGitignore(projectRoot: string): Promise<boolean> {
   const gitignorePath = join(projectRoot, '.gitignore');
   const current = (await readFileSafe(gitignorePath)) ?? '';
   const lines = new Set(
@@ -73,9 +78,10 @@ async function appendToGitignore(projectRoot: string): Promise<void> {
       .filter((s) => s.length > 0 && !s.startsWith('#')),
   );
   const toAdd = GITIGNORE_ENTRIES.filter((e) => !isCoveredByExisting(e, lines));
-  if (toAdd.length === 0) return;
+  if (toAdd.length === 0) return false;
   const suffix = current.endsWith('\n') || current === '' ? '' : '\n';
   await writeFileAtomic(gitignorePath, current + suffix + toAdd.join('\n') + '\n');
+  return true;
 }
 
 export { detectExistingConfigs };
@@ -89,7 +95,7 @@ export { detectExistingConfigs };
 export async function runInit(
   projectRoot: string,
   options: { yes?: boolean; global?: boolean } = {},
-): Promise<void> {
+): Promise<InitCommandResult> {
   const scope: ConfigScope = options.global === true ? 'global' : 'project';
   const context = resolveScopeContext(projectRoot, scope);
   const configPath = join(context.configDir, CONFIG_FILENAME);
@@ -106,51 +112,58 @@ export async function runInit(
       : detected;
   const defaultTargets = scope === 'global' ? GLOBAL_INIT_TARGETS : undefined;
 
-  if (existing.length > 0) {
-    logger.info(`Found existing configurations: ${existing.join(', ')}`);
+  const imported: Array<{ from: string; to: string }> = [];
+  let scaffoldType: 'full' | 'gap-fill' | 'none';
+  let importedToolCount = 0;
 
+  if (existing.length > 0) {
     if (options.yes) {
-      logger.info('Auto-importing existing configurations (--yes)...');
-      let totalImported = 0;
       for (const toolId of existing) {
         const importerFn = IMPORTERS[toolId];
         if (!importerFn) continue;
         const results = await importerFn(context.rootBase, scope);
         for (const r of results) {
-          const fromDisplay = relative(context.rootBase, r.fromPath).replaceAll('\\', '/');
-          const toDisplay = r.toPath.replaceAll('\\', '/');
-          logger.success(`  ${fromDisplay} → ${toDisplay}`);
+          imported.push({
+            from: relative(context.rootBase, r.fromPath).replaceAll('\\', '/'),
+            to: r.toPath.replaceAll('\\', '/'),
+          });
         }
-        totalImported += results.length;
       }
-      if (totalImported > 0) {
-        logger.info(`Imported ${totalImported} file(s) from ${existing.length} tool(s).`);
-      }
+      importedToolCount = existing.length;
 
       await writeScaffoldGapFill(context.canonicalDir);
-
+      scaffoldType = 'gap-fill';
       await writeFileAtomic(configPath, buildConfig(existing, defaultTargets));
-      logger.success(`Created ${CONFIG_FILENAME} (targets: ${existing.join(', ')})`);
     } else {
-      logger.info(
-        `Run 'agentsmesh init --yes' to auto-import, or 'agentsmesh import --from <tool>' manually.`,
-      );
       await writeScaffoldFull(context.canonicalDir);
+      scaffoldType = 'full';
       await writeFileAtomic(configPath, buildConfig([], defaultTargets));
-      logger.success(`Created ${CONFIG_FILENAME}`);
     }
   } else {
     await writeScaffoldFull(context.canonicalDir);
+    scaffoldType = 'full';
     await writeFileAtomic(configPath, buildConfig([], defaultTargets));
-    logger.success(`Created ${CONFIG_FILENAME}`);
   }
 
   const localPath = join(context.configDir, LOCAL_CONFIG_FILENAME);
   await writeFileAtomic(localPath, LOCAL_TEMPLATE);
-  logger.success(`Created ${LOCAL_CONFIG_FILENAME}`);
 
+  let gitignoreUpdated = false;
   if (scope === 'project') {
-    await appendToGitignore(projectRoot);
-    logger.success('Updated .gitignore');
+    gitignoreUpdated = await appendToGitignore(projectRoot);
   }
+
+  return {
+    exitCode: 0,
+    data: {
+      scope,
+      configFile: CONFIG_FILENAME,
+      localConfigFile: LOCAL_CONFIG_FILENAME,
+      detectedConfigs: existing,
+      imported,
+      importedToolCount,
+      scaffoldType,
+      gitignoreUpdated,
+    },
+  };
 }

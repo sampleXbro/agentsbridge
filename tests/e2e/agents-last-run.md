@@ -1,6 +1,6 @@
 # Agents E2E Last Run Report
 
-_Generated: 2026-05-04T17:36:56.387Z_
+_Generated: 2026-05-06T07:30:29.044Z_
 
 ## Initial — `.agentsmesh/agents/` (canonical fixture)
 
@@ -22,18 +22,6 @@ _Generated: 2026-05-04T17:36:56.387Z_
 ### Generated files
 
 ```
-✓ created .claude/CLAUDE.md
-✓ created .claude/rules/typescript.md
-✓ created .claude/commands/review.md
-✓ created .claude/agents/code-reviewer.md
-✓ created .claude/agents/researcher.md
-✓ created .claude/skills/api-generator/SKILL.md
-✓ created .claude/skills/api-generator/references/route-checklist.md
-✓ created .claude/skills/api-generator/template.ts
-✓ created .mcp.json
-✓ created .claude/settings.json
-✓ created .claudeignore
-Generated: 11 created, 0 updated, 0 unchanged
 ┌────────────────────┬────────────┐
 │Feature             │Claude      │
 ├────────────────────┼────────────┤
@@ -49,6 +37,18 @@ Generated: 11 created, 0 updated, 0 unchanged
 └────────────────────┴────────────┘
 
 Legend: ✓ = native  ◆ = embedded  ◐ = partial  – = not supported
+✓ created .claude/CLAUDE.md
+✓ created .claude/rules/typescript.md
+✓ created .claude/commands/review.md
+✓ created .claude/agents/code-reviewer.md
+✓ created .claude/agents/researcher.md
+✓ created .claude/skills/api-generator/SKILL.md
+✓ created .claude/skills/api-generator/references/route-checklist.md
+✓ created .claude/skills/api-generator/template.ts
+✓ created .mcp.json
+✓ created .claude/settings.json
+✓ created .claudeignore
+Generated: 11 created, 0 updated, 0 unchanged
 ```
 
 #### Agent files in `.claude/agents/`
@@ -104,20 +104,6 @@ Imported 12 file(s). Run 'agentsmesh generate' to sync to other tools.
 ### Generated files
 
 ```
-✓ created AGENTS.md
-✓ created .cursor/rules/general.mdc
-✓ created .cursor/rules/typescript.mdc
-✓ created .cursor/AGENTS.md
-✓ created .cursor/commands/review.md
-✓ created .cursor/agents/code-reviewer.md
-✓ created .cursor/agents/researcher.md
-✓ created .cursor/skills/api-generator/SKILL.md
-✓ created .cursor/skills/api-generator/references/route-checklist.md
-✓ created .cursor/skills/api-generator/template.ts
-✓ created .cursor/mcp.json
-✓ created .cursor/hooks.json
-✓ created .cursorignore
-Generated: 13 created, 0 updated, 0 unchanged
 ┌────────────────────┬────────────┐
 │Feature             │cursor      │
 ├────────────────────┼────────────┤
@@ -133,6 +119,20 @@ Generated: 13 created, 0 updated, 0 unchanged
 └────────────────────┴────────────┘
 
 Legend: ✓ = native  ◆ = embedded  ◐ = partial  – = not supported
+✓ created AGENTS.md
+✓ created .cursor/rules/general.mdc
+✓ created .cursor/rules/typescript.mdc
+✓ created .cursor/AGENTS.md
+✓ created .cursor/commands/review.md
+✓ created .cursor/agents/code-reviewer.md
+✓ created .cursor/agents/researcher.md
+✓ created .cursor/skills/api-generator/SKILL.md
+✓ created .cursor/skills/api-generator/references/route-checklist.md
+✓ created .cursor/skills/api-generator/template.ts
+✓ created .cursor/mcp.json
+✓ created .cursor/hooks.json
+✓ created .cursorignore
+Generated: 13 created, 0 updated, 0 unchanged
 ```
 
 #### Agent files in `.cursor/agents/`
@@ -187,17 +187,6 @@ Imported 11 file(s). Run 'agentsmesh generate' to sync to other tools.
 ### Generated files
 
 ```
-✓ created .github/copilot-instructions.md
-✓ created .github/instructions/typescript.instructions.md
-✓ created .github/prompts/review.prompt.md
-✓ created .github/agents/code-reviewer.agent.md
-✓ created .github/agents/researcher.agent.md
-✓ created .github/skills/api-generator/SKILL.md
-✓ created .github/skills/api-generator/references/route-checklist.md
-✓ created .github/skills/api-generator/template.ts
-✓ created .github/hooks/agentsmesh.json
-✓ created .github/hooks/scripts/posttooluse-0.sh
-Generated: 10 created, 0 updated, 0 unchanged
 ┌────────────────────┬────────────┐
 │Feature             │copilot     │
 ├────────────────────┼────────────┤
@@ -213,6 +202,17 @@ Generated: 10 created, 0 updated, 0 unchanged
 └────────────────────┴────────────┘
 
 Legend: ✓ = native  ◆ = embedded  ◐ = partial  – = not supported
+✓ created .github/copilot-instructions.md
+✓ created .github/instructions/typescript.instructions.md
+✓ created .github/prompts/review.prompt.md
+✓ created .github/agents/code-reviewer.agent.md
+✓ created .github/agents/researcher.agent.md
+✓ created .github/skills/api-generator/SKILL.md
+✓ created .github/skills/api-generator/references/route-checklist.md
+✓ created .github/skills/api-generator/template.ts
+✓ created .github/hooks/agentsmesh.json
+✓ created .github/hooks/scripts/posttooluse-0.sh
+Generated: 10 created, 0 updated, 0 unchanged
 ```
 
 #### Agents in `.github/agents/*.agent.md`

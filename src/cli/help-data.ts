@@ -14,6 +14,7 @@ export const GLOBAL_FLAGS: HelpFlag[] = [
   { name: '--help', description: 'Show this help output and exit' },
   { name: '--version', description: 'Print CLI version and exit' },
   { name: '--verbose', description: 'Show full error details on failure' },
+  { name: '--json', description: 'Output machine-readable JSON (single envelope to stdout)' },
 ];
 
 export const COMMANDS: HelpCommand[] = [
@@ -67,6 +68,17 @@ export const COMMANDS: HelpCommand[] = [
     ],
   },
   {
+    name: 'convert',
+    usage: 'agentsmesh convert --from <target> --to <target> [flags]',
+    description: 'Convert configuration directly from one tool to another',
+    flags: [
+      { name: '--from <target>', description: 'Source tool ID to convert from (required)' },
+      { name: '--to <target>', description: 'Destination tool ID to convert to (required)' },
+      { name: '--global', description: 'Convert user-level config (use home directory paths)' },
+      { name: '--dry-run', description: 'Preview conversion without writing files' },
+    ],
+  },
+  {
     name: 'install',
     usage: 'agentsmesh install <source> [flags]',
     description: 'Install canonical resources from local/remote sources',
@@ -106,7 +118,8 @@ export const COMMANDS: HelpCommand[] = [
       },
       {
         name: '--force',
-        description: 'Non-interactive mode; include invalid resources and skip selection prompts',
+        description:
+          'Non-interactive mode; include invalid resources and skip selection prompts (implied by --json)',
       },
     ],
   },

@@ -6,18 +6,23 @@
 import { loadScopedConfig } from '../../config/core/scope.js';
 import { checkLockSync } from '../../core/check/lock-sync.js';
 import { bootstrapPlugins } from '../../plugins/bootstrap-plugins.js';
-import { logger } from '../../utils/output/logger.js';
+import type { CheckData } from '../command-result.js';
+
+export interface CheckCommandResult {
+  exitCode: number;
+  data: CheckData;
+}
 
 /**
  * Run the check command.
  * @param flags - CLI flags (unused for check)
  * @param projectRoot - Project root (default process.cwd())
- * @returns Exit code: 1 if mismatch or no lock, 0 if OK
+ * @returns Structured check result with exit code and data
  */
 export async function runCheck(
   flags: Record<string, string | boolean>,
   projectRoot?: string,
-): Promise<number> {
+): Promise<CheckCommandResult> {
   const root = projectRoot ?? process.cwd();
   const scope = flags.global === true ? 'global' : 'project';
 
@@ -31,35 +36,30 @@ export async function runCheck(
   });
 
   if (!report.hasLock) {
-    logger.error("Not initialized for collaboration. Run 'agentsmesh generate' first.");
-    return 1;
+    return {
+      exitCode: 1,
+      data: {
+        hasLock: false,
+        inSync: false,
+        modified: [],
+        added: [],
+        removed: [],
+        extendsModified: [],
+        lockedViolations: [],
+      },
+    };
   }
 
-  if (report.inSync) {
-    logger.success('Lock file is in sync.');
-    return 0;
-  }
-
-  const lockedViolations = new Set(report.lockedViolations);
-
-  logger.error('Conflict detected:');
-  for (const p of report.extendsModified) {
-    logger.error(`  extend "${p}" was modified`);
-  }
-  for (const p of report.modified) {
-    const suffix = lockedViolations.has(p) ? ' [LOCKED]' : '';
-    logger.error(`  ${p} was modified${suffix}`);
-  }
-  for (const p of report.added) {
-    const suffix = lockedViolations.has(p) ? ' [LOCKED]' : '';
-    logger.error(`  ${p} was added${suffix}`);
-  }
-  for (const p of report.removed) {
-    const suffix = lockedViolations.has(p) ? ' [LOCKED]' : '';
-    logger.error(`  ${p} was removed${suffix}`);
-  }
-  logger.info(
-    "Run 'agentsmesh merge' to resolve, or 'agentsmesh generate --force' to accept current state.",
-  );
-  return 1;
+  return {
+    exitCode: report.inSync ? 0 : 1,
+    data: {
+      hasLock: true,
+      inSync: report.inSync,
+      modified: [...report.modified],
+      added: [...report.added],
+      removed: [...report.removed],
+      extendsModified: [...report.extendsModified],
+      lockedViolations: [...report.lockedViolations],
+    },
+  };
 }

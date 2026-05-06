@@ -113,6 +113,43 @@ describe('detectExistingConfigs', () => {
   });
 });
 
+describe('runInit — structured result', () => {
+  it('returns InitCommandResult with correct shape for fresh project', async () => {
+    const result = await runInit(TEST_DIR);
+    expect(result.exitCode).toBe(0);
+    expect(result.data.scope).toBe('project');
+    expect(result.data.configFile).toBe('agentsmesh.yaml');
+    expect(result.data.localConfigFile).toBe('agentsmesh.local.yaml');
+    expect(result.data.imported).toEqual([]);
+    expect(result.data.scaffoldType).toBe('full');
+    expect(result.data.gitignoreUpdated).toBe(true);
+  });
+
+  it('returns scaffoldType gap-fill when --yes with existing configs', async () => {
+    writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Rules\n');
+    const result = await runInit(TEST_DIR, { yes: true });
+    expect(result.data.scaffoldType).toBe('gap-fill');
+    expect(result.data.imported.length).toBeGreaterThan(0);
+  });
+
+  it('returns scaffoldType full when existing configs but no --yes', async () => {
+    writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Rules\n');
+    const result = await runInit(TEST_DIR);
+    expect(result.data.scaffoldType).toBe('full');
+    expect(result.data.imported).toEqual([]);
+  });
+
+  it('returns gitignoreUpdated false in global mode', async () => {
+    const homeDir = join(TEST_DIR, 'home');
+    mkdirSync(homeDir, { recursive: true });
+    vi.stubEnv('HOME', homeDir);
+    vi.stubEnv('USERPROFILE', homeDir);
+    const result = await runInit(join(TEST_DIR, 'workspace'), { global: true });
+    expect(result.data.scope).toBe('global');
+    expect(result.data.gitignoreUpdated).toBe(false);
+  });
+});
+
 describe('runInit — scaffold (no existing configs)', () => {
   it('creates agentsmesh.yaml with the starter target set', async () => {
     await runInit(TEST_DIR);

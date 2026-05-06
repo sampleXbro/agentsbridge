@@ -40,87 +40,77 @@ afterEach(() => {
 });
 
 describe('runDiff', () => {
-  it('shows diff when .claude/CLAUDE.md would be created', async () => {
-    const logs: string[] = [];
-    vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
-      logs.push(String(chunk));
-      return true;
-    });
+  it('returns structured data when .claude/CLAUDE.md would be created', async () => {
+    const result = await runDiff({}, TEST_DIR);
 
-    await runDiff({}, TEST_DIR);
+    expect(result.exitCode).toBe(0);
+    expect(result.data.summary.created).toBeGreaterThan(0);
+    expect(result.data.files.length).toBeGreaterThan(0);
+    expect(result.data.patches.length).toBeGreaterThan(0);
 
-    const output = logs.join('');
-    expect(output).toContain('.claude/CLAUDE.md (current)');
-    expect(output).toContain('.claude/CLAUDE.md (generated)');
-    expect(output).toContain('Use TypeScript');
-    expect(output).toMatch(/\d+ files would be created/);
+    const claudeFile = result.data.files.find((f) => f.path.includes('.claude/CLAUDE.md'));
+    expect(claudeFile).toBeDefined();
+    expect(claudeFile!.status).toBe('created');
+
+    const claudePatch = result.data.patches.find((p) => p.path.includes('.claude/CLAUDE.md'));
+    expect(claudePatch).toBeDefined();
+    expect(claudePatch!.patch).toContain('Use TypeScript');
   });
 
-  it('shows diff when file would be updated', async () => {
+  it('returns updated status when file would be updated', async () => {
     mkdirSync(join(TEST_DIR, '.claude'), { recursive: true });
     writeFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), '# Old content');
-    const logs: string[] = [];
-    vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
-      logs.push(String(chunk));
-      return true;
-    });
 
-    await runDiff({}, TEST_DIR);
+    const result = await runDiff({}, TEST_DIR);
 
-    const output = logs.join('');
-    expect(output).toContain('# Old content'); // old content in diff
-    expect(output).toContain('Use TypeScript'); // new content in diff
-    expect(output).toMatch(/updated/);
+    expect(result.exitCode).toBe(0);
+    const claudeFile = result.data.files.find((f) => f.path.includes('.claude/CLAUDE.md'));
+    expect(claudeFile).toBeDefined();
+    expect(claudeFile!.status).toBe('updated');
+
+    const claudePatch = result.data.patches.find((p) => p.path.includes('.claude/CLAUDE.md'));
+    expect(claudePatch).toBeDefined();
+    expect(claudePatch!.patch).toContain('# Old content');
+    expect(claudePatch!.patch).toContain('Use TypeScript');
   });
 
-  it('shows unchanged when files match', async () => {
+  it('returns empty data when files match', async () => {
     // Write exact content that generator would produce; use claude-code only
     mkdirSync(join(TEST_DIR, '.claude'), { recursive: true });
     const onDisk = appendAgentsmeshRootInstructionParagraph('# Rules\n- Use TypeScript');
     writeFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), onDisk);
 
-    const logs: string[] = [];
-    vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
-      logs.push(String(chunk));
-      return true;
-    });
+    const result = await runDiff({ targets: 'claude-code' }, TEST_DIR);
 
-    await runDiff({ targets: 'claude-code' }, TEST_DIR);
-
-    const output = logs.join('');
-    expect(output).toContain('unchanged');
-    expect(output).not.toContain('--- .claude/CLAUDE.md'); // no patch when unchanged
+    expect(result.exitCode).toBe(0);
+    expect(result.data.files.length).toBe(0);
+    expect(result.data.patches.length).toBe(0);
+    expect(result.data.summary.created).toBe(0);
+    expect(result.data.summary.updated).toBe(0);
+    expect(result.data.summary.unchanged).toBeGreaterThan(0);
   });
 
   it('respects --targets filter', async () => {
-    const logs: string[] = [];
-    vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
-      logs.push(String(chunk));
-      return true;
-    });
+    const result = await runDiff({ targets: 'claude-code' }, TEST_DIR);
 
-    await runDiff({ targets: 'claude-code' }, TEST_DIR);
-
-    const output = logs.join('');
-    expect(output).toContain('.claude/CLAUDE.md');
-    expect(output).not.toContain('_root.mdc');
+    expect(result.exitCode).toBe(0);
+    const paths = result.data.files.map((f) => f.path);
+    expect(paths.some((p) => p.includes('.claude/CLAUDE.md'))).toBe(true);
+    expect(paths.some((p) => p.includes('_root.mdc'))).toBe(false);
   });
 
-  it('shows "No files to generate" when canonical has no rules at all', async () => {
+  it('returns empty data when canonical has no rules at all', async () => {
     rmSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'));
-    const logs: string[] = [];
-    vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
-      logs.push(String(chunk));
-      return true;
-    });
 
-    await runDiff({}, TEST_DIR);
+    const result = await runDiff({}, TEST_DIR);
 
-    const output = logs.join('');
-    expect(output).toContain('No files to generate');
+    expect(result.exitCode).toBe(0);
+    expect(result.data.files).toEqual([]);
+    expect(result.data.patches).toEqual([]);
+    expect(result.data.summary).toEqual({ created: 0, updated: 0, unchanged: 0, deleted: 0 });
   });
 
-  it('generates contextual rule files even when no root rule', async () => {
+  it('returns contextual rule files even when no root rule', async () => {
     rmSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'));
     writeFileSync(
       join(TEST_DIR, '.agentsmesh', 'rules', 'other.md'),
@@ -130,18 +120,13 @@ description: "Other"
 # Other
 `,
     );
-    const logs: string[] = [];
-    vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
-      logs.push(String(chunk));
-      return true;
-    });
 
-    await runDiff({}, TEST_DIR);
+    const result = await runDiff({}, TEST_DIR);
 
-    const output = logs.join('');
-    // Non-root rules now generate .claude/rules/*.md and .cursor/rules/*.mdc
-    expect(output).toContain('other');
-    expect(output).not.toContain('.claude/CLAUDE.md');
+    expect(result.exitCode).toBe(0);
+    const paths = result.data.files.map((f) => f.path);
+    expect(paths.some((p) => p.includes('other'))).toBe(true);
+    expect(paths.some((p) => p.includes('.claude/CLAUDE.md'))).toBe(false);
   });
 
   it('diffs Claude global outputs from ~/.agentsmesh when --global is set', async () => {
@@ -169,17 +154,17 @@ description: "Global rules"
 `,
     );
 
-    const logs: string[] = [];
-    vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
-      logs.push(String(chunk));
-      return true;
-    });
+    const result = await runDiff({ global: true }, workspace);
 
-    await runDiff({ global: true }, workspace);
+    expect(result.exitCode).toBe(0);
+    expect(result.data.files.length).toBeGreaterThan(0);
 
-    const output = logs.join('');
-    expect(output).toContain('.claude/CLAUDE.md (current)');
-    expect(output).toContain('.claude/CLAUDE.md (generated)');
-    expect(output).toContain('Global Rules');
+    const claudeFile = result.data.files.find((f) => f.path.includes('.claude/CLAUDE.md'));
+    expect(claudeFile).toBeDefined();
+    expect(claudeFile!.status).toBe('created');
+
+    const claudePatch = result.data.patches.find((p) => p.path.includes('.claude/CLAUDE.md'));
+    expect(claudePatch).toBeDefined();
+    expect(claudePatch!.patch).toContain('Global Rules');
   });
 });

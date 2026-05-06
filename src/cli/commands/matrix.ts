@@ -4,13 +4,15 @@
 
 import { loadScopedConfig } from '../../config/core/scope.js';
 import { loadCanonicalWithExtends } from '../../canonical/extends/extends.js';
-import {
-  buildCompatibilityMatrix,
-  formatMatrix,
-  formatVerboseDetails,
-} from '../../core/matrix/matrix.js';
+import { buildCompatibilityMatrix, formatVerboseDetails } from '../../core/matrix/matrix.js';
 import { bootstrapPlugins } from '../../plugins/bootstrap-plugins.js';
-import { logger } from '../../utils/output/logger.js';
+import type { MatrixData } from '../command-result.js';
+
+export interface MatrixCommandResult {
+  exitCode: number;
+  data: MatrixData;
+  verboseDetails?: string;
+}
 
 /**
  * Run the matrix command.
@@ -20,7 +22,7 @@ import { logger } from '../../utils/output/logger.js';
 export async function runMatrix(
   flags: Record<string, string | boolean>,
   projectRoot?: string,
-): Promise<void> {
+): Promise<MatrixCommandResult> {
   const root = projectRoot ?? process.cwd();
   const scope = flags.global === true ? 'global' : 'project';
   const targetStr = flags.targets;
@@ -43,21 +45,14 @@ export async function runMatrix(
 
   const targets = targetFilter ?? [...config.targets, ...(config.pluginTargets ?? [])];
   const rows = buildCompatibilityMatrix(config, canonical, scope);
+  const verboseDetails = formatVerboseDetails(canonical);
 
-  if (rows.length === 0) {
-    logger.info('No features enabled. Enable features in agentsmesh.yaml.');
-    return;
-  }
-
-  const table = formatMatrix(rows, targets);
-  process.stdout.write(table);
-  process.stdout.write('\n');
-
-  if (flags.verbose === true) {
-    const details = formatVerboseDetails(canonical);
-    if (details) {
-      process.stdout.write(details);
-      process.stdout.write('\n');
-    }
-  }
+  return {
+    exitCode: 0,
+    data: {
+      targets,
+      features: rows.map((r) => ({ name: r.feature, support: r.support })),
+    },
+    verboseDetails: verboseDetails || undefined,
+  };
 }

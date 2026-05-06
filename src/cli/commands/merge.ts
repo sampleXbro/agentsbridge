@@ -6,17 +6,23 @@
 import { loadScopedConfig } from '../../config/core/scope.js';
 import { hasLockConflict, resolveLockConflict } from '../../core/merger.js';
 import { getVersion } from '../version.js';
-import { logger } from '../../utils/output/logger.js';
+import type { MergeData } from '../command-result.js';
+
+export interface MergeCommandResult {
+  exitCode: number;
+  data: MergeData;
+}
 
 /**
  * Run the merge command.
- * @param flags - CLI flags (unused for merge)
+ * @param flags - CLI flags (--global selects global scope)
  * @param projectRoot - Project root (default process.cwd())
+ * @returns Structured merge result with exit code and conflict data
  */
 export async function runMerge(
   flags: Record<string, string | boolean>,
   projectRoot?: string,
-): Promise<void> {
+): Promise<MergeCommandResult> {
   const root = projectRoot ?? process.cwd();
   const scope = flags.global === true ? 'global' : 'project';
 
@@ -25,10 +31,9 @@ export async function runMerge(
 
   const hasConflict = await hasLockConflict(abDir);
   if (!hasConflict) {
-    logger.info('No conflicts to resolve.');
-    return;
+    return { exitCode: 0, data: { hadConflict: false, resolved: false } };
   }
 
   await resolveLockConflict(abDir, getVersion(), config);
-  logger.success('Lock file conflict resolved.');
+  return { exitCode: 0, data: { hadConflict: true, resolved: true } };
 }

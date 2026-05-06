@@ -5,19 +5,8 @@ import { createRouter } from './router.js';
 import { printHelp } from './help.js';
 import { printVersion } from './version.js';
 import { handleError } from './error-handler.js';
-import { logger } from '../utils/output/logger.js';
-import { runGenerate } from './commands/generate.js';
-import { runInit } from './commands/init.js';
-import { runImport } from './commands/import.js';
-import { runDiff } from './commands/diff.js';
-import { runLintCmd } from './commands/lint.js';
-import { runMatrix } from './commands/matrix.js';
-import { runWatch } from './commands/watch.js';
-import { runCheck } from './commands/check.js';
-import { runMerge } from './commands/merge.js';
-import { runInstall } from './commands/install.js';
-import { runPlugin } from './commands/plugin.js';
-import { runTarget } from './commands/target.js';
+import { muteLogger } from '../utils/output/logger.js';
+import { cmdHandlers } from './command-handlers.js';
 
 export interface ParseResult {
   command: string;
@@ -61,91 +50,6 @@ export function parseArgs(argv: string[]): ParseResult {
   return { command, flags, args };
 }
 
-const CMDS = [
-  'init',
-  'generate',
-  'import',
-  'diff',
-  'lint',
-  'watch',
-  'check',
-  'merge',
-  'matrix',
-  'install',
-  'plugin',
-  'target',
-] as const;
-
-function stub(name: string) {
-  return async (flags: Record<string, string | boolean>, _args: string[]) => {
-    void flags;
-    void _args;
-    logger.info(`Not implemented yet: ${name}`);
-  };
-}
-
-const cmdHandlers: Record<
-  string,
-  (flags: Record<string, string | boolean>, args: string[]) => Promise<void>
-> = {
-  ...Object.fromEntries(CMDS.map((c) => [c, stub(c)])),
-  generate: async (flags, _args) => {
-    void _args;
-    const code = await runGenerate(flags);
-    if (code !== 0) process.exit(code);
-  },
-  init: async (flags, _args) => {
-    void _args;
-    await runInit(process.cwd(), {
-      yes: flags.yes === true,
-      global: flags.global === true,
-    });
-  },
-  import: (flags, _args) => {
-    void _args;
-    return runImport(flags);
-  },
-  diff: (flags, _args) => {
-    void _args;
-    return runDiff(flags);
-  },
-  lint: async (flags, _args) => {
-    void _args;
-    const code = await runLintCmd(flags);
-    if (code !== 0) process.exit(code);
-  },
-  check: async (flags, _args) => {
-    void _args;
-    const code = await runCheck(flags);
-    if (code !== 0) process.exit(code);
-  },
-  merge: (flags, _args) => {
-    void _args;
-    return runMerge(flags);
-  },
-  matrix: (flags, args) => {
-    void args;
-    return runMatrix(flags);
-  },
-  watch: async (flags, _args) => {
-    void _args;
-    const handle = await runWatch(flags);
-    const stop = (): void => {
-      void handle.stop().then(() => process.exit(0));
-    };
-    process.on('SIGINT', stop);
-    process.on('SIGTERM', stop);
-  },
-  install: (flags, args) => runInstall(flags, args, process.cwd()),
-  plugin: async (flags, args) => {
-    const code = await runPlugin(flags, args, process.cwd());
-    if (code !== 0) process.exit(code);
-  },
-  target: async (flags, args) => {
-    const code = await runTarget(flags, args, process.cwd());
-    if (code !== 0) process.exit(code);
-  },
-};
 const router = createRouter(cmdHandlers);
 
 async function main(parsed: ParseResult): Promise<void> {
@@ -159,6 +63,8 @@ async function main(parsed: ParseResult): Promise<void> {
     printVersion();
     return;
   }
+
+  if (flags.json === true) muteLogger();
 
   await router.route(command, flags, args);
 }
@@ -180,6 +86,8 @@ if (isMainModule()) {
   main(parsed).catch((err) =>
     handleError(err instanceof Error ? err : new Error(String(err)), {
       verbose: parsed.flags.verbose === true,
+      json: parsed.flags.json === true,
+      command: parsed.command,
     }),
   );
 }

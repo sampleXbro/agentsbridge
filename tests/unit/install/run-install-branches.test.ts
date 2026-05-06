@@ -159,7 +159,20 @@ describe('executeRunInstallPoolsAndWrite — dry-run pack branch', () => {
       installAsPack: vi.fn(),
     }));
     vi.doMock('../../../src/cli/commands/generate.js', () => ({
-      runGenerate: vi.fn().mockResolvedValue(0),
+      runGenerate: vi
+        .fn()
+        .mockResolvedValue({
+          exitCode: 0,
+          data: {
+            scope: 'project',
+            mode: 'generate',
+            files: [],
+            summary: { created: 0, updated: 0, unchanged: 0 },
+          },
+        }),
+    }));
+    vi.doMock('../../../src/cli/renderers/generate.js', () => ({
+      renderGenerate: vi.fn(),
     }));
     const loggerInfo = vi.fn();
     const loggerWarn = vi.fn();
@@ -254,7 +267,20 @@ describe('executeRunInstallPoolsAndWrite — dry-run pack branch', () => {
       installAsPack: vi.fn().mockResolvedValue(undefined),
     }));
     vi.doMock('../../../src/cli/commands/generate.js', () => ({
-      runGenerate: vi.fn().mockResolvedValue(1),
+      runGenerate: vi
+        .fn()
+        .mockResolvedValue({
+          exitCode: 1,
+          data: {
+            scope: 'project',
+            mode: 'generate',
+            files: [],
+            summary: { created: 0, updated: 0, unchanged: 0 },
+          },
+        }),
+    }));
+    vi.doMock('../../../src/cli/renderers/generate.js', () => ({
+      renderGenerate: vi.fn(),
     }));
     const loggerWarn = vi.fn();
     vi.doMock('../../../src/utils/output/logger.js', () => ({

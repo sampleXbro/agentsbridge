@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.13.0
+
+### Minor Changes
+
+- f68ab67: feat(cli): add convert command for direct tool-to-tool migration
+
+  Adds `agentsmesh convert --from <source> --to <target>` for direct tool-to-tool conversion without going through canonical setup. Internally chains the existing import and generate pipelines via a temporary directory, producing destination tool files from source tool files in a single command. Supports `--dry-run` and `--json` flags.
+
+- c8d58c0: feat(cli): add structured JSON output mode
+
+  Adds `--json` support across CLI commands so automation and CI can consume stable machine-readable command results. JSON mode returns structured success/error envelopes while keeping the existing human-readable output as the default.
+
 ## 0.12.0
 
 ### Minor Changes

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdirSync, writeFileSync, rmSync, readFileSync, existsSync } from 'node:fs';
+import { mkdirSync, writeFileSync, rmSync, readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execSync } from 'node:child_process';
@@ -27,13 +27,11 @@ describe('agentsmesh convert (integration)', () => {
       stdio: 'pipe',
     });
 
-    // Cursor puts root rules in general.mdc
     expect(existsSync(join(TEST_DIR, '.cursor', 'rules'))).toBe(true);
-    // Verify content was converted
-    const files = execSync(`find ${join(TEST_DIR, '.cursor')} -name "*.mdc"`, {
-      encoding: 'utf-8',
-    });
-    expect(files.trim().length).toBeGreaterThan(0);
+    const mdcFiles = readdirSync(join(TEST_DIR, '.cursor', 'rules')).filter((f) =>
+      f.endsWith('.mdc'),
+    );
+    expect(mdcFiles.length).toBeGreaterThan(0);
 
     expect(existsSync(join(TEST_DIR, '.agentsmesh'))).toBe(false);
     expect(readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8')).toContain('Use TypeScript');

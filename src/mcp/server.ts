@@ -6,7 +6,7 @@ import {
   ListResourcesRequestSchema,
   ReadResourceRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-import { TOOL_DESCRIPTORS, RESOURCE_DESCRIPTORS } from './register.js';
+import { TOOL_DESCRIPTORS, RESOURCE_DESCRIPTORS, zodToMcpSchema } from './register.js';
 import { resolveContext } from './context.js';
 import { McpError } from './errors.js';
 import { readFile } from 'node:fs/promises';
@@ -56,7 +56,7 @@ export async function startServer(): Promise<void> {
     tools: TOOL_DESCRIPTORS.map((d) => ({
       name: d.name,
       description: d.description,
-      inputSchema: { type: 'object' as const },
+      inputSchema: zodToMcpSchema(d.inputSchema),
     })),
   }));
 

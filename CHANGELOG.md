@@ -1,5 +1,73 @@
 # Changelog
 
+## 0.13.0
+
+### Minor Changes
+
+- f68ab67: feat(cli): add convert command for direct tool-to-tool migration
+
+  Adds `agentsmesh convert --from <source> --to <target>` for direct tool-to-tool conversion without going through canonical setup. Internally chains the existing import and generate pipelines via a temporary directory, producing destination tool files from source tool files in a single command. Supports `--dry-run` and `--json` flags.
+
+- c8d58c0: feat(cli): add structured JSON output mode
+
+  Adds `--json` support across CLI commands so automation and CI can consume stable machine-readable command results. JSON mode returns structured success/error envelopes while keeping the existing human-readable output as the default.
+
+## 0.12.0
+
+### Minor Changes
+
+- 11c0d58: feat(amp): add Amp (Sourcegraph) as a new built-in target
+
+  Amp is a coding agent by Sourcegraph (ampcode.com). This adds full project and global mode support:
+  - **Rules**: `AGENTS.md` (root + embedded additional rules)
+  - **Skills**: `.agents/skills/*/SKILL.md` skill bundles (shared path with Codex CLI, consumer role)
+  - **MCP**: `.amp/settings.json` under `amp.mcpServers` key with settings merge
+  - **Global mode**: `~/.config/amp/AGENTS.md`, `~/.config/amp/skills/`, `~/.config/amp/settings.json`
+  - Commands and agents projected as skills via `supportsConversion`
+  - Lint warnings for unsupported features (hooks, ignore, permissions)
+
+- fa8e208: feat(warp): add Warp as a new built-in target
+
+  Warp is an agentic development environment by Warp.dev. This adds project and global mode support:
+  - **Rules**: `AGENTS.md` (root + embedded additional rules); legacy `WARP.md` supported on import
+  - **Skills**: `.warp/skills/` with YAML frontmatter skill bundles
+  - **MCP**: `.mcp.json` at project root (standard format, shared with Claude Code)
+  - **Commands/Agents**: projected as skills via `supportsConversion`
+  - **Global mode**: `~/.warp/skills/` (skills only — global rules are UI-managed via Warp Drive)
+  - Lint warnings for unsupported features (hooks, ignore, permissions)
+
+- bfc0a57: feat(zed): add Zed as a new built-in target
+
+  Zed is a modern code editor with a built-in AI assistant (zed.dev). This adds project and global mode support:
+  - **Rules**: `.rules` (root + embedded additional rules in a single file)
+  - **MCP**: `.zed/settings.json` under `context_servers` key with settings merge
+  - **Global mode**: `~/.config/zed/settings.json` (MCP only — no global rules file)
+  - Lint warnings for unsupported features (hooks, ignore, permissions)
+
+## 0.11.0
+
+### Minor Changes
+
+- 85b8601: feat(goose): add Goose (Block) as a new built-in target
+
+  Goose is an open-source AI coding agent by Block (goose-docs.ai). This adds full project and global mode support:
+  - **Rules**: `.goosehints` (root + embedded additional rules)
+  - **Skills**: `.agents/skills/*/SKILL.md` skill bundles (shared path with Codex CLI)
+  - **Ignore**: `.gooseignore` with gitignore-style patterns
+  - **Global mode**: `~/.config/goose/.goosehints`, `~/.config/goose/.gooseignore`, `~/.agents/skills/`
+  - Lint warnings for unsupported features (commands, hooks, MCP, permissions)
+
+- ca7e48f: feat(opencode): add OpenCode as a new built-in target
+
+  OpenCode (opencode.ai) is an open-source AI coding agent CLI/TUI. This adds full project and global mode support:
+  - **Rules**: `AGENTS.md` (root) + `.opencode/rules/*.md` (additional)
+  - **Commands**: `.opencode/commands/*.md` with description frontmatter
+  - **Agents**: `.opencode/agents/*.md` with mode/description/model frontmatter
+  - **Skills**: `.opencode/skills/*/SKILL.md` skill bundles
+  - **MCP**: `opencode.json` with native format conversion (array `command`, `environment` key)
+  - **Global mode**: `~/.config/opencode/` with full feature parity
+  - Lint warnings for unsupported features (hooks, ignore, permissions)
+
 ## 0.10.0
 
 ### Minor Changes

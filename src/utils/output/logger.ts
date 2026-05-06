@@ -9,6 +9,7 @@ const C = {
 };
 
 let muted = false;
+let stdoutRedirectedToStderr = false;
 
 export function muteLogger(): void {
   muted = true;
@@ -16,6 +17,18 @@ export function muteLogger(): void {
 
 export function unmuteLogger(): void {
   muted = false;
+}
+
+export function redirectLoggerToStderr(): void {
+  stdoutRedirectedToStderr = true;
+}
+
+function out(text: string): void {
+  if (stdoutRedirectedToStderr) {
+    process.stderr.write(text);
+  } else {
+    process.stdout.write(text);
+  }
 }
 
 function noColor(): boolean {
@@ -34,7 +47,7 @@ function pad(str: string, width: number): string {
 export const logger = {
   info(msg: string): void {
     if (muted) return;
-    process.stdout.write(c(C.cyan, msg) + '\n');
+    out(c(C.cyan, msg) + '\n');
   },
   warn(msg: string): void {
     if (muted) return;
@@ -46,12 +59,12 @@ export const logger = {
   },
   success(msg: string): void {
     if (muted) return;
-    process.stdout.write(c(C.green, '✓ ') + msg + '\n');
+    out(c(C.green, '✓ ') + msg + '\n');
   },
   debug(msg: string): void {
     if (muted) return;
     if (process.env.AGENTSMESH_DEBUG === '1') {
-      process.stdout.write(c(C.cyan, '[debug] ') + msg + '\n');
+      out(c(C.cyan, '[debug] ') + msg + '\n');
     }
   },
   table(rows: string[][]): void {
@@ -68,12 +81,12 @@ export const logger = {
       widths[j] = max;
     }
     const border = '+' + widths.map((w) => '-'.repeat(w + 2)).join('+') + '+';
-    process.stdout.write(border + '\n');
+    out(border + '\n');
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i]!;
       const line = '| ' + row.map((cell, j) => pad(cell, widths[j]!)).join(' | ') + ' |';
-      process.stdout.write(line + '\n');
+      out(line + '\n');
     }
-    process.stdout.write(border + '\n');
+    out(border + '\n');
   },
 };

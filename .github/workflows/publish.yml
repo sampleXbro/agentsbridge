@@ -61,8 +61,14 @@ jobs:
         if: steps.changesets.outputs.published == 'true'
         run: |
           VERSION=$(node -e "console.log(require('./package.json').version)")
-          git tag "v$VERSION"
-          git push origin "v$VERSION"
+          TAG="v$VERSION"
+          # changesets/action runs `changeset publish`, which already creates this
+          # tag locally for single-package repos. Skip the create if it exists, and
+          # push idempotently — `git push origin <tag>` is a no-op when origin
+          # already matches, and succeeds when origin is missing the tag (the case
+          # that motivates this step in the first place).
+          git rev-parse --verify --quiet "$TAG" >/dev/null || git tag "$TAG"
+          git push origin "$TAG"
 
       - name: Export version
         if: steps.changesets.outputs.published == 'true'

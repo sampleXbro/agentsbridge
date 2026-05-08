@@ -7,7 +7,9 @@ import { MAX_DIR_ENTRIES } from '../limits.js';
 import { safeWrite } from '../writers/safe-write.js';
 import { parseMd, serializeMd } from '../writers/md-frontmatter.js';
 
-const NAME_RE = /^[a-zA-Z0-9_][a-zA-Z0-9_/-]*$/;
+// Flat identifier only — `/` is intentionally excluded so canonical names
+// cannot create hidden subdirectory layouts that `list` does not surface.
+const NAME_RE = /^[a-zA-Z0-9_][a-zA-Z0-9_-]*$/;
 const PROTECTED_NAMES: Record<string, string> = { rules: '_root' };
 
 export type CanonicalFeature = 'rules' | 'commands' | 'agents';
@@ -45,7 +47,7 @@ export interface CanonicalHandlers<TSummary> {
 }
 
 function checkName(name: string): void {
-  if (!NAME_RE.test(name) || name.includes('..') || name.includes('//') || name.endsWith('/')) {
+  if (!NAME_RE.test(name) || name.includes('..')) {
     throw new McpError('INVALID_NAME', `invalid name: ${name}`);
   }
 }
@@ -99,10 +101,11 @@ export function createCanonicalHandlers<TSummary>(
         const { frontmatter, body } = parseMd(src);
         return { name, frontmatter, body };
       } catch (e: unknown) {
-        if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
+        const errno = (e as NodeJS.ErrnoException).code;
+        if (errno === 'ENOENT') {
           throw new McpError('NOT_FOUND', `${feature} "${name}" not found`);
         }
-        throw new McpError('IO_ERROR', `failed to read ${feature}`);
+        throw new McpError('IO_ERROR', `failed to read ${feature}`, { errno });
       }
     },
 
@@ -137,10 +140,11 @@ export function createCanonicalHandlers<TSummary>(
         const src = await readFile(file, 'utf8');
         current = parseMd(src);
       } catch (e: unknown) {
-        if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
+        const errno = (e as NodeJS.ErrnoException).code;
+        if (errno === 'ENOENT') {
           throw new McpError('NOT_FOUND', `${feature} "${name}" not found`);
         }
-        throw new McpError('IO_ERROR', `failed to read ${feature}`);
+        throw new McpError('IO_ERROR', `failed to read ${feature}`, { errno });
       }
       const nextFm =
         frontmatter === undefined

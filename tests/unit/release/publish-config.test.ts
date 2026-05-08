@@ -164,4 +164,18 @@ describe('trusted publishing release config', () => {
     expect(String(version)).not.toBe('latest');
     expect(String(version)).toMatch(/^\d+(\.\d+)*$/);
   });
+
+  it('Push version tag step is idempotent (changeset publish already creates the tag locally)', () => {
+    // changesets/action runs `changeset publish`, which creates the v<version>
+    // tag locally for single-package repos. A bare `git tag "v$VERSION"` then
+    // fails with "tag already exists". The step must skip the create when the
+    // tag is already present and rely on `git push` being a no-op for matching
+    // remote tags.
+    const workflow = readPublishWorkflow();
+    const step = workflow.jobs.publish.steps.find((s) => s.name === 'Push version tag');
+    expect(step, 'expected a "Push version tag" step').toBeDefined();
+    const run = String((step as { run?: string }).run ?? '');
+    expect(run).toMatch(/git rev-parse[^\n]*\|\|\s*git tag/);
+    expect(run).toMatch(/git push origin/);
+  });
 });

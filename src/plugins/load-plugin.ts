@@ -112,7 +112,13 @@ export async function loadPlugin(entry: PluginEntry, projectRoot: string): Promi
 
 /**
  * Load all configured plugins.
- * Per-plugin errors are contained: a failing plugin logs a warning and is skipped.
+ *
+ * Per-plugin errors are contained by default: a failing plugin logs a warning
+ * and is skipped. When the entry sets `strict: true` (or the
+ * `AGENTSMESH_STRICT_PLUGINS=1` env var is set), any failed load is rethrown
+ * so CI/release pipelines fail loudly instead of silently shrinking the
+ * generation matrix.
+ *
  * @returns Array of successfully loaded plugins
  */
 export async function loadAllPlugins(
@@ -120,19 +126,34 @@ export async function loadAllPlugins(
   projectRoot: string,
 ): Promise<LoadedPlugin[]> {
   const results: LoadedPlugin[] = [];
+  const envStrict =
+    process.env.AGENTSMESH_STRICT_PLUGINS === '1' ||
+    process.env.AGENTSMESH_STRICT_PLUGINS === 'true';
 
-  await Promise.all(
+  const settled = await Promise.all(
     entries.map(async (entry) => {
       try {
         const loaded = await loadPlugin(entry, projectRoot);
         results.push(loaded);
+        return null;
       } catch (err) {
-        logger.warn(
-          `Plugin '${entry.source}' failed to load: ${err instanceof Error ? err.message : String(err)}`,
-        );
+        const message = `Plugin '${entry.source}' failed to load: ${
+          err instanceof Error ? err.message : String(err)
+        }`;
+        if (entry.strict === true || envStrict) {
+          return new Error(message);
+        }
+        logger.warn(message);
+        return null;
       }
     }),
   );
+
+  const fatal = settled.filter((e): e is Error => e !== null);
+  if (fatal.length > 0) {
+    const summary = fatal.map((e) => `  - ${e.message}`).join('\n');
+    throw new Error(`agentsmesh: ${fatal.length} plugin(s) failed strict load:\n${summary}`);
+  }
 
   return results;
 }

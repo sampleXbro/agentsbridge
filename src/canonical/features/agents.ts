@@ -6,6 +6,7 @@ import { basename } from 'node:path';
 import type { CanonicalAgent, Hooks } from '../../core/types.js';
 import { readFileSafe, readDirRecursive } from '../../utils/filesystem/fs.js';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
+import { assertCanonicalName, assertNoBasenameCollisions } from './validate-name.js';
 
 /**
  * Coerce value to string array. Handles comma-separated string, YAML array, or invalid.
@@ -66,12 +67,14 @@ function toHooks(v: unknown): Hooks {
 export async function parseAgents(agentsDir: string): Promise<CanonicalAgent[]> {
   const files = await readDirRecursive(agentsDir);
   const mdFiles = files.filter((f) => f.endsWith('.md') && !basename(f).startsWith('_'));
+  assertNoBasenameCollisions('agent', mdFiles, '.md');
   const agents: CanonicalAgent[] = [];
   for (const path of mdFiles) {
     const content = await readFileSafe(path);
     if (!content) continue;
     const { frontmatter, body } = parseFrontmatter(content);
     const name = basename(path, '.md');
+    assertCanonicalName('agent', name);
     const toolsCamel = toStrArray(frontmatter.tools);
     const toolsKebab = toStrArray(frontmatter['tools']);
     const tools = toolsCamel.length > 0 ? toolsCamel : toolsKebab;

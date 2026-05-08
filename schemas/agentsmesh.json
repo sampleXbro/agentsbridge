@@ -346,6 +346,9 @@
           },
           "version": {
             "type": "string"
+          },
+          "strict": {
+            "type": "boolean"
           }
         },
         "required": [

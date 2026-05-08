@@ -8,7 +8,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { TOOL_DESCRIPTORS, RESOURCE_DESCRIPTORS, zodToMcpSchema } from './register.js';
 import { resolveContext } from './context.js';
-import { McpError } from './errors.js';
+import { McpError, redactAbsolutePaths } from './errors.js';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
@@ -90,7 +90,7 @@ export async function startServer(): Promise<void> {
           ? e.toEnvelope()
           : {
               code: 'IO_ERROR' as const,
-              message: e instanceof Error ? e.message : 'unknown error',
+              message: redactAbsolutePaths(e instanceof Error ? e.message : 'unknown error'),
             };
       return {
         isError: true,

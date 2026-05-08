@@ -86,6 +86,34 @@ describe('fetchGitRemoteExtend', () => {
     vi.restoreAllMocks();
   });
 
+  it('rejects a clone-url starting with "-" before invoking git (option-injection guard)', async () => {
+    existsMock.mockResolvedValue(false);
+    await expect(
+      fetchGitRemoteExtend(
+        { url: '--upload-pack=evil' },
+        'shared-rules',
+        { allowOfflineFallback: false },
+        '/tmp/cache',
+        buildCacheKey,
+      ),
+    ).rejects.toThrow(/option-injection guard/);
+    expect(execFileMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects a ref starting with "-" before invoking checkout (option-injection guard)', async () => {
+    existsMock.mockResolvedValue(false);
+    queueGitSuccess(''); // clone succeeds
+    await expect(
+      fetchGitRemoteExtend(
+        { url: 'https://example.com/repo.git', ref: '--orphan' },
+        'shared-rules',
+        { allowOfflineFallback: false },
+        '/tmp/cache',
+        buildCacheKey,
+      ),
+    ).rejects.toThrow(/option-injection guard/);
+  });
+
   it('returns the cached clone without recloning when refresh is false', async () => {
     existsMock.mockResolvedValue(true);
     queueGitSuccess('cached-sha\n');

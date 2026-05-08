@@ -52,12 +52,20 @@ function wrapperPath(event: string, index: number): string {
   return `${COPILOT_HOOKS_DIR}/scripts/${safePhaseName(event)}-${index}.sh`;
 }
 
+// CR/LF in matcher/command would otherwise break out of the comment header
+// and inject executable lines BEFORE `set -e -u` enables strict mode. The
+// canonical hooks parser permits arbitrary YAML strings, so any remote pack
+// pulled via `extends:` could ship multi-line matcher/command values.
+function safeShellLine(value: string): string {
+  return value.replace(/[\r\n]+/g, ' ');
+}
+
 function buildWrapper(command: string, matcher: string): string {
   return [
     '#!/usr/bin/env bash',
-    `# agentsmesh-matcher: ${matcher}`,
-    `# agentsmesh-command: ${command}`,
-    'set -e',
+    `# agentsmesh-matcher: ${safeShellLine(matcher)}`,
+    `# agentsmesh-command: ${safeShellLine(command)}`,
+    'set -eu',
     command,
     '',
   ].join('\n');
@@ -89,8 +97,8 @@ export async function addHookScriptAssets(
       }
 
       const wrapper = buildWrapper(command, entry.matcher).replace(
-        'set -e\n',
-        'set -e\nHOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"\n',
+        'set -eu\n',
+        'set -eu\nHOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"\n',
       );
       wrapperOutputs.push({ path: scriptPath, content: wrapper });
       index++;

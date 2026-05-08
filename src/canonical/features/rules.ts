@@ -6,6 +6,7 @@ import { basename } from 'node:path';
 import type { CanonicalRule } from '../../core/types.js';
 import { readFileSafe, readDirRecursive } from '../../utils/filesystem/fs.js';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
+import { assertCanonicalName } from './validate-name.js';
 
 const VALID_TRIGGERS = ['always_on', 'model_decision', 'glob', 'manual'] as const;
 type Trigger = (typeof VALID_TRIGGERS)[number];
@@ -39,6 +40,7 @@ export async function parseRules(rulesDir: string): Promise<CanonicalRule[]> {
     if (!content) continue;
     const { frontmatter, body } = parseFrontmatter(content);
     const name = basename(path, '.md');
+    assertCanonicalName('rule', name);
     const rootFromFilename = name === '_root';
     const rootFromFm = frontmatter.root === true;
     const triggerRaw = frontmatter.trigger;

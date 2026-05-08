@@ -372,6 +372,8 @@ Common validation errors:
 - `generators.generateRules` and `generators.importFrom` are required
 - Non-`none` capabilities must have their matching generator (or `emitScopedSettings` for settings-backed features)
 
+For CI release jobs that must not silently skip a broken plugin, set `strict: true` on the plugin entry or run with `AGENTSMESH_STRICT_PLUGINS=1`. See the [`plugin` CLI reference](../../cli/plugin/#strict-mode) for the full contract.
+
 ```bash
 agentsmesh generate --dry-run    # preview generated output
 agentsmesh matrix                # verify capabilities appear correctly

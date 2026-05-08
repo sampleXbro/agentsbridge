@@ -8,6 +8,62 @@ import type { FetchRemoteOptions, FetchRemoteResult } from './remote-fetcher.js'
 import type { ParsedGitSource } from './remote-source.js';
 import type { ParsedGithubSource } from './remote-source.js';
 
+/**
+ * Hard cap on remote tarball size. The previous unbounded `arrayBuffer()`
+ * read would happily allocate hundreds of GB if a peer (or a malformed
+ * release) served an oversized response, exhausting host memory. 500 MiB is
+ * generous for legitimate dotfile / config repositories.
+ */
+export const MAX_TARBALL_BYTES = 500 * 1024 * 1024;
+
+/**
+ * Read a `Response` body into memory but abort if the running byte total
+ * exceeds `maxBytes`. Honors a non-zero `Content-Length` as a fast-fail
+ * before any chunk is read. Falls back to one-shot `arrayBuffer()` when the
+ * response has no readable stream (rare, e.g. some test mocks).
+ */
+export async function readBoundedResponse(res: Response, maxBytes: number): Promise<Uint8Array> {
+  // `res.headers` may be absent in mocked test responses; treat missing as no
+  // declared length and fall through to the streaming/buffer paths.
+  const lenHeader =
+    typeof res.headers?.get === 'function' ? res.headers.get('content-length') : null;
+  if (lenHeader !== null) {
+    const declared = Number(lenHeader);
+    if (Number.isFinite(declared) && declared > maxBytes) {
+      throw new Error(`remote response declared ${declared} bytes; exceeds cap of ${maxBytes}`);
+    }
+  }
+  const stream = res.body;
+  if (!stream) {
+    const buf = await res.arrayBuffer();
+    if (buf.byteLength > maxBytes) {
+      throw new Error(`remote response is ${buf.byteLength} bytes; exceeds cap of ${maxBytes}`);
+    }
+    return new Uint8Array(buf);
+  }
+  const reader = stream.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (!value) continue;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel().catch(() => {});
+      throw new Error(`remote response exceeded cap of ${maxBytes} bytes during streaming`);
+    }
+    chunks.push(value);
+  }
+  const out = new Uint8Array(total);
+  let offset = 0;
+  for (const c of chunks) {
+    out.set(c, offset);
+    offset += c.byteLength;
+  }
+  return out;
+}
+
 export async function resolveLatestTag(org: string, repo: string, token?: string): Promise<string> {
   const url = `https://api.github.com/repos/${org}/${repo}/releases/latest`;
   const headers: Record<string, string> = {
@@ -59,11 +115,11 @@ export async function fetchGithubRemoteExtend(
   const headers: Record<string, string> = {};
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  let tarballBuffer: ArrayBuffer;
+  let tarballBytes: Uint8Array;
   try {
     const res = await globalThis.fetch(tarballUrl, { headers, redirect: 'follow' });
     if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-    tarballBuffer = await res.arrayBuffer();
+    tarballBytes = await readBoundedResponse(res, MAX_TARBALL_BYTES);
   } catch (err) {
     const allowFallback = options.allowOfflineFallback !== false;
     if (allowFallback && (await exists(extractDir))) {
@@ -81,7 +137,7 @@ export async function fetchGithubRemoteExtend(
   await rm(extractDir, { recursive: true, force: true });
   await mkdir(extractDir, { recursive: true });
   const tarPath = join(extractDir, 'archive.tar.gz');
-  await writeFile(tarPath, new Uint8Array(tarballBuffer));
+  await writeFile(tarPath, tarballBytes);
   try {
     await tar.extract({
       file: tarPath,

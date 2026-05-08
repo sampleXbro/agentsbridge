@@ -259,7 +259,7 @@ agentsmesh generate            # plugin targets run alongside built-ins
 agentsmesh generate --global   # global mode works for plugins too
 ```
 
-Plugins have full parity with built-in targets: project + global layouts, feature conversions, scoped settings, per-feature lint hooks, and hook post-processing. [Build a plugin →](https://samplexbro.github.io/agentsmesh/guides/building-plugins/)
+Plugins have full parity with built-in targets: project + global layouts, feature conversions, scoped settings, per-feature lint hooks, and hook post-processing. By default a failed plugin import logs a warning and is skipped; set `strict: true` on the plugin entry or run `AGENTSMESH_STRICT_PLUGINS=1 agentsmesh generate` to fail the build instead — useful in CI where a missing target is a real regression. [Build a plugin →](https://samplexbro.github.io/agentsmesh/guides/building-plugins/)
 
 ### Team-safe collaboration & CI drift detection
 

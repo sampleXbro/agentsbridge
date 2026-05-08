@@ -71,3 +71,14 @@ agentsmesh.local.yaml
 ```
 
 Everything else — `.agentsmesh/`, generated tool directories, and `agentsmesh.yaml` — should be committed. Generated files are intentionally committed so that team members who don't use AgentsMesh can still benefit from the configs.
+
+## Naming constraints
+
+Canonical filenames flow into target-native paths verbatim, so they must round-trip cleanly across Linux, macOS, and Windows. The parsers reject the following at load time:
+
+- **Windows reserved device names** in any segment — `CON`, `PRN`, `AUX`, `NUL`, `COM1`–`COM9`, `LPT1`–`LPT9` (case-insensitive, with or without an extension).
+- **Reserved characters** anywhere in the name — `<`, `>`, `:`, `"`, `|`, `?`, `*`, plus ASCII control chars.
+- **Trailing dot or space** — Windows silently strips these and creates a different file.
+- **Duplicate basenames across nested directories** — for example `agents/foo.md` and `agents/sub/foo.md` would both generate to `<tool>/agents/foo.md` with last-write-wins. The parser raises an actionable error instead.
+
+If you hit a `CanonicalNameError`, rename the offending file to use only `[A-Za-z0-9_-]` characters and ensure each basename is unique within its feature directory.

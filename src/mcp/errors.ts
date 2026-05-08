@@ -32,3 +32,15 @@ export class McpError extends Error {
       : { code: this.code, message: this.message, details: this.details };
   }
 }
+
+/**
+ * Redact filesystem paths from raw `Error.message` strings so non-`McpError`
+ * fallbacks (e.g. ENOENT from `node:fs/promises`) do not leak the host's
+ * directory layout to MCP clients.
+ */
+export function redactAbsolutePaths(message: string): string {
+  return message
+    .replace(/(['"`])\/[^'"`\s]+\1/gu, '$1<redacted>$1')
+    .replace(/(\s|^)\/[A-Za-z][^\s'"`]*/gu, '$1<redacted>')
+    .replace(/(\s|^)[A-Z]:[\\/][^\s'"`]*/gu, '$1<redacted>');
+}

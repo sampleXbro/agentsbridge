@@ -46,7 +46,7 @@ export function extractWrapperCommand(content: string): string {
     .replace(/^#!.*\n/, '')
     .replace(/^#.*\n/gm, '')
     .replace(/^HOOK_DIR=.*\n/gm, '')
-    .replace(/^set -e\n?/m, '')
+    .replace(/^set -e[u]?\n?/m, '')
     .trim();
 }
 

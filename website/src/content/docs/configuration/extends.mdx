@@ -87,6 +87,22 @@ agentsmesh generate --no-cache   # alias
   Pin remote sources to a version tag (e.g., `@v1.0.0`) to ensure deterministic builds. Using `@main` or no version means you get the latest on every cache refresh.
 </Aside>
 
+## Environment variables
+
+| Variable | Effect |
+|---|---|
+| `AGENTSMESH_CACHE` | Override the cache directory. Must be an absolute path and must not be the filesystem root (`/` or a Windows drive root); otherwise the CLI throws at startup. Defaults to `~/.agentsmesh/cache`. |
+| `AGENTSMESH_GITHUB_TOKEN` | Token attached as `Authorization: Bearer …` for GitHub tarball/clone fetches. Required for private repos. |
+| `AGENTSMESH_GITLAB_TOKEN` | Token interpolated into GitLab clone URLs (`https://oauth2:$TOKEN@host/…`). Required for private repos. |
+
+## Fetch hardening
+
+AgentsMesh applies the following limits to every `extends:` fetch:
+
+- Tarball downloads are capped at **500 MiB**. The CLI fast-fails on a `Content-Length` over the cap and aborts mid-stream when the running byte total exceeds it.
+- Tar entries with `..` segments, absolute paths, symlinks, or hardlinks are rejected before extraction (zip-slip protection).
+- Git refs and clone URLs that begin with `-` are rejected as a defense against option injection (e.g. `--upload-pack=evil`). Avoid branch names that start with a dash.
+
 ## Merge precedence
 
 When extends sources define resources that conflict with your local canonical config, the merge order is:

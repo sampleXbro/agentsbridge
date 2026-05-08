@@ -57,10 +57,28 @@ export function buildCacheKey(provider: string, identifier: string, ref: string)
 
 /**
  * Get default cache directory (~/.agentsmesh/cache or AGENTSMESH_CACHE).
+ *
+ * If `AGENTSMESH_CACHE` is set, it must be an absolute path that is not the
+ * filesystem root. We later `rm -rf` keyed subdirectories of this path; an
+ * accidental `AGENTSMESH_CACHE=/` would otherwise let cache cleanup target
+ * top-level directories.
  */
 export function getCacheDir(): string {
   const env = process.env.AGENTSMESH_CACHE;
-  if (env) return env;
+  if (env) {
+    const trimmed = env.trim();
+    if (!trimmed) {
+      return join(homedir(), '.agentsmesh', 'cache');
+    }
+    const isAbs = /^([A-Za-z]:[\\/]|\/)/.test(trimmed);
+    if (!isAbs) {
+      throw new Error(`AGENTSMESH_CACHE must be an absolute path (got: "${trimmed}").`);
+    }
+    if (trimmed === '/' || /^[A-Za-z]:[\\/]?$/.test(trimmed)) {
+      throw new Error(`AGENTSMESH_CACHE must not be the filesystem root (got: "${trimmed}").`);
+    }
+    return trimmed;
+  }
   return join(homedir(), '.agentsmesh', 'cache');
 }
 

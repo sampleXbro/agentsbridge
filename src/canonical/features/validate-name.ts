@@ -41,6 +41,10 @@ export function assertCanonicalName(feature: string, name: string): void {
  * after the parser strips the extension. Catches the silent last-write-wins
  * collision pattern when nested files (e.g., `agents/sub/foo.md` and
  * `agents/foo.md`) ride through the same generator.
+ *
+ * Handles both POSIX and Windows separators since `readDirRecursive` returns
+ * native paths — splitting on `/` alone misses `\\` on win32 runners and
+ * lets the collision through.
  */
 export function assertNoBasenameCollisions(
   feature: string,
@@ -49,7 +53,9 @@ export function assertNoBasenameCollisions(
 ): void {
   const seen = new Map<string, string>();
   for (const p of paths) {
-    const idx = p.lastIndexOf('/');
+    const fwdIdx = p.lastIndexOf('/');
+    const bckIdx = p.lastIndexOf('\\');
+    const idx = Math.max(fwdIdx, bckIdx);
     const base = idx === -1 ? p : p.slice(idx + 1);
     const slug = base.endsWith(stripExt) ? base.slice(0, -stripExt.length) : base;
     const prior = seen.get(slug);

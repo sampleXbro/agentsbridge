@@ -21,6 +21,13 @@ export default [
         document: 'readonly',
         Buffer: 'readonly',
         NodeJS: 'readonly',
+        // Web platform globals that exist in Node 18+ runtime and as ambient
+        // types in @types/node. ESLint's no-undef rule does not consult the
+        // type checker, so these need to be declared here even though tsc
+        // recognizes them.
+        Response: 'readonly',
+        Request: 'readonly',
+        ReadableStream: 'readonly',
       },
     },
     plugins: {

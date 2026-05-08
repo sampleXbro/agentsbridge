@@ -6,6 +6,7 @@ import { basename } from 'node:path';
 import type { CanonicalCommand } from '../../core/types.js';
 import { readFileSafe, readDirRecursive } from '../../utils/filesystem/fs.js';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
+import { assertCanonicalName, assertNoBasenameCollisions } from './validate-name.js';
 
 /**
  * Coerce value to tools array. Handles comma-separated string, string[], or invalid.
@@ -40,12 +41,14 @@ function toToolsArray(v: unknown): string[] {
 export async function parseCommands(commandsDir: string): Promise<CanonicalCommand[]> {
   const files = await readDirRecursive(commandsDir);
   const mdFiles = files.filter((f) => f.endsWith('.md') && !basename(f).startsWith('_'));
+  assertNoBasenameCollisions('command', mdFiles, '.md');
   const commands: CanonicalCommand[] = [];
   for (const path of mdFiles) {
     const content = await readFileSafe(path);
     if (!content) continue;
     const { frontmatter, body } = parseFrontmatter(content);
     const name = basename(path, '.md');
+    assertCanonicalName('command', name);
     const fromCamel = toToolsArray(frontmatter.allowedTools);
     const fromKebab = toToolsArray(frontmatter['allowed-tools']);
     const allowedTools = fromCamel.length > 0 ? fromCamel : fromKebab;

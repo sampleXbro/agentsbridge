@@ -52,7 +52,7 @@ describe('addHookScriptAssets', () => {
           '#!/usr/bin/env bash',
           '# agentsmesh-matcher: src/**/*.ts',
           '# agentsmesh-command: pnpm lint',
-          'set -e',
+          'set -eu',
           'HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"',
           'pnpm lint',
           '',
@@ -81,7 +81,7 @@ describe('addHookScriptAssets', () => {
           '#!/usr/bin/env bash',
           '# agentsmesh-matcher: *',
           '# agentsmesh-command: bash "$HOOK_DIR/scripts/notify.sh" --flag',
-          'set -e',
+          'set -eu',
           'HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"',
           'bash "$HOOK_DIR/scripts/notify.sh" --flag',
           '',
@@ -115,7 +115,7 @@ describe('addHookScriptAssets', () => {
           '#!/usr/bin/env bash',
           '# agentsmesh-matcher: *',
           '# agentsmesh-command: scripts/missing.sh',
-          'set -e',
+          'set -eu',
           'HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"',
           'scripts/missing.sh',
           '',
@@ -142,7 +142,7 @@ describe('addHookScriptAssets', () => {
           '#!/usr/bin/env bash',
           '# agentsmesh-matcher: *',
           '# agentsmesh-command: pnpm lint',
-          'set -e',
+          'set -eu',
           'HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"',
           'pnpm lint',
           '',
@@ -170,6 +170,38 @@ describe('addHookScriptAssets', () => {
     ).toHaveLength(1);
   });
 
+  it('strips CR/LF from matcher and command before embedding in the comment header (H2)', async () => {
+    projectRoot = mkdtempSync(join(tmpdir(), 'am-copilot-assets-'));
+
+    const outputs = await addHookScriptAssets(
+      projectRoot,
+      makeCanonical({
+        PreToolUse: [
+          {
+            matcher: 'Bash\nrm -rf $HOME',
+            command: 'echo safe\nrm -rf /',
+            type: 'command',
+          },
+        ],
+      }),
+      [],
+    );
+
+    expect(outputs).toHaveLength(1);
+    const wrapper = outputs[0]!.content;
+    // Comment header must not let the second line escape into executable shell
+    expect(wrapper).toContain('# agentsmesh-matcher: Bash rm -rf $HOME');
+    expect(wrapper).toContain('# agentsmesh-command: echo safe rm -rf /');
+    // Both newline-bearing values must be on a single header line each — i.e.
+    // there's no `\n` mid-comment that could break out before `set -eu`.
+    const matcherLine = wrapper.split('\n').find((l) => l.startsWith('# agentsmesh-matcher:'));
+    const commandLine = wrapper.split('\n').find((l) => l.startsWith('# agentsmesh-command:'));
+    expect(matcherLine).toBe('# agentsmesh-matcher: Bash rm -rf $HOME');
+    expect(commandLine).toBe('# agentsmesh-command: echo safe rm -rf /');
+    // strict-mode line stays exactly where buildWrapper put it
+    expect(wrapper).toMatch(/\nset -eu\n/);
+  });
+
   it('does not copy assets that point outside the repo root', async () => {
     projectRoot = mkdtempSync(join(tmpdir(), 'am-copilot-assets-'));
 
@@ -188,7 +220,7 @@ describe('addHookScriptAssets', () => {
           '#!/usr/bin/env bash',
           '# agentsmesh-matcher: *',
           '# agentsmesh-command: bash ../outside.sh',
-          'set -e',
+          'set -eu',
           'HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"',
           'bash ../outside.sh',
           '',

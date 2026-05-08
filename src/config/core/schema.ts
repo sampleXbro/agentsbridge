@@ -78,6 +78,14 @@ export const pluginEntrySchema = z
     id: z.string().regex(/^[a-z][a-z0-9-]*$/),
     source: z.string(),
     version: z.string().optional(),
+    /**
+     * When true, a failure to import or validate this plugin throws and
+     * aborts the run. Default `false` keeps the lenient behavior of logging
+     * a warning and continuing. Use strict mode in CI when missing
+     * descriptors should fail the build instead of silently shrinking the
+     * generation matrix.
+     */
+    strict: z.boolean().optional(),
   })
   .strict();
 

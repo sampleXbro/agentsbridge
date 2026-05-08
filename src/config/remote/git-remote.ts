@@ -10,6 +10,20 @@ import type { ParsedGitSource, ParsedGitlabSource } from './remote-source.js';
 const execFileAsync = promisify(execFile);
 const REPO_DIRNAME = 'repo';
 
+/**
+ * Refuse refs/clone-URLs that begin with `-`. Even though we use `execFile`
+ * (no shell expansion), git itself parses leading-dash arguments as flags,
+ * and several flags accept executable values (e.g. `--upload-pack=cmd`).
+ * Defense-in-depth against option injection through `extends:` URLs.
+ */
+function ensureNotFlag(value: string, kind: 'ref' | 'clone-url'): void {
+  if (value.startsWith('-')) {
+    throw new Error(
+      `agentsmesh refuses ${kind} starting with "-" (option-injection guard): ${value}`,
+    );
+  }
+}
+
 export async function fetchGitRemoteExtend(
   parsed: ParsedGitSource | ParsedGitlabSource,
   extendName: string,
@@ -79,10 +93,12 @@ function resolveCloneUrl(parsed: ParsedGitSource | ParsedGitlabSource): string {
 }
 
 async function cloneRepo(cloneUrl: string, repoDir: string): Promise<void> {
+  ensureNotFlag(cloneUrl, 'clone-url');
   await runGit(['clone', cloneUrl, repoDir]);
 }
 
 async function checkoutRef(repoDir: string, ref: string): Promise<void> {
+  ensureNotFlag(ref, 'ref');
   await runGit(['checkout', ref], repoDir);
 }
 

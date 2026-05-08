@@ -7,6 +7,7 @@ import { readdir } from 'node:fs/promises';
 import type { CanonicalSkill, SkillSupportingFile } from '../../core/types.js';
 import { readFileSafe, readDirRecursive } from '../../utils/filesystem/fs.js';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
+import { assertCanonicalName } from './validate-name.js';
 
 /** Read file content; returns empty string if unreadable */
 async function readContent(path: string): Promise<string> {
@@ -65,9 +66,11 @@ export async function parseSkillDirectory(skillDir: string): Promise<CanonicalSk
   const { frontmatter, body } = parseFrontmatter(content);
   const supportingFiles = await listSupportingFiles(skillDir);
   const fmName = typeof frontmatter.name === 'string' ? sanitizeSkillName(frontmatter.name) : '';
+  const name = fmName || basename(skillDir);
+  assertCanonicalName('skill', name);
   return {
     source: skillPath,
-    name: fmName || basename(skillDir),
+    name,
     description: typeof frontmatter.description === 'string' ? frontmatter.description : '',
     body,
     supportingFiles,
@@ -85,6 +88,7 @@ export async function parseSkills(skillsDir: string): Promise<CanonicalSkill[]> 
   for (const ent of entries) {
     if (!ent.isDirectory()) continue;
     if (ent.name.startsWith('_')) continue;
+    assertCanonicalName('skill', ent.name);
     const skillDir = join(skillsDir, ent.name);
     const skillPath = join(skillDir, SKILL_FILE);
     const content = await readFileSafe(skillPath);

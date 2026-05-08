@@ -1,0 +1,59 @@
+import { McpError } from '../errors.js';
+import { TargetNotFoundError } from '../../public/index.js';
+
+export interface GenerateHandlerResult {
+  filesWritten: number;
+  byTarget: Record<string, { filesWritten: number }>;
+  lockfileUpdated: boolean;
+  errors: string[];
+  warnings: string[];
+  files?: string[];
+}
+
+export interface LintHandlerResult {
+  issues: Array<{ level: 'error' | 'warning'; file: string; target: string; message: string }>;
+}
+
+export interface CheckHandlerResult {
+  drift: boolean;
+  missing: string[];
+  extra: string[];
+  modified: string[];
+}
+
+export interface DiffHandlerResult {
+  willCreate: number;
+  willModify: number;
+  willDelete: number;
+}
+
+export interface ImportHandlerResult {
+  imported: number;
+  files: Array<{ fromPath: string; toPath: string; feature: string }>;
+  warnings: string[];
+  errors: string[];
+}
+
+export interface ConvertHandlerResult {
+  filesAffected: number;
+  dryRun: boolean;
+  warnings: string[];
+  errors: string[];
+}
+
+/**
+ * Translate an engine-level exception into the appropriate `McpError`. Used by
+ * every orchestration handler so the wrapper logic lives in one place.
+ */
+export function wrapEngineError(e: unknown): never {
+  if (e instanceof McpError) throw e;
+  if (e instanceof TargetNotFoundError) {
+    throw new McpError('VALIDATION_FAILED', e.message);
+  }
+  const msg = e instanceof Error ? e.message : String(e);
+  if (/unknown.*--from|unknown.*--to|unknown target/i.test(msg)) {
+    throw new McpError('VALIDATION_FAILED', msg);
+  }
+  if (/lock/i.test(msg)) throw new McpError('LOCK_HELD', 'generate lock is held');
+  throw new McpError('IO_ERROR', 'engine failure', { reason: msg });
+}

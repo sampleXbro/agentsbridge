@@ -150,4 +150,68 @@ describe('loadAllPlugins', () => {
     const results = await loadAllPlugins([], process.cwd());
     expect(results).toHaveLength(0);
   });
+
+  it('throws when a strict-tagged plugin fails to load (F3)', async () => {
+    const badStrict = {
+      id: 'nonexistent',
+      source: 'nonexistent-strict-xyz-12345',
+      strict: true,
+    } as const;
+    await expect(loadAllPlugins([badStrict], process.cwd())).rejects.toThrow(/strict load/);
+  });
+
+  it('throws when AGENTSMESH_STRICT_PLUGINS=1 even if strict is unset (F3)', async () => {
+    const original = process.env.AGENTSMESH_STRICT_PLUGINS;
+    process.env.AGENTSMESH_STRICT_PLUGINS = '1';
+    try {
+      const badEntry = { id: 'nonexistent', source: 'nonexistent-env-strict-xyz' };
+      await expect(loadAllPlugins([badEntry], process.cwd())).rejects.toThrow(/strict load/);
+    } finally {
+      if (original === undefined) delete process.env.AGENTSMESH_STRICT_PLUGINS;
+      else process.env.AGENTSMESH_STRICT_PLUGINS = original;
+    }
+  });
+
+  it('also recognizes AGENTSMESH_STRICT_PLUGINS=true (string) (F3)', async () => {
+    const original = process.env.AGENTSMESH_STRICT_PLUGINS;
+    process.env.AGENTSMESH_STRICT_PLUGINS = 'true';
+    try {
+      const badEntry = { id: 'nonexistent', source: 'nonexistent-env-strict-true' };
+      await expect(loadAllPlugins([badEntry], process.cwd())).rejects.toThrow(/strict load/);
+    } finally {
+      if (original === undefined) delete process.env.AGENTSMESH_STRICT_PLUGINS;
+      else process.env.AGENTSMESH_STRICT_PLUGINS = original;
+    }
+  });
+
+  it('does NOT escalate when AGENTSMESH_STRICT_PLUGINS has any other value (F3)', async () => {
+    const original = process.env.AGENTSMESH_STRICT_PLUGINS;
+    process.env.AGENTSMESH_STRICT_PLUGINS = 'no';
+    try {
+      const badEntry = { id: 'nonexistent', source: 'nonexistent-env-strict-no' };
+      const results = await loadAllPlugins([badEntry], process.cwd());
+      expect(results).toHaveLength(0);
+    } finally {
+      if (original === undefined) delete process.env.AGENTSMESH_STRICT_PLUGINS;
+      else process.env.AGENTSMESH_STRICT_PLUGINS = original;
+    }
+  });
+
+  it('still loads other plugins when one strict plugin fails (collects all failures)', async () => {
+    const goodEntry = {
+      id: 'good-strict',
+      source: pathToFileURL(join(process.cwd(), 'tests/fixtures/plugins/simple-plugin/index.js'))
+        .href,
+      strict: true,
+    } as const;
+    const badEntry = {
+      id: 'bad-strict',
+      source: 'totally-missing-pkg-xyz-12345',
+      strict: true,
+    } as const;
+    // Even though the good plugin loaded, the strict failure must surface
+    await expect(loadAllPlugins([goodEntry, badEntry], process.cwd())).rejects.toThrow(
+      /1 plugin\(s\) failed strict/,
+    );
+  });
 });

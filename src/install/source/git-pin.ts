@@ -7,6 +7,14 @@ import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
 
+function ensureNotFlag(value: string, kind: string): void {
+  if (value.startsWith('-')) {
+    throw new Error(
+      `agentsmesh refuses ${kind} starting with "-" (option-injection guard): ${value}`,
+    );
+  }
+}
+
 async function runGit(args: string[]): Promise<string> {
   const { stdout } = await execFileAsync('git', args, {
     env: { ...process.env, GIT_TERMINAL_PROMPT: '0' },
@@ -28,6 +36,8 @@ export async function isGitAvailable(): Promise<boolean> {
  * Resolve a remote ref (branch or tag) to a commit SHA via ls-remote.
  */
 export async function gitLsRemoteResolve(remoteUrl: string, ref: string): Promise<string> {
+  ensureNotFlag(remoteUrl, 'remote-url');
+  ensureNotFlag(ref, 'ref');
   const tryRefs = [ref, `refs/heads/${ref}`, `refs/tags/${ref}`];
   let lastErr: unknown;
   for (const r of tryRefs) {
@@ -51,7 +61,9 @@ export async function gitLsRemoteResolve(remoteUrl: string, ref: string): Promis
 
 /** Resolve branch/tag/HEAD to full SHA for pinning. */
 export async function resolveRemoteRefForInstall(ref: string, remoteUrl: string): Promise<string> {
+  ensureNotFlag(remoteUrl, 'remote-url');
   const r = ref === '' ? 'HEAD' : ref;
+  ensureNotFlag(r, 'ref');
   if (/^[0-9a-f]{40}$/i.test(r)) return r.toLowerCase();
   if (r === 'HEAD') {
     const out = await runGit(['ls-remote', remoteUrl, 'HEAD']);

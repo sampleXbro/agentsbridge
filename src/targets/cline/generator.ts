@@ -126,13 +126,21 @@ function safeEventName(event: string): string {
   return event.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
 }
 
+// CR/LF in event/matcher/command would otherwise break out of the comment
+// header and inject executable lines BEFORE `set -eu` enables strict mode.
+// Canonical hooks parser permits arbitrary YAML strings, so a remote pack
+// pulled via `extends:` could carry multi-line values.
+function safeShellLine(value: string): string {
+  return value.replace(/[\r\n]+/g, ' ');
+}
+
 function buildHookScript(event: string, command: string, matcher: string): string {
   return [
     '#!/usr/bin/env bash',
-    `# agentsmesh-event: ${event}`,
-    `# agentsmesh-matcher: ${matcher}`,
-    `# agentsmesh-command: ${command}`,
-    'set -e',
+    `# agentsmesh-event: ${safeShellLine(event)}`,
+    `# agentsmesh-matcher: ${safeShellLine(matcher)}`,
+    `# agentsmesh-command: ${safeShellLine(command)}`,
+    'set -eu',
     command,
     '',
   ].join('\n');

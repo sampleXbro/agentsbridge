@@ -54,6 +54,47 @@ describe('writeFileAtomic', () => {
     expect(await readFileSafe(path)).toBe('second');
   });
 
+  it('writes shell scripts with executable mode 0o755 (H3)', async () => {
+    const path = join(TEST_DIR, 'hook.sh');
+    await writeFileAtomic(path, '#!/bin/sh\necho hi\n');
+    const info = lstatSync(path);
+    // Bottom 9 bits encode rwxrwxrwx; mask off file-type/setuid bits.
+    expect((info.mode & 0o777).toString(8)).toBe('755');
+  });
+
+  it('does not mark non-script extensions as executable', async () => {
+    const path = join(TEST_DIR, 'plain.md');
+    await writeFileAtomic(path, '# hi\n');
+    const info = lstatSync(path);
+    // Should not have any execute bit set
+    expect(info.mode & 0o111).toBe(0);
+  });
+
+  it('honors explicit mode option overriding extension inference', async () => {
+    const path = join(TEST_DIR, 'forced.txt');
+    await writeFileAtomic(path, 'x', { mode: 0o600 });
+    const info = lstatSync(path);
+    expect((info.mode & 0o777).toString(8)).toBe('600');
+  });
+
+  it('writes .bash and .zsh scripts as 0o755 too', async () => {
+    const bashPath = join(TEST_DIR, 'a.bash');
+    const zshPath = join(TEST_DIR, 'a.zsh');
+    await writeFileAtomic(bashPath, '#!/bin/bash\n');
+    await writeFileAtomic(zshPath, '#!/bin/zsh\n');
+    expect((lstatSync(bashPath).mode & 0o777).toString(8)).toBe('755');
+    expect((lstatSync(zshPath).mode & 0o777).toString(8)).toBe('755');
+  });
+
+  it('chmod after rename guarantees mode even when tmpfile pre-existed', async () => {
+    const path = join(TEST_DIR, 'tmp-collision.sh');
+    // Pre-create the tmp file with restrictive mode that wouldn't get the bit set
+    // via writeFile()'s mode option (which only applies on initial create).
+    writeFileSync(`${path}.tmp`, 'old', { mode: 0o600 });
+    await writeFileAtomic(path, '#!/bin/sh\necho ok\n');
+    expect((lstatSync(path).mode & 0o777).toString(8)).toBe('755');
+  });
+
   it('refuses to write when target path is an existing directory', async () => {
     const path = join(TEST_DIR, 'existing-dir');
     mkdirSync(path, { recursive: true });

@@ -1,89 +1,32 @@
 /**
- * File system helpers for agentsmesh.
+ * File system helpers for agentsmesh: atomic write/read/exists/mkdirp.
+ * Traversal helpers live in `fs-traverse.ts`; text-encoding helpers in
+ * `fs-text-encoding.ts`. Re-exports keep the public API stable.
  */
 
 import {
   readFile,
   writeFile,
   access,
+  chmod,
   mkdir,
   rename,
-  readdir,
-  copyFile,
   rm,
-  stat,
-  symlink,
   unlink,
   lstat,
-  readlink,
-  realpath,
 } from 'node:fs/promises';
-import { basename, dirname, extname, join, resolve } from 'node:path';
+import { dirname } from 'node:path';
 import { constants } from 'node:fs';
 import { FileSystemError } from '../../core/errors.js';
+import {
+  UTF8_BOM,
+  executableModeFor,
+  normalizeLineEndings,
+  shouldNormalizeLineEndings,
+} from './fs-text-encoding.js';
 
-const UTF8_BOM = '\uFEFF';
-
-/**
- * Text-like extensions whose payload must use LF line endings on disk so
- * generated artifacts are byte-stable across Windows/Linux/macOS hosts
- * so generated artifacts are byte-stable across platforms. Anything outside
- * this set is treated as opaque.
- */
-const TEXT_EXTENSIONS = new Set<string>([
-  '.md',
-  '.mdc',
-  '.mdx',
-  '.markdown',
-  '.txt',
-  '.json',
-  '.jsonc',
-  '.yaml',
-  '.yml',
-  '.toml',
-  '.ini',
-  '.sh',
-  '.bash',
-  '.zsh',
-  '.ps1',
-  '.js',
-  '.mjs',
-  '.cjs',
-  '.ts',
-  '.tsx',
-  '.html',
-  '.css',
-]);
-
-/** Dotfile basenames (no extension) that contain text and should be LF-normalized. */
-const TEXT_DOTFILES = new Set<string>([
-  '.gitignore',
-  '.cursorignore',
-  '.cursorindexingignore',
-  '.aiignore',
-  '.agentignore',
-  '.clineignore',
-  '.geminiignore',
-  '.codeiumignore',
-  '.continueignore',
-  '.copilotignore',
-  '.windsurfignore',
-  '.junieignore',
-  '.kiroignore',
-  '.rooignore',
-  '.antigravityignore',
-]);
-
-function shouldNormalizeLineEndings(path: string): boolean {
-  const ext = extname(path).toLowerCase();
-  if (ext.length > 0) return TEXT_EXTENSIONS.has(ext);
-  const base = basename(path).toLowerCase();
-  return TEXT_DOTFILES.has(base);
-}
-
-function normalizeLineEndings(content: string): string {
-  return content.replace(/\r\n?/g, '\n');
-}
+export { copyDir, ensureCacheSymlink, readDirRecursive } from './fs-traverse.js';
+export { executableModeFor } from './fs-text-encoding.js';
 
 interface ErrnoLike {
   code?: string;
@@ -122,8 +65,15 @@ export async function readFileSafe(path: string): Promise<string | null> {
  *
  * @param path - Target file path
  * @param content - Content to write
+ * @param options - Optional `mode` (POSIX permission bits). When omitted, the
+ *   mode is inferred from the path extension via `executableModeFor`; passing
+ *   an explicit value overrides that inference.
  */
-export async function writeFileAtomic(path: string, content: string): Promise<void> {
+export async function writeFileAtomic(
+  path: string,
+  content: string,
+  options?: { mode?: number },
+): Promise<void> {
   const dir = dirname(path);
   await mkdir(dir, { recursive: true });
   try {
@@ -137,8 +87,8 @@ export async function writeFileAtomic(path: string, content: string): Promise<vo
     }
     if (info.isSymbolicLink()) {
       // Drop the symlink so the rename below lands at `path` itself, not at the
-      // link target. This closes the TOCTOU window where a symlink could be
-      // swapped in between guard and rename to redirect writes outside the tree.
+      // link target. Closes a TOCTOU window where a symlink could be swapped in
+      // between guard and rename to redirect writes outside the tree.
       await unlink(path).catch((e: unknown) => {
         if ((e as ErrnoLike).code !== 'ENOENT') throw e;
       });
@@ -150,6 +100,7 @@ export async function writeFileAtomic(path: string, content: string): Promise<vo
   }
   const tmpPath = `${path}.tmp`;
   const payload = shouldNormalizeLineEndings(path) ? normalizeLineEndings(content) : content;
+  const mode = options?.mode ?? executableModeFor(path);
   try {
     try {
       const tmpInfo = await lstat(tmpPath);
@@ -159,8 +110,19 @@ export async function writeFileAtomic(path: string, content: string): Promise<vo
     } catch (tmpErr) {
       if ((tmpErr as ErrnoLike).code !== 'ENOENT') throw tmpErr;
     }
-    await writeFile(tmpPath, payload, { encoding: 'utf-8', flag: 'w' });
+    const writeOpts: NonNullable<Parameters<typeof writeFile>[2]> = {
+      encoding: 'utf-8',
+      flag: 'w',
+    };
+    if (mode !== undefined) (writeOpts as { mode?: number }).mode = mode;
+    await writeFile(tmpPath, payload, writeOpts);
     await rename(tmpPath, path);
+    if (mode !== undefined) {
+      // `writeFile`'s mode only applies on initial create; if tmp already
+      // existed (or umask masked some bits) we'd silently drop the executable
+      // bit. chmod after rename guarantees the final inode carries the mode.
+      await chmod(path, mode);
+    }
   } catch (err) {
     await rm(tmpPath, { force: true }).catch(() => {});
     const e = err as ErrnoLike;
@@ -172,11 +134,7 @@ export async function writeFileAtomic(path: string, content: string): Promise<vo
   }
 }
 
-/**
- * Check if path exists.
- * @param path - File or directory path
- * @returns true if exists, false otherwise
- */
+/** Check if path exists. */
 export async function exists(path: string): Promise<boolean> {
   try {
     await access(path, constants.F_OK);
@@ -186,104 +144,7 @@ export async function exists(path: string): Promise<boolean> {
   }
 }
 
-/**
- * Create directory recursively. No-op if already exists.
- * @param path - Directory path
- */
+/** Create directory recursively. No-op if already exists. */
 export async function mkdirp(path: string): Promise<void> {
   await mkdir(path, { recursive: true });
-}
-
-/**
- * List all files recursively under dir. Returns absolute paths only.
- * Skips revisiting the same real directory (breaks symlink cycles).
- * @param dir - Directory to scan
- * @returns Array of absolute file paths
- */
-export async function readDirRecursive(dir: string, visited?: Set<string>): Promise<string[]> {
-  let canonicalDir: string;
-  try {
-    canonicalDir = await realpath(dir);
-  } catch (err) {
-    const e = err as ErrnoLike;
-    if (e.code === 'ENOENT' || e.code === 'ENOTDIR' || e.code === 'ELOOP') return [];
-    throw new FileSystemError(
-      dir,
-      `Failed to read directory ${dir}: ${e.message}. Check permissions.`,
-      { cause: err, errnoCode: e.code },
-    );
-  }
-  const seen = visited ?? new Set<string>();
-  if (seen.has(canonicalDir)) return [];
-  seen.add(canonicalDir);
-  try {
-    const entries = await readdir(dir, { withFileTypes: true });
-    const files: string[] = [];
-    for (const ent of entries) {
-      const full = join(dir, ent.name);
-      const walkChild =
-        ent.isDirectory() ||
-        (ent.isSymbolicLink() &&
-          (await stat(full).then(
-            (s) => s.isDirectory(),
-            () => false,
-          )));
-      if (walkChild) {
-        files.push(...(await readDirRecursive(full, seen)));
-      } else {
-        files.push(full);
-      }
-    }
-    return files;
-  } catch (err) {
-    const e = err as ErrnoLike;
-    if (e.code === 'ENOENT' || e.code === 'ENOTDIR' || e.code === 'EACCES') return [];
-    throw new FileSystemError(
-      dir,
-      `Failed to read directory ${dir}: ${e.message}. Check permissions.`,
-      { cause: err, errnoCode: e.code },
-    );
-  }
-}
-
-/**
- * Copy directory recursively preserving structure.
- * @param src - Source directory
- * @param dest - Destination directory
- */
-export async function copyDir(src: string, dest: string): Promise<void> {
-  await mkdirp(dest);
-  const entries = await readdir(src, { withFileTypes: true });
-  for (const ent of entries) {
-    const srcPath = join(src, ent.name);
-    const destPath = join(dest, ent.name);
-    const info = await stat(srcPath);
-    if (info.isDirectory()) {
-      await copyDir(srcPath, destPath);
-    } else {
-      await mkdirp(dirname(destPath));
-      await copyFile(srcPath, destPath);
-    }
-  }
-}
-
-/**
- * Ensure .agentsmeshcache symlink exists pointing to the agentsmesh cache dir.
- * Creates or updates the symlink so devs can inspect cached remote extends.
- * @param cacheDir - Absolute path to the cache (e.g. ~/.agentsmesh/cache)
- * @param linkPath - Absolute path where the symlink should live
- */
-export async function ensureCacheSymlink(cacheDir: string, linkPath: string): Promise<void> {
-  const targetPath = resolve(cacheDir);
-  try {
-    const info = await lstat(linkPath);
-    if (!info.isSymbolicLink()) return; // leave existing non-symlink alone
-    const currentTarget = resolve(dirname(linkPath), await readlink(linkPath));
-    if (currentTarget === targetPath) return;
-    await unlink(linkPath);
-  } catch (err) {
-    const e = err as ErrnoLike;
-    if (e.code !== 'ENOENT') throw err;
-  }
-  await symlink(targetPath, linkPath, 'dir');
 }

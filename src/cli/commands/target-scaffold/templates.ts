@@ -1,28 +1,21 @@
 /**
- * Template functions for agentsmesh target scaffold command.
- * Each function returns a string of TypeScript source code.
- * Pattern mirrors src/cli/commands/init-templates.ts (string constants, bundled by tsup).
+ * Template functions for `agentsmesh target scaffold`. Each function
+ * returns a string of TypeScript source code. Pattern mirrors
+ * `src/cli/commands/init-templates.ts` (string constants, bundled by tsup).
+ *
+ * The descriptor (TEMPLATE_INDEX) and test fixtures (TEMPLATE_*_TEST,
+ * TEMPLATE_FIXTURE_ROOT_MD) live in sibling files to keep this barrel
+ * under the 200-line file budget (CLAUDE.md).
  */
+import { toPascal, toPrefix, type TemplateVars } from './templates-shared.js';
 
-export interface TemplateVars {
-  id: string; // e.g. 'kilo-code'
-  displayName: string; // e.g. 'Kilo Code'
-}
-
-/** Convert 'kilo-code' → 'KILO_CODE' */
-function toPrefix(id: string): string {
-  return id.toUpperCase().replace(/-/g, '_');
-}
-
-/** Convert 'kilo-code' → 'KiloCode' (PascalCase) */
-function toPascal(id: string): string {
-  return id
-    .split('-')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join('');
-}
-
-// ─── constants.ts ─────────────────────────────────────────────────────────────
+export type { TemplateVars } from './templates-shared.js';
+export { TEMPLATE_INDEX } from './templates-index.js';
+export {
+  TEMPLATE_FIXTURE_ROOT_MD,
+  TEMPLATE_GENERATOR_TEST,
+  TEMPLATE_IMPORTER_TEST,
+} from './templates-tests.js';
 
 export function TEMPLATE_CONSTANTS(v: TemplateVars): string {
   const p = toPrefix(v.id);
@@ -41,113 +34,6 @@ export const ${p}_CANONICAL_ROOT_RULE = '.agentsmesh/rules/_root.md';
 export const ${p}_CANONICAL_RULES_DIR = '.agentsmesh/rules';
 `;
 }
-
-// ─── index.ts ─────────────────────────────────────────────────────────────────
-
-export function TEMPLATE_INDEX(v: TemplateVars): string {
-  const p = toPrefix(v.id);
-  const pascal = toPascal(v.id);
-  return `import type { TargetGenerators } from '../catalog/target.interface.js';
-import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
-import { generateRules } from './generator.js';
-import { importFrom${pascal} } from './importer.js';
-import { lintRules } from './linter.js';
-import { lintHooks } from './lint.js';
-import { build${pascal}ImportPaths } from '../../core/reference/import-map-builders.js';
-import {
-  ${p}_TARGET,
-  ${p}_DIR,
-  ${p}_GLOBAL_DIR,
-} from './constants.js';
-
-export const target: TargetGenerators = {
-  name: ${p}_TARGET,
-  generateRules,
-  importFrom: importFrom${pascal},
-};
-
-const project: TargetLayout = {
-  managedOutputs: {
-    dirs: [${p}_DIR],
-    files: [],
-  },
-  paths: {
-    rulePath(slug, _rule) {
-      return ${p}_DIR + '/' + slug + '.md';
-    },
-    commandPath(_name, _config) {
-      return null;
-    },
-    agentPath(_name, _config) {
-      return null;
-    },
-  },
-};
-
-const global: TargetLayout = {
-  paths: {
-    rulePath(slug, _rule) {
-      return ${p}_GLOBAL_DIR + '/' + slug + '.md';
-    },
-    commandPath(_name, _config) {
-      return null;
-    },
-    agentPath(_name, _config) {
-      return null;
-    },
-  },
-  rewriteGeneratedPath(path: string) {
-    if (path.startsWith(${p}_DIR + '/')) {
-      return ${p}_GLOBAL_DIR + '/' + path.slice(${p}_DIR.length + 1);
-    }
-    return path;
-  },
-};
-
-export const descriptor = {
-  id: ${p}_TARGET,
-  generators: target,
-  capabilities: {
-    rules: 'native',
-    additionalRules: 'none',
-    commands: 'none',
-    agents: 'none',
-    skills: 'none',
-    mcp: 'none',
-    hooks: 'none',
-    ignore: 'none',
-    permissions: 'none',
-  },
-  supportsConversion: { commands: true, agents: true },
-  lint: {
-    hooks: lintHooks,
-  },
-  emptyImportMessage:
-    'No ${v.displayName} config found (${p}_DIR).',
-  lintRules,
-  project,
-  globalSupport: {
-    capabilities: {
-      rules: 'native',
-      additionalRules: 'none',
-      commands: 'none',
-      agents: 'none',
-      skills: 'none',
-      mcp: 'none',
-      hooks: 'none',
-      ignore: 'none',
-      permissions: 'none',
-    },
-    detectionPaths: [${p}_GLOBAL_DIR],
-    layout: global,
-  },
-  buildImportPaths: build${pascal}ImportPaths,
-  detectionPaths: [${p}_DIR],
-} satisfies TargetDescriptor;
-`;
-}
-
-// ─── generator.ts ─────────────────────────────────────────────────────────────
 
 export function TEMPLATE_GENERATOR(v: TemplateVars): string {
   const p = toPrefix(v.id);
@@ -168,8 +54,6 @@ export function generateRules(_canonical: CanonicalFiles): ${toPascal(v.id)}Outp
 `;
 }
 
-// ─── importer.ts ──────────────────────────────────────────────────────────────
-
 export function TEMPLATE_IMPORTER(v: TemplateVars): string {
   const pascal = toPascal(v.id);
   const p = toPrefix(v.id);
@@ -187,8 +71,6 @@ export async function importFrom${pascal}(
 }
 `;
 }
-
-// ─── linter.ts ────────────────────────────────────────────────────────────────
 
 export function TEMPLATE_LINTER(v: TemplateVars): string {
   const p = toPrefix(v.id);
@@ -213,8 +95,6 @@ export function lintRules(
 `;
 }
 
-// ─── lint.ts ──────────────────────────────────────────────────────────────────
-
 export function TEMPLATE_LINT_HOOKS(v: TemplateVars): string {
   return `/**
  * ${v.displayName}-specific lint hooks.
@@ -228,8 +108,6 @@ export function lintHooks(_canonical: CanonicalFiles): LintDiagnostic[] {
 }
 `;
 }
-
-// ─── import-maps/<id>.ts ──────────────────────────────────────────────────────
 
 export function TEMPLATE_IMPORT_MAP(v: TemplateVars): string {
   const pascal = toPascal(v.id);
@@ -246,70 +124,5 @@ export async function build${pascal}ImportPaths(
   // Reference: src/core/reference/import-maps/kiro.ts for a full example
   void ${p}_DIR;
 }
-`;
-}
-
-// ─── tests/unit/targets/<id>/generator.test.ts ───────────────────────────────
-
-export function TEMPLATE_GENERATOR_TEST(v: TemplateVars): string {
-  return `import { describe, it, expect } from 'vitest';
-import type { CanonicalFiles } from '../../../../src/core/types.js';
-import { generateRules } from '../../../../src/targets/${v.id}/generator.js';
-
-function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
-  return {
-    rules: [],
-    commands: [],
-    agents: [],
-    skills: [],
-    mcp: null,
-    permissions: null,
-    hooks: null,
-    ignore: [],
-    ...overrides,
-  };
-}
-
-describe('generateRules (${v.id})', () => {
-  it('returns an array', () => {
-    const result = generateRules(makeCanonical());
-    expect(Array.isArray(result)).toBe(true);
-  });
-
-  it('returns empty array when no rules', () => {
-    const result = generateRules(makeCanonical({ rules: [] }));
-    expect(result).toHaveLength(0);
-  });
-});
-`;
-}
-
-// ─── tests/unit/targets/<id>/importer.test.ts ────────────────────────────────
-
-export function TEMPLATE_IMPORTER_TEST(v: TemplateVars): string {
-  const pascal = toPascal(v.id);
-  return `import { describe, it, expect } from 'vitest';
-import { importFrom${pascal} } from '../../../../src/targets/${v.id}/importer.js';
-
-describe('importFrom${pascal} (${v.id})', () => {
-  it('returns an array', async () => {
-    const result = await importFrom${pascal}('/tmp/stub-project');
-    expect(Array.isArray(result)).toBe(true);
-  });
-
-  it('returns empty array by default', async () => {
-    const result = await importFrom${pascal}('/tmp/stub-project', { scope: 'project' });
-    expect(result).toHaveLength(0);
-  });
-});
-`;
-}
-
-// ─── tests/e2e/fixtures/<id>-project/AGENTS.md ───────────────────────────────
-
-export function TEMPLATE_FIXTURE_ROOT_MD(v: TemplateVars): string {
-  return `# ${v.displayName} Workspace
-
-Follow the ${v.displayName} configuration files and keep changes small.
 `;
 }

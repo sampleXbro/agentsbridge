@@ -2,7 +2,8 @@
  * Plugin loader: dynamically imports npm packages that export TargetDescriptors.
  */
 
-import { resolve } from 'node:path';
+import { resolve, join } from 'node:path';
+import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { validateDescriptor } from '../targets/catalog/target-descriptor.schema.js';
 import { registerTargetDescriptor } from '../targets/catalog/registry.js';
@@ -16,9 +17,39 @@ export interface LoadedPlugin {
 }
 
 /**
- * Import a plugin module and extract TargetDescriptors from it.
- * Priority: `export const descriptor` → `export const descriptors` → `export default`
+ * Resolve an npm bare specifier to an absolute file path via node_modules.
+ * Works identically in Node.js and Bun-compiled binaries.
  */
+export function resolveNpmSpecifier(source: string, projectRoot: string): string {
+  const pkgDir = join(projectRoot, 'node_modules', source);
+  const pkgJsonPath = join(pkgDir, 'package.json');
+  if (!existsSync(pkgJsonPath)) {
+    throw new Error(`Cannot find package '${source}' in ${join(projectRoot, 'node_modules')}`);
+  }
+  const pkgJson = JSON.parse(readFileSync(pkgJsonPath, 'utf-8')) as Record<string, unknown>;
+  const entry =
+    (typeof pkgJson.exports === 'string' ? pkgJson.exports : null) ??
+    (typeof pkgJson.main === 'string' ? pkgJson.main : null) ??
+    'index.js';
+  const resolved = resolve(pkgDir, entry);
+  if (!existsSync(resolved)) {
+    throw new Error(`Package '${source}' entry '${entry}' does not exist at ${resolved}`);
+  }
+  return resolved;
+}
+
+function isLocalSource(source: string): boolean {
+  return (
+    source.startsWith('file:') ||
+    source.startsWith('./') ||
+    source.startsWith('../') ||
+    source.startsWith('/') ||
+    // Windows absolute paths: `D:\foo`, `C:/bar`, etc. `node:path`'s `resolve()` produces
+    // these on win32, and they must not be misinterpreted as bare npm package names.
+    /^[A-Za-z]:[/\\]/.test(source)
+  );
+}
+
 async function importPluginModule(
   entry: PluginEntry,
   projectRoot: string,
@@ -26,22 +57,13 @@ async function importPluginModule(
   const { source } = entry;
   let importTarget: string;
 
-  if (
-    source.startsWith('file:') ||
-    source.startsWith('./') ||
-    source.startsWith('../') ||
-    source.startsWith('/')
-  ) {
-    // Local file: resolve against project root and convert to file URL.
-    // Use fileURLToPath (not URL.pathname) so Windows drive-prefixed paths
-    // like `file:///C:/...` round-trip correctly — URL.pathname leaves the
-    // leading slash before `C:` which is not a valid filesystem path.
+  if (isLocalSource(source)) {
     const raw = source.startsWith('file:') ? fileURLToPath(source) : source;
     const resolved = resolve(projectRoot, raw);
     importTarget = pathToFileURL(resolved).href;
   } else {
-    // npm package: Node resolves from the consuming project's node_modules
-    importTarget = source;
+    const resolved = resolveNpmSpecifier(source, projectRoot);
+    importTarget = pathToFileURL(resolved).href;
   }
 
   const mod = await import(importTarget);

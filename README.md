@@ -24,6 +24,31 @@ AI coding assistants now ship with their own configuration formats — `CLAUDE.m
 
 ---
 
+## Install
+
+### npm (recommended for Node.js projects)
+
+```bash
+npm install -g agentsmesh
+```
+
+### Homebrew (macOS / Linux)
+
+```bash
+brew tap samplexbro/agentsmesh
+brew install agentsmesh
+```
+
+### Standalone binary (no Node.js required)
+
+```bash
+curl -fsSL https://github.com/sampleXbro/agentsmesh/releases/latest/download/install.sh | sh
+```
+
+Or download a binary directly from [GitHub Releases](https://github.com/sampleXbro/agentsmesh/releases/latest).
+
+---
+
 ## Before / After
 
 **Before — fragmented assistant-native config in one repo:**
@@ -64,7 +89,7 @@ The native files above are still emitted — AgentsMesh writes them for you from
 
 ## 60-second quickstart
 
-Requires Node.js 20+. Works on Linux, macOS, and Windows (native, not WSL).
+Works on Linux, macOS, and Windows. The `npx` commands below require Node.js 20+; see [Install](#install) for alternatives that don't need Node.js.
 
 ```bash
 npx agentsmesh init       # scaffold .agentsmesh/ + agentsmesh.yaml

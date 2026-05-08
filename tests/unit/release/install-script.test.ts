@@ -1,4 +1,5 @@
-import { readFileSync, statSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -16,9 +17,16 @@ describe('scripts/install.sh', () => {
     expect(script).toMatch(/^set -eu\b/m);
   });
 
-  it('is executable so curl|sh works after release upload', () => {
-    const mode = statSync(SCRIPT_PATH).mode;
-    expect(mode & 0o111).toBeGreaterThan(0);
+  it('is marked executable in the git index so curl|sh works after release upload', () => {
+    // `statSync(...).mode & 0o111` is unreliable on Windows runners because NTFS
+    // does not surface POSIX execute bits. The contract we actually need is that
+    // git stores mode 100755 — that's what `gh release create` ships and what
+    // every clone preserves. Querying the git index works identically on every OS.
+    const out = execFileSync('git', ['ls-files', '--stage', 'scripts/install.sh'], {
+      cwd: ROOT,
+      encoding: 'utf8',
+    });
+    expect(out).toMatch(/^100755 /);
   });
 
   it('uses fish-native syntax when emitting a PATH line into fish config', () => {

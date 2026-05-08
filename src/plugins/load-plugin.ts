@@ -43,7 +43,10 @@ function isLocalSource(source: string): boolean {
     source.startsWith('file:') ||
     source.startsWith('./') ||
     source.startsWith('../') ||
-    source.startsWith('/')
+    source.startsWith('/') ||
+    // Windows absolute paths: `D:\foo`, `C:/bar`, etc. `node:path`'s `resolve()` produces
+    // these on win32, and they must not be misinterpreted as bare npm package names.
+    /^[A-Za-z]:[/\\]/.test(source)
   );
 }
 

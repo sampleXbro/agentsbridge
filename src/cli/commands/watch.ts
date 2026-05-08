@@ -24,6 +24,12 @@ function shouldIgnoreWatchPath(
   _suppressAgentsmeshDirUntil: number,
 ): boolean {
   const relPath = normalizeWatchPath(relative(canonicalDir, changedPath));
+  // Parent-directory metadata events — chokidar reports a `.agentsmesh/`
+  // event whenever a child file write changes the directory mtime. Real
+  // canonical edits always arrive as child file events on rules/, commands/,
+  // etc. The parent event is pure noise; without this filter the watcher
+  // re-triggers on its own lock-file writes (lessons.md L76).
+  if (relPath === '') return true;
   // Chokidar can report paths through different resolution layers; use `endsWith`
   // so we reliably ignore lock-file churn regardless of relative prefixing.
   return (

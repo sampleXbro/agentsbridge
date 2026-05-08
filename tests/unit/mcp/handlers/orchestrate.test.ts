@@ -128,6 +128,37 @@ describe('orchestrateHandlers.generate', () => {
       code: 'LOCK_HELD',
     });
   });
+
+  it('writes files via writeFileAtomic when dry_run is false', async () => {
+    const fsMod = await import('../../../../src/utils/filesystem/fs.js');
+    const writeMock = fsMod.writeFileAtomic as unknown as ReturnType<typeof vi.fn>;
+    const results = makeGenerateResults([
+      { status: 'created', path: 'a.md', target: 'claude-code' },
+      { status: 'updated', path: 'b.md', target: 'claude-code' },
+      { status: 'skipped', path: 'c.md', target: 'cursor' },
+    ]);
+    mockGenerate.mockResolvedValue(results);
+
+    const out = await orchestrateHandlers.generate(ctx, {});
+
+    expect(out.filesWritten).toBe(2);
+    expect(out.lockfileUpdated).toBe(true);
+    expect(writeMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('applies the targets filter (input.targets non-empty)', async () => {
+    mockGenerate.mockResolvedValue([]);
+    await orchestrateHandlers.generate(ctx, { targets: ['claude-code'], dry_run: true });
+    expect(mockGenerate).toHaveBeenCalledWith(
+      expect.objectContaining({ targetFilter: ['claude-code'] }),
+    );
+  });
+
+  it('omits the targets filter when input.targets is empty', async () => {
+    mockGenerate.mockResolvedValue([]);
+    await orchestrateHandlers.generate(ctx, { targets: [], dry_run: true });
+    expect(mockGenerate).toHaveBeenCalledWith(expect.objectContaining({ targetFilter: undefined }));
+  });
 });
 
 describe('orchestrateHandlers.lint', () => {
@@ -150,6 +181,27 @@ describe('orchestrateHandlers.lint', () => {
       message: 'missing heading',
     });
   });
+
+  it('filters by severity when input.severity is provided', async () => {
+    mockLint.mockResolvedValue({
+      diagnostics: [
+        { level: 'error', file: 'a.md', target: 'claude-code', message: 'A' },
+        { level: 'warning', file: 'b.md', target: 'claude-code', message: 'B' },
+        { level: 'warning', file: 'c.md', target: 'cursor', message: 'C' },
+      ],
+      hasErrors: true,
+    });
+
+    const out = await orchestrateHandlers.lint(ctx, { severity: 'warning' });
+
+    expect(out.issues).toHaveLength(2);
+    expect(out.issues.every((i) => i.level === 'warning')).toBe(true);
+  });
+
+  it('wraps engine error via wrapEngineError', async () => {
+    mockLint.mockRejectedValue(new Error('lint engine boom'));
+    await expect(orchestrateHandlers.lint(ctx, {})).rejects.toMatchObject({ code: 'IO_ERROR' });
+  });
 });
 
 describe('orchestrateHandlers.check', () => {
@@ -171,6 +223,11 @@ describe('orchestrateHandlers.check', () => {
     expect(out.extra).toEqual(['rules/new.md']);
     expect(out.modified).toEqual(['rules/foo.md']);
   });
+
+  it('wraps engine error via wrapEngineError', async () => {
+    mockCheck.mockRejectedValue(new Error('check boom'));
+    await expect(orchestrateHandlers.check(ctx)).rejects.toMatchObject({ code: 'IO_ERROR' });
+  });
 });
 
 describe('orchestrateHandlers.diff', () => {
@@ -186,6 +243,21 @@ describe('orchestrateHandlers.diff', () => {
     expect(out.willCreate).toBe(3);
     expect(out.willModify).toBe(1);
     expect(out.willDelete).toBe(0);
+  });
+
+  it('forwards a non-empty targets filter', async () => {
+    mockDiff.mockResolvedValue({
+      diffs: [],
+      summary: { new: 0, updated: 0, unchanged: 0, deleted: 0 },
+      results: [],
+    });
+    await orchestrateHandlers.diff(ctx, { targets: ['cursor'] });
+    expect(mockDiff).toHaveBeenCalledWith(expect.objectContaining({ targetFilter: ['cursor'] }));
+  });
+
+  it('wraps engine error via wrapEngineError', async () => {
+    mockDiff.mockRejectedValue(new Error('diff boom'));
+    await expect(orchestrateHandlers.diff(ctx, {})).rejects.toMatchObject({ code: 'IO_ERROR' });
   });
 });
 
@@ -234,6 +306,27 @@ describe('orchestrateHandlers.import', () => {
       { code: 'VALIDATION_FAILED' },
     );
   });
+
+  it('translates a regex-matched "unknown target" string error to VALIDATION_FAILED', async () => {
+    mockImportFrom.mockRejectedValue(new Error('unknown target "nope"'));
+    await expect(orchestrateHandlers.import(ctx, { from: 'nope' })).rejects.toMatchObject({
+      code: 'VALIDATION_FAILED',
+    });
+  });
+
+  it('translates a regex-matched "not found" error to VALIDATION_FAILED', async () => {
+    mockImportFrom.mockRejectedValue(new Error('Target descriptor not found for "x"'));
+    await expect(orchestrateHandlers.import(ctx, { from: 'x' })).rejects.toMatchObject({
+      code: 'VALIDATION_FAILED',
+    });
+  });
+
+  it('falls through to wrapEngineError for unrelated failures', async () => {
+    mockImportFrom.mockRejectedValue(new Error('disk full'));
+    await expect(orchestrateHandlers.import(ctx, { from: 'cursor' })).rejects.toMatchObject({
+      code: 'IO_ERROR',
+    });
+  });
 });
 
 describe('orchestrateHandlers.convert', () => {
@@ -269,5 +362,37 @@ describe('orchestrateHandlers.convert', () => {
     await expect(
       orchestrateHandlers.convert(ctx, { from: 'nope', to: 'claude-code' }),
     ).rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
+  });
+
+  it('passes dry_run=true through to runConvert flags', async () => {
+    mockRunConvert.mockResolvedValue({
+      exitCode: 0,
+      data: {
+        from: 'cursor',
+        to: 'claude-code',
+        mode: 'convert',
+        files: [],
+        summary: { created: 0, updated: 0, unchanged: 0 },
+      },
+    });
+
+    const out = await orchestrateHandlers.convert(ctx, {
+      from: 'cursor',
+      to: 'claude-code',
+      dry_run: true,
+    });
+
+    expect(out.dryRun).toBe(true);
+    expect(mockRunConvert).toHaveBeenCalledWith(
+      { from: 'cursor', to: 'claude-code', 'dry-run': true },
+      '/project',
+    );
+  });
+
+  it('falls through to wrapEngineError when convert fails for unrelated reason', async () => {
+    mockRunConvert.mockRejectedValue(new Error('disk full'));
+    await expect(
+      orchestrateHandlers.convert(ctx, { from: 'cursor', to: 'claude-code' }),
+    ).rejects.toMatchObject({ code: 'IO_ERROR' });
   });
 });

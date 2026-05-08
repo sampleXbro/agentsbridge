@@ -1,7 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { loadPlugin, loadAllPlugins } from '../../../src/plugins/load-plugin.js';
+import {
+  loadPlugin,
+  loadAllPlugins,
+  resolveNpmSpecifier,
+} from '../../../src/plugins/load-plugin.js';
 import { resetRegistry, getDescriptor } from '../../../src/targets/catalog/registry.js';
 
 // Path to our hand-written fixture plugin
@@ -56,6 +60,20 @@ describe('loadPlugin', () => {
       source: `data:text/javascript,export const descriptor = { id: 'BAD_ID', generators: {}, capabilities: {}, emptyImportMessage: '', lintRules: null, project: { paths: {} }, buildImportPaths: async()=>{}, detectionPaths: [] };`,
     };
     await expect(loadPlugin(badPlugin, process.cwd())).rejects.toThrow(/data:/);
+  });
+});
+
+describe('resolveNpmSpecifier', () => {
+  it('resolves a real npm dependency to an absolute path in node_modules', () => {
+    const resolved = resolveNpmSpecifier('yaml', process.cwd());
+    expect(resolved).toContain('node_modules');
+    expect(resolved).toContain('yaml');
+  });
+
+  it('throws for a non-existent package', () => {
+    expect(() => resolveNpmSpecifier('totally-fake-pkg-xyz-999', process.cwd())).toThrow(
+      /Cannot find package/,
+    );
   });
 });
 

@@ -180,11 +180,16 @@ Guards in place:
 
 - **Path-traversal protection** — all paths are resolved relative to `.agentsmesh/` and rejected if they escape it.
 - **`_root.md` protection** — the root rule cannot be deleted.
-- **Resource limits** — individual file writes are capped to prevent runaway mutations.
-- **No absolute paths in error messages** — `McpError` refuses to leak filesystem paths to the agent.
+- **Resource limits** — individual file writes are capped at 1 MiB; canonical name length, hooks-per-event, args, and env values all have explicit caps.
+- **Flat canonical names** — `create_rule` / `create_command` / `create_agent` reject names containing `/`, `..`, or characters outside `[A-Za-z0-9_-]`. Names that are Windows reserved devices (`CON`, `AUX`, `NUL`, `COM1-9`, `LPT1-9`) or contain `&lt;&gt;:|?*` are rejected so generation stays portable.
+- **Strict write-tool input validation** — every mutation tool is gated by a Zod schema that rejects shell-meta payloads before they reach disk:
+  - `add_mcp_server` / `update_mcp_server` reject `command` strings containing any of the shell metacharacters `; & | $ \` &lt; &gt; ! \\` or newlines, env keys outside `[A-Za-z_][A-Za-z0-9_]*`, URLs whose protocol is not `http(s)://`, args arrays longer than 100, and unknown server fields.
+  - `update_hooks` requires a `matcher` free of CR/LF, requires every entry to have `command` or `prompt`, and caps each event at 100 entries (50 nested).
+  - `update_permissions` validates each entry against `Tool` / `Tool(matcher)` and rejects newlines that could escape YAML quoting.
+- **Redacted error messages** — `McpError` refuses to construct messages containing absolute paths, and the server fallback path runs raw `Error.message` strings through a redactor before returning them to the client. `IO_ERROR` envelopes include the underlying `errno` code in `details` so failures stay diagnosable without leaking layout.
 
 <Aside type="caution">
-  The server operates on your project's canonical directory. Any agent with access to this MCP server can modify rules, agents, skills, and trigger generation. Grant access only to trusted agents.
+  The server operates on your project's canonical directory. Any agent with access to this MCP server can modify rules, agents, skills, and trigger generation. Grant access only to trusted agents. The strict input validation above protects against obviously-malicious payloads but cannot prevent a trusted agent from registering a legitimate-looking malicious MCP server (e.g. `command: "node"`, `args: ["./evil.js"]`) — review the canonical files in `.agentsmesh/` like any other code.
 </Aside>
 
 ## Troubleshooting

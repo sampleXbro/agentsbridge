@@ -17,6 +17,17 @@ Manage runtime plugin targets. Plugins are npm packages (or local paths) that ex
 | `info <id>` | Print descriptor details for a loaded plugin. |
 | `remove <id>` | Remove a plugin from `agentsmesh.yaml`. |
 
+## Configuration shape
+
+```yaml
+# agentsmesh.yaml
+plugins:
+  - id: foo-ide                          # required, ^[a-z][a-z0-9-]*$
+    source: agentsmesh-target-foo-ide    # required: npm specifier, file:, ./, /, ../
+    version: 1.2.0                       # optional pin
+    strict: true                         # optional — see "Strict mode" below
+```
+
 ## `agentsmesh plugin add`
 
 Register a plugin in `agentsmesh.yaml` so AgentsMesh loads it on every command.
@@ -81,6 +92,25 @@ Removes the plugin entry from `agentsmesh.yaml`. Does not uninstall the npm pack
 ## How plugins are loaded
 
 At every command, AgentsMesh reads the `plugins` block in `agentsmesh.yaml`, dynamically imports each registered package, validates the exported descriptor against the Zod schema, and registers it in the target registry. Invalid descriptors are warned and skipped — one bad plugin does not block other targets or built-in generation.
+
+## Strict mode
+
+By default a plugin that fails to import (missing package, broken descriptor, schema violation) logs a warning and is skipped. CI pipelines often need the opposite — a missing target should fail the build instead of silently shrinking the generation matrix.
+
+Two switches escalate failures to errors:
+
+```yaml
+plugins:
+  - id: foo-ide
+    source: agentsmesh-target-foo-ide
+    strict: true            # this plugin must load successfully
+```
+
+```bash
+AGENTSMESH_STRICT_PLUGINS=1 agentsmesh generate    # all plugins must load
+```
+
+When either switch is set, AgentsMesh collects every failed-load message and throws a single combined error. Use it in CI release jobs to catch plugin regressions before a published artifact is built without expected target output.
 
 A descriptor is valid if every `native` / `embedded` / `partial` capability has a matching generator on `descriptor.generators`, or `emitScopedSettings` for settings-backed features (hooks, permissions, ignore patterns).
 

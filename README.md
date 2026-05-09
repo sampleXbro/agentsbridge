@@ -146,7 +146,7 @@ On macOS/Linux you can also run `tree .agentsmesh` if you have `tree` installed.
 
 ## Supported AI coding tools
 
-AgentsMesh currently generates native config for every major AI coding assistant — Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf, Continue, Cline, Kiro, Codex CLI, Junie, Roo Code, Antigravity, Amp, Zed, Warp — plus plugin targets you can ship as standalone npm packages. Each tool's native vs. embedded support per feature is tracked in the [supported tools matrix](https://samplexbro.github.io/agentsmesh/reference/supported-tools/). The full matrix table is also embedded [further down this README](#supported-tools--feature-matrix).
+AgentsMesh currently generates native config for every major AI coding assistant — Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf, Continue, Cline, Kiro, Codex CLI, Junie, Roo Code, Antigravity, Amp, Zed, Warp, Aider, Amazon Q, Augment Code, Crush, Qwen Code, Trae — plus plugin targets you can ship as standalone npm packages. Each tool's native vs. embedded support per feature is tracked in the [supported tools matrix](https://samplexbro.github.io/agentsmesh/reference/supported-tools/). The full matrix table is also embedded [further down this README](#supported-tools--feature-matrix).
 
 ---
 

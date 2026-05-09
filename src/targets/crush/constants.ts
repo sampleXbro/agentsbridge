@@ -1,0 +1,35 @@
+/**
+ * Crush target constants.
+ *
+ * Crush is a terminal TUI AI coding agent by Charmbracelet.
+ * https://github.com/charmbracelet/crush
+ *
+ *   - **Project config**: `crush.json` / `.crush.json` at project root
+ *   - **Global config**: `~/.config/crush/crush.json`
+ *   - **Context file**: `AGENTS.md` (or `CRUSH.md`, `CLAUDE.md`, `GEMINI.md`)
+ *   - **Skills**: `.crush/skills/` (also reads `.agents/skills/` by default)
+ *   - **Ignore**: `.crushignore`
+ *
+ * Crush reads multiple context files (AGENTS.md, CRUSH.md, CLAUDE.md, GEMINI.md)
+ * at project root; we generate to `AGENTS.md` as the primary root instruction file.
+ * MCP, hooks, and permissions all live in `crush.json`.
+ */
+
+export const CRUSH_TARGET = 'crush';
+
+// Project-scope paths
+export const CRUSH_ROOT_FILE = 'AGENTS.md';
+export const CRUSH_SKILLS_DIR = '.crush/skills';
+export const CRUSH_CONFIG_FILE = 'crush.json';
+export const CRUSH_IGNORE = '.crushignore';
+
+// Global-scope paths (~/.config/crush/)
+export const CRUSH_GLOBAL_CONFIG_DIR = '.config/crush';
+export const CRUSH_GLOBAL_CONFIG_FILE = `${CRUSH_GLOBAL_CONFIG_DIR}/crush.json`;
+export const CRUSH_GLOBAL_SKILLS_DIR = '.config/crush/skills';
+export const CRUSH_GLOBAL_ROOT_FILE = `${CRUSH_GLOBAL_CONFIG_DIR}/AGENTS.md`;
+
+// Canonical paths for import mapping
+export const CRUSH_CANONICAL_RULES_DIR = '.agentsmesh/rules';
+export const CRUSH_CANONICAL_IGNORE = '.agentsmesh/ignore';
+export const CRUSH_CANONICAL_MCP = '.agentsmesh/mcp.json';

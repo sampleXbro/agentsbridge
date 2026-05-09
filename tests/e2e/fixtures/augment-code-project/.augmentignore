@@ -1,0 +1,21 @@
+# Build artifacts
+dist/
+build/
+.turbo/
+
+# Dependencies
+node_modules/
+
+# Sensitive files
+.env
+.env.local
+.env.*.local
+secrets/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# IDE files
+.idea/
+*.swp

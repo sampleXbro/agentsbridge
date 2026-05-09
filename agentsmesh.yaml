@@ -18,6 +18,12 @@ targets:
   - amp
   - zed
   - warp
+  - aider
+  - amazon-q
+  - augment-code
+  - crush
+  - qwen-code
+  - trae
 features:
   - rules
   - commands

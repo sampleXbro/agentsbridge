@@ -1,0 +1,60 @@
+{
+  "$schema": "https://charm.land/crush.json",
+  "mcp": {
+    "context7": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ],
+      "env": {}
+    },
+    "github": {
+      "description": "GitHub MCP server for repo operations",
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_TOKEN": "$GITHUB_TOKEN"
+      }
+    },
+    "agentsmesh": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "agentsmesh",
+        "mcp"
+      ],
+      "env": {}
+    }
+  },
+  "permissions": {
+    "allowed_tools": [
+      "Bash(pnpm build:*)",
+      "Bash(pnpm test:*)",
+      "Bash(git add:*)",
+      "Bash(npx vitest:*)",
+      "Bash(node -e \"console.log\\(['.windsurfrules', 'AGENTS.md'].sort\\(\\)\\)\")",
+      "Bash(node -e \"console.log\\(['.windsurfrules', 'AGENTS.md'].sort\\(\\)\\)\":*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "command": "echo \"Running: $(jq -r '.tool_input.command' < /dev/stdin)\""
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "command": "jq -r '.tool_input.file_path' | xargs eslint --fix"
+      }
+    ]
+  }
+}

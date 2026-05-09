@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { descriptor as aider } from '../../../src/targets/aider/index.js';
 import { descriptor as amp } from '../../../src/targets/amp/index.js';
 import { descriptor as claudeCode } from '../../../src/targets/claude-code/index.js';
 import { descriptor as cursor } from '../../../src/targets/cursor/index.js';
@@ -277,6 +278,7 @@ describe('descriptor metadata', () => {
   // BUILTIN_TARGETS slots `undefined` under vitest's module loader. Drift is
   // caught separately by tests/unit/targets/catalog/builtin-catalog.test.ts.
   const allDescriptors = [
+    aider,
     amp,
     claudeCode,
     cursor,

@@ -981,4 +981,55 @@ features: [rules, skills, ignore]
     );
     fileContains(join(dir, '.gooseignore'), '.env');
   });
+
+  it('generates Aider CONVENTIONS.md, skills, and .aiderignore', async () => {
+    dir = createCanonicalProject(`version: 1
+targets: [aider]
+features: [rules, skills, ignore]
+`);
+    const result = await runCli('generate --targets aider', dir);
+    expect(result.exitCode, result.stderr).toBe(0);
+
+    dirTreeExactly(dir, [
+      '.agentsmesh/',
+      '.agentsmesh/.lock',
+      '.agentsmesh/agents/',
+      '.agentsmesh/agents/code-reviewer.md',
+      '.agentsmesh/agents/researcher.md',
+      '.agentsmesh/commands/',
+      '.agentsmesh/commands/review.md',
+      '.agentsmesh/hooks.yaml',
+      '.agentsmesh/ignore',
+      '.agentsmesh/mcp.json',
+      '.agentsmesh/permissions.yaml',
+      '.agentsmesh/rules/',
+      '.agentsmesh/rules/_root.md',
+      '.agentsmesh/rules/typescript.md',
+      '.agentsmesh/skills/',
+      '.agentsmesh/skills/api-generator/',
+      '.agentsmesh/skills/api-generator/SKILL.md',
+      '.agentsmesh/skills/api-generator/references/',
+      '.agentsmesh/skills/api-generator/references/route-checklist.md',
+      '.agentsmesh/skills/api-generator/template.ts',
+      '.agentsmeshcache',
+      '.aider/',
+      '.aider/skills/',
+      '.aider/skills/api-generator/',
+      '.aider/skills/api-generator/SKILL.md',
+      '.aider/skills/api-generator/references/',
+      '.aider/skills/api-generator/references/route-checklist.md',
+      '.aider/skills/api-generator/template.ts',
+      '.aiderignore',
+      'CONVENTIONS.md',
+      'agentsmesh.yaml',
+    ]);
+
+    fileContains(join(dir, 'CONVENTIONS.md'), '# Standards');
+    fileNotContains(join(dir, 'CONVENTIONS.md'), 'root: true');
+    fileContains(
+      join(dir, '.aider', 'skills', 'api-generator', 'SKILL.md'),
+      'name: api-generator',
+    );
+    fileContains(join(dir, '.aiderignore'), '.env');
+  });
 });

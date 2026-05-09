@@ -14,6 +14,7 @@ const ROOT =
   process.env.AGENTSMESH_MATRIX_ROOT ?? join(dirname(fileURLToPath(import.meta.url)), '..');
 
 const TARGET_LABELS: Record<string, string> = {
+  aider: 'Aider',
   amp: 'Amp',
   'claude-code': 'Claude Code',
   cursor: 'Cursor',

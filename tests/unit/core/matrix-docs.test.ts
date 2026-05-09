@@ -19,6 +19,7 @@ const FEATURES = [
 ] as const;
 
 const TARGET_LABELS: Record<string, string> = {
+  aider: 'Aider',
   amp: 'Amp',
   'claude-code': 'Claude Code',
   cursor: 'Cursor',

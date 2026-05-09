@@ -6,6 +6,7 @@
  * `schema.ts → descriptors → ValidatedConfig → schema.ts` cycle.
  */
 export const BUILTIN_TARGET_IDS = [
+  'aider',
   'amp',
   'antigravity',
   'claude-code',

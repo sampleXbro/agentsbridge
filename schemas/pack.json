@@ -78,6 +78,7 @@
     "target": {
       "type": "string",
       "enum": [
+        "aider",
         "amp",
         "antigravity",
         "claude-code",

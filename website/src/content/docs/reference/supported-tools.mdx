@@ -23,13 +23,17 @@ With `--global`, the canonical directory is `~/.agentsmesh/` and CLI commands re
 
 | Target | Global generate writes | Global import reads |
 |--------|------------------------|---------------------|
+| Aider | `~/CONVENTIONS.md`, `~/.aiderignore`, `~/.aider/skills/` | Same user-level paths |
+| Amazon Q | `~/.aws/amazonq/rules/*.md`, `~/.aws/amazonq/mcp.json` | Same user-level paths |
 | Amp | `~/.config/amp/AGENTS.md`, `~/.config/amp/skills/`, `~/.config/amp/settings.json`, optional mirror to `~/.agents/skills/` | Same user-level paths |
 | Antigravity | `~/.gemini/antigravity/GEMINI.md`, `~/.gemini/antigravity/skills/`, `~/.gemini/antigravity/workflows/`, `~/.gemini/antigravity/mcp_config.json` | Same user-level paths |
+| Augment Code | `~/.augment/rules/*.md`, `~/.augment/commands/*.md`, `~/.augment/skills/`, `~/.augment/settings.json` | Same user-level paths |
 | Claude Code | `~/.claude/**` (including `CLAUDE.md`, `settings.json`, `hooks.json`, `skills/`, `agents/`, `commands/`, `output-styles/`), `~/.claude.json`, `~/.claudeignore`, mirrored skills under `~/.agents/skills/` | Same user-level paths (hooks prefer `~/.claude/hooks.json` when present) |
 | Cline | `~/Documents/Cline/Rules/*.md`, `~/Documents/Cline/Workflows/*.md`, `~/Documents/Cline/Hooks/`, `~/.cline/skills/*/SKILL.md`, `~/.cline/cline_mcp_settings.json`, `~/.clineignore`, mirrored skills under `~/.agents/skills/` | Current importer reads Cline project-style paths under `$HOME` (`~/.clinerules`, `~/.cline/skills/`, `~/.cline/cline_mcp_settings.json`, `~/.clineignore`); generated hook scripts are not imported back yet |
 | Codex CLI | `~/.codex/AGENTS.md`, `~/.codex/config.toml`, `~/.codex/agents/*.toml`, `~/.codex/rules/*.rules` for execution rules, `~/.agents/skills/` | `~/.codex/AGENTS.override.md` preferred over `AGENTS.md`; `~/.codex/config.toml`, agents, rules, `~/.agents/skills/` (no whole-home nested `AGENTS.md` scan) |
 | Continue | `~/.continue/rules/*.md`, `~/.continue/prompts/*.md`, `~/.continue/skills/`, `~/.continue/mcpServers/agentsmesh.json`, `~/.continue/AGENTS.md` (compat mirror), `~/.continue/config.yaml` (global config) | Same user-level paths |
 | Copilot | `~/.copilot/copilot-instructions.md` (all instructions merged), `~/.copilot/AGENTS.md` (compat mirror), `~/.copilot/agents/*.agent.md`, `~/.copilot/skills/`, `~/.copilot/prompts/*.prompt.md`, mirrored skills under `~/.agents/skills/` and `~/.claude/skills/` | Same user-level paths |
+| Crush | `~/.config/crush/AGENTS.md`, `~/.config/crush/crush.json`, `~/.config/crush/skills/` | Same user-level paths (ignore file not emitted globally) |
 | Cursor | `~/.cursor/rules/*.mdc`, `~/.cursor/AGENTS.md`, `~/.cursor/mcp.json`, `~/.cursor/hooks.json`, `~/.cursorignore`, `~/.cursor/{skills/,agents/,commands/}` | Same paths when present; legacy `~/.agentsmesh-exports/cursor/user-rules.md` is still imported if no structured rules are found first |
 | Gemini CLI | `~/.gemini/GEMINI.md`, `~/.gemini/AGENTS.md`, `~/.gemini/settings.json`, `~/.gemini/commands/*.toml`, `~/.gemini/skills/`, `~/.gemini/agents/`, optional mirror to `~/.agents/skills/` | Same paths (policies/ignore not emitted in global mode) |
 | Goose | `~/.config/goose/.goosehints`, `~/.config/goose/.gooseignore`, `~/.agents/skills/`, optional mirror to `~/.agents/skills/` | Same user-level paths |
@@ -37,7 +41,9 @@ With `--global`, the canonical directory is `~/.agentsmesh/` and CLI commands re
 | Kilo Code | `~/.kilo/AGENTS.md`, `~/.kilo/rules/*.md`, `~/.kilo/commands/*.md`, `~/.kilo/agents/*.md` (first-class subagents), `~/.kilo/skills/`, `~/.kilo/mcp.json`, `~/.kilocodeignore`, optional mirror to `~/.agents/skills/` | Same user-level paths; legacy `~/.kilocode/` and `~/.kilocodemodes` (not yet read in global scope) |
 | Kiro | `~/.kiro/steering/AGENTS.md`, `~/.kiro/steering/*.md`, `~/.kiro/agents/`, `~/.kiro/skills/`, `~/.kiro/settings/mcp.json`, `~/.kiro/settings/kiroignore`, optional mirror to `~/.agents/skills/` | Same paths (hooks not emitted globally) |
 | OpenCode | `~/.config/opencode/AGENTS.md`, `~/.config/opencode/rules/*.md`, `~/.config/opencode/commands/*.md`, `~/.config/opencode/agents/*.md`, `~/.config/opencode/skills/`, `~/.config/opencode/opencode.json`, optional mirror to `~/.agents/skills/` | Same user-level paths |
+| Qwen Code | `~/.qwen/QWEN.md`, `~/.qwen/settings.json`, `~/.qwen/commands/*.md`, `~/.qwen/agents/*.md`, `~/.qwen/skills/` | Same user-level paths (ignore file not emitted globally) |
 | Roo Code | `~/.roo/AGENTS.md`, `~/.roo/rules/`, `~/.roo/commands/`, `~/.roo/skills/`, `~/mcp_settings.json` (home-level MCP file), `~/.rooignore`, `~/.roo/settings/custom_modes.yaml` (agents → custom modes), optional mirror to `~/.agents/skills/` | Same paths |
+| Trae | `~/.trae/user_rules/rules.md`, `~/.trae/skills/`, `~/.trae/mcp.json` | Same user-level paths |
 | Warp | `~/.warp/skills/`, optional mirror to `~/.agents/skills/` | Same user-level paths |
 | Windsurf | `~/.codeium/windsurf/memories/global_rules.md`, `~/.codeium/windsurf/skills/`, `~/.codeium/windsurf/global_workflows/`, `~/.codeium/windsurf/hooks.json`, `~/.codeium/windsurf/mcp_config.json`, `~/.codeium/.codeiumignore`, optional mirror to `~/.agents/skills/` | Current importer reads Windsurf project-style paths under `$HOME` (`~/.windsurfrules` or `~/AGENTS.md`, `~/.windsurf/`, `~/.windsurfignore` or `~/.codeiumignore`) |
 | Zed | `~/.config/zed/settings.json` (MCP only) | Same user-level path |
@@ -47,17 +53,17 @@ With `--global`, the canonical directory is `~/.agentsmesh/` and CLI commands re
 Catalog defaults for a repo-local `agentsmesh generate` (see `descriptor.capabilities`).
 
 {/* agentsmesh:support-matrix:project:start */}
-| Feature | Amp | Antigravity | Claude Code | Cline | Codex CLI | Continue | Copilot | Cursor | Gemini CLI | Goose | Junie | Kilo Code | Kiro | OpenCode | Roo Code | Warp | Windsurf | Zed |
-|---|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
-| Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
-| Additional Rules | Embedded | Native | Native | Native | Native | Native | Native | Embedded | Embedded | Embedded | Native | Native | Native | Native | Native | Embedded | Native | Embedded |
-| Commands | — | Partial (workflows) | Native | Native (workflows) | Embedded | Embedded | Native | Native | Native | — | Native | Native | — | Native | Native | — | Native (workflows) | — |
-| Agents | — | — | Native | Embedded | Native | — | Native | Native | Native | — | Native | Native | Native | Native | Partial | — | Embedded | — |
-| Skills | Native | Native | Native | Native | Native | Embedded | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — |
-| MCP Servers | Native | — | Native | Native | Native | Native | — | Native | Native | — | Native | Native | Native | Native | Native | Native | Partial | Native |
-| Hooks | — | — | Native | Native | — | — | Partial | Native | Partial | — | — | — | Native | — | — | — | Native | — |
-| Ignore | — | — | Native | Native | — | — | — | Native | Native (settings-embedded) | Native | Native | Native | Native | — | Native | — | Native | — |
-| Permissions | — | — | Native | — | — | — | — | Partial | Partial | — | — | — | — | — | — | — | — | — |
+| Feature | Aider | Amazon Q | Amp | Antigravity | Augment Code | Claude Code | Cline | Codex CLI | Continue | Copilot | Crush | Cursor | Gemini CLI | Goose | Junie | Kilo Code | Kiro | OpenCode | Qwen Code | Roo Code | Trae | Warp | Windsurf | Zed |
+|---|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
+| Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
+| Additional Rules | Embedded | — | Embedded | Native | Native | Native | Native | Native | Native | Native | Embedded | Embedded | Embedded | Embedded | Native | Native | Native | Native | Native | Native | Native | Embedded | Native | Embedded |
+| Commands | — | — | — | Partial (workflows) | Native | Native | Native (workflows) | Embedded | Embedded | Native | — | Native | Native | — | Native | Native | — | Native | Native | Native | — | — | Native (workflows) | — |
+| Agents | — | — | — | — | — | Native | Embedded | Native | — | Native | — | Native | Native | — | Native | Native | Native | Native | Native | Partial | — | — | Embedded | — |
+| Skills | Native | — | Native | Native | Native | Native | Native | Native | Embedded | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — |
+| MCP Servers | — | Native | Native | — | Native | Native | Native | Native | Native | — | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Partial | Native |
+| Hooks | — | — | — | — | Native | Native | Native | — | — | Partial | Native | Native | Partial | — | — | — | Native | — | — | — | — | — | Native | — |
+| Ignore | Native | — | — | — | Native | Native | Native | — | — | — | Native | Native | Native (settings-embedded) | Native | Native | Native | Native | — | Native | Native | Native | — | Native | — |
+| Permissions | — | — | — | — | — | Native | — | — | — | — | Partial | Partial | Partial | — | — | — | — | — | — | — | — | — | — | — |
 {/* agentsmesh:support-matrix:project:end */}
 
 ## Feature matrix (global scope)
@@ -65,17 +71,17 @@ Catalog defaults for a repo-local `agentsmesh generate` (see `descriptor.capabil
 Catalog defaults for `agentsmesh matrix --global` / `agentsmesh generate --global` (see `descriptor.globalSupport.capabilities` when present).
 
 {/* agentsmesh:support-matrix:global:start */}
-| Feature | Amp | Antigravity | Claude Code | Cline | Codex CLI | Continue | Copilot | Cursor | Gemini CLI | Goose | Junie | Kilo Code | Kiro | OpenCode | Roo Code | Warp | Windsurf | Zed |
-|---|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
-| Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | — |
-| Additional Rules | Embedded | Embedded | Native | Native | Embedded | Native | Native | Embedded | Embedded | Embedded | Embedded | Native | Native | Native | Native | — | Partial | — |
-| Commands | — | Partial (workflows) | Native | Native (workflows) | Embedded | Native | Native | Native | Native | — | Native | Native | — | Native | Native | — | Native (workflows) | — |
-| Agents | — | — | Native | Embedded | Native | — | Native | Native | Native | — | Native | Native | Native | Native | Partial | — | Embedded | — |
-| Skills | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — |
-| MCP Servers | Native | Native | Native | Native | Native | Native | — | Native | Native | — | Native | Native | Native | Native | Native | — | Partial | Native |
-| Hooks | — | — | Native | Native | — | — | — | Native | Partial | — | — | — | — | — | — | — | Native | — |
-| Ignore | — | — | Native | Native | — | — | — | Native | — | Native | — | Native | Native | — | Native | — | Native | — |
-| Permissions | — | — | Native | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — |
+| Feature | Aider | Amazon Q | Amp | Antigravity | Augment Code | Claude Code | Cline | Codex CLI | Continue | Copilot | Crush | Cursor | Gemini CLI | Goose | Junie | Kilo Code | Kiro | OpenCode | Qwen Code | Roo Code | Trae | Warp | Windsurf | Zed |
+|---|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
+| Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | — |
+| Additional Rules | Embedded | — | Embedded | Embedded | Native | Native | Native | Embedded | Native | Native | Embedded | Embedded | Embedded | Embedded | Embedded | Native | Native | Native | Embedded | Native | Native | — | Partial | — |
+| Commands | — | — | — | Partial (workflows) | Native | Native | Native (workflows) | Embedded | Native | Native | — | Native | Native | — | Native | Native | — | Native | Native | Native | — | — | Native (workflows) | — |
+| Agents | — | — | — | — | — | Native | Embedded | Native | — | Native | — | Native | Native | — | Native | Native | Native | Native | Native | Partial | — | — | Embedded | — |
+| Skills | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — |
+| MCP Servers | — | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | Native | — | Partial | Native |
+| Hooks | — | — | — | — | — | Native | Native | — | — | — | Native | Native | Partial | — | — | — | — | — | — | — | — | — | Native | — |
+| Ignore | Native | — | — | — | — | Native | Native | — | — | — | — | Native | — | Native | — | Native | Native | — | — | Native | — | — | Native | — |
+| Permissions | — | — | — | — | — | Native | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — |
 {/* agentsmesh:support-matrix:global:end */}
 
 ## Tool details

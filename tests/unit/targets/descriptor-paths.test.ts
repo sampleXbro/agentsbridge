@@ -17,6 +17,12 @@ import { descriptor as opencode } from '../../../src/targets/opencode/index.js';
 import { descriptor as goose } from '../../../src/targets/goose/index.js';
 import { descriptor as warp } from '../../../src/targets/warp/index.js';
 import { descriptor as zed } from '../../../src/targets/zed/index.js';
+import { descriptor as trae } from '../../../src/targets/trae/index.js';
+import { descriptor as aider } from '../../../src/targets/aider/index.js';
+import { descriptor as amazonQ } from '../../../src/targets/amazon-q/index.js';
+import { descriptor as augmentCode } from '../../../src/targets/augment-code/index.js';
+import { descriptor as crush } from '../../../src/targets/crush/index.js';
+import { descriptor as qwenCode } from '../../../src/targets/qwen-code/index.js';
 import { TARGET_IDS } from '../../../src/targets/catalog/target-ids.js';
 import type { ValidatedConfig } from '../../../src/config/core/schema.js';
 import type { CanonicalRule } from '../../../src/core/types.js';
@@ -295,6 +301,12 @@ describe('descriptor metadata', () => {
     goose,
     warp,
     zed,
+    trae,
+    aider,
+    amazonQ,
+    augmentCode,
+    crush,
+    qwenCode,
   ];
 
   const allFeatureKeys = [

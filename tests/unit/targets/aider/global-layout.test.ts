@@ -35,6 +35,11 @@ describe('aider global layout', () => {
     expect(rewrite(skillPath, '')).toBe(expectedPath);
   });
 
+  it('rewriteGeneratedPath passes through unknown paths unchanged', () => {
+    const rewrite = descriptor.globalSupport!.layout.rewriteGeneratedPath!;
+    expect(rewrite('some/unknown/path.txt', '')).toBe('some/unknown/path.txt');
+  });
+
   it('globalSupport.capabilities matches project capabilities', () => {
     expect(descriptor.globalSupport!.capabilities).toEqual(descriptor.capabilities);
   });

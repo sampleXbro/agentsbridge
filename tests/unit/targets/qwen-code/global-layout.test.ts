@@ -4,6 +4,7 @@ import {
   QWEN_ROOT,
   QWEN_IGNORE,
   QWEN_SETTINGS,
+  QWEN_RULES_DIR,
   QWEN_COMMANDS_DIR,
   QWEN_AGENTS_DIR,
   QWEN_SKILLS_DIR,
@@ -54,6 +55,16 @@ describe('qwen-code global layout', () => {
   it('rewriteGeneratedPath returns null for .qwenignore in global mode', () => {
     const rewrite = descriptor.globalSupport!.layout.rewriteGeneratedPath!;
     expect(rewrite(QWEN_IGNORE, '')).toBeNull();
+  });
+
+  it('rewriteGeneratedPath returns null for .qwen/rules paths in global mode', () => {
+    const rewrite = descriptor.globalSupport!.layout.rewriteGeneratedPath!;
+    expect(rewrite(`${QWEN_RULES_DIR}/typescript.md`, '')).toBeNull();
+  });
+
+  it('rewriteGeneratedPath passes through unknown paths unchanged', () => {
+    const rewrite = descriptor.globalSupport!.layout.rewriteGeneratedPath!;
+    expect(rewrite('some/unknown/path.txt', '')).toBe('some/unknown/path.txt');
   });
 
   it('globalSupport has detection paths', () => {

@@ -58,6 +58,12 @@ describe('crush descriptor global layout', () => {
     expect(paths).toContain(CRUSH_GLOBAL_SKILLS_DIR);
   });
 
+  it('rewriteGeneratedPath returns path unchanged for unknown files', () => {
+    const rewriteGeneratedPath = descriptor.globalSupport!.layout.rewriteGeneratedPath!;
+    const result = rewriteGeneratedPath('unknown-file.txt');
+    expect(result).toBe('unknown-file.txt');
+  });
+
   it('global capabilities have correct values', () => {
     const caps = descriptor.globalSupport!.capabilities;
     expect(caps.rules).toBe('native');

@@ -78,4 +78,21 @@ describe('importFromAider', () => {
 
     rmSync(projectRoot, { recursive: true, force: true });
   });
+
+  it('defaults to project scope when no scope option is passed', async () => {
+    projectRoot = setupFixture({
+      'CONVENTIONS.md': '# Project Instructions\n\nUse TDD.',
+    });
+
+    const withoutScope = await importFromAider(projectRoot);
+    const withProjectScope = await importFromAider(projectRoot, { scope: 'project' });
+
+    expect(withoutScope).toHaveLength(withProjectScope.length);
+    for (let i = 0; i < withoutScope.length; i++) {
+      expect(withoutScope[i].toPath).toBe(withProjectScope[i].toPath);
+      expect(withoutScope[i].feature).toBe(withProjectScope[i].feature);
+    }
+
+    rmSync(projectRoot, { recursive: true, force: true });
+  });
 });

@@ -122,6 +122,35 @@ describe('importFromCrush', () => {
     expect(Array.isArray(results)).toBe(true);
   });
 
+  it('skips empty hooks object in crush.json', async () => {
+    await writeJson(join(projectRoot, 'crush.json'), {
+      hooks: {},
+    });
+
+    const results = await importFromCrush(projectRoot);
+
+    const hooksResult = results.find((r) => r.feature === 'hooks');
+    expect(hooksResult).toBeUndefined();
+  });
+
+  it('does not crash when crush.json contains a permissions key', async () => {
+    await writeJson(join(projectRoot, 'crush.json'), {
+      permissions: {
+        allow: ['Bash'],
+        deny: ['rm -rf'],
+      },
+    });
+
+    const results = await importFromCrush(projectRoot);
+
+    // permissions in crush.json are not currently imported to canonical
+    // (allowed_tools/denied_tools format differs from canonical allow/deny);
+    // verify the importer handles the key gracefully without errors.
+    expect(Array.isArray(results)).toBe(true);
+    const permResult = results.find((r) => r.feature === 'permissions');
+    expect(permResult).toBeUndefined();
+  });
+
   it('skips MCP servers with neither command nor url', async () => {
     await writeJson(join(projectRoot, 'crush.json'), {
       mcp: {

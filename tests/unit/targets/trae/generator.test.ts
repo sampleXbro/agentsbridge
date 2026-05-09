@@ -118,6 +118,31 @@ describe('generateRules (trae)', () => {
     expect(results[0].path).toBe(`${TRAE_RULES_DIR}/trae-specific.md`);
   });
 
+  it('returns empty array when no rules', () => {
+    expect(generateRules(makeCanonical())).toHaveLength(0);
+  });
+
+  it('emits only non-root rule when no root rule exists', () => {
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: '/proj/.agentsmesh/rules/security.md',
+          root: false,
+          targets: [],
+          description: 'Security guidelines',
+          globs: [],
+          body: 'Never expose secrets.',
+        },
+      ],
+    });
+
+    const results = generateRules(canonical);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(`${TRAE_RULES_DIR}/security.md`);
+    expect(results.some((r) => r.path === TRAE_PROJECT_RULES)).toBe(false);
+  });
+
   it('trims whitespace from rule body', () => {
     const canonical = makeCanonical({
       rules: [

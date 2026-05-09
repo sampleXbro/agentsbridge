@@ -137,6 +137,48 @@ describe('generateRules (qwen-code)', () => {
     const results = generateRules(makeCanonical({ rules: [] }));
     expect(results).toHaveLength(0);
   });
+
+  it('generates QWEN.md with empty string for root rule with empty body', () => {
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: '/proj/.agentsmesh/rules/_root.md',
+          root: true,
+          targets: [],
+          description: '',
+          globs: [],
+          body: '',
+        },
+      ],
+    });
+
+    const results = generateRules(canonical);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(QWEN_ROOT);
+    expect(results[0].content).toBe('');
+  });
+
+  it('includes rules explicitly targeting qwen-code', () => {
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: '/proj/.agentsmesh/rules/qwen-only.md',
+          root: false,
+          targets: ['qwen-code'],
+          description: 'Qwen-only rule',
+          globs: [],
+          body: 'Qwen specific.',
+        },
+      ],
+    });
+
+    const results = generateRules(canonical);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(`${QWEN_RULES_DIR}/qwen-only.md`);
+    expect(results[0].content).toContain('Qwen specific.');
+  });
 });
 
 describe('generateCommands (qwen-code)', () => {
@@ -189,6 +231,43 @@ describe('generateCommands (qwen-code)', () => {
     const results = generateCommands(makeCanonical({ commands: [] }));
     expect(results).toHaveLength(0);
   });
+
+  it('omits allowed-tools from frontmatter when empty', () => {
+    const canonical = makeCanonical({
+      commands: [
+        {
+          name: 'simple',
+          description: 'A simple command',
+          allowedTools: [],
+          body: 'Do something.',
+        },
+      ],
+    });
+
+    const results = generateCommands(canonical);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].content).not.toContain('allowed-tools');
+    expect(results[0].content).toContain('A simple command');
+  });
+
+  it('generates command with empty body', () => {
+    const canonical = makeCanonical({
+      commands: [
+        {
+          name: 'empty-body',
+          description: 'Command with no body',
+          allowedTools: [],
+          body: '',
+        },
+      ],
+    });
+
+    const results = generateCommands(canonical);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(`${QWEN_COMMANDS_DIR}/empty-body.md`);
+  });
 });
 
 describe('generateAgents (qwen-code)', () => {
@@ -222,6 +301,59 @@ describe('generateAgents (qwen-code)', () => {
   it('returns empty when no agents exist', () => {
     const results = generateAgents(makeCanonical({ agents: [] }));
     expect(results).toHaveLength(0);
+  });
+
+  it('omits tools from frontmatter when empty', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          name: 'simple-agent',
+          description: 'No tools agent',
+          tools: [],
+          disallowedTools: [],
+          model: '',
+          permissionMode: '',
+          maxTurns: 0,
+          mcpServers: [],
+          hooks: {},
+          skills: [],
+          memory: '',
+          body: 'You are a simple agent.',
+        },
+      ],
+    });
+
+    const results = generateAgents(canonical);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].content).not.toContain('tools:');
+    expect(results[0].content).toContain('simple-agent');
+  });
+
+  it('generates agent with empty body', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          name: 'empty-agent',
+          description: 'Agent with no body',
+          tools: ['Read'],
+          disallowedTools: [],
+          model: '',
+          permissionMode: '',
+          maxTurns: 0,
+          mcpServers: [],
+          hooks: {},
+          skills: [],
+          memory: '',
+          body: '',
+        },
+      ],
+    });
+
+    const results = generateAgents(canonical);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(`${QWEN_AGENTS_DIR}/empty-agent.md`);
   });
 });
 

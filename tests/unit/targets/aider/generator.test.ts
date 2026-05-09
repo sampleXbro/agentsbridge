@@ -110,6 +110,36 @@ describe('generateRules (aider)', () => {
     const results = generateRules(canonical);
     expect(results).toHaveLength(0);
   });
+
+  it('generates CONVENTIONS.md with only non-root rules (no root)', () => {
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: '/proj/.agentsmesh/rules/typescript.md',
+          root: false,
+          targets: [],
+          description: 'TypeScript standards',
+          globs: ['src/**/*.ts'],
+          body: 'Use strict mode.',
+        },
+        {
+          source: '/proj/.agentsmesh/rules/security.md',
+          root: false,
+          targets: [],
+          description: 'Security',
+          globs: [],
+          body: 'No secrets.',
+        },
+      ],
+    });
+
+    const results = generateRules(canonical);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(AIDER_CONVENTIONS);
+    expect(results[0].content).toContain('Use strict mode.');
+    expect(results[0].content).toContain('No secrets.');
+  });
 });
 
 describe('generateSkills (aider)', () => {

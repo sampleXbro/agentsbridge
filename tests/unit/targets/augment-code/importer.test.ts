@@ -128,4 +128,29 @@ describe('importFromAugmentCode', () => {
     const results = await importFromAugmentCode(tmpDir);
     expect(results).toHaveLength(0);
   });
+
+  it('imports rules from global scope (.augment/rules/)', async () => {
+    mkdirSync(join(tmpDir, '.augment', 'rules'), { recursive: true });
+    writeFileSync(
+      join(tmpDir, '.augment', 'rules', '_root.md'),
+      '---\nalways_apply: true\ndescription: Global defaults\n---\n\n# Global Root\n\nGlobal rule.',
+    );
+
+    const results = await importFromAugmentCode(tmpDir, { scope: 'global' });
+
+    const ruleResult = results.find((r) => r.feature === 'rules');
+    expect(ruleResult).toBeDefined();
+    expect(ruleResult!.toPath).toBe('.agentsmesh/rules/_root.md');
+    expect(ruleResult!.fromTool).toBe('augment-code');
+  });
+
+  it('skips ignore import in global scope', async () => {
+    writeFileSync(join(tmpDir, '.augmentignore'), 'dist/\nnode_modules/\n');
+    mkdirSync(join(tmpDir, '.agentsmesh'), { recursive: true });
+
+    const results = await importFromAugmentCode(tmpDir, { scope: 'global' });
+
+    const ignoreResult = results.find((r) => r.feature === 'ignore');
+    expect(ignoreResult).toBeUndefined();
+  });
 });

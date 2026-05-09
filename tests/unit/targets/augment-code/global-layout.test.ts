@@ -67,6 +67,12 @@ describe('augment-code global layout', () => {
     expect(descriptor.globalSupport!.capabilities.mcp).toBe('native');
   });
 
+  it('globalSupport.layout.rewriteGeneratedPath passes through unknown paths unchanged', () => {
+    const rewrite = descriptor.globalSupport!.layout.rewriteGeneratedPath!;
+    const result = rewrite('some/other/path.txt');
+    expect(result).toBe('some/other/path.txt');
+  });
+
   it('globalSupport.detectionPaths includes global dirs', () => {
     const paths = descriptor.globalSupport!.detectionPaths;
     expect(paths).toContain(AUGMENT_CODE_GLOBAL_RULES_DIR);

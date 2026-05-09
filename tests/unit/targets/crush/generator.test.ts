@@ -139,6 +139,25 @@ describe('generateRules (crush)', () => {
     expect(results[0].content).toContain('Only for Crush.');
   });
 
+  it('returns empty when root rule body is only whitespace', () => {
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: '/proj/.agentsmesh/rules/_root.md',
+          root: true,
+          targets: [],
+          description: '',
+          globs: [],
+          body: '   \n  \t  \n  ',
+        },
+      ],
+    });
+
+    const results = generateRules(canonical);
+
+    expect(results).toHaveLength(0);
+  });
+
   it('returns empty when no rules exist', () => {
     const canonical = makeCanonical({ rules: [] });
     const results = generateRules(canonical);

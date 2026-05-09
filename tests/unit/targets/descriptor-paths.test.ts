@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { descriptor as aider } from '../../../src/targets/aider/index.js';
 import { descriptor as amp } from '../../../src/targets/amp/index.js';
 import { descriptor as claudeCode } from '../../../src/targets/claude-code/index.js';
 import { descriptor as cursor } from '../../../src/targets/cursor/index.js';
@@ -17,6 +18,11 @@ import { descriptor as opencode } from '../../../src/targets/opencode/index.js';
 import { descriptor as goose } from '../../../src/targets/goose/index.js';
 import { descriptor as warp } from '../../../src/targets/warp/index.js';
 import { descriptor as zed } from '../../../src/targets/zed/index.js';
+import { descriptor as trae } from '../../../src/targets/trae/index.js';
+import { descriptor as amazonQ } from '../../../src/targets/amazon-q/index.js';
+import { descriptor as augmentCode } from '../../../src/targets/augment-code/index.js';
+import { descriptor as crush } from '../../../src/targets/crush/index.js';
+import { descriptor as qwenCode } from '../../../src/targets/qwen-code/index.js';
 import { TARGET_IDS } from '../../../src/targets/catalog/target-ids.js';
 import type { ValidatedConfig } from '../../../src/config/core/schema.js';
 import type { CanonicalRule } from '../../../src/core/types.js';
@@ -277,6 +283,7 @@ describe('descriptor metadata', () => {
   // BUILTIN_TARGETS slots `undefined` under vitest's module loader. Drift is
   // caught separately by tests/unit/targets/catalog/builtin-catalog.test.ts.
   const allDescriptors = [
+    aider,
     amp,
     claudeCode,
     cursor,
@@ -295,6 +302,11 @@ describe('descriptor metadata', () => {
     goose,
     warp,
     zed,
+    trae,
+    amazonQ,
+    augmentCode,
+    crush,
+    qwenCode,
   ];
 
   const allFeatureKeys = [

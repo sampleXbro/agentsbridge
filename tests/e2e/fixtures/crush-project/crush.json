@@ -1,0 +1,38 @@
+{
+  "$schema": "https://charm.land/crush.json",
+  "mcp": {
+    "filesystem": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["/usr/local/lib/node_modules/@modelcontextprotocol/server-filesystem/dist/index.js", "/workspace"],
+      "env": {}
+    },
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer $GH_PAT"
+      },
+      "env": {}
+    }
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "^(edit|write|multiedit)$",
+        "command": ".crush/hooks/protect-readonly.sh",
+        "timeout": 10
+      },
+      {
+        "matcher": "^bash$",
+        "command": ".crush/hooks/no-dangerous-commands.sh"
+      }
+    ]
+  },
+  "permissions": {
+    "allowed_tools": ["view", "ls", "grep", "edit", "bash"]
+  },
+  "options": {
+    "skills_paths": [".crush/skills"]
+  }
+}

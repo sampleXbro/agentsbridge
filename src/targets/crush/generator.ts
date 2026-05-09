@@ -2,7 +2,7 @@
  * Generate Crush target outputs from canonical files.
  *
  * Emits:
- *   - `AGENTS.md`        — root rule + embedded non-root rules
+ *   - `CRUSH.md`         — root rule + embedded non-root rules
  *   - `.crush/skills/`   — skill bundles
  *   - `crush.json`       — MCP servers, hooks, permissions merged into config
  *   - `.crushignore`     — ignore patterns

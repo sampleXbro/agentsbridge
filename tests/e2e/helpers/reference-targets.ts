@@ -125,6 +125,8 @@ export function outputPaths(target: TargetName): OutputPathGroups {
                                 ? ['QWEN.md']
                                 : target === 'trae'
                                   ? ['.trae/rules/project_rules.md']
+                                  : target === 'crush'
+                                  ? ['CRUSH.md']
                                   : target === 'zed'
                                     ? ['.rules']
                                     : ['AGENTS.md'],

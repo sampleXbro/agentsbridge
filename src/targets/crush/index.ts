@@ -5,12 +5,12 @@
  * https://github.com/charmbracelet/crush
  *
  * Generation emits:
- *   - `AGENTS.md`        — root rule + embedded non-root rules
+ *   - `CRUSH.md`         — root rule + embedded non-root rules
  *   - `.crush/skills/`   — skill bundles
  *   - `crush.json`       — MCP servers, hooks, permissions
  *   - `.crushignore`     — ignore patterns
  *
- * Import reads `AGENTS.md`, `.crush/skills/`, `crush.json`, and `.crushignore`.
+ * Import reads `CRUSH.md`, `.crush/skills/`, `crush.json`, and `.crushignore`.
  *
  * Commands and agents are projected as skills via supportsConversion —
  * Crush has no native slash-command or Markdown-file agent format.
@@ -144,7 +144,7 @@ export const descriptor = {
   generators: target,
   capabilities,
   emptyImportMessage:
-    'No Crush config found (AGENTS.md, .crush/skills/, crush.json, or .crushignore).',
+    'No Crush config found (CRUSH.md, .crush/skills/, crush.json, or .crushignore).',
   lintRules,
   lint: {
     commands: lintCommands,

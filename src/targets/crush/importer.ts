@@ -2,7 +2,7 @@
  * Import Crush config into canonical `.agentsmesh/`.
  *
  * Reads:
- *   - `AGENTS.md`        — root rule
+ *   - `CRUSH.md`         — root rule
  *   - `.crush/skills/`   — skill bundles
  *   - `crush.json`       — MCP servers (`mcp` key), hooks (`hooks` key),
  *                          permissions (`permissions` key)

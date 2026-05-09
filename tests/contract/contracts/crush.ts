@@ -9,7 +9,7 @@ export const crushContract: TargetPathContract = {
     '.crush/skills/api-generator/references/route-checklist.md',
     '.crush/skills/api-generator/template.ts',
     '.crushignore',
-    'AGENTS.md',
+    'CRUSH.md',
     'crush.json',
   ],
   imported: [

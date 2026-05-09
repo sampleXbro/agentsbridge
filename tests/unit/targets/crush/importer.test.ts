@@ -19,9 +19,9 @@ describe('importFromCrush', () => {
     await rm(projectRoot, { recursive: true, force: true });
   });
 
-  it('imports root rule from AGENTS.md', async () => {
+  it('imports root rule from CRUSH.md', async () => {
     await writeFile(
-      join(projectRoot, 'AGENTS.md'),
+      join(projectRoot, 'CRUSH.md'),
       '# Project root\n\nUse strict TypeScript.',
       'utf-8',
     );
@@ -31,7 +31,7 @@ describe('importFromCrush', () => {
     const rootRule = results.find((r) => r.toPath.includes('_root.md'));
     expect(rootRule).toBeDefined();
     expect(rootRule!.feature).toBe('rules');
-    expect(rootRule!.fromPath).toContain('AGENTS.md');
+    expect(rootRule!.fromPath).toContain('CRUSH.md');
   });
 
   it('imports MCP servers from crush.json mcp key', async () => {

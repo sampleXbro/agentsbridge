@@ -4,13 +4,17 @@
  */
 
 export const GLOBAL_ROUNDTRIP_E2E_TARGET_IDS = [
+  'aider',
+  'amazon-q',
   'amp',
   'antigravity',
+  'augment-code',
   'claude-code',
   'cline',
   'codex-cli',
   'continue',
   'copilot',
+  'crush',
   'cursor',
   'gemini-cli',
   'goose',
@@ -18,7 +22,9 @@ export const GLOBAL_ROUNDTRIP_E2E_TARGET_IDS = [
   'kilo-code',
   'kiro',
   'opencode',
+  'qwen-code',
   'roo-code',
+  'trae',
   'warp',
   'windsurf',
   'zed',

@@ -2,22 +2,29 @@ import { commandSkillDirName } from '../../../src/targets/codex-cli/command-skil
 import { projectedAgentSkillDirName } from '../../../src/targets/projection/projected-agent-skill.js';
 
 export type TargetName =
+  | 'aider'
+  | 'amazon-q'
   | 'amp'
+  | 'antigravity'
+  | 'augment-code'
   | 'claude-code'
-  | 'cursor'
-  | 'copilot'
-  | 'continue'
-  | 'goose'
-  | 'junie'
-  | 'gemini-cli'
   | 'cline'
   | 'codex-cli'
-  | 'windsurf'
-  | 'antigravity'
-  | 'roo-code'
-  | 'kiro'
+  | 'continue'
+  | 'copilot'
+  | 'crush'
+  | 'cursor'
+  | 'gemini-cli'
+  | 'goose'
+  | 'junie'
   | 'kilo-code'
+  | 'kiro'
   | 'opencode'
+  | 'qwen-code'
+  | 'roo-code'
+  | 'trae'
+  | 'warp'
+  | 'windsurf'
   | 'zed';
 
 interface OutputPathGroups {
@@ -31,6 +38,12 @@ interface OutputPathGroups {
 
 function skillDir(target: TargetName): string {
   switch (target) {
+    case 'aider':
+      return '.aider/skills';
+    case 'amazon-q':
+      return '.amazonq/skills';
+    case 'augment-code':
+      return '.augment/skills';
     case 'claude-code':
       return '.claude/skills';
     case 'cursor':
@@ -59,10 +72,18 @@ function skillDir(target: TargetName): string {
       return '.roo/skills';
     case 'kiro':
       return '.kiro/skills';
+    case 'crush':
+      return '.crush/skills';
     case 'kilo-code':
       return '.kilo/skills';
     case 'opencode':
       return '.opencode/skills';
+    case 'qwen-code':
+      return '.qwen/skills';
+    case 'trae':
+      return '.trae/skills';
+    case 'warp':
+      return '.warp/skills';
     case 'zed':
       return '.zed/skills';
   }
@@ -76,27 +97,37 @@ export function outputPaths(target: TargetName): OutputPathGroups {
 
   return {
     root:
-      target === 'claude-code'
-        ? ['.claude/CLAUDE.md']
-        : target === 'cursor'
-          ? ['.cursor/rules/general.mdc']
-          : target === 'copilot'
-            ? ['.github/copilot-instructions.md']
-            : target === 'continue'
-              ? ['.continue/rules/general.md']
-              : target === 'junie'
-                ? ['.junie/AGENTS.md']
-                : target === 'antigravity'
-                  ? ['.agents/rules/general.md']
-                  : target === 'roo-code'
-                    ? ['.roo/rules/00-root.md']
-                    : target === 'kilo-code'
-                      ? ['AGENTS.md']
-                      : target === 'goose'
-                        ? ['.goosehints']
-                        : target === 'zed'
-                          ? ['.rules']
-                          : ['AGENTS.md'],
+      target === 'aider'
+        ? ['CONVENTIONS.md']
+        : target === 'amazon-q'
+          ? ['.amazonq/rules/_root.md']
+          : target === 'augment-code'
+            ? ['.augment/rules/_root.md']
+            : target === 'claude-code'
+              ? ['.claude/CLAUDE.md']
+              : target === 'cursor'
+                ? ['.cursor/rules/general.mdc']
+                : target === 'copilot'
+                  ? ['.github/copilot-instructions.md']
+                  : target === 'continue'
+                    ? ['.continue/rules/general.md']
+                    : target === 'junie'
+                      ? ['.junie/AGENTS.md']
+                      : target === 'antigravity'
+                        ? ['.agents/rules/general.md']
+                        : target === 'roo-code'
+                          ? ['.roo/rules/00-root.md']
+                          : target === 'kilo-code'
+                            ? ['AGENTS.md']
+                            : target === 'goose'
+                              ? ['.goosehints']
+                              : target === 'qwen-code'
+                                ? ['QWEN.md']
+                                : target === 'trae'
+                                  ? ['.trae/rules/project_rules.md']
+                                  : target === 'zed'
+                                    ? ['.rules']
+                                    : ['AGENTS.md'],
     rule:
       target === 'copilot'
         ? ['.github/instructions/typescript.instructions.md']
@@ -107,27 +138,37 @@ export function outputPaths(target: TargetName): OutputPathGroups {
             : target === 'windsurf'
               ? ['.windsurf/rules/typescript.md', 'src/AGENTS.md']
               : [
-                  target === 'claude-code'
-                    ? '.claude/rules/typescript.md'
-                    : target === 'cursor'
-                      ? '.cursor/rules/typescript.mdc'
-                      : target === 'gemini-cli'
-                        ? 'GEMINI.md'
-                        : target === 'cline'
-                          ? '.clinerules/typescript.md'
-                          : target === 'codex-cli'
-                            ? '.codex/instructions/typescript.md'
-                            : target === 'kiro'
-                              ? '.kiro/steering/typescript.md'
-                              : target === 'antigravity'
-                                ? '.agents/rules/typescript.md'
-                                : target === 'roo-code'
-                                  ? '.roo/rules/typescript.md'
-                                  : target === 'kilo-code'
-                                    ? '.kilo/rules/typescript.md'
-                                    : target === 'opencode'
-                                      ? '.opencode/rules/typescript.md'
-                                      : 'src/AGENTS.md',
+                  target === 'aider'
+                    ? 'CONVENTIONS.md'
+                    : target === 'amazon-q'
+                      ? '.amazonq/rules/typescript.md'
+                      : target === 'augment-code'
+                        ? '.augment/rules/typescript.md'
+                        : target === 'claude-code'
+                          ? '.claude/rules/typescript.md'
+                          : target === 'cursor'
+                            ? '.cursor/rules/typescript.mdc'
+                            : target === 'gemini-cli'
+                              ? 'GEMINI.md'
+                              : target === 'cline'
+                                ? '.clinerules/typescript.md'
+                                : target === 'codex-cli'
+                                  ? '.codex/instructions/typescript.md'
+                                  : target === 'kiro'
+                                    ? '.kiro/steering/typescript.md'
+                                    : target === 'antigravity'
+                                      ? '.agents/rules/typescript.md'
+                                      : target === 'roo-code'
+                                        ? '.roo/rules/typescript.md'
+                                        : target === 'kilo-code'
+                                          ? '.kilo/rules/typescript.md'
+                                          : target === 'opencode'
+                                            ? '.opencode/rules/typescript.md'
+                                            : target === 'qwen-code'
+                                              ? '.qwen/rules/typescript.md'
+                                              : target === 'trae'
+                                                ? '.trae/rules/typescript.md'
+                                                : 'src/AGENTS.md',
                 ],
     command: [
       target === 'claude-code'
@@ -156,7 +197,11 @@ export function outputPaths(target: TargetName): OutputPathGroups {
                               ? '.kilo/commands/review.md'
                               : target === 'opencode'
                                 ? '.opencode/commands/review.md'
-                                : `${skillDir(target)}/${commandSkillDirName('review')}/SKILL.md`,
+                                : target === 'augment-code'
+                                  ? '.augment/commands/review.md'
+                                  : target === 'qwen-code'
+                                    ? '.qwen/commands/review.md'
+                                    : `${skillDir(target)}/${commandSkillDirName('review')}/SKILL.md`,
     ],
     agent: [
       target === 'claude-code'
@@ -175,7 +220,9 @@ export function outputPaths(target: TargetName): OutputPathGroups {
                     ? '.kilo/agents/code-reviewer.md'
                     : target === 'opencode'
                       ? '.opencode/agents/code-reviewer.md'
-                      : agentSkill,
+                      : target === 'qwen-code'
+                        ? '.qwen/agents/code-reviewer.md'
+                        : agentSkill,
     ],
     skill: [`${skillDir(target)}/api-generator/SKILL.md`],
     template: [`${skillDir(target)}/api-generator/template.ts`],
@@ -187,61 +234,81 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
   const geminiCompatSkills =
     path === 'AGENTS.md' && target === 'gemini-cli' ? '.agents/skills' : skills;
   let rootRule =
-    target === 'gemini-cli'
-      ? 'GEMINI.md'
-      : target === 'claude-code'
-        ? '.claude/CLAUDE.md'
-        : target === 'cursor'
-          ? '.cursor/rules/general.mdc'
-          : target === 'copilot'
-            ? '.github/copilot-instructions.md'
-            : target === 'continue'
-              ? '.continue/rules/general.md'
-              : target === 'junie'
-                ? '.junie/AGENTS.md'
-                : target === 'kiro'
-                  ? 'AGENTS.md'
-                  : target === 'antigravity'
-                    ? '.agents/rules/general.md'
-                    : target === 'roo-code'
-                      ? '.roo/rules/00-root.md'
-                      : target === 'kilo-code'
+    target === 'aider'
+      ? 'CONVENTIONS.md'
+      : target === 'amazon-q'
+        ? '.amazonq/rules/_root.md'
+        : target === 'augment-code'
+          ? '.augment/rules/_root.md'
+          : target === 'gemini-cli'
+            ? 'GEMINI.md'
+            : target === 'claude-code'
+              ? '.claude/CLAUDE.md'
+              : target === 'cursor'
+                ? '.cursor/rules/general.mdc'
+                : target === 'copilot'
+                  ? '.github/copilot-instructions.md'
+                  : target === 'continue'
+                    ? '.continue/rules/general.md'
+                    : target === 'junie'
+                      ? '.junie/AGENTS.md'
+                      : target === 'kiro'
                         ? 'AGENTS.md'
-                        : target === 'zed'
-                          ? '.rules'
-                          : 'AGENTS.md';
+                        : target === 'antigravity'
+                          ? '.agents/rules/general.md'
+                          : target === 'roo-code'
+                            ? '.roo/rules/00-root.md'
+                            : target === 'kilo-code'
+                              ? 'AGENTS.md'
+                              : target === 'qwen-code'
+                                ? 'QWEN.md'
+                                : target === 'trae'
+                                  ? '.trae/rules/project_rules.md'
+                                  : target === 'zed'
+                                    ? '.rules'
+                                    : 'AGENTS.md';
   // From `src/AGENTS.md`, the rewriter points at repo-root AGENTS as `../AGENTS.md`.
   if (target === 'windsurf' && path === 'src/AGENTS.md') {
     rootRule = '../AGENTS.md';
   }
   const rule =
-    target === 'continue'
-      ? '.continue/rules/typescript.md'
-      : target === 'junie'
-        ? '.junie/rules/typescript.md'
-        : target === 'kiro'
-          ? '.kiro/steering/typescript.md'
-          : target === 'gemini-cli'
-            ? 'GEMINI.md'
-            : target === 'cline'
-              ? '.clinerules/typescript.md'
-              : target === 'codex-cli'
-                ? '.codex/instructions/typescript.md'
-                : target === 'windsurf'
-                  ? '.windsurf/rules/typescript.md'
-                  : target === 'antigravity'
-                    ? '.agents/rules/typescript.md'
-                    : target === 'roo-code'
-                      ? '.roo/rules/typescript.md'
-                      : target === 'copilot'
-                        ? '.github/instructions/typescript.instructions.md'
-                        : target === 'cursor'
-                          ? '.cursor/rules/typescript.mdc'
-                          : target === 'kilo-code'
-                            ? '.kilo/rules/typescript.md'
-                            : target === 'opencode'
-                              ? '.opencode/rules/typescript.md'
-                              : '.claude/rules/typescript.md';
+    target === 'aider'
+      ? 'CONVENTIONS.md'
+      : target === 'amazon-q'
+        ? '.amazonq/rules/typescript.md'
+        : target === 'augment-code'
+          ? '.augment/rules/typescript.md'
+          : target === 'continue'
+            ? '.continue/rules/typescript.md'
+            : target === 'junie'
+              ? '.junie/rules/typescript.md'
+              : target === 'kiro'
+                ? '.kiro/steering/typescript.md'
+                : target === 'gemini-cli'
+                  ? 'GEMINI.md'
+                  : target === 'cline'
+                    ? '.clinerules/typescript.md'
+                    : target === 'codex-cli'
+                      ? '.codex/instructions/typescript.md'
+                      : target === 'windsurf'
+                        ? '.windsurf/rules/typescript.md'
+                        : target === 'antigravity'
+                          ? '.agents/rules/typescript.md'
+                          : target === 'roo-code'
+                            ? '.roo/rules/typescript.md'
+                            : target === 'copilot'
+                              ? '.github/instructions/typescript.instructions.md'
+                              : target === 'cursor'
+                                ? '.cursor/rules/typescript.mdc'
+                                : target === 'kilo-code'
+                                  ? '.kilo/rules/typescript.md'
+                                  : target === 'opencode'
+                                    ? '.opencode/rules/typescript.md'
+                                    : target === 'qwen-code'
+                                      ? '.qwen/rules/typescript.md'
+                                      : target === 'trae'
+                                        ? '.trae/rules/typescript.md'
+                                        : '.claude/rules/typescript.md';
   const checklist = `${geminiCompatSkills}/api-generator/references/route-checklist.md`;
   return {
     rootRule,
@@ -273,7 +340,11 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
                               ? '.kilo/commands/review.md'
                               : target === 'opencode'
                                 ? '.opencode/commands/review.md'
-                                : '.windsurf/workflows/review.md',
+                                : target === 'augment-code'
+                                  ? '.augment/commands/review.md'
+                                  : target === 'qwen-code'
+                                    ? '.qwen/commands/review.md'
+                                    : '.windsurf/workflows/review.md',
     agent:
       target === 'claude-code'
         ? '.claude/agents/code-reviewer.md'
@@ -293,7 +364,9 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
                       ? '.kilo/agents/code-reviewer.md'
                       : target === 'opencode'
                         ? '.opencode/agents/code-reviewer.md'
-                        : `${skills}/${projectedAgentSkillDirName('code-reviewer')}/SKILL.md`,
+                        : target === 'qwen-code'
+                          ? '.qwen/agents/code-reviewer.md'
+                          : `${skills}/${projectedAgentSkillDirName('code-reviewer')}/SKILL.md`,
     skill: `${geminiCompatSkills}/api-generator/SKILL.md`,
     template: `${geminiCompatSkills}/api-generator/template.ts`,
     checklist,

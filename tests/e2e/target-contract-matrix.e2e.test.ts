@@ -16,12 +16,20 @@ import { TARGET_IDS } from '../../src/targets/catalog/target-ids.js';
 const TARGETS = Object.keys(TARGET_CONTRACTS) as TargetName[];
 
 /** Targets that do not emit native agent files (import also omits `.agentsmesh/agents/*`). */
-const TARGETS_WITHOUT_AGENT_OUTPUT = new Set<TargetName>(['roo-code', 'zed']);
+const TARGETS_WITHOUT_AGENT_OUTPUT = new Set<TargetName>([
+  'amazon-q',
+  'augment-code',
+  'roo-code',
+  'trae',
+  'zed',
+]);
 
 /** Targets whose agents are projected skills (no cross-references in agent body). */
 const TARGETS_WITH_PROJECTED_AGENTS = new Set<TargetName>([
+  'aider',
   'amp',
   'cline',
+  'crush',
   'windsurf',
   'warp',
   'goose',
@@ -31,24 +39,32 @@ const TARGETS_WITH_PROJECTED_AGENTS = new Set<TargetName>([
 
 /** Targets whose commands are projected skills (no cross-references in command body). */
 const TARGETS_WITH_PROJECTED_COMMANDS = new Set<TargetName>([
+  'aider',
+  'amazon-q',
   'amp',
   'codex-cli',
+  'crush',
   'goose',
   'kiro',
+  'trae',
   'warp',
   'zed',
 ]);
 
 /** Targets that do not emit any skill artifacts (no `.agentsmesh/skills/*` after round-trip). */
-const TARGETS_WITHOUT_SKILL_OUTPUT = new Set<TargetName>(['zed']);
+const TARGETS_WITHOUT_SKILL_OUTPUT = new Set<TargetName>(['amazon-q', 'zed']);
 
 const MATRIX_CONFIG = `version: 1
 targets:
+  - aider
+  - amazon-q
   - amp
+  - augment-code
   - claude-code
   - cursor
   - copilot
   - continue
+  - crush
   - goose
   - junie
   - gemini-cli
@@ -60,6 +76,8 @@ targets:
   - roo-code
   - kilo-code
   - opencode
+  - qwen-code
+  - trae
   - warp
   - zed
 features:

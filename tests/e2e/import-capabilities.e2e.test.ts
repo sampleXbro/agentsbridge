@@ -418,4 +418,18 @@ describe('import capabilities', () => {
     fileContains(join(dir, '.agentsmesh', 'skills', 'debugging', 'SKILL.md'), 'name: debugging');
     fileExists(join(dir, '.agentsmesh', 'skills', 'debugging', 'references', 'checklist.md'));
   });
+
+  it('imports Aider CONVENTIONS.md, skills, and .aiderignore', async () => {
+    dir = createTestProject('aider-project');
+    const result = await runCli('import --from aider', dir);
+    expect(result.exitCode, result.stderr).toBe(0);
+
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'Project Conventions');
+    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'root: true');
+    fileContains(join(dir, '.agentsmesh', 'ignore'), '.env');
+    fileContains(join(dir, '.agentsmesh', 'ignore'), 'node_modules/');
+    fileExists(join(dir, '.agentsmesh', 'skills', 'debugging', 'SKILL.md'));
+    fileContains(join(dir, '.agentsmesh', 'skills', 'debugging', 'SKILL.md'), 'name: debugging');
+    fileExists(join(dir, '.agentsmesh', 'skills', 'debugging', 'references', 'checklist.md'));
+  });
 });

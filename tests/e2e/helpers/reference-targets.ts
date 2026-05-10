@@ -14,14 +14,20 @@ export type TargetName =
   | 'copilot'
   | 'crush'
   | 'cursor'
+  | 'deepagents-cli'
+  | 'factory-droid'
   | 'gemini-cli'
   | 'goose'
+  | 'jules'
   | 'junie'
   | 'kilo-code'
   | 'kiro'
   | 'opencode'
+  | 'pi-agent'
   | 'qwen-code'
+  | 'replit-agent'
   | 'roo-code'
+  | 'rovodev'
   | 'trae'
   | 'warp'
   | 'windsurf'
@@ -86,6 +92,18 @@ function skillDir(target: TargetName): string {
       return '.warp/skills';
     case 'zed':
       return '.zed/skills';
+    case 'deepagents-cli':
+      return '.deepagents/skills';
+    case 'factory-droid':
+      return '.factory/skills';
+    case 'jules':
+      return '.jules/skills';
+    case 'pi-agent':
+      return '.pi/skills';
+    case 'replit-agent':
+      return '.agents/skills';
+    case 'rovodev':
+      return '.rovodev/skills';
   }
 }
 
@@ -126,10 +144,14 @@ export function outputPaths(target: TargetName): OutputPathGroups {
                                 : target === 'trae'
                                   ? ['.trae/rules/project_rules.md']
                                   : target === 'crush'
-                                  ? ['CRUSH.md']
-                                  : target === 'zed'
-                                    ? ['.rules']
-                                    : ['AGENTS.md'],
+                                    ? ['CRUSH.md']
+                                    : target === 'zed'
+                                      ? ['.rules']
+                                      : target === 'deepagents-cli'
+                                        ? ['.deepagents/AGENTS.md']
+                                        : target === 'replit-agent'
+                                          ? ['replit.md']
+                                          : ['AGENTS.md'],
     rule:
       target === 'copilot'
         ? ['.github/instructions/typescript.instructions.md']
@@ -224,7 +246,9 @@ export function outputPaths(target: TargetName): OutputPathGroups {
                       ? '.opencode/agents/code-reviewer.md'
                       : target === 'qwen-code'
                         ? '.qwen/agents/code-reviewer.md'
-                        : agentSkill,
+                        : target === 'factory-droid'
+                          ? '.factory/droids/code-reviewer.md'
+                          : agentSkill,
     ],
     skill: [`${skillDir(target)}/api-generator/SKILL.md`],
     template: [`${skillDir(target)}/api-generator/template.ts`],
@@ -346,7 +370,9 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
                                   ? '.augment/commands/review.md'
                                   : target === 'qwen-code'
                                     ? '.qwen/commands/review.md'
-                                    : '.windsurf/workflows/review.md',
+                                    : target === 'factory-droid'
+                                      ? `.factory/skills/${commandSkillDirName('review')}/SKILL.md`
+                                      : '.windsurf/workflows/review.md',
     agent:
       target === 'claude-code'
         ? '.claude/agents/code-reviewer.md'
@@ -368,7 +394,9 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
                         ? '.opencode/agents/code-reviewer.md'
                         : target === 'qwen-code'
                           ? '.qwen/agents/code-reviewer.md'
-                          : `${skills}/${projectedAgentSkillDirName('code-reviewer')}/SKILL.md`,
+                          : target === 'factory-droid'
+                            ? '.factory/droids/code-reviewer.md'
+                            : `${skills}/${projectedAgentSkillDirName('code-reviewer')}/SKILL.md`,
     skill: `${geminiCompatSkills}/api-generator/SKILL.md`,
     template: `${geminiCompatSkills}/api-generator/template.ts`,
     checklist,

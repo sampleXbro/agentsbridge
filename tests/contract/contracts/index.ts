@@ -11,14 +11,20 @@ import { continueContract } from './continue.js';
 import { copilotContract } from './copilot.js';
 import { crushContract } from './crush.js';
 import { cursorContract } from './cursor.js';
+import { deepagentsCliContract } from './deepagents-cli.js';
+import { factoryDroidContract } from './factory-droid.js';
 import { geminiCliContract } from './gemini-cli.js';
+import { julesContract } from './jules.js';
 import { junieContract } from './junie.js';
 import { kiloCodeContract } from './kilo-code.js';
 import { kiroContract } from './kiro.js';
 import { gooseContract } from './goose.js';
 import { opencodeContract } from './opencode.js';
+import { piAgentContract } from './pi-agent.js';
 import { qwenCodeContract } from './qwen-code.js';
+import { replitAgentContract } from './replit-agent.js';
 import { rooCodeContract } from './roo-code.js';
+import { rovodevContract } from './rovodev.js';
 import { traeContract } from './trae.js';
 import { windsurfContract } from './windsurf.js';
 import { warpContract } from './warp.js';
@@ -35,13 +41,17 @@ export const TARGET_SPECIFIC_PREFIXES = [
   '.augment/',
   '.claude/',
   '.cursor/',
+  '.deepagents/',
+  '.factory/',
   '.github/',
   '.continue/',
   '.junie/',
   '.gemini/',
   '.cline/',
   '.agents/',
+  '.pi/',
   '.qwen/',
+  '.rovodev/',
   '.trae/',
   '.windsurf/',
   '.roo/',
@@ -66,14 +76,20 @@ export const TARGET_CONTRACTS: TargetContractMap = {
   copilot: copilotContract,
   crush: crushContract,
   cursor: cursorContract,
+  'deepagents-cli': deepagentsCliContract,
+  'factory-droid': factoryDroidContract,
   'gemini-cli': geminiCliContract,
   goose: gooseContract,
+  jules: julesContract,
   junie: junieContract,
   'kilo-code': kiloCodeContract,
   kiro: kiroContract,
   opencode: opencodeContract,
+  'pi-agent': piAgentContract,
   'qwen-code': qwenCodeContract,
+  'replit-agent': replitAgentContract,
   'roo-code': rooCodeContract,
+  rovodev: rovodevContract,
   trae: traeContract,
   warp: warpContract,
   windsurf: windsurfContract,

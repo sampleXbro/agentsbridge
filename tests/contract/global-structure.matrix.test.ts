@@ -107,9 +107,13 @@ const GLOBAL_TARGETS = TARGET_IDS.filter(
   (id) => getBuiltinTargetDefinition(id)?.globalSupport !== undefined,
 );
 
+/** Cloud-only targets with no local config path are exempt from globalSupport. */
+const CLOUD_ONLY_TARGETS: readonly string[] = ['jules', 'replit-agent'];
+
 describe('global-mode structure matrix', () => {
-  it('every builtin target declares globalSupport', () => {
-    expect(GLOBAL_TARGETS).toEqual([...TARGET_IDS]);
+  it('all non-cloud-only builtin targets declare globalSupport', () => {
+    const expected = TARGET_IDS.filter((id) => !CLOUD_ONLY_TARGETS.includes(id));
+    expect(GLOBAL_TARGETS).toEqual(expected);
   });
 
   it.each(GLOBAL_TARGETS)(

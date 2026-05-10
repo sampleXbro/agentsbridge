@@ -1,0 +1,90 @@
+/**
+ * Jules target descriptor.
+ *
+ * Generation emits:
+ *   - `AGENTS.md` — root rule + embedded additional rules
+ *
+ * Import reads `AGENTS.md` for root instructions.
+ *
+ * Jules is Google's asynchronous coding agent. It clones repos
+ * into isolated cloud VMs and works via GitHub PRs. There is no
+ * local skills directory, MCP support, or global config — all
+ * configuration is through `AGENTS.md` at project root.
+ */
+
+import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
+import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
+import { generateRules } from './generator.js';
+import { importFromJules } from './importer.js';
+import { lintRules } from './linter.js';
+import { lintHooks, lintPermissions, lintIgnore, lintMcp, lintCommands } from './lint.js';
+import { buildJulesImportPaths } from '../../core/reference/import-map-builders.js';
+import { JULES_TARGET, JULES_ROOT_FILE, JULES_CANONICAL_RULES_DIR } from './constants.js';
+
+export const target: TargetGenerators = {
+  name: JULES_TARGET,
+  primaryRootInstructionPath: JULES_ROOT_FILE,
+  generateRules,
+  importFrom: importFromJules,
+};
+
+const project: TargetLayout = {
+  rootInstructionPath: JULES_ROOT_FILE,
+  managedOutputs: {
+    dirs: [],
+    files: [JULES_ROOT_FILE],
+  },
+  paths: {
+    rulePath(_slug) {
+      return JULES_ROOT_FILE;
+    },
+    commandPath() {
+      return null;
+    },
+    agentPath() {
+      return null;
+    },
+  },
+};
+
+const capabilities: TargetCapabilities = {
+  rules: 'native',
+  additionalRules: 'embedded',
+  commands: 'none',
+  agents: 'none',
+  skills: 'none',
+  mcp: 'none',
+  hooks: 'none',
+  ignore: 'none',
+  permissions: 'none',
+};
+
+export const descriptor = {
+  id: JULES_TARGET,
+  generators: target,
+  capabilities,
+  emptyImportMessage: 'No Jules config found (AGENTS.md).',
+  lintRules,
+  lint: {
+    hooks: lintHooks,
+    permissions: lintPermissions,
+    ignore: lintIgnore,
+    mcp: lintMcp,
+    commands: lintCommands,
+  },
+  project,
+  importer: {
+    rules: {
+      feature: 'rules',
+      mode: 'singleFile',
+      source: {
+        project: [JULES_ROOT_FILE],
+      },
+      canonicalDir: JULES_CANONICAL_RULES_DIR,
+      canonicalRootFilename: '_root.md',
+      markAsRoot: true,
+    },
+  },
+  buildImportPaths: buildJulesImportPaths,
+  detectionPaths: [JULES_ROOT_FILE],
+} satisfies TargetDescriptor;

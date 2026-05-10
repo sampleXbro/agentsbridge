@@ -117,10 +117,14 @@ async function collectOutputs(
 
 const SCOPES: readonly TargetLayoutScope[] = ['project', 'global'];
 
+/** Cloud-only targets with no local config path — they produce no outputs in global scope. */
+const CLOUD_ONLY_TARGETS: readonly string[] = ['jules', 'replit-agent'];
+
 describe('Windows path safety contract', () => {
   for (const scope of SCOPES) {
     describe(`scope=${scope}`, () => {
       it.each(TARGET_IDS)('every generated path for %s is Windows-safe', async (target) => {
+        if (scope === 'global' && CLOUD_ONLY_TARGETS.includes(target)) return;
         const outputs = await collectOutputs(target, scope);
         expect(outputs.length, `${target}/${scope} produced no outputs`).toBeGreaterThan(0);
 
@@ -140,6 +144,7 @@ describe('Windows path safety contract', () => {
       it.each(TARGET_IDS)(
         'no two outputs for %s differ only by case (case-insensitive collision)',
         async (target) => {
+          if (scope === 'global' && CLOUD_ONLY_TARGETS.includes(target)) return;
           const outputs = await collectOutputs(target, scope);
           const seen = new Map<string, string>();
           const collisions: Array<[string, string]> = [];

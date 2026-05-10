@@ -1,0 +1,63 @@
+import { describe, it, expect } from 'vitest';
+import { descriptor } from '../../../../src/targets/jules/index.js';
+import { JULES_ROOT_FILE } from '../../../../src/targets/jules/constants.js';
+
+describe('jules descriptor layout', () => {
+  it('descriptor has no globalSupport (cloud-based agent)', () => {
+    expect(descriptor.globalSupport).toBeUndefined();
+  });
+
+  it('project layout has rootInstructionPath set to AGENTS.md', () => {
+    expect(descriptor.project.rootInstructionPath).toBe(JULES_ROOT_FILE);
+  });
+
+  it('project layout has managedOutputs with AGENTS.md', () => {
+    expect(descriptor.project.managedOutputs?.files).toEqual([JULES_ROOT_FILE]);
+    expect(descriptor.project.managedOutputs?.dirs).toEqual([]);
+  });
+
+  it('capabilities reflect rules-only support', () => {
+    expect(descriptor.capabilities.rules).toBe('native');
+    expect(descriptor.capabilities.additionalRules).toBe('embedded');
+    expect(descriptor.capabilities.commands).toBe('none');
+    expect(descriptor.capabilities.agents).toBe('none');
+    expect(descriptor.capabilities.skills).toBe('none');
+    expect(descriptor.capabilities.mcp).toBe('none');
+    expect(descriptor.capabilities.hooks).toBe('none');
+    expect(descriptor.capabilities.ignore).toBe('none');
+    expect(descriptor.capabilities.permissions).toBe('none');
+  });
+
+  it('detection paths include AGENTS.md', () => {
+    expect(descriptor.detectionPaths).toContain(JULES_ROOT_FILE);
+  });
+
+  it('emptyImportMessage mentions Jules', () => {
+    expect(descriptor.emptyImportMessage).toContain('Jules');
+    expect(descriptor.emptyImportMessage).toContain('AGENTS.md');
+  });
+
+  it('does not declare supportsConversion', () => {
+    expect(descriptor.supportsConversion).toBeUndefined();
+  });
+
+  it('does not declare sharedArtifacts', () => {
+    expect(descriptor).not.toHaveProperty('sharedArtifacts');
+  });
+
+  it('descriptor id matches target constant', () => {
+    expect(descriptor.id).toBe('jules');
+  });
+
+  it('generators name matches target id', () => {
+    expect(descriptor.generators.name).toBe('jules');
+  });
+
+  it('project layout rulePath returns AGENTS.md for any slug', () => {
+    expect(descriptor.project.paths.rulePath('typescript', {} as never)).toBe(JULES_ROOT_FILE);
+  });
+
+  it('project layout has no skillDir', () => {
+    expect(descriptor.project.skillDir).toBeUndefined();
+  });
+});

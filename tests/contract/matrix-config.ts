@@ -10,6 +10,8 @@ targets:
   - copilot
   - continue
   - crush
+  - deepagents-cli
+  - factory-droid
   - junie
   - gemini-cli
   - cline
@@ -21,7 +23,11 @@ targets:
   - kilo-code
   - opencode
   - goose
+  - jules
+  - pi-agent
   - qwen-code
+  - replit-agent
+  - rovodev
   - trae
   - warp
   - zed

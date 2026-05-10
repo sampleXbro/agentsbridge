@@ -51,7 +51,7 @@ describe('CI binary smoke tests', () => {
 
   it('smoke-tests each native-runner-supported binary on its target OS', () => {
     // GitHub-hosted runners cover linux-x64 (ubuntu-latest), linux-arm64
-    // (ubuntu-24.04-arm), darwin-x64 (macos-13), darwin-arm64 (macos-latest), and
+    // (ubuntu-24.04-arm), darwin-x64 (macos-latest), darwin-arm64 (macos-latest), and
     // windows-x64 (windows-latest). Every shipped binary must be smoked on
     // exactly one matching runner.
     const workflow = readCiWorkflow();
@@ -62,7 +62,7 @@ describe('CI binary smoke tests', () => {
     const pairs = matrix.map((m) => `${m.os}|${m.binary}`).sort();
     expect(pairs).toEqual(
       [
-        'macos-13|agentsmesh-darwin-x64',
+        'macos-latest|agentsmesh-darwin-x64',
         'macos-latest|agentsmesh-darwin-arm64',
         'ubuntu-24.04-arm|agentsmesh-linux-arm64',
         'ubuntu-latest|agentsmesh-linux-x64',

@@ -39,10 +39,10 @@ jobs:
       - run: npm ci
 
       - name: Lint AgentsMesh config
-        run: npx agentsmesh lint
+        run: agentsmesh lint
 
       - name: Check AgentsMesh sync
-        run: npx agentsmesh check
+        run: agentsmesh check
 ```
 
 ## What each step catches
@@ -71,7 +71,7 @@ Add a comment to failing PRs explaining how to fix drift:
 
 ```yaml
 - name: Check AgentsMesh sync
-  run: npx agentsmesh check
+  run: agentsmesh check
   id: check
 
 - name: Comment on drift
@@ -83,7 +83,7 @@ Add a comment to failing PRs explaining how to fix drift:
         issue_number: context.issue.number,
         owner: context.repo.owner,
         repo: context.repo.repo,
-        body: '**AgentsMesh drift detected.**\n\nRun `npx agentsmesh generate` and commit the updated files.'
+        body: '**AgentsMesh drift detected.**\n\nRun `agentsmesh generate` and commit the updated files.'
       })
 ```
 
@@ -108,10 +108,10 @@ jobs:
       - run: npm ci
 
       - name: Lint AgentsMesh config
-        run: npx agentsmesh lint
+        run: agentsmesh lint
 
       - name: Verify AI config is in sync
-        run: npx agentsmesh check
+        run: agentsmesh check
 ```
 
 <Aside type="note">
@@ -128,7 +128,7 @@ git checkout feature/my-changes
 git pull
 
 # 2. Regenerate
-npx agentsmesh generate
+agentsmesh generate
 
 # 3. Review what changed
 git diff

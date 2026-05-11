@@ -96,10 +96,10 @@ Add lint to your CI pipeline alongside `check`:
 ```yaml
 # .github/workflows/ci.yml
 - name: Lint AgentsMesh config
-  run: npx agentsmesh lint
+  run: agentsmesh lint
 
 - name: Check AgentsMesh sync
-  run: npx agentsmesh check
+  run: agentsmesh check
 ```
 
 This catches both config errors and drift in the same pipeline.

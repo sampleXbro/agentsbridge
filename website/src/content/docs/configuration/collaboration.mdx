@@ -86,7 +86,7 @@ Add `agentsmesh check` to CI to enforce that the checked-in generated files alwa
 ```yaml
 # .github/workflows/ci.yml
 - name: Verify AI config sync
-  run: npx agentsmesh check
+  run: agentsmesh check
 ```
 
 This catches cases where a developer regenerated locally with `--force` but the canonical source wasn't committed.

@@ -25,22 +25,42 @@ agentsmesh import --global --from claude-code
 
 ## Supported targets
 
-The table below lists project-scope import roots. With `--global`, AgentsMesh uses the user-level paths documented in the global-mode sections below.
+The table below lists every builtin target's project-scope import root. With `--global`, AgentsMesh uses the user-level paths documented in the global-mode sections below. This table is generated from the target catalog — see [the support matrix](/reference/supported-tools/) for full feature coverage per tool.
 
-| Target ID | Reads from |
-|-----------|-----------|
-| `claude-code` | `.claude/` |
-| `cursor` | `.cursor/` |
-| `copilot` | `.github/copilot-instructions.md` |
-| `gemini-cli` | `.gemini/` |
-| `cline` | `.cline/` |
-| `codex-cli` | `AGENTS.md` |
-| `windsurf` | `.windsurf/` |
-| `continue` | `.continue/` |
-| `junie` | `.junie/` |
-| `kiro` | `.kiro/` |
-| `antigravity` | `.agents/` |
-| `roo-code` | `.roo/` |
+{/* agentsmesh:import-targets:start */}
+| Target ID | Tool | Reads from |
+|-----------|------|-----------|
+| `aider` | [Aider](https://aider.chat) | `CONVENTIONS.md` |
+| `amazon-q` | [Amazon Q Developer](https://aws.amazon.com/q/developer) | `.amazonq/rules` |
+| `amp` | [Amp](https://ampcode.com) | `AGENTS.md` |
+| `antigravity` | [Antigravity](https://antigravity.google) | `.agents/rules` |
+| `augment-code` | [Augment Code](https://www.augmentcode.com) | `.augment/rules` |
+| `claude-code` | [Claude Code](https://www.anthropic.com/claude-code) | `.claude/CLAUDE.md` |
+| `cline` | [Cline](https://cline.bot) | `AGENTS.md` |
+| `codex-cli` | [Codex CLI](https://github.com/openai/codex) | `AGENTS.md` |
+| `continue` | [Continue](https://continue.dev) | `.continue/rules` |
+| `copilot` | [GitHub Copilot](https://github.com/features/copilot) | `.github/copilot-instructions.md` |
+| `crush` | [Crush](https://github.com/charmbracelet/crush) | `CRUSH.md` |
+| `cursor` | [Cursor](https://cursor.com) | `.cursor/rules/general.mdc` |
+| `deepagents-cli` | [Deep Agents CLI](https://github.com/langchain-ai/deepagents) | `.deepagents/AGENTS.md` |
+| `factory-droid` | [Factory Droid](https://www.factory.ai) | `AGENTS.md` |
+| `gemini-cli` | [Gemini CLI](https://github.com/google-gemini/gemini-cli) | `.gemini/rules` |
+| `goose` | [Goose](https://block.github.io/goose) | `.goosehints` |
+| `jules` | [Jules](https://jules.google) | `AGENTS.md` |
+| `junie` | [Junie](https://www.jetbrains.com/junie) | `.junie/rules` |
+| `kilo-code` | [Kilo Code](https://kilocode.ai) | `AGENTS.md` |
+| `kiro` | [Kiro](https://kiro.dev) | `AGENTS.md` |
+| `opencode` | [OpenCode](https://opencode.ai) | `AGENTS.md` |
+| `pi-agent` | [Pi Agent](https://github.com/pi-labs/pi-agent) | `AGENTS.md` |
+| `qwen-code` | [Qwen Code](https://github.com/QwenLM/qwen-code) | `QWEN.md` |
+| `replit-agent` | [Replit Agent](https://replit.com) | `replit.md` |
+| `roo-code` | [Roo Code](https://roocode.com) | `.roo/rules/00-root.md` |
+| `rovodev` | [Rovo Dev](https://www.atlassian.com/solutions/devops/rovo-dev) | `AGENTS.md` |
+| `trae` | [Trae](https://www.trae.ai) | `.trae/rules/project_rules.md` |
+| `warp` | [Warp](https://www.warp.dev) | `WARP.md` |
+| `windsurf` | [Windsurf](https://windsurf.com) | `AGENTS.md` |
+| `zed` | [Zed](https://zed.dev) | `.rules` |
+{/* agentsmesh:import-targets:end */}
 
 ## Examples
 
@@ -53,117 +73,50 @@ agentsmesh import --global --from claude-code
 
 # Import Cursor rules and settings
 agentsmesh import --from cursor
-
-# Import all other supported tools
-agentsmesh import --from copilot
-agentsmesh import --from gemini-cli
-agentsmesh import --from cline
-agentsmesh import --from codex-cli
-agentsmesh import --from windsurf
-agentsmesh import --from continue
-agentsmesh import --from junie
-agentsmesh import --from kiro
-agentsmesh import --from antigravity
-agentsmesh import --from roo-code
 ```
+
+Any target ID from the table above is valid for `--from`. Run `agentsmesh init` first if you're unsure which tools have configs in the current project — it auto-detects every builtin target.
 
 ## What import maps
 
-### Claude Code
+The same canonical structure under `.agentsmesh/` is produced regardless of which target you import from:
 
-| Source | Canonical |
-|--------|-----------|
-| `.claude/rules/*.md` | `.agentsmesh/rules/*.md` |
-| `.claude/commands/*.md` | `.agentsmesh/commands/*.md` |
-| `.claude/agents/*.md` | `.agentsmesh/agents/*.md` |
-| `.claude/skills/*/SKILL.md` | `.agentsmesh/skills/*/SKILL.md` |
-| `.claude/settings.json` → `mcpServers` | `.agentsmesh/mcp.json` |
-| `.claude/settings.json` → `permissions` | `.agentsmesh/permissions.yaml` |
-| `.claude/settings.json` → `hooks` | `.agentsmesh/hooks.yaml` |
-| `.claudeignore` | `.agentsmesh/ignore` |
+| Source feature | Canonical destination |
+|----------------|----------------------|
+| Root rule + per-file rules | `.agentsmesh/rules/_root.md`, `.agentsmesh/rules/*.md` |
+| Commands / prompts / workflows | `.agentsmesh/commands/*.md` |
+| Agents / subagents / droids | `.agentsmesh/agents/*.md` |
+| Skills / SKILL bundles | `.agentsmesh/skills/<name>/SKILL.md` (+ supporting files) |
+| MCP servers | `.agentsmesh/mcp.json` |
+| Hooks | `.agentsmesh/hooks.yaml` |
+| Permissions | `.agentsmesh/permissions.yaml` |
+| Ignore patterns | `.agentsmesh/ignore` |
 
-### Claude Code global mode
+Each target's native file paths and feature support are listed in the [supported tools matrix](/reference/supported-tools/). Embedded features (e.g., Codex CLI commands projected as skills) are restored to their original canonical format on import — not the projected wrapper.
 
-When you pass `--global`, Claude Code imports from the documented user-level paths instead of the current project:
+## Global-mode caveats
 
-| Source | Canonical |
-|--------|-----------|
-| `~/.claude/CLAUDE.md` | `~/.agentsmesh/rules/_root.md` |
-| `~/.claude/agents/*.md` | `~/.agentsmesh/agents/*.md` |
-| `~/.claude/skills/*/SKILL.md` | `~/.agentsmesh/skills/*/SKILL.md` |
-| `~/.claude/commands/*.md` | `~/.agentsmesh/commands/*.md` |
-| `~/.claude/settings.json` → `permissions` / fallback `mcpServers` | `~/.agentsmesh/permissions.yaml`, `~/.agentsmesh/mcp.json` |
-| `~/.claude/hooks.json` → hooks | `~/.agentsmesh/hooks.yaml` (when present; otherwise hooks may still be read from `settings.json`) |
-| `~/.claude.json` → `mcpServers` | `~/.agentsmesh/mcp.json` |
-| `~/.claudeignore` | `~/.agentsmesh/ignore` |
-| `~/.agents/skills/*/SKILL.md` | `~/.agentsmesh/skills/*/SKILL.md` (compatibility mirror when present) |
+A handful of targets have global-mode importer behavior worth noting. For every target not listed here, `--global` simply reads from the documented user-level paths and writes to `~/.agentsmesh/`.
 
-### Antigravity global mode
-
-| Source | Canonical |
-|--------|-----------|
-| `~/.gemini/antigravity/GEMINI.md` | `~/.agentsmesh/rules/_root.md` |
-| `~/.gemini/antigravity/skills/**/SKILL.md` | `~/.agentsmesh/skills/**/SKILL.md` |
-| `~/.gemini/antigravity/mcp_config.json` | `~/.agentsmesh/mcp.json` |
+### Antigravity
 
 Project-only paths such as `.agents/workflows/` are not scanned in global mode.
 
-### Cline global mode
+### Cline
 
-`agentsmesh generate --global --targets cline` writes rules and workflows to `~/Documents/Cline/`. The current importer still reads Cline's project-style paths under `$HOME`:
+`agentsmesh generate --global --targets cline` writes rules and workflows to `~/Documents/Cline/`, but the current importer reads Cline's project-style paths under `$HOME` (`~/.clinerules`, `~/.cline/skills/`, `~/.cline/cline_mcp_settings.json`, `~/.clineignore`). Generated hook scripts under `~/Documents/Cline/Hooks/` are not imported back into `hooks.yaml` yet.
 
-| Source | Canonical |
-|--------|-----------|
-| `~/.clinerules` or `~/.clinerules/*.md` | `~/.agentsmesh/rules/*.md` |
-| `~/.clinerules/workflows/*.md` | `~/.agentsmesh/commands/*.md` |
-| `~/.cline/skills/*/SKILL.md` | `~/.agentsmesh/skills/*/SKILL.md` |
-| `~/.cline/cline_mcp_settings.json` | `~/.agentsmesh/mcp.json` |
-| `~/.clineignore` | `~/.agentsmesh/ignore` |
+### Windsurf
 
-Generated hook scripts under `~/Documents/Cline/Hooks/` are not imported back into `hooks.yaml` yet.
+`agentsmesh generate --global --targets windsurf` writes native user-level files under `~/.codeium/windsurf/`, but the current importer reads Windsurf's project-style paths under `$HOME` (`~/.windsurfrules` or `~/AGENTS.md`, `~/.windsurf/`, `~/.windsurfignore` or `~/.codeiumignore`).
 
-### Windsurf global mode
+### Codex CLI
 
-`agentsmesh generate --global --targets windsurf` writes native user-level files under `~/.codeium/windsurf/`. The current importer still reads Windsurf's project-style paths under `$HOME`:
-
-| Source | Canonical |
-|--------|-----------|
-| `~/.windsurfrules` or `~/AGENTS.md` | `~/.agentsmesh/rules/_root.md` |
-| `~/.windsurf/rules/*.md` | `~/.agentsmesh/rules/*.md` |
-| `~/.windsurf/workflows/*.md` | `~/.agentsmesh/commands/*.md` |
-| `~/.windsurf/skills/*/SKILL.md` | `~/.agentsmesh/skills/*/SKILL.md` |
-| `~/.windsurf/hooks.json` | `~/.agentsmesh/hooks.yaml` |
-| `~/.windsurf/mcp_config.json` | `~/.agentsmesh/mcp.json` |
-| `~/.windsurfignore` or `~/.codeiumignore` | `~/.agentsmesh/ignore` |
-
-### Codex CLI global mode
-
-| Source | Canonical |
-|--------|-----------|
-| `~/.codex/AGENTS.override.md` (if present) or `~/.codex/AGENTS.md` | `~/.agentsmesh/rules/_root.md` |
-| `~/.codex/config.toml` → `mcp_servers` | `~/.agentsmesh/mcp.json` |
-| `~/.codex/agents/*.toml` | `~/.agentsmesh/agents/*.md` |
-| `~/.agents/skills/**/SKILL.md` | `~/.agentsmesh/skills/**/SKILL.md` |
-
-Global import does **not** recurse nested `AGENTS.md` files under `$HOME`.
-
-### Cursor global mode
-
-Global import reads `~/.cursor/rules/*.mdc` first, then falls back to legacy `~/.agentsmesh-exports/cursor/user-rules.md` or `~/.cursor/AGENTS.md`, and reads MCP, hooks, ignore, skills, agents, and commands from `~/.cursor/`.
+`~/.codex/AGENTS.override.md` is preferred over `~/.codex/AGENTS.md` when both exist. Global import does **not** recurse nested `AGENTS.md` files under `$HOME`.
 
 ### Cursor
 
-| Source | Canonical |
-|--------|-----------|
-| `.cursor/rules/*.mdc` | `.agentsmesh/rules/*.md` (frontmatter converted) |
-| `.cursor/commands/*.md` | `.agentsmesh/commands/*.md` |
-| `.cursor/agents/*.md` | `.agentsmesh/agents/*.md` |
-| `.cursor/mcp.json` | `.agentsmesh/mcp.json` |
-| `.cursorignore` | `.agentsmesh/ignore` |
-
-### Embedded features
-
-For tools that received embedded/projected features (e.g., Codex CLI commands projected as skills), the importer reads the embedded AgentsMesh metadata and restores the original canonical format — not the projected wrapper.
+Global import reads `~/.cursor/rules/*.mdc` first, then falls back to legacy `~/.agentsmesh-exports/cursor/user-rules.md` or `~/.cursor/AGENTS.md`, and reads MCP, hooks, ignore, skills, agents, and commands from `~/.cursor/`.
 
 ## Reference rewriting
 

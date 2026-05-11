@@ -1,7 +1,7 @@
 ---
 draft: false
 title: AgentsMesh — AI Coding Config Sync for Every Tool
-description: Open-source AI coding config sync for Claude Code, Cursor, Copilot, Gemini CLI, Windsurf, Codex CLI, and more. One .agentsmesh source for rules, MCP servers, hooks, skills, agents, project/global config, CI drift checks, packs, plugins, and typed automation.
+description: Open-source AI coding config sync for every major tool — Claude Code, Cursor, GitHub Copilot, Gemini CLI, Codex CLI, Windsurf, Cline, and 20+ more. One .agentsmesh source for rules, MCP servers, hooks, skills, agents, project/global config, CI drift checks, packs, plugins, and typed automation.
 template: splash
 hero:
   tagline: Sync Cursor rules, Claude Code instructions, Copilot prompts, MCP servers, hooks, skills, agents, and permissions from one .agentsmesh directory. Import existing configs, generate native files, and keep project or global setup drift-free.
@@ -37,7 +37,7 @@ import SoftwareApplicationJsonLd from '../../components/SoftwareApplicationJsonL
 
 <div style="text-align: center; margin: 2rem 0 3rem;">
   <span style="font-size: 1.1rem; color: var(--sl-color-gray-5);">
-    Requires Node.js 20+ &nbsp;·&nbsp; MIT License &nbsp;·&nbsp; CLI + TypeScript API
+    Homebrew · standalone binary · npm — pick any &nbsp;·&nbsp; MIT License &nbsp;·&nbsp; CLI + TypeScript API
   </span>
   <br/>
   <div class="am-hero-badges"><img src="https://img.shields.io/npm/v/agentsmesh?style=flat-square" alt="npm version" /><img src="https://img.shields.io/npm/dm/agentsmesh?style=flat-square" alt="npm downloads" /><img src="https://github.com/sampleXbro/agentsmesh/actions/workflows/ci.yml/badge.svg" alt="CI" /><img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="License: MIT" /></div>
@@ -45,7 +45,7 @@ import SoftwareApplicationJsonLd from '../../components/SoftwareApplicationJsonL
 
 ## AI coding config should not drift between tools
 
-Every AI coding assistant ships a different configuration surface. Claude Code reads `CLAUDE.md` and `.claude/settings.json`. Cursor uses `.cursor/rules/*.mdc`. GitHub Copilot reads `.github/copilot-instructions.md` and prompts. Gemini CLI, Windsurf, Continue, Cline, Kiro, Codex CLI, Junie, Roo Code, Antigravity, Amp, Zed, and Warp each add their own files for rules, commands, agents, skills, MCP servers, hooks, ignore patterns, or permissions.
+Every AI coding assistant ships a different configuration surface. Claude Code reads `CLAUDE.md` and `.claude/settings.json`. Cursor uses `.cursor/rules/*.mdc`. GitHub Copilot reads `.github/copilot-instructions.md` and prompts. Every other [supported tool](./reference/supported-tools/) adds its own files for rules, commands, agents, skills, MCP servers, hooks, ignore patterns, or permissions.
 
 AgentsMesh turns that spread into one editable source of truth. Put the real project instructions in `.agentsmesh/`, then generate native files for every enabled tool. Import goes the other direction, so existing tool configs can be adopted without starting from scratch.
 
@@ -100,35 +100,52 @@ agentsmesh generate
 
 ## Quick start
 
+Pick any install method — Homebrew, standalone binary, or npm/pnpm/yarn:
+
+```bash
+brew install samplexbro/agentsmesh/agentsmesh    # no Node.js required
+# or
+curl -fsSL https://github.com/sampleXbro/agentsmesh/releases/latest/download/install.sh | sh
+# or
+npm install -D agentsmesh                        # requires Node.js 20+
+```
+
+See the [installation guide](./getting-started/installation/) for full options. The examples below use the `agentsmesh` binary directly — prefix with `npx` if you installed via `npm` without `-g`.
+
 ### New project
 
 ```bash
-npm install -D agentsmesh
-npx agentsmesh init
+agentsmesh init
 # edit .agentsmesh/rules/_root.md
-npx agentsmesh generate
+agentsmesh generate
 ```
 
 ### Existing project
 
 ```bash
-npx agentsmesh import --from cursor
-npx agentsmesh generate
+agentsmesh import --from cursor
+agentsmesh generate
 ```
 
 ### Personal global config
 
 ```bash
-npx agentsmesh init --global
-npx agentsmesh import --global --from claude-code
-npx agentsmesh generate --global
+agentsmesh init --global
+agentsmesh import --global --from claude-code
+agentsmesh generate --global
 ```
 
-The CLI is available as both `agentsmesh` and `amsh`.
+The CLI is available as both `agentsmesh` and the shorter alias `amsh`.
 
 ## Tool coverage and feature matrix
 
-AgentsMesh ships descriptor-driven support for the major AI coding tools and for plugin targets, so coverage can grow without changing the homepage copy.
+AgentsMesh ships descriptor-driven support for every major AI coding tool plus plugin targets, so coverage can grow without changing the homepage copy.
+
+{/* agentsmesh:tool-list:start */}
+- **CLI agents:** [Aider](https://aider.chat), [Amp](https://ampcode.com), [Claude Code](https://www.anthropic.com/claude-code), [Codex CLI](https://github.com/openai/codex), [Crush](https://github.com/charmbracelet/crush), [Deep Agents CLI](https://github.com/langchain-ai/deepagents), [Gemini CLI](https://github.com/google-gemini/gemini-cli), [Goose](https://block.github.io/goose), [OpenCode](https://opencode.ai), [Pi Agent](https://github.com/pi-labs/pi-agent), [Qwen Code](https://github.com/QwenLM/qwen-code), [Rovo Dev](https://www.atlassian.com/solutions/devops/rovo-dev), [Warp](https://www.warp.dev).
+- **IDE integrations:** [Amazon Q Developer](https://aws.amazon.com/q/developer), [Antigravity](https://antigravity.google), [Augment Code](https://www.augmentcode.com), [Cline](https://cline.bot), [Continue](https://continue.dev), [GitHub Copilot](https://github.com/features/copilot), [Cursor](https://cursor.com), [Junie](https://www.jetbrains.com/junie), [Kilo Code](https://kilocode.ai), [Kiro](https://kiro.dev), [Roo Code](https://roocode.com), [Trae](https://www.trae.ai), [Windsurf](https://windsurf.com), [Zed](https://zed.dev).
+- **Cloud agent platforms:** [Factory Droid](https://www.factory.ai), [Jules](https://jules.google), [Replit Agent](https://replit.com).
+{/* agentsmesh:tool-list:end */}
 
 Use the [supported tools matrix](./reference/supported-tools/) for the exact project/global paths and native, embedded, partial, or unsupported feature coverage.
 

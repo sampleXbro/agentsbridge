@@ -1,5 +1,85 @@
 # Changelog
 
+## 0.18.0
+
+### Minor Changes
+
+- 7c57018: Replace the AGENTS.md content-normalization logic with a shared-path rewrite skip. When two or more active targets emit the same root-instruction path (most commonly `AGENTS.md`), every copy keeps canonical `.agentsmesh/...` references instead of being rewritten to target-specific paths. The collision resolver then merges the byte-identical copies trivially.
+
+  **User-visible behavior change**
+
+  The single `AGENTS.md` at the project root now contains references like `.agentsmesh/skills/<name>/SKILL.md` rather than the previous `.agents/skills/<name>/SKILL.md` (or any other target-specific prefix). Tools reading `AGENTS.md` follow the path literally and find the file under `.agentsmesh/`, which is always present as the canonical source of truth. Each target's own directory (`.agents/skills/`, `.factory/skills/`, etc.) is still generated and its files still receive normal per-target reference rewriting — only the shared root-instruction file uses canonical paths.
+
+  **Why**
+
+  The previous approach generated N copies of `AGENTS.md`, rewrote their references to N different target-specific paths, and then ran ~200 lines of fragile reverse-normalization to prove they were "actually the same". That logic carried hardcoded target IDs, regex bare-path anchoring, and reverse reference maps — every new target risked breaking it. The new approach is structural: skip rewriting when a path is claimed by 2+ targets as their root instruction (detected via descriptor `rootInstructionPath` + `outputFamilies` of kind `'additional'`), so the content stays byte-identical and collision merge is a no-op. Plugin targets that declare a `rootInstructionPath` get the same treatment automatically — no per-target opt-in needed.
+
+  **Internal**
+  - Drops `src/targets/catalog/agents-md-overlap.ts` (199 lines) and its test file
+  - Adds `computeSharedRootInstructionPaths()` to `engine.ts` (descriptor-driven, no hardcoded target IDs)
+  - Adds an optional `skipPaths: ReadonlySet<string>` parameter to `rewriteGeneratedReferences()`
+  - Drops gemini-cli's legacy pre-emptive `.agentsmesh/skills/` → `.agents/skills/` substitution in `generateRules` — no longer needed under the new approach
+  - 28 new tests across `tests/unit/core/shared-root-instruction-paths.test.ts`, `reference-rewriter-shared-paths.test.ts`, and `tests/contract/shared-agents-md.test.ts`
+
+- 7c57018: Add six new built-in targets: `deepagents-cli`, `factory-droid`, `jules`, `pi-agent`, `replit-agent`, and `rovodev`. Each ships with project and global mode support, full feature generators (rules, skills, MCP, hooks, ignore, permissions where applicable), an importer, capability-focused unit tests, and integration coverage for the import + generate round-trip. The new targets appear automatically in the support matrix, the import target table, and every auto-generated tool list — no manual doc edits required to discover them.
+- 7c57018: Add a required `metadata` field to `TargetDescriptor` and a new `TARGET_REGISTRY` aggregator that drives every user-facing target listing in README and the website. Plugin and built-in targets now declare display name, category, official URL, and a one-line description in a single place; the TypeScript compiler enforces completeness.
+
+  **New public surface**
+  - `TargetMetadata` interface (`displayName`, `category: 'cli' | 'ide' | 'agent-platform'`, `officialUrl`, `shortDescription`) exported from `src/targets/catalog/target-descriptor.ts`.
+  - `TARGET_REGISTRY: Readonly<Record<BuiltinTargetId, TargetEntry>>` plus `listTargets()`, `targetsByCategory()`, and `primaryImportRoot()` helpers exported from `src/targets/catalog/target-metadata-registry.ts`.
+  - Every `TargetDescriptor.metadata` is required at compile time; the field is now part of the contract for plugin authors.
+
+  **Plugin authors — what to do**
+
+  If you ship a `TargetDescriptor` from a plugin package, add the `metadata` block immediately after `id:`:
+
+  ```typescript
+  export const descriptor = {
+    id: 'my-tool',
+    metadata: {
+      displayName: 'My Tool',
+      category: 'cli',
+      officialUrl: 'https://example.com',
+      shortDescription: 'One-line description used in tool lists',
+    },
+    // ...rest unchanged
+  } satisfies TargetDescriptor;
+  ```
+
+  The TypeScript compiler will fail if any field is missing or mistyped. The metadata appears in any auto-generated tool list a consumer renders — there is no separate registration step.
+
+  **Tooling updates**
+  - `agentsmesh target scaffold <id>` now emits a `metadata` block with `TODO(agentsmesh-scaffold)` markers that fail to compile until the author fills them in.
+  - The `add-agent-target` skill and `target-addition-checklist.md` reference list the metadata fields in Phase 1 research; the `add-new-target-playbook.md` walks through filling them.
+
+### Patch Changes
+
+- 7c57018: Auto-generate every user-facing target listing from `TARGET_REGISTRY`, and reposition install methods so AgentsMesh is no longer presented as Node-only.
+
+  **Auto-generated target listings**
+
+  `pnpm matrix:generate` now writes three new auto-generated marker blocks in addition to the existing project/global feature matrices:
+  - `tool-list` (README + homepage) — every target grouped by category with links to the official tool URL
+  - `import-targets` (`cli/import.mdx`) — all 30 targets with their primary read path
+  - `tool-details` (`reference/supported-tools.mdx`) — uniform per-target sections with display name, category, official URL, project + global root paths, and skill directory
+
+  `pnpm matrix:verify` (CI gate) fails the build whenever any of the four documents drift from the catalog. The render script was split into `scripts/support-matrix-blocks.ts` (pure builders) and a slim orchestrator.
+
+  **Hardcoded enumerations removed**
+
+  Replaced with links to the support matrix or generated content:
+  - README import-target list (was 13/30) and tool-format examples
+  - Homepage prose enumeration of 15+ tools
+  - `cli/import.mdx` per-target source→canonical mapping tables (only 7/30 documented) — collapsed into a single canonical-pattern table plus editorial caveats for the 5 targets with real implementation quirks
+  - `cli/init.mdx` auto-detection list (12 hardcoded paths) and starter-config example
+  - `cli/generate.mdx` output-locations table (was 12/30)
+  - `canonical-config/commands.mdx` + `canonical-config/hooks.mdx` per-target feature support enumerations
+  - `reference/supported-tools.mdx` per-tool detail sections (was 24/30 hand-written, ~494 lines) replaced with the auto-generated `tool-details` block covering all 30 targets uniformly
+
+  **Install repositioning**
+
+  AgentsMesh now presents three install methods as equals — Homebrew (no Node.js required), standalone binary (no Node.js required), and npm/pnpm/yarn (Node.js 20+). The `getting-started/installation.mdx` page rewrite uses a Tabs block with a "which method should I use?" comparison table. The README install section was reordered (Homebrew first, npm last) and `npx agentsmesh ...` was stripped from every non-install code sample — `npx` survives only in the two explicit "run without installing" snippets where it's the legitimate use. CI workflow examples, guides, and command-reference pages now use the plain `agentsmesh` binary, which works after any install method (with `npx` documented as the prefix for users who chose `npm install -D`).
+
 ## 0.17.0
 
 ### Minor Changes

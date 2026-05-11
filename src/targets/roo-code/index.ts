@@ -185,6 +185,12 @@ const globalCapabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: 'roo-code',
+  metadata: {
+    displayName: 'Roo Code',
+    category: 'ide',
+    officialUrl: 'https://roocode.com',
+    shortDescription: 'Open-source AI VS Code extension',
+  },
   generators: target,
   capabilities: {
     rules: 'native',

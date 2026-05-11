@@ -60,20 +60,7 @@ Running `agentsmesh init --global` creates the same canonical structure under `~
 
 ## Auto-detection
 
-During init, AgentsMesh scans the project for existing AI tool configs. If any are found, it prompts you to import them:
-
-- `.claude/` → Claude Code
-- `.cursor/` → Cursor
-- `.github/copilot-instructions.md` → Copilot
-- `.gemini/` → Gemini CLI
-- `.cline/` → Cline
-- `.codex/` → Codex CLI
-- `.windsurf/` → Windsurf
-- `.continue/` → Continue
-- `.junie/` → Junie
-- `.kiro/` → Kiro
-- `.agents/` → Antigravity
-- `.roo/` → Roo Code
+During init, AgentsMesh scans the project for existing AI tool configs from every [supported target](/reference/supported-tools/) — `.claude/`, `.cursor/`, `.github/copilot-instructions.md`, and the rest. For each one found, it prompts you to import.
 
 ## Examples
 
@@ -121,22 +108,18 @@ agentsmesh generate
 
 ## Generated agentsmesh.yaml
 
-The starter config enables a conflict-free default target set plus all features:
+The starter config enables every [supported target](/reference/supported-tools/) (except `codex-cli`, whose root `AGENTS.md` would collide with the other AGENTS.md-first targets) plus all features:
 
 ```yaml
 version: 1
 targets:
-  - claude-code
-  - cursor
-  - copilot
-  - continue
-  - junie
-  - kiro
-  - gemini-cli
-  - cline
+  # Every built-in target except codex-cli — see /reference/supported-tools/ for the full list.
+  - aider
+  - amazon-q
+  - amp
+  # ...
   - windsurf
-  - antigravity
-  - roo-code
+  - zed
 features:
   - rules
   - commands
@@ -147,6 +130,8 @@ features:
   - ignore
   - permissions
 ```
+
+Remove any target IDs you don't use. Add `codex-cli` only if you've disabled the other AGENTS.md-first targets.
 
 `codex-cli` is supported, but not enabled by default in the starter config because its generated `AGENTS.md` rule index can conflict with the shared `AGENTS.md` mirrors emitted by other default targets. Add it manually when your project needs Codex output.
 

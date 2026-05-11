@@ -127,7 +127,11 @@ const project: TargetLayout = {
 const globalLayout: TargetLayout = {
   skillDir: AUGMENT_CODE_GLOBAL_SKILLS_DIR,
   managedOutputs: {
-    dirs: [AUGMENT_CODE_GLOBAL_RULES_DIR, AUGMENT_CODE_GLOBAL_COMMANDS_DIR, AUGMENT_CODE_GLOBAL_SKILLS_DIR],
+    dirs: [
+      AUGMENT_CODE_GLOBAL_RULES_DIR,
+      AUGMENT_CODE_GLOBAL_COMMANDS_DIR,
+      AUGMENT_CODE_GLOBAL_SKILLS_DIR,
+    ],
     files: [AUGMENT_CODE_GLOBAL_SETTINGS_FILE],
   },
   rewriteGeneratedPath(path) {
@@ -135,10 +139,7 @@ const globalLayout: TargetLayout = {
       return path.replace(`${AUGMENT_CODE_RULES_DIR}/`, `${AUGMENT_CODE_GLOBAL_RULES_DIR}/`);
     }
     if (path.startsWith(`${AUGMENT_CODE_COMMANDS_DIR}/`)) {
-      return path.replace(
-        `${AUGMENT_CODE_COMMANDS_DIR}/`,
-        `${AUGMENT_CODE_GLOBAL_COMMANDS_DIR}/`,
-      );
+      return path.replace(`${AUGMENT_CODE_COMMANDS_DIR}/`, `${AUGMENT_CODE_GLOBAL_COMMANDS_DIR}/`);
     }
     if (path.startsWith(`${AUGMENT_CODE_SKILLS_DIR}/`)) {
       return path.replace(`${AUGMENT_CODE_SKILLS_DIR}/`, `${AUGMENT_CODE_GLOBAL_SKILLS_DIR}/`);
@@ -191,6 +192,12 @@ const globalCapabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: AUGMENT_CODE_TARGET,
+  metadata: {
+    displayName: 'Augment Code',
+    category: 'ide',
+    officialUrl: 'https://www.augmentcode.com',
+    shortDescription: 'Codebase-aware AI for IDEs',
+  },
   generators: target,
   capabilities,
   emptyImportMessage:

@@ -26,26 +26,36 @@ AI coding assistants now ship with their own configuration formats — `CLAUDE.m
 
 ## Install
 
-### npm (recommended for Node.js projects)
+Pick whichever matches your environment — every install method ships the same CLI (`agentsmesh` and the `amsh` alias) and the same TypeScript library.
 
-```bash
-npm install -g agentsmesh
-```
-
-### Homebrew (macOS / Linux)
+### Homebrew (macOS / Linux) — no Node.js required
 
 ```bash
 brew tap samplexbro/agentsmesh
 brew install agentsmesh
 ```
 
-### Standalone binary (no Node.js required)
+### Standalone binary (Linux / macOS / Windows) — no Node.js required
 
 ```bash
 curl -fsSL https://github.com/sampleXbro/agentsmesh/releases/latest/download/install.sh | sh
 ```
 
 Or download a binary directly from [GitHub Releases](https://github.com/sampleXbro/agentsmesh/releases/latest).
+
+### npm / pnpm / yarn (recommended for Node.js projects) — requires Node.js 20+
+
+```bash
+npm install -g agentsmesh          # global
+# or as a dev dependency, pinned per repo:
+npm install -D agentsmesh          # npm
+pnpm add -D agentsmesh             # pnpm
+yarn add -D agentsmesh             # yarn
+# or run once without installing:
+npx agentsmesh --help
+```
+
+The Node-based install also exposes the [typed programmatic API](https://samplexbro.github.io/agentsmesh/reference/programmatic-api/) for scripts and CI tooling.
 
 ---
 
@@ -80,7 +90,7 @@ AGENTS.md
 ```
 
 ```bash
-npx agentsmesh generate
+agentsmesh generate
 ```
 
 The native files above are still emitted — AgentsMesh writes them for you from `.agentsmesh/`. Edit canonical sources, regenerate, and every tool stays in sync.
@@ -89,19 +99,19 @@ The native files above are still emitted — AgentsMesh writes them for you from
 
 ## 60-second quickstart
 
-Works on Linux, macOS, and Windows. The `npx` commands below require Node.js 20+; see [Install](#install) for alternatives that don't need Node.js.
+Works on Linux, macOS, and Windows. Install via [Homebrew, a standalone binary, or any Node.js package manager](#install), then:
 
 ```bash
-npx agentsmesh init       # scaffold .agentsmesh/ + agentsmesh.yaml
-npx agentsmesh generate   # produce native configs for every enabled tool
-npx agentsmesh check      # CI-friendly drift gate against .agentsmesh/.lock
+agentsmesh init       # scaffold .agentsmesh/ + agentsmesh.yaml
+agentsmesh generate   # produce native configs for every enabled tool
+agentsmesh check      # CI-friendly drift gate against .agentsmesh/.lock
 ```
 
 - **`init`** — creates `agentsmesh.yaml`, `agentsmesh.local.yaml`, and the canonical `.agentsmesh/` directory.
 - **`generate`** — writes `CLAUDE.md`, `AGENTS.md`, `.cursor/`, `.github/copilot-instructions.md`, etc. from canonical sources.
 - **`check`** — exits non-zero if generated files have drifted from `.agentsmesh/.lock`. Drop into CI.
 
-Prefer a local install? `npm install -D agentsmesh` (also `pnpm add -D` / `yarn add -D`). The CLI ships as `agentsmesh` and the shorter alias `amsh`.
+If you installed via `npm install -D agentsmesh` (also `pnpm add -D` / `yarn add -D`), prefix each command with `npx`. The CLI ships as both `agentsmesh` and the shorter alias `amsh`.
 
 ---
 
@@ -110,10 +120,10 @@ Prefer a local install? `npm install -D agentsmesh` (also `pnpm add -D` / `yarn 
 If your repo already has `.cursor/`, `.claude/`, `.github/copilot-instructions.md`, or other native files, you don't have to delete them. The recommended flow imports them into `.agentsmesh/` first, lets you preview the projection, and only then trusts `generate`.
 
 ```bash
-npx agentsmesh import --from cursor   # or claude-code, copilot, codex-cli, gemini-cli, windsurf, amp, zed, warp, ...
-npx agentsmesh diff                   # patch-style preview of what generate would change
-npx agentsmesh generate               # write native configs (back) from canonical
-npx agentsmesh check                  # add to CI to detect drift
+agentsmesh import --from cursor   # or claude-code, copilot, codex-cli, gemini-cli, windsurf, amp, zed, warp, ...
+agentsmesh diff                   # patch-style preview of what generate would change
+agentsmesh generate               # write native configs (back) from canonical
+agentsmesh check                  # add to CI to detect drift
 ```
 
 What this gets you:
@@ -122,7 +132,7 @@ What this gets you:
 - `diff` shows the unified patch every output file would receive, so you can review before any write.
 - `check` reads `.agentsmesh/.lock` and fails the build if the canonical sources and the generated files disagree.
 
-`import --from` accepts the built-in target IDs: `claude-code`, `cursor`, `copilot`, `codex-cli`, `gemini-cli`, `windsurf`, `continue`, `cline`, `kiro`, `kilo-code`, `junie`, `roo-code`, `antigravity`. Plugin targets are valid too.
+`import --from` accepts any built-in target ID listed in the [Supported Tools matrix](#feature-support-matrix). Plugin targets are valid too.
 
 ---
 
@@ -133,11 +143,11 @@ What this gets you:
 A quick sample of the canonical → native projection:
 
 ```bash
-npx agentsmesh init
+agentsmesh init
 find .agentsmesh -maxdepth 2 -type f      # see the canonical scaffold
-npx agentsmesh generate
-npx agentsmesh diff                       # preview future changes
-npx agentsmesh check                      # CI-style drift gate
+agentsmesh generate
+agentsmesh diff                       # preview future changes
+agentsmesh check                      # CI-style drift gate
 ```
 
 On macOS/Linux you can also run `tree .agentsmesh` if you have `tree` installed.
@@ -146,7 +156,13 @@ On macOS/Linux you can also run `tree .agentsmesh` if you have `tree` installed.
 
 ## Supported AI coding tools
 
-AgentsMesh currently generates native config for every major AI coding assistant — Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf, Continue, Cline, Kiro, Codex CLI, Junie, Roo Code, Antigravity, Amp, Zed, Warp, Aider, Amazon Q, Augment Code, Crush, Qwen Code, Trae — plus plugin targets you can ship as standalone npm packages. Each tool's native vs. embedded support per feature is tracked in the [supported tools matrix](https://samplexbro.github.io/agentsmesh/reference/supported-tools/). The full matrix table is also embedded [further down this README](#supported-tools--feature-matrix).
+AgentsMesh generates native config for every major AI coding assistant — plus plugin targets you can ship as standalone npm packages. Each tool's native vs. embedded support per feature is tracked in the [supported tools matrix](https://samplexbro.github.io/agentsmesh/reference/supported-tools/). The full matrix table is also embedded [further down this README](#supported-tools--feature-matrix).
+
+<!-- agentsmesh:tool-list -->
+- **CLI agents:** [Aider](https://aider.chat), [Amp](https://ampcode.com), [Claude Code](https://www.anthropic.com/claude-code), [Codex CLI](https://github.com/openai/codex), [Crush](https://github.com/charmbracelet/crush), [Deep Agents CLI](https://github.com/langchain-ai/deepagents), [Gemini CLI](https://github.com/google-gemini/gemini-cli), [Goose](https://block.github.io/goose), [OpenCode](https://opencode.ai), [Pi Agent](https://github.com/pi-labs/pi-agent), [Qwen Code](https://github.com/QwenLM/qwen-code), [Rovo Dev](https://www.atlassian.com/solutions/devops/rovo-dev), [Warp](https://www.warp.dev).
+- **IDE integrations:** [Amazon Q Developer](https://aws.amazon.com/q/developer), [Antigravity](https://antigravity.google), [Augment Code](https://www.augmentcode.com), [Cline](https://cline.bot), [Continue](https://continue.dev), [GitHub Copilot](https://github.com/features/copilot), [Cursor](https://cursor.com), [Junie](https://www.jetbrains.com/junie), [Kilo Code](https://kilocode.ai), [Kiro](https://kiro.dev), [Roo Code](https://roocode.com), [Trae](https://www.trae.ai), [Windsurf](https://windsurf.com), [Zed](https://zed.dev).
+- **Cloud agent platforms:** [Factory Droid](https://www.factory.ai), [Jules](https://jules.google), [Replit Agent](https://replit.com).
+<!-- /agentsmesh:tool-list -->
 
 ---
 
@@ -379,33 +395,33 @@ Every public symbol resolves to a real `.d.ts` under strict TypeScript. Full ref
 ### Project scope (`agentsmesh generate`)
 
 <!-- agentsmesh:support-matrix:project -->
-| Feature | Aider | Amazon Q | Amp | Antigravity | Augment Code | Claude Code | Cline | Codex CLI | Continue | Copilot | Crush | Cursor | Gemini CLI | Goose | Junie | Kilo Code | Kiro | OpenCode | Qwen Code | Roo Code | Trae | Warp | Windsurf | Zed |
-|---|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
-| Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
-| Additional Rules | Embedded | — | Embedded | Native | Native | Native | Native | Native | Native | Native | Embedded | Embedded | Embedded | Embedded | Native | Native | Native | Native | Native | Native | Native | Embedded | Native | Embedded |
-| Commands | — | — | — | Partial (workflows) | Native | Native | Native (workflows) | Embedded | Embedded | Native | — | Native | Native | — | Native | Native | — | Native | Native | Native | — | — | Native (workflows) | — |
-| Agents | — | — | — | — | — | Native | Embedded | Native | — | Native | — | Native | Native | — | Native | Native | Native | Native | Native | Partial | — | — | Embedded | — |
-| Skills | Native | — | Native | Native | Native | Native | Native | Native | Embedded | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — |
-| MCP Servers | — | Native | Native | — | Native | Native | Native | Native | Native | — | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Partial | Native |
-| Hooks | — | — | — | — | Native | Native | Native | — | — | Partial | Native | Native | Partial | — | — | — | Native | — | — | — | — | — | Native | — |
-| Ignore | Native | — | — | — | Native | Native | Native | — | — | — | Native | Native | Native (settings-embedded) | Native | Native | Native | Native | — | Native | Native | Native | — | Native | — |
-| Permissions | — | — | — | — | — | Native | — | — | — | — | Partial | Partial | Partial | — | — | — | — | — | — | — | — | — | — | — |
+| Feature | Aider | Amazon Q Developer | Amp | Antigravity | Augment Code | Claude Code | Cline | Codex CLI | Continue | GitHub Copilot | Crush | Cursor | Deep Agents CLI | Factory Droid | Gemini CLI | Goose | Jules | Junie | Kilo Code | Kiro | OpenCode | Pi Agent | Qwen Code | Replit Agent | Roo Code | Rovo Dev | Trae | Warp | Windsurf | Zed |
+|---|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
+| Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
+| Additional Rules | Embedded | — | Embedded | Native | Native | Native | Native | Native | Native | Native | Embedded | Embedded | Embedded | Embedded | Embedded | Embedded | Embedded | Native | Native | Native | Native | Embedded | Native | Embedded | Native | Embedded | Native | Embedded | Native | Embedded |
+| Commands | — | — | — | Partial (workflows) | Native | Native | Native (workflows) | Embedded | Embedded | Native | — | Native | — | — | Native | — | — | Native | Native | — | Native | — | Native | — | Native | — | — | — | Native (workflows) | — |
+| Agents | — | — | — | — | — | Native | Embedded | Native | — | Native | — | Native | — | Native | Native | — | — | Native | Native | Native | Native | — | Native | — | Partial | — | — | — | Embedded | — |
+| Skills | Native | — | Native | Native | Native | Native | Native | Native | Embedded | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — |
+| MCP Servers | — | Native | Native | — | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | — | — | Native | Native | Native | Native | — | Native | — | Native | Native | Native | Native | Partial | Native |
+| Hooks | — | — | — | — | Native | Native | Native | — | — | Partial | Native | Native | — | — | Partial | — | — | — | — | Native | — | — | — | — | — | — | — | — | Native | — |
+| Ignore | Native | — | — | — | Native | Native | Native | — | — | — | Native | Native | — | — | Native (settings-embedded) | Native | — | Native | Native | Native | — | — | Native | — | Native | — | Native | — | Native | — |
+| Permissions | — | — | — | — | — | Native | — | — | — | — | Partial | Partial | — | — | Partial | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — |
 <!-- /agentsmesh:support-matrix:project -->
 
 ### Global scope (`agentsmesh generate --global`)
 
 <!-- agentsmesh:support-matrix:global -->
-| Feature | Aider | Amazon Q | Amp | Antigravity | Augment Code | Claude Code | Cline | Codex CLI | Continue | Copilot | Crush | Cursor | Gemini CLI | Goose | Junie | Kilo Code | Kiro | OpenCode | Qwen Code | Roo Code | Trae | Warp | Windsurf | Zed |
-|---|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
-| Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | — |
-| Additional Rules | Embedded | — | Embedded | Embedded | Native | Native | Native | Embedded | Native | Native | Embedded | Embedded | Embedded | Embedded | Embedded | Native | Native | Native | Embedded | Native | Native | — | Partial | — |
-| Commands | — | — | — | Partial (workflows) | Native | Native | Native (workflows) | Embedded | Native | Native | — | Native | Native | — | Native | Native | — | Native | Native | Native | — | — | Native (workflows) | — |
-| Agents | — | — | — | — | — | Native | Embedded | Native | — | Native | — | Native | Native | — | Native | Native | Native | Native | Native | Partial | — | — | Embedded | — |
-| Skills | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — |
-| MCP Servers | — | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | Native | — | Partial | Native |
-| Hooks | — | — | — | — | — | Native | Native | — | — | — | Native | Native | Partial | — | — | — | — | — | — | — | — | — | Native | — |
-| Ignore | Native | — | — | — | — | Native | Native | — | — | — | — | Native | — | Native | — | Native | Native | — | — | Native | — | — | Native | — |
-| Permissions | — | — | — | — | — | Native | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — |
+| Feature | Aider | Amazon Q Developer | Amp | Antigravity | Augment Code | Claude Code | Cline | Codex CLI | Continue | GitHub Copilot | Crush | Cursor | Deep Agents CLI | Factory Droid | Gemini CLI | Goose | Jules | Junie | Kilo Code | Kiro | OpenCode | Pi Agent | Qwen Code | Replit Agent | Roo Code | Rovo Dev | Trae | Warp | Windsurf | Zed |
+|---|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
+| Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | — |
+| Additional Rules | Embedded | — | Embedded | Embedded | Native | Native | Native | Embedded | Native | Native | Embedded | Embedded | Embedded | Embedded | Embedded | Embedded | Embedded | Embedded | Native | Native | Native | Embedded | Embedded | Embedded | Native | Embedded | Native | — | Partial | — |
+| Commands | — | — | — | Partial (workflows) | Native | Native | Native (workflows) | Embedded | Native | Native | — | Native | — | — | Native | — | — | Native | Native | — | Native | — | Native | — | Native | — | — | — | Native (workflows) | — |
+| Agents | — | — | — | — | — | Native | Embedded | Native | — | Native | — | Native | — | Native | Native | — | — | Native | Native | Native | Native | — | Native | — | Partial | — | — | — | Embedded | — |
+| Skills | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — |
+| MCP Servers | — | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | — | — | Native | Native | Native | Native | — | Native | — | Native | Native | Native | — | Partial | Native |
+| Hooks | — | — | — | — | — | Native | Native | — | — | — | Native | Native | — | — | Partial | — | — | — | — | — | — | — | — | — | — | — | — | — | Native | — |
+| Ignore | Native | — | — | — | — | Native | Native | — | — | — | — | Native | — | — | — | Native | — | — | Native | Native | — | — | — | — | Native | — | — | — | Native | — |
+| Permissions | — | — | — | — | — | Native | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — |
 <!-- /agentsmesh:support-matrix:global -->
 
 See the [full feature matrix docs](https://samplexbro.github.io/agentsmesh/reference/supported-tools/) for native vs. embedded support details and per-tool global paths.

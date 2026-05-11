@@ -23,6 +23,12 @@ import { descriptor as amazonQ } from '../../../src/targets/amazon-q/index.js';
 import { descriptor as augmentCode } from '../../../src/targets/augment-code/index.js';
 import { descriptor as crush } from '../../../src/targets/crush/index.js';
 import { descriptor as qwenCode } from '../../../src/targets/qwen-code/index.js';
+import { descriptor as deepagentsCli } from '../../../src/targets/deepagents-cli/index.js';
+import { descriptor as factoryDroid } from '../../../src/targets/factory-droid/index.js';
+import { descriptor as jules } from '../../../src/targets/jules/index.js';
+import { descriptor as piAgent } from '../../../src/targets/pi-agent/index.js';
+import { descriptor as replitAgent } from '../../../src/targets/replit-agent/index.js';
+import { descriptor as rovodev } from '../../../src/targets/rovodev/index.js';
 import { TARGET_IDS } from '../../../src/targets/catalog/target-ids.js';
 import type { ValidatedConfig } from '../../../src/config/core/schema.js';
 import type { CanonicalRule } from '../../../src/core/types.js';
@@ -307,6 +313,12 @@ describe('descriptor metadata', () => {
     augmentCode,
     crush,
     qwenCode,
+    deepagentsCli,
+    factoryDroid,
+    jules,
+    piAgent,
+    replitAgent,
+    rovodev,
   ];
 
   const allFeatureKeys = [

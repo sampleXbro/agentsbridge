@@ -1,0 +1,32 @@
+/**
+ * Import Rovo Dev config into canonical `.agentsmesh/`.
+ *
+ * Reads:
+ *   - `AGENTS.md`           — root rule
+ *   - `.rovodev/skills/`    — skill bundles
+ *   - `.rovodev/mcp.json`   — MCP servers
+ */
+
+import type { ImportResult } from '../../core/types.js';
+import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
+import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
+import { importEmbeddedSkills } from '../import/embedded-skill.js';
+import { runDescriptorImport } from '../import/descriptor-import-runner.js';
+import { ROVODEV_TARGET, ROVODEV_SKILLS_DIR, ROVODEV_GLOBAL_SKILLS_DIR } from './constants.js';
+import { descriptor } from './index.js';
+
+export async function importFromRovodev(
+  projectRoot: string,
+  options: { scope?: TargetLayoutScope } = {},
+): Promise<ImportResult[]> {
+  const scope = options.scope ?? 'project';
+  const results: ImportResult[] = [];
+  const normalize = await createImportReferenceNormalizer(ROVODEV_TARGET, projectRoot, scope);
+
+  results.push(...(await runDescriptorImport(descriptor, projectRoot, scope, { normalize })));
+
+  const skillsDir = scope === 'global' ? ROVODEV_GLOBAL_SKILLS_DIR : ROVODEV_SKILLS_DIR;
+  await importEmbeddedSkills(projectRoot, skillsDir, ROVODEV_TARGET, results, normalize);
+
+  return results;
+}

@@ -1,55 +1,55 @@
-# Security & Functional Gap Remediation
+# Target Metadata Registry — Plan
 
-Driven by senior-architect review. Each batch is one commit. TDD throughout: failing test → implement → typecheck/lint/test gate.
+## Goal
 
-## Batch 1 — MCP write-tool schema hardening (C1, H1, M4, M5, L1, L5)
-- Strict Zod for `add_mcp_server`/`update_mcp_server` server payload (type enum, command shape, args/env)
-- Strict Zod for `update_hooks` mirroring `HookEntry`
-- Per-entry format check for `update_permissions` allow/deny/ask
-- `NAME_RE` drops `/` (flat names only)
-- Apply `ABSOLUTE_PATH_RE` redaction in `server.ts` non-`McpError` fallback
-- `canonical-factory.ts` IO_ERROR passes underlying errno code
+Add a `metadata` field to every target descriptor so docs/website can be generated from a single source. Eliminate hardcoded target enumerations in README.md and website pages that already drift behind the catalog (only 13 of 30 targets listed in import docs).
 
-## Batch 2 — Hook script generation hardening (H2, H3, L3)
-- Strip `\r\n` from event/matcher/command before embedding in shell wrappers
-- Thread `mode` through `writeFileAtomic`; set `0o755` for `.sh`/`.bash`/`.zsh`
-- Add `set -u` to generated wrappers
+## Approach
 
-## Batch 3 — Remote fetch hardening (M2, M3, L2)
-- Content-Length cap + streaming size guard for tarball (500 MiB)
-- Reject git ref/clone-url starting with `-`
-- Validate `AGENTSMESH_CACHE` env override
+1. Extend `TargetDescriptor` with required `metadata: TargetMetadata` (displayName, category, officialUrl, shortDescription).
+2. Populate metadata in all 30 target descriptors using existing data from `TARGET_LABELS` and `supported-tools.mdx`.
+3. Build `TARGET_REGISTRY` aggregator that surfaces metadata + capabilities per target ID.
+4. Extend `scripts/render-support-matrix.ts` with new markers for: import target list, init scan directories.
+5. Replace hardcoded enumerations in README.md and website/src/content/docs/cli/import.mdx + quick-start.mdx with marker blocks.
+6. Verify with `pnpm matrix:verify`, full test suite, and `pnpm build`.
 
-## Batch 4 — Canonical parser path safety (M1, F4, F5)
-- Wire `findWindowsPathIssues` into canonical parsers
-- `parseAgents` flag duplicate basenames in nested directories
-- `parseSkills` use `sanitizeSkillName` (align with `parseSkillDirectory`)
+## File-by-file edits
 
-## Batch 5 — Link rebaser hardening (L4)
-- Reject `file:///` + escape-out-of-root absolute paths from generated artifacts
+### `src/targets/catalog/target-descriptor.ts`
+- Add `TargetMetadata` interface (displayName, category, officialUrl, shortDescription).
+- Add `readonly metadata: TargetMetadata` to `TargetDescriptor`.
 
-## Batch 6 — Plugin strictness (F3)
-- Per-plugin `strict: boolean` option; failed-load → error not warning when set
+### All 30 `src/targets/<id>/index.ts`
+- Add `metadata: { ... }` field after `id`.
 
-## Batch 7 — File-size budget (F1, partial)
-- Split top 4 offenders only:
-  - `src/mcp/register.ts` (407)
-  - `src/cli/commands/target-scaffold/templates.ts` (315)
-  - `src/utils/filesystem/fs.ts` (289)
-  - `src/mcp/handlers/orchestrate.ts` (265)
+### `src/core/catalog/registry.ts` (new)
+- Export `TARGET_REGISTRY: Record<TargetId, TargetEntry>` built from descriptors.
+- `TargetEntry` shape: `{ id, metadata, capabilities, importRoot }`.
 
-## Deferred with rationale
-- **F2 (process lock cross-host eviction)**: behavior change with possibly intentional design. Document in CHANGELOG/issue rather than silently flip.
-- **L4 (link rebaser strips `file://` outside project root)**: existing tests at `tests/unit/core/link-rebaser-edge-cases.test.ts:70-73` and `link-rebaser-skill-absolute-links.test.ts:298, 527` explicitly assert the contract "preserve `file://` URIs verbatim as protected schemes." Flipping this contract is a behavior change requiring product-owner sign-off. Recommended follow-up: add an opt-in `neutralizeFileUris` rebaser flag and a lint warning when canonical content emits `file://` links.
+### `scripts/render-support-matrix.ts`
+- Remove hardcoded `TARGET_LABELS` constant — read from metadata.
+- Add new marker blocks for `import-target-list`.
+- Refresh README.md import section and website/cli/import.mdx.
 
-## Verification cadence
-- After each batch: `pnpm typecheck` + `pnpm lint` + relevant `pnpm test`
-- Build (`pnpm build`) before any CLI/integration/e2e slice
-- Final gate: full `pnpm test` + `pnpm build && pnpm test:e2e`
+### `README.md` line 125
+- Replace hardcoded list with marker block.
 
-## Lessons applied
-- L37: explicit `!== null` / `!== undefined` (no `!= null`)
-- L62: separate runtime/dev install commands when changing deps
-- L101/L102: never run two CLI test commands in parallel; rebuild before integration/e2e slices
-- L67/L68/L113: rerun typecheck immediately after refactor that touches typed test fixtures
-- L188/L190: per-target import mappers stay in `*-mappers.ts`; flatFile won't model multi-file merge
+### `website/src/content/docs/cli/import.mdx` lines 30-44
+- Replace hardcoded table with marker block.
+
+### `website/src/content/docs/getting-started/quick-start.mdx` line 86
+- Replace hardcoded directory list with generic text + link to supported-tools.
+
+## Risk / scope
+
+- 30 target files need editing — straightforward but volume risk.
+- Hardcoded `TARGET_LABELS` removal might cascade if anything else imports it.
+- README has prose lists (lines 19, 59, 149, 167-177, 247) that I will NOT replace in this batch — that's a follow-up to avoid scope creep.
+
+## Verification
+
+- `pnpm typecheck` passes
+- `pnpm matrix:verify` passes (CI gate)
+- `pnpm test` full suite passes
+- `pnpm build` succeeds
+- Inspect README.md and website pages — generated blocks correct

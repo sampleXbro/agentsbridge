@@ -10,29 +10,23 @@ If your project already has AI tool configs scattered across `.claude/`, `.curso
 
 ## Prerequisites
 
-- Node.js 20+
-- The project already has tool configs in one or more tool directories
+- AgentsMesh installed — pick any method from the [installation guide](../getting-started/installation/): Homebrew, standalone binary, or `npm install -D agentsmesh` for Node.js projects.
+- The project already has tool configs in one or more tool directories.
 
 ## Migration steps
 
 <Steps>
 
-1. **Install AgentsMesh**
+1. **Initialize the canonical directory**
 
    ```bash
-   npm install -D agentsmesh
-   ```
-
-2. **Initialize the canonical directory**
-
-   ```bash
-   npx agentsmesh init
+   agentsmesh init
    ```
 
    AgentsMesh scans the project and prompts you to import each detected config. Use `--yes` to import everything without prompts:
 
    ```bash
-   npx agentsmesh init --yes
+   agentsmesh init --yes
    ```
 
    Starter example files are added only for canonical folders that stay empty after import (so imported commands or skills are not duplicated with `example` stubs).
@@ -77,7 +71,7 @@ If your project already has AI tool configs scattered across `.claude/`, `.curso
 5. **Regenerate for all targets**
 
    ```bash
-   npx agentsmesh generate
+   agentsmesh generate
    ```
 
    This writes fresh output to each tool directory based on the canonical sources.
@@ -85,7 +79,7 @@ If your project already has AI tool configs scattered across `.claude/`, `.curso
 6. **Verify nothing unexpected changed**
 
    ```bash
-   npx agentsmesh diff
+   agentsmesh diff
    ```
 
    The diff should show no changes (since the generated output should match what was imported). If there are differences, review them — they represent normalization that AgentsMesh applied during the round-trip.
@@ -106,9 +100,9 @@ If your project already has AI tool configs scattered across `.claude/`, `.curso
 ## What to tell your team
 
 1. Edit `.agentsmesh/` files (not tool directories directly)
-2. Run `npx agentsmesh generate` after editing
+2. Run `agentsmesh generate` after editing
 3. Commit both `.agentsmesh/` and the generated tool directories
-4. CI will run `npx agentsmesh check` to catch drift
+4. CI will run `agentsmesh check` to catch drift
 
 ## Adding more tools later
 
@@ -122,7 +116,7 @@ targets:
 ```
 
 ```bash
-npx agentsmesh generate
+agentsmesh generate
 ```
 
 Their tool directory (`.gemini/`) is now in sync with the rest of the team.

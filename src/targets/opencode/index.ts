@@ -132,6 +132,12 @@ const capabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: OPENCODE_TARGET,
+  metadata: {
+    displayName: 'OpenCode',
+    category: 'cli',
+    officialUrl: 'https://opencode.ai',
+    shortDescription: 'Open-source terminal AI agent',
+  },
   generators: target,
   capabilities,
   emptyImportMessage:

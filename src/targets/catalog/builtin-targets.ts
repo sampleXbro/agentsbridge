@@ -36,14 +36,20 @@ import { descriptor as continueTarget } from '../continue/index.js';
 import { descriptor as copilot } from '../copilot/index.js';
 import { descriptor as crush } from '../crush/index.js';
 import { descriptor as cursor } from '../cursor/index.js';
+import { descriptor as deepagentsCli } from '../deepagents-cli/index.js';
+import { descriptor as factoryDroid } from '../factory-droid/index.js';
 import { descriptor as geminiCli } from '../gemini-cli/index.js';
 import { descriptor as goose } from '../goose/index.js';
+import { descriptor as jules } from '../jules/index.js';
 import { descriptor as junie } from '../junie/index.js';
 import { descriptor as kiloCode } from '../kilo-code/index.js';
 import { descriptor as kiro } from '../kiro/index.js';
 import { descriptor as opencode } from '../opencode/index.js';
+import { descriptor as piAgent } from '../pi-agent/index.js';
 import { descriptor as qwenCode } from '../qwen-code/index.js';
+import { descriptor as replitAgent } from '../replit-agent/index.js';
 import { descriptor as rooCode } from '../roo-code/index.js';
+import { descriptor as rovodev } from '../rovodev/index.js';
 import { descriptor as trae } from '../trae/index.js';
 import { descriptor as warp } from '../warp/index.js';
 import { descriptor as windsurf } from '../windsurf/index.js';
@@ -76,14 +82,20 @@ export const BUILTIN_TARGETS: readonly TargetDescriptor[] = [
   copilot,
   crush,
   cursor,
+  deepagentsCli,
+  factoryDroid,
   geminiCli,
   goose,
+  jules,
   junie,
   kiloCode,
   kiro,
   opencode,
+  piAgent,
   qwenCode,
+  replitAgent,
   rooCode,
+  rovodev,
   trae,
   warp,
   windsurf,

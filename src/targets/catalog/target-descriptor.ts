@@ -141,6 +141,24 @@ export interface TargetLintHooks {
   readonly settings?: FeatureLinter;
 }
 
+/** High-level category for grouping/filtering in docs and UI. */
+export type TargetCategory = 'cli' | 'ide' | 'agent-platform';
+
+/**
+ * User-facing metadata for a target. Drives display names, docs, and links in
+ * README/website, replacing hardcoded enumerations.
+ */
+export interface TargetMetadata {
+  /** Human-readable display name, e.g. "Claude Code". */
+  readonly displayName: string;
+  /** High-level category for filtering. */
+  readonly category: TargetCategory;
+  /** Official tool homepage or canonical documentation URL. */
+  readonly officialUrl: string;
+  /** One-line description used in tool lists and tables. */
+  readonly shortDescription: string;
+}
+
 /**
  * Full self-describing target descriptor.
  * Bundles everything needed to generate, import, lint, and detect a target.
@@ -148,6 +166,8 @@ export interface TargetLintHooks {
 export interface TargetDescriptor {
   /** Unique target identifier, e.g. 'claude-code' */
   readonly id: string;
+  /** User-facing metadata (display name, category, URL, description) */
+  readonly metadata: TargetMetadata;
   /** Feature generators (rules, commands, agents, etc.) */
   readonly generators: TargetGenerators;
   /** Feature support levels */

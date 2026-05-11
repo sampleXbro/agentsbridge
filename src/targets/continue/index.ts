@@ -101,6 +101,12 @@ const globalCapabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: 'continue',
+  metadata: {
+    displayName: 'Continue',
+    category: 'ide',
+    officialUrl: 'https://continue.dev',
+    shortDescription: 'Open-source AI code assistant',
+  },
   generators: target,
   capabilities: {
     rules: 'native',

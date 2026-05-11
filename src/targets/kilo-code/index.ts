@@ -139,6 +139,12 @@ const capabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: KILO_CODE_TARGET,
+  metadata: {
+    displayName: 'Kilo Code',
+    category: 'ide',
+    officialUrl: 'https://kilocode.ai',
+    shortDescription: 'Open-source AI coding agent for VS Code',
+  },
   generators: target,
   capabilities,
   emptyImportMessage:

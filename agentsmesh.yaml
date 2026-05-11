@@ -24,6 +24,12 @@ targets:
   - crush
   - qwen-code
   - trae
+  - deepagents-cli
+  - factory-droid
+  - jules
+  - pi-agent
+  - replit-agent
+  - rovodev
 features:
   - rules
   - commands

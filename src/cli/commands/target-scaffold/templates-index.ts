@@ -66,6 +66,12 @@ const global: TargetLayout = {
 
 export const descriptor = {
   id: ${p}_TARGET,
+  metadata: {
+    displayName: '${v.displayName}',
+    category: 'cli', // TODO(agentsmesh-scaffold): 'cli' | 'ide' | 'agent-platform'
+    officialUrl: 'https://example.com', // TODO(agentsmesh-scaffold): official tool homepage or canonical docs URL
+    shortDescription: '${v.displayName} — TODO(agentsmesh-scaffold): one-line description used in tool lists',
+  },
   generators: target,
   capabilities: {
     rules: 'native',

@@ -20,10 +20,7 @@ export function generateRules(canonical: CanonicalFiles): RulesOutput[] {
 
   const outputs: RulesOutput[] = [{ path: GEMINI_ROOT, content }];
   if (root) {
-    const compatAgentsContent = root.body
-      .trim()
-      .replace(/\.agentsmesh\/skills\//g, '.agents/skills/');
-    outputs.push({ path: GEMINI_COMPAT_AGENTS, content: compatAgentsContent });
+    outputs.push({ path: GEMINI_COMPAT_AGENTS, content: root.body.trim() });
   }
   return outputs;
 }

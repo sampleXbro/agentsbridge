@@ -2,62 +2,19 @@
  * Renders README + website support matrices from SUPPORT_MATRIX / SUPPORT_MATRIX_GLOBAL.
  * Usage: `pnpm matrix:generate` | `pnpm matrix:verify` (non-zero if docs drift from catalog).
  */
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { SupportLevel } from '../src/core/result-types.js';
 import { SUPPORT_MATRIX, SUPPORT_MATRIX_GLOBAL } from '../src/core/matrix/data.js';
-import { TARGET_IDS } from '../src/targets/catalog/target-ids.js';
-import type { TargetCapabilityValue } from '../src/targets/catalog/capabilities.js';
+import {
+  buildImportTargetsTable,
+  buildMarkdownTable,
+  buildToolDetails,
+  buildToolList,
+} from './support-matrix-blocks.js';
 
 const ROOT =
   process.env.AGENTSMESH_MATRIX_ROOT ?? join(dirname(fileURLToPath(import.meta.url)), '..');
-
-const TARGET_LABELS: Record<string, string> = {
-  aider: 'Aider',
-  'amazon-q': 'Amazon Q',
-  amp: 'Amp',
-  antigravity: 'Antigravity',
-  'augment-code': 'Augment Code',
-  'claude-code': 'Claude Code',
-  cline: 'Cline',
-  'codex-cli': 'Codex CLI',
-  continue: 'Continue',
-  copilot: 'Copilot',
-  crush: 'Crush',
-  cursor: 'Cursor',
-  'gemini-cli': 'Gemini CLI',
-  goose: 'Goose',
-  junie: 'Junie',
-  'kilo-code': 'Kilo Code',
-  kiro: 'Kiro',
-  opencode: 'OpenCode',
-  'qwen-code': 'Qwen Code',
-  'roo-code': 'Roo Code',
-  trae: 'Trae',
-  warp: 'Warp',
-  windsurf: 'Windsurf',
-  zed: 'Zed',
-};
-
-const FEATURE_ROWS: [string, keyof typeof SUPPORT_MATRIX][] = [
-  ['Rules', 'rules'],
-  ['Additional Rules', 'additionalRules'],
-  ['Commands', 'commands'],
-  ['Agents', 'agents'],
-  ['Skills', 'skills'],
-  ['MCP Servers', 'mcp'],
-  ['Hooks', 'hooks'],
-  ['Ignore', 'ignore'],
-  ['Permissions', 'permissions'],
-];
-
-const LEVEL_LABELS: Record<SupportLevel, string> = {
-  native: 'Native',
-  embedded: 'Embedded',
-  partial: 'Partial',
-  none: '—',
-};
 
 const README_MARKERS = {
   project: {
@@ -67,6 +24,14 @@ const README_MARKERS = {
   global: {
     start: '<!-- agentsmesh:support-matrix:global -->',
     end: '<!-- /agentsmesh:support-matrix:global -->',
+  },
+  importTargets: {
+    start: '<!-- agentsmesh:import-targets -->',
+    end: '<!-- /agentsmesh:import-targets -->',
+  },
+  toolList: {
+    start: '<!-- agentsmesh:tool-list -->',
+    end: '<!-- /agentsmesh:tool-list -->',
   },
 } as const;
 
@@ -79,26 +44,19 @@ const MDX_MARKERS = {
     start: '{/* agentsmesh:support-matrix:global:start */}',
     end: '{/* agentsmesh:support-matrix:global:end */}',
   },
+  importTargets: {
+    start: '{/* agentsmesh:import-targets:start */}',
+    end: '{/* agentsmesh:import-targets:end */}',
+  },
+  toolList: {
+    start: '{/* agentsmesh:tool-list:start */}',
+    end: '{/* agentsmesh:tool-list:end */}',
+  },
+  toolDetails: {
+    start: '{/* agentsmesh:tool-details:start */}',
+    end: '{/* agentsmesh:tool-details:end */}',
+  },
 } as const;
-
-function cellLabel(c: TargetCapabilityValue): string {
-  const base = LEVEL_LABELS[c.level];
-  if (c.flavor && c.flavor !== 'standard') {
-    return `${base} (${c.flavor})`;
-  }
-  return base;
-}
-
-function buildMarkdownTable(matrix: typeof SUPPORT_MATRIX): string {
-  const headers = ['Feature', ...TARGET_IDS.map((id) => TARGET_LABELS[id])];
-  const header = `| ${headers.join(' | ')} |`;
-  const sep = `|${headers.map((h) => (h === 'Feature' ? '---' : ':-----------:')).join('|')}|`;
-  const lines = FEATURE_ROWS.map(([label, key]) => {
-    const cells = [label, ...TARGET_IDS.map((t) => cellLabel(matrix[key][t]))];
-    return `| ${cells.join(' | ')} |`;
-  });
-  return [header, sep, ...lines].join('\n');
-}
 
 function replaceBetweenMarkers(
   content: string,
@@ -114,41 +72,14 @@ function replaceBetweenMarkers(
   return content.slice(0, a + start.length) + '\n' + replacement + '\n' + content.slice(b);
 }
 
-function renderReadme(): void {
-  const path = join(ROOT, 'README.md');
-  let text = readFileSync(path, 'utf-8');
-  const projBlock = buildMarkdownTable(SUPPORT_MATRIX);
-  text = replaceBetweenMarkers(
-    text,
-    README_MARKERS.project.start,
-    README_MARKERS.project.end,
-    projBlock,
-  );
-  const globBlock = buildMarkdownTable(SUPPORT_MATRIX_GLOBAL);
-  text = replaceBetweenMarkers(
-    text,
-    README_MARKERS.global.start,
-    README_MARKERS.global.end,
-    globBlock,
-  );
-  writeFileSync(path, text);
+function maybeReplace(content: string, start: string, end: string, replacement: string): string {
+  if (!content.includes(start) || !content.includes(end)) return content;
+  return replaceBetweenMarkers(content, start, end, replacement);
 }
 
-function renderWebsiteMdx(): void {
-  const path = join(ROOT, 'website/src/content/docs/reference/supported-tools.mdx');
-  let text = readFileSync(path, 'utf-8');
-  const projBlock = buildMarkdownTable(SUPPORT_MATRIX);
-  text = replaceBetweenMarkers(text, MDX_MARKERS.project.start, MDX_MARKERS.project.end, projBlock);
-  const globBlock = buildMarkdownTable(SUPPORT_MATRIX_GLOBAL);
-  text = replaceBetweenMarkers(text, MDX_MARKERS.global.start, MDX_MARKERS.global.end, globBlock);
-  writeFileSync(path, text);
-}
+type MarkerSet = typeof README_MARKERS | typeof MDX_MARKERS;
 
-function expectedDocument(
-  source: string,
-  globalMatrix: typeof SUPPORT_MATRIX_GLOBAL,
-  markers: typeof README_MARKERS,
-): string {
+function applyAllBlocks(source: string, markers: MarkerSet): string {
   let t = replaceBetweenMarkers(
     source,
     markers.project.start,
@@ -159,29 +90,108 @@ function expectedDocument(
     t,
     markers.global.start,
     markers.global.end,
-    buildMarkdownTable(globalMatrix),
+    buildMarkdownTable(SUPPORT_MATRIX_GLOBAL),
   );
+  t = maybeReplace(
+    t,
+    markers.importTargets.start,
+    markers.importTargets.end,
+    buildImportTargetsTable(),
+  );
+  t = maybeReplace(t, markers.toolList.start, markers.toolList.end, buildToolList());
   return t;
 }
 
-const verify = process.argv.includes('--verify');
+function applyOptionalBlock(source: string, start: string, end: string, block: string): string {
+  return maybeReplace(source, start, end, block);
+}
 
-if (verify) {
-  const readmePath = join(ROOT, 'README.md');
-  const mdxPath = join(ROOT, 'website/src/content/docs/reference/supported-tools.mdx');
-  const readme = readFileSync(readmePath, 'utf-8');
-  const mdx = readFileSync(mdxPath, 'utf-8');
-  if (
-    readme !== expectedDocument(readme, SUPPORT_MATRIX_GLOBAL, README_MARKERS) ||
-    mdx !== expectedDocument(mdx, SUPPORT_MATRIX_GLOBAL, MDX_MARKERS)
-  ) {
+function renderFile(path: string, transform: (text: string) => string, optional = false): void {
+  if (optional && !existsSync(path)) return;
+  const text = readFileSync(path, 'utf-8');
+  writeFileSync(path, transform(text));
+}
+
+const PATHS = {
+  readme: join(ROOT, 'README.md'),
+  supported: join(ROOT, 'website/src/content/docs/reference/supported-tools.mdx'),
+  importPage: join(ROOT, 'website/src/content/docs/cli/import.mdx'),
+  homepage: join(ROOT, 'website/src/content/docs/index.mdx'),
+} as const;
+
+function renderAll(): void {
+  renderFile(PATHS.readme, (t) => applyAllBlocks(t, README_MARKERS));
+  renderFile(PATHS.supported, (t) => {
+    let s = applyAllBlocks(t, MDX_MARKERS);
+    s = applyOptionalBlock(
+      s,
+      MDX_MARKERS.toolDetails.start,
+      MDX_MARKERS.toolDetails.end,
+      buildToolDetails(),
+    );
+    return s;
+  });
+  renderFile(
+    PATHS.importPage,
+    (t) =>
+      applyOptionalBlock(
+        t,
+        MDX_MARKERS.importTargets.start,
+        MDX_MARKERS.importTargets.end,
+        buildImportTargetsTable(),
+      ),
+    true,
+  );
+  renderFile(
+    PATHS.homepage,
+    (t) =>
+      applyOptionalBlock(t, MDX_MARKERS.toolList.start, MDX_MARKERS.toolList.end, buildToolList()),
+    true,
+  );
+}
+
+function verifyAll(): boolean {
+  const readme = readFileSync(PATHS.readme, 'utf-8');
+  if (readme !== applyAllBlocks(readme, README_MARKERS)) return false;
+  const supported = readFileSync(PATHS.supported, 'utf-8');
+  const supportedExpected = applyOptionalBlock(
+    applyAllBlocks(supported, MDX_MARKERS),
+    MDX_MARKERS.toolDetails.start,
+    MDX_MARKERS.toolDetails.end,
+    buildToolDetails(),
+  );
+  if (supported !== supportedExpected) return false;
+  if (existsSync(PATHS.importPage)) {
+    const importMdx = readFileSync(PATHS.importPage, 'utf-8');
+    const expected = applyOptionalBlock(
+      importMdx,
+      MDX_MARKERS.importTargets.start,
+      MDX_MARKERS.importTargets.end,
+      buildImportTargetsTable(),
+    );
+    if (importMdx !== expected) return false;
+  }
+  if (existsSync(PATHS.homepage)) {
+    const homepage = readFileSync(PATHS.homepage, 'utf-8');
+    const expected = applyOptionalBlock(
+      homepage,
+      MDX_MARKERS.toolList.start,
+      MDX_MARKERS.toolList.end,
+      buildToolList(),
+    );
+    if (homepage !== expected) return false;
+  }
+  return true;
+}
+
+if (process.argv.includes('--verify')) {
+  if (!verifyAll()) {
     process.stderr.write(
-      'matrix:verify failed: README or supported-tools.mdx does not match SUPPORT_MATRIX.\nRun pnpm matrix:generate\n',
+      'matrix:verify failed: docs do not match catalog.\nRun pnpm matrix:generate\n',
     );
     process.exit(1);
   }
   process.stdout.write('matrix:verify OK\n');
 } else {
-  renderReadme();
-  renderWebsiteMdx();
+  renderAll();
 }

@@ -1,88 +1,104 @@
 ---
 draft: false
 title: Installation
-description: Install AgentsMesh via npm, pnpm, yarn, or run it directly with npx. Requires Node.js 20 or later.
+description: Install AgentsMesh via Homebrew, a standalone binary, or any Node.js package manager (npm, pnpm, yarn, npx). Works on Linux, macOS, and Windows.
 sidebar:
   order: 1
 ---
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-## Requirements
+AgentsMesh ships three ways. Pick whichever matches your environment — every install method delivers the same CLI (`agentsmesh` and the shorter alias `amsh`) and the same TypeScript library.
 
-- **Node.js 20** or later
-- Linux, macOS, or **Windows** (native, not WSL)
-- Any package manager: npm, pnpm, or yarn
-
-<Aside type="tip">
-  **Windows support** is first-class: paths are normalized internally so generated configs and `installs.yaml` are portable across platforms. Watch mode uses polling on Windows because `ReadDirectoryChangesW` can miss just-created files in tmpdirs. CI runs the full test suite on Linux, macOS, and Windows.
-</Aside>
-
-## Install as a dev dependency
+## Quick install
 
 <Tabs>
-  <TabItem label="npm">
+  <TabItem label="Homebrew (macOS / Linux)">
+    No Node.js required.
+
     ```bash
-    npm install -D agentsmesh
+    brew tap samplexbro/agentsmesh
+    brew install agentsmesh
     ```
   </TabItem>
-  <TabItem label="pnpm">
+  <TabItem label="Standalone binary">
+    No Node.js required. Linux, macOS, and Windows binaries are published with each release.
+
     ```bash
-    pnpm add -D agentsmesh
+    curl -fsSL https://github.com/sampleXbro/agentsmesh/releases/latest/download/install.sh | sh
     ```
+
+    Or download a binary directly from [GitHub Releases](https://github.com/sampleXbro/agentsmesh/releases/latest).
   </TabItem>
-  <TabItem label="yarn">
+  <TabItem label="npm / pnpm / yarn">
+    Requires Node.js 20+. Recommended when AgentsMesh is part of a Node.js project's dev tooling so it's pinned per repo.
+
     ```bash
-    yarn add -D agentsmesh
+    # Global install
+    npm install -g agentsmesh
+
+    # Or as a dev dependency
+    npm install -D agentsmesh        # npm
+    pnpm add -D agentsmesh           # pnpm
+    yarn add -D agentsmesh           # yarn
+
+    # Or run without installing
+    npx agentsmesh --help
     ```
   </TabItem>
 </Tabs>
 
-## Run without installing
+## Platform support
 
-```bash
-npx agentsmesh --help
-```
+Linux, macOS, and **Windows** (native, not WSL).
 
-## CLI aliases
+<Aside type="tip">
+  **Windows support** is first-class for every install method: paths are normalized internally so generated configs and `installs.yaml` are portable across platforms. Watch mode uses polling on Windows because `ReadDirectoryChangesW` can miss just-created files in tmpdirs. CI runs the full test suite on Linux, macOS, and Windows.
+</Aside>
 
-AgentsMesh installs two aliases:
+## Which install method should I use?
 
-```bash
-agentsmesh --version   # full name
-amsh --version         # short alias
-```
-
-Both commands are identical. Use whichever you prefer.
+| Method | Requires Node.js | Best for |
+|--------|:----------------:|---------|
+| **Homebrew** | No | macOS / Linux engineers who want a single managed install |
+| **Standalone binary** | No | CI runners without Node, locked-down environments, Windows users without npm |
+| **npm / pnpm / yarn (`-D`)** | Yes | Node.js projects — pins AgentsMesh per repo so teammates and CI get the exact same version |
+| **npx** | Yes | Trying it out, one-off commands in Node.js projects |
 
 ## Verify installation
 
 ```bash
 agentsmesh --version
-# 0.7.0
-
 agentsmesh --help
-# Usage: agentsmesh <command> [options]
-# ...
 ```
 
-<Aside type="note">
-  If you installed locally (not globally), prefix commands with `npx agentsmesh` or add a script to your `package.json`.
-</Aside>
+Both `agentsmesh` and the shorter `amsh` alias resolve to the same CLI regardless of install method.
 
 ## IDE autocomplete via JSON Schema
 
 Every canonical config file ships with a generated JSON Schema, so VS Code, JetBrains, and other editors give you autocomplete and validation out of the box. `agentsmesh init` writes the appropriate `# yaml-language-server: $schema=...` directive (or `$schema` field for JSON) into each file:
 
-| Config file | Schema location (in your `node_modules`) |
+| Config file | Schema location |
 |---|---|
-| `agentsmesh.yaml` / `agentsmesh.local.yaml` | `agentsmesh/schemas/agentsmesh.json` |
+| `agentsmesh.yaml` / `agentsmesh.local.yaml` | `agentsmesh/schemas/agentsmesh.json` (via `unpkg.com` when no Node project is present) |
 | `.agentsmesh/hooks.yaml` | `agentsmesh/schemas/hooks.json` |
 | `.agentsmesh/permissions.yaml` | `agentsmesh/schemas/permissions.json` |
 | `.agentsmesh/mcp.json` | `agentsmesh/schemas/mcp.json` |
 | `.agentsmesh/packs/*/pack.json` | `agentsmesh/schemas/pack.json` |
 
+## Use as a TypeScript / Node.js library
+
+In addition to the CLI, AgentsMesh exports a typed programmatic API for scripts, IDE extensions, and CI tooling. This path requires Node.js 20+ and `npm install agentsmesh` (or pnpm/yarn equivalent).
+
+```typescript
+import { generate, importFrom, loadCanonical } from 'agentsmesh';
+```
+
+See the [programmatic API reference](../reference/programmatic-api/) for the full entrypoint table.
+
 ## Add scripts to package.json
+
+If you installed via npm/pnpm/yarn, wire AgentsMesh into your project scripts:
 
 ```json
 {

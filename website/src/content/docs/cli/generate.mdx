@@ -98,20 +98,7 @@ Forces a re-fetch of all remote `extends` sources. Without this flag, AgentsMesh
 
 ## Output locations
 
-| Target | Output directory |
-|--------|----------------|
-| `claude-code` | `.claude/` |
-| `cursor` | `.cursor/` |
-| `copilot` | `.github/` |
-| `gemini-cli` | `.gemini/` |
-| `cline` | `.cline/` |
-| `codex-cli` | `AGENTS.md` |
-| `windsurf` | `.windsurf/` |
-| `continue` | `.continue/` |
-| `junie` | `.junie/` |
-| `kiro` | `.kiro/` + `AGENTS.md` |
-| `antigravity` | `.agents/` |
-| `roo-code` | `.roo/` |
+Each target writes to its own native directory (e.g. `claude-code` → `.claude/`, `cursor` → `.cursor/`, `copilot` → `.github/`). The shared `AGENTS.md` at the project root is emitted by every target that uses it as a root-instruction surface. See the [supported tools matrix](/reference/supported-tools/) for the exact project-scope and global-scope paths for every target.
 
 ## Global mode path resolution
 

@@ -36,12 +36,12 @@ Drift occurs when:
 ```yaml
 # .github/workflows/ci.yml
 - name: Verify AI config is in sync
-  run: npx agentsmesh check
+  run: agentsmesh check
 ```
 
 This step fails the build if generated files are out of date with canonical sources.
 
-For user-level config checks, run `npx agentsmesh check --global` on a machine that owns the home-level AgentsMesh config.
+For user-level config checks, run `agentsmesh check --global` on a machine that owns the home-level AgentsMesh config.
 
 ### Full CI example
 
@@ -59,8 +59,8 @@ jobs:
         with:
           node-version: '20'
       - run: npm ci
-      - run: npx agentsmesh lint
-      - run: npx agentsmesh check
+      - run: agentsmesh lint
+      - run: agentsmesh check
 ```
 
 ## Exit codes

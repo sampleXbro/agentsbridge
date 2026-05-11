@@ -33,6 +33,7 @@ Use this skill when the task is to add a brand-new supported agent target to thi
 - Prefer official docs and other primary sources. Use vendor examples or source code only when official docs are incomplete, and call that out explicitly.
 - Separate the target product from the current assistant runtime before making format decisions. Do not confuse a generated target like `codex-cli` with Codex desktop/chat, or local CLI MCP config with app-managed connectors.
 - Capture the target's real capability map for every canonical feature: rules, additionalRules, commands, agents, skills, mcp, hooks, ignore, permissions.
+- Fill in the descriptor `metadata` block (`displayName`, `category`, `officialUrl`, `shortDescription`). This is required at compile time and drives every auto-generated tool list in README + website. The scaffold leaves `TODO(agentsmesh-scaffold)` markers — replace them with the values from your Phase 1 research before commit.
 - When a feature is `none` but `skills` is `native` or `embedded`, evaluate whether `supportsConversion` should project that feature as skills. If the target reads skill bundles, commands and agents with no native surface should be projected as skills via `supportsConversion: { commands: true, agents: true }` and registered in `src/config/core/conversions.ts` with `DEFAULT_*_TO_SKILLS`. Do not add lint warnings for features that are projected as skills — only warn for features that are truly dropped.
 - Start from `agentsmesh target scaffold <id>` when building a built-in target. Do not hand-write the 10 skeleton files the scaffold produces.
 - Write failing tests first for every new behavior. Do not implement first and backfill later.
@@ -41,7 +42,7 @@ Use this skill when the task is to add a brand-new supported agent target to thi
 - Cover all edge cases for the new target, including legacy paths, fallbacks, malformed files, partial support, and unsupported features.
 - Wire descriptor capabilities for both project and global scope. New targets must include global mode unless the target has no global config surface at all, and that absence must be documented.
 - Update every affected command surface and user-facing document so the new target is discoverable and accurately described.
-- Update the compatibility matrix to reflect native, embedded, partial, or unsupported features. The matrix auto-builds from descriptor capabilities; `pnpm matrix:verify` must pass.
+- Update the compatibility matrix to reflect native, embedded, partial, or unsupported features. The matrix auto-builds from descriptor capabilities; `pnpm matrix:verify` must pass. The same script auto-generates the import-targets table, homepage tool list, and README tool list from descriptor `metadata` — no manual edits to those tables.
 - Update init detection and import empty-state messaging for the new target when native files exist.
 - Reuse existing capability-focused tests where possible; extend them instead of duplicating assertions across multiple files.
 - Preserve the canonical `.agentsmesh/` contract. If the target cannot represent a feature natively, model that explicitly instead of inventing fake native output.

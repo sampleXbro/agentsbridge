@@ -113,6 +113,12 @@ const globalCapabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: 'codex-cli',
+  metadata: {
+    displayName: 'Codex CLI',
+    category: 'cli',
+    officialUrl: 'https://github.com/openai/codex',
+    shortDescription: "OpenAI's terminal coding agent",
+  },
   generators: target,
   capabilities: {
     rules: 'native',

@@ -1,0 +1,102 @@
+import { describe, it, expect } from 'vitest';
+import { descriptor } from '../../../../src/targets/factory-droid/index.js';
+import {
+  FACTORY_DROID_ROOT_FILE,
+  FACTORY_DROID_MCP_FILE,
+  FACTORY_DROID_SKILLS_DIR,
+  FACTORY_DROID_DROIDS_DIR,
+  FACTORY_DROID_GLOBAL_ROOT_FILE,
+  FACTORY_DROID_GLOBAL_MCP_FILE,
+  FACTORY_DROID_GLOBAL_SKILLS_DIR,
+  FACTORY_DROID_GLOBAL_DROIDS_DIR,
+} from '../../../../src/targets/factory-droid/constants.js';
+
+describe('factory-droid descriptor shape', () => {
+  it('has id factory-droid', () => {
+    expect(descriptor.id).toBe('factory-droid');
+  });
+
+  it('has capabilities', () => {
+    expect(descriptor.capabilities.rules).toBe('native');
+    expect(descriptor.capabilities.additionalRules).toBe('embedded');
+    expect(descriptor.capabilities.commands).toBe('none');
+    expect(descriptor.capabilities.agents).toBe('native');
+    expect(descriptor.capabilities.skills).toBe('native');
+    expect(descriptor.capabilities.mcp).toBe('native');
+    expect(descriptor.capabilities.hooks).toBe('none');
+    expect(descriptor.capabilities.ignore).toBe('none');
+    expect(descriptor.capabilities.permissions).toBe('none');
+  });
+
+  it('has detection paths', () => {
+    expect(descriptor.detectionPaths).toContain(FACTORY_DROID_ROOT_FILE);
+    expect(descriptor.detectionPaths).toContain(FACTORY_DROID_MCP_FILE);
+    expect(descriptor.detectionPaths).toContain(FACTORY_DROID_DROIDS_DIR);
+  });
+
+  it('has supportsConversion for commands', () => {
+    expect(descriptor.supportsConversion).toEqual({ commands: true });
+  });
+
+  it('project layout has rootInstructionPath', () => {
+    expect(descriptor.project.rootInstructionPath).toBe(FACTORY_DROID_ROOT_FILE);
+  });
+
+  it('project layout has skillDir', () => {
+    expect(descriptor.project.skillDir).toBe(FACTORY_DROID_SKILLS_DIR);
+  });
+
+  it('project layout has managed outputs', () => {
+    expect(descriptor.project.managedOutputs!.dirs).toContain(FACTORY_DROID_SKILLS_DIR);
+    expect(descriptor.project.managedOutputs!.dirs).toContain(FACTORY_DROID_DROIDS_DIR);
+    expect(descriptor.project.managedOutputs!.files).toContain(FACTORY_DROID_ROOT_FILE);
+    expect(descriptor.project.managedOutputs!.files).toContain(FACTORY_DROID_MCP_FILE);
+  });
+});
+
+describe('factory-droid global layout', () => {
+  it('descriptor.globalSupport exists', () => {
+    expect(descriptor.globalSupport).toBeDefined();
+  });
+
+  it('globalSupport has layout with rewriteGeneratedPath', () => {
+    expect(descriptor.globalSupport!.layout.rewriteGeneratedPath).toBeDefined();
+  });
+
+  it('rewriteGeneratedPath transforms AGENTS.md to global path', () => {
+    const rewrite = descriptor.globalSupport!.layout.rewriteGeneratedPath!;
+    expect(rewrite(FACTORY_DROID_ROOT_FILE)).toBe(FACTORY_DROID_GLOBAL_ROOT_FILE);
+  });
+
+  it('rewriteGeneratedPath transforms .factory/mcp.json to global path', () => {
+    const rewrite = descriptor.globalSupport!.layout.rewriteGeneratedPath!;
+    expect(rewrite(FACTORY_DROID_MCP_FILE)).toBe(FACTORY_DROID_GLOBAL_MCP_FILE);
+  });
+
+  it('rewriteGeneratedPath transforms .factory/skills/ to global skills path', () => {
+    const rewrite = descriptor.globalSupport!.layout.rewriteGeneratedPath!;
+    const skillPath = `${FACTORY_DROID_SKILLS_DIR}/debugging/SKILL.md`;
+    expect(rewrite(skillPath)).toBe(`${FACTORY_DROID_GLOBAL_SKILLS_DIR}/debugging/SKILL.md`);
+  });
+
+  it('rewriteGeneratedPath transforms .factory/droids/ to global droids path', () => {
+    const rewrite = descriptor.globalSupport!.layout.rewriteGeneratedPath!;
+    const droidPath = `${FACTORY_DROID_DROIDS_DIR}/security-auditor.md`;
+    expect(rewrite(droidPath)).toBe(`${FACTORY_DROID_GLOBAL_DROIDS_DIR}/security-auditor.md`);
+  });
+
+  it('rewriteGeneratedPath passes through unrelated paths', () => {
+    const rewrite = descriptor.globalSupport!.layout.rewriteGeneratedPath!;
+    expect(rewrite('unrelated/file.md')).toBe('unrelated/file.md');
+  });
+
+  it('globalSupport.capabilities matches project capabilities', () => {
+    expect(descriptor.globalSupport!.capabilities).toEqual(descriptor.capabilities);
+  });
+
+  it('globalSupport has detection paths', () => {
+    expect(descriptor.globalSupport!.detectionPaths.length).toBeGreaterThan(0);
+    expect(descriptor.globalSupport!.detectionPaths).toContain(FACTORY_DROID_GLOBAL_ROOT_FILE);
+    expect(descriptor.globalSupport!.detectionPaths).toContain(FACTORY_DROID_GLOBAL_MCP_FILE);
+  });
+});

@@ -1,0 +1,11 @@
+allowBuilds:
+  esbuild: true
+onlyBuiltDependencies:
+  - esbuild
+overrides:
+  flatted: ^3.4.2
+  vite@7.3.1: 7.3.2
+  picomatch@2.3.1: 2.3.2
+  picomatch@4.0.3: 4.0.4
+  brace-expansion@1.1.12: 1.1.13
+  brace-expansion@5.0.4: 5.0.5

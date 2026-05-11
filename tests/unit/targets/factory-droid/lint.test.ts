@@ -62,6 +62,18 @@ describe('lintPermissions (factory-droid)', () => {
     expect(result[0].level).toBe('warning');
     expect(result[0].target).toBe('factory-droid');
   });
+
+  it('warns when permissions object has no ask field', () => {
+    const result = lintPermissions(makeCanonical({ permissions: { allow: ['Bash'], deny: [] } }));
+    expect(result).toHaveLength(1);
+    expect(result[0].level).toBe('warning');
+    expect(result[0].target).toBe('factory-droid');
+  });
+
+  it('returns empty when permissions exist but all lists are empty and ask is absent', () => {
+    const result = lintPermissions(makeCanonical({ permissions: { allow: [], deny: [] } }));
+    expect(result).toHaveLength(0);
+  });
 });
 
 describe('lintIgnore (factory-droid)', () => {

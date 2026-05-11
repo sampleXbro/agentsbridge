@@ -81,6 +81,13 @@ describe('lintPermissions (pi-agent)', () => {
     expect(result[0].level).toBe('warning');
     expect(result[0].target).toBe('pi-agent');
   });
+
+  it('warns when permissions have entries but no ask field', () => {
+    const result = lintPermissions(makeCanonical({ permissions: { allow: ['Bash'], deny: [] } }));
+    expect(result).toHaveLength(1);
+    expect(result[0].level).toBe('warning');
+    expect(result[0].target).toBe('pi-agent');
+  });
 });
 
 describe('lintIgnore (pi-agent)', () => {

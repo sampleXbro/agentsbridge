@@ -159,6 +159,13 @@ describe('lintPermissions (replit-agent)', () => {
     expect(results).toHaveLength(1);
     expect(results[0].level).toBe('warning');
   });
+
+  it('warns when permissions have entries but no ask field', () => {
+    const result = lintPermissions(makeCanonical({ permissions: { allow: ['Bash'], deny: [] } }));
+    expect(result).toHaveLength(1);
+    expect(result[0].level).toBe('warning');
+    expect(result[0].target).toBe('replit-agent');
+  });
 });
 
 describe('lintIgnore (replit-agent)', () => {

@@ -116,4 +116,20 @@ describe('importFromDeepagentsCli', () => {
 
     rmSync(projectRoot, { recursive: true, force: true });
   });
+
+  it('imports root rule and skills from global scope paths', async () => {
+    projectRoot = setupFixture({
+      '.deepagents/AGENTS.md': '# Global Instructions\n\nApply everywhere.',
+      '.deepagents/skills/review/SKILL.md':
+        '---\nname: review\ndescription: Code review workflow\n---\n\n# Review\n\nCheck everything.',
+    });
+
+    const results = await importFromDeepagentsCli(projectRoot, { scope: 'global' });
+
+    const rootRule = results.find((r) => r.toPath.endsWith('_root.md'));
+    expect(rootRule).toBeDefined();
+    expect(rootRule!.fromTool).toBe('deepagents-cli');
+
+    rmSync(projectRoot, { recursive: true, force: true });
+  });
 });

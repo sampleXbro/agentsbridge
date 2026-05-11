@@ -1,0 +1,5 @@
+# Shadows the root pnpm-workspace.yaml so `pnpm install` in website/
+# installs into website/node_modules instead of walking up to the
+# repo root (which has settings for the main package, not this site).
+packages:
+  - .

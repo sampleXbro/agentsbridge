@@ -6,10 +6,11 @@ import type { CanonicalFiles, GenerateResult } from '../types.js';
 import type { ValidatedConfig } from '../../config/core/schema.js';
 import {
   getBuiltinTargetDefinition,
+  getTargetLayout,
   resolveTargetFeatureGenerator,
 } from '../../targets/catalog/builtin-targets.js';
 import { getDescriptor } from '../../targets/catalog/registry.js';
-import { preferEquivalentCodexAgents } from '../../targets/catalog/agents-md-overlap.js';
+import { getAdditionalRootDecorationPaths } from '../../targets/catalog/layout-outputs.js';
 import { rewriteGeneratedReferences } from '../reference/rewriter.js';
 import { validateGeneratedMarkdownLinks } from '../reference/validate-generated-markdown-links.js';
 import { resolveOutputCollisions, refreshResultStatus } from './collision.js';
@@ -144,6 +145,7 @@ export async function generate(ctx: GenerateContext): Promise<GenerateResult[]> 
   // Decoration must run before reference rewriting so that renderPrimaryRootInstruction output
   // (which uses canonical body verbatim) gets its canonical paths rewritten to target paths.
   const decoratedResults = decoratePrimaryRootInstructions(results, canonical, scope);
+  const sharedPaths = computeSharedRootInstructionPaths(decoratedResults, scope);
   const rewrittenResults = rewriteGeneratedReferences(
     decoratedResults,
     canonical,
@@ -151,11 +153,45 @@ export async function generate(ctx: GenerateContext): Promise<GenerateResult[]> 
     projectRoot,
     scope,
     targets,
+    sharedPaths,
   );
 
   validateGeneratedMarkdownLinks(rewrittenResults, projectRoot);
 
-  return resolveOutputCollisions(
-    preferEquivalentCodexAgents(rewrittenResults.map(refreshResultStatus), canonical, config),
-  );
+  return resolveOutputCollisions(rewrittenResults.map(refreshResultStatus));
+}
+
+// Root-instruction paths (primary + compat) claimed by 2+ targets keep canonical references so
+// every copy converges to byte-identical content for trivial collision merge. Only applies to
+// root instructions — content files (skills, agents, commands) keep target-specific rewriting.
+export function computeSharedRootInstructionPaths(
+  results: GenerateResult[],
+  scope: TargetLayoutScope,
+): Set<string> {
+  const rootPathsByTarget = new Map<string, Set<string>>();
+  function rootPathsFor(target: string): Set<string> {
+    const cached = rootPathsByTarget.get(target);
+    if (cached) return cached;
+    const layout = getTargetLayout(target, scope);
+    const paths = new Set<string>();
+    if (layout?.rootInstructionPath) {
+      paths.add(layout.rootInstructionPath);
+      for (const extra of getAdditionalRootDecorationPaths(layout)) paths.add(extra);
+    }
+    rootPathsByTarget.set(target, paths);
+    return paths;
+  }
+
+  const targetsByPath = new Map<string, Set<string>>();
+  for (const r of results) {
+    if (!rootPathsFor(r.target).has(r.path)) continue;
+    const set = targetsByPath.get(r.path) ?? new Set<string>();
+    set.add(r.target);
+    targetsByPath.set(r.path, set);
+  }
+  const shared = new Set<string>();
+  for (const [path, targetSet] of targetsByPath) {
+    if (targetSet.size > 1) shared.add(path);
+  }
+  return shared;
 }

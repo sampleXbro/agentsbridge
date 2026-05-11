@@ -119,12 +119,14 @@ export function rewriteGeneratedReferences(
   projectRoot: string,
   scope: TargetLayoutScope = 'project',
   activeTargets?: readonly string[],
+  skipPaths?: ReadonlySet<string>,
 ): GenerateResult[] {
   const plannedPaths = collectPlannedPaths(projectRoot, results);
   const artifactCache = new Map<string, Map<string, string>>();
   const sourceCache = new Map<string, Map<string, string>>();
 
   return results.map((result) => {
+    if (skipPaths?.has(result.path)) return result;
     const smKey = sourceMapCacheKey(result.target, activeTargets);
     const sourceMap =
       sourceCache.get(smKey) ??

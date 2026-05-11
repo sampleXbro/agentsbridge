@@ -16,9 +16,10 @@ name: Deploy Website
 on:
   push:
     branches: [master]
-    paths:
-      - 'website/**'
-      - '.github/workflows/deploy-website.yml'
+    # Note: a `paths:` filter was previously used but GitHub silently skipped
+    # the workflow on several develop→master merge pushes that did include
+    # website/** changes. Always running on master push is cheap (~60s build,
+    # idempotent Pages deploy) and removes a class of "stale docs" bugs.
   workflow_dispatch:
 
 permissions:

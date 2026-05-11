@@ -115,6 +115,12 @@ const capabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: GOOSE_TARGET,
+  metadata: {
+    displayName: 'Goose',
+    category: 'cli',
+    officialUrl: 'https://block.github.io/goose',
+    shortDescription: "Block's open-source AI agent",
+  },
   generators: target,
   capabilities,
   emptyImportMessage: 'No Goose config found (.goosehints, .agents/skills, or .gooseignore).',

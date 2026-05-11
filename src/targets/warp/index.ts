@@ -125,6 +125,12 @@ const globalCapabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: WARP_TARGET,
+  metadata: {
+    displayName: 'Warp',
+    category: 'cli',
+    officialUrl: 'https://www.warp.dev',
+    shortDescription: 'AI-powered terminal',
+  },
   generators: target,
   capabilities,
   emptyImportMessage: 'No Warp config found (WARP.md, AGENTS.md, .warp/skills, or .mcp.json).',

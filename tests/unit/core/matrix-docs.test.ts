@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { SUPPORT_MATRIX, SUPPORT_MATRIX_GLOBAL } from '../../../src/core/matrix/data.js';
 import { TARGET_IDS } from '../../../src/targets/catalog/target-ids.js';
+import { TARGET_REGISTRY } from '../../../src/targets/catalog/target-metadata-registry.js';
 import type { TargetCapabilityValue } from '../../../src/targets/catalog/capabilities.js';
 
 const ROOT = process.cwd();
@@ -18,38 +19,9 @@ const FEATURES = [
   ['Permissions', 'permissions'],
 ] as const;
 
-const TARGET_LABELS: Record<string, string> = {
-  aider: 'Aider',
-  'amazon-q': 'Amazon Q',
-  amp: 'Amp',
-  antigravity: 'Antigravity',
-  'augment-code': 'Augment Code',
-  'claude-code': 'Claude Code',
-  cline: 'Cline',
-  'codex-cli': 'Codex CLI',
-  continue: 'Continue',
-  copilot: 'Copilot',
-  crush: 'Crush',
-  cursor: 'Cursor',
-  'deepagents-cli': 'Deep Agents CLI',
-  'factory-droid': 'Factory Droid',
-  'gemini-cli': 'Gemini CLI',
-  goose: 'Goose',
-  jules: 'Jules',
-  junie: 'Junie',
-  'kilo-code': 'Kilo Code',
-  kiro: 'Kiro',
-  opencode: 'OpenCode',
-  'pi-agent': 'Pi Agent',
-  'qwen-code': 'Qwen Code',
-  'replit-agent': 'Replit Agent',
-  'roo-code': 'Roo Code',
-  rovodev: 'Rovo Dev',
-  trae: 'Trae',
-  warp: 'Warp',
-  windsurf: 'Windsurf',
-  zed: 'Zed',
-};
+const TARGET_LABELS: Record<string, string> = Object.fromEntries(
+  TARGET_IDS.map((id) => [id, TARGET_REGISTRY[id]!.metadata.displayName]),
+);
 
 const LEVEL_LABELS = {
   native: 'Native',

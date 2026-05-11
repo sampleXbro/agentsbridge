@@ -118,6 +118,12 @@ const capabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: FACTORY_DROID_TARGET,
+  metadata: {
+    displayName: 'Factory Droid',
+    category: 'agent-platform',
+    officialUrl: 'https://www.factory.ai',
+    shortDescription: "Factory.ai's coding droid",
+  },
   generators: target,
   capabilities,
   emptyImportMessage:

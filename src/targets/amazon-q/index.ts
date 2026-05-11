@@ -96,6 +96,12 @@ const globalCapabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: AMAZON_Q_TARGET,
+  metadata: {
+    displayName: 'Amazon Q Developer',
+    category: 'ide',
+    officialUrl: 'https://aws.amazon.com/q/developer',
+    shortDescription: 'AWS AI coding assistant',
+  },
   generators: target,
   capabilities: {
     rules: 'native',
@@ -108,8 +114,7 @@ export const descriptor = {
     ignore: 'none',
     permissions: 'none',
   },
-  emptyImportMessage:
-    'No Amazon Q Developer config found (.amazonq/rules/ or .amazonq/mcp.json).',
+  emptyImportMessage: 'No Amazon Q Developer config found (.amazonq/rules/ or .amazonq/mcp.json).',
   lintRules,
   project,
   globalSupport: {

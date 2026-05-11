@@ -102,6 +102,12 @@ const capabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: PI_AGENT_TARGET,
+  metadata: {
+    displayName: 'Pi Agent',
+    category: 'cli',
+    officialUrl: 'https://github.com/pi-labs/pi-agent',
+    shortDescription: 'Pi coding agent',
+  },
   generators: target,
   capabilities,
   emptyImportMessage: 'No Pi Coding Agent config found (AGENTS.md or .pi/skills).',

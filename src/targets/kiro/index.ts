@@ -137,6 +137,12 @@ const globalCapabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: KIRO_TARGET,
+  metadata: {
+    displayName: 'Kiro',
+    category: 'ide',
+    officialUrl: 'https://kiro.dev',
+    shortDescription: 'AWS spec-driven AI IDE',
+  },
   generators: target,
   capabilities: {
     rules: 'native',

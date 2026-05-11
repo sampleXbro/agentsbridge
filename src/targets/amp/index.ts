@@ -128,6 +128,12 @@ function mergeAmpSettings(existing: string | null, newContent: string): string {
 
 export const descriptor = {
   id: AMP_TARGET,
+  metadata: {
+    displayName: 'Amp',
+    category: 'cli',
+    officialUrl: 'https://ampcode.com',
+    shortDescription: "Sourcegraph's coding agent",
+  },
   generators: target,
   capabilities,
   emptyImportMessage: 'No Amp config found (AGENTS.md, .agents/skills, or .amp/settings.json).',

@@ -162,6 +162,12 @@ const globalCapabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: 'copilot',
+  metadata: {
+    displayName: 'GitHub Copilot',
+    category: 'ide',
+    officialUrl: 'https://github.com/features/copilot',
+    shortDescription: "GitHub's AI pair programmer",
+  },
   generators: target,
   capabilities: {
     rules: 'native',

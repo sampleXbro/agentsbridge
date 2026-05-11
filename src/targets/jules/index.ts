@@ -61,6 +61,12 @@ const capabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: JULES_TARGET,
+  metadata: {
+    displayName: 'Jules',
+    category: 'agent-platform',
+    officialUrl: 'https://jules.google',
+    shortDescription: "Google's autonomous coding agent",
+  },
   generators: target,
   capabilities,
   emptyImportMessage: 'No Jules config found (AGENTS.md).',

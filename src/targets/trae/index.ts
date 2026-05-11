@@ -112,6 +112,12 @@ const globalCapabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: TRAE_TARGET,
+  metadata: {
+    displayName: 'Trae',
+    category: 'ide',
+    officialUrl: 'https://www.trae.ai',
+    shortDescription: "ByteDance's adaptive AI IDE",
+  },
   generators: target,
   capabilities: {
     rules: 'native',

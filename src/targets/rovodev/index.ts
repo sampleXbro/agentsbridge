@@ -128,6 +128,12 @@ const globalCapabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: ROVODEV_TARGET,
+  metadata: {
+    displayName: 'Rovo Dev',
+    category: 'cli',
+    officialUrl: 'https://www.atlassian.com/solutions/devops/rovo-dev',
+    shortDescription: "Atlassian's coding agent",
+  },
   generators: target,
   capabilities,
   emptyImportMessage:

@@ -145,6 +145,12 @@ const globalCapabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: 'cursor',
+  metadata: {
+    displayName: 'Cursor',
+    category: 'ide',
+    officialUrl: 'https://cursor.com',
+    shortDescription: 'AI-first code editor',
+  },
   generators: target,
   capabilities: {
     rules: 'native',

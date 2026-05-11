@@ -113,6 +113,12 @@ const globalCapabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: 'claude-code',
+  metadata: {
+    displayName: 'Claude Code',
+    category: 'cli',
+    officialUrl: 'https://www.anthropic.com/claude-code',
+    shortDescription: "Anthropic's terminal coding agent",
+  },
   generators: target,
   capabilities: {
     rules: 'native',

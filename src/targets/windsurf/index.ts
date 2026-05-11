@@ -162,6 +162,12 @@ const globalCapabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: 'windsurf',
+  metadata: {
+    displayName: 'Windsurf',
+    category: 'ide',
+    officialUrl: 'https://windsurf.com',
+    shortDescription: "Codeium's agentic IDE",
+  },
   generators: target,
   capabilities: {
     rules: 'native',

@@ -141,6 +141,12 @@ const globalCapabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: CRUSH_TARGET,
+  metadata: {
+    displayName: 'Crush',
+    category: 'cli',
+    officialUrl: 'https://github.com/charmbracelet/crush',
+    shortDescription: "Charm's TUI coding agent",
+  },
   generators: target,
   capabilities,
   emptyImportMessage:

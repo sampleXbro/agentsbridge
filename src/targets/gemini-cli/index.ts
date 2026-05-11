@@ -172,6 +172,12 @@ const globalCapabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: 'gemini-cli',
+  metadata: {
+    displayName: 'Gemini CLI',
+    category: 'cli',
+    officialUrl: 'https://github.com/google-gemini/gemini-cli',
+    shortDescription: "Google's terminal Gemini agent",
+  },
   generators: target,
   capabilities: {
     rules: 'native',

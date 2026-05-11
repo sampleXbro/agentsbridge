@@ -71,6 +71,12 @@ const capabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: REPLIT_AGENT_TARGET,
+  metadata: {
+    displayName: 'Replit Agent',
+    category: 'agent-platform',
+    officialUrl: 'https://replit.com',
+    shortDescription: "Replit's autonomous coding agent",
+  },
   generators: target,
   capabilities,
   emptyImportMessage: 'No Replit Agent config found (replit.md or .agents/skills).',

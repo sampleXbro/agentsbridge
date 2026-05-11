@@ -145,6 +145,12 @@ const globalCapabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: QWEN_CODE_TARGET,
+  metadata: {
+    displayName: 'Qwen Code',
+    category: 'cli',
+    officialUrl: 'https://github.com/QwenLM/qwen-code',
+    shortDescription: "Alibaba's Qwen coding CLI",
+  },
   generators: target,
   capabilities,
   emptyImportMessage:

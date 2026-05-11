@@ -121,6 +121,12 @@ function mergeZedSettings(existing: string | null, newContent: string): string {
 
 export const descriptor = {
   id: ZED_TARGET,
+  metadata: {
+    displayName: 'Zed',
+    category: 'ide',
+    officialUrl: 'https://zed.dev',
+    shortDescription: 'Collaborative AI editor',
+  },
   generators: target,
   capabilities,
   emptyImportMessage: 'No Zed config found (.rules or .zed/settings.json).',

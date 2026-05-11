@@ -130,6 +130,12 @@ const globalCapabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: 'cline',
+  metadata: {
+    displayName: 'Cline',
+    category: 'ide',
+    officialUrl: 'https://cline.bot',
+    shortDescription: 'Autonomous coding agent for VS Code',
+  },
   generators: target,
   capabilities: {
     rules: 'native',

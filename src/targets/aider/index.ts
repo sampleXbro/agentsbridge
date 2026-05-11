@@ -109,6 +109,12 @@ const capabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: AIDER_TARGET,
+  metadata: {
+    displayName: 'Aider',
+    category: 'cli',
+    officialUrl: 'https://aider.chat',
+    shortDescription: 'Open-source terminal AI pair programmer',
+  },
   generators: target,
   capabilities,
   emptyImportMessage: 'No Aider config found (CONVENTIONS.md, .aider/skills, or .aiderignore).',

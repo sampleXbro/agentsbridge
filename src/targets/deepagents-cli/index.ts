@@ -125,6 +125,12 @@ const globalCapabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: DEEPAGENTS_CLI_TARGET,
+  metadata: {
+    displayName: 'Deep Agents CLI',
+    category: 'cli',
+    officialUrl: 'https://github.com/langchain-ai/deepagents',
+    shortDescription: 'LangChain Deep Agents framework CLI',
+  },
   generators: target,
   capabilities,
   emptyImportMessage:

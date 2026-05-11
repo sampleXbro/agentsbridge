@@ -107,6 +107,12 @@ const globalCapabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: 'antigravity',
+  metadata: {
+    displayName: 'Antigravity',
+    category: 'ide',
+    officialUrl: 'https://antigravity.google',
+    shortDescription: "Google's agentic IDE",
+  },
   generators: target,
   capabilities: {
     rules: 'native',

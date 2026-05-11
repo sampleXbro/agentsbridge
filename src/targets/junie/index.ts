@@ -136,6 +136,12 @@ const globalCapabilities: TargetCapabilities = {
 
 export const descriptor = {
   id: 'junie',
+  metadata: {
+    displayName: 'Junie',
+    category: 'ide',
+    officialUrl: 'https://www.jetbrains.com/junie',
+    shortDescription: 'JetBrains AI coding agent',
+  },
   generators: target,
   capabilities: {
     rules: 'native',

@@ -6,7 +6,10 @@ Concrete audit list for adding a built-in agent target. For the step-by-step wor
 
 Every item must have a primary-source link before coding starts:
 
-- Official docs URL for the tool
+- Official docs URL for the tool (becomes `metadata.officialUrl` — must be a canonical, stable URL)
+- Human-readable display name (becomes `metadata.displayName` — used in every doc table and tool list)
+- One-line description (becomes `metadata.shortDescription` — used in tool lists for SEO)
+- Tool category — one of: `cli` | `ide` | `agent-platform` (becomes `metadata.category` — groups the target on the homepage and supported-tools page)
 - Exact product surface being implemented (CLI vs desktop vs chat — often different config systems)
 - Project-scope config directory and root-instruction file
 - Global-scope config directory and root-instruction file
@@ -51,10 +54,21 @@ Shared code to audit, not usually modify:
 
 ## Documentation Touchpoints
 
-- `README.md` — matrix tables update automatically via `pnpm matrix:generate`
-- `website/src/content/docs/reference/supported-tools.mdx` — single docs page for per-target detail (paths, native vs embedded, limitations). Update this manually.
+The following are **all auto-generated** by `pnpm matrix:generate` from descriptor data — no manual edits:
+
+- `README.md` — feature matrices + tool-list (from `metadata` + `capabilities`)
+- `website/src/content/docs/reference/supported-tools.mdx` — feature matrices (from `capabilities`)
+- `website/src/content/docs/cli/import.mdx` — import-targets table (from `metadata` + `descriptor.importer`)
+- `website/src/content/docs/index.mdx` — homepage tool-list (from `metadata` grouped by `category`)
+
+Manual edits:
+
+- `website/src/content/docs/reference/supported-tools.mdx` — per-target detail sections (paths, native vs embedded, limitations, global-mode notes). Add a section for the new target.
 - `docs/prd-v2-complete.md` — only if the architecture contract changes
-- No other docs pages should need edits per repo rules
+
+After adding the descriptor metadata, run `pnpm matrix:generate && pnpm matrix:verify`. CI will fail any PR where docs drift from `TARGET_REGISTRY` (see `src/targets/catalog/target-metadata-registry.ts`).
+
+No other docs pages should need edits per repo rules.
 
 ## Unit Tests
 
@@ -143,10 +157,12 @@ Before marking complete, every command must exit 0:
 
 - Did you search the internet first, using official docs only?
 - Did you start from `agentsmesh target scaffold <id>`, or did you hand-write the skeleton?
+- Did you replace every `TODO(agentsmesh-scaffold)` marker in the descriptor `metadata` block with real values (`displayName`, `category`, `officialUrl`, `shortDescription`)?
 - Did you write failing tests first?
 - Did you add rich fixtures instead of placeholders?
 - Did you register the id in all three catalog files (`target-ids.ts`, `builtin-targets.ts`, `import-maps/index.ts`)?
 - Did you include global mode, or document the decision to omit it?
 - Did you check conversion eligibility for `none` features — could commands/agents be projected as skills instead of dropped?
-- Did you update `supported-tools.mdx` with per-target detail?
-- Did every verification command pass?
+- Did you run `pnpm matrix:generate` to refresh README + website auto-generated blocks from the new descriptor `metadata`?
+- Did you update `supported-tools.mdx` with per-target detail (paths, native vs embedded, limitations, global-mode notes)?
+- Did every verification command pass, including `pnpm matrix:verify`?

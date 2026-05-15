@@ -53,6 +53,7 @@
     "test": "vitest run",
     "test:contract": "vitest run tests/contract",
     "flake:check": "tsx scripts/flake-check.ts",
+    "flake:watch": "tsx scripts/flake-check-watch.ts",
     "test:watch": "vitest",
     "test:coverage": "COVERAGE=1 vitest run --coverage",
     "test:e2e": "pnpm build && vitest run --config vitest.e2e.config.ts",

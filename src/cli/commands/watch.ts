@@ -14,15 +14,25 @@ import { logger } from '../../utils/output/logger.js';
 
 const DEBOUNCE_MS = 300;
 
+export interface WatchCycleInfo {
+  /** True when the current cycle observed a feature/fingerprint change vs. the previous cycle. */
+  featuresChanged: boolean;
+}
+
+export interface RunWatchOptions {
+  /**
+   * Optional per-cycle callback fired exactly once per completed generate cycle (including
+   * the initial startup cycle). Tests use this as the deterministic synchronization signal
+   * instead of scraping log output, which is timing-sensitive under coverage/full-suite load.
+   */
+  onCycle?: (info: WatchCycleInfo) => void;
+}
+
 function normalizeWatchPath(path: string): string {
   return path.replace(/\\/g, '/').replace(/\/+$/, '');
 }
 
-function shouldIgnoreWatchPath(
-  canonicalDir: string,
-  changedPath: string,
-  _suppressAgentsmeshDirUntil: number,
-): boolean {
+function shouldIgnoreWatchPath(canonicalDir: string, changedPath: string): boolean {
   const relPath = normalizeWatchPath(relative(canonicalDir, changedPath));
   // Parent-directory metadata events — chokidar reports a `.agentsmesh/`
   // event whenever a child file write changes the directory mtime. Real
@@ -77,12 +87,14 @@ function featureFingerprint(
  * generate, print compact summary, show matrix if features changed.
  * @param flags - CLI flags (targets, verbose)
  * @param projectRoot - Project root (default process.cwd())
+ * @param watchOptions - Optional callbacks (onCycle for deterministic test sync)
  * @returns Object with stop() to stop watching
  * @throws When not initialized (no agentsmesh.yaml)
  */
 export async function runWatch(
   flags: Record<string, string | boolean>,
   projectRoot?: string,
+  watchOptions: RunWatchOptions = {},
 ): Promise<{ stop: () => Promise<void> }> {
   const root = projectRoot ?? process.cwd();
   const scope = flags.global === true ? 'global' : 'project';
@@ -98,7 +110,6 @@ export async function runWatch(
   let lastFingerprint: string | null = null;
   let stopped = false;
   let pendingRun: Promise<void> | null = null;
-  let suppressAgentsmeshDirUntil = 0;
 
   const run = async (): Promise<void> => {
     if (stopped) return;
@@ -137,10 +148,8 @@ export async function runWatch(
     lastFingerprint = fp;
 
     if (stopped) return;
-    suppressAgentsmeshDirUntil = Date.now() + 500;
     const genResult = await runGenerate(flags, root, { printMatrix: false });
     renderGenerate(genResult);
-    suppressAgentsmeshDirUntil = Date.now() + 500;
 
     if (stopped) return;
     if (featuresChanged) {
@@ -149,6 +158,8 @@ export async function runWatch(
     } else {
       logger.info('Regenerated.');
     }
+
+    watchOptions.onCycle?.({ featuresChanged });
   };
 
   const scheduleRun = (): void => {
@@ -181,8 +192,7 @@ export async function runWatch(
     usePolling: process.platform === 'win32',
   });
   watcher.on('all', (_eventName, changedPath) => {
-    if (shouldIgnoreWatchPath(context.canonicalDir, changedPath, suppressAgentsmeshDirUntil))
-      return;
+    if (shouldIgnoreWatchPath(context.canonicalDir, changedPath)) return;
     schedule();
   });
 

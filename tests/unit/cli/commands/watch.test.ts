@@ -27,12 +27,6 @@ afterEach(() => {
 });
 
 describe('runWatch', () => {
-  async function waitForInitialGenerate(): Promise<void> {
-    await vi.waitFor(() => expect(existsSync(join(testDir, '.claude', 'CLAUDE.md'))).toBe(true), {
-      timeout: watchWaitTimeoutMs(),
-    });
-  }
-
   it('throws when not initialized (no config)', async () => {
     rmSync(join(testDir, 'agentsmesh.yaml'));
     await expect(runWatch({}, testDir)).rejects.toThrow(/agentsmesh\.yaml/);
@@ -80,23 +74,43 @@ features: [rules, permissions]
   it('calls runMatrix when features change (new rule adds to fingerprint)', async () => {
     const mockResult = { exitCode: 0, data: { targets: [], features: [] } };
     const runMatrixSpy = vi.spyOn(matrixMod, 'runMatrix').mockResolvedValue(mockResult);
-    const result = await runWatch({}, testDir);
+    const cycles: Array<{ featuresChanged: boolean }> = [];
+    const result = await runWatch({}, testDir, {
+      onCycle: (info) => cycles.push(info),
+    });
     try {
-      await waitForInitialGenerate();
-      const newRulePath = join(testDir, '.agentsmesh', 'rules', 'new.md');
-      const writeNewRule = (): void =>
-        writeFileSync(newRulePath, `---\ndescription: "New"\n---\n# New\n${Date.now()}`);
+      await vi.waitFor(() => expect(cycles.length).toBeGreaterThanOrEqual(1), {
+        timeout: watchWaitTimeoutMs(),
+      });
+      // Use a unique filename per retry so chokidar emits ADD events rather than
+      // coalesced CHANGE events on the same path — ADD is more reliably delivered
+      // under full-suite scheduler load on macOS FSEvents.
+      let attempt = 0;
+      const writeNewRule = (): void => {
+        attempt += 1;
+        writeFileSync(
+          join(testDir, '.agentsmesh', 'rules', `new-${attempt}.md`),
+          `---\ndescription: "New"\n---\n# New\n`,
+        );
+      };
       writeNewRule();
       const retryWrite = globalThis.setInterval(() => {
-        if (runMatrixSpy.mock.calls.length === 0) writeNewRule();
+        if (cycles.length < 2) writeNewRule();
       }, 1_000);
       try {
-        await vi.waitFor(() => expect(runMatrixSpy).toHaveBeenCalled(), {
-          timeout: watchWaitTimeoutMs(),
-        });
+        await vi.waitFor(
+          () => {
+            expect(cycles.length).toBeGreaterThanOrEqual(2);
+            expect(cycles[1]?.featuresChanged).toBe(true);
+          },
+          {
+            timeout: watchWaitTimeoutMs(),
+          },
+        );
       } finally {
         globalThis.clearInterval(retryWrite);
       }
+      expect(runMatrixSpy).toHaveBeenCalled();
     } finally {
       runMatrixSpy.mockRestore();
       await result!.stop();
@@ -107,10 +121,20 @@ features: [rules, permissions]
     const mockResult = { exitCode: 0, data: { targets: [], features: [] } };
     const runMatrixSpy = vi.spyOn(matrixMod, 'runMatrix').mockResolvedValue(mockResult);
     const infoSpy = vi.spyOn(logger, 'info').mockImplementation(() => {});
-    const result = await runWatch({}, testDir);
-    writeFileSync(
-      join(testDir, '.agentsmesh', 'rules', '_root.md'),
-      `---
+    const cycles: Array<{ featuresChanged: boolean }> = [];
+    const result = await runWatch({}, testDir, {
+      onCycle: (info) => cycles.push(info),
+    });
+    try {
+      await vi.waitFor(() => expect(cycles.length).toBeGreaterThanOrEqual(1), {
+        timeout: watchWaitTimeoutMs(),
+      });
+      const regenCallsAfterStartup = infoSpy.mock.calls.filter(
+        ([message]) => message === 'Regenerated.',
+      ).length;
+      writeFileSync(
+        join(testDir, '.agentsmesh', 'rules', '_root.md'),
+        `---
 root: true
 description: "Project rules"
 ---
@@ -118,14 +142,40 @@ description: "Project rules"
 - Use TypeScript
 - Added one line (same rule count)
 `,
-    );
-    await vi.waitFor(() => expect(infoSpy).toHaveBeenCalledWith('Regenerated.'), {
-      timeout: watchWaitTimeoutMs(),
+      );
+      await vi.waitFor(() => expect(cycles.length).toBeGreaterThanOrEqual(2), {
+        timeout: watchWaitTimeoutMs(),
+      });
+      expect(cycles[1]?.featuresChanged).toBe(false);
+      const regenCallsAfterEdit = infoSpy.mock.calls.filter(
+        ([message]) => message === 'Regenerated.',
+      ).length;
+      expect(regenCallsAfterEdit).toBeGreaterThan(regenCallsAfterStartup);
+      expect(runMatrixSpy).not.toHaveBeenCalled();
+    } finally {
+      runMatrixSpy.mockRestore();
+      infoSpy.mockRestore();
+      await result!.stop();
+    }
+  });
+
+  it('fires onCycle for the initial generate and subsequent regen cycles', async () => {
+    const mockResult = { exitCode: 0, data: { targets: [], features: [] } };
+    const runMatrixSpy = vi.spyOn(matrixMod, 'runMatrix').mockResolvedValue(mockResult);
+    const cycles: Array<{ featuresChanged: boolean }> = [];
+    const result = await runWatch({}, testDir, {
+      onCycle: (info) => cycles.push(info),
     });
-    expect(runMatrixSpy).not.toHaveBeenCalled();
-    runMatrixSpy.mockRestore();
-    infoSpy.mockRestore();
-    await result!.stop();
+    try {
+      // Initial cycle: lastFingerprint is null, so featuresChanged must be false.
+      await vi.waitFor(() => expect(cycles.length).toBeGreaterThanOrEqual(1), {
+        timeout: watchWaitTimeoutMs(),
+      });
+      expect(cycles[0]?.featuresChanged).toBe(false);
+    } finally {
+      runMatrixSpy.mockRestore();
+      await result!.stop();
+    }
   });
 
   it('does not retrigger from its own .agentsmesh/.lock writes while idle', async () => {

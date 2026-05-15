@@ -22,7 +22,6 @@ export async function importSkills(
 
   const options: SkillImportOptions = {
     projectRoot,
-    sourceSkillsDir: skillsDirRel,
     destCanonicalSkillsDir: COPILOT_CANONICAL_SKILLS_DIR,
     targetName: COPILOT_TARGET,
     normalize,

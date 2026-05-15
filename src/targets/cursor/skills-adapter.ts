@@ -24,7 +24,6 @@ export async function importSkills(
 
   const options: SkillImportOptions = {
     projectRoot,
-    sourceSkillsDir: skillsRelDir,
     destCanonicalSkillsDir: CURSOR_CANONICAL_SKILLS_DIR,
     targetName: 'cursor',
     normalize,

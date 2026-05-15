@@ -1,55 +1,53 @@
-# Target Metadata Registry — Plan
+# P0 Implementation — G1 + G2
 
-## Goal
+**Updated:** 2026-05-12 after deeper investigation.
 
-Add a `metadata` field to every target descriptor so docs/website can be generated from a single source. Eliminate hardcoded target enumerations in README.md and website pages that already drift behind the catalog (only 13 of 30 targets listed in import docs).
+## Correction to initial analysis
 
-## Approach
+- **G1:** Shared pipeline EXISTS at `src/targets/import/shared/skill-import-pipeline.ts`. Initial verification (Agent #1) read only `shared-import-helpers.ts` and missed `shared/skill-import-pipeline.ts`. Real remaining duplication: the **dispatch loop** in Cline / Windsurf / Codex adapters (read SKILL.md → try recognizers → fall back). L132 confirms it caused bug recurrence.
+- **G2:** Harness is mature (45s × 1.5 coverage timeout, per-test temp roots, chokidar ready awaited, Windows polling, lock-file path ignore). Real remaining gaps: tests scrape logs/files for cycle signal (timing variance); `_suppressAgentsmeshDirUntil` is dead code; no `flake:watch` validator.
 
-1. Extend `TargetDescriptor` with required `metadata: TargetMetadata` (displayName, category, officialUrl, shortDescription).
-2. Populate metadata in all 30 target descriptors using existing data from `TARGET_LABELS` and `supported-tools.mdx`.
-3. Build `TARGET_REGISTRY` aggregator that surfaces metadata + capabilities per target ID.
-4. Extend `scripts/render-support-matrix.ts` with new markers for: import target list, init scan directories.
-5. Replace hardcoded enumerations in README.md and website/src/content/docs/cli/import.mdx + quick-start.mdx with marker blocks.
-6. Verify with `pnpm matrix:verify`, full test suite, and `pnpm build`.
+## G1 — Extract skill-import dispatch loop
 
-## File-by-file edits
+**Goal:** consolidate Cline / Windsurf / Codex dispatch loops behind `importSkillsDirectory(options, recognizers)` so reserved-artifact / projected-agent / command-skill handling lives in one place.
 
-### `src/targets/catalog/target-descriptor.ts`
-- Add `TargetMetadata` interface (displayName, category, officialUrl, shortDescription).
-- Add `readonly metadata: TargetMetadata` to `TargetDescriptor`.
+- [x] G1.1 RED: add tests for `importSkillsDirectory` — source-dir fallback (Codex pattern), recognizer order, default fallback to `importDirectorySkill`, stale-skill-dir cleanup
+- [x] G1.2 GREEN: implement `importSkillsDirectory` + `projectedAgentRecognizer` + `commandSkillRecognizer` in `shared/skill-import-pipeline.ts`
+- [x] G1.3 Migrate `src/targets/cline/skills-adapter.ts` to use orchestrator (drop inline dispatch)
+- [x] G1.4 Migrate `src/targets/windsurf/skills-adapter.ts` to use orchestrator
+- [x] G1.5 Migrate `src/targets/codex-cli/skills-adapter.ts` to use orchestrator (2 recognizers + fallback dir)
+- [x] G1.6 Run `pnpm test tests/unit/targets/{cline,windsurf,codex-cli,import}` GREEN
+- [x] G1.7 `pnpm build && pnpm test:e2e -- importer` GREEN
+- [x] G1.8 `pnpm lint && pnpm typecheck` GREEN
+- [x] G1.9 Add lesson to `tasks/lessons.md`
 
-### All 30 `src/targets/<id>/index.ts`
-- Add `metadata: { ... }` field after `id`.
+## G2 — Watch test determinism + dead code
 
-### `src/core/catalog/registry.ts` (new)
-- Export `TARGET_REGISTRY: Record<TargetId, TargetEntry>` built from descriptors.
-- `TargetEntry` shape: `{ id, metadata, capabilities, importRoot }`.
+**Goal:** replace timing-scrape with a deterministic per-cycle callback; delete unused param; add a flake validator.
 
-### `scripts/render-support-matrix.ts`
-- Remove hardcoded `TARGET_LABELS` constant — read from metadata.
-- Add new marker blocks for `import-target-list`.
-- Refresh README.md import section and website/cli/import.mdx.
+- [x] G2.1 Remove dead `_suppressAgentsmeshDirUntil` parameter from `shouldIgnoreWatchPath` (and its set-but-never-read assignments in `runWatch`)
+- [x] G2.2 RED: test asserting `runWatch({ onCycle })` fires `onCycle({ featuresChanged })` once per regen, both initial and after edits
+- [x] G2.3 GREEN: thread `onCycle` from `runWatch` options through `run()` cycles
+- [x] G2.4 Migrate `runMatrix when features change` test to wait on `onCycle` instead of log/spy timing
+- [x] G2.5 Fix tautological `logs Regenerated` test (currently captures startup call only) to assert the post-edit cycle via `onCycle`
+- [x] G2.6 Add `scripts/flake-check-watch.ts` (N=10 watch-test runs under COVERAGE=1)
+- [x] G2.7 Wire `"flake:watch": "tsx scripts/flake-check-watch.ts"` in `package.json`
+- [x] G2.8 Run `pnpm flake:watch` locally to validate stability
+- [x] G2.9 `pnpm lint && pnpm typecheck && pnpm test` GREEN
+- [x] G2.10 Add lesson to `tasks/lessons.md`
 
-### `README.md` line 125
-- Replace hardcoded list with marker block.
+## Verification gate
 
-### `website/src/content/docs/cli/import.mdx` lines 30-44
-- Replace hardcoded table with marker block.
+- [x] V1: `pnpm lint` clean
+- [x] V2: `pnpm typecheck` clean
+- [x] V3: `pnpm typecheck:tests` if shipped — not part of this batch
+- [x] V4: `pnpm test` full suite
+- [x] V5: `pnpm test:e2e` full
+- [x] V6: `pnpm matrix:verify`
+- [ ] V7: Commit with `feat(import): consolidate skill-import dispatch loop` and `refactor(watch): expose onCycle and remove dead state` (awaiting user)
 
-### `website/src/content/docs/getting-started/quick-start.mdx` line 86
-- Replace hardcoded directory list with generic text + link to supported-tools.
+## Out of scope
 
-## Risk / scope
-
-- 30 target files need editing — straightforward but volume risk.
-- Hardcoded `TARGET_LABELS` removal might cascade if anything else imports it.
-- README has prose lists (lines 19, 59, 149, 167-177, 247) that I will NOT replace in this batch — that's a follow-up to avoid scope creep.
-
-## Verification
-
-- `pnpm typecheck` passes
-- `pnpm matrix:verify` passes (CI gate)
-- `pnpm test` full suite passes
-- `pnpm build` succeeds
-- Inspect README.md and website pages — generated blocks correct
+- Splitting >200 LOC files (G16)
+- New CLI commands from the wider plan (T1–T16)
+- Watch behavior changes beyond the test-determinism hook

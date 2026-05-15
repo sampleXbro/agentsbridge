@@ -7,21 +7,22 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { randomBytes } from 'node:crypto';
 import { runWatch } from '../../src/cli/commands/watch.js';
+export type { RunWatchOptions, WatchCycleInfo } from '../../src/cli/commands/watch.js';
 
 export function coverageScale(): number {
   return process.env['COVERAGE'] === '1' ? 1.5 : 1;
 }
 
 /**
- * Default `vi.waitFor` timeout for watch assertions (45s, ×1.5 under coverage = 67.5s).
- * Isolated runs finish in ~5s; full-suite under coverage instrumentation
- * pushes individual `runMatrix` awaits well past 36s. Coverage timer churn
- * compounds with the chokidar 300ms debounce and the actual generate pass.
- * Generous headroom is the correct trade-off here — a slow CI gate is
- * cheaper than an intermittent red.
+ * Default `vi.waitFor` timeout for watch assertions (60s, ×1.5 under coverage = 90s).
+ * Isolated runs finish in ~5s; full-suite scheduler load (even without coverage) can
+ * push individual cycle waits well past 45s when many test files run in parallel.
+ * Coverage timer churn compounds with the chokidar 300ms debounce and the actual
+ * generate pass. Generous headroom is the correct trade-off here — a slow CI gate
+ * is cheaper than an intermittent red (lessons.md L60, L153).
  */
 export function watchWaitTimeoutMs(): number {
-  return Math.round(45_000 * coverageScale());
+  return Math.round(60_000 * coverageScale());
 }
 
 /** Idle stability window after watcher events (3s, ×1.5 under coverage). */

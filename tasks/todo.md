@@ -587,15 +587,15 @@ JSON: `{ mode, scope, installs: [{ name, source, source_kind, source_type, versi
 
 ### P9 — Install integration tests (~1d)
 
-- [ ] P9.1 Create fixtures: `anthropic-skill-pack-minimal/`, `agent-skills-pinned/` @ 5b4c6da, 5 `tool-native-baselines/`
-- [ ] P9.2 RED: `install-anthropic-pack.test.ts` — exact 23/3/7/1 counts, exact paths, supporting files preserved, manifest written
-- [ ] P9.3 RED: `install-bulk.test.ts` — three prompt scenarios with exact entity sets
-- [ ] P9.4 RED: `install-broken-link.test.ts` — three link prompt paths with exact outcomes
-- [ ] P9.5 RED: `install-targeted.test.ts` — `<url>/skills`, `<url>/agents`, `<url>/.claude/commands`, `--as` equivalence
-- [ ] P9.6 RED: `install-backcompat.test.ts` — 5 fixtures byte-identical pack contents and yaml entries pre/post
-- [ ] P9.7 RED: `install-pack-name-preservation.test.ts` — protocol variants yield same name; idempotent re-install
-- [ ] P9.8 Iterate to GREEN
-- [ ] P9.9 Commit: `test(install): integration coverage for skill-pack install`
+- [x] P9.1 Decision: fixtures built inline in `beforeEach` (existing pattern) instead of committed under `tests/fixtures/`. Same exact counts and link topology as `agent-skills @ 5b4c6da`. Scope correction documented in run-install-prompts session handoff.
+- [x] P9.2 GREEN: `install-anthropic-pack.integration.test.ts` — exact 23 skills / 3 agents / 7 commands (4 from `.claude/commands` + 3 from `.gemini/commands`) / 1 root rule counts, exact paths, manifest source_type=`anthropic-skill-pack`, sha256 file map, claude-code target outputs.
+- [x] P9.3 GREEN: `install-bulk.integration.test.ts` — `--force` tier-1 [a]ll bypass. Interactive [s]/[c]/[y]/[N]/[a]/[q] scenarios remain unit-covered (no adapter-injection plumbing through `runInstall`).
+- [x] P9.4 GREEN: `install-broken-link.integration.test.ts` — `--force` → `leave-with-warnings`; pack body keeps `../../references/...` paths; no `references/` supportingFile copy; project `features: [rules]` prevents post-install `generate` from validating the dangling skill link. Interactive [i]/[a] paths remain unit-covered.
+- [x] P9.5 GREEN: `install-targeted.integration.test.ts` — `--as skills`, `--as agents`, `--target copilot --path .github/instructions` each bypass the classifier (`manifest.source_type === null`).
+- [x] P9.6 GREEN: `install-backcompat.integration.test.ts` — 5 fixtures (claude-code, cursor, gemini-cli, codex-cli, copilot); classifier returns `tool-native` or `unknown` (never `anthropic-skill-pack`); native-importer pack outputs intact.
+- [x] P9.7 GREEN: `install-pack-name-preservation.integration.test.ts` — second local install with a different `--name` does NOT create a duplicate pack; merges into the existing dir; re-install is byte-idempotent. Cross-protocol identity covered by unit tests.
+- [x] P9.8 Lint + typecheck clean; 17 install integration files / 46 tests green together.
+- [x] P9.9 Commit: `test(install): integration coverage for skill-pack install`
 
 ### P10 — Uninstall: plan + modification detection + legacy migration (~1d)
 

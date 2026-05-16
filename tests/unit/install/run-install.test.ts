@@ -23,7 +23,10 @@ vi.mock('../../../src/install/source/url-parser.js', () => ({
 vi.mock('../../../src/install/run/run-install-resolve.js', () => ({
   resolveInstallResolvedPath: mockResolveInstallResolvedPath,
 }));
-vi.mock('../../../src/utils/filesystem/fs.js', () => ({ exists: mockExists }));
+vi.mock('../../../src/utils/filesystem/fs.js', () => ({
+  exists: mockExists,
+  readFileSafe: vi.fn().mockResolvedValue(null),
+}));
 vi.mock('../../../src/install/run/run-install-discovery.js', () => ({
   resolveDiscoveredForInstall: mockResolveDiscoveredForInstall,
 }));

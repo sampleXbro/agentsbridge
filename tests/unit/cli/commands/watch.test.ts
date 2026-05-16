@@ -26,7 +26,12 @@ afterEach(() => {
   rmSync(testDir, { recursive: true, force: true });
 });
 
-describe('runWatch', () => {
+// Watch tests are timing-sensitive under full-suite load: chokidar warm-up +
+// initial generate + the vi.waitFor windows (watchWaitTimeoutMs = 60s, ×1.5
+// under coverage) can together exceed vitest's default 60s testTimeout. Give
+// every test in this file headroom that exceeds watchWaitTimeoutMs(). Slow
+// gate beats intermittent red (lessons.md L60, L153).
+describe('runWatch', { timeout: 180_000 }, () => {
   it('throws when not initialized (no config)', async () => {
     rmSync(join(testDir, 'agentsmesh.yaml'));
     await expect(runWatch({}, testDir)).rejects.toThrow(/agentsmesh\.yaml/);

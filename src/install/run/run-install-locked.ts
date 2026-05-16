@@ -10,14 +10,12 @@ import { exists } from '../../utils/filesystem/fs.js';
 import { resolveInstallResolvedPath } from './run-install-resolve.js';
 import { isGitAvailable } from '../source/git-pin.js';
 import { parseInstallSource } from '../source/url-parser.js';
-import { maybeRunInstallSync } from './install-sync.js';
 import { resolveInstallDiscovery } from '../core/install-discovery.js';
 import { type InstallReplayScope } from './install-replay.js';
 import { resolveManualInstallPersistence } from '../manual/manual-install-persistence.js';
-import {
-  executeRunInstallPoolsAndWrite,
-  type InstallExecuteResult,
-} from './run-install-execute.js';
+import { executeRunInstallPoolsAndWrite } from './run-install-execute.js';
+import { runPromptFlowWithAbort } from './run-install-prompts.js';
+import { handleSync } from './run-install-sync-locked.js';
 import type { InstallData } from '../../cli/command-result.js';
 import type { ManualInstallAs } from '../manual/manual-install-mode.js';
 
@@ -47,51 +45,6 @@ export interface RunInstallLockedArgs {
     projectRoot: string,
     replay?: InstallReplayScope,
   ) => Promise<InstallCommandResult>;
-}
-
-async function handleSync(opts: RunInstallLockedArgs): Promise<InstallCommandResult | undefined> {
-  const { projectRoot, sync, dryRun, force, scope, recurseInstall } = opts;
-  if (!sync) return undefined;
-
-  const { context } = await loadScopedConfig(projectRoot, scope);
-  const syncInstalled: InstallExecuteResult['installed'] = [];
-  const syncSkipped: InstallExecuteResult['skipped'] = [];
-  const handled = await maybeRunInstallSync({
-    sync,
-    canonicalDir: context.canonicalDir,
-    reinstall: async (entry) => {
-      const replayPaths = entry.paths && entry.paths.length > 0 ? entry.paths : [entry.path];
-      for (const replayPath of replayPaths) {
-        const result = await recurseInstall(
-          {
-            ...(force ? { force: true } : {}),
-            ...(dryRun ? { 'dry-run': true } : {}),
-            ...(scope === 'global' ? { global: true } : {}),
-            name: entry.name,
-            ...(entry.target ? { target: entry.target } : {}),
-            ...(replayPath ? { path: replayPath } : {}),
-            ...(entry.as ? { as: entry.as } : {}),
-          },
-          [entry.source],
-          projectRoot,
-          { features: entry.features, pick: entry.pick },
-        );
-        syncInstalled.push(...result.data.installed);
-        syncSkipped.push(...result.data.skipped);
-      }
-    },
-  });
-  if (!handled) return undefined;
-  return {
-    exitCode: 0,
-    data: {
-      source: '',
-      mode: 'sync' as const,
-      installed: syncInstalled,
-      skipped: syncSkipped,
-      dryRun,
-    },
-  };
 }
 
 function assertPathStaysInRepo(pathInRepo: string, originalPath: string): void {
@@ -151,7 +104,7 @@ export async function runInstallLocked(opts: RunInstallLockedArgs): Promise<Inst
     contentRoot,
     pathInRepo,
   });
-  const { prep, implicitPick, narrowed, discoveredFeatures } = await resolveInstallDiscovery({
+  const discovery = await resolveInstallDiscovery({
     resolvedPath,
     contentRoot,
     pathInRepo,
@@ -159,7 +112,28 @@ export async function runInstallLocked(opts: RunInstallLockedArgs): Promise<Inst
     explicitAs,
     replayPick: replay?.pick,
   });
+  const { prep, implicitPick } = discovery;
+  let { narrowed, discoveredFeatures } = discovery;
   try {
+    const flow = await runPromptFlowWithAbort({
+      discovery,
+      contentRoot,
+      bypass: force || dryRun || !tty,
+    });
+    if (flow.aborted) {
+      return {
+        exitCode: 130,
+        data: {
+          source: sourceArg,
+          mode: 'install' as const,
+          installed: [],
+          skipped: [],
+          dryRun,
+        },
+      };
+    }
+    narrowed = flow.narrowed ?? narrowed;
+    discoveredFeatures = flow.discoveredFeatures ?? discoveredFeatures;
     const executeResult = await executeRunInstallPoolsAndWrite({
       scope,
       force,
@@ -180,6 +154,7 @@ export async function runInstallLocked(opts: RunInstallLockedArgs): Promise<Inst
       implicitPick,
       narrowed,
       discoveredFeatures,
+      sourceType: discovery.classification?.type,
     });
     return {
       exitCode: 0,

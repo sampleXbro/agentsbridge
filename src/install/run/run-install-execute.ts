@@ -51,6 +51,8 @@ export interface RunInstallExecuteArgs {
   implicitPick: ExtendPick | undefined;
   narrowed: CanonicalFiles;
   discoveredFeatures: string[];
+  /** Classifier verdict (e.g. `anthropic-skill-pack`); recorded in install manifest. */
+  sourceType?: string;
 }
 
 export interface InstallExecuteResult {
@@ -81,6 +83,7 @@ export async function executeRunInstallPoolsAndWrite(
     implicitPick,
     narrowed,
     discoveredFeatures,
+    sourceType,
   } = args;
 
   const { narrowed: effectiveNarrowed, discoveredFeatures: effectiveFeatures } =
@@ -192,6 +195,7 @@ export async function executeRunInstallPoolsAndWrite(
       pathInRepo: persisted.pathInRepo,
       manualAs: explicitAs,
       renameExistingPack: nameOverride === '' && reuseExistingName === null,
+      sourceType,
     });
   }
   const genResult = await runGenerate(scope === 'global' ? { global: true } : {}, context.rootBase);

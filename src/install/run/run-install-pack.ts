@@ -37,6 +37,8 @@ export interface InstallAsPackArgs {
   pathInRepo?: string;
   manualAs?: ManualInstallAs;
   renameExistingPack?: boolean;
+  /** Classifier verdict that drove this install; written to `.agentsmesh-install-manifest.json`. */
+  sourceType?: string;
 }
 
 function pathScope(pathInRepo?: string): Pick<PackMetadata, 'path' | 'paths'> {
@@ -83,6 +85,7 @@ export async function installAsPack(args: InstallAsPackArgs): Promise<void> {
     pathInRepo,
     manualAs,
     renameExistingPack,
+    sourceType,
   } = args;
 
   const packsDir = join(canonicalDir, 'packs');
@@ -141,19 +144,25 @@ export async function installAsPack(args: InstallAsPackArgs): Promise<void> {
         `Auto-generated pack name "${packName}" collides with an existing incompatible pack. Use --name to choose a different pack name.`,
       );
     }
-    await materializePack(packsDir, packName, selectedCanonical, {
-      name: packName,
-      source: sourceForYaml,
-      ...(version !== undefined && { version }),
-      source_kind: sourceKind,
-      installed_at: now,
-      updated_at: now,
-      features: entryFeatures,
-      ...(pick !== undefined && { pick }),
-      ...(parsedTarget !== undefined && { target: parsedTarget }),
-      ...pathScope(pathInRepo),
-      ...(manualAs !== undefined && { as: manualAs }),
-    });
+    await materializePack(
+      packsDir,
+      packName,
+      selectedCanonical,
+      {
+        name: packName,
+        source: sourceForYaml,
+        ...(version !== undefined && { version }),
+        source_kind: sourceKind,
+        installed_at: now,
+        updated_at: now,
+        features: entryFeatures,
+        ...(pick !== undefined && { pick }),
+        ...(parsedTarget !== undefined && { target: parsedTarget }),
+        ...pathScope(pathInRepo),
+        ...(manualAs !== undefined && { as: manualAs }),
+      },
+      sourceType !== undefined ? { source_type: sourceType } : {},
+    );
     logger.success(`Installed pack "${packName}" to .agentsmesh/packs/.`);
   }
 

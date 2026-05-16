@@ -64,6 +64,7 @@ describe('install replay e2e', () => {
     ).toBe(0);
 
     expect(listRelativeFiles(join(project, '.agentsmesh', 'packs', 'upstream-agents'))).toEqual([
+      '.agentsmesh-install-manifest.json',
       'agents/code-archaeologist.md',
       'agents/documentation-specialist.md',
       'pack.yaml',
@@ -136,6 +137,7 @@ describe('install replay e2e', () => {
     rmSync(join(project, '.agentsmesh', 'packs'), { recursive: true, force: true });
     expect((await runCli('install --sync --force', project)).exitCode).toBe(0);
     expect(listRelativeFiles(join(project, '.agentsmesh', 'packs', 'upstream-agents'))).toEqual([
+      '.agentsmesh-install-manifest.json',
       'agents/code-archaeologist.md',
       'agents/documentation-specialist.md',
       'pack.yaml',

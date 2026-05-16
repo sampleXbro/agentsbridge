@@ -57,6 +57,7 @@ describe('install standalone skill repo (integration)', () => {
 
     const packFiles = listRelativeFiles(join(project, '.agentsmesh', 'packs', 'code-review'));
     expect(packFiles).toEqual([
+      '.agentsmesh-install-manifest.json',
       'pack.yaml',
       'skills/code-review-excellence/SKILL.md',
       'skills/code-review-excellence/assets/template.md',
@@ -99,6 +100,7 @@ describe('install manual --as skills (integration)', () => {
     );
 
     expect(listRelativeFiles(join(project, '.agentsmesh', 'packs', 'bulk-skills'))).toEqual([
+      '.agentsmesh-install-manifest.json',
       'pack.yaml',
       'skills/qa/SKILL.md',
       'skills/review/SKILL.md',
@@ -135,6 +137,7 @@ describe('install manual --as skills (integration)', () => {
     );
 
     expect(listRelativeFiles(join(project, '.agentsmesh', 'packs', 'single-skill'))).toEqual([
+      '.agentsmesh-install-manifest.json',
       'pack.yaml',
       'skills/review/SKILL.md',
       'skills/review/templates/plan.md',
@@ -170,6 +173,7 @@ describe('install manual --as skills (integration)', () => {
     );
 
     expect(listRelativeFiles(join(project, '.agentsmesh', 'packs', 'direct-skill'))).toEqual([
+      '.agentsmesh-install-manifest.json',
       'pack.yaml',
       'skills/review/SKILL.md',
       'skills/review/templates/plan.md',
@@ -212,6 +216,7 @@ describe('install manual --as skills (integration)', () => {
     );
 
     expect(listRelativeFiles(join(project, '.agentsmesh', 'packs', 'upstream-skills'))).toEqual([
+      '.agentsmesh-install-manifest.json',
       'pack.yaml',
       'skills/qa/SKILL.md',
       'skills/review/SKILL.md',

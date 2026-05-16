@@ -27,9 +27,9 @@ import { buildInstalledList, buildSkippedList } from './run-install-result.js';
 import type { ParsedInstallSource } from '../source/parse-install-source.js';
 import type { ManualInstallPersistence } from '../manual/manual-install-persistence.js';
 import type { ManualInstallAs } from '../manual/manual-install-mode.js';
-import type { PrepareInstallDiscoveryResult } from '../core/prepare-install-discovery.js';
 import type { ExtendPick } from '../../config/core/schema.js';
 import type { CanonicalFiles } from '../../core/types.js';
+import type { InstallDiscoveryPrep } from '../core/install-discovery.js';
 
 export interface RunInstallExecuteArgs {
   scope: 'global' | 'project';
@@ -47,7 +47,7 @@ export interface RunInstallExecuteArgs {
   pathInRepo: string;
   persisted: ManualInstallPersistence;
   replay?: InstallReplayScope;
-  prep: PrepareInstallDiscoveryResult;
+  prep: InstallDiscoveryPrep;
   implicitPick: ExtendPick | undefined;
   narrowed: CanonicalFiles;
   discoveredFeatures: string[];

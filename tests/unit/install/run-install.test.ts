@@ -15,6 +15,8 @@ const mockRunGenerate = vi.hoisted(() => vi.fn());
 const mockIsGitAvailable = vi.hoisted(() => vi.fn());
 const mockLoggerWarn = vi.hoisted(() => vi.fn());
 const mockMaybeRunInstallSync = vi.hoisted(() => vi.fn());
+const mockAcquireInstallLock = vi.hoisted(() => vi.fn());
+const mockInstallLockRelease = vi.hoisted(() => vi.fn());
 
 vi.mock('../../../src/config/core/scope.js', () => ({ loadScopedConfig: mockLoadScopedConfig }));
 vi.mock('../../../src/install/source/url-parser.js', () => ({
@@ -53,6 +55,10 @@ vi.mock('../../../src/install/run/install-sync.js', () => ({
 }));
 vi.mock('../../../src/utils/output/logger.js', () => ({
   logger: { warn: mockLoggerWarn, info: vi.fn(), success: vi.fn() },
+}));
+vi.mock('../../../src/install/lock/install-lock.js', () => ({
+  acquireInstallLock: mockAcquireInstallLock,
+  INSTALL_LOCK_FILENAME: '.install.lock',
 }));
 
 import { runInstall } from '../../../src/install/run/run-install.js';
@@ -141,6 +147,8 @@ beforeEach(() => {
   });
   mockIsGitAvailable.mockResolvedValue(true);
   mockMaybeRunInstallSync.mockResolvedValue(false);
+  mockInstallLockRelease.mockResolvedValue(undefined);
+  mockAcquireInstallLock.mockResolvedValue(mockInstallLockRelease);
 });
 
 afterEach(() => {
@@ -317,6 +325,27 @@ describe('runInstall', () => {
     expect(mockLoggerWarn).toHaveBeenCalledWith(
       'Generate failed after install. Fix the issue and run agentsmesh generate.',
     );
+  });
+
+  it('acquires the install-lock for the canonical dir and releases it after success', async () => {
+    await runInstall({ force: true }, ['../upstream'], '/project');
+    expect(mockAcquireInstallLock).toHaveBeenCalledOnce();
+    expect(mockAcquireInstallLock).toHaveBeenCalledWith('/project/.agentsmesh');
+    expect(mockInstallLockRelease).toHaveBeenCalledOnce();
+  });
+
+  it('releases the install-lock when install fails', async () => {
+    mockInstallAsPack.mockRejectedValueOnce(new Error('boom'));
+    await expect(runInstall({ force: true }, ['../upstream'], '/project')).rejects.toThrow('boom');
+    expect(mockAcquireInstallLock).toHaveBeenCalledOnce();
+    expect(mockInstallLockRelease).toHaveBeenCalledOnce();
+  });
+
+  it('does not re-acquire the install-lock during sync replay (recursive call)', async () => {
+    // replay is set → caller is a recursive sync replay; outer call holds the lock.
+    await runInstall({ force: true }, ['../upstream'], '/project', { features: ['skills'] });
+    expect(mockAcquireInstallLock).not.toHaveBeenCalled();
+    expect(mockInstallLockRelease).not.toHaveBeenCalled();
   });
 
   it('materializes only replay-scoped features during sync reinstall', async () => {

@@ -43,6 +43,7 @@ describe('install --global (integration)', () => {
     await runInstall({ global: true, force: true, name: 'shared-pack' }, [upstream], workspace);
 
     expect(listRelativeFiles(join(home, '.agentsmesh', 'packs', 'shared-pack'))).toEqual([
+      '.agentsmesh-install-manifest.json',
       'pack.yaml',
       'skills/demo/SKILL.md',
     ]);
@@ -71,6 +72,7 @@ describe('install --global (integration)', () => {
     await runInstall({ global: true, sync: true, force: true }, [], workspace);
 
     expect(listRelativeFiles(join(home, '.agentsmesh', 'packs', 'shared-pack'))).toEqual([
+      '.agentsmesh-install-manifest.json',
       'pack.yaml',
       'skills/demo/SKILL.md',
     ]);

@@ -37,6 +37,7 @@ describe('install --sync (integration)', () => {
 
     await runInstall({ force: true, name: 'shared-pack' }, [upstream], project);
     expect(listRelativeFiles(join(project, '.agentsmesh', 'packs', 'shared-pack'))).toEqual([
+      '.agentsmesh-install-manifest.json',
       'pack.yaml',
       'skills/demo/SKILL.md',
     ]);
@@ -54,6 +55,7 @@ describe('install --sync (integration)', () => {
     await runInstall({ sync: true, force: true }, [], project);
 
     expect(listRelativeFiles(join(project, '.agentsmesh', 'packs', 'shared-pack'))).toEqual([
+      '.agentsmesh-install-manifest.json',
       'pack.yaml',
       'skills/demo/SKILL.md',
     ]);
@@ -109,6 +111,7 @@ describe('install --sync (integration)', () => {
     await runInstall({ sync: true, force: true }, [], project);
 
     expect(listRelativeFiles(join(project, '.agentsmesh', 'packs', 'core-agents'))).toEqual([
+      '.agentsmesh-install-manifest.json',
       'agents/code-archaeologist.md',
       'agents/performance-optimizer.md',
       'pack.yaml',
@@ -176,6 +179,7 @@ describe('install --sync (integration)', () => {
     await runInstall({ sync: true, force: true }, [], project);
 
     expect(listRelativeFiles(join(project, '.agentsmesh', 'packs', 'engineering-pack'))).toEqual([
+      '.agentsmesh-install-manifest.json',
       'pack.yaml',
       'skills/release-manager/SKILL.md',
       'skills/release-manager/references/guide.md',
@@ -243,6 +247,7 @@ describe('install --sync (integration)', () => {
       'skills/release-manager/references/guide.md',
     ]);
     expect(listRelativeFiles(join(project, '.agentsmesh', 'packs', 'release-root-pack'))).toEqual([
+      '.agentsmesh-install-manifest.json',
       'pack.yaml',
       'skills/release-manager/SKILL.md',
       'skills/release-manager/references/guide.md',

@@ -1,5 +1,11 @@
 /**
  * Materialize canonical files into a pack directory.
+ *
+ * Atomicity model: every write happens inside `${packName}.tmp/` (the
+ * "staging" dir). Only after content + `pack.yaml` +
+ * `.agentsmesh-install-manifest.json` are durable do we rename the staging
+ * dir to the final `${packName}/`. Any error before the rename rolls back
+ * the staging dir, so a half-written pack never appears at the destination.
  */
 
 import { join, basename, dirname } from 'node:path';
@@ -9,9 +15,17 @@ import type { CanonicalFiles } from '../../core/types.js';
 import type { PackMetadata } from './pack-schema.js';
 import { writeFileAtomic, exists, mkdirp } from '../../utils/filesystem/fs.js';
 import { hashPackContent } from './pack-hash.js';
+import { hashPackFiles, INSTALL_MANIFEST_FILENAME } from '../manifest/install-manifest-hash.js';
 import { normalizePersistedInstallPaths } from '../core/portable-paths.js';
 
 type PackMetadataInput = Omit<PackMetadata, 'content_hash'>;
+
+export interface InstallManifestExtras {
+  /** `null` for materialized installs; the extend entry id when extending. */
+  readonly extends_id?: string | null;
+  /** Classifier verdict that drove this install (e.g. `anthropic-skill-pack`). */
+  readonly source_type?: string | null;
+}
 
 /** Write rules to packDir/rules/ by copying source files. */
 async function writeRules(canonical: CanonicalFiles, packDir: string): Promise<void> {
@@ -80,16 +94,6 @@ async function writeSettings(canonical: CanonicalFiles, packDir: string): Promis
   }
 }
 
-/**
- * Materialize canonical resources into a pack directory under packsDir.
- * Uses atomic .tmp → rename pattern.
- *
- * @param packsDir - Absolute path to .agentsmesh/packs/
- * @param packName - Directory name for this pack
- * @param canonical - Canonical files to write (already filtered + picked)
- * @param metadataInput - Pack metadata without content_hash (computed after write)
- * @returns Full PackMetadata including content_hash
- */
 function validatePackName(name: string): void {
   if (
     name.includes('/') ||
@@ -104,46 +108,86 @@ function validatePackName(name: string): void {
   }
 }
 
+async function writeInstallManifest(
+  stagingDir: string,
+  metadata: PackMetadata,
+  extras: InstallManifestExtras,
+): Promise<void> {
+  const files = await hashPackFiles(stagingDir);
+  const manifest = {
+    name: metadata.name,
+    source: metadata.source,
+    installed_at: metadata.installed_at,
+    extends_id: extras.extends_id ?? null,
+    source_type: extras.source_type ?? null,
+    files,
+  };
+  await writeFileAtomic(
+    join(stagingDir, INSTALL_MANIFEST_FILENAME),
+    `${JSON.stringify(manifest, null, 2)}\n`,
+  );
+}
+
+/**
+ * Materialize canonical resources into a pack directory under packsDir.
+ *
+ * @param packsDir - Absolute path to `.agentsmesh/packs/`
+ * @param packName - Directory name for this pack
+ * @param canonical - Canonical files to write (already filtered + picked)
+ * @param metadataInput - Pack metadata without `content_hash` (computed after write)
+ * @param installManifestExtras - Optional extras for `.agentsmesh-install-manifest.json`
+ * @returns Full PackMetadata including `content_hash`
+ */
 export async function materializePack(
   packsDir: string,
   packName: string,
   canonical: CanonicalFiles,
   metadataInput: PackMetadataInput,
+  installManifestExtras: InstallManifestExtras = {},
 ): Promise<PackMetadata> {
   validatePackName(packName);
   const tmpDir = join(packsDir, `${packName}.tmp`);
   const finalDir = join(packsDir, packName);
 
-  // Clean up stale .tmp if exists
+  // Clean up stale .tmp if exists (from a prior aborted install).
   if (await exists(tmpDir)) {
     await rm(tmpDir, { recursive: true, force: true });
   }
 
-  await mkdirp(tmpDir);
+  let metadata: PackMetadata;
+  try {
+    await mkdirp(tmpDir);
 
-  // Write canonical resources
-  await writeRules(canonical, tmpDir);
-  await writeCommands(canonical, tmpDir);
-  await writeAgents(canonical, tmpDir);
-  await writeSkills(canonical, tmpDir);
-  await writeSettings(canonical, tmpDir);
+    // Write canonical resources
+    await writeRules(canonical, tmpDir);
+    await writeCommands(canonical, tmpDir);
+    await writeAgents(canonical, tmpDir);
+    await writeSkills(canonical, tmpDir);
+    await writeSettings(canonical, tmpDir);
 
-  // Compute content hash (excludes pack.yaml)
-  const contentHash = await hashPackContent(tmpDir);
+    // Compute aggregate content hash (excludes pack.yaml + install manifest).
+    const contentHash = await hashPackContent(tmpDir);
 
-  // Write pack.yaml
-  const metadata: PackMetadata = normalizePersistedInstallPaths({
-    ...metadataInput,
-    content_hash: contentHash,
-  });
-  await writeFileAtomic(join(tmpDir, 'pack.yaml'), yamlStringify(metadata));
+    // Write pack.yaml
+    metadata = normalizePersistedInstallPaths({
+      ...metadataInput,
+      content_hash: contentHash,
+    });
+    await writeFileAtomic(join(tmpDir, 'pack.yaml'), yamlStringify(metadata));
 
-  // Atomic rename to final
-  if (await exists(finalDir)) {
-    await rm(finalDir, { recursive: true, force: true });
+    // Write .agentsmesh-install-manifest.json (per-file sha256 map).
+    await writeInstallManifest(tmpDir, metadata, installManifestExtras);
+
+    // Atomic rename to final
+    if (await exists(finalDir)) {
+      await rm(finalDir, { recursive: true, force: true });
+    }
+    await mkdir(packsDir, { recursive: true });
+    await rename(tmpDir, finalDir);
+  } catch (err) {
+    await rm(tmpDir, { recursive: true, force: true }).catch(() => {});
+    throw err;
   }
-  await mkdir(packsDir, { recursive: true });
-  await rename(tmpDir, finalDir);
 
   return metadata;
 }

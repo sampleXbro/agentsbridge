@@ -14,15 +14,17 @@ export function coverageScale(): number {
 }
 
 /**
- * Default `vi.waitFor` timeout for watch assertions (60s, ×1.5 under coverage = 90s).
+ * Default `vi.waitFor` timeout for watch assertions (120s, ×1.5 under coverage = 180s).
  * Isolated runs finish in ~5s; full-suite scheduler load (even without coverage) can
- * push individual cycle waits well past 45s when many test files run in parallel.
+ * push individual cycle waits well past 60s when many test files run in parallel
+ * because chokidar's FSEvents stream throughput drops under concurrent disk pressure.
  * Coverage timer churn compounds with the chokidar 300ms debounce and the actual
- * generate pass. Generous headroom is the correct trade-off here — a slow CI gate
- * is cheaper than an intermittent red (lessons.md L60, L153).
+ * generate pass. The 120s baseline absorbs that load without bumping into the
+ * describe-level testTimeout (180s in watch.test.ts) — slow gate beats intermittent
+ * red (lessons.md L60, L153).
  */
 export function watchWaitTimeoutMs(): number {
-  return Math.round(60_000 * coverageScale());
+  return Math.round(120_000 * coverageScale());
 }
 
 /** Idle stability window after watcher events (3s, ×1.5 under coverage). */

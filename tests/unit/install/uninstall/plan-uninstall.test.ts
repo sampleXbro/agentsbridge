@@ -174,6 +174,35 @@ describe('planUninstall - input validation', () => {
   });
 });
 
+describe('planUninstall - extends-only entries (install --extends)', () => {
+  it('recognises a name found only in extends and emits a manifest-less plan', () => {
+    const ext = extendEntry('extends-only', 'github:acme/extends-only@abc');
+
+    const result = planUninstall(makeArgs({ names: ['extends-only'], extends: [ext] }));
+
+    expect(result.skipped).toEqual([]);
+    expect(result.removals).toHaveLength(1);
+    expect(result.removals[0]!.name).toBe('extends-only');
+    // No installs.yaml entry to drop, no pack dir to remove.
+    expect(result.removals[0]!.manifestEntry).toBeNull();
+    expect(result.removals[0]!.packDir).toBeNull();
+    expect(result.removals[0]!.extendsEntry).toBe(ext);
+  });
+
+  it('--all sweeps extends-only entries alongside installs.yaml entries', () => {
+    const a = installEntry({ name: 'a' });
+    const ext = extendEntry('extends-only', 'github:acme/extends-only@abc');
+
+    const result = planUninstall(makeArgs({ all: true, installs: [a], extends: [ext] }));
+
+    expect(result.skipped).toEqual([]);
+    expect(result.removals.map((r) => r.name).sort()).toEqual(['a', 'extends-only']);
+    const eo = result.removals.find((r) => r.name === 'extends-only');
+    expect(eo!.manifestEntry).toBeNull();
+    expect(eo!.packDir).toBeNull();
+  });
+});
+
 describe('planUninstall - extends entry resolution', () => {
   it('matches the extends entry by name (not by source) so renames do not strand entries', () => {
     const entry = installEntry({ name: 'foo' });

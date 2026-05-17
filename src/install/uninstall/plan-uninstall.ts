@@ -47,10 +47,17 @@ export interface PlanUninstallArgs {
 
 export interface UninstallRemovalPlan {
   readonly name: string;
-  /** Absolute path to the pack dir to remove, or `null` when `--keep-pack`. */
+  /**
+   * Absolute path to the pack dir to remove. `null` when `--keep-pack` or
+   * when the entry came from `agentsmesh.yaml` extends only (install
+   * `--extends` does not materialize a pack on disk).
+   */
   readonly packDir: string | null;
-  /** The installs.yaml entry that must be dropped. */
-  readonly manifestEntry: InstallManifestEntry;
+  /**
+   * The installs.yaml entry that must be dropped, or `null` when this
+   * removal came from an extends-only install (`install --extends`).
+   */
+  readonly manifestEntry: InstallManifestEntry | null;
   /** Matching extends entry (by name), or `null` when none. */
   readonly extendsEntry: ExtendEntry | null;
   /** Whether the post-uninstall generate pass should clean stale target files. */
@@ -76,21 +83,26 @@ function detectDuplicates(names: readonly string[]): string[] {
 }
 
 function buildPlan(
-  manifestEntry: InstallManifestEntry,
+  name: string,
+  manifestEntry: InstallManifestEntry | null,
   args: PlanUninstallArgs,
   extendsByName: ReadonlyMap<string, ExtendEntry>,
 ): UninstallRemovalPlan {
   const warnings: string[] = [];
   if (args.keepGenerated) {
     warnings.push(
-      `--keep-generated: target trees will not be re-rendered; generated files derived from "${manifestEntry.name}" may remain stale until the next generate.`,
+      `--keep-generated: target trees will not be re-rendered; generated files derived from "${name}" may remain stale until the next generate.`,
     );
   }
+  // Extends-only installs never materialized a pack dir on disk, so there is
+  // nothing to delete even without `--keep-pack`.
+  const packDir =
+    args.keepPack || manifestEntry === null ? null : join(args.packsDir, name);
   return {
-    name: manifestEntry.name,
-    packDir: args.keepPack ? null : join(args.packsDir, manifestEntry.name),
+    name,
+    packDir,
     manifestEntry,
-    extendsEntry: extendsByName.get(manifestEntry.name) ?? null,
+    extendsEntry: extendsByName.get(name) ?? null,
     removeGenerated: !args.keepGenerated,
     warnings,
   };
@@ -116,6 +128,9 @@ export function planUninstall(args: PlanUninstallArgs): PlanUninstallResult {
     if (!extendsByName.has(ext.name)) extendsByName.set(ext.name, ext);
   }
 
+  const installsByName = new Map<string, InstallManifestEntry>();
+  for (const entry of args.installs) installsByName.set(entry.name, entry);
+
   if (args.all) {
     const installNames = args.installs.map((entry) => entry.name);
     const dups = detectDuplicates(installNames);
@@ -124,7 +139,15 @@ export function planUninstall(args: PlanUninstallArgs): PlanUninstallResult {
         `uninstall --all: installs.yaml has duplicate names: ${dups.join(', ')}. Manifest is corrupt; remove the duplicates before retrying.`,
       );
     }
-    const removals = args.installs.map((entry) => buildPlan(entry, args, extendsByName));
+    const removals: UninstallRemovalPlan[] = args.installs.map((entry) =>
+      buildPlan(entry.name, entry, args, extendsByName),
+    );
+    // Include extends-only entries (installs that wrote to agentsmesh.yaml but
+    // not to installs.yaml, e.g. `install --extends`).
+    for (const ext of args.extends) {
+      if (installsByName.has(ext.name)) continue;
+      removals.push(buildPlan(ext.name, null, args, extendsByName));
+    }
     return { removals, skipped: [] };
   }
 
@@ -133,18 +156,19 @@ export function planUninstall(args: PlanUninstallArgs): PlanUninstallResult {
     throw new Error(`uninstall: duplicate names requested: ${userDups.join(', ')}.`);
   }
 
-  const installsByName = new Map<string, InstallManifestEntry>();
-  for (const entry of args.installs) installsByName.set(entry.name, entry);
-
   const removals: UninstallRemovalPlan[] = [];
   const skipped: string[] = [];
   for (const name of args.names) {
-    const entry = installsByName.get(name);
-    if (entry === undefined) {
-      skipped.push(name);
+    const installEntry = installsByName.get(name);
+    if (installEntry !== undefined) {
+      removals.push(buildPlan(name, installEntry, args, extendsByName));
       continue;
     }
-    removals.push(buildPlan(entry, args, extendsByName));
+    if (extendsByName.has(name)) {
+      removals.push(buildPlan(name, null, args, extendsByName));
+      continue;
+    }
+    skipped.push(name);
   }
 
   return { removals, skipped };

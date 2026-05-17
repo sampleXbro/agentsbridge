@@ -79,6 +79,25 @@ export async function upsertInstallManifestEntry(
   );
 }
 
+/**
+ * Remove a single install entry by name. Returns `true` when an entry was
+ * found and the file was rewritten, `false` when no entry matched and the
+ * file is unchanged. The rewrite is atomic via `writeFileAtomic`.
+ */
+export async function removeInstallManifestEntry(
+  canonicalDir: string,
+  name: string,
+): Promise<boolean> {
+  const installs = await readInstallManifest(canonicalDir);
+  const next = installs.filter((entry) => entry.name !== name);
+  if (next.length === installs.length) return false;
+  await writeFileAtomic(
+    manifestPath(canonicalDir),
+    yamlStringify({ version: 1, installs: next.sort((a, b) => a.name.localeCompare(b.name)) }),
+  );
+  return true;
+}
+
 export function buildInstallManifestEntry(args: {
   name: string;
   source: string;

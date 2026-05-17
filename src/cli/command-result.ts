@@ -65,6 +65,24 @@ export interface InstallData {
   dryRun: boolean;
 }
 
+export interface UninstallRemovedEntry {
+  name: string;
+  pack_path: string;
+  manifest_entry_removed: boolean;
+  extends_entry_removed: boolean;
+  generated_files_removed: number;
+  modified_files_kept: Array<{ relativePath: string; status: string }>;
+  legacy_migrated: boolean;
+}
+
+export interface UninstallData {
+  scope: 'project' | 'global';
+  mode: 'uninstall';
+  removed: UninstallRemovedEntry[];
+  skipped: Array<{ name: string; reason: string }>;
+  dryRun: boolean;
+}
+
 export interface PluginAddData {
   subcommand: 'add';
   id: string;

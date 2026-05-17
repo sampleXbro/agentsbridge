@@ -124,6 +124,33 @@ export const COMMANDS: HelpCommand[] = [
     ],
   },
   {
+    name: 'uninstall',
+    usage: 'agentsmesh uninstall <name>[,<name>...] [flags]',
+    description: 'Remove an installed pack; cleans installs.yaml, extends, and generated outputs',
+    flags: [
+      {
+        name: '<name>',
+        description: 'Install entry name from installs.yaml (comma-separated for batch)',
+      },
+      { name: '--all', description: 'Remove every installed pack in this scope' },
+      {
+        name: '--keep-pack',
+        description: 'Keep .agentsmesh/packs/<name>/ on disk; only drop yaml/extends entries',
+      },
+      {
+        name: '--keep-generated',
+        description: 'Skip the post-uninstall generate pass; warn about stale target files',
+      },
+      { name: '--global', description: 'Uninstall from ~/.agentsmesh/' },
+      { name: '--dry-run', description: 'Preview removal plan; no writes' },
+      {
+        name: '--force',
+        description:
+          'Non-interactive mode; accept all prompts (delete-anyway on modifications)',
+      },
+    ],
+  },
+  {
     name: 'diff',
     usage: 'agentsmesh diff [flags]',
     description: 'Show patch-style output for what generate would change',

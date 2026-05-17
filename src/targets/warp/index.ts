@@ -170,4 +170,5 @@ export const descriptor = {
   },
   buildImportPaths: buildWarpImportPaths,
   detectionPaths: [WARP_ROOT_FILE, WARP_LEGACY_ROOT_FILE, WARP_MCP_FILE],
+  conversionDefaults: { commandsToSkills: true, agentsToSkills: true },
 } satisfies TargetDescriptor;

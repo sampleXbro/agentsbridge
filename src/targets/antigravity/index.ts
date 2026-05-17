@@ -180,4 +180,5 @@ export const descriptor = {
     '.agents/skills/',
     '.agents/workflows/',
   ],
+  conversionDefaults: { agentsToSkills: true },
 } satisfies TargetDescriptor;

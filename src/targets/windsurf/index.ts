@@ -203,4 +203,5 @@ export const descriptor = {
   },
   buildImportPaths: buildWindsurfImportPaths,
   detectionPaths: ['.windsurfrules', '.windsurf'],
+  conversionDefaults: { agentsToSkills: true },
 } satisfies TargetDescriptor;

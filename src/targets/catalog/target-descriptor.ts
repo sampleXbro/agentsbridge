@@ -236,4 +236,17 @@ export interface TargetDescriptor {
    * scaffolded together. Explicit `--target codex-cli` still works.
    */
   readonly excludeFromStarterInit?: boolean;
+  /**
+   * Built-in default values for `commands_to_skills` / `agents_to_skills`
+   * conversion projections. A `true` value enables conversion by default; an
+   * explicit `false` disables it (still consults the user's per-target config
+   * override before honoring this default). When the field is `undefined`,
+   * `shouldConvert{Commands,Agents}ToSkills` falls back to the caller-supplied
+   * `defaultEnabled` argument (used by plugin targets that haven't declared
+   * a default).
+   */
+  readonly conversionDefaults?: {
+    readonly commandsToSkills?: boolean;
+    readonly agentsToSkills?: boolean;
+  };
 }

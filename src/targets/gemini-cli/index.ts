@@ -237,4 +237,5 @@ export const descriptor = {
   },
   buildImportPaths: buildGeminiCliImportPaths,
   detectionPaths: ['GEMINI.md', '.gemini'],
+  conversionDefaults: { agentsToSkills: false },
 } satisfies TargetDescriptor;

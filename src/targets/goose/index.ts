@@ -165,4 +165,5 @@ export const descriptor = {
   },
   buildImportPaths: buildGooseImportPaths,
   detectionPaths: [GOOSE_ROOT_FILE, GOOSE_IGNORE],
+  conversionDefaults: { commandsToSkills: true, agentsToSkills: true },
 } satisfies TargetDescriptor;

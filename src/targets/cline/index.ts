@@ -171,4 +171,5 @@ export const descriptor = {
   },
   buildImportPaths: buildClineImportPaths,
   detectionPaths: ['.clinerules', '.cline'],
+  conversionDefaults: { agentsToSkills: true },
 } satisfies TargetDescriptor;

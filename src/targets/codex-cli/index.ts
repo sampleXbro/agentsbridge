@@ -163,4 +163,5 @@ export const descriptor = {
     '.codex/rules',
   ],
   excludeFromStarterInit: true,
+  conversionDefaults: { commandsToSkills: true, agentsToSkills: false },
 } satisfies TargetDescriptor;

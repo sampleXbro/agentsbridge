@@ -183,4 +183,5 @@ export const descriptor = {
   },
   buildImportPaths: buildAmpImportPaths,
   detectionPaths: [AMP_ROOT_FILE, AMP_MCP_FILE],
+  conversionDefaults: { commandsToSkills: true, agentsToSkills: true },
 } satisfies TargetDescriptor;

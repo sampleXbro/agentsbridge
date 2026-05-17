@@ -208,4 +208,5 @@ export const descriptor = {
     KIRO_MCP_FILE,
     KIRO_IGNORE,
   ],
+  conversionDefaults: { commandsToSkills: true },
 } satisfies TargetDescriptor;

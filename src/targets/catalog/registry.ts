@@ -8,10 +8,21 @@ const legacyRegistry = new Map<string, TargetGenerators>();
 
 let _builtinDescriptors: Map<string, TargetDescriptor> | undefined;
 function builtinDescriptors(): Map<string, TargetDescriptor> {
-  if (!_builtinDescriptors) {
-    _builtinDescriptors = new Map(BUILTIN_TARGETS.map((d) => [d.id, d]));
+  if (_builtinDescriptors) return _builtinDescriptors;
+  // Filter undefined slots: when a descriptor's path callback transitively
+  // looks up another descriptor during the circular-import resolution
+  // window (e.g. cline's `agentPath` → `shouldConvertAgentsToSkills` →
+  // `getDescriptor`), BUILTIN_TARGETS may temporarily contain TDZ holes.
+  // Don't cache until every slot is populated, so the next call after
+  // module load completes gets a full map.
+  const defined = BUILTIN_TARGETS.filter(
+    (d): d is TargetDescriptor => d !== undefined && typeof d.id === 'string',
+  );
+  const map = new Map(defined.map((d) => [d.id, d]));
+  if (defined.length === BUILTIN_TARGETS.length) {
+    _builtinDescriptors = map;
   }
-  return _builtinDescriptors;
+  return map;
 }
 
 /** Register a full target descriptor (for plugins). */

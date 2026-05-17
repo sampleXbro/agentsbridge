@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import {
@@ -100,5 +101,24 @@ describe('hashPackFiles', () => {
     const result = await hashPackFiles(tmpDir);
 
     expect(Object.keys(result)).toEqual(['a.md', 'b.md', 'skills/z/SKILL.md']);
+  });
+
+  it('treats CRLF and LF as distinct content (regression guard)', async () => {
+    writeFileSync(join(tmpDir, 'lf.md'), 'line1\nline2\n');
+    writeFileSync(join(tmpDir, 'crlf.md'), 'line1\r\nline2\r\n');
+
+    const result = await hashPackFiles(tmpDir);
+
+    expect(result['lf.md']).not.toBe(result['crlf.md']);
+  });
+
+  it('hashes binary supporting files by raw bytes (no UTF-8 round-trip)', async () => {
+    mkdirSync(join(tmpDir, 'skills', 'demo', 'assets'), { recursive: true });
+    const bytes = Buffer.from([0xff, 0xfe, 0xfd, 0xfc, 0x00, 0x01, 0x02, 0x80]);
+    writeFileSync(join(tmpDir, 'skills', 'demo', 'assets', 'logo.png'), bytes);
+
+    const result = await hashPackFiles(tmpDir);
+    const expected = `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+    expect(result['skills/demo/assets/logo.png']).toBe(expected);
   });
 });

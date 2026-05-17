@@ -112,7 +112,7 @@ const generateRooGlobalExtras: ScopeExtrasFn = async (
   ];
 };
 
-const global: TargetLayout = {
+const globalLayout: TargetLayout = {
   rootInstructionPath: ROO_CODE_GLOBAL_AGENTS_MD,
   skillDir: ROO_CODE_GLOBAL_SKILLS_DIR,
   managedOutputs: {
@@ -218,7 +218,7 @@ export const descriptor = {
       ROO_CODE_GLOBAL_AGENTS_MD,
       ROO_CODE_GLOBAL_MODES_FILE,
     ],
-    layout: global,
+    layout: globalLayout,
     scopeExtras: generateRooGlobalExtras,
   },
   importer: {

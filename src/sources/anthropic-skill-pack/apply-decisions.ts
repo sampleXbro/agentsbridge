@@ -52,7 +52,7 @@ async function applyResolvableToSkill(
   skill: CanonicalSkill,
   resolved: ResolvedLink,
 ): Promise<CanonicalSkill> {
-  if (resolved.classification !== 'resolvable-outside' || resolved.resolvedRelative === null) {
+  if (resolved.classification !== 'resolvable-outside') {
     return skill;
   }
   const absolutePath = `${contentRoot}/${resolved.resolvedRelative}`;

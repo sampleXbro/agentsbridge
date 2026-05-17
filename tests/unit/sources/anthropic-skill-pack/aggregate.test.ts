@@ -126,10 +126,11 @@ describe('aggregateAnthropicSkillPack — command merging', () => {
     expect(dedup.winnerPath.replaceAll('\\', '/')).toContain('/commands/bar.md');
     expect(dedup.winnerPath.replaceAll('\\', '/')).not.toContain('.claude');
     expect(dedup.winnerPath.replaceAll('\\', '/')).not.toContain('.gemini');
-    const losers = dedup.loserPaths.map((p) => p.replaceAll('\\', '/'));
-    expect(losers).toHaveLength(2);
-    expect(losers.some((p) => p.includes('.claude/commands/bar.md'))).toBe(true);
-    expect(losers.some((p) => p.includes('.gemini/commands/bar.md'))).toBe(true);
+    const losers = dedup.loserPaths.map((p) => p.replaceAll('\\', '/')).sort();
+    expect(losers).toEqual([
+      expect.stringContaining('.claude/commands/bar.md'),
+      expect.stringContaining('.gemini/commands/bar.md'),
+    ]);
   });
 });
 
@@ -215,5 +216,22 @@ describe('aggregateAnthropicSkillPack — link classification', () => {
 
     const kinds = result.brokenLinks.map((e) => e.entityKind).sort();
     expect(kinds).toEqual(['agent', 'command']);
+  });
+
+  it('flags broken links on rules as well as skills/agents/commands', async () => {
+    writeFm(
+      join(root, 'rules', 'typescript.md'),
+      'description: TS rule',
+      'See [strict](./strict-mode.md) for context.\n',
+    );
+
+    const result = await aggregateAnthropicSkillPack(root, anthropicSkillPackSource);
+
+    expect(result.brokenLinks).toHaveLength(1);
+    const entry = result.brokenLinks[0]!;
+    expect(entry.entityKind).toBe('rule');
+    expect(entry.entityName).toBe('typescript');
+    expect(entry.resolved).toHaveLength(1);
+    expect(entry.resolved[0]!.classification).toBe('unresolvable');
   });
 });

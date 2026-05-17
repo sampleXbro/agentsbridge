@@ -85,7 +85,7 @@ const project: TargetLayout = {
   },
 };
 
-const global: TargetLayout = {
+const globalLayout: TargetLayout = {
   rootInstructionPath: COPILOT_GLOBAL_INSTRUCTIONS,
   renderPrimaryRootInstruction: renderCopilotGlobalInstructions,
   outputFamilies: [
@@ -200,7 +200,7 @@ export const descriptor = {
       COPILOT_GLOBAL_PROMPTS_DIR,
       COPILOT_GLOBAL_AGENTS_SKILLS_DIR,
     ],
-    layout: global,
+    layout: globalLayout,
     scopeExtras: generateCopilotGlobalExtras,
   },
   importer: {

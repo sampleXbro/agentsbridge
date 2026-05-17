@@ -68,7 +68,7 @@ const project: TargetLayout = {
   },
 };
 
-const global: TargetLayout = {
+const globalLayout: TargetLayout = {
   rootInstructionPath: CLAUDE_ROOT,
   skillDir: '.claude/skills',
   renderPrimaryRootInstruction: renderClaudeGlobalPrimaryInstructions,
@@ -149,7 +149,7 @@ export const descriptor = {
       '.claude.json',
       '.agents/skills',
     ],
-    layout: global,
+    layout: globalLayout,
     scopeExtras: generateClaudeGlobalExtras,
   },
   importer: {

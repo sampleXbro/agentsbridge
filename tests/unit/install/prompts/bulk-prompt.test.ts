@@ -265,4 +265,22 @@ describe('runBulkPrompt - degenerate inputs', () => {
     expect(result.rules).toEqual([]);
     expect(r.prompts).toEqual([]);
   });
+
+  it('treats whitespace-only input at tier 1 as abort (matches EOF policy)', async () => {
+    // The module docstring documents: "any unrecognized response at tier 1
+    // or tier 2 — including the empty string returned on EOF/Ctrl-D — aborts
+    // the run." `.trim()` collapses a stray space into the empty string, so
+    // `' '` follows the documented abort path rather than silently choosing a
+    // default.
+    const r = makeRecorder([' ']);
+    const result = await runBulkPrompt(FULL, { packName: 'pack', bypass: false }, r.deps);
+    expect(result.aborted).toBe(true);
+    expect(result.skills).toEqual([]);
+  });
+
+  it('treats whitespace-only input at tier 2 as abort', async () => {
+    const r = makeRecorder(['s', ' ']); // select-per-type, then whitespace at first kind
+    const result = await runBulkPrompt(FULL, { packName: 'pack', bypass: false }, r.deps);
+    expect(result.aborted).toBe(true);
+  });
 });

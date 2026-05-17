@@ -17,7 +17,10 @@ export function renderUninstall(result: UninstallCommandResult): void {
       return;
     }
     logger.info(`[dry-run] Would uninstall ${data.removed.length} pack(s):`);
-    for (const r of data.removed) logger.info(`  - ${r.name} (${r.pack_path})`);
+    for (const r of data.removed) {
+      const where = r.pack_path === null ? 'extends-only' : r.pack_path;
+      logger.info(`  - ${r.name} (${where})`);
+    }
     return;
   }
 

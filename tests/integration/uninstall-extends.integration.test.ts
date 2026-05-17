@@ -31,7 +31,10 @@ function buildProject(project: string): void {
     join(project, 'agentsmesh.yaml'),
     'version: 1\ntargets: [claude-code]\nfeatures: [rules, skills]\nextends: []\n',
   );
-  writeFileSync(join(project, '.agentsmesh', 'rules', '_root.md'), '---\nroot: true\n---\n# Root\n');
+  writeFileSync(
+    join(project, '.agentsmesh', 'rules', '_root.md'),
+    '---\nroot: true\n---\n# Root\n',
+  );
 }
 
 describe('uninstall --extends entry (integration)', () => {
@@ -49,11 +52,7 @@ describe('uninstall --extends entry (integration)', () => {
     const project = join(ROOT, 'project');
     const upstream = join(ROOT, 'upstream');
 
-    await runInstall(
-      { force: true, name: 'demo-extends', extends: true },
-      [upstream],
-      project,
-    );
+    await runInstall({ force: true, name: 'demo-extends', extends: true }, [upstream], project);
 
     const configPath = join(project, 'agentsmesh.yaml');
     const cfgBefore = readFileSync(configPath, 'utf-8');
@@ -66,6 +65,9 @@ describe('uninstall --extends entry (integration)', () => {
     expect(result.data.removed[0]?.extends_entry_removed).toBe(true);
     // install --extends does not write to installs.yaml, so nothing to drop there.
     expect(result.data.removed[0]?.manifest_entry_removed).toBe(false);
+    // No pack directory was ever materialized, so `pack_path` must be null
+    // rather than a synthesized `.agentsmesh/packs/<name>` placeholder.
+    expect(result.data.removed[0]?.pack_path).toBeNull();
 
     const cfgAfter = readFileSync(configPath, 'utf-8');
     expect(cfgAfter).not.toContain('name: demo-extends');

@@ -49,11 +49,12 @@ export async function mergeCommands(
   for (const [name, loserList] of losers) {
     const winner = winners.get(name);
     if (winner === undefined) continue;
-    const sortedLosers = [...loserList].sort((a, b) => a.precedence - b.precedence);
+    // `loserList` was filled by iterating `ordered` (sorted ascending by
+    // precedence at line 32), so it is already in precedence order.
     dedups.push({
       basename: name,
       winnerPath: winner.command.source,
-      loserPaths: sortedLosers.map((l) => l.path),
+      loserPaths: loserList.map((l) => l.path),
     });
   }
   dedups.sort((a, b) => a.basename.localeCompare(b.basename));

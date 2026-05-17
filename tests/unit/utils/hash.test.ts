@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { hashContent, hashFile } from '../../../src/utils/crypto/hash.js';
 import { writeFileSync, mkdirSync, rmSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
@@ -35,5 +36,29 @@ describe('hashFile', () => {
 
   it('returns null for non-existent file', async () => {
     expect(await hashFile(join(dir, 'nope.txt'))).toBeNull();
+  });
+
+  it('hashes binary bytes without UTF-8 lossy decoding', async () => {
+    // Bytes that are not valid UTF-8. A buffered hash matches `createHash` on
+    // the raw bytes; a `readFile(path, 'utf8')` round-trip replaces them with
+    // U+FFFD and produces a different digest.
+    const binPath = join(dir, 'bin');
+    const bytes = Buffer.from([0xff, 0xfe, 0xfd, 0xfc, 0x00, 0x01, 0x02, 0x80]);
+    writeFileSync(binPath, bytes);
+
+    const hashed = await hashFile(binPath);
+    const expected = createHash('sha256').update(bytes).digest('hex');
+    expect(hashed).toBe(expected);
+  });
+
+  it('produces distinct hashes for CRLF vs LF line endings', async () => {
+    const lfPath = join(dir, 'lf.txt');
+    const crlfPath = join(dir, 'crlf.txt');
+    writeFileSync(lfPath, 'line1\nline2\n');
+    writeFileSync(crlfPath, 'line1\r\nline2\r\n');
+
+    const lfHash = await hashFile(lfPath);
+    const crlfHash = await hashFile(crlfPath);
+    expect(lfHash).not.toBe(crlfHash);
   });
 });

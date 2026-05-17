@@ -15,7 +15,3 @@ export class InstallAbortError extends Error {
     this.name = 'InstallAbortError';
   }
 }
-
-export function isInstallAbortError(err: unknown): err is InstallAbortError {
-  return err instanceof InstallAbortError;
-}

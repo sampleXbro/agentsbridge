@@ -67,7 +67,12 @@ export interface InstallData {
 
 export interface UninstallRemovedEntry {
   name: string;
-  pack_path: string;
+  /**
+   * Forward-slash relative path to the pack directory, or `null` for
+   * extends-only installs (`install --extends`) that never materialized
+   * a pack on disk.
+   */
+  pack_path: string | null;
   manifest_entry_removed: boolean;
   extends_entry_removed: boolean;
   generated_files_removed: number;

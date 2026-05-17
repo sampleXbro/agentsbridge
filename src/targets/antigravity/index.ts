@@ -60,7 +60,7 @@ const project: TargetLayout = {
   },
 };
 
-const global: TargetLayout = {
+const globalLayout: TargetLayout = {
   rootInstructionPath: ANTIGRAVITY_GLOBAL_ROOT,
   renderPrimaryRootInstruction: renderAntigravityGlobalInstructions,
   skillDir: ANTIGRAVITY_GLOBAL_SKILLS_DIR,
@@ -88,7 +88,11 @@ const global: TargetLayout = {
       return `${ANTIGRAVITY_GLOBAL_WORKFLOWS_DIR}/${name}.md`;
     },
     agentPath(name) {
-      return `${ANTIGRAVITY_SKILLS_DIR}/${projectedAgentSkillDirName(name)}/SKILL.md`;
+      // Return the global path directly so consumers that build a reference
+      // map (e.g. `agentTargetPath` in `core/reference/map-targets.ts`) don't
+      // rely on `rewriteGeneratedPath` running after them. Generation also
+      // invokes the rewrite, which is now a no-op for this path.
+      return `${ANTIGRAVITY_GLOBAL_SKILLS_DIR}/${projectedAgentSkillDirName(name)}/SKILL.md`;
     },
   },
 };
@@ -138,7 +142,7 @@ export const descriptor = {
       '.gemini/antigravity/workflows',
       '.gemini/antigravity/mcp_config.json',
     ],
-    layout: global,
+    layout: globalLayout,
   },
   importer: {
     rules: {

@@ -71,6 +71,20 @@ async function decideOne(
   packsDir: string,
   deps: UninstallDecisionsDeps,
 ): Promise<RemovalDecision | 'abort'> {
+  // Extends-only plans (`install --extends`) never materialized a pack dir;
+  // skip the disk stat, legacy migration, and modification detection. The
+  // `--keep-pack` case keeps `plan.packDir === null` even when the pack IS
+  // on disk, so discriminate on `manifestEntry` here.
+  if (plan.manifestEntry === null) {
+    return {
+      plan,
+      modifications: [],
+      action: 'proceed',
+      legacyMigrated: false,
+      packDirMissing: false,
+    };
+  }
+
   const packDir = join(packsDir, plan.name);
   if (!(await exists(packDir))) {
     deps.warn(
@@ -88,18 +102,19 @@ async function decideOne(
   const migration = await migrateLegacyManifest(packDir, { warn: deps.warn });
   const legacyMigrated = migration !== null;
 
-  if (deps.keepPack) {
-    return { plan, modifications: [], action: 'proceed', legacyMigrated, packDirMissing: false };
-  }
-
   const manifestFiles = await readManifestFiles(packDir);
   if (manifestFiles === null) {
     return { plan, modifications: [], action: 'proceed', legacyMigrated, packDirMissing: false };
   }
 
   const modifications = await detectModifiedFiles(packDir, manifestFiles);
-  if (modifications.length === 0) {
-    return { plan, modifications: [], action: 'proceed', legacyMigrated, packDirMissing: false };
+
+  // `--keep-pack`: report modifications in the decision so the JSON result
+  // reflects *why* the user might have asked to keep the pack, but bypass the
+  // prompt and never delete. Pack-dir removal is gated by `plan.packDir`
+  // (which is `null` under `--keep-pack`) in `applyUninstall`.
+  if (deps.keepPack || modifications.length === 0) {
+    return { plan, modifications, action: 'proceed', legacyMigrated, packDirMissing: false };
   }
 
   const promptResult = await runModifiedFilesPrompt(

@@ -37,13 +37,16 @@ export interface UninstallCommandResult {
 }
 
 function parseNames(args: readonly string[]): string[] {
+  // Preserves duplicates so `planUninstall`'s `detectDuplicates` guard can
+  // raise the documented "probably a typo or scripted-loop bug" error
+  // instead of being silenced here.
   const out: string[] = [];
   for (const arg of args) {
     for (const part of arg
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean)) {
-      if (!out.includes(part)) out.push(part);
+      out.push(part);
     }
   }
   return out;
@@ -56,10 +59,18 @@ function defaultAdapter(): PromptAdapter {
   };
 }
 
+export interface RunUninstallOptions {
+  /** Test seam: override the default stdin/stdout-backed modification prompt. */
+  readonly promptAdapter?: PromptAdapter;
+  /** Test seam: treat the run as interactive regardless of `process.stdin.isTTY`. */
+  readonly assumeTty?: boolean;
+}
+
 export async function runUninstall(
   flags: Record<string, string | boolean>,
   args: readonly string[],
   projectRoot: string,
+  options: RunUninstallOptions = {},
 ): Promise<UninstallCommandResult> {
   const scope: 'project' | 'global' = flags.global === true ? 'global' : 'project';
   const all = flags.all === true;
@@ -67,16 +78,29 @@ export async function runUninstall(
   const dryRun = flags['dry-run'] === true;
   const keepPack = flags['keep-pack'] === true;
   const keepGenerated = flags['keep-generated'] === true;
-  const tty = process.stdin.isTTY;
+  const tty = options.assumeTty === true || process.stdin.isTTY;
 
   const names = parseNames(args);
+
+  // Validation failures land here as `{ exitCode: 1 }` so they render via the
+  // standard logger.error path and surface a useful message in `--json` mode.
+  function validationFailure(message: string): UninstallCommandResult {
+    logger.error(message);
+    return {
+      exitCode: 1,
+      data: { scope, mode: 'uninstall', removed: [], skipped: [], dryRun },
+    };
+  }
+
   if (!all && names.length === 0) {
-    throw new Error(
+    return validationFailure(
       'Missing install name. Usage: agentsmesh uninstall <name>[,<name>...] [--all]',
     );
   }
   if (!tty && !force && !dryRun) {
-    throw new Error('Non-interactive terminal: use --force or --dry-run for agentsmesh uninstall.');
+    return validationFailure(
+      'Non-interactive terminal: use --force or --dry-run for agentsmesh uninstall.',
+    );
   }
 
   const { config, context } = await loadScopedConfig(projectRoot, scope);
@@ -97,7 +121,7 @@ export async function runUninstall(
     });
 
     const { decisions, aborted } = await gatherUninstallDecisions(plan.removals, packsDir, {
-      adapter: defaultAdapter(),
+      adapter: options.promptAdapter ?? defaultAdapter(),
       warn: (m) => logger.warn(m),
       bypassPrompts: force || dryRun || !tty,
       keepPack,

@@ -56,7 +56,7 @@ generate (cleanupStaleGeneratedOutputs)              src/core/generate/stale-cle
   | `agents-dir` | ≥1 `agents/<name>.md` with frontmatter (boilerplate filtered) | 0.4 |
   | `references-dir` | ≥1 `references/<name>.md` | 0.3 |
   | `multi-tool-rules` | ≥2 of `CLAUDE.md`, `AGENTS.md`, `GEMINI.md` at root | 0.3 |
-  | `per-target-commands` | ≥1 `.md` in `.claude/commands/`, `.gemini/commands/`, or `.cursor/commands/` | 0.4 |
+  | `per-target-commands` | ≥1 `.md` in any descriptor-declared `.<tool>/commands/` directory (derived at module load from every `managedOutputs.dirs` matching `^\.[^/]+\/commands$`) | 0.4 |
 
 - `classify-source.ts` — composes the signals:
 

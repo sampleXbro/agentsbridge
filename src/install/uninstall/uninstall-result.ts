@@ -21,10 +21,15 @@ function toForwardSlashRel(rootBase: string, abs: string): string {
   return relative(rootBase, abs).replaceAll('\\', '/');
 }
 
-export function buildSkipped(
-  skipped: readonly string[],
-): Array<{ name: string; reason: string }> {
+export function buildSkipped(skipped: readonly string[]): Array<{ name: string; reason: string }> {
   return skipped.map((name) => ({ name, reason: 'not found in installs.yaml' }));
+}
+
+function packPathFor(decision: RemovalDecision, rootBase: string, packsDir: string): string | null {
+  // Extends-only installs never materialized a pack dir on disk; reporting a
+  // synthesized path would be misleading in `--dry-run --json` output.
+  if (decision.plan.manifestEntry === null) return null;
+  return toForwardSlashRel(rootBase, join(packsDir, decision.plan.name));
 }
 
 export function previewEntries(
@@ -34,7 +39,7 @@ export function previewEntries(
 ): UninstallRemovedEntry[] {
   return decisions.map((d) => ({
     name: d.plan.name,
-    pack_path: toForwardSlashRel(rootBase, join(packsDir, d.plan.name)),
+    pack_path: packPathFor(d, rootBase, packsDir),
     manifest_entry_removed: false,
     extends_entry_removed: false,
     generated_files_removed: 0,
@@ -52,16 +57,19 @@ export function appliedEntry(
   rootBase: string,
   packsDir: string,
 ): UninstallRemovedEntry {
+  // When the pack was preserved on disk (either the prompt's `[k]eep-modified`
+  // branch OR `--keep-pack` short-circuit), the JSON record names the
+  // surviving modifications so callers can see *why* the pack was kept.
+  const packKept = decision.action === 'keep-modified' || !applied.packDirRemoved;
   return {
     name: applied.name,
-    pack_path: toForwardSlashRel(rootBase, join(packsDir, decision.plan.name)),
+    pack_path: packPathFor(decision, rootBase, packsDir),
     manifest_entry_removed: applied.manifestEntryRemoved,
     extends_entry_removed: applied.extendsEntryRemoved,
     generated_files_removed: 0,
-    modified_files_kept:
-      decision.action === 'keep-modified'
-        ? decision.modifications.map((m) => ({ relativePath: m.relativePath, status: m.status }))
-        : [],
+    modified_files_kept: packKept
+      ? decision.modifications.map((m) => ({ relativePath: m.relativePath, status: m.status }))
+      : [],
     legacy_migrated: decision.legacyMigrated,
   };
 }

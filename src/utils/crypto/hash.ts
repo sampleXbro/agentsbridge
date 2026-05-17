@@ -14,13 +14,16 @@ export function hashContent(content: string): string {
 
 /**
  * Returns SHA-256 hex hash of file content, or null if file doesn't exist.
+ * Hashes raw bytes (no UTF-8 round-trip) so binary supporting files in skill
+ * bundles (`.png`, scripts with non-UTF-8 bytes) produce stable digests for
+ * the install manifest's modification-detection contract.
  * @param path - File path
  * @returns Hash or null
  */
 export async function hashFile(path: string): Promise<string | null> {
   try {
-    const content = await readFile(path, 'utf8');
-    return hashContent(content);
+    const bytes = await readFile(path);
+    return createHash('sha256').update(bytes).digest('hex');
   } catch (err) {
     if (err instanceof Error && 'code' in err && err.code === 'ENOENT') {
       return null;

@@ -55,7 +55,7 @@ const project: TargetLayout = {
   },
 };
 
-const global: TargetLayout = {
+const globalLayout: TargetLayout = {
   managedOutputs: {
     dirs: [AMAZON_Q_GLOBAL_RULES_DIR],
     files: [AMAZON_Q_GLOBAL_MCP_FILE],
@@ -120,7 +120,7 @@ export const descriptor = {
   globalSupport: {
     capabilities: globalCapabilities,
     detectionPaths: [AMAZON_Q_GLOBAL_RULES_DIR, AMAZON_Q_GLOBAL_MCP_FILE],
-    layout: global,
+    layout: globalLayout,
   },
   importer: {
     rules: {

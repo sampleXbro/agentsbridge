@@ -14,7 +14,9 @@ function builtinDescriptors(): Map<string, TargetDescriptor> {
   // window (e.g. cline's `agentPath` → `shouldConvertAgentsToSkills` →
   // `getDescriptor`), BUILTIN_TARGETS may temporarily contain TDZ holes.
   // Don't cache until every slot is populated, so the next call after
-  // module load completes gets a full map.
+  // module load completes gets a full map. See `tasks/lessons.md:248` for
+  // the original trap; contract is locked by `registry.test.ts`
+  // "builtin descriptor lookup (circular-import contract)".
   const defined = BUILTIN_TARGETS.filter(
     (d): d is TargetDescriptor => d !== undefined && typeof d.id === 'string',
   );

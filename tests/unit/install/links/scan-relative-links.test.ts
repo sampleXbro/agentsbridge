@@ -74,6 +74,13 @@ describe('scanRelativeLinks - non-relative destinations are skipped', () => {
   it('skips absolute / paths', () => {
     expect(scanRelativeLinks('[abs](/etc/passwd)')).toEqual([]);
   });
+
+  it('normalizes Windows-style backslash separators to forward slashes', () => {
+    const links = scanRelativeLinks('![logo](assets\\logo.png) and [doc](docs\\guide.md)');
+    expect(links).toHaveLength(2);
+    expect(links[0]!.path).toBe('assets/logo.png');
+    expect(links[1]!.path).toBe('docs/guide.md');
+  });
 });
 
 describe('scanRelativeLinks - reference-style links', () => {
@@ -121,14 +128,9 @@ describe('scanRelativeLinks - fenced code blocks', () => {
   });
 
   it('skips reference defs inside fenced blocks', () => {
-    const md = [
-      'Use [d][id].',
-      '```',
-      '[fake]: nope.md',
-      '```',
-      '',
-      '[id]: real-def.md',
-    ].join('\n');
+    const md = ['Use [d][id].', '```', '[fake]: nope.md', '```', '', '[id]: real-def.md'].join(
+      '\n',
+    );
     const links = scanRelativeLinks(md);
     expect(links.map((l) => l.path)).toEqual(['real-def.md']);
   });

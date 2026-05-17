@@ -19,8 +19,9 @@ import {
 import { ruleSlug } from '../core/validate-resources.js';
 import { writeInstallAsExtend } from '../core/install-extend-entry.js';
 import { installAsPack } from './run-install-pack.js';
-import { findExistingInstallName, selectInstallEntryName } from '../core/install-name.js';
-import { readInstallManifest, type InstallManifestEntry } from '../core/install-manifest.js';
+import { selectInstallEntryName } from '../core/install-name.js';
+import { readInstallManifest } from '../core/install-manifest.js';
+import { pickReuseEntryName } from '../core/pick-reuse-entry-name.js';
 import { applyReplayInstallScope, type InstallReplayScope } from './install-replay.js';
 import { buildInstalledList, buildSkippedList } from './run-install-result.js';
 import type { ParsedInstallSource } from '../source/parse-install-source.js';
@@ -62,28 +63,9 @@ export interface InstallExecuteResult {
 export async function executeRunInstallPoolsAndWrite(
   args: RunInstallExecuteArgs,
 ): Promise<InstallExecuteResult> {
-  const {
-    scope,
-    force,
-    dryRun,
-    tty,
-    useExtends,
-    nameOverride,
-    explicitAs,
-    config,
-    context,
-    parsed,
-    sourceForYaml,
-    version,
-    pathInRepo,
-    persisted,
-    replay,
-    prep,
-    implicitPick,
-    narrowed,
-    discoveredFeatures,
-    sourceType,
-  } = args;
+  const { scope, force, dryRun, tty, useExtends, nameOverride, explicitAs } = args;
+  const { config, context, parsed, sourceForYaml, version, pathInRepo, persisted } = args;
+  const { replay, prep, implicitPick, narrowed, discoveredFeatures, sourceType } = args;
 
   const { narrowed: effectiveNarrowed, discoveredFeatures: effectiveFeatures } =
     applyReplayInstallScope(narrowed, discoveredFeatures, replay);
@@ -199,38 +181,4 @@ export async function executeRunInstallPoolsAndWrite(
   }
   await runPostOperationGenerate('install', scope, context.rootBase);
   return { installed, skipped };
-}
-
-function sameFeaturesSet(a: readonly string[], b: readonly string[]): boolean {
-  if (a.length !== b.length) return false;
-  const sortedA = [...a].sort();
-  const sortedB = [...b].sort();
-  for (let i = 0; i < sortedA.length; i++) {
-    if (sortedA[i] !== sortedB[i]) return false;
-  }
-  return true;
-}
-
-/**
- * Returns the existing install entry's persisted name when re-installing the
- * same source under a different URL spelling and with matching scope
- * (target / as / features). When the matching entry's scope differs, returns
- * `null` so the existing feature-variant pack naming behavior is preserved.
- */
-function pickReuseEntryName(args: {
-  manifest: readonly InstallManifestEntry[];
-  parsed: ParsedInstallSource;
-  entryFeatures: readonly string[];
-  yamlTarget: string | undefined;
-  explicitAs: ManualInstallAs | undefined;
-}): string | null {
-  const { manifest, parsed, entryFeatures, yamlTarget, explicitAs } = args;
-  const candidateName = findExistingInstallName(manifest, parsed);
-  if (candidateName === null) return null;
-  const candidate = manifest.find((entry) => entry.name === candidateName);
-  if (!candidate) return null;
-  if (candidate.target !== yamlTarget) return null;
-  if (candidate.as !== explicitAs) return null;
-  if (!sameFeaturesSet(candidate.features, entryFeatures)) return null;
-  return candidate.name;
 }

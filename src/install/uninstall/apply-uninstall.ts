@@ -53,7 +53,11 @@ export async function applyUninstall(args: ApplyUninstallArgs): Promise<AppliedR
 
   let packDirRemoved = false;
   if (plan.packDir !== null && (await exists(plan.packDir))) {
-    await rm(plan.packDir, { recursive: true, force: true });
+    // No `force: true`: the `exists()` guard above already handles ENOENT.
+    // Without `force` real I/O errors (EACCES, EBUSY) surface to the caller
+    // instead of being silently swallowed, and the uninstall fails loudly
+    // rather than reporting `packDirRemoved: true` on a half-deleted tree.
+    await rm(plan.packDir, { recursive: true });
     packDirRemoved = true;
   }
 

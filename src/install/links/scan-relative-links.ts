@@ -74,7 +74,10 @@ function isCandidateRelativePath(destination: string): boolean {
 
 function stripPath(destination: string): string {
   // Keep the #anchor — callers preserve it on rewrite; resolve-link strips it.
-  return destination;
+  // Normalize backslash separators to forward slashes so links authored on
+  // Windows (`assets\logo.png`) resolve identically to POSIX-style paths and
+  // downstream `path.resolve()` doesn't choke on mixed separators on POSIX.
+  return destination.replaceAll('\\', '/');
 }
 
 export function scanRelativeLinks(content: string): readonly ScannedLink[] {

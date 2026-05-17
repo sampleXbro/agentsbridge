@@ -48,8 +48,13 @@ export type ExtraRuleOutputResolver = (
  * target-specific path logic after those guards pass.
  */
 export interface TargetPathResolvers {
-  /** Output path for a non-root, non-filtered rule. */
-  rulePath(slug: string, rule: CanonicalRule): string;
+  /**
+   * Output path for a non-root, non-filtered rule, or `null` to suppress
+   * generation. Targets whose capability `rules === 'none'` for a given
+   * scope MUST return `null` so callers can drop the row rather than emit
+   * to a fabricated directory path.
+   */
+  rulePath(slug: string, rule: CanonicalRule): string | null;
   /** Output path for a command. Null suppresses generation. */
   commandPath(name: string, config: ValidatedConfig): string | null;
   /** Output path for an agent. Null suppresses generation. */
@@ -164,8 +169,14 @@ export interface TargetMetadata {
  * Bundles everything needed to generate, import, lint, and detect a target.
  */
 export interface TargetDescriptor {
-  /** Unique target identifier, e.g. 'claude-code' */
-  readonly id: string;
+  /**
+   * Unique target identifier, e.g. 'claude-code'. The `string & {}` widening
+   * keeps plugin ids assignable while still letting `BuiltinTargetId` literal
+   * checks (`if (id === 'claude-code')`) get autocomplete + typo protection
+   * in editor tooling. Runtime validation lives in
+   * `target-descriptor.schema.ts` (`/^[a-z][a-z0-9-]*$/`).
+   */
+  readonly id: import('./target-ids.js').BuiltinTargetId | (string & {});
   /** User-facing metadata (display name, category, URL, description) */
   readonly metadata: TargetMetadata;
   /** Feature generators (rules, commands, agents, etc.) */

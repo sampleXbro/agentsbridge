@@ -88,7 +88,10 @@ const globalLayout: TargetLayout = {
   },
   paths: {
     rulePath() {
-      return WARP_GLOBAL_SKILLS_DIR;
+      // Warp's global rules are Warp-Drive UI-managed (not file-based);
+      // `globalCapabilities.rules === 'none'`, so this resolver should
+      // never be reached. Returning `null` ensures callers drop the row.
+      return null;
     },
     commandPath(name) {
       return `${WARP_GLOBAL_SKILLS_DIR}/${commandSkillDirName(name)}/SKILL.md`;

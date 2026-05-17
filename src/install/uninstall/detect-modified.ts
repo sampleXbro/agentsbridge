@@ -66,6 +66,14 @@ export async function detectModifiedFiles(
     }
     const hex = await hashFile(abs);
     if (hex === null) {
+      // `hashFile` returns null only for ENOENT (other I/O errors throw).
+      // The file existed at `readDirRecursive` but is gone now — a raced
+      // deletion. Under the install lock no other agentsmesh process can
+      // race us, so this realistically only fires when an external tool
+      // unlinks the file mid-uninstall. Folding into `deleted` is correct:
+      // the file is gone from disk, the user will see it reported, and
+      // `delete-anyway` is still safe (`rm -rf` on a missing file is a
+      // no-op).
       results.push({ relativePath: rel, status: 'deleted' });
       continue;
     }

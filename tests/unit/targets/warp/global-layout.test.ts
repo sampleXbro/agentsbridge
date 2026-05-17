@@ -35,4 +35,18 @@ describe('warp global layout', () => {
   it('does not declare sharedArtifacts', () => {
     expect(descriptor).not.toHaveProperty('sharedArtifacts');
   });
+
+  it('global rulePath returns null because rules capability is "none"', () => {
+    // Warp's global rules are Warp Drive UI-managed; the resolver must NOT
+    // fabricate a path that callers would treat as a generation target.
+    const rulePath = descriptor.globalSupport!.layout.paths.rulePath('typescript', {
+      source: 'rules/typescript.md',
+      root: false,
+      targets: [],
+      description: 'ts',
+      globs: [],
+      body: '',
+    });
+    expect(rulePath).toBeNull();
+  });
 });

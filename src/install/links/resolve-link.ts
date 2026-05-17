@@ -34,14 +34,34 @@ export interface ResolveLinkInput {
   readonly includedPaths: ReadonlySet<string>;
 }
 
-export interface ResolvedLink {
+interface ResolvedLinkCommon {
   readonly link: ScannedLink;
-  readonly classification: LinkClassification;
-  /** Path resolved relative to `contentRoot` (forward-slash, anchor-stripped); null when escapes contentRoot. */
-  readonly resolvedRelative: string | null;
   /** `#fragment` portion of the original link, including the leading `#`; empty when none. */
   readonly anchor: string;
 }
+
+/** Target exists on disk AND is part of the install scope. */
+export interface InTreeIncludedLink extends ResolvedLinkCommon {
+  readonly classification: 'in-tree-included';
+  /** Path resolved relative to `contentRoot` (forward-slash, anchor-stripped). */
+  readonly resolvedRelative: string;
+}
+
+/** Target exists on disk but lives outside the install scope. */
+export interface ResolvableOutsideLink extends ResolvedLinkCommon {
+  readonly classification: 'resolvable-outside';
+  /** Path resolved relative to `contentRoot` (forward-slash, anchor-stripped). */
+  readonly resolvedRelative: string;
+}
+
+/** Target does not exist OR escapes `contentRoot`. */
+export interface UnresolvableLink extends ResolvedLinkCommon {
+  readonly classification: 'unresolvable';
+  /** Path resolved relative to `contentRoot`, or `null` when the link escapes contentRoot or is empty/absolute. */
+  readonly resolvedRelative: string | null;
+}
+
+export type ResolvedLink = InTreeIncludedLink | ResolvableOutsideLink | UnresolvableLink;
 
 function splitAnchor(p: string): { path: string; anchor: string } {
   const hashIdx = p.indexOf('#');
@@ -70,7 +90,9 @@ export async function resolveLink(input: ResolveLinkInput): Promise<ResolvedLink
     return { link, classification: 'unresolvable', resolvedRelative: null, anchor };
   }
 
-  const fromDir = toForwardSlash(join(contentRoot, fromFile, '..'));
+  // Pass native-separator paths to `resolve()`; normalize to forward-slash
+  // only on the way out so the result is portable for downstream consumers.
+  const fromDir = join(contentRoot, fromFile, '..');
   const targetAbs = normalize(resolve(fromDir, rawPath));
   const rootAbs = normalize(resolve(contentRoot));
 

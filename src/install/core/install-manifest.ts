@@ -9,6 +9,7 @@ import { extendPickSchema, featureSchema, targetSchema } from '../../config/core
 import { readFileSafe, writeFileAtomic } from '../../utils/filesystem/fs.js';
 import { manualInstallAsSchema, type ManualInstallAs } from '../manual/manual-install-mode.js';
 import { normalizePersistedInstallPaths } from './portable-paths.js';
+import { sameFeatureSet } from './pick-reuse-entry-name.js';
 
 const installManifestEntrySchema = z.object({
   name: z.string().min(1),
@@ -30,19 +31,12 @@ const installManifestSchema = z.object({
 
 export type InstallManifestEntry = z.infer<typeof installManifestEntrySchema>;
 
-function sameFeatures(a: string[], b: string[]): boolean {
-  return (
-    a.length === b.length &&
-    [...a].sort().every((feature, index) => feature === [...b].sort()[index])
-  );
-}
-
 function sameInstallIdentity(a: InstallManifestEntry, b: InstallManifestEntry): boolean {
   return (
     a.source === b.source &&
     a.target === b.target &&
     a.as === b.as &&
-    sameFeatures(a.features, b.features)
+    sameFeatureSet(a.features, b.features)
   );
 }
 

@@ -154,6 +154,54 @@ describe('install pack atomicity (integration)', () => {
     expect(manifest.files[INSTALL_MANIFEST_FILENAME]).toBeUndefined();
   });
 
+  it('replaces an existing pack via swap and leaves no .old or .tmp siblings', async () => {
+    const canonical1 = makeCanonical();
+    await materializePack(packsDir, 'atomic-pack', canonical1, BASE_META);
+    expect(existsSync(join(packsDir, 'atomic-pack', 'rules', 'security.md'))).toBe(true);
+
+    const replacementRulePath = writeRule('typescript', 'Use TS.');
+    const canonical2: CanonicalFiles = {
+      rules: [
+        {
+          source: replacementRulePath,
+          root: false,
+          targets: [],
+          description: 'ts',
+          globs: [],
+          body: 'Use TS.',
+        },
+      ],
+      commands: [],
+      agents: [],
+      skills: [],
+      mcp: null,
+      permissions: null,
+      hooks: null,
+      ignore: [],
+    };
+
+    await materializePack(packsDir, 'atomic-pack', canonical2, {
+      ...BASE_META,
+      features: ['rules'],
+    });
+
+    expect(existsSync(join(packsDir, 'atomic-pack', 'rules', 'typescript.md'))).toBe(true);
+    expect(existsSync(join(packsDir, 'atomic-pack', 'rules', 'security.md'))).toBe(false);
+    expect(readdirSync(packsDir).sort()).toEqual(['atomic-pack']);
+  });
+
+  it('cleans up stale .old directory from a prior crashed swap', async () => {
+    const staleOld = join(packsDir, 'atomic-pack.old');
+    mkdirSync(staleOld, { recursive: true });
+    writeFileSync(join(staleOld, 'crashed.txt'), 'should be cleaned', 'utf-8');
+
+    const canonical = makeCanonical();
+    await materializePack(packsDir, 'atomic-pack', canonical, BASE_META);
+
+    expect(existsSync(staleOld)).toBe(false);
+    expect(readdirSync(packsDir).sort()).toEqual(['atomic-pack']);
+  });
+
   it('cleans up staging dir and writes nothing final when materialization fails mid-write', async () => {
     // Build a canonical that points one rule at a path that does not exist on
     // disk. `copyFile` will throw ENOENT during the staging-write step, after

@@ -77,7 +77,7 @@ const project: TargetLayout = {
   },
 };
 
-const global: TargetLayout = {
+const globalLayout: TargetLayout = {
   rootInstructionPath: CURSOR_GENERAL_RULE,
   outputFamilies: [
     {
@@ -185,7 +185,7 @@ export const descriptor = {
       CURSOR_COMMANDS_DIR,
       CURSOR_GLOBAL_USER_RULES,
     ],
-    layout: global,
+    layout: globalLayout,
   },
   importer: {
     // Project-only declarable features. Rules/mcp/skills/settings/ignore stay

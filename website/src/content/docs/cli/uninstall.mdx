@@ -31,9 +31,8 @@ agentsmesh uninstall --all [flags]
 
 | Code | Meaning |
 |------|---------|
-| `0` | Success (or `--dry-run` preview shown). |
-| `1` | Unrecoverable error. |
-| `2` | Reserved for "no matching install entry" — currently surfaced as a row in `data.skipped`. |
+| `0` | Success (or `--dry-run` preview shown). Names with no matching install are reported in `data.skipped`. |
+| `1` | Unrecoverable error (validation failure, lock contention, apply failure). |
 | `130` | User aborted at the modification prompt. |
 
 ## Examples

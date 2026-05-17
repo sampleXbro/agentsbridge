@@ -133,3 +133,28 @@ describe('getAllDescriptors', () => {
     expect(getAllDescriptors()).toHaveLength(0);
   });
 });
+
+describe('builtin descriptor lookup (circular-import contract)', () => {
+  it('every BUILTIN_TARGETS slot is populated after module init (no TDZ holes)', async () => {
+    // Importing here (not at file top) keeps `resetRegistry()` from
+    // affecting builtins — they live in the builtin map, not the plugin one.
+    const { BUILTIN_TARGETS } = await import('../../../../src/targets/catalog/builtin-targets.js');
+    expect(BUILTIN_TARGETS.length).toBeGreaterThan(0);
+    for (let i = 0; i < BUILTIN_TARGETS.length; i++) {
+      const descriptor = BUILTIN_TARGETS[i];
+      // A TDZ hole here means a descriptor module imported `getDescriptor`
+      // from `registry.ts` during its own init and the resulting cycle
+      // froze undefined slots. See `tasks/lessons.md:248` for the trap.
+      expect(descriptor, `BUILTIN_TARGETS[${i}] should not be undefined`).toBeDefined();
+      expect(typeof descriptor.id).toBe('string');
+    }
+  });
+
+  it('getDescriptor resolves every builtin target id', async () => {
+    const { TARGET_IDS } = await import('../../../../src/targets/catalog/target-ids.js');
+    const { getDescriptor } = await import('../../../../src/targets/catalog/registry.js');
+    for (const id of TARGET_IDS) {
+      expect(getDescriptor(id), `getDescriptor("${id}") should return a descriptor`).toBeDefined();
+    }
+  });
+});

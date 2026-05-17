@@ -130,6 +130,13 @@ function validateCapabilityImplementations(
  * Structural Zod schema for TargetDescriptor.
  * Uses passthrough() on the root so unknown plugin fields don't cause rejection.
  */
+const conversionDefaultsSchema = z
+  .object({
+    commandsToSkills: z.boolean().optional(),
+    agentsToSkills: z.boolean().optional(),
+  })
+  .strict();
+
 const targetDescriptorSchemaBase = z
   .object({
     id: z.string().regex(/^[a-z][a-z0-9-]*$/, 'Target id must be lowercase with hyphens'),
@@ -141,6 +148,8 @@ const targetDescriptorSchemaBase = z
     globalSupport: globalSupportSchema.optional(),
     buildImportPaths: z.function(),
     detectionPaths: z.array(z.string()),
+    excludeFromStarterInit: z.boolean().optional(),
+    conversionDefaults: conversionDefaultsSchema.optional(),
   })
   .passthrough();
 

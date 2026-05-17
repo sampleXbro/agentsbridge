@@ -6,6 +6,15 @@
  * `.agentsmesh-install-manifest.json` are durable do we rename the staging
  * dir to the final `${packName}/`. Any error before the rename rolls back
  * the staging dir, so a half-written pack never appears at the destination.
+ *
+ * When `${packName}/` already exists (re-install / overwrite) the swap is:
+ *   1. `rename(finalDir → ${packName}.old)` — atomic, prior pack preserved.
+ *   2. `rename(tmpDir → finalDir)` — atomic, new pack now live.
+ *   3. `rm(${packName}.old)` — best-effort cleanup of the swapped-out copy.
+ * If step 2 fails in-process we restore via `rename(.old → finalDir)` so the
+ * prior pack survives. A hard crash between steps 1 and 2 leaves the prior
+ * pack at `${packName}.old`; the next `materializePack` call cleans stale
+ * `.old` like it cleans stale `.tmp`.
  */
 
 import { join, basename, dirname } from 'node:path';
@@ -147,14 +156,22 @@ export async function materializePack(
 ): Promise<PackMetadata> {
   validatePackName(packName);
   const tmpDir = join(packsDir, `${packName}.tmp`);
+  const oldDir = join(packsDir, `${packName}.old`);
   const finalDir = join(packsDir, packName);
 
-  // Clean up stale .tmp if exists (from a prior aborted install).
+  // Clean up stale .tmp + .old if present (from a prior aborted install /
+  // crashed swap). Cleaning .old is safe: either finalDir is also present
+  // (this .old is orphaned) or finalDir is absent and the user has already
+  // moved on — re-install will write fresh content over this name.
   if (await exists(tmpDir)) {
     await rm(tmpDir, { recursive: true, force: true });
   }
+  if (await exists(oldDir)) {
+    await rm(oldDir, { recursive: true, force: true });
+  }
 
   let metadata: PackMetadata;
+  let swappedOut = false;
   try {
     await mkdirp(tmpDir);
 
@@ -178,15 +195,28 @@ export async function materializePack(
     // Write .agentsmesh-install-manifest.json (per-file sha256 map).
     await writeInstallManifest(tmpDir, metadata, installManifestExtras);
 
-    // Atomic rename to final
-    if (await exists(finalDir)) {
-      await rm(finalDir, { recursive: true, force: true });
-    }
+    // Atomic swap to final destination.
     await mkdir(packsDir, { recursive: true });
-    await rename(tmpDir, finalDir);
+    if (await exists(finalDir)) {
+      await rename(finalDir, oldDir);
+      swappedOut = true;
+    }
+    try {
+      await rename(tmpDir, finalDir);
+    } catch (err) {
+      if (swappedOut) {
+        await rename(oldDir, finalDir).catch(() => {});
+        swappedOut = false;
+      }
+      throw err;
+    }
   } catch (err) {
     await rm(tmpDir, { recursive: true, force: true }).catch(() => {});
     throw err;
+  }
+
+  if (swappedOut) {
+    await rm(oldDir, { recursive: true, force: true }).catch(() => {});
   }
 
   return metadata;

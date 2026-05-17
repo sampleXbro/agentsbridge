@@ -93,7 +93,10 @@ export async function runInstallLocked(opts: RunInstallLockedArgs): Promise<Inst
     parsed,
     sourceArg,
   );
-  const pathInRepo = parsed.pathInRepo.replace(/^\/+|\/+$/g, '');
+  // Normalize backslash separators to forward slashes before stripping
+  // leading/trailing slashes so a Windows-authored `--path \\src\\foo\\`
+  // joins correctly under POSIX `resolvedPath`.
+  const pathInRepo = parsed.pathInRepo.replaceAll('\\', '/').replace(/^\/+|\/+$/g, '');
   assertPathStaysInRepo(pathInRepo, parsed.pathInRepo);
   const contentRoot = pathInRepo ? join(resolvedPath, pathInRepo) : resolvedPath;
   if (!(await exists(contentRoot))) {

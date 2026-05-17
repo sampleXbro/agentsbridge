@@ -233,6 +233,8 @@ agentsmesh check [--global]
 agentsmesh merge [--global]
 agentsmesh matrix [--global] [--targets <csv>] [--verbose]
 agentsmesh install <source> [--sync] [--path <dir>] [--target <id>] [--as <kind>] [--name <id>] [--extends] [--dry-run] [--global] [--force]
+agentsmesh uninstall <name>[,<name>...] [--all] [--keep-pack] [--keep-generated] [--dry-run] [--global] [--force]
+agentsmesh installs list [--global]
 agentsmesh plugin add|list|remove|info [--version <v>] [--id <id>]
 agentsmesh target scaffold <id> [--name <displayName>] [--force]
 ```
@@ -296,7 +298,20 @@ agentsmesh install --path rules --as rules github:team/standards
 agentsmesh install --sync       # restore all packs after clone
 ```
 
-Packs live in `.agentsmesh/packs/`, track in `installs.yaml`, and merge into canonical config on every `generate`.
+Packs live in `.agentsmesh/packs/`, track in `installs.yaml`, and merge into canonical config on every `generate`. Anthropic-style skill packs (root `skills/`, `agents/`, `references/`, `.claude/commands/`, …) are auto-detected by a multi-signal classifier and imported as a bulk set in a single command — no `--as` needed. The discriminator is strict enough that legacy tool-native and canonical-agentsmesh repos still take their original code paths (verified by 5 backcompat fixtures).
+
+List and remove installed packs:
+
+```bash
+agentsmesh installs list                       # NAME / SOURCE / FEATURES / INSTALLED table
+agentsmesh uninstall <name>                    # rm pack dir, drop installs.yaml/extends entry, clean generated outputs
+agentsmesh uninstall --all                     # sweep every install in this scope
+agentsmesh uninstall <name> --keep-pack        # only drop yaml entries; leave .agentsmesh/packs/<name>/ on disk
+agentsmesh uninstall <name> --keep-generated   # skip the final generate; emit a warning about stale target files
+agentsmesh uninstall <name> --dry-run          # preview; no writes
+```
+
+Each install writes `.agentsmesh-install-manifest.json` next to the pack with per-file sha256 hashes; uninstall compares current contents against that manifest and prompts before deleting locally-modified files. `--force` accepts the documented defaults (bulk = accept all, broken-link = leave-with-warnings, modified = delete-anyway). `.agentsmesh/.install.lock` serialises install/uninstall so concurrent runs on the same project fail fast rather than racing on disk.
 
 ### What to commit and what to gitignore
 

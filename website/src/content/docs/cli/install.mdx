@@ -8,6 +8,14 @@ import { Aside } from '@astrojs/starlight/components';
 
 Install rules, commands, agents, or skills from remote repositories or local paths. Installed packs are tracked in `.agentsmesh/installs.yaml` and merged into canonical config during generation.
 
+A multi-signal classifier auto-detects three source shapes at install time:
+
+- **Anthropic-style skill packs** — root `skills/<kebab>/SKILL.md`, optional `agents/`, `references/`, `.claude/commands/`, `.gemini/commands/`, multi-tool rules at root. One `install <url>` imports the whole pack as a bulk set.
+- **Canonical agentsmesh repos** — anything carrying `.agentsmesh/` at the root. Imports verbatim via the canonical loader.
+- **Tool-native repos** — `.claude/`, `.cursor/`, `.codex/`, etc. layouts. Native importer dispatches per target, identical to pre-skill-pack behavior.
+
+`--target <id>` and `--as <kind>` are explicit overrides that skip the classifier; existing scripts keep working unchanged. `.agentsmesh/.install.lock` serialises concurrent install/uninstall runs.
+
 ## Usage
 
 ```bash
@@ -49,7 +57,45 @@ agentsmesh install --sync
 agentsmesh install github:org/shared-rules@v2.0.0
 ```
 
-AgentsMesh clones the repo, detects the config format, and imports everything into `.agentsmesh/`.
+AgentsMesh clones the repo, classifies the source, and imports everything into `.agentsmesh/`.
+
+### Install a community skill pack in one command
+
+```bash
+agentsmesh install github:addyosmani/agent-skills
+```
+
+The classifier sees `skills/<kebab>/SKILL.md`, `agents/`, `references/`, multi-tool rules, and per-target command dirs (`.claude/commands/`, `.gemini/commands/`); it imports all skills, agents, root rule, and the merged command set in one shot. Per-entity prompts surface only when the source contains relative links that cross the imported subtree.
+
+### Bulk-select prompt (interactive)
+
+When the classifier picks `anthropic-skill-pack` and you're at a TTY, AgentsMesh surfaces a summary banner with per-type counts:
+
+```
+Found in agent-skills:
+  - 23 skills
+  - 3 agents
+  - 7 commands
+  - 1 root rule
+
+Install [a]ll, [n]one, or [s]elect per type? [a/n/s]
+```
+
+`s` drills into per-type prompts; `c` from there drills into per-entity prompts (`[y/N/a=accept-all-remaining/q=skip-all-remaining]`). `--force`, `--json`, and non-TTY runs accept everything without prompting.
+
+### Broken-link prompt (interactive)
+
+When a skill body references files outside its scope (e.g. `../references/orchestration-patterns.md`), AgentsMesh classifies each link and prompts per-entity:
+
+```
+Entity "code-reviewer" (agent) has 2 broken links:
+  - ../references/orchestration-patterns.md (resolvable-outside)
+  - ../references/missing.md (unresolvable)
+
+Action: [i]nclude resolvable as supporting files / [l]eave with warnings / [a]bort install
+```
+
+`--force` and non-TTY runs default to `[l]eave-with-warnings` (preserves the link string; warns).
 
 ### Install from a subdirectory
 
@@ -123,6 +169,14 @@ packs:
 <Aside type="tip">
   Commit `.agentsmesh/installs.yaml` but gitignore `.agentsmesh/packs/` if packs are large. Use `agentsmesh install --sync` to restore packs after cloning.
 </Aside>
+
+## Per-install integrity manifest
+
+Every install writes `.agentsmesh-install-manifest.json` next to the pack with the install-time `name`, `source`, `installed_at`, classifier verdict (`source_type`), and a `files` map of relative-path → `sha256:<hex>`. `agentsmesh uninstall` reuses this manifest to detect locally-modified files and prompts before deleting them. Legacy packs without a manifest auto-migrate at uninstall time (current contents become the baseline) and surface a one-line warning.
+
+## Concurrent-install lock
+
+`.agentsmesh/.install.lock` (mirrored from `.generate.lock`) is acquired at the top of any `install` or `uninstall` run. Concurrent invocations on the same project fail fast with a clear lock-holder error rather than racing on filesystem writes. `--sync` replay holds the same lock across all recursive installs.
 
 ## Merge behavior
 

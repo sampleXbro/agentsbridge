@@ -1,0 +1,86 @@
+---
+draft: false
+title: agentsmesh installs
+description: Read-only inventory of installed packs. List installed packs with name, source, features, and install date.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Read-only namespace for inspecting installed packs. The only subcommand today is `list`; future read-only subcommands plug in here.
+
+<Aside type="note">
+  `installs` (plural) lists what's already installed. `install` (singular) adds a pack from a source URL. The dispatcher emits a "did you mean `install`?" hint when you type an unknown subcommand to soften the typo path.
+</Aside>
+
+## Usage
+
+```bash
+agentsmesh installs list [flags]
+```
+
+## Flags
+
+| Flag | Description |
+|------|-------------|
+| `--global` | Read from `~/.agentsmesh/installs.yaml`. |
+| `--json` | Machine-readable output. |
+
+## Examples
+
+### List installed packs
+
+```bash
+agentsmesh installs list
+```
+
+```text
+NAME                     SOURCE                                      FEATURES                  INSTALLED
+addyosmani-agent-skills  github:addyosmani/agent-skills@5b4c6da       skills, agents, commands  2026-05-16
+team-agents              github:my-org/team-agents@v1.0.0             agents                    2026-05-12
+```
+
+Empty list prints `No installed packs.` and exits 0. Rows preserve the order in `installs.yaml` (no resort at read time).
+
+### Global scope
+
+```bash
+agentsmesh installs list --global
+```
+
+Reads `~/.agentsmesh/installs.yaml`. `pack_path` is reported relative to `~/.agentsmesh/`.
+
+### JSON output
+
+```bash
+agentsmesh installs list --json
+```
+
+```json
+{
+  "success": true,
+  "command": "installs",
+  "data": {
+    "scope": "project",
+    "subcommand": "list",
+    "installs": [
+      {
+        "name": "addyosmani-agent-skills",
+        "source": "github:addyosmani/agent-skills@5b4c6da",
+        "source_kind": "github",
+        "source_type": "anthropic-skill-pack",
+        "version": "5b4c6da",
+        "features": ["skills", "agents", "commands"],
+        "target": null,
+        "installed_at": "2026-05-16T10:00:00.000Z",
+        "pack_path": ".agentsmesh/packs/addyosmani-agent-skills"
+      }
+    ]
+  }
+}
+```
+
+`source_type` and `installed_at` are hydrated from each pack's `.agentsmesh-install-manifest.json`; both are `null` when the manifest is missing (legacy packs, manually-deleted packs). Forward-slash `pack_path` per the project CLI display rule.
+
+## What's not covered
+
+`installs show <name>`, `installs prune`, and `installs verify` are explicitly out of scope until real use cases surface. To remove a pack, use [`agentsmesh uninstall`](../uninstall/). To re-install missing packs after a fresh clone, use `agentsmesh install --sync`.

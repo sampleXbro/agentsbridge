@@ -1,0 +1,135 @@
+---
+draft: false
+title: agentsmesh uninstall
+description: Remove an installed pack. Cleans .agentsmesh/packs/, installs.yaml, extends entries, and generated outputs.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Remove an installed pack and clean up everything `agentsmesh install` wrote: the pack directory, the `installs.yaml` row, the matching `extends:` row in `agentsmesh.yaml` (when present), and any orphaned files in target trees.
+
+## Usage
+
+```bash
+agentsmesh uninstall <name>[,<name>...] [flags]
+agentsmesh uninstall --all [flags]
+```
+
+## Flags
+
+| Flag | Description |
+|------|-------------|
+| `<name>` | Install entry name from `installs.yaml` (comma-separated for batch). |
+| `--all` | Remove every pack in the current scope. |
+| `--keep-pack` | Skip the `rm -rf` on `.agentsmesh/packs/<name>/`; only drop yaml/extends entries. |
+| `--keep-generated` | Skip the post-uninstall `generate` pass; emit a warning listing now-stale target paths. |
+| `--global` | Uninstall from `~/.agentsmesh/`. |
+| `--dry-run` | Preview removal plan; no writes. |
+| `--force` | Non-interactive; accept all prompts (defaults: `delete-anyway` on modifications). |
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success (or `--dry-run` preview shown). |
+| `1` | Unrecoverable error. |
+| `2` | Reserved for "no matching install entry" — currently surfaced as a row in `data.skipped`. |
+| `130` | User aborted at the modification prompt. |
+
+## Examples
+
+### Remove a single pack
+
+```bash
+agentsmesh uninstall demo-pack
+```
+
+Removes `.agentsmesh/packs/demo-pack/`, drops its row from `installs.yaml`, then runs `agentsmesh generate` so `cleanupStaleGeneratedOutputs` evicts any orphaned files in the target trees (`.claude/skills/demo/`, etc.).
+
+### Remove several at once
+
+```bash
+agentsmesh uninstall demo-pack,team-agents,old-rules
+```
+
+### Remove everything
+
+```bash
+agentsmesh uninstall --all --force
+```
+
+`--force` accepts the would-be confirmation prompt.
+
+### Preview without writing
+
+```bash
+agentsmesh uninstall demo-pack --dry-run
+```
+
+`data.removed[]` describes what would happen; nothing is written. The pack dir, `installs.yaml`, `agentsmesh.yaml`, and generated target files all stay intact.
+
+### Keep the pack on disk
+
+```bash
+agentsmesh uninstall demo-pack --keep-pack
+```
+
+Drops the `installs.yaml` and `extends:` entries but leaves the pack directory in place — useful when the user has edited files inside the pack and wants to preserve those bytes for review.
+
+### Skip the post-uninstall generate
+
+```bash
+agentsmesh uninstall demo-pack --keep-generated
+```
+
+The pack dir and yaml entries are removed; target trees keep the now-stale files. A warning lists what will be cleaned on the next `agentsmesh generate`.
+
+## Modification prompt
+
+When the on-disk pack contents drift from `.agentsmesh-install-manifest.json`, AgentsMesh surfaces:
+
+```
+Pack "demo-pack" has 2 locally modified files:
+  - skills/demo/SKILL.md (modified)
+  - agents/reviewer.md (added)
+
+Action: [d]elete anyway / [k]eep modified files (uninstall the rest) / [a]bort
+```
+
+`d` proceeds with `rm -rf`. `k` preserves the pack directory but still drops yaml entries (equivalent to `--keep-pack` for this pack only). `a` aborts the run with exit `130`; no writes. `--force` accepts `d` non-interactively.
+
+<Aside type="note">
+  Legacy packs installed before per-file integrity tracking auto-migrate on first uninstall touch: the current pack contents become the manifest baseline (the warning makes this explicit). Local modifications since the original install cannot be detected for those packs.
+</Aside>
+
+## JSON output
+
+```bash
+agentsmesh uninstall demo-pack --json
+```
+
+```json
+{
+  "success": true,
+  "command": "uninstall",
+  "data": {
+    "scope": "project",
+    "mode": "uninstall",
+    "removed": [
+      {
+        "name": "demo-pack",
+        "pack_path": ".agentsmesh/packs/demo-pack",
+        "manifest_entry_removed": true,
+        "extends_entry_removed": false,
+        "generated_files_removed": 0,
+        "modified_files_kept": [],
+        "legacy_migrated": false
+      }
+    ],
+    "skipped": [],
+    "dryRun": false
+  }
+}
+```
+
+Forward-slash `pack_path` per the project CLI display rule.

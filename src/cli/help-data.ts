@@ -81,7 +81,8 @@ export const COMMANDS: HelpCommand[] = [
   {
     name: 'install',
     usage: 'agentsmesh install <source> [flags]',
-    description: 'Install canonical resources from local/remote sources',
+    description:
+      'Install rules/commands/agents/skills from a local path or remote repo. Auto-classifies anthropic-skill-pack / canonical-agentsmesh / tool-native sources; --target and --as skip the classifier.',
     flags: [
       {
         name: '<source>',

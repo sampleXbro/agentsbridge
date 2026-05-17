@@ -229,4 +229,11 @@ export interface TargetDescriptor {
    * this flag get a lint warning when canonical rules have `trigger: 'manual'`.
    */
   readonly preservesManualActivation?: boolean;
+  /**
+   * When true, `agentsmesh init` excludes this target from the default bulk
+   * starter scaffold. Used by codex-cli because its `AGENTS.md` index format
+   * collides with other AGENTS.md-first targets when multiple targets are
+   * scaffolded together. Explicit `--target codex-cli` still works.
+   */
+  readonly excludeFromStarterInit?: boolean;
 }

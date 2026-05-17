@@ -72,4 +72,11 @@ describe('builtin target catalog (auto-discovered)', () => {
     const offenders = BUILTIN_TARGETS.filter((d) => d.detectionPaths.length === 0).map((d) => d.id);
     expect(offenders, `targets with empty detectionPaths: ${offenders.join(', ')}`).toEqual([]);
   });
+
+  it('codex-cli opts out of the starter-init scaffold via descriptor', () => {
+    // The AGENTS.md collision rule lives on codex-cli's descriptor, not in a
+    // central exclusion list. Other targets should not silently opt out.
+    const optedOut = BUILTIN_TARGETS.filter((d) => d.excludeFromStarterInit).map((d) => d.id);
+    expect(optedOut).toEqual(['codex-cli']);
+  });
 });

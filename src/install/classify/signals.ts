@@ -8,6 +8,25 @@ import { join } from 'node:path';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
 import { isBoilerplate } from '../importers/boilerplate-filter.js';
+import { BUILTIN_TARGETS } from '../../targets/catalog/builtin-targets.js';
+
+/**
+ * Per-target command directories advertised by builtin descriptors. Derived
+ * from each descriptor's `project.managedOutputs.dirs` so a new target whose
+ * convention is `.<tool>/commands/` participates in this signal automatically.
+ *
+ * Anthropic-style skill packs typically ship `.claude/commands`,
+ * `.gemini/commands`, etc. as per-tool slash-command directories.
+ */
+const PER_TARGET_COMMAND_DIRS: readonly string[] = (() => {
+  const dirs = new Set<string>();
+  for (const descriptor of BUILTIN_TARGETS) {
+    for (const dir of descriptor.project.managedOutputs?.dirs ?? []) {
+      if (/^\.[^/]+\/commands$/.test(dir)) dirs.add(dir);
+    }
+  }
+  return [...dirs];
+})();
 
 export interface SignalContext {
   readonly contentRoot: string;
@@ -125,8 +144,7 @@ export async function hasMultiToolRules(ctx: SignalContext): Promise<boolean> {
  * per-target command directories.
  */
 export async function hasPerTargetCommands(ctx: SignalContext): Promise<boolean> {
-  const dirs = ['.claude/commands', '.gemini/commands', '.cursor/commands'];
-  for (const rel of dirs) {
+  for (const rel of PER_TARGET_COMMAND_DIRS) {
     const entries = await listEntries(join(ctx.contentRoot, rel));
     for (const ent of entries) {
       if (!ent.isFile) continue;

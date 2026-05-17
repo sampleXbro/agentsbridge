@@ -162,4 +162,5 @@ export const descriptor = {
     '.codex/agents',
     '.codex/rules',
   ],
+  excludeFromStarterInit: true,
 } satisfies TargetDescriptor;

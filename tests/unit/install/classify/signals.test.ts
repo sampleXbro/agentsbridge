@@ -207,4 +207,12 @@ describe('hasPerTargetCommands (secondary)', () => {
     writeFile('.claude/commands/README.md', 'index');
     expect(await hasPerTargetCommands({ contentRoot })).toBe(false);
   });
+
+  it('matches additional descriptor-derived per-target commands dirs (e.g. .junie/commands)', async () => {
+    // The dir list is derived from every descriptor's managedOutputs.dirs that
+    // matches `.<tool>/commands`; junie ships such a dir even though the
+    // previous hardcoded list omitted it.
+    writeFile('.junie/commands/release.md', 'release command');
+    expect(await hasPerTargetCommands({ contentRoot })).toBe(true);
+  });
 });

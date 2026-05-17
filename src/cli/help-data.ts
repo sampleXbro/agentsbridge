@@ -124,6 +124,15 @@ export const COMMANDS: HelpCommand[] = [
     ],
   },
   {
+    name: 'installs',
+    usage: 'agentsmesh installs <subcommand> [flags]',
+    description: 'Read-only inventory of installed packs (subcommands: list)',
+    flags: [
+      { name: 'list', description: 'List installed packs (NAME, SOURCE, FEATURES, INSTALLED)' },
+      { name: '--global', description: 'Read from ~/.agentsmesh/installs.yaml' },
+    ],
+  },
+  {
     name: 'uninstall',
     usage: 'agentsmesh uninstall <name>[,<name>...] [flags]',
     description: 'Remove an installed pack; cleans installs.yaml, extends, and generated outputs',
@@ -145,8 +154,7 @@ export const COMMANDS: HelpCommand[] = [
       { name: '--dry-run', description: 'Preview removal plan; no writes' },
       {
         name: '--force',
-        description:
-          'Non-interactive mode; accept all prompts (delete-anyway on modifications)',
+        description: 'Non-interactive mode; accept all prompts (delete-anyway on modifications)',
       },
     ],
   },

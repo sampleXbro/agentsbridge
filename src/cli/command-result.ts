@@ -83,6 +83,29 @@ export interface UninstallData {
   dryRun: boolean;
 }
 
+export interface InstallsListEntry {
+  name: string;
+  source: string;
+  source_kind: string;
+  /** Classifier verdict captured at install time, or `null` when unknown. */
+  source_type: string | null;
+  version: string | null;
+  features: string[];
+  target: string | null;
+  /** ISO timestamp from the pack install-manifest, or `null` when missing. */
+  installed_at: string | null;
+  /** Forward-slash relative path from the canonical scope root. */
+  pack_path: string;
+}
+
+export interface InstallsListData {
+  scope: 'project' | 'global';
+  subcommand: 'list';
+  installs: InstallsListEntry[];
+}
+
+export type InstallsData = InstallsListData;
+
 export interface PluginAddData {
   subcommand: 'add';
   id: string;

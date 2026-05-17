@@ -13,6 +13,7 @@ import {
   runWatch,
   watchWaitTimeoutMs,
   watchStabilityDelayMs,
+  WATCH_TEST_OPTS,
 } from '../../../harness/watch.js';
 
 let testDir = '';
@@ -26,33 +27,33 @@ afterEach(() => {
   rmSync(testDir, { recursive: true, force: true });
 });
 
-// Watch tests are timing-sensitive under full-suite load: chokidar warm-up +
-// initial generate + the vi.waitFor windows (watchWaitTimeoutMs = 120s, ×1.5
-// under coverage = 180s) can together exceed vitest's default 60s testTimeout.
-// Give every test in this file headroom that exceeds watchWaitTimeoutMs() under
-// coverage (so 180s ÷ tests can each consume two waits). Slow gate beats
-// intermittent red (lessons.md L60, L153).
-describe('runWatch', { timeout: 300_000 }, () => {
+// Watch tests use forced chokidar polling (see tests/harness/watch.ts), so
+// cycle latency is bounded by `poll(50ms) + debounce(300ms) + generate work`
+// rather than the kernel FSEvents queue. 60s per test is plenty of headroom
+// for a chain of two `vi.waitFor` windows (15s each under polling, ×1.5 under
+// coverage) plus startup. Tight gate fails fast on real regressions instead of
+// hanging the pre-commit hook for minutes (lessons.md L240).
+describe('runWatch', { timeout: 60_000 }, () => {
   it('throws when not initialized (no config)', async () => {
     rmSync(join(testDir, 'agentsmesh.yaml'));
     await expect(runWatch({}, testDir)).rejects.toThrow(/agentsmesh\.yaml/);
   });
 
   it('starts watching and returns stop function', async () => {
-    const result = await runWatch({}, testDir);
+    const result = await runWatch({}, testDir, WATCH_TEST_OPTS);
     expect(result).toBeDefined();
     expect(typeof result?.stop).toBe('function');
     await result!.stop();
   });
 
   it('respects --targets flag', async () => {
-    const result = await runWatch({ targets: 'claude-code' }, testDir);
+    const result = await runWatch({ targets: 'claude-code' }, testDir, WATCH_TEST_OPTS);
     expect(result).toBeDefined();
     await result!.stop();
   });
 
   it('stops and clears debounce when stop called during debounce', async () => {
-    const result = await runWatch({}, testDir);
+    const result = await runWatch({}, testDir, WATCH_TEST_OPTS);
     writeFileSync(
       join(testDir, '.agentsmesh', 'rules', 'other.md'),
       '---\ndescription: ""\n---\n# Other',
@@ -73,7 +74,7 @@ features: [rules, permissions]
       join(testDir, '.agentsmesh', 'permissions.yaml'),
       'allow:\n  - Read\n  - Grep\ndeny: []',
     );
-    const result = await runWatch({}, testDir);
+    const result = await runWatch({}, testDir, WATCH_TEST_OPTS);
     await result!.stop();
   });
 
@@ -82,6 +83,7 @@ features: [rules, permissions]
     const runMatrixSpy = vi.spyOn(matrixMod, 'runMatrix').mockResolvedValue(mockResult);
     const cycles: Array<{ featuresChanged: boolean }> = [];
     const result = await runWatch({}, testDir, {
+      ...WATCH_TEST_OPTS,
       onCycle: (info) => cycles.push(info),
     });
     try {
@@ -129,6 +131,7 @@ features: [rules, permissions]
     const infoSpy = vi.spyOn(logger, 'info').mockImplementation(() => {});
     const cycles: Array<{ featuresChanged: boolean }> = [];
     const result = await runWatch({}, testDir, {
+      ...WATCH_TEST_OPTS,
       onCycle: (info) => cycles.push(info),
     });
     try {
@@ -170,6 +173,7 @@ description: "Project rules"
     const runMatrixSpy = vi.spyOn(matrixMod, 'runMatrix').mockResolvedValue(mockResult);
     const cycles: Array<{ featuresChanged: boolean }> = [];
     const result = await runWatch({}, testDir, {
+      ...WATCH_TEST_OPTS,
       onCycle: (info) => cycles.push(info),
     });
     try {
@@ -190,7 +194,7 @@ description: "Project rules"
       join(testDir, '.agentsmesh', '.lock'),
       'generated_at: "2026-03-15T14:00:00Z"\nchecksums: {}\nextends: {}\n',
     );
-    const result = await runWatch({}, testDir);
+    const result = await runWatch({}, testDir, WATCH_TEST_OPTS);
 
     await vi.waitFor(
       () =>
@@ -239,7 +243,7 @@ description: "Global rules"
 `,
     );
 
-    const result = await runWatch({ global: true }, workspace);
+    const result = await runWatch({ global: true }, workspace, WATCH_TEST_OPTS);
     await vi.waitFor(() => expect(existsSync(join(testDir, '.claude', 'CLAUDE.md'))).toBe(true), {
       timeout: watchWaitTimeoutMs(),
     });

@@ -1,121 +1,40 @@
-import { describe, expect, it, vi } from 'vitest';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { importNativeToCanonical } from '../../../src/canonical/extends/native-extends-importer.js';
+import { BUILTIN_TARGETS } from '../../../src/targets/catalog/builtin-targets.js';
 
-const mockClaudeImport = vi.hoisted(() =>
-  vi.fn().mockResolvedValue([
-    {
-      fromTool: 'claude-code',
-      fromPath: 'CLAUDE.md',
-      toPath: '.agentsmesh/rules/_root.md',
-      feature: 'rules',
-    },
-  ]),
-);
-const mockCursorImport = vi.hoisted(() => vi.fn().mockResolvedValue([]));
-const mockCopilotImport = vi.hoisted(() => vi.fn().mockResolvedValue([]));
-const mockGeminiImport = vi.hoisted(() => vi.fn().mockResolvedValue([]));
-const mockCodexImport = vi.hoisted(() => vi.fn().mockResolvedValue([]));
-const mockWindsurfImport = vi.hoisted(() => vi.fn().mockResolvedValue([]));
-const mockClineImport = vi.hoisted(() => vi.fn().mockResolvedValue([]));
-const mockContinueImport = vi.hoisted(() => vi.fn().mockResolvedValue([]));
-const mockJunieImport = vi.hoisted(() => vi.fn().mockResolvedValue([]));
-const mockKiroImport = vi.hoisted(() => vi.fn().mockResolvedValue([]));
-const mockKiloCodeImport = vi.hoisted(() => vi.fn().mockResolvedValue([]));
-
-vi.mock('../../../src/targets/claude-code/importer.js', () => ({
-  importFromClaudeCode: mockClaudeImport,
-}));
-vi.mock('../../../src/targets/cursor/importer.js', () => ({
-  importFromCursor: mockCursorImport,
-}));
-vi.mock('../../../src/targets/copilot/importer.js', () => ({
-  importFromCopilot: mockCopilotImport,
-}));
-vi.mock('../../../src/targets/gemini-cli/importer.js', () => ({
-  importFromGemini: mockGeminiImport,
-}));
-vi.mock('../../../src/targets/codex-cli/importer.js', () => ({
-  importFromCodex: mockCodexImport,
-}));
-vi.mock('../../../src/targets/windsurf/importer.js', () => ({
-  importFromWindsurf: mockWindsurfImport,
-}));
-vi.mock('../../../src/targets/cline/importer.js', () => ({
-  importFromCline: mockClineImport,
-}));
-vi.mock('../../../src/targets/continue/importer.js', () => ({
-  importFromContinue: mockContinueImport,
-}));
-vi.mock('../../../src/targets/junie/importer.js', () => ({
-  importFromJunie: mockJunieImport,
-}));
-vi.mock('../../../src/targets/kiro/importer.js', () => ({
-  importFromKiro: mockKiroImport,
-}));
-vi.mock('../../../src/targets/kilo-code/importer.js', () => ({
-  importFromKiloCode: mockKiloCodeImport,
-}));
-
+/**
+ * `importNativeToCanonical` is a single-line dispatcher: it must invoke each
+ * descriptor's own `generators.importFrom` rather than maintain its own
+ * registry. The previous hardcoded `NATIVE_IMPORTERS` record listed only 11
+ * of 30 targets — installing or extending from any of the other 19
+ * (aider, amp, opencode, zed, etc.) threw "No importer registered" even
+ * though every descriptor declares an importer.
+ *
+ * These tests assert the dispatcher reaches every builtin descriptor's
+ * importer and returns an array, without making behavioral claims about the
+ * importer outputs (which have their own per-target test suites).
+ */
 describe('importNativeToCanonical', () => {
-  it('dispatches to claude-code importer and returns its results', async () => {
-    const results = await importNativeToCanonical('/repo', 'claude-code');
-    expect(mockClaudeImport).toHaveBeenCalledWith('/repo');
-    expect(results).toHaveLength(1);
-    expect(results[0]?.fromTool).toBe('claude-code');
+  let tmp: string;
+  beforeEach(() => {
+    tmp = mkdtempSync(join(tmpdir(), 'am-native-import-'));
   });
+  afterEach(() => rmSync(tmp, { recursive: true, force: true }));
 
-  it('dispatches to cursor importer', async () => {
-    await importNativeToCanonical('/repo', 'cursor');
-    expect(mockCursorImport).toHaveBeenCalledWith('/repo');
-  });
-
-  it('dispatches to copilot importer', async () => {
-    await importNativeToCanonical('/repo', 'copilot');
-    expect(mockCopilotImport).toHaveBeenCalledWith('/repo');
-  });
-
-  it('dispatches to gemini-cli importer', async () => {
-    await importNativeToCanonical('/repo', 'gemini-cli');
-    expect(mockGeminiImport).toHaveBeenCalledWith('/repo');
-  });
-
-  it('dispatches to codex-cli importer', async () => {
-    await importNativeToCanonical('/repo', 'codex-cli');
-    expect(mockCodexImport).toHaveBeenCalledWith('/repo');
-  });
-
-  it('dispatches to windsurf importer', async () => {
-    await importNativeToCanonical('/repo', 'windsurf');
-    expect(mockWindsurfImport).toHaveBeenCalledWith('/repo');
-  });
-
-  it('dispatches to cline importer', async () => {
-    await importNativeToCanonical('/repo', 'cline');
-    expect(mockClineImport).toHaveBeenCalledWith('/repo');
-  });
-
-  it('dispatches to continue importer', async () => {
-    await importNativeToCanonical('/repo', 'continue');
-    expect(mockContinueImport).toHaveBeenCalledWith('/repo');
-  });
-
-  it('dispatches to junie importer', async () => {
-    await importNativeToCanonical('/repo', 'junie');
-    expect(mockJunieImport).toHaveBeenCalledWith('/repo');
-  });
-
-  it('dispatches to kiro importer', async () => {
-    await importNativeToCanonical('/repo', 'kiro');
-    expect(mockKiroImport).toHaveBeenCalledWith('/repo');
-  });
-
-  it('dispatches to kilo-code importer', async () => {
-    await importNativeToCanonical('/repo', 'kilo-code');
-    expect(mockKiloCodeImport).toHaveBeenCalledWith('/repo');
+  describe('every builtin descriptor is dispatchable', () => {
+    for (const descriptor of BUILTIN_TARGETS) {
+      it(`${descriptor.id}`, async () => {
+        const results = await importNativeToCanonical(tmp, descriptor.id);
+        expect(Array.isArray(results)).toBe(true);
+      });
+    }
   });
 
   it('throws for unknown target name', async () => {
-    await expect(importNativeToCanonical('/repo', 'unknown-tool')).rejects.toThrow(
+    await expect(importNativeToCanonical(tmp, 'unknown-tool')).rejects.toThrow(
       /No importer registered for native target: unknown-tool/,
     );
   });

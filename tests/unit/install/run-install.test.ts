@@ -323,7 +323,7 @@ describe('runInstall', () => {
     });
     await runInstall({ force: true }, ['../upstream'], '/project');
     expect(mockLoggerWarn).toHaveBeenCalledWith(
-      'Generate failed after install. Fix the issue and run agentsmesh generate.',
+      'Generate failed after install. Pack is installed; run agentsmesh generate.',
     );
   });
 

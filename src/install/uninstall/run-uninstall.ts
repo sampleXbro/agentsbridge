@@ -21,8 +21,7 @@ import { join } from 'node:path';
 import { loadScopedConfig } from '../../config/core/scope.js';
 import { acquireInstallLock } from '../lock/install-lock.js';
 import { readInstallManifest } from '../core/install-manifest.js';
-import { runGenerate } from '../../cli/commands/generate.js';
-import { renderGenerate } from '../../cli/renderers/generate.js';
+import { runPostOperationGenerate } from '../run/post-install-generate.js';
 import { logger } from '../../utils/output/logger.js';
 import { readLine } from '../prompts/prompt-io.js';
 import { planUninstall, type UninstallRemovalPlan } from './plan-uninstall.js';
@@ -145,12 +144,7 @@ export async function runUninstall(
     }
 
     if (!keepGenerated && removed.length > 0) {
-      const genFlags: Record<string, string | boolean> = scope === 'global' ? { global: true } : {};
-      const genResult = await runGenerate(genFlags, context.rootBase);
-      renderGenerate(genResult);
-      if (genResult.exitCode !== 0) {
-        logger.warn('Generate failed after uninstall.');
-      }
+      await runPostOperationGenerate('uninstall', scope, context.rootBase);
     } else if (keepGenerated && removed.length > 0) {
       logger.warn(
         '--keep-generated: target files derived from the removed pack(s) may be stale until the next generate.',

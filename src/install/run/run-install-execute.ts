@@ -1,8 +1,7 @@
 import type { ValidatedConfig } from '../../config/core/schema.js';
 import { loadCanonicalWithExtends } from '../../canonical/extends/extends.js';
 import { logger } from '../../utils/output/logger.js';
-import { runGenerate } from '../../cli/commands/generate.js';
-import { renderGenerate } from '../../cli/renderers/generate.js';
+import { runPostOperationGenerate } from './post-install-generate.js';
 import {
   hasInstallableResources,
   resolveAgentPool,
@@ -198,13 +197,7 @@ export async function executeRunInstallPoolsAndWrite(
       sourceType,
     });
   }
-  const genResult = await runGenerate(scope === 'global' ? { global: true } : {}, context.rootBase);
-  renderGenerate(genResult);
-  if (genResult.exitCode !== 0) {
-    logger.warn(
-      `Generate failed after install. Fix the issue and run agentsmesh generate${scope === 'global' ? ' --global' : ''}.`,
-    );
-  }
+  await runPostOperationGenerate('install', scope, context.rootBase);
   return { installed, skipped };
 }
 

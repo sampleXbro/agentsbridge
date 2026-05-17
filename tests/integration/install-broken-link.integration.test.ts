@@ -97,6 +97,38 @@ describe('install broken-link (integration)', () => {
     rmSync(ROOT, { recursive: true, force: true });
   });
 
+  it('post-install generate failure does not roll back the install (exit 0)', async () => {
+    // Same upstream, but the project enables `skills` so the dangling skill
+    // body lands in a generated target file. The markdown-link validator
+    // throws inside runGenerate; the install pipeline must catch that throw
+    // and treat the post-install generate as best-effort. Pack + installs.yaml
+    // are already written by the time we get there, so they must survive.
+    const project = join(ROOT, 'project');
+    const upstream = join(ROOT, 'upstream');
+
+    // Replace the scoped agentsmesh.yaml with one that enables `skills`.
+    writeFile(
+      join(project, 'agentsmesh.yaml'),
+      'version: 1\ntargets: [claude-code]\nfeatures: [rules, skills]\nextends: []\n',
+    );
+
+    const result = await runInstall(
+      { force: true, name: 'pack-bl-fail' },
+      [upstream],
+      project,
+    );
+
+    expect(result.exitCode).toBe(0);
+    const packDir = join(project, '.agentsmesh', 'packs', 'pack-bl-fail');
+    expect(existsSync(packDir)).toBe(true);
+    expect(existsSync(join(packDir, 'skills', 'with-broken-links', 'SKILL.md'))).toBe(true);
+    const installsYaml = readFileSync(
+      join(project, '.agentsmesh', 'installs.yaml'),
+      'utf-8',
+    );
+    expect(installsYaml).toContain('name: pack-bl-fail');
+  });
+
   it('under --force, leaves broken links unchanged in the pack body', async () => {
     const project = join(ROOT, 'project');
     const upstream = join(ROOT, 'upstream');

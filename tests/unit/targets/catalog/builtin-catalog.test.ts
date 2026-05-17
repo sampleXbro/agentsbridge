@@ -64,4 +64,12 @@ describe('builtin target catalog (auto-discovered)', () => {
   it('generated id list is alphabetically sorted', () => {
     expect([...BUILTIN_TARGET_IDS]).toEqual([...BUILTIN_TARGET_IDS].sort());
   });
+
+  it('every descriptor declares at least one detectionPath', () => {
+    // detectionPaths is the single source of truth for native-format auto
+    // detection (src/config/resolve/native-format-detector.ts). A target with
+    // an empty array would be silently undetectable from path signatures.
+    const offenders = BUILTIN_TARGETS.filter((d) => d.detectionPaths.length === 0).map((d) => d.id);
+    expect(offenders, `targets with empty detectionPaths: ${offenders.join(', ')}`).toEqual([]);
+  });
 });

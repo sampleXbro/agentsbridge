@@ -295,10 +295,11 @@ Install shared skills, rules, agents, and commands from any git repo:
 ```bash
 agentsmesh install github:org/shared-config@v1.0.0
 agentsmesh install --path rules --as rules github:team/standards
+agentsmesh install github:team/prompts --path workflows --as commands --extends
 agentsmesh install --sync       # restore all packs after clone
 ```
 
-Packs live in `.agentsmesh/packs/`, track in `installs.yaml`, and merge into canonical config on every `generate`. Anthropic-style skill packs (root `skills/`, `agents/`, `references/`, `.claude/commands/`, …) are auto-detected by a multi-signal classifier and imported as a bulk set in a single command — no `--as` needed. The discriminator is strict enough that legacy tool-native and canonical-agentsmesh repos still take their original code paths (verified by 5 backcompat fixtures).
+Packs live in `.agentsmesh/packs/`, track in `installs.yaml`, and merge into canonical config on every `generate`. `install --extends` records a linked `extends:` entry instead of materializing a pack; when paired with `--as`, the forced kind is persisted as `extends[].as` so flat markdown directories continue to load as commands, agents, rules, or skills during later `generate` runs. Anthropic-style skill packs (root `skills/`, `agents/`, `references/`, `.claude/commands/`, …) are auto-detected by a multi-signal classifier and imported as a bulk set in a single command — no `--as` needed. The discriminator is strict enough that legacy tool-native and canonical-agentsmesh repos still take their original code paths (verified by 5 backcompat fixtures).
 
 List and remove installed packs:
 
@@ -344,6 +345,14 @@ Every config file ships with a generated JSON Schema, so VS Code, JetBrains, and
 | `.agentsmesh/packs/*/pack.json` | `schemas/pack.json` |
 
 `agentsmesh init` writes the appropriate `# yaml-language-server: $schema=...` directive (or `$schema` field for JSON) into each canonical file, so editors pick up validation immediately.
+
+### Environment variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `AGENTSMESH_GITHUB_TOKEN` | — | GitHub personal access token for private repo installs and `extends`. |
+| `AGENTSMESH_CACHE` | `~/.agentsmeshcache` | Override the remote-extends / tarball cache directory. |
+| `AGENTSMESH_MAX_TARBALL_MB` | `500` | Maximum GitHub tarball size in MiB the install command will accept. Allowed range: `1`–`4096`. Increase this when installing from large monorepos. |
 
 ---
 

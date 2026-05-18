@@ -4,7 +4,7 @@
  *   M3: refuse git refs/clone-urls starting with "-"
  *   L2: validate AGENTSMESH_CACHE env override
  */
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import {
   MAX_TARBALL_BYTES,
   readBoundedResponse,
@@ -99,5 +99,55 @@ describe('AGENTSMESH_CACHE validation (L2)', () => {
   it('treats empty/whitespace-only as unset', () => {
     process.env.AGENTSMESH_CACHE = '   ';
     expect(getCacheDir()).toMatch(/\.agentsmesh[\\/]cache$/);
+  });
+});
+
+describe('AGENTSMESH_MAX_TARBALL_MB (env override)', () => {
+  const ORIGINAL = process.env.AGENTSMESH_MAX_TARBALL_MB;
+  afterEach(() => {
+    if (ORIGINAL === undefined) delete process.env.AGENTSMESH_MAX_TARBALL_MB;
+    else process.env.AGENTSMESH_MAX_TARBALL_MB = ORIGINAL;
+    vi.resetModules();
+  });
+
+  it('uses default 500 MiB when env var is unset', async () => {
+    delete process.env.AGENTSMESH_MAX_TARBALL_MB;
+    vi.resetModules();
+    const mod = await import('../../../src/config/remote/github-remote.js');
+    expect(mod.MAX_TARBALL_BYTES).toBe(500 * 1024 * 1024);
+  });
+
+  it('honors a valid AGENTSMESH_MAX_TARBALL_MB override', async () => {
+    process.env.AGENTSMESH_MAX_TARBALL_MB = '1024';
+    vi.resetModules();
+    const mod = await import('../../../src/config/remote/github-remote.js');
+    expect(mod.MAX_TARBALL_BYTES).toBe(1024 * 1024 * 1024);
+  });
+
+  it('falls back to default when env var is non-numeric', async () => {
+    process.env.AGENTSMESH_MAX_TARBALL_MB = 'banana';
+    vi.resetModules();
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const mod = await import('../../../src/config/remote/github-remote.js');
+    expect(mod.MAX_TARBALL_BYTES).toBe(500 * 1024 * 1024);
+    warnSpy.mockRestore();
+  });
+
+  it('clamps below 1 MiB to default', async () => {
+    process.env.AGENTSMESH_MAX_TARBALL_MB = '0';
+    vi.resetModules();
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const mod = await import('../../../src/config/remote/github-remote.js');
+    expect(mod.MAX_TARBALL_BYTES).toBe(500 * 1024 * 1024);
+    warnSpy.mockRestore();
+  });
+
+  it('clamps above 4096 MiB to default', async () => {
+    process.env.AGENTSMESH_MAX_TARBALL_MB = '9999';
+    vi.resetModules();
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const mod = await import('../../../src/config/remote/github-remote.js');
+    expect(mod.MAX_TARBALL_BYTES).toBe(500 * 1024 * 1024);
+    warnSpy.mockRestore();
   });
 });

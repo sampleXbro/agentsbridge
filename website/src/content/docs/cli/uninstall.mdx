@@ -26,13 +26,14 @@ agentsmesh uninstall --all [flags]
 | `--global` | Uninstall from `~/.agentsmesh/`. |
 | `--dry-run` | Preview removal plan; no writes. |
 | `--force` | Non-interactive; accept all prompts (defaults: `delete-anyway` on modifications). Implied by `--json`. |
+| `--json` | Machine-readable JSON envelope on stdout. Implies `--force`. Validation errors and per-pack failures land in the envelope, not stderr. |
 
 ## Exit codes
 
 | Code | Meaning |
 |------|---------|
 | `0` | Success (or `--dry-run` preview shown). Names with no matching install are reported in `data.skipped`. |
-| `1` | Unrecoverable error (validation failure, lock contention, apply failure). |
+| `1` | Validation failure, lock contention, OR mid-batch apply failure (`data.failed[]` populated). Survivors still applied; post-operation `generate` still ran. |
 | `130` | User aborted at the modification prompt. |
 
 ## Examples
@@ -99,17 +100,23 @@ Action: [d]elete anyway / [k]eep modified files (uninstall the rest) / [a]bort
 
 <Aside type="note">
   Legacy packs installed before per-file integrity tracking auto-migrate on first uninstall touch: the current pack contents become the manifest baseline (the warning makes this explicit). Local modifications since the original install cannot be detected for those packs.
+
+  **Upgrade note:** packs installed before line-ending and BOM-tolerant hashing landed may report some text files as `modified` on the first uninstall after upgrade if those files contain CRLF or a UTF-8 BOM. The standard `[d]elete-anyway` prompt covers it (or use `--force` to accept the default). No data is lost; installs created after upgrade use the new hashing algorithm consistently.
 </Aside>
+
+## Partial-batch failures
+
+When `--all` (or a comma-separated batch) is in flight and one pack's `apply` step throws, surviving packs still apply. The failing pack lands in `data.failed[]`; post-operation `generate` still runs over the survivors so the tool tree stays consistent with the partially mutated `installs.yaml`. The run exits `1` whenever `data.failed[]` is non-empty.
 
 ## JSON output
 
 ```bash
-agentsmesh uninstall demo-pack --json
+agentsmesh uninstall demo-pack,team-agents --json
 ```
 
 ```json
 {
-  "success": true,
+  "success": false,
   "command": "uninstall",
   "data": {
     "scope": "project",
@@ -122,13 +129,36 @@ agentsmesh uninstall demo-pack --json
         "extends_entry_removed": false,
         "generated_files_removed": 0,
         "modified_files_kept": [],
-        "legacy_migrated": false
+        "legacy_migrated": false,
+        "partial": false
+      },
+      {
+        "name": "team-agents",
+        "pack_path": ".agentsmesh/packs/team-agents",
+        "manifest_entry_removed": true,
+        "extends_entry_removed": true,
+        "generated_files_removed": 0,
+        "modified_files_kept": [
+          { "relativePath": "skills/qa/SKILL.md", "status": "modified" }
+        ],
+        "legacy_migrated": false,
+        "partial": true
       }
     ],
     "skipped": [],
+    "failed": [
+      { "name": "broken-pack", "reason": "EACCES: permission denied" }
+    ],
     "dryRun": false
   }
 }
 ```
 
-Forward-slash `pack_path` per the project CLI display rule.
+Field reference:
+
+- `removed[].pack_path` — forward-slash relative to scope root. `null` for extends-only installs (`install --extends`) that never materialized a pack on disk.
+- `removed[].modified_files_kept` — `Array<{ relativePath: string; status: 'modified' | 'deleted' | 'added' }>`. Non-empty only when the pack was preserved (`[k]eep-modified` or `--keep-pack`).
+- `removed[].partial` — `true` when at least one expected step did not land (user-driven `[k]eep-modified` / `--keep-pack`, or a missing-row no-op). Lets JSON consumers distinguish a fully-clean removal from one that left bytes by design.
+- `removed[].legacy_migrated` — `true` when the pack predated `.agentsmesh-install-manifest.json` and the baseline was synthesized on the fly.
+- `skipped[]` — names that did not match any install (typos, already-removed packs).
+- `failed[]` — packs whose `apply` step threw. Surviving packs are still in `removed[]`; post-operation `generate` still ran over them. Exit code is `1` whenever this array is non-empty.

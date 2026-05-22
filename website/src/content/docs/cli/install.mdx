@@ -34,10 +34,19 @@ agentsmesh install --sync
 | `--name <id>` | Override the generated install entry name. |
 | `--extends` | Record as an extends entry instead of a materialized pack. |
 | `--sync` | Reinstall missing packs from `.agentsmesh/installs.yaml`. |
-| `--all` | Install every sub-pack from a marketplace source (`.claude-plugin/marketplace.json`). |
+| `--all` | Install every sub-pack from a marketplace source (`.claude-plugin/marketplace.json`) or every flat collection in a multi-collection layout. Skips the picker prompt. |
 | `--dry-run` | Preview what would be installed without writing. |
 | `--global` | Install into `~/.agentsmesh/` and regenerate user-level outputs. |
 | `--force` | Non-interactive mode: include all resources, skip prompts (implied by `--json`). |
+| `--json` | Machine-readable JSON envelope on stdout. Implies `--force`. Validation errors land in the envelope, not stderr. |
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success (or `--dry-run` preview shown). |
+| `1` | Validation failure (missing source, non-TTY without `--force`/`--dry-run`, source not found, lock contention, parse-time failure with no installable resources remaining). |
+| `130` | User aborted at a prompt (bulk select, broken-link, abort sentinel). |
 
 ## Source formats
 
@@ -151,6 +160,42 @@ agentsmesh install github:org/repo --force
 ```
 
 Includes all resources, skips all prompts.
+
+## JSON output
+
+```bash
+agentsmesh install github:addyosmani/agent-skills --json
+```
+
+```json
+{
+  "success": true,
+  "command": "install",
+  "data": {
+    "source": "github:addyosmani/agent-skills",
+    "mode": "install",
+    "installed": [
+      { "kind": "skills", "name": "lint", "path": ".agentsmesh/skills/lint/SKILL.md" }
+    ],
+    "skipped": [],
+    "dryRun": false,
+    "brokenResources": [
+      {
+        "path": "skills/draft/SKILL.md",
+        "kind": "frontmatter",
+        "reason": "Nested mappings are not allowed in compact mappings"
+      }
+    ]
+  }
+}
+```
+
+Field reference:
+
+- `mode` — `"install"` or `"sync"` (matches the documented contract).
+- `installed[]` — `{ kind, name, path }` per resource that landed; `path` is forward-slash relative to scope root.
+- `skipped[]` — `{ kind, name, reason }` per resource that the user (or `--force` defaults) chose not to include.
+- `brokenResources[]` — only present when the install pipeline skipped one or more files whose YAML frontmatter could not be parsed. Each entry carries the source path, the failure category, and the underlying parser message. The renderer also surfaces a footer warning when this is non-empty.
 
 ## Pack storage
 

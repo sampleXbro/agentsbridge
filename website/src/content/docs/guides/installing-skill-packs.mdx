@@ -84,9 +84,11 @@ Entity "code-reviewer" (agent) has 2 broken links:
 Action: [i]nclude resolvable as supporting files / [l]eave with warnings / [a]bort install
 ```
 
-- `i` copies the resolvable file into the entity's `supportingFiles` and rewrites the body link to `./references/<x>.md`. Unresolvables are left in place with warnings.
+- `i` copies the resolvable file into the entity's `supportingFiles` and rewrites the body link to `./references/<x>.md`. Unresolvables are left in place with warnings. Bodies authored with the `{baseDir}/x.md` placeholder or Windows-style `..\refs\x.md` rewrite verbatim — the scanner matches the raw destination, not a normalized form.
 - `l` (the `--force` default) preserves all link strings and warns.
 - `a` aborts the run with exit 130; no writes.
+
+When two resolvable links share a basename (`docs/A/README.md` and `docs/B/README.md` both pulled in), AgentsMesh slugs the second to keep distinct files: you end up with `references/docs-A-README.md` and `references/docs-B-README.md` rather than one file overwriting the other.
 
 ## 4. Uninstall
 
@@ -109,6 +111,10 @@ agentsmesh installs list
 ```
 
 `--keep-pack` preserves the directory on disk but still drops the yaml rows (useful when you've edited files and want to keep them around). `--keep-generated` skips the post-uninstall generate; target files stay until the next manual `generate` — a warning lists what will be cleaned then.
+
+### Partial-batch failures
+
+`agentsmesh uninstall name1,name2,name3 --force` (or `--all`) wraps each pack in its own try/catch. If one pack's apply step throws (EACCES, disk full, etc.), survivors still apply, post-operation `generate` still runs over them, and the failed pack lands in the JSON envelope's `data.failed[]` array. The run exits `1` whenever `data.failed[]` is non-empty — see [`agentsmesh uninstall` reference](../../cli/uninstall/#partial-batch-failures) for the JSON shape.
 
 ## Where to dig deeper
 

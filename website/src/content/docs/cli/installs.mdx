@@ -18,12 +18,20 @@ Read-only namespace for inspecting installed packs. The only subcommand today is
 agentsmesh installs list [flags]
 ```
 
+## Subcommands
+
+| Subcommand | Description |
+|------------|-------------|
+| `list` | List installed packs (NAME, SOURCE, FEATURES, INSTALLED). |
+
+Unknown subcommands exit `2` and print a "did you mean `install`?" hint.
+
 ## Flags
 
 | Flag | Description |
 |------|-------------|
 | `--global` | Read from `~/.agentsmesh/installs.yaml`. |
-| `--json` | Machine-readable output. |
+| `--json` | Machine-readable JSON envelope on stdout. |
 
 ## Examples
 
@@ -73,13 +81,24 @@ agentsmesh installs list --json
         "target": null,
         "installed_at": "2026-05-16T10:00:00.000Z",
         "pack_path": ".agentsmesh/packs/addyosmani-agent-skills"
+      },
+      {
+        "name": "legacy-rules",
+        "source": "local:./vendor/legacy-rules",
+        "source_kind": "local",
+        "source_type": null,
+        "version": null,
+        "features": ["rules"],
+        "target": null,
+        "installed_at": null,
+        "pack_path": ".agentsmesh/packs/legacy-rules"
       }
     ]
   }
 }
 ```
 
-`source_type` and `installed_at` are hydrated from each pack's `.agentsmesh-install-manifest.json`; both are `null` when the manifest is missing (legacy packs, manually-deleted packs). Forward-slash `pack_path` per the project CLI display rule.
+`source_type` and `installed_at` are hydrated from each pack's `.agentsmesh-install-manifest.json`; both are `null` when the manifest is missing (legacy packs installed before per-file integrity tracking, or packs whose manifest was manually deleted). `version` is `null` for local-path or unpinned remote sources. `target` is `null` unless the install used `--target <id>`. Forward-slash `pack_path` per the project CLI display rule.
 
 ## What's not covered
 

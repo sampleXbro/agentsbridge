@@ -129,4 +129,18 @@ Instead of manually editing `agentsmesh.yaml`, you can use `agentsmesh install -
 agentsmesh install github:org/base-config --extends
 ```
 
-This adds the entry to `agentsmesh.yaml` automatically.
+Unlike plain `agentsmesh install`, the `--extends` flag does **not** materialize a pack under `.agentsmesh/packs/`. It only adds the entry to the `extends:` list in `agentsmesh.yaml`; the content is fetched and merged on every `agentsmesh generate`. Use this when you want the extending repository to remain a live reference (always-on-latest) rather than a snapshotted pack.
+
+## Removing extends via CLI
+
+```bash
+agentsmesh uninstall <name>
+```
+
+Removes the matching `extends:` entry from `agentsmesh.yaml` (and, if the install also materialized a pack, the pack directory and `installs.yaml` row). For extends-only installs (no pack on disk):
+
+- `pack_path` is reported as `null` in the JSON envelope.
+- `--keep-pack` is a no-op because no pack directory exists.
+- The post-uninstall `generate` pass re-resolves the remaining `extends:` list so any inherited content disappears from the generated target trees.
+
+See [`agentsmesh uninstall`](../../cli/uninstall/) for the full flag and exit-code reference.

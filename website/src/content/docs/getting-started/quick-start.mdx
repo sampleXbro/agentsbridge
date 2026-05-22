@@ -121,6 +121,16 @@ Choose the path that matches your situation.
   After init, `.agentsmesh/` is the only thing you should edit. Generated files in `.claude/`, `.cursor/`, etc. are artifacts — regenerate them, don't edit them directly.
 </Aside>
 
+## Try a community skill pack
+
+```bash
+agentsmesh install github:addyosmani/agent-skills    # auto-detects the layout
+agentsmesh installs list                              # see what landed
+agentsmesh uninstall addyosmani-agent-skills          # remove cleanly when done
+```
+
+The classifier sees `skills/<kebab>/SKILL.md`, multi-tool root rules, and per-target `.claude/commands` / `.gemini/commands` directories, and imports the whole pack in one shot. Per-entity prompts only surface when there are out-of-scope relative links to resolve. See the [skill-pack guide](../guides/installing-skill-packs/) for the full prompt walkthrough, `--force` behavior, and JSON shape; see [`agentsmesh install`](../cli/install/), [`agentsmesh uninstall`](../cli/uninstall/), and [`agentsmesh installs`](../cli/installs/) for flag references.
+
 ## What to commit and what to gitignore
 
 `agentsmesh init` writes the recommended `.gitignore` entries. The defaults are deliberate:

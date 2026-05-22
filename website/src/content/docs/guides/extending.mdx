@@ -76,6 +76,13 @@ A plugin package must export a `descriptor` (or `descriptors` array, or `default
 // agentsmesh-target-foo-ide/index.js
 export const descriptor = {
   id: 'foo-ide',
+  // Required user-facing metadata. Validation rejects descriptors without it.
+  metadata: {
+    displayName: 'Foo IDE',
+    category: 'ide',
+    officialUrl: 'https://example.test/foo-ide',
+    shortDescription: 'Foo IDE — a fictional editor with native rule support.',
+  },
   generators: {
     name: 'foo-ide',
     generateRules(canonical) {
@@ -159,7 +166,12 @@ pluginTargets:
   - foo-ide
 ```
 
-At generate time, AgentsMesh dynamically imports each plugin, validates the exported descriptor with a Zod schema, and registers it in the target registry. Invalid descriptors are warned and skipped — one bad plugin does not block other targets. Validation also checks that every non-`none` capability has a matching generator, or `emitScopedSettings` for settings-backed features.
+At generate time, AgentsMesh dynamically imports each plugin, validates the exported descriptor with a Zod schema, and registers it in the target registry. Invalid descriptors are warned and skipped — one bad plugin does not block other targets. Validation also checks that:
+
+- A `metadata` block is present with `displayName`, `category` (`'cli' | 'ide' | 'agent-platform'`), `officialUrl`, and `shortDescription`.
+- Every non-`none` capability has a matching generator, or `emitScopedSettings` for settings-backed features (`mcp`, `hooks`, `ignore`, `permissions`).
+
+Set `AGENTSMESH_STRICT_PLUGINS=1` (or `strict: true` on the plugin entry) to fail the build on plugin load errors instead of warn-and-skip.
 
 ---
 

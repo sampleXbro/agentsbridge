@@ -23,6 +23,10 @@ import { stringify as yamlStringify } from 'yaml';
 import type { CanonicalFiles } from '../../core/types.js';
 import type { PackMetadata } from './pack-schema.js';
 import { writeFileAtomic, exists, mkdirp } from '../../utils/filesystem/fs.js';
+import {
+  prependYamlSchemaDirective,
+  stampJsonSchemaField,
+} from '../../utils/output/schema-directive.js';
 import { hashPackContent } from './pack-hash.js';
 import { hashPackFiles, INSTALL_MANIFEST_FILENAME } from '../manifest/install-manifest-hash.js';
 import { normalizePersistedInstallPaths } from '../core/portable-paths.js';
@@ -123,14 +127,17 @@ async function writeInstallManifest(
   extras: InstallManifestExtras,
 ): Promise<void> {
   const files = await hashPackFiles(stagingDir);
-  const manifest = {
-    name: metadata.name,
-    source: metadata.source,
-    installed_at: metadata.installed_at,
-    extends_id: extras.extends_id ?? null,
-    source_type: extras.source_type ?? null,
-    files,
-  };
+  const manifest = stampJsonSchemaField(
+    {
+      name: metadata.name,
+      source: metadata.source,
+      installed_at: metadata.installed_at,
+      extends_id: extras.extends_id ?? null,
+      source_type: extras.source_type ?? null,
+      files,
+    },
+    'install-manifest',
+  );
   await writeFileAtomic(
     join(stagingDir, INSTALL_MANIFEST_FILENAME),
     `${JSON.stringify(manifest, null, 2)}\n`,
@@ -190,7 +197,10 @@ export async function materializePack(
       ...metadataInput,
       content_hash: contentHash,
     });
-    await writeFileAtomic(join(tmpDir, 'pack.yaml'), yamlStringify(metadata));
+    await writeFileAtomic(
+      join(tmpDir, 'pack.yaml'),
+      prependYamlSchemaDirective(yamlStringify(metadata), 'pack'),
+    );
 
     // Write .agentsmesh-install-manifest.json (per-file sha256 map).
     await writeInstallManifest(tmpDir, metadata, installManifestExtras);

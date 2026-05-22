@@ -76,15 +76,19 @@ Both `agentsmesh` and the shorter `amsh` alias resolve to the same CLI regardles
 
 ## IDE autocomplete via JSON Schema
 
-Every canonical config file ships with a generated JSON Schema, so VS Code, JetBrains, and other editors give you autocomplete and validation out of the box. `agentsmesh init` writes the appropriate `# yaml-language-server: $schema=...` directive (or `$schema` field for JSON) into each file:
+Every canonical config file ships with a generated JSON Schema, so VS Code, JetBrains, and other editors give you autocomplete and validation out of the box. `agentsmesh init` and `agentsmesh install` stamp the appropriate `# yaml-language-server: $schema=...` directive (or `$schema` field for JSON) into every file at write time. The URL is pinned to the running package version so the schema referenced always matches the format the file was written with.
 
-| Config file | Schema location |
-|---|---|
-| `agentsmesh.yaml` / `agentsmesh.local.yaml` | `agentsmesh/schemas/agentsmesh.json` (via `unpkg.com` when no Node project is present) |
-| `.agentsmesh/hooks.yaml` | `agentsmesh/schemas/hooks.json` |
-| `.agentsmesh/permissions.yaml` | `agentsmesh/schemas/permissions.json` |
-| `.agentsmesh/mcp.json` | `agentsmesh/schemas/mcp.json` |
-| `.agentsmesh/packs/*/pack.json` | `agentsmesh/schemas/pack.json` |
+| Config file | Schema | Written by |
+|---|---|---|
+| `agentsmesh.yaml` / `agentsmesh.local.yaml` | `schemas/agentsmesh.json` | `init` |
+| `.agentsmesh/hooks.yaml` | `schemas/hooks.json` | `init` |
+| `.agentsmesh/permissions.yaml` | `schemas/permissions.json` | `init` |
+| `.agentsmesh/mcp.json` | `schemas/mcp.json` | `init` |
+| `.agentsmesh/installs.yaml` | `schemas/installs.json` | `install` / `uninstall` |
+| `.agentsmesh/packs/<name>/pack.yaml` | `schemas/pack.json` | `install` |
+| `.agentsmesh/packs/<name>/.agentsmesh-install-manifest.json` | `schemas/install-manifest.json` | `install` |
+
+All schemas resolve via the published `https://unpkg.com/agentsmesh@<version>/schemas/<name>.json` URLs (no extension required when AgentsMesh is in `node_modules/`). VS Code needs the [Red Hat YAML extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml); JetBrains IDEs honor the directive out of the box. See the [JSON Schemas reference](../reference/json-schemas/) for the full breakdown, CI validation examples, and SchemaStore plans.
 
 ## Use as a TypeScript / Node.js library
 

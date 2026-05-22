@@ -1,0 +1,144 @@
+---
+draft: false
+title: JSON Schemas (IDE autocomplete)
+description: AgentsMesh ships pinned JSON Schemas for every config file it writes — agentsmesh.yaml, installs.yaml, pack.yaml, install-manifest.json, mcp.json, hooks.yaml, permissions.yaml. Editors auto-detect them with zero configuration.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+AgentsMesh publishes a JSON Schema for every YAML / JSON file it writes. Every file the CLI creates is stamped with an editor-recognizable directive that points at the matching schema, so VSCode, JetBrains IDEs, vim/neovim with `yaml-language-server`, and the GitHub Actions YAML editor light up with autocomplete + validation immediately — **no IDE configuration required**.
+
+## Published schemas
+
+Shipped under `schemas/` in every npm release, accessible at the pinned URL `https://unpkg.com/agentsmesh@<version>/schemas/<name>.json`.
+
+| Schema file | Covers | Stamped into |
+|---|---|---|
+| `agentsmesh.json` | `agentsmesh.yaml` / `agentsmesh.local.yaml` config | both files at `init` time |
+| `permissions.json` | `.agentsmesh/permissions.yaml` allow / deny / ask | scaffolded by `init` |
+| `hooks.json` | `.agentsmesh/hooks.yaml` lifecycle hooks | scaffolded by `init` |
+| `mcp.json` | `.agentsmesh/mcp.json` MCP server entries | scaffolded by `init` |
+| `pack.json` | `.agentsmesh/packs/<name>/pack.yaml` per-pack metadata | written by `install` |
+| `installs.json` | `.agentsmesh/installs.yaml` install manifest | written by `install` / `uninstall` |
+| `install-manifest.json` | `.agentsmesh/packs/<name>/.agentsmesh-install-manifest.json` per-pack integrity manifest | written by `install` |
+
+URLs are pinned to the running package version so the schema referenced always matches the format the file was written with. Upgrading agentsmesh updates the directive on the next write; older files keep validating against their original schema until the writer touches them again.
+
+## How editors find them
+
+Four mechanisms, in order of portability:
+
+### 1. `$schema` field (JSON, in-file) — works everywhere
+
+JSON files written by AgentsMesh carry a top-level `$schema` key:
+
+```json
+{
+  "$schema": "https://unpkg.com/agentsmesh@0.19.0/schemas/install-manifest.json",
+  "name": "addyosmani-agent-skills",
+  "source": "github:addyosmani/agent-skills@5b4c6da",
+  ...
+}
+```
+
+VSCode (built-in), JetBrains IDEs, vim/neovim with `coc-json`, and every modern editor reads this. The file is self-describing — no IDE configuration needed.
+
+### 2. `# yaml-language-server` directive (YAML, in-file) — works everywhere
+
+YAML files carry the equivalent as the first line of the file:
+
+```yaml
+# yaml-language-server: $schema=https://unpkg.com/agentsmesh@0.19.0/schemas/agentsmesh.json
+version: 1
+targets:
+  - claude-code
+  - cursor
+features:
+  - rules
+  - commands
+```
+
+Honored by:
+- VSCode with the [Red Hat YAML extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) (de facto standard, ships in many distros).
+- JetBrains IDEs (built-in YAML support).
+- vim/neovim with `coc-yaml` or any client that speaks the [yaml-language-server](https://github.com/redhat-developer/yaml-language-server) protocol.
+- The GitHub Actions YAML editor.
+
+The directive travels with the file — no IDE config required and no risk of teammates losing schema validation because their workspace settings differ.
+
+### 3. Workspace settings — VSCode only
+
+For projects that don't want the directive inside the YAML (legacy reasons, in-house schema overrides), `.vscode/settings.json` can map file patterns to schema URLs:
+
+```json
+{
+  "yaml.schemas": {
+    "https://unpkg.com/agentsmesh/schemas/agentsmesh.json": [
+      "agentsmesh.yaml",
+      "agentsmesh.local.yaml"
+    ],
+    "https://unpkg.com/agentsmesh/schemas/installs.json": [".agentsmesh/installs.yaml"],
+    "https://unpkg.com/agentsmesh/schemas/pack.json": [".agentsmesh/packs/*/pack.yaml"]
+  },
+  "json.schemas": [
+    {
+      "fileMatch": [".agentsmesh/packs/*/.agentsmesh-install-manifest.json"],
+      "url": "https://unpkg.com/agentsmesh/schemas/install-manifest.json"
+    }
+  ]
+}
+```
+
+VSCode-only and opinionated; AgentsMesh does not write this file.
+
+### 4. SchemaStore.org — registry-wide, zero config (planned)
+
+A future PR to [SchemaStore](https://github.com/SchemaStore/schemastore) will register the AgentsMesh schemas globally. Once accepted, any editor that consumes SchemaStore (VSCode, JetBrains, vim, etc.) auto-applies the schema for the documented file patterns without any directive in the file.
+
+## What gets stamped, and when
+
+| Command | Files stamped |
+|---|---|
+| `agentsmesh init` | `agentsmesh.yaml`, `agentsmesh.local.yaml`, `.agentsmesh/permissions.yaml`, `.agentsmesh/hooks.yaml` |
+| `agentsmesh install <source>` | `.agentsmesh/installs.yaml`, `.agentsmesh/packs/<name>/pack.yaml`, `.agentsmesh/packs/<name>/.agentsmesh-install-manifest.json` |
+| `agentsmesh uninstall <name>` | `.agentsmesh/installs.yaml` (refreshed after row removal) |
+
+Stamping is idempotent: re-running a writer on a file that already carries the directive updates the URL in place rather than duplicating the line.
+
+<Aside type="note">
+  Files written by older versions of AgentsMesh (pre-this-release) are not retroactively stamped. They keep working unchanged; they just don't get IDE autocomplete until a writer touches them again. Running `agentsmesh install --sync` on an existing project refreshes every install entry, which updates `installs.yaml` plus every pack's `pack.yaml` and `.agentsmesh-install-manifest.json`.
+</Aside>
+
+## What's NOT stamped, and why
+
+- **`.agentsmesh/mcp.json`** — the init template is JSONC (JSON with comments) for readability. JSONC and the `$schema` field together can confuse some editors that strictly parse the file as JSON. The schema is still published at `https://unpkg.com/agentsmesh/schemas/mcp.json` and can be wired via workspace settings.
+- **`.agentsmesh/ignore`** — gitignore-style format, no schema to publish.
+- **Canonical markdown files** (`rules/*.md`, `commands/*.md`, `agents/*.md`, `skills/<name>/SKILL.md`) — frontmatter-only schemas are not yet published; the markdown bodies have no shape contract.
+
+## Validating in CI
+
+```bash
+# Validate every file against its pinned schema
+npx ajv validate \
+  -s ./node_modules/agentsmesh/schemas/agentsmesh.json \
+  -d agentsmesh.yaml \
+  -d agentsmesh.local.yaml
+
+npx ajv validate \
+  -s ./node_modules/agentsmesh/schemas/installs.json \
+  -d .agentsmesh/installs.yaml
+
+npx ajv validate \
+  -s ./node_modules/agentsmesh/schemas/install-manifest.json \
+  -d ".agentsmesh/packs/*/.agentsmesh-install-manifest.json"
+```
+
+The local copies under `node_modules/agentsmesh/schemas/` ship via `package.json`'s `files[]` list, so this works without a network round-trip.
+
+## Troubleshooting
+
+**No autocomplete in VSCode.** Install the [Red Hat YAML extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml). The built-in JSON extension already handles JSON files.
+
+**JetBrains IDEs not picking up the directive.** WebStorm / IntelliJ honor the `# yaml-language-server:` comment via their built-in YAML support; if it's not working, check Settings → Languages & Frameworks → Schemas and DTDs → JSON Schema Mappings and ensure the IDE's network access for schema downloads is enabled.
+
+**Validation looks stale after upgrade.** The directive URL is pinned to the version that wrote the file. Run any writer (`agentsmesh install --sync` is the lowest-friction option) to refresh.

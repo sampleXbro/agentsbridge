@@ -69,6 +69,28 @@ Two silent data-corruption bugs in the skill-pack broken-link `[i]nclude` flow a
 - **CRLF / BOM normalization** — `hashFileForManifest` (`src/utils/crypto/hash.ts`) normalizes `\r\n?` → `\n` and strips a leading UTF-8 BOM for text-extension files (`.md`, `.json`, `.yaml`, etc.) before hashing. A Windows editor saving CRLF or a tool prepending a BOM no longer registers as drift. Binary files are still hashed as raw bytes.
 - **Symlink-safe traversal** — install-time pack hashing and uninstall-time drift detection now use `readDirRecursiveNoSymlinks`. A symlink that used to be followed at install (silently absorbing external bytes into the hash) only to be unlinked-without-following at uninstall (`rm` removes the link, not the target) no longer produces a permanent drift-detection mismatch.
 
+## IDE auto-config via in-file schema directives (NEW)
+
+Every YAML / JSON file the CLI writes is now stamped with an editor-recognizable schema directive so VSCode (Red Hat YAML extension), JetBrains IDEs, vim/neovim with `yaml-language-server` / `coc-json`, and the GitHub Actions YAML editor get autocomplete + validation immediately — **no IDE configuration required**.
+
+YAML files get a top-of-file comment:
+
+```yaml
+# yaml-language-server: $schema=https://unpkg.com/agentsmesh@<version>/schemas/<name>.json
+version: 1
+...
+```
+
+JSON files get a top-level `$schema` field. URLs are pinned to the running package version so the schema referenced always matches the format the file was written with; older files keep working pointed at their original schema until a writer touches them again.
+
+Stamped files:
+
+- `init` writes — `agentsmesh.yaml`, `agentsmesh.local.yaml`, `.agentsmesh/hooks.yaml`, `.agentsmesh/permissions.yaml`.
+- `install` writes — `.agentsmesh/installs.yaml`, `.agentsmesh/packs/<name>/pack.yaml`, `.agentsmesh/packs/<name>/.agentsmesh-install-manifest.json`.
+- `uninstall` refreshes — `.agentsmesh/installs.yaml` after row removal.
+
+Implementation: a single helper module `src/utils/output/schema-directive.ts` exports `prependYamlSchemaDirective`, `stampJsonSchemaField`, `schemaUrl`, and `yamlSchemaDirective`. Each is idempotent — re-running a writer on a file that already carries the directive updates the URL in place rather than duplicating the line. New reference page at `reference/json-schemas.mdx` documents all four IDE mechanisms (in-file directive, `$schema` field, VSCode workspace settings, SchemaStore.org plans), CI validation examples, and troubleshooting. The getting-started installation guide expands the existing IDE-autocomplete section to mention the new `installs` and `install-manifest` schemas.
+
 ## Published JSON Schemas (NEW)
 
 Two new entries in the published `schemas/` directory (already shipped via `package.json`'s `files` array) cover the two new file formats introduced in this release:

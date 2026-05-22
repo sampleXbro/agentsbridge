@@ -7,6 +7,7 @@ import { parse as parseYaml, stringify as yamlStringify } from 'yaml';
 import { z } from 'zod';
 import { extendPickSchema, featureSchema, targetSchema } from '../../config/core/schema.js';
 import { readFileSafe, writeFileAtomic } from '../../utils/filesystem/fs.js';
+import { prependYamlSchemaDirective } from '../../utils/output/schema-directive.js';
 import { manualInstallAsSchema, type ManualInstallAs } from '../manual/manual-install-mode.js';
 import { normalizePersistedInstallPaths } from './portable-paths.js';
 import { sameFeatureSet } from './pick-reuse-entry-name.js';
@@ -69,7 +70,10 @@ export async function upsertInstallManifestEntry(
   next.push(normalizedEntry);
   await writeFileAtomic(
     manifestPath(canonicalDir),
-    yamlStringify({ version: 1, installs: next.sort((a, b) => a.name.localeCompare(b.name)) }),
+    prependYamlSchemaDirective(
+      yamlStringify({ version: 1, installs: next.sort((a, b) => a.name.localeCompare(b.name)) }),
+      'installs',
+    ),
   );
 }
 
@@ -87,7 +91,10 @@ export async function removeInstallManifestEntry(
   if (next.length === installs.length) return false;
   await writeFileAtomic(
     manifestPath(canonicalDir),
-    yamlStringify({ version: 1, installs: next.sort((a, b) => a.name.localeCompare(b.name)) }),
+    prependYamlSchemaDirective(
+      yamlStringify({ version: 1, installs: next.sort((a, b) => a.name.localeCompare(b.name)) }),
+      'installs',
+    ),
   );
   return true;
 }

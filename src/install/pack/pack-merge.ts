@@ -9,6 +9,7 @@ import type { CanonicalFiles } from '../../core/types.js';
 import type { PackMetadata } from './pack-schema.js';
 import type { ExtendPick } from '../../config/core/schema.js';
 import { writeFileAtomic, mkdirp } from '../../utils/filesystem/fs.js';
+import { prependYamlSchemaDirective } from '../../utils/output/schema-directive.js';
 import { hashPackContent } from './pack-hash.js';
 import { normalizePersistedInstallPaths } from '../core/portable-paths.js';
 
@@ -188,6 +189,9 @@ export async function mergeIntoPack(
     content_hash: contentHash,
   });
 
-  await writeFileAtomic(join(packDir, 'pack.yaml'), yamlStringify(updatedMeta));
+  await writeFileAtomic(
+    join(packDir, 'pack.yaml'),
+    prependYamlSchemaDirective(yamlStringify(updatedMeta), 'pack'),
+  );
   return updatedMeta;
 }

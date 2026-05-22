@@ -8,6 +8,12 @@
  *   Tier 2  Install all N <kind>?                              [y/n/c]
  *   Tier 3  Install <kind> "<id>"?                             [y/N/a/q]
  *
+ * Special case: when the candidate set contains exactly one entity across all
+ * four kinds, the tier-1 selector collapses (`[a]ll` / `[n]one` / `[s]elect`
+ * all resolve to the same outcome) — short-circuit to a single y/N
+ * confirmation that names the entity directly. Empty input is the documented
+ * `N` default (skip); only an unrecognized non-empty response aborts.
+ *
  * The function is pure: it owns no streams, asks no questions directly, and
  * returns the user's selection plus an `aborted` flag. A `bypass` option
  * short-circuits the entire walk (used for `--force`, `--json`, and non-TTY
@@ -127,6 +133,35 @@ async function walkType(
   return { selected: picked, aborted: false };
 }
 
+function findSingleEntity(candidates: BulkCandidates): { kind: EntityKind; id: string } | null {
+  let found: { kind: EntityKind; id: string } | null = null;
+  for (const kind of KIND_ORDER) {
+    for (const id of candidates[kind]) {
+      if (found !== null) return null;
+      found = { kind, id };
+    }
+  }
+  return found;
+}
+
+async function runSingleEntityPrompt(
+  deps: BulkPromptDeps,
+  entity: { kind: EntityKind; id: string },
+): Promise<BulkSelection> {
+  const singular = SINGULAR[entity.kind];
+  const answer = (await deps.ask(`Install ${singular} "${entity.id}"? [y/N] `))
+    .trim()
+    .toLowerCase();
+  if (answer === 'y') {
+    const result = emptySelection(false);
+    return { ...result, [entity.kind]: [entity.id] } as BulkSelection;
+  }
+  // Empty input matches the documented `N` default (skip, not abort) — same
+  // semantics as the tier-3 per-entity prompt for consistency.
+  if (answer === '' || answer === 'n') return emptySelection(false);
+  return emptySelection(true);
+}
+
 export async function runBulkPrompt(
   candidates: BulkCandidates,
   options: BulkPromptOptions,
@@ -140,6 +175,14 @@ export async function runBulkPrompt(
     candidates.commands.length +
     candidates.rules.length;
   if (total === 0) return emptySelection(false);
+
+  if (total === 1) {
+    const single = findSingleEntity(candidates);
+    if (single !== null) {
+      writeBanner(deps, options.packName, candidates);
+      return runSingleEntityPrompt(deps, single);
+    }
+  }
 
   writeBanner(deps, options.packName, candidates);
 

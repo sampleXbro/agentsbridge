@@ -62,6 +62,75 @@ describe('runBulkPrompt - bypass', () => {
   });
 });
 
+describe('runBulkPrompt - single-entity short-circuit', () => {
+  // When the candidate set holds exactly one entity, the tier-1 selector
+  // (`[a]ll/[n]one/[s]elect per type`) is meaningless — every branch is the
+  // same outcome. Short-circuit to a single yes/no confirmation so the user
+  // sees the entity name immediately and can install with one keystroke.
+  const ONE_SKILL: BulkCandidates = { skills: ['only-skill'], agents: [], commands: [], rules: [] };
+  const ONE_AGENT: BulkCandidates = { skills: [], agents: ['reviewer'], commands: [], rules: [] };
+  const ONE_COMMAND: BulkCandidates = { skills: [], agents: [], commands: ['ship'], rules: [] };
+  const ONE_RULE: BulkCandidates = { skills: [], agents: [], commands: [], rules: ['security'] };
+
+  it('y/Y accepts the single skill', async () => {
+    const r = makeRecorder(['y']);
+    const result = await runBulkPrompt(ONE_SKILL, { packName: 'pack', bypass: false }, r.deps);
+
+    expect(result.aborted).toBe(false);
+    expect(result.skills).toEqual(['only-skill']);
+    expect(result.agents).toEqual([]);
+    expect(result.commands).toEqual([]);
+    expect(result.rules).toEqual([]);
+    expect(r.prompts).toHaveLength(1);
+    // Single-entity prompt names the entity directly and the singular kind.
+    expect(r.prompts[0]).toMatch(/install skill "only-skill"\? \[y\/N\]/i);
+  });
+
+  it('Y (uppercase) accepts the single agent', async () => {
+    const r = makeRecorder(['Y']);
+    const result = await runBulkPrompt(ONE_AGENT, { packName: 'pack', bypass: false }, r.deps);
+
+    expect(result.aborted).toBe(false);
+    expect(result.agents).toEqual(['reviewer']);
+  });
+
+  it('n declines the single command (not aborted)', async () => {
+    const r = makeRecorder(['n']);
+    const result = await runBulkPrompt(ONE_COMMAND, { packName: 'pack', bypass: false }, r.deps);
+
+    expect(result.aborted).toBe(false);
+    expect(result.skills).toEqual([]);
+    expect(result.agents).toEqual([]);
+    expect(result.commands).toEqual([]);
+    expect(result.rules).toEqual([]);
+  });
+
+  it('empty input declines the single rule (default is N, not aborted)', async () => {
+    const r = makeRecorder(['']);
+    const result = await runBulkPrompt(ONE_RULE, { packName: 'pack', bypass: false }, r.deps);
+
+    expect(result.aborted).toBe(false);
+    expect(result.rules).toEqual([]);
+  });
+
+  it('unknown response aborts', async () => {
+    const r = makeRecorder(['z']);
+    const result = await runBulkPrompt(ONE_SKILL, { packName: 'pack', bypass: false }, r.deps);
+
+    expect(result.aborted).toBe(true);
+    expect(result.skills).toEqual([]);
+  });
+
+  it('does NOT show the [a/n/s] tier-1 prompt when there is exactly one entity', async () => {
+    const r = makeRecorder(['n']);
+    await runBulkPrompt(ONE_SKILL, { packName: 'pack', bypass: false }, r.deps);
+
+    for (const p of r.prompts) {
+      expect(p).not.toMatch(/\[a\/n\/s\]/i);
+    }
+  });
+});
+
 describe('runBulkPrompt - tier 1', () => {
   it("'a' selects every candidate across all four types", async () => {
     const r = makeRecorder(['a']);

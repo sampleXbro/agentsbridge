@@ -16,12 +16,47 @@
  */
 
 import { relative } from 'node:path';
+import { z } from 'zod';
 import { readDirRecursiveNoSymlinks } from '../../utils/filesystem/fs.js';
 import { hashFileForManifest } from '../../utils/crypto/hash.js';
 
 export const INSTALL_MANIFEST_FILENAME = '.agentsmesh-install-manifest.json';
 
 const EXCLUDED_FILENAMES: readonly string[] = ['pack.yaml', INSTALL_MANIFEST_FILENAME];
+
+/**
+ * Structural schema for `.agentsmesh-install-manifest.json` — the per-pack
+ * integrity manifest written by `pack-writer.ts::writeInstallManifest` next
+ * to every installed pack.
+ *
+ * Used by the JSON Schema generator to publish `schemas/install-manifest.json`
+ * for editor autocomplete and CI validation. Runtime parsing currently goes
+ * through `JSON.parse` plus narrow field-by-field reads (see
+ * `uninstall-decisions.ts::readManifestFiles` and
+ * `installs-list.ts::readPackManifestMeta`), which remain forgiving of
+ * legacy/partial manifests.
+ *
+ * Field reference (mirrors `pack-writer.ts`):
+ *   - `name`         — pack name; matches the parent directory under `.agentsmesh/packs/`.
+ *   - `source`       — pinned install source (e.g. `github:org/repo@sha`).
+ *   - `installed_at` — ISO 8601 timestamp.
+ *   - `extends_id`   — currently always `null`; reserved for future `--extends` provenance.
+ *   - `source_type`  — classifier verdict at install time; `null` for legacy packs.
+ *   - `files`        — forward-slash-relative-path → `"sha256:<64-hex>"` map,
+ *                      excluding `pack.yaml` and the manifest itself.
+ */
+export const installManifestFileSchema = z.object({
+  name: z.string().min(1),
+  source: z.string().min(1),
+  installed_at: z.string().min(1),
+  extends_id: z.string().nullable(),
+  source_type: z
+    .enum(['anthropic-skill-pack', 'canonical-agentsmesh', 'tool-native', 'unknown'])
+    .nullable(),
+  files: z.record(z.string().min(1), z.string().regex(/^sha256:[0-9a-f]{64}$/)),
+});
+
+export type InstallManifestFile = z.infer<typeof installManifestFileSchema>;
 
 function toForwardSlashRelative(packDir: string, abs: string): string {
   return relative(packDir, abs).replaceAll('\\', '/');

@@ -10,6 +10,8 @@ import { join } from 'node:path';
 import { z } from 'zod';
 import { configSchema } from '../../../src/config/core/schema.js';
 import { packMetadataSchema } from '../../../src/install/pack/pack-schema.js';
+import { installManifestSchema } from '../../../src/install/core/install-manifest.js';
+import { installManifestFileSchema } from '../../../src/install/manifest/install-manifest-hash.js';
 import {
   permissionsSchema,
   hooksSchema,
@@ -132,16 +134,82 @@ describe('packMetadataSchema → JSON Schema', () => {
   });
 });
 
+describe('installManifestSchema → JSON Schema (installs.yaml)', () => {
+  it('produces a valid JSON Schema object', () => {
+    const schema = z.toJSONSchema(installManifestSchema, { unrepresentable: 'any' });
+    expect(schema).toMatchObject({ type: 'object' });
+  });
+
+  it('requires the `version` top-level field and exposes `installs` as an array', () => {
+    const schema = z.toJSONSchema(installManifestSchema, { unrepresentable: 'any' }) as Record<
+      string,
+      unknown
+    >;
+    const required = schema.required as string[];
+    expect(required).toContain('version');
+    const props = schema.properties as Record<string, unknown>;
+    const installs = props.installs as Record<string, unknown>;
+    expect(installs.type).toBe('array');
+  });
+
+  it('item shape requires name, source, source_kind, features', () => {
+    const schema = z.toJSONSchema(installManifestSchema, { unrepresentable: 'any' }) as Record<
+      string,
+      unknown
+    >;
+    const props = schema.properties as Record<string, unknown>;
+    const installs = props.installs as Record<string, unknown>;
+    const items = installs.items as Record<string, unknown>;
+    const itemRequired = items.required as string[];
+    expect(itemRequired).toEqual(
+      expect.arrayContaining(['name', 'source', 'source_kind', 'features']),
+    );
+  });
+});
+
+describe('installManifestFileSchema → JSON Schema (.agentsmesh-install-manifest.json)', () => {
+  it('produces a valid JSON Schema object', () => {
+    const schema = z.toJSONSchema(installManifestFileSchema, { unrepresentable: 'any' });
+    expect(schema).toMatchObject({ type: 'object' });
+  });
+
+  it('requires every documented field including the nullable `source_type` and `extends_id`', () => {
+    const schema = z.toJSONSchema(installManifestFileSchema, { unrepresentable: 'any' }) as Record<
+      string,
+      unknown
+    >;
+    const required = schema.required as string[];
+    for (const field of ['name', 'source', 'installed_at', 'extends_id', 'source_type', 'files']) {
+      expect(required).toContain(field);
+    }
+  });
+
+  it('files map values are `sha256:<64-hex>` strings', () => {
+    const schema = z.toJSONSchema(installManifestFileSchema, { unrepresentable: 'any' }) as Record<
+      string,
+      unknown
+    >;
+    const props = schema.properties as Record<string, unknown>;
+    const files = props.files as Record<string, unknown>;
+    expect(files.type).toBe('object');
+    // Zod `z.record(key, value)` emits the value shape under additionalProperties.
+    const additionalProps = files.additionalProperties as Record<string, unknown>;
+    expect(additionalProps).toMatchObject({ pattern: '^sha256:[0-9a-f]{64}$' });
+  });
+});
+
 // ─── buildAllSchemas ──────────────────────────────────────────────────────────
 
 describe('buildAllSchemas()', () => {
-  it('returns all 5 named schemas', () => {
+  it('returns all 7 named schemas', () => {
     const schemas = buildAllSchemas();
     expect(schemas).toHaveProperty('agentsmesh');
     expect(schemas).toHaveProperty('permissions');
     expect(schemas).toHaveProperty('hooks');
     expect(schemas).toHaveProperty('mcp');
     expect(schemas).toHaveProperty('pack');
+    expect(schemas).toHaveProperty('installs');
+    expect(schemas).toHaveProperty('install-manifest');
   });
 
   it('each schema is a non-empty object', () => {
@@ -162,6 +230,8 @@ describe('schemas/ committed files are in sync', () => {
     'hooks.json',
     'mcp.json',
     'pack.json',
+    'installs.json',
+    'install-manifest.json',
   ];
 
   for (const file of EXPECTED_FILES) {

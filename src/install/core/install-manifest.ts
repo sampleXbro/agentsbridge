@@ -11,7 +11,7 @@ import { manualInstallAsSchema, type ManualInstallAs } from '../manual/manual-in
 import { normalizePersistedInstallPaths } from './portable-paths.js';
 import { sameFeatureSet } from './pick-reuse-entry-name.js';
 
-const installManifestEntrySchema = z.object({
+export const installManifestEntrySchema = z.object({
   name: z.string().min(1),
   source: z.string().min(1),
   version: z.string().optional(),
@@ -24,7 +24,7 @@ const installManifestEntrySchema = z.object({
   as: manualInstallAsSchema.optional(),
 });
 
-const installManifestSchema = z.object({
+export const installManifestSchema = z.object({
   version: z.literal(1),
   installs: z.array(installManifestEntrySchema).default([]),
 });

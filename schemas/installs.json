@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "number",
+      "const": 1
+    },
+    "installs": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "version": {
+            "type": "string"
+          },
+          "source_kind": {
+            "type": "string",
+            "enum": [
+              "github",
+              "gitlab",
+              "git",
+              "local"
+            ]
+          },
+          "features": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "rules",
+                "commands",
+                "agents",
+                "skills",
+                "mcp",
+                "hooks",
+                "ignore",
+                "permissions"
+              ]
+            }
+          },
+          "pick": {
+            "type": "object",
+            "properties": {
+              "skills": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "commands": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "rules": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "agents": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "target": {
+            "type": "string",
+            "enum": [
+              "aider",
+              "amazon-q",
+              "amp",
+              "antigravity",
+              "augment-code",
+              "claude-code",
+              "cline",
+              "codex-cli",
+              "continue",
+              "copilot",
+              "crush",
+              "cursor",
+              "deepagents-cli",
+              "factory-droid",
+              "gemini-cli",
+              "goose",
+              "jules",
+              "junie",
+              "kilo-code",
+              "kiro",
+              "opencode",
+              "pi-agent",
+              "qwen-code",
+              "replit-agent",
+              "roo-code",
+              "rovodev",
+              "trae",
+              "warp",
+              "windsurf",
+              "zed"
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "paths": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "as": {
+            "type": "string",
+            "enum": [
+              "rules",
+              "commands",
+              "agents",
+              "skills"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "source",
+          "source_kind",
+          "features"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "version",
+    "installs"
+  ],
+  "additionalProperties": false,
+  "title": "agentsmesh-installs.yaml",
+  "description": "AgentsMesh install manifest (.agentsmesh/installs.yaml) — tracks every installed pack so `--sync` can replay them post-clone."
+}

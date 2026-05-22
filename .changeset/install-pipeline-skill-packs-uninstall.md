@@ -69,6 +69,19 @@ Two silent data-corruption bugs in the skill-pack broken-link `[i]nclude` flow a
 - **CRLF / BOM normalization** — `hashFileForManifest` (`src/utils/crypto/hash.ts`) normalizes `\r\n?` → `\n` and strips a leading UTF-8 BOM for text-extension files (`.md`, `.json`, `.yaml`, etc.) before hashing. A Windows editor saving CRLF or a tool prepending a BOM no longer registers as drift. Binary files are still hashed as raw bytes.
 - **Symlink-safe traversal** — install-time pack hashing and uninstall-time drift detection now use `readDirRecursiveNoSymlinks`. A symlink that used to be followed at install (silently absorbing external bytes into the hash) only to be unlinked-without-following at uninstall (`rm` removes the link, not the target) no longer produces a permanent drift-detection mismatch.
 
+## Published JSON Schemas (NEW)
+
+Two new entries in the published `schemas/` directory (already shipped via `package.json`'s `files` array) cover the two new file formats introduced in this release:
+
+| File | Documents |
+|---|---|
+| `schemas/installs.json` | `.agentsmesh/installs.yaml` — the install manifest that records every materialized pack so `--sync` can replay them post-clone. |
+| `schemas/install-manifest.json` | `.agentsmesh/packs/<name>/.agentsmesh-install-manifest.json` — per-pack integrity manifest (install-time provenance + per-file `sha256:` map used by `uninstall` to detect locally-modified files). |
+
+Both schemas are generated from their respective Zod sources (`installManifestSchema` in `src/install/core/install-manifest.ts`; `installManifestFileSchema` in `src/install/manifest/install-manifest-hash.ts`) and verified by the existing schema-freshness test, which now covers all seven published schemas (was five).
+
+Editors / GitHub schema validators that wire `$schema: https://unpkg.com/agentsmesh/schemas/installs.json` (or the corresponding install-manifest URL) get autocomplete and validation for these files; CI tools can use them to assert pack provenance without hand-coded JSON-shape checks. `buildAllSchemas()` and the `pnpm schemas:generate` script now produce **7 JSON schemas** instead of 5.
+
 ## MCP server — pack lifecycle tools (NEW)
 
 The built-in `agentsmesh mcp` server now exposes three additional tools so AI agents speaking MCP can install, uninstall, and inspect community packs without leaving the conversation:

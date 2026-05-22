@@ -146,8 +146,7 @@
     }
   },
   "required": [
-    "version",
-    "installs"
+    "version"
   ],
   "additionalProperties": false,
   "title": "agentsmesh-installs.yaml",

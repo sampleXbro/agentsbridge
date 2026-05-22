@@ -38,6 +38,17 @@ describe('configSchema → JSON Schema', () => {
     expect(required).toContain('version');
   });
 
+  it('publishes ONLY `version` as required (defaultable fields stay optional via the post-processor)', () => {
+    // Regression for the published-schema bug where every field carrying a
+    // `.default(...)` was emitted as `required: true`. The fix lives in
+    // `schema-generator.ts::stripRequiredFromDefaults` (called inside
+    // `buildAllSchemas`); the raw `z.toJSONSchema(configSchema)` output
+    // still lists them as required, but the published schema must not.
+    // A minimal valid `agentsmesh.yaml` is just `version: 1`.
+    const published = buildAllSchemas().agentsmesh as Record<string, unknown>;
+    expect(published.required).toEqual(['version']);
+  });
+
   it('exposes targets and features as enum arrays', () => {
     const schema = z.toJSONSchema(configSchema, { unrepresentable: 'any' }) as Record<
       string,

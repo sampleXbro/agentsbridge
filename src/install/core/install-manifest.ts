@@ -27,6 +27,10 @@ export const installManifestEntrySchema = z.object({
 
 export const installManifestSchema = z.object({
   version: z.literal(1),
+  // Post-processed by `stripRequiredFromDefaults()` in the schema generator
+  // so the emitted JSON Schema marks `installs` as not-required (a
+  // freshly-created or fully-uninstalled manifest is just `version: 1`).
+  // Runtime parser still substitutes `[]` for an absent field.
   installs: z.array(installManifestEntrySchema).default([]),
 });
 

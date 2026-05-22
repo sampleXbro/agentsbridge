@@ -91,6 +91,16 @@ Stamped files:
 
 Implementation: a single helper module `src/utils/output/schema-directive.ts` exports `prependYamlSchemaDirective`, `stampJsonSchemaField`, `schemaUrl`, and `yamlSchemaDirective`. Each is idempotent — re-running a writer on a file that already carries the directive updates the URL in place rather than duplicating the line. New reference page at `reference/json-schemas.mdx` documents all four IDE mechanisms (in-file directive, `$schema` field, VSCode workspace settings, SchemaStore.org plans), CI validation examples, and troubleshooting. The getting-started installation guide expands the existing IDE-autocomplete section to mention the new `installs` and `install-manifest` schemas.
 
+## Published JSON Schemas — required-field correctness (FIX)
+
+A long-standing bug in the published `schemas/*.json` files marked every field with a `.default(...)` in its Zod source as `required: true`. Editors then complained about valid minimal configs (e.g. an `agentsmesh.yaml` with just `version: 1` was flagged as "Missing required properties: overrides, pluginTargets, plugins"). The runtime parser substituted the documented default in every one of these cases — only the published schema disagreed.
+
+Fixed by a post-processor in `src/schemas/schema-generator.ts::stripRequiredFromDefaults` that walks the emitted JSON Schema and strips defaultable fields from every `required` array. The Zod source schemas keep plain `.default(...)` (so the parsed TS type stays `T`, never `T | undefined`); the publishing layer alone reconciles "default present" with "user MUST provide". `buildAllSchemas()` calls the post-processor for all seven schemas. New regression test asserts the top-level `agentsmesh.json` required list collapses to `['version']`. Verified: `pnpm schemas:generate` produces correct `required` arrays:
+
+- `agentsmesh.json`, `installs.json` — only `version`
+- `permissions.json`, `hooks.json`, `mcp.json` — no required (everything has a default)
+- `pack.json`, `install-manifest.json` — required = the documented structural fields, unchanged
+
 ## Published JSON Schemas (NEW)
 
 Two new entries in the published `schemas/` directory (already shipped via `package.json`'s `files` array) cover the two new file formats introduced in this release:

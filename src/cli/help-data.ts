@@ -159,7 +159,8 @@ export const COMMANDS: HelpCommand[] = [
       { name: '--dry-run', description: 'Preview removal plan; no writes' },
       {
         name: '--force',
-        description: 'Non-interactive mode; accept all prompts (delete-anyway on modifications)',
+        description:
+          'Non-interactive mode; accept all prompts (delete-anyway on modifications). Implied by --json.',
       },
     ],
   },

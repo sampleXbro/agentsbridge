@@ -95,7 +95,10 @@ describe('gatherUninstallDecisions — edge branches', () => {
     const result = await gatherUninstallDecisions([plan], packsDir, deps({ keepPack: true }));
     expect(result.aborted).toBe(false);
     expect(result.decisions[0]!.action).toBe('proceed');
-    // Modifications are reported even though prompt is bypassed.
-    expect(result.decisions[0]!.modifications.length).toBeGreaterThan(0);
+    // Exactly one modification is reported (the single file we mutated), with
+    // the correct relative path and `modified` status.
+    expect(result.decisions[0]!.modifications).toEqual([
+      { relativePath: 'rules.md', status: 'modified' },
+    ]);
   });
 });

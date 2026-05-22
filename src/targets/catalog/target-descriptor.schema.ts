@@ -137,9 +137,19 @@ const conversionDefaultsSchema = z
   })
   .strict();
 
+const metadataSchema = z
+  .object({
+    displayName: z.string().min(1),
+    category: z.enum(['cli', 'ide', 'agent-platform']),
+    officialUrl: z.string().min(1),
+    shortDescription: z.string().min(1),
+  })
+  .passthrough();
+
 const targetDescriptorSchemaBase = z
   .object({
     id: z.string().regex(/^[a-z][a-z0-9-]*$/, 'Target id must be lowercase with hyphens'),
+    metadata: metadataSchema,
     generators: generatorsSchema,
     capabilities: capabilitiesSchema,
     emptyImportMessage: z.string(),
@@ -150,9 +160,20 @@ const targetDescriptorSchemaBase = z
     detectionPaths: z.array(z.string()),
     excludeFromStarterInit: z.boolean().optional(),
     conversionDefaults: conversionDefaultsSchema.optional(),
+    emitScopedSettings: z.function().optional(),
+    mergeGeneratedOutputContent: z.function().optional(),
+    postProcessHookOutputs: z.function().optional(),
+    preservesManualActivation: z.boolean().optional(),
   })
   .passthrough();
 
+// The runtime schema validates structure: callbacks remain `z.function()` (Zod
+// can't model TS parameter types) but the interface-required fields (`id`,
+// `metadata`, `generators`, `capabilities`, `project`, `buildImportPaths`,
+// `detectionPaths`, `emptyImportMessage`, `lintRules`) are now ALL present in
+// `targetDescriptorSchemaBase`. The cast to `z.ZodSchema<TargetDescriptor>`
+// bridges the function-type gap; it is honest about Zod's limitation, not a
+// laundering of missing fields.
 export const targetDescriptorSchema = targetDescriptorSchemaBase.superRefine((value, ctx) => {
   for (const key of legacyGlobalKeys) {
     if (key in value) {

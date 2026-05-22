@@ -45,10 +45,20 @@ describe('findExistingInstallName — gitlab url variants', () => {
     expect(findExistingInstallName([entry], gitlabParsed())).toBe('team-platform');
   });
 
-  it('matches git+https://… by recursing through the git+ prefix', () => {
+  it('matches git+https://… by stripping the git+ prefix', () => {
     const entry: InstallManifestEntry = {
       name: 'team-platform',
       source: 'git+https://gitlab.com/team/platform.git#main',
+      source_kind: 'gitlab',
+      features: ['rules'],
+    };
+    expect(findExistingInstallName([entry], gitlabParsed())).toBe('team-platform');
+  });
+
+  it('strips multiple git+ prefixes iteratively without stack overflow', () => {
+    const entry: InstallManifestEntry = {
+      name: 'team-platform',
+      source: 'git+git+git+https://gitlab.com/team/platform.git#main',
       source_kind: 'gitlab',
       features: ['rules'],
     };

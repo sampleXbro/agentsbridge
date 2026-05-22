@@ -52,7 +52,7 @@ describe('resolveMapper', () => {
     expect(resolveMapper(spec)).toBe(custom);
   });
 
-  it('dispatches to ruleMapper for preset "rule"', () => {
+  it('dispatches to ruleMapper for preset "rule" — output pins root=false', async () => {
     const spec = {
       feature: 'rules',
       mode: 'file',
@@ -60,10 +60,14 @@ describe('resolveMapper', () => {
       sourceDir: 'rules',
       preset: 'rule',
     } as unknown as ImportFeatureSpec;
-    expect(typeof resolveMapper(spec)).toBe('function');
+    const out = await resolveMapper(spec)(ctx() as never);
+    // The rule mapper's defining behavior: it injects `root: false` into the
+    // serialized output. A different mapper would not.
+    expect(out.toPath).toBe('.agentsmesh/rules/r1.md');
+    expect(out.content).toContain('root: false');
   });
 
-  it('dispatches to commandMapper for preset "command"', () => {
+  it('dispatches to commandMapper for preset "command" — emits commands canonicalDir', async () => {
     const spec = {
       feature: 'commands',
       mode: 'file',
@@ -71,10 +75,19 @@ describe('resolveMapper', () => {
       sourceDir: 'commands',
       preset: 'command',
     } as unknown as ImportFeatureSpec;
-    expect(typeof resolveMapper(spec)).toBe('function');
+    const out = await resolveMapper(spec)({
+      destDir: '/dst',
+      relativePath: 'sync.md',
+      normalizeTo: (): string => `---\ndescription: cmd\nallowed-tools:\n  - Bash\n---\nbody`,
+      fromTool: 'unit',
+      sourceAbs: '/src/sync.md',
+    } as never);
+    expect(out.toPath).toBe('.agentsmesh/commands/sync.md');
+    expect(out.content).toContain('description: cmd');
+    expect(out.content).not.toContain('root: false');
   });
 
-  it('dispatches to agentMapper for preset "agent"', () => {
+  it('dispatches to agentMapper for preset "agent" — emits agents canonicalDir', async () => {
     const spec = {
       feature: 'agents',
       mode: 'file',
@@ -82,7 +95,16 @@ describe('resolveMapper', () => {
       sourceDir: 'agents',
       preset: 'agent',
     } as unknown as ImportFeatureSpec;
-    expect(typeof resolveMapper(spec)).toBe('function');
+    const out = await resolveMapper(spec)({
+      destDir: '/dst',
+      relativePath: 'a.md',
+      normalizeTo: (): string => `---\nname: a\ndescription: d\n---\nbody`,
+      fromTool: 'unit',
+      sourceAbs: '/src/a.md',
+    } as never);
+    expect(out.toPath).toBe('.agentsmesh/agents/a.md');
+    expect(out.content).toContain('name: a');
+    expect(out.content).not.toContain('root: false');
   });
 
   it('throws when neither preset nor map is provided', () => {

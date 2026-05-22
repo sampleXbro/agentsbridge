@@ -29,15 +29,22 @@ beforeEach(() => {
 });
 
 describe('renderInstalls', () => {
-  it('prints help banner when result.showHelp is set', () => {
+  it('prints the canonical help banner from help-data when result.showHelp is set', () => {
     const result: InstallsCommandResult = {
       exitCode: 0,
       showHelp: true,
       data: { scope: 'project', subcommand: 'list', installs: [] },
     };
     renderInstalls(result);
-    expect(infoLines.some((l) => l.includes('Usage: agentsmesh installs'))).toBe(true);
-    expect(infoLines.some((l) => l.includes('--global'))).toBe(true);
+    // `printCommandHelp('installs')` emits one multi-line info entry. Assert
+    // the exact usage line and the documented flag set so the renderer cannot
+    // silently drift from `help-data.ts` again.
+    expect(infoLines).toHaveLength(1);
+    const banner = infoLines[0]!;
+    expect(banner).toContain('agentsmesh installs <subcommand> [flags]');
+    expect(banner).toContain('Read-only inventory of installed packs');
+    expect(banner).toContain('list');
+    expect(banner).toContain('--global');
   });
 
   it('prints the error message when result.error is set', () => {
@@ -119,7 +126,14 @@ describe('renderUninstall', () => {
   it('dry-run with no removals prints the empty message', () => {
     const result: UninstallCommandResult = {
       exitCode: 0,
-      data: { scope: 'project', mode: 'uninstall', removed: [], skipped: [], dryRun: true },
+      data: {
+        scope: 'project',
+        mode: 'uninstall',
+        removed: [],
+        skipped: [],
+        failed: [],
+        dryRun: true,
+      },
     };
     renderUninstall(result);
     expect(infoLines).toEqual(['[dry-run] No installs matched.']);
@@ -136,6 +150,7 @@ describe('renderUninstall', () => {
           { name: 'pack-b', pack_path: null, manifest_entry_removed: true },
         ],
         skipped: [],
+        failed: [],
         dryRun: true,
       },
     };
@@ -155,6 +170,7 @@ describe('renderUninstall', () => {
           { name: 'pack-a', pack_path: '.agentsmesh/packs/pack-a', manifest_entry_removed: true },
         ],
         skipped: [],
+        failed: [],
         dryRun: false,
       },
     };
@@ -173,6 +189,7 @@ describe('renderUninstall', () => {
           { name: 'gone', reason: 'No such pack' },
           { name: 'pinned', reason: 'Protected by lock' },
         ],
+        failed: [],
         dryRun: false,
       },
     };
@@ -182,5 +199,28 @@ describe('renderUninstall', () => {
       'Skipped "pinned": Protected by lock',
     ]);
     expect(successLines).toEqual([]);
+  });
+
+  it('emits one error per failed pack and includes the reason', () => {
+    const result: UninstallCommandResult = {
+      exitCode: 1,
+      data: {
+        scope: 'project',
+        mode: 'uninstall',
+        removed: [{ name: 'ok', pack_path: '.agentsmesh/packs/ok', manifest_entry_removed: true }],
+        skipped: [],
+        failed: [
+          { name: 'broken', reason: 'EACCES: permission denied' },
+          { name: 'crashed', reason: 'Disk full' },
+        ],
+        dryRun: false,
+      },
+    };
+    renderUninstall(result);
+    expect(successLines).toEqual(['Uninstalled 1 pack(s): "ok".']);
+    expect(errorLines).toEqual([
+      'Failed "broken": EACCES: permission denied',
+      'Failed "crashed": Disk full',
+    ]);
   });
 });

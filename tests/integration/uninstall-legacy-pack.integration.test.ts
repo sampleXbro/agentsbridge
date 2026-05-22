@@ -36,7 +36,10 @@ function buildProject(project: string): void {
     join(project, 'agentsmesh.yaml'),
     'version: 1\ntargets: [claude-code]\nfeatures: [rules, skills]\nextends: []\n',
   );
-  writeFileSync(join(project, '.agentsmesh', 'rules', '_root.md'), '---\nroot: true\n---\n# Root\n');
+  writeFileSync(
+    join(project, '.agentsmesh', 'rules', '_root.md'),
+    '---\nroot: true\n---\n# Root\n',
+  );
 }
 
 describe('uninstall legacy pack (integration)', () => {
@@ -69,5 +72,29 @@ describe('uninstall legacy pack (integration)', () => {
     expect(result.data.removed[0]?.legacy_migrated).toBe(true);
     expect(result.data.removed[0]?.manifest_entry_removed).toBe(true);
     expect(existsSync(packDir)).toBe(false);
+  });
+
+  it('dry-run does NOT persist the legacy manifest baseline to disk (M2)', async () => {
+    const project = join(ROOT, 'project');
+    const upstream = join(ROOT, 'upstream');
+
+    await runInstall({ force: true, name: 'demo-pack' }, [upstream], project);
+
+    const packDir = join(project, '.agentsmesh', 'packs', 'demo-pack');
+    const manifestPath = join(packDir, INSTALL_MANIFEST_FILENAME);
+    expect(existsSync(manifestPath)).toBe(true);
+    unlinkSync(manifestPath);
+    expect(existsSync(manifestPath)).toBe(false);
+
+    const result = await runUninstall({ force: true, 'dry-run': true }, ['demo-pack'], project);
+
+    // Dry-run preview is a true no-op: the legacy migration code path runs in
+    // memory so drift detection still works, but nothing lands on disk.
+    expect(result.exitCode).toBe(0);
+    expect(result.data.dryRun).toBe(true);
+    expect(result.data.removed[0]?.legacy_migrated).toBe(true);
+    expect(existsSync(manifestPath)).toBe(false);
+    // Pack directory is preserved under dry-run.
+    expect(existsSync(packDir)).toBe(true);
   });
 });

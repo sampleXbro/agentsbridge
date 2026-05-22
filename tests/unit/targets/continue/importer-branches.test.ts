@@ -26,14 +26,16 @@ describe('continue importer — extra branches', () => {
     writeFile('.continue/mcpServers/empty.yaml', '');
     writeFile('.continue/mcpServers/x.yaml', 'mcpServers:\n  x:\n    command: node\n');
     const results = await importFromContinue(projectRoot);
-    expect(results.some((r) => r.feature === 'mcp')).toBe(true);
+    const mcp = results.find((r) => r.feature === 'mcp');
+    expect(mcp).toBeDefined();
+    expect(mcp?.toPath).toBe('.agentsmesh/mcp.json');
     expect(existsSync(join(projectRoot, '.agentsmesh/mcp.json'))).toBe(true);
   });
 
   it('skips files without mcpServers key (line 23 true)', async () => {
     writeFile('.continue/mcpServers/no-mcp.json', '{"other": 1}');
     const results = await importFromContinue(projectRoot);
-    expect(results.find((r) => r.feature === 'mcp')).toBeUndefined();
+    expect(results.filter((r) => r.feature === 'mcp')).toEqual([]);
   });
 
   it('skips servers that are not objects (line 26 true)', async () => {
@@ -42,9 +44,9 @@ describe('continue importer — extra branches', () => {
       JSON.stringify({ mcpServers: { stringValue: 'no-object', validOne: { command: 'node' } } }),
     );
     const results = await importFromContinue(projectRoot);
-    expect(results.some((r) => r.feature === 'mcp')).toBe(true);
-    // valid server should be present
-    expect(results.find((r) => r.feature === 'mcp')?.toPath).toContain('mcp.json');
+    const mcp = results.find((r) => r.feature === 'mcp');
+    expect(mcp).toBeDefined();
+    expect(mcp?.toPath).toBe('.agentsmesh/mcp.json');
   });
 
   it('skips empty file content during merge (line 53 true)', async () => {
@@ -54,7 +56,9 @@ describe('continue importer — extra branches', () => {
       JSON.stringify({ mcpServers: { x: { command: 'node' } } }),
     );
     const results = await importFromContinue(projectRoot);
-    expect(results.some((r) => r.feature === 'mcp')).toBe(true);
+    const mcp = results.find((r) => r.feature === 'mcp');
+    expect(mcp).toBeDefined();
+    expect(mcp?.toPath).toBe('.agentsmesh/mcp.json');
   });
 
   it('skips when no mcp directory exists', async () => {
@@ -73,6 +77,8 @@ describe('continue importer — extra branches', () => {
       }),
     );
     const results = await importFromContinue(projectRoot);
-    expect(results.some((r) => r.feature === 'mcp')).toBe(true);
+    const mcp = results.find((r) => r.feature === 'mcp');
+    expect(mcp).toBeDefined();
+    expect(mcp?.toPath).toBe('.agentsmesh/mcp.json');
   });
 });

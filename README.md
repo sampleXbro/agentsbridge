@@ -232,7 +232,7 @@ agentsmesh watch [--global] [--targets <csv>]
 agentsmesh check [--global]
 agentsmesh merge [--global]
 agentsmesh matrix [--global] [--targets <csv>] [--verbose]
-agentsmesh install <source> [--sync] [--path <dir>] [--target <id>] [--as <kind>] [--name <id>] [--extends] [--dry-run] [--global] [--force]
+agentsmesh install <source> [--sync] [--path <dir>] [--target <id>] [--as <kind>] [--name <id>] [--extends] [--all] [--dry-run] [--global] [--force]
 agentsmesh uninstall <name>[,<name>...] [--all] [--keep-pack] [--keep-generated] [--dry-run] [--global] [--force]
 agentsmesh installs list [--global]
 agentsmesh plugin add|list|remove|info [--version <v>] [--id <id>]
@@ -353,6 +353,7 @@ Every config file ships with a generated JSON Schema, so VS Code, JetBrains, and
 | `AGENTSMESH_GITHUB_TOKEN` | — | GitHub personal access token for private repo installs and `extends`. |
 | `AGENTSMESH_CACHE` | `~/.agentsmeshcache` | Override the remote-extends / tarball cache directory. |
 | `AGENTSMESH_MAX_TARBALL_MB` | `500` | Maximum GitHub tarball size in MiB the install command will accept. Allowed range: `1`–`4096`. Increase this when installing from large monorepos. |
+| `AGENTSMESH_STRICT_PLUGINS` | `0` | When set to `1`, a failed plugin descriptor import fails the build instead of warning-and-skip. Useful in CI where a missing plugin target is a regression. |
 
 ---
 

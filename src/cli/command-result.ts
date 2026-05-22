@@ -93,6 +93,13 @@ export interface UninstallRemovedEntry {
   generated_files_removed: number;
   modified_files_kept: Array<{ relativePath: string; status: string }>;
   legacy_migrated: boolean;
+  /**
+   * True when at least one expected removal step did not land (pack bytes
+   * preserved via `[k]eep-modified` or `--keep-pack`, missing extends row,
+   * etc.). Lets JSON consumers distinguish a fully-clean run from a
+   * deliberately-or-silently partial one.
+   */
+  partial: boolean;
 }
 
 export interface UninstallData {
@@ -100,6 +107,12 @@ export interface UninstallData {
   mode: 'uninstall';
   removed: UninstallRemovedEntry[];
   skipped: Array<{ name: string; reason: string }>;
+  /**
+   * Packs whose `applyUninstall` threw mid-batch. Surviving packs continue;
+   * post-operation `generate` still runs over the packs that did apply so the
+   * tool tree is consistent with `installs.yaml` after the partial run.
+   */
+  failed: Array<{ name: string; reason: string }>;
   dryRun: boolean;
 }
 

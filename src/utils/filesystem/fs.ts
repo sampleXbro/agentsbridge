@@ -25,7 +25,12 @@ import {
   shouldNormalizeLineEndings,
 } from './fs-text-encoding.js';
 
-export { copyDir, ensureCacheSymlink, readDirRecursive } from './fs-traverse.js';
+export {
+  copyDir,
+  ensureCacheSymlink,
+  readDirRecursive,
+  readDirRecursiveNoSymlinks,
+} from './fs-traverse.js';
 export { executableModeFor } from './fs-text-encoding.js';
 
 interface ErrnoLike {

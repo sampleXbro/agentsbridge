@@ -41,17 +41,17 @@ describe('readInstallFlags', () => {
     expect(out.all).toBe(true);
   });
 
-  it('treats empty-string path/target/as the same as missing (undefined)', () => {
-    const out = readInstallFlags({ path: '', target: '   ', as: '   ', name: '   ' });
+  it('treats empty-string and whitespace-only path/target/as the same as missing (undefined)', () => {
+    const out = readInstallFlags({ path: '   ', target: '   ', as: '   ', name: '   ' });
     expect(out.explicitPath).toBeUndefined();
     expect(out.explicitTarget).toBeUndefined();
     expect(out.explicitAs).toBeUndefined();
     expect(out.nameOverride).toBe('');
   });
 
-  it('trims target/as/name and pipes path through verbatim', () => {
+  it('trims path/target/as/name symmetrically and preserves internal whitespace', () => {
     const out = readInstallFlags({
-      path: 'src/some path',
+      path: '  src/some path  ',
       target: '  claude-code  ',
       as: '  skills  ',
       name: '  my-pack  ',

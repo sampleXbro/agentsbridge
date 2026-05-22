@@ -67,6 +67,7 @@ describe('appliedEntry', () => {
     manifestEntryRemoved: true,
     extendsEntryRemoved: true,
     packDirRemoved: true,
+    partial: false,
   };
 
   it('keeps modified_files_kept when the user chose [k]eep-modified at the prompt', () => {

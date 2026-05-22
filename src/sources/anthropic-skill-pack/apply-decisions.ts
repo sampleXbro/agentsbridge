@@ -23,7 +23,7 @@ import type {
   BrokenLinkDecision,
   EntityWithBrokenLinks,
 } from '../../install/prompts/broken-link-prompt.js';
-import type { ResolvedLink } from '../../install/links/resolve-link.js';
+import type { ResolvableOutsideLink, ResolvedLink } from '../../install/links/resolve-link.js';
 import {
   applyRangeRewrites,
   scanMarkdownLinks,
@@ -44,14 +44,24 @@ export interface ApplyBrokenLinkDecisionsArgs {
 
 /**
  * Build exact-range rewrites for every markdown link destination in `body`
- * that matches `linkPath`. Uses the shared markdown scanner so fenced code
- * blocks containing the same path stay untouched, and rewrites operate on
- * destination spans only (never on surrounding markdown).
+ * that matches `rawDestination`. Uses the shared markdown scanner so fenced
+ * code blocks containing the same path stay untouched, and rewrites operate
+ * on destination spans only (never on surrounding markdown).
+ *
+ * Match against the verbatim scanned destination — NOT a normalized form —
+ * so links authored with `{baseDir}/…` or Windows-style `..\..\x.md` still
+ * get rewritten. The scanner returns `token.destination` verbatim, and the
+ * caller threads through `ScannedLink.raw` which preserves the original
+ * spelling.
  */
-function buildLinkRewrites(body: string, linkPath: string, replacement: string): RangeRewrite[] {
+function buildLinkRewrites(
+  body: string,
+  rawDestination: string,
+  replacement: string,
+): RangeRewrite[] {
   const rewrites: RangeRewrite[] = [];
   for (const token of scanMarkdownLinks(body)) {
-    if (token.destination !== linkPath) continue;
+    if (token.destination !== rawDestination) continue;
     rewrites.push({
       offset: token.destinationOffset,
       length: token.destinationLength,
@@ -67,33 +77,38 @@ function warnLink(logger: WarnLogger, entity: EntityWithBrokenLinks, resolved: R
   );
 }
 
-async function applyResolvableToSkill(
-  contentRoot: string,
-  skill: CanonicalSkill,
-  resolved: ResolvedLink,
-): Promise<CanonicalSkill> {
-  if (resolved.classification !== 'resolvable-outside') {
-    return skill;
+/**
+ * Allocate `references/<name>` paths for a skill's `resolvable-outside` links.
+ *
+ * Default to `references/<basename>` when basenames are unique. If two distinct
+ * `resolvedRelative` paths share a basename (e.g. `docs/A/README.md` and
+ * `docs/B/README.md`), slug their parent path into the name (`docs-A-README.md`
+ * and `docs-B-README.md`) so neither file is silently dropped and each citation
+ * resolves to its own content.
+ */
+function allocateSupportingFileNames(
+  resolvableLinks: readonly ResolvableOutsideLink[],
+): Map<string, string> {
+  const pathsByBasename = new Map<string, Set<string>>();
+  for (const r of resolvableLinks) {
+    const b = basename(r.resolvedRelative);
+    const set = pathsByBasename.get(b) ?? new Set<string>();
+    set.add(r.resolvedRelative);
+    pathsByBasename.set(b, set);
   }
-  const absolutePath = `${contentRoot}/${resolved.resolvedRelative}`;
-  const targetBasename = basename(resolved.resolvedRelative);
-  const relativePath = `references/${targetBasename}`;
-  const localDest = `./references/${targetBasename}${resolved.anchor}`;
-
-  const supportingFiles = skill.supportingFiles.some((sf) => sf.relativePath === relativePath)
-    ? skill.supportingFiles
-    : [
-        ...skill.supportingFiles,
-        {
-          relativePath,
-          absolutePath,
-          content: await readFile(absolutePath, 'utf-8'),
-        } satisfies SkillSupportingFile,
-      ];
-
-  const rewrites = buildLinkRewrites(skill.body, resolved.link.path, localDest);
-  const body = applyRangeRewrites(skill.body, rewrites);
-  return { ...skill, body, supportingFiles };
+  const allocation = new Map<string, string>();
+  for (const [b, paths] of pathsByBasename) {
+    if (paths.size === 1) {
+      const only = [...paths][0]!;
+      allocation.set(only, `references/${b}`);
+      continue;
+    }
+    for (const p of paths) {
+      const slug = p.replaceAll('/', '-');
+      allocation.set(p, `references/${slug}`);
+    }
+  }
+  return allocation;
 }
 
 function findEntity(
@@ -104,21 +119,68 @@ function findEntity(
   return entities.find((e) => e.entityKind === kind && e.entityName === name);
 }
 
+async function buildSupportingFiles(
+  contentRoot: string,
+  existing: readonly SkillSupportingFile[],
+  resolvableLinks: readonly ResolvableOutsideLink[],
+  allocation: ReadonlyMap<string, string>,
+): Promise<SkillSupportingFile[]> {
+  const out: SkillSupportingFile[] = [...existing];
+  const seenRelative = new Set(out.map((sf) => sf.relativePath));
+  const seenResolved = new Set<string>();
+  for (const r of resolvableLinks) {
+    if (seenResolved.has(r.resolvedRelative)) continue;
+    seenResolved.add(r.resolvedRelative);
+    const relativePath = allocation.get(r.resolvedRelative);
+    if (relativePath === undefined || seenRelative.has(relativePath)) continue;
+    seenRelative.add(relativePath);
+    const absolutePath = `${contentRoot}/${r.resolvedRelative}`;
+    out.push({
+      relativePath,
+      absolutePath,
+      content: await readFile(absolutePath, 'utf-8'),
+    } satisfies SkillSupportingFile);
+  }
+  return out;
+}
+
 async function applySkillDecision(
   contentRoot: string,
   skill: CanonicalSkill,
   entity: EntityWithBrokenLinks,
   logger: WarnLogger,
 ): Promise<CanonicalSkill> {
-  let next = skill;
+  const resolvableLinks = entity.resolved.filter(
+    (r): r is ResolvableOutsideLink => r.classification === 'resolvable-outside',
+  );
+  const allocation = allocateSupportingFileNames(resolvableLinks);
+  const supportingFiles = await buildSupportingFiles(
+    contentRoot,
+    skill.supportingFiles,
+    resolvableLinks,
+    allocation,
+  );
+
+  // Dedupe by raw destination so the same `(raw, anchor)` pair doesn't trigger
+  // multiple overlapping rewrites when the entity has inline + reference-def
+  // entries pointing at the same target.
+  const rewrites: RangeRewrite[] = [];
+  const rewrittenRaw = new Set<string>();
   for (const r of entity.resolved) {
     if (r.classification === 'resolvable-outside') {
-      next = await applyResolvableToSkill(contentRoot, next, r);
+      if (rewrittenRaw.has(r.link.raw)) continue;
+      const relativePath = allocation.get(r.resolvedRelative);
+      if (relativePath === undefined) continue;
+      rewrittenRaw.add(r.link.raw);
+      const localDest = `./${relativePath}${r.anchor}`;
+      rewrites.push(...buildLinkRewrites(skill.body, r.link.raw, localDest));
     } else {
       warnLink(logger, entity, r);
     }
   }
-  return next;
+
+  const body = applyRangeRewrites(skill.body, rewrites);
+  return { ...skill, body, supportingFiles };
 }
 
 export async function applyBrokenLinkDecisions(

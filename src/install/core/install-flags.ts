@@ -16,9 +16,10 @@ export function readInstallFlags(flags: Record<string, string | boolean>): {
   nameOverride: string;
 } {
   // Recursive `runInstall` calls (auto-pick, marketplace fan-out) build flag
-  // bags with `?? ''` defaults. Treat empty strings as "not provided" so the
-  // contract everywhere downstream is "undefined OR a non-empty value".
-  const explicitPathRaw = typeof flags.path === 'string' ? flags.path : undefined;
+  // bags with `?? ''` defaults. Treat empty strings (and whitespace-only
+  // strings) as "not provided" so the contract everywhere downstream is
+  // "undefined OR a non-empty value".
+  const explicitPathRaw = typeof flags.path === 'string' ? flags.path.trim() : undefined;
   const explicitTargetRaw = typeof flags.target === 'string' ? flags.target.trim() : undefined;
   const explicitAsRaw = typeof flags.as === 'string' ? flags.as.trim() : undefined;
   return {

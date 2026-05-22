@@ -30,6 +30,11 @@ import { readPackMetadata } from '../pack/pack-reader.js';
 
 export interface LegacyMigrationDeps {
   warn(message: string): void;
+  /**
+   * When true, compute the baseline hash map but DO NOT persist the manifest
+   * to disk. Used by `--dry-run uninstall` so previewing never mutates state.
+   */
+  readonly dryRun?: boolean;
 }
 
 export interface BaselineInstallManifest {
@@ -78,7 +83,9 @@ export async function migrateLegacyManifest(
     files,
   };
 
-  await writeFileAtomic(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  if (deps.dryRun !== true) {
+    await writeFileAtomic(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  }
   deps.warn(
     `Legacy pack "${meta.name}" detected; generated baseline install manifest from current contents. Local modifications since install cannot be detected.`,
   );

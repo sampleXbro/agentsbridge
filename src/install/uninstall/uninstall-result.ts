@@ -48,6 +48,10 @@ export function previewEntries(
       status: m.status,
     })),
     legacy_migrated: d.legacyMigrated,
+    // Preview mirrors the live `partial` semantics: `--keep-pack` and
+    // `[k]eep-modified` planned outcomes leave bytes on disk, which the
+    // applied flow would also flag as partial.
+    partial: d.action === 'keep-modified' || d.plan.packDir === null,
   }));
 }
 
@@ -71,5 +75,6 @@ export function appliedEntry(
       ? decision.modifications.map((m) => ({ relativePath: m.relativePath, status: m.status }))
       : [],
     legacy_migrated: decision.legacyMigrated,
+    partial: applied.partial,
   };
 }

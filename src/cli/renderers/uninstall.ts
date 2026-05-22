@@ -32,4 +32,8 @@ export function renderUninstall(result: UninstallCommandResult): void {
   for (const s of data.skipped) {
     logger.warn(`Skipped "${s.name}": ${s.reason}`);
   }
+
+  for (const f of data.failed) {
+    logger.error(`Failed "${f.name}": ${f.reason}`);
+  }
 }

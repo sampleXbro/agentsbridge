@@ -98,6 +98,49 @@ export async function readDirRecursive(
   }
 }
 
+/**
+ * List all regular files recursively under dir, NOT following symlinks.
+ *
+ * Differs from `readDirRecursive`: symlinks (to files OR directories) are
+ * skipped entirely. Used by the install-manifest hash and uninstall drift
+ * detection so a symlinked target outside the pack tree cannot:
+ *   - leak external content into the install-time hash, and
+ *   - diverge between install (followed) and uninstall (link removed only).
+ *
+ * Returns absolute paths for regular files only. Directories are walked but
+ * not emitted; symlinks are dropped silently.
+ */
+export async function readDirRecursiveNoSymlinks(
+  dir: string,
+  branchSegments?: readonly string[],
+): Promise<string[]> {
+  const currentBranchSegments = branchSegments ?? [basename(dir)];
+  try {
+    const entries = await readdir(dir, { withFileTypes: true });
+    const files: string[] = [];
+    for (const ent of entries) {
+      if (ent.isSymbolicLink()) continue;
+      const full = join(dir, ent.name);
+      if (ent.isDirectory()) {
+        const nextSegments = [...currentBranchSegments, ent.name];
+        if (shouldSkipRecursiveBranch(nextSegments)) continue;
+        files.push(...(await readDirRecursiveNoSymlinks(full, nextSegments)));
+      } else if (ent.isFile()) {
+        files.push(full);
+      }
+    }
+    return files;
+  } catch (err) {
+    const e = err as ErrnoLike;
+    if (e.code === 'ENOENT' || e.code === 'ENOTDIR' || e.code === 'EACCES') return [];
+    throw new FileSystemError(
+      dir,
+      `Failed to read directory ${dir}: ${e.message}. Check permissions.`,
+      { cause: err, errnoCode: e.code },
+    );
+  }
+}
+
 /** Copy directory recursively preserving structure. */
 export async function copyDir(src: string, dest: string): Promise<void> {
   await mkdirp(dest);

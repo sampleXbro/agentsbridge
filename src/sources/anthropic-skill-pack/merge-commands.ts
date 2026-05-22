@@ -50,7 +50,12 @@ export async function mergeCommands(
   const dedups: CommandDedup[] = [];
   for (const [name, loserList] of losers) {
     const winner = winners.get(name);
-    if (winner === undefined) continue;
+    // Invariant: `losers` is only populated when a `winners` entry already
+    // exists for the same name. A missing winner here means the invariant has
+    // been broken by a refactor — fail loudly rather than hide the bug.
+    if (winner === undefined) {
+      throw new Error(`mergeCommands invariant: loser without winner for "${name}"`);
+    }
     // `loserList` was filled by iterating `ordered` (sorted ascending by
     // precedence at line 32), so it is already in precedence order.
     dedups.push({

@@ -39,6 +39,13 @@ export interface AppliedRemoval {
   readonly packDirRemoved: boolean;
   readonly manifestEntryRemoved: boolean;
   readonly extendsEntryRemoved: boolean;
+  /**
+   * True when at least one expected removal step did not land. JSON consumers
+   * (CI, scripts) use this to distinguish a fully-clean uninstall from a
+   * silent partial one (e.g. `installs.yaml` updated but the extends row
+   * never matched, or `--keep-pack` preserved bytes by design).
+   */
+  readonly partial: boolean;
 }
 
 export interface ApplyUninstallArgs {
@@ -68,10 +75,23 @@ export async function applyUninstall(args: ApplyUninstallArgs): Promise<AppliedR
     extendsEntryRemoved = await removeAgentsmeshExtendByName(configPath, config, plan.name);
   }
 
+  // "Partial" = at least one expected step did not land. Each expected step is:
+  //   - pack dir removal (skipped when plan.packDir is null OR pack absent on disk)
+  //   - manifest entry removal (extends-only installs have no row → not expected)
+  //   - extends entry removal (only expected when plan.extendsEntry is non-null)
+  const packExpected = plan.packDir !== null;
+  const manifestExpected = plan.manifestEntry !== null;
+  const extendsExpected = plan.extendsEntry !== null;
+  const partial =
+    (packExpected && !packDirRemoved) ||
+    (manifestExpected && !manifestEntryRemoved) ||
+    (extendsExpected && !extendsEntryRemoved);
+
   return {
     name: plan.name,
     packDirRemoved,
     manifestEntryRemoved,
     extendsEntryRemoved,
+    partial,
   };
 }

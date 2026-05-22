@@ -34,9 +34,10 @@ agentsmesh install --sync
 | `--name <id>` | Override the generated install entry name. |
 | `--extends` | Record as an extends entry instead of a materialized pack. |
 | `--sync` | Reinstall missing packs from `.agentsmesh/installs.yaml`. |
+| `--all` | Install every sub-pack from a marketplace source (`.claude-plugin/marketplace.json`). |
 | `--dry-run` | Preview what would be installed without writing. |
 | `--global` | Install into `~/.agentsmesh/` and regenerate user-level outputs. |
-| `--force` | Non-interactive mode: include all resources, skip prompts. |
+| `--force` | Non-interactive mode: include all resources, skip prompts (implied by `--json`). |
 
 ## Source formats
 

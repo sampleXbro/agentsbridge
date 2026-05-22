@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { mkdirSync, writeFileSync, rmSync, mkdtempSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -7,6 +7,7 @@ import {
   hashPackFiles,
   INSTALL_MANIFEST_FILENAME,
 } from '../../../../src/install/manifest/install-manifest-hash.js';
+import * as hashMod from '../../../../src/utils/crypto/hash.js';
 
 let tmpDir: string;
 
@@ -103,13 +104,58 @@ describe('hashPackFiles', () => {
     expect(Object.keys(result)).toEqual(['a.md', 'b.md', 'skills/z/SKILL.md']);
   });
 
-  it('treats CRLF and LF as distinct content (regression guard)', async () => {
+  it('treats CRLF and LF as identical for text extensions (M3 — drift normalization)', async () => {
     writeFileSync(join(tmpDir, 'lf.md'), 'line1\nline2\n');
     writeFileSync(join(tmpDir, 'crlf.md'), 'line1\r\nline2\r\n');
 
     const result = await hashPackFiles(tmpDir);
 
-    expect(result['lf.md']).not.toBe(result['crlf.md']);
+    // Markdown is text → normalized before hashing so a Windows editor saving
+    // CRLF doesn't register as drift at uninstall time.
+    expect(result['lf.md']).toBe(result['crlf.md']);
+  });
+
+  it('strips a leading UTF-8 BOM from text files before hashing (M3)', async () => {
+    writeFileSync(join(tmpDir, 'plain.md'), 'line1\nline2\n');
+    writeFileSync(join(tmpDir, 'with-bom.md'), '﻿line1\nline2\n');
+
+    const result = await hashPackFiles(tmpDir);
+    expect(result['plain.md']).toBe(result['with-bom.md']);
+  });
+
+  it('skips symlinked files entirely so install and uninstall agree (M4)', async () => {
+    const { symlinkSync } = await import('node:fs');
+    writeFileSync(join(tmpDir, 'real.md'), 'real\n');
+    const outsideDir = mkdtempSync(join(tmpdir(), 'am-pack-hash-out-'));
+    writeFileSync(join(outsideDir, 'outside.md'), 'outside\n');
+    try {
+      symlinkSync(join(outsideDir, 'outside.md'), join(tmpDir, 'linked.md'));
+    } catch {
+      // Symlinks unsupported on this filesystem (e.g. Windows without dev mode);
+      // skip the contract assertion in that environment.
+      return;
+    }
+
+    const result = await hashPackFiles(tmpDir);
+
+    expect(Object.keys(result).sort()).toEqual(['real.md']);
+    rmSync(outsideDir, { recursive: true, force: true });
+  });
+
+  it('skips files where hashFileForManifest returns null (race against unlink)', async () => {
+    writeFileSync(join(tmpDir, 'a.md'), 'alpha');
+    writeFileSync(join(tmpDir, 'b.md'), 'beta');
+    writeFileSync(join(tmpDir, 'c.md'), 'gamma');
+
+    const real = hashMod.hashFileForManifest;
+    vi.spyOn(hashMod, 'hashFileForManifest').mockImplementation(async (path: string) => {
+      if (path.endsWith('b.md')) return null;
+      return real(path);
+    });
+
+    const result = await hashPackFiles(tmpDir);
+    expect(Object.keys(result).sort()).toEqual(['a.md', 'c.md']);
+    vi.restoreAllMocks();
   });
 
   it('hashes binary supporting files by raw bytes (no UTF-8 round-trip)', async () => {

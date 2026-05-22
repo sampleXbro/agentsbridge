@@ -39,7 +39,14 @@ export function selectInstallEntryName(args: {
  * Gitea installs still de-duplicate against themselves.
  */
 function canonicalRemoteIdentity(rawSource: string): string | null {
-  const trimmed = rawSource.trim();
+  // Strip any number of `git+` prefixes and a trailing `#fragment` iteratively;
+  // recursion would let a pathological input like `git+git+git+…` blow the
+  // call stack from a malicious manifest entry.
+  let trimmed = rawSource.trim();
+  while (trimmed.startsWith('git+')) {
+    const hashIdx = trimmed.lastIndexOf('#');
+    trimmed = (hashIdx < 0 ? trimmed.slice(4) : trimmed.slice(4, hashIdx)).trim();
+  }
 
   const ghShort = trimmed.match(/^github:([^/]+)\/([^/@]+?)(?:\.git)?(?:@[^/]+)?$/i);
   if (ghShort) return `github:${ghShort[1]!.toLowerCase()}/${ghShort[2]!.toLowerCase()}`;
@@ -62,12 +69,6 @@ function canonicalRemoteIdentity(rawSource: string): string | null {
 
   const sshGl = trimmed.match(/^git@gitlab\.com:(.+?)\/([^/]+?)(?:\.git)?$/i);
   if (sshGl) return `gitlab:${sshGl[1]!.toLowerCase()}/${sshGl[2]!.toLowerCase()}`;
-
-  if (trimmed.startsWith('git+')) {
-    const hashIdx = trimmed.lastIndexOf('#');
-    const inner = hashIdx < 0 ? trimmed.slice(4) : trimmed.slice(4, hashIdx);
-    return canonicalRemoteIdentity(inner);
-  }
 
   return null;
 }

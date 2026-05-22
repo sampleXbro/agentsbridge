@@ -50,6 +50,12 @@ const pluginGenerators: TargetGenerators = {
 
 const pluginDescriptor: TargetDescriptor = {
   id: PLUGIN_ID,
+  metadata: {
+    displayName: PLUGIN_ID,
+    category: 'cli',
+    officialUrl: 'https://example.test/plugin',
+    shortDescription: 'Plugin descriptor contract test fixture',
+  },
   generators: pluginGenerators,
   capabilities: {
     rules: { level: 'native' },

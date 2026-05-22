@@ -83,13 +83,18 @@ export async function runUninstall(
 
   const names = parseNames(args);
 
+  const isJson = flags.json === true;
+
   // Validation failures land here as `{ exitCode: 1 }` so they render via the
   // standard logger.error path and surface a useful message in `--json` mode.
+  // Under `--json` the message belongs in the envelope's `error` field; emitting
+  // it on stderr here would mix channels with the JSON payload on stdout, so
+  // suppress the logger.error in that case.
   function validationFailure(message: string): UninstallCommandResult {
-    logger.error(message);
+    if (!isJson) logger.error(message);
     return {
       exitCode: 1,
-      data: { scope, mode: 'uninstall', removed: [], skipped: [], dryRun },
+      data: { scope, mode: 'uninstall', removed: [], skipped: [], failed: [], dryRun },
     };
   }
 
@@ -127,13 +132,14 @@ export async function runUninstall(
       warn: (m) => logger.warn(m),
       bypassPrompts: force || dryRun || !tty,
       keepPack,
+      dryRun,
     });
 
     if (aborted) {
       logger.warn('Uninstall aborted at modification prompt.');
       return {
         exitCode: 130,
-        data: { scope, mode: 'uninstall', removed: [], skipped: [], dryRun },
+        data: { scope, mode: 'uninstall', removed: [], skipped: [], failed: [], dryRun },
       };
     }
 
@@ -150,6 +156,7 @@ export async function runUninstall(
           mode: 'uninstall',
           removed: previewEntries(decisions, context.rootBase, packsDir),
           skipped: buildSkipped(plan.skipped),
+          failed: [],
           dryRun: true,
         },
       };
@@ -157,18 +164,31 @@ export async function runUninstall(
 
     const configPath = join(context.configDir, 'agentsmesh.yaml');
     const removed: UninstallRemovedEntry[] = [];
+    const failed: Array<{ name: string; reason: string }> = [];
     for (const d of decisions) {
       const effectivePlan: UninstallRemovalPlan =
         d.action === 'keep-modified' ? { ...d.plan, packDir: null } : d.plan;
-      const applied = await applyUninstall({
-        plan: effectivePlan,
-        canonicalDir: context.canonicalDir,
-        configPath,
-        config,
-      });
-      removed.push(appliedEntry(d, applied, context.rootBase, packsDir));
+      try {
+        const applied = await applyUninstall({
+          plan: effectivePlan,
+          canonicalDir: context.canonicalDir,
+          configPath,
+          config,
+        });
+        removed.push(appliedEntry(d, applied, context.rootBase, packsDir));
+      } catch (err) {
+        const reason = err instanceof Error ? err.message : String(err);
+        failed.push({ name: d.plan.name, reason });
+        // Surviving packs continue; we report the per-pack failure on stderr
+        // (skipped under --json so the envelope is the single channel).
+        if (!isJson) {
+          logger.error(`Failed to uninstall "${d.plan.name}": ${reason}`);
+        }
+      }
     }
 
+    // Always run post-operation generate over surviving installs so the tool
+    // tree stays consistent with the (possibly partially mutated) installs.yaml.
     if (!keepGenerated && removed.length > 0) {
       await runPostOperationGenerate('uninstall', scope, context.rootBase);
     } else if (keepGenerated && removed.length > 0) {
@@ -178,12 +198,13 @@ export async function runUninstall(
     }
 
     return {
-      exitCode: 0,
+      exitCode: failed.length > 0 ? 1 : 0,
       data: {
         scope,
         mode: 'uninstall',
         removed,
         skipped: buildSkipped(plan.skipped),
+        failed,
         dryRun: false,
       },
     };

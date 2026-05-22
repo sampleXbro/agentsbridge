@@ -19,8 +19,8 @@
  */
 
 import { relative } from 'node:path';
-import { readDirRecursive } from '../../utils/filesystem/fs.js';
-import { hashFile } from '../../utils/crypto/hash.js';
+import { readDirRecursiveNoSymlinks } from '../../utils/filesystem/fs.js';
+import { hashFileForManifest } from '../../utils/crypto/hash.js';
 import { INSTALL_MANIFEST_FILENAME } from '../manifest/install-manifest-hash.js';
 
 export type ModificationStatus = 'modified' | 'deleted' | 'added';
@@ -48,7 +48,9 @@ export async function detectModifiedFiles(
   packDir: string,
   manifestFiles: Readonly<Record<string, string>>,
 ): Promise<ModifiedFile[]> {
-  const onDiskAbs = await readDirRecursive(packDir);
+  // Match `hashPackFiles`: ignore symlinks so a link inside the pack does not
+  // diverge between install (followed) and uninstall (link removed only).
+  const onDiskAbs = await readDirRecursiveNoSymlinks(packDir);
   const onDisk = new Map<string, string>();
   for (const abs of onDiskAbs) {
     const rel = toForwardSlashRelative(packDir, abs);
@@ -64,7 +66,7 @@ export async function detectModifiedFiles(
       results.push({ relativePath: rel, status: 'deleted' });
       continue;
     }
-    const hex = await hashFile(abs);
+    const hex = await hashFileForManifest(abs);
     if (hex === null) {
       // `hashFile` returns null only for ENOENT (other I/O errors throw).
       // The file existed at `readDirRecursive` but is gone now — a raced

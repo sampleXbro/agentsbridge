@@ -51,6 +51,12 @@ export interface UninstallDecisionsDeps {
   readonly bypassPrompts: boolean;
   /** When true, prompts are still bypassed and pack dirs are not touched. */
   readonly keepPack: boolean;
+  /**
+   * When true, the decision pass must not write to disk. Legacy-pack manifest
+   * migration computes a baseline in memory but skips persistence so a preview
+   * `--dry-run uninstall` is a true no-op.
+   */
+  readonly dryRun?: boolean;
 }
 
 async function readManifestFiles(
@@ -99,10 +105,19 @@ async function decideOne(
     };
   }
 
-  const migration = await migrateLegacyManifest(packDir, { warn: deps.warn });
+  const migration = await migrateLegacyManifest(packDir, {
+    warn: deps.warn,
+    dryRun: deps.dryRun === true,
+  });
   const legacyMigrated = migration !== null;
 
-  const manifestFiles = await readManifestFiles(packDir);
+  // Under `--dry-run`, the legacy migration deliberately skipped persisting
+  // the manifest. Use the in-memory baseline so drift detection still
+  // reflects what *would* be the manifest after the real run.
+  const manifestFiles =
+    migration !== null && deps.dryRun === true
+      ? migration.manifest.files
+      : await readManifestFiles(packDir);
   if (manifestFiles === null) {
     return { plan, modifications: [], action: 'proceed', legacyMigrated, packDirMissing: false };
   }

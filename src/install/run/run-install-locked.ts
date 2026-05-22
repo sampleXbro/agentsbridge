@@ -1,7 +1,11 @@
 /**
  * Body of `runInstall` that runs while the `.install.lock` is held.
- * Split from `run-install.ts` at the lock boundary so the orchestrator
- * file stays under the 200-line cap.
+ *
+ * Split into three modules to keep each file under the 200-line cap:
+ *   - `run-install-locked.ts` (this file) — top-level dispatch: parse source,
+ *     resolve discovery, route to picker → marketplace recursion OR single-pack.
+ *   - `run-install-marketplace.ts` — marketplace sub-pack fan-out.
+ *   - `single-pack-install.ts` — prompt + execute + write for one pack.
  */
 
 import { join, normalize } from 'node:path';
@@ -10,23 +14,18 @@ import { exists } from '../../utils/filesystem/fs.js';
 import { resolveInstallResolvedPath } from './run-install-resolve.js';
 import { isGitAvailable } from '../source/git-pin.js';
 import { parseInstallSource } from '../source/url-parser.js';
-import { resolveInstallDiscovery, deriveSourceType } from '../core/install-discovery.js';
+import { resolveInstallDiscovery } from '../core/install-discovery.js';
 import { selectInstallCandidates } from '../picker/select-candidates.js';
-import { runInstallMarketplace } from './run-install-marketplace.js';
 import { bootstrapPlugins } from '../../plugins/bootstrap-plugins.js';
 import { type InstallReplayScope } from './install-replay.js';
 import { resolveManualInstallPersistence } from '../manual/manual-install-persistence.js';
-import { executeRunInstallPoolsAndWrite } from './run-install-execute.js';
-import { runPromptFlowWithAbort } from './run-install-prompts.js';
+import { runSinglePackInstall, type InstallCommandResult } from './single-pack-install.js';
+import { routePickerResult } from './route-picker-result.js';
 import { handleSync } from './run-install-sync-locked.js';
 import { createInstallReport } from '../core/install-report.js';
-import type { InstallData } from '../../cli/command-result.js';
 import type { ManualInstallAs } from '../manual/manual-install-mode.js';
 
-export interface InstallCommandResult {
-  exitCode: number;
-  data: InstallData;
-}
+export type { InstallCommandResult };
 
 export interface RunInstallLockedArgs {
   args: string[];
@@ -143,65 +142,22 @@ export async function runInstallLocked(opts: RunInstallLockedArgs): Promise<Inst
       force,
       tty,
     });
-    if (pickerResult.isMarketplace && pickerResult.targets.length > 0) {
-      const mpResult = await runInstallMarketplace(
-        pickerResult.targets,
-        async (target) => {
-          const sub = await opts.recurseInstall(
-            {
-              force: true,
-              'dry-run': dryRun,
-              path: target.path ?? '',
-              target: target.target ?? '',
-              name: target.name,
-              extends: useExtends,
-            },
-            [sourceArg],
-            projectRoot,
-            {},
-          );
-          return sub.data;
-        },
-        installReport,
-      );
-      return {
-        exitCode: mpResult.exitCode,
-        data: {
-          source: sourceArg,
-          mode: 'install' as const,
-          installed: mpResult.installed,
-          skipped: mpResult.skipped,
-          dryRun,
-          ...(installReport.brokenResources.length > 0
-            ? { brokenResources: installReport.brokenResources }
-            : {}),
-        },
-      };
-    }
-    if (!pickerResult.isMarketplace && pickerResult.targets.length === 1) {
-      const target = pickerResult.targets[0]!;
-      // Pass `replay ?? {}` so the nested `runInstall` skips re-acquiring the
-      // install lock we already hold. Marketplace recursion uses the same
-      // workaround; normal call sites never reach this branch.
-      return opts.recurseInstall(
-        {
-          force,
-          'dry-run': dryRun,
-          path: target.path ?? '',
-          as: target.as ?? '',
-          target: target.target ?? '',
-          name: nameOverride,
-          extends: useExtends,
-        },
-        [sourceArg],
-        projectRoot,
-        replay ?? {},
-      );
-    }
+    const routed = await routePickerResult({
+      pickerResult,
+      installReport,
+      sourceArg,
+      projectRoot,
+      dryRun,
+      force,
+      useExtends,
+      nameOverride,
+      replay,
+      recurseInstall: opts.recurseInstall,
+    });
+    if (routed !== null) return routed;
   }
 
-  return runSinglePackInstall(
-    opts,
+  return runSinglePackInstall({
     discovery,
     installReport,
     persisted,
@@ -212,84 +168,13 @@ export async function runInstallLocked(opts: RunInstallLockedArgs): Promise<Inst
     contentRoot,
     config,
     context,
-  );
-}
-
-async function runSinglePackInstall(
-  opts: RunInstallLockedArgs,
-  discovery: Awaited<ReturnType<typeof resolveInstallDiscovery>>,
-  installReport: ReturnType<typeof createInstallReport>,
-  persisted: Awaited<ReturnType<typeof resolveManualInstallPersistence>>,
-  parsed: Awaited<ReturnType<typeof parseInstallSource>>,
-  sourceForYaml: string,
-  version: string | undefined,
-  pathInRepo: string,
-  contentRoot: string,
-  config: Awaited<ReturnType<typeof loadScopedConfig>>['config'],
-  context: Awaited<ReturnType<typeof loadScopedConfig>>['context'],
-): Promise<InstallCommandResult> {
-  const { dryRun, force, useExtends, explicitAs, nameOverride, scope, sourceArg, replay } = opts;
-  const tty = process.stdin.isTTY;
-  const { prep, implicitPick } = discovery;
-  let { narrowed, discoveredFeatures } = discovery;
-  try {
-    const flow = await runPromptFlowWithAbort({
-      discovery,
-      contentRoot,
-      bypass: force || dryRun || !tty,
-    });
-    if (flow.aborted) {
-      return {
-        exitCode: 130,
-        data: { source: sourceArg!, mode: 'install', installed: [], skipped: [], dryRun },
-      };
-    }
-    narrowed = flow.narrowed ?? narrowed;
-    discoveredFeatures = flow.discoveredFeatures ?? discoveredFeatures;
-    if (discoveredFeatures.length === 0 && installReport.brokenResources.length > 0) {
-      const list = installReport.brokenResources
-        .map((b) => `  - ${b.path}: ${b.reason}`)
-        .join('\n');
-      throw new Error(
-        `No installable resources after skipping invalid files (${installReport.brokenResources.length}):\n${list}`,
-      );
-    }
-    const executeResult = await executeRunInstallPoolsAndWrite({
-      scope,
-      force,
-      dryRun,
-      tty,
-      useExtends,
-      nameOverride,
-      explicitAs,
-      config,
-      context,
-      parsed,
-      sourceForYaml,
-      version,
-      pathInRepo,
-      persisted,
-      replay,
-      prep,
-      implicitPick,
-      narrowed,
-      discoveredFeatures,
-      sourceType: discovery.layout ? deriveSourceType(discovery.layout) : undefined,
-    });
-    return {
-      exitCode: 0,
-      data: {
-        source: sourceArg!,
-        mode: 'install',
-        installed: executeResult.installed,
-        skipped: executeResult.skipped,
-        dryRun,
-        ...(installReport.brokenResources.length > 0
-          ? { brokenResources: installReport.brokenResources }
-          : {}),
-      },
-    };
-  } finally {
-    if (prep.cleanup) await prep.cleanup();
-  }
+    dryRun,
+    force,
+    useExtends,
+    explicitAs,
+    nameOverride,
+    scope,
+    sourceArg,
+    replay,
+  });
 }

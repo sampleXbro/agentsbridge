@@ -27,6 +27,12 @@ const mockPathResolvers = {
 
 const mockDescriptor: TargetDescriptor = {
   id: 'plugin-target',
+  metadata: {
+    displayName: 'Plugin Target',
+    category: 'cli',
+    officialUrl: 'https://example.test/plugin-target',
+    shortDescription: 'Mock plugin descriptor used for registry tests',
+  },
   generators: mockGenerators,
   capabilities: {
     rules: 'native',

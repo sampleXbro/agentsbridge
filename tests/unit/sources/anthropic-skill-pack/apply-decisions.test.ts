@@ -318,6 +318,197 @@ describe('applyBrokenLinkDecisions — include-resolvable (skills)', () => {
   });
 });
 
+describe('applyBrokenLinkDecisions — raw destination preservation (C1)', () => {
+  it('rewrites body link authored with {baseDir}/ placeholder verbatim', async () => {
+    const targetAbs = join(root, 'references', 'foo.md');
+    mkdirSync(join(root, 'references'), { recursive: true });
+    writeFileSync(targetAbs, '# Foo\n');
+
+    const body = 'See [foo]({baseDir}/foo.md) for context.\n';
+    const skill = makeSkill('lint', body);
+    // link.raw is the verbatim destination as scanned; link.path is post-stripPath
+    // (the scanner expands `{baseDir}/` to the sibling form `foo.md`).
+    const link: ScannedLink = {
+      raw: '{baseDir}/foo.md',
+      path: 'foo.md',
+      kind: 'inline',
+    };
+    const aggregate: AggregateResult = {
+      ...emptyAggregate(),
+      skills: [skill],
+      brokenLinks: [
+        {
+          entityKind: 'skill',
+          entityName: 'lint',
+          resolved: [
+            {
+              link,
+              classification: 'resolvable-outside',
+              resolvedRelative: 'references/foo.md',
+              anchor: '',
+            },
+          ],
+        },
+      ],
+    };
+    const decisions: BrokenLinkDecision[] = [
+      { entityKind: 'skill', entityName: 'lint', action: 'include-resolvable' },
+    ];
+
+    const { logger } = makeLogger();
+    const out = await applyBrokenLinkDecisions({
+      contentRoot: root,
+      aggregate,
+      decisions,
+      logger,
+    });
+
+    expect(out.skills[0]!.body).toBe('See [foo](./references/foo.md) for context.\n');
+    expect(out.skills[0]!.supportingFiles).toHaveLength(1);
+    expect(out.skills[0]!.supportingFiles[0]!.relativePath).toBe('references/foo.md');
+  });
+
+  it('rewrites body link authored with Windows-style backslash separator', async () => {
+    const targetAbs = join(root, 'references', 'bar.md');
+    mkdirSync(join(root, 'references'), { recursive: true });
+    writeFileSync(targetAbs, '# Bar\n');
+
+    const body = 'See [bar](..\\references\\bar.md) for context.\n';
+    const skill = makeSkill('lint', body);
+    const link: ScannedLink = {
+      raw: '..\\references\\bar.md',
+      path: '../references/bar.md',
+      kind: 'inline',
+    };
+    const aggregate: AggregateResult = {
+      ...emptyAggregate(),
+      skills: [skill],
+      brokenLinks: [
+        {
+          entityKind: 'skill',
+          entityName: 'lint',
+          resolved: [
+            {
+              link,
+              classification: 'resolvable-outside',
+              resolvedRelative: 'references/bar.md',
+              anchor: '',
+            },
+          ],
+        },
+      ],
+    };
+    const decisions: BrokenLinkDecision[] = [
+      { entityKind: 'skill', entityName: 'lint', action: 'include-resolvable' },
+    ];
+
+    const { logger } = makeLogger();
+    const out = await applyBrokenLinkDecisions({
+      contentRoot: root,
+      aggregate,
+      decisions,
+      logger,
+    });
+
+    expect(out.skills[0]!.body).toBe('See [bar](./references/bar.md) for context.\n');
+    expect(out.skills[0]!.supportingFiles).toHaveLength(1);
+  });
+});
+
+describe('applyBrokenLinkDecisions — basename collision (C2)', () => {
+  it('preserves both files and rewrites each citation to its distinct local target when basenames collide', async () => {
+    const aAbs = join(root, 'docs', 'A', 'README.md');
+    const bAbs = join(root, 'docs', 'B', 'README.md');
+    mkdirSync(join(root, 'docs', 'A'), { recursive: true });
+    mkdirSync(join(root, 'docs', 'B'), { recursive: true });
+    writeFileSync(aAbs, 'A content\n');
+    writeFileSync(bAbs, 'B content\n');
+
+    const body = 'See [A](../docs/A/README.md) and [B](../docs/B/README.md).\n';
+    const skill = makeSkill('lint', body);
+    const aggregate: AggregateResult = {
+      ...emptyAggregate(),
+      skills: [skill],
+      brokenLinks: [
+        {
+          entityKind: 'skill',
+          entityName: 'lint',
+          resolved: [
+            resolvedLink('../docs/A/README.md', 'resolvable-outside', 'docs/A/README.md'),
+            resolvedLink('../docs/B/README.md', 'resolvable-outside', 'docs/B/README.md'),
+          ],
+        },
+      ],
+    };
+    const decisions: BrokenLinkDecision[] = [
+      { entityKind: 'skill', entityName: 'lint', action: 'include-resolvable' },
+    ];
+
+    const { logger } = makeLogger();
+    const out = await applyBrokenLinkDecisions({
+      contentRoot: root,
+      aggregate,
+      decisions,
+      logger,
+    });
+
+    const result = out.skills[0]!;
+    // Both supporting files must be present with distinct names.
+    expect(result.supportingFiles).toHaveLength(2);
+    const names = result.supportingFiles.map((sf) => sf.relativePath).sort();
+    expect(names).toEqual(['references/docs-A-README.md', 'references/docs-B-README.md']);
+    // Each citation rewrites to its own file.
+    expect(result.body).toContain('[A](./references/docs-A-README.md)');
+    expect(result.body).toContain('[B](./references/docs-B-README.md)');
+    // Content preserved per file.
+    const aFile = result.supportingFiles.find((sf) =>
+      sf.relativePath.endsWith('docs-A-README.md'),
+    )!;
+    const bFile = result.supportingFiles.find((sf) =>
+      sf.relativePath.endsWith('docs-B-README.md'),
+    )!;
+    expect(aFile.content).toBe('A content\n');
+    expect(bFile.content).toBe('B content\n');
+  });
+
+  it('uses bare basename when there is no collision', async () => {
+    const targetAbs = join(root, 'docs', 'single', 'README.md');
+    mkdirSync(join(root, 'docs', 'single'), { recursive: true });
+    writeFileSync(targetAbs, 'single\n');
+
+    const body = 'See [only](../docs/single/README.md).\n';
+    const skill = makeSkill('lint', body);
+    const aggregate: AggregateResult = {
+      ...emptyAggregate(),
+      skills: [skill],
+      brokenLinks: [
+        {
+          entityKind: 'skill',
+          entityName: 'lint',
+          resolved: [
+            resolvedLink('../docs/single/README.md', 'resolvable-outside', 'docs/single/README.md'),
+          ],
+        },
+      ],
+    };
+    const decisions: BrokenLinkDecision[] = [
+      { entityKind: 'skill', entityName: 'lint', action: 'include-resolvable' },
+    ];
+
+    const { logger } = makeLogger();
+    const out = await applyBrokenLinkDecisions({
+      contentRoot: root,
+      aggregate,
+      decisions,
+      logger,
+    });
+
+    expect(out.skills[0]!.supportingFiles).toHaveLength(1);
+    expect(out.skills[0]!.supportingFiles[0]!.relativePath).toBe('references/README.md');
+    expect(out.skills[0]!.body).toBe('See [only](./references/README.md).\n');
+  });
+});
+
 describe('applyBrokenLinkDecisions — include-resolvable (non-skills)', () => {
   it('downgrades agent decision to warnings (no supportingFiles for non-skills); body unchanged', async () => {
     const targetAbs = join(root, 'references', 'foo.md');

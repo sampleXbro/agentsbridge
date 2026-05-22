@@ -43,6 +43,7 @@ describe('cmdHandlers — install/uninstall/installs/mcp', () => {
       mode: 'uninstall' as const,
       removed: [],
       skipped: [],
+      failed: [],
       dryRun: false,
     },
   };

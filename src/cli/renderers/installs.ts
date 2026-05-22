@@ -7,6 +7,7 @@
  */
 
 import { logger } from '../../utils/output/logger.js';
+import { printCommandHelp } from '../help.js';
 import type { InstallsCommandResult } from '../commands/installs.js';
 import type { InstallsListEntry } from '../command-result.js';
 
@@ -60,7 +61,10 @@ export function renderInstalls(result: InstallsCommandResult): void {
     logger.error(result.error);
   }
   if (result.showHelp) {
-    printInstallsHelp();
+    // Single source of truth: `help-data.ts` carries the canonical flag set
+    // and description. Hand-rolling a second banner here drifts every time
+    // a new flag is added to the dispatcher.
+    printCommandHelp('installs');
     return;
   }
 
@@ -70,17 +74,4 @@ export function renderInstalls(result: InstallsCommandResult): void {
     return;
   }
   renderTable(data.installs.map(toRow));
-}
-
-function printInstallsHelp(): void {
-  logger.info('Usage: agentsmesh installs <subcommand> [flags]');
-  logger.info('');
-  logger.info('Subcommands:');
-  logger.info('  list  List installed packs');
-  logger.info('');
-  logger.info('Flags:');
-  logger.info('  --global  List from ~/.agentsmesh/installs.yaml');
-  logger.info('  --json    Machine-readable output');
-  logger.info('');
-  logger.info('Tip: `agentsmesh install <source>` (singular) adds a pack.');
 }

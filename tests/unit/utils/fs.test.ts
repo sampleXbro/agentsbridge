@@ -8,6 +8,7 @@ import {
   exists,
   mkdirp,
   readDirRecursive,
+  readDirRecursiveNoSymlinks,
   copyDir,
   ensureCacheSymlink,
 } from '../../../src/utils/filesystem/fs.js';
@@ -204,6 +205,73 @@ describe('readDirRecursive', () => {
     expect(files.sort()).toEqual([
       join(base, 'business-marketing', 'vital-health-content-agent.md'),
     ]);
+  });
+});
+
+describe('readDirRecursiveNoSymlinks (M4)', () => {
+  it('returns regular files recursively', async () => {
+    mkdirSync(join(TEST_DIR, 'sub', 'inner'), { recursive: true });
+    writeFileSync(join(TEST_DIR, 'top.md'), 'top');
+    writeFileSync(join(TEST_DIR, 'sub', 'mid.md'), 'mid');
+    writeFileSync(join(TEST_DIR, 'sub', 'inner', 'leaf.md'), 'leaf');
+
+    const files = await readDirRecursiveNoSymlinks(TEST_DIR);
+    expect(files.sort()).toEqual([
+      join(TEST_DIR, 'sub', 'inner', 'leaf.md'),
+      join(TEST_DIR, 'sub', 'mid.md'),
+      join(TEST_DIR, 'top.md'),
+    ]);
+  });
+
+  it('returns [] for a missing directory', async () => {
+    expect(await readDirRecursiveNoSymlinks(join(TEST_DIR, 'no-such'))).toEqual([]);
+  });
+
+  it('skips symlinked files entirely', async () => {
+    writeFileSync(join(TEST_DIR, 'real.md'), 'real');
+    const outsideDir = join(tmpdir(), `am-no-symlink-out-${Date.now()}`);
+    mkdirSync(outsideDir, { recursive: true });
+    writeFileSync(join(outsideDir, 'out.md'), 'outside');
+    try {
+      symlinkSync(join(outsideDir, 'out.md'), join(TEST_DIR, 'link.md'));
+    } catch {
+      // Symlink unsupported on this filesystem; nothing to assert.
+      rmSync(outsideDir, { recursive: true, force: true });
+      return;
+    }
+
+    const files = await readDirRecursiveNoSymlinks(TEST_DIR);
+    expect(files.sort()).toEqual([join(TEST_DIR, 'real.md')]);
+    rmSync(outsideDir, { recursive: true, force: true });
+  });
+
+  it('skips symlinked directories (does not follow into them)', async () => {
+    mkdirSync(join(TEST_DIR, 'kept'), { recursive: true });
+    writeFileSync(join(TEST_DIR, 'kept', 'a.md'), 'a');
+    const outsideDir = join(tmpdir(), `am-no-symlink-dir-${Date.now()}`);
+    mkdirSync(outsideDir, { recursive: true });
+    writeFileSync(join(outsideDir, 'should-not-show.md'), 'no');
+    try {
+      symlinkSync(outsideDir, join(TEST_DIR, 'linked-dir'));
+    } catch {
+      rmSync(outsideDir, { recursive: true, force: true });
+      return;
+    }
+
+    const files = await readDirRecursiveNoSymlinks(TEST_DIR);
+    expect(files.sort()).toEqual([join(TEST_DIR, 'kept', 'a.md')]);
+    rmSync(outsideDir, { recursive: true, force: true });
+  });
+
+  it('skips recursive-loop branches when a path segment repeats', async () => {
+    // The recursive guard fires when the same dirname appears 3+ times in
+    // the walked branch. Build `a/a/a/` so the deepest level is skipped.
+    mkdirSync(join(TEST_DIR, 'a', 'a', 'a'), { recursive: true });
+    writeFileSync(join(TEST_DIR, 'a', 'a', 'a', 'leaf.md'), 'leaf');
+
+    const files = await readDirRecursiveNoSymlinks(TEST_DIR);
+    // Guard kicks in before recursing into the 3rd `a/`.
+    expect(files).toEqual([]);
   });
 });
 

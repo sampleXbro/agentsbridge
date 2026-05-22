@@ -21,6 +21,12 @@ function makeLegacyTarget(name: string): TargetGenerators {
 function makeDescriptor(id: string): TargetDescriptor {
   return {
     id,
+    metadata: {
+      displayName: id,
+      category: 'cli',
+      officialUrl: 'https://example.test/',
+      shortDescription: `Test descriptor for ${id}`,
+    },
     generators: makeLegacyTarget(id),
     capabilities: {
       rules: 'native',

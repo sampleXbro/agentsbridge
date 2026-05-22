@@ -8,6 +8,12 @@
 
 export const descriptor = {
   id: 'simple-plugin',
+  metadata: {
+    displayName: 'Simple Plugin',
+    category: 'cli',
+    officialUrl: 'https://example.test/simple-plugin',
+    shortDescription: 'Minimal plugin fixture for load-plugin tests',
+  },
   generators: {
     name: 'simple-plugin',
     generateRules(canonical) {

@@ -18,6 +18,12 @@ const baseCaps = {
 
 export default {
   id: 'default-plugin',
+  metadata: {
+    displayName: 'Default Plugin',
+    category: 'cli',
+    officialUrl: 'https://example.test/default-plugin',
+    shortDescription: 'Default-export plugin fixture',
+  },
   generators: {
     name: 'default-plugin',
     generateRules() { return [{ path: 'default-plugin.md', content: '# default' }]; },

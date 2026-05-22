@@ -115,9 +115,10 @@ agentsmesh install github:org/repo --as agents --name team-agents
 
 ```bash
 agentsmesh install github:org/base-config --extends
+agentsmesh install github:org/commands --path workflows --as commands --extends
 ```
 
-Instead of copying files, records the source in `agentsmesh.yaml`'s `extends` field. Config is resolved at generate time from cache.
+Instead of copying files, records the source in `agentsmesh.yaml`'s `extends` field. Config is resolved at generate time from cache. When you combine `--extends` with `--as`, the forced kind is saved as `extends[].as`, so flat markdown folders keep loading as the intended resource type on every future `generate`.
 
 ### Reinstall after a fresh clone
 

@@ -15,7 +15,7 @@ import {
   realpath,
   mkdir,
 } from 'node:fs/promises';
-import { dirname, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { FileSystemError } from '../../core/errors.js';
 
 interface ErrnoLike {
@@ -23,15 +23,34 @@ interface ErrnoLike {
   message: string;
 }
 
+const MAX_RECURSIVE_DEPTH = 32;
+const MAX_SEGMENT_REPETITIONS = 3;
+
 async function mkdirp(path: string): Promise<void> {
   await mkdir(path, { recursive: true });
+}
+
+function shouldSkipRecursiveBranch(segments: readonly string[]): boolean {
+  if (segments.length > MAX_RECURSIVE_DEPTH) return true;
+  const counts = new Map<string, number>();
+  for (const segment of segments) {
+    const count = (counts.get(segment) ?? 0) + 1;
+    if (count >= MAX_SEGMENT_REPETITIONS) return true;
+    counts.set(segment, count);
+  }
+  return false;
 }
 
 /**
  * List all files recursively under dir. Returns absolute paths only.
  * Skips revisiting the same real directory (breaks symlink cycles).
  */
-export async function readDirRecursive(dir: string, visited?: Set<string>): Promise<string[]> {
+export async function readDirRecursive(
+  dir: string,
+  visited?: Set<string>,
+  branchSegments?: readonly string[],
+): Promise<string[]> {
+  const currentBranchSegments = branchSegments ?? [basename(dir)];
   let canonicalDir: string;
   try {
     canonicalDir = await realpath(dir);
@@ -60,7 +79,9 @@ export async function readDirRecursive(dir: string, visited?: Set<string>): Prom
             () => false,
           )));
       if (walkChild) {
-        files.push(...(await readDirRecursive(full, seen)));
+        const nextSegments = [...currentBranchSegments, ent.name];
+        if (shouldSkipRecursiveBranch(nextSegments)) continue;
+        files.push(...(await readDirRecursive(full, seen, nextSegments)));
       } else {
         files.push(full);
       }

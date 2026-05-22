@@ -96,6 +96,14 @@ describe('error-handling', () => {
     expect(r.stdout).toMatch(/usage|agentsmesh|init|generate|import/i);
   });
 
+  it('install --help shows command help instead of missing-source usage error', async () => {
+    dir = createTestProject();
+    const r = await runCli('install --help', dir);
+    expect(r.exitCode).toBe(0);
+    expect(r.stdout).toContain('agentsmesh install <source>');
+    expect(r.stderr).not.toContain('Missing source');
+  });
+
   it('--version always works — even with broken config', async () => {
     dir = createTestProject();
     const r = await runCli('--version', dir);

@@ -19,6 +19,7 @@
 
 import { join } from 'node:path';
 import { loadScopedConfig } from '../../config/core/scope.js';
+import { bootstrapPlugins } from '../../plugins/bootstrap-plugins.js';
 import { acquireInstallLock } from '../lock/install-lock.js';
 import { readInstallManifest } from '../core/install-manifest.js';
 import { runPostOperationGenerate } from '../run/post-install-generate.js';
@@ -104,6 +105,7 @@ export async function runUninstall(
   }
 
   const { config, context } = await loadScopedConfig(projectRoot, scope);
+  await bootstrapPlugins(config, projectRoot);
   const lockRelease = await acquireInstallLock(context.canonicalDir);
 
   try {

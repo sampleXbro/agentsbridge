@@ -13,10 +13,13 @@ import type {
   CanonicalSkill,
 } from '../../core/types.js';
 import { exists } from '../../utils/filesystem/fs.js';
-import { parseAgents } from '../features/agents.js';
+import {
+  importAgents,
+  importCommands,
+  importRules,
+} from '../../install/importers/entity-importers.js';
+import type { ParseFrontmatterOptions } from '../features/rules.js';
 import { loadCanonicalFiles } from './loader.js';
-import { parseCommands } from '../features/commands.js';
-import { parseRules } from '../features/rules.js';
 import { isSkillPackLayout, loadSkillsAtExtendPath } from './skill-pack-load.js';
 
 function emptyCanonical(): CanonicalFiles {
@@ -82,50 +85,72 @@ export async function normalizeSlicePath(absolutePath: string): Promise<{
   );
 }
 
-async function parseRulesAt(sliceRoot: string): Promise<CanonicalRule[]> {
+/**
+ * Install-time slice loaders. These route through the install-layer entity
+ * importers (`importRules` / `importCommands` / `importAgents`) so repo
+ * boilerplate files (`README.md`, `CONTRIBUTING.md`, `LICENSE*`,
+ * `CODE_OF_CONDUCT.md`, ...) that frequently sit next to entity content in
+ * third-party source repos are excluded from canonical discovery.
+ *
+ * The pure canonical loader (`loadCanonicalFiles`) used for the user's own
+ * `.agentsmesh/` stays filter-free per the canonical-parser contract.
+ */
+async function parseRulesAt(
+  sliceRoot: string,
+  opts: ParseFrontmatterOptions,
+): Promise<CanonicalRule[]> {
   const base = basename(sliceRoot);
   if (base === 'rules') {
-    return parseRules(sliceRoot);
+    return importRules(sliceRoot, opts);
   }
   const nested = join(sliceRoot, 'rules');
   if (await exists(nested)) {
-    return parseRules(nested);
+    return importRules(nested, opts);
   }
   return [];
 }
 
-async function parseCommandsAt(sliceRoot: string): Promise<CanonicalCommand[]> {
+async function parseCommandsAt(
+  sliceRoot: string,
+  opts: ParseFrontmatterOptions,
+): Promise<CanonicalCommand[]> {
   const base = basename(sliceRoot);
   if (base === 'commands') {
-    return parseCommands(sliceRoot);
+    return importCommands(sliceRoot, opts);
   }
   const nested = join(sliceRoot, 'commands');
   if (await exists(nested)) {
-    return parseCommands(nested);
+    return importCommands(nested, opts);
   }
   return [];
 }
 
-async function parseAgentsAt(sliceRoot: string): Promise<CanonicalAgent[]> {
+async function parseAgentsAt(
+  sliceRoot: string,
+  opts: ParseFrontmatterOptions,
+): Promise<CanonicalAgent[]> {
   const base = basename(sliceRoot);
   if (base === 'agents') {
-    return parseAgents(sliceRoot);
+    return importAgents(sliceRoot, opts);
   }
   const nested = join(sliceRoot, 'agents');
   if (await exists(nested)) {
-    return parseAgents(nested);
+    return importAgents(nested, opts);
   }
   return [];
 }
 
 /** Skill pack at slice root or nested `skills/` (common in upstream repos). */
-async function loadSkillsForPartialSlice(sliceRoot: string): Promise<CanonicalSkill[]> {
+async function loadSkillsForPartialSlice(
+  sliceRoot: string,
+  opts: ParseFrontmatterOptions,
+): Promise<CanonicalSkill[]> {
   if (await isSkillPackLayout(sliceRoot)) {
-    return loadSkillsAtExtendPath(sliceRoot);
+    return loadSkillsAtExtendPath(sliceRoot, opts);
   }
   const nestedSkills = join(sliceRoot, 'skills');
   if (await isSkillPackLayout(nestedSkills)) {
-    return loadSkillsAtExtendPath(nestedSkills);
+    return loadSkillsAtExtendPath(nestedSkills, opts);
   }
   return [];
 }
@@ -133,23 +158,27 @@ async function loadSkillsForPartialSlice(sliceRoot: string): Promise<CanonicalSk
 /**
  * Load whatever canonical resources exist at sliceRoot (directory).
  */
-export async function loadCanonicalSliceAtPath(sliceRoot: string): Promise<CanonicalFiles> {
+export async function loadCanonicalSliceAtPath(
+  sliceRoot: string,
+  opts: ParseFrontmatterOptions = {},
+): Promise<CanonicalFiles> {
   const ab = join(sliceRoot, '.agentsmesh');
   if (await exists(ab)) {
-    return loadCanonicalFiles(sliceRoot);
+    return loadCanonicalFiles(sliceRoot, opts);
   }
 
   const partial = emptyCanonical();
-  partial.rules = await parseRulesAt(sliceRoot);
-  partial.commands = await parseCommandsAt(sliceRoot);
-  partial.agents = await parseAgentsAt(sliceRoot);
+  partial.rules = await parseRulesAt(sliceRoot, opts);
+  partial.commands = await parseCommandsAt(sliceRoot, opts);
+  partial.agents = await parseAgentsAt(sliceRoot, opts);
 
-  partial.skills = await loadSkillsForPartialSlice(sliceRoot);
+  partial.skills = await loadSkillsForPartialSlice(sliceRoot, opts);
 
   if (isCanonicalSliceEmpty(partial)) {
     throw new Error(
       `No installable resources at ${sliceRoot}. ` +
-        'Expected .agentsmesh/, or rules/, commands/, agents/, or Anthropic-style skills (SKILL.md).',
+        'Expected .agentsmesh/, or rules/, commands/, agents/, or Anthropic-style skills (SKILL.md). ' +
+        'Hint: pass --as commands|agents|rules|skills to force a kind for flat markdown directories.',
     );
   }
 

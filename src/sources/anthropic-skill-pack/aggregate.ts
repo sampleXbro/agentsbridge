@@ -19,6 +19,7 @@ import {
   importRules,
   importSkills,
 } from '../../install/importers/entity-importers.js';
+import type { ParseFrontmatterOptions } from '../../canonical/features/rules.js';
 import type { EntityWithBrokenLinks } from '../../install/prompts/broken-link-prompt.js';
 import type {
   CanonicalAgent,
@@ -66,12 +67,13 @@ export interface AggregateResult {
 export async function aggregateAnthropicSkillPack(
   contentRoot: string,
   descriptor: SourceDescriptor,
+  parseOpts: ParseFrontmatterOptions = {},
 ): Promise<AggregateResult> {
   const [skills, agents, rules, merged] = await Promise.all([
-    importSkills(`${contentRoot}/skills`),
-    importAgents(`${contentRoot}/agents`),
-    importRules(`${contentRoot}/rules`),
-    mergeCommands(contentRoot, descriptor.mergeFromToolDirs),
+    importSkills(`${contentRoot}/skills`, parseOpts),
+    importAgents(`${contentRoot}/agents`, parseOpts),
+    importRules(`${contentRoot}/rules`, parseOpts),
+    mergeCommands(contentRoot, descriptor.mergeFromToolDirs, parseOpts),
   ]);
 
   const includedPaths = buildIncludedPaths(contentRoot, skills, agents, merged.commands, rules);

@@ -14,7 +14,7 @@
 import { basename } from 'node:path';
 import { parseAgents } from '../../canonical/features/agents.js';
 import { parseCommands } from '../../canonical/features/commands.js';
-import { parseRules } from '../../canonical/features/rules.js';
+import { parseRules, type ParseFrontmatterOptions } from '../../canonical/features/rules.js';
 import { parseSkills } from '../../canonical/features/skills.js';
 import type {
   CanonicalAgent,
@@ -25,20 +25,29 @@ import type {
 import { isBoilerplate } from './boilerplate-filter.js';
 
 /** Returns agents from `agentsDir`, excluding repository-boilerplate files. */
-export async function importAgents(agentsDir: string): Promise<CanonicalAgent[]> {
-  const agents = await parseAgents(agentsDir);
+export async function importAgents(
+  agentsDir: string,
+  opts: ParseFrontmatterOptions = {},
+): Promise<CanonicalAgent[]> {
+  const agents = await parseAgents(agentsDir, opts);
   return agents.filter((entity) => !isBoilerplate(basename(entity.source)));
 }
 
 /** Returns commands from `commandsDir`, excluding repository-boilerplate files. */
-export async function importCommands(commandsDir: string): Promise<CanonicalCommand[]> {
-  const commands = await parseCommands(commandsDir);
+export async function importCommands(
+  commandsDir: string,
+  opts: ParseFrontmatterOptions = {},
+): Promise<CanonicalCommand[]> {
+  const commands = await parseCommands(commandsDir, opts);
   return commands.filter((entity) => !isBoilerplate(basename(entity.source)));
 }
 
 /** Returns rules from `rulesDir`, excluding repository-boilerplate files. */
-export async function importRules(rulesDir: string): Promise<CanonicalRule[]> {
-  const rules = await parseRules(rulesDir);
+export async function importRules(
+  rulesDir: string,
+  opts: ParseFrontmatterOptions = {},
+): Promise<CanonicalRule[]> {
+  const rules = await parseRules(rulesDir, opts);
   return rules.filter((entity) => !isBoilerplate(basename(entity.source)));
 }
 
@@ -49,6 +58,9 @@ export async function importRules(rulesDir: string): Promise<CanonicalRule[]> {
  * nested `scripts/`, `references/`, `assets/`) are preserved by the
  * canonical parser.
  */
-export async function importSkills(skillsDir: string): Promise<CanonicalSkill[]> {
-  return parseSkills(skillsDir);
+export async function importSkills(
+  skillsDir: string,
+  opts: ParseFrontmatterOptions = {},
+): Promise<CanonicalSkill[]> {
+  return parseSkills(skillsDir, opts);
 }

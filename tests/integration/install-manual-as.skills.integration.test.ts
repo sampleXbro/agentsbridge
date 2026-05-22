@@ -36,7 +36,7 @@ afterEach(() => {
 });
 
 describe('install standalone skill repo (integration)', () => {
-  it('installs a repo-root skill using frontmatter name and excludes boilerplate', async () => {
+  it('installs a repo-root skill: noise excluded, LICENSE / README preserved', async () => {
     const repoDir = join(ROOT, 'code-review-skill');
     const project = join(ROOT, 'project');
     mkdirSync(join(repoDir, 'reference'), { recursive: true });
@@ -47,8 +47,10 @@ describe('install standalone skill repo (integration)', () => {
     );
     writeFileSync(join(repoDir, 'reference', 'react.md'), '# React guide\n');
     writeFileSync(join(repoDir, 'assets', 'template.md'), '# Template\n');
+    // Preserved.
     writeFileSync(join(repoDir, 'README.md'), '# Code Review Skill\n');
     writeFileSync(join(repoDir, 'LICENSE'), 'MIT\n');
+    // Noise / non-content.
     writeFileSync(join(repoDir, 'CONTRIBUTING.md'), '# Contributing\n');
     writeFileSync(join(repoDir, '.gitignore'), 'node_modules\n');
     seedProject(project);
@@ -59,6 +61,8 @@ describe('install standalone skill repo (integration)', () => {
     expect(packFiles).toEqual([
       '.agentsmesh-install-manifest.json',
       'pack.yaml',
+      'skills/code-review-excellence/LICENSE',
+      'skills/code-review-excellence/README.md',
       'skills/code-review-excellence/SKILL.md',
       'skills/code-review-excellence/assets/template.md',
       'skills/code-review-excellence/reference/react.md',
@@ -67,6 +71,8 @@ describe('install standalone skill repo (integration)', () => {
     const generatedFiles = listRelativeFiles(join(project, '.claude'));
     expect(generatedFiles).toEqual([
       'CLAUDE.md',
+      'skills/code-review-excellence/LICENSE',
+      'skills/code-review-excellence/README.md',
       'skills/code-review-excellence/SKILL.md',
       'skills/code-review-excellence/assets/template.md',
       'skills/code-review-excellence/reference/react.md',

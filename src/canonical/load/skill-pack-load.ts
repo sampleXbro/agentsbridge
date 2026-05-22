@@ -7,6 +7,7 @@ import { readdir } from 'node:fs/promises';
 import type { CanonicalSkill } from '../../core/types.js';
 import { exists } from '../../utils/filesystem/fs.js';
 import { parseSkillDirectory, parseSkills } from '../features/skills.js';
+import type { ParseFrontmatterOptions } from '../features/rules.js';
 
 const SKILL = 'SKILL.md';
 
@@ -27,11 +28,14 @@ export async function isSkillPackLayout(root: string): Promise<boolean> {
 }
 
 /** Parse skills at path (registry or single skill leaf). */
-export async function loadSkillsAtExtendPath(skillsRoot: string): Promise<CanonicalSkill[]> {
+export async function loadSkillsAtExtendPath(
+  skillsRoot: string,
+  opts: ParseFrontmatterOptions = {},
+): Promise<CanonicalSkill[]> {
   if (!(await exists(skillsRoot))) return [];
   if (await exists(join(skillsRoot, SKILL))) {
-    const one = await parseSkillDirectory(skillsRoot);
+    const one = await parseSkillDirectory(skillsRoot, opts);
     return one ? [one] : [];
   }
-  return parseSkills(skillsRoot);
+  return parseSkills(skillsRoot, opts);
 }

@@ -24,6 +24,11 @@ import type {
   EntityWithBrokenLinks,
 } from '../../install/prompts/broken-link-prompt.js';
 import type { ResolvedLink } from '../../install/links/resolve-link.js';
+import {
+  applyRangeRewrites,
+  scanMarkdownLinks,
+  type RangeRewrite,
+} from '../../core/reference/markdown-link-scan.js';
 import type { CanonicalSkill, SkillSupportingFile } from '../../core/types.js';
 
 export interface WarnLogger {
@@ -37,8 +42,23 @@ export interface ApplyBrokenLinkDecisionsArgs {
   readonly logger: WarnLogger;
 }
 
-function escapeRegex(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+/**
+ * Build exact-range rewrites for every markdown link destination in `body`
+ * that matches `linkPath`. Uses the shared markdown scanner so fenced code
+ * blocks containing the same path stay untouched, and rewrites operate on
+ * destination spans only (never on surrounding markdown).
+ */
+function buildLinkRewrites(body: string, linkPath: string, replacement: string): RangeRewrite[] {
+  const rewrites: RangeRewrite[] = [];
+  for (const token of scanMarkdownLinks(body)) {
+    if (token.destination !== linkPath) continue;
+    rewrites.push({
+      offset: token.destinationOffset,
+      length: token.destinationLength,
+      replacement,
+    });
+  }
+  return rewrites;
 }
 
 function warnLink(logger: WarnLogger, entity: EntityWithBrokenLinks, resolved: ResolvedLink): void {
@@ -71,7 +91,8 @@ async function applyResolvableToSkill(
         } satisfies SkillSupportingFile,
       ];
 
-  const body = skill.body.replace(new RegExp(escapeRegex(resolved.link.path), 'g'), localDest);
+  const rewrites = buildLinkRewrites(skill.body, resolved.link.path, localDest);
+  const body = applyRangeRewrites(skill.body, rewrites);
   return { ...skill, body, supportingFiles };
 }
 

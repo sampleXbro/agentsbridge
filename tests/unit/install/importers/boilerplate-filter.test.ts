@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { isBoilerplate } from '../../../../src/install/importers/boilerplate-filter.js';
+import {
+  isBoilerplate,
+  isNoiseBoilerplate,
+  isPreservedBoilerplate,
+  isRepoNonContentDir,
+  isRepoNonContentFile,
+} from '../../../../src/install/importers/boilerplate-filter.js';
 
 describe('isBoilerplate', () => {
   describe('README variants', () => {
@@ -139,5 +145,128 @@ describe('isBoilerplate', () => {
     it('does not match .DS_Store', () => {
       expect(isBoilerplate('.DS_Store')).toBe(false);
     });
+  });
+});
+
+describe('isPreservedBoilerplate — files kept as passive supporting content', () => {
+  it('matches LICENSE variants (need to travel with redistributed content)', () => {
+    expect(isPreservedBoilerplate('LICENSE')).toBe(true);
+    expect(isPreservedBoilerplate('LICENSE.md')).toBe(true);
+    expect(isPreservedBoilerplate('LICENSE.txt')).toBe(true);
+    expect(isPreservedBoilerplate('LICENSE-MIT')).toBe(true);
+    expect(isPreservedBoilerplate('LICENSE-APACHE.md')).toBe(true);
+    expect(isPreservedBoilerplate('license-bsd.txt')).toBe(true);
+  });
+
+  it('matches NOTICE (required by Apache 2.0 attribution)', () => {
+    expect(isPreservedBoilerplate('NOTICE')).toBe(true);
+    expect(isPreservedBoilerplate('NOTICE.md')).toBe(true);
+    expect(isPreservedBoilerplate('NOTICE.txt')).toBe(true);
+  });
+
+  it('matches COPYING / COPYRIGHT (common GPL/BSD attribution)', () => {
+    expect(isPreservedBoilerplate('COPYING')).toBe(true);
+    expect(isPreservedBoilerplate('COPYING.md')).toBe(true);
+    expect(isPreservedBoilerplate('COPYRIGHT')).toBe(true);
+  });
+
+  it('matches README (skill-specific docs that explain context to the consumer)', () => {
+    expect(isPreservedBoilerplate('README')).toBe(true);
+    expect(isPreservedBoilerplate('README.md')).toBe(true);
+    expect(isPreservedBoilerplate('readme.md')).toBe(true);
+    expect(isPreservedBoilerplate('README.txt')).toBe(true);
+  });
+
+  it('does not match noise files (CHANGELOG, CONTRIBUTING, CODE_OF_CONDUCT, ...)', () => {
+    expect(isPreservedBoilerplate('CHANGELOG.md')).toBe(false);
+    expect(isPreservedBoilerplate('CONTRIBUTING.md')).toBe(false);
+    expect(isPreservedBoilerplate('CODE_OF_CONDUCT.md')).toBe(false);
+    expect(isPreservedBoilerplate('SECURITY.md')).toBe(false);
+  });
+
+  it('does not match arbitrary content files', () => {
+    expect(isPreservedBoilerplate('SKILL.md')).toBe(false);
+    expect(isPreservedBoilerplate('interview-me.md')).toBe(false);
+    expect(isPreservedBoilerplate('_root.md')).toBe(false);
+  });
+});
+
+describe('isNoiseBoilerplate — files dropped from skill supporting content', () => {
+  it('matches CHANGELOG / CONTRIBUTING / community-health (NOT README anymore)', () => {
+    expect(isNoiseBoilerplate('CHANGELOG.md')).toBe(true);
+    expect(isNoiseBoilerplate('CONTRIBUTING.md')).toBe(true);
+    expect(isNoiseBoilerplate('CODE_OF_CONDUCT.md')).toBe(true);
+    expect(isNoiseBoilerplate('SECURITY.md')).toBe(true);
+    expect(isNoiseBoilerplate('SUPPORT.md')).toBe(true);
+    expect(isNoiseBoilerplate('AUTHORS')).toBe(true);
+    expect(isNoiseBoilerplate('CODEOWNERS')).toBe(true);
+  });
+
+  it('does NOT match preserved files (LICENSE, NOTICE, COPYING, README)', () => {
+    expect(isNoiseBoilerplate('LICENSE')).toBe(false);
+    expect(isNoiseBoilerplate('LICENSE.md')).toBe(false);
+    expect(isNoiseBoilerplate('LICENSE-MIT')).toBe(false);
+    expect(isNoiseBoilerplate('NOTICE')).toBe(false);
+    expect(isNoiseBoilerplate('COPYING')).toBe(false);
+    expect(isNoiseBoilerplate('COPYRIGHT')).toBe(false);
+    expect(isNoiseBoilerplate('README.md')).toBe(false);
+  });
+
+  it('does not match SKILL.md or arbitrary entity content', () => {
+    expect(isNoiseBoilerplate('SKILL.md')).toBe(false);
+    expect(isNoiseBoilerplate('interview-me.md')).toBe(false);
+  });
+});
+
+describe('isBoilerplate — union of preserved + noise (entity discovery filter)', () => {
+  it('returns true for ALL preserved files (never an entity, even though kept as supporting content)', () => {
+    expect(isBoilerplate('LICENSE')).toBe(true);
+    expect(isBoilerplate('NOTICE.md')).toBe(true);
+    expect(isBoilerplate('COPYING')).toBe(true);
+    expect(isBoilerplate('README.md')).toBe(true);
+  });
+
+  it('returns true for ALL noise files', () => {
+    expect(isBoilerplate('CHANGELOG.md')).toBe(true);
+    expect(isBoilerplate('CONTRIBUTING.md')).toBe(true);
+  });
+});
+
+describe('isRepoNonContentDir', () => {
+  it('matches VCS / tooling dirs', () => {
+    expect(isRepoNonContentDir('.git')).toBe(true);
+    expect(isRepoNonContentDir('.github')).toBe(true);
+    expect(isRepoNonContentDir('.gitlab')).toBe(true);
+    expect(isRepoNonContentDir('node_modules')).toBe(true);
+    expect(isRepoNonContentDir('.vscode')).toBe(true);
+    expect(isRepoNonContentDir('.idea')).toBe(true);
+  });
+
+  it('does not match canonical content dirs', () => {
+    expect(isRepoNonContentDir('skills')).toBe(false);
+    expect(isRepoNonContentDir('agents')).toBe(false);
+    expect(isRepoNonContentDir('commands')).toBe(false);
+    expect(isRepoNonContentDir('rules')).toBe(false);
+    expect(isRepoNonContentDir('references')).toBe(false);
+    expect(isRepoNonContentDir('.agentsmesh')).toBe(false);
+  });
+});
+
+describe('isRepoNonContentFile', () => {
+  it('matches lockfiles, package.json, dotfiles, OS noise', () => {
+    expect(isRepoNonContentFile('package.json')).toBe(true);
+    expect(isRepoNonContentFile('package-lock.json')).toBe(true);
+    expect(isRepoNonContentFile('pnpm-lock.yaml')).toBe(true);
+    expect(isRepoNonContentFile('yarn.lock')).toBe(true);
+    expect(isRepoNonContentFile('.gitignore')).toBe(true);
+    expect(isRepoNonContentFile('.gitattributes')).toBe(true);
+    expect(isRepoNonContentFile('.editorconfig')).toBe(true);
+    expect(isRepoNonContentFile('.DS_Store')).toBe(true);
+  });
+
+  it('does not match markdown content', () => {
+    expect(isRepoNonContentFile('SKILL.md')).toBe(false);
+    expect(isRepoNonContentFile('README.md')).toBe(false);
+    expect(isRepoNonContentFile('agent.md')).toBe(false);
   });
 });

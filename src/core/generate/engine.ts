@@ -13,6 +13,7 @@ import { getDescriptor } from '../../targets/catalog/registry.js';
 import { getAdditionalRootDecorationPaths } from '../../targets/catalog/layout-outputs.js';
 import { rewriteGeneratedReferences } from '../reference/rewriter.js';
 import { validateGeneratedMarkdownLinks } from '../reference/validate-generated-markdown-links.js';
+import { buildPackOriginatedKeys } from '../reference/pack-originated-keys.js';
 import { resolveOutputCollisions, refreshResultStatus } from './collision.js';
 import { generateFeature } from './feature-loop.js';
 import { decoratePrimaryRootInstructions } from './root-instruction-decorator.js';
@@ -156,7 +157,9 @@ export async function generate(ctx: GenerateContext): Promise<GenerateResult[]> 
     sharedPaths,
   );
 
-  validateGeneratedMarkdownLinks(rewrittenResults, projectRoot);
+  validateGeneratedMarkdownLinks(rewrittenResults, projectRoot, {
+    packOriginatedKeys: buildPackOriginatedKeys(canonical),
+  });
 
   return resolveOutputCollisions(rewrittenResults.map(refreshResultStatus));
 }

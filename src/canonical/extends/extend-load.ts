@@ -15,6 +15,7 @@ import { loadCanonicalFiles } from '../load/loader.js';
 import { importNativeToCanonical } from './native-extends-importer.js';
 import { isSkillPackLayout, loadSkillsAtExtendPath } from '../load/skill-pack-load.js';
 import { loadCanonicalSliceAtPath, normalizeSlicePath } from '../load/load-canonical-slice.js';
+import { stageManualInstallScope } from '../../install/manual/manual-install-scope.js';
 
 function emptyCanonical(): CanonicalFiles {
   return {
@@ -34,6 +35,19 @@ function emptyCanonical(): CanonicalFiles {
  */
 export async function loadCanonicalForExtend(ext: ResolvedExtend): Promise<CanonicalFiles> {
   const base = ext.resolvedPath;
+
+  if (ext.as !== undefined) {
+    const rawRoot = ext.path ? join(base, ext.path) : base;
+    if (!(await exists(rawRoot))) {
+      throw new Error(`Extend "${ext.name}": path does not exist: ${rawRoot}`);
+    }
+    const staged = await stageManualInstallScope(rawRoot, ext.as);
+    try {
+      return loadCanonicalFiles(join(staged.discoveryRoot, '.agentsmesh'));
+    } finally {
+      await staged.cleanup();
+    }
+  }
 
   if (!ext.path) {
     const agentsmeshDir = join(base, '.agentsmesh');

@@ -168,6 +168,35 @@ describe('rewriteGeneratedReferences — skipPaths', () => {
     expect(merged[0]!.content).toBe(sharedContent);
   });
 
+  it('R-7: resolves amp/cline AGENTS.md collision by preferring the version with embedded rules', () => {
+    // amp embeds non-root rules in AGENTS.md; cline emits them to .clinerules/*.md
+    // and writes only the root rule to AGENTS.md. After stripping the optional
+    // embedded-rules block they're identical, so amp's richer rendering wins.
+    const cline =
+      'Root rule body.\n\n<!-- agentsmesh:root-generation-contract:start -->\nContract.\n<!-- agentsmesh:root-generation-contract:end -->';
+    const amp =
+      'Root rule body.\n\n<!-- agentsmesh:embedded-rules:start -->\n## Code review\nBody.\n<!-- agentsmesh:embedded-rules:end -->\n\n<!-- agentsmesh:root-generation-contract:start -->\nContract.\n<!-- agentsmesh:root-generation-contract:end -->';
+    const results: GenerateResult[] = [
+      { target: 'amp', path: 'AGENTS.md', content: amp, status: 'created' },
+      { target: 'cline', path: 'AGENTS.md', content: cline, status: 'created' },
+    ];
+    const merged = resolveOutputCollisions(results);
+    expect(merged).toHaveLength(1);
+    expect(merged[0]!.content).toBe(amp);
+  });
+
+  it('R-7: STILL throws when amp/cline AGENTS.md content differs beyond optional blocks', () => {
+    // If the non-block content actually differs, the collision is real and must throw.
+    const cline = 'Root rule body A.\n';
+    const amp =
+      'Root rule body B.\n<!-- agentsmesh:embedded-rules:start -->\nx\n<!-- agentsmesh:embedded-rules:end -->';
+    const results: GenerateResult[] = [
+      { target: 'amp', path: 'AGENTS.md', content: amp, status: 'created' },
+      { target: 'cline', path: 'AGENTS.md', content: cline, status: 'created' },
+    ];
+    expect(() => resolveOutputCollisions(results)).toThrow(/Conflicting generated outputs/);
+  });
+
   it('omitting skipPaths preserves existing rewrite behavior', () => {
     const projectRoot = '/proj';
     const results: GenerateResult[] = [

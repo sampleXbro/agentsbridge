@@ -8,12 +8,14 @@ import { prepareInstallDiscovery } from '../core/prepare-install-discovery.js';
 import type { PrepareInstallDiscoveryResult } from '../core/prepare-install-discovery.js';
 import type { CanonicalFiles } from '../../core/types.js';
 import type { ExtendPick } from '../../config/core/schema.js';
+import type { ParseFrontmatterOptions } from '../../canonical/features/rules.js';
 
 export async function resolveDiscoveredForInstall(
   resolvedPath: string,
   contentRoot: string,
   pathInRepo: string,
   explicitTarget: string | undefined,
+  parseOpts: ParseFrontmatterOptions = {},
 ): Promise<{
   prep: PrepareInstallDiscoveryResult;
   discovered: CanonicalFiles;
@@ -27,6 +29,7 @@ export async function resolveDiscoveredForInstall(
 
   const { canonical: discovered, implicitPick: sliceImplicitPick } = await discoverFromContentRoot(
     prep.discoveryRoot,
+    parseOpts,
   );
 
   const implicitPick = sliceImplicitPick ?? prep.implicitPick;

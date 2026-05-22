@@ -1,15 +1,13 @@
 /**
  * Backward-compatibility guard: tool-native source repositories must not
- * trip the new skill-pack classifier, and must continue to flow through
+ * trip the skill-pack layout detection, and must continue to flow through
  * the existing native importer with the exact same pack outputs.
  *
  * Five representative tool-native fixtures are exercised below. For each:
- *   1. `classifySource(contentRoot)` returns either `tool-native` or
- *      `unknown` (never `anthropic-skill-pack`).
+ *   1. `detectLayout(contentRoot)` returns a layout with NO `skillPack`.
  *   2. `runInstall` succeeds and produces a pack whose
  *      `.agentsmesh-install-manifest.json` matches the expected file set.
- *   3. The pack manifest's `source_type` matches the classifier verdict
- *      (never `anthropic-skill-pack`).
+ *   3. The pack manifest's `source_type` is never `anthropic-skill-pack`.
  *
  * These five repos cover the most popular agent tools and were chosen for
  * their distinct on-disk shapes (top-level dotdir vs `.github/` subtree).
@@ -20,7 +18,7 @@ import { mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { runInstall } from '../../src/install/run/run-install.js';
-import { classifySource } from '../../src/install/classify/classify-source.js';
+import { detectLayout } from '../../src/install/classify/layout-detect.js';
 import { INSTALL_MANIFEST_FILENAME } from '../../src/install/manifest/install-manifest-hash.js';
 
 const ROOT = join(tmpdir(), 'am-install-backcompat-integration');
@@ -134,9 +132,8 @@ describe('install backcompat (integration)', () => {
       c.buildUpstream(upstream);
       buildProject(project, c.seedTarget);
 
-      const classification = await classifySource(upstream);
-      expect(classification.type).not.toBe('anthropic-skill-pack');
-      expect(['tool-native', 'unknown']).toContain(classification.type);
+      const layout = await detectLayout(upstream);
+      expect(layout.skillPack).toBeNull();
 
       const flags: Record<string, string | boolean> = {
         force: true,

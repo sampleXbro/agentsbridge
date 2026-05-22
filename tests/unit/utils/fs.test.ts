@@ -180,6 +180,31 @@ describe('readDirRecursive', () => {
     const files = await readDirRecursive(base);
     expect(files.sort()).toEqual([join(base, 'sub', 'leaf.txt')].sort());
   });
+
+  it('skips self-nested copied directory branches before duplicate discovery', async () => {
+    const base = join(TEST_DIR, 'self-nested');
+    const sourceRoot = join(base, 'business-marketing');
+    const recursiveBranch = join(
+      base,
+      'business-marketing',
+      'cli-tool',
+      'components',
+      'agents',
+      'business-marketing',
+      'cli-tool',
+      'components',
+      'agents',
+      'business-marketing',
+    );
+    mkdirSync(recursiveBranch, { recursive: true });
+    writeFileSync(join(base, 'business-marketing', 'vital-health-content-agent.md'), 'root\n');
+    writeFileSync(join(recursiveBranch, 'vital-health-content-agent.md'), 'nested\n');
+
+    const files = await readDirRecursive(sourceRoot);
+    expect(files.sort()).toEqual([
+      join(base, 'business-marketing', 'vital-health-content-agent.md'),
+    ]);
+  });
 });
 
 describe('ensureCacheSymlink', () => {

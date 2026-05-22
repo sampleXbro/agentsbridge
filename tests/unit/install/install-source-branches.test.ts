@@ -430,6 +430,23 @@ describe('parseInstallSource branches', () => {
       }
     });
 
+    it('parses github:org/repo without ref defaulting to HEAD', async () => {
+      const cfg = makeTmpCfg();
+      try {
+        const parsed = await parseInstallSource('github:wshobson/agents', cfg);
+        expect(parsed).toEqual({
+          kind: 'github',
+          rawRef: 'HEAD',
+          org: 'wshobson',
+          repo: 'agents',
+          gitRemoteUrl: 'https://github.com/wshobson/agents.git',
+          pathInRepo: '',
+        });
+      } finally {
+        rmSync(cfg, { recursive: true, force: true });
+      }
+    });
+
     it('parses gitlab:ns/sub/proj@ref with multi-segment namespace', async () => {
       const cfg = makeTmpCfg();
       try {
@@ -440,6 +457,23 @@ describe('parseInstallSource branches', () => {
           org: 'ns/sub',
           repo: 'proj',
           gitRemoteUrl: 'https://gitlab.com/ns/sub/proj.git',
+          pathInRepo: '',
+        });
+      } finally {
+        rmSync(cfg, { recursive: true, force: true });
+      }
+    });
+
+    it('parses gitlab:ns/proj without ref defaulting to HEAD', async () => {
+      const cfg = makeTmpCfg();
+      try {
+        const parsed = await parseInstallSource('gitlab:ns/proj', cfg);
+        expect(parsed).toEqual({
+          kind: 'gitlab',
+          rawRef: 'HEAD',
+          org: 'ns',
+          repo: 'proj',
+          gitRemoteUrl: 'https://gitlab.com/ns/proj.git',
           pathInRepo: '',
         });
       } finally {

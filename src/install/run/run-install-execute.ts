@@ -151,6 +151,7 @@ export async function executeRunInstallPoolsAndWrite(
         path: persisted.pathInRepo,
         pick,
         yamlTarget: prep.yamlTarget,
+        as: explicitAs,
       },
       dryRun,
     });

@@ -1,19 +1,19 @@
 /**
  * Markdown link scanner used by install-time broken-link validation (B1).
  *
- * Walks a single entity body and extracts every relative link destination
- * (inline `[t](p)`, image `![a](p)`, or reference-style `[t][id]` + `[id]: p`).
- * The scanner is intentionally permissive: it only filters destinations that
- * are clearly non-local (URL schemes, mailto/tel/javascript, bare anchors,
- * absolute paths) and leaves classification of in-tree / outside / unreachable
- * to `resolve-link`.
+ * Thin filter over the shared `scanMarkdownLinks` primitive in
+ * `src/core/reference/markdown-link-scan.ts`. The shared scanner owns the
+ * markdown grammar (inline, image, reference-def) and fenced-code-block
+ * protection; this module narrows the result to candidate relative paths
+ * (URLs, anchors, absolute paths, mailto/tel/javascript schemes are excluded).
  *
- * Fenced code blocks (``` and ~~~) are protected: any links inside are not
- * extracted. Other markdown constructs (inline code spans, HTML comments) are
- * intentionally NOT protected — install fixtures rarely contain pathological
- * markdown, and the safety boundary lives in `resolve-link` where unresolved
- * paths surface as warnings, not crashes.
+ * Classification of in-tree / outside / unresolvable lives in `resolve-link`.
  */
+
+import {
+  scanMarkdownLinks,
+  type MarkdownLinkToken,
+} from '../../core/reference/markdown-link-scan.js';
 
 export type LinkKind = 'inline' | 'image' | 'reference-def';
 
@@ -28,38 +28,6 @@ export interface ScannedLink {
   readonly label?: string;
 }
 
-const FENCED_BLOCK = /^(?:```|~~~)[\s\S]*?\n(?:```|~~~)\s*$/gm;
-const INLINE_LINK = /(!?)\[[^\]\n]*\]\(([^)\n]+)\)/g;
-const REFERENCE_DEF = /^\s*\[([^\]\n]+)\]:\s*(.+?)\s*$/gm;
-
-function isOffsetInRanges(
-  offset: number,
-  ranges: ReadonlyArray<readonly [number, number]>,
-): boolean {
-  for (const [start, end] of ranges) {
-    if (offset >= start && offset < end) return true;
-  }
-  return false;
-}
-
-function fencedRanges(content: string): Array<[number, number]> {
-  const ranges: Array<[number, number]> = [];
-  for (const match of content.matchAll(FENCED_BLOCK)) {
-    const start = match.index ?? 0;
-    ranges.push([start, start + match[0].length]);
-  }
-  return ranges;
-}
-
-/** Strip an optional `"title"` or `'title'` and surrounding `<>` from a destination. */
-function normalizeDestination(raw: string): string {
-  let s = raw.trim();
-  const titleMatch = /^(.*?)\s+(["'])([\s\S]*?)\2\s*$/.exec(s);
-  if (titleMatch?.[1] !== undefined) s = titleMatch[1].trim();
-  if (s.startsWith('<') && s.endsWith('>')) s = s.slice(1, -1).trim();
-  return s;
-}
-
 /**
  * Return true when `destination` is a relative on-disk path that warrants
  * resolution (as opposed to a URL, mailto, anchor, or absolute reference).
@@ -72,48 +40,42 @@ function isCandidateRelativePath(destination: string): boolean {
   return true;
 }
 
+/**
+ * Normalize backslash separators to forward slashes so links authored on
+ * Windows (`assets\logo.png`) resolve identically to POSIX-style paths and
+ * downstream `path.resolve()` doesn't choke on mixed separators on POSIX.
+ *
+ * Also expands the `{baseDir}` placeholder convention used by Anthropic-style
+ * skills (e.g. trailofbits/skills) to mean "the directory containing this
+ * file". `{baseDir}/foo.md` → `foo.md` (sibling); bare `{baseDir}` → `.`.
+ *
+ * Anchors are preserved — `resolve-link` strips them on the way to disk and
+ * echoes them back so callers can rewrite the link verbatim.
+ */
 function stripPath(destination: string): string {
-  // Keep the #anchor — callers preserve it on rewrite; resolve-link strips it.
-  // Normalize backslash separators to forward slashes so links authored on
-  // Windows (`assets\logo.png`) resolve identically to POSIX-style paths and
-  // downstream `path.resolve()` doesn't choke on mixed separators on POSIX.
-  return destination.replaceAll('\\', '/');
+  const forward = destination.replaceAll('\\', '/');
+  if (forward === '{baseDir}') return '.';
+  if (forward.startsWith('{baseDir}/')) return forward.slice('{baseDir}/'.length);
+  return forward;
+}
+
+function toScannedLink(tok: MarkdownLinkToken): ScannedLink | null {
+  const normalized = tok.destination;
+  if (!isCandidateRelativePath(normalized)) return null;
+  const base: ScannedLink = {
+    raw: normalized,
+    path: stripPath(normalized),
+    kind: tok.kind,
+    ...(tok.label !== undefined ? { label: tok.label } : {}),
+  };
+  return base;
 }
 
 export function scanRelativeLinks(content: string): readonly ScannedLink[] {
-  const protectedR = fencedRanges(content);
   const out: ScannedLink[] = [];
-
-  for (const match of content.matchAll(INLINE_LINK)) {
-    const idx = match.index ?? 0;
-    if (isOffsetInRanges(idx, protectedR)) continue;
-    const isImage = match[1] === '!';
-    const inner = match[2];
-    if (inner === undefined) continue;
-    const normalized = normalizeDestination(inner);
-    if (!isCandidateRelativePath(normalized)) continue;
-    out.push({
-      raw: normalized,
-      path: stripPath(normalized),
-      kind: isImage ? 'image' : 'inline',
-    });
+  for (const tok of scanMarkdownLinks(content)) {
+    const link = toScannedLink(tok);
+    if (link !== null) out.push(link);
   }
-
-  for (const match of content.matchAll(REFERENCE_DEF)) {
-    const idx = match.index ?? 0;
-    if (isOffsetInRanges(idx, protectedR)) continue;
-    const label = (match[1] ?? '').trim();
-    const rawDest = (match[2] ?? '').trim();
-    if (label === '' || rawDest === '') continue;
-    const normalized = normalizeDestination(rawDest);
-    if (!isCandidateRelativePath(normalized)) continue;
-    out.push({
-      raw: normalized,
-      path: stripPath(normalized),
-      kind: 'reference-def',
-      label,
-    });
-  }
-
   return out;
 }

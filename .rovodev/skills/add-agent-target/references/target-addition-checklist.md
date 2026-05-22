@@ -41,7 +41,8 @@ Target implementation (scaffold produces these; fill in):
 Conversion eligibility (when `commands` or `agents` is `none` but `skills` is `native` or `embedded`):
 
 - `src/targets/<id>/index.ts` — add `supportsConversion: { commands: true, agents: true }` (only the features that are `none`)
-- `src/config/core/conversions.ts` — add the target to `DEFAULT_COMMANDS_TO_SKILLS` and/or `DEFAULT_AGENTS_TO_SKILLS` with `true`
+- `src/targets/<id>/index.ts` — add `conversionDefaults: { commandsToSkills: true, agentsToSkills: true }` on the descriptor for the projections that should default to on (omit fields you don't want defaulted)
+- Do NOT edit `src/config/core/conversions.ts` — defaults are now descriptor-driven; that module only reads from `descriptor.conversionDefaults`
 - Do NOT add lint warnings for converted features — they are projected as skills, not dropped
 - Only add lint warnings for features that are truly unsupported (no native support AND no skill fallback, e.g. hooks, permissions, MCP when project-only)
 

@@ -82,6 +82,7 @@ const CONFIG = {
   targets: ['claude-code'],
   features: ['rules', 'skills', 'mcp', 'permissions', 'hooks', 'ignore'],
   extends: [],
+  plugins: [],
   overrides: {},
   collaboration: { strategy: 'merge' as const, lock_features: [] },
 };
@@ -216,7 +217,7 @@ describe('runInstall', () => {
         entryFeatures: ['skills', 'mcp', 'ignore'],
       }),
     );
-    expect(mockRunGenerate).toHaveBeenCalledWith({}, '/project');
+    expect(mockRunGenerate).toHaveBeenCalledWith({}, '/project', { printMatrix: false });
   });
 
   it('writes extends instead of packs when --extends is set', async () => {
@@ -243,7 +244,9 @@ describe('runInstall', () => {
         canonicalDir: '/home/user/.agentsmesh',
       }),
     );
-    expect(mockRunGenerate).toHaveBeenCalledWith({ global: true }, '/home/user');
+    expect(mockRunGenerate).toHaveBeenCalledWith({ global: true }, '/home/user', {
+      printMatrix: false,
+    });
   });
 
   it('throws when git is unavailable for remote installs', async () => {

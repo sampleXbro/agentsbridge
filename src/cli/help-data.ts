@@ -118,6 +118,10 @@ export const COMMANDS: HelpCommand[] = [
         description: 'Install into ~/.agentsmesh/ and regenerate user-level config',
       },
       {
+        name: '--all',
+        description: 'Install every sub-pack from a marketplace source',
+      },
+      {
         name: '--force',
         description:
           'Non-interactive mode; include invalid resources and skip selection prompts (implied by --json)',

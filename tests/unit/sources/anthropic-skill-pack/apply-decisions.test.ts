@@ -269,6 +269,53 @@ describe('applyBrokenLinkDecisions — include-resolvable (skills)', () => {
     expect(stub.warns).toHaveLength(1);
     expect(stub.warns[0]).toContain('../../references/missing.md');
   });
+
+  it('does not rewrite occurrences of the link path inside fenced code blocks', async () => {
+    const targetAbs = join(root, 'references', 'foo.md');
+    mkdirSync(join(root, 'references'), { recursive: true });
+    writeFileSync(targetAbs, '# Foo\n');
+
+    const body = [
+      'Prose link: [foo](../../references/foo.md)',
+      '',
+      '```md',
+      'Example: [foo](../../references/foo.md)',
+      '```',
+      '',
+    ].join('\n');
+    const skill = makeSkill('lint', body);
+    const aggregate: AggregateResult = {
+      ...emptyAggregate(),
+      skills: [skill],
+      brokenLinks: [
+        {
+          entityKind: 'skill',
+          entityName: 'lint',
+          resolved: [
+            resolvedLink('../../references/foo.md', 'resolvable-outside', 'references/foo.md'),
+          ],
+        },
+      ],
+    };
+    const decisions: BrokenLinkDecision[] = [
+      { entityKind: 'skill', entityName: 'lint', action: 'include-resolvable' },
+    ];
+
+    const { logger } = makeLogger();
+    const out = await applyBrokenLinkDecisions({
+      contentRoot: root,
+      aggregate,
+      decisions,
+      logger,
+    });
+
+    const resultBody = out.skills[0]!.body;
+    // Prose link rewritten to the local supporting file.
+    expect(resultBody).toContain('Prose link: [foo](./references/foo.md)');
+    // Code-fenced occurrence stays verbatim — the naive string.replace
+    // would have rewritten this destination as well.
+    expect(resultBody).toContain('Example: [foo](../../references/foo.md)');
+  });
 });
 
 describe('applyBrokenLinkDecisions — include-resolvable (non-skills)', () => {

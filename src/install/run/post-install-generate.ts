@@ -27,7 +27,9 @@ export async function runPostOperationGenerate(
   const action = mode === 'install' ? 'Pack is installed' : 'Uninstall is committed';
   const genFlag = scope === 'global' ? ' --global' : '';
   try {
-    const genResult = await runGenerate(scope === 'global' ? { global: true } : {}, rootBase);
+    const genResult = await runGenerate(scope === 'global' ? { global: true } : {}, rootBase, {
+      printMatrix: false,
+    });
     renderGenerate(genResult);
     if (genResult.exitCode !== 0) {
       logger.warn(`Generate failed after ${mode}. ${action}; run agentsmesh generate${genFlag}.`);

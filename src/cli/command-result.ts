@@ -57,12 +57,27 @@ export interface MatrixData {
   features: Array<{ name: string; support: Record<string, string> }>;
 }
 
+export interface InstallBrokenResource {
+  /** Source file or skill-directory path that was skipped during install. */
+  path: string;
+  /** Why it was skipped: invalid YAML, unparseable SKILL.md, etc. */
+  kind: 'frontmatter' | 'skill-dir' | 'unsupported-extension';
+  /** Human-readable cause; typically the underlying YAML or filesystem error. */
+  reason: string;
+}
+
 export interface InstallData {
   source: string;
   mode: 'install' | 'sync';
   installed: Array<{ kind: string; name: string; path: string }>;
   skipped: Array<{ kind: string; name: string; reason: string }>;
   dryRun: boolean;
+  /**
+   * Files the install pipeline skipped because their YAML frontmatter (or
+   * SKILL.md) could not be parsed. Absent when nothing was skipped. The CLI
+   * renderer surfaces a footer warning when this is present.
+   */
+  brokenResources?: InstallBrokenResource[];
 }
 
 export interface UninstallRemovedEntry {

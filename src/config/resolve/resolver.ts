@@ -16,6 +16,7 @@ export interface ResolvedExtend {
   resolvedPath: string;
   features: string[];
   target?: string;
+  as?: 'rules' | 'commands' | 'agents' | 'skills';
   /** Resolved version for remote extends. Undefined for local. */
   version?: string;
   /** Repo-relative path for discovery (skill packs, nested layouts). */
@@ -79,6 +80,7 @@ export async function resolveExtendPaths(
         resolvedPath: fetched.resolvedPath,
         features: [...ext.features],
         target: ext.target,
+        as: ext.as,
         version: fetched.version,
         path: ext.path,
         pick: ext.pick,
@@ -100,6 +102,7 @@ export async function resolveExtendPaths(
       resolvedPath,
       features: [...ext.features],
       target: ext.target,
+      as: ext.as,
       path: ext.path,
       pick: ext.pick,
     });

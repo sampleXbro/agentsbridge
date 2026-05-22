@@ -10,7 +10,7 @@ import { cp } from 'node:fs/promises';
 import { readFileSafe } from '../../utils/filesystem/fs.js';
 import { tryParseFrontmatter } from '../../utils/text/markdown.js';
 import {
-  isBoilerplate,
+  isNoiseBoilerplate,
   isRepoNonContentDir,
   isRepoNonContentFile,
 } from '../importers/boilerplate-filter.js';
@@ -40,7 +40,10 @@ export async function cpFilteredSkill(sourceRoot: string, destDir: string): Prom
       const first = rel.split('/')[0]!;
       if (isRepoNonContentDir(first)) return false;
       if (!rel.includes('/')) {
-        if (isBoilerplate(rel)) return false;
+        // Drop noise (CHANGELOG / CONTRIBUTING / CODE_OF_CONDUCT / ...) but
+        // keep preserved files (LICENSE / NOTICE / COPYING / README) so they
+        // travel with the staged skill copy.
+        if (isNoiseBoilerplate(rel)) return false;
         if (isRepoNonContentFile(rel)) return false;
       }
       return true;

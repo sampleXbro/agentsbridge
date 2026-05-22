@@ -4,6 +4,7 @@
 
 import type { ExtendPick } from '../../config/core/schema.js';
 import type { CanonicalFiles } from '../../core/types.js';
+import type { ParseFrontmatterOptions } from '../../canonical/features/rules.js';
 import {
   loadCanonicalSliceAtPath,
   normalizeSlicePath,
@@ -26,13 +27,16 @@ export function featuresFromCanonical(c: CanonicalFiles): string[] {
 /**
  * Resolve file vs directory, then load canonical slice (rules/commands/agents/skills / .agentsmesh).
  */
-export async function discoverFromContentRoot(contentRoot: string): Promise<{
+export async function discoverFromContentRoot(
+  contentRoot: string,
+  opts: ParseFrontmatterOptions = {},
+): Promise<{
   canonical: CanonicalFiles;
   features: string[];
   implicitPick?: ExtendPick;
 }> {
   const { sliceRoot, implicitPick } = await normalizeSlicePath(contentRoot);
-  const canonical = await loadCanonicalSliceAtPath(sliceRoot);
+  const canonical = await loadCanonicalSliceAtPath(sliceRoot, opts);
   return {
     canonical,
     features: featuresFromCanonical(canonical),

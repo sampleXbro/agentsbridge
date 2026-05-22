@@ -113,6 +113,24 @@ describe('mergeExtendList', () => {
     });
   });
 
+  it('persists manual as mode and lets incoming entries update it', () => {
+    const appended = mergeExtendList([], {
+      name: 'commands-pack',
+      source: 'github:o/r@abc',
+      features: ['commands'],
+      as: 'commands',
+    });
+    expect(appended[0]!.as).toBe('commands');
+
+    const merged = mergeExtendList(appended, {
+      name: 'commands-pack',
+      source: 'github:o/r@abc',
+      features: ['agents'],
+      as: 'agents',
+    });
+    expect(merged[0]!.as).toBe('agents');
+  });
+
   it('unions incoming picks onto an existing source and preserves other entries', () => {
     const merged = mergeExtendList(
       [

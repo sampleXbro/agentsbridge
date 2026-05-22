@@ -15,6 +15,7 @@ const VALID_FEATURES = [
 /** Valid `extends[].target` / `agentsmesh install --target` identifiers */
 export const targetSchema = z.enum(TARGET_IDS);
 export const featureSchema = z.enum(VALID_FEATURES);
+export const installAsSchema = z.enum(['rules', 'commands', 'agents', 'skills']);
 
 /** Cherry-pick resource names within array features (extends.install + merge). */
 export const extendPickSchema = z
@@ -33,6 +34,7 @@ const extendSourceSchema = z.object({
   source: z.string(),
   version: z.string().optional(),
   target: targetSchema.optional(),
+  as: installAsSchema.optional(),
   features: z.array(featureSchema),
   /** Repo-relative POSIX path for discovery (skill packs, nested .agentsmesh). */
   path: z.string().optional(),

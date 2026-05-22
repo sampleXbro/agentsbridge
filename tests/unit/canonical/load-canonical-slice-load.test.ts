@@ -54,7 +54,9 @@ describe('load-canonical-slice (load path)', () => {
   it('throws when nothing installable', async () => {
     const empty = join(ROOT, 'empty');
     mkdirSync(empty);
-    await expect(loadCanonicalSliceAtPath(empty)).rejects.toThrow('No installable resources');
+    await expect(loadCanonicalSliceAtPath(empty)).rejects.toThrow(
+      'Hint: pass --as commands|agents|rules|skills',
+    );
   });
 
   it('skill pack at slice root', async () => {
@@ -92,6 +94,25 @@ describe('load-canonical-slice (load path)', () => {
     const c = await loadCanonicalSliceAtPath(proj);
     expect(c.rules.length).toBe(1);
     expect(c.commands.length).toBe(1);
+  });
+
+  it('ignores repo boilerplate (README/LICENSE/CONTRIBUTING/SECURITY) in agents/, commands/, rules/', async () => {
+    const proj = join(ROOT, 'boiler');
+    mkdirSync(join(proj, 'agents'), { recursive: true });
+    mkdirSync(join(proj, 'commands'), { recursive: true });
+    mkdirSync(join(proj, 'rules'), { recursive: true });
+    const stub = '---\ndescription: d\n---\n';
+    writeFileSync(join(proj, 'agents', 'README.md'), stub);
+    writeFileSync(join(proj, 'agents', 'real.md'), stub);
+    writeFileSync(join(proj, 'commands', 'CONTRIBUTING.md'), stub);
+    writeFileSync(join(proj, 'commands', 'do.md'), stub);
+    writeFileSync(join(proj, 'rules', 'LICENSE.md'), stub);
+    writeFileSync(join(proj, 'rules', 'SECURITY.md'), stub);
+    writeFileSync(join(proj, 'rules', 'guideline.md'), stub);
+    const c = await loadCanonicalSliceAtPath(proj);
+    expect(c.agents.map((x) => x.name)).toEqual(['real']);
+    expect(c.commands.map((x) => x.name)).toEqual(['do']);
+    expect(c.rules.map((x) => x.source.split('/').pop())).toEqual(['guideline.md']);
   });
 
   it('merges rules and nested skills/ skill pack', async () => {

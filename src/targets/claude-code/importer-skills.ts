@@ -6,7 +6,7 @@ import {
   writeFileAtomic,
   mkdirp,
 } from '../../utils/filesystem/fs.js';
-import { parseFrontmatter } from '../../utils/text/markdown.js';
+import { tryParseFrontmatter } from '../../utils/text/markdown.js';
 import { serializeImportedSkillWithFallback } from '../import/import-metadata.js';
 import { CLAUDE_SKILLS_DIR, CLAUDE_CANONICAL_SKILLS_DIR } from './constants.js';
 
@@ -26,6 +26,24 @@ export async function importClaudeSkills(
     const skillName = basename(skillDir);
     const destSkillDir = join(destBase, skillName);
 
+    // Lenient parse on SKILL.md so a single malformed third-party skill skips
+    // the whole skill subtree instead of aborting the install. Without this,
+    // repos like christianestay/claude-code-base-project (unquoted scalars
+    // with embedded colons, e.g. `argument-hint: ej. feat: add auth`) crash
+    // the YAML parser before any sibling skill is staged.
+    const skillMdContent = await readFileSafe(skillMdPath);
+    if (skillMdContent === null) continue;
+    const normalizedSkillMd = normalize(
+      skillMdContent,
+      skillMdPath,
+      join(destSkillDir, 'SKILL.md'),
+    );
+    const skillMdParsed = tryParseFrontmatter(normalizedSkillMd, skillMdPath);
+    if (!skillMdParsed.ok) {
+      process.stderr.write(`⚠ skipping ${skillMdPath}: ${skillMdParsed.error.message}\n`);
+      continue;
+    }
+
     const skillFiles = await readDirRecursive(skillDir);
     for (const filePath of skillFiles) {
       const fileContent = await readFileSafe(filePath);
@@ -34,14 +52,13 @@ export async function importClaudeSkills(
       const destPath = join(destSkillDir, relPath);
       await mkdirp(dirname(destPath));
       const normalized = normalize(fileContent, filePath, destPath);
-      const parsed = relPath === 'SKILL.md' ? parseFrontmatter(normalized) : null;
       await writeFileAtomic(
         destPath,
         relPath === 'SKILL.md'
           ? await serializeImportedSkillWithFallback(
               destPath,
-              parsed?.frontmatter ?? {},
-              parsed?.body ?? '',
+              skillMdParsed.value.frontmatter,
+              skillMdParsed.value.body,
             )
           : normalized,
       );

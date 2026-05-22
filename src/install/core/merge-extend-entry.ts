@@ -14,6 +14,7 @@ export interface NewExtendEntry {
   path?: string;
   pick?: ExtendPick;
   target?: ExtEntry['target'];
+  as?: ExtEntry['as'];
 }
 
 export function assertExtendNameAvailable(
@@ -73,6 +74,7 @@ export function mergeExtendList(
         path: incoming.path,
         pick: incoming.pick,
         target: incoming.target,
+        as: incoming.as,
       },
     ];
   }
@@ -91,6 +93,7 @@ export function mergeExtendList(
           path: incoming.path !== undefined ? incoming.path : old.path,
           pick,
           target: (incoming.target ?? old.target) as ExtEntry['target'],
+          as: (incoming.as ?? old.as) as ExtEntry['as'],
         }
       : e,
   );

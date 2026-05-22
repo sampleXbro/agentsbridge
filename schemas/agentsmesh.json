@@ -152,6 +152,15 @@
               "zed"
             ]
           },
+          "as": {
+            "type": "string",
+            "enum": [
+              "rules",
+              "commands",
+              "agents",
+              "skills"
+            ]
+          },
           "features": {
             "type": "array",
             "items": {

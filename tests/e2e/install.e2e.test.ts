@@ -116,6 +116,7 @@ describe('install e2e', () => {
 
       const r = await runCli(`install ${upstream} --force --name shared-pack`, proj);
       expect(r.exitCode, r.stderr).toBe(0);
+      expect(r.stdout).not.toContain('Legend:');
       expect(
         readFileSync(join(proj, '.agentsmesh', 'packs', 'shared-pack', 'ignore'), 'utf8'),
       ).toContain('node_modules');
@@ -156,6 +157,46 @@ describe('install e2e', () => {
       expect(yaml).toContain('name: ext-pack');
       expect(yaml).toContain('features:');
       expect(yaml).toContain('skills');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('non-dry-run --extends preserves --as and generates flat markdown collections', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'am-e2e-install-extends-as-'));
+    try {
+      const upstream = join(dir, 'up');
+      mkdirSync(join(upstream, 'workflows'), { recursive: true });
+      writeFileSync(
+        join(upstream, 'workflows', 'review.md'),
+        '---\ndescription: Review\n---\nReview changes.\n',
+      );
+
+      const proj = join(dir, 'proj');
+      mkdirSync(join(proj, '.agentsmesh', 'rules'), { recursive: true });
+      writeFileSync(
+        join(proj, 'agentsmesh.yaml'),
+        'version: 1\ntargets: [claude-code]\nfeatures: [rules,commands]\nextends: []\n',
+      );
+      writeFileSync(
+        join(proj, '.agentsmesh', 'rules', '_root.md'),
+        '---\nroot: true\n---\n# Root\n',
+      );
+
+      const r = await runCli(
+        `install ${upstream} --force --extends --as commands --path workflows --name workflow-commands`,
+        proj,
+      );
+      expect(r.exitCode, r.stderr).toBe(0);
+      const yaml = readFileSync(join(proj, 'agentsmesh.yaml'), 'utf8');
+      expect(yaml).toContain('name: workflow-commands');
+      expect(yaml).toContain('as: commands');
+      expect(readFileSync(join(proj, '.claude', 'commands', 'review.md'), 'utf8')).toContain(
+        'Review changes.',
+      );
+
+      const generated = await runCli('generate --targets claude-code', proj);
+      expect(generated.exitCode, generated.stderr).toBe(0);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

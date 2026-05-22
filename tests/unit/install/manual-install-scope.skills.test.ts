@@ -116,7 +116,7 @@ describe('stageManualInstallScope skills', () => {
     }
   });
 
-  it('stages a repo-root skill using frontmatter name and excludes boilerplate', async () => {
+  it('stages a repo-root skill using frontmatter name, excludes noise but preserves LICENSE / README', async () => {
     const repoRoot = join(ROOT, 'code-review-skill');
     mkdirSync(join(repoRoot, 'reference'), { recursive: true });
     mkdirSync(join(repoRoot, 'assets'), { recursive: true });
@@ -126,8 +126,10 @@ describe('stageManualInstallScope skills', () => {
     );
     writeFileSync(join(repoRoot, 'reference', 'react.md'), '# React guide\n');
     writeFileSync(join(repoRoot, 'assets', 'template.md'), '# Template\n');
+    // Preserved — README explains the skill; LICENSE travels with redistributed content.
     writeFileSync(join(repoRoot, 'README.md'), '# Code Review Skill\n');
     writeFileSync(join(repoRoot, 'LICENSE'), 'MIT\n');
+    // Noise — dropped from the staged skill subtree.
     writeFileSync(join(repoRoot, 'CONTRIBUTING.md'), '# Contributing\n');
     writeFileSync(join(repoRoot, '.gitignore'), 'node_modules\n');
     writeFileSync(join(repoRoot, '.editorconfig'), 'root = true\n');
@@ -135,6 +137,8 @@ describe('stageManualInstallScope skills', () => {
     const staged = await stageManualInstallScope(repoRoot, 'skills');
     try {
       expect(listRelativeFiles(join(staged.discoveryRoot, '.agentsmesh', 'skills'))).toEqual([
+        'code-review-excellence/LICENSE',
+        'code-review-excellence/README.md',
         'code-review-excellence/SKILL.md',
         'code-review-excellence/assets/template.md',
         'code-review-excellence/reference/react.md',
@@ -144,7 +148,7 @@ describe('stageManualInstallScope skills', () => {
     }
   });
 
-  it('stages a repo-root skill falling back to dirname when no frontmatter name', async () => {
+  it('stages a repo-root skill falling back to dirname when no frontmatter name (README preserved)', async () => {
     const repoRoot = join(ROOT, 'my-skill-repo');
     mkdirSync(join(repoRoot, 'docs'), { recursive: true });
     writeFileSync(join(repoRoot, 'SKILL.md'), '---\ndescription: A skill\n---\n\nDo things.\n');
@@ -154,6 +158,7 @@ describe('stageManualInstallScope skills', () => {
     const staged = await stageManualInstallScope(repoRoot, 'skills');
     try {
       expect(listRelativeFiles(join(staged.discoveryRoot, '.agentsmesh', 'skills'))).toEqual([
+        'my-skill-repo/README.md',
         'my-skill-repo/SKILL.md',
         'my-skill-repo/docs/guide.md',
       ]);
@@ -162,7 +167,7 @@ describe('stageManualInstallScope skills', () => {
     }
   });
 
-  it('preserves nested README.md in subdirs (only root boilerplate excluded)', async () => {
+  it('preserves README at both root and nested subdirs (noise like CHANGELOG still dropped)', async () => {
     const repoRoot = join(ROOT, 'skill-with-nested-readme');
     mkdirSync(join(repoRoot, 'reference'), { recursive: true });
     writeFileSync(
@@ -170,11 +175,13 @@ describe('stageManualInstallScope skills', () => {
       '---\nname: my-skill\ndescription: Skill\n---\n\nBody.\n',
     );
     writeFileSync(join(repoRoot, 'reference', 'README.md'), '# Reference readme\n');
-    writeFileSync(join(repoRoot, 'README.md'), '# Root readme (should be excluded)\n');
+    writeFileSync(join(repoRoot, 'README.md'), '# Root readme (preserved as skill context)\n');
+    writeFileSync(join(repoRoot, 'CHANGELOG.md'), '# Changelog (noise, dropped)\n');
 
     const staged = await stageManualInstallScope(repoRoot, 'skills');
     try {
       expect(listRelativeFiles(join(staged.discoveryRoot, '.agentsmesh', 'skills'))).toEqual([
+        'my-skill/README.md',
         'my-skill/SKILL.md',
         'my-skill/reference/README.md',
       ]);

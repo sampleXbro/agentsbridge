@@ -136,6 +136,35 @@ describe('scanRelativeLinks - fenced code blocks', () => {
   });
 });
 
+describe('scanRelativeLinks - {baseDir} placeholder', () => {
+  it('strips a leading {baseDir}/ prefix so the remainder resolves as a sibling path', () => {
+    const links = scanRelativeLinks('See [foundations]({baseDir}/references/foundations.md).');
+    expect(links).toHaveLength(1);
+    expect(links[0]!.path).toBe('references/foundations.md');
+  });
+
+  it('strips {baseDir}/ inside image links', () => {
+    const links = scanRelativeLinks('![diagram]({baseDir}/assets/diagram.png)');
+    expect(links).toHaveLength(1);
+    expect(links[0]!.kind).toBe('image');
+    expect(links[0]!.path).toBe('assets/diagram.png');
+  });
+
+  it('strips {baseDir}/ inside reference-definition destinations', () => {
+    const md = 'See [foo][id].\n\n[id]: {baseDir}/refs/foo.md\n';
+    const links = scanRelativeLinks(md);
+    expect(links).toHaveLength(1);
+    expect(links[0]!.kind).toBe('reference-def');
+    expect(links[0]!.path).toBe('refs/foo.md');
+  });
+
+  it('treats a bare {baseDir} (no trailing slash) as the current dir', () => {
+    const links = scanRelativeLinks('Open [self]({baseDir}).');
+    expect(links).toHaveLength(1);
+    expect(links[0]!.path).toBe('.');
+  });
+});
+
 describe('scanRelativeLinks - degenerate inputs', () => {
   it('returns [] for an empty body', () => {
     expect(scanRelativeLinks('')).toEqual([]);

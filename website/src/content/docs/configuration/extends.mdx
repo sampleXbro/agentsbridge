@@ -31,6 +31,13 @@ extends:
   - name: shared-local
     source: ../shared-ai-config
     features: [rules, commands, mcp]
+
+  # Flat markdown directory forced to commands
+  - name: team-workflows
+    source: github:my-org/command-library@v1.2.0
+    path: workflows
+    as: commands
+    features: [commands]
 ```
 
 ## Fields
@@ -41,6 +48,7 @@ extends:
 | `source` | `string` | Yes | Source URL or path (see formats below). |
 | `version` | `string` | No | Version tag for remote sources (alternative to `@tag` in source). |
 | `target` | `string` | No | Hint for native format auto-discovery (e.g., `claude-code`). |
+| `as` | `string` | No | Force manual loading as `rules`, `commands`, `agents`, or `skills`. Useful for flat markdown directories. |
 | `features` | `string[]` | No | Which features to inherit. Omit to inherit all. |
 | `path` | `string` | No | Subdirectory within the source to look for config. |
 | `pick` | `object` | No | Cherry-pick specific named resources. |

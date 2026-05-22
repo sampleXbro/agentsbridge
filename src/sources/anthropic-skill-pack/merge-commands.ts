@@ -9,6 +9,7 @@
  */
 
 import { importCommands } from '../../install/importers/entity-importers.js';
+import type { ParseFrontmatterOptions } from '../../canonical/features/rules.js';
 import type { CanonicalCommand } from '../../core/types.js';
 import type { CommandDedup, CommandMergeSpec } from './aggregate.js';
 
@@ -25,6 +26,7 @@ export interface MergedCommandsResult {
 export async function mergeCommands(
   contentRoot: string,
   specs: readonly CommandMergeSpec[],
+  parseOpts: ParseFrontmatterOptions = {},
 ): Promise<MergedCommandsResult> {
   const winners = new Map<string, MergedCommand>();
   const losers = new Map<string, Array<{ path: string; precedence: number }>>();
@@ -32,7 +34,7 @@ export async function mergeCommands(
   const ordered = [...specs].sort((a, b) => a.precedence - b.precedence);
   for (const spec of ordered) {
     const dir = `${contentRoot}/${spec.dir}`;
-    const commands = await importCommands(dir);
+    const commands = await importCommands(dir, parseOpts);
     for (const cmd of commands) {
       const existing = winners.get(cmd.name);
       if (existing === undefined) {

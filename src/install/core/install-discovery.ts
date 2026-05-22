@@ -4,32 +4,29 @@
  * Dispatch precedence:
  *   1. Explicit `--as <kind>`          → manual importer (classifier bypassed).
  *   2. Explicit `--target <id>`        → native importer (classifier bypassed).
- *   3. Multi-signal classifier:
- *      - `anthropic-skill-pack`        → aggregator → CanonicalFiles + extras.
- *      - `canonical-agentsmesh`        → existing native/slice path.
- *      - `tool-native` / `unknown`     → existing native/slice path.
- *
- * The classifier is only consulted when no override is set, which preserves
- * the locked decision that `--target` and `--as` always win.
+ *   3. Layout-based detection:
+ *      - `canonical` set              → existing native/slice path.
+ *      - `skillPack` set              → aggregator → CanonicalFiles + extras.
+ *      - otherwise                    → existing native/slice path + discarded hint.
  */
+import { join } from 'node:path';
+import { readFile } from 'node:fs/promises';
 import { resolveManualDiscoveredForInstall } from '../manual/manual-install-discovery.js';
 import { resolveDiscoveredForInstall } from '../run/run-install-discovery.js';
-import { classifySource } from '../classify/classify-source.js';
+import { detectLayout } from '../classify/layout-detect.js';
+import { inferMdcTarget } from '../manual/mdc-target-infer.js';
 import { aggregateAnthropicSkillPack } from '../../sources/anthropic-skill-pack/aggregate.js';
 import { anthropicSkillPackSource } from '../../sources/anthropic-skill-pack/index.js';
+import { parseSkillDirectory } from '../../canonical/features/skills.js';
 import { featuresFromCanonical } from './discover-resources.js';
+import type { CanonicalRule } from '../../core/canonical-types.js';
 import type { ExtendPick } from '../../config/core/schema.js';
 import type { ManualInstallAs } from '../manual/manual-install-mode.js';
-import type { Classification } from '../classify/types.js';
+import type { SourceLayout, FlatCollection } from '../classify/layout-types.js';
 import type { AggregateResult } from '../../sources/anthropic-skill-pack/aggregate.js';
 import type { CanonicalFiles } from '../../core/types.js';
+import type { ParseFrontmatterOptions } from '../../canonical/features/rules.js';
 
-/**
- * Minimal `prep` shape consumed by the install executor. Both the manual
- * (`resolveManualDiscoveredForInstall`) and native
- * (`resolveDiscoveredForInstall`) discovery functions return supersets of
- * this; the new skill-pack branch returns the same minimal shape.
- */
 export interface InstallDiscoveryPrep {
   readonly yamlTarget?: string;
   readonly scopedFeatures?: string[];
@@ -41,9 +38,8 @@ export interface InstallDiscoveryResult {
   implicitPick: ExtendPick | undefined;
   narrowed: CanonicalFiles;
   discoveredFeatures: string[];
-  /** Present when the classifier ran (no override). */
-  classification?: Classification;
-  /** Present only for `anthropic-skill-pack`; carries broken-links + dedups. */
+  layout?: SourceLayout;
+  /** Present only for skill-pack path; carries broken-links + dedups. */
   aggregate?: AggregateResult;
 }
 
@@ -64,6 +60,79 @@ function emptyPrep(): InstallDiscoveryPrep {
   return {};
 }
 
+async function enrichMdcTargets(
+  contentRoot: string,
+  collections: readonly FlatCollection[],
+): Promise<FlatCollection[]> {
+  const out: FlatCollection[] = [];
+  for (const c of collections) {
+    if (c.fileShape === 'mdc' && !c.inferredTarget) {
+      const target = await inferMdcTarget(join(contentRoot, c.path));
+      out.push(target ? { ...c, inferredTarget: target } : c);
+    } else {
+      out.push(c);
+    }
+  }
+  return out;
+}
+
+/** Map a SourceLayout to the legacy sourceType string for install manifests. */
+export function deriveSourceType(layout: SourceLayout): string {
+  if (layout.canonical) return 'canonical-agentsmesh';
+  if (layout.skillPack) return 'anthropic-skill-pack';
+  if (layout.rootSkill) return 'anthropic-skill-pack';
+  if (layout.rootRule) return 'tool-native';
+  if (layout.toolNativeManifests.length > 0) return 'tool-native';
+  return 'unknown';
+}
+
+async function rootSkillToCanonical(
+  contentRoot: string,
+  parseOpts: ParseFrontmatterOptions,
+): Promise<CanonicalFiles> {
+  const skill = await parseSkillDirectory(contentRoot, parseOpts);
+  return {
+    rules: [],
+    commands: [],
+    agents: [],
+    skills: skill ? [skill] : [],
+    mcp: null,
+    permissions: null,
+    hooks: null,
+    ignore: [],
+  };
+}
+
+async function rootRuleToCanonical(
+  contentRoot: string,
+  rootRulePath: string,
+): Promise<CanonicalFiles> {
+  const absPath = join(contentRoot, rootRulePath);
+  const body = await readFile(absPath, 'utf-8').catch(() => '');
+  // Validation requires a non-empty description. Legacy `.cursorrules` /
+  // `.windsurfrules` files don't carry frontmatter, so synthesize a stable
+  // description that documents the file's origin and survives dry-run filters.
+  const description = `Imported from ${rootRulePath}`;
+  const rule: CanonicalRule = {
+    source: absPath,
+    root: true,
+    targets: [],
+    description,
+    globs: [],
+    body,
+  };
+  return {
+    rules: body ? [rule] : [],
+    commands: [],
+    agents: [],
+    skills: [],
+    mcp: null,
+    permissions: null,
+    hooks: null,
+    ignore: [],
+  };
+}
+
 export async function resolveInstallDiscovery(args: {
   resolvedPath: string;
   contentRoot: string;
@@ -71,13 +140,17 @@ export async function resolveInstallDiscovery(args: {
   explicitTarget?: string;
   explicitAs?: ManualInstallAs;
   replayPick?: ExtendPick;
+  parseOpts?: ParseFrontmatterOptions;
 }): Promise<InstallDiscoveryResult> {
+  const parseOpts = args.parseOpts ?? {};
+
   if (args.explicitAs) {
     const manual = await resolveManualDiscoveredForInstall(
       args.contentRoot,
       args.explicitAs,
       args.explicitTarget,
       args.replayPick,
+      parseOpts,
     );
     return { implicitPick: undefined, ...manual };
   }
@@ -88,21 +161,98 @@ export async function resolveInstallDiscovery(args: {
       args.contentRoot,
       args.pathInRepo,
       args.explicitTarget,
+      parseOpts,
     );
   }
 
-  const classification = await classifySource(args.contentRoot);
+  const rawLayout = await detectLayout(args.contentRoot);
+  const enrichedCollections = await enrichMdcTargets(args.contentRoot, rawLayout.flatCollections);
+  const layout: SourceLayout = { ...rawLayout, flatCollections: enrichedCollections };
 
-  if (classification.type === 'anthropic-skill-pack') {
-    const aggregate = await aggregateAnthropicSkillPack(args.contentRoot, anthropicSkillPackSource);
+  if (layout.skillPack && !layout.canonical) {
+    const aggregate = await aggregateAnthropicSkillPack(
+      args.contentRoot,
+      anthropicSkillPackSource,
+      parseOpts,
+    );
     const narrowed = aggregateToCanonical(aggregate);
     return {
       prep: emptyPrep(),
       implicitPick: undefined,
       narrowed,
       discoveredFeatures: featuresFromCanonical(narrowed),
-      classification,
+      layout,
       aggregate,
+    };
+  }
+
+  if (layout.rootSkill && !layout.canonical && !layout.skillPack) {
+    const narrowed = await rootSkillToCanonical(args.contentRoot, parseOpts);
+    return {
+      prep: emptyPrep(),
+      implicitPick: undefined,
+      narrowed,
+      discoveredFeatures: featuresFromCanonical(narrowed),
+      layout,
+    };
+  }
+
+  if (
+    layout.rootRule &&
+    !layout.canonical &&
+    !layout.skillPack &&
+    !layout.rootSkill &&
+    layout.flatCollections.length === 0
+  ) {
+    const narrowed = await rootRuleToCanonical(args.contentRoot, layout.rootRule.path);
+    return {
+      prep: emptyPrep(),
+      implicitPick: undefined,
+      narrowed,
+      discoveredFeatures: featuresFromCanonical(narrowed),
+      layout,
+    };
+  }
+
+  if (layout.subPacks.length > 0) {
+    return {
+      prep: emptyPrep(),
+      implicitPick: undefined,
+      narrowed: {
+        rules: [],
+        commands: [],
+        agents: [],
+        skills: [],
+        mcp: null,
+        permissions: null,
+        hooks: null,
+        ignore: [],
+      },
+      discoveredFeatures: [],
+      layout,
+    };
+  }
+
+  // Flat collections (e.g. rules/*.mdc, commands/*.md) have no canonical or
+  // skill-pack hint, but the picker can auto-pick a single collection and
+  // recurse with explicit --as / --path. Surface the layout instead of letting
+  // the native fallback throw "No installable resources" before the picker runs.
+  if (layout.flatCollections.length > 0) {
+    return {
+      prep: emptyPrep(),
+      implicitPick: undefined,
+      narrowed: {
+        rules: [],
+        commands: [],
+        agents: [],
+        skills: [],
+        mcp: null,
+        permissions: null,
+        hooks: null,
+        ignore: [],
+      },
+      discoveredFeatures: [],
+      layout,
     };
   }
 
@@ -111,6 +261,7 @@ export async function resolveInstallDiscovery(args: {
     args.contentRoot,
     args.pathInRepo,
     args.explicitTarget,
+    parseOpts,
   );
-  return { ...native, classification };
+  return { ...native, layout };
 }

@@ -61,15 +61,3 @@ installs:
     target: claude-code
     path: subagents
     as: agents
-  - name: onmax-nuxt-skills-skills
-    source: github:onmax/nuxt-skills@004e2460c21d1d07203743a2fd47a7d2321fc8b6
-    version: 004e2460c21d1d07203743a2fd47a7d2321fc8b6
-    source_kind: github
-    features:
-      - skills
-    pick:
-      skills:
-        - ts-library
-    target: claude-code
-    path: skills
-    as: skills

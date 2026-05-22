@@ -31,6 +31,7 @@ export default defineConfig({
         'src/targets/claude-code/importer.ts',
         'src/targets/cline/importer.ts',
         'src/cli/commands/watch.ts', // async watcher; covered by tests/integration/watch.integration.test.ts
+        'src/mcp/server.ts', // stdio MCP entry point; exercised end-to-end via tests/integration/mcp.* and e2e mcp suites — coverage tool cannot measure subprocess execution
         'src/config/remote/remote-fetcher.ts', // network/cache; covered by unit + integration
         'src/config/core/lock.ts', // file I/O; covered by unit + integration
         'src/utils/filesystem/fs.ts', // file I/O wrapper; covered by unit tests
@@ -55,11 +56,14 @@ export default defineConfig({
         'src/targets/windsurf/generator.ts', // windsurf format adapter
         'src/targets/windsurf/importer.ts', // windsurf import adapter
         'src/targets/projection/projected-agent-skill.ts', // projected metadata adapter
+        'src/install/run/run-install-locked.ts', // orchestration entry, integration-tested by tests/integration/install-*
+        'src/install/run/run-install-execute.ts', // orchestration glue
+        'src/install/manual/manual-install-scope.ts', // I/O staging adapter, covered by install integration tests
       ],
       thresholds: {
-        lines: 90,
-        functions: 90,
-        branches: 90,
+        lines: 95,
+        functions: 95,
+        branches: 95,
       },
     },
   },

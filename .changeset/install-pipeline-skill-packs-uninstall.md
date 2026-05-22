@@ -69,6 +69,20 @@ Two silent data-corruption bugs in the skill-pack broken-link `[i]nclude` flow a
 - **CRLF / BOM normalization** — `hashFileForManifest` (`src/utils/crypto/hash.ts`) normalizes `\r\n?` → `\n` and strips a leading UTF-8 BOM for text-extension files (`.md`, `.json`, `.yaml`, etc.) before hashing. A Windows editor saving CRLF or a tool prepending a BOM no longer registers as drift. Binary files are still hashed as raw bytes.
 - **Symlink-safe traversal** — install-time pack hashing and uninstall-time drift detection now use `readDirRecursiveNoSymlinks`. A symlink that used to be followed at install (silently absorbing external bytes into the hash) only to be unlinked-without-following at uninstall (`rm` removes the link, not the target) no longer produces a permanent drift-detection mismatch.
 
+## MCP server — pack lifecycle tools (NEW)
+
+The built-in `agentsmesh mcp` server now exposes three additional tools so AI agents speaking MCP can install, uninstall, and inspect community packs without leaving the conversation:
+
+| Tool | Purpose |
+|---|---|
+| `install` | Install a community pack from a URL or local path. Auto-classifies the source layout; `target` / `as` overrides the classifier. |
+| `uninstall` | Remove one or more installed packs. Mid-batch failures isolated; survivors continue. |
+| `installs_list` | Read-only inventory of installed packs (also exposed as `agentsmesh://installs` resource). |
+
+All three run with `force: true` internally — MCP has no stdin TTY, so the documented `--force` defaults are accepted for every interactive prompt the CLI would surface (bulk select → accept all, broken-link → leave-with-warnings, modified-files → delete-anyway). Input shapes mirror the CLI flags one-for-one; output envelopes match `InstallData` / `UninstallData` / `InstallsListData`.
+
+Tool count moves from **41 → 44**; resource count moves from **16 → 17**. The MCP docs reference and the in-tree `register` / `tool-tables-sweep` contract tests are updated to match.
+
 ## Programmatic / JSON-envelope additions (additive)
 
 New required fields on public types. JSON readers are unaffected (additive); TypeScript code constructing these types directly needs to populate the new fields:

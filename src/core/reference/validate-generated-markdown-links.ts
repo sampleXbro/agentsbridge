@@ -93,6 +93,16 @@ const OUTPUT_DIR_TO_FEATURE: Record<string, string> = {
   commands: 'commands',
   agents: 'agents',
   skills: 'skills',
+  // factory-droid: native agent definitions land in `.factory/droids/<name>.md`.
+  // Treat the directory as the agents feature so pack-originated key matching
+  // recognizes those outputs and downgrades broken links to advisory warnings.
+  droids: 'agents',
+  // copilot project layout: rules emit per-glob into `.github/instructions/`,
+  // commands into `.github/prompts/`. Map both to their canonical features so
+  // pack-originated outputs from those dirs match the same keys as their
+  // canonical counterparts.
+  instructions: 'rules',
+  prompts: 'commands',
 };
 
 /**
@@ -107,7 +117,18 @@ const TOP_LEVEL_DIR_TO_FEATURE: Record<string, string> = {
   '.clinerules': 'rules',
 };
 
+/**
+ * Target-specific double-extensions that wrap a canonical entity name.
+ * Copilot agents emit as `<name>.agent.md`, rules as `<name>.instructions.md`,
+ * commands as `<name>.prompt.md`. Strip the suffix before keying so the result
+ * matches the canonical `<feature>/<name>` form used in pack-originated key sets.
+ */
+const COMPOUND_MARKDOWN_SUFFIXES = ['.agent.md', '.instructions.md', '.prompt.md'] as const;
+
 function stripMarkdownExt(name: string): string {
+  for (const suffix of COMPOUND_MARKDOWN_SUFFIXES) {
+    if (name.endsWith(suffix)) return name.slice(0, -suffix.length);
+  }
   if (name.endsWith('.mdc')) return name.slice(0, -4);
   if (name.endsWith('.md')) return name.slice(0, -3);
   return name;

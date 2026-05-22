@@ -12,6 +12,7 @@ import { writeFileAtomic, mkdirp } from '../../utils/filesystem/fs.js';
 import { prependYamlSchemaDirective } from '../../utils/output/schema-directive.js';
 import { hashPackContent } from './pack-hash.js';
 import { normalizePersistedInstallPaths } from '../core/portable-paths.js';
+import type { PreservedRootFile } from '../source/collect-preserved-root.js';
 
 export interface PackMetadataRefresh {
   source: string;
@@ -116,6 +117,20 @@ async function mergeSkills(canonical: CanonicalFiles, packDir: string): Promise<
   }
 }
 
+/**
+ * Refresh upstream preserved-boilerplate files (README/LICENSE/…) at the pack
+ * root. Overwrites on collision: the latest upstream source is the truth on
+ * re-install, matching how the rest of `mergeIntoPack` treats same-name files.
+ */
+async function mergePreservedRootFiles(
+  files: readonly PreservedRootFile[],
+  packDir: string,
+): Promise<void> {
+  for (const file of files) {
+    await copyFile(file.absolutePath, join(packDir, file.relativePath));
+  }
+}
+
 async function mergeSettings(canonical: CanonicalFiles, packDir: string): Promise<void> {
   if (canonical.mcp !== null) {
     await writeFileAtomic(join(packDir, 'mcp.json'), `${JSON.stringify(canonical.mcp, null, 2)}\n`);
@@ -149,6 +164,7 @@ export async function mergeIntoPack(
   newFeatures: string[],
   newPick: ExtendPick | undefined,
   refresh?: PackMetadataRefresh,
+  preservedRootFiles: readonly PreservedRootFile[] = [],
 ): Promise<PackMetadata> {
   // Write new resources
   await mergeRules(newCanonical, packDir);
@@ -156,6 +172,7 @@ export async function mergeIntoPack(
   await mergeAgents(newCanonical, packDir);
   await mergeSkills(newCanonical, packDir);
   await mergeSettings(newCanonical, packDir);
+  await mergePreservedRootFiles(preservedRootFiles, packDir);
 
   // Merge metadata
   const mergedFeatures = union(existingMeta.features, newFeatures) as PackMetadata['features'];

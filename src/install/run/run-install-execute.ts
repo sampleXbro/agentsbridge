@@ -45,6 +45,8 @@ export interface RunInstallExecuteArgs {
   sourceForYaml: string;
   version: string | undefined;
   pathInRepo: string;
+  /** Upstream source root; forwarded to the pack writer for preserved-file harvesting. */
+  contentRoot: string;
   persisted: ManualInstallPersistence;
   replay?: InstallReplayScope;
   prep: InstallDiscoveryPrep;
@@ -64,7 +66,8 @@ export async function executeRunInstallPoolsAndWrite(
   args: RunInstallExecuteArgs,
 ): Promise<InstallExecuteResult> {
   const { scope, force, dryRun, tty, useExtends, nameOverride, explicitAs } = args;
-  const { config, context, parsed, sourceForYaml, version, pathInRepo, persisted } = args;
+  const { config, context, parsed, sourceForYaml, version, pathInRepo, contentRoot, persisted } =
+    args;
   const { replay, prep, implicitPick, narrowed, discoveredFeatures, sourceType } = args;
 
   const { narrowed: effectiveNarrowed, discoveredFeatures: effectiveFeatures } =
@@ -178,6 +181,7 @@ export async function executeRunInstallPoolsAndWrite(
       manualAs: explicitAs,
       renameExistingPack: nameOverride === '' && reuseExistingName === null,
       sourceType,
+      contentRoot,
     });
   }
   await runPostOperationGenerate('install', scope, context.rootBase);

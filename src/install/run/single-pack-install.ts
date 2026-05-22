@@ -112,6 +112,7 @@ export async function runSinglePackInstall(opts: RunSinglePackArgs): Promise<Ins
       sourceForYaml,
       version,
       pathInRepo,
+      contentRoot,
       persisted,
       replay,
       prep,

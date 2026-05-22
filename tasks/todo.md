@@ -1,64 +1,70 @@
-# Ultrareview Fix-Plan — develop branch (37 unpushed commits)
+# Plan — Pack-root README/LICENSE preservation + link validator key fix (C + Tiny A)
 
-Order: CRITICAL → HIGH → MEDIUM → LOW. TDD for every behavior change.
+## Scope (locked in by user)
 
-## CRITICAL
+1. **Link validator key fix (C)** — recognize copilot's `.agent.md` / `.instructions.md` / `.prompt.md` double-extensions and factory-droid's `droids/` feature dir in `canonicalKeyFromOutputPath`, so broken links in pack-originated outputs correctly downgrade to advisory warnings instead of hard errors.
+2. **Pack-root preservation (Tiny A)** — when installing a pack, copy upstream top-level `README*`, `LICENSE*`, `NOTICE*`, `COPYING*`, `COPYRIGHT*` files into the pack root at `.agentsmesh/packs/<name>/`. Honors L270's legal-attribution intent; carries upstream context for the consumer; one file copy in pack writer, no canonical model changes, no per-target descriptor changes.
 
-- [ ] **C1** `apply-decisions.ts:54` — `buildLinkRewrites` compares `token.destination` (raw scanned) against `resolved.link.path` (post-`stripPath`). Bodies with `{baseDir}/x.md` or Windows-style `..\x.md` silently no-op. **Fix:** call with `resolved.link.raw`. **Test:** body containing `{baseDir}/foo.md`.
-- [ ] **C2** `apply-decisions.ts:79-83` — basename collision (`docs/A/README.md` + `docs/B/README.md` → `references/README.md`) drops second content + both citations point at one file. **Fix:** disambiguate via `resolvedRelative` slug when collision. **Test:** two distinct outside paths sharing a basename.
+Explicitly out of scope: emitting README/LICENSE into generated target dirs (`.claude/agents/README.md`, etc.). Broken-link warnings inside agent bodies stay as advisory.
 
-## HIGH
+## Files touched
 
-- [ ] **H1** `run-uninstall.ts:160-170` — per-pack try/catch in apply loop; collect failures; always run post-generate over surviving installs.
-- [ ] **H2** `vitest.config.ts` — coverage honesty: re-include orchestrator files (`run-install-locked`, `run-install-execute`, `manual-install-scope`, `native-path-pick-infer`) or annotate explicitly. Prefer adding minimal targeted tests + removing from exclude.
-- [ ] **H3** `install-flags.ts:21,30` — `.trim()` `explicitPath` to match `target`/`as` symmetry.
-- [ ] **H4** Tighten loose tests:
-  - `tests/unit/core/reference/import-maps-global-branches.test.ts:31,51,57,64`
-  - `tests/unit/core/reference/import-maps-misc-branches.test.ts:29,45`
-  - `tests/unit/targets/continue/importer-branches.test.ts:29,45,57,76`
-  - `tests/unit/targets/codex-cli/importer-rules-branches.test.ts:40,49`
-  - `tests/unit/install/uninstall/uninstall-decisions-edge.test.ts:99`
-  - `tests/unit/targets/import/descriptor-default-mappers-branches.test.ts:63,74,85`
-- [ ] **H5** `native-path-pick-infer.ts` — replace 8-target hardcoded ladder with descriptor-driven dispatch (use `descriptor.importer.*.source.project` paths).
-- [ ] **H6** `target-descriptor.schema.ts:140-173` — require `metadata`, drop `as unknown as` cast.
-- [ ] **H7** File-size cap (≥200):
-  - `src/install/run/run-install-locked.ts` (295) → split marketplace-branch + single-pack-branch.
-  - `src/install/classify/layout-detect.ts` (244) → extract per-detector helpers.
-- [ ] **H8** README + website: add `--all` flag to install docs/synopsis; add `AGENTSMESH_STRICT_PLUGINS` to env-var table; verify env-var table parity.
+### Step 1: Link validator
+- `src/core/reference/validate-generated-markdown-links.ts`
+- New/extended: `tests/unit/core/reference/canonical-key-from-output-path.test.ts` (check whether already exists; otherwise create)
 
-## MEDIUM
+### Step 2: Pack-root preservation
+- New: `src/install/source/collect-preserved-root.ts` — `collectPreservedRootFiles(contentRoot)` returns top-level preserved-boilerplate files
+- `src/install/pack/pack-writer.ts` — accept `preservedRootFiles` arg, copy into pack root before hashing
+- `src/install/pack/pack-merge.ts` — accept `preservedRootFiles` arg, copy into pack root (last-write-wins on collision)
+- `src/install/run/run-install-pack.ts` — extend `InstallAsPackArgs` with `contentRoot`, collect preserved root files, plumb to writer/merger
+- `src/install/run/run-install-execute.ts` — extend `RunInstallExecuteArgs` with `contentRoot`, pass through
+- `src/install/run/single-pack-install.ts` — already has `contentRoot`, just thread it through
+- New: `tests/unit/install/source/collect-preserved-root.test.ts`
+- Extensions: `tests/unit/install/pack-writer.test.ts`, `tests/unit/install/pack-merge.test.ts` if it exists (otherwise covered by writer test + integration)
+- New: `tests/integration/install-pack-root-preservation.integration.test.ts`
 
-- [ ] **M1** `run-uninstall.ts:88-94` — under `--json`, suppress `logger.error` stderr leak.
-- [ ] **M2** `uninstall-decisions.ts:102` — `migrateLegacyManifest` writes under dry-run. Thread `dryRun` flag.
-- [ ] **M3** `detect-modified.ts` + `install-manifest-hash.ts` — normalize line endings + strip BOM for text extensions before hashing.
-- [ ] **M4** `fs-traverse.ts:74-87` — skip symlinks in hash/uninstall traversal.
-- [ ] **M5** `apply-uninstall.ts` — add `partial: boolean` to `AppliedRemoval` for JSON consumers.
-- [ ] **M6** `install-lock.ts:33` — `mkdir(canonicalDir, { recursive: true })` before acquire.
-- [ ] **M7** `renderers/installs.ts:75-86` — replace hand-rolled help banner with `printCommandHelp('installs')`.
-- [ ] **M8** `help-data.ts:163` + `uninstall.mdx:28` — note `--force` is implied by `--json`.
-- [ ] **M9** `merge-commands.ts:50-61` — replace dead defensive branch with invariant assertion.
-- [ ] **M10** `install-name.ts:66-70` — iterative `git+` strip (recursion guard).
+## TDD plan (test-first per step)
 
-## LOW
+### Step 1 — link validator
+1. Write failing tests in `canonical-key-from-output-path.test.ts`:
+   - `.github/agents/foo.agent.md` → `agents/foo`
+   - `.github/instructions/foo.instructions.md` → `rules/foo`
+   - `.github/prompts/foo.prompt.md` → `commands/foo`
+   - `.factory/droids/foo.md` → `agents/foo`
+   - Existing keys unchanged: `.claude/agents/foo.md` → `agents/foo`, `.kiro/steering/foo.md` → `rules/foo`, `.clinerules/foo.md` → `rules/foo`
+2. Implement:
+   - `stripMarkdownExt`: extend to peel known double-extensions (`.agent.md`, `.instructions.md`, `.prompt.md`) before falling back to single `.md` / `.mdc` strip
+   - `OUTPUT_DIR_TO_FEATURE`: add `droids: 'agents'`
+3. Run unit + full link-validator suite.
 
-- [ ] **L1** `prompt-io-defaults.test.ts:16-24` — use `vi.spyOn` instead of `Object.defineProperty(process, 'stdin')`.
-- [ ] **L2** `skill-mirror.ts:24-30` — `NATIVE_AGENTS_SKILL_WRITERS` → `descriptor.project.ownsSharedSkillDir`.
-- [ ] **L3** `native-format-detector.ts:60-74` — restore bare-dir markers if regression unintended.
-- [ ] **L4** `descriptor-import-runner.ts:55,115` — type annotation for `let mapping`.
-- [ ] **L5** `conversions.ts:49,70` — add conversions schema + drop cast.
-- [ ] **L6** `registry.ts:13-27` — lint rule against top-level `getDescriptor` in `src/targets/*/index.ts`.
+### Step 2 — preserved root files
+1. Write failing tests:
+   - `collect-preserved-root.test.ts`: temp dir with README.md, LICENSE, LICENSE-MIT, CHANGELOG.md, foo.md, subdir/README.md → returns exactly README.md + LICENSE + LICENSE-MIT; CHANGELOG/foo/subdir excluded
+   - `pack-writer.test.ts` extension: pass `preservedRootFiles: [{relativePath:'README.md', absolutePath: tmp+'/README.md'}, ...]` → assert file exists at `<packDir>/README.md` with matching bytes; assert content_hash differs from baseline-without-preserved-files; assert install-manifest contains the file's sha256
+   - Integration: synthesize source dir with `README.md`+`LICENSE`+`agents/foo.md`; run install; assert `.agentsmesh/packs/<name>/{README.md,LICENSE,agents/foo.md}` all present
+2. Implement bottom-up:
+   - `collect-preserved-root.ts`: readdir contentRoot (top-level only), filter by `isPreservedBoilerplate(name)` AND `dirent.isFile()`, return `{relativePath, absolutePath}[]` sorted
+   - `pack-writer.ts`: add optional `preservedRootFiles` to args; iterate after `writeSettings`, before `hashPackContent`; `copyFile` each into the tmpDir
+   - `pack-merge.ts`: same — accept arg, copy before `hashPackContent`. Overwrites on re-install (consistent with how the rest of the merge handles same-name files)
+   - `run-install-pack.ts`: add `contentRoot` to `InstallAsPackArgs`; call `collectPreservedRootFiles(contentRoot)` once; pass to both `materializePack` and `mergeIntoPack`
+   - `run-install-execute.ts`: add `contentRoot` to `RunInstallExecuteArgs`; pass through to `installAsPack`
+   - `single-pack-install.ts`: pass `contentRoot` into `executeRunInstallPoolsAndWrite`
+3. Run install integration tests (existing + new). Manually re-run the user's broken install to confirm warnings shrink + README/LICENSE land in pack root.
 
-## Verification
+### Step 3 — lesson + verification
+1. Add `tasks/lessons.md` entry: "Preserved boilerplate at the upstream source root must travel into the pack root for legal attribution + consumer context; flat-collection per-target emission is intentionally out of scope (treated as advisory link warnings)."
+2. Re-run user's original install: `agentsmesh install addyosmani/agent-skills`. Verify:
+   - install completes cleanly (no `Generate failed after install` hard error)
+   - `.agentsmesh/packs/addyosmani-agent-skills-pack/README.md` + `LICENSE` exist
+   - 42 broken-link warnings remain as advisory (acceptable per scope)
 
-After each phase: `pnpm test` (unit + integration). Final: `pnpm build && pnpm lint && pnpm typecheck && pnpm test`.
+## Tracking
 
-## Deferred to a follow-up PR
-
-- **H5** `src/install/native/native-path-pick-infer.ts` — replace the 8-target hardcoded ladder with descriptor-driven dispatch. Requires either:
-  - Adding an `installPickHints` field to `TargetDescriptor` and populating it across all 27 builtin descriptors, OR
-  - Deriving hints at module load by parsing each descriptor's `project.managedOutputs.dirs` for `<scope>/{rules,commands,agents,skills}` patterns, with bespoke overrides for `gemini-cli` (namespaced commands), `cline` (workflows dir), and `codex-cli` (flat `.codex` layout).
-  - Until that lands, the file stays in the vitest coverage exclude list (category 5).
-
-## Out of scope
-
-- Pre-existing 200-line cap violators not touched in this PR (`skill-import-pipeline.ts`, `builtin-targets.ts`, etc.).
+- [ ] Step 1 tests written and red
+- [ ] Step 1 implementation green
+- [ ] Step 2 tests written and red (collect helper, writer, merge, integration)
+- [ ] Step 2 implementation green
+- [ ] Step 3 lesson + manual verification
+- [ ] Full `pnpm test` clean
+- [ ] Lint clean

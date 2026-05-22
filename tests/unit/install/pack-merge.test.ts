@@ -198,6 +198,52 @@ describe('mergeIntoPack', () => {
     expect(parsed.updated_at).toBe(updatedMeta.updated_at);
   });
 
+  it('copies preserved root files into the existing pack on merge', async () => {
+    const upstream = join(srcDir, 'upstream');
+    mkdirSync(upstream, { recursive: true });
+    writeFileSync(join(upstream, 'README.md'), 'merged\n', 'utf-8');
+    writeFileSync(join(upstream, 'LICENSE'), 'Apache-2.0\n', 'utf-8');
+
+    const rulePath = writeRuleFile('m', 'body');
+    const newCanonical = makeCanonical({
+      rules: [
+        {
+          source: rulePath,
+          root: false,
+          targets: [],
+          description: 'm',
+          globs: [],
+          body: 'body',
+        },
+      ],
+    });
+
+    await mergeIntoPack(packDir, BASE_META, newCanonical, ['rules'], undefined, undefined, [
+      { relativePath: 'README.md', absolutePath: join(upstream, 'README.md') },
+      { relativePath: 'LICENSE', absolutePath: join(upstream, 'LICENSE') },
+    ]);
+
+    expect(existsSync(join(packDir, 'README.md'))).toBe(true);
+    expect(existsSync(join(packDir, 'LICENSE'))).toBe(true);
+    expect(readFileSync(join(packDir, 'README.md'), 'utf-8')).toBe('merged\n');
+    expect(readFileSync(join(packDir, 'LICENSE'), 'utf-8')).toBe('Apache-2.0\n');
+  });
+
+  it('overwrites stale preserved root files on re-install (upstream truth)', async () => {
+    // Pack already has an old README from a previous install.
+    writeFileSync(join(packDir, 'README.md'), 'old upstream\n', 'utf-8');
+
+    const upstream = join(srcDir, 'upstream');
+    mkdirSync(upstream, { recursive: true });
+    writeFileSync(join(upstream, 'README.md'), 'new upstream\n', 'utf-8');
+
+    await mergeIntoPack(packDir, BASE_META, makeCanonical(), [], undefined, undefined, [
+      { relativePath: 'README.md', absolutePath: join(upstream, 'README.md') },
+    ]);
+
+    expect(readFileSync(join(packDir, 'README.md'), 'utf-8')).toBe('new upstream\n');
+  });
+
   it('refreshes source/version metadata when the latest install resolves to a new remote pin', async () => {
     const newRulePath = writeRuleFile('latest', 'body');
     const newCanonical = makeCanonical({

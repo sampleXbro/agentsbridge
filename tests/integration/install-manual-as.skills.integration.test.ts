@@ -58,8 +58,14 @@ describe('install standalone skill repo (integration)', () => {
     await runInstall({ force: true, as: 'skills', name: 'code-review' }, [repoDir], project);
 
     const packFiles = listRelativeFiles(join(project, '.agentsmesh', 'packs', 'code-review'));
+    // Upstream-root README/LICENSE travel to the pack root (legal attribution +
+    // consumer-facing context). They ALSO remain inside the skill subtree —
+    // both copies are correct: pack-root is the repo-level docs, skill-internal
+    // is the per-skill docs (here they happen to be the same file).
     expect(packFiles).toEqual([
       '.agentsmesh-install-manifest.json',
+      'LICENSE',
+      'README.md',
       'pack.yaml',
       'skills/code-review-excellence/LICENSE',
       'skills/code-review-excellence/README.md',

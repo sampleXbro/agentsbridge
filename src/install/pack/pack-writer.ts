@@ -30,6 +30,7 @@ import {
 import { hashPackContent } from './pack-hash.js';
 import { hashPackFiles, INSTALL_MANIFEST_FILENAME } from '../manifest/install-manifest-hash.js';
 import { normalizePersistedInstallPaths } from '../core/portable-paths.js';
+import type { PreservedRootFile } from '../source/collect-preserved-root.js';
 
 type PackMetadataInput = Omit<PackMetadata, 'content_hash'>;
 
@@ -89,6 +90,21 @@ async function writeSkills(canonical: CanonicalFiles, packDir: string): Promise<
       await mkdirp(dirname(destPath));
       await copyFile(sf.absolutePath, destPath);
     }
+  }
+}
+
+/**
+ * Copy upstream preserved-boilerplate files (README/LICENSE/NOTICE/…) into the
+ * pack root verbatim. These files are not canonical entities — they carry
+ * legal attribution and consumer-facing context for the redistributed pack.
+ * Must run before `hashPackContent` so the bytes contribute to the pack hash.
+ */
+async function writePreservedRootFiles(
+  files: readonly PreservedRootFile[],
+  packDir: string,
+): Promise<void> {
+  for (const file of files) {
+    await copyFile(file.absolutePath, join(packDir, file.relativePath));
   }
 }
 
@@ -160,6 +176,7 @@ export async function materializePack(
   canonical: CanonicalFiles,
   metadataInput: PackMetadataInput,
   installManifestExtras: InstallManifestExtras = {},
+  preservedRootFiles: readonly PreservedRootFile[] = [],
 ): Promise<PackMetadata> {
   validatePackName(packName);
   const tmpDir = join(packsDir, `${packName}.tmp`);
@@ -188,6 +205,9 @@ export async function materializePack(
     await writeAgents(canonical, tmpDir);
     await writeSkills(canonical, tmpDir);
     await writeSettings(canonical, tmpDir);
+    // Preserved root files (README/LICENSE/…) before hash so the bytes
+    // participate in `content_hash` and the per-file install manifest.
+    await writePreservedRootFiles(preservedRootFiles, tmpDir);
 
     // Compute aggregate content hash (excludes pack.yaml + install manifest).
     const contentHash = await hashPackContent(tmpDir);

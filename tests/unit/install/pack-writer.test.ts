@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdirSync, writeFileSync, rmSync, existsSync } from 'node:fs';
+import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { materializePack } from '../../../src/install/pack/pack-writer.js';
@@ -215,6 +215,94 @@ describe('materializePack', () => {
     await expect(
       materializePack(packsDir, 'foo/bar', canonical, { ...BASE_META, features: ['rules'] }),
     ).rejects.toThrow(/Invalid pack name/);
+  });
+
+  it('copies preserved root files (README, LICENSE, …) into the pack root', async () => {
+    // Simulate an upstream source tree with top-level README + LICENSE.
+    const upstream = join(srcDir, 'upstream');
+    mkdirSync(upstream, { recursive: true });
+    writeFileSync(join(upstream, 'README.md'), '# upstream readme\n', 'utf-8');
+    writeFileSync(join(upstream, 'LICENSE'), 'MIT License\n', 'utf-8');
+    const rulePath = writeRule('keep', 'body');
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: rulePath,
+          root: false,
+          targets: [],
+          description: 'keep',
+          globs: [],
+          body: 'body',
+        },
+      ],
+    });
+
+    await materializePack(
+      packsDir,
+      'test-pack',
+      canonical,
+      { ...BASE_META, features: ['rules'] },
+      {},
+      [
+        { relativePath: 'README.md', absolutePath: join(upstream, 'README.md') },
+        { relativePath: 'LICENSE', absolutePath: join(upstream, 'LICENSE') },
+      ],
+    );
+
+    const packRoot = join(packsDir, 'test-pack');
+    expect(existsSync(join(packRoot, 'README.md'))).toBe(true);
+    expect(existsSync(join(packRoot, 'LICENSE'))).toBe(true);
+    // Bytes must match upstream.
+    expect(readFileSync(join(packRoot, 'README.md'), 'utf-8')).toBe('# upstream readme\n');
+    expect(readFileSync(join(packRoot, 'LICENSE'), 'utf-8')).toBe('MIT License\n');
+  });
+
+  it('includes preserved root files in content_hash + install manifest', async () => {
+    const upstream = join(srcDir, 'upstream');
+    mkdirSync(upstream, { recursive: true });
+    writeFileSync(join(upstream, 'README.md'), 'hello\n', 'utf-8');
+    const rulePath = writeRule('h', 'body');
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: rulePath,
+          root: false,
+          targets: [],
+          description: 'h',
+          globs: [],
+          body: 'body',
+        },
+      ],
+    });
+
+    // Baseline: no preserved files.
+    const baseline = await materializePack(packsDir, 'pack-base', canonical, {
+      ...BASE_META,
+      name: 'pack-base',
+      features: ['rules'],
+    });
+
+    // With preserved README.
+    const withReadme = await materializePack(
+      packsDir,
+      'pack-with-readme',
+      canonical,
+      { ...BASE_META, name: 'pack-with-readme', features: ['rules'] },
+      {},
+      [{ relativePath: 'README.md', absolutePath: join(upstream, 'README.md') }],
+    );
+
+    // content_hash must differ — preserved file contributes to the hash.
+    expect(withReadme.content_hash).not.toBe(baseline.content_hash);
+
+    // Install manifest should list README.md alongside pack content.
+    const manifest = JSON.parse(
+      readFileSync(
+        join(packsDir, 'pack-with-readme', '.agentsmesh-install-manifest.json'),
+        'utf-8',
+      ),
+    ) as { files: Record<string, string> };
+    expect(manifest.files['README.md']).toMatch(/^sha256:[0-9a-f]{64}$/);
   });
 
   it('does not create subdirs for features with no resources', async () => {

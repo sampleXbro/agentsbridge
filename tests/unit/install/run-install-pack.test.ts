@@ -124,8 +124,8 @@ describe('installAsPack', () => {
         version: 'new456',
         target: 'gemini-cli',
         path: '.gemini/commands',
-        as: undefined,
       },
+      [],
     );
   });
 

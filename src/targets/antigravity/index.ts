@@ -43,6 +43,20 @@ export const target: TargetGenerators = {
 const project: TargetLayout = {
   rootInstructionPath: ANTIGRAVITY_RULES_ROOT,
   skillDir: '.agents/skills',
+  // managedOutputs is the sole signal `cleanupStaleGeneratedOutputs` uses to
+  // decide which dirs/files to scan when reconciling post-uninstall state.
+  // Antigravity emits across three dirs:
+  //   - `.agents/rules`     (rules)
+  //   - `.agents/workflows` (commands → workflows projection)
+  //   - `.agents/skills`    (agents → skills projection + native skills)
+  // Without all three here, projected outputs from an uninstalled pack would
+  // linger in the user's project. The root rule file and (suppressed) MCP
+  // config are listed under `files` so a flip from one root style to another
+  // doesn't leave both behind.
+  managedOutputs: {
+    dirs: [ANTIGRAVITY_RULES_DIR, ANTIGRAVITY_WORKFLOWS_DIR, ANTIGRAVITY_SKILLS_DIR],
+    files: [ANTIGRAVITY_RULES_ROOT],
+  },
   rewriteGeneratedPath(path) {
     if (path === ANTIGRAVITY_MCP_CONFIG) return null;
     return path;

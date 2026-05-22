@@ -56,7 +56,20 @@ Each target's tree carries exactly the 23 skills, with no boilerplate (`README.m
 
 ### Bulk-select
 
-When the classifier picks `anthropic-skill-pack` and stdin is a TTY, you see:
+When the classifier picks `anthropic-skill-pack` and stdin is a TTY, the prompt shape depends on how many entities the source carries.
+
+**One entity total** — single yes/no:
+
+```
+Found in source-name:
+  - 1 skill
+
+Install skill "interview-me"? [y/N]
+```
+
+`y` installs it, `n` or Enter skips, anything else aborts (exit `130`). The three-tier picker would be pointless ceremony here, so AgentsMesh skips it.
+
+**Two or more entities** — three-tier picker:
 
 ```
 Found in agent-skills:
@@ -69,8 +82,10 @@ Install [a]ll, [n]one, or [s]elect per type? [a/n/s]
 ```
 
 - `a` accepts everything (also the default under `--force`, `--json`, non-TTY).
-- `n` aborts the run (exit 130; no writes).
-- `s` drills into per-type prompts (`Install all 23 skills? [y/n/c]`); `c` drills into per-entity prompts (`Install skill "interview-me"? [y/N/a/q]`).
+- `n` returns nothing and exits `0` (no writes).
+- `s` enters Tier 2, asking once per non-empty kind: `Install all 23 skills? [y/n/c]` — `y`/`n` take/skip the whole kind; `c` drills into Tier 3 per-entity prompts: `Install skill "interview-me"? [y/N/a/q]` (`a` = accept this and every remaining entity in the kind; `q` = skip this and every remaining entity in the kind).
+
+See the [`install` reference](../../cli/install/#interactive-prompts) for the full tier matrix, marketplace and multi-collection flows, conflict handling, and the consolidated bypass table.
 
 ### Broken-link
 

@@ -77,9 +77,32 @@ agentsmesh install github:addyosmani/agent-skills
 
 The classifier sees `skills/<kebab>/SKILL.md`, `agents/`, `references/`, multi-tool rules, and per-target command dirs (`.claude/commands/`, `.gemini/commands/`); it imports all skills, agents, root rule, and the merged command set in one shot. Per-entity prompts surface only when the source contains relative links that cross the imported subtree.
 
-### Bulk-select prompt (interactive)
+## Interactive prompts
 
-When the classifier picks `anthropic-skill-pack` and you're at a TTY, AgentsMesh surfaces a summary banner with per-type counts:
+What you see at the prompt depends on the source's shape. AgentsMesh detects the shape during discovery and picks the simplest prompt that fits — never asks more than it needs to. Every prompt has a deterministic non-interactive default (see the [bypass table](#non-interactive-defaults) below) so `--force`, `--json`, `--dry-run`, and non-TTY runs never block.
+
+### 1. Single-entity confirm
+
+When discovery turns up **exactly one** installable entity across all four kinds, you get a one-line yes/no:
+
+```
+Found in source-name:
+  - 1 skill
+
+Install skill "interview-me"? [y/N]
+```
+
+| Response | Effect |
+|----------|--------|
+| `y` / `Y` | Install the entity. |
+| `n` / `N` / Enter | Skip the entity (exit `0`, nothing installed). |
+| anything else | Abort the run (exit `130`). |
+
+### 2. Multi-entity bulk-select (skill packs)
+
+When the classifier picks `anthropic-skill-pack` and the count is `≥ 2`, you get a three-tier flow. Each tier only fires if the previous one routed there:
+
+**Tier 1 — top-level choice across all kinds:**
 
 ```
 Found in agent-skills:
@@ -91,11 +114,88 @@ Found in agent-skills:
 Install [a]ll, [n]one, or [s]elect per type? [a/n/s]
 ```
 
-`s` drills into per-type prompts; `c` from there drills into per-entity prompts (`[y/N/a=accept-all-remaining/q=skip-all-remaining]`). `--force`, `--json`, and non-TTY runs accept everything without prompting.
+| Response | Effect |
+|----------|--------|
+| `a` | Accept every entity across every kind. |
+| `n` | Decline everything (exit `0`, nothing installed). |
+| `s` | Drill into Tier 2 per kind. |
+| anything else / blank | Abort (exit `130`). |
 
-### Broken-link prompt (interactive)
+**Tier 2 — per-kind, fires once per non-empty kind under `s`:**
 
-When a skill body references files outside its scope (e.g. `../references/orchestration-patterns.md`), AgentsMesh classifies each link and prompts per-entity:
+```
+Install all 23 skills? [y/n/c]
+```
+
+| Response | Effect |
+|----------|--------|
+| `y` | Take every entity of this kind, continue to the next kind. |
+| `n` | Skip every entity of this kind, continue to the next kind. |
+| `c` | Drill into Tier 3 (cherry-pick by name). |
+| anything else | Abort (exit `130`). |
+
+**Tier 3 — per-entity, fires once per entity inside the kind you entered under `c`:**
+
+```
+Install skill "interview-me"? [y/N/a/q]
+```
+
+| Response | Effect |
+|----------|--------|
+| `y` | Include this entity. |
+| `n` / Enter | Skip this entity, continue to the next. |
+| `a` | Accept this entity and every remaining entity of this kind. |
+| `q` | Skip this entity and every remaining entity of this kind (move to the next kind's Tier 2). |
+| anything else | Abort (exit `130`). |
+
+### 3. Multiple flat collections
+
+When the source root holds two or more flat collections — e.g. `agents/` + `commands/` + `rules/` side-by-side — AgentsMesh can't infer a single intent. Pass `--as <kind>` to pick one kind, or `--path <subdir>` to scope to one folder. Without those flags, the run errors out with the collection list so you can re-run with the right flag:
+
+```
+Ambiguous source with 3 resource collections. Pass --as <kind> to select, or --path <subpath>:
+  - agents (agents, .md)
+  - commands (commands, .md)
+  - rules (rules, .md)
+```
+
+A single flat collection auto-picks silently — no prompt — and the inferred `--as`/`--target` are recorded in `installs.yaml`.
+
+### 4. Marketplace fan-out
+
+When the source is a marketplace (`.claude-plugin/marketplace.json` or a parent dir holding two or more sub-packs), AgentsMesh fans out one install per sub-pack:
+
+- **TTY, no `--all`** — every sub-pack installs silently (no per-sub-pack prompt; each sub-install runs under `--force`).
+- **`--force` or non-TTY** — the run errors out with the sub-pack list so you can choose:
+
+  ```
+  Marketplace source with 4 sub-packs. Pass --all to install all, or use --path <subpath>:
+    - plugins/code-review (skills)
+    - plugins/security (skills, rules)
+    - plugins/testing (commands)
+    - plugins/release (commands, agents)
+  ```
+
+  Re-run with `--all` to fan-out, or `--path plugins/<one>` to install a single sub-pack.
+
+### 5. Conflict with existing canonical entities
+
+If a pack would add a rule / command / agent / skill whose name already exists in your merged canonical config (the union of `.agentsmesh/`, prior packs, and any `extends:`), AgentsMesh asks per collision before writing:
+
+```
+Skill "code-reviewer" already exists in merged config. Add extend anyway? (y/n)
+```
+
+| Response | Effect |
+|----------|--------|
+| `y` / `yes` | Include the colliding entity. At generate time, your canonical entry still wins on basename collision — see [Merge behavior](#merge-behavior). |
+| anything else | Drop the colliding entity from this install. The rest of the pack still installs. |
+
+Under `--force`, `--dry-run`, `--json`, or non-TTY, every colliding entity is kept (treated as `y`); merge-time precedence handles the collision.
+
+### 6. Broken-link prompt (skill packs)
+
+When a skill or agent body references files outside its own subtree (e.g. `../references/orchestration-patterns.md` from a `skills/<x>/SKILL.md`), AgentsMesh classifies each link and prompts per-entity:
 
 ```
 Entity "code-reviewer" (agent) has 2 broken links:
@@ -105,7 +205,27 @@ Entity "code-reviewer" (agent) has 2 broken links:
 Action: [i]nclude resolvable as supporting files / [l]eave with warnings / [a]bort install
 ```
 
-`--force` and non-TTY runs default to `[l]eave-with-warnings` (preserves the link string; warns).
+| Response | Effect |
+|----------|--------|
+| `i` | Copy resolvable files into the entity's `supportingFiles`, rewrite the body link to `./references/<x>.md`. Unresolvables stay as-is with warnings. |
+| `l` | Preserve every link string verbatim and warn at generate time. |
+| `a` | Abort the run (exit `130`). |
+
+## Non-interactive defaults
+
+When `--force`, `--json` (implies `--force`), `--dry-run`, or non-TTY runs hit a prompt, AgentsMesh applies the documented default below without asking. This makes CI runs deterministic.
+
+| Prompt | `--force` / non-TTY default | Notes |
+|--------|----------------------------|-------|
+| Single-entity confirm | accept (install the entity) | Matches Tier 1 `a`. |
+| Bulk-select Tier 1 | `a` (accept all) | Same for `--json`. |
+| Bulk-select Tier 2 / 3 | not reached (Tier 1 short-circuits to `a`) | — |
+| Multiple flat collections | **errors** with the collection list | Re-run with `--as` or `--path`. No silent default. |
+| Marketplace fan-out | **errors** with the sub-pack list | Re-run with `--all` or `--path`. `--all` accepts every sub-pack. |
+| Conflict (already in merged) | accept colliding entity | Merge-time precedence resolves it. |
+| Broken-link | `l` (leave with warnings) | Preserves the link string; warns at generate. |
+
+`--dry-run` runs the prompts the same way as the bypass column but never writes anything; the planned changes appear in the renderer/JSON output.
 
 ### Install from a subdirectory
 

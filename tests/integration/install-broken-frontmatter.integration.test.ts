@@ -108,5 +108,14 @@ describe('install broken-frontmatter (integration)', () => {
         project,
       ),
     ).rejects.toThrow(/No installable resources after skipping invalid files \(2\)/);
+    // Error must point the user at the source-side fix (frontmatter) and the
+    // --path narrowing escape hatch so they don't get stuck.
+    await expect(
+      runInstall(
+        { force: true, as: 'commands', path: 'commands', name: 'all-bad-pack' },
+        [upstream],
+        project,
+      ),
+    ).rejects.toThrow(/frontmatter/);
   });
 });

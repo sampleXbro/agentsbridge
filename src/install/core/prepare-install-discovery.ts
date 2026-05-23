@@ -127,7 +127,9 @@ export async function prepareInstallDiscovery(
     implicitPick = await inferImplicitPickFromNativePath(repoRoot, posixPath, effectiveTarget);
     if (isImplicitPickEmpty(implicitPick)) {
       throw new Error(
-        `No installable native resources found under "${posixPath}" for target "${effectiveTarget}".`,
+        `No installable native resources found under "${posixPath}" for target "${effectiveTarget}". ` +
+          `Try --path "${posixPath}" without --target so agentsmesh can auto-detect the layout, ` +
+          `or use --as <rules|commands|agents|skills> to install the directory as a flat collection.`,
       );
     }
   }

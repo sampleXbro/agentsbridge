@@ -83,6 +83,13 @@ describe('prepareInstallDiscovery branch cases', () => {
         explicitTarget: 'gemini-cli',
       }),
     ).rejects.toThrow(/No installable native resources found/);
+    // The error must surface the recovery hints so the user can pivot without
+    // re-reading docs. Loose contract: phrasing can change, flag names stay.
+    await expect(
+      prepareInstallDiscovery('/repo', '/repo/.agentsmesh', '.agentsmesh/native', {
+        explicitTarget: 'gemini-cli',
+      }),
+    ).rejects.toThrow(/--as/);
   });
 
   it('R-3: skips root native-format detection when --path narrows to a non-native subdir', async () => {

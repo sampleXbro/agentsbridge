@@ -95,7 +95,9 @@ export async function runSinglePackInstall(opts: RunSinglePackArgs): Promise<Ins
         .map((b) => `  - ${b.path}: ${b.reason}`)
         .join('\n');
       throw new Error(
-        `No installable resources after skipping invalid files (${installReport.brokenResources.length}):\n${list}`,
+        `No installable resources after skipping invalid files (${installReport.brokenResources.length}):\n${list}\n` +
+          `Fix the frontmatter in the source files (most often: unquoted scalars containing colons or square brackets), ` +
+          `or narrow --path to a subdirectory that excludes them.`,
       );
     }
     const executeResult = await executeRunInstallPoolsAndWrite({

@@ -68,7 +68,11 @@ async function stageMarkdownCollection(
     (file) => isAcceptedFile(file, acceptMdc) && !isBoilerplate(basename(file)),
   );
   if (files.length === 0) {
-    throw new Error(`No installable files found under ${sourceRoot} for manual install.`);
+    throw new Error(
+      `No installable files found under ${sourceRoot} for manual install. ` +
+        `Try a different --path to point at the directory holding *.md (or *.mdc) files, ` +
+        `or omit --as so agentsmesh can auto-detect the layout.`,
+    );
   }
 
   const bareCounts = new Map<string, number>();

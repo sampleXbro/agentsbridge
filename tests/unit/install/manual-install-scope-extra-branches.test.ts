@@ -25,6 +25,11 @@ describe('stageManualInstallScope — additional branch gaps', () => {
     await expect(stageManualInstallScope(src, 'commands')).rejects.toThrow(
       /No installable files found/,
     );
+    // Error must hint at the recovery flags so the user can pivot without
+    // re-reading docs. Loose contract — the literal phrasing can drift but the
+    // flag names must stay visible.
+    await expect(stageManualInstallScope(src, 'commands')).rejects.toThrow(/--path/);
+    await expect(stageManualInstallScope(src, 'commands')).rejects.toThrow(/--as/);
   });
 
   it('rejects single-file install when extension is not .md', async () => {

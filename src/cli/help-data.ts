@@ -82,7 +82,7 @@ export const COMMANDS: HelpCommand[] = [
     name: 'install',
     usage: 'agentsmesh install <source> [flags]',
     description:
-      'Install rules/commands/agents/skills from a local path or remote repo. Auto-classifies anthropic-skill-pack / canonical-agentsmesh / tool-native sources; --target and --as skip the classifier.',
+      'Install rules/commands/agents/skills from a local path or remote repo. Auto-classifies anthropic-skill-pack / canonical-agentsmesh / tool-native sources. When auto-detection is ambiguous or refuses a non-standard layout, override with: --path <dir> to narrow scope, --as <kind> to force a flat collection (rules|commands|agents|skills), --target <id> to lock the native importer, or --all to install every sub-pack of a marketplace.',
     flags: [
       {
         name: '<source>',

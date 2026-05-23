@@ -40,6 +40,19 @@ agentsmesh install --sync
 | `--force` | Non-interactive mode: include all resources, skip prompts (implied by `--json`). |
 | `--json` | Machine-readable JSON envelope on stdout. Implies `--force`. Validation errors land in the envelope, not stderr. |
 
+## When to reach for each flag
+
+Auto-classification handles the common shapes — Anthropic skill pack, canonical agentsmesh, tool-native — without any flag. Reach for these only when the classifier refuses a source, picks the wrong shape, or asks you to disambiguate.
+
+| Symptom you see | Flag that resolves it | Why |
+|-----------------|----------------------|-----|
+| Repo uses a non-canonical collection dir name (e.g. `rules-mdc/` instead of `rules/`) | `--path rules-mdc --as rules` | `FLAT_COLLECTION_DIRS` only matches the canonical names; `--path` narrows the discovery root and `--as` declares the kind. |
+| Root `CLAUDE.md` (or other root marker) shadows nested content the auto-detector ignores (e.g. `categories/<group>/<agent>.md`) | `--path categories --as agents` | Native auto-detect sees the root marker and stops; `--path` re-roots discovery on the nested tree. |
+| Source is a `.claude-plugin/marketplace.json` and you want every sub-pack | `--all` | Bypasses the picker and fans out one install per sub-pack. For a single sub-pack, prefer `--path plugins/<name>`. |
+| Source is ambiguous between two or more flat collections at root | `--as <kind>` (optionally with `--path <subdir>`) | Picks one kind and skips the picker prompt. |
+| Auto-detection picks the wrong native tool format for an embedded `.<tool>/` layout | `--target <id>` | Locks the native importer; useful for shared-root markers like `AGENTS.md` that several targets could own. |
+| Repo has `agents/` + `commands/` + `skills/` at root with no `.agentsmesh/` parent | Separate calls, one per kind: `--as commands --path commands`, then `--as agents --path agents`, ... | Multi-collection canonical layouts intentionally require explicit intent today — see [Troubleshooting](#troubleshooting). |
+
 ## Exit codes
 
 | Code | Meaning |
@@ -226,6 +239,25 @@ When `--force`, `--json` (implies `--force`), `--dry-run`, or non-TTY runs hit a
 | Broken-link | `l` (leave with warnings) | Preserves the link string; warns at generate. |
 
 `--dry-run` runs the prompts the same way as the bypass column but never writes anything; the planned changes appear in the renderer/JSON output.
+
+## Troubleshooting
+
+Every install error surfaces a recovery flag in its own text — you should never need to leave the terminal to find the next step. The mapping below is the same one the CLI prints, written out so you can scan it without re-running the command.
+
+| Error you see | What it means | Recovery |
+|---------------|---------------|----------|
+| `Ambiguous source with N resource collections. Pass --as <kind> to select, or --path <subpath>:` | Two or more canonical-named flat collections sit at the source root (e.g. `agents/` + `commands/` + `rules/`) with no `.agentsmesh/` parent. The picker won't guess. | Run one install per kind: `--as <kind> --path <kind>`. Combine the kinds you want and re-run as needed. |
+| `Marketplace source with N sub-packs. Pass --all to install all, or use --path <subpath>:` | Source is a `.claude-plugin/marketplace.json` (or a parent dir with two-plus sub-packs) hit under `--force` or non-TTY, so the silent TTY fan-out can't apply. | Re-run with `--all` (fan out every sub-pack) or `--path plugins/<name>` (install one). |
+| `No installable files found under <path> for manual install.` | `--as <kind>` was passed but the directory holds no `.md` / `.mdc` files matching the kind. | Try a different `--path` to point at the directory holding the markdown files, or drop `--as` so the classifier can re-evaluate the layout. |
+| `No installable native resources found under "<path>" for target "<id>".` | `--target` + `--path` were combined but the resulting subtree carries no native artifacts the target recognizes. | Re-run with `--path <dir>` and *without* `--target` to let auto-detect run on the narrowed tree, or use `--as <kind>` to install the directory as a flat collection. |
+| `No installable resources after skipping invalid files (N): ...` | Every `.md` under the chosen scope had invalid YAML frontmatter (e.g. unquoted scalars containing colons or `[...]` flow-sequences). Lenient parsing skipped each one with a per-file reason; nothing remained. | Fix the frontmatter at the source (quote the offending strings), or narrow `--path` to a subdirectory that excludes the bad files. |
+| `No installable resources at <cache path>` | The classifier ran clean but found no rules / commands / agents / skills / SKILL.md / marketplace.json anywhere under the source. Usually means the repo is a README-only "awesome list" or a CLI tool repo, not a content pack. | Verify the repo actually carries installable content. If it does live under a non-standard path, point at it with `--path <dir>`; if it's a single flat collection, add `--as <kind>`. |
+
+### Limitations that no flag recovers
+
+- **Filename collisions after normalization** (e.g. `docker.md` + `docker.mdc` both normalize to `docker.md`) — the manual-install scope refuses the write so neither file silently overwrites the other. Resolution requires renaming one file at the source.
+- **`.claude-plugin/marketplace.json` entries that point at external URLs** instead of local paths — the parser only resolves local-path plugin sources today. Install each linked repo directly.
+- **Repos where every detected entity has invalid YAML** — there is intentionally no `--skip-validation` flag; bad frontmatter is fixed in the source so downstream `generate` stays predictable.
 
 ### Install from a subdirectory
 

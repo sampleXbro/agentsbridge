@@ -12,7 +12,7 @@
  * runner for the declarable parts of their flow.
  */
 
-import { dirname, join, posix } from 'node:path';
+import { basename, dirname, join, posix } from 'node:path';
 import type { ImportResult, McpServer } from '../../core/types.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
 import { mkdirp, readFileSafe, writeFileAtomic } from '../../utils/filesystem/fs.js';
@@ -22,6 +22,7 @@ import { toStringArray, toStringRecord } from './shared-import-helpers.js';
 import { serializeImportedRuleWithFallback } from './import-metadata.js';
 import { importFileDirectory } from './import-orchestrator.js';
 import { resolveMapper } from './descriptor-default-mappers.js';
+import { isPreservedBoilerplate } from '../../install/importers/boilerplate-filter.js';
 import {
   IMPORT_FEATURE_ORDER,
   resolveScopedSources,
@@ -112,6 +113,14 @@ async function runDirectory(
       fromTool,
       normalize,
       mapEntry: async ({ srcPath, relativePath, content, normalizeTo }) => {
+        // Preserved boilerplate (README/LICENSE/NOTICE/COPYING/COPYRIGHT) at
+        // any depth in a third-party source tree is folder documentation or
+        // legal attribution, never a canonical entity. Filtering here prevents
+        // basename-slug collisions like two `README.md` files in `agents/` and
+        // `agents/external/` taking down the whole install. Noise stems
+        // (`security`, `contributing`, ...) stay through because users may
+        // legitimately name a rule `.claude/rules/security.md`.
+        if (isPreservedBoilerplate(basename(srcPath))) return null;
         let mapping;
         try {
           mapping = await mapper({

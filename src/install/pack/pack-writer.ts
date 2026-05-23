@@ -31,8 +31,9 @@ import { hashPackContent } from './pack-hash.js';
 import { hashPackFiles, INSTALL_MANIFEST_FILENAME } from '../manifest/install-manifest-hash.js';
 import { normalizePersistedInstallPaths } from '../core/portable-paths.js';
 import type { PreservedRootFile } from '../source/collect-preserved-root.js';
+import { detectLicenseInPackDir } from '../license/detect-pack-license.js';
 
-type PackMetadataInput = Omit<PackMetadata, 'content_hash'>;
+type PackMetadataInput = Omit<PackMetadata, 'content_hash' | 'license'>;
 
 export interface InstallManifestExtras {
   /** `null` for materialized installs; the extend entry id when extending. */
@@ -212,10 +213,16 @@ export async function materializePack(
     // Compute aggregate content hash (excludes pack.yaml + install manifest).
     const contentHash = await hashPackContent(tmpDir);
 
+    // Detect the SPDX license now that preserved files have been written.
+    // Runs against the staged bytes so it captures whatever the user is about
+    // to install — without re-reading the upstream cache.
+    const license = await detectLicenseInPackDir(tmpDir);
+
     // Write pack.yaml
     metadata = normalizePersistedInstallPaths({
       ...metadataInput,
       content_hash: contentHash,
+      license,
     });
     await writeFileAtomic(
       join(tmpDir, 'pack.yaml'),

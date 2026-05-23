@@ -129,6 +129,13 @@ export interface InstallsListEntry {
   installed_at: string | null;
   /** Forward-slash relative path from the canonical scope root. */
   pack_path: string;
+  /**
+   * SPDX identifier detected from the pack's LICENSE/NOTICE/COPYING file at
+   * install time, or `null` when no license file is present in the pack root
+   * (and `null` when the text matches no known fingerprint). Surfacing this
+   * lets the user spot proprietary or unknown-terms upstreams at a glance.
+   */
+  license: string | null;
 }
 
 export interface InstallsListData {

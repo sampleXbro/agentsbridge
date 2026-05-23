@@ -84,6 +84,7 @@ describe('renderInstalls', () => {
             target: null,
             installed_at: '2026-05-20T12:34:56Z',
             pack_path: '.agentsmesh/packs/demo-pack',
+            license: 'MIT',
           },
         ],
       },
@@ -91,12 +92,14 @@ describe('renderInstalls', () => {
     renderInstalls(result);
     expect(infoLines).toHaveLength(2); // header + one row
     expect(infoLines[0]).toContain('NAME');
+    expect(infoLines[0]).toContain('LICENSE');
     expect(infoLines[1]).toContain('demo-pack');
     expect(infoLines[1]).toContain('rules, skills');
+    expect(infoLines[1]).toContain('MIT');
     expect(infoLines[1]).toContain('2026-05-20');
   });
 
-  it('falls back to "-" when installed_at is null', () => {
+  it('falls back to "-" when installed_at and license are null', () => {
     const result: InstallsCommandResult = {
       exitCode: 0,
       data: {
@@ -113,6 +116,7 @@ describe('renderInstalls', () => {
             target: null,
             installed_at: null,
             pack_path: '.agentsmesh/packs/p',
+            license: null,
           },
         ],
       },

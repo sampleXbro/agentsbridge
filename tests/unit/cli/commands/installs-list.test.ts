@@ -110,7 +110,38 @@ describe('installs list - single entry', () => {
       target: 'claude-code',
       installed_at: '2026-05-16T10:00:00.000Z',
       pack_path: '.agentsmesh/packs/demo-pack',
+      license: null,
     });
+  });
+
+  it('surfaces the SPDX license recorded in pack.yaml', async () => {
+    await seedInstallsYaml([
+      {
+        name: 'mit-pack',
+        source: 'github:acme/mit@abc',
+        source_kind: 'github',
+        features: ['skills'],
+      },
+    ]);
+    const packDir = join(tmpDir, '.agentsmesh', 'packs', 'mit-pack');
+    await mkdir(packDir, { recursive: true });
+    await writeFile(
+      join(packDir, 'pack.yaml'),
+      stringifyYaml({
+        name: 'mit-pack',
+        source: 'github:acme/mit@abc',
+        source_kind: 'github',
+        installed_at: '2026-05-16T10:00:00.000Z',
+        updated_at: '2026-05-16T10:00:00.000Z',
+        features: ['skills'],
+        content_hash: 'sha256:dummy',
+        license: 'MIT',
+      }),
+    );
+
+    const result = await runInstalls({}, ['list'], tmpDir);
+
+    expect(result.data.installs[0]?.license).toBe('MIT');
   });
 
   it('leaves installed_at and source_type null when the pack manifest is missing', async () => {

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { parse as parseYaml } from 'yaml';
 import { runInstall } from '../../src/install/run/run-install.js';
 
 /**
@@ -64,6 +65,46 @@ describe('install pack root preservation (integration)', () => {
 
     // Canonical pack content is still present.
     expect(existsSync(join(packDir, 'rules', 'sample.md'))).toBe(true);
+  });
+
+  it('records the detected SPDX license in pack.yaml', async () => {
+    const project = join(ROOT, 'project');
+    const upstream = join(ROOT, 'upstream');
+    // Replace the stub LICENSE with a body the detector recognizes as MIT.
+    writeFileSync(
+      join(upstream, 'LICENSE'),
+      `MIT License
+
+Copyright (c) 2024 Foo
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction`,
+    );
+
+    await runInstall({ force: true, name: 'preserved-pack' }, [upstream], project);
+
+    const packYaml = readFileSync(
+      join(project, '.agentsmesh', 'packs', 'preserved-pack', 'pack.yaml'),
+      'utf-8',
+    );
+    const meta = parseYaml(packYaml) as { license?: string | null };
+    expect(meta.license).toBe('MIT');
+  });
+
+  it('records license as null when no LICENSE file ships at the upstream root', async () => {
+    const project = join(ROOT, 'project');
+    const upstream = join(ROOT, 'upstream');
+    rmSync(join(upstream, 'LICENSE'));
+
+    await runInstall({ force: true, name: 'no-license-pack' }, [upstream], project);
+
+    const packYaml = readFileSync(
+      join(project, '.agentsmesh', 'packs', 'no-license-pack', 'pack.yaml'),
+      'utf-8',
+    );
+    const meta = parseYaml(packYaml) as { license?: string | null };
+    expect(meta.license).toBeNull();
   });
 
   it('refreshes README/LICENSE on re-install (upstream is source of truth)', async () => {

@@ -22,6 +22,14 @@ export const packMetadataSchema = z.object({
   paths: z.array(z.string().min(1)).min(1).optional(),
   as: manualInstallAsSchema.optional(),
   content_hash: z.string(),
+  /**
+   * SPDX identifier of the LICENSE / NOTICE / COPYING file at the pack root,
+   * or `null` when the file is missing or its text matches no known
+   * fingerprint. Detected at materialize time from the upstream bytes — never
+   * inferred from `package.json` or other secondary signals. See
+   * `src/install/license/detect-license.ts`.
+   */
+  license: z.string().nullable().optional(),
 });
 
 export type PackMetadata = z.infer<typeof packMetadataSchema>;

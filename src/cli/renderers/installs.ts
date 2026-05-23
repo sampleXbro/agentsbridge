@@ -15,6 +15,7 @@ interface Row {
   readonly name: string;
   readonly source: string;
   readonly features: string;
+  readonly license: string;
   readonly installed: string;
 }
 
@@ -24,6 +25,7 @@ const COLUMNS: ReadonlyArray<{ key: ColumnKey; label: string }> = [
   { key: 'name', label: 'NAME' },
   { key: 'source', label: 'SOURCE' },
   { key: 'features', label: 'FEATURES' },
+  { key: 'license', label: 'LICENSE' },
   { key: 'installed', label: 'INSTALLED' },
 ];
 
@@ -32,6 +34,7 @@ function toRow(entry: InstallsListEntry): Row {
     name: entry.name,
     source: entry.source,
     features: entry.features.join(', '),
+    license: entry.license ?? '-',
     installed: entry.installed_at ? entry.installed_at.slice(0, 10) : '-',
   };
 }
@@ -41,6 +44,7 @@ function renderTable(rows: readonly Row[]): void {
     name: 0,
     source: 0,
     features: 0,
+    license: 0,
     installed: 0,
   };
   for (const col of COLUMNS) widths[col.key] = col.label.length;

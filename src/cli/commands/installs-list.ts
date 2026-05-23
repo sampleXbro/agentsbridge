@@ -16,6 +16,7 @@ import { resolveScopeContext } from '../../config/core/scope.js';
 import { readInstallManifest } from '../../install/core/install-manifest.js';
 import { readFileSafe } from '../../utils/filesystem/fs.js';
 import { INSTALL_MANIFEST_FILENAME } from '../../install/manifest/install-manifest-hash.js';
+import { readPackMetadata } from '../../install/pack/pack-reader.js';
 import type { InstallsListData, InstallsListEntry } from '../command-result.js';
 
 export interface InstallsListResult {
@@ -63,6 +64,7 @@ export async function runInstallsList(
   for (const entry of entries) {
     const packDir = join(packsDir, entry.name);
     const meta = await readPackManifestMeta(packDir);
+    const packMeta = await readPackMetadata(packDir);
     rows.push({
       name: entry.name,
       source: entry.source,
@@ -73,6 +75,7 @@ export async function runInstallsList(
       target: entry.target ?? null,
       installed_at: meta.installed_at,
       pack_path: toForwardSlashRel(context.rootBase, packDir),
+      license: packMeta?.license ?? null,
     });
   }
 

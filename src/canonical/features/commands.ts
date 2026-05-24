@@ -8,7 +8,10 @@ import { readFileSafe, readDirRecursive } from '../../utils/filesystem/fs.js';
 import { parseOrSkipFrontmatter } from '../../utils/text/markdown.js';
 import type { ParseFrontmatterOptions } from './rules.js';
 import { assertCanonicalName, assertNoBasenameCollisions } from './validate-name.js';
-import { warnIfUnrecognizedResourceFormats } from './unrecognized-files-warning.js';
+import {
+  warnIfUnrecognizedResourceFormats,
+  type UnrecognizedFormatsWarningOptions,
+} from './unrecognized-files-warning.js';
 
 /**
  * Coerce value to tools array. Handles comma-separated string, string[], or invalid.
@@ -35,6 +38,9 @@ function toToolsArray(v: unknown): string[] {
   return [];
 }
 
+export interface ParseCommandsOptions
+  extends ParseFrontmatterOptions, UnrecognizedFormatsWarningOptions {}
+
 /**
  * Parse all command files in a commands directory.
  * @param commandsDir - Absolute path to .agentsmesh/commands
@@ -42,11 +48,13 @@ function toToolsArray(v: unknown): string[] {
  */
 export async function parseCommands(
   commandsDir: string,
-  opts: ParseFrontmatterOptions = {},
+  opts: ParseCommandsOptions = {},
 ): Promise<CanonicalCommand[]> {
   const files = await readDirRecursive(commandsDir);
   const mdFiles = files.filter((f) => f.endsWith('.md') && !basename(f).startsWith('_'));
-  warnIfUnrecognizedResourceFormats('commands', commandsDir, files, mdFiles);
+  warnIfUnrecognizedResourceFormats('commands', commandsDir, files, mdFiles, {
+    handledByOtherReader: opts.handledByOtherReader,
+  });
   assertNoBasenameCollisions('command', mdFiles, '.md');
   const commands: CanonicalCommand[] = [];
   for (const path of mdFiles) {

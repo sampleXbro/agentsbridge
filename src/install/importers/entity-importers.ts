@@ -13,7 +13,7 @@
  */
 import { basename } from 'node:path';
 import { parseAgents } from '../../canonical/features/agents.js';
-import { parseCommands } from '../../canonical/features/commands.js';
+import { parseCommands, type ParseCommandsOptions } from '../../canonical/features/commands.js';
 import { parseRules, type ParseFrontmatterOptions } from '../../canonical/features/rules.js';
 import { parseSkills } from '../../canonical/features/skills.js';
 import type {
@@ -36,7 +36,7 @@ export async function importAgents(
 /** Returns commands from `commandsDir`, excluding repository-boilerplate files. */
 export async function importCommands(
   commandsDir: string,
-  opts: ParseFrontmatterOptions = {},
+  opts: ParseCommandsOptions = {},
 ): Promise<CanonicalCommand[]> {
   const commands = await parseCommands(commandsDir, opts);
   return commands.filter((entity) => !isBoilerplate(basename(entity.source)));

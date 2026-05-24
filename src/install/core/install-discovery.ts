@@ -177,7 +177,7 @@ export async function resolveInstallDiscovery(args: {
     );
     const narrowed = aggregateToCanonical(aggregate);
     return {
-      prep: emptyPrep(),
+      prep: { cleanup: aggregate.cleanup },
       implicitPick: undefined,
       narrowed,
       discoveredFeatures: featuresFromCanonical(narrowed),

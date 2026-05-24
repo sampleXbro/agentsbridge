@@ -13,6 +13,18 @@ import { logger } from '../../utils/output/logger.js';
  */
 const ALTERNATE_RESOURCE_FORMATS = new Set(['.toml', '.yaml', '.yml', '.json']);
 
+export interface UnrecognizedFormatsWarningOptions {
+  /**
+   * Extensions to exclude from the warning because another reader handles
+   * them downstream (e.g. the gemini-cli command mapper parses `.toml` from
+   * `.gemini/commands/`). Without this, the canonical reader's warning would
+   * fire even when the alternate format is actually being installed.
+   *
+   * Lowercase, dot-prefixed (e.g. `'.toml'`).
+   */
+  readonly handledByOtherReader?: ReadonlySet<string>;
+}
+
 /**
  * R-5: warn when a feature directory contains files in an alternate
  * definition format (e.g. `.toml` slash commands) that the parser silently
@@ -27,9 +39,11 @@ export function warnIfUnrecognizedResourceFormats(
   dir: string,
   allFiles: readonly string[],
   parsedFiles: readonly string[],
+  opts: UnrecognizedFormatsWarningOptions = {},
 ): void {
   if (allFiles.length === 0) return;
   const parsed = new Set(parsedFiles);
+  const handled = opts.handledByOtherReader;
   const formats = new Set<string>();
   let droppedCount = 0;
   for (const f of allFiles) {
@@ -37,6 +51,7 @@ export function warnIfUnrecognizedResourceFormats(
     if (basename(f).startsWith('.')) continue;
     const ext = extname(f).toLowerCase();
     if (!ALTERNATE_RESOURCE_FORMATS.has(ext)) continue;
+    if (handled?.has(ext)) continue;
     formats.add(ext);
     droppedCount++;
   }

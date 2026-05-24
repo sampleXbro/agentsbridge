@@ -62,6 +62,14 @@ export interface AggregateResult {
   readonly rules: readonly CanonicalRule[];
   readonly dedups: readonly CommandDedup[];
   readonly brokenLinks: readonly EntityWithBrokenLinks[];
+  /**
+   * Removes any temp staging directories created by per-target command
+   * importers (e.g. the canonical-.md output of Gemini's TOML mapper).
+   * Always safe to call. The install pipeline invokes it via
+   * `prep.cleanup()` after pack materialization has copied each staged
+   * command into the pack tree.
+   */
+  readonly cleanup: () => Promise<void>;
 }
 
 export async function aggregateAnthropicSkillPack(
@@ -93,5 +101,6 @@ export async function aggregateAnthropicSkillPack(
     rules,
     dedups: merged.dedups,
     brokenLinks,
+    cleanup: merged.cleanup,
   };
 }

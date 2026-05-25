@@ -2,8 +2,8 @@
  * Plugin loader: dynamically imports npm packages that export TargetDescriptors.
  */
 
-import { resolve, join } from 'node:path';
-import { readFileSync, existsSync } from 'node:fs';
+import { resolve, join, sep } from 'node:path';
+import { readFileSync, existsSync, realpathSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { validateDescriptor } from '../targets/catalog/target-descriptor.schema.js';
 import { registerTargetDescriptor } from '../targets/catalog/registry.js';
@@ -50,6 +50,39 @@ function isLocalSource(source: string): boolean {
   );
 }
 
+/**
+ * Reject local plugin sources whose resolved path escapes `projectRoot`.
+ *
+ * `agentsmesh.yaml` is a trust boundary — anyone who can write a `source`
+ * entry there would otherwise get arbitrary code execution on the next CLI
+ * invocation via a path like `../../tmp/evil.js`. Bare npm specifiers go
+ * through `resolveNpmSpecifier` and are confined to `node_modules/`, which
+ * itself lives inside `projectRoot`, so this check covers both paths.
+ *
+ * Both sides are canonicalized via `realpath` before comparison so
+ * platform-level symlinks (notably macOS `/tmp -> /private/tmp`) do not
+ * cause false positives, and so a symlink planted inside `projectRoot`
+ * cannot redirect outside (its realpath escapes the project root).
+ */
+function canonicalize(path: string): string {
+  try {
+    return realpathSync(path);
+  } catch {
+    // Fall back to the resolved path so the prefix check still fires on
+    // structurally-escaping paths whose realpath fails (e.g. the target
+    // does not exist yet). Dynamic import would surface a clearer error
+    // immediately after.
+    return path;
+  }
+}
+
+function assertSourceInsideProjectRoot(resolvedPath: string, projectRoot: string): void {
+  const rootAbs = canonicalize(resolve(projectRoot));
+  const sourceAbs = canonicalize(resolvedPath);
+  if (sourceAbs === rootAbs || sourceAbs.startsWith(`${rootAbs}${sep}`)) return;
+  throw new Error(`Plugin source resolves outside project root (escapes ${rootAbs}): ${sourceAbs}`);
+}
+
 async function importPluginModule(
   entry: PluginEntry,
   projectRoot: string,
@@ -60,9 +93,11 @@ async function importPluginModule(
   if (isLocalSource(source)) {
     const raw = source.startsWith('file:') ? fileURLToPath(source) : source;
     const resolved = resolve(projectRoot, raw);
+    assertSourceInsideProjectRoot(resolved, projectRoot);
     importTarget = pathToFileURL(resolved).href;
   } else {
     const resolved = resolveNpmSpecifier(source, projectRoot);
+    assertSourceInsideProjectRoot(resolved, projectRoot);
     importTarget = pathToFileURL(resolved).href;
   }
 

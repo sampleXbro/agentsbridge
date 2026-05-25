@@ -5,21 +5,28 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtemp, rm, readFile, writeFile, mkdir } from 'node:fs/promises';
+import { mkdtemp, rm, readFile, writeFile, mkdir, cp } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { stringify as stringifyYaml, parse as parseYaml } from 'yaml';
 import { runCli } from './helpers/run-cli.js';
 
-const PLUGIN_PATH = join(
+const PLUGIN_SRC_DIR = join(
   process.cwd(),
-  'tests/fixtures/plugins/agentsmesh-target-claude-desktop/index.js',
+  'tests/fixtures/plugins/agentsmesh-target-claude-desktop',
 );
 
 let tmpDir: string;
+// Per-test plugin path inside tmpDir so the loader's projectRoot containment
+// check accepts the `file://` source.
+let PLUGIN_PATH = '';
 
 beforeEach(async () => {
   tmpDir = await mkdtemp(join(tmpdir(), 'agentsmesh-claude-desktop-e2e-'));
+  const pluginDir = join(tmpDir, 'plugin');
+  await cp(PLUGIN_SRC_DIR, pluginDir, { recursive: true });
+  await writeFile(join(pluginDir, 'package.json'), '{"type":"module"}');
+  PLUGIN_PATH = join(pluginDir, 'index.js');
 });
 
 afterEach(async () => {

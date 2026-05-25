@@ -37,10 +37,21 @@ export class McpError extends Error {
  * Redact filesystem paths from raw `Error.message` strings so non-`McpError`
  * fallbacks (e.g. ENOENT from `node:fs/promises`) do not leak the host's
  * directory layout to MCP clients.
+ *
+ * Strips paths anywhere in the string — not only at line start or after
+ * whitespace — so embedded paths in stack frames (`at Foo (/Users/...)`)
+ * and quoted paths in node errors (`ENOENT, open '/Users/...'`) are caught
+ * along with the leading-whitespace shape.
  */
 export function redactAbsolutePaths(message: string): string {
-  return message
-    .replace(/(['"`])\/[^'"`\s]+\1/gu, '$1<redacted>$1')
-    .replace(/(\s|^)\/[A-Za-z][^\s'"`]*/gu, '$1<redacted>')
-    .replace(/(\s|^)[A-Z]:[\\/][^\s'"`]*/gu, '$1<redacted>');
+  return (
+    message
+      // Quoted paths (preserve the surrounding quote glyph).
+      .replace(/(['"`])\/[^'"`\s]+\1/gu, '$1<redacted>$1')
+      .replace(/(['"`])[A-Z]:[\\/][^'"`\s]+\1/gu, '$1<redacted>$1')
+      // Unquoted POSIX paths anywhere in the string.
+      .replace(/\/[A-Za-z][^\s'"`<>()]*/gu, '<redacted>')
+      // Unquoted Windows paths anywhere in the string.
+      .replace(/[A-Z]:[\\/][^\s'"`<>()]*/gu, '<redacted>')
+  );
 }

@@ -54,6 +54,14 @@ export async function loadConfig(configPath: string): Promise<ValidatedConfig> {
   return result.data;
 }
 
+// Defense-in-depth against prototype-pollution payloads in
+// `agentsmesh.local.yaml`. The `yaml` v2 parser already strips `__proto__`,
+// and `constructor` does not recurse because `{}.constructor` is a function
+// (not a plain object). Filtering these keys here pins the invariant so
+// future refactors — different parser, different merge primitive — cannot
+// silently reopen the hole.
+const PROTOTYPE_POLLUTION_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
 function deepMergeObjects(
   base: Record<string, unknown>,
   overrides: Record<string, unknown>,
@@ -61,6 +69,7 @@ function deepMergeObjects(
   const result = { ...base };
   for (const [k, v] of Object.entries(overrides)) {
     if (v === null || v === undefined) continue;
+    if (PROTOTYPE_POLLUTION_KEYS.has(k)) continue;
     const baseVal = result[k];
     if (
       typeof v === 'object' &&

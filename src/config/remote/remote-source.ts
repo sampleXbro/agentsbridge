@@ -83,7 +83,16 @@ export function parseGitSource(source: string): ParsedGitSource | null {
   } catch {
     return null;
   }
-  if (!['https:', 'http:', 'ssh:', 'file:'].includes(parsedUrl.protocol)) {
+  // `http:` strips transport security — a MITM on any hop can swap the
+  // cloned bytes before SHA pinning resolves. Reject by default; allow via
+  // explicit env opt-in for closed-network development.
+  const allowInsecure =
+    process.env.AGENTSMESH_ALLOW_INSECURE_GIT === '1' ||
+    process.env.AGENTSMESH_ALLOW_INSECURE_GIT === 'true';
+  const allowedProtocols = allowInsecure
+    ? ['https:', 'http:', 'ssh:', 'file:']
+    : ['https:', 'ssh:', 'file:'];
+  if (!allowedProtocols.includes(parsedUrl.protocol)) {
     return null;
   }
   return { url, ref };

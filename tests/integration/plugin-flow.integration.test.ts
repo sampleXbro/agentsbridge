@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtemp, rm, writeFile, mkdir, access } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile, mkdir, access, cp } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { pathToFileURL } from 'node:url';
@@ -15,7 +15,7 @@ import { resetRegistry } from '../../src/targets/catalog/registry.js';
 
 let tmpDir: string;
 
-const FIXTURE_PLUGIN_PATH = join(process.cwd(), 'tests/fixtures/plugins/simple-plugin/index.js');
+const FIXTURE_PLUGIN_DIR = join(process.cwd(), 'tests/fixtures/plugins/simple-plugin');
 
 async function fileExists(p: string): Promise<boolean> {
   try {
@@ -47,8 +47,12 @@ describe('plugin flow integration', () => {
       '---\nroot: true\ndescription: root\n---\n\n# Root\n',
     );
 
-    // Write agentsmesh.yaml pointing to the fixture plugin
-    const pluginSource = pathToFileURL(FIXTURE_PLUGIN_PATH).href;
+    // Copy the fixture plugin under projectRoot — load-plugin enforces that
+    // plugin sources resolve inside the project root, matching real-world
+    // node_modules/local-plugin layouts.
+    const pluginDir = join(tmpDir, 'plugin');
+    await cp(FIXTURE_PLUGIN_DIR, pluginDir, { recursive: true });
+    const pluginSource = pathToFileURL(join(pluginDir, 'index.js')).href;
     const config = {
       version: 1,
       targets: [],

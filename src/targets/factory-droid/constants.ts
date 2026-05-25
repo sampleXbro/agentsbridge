@@ -33,8 +33,6 @@ export const FACTORY_DROID_SKILLS_DIR = '.factory/skills';
 export const FACTORY_DROID_DROIDS_DIR = '.factory/droids';
 export const FACTORY_DROID_MCP_FILE = '.factory/mcp.json';
 
-// Global-level paths (~/.factory/)
-export const FACTORY_DROID_GLOBAL_DIR = '.factory';
 export const FACTORY_DROID_GLOBAL_ROOT_FILE = '.factory/AGENTS.md';
 export const FACTORY_DROID_GLOBAL_SKILLS_DIR = '.factory/skills';
 export const FACTORY_DROID_GLOBAL_DROIDS_DIR = '.factory/droids';
@@ -42,4 +40,3 @@ export const FACTORY_DROID_GLOBAL_MCP_FILE = '.factory/mcp.json';
 
 // Canonical paths
 export const FACTORY_DROID_CANONICAL_RULES_DIR = '.agentsmesh/rules';
-export const FACTORY_DROID_CANONICAL_AGENTS_DIR = '.agentsmesh/agents';

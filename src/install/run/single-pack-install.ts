@@ -9,7 +9,6 @@
 
 import type { ManualInstallAs } from '../manual/manual-install-mode.js';
 import type { ValidatedConfig } from '../../config/core/schema.js';
-import type { resolveInstallResolvedPath } from './run-install-resolve.js';
 import type { ParsedInstallSource } from '../source/install-source-types.js';
 import type { resolveInstallDiscovery } from '../core/install-discovery.js';
 import { deriveSourceType } from '../core/install-discovery.js';
@@ -46,11 +45,6 @@ export interface RunSinglePackArgs {
   readonly sourceArg: string;
   readonly replay: InstallReplayScope | undefined;
 }
-
-/**
- * Re-exported for callers that previously imported from `run-install-locked.ts`.
- */
-export type ResolvedPathOutput = Awaited<ReturnType<typeof resolveInstallResolvedPath>>;
 
 export async function runSinglePackInstall(opts: RunSinglePackArgs): Promise<InstallCommandResult> {
   const {

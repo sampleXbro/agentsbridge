@@ -20,10 +20,12 @@ export const CURSOR_GLOBAL_EXPORT_DIR = '.agentsmesh-exports/cursor';
 export const CURSOR_GLOBAL_USER_RULES = `${CURSOR_GLOBAL_EXPORT_DIR}/user-rules.md`;
 /** Cross-tool aggregate under `~/.cursor/` (see docs/agent-structures/cursor-global-level-generation-strategy.md). */
 export const CURSOR_DOT_CURSOR_AGENTS = '.cursor/AGENTS.md';
-/** Global Cursor uses the same paths as project mode under `$HOME` for tooling Cursor loads from `~/.cursor/`. */
-export const CURSOR_GLOBAL_MCP_EXPORT = CURSOR_MCP;
-export const CURSOR_GLOBAL_SKILLS_DIR = CURSOR_SKILLS_DIR;
-export const CURSOR_GLOBAL_AGENTS_DIR = CURSOR_AGENTS_DIR;
+// Global Cursor uses the same `.cursor/...` paths as project mode (tooling
+// loads from `~/.cursor/`). Earlier code aliased `CURSOR_MCP` /
+// `CURSOR_SKILLS_DIR` / `CURSOR_AGENTS_DIR` as `CURSOR_GLOBAL_*` for read-
+// site clarity, but the aliases were structurally identical — knip flagged
+// them as duplicate exports, so call sites import the project-mode names
+// directly and the global layout reuses them verbatim.
 
 export const CURSOR_CANONICAL_RULES_DIR = '.agentsmesh/rules';
 export const CURSOR_CANONICAL_COMMANDS_DIR = '.agentsmesh/commands';

@@ -56,8 +56,6 @@ export const installManifestFileSchema = z.object({
   files: z.record(z.string().min(1), z.string().regex(/^sha256:[0-9a-f]{64}$/)),
 });
 
-export type InstallManifestFile = z.infer<typeof installManifestFileSchema>;
-
 function toForwardSlashRelative(packDir: string, abs: string): string {
   return relative(packDir, abs).replaceAll('\\', '/');
 }
@@ -86,6 +84,6 @@ export async function hashPackFiles(packDir: string): Promise<Record<string, str
     entries.push([rel, `sha256:${hex}`]);
   }
 
-  entries.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  entries.sort(([a], [b]) => a.localeCompare(b));
   return Object.fromEntries(entries);
 }

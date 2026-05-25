@@ -11,9 +11,9 @@ import { parseFrontmatter } from '../../utils/text/markdown.js';
 import { importFileDirectory } from '../import/import-orchestrator.js';
 import {
   CURSOR_GLOBAL_USER_RULES,
-  CURSOR_GLOBAL_MCP_EXPORT,
-  CURSOR_GLOBAL_SKILLS_DIR,
-  CURSOR_GLOBAL_AGENTS_DIR,
+  CURSOR_MCP,
+  CURSOR_SKILLS_DIR,
+  CURSOR_AGENTS_DIR,
   CURSOR_COMMANDS_DIR,
   CURSOR_CANONICAL_RULES_DIR,
   CURSOR_CANONICAL_MCP,
@@ -34,20 +34,20 @@ export async function hasGlobalCursorArtifacts(projectRoot: string): Promise<boo
   const candidates = [
     join(projectRoot, CURSOR_DOT_CURSOR_AGENTS),
     join(projectRoot, CURSOR_GLOBAL_USER_RULES),
-    join(projectRoot, CURSOR_GLOBAL_MCP_EXPORT),
+    join(projectRoot, CURSOR_MCP),
     join(projectRoot, CURSOR_HOOKS),
     join(projectRoot, CURSOR_IGNORE),
-    join(projectRoot, CURSOR_GLOBAL_SKILLS_DIR),
-    join(projectRoot, CURSOR_GLOBAL_AGENTS_DIR),
+    join(projectRoot, CURSOR_SKILLS_DIR),
+    join(projectRoot, CURSOR_AGENTS_DIR),
     join(projectRoot, CURSOR_COMMANDS_DIR),
   ];
   for (const p of candidates) {
     const stat = await readFileSafe(p);
     if (stat !== null && stat.trim() !== '') return true;
   }
-  const skillFiles = await readDirRecursive(join(projectRoot, CURSOR_GLOBAL_SKILLS_DIR));
+  const skillFiles = await readDirRecursive(join(projectRoot, CURSOR_SKILLS_DIR));
   if (skillFiles.some((f) => f.endsWith('.md'))) return true;
-  const agentFiles = await readDirRecursive(join(projectRoot, CURSOR_GLOBAL_AGENTS_DIR));
+  const agentFiles = await readDirRecursive(join(projectRoot, CURSOR_AGENTS_DIR));
   if (agentFiles.some((f) => f.endsWith('.md'))) return true;
   const commandFiles = await readDirRecursive(join(projectRoot, CURSOR_COMMANDS_DIR));
   if (commandFiles.some((f) => f.endsWith('.md'))) return true;
@@ -120,7 +120,7 @@ export async function importGlobalDotCursorAgents(
 }
 
 export async function importGlobalMcp(projectRoot: string, results: ImportResult[]): Promise<void> {
-  const mcpPath = join(projectRoot, CURSOR_GLOBAL_MCP_EXPORT);
+  const mcpPath = join(projectRoot, CURSOR_MCP);
   const content = await readFileSafe(mcpPath);
   if (content === null || content.trim() === '') return;
   let parsed: unknown;
@@ -146,7 +146,7 @@ export async function importGlobalAgents(
   results: ImportResult[],
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
 ): Promise<void> {
-  const agentsDir = join(projectRoot, CURSOR_GLOBAL_AGENTS_DIR);
+  const agentsDir = join(projectRoot, CURSOR_AGENTS_DIR);
   const destDir = join(projectRoot, CURSOR_CANONICAL_AGENTS_DIR);
   results.push(
     ...(await importFileDirectory({

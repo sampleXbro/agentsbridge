@@ -13,13 +13,6 @@ export const MCP_AGENTSMESH_ENTRY_VALUE = {
   args: ['-y', 'agentsmesh', 'mcp'],
 };
 
-export const MCP_AGENTSMESH_HEADER_COMMENT = `// agentsmesh self-serve MCP server — exposes your canonical config to AI agents.
-  // Lets agents introspect rules/commands/agents/skills and trigger generate.
-  // Docs: https://samplexbro.github.io/agentsmesh/reference/mcp-server/
-  // For faster startup, install agentsmesh as a devDependency and replace the entry below with:
-  //   "command": "agentsmesh", "args": ["mcp"]
-  // Remove this entry to disable.`;
-
 /**
  * Inject the agentsmesh entry into a parsed mcp.json structure if absent.
  * Returns true if the structure was modified.

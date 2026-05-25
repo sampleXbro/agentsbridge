@@ -23,8 +23,6 @@ export const DEEPAGENTS_CLI_ROOT_FILE = '.deepagents/AGENTS.md';
 export const DEEPAGENTS_CLI_SKILLS_DIR = '.deepagents/skills';
 export const DEEPAGENTS_CLI_MCP_FILE = '.mcp.json';
 
-// Global-level paths (~/.deepagents/)
-export const DEEPAGENTS_CLI_GLOBAL_DIR = '.deepagents';
 export const DEEPAGENTS_CLI_GLOBAL_ROOT_FILE = '.deepagents/AGENTS.md';
 export const DEEPAGENTS_CLI_GLOBAL_SKILLS_DIR = '.deepagents/skills';
 export const DEEPAGENTS_CLI_GLOBAL_MCP_FILE = '.deepagents/.mcp.json';

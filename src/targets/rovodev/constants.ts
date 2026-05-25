@@ -27,6 +27,4 @@ export const ROVODEV_GLOBAL_ROOT_FILE = '.rovodev/AGENTS.md';
 export const ROVODEV_GLOBAL_SKILLS_DIR = '.rovodev/skills';
 export const ROVODEV_GLOBAL_MCP_FILE = '.rovodev/mcp.json';
 
-// Canonical paths
-export const ROVODEV_CANONICAL_ROOT_RULE = '.agentsmesh/rules/_root.md';
 export const ROVODEV_CANONICAL_RULES_DIR = '.agentsmesh/rules';

@@ -36,7 +36,6 @@ export const AUGMENT_CODE_GLOBAL_SETTINGS_FILE = `${AUGMENT_CODE_GLOBAL_DIR}/set
 
 // Canonical paths
 export const AUGMENT_CODE_CANONICAL_RULES_DIR = '.agentsmesh/rules';
-export const AUGMENT_CODE_CANONICAL_AGENTS_DIR = '.agentsmesh/agents';
 export const AUGMENT_CODE_CANONICAL_MCP = '.agentsmesh/mcp.json';
 export const AUGMENT_CODE_CANONICAL_HOOKS = '.agentsmesh/hooks.yaml';
 export const AUGMENT_CODE_CANONICAL_IGNORE = '.agentsmesh/ignore';

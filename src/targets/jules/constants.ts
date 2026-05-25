@@ -18,9 +18,5 @@ export const JULES_TARGET = 'jules';
 // Project-level paths
 export const JULES_ROOT_FILE = 'AGENTS.md';
 
-// Global-level paths (~/.jules/)
-export const JULES_GLOBAL_DIR = '.jules';
-export const JULES_GLOBAL_ROOT_FILE = '.jules/AGENTS.md';
-
 // Canonical paths
 export const JULES_CANONICAL_RULES_DIR = '.agentsmesh/rules';

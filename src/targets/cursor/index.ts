@@ -18,9 +18,6 @@ import {
   CURSOR_COMMANDS_DIR,
   CURSOR_DOT_CURSOR_AGENTS,
   CURSOR_GENERAL_RULE,
-  CURSOR_GLOBAL_AGENTS_DIR,
-  CURSOR_GLOBAL_MCP_EXPORT,
-  CURSOR_GLOBAL_SKILLS_DIR,
   CURSOR_GLOBAL_USER_RULES,
   CURSOR_HOOKS,
   CURSOR_IGNORE,
@@ -86,18 +83,13 @@ const globalLayout: TargetLayout = {
       explicitPaths: [CURSOR_COMPAT_AGENTS, CURSOR_DOT_CURSOR_AGENTS],
     },
   ],
-  skillDir: CURSOR_GLOBAL_SKILLS_DIR,
+  skillDir: CURSOR_SKILLS_DIR,
   managedOutputs: {
-    dirs: [
-      CURSOR_RULES_DIR,
-      CURSOR_COMMANDS_DIR,
-      CURSOR_GLOBAL_AGENTS_DIR,
-      CURSOR_GLOBAL_SKILLS_DIR,
-    ],
+    dirs: [CURSOR_RULES_DIR, CURSOR_COMMANDS_DIR, CURSOR_AGENTS_DIR, CURSOR_SKILLS_DIR],
     files: [
       CURSOR_GENERAL_RULE,
       CURSOR_DOT_CURSOR_AGENTS,
-      CURSOR_GLOBAL_MCP_EXPORT,
+      CURSOR_MCP,
       CURSOR_HOOKS,
       CURSOR_IGNORE,
       CURSOR_GLOBAL_USER_RULES,
@@ -126,7 +118,7 @@ const globalLayout: TargetLayout = {
       return `${CURSOR_COMMANDS_DIR}/${name}.md`;
     },
     agentPath(name, _config) {
-      return `${CURSOR_GLOBAL_AGENTS_DIR}/${name}.md`;
+      return `${CURSOR_AGENTS_DIR}/${name}.md`;
     },
   },
 };
@@ -181,7 +173,7 @@ export const descriptor = {
       CURSOR_HOOKS,
       CURSOR_IGNORE,
       CURSOR_SKILLS_DIR,
-      CURSOR_GLOBAL_AGENTS_DIR,
+      CURSOR_AGENTS_DIR,
       CURSOR_COMMANDS_DIR,
       CURSOR_GLOBAL_USER_RULES,
     ],

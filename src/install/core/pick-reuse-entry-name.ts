@@ -39,10 +39,16 @@ export function pickReuseEntryName(args: PickReuseEntryNameArgs): string | null 
   const { manifest, parsed, entryFeatures, yamlTarget, explicitAs } = args;
   const candidateName = findExistingInstallName(manifest, parsed);
   if (candidateName === null) return null;
-  const candidate = manifest.find((entry) => entry.name === candidateName);
-  if (!candidate) return null;
-  if (candidate.target !== yamlTarget) return null;
-  if (candidate.as !== explicitAs) return null;
-  if (!sameFeatureSet(candidate.features, entryFeatures)) return null;
+  // `findExistingInstallName` only returns names that exist in `manifest`
+  // (it iterates the same array), so the lookup is guaranteed to find a
+  // match. No defensive null-check needed.
+  const candidate = manifest.find((entry) => entry.name === candidateName)!;
+  if (
+    candidate.target !== yamlTarget ||
+    candidate.as !== explicitAs ||
+    !sameFeatureSet(candidate.features, entryFeatures)
+  ) {
+    return null;
+  }
   return candidate.name;
 }

@@ -18,13 +18,9 @@
 
 export const AMAZON_Q_TARGET = 'amazon-q';
 
-// Project-level paths
-export const AMAZON_Q_DIR = '.amazonq';
 export const AMAZON_Q_RULES_DIR = '.amazonq/rules';
 export const AMAZON_Q_MCP_FILE = '.amazonq/mcp.json';
 
-// Global-level paths (relative to user home directory: ~/.aws/amazonq/)
-export const AMAZON_Q_GLOBAL_DIR = '.aws/amazonq';
 export const AMAZON_Q_GLOBAL_RULES_DIR = '.aws/amazonq/rules';
 export const AMAZON_Q_GLOBAL_MCP_FILE = '.aws/amazonq/mcp.json';
 

@@ -24,8 +24,6 @@ export const TRAE_MCP_FILE = `${TRAE_DIR}/mcp.json`;
 /** Ignore file: .trae/.ignore excludes paths from AI indexing */
 export const TRAE_IGNORE = `${TRAE_DIR}/.ignore`;
 
-// Global-level paths (under ~/.trae/)
-export const TRAE_GLOBAL_DIR = '.trae';
 export const TRAE_GLOBAL_RULES_DIR = '.trae/user_rules';
 export const TRAE_GLOBAL_ROOT_RULE = '.trae/user_rules/rules.md';
 export const TRAE_GLOBAL_SKILLS_DIR = '.trae/skills';
@@ -36,6 +34,5 @@ export const TRAE_GLOBAL_AGENTS_SKILLS_DIR = '.agents/skills';
 
 // Canonical paths (reference only)
 export const TRAE_CANONICAL_RULES_DIR = '.agentsmesh/rules';
-export const TRAE_CANONICAL_SKILLS_DIR = '.agentsmesh/skills';
 export const TRAE_CANONICAL_MCP = '.agentsmesh/mcp.json';
 export const TRAE_CANONICAL_IGNORE = '.agentsmesh/ignore';

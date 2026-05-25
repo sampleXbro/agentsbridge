@@ -22,8 +22,6 @@ import { stat } from 'node:fs/promises';
 import { isAbsolute, join, normalize, relative, resolve, sep } from 'node:path';
 import type { ScannedLink } from './scan-relative-links.js';
 
-export type LinkClassification = 'in-tree-included' | 'resolvable-outside' | 'unresolvable';
-
 export interface ResolveLinkInput {
   readonly link: ScannedLink;
   /** Path of the markdown file the link came from, relative to `contentRoot` (forward-slash). */

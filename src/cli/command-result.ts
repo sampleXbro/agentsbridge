@@ -144,8 +144,6 @@ export interface InstallsListData {
   installs: InstallsListEntry[];
 }
 
-export type InstallsData = InstallsListData;
-
 export interface PluginAddData {
   subcommand: 'add';
   id: string;

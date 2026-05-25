@@ -1,0 +1,48 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/cli/index.ts",
+    "src/public/index.ts",
+    "src/public/engine.ts",
+    "src/public/canonical.ts",
+    "src/public/targets.ts",
+    "src/mcp/server.ts",
+    "scripts/**/*.ts",
+    "tests/**/*.test.ts",
+    "tests/e2e/**/*.ts",
+    "tests/import-generate-roundtrip.ts",
+    "tests/agents-folder-structure-research.test.ts",
+    "tests/harness/**/*.ts",
+    "tests/fixtures/**/*.ts",
+    "vitest.config.ts",
+    "vitest.e2e.config.ts",
+    "vitest.e2e-skill-fixtures.config.ts",
+    "tsup.config.ts",
+    "eslint.config.mjs"
+  ],
+  "project": ["src/**/*.ts", "tests/**/*.ts", "scripts/**/*.ts"],
+  "ignore": [
+    "dist/**",
+    "coverage/**",
+    "website/**",
+    "tests/consumer-smoke/**",
+    "tests/e2e/fixtures/**"
+  ],
+  "ignoreDependencies": [],
+  "ignoreExportsUsedInFile": true,
+  "rules": {
+    "files": "error",
+    "dependencies": "error",
+    "devDependencies": "error",
+    "unlisted": "error",
+    "binaries": "error",
+    "unresolved": "error",
+    "exports": "error",
+    "types": "error",
+    "nsExports": "error",
+    "nsTypes": "error",
+    "duplicates": "error",
+    "enumMembers": "error",
+    "classMembers": "off"
+  }
+}

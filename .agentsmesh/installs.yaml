@@ -1,6 +1,14 @@
 # yaml-language-server: $schema=https://unpkg.com/agentsmesh@0.18.1/schemas/installs.json
 version: 1
 installs:
+  - name: addyosmani-agent-skills-pack
+    source: github:addyosmani/agent-skills@2a62238edd41ccd9a5a4d16269a4d87808e3e9c1
+    version: 2a62238edd41ccd9a5a4d16269a4d87808e3e9c1
+    source_kind: github
+    features:
+      - skills
+      - commands
+      - agents
   - name: alirezarezvani-claude-skills-skills
     source: github:alirezarezvani/claude-skills@110348f4b2a66d856bc474a1f3f304ab93a50853
     version: 110348f4b2a66d856bc474a1f3f304ab93a50853

@@ -141,17 +141,27 @@ export async function readDirRecursiveNoSymlinks(
   }
 }
 
-/** Copy directory recursively preserving structure. */
+/**
+ * Copy directory recursively preserving structure.
+ *
+ * Skips symlinks (file or directory). Following them would let a symlink in
+ * `src` pointing outside the source tree exfiltrate foreign bytes into
+ * `dest` — and into anything `dest` is later redistributed as (a published
+ * pack, a committed canonical tree, an uploaded artifact). Use `lstat` to
+ * inspect the entry without following it.
+ */
 export async function copyDir(src: string, dest: string): Promise<void> {
   await mkdirp(dest);
   const entries = await readdir(src, { withFileTypes: true });
   for (const ent of entries) {
+    if (ent.isSymbolicLink()) continue;
     const srcPath = join(src, ent.name);
     const destPath = join(dest, ent.name);
-    const info = await stat(srcPath);
+    const info = await lstat(srcPath);
+    if (info.isSymbolicLink()) continue;
     if (info.isDirectory()) {
       await copyDir(srcPath, destPath);
-    } else {
+    } else if (info.isFile()) {
       await mkdirp(dirname(destPath));
       await copyFile(srcPath, destPath);
     }

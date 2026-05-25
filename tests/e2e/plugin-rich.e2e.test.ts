@@ -19,20 +19,26 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtemp, rm, readFile, writeFile, mkdir } from 'node:fs/promises';
+import { mkdtemp, rm, readFile, writeFile, mkdir, cp } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { pathToFileURL } from 'node:url';
 import { stringify as stringifyYaml } from 'yaml';
 import { runCli } from './helpers/run-cli.js';
 
-const RICH_PLUGIN_PATH = join(process.cwd(), 'tests/fixtures/plugins/rich-plugin/index.js');
-const RICH_PLUGIN_URL = pathToFileURL(RICH_PLUGIN_PATH).href;
+const RICH_PLUGIN_SRC_DIR = join(process.cwd(), 'tests/fixtures/plugins/rich-plugin');
 
 let tmpDir: string;
+// Per-test plugin source URL, set after copying the fixture inside tmpDir so
+// the loader's projectRoot containment check accepts it.
+let RICH_PLUGIN_URL = '';
 
 beforeEach(async () => {
   tmpDir = await mkdtemp(join(tmpdir(), 'agentsmesh-rich-plugin-e2e-'));
+  const pluginDir = join(tmpDir, 'plugin');
+  await cp(RICH_PLUGIN_SRC_DIR, pluginDir, { recursive: true });
+  await writeFile(join(pluginDir, 'package.json'), '{"type":"module"}');
+  RICH_PLUGIN_URL = pathToFileURL(join(pluginDir, 'index.js')).href;
 });
 
 afterEach(async () => {

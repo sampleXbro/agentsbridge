@@ -12,8 +12,22 @@ import { manualInstallAsSchema, type ManualInstallAs } from '../manual/manual-in
 import { normalizePersistedInstallPaths } from './portable-paths.js';
 import { sameFeatureSet } from './pick-reuse-entry-name.js';
 
+/**
+ * `name` becomes `join(packsDir, name)` at uninstall time. A poisoned manifest
+ * entry like `name: "../../tmp/victim"` would otherwise cause `rm -rf` outside
+ * `.agentsmesh/packs/`. Mirrors `validatePackName` in `pack-writer.ts`.
+ */
+const isSafeInstallName = (name: string): boolean =>
+  !name.includes('/') &&
+  !name.includes('\\') &&
+  !name.includes('\0') &&
+  name !== '.' &&
+  name !== '..';
+
 export const installManifestEntrySchema = z.object({
-  name: z.string().min(1),
+  name: z.string().min(1).refine(isSafeInstallName, {
+    message: 'install name must not contain path separators, NUL, or "."/".." segments',
+  }),
   source: z.string().min(1),
   version: z.string().optional(),
   source_kind: z.enum(['github', 'gitlab', 'git', 'local']),

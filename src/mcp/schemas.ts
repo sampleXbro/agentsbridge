@@ -28,6 +28,20 @@ const ENV_KEY_RE = /^[A-Za-z_][A-Za-z0-9_]*$/u;
 const HEADER_KEY_RE = /^[A-Za-z][A-Za-z0-9_-]*$/u;
 const PERMISSION_PATTERN_RE = /^[A-Za-z][A-Za-z0-9_-]*(\([^)]*\))?$/u;
 const NEWLINE_RE = /[\r\n]/u;
+const CONTROL_OR_NUL_RE = /[\0\r\n]/u;
+
+/**
+ * `cwd` is recorded in `.agentsmesh/mcp.json` and consumed by downstream
+ * agents that `spawn(command, args, { cwd })`. Reject structural-escape
+ * patterns so an MCP client cannot mislead a hosting agent into spawning a
+ * server with an attacker-chosen working directory.
+ */
+function isSafeMcpCwd(value: string): boolean {
+  if (CONTROL_OR_NUL_RE.test(value)) return false;
+  // Split on both POSIX and Windows separators so `..\\foo` is caught too.
+  const segments = value.split(/[/\\]/u);
+  return !segments.includes('..');
+}
 
 function noShellMeta(label: string): z.ZodType<string> {
   return z
@@ -42,7 +56,13 @@ function noShellMeta(label: string): z.ZodType<string> {
 export const McpServerInputSchema = z
   .object({
     type: z.enum(['stdio', 'sse', 'http', 'streamable-http', 'streamable_http']).optional(),
-    description: z.string().max(MAX_DESCRIPTION_LEN).optional(),
+    description: z
+      .string()
+      .max(MAX_DESCRIPTION_LEN)
+      .refine((s) => !CONTROL_OR_NUL_RE.test(s), {
+        message: 'description must not contain NUL or newline characters',
+      })
+      .optional(),
     command: noShellMeta('command').optional(),
     args: z.array(z.string().max(MAX_MCP_ARG_LEN)).max(MAX_MCP_ARGS).optional(),
     env: z
@@ -65,7 +85,13 @@ export const McpServerInputSchema = z
         z.string().max(MAX_MCP_ENV_VALUE_LEN),
       )
       .optional(),
-    cwd: z.string().max(MAX_MCP_URL_LEN).optional(),
+    cwd: z
+      .string()
+      .max(MAX_MCP_URL_LEN)
+      .refine(isSafeMcpCwd, {
+        message: 'cwd must not contain "..", NUL, or newline characters',
+      })
+      .optional(),
     disabled: z.boolean().optional(),
     timeout: z.number().int().nonnegative().max(3_600_000).optional(),
   })

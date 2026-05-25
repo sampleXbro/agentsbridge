@@ -4,20 +4,29 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtemp, rm, readFile, writeFile, mkdir } from 'node:fs/promises';
+import { mkdtemp, rm, readFile, writeFile, mkdir, cp } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { pathToFileURL } from 'node:url';
 import { stringify as stringifyYaml } from 'yaml';
 import { runCli } from './helpers/run-cli.js';
 
-const FIXTURE_PLUGIN_PATH = join(process.cwd(), 'tests/fixtures/plugins/simple-plugin/index.js');
-const FIXTURE_PLUGIN_URL = pathToFileURL(FIXTURE_PLUGIN_PATH).href;
+const FIXTURE_PLUGIN_DIR = join(process.cwd(), 'tests/fixtures/plugins/simple-plugin');
 
 let tmpDir: string;
+// Per-test plugin source URL, computed after the fixture is copied inside
+// tmpDir so the loader's projectRoot containment check accepts it.
+let FIXTURE_PLUGIN_URL = '';
 
 beforeEach(async () => {
   tmpDir = await mkdtemp(join(tmpdir(), 'agentsmesh-plugin-e2e-'));
+  const pluginDir = join(tmpDir, 'plugin');
+  await cp(FIXTURE_PLUGIN_DIR, pluginDir, { recursive: true });
+  // The fixture is ESM but has no package.json; the agentsmesh repo's
+  // own `"type": "module"` is no longer in scope once the file is copied
+  // into a tmpDir, so write a minimal manifest alongside it.
+  await writeFile(join(pluginDir, 'package.json'), '{"type":"module"}');
+  FIXTURE_PLUGIN_URL = pathToFileURL(join(pluginDir, 'index.js')).href;
 });
 
 afterEach(async () => {

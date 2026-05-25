@@ -3,8 +3,8 @@
   "type": "object",
   "properties": {
     "mcpServers": {
-      "default": {},
       "description": "Map of server name to server configuration",
+      "default": {},
       "type": "object",
       "propertyNames": {
         "type": "string"
@@ -49,9 +49,7 @@
             },
             "required": [
               "type",
-              "env",
-              "command",
-              "args"
+              "command"
             ],
             "additionalProperties": false,
             "description": "stdio MCP server (local process)"
@@ -98,9 +96,7 @@
             },
             "required": [
               "type",
-              "env",
-              "url",
-              "headers"
+              "url"
             ],
             "additionalProperties": false,
             "description": "URL-based MCP server (HTTP/SSE)"
@@ -110,9 +106,6 @@
       }
     }
   },
-  "required": [
-    "mcpServers"
-  ],
   "additionalProperties": false,
   "description": "AgentsMesh MCP server config (.agentsmesh/mcp.json)",
   "title": "agentsmesh-mcp.json"

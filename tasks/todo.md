@@ -1,53 +1,70 @@
-# P0 Implementation — G1 + G2
+# Plan — Pack-root README/LICENSE preservation + link validator key fix (C + Tiny A)
 
-**Updated:** 2026-05-12 after deeper investigation.
+## Scope (locked in by user)
 
-## Correction to initial analysis
+1. **Link validator key fix (C)** — recognize copilot's `.agent.md` / `.instructions.md` / `.prompt.md` double-extensions and factory-droid's `droids/` feature dir in `canonicalKeyFromOutputPath`, so broken links in pack-originated outputs correctly downgrade to advisory warnings instead of hard errors.
+2. **Pack-root preservation (Tiny A)** — when installing a pack, copy upstream top-level `README*`, `LICENSE*`, `NOTICE*`, `COPYING*`, `COPYRIGHT*` files into the pack root at `.agentsmesh/packs/<name>/`. Honors L270's legal-attribution intent; carries upstream context for the consumer; one file copy in pack writer, no canonical model changes, no per-target descriptor changes.
 
-- **G1:** Shared pipeline EXISTS at `src/targets/import/shared/skill-import-pipeline.ts`. Initial verification (Agent #1) read only `shared-import-helpers.ts` and missed `shared/skill-import-pipeline.ts`. Real remaining duplication: the **dispatch loop** in Cline / Windsurf / Codex adapters (read SKILL.md → try recognizers → fall back). L132 confirms it caused bug recurrence.
-- **G2:** Harness is mature (45s × 1.5 coverage timeout, per-test temp roots, chokidar ready awaited, Windows polling, lock-file path ignore). Real remaining gaps: tests scrape logs/files for cycle signal (timing variance); `_suppressAgentsmeshDirUntil` is dead code; no `flake:watch` validator.
+Explicitly out of scope: emitting README/LICENSE into generated target dirs (`.claude/agents/README.md`, etc.). Broken-link warnings inside agent bodies stay as advisory.
 
-## G1 — Extract skill-import dispatch loop
+## Files touched
 
-**Goal:** consolidate Cline / Windsurf / Codex dispatch loops behind `importSkillsDirectory(options, recognizers)` so reserved-artifact / projected-agent / command-skill handling lives in one place.
+### Step 1: Link validator
+- `src/core/reference/validate-generated-markdown-links.ts`
+- New/extended: `tests/unit/core/reference/canonical-key-from-output-path.test.ts` (check whether already exists; otherwise create)
 
-- [x] G1.1 RED: add tests for `importSkillsDirectory` — source-dir fallback (Codex pattern), recognizer order, default fallback to `importDirectorySkill`, stale-skill-dir cleanup
-- [x] G1.2 GREEN: implement `importSkillsDirectory` + `projectedAgentRecognizer` + `commandSkillRecognizer` in `shared/skill-import-pipeline.ts`
-- [x] G1.3 Migrate `src/targets/cline/skills-adapter.ts` to use orchestrator (drop inline dispatch)
-- [x] G1.4 Migrate `src/targets/windsurf/skills-adapter.ts` to use orchestrator
-- [x] G1.5 Migrate `src/targets/codex-cli/skills-adapter.ts` to use orchestrator (2 recognizers + fallback dir)
-- [x] G1.6 Run `pnpm test tests/unit/targets/{cline,windsurf,codex-cli,import}` GREEN
-- [x] G1.7 `pnpm build && pnpm test:e2e -- importer` GREEN
-- [x] G1.8 `pnpm lint && pnpm typecheck` GREEN
-- [x] G1.9 Add lesson to `tasks/lessons.md`
+### Step 2: Pack-root preservation
+- New: `src/install/source/collect-preserved-root.ts` — `collectPreservedRootFiles(contentRoot)` returns top-level preserved-boilerplate files
+- `src/install/pack/pack-writer.ts` — accept `preservedRootFiles` arg, copy into pack root before hashing
+- `src/install/pack/pack-merge.ts` — accept `preservedRootFiles` arg, copy into pack root (last-write-wins on collision)
+- `src/install/run/run-install-pack.ts` — extend `InstallAsPackArgs` with `contentRoot`, collect preserved root files, plumb to writer/merger
+- `src/install/run/run-install-execute.ts` — extend `RunInstallExecuteArgs` with `contentRoot`, pass through
+- `src/install/run/single-pack-install.ts` — already has `contentRoot`, just thread it through
+- New: `tests/unit/install/source/collect-preserved-root.test.ts`
+- Extensions: `tests/unit/install/pack-writer.test.ts`, `tests/unit/install/pack-merge.test.ts` if it exists (otherwise covered by writer test + integration)
+- New: `tests/integration/install-pack-root-preservation.integration.test.ts`
 
-## G2 — Watch test determinism + dead code
+## TDD plan (test-first per step)
 
-**Goal:** replace timing-scrape with a deterministic per-cycle callback; delete unused param; add a flake validator.
+### Step 1 — link validator
+1. Write failing tests in `canonical-key-from-output-path.test.ts`:
+   - `.github/agents/foo.agent.md` → `agents/foo`
+   - `.github/instructions/foo.instructions.md` → `rules/foo`
+   - `.github/prompts/foo.prompt.md` → `commands/foo`
+   - `.factory/droids/foo.md` → `agents/foo`
+   - Existing keys unchanged: `.claude/agents/foo.md` → `agents/foo`, `.kiro/steering/foo.md` → `rules/foo`, `.clinerules/foo.md` → `rules/foo`
+2. Implement:
+   - `stripMarkdownExt`: extend to peel known double-extensions (`.agent.md`, `.instructions.md`, `.prompt.md`) before falling back to single `.md` / `.mdc` strip
+   - `OUTPUT_DIR_TO_FEATURE`: add `droids: 'agents'`
+3. Run unit + full link-validator suite.
 
-- [x] G2.1 Remove dead `_suppressAgentsmeshDirUntil` parameter from `shouldIgnoreWatchPath` (and its set-but-never-read assignments in `runWatch`)
-- [x] G2.2 RED: test asserting `runWatch({ onCycle })` fires `onCycle({ featuresChanged })` once per regen, both initial and after edits
-- [x] G2.3 GREEN: thread `onCycle` from `runWatch` options through `run()` cycles
-- [x] G2.4 Migrate `runMatrix when features change` test to wait on `onCycle` instead of log/spy timing
-- [x] G2.5 Fix tautological `logs Regenerated` test (currently captures startup call only) to assert the post-edit cycle via `onCycle`
-- [x] G2.6 Add `scripts/flake-check-watch.ts` (N=10 watch-test runs under COVERAGE=1)
-- [x] G2.7 Wire `"flake:watch": "tsx scripts/flake-check-watch.ts"` in `package.json`
-- [x] G2.8 Run `pnpm flake:watch` locally to validate stability
-- [x] G2.9 `pnpm lint && pnpm typecheck && pnpm test` GREEN
-- [x] G2.10 Add lesson to `tasks/lessons.md`
+### Step 2 — preserved root files
+1. Write failing tests:
+   - `collect-preserved-root.test.ts`: temp dir with README.md, LICENSE, LICENSE-MIT, CHANGELOG.md, foo.md, subdir/README.md → returns exactly README.md + LICENSE + LICENSE-MIT; CHANGELOG/foo/subdir excluded
+   - `pack-writer.test.ts` extension: pass `preservedRootFiles: [{relativePath:'README.md', absolutePath: tmp+'/README.md'}, ...]` → assert file exists at `<packDir>/README.md` with matching bytes; assert content_hash differs from baseline-without-preserved-files; assert install-manifest contains the file's sha256
+   - Integration: synthesize source dir with `README.md`+`LICENSE`+`agents/foo.md`; run install; assert `.agentsmesh/packs/<name>/{README.md,LICENSE,agents/foo.md}` all present
+2. Implement bottom-up:
+   - `collect-preserved-root.ts`: readdir contentRoot (top-level only), filter by `isPreservedBoilerplate(name)` AND `dirent.isFile()`, return `{relativePath, absolutePath}[]` sorted
+   - `pack-writer.ts`: add optional `preservedRootFiles` to args; iterate after `writeSettings`, before `hashPackContent`; `copyFile` each into the tmpDir
+   - `pack-merge.ts`: same — accept arg, copy before `hashPackContent`. Overwrites on re-install (consistent with how the rest of the merge handles same-name files)
+   - `run-install-pack.ts`: add `contentRoot` to `InstallAsPackArgs`; call `collectPreservedRootFiles(contentRoot)` once; pass to both `materializePack` and `mergeIntoPack`
+   - `run-install-execute.ts`: add `contentRoot` to `RunInstallExecuteArgs`; pass through to `installAsPack`
+   - `single-pack-install.ts`: pass `contentRoot` into `executeRunInstallPoolsAndWrite`
+3. Run install integration tests (existing + new). Manually re-run the user's broken install to confirm warnings shrink + README/LICENSE land in pack root.
 
-## Verification gate
+### Step 3 — lesson + verification
+1. Add `tasks/lessons.md` entry: "Preserved boilerplate at the upstream source root must travel into the pack root for legal attribution + consumer context; flat-collection per-target emission is intentionally out of scope (treated as advisory link warnings)."
+2. Re-run user's original install: `agentsmesh install addyosmani/agent-skills`. Verify:
+   - install completes cleanly (no `Generate failed after install` hard error)
+   - `.agentsmesh/packs/addyosmani-agent-skills-pack/README.md` + `LICENSE` exist
+   - 42 broken-link warnings remain as advisory (acceptable per scope)
 
-- [x] V1: `pnpm lint` clean
-- [x] V2: `pnpm typecheck` clean
-- [x] V3: `pnpm typecheck:tests` if shipped — not part of this batch
-- [x] V4: `pnpm test` full suite
-- [x] V5: `pnpm test:e2e` full
-- [x] V6: `pnpm matrix:verify`
-- [ ] V7: Commit with `feat(import): consolidate skill-import dispatch loop` and `refactor(watch): expose onCycle and remove dead state` (awaiting user)
+## Tracking
 
-## Out of scope
-
-- Splitting >200 LOC files (G16)
-- New CLI commands from the wider plan (T1–T16)
-- Watch behavior changes beyond the test-determinism hook
+- [ ] Step 1 tests written and red
+- [ ] Step 1 implementation green
+- [ ] Step 2 tests written and red (collect helper, writer, merge, integration)
+- [ ] Step 2 implementation green
+- [ ] Step 3 lesson + manual verification
+- [ ] Full `pnpm test` clean
+- [ ] Lint clean

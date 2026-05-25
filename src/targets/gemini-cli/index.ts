@@ -94,7 +94,7 @@ const project: TargetLayout = {
   },
 };
 
-const global: TargetLayout = {
+const globalLayout: TargetLayout = {
   rootInstructionPath: GEMINI_GLOBAL_ROOT,
   outputFamilies: [
     { id: 'compat-agents', kind: 'additional', explicitPaths: [GEMINI_GLOBAL_COMPAT_AGENTS] },
@@ -215,7 +215,7 @@ export const descriptor = {
       GEMINI_GLOBAL_SKILLS_DIR,
       GEMINI_GLOBAL_AGENTS_DIR,
     ],
-    layout: global,
+    layout: globalLayout,
   },
   importer: {
     rules: {
@@ -237,4 +237,5 @@ export const descriptor = {
   },
   buildImportPaths: buildGeminiCliImportPaths,
   detectionPaths: ['GEMINI.md', '.gemini'],
+  conversionDefaults: { agentsToSkills: false },
 } satisfies TargetDescriptor;

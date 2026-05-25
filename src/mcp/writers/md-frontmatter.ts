@@ -5,9 +5,12 @@ const FRONT_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n\r?\n?([\s\S]*)$/;
 export function parseMd(src: string): { frontmatter: Record<string, unknown>; body: string } {
   const m = FRONT_RE.exec(src);
   if (!m) return { frontmatter: {}, body: src };
+  // Regex groups 1 and 2 are non-optional captures, so on match they're
+  // always strings. `parseYaml('')` returns undefined → fall back to {}.
+  const [, fmRaw, body] = m as RegExpExecArray & [string, string, string];
   return {
-    frontmatter: (parseYaml(m[1] ?? '') ?? {}) as Record<string, unknown>,
-    body: m[2] ?? '',
+    frontmatter: (parseYaml(fmRaw) ?? {}) as Record<string, unknown>,
+    body,
   };
 }
 

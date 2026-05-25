@@ -1,13 +1,12 @@
-/**
- * Stage manually typed install folders as canonical content under a temp .agentsmesh tree.
- */
-
 import { basename, dirname, join, relative } from 'node:path';
-import { cp, mkdtemp, stat, rm } from 'node:fs/promises';
+import { cp, mkdtemp, stat, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { mkdirp, readDirRecursive } from '../../utils/filesystem/fs.js';
+import { mkdirp, readDirRecursive, readFileSafe } from '../../utils/filesystem/fs.js';
 import { isSkillPackLayout } from '../../canonical/load/skill-pack-load.js';
 import { readSkillFrontmatterName, cpFilteredSkill } from '../source/skill-repo-filter.js';
+import { isBoilerplate } from '../importers/boilerplate-filter.js';
+import { normalizeMdcToCanonical } from './mdc-reader.js';
+import { sanitizeNameSegment, computeDestName, namespacedName } from './collection-naming.js';
 import type { ManualInstallAs } from './manual-install-mode.js';
 
 export interface ManualInstallScope {
@@ -31,36 +30,87 @@ async function createStageRoot(): Promise<ManualInstallScope> {
   };
 }
 
-async function stageMarkdownCollection(sourceRoot: string, destinationDir: string): Promise<void> {
-  const info = await stat(sourceRoot);
-  if (info.isFile()) {
-    if (!sourceRoot.toLowerCase().endsWith('.md')) {
-      throw new Error(`Manual install only supports .md files for this collection: ${sourceRoot}`);
-    }
-    await mkdirp(destinationDir);
-    await cp(sourceRoot, join(destinationDir, basename(sourceRoot)));
-    return;
-  }
+function isAcceptedFile(file: string, acceptMdc: boolean): boolean {
+  const lower = file.toLowerCase();
+  if (lower.endsWith('.md')) return true;
+  if (acceptMdc && lower.endsWith('.mdc')) return true;
+  return false;
+}
 
-  const files = (await readDirRecursive(sourceRoot)).filter((file) =>
-    file.toLowerCase().endsWith('.md'),
+async function stageSingleFile(
+  sourcePath: string,
+  destinationDir: string,
+  acceptMdc: boolean,
+): Promise<void> {
+  if (!isAcceptedFile(sourcePath, acceptMdc)) {
+    throw new Error(`Manual install only supports .md files for this collection: ${sourcePath}`);
+  }
+  await mkdirp(destinationDir);
+  if (sourcePath.toLowerCase().endsWith('.mdc')) {
+    const content = await readFileSafe(sourcePath);
+    if (!content) return;
+    const destName = basename(sourcePath).replace(/\.mdc$/i, '.md');
+    await writeFile(join(destinationDir, destName), normalizeMdcToCanonical(content));
+  } else {
+    await cp(sourcePath, join(destinationDir, basename(sourcePath)));
+  }
+}
+
+async function stageMarkdownCollection(
+  sourceRoot: string,
+  destinationDir: string,
+  acceptMdc: boolean,
+): Promise<void> {
+  const info = await stat(sourceRoot);
+  if (info.isFile()) return stageSingleFile(sourceRoot, destinationDir, acceptMdc);
+
+  const files = (await readDirRecursive(sourceRoot)).filter(
+    (file) => isAcceptedFile(file, acceptMdc) && !isBoilerplate(basename(file)),
   );
   if (files.length === 0) {
-    throw new Error(`No .md files found under ${sourceRoot} for manual install.`);
+    throw new Error(
+      `No installable files found under ${sourceRoot} for manual install. ` +
+        `Try a different --path to point at the directory holding *.md (or *.mdc) files, ` +
+        `or omit --as so agentsmesh can auto-detect the layout.`,
+    );
+  }
+
+  const bareCounts = new Map<string, number>();
+  for (const file of files) {
+    const name = computeDestName(file);
+    bareCounts.set(name, (bareCounts.get(name) ?? 0) + 1);
   }
 
   const usedNames = new Map<string, string>();
   await mkdirp(destinationDir);
   for (const file of files) {
-    const name = basename(file);
-    const previous = usedNames.get(name);
-    if (previous) {
+    const bare = computeDestName(file);
+    const hasCollision = (bareCounts.get(bare) ?? 0) > 1;
+    let destName = hasCollision ? namespacedName(sourceRoot, file, bare) : bare;
+    if (usedNames.has(destName) && usedNames.get(destName) !== file) {
+      const rel = relative(sourceRoot, file)
+        .replace(/\\/g, '/')
+        .split('/')
+        .map(sanitizeNameSegment)
+        .filter(Boolean);
+      const ext = bare.includes('.') ? '.' + bare.split('.').pop()! : '';
+      const stem = rel.join('-').replace(/\.(md|mdc)$/i, '');
+      destName = stem + ext || destName;
+    }
+    if (usedNames.has(destName)) {
       throw new Error(
-        `Manual install found duplicate file name "${name}" under ${sourceRoot} (${previous} and ${file}).`,
+        `Manual install could not resolve duplicate name "${destName}" under ${sourceRoot} (${usedNames.get(destName)} and ${file}).`,
       );
     }
-    usedNames.set(name, file);
-    await cp(file, join(destinationDir, name));
+    usedNames.set(destName, file);
+    const isMdc = file.toLowerCase().endsWith('.mdc');
+    if (isMdc) {
+      const content = await readFileSafe(file);
+      if (!content) continue;
+      await writeFile(join(destinationDir, destName), normalizeMdcToCanonical(content));
+    } else {
+      await cp(file, join(destinationDir, destName));
+    }
   }
 }
 
@@ -162,7 +212,7 @@ export async function stageManualInstallScope(
     if (as === 'skills') {
       await stageSkills(sourceRoot, destDir, options);
     } else {
-      await stageMarkdownCollection(sourceRoot, destDir);
+      await stageMarkdownCollection(sourceRoot, destDir, as === 'rules');
     }
     return staged;
   } catch (error) {

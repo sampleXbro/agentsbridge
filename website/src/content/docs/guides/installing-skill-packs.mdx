@@ -1,0 +1,143 @@
+---
+draft: false
+title: Installing Anthropic-style skill packs
+description: Walk through agentsmesh install on a community skill pack (addyosmani/agent-skills). Bulk-select, broken-link prompts, and uninstall round-trip.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Anthropic-style skill packs are repos shaped around top-level `skills/<kebab>/SKILL.md`, optional `agents/`, `references/`, and per-target command directories (`.claude/commands/`, `.gemini/commands/`). AgentsMesh classifies these automatically and imports them as a single bulk set — no `--as` or `--target` needed.
+
+This guide walks the full install → list → uninstall round-trip using [`addyosmani/agent-skills`](https://github.com/addyosmani/agent-skills) as the example.
+
+## 1. Install
+
+```bash
+agentsmesh init                 # if not already set up
+agentsmesh install https://github.com/addyosmani/agent-skills
+```
+
+AgentsMesh:
+
+1. Acquires `.agentsmesh/.install.lock`.
+2. Clones the source.
+3. Runs the multi-signal classifier. For `agent-skills` the classifier matches `skills/<kebab>/SKILL.md`, `agents/<name>.md`, `references/`, multi-tool rules at root, and per-target command dirs — total score ≥ 1.4, primary signal present → `anthropic-skill-pack`.
+4. Aggregates 23 skills + 3 agents + 7 commands (4 `.claude/commands/` + 3 `.gemini/commands/` merged into the canonical `commands/` set, with claude precedence on basename collisions) + 1 root rule.
+5. Surfaces the bulk-select prompt (`[a/n/s]`) unless `--force`.
+6. Materialises the pack under `.agentsmesh/packs/addyosmani-agent-skills/` with a per-file integrity manifest at `.agentsmesh-install-manifest.json`.
+7. Writes the entry to `installs.yaml`.
+8. Runs `agentsmesh generate` so every active target (claude-code, cursor, opencode, …) gets the skill files in its native layout.
+
+```text
+✓ Installed pack "addyosmani-agent-skills" to .agentsmesh/packs/.
+Generated: 67 created, 0 updated, 0 unchanged
+```
+
+## 2. Inspect
+
+```bash
+agentsmesh installs list
+```
+
+```text
+NAME                     SOURCE                                  FEATURES                  INSTALLED
+addyosmani-agent-skills  github:addyosmani/agent-skills@5b4c6da  skills, agents, commands  2026-05-16
+```
+
+```bash
+ls .claude/skills | head        # writes for the claude-code target
+ls .cursor/skills | head        # writes for the cursor target
+ls .opencode/skills | head      # writes for the opencode target
+```
+
+Each target's tree carries exactly the 23 skills, with no boilerplate (`README.md`, etc.) bleeding through — the install-layer boilerplate filter excludes them.
+
+## 3. Handle prompts (interactive only)
+
+### Bulk-select
+
+When the classifier picks `anthropic-skill-pack` and stdin is a TTY, the prompt shape depends on how many entities the source carries.
+
+**One entity total** — single yes/no:
+
+```
+Found in source-name:
+  - 1 skill
+
+Install skill "interview-me"? [y/N]
+```
+
+`y` installs it, `n` or Enter skips, anything else aborts (exit `130`). The three-tier picker would be pointless ceremony here, so AgentsMesh skips it.
+
+**Two or more entities** — three-tier picker:
+
+```
+Found in agent-skills:
+  - 23 skills
+  - 3 agents
+  - 7 commands
+  - 1 root rule
+
+Install [a]ll, [n]one, or [s]elect per type? [a/n/s]
+```
+
+- `a` accepts everything (also the default under `--force`, `--json`, non-TTY).
+- `n` returns nothing and exits `0` (no writes).
+- `s` enters Tier 2, asking once per non-empty kind: `Install all 23 skills? [y/n/c]` — `y`/`n` take/skip the whole kind; `c` drills into Tier 3 per-entity prompts: `Install skill "interview-me"? [y/N/a/q]` (`a` = accept this and every remaining entity in the kind; `q` = skip this and every remaining entity in the kind).
+
+See the [`install` reference](../../cli/install/#interactive-prompts) for the full tier matrix, marketplace and multi-collection flows, conflict handling, and the consolidated bypass table.
+
+### Broken-link
+
+If a skill body references a file outside its scope (`../references/orchestration-patterns.md` from a `skills/<x>/SKILL.md`), you get a per-entity cluster:
+
+```
+Entity "code-reviewer" (agent) has 2 broken links:
+  - ../references/orchestration-patterns.md (resolvable-outside)
+  - ../references/missing.md (unresolvable)
+
+Action: [i]nclude resolvable as supporting files / [l]eave with warnings / [a]bort install
+```
+
+- `i` copies the resolvable file into the entity's `supportingFiles` and rewrites the body link to `./references/<x>.md`. Unresolvables are left in place with warnings. Bodies authored with the `{baseDir}/x.md` placeholder or Windows-style `..\refs\x.md` rewrite verbatim — the scanner matches the raw destination, not a normalized form.
+- `l` (the `--force` default) preserves all link strings and warns.
+- `a` aborts the run with exit 130; no writes.
+
+When two resolvable links share a basename (`docs/A/README.md` and `docs/B/README.md` both pulled in), AgentsMesh slugs the second to keep distinct files: you end up with `references/docs-A-README.md` and `references/docs-B-README.md` rather than one file overwriting the other.
+
+## 4. Uninstall
+
+```bash
+agentsmesh uninstall addyosmani-agent-skills
+```
+
+AgentsMesh:
+
+1. Acquires `.agentsmesh/.install.lock`.
+2. Reads `installs.yaml` to find the entry.
+3. Reads `.agentsmesh-install-manifest.json` and computes drift against the current pack contents. When drift is present (locally edited files), the modification prompt offers `[d]elete-anyway / [k]eep-modified / [a]bort`.
+4. `rm -rf`s `.agentsmesh/packs/addyosmani-agent-skills/`.
+5. Drops the `installs.yaml` row (and any matching `extends:` row).
+6. Runs `agentsmesh generate` so `cleanupStaleGeneratedOutputs` evicts orphaned target files (`.claude/skills/<x>/`, etc.).
+
+```bash
+agentsmesh installs list
+# No installed packs.
+```
+
+`--keep-pack` preserves the directory on disk but still drops the yaml rows (useful when you've edited files and want to keep them around). `--keep-generated` skips the post-uninstall generate; target files stay until the next manual `generate` — a warning lists what will be cleaned then.
+
+### Partial-batch failures
+
+`agentsmesh uninstall name1,name2,name3 --force` (or `--all`) wraps each pack in its own try/catch. If one pack's apply step throws (EACCES, disk full, etc.), survivors still apply, post-operation `generate` still runs over them, and the failed pack lands in the JSON envelope's `data.failed[]` array. The run exits `1` whenever `data.failed[]` is non-empty — see [`agentsmesh uninstall` reference](../../cli/uninstall/#partial-batch-failures) for the JSON shape.
+
+## Where to dig deeper
+
+- [`agentsmesh install` reference](../../cli/install/) — full flag list, source formats, classifier and lock details.
+- [`agentsmesh uninstall` reference](../../cli/uninstall/) — flags, exit codes, modification prompt semantics.
+- [`agentsmesh installs` reference](../../cli/installs/) — JSON shape, scope behavior.
+- [Architecture: install internals](https://github.com/sampleXbro/agentsmesh/blob/master/docs/architecture/install.md) — signal scoring, classifier dispatch, pack-writer atomicity, manifest format.
+
+<Aside type="tip">
+  The same install command works for any Anthropic-style pack — point it at your team's internal skill repo and AgentsMesh figures out the rest. Use `--name` to set a stable install entry name across URL spellings (`github:`, `https://`, `git+ssh://`); AgentsMesh also auto-preserves names across protocol variants.
+</Aside>

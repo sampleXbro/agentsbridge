@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { mirrorSkillsToAgents } from '../../../../src/targets/catalog/skill-mirror.js';
+import {
+  mirrorSkillsToAgents,
+  _NATIVE_AGENTS_SKILL_WRITERS_FOR_TEST,
+} from '../../../../src/targets/catalog/skill-mirror.js';
+import { BUILTIN_TARGETS } from '../../../../src/targets/catalog/builtin-targets.js';
 
 describe('mirrorSkillsToAgents', () => {
   it('returns mirror path when path starts with skillsDir', () => {
@@ -17,6 +21,15 @@ describe('mirrorSkillsToAgents', () => {
   it('returns null when codex-cli is active', () => {
     expect(
       mirrorSkillsToAgents('.cursor/skills/ts-pro/SKILL.md', '.cursor/skills', ['codex-cli']),
+    ).toBeNull();
+  });
+
+  it('returns null when amp is active because amp owns .agents/skills natively', () => {
+    expect(
+      mirrorSkillsToAgents('.gemini/skills/ts-pro/SKILL.md', '.gemini/skills', [
+        'amp',
+        'gemini-cli',
+      ]),
     ).toBeNull();
   });
 
@@ -39,5 +52,14 @@ describe('mirrorSkillsToAgents', () => {
 
   it('returns null when path equals skillsDir without trailing slash', () => {
     expect(mirrorSkillsToAgents('.cursor/skills', '.cursor/skills', [])).toBeNull();
+  });
+
+  it('native-writer list matches BUILTIN_TARGETS with project.skillDir === .agents/skills', () => {
+    const derived = BUILTIN_TARGETS.filter(
+      (descriptor) => descriptor.project?.skillDir === '.agents/skills',
+    )
+      .map((descriptor) => descriptor.id)
+      .sort();
+    expect([..._NATIVE_AGENTS_SKILL_WRITERS_FOR_TEST].sort()).toEqual(derived);
   });
 });

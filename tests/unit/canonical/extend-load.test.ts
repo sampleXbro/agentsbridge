@@ -211,7 +211,10 @@ describe('extend-load', () => {
       };
       mockExists.mockResolvedValue(true);
       mockNormalizeSlicePath.mockResolvedValue({ sliceRoot: '/path/to/extend/subdir' });
-      mockLoadCanonicalSliceAtPath.mockResolvedValue(mockSlice);
+      mockLoadCanonicalSliceAtPath.mockResolvedValue({
+        canonical: mockSlice,
+        cleanup: async () => {},
+      });
 
       const result = await loadCanonicalForExtend(extendWithPath);
 

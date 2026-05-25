@@ -1,50 +1,38 @@
 /**
- * Map install pathInRepo to target hint and whether repo-root discovery + pick inference applies.
+ * Map install pathInRepo to target hint and whether repo-root discovery +
+ * pick inference applies. The `path → target` map is derived from every
+ * builtin descriptor's `project.managedOutputs.{dirs,files}` and
+ * `detectionPaths`, so adding a new target automatically extends this map.
+ *
+ * Only paths owned by exactly one descriptor are included. Shared markers
+ * (`AGENTS.md`, `.agents/skills`, `.mcp.json`) return `undefined` from the
+ * hint — the caller falls through to other resolution (explicit `--target`,
+ * import-target memory, or repo-root format detection).
  */
 
 import type { ExtendPick } from '../../config/core/schema.js';
+import { BUILTIN_TARGETS } from '../../targets/catalog/builtin-targets.js';
 
-/** Longest-match first */
-const PATH_PREFIX_TO_TARGET: { prefix: string; target: string }[] = [
-  { prefix: '.gemini/commands', target: 'gemini-cli' },
-  { prefix: '.github/instructions', target: 'copilot' },
-  { prefix: '.github/copilot-instructions.md', target: 'copilot' },
-  { prefix: '.github/copilot', target: 'copilot' },
-  { prefix: '.github/prompts', target: 'copilot' },
-  { prefix: '.github/skills', target: 'copilot' },
-  { prefix: '.github/agents', target: 'copilot' },
-  { prefix: '.github/hooks', target: 'copilot' },
-  { prefix: '.claude/commands', target: 'claude-code' },
-  { prefix: '.claude/rules', target: 'claude-code' },
-  { prefix: '.claude/skills', target: 'claude-code' },
-  { prefix: '.claude/agents', target: 'claude-code' },
-  { prefix: '.cursor/commands', target: 'cursor' },
-  { prefix: '.cursor/rules', target: 'cursor' },
-  { prefix: '.cursor/agents', target: 'cursor' },
-  { prefix: '.cursor/skills', target: 'cursor' },
-  { prefix: '.continue/prompts', target: 'continue' },
-  { prefix: '.continue/rules', target: 'continue' },
-  { prefix: '.continue/skills', target: 'continue' },
-  { prefix: '.junie/commands', target: 'junie' },
-  { prefix: '.junie/rules', target: 'junie' },
-  { prefix: '.junie/agents', target: 'junie' },
-  { prefix: '.junie/skills', target: 'junie' },
-  { prefix: '.kiro/steering', target: 'kiro' },
-  { prefix: '.kiro/skills', target: 'kiro' },
-  { prefix: '.kilo/commands', target: 'kilo-code' },
-  { prefix: '.kilo/rules', target: 'kilo-code' },
-  { prefix: '.kilo/skills', target: 'kilo-code' },
-  { prefix: '.kilo/agents', target: 'kilo-code' },
-  { prefix: '.kilocode/workflows', target: 'kilo-code' },
-  { prefix: '.kilocode/rules', target: 'kilo-code' },
-  { prefix: '.kilocode/skills', target: 'kilo-code' },
-  { prefix: '.kilocodemodes', target: 'kilo-code' },
-  { prefix: '.kilocodeignore', target: 'kilo-code' },
-  { prefix: '.cline/skills', target: 'cline' },
-  { prefix: '.clinerules/workflows', target: 'cline' },
-  { prefix: '.windsurf/rules', target: 'windsurf' },
-  { prefix: '.codex', target: 'codex-cli' },
-];
+const PATH_PREFIX_TO_TARGET: ReadonlyArray<{ prefix: string; target: string }> = (() => {
+  const owners = new Map<string, Set<string>>();
+  for (const descriptor of BUILTIN_TARGETS) {
+    const mo = descriptor.project.managedOutputs;
+    const candidates = [...(mo?.dirs ?? []), ...(mo?.files ?? []), ...descriptor.detectionPaths];
+    for (const raw of candidates) {
+      const normalized = raw.replace(/\/$/, '');
+      const ownerSet = owners.get(normalized) ?? new Set<string>();
+      ownerSet.add(descriptor.id);
+      owners.set(normalized, ownerSet);
+    }
+  }
+  const entries: { prefix: string; target: string }[] = [];
+  for (const [prefix, ownerSet] of owners) {
+    if (ownerSet.size !== 1) continue;
+    const [target] = [...ownerSet];
+    entries.push({ prefix, target: target! });
+  }
+  return entries.sort((a, b) => b.prefix.length - a.prefix.length);
+})();
 
 function norm(p: string): string {
   return p.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
@@ -53,8 +41,8 @@ function norm(p: string): string {
 /** Best-effort target id from a native subtree path (for install path scoping). */
 export function targetHintFromNativePath(pathInRepoPosix: string): string | undefined {
   const p = norm(pathInRepoPosix);
-  const sorted = [...PATH_PREFIX_TO_TARGET].sort((a, b) => b.prefix.length - a.prefix.length);
-  for (const { prefix, target } of sorted) {
+  if (!p) return undefined;
+  for (const { prefix, target } of PATH_PREFIX_TO_TARGET) {
     if (p === prefix || p.startsWith(`${prefix}/`)) return target;
   }
   return undefined;

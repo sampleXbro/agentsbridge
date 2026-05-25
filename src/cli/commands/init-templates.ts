@@ -1,8 +1,16 @@
 /**
  * Template data for agentsmesh init command.
+ *
+ * Every YAML file written by `init` carries the `# yaml-language-server:`
+ * directive recognized by the Red Hat YAML extension (VSCode), JetBrains
+ * IDEs' built-in YAML support, vim/neovim with `yaml-language-server`, and
+ * the GitHub Actions YAML editor. The URL is pinned to the running package
+ * version via `yamlSchemaDirective(...)` so the schema referenced always
+ * matches the file format the writer used.
  */
 
 import { starterInitTargetIds } from '../../targets/catalog/init-starter-targets.js';
+import { yamlSchemaDirective } from '../../utils/output/schema-directive.js';
 
 const ALL_FEATURES = [
   'rules',
@@ -35,7 +43,7 @@ export function buildConfig(
     .map((t) => `  - ${t}`)
     .join('\n');
   const featureList = ALL_FEATURES.map((f) => `  - ${f}`).join('\n');
-  return `# yaml-language-server: $schema=https://unpkg.com/agentsmesh/schemas/agentsmesh.json\nversion: 1\ntargets:\n${targetList}\nfeatures:\n${featureList}\n`;
+  return `${yamlSchemaDirective('agentsmesh')}version: 1\ntargets:\n${targetList}\nfeatures:\n${featureList}\n`;
 }
 
 // ─── Canonical file templates ─────────────────────────────────────────────────
@@ -124,7 +132,7 @@ export const TEMPLATE_MCP = `{
 }
 `;
 
-export const TEMPLATE_HOOKS = `# Lifecycle hooks — run shell commands before/after AI tool use
+export const TEMPLATE_HOOKS = `${yamlSchemaDirective('hooks')}# Lifecycle hooks — run shell commands before/after AI tool use
 # Events: PreToolUse, PostToolUse, SubagentStart, SubagentStop
 # Matcher: tool name pattern (e.g. "Edit|Write", "Bash", "*")
 #
@@ -139,7 +147,7 @@ export const TEMPLATE_HOOKS = `# Lifecycle hooks — run shell commands before/a
 #     command: npm test --passWithNoTests
 `;
 
-export const TEMPLATE_PERMISSIONS = `# Tool permission allow/deny lists
+export const TEMPLATE_PERMISSIONS = `${yamlSchemaDirective('permissions')}# Tool permission allow/deny lists
 #
 # allow:
 #   - Bash(npm run:*)
@@ -166,8 +174,7 @@ export const TEMPLATE_IGNORE = `# Patterns ignored by all configured AI tools (g
 # coverage/
 `;
 
-export const LOCAL_TEMPLATE = `# yaml-language-server: $schema=https://unpkg.com/agentsmesh/schemas/agentsmesh.json
-# Personal overrides — NOT committed to git
+export const LOCAL_TEMPLATE = `${yamlSchemaDirective('agentsmesh')}# Personal overrides — NOT committed to git
 # Uncomment and customize for your local setup:
 
 # targets:

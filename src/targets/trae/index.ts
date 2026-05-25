@@ -51,7 +51,7 @@ const project: TargetLayout = {
   },
 };
 
-const global: TargetLayout = {
+const globalLayout: TargetLayout = {
   rootInstructionPath: TRAE_GLOBAL_ROOT_RULE,
   skillDir: TRAE_GLOBAL_SKILLS_DIR,
   managedOutputs: {
@@ -142,7 +142,7 @@ export const descriptor = {
       TRAE_GLOBAL_SKILLS_DIR,
       TRAE_GLOBAL_MCP_FILE,
     ],
-    layout: global,
+    layout: globalLayout,
   },
   importer: {
     mcp: {

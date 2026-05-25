@@ -8,12 +8,14 @@ import { prepareInstallDiscovery } from '../core/prepare-install-discovery.js';
 import type { PrepareInstallDiscoveryResult } from '../core/prepare-install-discovery.js';
 import type { CanonicalFiles } from '../../core/types.js';
 import type { ExtendPick } from '../../config/core/schema.js';
+import type { ParseFrontmatterOptions } from '../../canonical/features/rules.js';
 
 export async function resolveDiscoveredForInstall(
   resolvedPath: string,
   contentRoot: string,
   pathInRepo: string,
   explicitTarget: string | undefined,
+  parseOpts: ParseFrontmatterOptions = {},
 ): Promise<{
   prep: PrepareInstallDiscoveryResult;
   discovered: CanonicalFiles;
@@ -25,9 +27,21 @@ export async function resolveDiscoveredForInstall(
     explicitTarget,
   });
 
-  const { canonical: discovered, implicitPick: sliceImplicitPick } = await discoverFromContentRoot(
-    prep.discoveryRoot,
-  );
+  const {
+    canonical: discovered,
+    implicitPick: sliceImplicitPick,
+    cleanup: sliceCleanup,
+  } = await discoverFromContentRoot(prep.discoveryRoot, parseOpts);
+
+  // Merge any slice-level staging cleanup (target-mapper tmpdirs) into
+  // `prep.cleanup` so `runSinglePackInstall`'s `finally` runs both. The
+  // prep cleanup may not exist (no native staging happened); the slice
+  // cleanup is always present even when a no-op.
+  const prepCleanup = prep.cleanup;
+  const mergedCleanup = async (): Promise<void> => {
+    await Promise.allSettled([sliceCleanup(), ...(prepCleanup ? [prepCleanup()] : [])]);
+  };
+  const prepWithSliceCleanup = { ...prep, cleanup: mergedCleanup };
 
   const implicitPick = sliceImplicitPick ?? prep.implicitPick;
   const narrowed = narrowDiscoveredForInstallScope(discovered, {
@@ -36,5 +50,5 @@ export async function resolveDiscoveredForInstall(
   });
   const discoveredFeatures = featuresFromCanonical(narrowed);
 
-  return { prep, discovered, implicitPick, narrowed, discoveredFeatures };
+  return { prep: prepWithSliceCleanup, discovered, implicitPick, narrowed, discoveredFeatures };
 }

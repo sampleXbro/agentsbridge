@@ -3,10 +3,31 @@
  *
  * Every target that stores skills in its own `skillsDir` mirrors them into
  * `.agents/skills/` so that the canonical reference chain and cross-tool skill
- * consumers always see a consistent location.  The mirror is suppressed when
- * codex-cli is active because codex-cli owns `.agents/skills/` natively and
- * would create conflicts.
+ * consumers always see a consistent location. The mirror is suppressed when a
+ * target that writes to `.agents/skills/` natively is active, otherwise mirrors
+ * collide with the native target's per-target rewritten content.
  */
+
+/**
+ * Target IDs whose project-scope `skillDir` is `.agents/skills`, meaning they
+ * write skills there natively. Mirroring another target's skills into that
+ * same path while one of these is active produces a content collision.
+ *
+ * This list is enforced to match `BUILTIN_TARGETS` by a unit test
+ * (`tests/unit/targets/catalog/skill-mirror.test.ts`). It cannot be derived
+ * here at module load because that would create an ESM cycle:
+ * `skill-mirror -> builtin-targets -> <each target> -> skill-mirror`.
+ *
+ * To add a target: set `descriptor.project.skillDir = '.agents/skills'` AND
+ * append its ID below. The drift test will fail if the two get out of sync.
+ */
+const NATIVE_AGENTS_SKILL_WRITERS: readonly string[] = [
+  'amp',
+  'antigravity',
+  'codex-cli',
+  'goose',
+  'replit-agent',
+];
 
 /**
  * Mirror a skill path from a target-specific dir to `.agents/skills/`.
@@ -21,8 +42,12 @@ export function mirrorSkillsToAgents(
   skillsDir: string,
   activeTargets: readonly string[],
 ): string | null {
-  if (path.startsWith(`${skillsDir}/`) && !activeTargets.includes('codex-cli')) {
+  const hasNativeWriter = activeTargets.some((id) => NATIVE_AGENTS_SKILL_WRITERS.includes(id));
+  if (path.startsWith(`${skillsDir}/`) && !hasNativeWriter) {
     return `.agents/skills/${path.slice(skillsDir.length + 1)}`;
   }
   return null;
 }
+
+/** Exposed for the drift test only. Do not consume in production code. */
+export const _NATIVE_AGENTS_SKILL_WRITERS_FOR_TEST: readonly string[] = NATIVE_AGENTS_SKILL_WRITERS;

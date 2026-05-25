@@ -1,5 +1,10 @@
-import { describe, it, expect } from 'vitest';
-import { parseFrontmatter, serializeFrontmatter } from '../../../src/utils/text/markdown.js';
+import { describe, it, expect, vi } from 'vitest';
+import {
+  parseFrontmatter,
+  parseFrontmatterForPath,
+  serializeFrontmatter,
+  tryParseFrontmatter,
+} from '../../../src/utils/text/markdown.js';
 
 describe('parseFrontmatter', () => {
   it('parses YAML frontmatter + body', () => {
@@ -88,6 +93,69 @@ x: 1
 `;
     const result = parseFrontmatter(input);
     expect(result.body).toBe('Body');
+  });
+});
+
+describe('tryParseFrontmatter', () => {
+  it('returns ok=true with parsed content on valid frontmatter', () => {
+    const result = tryParseFrontmatter('---\ndescription: ok\n---\nbody', '/x.md');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.frontmatter.description).toBe('ok');
+      expect(result.value.body).toBe('body');
+    }
+  });
+
+  it('returns ok=true with empty frontmatter when content has none', () => {
+    const result = tryParseFrontmatter('# Just body', '/x.md');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.frontmatter).toEqual({});
+    }
+  });
+
+  it('returns ok=false with the underlying error on malformed YAML', () => {
+    // Mirrors qdhenry/Claude-Command-Suite: multi-bracket sequence on one line.
+    const bad = '---\nargument-hint: [path/to/video.mp4] [interval] [output-dir]\n---\nbody';
+    const result = tryParseFrontmatter(bad, '/cmd/x.md');
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toBeInstanceOf(Error);
+      // The path is folded into the message for parity with parseFrontmatterForPath.
+      expect(result.error.message).toContain('/cmd/x.md');
+      // Body fallback skips the broken frontmatter block.
+      expect(result.bodyFallback).toBe('body');
+    }
+  });
+});
+
+// Mirrors the qdhenry/Claude-Command-Suite breakage: multi-bracket sequence
+// trips a YAML flow-seq-start error after the first `[foo]` parses.
+const BAD_FRONTMATTER =
+  '---\nargument-hint: [path/to/video.mp4] [interval] [output-dir]\n---\nbody';
+
+describe('parseFrontmatterForPath lenient mode', () => {
+  it('throws when no onError callback is provided (strict default)', () => {
+    expect(() => parseFrontmatterForPath(BAD_FRONTMATTER, '/strict.md')).toThrow(
+      /Failed to parse frontmatter in \/strict\.md/,
+    );
+  });
+
+  it('invokes onError and returns empty frontmatter when callback is provided', () => {
+    const onError = vi.fn();
+    const result = parseFrontmatterForPath(BAD_FRONTMATTER, '/lenient.md', onError);
+    expect(onError).toHaveBeenCalledOnce();
+    const [err, path] = onError.mock.calls[0] as [Error, string];
+    expect(err).toBeInstanceOf(Error);
+    expect(path).toBe('/lenient.md');
+    expect(result.frontmatter).toEqual({});
+    expect(result.body).toBe('body');
+  });
+
+  it('does not invoke onError on successful parse', () => {
+    const onError = vi.fn();
+    parseFrontmatterForPath('---\nx: 1\n---\nbody', '/ok.md', onError);
+    expect(onError).not.toHaveBeenCalled();
   });
 });
 

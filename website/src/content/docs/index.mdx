@@ -30,7 +30,7 @@ import SoftwareApplicationJsonLd from '../../components/SoftwareApplicationJsonL
 <section class="am-homepage-catalog" aria-labelledby="community-catalog">
   <h2 id="community-catalog">Community catalog</h2>
 
-  <div class="am-homepage-catalog-intro">Install shared skills, agents, and commands from GitHub, GitLab, git URLs, or local paths. Packs live in <code>.agentsmesh/packs/</code>, are tracked in <code>.agentsmesh/installs.yaml</code>, and merge with local canonical config during generation.</div>
+  <div class="am-homepage-catalog-intro">Install shared skills, agents, and commands from GitHub, GitLab, git URLs, or local paths with <code>agentsmesh install &lt;source&gt;</code>; list inventory with <code>agentsmesh installs list</code>; remove with <code>agentsmesh uninstall &lt;name&gt;</code>. Packs live in <code>.agentsmesh/packs/</code>, are tracked in <code>.agentsmesh/installs.yaml</code>, and merge with local canonical config during generation. The classifier auto-detects Anthropic-style skill packs and imports skills, agents, references, and per-target commands in one command — see the <a href="./guides/installing-skill-packs/">skill-pack guide</a>.</div>
 
   <CatalogExplorer />
 </section>

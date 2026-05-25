@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { loadCanonicalSliceAtPath } from '../../../src/canonical/load/load-canonical-slice.js';
 
@@ -19,7 +19,7 @@ describe('load-canonical-slice (load path)', () => {
   it('empty .agentsmesh yields empty canonical (no throw)', async () => {
     const proj = join(ROOT, 'empty-ab');
     mkdirSync(join(proj, '.agentsmesh'), { recursive: true });
-    const c = await loadCanonicalSliceAtPath(proj);
+    const { canonical: c } = await loadCanonicalSliceAtPath(proj);
     expect(c.rules.length).toBe(0);
     expect(c.skills.length).toBe(0);
   });
@@ -28,7 +28,7 @@ describe('load-canonical-slice (load path)', () => {
     const proj = join(ROOT, 'ext');
     mkdirSync(join(proj, 'rules'), { recursive: true });
     writeFileSync(join(proj, 'rules', 'a.md'), '---\ndescription: d\n---\n# A\n');
-    const c = await loadCanonicalSliceAtPath(proj);
+    const { canonical: c } = await loadCanonicalSliceAtPath(proj);
     expect(c.rules.length).toBe(1);
     expect(c.skills.length).toBe(0);
   });
@@ -37,7 +37,7 @@ describe('load-canonical-slice (load path)', () => {
     const rules = join(ROOT, 'rules');
     mkdirSync(rules);
     writeFileSync(join(rules, 'b.md'), '---\ndescription: d\n---\n');
-    const c = await loadCanonicalSliceAtPath(rules);
+    const { canonical: c } = await loadCanonicalSliceAtPath(rules);
     expect(c.rules.length).toBe(1);
   });
 
@@ -47,21 +47,23 @@ describe('load-canonical-slice (load path)', () => {
     writeFileSync(join(proj, '.agentsmesh', 'rules', '_root.md'), '---\nroot: true\n---\n');
     mkdirSync(join(proj, 'rules'));
     writeFileSync(join(proj, 'rules', 'orphan.md'), '---\ndescription: d\n---\n');
-    const c = await loadCanonicalSliceAtPath(proj);
+    const { canonical: c } = await loadCanonicalSliceAtPath(proj);
     expect(c.rules.some((r) => r.source.includes('.agentsmesh'))).toBe(true);
   });
 
   it('throws when nothing installable', async () => {
     const empty = join(ROOT, 'empty');
     mkdirSync(empty);
-    await expect(loadCanonicalSliceAtPath(empty)).rejects.toThrow('No installable resources');
+    await expect(loadCanonicalSliceAtPath(empty)).rejects.toThrow(
+      'Hint: pass --as commands|agents|rules|skills',
+    );
   });
 
   it('skill pack at slice root', async () => {
     const sk = join(ROOT, 'pack', 'demo');
     mkdirSync(sk, { recursive: true });
     writeFileSync(join(sk, 'SKILL.md'), '---\ndescription: d\n---\n# D\n');
-    const c = await loadCanonicalSliceAtPath(sk);
+    const { canonical: c } = await loadCanonicalSliceAtPath(sk);
     expect(c.skills.length).toBe(1);
     expect(c.skills[0]!.name).toBe('demo');
   });
@@ -70,7 +72,7 @@ describe('load-canonical-slice (load path)', () => {
     const proj = join(ROOT, 'cmd-only');
     mkdirSync(join(proj, 'commands'), { recursive: true });
     writeFileSync(join(proj, 'commands', 'x.md'), '---\ndescription: d\n---\n');
-    const c = await loadCanonicalSliceAtPath(proj);
+    const { canonical: c } = await loadCanonicalSliceAtPath(proj);
     expect(c.commands.map((x) => x.name)).toEqual(['x']);
     expect(c.rules.length).toBe(0);
   });
@@ -79,7 +81,7 @@ describe('load-canonical-slice (load path)', () => {
     const proj = join(ROOT, 'ag-only');
     mkdirSync(join(proj, 'agents'), { recursive: true });
     writeFileSync(join(proj, 'agents', 'bot.md'), '---\ndescription: d\n---\n');
-    const c = await loadCanonicalSliceAtPath(proj);
+    const { canonical: c } = await loadCanonicalSliceAtPath(proj);
     expect(c.agents.map((x) => x.name)).toEqual(['bot']);
   });
 
@@ -89,9 +91,28 @@ describe('load-canonical-slice (load path)', () => {
     mkdirSync(join(proj, 'commands'), { recursive: true });
     writeFileSync(join(proj, 'rules', 'r.md'), '---\ndescription: d\n---\n');
     writeFileSync(join(proj, 'commands', 'c.md'), '---\ndescription: d\n---\n');
-    const c = await loadCanonicalSliceAtPath(proj);
+    const { canonical: c } = await loadCanonicalSliceAtPath(proj);
     expect(c.rules.length).toBe(1);
     expect(c.commands.length).toBe(1);
+  });
+
+  it('ignores repo boilerplate (README/LICENSE/CONTRIBUTING/SECURITY) in agents/, commands/, rules/', async () => {
+    const proj = join(ROOT, 'boiler');
+    mkdirSync(join(proj, 'agents'), { recursive: true });
+    mkdirSync(join(proj, 'commands'), { recursive: true });
+    mkdirSync(join(proj, 'rules'), { recursive: true });
+    const stub = '---\ndescription: d\n---\n';
+    writeFileSync(join(proj, 'agents', 'README.md'), stub);
+    writeFileSync(join(proj, 'agents', 'real.md'), stub);
+    writeFileSync(join(proj, 'commands', 'CONTRIBUTING.md'), stub);
+    writeFileSync(join(proj, 'commands', 'do.md'), stub);
+    writeFileSync(join(proj, 'rules', 'LICENSE.md'), stub);
+    writeFileSync(join(proj, 'rules', 'SECURITY.md'), stub);
+    writeFileSync(join(proj, 'rules', 'guideline.md'), stub);
+    const { canonical: c } = await loadCanonicalSliceAtPath(proj);
+    expect(c.agents.map((x) => x.name)).toEqual(['real']);
+    expect(c.commands.map((x) => x.name)).toEqual(['do']);
+    expect(c.rules.map((x) => basename(x.source))).toEqual(['guideline.md']);
   });
 
   it('merges rules and nested skills/ skill pack', async () => {
@@ -100,7 +121,7 @@ describe('load-canonical-slice (load path)', () => {
     writeFileSync(join(proj, 'rules', 'z.md'), '---\ndescription: d\n---\n');
     mkdirSync(join(proj, 'skills', 's1'), { recursive: true });
     writeFileSync(join(proj, 'skills', 's1', 'SKILL.md'), '---\ndescription: d\n---\n');
-    const c = await loadCanonicalSliceAtPath(proj);
+    const { canonical: c } = await loadCanonicalSliceAtPath(proj);
     expect(c.rules.length).toBe(1);
     expect(c.skills.length).toBe(1);
     expect(c.skills[0]!.name).toBe('s1');

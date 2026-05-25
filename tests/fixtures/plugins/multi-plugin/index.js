@@ -19,6 +19,12 @@ const baseCaps = {
 function makeDescriptor(id) {
   return {
     id,
+    metadata: {
+      displayName: id,
+      category: 'cli',
+      officialUrl: 'https://example.test/',
+      shortDescription: `Multi-plugin descriptor ${id}`,
+    },
     generators: {
       name: id,
       generateRules() { return [{ path: `${id}.md`, content: `# ${id}` }]; },

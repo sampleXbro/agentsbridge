@@ -123,4 +123,41 @@ Run QA.
     fileExists(join(dir, 'AGENTS.md'));
     fileContains(join(dir, 'AGENTS.md'), 'skills/post-feature-qa/');
   });
+
+  it('does not collide on .agents/skills when amp and gemini-cli are generated together', async () => {
+    dir = createTestProject();
+    mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
+    mkdirSync(join(dir, '.agentsmesh', 'skills', 'pdf'), { recursive: true });
+    writeFileSync(
+      join(dir, 'agentsmesh.yaml'),
+      `version: 1
+targets: [amp, gemini-cli]
+features: [rules, skills]
+`,
+    );
+    writeFileSync(
+      join(dir, '.agentsmesh', 'rules', '_root.md'),
+      `---
+root: true
+description: Shared root
+---
+# Shared root
+`,
+    );
+    writeFileSync(
+      join(dir, '.agentsmesh', 'skills', 'pdf', 'SKILL.md'),
+      `---
+description: PDF helper
+---
+Use [forms](forms.md).
+`,
+    );
+    writeFileSync(join(dir, '.agentsmesh', 'skills', 'pdf', 'forms.md'), '# Forms\n');
+
+    const result = await runCli('generate', dir);
+
+    expect(result.exitCode, result.stderr).toBe(0);
+    fileExists(join(dir, '.agents', 'skills', 'pdf', 'forms.md'));
+    fileExists(join(dir, '.gemini', 'skills', 'pdf', 'forms.md'));
+  });
 });

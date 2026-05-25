@@ -81,7 +81,8 @@ export const COMMANDS: HelpCommand[] = [
   {
     name: 'install',
     usage: 'agentsmesh install <source> [flags]',
-    description: 'Install canonical resources from local/remote sources',
+    description:
+      'Install rules/commands/agents/skills from a local path or remote repo. Auto-classifies anthropic-skill-pack / canonical-agentsmesh / tool-native sources. When auto-detection is ambiguous or refuses a non-standard layout, override with: --path <dir> to narrow scope, --as <kind> to force a flat collection (rules|commands|agents|skills), --target <id> to lock the native importer, or --all to install every sub-pack of a marketplace.',
     flags: [
       {
         name: '<source>',
@@ -117,9 +118,49 @@ export const COMMANDS: HelpCommand[] = [
         description: 'Install into ~/.agentsmesh/ and regenerate user-level config',
       },
       {
+        name: '--all',
+        description: 'Install every sub-pack from a marketplace source',
+      },
+      {
         name: '--force',
         description:
           'Non-interactive mode; include invalid resources and skip selection prompts (implied by --json)',
+      },
+    ],
+  },
+  {
+    name: 'installs',
+    usage: 'agentsmesh installs <subcommand> [flags]',
+    description: 'Read-only inventory of installed packs (subcommands: list)',
+    flags: [
+      { name: 'list', description: 'List installed packs (NAME, SOURCE, FEATURES, INSTALLED)' },
+      { name: '--global', description: 'Read from ~/.agentsmesh/installs.yaml' },
+    ],
+  },
+  {
+    name: 'uninstall',
+    usage: 'agentsmesh uninstall <name>[,<name>...] [flags]',
+    description: 'Remove an installed pack; cleans installs.yaml, extends, and generated outputs',
+    flags: [
+      {
+        name: '<name>',
+        description: 'Install entry name from installs.yaml (comma-separated for batch)',
+      },
+      { name: '--all', description: 'Remove every installed pack in this scope' },
+      {
+        name: '--keep-pack',
+        description: 'Keep .agentsmesh/packs/<name>/ on disk; only drop yaml/extends entries',
+      },
+      {
+        name: '--keep-generated',
+        description: 'Skip the post-uninstall generate pass; warn about stale target files',
+      },
+      { name: '--global', description: 'Uninstall from ~/.agentsmesh/' },
+      { name: '--dry-run', description: 'Preview removal plan; no writes' },
+      {
+        name: '--force',
+        description:
+          'Non-interactive mode; accept all prompts (delete-anyway on modifications). Implied by --json.',
       },
     ],
   },

@@ -68,4 +68,3 @@ export const GEMINI_GLOBAL_SETTINGS = '.gemini/settings.json';
 export const GEMINI_GLOBAL_COMMANDS_DIR = '.gemini/commands';
 export const GEMINI_GLOBAL_SKILLS_DIR = '.gemini/skills';
 export const GEMINI_GLOBAL_AGENTS_DIR = '.gemini/agents';
-export const GEMINI_GLOBAL_AGENTS_SKILLS_DIR = '.agents/skills';

@@ -8,6 +8,7 @@ import {
   resolveProjectPath,
 } from './link-rebaser-helpers.js';
 import { collectPlannedPaths } from './rewriter.js';
+import { logger } from '../../utils/output/logger.js';
 
 const INLINE_MD_LINK = /!?\[[^\]]*\]\(([^)]+)\)/g;
 const REF_LINK_DEF = /^\s*\[[^\]\n]+\]:\s*(?:<([^>\n]*)>|(\S+))/gm;
@@ -32,7 +33,7 @@ export function parseMarkdownLinkDestination(raw: string): string {
   return s;
 }
 
-function shouldSkipLocalValidation(pathPart: string): boolean {
+function shouldSkipLocalValidation(pathPart: string, projectRoot: string): boolean {
   const t = pathPart.trim();
   if (!t) return true;
   if (t.startsWith('#')) return true;
@@ -43,7 +44,116 @@ function shouldSkipLocalValidation(pathPart: string): boolean {
   if (/^ftp:/i.test(t)) return true;
   if (/^[a-zA-Z]:[\\/]/.test(t)) return false;
   if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(t)) return true;
+  // R-1: absolute-rooted paths that don't fall under the project tree are
+  // URL paths (e.g. `/en/docs/agents-and-tools/...`), not filesystem refs.
+  // Project-rooted absolutes (e.g. `/proj/.agentsmesh/...`) keep going so the
+  // existing strict check for misformed in-project absolutes still applies.
+  if (t.startsWith('/')) {
+    const normalizedRoot = normalizeForProject(projectRoot, projectRoot);
+    const normalizedAbs = normalizeForProject(projectRoot, t);
+    if (!normalizedAbs.startsWith(`${normalizedRoot}/`) && normalizedAbs !== normalizedRoot) {
+      return true;
+    }
+  }
   return false;
+}
+
+/**
+ * R-4: a generated output that lives under `<tool-dir>/skills/<name>/...` is
+ * third-party skill content (materialized from an install pack). Broken
+ * sibling-reference links inside that subtree are advisory warnings, not
+ * generate-blocking errors — the consumer has no way to fix upstream content.
+ */
+function isSkillGeneratedOutput(relativePath: string): boolean {
+  return /(?:^|\/)[^/]+\/skills\/[^/]+\//.test(relativePath);
+}
+
+/**
+ * Extract a canonical `<feature>/<name>` key from a generated output path.
+ * Returns null when the path doesn't match `<tool-dir>/<feature-dir>/<name>...`.
+ *
+ * Recognized feature directories (per-target naming variation):
+ *   - rules     ← `.<tool>/rules`, `.cursor/rules` (`.mdc`), `.kiro/steering`
+ *   - commands  ← `.<tool>/commands`
+ *   - agents    ← `.<tool>/agents`
+ *   - skills    ← `.<tool>/skills/<name>/...`
+ *
+ * Examples:
+ *   `.claude/rules/code-review.md`         → `rules/code-review`
+ *   `.cursor/rules/typescript.mdc`         → `rules/typescript`
+ *   `.kiro/steering/code-review.md`        → `rules/code-review`
+ *   `.cursor/agents/reviewer.md`           → `agents/reviewer`
+ *   `.claude/commands/foo.md`              → `commands/foo`
+ *   `.claude/skills/foo/SKILL.md`          → `skills/foo`
+ *   `.claude/skills/foo/references/x.md`   → `skills/foo`
+ */
+const OUTPUT_DIR_TO_FEATURE: Record<string, string> = {
+  rules: 'rules',
+  steering: 'rules',
+  commands: 'commands',
+  agents: 'agents',
+  skills: 'skills',
+  // factory-droid: native agent definitions land in `.factory/droids/<name>.md`.
+  // Treat the directory as the agents feature so pack-originated key matching
+  // recognizes those outputs and downgrades broken links to advisory warnings.
+  droids: 'agents',
+  // copilot project layout: rules emit per-glob into `.github/instructions/`,
+  // commands into `.github/prompts/`. Map both to their canonical features so
+  // pack-originated outputs from those dirs match the same keys as their
+  // canonical counterparts.
+  instructions: 'rules',
+  prompts: 'commands',
+};
+
+/**
+ * Target-specific top-level rule dirs that are themselves the "rules" output
+ * (no per-feature subdirectory). Each entry maps the leading directory of the
+ * generated output path to a canonical feature.
+ *
+ * Examples:
+ *   `.clinerules/code-review.md` → rules/code-review
+ */
+const TOP_LEVEL_DIR_TO_FEATURE: Record<string, string> = {
+  '.clinerules': 'rules',
+};
+
+/**
+ * Target-specific double-extensions that wrap a canonical entity name.
+ * Copilot agents emit as `<name>.agent.md`, rules as `<name>.instructions.md`,
+ * commands as `<name>.prompt.md`. Strip the suffix before keying so the result
+ * matches the canonical `<feature>/<name>` form used in pack-originated key sets.
+ */
+const COMPOUND_MARKDOWN_SUFFIXES = ['.agent.md', '.instructions.md', '.prompt.md'] as const;
+
+function stripMarkdownExt(name: string): string {
+  for (const suffix of COMPOUND_MARKDOWN_SUFFIXES) {
+    if (name.endsWith(suffix)) return name.slice(0, -suffix.length);
+  }
+  if (name.endsWith('.mdc')) return name.slice(0, -4);
+  if (name.endsWith('.md')) return name.slice(0, -3);
+  return name;
+}
+
+function canonicalKeyFromOutputPath(relativePath: string): string | null {
+  // <tool-dir>/<feature-dir>/<name>...
+  const m = /^[^/]+\/([^/]+)\/([^/]+)/.exec(relativePath);
+  if (m) {
+    const feature = OUTPUT_DIR_TO_FEATURE[m[1] ?? ''];
+    if (feature) {
+      let name = m[2] ?? '';
+      if (feature !== 'skills') name = stripMarkdownExt(name);
+      return `${feature}/${name}`;
+    }
+  }
+  // <top-level-rule-dir>/<name>... (e.g. .clinerules/<name>.md)
+  const m2 = /^([^/]+)\/([^/]+)/.exec(relativePath);
+  if (m2) {
+    const feature = TOP_LEVEL_DIR_TO_FEATURE[m2[1] ?? ''];
+    if (feature) {
+      return `${feature}/${stripMarkdownExt(m2[2] ?? '')}`;
+    }
+  }
+  return null;
 }
 
 function pathExistsForGenerate(absolutePath: string, planned: ReadonlySet<string>): boolean {
@@ -78,7 +188,7 @@ export function resolveMarkdownLinkTargets(
     decoded = pathPart;
   }
 
-  if (shouldSkipLocalValidation(decoded)) return [];
+  if (shouldSkipLocalValidation(decoded, projectRoot)) return [];
 
   let candidates = resolveProjectPath(decoded, projectRoot, destinationFileAbs);
   if (candidates.length === 0) {
@@ -158,11 +268,37 @@ export function findBrokenMarkdownLinks(
 export function validateGeneratedMarkdownLinks(
   results: GenerateResult[],
   projectRoot: string,
+  options: { packOriginatedKeys?: ReadonlySet<string> } = {},
 ): void {
   const broken = findBrokenMarkdownLinks(results, projectRoot);
   if (broken.length === 0) return;
 
-  const lines = broken.map(
+  const packKeys = options.packOriginatedKeys;
+  const errors: BrokenMarkdownLink[] = [];
+  const warnings: BrokenMarkdownLink[] = [];
+  for (const b of broken) {
+    const key = canonicalKeyFromOutputPath(b.generatePath);
+    const isPackOriginated = packKeys !== undefined && key !== null && packKeys.has(key);
+    if (isSkillGeneratedOutput(b.generatePath) || isPackOriginated) {
+      warnings.push(b);
+    } else {
+      errors.push(b);
+    }
+  }
+
+  if (warnings.length > 0) {
+    const lines = warnings.map(
+      (b) => `  ${b.generatePath} (${b.target}): "${b.rawLink}" → not found`,
+    );
+    logger.warn(
+      `Third-party content contains ${warnings.length} broken local link${warnings.length === 1 ? '' : 's'} (warning only; ` +
+        `outputs from installed packs and skill subtrees are treated as advisory):\n${lines.join('\n')}`,
+    );
+  }
+
+  if (errors.length === 0) return;
+
+  const lines = errors.map(
     (b) =>
       `  ${b.generatePath} (${b.target}): "${b.rawLink}" → not found (tried: ${b.checkedPaths.join(', ')})`,
   );

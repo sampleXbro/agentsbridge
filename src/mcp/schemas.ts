@@ -71,8 +71,6 @@ export const McpServerInputSchema = z
   })
   .strict();
 
-export type McpServerInput = z.infer<typeof McpServerInputSchema>;
-
 const HookCallable = z
   .object({
     type: z.enum(['command', 'prompt']).optional(),
@@ -118,8 +116,6 @@ export const HooksRecordSchema = z.record(
   z.string().min(1).max(64),
   z.array(HookEntryInputSchema).max(MAX_HOOK_ENTRIES_PER_EVENT),
 );
-
-export type HooksRecordInput = z.infer<typeof HooksRecordSchema>;
 
 const PermissionPattern = z
   .string()

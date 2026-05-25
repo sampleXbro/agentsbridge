@@ -19,20 +19,8 @@ export const RESERVED_SKILL_PATTERNS = [
 ] as const;
 
 /**
- * Reserved directory names that should be excluded from skill imports.
- */
-export const RESERVED_SKILL_DIRS = ['node_modules', '.git', 'dist', 'coverage'] as const;
-
-/**
  * Check if a filename matches any reserved pattern.
  */
 export function isReservedArtifactName(name: string): boolean {
   return RESERVED_SKILL_PATTERNS.some((pattern) => pattern.test(name));
-}
-
-/**
- * Check if a directory name is reserved.
- */
-export function isReservedDirectory(name: string): boolean {
-  return RESERVED_SKILL_DIRS.includes(name as never);
 }

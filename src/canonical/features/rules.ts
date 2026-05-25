@@ -5,8 +5,22 @@
 import { basename } from 'node:path';
 import type { CanonicalRule } from '../../core/types.js';
 import { readFileSafe, readDirRecursive } from '../../utils/filesystem/fs.js';
-import { parseFrontmatter } from '../../utils/text/markdown.js';
+import { parseOrSkipFrontmatter } from '../../utils/text/markdown.js';
 import { assertCanonicalName } from './validate-name.js';
+import {
+  warnIfUnrecognizedResourceFormats,
+  type UnrecognizedFormatsWarningOptions,
+} from './unrecognized-files-warning.js';
+
+export interface ParseFrontmatterOptions extends UnrecognizedFormatsWarningOptions {
+  /**
+   * When supplied, frontmatter parse failures invoke the callback and the
+   * offending file is skipped instead of aborting the whole parse. Used by
+   * the install path to keep the run going through third-party content with
+   * malformed YAML. Strict callers (`generate`/`lint`/`check`) leave it unset.
+   */
+  onParseError?: (err: Error, filePath: string) => void;
+}
 
 const VALID_TRIGGERS = ['always_on', 'model_decision', 'glob', 'manual'] as const;
 type Trigger = (typeof VALID_TRIGGERS)[number];
@@ -27,18 +41,26 @@ function toStrArray(v: unknown): string[] {
  * @param rulesDir - Absolute path to .agentsmesh/rules
  * @returns Array of parsed CanonicalRule, or [] if dir missing/empty
  */
-export async function parseRules(rulesDir: string): Promise<CanonicalRule[]> {
+export async function parseRules(
+  rulesDir: string,
+  opts: ParseFrontmatterOptions = {},
+): Promise<CanonicalRule[]> {
   const files = await readDirRecursive(rulesDir);
   const mdFiles = files.filter((f) => {
     if (!f.endsWith('.md')) return false;
     const name = basename(f, '.md');
     return name === '_root' || !name.startsWith('_');
   });
+  warnIfUnrecognizedResourceFormats('rules', rulesDir, files, mdFiles, {
+    handledByOtherReader: opts.handledByOtherReader,
+  });
   const rules: CanonicalRule[] = [];
   for (const path of mdFiles) {
     const content = await readFileSafe(path);
     if (!content) continue;
-    const { frontmatter, body } = parseFrontmatter(content);
+    const parsed = parseOrSkipFrontmatter(content, path, opts.onParseError);
+    if (!parsed) continue;
+    const { frontmatter, body } = parsed;
     const name = basename(path, '.md');
     assertCanonicalName('rule', name);
     const rootFromFilename = name === '_root';

@@ -7,6 +7,12 @@ import { z } from 'zod';
 
 // ─── permissions.yaml ─────────────────────────────────────────────────────────
 
+// All `.default(...)` fields below are post-processed by
+// `stripRequiredFromDefaults()` in `src/schemas/schema-generator.ts` so the
+// emitted JSON Schema marks them as not required (editors don't complain
+// about minimal configs). Runtime parser still substitutes the documented
+// default when the user omits the field; the inferred TS type stays `T`,
+// never `T | undefined`.
 export const permissionsSchema = z
   .object({
     allow: z.array(z.string()).default([]).describe('Tool calls to allow without confirmation'),
@@ -66,6 +72,7 @@ export const mcpConfigSchema = z
     mcpServers: z
       .record(z.string(), mcpServerSchema)
       .default({})
+      .optional()
       .describe('Map of server name to server configuration'),
   })
   .describe('MCP server configuration (.agentsmesh/mcp.json)');

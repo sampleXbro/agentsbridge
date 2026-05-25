@@ -112,7 +112,12 @@ AGENTSMESH_STRICT_PLUGINS=1 agentsmesh generate    # all plugins must load
 
 When either switch is set, AgentsMesh collects every failed-load message and throws a single combined error. Use it in CI release jobs to catch plugin regressions before a published artifact is built without expected target output.
 
-A descriptor is valid if every `native` / `embedded` / `partial` capability has a matching generator on `descriptor.generators`, or `emitScopedSettings` for settings-backed features (hooks, permissions, ignore patterns).
+A descriptor is valid if:
+
+- A `metadata` block is present with `displayName`, `category` (`'cli' | 'ide' | 'agent-platform'`), `officialUrl`, and `shortDescription`. **Plugins built before this requirement landed will need to add this block.**
+- Every `native` / `embedded` / `partial` capability has a matching generator on `descriptor.generators`, or `emitScopedSettings` for settings-backed features (hooks, permissions, ignore patterns).
+- `id` matches `^[a-z][a-z0-9-]*$`.
+- No legacy global keys (`global`, `globalCapabilities`, `globalDetectionPaths`, `generateScopeExtras`) are present; use the `globalSupport` block instead.
 
 <Aside type="tip">
   To build a plugin from scratch, see the [Building Plugins guide](../../guides/building-plugins/). To scaffold a new built-in target instead, see [`agentsmesh target`](../target/).

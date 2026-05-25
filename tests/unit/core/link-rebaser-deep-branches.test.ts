@@ -393,11 +393,25 @@ describe('link-token-context — deep branches', () => {
     expect(shouldRewritePathToken(content, 1, 7, 'foo.md', false)).toBe(false);
   });
 
-  it('shouldRewritePathToken: ( ... ) with explicit hash, ?, or whitespace returns true', () => {
-    expect(shouldRewritePathToken('(foo.md#anchor)', 1, 7, 'foo.md', false)).toBe(true);
-    expect(shouldRewritePathToken('(foo.md?q=1)', 1, 7, 'foo.md', false)).toBe(true);
-    expect(shouldRewritePathToken('(foo.md ', 1, 7, 'foo.md', false)).toBe(true);
-    expect(shouldRewritePathToken('(foo.md\t', 1, 7, 'foo.md', false)).toBe(true);
+  it('shouldRewritePathToken: Markdown link `](foo.md…)` with hash, ?, or whitespace returns true', () => {
+    // Real Markdown link destinations require `](` immediately before the
+    // candidate. In `[x](foo.md…)` the `]` is at index 2, `(` at 3, the
+    // candidate `foo.md` starts at index 4 (length 6 → end index 10).
+    expect(shouldRewritePathToken('[x](foo.md#anchor)', 4, 10, 'foo.md', false)).toBe(true);
+    expect(shouldRewritePathToken('[x](foo.md?q=1)', 4, 10, 'foo.md', false)).toBe(true);
+    expect(shouldRewritePathToken('[x](foo.md ', 4, 10, 'foo.md', false)).toBe(true);
+    expect(shouldRewritePathToken('[x](foo.md\t', 4, 10, 'foo.md', false)).toBe(true);
+  });
+
+  it('shouldRewritePathToken: parenthesized prose `(foo.md ...)` without `](` prefix returns false', () => {
+    // Regression: previously the `(`-branch was unconditional and treated
+    // any token after a `(` as a link destination, so `(SPEC.md or
+    // equivalent)` in prose got rewritten to a canonical path. The
+    // classifier now requires `]` immediately before the `(` to call
+    // something a Markdown link destination.
+    expect(shouldRewritePathToken('(foo.md or equivalent)', 1, 7, 'foo.md', false)).toBe(false);
+    expect(shouldRewritePathToken('(foo.md#anchor)', 1, 7, 'foo.md', false)).toBe(false);
+    expect(shouldRewritePathToken('(foo.md)', 1, 7, 'foo.md', false)).toBe(false);
   });
 
   it('shouldRewritePathToken: bracket-label with rewriteBare=true bypasses duplicate-dest guard', () => {

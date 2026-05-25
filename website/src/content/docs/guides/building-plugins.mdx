@@ -57,6 +57,17 @@ Your plugin sits in the middle — it receives parsed canonical files and return
      // ---- Identity ----
      id: 'foo-ide',
 
+     // ---- User-facing metadata (required) ----
+     // Drives display names in `agentsmesh matrix`, the support-matrix doc,
+     // and any UI rendering that lists targets. Plugins missing `metadata`
+     // are rejected at load time.
+     metadata: {
+       displayName: 'Foo IDE',
+       category: 'ide',                       // 'cli' | 'ide' | 'agent-platform'
+       officialUrl: 'https://example.test/foo-ide',
+       shortDescription: 'Foo IDE — a fictional editor with native rule support.',
+     },
+
      // ---- Generation ----
      generators: {
        name: 'foo-ide',
@@ -98,7 +109,7 @@ Your plugin sits in the middle — it receives parsed canonical files and return
    };
    ```
 
-   Every non-`none` capability must have a matching generator. AgentsMesh validates this at load time with a Zod schema and warns if something is missing.
+   Every non-`none` capability must have a matching generator. The `metadata` block must be present (all four subfields are required). AgentsMesh validates this at load time with a Zod schema and warns (or hard-errors under `AGENTSMESH_STRICT_PLUGINS=1`) if something is missing.
 
    <Aside type="tip">
      Nine capability fields looks like a lot, but the explicit declaration lets AgentsMesh skip irrelevant generators, show accurate results in `agentsmesh matrix`, and validate that every advertised feature has an implementation.
@@ -369,6 +380,7 @@ AgentsMesh validates every plugin descriptor with a Zod schema at load time. Inv
 
 Common validation errors:
 - `id` must match `^[a-z][a-z0-9-]*$`
+- `metadata.displayName`, `metadata.category`, `metadata.officialUrl`, and `metadata.shortDescription` are all required; `category` must be one of `'cli' | 'ide' | 'agent-platform'`
 - `generators.generateRules` and `generators.importFrom` are required
 - Non-`none` capabilities must have their matching generator (or `emitScopedSettings` for settings-backed features)
 
@@ -570,6 +582,7 @@ mergeGeneratedOutputContent(existingContent, pendingContent, newContent, path) {
 | Field | Type | Purpose |
 |-------|------|---------|
 | `id` | `string` | Unique target ID (`^[a-z][a-z0-9-]*$`) |
+| `metadata` | `TargetMetadata` | User-facing metadata (`displayName`, `category: 'cli' \| 'ide' \| 'agent-platform'`, `officialUrl`, `shortDescription`). Drives matrix display and target lists |
 | `generators` | `TargetGenerators` | Feature generators (`generateRules`, `importFrom` required; others per capability) |
 | `capabilities` | `TargetCapabilities` | Support levels for all 9 features |
 | `emptyImportMessage` | `string` | Shown when `import --from` finds nothing |
@@ -584,6 +597,9 @@ mergeGeneratedOutputContent(existingContent, pendingContent, newContent, path) {
 |-------|------|---------|
 | `globalSupport` | `GlobalTargetSupport` | Global-scope support (capabilities, detection, layout, scopeExtras) |
 | `supportsConversion` | `{ commands?, agents? }` | Enables user-configurable feature projection |
+| `conversionDefaults` | `{ commandsToSkills?, agentsToSkills? }` | Built-in defaults for `commands_to_skills` / `agents_to_skills` projection. `undefined` falls back to caller-supplied default |
+| `excludeFromStarterInit` | `boolean` | When `true`, `agentsmesh init` skips this target in the default bulk starter scaffold; explicit `--target <id>` still works |
+| `preservesManualActivation` | `boolean` | When `true`, the target preserves manual-only activation semantics (e.g. Cursor's `alwaysApply: false`); other targets get a lint warning on `trigger: 'manual'` rules |
 | `importer` | `TargetImporterDescriptor` | Declarative importer for scan + map orchestration |
 | `lint` | `TargetLintHooks` | Per-feature lint hooks |
 | `sharedArtifacts` | `Record<string, 'owner' \| 'consumer'>` | Shared output path ownership |

@@ -19,6 +19,10 @@ import { runCheck } from './commands/check.js';
 import { runMerge } from './commands/merge.js';
 import { runInstall } from './commands/install.js';
 import { renderInstall } from './renderers/install.js';
+import { runUninstall } from './commands/uninstall.js';
+import { renderUninstall } from './renderers/uninstall.js';
+import { runInstalls } from './commands/installs.js';
+import { renderInstalls } from './renderers/installs.js';
 import { runPlugin } from './commands/plugin.js';
 import { renderPlugin } from './renderers/plugin.js';
 import { runTarget } from './commands/target.js';
@@ -96,6 +100,15 @@ export const cmdHandlers: Record<
     if (flags.json === true) flags.force = true;
     const result = await runInstall(flags, args, process.cwd());
     handleResult('install', result, flags, () => renderInstall(result));
+  },
+  uninstall: async (flags, args) => {
+    if (flags.json === true) flags.force = true;
+    const result = await runUninstall(flags, args, process.cwd());
+    handleResult('uninstall', result, flags, () => renderUninstall(result));
+  },
+  installs: async (flags, args) => {
+    const result = await runInstalls(flags, args, process.cwd());
+    handleResult('installs', result, flags, () => renderInstalls(result));
   },
   plugin: async (flags, args) => {
     const result = await runPlugin(flags, args, process.cwd());

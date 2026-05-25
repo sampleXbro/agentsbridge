@@ -64,7 +64,7 @@ const project: TargetLayout = {
   },
 };
 
-const global: TargetLayout = {
+const globalLayout: TargetLayout = {
   rootInstructionPath: CODEX_GLOBAL_AGENTS_MD,
   renderPrimaryRootInstruction: renderCodexGlobalInstructions,
   extraRuleOutputPaths(rule) {
@@ -148,7 +148,7 @@ export const descriptor = {
       '.codex/rules',
       '.agents/skills',
     ],
-    layout: global,
+    layout: globalLayout,
   },
   buildImportPaths: buildCodexCliImportPaths,
   sharedArtifacts: {
@@ -162,4 +162,6 @@ export const descriptor = {
     '.codex/agents',
     '.codex/rules',
   ],
+  excludeFromStarterInit: true,
+  conversionDefaults: { commandsToSkills: true, agentsToSkills: false },
 } satisfies TargetDescriptor;

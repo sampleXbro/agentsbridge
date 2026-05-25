@@ -15,6 +15,7 @@ const VALID_FEATURES = [
 /** Valid `extends[].target` / `agentsmesh install --target` identifiers */
 export const targetSchema = z.enum(TARGET_IDS);
 export const featureSchema = z.enum(VALID_FEATURES);
+export const installAsSchema = z.enum(['rules', 'commands', 'agents', 'skills']);
 
 /** Cherry-pick resource names within array features (extends.install + merge). */
 export const extendPickSchema = z
@@ -33,6 +34,7 @@ const extendSourceSchema = z.object({
   source: z.string(),
   version: z.string().optional(),
   target: targetSchema.optional(),
+  as: installAsSchema.optional(),
   features: z.array(featureSchema),
   /** Repo-relative POSIX path for discovery (skill packs, nested .agentsmesh). */
   path: z.string().optional(),
@@ -91,7 +93,17 @@ export const pluginEntrySchema = z
 
 export type PluginEntry = z.infer<typeof pluginEntrySchema>;
 
-/** Zod schema for agentsmesh.yaml config validation */
+/**
+ * Zod schema for `agentsmesh.yaml` config validation.
+ *
+ * Every field except `version` uses `.default(...)` so the runtime parser
+ * substitutes a documented value when the user omits the key. The published
+ * JSON Schema removes these from the top-level `required` array via
+ * `stripRequiredFromDefaults()` in `src/schemas/schema-generator.ts`, so
+ * editors don't complain about valid minimal configs (a `version: 1`-only
+ * file is allowed). Runtime parser typing stays `T` (not `T | undefined`) —
+ * the post-process fix lives at the publishing layer only.
+ */
 export const configSchema = z.object({
   version: z.literal(1),
   targets: z.array(targetSchema).default([...TARGET_IDS]),

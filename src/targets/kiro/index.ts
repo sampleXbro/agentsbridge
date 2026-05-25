@@ -69,7 +69,7 @@ const project: TargetLayout = {
   },
 };
 
-const global: TargetLayout = {
+const globalLayout: TargetLayout = {
   rootInstructionPath: KIRO_GLOBAL_STEERING_AGENTS_MD,
   skillDir: KIRO_GLOBAL_SKILLS_DIR,
   managedOutputs: {
@@ -173,7 +173,7 @@ export const descriptor = {
       KIRO_GLOBAL_MCP_FILE,
       KIRO_GLOBAL_IGNORE,
     ],
-    layout: global,
+    layout: globalLayout,
   },
   importer: {
     agents: {
@@ -208,4 +208,5 @@ export const descriptor = {
     KIRO_MCP_FILE,
     KIRO_IGNORE,
   ],
+  conversionDefaults: { commandsToSkills: true },
 } satisfies TargetDescriptor;

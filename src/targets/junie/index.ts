@@ -67,7 +67,7 @@ const project: TargetLayout = {
   },
 };
 
-const global: TargetLayout = {
+const globalLayout: TargetLayout = {
   rootInstructionPath: JUNIE_GLOBAL_AGENTS_MD,
   renderPrimaryRootInstruction: renderJunieGlobalInstructions,
   skillDir: JUNIE_GLOBAL_SKILLS_DIR,
@@ -170,7 +170,7 @@ export const descriptor = {
       JUNIE_GLOBAL_COMMANDS_DIR,
       JUNIE_GLOBAL_MCP_FILE,
     ],
-    layout: global,
+    layout: globalLayout,
   },
   importer: {
     rules: {

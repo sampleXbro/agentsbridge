@@ -38,10 +38,11 @@ export const TARGET_CATALOG: Record<BuiltinTargetId, TargetCatalogEntry> = Objec
   ]),
 ) as Record<BuiltinTargetId, TargetCatalogEntry>;
 
+/**
+ * Look up a builtin target by id. `BuiltinTargetId` is a closed union built
+ * from `BUILTIN_TARGETS`, so every value indexes a real entry — no runtime
+ * miss is reachable without a type-system escape hatch.
+ */
 export function getTargetCatalogEntry(id: BuiltinTargetId): TargetCatalogEntry {
-  const entry = TARGET_CATALOG[id];
-  if (!entry) {
-    throw new Error(`Unknown target: ${id}`);
-  }
-  return entry;
+  return TARGET_CATALOG[id];
 }

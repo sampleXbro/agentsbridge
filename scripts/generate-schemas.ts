@@ -17,6 +17,8 @@ const files: Record<string, string> = {
   'hooks.json': 'hooks',
   'mcp.json': 'mcp',
   'pack.json': 'pack',
+  'installs.json': 'installs',
+  'install-manifest.json': 'install-manifest',
 };
 
 for (const [filename, key] of Object.entries(files)) {

@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "installed_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "extends_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "source_type": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "anthropic-skill-pack",
+            "canonical-agentsmesh",
+            "tool-native",
+            "unknown"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "files": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^sha256:[0-9a-f]{64}$"
+      }
+    }
+  },
+  "required": [
+    "name",
+    "source",
+    "installed_at",
+    "extends_id",
+    "source_type",
+    "files"
+  ],
+  "additionalProperties": false,
+  "title": "agentsmesh-install-manifest.json",
+  "description": "Per-pack integrity manifest (.agentsmesh/packs/{name}/.agentsmesh-install-manifest.json) — install-time provenance + per-file sha256 map used by `uninstall` to detect locally-modified files before deleting."
+}

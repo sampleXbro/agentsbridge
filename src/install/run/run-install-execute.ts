@@ -1,8 +1,7 @@
 import type { ValidatedConfig } from '../../config/core/schema.js';
 import { loadCanonicalWithExtends } from '../../canonical/extends/extends.js';
 import { logger } from '../../utils/output/logger.js';
-import { runGenerate } from '../../cli/commands/generate.js';
-import { renderGenerate } from '../../cli/renderers/generate.js';
+import { runPostOperationGenerate } from './post-install-generate.js';
 import {
   hasInstallableResources,
   resolveAgentPool,
@@ -21,14 +20,16 @@ import { ruleSlug } from '../core/validate-resources.js';
 import { writeInstallAsExtend } from '../core/install-extend-entry.js';
 import { installAsPack } from './run-install-pack.js';
 import { selectInstallEntryName } from '../core/install-name.js';
+import { readInstallManifest } from '../core/install-manifest.js';
+import { pickReuseEntryName } from '../core/pick-reuse-entry-name.js';
 import { applyReplayInstallScope, type InstallReplayScope } from './install-replay.js';
 import { buildInstalledList, buildSkippedList } from './run-install-result.js';
 import type { ParsedInstallSource } from '../source/parse-install-source.js';
 import type { ManualInstallPersistence } from '../manual/manual-install-persistence.js';
 import type { ManualInstallAs } from '../manual/manual-install-mode.js';
-import type { PrepareInstallDiscoveryResult } from '../core/prepare-install-discovery.js';
 import type { ExtendPick } from '../../config/core/schema.js';
 import type { CanonicalFiles } from '../../core/types.js';
+import type { InstallDiscoveryPrep } from '../core/install-discovery.js';
 
 export interface RunInstallExecuteArgs {
   scope: 'global' | 'project';
@@ -44,12 +45,16 @@ export interface RunInstallExecuteArgs {
   sourceForYaml: string;
   version: string | undefined;
   pathInRepo: string;
+  /** Upstream source root; forwarded to the pack writer for preserved-file harvesting. */
+  contentRoot: string;
   persisted: ManualInstallPersistence;
   replay?: InstallReplayScope;
-  prep: PrepareInstallDiscoveryResult;
+  prep: InstallDiscoveryPrep;
   implicitPick: ExtendPick | undefined;
   narrowed: CanonicalFiles;
   discoveredFeatures: string[];
+  /** Classifier verdict (e.g. `anthropic-skill-pack`); recorded in install manifest. */
+  sourceType?: string;
 }
 
 export interface InstallExecuteResult {
@@ -60,27 +65,10 @@ export interface InstallExecuteResult {
 export async function executeRunInstallPoolsAndWrite(
   args: RunInstallExecuteArgs,
 ): Promise<InstallExecuteResult> {
-  const {
-    scope,
-    force,
-    dryRun,
-    tty,
-    useExtends,
-    nameOverride,
-    explicitAs,
-    config,
-    context,
-    parsed,
-    sourceForYaml,
-    version,
-    pathInRepo,
-    persisted,
-    replay,
-    prep,
-    implicitPick,
-    narrowed,
-    discoveredFeatures,
-  } = args;
+  const { scope, force, dryRun, tty, useExtends, nameOverride, explicitAs } = args;
+  const { config, context, parsed, sourceForYaml, version, pathInRepo, contentRoot, persisted } =
+    args;
+  const { replay, prep, implicitPick, narrowed, discoveredFeatures, sourceType } = args;
 
   const { narrowed: effectiveNarrowed, discoveredFeatures: effectiveFeatures } =
     applyReplayInstallScope(narrowed, discoveredFeatures, replay);
@@ -136,11 +124,19 @@ export async function executeRunInstallPoolsAndWrite(
       preConflictCounts: preConflict,
       selected,
     });
+  const installManifest = await readInstallManifest(context.canonicalDir);
+  const reuseExistingName = pickReuseEntryName({
+    manifest: installManifest,
+    parsed,
+    entryFeatures,
+    yamlTarget: prep.yamlTarget,
+    explicitAs,
+  });
   const entryName = selectInstallEntryName({
     config,
     parsed,
     entryFeatures,
-    nameOverride,
+    nameOverride: nameOverride || reuseExistingName || '',
   });
 
   const installed = buildInstalledList(selected, entryName);
@@ -158,6 +154,7 @@ export async function executeRunInstallPoolsAndWrite(
         path: persisted.pathInRepo,
         pick,
         yamlTarget: prep.yamlTarget,
+        as: explicitAs,
       },
       dryRun,
     });
@@ -182,15 +179,11 @@ export async function executeRunInstallPoolsAndWrite(
       yamlTarget: prep.yamlTarget,
       pathInRepo: persisted.pathInRepo,
       manualAs: explicitAs,
-      renameExistingPack: nameOverride === '',
+      renameExistingPack: nameOverride === '' && reuseExistingName === null,
+      sourceType,
+      contentRoot,
     });
   }
-  const genResult = await runGenerate(scope === 'global' ? { global: true } : {}, context.rootBase);
-  renderGenerate(genResult);
-  if (genResult.exitCode !== 0) {
-    logger.warn(
-      `Generate failed after install. Fix the issue and run agentsmesh generate${scope === 'global' ? ' --global' : ''}.`,
-    );
-  }
+  await runPostOperationGenerate('install', scope, context.rootBase);
   return { installed, skipped };
 }

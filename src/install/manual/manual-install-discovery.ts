@@ -3,6 +3,7 @@
  */
 
 import type { ExtendPick } from '../../config/core/schema.js';
+import type { ParseFrontmatterOptions } from '../../canonical/features/rules.js';
 import { discoverFromContentRoot, featuresFromCanonical } from '../core/discover-resources.js';
 import { narrowDiscoveredForInstallScope } from '../core/resource-selection.js';
 import { stageManualInstallScope } from './manual-install-scope.js';
@@ -13,6 +14,7 @@ export async function resolveManualDiscoveredForInstall(
   explicitAs: ManualInstallAs,
   explicitTarget?: string,
   replayPick?: ExtendPick,
+  parseOpts: ParseFrontmatterOptions = {},
 ): Promise<{
   prep: {
     yamlTarget?: string;
@@ -25,15 +27,24 @@ export async function resolveManualDiscoveredForInstall(
   const staged = await stageManualInstallScope(sourceRoot, explicitAs, {
     preferredSkillNames: explicitAs === 'skills' ? replayPick?.skills : undefined,
   });
-  const { canonical } = await discoverFromContentRoot(staged.discoveryRoot);
+  const { canonical, cleanup: sliceCleanup } = await discoverFromContentRoot(
+    staged.discoveryRoot,
+    parseOpts,
+  );
   const narrowed = narrowDiscoveredForInstallScope(canonical, {
     scopedFeatures: [explicitAs],
   });
+  const combinedCleanup = async (): Promise<void> => {
+    // Slice-level staging dirs (target-mapper output) must be cleaned up
+    // alongside the manual-scope staging dir. Best-effort: a failure in one
+    // shouldn't strand the other.
+    await Promise.allSettled([sliceCleanup(), staged.cleanup()]);
+  };
   return {
     prep: {
       yamlTarget: explicitTarget,
       scopedFeatures: [explicitAs],
-      cleanup: staged.cleanup,
+      cleanup: combinedCleanup,
     },
     narrowed,
     discoveredFeatures: featuresFromCanonical(narrowed),

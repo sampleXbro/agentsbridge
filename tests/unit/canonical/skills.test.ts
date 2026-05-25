@@ -269,4 +269,30 @@ describe('parseSkillDirectory', () => {
     const skill = await parseSkillDirectory(skillDir);
     expect(skill?.name).toBe('special-chars-dir');
   });
+
+  it('R-6: drops noise boilerplate (CHANGELOG, CONTRIBUTING) but preserves LICENSE / NOTICE / README in supporting files', async () => {
+    writeSkill('caveman-help', '---\ndescription: Help command\n---\nBody.', {
+      // Noise — dropped (irrelevant context once the skill is installed downstream).
+      'CONTRIBUTING.md': '# Contributing\n',
+      'CHANGELOG.md': '# Changelog\n',
+      'CODE_OF_CONDUCT.md': '# Code of Conduct\n',
+      // Preserved — attribution that legally must travel with redistributed content.
+      LICENSE: 'MIT License...',
+      'LICENSE-MIT.md': 'MIT License...',
+      NOTICE: 'Apache attribution...',
+      // Preserved — skill-specific context useful to the consumer.
+      'README.md': '# caveman-help\n\nWhat this skill does.',
+      'reference.md': '# Reference\n\nLegit supporting doc.',
+    });
+    const skills = await parseSkills(SKILLS_DIR);
+    expect(skills).toHaveLength(1);
+    const supporting = skills[0]?.supportingFiles.map((f) => f.relativePath).sort() ?? [];
+    expect(supporting).toEqual([
+      'LICENSE',
+      'LICENSE-MIT.md',
+      'NOTICE',
+      'README.md',
+      'reference.md',
+    ]);
+  });
 });

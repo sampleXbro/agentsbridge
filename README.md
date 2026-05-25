@@ -232,7 +232,9 @@ agentsmesh watch [--global] [--targets <csv>]
 agentsmesh check [--global]
 agentsmesh merge [--global]
 agentsmesh matrix [--global] [--targets <csv>] [--verbose]
-agentsmesh install <source> [--sync] [--path <dir>] [--target <id>] [--as <kind>] [--name <id>] [--extends] [--dry-run] [--global] [--force]
+agentsmesh install <source> [--sync] [--path <dir>] [--target <id>] [--as <kind>] [--name <id>] [--extends] [--all] [--dry-run] [--global] [--force]
+agentsmesh uninstall <name>[,<name>...] [--all] [--keep-pack] [--keep-generated] [--dry-run] [--global] [--force]
+agentsmesh installs list [--global]
 agentsmesh plugin add|list|remove|info [--version <v>] [--id <id>]
 agentsmesh target scaffold <id> [--name <displayName>] [--force]
 ```
@@ -293,10 +295,24 @@ Install shared skills, rules, agents, and commands from any git repo:
 ```bash
 agentsmesh install github:org/shared-config@v1.0.0
 agentsmesh install --path rules --as rules github:team/standards
+agentsmesh install github:team/prompts --path workflows --as commands --extends
 agentsmesh install --sync       # restore all packs after clone
 ```
 
-Packs live in `.agentsmesh/packs/`, track in `installs.yaml`, and merge into canonical config on every `generate`.
+Packs live in `.agentsmesh/packs/`, track in `installs.yaml`, and merge into canonical config on every `generate`. `install --extends` records a linked `extends:` entry instead of materializing a pack; when paired with `--as`, the forced kind is persisted as `extends[].as` so flat markdown directories continue to load as commands, agents, rules, or skills during later `generate` runs. Anthropic-style skill packs (root `skills/`, `agents/`, `references/`, `.claude/commands/`, …) are auto-detected by a multi-signal classifier and imported as a bulk set in a single command — no `--as` needed. The discriminator is strict enough that legacy tool-native and canonical-agentsmesh repos still take their original code paths (verified by 5 backcompat fixtures).
+
+List and remove installed packs:
+
+```bash
+agentsmesh installs list                       # NAME / SOURCE / FEATURES / INSTALLED table
+agentsmesh uninstall <name>                    # rm pack dir, drop installs.yaml/extends entry, clean generated outputs
+agentsmesh uninstall --all                     # sweep every install in this scope
+agentsmesh uninstall <name> --keep-pack        # only drop yaml entries; leave .agentsmesh/packs/<name>/ on disk
+agentsmesh uninstall <name> --keep-generated   # skip the final generate; emit a warning about stale target files
+agentsmesh uninstall <name> --dry-run          # preview; no writes
+```
+
+Each install writes `.agentsmesh-install-manifest.json` next to the pack with per-file sha256 hashes; uninstall compares current contents against that manifest and prompts before deleting locally-modified files. `--force` accepts the documented defaults (bulk = accept all, broken-link = leave-with-warnings, modified = delete-anyway). `.agentsmesh/.install.lock` serialises install/uninstall so concurrent runs on the same project fail fast rather than racing on disk.
 
 ### What to commit and what to gitignore
 
@@ -329,6 +345,15 @@ Every config file ships with a generated JSON Schema, so VS Code, JetBrains, and
 | `.agentsmesh/packs/*/pack.json` | `schemas/pack.json` |
 
 `agentsmesh init` writes the appropriate `# yaml-language-server: $schema=...` directive (or `$schema` field for JSON) into each canonical file, so editors pick up validation immediately.
+
+### Environment variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `AGENTSMESH_GITHUB_TOKEN` | — | GitHub personal access token for private repo installs and `extends`. |
+| `AGENTSMESH_CACHE` | `~/.agentsmeshcache` | Override the remote-extends / tarball cache directory. |
+| `AGENTSMESH_MAX_TARBALL_MB` | `500` | Maximum GitHub tarball size in MiB the install command will accept. Allowed range: `1`–`4096`. Increase this when installing from large monorepos. |
+| `AGENTSMESH_STRICT_PLUGINS` | `0` | When set to `1`, a failed plugin descriptor import fails the build instead of warning-and-skip. Useful in CI where a missing plugin target is a regression. |
 
 ---
 
@@ -432,7 +457,7 @@ See the [full feature matrix docs](https://samplexbro.github.io/agentsmesh/refer
 
 - **[Getting Started](https://samplexbro.github.io/agentsmesh/getting-started/installation/)** — installation, quick start
 - **[Canonical Config](https://samplexbro.github.io/agentsmesh/canonical-config/)** — rules, commands, agents, skills, MCP, hooks, ignore, permissions
-- **[CLI Reference](https://samplexbro.github.io/agentsmesh/cli/)** — `init`, `generate`, `import`, `convert`, `install`, `diff`, `lint`, `watch`, `check`, `merge`, `matrix`, `plugin`, `target`
+- **[CLI Reference](https://samplexbro.github.io/agentsmesh/cli/)** — `init`, `generate`, `import`, `convert`, `install`, `uninstall`, `installs`, `diff`, `lint`, `watch`, `check`, `merge`, `matrix`, `plugin`, `target`
 - **[Configuration](https://samplexbro.github.io/agentsmesh/configuration/agentsmesh-yaml/)** — `agentsmesh.yaml`, local overrides, extends, collaboration, conversions
 - **[Guides](https://samplexbro.github.io/agentsmesh/guides/existing-project/)** — adopting in existing projects · multi-tool teams · sharing config · CI drift detection · community packs · **building plugins**
 - **[Reference](https://samplexbro.github.io/agentsmesh/reference/generation-pipeline/)** — supported tools matrix · generation pipeline · managed embedding

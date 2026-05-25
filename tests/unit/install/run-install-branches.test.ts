@@ -28,6 +28,7 @@ vi.mock('../../../src/install/pack/cache-cleanup.js', () => ({
 vi.mock('../../../src/install/core/install-manifest.js', () => ({
   upsertInstallManifestEntry: mockUpsertInstallManifestEntry,
   buildInstallManifestEntry: mockBuildInstallManifestEntry,
+  readInstallManifest: vi.fn().mockResolvedValue([]),
 }));
 vi.mock('../../../src/utils/filesystem/fs.js', async (orig) => {
   const actual = (await orig()) as Record<string, unknown>;
@@ -159,17 +160,15 @@ describe('executeRunInstallPoolsAndWrite — dry-run pack branch', () => {
       installAsPack: vi.fn(),
     }));
     vi.doMock('../../../src/cli/commands/generate.js', () => ({
-      runGenerate: vi
-        .fn()
-        .mockResolvedValue({
-          exitCode: 0,
-          data: {
-            scope: 'project',
-            mode: 'generate',
-            files: [],
-            summary: { created: 0, updated: 0, unchanged: 0 },
-          },
-        }),
+      runGenerate: vi.fn().mockResolvedValue({
+        exitCode: 0,
+        data: {
+          scope: 'project',
+          mode: 'generate',
+          files: [],
+          summary: { created: 0, updated: 0, unchanged: 0 },
+        },
+      }),
     }));
     vi.doMock('../../../src/cli/renderers/generate.js', () => ({
       renderGenerate: vi.fn(),
@@ -198,6 +197,7 @@ describe('executeRunInstallPoolsAndWrite — dry-run pack branch', () => {
     }));
     vi.doMock('../../../src/install/core/install-name.js', () => ({
       selectInstallEntryName: vi.fn().mockReturnValue('demo-pack'),
+      findExistingInstallName: vi.fn().mockReturnValue(null),
     }));
     vi.doMock('../../../src/install/run/install-replay.js', () => ({
       applyReplayInstallScope: vi.fn().mockImplementation((narrowed, features) => ({
@@ -267,17 +267,15 @@ describe('executeRunInstallPoolsAndWrite — dry-run pack branch', () => {
       installAsPack: vi.fn().mockResolvedValue(undefined),
     }));
     vi.doMock('../../../src/cli/commands/generate.js', () => ({
-      runGenerate: vi
-        .fn()
-        .mockResolvedValue({
-          exitCode: 1,
-          data: {
-            scope: 'project',
-            mode: 'generate',
-            files: [],
-            summary: { created: 0, updated: 0, unchanged: 0 },
-          },
-        }),
+      runGenerate: vi.fn().mockResolvedValue({
+        exitCode: 1,
+        data: {
+          scope: 'project',
+          mode: 'generate',
+          files: [],
+          summary: { created: 0, updated: 0, unchanged: 0 },
+        },
+      }),
     }));
     vi.doMock('../../../src/cli/renderers/generate.js', () => ({
       renderGenerate: vi.fn(),
@@ -305,6 +303,7 @@ describe('executeRunInstallPoolsAndWrite — dry-run pack branch', () => {
     }));
     vi.doMock('../../../src/install/core/install-name.js', () => ({
       selectInstallEntryName: vi.fn().mockReturnValue('demo-pack'),
+      findExistingInstallName: vi.fn().mockReturnValue(null),
     }));
     vi.doMock('../../../src/install/run/install-replay.js', () => ({
       applyReplayInstallScope: vi.fn().mockImplementation((narrowed, features) => ({

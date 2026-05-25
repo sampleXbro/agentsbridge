@@ -8,7 +8,7 @@
 
 import type { ImportResult } from '../../core/types.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
-import { CURSOR_GLOBAL_SKILLS_DIR } from './constants.js';
+import { CURSOR_SKILLS_DIR } from './constants.js';
 import { importSkills } from './skills-adapter.js';
 import { importSettings, importIgnore } from './settings-helpers.js';
 import {
@@ -30,7 +30,7 @@ export async function importFromCursorGlobalExports(projectRoot: string): Promis
   if (!rootWritten) rootWritten = await importGlobalUserRules(projectRoot, results, normalize);
   if (!rootWritten) await importGlobalDotCursorAgents(projectRoot, results, normalize);
   await importGlobalMcp(projectRoot, results);
-  await importSkills(projectRoot, results, normalize, CURSOR_GLOBAL_SKILLS_DIR);
+  await importSkills(projectRoot, results, normalize, CURSOR_SKILLS_DIR);
   await importGlobalAgents(projectRoot, results, normalize);
   await importGlobalCommands(projectRoot, results, normalize);
   await importSettings(projectRoot, results);

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { resolveManualInstallPersistence } from '../../../src/install/manual/manual-install-persistence.js';
@@ -130,20 +130,26 @@ describe('manual-install-scope — extra branches', () => {
     );
   });
 
-  it('throws when manual collection contains duplicate filenames', async () => {
+  it('namespaces colliding basenames in manual collection', async () => {
     const root = join(dir, 'rules-coll');
     mkdirSync(join(root, 'sub1'), { recursive: true });
     mkdirSync(join(root, 'sub2'), { recursive: true });
     writeFileSync(join(root, 'sub1', 'lint.md'), 'one');
     writeFileSync(join(root, 'sub2', 'lint.md'), 'two');
-    await expect(stageManualInstallScope(root, 'rules')).rejects.toThrow(/duplicate file name/);
+    const staged = await stageManualInstallScope(root, 'rules');
+    try {
+      const files = readdirSync(join(staged.discoveryRoot, '.agentsmesh', 'rules')).sort();
+      expect(files).toEqual(['sub1-lint.md', 'sub2-lint.md']);
+    } finally {
+      await staged.cleanup();
+    }
   });
 
   it('throws when no .md files found under root', async () => {
     const root = join(dir, 'empty-coll');
     mkdirSync(root, { recursive: true });
     writeFileSync(join(root, 'README'), 'no md');
-    await expect(stageManualInstallScope(root, 'rules')).rejects.toThrow(/No \.md files/);
+    await expect(stageManualInstallScope(root, 'rules')).rejects.toThrow(/No installable files/);
   });
 
   it('stages a single SKILL.md file into a skill directory', async () => {

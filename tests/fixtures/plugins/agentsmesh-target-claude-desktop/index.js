@@ -38,6 +38,13 @@ function readExistingConfig(projectRoot) {
 export const descriptor = {
   id: 'claude-desktop',
 
+  metadata: {
+    displayName: 'Claude Desktop',
+    category: 'ide',
+    officialUrl: 'https://claude.ai/desktop',
+    shortDescription: 'Anthropic Claude Desktop application',
+  },
+
   generators: {
     name: 'claude-desktop',
 

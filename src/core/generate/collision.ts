@@ -29,6 +29,29 @@ function trimmedContent(content: string): string {
   return content.trim();
 }
 
+/**
+ * Strip optional decoration blocks that some targets embed in AGENTS.md while
+ * others (e.g. cline) omit, then collapse the resulting whitespace. Two
+ * AGENTS.md outputs that differ ONLY in these optional blocks are considered
+ * semantically equivalent for collision purposes — the one that actually emits
+ * the block wins as "richer".
+ */
+const OPTIONAL_AGENTS_BLOCKS: readonly RegExp[] = [
+  /<!-- agentsmesh:embedded-rules:start -->[\s\S]*?<!-- agentsmesh:embedded-rules:end -->\n*/g,
+];
+
+function normalizeAgentsContent(content: string): string {
+  let out = content;
+  for (const block of OPTIONAL_AGENTS_BLOCKS) {
+    out = out.replace(block, '');
+  }
+  return out.trim().replace(/\n{2,}/g, '\n\n');
+}
+
+function hasOptionalAgentsBlock(content: string): boolean {
+  return /<!-- agentsmesh:embedded-rules:start -->/.test(content);
+}
+
 function richerAgentsResult(left: GenerateResult, right: GenerateResult): GenerateResult | null {
   if (!left.path.endsWith(AGENTS_SUFFIX) || left.path !== right.path) return null;
 
@@ -39,8 +62,20 @@ function richerAgentsResult(left: GenerateResult, right: GenerateResult): Genera
   const leftContainsRight = leftTrimmed.includes(rightTrimmed);
   const rightContainsLeft = rightTrimmed.includes(leftTrimmed);
 
-  if (leftContainsRight === rightContainsLeft) return null;
-  return leftContainsRight ? left : right;
+  if (leftContainsRight !== rightContainsLeft) {
+    return leftContainsRight ? left : right;
+  }
+
+  // R-7: contents that differ only in optional decoration blocks (e.g. amp
+  // embeds non-root rules in AGENTS.md while cline emits them separately) are
+  // semantically equivalent. Prefer the one that emits the optional block.
+  if (normalizeAgentsContent(left.content) === normalizeAgentsContent(right.content)) {
+    const leftHas = hasOptionalAgentsBlock(left.content);
+    const rightHas = hasOptionalAgentsBlock(right.content);
+    if (leftHas !== rightHas) return leftHas ? left : right;
+  }
+
+  return null;
 }
 
 function richerCodexAgentsResult(

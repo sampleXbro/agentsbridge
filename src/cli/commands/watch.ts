@@ -26,6 +26,21 @@ export interface RunWatchOptions {
    * instead of scraping log output, which is timing-sensitive under coverage/full-suite load.
    */
   onCycle?: (info: WatchCycleInfo) => void;
+  /**
+   * Force chokidar to use polling instead of native fs.watch / FSEvents.
+   * Default: true on Windows (ReadDirectoryChangesW misses events on AppData
+   * tmp paths), false on macOS/Linux (native FSEvents/inotify is faster).
+   *
+   * Test harness sets this to `true` regardless of platform because macOS
+   * FSEvents under parallel test load drops events for files in
+   * newly-watched subdirectories, causing intermittent watch-test hangs.
+   */
+  usePolling?: boolean;
+  /**
+   * Poll interval (ms) when `usePolling` is true. Default: chokidar's 100ms.
+   * Test harness sets 50ms for fast cycle reaction.
+   */
+  pollIntervalMs?: number;
 }
 
 function normalizeWatchPath(path: string): string {
@@ -186,10 +201,14 @@ export async function runWatch(
   // created in just-watched subdirectories, especially under the AppData\Local\Temp
   // short-name path used by GitHub Actions runners. Force polling there so the
   // watcher reliably observes new canonical files. macOS/Linux keep the native
-  // watcher for low-latency event delivery.
+  // watcher for low-latency event delivery. Tests override via `usePolling`.
+  const usePolling = watchOptions.usePolling ?? process.platform === 'win32';
   const watcher = chokidar.watch(paths, {
     ignoreInitial: true,
-    usePolling: process.platform === 'win32',
+    usePolling,
+    ...(usePolling && watchOptions.pollIntervalMs !== undefined
+      ? { interval: watchOptions.pollIntervalMs }
+      : {}),
   });
   watcher.on('all', (_eventName, changedPath) => {
     if (shouldIgnoreWatchPath(context.canonicalDir, changedPath)) return;

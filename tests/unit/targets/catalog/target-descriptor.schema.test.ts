@@ -7,6 +7,12 @@ import { BUILTIN_TARGETS } from '../../../../src/targets/catalog/builtin-targets
 
 const minimalDescriptor = {
   id: 'test-plugin',
+  metadata: {
+    displayName: 'Test Plugin',
+    category: 'cli' as const,
+    officialUrl: 'https://example.test/',
+    shortDescription: 'Schema-test plugin descriptor',
+  },
   generators: {
     name: 'test-plugin',
     generateRules: () => [],
@@ -78,6 +84,21 @@ describe('targetDescriptorSchema', () => {
     const { id: _id, ...noId } = minimalDescriptor;
     void _id;
     expect(() => targetDescriptorSchema.parse(noId)).toThrow();
+  });
+
+  it('rejects descriptor missing metadata (H6)', () => {
+    const { metadata: _metadata, ...noMetadata } = minimalDescriptor;
+    void _metadata;
+    expect(() => targetDescriptorSchema.parse(noMetadata)).toThrow(/metadata/);
+  });
+
+  it('rejects descriptor whose metadata.category is not in the documented union', () => {
+    expect(() =>
+      validateDescriptor({
+        ...minimalDescriptor,
+        metadata: { ...minimalDescriptor.metadata, category: 'unknown-category' },
+      }),
+    ).toThrow();
   });
 
   it('rejects descriptor with invalid id (uppercase)', () => {

@@ -36,7 +36,7 @@ afterEach(() => {
 });
 
 describe('install standalone skill repo (integration)', () => {
-  it('installs a repo-root skill using frontmatter name and excludes boilerplate', async () => {
+  it('installs a repo-root skill: noise excluded, LICENSE / README preserved', async () => {
     const repoDir = join(ROOT, 'code-review-skill');
     const project = join(ROOT, 'project');
     mkdirSync(join(repoDir, 'reference'), { recursive: true });
@@ -47,8 +47,10 @@ describe('install standalone skill repo (integration)', () => {
     );
     writeFileSync(join(repoDir, 'reference', 'react.md'), '# React guide\n');
     writeFileSync(join(repoDir, 'assets', 'template.md'), '# Template\n');
+    // Preserved.
     writeFileSync(join(repoDir, 'README.md'), '# Code Review Skill\n');
     writeFileSync(join(repoDir, 'LICENSE'), 'MIT\n');
+    // Noise / non-content.
     writeFileSync(join(repoDir, 'CONTRIBUTING.md'), '# Contributing\n');
     writeFileSync(join(repoDir, '.gitignore'), 'node_modules\n');
     seedProject(project);
@@ -56,8 +58,17 @@ describe('install standalone skill repo (integration)', () => {
     await runInstall({ force: true, as: 'skills', name: 'code-review' }, [repoDir], project);
 
     const packFiles = listRelativeFiles(join(project, '.agentsmesh', 'packs', 'code-review'));
+    // Upstream-root README/LICENSE travel to the pack root (legal attribution +
+    // consumer-facing context). They ALSO remain inside the skill subtree —
+    // both copies are correct: pack-root is the repo-level docs, skill-internal
+    // is the per-skill docs (here they happen to be the same file).
     expect(packFiles).toEqual([
+      '.agentsmesh-install-manifest.json',
+      'LICENSE',
+      'README.md',
       'pack.yaml',
+      'skills/code-review-excellence/LICENSE',
+      'skills/code-review-excellence/README.md',
       'skills/code-review-excellence/SKILL.md',
       'skills/code-review-excellence/assets/template.md',
       'skills/code-review-excellence/reference/react.md',
@@ -66,6 +77,8 @@ describe('install standalone skill repo (integration)', () => {
     const generatedFiles = listRelativeFiles(join(project, '.claude'));
     expect(generatedFiles).toEqual([
       'CLAUDE.md',
+      'skills/code-review-excellence/LICENSE',
+      'skills/code-review-excellence/README.md',
       'skills/code-review-excellence/SKILL.md',
       'skills/code-review-excellence/assets/template.md',
       'skills/code-review-excellence/reference/react.md',
@@ -99,6 +112,7 @@ describe('install manual --as skills (integration)', () => {
     );
 
     expect(listRelativeFiles(join(project, '.agentsmesh', 'packs', 'bulk-skills'))).toEqual([
+      '.agentsmesh-install-manifest.json',
       'pack.yaml',
       'skills/qa/SKILL.md',
       'skills/review/SKILL.md',
@@ -135,6 +149,7 @@ describe('install manual --as skills (integration)', () => {
     );
 
     expect(listRelativeFiles(join(project, '.agentsmesh', 'packs', 'single-skill'))).toEqual([
+      '.agentsmesh-install-manifest.json',
       'pack.yaml',
       'skills/review/SKILL.md',
       'skills/review/templates/plan.md',
@@ -170,6 +185,7 @@ describe('install manual --as skills (integration)', () => {
     );
 
     expect(listRelativeFiles(join(project, '.agentsmesh', 'packs', 'direct-skill'))).toEqual([
+      '.agentsmesh-install-manifest.json',
       'pack.yaml',
       'skills/review/SKILL.md',
       'skills/review/templates/plan.md',
@@ -212,6 +228,7 @@ describe('install manual --as skills (integration)', () => {
     );
 
     expect(listRelativeFiles(join(project, '.agentsmesh', 'packs', 'upstream-skills'))).toEqual([
+      '.agentsmesh-install-manifest.json',
       'pack.yaml',
       'skills/qa/SKILL.md',
       'skills/review/SKILL.md',

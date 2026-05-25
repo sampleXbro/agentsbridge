@@ -11,6 +11,7 @@ import { materializePack } from '../pack/pack-writer.js';
 import { findExistingPack, readPackMetadata } from '../pack/pack-reader.js';
 import { mergeIntoPack } from '../pack/pack-merge.js';
 import { cleanInstallCache } from '../pack/cache-cleanup.js';
+import { collectPreservedRootFiles } from '../source/collect-preserved-root.js';
 import { ruleSlug } from '../core/validate-resources.js';
 import { targetSchema } from '../../config/core/schema.js';
 import { logger } from '../../utils/output/logger.js';
@@ -37,6 +38,14 @@ export interface InstallAsPackArgs {
   pathInRepo?: string;
   manualAs?: ManualInstallAs;
   renameExistingPack?: boolean;
+  /** Classifier verdict that drove this install; written to `.agentsmesh-install-manifest.json`. */
+  sourceType?: string;
+  /**
+   * Upstream source root from which `narrowed` was discovered. Used to
+   * harvest top-level preserved-boilerplate files (README/LICENSE/…) into the
+   * pack root. Optional — when omitted, no preserved files are copied.
+   */
+  contentRoot?: string;
 }
 
 function pathScope(pathInRepo?: string): Pick<PackMetadata, 'path' | 'paths'> {
@@ -83,10 +92,13 @@ export async function installAsPack(args: InstallAsPackArgs): Promise<void> {
     pathInRepo,
     manualAs,
     renameExistingPack,
+    sourceType,
+    contentRoot,
   } = args;
 
   const packsDir = join(canonicalDir, 'packs');
   const selectedCanonical = applySelection(narrowed, selected);
+  const preservedRootFiles = contentRoot ? await collectPreservedRootFiles(contentRoot) : [];
   const now = new Date().toISOString();
   const parsedTarget = yamlTarget !== undefined ? targetSchema.parse(yamlTarget) : undefined;
 
@@ -127,6 +139,7 @@ export async function installAsPack(args: InstallAsPackArgs): Promise<void> {
         ...(pathInRepo ? { path: pathInRepo } : {}),
         ...(manualAs !== undefined ? { as: manualAs } : {}),
       },
+      preservedRootFiles,
     );
     persistedName = mergedMeta.name;
     persistedFeatures = mergedMeta.features;
@@ -141,19 +154,26 @@ export async function installAsPack(args: InstallAsPackArgs): Promise<void> {
         `Auto-generated pack name "${packName}" collides with an existing incompatible pack. Use --name to choose a different pack name.`,
       );
     }
-    await materializePack(packsDir, packName, selectedCanonical, {
-      name: packName,
-      source: sourceForYaml,
-      ...(version !== undefined && { version }),
-      source_kind: sourceKind,
-      installed_at: now,
-      updated_at: now,
-      features: entryFeatures,
-      ...(pick !== undefined && { pick }),
-      ...(parsedTarget !== undefined && { target: parsedTarget }),
-      ...pathScope(pathInRepo),
-      ...(manualAs !== undefined && { as: manualAs }),
-    });
+    await materializePack(
+      packsDir,
+      packName,
+      selectedCanonical,
+      {
+        name: packName,
+        source: sourceForYaml,
+        ...(version !== undefined && { version }),
+        source_kind: sourceKind,
+        installed_at: now,
+        updated_at: now,
+        features: entryFeatures,
+        ...(pick !== undefined && { pick }),
+        ...(parsedTarget !== undefined && { target: parsedTarget }),
+        ...pathScope(pathInRepo),
+        ...(manualAs !== undefined && { as: manualAs }),
+      },
+      sourceType !== undefined ? { source_type: sourceType } : {},
+      preservedRootFiles,
+    );
     logger.success(`Installed pack "${packName}" to .agentsmesh/packs/.`);
   }
 

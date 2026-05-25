@@ -4,6 +4,7 @@
 
 import type { ExtendPick } from '../../config/core/schema.js';
 import type { CanonicalFiles } from '../../core/types.js';
+import type { ParseFrontmatterOptions } from '../../canonical/features/rules.js';
 import {
   loadCanonicalSliceAtPath,
   normalizeSlicePath,
@@ -25,17 +26,28 @@ export function featuresFromCanonical(c: CanonicalFiles): string[] {
 
 /**
  * Resolve file vs directory, then load canonical slice (rules/commands/agents/skills / .agentsmesh).
+ * Returns a cleanup callback for any tmpdir staging the slice loader created
+ * (e.g. target-mapper output for `.toml` commands). Callers must await it
+ * after they finish reading from `canonical.commands[].source`.
  */
-export async function discoverFromContentRoot(contentRoot: string): Promise<{
+export async function discoverFromContentRoot(
+  contentRoot: string,
+  opts: ParseFrontmatterOptions = {},
+): Promise<{
   canonical: CanonicalFiles;
   features: string[];
   implicitPick?: ExtendPick;
+  cleanup: () => Promise<void>;
 }> {
   const { sliceRoot, implicitPick } = await normalizeSlicePath(contentRoot);
-  const canonical = await loadCanonicalSliceAtPath(sliceRoot);
+  const { canonical, cleanup } = await loadCanonicalSliceAtPath(sliceRoot, {
+    ...opts,
+    enableTargetEntityMappers: true,
+  });
   return {
     canonical,
     features: featuresFromCanonical(canonical),
     implicitPick,
+    cleanup,
   };
 }

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -156,5 +156,45 @@ Body`,
     writeFileSync(join(COMMANDS_DIR, 'readme.txt'), 'not a command');
     const commands = await parseCommands(COMMANDS_DIR);
     expect(commands).toHaveLength(1);
+  });
+
+  it('reports the offending file path when frontmatter YAML is malformed', async () => {
+    writeCommand(
+      'cleanup-cache.md',
+      '---\nargument-hint: [--aggressive] | [--maximum]\n---\nClean\n',
+    );
+
+    await expect(parseCommands(COMMANDS_DIR)).rejects.toThrow(/cleanup-cache\.md/);
+  });
+
+  it('R-5: warns about .toml/.yaml/.json command files so they are not silently dropped', async () => {
+    writeCommand('build.md', '---\ndescription: Build\n---\nBuild');
+    writeFileSync(join(COMMANDS_DIR, 'release.toml'), 'description = "Release"\n');
+    writeFileSync(join(COMMANDS_DIR, 'deploy.json'), '{"description":"Deploy"}');
+    const warn = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    try {
+      const commands = await parseCommands(COMMANDS_DIR);
+      expect(commands).toHaveLength(1);
+      const calls = warn.mock.calls.flat().join('');
+      expect(calls).toMatch(/Skipped 2 commands file/);
+      expect(calls).toMatch(/\.json/);
+      expect(calls).toMatch(/\.toml/);
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('R-5: does NOT warn on incidental .txt files (only flags command-like alternate formats)', async () => {
+    writeCommand('build.md', '---\ndescription: Build\n---\nBuild');
+    writeFileSync(join(COMMANDS_DIR, 'notes.txt'), 'not a command');
+    const warn = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    try {
+      const commands = await parseCommands(COMMANDS_DIR);
+      expect(commands).toHaveLength(1);
+      const calls = warn.mock.calls.flat().join('');
+      expect(calls).not.toMatch(/Skipped/);
+    } finally {
+      warn.mockRestore();
+    }
   });
 });

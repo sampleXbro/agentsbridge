@@ -71,6 +71,9 @@ const MINIMAL_INPUTS: Record<string, unknown> = {
   diff: {},
   import: { from: 'cursor' },
   convert: { from: 'cursor', to: 'claude-code', dry_run: true },
+  install: { source: 'local:./nowhere', dry_run: true },
+  uninstall: { names: ['sweep-pack'], dry_run: true },
+  installs_list: {},
 };
 
 beforeEach(async () => {
@@ -97,8 +100,8 @@ afterEach(async () => {
 });
 
 describe('tool-tables sweep — every descriptor handler arrow runs', () => {
-  it('covers all 41 descriptor handlers without exception leak', async () => {
-    expect(TOOL_DESCRIPTORS.length).toBe(41);
+  it('covers all 44 descriptor handlers without exception leak', async () => {
+    expect(TOOL_DESCRIPTORS.length).toBe(44);
     const missingFixtures = TOOL_DESCRIPTORS.filter((d) => !(d.name in MINIMAL_INPUTS));
     expect(missingFixtures.map((d) => d.name)).toEqual([]);
 

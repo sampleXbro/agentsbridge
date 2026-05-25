@@ -6,7 +6,9 @@ import { basename, join } from 'node:path';
 import { readdir } from 'node:fs/promises';
 import type { CanonicalSkill, SkillSupportingFile } from '../../core/types.js';
 import { readFileSafe, readDirRecursive } from '../../utils/filesystem/fs.js';
-import { parseFrontmatter } from '../../utils/text/markdown.js';
+import { parseOrSkipFrontmatter } from '../../utils/text/markdown.js';
+import type { ParseFrontmatterOptions } from './rules.js';
+import { isNoiseBoilerplate } from '../../install/importers/boilerplate-filter.js';
 import { assertCanonicalName } from './validate-name.js';
 
 /** Read file content; returns empty string if unreadable */
@@ -16,6 +18,15 @@ async function readContent(path: string): Promise<string> {
 }
 
 const SKILL_FILE = 'SKILL.md';
+
+/** Markdown / plain-text doc filenames the markdown-boilerplate filter applies to. */
+const DOC_EXTENSIONS = new Set(['.md', '.mdx', '.rst', '.txt']);
+
+function isMarkdownLikeDoc(name: string): boolean {
+  const dot = name.lastIndexOf('.');
+  if (dot < 0) return true;
+  return DOC_EXTENSIONS.has(name.slice(dot).toLowerCase());
+}
 
 /** Directories that are never valid skill supporting content. */
 const EXCLUDED_DIR_PREFIXES = ['.git', 'node_modules'];
@@ -44,6 +55,15 @@ async function listSupportingFiles(skillDir: string): Promise<SkillSupportingFil
     const firstSegment = name.split('/')[0]!;
     if (EXCLUDED_DIR_PREFIXES.some((p) => firstSegment === p)) continue;
     if (name === '.DS_Store' || name.endsWith('/.DS_Store')) continue;
+    // R-6: skip third-party-repo noise boilerplate (CONTRIBUTING, CHANGELOG,
+    // CODE_OF_CONDUCT, …) inside skill subtrees. Preserved files
+    // (LICENSE / NOTICE / COPYING / COPYRIGHT for legal attribution; README
+    // for skill-specific context) are kept here so license terms travel with
+    // redistributed content and the consumer still sees the skill's own docs.
+    // The filter is restricted to markdown-like docs so legitimate supporting
+    // scripts (e.g. `scripts/changelog.py`) are kept.
+    const baseName = name.includes('/') ? name.slice(name.lastIndexOf('/') + 1) : name;
+    if (isMarkdownLikeDoc(baseName) && isNoiseBoilerplate(baseName)) continue;
     const content = await readContent(absPath);
     result.push({ relativePath: name, absolutePath: absPath, content });
   }
@@ -59,11 +79,19 @@ async function listSupportingFiles(skillDir: string): Promise<SkillSupportingFil
 /**
  * Parse a single skill directory containing SKILL.md (Anthropic-style leaf folder).
  */
-export async function parseSkillDirectory(skillDir: string): Promise<CanonicalSkill | null> {
+export async function parseSkillDirectory(
+  skillDir: string,
+  opts: ParseFrontmatterOptions = {},
+): Promise<CanonicalSkill | null> {
   const skillPath = join(skillDir, SKILL_FILE);
   const content = await readFileSafe(skillPath);
   if (!content) return null;
-  const { frontmatter, body } = parseFrontmatter(content);
+  const parsed = parseOrSkipFrontmatter(content, skillPath, opts.onParseError);
+  // SKILL.md frontmatter parse error skips the entire skill directory: a skill
+  // with no parseable identity has no canonical shape and partial skills are
+  // worse than no skill (per the spec's skill-skip granularity rule).
+  if (!parsed) return null;
+  const { frontmatter, body } = parsed;
   const supportingFiles = await listSupportingFiles(skillDir);
   const fmName = typeof frontmatter.name === 'string' ? sanitizeSkillName(frontmatter.name) : '';
   const name = fmName || basename(skillDir);
@@ -77,7 +105,10 @@ export async function parseSkillDirectory(skillDir: string): Promise<CanonicalSk
   };
 }
 
-export async function parseSkills(skillsDir: string): Promise<CanonicalSkill[]> {
+export async function parseSkills(
+  skillsDir: string,
+  opts: ParseFrontmatterOptions = {},
+): Promise<CanonicalSkill[]> {
   let entries: { name: string; isDirectory: () => boolean }[];
   try {
     entries = await readdir(skillsDir, { withFileTypes: true });
@@ -93,7 +124,9 @@ export async function parseSkills(skillsDir: string): Promise<CanonicalSkill[]> 
     const skillPath = join(skillDir, SKILL_FILE);
     const content = await readFileSafe(skillPath);
     if (!content) continue;
-    const { frontmatter, body } = parseFrontmatter(content);
+    const parsed = parseOrSkipFrontmatter(content, skillPath, opts.onParseError);
+    if (!parsed) continue;
+    const { frontmatter, body } = parsed;
     const supportingFiles = await listSupportingFiles(skillDir);
     skills.push({
       source: skillPath,

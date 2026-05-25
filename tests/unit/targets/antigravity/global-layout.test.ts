@@ -23,9 +23,12 @@ describe('antigravity global layout — paths', () => {
     );
   });
 
-  it('returns projected agent skill path', () => {
+  it('returns projected agent skill path under .gemini/antigravity/skills/', () => {
+    // Phase 7.F: agentPath must return the global path directly so reference
+    // map consumers (`agentTargetPath`) get the correct destination without
+    // depending on `rewriteGeneratedPath` running after them.
     expect(layout.paths.agentPath('reviewer', {} as never)).toBe(
-      '.agents/skills/am-agent-reviewer/SKILL.md',
+      '.gemini/antigravity/skills/am-agent-reviewer/SKILL.md',
     );
   });
 });

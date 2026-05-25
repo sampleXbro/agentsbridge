@@ -135,6 +135,20 @@ export async function parseInstallSource(
     };
   }
 
+  const githubBare = trimmed.match(/^github:([^/]+)\/([^/@]+)$/);
+  if (githubBare) {
+    const org = githubBare[1]!;
+    const repo = githubBare[2]!;
+    return {
+      kind: 'github',
+      rawRef: 'HEAD',
+      org,
+      repo,
+      gitRemoteUrl: `https://github.com/${org}/${repo}.git`,
+      pathInRepo: pathFlag,
+    };
+  }
+
   const gitlabSource = trimmed.match(/^gitlab:(.+)\/([^/@]+)@([^/@]+)$/);
   if (gitlabSource) {
     const namespace = gitlabSource[1]!;
@@ -143,6 +157,20 @@ export async function parseInstallSource(
     return {
       kind: 'gitlab',
       rawRef: ref,
+      org: namespace,
+      repo: project,
+      gitRemoteUrl: `https://gitlab.com/${namespace}/${project}.git`,
+      pathInRepo: pathFlag,
+    };
+  }
+
+  const gitlabBare = trimmed.match(/^gitlab:(.+)\/([^/@]+)$/);
+  if (gitlabBare) {
+    const namespace = gitlabBare[1]!;
+    const project = gitlabBare[2]!;
+    return {
+      kind: 'gitlab',
+      rawRef: 'HEAD',
       org: namespace,
       repo: project,
       gitRemoteUrl: `https://gitlab.com/${namespace}/${project}.git`,

@@ -8,6 +8,14 @@ import { Aside } from '@astrojs/starlight/components';
 
 Install rules, commands, agents, or skills from remote repositories or local paths. Installed packs are tracked in `.agentsmesh/installs.yaml` and merged into canonical config during generation.
 
+A multi-signal classifier auto-detects three source shapes at install time:
+
+- **Anthropic-style skill packs** — root `skills/<kebab>/SKILL.md`, optional `agents/`, `references/`, `.claude/commands/`, `.gemini/commands/`, multi-tool rules at root. One `install <url>` imports the whole pack as a bulk set.
+- **Canonical agentsmesh repos** — anything carrying `.agentsmesh/` at the root. Imports verbatim via the canonical loader.
+- **Tool-native repos** — `.claude/`, `.cursor/`, `.codex/`, etc. layouts. Native importer dispatches per target, identical to pre-skill-pack behavior.
+
+`--target <id>` and `--as <kind>` are explicit overrides that skip the classifier; existing scripts keep working unchanged. `.agentsmesh/.install.lock` serialises concurrent install/uninstall runs.
+
 ## Usage
 
 ```bash
@@ -26,9 +34,32 @@ agentsmesh install --sync
 | `--name <id>` | Override the generated install entry name. |
 | `--extends` | Record as an extends entry instead of a materialized pack. |
 | `--sync` | Reinstall missing packs from `.agentsmesh/installs.yaml`. |
+| `--all` | Install every sub-pack from a marketplace source (`.claude-plugin/marketplace.json`) or every flat collection in a multi-collection layout. Skips the picker prompt. |
 | `--dry-run` | Preview what would be installed without writing. |
 | `--global` | Install into `~/.agentsmesh/` and regenerate user-level outputs. |
-| `--force` | Non-interactive mode: include all resources, skip prompts. |
+| `--force` | Non-interactive mode: include all resources, skip prompts (implied by `--json`). |
+| `--json` | Machine-readable JSON envelope on stdout. Implies `--force`. Validation errors land in the envelope, not stderr. |
+
+## When to reach for each flag
+
+Auto-classification handles the common shapes — Anthropic skill pack, canonical agentsmesh, tool-native — without any flag. Reach for these only when the classifier refuses a source, picks the wrong shape, or asks you to disambiguate.
+
+| Symptom you see | Flag that resolves it | Why |
+|-----------------|----------------------|-----|
+| Repo uses a non-canonical collection dir name (e.g. `rules-mdc/` instead of `rules/`) | `--path rules-mdc --as rules` | `FLAT_COLLECTION_DIRS` only matches the canonical names; `--path` narrows the discovery root and `--as` declares the kind. |
+| Root `CLAUDE.md` (or other root marker) shadows nested content the auto-detector ignores (e.g. `categories/<group>/<agent>.md`) | `--path categories --as agents` | Native auto-detect sees the root marker and stops; `--path` re-roots discovery on the nested tree. |
+| Source is a `.claude-plugin/marketplace.json` and you want every sub-pack | `--all` | Bypasses the picker and fans out one install per sub-pack. For a single sub-pack, prefer `--path plugins/<name>`. |
+| Source is ambiguous between two or more flat collections at root | `--as <kind>` (optionally with `--path <subdir>`) | Picks one kind and skips the picker prompt. |
+| Auto-detection picks the wrong native tool format for an embedded `.<tool>/` layout | `--target <id>` | Locks the native importer; useful for shared-root markers like `AGENTS.md` that several targets could own. |
+| Repo has `agents/` + `commands/` + `skills/` at root with no `.agentsmesh/` parent | Separate calls, one per kind: `--as commands --path commands`, then `--as agents --path agents`, ... | Multi-collection canonical layouts intentionally require explicit intent today — see [Troubleshooting](#troubleshooting). |
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success (or `--dry-run` preview shown). |
+| `1` | Validation failure (missing source, non-TTY without `--force`/`--dry-run`, source not found, lock contention, parse-time failure with no installable resources remaining). |
+| `130` | User aborted at a prompt (bulk select, broken-link, abort sentinel). |
 
 ## Source formats
 
@@ -49,7 +80,184 @@ agentsmesh install --sync
 agentsmesh install github:org/shared-rules@v2.0.0
 ```
 
-AgentsMesh clones the repo, detects the config format, and imports everything into `.agentsmesh/`.
+AgentsMesh clones the repo, classifies the source, and imports everything into `.agentsmesh/`.
+
+### Install a community skill pack in one command
+
+```bash
+agentsmesh install github:addyosmani/agent-skills
+```
+
+The classifier sees `skills/<kebab>/SKILL.md`, `agents/`, `references/`, multi-tool rules, and per-target command dirs (`.claude/commands/`, `.gemini/commands/`); it imports all skills, agents, root rule, and the merged command set in one shot. Per-entity prompts surface only when the source contains relative links that cross the imported subtree.
+
+## Interactive prompts
+
+What you see at the prompt depends on the source's shape. AgentsMesh detects the shape during discovery and picks the simplest prompt that fits — never asks more than it needs to. Every prompt has a deterministic non-interactive default (see the [bypass table](#non-interactive-defaults) below) so `--force`, `--json`, `--dry-run`, and non-TTY runs never block.
+
+### 1. Single-entity confirm
+
+When discovery turns up **exactly one** installable entity across all four kinds, you get a one-line yes/no:
+
+```
+Found in source-name:
+  - 1 skill
+
+Install skill "interview-me"? [y/N]
+```
+
+| Response | Effect |
+|----------|--------|
+| `y` / `Y` | Install the entity. |
+| `n` / `N` / Enter | Skip the entity (exit `0`, nothing installed). |
+| anything else | Abort the run (exit `130`). |
+
+### 2. Multi-entity bulk-select (skill packs)
+
+When the classifier picks `anthropic-skill-pack` and the count is `≥ 2`, you get a three-tier flow. Each tier only fires if the previous one routed there:
+
+**Tier 1 — top-level choice across all kinds:**
+
+```
+Found in agent-skills:
+  - 23 skills
+  - 3 agents
+  - 7 commands
+  - 1 root rule
+
+Install [a]ll, [n]one, or [s]elect per type? [a/n/s]
+```
+
+| Response | Effect |
+|----------|--------|
+| `a` | Accept every entity across every kind. |
+| `n` | Decline everything (exit `0`, nothing installed). |
+| `s` | Drill into Tier 2 per kind. |
+| anything else / blank | Abort (exit `130`). |
+
+**Tier 2 — per-kind, fires once per non-empty kind under `s`:**
+
+```
+Install all 23 skills? [y/n/c]
+```
+
+| Response | Effect |
+|----------|--------|
+| `y` | Take every entity of this kind, continue to the next kind. |
+| `n` | Skip every entity of this kind, continue to the next kind. |
+| `c` | Drill into Tier 3 (cherry-pick by name). |
+| anything else | Abort (exit `130`). |
+
+**Tier 3 — per-entity, fires once per entity inside the kind you entered under `c`:**
+
+```
+Install skill "interview-me"? [y/N/a/q]
+```
+
+| Response | Effect |
+|----------|--------|
+| `y` | Include this entity. |
+| `n` / Enter | Skip this entity, continue to the next. |
+| `a` | Accept this entity and every remaining entity of this kind. |
+| `q` | Skip this entity and every remaining entity of this kind (move to the next kind's Tier 2). |
+| anything else | Abort (exit `130`). |
+
+### 3. Multiple flat collections
+
+When the source root holds two or more flat collections — e.g. `agents/` + `commands/` + `rules/` side-by-side — AgentsMesh can't infer a single intent. Pass `--as <kind>` to pick one kind, or `--path <subdir>` to scope to one folder. Without those flags, the run errors out with the collection list so you can re-run with the right flag:
+
+```
+Ambiguous source with 3 resource collections. Pass --as <kind> to select, or --path <subpath>:
+  - agents (agents, .md)
+  - commands (commands, .md)
+  - rules (rules, .md)
+```
+
+A single flat collection auto-picks silently — no prompt — and the inferred `--as`/`--target` are recorded in `installs.yaml`.
+
+### 4. Marketplace fan-out
+
+When the source is a marketplace (`.claude-plugin/marketplace.json` or a parent dir holding two or more sub-packs), AgentsMesh fans out one install per sub-pack:
+
+- **TTY, no `--all`** — every sub-pack installs silently (no per-sub-pack prompt; each sub-install runs under `--force`).
+- **`--force` or non-TTY** — the run errors out with the sub-pack list so you can choose:
+
+  ```
+  Marketplace source with 4 sub-packs. Pass --all to install all, or use --path <subpath>:
+    - plugins/code-review (skills)
+    - plugins/security (skills, rules)
+    - plugins/testing (commands)
+    - plugins/release (commands, agents)
+  ```
+
+  Re-run with `--all` to fan-out, or `--path plugins/<one>` to install a single sub-pack.
+
+### 5. Conflict with existing canonical entities
+
+If a pack would add a rule / command / agent / skill whose name already exists in your merged canonical config (the union of `.agentsmesh/`, prior packs, and any `extends:`), AgentsMesh asks per collision before writing:
+
+```
+Skill "code-reviewer" already exists in merged config. Add extend anyway? (y/n)
+```
+
+| Response | Effect |
+|----------|--------|
+| `y` / `yes` | Include the colliding entity. At generate time, your canonical entry still wins on basename collision — see [Merge behavior](#merge-behavior). |
+| anything else | Drop the colliding entity from this install. The rest of the pack still installs. |
+
+Under `--force`, `--dry-run`, `--json`, or non-TTY, every colliding entity is kept (treated as `y`); merge-time precedence handles the collision.
+
+### 6. Broken-link prompt (skill packs)
+
+When a skill or agent body references files outside its own subtree (e.g. `../references/orchestration-patterns.md` from a `skills/<x>/SKILL.md`), AgentsMesh classifies each link and prompts per-entity:
+
+```
+Entity "code-reviewer" (agent) has 2 broken links:
+  - ../references/orchestration-patterns.md (resolvable-outside)
+  - ../references/missing.md (unresolvable)
+
+Action: [i]nclude resolvable as supporting files / [l]eave with warnings / [a]bort install
+```
+
+| Response | Effect |
+|----------|--------|
+| `i` | Copy resolvable files into the entity's `supportingFiles`, rewrite the body link to `./references/<x>.md`. Unresolvables stay as-is with warnings. |
+| `l` | Preserve every link string verbatim and warn at generate time. |
+| `a` | Abort the run (exit `130`). |
+
+## Non-interactive defaults
+
+When `--force`, `--json` (implies `--force`), `--dry-run`, or non-TTY runs hit a prompt, AgentsMesh applies the documented default below without asking. This makes CI runs deterministic.
+
+| Prompt | `--force` / non-TTY default | Notes |
+|--------|----------------------------|-------|
+| Single-entity confirm | accept (install the entity) | Matches Tier 1 `a`. |
+| Bulk-select Tier 1 | `a` (accept all) | Same for `--json`. |
+| Bulk-select Tier 2 / 3 | not reached (Tier 1 short-circuits to `a`) | — |
+| Multiple flat collections | **errors** with the collection list | Re-run with `--as` or `--path`. No silent default. |
+| Marketplace fan-out | **errors** with the sub-pack list | Re-run with `--all` or `--path`. `--all` accepts every sub-pack. |
+| Conflict (already in merged) | accept colliding entity | Merge-time precedence resolves it. |
+| Broken-link | `l` (leave with warnings) | Preserves the link string; warns at generate. |
+
+`--dry-run` runs the prompts the same way as the bypass column but never writes anything; the planned changes appear in the renderer/JSON output.
+
+## Troubleshooting
+
+Every install error surfaces a recovery flag in its own text — you should never need to leave the terminal to find the next step. The mapping below is the same one the CLI prints, written out so you can scan it without re-running the command.
+
+| Error you see | What it means | Recovery |
+|---------------|---------------|----------|
+| `Ambiguous source with N resource collections. Pass --as <kind> to select, or --path <subpath>:` | Two or more canonical-named flat collections sit at the source root (e.g. `agents/` + `commands/` + `rules/`) with no `.agentsmesh/` parent. The picker won't guess. | Run one install per kind: `--as <kind> --path <kind>`. Combine the kinds you want and re-run as needed. |
+| `Marketplace source with N sub-packs. Pass --all to install all, or use --path <subpath>:` | Source is a `.claude-plugin/marketplace.json` (or a parent dir with two-plus sub-packs) hit under `--force` or non-TTY, so the silent TTY fan-out can't apply. | Re-run with `--all` (fan out every sub-pack) or `--path plugins/<name>` (install one). |
+| `No installable files found under <path> for manual install.` | `--as <kind>` was passed but the directory holds no `.md` / `.mdc` files matching the kind. | Try a different `--path` to point at the directory holding the markdown files, or drop `--as` so the classifier can re-evaluate the layout. |
+| `No installable native resources found under "<path>" for target "<id>".` | `--target` + `--path` were combined but the resulting subtree carries no native artifacts the target recognizes. | Re-run with `--path <dir>` and *without* `--target` to let auto-detect run on the narrowed tree, or use `--as <kind>` to install the directory as a flat collection. |
+| `No installable resources after skipping invalid files (N): ...` | Every `.md` under the chosen scope had invalid YAML frontmatter (e.g. unquoted scalars containing colons or `[...]` flow-sequences). Lenient parsing skipped each one with a per-file reason; nothing remained. | Fix the frontmatter at the source (quote the offending strings), or narrow `--path` to a subdirectory that excludes the bad files. |
+| `No installable resources at <cache path>` | The classifier ran clean but found no rules / commands / agents / skills / SKILL.md / marketplace.json anywhere under the source. Usually means the repo is a README-only "awesome list" or a CLI tool repo, not a content pack. | Verify the repo actually carries installable content. If it does live under a non-standard path, point at it with `--path <dir>`; if it's a single flat collection, add `--as <kind>`. |
+
+### Limitations that no flag recovers
+
+- **Filename collisions after normalization** (e.g. `docker.md` + `docker.mdc` both normalize to `docker.md`) — the manual-install scope refuses the write so neither file silently overwrites the other. Resolution requires renaming one file at the source.
+- **`.claude-plugin/marketplace.json` entries that point at external URLs** instead of local paths — the parser only resolves local-path plugin sources today. Install each linked repo directly.
+- **Repos where every detected entity has invalid YAML** — there is intentionally no `--skip-validation` flag; bad frontmatter is fixed in the source so downstream `generate` stays predictable.
 
 ### Install from a subdirectory
 
@@ -69,9 +277,10 @@ agentsmesh install github:org/repo --as agents --name team-agents
 
 ```bash
 agentsmesh install github:org/base-config --extends
+agentsmesh install github:org/commands --path workflows --as commands --extends
 ```
 
-Instead of copying files, records the source in `agentsmesh.yaml`'s `extends` field. Config is resolved at generate time from cache.
+Instead of copying files, records the source in `agentsmesh.yaml`'s `extends` field. Config is resolved at generate time from cache. When you combine `--extends` with `--as`, the forced kind is saved as `extends[].as`, so flat markdown folders keep loading as the intended resource type on every future `generate`.
 
 ### Reinstall after a fresh clone
 
@@ -104,6 +313,42 @@ agentsmesh install github:org/repo --force
 
 Includes all resources, skips all prompts.
 
+## JSON output
+
+```bash
+agentsmesh install github:addyosmani/agent-skills --json
+```
+
+```json
+{
+  "success": true,
+  "command": "install",
+  "data": {
+    "source": "github:addyosmani/agent-skills",
+    "mode": "install",
+    "installed": [
+      { "kind": "skills", "name": "lint", "path": ".agentsmesh/skills/lint/SKILL.md" }
+    ],
+    "skipped": [],
+    "dryRun": false,
+    "brokenResources": [
+      {
+        "path": "skills/draft/SKILL.md",
+        "kind": "frontmatter",
+        "reason": "Nested mappings are not allowed in compact mappings"
+      }
+    ]
+  }
+}
+```
+
+Field reference:
+
+- `mode` — `"install"` or `"sync"` (matches the documented contract).
+- `installed[]` — `{ kind, name, path }` per resource that landed; `path` is forward-slash relative to scope root.
+- `skipped[]` — `{ kind, name, reason }` per resource that the user (or `--force` defaults) chose not to include.
+- `brokenResources[]` — only present when the install pipeline skipped one or more files whose YAML frontmatter could not be parsed. Each entry carries the source path, the failure category, and the underlying parser message. The renderer also surfaces a footer warning when this is non-empty.
+
 ## Pack storage
 
 Installed packs are stored in `.agentsmesh/packs/{name}/` and tracked in `.agentsmesh/installs.yaml`:
@@ -123,6 +368,14 @@ packs:
 <Aside type="tip">
   Commit `.agentsmesh/installs.yaml` but gitignore `.agentsmesh/packs/` if packs are large. Use `agentsmesh install --sync` to restore packs after cloning.
 </Aside>
+
+## Per-install integrity manifest
+
+Every install writes `.agentsmesh-install-manifest.json` next to the pack with the install-time `name`, `source`, `installed_at`, classifier verdict (`source_type`), and a `files` map of relative-path → `sha256:<hex>`. `agentsmesh uninstall` reuses this manifest to detect locally-modified files and prompts before deleting them. Legacy packs without a manifest auto-migrate at uninstall time (current contents become the baseline) and surface a one-line warning.
+
+## Concurrent-install lock
+
+`.agentsmesh/.install.lock` (mirrored from `.generate.lock`) is acquired at the top of any `install` or `uninstall` run. Concurrent invocations on the same project fail fast with a clear lock-holder error rather than racing on filesystem writes. `--sync` replay holds the same lock across all recursive installs.
 
 ## Merge behavior
 

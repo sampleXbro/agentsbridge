@@ -21,6 +21,12 @@ function makeMinimalDescriptor(
 ): TargetDescriptor {
   return {
     id,
+    metadata: {
+      displayName: id,
+      category: 'cli',
+      officialUrl: 'https://example.test/',
+      shortDescription: `Test descriptor for ${id}`,
+    },
     generators: { name: id, generateRules: () => [], importFrom: async () => [] },
     capabilities: {
       rules: 'native',

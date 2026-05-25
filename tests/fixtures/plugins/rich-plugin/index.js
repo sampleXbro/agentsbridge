@@ -23,6 +23,14 @@ import { basename } from 'node:path';
 export const descriptor = {
   id: 'rich-plugin',
 
+  // ──── User-facing metadata (H6 — required by schema) ──
+  metadata: {
+    displayName: 'Rich Plugin',
+    category: 'ide',
+    officialUrl: 'https://example.test/rich-plugin',
+    shortDescription: 'Test plugin covering every TargetDescriptor surface',
+  },
+
   // ──── Generators (all 8 feature generators + lint + primaryRootInstructionPath) ──
   generators: {
     name: 'rich-plugin',

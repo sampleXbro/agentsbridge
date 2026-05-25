@@ -12,16 +12,17 @@
  * runner for the declarable parts of their flow.
  */
 
-import { dirname, join, posix } from 'node:path';
+import { basename, dirname, join, posix } from 'node:path';
 import type { ImportResult, McpServer } from '../../core/types.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
 import { mkdirp, readFileSafe, writeFileAtomic } from '../../utils/filesystem/fs.js';
 import { writeMcpWithMerge } from './mcp-merge.js';
-import { parseFrontmatter } from '../../utils/text/markdown.js';
+import { tryParseFrontmatter } from '../../utils/text/markdown.js';
 import { toStringArray, toStringRecord } from './shared-import-helpers.js';
 import { serializeImportedRuleWithFallback } from './import-metadata.js';
 import { importFileDirectory } from './import-orchestrator.js';
 import { resolveMapper } from './descriptor-default-mappers.js';
+import { isPreservedBoilerplate } from '../../install/importers/boilerplate-filter.js';
 import {
   IMPORT_FEATURE_ORDER,
   resolveScopedSources,
@@ -52,19 +53,31 @@ async function runSingleFile(
       normalize(content, srcPath, destinationFile);
 
     if (spec.map) {
-      const mapping = await spec.map({
-        absolutePath: srcPath,
-        relativePath: rel,
-        content,
-        destDir,
-        normalizeTo,
-      });
+      let mapping;
+      try {
+        mapping = await spec.map({
+          absolutePath: srcPath,
+          relativePath: rel,
+          content,
+          destDir,
+          normalizeTo,
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        process.stderr.write(`⚠ skipping ${srcPath}: ${msg}\n`);
+        continue;
+      }
       if (!mapping) continue;
       await writeFileAtomic(mapping.destPath, mapping.content);
       return [{ fromTool, fromPath: srcPath, toPath: mapping.toPath, feature: spec.feature }];
     }
 
-    const { frontmatter, body } = parseFrontmatter(normalizeTo(destPath));
+    const result = tryParseFrontmatter(normalizeTo(destPath), srcPath);
+    if (!result.ok) {
+      process.stderr.write(`⚠ skipping ${srcPath}: ${result.error.message}\n`);
+      continue;
+    }
+    const { frontmatter, body } = result.value;
     const remapped = spec.frontmatterRemap ? spec.frontmatterRemap(frontmatter) : frontmatter;
     const outFm = spec.markAsRoot ? { ...remapped, root: true } : remapped;
     const outContent = await serializeImportedRuleWithFallback(destPath, outFm, body);
@@ -100,13 +113,28 @@ async function runDirectory(
       fromTool,
       normalize,
       mapEntry: async ({ srcPath, relativePath, content, normalizeTo }) => {
-        const mapping = await mapper({
-          absolutePath: srcPath,
-          relativePath,
-          content,
-          destDir,
-          normalizeTo: (destinationFile) => normalizeTo(destinationFile),
-        });
+        // Preserved boilerplate (README/LICENSE/NOTICE/COPYING/COPYRIGHT) at
+        // any depth in a third-party source tree is folder documentation or
+        // legal attribution, never a canonical entity. Filtering here prevents
+        // basename-slug collisions like two `README.md` files in `agents/` and
+        // `agents/external/` taking down the whole install. Noise stems
+        // (`security`, `contributing`, ...) stay through because users may
+        // legitimately name a rule `.claude/rules/security.md`.
+        if (isPreservedBoilerplate(basename(srcPath))) return null;
+        let mapping;
+        try {
+          mapping = await mapper({
+            absolutePath: srcPath,
+            relativePath,
+            content,
+            destDir,
+            normalizeTo: (destinationFile) => normalizeTo(destinationFile),
+          });
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          process.stderr.write(`⚠ skipping ${srcPath}: ${msg}\n`);
+          return null;
+        }
         if (!mapping) return null;
         return {
           destPath: mapping.destPath,

@@ -28,7 +28,6 @@ export const ROO_CODE_GLOBAL_AGENTS_MD = `${ROO_CODE_GLOBAL_DIR}/AGENTS.md`;
 // Cross-agent compatibility mirror
 export const ROO_CODE_GLOBAL_AGENTS_SKILLS_DIR = '.agents/skills';
 
-export const ROO_CODE_CANONICAL_ROOT_RULE = '.agentsmesh/rules/_root.md';
 export const ROO_CODE_CANONICAL_RULES_DIR = '.agentsmesh/rules';
 export const ROO_CODE_CANONICAL_COMMANDS_DIR = '.agentsmesh/commands';
 export const ROO_CODE_CANONICAL_MCP = '.agentsmesh/mcp.json';

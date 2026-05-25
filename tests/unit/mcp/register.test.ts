@@ -10,17 +10,23 @@ function descriptor(name: string): {
 }
 
 describe('register', () => {
-  it('registers exactly 41 tools', () => {
-    expect(TOOL_DESCRIPTORS).toHaveLength(41);
+  it('registers exactly 44 tools', () => {
+    expect(TOOL_DESCRIPTORS).toHaveLength(44);
     const names = TOOL_DESCRIPTORS.map((d) => d.name);
-    expect(new Set(names).size).toBe(41); // no dupes
+    expect(new Set(names).size).toBe(44); // no dupes
   });
-  it('registers exactly 16 resources', () => {
-    expect(RESOURCE_DESCRIPTORS).toHaveLength(16);
+  it('registers exactly 17 resources', () => {
+    expect(RESOURCE_DESCRIPTORS).toHaveLength(17);
   });
   it('every read tool also registers as a Resource', () => {
     const reads = TOOL_DESCRIPTORS.filter((d) => d.resourceUri !== undefined);
-    expect(reads.length).toBe(16);
+    expect(reads.length).toBe(17);
+  });
+  it('exposes install / uninstall / installs_list as registered tools', () => {
+    const names = new Set(TOOL_DESCRIPTORS.map((d) => d.name));
+    expect(names.has('install')).toBe(true);
+    expect(names.has('uninstall')).toBe(true);
+    expect(names.has('installs_list')).toBe(true);
   });
 });
 

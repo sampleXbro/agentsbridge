@@ -2,7 +2,7 @@ import { realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRouter } from './router.js';
-import { printHelp } from './help.js';
+import { printCommandHelp, printHelp } from './help.js';
 import { printVersion } from './version.js';
 import { handleError } from './error-handler.js';
 import { muteLogger } from '../utils/output/logger.js';
@@ -61,6 +61,10 @@ async function main(parsed: ParseResult): Promise<void> {
   }
   if (command === 'version') {
     printVersion();
+    return;
+  }
+  if (flags.help === true) {
+    printCommandHelp(command);
     return;
   }
 

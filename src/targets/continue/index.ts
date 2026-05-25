@@ -158,4 +158,5 @@ export const descriptor = {
   },
   buildImportPaths: buildContinueImportPaths,
   detectionPaths: ['.continue/rules', '.continue/skills', '.continue/mcpServers'],
+  conversionDefaults: { agentsToSkills: true },
 } satisfies TargetDescriptor;

@@ -122,7 +122,9 @@ function scopeImportedResults(
   const filtered = results.filter((result) => overlapsPath(requestedPath, result.fromPath));
   if (filtered.length === 0) {
     throw new Error(
-      `No installable native resources found under "${pathInRepoPosix}" for target "${target}".`,
+      `No installable native resources found under "${pathInRepoPosix}" for target "${target}". ` +
+        `Try --path "${pathInRepoPosix}" without --target so agentsmesh can auto-detect the layout, ` +
+        `or use --as <rules|commands|agents|skills> to install the directory as a flat collection.`,
     );
   }
 

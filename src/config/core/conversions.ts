@@ -1,32 +1,26 @@
 import type { ValidatedConfig } from './schema.js';
 import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
+import { getDescriptor } from '../../targets/catalog/registry.js';
 
-const DEFAULT_COMMANDS_TO_SKILLS: Record<string, boolean> = {
-  amp: true,
-  'codex-cli': true,
-  goose: true,
-  kiro: true,
-  warp: true,
-};
-
-const DEFAULT_AGENTS_TO_SKILLS: Record<string, boolean> = {
-  amp: true,
-  'gemini-cli': false, // native .gemini/agents/*.md per agent-structures
-  cline: true,
-  'codex-cli': false, // native .codex/agents/*.toml per agent-structures
-  windsurf: true,
-  goose: true,
-  antigravity: true,
-  continue: true,
-  warp: true,
-};
+/**
+ * Read a builtin or plugin descriptor's declared conversion default.
+ * `undefined` means "no default declared" — caller falls back to its own
+ * `defaultEnabled` argument (used by plugin targets that haven't opted into
+ * conversion projection at all).
+ */
+function builtinDefault(
+  target: string,
+  key: 'commandsToSkills' | 'agentsToSkills',
+): boolean | undefined {
+  return getDescriptor(target)?.conversionDefaults?.[key];
+}
 
 export function usesCommandSkillProjection(target: string): boolean {
-  return Object.prototype.hasOwnProperty.call(DEFAULT_COMMANDS_TO_SKILLS, target);
+  return builtinDefault(target, 'commandsToSkills') !== undefined;
 }
 
 export function usesAgentSkillProjection(target: string): boolean {
-  return Object.prototype.hasOwnProperty.call(DEFAULT_AGENTS_TO_SKILLS, target);
+  return builtinDefault(target, 'agentsToSkills') !== undefined;
 }
 
 type ConversionValue = boolean | { project?: boolean; global?: boolean };
@@ -41,8 +35,9 @@ function resolveConversionValue(
 }
 
 /**
- * @param defaultEnabled - For plugin targets not in the builtin map, use this
- *   as the fallback when the user hasn't set an explicit config override.
+ * @param defaultEnabled - For plugin targets without a declared default in
+ *   their descriptor, use this as the fallback when the user hasn't set an
+ *   explicit config override.
  */
 export function shouldConvertCommandsToSkills(
   config: ValidatedConfig,
@@ -55,13 +50,15 @@ export function shouldConvertCommandsToSkills(
   )?.[target];
   const configVal = resolveConversionValue(raw, scope);
   if (configVal !== undefined) return configVal;
-  if (usesCommandSkillProjection(target)) return DEFAULT_COMMANDS_TO_SKILLS[target]!;
+  const builtin = builtinDefault(target, 'commandsToSkills');
+  if (builtin !== undefined) return builtin;
   return defaultEnabled ?? false;
 }
 
 /**
- * @param defaultEnabled - For plugin targets not in the builtin map, use this
- *   as the fallback when the user hasn't set an explicit config override.
+ * @param defaultEnabled - For plugin targets without a declared default in
+ *   their descriptor, use this as the fallback when the user hasn't set an
+ *   explicit config override.
  */
 export function shouldConvertAgentsToSkills(
   config: ValidatedConfig,
@@ -74,6 +71,7 @@ export function shouldConvertAgentsToSkills(
   )?.[target];
   const configVal = resolveConversionValue(raw, scope);
   if (configVal !== undefined) return configVal;
-  if (usesAgentSkillProjection(target)) return DEFAULT_AGENTS_TO_SKILLS[target]!;
+  const builtin = builtinDefault(target, 'agentsToSkills');
+  if (builtin !== undefined) return builtin;
   return defaultEnabled ?? false;
 }

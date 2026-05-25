@@ -8,13 +8,34 @@ import type { FetchRemoteOptions, FetchRemoteResult } from './remote-fetcher.js'
 import type { ParsedGitSource } from './remote-source.js';
 import type { ParsedGithubSource } from './remote-source.js';
 
+const DEFAULT_MAX_TARBALL_MB = 500;
+const MIN_MAX_TARBALL_MB = 1;
+const MAX_MAX_TARBALL_MB = 4096;
+
+function resolveMaxTarballBytes(): number {
+  const raw = process.env.AGENTSMESH_MAX_TARBALL_MB;
+  if (raw === undefined || raw === '') return DEFAULT_MAX_TARBALL_MB * 1024 * 1024;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || !Number.isInteger(parsed)) {
+    console.warn(
+      `[agentsmesh] AGENTSMESH_MAX_TARBALL_MB="${raw}" is not an integer; using default ${DEFAULT_MAX_TARBALL_MB} MiB.`,
+    );
+    return DEFAULT_MAX_TARBALL_MB * 1024 * 1024;
+  }
+  if (parsed < MIN_MAX_TARBALL_MB || parsed > MAX_MAX_TARBALL_MB) {
+    console.warn(
+      `[agentsmesh] AGENTSMESH_MAX_TARBALL_MB=${parsed} is outside [${MIN_MAX_TARBALL_MB}, ${MAX_MAX_TARBALL_MB}]; using default ${DEFAULT_MAX_TARBALL_MB} MiB.`,
+    );
+    return DEFAULT_MAX_TARBALL_MB * 1024 * 1024;
+  }
+  return parsed * 1024 * 1024;
+}
+
 /**
- * Hard cap on remote tarball size. The previous unbounded `arrayBuffer()`
- * read would happily allocate hundreds of GB if a peer (or a malformed
- * release) served an oversized response, exhausting host memory. 500 MiB is
- * generous for legitimate dotfile / config repositories.
+ * Hard cap on remote tarball size. Defaults to 500 MiB. Override via
+ * `AGENTSMESH_MAX_TARBALL_MB` (integer MiB, clamped to [1, 4096]).
  */
-export const MAX_TARBALL_BYTES = 500 * 1024 * 1024;
+export const MAX_TARBALL_BYTES = resolveMaxTarballBytes();
 
 /**
  * Read a `Response` body into memory but abort if the running byte total

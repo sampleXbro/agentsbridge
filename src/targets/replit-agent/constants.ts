@@ -18,9 +18,5 @@ export const REPLIT_AGENT_TARGET = 'replit-agent';
 export const REPLIT_AGENT_ROOT_FILE = 'replit.md';
 export const REPLIT_AGENT_SKILLS_DIR = '.agents/skills';
 
-// Global-level paths (~/.replit/)
-export const REPLIT_AGENT_GLOBAL_ROOT_FILE = '.replit/replit.md';
-export const REPLIT_AGENT_GLOBAL_SKILLS_DIR = '.replit/skills';
-
 // Canonical paths
 export const REPLIT_AGENT_CANONICAL_RULES_DIR = '.agentsmesh/rules';

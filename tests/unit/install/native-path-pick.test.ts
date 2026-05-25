@@ -30,8 +30,25 @@ describe('targetHintFromNativePath', () => {
 
   it('handles exact matches', () => {
     expect(targetHintFromNativePath('.github/copilot-instructions.md')).toBe('copilot');
-    expect(targetHintFromNativePath('.codex')).toBe('codex-cli');
+    expect(targetHintFromNativePath('.codex/config.toml')).toBe('codex-cli');
     expect(targetHintFromNativePath('.kilocodeignore')).toBe('kilo-code');
+  });
+
+  it('resolves previously-unmapped targets via descriptor derivation', () => {
+    // These were not in the old hardcoded PATH_PREFIX_TO_TARGET array;
+    // descriptor-driven derivation picks them up automatically.
+    expect(targetHintFromNativePath('.opencode/rules')).toBe('opencode');
+    expect(targetHintFromNativePath('.augment/commands/build.md')).toBe('augment-code');
+    expect(targetHintFromNativePath('.roo/skills/foo')).toBe('roo-code');
+    expect(targetHintFromNativePath('.qwen/agents/x.md')).toBe('qwen-code');
+    expect(targetHintFromNativePath('.trae/rules')).toBe('trae');
+  });
+
+  it('returns undefined for paths shared by multiple targets (ambiguous markers)', () => {
+    // `AGENTS.md` and `.agents/skills/` are claimed by many descriptors —
+    // hints must be undefined so the caller falls through to other resolution.
+    expect(targetHintFromNativePath('AGENTS.md')).toBeUndefined();
+    expect(targetHintFromNativePath('.agents/skills/some-skill')).toBeUndefined();
   });
 
   it('normalizes path separators', () => {

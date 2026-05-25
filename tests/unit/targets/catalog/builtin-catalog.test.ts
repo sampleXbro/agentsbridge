@@ -64,4 +64,19 @@ describe('builtin target catalog (auto-discovered)', () => {
   it('generated id list is alphabetically sorted', () => {
     expect([...BUILTIN_TARGET_IDS]).toEqual([...BUILTIN_TARGET_IDS].sort());
   });
+
+  it('every descriptor declares at least one detectionPath', () => {
+    // detectionPaths is the single source of truth for native-format auto
+    // detection (src/config/resolve/native-format-detector.ts). A target with
+    // an empty array would be silently undetectable from path signatures.
+    const offenders = BUILTIN_TARGETS.filter((d) => d.detectionPaths.length === 0).map((d) => d.id);
+    expect(offenders, `targets with empty detectionPaths: ${offenders.join(', ')}`).toEqual([]);
+  });
+
+  it('codex-cli opts out of the starter-init scaffold via descriptor', () => {
+    // The AGENTS.md collision rule lives on codex-cli's descriptor, not in a
+    // central exclusion list. Other targets should not silently opt out.
+    const optedOut = BUILTIN_TARGETS.filter((d) => d.excludeFromStarterInit).map((d) => d.id);
+    expect(optedOut).toEqual(['codex-cli']);
+  });
 });

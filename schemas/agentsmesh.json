@@ -152,6 +152,15 @@
               "zed"
             ]
           },
+          "as": {
+            "type": "string",
+            "enum": [
+              "rules",
+              "commands",
+              "agents",
+              "skills"
+            ]
+          },
           "features": {
             "type": "array",
             "items": {
@@ -248,10 +257,6 @@
           }
         }
       },
-      "required": [
-        "strategy",
-        "lock_features"
-      ],
       "additionalProperties": false
     },
     "conversions": {
@@ -404,14 +409,7 @@
     }
   },
   "required": [
-    "version",
-    "targets",
-    "features",
-    "extends",
-    "overrides",
-    "collaboration",
-    "plugins",
-    "pluginTargets"
+    "version"
   ],
   "additionalProperties": false,
   "title": "agentsmesh.yaml",

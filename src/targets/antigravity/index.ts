@@ -43,6 +43,20 @@ export const target: TargetGenerators = {
 const project: TargetLayout = {
   rootInstructionPath: ANTIGRAVITY_RULES_ROOT,
   skillDir: '.agents/skills',
+  // managedOutputs is the sole signal `cleanupStaleGeneratedOutputs` uses to
+  // decide which dirs/files to scan when reconciling post-uninstall state.
+  // Antigravity emits across three dirs:
+  //   - `.agents/rules`     (rules)
+  //   - `.agents/workflows` (commands → workflows projection)
+  //   - `.agents/skills`    (agents → skills projection + native skills)
+  // Without all three here, projected outputs from an uninstalled pack would
+  // linger in the user's project. The root rule file and (suppressed) MCP
+  // config are listed under `files` so a flip from one root style to another
+  // doesn't leave both behind.
+  managedOutputs: {
+    dirs: [ANTIGRAVITY_RULES_DIR, ANTIGRAVITY_WORKFLOWS_DIR, ANTIGRAVITY_SKILLS_DIR],
+    files: [ANTIGRAVITY_RULES_ROOT],
+  },
   rewriteGeneratedPath(path) {
     if (path === ANTIGRAVITY_MCP_CONFIG) return null;
     return path;
@@ -60,7 +74,7 @@ const project: TargetLayout = {
   },
 };
 
-const global: TargetLayout = {
+const globalLayout: TargetLayout = {
   rootInstructionPath: ANTIGRAVITY_GLOBAL_ROOT,
   renderPrimaryRootInstruction: renderAntigravityGlobalInstructions,
   skillDir: ANTIGRAVITY_GLOBAL_SKILLS_DIR,
@@ -88,7 +102,11 @@ const global: TargetLayout = {
       return `${ANTIGRAVITY_GLOBAL_WORKFLOWS_DIR}/${name}.md`;
     },
     agentPath(name) {
-      return `${ANTIGRAVITY_SKILLS_DIR}/${projectedAgentSkillDirName(name)}/SKILL.md`;
+      // Return the global path directly so consumers that build a reference
+      // map (e.g. `agentTargetPath` in `core/reference/map-targets.ts`) don't
+      // rely on `rewriteGeneratedPath` running after them. Generation also
+      // invokes the rewrite, which is now a no-op for this path.
+      return `${ANTIGRAVITY_GLOBAL_SKILLS_DIR}/${projectedAgentSkillDirName(name)}/SKILL.md`;
     },
   },
 };
@@ -138,7 +156,7 @@ export const descriptor = {
       '.gemini/antigravity/workflows',
       '.gemini/antigravity/mcp_config.json',
     ],
-    layout: global,
+    layout: globalLayout,
   },
   importer: {
     rules: {
@@ -180,4 +198,5 @@ export const descriptor = {
     '.agents/skills/',
     '.agents/workflows/',
   ],
+  conversionDefaults: { agentsToSkills: true },
 } satisfies TargetDescriptor;

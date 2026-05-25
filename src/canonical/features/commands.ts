@@ -5,8 +5,13 @@
 import { basename } from 'node:path';
 import type { CanonicalCommand } from '../../core/types.js';
 import { readFileSafe, readDirRecursive } from '../../utils/filesystem/fs.js';
-import { parseFrontmatter } from '../../utils/text/markdown.js';
+import { parseOrSkipFrontmatter } from '../../utils/text/markdown.js';
+import type { ParseFrontmatterOptions } from './rules.js';
 import { assertCanonicalName, assertNoBasenameCollisions } from './validate-name.js';
+import {
+  warnIfUnrecognizedResourceFormats,
+  type UnrecognizedFormatsWarningOptions,
+} from './unrecognized-files-warning.js';
 
 /**
  * Coerce value to tools array. Handles comma-separated string, string[], or invalid.
@@ -33,20 +38,31 @@ function toToolsArray(v: unknown): string[] {
   return [];
 }
 
+export interface ParseCommandsOptions
+  extends ParseFrontmatterOptions, UnrecognizedFormatsWarningOptions {}
+
 /**
  * Parse all command files in a commands directory.
  * @param commandsDir - Absolute path to .agentsmesh/commands
  * @returns Array of parsed CanonicalCommand, or [] if dir missing/empty
  */
-export async function parseCommands(commandsDir: string): Promise<CanonicalCommand[]> {
+export async function parseCommands(
+  commandsDir: string,
+  opts: ParseCommandsOptions = {},
+): Promise<CanonicalCommand[]> {
   const files = await readDirRecursive(commandsDir);
   const mdFiles = files.filter((f) => f.endsWith('.md') && !basename(f).startsWith('_'));
+  warnIfUnrecognizedResourceFormats('commands', commandsDir, files, mdFiles, {
+    handledByOtherReader: opts.handledByOtherReader,
+  });
   assertNoBasenameCollisions('command', mdFiles, '.md');
   const commands: CanonicalCommand[] = [];
   for (const path of mdFiles) {
     const content = await readFileSafe(path);
     if (!content) continue;
-    const { frontmatter, body } = parseFrontmatter(content);
+    const parsed = parseOrSkipFrontmatter(content, path, opts.onParseError);
+    if (!parsed) continue;
+    const { frontmatter, body } = parsed;
     const name = basename(path, '.md');
     assertCanonicalName('command', name);
     const fromCamel = toToolsArray(frontmatter.allowedTools);

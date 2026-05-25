@@ -27,11 +27,6 @@
       }
     }
   },
-  "required": [
-    "allow",
-    "deny",
-    "ask"
-  ],
   "additionalProperties": false,
   "description": "AgentsMesh permissions config (.agentsmesh/permissions.yaml)",
   "title": "agentsmesh-permissions.yaml"

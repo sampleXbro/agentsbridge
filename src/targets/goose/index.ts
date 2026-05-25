@@ -80,9 +80,9 @@ const globalLayout: TargetLayout = {
   rewriteGeneratedPath(path) {
     if (path === GOOSE_ROOT_FILE) return GOOSE_GLOBAL_ROOT_FILE;
     if (path === GOOSE_IGNORE) return GOOSE_GLOBAL_IGNORE;
-    if (path.startsWith(`${GOOSE_SKILLS_DIR}/`)) {
-      return path;
-    }
+    // Skills: `GOOSE_SKILLS_DIR === GOOSE_GLOBAL_SKILLS_DIR === '.agents/skills'`
+    // by design — goose mirrors agents/skills under one path in both scopes.
+    // No rewrite needed.
     return path;
   },
   mirrorGlobalPath(path, activeTargets) {
@@ -165,4 +165,5 @@ export const descriptor = {
   },
   buildImportPaths: buildGooseImportPaths,
   detectionPaths: [GOOSE_ROOT_FILE, GOOSE_IGNORE],
+  conversionDefaults: { commandsToSkills: true, agentsToSkills: true },
 } satisfies TargetDescriptor;

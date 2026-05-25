@@ -53,8 +53,17 @@ export async function prepareInstallDiscovery(
   const agentsmeshAtRoot = join(repoRoot, '.agentsmesh');
   const hasAbRoot = await exists(agentsmeshAtRoot);
   const pathHint = posixPath ? targetHintFromNativePath(posixPath) : undefined;
-  const detectedTarget =
-    !hasAbRoot && !explicitTarget ? ((await detectNativeFormat(repoRoot)) ?? undefined) : undefined;
+  // R-3: when `--path` narrows to a non-native subdirectory and the user did
+  // NOT explicitly choose a target, suppress root-level `detectNativeFormat`.
+  // Otherwise a repo with a root `CLAUDE.md` and a sibling `skills/` folder
+  // forces `--path skills` to be treated as a claude-code subset and fails
+  // with "No installable native resources" instead of letting the subdir be
+  // classified on its own (e.g. as an Anthropic skill pack).
+  const allowRootDetection =
+    !hasAbRoot && !explicitTarget && (!posixPath || pathHint !== undefined);
+  const detectedTarget = allowRootDetection
+    ? ((await detectNativeFormat(repoRoot)) ?? undefined)
+    : undefined;
 
   if (!explicitTarget && pathHint && detectedTarget && pathHint !== detectedTarget) {
     throw new Error(
@@ -118,7 +127,9 @@ export async function prepareInstallDiscovery(
     implicitPick = await inferImplicitPickFromNativePath(repoRoot, posixPath, effectiveTarget);
     if (isImplicitPickEmpty(implicitPick)) {
       throw new Error(
-        `No installable native resources found under "${posixPath}" for target "${effectiveTarget}".`,
+        `No installable native resources found under "${posixPath}" for target "${effectiveTarget}". ` +
+          `Try --path "${posixPath}" without --target so agentsmesh can auto-detect the layout, ` +
+          `or use --as <rules|commands|agents|skills> to install the directory as a flat collection.`,
       );
     }
   }

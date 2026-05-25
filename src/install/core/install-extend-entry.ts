@@ -41,6 +41,7 @@ export function toNewExtendEntry(args: {
   path?: string;
   pick?: ExtendPick;
   yamlTarget?: string;
+  as?: ValidatedConfig['extends'][number]['as'];
 }): NewExtendEntry {
   return {
     name: args.name,
@@ -50,5 +51,6 @@ export function toNewExtendEntry(args: {
     path: args.path,
     pick: args.pick,
     target: args.yamlTarget !== undefined ? targetSchema.parse(args.yamlTarget) : undefined,
+    as: args.as,
   };
 }

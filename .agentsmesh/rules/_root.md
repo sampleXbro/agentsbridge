@@ -77,5 +77,7 @@ description: ""
   5. No hardcoded target counts or enumerations on homepage, CLI overview, or other pages. Use generic language and link to the matrix.
   6. Adding/changing a target: update `target-ids.ts` + descriptor → `supported-tools.mdx` → `README.md` matrix. No other docs pages should need changes.
 - **CLI display paths must use forward slashes**: Any CLI output displaying file paths to users must normalize with `.replaceAll('\\', '/')` before printing. Tests assert forward-slash paths unconditionally; native `node:path` separators leak platform differences into output.
-- **Refer to PRD**: `docs/prd-v2-complete.md` for architecture decisions
-- **Refer to tasks**: `docs/agentsmesh-ai-first-tasks.md` for current task specs
+- **Load-bearing contracts** — verify before claiming any non-trivial change complete:
+  - **Plugins**: every install path picks up `registerTargetDescriptor()` non-`.md` mappers via `getAllRegisteredDescriptorIds()` (`tests/unit/install/importers/target-native-commands-plugin.test.ts`).
+  - **Reference rewriting**: `(SPEC.md or equivalent)` prose stays verbatim; real Markdown inline-link destinations rewrite cross-format (`tests/unit/core/link-token-classifier-prose-vs-md-link.test.ts`).
+  - **Install**: third-party dir-readers route through `readEntityDirWithMappers`; the 79-repo sweep in `docs/testing/install-compatibility-repos.md` stays green.

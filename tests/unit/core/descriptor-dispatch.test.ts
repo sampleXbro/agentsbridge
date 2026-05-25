@@ -40,6 +40,12 @@ function makeRule(slug: string, overrides?: Partial<CanonicalRule>): CanonicalRu
 function makePluginDescriptor(id: string): TargetDescriptor {
   return {
     id,
+    metadata: {
+      displayName: id,
+      category: 'cli',
+      officialUrl: 'https://example.test/dispatch',
+      shortDescription: `Dispatch-test plugin descriptor for ${id}`,
+    },
     generators: {
       name: id,
       generateRules: () => [],

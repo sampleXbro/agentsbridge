@@ -7,10 +7,12 @@ import { parse as parseYaml, stringify as yamlStringify } from 'yaml';
 import { z } from 'zod';
 import { extendPickSchema, featureSchema, targetSchema } from '../../config/core/schema.js';
 import { readFileSafe, writeFileAtomic } from '../../utils/filesystem/fs.js';
+import { prependYamlSchemaDirective } from '../../utils/output/schema-directive.js';
 import { manualInstallAsSchema, type ManualInstallAs } from '../manual/manual-install-mode.js';
 import { normalizePersistedInstallPaths } from './portable-paths.js';
+import { sameFeatureSet } from './pick-reuse-entry-name.js';
 
-const installManifestEntrySchema = z.object({
+export const installManifestEntrySchema = z.object({
   name: z.string().min(1),
   source: z.string().min(1),
   version: z.string().optional(),
@@ -23,26 +25,23 @@ const installManifestEntrySchema = z.object({
   as: manualInstallAsSchema.optional(),
 });
 
-const installManifestSchema = z.object({
+export const installManifestSchema = z.object({
   version: z.literal(1),
+  // Post-processed by `stripRequiredFromDefaults()` in the schema generator
+  // so the emitted JSON Schema marks `installs` as not-required (a
+  // freshly-created or fully-uninstalled manifest is just `version: 1`).
+  // Runtime parser still substitutes `[]` for an absent field.
   installs: z.array(installManifestEntrySchema).default([]),
 });
 
 export type InstallManifestEntry = z.infer<typeof installManifestEntrySchema>;
-
-function sameFeatures(a: string[], b: string[]): boolean {
-  return (
-    a.length === b.length &&
-    [...a].sort().every((feature, index) => feature === [...b].sort()[index])
-  );
-}
 
 function sameInstallIdentity(a: InstallManifestEntry, b: InstallManifestEntry): boolean {
   return (
     a.source === b.source &&
     a.target === b.target &&
     a.as === b.as &&
-    sameFeatures(a.features, b.features)
+    sameFeatureSet(a.features, b.features)
   );
 }
 
@@ -75,8 +74,33 @@ export async function upsertInstallManifestEntry(
   next.push(normalizedEntry);
   await writeFileAtomic(
     manifestPath(canonicalDir),
-    yamlStringify({ version: 1, installs: next.sort((a, b) => a.name.localeCompare(b.name)) }),
+    prependYamlSchemaDirective(
+      yamlStringify({ version: 1, installs: next.sort((a, b) => a.name.localeCompare(b.name)) }),
+      'installs',
+    ),
   );
+}
+
+/**
+ * Remove a single install entry by name. Returns `true` when an entry was
+ * found and the file was rewritten, `false` when no entry matched and the
+ * file is unchanged. The rewrite is atomic via `writeFileAtomic`.
+ */
+export async function removeInstallManifestEntry(
+  canonicalDir: string,
+  name: string,
+): Promise<boolean> {
+  const installs = await readInstallManifest(canonicalDir);
+  const next = installs.filter((entry) => entry.name !== name);
+  if (next.length === installs.length) return false;
+  await writeFileAtomic(
+    manifestPath(canonicalDir),
+    prependYamlSchemaDirective(
+      yamlStringify({ version: 1, installs: next.sort((a, b) => a.name.localeCompare(b.name)) }),
+      'installs',
+    ),
+  );
+  return true;
 }
 
 export function buildInstallManifestEntry(args: {

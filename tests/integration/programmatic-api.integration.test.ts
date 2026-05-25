@@ -88,6 +88,12 @@ function makeTestPluginDescriptor(
 ): TargetDescriptor {
   const descriptor: TargetDescriptor = {
     id,
+    metadata: {
+      displayName: id,
+      category: 'cli',
+      officialUrl: 'https://example.test/programmatic',
+      shortDescription: `Test plugin descriptor for ${id}`,
+    },
     generators: {
       name: id,
       generateRules: () => [{ path: `.test-plugin/${id}.md`, content: `# ${id}` }],

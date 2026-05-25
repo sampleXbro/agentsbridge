@@ -147,8 +147,11 @@ features: [rules, commands, skills]
   );
 
   it.skipIf(process.platform === 'win32')(
-    'fails generation when a SKILL.md markdown destination contains a non-existent absolute path',
+    'warns (does not fail) when a SKILL.md markdown destination contains a non-existent absolute path',
     () => {
+      // R-4: skill outputs are third-party content; broken links inside them
+      // are warnings, not generate-blocking errors. We still surface the warning
+      // text on stderr so the user can see what's broken.
       writeFileSync(
         join(testDir, 'agentsmesh.yaml'),
         `version: 1
@@ -168,19 +171,26 @@ features: [skills]
         ].join('\n'),
       );
 
-      let stderr = '';
+      let stderr: string;
       let exitCode = 0;
       try {
-        execSync(`node ${CLI_PATH} generate`, { cwd: testDir, env: process.env, stdio: 'pipe' });
+        const out = execSync(`node ${CLI_PATH} generate 2>&1`, {
+          cwd: testDir,
+          env: process.env,
+        });
+        stderr = out.toString();
       } catch (err) {
-        const e = err as { status?: number; stderr?: Buffer; stdout?: Buffer };
-        exitCode = e.status ?? 0;
-        stderr = `${e.stderr?.toString() ?? ''}${e.stdout?.toString() ?? ''}`;
+        const e = err as { status?: number; stdout?: Buffer; stderr?: Buffer };
+        exitCode = e.status ?? 1;
+        stderr = `${e.stdout?.toString() ?? ''}${e.stderr?.toString() ?? ''}`;
       }
 
-      expect(exitCode).not.toBe(0);
-      expect(stderr).toMatch(/broken local links/);
+      expect(exitCode).toBe(0);
+      expect(stderr).toMatch(/Third-party content contains .* broken local link/);
       expect(stderr).toContain(`${testDir}/.agentsmesh/rules/missing.md`);
+      // The skill output IS still materialized despite the warning.
+      const generated = readFileSync(join(testDir, '.claude', 'skills', 'qa', 'SKILL.md'), 'utf-8');
+      expect(generated).toContain('description: QA');
     },
   );
 
@@ -327,8 +337,9 @@ features: [rules, skills]
   );
 
   it.skipIf(process.platform === 'win32')(
-    'fails global generation when a SKILL.md markdown destination contains a non-existent HOME-rooted absolute path',
+    'warns (does not fail) on global generation when a SKILL.md absolute link is non-existent',
     () => {
+      // R-4: same relaxation in global scope. Skills generate, warning emitted.
       const meshDir = join(homeDir, '.agentsmesh');
       mkdirSync(join(meshDir, 'skills', 'qa'), { recursive: true });
 
@@ -350,23 +361,25 @@ features: [skills]
         ].join('\n'),
       );
 
-      let stderr = '';
+      let stderr: string;
       let exitCode = 0;
       try {
-        execSync(`node ${CLI_PATH} generate --global`, {
+        const out = execSync(`node ${CLI_PATH} generate --global 2>&1`, {
           cwd: homeDir,
           env: makeEnv(homeDir),
-          stdio: 'pipe',
         });
+        stderr = out.toString();
       } catch (err) {
-        const e = err as { status?: number; stderr?: Buffer; stdout?: Buffer };
-        exitCode = e.status ?? 0;
-        stderr = `${e.stderr?.toString() ?? ''}${e.stdout?.toString() ?? ''}`;
+        const e = err as { status?: number; stdout?: Buffer; stderr?: Buffer };
+        exitCode = e.status ?? 1;
+        stderr = `${e.stdout?.toString() ?? ''}${e.stderr?.toString() ?? ''}`;
       }
 
-      expect(exitCode).not.toBe(0);
-      expect(stderr).toMatch(/broken local links/);
+      expect(exitCode).toBe(0);
+      expect(stderr).toMatch(/Third-party content contains .* broken local link/);
       expect(stderr).toContain(`${homeDir}/.agentsmesh/rules/missing.md`);
+      const generated = readFileSync(join(homeDir, '.claude', 'skills', 'qa', 'SKILL.md'), 'utf-8');
+      expect(generated).toContain('description: QA');
     },
   );
 

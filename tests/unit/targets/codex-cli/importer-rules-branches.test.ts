@@ -37,7 +37,8 @@ describe('importCodexRules — sourcePath selection branches', () => {
     const root = readFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), 'utf-8');
     expect(root).toContain('# Override file root');
     expect(root).not.toContain('# Plain global root');
-    expect(results.some((r) => r.toPath === '.agentsmesh/rules/_root.md')).toBe(true);
+    const rootResults = results.filter((r) => r.toPath === '.agentsmesh/rules/_root.md');
+    expect(rootResults).toHaveLength(1);
   });
 
   it('falls back to plain global AGENTS.md when override is absent (2nd ternary branch)', async () => {
@@ -46,7 +47,8 @@ describe('importCodexRules — sourcePath selection branches', () => {
     const results = await importFromCodex(projectRoot, { scope: 'global' });
     const root = readFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), 'utf-8');
     expect(root).toContain('# Plain global root');
-    expect(results.some((r) => r.toPath === '.agentsmesh/rules/_root.md')).toBe(true);
+    const rootResults = results.filter((r) => r.toPath === '.agentsmesh/rules/_root.md');
+    expect(rootResults).toHaveLength(1);
   });
 
   it('project scope falls through to codex.md when AGENTS.md missing (4th ternary branch)', async () => {

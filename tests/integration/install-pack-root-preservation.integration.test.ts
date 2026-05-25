@@ -1,0 +1,124 @@
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { parse as parseYaml } from 'yaml';
+import { runInstall } from '../../src/install/run/run-install.js';
+
+/**
+ * Pack-root README/LICENSE preservation (Tiny A).
+ *
+ * Upstream repos commonly ship `README.md` + `LICENSE` at their root. When
+ * agentsmesh installs from such a source, those files must travel into the
+ * materialized pack root (`.agentsmesh/packs/<name>/`) so:
+ *   - legal attribution survives redistribution (LICENSE);
+ *   - the consumer has a visible link to upstream context (README).
+ *
+ * Files inside `agents/`, `commands/`, `rules/` are still filtered from
+ * canonical entity discovery — they don't become phantom rules/commands/agents.
+ * Only top-level boilerplate is copied verbatim.
+ */
+const ROOT = join(tmpdir(), 'am-install-pack-root-preservation');
+
+describe('install pack root preservation (integration)', () => {
+  beforeEach(() => {
+    rmSync(ROOT, { recursive: true, force: true });
+    mkdirSync(join(ROOT, 'upstream', '.agentsmesh', 'rules'), { recursive: true });
+    mkdirSync(join(ROOT, 'project', '.agentsmesh'), { recursive: true });
+
+    // Upstream: rules + top-level README/LICENSE.
+    writeFileSync(
+      join(ROOT, 'upstream', '.agentsmesh', 'rules', 'sample.md'),
+      '---\nroot: false\ndescription: sample rule\n---\n# Sample\n',
+    );
+    writeFileSync(join(ROOT, 'upstream', 'README.md'), '# Upstream readme\n', 'utf-8');
+    writeFileSync(join(ROOT, 'upstream', 'LICENSE'), 'MIT License\nCopyright …\n', 'utf-8');
+    // Noise should NOT be copied.
+    writeFileSync(join(ROOT, 'upstream', 'CHANGELOG.md'), '# changelog\n', 'utf-8');
+    writeFileSync(join(ROOT, 'upstream', 'CONTRIBUTING.md'), 'contribute\n', 'utf-8');
+
+    writeFileSync(
+      join(ROOT, 'project', 'agentsmesh.yaml'),
+      'version: 1\ntargets: [claude-code]\nfeatures: [rules]\nextends: []\n',
+    );
+  });
+
+  afterEach(() => {
+    rmSync(ROOT, { recursive: true, force: true });
+  });
+
+  it('copies upstream README/LICENSE into the pack root and excludes noise', async () => {
+    const project = join(ROOT, 'project');
+    const upstream = join(ROOT, 'upstream');
+
+    await runInstall({ force: true, name: 'preserved-pack' }, [upstream], project);
+
+    const packDir = join(project, '.agentsmesh', 'packs', 'preserved-pack');
+    expect(existsSync(join(packDir, 'README.md'))).toBe(true);
+    expect(existsSync(join(packDir, 'LICENSE'))).toBe(true);
+    expect(readFileSync(join(packDir, 'README.md'), 'utf-8')).toBe('# Upstream readme\n');
+    expect(readFileSync(join(packDir, 'LICENSE'), 'utf-8')).toBe('MIT License\nCopyright …\n');
+
+    // Noise boilerplate is filtered out.
+    expect(existsSync(join(packDir, 'CHANGELOG.md'))).toBe(false);
+    expect(existsSync(join(packDir, 'CONTRIBUTING.md'))).toBe(false);
+
+    // Canonical pack content is still present.
+    expect(existsSync(join(packDir, 'rules', 'sample.md'))).toBe(true);
+  });
+
+  it('records the detected SPDX license in pack.yaml', async () => {
+    const project = join(ROOT, 'project');
+    const upstream = join(ROOT, 'upstream');
+    // Replace the stub LICENSE with a body the detector recognizes as MIT.
+    writeFileSync(
+      join(upstream, 'LICENSE'),
+      `MIT License
+
+Copyright (c) 2024 Foo
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction`,
+    );
+
+    await runInstall({ force: true, name: 'preserved-pack' }, [upstream], project);
+
+    const packYaml = readFileSync(
+      join(project, '.agentsmesh', 'packs', 'preserved-pack', 'pack.yaml'),
+      'utf-8',
+    );
+    const meta = parseYaml(packYaml) as { license?: string | null };
+    expect(meta.license).toBe('MIT');
+  });
+
+  it('records license as null when no LICENSE file ships at the upstream root', async () => {
+    const project = join(ROOT, 'project');
+    const upstream = join(ROOT, 'upstream');
+    rmSync(join(upstream, 'LICENSE'));
+
+    await runInstall({ force: true, name: 'no-license-pack' }, [upstream], project);
+
+    const packYaml = readFileSync(
+      join(project, '.agentsmesh', 'packs', 'no-license-pack', 'pack.yaml'),
+      'utf-8',
+    );
+    const meta = parseYaml(packYaml) as { license?: string | null };
+    expect(meta.license).toBeNull();
+  });
+
+  it('refreshes README/LICENSE on re-install (upstream is source of truth)', async () => {
+    const project = join(ROOT, 'project');
+    const upstream = join(ROOT, 'upstream');
+
+    await runInstall({ force: true, name: 'preserved-pack' }, [upstream], project);
+
+    // Upstream README changes — re-install must mirror it.
+    writeFileSync(join(upstream, 'README.md'), '# Upstream readme v2\n', 'utf-8');
+
+    await runInstall({ force: true, name: 'preserved-pack' }, [upstream], project);
+
+    const packDir = join(project, '.agentsmesh', 'packs', 'preserved-pack');
+    expect(readFileSync(join(packDir, 'README.md'), 'utf-8')).toBe('# Upstream readme v2\n');
+  });
+});

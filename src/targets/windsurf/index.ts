@@ -89,7 +89,7 @@ const project: TargetLayout = {
   },
 };
 
-const global: TargetLayout = {
+const globalLayout: TargetLayout = {
   rootInstructionPath: WINDSURF_GLOBAL_RULES,
   skillDir: WINDSURF_GLOBAL_SKILLS_DIR,
   managedOutputs: {
@@ -199,8 +199,9 @@ export const descriptor = {
       WINDSURF_GLOBAL_MCP_FILE,
       WINDSURF_GLOBAL_IGNORE,
     ],
-    layout: global,
+    layout: globalLayout,
   },
   buildImportPaths: buildWindsurfImportPaths,
   detectionPaths: ['.windsurfrules', '.windsurf'],
+  conversionDefaults: { agentsToSkills: true },
 } satisfies TargetDescriptor;

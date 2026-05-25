@@ -28,4 +28,11 @@ export function renderInstall(result: InstallCommandResult): void {
       logger.warn(`Skipped ${s.kind} "${s.name}": ${s.reason}`);
     }
   }
+
+  if (data.brokenResources && data.brokenResources.length > 0) {
+    const count = data.brokenResources.length;
+    logger.warn(
+      `Skipped ${count} file${count > 1 ? 's' : ''} with invalid frontmatter; see --json for details.`,
+    );
+  }
 }

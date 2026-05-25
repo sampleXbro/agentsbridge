@@ -105,7 +105,17 @@ export function shouldRewritePathToken(
   }
   if (before === '@') return true;
   if (before === '(') {
-    return after === ')' || after === '#' || after === '?' || after === ' ' || after === '\t';
+    // Markdown link destination requires the `](` prefix. With it, this
+    // is a real link and we accept any reasonable terminator. Without it,
+    // the `(` is just punctuation — `(SPEC.md or equivalent)` is prose,
+    // not a link. Fall through to the bare-token path-shape checks below
+    // so genuine paths inside parens (`(.claude/skills/foo.md)`,
+    // `(commands/spec.md)`) still rewrite, while bare filenames like
+    // `(SPEC.md ...)` stay untouched. Matches the same prefix test that
+    // `getTokenContext` (line 64) uses to label `markdown-link-dest`.
+    if (fullContent[start - 2] === ']') {
+      return after === ')' || after === '#' || after === '?' || after === ' ' || after === '\t';
+    }
   }
   if (!rewriteBarePathTokens) return false;
   if (isRootRelativePathToken(normalizedCandidate)) return true;

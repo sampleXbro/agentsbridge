@@ -134,7 +134,10 @@ describe('applyBrokenLinkDecisions — include-resolvable (skills)', () => {
     const result = out.skills[0]!;
     expect(result.supportingFiles).toHaveLength(1);
     expect(result.supportingFiles[0]!.relativePath).toBe('references/foo.md');
-    expect(result.supportingFiles[0]!.absolutePath).toBe(targetAbs);
+    // Production normalizes the resolved absolutePath to forward-slash so
+    // it round-trips identically on Linux, macOS, and Windows. Compare
+    // both sides in forward-slash form to assert that invariant.
+    expect(result.supportingFiles[0]!.absolutePath).toBe(targetAbs.replaceAll('\\', '/'));
     expect(result.supportingFiles[0]!.content).toBe('# Foo\n');
     expect(result.body).toBe('See [foo](./references/foo.md) for context.\n');
   });

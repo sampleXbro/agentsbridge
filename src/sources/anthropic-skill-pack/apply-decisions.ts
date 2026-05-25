@@ -16,7 +16,7 @@
  *    definition) is replaced everywhere it occurs in that single body.
  */
 
-import { basename } from 'node:path';
+import { basename, posix } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import type { AggregateResult } from './aggregate.js';
 import type {
@@ -134,7 +134,12 @@ async function buildSupportingFiles(
     const relativePath = allocation.get(r.resolvedRelative);
     if (relativePath === undefined || seenRelative.has(relativePath)) continue;
     seenRelative.add(relativePath);
-    const absolutePath = `${contentRoot}/${r.resolvedRelative}`;
+    // Forward-slash via `posix.join` so the path is identical on every
+    // platform. Previous template-literal `${contentRoot}/${rel}`
+    // produced mixed separators on Windows (back-slash in the tmpdir
+    // root, forward-slash in the relative tail), which broke equality
+    // checks downstream. `readFile` accepts both styles.
+    const absolutePath = posix.join(contentRoot.replaceAll('\\', '/'), r.resolvedRelative);
     out.push({
       relativePath,
       absolutePath,

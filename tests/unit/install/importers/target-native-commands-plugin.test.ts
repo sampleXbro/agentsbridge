@@ -207,7 +207,9 @@ describe('plugin descriptor enumeration in read*DirWithMappers', () => {
       // Canonical reader wins: description comes from the .md, source path
       // points at the upstream .md (not the staged tmpdir copy).
       expect(commands[0]!.description).toBe('From canonical .md');
-      expect(commands[0]!.source.endsWith('/shared.md')).toBe(true);
+      // Forward-slash assertion: production source paths use native
+      // separators (back-slash on Windows), so normalize before comparing.
+      expect(commands[0]!.source.replaceAll('\\', '/').endsWith('/shared.md')).toBe(true);
       expect(commands[0]!.source).not.toContain('am-tool-');
     } finally {
       await cleanup();

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { loadCanonicalSliceAtPath } from '../../../src/canonical/load/load-canonical-slice.js';
 
@@ -112,7 +112,7 @@ describe('load-canonical-slice (load path)', () => {
     const { canonical: c } = await loadCanonicalSliceAtPath(proj);
     expect(c.agents.map((x) => x.name)).toEqual(['real']);
     expect(c.commands.map((x) => x.name)).toEqual(['do']);
-    expect(c.rules.map((x) => x.source.split('/').pop())).toEqual(['guideline.md']);
+    expect(c.rules.map((x) => basename(x.source))).toEqual(['guideline.md']);
   });
 
   it('merges rules and nested skills/ skill pack', async () => {

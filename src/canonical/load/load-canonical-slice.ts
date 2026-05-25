@@ -18,6 +18,11 @@ import {
   importCommands,
   importRules,
 } from '../../install/importers/entity-importers.js';
+import {
+  readAgentsDirWithMappers,
+  readCommandsDirWithMappers,
+  readRulesDirWithMappers,
+} from '../../install/importers/target-native-commands.js';
 import type { ParseFrontmatterOptions } from '../features/rules.js';
 import { loadCanonicalFiles } from './loader.js';
 import { isSkillPackLayout, loadSkillsAtExtendPath } from './skill-pack-load.js';
@@ -95,49 +100,63 @@ export async function normalizeSlicePath(absolutePath: string): Promise<{
  * The pure canonical loader (`loadCanonicalFiles`) used for the user's own
  * `.agentsmesh/` stays filter-free per the canonical-parser contract.
  */
+/**
+ * Resolve the entity dir under `sliceRoot`. The sliceRoot may itself BE the
+ * entity dir (e.g. `rules/`) or may CONTAIN it (e.g. project root with a
+ * `rules/` subdir). Returns null when neither shape matches.
+ */
+async function resolveEntityDir(
+  sliceRoot: string,
+  kindDirName: 'rules' | 'commands' | 'agents',
+): Promise<string | null> {
+  if (basename(sliceRoot) === kindDirName) return sliceRoot;
+  const nested = join(sliceRoot, kindDirName);
+  return (await exists(nested)) ? nested : null;
+}
+
 async function parseRulesAt(
   sliceRoot: string,
   opts: ParseFrontmatterOptions,
-): Promise<CanonicalRule[]> {
-  const base = basename(sliceRoot);
-  if (base === 'rules') {
-    return importRules(sliceRoot, opts);
+  enableTargetMappers: boolean,
+): Promise<{ rules: CanonicalRule[]; cleanup: () => Promise<void> }> {
+  const noop = async (): Promise<void> => {};
+  const rulesDir = await resolveEntityDir(sliceRoot, 'rules');
+  if (!rulesDir) return { rules: [], cleanup: noop };
+  if (!enableTargetMappers) {
+    return { rules: await importRules(rulesDir, opts), cleanup: noop };
   }
-  const nested = join(sliceRoot, 'rules');
-  if (await exists(nested)) {
-    return importRules(nested, opts);
-  }
-  return [];
+  const result = await readRulesDirWithMappers(rulesDir, { parseOpts: opts });
+  return { rules: [...result.rules], cleanup: result.cleanup };
 }
 
 async function parseCommandsAt(
   sliceRoot: string,
   opts: ParseFrontmatterOptions,
-): Promise<CanonicalCommand[]> {
-  const base = basename(sliceRoot);
-  if (base === 'commands') {
-    return importCommands(sliceRoot, opts);
+  enableTargetMappers: boolean,
+): Promise<{ commands: CanonicalCommand[]; cleanup: () => Promise<void> }> {
+  const noop = async (): Promise<void> => {};
+  const commandsDir = await resolveEntityDir(sliceRoot, 'commands');
+  if (!commandsDir) return { commands: [], cleanup: noop };
+  if (!enableTargetMappers) {
+    return { commands: await importCommands(commandsDir, opts), cleanup: noop };
   }
-  const nested = join(sliceRoot, 'commands');
-  if (await exists(nested)) {
-    return importCommands(nested, opts);
-  }
-  return [];
+  const result = await readCommandsDirWithMappers(commandsDir, { parseOpts: opts });
+  return { commands: [...result.commands], cleanup: result.cleanup };
 }
 
 async function parseAgentsAt(
   sliceRoot: string,
   opts: ParseFrontmatterOptions,
-): Promise<CanonicalAgent[]> {
-  const base = basename(sliceRoot);
-  if (base === 'agents') {
-    return importAgents(sliceRoot, opts);
+  enableTargetMappers: boolean,
+): Promise<{ agents: CanonicalAgent[]; cleanup: () => Promise<void> }> {
+  const noop = async (): Promise<void> => {};
+  const agentsDir = await resolveEntityDir(sliceRoot, 'agents');
+  if (!agentsDir) return { agents: [], cleanup: noop };
+  if (!enableTargetMappers) {
+    return { agents: await importAgents(agentsDir, opts), cleanup: noop };
   }
-  const nested = join(sliceRoot, 'agents');
-  if (await exists(nested)) {
-    return importAgents(nested, opts);
-  }
-  return [];
+  const result = await readAgentsDirWithMappers(agentsDir, { parseOpts: opts });
+  return { agents: [...result.agents], cleanup: result.cleanup };
 }
 
 /** Skill pack at slice root or nested `skills/` (common in upstream repos). */
@@ -155,26 +174,57 @@ async function loadSkillsForPartialSlice(
   return [];
 }
 
+export interface LoadCanonicalSliceOptions extends ParseFrontmatterOptions {
+  /**
+   * Run every registered target's non-`.md` importer mapper for rules,
+   * commands, and agents alongside the canonical `.md` reader. Install-path
+   * callers set this so root-level `commands/*.toml`, `rules/*.mdc`, etc.
+   * install without flags. Extends-path callers leave it off to preserve
+   * historical `.md`-only behavior and avoid the tmpdir staging lifecycle
+   * (extends content needs to outlive its load).
+   */
+  enableTargetEntityMappers?: boolean;
+}
+
 /**
- * Load whatever canonical resources exist at sliceRoot (directory).
+ * Load whatever canonical resources exist at sliceRoot (directory). Returns
+ * a cleanup callback when target-mapper staging directories were created;
+ * a no-op otherwise. Callers MUST await `cleanup()` after they are done
+ * reading from `commands[].source` (e.g. once pack materialization has
+ * copied each staged file into the pack tree).
  */
 export async function loadCanonicalSliceAtPath(
   sliceRoot: string,
-  opts: ParseFrontmatterOptions = {},
-): Promise<CanonicalFiles> {
+  opts: LoadCanonicalSliceOptions = {},
+): Promise<{ canonical: CanonicalFiles; cleanup: () => Promise<void> }> {
+  const noop = async (): Promise<void> => {};
   const ab = join(sliceRoot, '.agentsmesh');
   if (await exists(ab)) {
-    return loadCanonicalFiles(sliceRoot, opts);
+    return { canonical: await loadCanonicalFiles(sliceRoot, opts), cleanup: noop };
   }
 
+  const enableMappers = opts.enableTargetEntityMappers ?? false;
   const partial = emptyCanonical();
-  partial.rules = await parseRulesAt(sliceRoot, opts);
-  partial.commands = await parseCommandsAt(sliceRoot, opts);
-  partial.agents = await parseAgentsAt(sliceRoot, opts);
+  const rulesResult = await parseRulesAt(sliceRoot, opts, enableMappers);
+  partial.rules = rulesResult.rules;
+  const commandsResult = await parseCommandsAt(sliceRoot, opts, enableMappers);
+  partial.commands = commandsResult.commands;
+  const agentsResult = await parseAgentsAt(sliceRoot, opts, enableMappers);
+  partial.agents = agentsResult.agents;
 
   partial.skills = await loadSkillsForPartialSlice(sliceRoot, opts);
 
+  // Best-effort: never let one staging-dir failure strand the others.
+  const mergedCleanup = async (): Promise<void> => {
+    await Promise.allSettled([
+      rulesResult.cleanup(),
+      commandsResult.cleanup(),
+      agentsResult.cleanup(),
+    ]);
+  };
+
   if (isCanonicalSliceEmpty(partial)) {
+    await mergedCleanup();
     throw new Error(
       `No installable resources at ${sliceRoot}. ` +
         'Expected .agentsmesh/, or rules/, commands/, agents/, or Anthropic-style skills (SKILL.md). ' +
@@ -182,5 +232,5 @@ export async function loadCanonicalSliceAtPath(
     );
   }
 
-  return partial;
+  return { canonical: partial, cleanup: mergedCleanup };
 }

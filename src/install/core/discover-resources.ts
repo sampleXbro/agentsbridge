@@ -26,6 +26,9 @@ export function featuresFromCanonical(c: CanonicalFiles): string[] {
 
 /**
  * Resolve file vs directory, then load canonical slice (rules/commands/agents/skills / .agentsmesh).
+ * Returns a cleanup callback for any tmpdir staging the slice loader created
+ * (e.g. target-mapper output for `.toml` commands). Callers must await it
+ * after they finish reading from `canonical.commands[].source`.
  */
 export async function discoverFromContentRoot(
   contentRoot: string,
@@ -34,12 +37,17 @@ export async function discoverFromContentRoot(
   canonical: CanonicalFiles;
   features: string[];
   implicitPick?: ExtendPick;
+  cleanup: () => Promise<void>;
 }> {
   const { sliceRoot, implicitPick } = await normalizeSlicePath(contentRoot);
-  const canonical = await loadCanonicalSliceAtPath(sliceRoot, opts);
+  const { canonical, cleanup } = await loadCanonicalSliceAtPath(sliceRoot, {
+    ...opts,
+    enableTargetEntityMappers: true,
+  });
   return {
     canonical,
     features: featuresFromCanonical(canonical),
     implicitPick,
+    cleanup,
   };
 }

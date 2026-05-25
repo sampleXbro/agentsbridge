@@ -56,6 +56,19 @@ export function getAllDescriptors(): TargetDescriptor[] {
   return [...descriptorRegistry.values()];
 }
 
+/**
+ * IDs of every descriptor available via `getDescriptor`: builtins plus any
+ * runtime-registered plugin descriptors. Plugin IDs that override a builtin
+ * appear once. Use this when callers need to **enumerate** every target —
+ * e.g. install-time helpers asking "which targets claim non-`.md` command
+ * extensions?". Don't use `TARGET_IDS` (builtin-only) or
+ * `getAllDescriptors()` (plugin-only) for that question.
+ */
+export function getAllRegisteredDescriptorIds(): readonly string[] {
+  const ids = new Set<string>([...builtinDescriptors().keys(), ...descriptorRegistry.keys()]);
+  return [...ids];
+}
+
 export function getAllTargets(): TargetGenerators[] {
   return [...legacyRegistry.values()];
 }

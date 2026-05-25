@@ -7,20 +7,17 @@
  * `commands/` directory is included as `precedence: 0`, so it always wins
  * over per-tool directories such as `.claude/commands/`.
  *
- * Per-tool dirs delegate to that target's command importer mapper (via
- * `readToolNativeCommands`) when `spec.target` is set and the target ships
- * a directory-mode mapper. That's how `.gemini/commands/*.toml` parse
- * correctly — single source of truth for the per-target native format
- * lives in the target descriptor, not duplicated here.
+ * Every spec — canonical root `commands/` and per-tool dirs alike — routes
+ * through `readCommandsDirWithMappers`. Per-tool dirs restrict to that
+ * tool's mapper (`.gemini/commands/` → `gemini-cli`); the canonical root
+ * (`spec.target` unset) tries every registered target's non-`.md` mapper
+ * so stray cross-format commands are picked up too. Single source of
+ * truth for "how to read X's commands" lives in each target descriptor;
+ * this aggregator just decides scope.
  */
 
 import { join } from 'node:path';
-import { importCommands } from '../../install/importers/entity-importers.js';
-import {
-  hasToolNativeCommandImporter,
-  readToolNativeCommands,
-  toolNativeCommandExtensions,
-} from '../../install/importers/target-native-commands.js';
+import { readCommandsDirWithMappers } from '../../install/importers/target-native-commands.js';
 import type { ParseFrontmatterOptions } from '../../canonical/features/rules.js';
 import type { CanonicalCommand } from '../../core/types.js';
 import type { CommandDedup, CommandMergeSpec } from './aggregate.js';
@@ -52,24 +49,17 @@ export async function mergeCommands(
 
   const ordered = [...specs].sort((a, b) => a.precedence - b.precedence);
   for (const spec of ordered) {
-    // Canonical .md files always go through `importCommands` so the upstream
-    // path lives on `CanonicalCommand.source` (dedup metadata, error
-    // messages). Per-tool native non-.md formats (e.g. Gemini `.toml`)
-    // additionally route through that target's importer mapper so they
-    // parse correctly instead of being silently dropped.
-    const handledByOtherReader = spec.target ? toolNativeCommandExtensions(spec.target) : undefined;
-    const collected: CanonicalCommand[] = [
-      ...(await importCommands(join(contentRoot, spec.dir), {
-        ...parseOpts,
-        handledByOtherReader,
-      })),
-    ];
-    if (spec.target && hasToolNativeCommandImporter(spec.target)) {
-      const result = await readToolNativeCommands(contentRoot, spec.dir, spec.target, parseOpts);
-      collected.push(...result.commands);
-      cleanups.push(result.cleanup);
-    }
-    for (const cmd of collected) {
+    // Per-tool dirs (`.gemini/commands/`) restrict to that target's mapper
+    // to keep the canonical-source-path invariant for known dirs; the
+    // canonical root (`spec.target` unset) tries every registered target's
+    // non-`.md` mapper so cross-format files (e.g. a stray `.toml` in
+    // `commands/`) install instead of being silently dropped.
+    const { commands, cleanup } = await readCommandsDirWithMappers(join(contentRoot, spec.dir), {
+      restrictToTarget: spec.target,
+      parseOpts,
+    });
+    cleanups.push(cleanup);
+    for (const cmd of commands) {
       const existing = winners.get(cmd.name);
       if (existing === undefined) {
         winners.set(cmd.name, { command: cmd, precedence: spec.precedence });

@@ -7,9 +7,12 @@ import type { CanonicalRule } from '../../core/types.js';
 import { readFileSafe, readDirRecursive } from '../../utils/filesystem/fs.js';
 import { parseOrSkipFrontmatter } from '../../utils/text/markdown.js';
 import { assertCanonicalName } from './validate-name.js';
-import { warnIfUnrecognizedResourceFormats } from './unrecognized-files-warning.js';
+import {
+  warnIfUnrecognizedResourceFormats,
+  type UnrecognizedFormatsWarningOptions,
+} from './unrecognized-files-warning.js';
 
-export interface ParseFrontmatterOptions {
+export interface ParseFrontmatterOptions extends UnrecognizedFormatsWarningOptions {
   /**
    * When supplied, frontmatter parse failures invoke the callback and the
    * offending file is skipped instead of aborting the whole parse. Used by
@@ -48,7 +51,9 @@ export async function parseRules(
     const name = basename(f, '.md');
     return name === '_root' || !name.startsWith('_');
   });
-  warnIfUnrecognizedResourceFormats('rules', rulesDir, files, mdFiles);
+  warnIfUnrecognizedResourceFormats('rules', rulesDir, files, mdFiles, {
+    handledByOtherReader: opts.handledByOtherReader,
+  });
   const rules: CanonicalRule[] = [];
   for (const path of mdFiles) {
     const content = await readFileSafe(path);

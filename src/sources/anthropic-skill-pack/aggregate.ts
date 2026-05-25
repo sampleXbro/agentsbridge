@@ -14,11 +14,11 @@
  *    decisions, and writes the resulting pack.
  */
 
+import { importSkills } from '../../install/importers/entity-importers.js';
 import {
-  importAgents,
-  importRules,
-  importSkills,
-} from '../../install/importers/entity-importers.js';
+  readAgentsDirWithMappers,
+  readRulesDirWithMappers,
+} from '../../install/importers/target-native-commands.js';
 import type { ParseFrontmatterOptions } from '../../canonical/features/rules.js';
 import type { EntityWithBrokenLinks } from '../../install/prompts/broken-link-prompt.js';
 import type {
@@ -77,13 +77,15 @@ export async function aggregateAnthropicSkillPack(
   descriptor: SourceDescriptor,
   parseOpts: ParseFrontmatterOptions = {},
 ): Promise<AggregateResult> {
-  const [skills, agents, rules, merged] = await Promise.all([
+  const [skills, agentsRead, rulesRead, merged] = await Promise.all([
     importSkills(`${contentRoot}/skills`, parseOpts),
-    importAgents(`${contentRoot}/agents`, parseOpts),
-    importRules(`${contentRoot}/rules`, parseOpts),
+    readAgentsDirWithMappers(`${contentRoot}/agents`, { parseOpts }),
+    readRulesDirWithMappers(`${contentRoot}/rules`, { parseOpts }),
     mergeCommands(contentRoot, descriptor.mergeFromToolDirs, parseOpts),
   ]);
 
+  const agents = [...agentsRead.agents];
+  const rules = [...rulesRead.rules];
   const includedPaths = buildIncludedPaths(contentRoot, skills, agents, merged.commands, rules);
   const brokenLinks = await detectBrokenLinks(
     contentRoot,
@@ -94,6 +96,13 @@ export async function aggregateAnthropicSkillPack(
     includedPaths,
   );
 
+  // Merge per-entity staging cleanups so a plugin shipping non-`.md`
+  // mappers for rules/agents (e.g. `.mdc`, `.yaml`) doesn't leak its
+  // tmpdir. Best-effort — same lifecycle as the existing command cleanup.
+  const cleanup = async (): Promise<void> => {
+    await Promise.allSettled([rulesRead.cleanup(), agentsRead.cleanup(), merged.cleanup()]);
+  };
+
   return {
     skills,
     agents,
@@ -101,6 +110,6 @@ export async function aggregateAnthropicSkillPack(
     rules,
     dedups: merged.dedups,
     brokenLinks,
-    cleanup: merged.cleanup,
+    cleanup,
   };
 }

@@ -89,7 +89,12 @@ export async function loadCanonicalForExtend(ext: ResolvedExtend): Promise<Canon
 
   const { sliceRoot } = await normalizeSlicePath(rawRoot);
   try {
-    return await loadCanonicalSliceAtPath(sliceRoot);
+    // Extends-path: target-mapper staging is left off because the returned
+    // canonical files would reference tmpdir paths that need a lifecycle
+    // tied to the entire extends-load → merge sequence. Install path uses
+    // enableTargetCommandMappers via `discoverFromContentRoot`.
+    const { canonical } = await loadCanonicalSliceAtPath(sliceRoot);
+    return canonical;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     const wrapped = new Error(`Extend "${ext.name}": ${msg}`);

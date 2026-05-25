@@ -10,6 +10,8 @@ import type { ParseFrontmatterOptions } from './rules.js';
 import { assertCanonicalName, assertNoBasenameCollisions } from './validate-name.js';
 import { warnIfUnrecognizedResourceFormats } from './unrecognized-files-warning.js';
 
+export interface ParseAgentsOptions extends ParseFrontmatterOptions {}
+
 /**
  * Coerce value to string array. Handles comma-separated string, YAML array, or invalid.
  * @param v - Raw value from YAML
@@ -72,7 +74,9 @@ export async function parseAgents(
 ): Promise<CanonicalAgent[]> {
   const files = await readDirRecursive(agentsDir);
   const mdFiles = files.filter((f) => f.endsWith('.md') && !basename(f).startsWith('_'));
-  warnIfUnrecognizedResourceFormats('agents', agentsDir, files, mdFiles);
+  warnIfUnrecognizedResourceFormats('agents', agentsDir, files, mdFiles, {
+    handledByOtherReader: opts.handledByOtherReader,
+  });
   assertNoBasenameCollisions('agent', mdFiles, '.md');
   const agents: CanonicalAgent[] = [];
   for (const path of mdFiles) {

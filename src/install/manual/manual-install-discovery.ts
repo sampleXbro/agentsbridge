@@ -27,15 +27,24 @@ export async function resolveManualDiscoveredForInstall(
   const staged = await stageManualInstallScope(sourceRoot, explicitAs, {
     preferredSkillNames: explicitAs === 'skills' ? replayPick?.skills : undefined,
   });
-  const { canonical } = await discoverFromContentRoot(staged.discoveryRoot, parseOpts);
+  const { canonical, cleanup: sliceCleanup } = await discoverFromContentRoot(
+    staged.discoveryRoot,
+    parseOpts,
+  );
   const narrowed = narrowDiscoveredForInstallScope(canonical, {
     scopedFeatures: [explicitAs],
   });
+  const combinedCleanup = async (): Promise<void> => {
+    // Slice-level staging dirs (target-mapper output) must be cleaned up
+    // alongside the manual-scope staging dir. Best-effort: a failure in one
+    // shouldn't strand the other.
+    await Promise.allSettled([sliceCleanup(), staged.cleanup()]);
+  };
   return {
     prep: {
       yamlTarget: explicitTarget,
       scopedFeatures: [explicitAs],
-      cleanup: staged.cleanup,
+      cleanup: combinedCleanup,
     },
     narrowed,
     discoveredFeatures: featuresFromCanonical(narrowed),

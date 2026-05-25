@@ -1,5 +1,5 @@
 import { existsSync, realpathSync, statSync } from 'node:fs';
-import { existsWithExactCase, pathApi } from '../path-helpers.js';
+import { pathApi } from '../path-helpers.js';
 import { buildImportReferenceMap } from './import-map.js';
 import { rewriteFileLinks } from './link-rebaser.js';
 import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
@@ -64,7 +64,7 @@ export async function createImportReferenceNormalizer(
         return (
           artifactMap.has(absolutePath) ||
           artifactMap.has(normalized) ||
-          existsWithExactCase(absolutePath) ||
+          existsSync(absolutePath) ||
           canonicalDestAbs.has(normalized)
         );
       },

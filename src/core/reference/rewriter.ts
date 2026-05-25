@@ -20,9 +20,9 @@
  * Import uses the same {@link rewriteFileLinks} engine with paths from `import-map` builders
  * instead of generate-time maps.
  */
-import { statSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import type { CanonicalFiles, GenerateResult } from '../types.js';
-import { existsWithExactCase, pathApi } from '../path-helpers.js';
+import { pathApi } from '../path-helpers.js';
 import type { ValidatedConfig } from '../../config/core/schema.js';
 import { rewriteFileLinks } from './link-rebaser.js';
 import { buildArtifactPathMap, buildOutputSourceMap } from './output-source-map.js';
@@ -160,8 +160,7 @@ export function rewriteGeneratedReferences(
       sourceFile,
       destinationFile: pathApi(projectRoot).join(projectRoot, result.path),
       translatePath: (absolutePath) => artifactMap.get(absolutePath) ?? absolutePath,
-      pathExists: (absolutePath) =>
-        plannedPaths.has(absolutePath) || existsWithExactCase(absolutePath),
+      pathExists: (absolutePath) => plannedPaths.has(absolutePath) || existsSync(absolutePath),
       explicitCurrentDirLinks: true,
       rewriteBarePathTokens: true,
       scope,

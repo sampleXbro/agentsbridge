@@ -1,3 +1,5 @@
+import { basename, dirname } from 'node:path';
+import { readdirSync } from 'node:fs';
 import { posix, win32 } from 'node:path';
 
 const WINDOWS_ABSOLUTE_PATH = /^[A-Za-z]:[\\/]/;
@@ -43,4 +45,27 @@ export function rootFallbackPath(token: string, projectRoot: string): string | n
   return stripped && stripped !== token
     ? normalizeForProject(projectRoot, api.join(projectRoot, stripped))
     : null;
+}
+
+/**
+ * Strict-case `existsSync`. Returns true only when the file exists AND its
+ * on-disk basename matches the requested basename exactly. Defends against
+ * macOS / Windows case-insensitive filesystems silently resolving
+ * `SPEC.md` to `spec.md`, which the link rebaser would then treat as a real
+ * link target and emit a canonical-relative path in generated artifacts.
+ *
+ * Implementation: list the parent dir and check whether the basename
+ * appears verbatim. `realpathSync` won't help — macOS APFS preserves case
+ * but resolves case-insensitively, so `realpathSync('/x/SPEC.md')` returns
+ * `/x/SPEC.md` even when the actual file is `/x/spec.md`. `readdirSync`
+ * reports the on-disk casing, and a JS string comparison is always
+ * case-sensitive regardless of FS, giving consistent behavior on Linux,
+ * macOS, and Windows.
+ */
+export function existsWithExactCase(absolutePath: string): boolean {
+  try {
+    return readdirSync(dirname(absolutePath)).includes(basename(absolutePath));
+  } catch {
+    return false;
+  }
 }

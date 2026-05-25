@@ -1,5 +1,349 @@
 # Changelog
 
+## 0.19.0
+
+### Minor Changes
+
+- 879eeed: refactor(install): every install-time command-directory read now delegates to per-target importer mappers
+
+  The previous skill-pack-aggregator refactor wired the target-mapper
+  delegation seam (`hasToolNativeCommandImporter` + `readToolNativeCommands`)
+  into exactly one call site: `mergeCommands`. The canonical / manual /
+  flat-collection install paths still routed through plain `parseCommands`
+  (`.md`-only), so a root-level `commands/*.toml` (Gemini CLI's native
+  format) on `JuliusBrussee/caveman` and similar repos was silently dropped
+  with a "Skipped N commands file(s) ... format: .toml" warning, even though
+  the gemini-cli descriptor already ships a TOML-aware mapper.
+
+  This change generalizes the seam into a single shared helper
+  (`readCommandsDirWithMappers`) used by every install-time read:
+  - **`src/install/importers/target-native-commands.ts`** gains
+    `readCommandsDirWithMappers(srcDir, { restrictToTarget?, parseOpts? })`.
+    When `restrictToTarget` is set (per-tool dir like `.gemini/commands/`),
+    only that target's mapper runs. When unset (canonical root `commands/`),
+    every registered target's non-`.md` mapper is tried; canonical `.md`
+    wins on basename collision so dedup-log readability is preserved.
+  - **`src/canonical/load/load-canonical-slice.ts`** now returns
+    `{ canonical, cleanup }` and takes an `enableTargetCommandMappers` flag.
+    Install-path callers (`discoverFromContentRoot`) set it; the extends
+    path leaves it off to preserve the historical `.md`-only behavior and
+    avoid the tmpdir staging lifecycle (extends would need cross-load
+    cleanup tracking that isn't worth the complexity for a rare edge case).
+  - **`src/sources/anthropic-skill-pack/merge-commands.ts`** drops its
+    bespoke per-spec loop and routes every spec — canonical root `commands/`
+    and per-tool dirs alike — through the shared helper.
+  - **`src/install/run/run-install-discovery.ts`** and
+    **`src/install/manual/manual-install-discovery.ts`** merge the slice's
+    staging cleanup into the existing `prep.cleanup` lifecycle.
+
+  Result on `JuliusBrussee/caveman`: install with no flags previously
+  produced `7 skills + 3 agents` and warned about 4 TOML commands; now
+  installs `7 skills + 4 commands + 3 agents`, no warning, no flag needed.
+  Verified end-to-end (`Installed 7 skills, 4 commands, 3 agents`).
+  `addyosmani/agent-skills` (the original skill-pack test) remains at
+  `23 skills, 8 commands, 3 agents` — no regression.
+
+  Architectural payoff: adding a future target whose commands use a
+  non-Markdown format is now a one-place change in that target's
+  descriptor. The aggregator and every install path automatically pick up
+  the new format via the shared seam.
+
+- 3b6af70: feat(install): detect upstream SPDX license at pack-creation time and surface it in `agentsmesh installs list`
+
+  Every `agentsmesh install <source>` now probes the materialized pack root for a `LICENSE` / `COPYING` / `NOTICE` / `COPYRIGHT` file (across `.md` / `.txt` / `.rst` / no-extension variants) and runs a conservative SPDX detector against the bytes. The detector recognizes the dozen most common OSI/SPDX licenses by their canonical text fingerprints (MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, GPL-2.0, GPL-3.0, LGPL-2.1, LGPL-3.0, AGPL-3.0, MPL-2.0, ISC, CC0-1.0, Unlicense) plus the explicit `SPDX-License-Identifier:` header. Unknown text resolves to `null` — better to say "unknown" than mislabel exotic terms.
+
+  The detected identifier is recorded in `pack.yaml#license`, propagated through `InstallsListEntry`, and rendered as a new `LICENSE` column in `agentsmesh installs list` (and JSON output). Lets you scan installed packs and spot proprietary or unknown-terms upstreams at a glance before relying on them.
+
+  Pack metadata schema is additive (`license` is optional) and prior `pack.yaml` files keep parsing — no migration needed.
+
+- 975bdb5: Skill-pack-aware install pipeline, new `uninstall` and `installs` commands, descriptor-driven target dispatch refactors, and a senior-architect hardening pass. Roll-up of every change on `develop` since `v0.18.1`.
+
+  ## New commands
+
+  ### `agentsmesh install <url>` (extended)
+
+  Now auto-detects three source shapes via a multi-signal classifier (`src/install/classify/`) and dispatches accordingly:
+  - **`anthropic-skill-pack`** — imports root `skills/`, `agents/`, `references/`, merged per-target `.claude/commands/` + `.gemini/commands/`, and multi-tool rule files as one bulk set. A single command imports the full pack (e.g. all 23 skills + 3 agents + 7 commands of `addyosmani/agent-skills`); pre-change behaviour required 7+ invocations with `--as`.
+  - **`canonical-agentsmesh`** — unchanged.
+  - **`tool-native`** — unchanged. Five backcompat fixtures (`tests/integration/install-backcompat.integration.test.ts`) pin the discriminator threshold so legacy repos take their original path.
+  - **`unknown`** — unchanged canonical-slice fallback.
+
+  The discriminator threshold (sum of matched signal weights ≥ 1.4 with the primary `skills/<kebab>/SKILL.md` signal present) makes false positives essentially impossible on tool-native or canonical repos. `--target` and `--as` keep their explicit-override semantics and skip the classifier.
+
+  When classified as a skill pack and a TTY is attached, two interactive prompts surface:
+  - **Bulk select (three tiers)** — `[a]ll / [n]one / [s]elect per type` summary banner → per-type `[y/n/c]` → per-entity `[y/N/a=accept-all-remaining/q=skip-all-remaining]`. `--force`, `--json`, and non-TTY contexts accept everything.
+  - **Broken-link (three options)** — for body links that point outside the imported subtree, classify each as in-tree-included / resolvable-outside / unresolvable and cluster per entity. `[i]nclude resolvable as supporting files / [l]eave with warnings / [a]bort install`. `--force` defaults to `[l]eave-with-warnings`.
+
+  New flags:
+  - `--all` — install every sub-pack from a `.claude-plugin/marketplace.json` source.
+
+  Other install improvements:
+  - **Source-layout detection covers community-repo shapes**: root-level `SKILL.md` (`blader/humanizer`), root `.cursorrules` / `.windsurfrules` (`PatrickJS/awesome-cursorrules` style), nested marketplace plugin trees (`.claude-plugin/marketplace.json`), and arbitrary 2+ sub-pack directory layouts. The picker is descriptor-driven via `selectInstallCandidates`.
+  - **Concurrent-install lock** — `.agentsmesh/.install.lock` is acquired at the top of any `install` or `uninstall` run (and held across `--sync` replay). Concurrent invocations on the same project fail fast with `LockAcquisitionError` rather than racing on filesystem writes.
+  - **Pack writes are atomic** via staging-dir + rename. Each install now writes `.agentsmesh-install-manifest.json` next to the pack with the install-time `name`, `source`, `installed_at`, classifier verdict (`source_type`), and per-file `sha256:` map.
+  - **Pack-name preservation across URL variants** — `findExistingInstallName` (`src/install/core/install-name.ts`) keys reuse on canonical `github:<org>/<repo>` plus identity scope (`target + as + features`), so `https://`, `git@`, and `github:` spellings of the same source dedupe into one pack. The `git+` prefix is now stripped iteratively (no recursion, safe under malicious manifest input).
+  - **Lenient frontmatter parsing for all third-party imports** — `readSkillFrontmatterName` and `inferMdcTarget` skip files with invalid YAML and continue, rather than aborting the whole install on one bad scalar.
+  - **Flat-collection basename collisions** — when two `--as <kind>` flat-collection files share a basename, names are namespaced rather than dropped silently.
+  - **`--path`, `--target`, `--as` flags** — all trimmed symmetrically; empty/whitespace-only values now correctly normalise to "not provided" inside recursive auto-pick calls.
+
+  ### `agentsmesh uninstall <name>[,<name>...]` (NEW)
+
+  Removes one or more installed packs:
+  - `rm -rf .agentsmesh/packs/<name>/`.
+  - Drops the row from `installs.yaml`.
+  - Drops the matching `extends:` row from `agentsmesh.yaml` when present (`install --extends` is now uninstallable).
+  - Runs `generate` so `cleanupStaleGeneratedOutputs` evicts orphaned target files.
+
+  Flags: `--all`, `--keep-pack` (leave pack on disk; only drop yaml entries), `--keep-generated` (skip the final generate; warn about stale targets), `--global`, `--dry-run`, `--force`, `--json`. The `--keep-pack` flag also doubles as the apply-layer equivalent of the interactive `[k]eep-modified` action. `--force` is implied by `--json`.
+
+  Pre-uninstall **drift check** compares the current pack contents against `.agentsmesh-install-manifest.json`. When drift is detected, a modified-files prompt offers `[d]elete-anyway / [k]eep-modified / [a]bort`; `--force` defaults to `[d]`. Legacy packs (no manifest) auto-migrate at uninstall time — current contents become the baseline; a warning makes this explicit. Exit `130` on user-aborted prompt; `0` on success or `--dry-run`.
+
+  **Mid-batch failure isolation** — if `applyUninstall` throws for one pack, survivors continue. The failure lands in a new `data.failed[]` envelope; post-operation `generate` still runs over the packs that succeeded so the tool tree stays consistent with the (possibly partially mutated) `installs.yaml`. Exit code is `1` when any pack failed.
+
+  **`--dry-run uninstall` is a true no-op** — the legacy-manifest migration computes the baseline in memory but does NOT persist `.agentsmesh-install-manifest.json` to disk under `--dry-run`.
+
+  ### `agentsmesh installs list` (NEW)
+
+  Read-only inventory. Reads `installs.yaml`, hydrates `installed_at` + `source_type` from each pack's manifest, and emits either a space-padded `NAME / SOURCE / FEATURES / INSTALLED` table or a JSON envelope. Empty list exits 0. Forward-slash `pack_path`. `--global` reads from `~/.agentsmesh/installs.yaml`. The plural-vs-singular typo (`installs` vs `install`) surfaces a "did you mean `install`?" hint on unknown subcommands. Help banner comes from the central `help-data.ts` (single source of truth).
+
+  ## Reliability fixes (broken-link rewriter)
+
+  Two silent data-corruption bugs in the skill-pack broken-link `[i]nclude` flow are now fixed:
+  - **Verbatim destination matching** — body rewrites match `ScannedLink.raw` (the as-authored text), not a normalized form. Bodies authored with `{baseDir}/foo.md` or Windows-style `..\refs\x.md` previously copied the supporting file but silently skipped the body rewrite, leaving an orphan `references/<basename>` plus a still-broken link. Both forms now rewrite correctly.
+  - **Basename-collision disambiguation** — two distinct outside paths sharing a basename (`docs/A/README.md` + `docs/B/README.md` → `references/README.md`) previously dropped the second file's bytes and pointed both citations at the same target. Names are now slugged from the full `resolvedRelative` on collision (`references/docs-A-README.md`, `references/docs-B-README.md`).
+
+  ## Drift-detection robustness
+  - **CRLF / BOM normalization** — `hashFileForManifest` (`src/utils/crypto/hash.ts`) normalizes `\r\n?` → `\n` and strips a leading UTF-8 BOM for text-extension files (`.md`, `.json`, `.yaml`, etc.) before hashing. A Windows editor saving CRLF or a tool prepending a BOM no longer registers as drift. Binary files are still hashed as raw bytes.
+  - **Symlink-safe traversal** — install-time pack hashing and uninstall-time drift detection now use `readDirRecursiveNoSymlinks`. A symlink that used to be followed at install (silently absorbing external bytes into the hash) only to be unlinked-without-following at uninstall (`rm` removes the link, not the target) no longer produces a permanent drift-detection mismatch.
+
+  ## IDE auto-config via in-file schema directives (NEW)
+
+  Every YAML / JSON file the CLI writes is now stamped with an editor-recognizable schema directive so VSCode (Red Hat YAML extension), JetBrains IDEs, vim/neovim with `yaml-language-server` / `coc-json`, and the GitHub Actions YAML editor get autocomplete + validation immediately — **no IDE configuration required**.
+
+  YAML files get a top-of-file comment:
+
+  ```yaml
+  # yaml-language-server: $schema=https://unpkg.com/agentsmesh@<version>/schemas/<name>.json
+  version: 1
+  ...
+  ```
+
+  JSON files get a top-level `$schema` field. URLs are pinned to the running package version so the schema referenced always matches the format the file was written with; older files keep working pointed at their original schema until a writer touches them again.
+
+  Stamped files:
+  - `init` writes — `agentsmesh.yaml`, `agentsmesh.local.yaml`, `.agentsmesh/hooks.yaml`, `.agentsmesh/permissions.yaml`.
+  - `install` writes — `.agentsmesh/installs.yaml`, `.agentsmesh/packs/<name>/pack.yaml`, `.agentsmesh/packs/<name>/.agentsmesh-install-manifest.json`.
+  - `uninstall` refreshes — `.agentsmesh/installs.yaml` after row removal.
+
+  Implementation: a single helper module `src/utils/output/schema-directive.ts` exports `prependYamlSchemaDirective`, `stampJsonSchemaField`, `schemaUrl`, and `yamlSchemaDirective`. Each is idempotent — re-running a writer on a file that already carries the directive updates the URL in place rather than duplicating the line. New reference page at `reference/json-schemas.mdx` documents all four IDE mechanisms (in-file directive, `$schema` field, VSCode workspace settings, SchemaStore.org plans), CI validation examples, and troubleshooting. The getting-started installation guide expands the existing IDE-autocomplete section to mention the new `installs` and `install-manifest` schemas.
+
+  ## Published JSON Schemas — required-field correctness (FIX)
+
+  A long-standing bug in the published `schemas/*.json` files marked every field with a `.default(...)` in its Zod source as `required: true`. Editors then complained about valid minimal configs (e.g. an `agentsmesh.yaml` with just `version: 1` was flagged as "Missing required properties: overrides, pluginTargets, plugins"). The runtime parser substituted the documented default in every one of these cases — only the published schema disagreed.
+
+  Fixed by a post-processor in `src/schemas/schema-generator.ts::stripRequiredFromDefaults` that walks the emitted JSON Schema and strips defaultable fields from every `required` array. The Zod source schemas keep plain `.default(...)` (so the parsed TS type stays `T`, never `T | undefined`); the publishing layer alone reconciles "default present" with "user MUST provide". `buildAllSchemas()` calls the post-processor for all seven schemas. New regression test asserts the top-level `agentsmesh.json` required list collapses to `['version']`. Verified: `pnpm schemas:generate` produces correct `required` arrays:
+  - `agentsmesh.json`, `installs.json` — only `version`
+  - `permissions.json`, `hooks.json`, `mcp.json` — no required (everything has a default)
+  - `pack.json`, `install-manifest.json` — required = the documented structural fields, unchanged
+
+  ## Published JSON Schemas (NEW)
+
+  Two new entries in the published `schemas/` directory (already shipped via `package.json`'s `files` array) cover the two new file formats introduced in this release:
+
+  | File                            | Documents                                                                                                                                                                                           |
+  | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `schemas/installs.json`         | `.agentsmesh/installs.yaml` — the install manifest that records every materialized pack so `--sync` can replay them post-clone.                                                                     |
+  | `schemas/install-manifest.json` | `.agentsmesh/packs/<name>/.agentsmesh-install-manifest.json` — per-pack integrity manifest (install-time provenance + per-file `sha256:` map used by `uninstall` to detect locally-modified files). |
+
+  Both schemas are generated from their respective Zod sources (`installManifestSchema` in `src/install/core/install-manifest.ts`; `installManifestFileSchema` in `src/install/manifest/install-manifest-hash.ts`) and verified by the existing schema-freshness test, which now covers all seven published schemas (was five).
+
+  Editors / GitHub schema validators that wire `$schema: https://unpkg.com/agentsmesh/schemas/installs.json` (or the corresponding install-manifest URL) get autocomplete and validation for these files; CI tools can use them to assert pack provenance without hand-coded JSON-shape checks. `buildAllSchemas()` and the `pnpm schemas:generate` script now produce **7 JSON schemas** instead of 5.
+
+  ## MCP server — pack lifecycle tools (NEW)
+
+  The built-in `agentsmesh mcp` server now exposes three additional tools so AI agents speaking MCP can install, uninstall, and inspect community packs without leaving the conversation:
+
+  | Tool            | Purpose                                                                                                                         |
+  | --------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+  | `install`       | Install a community pack from a URL or local path. Auto-classifies the source layout; `target` / `as` overrides the classifier. |
+  | `uninstall`     | Remove one or more installed packs. Mid-batch failures isolated; survivors continue.                                            |
+  | `installs_list` | Read-only inventory of installed packs (also exposed as `agentsmesh://installs` resource).                                      |
+
+  All three run with `force: true` internally — MCP has no stdin TTY, so the documented `--force` defaults are accepted for every interactive prompt the CLI would surface (bulk select → accept all, broken-link → leave-with-warnings, modified-files → delete-anyway). Input shapes mirror the CLI flags one-for-one; output envelopes match `InstallData` / `UninstallData` / `InstallsListData`.
+
+  Tool count moves from **41 → 44**; resource count moves from **16 → 17**. The MCP docs reference and the in-tree `register` / `tool-tables-sweep` contract tests are updated to match.
+
+  ## Programmatic / JSON-envelope additions (additive)
+
+  New required fields on public types. JSON readers are unaffected (additive); TypeScript code constructing these types directly needs to populate the new fields:
+
+  | Type                    | New field                         |
+  | ----------------------- | --------------------------------- |
+  | `UninstallData`         | `failed: Array<{ name; reason }>` |
+  | `UninstallRemovedEntry` | `partial: boolean`                |
+  | `AppliedRemoval`        | `partial: boolean`                |
+
+  `partial` lets JSON consumers distinguish a fully-clean removal from one where bytes were kept by design (`--keep-pack`, `[k]eep-modified`) or where a step silently no-op'd (no matching extends row, missing pack dir, etc.).
+
+  ## Descriptor-driven target dispatch (internal refactor)
+
+  Several install-layer behaviours that previously branched on hardcoded target IDs in shared code now read directly from the relevant target descriptor:
+  - **Native-format detection** — `src/config/resolve/native-format-detector.ts` walks `descriptor.detectionPaths` instead of a hand-maintained per-target table.
+  - **Native importer dispatch** — `src/install/native/native-importers.ts` looks up the importer via the descriptor registry.
+  - **Command directories** and **starter exclusions** — derived from each descriptor's `managedOutputs.dirs` and `excludeFromStarterInit` flag.
+  - **Conversion defaults** — `commands_to_skills` / `agents_to_skills` defaults now live on each descriptor's `conversionDefaults`, removing duplicated per-target enable lists.
+  - **Path-to-target hint map** — built at module load from descriptor `managedOutputs.dirs` patterns matching `^\.[^/]+\/(rules|commands|agents|skills)$`.
+
+  Plugin descriptors transparently inherit all of these capabilities.
+
+  ## Schema tightening (BREAKING for plugin authors)
+
+  **`validateDescriptor()` now requires `metadata`:**
+
+  ```ts
+  metadata: {
+    displayName: string;
+    category: 'cli' | 'ide' | 'agent-platform';
+    officialUrl: string;
+    shortDescription: string;
+  }
+  ```
+
+  Plugins built against earlier versions will fail to register at runtime until the descriptor adds the `metadata` block. All bundled plugin fixtures + the 30 built-in target descriptors already include it.
+
+  The Zod schema also now models `emitScopedSettings`, `mergeGeneratedOutputContent`, `postProcessHookOutputs`, and `preservesManualActivation` (previously laundered away by a `passthrough()` + cast).
+
+  ## Operational polish
+  - **`AGENTSMESH_MAX_TARBALL_MB`** env var caps GitHub tarball acceptance (default 500, range 1-4096). Set higher for large monorepo installs.
+  - **`AGENTSMESH_STRICT_PLUGINS=1`** turns plugin descriptor import failures from warning-and-skip into hard errors (CI gate).
+  - **Best-effort post-install / uninstall generate** — when the post-operation `generate` pass fails (e.g. lock contention), the surrounding `install` / `uninstall` exits cleanly with a warning rather than reverting the install/uninstall work.
+  - **First-time install on a fresh project** — `acquireInstallLock` now `mkdir`s the canonical dir before writing the lockfile, eliminating an ENOENT failure when no `.agentsmesh/` exists yet.
+  - **`agentsmesh install --json` and `agentsmesh uninstall --json`** — validation errors and per-pack failures no longer leak to stderr; they go only into the JSON envelope's `error` / `failed[]` fields. Wrappers that were grepping stderr for error text should read the envelope.
+  - **Forward-slash paths** — every CLI display string normalizes `\\` → `/`.
+
+  ## Internals
+
+  New files (selection): `src/install/classify/{types,signals,classify-source,layout-detect,layout-types,marketplace-manifest}.ts` and `src/install/classify/detectors/{fs-helpers,root-shape,collections}.ts`; `src/install/importers/{boilerplate-filter,entity-importers}.ts`; `src/install/lock/install-lock.ts`; `src/install/prompts/{prompt-io,prompt-types,bulk-prompt,broken-link-prompt,modified-files-prompt}.ts`; `src/install/links/{scan-relative-links,resolve-link}.ts`; `src/install/manifest/install-manifest-hash.ts`; `src/install/picker/select-candidates.ts`; `src/install/run/{single-pack-install,route-picker-result,run-install-marketplace,run-install-prompts,run-install-sync-locked,post-install-generate,install-abort-error}.ts`; `src/install/uninstall/{plan-uninstall,detect-modified,legacy-manifest-migration,uninstall-decisions,apply-uninstall,uninstall-result,run-uninstall}.ts`; `src/install/core/{install-target,install-report,pick-reuse-entry-name,remove-extend-entry}.ts`; `src/sources/anthropic-skill-pack/{index,aggregate,merge-commands,link-scan,apply-decisions}.ts`; `src/cli/commands/{uninstall,installs,installs-list}.ts`; `src/cli/renderers/{uninstall,installs}.ts`; `src/utils/filesystem/fs-traverse.ts::readDirRecursiveNoSymlinks`; `src/utils/crypto/hash.ts::hashFileForManifest`.
+
+  File-size discipline (per the project's 200-line cap): `layout-detect.ts` (244 → 116 lines) split into `detectors/` modules; `run-install-locked.ts` (295 → 180 lines) split into `single-pack-install.ts` + `route-picker-result.ts`.
+
+  Coverage: unit-test branch coverage held at 95% across the included set. New: 30+ unit suites and 17 integration tests covering anthropic-pack imports, broken-link / bulk prompt force paths, targeted overrides, backcompat across 5 tool-native fixtures, pack-name preservation, atomicity, every uninstall scenario, `installs list` round-trip, lock contention, marketplace recursion, failure-isolation, dry-run no-op, and CRLF/BOM/symlink hash invariants. Watch-test scheduler envelope hardened (chokidar polling forced in test harness; describe-level timeouts widened).
+
+  Docs: new `cli/uninstall.mdx`, `cli/installs.mdx`, `guides/installing-skill-packs.mdx`, and `docs/architecture/install.md`; expanded `cli/install.mdx`; README env-var table; lessons-file additions documenting the lenient-frontmatter contract, the circular-import trap in target descriptor evaluation, and the FSEvents flake fix.
+
+  ## Upgrade notes
+  1. **Plugin authors must add a `metadata` block** to each `TargetDescriptor`. Validation rejects descriptors without it.
+  2. **Packs installed before this version** may report some text files as `modified` on the first `uninstall` after upgrade if their content contains CRLF or a BOM. The standard `[d]elete-anyway / [k]eep-modified / [a]bort` prompt covers it (or use `--force` to accept the default). No data is lost. Installs created after upgrade use the new hashing algorithm consistently.
+  3. **CI wrappers parsing `--json`** should read errors from the envelope's `error` field rather than scraping stderr.
+
+  ## Deferred to a follow-up
+
+  `src/install/native/native-path-pick-infer.ts` still hardcodes per-target dir prefixes for 8 targets (`gemini-cli`, `claude-code`, `cursor`, `copilot`, `windsurf`, `cline`, `continue`, `junie`, `codex-cli`). The descriptor-driven refactor touches all 27 builtin descriptors plus the three bespoke-layout targets and is tracked separately in `tasks/todo.md`. The file remains in the coverage exclude list with a `category 5` comment until refactored.
+
+- 7cd2c3e: refactor(install): make the skill-pack aggregator delegate per-tool command reads to that target's importer mapper
+
+  `mergeCommands` (the Anthropic skill-pack aggregator's command merger) previously routed every per-tool directory through the canonical `.md`-only parser. That worked for `.claude/commands/` (Claude Code commands are Markdown) but silently dropped `.gemini/commands/*.toml` because Gemini CLI's slash-command format is TOML, not Markdown — even though the gemini-cli target descriptor already ships a TOML-aware mapper (`mapGeminiCommandFile` + `geminiCommandMapper`).
+
+  The aggregator now treats the `target` field on each `CommandMergeSpec` as load-bearing: when set and the target ships a directory-mode command importer with non-`.md` extensions, the aggregator delegates non-`.md` reads to that target's mapper (via the new `readToolNativeCommands`). Markdown files keep going through the canonical reader so dedup metadata keeps pointing at the upstream `.gemini/commands/foo.md`-style path.
+
+  Knock-on cleanups:
+  - New `src/install/importers/target-native-commands.ts` — single owner of "read a tool-native command directory through that tool's mapper". Both the descriptor-driven full install (`runDescriptorImport`) and the skill-pack aggregator now share this seam, so adding a new target whose commands aren't Markdown means writing one mapper in that target's descriptor — no aggregator change.
+  - `aggregateAnthropicSkillPack` now returns a `cleanup` callback that removes any temp staging directories created by per-target mappers. Wired through the existing `prep.cleanup` lifecycle so `runSinglePackInstall`'s `finally` block runs it after pack materialization.
+  - `parseCommands` learns a `handledByOtherReader` option so the canonical reader's "skipped N command file(s)" warning is suppressed for extensions another reader (the per-target mapper) actually consumes.
+
+  Side effect on `addyosmani/agent-skills` and similar multi-tool skill packs: the seven `.gemini/commands/*.toml` files now merge into the canonical command set alongside Claude's `.md` commands instead of triggering the "Skipped 7 commands file(s) … format: .toml" warning. Verified end-to-end: `installs list` shows `8 commands` (4 Claude + 7 Gemini deduped on basename collision), and the previously-dropped Gemini commands are present in `pack/commands/`.
+
+### Patch Changes
+
+- 4c39bd4: fix(install): compound `.md` extensions (e.g. `.agent.md`) stay on the canonical reader
+
+  `hasNonMdEntityMapper` and friends in
+  `src/install/importers/target-native-commands.ts` previously asked
+  `ext !== '.md'` to decide whether a target's extension was
+  "non-Markdown". That treated Copilot's `.agent.md` (a Markdown
+  sub-extension Copilot uses to mark agent files) as non-Markdown and
+  routed those files through Copilot's importer mapper **in addition**
+  to the canonical reader. For any repo containing `foo.agent.md`, two
+  canonical agents were emitted: one slugged `foo.agent` (canonical
+  read) and one slugged `foo` (Copilot mapper). Surfaced during the
+  `VoltAgent/awesome-claude-code-subagents` compatibility sweep when
+  the same input started producing two extra agents per `.agent.md`
+  file.
+
+  Now uses `ext.toLowerCase().endsWith('.md')`, so any `.<sub>.md`
+  compound stays on the canonical reader and the seam only fires for
+  genuinely non-Markdown formats (`.toml`, `.mdc`, `.yaml`, `.json`).
+  Pinned by a regression test in
+  `tests/unit/install/importers/target-native-commands-plugin.test.ts`
+  ("compound .md extensions ... stay on the canonical reader — no
+  double-counting"), plus the existing per-kind plugin tests for
+  `.yaml`-extension plugins still pass unchanged.
+
+  Also includes the dedup-key change from the same commit: entities are
+  now deduped by source-file basename slug (matches the canonical
+  parser's `basename(path, '.md')` convention). Required because
+  `CanonicalRule` doesn't carry a `name` field — the prior
+  `entity.name`-keyed `Map` would collapse every rule into a single
+  entry. Fixes a separate latent issue on rule installs.
+
+- a3e5686: fix(install): skip preserved boilerplate (README/LICENSE/NOTICE/COPYING/COPYRIGHT) in native descriptor import
+
+  Native-import directory mode (`runDirectory` in `descriptor-import-runner.ts`) previously materialized every `*.md` under `.claude/agents/`, `.claude/commands/`, and `.claude/rules/` as a canonical entity. Repos that ship folder-level documentation alongside content (e.g. `.claude/agents/README.md` and `.claude/agents/external/README.md` in `qdhenry/Claude-Command-Suite`) tripped the basename-slug collision check at parse time and hard-failed the install. The runner now consults `isPreservedBoilerplate` and silently drops those files — matching the existing filter applied via `entity-importers.ts` in the install-discovery path. Noise stems (`security`, `contributing`, …) are intentionally left through so user-authored rules like `.claude/rules/security.md` continue to import.
+
+- fc3ec85: fix(install): surface recovery flags in every "no installable resources" error and document the auto-detect → flag fallback chain
+
+  `agentsmesh install <source>` runs the classifier first and falls back to user-supplied flags (`--path`, `--as`, `--target`, `--all`) when auto-detection refuses a source or can't disambiguate it. Three error paths used to dead-end without naming those flags, leaving the user stuck:
+  - `No installable files found under <path> for manual install` — now also says: _Try a different `--path`, or omit `--as` to let agentsmesh auto-detect the layout._
+  - `No installable native resources found under "<path>" for target "<id>"` (both call sites) — now also says: _Try `--path <dir>` without `--target` for auto-detection, or `--as <kind>` for a flat-collection override._
+  - `No installable resources after skipping invalid files (N): …` — now also says: _Fix the frontmatter in the source files (most often: unquoted scalars with embedded colons or square brackets), or narrow `--path` to a subdirectory that excludes them._
+
+  The `agentsmesh install --help` description now spells out the precedence — auto-classify first, then `--path` / `--as` / `--target` / `--all` to override — instead of just listing flags alphabetically.
+
+  Regression tests pin the flag names (not literal phrasing) so the contract stays visible even if future copy-edits rework the sentences.
+
+- 4c39bd4: fix(reference): classify `(filename)` prose as bare-prose, not a Markdown link destination
+
+  `shouldRewritePathToken`'s `(`-branch in
+  `src/core/reference/link-token-context.ts` unconditionally treated any
+  token preceded by `(` as a Markdown link destination, regardless of
+  whether the `[label]` prefix was actually present. Prose mentions
+  like `Read the existing spec (SPEC.md or equivalent)` were routed to
+  the link-rewrite path; the rebaser then resolved `SPEC.md` against
+  the canonical pack's `commands/` dir (case-insensitive on macOS APFS
+  / Windows NTFS) and emitted `(../../.agentsmesh/.../SPEC.md or
+equivalent)` into every generated `.claude/commands/`,
+  `.gemini/commands/`, `.cursor/commands/` artifact (etc.). The leaked
+  path was wrong even by intent — the author meant the filename as a
+  documentary mention, not a link target.
+
+  The matching guard in `getTokenContext` (same file, line 64) already
+  encodes the correct rule: a token is `markdown-link-dest` only when
+  `]` sits directly before the `(`. This change propagates that rule
+  into `shouldRewritePathToken`:
+  - With `]` immediately before `(` → real Markdown link, accept any
+    terminator (`)`, `#`, `?`, space, tab) — `[text](spec.md)`,
+    `[text](spec.md#anchor)`, etc. continue to rewrite cleanly.
+  - Without it → fall through to the bare-token path-shape checks, so
+    genuine paths inside parens (`(./commands/spec.md)`,
+    `(.claude/skills/foo.md)`) still rewrite via the slash /
+    root-relative branches, while bare filenames like
+    `(SPEC.md or equivalent)` stay verbatim.
+
+  Verified end-to-end by regenerating against the
+  `addyosmani-agent-skills` pack: `(SPEC.md or equivalent)` is now
+  preserved in `.gemini/commands/planning.toml`,
+  `.claude/commands/planning.md`, `.cursor/commands/planning.md` and the
+  24 other targets. The same rule fires identically for `.md`, `.mdc`,
+  and `.toml` outputs — the engine is format-agnostic; only the
+  classifier's prose-vs-link distinction needed tightening.
+
+  Tests:
+  - New `tests/unit/core/link-token-classifier-prose-vs-md-link.test.ts`
+    (8 cases) pins the prose-vs-link distinction.
+  - `tests/unit/core/link-rebaser-deep-branches.test.ts:396` updated:
+    positive cases now require `](` prefix; a new sibling case pins the
+    negative behavior for prose forms.
+
 ## 0.18.1
 
 ### Patch Changes

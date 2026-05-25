@@ -55,20 +55,41 @@ type CanonicalEntityByKind = {
 };
 
 /**
+ * Narrowed shape for a directory-mode spec WITH a mapper. `extensions`
+ * defaults to `['.md']` (per `import-descriptor.ts`); `map` is required by
+ * construction so downstream code never re-checks either.
+ */
+interface DirectoryMapperSpec {
+  readonly extensions: readonly string[];
+  readonly map: NonNullable<ImportFeatureSpec['map']>;
+}
+
+/**
  * Pull every directory-mode spec out of `importer.<kind>`. Rules' importer
  * may be `ImportFeatureSpec | ImportFeatureSpec[]` (Copilot, Cursor, ...);
- * commands/agents are singular. The flat-array shape lets the caller treat
- * "this target has a directory mapper" uniformly.
+ * commands/agents are singular. Narrowing to `DirectoryMapperSpec` here
+ * lets consumers skip the `extensions ?? []` and `if (!spec.map)` guards
+ * — both are statically enforced by this filter.
  */
 function directorySpecsFor(
   importer: TargetImporterDescriptor | undefined,
   kind: DirectoryEntityKind,
-): readonly ImportFeatureSpec[] {
-  if (!importer) return [];
-  const raw = importer[kind];
+): readonly DirectoryMapperSpec[] {
+  const raw = importer?.[kind];
   if (!raw) return [];
   const specs: readonly ImportFeatureSpec[] = Array.isArray(raw) ? raw : [raw];
-  return specs.filter((s) => s.mode === 'directory' && Boolean(s.map));
+  const out: DirectoryMapperSpec[] = [];
+  for (const s of specs) {
+    // A spec without `extensions` defaults to `['.md']` per
+    // import-descriptor.ts, which means it's Markdown-only and never
+    // enters the non-`.md` seam. Dropping it here keeps the narrowed type
+    // total (no `?? ['.md']` defensive branch downstream) without changing
+    // observable behavior — every consumer of this list cares only about
+    // specs that can claim a non-`.md` file.
+    if (s.mode !== 'directory' || !s.map || !s.extensions) continue;
+    out.push({ extensions: s.extensions, map: s.map });
+  }
+  return out;
 }
 
 /**
@@ -96,8 +117,7 @@ function isMarkdownExtension(ext: string): boolean {
 
 export function hasNonMdEntityMapper(targetId: string, kind: DirectoryEntityKind): boolean {
   for (const spec of directorySpecsFor(getDescriptor(targetId)?.importer, kind)) {
-    const exts = spec.extensions ?? ['.md'];
-    if (exts.some((ext) => !isMarkdownExtension(ext))) return true;
+    if (spec.extensions.some((ext) => !isMarkdownExtension(ext))) return true;
   }
   return false;
 }
@@ -113,7 +133,7 @@ export function nonMdEntityExtensions(
 ): ReadonlySet<string> {
   const out = new Set<string>();
   for (const spec of directorySpecsFor(getDescriptor(targetId)?.importer, kind)) {
-    for (const ext of spec.extensions ?? []) {
+    for (const ext of spec.extensions) {
       if (!isMarkdownExtension(ext)) out.add(ext.toLowerCase());
     }
   }
@@ -130,21 +150,33 @@ function targetsWithNonMdEntityMapper(kind: DirectoryEntityKind): readonly strin
   return getAllRegisteredDescriptorIds().filter((id) => hasNonMdEntityMapper(id, kind));
 }
 
+/**
+ * Per-kind dispatch tables. Replacing the switch lets `kind` index the
+ * table directly — the exhaustiveness check happens at table construction
+ * (TS errors if a kind is missing), so no unreachable defensive `throw`
+ * remains for the test runner to count as an uncovered branch.
+ */
+const CANONICAL_PARSERS = {
+  rules: parseRules,
+  commands: parseCommands,
+  agents: parseAgents,
+} as const;
+
+const INSTALL_IMPORTERS = {
+  rules: importRules,
+  commands: importCommands,
+  agents: importAgents,
+} as const;
+
 /** Canonical-parser dispatch per entity kind. */
 async function parseEntityDir<K extends DirectoryEntityKind>(
   kind: K,
   dir: string,
   opts: ParseFrontmatterOptions,
 ): Promise<readonly CanonicalEntityByKind[K][]> {
-  switch (kind) {
-    case 'rules':
-      return parseRules(dir, opts) as unknown as Promise<readonly CanonicalEntityByKind[K][]>;
-    case 'commands':
-      return parseCommands(dir, opts) as unknown as Promise<readonly CanonicalEntityByKind[K][]>;
-    case 'agents':
-      return parseAgents(dir, opts) as unknown as Promise<readonly CanonicalEntityByKind[K][]>;
-  }
-  throw new Error(`Unknown entity kind: ${kind as string}`);
+  return CANONICAL_PARSERS[kind](dir, opts) as unknown as Promise<
+    readonly CanonicalEntityByKind[K][]
+  >;
 }
 
 /**
@@ -157,18 +189,12 @@ async function importEntities<K extends DirectoryEntityKind>(
   dir: string,
   opts: ParseFrontmatterOptions & { handledByOtherReader?: ReadonlySet<string> },
 ): Promise<readonly CanonicalEntityByKind[K][]> {
-  switch (kind) {
-    case 'rules':
-      return importRules(dir, opts) as unknown as Promise<readonly CanonicalEntityByKind[K][]>;
-    case 'commands':
-      return importCommands(dir, opts) as unknown as Promise<readonly CanonicalEntityByKind[K][]>;
-    case 'agents':
-      return importAgents(dir, opts) as unknown as Promise<readonly CanonicalEntityByKind[K][]>;
-  }
-  throw new Error(`Unknown entity kind: ${kind as string}`);
+  return INSTALL_IMPORTERS[kind](dir, opts) as unknown as Promise<
+    readonly CanonicalEntityByKind[K][]
+  >;
 }
 
-export interface ToolNativeEntitiesResult<K extends DirectoryEntityKind> {
+interface ToolNativeEntitiesResult<K extends DirectoryEntityKind> {
   readonly entities: readonly CanonicalEntityByKind[K][];
   /**
    * Removes the temp staging directory holding the mapper's canonical
@@ -180,9 +206,9 @@ export interface ToolNativeEntitiesResult<K extends DirectoryEntityKind> {
 
 /**
  * Read entities of `kind` from `srcDir` via the named target's importer
- * mapper. Returns canonical entities referencing files in a temp staging
- * directory plus a cleanup callback. Used internally by
- * `readEntityDirWithMappers` once per applicable target.
+ * mapper. Internal — callers pre-filter to targets whose descriptor has a
+ * non-`.md` mapper for `kind` (via `hasNonMdEntityMapper`), so the
+ * descriptor/specs lookup here always returns at least one spec.
  */
 async function readToolNativeEntities<K extends DirectoryEntityKind>(
   srcDir: string,
@@ -190,14 +216,7 @@ async function readToolNativeEntities<K extends DirectoryEntityKind>(
   kind: K,
   parseOpts: ParseFrontmatterOptions = {},
 ): Promise<ToolNativeEntitiesResult<K>> {
-  const descriptor = getDescriptor(targetId);
-  const specs = directorySpecsFor(descriptor?.importer, kind);
-  if (!descriptor || specs.length === 0) {
-    throw new Error(
-      `Target "${targetId}" has no directory-mode ${kind} importer with a mapper. ` +
-        `Callers must guard with hasNonMdEntityMapper() first.`,
-    );
-  }
+  const specs = directorySpecsFor(getDescriptor(targetId)?.importer, kind);
 
   const allFiles = await readDirRecursive(srcDir);
   // Combined non-`.md` extension set across every spec for this target+kind
@@ -206,7 +225,7 @@ async function readToolNativeEntities<K extends DirectoryEntityKind>(
   // going through the canonical reader to preserve upstream source paths.
   const nonMdExtensions = new Set<string>();
   for (const spec of specs) {
-    for (const ext of spec.extensions ?? []) {
+    for (const ext of spec.extensions) {
       if (!isMarkdownExtension(ext)) nonMdExtensions.add(ext.toLowerCase());
     }
   }
@@ -228,13 +247,13 @@ async function readToolNativeEntities<K extends DirectoryEntityKind>(
       const relPath = relative(srcDir, absPath).replaceAll('\\', '/');
       // Try every directory-mode spec for this target+kind in order; the
       // first that returns a mapping wins. Specs that don't claim this
-      // extension just return null after running their own filter.
+      // file's extension are skipped without calling their mapper.
       let mapping: { destPath: string; content: string } | null = null;
       for (const spec of specs) {
-        const claimsExt = (spec.extensions ?? []).some((e) =>
+        const claimsExt = spec.extensions.some((e) =>
           absPath.toLowerCase().endsWith(e.toLowerCase()),
         );
-        if (!claimsExt || !spec.map) continue;
+        if (!claimsExt) continue;
         const r = await spec.map({
           absolutePath: absPath,
           relativePath: relPath,
@@ -326,11 +345,8 @@ export async function readEntityDirWithMappers<K extends DirectoryEntityKind>(
   // carries `source`. Using the filename stem keeps the dedup key uniform
   // across all three entity kinds and matches the slug the canonical
   // parser already derives via `basename(path, '.md')`.
-  const slugOf = (e: CanonicalEntityByKind[K]): string => {
-    const file = basename((e as { source: string }).source);
-    const dot = file.lastIndexOf('.');
-    return dot > 0 ? file.slice(0, dot) : file;
-  };
+  const slugOf = (e: CanonicalEntityByKind[K]): string =>
+    basename((e as { source: string }).source).replace(/\.[^.]+$/, '');
   const byKey = new Map<string, CanonicalEntityByKind[K]>();
   for (const e of canonical) byKey.set(slugOf(e), e);
 
@@ -352,53 +368,11 @@ export async function readEntityDirWithMappers<K extends DirectoryEntityKind>(
   return { entities, cleanup };
 }
 
-// ─── Command-specific backward-compatible exports ─────────────────────────
-// Kept so existing callers (`merge-commands.ts`, `load-canonical-slice.ts`,
-// `unrecognized-files-warning.ts` opts wiring) don't need a rename sweep.
+// ─── Per-kind convenience wrappers ────────────────────────────────────────
+// Same shape as the generic `readEntityDirWithMappers`, just typed to the
+// right canonical entity. Callers reach for these to avoid spelling the
+// kind discriminator at every call site; the underlying logic is shared.
 
-export function hasToolNativeCommandImporter(targetId: string): boolean {
-  return hasNonMdEntityMapper(targetId, 'commands');
-}
-
-export function toolNativeCommandExtensions(targetId: string): ReadonlySet<string> {
-  return nonMdEntityExtensions(targetId, 'commands');
-}
-
-export function allNonMdCommandExtensions(): ReadonlySet<string> {
-  const merged = new Set<string>();
-  for (const id of targetsWithNonMdEntityMapper('commands')) {
-    for (const ext of nonMdEntityExtensions(id, 'commands')) merged.add(ext);
-  }
-  return merged;
-}
-
-export interface ToolNativeCommandsResult {
-  readonly commands: readonly CanonicalCommand[];
-  readonly cleanup: () => Promise<void>;
-}
-
-/**
- * Backward-compat wrapper: per-tool dir → that tool's command mapper.
- * `dirRel` is joined onto `contentRoot` (kept for callers passing
- * `contentRoot + 'relative/dir'` separately, like the skill-pack
- * aggregator's per-spec loop did historically).
- */
-export async function readToolNativeCommands(
-  contentRoot: string,
-  dirRel: string,
-  targetId: string,
-  parseOpts: ParseFrontmatterOptions = {},
-): Promise<ToolNativeCommandsResult> {
-  const result = await readToolNativeEntities(
-    join(contentRoot, dirRel),
-    targetId,
-    'commands',
-    parseOpts,
-  );
-  return { commands: [...result.entities], cleanup: result.cleanup };
-}
-
-export interface ReadCommandsDirOptions extends ReadEntityDirOptions {}
 export interface ReadCommandsDirResult {
   readonly commands: readonly CanonicalCommand[];
   readonly cleanup: () => Promise<void>;
@@ -406,16 +380,11 @@ export interface ReadCommandsDirResult {
 
 export async function readCommandsDirWithMappers(
   srcDir: string,
-  opts: ReadCommandsDirOptions = {},
+  opts: ReadEntityDirOptions = {},
 ): Promise<ReadCommandsDirResult> {
   const result = await readEntityDirWithMappers(srcDir, 'commands', opts);
   return { commands: [...result.entities], cleanup: result.cleanup };
 }
-
-// ─── Rules- and agents-specific convenience wrappers ──────────────────────
-// Same shape as commands, just typed to the right entity. Callers that
-// want canonical + plugin coverage for a rules or agents dir go through
-// these; the underlying logic is shared with commands.
 
 export interface ReadRulesDirResult {
   readonly rules: readonly CanonicalRule[];

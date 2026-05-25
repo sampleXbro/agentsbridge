@@ -109,7 +109,7 @@ describe('target layout metadata', () => {
         }),
       }),
     );
-    const mockConfig = {} as import('../../../../src/config/core/schema.js').ValidatedConfig;
+    const mockConfig = {} as import('../../../src/config/core/schema.js').ValidatedConfig;
     expect(layout?.paths.commandPath('deploy', mockConfig)).toBe(
       '.gemini/antigravity/workflows/deploy.md',
     );

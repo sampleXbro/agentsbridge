@@ -10,8 +10,6 @@ import type { ParseFrontmatterOptions } from './rules.js';
 import { assertCanonicalName, assertNoBasenameCollisions } from './validate-name.js';
 import { warnIfUnrecognizedResourceFormats } from './unrecognized-files-warning.js';
 
-export interface ParseAgentsOptions extends ParseFrontmatterOptions {}
-
 /**
  * Coerce value to string array. Handles comma-separated string, YAML array, or invalid.
  * @param v - Raw value from YAML

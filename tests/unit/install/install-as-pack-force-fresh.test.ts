@@ -1,9 +1,10 @@
-import { mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile, mkdir, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { installAsPack } from '../../../src/install/run/run-install-pack.js';
 import type { CanonicalFiles } from '../../../src/core/types.js';
+import { exists } from '../../../src/utils/filesystem/fs.js';
 
 describe('installAsPack with forceFreshMaterialize', () => {
   let canonicalDir: string;
@@ -61,8 +62,11 @@ describe('installAsPack with forceFreshMaterialize', () => {
       forceFreshMaterialize: true,
     });
 
-    const { exists } = await import('../../../src/utils/filesystem/fs.js');
     expect(await exists(join(existingPackDir, 'skills', 'old-skill', 'SKILL.md'))).toBe(false);
+    const packYaml = await readFile(join(existingPackDir, 'pack.yaml'), 'utf8');
+    expect(packYaml).toContain('source: github:org/repo');
+    // Confirm a fresh installed_at — the fixture used 2026-01-01, materialize should set it to "now"
+    expect(packYaml).not.toContain('installed_at: 2026-01-01T00:00:00.000Z');
   });
 
   it('forceFreshMaterialize: false (default) preserves existing merge behavior', async () => {
@@ -95,7 +99,8 @@ describe('installAsPack with forceFreshMaterialize', () => {
       pick: undefined,
     });
 
-    const { exists } = await import('../../../src/utils/filesystem/fs.js');
     expect(await exists(join(existingPackDir, 'skills', 'old-skill', 'SKILL.md'))).toBe(true);
+    const packYaml = await readFile(join(existingPackDir, 'pack.yaml'), 'utf8');
+    expect(packYaml).not.toContain('updated_at: 2026-01-01T00:00:00.000Z');
   });
 });

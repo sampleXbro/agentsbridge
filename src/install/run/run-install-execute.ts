@@ -37,6 +37,7 @@ export interface RunInstallExecuteArgs {
   dryRun: boolean;
   tty: boolean;
   useExtends: boolean;
+  forceFreshMaterialize?: boolean;
   nameOverride: string;
   explicitAs?: ManualInstallAs;
   config: ValidatedConfig;
@@ -65,7 +66,8 @@ export interface InstallExecuteResult {
 export async function executeRunInstallPoolsAndWrite(
   args: RunInstallExecuteArgs,
 ): Promise<InstallExecuteResult> {
-  const { scope, force, dryRun, tty, useExtends, nameOverride, explicitAs } = args;
+  const { scope, force, dryRun, tty, useExtends, forceFreshMaterialize, nameOverride, explicitAs } =
+    args;
   const { config, context, parsed, sourceForYaml, version, pathInRepo, contentRoot, persisted } =
     args;
   const { replay, prep, implicitPick, narrowed, discoveredFeatures, sourceType } = args;
@@ -182,6 +184,7 @@ export async function executeRunInstallPoolsAndWrite(
       renameExistingPack: nameOverride === '' && reuseExistingName === null,
       sourceType,
       contentRoot,
+      forceFreshMaterialize: forceFreshMaterialize,
     });
   }
   await runPostOperationGenerate('install', scope, context.rootBase);

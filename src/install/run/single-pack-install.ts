@@ -39,6 +39,7 @@ export interface RunSinglePackArgs {
   readonly dryRun: boolean;
   readonly force: boolean;
   readonly useExtends: boolean;
+  readonly forceFreshMaterialize?: boolean;
   readonly explicitAs: ManualInstallAs | undefined;
   readonly nameOverride: string;
   readonly scope: 'global' | 'project';
@@ -61,6 +62,7 @@ export async function runSinglePackInstall(opts: RunSinglePackArgs): Promise<Ins
     dryRun,
     force,
     useExtends,
+    forceFreshMaterialize,
     explicitAs,
     nameOverride,
     scope,
@@ -100,6 +102,7 @@ export async function runSinglePackInstall(opts: RunSinglePackArgs): Promise<Ins
       dryRun,
       tty,
       useExtends,
+      forceFreshMaterialize,
       nameOverride,
       explicitAs,
       config,

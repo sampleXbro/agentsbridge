@@ -10,6 +10,7 @@ export function readInstallFlags(flags: Record<string, string | boolean>): {
   force: boolean;
   useExtends: boolean;
   all: boolean;
+  forceFreshMaterialize: boolean;
   explicitPath?: string;
   explicitTarget?: string;
   explicitAs?: ReturnType<typeof manualInstallAsSchema.parse>;
@@ -28,6 +29,7 @@ export function readInstallFlags(flags: Record<string, string | boolean>): {
     force: flags.force === true,
     useExtends: flags.extends === true,
     all: flags.all === true,
+    forceFreshMaterialize: flags.forceFreshMaterialize === true,
     explicitPath: explicitPathRaw ? explicitPathRaw : undefined,
     explicitTarget: explicitTargetRaw ? explicitTargetRaw : undefined,
     explicitAs: explicitAsRaw ? manualInstallAsSchema.parse(explicitAsRaw) : undefined,

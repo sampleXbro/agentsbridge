@@ -2,52 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   parseRefreshNames,
   readRefreshFlags,
-  type RefreshCommandResult,
 } from '../../../../src/install/refresh/refresh-flags.js';
-import type {
-  FailedItem,
-  FailurePhase,
-  RefreshedItem,
-  SkippedItem,
-  UnchangedItem,
-} from '../../../../src/install/refresh/refresh-result.js';
-
-/**
- * Type-only smoke check: assert the Phase 3 vocabulary compiles correctly.
- * These assignments are never evaluated at runtime.
- */
-function _typeChecks(): void {
-  const _result: RefreshCommandResult = {
-    exitCode: 0,
-    data: {
-      scope: 'project',
-      mode: 'refresh',
-      refreshed: [],
-      unchanged: [],
-      skipped: [],
-      failed: [],
-      dryRun: false,
-    },
-  };
-  const _refreshed: RefreshedItem = {
-    name: 'p',
-    oldRef: null,
-    newRef: 'main',
-    oldSha: null,
-    newSha: 'abc',
-    changedFiles: { added: [], removed: [], modified: [] },
-  };
-  const _unchanged: UnchangedItem = { name: 'p', ref: 'main' };
-  const _skipped: SkippedItem = { name: 'p', reason: 'user-declined' };
-  const _phase: FailurePhase = 'plan';
-  const _failed: FailedItem = { name: 'p', phase: _phase, error: 'oops' };
-  void _result;
-  void _refreshed;
-  void _unchanged;
-  void _skipped;
-  void _failed;
-}
-void _typeChecks;
 
 describe('readRefreshFlags', () => {
   it('defaults every flag to false', () => {

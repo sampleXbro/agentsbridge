@@ -2,8 +2,6 @@
  * Parse and validate `agentsmesh refresh` command flags.
  */
 
-export type { RefreshCommandResult } from './refresh-result.js';
-
 export interface RefreshFlags {
   readonly dryRun: boolean;
   readonly force: boolean;

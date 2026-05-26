@@ -194,3 +194,24 @@ export interface ConvertData {
   files: Array<{ path: string; target: string; status: 'created' | 'updated' | 'unchanged' }>;
   summary: { created: number; updated: number; unchanged: number };
 }
+
+export interface RefreshData {
+  scope: 'project' | 'global';
+  mode: 'refresh';
+  refreshed: Array<{
+    name: string;
+    oldRef: string | null;
+    newRef: string;
+    oldSha: string | null;
+    newSha: string;
+    changedFiles: { added: string[]; removed: string[]; modified: string[] };
+  }>;
+  unchanged: Array<{ name: string; ref: string }>;
+  skipped: Array<{ name: string; reason: 'user-declined' }>;
+  failed: Array<{
+    name: string;
+    phase: 'plan' | 'fetch' | 'apply' | 'manifest-update';
+    error: string;
+  }>;
+  dryRun: boolean;
+}

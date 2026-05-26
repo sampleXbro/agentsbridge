@@ -1,17 +1,13 @@
 /**
  * Integration test: refresh against a bare git source.
  *
- * Flow: create a bare git repo with two commits → install at firstSha
- * (by patching installs.yaml to store the branch ref rather than the pinned
- * SHA that the install pipeline produces) → advance upstream → runRefresh →
- * assert v2 content on disk.
+ * Flow: create a bare git repo with two commits → install at firstSha using a
+ * branch ref → advance upstream → runRefresh → assert v2 content on disk.
  *
- * Why patch installs.yaml: the install pipeline stores a SHA-pinned source
- * (git+file:///path#sha), while the refresh planner uses the source's ref
- * fragment to re-resolve via git ls-remote. Storing the branch name in source
- * is the intended semantic contract (as the unit test fixtures show), so the
- * patch simulates a correct future install while still exercising the full
- * refresh pipeline end-to-end.
+ * The install pipeline now captures the user's original ref expression in
+ * `installs.yaml` as `original_ref`. The refresh planner re-resolves that ref
+ * against the remote rather than the pinned SHA stored in `source`, so no
+ * manual patching of the manifest is required.
  */
 
 import { mkdtemp, rm, writeFile, mkdir, readFile } from 'node:fs/promises';
@@ -20,7 +16,6 @@ import { join } from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { parse as parseYaml, stringify as yamlStringify } from 'yaml';
 import { runRefresh } from '../../src/install/refresh/run-refresh.js';
 import { runInstall } from '../../src/install/run/run-install.js';
 import {
@@ -30,27 +25,6 @@ import {
 } from './fixtures/refresh-git-source/setup.js';
 
 const execFileP = promisify(execFile);
-
-/** Rewrite installs.yaml source to use branch ref instead of pinned SHA. */
-async function patchInstallsYamlToBranchRef(
-  canonicalDir: string,
-  packName: string,
-  branchSource: string,
-): Promise<void> {
-  const manifestPath = join(canonicalDir, 'installs.yaml');
-  const raw = await readFile(manifestPath, 'utf8');
-  const parsed = parseYaml(raw) as { version: number; installs: Array<Record<string, unknown>> };
-  for (const entry of parsed.installs) {
-    if (entry['name'] === packName) {
-      entry['source'] = branchSource;
-      delete entry['version']; // remove pinned SHA; refresh will derive newSha via ls-remote
-    }
-  }
-  await writeFile(
-    manifestPath,
-    `# yaml-language-server: $schema=https://agentsmesh.ai/schema/installs.json\n${yamlStringify({ version: 1, installs: parsed.installs })}`,
-  );
-}
 
 describe('refresh against a git source', () => {
   let projectRoot: string;
@@ -79,7 +53,8 @@ describe('refresh against a git source', () => {
     // Rewind upstream so install captures v1
     await rewindRepoToFirstCommit(bare.bareRepoPath, bare.firstSha);
 
-    // Install at firstSha using git+file:// URL with a predictable pack name
+    // Install at firstSha using git+file:// URL with branch ref (#main).
+    // The install pipeline will capture original_ref='main' in installs.yaml.
     const sourceUrl = `git+file://${bare.bareRepoPath}#main`;
     const installResult = await runInstall(
       { force: true, name: 'bare-pack' },
@@ -101,12 +76,6 @@ describe('refresh against a git source', () => {
     const v1 = await readFile(skillPath, 'utf8');
     expect(v1).toContain('# v1');
 
-    // Patch installs.yaml to store branch ref form (not pinned SHA)
-    // so the refresh planner can re-resolve via git ls-remote
-    const canonicalDir = join(projectRoot, '.agentsmesh');
-    const branchSource = `git+file://${bare.bareRepoPath}#main`;
-    await patchInstallsYamlToBranchRef(canonicalDir, 'bare-pack', branchSource);
-
     // Advance upstream to second SHA
     await execFileP('git', [
       '--git-dir',
@@ -116,7 +85,7 @@ describe('refresh against a git source', () => {
       bare.secondSha,
     ]);
 
-    // Run refresh
+    // Run refresh — no manifest patching needed; original_ref captured at install time
     const refreshResult = await runRefresh({ force: true }, [], projectRoot);
     expect(refreshResult.exitCode).toBe(0);
     expect(refreshResult.data.refreshed).toHaveLength(1);
@@ -132,7 +101,8 @@ describe('refresh against a git source', () => {
   }, 30_000);
 
   it('refresh leaves unchanged packs when the ref has not moved', async () => {
-    // Install at current tip (secondSha since bare has both commits)
+    // Install at current tip (secondSha since bare has both commits).
+    // original_ref='main' is captured automatically.
     const sourceUrl = `git+file://${bare.bareRepoPath}#main`;
     const installResult = await runInstall(
       { force: true, name: 'bare-pack' },
@@ -141,30 +111,8 @@ describe('refresh against a git source', () => {
     );
     expect(installResult.exitCode).toBe(0);
 
-    // Patch installs.yaml to branch ref form but PRESERVE the version field
-    // (which ls-remote will also return), so oldSha === newSha → unchanged.
-    const canonicalDir = join(projectRoot, '.agentsmesh');
-    const manifestPath = join(canonicalDir, 'installs.yaml');
-    const raw = await readFile(manifestPath, 'utf8');
-    const parsed = parseYaml(raw) as {
-      version: number;
-      installs: Array<Record<string, unknown>>;
-    };
-    for (const entry of parsed.installs) {
-      if (entry['name'] === 'bare-pack') {
-        // Store branch ref as source so ls-remote resolves it, but keep the
-        // version (pinned SHA) so oldSha === newSha → classification = unchanged.
-        entry['source'] = `git+file://${bare.bareRepoPath}#main`;
-        // version stays as the secondSha that ls-remote will return
-        entry['version'] = bare.secondSha;
-      }
-    }
-    await writeFile(
-      manifestPath,
-      `# yaml-language-server: $schema=https://agentsmesh.ai/schema/installs.json\n${yamlStringify({ version: 1, installs: parsed.installs })}`,
-    );
-
-    // Refresh without advancing upstream — ref resolves to secondSha, version = secondSha → unchanged
+    // Refresh without advancing upstream — original_ref resolves to secondSha
+    // which equals the stored version → classification = unchanged.
     const refreshResult = await runRefresh({ force: true }, [], projectRoot);
     expect(refreshResult.exitCode).toBe(0);
     expect(refreshResult.data.unchanged).toHaveLength(1);

@@ -303,4 +303,48 @@ describe('createDefaultResolveRef', () => {
     await resolve(entry);
     expect(resolveRemoteRefForInstall).toHaveBeenCalledWith('HEAD', 'https://example.com/repo.git');
   });
+
+  it('uses original_ref when present instead of the embedded ref in source', async () => {
+    // source carries pinned SHA (which would make refresh a no-op without original_ref)
+    const entry: InstallManifestEntry = {
+      name: 'p',
+      source: 'git+https://example.com/repo.git#abc123sha',
+      source_kind: 'git',
+      features: ['skills'],
+      original_ref: 'main',
+    };
+    await resolve(entry);
+    expect(resolveRemoteRefForInstall).toHaveBeenCalledWith('main', 'https://example.com/repo.git');
+  });
+
+  it('falls back to source ref when original_ref is absent (backward compat)', async () => {
+    // Old install with pinned SHA in source; no original_ref → no-op re-resolve
+    const entry: InstallManifestEntry = {
+      name: 'p',
+      source: 'git+https://example.com/repo.git#abc123sha',
+      source_kind: 'git',
+      features: ['skills'],
+      // no original_ref
+    };
+    await resolve(entry);
+    expect(resolveRemoteRefForInstall).toHaveBeenCalledWith(
+      'abc123sha',
+      'https://example.com/repo.git',
+    );
+  });
+
+  it('falls back to source ref when original_ref is empty string', async () => {
+    const entry: InstallManifestEntry = {
+      name: 'p',
+      source: 'git+https://example.com/repo.git#abc123sha',
+      source_kind: 'git',
+      features: ['skills'],
+      original_ref: '',
+    };
+    await resolve(entry);
+    expect(resolveRemoteRefForInstall).toHaveBeenCalledWith(
+      'abc123sha',
+      'https://example.com/repo.git',
+    );
+  });
 });

@@ -185,6 +185,7 @@ export async function executeRunInstallPoolsAndWrite(
       sourceType,
       contentRoot,
       forceFreshMaterialize: forceFreshMaterialize,
+      originalRef: parsed.rawRef !== '' ? parsed.rawRef : undefined,
     });
   }
   await runPostOperationGenerate('install', scope, context.rootBase);

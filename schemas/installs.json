@@ -137,6 +137,9 @@
           "refreshed_at": {
             "type": "string",
             "minLength": 1
+          },
+          "original_ref": {
+            "type": "string"
           }
         },
         "required": [

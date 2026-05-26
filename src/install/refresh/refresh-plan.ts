@@ -136,10 +136,19 @@ import { parseSourceUrl } from '../source/parse-source-url.js';
 export function createDefaultResolveRef(): PlanSinglePackDeps['resolveRef'] {
   return async (entry: InstallManifestEntry): Promise<string> => {
     if (entry.source_kind === 'local') return entry.version ?? 'local';
+
+    // Re-resolve the user's original ref expression against the remote.
+    // For installs predating `original_ref` (backward compat), fall back to
+    // parsing the source string — which carries the pinned SHA, meaning the
+    // re-resolve is a no-op (refresh effectively does nothing for old entries).
     const parsed = parseSourceUrl(entry.source);
     if (parsed === null || parsed.remoteUrl === undefined) {
       throw new Error(`Cannot parse source for refresh: ${entry.source}`);
     }
-    return resolveRemoteRefForInstall(parsed.ref ?? 'HEAD', parsed.remoteUrl);
+    const refToResolve =
+      entry.original_ref !== undefined && entry.original_ref !== ''
+        ? entry.original_ref
+        : (parsed.ref ?? 'HEAD');
+    return resolveRemoteRefForInstall(refToResolve, parsed.remoteUrl);
   };
 }

@@ -102,4 +102,95 @@ describe('createRunInstallForRefresh', () => {
       /Install for refresh "my-pack" failed with exit code 1/,
     );
   });
+
+  it('replaces the SHA in a github: source with newSha', async () => {
+    const entry: InstallManifestEntry = {
+      ...baseEntry,
+      source: 'github:org/repo@oldsha',
+      source_kind: 'github',
+    };
+    const fn = createRunInstallForRefresh({ projectRoot: '/proj', scope: 'project' });
+    await fn(entry, 'newsha456');
+
+    const [, args] = mockRunInstall.mock.calls[0]!;
+    expect(args[0]).toBe('github:org/repo@newsha456');
+  });
+
+  it('appends @newSha to a bare github: source with no existing ref', async () => {
+    const entry: InstallManifestEntry = {
+      ...baseEntry,
+      source: 'github:org/repo',
+      source_kind: 'github',
+    };
+    const fn = createRunInstallForRefresh({ projectRoot: '/proj', scope: 'project' });
+    await fn(entry, 'newsha456');
+
+    const [, args] = mockRunInstall.mock.calls[0]!;
+    expect(args[0]).toBe('github:org/repo@newsha456');
+  });
+
+  it('replaces the SHA in a gitlab: source with newSha', async () => {
+    const entry: InstallManifestEntry = {
+      ...baseEntry,
+      source: 'gitlab:org/repo@oldsha',
+      source_kind: 'gitlab',
+    };
+    const fn = createRunInstallForRefresh({ projectRoot: '/proj', scope: 'project' });
+    await fn(entry, 'newsha456');
+
+    const [, args] = mockRunInstall.mock.calls[0]!;
+    expect(args[0]).toBe('gitlab:org/repo@newsha456');
+  });
+
+  it('appends @newSha to a bare gitlab: source with no existing ref', async () => {
+    const entry: InstallManifestEntry = {
+      ...baseEntry,
+      source: 'gitlab:org/repo',
+      source_kind: 'gitlab',
+    };
+    const fn = createRunInstallForRefresh({ projectRoot: '/proj', scope: 'project' });
+    await fn(entry, 'newsha456');
+
+    const [, args] = mockRunInstall.mock.calls[0]!;
+    expect(args[0]).toBe('gitlab:org/repo@newsha456');
+  });
+
+  it('replaces the SHA fragment in a git+ source with newSha', async () => {
+    const entry: InstallManifestEntry = {
+      ...baseEntry,
+      source: 'git+https://example.com/repo.git#oldsha',
+      source_kind: 'git',
+    };
+    const fn = createRunInstallForRefresh({ projectRoot: '/proj', scope: 'project' });
+    await fn(entry, 'newsha456');
+
+    const [, args] = mockRunInstall.mock.calls[0]!;
+    expect(args[0]).toBe('git+https://example.com/repo.git#newsha456');
+  });
+
+  it('appends #newSha to a git+ source with no existing fragment', async () => {
+    const entry: InstallManifestEntry = {
+      ...baseEntry,
+      source: 'git+https://example.com/repo.git',
+      source_kind: 'git',
+    };
+    const fn = createRunInstallForRefresh({ projectRoot: '/proj', scope: 'project' });
+    await fn(entry, 'newsha456');
+
+    const [, args] = mockRunInstall.mock.calls[0]!;
+    expect(args[0]).toBe('git+https://example.com/repo.git#newsha456');
+  });
+
+  it('falls back to entry.source when source cannot be parsed', async () => {
+    const entry: InstallManifestEntry = {
+      ...baseEntry,
+      source: 'local:./some-pack',
+      source_kind: 'local',
+    };
+    const fn = createRunInstallForRefresh({ projectRoot: '/proj', scope: 'project' });
+    await fn(entry, 'newsha456');
+
+    const [, args] = mockRunInstall.mock.calls[0]!;
+    expect(args[0]).toBe('local:./some-pack');
+  });
 });

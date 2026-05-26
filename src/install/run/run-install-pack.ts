@@ -53,6 +53,13 @@ export interface InstallAsPackArgs {
    * pack. When omitted or false, existing merge behavior is preserved.
    */
   forceFreshMaterialize?: boolean;
+  /**
+   * The user's original ref expression (e.g. `main`, `v1.2.3`) before it was
+   * resolved to a pinned SHA. Stored in `installs.yaml` as `original_ref` so
+   * the refresh planner can re-resolve branch/tag pins against the remote
+   * rather than re-resolving the already-pinned SHA to itself.
+   */
+  originalRef?: string;
 }
 
 function pathScope(pathInRepo?: string): Pick<PackMetadata, 'path' | 'paths'> {
@@ -102,6 +109,7 @@ export async function installAsPack(args: InstallAsPackArgs): Promise<void> {
     sourceType,
     contentRoot,
     forceFreshMaterialize,
+    originalRef,
   } = args;
 
   const packsDir = join(canonicalDir, 'packs');
@@ -202,6 +210,7 @@ export async function installAsPack(args: InstallAsPackArgs): Promise<void> {
       path: persistedPath,
       paths: persistedPaths,
       as: manualAs,
+      originalRef,
     }),
   );
 

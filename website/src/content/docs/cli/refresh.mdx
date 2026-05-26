@@ -1,0 +1,175 @@
+---
+draft: false
+title: agentsmesh refresh
+description: Re-fetch and re-apply installed packs from their recorded sources. Branch pins advance to the current tip; SHA pins stay put. Per-pack atomic.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Re-fetch and re-apply every installed pack from its recorded source/ref. Branch pins (`@main`) advance to the current tip; tag pins re-resolve in case the tag moved; SHA pins stay put (content is re-fetched but the SHA is unchanged). Each pack is refreshed atomically — a failure leaves the affected pack at its prior state.
+
+## Usage
+
+```bash
+agentsmesh refresh [<name>[,<name>...]] [flags]
+```
+
+Bare command (no names) refreshes every installed pack in the current scope.
+
+## Flags
+
+| Flag | Description |
+|------|-------------|
+| `<name>` | Pack name(s) to refresh, comma-separated. Omit to refresh all installed packs. |
+| `--dry-run` | Preview the refresh plan (resolved refs, drift detection) without writing. |
+| `--force` | Non-interactive mode: skip the local-edit consent prompt. Implied by `--json`. |
+| `--json` | Machine-readable JSON envelope on stdout. Implies `--force`. |
+| `--global` | Refresh packs in the global scope (`~/.agentsmesh/`) instead of the project scope. |
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | All requested packs refreshed (or `--dry-run` preview shown). Partially-applied batches where some packs are unchanged still exit `0`. |
+| `1` | At least one pack failed (`data.failed[]` non-empty). Surviving packs still applied; post-operation `generate` still ran. |
+| `2` | Validation failure (no installed packs found, lock contention, or unknown pack name). |
+
+## Examples
+
+### Refresh every installed pack
+
+```bash
+agentsmesh refresh
+```
+
+Re-fetches every pack from its recorded source and ref. Branch pins resolve to the current tip of their branch.
+
+### Refresh specific packs
+
+```bash
+agentsmesh refresh my-pack,other-pack
+```
+
+### Preview without writing
+
+```bash
+agentsmesh refresh --dry-run
+```
+
+Shows which packs would change, the resolved ref transitions, and any local file drift — without writing anything.
+
+### Non-interactive (CI/scripts)
+
+```bash
+agentsmesh refresh --force
+```
+
+Skips the consent prompt for locally-modified pack files. Use in CI to keep packs up-to-date automatically.
+
+### Refresh global packs
+
+```bash
+agentsmesh refresh --global
+```
+
+Refreshes packs installed in `~/.agentsmesh/`.
+
+## Local-edit consent prompt
+
+When refresh detects that pack files have been edited locally since install, it surfaces a consolidated prompt before overwriting:
+
+```
+Pack "my-pack" has 2 locally modified files:
+  - skills/demo/SKILL.md (modified)
+  - agents/reviewer.md (modified)
+
+Refresh will overwrite these changes. Continue? [y/N]
+```
+
+The prompt has a 5-minute timeout that defaults to "no" on expiry. `--force` accepts the overwrite non-interactively. `--dry-run` reports the drift without prompting.
+
+## refresh does NOT switch refs
+
+`refresh` replays the **currently recorded** source/ref. It does not change which ref a pack tracks.
+
+To move a pack to a different ref, just install with the new ref — `install` silently updates an existing pack of the same name:
+
+```bash
+agentsmesh install github:org/repo@v2.0.0
+```
+
+## refresh vs `install --sync`
+
+| | `refresh` | `install --sync` |
+|---|---|---|
+| Purpose | Update existing installs against their declared sources | Restore missing packs after a fresh clone |
+| When a pack dir exists | Re-fetches and re-applies it | Skips it (already present) |
+| When a pack dir is missing | Skips it (not a restore tool) | Reinstalls it from `installs.yaml` |
+
+Use `install --sync` after `git clone` or when a teammate added a new pack to `installs.yaml`. Use `refresh` to pull in upstream changes for packs you already have.
+
+## JSON output
+
+```bash
+agentsmesh refresh --json
+```
+
+```json
+{
+  "success": true,
+  "command": "refresh",
+  "data": {
+    "scope": "project",
+    "mode": "refresh",
+    "refreshed": [
+      {
+        "name": "my-pack",
+        "oldRef": "main",
+        "newRef": "main",
+        "oldSha": "abc1234",
+        "newSha": "def5678",
+        "changedFiles": {
+          "added": ["skills/new-skill/SKILL.md"],
+          "removed": [],
+          "modified": ["skills/existing/SKILL.md"]
+        }
+      }
+    ],
+    "unchanged": [
+      { "name": "stable-pack", "ref": "v1.0.0" }
+    ],
+    "skipped": [],
+    "failed": [],
+    "dryRun": false
+  }
+}
+```
+
+Field reference:
+
+- `refreshed[].oldRef` / `newRef` — the ref string before and after (identical for SHA pins; branch name for branch pins).
+- `refreshed[].oldSha` / `newSha` — the resolved commit SHA before and after. Both `null` for local-path packs that have no SHA tracking.
+- `refreshed[].changedFiles` — `{ added, removed, modified }` arrays of forward-slash paths relative to the pack root.
+- `unchanged[]` — packs whose re-fetched content matched the current on-disk state; no files were written.
+- `skipped[]` — packs the user declined at the consent prompt (reason `"user-declined"`).
+- `failed[]` — packs that encountered an error during `plan`, `fetch`, `apply`, or `manifest-update`. Exit code is `1` whenever this array is non-empty.
+
+## MCP tool
+
+`agentsmesh refresh` is also available as an MCP tool.
+
+**Name:** `mcp__agentsmesh__refresh`
+
+**Input:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `names` | `string[]` (optional) | Pack names to refresh. Omit or pass empty array to refresh every installed pack. |
+| `dry_run` | `boolean` (optional) | Preview the refresh plan without writing. |
+| `global` | `boolean` (optional) | Refresh packs in the global scope (`~/.agentsmesh/`). |
+
+MCP calls always run non-interactively (`force: true`). The response envelope matches the `--json` output above.
+
+<Aside type="note">
+  `force` is not exposed as an MCP input — MCP invocations are always non-interactive. To replicate interactive behavior, use the CLI directly.
+</Aside>

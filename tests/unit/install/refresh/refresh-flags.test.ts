@@ -42,6 +42,12 @@ describe('readRefreshFlags', () => {
       verbose: false,
     });
   });
+
+  it('--json implies --force (non-TTY consumers must not block on consent prompt)', () => {
+    const result = readRefreshFlags({ json: true });
+    expect(result.json).toBe(true);
+    expect(result.force).toBe(true);
+  });
 });
 
 describe('parseRefreshNames', () => {

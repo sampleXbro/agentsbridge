@@ -11,11 +11,12 @@ export interface RefreshFlags {
 }
 
 export function readRefreshFlags(flags: Record<string, string | boolean>): RefreshFlags {
+  const json = flags.json === true;
   return {
     dryRun: flags['dry-run'] === true,
-    force: flags.force === true,
+    force: flags.force === true || json,
     global: flags.global === true,
-    json: flags.json === true,
+    json,
     verbose: flags.verbose === true,
   };
 }

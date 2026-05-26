@@ -40,3 +40,44 @@ function normalize(raw: string): PromptAnswer {
   if (lower === 'per-pack') return 'per-pack';
   return 'n';
 }
+
+export interface ConsentRequestItem {
+  readonly name: string;
+  readonly modifiedCount: number;
+}
+
+export interface ConsentResult {
+  readonly proceed: boolean;
+  readonly perPack: boolean;
+  readonly declined: readonly string[];
+}
+
+export interface RunConsentPromptOptions extends PromptWithTimeoutDeps {
+  readonly timeoutMs: number;
+}
+
+export async function runConsentPrompt(
+  items: readonly ConsentRequestItem[],
+  options: RunConsentPromptOptions,
+): Promise<ConsentResult> {
+  const lines = [
+    `The following ${items.length} pack(s) have local edits that refresh will overwrite:`,
+    ...items.map((i) => `  - ${i.name}: ${i.modifiedCount} modified file(s)`),
+    'Continue? [y/N/per-pack]  (5 min timeout, default N) ',
+  ];
+  const message = lines.join('\n');
+  const answer = await promptWithTimeout(message, options.timeoutMs, options);
+  switch (answer) {
+    case 'y':
+      return { proceed: true, perPack: false, declined: [] };
+    case 'per-pack':
+      return { proceed: true, perPack: true, declined: [] };
+    case 'n':
+    case 'timeout':
+      return {
+        proceed: false,
+        perPack: false,
+        declined: items.map((i) => i.name),
+      };
+  }
+}

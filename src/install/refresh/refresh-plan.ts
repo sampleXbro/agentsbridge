@@ -11,15 +11,6 @@ import type { InstallManifestEntry } from '../core/install-manifest.js';
 import { readFileSafe, exists } from '../../utils/filesystem/fs.js';
 import { INSTALL_MANIFEST_FILENAME } from '../manifest/install-manifest-hash.js';
 import type { FailurePhase } from './refresh-result.js';
-// Re-export result vocabulary so Phase 5+ orchestrator has a single import.
-export type {
-  RefreshCommandResult,
-  RefreshedItem,
-  UnchangedItem,
-  SkippedItem,
-  FailurePhase,
-  FailedItem,
-} from './refresh-result.js';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

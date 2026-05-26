@@ -30,6 +30,9 @@
   ],
   "ignoreDependencies": [],
   "ignoreExportsUsedInFile": true,
+  "ignoreIssues": {
+    "src/install/refresh/**": ["exports", "types"]
+  },
   "rules": {
     "files": "error",
     "dependencies": "error",

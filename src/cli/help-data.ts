@@ -165,6 +165,20 @@ export const COMMANDS: HelpCommand[] = [
     ],
   },
   {
+    name: 'refresh',
+    usage: 'agentsmesh refresh [<name>...] [flags]',
+    description: 'Re-fetch and re-apply installed packs from their recorded sources',
+    flags: [
+      {
+        name: '<name>',
+        description: 'Pack name(s) to refresh (defaults to all installed packs)',
+      },
+      { name: '--dry-run', description: 'Preview what would be refreshed without writing' },
+      { name: '--force', description: 'Skip drift-consent prompts; refresh even modified packs' },
+      { name: '--global', description: 'Refresh packs installed in ~/.agentsmesh/' },
+    ],
+  },
+  {
     name: 'diff',
     usage: 'agentsmesh diff [flags]',
     description: 'Show patch-style output for what generate would change',

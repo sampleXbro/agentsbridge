@@ -21,6 +21,8 @@ import { runInstall } from './commands/install.js';
 import { renderInstall } from './renderers/install.js';
 import { runUninstall } from './commands/uninstall.js';
 import { renderUninstall } from './renderers/uninstall.js';
+import { runRefresh } from './commands/refresh.js';
+import { renderRefresh } from './renderers/refresh.js';
 import { runInstalls } from './commands/installs.js';
 import { renderInstalls } from './renderers/installs.js';
 import { runPlugin } from './commands/plugin.js';
@@ -105,6 +107,10 @@ export const cmdHandlers: Record<
     if (flags.json === true) flags.force = true;
     const result = await runUninstall(flags, args, process.cwd());
     handleResult('uninstall', result, flags, () => renderUninstall(result));
+  },
+  refresh: async (flags, args) => {
+    const result = await runRefresh(flags, args, process.cwd());
+    handleResult('refresh', result, flags, () => renderRefresh(result));
   },
   installs: async (flags, args) => {
     const result = await runInstalls(flags, args, process.cwd());

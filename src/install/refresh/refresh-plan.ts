@@ -130,53 +130,16 @@ export async function planSinglePack(
 // ─── createDefaultResolveRef ──────────────────────────────────────────────────
 
 import { resolveRemoteRefForInstall } from '../source/git-pin.js';
+import { parseSourceUrl } from '../source/parse-source-url.js';
 
 /** Production wiring for `PlanSinglePackDeps.resolveRef`. */
 export function createDefaultResolveRef(): PlanSinglePackDeps['resolveRef'] {
   return async (entry: InstallManifestEntry): Promise<string> => {
     if (entry.source_kind === 'local') return entry.version ?? 'local';
-    const source = entry.source;
-
-    // github:<org>/<repo>@<ref>
-    const ghPinned = source.match(/^github:([^/]+)\/(.+?)@([^/@]+)$/);
-    if (ghPinned !== null) {
-      return resolveRemoteRefForInstall(
-        ghPinned[3] as string,
-        `https://github.com/${ghPinned[1] as string}/${ghPinned[2] as string}.git`,
-      );
+    const parsed = parseSourceUrl(entry.source);
+    if (parsed === null || parsed.remoteUrl === undefined) {
+      throw new Error(`Cannot parse source for refresh: ${entry.source}`);
     }
-    // github:<org>/<repo>
-    const ghBare = source.match(/^github:([^/]+)\/([^/@]+)$/);
-    if (ghBare !== null) {
-      return resolveRemoteRefForInstall(
-        'HEAD',
-        `https://github.com/${ghBare[1] as string}/${ghBare[2] as string}.git`,
-      );
-    }
-    // gitlab:<ns>/<repo>@<ref>
-    const glPinned = source.match(/^gitlab:(.+)\/([^/@]+)@([^/@]+)$/);
-    if (glPinned !== null) {
-      return resolveRemoteRefForInstall(
-        glPinned[3] as string,
-        `https://gitlab.com/${glPinned[1] as string}/${glPinned[2] as string}.git`,
-      );
-    }
-    // gitlab:<ns>/<repo>
-    const glBare = source.match(/^gitlab:(.+)\/([^/@]+)$/);
-    if (glBare !== null) {
-      return resolveRemoteRefForInstall(
-        'HEAD',
-        `https://gitlab.com/${glBare[1] as string}/${glBare[2] as string}.git`,
-      );
-    }
-    // git+<url>#<ref>
-    if (source.startsWith('git+')) {
-      const hashIdx = source.lastIndexOf('#');
-      const base = hashIdx < 0 ? source : source.slice(0, hashIdx);
-      const ref = hashIdx < 0 ? 'HEAD' : source.slice(hashIdx + 1);
-      return resolveRemoteRefForInstall(ref, base.slice(4));
-    }
-    // HTTPS / SSH
-    return resolveRemoteRefForInstall('HEAD', source);
+    return resolveRemoteRefForInstall(parsed.ref ?? 'HEAD', parsed.remoteUrl);
   };
 }

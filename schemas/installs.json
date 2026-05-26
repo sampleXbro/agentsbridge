@@ -133,6 +133,10 @@
               "agents",
               "skills"
             ]
+          },
+          "refreshed_at": {
+            "type": "string",
+            "minLength": 1
           }
         },
         "required": [

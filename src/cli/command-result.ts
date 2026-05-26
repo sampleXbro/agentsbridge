@@ -127,6 +127,8 @@ export interface InstallsListEntry {
   target: string | null;
   /** ISO timestamp from the pack install-manifest, or `null` when missing. */
   installed_at: string | null;
+  /** ISO timestamp from the last `agentsmesh refresh`, or `null` when never refreshed. */
+  refreshed_at: string | null;
   /** Forward-slash relative path from the canonical scope root. */
   pack_path: string;
   /**

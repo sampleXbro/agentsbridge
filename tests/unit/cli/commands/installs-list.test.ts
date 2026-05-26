@@ -109,6 +109,7 @@ describe('installs list - single entry', () => {
       features: ['skills', 'rules'],
       target: 'claude-code',
       installed_at: '2026-05-16T10:00:00.000Z',
+      refreshed_at: null,
       pack_path: '.agentsmesh/packs/demo-pack',
       license: null,
     });

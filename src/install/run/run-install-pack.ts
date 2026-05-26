@@ -46,6 +46,13 @@ export interface InstallAsPackArgs {
    * pack root. Optional — when omitted, no preserved files are copied.
    */
   contentRoot?: string;
+  /**
+   * When true, skip the `findExistingPack` merge path and force a full
+   * materialize of the new content. Used by `agentsmesh refresh` to replace
+   * a pack's contents with a fresh ref rather than merging into the existing
+   * pack. When omitted or false, existing merge behavior is preserved.
+   */
+  forceFreshMaterialize?: boolean;
 }
 
 function pathScope(pathInRepo?: string): Pick<PackMetadata, 'path' | 'paths'> {
@@ -94,6 +101,7 @@ export async function installAsPack(args: InstallAsPackArgs): Promise<void> {
     renameExistingPack,
     sourceType,
     contentRoot,
+    forceFreshMaterialize,
   } = args;
 
   const packsDir = join(canonicalDir, 'packs');
@@ -102,11 +110,13 @@ export async function installAsPack(args: InstallAsPackArgs): Promise<void> {
   const now = new Date().toISOString();
   const parsedTarget = yamlTarget !== undefined ? targetSchema.parse(yamlTarget) : undefined;
 
-  const existingPack = await findExistingPack(packsDir, sourceForYaml, {
-    target: parsedTarget,
-    as: manualAs,
-    features: entryFeatures,
-  });
+  const existingPack = forceFreshMaterialize
+    ? null
+    : await findExistingPack(packsDir, sourceForYaml, {
+        target: parsedTarget,
+        as: manualAs,
+        features: entryFeatures,
+      });
   let persistedName = packName;
   let persistedFeatures = entryFeatures;
   let persistedPick = pick;
@@ -148,11 +158,13 @@ export async function installAsPack(args: InstallAsPackArgs): Promise<void> {
     persistedPaths = mergedMeta.paths;
     logger.success(`Updated pack "${mergedMeta.name}" in .agentsmesh/packs/.`);
   } else {
-    const collidingMeta = await readPackMetadata(join(packsDir, packName));
-    if (collidingMeta) {
-      throw new Error(
-        `Auto-generated pack name "${packName}" collides with an existing incompatible pack. Use --name to choose a different pack name.`,
-      );
+    if (!forceFreshMaterialize) {
+      const collidingMeta = await readPackMetadata(join(packsDir, packName));
+      if (collidingMeta) {
+        throw new Error(
+          `Auto-generated pack name "${packName}" collides with an existing incompatible pack. Use --name to choose a different pack name.`,
+        );
+      }
     }
     await materializePack(
       packsDir,

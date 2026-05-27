@@ -219,6 +219,35 @@ describe('runRefresh', () => {
       expect(mocks.runPostOperationGenerate).not.toHaveBeenCalled();
     });
 
+    it('dry-run surfaces clean-update plans in data.refreshed', async () => {
+      mocks.planSinglePack.mockResolvedValue(makePlan('my-pack', 'clean-update'));
+
+      const result = await runRefresh({ 'dry-run': true }, [], projectRoot);
+
+      expect(result.exitCode).toBe(0);
+      expect(result.data.refreshed).toHaveLength(1);
+      expect(result.data.refreshed[0]!.name).toBe('my-pack');
+      expect(result.data.refreshed[0]!.newSha).toBe('sha-new');
+      expect(result.data.refreshed[0]!.oldSha).toBe('sha-old');
+      expect(mocks.applySinglePack).not.toHaveBeenCalled();
+    });
+
+    it('dry-run surfaces needs-consent plans in data.refreshed', async () => {
+      mocks.planSinglePack.mockResolvedValue(
+        makePlan('my-pack', 'needs-consent', {
+          modifications: [{ path: 'file.md', reason: 'modified' }],
+        }),
+      );
+
+      const result = await runRefresh({ 'dry-run': true }, [], projectRoot);
+
+      expect(result.exitCode).toBe(0);
+      expect(result.data.refreshed).toHaveLength(1);
+      expect(result.data.refreshed[0]!.name).toBe('my-pack');
+      expect(mocks.runConsentPrompt).not.toHaveBeenCalled();
+      expect(mocks.applySinglePack).not.toHaveBeenCalled();
+    });
+
     it('dry-run with error plan: exits 1', async () => {
       mocks.planSinglePack.mockResolvedValue(
         makePlan('my-pack', 'error', {

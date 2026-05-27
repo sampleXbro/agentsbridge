@@ -88,8 +88,32 @@ export async function runRefresh(
       error: p.error?.message ?? 'unknown plan error',
     }));
 
-    // Dry-run: stop here
+    // Dry-run: stop here, but populate refreshed[] so output faithfully previews
+    // what the real run will produce. Use empty changedFiles since we haven't
+    // fetched new content yet.
     if (dryRun) {
+      for (const plan of cleanUpdate) {
+        data.refreshed.push({
+          name: plan.name,
+          oldRef: plan.oldSha,
+          newRef: plan.newSha,
+          oldSha: plan.oldSha,
+          newSha: plan.newSha,
+          changedFiles: { added: [], removed: [], modified: [] },
+        });
+      }
+      // needsConsent packs are also surfaced: with --force they'd refresh;
+      // without, they'd prompt. Dry-run assumes the user will proceed.
+      for (const plan of needsConsent) {
+        data.refreshed.push({
+          name: plan.name,
+          oldRef: plan.oldSha,
+          newRef: plan.newSha,
+          oldSha: plan.oldSha,
+          newSha: plan.newSha,
+          changedFiles: { added: [], removed: [], modified: [] },
+        });
+      }
       return { exitCode: errors.length > 0 ? 1 : 0, data };
     }
 

@@ -195,6 +195,8 @@ export interface ConvertData {
   summary: { created: number; updated: number; unchanged: number };
 }
 
+export type FailurePhase = 'plan' | 'fetch' | 'apply' | 'manifest-update';
+
 export interface RefreshData {
   scope: 'project' | 'global';
   mode: 'refresh';
@@ -210,7 +212,7 @@ export interface RefreshData {
   skipped: Array<{ name: string; reason: 'user-declined' }>;
   failed: Array<{
     name: string;
-    phase: 'plan' | 'fetch' | 'apply' | 'manifest-update';
+    phase: FailurePhase;
     error: string;
   }>;
   dryRun: boolean;

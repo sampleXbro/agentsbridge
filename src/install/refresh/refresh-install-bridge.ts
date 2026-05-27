@@ -66,6 +66,9 @@ export function createRunInstallForRefresh(args: RunInstallForRefreshArgs) {
     if (entry.target !== undefined) flags.target = entry.target;
     if (entry.as !== undefined) flags.as = entry.as;
     if (entry.path !== undefined) flags.path = entry.path;
+    // Marketplace `--all` installs persist as `paths: [...]` (not `path`). Re-invoking
+    // install without `all: true` would trip the marketplace picker's threshold.
+    if (entry.paths !== undefined && entry.paths.length > 0) flags.all = true;
     flags.name = entry.name;
 
     const replay: InstallReplayScope = {

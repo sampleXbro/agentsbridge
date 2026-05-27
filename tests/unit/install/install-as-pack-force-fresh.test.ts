@@ -69,6 +69,109 @@ describe('installAsPack with forceFreshMaterialize', () => {
     expect(packYaml).not.toContain('installed_at: 2026-01-01T00:00:00.000Z');
   });
 
+  // ── Case 1: pack dir missing on disk but manifest entry present ────────────
+  // refresh's planSinglePack would return 'error' for a missing manifest.json,
+  // but a direct installAsPack({forceFreshMaterialize:true}) must succeed because
+  // materializePack handles absent finalDir cleanly (skips the rename-to-.old step).
+
+  it('forceFreshMaterialize: true re-materializes when pack dir is absent from disk', async () => {
+    const packsDir = join(canonicalDir, 'packs');
+    // DO NOT create the pack dir — it's missing (user deleted it manually)
+
+    await installAsPack({
+      canonicalDir,
+      packName: 'missing-pack',
+      narrowed: emptyCanonical(),
+      selected: { skillNames: [], ruleSlugs: [], commandNames: [], agentNames: [] },
+      sourceForYaml: 'github:org/repo',
+      sourceKind: 'github',
+      entryFeatures: ['skills'],
+      pick: undefined,
+      forceFreshMaterialize: true,
+    });
+
+    // pack dir must now exist with a fresh pack.yaml
+    expect(await exists(join(packsDir, 'missing-pack'))).toBe(true);
+    const packYaml = await readFile(join(packsDir, 'missing-pack', 'pack.yaml'), 'utf8');
+    expect(packYaml).toContain('source: github:org/repo');
+  });
+
+  // ── Case 3: forceFreshMaterialize bypasses collision guard → clobbers other pack ──
+  // With forceFreshMaterialize:true the collision check (!forceFreshMaterialize guard)
+  // is skipped, so installAsPack WILL overwrite an existing pack even when its
+  // source differs. This is intentional for refresh (refresh always targets the
+  // exact entry.name from the manifest), but must be documented behavior.
+
+  it('forceFreshMaterialize: true overwrites a colliding same-name pack from a different source', async () => {
+    const packsDir = join(canonicalDir, 'packs');
+    const packDir = join(packsDir, 'colliding-pack');
+    await mkdir(packDir, { recursive: true });
+    await writeFile(
+      join(packDir, 'pack.yaml'),
+      [
+        'name: colliding-pack',
+        'source: github:other/different-source', // DIFFERENT source
+        'source_kind: github',
+        'installed_at: 2026-01-01T00:00:00.000Z',
+        'updated_at: 2026-01-01T00:00:00.000Z',
+        'content_hash: sha256:0000000000000000000000000000000000000000000000000000000000000000',
+        'features:',
+        '  - skills',
+      ].join('\n'),
+    );
+
+    // Should NOT throw — forceFreshMaterialize bypasses the collision guard
+    await installAsPack({
+      canonicalDir,
+      packName: 'colliding-pack',
+      narrowed: emptyCanonical(),
+      selected: { skillNames: [], ruleSlugs: [], commandNames: [], agentNames: [] },
+      sourceForYaml: 'github:org/refreshed-source',
+      sourceKind: 'github',
+      entryFeatures: ['skills'],
+      pick: undefined,
+      forceFreshMaterialize: true,
+    });
+
+    // The pack is overwritten with the new source
+    const packYaml = await readFile(join(packDir, 'pack.yaml'), 'utf8');
+    expect(packYaml).toContain('source: github:org/refreshed-source');
+    expect(packYaml).not.toContain('github:other/different-source');
+  });
+
+  it('forceFreshMaterialize: false DOES throw when a colliding same-name different-source pack exists', async () => {
+    const packsDir = join(canonicalDir, 'packs');
+    const packDir = join(packsDir, 'colliding-pack');
+    await mkdir(packDir, { recursive: true });
+    await writeFile(
+      join(packDir, 'pack.yaml'),
+      [
+        'name: colliding-pack',
+        'source: github:other/different-source',
+        'source_kind: github',
+        'installed_at: 2026-01-01T00:00:00.000Z',
+        'updated_at: 2026-01-01T00:00:00.000Z',
+        'content_hash: sha256:0000000000000000000000000000000000000000000000000000000000000000',
+        'features:',
+        '  - skills',
+      ].join('\n'),
+    );
+
+    await expect(
+      installAsPack({
+        canonicalDir,
+        packName: 'colliding-pack',
+        narrowed: emptyCanonical(),
+        selected: { skillNames: [], ruleSlugs: [], commandNames: [], agentNames: [] },
+        sourceForYaml: 'github:org/another-source',
+        sourceKind: 'github',
+        entryFeatures: ['skills'],
+        pick: undefined,
+        // forceFreshMaterialize NOT set → collision check runs → throws
+      }),
+    ).rejects.toThrow(/collides/i);
+  });
+
   it('forceFreshMaterialize: false (default) preserves existing merge behavior', async () => {
     const packsDir = join(canonicalDir, 'packs');
     const existingPackDir = join(packsDir, 'my-pack');

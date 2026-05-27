@@ -383,5 +383,45 @@ describe('runRefresh', () => {
       const result = await runRefresh({ json: true }, ['does-not-exist'], projectRoot);
       expect(result.exitCode).toBe(2);
     });
+
+    // ── F: dry-run consent semantic pin ─────────────────────────────────────
+    // dry-run with force=false still surfaces needs-consent packs in data.refreshed.
+    // The comment in run-refresh.ts reads: "Dry-run assumes the user will proceed."
+    // This is intentionally optimistic — the dry-run output previews what WOULD
+    // happen if the user consents. A real run (no --force) would prompt first.
+    // We pin this behavior so future changes can't silently flip it.
+
+    it('dry-run without --force surfaces needs-consent pack in data.refreshed (optimistic preview)', async () => {
+      mocks.planSinglePack.mockResolvedValue(
+        makePlan('my-pack', 'needs-consent', {
+          modifications: [{ path: 'file.md', reason: 'modified' }],
+        }),
+      );
+
+      const result = await runRefresh({ 'dry-run': true /* force absent */ }, [], projectRoot);
+
+      expect(result.exitCode).toBe(0);
+      // Pin: needs-consent IS shown in refreshed even without --force in dry-run
+      expect(result.data.refreshed).toHaveLength(1);
+      expect(result.data.refreshed[0]!.name).toBe('my-pack');
+      // Consent prompt must NOT run in dry-run mode
+      expect(mocks.runConsentPrompt).not.toHaveBeenCalled();
+      // No actual apply in dry-run
+      expect(mocks.applySinglePack).not.toHaveBeenCalled();
+    });
+
+    it('dry-run with --force also surfaces needs-consent pack (same optimistic preview)', async () => {
+      mocks.planSinglePack.mockResolvedValue(
+        makePlan('my-pack', 'needs-consent', {
+          modifications: [{ path: 'file.md', reason: 'modified' }],
+        }),
+      );
+
+      const result = await runRefresh({ 'dry-run': true, force: true }, [], projectRoot);
+
+      expect(result.exitCode).toBe(0);
+      expect(result.data.refreshed).toHaveLength(1);
+      expect(result.data.refreshed[0]!.name).toBe('my-pack');
+    });
   });
 });

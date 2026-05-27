@@ -10,10 +10,10 @@ function descriptor(name: string): {
 }
 
 describe('register', () => {
-  it('registers exactly 44 tools', () => {
-    expect(TOOL_DESCRIPTORS).toHaveLength(44);
+  it('registers exactly 45 tools', () => {
+    expect(TOOL_DESCRIPTORS).toHaveLength(45);
     const names = TOOL_DESCRIPTORS.map((d) => d.name);
-    expect(new Set(names).size).toBe(44); // no dupes
+    expect(new Set(names).size).toBe(45); // no dupes
   });
   it('registers exactly 17 resources', () => {
     expect(RESOURCE_DESCRIPTORS).toHaveLength(17);
@@ -22,11 +22,12 @@ describe('register', () => {
     const reads = TOOL_DESCRIPTORS.filter((d) => d.resourceUri !== undefined);
     expect(reads.length).toBe(17);
   });
-  it('exposes install / uninstall / installs_list as registered tools', () => {
+  it('exposes install / uninstall / installs_list / refresh as registered tools', () => {
     const names = new Set(TOOL_DESCRIPTORS.map((d) => d.name));
     expect(names.has('install')).toBe(true);
     expect(names.has('uninstall')).toBe(true);
     expect(names.has('installs_list')).toBe(true);
+    expect(names.has('refresh')).toBe(true);
   });
 });
 

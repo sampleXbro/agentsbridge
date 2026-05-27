@@ -17,14 +17,19 @@ import { runGenerate } from '../../cli/commands/generate.js';
 import { renderGenerate } from '../../cli/renderers/generate.js';
 import { logger } from '../../utils/output/logger.js';
 
-export type PostGenerateMode = 'install' | 'uninstall';
+export type PostGenerateMode = 'install' | 'uninstall' | 'refresh';
 
 export async function runPostOperationGenerate(
   mode: PostGenerateMode,
   scope: 'project' | 'global',
   rootBase: string,
 ): Promise<void> {
-  const action = mode === 'install' ? 'Pack is installed' : 'Uninstall is committed';
+  const action =
+    mode === 'install'
+      ? 'Pack is installed'
+      : mode === 'refresh'
+        ? 'Refresh is committed'
+        : 'Uninstall is committed';
   const genFlag = scope === 'global' ? ' --global' : '';
   try {
     const genResult = await runGenerate(scope === 'global' ? { global: true } : {}, rootBase, {

@@ -19,7 +19,7 @@ Shipped under `schemas/` in every npm release, accessible at the pinned URL `htt
 | `hooks.json` | `.agentsmesh/hooks.yaml` lifecycle hooks | scaffolded by `init` |
 | `mcp.json` | `.agentsmesh/mcp.json` MCP server entries | scaffolded by `init` |
 | `pack.json` | `.agentsmesh/packs/<name>/pack.yaml` per-pack metadata | written by `install` |
-| `installs.json` | `.agentsmesh/installs.yaml` install manifest | written by `install` / `uninstall` |
+| `installs.json` | `.agentsmesh/installs.yaml` install manifest | written by `install` / `uninstall` / `refresh` |
 | `install-manifest.json` | `.agentsmesh/packs/<name>/.agentsmesh-install-manifest.json` per-pack integrity manifest | written by `install` |
 
 URLs are pinned to the running package version so the schema referenced always matches the format the file was written with. Upgrading agentsmesh updates the directive on the next write; older files keep validating against their original schema until the writer touches them again.
@@ -102,8 +102,16 @@ A future PR to [SchemaStore](https://github.com/SchemaStore/schemastore) will re
 | `agentsmesh init` | `agentsmesh.yaml`, `agentsmesh.local.yaml`, `.agentsmesh/permissions.yaml`, `.agentsmesh/hooks.yaml` |
 | `agentsmesh install <source>` | `.agentsmesh/installs.yaml`, `.agentsmesh/packs/<name>/pack.yaml`, `.agentsmesh/packs/<name>/.agentsmesh-install-manifest.json` |
 | `agentsmesh uninstall <name>` | `.agentsmesh/installs.yaml` (refreshed after row removal) |
+| `agentsmesh refresh` | `.agentsmesh/installs.yaml` (updates `refreshed_at` on every successfully refreshed row) |
 
 Stamping is idempotent: re-running a writer on a file that already carries the directive updates the URL in place rather than duplicating the line.
+
+### `installs.yaml` refresh fields
+
+Two optional fields were added to each `installs.yaml` row by the `agentsmesh refresh` feature. Rows written by older versions of AgentsMesh will not have them until the next `install` or `refresh` touches the entry.
+
+- **`original_ref?: string`** — the user's original ref expression (e.g. `main`, `v1.2.3`) captured at install time. Used by `agentsmesh refresh` to re-resolve branch pins to the current tip, or to re-verify tag pins. Absent on installs that predate the refresh feature.
+- **`refreshed_at?: string`** — ISO-8601 timestamp of the last successful `agentsmesh refresh` for this row. Absent until the pack has been refreshed at least once.
 
 <Aside type="note">
   Files written by older versions of AgentsMesh (pre-this-release) are not retroactively stamped. They keep working unchanged; they just don't get IDE autocomplete until a writer touches them again. Running `agentsmesh install --sync` on an existing project refreshes every install entry, which updates `installs.yaml` plus every pack's `pack.yaml` and `.agentsmesh-install-manifest.json`.

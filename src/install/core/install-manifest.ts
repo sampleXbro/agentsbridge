@@ -37,6 +37,8 @@ export const installManifestEntrySchema = z.object({
   path: z.string().optional(),
   paths: z.array(z.string().min(1)).min(1).optional(),
   as: manualInstallAsSchema.optional(),
+  refreshed_at: z.string().min(1).optional(),
+  original_ref: z.string().optional(),
 });
 
 export const installManifestSchema = z.object({
@@ -128,6 +130,8 @@ export function buildInstallManifestEntry(args: {
   path?: string;
   paths?: string[];
   as?: ManualInstallAs;
+  refreshed_at?: string;
+  originalRef?: string;
 }): InstallManifestEntry {
   return normalizePersistedInstallPaths(
     installManifestEntrySchema.parse({
@@ -141,6 +145,8 @@ export function buildInstallManifestEntry(args: {
       path: args.path,
       paths: args.paths,
       as: args.as,
+      refreshed_at: args.refreshed_at,
+      original_ref: args.originalRef,
     }),
   );
 }

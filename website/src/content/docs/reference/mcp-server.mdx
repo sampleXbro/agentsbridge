@@ -54,7 +54,7 @@ The server reads `projectRoot` from the process working directory at startup. No
 
 ## Tools reference
 
-The server exposes **44 tools** grouped by category. All tool errors return a structured envelope `{ code, message, details? }` (see [Error codes](#error-codes)).
+The server exposes **45 tools** grouped by category. All tool errors return a structured envelope `{ code, message, details? }` (see [Error codes](#error-codes)).
 
 ### Canonical reads (8)
 
@@ -132,15 +132,16 @@ The server exposes **44 tools** grouped by category. All tool errors return a st
 | `import` | Import another tool's config into canonical |
 | `convert` | Convert directly from one tool to another |
 
-### Pack lifecycle (3)
+### Pack lifecycle (4)
 
 | Tool | Description |
 |------|-------------|
 | `install` | Install a community pack from a URL or local path (auto-classifies skill-pack / canonical / tool-native; `--target` / `--as` overrides) |
 | `uninstall` | Remove one or more installed packs; mid-batch failures isolated in `data.failed[]` |
 | `installs_list` | Read-only inventory of installed packs (NAME / SOURCE / FEATURES / INSTALLED) |
+| `refresh` | Re-fetch and re-apply installed packs against their recorded source/ref. Branch pins re-resolve to the current tip; tag pins re-resolve; SHA pins stay put. Per-pack atomic. |
 
-The pack-lifecycle tools always run non-interactively. MCP has no stdin TTY, so the documented `--force` defaults are accepted for every interactive prompt the CLI would surface (bulk select → accept all, broken-link → leave-with-warnings, modified-files → delete-anyway). For finer-grained selection, drive the CLI directly. Input shapes mirror the CLI flags one-for-one; output envelopes match `InstallData` / `UninstallData` / `InstallsListData` documented under [`install`](../../cli/install/#json-output), [`uninstall`](../../cli/uninstall/#json-output), and [`installs`](../../cli/installs/#json-output).
+The pack-lifecycle tools always run non-interactively. MCP has no stdin TTY, so the documented `--force` defaults are accepted for every interactive prompt the CLI would surface (bulk select → accept all, broken-link → leave-with-warnings, modified-files → delete-anyway). For finer-grained selection, drive the CLI directly. Input shapes mirror the CLI flags one-for-one (`refresh` accepts `names?: string[]`, `dry_run?`, `global?`); output envelopes match `InstallData` / `UninstallData` / `InstallsListData` / `RefreshData` documented under [`install`](../../cli/install/#json-output), [`uninstall`](../../cli/uninstall/#json-output), [`installs`](../../cli/installs/#json-output), and [`refresh`](../../cli/refresh/#json-output).
 
 All mutation tools and orchestration tools accept an optional `dry_run: true` parameter that returns the planned changes without writing to disk. `install` and `uninstall` also honor `dry_run` (the legacy-manifest migration runs in memory only).
 

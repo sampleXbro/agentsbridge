@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://unpkg.com/agentsmesh@0.18.1/schemas/installs.json
+# yaml-language-server: $schema=https://unpkg.com/agentsmesh@0.19.0/schemas/installs.json
 version: 1
 installs:
   - name: addyosmani-agent-skills-pack

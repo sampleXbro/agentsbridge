@@ -14,6 +14,8 @@ describe('errors', () => {
       NO_PROJECT: 'NO_PROJECT',
       IO_ERROR: 'IO_ERROR',
       LIMIT_EXCEEDED: 'LIMIT_EXCEEDED',
+      REFRESH_RESOLVE_FAILED: 'REFRESH_RESOLVE_FAILED',
+      REFRESH_APPLY_FAILED: 'REFRESH_APPLY_FAILED',
     });
   });
   it('serializes to envelope with code/message/details', () => {

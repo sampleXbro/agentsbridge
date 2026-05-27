@@ -36,6 +36,7 @@ export interface RunInstallLockedArgs {
   force: boolean;
   useExtends: boolean;
   all?: boolean;
+  forceFreshMaterialize?: boolean;
   explicitPath?: string;
   explicitTarget?: string;
   explicitAs?: ManualInstallAs;
@@ -71,6 +72,7 @@ export async function runInstallLocked(opts: RunInstallLockedArgs): Promise<Inst
     force,
     useExtends,
     all,
+    forceFreshMaterialize,
     explicitPath,
     explicitTarget,
     explicitAs,
@@ -171,6 +173,7 @@ export async function runInstallLocked(opts: RunInstallLockedArgs): Promise<Inst
     dryRun,
     force,
     useExtends,
+    forceFreshMaterialize,
     explicitAs,
     nameOverride,
     scope,

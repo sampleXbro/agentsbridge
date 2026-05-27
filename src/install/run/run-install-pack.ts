@@ -46,6 +46,20 @@ export interface InstallAsPackArgs {
    * pack root. Optional — when omitted, no preserved files are copied.
    */
   contentRoot?: string;
+  /**
+   * When true, skip the `findExistingPack` merge path and force a full
+   * materialize of the new content. Used by `agentsmesh refresh` to replace
+   * a pack's contents with a fresh ref rather than merging into the existing
+   * pack. When omitted or false, existing merge behavior is preserved.
+   */
+  forceFreshMaterialize?: boolean;
+  /**
+   * The user's original ref expression (e.g. `main`, `v1.2.3`) before it was
+   * resolved to a pinned SHA. Stored in `installs.yaml` as `original_ref` so
+   * the refresh planner can re-resolve branch/tag pins against the remote
+   * rather than re-resolving the already-pinned SHA to itself.
+   */
+  originalRef?: string;
 }
 
 function pathScope(pathInRepo?: string): Pick<PackMetadata, 'path' | 'paths'> {
@@ -94,6 +108,8 @@ export async function installAsPack(args: InstallAsPackArgs): Promise<void> {
     renameExistingPack,
     sourceType,
     contentRoot,
+    forceFreshMaterialize,
+    originalRef,
   } = args;
 
   const packsDir = join(canonicalDir, 'packs');
@@ -102,11 +118,13 @@ export async function installAsPack(args: InstallAsPackArgs): Promise<void> {
   const now = new Date().toISOString();
   const parsedTarget = yamlTarget !== undefined ? targetSchema.parse(yamlTarget) : undefined;
 
-  const existingPack = await findExistingPack(packsDir, sourceForYaml, {
-    target: parsedTarget,
-    as: manualAs,
-    features: entryFeatures,
-  });
+  const existingPack = forceFreshMaterialize
+    ? null
+    : await findExistingPack(packsDir, sourceForYaml, {
+        target: parsedTarget,
+        as: manualAs,
+        features: entryFeatures,
+      });
   let persistedName = packName;
   let persistedFeatures = entryFeatures;
   let persistedPick = pick;
@@ -148,11 +166,13 @@ export async function installAsPack(args: InstallAsPackArgs): Promise<void> {
     persistedPaths = mergedMeta.paths;
     logger.success(`Updated pack "${mergedMeta.name}" in .agentsmesh/packs/.`);
   } else {
-    const collidingMeta = await readPackMetadata(join(packsDir, packName));
-    if (collidingMeta) {
-      throw new Error(
-        `Auto-generated pack name "${packName}" collides with an existing incompatible pack. Use --name to choose a different pack name.`,
-      );
+    if (!forceFreshMaterialize) {
+      const collidingMeta = await readPackMetadata(join(packsDir, packName));
+      if (collidingMeta) {
+        throw new Error(
+          `Auto-generated pack name "${packName}" collides with an existing incompatible pack. Use --name to choose a different pack name.`,
+        );
+      }
     }
     await materializePack(
       packsDir,
@@ -190,6 +210,7 @@ export async function installAsPack(args: InstallAsPackArgs): Promise<void> {
       path: persistedPath,
       paths: persistedPaths,
       as: manualAs,
+      originalRef,
     }),
   );
 

@@ -235,6 +235,7 @@ agentsmesh matrix [--global] [--targets <csv>] [--verbose]
 agentsmesh install <source> [--sync] [--path <dir>] [--target <id>] [--as <kind>] [--name <id>] [--extends] [--all] [--dry-run] [--global] [--force]
 agentsmesh uninstall <name>[,<name>...] [--all] [--keep-pack] [--keep-generated] [--dry-run] [--global] [--force]
 agentsmesh installs list [--global]
+agentsmesh refresh [<name>[,<name>...]] [--dry-run] [--force] [--json] [--global]
 agentsmesh plugin add|list|remove|info [--version <v>] [--id <id>]
 agentsmesh target scaffold <id> [--name <displayName>] [--force]
 ```
@@ -313,6 +314,34 @@ agentsmesh uninstall <name> --dry-run          # preview; no writes
 ```
 
 Each install writes `.agentsmesh-install-manifest.json` next to the pack with per-file sha256 hashes; uninstall compares current contents against that manifest and prompts before deleting locally-modified files. `--force` accepts the documented defaults (bulk = accept all, broken-link = leave-with-warnings, modified = delete-anyway). `.agentsmesh/.install.lock` serialises install/uninstall so concurrent runs on the same project fail fast rather than racing on disk.
+
+### Refreshing packs
+
+`agentsmesh refresh` re-fetches every installed pack from its recorded source/ref
+and re-applies it. Branch pins (`@main`) advance to the current tip; tag pins
+re-resolve in case the tag moved; SHA pins stay put (re-fetch with the same content).
+
+```bash
+agentsmesh refresh                    # refresh every installed pack
+agentsmesh refresh my-pack,other-pack # refresh just these
+agentsmesh refresh --dry-run          # preview without writing
+agentsmesh refresh --force            # skip the drift prompt
+```
+
+Each pack is refreshed atomically — a failure or interruption leaves the
+affected pack at its pre-refresh state. Local edits to pack files trigger
+a consolidated consent prompt (5-minute timeout) unless `--force` is set.
+
+**refresh does NOT switch refs.** To move a pack to a different ref, just install
+with the new ref — install silently overwrites an existing pack of the same name:
+
+```bash
+agentsmesh install github:org/repo@v2.0.0
+```
+
+**refresh vs `install --sync`.** `--sync` replays missing installs from
+`installs.yaml` (e.g. after a fresh clone). `refresh` updates existing
+installs against their declared sources. They are orthogonal.
 
 ### What to commit and what to gitignore
 
@@ -457,7 +486,7 @@ See the [full feature matrix docs](https://samplexbro.github.io/agentsmesh/refer
 
 - **[Getting Started](https://samplexbro.github.io/agentsmesh/getting-started/installation/)** — installation, quick start
 - **[Canonical Config](https://samplexbro.github.io/agentsmesh/canonical-config/)** — rules, commands, agents, skills, MCP, hooks, ignore, permissions
-- **[CLI Reference](https://samplexbro.github.io/agentsmesh/cli/)** — `init`, `generate`, `import`, `convert`, `install`, `uninstall`, `installs`, `diff`, `lint`, `watch`, `check`, `merge`, `matrix`, `plugin`, `target`
+- **[CLI Reference](https://samplexbro.github.io/agentsmesh/cli/)** — `init`, `generate`, `import`, `convert`, `install`, `uninstall`, `installs`, `refresh`, `diff`, `lint`, `watch`, `check`, `merge`, `matrix`, `plugin`, `target`
 - **[Configuration](https://samplexbro.github.io/agentsmesh/configuration/agentsmesh-yaml/)** — `agentsmesh.yaml`, local overrides, extends, collaboration, conversions
 - **[Guides](https://samplexbro.github.io/agentsmesh/guides/existing-project/)** — adopting in existing projects · multi-tool teams · sharing config · CI drift detection · community packs · **building plugins**
 - **[Reference](https://samplexbro.github.io/agentsmesh/reference/generation-pipeline/)** — supported tools matrix · generation pipeline · managed embedding

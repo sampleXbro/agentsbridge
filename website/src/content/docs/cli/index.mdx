@@ -1,7 +1,7 @@
 ---
 draft: false
 title: CLI Reference
-description: Complete reference for all AgentsMesh CLI commands — init, generate, import, convert, install, uninstall, installs, diff, lint, watch, check, merge, matrix, plugin, and target. Both project and global mode supported.
+description: Complete reference for all AgentsMesh CLI commands — init, generate, import, convert, install, uninstall, installs, refresh, diff, lint, watch, check, merge, matrix, plugin, and target. Both project and global mode supported.
 sidebar:
   label: Overview
   order: 0
@@ -55,6 +55,10 @@ amsh --help
   <Card title="installs" icon="information">
     Read-only inventory — list installed packs with name, source, features, and install date.
     [→ installs docs](./installs/)
+  </Card>
+  <Card title="refresh" icon="refresh">
+    Re-fetch and re-apply installed packs from their recorded sources. Branch pins advance to the current tip; SHA pins stay put. Per-pack atomic.
+    [→ refresh docs](./refresh/)
   </Card>
   <Card title="diff" icon="magnifier">
     Show a unified diff of what the next `generate` would change, without writing anything.

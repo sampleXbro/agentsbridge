@@ -127,6 +127,8 @@ export interface InstallsListEntry {
   target: string | null;
   /** ISO timestamp from the pack install-manifest, or `null` when missing. */
   installed_at: string | null;
+  /** ISO timestamp from the last `agentsmesh refresh`, or `null` when never refreshed. */
+  refreshed_at: string | null;
   /** Forward-slash relative path from the canonical scope root. */
   pack_path: string;
   /**
@@ -191,4 +193,27 @@ export interface ConvertData {
   mode: 'convert' | 'dry-run';
   files: Array<{ path: string; target: string; status: 'created' | 'updated' | 'unchanged' }>;
   summary: { created: number; updated: number; unchanged: number };
+}
+
+export type FailurePhase = 'plan' | 'fetch' | 'apply' | 'manifest-update';
+
+export interface RefreshData {
+  scope: 'project' | 'global';
+  mode: 'refresh';
+  refreshed: Array<{
+    name: string;
+    oldRef: string | null;
+    newRef: string;
+    oldSha: string | null;
+    newSha: string;
+    changedFiles: { added: string[]; removed: string[]; modified: string[] };
+  }>;
+  unchanged: Array<{ name: string; ref: string }>;
+  skipped: Array<{ name: string; reason: 'user-declined' }>;
+  failed: Array<{
+    name: string;
+    phase: FailurePhase;
+    error: string;
+  }>;
+  dryRun: boolean;
 }

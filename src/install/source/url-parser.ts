@@ -15,3 +15,5 @@ export {
 
 export type { InstallSourceKind, ParsedInstallSource } from './install-source-types.js';
 export { parseInstallSource } from './parse-install-source.js';
+export { parseSourceUrl } from './parse-source-url.js';
+export type { ParsedSourceUrl } from './parse-source-url.js';

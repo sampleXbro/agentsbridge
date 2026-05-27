@@ -19,6 +19,7 @@ describe('readInstallFlags', () => {
       force: false,
       useExtends: false,
       all: false,
+      forceFreshMaterialize: false,
       explicitPath: undefined,
       explicitTarget: undefined,
       explicitAs: undefined,

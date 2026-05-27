@@ -26,16 +26,17 @@ const COLUMNS: ReadonlyArray<{ key: ColumnKey; label: string }> = [
   { key: 'source', label: 'SOURCE' },
   { key: 'features', label: 'FEATURES' },
   { key: 'license', label: 'LICENSE' },
-  { key: 'installed', label: 'INSTALLED' },
+  { key: 'installed', label: 'LAST TOUCHED' },
 ];
 
 function toRow(entry: InstallsListEntry): Row {
+  const lastTouched = entry.refreshed_at ?? entry.installed_at ?? null;
   return {
     name: entry.name,
     source: entry.source,
     features: entry.features.join(', '),
     license: entry.license ?? '-',
-    installed: entry.installed_at ? entry.installed_at.slice(0, 10) : '-',
+    installed: lastTouched ? lastTouched.slice(0, 10) : '-',
   };
 }
 

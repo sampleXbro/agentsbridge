@@ -9,6 +9,7 @@
 
 import { z } from 'zod';
 import { installHandlers } from '../handlers/install.js';
+import { refreshHandlers } from '../handlers/refresh.js';
 import type { ToolDescriptor } from './types.js';
 
 const InstallInput = z.object({
@@ -109,6 +110,23 @@ const InstallsListInput = z.object({
     .describe('Read from `~/.agentsmesh/installs.yaml` instead of the project scope.'),
 });
 
+const RefreshInput = z.object({
+  names: z
+    .array(z.string().min(1))
+    .optional()
+    .describe(
+      'Pack names to refresh. Omit or pass empty array to refresh every installed pack in the current scope.',
+    ),
+  dry_run: z
+    .boolean()
+    .optional()
+    .describe('Preview the refresh plan (resolved refs, drift detection) without writing.'),
+  global: z
+    .boolean()
+    .optional()
+    .describe('Refresh packs in the global scope (`~/.agentsmesh/`) instead of the project scope.'),
+});
+
 export const INSTALL_TOOL_DESCRIPTORS: ToolDescriptor[] = [
   {
     name: 'install',
@@ -131,5 +149,12 @@ export const INSTALL_TOOL_DESCRIPTORS: ToolDescriptor[] = [
     inputSchema: InstallsListInput,
     handler: (ctx, i) => installHandlers.installsList(ctx, i as never),
     resourceUri: 'agentsmesh://installs',
+  },
+  {
+    name: 'refresh',
+    description:
+      'Re-fetch and re-apply installed packs against their originally-recorded source/ref. Branch pins re-resolve to the current tip; tag pins re-resolve in case the tag moved; SHA pins stay put. Per-pack atomic via `materializePack` — a failure leaves the affected pack at its prior state. Always runs non-interactively (force: true) over MCP.',
+    inputSchema: RefreshInput,
+    handler: (ctx, i) => refreshHandlers.refresh(ctx, i as never),
   },
 ];

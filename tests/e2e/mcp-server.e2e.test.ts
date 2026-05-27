@@ -120,10 +120,10 @@ describe('mcp-server protocol', () => {
     expect(info).toMatchObject({ name: 'agentsmesh-mcp' });
   });
 
-  it('lists exactly 44 tools with unique names', async () => {
+  it('lists exactly 45 tools with unique names', async () => {
     const { tools } = await server.client.listTools();
-    expect(tools).toHaveLength(44);
-    expect(new Set(tools.map((t) => t.name)).size).toBe(44);
+    expect(tools).toHaveLength(45);
+    expect(new Set(tools.map((t) => t.name)).size).toBe(45);
   });
 
   it('lists exactly 17 resources', async () => {
@@ -131,12 +131,13 @@ describe('mcp-server protocol', () => {
     expect(resources).toHaveLength(17);
   });
 
-  it('exposes install / uninstall / installs_list as live MCP tools', async () => {
+  it('exposes install / uninstall / installs_list / refresh as live MCP tools', async () => {
     const { tools } = await server.client.listTools();
     const names = new Set(tools.map((t) => t.name));
     expect(names.has('install')).toBe(true);
     expect(names.has('uninstall')).toBe(true);
     expect(names.has('installs_list')).toBe(true);
+    expect(names.has('refresh')).toBe(true);
   });
 });
 

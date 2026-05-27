@@ -11,6 +11,7 @@ import { renderUninstall } from '../../../../src/cli/renderers/uninstall.js';
 import { logger } from '../../../../src/utils/output/logger.js';
 import type { InstallsCommandResult } from '../../../../src/cli/commands/installs.js';
 import type { UninstallCommandResult } from '../../../../src/cli/commands/uninstall.js';
+import type { InstallsListData } from '../../../../src/cli/command-result.js';
 
 let infoLines: string[];
 let errorLines: string[];
@@ -83,6 +84,7 @@ describe('renderInstalls', () => {
             features: ['rules', 'skills'],
             target: null,
             installed_at: '2026-05-20T12:34:56Z',
+            refreshed_at: null,
             pack_path: '.agentsmesh/packs/demo-pack',
             license: 'MIT',
           },
@@ -115,6 +117,7 @@ describe('renderInstalls', () => {
             features: ['rules'],
             target: null,
             installed_at: null,
+            refreshed_at: null,
             pack_path: '.agentsmesh/packs/p',
             license: null,
           },
@@ -123,6 +126,46 @@ describe('renderInstalls', () => {
     };
     renderInstalls(result);
     expect(infoLines[1]).toContain('-');
+  });
+
+  it('displays refreshed_at when present, falls back to installed_at when absent', () => {
+    const data: InstallsListData = {
+      scope: 'project',
+      subcommand: 'list',
+      installs: [
+        {
+          name: 'pack-a',
+          source: 'github:org/a',
+          source_kind: 'github',
+          source_type: null,
+          version: 'abc123',
+          features: ['skills'],
+          target: null,
+          installed_at: '2026-01-01T00:00:00.000Z',
+          refreshed_at: '2026-05-26T12:00:00.000Z',
+          pack_path: 'packs/pack-a',
+          license: null,
+        },
+        {
+          name: 'pack-b',
+          source: 'github:org/b',
+          source_kind: 'github',
+          source_type: null,
+          version: 'def456',
+          features: ['skills'],
+          target: null,
+          installed_at: '2026-01-01T00:00:00.000Z',
+          refreshed_at: null,
+          pack_path: 'packs/pack-b',
+          license: null,
+        },
+      ],
+    };
+    renderInstalls({ exitCode: 0, data });
+    // pack-a: "Last touched" column shows refreshed_at (date portion)
+    expect(infoLines[1]).toContain('2026-05-26');
+    // pack-b: "Last touched" column falls back to installed_at (date portion)
+    expect(infoLines[2]).toContain('2026-01-01');
   });
 });
 

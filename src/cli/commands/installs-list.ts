@@ -74,6 +74,7 @@ export async function runInstallsList(
       features: [...entry.features],
       target: entry.target ?? null,
       installed_at: meta.installed_at,
+      refreshed_at: entry.refreshed_at ?? null,
       pack_path: toForwardSlashRel(context.rootBase, packDir),
       license: packMeta?.license ?? null,
     });

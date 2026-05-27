@@ -13,7 +13,6 @@ import { join } from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { parse as parseYaml, stringify as yamlStringify } from 'yaml';
 
 const execFileP = promisify(execFile);
 import { runRefresh } from '../../src/install/refresh/run-refresh.js';
@@ -23,27 +22,6 @@ import {
   rewindRepoToFirstCommit,
   type BareRepoWithTwoCommits,
 } from './fixtures/refresh-git-source/setup.js';
-
-/** Rewrite installs.yaml source to use branch ref instead of pinned SHA. */
-async function patchInstallsYamlToBranchRef(
-  canonicalDir: string,
-  packName: string,
-  branchSource: string,
-): Promise<void> {
-  const manifestPath = join(canonicalDir, 'installs.yaml');
-  const raw = await readFile(manifestPath, 'utf8');
-  const parsed = parseYaml(raw) as { version: number; installs: Array<Record<string, unknown>> };
-  for (const entry of parsed.installs) {
-    if (entry['name'] === packName) {
-      entry['source'] = branchSource;
-      delete entry['version'];
-    }
-  }
-  await writeFile(
-    manifestPath,
-    `# yaml-language-server: $schema=https://agentsmesh.ai/schema/installs.json\n${yamlStringify({ version: 1, installs: parsed.installs })}`,
-  );
-}
 
 describe('refresh drift handling', () => {
   let projectRoot: string;
@@ -87,10 +65,6 @@ describe('refresh drift handling', () => {
     const v1 = await readFile(skillPath, 'utf8');
     expect(v1).toContain('# v1');
 
-    // Patch installs.yaml to branch form so refresh can detect drift + re-apply
-    const canonicalDir = join(projectRoot, '.agentsmesh');
-    await patchInstallsYamlToBranchRef(canonicalDir, 'drift-pack', sourceUrl);
-
     // User edits a pack file (introducing drift)
     await writeFile(skillPath, '# USER EDIT\n');
 
@@ -115,12 +89,13 @@ describe('refresh drift handling', () => {
     expect(after).toContain('# v2');
   }, 30_000);
 
-  it.skip('refresh without --force in non-interactive context skips drifted packs', // Skipped: the consent prompt (refresh-prompt.ts) uses process.stdin.isTTY
-  // to detect interactivity and the PROMPT_TIMEOUT_MS (5 minutes) to time out.
+  // Skipped: the consent prompt (refresh-prompt.ts) uses process.stdin.isTTY
+  // to detect interactivity and PROMPT_TIMEOUT_MS (5 minutes) to time out.
   // In a non-TTY test environment the prompt is not written to stdout, but
   // runConsentPrompt still waits for the full timeout before declining.
   // A 5-minute wait in a test is not acceptable. Driving this path requires
   // either injecting a custom timeoutMs or mocking the prompt — both of
   // which belong in unit tests (see tests/unit/install/refresh/).
-  () => undefined);
+  it.skip('refresh without --force in non-interactive context skips drifted packs', () =>
+    undefined);
 });

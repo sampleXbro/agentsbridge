@@ -5,7 +5,8 @@
 import { basename, join } from 'node:path';
 import { readdir } from 'node:fs/promises';
 import type { CanonicalSkill, SkillSupportingFile } from '../../core/types.js';
-import { readFileSafe, readDirRecursive } from '../../utils/filesystem/fs.js';
+import { readFileSafe } from '../../utils/filesystem/fs.js';
+import { readDirRecursiveNoSymlinks } from '../../utils/filesystem/fs-traverse.js';
 import { parseOrSkipFrontmatter } from '../../utils/text/markdown.js';
 import type { ParseFrontmatterOptions } from './rules.js';
 import { isNoiseBoilerplate } from '../../install/importers/boilerplate-filter.js';
@@ -46,7 +47,11 @@ function sanitizeSkillName(raw: string): string {
  * @returns Supporting files with relative and absolute paths
  */
 async function listSupportingFiles(skillDir: string): Promise<SkillSupportingFile[]> {
-  const files = await readDirRecursive(skillDir);
+  // Hardening: do NOT follow symlinks. A malicious skill dir containing
+  // `keys -> /Users/victim/.ssh` would otherwise pull external bytes (private
+  // keys, etc.) into the canonical skill and through to any pack/tool that
+  // later redistributes it.
+  const files = await readDirRecursiveNoSymlinks(skillDir);
   const result: SkillSupportingFile[] = [];
   for (const absPath of files) {
     const raw = absPath.slice(skillDir.length + 1);

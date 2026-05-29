@@ -42,6 +42,9 @@ export interface RunSinglePackArgs {
   readonly forceFreshMaterialize?: boolean;
   readonly explicitAs: ManualInstallAs | undefined;
   readonly nameOverride: string;
+  readonly acceptHooks: boolean;
+  readonly acceptPermissions: boolean;
+  readonly acceptMcp: boolean;
   readonly scope: 'global' | 'project';
   readonly sourceArg: string;
   readonly replay: InstallReplayScope | undefined;
@@ -65,6 +68,9 @@ export async function runSinglePackInstall(opts: RunSinglePackArgs): Promise<Ins
     forceFreshMaterialize,
     explicitAs,
     nameOverride,
+    acceptHooks,
+    acceptPermissions,
+    acceptMcp,
     scope,
     sourceArg,
     replay,
@@ -105,6 +111,9 @@ export async function runSinglePackInstall(opts: RunSinglePackArgs): Promise<Ins
       forceFreshMaterialize,
       nameOverride,
       explicitAs,
+      acceptHooks,
+      acceptPermissions,
+      acceptMcp,
       config,
       context,
       parsed,

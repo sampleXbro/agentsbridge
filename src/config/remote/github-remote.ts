@@ -3,6 +3,7 @@ import { readdir, writeFile } from 'node:fs/promises';
 import { mkdir, rm } from 'node:fs/promises';
 import * as tar from 'tar';
 import { exists } from '../../utils/filesystem/fs.js';
+import { redactUrlSecrets } from '../../utils/output/redact-url-secrets.js';
 import { fetchGitRemoteExtend } from './git-remote.js';
 import type { FetchRemoteOptions, FetchRemoteResult } from './remote-fetcher.js';
 import type { ParsedGitSource } from './remote-source.js';
@@ -146,13 +147,16 @@ export async function fetchGithubRemoteExtend(
     if (allowFallback && (await exists(extractDir))) {
       const topDir = await findExtractTopDir(extractDir);
       if (topDir) {
+        const rawMsg = err instanceof Error ? err.message : String(err);
         console.warn(
-          `[agentsmesh] Network failed for ${extendName}; using cached version. Error: ${err instanceof Error ? err.message : String(err)}`,
+          `[agentsmesh] Network failed for ${extendName}; using cached version. Error: ${redactUrlSecrets(rawMsg)}`,
         );
         return { resolvedPath: join(extractDir, topDir), version: tag };
       }
     }
-    throw err;
+    throw err instanceof Error
+      ? Object.assign(new Error(redactUrlSecrets(err.message)), { cause: err.cause })
+      : err;
   }
 
   await rm(extractDir, { recursive: true, force: true });
@@ -164,12 +168,14 @@ export async function fetchGithubRemoteExtend(
       file: tarPath,
       cwd: extractDir,
       strict: true,
+      // Allowlist entry types instead of denylist: only `File` and `Directory`
+      // can be extracted. Hardlinks (`Link`), symlinks (`SymbolicLink`), FIFOs,
+      // character/block devices, and any future/exotic tar entry type are
+      // rejected. A denylist would silently let an unknown variant through.
       filter: (entryPath, entry) => {
         if (isZipSlipPath(entryPath)) return false;
-        if (entry && 'type' in entry && (entry.type === 'Link' || entry.type === 'SymbolicLink')) {
-          return false;
-        }
-        return true;
+        const type = entry && 'type' in entry ? entry.type : undefined;
+        return type === 'File' || type === 'Directory';
       },
     });
   } finally {

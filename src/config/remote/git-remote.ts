@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { URL } from 'node:url';
 import { promisify } from 'node:util';
 import { exists } from '../../utils/filesystem/fs.js';
+import { redactUrlSecrets } from '../../utils/output/redact-url-secrets.js';
 import type { FetchRemoteOptions, FetchRemoteResult } from './remote-fetcher.js';
 import type { ParsedGitSource, ParsedGitlabSource } from './remote-source.js';
 
@@ -56,12 +57,15 @@ export async function fetchGitRemoteExtend(
     await rm(stagedRoot, { recursive: true, force: true });
     const allowFallback = options.allowOfflineFallback !== false;
     if (allowFallback && (await hasCachedRepo(cacheRepoDir))) {
+      const rawMsg = err instanceof Error ? err.message : String(err);
       console.warn(
-        `[agentsmesh] Remote fetch failed for ${extendName}; using cached version. Error: ${err instanceof Error ? err.message : String(err)}`,
+        `[agentsmesh] Remote fetch failed for ${extendName}; using cached version. Error: ${redactUrlSecrets(rawMsg)}`,
       );
       return readCachedRepo(cacheRepoDir);
     }
-    throw err;
+    throw err instanceof Error
+      ? Object.assign(new Error(redactUrlSecrets(err.message)), { cause: err.cause })
+      : err;
   }
 }
 

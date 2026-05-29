@@ -125,9 +125,26 @@ describe('remote-source — branch coverage', () => {
       });
     });
 
-    it('accepts file:// protocol', () => {
-      const out = parseGitSource('git+file:///tmp/r');
-      expect(out).not.toBeNull();
+    it('rejects file:// by default (local-FS trust boundary)', () => {
+      const prev = process.env.AGENTSMESH_ALLOW_LOCAL_GIT;
+      delete process.env.AGENTSMESH_ALLOW_LOCAL_GIT;
+      try {
+        expect(parseGitSource('git+file:///tmp/r')).toBeNull();
+      } finally {
+        if (prev !== undefined) process.env.AGENTSMESH_ALLOW_LOCAL_GIT = prev;
+      }
+    });
+
+    it('accepts file:// when AGENTSMESH_ALLOW_LOCAL_GIT=1', () => {
+      const prev = process.env.AGENTSMESH_ALLOW_LOCAL_GIT;
+      process.env.AGENTSMESH_ALLOW_LOCAL_GIT = '1';
+      try {
+        const out = parseGitSource('git+file:///tmp/r');
+        expect(out).not.toBeNull();
+      } finally {
+        if (prev === undefined) delete process.env.AGENTSMESH_ALLOW_LOCAL_GIT;
+        else process.env.AGENTSMESH_ALLOW_LOCAL_GIT = prev;
+      }
     });
   });
 

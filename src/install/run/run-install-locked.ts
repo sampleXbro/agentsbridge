@@ -41,6 +41,9 @@ export interface RunInstallLockedArgs {
   explicitTarget?: string;
   explicitAs?: ManualInstallAs;
   nameOverride: string;
+  acceptHooks: boolean;
+  acceptPermissions: boolean;
+  acceptMcp: boolean;
   scope: 'global' | 'project';
   sourceArg: string | undefined;
   recurseInstall: (
@@ -77,6 +80,9 @@ export async function runInstallLocked(opts: RunInstallLockedArgs): Promise<Inst
     explicitTarget,
     explicitAs,
     nameOverride,
+    acceptHooks,
+    acceptPermissions,
+    acceptMcp,
     scope,
     sourceArg,
   } = opts;
@@ -176,6 +182,9 @@ export async function runInstallLocked(opts: RunInstallLockedArgs): Promise<Inst
     forceFreshMaterialize,
     explicitAs,
     nameOverride,
+    acceptHooks,
+    acceptPermissions,
+    acceptMcp,
     scope,
     sourceArg,
     replay,

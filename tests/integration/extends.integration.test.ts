@@ -84,7 +84,11 @@ describe('generate with remote extends', () => {
       ].join('\n'),
     );
 
-    execFileSync('node', [CLI_PATH, 'generate'], { cwd: testDir, stdio: 'pipe' });
+    execFileSync('node', [CLI_PATH, 'generate'], {
+      cwd: testDir,
+      stdio: 'pipe',
+      env: { ...process.env, AGENTSMESH_ALLOW_LOCAL_GIT: '1' },
+    });
 
     const settings = JSON.parse(
       readFileSync(join(testDir, '.claude', 'settings.json'), 'utf-8'),

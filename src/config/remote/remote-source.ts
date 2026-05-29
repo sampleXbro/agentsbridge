@@ -89,10 +89,18 @@ export function parseGitSource(source: string): ParsedGitSource | null {
   const allowInsecure =
     process.env.AGENTSMESH_ALLOW_INSECURE_GIT === '1' ||
     process.env.AGENTSMESH_ALLOW_INSECURE_GIT === 'true';
-  const allowedProtocols = allowInsecure
-    ? ['https:', 'http:', 'ssh:', 'file:']
-    : ['https:', 'ssh:', 'file:'];
-  if (!allowedProtocols.includes(parsedUrl.protocol)) {
+  // `file:` is a local-FS trust boundary. On shared/multi-tenant hosts a
+  // `git+file:///tmp/world-writable-repo` could let another local user plant
+  // the repo we silently consume — and downstream emission of hooks /
+  // permissions / mcp into the user's tool settings turns that into a
+  // priv-esc. Gate behind explicit env opt-in.
+  const allowLocalGit =
+    process.env.AGENTSMESH_ALLOW_LOCAL_GIT === '1' ||
+    process.env.AGENTSMESH_ALLOW_LOCAL_GIT === 'true';
+  const allowed: string[] = ['https:', 'ssh:'];
+  if (allowInsecure) allowed.push('http:');
+  if (allowLocalGit) allowed.push('file:');
+  if (!allowed.includes(parsedUrl.protocol)) {
     return null;
   }
   return { url, ref };

@@ -26,8 +26,10 @@ import {
 describe('refresh drift handling', () => {
   let projectRoot: string;
   let bare: BareRepoWithTwoCommits;
+  const ORIGINAL_ALLOW_LOCAL_GIT = process.env.AGENTSMESH_ALLOW_LOCAL_GIT;
 
   beforeEach(async () => {
+    process.env.AGENTSMESH_ALLOW_LOCAL_GIT = '1';
     projectRoot = await mkdtemp(join(tmpdir(), 'refresh-drift-'));
     await mkdir(join(projectRoot, '.agentsmesh', 'rules'), { recursive: true });
     await writeFile(
@@ -46,6 +48,11 @@ describe('refresh drift handling', () => {
   afterEach(async () => {
     await rm(projectRoot, { recursive: true, force: true });
     await bare.cleanup();
+    if (ORIGINAL_ALLOW_LOCAL_GIT === undefined) {
+      delete process.env.AGENTSMESH_ALLOW_LOCAL_GIT;
+    } else {
+      process.env.AGENTSMESH_ALLOW_LOCAL_GIT = ORIGINAL_ALLOW_LOCAL_GIT;
+    }
   });
 
   it('refresh --force overwrites user-modified pack files', async () => {

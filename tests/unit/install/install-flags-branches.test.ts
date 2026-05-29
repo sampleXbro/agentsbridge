@@ -24,7 +24,24 @@ describe('readInstallFlags', () => {
       explicitTarget: undefined,
       explicitAs: undefined,
       nameOverride: '',
+      acceptHooks: false,
+      acceptPermissions: false,
+      acceptMcp: false,
     });
+  });
+
+  it('exposes per-artifact accept-* flags for elevated install artifacts', () => {
+    const out = readInstallFlags({ 'accept-hooks': true });
+    expect(out.acceptHooks).toBe(true);
+    expect(out.acceptPermissions).toBe(false);
+    expect(out.acceptMcp).toBe(false);
+  });
+
+  it('--accept-elevated sets hooks, permissions, and mcp consent at once', () => {
+    const out = readInstallFlags({ 'accept-elevated': true });
+    expect(out.acceptHooks).toBe(true);
+    expect(out.acceptPermissions).toBe(true);
+    expect(out.acceptMcp).toBe(true);
   });
 
   it('flips every boolean when each flag is set to true', () => {

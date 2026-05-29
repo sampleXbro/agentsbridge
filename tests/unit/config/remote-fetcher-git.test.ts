@@ -48,10 +48,20 @@ function createRemoteRepo(root: string, withCanonical = true): string {
   return repoDir;
 }
 
-beforeEach(() => mkdirSync(TEST_ROOT, { recursive: true }));
+const ORIGINAL_ALLOW_LOCAL_GIT = process.env.AGENTSMESH_ALLOW_LOCAL_GIT;
+
+beforeEach(() => {
+  mkdirSync(TEST_ROOT, { recursive: true });
+  process.env.AGENTSMESH_ALLOW_LOCAL_GIT = '1';
+});
 afterEach(() => {
   vi.restoreAllMocks();
   rmSync(TEST_ROOT, { recursive: true, force: true });
+  if (ORIGINAL_ALLOW_LOCAL_GIT === undefined) {
+    delete process.env.AGENTSMESH_ALLOW_LOCAL_GIT;
+  } else {
+    process.env.AGENTSMESH_ALLOW_LOCAL_GIT = ORIGINAL_ALLOW_LOCAL_GIT;
+  }
 });
 
 describe('parseGitlabSource', () => {

@@ -225,9 +225,21 @@ describe('fetchGithubRemoteExtend', () => {
         expect(opts.strict).toBe(true);
         expect(opts.filter?.('../escape.txt')).toBe(false);
         expect(opts.filter?.('/absolute/path.txt')).toBe(false);
-        expect(opts.filter?.('org-repo-v1.0.0/.agentsmesh/rules/_root.md')).toBe(true);
+        // Allowlist: only File and Directory entries are extracted.
+        expect(opts.filter?.('org-repo-v1.0.0/.agentsmesh/rules/_root.md', { type: 'File' })).toBe(
+          true,
+        );
+        expect(opts.filter?.('org-repo-v1.0.0/dir', { type: 'Directory' })).toBe(true);
         expect(opts.filter?.('org-repo-v1.0.0/link', { type: 'SymbolicLink' })).toBe(false);
         expect(opts.filter?.('org-repo-v1.0.0/hardlink', { type: 'Link' })).toBe(false);
+        // Entries with no declared type or with unknown / exotic types must be
+        // rejected too (defense-in-depth — a future tar variant could emit a
+        // hardlink under a different label like `GNULongLink`).
+        expect(opts.filter?.('org-repo-v1.0.0/untyped')).toBe(false);
+        expect(opts.filter?.('org-repo-v1.0.0/fifo', { type: 'FIFO' })).toBe(false);
+        expect(opts.filter?.('org-repo-v1.0.0/dev', { type: 'CharacterDevice' })).toBe(false);
+        expect(opts.filter?.('org-repo-v1.0.0/dev', { type: 'BlockDevice' })).toBe(false);
+        expect(opts.filter?.('org-repo-v1.0.0/odd', { type: 'GNULongLink' })).toBe(false);
         mkdirSync(join(opts.cwd, 'org-repo-v1.0.0'), { recursive: true });
       },
     );

@@ -38,7 +38,17 @@ agentsmesh install --sync
 | `--dry-run` | Preview what would be installed without writing. |
 | `--global` | Install into `~/.agentsmesh/` and regenerate user-level outputs. |
 | `--force` | Non-interactive mode: include all resources, skip prompts (implied by `--json`). |
+| `--accept-hooks` | Trust `hooks.yaml` from a non-local source. **Stripped by default** — hook commands run as shell on tool events. |
+| `--accept-permissions` | Trust `permissions.yaml` from a non-local source. **Stripped by default** — grants allowlist tool capabilities. |
+| `--accept-mcp` | Trust `mcp.json` from a non-local source. **Stripped by default** — MCP launch specs spawn child processes. |
+| `--accept-elevated` | Convenience for `--accept-hooks --accept-permissions --accept-mcp` together. |
 | `--json` | Machine-readable JSON envelope on stdout. Implies `--force`. Validation errors land in the envelope, not stderr. |
+
+### Elevated artifacts (hooks, permissions, mcp)
+
+`hooks.yaml`, `permissions.yaml`, and `mcp.json` control your agent's tool settings at generate time — shell hooks, granted allowlist permissions, and MCP server launch specs. A third-party pack shipping any of these gets local code execution on your machine the next time the matching event fires.
+
+For any non-local source (`github:`, `gitlab:`, `git+...`) AgentsMesh **strips these three artifacts by default** and warns you. To accept them, re-run with the matching `--accept-*` flag (or `--accept-elevated` for all three). Local sources (a directory on disk) are trusted as-is — you already control those bytes.
 
 ## When to reach for each flag
 

@@ -228,6 +228,26 @@ describe('selectInstallCandidates', () => {
       expect(result.targets[0].features).toContain('skills');
       expect(result.targets[1].features).toContain('agents');
     });
+
+    it('omits `as` for skill-pack sub-packs but sets it for flat-collection sub-packs', () => {
+      // Regression for `rsmdt/the-startup --all`: the marketplace silently
+      // dropped the `team` plugin (a flat `agents/` collection). The picker
+      // was setting `as: 'skills'` on skill-pack sub-packs, which routed
+      // them through the manual single-skill installer and broke the
+      // skill-pack auto-discovery path. Skill-packs must auto-discover
+      // (no `as`); flat-collection sub-packs need `--as <kind>` so the
+      // recursive install knows how to interpret the sub-pack root.
+      const result = selectInstallCandidates({
+        ...baseOpts(marketplaceLayout),
+        all: true,
+      });
+      // canvas-apps: skill-pack → no `as`
+      expect(result.targets[0].as).toBeUndefined();
+      // code-apps: flat-agents collection → `as: 'agents'`
+      expect(result.targets[1].as).toBe('agents');
+      // power-pages: skill-pack → no `as`
+      expect(result.targets[2].as).toBeUndefined();
+    });
   });
 
   describe('empty layout', () => {

@@ -4,7 +4,7 @@
 
 import { describe, it, expect, afterEach } from 'vitest';
 import { join } from 'node:path';
-import { writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { runCli } from './helpers/run-cli.js';
 import { createTestProject, cleanup } from './helpers/setup.js';
 import { createCanonicalProject } from './helpers/canonical.js';
@@ -73,5 +73,27 @@ features:
     expect(windsurf.exitCode).toBe(0);
     expect(codex.stdout.split('\n').find((line) => line.includes('commands'))).toContain('–');
     expect(windsurf.stdout.split('\n').find((line) => line.includes('agents'))).toContain('–');
+  });
+
+  it('--global prints the matrix for $HOME/.agentsmesh', async () => {
+    dir = createTestProject();
+    const fakeHome = join(dir, 'home');
+    const globalCanonical = join(fakeHome, '.agentsmesh');
+    mkdirSync(join(globalCanonical, 'rules'), { recursive: true });
+    writeFileSync(
+      join(globalCanonical, 'agentsmesh.yaml'),
+      'version: 1\ntargets: [claude-code]\nfeatures: [rules]\nextends: []\n',
+    );
+    writeFileSync(
+      join(globalCanonical, 'rules', '_root.md'),
+      '---\nroot: true\n---\n# Global root\n',
+    );
+
+    const r = await runCli('matrix --global', dir, { HOME: fakeHome });
+    expect(r.exitCode, r.stderr).toBe(0);
+    // Matrix output uses display names ("Claude") and a Feature column.
+    expect(r.stdout).toMatch(/Claude/);
+    expect(r.stdout).toMatch(/Feature/);
+    expect(r.stdout).toMatch(/rules/);
   });
 });

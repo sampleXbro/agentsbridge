@@ -27,7 +27,21 @@ export async function runCli(
   extraEnv: Record<string, string | undefined> = {},
 ): Promise<RunCliResult> {
   const argList = args.trim().split(/\s+/).filter(Boolean);
-  const env = { ...process.env, ...extraEnv, NO_COLOR: '1' };
+  // On Windows, `os.homedir()` reads USERPROFILE, not HOME — so tests that
+  // redirect the CLI to a fake home via `HOME` must also override USERPROFILE
+  // (and HOMEDRIVE/HOMEPATH, which Node consults as a secondary fallback).
+  // Without this, `--global` writes land in the real `C:\Users\<user>\.agentsmesh`
+  // on CI and tests fail intermittently or pollute the runner home.
+  const homeOverride = extraEnv.HOME;
+  const platformHomeEnv: Record<string, string | undefined> =
+    process.platform === 'win32' && typeof homeOverride === 'string'
+      ? {
+          USERPROFILE: homeOverride,
+          HOMEDRIVE: homeOverride.slice(0, 2),
+          HOMEPATH: homeOverride.slice(2),
+        }
+      : {};
+  const env = { ...process.env, ...platformHomeEnv, ...extraEnv, NO_COLOR: '1' };
 
   return new Promise<RunCliResult>((resolve, _reject) => {
     let proc: ChildProcess | null = null;

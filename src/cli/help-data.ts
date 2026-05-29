@@ -126,6 +126,25 @@ export const COMMANDS: HelpCommand[] = [
         description:
           'Non-interactive mode; include invalid resources and skip selection prompts (implied by --json)',
       },
+      {
+        name: '--accept-hooks',
+        description:
+          'Trust hooks.yaml from a non-local source. Stripped by default — hook commands run as shell on tool events.',
+      },
+      {
+        name: '--accept-permissions',
+        description:
+          'Trust permissions.yaml from a non-local source. Stripped by default — grants allowlist tool capabilities.',
+      },
+      {
+        name: '--accept-mcp',
+        description:
+          'Trust mcp.json from a non-local source. Stripped by default — MCP launch specs spawn child processes.',
+      },
+      {
+        name: '--accept-elevated',
+        description: 'Convenience for --accept-hooks --accept-permissions --accept-mcp together.',
+      },
     ],
   },
   {

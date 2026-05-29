@@ -95,7 +95,7 @@ describe('multi-extend precedence e2e', () => {
       'project-mcp',
     );
 
-    const result = await runCli('generate', project);
+    const result = await runCli('generate', project, { AGENTSMESH_ALLOW_LOCAL_GIT: '1' });
     expect(result.exitCode, result.stderr).toBe(0);
 
     expect(readFileSync(join(project, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(

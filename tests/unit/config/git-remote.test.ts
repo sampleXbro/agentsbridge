@@ -220,4 +220,28 @@ describe('fetchGitRemoteExtend', () => {
 
     expect(execFileMock).toHaveBeenCalledOnce();
   });
+
+  it('rethrows non-Error clone failures verbatim when offline fallback is disabled', async () => {
+    existsMock.mockResolvedValue(false);
+    execFileMock.mockImplementationOnce(
+      (_file: string, _args: string[], _options: ExecFileOptions, callback: ExecFileCallback) => {
+        // Reject with a non-Error value (string). The catch block's `: err`
+        // branch must rethrow the original primitive unwrapped — no
+        // `new Error` wrapping, no `redactUrlSecrets` mutation.
+        callback('boom-string-failure' as unknown as Error, '', '');
+      },
+    );
+
+    await expect(
+      fetchGitRemoteExtend(
+        { url: 'file:///tmp/example.git' },
+        'shared-rules',
+        { allowOfflineFallback: false, refresh: true },
+        '/tmp/cache',
+        buildCacheKey,
+      ),
+    ).rejects.toBe('boom-string-failure');
+
+    expect(execFileMock).toHaveBeenCalledOnce();
+  });
 });

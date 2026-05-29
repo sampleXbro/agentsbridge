@@ -36,6 +36,9 @@ export async function runInstall(
     explicitTarget,
     explicitAs,
     nameOverride,
+    acceptHooks,
+    acceptPermissions,
+    acceptMcp,
   } = readInstallFlags(flags);
   const scope = flags.global === true ? 'global' : 'project';
   const sourceArg = args[0]?.trim();
@@ -61,6 +64,9 @@ export async function runInstall(
       explicitTarget,
       explicitAs,
       nameOverride,
+      acceptHooks,
+      acceptPermissions,
+      acceptMcp,
       scope,
       sourceArg,
       recurseInstall: runInstall,

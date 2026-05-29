@@ -23,6 +23,31 @@ beforeEach(() => {
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
 
 describe('watch', () => {
+  it('--targets limits the initial regenerate to the named target(s)', async () => {
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', '.lock'),
+      'generated_at: "2026-03-15T14:00:00Z"\nchecksums: {}\nextends: {}\n',
+    );
+
+    const child = spawn('node', [CLI_PATH, 'watch', '--targets', 'claude-code'], {
+      cwd: TEST_DIR,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      // Claude output was generated; cursor output was NOT (--targets filtered).
+      expect(readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
+        'Use TypeScript',
+      );
+      const { existsSync } = await import('node:fs');
+      expect(existsSync(join(TEST_DIR, '.cursor', 'rules'))).toBe(false);
+    } finally {
+      child.kill('SIGINT');
+      await new Promise((resolve) => child.on('exit', resolve));
+    }
+  });
+
   it('regenerates once on startup, stays idle, then reacts to source changes', async () => {
     writeFileSync(
       join(TEST_DIR, '.agentsmesh', '.lock'),

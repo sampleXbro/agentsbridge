@@ -30,6 +30,7 @@ import type { ManualInstallAs } from '../manual/manual-install-mode.js';
 import type { ExtendPick } from '../../config/core/schema.js';
 import type { CanonicalFiles } from '../../core/types.js';
 import type { InstallDiscoveryPrep } from '../core/install-discovery.js';
+import { stripUntrustedElevatedArtifacts } from '../core/elevated-artifacts.js';
 
 export interface RunInstallExecuteArgs {
   scope: 'global' | 'project';
@@ -40,6 +41,14 @@ export interface RunInstallExecuteArgs {
   forceFreshMaterialize?: boolean;
   nameOverride: string;
   explicitAs?: ManualInstallAs;
+  /**
+   * Per-artifact consent for elevated install artifacts shipped by the source
+   * (hooks/permissions/mcp). For non-local sources these are stripped by
+   * default; the user has to opt in explicitly.
+   */
+  acceptHooks: boolean;
+  acceptPermissions: boolean;
+  acceptMcp: boolean;
   config: ValidatedConfig;
   context: { configDir: string; canonicalDir: string; rootBase: string };
   parsed: ParsedInstallSource;
@@ -68,12 +77,32 @@ export async function executeRunInstallPoolsAndWrite(
 ): Promise<InstallExecuteResult> {
   const { scope, force, dryRun, tty, useExtends, forceFreshMaterialize, nameOverride, explicitAs } =
     args;
+  const { acceptHooks, acceptPermissions, acceptMcp } = args;
   const { config, context, parsed, sourceForYaml, version, pathInRepo, contentRoot, persisted } =
     args;
   const { replay, prep, implicitPick, narrowed, discoveredFeatures, sourceType } = args;
 
+  // Consent gate: strip elevated artifacts (hooks/permissions/mcp) from any
+  // non-local source unless the user explicitly opted in. Done BEFORE pool
+  // resolution so the bytes never reach the pack on disk.
+  const gated = stripUntrustedElevatedArtifacts(narrowed, {
+    sourceKind: parsed.kind,
+    acceptHooks,
+    acceptPermissions,
+    acceptMcp,
+  });
+  if (gated.stripped.length > 0) {
+    logger.warn(
+      `[agentsmesh] Stripped ${gated.stripped.join(', ')} from untrusted ${parsed.kind} source.\n` +
+        `  These artifacts control your tool settings (shell hooks, granted permissions, MCP launch specs).\n` +
+        `  To accept them explicitly, re-run with: ${gated.stripped
+          .map((a) => `--accept-${a}`)
+          .join(' ')} (or --accept-elevated for all three).`,
+    );
+  }
+
   const { narrowed: effectiveNarrowed, discoveredFeatures: effectiveFeatures } =
-    applyReplayInstallScope(narrowed, discoveredFeatures, replay);
+    applyReplayInstallScope(gated.canonical, discoveredFeatures, replay);
   if (!hasInstallableResources(effectiveNarrowed)) {
     throw new Error(
       implicitPick || prep.scopedFeatures

@@ -204,6 +204,30 @@ describe('fetchGithubRemoteExtend', () => {
     rmSync(cacheDir, { recursive: true, force: true });
   });
 
+  it('rethrows non-Error tarball-fetch failures verbatim when no cached fallback exists', async () => {
+    // First fetch (latest tag) succeeds; second fetch (tarball) rejects with
+    // a string. The catch block's `: err` branch must propagate the primitive
+    // unwrapped — no `new Error` wrapping, no `redactUrlSecrets` rewrite.
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ tag_name: 'v1.0.0' }) })
+        .mockRejectedValueOnce('network-boom-string'),
+    );
+
+    await expect(
+      fetchGithubRemoteExtend(
+        { org: 'org', repo: 'repo', tag: 'latest' },
+        'shared-rules',
+        { allowOfflineFallback: false },
+        '/tmp/cache-nonexistent-am-test',
+        buildCacheKey,
+        false,
+      ),
+    ).rejects.toBe('network-boom-string');
+  });
+
   it('passes a tar extraction filter that rejects zip-slip paths', async () => {
     const cacheDir = join(tmpdir(), 'am-gh-remote-zipslip-test');
     mkdirSync(cacheDir, { recursive: true });

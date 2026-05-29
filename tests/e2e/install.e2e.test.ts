@@ -333,4 +333,98 @@ describe('install e2e', () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  it('--global installs into ~/.agentsmesh/packs and regenerates user-level outputs', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'am-e2e-install-global-'));
+    try {
+      const upstream = join(dir, 'up');
+      mkdirSync(join(upstream, '.agentsmesh', 'skills', 'demo'), { recursive: true });
+      writeFileSync(
+        join(upstream, '.agentsmesh', 'skills', 'demo', 'SKILL.md'),
+        '---\ndescription: Demo\n---\n# Demo\n',
+      );
+
+      const fakeHome = join(dir, 'home');
+      const globalCanonical = join(fakeHome, '.agentsmesh');
+      mkdirSync(join(globalCanonical, 'rules'), { recursive: true });
+      writeFileSync(
+        join(globalCanonical, 'agentsmesh.yaml'),
+        'version: 1\ntargets: [claude-code]\nfeatures: [rules, skills]\nextends: []\n',
+      );
+      writeFileSync(
+        join(globalCanonical, 'rules', '_root.md'),
+        '---\nroot: true\n---\n# Global root\n',
+      );
+
+      const r = await runCli(`install ${upstream} --force --global --name global-pack`, dir, {
+        HOME: fakeHome,
+      });
+      expect(r.exitCode, r.stderr).toBe(0);
+      // Pack lives under ~/.agentsmesh/packs, not the project.
+      expect(
+        readFileSync(
+          join(fakeHome, '.agentsmesh', 'packs', 'global-pack', 'skills', 'demo', 'SKILL.md'),
+          'utf-8',
+        ),
+      ).toContain('# Demo');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('--all installs every sub-pack from a marketplace.json source', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'am-e2e-install-all-'));
+    try {
+      const upstream = join(dir, 'marketplace');
+      // Two sub-packs at plugins/alpha and plugins/beta — each a canonical
+      // agentsmesh layout with a single skill.
+      mkdirSync(join(upstream, '.claude-plugin'), { recursive: true });
+      writeFileSync(
+        join(upstream, '.claude-plugin', 'marketplace.json'),
+        JSON.stringify({
+          plugins: [{ source: 'plugins/alpha' }, { source: 'plugins/beta' }],
+        }),
+      );
+      for (const name of ['alpha', 'beta']) {
+        mkdirSync(join(upstream, 'plugins', name, '.agentsmesh', 'skills', `skill-${name}`), {
+          recursive: true,
+        });
+        writeFileSync(
+          join(upstream, 'plugins', name, '.agentsmesh', 'skills', `skill-${name}`, 'SKILL.md'),
+          `---\ndescription: ${name}\n---\n# ${name}\n`,
+        );
+      }
+
+      const proj = join(dir, 'proj');
+      mkdirSync(join(proj, '.agentsmesh', 'rules'), { recursive: true });
+      writeFileSync(
+        join(proj, 'agentsmesh.yaml'),
+        'version: 1\ntargets: [claude-code]\nfeatures: [rules, skills]\nextends: []\n',
+      );
+      writeFileSync(
+        join(proj, '.agentsmesh', 'rules', '_root.md'),
+        '---\nroot: true\n---\n# Root\n',
+      );
+
+      const r = await runCli(`install ${upstream} --force --all`, proj);
+      expect(r.exitCode, r.stderr).toBe(0);
+
+      // --all fans out across every sub-pack; both skills must land in the
+      // generated outputs regardless of how the pack writer chose to bundle
+      // them on disk (one shared pack for a single source, distinct packs
+      // for separate sources).
+      expect(
+        readFileSync(join(proj, '.claude', 'skills', 'skill-alpha', 'SKILL.md'), 'utf-8'),
+      ).toContain('alpha');
+      expect(
+        readFileSync(join(proj, '.claude', 'skills', 'skill-beta', 'SKILL.md'), 'utf-8'),
+      ).toContain('beta');
+      // installs.yaml records both sub-pack paths from the marketplace.
+      const installsYaml = readFileSync(join(proj, '.agentsmesh', 'installs.yaml'), 'utf-8');
+      expect(installsYaml).toContain('plugins/alpha');
+      expect(installsYaml).toContain('plugins/beta');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });

@@ -54,4 +54,35 @@ describe('diff', () => {
     expect(r.exitCode).toBe(0);
     expect(r.stdout + r.stderr).toMatch(/unchanged|created|updated/);
   });
+
+  it('--targets restricts the diff to the named target(s)', async () => {
+    dir = createTestProject('canonical-full');
+    await runCli('generate', dir);
+    mkdirSync(join(dir, '.claude'), { recursive: true });
+    writeFileSync(join(dir, '.claude', 'CLAUDE.md'), '# Modified for claude only\n');
+    const r = await runCli('diff --targets claude-code', dir);
+    expect(r.exitCode).toBe(0);
+    expect(r.stdout + r.stderr).toMatch(/claude|CLAUDE|Modified/i);
+  });
+
+  it('--global runs against $HOME/.agentsmesh and exits 0 on a fresh scaffold', async () => {
+    dir = createTestProject();
+    const fakeHome = join(dir, 'home');
+    const globalCanonical = join(fakeHome, '.agentsmesh');
+    mkdirSync(join(globalCanonical, 'rules'), { recursive: true });
+    writeFileSync(
+      join(globalCanonical, 'agentsmesh.yaml'),
+      'version: 1\ntargets: [claude-code]\nfeatures: [rules]\nextends: []\n',
+    );
+    writeFileSync(
+      join(globalCanonical, 'rules', '_root.md'),
+      '---\nroot: true\n---\n# Global root\n',
+    );
+
+    const gen = await runCli('generate --global', dir, { HOME: fakeHome });
+    expect(gen.exitCode, gen.stderr).toBe(0);
+
+    const r = await runCli('diff --global', dir, { HOME: fakeHome });
+    expect(r.exitCode, r.stderr).toBe(0);
+  });
 });

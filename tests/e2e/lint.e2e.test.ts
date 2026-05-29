@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, afterEach } from 'vitest';
-import { writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { runCli } from './helpers/run-cli.js';
 import { createTestProject, cleanup } from './helpers/setup.js';
@@ -28,5 +28,29 @@ describe('lint', () => {
     const r = await runCli('lint', dir);
     // Linter may warn on empty body; exit 0 or 1 both acceptable
     expect([0, 1]).toContain(r.exitCode);
+  });
+
+  it('--targets limits lint output to the named target(s)', async () => {
+    dir = createTestProject('canonical-full');
+    const r = await runCli('lint --targets claude-code', dir);
+    expect(r.exitCode).toBe(0);
+  });
+
+  it('--global lints the canonical scaffold under $HOME/.agentsmesh', async () => {
+    dir = createTestProject();
+    const fakeHome = join(dir, 'home');
+    const globalCanonical = join(fakeHome, '.agentsmesh');
+    mkdirSync(join(globalCanonical, 'rules'), { recursive: true });
+    writeFileSync(
+      join(globalCanonical, 'agentsmesh.yaml'),
+      'version: 1\ntargets: [claude-code]\nfeatures: [rules]\nextends: []\n',
+    );
+    writeFileSync(
+      join(globalCanonical, 'rules', '_root.md'),
+      '---\nroot: true\n---\n# Global root\n',
+    );
+
+    const r = await runCli('lint --global', dir, { HOME: fakeHome });
+    expect(r.exitCode, r.stderr).toBe(0);
   });
 });

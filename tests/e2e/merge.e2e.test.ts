@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, afterEach } from 'vitest';
-import { writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { runCli } from './helpers/run-cli.js';
 import { createTestProject, cleanup } from './helpers/setup.js';
@@ -50,5 +50,27 @@ extends: {}
     expect(r.stdout + r.stderr).toMatch(/resolved|conflict/i);
     const check = await runCli('check', dir);
     expect(check.exitCode).toBe(0);
+  });
+
+  it('--global runs against $HOME/.agentsmesh/.lock', async () => {
+    dir = createTestProject();
+    const fakeHome = join(dir, 'home');
+    const globalCanonical = join(fakeHome, '.agentsmesh');
+    mkdirSync(join(globalCanonical, 'rules'), { recursive: true });
+    writeFileSync(
+      join(globalCanonical, 'agentsmesh.yaml'),
+      'version: 1\ntargets: [claude-code]\nfeatures: [rules]\nextends: []\n',
+    );
+    writeFileSync(
+      join(globalCanonical, 'rules', '_root.md'),
+      '---\nroot: true\n---\n# Global root\n',
+    );
+
+    const gen = await runCli('generate --global', dir, { HOME: fakeHome });
+    expect(gen.exitCode, gen.stderr).toBe(0);
+
+    const r = await runCli('merge --global', dir, { HOME: fakeHome });
+    expect(r.exitCode, r.stderr).toBe(0);
+    expect(r.stdout + r.stderr).toMatch(/No conflicts/i);
   });
 });

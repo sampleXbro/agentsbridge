@@ -70,4 +70,26 @@ describe('init', () => {
     fileContains(join(dir, '.gitignore'), '.agentsmeshcache');
     fileContains(join(dir, '.gitignore'), '.agentsmesh/.lock.tmp');
   });
+
+  it('init --global writes the global scaffold under $HOME/.agentsmesh', async () => {
+    dir = createTestProject();
+    const fakeHome = join(dir, 'home');
+    mkdirSync(fakeHome, { recursive: true });
+
+    const r = await runCli('init --global', dir, { HOME: fakeHome });
+    expect(r.exitCode, r.stderr).toBe(0);
+    fileExists(join(fakeHome, '.agentsmesh', 'agentsmesh.yaml'));
+    fileExists(join(fakeHome, '.agentsmesh', 'rules', '_root.md'));
+  });
+
+  it('init --yes auto-imports detected configs and scaffolds empty paths', async () => {
+    dir = createTestProject();
+    writeFileSync(join(dir, 'CLAUDE.md'), '# Existing project rules\n');
+
+    const r = await runCli('init --yes', dir);
+    expect(r.exitCode, r.stderr).toBe(0);
+    fileExists(join(dir, 'agentsmesh.yaml'));
+    fileExists(join(dir, '.agentsmesh', 'rules', '_root.md'));
+    expect(r.stdout + r.stderr).toMatch(/claude|Imported|Found/i);
+  });
 });

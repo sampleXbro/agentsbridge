@@ -25,6 +25,9 @@ importers:
       diff:
         specifier: 8.0.4
         version: 8.0.4
+      picomatch:
+        specifier: ^4.0.4
+        version: 4.0.4
       smol-toml:
         specifier: ^1.6.1
         version: 1.6.1
@@ -50,6 +53,9 @@ importers:
       '@types/node':
         specifier: ^25.6.0
         version: 25.6.0
+      '@types/picomatch':
+        specifier: ^4.0.3
+        version: 4.0.3
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.58.1
         version: 8.58.1(@typescript-eslint/parser@8.58.1(eslint@10.2.0(jiti@2.7.0))(typescript@5.9.3))(eslint@10.2.0(jiti@2.7.0))(typescript@5.9.3)
@@ -769,6 +775,9 @@ packages:
 
   '@types/node@25.6.0':
     resolution: {integrity: sha512-+qIYRKdNYJwY3vRCZMdJbPLJAtGjQBudzZzdzwQYkEPQd+PJGixUL5QfvCLDaULoLv+RhT3LDkwEfKaAkgSmNQ==}
+
+  '@types/picomatch@4.0.3':
+    resolution: {integrity: sha512-iG0T6+nYJ9FAPmx9SsUlnwcq1ZVRuCXcVEvWnntoPlrOpwtSTKNDC9uVAxTsC3PUvJ+99n4RpAcNgBbHX3JSnQ==}
 
   '@typescript-eslint/eslint-plugin@8.58.1':
     resolution: {integrity: sha512-eSkwoemjo76bdXl2MYqtxg51HNwUSkWfODUOQ3PaTLZGh9uIWWFZIjyjaJnex7wXDu+TRx+ATsnSxdN9YWfRTQ==}
@@ -3342,6 +3351,8 @@ snapshots:
   '@types/node@25.6.0':
     dependencies:
       undici-types: 7.19.2
+
+  '@types/picomatch@4.0.3': {}
 
   '@typescript-eslint/eslint-plugin@8.58.1(@typescript-eslint/parser@8.58.1(eslint@10.2.0(jiti@2.7.0))(typescript@5.9.3))(eslint@10.2.0(jiti@2.7.0))(typescript@5.9.3)':
     dependencies:

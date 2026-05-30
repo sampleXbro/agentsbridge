@@ -49,6 +49,7 @@ export const cmdHandlers: Record<
     const result = await runInit(process.cwd(), {
       yes: flags.yes === true,
       global: flags.global === true,
+      lessons: flags.lessons === true,
     });
     handleResult('init', result, flags, () => renderInit(result));
   },

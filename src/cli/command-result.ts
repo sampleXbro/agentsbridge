@@ -18,6 +18,18 @@ export interface InitData {
   importedToolCount: number;
   scaffoldType: 'full' | 'gap-fill' | 'none';
   gitignoreUpdated: boolean;
+  /** Populated when --lessons is passed; absent otherwise. */
+  lessons?: {
+    created: string[];
+    skipped: string[];
+    rootRuleUpdated: boolean;
+  };
+  /**
+   * True when --lessons was passed against an already-initialized project,
+   * meaning init only scaffolded the lessons subsystem (config + scaffold
+   * were left untouched).
+   */
+  lessonsOnly?: boolean;
 }
 
 export interface ImportData {

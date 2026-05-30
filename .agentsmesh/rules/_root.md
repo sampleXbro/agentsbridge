@@ -5,9 +5,12 @@ description: ""
 
 # Operational Guidelines
 
-## Session Start
+## Lessons (mandatory)
 
-- Read `tasks/lessons.md` before doing any work. Apply relevant lessons.
+- **Recall** — before editing a file or running a command, scan `.agentsmesh/lessons/index.yaml`. For every matched cluster, read the cluster's `file` (e.g. `.agentsmesh/lessons/topics/<topic>.md`) before proceeding. Match `file_globs` (path), `command_patterns` (command), or `keywords` (task text); multiple matches → read all.
+- **Capture** — after every failure (test, CI, lint, code review, user correction, or one you spotted yourself), append a bullet to `.agentsmesh/lessons/journal.md`: **what went wrong**, **root cause**, **rule that prevents recurrence**. Then `pnpm distill` → review the proposal → `pnpm distill:apply`.
+
+Skipping either is a process violation.
 
 ## Workflow
 
@@ -20,12 +23,6 @@ description: ""
 ### Subagents
 
 - Use subagents liberally for research, exploration, and parallel analysis. One tack per subagent.
-
-### Lessons
-
-- **When**: user correction, test failure, CI failure, code review feedback, or any other mistake signal.
-- **How**: add a bullet to `tasks/lessons.md` with (1) what went wrong, (2) root cause, (3) a rule that prevents recurrence.
-- This is the primary cross-session memory — ruthlessly iterate until mistake rate drops.
 
 ### Verification
 

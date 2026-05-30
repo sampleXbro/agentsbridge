@@ -1,8 +1,11 @@
 # Operational Guidelines
 
-## Session Start
+## Lessons (mandatory)
 
-- Read `tasks/lessons.md` before doing any work. Apply relevant lessons.
+- **Recall** — before editing a file or running a command, scan `../.agentsmesh/lessons/index.yaml`. For every matched cluster, read the cluster's `file` (e.g. `lessons/topics/<topic>.md`) before proceeding. Match `file_globs` (path), `command_patterns` (command), or `keywords` (task text); multiple matches → read all.
+- **Capture** — after every failure (test, CI, lint, code review, user correction, or one you spotted yourself), append a bullet to `../.agentsmesh/lessons/journal.md`: **what went wrong**, **root cause**, **rule that prevents recurrence**. Then `pnpm distill` → review the proposal → `pnpm distill:apply`.
+
+Skipping either is a process violation.
 
 ## Workflow
 
@@ -15,12 +18,6 @@
 ### Subagents
 
 - Use subagents liberally for research, exploration, and parallel analysis. One tack per subagent.
-
-### Lessons
-
-- **When**: user correction, test failure, CI failure, code review feedback, or any other mistake signal.
-- **How**: add a bullet to `tasks/lessons.md` with (1) what went wrong, (2) root cause, (3) a rule that prevents recurrence.
-- This is the primary cross-session memory — ruthlessly iterate until mistake rate drops.
 
 ### Verification
 
@@ -80,5 +77,5 @@
 <!-- agentsmesh:root-generation-contract:start -->
 ## AgentsMesh Generation Contract
 
-`agentsmesh.yaml` selects targets/features (`agentsmesh.local.yaml` overrides locally), and `.agentsmesh` is the only place to add or edit canonical items: `rules/_root.md`, `rules/*.md`, `commands/*.md`, `agents/*.md`, `skills/*/SKILL.md` plus supporting files, `mcp.json`, `hooks.yaml`, `permissions.yaml`, and `ignore`; if missing run `agentsmesh init`, use `agentsmesh import --from <tool>` for native configs, `agentsmesh install <source>` or `install --sync` for reusable packs, then run `agentsmesh generate`. Use `diff`, `lint`, `check`, `watch`, `matrix`, and `merge` as needed; never edit generated tool files.
+`agentsmesh.yaml` selects targets/features (`agentsmesh.local.yaml` overrides locally), and `.agentsmesh` is the only place to add or edit canonical items: `rules/_root.md`, `rules/*.md`, `commands/*.md`, `agents/*.md`, `skills/*/SKILL.md` plus supporting files, `mcp.json`, `hooks.yaml`, `permissions.yaml`, and `ignore`; if missing run `agentsmesh init`, use `agentsmesh import --from <tool>` for native configs, `agentsmesh install <source>` or `install --sync` for reusable packs, then run `agentsmesh generate`. Use `diff`, `lint`, `check`, `watch`, `matrix`, `merge`, and `refresh` as needed; never edit generated tool files.
 <!-- agentsmesh:root-generation-contract:end -->

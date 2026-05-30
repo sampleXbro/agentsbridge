@@ -47,6 +47,7 @@ export default defineConfig([
       engine: 'src/public/engine.ts',
       canonical: 'src/public/canonical.ts',
       targets: 'src/public/targets.ts',
+      lessons: 'src/public/lessons.ts',
     },
     format: ['esm'],
     target: 'node20',

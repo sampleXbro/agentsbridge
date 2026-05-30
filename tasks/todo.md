@@ -1,37 +1,16 @@
-# Security fixes — implementation plan
+# Lessons subsystem — DONE
 
-## Scope
-Three HIGH + two MEDIUM findings from the security audit. TDD throughout — failing test first.
+Implementation plan from the lessons-recall + capture rollout has shipped.
+Current state of the system:
 
-## Fix 1 — Plugin source containment (HIGH)
+- Procedural rule lives in `.agentsmesh/rules/_root.md` (auto-projected to every
+  target's root rule file).
+- Canonical artifacts live under `.agentsmesh/lessons/` (`journal.md`,
+  `index.yaml`, `topics/*.md`, `distill-ledger.yaml`).
+- Library code lives under `src/lessons/`; public API at
+  `src/public/lessons.ts` (exported as `agentsmesh/lessons`).
+- CLI scripts: `pnpm distill` (propose), `pnpm distill:apply` (route).
 
-**File:** `src/plugins/load-plugin.ts`
-**Risk:** Any actor who writes `agentsmesh.yaml` can trigger arbitrary code execution via `plugins[].source: "../../tmp/evil.js"`.
-**Change:** After resolving a local plugin source, assert the resolved absolute path stays under `projectRoot`. Reject otherwise. Bare npm specifiers continue to resolve through `node_modules/<source>`.
-**Tests:** `tests/unit/plugins/load-plugin-containment.test.ts`
+For the canonical reference and upgrade path see `src/lessons/README.md`.
 
-## Fix 2 — `deepMergeObjects` prototype pollution (HIGH)
-
-**File:** `src/config/core/loader.ts`
-**Change:** Skip keys `__proto__`, `constructor`, `prototype` in the merge loop.
-**Tests:** new test asserting `Object.prototype` is not polluted by hostile YAML.
-
-## Fix 3 — Symlink traversal in `readDirRecursive` + `copyDir` (HIGH)
-
-**File:** `src/utils/filesystem/fs-traverse.ts`
-**Change:** `readDirRecursive` skips both file- and dir-symlinks by default. `copyDir` uses `lstat` and skips symlinks.
-**Tests:** Updated `tests/unit/utils/fs.test.ts` + import-pipeline test.
-
-## Fix 4 — Uninstall manifest name validation (MEDIUM)
-
-**File:** `src/install/core/install-manifest.ts`
-**Change:** `.refine()` on `installManifestEntrySchema.name` matching `validatePackName` in pack-writer.
-
-## Fix 5 — `parseGitSource` protocol allowlist (MEDIUM)
-
-**File:** `src/config/remote/remote-source.ts`
-**Change:** allowlist `https:` + `ssh:` by default; `http:` only with `AGENTSMESH_ALLOW_INSECURE_GIT=1`; drop `file:`.
-
-## Verification
-
-`pnpm typecheck` + `pnpm test`.
+This file is now free for the next plan.

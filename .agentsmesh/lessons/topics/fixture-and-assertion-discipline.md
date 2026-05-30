@@ -1,0 +1,20 @@
+# Lessons: fixture & assertion discipline
+
+## Rules (apply unconditionally)
+
+1. Assert the exact relative path set and exact count for generated files/dirs — never `some(...)`, prefix matches, or "at least one". Cross-check referenced artifacts (e.g. hook wrapper scripts) against the config that points to them.
+2. When asserting an exact generated repo tree after `generate`, include `.agentsmesh/.lock` in the expected set — `generate` always emits it.
+3. When a user asks for e2e coverage over realistic structures, start from the richest existing fixture and mutate a temp copy — do not invent a smaller synthetic project.
+4. Audit fixtures with a full-depth listing first; never use `find -maxdepth N` on nested skill/reference trees and conclude content is absent.
+5. Before writing parameterized tests, scoring rules, or tie-breaks over any descriptor-derived list (`BUILTIN_TARGETS`, `RULES`, capability sets), run a one-shot `tsx scripts/<dump>.mts` that materializes the values and counts collisions; pick inputs that are unique per case and document ambiguity.
+6. Re-import tests must cover importing into an *existing* `.agentsmesh` tree, not only empty-project round trips — verify unsupported target metadata is preserved from the canonical destination instead of erased.
+7. When converting loose install/manifest assertions into strict ones, inspect the real persisted entry shape first and lock tests to the observed contract (field omission, ordering) — never write expectations from inferred intent.
+8. Mock `ValidatedConfig` fixtures (any `mockLoadScopedConfig.mockResolvedValue(...)`) must include every field the schema defaults populate (e.g. `plugins: []`). When a new orchestration step reads `config.X`, grep every mock and add the field before rerunning.
+9. When tightening `TargetDescriptor` schema requirements, run a repo-wide descriptor fixture search plus the full test suite and update every plugin/mock descriptor fixture to the full contract — focused catalog tests are insufficient.
+10. When replacing or removing a core helper API, run a targeted search for all direct imports/usages (including unit tests that reference helpers by name like the old reference normalizer) and update those tests before relying on the full suite.
+11. Whenever a generation/import/rewrite contract changes, mirror updates across the matching suites: research (`agents-folder-structure-research`), round-trip (`import-generate-roundtrip`), edge-case (`link-rebaser-edge-cases`), unit, integration, and e2e — primary tests alone do not codify the full contract.
+12. Use the correct shape for test helpers: `findGeneratedFile` accepts either a plain string for exact path matching or `{ stringContaining }`/`{ stringMatching }` — `{ exactPath }` does not exist. Check the helper's actual parameter types before use.
+13. For global-mode structure validation tests, drive `generate()` from `src/core/generate/engine.ts` with `scope: 'global'` and a `ValidatedConfig`-shaped fixture — `runGenerate()` from the CLI returns an exit code, not files.
+14. Cross-platform assertion tolerance: normalize native paths to POSIX in tests via `toPosixPath(result.fromPath)` before `.toContain('.codex/...')`; extend `stripProtectedRegions` to drop Windows absolute-path tokens before `not.toContain('.agentsmesh\\')` checks; permit any of `` `docs/...` ``, `` `/docs/...` ``, `` `./docs/...` ``, `` `../docs/...` `` for inline-backtick path rewrites that depend on realpath on 8.3-shortname Windows tmpdirs.
+15. When codegen-ing module-level array-literal data from per-target imports, patch the existing source file in place between sentinel comments instead of extracting to a new generated module — `descriptor-paths.test.ts` and other per-descriptor import paths trip ESM TDZ when an extra hop captures undefined slots.
+16. Per-target import mappers referenced from a descriptor object literal must live in a third file (`import-mappers.ts`), never in `importer.ts` — descriptor↔importer cycles capture `undefined` in `map:` fields and the runner throws at execution time.

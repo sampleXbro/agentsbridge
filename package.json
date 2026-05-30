@@ -26,6 +26,11 @@
       "types": "./dist/targets.d.ts",
       "import": "./dist/targets.js",
       "default": "./dist/targets.js"
+    },
+    "./lessons": {
+      "types": "./dist/lessons.d.ts",
+      "import": "./dist/lessons.js",
+      "default": "./dist/lessons.js"
     }
   },
   "bin": {
@@ -69,6 +74,8 @@
     "schemas:generate": "tsx scripts/generate-schemas.ts",
     "matrix:generate": "tsx scripts/render-support-matrix.ts",
     "matrix:verify": "tsx scripts/render-support-matrix.ts --verify",
+    "distill": "tsx scripts/distill-lessons.ts",
+    "distill:apply": "tsx scripts/distill-lessons.ts --apply",
     "changeset": "changeset",
     "version": "changeset version",
     "release": "pnpm build && changeset publish",
@@ -123,14 +130,15 @@
     "@arethetypeswrong/cli": "^0.18.2",
     "@changesets/cli": "^2.27.12",
     "@eslint/js": "^10.0.1",
-    "knip": "^5.66.0",
     "@types/node": "^25.6.0",
+    "@types/picomatch": "^4.0.3",
     "@typescript-eslint/eslint-plugin": "^8.58.1",
     "@typescript-eslint/parser": "^8.58.1",
     "@vitest/coverage-v8": "^4.1.4",
     "eslint": "^10.2.0",
     "eslint-plugin-import": "^2.32.0",
     "husky": "^9.1.7",
+    "knip": "^5.66.0",
     "lint-staged": "^16.4.0",
     "prettier": "^3.8.2",
     "publint": "^0.3.18",
@@ -143,6 +151,7 @@
     "@modelcontextprotocol/sdk": "^1.29.0",
     "chokidar": "^5.0.0",
     "diff": "8.0.4",
+    "picomatch": "^4.0.4",
     "smol-toml": "^1.6.1",
     "tar": "7.5.13",
     "yaml": "^2.8.3",

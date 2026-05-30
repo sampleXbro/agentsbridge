@@ -34,6 +34,11 @@ export const COMMANDS: HelpCommand[] = [
         description:
           'Auto-import detected tool configs, then add example scaffold only under empty canonical paths',
       },
+      {
+        name: '--lessons',
+        description:
+          'Scaffold the lessons recall + capture subsystem under .agentsmesh/lessons/ and append the procedural rule to .agentsmesh/rules/_root.md. Project mode only. Safe to run on an already-initialized project to retroactively add the subsystem.',
+      },
     ],
   },
   {

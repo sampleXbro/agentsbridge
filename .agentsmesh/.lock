@@ -1,9 +1,9 @@
 # Auto-generated. DO NOT EDIT MANUALLY.
 # Tracks the state of all config files for team conflict resolution.
 
-generated_at: 2026-05-28T08:14:03.455Z
+generated_at: 2026-05-30T10:51:11.878Z
 generated_by: serhii
-lib_version: 0.19.0
+lib_version: 0.20.0
 checksums:
   agents/code-debugger.md: sha256:33452bf839256a119a602cd10d085bff3cdb8f537ded76e60053bb9d8e5d33bc
   agents/code-documenter.md: sha256:89b4ebd27718bcd50a7283c95ea1ff9cad153b1112cf695f9f1fc22d90ec85ec
@@ -20,7 +20,7 @@ checksums:
   ignore: sha256:53ad60cb2c945a41619fbb5dd0d43559c8461e4cb35e30f4d98b901c73766e12
   mcp.json: sha256:963782b54cbea4ef4686fd036e87332e1a61042579916222991429e359654921
   permissions.yaml: sha256:c806acb62daf533af836dc113be37e9840a2a9b3e21b984c5909fcfb16eb52f2
-  rules/_root.md: sha256:f54ee412c420830b78e0d01fdd4c90767df01f5730902bcb4fe59ba62db17bb4
+  rules/_root.md: sha256:531c56a1a0dfb81acc4c44c69d03cd6e8ac428bd5a13ee91f6a89611804ae9b0
   rules/typescript.md: sha256:18f52143dfdd3e219a5c6d6c0feb7283fe74cce99458c46dafcd1c3620ad4fba
   skills/add-agent-target/SKILL.md: sha256:b425055659d29f74dbbe97966f6396e918d96cb0736d1448217656cf26b410f6
   skills/add-agent-target/references/target-addition-checklist.md: sha256:3b658fc204d33995cb15281af1696d8ded09abac26455382c3e8472a1fddafca
@@ -129,4 +129,5 @@ packs:
   composiohq-awesome-claude-skills-skills: sha256:6b63e9d8e01c904ed85fcff5dd9e368ab37e68b904b2170454c3104feb82cd3d
   devsforge-orchestrator-skills: sha256:9228afa4fd2aedaca2403e7c2afbce0c18e4204793ede6e649a777eed9eb3231
   joeking-ly-claude-skills-arsenal-skills: sha256:63b24277c3d09607506971957d40f95139385193eaf8b02a92d68ca6f8af15ec
+  mattpocock-skills-skills: sha256:e55bf71f63e4550b28e942ba04f88d853cb93d7d91f7788a590f46102a61472f
   njengah-claude-code-cheat-sheet-agents: sha256:6b0a573bc4a725d0a5d38d323d19382f7a24bd948885d3555b94cbca47a05cbf

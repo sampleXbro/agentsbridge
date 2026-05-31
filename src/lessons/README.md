@@ -90,23 +90,31 @@ Distill writes routing decisions into the **ledger only** — never appends to
 topic files. If a new journal bullet teaches a new rule, the author edits the
 topic's Rules section manually. This keeps topics small and authoritative.
 
-## Hard guarantee: `distill:check` gate
+## CLI — the only interface consumers need
+
+Three subcommands, all shipped inside the `agentsmesh` binary. No scripts
+to copy, no package-manager assumptions, no third-party tooling:
+
+```bash
+agentsmesh distill            # propose routing for unrouted journal bullets
+agentsmesh distill --apply    # record reviewed decisions in the ledger
+agentsmesh distill --check    # assert every bullet is routed; exits 1 if not
+```
+
+## Hard guarantee: `agentsmesh distill --check`
 
 The procedural rule in `_root.md` is a *soft contract* — an agent can ignore
-it. The single hard guarantee in the subsystem is `pnpm distill:check`:
+it. The single hard guarantee in the subsystem is `agentsmesh distill --check`:
 
 - Hashes every bullet in `journal.md`.
-- Asserts every hash is present in `distill-ledger.yaml` (routed to a topic
-  or explicitly `skip`).
+- Asserts every hash is in `distill-ledger.yaml` (routed to a topic or
+  explicitly `skip`).
 - Exits non-zero if any bullet is unrouted, listing each by line + preview.
 
-This is wired into the project's husky pre-commit chain (in front of
-`typecheck`/`lint:dead`/`test:coverage`), so a commit cannot land while the
-journal contains bullets the developer or agent forgot to distill. Captured
-lessons can no longer be silently dropped.
-
-Same script works as a CI gate (any commit, any branch) — drop
-`pnpm distill:check` into the workflow before merge.
+Wire it as a pre-commit hook (husky / lefthook / simple-git-hooks / plain
+`.git/hooks`) or a CI step. A failed check forces the developer or agent to
+distill the bullet (or explicitly mark it `skip`) before the commit lands.
+Captured lessons can no longer be silently dropped.
 
 ## Adding the subsystem to a project
 

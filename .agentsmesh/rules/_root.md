@@ -8,7 +8,7 @@ description: ""
 ## Lessons (mandatory)
 
 - **Recall** — before editing a file or running a command, scan `.agentsmesh/lessons/index.yaml`. For every matched cluster, read the cluster's `file` (e.g. `.agentsmesh/lessons/topics/<topic>.md`) before proceeding. Match `file_globs` (path), `command_patterns` (command), or `keywords` (task text); multiple matches → read all.
-- **Capture** — after every failure (test, CI, lint, code review, user correction, or one you spotted yourself), append a bullet to `.agentsmesh/lessons/journal.md`: **what went wrong**, **root cause**, **rule that prevents recurrence**. Then `pnpm distill` → review the proposal → `pnpm distill:apply`.
+- **Capture** — after every failure (test, CI, lint, code review, user correction, or one you spotted yourself), append a bullet to `.agentsmesh/lessons/journal.md`: **what went wrong**, **root cause**, **rule that prevents recurrence**. Then `agentsmesh distill` → review the proposal → `agentsmesh distill --apply`.
 
 Skipping either is a process violation.
 

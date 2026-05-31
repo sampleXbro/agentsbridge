@@ -284,4 +284,22 @@ export const COMMANDS: HelpCommand[] = [
     description: 'Start the agentsmesh MCP server (stdio)',
     flags: [],
   },
+  {
+    name: 'distill',
+    usage: 'agentsmesh distill [--apply | --check]',
+    description:
+      'Route lessons journal bullets into topic clusters. Default: propose a routing for every unrouted bullet. Requires the lessons subsystem (run `agentsmesh init --lessons` first).',
+    flags: [
+      {
+        name: '--apply',
+        description:
+          'Read decisions back from .agentsmesh/lessons/distill-proposal.md and record them in the ledger.',
+      },
+      {
+        name: '--check',
+        description:
+          'Assert every journal bullet is in the ledger (routed or skip). Exits non-zero on missing bullets. Wire into pre-commit or CI.',
+      },
+    ],
+  },
 ];

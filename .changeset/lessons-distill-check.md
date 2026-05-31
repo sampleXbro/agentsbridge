@@ -1,19 +1,32 @@
 ---
-'agentsmesh': patch
+'agentsmesh': minor
 ---
 
-Add `pnpm distill:check` — a hard gate that fails when
-`.agentsmesh/lessons/journal.md` contains bullets not yet routed in
-`distill-ledger.yaml` (or explicitly marked `skip`).
+Add `agentsmesh distill` CLI command — the encapsulated interface for the
+lessons recall + capture subsystem. Three modes:
 
-Wired into the project's husky pre-commit chain so an agent or
-developer cannot land a commit that captures a lesson without also
-distilling it. Recommended as a CI gate on consumer projects: drop
-`pnpm distill:check` into the build before merge.
+```bash
+agentsmesh distill            # propose routing for unrouted journal bullets
+agentsmesh distill --apply    # record reviewed decisions in the ledger
+agentsmesh distill --check    # assert every bullet is routed; exits 1 if not
+```
+
+No package-manager assumption, no scripts to copy. Consumers wire
+`agentsmesh distill --check` into whatever hook system they prefer (husky,
+lefthook, simple-git-hooks, plain `.git/hooks`) or a CI step — a failed
+check forces the developer or agent to distill the bullet (or explicitly
+mark it `skip`) before the commit lands. The one hard guarantee in the
+subsystem: captured lessons cannot be silently dropped.
+
+The procedural rule in `_root.md` (projected to every target's root file)
+now references `agentsmesh distill` instead of `pnpm distill:*`, making the
+subsystem fully self-contained — consumers need only the `agentsmesh`
+binary.
 
 Public API additions (`agentsmesh/lessons`):
 
-- `checkJournalCoverage(paths): CheckJournalResult` — pure function that
-  returns the routed vs unrouted breakdown; callers decide how to
-  surface (CLI exit, CI annotation, custom UI).
-- `CheckJournalResult`, `UnroutedBullet` types.
+- `proposeDistill(paths): ProposeDistillResult`
+- `applyDistill(paths): ApplyDistillResult`
+- `checkJournalCoverage(paths): CheckJournalResult`
+- `ProposalEntry`, `ProposeDistillResult`, `ApplyDistillResult`,
+  `CheckJournalResult`, `UnroutedBullet` types

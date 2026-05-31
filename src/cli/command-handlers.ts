@@ -28,6 +28,8 @@ import { renderInstalls } from './renderers/installs.js';
 import { runPlugin } from './commands/plugin.js';
 import { renderPlugin } from './renderers/plugin.js';
 import { runTarget } from './commands/target.js';
+import { runDistill } from './commands/distill.js';
+import { renderDistill } from './renderers/distill.js';
 import { renderTarget } from './renderers/target.js';
 import { runConvert } from './commands/convert.js';
 import { renderConvert } from './renderers/convert.js';
@@ -132,5 +134,13 @@ export const cmdHandlers: Record<
   },
   mcp: async (flags, args) => {
     await runMcp(flags, args);
+  },
+  distill: async (flags, _args) => {
+    void _args;
+    const result = await runDistill(process.cwd(), {
+      apply: flags.apply === true,
+      check: flags.check === true,
+    });
+    handleResult('distill', result, flags, () => renderDistill(result));
   },
 };

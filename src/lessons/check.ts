@@ -42,6 +42,7 @@ export function checkJournalCoverage(paths: LessonsPaths): CheckJournalResult {
 }
 
 function previewOf(bullet: ParsedBullet): string {
-  const firstLine = bullet.text.split('\n', 1)[0] ?? '';
+  const newlineAt = bullet.text.indexOf('\n');
+  const firstLine = newlineAt === -1 ? bullet.text : bullet.text.slice(0, newlineAt);
   return firstLine.length > 120 ? `${firstLine.slice(0, 117)}...` : firstLine;
 }

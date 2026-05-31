@@ -32,23 +32,6 @@ export interface InitData {
   lessonsOnly?: boolean;
 }
 
-export type DistillData =
-  | {
-      mode: 'propose';
-      proposalCount: number;
-      proposalFile: string | null;
-    }
-  | {
-      mode: 'apply';
-      routed: number;
-      skipped: number;
-    }
-  | {
-      mode: 'check';
-      checked: number;
-      unrouted: Array<{ hash: string; lineNumber: number; preview: string }>;
-    };
-
 export interface ImportData {
   scope: 'project' | 'global';
   target: string;

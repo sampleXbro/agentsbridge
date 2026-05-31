@@ -39,13 +39,3 @@ export type { LessonsPaths } from '../lessons/paths.js';
 
 export { scaffoldLessons } from '../lessons/init.js';
 export type { ScaffoldLessonsResult } from '../lessons/init.js';
-
-export { checkJournalCoverage } from '../lessons/check.js';
-export type { CheckJournalResult, UnroutedBullet } from '../lessons/check.js';
-
-export { proposeDistill, applyDistill } from '../lessons/distill.js';
-export type {
-  ProposalEntry,
-  ProposeDistillResult,
-  ApplyDistillResult,
-} from '../lessons/distill.js';

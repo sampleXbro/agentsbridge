@@ -29,6 +29,14 @@ export { scoreBullet } from '../lessons/scoring.js';
 export type { ScoredCluster } from '../lessons/scoring.js';
 
 export {
+  appendLessonToJournal,
+  formatLessonBullet,
+  loadLessonsIndex,
+  readTriggeredLessons,
+} from '../lessons/store.js';
+export type { AppendLessonResult, LessonCaptureInput, TriggeredLesson } from '../lessons/store.js';
+
+export {
   lessonsPaths,
   toRelPath,
   LESSONS_JOURNAL_TEMPLATE,

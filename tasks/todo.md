@@ -1,16 +1,10 @@
-# Lessons subsystem — DONE
+# Lessons Subsystem Review
 
-Implementation plan from the lessons-recall + capture rollout has shipped.
-Current state of the system:
+Goal: review the unpushed lessons functionality and make reading/writing lessons efficient and unified for every supported tool.
 
-- Procedural rule lives in `.agentsmesh/rules/_root.md` (auto-projected to every
-  target's root rule file).
-- Canonical artifacts live under `.agentsmesh/lessons/` (`journal.md`,
-  `index.yaml`, `topics/*.md`, `distill-ledger.yaml`).
-- Library code lives under `src/lessons/`; public API at
-  `src/public/lessons.ts` (exported as `agentsmesh/lessons`).
-- CLI scripts: `pnpm distill` (propose), `pnpm distill:apply` (route).
-
-For the canonical reference and upgrade path see `src/lessons/README.md`.
-
-This file is now free for the next plan.
+- [x] Review unpushed lessons diff and architecture intent.
+- [x] Audit tests first for cross-target read/write lesson guarantees.
+- [x] Add failing coverage for unified store, path normalization, and import/generate contracts.
+- [x] Implement the smallest unified fix.
+- [x] Run focused and broader verification.
+- [x] Apply post-feature QA before marking complete.

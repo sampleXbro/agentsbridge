@@ -87,6 +87,10 @@ AGENTS.md
   hooks.yaml
   permissions.yaml
   ignore
+  lessons/
+    index.yaml
+    journal.md
+    topics/
 ```
 
 ```bash
@@ -110,6 +114,12 @@ agentsmesh check      # CI-friendly drift gate against .agentsmesh/.lock
 - **`init`** — creates `agentsmesh.yaml`, `agentsmesh.local.yaml`, and the canonical `.agentsmesh/` directory.
 - **`generate`** — writes `CLAUDE.md`, `AGENTS.md`, `.cursor/`, `.github/copilot-instructions.md`, etc. from canonical sources.
 - **`check`** — exits non-zero if generated files have drifted from `.agentsmesh/.lock`. Drop into CI.
+
+Use `agentsmesh init --lessons` when you want the optional lessons recall +
+capture subsystem. Agents read `.agentsmesh/lessons/index.yaml`, load only
+matching topic files before edits/commands, and append failures to
+`.agentsmesh/lessons/journal.md`; the procedural rule is projected through the
+normal root rule, so it stays tool-agnostic.
 
 If you installed via `npm install -D agentsmesh` (also `pnpm add -D` / `yarn add -D`), prefix each command with `npx`. The CLI ships as both `agentsmesh` and the shorter alias `amsh`.
 
@@ -208,6 +218,7 @@ AgentsMesh canonicalizes all of these — rules, commands, agents, skills, MCP s
 - `hooks.yaml` — pre/post tool hooks.
 - `permissions.yaml` — allow/deny rules where the target supports them.
 - `ignore` — paths the assistant should not read or modify.
+- `lessons/` — optional recall/capture memory: trigger index, append-only journal, and small topic rule files read directly by agents.
 
 Configuration:
 
@@ -222,7 +233,7 @@ Detailed contracts: [Canonical Config](https://samplexbro.github.io/agentsmesh/c
 ## CLI usage
 
 ```bash
-agentsmesh init [--global] [--yes]
+agentsmesh init [--global] [--yes] [--lessons]
 agentsmesh generate [--global] [--targets <csv>] [--check] [--dry-run] [--force] [--refresh-cache]
 agentsmesh import --from <target> [--global]
 agentsmesh convert --from <target> --to <target> [--global] [--dry-run]

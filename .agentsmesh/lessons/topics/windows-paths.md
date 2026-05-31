@@ -37,3 +37,5 @@
 17. **Tests that need merged stdout+stderr must not hardcode a POSIX shell.** Use `spawnSync(process.execPath, [...args], { encoding: 'utf-8' })` and concatenate `result.stdout + result.stderr`. Never embed `2>&1` or hardcode `/bin/sh` / `/bin/zsh` once Windows is in the CI matrix. (Evidence: L191)
 
 18. **Control-character escapes in regex literals must survive the `Write` JSON transport.** Build via `new RegExp('[<>:"|?*\\u0000-\\u001F]')` so the file stores literal escape sequences, not raw bytes. Verify with `file(1)` after authoring. (Evidence: L192)
+
+19. **Project-relative path validators must reject Windows absolutes independently of host OS.** Native `path.isAbsolute()` does not recognize `C:\...` as absolute on POSIX, so cross-platform canonical path validators must also reject `/^[A-Za-z]:[\\/]/` before resolving against a project root. (Evidence: L314)

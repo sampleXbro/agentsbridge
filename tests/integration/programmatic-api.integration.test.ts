@@ -39,13 +39,19 @@ import {
   loadCanonicalFiles,
   loadConfig,
   loadConfigFromDirectory,
+  loadLessonsIndex,
   registerTargetDescriptor,
+  readTriggeredLessons,
   resolveOutputCollisions,
+  appendLessonToJournal,
+  formatLessonBullet,
   type CanonicalFiles,
   type GenerateContext,
   type GenerateResult,
+  type AppendLessonResult,
   type LintResult,
   type LockSyncReport,
+  type TriggeredLesson,
   type ProjectContext,
   type TargetDescriptor,
   type ValidatedConfig,
@@ -145,6 +151,10 @@ describe('Programmatic API — entrypoint shape', () => {
     expect(typeof loadCanonicalFiles).toBe('function');
     expect(typeof loadConfig).toBe('function');
     expect(typeof loadConfigFromDirectory).toBe('function');
+    expect(typeof loadLessonsIndex).toBe('function');
+    expect(typeof readTriggeredLessons).toBe('function');
+    expect(typeof appendLessonToJournal).toBe('function');
+    expect(typeof formatLessonBullet).toBe('function');
     expect(typeof lint).toBe('function');
     expect(typeof diff).toBe('function');
     expect(typeof check).toBe('function');
@@ -159,6 +169,54 @@ describe('Programmatic API — entrypoint shape', () => {
     expect(new ConfigNotFoundError('/x')).toBeInstanceOf(AgentsMeshError);
     expect(new ConfigValidationError('/x', ['issue'])).toBeInstanceOf(AgentsMeshError);
     expect(new TargetNotFoundError('foo')).toBeInstanceOf(AgentsMeshError);
+  });
+});
+
+describe('Programmatic API — lessons helpers', () => {
+  it('exports unified lesson read/write helpers from the root barrel', () => {
+    const { projectRoot } = createMinimalProject('lessons-public-api');
+    mkdirSync(join(projectRoot, '.agentsmesh/lessons/topics'), { recursive: true });
+    writeFileSync(
+      join(projectRoot, '.agentsmesh/lessons/index.yaml'),
+      `version: 1
+clusters:
+  - topic: shell-quoting
+    file: .agentsmesh/lessons/topics/shell-quoting.md
+    summary: Shell rules.
+    triggers:
+      file_globs: []
+      command_patterns:
+        - "^rg "
+      keywords: []
+`,
+      'utf8',
+    );
+    writeFileSync(
+      join(projectRoot, '.agentsmesh/lessons/topics/shell-quoting.md'),
+      '# Shell quoting\n\n## Rules\n\n1. Use -e for dash-leading patterns.\n',
+      'utf8',
+    );
+
+    expect(loadLessonsIndex(projectRoot).clusters.map((cluster) => cluster.topic)).toEqual([
+      'shell-quoting',
+    ]);
+
+    const triggered: TriggeredLesson[] = readTriggeredLessons(projectRoot, {
+      kind: 'bash',
+      command: "rg 'foo' src",
+    });
+    expect(triggered.map((lesson) => lesson.relativePath)).toEqual([
+      '.agentsmesh/lessons/topics/shell-quoting.md',
+    ]);
+
+    const input = {
+      heading: 'Dash-leading rg',
+      whatWentWrong: 'ripgrep parsed a pattern as a flag',
+      rootCause: 'the pattern began with a dash',
+      rule: 'pass the pattern through -e',
+    };
+    const captured: AppendLessonResult = appendLessonToJournal(projectRoot, input);
+    expect(captured.bullet).toBe(formatLessonBullet(input));
   });
 });
 

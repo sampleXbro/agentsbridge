@@ -20,6 +20,7 @@ agentsmesh init [flags]
 |------|-------------|
 | `--global` | Initialize canonical home config under `~/.agentsmesh/`. |
 | `--yes` | Auto-import all detected tool configs, then add starter examples only under empty canonical folders (skip categories import already filled). |
+| `--lessons` | Scaffold the project-level lessons recall + capture subsystem and append its procedural rule to `_root.md`. Cannot be combined with `--global`. |
 
 ## What init creates
 
@@ -43,6 +44,10 @@ agentsmesh.local.yaml     # Local overrides (gitignored)
   hooks.yaml
   permissions.yaml
   ignore
+  lessons/                # Created only with --lessons
+    index.yaml
+    journal.md
+    topics/
 .gitignore                # Updated to exclude agentsmesh.local.yaml
 ```
 
@@ -79,6 +84,23 @@ agentsmesh init --yes
 ```
 
 Imports all detected configs without prompting, then writes the same starter files as a plain `init` **only** where a canonical folder is still empty (for example `commands/_example.md` if nothing was imported under `commands/`). Useful for scripted setups or when you want to migrate everything at once without losing starter templates for unused features.
+
+### Enable lessons recall
+
+```bash
+agentsmesh init --lessons
+agentsmesh generate
+```
+
+`--lessons` creates `.agentsmesh/lessons/index.yaml`,
+`.agentsmesh/lessons/journal.md`, and `.agentsmesh/lessons/topics/`, then
+appends a tool-agnostic recall/capture protocol to `.agentsmesh/rules/_root.md`.
+After `generate`, every enabled target receives the same root rule: agents read
+the index, load only matching topic files before edits or commands, and append
+failures to the journal.
+
+Run the same command in an already-initialized project to add lessons
+retroactively; init leaves existing config and canonical files untouched.
 
 ### Initialize global config
 

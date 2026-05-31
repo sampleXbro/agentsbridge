@@ -1,17 +1,16 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { parse as parseYaml } from 'yaml';
-import { parseIndex } from '../src/lessons/index-schema.js';
+import { dirname } from 'node:path';
 import { parseBullets } from '../src/lessons/bullet-parser.js';
 import { hashBullet } from '../src/lessons/bullet-hash.js';
 import { loadLedger, saveLedger } from '../src/lessons/ledger.js';
 import { scoreBullet } from '../src/lessons/scoring.js';
 import { lessonsPaths } from '../src/lessons/paths.js';
+import { loadLessonsIndex } from '../src/lessons/store.js';
 
 const paths = lessonsPaths(process.cwd());
 
 function propose(): void {
-  const index = parseIndex(parseYaml(readFileSync(paths.index, 'utf8')) as unknown);
+  const index = loadLessonsIndex(process.cwd());
   const bullets = parseBullets(readFileSync(paths.journal, 'utf8'));
   const ledger = loadLedger(paths.ledger);
 
@@ -64,7 +63,7 @@ function apply(): void {
     console.error('No proposal file. Run without --apply first.');
     process.exit(1);
   }
-  const index = parseIndex(parseYaml(readFileSync(paths.index, 'utf8')) as unknown);
+  const index = loadLessonsIndex(process.cwd());
   const knownTopics = new Set(index.clusters.map((c) => c.topic));
   const proposal = readFileSync(paths.proposal, 'utf8');
   const ledger = loadLedger(paths.ledger);

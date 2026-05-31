@@ -67,6 +67,14 @@ import {
   loadLedger,
   saveLedger,
   type Ledger,
+  // Unified read/write store
+  loadLessonsIndex,
+  readTriggeredLessons,
+  appendLessonToJournal,
+  formatLessonBullet,
+  type TriggeredLesson,
+  type LessonCaptureInput,
+  type AppendLessonResult,
   // Scoring
   scoreBullet,
   type ScoredCluster,
@@ -95,8 +103,9 @@ Everything not re-exported through `src/public/lessons.ts` is internal.
 | `matcher.ts` | Runtime trigger matcher (file_globs / command_patterns / keywords → matched clusters). |
 | `ledger.ts` | YAML I/O for `distill-ledger.yaml`. |
 | `scoring.ts` | Rank clusters for a new bullet during distillation. |
+| `store.ts` | High-level file I/O: load the index, read only triggered topic files, and append capture bullets in the canonical journal shape. |
 | `paths.ts` | Default file paths under `.agentsmesh/lessons/` + init templates (journal, index, procedural-rule paragraph). |
-| `init.ts` | `scaffoldLessons(projectRoot)` — idempotent scaffolder for future `agentsmesh init --lessons` (project mode). |
+| `init.ts` | `scaffoldLessons(projectRoot)` — idempotent scaffolder for `agentsmesh init --lessons` (project mode). |
 
 ## Topic files: Rules only
 
@@ -139,8 +148,25 @@ overwrites existing files.
 **Programmatic equivalent** (for custom init flows):
 
 ```js
-import { scaffoldLessons } from 'agentsmesh/lessons';
-const result = scaffoldLessons(process.cwd());
+import {
+  scaffoldLessons,
+  readTriggeredLessons,
+  appendLessonToJournal,
+} from 'agentsmesh/lessons';
+
+scaffoldLessons(process.cwd());
+
+const lessons = readTriggeredLessons(process.cwd(), {
+  kind: 'bash',
+  command: "rg 'foo' src",
+});
+
+appendLessonToJournal(process.cwd(), {
+  heading: 'Example failure',
+  whatWentWrong: 'the command failed',
+  rootCause: 'a matching lesson was skipped',
+  rule: 'read triggered lesson files before running the command',
+});
 ```
 
 **Removal:** `rm -rf .agentsmesh/lessons/` and strip the `## Lessons

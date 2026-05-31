@@ -5,6 +5,7 @@ import { parse as parseYaml } from 'yaml';
 import { parseIndex } from '../../src/lessons/index-schema.js';
 import { matchTriggers, type ToolEvent } from '../../src/lessons/matcher.js';
 import { lessonsPaths } from '../../src/lessons/paths.js';
+import { readTriggeredLessons } from '../../src/lessons/store.js';
 
 const REPO = fileURLToPath(new URL('../..', import.meta.url));
 const idx = parseIndex(parseYaml(readFileSync(lessonsPaths(REPO).index, 'utf8')) as unknown);
@@ -150,6 +151,15 @@ describe('lessons recall', () => {
     expect(topics, `event=${JSON.stringify(event)} matched=${topics.join(',')}`).toContain(
       expectedTopic,
     );
+  });
+
+  it.each(CASES)('loads topic content for $name', ({ event, expectedTopic }) => {
+    const lessons = readTriggeredLessons(REPO, event);
+    const topic = idx.clusters.find((cluster) => cluster.topic === expectedTopic);
+    expect(topic).toBeDefined();
+    const hit = lessons.find((lesson) => lesson.cluster.topic === expectedTopic);
+    expect(hit?.relativePath).toBe(topic?.file);
+    expect(hit?.content).toContain('## Rules');
   });
 
   it('covers every cluster at least once', () => {

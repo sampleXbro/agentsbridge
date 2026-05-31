@@ -9,8 +9,9 @@ The subsystem keeps agents from repeating past mistakes via a procedural rule
 that lives in every target's root file: before any edit or command, scan
 `.agentsmesh/lessons/index.yaml` and read every matched
 `.agentsmesh/lessons/topics/<topic>.md`; after any failure, append to
-`.agentsmesh/lessons/journal.md` and route via `pnpm distill` →
-`pnpm distill:apply`.
+`.agentsmesh/lessons/journal.md`. The optional repo-local `pnpm distill` /
+`pnpm distill:apply` scripts can help maintain AgentsMesh's own topic routing,
+but the generated rule does not require package-manager-specific tooling.
 
 **Using it:**
 
@@ -26,6 +27,10 @@ that lives in every target's root file: before any edit or command, scan
 
 - `scaffoldLessons(projectRoot)` — idempotent scaffolder used internally by
   `init --lessons`; reusable from custom tooling.
+- `loadLessonsIndex(projectRoot)`, `readTriggeredLessons(projectRoot, event)`,
+  `appendLessonToJournal(projectRoot, input)`, and `formatLessonBullet(input)` —
+  one high-level, target-agnostic read/write layer for integrations that should
+  not hand-roll filesystem access.
 - `lessonsPaths(projectRoot)`, `LESSONS_PROCEDURAL_RULE`,
   `LESSONS_JOURNAL_TEMPLATE`, `LESSONS_INDEX_TEMPLATE` — paths and templates.
 - `parseIndex`, `LessonsIndexSchema`, `matchTriggers`, `scoreBullet`,
@@ -39,5 +44,5 @@ Cursor, Gemini CLI, Aider, Goose, and every other supported harness.
 
 **Constraints:**
 - `--lessons` is project-mode only. Combining with `--global` errors out.
-- Removal: `rm -rf .agentsmesh/lessons/` and strip the `## Lessons (mandatory)`
-  paragraph from `.agentsmesh/rules/_root.md`.
+- Removal: `rm -rf .agentsmesh/lessons/` and strip the `## Lessons` paragraph
+  from `.agentsmesh/rules/_root.md`.

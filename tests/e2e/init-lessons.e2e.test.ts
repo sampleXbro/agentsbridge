@@ -38,9 +38,9 @@ describe('agentsmesh init --lessons (e2e)', () => {
     expect(existsSync(join(tempDir, '.agentsmesh/lessons/topics'))).toBe(true);
 
     const rootRule = readFileSync(join(tempDir, '.agentsmesh/rules/_root.md'), 'utf8');
-    expect(rootRule).toContain('## Lessons (mandatory)');
-    expect(rootRule).toContain('**Recall**');
-    expect(rootRule).toContain('**Capture**');
+    expect(rootRule).toContain('## Lessons (MUST do — non-negotiable)');
+    expect(rootRule).toContain('**Recall');
+    expect(rootRule).toContain('**Capture');
   });
 
   it('retrofits lessons onto an already-initialized project', async () => {
@@ -65,7 +65,7 @@ describe('agentsmesh init --lessons (e2e)', () => {
     expect(second.stdout).toContain('already contains the Lessons paragraph');
 
     const rootRule = readFileSync(join(tempDir, '.agentsmesh/rules/_root.md'), 'utf8');
-    const occurrences = rootRule.match(/## Lessons \(mandatory\)/g) ?? [];
+    const occurrences = rootRule.match(/^## Lessons \(/gm) ?? [];
     expect(occurrences.length).toBe(1);
   });
 

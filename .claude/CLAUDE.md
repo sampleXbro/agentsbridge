@@ -1,11 +1,28 @@
 # Operational Guidelines
 
-## Lessons (mandatory)
+## Lessons (MUST do — non-negotiable)
 
-- **Recall** — before editing a file or running a command, scan `../.agentsmesh/lessons/index.yaml`. For every matched cluster, read the cluster's `file` (e.g. `lessons/topics/<topic>.md`) before proceeding. Match `file_globs` (path), `command_patterns` (command), or `keywords` (task text); multiple matches → read all.
-- **Capture** — after every failure (test, CI, lint, code review, user correction, or one you spotted yourself), append a bullet to `../.agentsmesh/lessons/journal.md`: **what went wrong**, **root cause**, **rule that prevents recurrence**. Then `pnpm distill` → review the proposal → `pnpm distill:apply`.
+Two rituals. Skipping either is a process violation; the same paid-for failure recurs next session.
 
-Skipping either is a process violation.
+**Recall — BEFORE every `Edit`, `Write`, or `Bash` tool call:**
+
+1. Read `../.agentsmesh/lessons/index.yaml`.
+2. For every cluster whose triggers match — `file_globs` against the target file path, `command_patterns` (regex) against the Bash command, or `keywords` (case-insensitive substring) against the active task description — read its `file` (e.g. `lessons/topics/<topic>.md`).
+3. Apply the loaded rules to the action.
+4. Then — and only then — invoke the tool.
+
+Rejected excuses: *"the edit is small"* → apply it. *"I read this earlier in the session"* → context may have compacted; re-read. *"no trigger fires"* → proceed; you've done your part.
+
+**Capture — IMMEDIATELY after any failure** (test, CI, lint, code review, user correction, regression you spotted yourself, OR any mistake by anyone in the loop):
+
+1. Append one bullet to `../.agentsmesh/lessons/journal.md` in this exact shape:
+   `- **<short heading>**: <what went wrong>. <root cause>. <imperative rule that prevents recurrence>.`
+2. Read `../.agentsmesh/lessons/index.yaml` and identify which topic the lesson belongs to (use the `summary:` fields).
+3. If the lesson teaches a NEW rule: edit that topic's `## Rules` section to add it, citing `(Evidence: L<journal-line>)`. If it only reinforces an existing rule, the journal entry alone suffices.
+
+Rejected excuses: *"it wasn't really a failure"* → if you fixed something, it was. *"I'll capture it later"* → no; do it now while context is fresh. *"no topic fits"* → still record in journal; an unrouted bullet is recoverable, a forgotten one is not.
+
+**These two rituals are load-bearing. Treat them with the same discipline as TDD.**
 
 ## Workflow
 

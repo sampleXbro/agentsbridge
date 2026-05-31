@@ -57,7 +57,10 @@ function appendProceduralRule(projectRoot: string): boolean {
     return true;
   }
   const current = readFileSync(rootRule, 'utf8');
-  if (current.includes('## Lessons (mandatory)')) return false;
+  // Match any '## Lessons (…)' heading — the parenthetical wording may evolve
+  // (mandatory / MUST do / etc.) but the H2 itself is the stable idempotency
+  // anchor for this paragraph.
+  if (/^## Lessons \(/m.test(current)) return false;
   const next = current.endsWith('\n') ? current : `${current}\n`;
   writeFileSync(rootRule, `${next}\n${LESSONS_PROCEDURAL_RULE}\n`, 'utf8');
   return true;

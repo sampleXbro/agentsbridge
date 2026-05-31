@@ -23,7 +23,7 @@ describe('scaffoldLessons', () => {
     expect(readFileSync(paths.index, 'utf8')).toContain('clusters: []');
 
     const rootRule = readFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), 'utf8');
-    expect(rootRule).toContain('## Lessons (mandatory)');
+    expect(rootRule).toContain('## Lessons (MUST do — non-negotiable)');
 
     expect(result.created.length).toBeGreaterThan(0);
     expect(result.rootRuleUpdated).toBe(true);
@@ -34,7 +34,7 @@ describe('scaffoldLessons', () => {
     const second = scaffoldLessons(projectRoot);
 
     const rootRule = readFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), 'utf8');
-    const occurrences = rootRule.match(/## Lessons \(mandatory\)/g) ?? [];
+    const occurrences = rootRule.match(/^## Lessons \(/gm) ?? [];
     expect(occurrences.length).toBe(1);
 
     expect(second.skipped.length).toBeGreaterThan(0);
@@ -51,7 +51,7 @@ describe('scaffoldLessons', () => {
     const rootRule = readFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), 'utf8');
     expect(rootRule).toContain('## Custom Section');
     expect(rootRule).toContain('Keep me intact.');
-    expect(rootRule).toContain('## Lessons (mandatory)');
+    expect(rootRule).toContain('## Lessons (MUST do — non-negotiable)');
   });
 
   it('normalizes append when existing root rule does not end with a newline', () => {
@@ -62,7 +62,7 @@ describe('scaffoldLessons', () => {
     scaffoldLessons(projectRoot);
 
     const rootRule = readFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), 'utf8');
-    expect(rootRule).toMatch(/Last line no newline\n+## Lessons \(mandatory\)/);
+    expect(rootRule).toMatch(/Last line no newline\n+## Lessons \(/);
     expect(rootRule.endsWith('\n')).toBe(true);
   });
 });

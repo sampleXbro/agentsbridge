@@ -25,7 +25,7 @@ describe('runInit --lessons', () => {
     expect(existsSync(paths.topicsDir)).toBe(true);
 
     const rootRule = readFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), 'utf8');
-    expect(rootRule).toContain('## Lessons (mandatory)');
+    expect(rootRule).toContain('## Lessons (MUST do — non-negotiable)');
 
     expect(result.data.lessons).toBeDefined();
     expect(result.data.lessons!.rootRuleUpdated).toBe(true);
@@ -53,7 +53,7 @@ describe('runInit --lessons', () => {
     const rootRule = readFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), 'utf8');
     expect(rootRule).toContain('## Custom Section');
     expect(rootRule).toContain('Keep me.');
-    expect(rootRule).toContain('## Lessons (mandatory)');
+    expect(rootRule).toContain('## Lessons (MUST do — non-negotiable)');
   });
 
   it('is idempotent — re-running --lessons on a project that already has lessons leaves files intact', async () => {
@@ -65,7 +65,7 @@ describe('runInit --lessons', () => {
     expect(result.data.lessons!.rootRuleUpdated).toBe(false);
 
     const rootRule = readFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), 'utf8');
-    const occurrences = rootRule.match(/## Lessons \(mandatory\)/g) ?? [];
+    const occurrences = rootRule.match(/^## Lessons \(/gm) ?? [];
     expect(occurrences.length).toBe(1);
   });
 

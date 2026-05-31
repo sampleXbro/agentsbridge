@@ -41,15 +41,40 @@ describe('LESSONS_INDEX_TEMPLATE', () => {
 });
 
 describe('LESSONS_PROCEDURAL_RULE', () => {
-  it('declares both Recall and Capture obligations', () => {
-    expect(LESSONS_PROCEDURAL_RULE).toContain('**Recall**');
-    expect(LESSONS_PROCEDURAL_RULE).toContain('**Capture**');
+  it('declares both Recall and Capture rituals as non-negotiable', () => {
+    expect(LESSONS_PROCEDURAL_RULE).toContain('Recall');
+    expect(LESSONS_PROCEDURAL_RULE).toContain('Capture');
     expect(LESSONS_PROCEDURAL_RULE).toContain('process violation');
+    expect(LESSONS_PROCEDURAL_RULE).toContain('MUST');
+  });
+
+  it('uses imperative numbered steps so the agent has an explicit serial protocol', () => {
+    expect(LESSONS_PROCEDURAL_RULE).toMatch(/1\. /);
+    expect(LESSONS_PROCEDURAL_RULE).toMatch(/2\. /);
+    expect(LESSONS_PROCEDURAL_RULE).toMatch(/3\. /);
+  });
+
+  it('pre-empts common rationalizations for both rituals', () => {
+    expect(LESSONS_PROCEDURAL_RULE).toMatch(/Rejected excuses/i);
+    expect(LESSONS_PROCEDURAL_RULE).toMatch(/the edit is small/i);
+    expect(LESSONS_PROCEDURAL_RULE).toMatch(/I'll capture it later/i);
   });
 
   it('names the canonical artifact paths so init scaffolding stays consistent', () => {
     expect(LESSONS_PROCEDURAL_RULE).toContain('.agentsmesh/lessons/index.yaml');
     expect(LESSONS_PROCEDURAL_RULE).toContain('.agentsmesh/lessons/journal.md');
     expect(LESSONS_PROCEDURAL_RULE).toContain('.agentsmesh/lessons/topics/');
+  });
+
+  it('references the standard tool names (Edit / Write / Bash) so trigger semantics are unambiguous', () => {
+    expect(LESSONS_PROCEDURAL_RULE).toContain('Edit');
+    expect(LESSONS_PROCEDURAL_RULE).toContain('Write');
+    expect(LESSONS_PROCEDURAL_RULE).toContain('Bash');
+  });
+
+  it('does NOT reference any package-manager-specific tooling (universal across targets)', () => {
+    expect(LESSONS_PROCEDURAL_RULE).not.toMatch(/pnpm /);
+    expect(LESSONS_PROCEDURAL_RULE).not.toMatch(/npm run/);
+    expect(LESSONS_PROCEDURAL_RULE).not.toMatch(/agentsmesh distill/);
   });
 });

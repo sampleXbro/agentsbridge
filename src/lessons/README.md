@@ -20,9 +20,31 @@ Everything lives under `<projectRoot>/.agentsmesh/lessons/`:
 ```
 
 Topic files are **never projected** to per-target skills folders. The
-procedural rule in `_root.md` tells the agent to read them directly. Universal
-across every supported target — Claude Code, Codex CLI, Cline, Roo Code,
-Cursor, Gemini CLI, Aider, Goose, etc. — because every agent can read a file.
+procedural rule in `_root.md` tells the agent to read them directly using
+its standard `Read` tool, and to capture failures via `Edit`/`Write` on the
+journal and topic files. No CLI, no package-manager assumption, no external
+gate — pure prompt-engineered enforcement that works in every supported
+target (Claude Code, Codex CLI, Cline, Roo Code, Cursor, Gemini CLI, Aider,
+Goose, etc.) because every agent can read and edit files.
+
+## Enforcement model
+
+The procedural rule in `.agentsmesh/rules/_root.md` (projected to every
+target's root) is the single enforcement mechanism. It uses these
+prompt-engineering techniques to maximize agent compliance:
+
+- **Imperative voice with MUST / NEVER caps** — frames the rituals as
+  non-negotiable, not advisory.
+- **Numbered serial protocol** — agents reliably follow ordered steps.
+- **Explicit tool names** (`Edit`, `Write`, `Bash`) and concrete file
+  paths — no abstraction the agent has to resolve.
+- **Pre-empted rationalizations** — common excuses are named and rejected
+  inline so the agent cannot reach for them.
+- **Anchored consequence** — "process violation", "paid-for failure
+  recurs next session", "load-bearing" — visceral framing that triggers
+  compliance.
+- **Stop-then-act protocol** — "Then — and only then — invoke the tool"
+  makes the recall step a hard barrier.
 
 ## Public API
 
@@ -129,7 +151,20 @@ paragraph.
 - Project mode only. `--lessons` combined with `--global` errors out: lessons
   live in the project tree, not the user-level home tree.
 - The subsystem starts empty (zero clusters). Topic files accumulate as the
-  agent captures real failures and runs `pnpm distill` → `pnpm distill:apply`.
+  agent captures real failures and routes them per the procedural rule
+  (append to journal, identify topic via `index.yaml`, edit topic Rules if
+  the lesson is new).
+
+## Optional helper scripts (internal to agentsmesh)
+
+`scripts/distill-lessons.ts` provides `pnpm distill` / `pnpm distill:apply`
+for agentsmesh's own dev workflow — they score new journal bullets against
+the index and write/apply a proposal file. They are NOT part of the consumer
+contract: the procedural rule never references them, and the lessons
+subsystem works end-to-end without them. Consumers can vendor an equivalent
+or compose `parseBullets`, `hashBullet`, `scoreBullet`, `loadLedger`,
+`saveLedger`, and `matchTriggers` from `agentsmesh/lessons` into their own
+routing workflow.
 
 ## Notes for future work
 

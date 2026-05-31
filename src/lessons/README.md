@@ -90,6 +90,24 @@ Distill writes routing decisions into the **ledger only** — never appends to
 topic files. If a new journal bullet teaches a new rule, the author edits the
 topic's Rules section manually. This keeps topics small and authoritative.
 
+## Hard guarantee: `distill:check` gate
+
+The procedural rule in `_root.md` is a *soft contract* — an agent can ignore
+it. The single hard guarantee in the subsystem is `pnpm distill:check`:
+
+- Hashes every bullet in `journal.md`.
+- Asserts every hash is present in `distill-ledger.yaml` (routed to a topic
+  or explicitly `skip`).
+- Exits non-zero if any bullet is unrouted, listing each by line + preview.
+
+This is wired into the project's husky pre-commit chain (in front of
+`typecheck`/`lint:dead`/`test:coverage`), so a commit cannot land while the
+journal contains bullets the developer or agent forgot to distill. Captured
+lessons can no longer be silently dropped.
+
+Same script works as a CI gate (any commit, any branch) — drop
+`pnpm distill:check` into the workflow before merge.
+
 ## Adding the subsystem to a project
 
 **Fresh init (one command):**

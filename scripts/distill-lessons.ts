@@ -1,11 +1,12 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { parseIndex } from '../src/lessons/index-schema.js';
 import { parseBullets } from '../src/lessons/bullet-parser.js';
 import { hashBullet } from '../src/lessons/bullet-hash.js';
 import { loadLedger, saveLedger } from '../src/lessons/ledger.js';
 import { scoreBullet } from '../src/lessons/scoring.js';
+import { checkJournalCoverage } from '../src/lessons/check.js';
 import { lessonsPaths } from '../src/lessons/paths.js';
 
 const paths = lessonsPaths(process.cwd());
@@ -99,6 +100,23 @@ function apply(): void {
   );
 }
 
+function check(): void {
+  const result = checkJournalCoverage(paths);
+  if (result.ok) {
+    console.log(`✓ all ${result.checked} journal bullets routed`);
+    return;
+  }
+  const journalRel = relative(process.cwd(), paths.journal).replaceAll('\\', '/');
+  console.error(`✗ ${result.unrouted.length} unrouted bullet(s) in ${journalRel}:`);
+  for (const bullet of result.unrouted) {
+    console.error(`  L${bullet.lineNumber}  ${bullet.preview}`);
+  }
+  console.error('');
+  console.error('Run `pnpm distill` → review proposal → `pnpm distill:apply`.');
+  process.exit(1);
+}
+
 const mode = process.argv[2] ?? '--propose';
 if (mode === '--apply') apply();
+else if (mode === '--check') check();
 else propose();

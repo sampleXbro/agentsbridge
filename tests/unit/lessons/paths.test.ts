@@ -66,10 +66,19 @@ describe('LESSONS_PROCEDURAL_RULE', () => {
     expect(LESSONS_PROCEDURAL_RULE).toContain('.agentsmesh/lessons/topics/');
   });
 
-  it('references the standard tool names (Edit / Write / Bash) so trigger semantics are unambiguous', () => {
-    expect(LESSONS_PROCEDURAL_RULE).toContain('Edit');
-    expect(LESSONS_PROCEDURAL_RULE).toContain('Write');
-    expect(LESSONS_PROCEDURAL_RULE).toContain('Bash');
+  it('uses tool-agnostic action verbs so the rule works in any harness', () => {
+    // Universal verbs the agent can map to its own toolset.
+    expect(LESSONS_PROCEDURAL_RULE).toMatch(/editing any file/);
+    expect(LESSONS_PROCEDURAL_RULE).toMatch(/running any shell command/);
+  });
+
+  it('does NOT bake in any Claude Code-specific tool names as required actions', () => {
+    // These would couple the rule to one harness. Codex (apply_patch / shell),
+    // Cline (write_to_file / replace_in_file / execute_command), Cursor (IDE),
+    // Gemini CLI, Aider, Goose, etc. all use different tool names.
+    expect(LESSONS_PROCEDURAL_RULE).not.toMatch(/\bEdit\b/);
+    expect(LESSONS_PROCEDURAL_RULE).not.toMatch(/\bWrite\b/);
+    expect(LESSONS_PROCEDURAL_RULE).not.toMatch(/\bBash\b/);
   });
 
   it('does NOT reference any package-manager-specific tooling (universal across targets)', () => {

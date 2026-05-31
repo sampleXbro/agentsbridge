@@ -2,14 +2,14 @@
 
 ## Lessons (MUST do — non-negotiable)
 
-Two rituals. Skipping either is a process violation; the same paid-for failure recurs next session.
+Two rituals. Universal across every agent harness — described in tool-agnostic action verbs ("read a file", "edit a file", "run a shell command"); use whatever read / write-patch / shell-exec tool your harness exposes. Skipping either ritual is a process violation; the same paid-for failure recurs next session.
 
-**Recall — BEFORE every `Edit`, `Write`, or `Bash` tool call:**
+**Recall — BEFORE editing any file or running any shell command:**
 
 1. Read `.agentsmesh/lessons/index.yaml`.
-2. For every cluster whose triggers match — `file_globs` against the target file path, `command_patterns` (regex) against the Bash command, or `keywords` (case-insensitive substring) against the active task description — read its `file` (e.g. `lessons/topics/<topic>.md`).
+2. For every cluster whose triggers match — `file_globs` against the target file path, `command_patterns` (regex) against the shell command, or `keywords` (case-insensitive substring) against the active task description — read its `file` (e.g. `lessons/topics/<topic>.md`).
 3. Apply the loaded rules to the action.
-4. Then — and only then — invoke the tool.
+4. Then — and only then — perform the edit or run the command.
 
 Rejected excuses: *"the edit is small"* → apply it. *"I read this earlier in the session"* → context may have compacted; re-read. *"no trigger fires"* → proceed; you've done your part.
 

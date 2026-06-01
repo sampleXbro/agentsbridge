@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { getTargetLayout } from '../../../../src/targets/catalog/builtin-targets.js';
+import { generate } from '../../../../src/core/generate/engine.js';
+import type { ValidatedConfig } from '../../../../src/config/core/schema.js';
+import type { CanonicalFiles } from '../../../../src/core/types.js';
 
 describe('gemini-cli global layout — paths', () => {
   const layout = getTargetLayout('gemini-cli', 'global')!;
@@ -129,5 +134,97 @@ describe('gemini-cli project layout — mirrorGlobalPath', () => {
 
   it('does not mirror when codex-cli is active', () => {
     expect(mirror('.gemini/skills/api-generator/SKILL.md', ['codex-cli'])).toBeNull();
+  });
+});
+
+describe('gemini-cli global frontmatter preservation', () => {
+  const TEST_DIR = join(tmpdir(), 'am-gemini-cli-global-fm');
+
+  function makeGlobalConfig(): ValidatedConfig {
+    return {
+      version: 1,
+      targets: ['gemini-cli'],
+      features: ['rules', 'skills'],
+      extends: [],
+      overrides: {},
+      collaboration: { strategy: 'merge', lock_features: [] },
+    } as ValidatedConfig;
+  }
+
+  function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
+    return {
+      rules: [],
+      commands: [],
+      agents: [],
+      skills: [],
+      mcp: null,
+      permissions: null,
+      hooks: null,
+      ignore: [],
+      ...overrides,
+    };
+  }
+
+  it('preserves skill frontmatter in global mode', async () => {
+    const results = await generate({
+      config: makeGlobalConfig(),
+      canonical: makeCanonical({
+        skills: [
+          {
+            source: '/proj/.agentsmesh/skills/debugging/SKILL.md',
+            name: 'debugging',
+            description: 'Debug workflow',
+            body: '# Debugging\n\nReproduce first.',
+            supportingFiles: [],
+          },
+        ],
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const skill = results.find(
+      (r) => r.target === 'gemini-cli' && r.path === '.gemini/skills/debugging/SKILL.md',
+    );
+    expect(skill).toBeDefined();
+    expect(skill!.content).toContain('name: debugging');
+    expect(skill!.content).toContain('description: Debug workflow');
+    expect(skill!.content).toContain('# Debugging');
+  });
+
+  it('embeds rule content in root GEMINI.md in global mode', async () => {
+    const results = await generate({
+      config: makeGlobalConfig(),
+      canonical: makeCanonical({
+        rules: [
+          {
+            source: '/proj/.agentsmesh/rules/_root.md',
+            root: true,
+            targets: [],
+            description: 'Root rule',
+            globs: [],
+            body: '# Root\nUse TypeScript.',
+          },
+          {
+            source: '/proj/.agentsmesh/rules/ts.md',
+            root: false,
+            targets: [],
+            description: 'TypeScript standards',
+            globs: ['src/**/*.ts'],
+            body: 'Use strict mode.',
+          },
+        ],
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    // Gemini-CLI embeds all rules into GEMINI.md (no separate non-root rule files)
+    const rootFile = results.find(
+      (r) => r.target === 'gemini-cli' && r.path === '.gemini/GEMINI.md',
+    );
+    expect(rootFile).toBeDefined();
+    expect(rootFile!.content).toContain('TypeScript standards');
+    expect(rootFile!.content).toContain('Use strict mode.');
   });
 });

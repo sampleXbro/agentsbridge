@@ -185,6 +185,71 @@ describe('copilot global layout — engine emits dual mirror end-to-end', () => 
     ]);
   });
 
+  it('preserves skill frontmatter in global mode', async () => {
+    const results = await generate({
+      config: makeConfig(['copilot']),
+      canonical: {
+        ...makeCanonical(),
+        skills: [
+          {
+            source: '/proj/.agentsmesh/skills/debugging/SKILL.md',
+            name: 'debugging',
+            description: 'Debug workflow',
+            body: '# Debugging\n\nReproduce first.',
+            supportingFiles: [],
+          },
+        ],
+      },
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const skill = results.find(
+      (r) => r.target === 'copilot' && r.path === '.copilot/skills/debugging/SKILL.md',
+    );
+    expect(skill).toBeDefined();
+    expect(skill!.content).toContain('name: debugging');
+    expect(skill!.content).toContain('description: Debug workflow');
+    expect(skill!.content).toContain('# Debugging');
+  });
+
+  it('embeds rule content in root instructions in global mode', async () => {
+    const results = await generate({
+      config: makeConfig(['copilot']),
+      canonical: {
+        ...makeCanonical(),
+        rules: [
+          {
+            source: '/proj/.agentsmesh/rules/_root.md',
+            root: true,
+            targets: [],
+            description: 'Root rule',
+            globs: [],
+            body: '# Root\nUse TypeScript.',
+          },
+          {
+            source: '/proj/.agentsmesh/rules/ts.md',
+            root: false,
+            targets: [],
+            description: 'TypeScript standards',
+            globs: ['src/**/*.ts'],
+            body: 'Use strict mode.',
+          },
+        ],
+      },
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    // Copilot aggregates non-root rules into root instructions in global mode
+    const rootFile = results.find(
+      (r) => r.target === 'copilot' && r.path === '.copilot/copilot-instructions.md',
+    );
+    expect(rootFile).toBeDefined();
+    expect(rootFile!.content).toContain('TypeScript standards');
+    expect(rootFile!.content).toContain('Use strict mode.');
+  });
+
   it('skips the .agents/skills/ mirror when codex-cli is also being generated (codex owns that prefix)', async () => {
     const results = await generate({
       config: makeConfig(['copilot', 'codex-cli']),

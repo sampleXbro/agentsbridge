@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { getTargetLayout } from '../../../../src/targets/catalog/builtin-targets.js';
+import { generate } from '../../../../src/core/generate/engine.js';
+import type { ValidatedConfig } from '../../../../src/config/core/schema.js';
+import type { CanonicalFiles } from '../../../../src/core/types.js';
 
 describe('windsurf global layout — paths', () => {
   const layout = getTargetLayout('windsurf', 'global')!;
@@ -97,5 +102,96 @@ describe('windsurf global layout — mirrorGlobalPath', () => {
 
   it('returns null for workflow files (not mirrored)', () => {
     expect(mirror('.codeium/windsurf/global_workflows/deploy.md', [])).toBeNull();
+  });
+});
+
+describe('windsurf global frontmatter preservation', () => {
+  const TEST_DIR = join(tmpdir(), 'am-windsurf-global-fm');
+
+  function makeGlobalConfig(): ValidatedConfig {
+    return {
+      version: 1,
+      targets: ['windsurf'],
+      features: ['rules', 'skills'],
+      extends: [],
+      overrides: {},
+      collaboration: { strategy: 'merge', lock_features: [] },
+    } as ValidatedConfig;
+  }
+
+  function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
+    return {
+      rules: [],
+      commands: [],
+      agents: [],
+      skills: [],
+      mcp: null,
+      permissions: null,
+      hooks: null,
+      ignore: [],
+      ...overrides,
+    };
+  }
+
+  it('preserves skill frontmatter in global mode', async () => {
+    const results = await generate({
+      config: makeGlobalConfig(),
+      canonical: makeCanonical({
+        skills: [
+          {
+            source: '/proj/.agentsmesh/skills/debugging/SKILL.md',
+            name: 'debugging',
+            description: 'Debug workflow',
+            body: '# Debugging\n\nReproduce first.',
+            supportingFiles: [],
+          },
+        ],
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const skill = results.find(
+      (r) => r.target === 'windsurf' && r.path === '.codeium/windsurf/skills/debugging/SKILL.md',
+    );
+    expect(skill).toBeDefined();
+    expect(skill!.content).toContain('name: debugging');
+    expect(skill!.content).toContain('description: Debug workflow');
+    expect(skill!.content).toContain('# Debugging');
+  });
+
+  it('embeds rule content in root global_rules.md in global mode', async () => {
+    const results = await generate({
+      config: makeGlobalConfig(),
+      canonical: makeCanonical({
+        rules: [
+          {
+            source: '/proj/.agentsmesh/rules/_root.md',
+            root: true,
+            targets: [],
+            description: 'Root rule',
+            globs: [],
+            body: '# Root\nUse TypeScript.',
+          },
+          {
+            source: '/proj/.agentsmesh/rules/ts.md',
+            root: false,
+            targets: [],
+            description: 'TypeScript standards',
+            globs: ['src/**/*.ts'],
+            body: 'Use strict mode.',
+          },
+        ],
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    // Windsurf suppresses per-rule files in global mode; content embedded in root
+    const rootFile = results.find(
+      (r) => r.target === 'windsurf' && r.path === '.codeium/windsurf/memories/global_rules.md',
+    );
+    expect(rootFile).toBeDefined();
+    expect(rootFile!.content).toContain('Use TypeScript.');
   });
 });

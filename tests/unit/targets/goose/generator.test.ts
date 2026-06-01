@@ -3,6 +3,8 @@ import type { CanonicalFiles } from '../../../../src/core/types.js';
 import {
   generateRules,
   generateSkills,
+  generateCommands,
+  generateAgents,
   generateIgnore,
 } from '../../../../src/targets/goose/generator.js';
 import {
@@ -136,6 +138,8 @@ describe('generateSkills (goose)', () => {
     expect(results.length).toBeGreaterThanOrEqual(2);
     const skillFile = results.find((r) => r.path === `${GOOSE_SKILLS_DIR}/debugging/SKILL.md`);
     expect(skillFile).toBeDefined();
+    expect(skillFile!.content).toContain('name:');
+    expect(skillFile!.content).toContain('description:');
     expect(skillFile!.content).toContain('Debug workflow');
     const refFile = results.find(
       (r) => r.path === `${GOOSE_SKILLS_DIR}/debugging/references/checklist.md`,
@@ -148,6 +152,75 @@ describe('generateSkills (goose)', () => {
     const canonical = makeCanonical({ skills: [] });
     const results = generateSkills(canonical);
     expect(results).toHaveLength(0);
+  });
+});
+
+describe('generateCommands (goose)', () => {
+  it('projects commands as skill bundles with command frontmatter', () => {
+    const canonical = makeCanonical({
+      commands: [
+        {
+          source: '/proj/.agentsmesh/commands/review.md',
+          name: 'review',
+          description: 'Review code changes',
+          allowedTools: ['Read', 'Grep', 'Bash(git diff)'],
+          body: 'Review the current diff.',
+        },
+      ],
+    });
+
+    const results = generateCommands(canonical);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(`${GOOSE_SKILLS_DIR}/am-command-review/SKILL.md`);
+    expect(results[0].content).toContain('x-agentsmesh-kind: command');
+    expect(results[0].content).toContain('x-agentsmesh-name: review');
+    expect(results[0].content).toContain('name: am-command-review');
+    expect(results[0].content).toContain('description: Review code changes');
+    expect(results[0].content).toContain('x-agentsmesh-allowed-tools:');
+    expect(results[0].content).toContain('Review the current diff.');
+  });
+
+  it('returns empty when no commands exist', () => {
+    expect(generateCommands(makeCanonical())).toHaveLength(0);
+  });
+});
+
+describe('generateAgents (goose)', () => {
+  it('projects agents as skill bundles with agent frontmatter', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          source: '/proj/.agentsmesh/agents/reviewer.md',
+          name: 'reviewer',
+          description: 'Reviews code for quality',
+          tools: ['Read', 'Grep', 'Glob'],
+          disallowedTools: [],
+          model: 'sonnet',
+          permissionMode: 'default',
+          maxTurns: 10,
+          mcpServers: [],
+          hooks: {},
+          skills: [],
+          memory: '',
+          body: 'You review code.',
+        },
+      ],
+    });
+
+    const results = generateAgents(canonical);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(`${GOOSE_SKILLS_DIR}/am-agent-reviewer/SKILL.md`);
+    expect(results[0].content).toContain('x-agentsmesh-kind: agent');
+    expect(results[0].content).toContain('x-agentsmesh-name: reviewer');
+    expect(results[0].content).toContain('name: am-agent-reviewer');
+    expect(results[0].content).toContain('description: Reviews code for quality');
+    expect(results[0].content).toContain('You review code.');
+  });
+
+  it('returns empty when no agents exist', () => {
+    expect(generateAgents(makeCanonical())).toHaveLength(0);
   });
 });
 

@@ -4,6 +4,7 @@ import {
   generateRules,
   generateCommands,
   generateSkills,
+  generateAgents,
 } from '../../../../src/targets/antigravity/generator.js';
 import {
   ANTIGRAVITY_RULES_ROOT,
@@ -193,5 +194,43 @@ describe('generateSkills (antigravity)', () => {
 
   it('returns empty array when no skills exist', () => {
     expect(generateSkills(makeCanonical())).toHaveLength(0);
+  });
+});
+
+describe('generateAgents (antigravity)', () => {
+  it('projects agents as skill bundles with projected agent frontmatter', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          source: '/proj/.agentsmesh/agents/reviewer.md',
+          name: 'reviewer',
+          description: 'Reviews code for quality',
+          tools: ['Read', 'Grep', 'Glob'],
+          disallowedTools: [],
+          model: 'sonnet',
+          permissionMode: 'default',
+          maxTurns: 10,
+          mcpServers: [],
+          hooks: {},
+          skills: [],
+          memory: '',
+          body: 'You review code.',
+        },
+      ],
+    });
+
+    const results = generateAgents(canonical);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(`${ANTIGRAVITY_SKILLS_DIR}/am-agent-reviewer/SKILL.md`);
+    expect(results[0].content).toContain('x-agentsmesh-kind: agent');
+    expect(results[0].content).toContain('x-agentsmesh-name: reviewer');
+    expect(results[0].content).toContain('name: am-agent-reviewer');
+    expect(results[0].content).toContain('description: Reviews code for quality');
+    expect(results[0].content).toContain('You review code.');
+  });
+
+  it('returns empty array when no agents exist', () => {
+    expect(generateAgents(makeCanonical())).toHaveLength(0);
   });
 });

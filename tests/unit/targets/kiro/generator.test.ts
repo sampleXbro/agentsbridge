@@ -3,6 +3,8 @@ import type { CanonicalFiles } from '../../../../src/core/types.js';
 import {
   generateRules,
   generateSkills,
+  generateCommands,
+  generateAgents,
   generateMcp,
   generateHooks,
   generateIgnore,
@@ -11,6 +13,7 @@ import {
   KIRO_AGENTS_MD,
   KIRO_STEERING_DIR,
   KIRO_SKILLS_DIR,
+  KIRO_AGENTS_DIR,
   KIRO_MCP_FILE,
   KIRO_HOOKS_DIR,
   KIRO_IGNORE,
@@ -156,6 +159,110 @@ describe('generateSkills (kiro)', () => {
         (result) => result.path === `${KIRO_SKILLS_DIR}/debugging/references/checklist.md`,
       ),
     ).toBe(true);
+    const skillMd = results.find((result) => result.path.endsWith('SKILL.md'));
+    expect(skillMd!.content).toContain('name:');
+    expect(skillMd!.content).toContain('description:');
+  });
+});
+
+describe('generateCommands (kiro)', () => {
+  it('projects commands as skill bundles with command frontmatter', () => {
+    const canonical = makeCanonical({
+      commands: [
+        {
+          source: '/proj/.agentsmesh/commands/review.md',
+          name: 'review',
+          description: 'Review code changes',
+          allowedTools: ['Read', 'Grep', 'Bash(git diff)'],
+          body: 'Review the current diff.',
+        },
+      ],
+    });
+
+    const results = generateCommands(canonical);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(`${KIRO_SKILLS_DIR}/am-command-review/SKILL.md`);
+    expect(results[0].content).toContain('x-agentsmesh-kind: command');
+    expect(results[0].content).toContain('x-agentsmesh-name: review');
+    expect(results[0].content).toContain('name: am-command-review');
+    expect(results[0].content).toContain('description: Review code changes');
+    expect(results[0].content).toContain('x-agentsmesh-allowed-tools:');
+    expect(results[0].content).toContain('Review the current diff.');
+  });
+
+  it('returns empty when no commands exist', () => {
+    expect(generateCommands(makeCanonical())).toHaveLength(0);
+  });
+});
+
+describe('generateAgents (kiro)', () => {
+  it('generates agent files with native frontmatter in .kiro/agents/', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          source: '/proj/.agentsmesh/agents/reviewer.md',
+          name: 'reviewer',
+          description: 'Reviews code for quality',
+          tools: ['Read', 'Grep', 'Glob'],
+          disallowedTools: [],
+          model: 'sonnet',
+          permissionMode: 'default',
+          maxTurns: 10,
+          mcpServers: [],
+          hooks: {},
+          skills: [],
+          memory: '',
+          body: 'You review code.',
+        },
+      ],
+    });
+
+    const results = generateAgents(canonical);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(`${KIRO_AGENTS_DIR}/reviewer.md`);
+    expect(results[0].content).toContain('name: reviewer');
+    expect(results[0].content).toContain('description: Reviews code for quality');
+    expect(results[0].content).toContain('tools:');
+    expect(results[0].content).toContain('model: sonnet');
+    expect(results[0].content).toContain('You review code.');
+    expect(results[0].content).not.toContain('x-agentsmesh-kind');
+  });
+
+  it('omits undefined optional fields from frontmatter', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          source: '/proj/.agentsmesh/agents/simple.md',
+          name: 'simple',
+          description: 'A simple agent',
+          tools: [],
+          disallowedTools: [],
+          model: '',
+          permissionMode: '',
+          maxTurns: 0,
+          mcpServers: [],
+          hooks: {},
+          skills: [],
+          memory: '',
+          body: 'Do simple things.',
+        },
+      ],
+    });
+
+    const results = generateAgents(canonical);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(`${KIRO_AGENTS_DIR}/simple.md`);
+    expect(results[0].content).toContain('name: simple');
+    expect(results[0].content).toContain('description: A simple agent');
+    expect(results[0].content).not.toContain('tools:');
+    expect(results[0].content).not.toContain('model:');
+  });
+
+  it('returns empty when no agents exist', () => {
+    expect(generateAgents(makeCanonical())).toHaveLength(0);
   });
 });
 

@@ -40,6 +40,7 @@ describe('generateRules (amazon-q)', () => {
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(`${AMAZON_Q_RULES_DIR}/_root.md`);
     expect(results[0].content).toContain('Use TDD.');
+    expect(results[0].content).not.toMatch(/^---/);
   });
 
   it('generates non-root rules in .amazonq/rules/<slug>.md', () => {
@@ -61,6 +62,7 @@ describe('generateRules (amazon-q)', () => {
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(`${AMAZON_Q_RULES_DIR}/typescript.md`);
     expect(results[0].content).toContain('Use strict TypeScript.');
+    expect(results[0].content).not.toMatch(/^---/);
   });
 
   it('generates both root and non-root rules', () => {

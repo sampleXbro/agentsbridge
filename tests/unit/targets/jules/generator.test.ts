@@ -37,6 +37,7 @@ describe('generateRules (jules)', () => {
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(JULES_ROOT_FILE);
     expect(results[0].content).toContain('Use TDD and strict TypeScript.');
+    expect(results[0].content).not.toMatch(/^---/);
   });
 
   it('embeds non-root rules in AGENTS.md', () => {

@@ -1,11 +1,17 @@
 import { describe, it, expect } from 'vitest';
-import { descriptor } from '../../../../src/targets/zed/index.js';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { getBuiltinTargetDefinition } from '../../../../src/targets/catalog/builtin-targets.js';
+import { generate } from '../../../../src/core/generate/engine.js';
+import type { ValidatedConfig } from '../../../../src/config/core/schema.js';
+import type { CanonicalFiles } from '../../../../src/core/types.js';
 import {
   ZED_SETTINGS_FILE,
   ZED_GLOBAL_SETTINGS_FILE,
 } from '../../../../src/targets/zed/constants.js';
 
 describe('zed global layout', () => {
+  const descriptor = getBuiltinTargetDefinition('zed')!;
   it('descriptor.globalSupport exists', () => {
     expect(descriptor.globalSupport).toBeDefined();
   });
@@ -46,5 +52,54 @@ describe('zed global layout', () => {
 
   it('does not declare sharedArtifacts', () => {
     expect(descriptor.sharedArtifacts).toBeUndefined();
+  });
+});
+
+describe('zed global MCP content preservation', () => {
+  const TEST_DIR = join(tmpdir(), 'am-zed-global-fm');
+
+  function makeGlobalConfig(): ValidatedConfig {
+    return {
+      version: 1,
+      targets: ['zed'],
+      features: ['mcp'],
+      extends: [],
+      overrides: {},
+      collaboration: { strategy: 'merge', lock_features: [] },
+    } as ValidatedConfig;
+  }
+
+  function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
+    return {
+      rules: [],
+      commands: [],
+      agents: [],
+      skills: [],
+      mcp: null,
+      permissions: null,
+      hooks: null,
+      ignore: [],
+      ...overrides,
+    };
+  }
+
+  it('preserves MCP server configuration in global mode', async () => {
+    const results = await generate({
+      config: makeGlobalConfig(),
+      canonical: makeCanonical({
+        mcp: {
+          mcpServers: {
+            'my-server': { type: 'stdio', command: 'node', args: ['server.js'], env: {} },
+          },
+        },
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const settings = results.find((r) => r.target === 'zed' && r.path === ZED_GLOBAL_SETTINGS_FILE);
+    expect(settings).toBeDefined();
+    expect(settings!.content).toContain('my-server');
+    expect(settings!.content).toContain('context_servers');
   });
 });

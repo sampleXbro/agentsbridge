@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { descriptor } from '../../../../src/targets/trae/index.js';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { getBuiltinTargetDefinition } from '../../../../src/targets/catalog/builtin-targets.js';
+import { generate } from '../../../../src/core/generate/engine.js';
+import type { ValidatedConfig } from '../../../../src/config/core/schema.js';
+import type { CanonicalFiles } from '../../../../src/core/types.js';
 import {
   TRAE_PROJECT_RULES,
   TRAE_RULES_DIR,
@@ -13,6 +18,7 @@ import {
 } from '../../../../src/targets/trae/constants.js';
 
 describe('trae descriptor global layout', () => {
+  const descriptor = getBuiltinTargetDefinition('trae')!;
   it('descriptor.globalSupport exists', () => {
     expect(descriptor.globalSupport).toBeDefined();
   });
@@ -64,5 +70,85 @@ describe('trae descriptor global layout', () => {
 
   it('global layout has correct rootInstructionPath', () => {
     expect(descriptor.globalSupport!.layout.rootInstructionPath).toBe(TRAE_GLOBAL_ROOT_RULE);
+  });
+});
+
+describe('trae global frontmatter preservation', () => {
+  const TEST_DIR = join(tmpdir(), 'am-trae-global-fm');
+
+  function makeGlobalConfig(): ValidatedConfig {
+    return {
+      version: 1,
+      targets: ['trae'],
+      features: ['rules', 'skills'],
+      extends: [],
+      overrides: {},
+      collaboration: { strategy: 'merge', lock_features: [] },
+    } as ValidatedConfig;
+  }
+
+  function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
+    return {
+      rules: [],
+      commands: [],
+      agents: [],
+      skills: [],
+      mcp: null,
+      permissions: null,
+      hooks: null,
+      ignore: [],
+      ...overrides,
+    };
+  }
+
+  it('preserves embedded skill frontmatter in global mode', async () => {
+    const results = await generate({
+      config: makeGlobalConfig(),
+      canonical: makeCanonical({
+        skills: [
+          {
+            source: '/proj/.agentsmesh/skills/debugging/SKILL.md',
+            name: 'debugging',
+            description: 'Debug workflow',
+            body: '# Debugging\n\nReproduce first.',
+            supportingFiles: [],
+          },
+        ],
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const skill = results.find(
+      (r) => r.target === 'trae' && r.path === `${TRAE_GLOBAL_SKILLS_DIR}/debugging/SKILL.md`,
+    );
+    expect(skill).toBeDefined();
+    expect(skill!.content).toContain('name: debugging');
+    expect(skill!.content).toContain('description: Debug workflow');
+    expect(skill!.content).toContain('# Debugging');
+  });
+
+  it('preserves rule body content in global mode', async () => {
+    const results = await generate({
+      config: makeGlobalConfig(),
+      canonical: makeCanonical({
+        rules: [
+          {
+            source: '/proj/.agentsmesh/rules/_root.md',
+            root: true,
+            targets: [],
+            description: '',
+            globs: [],
+            body: 'Use TDD and strict TypeScript.',
+          },
+        ],
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const rule = results.find((r) => r.target === 'trae' && r.path === TRAE_GLOBAL_ROOT_RULE);
+    expect(rule).toBeDefined();
+    expect(rule!.content).toContain('Use TDD and strict TypeScript.');
   });
 });

@@ -189,9 +189,8 @@ describe('generateSkills (crush)', () => {
 
     expect(results).toHaveLength(2);
     expect(results[0].path).toBe(`${CRUSH_SKILLS_DIR}/api-generator/SKILL.md`);
-    expect(results[0].content).toContain('name:');
-    expect(results[0].content).toContain('description:');
-    expect(results[0].content).toContain('Generate REST API endpoints');
+    expect(results[0].content).toContain('name: api-generator');
+    expect(results[0].content).toContain('description: Generate REST API endpoints');
     expect(results[1].path).toBe(`${CRUSH_SKILLS_DIR}/api-generator/references/checklist.md`);
     expect(results[1].content).toContain('Validate inputs');
   });
@@ -225,8 +224,10 @@ describe('generateCommands (crush)', () => {
     expect(results[0].content).toContain('review');
     const cmd = results.find((r) => r.path.endsWith('SKILL.md'));
     expect(cmd!.content).toContain('x-agentsmesh-kind: command');
-    expect(cmd!.content).toContain('x-agentsmesh-name:');
-    expect(cmd!.content).toContain('description:');
+    expect(cmd!.content).toContain('x-agentsmesh-name: review');
+    expect(cmd!.content).toContain('name: am-command-review');
+    expect(cmd!.content).toContain('description: Review code changes');
+    expect(cmd!.content).toContain('x-agentsmesh-allowed-tools:');
     expect(cmd!.content).toContain('- Read');
   });
 
@@ -267,10 +268,11 @@ describe('generateAgents (crush)', () => {
     expect(results[0].content).toContain('researcher');
     const agent = results.find((r) => r.path.endsWith('SKILL.md'));
     expect(agent!.content).toContain('x-agentsmesh-kind: agent');
-    expect(agent!.content).toContain('x-agentsmesh-name:');
-    expect(agent!.content).toContain('description:');
+    expect(agent!.content).toContain('x-agentsmesh-name: researcher');
+    expect(agent!.content).toContain('name: am-agent-researcher');
+    expect(agent!.content).toContain('description: Research agent');
     expect(agent!.content).toContain('x-agentsmesh-tools:');
-    expect(agent!.content).toContain('x-agentsmesh-model:');
+    expect(agent!.content).toContain('x-agentsmesh-model: claude-sonnet');
   });
 
   it('returns empty when no agents exist', () => {

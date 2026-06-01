@@ -188,6 +188,7 @@ describe('generateCommands (kiro)', () => {
     expect(results[0].content).toContain('name: am-command-review');
     expect(results[0].content).toContain('description: Review code changes');
     expect(results[0].content).toContain('x-agentsmesh-allowed-tools:');
+    expect(results[0].content).toContain('- Read');
     expect(results[0].content).toContain('Review the current diff.');
   });
 

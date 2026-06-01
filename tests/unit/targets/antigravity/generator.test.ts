@@ -227,6 +227,8 @@ describe('generateAgents (antigravity)', () => {
     expect(results[0].content).toContain('x-agentsmesh-name: reviewer');
     expect(results[0].content).toContain('name: am-agent-reviewer');
     expect(results[0].content).toContain('description: Reviews code for quality');
+    expect(results[0].content).toContain('x-agentsmesh-tools:');
+    expect(results[0].content).toContain('x-agentsmesh-model: sonnet');
     expect(results[0].content).toContain('You review code.');
   });
 

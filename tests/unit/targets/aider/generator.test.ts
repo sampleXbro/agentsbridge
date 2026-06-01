@@ -208,6 +208,7 @@ describe('generateCommands (aider)', () => {
     expect(results[0].content).toContain('name: am-command-review');
     expect(results[0].content).toContain('description: Review code changes');
     expect(results[0].content).toContain('x-agentsmesh-allowed-tools:');
+    expect(results[0].content).toContain('- Read');
     expect(results[0].content).toContain('Review the current diff.');
   });
 
@@ -246,6 +247,8 @@ describe('generateAgents (aider)', () => {
     expect(results[0].content).toContain('x-agentsmesh-name: reviewer');
     expect(results[0].content).toContain('name: am-agent-reviewer');
     expect(results[0].content).toContain('description: Reviews code for quality');
+    expect(results[0].content).toContain('x-agentsmesh-tools:');
+    expect(results[0].content).toContain('x-agentsmesh-model: sonnet');
     expect(results[0].content).toContain('You review code.');
   });
 

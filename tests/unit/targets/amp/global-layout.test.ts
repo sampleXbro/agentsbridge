@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { descriptor } from '../../../../src/targets/amp/index.js';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { getBuiltinTargetDefinition } from '../../../../src/targets/catalog/builtin-targets.js';
+import { generate } from '../../../../src/core/generate/engine.js';
+import type { ValidatedConfig } from '../../../../src/config/core/schema.js';
+import type { CanonicalFiles } from '../../../../src/core/types.js';
 import {
   AMP_ROOT_FILE,
   AMP_MCP_FILE,
@@ -10,6 +15,8 @@ import {
 } from '../../../../src/targets/amp/constants.js';
 
 describe('amp global layout', () => {
+  const descriptor = getBuiltinTargetDefinition('amp')!;
+
   it('descriptor.globalSupport exists', () => {
     expect(descriptor.globalSupport).toBeDefined();
   });
@@ -50,5 +57,85 @@ describe('amp global layout', () => {
 
   it('descriptor supports conversion for commands and agents', () => {
     expect(descriptor.supportsConversion).toEqual({ commands: true, agents: true });
+  });
+});
+
+describe('amp global frontmatter preservation', () => {
+  const TEST_DIR = join(tmpdir(), 'am-amp-global-fm');
+
+  function makeGlobalConfig(): ValidatedConfig {
+    return {
+      version: 1,
+      targets: ['amp'],
+      features: ['rules', 'skills'],
+      extends: [],
+      overrides: {},
+      collaboration: { strategy: 'merge', lock_features: [] },
+    } as ValidatedConfig;
+  }
+
+  function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
+    return {
+      rules: [],
+      commands: [],
+      agents: [],
+      skills: [],
+      mcp: null,
+      permissions: null,
+      hooks: null,
+      ignore: [],
+      ...overrides,
+    };
+  }
+
+  it('preserves embedded skill frontmatter in global mode', async () => {
+    const results = await generate({
+      config: makeGlobalConfig(),
+      canonical: makeCanonical({
+        skills: [
+          {
+            source: '/proj/.agentsmesh/skills/debugging/SKILL.md',
+            name: 'debugging',
+            description: 'Debug workflow',
+            body: '# Debugging\n\nReproduce first.',
+            supportingFiles: [],
+          },
+        ],
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const skill = results.find(
+      (r) => r.target === 'amp' && r.path === `${AMP_GLOBAL_SKILLS_DIR}/debugging/SKILL.md`,
+    );
+    expect(skill).toBeDefined();
+    expect(skill!.content).toContain('name: debugging');
+    expect(skill!.content).toContain('description: Debug workflow');
+    expect(skill!.content).toContain('# Debugging');
+  });
+
+  it('preserves rule body content in global mode', async () => {
+    const results = await generate({
+      config: makeGlobalConfig(),
+      canonical: makeCanonical({
+        rules: [
+          {
+            source: '/proj/.agentsmesh/rules/_root.md',
+            root: true,
+            targets: [],
+            description: '',
+            globs: [],
+            body: 'Use TDD and strict TypeScript.',
+          },
+        ],
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const rule = results.find((r) => r.target === 'amp' && r.path === AMP_GLOBAL_ROOT_FILE);
+    expect(rule).toBeDefined();
+    expect(rule!.content).toContain('Use TDD and strict TypeScript.');
   });
 });

@@ -51,6 +51,7 @@ describe('generateRules (crush)', () => {
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(CRUSH_ROOT_FILE);
     expect(results[0].content).toContain('Use TDD and strict TypeScript.');
+    expect(results[0].content).not.toMatch(/^---\n/);
   });
 
   it('embeds non-root rules in AGENTS.md', () => {
@@ -188,6 +189,8 @@ describe('generateSkills (crush)', () => {
 
     expect(results).toHaveLength(2);
     expect(results[0].path).toBe(`${CRUSH_SKILLS_DIR}/api-generator/SKILL.md`);
+    expect(results[0].content).toContain('name:');
+    expect(results[0].content).toContain('description:');
     expect(results[0].content).toContain('Generate REST API endpoints');
     expect(results[1].path).toBe(`${CRUSH_SKILLS_DIR}/api-generator/references/checklist.md`);
     expect(results[1].content).toContain('Validate inputs');
@@ -220,6 +223,11 @@ describe('generateCommands (crush)', () => {
     expect(results[0].path).toContain(CRUSH_SKILLS_DIR);
     expect(results[0].path).toContain('SKILL.md');
     expect(results[0].content).toContain('review');
+    const cmd = results.find((r) => r.path.endsWith('SKILL.md'));
+    expect(cmd!.content).toContain('x-agentsmesh-kind: command');
+    expect(cmd!.content).toContain('x-agentsmesh-name:');
+    expect(cmd!.content).toContain('description:');
+    expect(cmd!.content).toContain('- Read');
   });
 
   it('returns empty when no commands exist', () => {
@@ -240,7 +248,7 @@ describe('generateAgents (crush)', () => {
           body: 'Research topics thoroughly.',
           tools: ['WebSearch'],
           disallowedTools: [],
-          model: '',
+          model: 'claude-sonnet',
           permissionMode: '',
           maxTurns: 0,
           mcpServers: [],
@@ -257,6 +265,12 @@ describe('generateAgents (crush)', () => {
     expect(results[0].path).toContain(CRUSH_SKILLS_DIR);
     expect(results[0].path).toContain('SKILL.md');
     expect(results[0].content).toContain('researcher');
+    const agent = results.find((r) => r.path.endsWith('SKILL.md'));
+    expect(agent!.content).toContain('x-agentsmesh-kind: agent');
+    expect(agent!.content).toContain('x-agentsmesh-name:');
+    expect(agent!.content).toContain('description:');
+    expect(agent!.content).toContain('x-agentsmesh-tools:');
+    expect(agent!.content).toContain('x-agentsmesh-model:');
   });
 
   it('returns empty when no agents exist', () => {
@@ -329,7 +343,11 @@ describe('generateHooks (crush)', () => {
     expect(hooks).toHaveProperty('PreToolUse');
     const preToolUse = hooks['PreToolUse'] as Array<Record<string, unknown>>;
     expect(preToolUse).toHaveLength(1);
-    expect(preToolUse[0]).toMatchObject({ matcher: '^bash$', command: '.crush/hooks/protect.sh', timeout: 10 });
+    expect(preToolUse[0]).toMatchObject({
+      matcher: '^bash$',
+      command: '.crush/hooks/protect.sh',
+      timeout: 10,
+    });
   });
 
   it('returns empty when no hooks exist', () => {

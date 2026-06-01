@@ -45,6 +45,7 @@ describe('generateRules (replit-agent)', () => {
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(REPLIT_AGENT_ROOT_FILE);
     expect(results[0].content).toContain('Use TDD and strict TypeScript.');
+    expect(results[0].content).not.toMatch(/^---\n/);
   });
 
   it('embeds non-root rules in replit.md', () => {
@@ -184,6 +185,8 @@ describe('generateSkills (replit-agent)', () => {
       (r) => r.path === `${REPLIT_AGENT_SKILLS_DIR}/debugging/SKILL.md`,
     );
     expect(skillFile).toBeDefined();
+    expect(skillFile!.content).toContain('name:');
+    expect(skillFile!.content).toContain('description:');
     expect(skillFile!.content).toContain('Debug workflow');
     const refFile = results.find(
       (r) => r.path === `${REPLIT_AGENT_SKILLS_DIR}/debugging/references/checklist.md`,
@@ -219,6 +222,11 @@ describe('generateCommands (replit-agent)', () => {
     expect(results[0].path).toContain(`${REPLIT_AGENT_SKILLS_DIR}/`);
     expect(results[0].path).toContain('SKILL.md');
     expect(results[0].content).toContain('review');
+    const cmd = results.find((r) => r.path.endsWith('SKILL.md'));
+    expect(cmd!.content).toContain('x-agentsmesh-kind: command');
+    expect(cmd!.content).toContain('x-agentsmesh-name:');
+    expect(cmd!.content).toContain('description:');
+    expect(cmd!.content).toContain('- Read');
   });
 
   it('returns empty when no commands exist', () => {
@@ -239,7 +247,7 @@ describe('generateAgents (replit-agent)', () => {
           body: 'Research topics thoroughly.',
           tools: ['WebSearch'],
           disallowedTools: [],
-          model: '',
+          model: 'claude-sonnet',
           permissionMode: '',
           maxTurns: 0,
           mcpServers: [],
@@ -256,6 +264,12 @@ describe('generateAgents (replit-agent)', () => {
     expect(results[0].path).toContain(`${REPLIT_AGENT_SKILLS_DIR}/`);
     expect(results[0].path).toContain('SKILL.md');
     expect(results[0].content).toContain('researcher');
+    const agent = results.find((r) => r.path.endsWith('SKILL.md'));
+    expect(agent!.content).toContain('x-agentsmesh-kind: agent');
+    expect(agent!.content).toContain('x-agentsmesh-name:');
+    expect(agent!.content).toContain('description:');
+    expect(agent!.content).toContain('x-agentsmesh-tools:');
+    expect(agent!.content).toContain('x-agentsmesh-model:');
   });
 
   it('returns empty when no agents exist', () => {

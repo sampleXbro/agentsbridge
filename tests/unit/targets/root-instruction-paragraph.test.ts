@@ -6,6 +6,8 @@ import {
 
 describe('appendAgentsmeshRootInstructionParagraph', () => {
   const CURRENT_BODY_SNIPPET = '`agentsmesh.yaml` selects targets/features';
+  const CURRENT_BODY_MANDATE_SNIPPET =
+    '**MUST follow when changing any rule, agent, command, skill, hook, MCP server, permission, or ignore pattern.**';
 
   const LEGACY_BODY_V1 =
     "AgentsMesh is a config sync library for AI coding tools. The only canonical source of truth is `.agentsmesh/`; files emitted into target formats such as `AGENTS.md`, `.claude/`, `.cursor/`, `.junie/`, and similar directories are generated artifacts. When making changes, edit canonical config first, then regenerate and verify the target outputs. Preserve the library's bidirectional contract: import native tool config into canonical form, generate back to target-specific layouts, and keep projected or embedded features round-trippable rather than treating them as plain text exports.";
@@ -28,12 +30,19 @@ describe('appendAgentsmeshRootInstructionParagraph', () => {
   const LEGACY_BODY_V7 =
     '`.agentsmesh` is the only folder you edit or add these files in: `rules/_root.md` and `rules/*.md` are Markdown rules; `commands/*.md`, `agents/*.md`, and `skills/*/SKILL.md` plus supporting files use Claude-style frontmatter Markdown; `mcp.json` is MCP JSON; `hooks.yaml` and `permissions.yaml` are YAML; `ignore` is gitignore-style text. Do not edit generated tool files; run `agentsmesh generate`.';
 
+  const LEGACY_BODY_V8 =
+    '`agentsmesh.yaml` selects targets/features (`agentsmesh.local.yaml` overrides locally), and `.agentsmesh` is the only place to add or edit canonical items: `rules/_root.md`, `rules/*.md`, `commands/*.md`, `agents/*.md`, `skills/*/SKILL.md` plus supporting files, `mcp.json`, `hooks.yaml`, `permissions.yaml`, and `ignore`; if missing run `agentsmesh init`, use `agentsmesh import --from <tool>` for native configs, `agentsmesh install <source>` or `install --sync` for reusable packs, then run `agentsmesh generate`. Use `diff`, `lint`, `check`, `watch`, `matrix`, and `merge` as needed; never edit generated tool files.';
+
+  const LEGACY_BODY_V9 =
+    '`agentsmesh.yaml` selects targets/features (`agentsmesh.local.yaml` overrides locally), and `.agentsmesh` is the only place to add or edit canonical items: `rules/_root.md`, `rules/*.md`, `commands/*.md`, `agents/*.md`, `skills/*/SKILL.md` plus supporting files, `mcp.json`, `hooks.yaml`, `permissions.yaml`, and `ignore`; if missing run `agentsmesh init`, use `agentsmesh import --from <tool>` for native configs, `agentsmesh install <source>` or `install --sync` for reusable packs, then run `agentsmesh generate`. Use `diff`, `lint`, `check`, `watch`, `matrix`, `merge`, and `refresh` as needed; never edit generated tool files.';
+
   it('appends the headed section to plain content', () => {
     const result = appendAgentsmeshRootInstructionParagraph('First');
     expect(result).toContain('First');
     expect(result).toContain('<!-- agentsmesh:root-generation-contract:start -->');
     expect(result).toContain('## AgentsMesh Generation Contract');
     expect(result).toContain('<!-- agentsmesh:root-generation-contract:end -->');
+    expect(result).toContain(CURRENT_BODY_MANDATE_SNIPPET);
     expect(result).toContain(CURRENT_BODY_SNIPPET);
     expect(result).not.toContain('.agentsmesh/');
   });
@@ -138,5 +147,26 @@ describe('appendAgentsmeshRootInstructionParagraph', () => {
     expect(result.match(/## AgentsMesh Generation Contract/g)).toHaveLength(1);
     expect(result).toContain(CURRENT_BODY_SNIPPET);
     expect(result).not.toContain('`.agentsmesh` is the only folder you edit or add these files in');
+  });
+
+  it('upgrades the v8 body (no `refresh`) under the current heading', () => {
+    const v8Contract = `First\n\n## AgentsMesh Generation Contract\n\n${LEGACY_BODY_V8}`;
+    const result = appendAgentsmeshRootInstructionParagraph(v8Contract);
+    expect(result).toContain('## AgentsMesh Generation Contract');
+    expect(result.match(/## AgentsMesh Generation Contract/g)).toHaveLength(1);
+    expect(result).toContain(CURRENT_BODY_MANDATE_SNIPPET);
+    expect(result).toContain(CURRENT_BODY_SNIPPET);
+    expect(result).not.toContain('`matrix`, and `merge` as needed');
+  });
+
+  it('upgrades the v9 body (pre-mandate) under the current heading', () => {
+    const v9Contract = `First\n\n## AgentsMesh Generation Contract\n\n${LEGACY_BODY_V9}`;
+    const result = appendAgentsmeshRootInstructionParagraph(v9Contract);
+    expect(result).toContain('## AgentsMesh Generation Contract');
+    expect(result.match(/## AgentsMesh Generation Contract/g)).toHaveLength(1);
+    expect(result).toContain(CURRENT_BODY_MANDATE_SNIPPET);
+    expect(result).toContain(CURRENT_BODY_SNIPPET);
+    // v9 had no MUST mandate prefix; the upgraded body must add it exactly once.
+    expect(result.match(/\*\*MUST follow when changing/g)).toHaveLength(1);
   });
 });

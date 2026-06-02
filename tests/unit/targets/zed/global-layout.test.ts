@@ -83,13 +83,13 @@ describe('zed global MCP content preservation', () => {
     };
   }
 
-  it('preserves MCP server configuration in global mode', async () => {
+  it('preserves MCP content in global mode (written to .config/zed/settings.json with context_servers key)', async () => {
     const results = await generate({
       config: makeGlobalConfig(),
       canonical: makeCanonical({
         mcp: {
           mcpServers: {
-            'my-server': { type: 'stdio', command: 'node', args: ['server.js'], env: {} },
+            'test-server': { type: 'stdio', command: 'npx', args: ['-y', '@test/mcp'], env: {} },
           },
         },
       }),
@@ -97,9 +97,14 @@ describe('zed global MCP content preservation', () => {
       scope: 'global',
     });
 
-    const settings = results.find((r) => r.target === 'zed' && r.path === ZED_GLOBAL_SETTINGS_FILE);
-    expect(settings).toBeDefined();
-    expect(settings!.content).toContain('my-server');
-    expect(settings!.content).toContain('context_servers');
+    const mcpFile = results.find((r) => r.target === 'zed' && r.path === ZED_GLOBAL_SETTINGS_FILE);
+    expect(mcpFile).toBeDefined();
+    const parsed = JSON.parse(mcpFile!.content) as Record<string, unknown>;
+    expect(parsed).toHaveProperty('context_servers');
+    const servers = parsed.context_servers as Record<string, unknown>;
+    expect(servers).toHaveProperty('test-server');
+    const server = servers['test-server'] as Record<string, unknown>;
+    expect(server.command).toBe('npx');
+    expect(server.args).toEqual(['-y', '@test/mcp']);
   });
 });

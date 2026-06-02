@@ -184,4 +184,31 @@ describe('qwen-code global frontmatter preservation', () => {
     );
     expect(ruleFile).toBeUndefined();
   });
+
+  it('preserves MCP content in global mode (written to .qwen/settings.json with mcpServers key)', async () => {
+    const results = await generate({
+      config: { ...makeGlobalConfig(), features: ['mcp'] } as ValidatedConfig,
+      canonical: makeCanonical({
+        mcp: {
+          mcpServers: {
+            'test-server': { type: 'stdio', command: 'npx', args: ['-y', '@test/mcp'], env: {} },
+          },
+        },
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const mcpFile = results.find(
+      (r) => r.target === 'qwen-code' && r.path === QWEN_GLOBAL_SETTINGS,
+    );
+    expect(mcpFile).toBeDefined();
+    const parsed = JSON.parse(mcpFile!.content) as Record<string, unknown>;
+    expect(parsed).toHaveProperty('mcpServers');
+    const servers = parsed.mcpServers as Record<string, unknown>;
+    expect(servers).toHaveProperty('test-server');
+    const server = servers['test-server'] as Record<string, unknown>;
+    expect(server.command).toBe('npx');
+    expect(server.args).toEqual(['-y', '@test/mcp']);
+  });
 });

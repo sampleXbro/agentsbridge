@@ -5,6 +5,7 @@ import { getTargetLayout } from '../../../../src/targets/catalog/builtin-targets
 import { generate } from '../../../../src/core/generate/engine.js';
 import type { ValidatedConfig } from '../../../../src/config/core/schema.js';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
+import { WINDSURF_GLOBAL_MCP_FILE } from '../../../../src/targets/windsurf/constants.js';
 
 describe('windsurf global layout — paths', () => {
   const layout = getTargetLayout('windsurf', 'global')!;
@@ -193,5 +194,32 @@ describe('windsurf global frontmatter preservation', () => {
     );
     expect(rootFile).toBeDefined();
     expect(rootFile!.content).toContain('Use TypeScript.');
+  });
+
+  it('preserves MCP content in global mode (written to .codeium/windsurf/mcp_config.json with mcpServers key)', async () => {
+    const results = await generate({
+      config: { ...makeGlobalConfig(), features: ['mcp'] } as ValidatedConfig,
+      canonical: makeCanonical({
+        mcp: {
+          mcpServers: {
+            'test-server': { type: 'stdio', command: 'npx', args: ['-y', '@test/mcp'], env: {} },
+          },
+        },
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const mcpFile = results.find(
+      (r) => r.target === 'windsurf' && r.path === WINDSURF_GLOBAL_MCP_FILE,
+    );
+    expect(mcpFile).toBeDefined();
+    const parsed = JSON.parse(mcpFile!.content) as Record<string, unknown>;
+    expect(parsed).toHaveProperty('mcpServers');
+    const servers = parsed.mcpServers as Record<string, unknown>;
+    expect(servers).toHaveProperty('test-server');
+    const server = servers['test-server'] as Record<string, unknown>;
+    expect(server.command).toBe('npx');
+    expect(server.args).toEqual(['-y', '@test/mcp']);
   });
 });

@@ -14,6 +14,7 @@
 import { basename } from 'node:path';
 import type { CanonicalFiles } from '../../core/types.js';
 import { serializeFrontmatter } from '../../utils/text/markdown.js';
+import { appendEmbeddedRulesBlock } from '../projection/managed-blocks.js';
 import {
   QWEN_CODE_TARGET,
   QWEN_ROOT,
@@ -135,4 +136,18 @@ export function generateMcp(canonical: CanonicalFiles): QwenCodeOutput[] {
 export function generateIgnore(canonical: CanonicalFiles): QwenCodeOutput[] {
   if (!canonical.ignore || canonical.ignore.length === 0) return [];
   return [{ path: QWEN_IGNORE, content: canonical.ignore.join('\n') }];
+}
+
+/**
+ * Render global root instructions with non-root rules embedded.
+ * Used by the global layout's `renderPrimaryRootInstruction` callback.
+ */
+export function renderQwenGlobalInstructions(canonical: CanonicalFiles): string {
+  const root = canonical.rules.find((rule) => rule.root);
+  const nonRootRules = canonical.rules.filter((rule) => {
+    if (rule.root) return false;
+    return rule.targets.length === 0 || rule.targets.includes(QWEN_CODE_TARGET);
+  });
+
+  return appendEmbeddedRulesBlock(root?.body.trim() ?? '', nonRootRules);
 }

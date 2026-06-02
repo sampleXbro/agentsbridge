@@ -160,11 +160,19 @@ describe('qwen-code global frontmatter preservation', () => {
     expect(rootFile!.content).toContain('Use TypeScript.');
   });
 
-  it('suppresses non-root rule files in global mode', async () => {
+  it('embeds non-root rules into root instructions in global mode', async () => {
     const results = await generate({
       config: makeGlobalConfig(),
       canonical: makeCanonical({
         rules: [
+          {
+            source: '/proj/.agentsmesh/rules/_root.md',
+            root: true,
+            targets: [],
+            description: '',
+            globs: [],
+            body: 'Root instructions.',
+          },
           {
             source: '/proj/.agentsmesh/rules/ts.md',
             root: false,
@@ -183,6 +191,12 @@ describe('qwen-code global frontmatter preservation', () => {
       (r) => r.target === 'qwen-code' && r.path.includes('rules/ts.md'),
     );
     expect(ruleFile).toBeUndefined();
+
+    const rootFile = results.find((r) => r.target === 'qwen-code' && r.path === QWEN_GLOBAL_ROOT);
+    expect(rootFile).toBeDefined();
+    expect(rootFile!.content).toContain('Root instructions.');
+    expect(rootFile!.content).toContain('Use strict mode.');
+    expect(rootFile!.content).toContain('TypeScript standards');
   });
 
   it('preserves MCP content in global mode (written to .qwen/settings.json with mcpServers key)', async () => {

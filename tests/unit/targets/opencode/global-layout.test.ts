@@ -241,4 +241,31 @@ describe('opencode global frontmatter preservation', () => {
     expect(rule!.content).toContain('src/**/*.ts');
     expect(rule!.content).toContain('Use strict mode.');
   });
+
+  it('preserves MCP configuration in global mode', async () => {
+    const results = await generate({
+      config: { ...makeGlobalConfig(), features: ['mcp'] } as ValidatedConfig,
+      canonical: makeCanonical({
+        mcp: {
+          mcpServers: {
+            'test-server': { type: 'stdio', command: 'npx', args: ['-y', '@test/mcp'], env: {} },
+          },
+        },
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const mcpFile = results.find(
+      (r) => r.target === 'opencode' && r.path === OPENCODE_GLOBAL_CONFIG_FILE,
+    );
+    expect(mcpFile).toBeDefined();
+    const parsed = JSON.parse(mcpFile!.content) as Record<string, unknown>;
+    expect(parsed).toHaveProperty('mcp');
+    const servers = parsed.mcp as Record<string, unknown>;
+    expect(servers).toHaveProperty('test-server');
+    const server = servers['test-server'] as Record<string, unknown>;
+    expect(server.type).toBe('local');
+    expect(server.command).toEqual(['npx', '-y', '@test/mcp']);
+  });
 });

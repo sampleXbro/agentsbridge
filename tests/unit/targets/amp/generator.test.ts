@@ -6,7 +6,12 @@ import {
   generateCommands,
   generateAgents,
 } from '../../../../src/targets/amp/generator.js';
-import { AMP_ROOT_FILE, AMP_SKILLS_DIR } from '../../../../src/targets/amp/constants.js';
+import { descriptor } from '../../../../src/targets/amp/index.js';
+import {
+  AMP_ROOT_FILE,
+  AMP_SKILLS_DIR,
+  AMP_MCP_FILE,
+} from '../../../../src/targets/amp/constants.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
   return {
@@ -215,5 +220,43 @@ describe('generateAgents (amp)', () => {
     expect(agent!.content).toContain('description: Research agent');
     expect(agent!.content).toContain('x-agentsmesh-tools:');
     expect(agent!.content).toContain('x-agentsmesh-model: claude-sonnet');
+  });
+});
+
+describe('emitScopedSettings — MCP format (amp)', () => {
+  it('emits .amp/settings.json with amp.mcpServers key', () => {
+    const canonical = makeCanonical({
+      mcp: {
+        mcpServers: {
+          context7: {
+            type: 'stdio',
+            command: 'npx',
+            args: ['-y', '@upstash/context7-mcp'],
+            env: {},
+          },
+        },
+      },
+    });
+    const results = descriptor.emitScopedSettings!(canonical, 'project');
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(AMP_MCP_FILE);
+    const parsed = JSON.parse(results[0].content);
+    expect(parsed).toEqual({
+      'amp.mcpServers': {
+        context7: { type: 'stdio', command: 'npx', args: ['-y', '@upstash/context7-mcp'], env: {} },
+      },
+    });
+  });
+
+  it('returns empty array when mcp is null', () => {
+    const canonical = makeCanonical({ mcp: null });
+    const results = descriptor.emitScopedSettings!(canonical, 'project');
+    expect(results).toEqual([]);
+  });
+
+  it('returns empty array when mcpServers is empty', () => {
+    const canonical = makeCanonical({ mcp: { mcpServers: {} } });
+    const results = descriptor.emitScopedSettings!(canonical, 'project');
+    expect(results).toEqual([]);
   });
 });

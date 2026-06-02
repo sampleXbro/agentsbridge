@@ -5,12 +5,14 @@ import {
   generateCommands,
   generateSkills,
   generateAgents,
+  generateMcp,
 } from '../../../../src/targets/antigravity/generator.js';
 import {
   ANTIGRAVITY_RULES_ROOT,
   ANTIGRAVITY_RULES_DIR,
   ANTIGRAVITY_WORKFLOWS_DIR,
   ANTIGRAVITY_SKILLS_DIR,
+  ANTIGRAVITY_MCP_CONFIG,
 } from '../../../../src/targets/antigravity/constants.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
@@ -234,5 +236,41 @@ describe('generateAgents (antigravity)', () => {
 
   it('returns empty array when no agents exist', () => {
     expect(generateAgents(makeCanonical())).toHaveLength(0);
+  });
+});
+
+describe('generateMcp (antigravity)', () => {
+  it('emits mcp_config.json with mcpServers key', () => {
+    const canonical = makeCanonical({
+      mcp: {
+        mcpServers: {
+          context7: {
+            type: 'stdio',
+            command: 'npx',
+            args: ['-y', '@upstash/context7-mcp'],
+            env: {},
+          },
+        },
+      },
+    });
+    const results = generateMcp(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(ANTIGRAVITY_MCP_CONFIG);
+    const parsed = JSON.parse(results[0].content);
+    expect(parsed).toEqual({
+      mcpServers: {
+        context7: { type: 'stdio', command: 'npx', args: ['-y', '@upstash/context7-mcp'], env: {} },
+      },
+    });
+  });
+
+  it('returns empty array when mcp is null', () => {
+    const results = generateMcp(makeCanonical({ mcp: null }));
+    expect(results).toEqual([]);
+  });
+
+  it('returns empty array when mcpServers is empty', () => {
+    const results = generateMcp(makeCanonical({ mcp: { mcpServers: {} } }));
+    expect(results).toEqual([]);
   });
 });

@@ -185,6 +185,28 @@ describe('claude-code global frontmatter preservation', () => {
     expect(server.args).toEqual(['-y', '@test/mcp']);
   });
 
+  it('preserves permissions in global mode', async () => {
+    const results = await generate({
+      config: { ...makeGlobalConfig(), features: ['permissions'] } as ValidatedConfig,
+      canonical: makeCanonical({
+        permissions: { allow: ['Read', 'Grep'], deny: ['Bash(rm *)'], ask: [] },
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const permFile = results.find(
+      (r) => r.target === 'claude-code' && r.path === '.claude/settings.json',
+    );
+    expect(permFile).toBeDefined();
+    const parsed = JSON.parse(permFile!.content) as Record<string, unknown>;
+    expect(parsed).toHaveProperty('permissions');
+    const perms = parsed.permissions as Record<string, unknown>;
+    expect(perms.allow).toEqual(['Read', 'Grep']);
+    expect(perms.deny).toEqual(['Bash(rm *)']);
+    expect(perms.ask).toEqual([]);
+  });
+
   it('preserves hooks configuration in global mode', async () => {
     const results = await generate({
       config: { ...makeGlobalConfig(), features: ['hooks'] } as ValidatedConfig,

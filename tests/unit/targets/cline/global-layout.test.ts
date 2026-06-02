@@ -204,4 +204,34 @@ describe('cline global frontmatter preservation', () => {
     expect(server.command).toBe('npx');
     expect(server.args).toEqual(['-y', '@test/mcp']);
   });
+
+  it('preserves hooks configuration in global mode', async () => {
+    const results = await generate({
+      config: { ...makeGlobalConfig(), features: ['hooks'] } as ValidatedConfig,
+      canonical: makeCanonical({
+        hooks: {
+          PreToolUse: [
+            {
+              matcher: 'Bash',
+              type: 'command' as const,
+              command: './scripts/validate.sh',
+              timeout: 30,
+            },
+          ],
+        },
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    // Cline hooks are shell scripts; .clinerules/hooks/ rewrites to Documents/Cline/Hooks/
+    const hookFile = results.find(
+      (r) => r.target === 'cline' && r.path === 'Documents/Cline/Hooks/pretooluse-0.sh',
+    );
+    expect(hookFile).toBeDefined();
+    expect(hookFile!.content).toContain('#!/usr/bin/env bash');
+    expect(hookFile!.content).toContain('./scripts/validate.sh');
+    expect(hookFile!.content).toContain('agentsmesh-event: PreToolUse');
+    expect(hookFile!.content).toContain('agentsmesh-matcher: Bash');
+  });
 });

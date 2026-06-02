@@ -255,4 +255,42 @@ describe('gemini-cli global frontmatter preservation', () => {
     expect(server.command).toBe('npx');
     expect(server.args).toEqual(['-y', '@test/mcp']);
   });
+
+  it('preserves hooks configuration in global mode', async () => {
+    const results = await generate({
+      config: { ...makeGlobalConfig(), features: ['hooks'] } as ValidatedConfig,
+      canonical: makeCanonical({
+        hooks: {
+          PreToolUse: [
+            {
+              matcher: 'Bash',
+              type: 'command' as const,
+              command: './scripts/validate.sh',
+              timeout: 30,
+            },
+          ],
+        },
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    // Gemini-CLI hooks (partial) are embedded in settings.json; PreToolUse maps to BeforeTool
+    const settingsFile = results.find(
+      (r) => r.target === 'gemini-cli' && r.path === GEMINI_GLOBAL_SETTINGS,
+    );
+    expect(settingsFile).toBeDefined();
+    const parsed = JSON.parse(settingsFile!.content) as Record<string, unknown>;
+    expect(parsed).toHaveProperty('hooks');
+    const hooksObj = parsed.hooks as Record<string, unknown>;
+    expect(hooksObj).toHaveProperty('BeforeTool');
+    const entries = hooksObj.BeforeTool as Array<Record<string, unknown>>;
+    expect(entries).toHaveLength(1);
+    expect(entries[0]!.matcher).toBe('Bash');
+    const hooks = entries[0]!.hooks as Array<Record<string, unknown>>;
+    expect(hooks).toHaveLength(1);
+    expect(hooks[0]!.type).toBe('command');
+    expect(hooks[0]!.command).toBe('./scripts/validate.sh');
+    expect(hooks[0]!.timeout).toBe(30);
+  });
 });

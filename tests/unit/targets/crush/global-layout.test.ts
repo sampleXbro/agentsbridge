@@ -196,4 +196,46 @@ describe('crush global frontmatter preservation', () => {
     expect(server.command).toBe('npx');
     expect(server.args).toEqual(['-y', '@test/mcp']);
   });
+
+  it('preserves hooks configuration in global mode', async () => {
+    const results = await generate({
+      config: {
+        version: 1,
+        targets: ['crush'],
+        features: ['hooks'],
+        extends: [],
+        overrides: {},
+        collaboration: { strategy: 'merge', lock_features: [] },
+      } as ValidatedConfig,
+      canonical: makeCanonical({
+        hooks: {
+          PreToolUse: [
+            {
+              matcher: 'Bash',
+              type: 'command' as const,
+              command: './scripts/validate.sh',
+              timeout: 30,
+            },
+          ],
+        },
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    // Crush hooks are written to crush.json, which rewrites to .config/crush/crush.json in global mode
+    const hooksFile = results.find(
+      (r) => r.target === 'crush' && r.path === CRUSH_GLOBAL_CONFIG_FILE,
+    );
+    expect(hooksFile).toBeDefined();
+    const parsed = JSON.parse(hooksFile!.content) as Record<string, unknown>;
+    expect(parsed).toHaveProperty('hooks');
+    const hooksObj = parsed.hooks as Record<string, unknown>;
+    expect(hooksObj).toHaveProperty('PreToolUse');
+    const entries = hooksObj.PreToolUse as Array<Record<string, unknown>>;
+    expect(entries).toHaveLength(1);
+    expect(entries[0]!.matcher).toBe('Bash');
+    expect(entries[0]!.command).toBe('./scripts/validate.sh');
+    expect(entries[0]!.timeout).toBe(30);
+  });
 });

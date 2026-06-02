@@ -222,4 +222,39 @@ describe('windsurf global frontmatter preservation', () => {
     expect(server.command).toBe('npx');
     expect(server.args).toEqual(['-y', '@test/mcp']);
   });
+
+  it('preserves hooks configuration in global mode', async () => {
+    const results = await generate({
+      config: { ...makeGlobalConfig(), features: ['hooks'] } as ValidatedConfig,
+      canonical: makeCanonical({
+        hooks: {
+          PreToolUse: [
+            {
+              matcher: 'Bash',
+              type: 'command' as const,
+              command: './scripts/validate.sh',
+              timeout: 30,
+            },
+          ],
+        },
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    // Windsurf hooks: .windsurf/hooks.json rewrites to .codeium/windsurf/hooks.json;
+    // PreToolUse maps to pre_tool_use; format is { command, show_output: true }
+    const hooksFile = results.find(
+      (r) => r.target === 'windsurf' && r.path === '.codeium/windsurf/hooks.json',
+    );
+    expect(hooksFile).toBeDefined();
+    const parsed = JSON.parse(hooksFile!.content) as Record<string, unknown>;
+    expect(parsed).toHaveProperty('hooks');
+    const hooksObj = parsed.hooks as Record<string, unknown>;
+    expect(hooksObj).toHaveProperty('pre_tool_use');
+    const entries = hooksObj.pre_tool_use as Array<Record<string, unknown>>;
+    expect(entries).toHaveLength(1);
+    expect(entries[0]!.command).toBe('./scripts/validate.sh');
+    expect(entries[0]!.show_output).toBe(true);
+  });
 });

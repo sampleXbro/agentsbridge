@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { parse as parseToml } from 'smol-toml';
 import { getTargetLayout } from '../../../../src/targets/catalog/builtin-targets.js';
 import { generate } from '../../../../src/core/generate/engine.js';
 import type { ValidatedConfig } from '../../../../src/config/core/schema.js';
@@ -170,5 +171,32 @@ describe('codex-cli global frontmatter preservation', () => {
     expect(rootFile).toBeDefined();
     expect(rootFile!.content).toContain('TypeScript standards');
     expect(rootFile!.content).toContain('Use strict mode.');
+  });
+
+  it('preserves MCP content in global mode (written to .codex/config.toml)', async () => {
+    const results = await generate({
+      config: { ...makeGlobalConfig(), features: ['mcp'] } as ValidatedConfig,
+      canonical: makeCanonical({
+        mcp: {
+          mcpServers: {
+            'test-server': { type: 'stdio', command: 'npx', args: ['-y', '@test/mcp'], env: {} },
+          },
+        },
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const mcpFile = results.find(
+      (r) => r.target === 'codex-cli' && r.path === '.codex/config.toml',
+    );
+    expect(mcpFile).toBeDefined();
+    const parsed = parseToml(mcpFile!.content) as Record<string, unknown>;
+    expect(parsed).toHaveProperty('mcp_servers');
+    const servers = parsed.mcp_servers as Record<string, unknown>;
+    expect(servers).toHaveProperty('test-server');
+    const server = servers['test-server'] as Record<string, unknown>;
+    expect(server.command).toBe('npx');
+    expect(server.args).toEqual(['-y', '@test/mcp']);
   });
 });

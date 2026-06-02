@@ -232,4 +232,38 @@ describe('continue global frontmatter preservation', () => {
     expect(rule).toBeDefined();
     expect(rule!.content).toContain('Use TDD and strict TypeScript.');
   });
+
+  it('preserves MCP content in global mode (written to .continue/mcpServers/agentsmesh.json)', async () => {
+    const results = await generate({
+      config: {
+        version: 1,
+        targets: ['continue'],
+        features: ['mcp'],
+        extends: [],
+        overrides: {},
+        collaboration: { strategy: 'merge', lock_features: [] },
+      } as ValidatedConfig,
+      canonical: makeCanonical({
+        mcp: {
+          mcpServers: {
+            'test-server': { type: 'stdio', command: 'npx', args: ['-y', '@test/mcp'], env: {} },
+          },
+        },
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const mcpFile = results.find(
+      (r) => r.target === 'continue' && r.path === '.continue/mcpServers/agentsmesh.json',
+    );
+    expect(mcpFile).toBeDefined();
+    const parsed = JSON.parse(mcpFile!.content) as Record<string, unknown>;
+    expect(parsed).toHaveProperty('mcpServers');
+    const servers = parsed.mcpServers as Record<string, unknown>;
+    expect(servers).toHaveProperty('test-server');
+    const server = servers['test-server'] as Record<string, unknown>;
+    expect(server.command).toBe('npx');
+    expect(server.args).toEqual(['-y', '@test/mcp']);
+  });
 });

@@ -162,4 +162,38 @@ describe('crush global frontmatter preservation', () => {
     expect(rule).toBeDefined();
     expect(rule!.content).toContain('Use TDD and strict TypeScript.');
   });
+
+  it('preserves MCP content in global mode (written to .config/crush/crush.json)', async () => {
+    const results = await generate({
+      config: {
+        version: 1,
+        targets: ['crush'],
+        features: ['mcp'],
+        extends: [],
+        overrides: {},
+        collaboration: { strategy: 'merge', lock_features: [] },
+      } as ValidatedConfig,
+      canonical: makeCanonical({
+        mcp: {
+          mcpServers: {
+            'test-server': { type: 'stdio', command: 'npx', args: ['-y', '@test/mcp'], env: {} },
+          },
+        },
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const mcpFile = results.find(
+      (r) => r.target === 'crush' && r.path === CRUSH_GLOBAL_CONFIG_FILE,
+    );
+    expect(mcpFile).toBeDefined();
+    const parsed = JSON.parse(mcpFile!.content) as Record<string, unknown>;
+    expect(parsed).toHaveProperty('mcp');
+    const servers = parsed.mcp as Record<string, unknown>;
+    expect(servers).toHaveProperty('test-server');
+    const server = servers['test-server'] as Record<string, unknown>;
+    expect(server.command).toBe('npx');
+    expect(server.args).toEqual(['-y', '@test/mcp']);
+  });
 });

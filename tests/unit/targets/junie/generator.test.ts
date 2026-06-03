@@ -48,12 +48,11 @@ describe('generateRules (junie)', () => {
       ],
     });
     const results = generateRules(canonical);
-    expect(results.some((r) => r.path === JUNIE_DOT_AGENTS)).toBe(true);
-    expect(results.find((r) => r.path === JUNIE_DOT_AGENTS)?.content).toContain('Use TDD.');
-    expect(results.find((r) => r.path === JUNIE_DOT_AGENTS)?.content).not.toContain(
-      '## AgentsMesh Generation Contract',
-    );
     expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(JUNIE_DOT_AGENTS);
+    expect(results[0].content).toContain('Use TDD.');
+    expect(results[0].content).not.toContain('## AgentsMesh Generation Contract');
+    expect(results[0].content).not.toMatch(/^---/);
   });
 
   it('generates non-root rules as .junie/rules/{slug}.md', () => {
@@ -81,6 +80,7 @@ describe('generateRules (junie)', () => {
     const tsRule = results.find((r) => r.path === `${JUNIE_RULES_DIR}/typescript.md`);
     expect(tsRule).toBeDefined();
     expect(tsRule!.content).toContain('Use strict TypeScript.');
+    expect(tsRule!.content).not.toMatch(/^---/);
   });
 
   it('skips non-root rules targeting other agents only', () => {
@@ -235,5 +235,10 @@ describe('generateSkills (junie)', () => {
       `${JUNIE_SKILLS_DIR}/api-generator/SKILL.md`,
       `${JUNIE_SKILLS_DIR}/api-generator/references/route-checklist.md`,
     ]);
+    const skillFile = results.find((r) => r.path === `${JUNIE_SKILLS_DIR}/api-generator/SKILL.md`)!;
+    const parsedSkill = parseFrontmatter(skillFile.content);
+    expect(parsedSkill.frontmatter.name).toBe('api-generator');
+    expect(parsedSkill.frontmatter.description).toBe('API Generator');
+    expect(parsedSkill.body).toContain('Use `references/route-checklist.md`.');
   });
 });

@@ -49,12 +49,17 @@ function subPackSlug(path: string): string {
 
 function targetFromSubPack(sp: SubPack, sourceName: string, sourceForYaml: string): InstallTarget {
   const features = featuresFromLayout(sp.layout);
-  const primaryFeature = features[0];
+  // Only forward `as` for flat-collection sub-packs. Skill-pack sub-packs
+  // (`skills/<kebab>/SKILL.md`) and root-skill sub-packs (`SKILL.md` at the
+  // sub-pack root) need the auto-discovery path; `--as skills` would route
+  // them through the manual single-skill installer, which expects a single
+  // SKILL.md directory and fails on `skills/<kebab>/...` subtrees.
+  const useManualAs = !sp.layout.skillPack && !sp.layout.rootSkill && features.length > 0;
   return {
     name: `${sourceName}-${subPackSlug(sp.path)}`,
     source: sourceForYaml,
     path: sp.path,
-    as: primaryFeature,
+    ...(useManualAs ? { as: features[0] } : {}),
     features,
   };
 }

@@ -150,7 +150,7 @@ describe('builtin descriptor lookup (circular-import contract)', () => {
       const descriptor = BUILTIN_TARGETS[i];
       // A TDZ hole here means a descriptor module imported `getDescriptor`
       // from `registry.ts` during its own init and the resulting cycle
-      // froze undefined slots. See `tasks/lessons.md:248` for the trap.
+      // froze undefined slots. See `.agentsmesh/lessons/journal.md:248` for the trap.
       expect(descriptor, `BUILTIN_TARGETS[${i}] should not be undefined`).toBeDefined();
       expect(typeof descriptor.id).toBe('string');
     }

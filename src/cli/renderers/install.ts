@@ -35,4 +35,10 @@ export function renderInstall(result: InstallCommandResult): void {
       `Skipped ${count} file${count > 1 ? 's' : ''} with invalid frontmatter; see --json for details.`,
     );
   }
+
+  if (data.subPackFailures && data.subPackFailures.length > 0) {
+    for (const f of data.subPackFailures) {
+      logger.warn(`Sub-pack "${f.name}" (${f.path}) failed: ${f.error}`);
+    }
+  }
 }

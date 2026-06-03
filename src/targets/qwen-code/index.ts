@@ -25,6 +25,7 @@ import {
   generateSkills,
   generateMcp,
   generateIgnore,
+  renderQwenGlobalInstructions,
 } from './generator.js';
 import { importFromQwenCode } from './importer.js';
 import { lintRules } from './linter.js';
@@ -83,6 +84,7 @@ const project: TargetLayout = {
 
 const globalLayout: TargetLayout = {
   rootInstructionPath: QWEN_GLOBAL_ROOT,
+  renderPrimaryRootInstruction: renderQwenGlobalInstructions,
   skillDir: QWEN_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [QWEN_GLOBAL_COMMANDS_DIR, QWEN_GLOBAL_AGENTS_DIR, QWEN_GLOBAL_SKILLS_DIR],

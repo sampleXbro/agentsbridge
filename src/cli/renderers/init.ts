@@ -2,25 +2,30 @@
  * Human-readable renderer for init command output.
  */
 
+import { relative } from 'node:path';
 import { logger } from '../../utils/output/logger.js';
 import type { InitCommandResult } from '../commands/init.js';
 
 export function renderInit(result: InitCommandResult): void {
   const { data } = result;
 
-  // Log detected configs info
+  // Lessons-only retrofit (`init --lessons` on an already-initialized project).
+  if (data.lessonsOnly === true && data.lessons !== undefined) {
+    renderLessons(data.lessons);
+    logger.info(`Run 'agentsmesh generate' to project the new lessons rule to every target.`);
+    return;
+  }
+
   if (data.detectedConfigs.length > 0) {
     logger.info(`Found existing configurations: ${data.detectedConfigs.join(', ')}`);
   }
 
-  // Log existing config hint when --yes not passed but configs detected
   if (data.detectedConfigs.length > 0 && data.imported.length === 0) {
     logger.info(
       `Run 'agentsmesh init --yes' to auto-import, or 'agentsmesh import --from <tool>' manually.`,
     );
   }
 
-  // Log each imported file
   if (data.imported.length > 0) {
     logger.info('Auto-importing existing configurations (--yes)...');
     for (const f of data.imported) {
@@ -29,18 +34,35 @@ export function renderInit(result: InitCommandResult): void {
     logger.info(`Imported ${data.imported.length} file(s) from ${data.importedToolCount} tool(s).`);
   }
 
-  // Config file creation
   const targetsSuffix =
     data.imported.length > 0 && data.detectedConfigs.length > 0
       ? ` (targets: ${data.detectedConfigs.join(', ')})`
       : '';
   logger.success(`Created ${data.configFile}${targetsSuffix}`);
-
-  // Local config creation
   logger.success(`Created ${data.localConfigFile}`);
 
-  // Gitignore update
   if (data.gitignoreUpdated) {
     logger.success('Updated .gitignore');
   }
+
+  if (data.lessons !== undefined) {
+    renderLessons(data.lessons);
+  }
+}
+
+function renderLessons(lessons: NonNullable<InitCommandResult['data']['lessons']>): void {
+  const cwd = process.cwd();
+  const rel = (p: string): string => relative(cwd, p).replaceAll('\\', '/');
+  for (const path of lessons.created) {
+    logger.success(`  Created ${rel(path)}`);
+  }
+  for (const path of lessons.skipped) {
+    logger.info(`  Kept ${rel(path)} (already exists)`);
+  }
+  if (lessons.rootRuleUpdated) {
+    logger.success('  Appended Lessons recall paragraph to .agentsmesh/rules/_root.md');
+  } else {
+    logger.info('  .agentsmesh/rules/_root.md already contains the Lessons paragraph');
+  }
+  logger.success('Lessons subsystem ready (.agentsmesh/lessons/).');
 }

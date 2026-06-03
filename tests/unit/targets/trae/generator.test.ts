@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
+import { parseFrontmatter } from '../../../../src/utils/text/markdown.js';
 import {
   generateRules,
   generateSkills,
@@ -48,6 +49,7 @@ describe('generateRules (trae)', () => {
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(TRAE_PROJECT_RULES);
     expect(results[0].content).toContain('Use TDD.');
+    expect(results[0].content).not.toMatch(/^---/);
   });
 
   it('generates non-root rules as .trae/rules/<slug>.md', () => {
@@ -79,6 +81,7 @@ describe('generateRules (trae)', () => {
     const tsRule = results.find((r) => r.path === `${TRAE_RULES_DIR}/typescript.md`);
     expect(tsRule).toBeDefined();
     expect(tsRule?.content).toContain('Use strict TypeScript.');
+    expect(tsRule?.content).not.toMatch(/^---/);
   });
 
   it('skips rules filtered to other targets', () => {
@@ -188,6 +191,10 @@ describe('generateSkills (trae)', () => {
     expect(results).toHaveLength(2);
     expect(results[0].path).toBe(`${TRAE_SKILLS_DIR}/api-generator/SKILL.md`);
     expect(results[1].path).toBe(`${TRAE_SKILLS_DIR}/api-generator/references/checklist.md`);
+
+    const { frontmatter } = parseFrontmatter(results[0].content);
+    expect(frontmatter.name).toBe('api-generator');
+    expect(frontmatter.description).toBe('Generate API endpoints');
   });
 
   it('returns empty for no skills', () => {

@@ -147,10 +147,24 @@ describe('cmdHandlers', () => {
   it('maps init flags to typed options', async () => {
     await cmdHandlers.init({ yes: true, global: true }, []);
     await cmdHandlers.init({}, []);
+    await cmdHandlers.init({ lessons: true }, []);
 
-    expect(runInit).toHaveBeenNthCalledWith(1, process.cwd(), { yes: true, global: true });
-    expect(runInit).toHaveBeenNthCalledWith(2, process.cwd(), { yes: false, global: false });
-    expect(renderInit).toHaveBeenCalledTimes(2);
+    expect(runInit).toHaveBeenNthCalledWith(1, process.cwd(), {
+      yes: true,
+      global: true,
+      lessons: false,
+    });
+    expect(runInit).toHaveBeenNthCalledWith(2, process.cwd(), {
+      yes: false,
+      global: false,
+      lessons: false,
+    });
+    expect(runInit).toHaveBeenNthCalledWith(3, process.cwd(), {
+      yes: false,
+      global: false,
+      lessons: true,
+    });
+    expect(renderInit).toHaveBeenCalledTimes(3);
   });
 
   it('delegates import, diff, lint, check, and merge to their renderers', async () => {

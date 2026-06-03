@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
 import { generateRules } from '../../../../src/targets/zed/generator.js';
-import { ZED_ROOT_FILE } from '../../../../src/targets/zed/constants.js';
+import { descriptor } from '../../../../src/targets/zed/index.js';
+import { ZED_ROOT_FILE, ZED_SETTINGS_FILE } from '../../../../src/targets/zed/constants.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
   return {
@@ -37,6 +38,7 @@ describe('generateRules (zed)', () => {
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(ZED_ROOT_FILE);
     expect(results[0].content).toContain('Use TDD and strict TypeScript.');
+    expect(results[0].content).not.toMatch(/^---/);
   });
 
   it('embeds non-root rules in .rules', () => {
@@ -129,5 +131,43 @@ describe('generateRules (zed)', () => {
     const canonical = makeCanonical({ rules: [] });
     const results = generateRules(canonical);
     expect(results).toHaveLength(0);
+  });
+});
+
+describe('emitScopedSettings — MCP format (zed)', () => {
+  it('emits .zed/settings.json with context_servers key', () => {
+    const canonical = makeCanonical({
+      mcp: {
+        mcpServers: {
+          context7: {
+            type: 'stdio',
+            command: 'npx',
+            args: ['-y', '@upstash/context7-mcp'],
+            env: {},
+          },
+        },
+      },
+    });
+    const results = descriptor.emitScopedSettings!(canonical, 'project');
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(ZED_SETTINGS_FILE);
+    const parsed = JSON.parse(results[0].content);
+    expect(parsed).toEqual({
+      context_servers: {
+        context7: { type: 'stdio', command: 'npx', args: ['-y', '@upstash/context7-mcp'], env: {} },
+      },
+    });
+  });
+
+  it('returns empty array when mcp is null', () => {
+    const canonical = makeCanonical({ mcp: null });
+    const results = descriptor.emitScopedSettings!(canonical, 'project');
+    expect(results).toEqual([]);
+  });
+
+  it('returns empty array when mcpServers is empty', () => {
+    const canonical = makeCanonical({ mcp: { mcpServers: {} } });
+    const results = descriptor.emitScopedSettings!(canonical, 'project');
+    expect(results).toEqual([]);
   });
 });

@@ -13,6 +13,7 @@ import { writeScaffoldFull, writeScaffoldGapFill } from './init-scaffold.js';
 import { resolveScopeContext, type ConfigScope } from '../../config/core/scope.js';
 import type { BuiltinTargetId } from '../../targets/catalog/target-ids.js';
 import type { InitData } from '../command-result.js';
+import { scaffoldLessons } from '../../lessons/init.js';
 
 export interface InitCommandResult {
   exitCode: number;
@@ -89,17 +90,50 @@ export { detectExistingConfigs };
 /**
  * Run the init command.
  * @param projectRoot - Project root (default process.cwd())
- * @param options - Optional flags: yes (auto-import without prompting)
- * @throws Error if already initialized
+ * @param options - Optional flags: yes (auto-import without prompting),
+ *   global (init global scope), lessons (scaffold the lessons subsystem;
+ *   project-mode only; non-destructive — works on an already-initialized
+ *   project to add lessons retroactively).
+ * @throws Error if already initialized (unless --lessons was passed to
+ *   retroactively add the lessons subsystem to an existing init)
  */
 export async function runInit(
   projectRoot: string,
-  options: { yes?: boolean; global?: boolean } = {},
+  options: { yes?: boolean; global?: boolean; lessons?: boolean } = {},
 ): Promise<InitCommandResult> {
   const scope: ConfigScope = options.global === true ? 'global' : 'project';
+  const wantLessons = options.lessons === true;
+
+  if (wantLessons && scope === 'global') {
+    throw new Error('--lessons is project-mode only. Lessons live in the project tree.');
+  }
+
   const context = resolveScopeContext(projectRoot, scope);
   const configPath = join(context.configDir, CONFIG_FILENAME);
-  if (await exists(configPath)) {
+  const alreadyInitialized = await exists(configPath);
+
+  // Lessons-only retrofit path: already-initialized project + --lessons.
+  // Scaffold lessons without touching the existing config/scaffold.
+  if (alreadyInitialized && wantLessons) {
+    const lessons = scaffoldLessons(projectRoot);
+    return {
+      exitCode: 0,
+      data: {
+        scope,
+        configFile: CONFIG_FILENAME,
+        localConfigFile: LOCAL_CONFIG_FILENAME,
+        detectedConfigs: [],
+        imported: [],
+        importedToolCount: 0,
+        scaffoldType: 'none',
+        gitignoreUpdated: false,
+        lessons,
+        lessonsOnly: true,
+      },
+    };
+  }
+
+  if (alreadyInitialized) {
     throw new Error(`Already initialized. ${CONFIG_FILENAME} exists. Remove it first to re-init.`);
   }
 
@@ -153,6 +187,8 @@ export async function runInit(
     gitignoreUpdated = await appendToGitignore(projectRoot);
   }
 
+  const lessons = wantLessons ? scaffoldLessons(projectRoot) : undefined;
+
   return {
     exitCode: 0,
     data: {
@@ -164,6 +200,7 @@ export async function runInit(
       importedToolCount,
       scaffoldType,
       gitignoreUpdated,
+      lessons,
     },
   };
 }

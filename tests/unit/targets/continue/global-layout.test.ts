@@ -4,7 +4,10 @@ import { join } from 'node:path';
 import { parse as yamlParse } from 'yaml';
 import { getTargetLayout } from '../../../../src/targets/catalog/builtin-targets.js';
 import { generateContinueGlobalConfig } from '../../../../src/targets/continue/global-config.js';
+import { generate } from '../../../../src/core/generate/engine.js';
+import type { ValidatedConfig } from '../../../../src/config/core/schema.js';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
+import { CONTINUE_SKILLS_DIR } from '../../../../src/targets/continue/constants.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
   return {
@@ -162,5 +165,105 @@ describe('generateContinueGlobalConfig', () => {
     expect(result).toHaveLength(1);
     const parsed = yamlParse(result[0].content) as Record<string, unknown>;
     expect(Array.isArray(parsed.mcpServers)).toBe(true);
+  });
+});
+
+describe('continue global frontmatter preservation', () => {
+  const TEST_DIR = join(tmpdir(), 'am-continue-global-fm');
+
+  function makeGlobalConfig(): ValidatedConfig {
+    return {
+      version: 1,
+      targets: ['continue'],
+      features: ['rules', 'skills'],
+      extends: [],
+      overrides: {},
+      collaboration: { strategy: 'merge', lock_features: [] },
+    } as ValidatedConfig;
+  }
+
+  it('preserves embedded skill frontmatter in global mode', async () => {
+    const results = await generate({
+      config: makeGlobalConfig(),
+      canonical: makeCanonical({
+        skills: [
+          {
+            source: '/proj/.agentsmesh/skills/debugging/SKILL.md',
+            name: 'debugging',
+            description: 'Debug workflow',
+            body: '# Debugging\n\nReproduce first.',
+            supportingFiles: [],
+          },
+        ],
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const skill = results.find(
+      (r) => r.target === 'continue' && r.path === `${CONTINUE_SKILLS_DIR}/debugging/SKILL.md`,
+    );
+    expect(skill).toBeDefined();
+    expect(skill!.content).toContain('name: debugging');
+    expect(skill!.content).toContain('description: Debug workflow');
+    expect(skill!.content).toContain('# Debugging');
+  });
+
+  it('preserves rule body content in global mode', async () => {
+    const results = await generate({
+      config: makeGlobalConfig(),
+      canonical: makeCanonical({
+        rules: [
+          {
+            source: '/proj/.agentsmesh/rules/ts.md',
+            root: false,
+            targets: [],
+            description: 'TypeScript standards',
+            globs: [],
+            body: 'Use TDD and strict TypeScript.',
+          },
+        ],
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const rule = results.find((r) => r.target === 'continue' && r.path === '.continue/rules/ts.md');
+    expect(rule).toBeDefined();
+    expect(rule!.content).toContain('Use TDD and strict TypeScript.');
+  });
+
+  it('preserves MCP content in global mode (written to .continue/mcpServers/agentsmesh.json)', async () => {
+    const results = await generate({
+      config: {
+        version: 1,
+        targets: ['continue'],
+        features: ['mcp'],
+        extends: [],
+        overrides: {},
+        collaboration: { strategy: 'merge', lock_features: [] },
+      } as ValidatedConfig,
+      canonical: makeCanonical({
+        mcp: {
+          mcpServers: {
+            'test-server': { type: 'stdio', command: 'npx', args: ['-y', '@test/mcp'], env: {} },
+          },
+        },
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const mcpFile = results.find(
+      (r) => r.target === 'continue' && r.path === '.continue/mcpServers/agentsmesh.json',
+    );
+    expect(mcpFile).toBeDefined();
+    const parsed = JSON.parse(mcpFile!.content) as Record<string, unknown>;
+    expect(parsed).toHaveProperty('mcpServers');
+    const servers = parsed.mcpServers as Record<string, unknown>;
+    expect(servers).toHaveProperty('test-server');
+    const server = servers['test-server'] as Record<string, unknown>;
+    expect(server.command).toBe('npx');
+    expect(server.args).toEqual(['-y', '@test/mcp']);
   });
 });

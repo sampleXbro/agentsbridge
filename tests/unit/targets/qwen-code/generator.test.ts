@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
+import { parseFrontmatter } from '../../../../src/utils/text/markdown.js';
 import {
   generateRules,
   generateCommands,
@@ -52,6 +53,7 @@ describe('generateRules (qwen-code)', () => {
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(QWEN_ROOT);
     expect(results[0].content).toContain('Use TDD and strict TypeScript.');
+    expect(results[0].content).not.toMatch(/^---/);
   });
 
   it('generates non-root rule to .qwen/rules/<slug>.md', () => {
@@ -72,7 +74,10 @@ describe('generateRules (qwen-code)', () => {
 
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(`${QWEN_RULES_DIR}/typescript.md`);
-    expect(results[0].content).toContain('Use strict mode.');
+    const parsedRule = parseFrontmatter(results[0].content);
+    expect(parsedRule.frontmatter.description).toBe('TypeScript standards');
+    expect(parsedRule.frontmatter.globs).toEqual(['src/**/*.ts']);
+    expect(parsedRule.body).toContain('Use strict mode.');
   });
 
   it('generates both QWEN.md (root) and .qwen/rules/<slug>.md (non-root)', () => {
@@ -198,8 +203,10 @@ describe('generateCommands (qwen-code)', () => {
 
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(`${QWEN_COMMANDS_DIR}/review.md`);
-    expect(results[0].content).toContain('Review the current file for issues');
-    expect(results[0].content).toContain('Read the file and review it.');
+    const parsedCmd = parseFrontmatter(results[0].content);
+    expect(parsedCmd.frontmatter.description).toBe('Review the current file for issues');
+    expect(parsedCmd.frontmatter['allowed-tools']).toEqual(['Read', 'Bash']);
+    expect(parsedCmd.body).toContain('Read the file and review it.');
   });
 
   it('generates multiple commands as separate files', () => {
@@ -295,7 +302,11 @@ describe('generateAgents (qwen-code)', () => {
 
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(`${QWEN_AGENTS_DIR}/researcher.md`);
-    expect(results[0].content).toContain('You are a researcher.');
+    const parsedAgent = parseFrontmatter(results[0].content);
+    expect(parsedAgent.frontmatter.name).toBe('researcher');
+    expect(parsedAgent.frontmatter.description).toBe('Research agent');
+    expect(parsedAgent.frontmatter.tools).toEqual(['WebSearch']);
+    expect(parsedAgent.body).toContain('You are a researcher.');
   });
 
   it('returns empty when no agents exist', () => {
@@ -380,8 +391,10 @@ describe('generateSkills (qwen-code)', () => {
 
     expect(results).toHaveLength(2);
     expect(results[0].path).toBe(`${QWEN_SKILLS_DIR}/api-generator/SKILL.md`);
-    expect(results[0].content).toContain('api-generator');
-    expect(results[0].content).toContain('Generate REST API endpoints');
+    const parsedSkill = parseFrontmatter(results[0].content);
+    expect(parsedSkill.frontmatter.name).toBe('api-generator');
+    expect(parsedSkill.frontmatter.description).toBe('Generate REST API endpoints');
+    expect(parsedSkill.body).toContain('Use this for REST endpoints.');
     expect(results[1].path).toBe(`${QWEN_SKILLS_DIR}/api-generator/references/checklist.md`);
     expect(results[1].content).toContain('API Checklist');
   });

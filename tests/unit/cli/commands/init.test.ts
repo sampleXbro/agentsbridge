@@ -280,6 +280,15 @@ describe('runInit — scaffold (no existing configs)', () => {
     expect((content.match(/\.agentsmesh\/packs\//g) ?? []).length).toBe(0);
   });
 
+  it('reports gitignoreUpdated=false when every managed entry is already present', async () => {
+    writeFileSync(
+      join(TEST_DIR, '.gitignore'),
+      'agentsmesh.local.yaml\n.agentsmeshcache\n.agentsmesh/.lock.tmp\n.agentsmesh/packs/\n',
+    );
+    const result = await runInit(TEST_DIR);
+    expect(result.data.gitignoreUpdated).toBe(false);
+  });
+
   it('skips comment-only and blank lines when checking existing gitignore entries', async () => {
     writeFileSync(join(TEST_DIR, '.gitignore'), '# managed by tooling\n\nnode_modules\n');
     await runInit(TEST_DIR);

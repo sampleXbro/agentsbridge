@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
+import { parseFrontmatter } from '../../../../src/utils/text/markdown.js';
 import {
   generateRules,
   generateSkills,
@@ -48,6 +49,7 @@ describe('generateRules (factory-droid)', () => {
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(FACTORY_DROID_ROOT_FILE);
     expect(results[0].content).toContain('Use TDD and strict TypeScript.');
+    expect(results[0].content).not.toMatch(/^---/);
   });
 
   it('embeds non-root rules in AGENTS.md', () => {
@@ -169,7 +171,10 @@ describe('generateSkills (factory-droid)', () => {
       (r) => r.path === `${FACTORY_DROID_SKILLS_DIR}/debugging/SKILL.md`,
     );
     expect(skillFile).toBeDefined();
-    expect(skillFile!.content).toContain('Debug workflow');
+    const parsedSkill = parseFrontmatter(skillFile!.content);
+    expect(parsedSkill.frontmatter.name).toBe('debugging');
+    expect(parsedSkill.frontmatter.description).toBe('Debug workflow');
+    expect(parsedSkill.body).toContain('Reproduce first.');
     const refFile = results.find(
       (r) => r.path === `${FACTORY_DROID_SKILLS_DIR}/debugging/references/checklist.md`,
     );
@@ -201,9 +206,14 @@ describe('generateCommands (factory-droid)', () => {
     const results = generateCommands(canonical);
 
     expect(results).toHaveLength(1);
-    expect(results[0].path).toContain(`${FACTORY_DROID_SKILLS_DIR}/`);
-    expect(results[0].path).toContain('SKILL.md');
-    expect(results[0].content).toContain('review');
+    expect(results[0].path).toBe(`${FACTORY_DROID_SKILLS_DIR}/am-command-review/SKILL.md`);
+    const parsedCmd = parseFrontmatter(results[0].content);
+    expect(parsedCmd.frontmatter.name).toBe('am-command-review');
+    expect(parsedCmd.frontmatter.description).toBe('Review code changes');
+    expect(parsedCmd.frontmatter['x-agentsmesh-kind']).toBe('command');
+    expect(parsedCmd.frontmatter['x-agentsmesh-name']).toBe('review');
+    expect(parsedCmd.frontmatter['x-agentsmesh-allowed-tools']).toEqual(['Bash', 'Read']);
+    expect(parsedCmd.body).toContain('Run code review.');
   });
 
   it('returns empty when no commands exist', () => {
@@ -239,7 +249,12 @@ describe('generateAgents (factory-droid)', () => {
 
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(`${FACTORY_DROID_DROIDS_DIR}/security-auditor.md`);
-    expect(results[0].content).toContain('security-auditor');
+    const parsed = parseFrontmatter(results[0].content);
+    expect(parsed.frontmatter.name).toBe('security-auditor');
+    expect(parsed.frontmatter.description).toBe('Security audit agent');
+    expect(parsed.frontmatter.model).toBe('inherit');
+    expect(parsed.frontmatter.tools).toEqual(['Read', 'Grep']);
+    expect(parsed.body).toContain('Perform security audits on all code changes.');
   });
 
   it('returns empty when no agents exist', () => {

@@ -1,11 +1,17 @@
 import { describe, it, expect } from 'vitest';
-import { descriptor } from '../../../../src/targets/zed/index.js';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { getBuiltinTargetDefinition } from '../../../../src/targets/catalog/builtin-targets.js';
+import { generate } from '../../../../src/core/generate/engine.js';
+import type { ValidatedConfig } from '../../../../src/config/core/schema.js';
+import type { CanonicalFiles } from '../../../../src/core/types.js';
 import {
   ZED_SETTINGS_FILE,
   ZED_GLOBAL_SETTINGS_FILE,
 } from '../../../../src/targets/zed/constants.js';
 
 describe('zed global layout', () => {
+  const descriptor = getBuiltinTargetDefinition('zed')!;
   it('descriptor.globalSupport exists', () => {
     expect(descriptor.globalSupport).toBeDefined();
   });
@@ -46,5 +52,59 @@ describe('zed global layout', () => {
 
   it('does not declare sharedArtifacts', () => {
     expect(descriptor.sharedArtifacts).toBeUndefined();
+  });
+});
+
+describe('zed global MCP content preservation', () => {
+  const TEST_DIR = join(tmpdir(), 'am-zed-global-fm');
+
+  function makeGlobalConfig(): ValidatedConfig {
+    return {
+      version: 1,
+      targets: ['zed'],
+      features: ['mcp'],
+      extends: [],
+      overrides: {},
+      collaboration: { strategy: 'merge', lock_features: [] },
+    } as ValidatedConfig;
+  }
+
+  function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
+    return {
+      rules: [],
+      commands: [],
+      agents: [],
+      skills: [],
+      mcp: null,
+      permissions: null,
+      hooks: null,
+      ignore: [],
+      ...overrides,
+    };
+  }
+
+  it('preserves MCP content in global mode (written to .config/zed/settings.json with context_servers key)', async () => {
+    const results = await generate({
+      config: makeGlobalConfig(),
+      canonical: makeCanonical({
+        mcp: {
+          mcpServers: {
+            'test-server': { type: 'stdio', command: 'npx', args: ['-y', '@test/mcp'], env: {} },
+          },
+        },
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const mcpFile = results.find((r) => r.target === 'zed' && r.path === ZED_GLOBAL_SETTINGS_FILE);
+    expect(mcpFile).toBeDefined();
+    const parsed = JSON.parse(mcpFile!.content) as Record<string, unknown>;
+    expect(parsed).toHaveProperty('context_servers');
+    const servers = parsed.context_servers as Record<string, unknown>;
+    expect(servers).toHaveProperty('test-server');
+    const server = servers['test-server'] as Record<string, unknown>;
+    expect(server.command).toBe('npx');
+    expect(server.args).toEqual(['-y', '@test/mcp']);
   });
 });

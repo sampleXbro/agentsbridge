@@ -106,6 +106,27 @@ describe('routePickerResult', () => {
     ]);
   });
 
+  it('marketplace branch: surfaces subPackFailures when the installReport carries any', async () => {
+    const installReport = createInstallReport();
+    installReport.subPackFailures.push({
+      name: 'bad-sub',
+      path: 'plugins/bad-sub',
+      error: 'No installable resources',
+    });
+    const recurseInstall = vi.fn().mockResolvedValue(makeRecurseResult());
+    const args = makeBaseArgs({
+      pickerResult: { isMarketplace: true, targets: [{ name: 'sub', path: 'sub' }] },
+      recurseInstall,
+      installReport,
+    });
+
+    const result = await routePickerResult(args);
+
+    expect(result!.data.subPackFailures).toEqual([
+      { name: 'bad-sub', path: 'plugins/bad-sub', error: 'No installable resources' },
+    ]);
+  });
+
   it("single-candidate branch: forwards to recurseInstall with the picked target's flags", async () => {
     const recurseResult = makeRecurseResult();
     const recurseInstall = vi.fn().mockResolvedValue(recurseResult);

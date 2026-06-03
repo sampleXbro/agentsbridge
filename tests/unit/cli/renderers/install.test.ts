@@ -49,4 +49,30 @@ describe('renderInstall', () => {
     expect(output.stdout()).not.toContain('Installed');
     expect(output.stderr()).toContain('Skipped skill "existing": already exists');
   });
+
+  it('surfaces marketplace sub-pack failures as warnings (no silent partial-install)', () => {
+    // Regression for `rsmdt/the-startup --all`: a sub-pack failure left
+    // `subPackFailures` populated in the report but the renderer never
+    // printed it, so partial marketplace installs looked clean.
+    renderInstall({
+      exitCode: 0,
+      data: {
+        source: 'github:org/repo',
+        mode: 'install',
+        dryRun: false,
+        installed: [{ kind: 'skill', name: 'demo', path: '.agentsmesh/skills/demo/SKILL.md' }],
+        skipped: [],
+        subPackFailures: [
+          {
+            name: 'org-repo-plugins-team',
+            path: 'plugins/team',
+            error: 'No supported resources found to install (skills, rules, commands, agents).',
+          },
+        ],
+      },
+    });
+
+    expect(output.stderr()).toContain('Sub-pack "org-repo-plugins-team" (plugins/team) failed');
+    expect(output.stderr()).toContain('No supported resources');
+  });
 });

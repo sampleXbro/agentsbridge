@@ -12,6 +12,7 @@ import { getDescriptor } from '../../targets/catalog/registry.js';
 import { lintSilentFeatureDrops } from './shared/silent-drop-guard.js';
 import { lintHookScriptReferences } from './shared/hook-script-references.js';
 import { lintRuleScopeInversion } from './shared/rule-scope-inversion.js';
+import { lintLessonsSubsystem } from './shared/lessons.js';
 
 const EXCLUDE_DIRS = ['node_modules', '.git', 'dist', 'coverage', '.agentsmesh'];
 
@@ -51,7 +52,7 @@ export async function runLint(
   const hasPermissions = config.features.includes('permissions');
   const hasHooks = config.features.includes('hooks');
 
-  const diagnostics: LintDiagnostic[] = [];
+  const diagnostics: LintDiagnostic[] = [...lintLessonsSubsystem(projectRoot, scope)];
   const projectFiles = scope === 'global' ? [] : await getProjectFiles(projectRoot);
 
   for (const target of targets) {

@@ -4,6 +4,7 @@ import {
   generateRules,
   generateCommands,
   generateMcp,
+  generateAgents,
   generateSkills,
 } from '../../../../src/targets/continue/generator.js';
 import {
@@ -174,5 +175,48 @@ describe('generateSkills (continue)', () => {
       `${CONTINUE_SKILLS_DIR}/api-generator/SKILL.md`,
       `${CONTINUE_SKILLS_DIR}/api-generator/references/route-checklist.md`,
     ]);
+    const skillMd = results.find((result) => result.path.endsWith('SKILL.md'));
+    expect(skillMd!.content).toContain('name:');
+    expect(skillMd!.content).toContain('description:');
+  });
+});
+
+describe('generateAgents (continue)', () => {
+  it('projects agents as skill bundles with projected agent frontmatter', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          source: '/proj/.agentsmesh/agents/reviewer.md',
+          name: 'reviewer',
+          description: 'Reviews code for quality',
+          tools: ['Read', 'Grep', 'Glob'],
+          disallowedTools: [],
+          model: 'sonnet',
+          permissionMode: 'default',
+          maxTurns: 10,
+          mcpServers: [],
+          hooks: {},
+          skills: [],
+          memory: '',
+          body: 'You review code.',
+        },
+      ],
+    });
+
+    const results = generateAgents(canonical);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(`${CONTINUE_SKILLS_DIR}/am-agent-reviewer/SKILL.md`);
+    expect(results[0].content).toContain('x-agentsmesh-kind: agent');
+    expect(results[0].content).toContain('x-agentsmesh-name: reviewer');
+    expect(results[0].content).toContain('name: am-agent-reviewer');
+    expect(results[0].content).toContain('description: Reviews code for quality');
+    expect(results[0].content).toContain('x-agentsmesh-tools:');
+    expect(results[0].content).toContain('x-agentsmesh-model: sonnet');
+    expect(results[0].content).toContain('You review code.');
+  });
+
+  it('returns empty when no agents exist', () => {
+    expect(generateAgents(makeCanonical())).toHaveLength(0);
   });
 });

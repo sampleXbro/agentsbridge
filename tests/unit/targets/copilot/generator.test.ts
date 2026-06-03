@@ -228,23 +228,24 @@ describe('generateRules (copilot)', () => {
     expect(results[0]!.content).toContain('typescript-pro');
   });
 
-  it('generateSkills produces .github/skills/{name}/SKILL.md', () => {
+  it('generateSkills produces .github/skills/{name}/SKILL.md with frontmatter', () => {
     const canonical = makeCanonical({
       skills: [
         {
           source: '',
-          name: 'empty-skill',
-          description: '',
-          body: 'Just do it.',
+          name: 'debugging',
+          description: 'Debug workflow',
+          body: 'Reproduce first.',
           supportingFiles: [],
         },
       ],
     });
     const results = generateSkills(canonical);
     expect(results).toHaveLength(1);
-    expect(results[0]!.path).toBe('.github/skills/empty-skill/SKILL.md');
-    expect(results[0]!.content).toContain('name: empty-skill');
-    expect(results[0]!.content).toContain('Just do it.');
+    expect(results[0]!.path).toBe('.github/skills/debugging/SKILL.md');
+    expect(results[0]!.content).toContain('name: debugging');
+    expect(results[0]!.content).toContain('description: Debug workflow');
+    expect(results[0]!.content).toContain('Reproduce first.');
   });
 
   it('skips non-root rules when targets excludes copilot', () => {

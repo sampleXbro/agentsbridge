@@ -69,4 +69,103 @@ describe('renderInit', () => {
     expect(output.stdout()).toContain('Created .agentsmesh/agentsmesh.yaml\n');
     expect(output.stdout()).not.toContain('(targets:');
   });
+
+  it('renders the lessons block after the standard init when --lessons creates files', () => {
+    renderInit({
+      exitCode: 0,
+      data: {
+        scope: 'project',
+        configFile: 'agentsmesh.yaml',
+        localConfigFile: 'agentsmesh.local.yaml',
+        detectedConfigs: [],
+        imported: [],
+        importedToolCount: 0,
+        scaffoldType: 'full',
+        gitignoreUpdated: false,
+        lessons: {
+          created: [`${process.cwd()}/.agentsmesh/lessons/journal.md`],
+          skipped: [],
+          rootRuleUpdated: true,
+        },
+      },
+    });
+
+    const stdout = output.stdout();
+    expect(stdout).toContain('Created agentsmesh.yaml');
+    expect(stdout).toContain('Created .agentsmesh/lessons/journal.md');
+    expect(stdout).toContain('Appended Lessons recall paragraph to .agentsmesh/rules/_root.md');
+    expect(stdout).toContain('Lessons subsystem ready (.agentsmesh/lessons/).');
+  });
+
+  it('renders Kept lines for skipped paths and notes the already-present paragraph', () => {
+    renderInit({
+      exitCode: 0,
+      data: {
+        scope: 'project',
+        configFile: 'agentsmesh.yaml',
+        localConfigFile: 'agentsmesh.local.yaml',
+        detectedConfigs: [],
+        imported: [],
+        importedToolCount: 0,
+        scaffoldType: 'full',
+        gitignoreUpdated: false,
+        lessons: {
+          created: [],
+          skipped: [`${process.cwd()}/.agentsmesh/lessons/journal.md`],
+          rootRuleUpdated: false,
+        },
+      },
+    });
+
+    const stdout = output.stdout();
+    expect(stdout).toContain('Kept .agentsmesh/lessons/journal.md (already exists)');
+    expect(stdout).toContain('.agentsmesh/rules/_root.md already contains the Lessons paragraph');
+  });
+
+  it('lessons-only retrofit skips standard init lines and prints the generate hint', () => {
+    renderInit({
+      exitCode: 0,
+      data: {
+        scope: 'project',
+        configFile: 'agentsmesh.yaml',
+        localConfigFile: 'agentsmesh.local.yaml',
+        detectedConfigs: [],
+        imported: [],
+        importedToolCount: 0,
+        scaffoldType: 'none',
+        gitignoreUpdated: false,
+        lessonsOnly: true,
+        lessons: {
+          created: [`${process.cwd()}/.agentsmesh/lessons/journal.md`],
+          skipped: [],
+          rootRuleUpdated: true,
+        },
+      },
+    });
+
+    const stdout = output.stdout();
+    expect(stdout).toContain('Lessons subsystem ready (.agentsmesh/lessons/).');
+    expect(stdout).toContain("Run 'agentsmesh generate'");
+    expect(stdout).not.toContain('Created agentsmesh.yaml');
+    expect(stdout).not.toContain('Created agentsmesh.local.yaml');
+  });
+
+  it('lessonsOnly without lessons payload falls through to standard rendering (defensive guard)', () => {
+    renderInit({
+      exitCode: 0,
+      data: {
+        scope: 'project',
+        configFile: 'agentsmesh.yaml',
+        localConfigFile: 'agentsmesh.local.yaml',
+        detectedConfigs: [],
+        imported: [],
+        importedToolCount: 0,
+        scaffoldType: 'full',
+        gitignoreUpdated: false,
+        lessonsOnly: true,
+      },
+    });
+
+    expect(output.stdout()).toContain('Created agentsmesh.yaml');
+  });
 });

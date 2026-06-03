@@ -9,11 +9,13 @@ import { loadScopedConfig } from '../../src/config/core/scope.js';
 import { loadCanonicalWithExtends } from '../../src/canonical/extends/extends.js';
 import { runLint } from '../../src/core/lint/linter.js';
 import { getTargetCatalogEntry } from '../../src/targets/catalog/target-catalog.js';
+import { getTargetPrimaryRootInstructionPath } from '../../src/targets/catalog/builtin-targets.js';
 import { TARGET_IDS, type BuiltinTargetId } from '../../src/targets/catalog/target-ids.js';
 import { TARGET_CONTRACTS, TARGET_SPECIFIC_PREFIXES } from './contracts/index.js';
 import { MATRIX_CONFIG } from './matrix-config.js';
 import { assertParsableGeneratedFile } from './parse-generated-shape.js';
 import { canonicalPathsOnDisk, generatedPathsOnDisk } from './matrix-helpers.js';
+import { LESSONS_PROCEDURAL_RULE } from '../../src/lessons/paths.js';
 
 let dir = '';
 
@@ -27,6 +29,33 @@ function expectNoTargetSpecificPrefixes(content: string): void {
   for (const prefix of TARGET_SPECIFIC_PREFIXES) {
     expect(content).not.toContain(prefix);
   }
+}
+
+function writeLessonsRoot(dir: string): void {
+  writeFileSync(
+    join(dir, '.agentsmesh/rules/_root.md'),
+    `---\nroot: true\ndescription: ""\n---\n\n# Operational Guidelines\n\n${LESSONS_PROCEDURAL_RULE}\n`,
+    'utf8',
+  );
+}
+
+function expectLessonsRitual(content: string): void {
+  expect(content).toContain('**Recall');
+  expect(content).toContain('**Capture');
+  expect(content).toContain('.agentsmesh/lessons/index.yaml');
+  expect(content).toContain('.agentsmesh/lessons/journal.md');
+}
+
+function readGeneratedLessonsRoot(dir: string, target: BuiltinTargetId): string {
+  const rootPath = getTargetPrimaryRootInstructionPath(target);
+  const candidates = rootPath === undefined ? TARGET_CONTRACTS[target].generated : [rootPath];
+  for (const rel of candidates) {
+    const path = join(dir, rel);
+    if (!existsSync(path)) continue;
+    const content = readFileSync(path, 'utf-8');
+    if (content.includes('.agentsmesh/lessons/index.yaml')) return content;
+  }
+  throw new Error(`${target} did not project the lessons ritual into any generated root file`);
 }
 
 describe('target contract matrix (in-process)', () => {
@@ -70,6 +99,17 @@ describe('target contract matrix (in-process)', () => {
     },
   );
 
+  it.each(TARGET_IDS)('projects the lessons ritual into %s root instructions', async (target) => {
+    dir = createCanonicalProject(`version: 1
+targets: [${target}]
+features: [rules]
+`);
+    writeLessonsRoot(dir);
+
+    expect((await runGenerate({ targets: target }, dir, { printMatrix: false })).exitCode).toBe(0);
+    expectLessonsRitual(readGeneratedLessonsRoot(dir, target));
+  });
+
   it.each(TARGET_IDS)('import round-trip paths for %s', async (target) => {
     dir = createCanonicalProject(MATRIX_CONFIG);
     appendGenerateReferenceMatrix(dir);
@@ -86,6 +126,20 @@ describe('target contract matrix (in-process)', () => {
     ) {
       expectNoTargetSpecificPrefixes(root);
     }
+  });
+
+  it.each(TARGET_IDS)('import preserves the lessons ritual for %s', async (target) => {
+    dir = createCanonicalProject(`version: 1
+targets: [${target}]
+features: [rules]
+`);
+    writeLessonsRoot(dir);
+    expect((await runGenerate({ targets: target }, dir, { printMatrix: false })).exitCode).toBe(0);
+    rmSync(join(dir, '.agentsmesh'), { recursive: true, force: true });
+
+    await getTargetCatalogEntry(target).importFrom(dir, { scope: 'project' });
+
+    expectLessonsRitual(readFileSync(join(dir, '.agentsmesh/rules/_root.md'), 'utf-8'));
   });
 
   it.each(TARGET_IDS)('generate → import → generate --check for %s', async (target) => {

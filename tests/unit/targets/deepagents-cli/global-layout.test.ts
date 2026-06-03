@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { descriptor } from '../../../../src/targets/deepagents-cli/index.js';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { getBuiltinTargetDefinition } from '../../../../src/targets/catalog/builtin-targets.js';
+import { generate } from '../../../../src/core/generate/engine.js';
+import type { ValidatedConfig } from '../../../../src/config/core/schema.js';
+import type { CanonicalFiles } from '../../../../src/core/types.js';
 import {
   DEEPAGENTS_CLI_ROOT_FILE,
   DEEPAGENTS_CLI_SKILLS_DIR,
@@ -10,6 +15,8 @@ import {
 } from '../../../../src/targets/deepagents-cli/constants.js';
 
 describe('deepagents-cli global layout', () => {
+  const descriptor = getBuiltinTargetDefinition('deepagents-cli')!;
+
   it('descriptor.globalSupport exists', () => {
     expect(descriptor.globalSupport).toBeDefined();
   });
@@ -81,5 +88,116 @@ describe('deepagents-cli global layout', () => {
   it('detection paths include project-level paths', () => {
     expect(descriptor.detectionPaths).toContain(DEEPAGENTS_CLI_ROOT_FILE);
     expect(descriptor.detectionPaths).toContain(DEEPAGENTS_CLI_MCP_FILE);
+  });
+});
+
+describe('deepagents-cli global frontmatter preservation', () => {
+  const TEST_DIR = join(tmpdir(), 'am-deepagents-cli-global-fm');
+
+  function makeGlobalConfig(): ValidatedConfig {
+    return {
+      version: 1,
+      targets: ['deepagents-cli'],
+      features: ['rules', 'skills'],
+      extends: [],
+      overrides: {},
+      collaboration: { strategy: 'merge', lock_features: [] },
+    } as ValidatedConfig;
+  }
+
+  function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
+    return {
+      rules: [],
+      commands: [],
+      agents: [],
+      skills: [],
+      mcp: null,
+      permissions: null,
+      hooks: null,
+      ignore: [],
+      ...overrides,
+    };
+  }
+
+  it('preserves embedded skill frontmatter in global mode', async () => {
+    const results = await generate({
+      config: makeGlobalConfig(),
+      canonical: makeCanonical({
+        skills: [
+          {
+            source: '/proj/.agentsmesh/skills/debugging/SKILL.md',
+            name: 'debugging',
+            description: 'Debug workflow',
+            body: '# Debugging\n\nReproduce first.',
+            supportingFiles: [],
+          },
+        ],
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const skill = results.find(
+      (r) =>
+        r.target === 'deepagents-cli' &&
+        r.path === `${DEEPAGENTS_CLI_GLOBAL_SKILLS_DIR}/debugging/SKILL.md`,
+    );
+    expect(skill).toBeDefined();
+    expect(skill!.content).toContain('name: debugging');
+    expect(skill!.content).toContain('description: Debug workflow');
+    expect(skill!.content).toContain('# Debugging');
+  });
+
+  it('preserves rule body content in global mode', async () => {
+    const results = await generate({
+      config: makeGlobalConfig(),
+      canonical: makeCanonical({
+        rules: [
+          {
+            source: '/proj/.agentsmesh/rules/_root.md',
+            root: true,
+            targets: [],
+            description: '',
+            globs: [],
+            body: 'Use TDD and strict TypeScript.',
+          },
+        ],
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const rule = results.find(
+      (r) => r.target === 'deepagents-cli' && r.path === DEEPAGENTS_CLI_GLOBAL_ROOT_FILE,
+    );
+    expect(rule).toBeDefined();
+    expect(rule!.content).toContain('Use TDD and strict TypeScript.');
+  });
+
+  it('preserves MCP configuration in global mode', async () => {
+    const results = await generate({
+      config: { ...makeGlobalConfig(), features: ['mcp'] } as ValidatedConfig,
+      canonical: makeCanonical({
+        mcp: {
+          mcpServers: {
+            'test-server': { type: 'stdio', command: 'npx', args: ['-y', '@test/mcp'], env: {} },
+          },
+        },
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const mcpFile = results.find(
+      (r) => r.target === 'deepagents-cli' && r.path === DEEPAGENTS_CLI_GLOBAL_MCP_FILE,
+    );
+    expect(mcpFile).toBeDefined();
+    const parsed = JSON.parse(mcpFile!.content) as Record<string, unknown>;
+    expect(parsed).toHaveProperty('mcpServers');
+    const servers = parsed.mcpServers as Record<string, unknown>;
+    expect(servers).toHaveProperty('test-server');
+    const server = servers['test-server'] as Record<string, unknown>;
+    expect(server.command).toBe('npx');
+    expect(server.args).toEqual(['-y', '@test/mcp']);
   });
 });

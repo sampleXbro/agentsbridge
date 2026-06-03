@@ -2,7 +2,8 @@
  * agentsmesh import — import config from a tool into canonical .agentsmesh/.
  */
 
-import { relative } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
+import { join, relative } from 'node:path';
 import { resolveScopeContext, loadScopedConfig } from '../../config/core/scope.js';
 import {
   TARGET_IDS,
@@ -13,6 +14,8 @@ import { getDescriptor } from '../../targets/catalog/registry.js';
 import { bootstrapPlugins } from '../../plugins/bootstrap-plugins.js';
 import { seedAgentsmeshMcpEntry } from './seed-mcp-entry.js';
 import type { ImportData } from '../command-result.js';
+import { scaffoldLessons } from '../../lessons/init.js';
+import { lessonsPaths } from '../../lessons/paths.js';
 
 export interface ImportCommandResult {
   exitCode: number;
@@ -27,6 +30,17 @@ function mapResults(
     from: relative(rootBase, r.fromPath).replaceAll('\\', '/'),
     to: r.toPath,
   }));
+}
+
+function ensureImportedLessonsSubsystem(rootBase: string, scope: 'project' | 'global'): void {
+  if (scope !== 'project') return;
+  if (existsSync(lessonsPaths(rootBase).index)) return;
+
+  const rootRule = join(rootBase, '.agentsmesh/rules/_root.md');
+  if (!existsSync(rootRule)) return;
+  if (/^## Lessons \(/m.test(readFileSync(rootRule, 'utf8'))) {
+    scaffoldLessons(rootBase);
+  }
 }
 
 /**
@@ -51,7 +65,10 @@ export async function runImport(
     const context = resolveScopeContext(root, scope);
     const target = getTargetCatalogEntry(normalized);
     const results = await target.importFrom(context.rootBase, { scope });
-    if (results.length > 0) await seedAgentsmeshMcpEntry(context.rootBase);
+    if (results.length > 0) {
+      await seedAgentsmeshMcpEntry(context.rootBase);
+      ensureImportedLessonsSubsystem(context.rootBase, scope);
+    }
     return {
       exitCode: 0,
       data: {
@@ -82,7 +99,10 @@ export async function runImport(
   }
 
   const results = await descriptor.generators.importFrom(context.rootBase, { scope });
-  if (results.length > 0) await seedAgentsmeshMcpEntry(context.rootBase);
+  if (results.length > 0) {
+    await seedAgentsmeshMcpEntry(context.rootBase);
+    ensureImportedLessonsSubsystem(context.rootBase, scope);
+  }
   return {
     exitCode: 0,
     data: {

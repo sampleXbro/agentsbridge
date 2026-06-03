@@ -1,37 +1,10 @@
-# Security fixes — implementation plan
+# Lessons Subsystem Review
 
-## Scope
-Three HIGH + two MEDIUM findings from the security audit. TDD throughout — failing test first.
+Goal: review the unpushed lessons functionality and make reading/writing lessons efficient and unified for every supported tool.
 
-## Fix 1 — Plugin source containment (HIGH)
-
-**File:** `src/plugins/load-plugin.ts`
-**Risk:** Any actor who writes `agentsmesh.yaml` can trigger arbitrary code execution via `plugins[].source: "../../tmp/evil.js"`.
-**Change:** After resolving a local plugin source, assert the resolved absolute path stays under `projectRoot`. Reject otherwise. Bare npm specifiers continue to resolve through `node_modules/<source>`.
-**Tests:** `tests/unit/plugins/load-plugin-containment.test.ts`
-
-## Fix 2 — `deepMergeObjects` prototype pollution (HIGH)
-
-**File:** `src/config/core/loader.ts`
-**Change:** Skip keys `__proto__`, `constructor`, `prototype` in the merge loop.
-**Tests:** new test asserting `Object.prototype` is not polluted by hostile YAML.
-
-## Fix 3 — Symlink traversal in `readDirRecursive` + `copyDir` (HIGH)
-
-**File:** `src/utils/filesystem/fs-traverse.ts`
-**Change:** `readDirRecursive` skips both file- and dir-symlinks by default. `copyDir` uses `lstat` and skips symlinks.
-**Tests:** Updated `tests/unit/utils/fs.test.ts` + import-pipeline test.
-
-## Fix 4 — Uninstall manifest name validation (MEDIUM)
-
-**File:** `src/install/core/install-manifest.ts`
-**Change:** `.refine()` on `installManifestEntrySchema.name` matching `validatePackName` in pack-writer.
-
-## Fix 5 — `parseGitSource` protocol allowlist (MEDIUM)
-
-**File:** `src/config/remote/remote-source.ts`
-**Change:** allowlist `https:` + `ssh:` by default; `http:` only with `AGENTSMESH_ALLOW_INSECURE_GIT=1`; drop `file:`.
-
-## Verification
-
-`pnpm typecheck` + `pnpm test`.
+- [x] Review unpushed lessons diff and architecture intent.
+- [x] Audit tests first for cross-target read/write lesson guarantees.
+- [x] Add failing coverage for unified store, path normalization, and import/generate contracts.
+- [x] Implement the smallest unified fix.
+- [x] Run focused and broader verification.
+- [x] Apply post-feature QA before marking complete.

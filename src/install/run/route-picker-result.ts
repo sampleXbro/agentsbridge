@@ -56,6 +56,7 @@ export async function routePickerResult(
             force: true,
             'dry-run': dryRun,
             path: target.path ?? '',
+            as: target.as ?? '',
             target: target.target ?? '',
             name: target.name,
             extends: useExtends,
@@ -78,6 +79,9 @@ export async function routePickerResult(
         dryRun,
         ...(installReport.brokenResources.length > 0
           ? { brokenResources: installReport.brokenResources }
+          : {}),
+        ...(installReport.subPackFailures.length > 0
+          ? { subPackFailures: installReport.subPackFailures }
           : {}),
       },
     };

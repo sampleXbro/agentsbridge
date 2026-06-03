@@ -74,6 +74,41 @@ export {
   getTargetCatalog,
 } from './targets.js';
 
+export {
+  appendLessonToJournal,
+  formatLessonBullet,
+  hashBullet,
+  LESSONS_INDEX_TEMPLATE,
+  LESSONS_JOURNAL_TEMPLATE,
+  LESSONS_PROCEDURAL_RULE,
+  lessonsPaths,
+  loadLedger,
+  loadLessonsIndex,
+  matchTriggers,
+  parseBullets,
+  parseIndex,
+  readTriggeredLessons,
+  saveLedger,
+  scaffoldLessons,
+  scoreBullet,
+  toRelPath,
+  LessonsIndexSchema,
+} from './lessons.js';
+
+export type {
+  AppendLessonResult,
+  LessonCaptureInput,
+  LessonsCluster,
+  LessonsIndex,
+  LessonsPaths,
+  Ledger,
+  ParsedBullet,
+  ScaffoldLessonsResult,
+  ScoredCluster,
+  ToolEvent,
+  TriggeredLesson,
+} from './lessons.js';
+
 export type {
   TargetDescriptor,
   TargetLayout,

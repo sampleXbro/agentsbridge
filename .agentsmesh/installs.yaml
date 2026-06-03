@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://unpkg.com/agentsmesh@0.19.0/schemas/installs.json
+# yaml-language-server: $schema=https://unpkg.com/agentsmesh@0.20.0/schemas/installs.json
 version: 1
 installs:
   - name: addyosmani-agent-skills-pack
@@ -53,6 +53,15 @@ installs:
         - release-manager
     path: skills
     as: skills
+  - name: mattpocock-skills-skills
+    source: github:mattpocock/skills@e3b90b5238f38cdea5996e16861dcae28ef52eda
+    version: e3b90b5238f38cdea5996e16861dcae28ef52eda
+    source_kind: github
+    features:
+      - skills
+    path: skills/productivity
+    as: skills
+    original_ref: HEAD
   - name: njengah-claude-code-cheat-sheet-agents
     source: github:Njengah/claude-code-cheat-sheet@94fbfc0040b11e16070d895c7282a6028d35e89c
     version: 94fbfc0040b11e16070d895c7282a6028d35e89c

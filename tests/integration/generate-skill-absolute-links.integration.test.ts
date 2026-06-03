@@ -42,7 +42,7 @@ describe('generate: skill absolute links → relative (integration, project scop
 
   // Windows absolute paths (`C:\...`) are intentionally preserved by the link
   // rebaser — see `WINDOWS_ABSOLUTE_PATH` in `src/core/reference/link-rebaser.ts`
-  // and the rationale in `tasks/lessons.md` (realpath divergence under
+  // and the rationale in `.agentsmesh/lessons/journal.md` (realpath divergence under
   // 8.3-shortname tmpdirs). On Windows runners this test's input *is* a
   // Windows absolute path, so the rewrite is correctly skipped.
   it.skipIf(process.platform === 'win32')(

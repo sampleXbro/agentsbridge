@@ -1,7 +1,7 @@
 # Testing Strategy — agentsmesh
 
 **Date:** 2026-04-19
-**Status:** Proposed. Supersedes scattered test guidance in `CLAUDE.md` and `tasks/lessons.md`. Does not replace the repo's TDD rule.
+**Status:** Proposed. Supersedes scattered test guidance in `CLAUDE.md` and `.agentsmesh/lessons/journal.md`. Does not replace the repo's TDD rule.
 
 This strategy describes what we test, at what layer, with what fidelity, and how we prevent regressions as the target count grows. It assumes the architectural recommendations in `docs/architecture/review.md` are in scope.
 
@@ -220,7 +220,7 @@ Every command is documented in `README.md` under a "Testing" section.
 1. Reproduce with the smallest targeted test first.
 2. Write the failing test under the **lowest** layer that reproduces it — ideally framework unit or matrix.
 3. Fix the root cause in a single PR. No "temporary" fixes.
-4. Add a one-line entry to `tasks/lessons.md` capturing the failure, root cause, and preventative rule.
+4. Append a one-line bullet to `.agentsmesh/lessons/journal.md` capturing the failure, root cause, and preventative rule, then `pnpm distill` → `pnpm distill:apply` to route it to the matching topic.
 5. If the class of bug could recur across targets, lift the check into the harness or the matrix (§3, §8).
 
 This is the same rule the repo already runs on; this strategy doc makes it explicit.

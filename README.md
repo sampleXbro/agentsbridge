@@ -87,6 +87,10 @@ AGENTS.md
   hooks.yaml
   permissions.yaml
   ignore
+  lessons/
+    index.yaml
+    journal.md
+    topics/
 ```
 
 ```bash
@@ -110,6 +114,12 @@ agentsmesh check      # CI-friendly drift gate against .agentsmesh/.lock
 - **`init`** — creates `agentsmesh.yaml`, `agentsmesh.local.yaml`, and the canonical `.agentsmesh/` directory.
 - **`generate`** — writes `CLAUDE.md`, `AGENTS.md`, `.cursor/`, `.github/copilot-instructions.md`, etc. from canonical sources.
 - **`check`** — exits non-zero if generated files have drifted from `.agentsmesh/.lock`. Drop into CI.
+
+Use `agentsmesh init --lessons` when you want the optional lessons recall +
+capture subsystem. Agents read `.agentsmesh/lessons/index.yaml`, load only
+matching topic files before edits/commands, and append failures to
+`.agentsmesh/lessons/journal.md`; the procedural rule is projected through the
+normal root rule, so it stays tool-agnostic.
 
 If you installed via `npm install -D agentsmesh` (also `pnpm add -D` / `yarn add -D`), prefix each command with `npx`. The CLI ships as both `agentsmesh` and the shorter alias `amsh`.
 
@@ -208,6 +218,7 @@ AgentsMesh canonicalizes all of these — rules, commands, agents, skills, MCP s
 - `hooks.yaml` — pre/post tool hooks.
 - `permissions.yaml` — allow/deny rules where the target supports them.
 - `ignore` — paths the assistant should not read or modify.
+- `lessons/` — optional recall/capture memory: trigger index, append-only journal, and small topic rule files read directly by agents.
 
 Configuration:
 
@@ -222,7 +233,7 @@ Detailed contracts: [Canonical Config](https://samplexbro.github.io/agentsmesh/c
 ## CLI usage
 
 ```bash
-agentsmesh init [--global] [--yes]
+agentsmesh init [--global] [--yes] [--lessons]
 agentsmesh generate [--global] [--targets <csv>] [--check] [--dry-run] [--force] [--refresh-cache]
 agentsmesh import --from <target> [--global]
 agentsmesh convert --from <target> --to <target> [--global] [--dry-run]
@@ -384,6 +395,7 @@ Every config file ships with a generated JSON Schema, so VS Code, JetBrains, and
 | `AGENTSMESH_CACHE` | `~/.agentsmeshcache` | Override the remote-extends / tarball cache directory. |
 | `AGENTSMESH_MAX_TARBALL_MB` | `500` | Maximum GitHub tarball size in MiB the install command will accept. Allowed range: `1`–`4096`. Increase this when installing from large monorepos. |
 | `AGENTSMESH_STRICT_PLUGINS` | `0` | When set to `1`, a failed plugin descriptor import fails the build instead of warning-and-skip. Useful in CI where a missing plugin target is a regression. |
+| `AGENTSMESH_ALLOW_LOCAL_GIT` | `0` | When set to `1`, enables `git+file://` sources in `extends` and `install`. Disabled by default because on shared hosts a world-writable repo could be planted by another user and combined with elevated-artifact emission for local privilege escalation. |
 
 ---
 

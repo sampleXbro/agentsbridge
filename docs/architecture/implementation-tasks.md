@@ -7,7 +7,7 @@
 
 Global pre-flight (read before picking up any task):
 
-1. Read `tasks/lessons.md` end-to-end. Cite applicable lessons in the PR description.
+1. Follow the **Lessons recall** ritual from `.agentsmesh/rules/_root.md`: scan `.agentsmesh/lessons/index.yaml`, read every matched `.agentsmesh/lessons/topics/<topic>.md`. Cite applicable lesson topics in the PR description.
 2. Read `docs/architecture/review.md` for the finding the task implements.
 3. Read `docs/architecture/testing-strategy.md` before writing or modifying tests.
 4. Canonical source of truth is `.agentsmesh/`. Never edit generated artifact trees.
@@ -448,7 +448,7 @@ Maintain the current state of each task here. Update when a task moves.
 
 1. **One PR per task.** No bundling. Open a follow-up issue for anything adjacent.
 2. **No silent format changes.** If a change alters a generated file's bytes (including whitespace), the PR must say so explicitly and include an updated golden if one exists for that file.
-3. **Update `tasks/lessons.md`** whenever a test failure, CI failure, or reviewer correction occurs. One bullet: what failed, root cause, preventative rule.
+3. **Capture** whenever a test failure, CI failure, or reviewer correction occurs: append one bullet to `.agentsmesh/lessons/journal.md` (what failed, root cause, preventative rule), then `pnpm distill` → review the proposal → `pnpm distill:apply`.
 4. **Document user-visible behavior changes** in a changeset (`pnpm changeset`).
 5. **Never** weaken a test assertion to pass a PR. If an assertion is wrong, fix the assertion **and explain why** in the PR description.
 6. **Never** add a new target-name string literal to `src/core/` or `src/cli/`. If a task seems to require it, stop and re-read §3.1 of the review.

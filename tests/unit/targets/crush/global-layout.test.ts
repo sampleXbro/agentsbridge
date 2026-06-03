@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { descriptor } from '../../../../src/targets/crush/index.js';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { getBuiltinTargetDefinition } from '../../../../src/targets/catalog/builtin-targets.js';
+import { generate } from '../../../../src/core/generate/engine.js';
+import type { ValidatedConfig } from '../../../../src/config/core/schema.js';
+import type { CanonicalFiles } from '../../../../src/core/types.js';
 import {
   CRUSH_ROOT_FILE,
   CRUSH_SKILLS_DIR,
@@ -11,6 +16,8 @@ import {
 } from '../../../../src/targets/crush/constants.js';
 
 describe('crush descriptor global layout', () => {
+  const descriptor = getBuiltinTargetDefinition('crush')!;
+
   it('descriptor.globalSupport is defined', () => {
     expect(descriptor.globalSupport).toBeDefined();
   });
@@ -74,5 +81,161 @@ describe('crush descriptor global layout', () => {
     expect(caps.permissions).toBe('none');
     expect(caps.commands).toBe('none');
     expect(caps.agents).toBe('none');
+  });
+});
+
+describe('crush global frontmatter preservation', () => {
+  const TEST_DIR = join(tmpdir(), 'am-crush-global-fm');
+
+  function makeGlobalConfig(): ValidatedConfig {
+    return {
+      version: 1,
+      targets: ['crush'],
+      features: ['rules', 'skills'],
+      extends: [],
+      overrides: {},
+      collaboration: { strategy: 'merge', lock_features: [] },
+    } as ValidatedConfig;
+  }
+
+  function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
+    return {
+      rules: [],
+      commands: [],
+      agents: [],
+      skills: [],
+      mcp: null,
+      permissions: null,
+      hooks: null,
+      ignore: [],
+      ...overrides,
+    };
+  }
+
+  it('preserves embedded skill frontmatter in global mode', async () => {
+    const results = await generate({
+      config: makeGlobalConfig(),
+      canonical: makeCanonical({
+        skills: [
+          {
+            source: '/proj/.agentsmesh/skills/debugging/SKILL.md',
+            name: 'debugging',
+            description: 'Debug workflow',
+            body: '# Debugging\n\nReproduce first.',
+            supportingFiles: [],
+          },
+        ],
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const skill = results.find(
+      (r) => r.target === 'crush' && r.path === `${CRUSH_GLOBAL_SKILLS_DIR}/debugging/SKILL.md`,
+    );
+    expect(skill).toBeDefined();
+    expect(skill!.content).toContain('name: debugging');
+    expect(skill!.content).toContain('description: Debug workflow');
+    expect(skill!.content).toContain('# Debugging');
+  });
+
+  it('preserves rule body content in global mode', async () => {
+    const results = await generate({
+      config: makeGlobalConfig(),
+      canonical: makeCanonical({
+        rules: [
+          {
+            source: '/proj/.agentsmesh/rules/_root.md',
+            root: true,
+            targets: [],
+            description: '',
+            globs: [],
+            body: 'Use TDD and strict TypeScript.',
+          },
+        ],
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const rule = results.find((r) => r.target === 'crush' && r.path === CRUSH_GLOBAL_ROOT_FILE);
+    expect(rule).toBeDefined();
+    expect(rule!.content).toContain('Use TDD and strict TypeScript.');
+  });
+
+  it('preserves MCP content in global mode (written to .config/crush/crush.json)', async () => {
+    const results = await generate({
+      config: {
+        version: 1,
+        targets: ['crush'],
+        features: ['mcp'],
+        extends: [],
+        overrides: {},
+        collaboration: { strategy: 'merge', lock_features: [] },
+      } as ValidatedConfig,
+      canonical: makeCanonical({
+        mcp: {
+          mcpServers: {
+            'test-server': { type: 'stdio', command: 'npx', args: ['-y', '@test/mcp'], env: {} },
+          },
+        },
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const mcpFile = results.find(
+      (r) => r.target === 'crush' && r.path === CRUSH_GLOBAL_CONFIG_FILE,
+    );
+    expect(mcpFile).toBeDefined();
+    const parsed = JSON.parse(mcpFile!.content) as Record<string, unknown>;
+    expect(parsed).toHaveProperty('mcp');
+    const servers = parsed.mcp as Record<string, unknown>;
+    expect(servers).toHaveProperty('test-server');
+    const server = servers['test-server'] as Record<string, unknown>;
+    expect(server.command).toBe('npx');
+    expect(server.args).toEqual(['-y', '@test/mcp']);
+  });
+
+  it('preserves hooks configuration in global mode', async () => {
+    const results = await generate({
+      config: {
+        version: 1,
+        targets: ['crush'],
+        features: ['hooks'],
+        extends: [],
+        overrides: {},
+        collaboration: { strategy: 'merge', lock_features: [] },
+      } as ValidatedConfig,
+      canonical: makeCanonical({
+        hooks: {
+          PreToolUse: [
+            {
+              matcher: 'Bash',
+              type: 'command' as const,
+              command: './scripts/validate.sh',
+              timeout: 30,
+            },
+          ],
+        },
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    // Crush hooks are written to crush.json, which rewrites to .config/crush/crush.json in global mode
+    const hooksFile = results.find(
+      (r) => r.target === 'crush' && r.path === CRUSH_GLOBAL_CONFIG_FILE,
+    );
+    expect(hooksFile).toBeDefined();
+    const parsed = JSON.parse(hooksFile!.content) as Record<string, unknown>;
+    expect(parsed).toHaveProperty('hooks');
+    const hooksObj = parsed.hooks as Record<string, unknown>;
+    expect(hooksObj).toHaveProperty('PreToolUse');
+    const entries = hooksObj.PreToolUse as Array<Record<string, unknown>>;
+    expect(entries).toHaveLength(1);
+    expect(entries[0]!.matcher).toBe('Bash');
+    expect(entries[0]!.command).toBe('./scripts/validate.sh');
+    expect(entries[0]!.timeout).toBe(30);
   });
 });

@@ -4,9 +4,29 @@ always_apply: true
 
 # Operational Guidelines
 
-## Session Start
+## Lessons (MUST do — non-negotiable)
 
-- Read `tasks/lessons.md` before doing any work. Apply relevant lessons.
+Two rituals. Universal across every agent harness — described in tool-agnostic action verbs ("read a file", "edit a file", "run a shell command"); use whatever read / write-patch / shell-exec tool your harness exposes. Skipping either ritual is a process violation; the same paid-for failure recurs next session.
+
+**Recall — BEFORE editing any file or running any shell command:**
+
+1. Read `.agentsmesh/lessons/index.yaml`.
+2. For every cluster whose triggers match — `file_globs` against the target file path, `command_patterns` (regex) against the shell command, or `keywords` (case-insensitive substring) against the active task description — read its `file` (e.g. `.agentsmesh/lessons/topics/<topic>.md`).
+3. Apply the loaded rules to the action.
+4. Then — and only then — perform the edit or run the command.
+
+Rejected excuses: *"the edit is small"* → apply it. *"I read this earlier in the session"* → context may have compacted; re-read. *"no trigger fires"* → proceed; you've done your part.
+
+**Capture — IMMEDIATELY after any failure** (test, CI, lint, code review, user correction, regression you spotted yourself, OR any mistake by anyone in the loop):
+
+1. Append one bullet to `.agentsmesh/lessons/journal.md` in this exact shape:
+   `- **<short heading>**: <what went wrong>. <root cause>. <imperative rule that prevents recurrence>.`
+2. Read `.agentsmesh/lessons/index.yaml` and identify which topic the lesson belongs to (use the `summary:` fields).
+3. If the lesson teaches a NEW rule: edit that topic's `## Rules` section to add it, citing `(Evidence: L<journal-line>)`. If it only reinforces an existing rule, the journal entry alone suffices.
+
+Rejected excuses: *"it wasn't really a failure"* → if you fixed something, it was. *"I'll capture it later"* → no; do it now while context is fresh. *"no topic fits"* → still record in journal; an unrouted bullet is recoverable, a forgotten one is not.
+
+**These two rituals are load-bearing. Treat them with the same discipline as TDD.**
 
 ## Workflow
 
@@ -19,12 +39,6 @@ always_apply: true
 ### Subagents
 
 - Use subagents liberally for research, exploration, and parallel analysis. One tack per subagent.
-
-### Lessons
-
-- **When**: user correction, test failure, CI failure, code review feedback, or any other mistake signal.
-- **How**: add a bullet to `tasks/lessons.md` with (1) what went wrong, (2) root cause, (3) a rule that prevents recurrence.
-- This is the primary cross-session memory — ruthlessly iterate until mistake rate drops.
 
 ### Verification
 

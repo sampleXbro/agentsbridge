@@ -72,6 +72,16 @@ agentsmesh lint --global --targets claude-code
 - Required fields (`matcher`, `type`)
 - Valid `type` values (`command`, `prompt`)
 
+### Lessons subsystem
+
+When `.agentsmesh/lessons/` is present, lint validates:
+
+- `index.yaml` parses as valid YAML matching the lessons index schema
+- Every topic file referenced in the index exists under `topics/`
+- `journal.md` is present and well-formed
+
+These checks run only when the lessons subsystem has been scaffolded (`agentsmesh init --lessons`). Projects without lessons are unaffected.
+
 ### Cross-target diagnostics (warnings)
 
 These checks run against every configured target and are emitted as warnings — they do not fail `lint`'s exit code, but they surface contract gaps that would silently bite at generation time.

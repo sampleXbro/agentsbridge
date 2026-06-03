@@ -34,6 +34,10 @@ import {
   RemoteFetchError,
   LockAcquisitionError,
   FileSystemError,
+  appendLessonToJournal,
+  formatLessonBullet,
+  loadLessonsIndex,
+  readTriggeredLessons,
 } from 'agentsmesh';
 
 import type {
@@ -84,6 +88,11 @@ import type {
   GeneratedOutputMerger,
   TargetCapabilities,
   TargetGenerators,
+  AppendLessonResult,
+  LessonCaptureInput,
+  LessonsIndex,
+  ToolEvent,
+  TriggeredLesson,
 } from 'agentsmesh';
 
 // Subpath entrypoints — each must resolve to types, not `any`.
@@ -100,6 +109,10 @@ import {
   loadCanonicalFiles as loadCanonicalFilesFromSub,
 } from 'agentsmesh/canonical';
 import { getAllDescriptors as getAllFromSub } from 'agentsmesh/targets';
+import {
+  readTriggeredLessons as readTriggeredLessonsFromSub,
+  type TriggeredLesson as TriggeredLessonFromSub,
+} from 'agentsmesh/lessons';
 
 async function exerciseRuntime(): Promise<void> {
   // loadConfig now returns a typed ValidatedConfig — no unknown cast required.
@@ -175,6 +188,22 @@ async function exerciseRuntime(): Promise<void> {
   const checkReport: LockSyncReport = await check(checkOpts);
   const _checkFromSub: LockSyncReport = await checkFromSub(checkOpts);
 
+  const lessonsIndex: LessonsIndex = loadLessonsIndex('/tmp/noop');
+  const lessonEvent: ToolEvent = { kind: 'task', text: 'shell quoting' };
+  const triggeredLessons: TriggeredLesson[] = readTriggeredLessons('/tmp/noop', lessonEvent);
+  const triggeredLessonsFromSub: TriggeredLessonFromSub[] = readTriggeredLessonsFromSub(
+    '/tmp/noop',
+    lessonEvent,
+  );
+  const lessonInput: LessonCaptureInput = {
+    heading: 'Example',
+    whatWentWrong: 'Something failed',
+    rootCause: 'The cause was missed',
+    rule: 'Check the cause first',
+  };
+  const formattedLesson: string = formatLessonBullet(lessonInput);
+  const appendedLesson: AppendLessonResult = appendLessonToJournal('/tmp/noop', lessonInput);
+
   void _fromSub;
   void _canonicalFromSub;
   void _canonicalFilesFromSub;
@@ -194,6 +223,11 @@ async function exerciseRuntime(): Promise<void> {
   void _diffSummary;
   void _checkFromSub;
   void checkReport;
+  void lessonsIndex;
+  void triggeredLessons;
+  void triggeredLessonsFromSub;
+  void formattedLesson;
+  void appendedLesson;
   void lintResult;
   void diffResult;
   void computed;

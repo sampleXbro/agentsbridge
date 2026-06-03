@@ -134,6 +134,30 @@ describe('generateRules (augment-code)', () => {
     expect(generateRules(canonical)).toHaveLength(0);
   });
 
+  it('generates agent_requested rules for manual trigger', () => {
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: '/proj/.agentsmesh/rules/deploy.md',
+          root: false,
+          targets: [],
+          description: 'Deployment checklist',
+          globs: [],
+          trigger: 'manual',
+          body: 'Run deploy checklist.',
+        },
+      ],
+    });
+
+    const results = generateRules(canonical);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(`${AUGMENT_CODE_RULES_DIR}/deploy.md`);
+    expect(results[0].content).toContain('agent_requested: true');
+    expect(results[0].content).toContain('description: Deployment checklist');
+    expect(results[0].content).not.toContain('always_apply');
+  });
+
   it('includes rules targeting augment-code explicitly', () => {
     const canonical = makeCanonical({
       rules: [

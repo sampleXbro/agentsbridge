@@ -449,4 +449,23 @@ describe('runLint', () => {
         'MCP server "remote" uses http transport; Junie project mcp.json currently documents stdio MCP servers only.',
     });
   });
+
+  it('surfaces lessons-subsystem diagnostics through runLint', async () => {
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'lessons'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.agentsmesh', 'lessons', 'index.yaml'), 'version: 99\n', 'utf8');
+    const config = minimalConfig({ features: [] });
+    const canonical: CanonicalFiles = {
+      rules: [],
+      commands: [],
+      agents: [],
+      skills: [],
+      mcp: null,
+      permissions: null,
+      hooks: null,
+      ignore: [],
+    };
+    const { diagnostics, hasErrors } = await runLint(config, canonical, TEST_DIR);
+    expect(hasErrors).toBe(true);
+    expect(diagnostics.some((d) => d.target === 'lessons' && d.level === 'error')).toBe(true);
+  });
 });

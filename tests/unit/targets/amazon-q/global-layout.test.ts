@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { descriptor } from '../../../../src/targets/amazon-q/index.js';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { getBuiltinTargetDefinition } from '../../../../src/targets/catalog/builtin-targets.js';
+import { generate } from '../../../../src/core/generate/engine.js';
+import type { ValidatedConfig } from '../../../../src/config/core/schema.js';
+import type { CanonicalFiles } from '../../../../src/core/types.js';
 import {
   AMAZON_Q_RULES_DIR,
   AMAZON_Q_MCP_FILE,
@@ -8,6 +13,7 @@ import {
 } from '../../../../src/targets/amazon-q/constants.js';
 
 describe('amazon-q descriptor', () => {
+  const descriptor = getBuiltinTargetDefinition('amazon-q')!;
   it('has correct id', () => {
     expect(descriptor.id).toBe('amazon-q');
   });
@@ -38,6 +44,8 @@ describe('amazon-q descriptor', () => {
 });
 
 describe('amazon-q global layout', () => {
+  const descriptor = getBuiltinTargetDefinition('amazon-q')!;
+
   it('descriptor.globalSupport exists', () => {
     expect(descriptor.globalSupport).toBeDefined();
   });
@@ -89,5 +97,87 @@ describe('amazon-q global layout', () => {
     const managedOutputs = descriptor.globalSupport?.layout.managedOutputs;
     expect(managedOutputs?.dirs).toContain(AMAZON_Q_GLOBAL_RULES_DIR);
     expect(managedOutputs?.files).toContain(AMAZON_Q_GLOBAL_MCP_FILE);
+  });
+});
+
+describe('amazon-q global frontmatter preservation', () => {
+  const TEST_DIR = join(tmpdir(), 'am-amazon-q-global-fm');
+
+  function makeGlobalConfig(): ValidatedConfig {
+    return {
+      version: 1,
+      targets: ['amazon-q'],
+      features: ['rules'],
+      extends: [],
+      overrides: {},
+      collaboration: { strategy: 'merge', lock_features: [] },
+    } as ValidatedConfig;
+  }
+
+  function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
+    return {
+      rules: [],
+      commands: [],
+      agents: [],
+      skills: [],
+      mcp: null,
+      permissions: null,
+      hooks: null,
+      ignore: [],
+      ...overrides,
+    };
+  }
+
+  it('preserves rule body content in global mode', async () => {
+    const results = await generate({
+      config: makeGlobalConfig(),
+      canonical: makeCanonical({
+        rules: [
+          {
+            source: '/proj/.agentsmesh/rules/_root.md',
+            root: true,
+            targets: [],
+            description: '',
+            globs: [],
+            body: 'Use TDD and strict TypeScript.',
+          },
+        ],
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const rule = results.find(
+      (r) => r.target === 'amazon-q' && r.path === `${AMAZON_Q_GLOBAL_RULES_DIR}/_root.md`,
+    );
+    expect(rule).toBeDefined();
+    expect(rule!.content).toContain('Use TDD and strict TypeScript.');
+  });
+
+  it('preserves MCP content in global mode (written to .aws/amazonq/mcp.json)', async () => {
+    const results = await generate({
+      config: { ...makeGlobalConfig(), features: ['mcp'] } as ValidatedConfig,
+      canonical: makeCanonical({
+        mcp: {
+          mcpServers: {
+            'test-server': { type: 'stdio', command: 'npx', args: ['-y', '@test/mcp'], env: {} },
+          },
+        },
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const mcpFile = results.find(
+      (r) => r.target === 'amazon-q' && r.path === AMAZON_Q_GLOBAL_MCP_FILE,
+    );
+    expect(mcpFile).toBeDefined();
+    const parsed = JSON.parse(mcpFile!.content) as Record<string, unknown>;
+    expect(parsed).toHaveProperty('mcpServers');
+    const servers = parsed.mcpServers as Record<string, unknown>;
+    expect(servers).toHaveProperty('test-server');
+    const server = servers['test-server'] as Record<string, unknown>;
+    expect(server.command).toBe('npx');
+    expect(server.args).toEqual(['-y', '@test/mcp']);
   });
 });

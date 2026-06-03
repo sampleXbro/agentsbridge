@@ -41,9 +41,13 @@ const ROOT_INSTRUCTION_BODY_V8 =
 const ROOT_INSTRUCTION_BODY_V9 =
   '`agentsmesh.yaml` selects targets/features (`agentsmesh.local.yaml` overrides locally), and `.agentsmesh` is the only place to add or edit canonical items: `rules/_root.md`, `rules/*.md`, `commands/*.md`, `agents/*.md`, `skills/*/SKILL.md` plus supporting files, `mcp.json`, `hooks.yaml`, `permissions.yaml`, and `ignore`; if missing run `agentsmesh init`, use `agentsmesh import --from <tool>` for native configs, `agentsmesh install <source>` or `install --sync` for reusable packs, then run `agentsmesh generate`. Use `diff`, `lint`, `check`, `watch`, `matrix`, `merge`, and `refresh` as needed; never edit generated tool files.';
 
-/** Body v10 (current): mandates this contract when changing any canonical entity. */
-const ROOT_INSTRUCTION_BODY =
+/** Body v10: mandate prefix without prohibition lead. Kept for upgrade/strip compatibility. */
+const ROOT_INSTRUCTION_BODY_V10 =
   '**MUST follow when changing any rule, agent, command, skill, hook, MCP server, permission, or ignore pattern.** `agentsmesh.yaml` selects targets/features (`agentsmesh.local.yaml` overrides locally), and `.agentsmesh` is the only place to add or edit canonical items: `rules/_root.md`, `rules/*.md`, `commands/*.md`, `agents/*.md`, `skills/*/SKILL.md` plus supporting files, `mcp.json`, `hooks.yaml`, `permissions.yaml`, and `ignore`; if missing run `agentsmesh init`, use `agentsmesh import --from <tool>` for native configs, `agentsmesh install <source>` or `install --sync` for reusable packs, then run `agentsmesh generate`. Use `diff`, `lint`, `check`, `watch`, `matrix`, `merge`, and `refresh` as needed; never edit generated tool files.';
+
+/** Body v11 (current): leads with explicit prohibition naming generated files. */
+const ROOT_INSTRUCTION_BODY =
+  '**NEVER edit generated files** (`.claude/`, `.cursor/`, `AGENTS.md`, `.github/copilot-instructions.md`, and similar target outputs) — `agentsmesh generate` overwrites them. **All changes MUST go through `.agentsmesh` first**: edit `rules/_root.md`, `rules/*.md`, `commands/*.md`, `agents/*.md`, `skills/*/SKILL.md` plus supporting files, `mcp.json`, `hooks.yaml`, `permissions.yaml`, and `ignore`; `agentsmesh.yaml` selects targets/features (`agentsmesh.local.yaml` overrides locally); if missing run `agentsmesh init`, use `agentsmesh import --from <tool>` for native configs, `agentsmesh install <source>` or `install --sync` for reusable packs, then run `agentsmesh generate`. Use `diff`, `lint`, `check`, `watch`, `matrix`, `merge`, and `refresh` as needed.';
 
 const LEGACY_AGENTSMESH_ROOT_INSTRUCTION_PARAGRAPH = ROOT_INSTRUCTION_BODY_V1;
 
@@ -96,6 +100,11 @@ const AGENTSMESH_CONTRACT_WITH_V9_BODY = `## AgentsMesh Generation Contract
 
 ${ROOT_INSTRUCTION_BODY_V9}`;
 
+/** Prior shipped heading + v10 body (still stripped on import after wording change). */
+const AGENTSMESH_CONTRACT_WITH_V10_BODY = `## AgentsMesh Generation Contract
+
+${ROOT_INSTRUCTION_BODY_V10}`;
+
 export const AGENTSMESH_ROOT_INSTRUCTION_PARAGRAPH = `${ROOT_CONTRACT_START}
 ## AgentsMesh Generation Contract
 
@@ -108,6 +117,7 @@ function normalizeWhitespace(value: string): string {
 
 /** All legacy paragraph forms, newest first. Each is tried for upgrade/strip. */
 const LEGACY_FORMS = [
+  AGENTSMESH_CONTRACT_WITH_V10_BODY,
   AGENTSMESH_CONTRACT_WITH_V9_BODY,
   AGENTSMESH_CONTRACT_WITH_V8_BODY,
   AGENTSMESH_CONTRACT_WITH_V7_BODY,

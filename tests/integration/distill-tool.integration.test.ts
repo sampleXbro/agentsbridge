@@ -7,10 +7,11 @@ import { fileURLToPath } from 'node:url';
 import { hashBullet } from '../../src/lessons/bullet-hash.js';
 import { loadLedger, saveLedger } from '../../src/lessons/ledger.js';
 import { lessonsPaths } from '../../src/lessons/paths.js';
+import { resolveNodeBin } from '../helpers/node-bin.js';
 
 const REPO = fileURLToPath(new URL('../..', import.meta.url));
 const DISTILL_SCRIPT = join(REPO, 'scripts/distill-lessons.ts');
-const TSX = join(REPO, 'node_modules/.bin/tsx');
+const TSX = resolveNodeBin(REPO, 'tsx');
 const BULLET =
   '- **Shell quoting failed**: rg parsed the search text as a flag. The pattern started with a dash. Pass dash-leading patterns with -e.';
 
@@ -43,6 +44,7 @@ function runDistill(...args: string[]): string {
   return execFileSync(TSX, [DISTILL_SCRIPT, ...args], {
     cwd: projectRoot,
     encoding: 'utf8',
+    shell: process.platform === 'win32',
   });
 }
 

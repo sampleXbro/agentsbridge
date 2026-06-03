@@ -6,16 +6,17 @@ import {
   LESSONS_INDEX_TEMPLATE,
   LESSONS_PROCEDURAL_RULE,
 } from '../../../src/lessons/paths.js';
+import { toPosixPath } from '../../helpers/posix-path.js';
 
 describe('lessonsPaths', () => {
   it('derives all paths under .agentsmesh/lessons/', () => {
     const p = lessonsPaths('/proj');
-    expect(p.base).toBe('/proj/.agentsmesh/lessons');
-    expect(p.journal).toBe('/proj/.agentsmesh/lessons/journal.md');
-    expect(p.index).toBe('/proj/.agentsmesh/lessons/index.yaml');
-    expect(p.ledger).toBe('/proj/.agentsmesh/lessons/distill-ledger.yaml');
-    expect(p.proposal).toBe('/proj/.agentsmesh/lessons/distill-proposal.md');
-    expect(p.topicsDir).toBe('/proj/.agentsmesh/lessons/topics');
+    expect(toPosixPath(p.base)).toBe('/proj/.agentsmesh/lessons');
+    expect(toPosixPath(p.journal)).toBe('/proj/.agentsmesh/lessons/journal.md');
+    expect(toPosixPath(p.index)).toBe('/proj/.agentsmesh/lessons/index.yaml');
+    expect(toPosixPath(p.ledger)).toBe('/proj/.agentsmesh/lessons/distill-ledger.yaml');
+    expect(toPosixPath(p.proposal)).toBe('/proj/.agentsmesh/lessons/distill-proposal.md');
+    expect(toPosixPath(p.topicsDir)).toBe('/proj/.agentsmesh/lessons/topics');
   });
 });
 

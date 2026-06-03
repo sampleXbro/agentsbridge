@@ -42,6 +42,10 @@ read via standard file I/O — no `Skill` tool, no description-match, no
 per-target projection. Works in Claude Code, Codex CLI, Cline, Roo Code,
 Cursor, Gemini CLI, Aider, Goose, and every other supported harness.
 
+**Linter integration:** `agentsmesh lint` now validates the lessons subsystem
+when present — checks that `index.yaml` parses, topic files referenced in the
+index exist, and the journal file is well-formed.
+
 **Constraints:**
 - `--lessons` is project-mode only. Combining with `--global` errors out.
 - Removal: `rm -rf .agentsmesh/lessons/` and strip the `## Lessons` paragraph

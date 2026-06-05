@@ -60,9 +60,10 @@ function renderLessons(lessons: NonNullable<InitCommandResult['data']['lessons']
     logger.info(`  Kept ${rel(path)} (already exists)`);
   }
   if (lessons.rootRuleUpdated) {
-    logger.success('  Appended Lessons recall paragraph to .agentsmesh/rules/_root.md');
+    logger.success('  Injected the Lessons ritual block into .agentsmesh/rules/_root.md');
   } else {
-    logger.info('  .agentsmesh/rules/_root.md already contains the Lessons paragraph');
+    logger.info('  .agentsmesh/rules/_root.md already carries the current Lessons block');
   }
   logger.success('Lessons subsystem ready (.agentsmesh/lessons/).');
+  logger.info("  Run 'agentsmesh generate' to sync the ritual into every target.");
 }

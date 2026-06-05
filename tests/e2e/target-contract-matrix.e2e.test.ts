@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { cleanup } from './helpers/setup.js';
 import { createCanonicalProject } from './helpers/canonical.js';
@@ -12,7 +12,8 @@ import {
 } from './helpers/reference-matrix.js';
 import { TARGET_CONTRACTS, TARGET_SPECIFIC_PREFIXES } from './helpers/target-contracts.js';
 import { TARGET_IDS } from '../../src/targets/catalog/target-ids.js';
-import { LESSONS_PROCEDURAL_RULE, lessonsPaths } from '../../src/lessons/paths.js';
+import { lessonsPaths } from '../../src/lessons/paths.js';
+import { scaffoldLessons } from '../../src/lessons/init.js';
 
 const TARGETS = Object.keys(TARGET_CONTRACTS) as TargetName[];
 
@@ -138,17 +139,9 @@ function read(dir: string, path: string): string {
   return readFileSync(join(dir, path), 'utf-8');
 }
 
-function appendLessonsRule(dir: string): void {
-  const root = join(dir, '.agentsmesh/rules/_root.md');
-  const current = readFileSync(root, 'utf-8');
-  writeFileSync(root, `${current}\n\n${LESSONS_PROCEDURAL_RULE}\n`, 'utf-8');
-}
-
-function expectLessonsRitual(content: string): void {
-  expect(content).toContain('**Recall');
-  expect(content).toContain('**Capture');
-  expect(content).toContain('.agentsmesh/lessons/index.yaml');
-  expect(content).toContain('.agentsmesh/lessons/journal.md');
+/** Activate lessons: scaffold injects the ritual block into canonical _root.md + creates the graph. */
+function activateLessons(dir: string): void {
+  scaffoldLessons(dir);
 }
 
 function expectNoTargetSpecificPrefixes(content: string): void {
@@ -303,7 +296,7 @@ describe('target contract matrix', () => {
     async (target) => {
       dir = createCanonicalProject(MATRIX_CONFIG);
       appendGenerateReferenceMatrix(dir);
-      appendLessonsRule(dir);
+      activateLessons(dir);
 
       const generateResult = await runCli(`generate --targets ${target}`, dir);
       expect(generateResult.exitCode, generateResult.stderr).toBe(0);
@@ -316,14 +309,16 @@ describe('target contract matrix', () => {
       if (!expectedImported.includes('.agentsmesh/mcp.json')) {
         expectedImported.push('.agentsmesh/mcp.json');
       }
-      expectedImported.push('.agentsmesh/lessons/index.yaml', '.agentsmesh/lessons/journal.md');
+      // The import safety net reactivates the subsystem (recreates lessons.json).
+      expectedImported.push('.agentsmesh/lessons/lessons.json');
       expectedImported.sort();
       expect(canonicalFiles(dir)).toEqual(expectedImported);
 
       const root = read(dir, '.agentsmesh/rules/_root.md');
       expectCanonicalizedRoot(root);
-      expectLessonsRitual(root);
-      expect(existsSync(lessonsPaths(dir).index)).toBe(true);
+      // The ritual is canonical content wrapped in sentinels — it round-trips back into _root.md.
+      expect(root).toContain('<!-- agentsmesh:lessons-contract:start -->');
+      expect(existsSync(lessonsPaths(dir).graph)).toBe(true);
       if (!TARGETS_WITHOUT_AGENT_OUTPUT.has(target)) {
         expectCanonicalizedAgent(read(dir, '.agentsmesh/agents/code-reviewer.md'));
       }

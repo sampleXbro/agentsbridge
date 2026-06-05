@@ -74,13 +74,19 @@ agentsmesh lint --global --targets claude-code
 
 ### Lessons subsystem
 
-When `.agentsmesh/lessons/` is present, lint validates:
+When `.agentsmesh/lessons/lessons.json` is present, lint validates the
+canonical graph and the procedural rule:
 
-- `index.yaml` parses as valid YAML matching the lessons index schema
-- Every topic file referenced in the index exists under `topics/`
-- `journal.md` is present and well-formed
+- `lessons.json` parses as valid JSON matching the graph schema.
+- Graph integrity: no dangling lesson→topic / lesson→trigger / `supersededBy` refs.
+- No duplicate rule text (normalized: whitespace-collapsed, lowercased).
+- Status invariants: `superseded` requires a `supersededBy`; `active` forbids it.
+- Orphan topics/triggers (warning only).
+- `_root.md` contains the `## Lessons (…)` procedural rule heading.
 
-These checks run only when the lessons subsystem has been scaffolded (`agentsmesh init --lessons`). Projects without lessons are unaffected.
+These checks run only when the lessons subsystem is scaffolded (`agentsmesh init --lessons`). Projects without lessons are unaffected.
+
+The same integrity checks are available standalone via `agentsmesh lessons validate`.
 
 ### Cross-target diagnostics (warnings)
 

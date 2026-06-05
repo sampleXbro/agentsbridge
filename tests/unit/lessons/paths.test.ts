@@ -1,43 +1,24 @@
 import { describe, it, expect } from 'vitest';
-import {
-  lessonsPaths,
-  toRelPath,
-  LESSONS_JOURNAL_TEMPLATE,
-  LESSONS_INDEX_TEMPLATE,
-  LESSONS_PROCEDURAL_RULE,
-} from '../../../src/lessons/paths.js';
+import { lessonsPaths, toRelPath, LESSONS_PROCEDURAL_RULE } from '../../../src/lessons/paths.js';
 import { toPosixPath } from '../../helpers/posix-path.js';
 
 describe('lessonsPaths', () => {
-  it('derives all paths under .agentsmesh/lessons/', () => {
+  it('derives the canonical graph + legacy migrator paths under .agentsmesh/lessons/', () => {
     const p = lessonsPaths('/proj');
     expect(toPosixPath(p.base)).toBe('/proj/.agentsmesh/lessons');
+    expect(toPosixPath(p.graph)).toBe('/proj/.agentsmesh/lessons/lessons.json');
+    // Legacy paths are exposed only so the one-shot migrator can read them.
     expect(toPosixPath(p.journal)).toBe('/proj/.agentsmesh/lessons/journal.md');
     expect(toPosixPath(p.index)).toBe('/proj/.agentsmesh/lessons/index.yaml');
-    expect(toPosixPath(p.ledger)).toBe('/proj/.agentsmesh/lessons/distill-ledger.yaml');
-    expect(toPosixPath(p.proposal)).toBe('/proj/.agentsmesh/lessons/distill-proposal.md');
     expect(toPosixPath(p.topicsDir)).toBe('/proj/.agentsmesh/lessons/topics');
   });
 });
 
 describe('toRelPath', () => {
   it('returns project-relative forward-slash path', () => {
-    expect(toRelPath('/proj', '/proj/.agentsmesh/lessons/topics/foo.md')).toBe(
-      '.agentsmesh/lessons/topics/foo.md',
+    expect(toRelPath('/proj', '/proj/.agentsmesh/lessons/lessons.json')).toBe(
+      '.agentsmesh/lessons/lessons.json',
     );
-  });
-});
-
-describe('LESSONS_JOURNAL_TEMPLATE', () => {
-  it('is a non-empty markdown header', () => {
-    expect(LESSONS_JOURNAL_TEMPLATE).toMatch(/^# /);
-  });
-});
-
-describe('LESSONS_INDEX_TEMPLATE', () => {
-  it('is a valid empty index (zero clusters)', () => {
-    expect(LESSONS_INDEX_TEMPLATE).toContain('version: 1');
-    expect(LESSONS_INDEX_TEMPLATE).toContain('clusters: []');
   });
 });
 
@@ -56,21 +37,31 @@ describe('LESSONS_PROCEDURAL_RULE', () => {
   });
 
   it('pre-empts common rationalizations for both rituals', () => {
-    expect(LESSONS_PROCEDURAL_RULE).toMatch(/Rejected excuses/i);
+    expect(LESSONS_PROCEDURAL_RULE).toMatch(/Rejected excuses/);
     expect(LESSONS_PROCEDURAL_RULE).toMatch(/the edit is small/i);
     expect(LESSONS_PROCEDURAL_RULE).toMatch(/I'll capture it later/i);
   });
 
-  it('names the canonical artifact paths so init scaffolding stays consistent', () => {
-    expect(LESSONS_PROCEDURAL_RULE).toContain('.agentsmesh/lessons/index.yaml');
-    expect(LESSONS_PROCEDURAL_RULE).toContain('.agentsmesh/lessons/journal.md');
-    expect(LESSONS_PROCEDURAL_RULE).toContain('.agentsmesh/lessons/topics/');
+  it('names the canonical graph path so init scaffolding stays consistent', () => {
+    expect(LESSONS_PROCEDURAL_RULE).toContain('.agentsmesh/lessons/lessons.json');
+  });
+
+  it('directs the agent at the CLI primitives, not at hand-editing files', () => {
+    expect(LESSONS_PROCEDURAL_RULE).toContain('agentsmesh lessons query');
+    expect(LESSONS_PROCEDURAL_RULE).toContain('agentsmesh lessons add');
   });
 
   it('uses tool-agnostic action verbs so the rule works in any harness', () => {
     // Universal verbs the agent can map to its own toolset.
-    expect(LESSONS_PROCEDURAL_RULE).toMatch(/editing any file/);
-    expect(LESSONS_PROCEDURAL_RULE).toMatch(/running any shell command/);
+    expect(LESSONS_PROCEDURAL_RULE).toMatch(/file edit/);
+    expect(LESSONS_PROCEDURAL_RULE).toMatch(/shell command/);
+  });
+
+  it('keeps the forcing language that turns the rule binding rather than advisory', () => {
+    expect(LESSONS_PROCEDURAL_RULE).toContain('BLOCKING REQUIREMENT');
+    expect(LESSONS_PROCEDURAL_RULE).toContain('no exceptions');
+    expect(LESSONS_PROCEDURAL_RULE).toContain('the user will check');
+    expect(LESSONS_PROCEDURAL_RULE).toContain('the system does not exist');
   });
 
   it('does NOT bake in any Claude Code-specific tool names as required actions', () => {

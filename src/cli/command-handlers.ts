@@ -32,6 +32,8 @@ import { renderTarget } from './renderers/target.js';
 import { runConvert } from './commands/convert.js';
 import { renderConvert } from './renderers/convert.js';
 import { runMcp } from './commands/mcp.js';
+import { runLessons } from './commands/lessons.js';
+import { renderLessons } from './renderers/lessons.js';
 
 export const cmdHandlers: Record<
   string,
@@ -132,5 +134,10 @@ export const cmdHandlers: Record<
   },
   mcp: async (flags, args) => {
     await runMcp(flags, args);
+  },
+  lessons: async (flags, args) => {
+    const result = await runLessons(flags, args, process.cwd());
+    handleResult('lessons', result, flags, () => renderLessons(result));
+    if (result.exitCode !== 0) process.exit(result.exitCode);
   },
 };

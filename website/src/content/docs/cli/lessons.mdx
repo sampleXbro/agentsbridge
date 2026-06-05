@@ -1,0 +1,133 @@
+---
+draft: false
+title: agentsmesh lessons
+description: Query and capture lessons from .agentsmesh/lessons/lessons.json — the universal recall/capture graph that any harness can read through one shell primitive.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Query and capture lessons from `.agentsmesh/lessons/lessons.json` — the single source of truth for the recall/capture subsystem. Every harness (Claude, Cursor, Codex, plain shell) calls the same two commands.
+
+## Usage
+
+```bash
+agentsmesh lessons <subcommand> [args] [flags]
+```
+
+## Subcommands
+
+| Subcommand | Purpose |
+|------------|---------|
+| `query` | Recall primitive — return active lessons whose triggers match the supplied file / command / keyword predicates. |
+| `add` | Capture primitive — atomically add a new lesson, deduplicating triggers against the graph. |
+| `topics` | List every topic with its summary. |
+| `show <topic>` | Render a topic's lessons as Markdown (read-only view). |
+| `deprecate <id>` | Mark a lesson `deprecated`. With `--superseded-by <id>`, mark it `superseded`. |
+| `journal` | Render lessons chronologically (sorted by `createdAt` then id). |
+| `validate` | Schema + integrity checks. Non-zero exit on errors; warnings do not affect exit code. |
+| `import-md` | One-shot migrator from legacy `index.yaml` + `topics/*.md` + `journal.md`. |
+
+## Recall ritual
+
+Before any edit or shell command, agents call:
+
+```bash
+agentsmesh lessons query --file <path-about-to-edit> --cmd <command-about-to-run>
+```
+
+Omit a flag when not applicable. Add `--keyword <text>` for task-description matches. Default `--format plain` prints one rule per line — the cheapest shape for agents to paste back into context.
+
+```bash
+# Examples
+agentsmesh lessons query --file src/cli/lessons.ts
+agentsmesh lessons query --cmd "pnpm test:e2e"
+agentsmesh lessons query --keyword "windows path normalization"
+agentsmesh lessons query --file src/x.ts --format md
+agentsmesh lessons query --file src/x.ts --format json
+```
+
+## Capture ritual
+
+Immediately after any failure, agents call:
+
+```bash
+agentsmesh lessons add "<imperative rule>" --topic <id> --trigger-file <glob> --evidence <commit-sha|lesson-id>
+```
+
+Triggers and evidence can be passed multiple times via comma-separated values. The CLI dedupes triggers against the graph and assigns a stable lesson id.
+
+```bash
+# Examples
+agentsmesh lessons add "Always normalize CLI display paths to forward slashes." \
+  --topic windows-paths \
+  --trigger-file "src/cli/**/*.ts" \
+  --evidence commit:abc1234
+
+agentsmesh lessons add "Treat the cache as advisory." \
+  --topic perf \
+  --new-topic --topic-summary "Performance-related rules." \
+  --trigger-kw "cache,latency"
+```
+
+<Aside type="tip">
+The graph at `.agentsmesh/lessons/lessons.json` is the single source of truth. Never edit it by hand. The CLI handles deduping, locking, atomic writes, and id assignment.
+</Aside>
+
+## One-shot upgrade migration
+
+If you're coming from a previous release that used `index.yaml` +
+`topics/*.md` + `journal.md`, the first `lessons` subcommand auto-migrates:
+
+```bash
+$ agentsmesh lessons query --file src/x.ts
+⚠ lessons.json was auto-migrated from index.yaml on first invocation.
+…
+```
+
+Auto-migration **deletes the legacy files** after a successful import so the
+project lands in a clean state. Run `agentsmesh lessons import-md` explicitly
+if you prefer to migrate at a specific point in time. New projects skip this
+entirely — `agentsmesh init --lessons` creates the graph directly.
+
+## Flag reference
+
+### `query`
+
+| Flag | Description |
+|------|-------------|
+| `--file <path>` | Project-relative path of the file about to be edited. Matched against `file_glob` triggers. |
+| `--cmd <command>` | Shell command about to run. Matched against `command_pattern` triggers (regex). |
+| `--keyword <text>` | Free-form task description. Matched against `keyword` triggers (case-insensitive substring). |
+| `--format plain\|md\|json` | Output shape. Default `plain` (one rule per line). |
+
+### `add`
+
+| Flag | Description |
+|------|-------------|
+| `--rule "<text>"` | **Required.** Imperative rule that prevents recurrence. |
+| `--topic <id>` | **Required.** Topic id. Pass `--new-topic --topic-summary "..."` to create one. |
+| `--trigger-file <glob>` | `file_glob` trigger. Comma-separate for multiple. |
+| `--trigger-cmd <regex>` | `command_pattern` trigger. Comma-separate for multiple. |
+| `--trigger-kw <text>` | `keyword` trigger. Comma-separate for multiple. |
+| `--evidence <ref>` | Evidence reference (`commit:SHA`, `lesson:id`, …). Comma-separate for multiple. |
+| `--rationale <text>` | One-line "why" behind the rule. |
+| `--new-topic` | Allow creating a new topic if missing. Requires `--topic-summary`. |
+| `--topic-summary "<text>"` | One-line summary when `--new-topic` creates a topic. |
+
+### `deprecate`
+
+| Flag | Description |
+|------|-------------|
+| `--superseded-by <id>` | Replacement lesson id. Without it, the lesson is marked `deprecated`; with it, `superseded`. |
+
+### `import-md`
+
+| Flag | Description |
+|------|-------------|
+| `--force` | Overwrite an existing `lessons.json`. Default behavior is to refuse. |
+| `--migrated-at <ISO date>` | Date stamped onto every imported lesson's `createdAt`. Defaults to today. |
+
+## See also
+
+- [Lessons reference](../../reference/lessons/) — graph schema, validation codes, and programmatic API.
+- [agentsmesh init](../init/) — scaffold the lessons subsystem with `--lessons`.

@@ -506,14 +506,14 @@ describe('link-token-context branch coverage', () => {
       expect(shouldRewritePathToken(content, 7, 13, 'foo.md', false)).toBe(true);
     });
 
-    it('returns true for double-quoted token', () => {
+    it('returns false for double-quoted token (string-literal context)', () => {
       const content = '"foo.md"';
-      expect(shouldRewritePathToken(content, 1, 7, 'foo.md', false)).toBe(true);
+      expect(shouldRewritePathToken(content, 1, 7, 'foo.md', false)).toBe(false);
     });
 
-    it('returns true for single-quoted token', () => {
+    it('returns false for single-quoted token (string-literal context)', () => {
       const content = "'foo.md'";
-      expect(shouldRewritePathToken(content, 1, 7, 'foo.md', false)).toBe(true);
+      expect(shouldRewritePathToken(content, 1, 7, 'foo.md', false)).toBe(false);
     });
 
     it('returns true for backtick-wrapped token', () => {

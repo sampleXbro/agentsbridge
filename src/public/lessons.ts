@@ -1,9 +1,9 @@
 /**
  * Public API — lessons subsystem (package.json "exports"."./lessons").
  *
- * Re-exports a stable surface for the lessons recall + capture mechanism so
- * downstream consumers (CLI, future `agentsmesh init --lessons`, custom
- * tooling) can build on top without reaching into private modules.
+ * Re-exports a stable surface for the JSON-graph recall + capture mechanism
+ * so downstream consumers (CLI, MCP server, custom tooling) can build on top
+ * without reaching into private modules.
  *
  * Stability contract:
  * - Functions and types exported here are stable.
@@ -11,38 +11,48 @@
  *   change without notice.
  */
 
-export { hashBullet } from '../lessons/bullet-hash.js';
-
-export { parseBullets } from '../lessons/bullet-parser.js';
-export type { ParsedBullet } from '../lessons/bullet-parser.js';
-
-export { LessonsIndexSchema, parseIndex } from '../lessons/index-schema.js';
-export type { LessonsIndex, LessonsCluster } from '../lessons/index-schema.js';
-
-export { matchTriggers } from '../lessons/matcher.js';
-export type { ToolEvent } from '../lessons/matcher.js';
-
-export { loadLedger, saveLedger } from '../lessons/ledger.js';
-export type { Ledger } from '../lessons/ledger.js';
-
-export { scoreBullet } from '../lessons/scoring.js';
-export type { ScoredCluster } from '../lessons/scoring.js';
+export { LessonsGraphSchema, parseGraph } from '../lessons/graph-schema.js';
+export type {
+  Lesson,
+  LessonStatus,
+  LessonsGraph,
+  Topic,
+  Trigger,
+  TriggerKind,
+} from '../lessons/graph-schema.js';
 
 export {
-  appendLessonToJournal,
-  formatLessonBullet,
-  loadLessonsIndex,
-  readTriggeredLessons,
-} from '../lessons/store.js';
-export type { AppendLessonResult, LessonCaptureInput, TriggeredLesson } from '../lessons/store.js';
+  graphFilePath,
+  loadLessonsGraph,
+  saveLessonsGraph,
+  serializeGraph,
+  tryLoadLessonsGraph,
+} from '../lessons/graph-store.js';
+
+export { queryLessons } from '../lessons/query.js';
+export type { LessonsQuery, MatchedLesson } from '../lessons/query.js';
+
+export { addLesson, UnknownTopicError } from '../lessons/add.js';
+export type {
+  AddLessonInput,
+  AddLessonOptions,
+  AddLessonResult,
+  AddLessonTriggers,
+} from '../lessons/add.js';
+
+export { validateLessonsGraph } from '../lessons/validate.js';
+export type { ValidationFinding, ValidationLevel, ValidationReport } from '../lessons/validate.js';
+
+export { importLegacyLessons } from '../lessons/import-legacy.js';
+export type { ImportLegacyOptions, ImportLegacyReport } from '../lessons/import-legacy.js';
 
 export {
-  lessonsPaths,
-  toRelPath,
-  LESSONS_JOURNAL_TEMPLATE,
-  LESSONS_INDEX_TEMPLATE,
-  LESSONS_PROCEDURAL_RULE,
-} from '../lessons/paths.js';
+  acquireLessonsLock,
+  lessonsLockPath,
+  LESSONS_LOCK_FILENAME,
+} from '../lessons/lessons-lock.js';
+
+export { lessonsPaths, toRelPath, LESSONS_PROCEDURAL_RULE } from '../lessons/paths.js';
 export type { LessonsPaths } from '../lessons/paths.js';
 
 export { scaffoldLessons } from '../lessons/init.js';

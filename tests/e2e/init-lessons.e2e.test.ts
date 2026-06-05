@@ -1,11 +1,10 @@
 /**
  * E2E: `agentsmesh init --lessons` against the real CLI binary.
  *
- * Exercises the full path users hit: argv parse → runInit → renderInit, with
- * `dist/cli.js` as the executor. Covers the three flows:
- *   - fresh init + lessons (one shot)
- *   - lessons-only retrofit on an existing init
- *   - idempotent re-run
+ * The lessons ritual is canonical content wrapped in managed-block sentinels
+ * (`<!-- agentsmesh:lessons-contract:start -->`). init injects it into
+ * `.agentsmesh/rules/_root.md` and creates `lessons.json`; generate then
+ * projects the block to every target.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -25,7 +24,7 @@ afterEach(() => {
 });
 
 describe('agentsmesh init --lessons (e2e)', () => {
-  it('fresh init + lessons in one shot', async () => {
+  it('fresh init + lessons in one shot; ritual block lands in canonical _root.md', async () => {
     const result = await runCli('init --lessons', tempDir);
 
     expect(result.exitCode).toBe(0);
@@ -33,14 +32,22 @@ describe('agentsmesh init --lessons (e2e)', () => {
     expect(result.stdout).toContain('Lessons subsystem ready');
 
     expect(existsSync(join(tempDir, 'agentsmesh.yaml'))).toBe(true);
-    expect(existsSync(join(tempDir, '.agentsmesh/lessons/journal.md'))).toBe(true);
-    expect(existsSync(join(tempDir, '.agentsmesh/lessons/index.yaml'))).toBe(true);
-    expect(existsSync(join(tempDir, '.agentsmesh/lessons/topics'))).toBe(true);
+    expect(existsSync(join(tempDir, '.agentsmesh/lessons/lessons.json'))).toBe(true);
 
     const rootRule = readFileSync(join(tempDir, '.agentsmesh/rules/_root.md'), 'utf8');
-    expect(rootRule).toContain('## Lessons (MUST do — non-negotiable)');
+    expect(rootRule).toContain('<!-- agentsmesh:lessons-contract:start -->');
     expect(rootRule).toContain('**Recall');
     expect(rootRule).toContain('**Capture');
+  });
+
+  it('generate projects the lessons block into the target root file', async () => {
+    await runCli('init --lessons', tempDir);
+    const gen = await runCli('generate --targets claude-code', tempDir);
+    expect(gen.exitCode).toBe(0);
+
+    const claude = readFileSync(join(tempDir, '.claude/CLAUDE.md'), 'utf8');
+    expect(claude).toContain('<!-- agentsmesh:lessons-contract:start -->');
+    expect(claude).toContain('agentsmesh lessons query');
   });
 
   it('retrofits lessons onto an already-initialized project', async () => {
@@ -51,22 +58,20 @@ describe('agentsmesh init --lessons (e2e)', () => {
     const second = await runCli('init --lessons', tempDir);
     expect(second.exitCode).toBe(0);
     expect(second.stdout).toContain('Lessons subsystem ready');
-    expect(second.stdout).toContain("Run 'agentsmesh generate'");
 
-    expect(existsSync(join(tempDir, '.agentsmesh/lessons/journal.md'))).toBe(true);
-    expect(existsSync(join(tempDir, '.agentsmesh/lessons/index.yaml'))).toBe(true);
+    expect(existsSync(join(tempDir, '.agentsmesh/lessons/lessons.json'))).toBe(true);
+    const rootRule = readFileSync(join(tempDir, '.agentsmesh/rules/_root.md'), 'utf8');
+    expect(rootRule).toContain('<!-- agentsmesh:lessons-contract:start -->');
   });
 
-  it('is idempotent — re-running --lessons does not duplicate the procedural paragraph', async () => {
+  it('is idempotent — re-running --lessons does not duplicate the block', async () => {
     await runCli('init --lessons', tempDir);
     const second = await runCli('init --lessons', tempDir);
-
     expect(second.exitCode).toBe(0);
-    expect(second.stdout).toContain('already contains the Lessons paragraph');
 
     const rootRule = readFileSync(join(tempDir, '.agentsmesh/rules/_root.md'), 'utf8');
-    const occurrences = rootRule.match(/^## Lessons \(/gm) ?? [];
-    expect(occurrences.length).toBe(1);
+    const starts = rootRule.match(/<!-- agentsmesh:lessons-contract:start -->/g) ?? [];
+    expect(starts.length).toBe(1);
   });
 
   it('errors when --lessons is combined with --global', async () => {

@@ -3,6 +3,8 @@ import type { CanonicalRule } from '../../core/types.js';
 
 export const ROOT_CONTRACT_START = '<!-- agentsmesh:root-generation-contract:start -->';
 export const ROOT_CONTRACT_END = '<!-- agentsmesh:root-generation-contract:end -->';
+export const LESSONS_CONTRACT_START = '<!-- agentsmesh:lessons-contract:start -->';
+export const LESSONS_CONTRACT_END = '<!-- agentsmesh:lessons-contract:end -->';
 export const EMBEDDED_RULES_START = '<!-- agentsmesh:embedded-rules:start -->';
 export const EMBEDDED_RULES_END = '<!-- agentsmesh:embedded-rules:end -->';
 export const EMBEDDED_RULE_END = '<!-- agentsmesh:embedded-rule:end -->';

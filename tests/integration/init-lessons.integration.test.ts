@@ -19,21 +19,17 @@ describe('runInit --lessons', () => {
     expect(existsSync(join(projectRoot, 'agentsmesh.yaml'))).toBe(true);
     expect(existsSync(join(projectRoot, 'agentsmesh.local.yaml'))).toBe(true);
 
-    const paths = lessonsPaths(projectRoot);
-    expect(existsSync(paths.journal)).toBe(true);
-    expect(existsSync(paths.index)).toBe(true);
-    expect(existsSync(paths.topicsDir)).toBe(true);
-
+    expect(existsSync(lessonsPaths(projectRoot).graph)).toBe(true);
     const rootRule = readFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), 'utf8');
-    expect(rootRule).toContain('## Lessons (MUST do — non-negotiable)');
+    expect(rootRule).toContain('<!-- agentsmesh:lessons-contract:start -->');
 
     expect(result.data.lessons).toBeDefined();
+    expect(result.data.lessons!.created).toEqual([lessonsPaths(projectRoot).graph]);
     expect(result.data.lessons!.rootRuleUpdated).toBe(true);
     expect(result.data.lessonsOnly).toBeUndefined();
   });
 
   it('retrofits the lessons subsystem on an already-initialized project (lessons-only)', async () => {
-    // Simulate prior init
     mkdirSync(join(projectRoot, '.agentsmesh/rules'), { recursive: true });
     writeFileSync(join(projectRoot, 'agentsmesh.yaml'), 'version: 1\n', 'utf8');
     writeFileSync(
@@ -46,17 +42,15 @@ describe('runInit --lessons', () => {
     expect(result.exitCode).toBe(0);
     expect(result.data.lessonsOnly).toBe(true);
 
-    const paths = lessonsPaths(projectRoot);
-    expect(existsSync(paths.journal)).toBe(true);
-    expect(existsSync(paths.index)).toBe(true);
+    expect(existsSync(lessonsPaths(projectRoot).graph)).toBe(true);
 
     const rootRule = readFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), 'utf8');
     expect(rootRule).toContain('## Custom Section');
     expect(rootRule).toContain('Keep me.');
-    expect(rootRule).toContain('## Lessons (MUST do — non-negotiable)');
+    expect(rootRule).toContain('<!-- agentsmesh:lessons-contract:start -->');
   });
 
-  it('is idempotent — re-running --lessons on a project that already has lessons leaves files intact', async () => {
+  it('is idempotent — re-running --lessons keeps a single block and graph intact', async () => {
     await runInit(projectRoot, { lessons: true });
     const result = await runInit(projectRoot, { lessons: true });
 
@@ -65,8 +59,8 @@ describe('runInit --lessons', () => {
     expect(result.data.lessons!.rootRuleUpdated).toBe(false);
 
     const rootRule = readFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), 'utf8');
-    const occurrences = rootRule.match(/^## Lessons \(/gm) ?? [];
-    expect(occurrences.length).toBe(1);
+    const starts = rootRule.match(/<!-- agentsmesh:lessons-contract:start -->/g) ?? [];
+    expect(starts.length).toBe(1);
   });
 
   it('still errors on bare init (no --lessons) when project is already initialized', async () => {

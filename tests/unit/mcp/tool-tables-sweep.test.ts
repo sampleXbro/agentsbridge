@@ -75,6 +75,14 @@ const MINIMAL_INPUTS: Record<string, unknown> = {
   uninstall: { names: ['sweep-pack'], dry_run: true },
   installs_list: {},
   refresh: { dry_run: true },
+  lessons_query: { file: 'src/x.ts' },
+  lessons_add: {
+    rule: 'Sweep lesson.',
+    topic: 'sweep-topic',
+    new_topic: true,
+    topic_summary: 'Sweep.',
+    trigger_files: ['src/**'],
+  },
 };
 
 beforeEach(async () => {
@@ -101,8 +109,8 @@ afterEach(async () => {
 });
 
 describe('tool-tables sweep — every descriptor handler arrow runs', () => {
-  it('covers all 45 descriptor handlers without exception leak', async () => {
-    expect(TOOL_DESCRIPTORS.length).toBe(45);
+  it('covers all 47 descriptor handlers without exception leak', async () => {
+    expect(TOOL_DESCRIPTORS.length).toBe(47);
     const missingFixtures = TOOL_DESCRIPTORS.filter((d) => !(d.name in MINIMAL_INPUTS));
     expect(missingFixtures.map((d) => d.name)).toEqual([]);
 

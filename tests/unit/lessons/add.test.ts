@@ -1,0 +1,202 @@
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { addLesson, UnknownTopicError } from '../../../src/lessons/add.js';
+import { loadLessonsGraph, saveLessonsGraph } from '../../../src/lessons/graph-store.js';
+import type { LessonsGraph } from '../../../src/lessons/graph-schema.js';
+
+let root: string;
+
+beforeEach(() => {
+  root = mkdtempSync(join(tmpdir(), 'amesh-add-'));
+});
+
+afterEach(() => {
+  rmSync(root, { recursive: true, force: true });
+});
+
+function seedGraph(graph: LessonsGraph): void {
+  saveLessonsGraph(root, graph);
+}
+
+const baseTopics = { 'windows-paths': { summary: 'Path handling.' } } as const;
+
+const baseInput = {
+  rule: 'Always normalize CLI display paths to forward slashes.',
+  topic: 'windows-paths',
+  triggers: { files: ['src/cli/**/*.ts'] },
+  evidence: ['commit:abc'],
+  createdAt: '2026-06-05',
+};
+
+describe('addLesson', () => {
+  it('writes a new lessons.json when the file does not exist', async () => {
+    const result = await addLesson(root, baseInput, {
+      allowNewTopic: true,
+      topicSummary: 'Path handling.',
+    });
+    expect(result.isNewLesson).toBe(true);
+    expect(result.isNewTopic).toBe(true);
+    expect(result.newTriggerIds.length).toBe(1);
+
+    const graph = loadLessonsGraph(root);
+    expect(graph.lessons[result.id]?.rule).toBe(baseInput.rule);
+    expect(graph.lessons[result.id]?.triggers).toEqual(result.newTriggerIds);
+    expect(graph.topics['windows-paths']?.summary).toBe('Path handling.');
+  });
+
+  it('assigns a deterministic kebab-case id derived from topic and rule', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    const result = await addLesson(root, baseInput);
+    expect(result.id).toMatch(/^[a-z0-9-]+$/);
+    expect(result.id.startsWith('windows-paths-')).toBe(true);
+  });
+
+  it('rejects an unknown topic without allowNewTopic', async () => {
+    await expect(addLesson(root, { ...baseInput, topic: 'nope' }, {})).rejects.toBeInstanceOf(
+      UnknownTopicError,
+    );
+  });
+
+  it('requires topicSummary when allowNewTopic adds a topic', async () => {
+    await expect(addLesson(root, baseInput, { allowNewTopic: true })).rejects.toThrow(
+      /topicSummary/,
+    );
+  });
+
+  it('reuses an existing trigger node when the (kind, pattern) already exists', async () => {
+    seedGraph({
+      version: 1,
+      lessons: {},
+      topics: baseTopics,
+      triggers: { 't-existing': { kind: 'file_glob', pattern: 'src/cli/**/*.ts' } },
+    });
+    const result = await addLesson(root, baseInput);
+    expect(result.newTriggerIds).toEqual([]);
+    const graph = loadLessonsGraph(root);
+    expect(graph.lessons[result.id]?.triggers).toEqual(['t-existing']);
+    expect(Object.keys(graph.triggers)).toEqual(['t-existing']);
+  });
+
+  it('creates new trigger nodes when patterns differ', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    const result = await addLesson(root, {
+      ...baseInput,
+      triggers: {
+        files: ['src/cli/**/*.ts'],
+        commands: ['^pnpm test'],
+        keywords: ['display path'],
+      },
+    });
+    expect(result.newTriggerIds.length).toBe(3);
+    const graph = loadLessonsGraph(root);
+    const kinds = result.newTriggerIds.map((id) => graph.triggers[id]?.kind);
+    expect(kinds.sort()).toEqual(['command_pattern', 'file_glob', 'keyword']);
+  });
+
+  it('is idempotent: re-adding the same rule + topic returns the same id and does not duplicate triggers', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    const first = await addLesson(root, baseInput);
+    const second = await addLesson(root, baseInput);
+    expect(second.id).toBe(first.id);
+    expect(second.isNewLesson).toBe(false);
+    const graph = loadLessonsGraph(root);
+    expect(Object.keys(graph.lessons)).toEqual([first.id]);
+    expect(Object.keys(graph.triggers).length).toBe(1);
+  });
+
+  it('treats whitespace and case variations as the same rule for idempotency', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    const first = await addLesson(root, baseInput);
+    const second = await addLesson(root, {
+      ...baseInput,
+      rule: '  ALWAYS  normalize  CLI display paths to forward slashes.  ',
+    });
+    expect(second.id).toBe(first.id);
+    expect(second.isNewLesson).toBe(false);
+  });
+
+  it('appends a distinct lesson when topic matches but rule text differs', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    const a = await addLesson(root, baseInput);
+    const b = await addLesson(root, {
+      ...baseInput,
+      rule: 'Strip trailing slashes from emitted paths.',
+    });
+    expect(b.id).not.toBe(a.id);
+    expect(b.isNewLesson).toBe(true);
+    const graph = loadLessonsGraph(root);
+    expect(Object.keys(graph.lessons).sort()).toEqual([a.id, b.id].sort());
+  });
+
+  it('serializes concurrent adders without losing data', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    const inputs = Array.from({ length: 5 }, (_, i) => ({
+      ...baseInput,
+      rule: `Concurrent rule ${i}.`,
+      triggers: { files: [`src/c${i}/**/*.ts`] },
+    }));
+    const results = await Promise.all(
+      inputs.map((input) => addLesson(root, input, { retries: 50 })),
+    );
+    expect(new Set(results.map((r) => r.id)).size).toBe(5);
+    const graph = loadLessonsGraph(root);
+    expect(Object.keys(graph.lessons).length).toBe(5);
+    expect(Object.keys(graph.triggers).length).toBe(5);
+  });
+
+  it('suffixes the id when two distinct rules slug to the same base in a topic', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    const a = await addLesson(root, {
+      ...baseInput,
+      rule: 'alpha beta gamma delta epsilon one',
+    });
+    const b = await addLesson(root, {
+      ...baseInput,
+      rule: 'alpha beta gamma delta epsilon two',
+    });
+    expect(b.id).not.toBe(a.id);
+    expect(b.id.endsWith('-2')).toBe(true);
+  });
+
+  it('falls back to a hash id when the rule has no alphanumeric words', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    const r = await addLesson(root, { ...baseInput, rule: '!!! ??? ...' });
+    expect(r.id).toMatch(/^windows-paths-[0-9a-f]{8}$/);
+  });
+
+  it('defaults createdAt to today (UTC ISO date) when omitted', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    const { createdAt: _omit, ...noDate } = baseInput;
+    const r = await addLesson(root, noDate);
+    const graph = loadLessonsGraph(root);
+    expect(graph.lessons[r.id]?.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('defaults evidence to an empty array when omitted', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    const { evidence: _drop, ...noEvidence } = baseInput;
+    const r = await addLesson(root, noEvidence);
+    const graph = loadLessonsGraph(root);
+    expect(graph.lessons[r.id]?.evidence).toEqual([]);
+  });
+
+  it('deduplicates a trigger pattern repeated within a single add call', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    const r = await addLesson(root, {
+      ...baseInput,
+      triggers: { files: ['src/dup/**', 'src/dup/**'] },
+    });
+    const graph = loadLessonsGraph(root);
+    expect(graph.lessons[r.id]?.triggers.length).toBe(1);
+    expect(Object.keys(graph.triggers).length).toBe(1);
+  });
+
+  it('records optional rationale on the lesson', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    const result = await addLesson(root, { ...baseInput, rationale: 'incident 2026-05-30' });
+    const graph = loadLessonsGraph(root);
+    expect(graph.lessons[result.id]?.rationale).toBe('incident 2026-05-30');
+  });
+});

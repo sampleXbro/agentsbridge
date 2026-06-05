@@ -1,0 +1,156 @@
+---
+draft: false
+title: Lessons graph reference
+description: Schema, validation codes, and programmatic API for .agentsmesh/lessons/lessons.json — the universal recall/capture graph.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+`.agentsmesh/lessons/lessons.json` is the single source of truth for the recall/capture subsystem. This page documents its schema, the validation codes returned by `agentsmesh lessons validate`, and the programmatic API for consumers building on top.
+
+For the CLI surface, see [`agentsmesh lessons`](../../cli/lessons/).
+
+## Graph shape
+
+The graph has four top-level fields:
+
+```jsonc
+{
+  "version": 1,
+  "lessons":  { "<lesson-id>":  { rule, topics, triggers, evidence, status, createdAt, … } },
+  "topics":   { "<topic-id>":   { summary } },
+  "triggers": { "<trigger-id>": { kind, pattern } }
+}
+```
+
+All ids are kebab-case (`^[a-z0-9-]+$`). The file is deterministically sorted (alphabetical keys at every depth) and always ends with a single trailing newline, so diffs reflect content changes rather than insertion order.
+
+### Lesson
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `rule` | string | yes | Imperative rule text. Non-empty. |
+| `rationale` | string | no | One-line "why" behind the rule. |
+| `topics` | string[] | yes | At least one topic id. Every entry must resolve in `topics`. |
+| `triggers` | string[] | yes | Trigger ids. Each must resolve in `triggers`. May be empty (the lesson is then never recalled). |
+| `evidence` | string[] | yes | Free-form references (`commit:SHA`, `legacy:.agentsmesh/lessons/topics/foo.md#rule-3`, `lesson:other-id`). |
+| `status` | `"active" \| "deprecated" \| "superseded"` | yes | Recall only returns `active` lessons. |
+| `supersededBy` | string | conditional | Required when `status` is `superseded`; forbidden when `status` is `active`. |
+| `createdAt` | ISO date or datetime | yes | When the lesson was first added. Determines journal ordering. |
+
+### Topic
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `summary` | string | yes | One-line description. Non-empty. |
+
+### Trigger
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `kind` | `"file_glob" \| "command_pattern" \| "keyword"` | yes | Trigger kind. |
+| `pattern` | string | yes | Pattern body. Non-empty. |
+
+`file_glob` patterns use the [picomatch](https://github.com/micromatch/picomatch) syntax. `command_pattern` patterns are JavaScript regex literals (no flags). `keyword` patterns are case-insensitive substrings.
+
+Triggers are content-addressed: the migrator and `agentsmesh lessons add` both dedupe by `(kind, pattern)`, so two lessons targeting the same glob share one trigger node.
+
+## Recall semantics
+
+`agentsmesh lessons query` returns every `active` lesson whose triggers match **any** supplied field:
+
+- `--file <p>` matches `file_glob` triggers via picomatch with `dot: true`.
+- `--cmd <c>` matches `command_pattern` triggers via `new RegExp(pattern).test(command)`. Invalid regex never throws — it just doesn't match.
+- `--keyword <t>` matches `keyword` triggers via `keyword.toLowerCase().includes(pattern.toLowerCase())`.
+
+Combination is OR across triggers per lesson: a lesson appears in the result if **any** of its triggers fire from **any** supplied field. Results are deduplicated and sorted by lesson id.
+
+## Validation codes
+
+`agentsmesh lessons validate` returns a list of findings with these codes:
+
+| Code | Level | Meaning |
+|------|-------|---------|
+| `SCHEMA_INVALID` | error | The graph fails the Zod schema. Other checks are skipped. |
+| `DANGLING_TOPIC` | error | A lesson references an unknown topic id. |
+| `DANGLING_TRIGGER` | error | A lesson references an unknown trigger id. |
+| `DANGLING_SUPERSEDER` | error | `supersededBy` points to an unknown lesson id. |
+| `DUPLICATE_RULE` | error | Two or more lessons share the same normalized rule text (whitespace-collapsed, lowercased). |
+| `SUPERSEDED_WITHOUT_TARGET` | error | `status: superseded` without a `supersededBy` field. |
+| `ACTIVE_WITH_SUPERSEDER` | error | `status: active` with a `supersededBy` field. |
+| `ORPHAN_TOPIC` | warning | A topic node is not referenced by any lesson. |
+| `ORPHAN_TRIGGER` | warning | A trigger node is not referenced by any lesson. |
+
+Exit code is non-zero when any `error`-level finding exists. Warnings do not affect the exit code.
+
+## Concurrency
+
+Writers acquire a process lock at `.agentsmesh/lessons/.lessons.lock` (mkdir-based, cross-platform). The lock reuses the same primitive as `.generate.lock` and `.install.lock` — stale-eviction by PID, signal cleanup, retry budget. Concurrent `agentsmesh lessons add` calls serialize cleanly; no data is lost.
+
+## One-shot upgrade migration
+
+Earlier releases stored lessons as `.agentsmesh/lessons/index.yaml` plus
+per-topic Markdown files plus an append-only `journal.md`. On upgrade, the
+migrator collapses all three into `lessons.json` and **deletes the legacy
+files**:
+
+```bash
+agentsmesh lessons import-md
+```
+
+It also runs lazily on the first `lessons` subcommand when `lessons.json`
+is absent and `index.yaml` exists. New projects skip this entirely.
+
+Migrated lessons carry their legacy provenance in `evidence[0]` as
+`legacy:.agentsmesh/lessons/topics/<topic>.md#rule-N`, plus any
+`(Evidence L<n>)` references parsed verbatim from the original bullets
+(preserved as `legacy:L<n>`).
+
+## Programmatic API
+
+The new graph types and helpers are exported from `agentsmesh/lessons`:
+
+```ts
+import {
+  loadLessonsGraph,
+  tryLoadLessonsGraph,
+  saveLessonsGraph,
+  queryLessons,
+  addLesson,
+  validateLessonsGraph,
+  importLegacyLessons,
+  type LessonsGraph,
+  type Lesson,
+  type Topic,
+  type Trigger,
+  type LessonsQuery,
+  type ValidationReport,
+} from 'agentsmesh/lessons';
+
+const graph = tryLoadLessonsGraph(process.cwd());
+if (graph) {
+  const hits = queryLessons(graph, { file: 'src/cli/x.ts' });
+  console.log(hits.map((h) => h.lesson.rule));
+}
+
+await addLesson(process.cwd(), {
+  rule: 'Normalize CLI display paths.',
+  topic: 'windows-paths',
+  triggers: { files: ['src/cli/**/*.ts'] },
+  evidence: ['commit:abc1234'],
+});
+```
+
+## Token-cost comparison
+
+The recall flow saves tokens by returning only the lessons that match — agents never read the whole graph.
+
+| Step | Legacy YAML + MD | JSON graph |
+|------|------------------|------------|
+| Recall | Read 400+ line `index.yaml` + matching topic Markdown files. ~2–5k tokens per session. | One `query` call returning matched rules only. ~100–500 tokens. |
+| Capture | Edit `journal.md` + matching `topics/<topic>.md` + reconcile `index.yaml` triggers. Three file ops, often skipped. | One `add` call. Atomic. |
+
+## See also
+
+- [`agentsmesh lessons`](../../cli/lessons/) — full CLI surface.
+- [Programmatic API](../programmatic-api/) — all stable exports including the legacy lesson helpers.

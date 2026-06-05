@@ -1,29 +1,5 @@
 # Operational Guidelines
 
-## Lessons (MUST do — non-negotiable)
-
-Two rituals. Universal across every agent harness — described in tool-agnostic action verbs ("read a file", "edit a file", "run a shell command"); use whatever read / write-patch / shell-exec tool your harness exposes. Skipping either ritual is a process violation; the same paid-for failure recurs next session.
-
-**Recall — BEFORE editing any file or running any shell command:**
-
-1. Read `.agentsmesh/lessons/index.yaml`.
-2. For every cluster whose triggers match — `file_globs` against the target file path, `command_patterns` (regex) against the shell command, or `keywords` (case-insensitive substring) against the active task description — read its `file` (e.g. `.agentsmesh/lessons/topics/<topic>.md`).
-3. Apply the loaded rules to the action.
-4. Then — and only then — perform the edit or run the command.
-
-Rejected excuses: *"the edit is small"* → apply it. *"I read this earlier in the session"* → context may have compacted; re-read. *"no trigger fires"* → proceed; you've done your part.
-
-**Capture — IMMEDIATELY after any failure** (test, CI, lint, code review, user correction, regression you spotted yourself, OR any mistake by anyone in the loop):
-
-1. Append one bullet to `.agentsmesh/lessons/journal.md` in this exact shape:
-   `- **<short heading>**: <what went wrong>. <root cause>. <imperative rule that prevents recurrence>.`
-2. Read `.agentsmesh/lessons/index.yaml` and identify which topic the lesson belongs to (use the `summary:` fields).
-3. If the lesson teaches a NEW rule: edit that topic's `## Rules` section to add it, citing `(Evidence: L<journal-line>)`. If it only reinforces an existing rule, the journal entry alone suffices.
-
-Rejected excuses: *"it wasn't really a failure"* → if you fixed something, it was. *"I'll capture it later"* → no; do it now while context is fresh. *"no topic fits"* → still record in journal; an unrouted bullet is recoverable, a forgotten one is not.
-
-**These two rituals are load-bearing. Treat them with the same discipline as TDD.**
-
 ## Workflow
 
 ### Planning
@@ -90,6 +66,30 @@ Rejected excuses: *"it wasn't really a failure"* → if you fixed something, it 
   - **Plugins**: every install path picks up `registerTargetDescriptor()` non-`.md` mappers via `getAllRegisteredDescriptorIds()` (`tests/unit/install/importers/target-native-commands-plugin.test.ts`).
   - **Reference rewriting**: `(SPEC.md or equivalent)` prose stays verbatim; real Markdown inline-link destinations rewrite cross-format (`tests/unit/core/link-token-classifier-prose-vs-md-link.test.ts`).
   - **Install**: third-party dir-readers route through `readEntityDirWithMappers`; the 79-repo sweep in `docs/testing/install-compatibility-repos.md` stays green.
+
+<!-- agentsmesh:lessons-contract:start -->
+## Lessons (BLOCKING REQUIREMENT — MUST run, no exceptions)
+
+Two shell commands. Skipping either is a process violation; the user will check. The graph at `.agentsmesh/lessons/lessons.json` is canonical — NEVER edit by hand.
+
+**Recall — MUST run BEFORE every file edit and every shell command:**
+
+1. Run: `agentsmesh lessons query --file <path-about-to-edit> --cmd <command-about-to-run>` (add `--keyword <text>` for task matches).
+2. Apply EVERY returned rule.
+3. Then perform the edit / run the command.
+
+Rejected excuses: *"the edit is small"* → query it. *"I already know this"* → query it. *"I'll do it later"* → no.
+
+**Capture — MUST run IMMEDIATELY after any failure** (test, CI, lint, code review, user correction, regression — anyone's mistake):
+
+1. Run: `agentsmesh lessons add "<imperative rule>" --topic <id> --trigger-file <glob> --evidence <commit-sha|lesson-id>` (add `--trigger-cmd <regex>` / `--trigger-kw <text>` as needed).
+2. Use `agentsmesh lessons topics` to find the topic id; pass `--new-topic --topic-summary "<one line>"` for a brand-new area.
+3. The CLI writes `lessons.json` atomically — capture is one command.
+
+Rejected excuses: *"it wasn't really a failure"* → it was. *"I'll capture it later"* → no. *"no topic fits"* → `agentsmesh lessons topics` then `--new-topic`.
+
+**These two commands ARE the system. Skip them and the system does not exist.**
+<!-- agentsmesh:lessons-contract:end -->
 
 <!-- agentsmesh:embedded-rules:start -->
 <!-- agentsmesh:embedded-rule:start {"source":"rules/typescript.md","description":"TypeScript-specific coding standards","globs":["src/**/*.ts","tests/**/*.ts"],"targets":[]} -->

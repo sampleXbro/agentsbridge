@@ -87,4 +87,39 @@ describe('shouldRewritePathToken — parenthesized prose vs Markdown link', () =
     const { start, end } = tokenAt(content, 'SPEC.md');
     expect(shouldRewritePathToken(content, start, end, 'SPEC.md', true)).toBe(false);
   });
+
+  // Quote-wrapped tokens are string literals (code-like prose), not link
+  // references. Rewriting them corrupts pseudo-code such as
+  // `` `scan_root + "/graphify-out/"` `` — the `/graphify-out/` inside the
+  // double quotes is a JS string concatenation argument, not a path the
+  // rebaser should resolve. Backticks remain rewritable elsewhere; this
+  // suite covers only `'…'` and `"…"`.
+  it('rejects double-quoted path token: `"/graphify-out/"`', () => {
+    const content =
+      'Filter out any path that starts with `scan_root + "/graphify-out/"` to exclude sidecars.';
+    const { start, end } = tokenAt(content, '/graphify-out/');
+    expect(shouldRewritePathToken(content, start, end, '/graphify-out/', true)).toBe(false);
+  });
+
+  it("rejects single-quoted path token: `'/graphify-out/'`", () => {
+    const content =
+      "use 'scan_root + \"/graphify-out/\"' as prefix; alt form: '/graphify-out/' here.";
+    const { start, end } = tokenAt(content, "'/graphify-out/'");
+    // Token is `/graphify-out/`; surrounding chars are `'` on both sides.
+    const tokStart = start + 1;
+    const tokEnd = end - 1;
+    expect(shouldRewritePathToken(content, tokStart, tokEnd, '/graphify-out/', true)).toBe(false);
+  });
+
+  it('rejects double-quoted multi-segment path: `"docs/foo.md"`', () => {
+    const content = 'See "docs/foo.md" for details.';
+    const { start, end } = tokenAt(content, 'docs/foo.md');
+    expect(shouldRewritePathToken(content, start, end, 'docs/foo.md', true)).toBe(false);
+  });
+
+  it('still accepts backtick-wrapped path: `` `docs/foo.md` ``', () => {
+    const content = 'See `docs/foo.md` for details.';
+    const { start, end } = tokenAt(content, 'docs/foo.md');
+    expect(shouldRewritePathToken(content, start, end, 'docs/foo.md', true)).toBe(true);
+  });
 });

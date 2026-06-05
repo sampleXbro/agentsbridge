@@ -1,26 +1,25 @@
 /**
  * Lint guard for the `.agentsmesh/lessons/` subsystem.
  *
- * Validates only the contract the procedural rule depends on at recall time:
- * index parseability, topic-file presence, topic-body shape, regex validity,
- * and presence of the procedural rule paragraph in `_root.md`.
+ * Validates the JSON graph (`lessons.json`) against the canonical schema and
+ * integrity rules, then verifies the procedural rule paragraph is present in
+ * `_root.md`.
  *
  * Project-scope only — lessons live in the project tree, never under `~`.
  */
 
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { parse as parseYaml } from 'yaml';
-import { LessonsIndexSchema } from '../../../lessons/index-schema.js';
+import { loadLessonsGraph } from '../../../lessons/graph-store.js';
 import { lessonsPaths } from '../../../lessons/paths.js';
+import { validateLessonsGraph } from '../../../lessons/validate.js';
 import type { TargetLayoutScope } from '../../../targets/catalog/target-descriptor.js';
 import type { LintDiagnostic } from '../../types.js';
 
 const LESSONS_TARGET = 'lessons';
-const INDEX_REL = '.agentsmesh/lessons/index.yaml';
+const GRAPH_REL = '.agentsmesh/lessons/lessons.json';
 const ROOT_RULE_REL = '.agentsmesh/rules/_root.md';
 const LESSONS_HEADING = /^## Lessons \(/m;
-const RULES_HEADING = /^## Rules\b/m;
 
 export function lintLessonsSubsystem(
   projectRoot: string,
@@ -28,40 +27,27 @@ export function lintLessonsSubsystem(
 ): LintDiagnostic[] {
   if (scope === 'global') return [];
   const paths = lessonsPaths(projectRoot);
-  if (!existsSync(paths.index)) return [];
+  if (!existsSync(paths.graph)) return [];
 
   const out: LintDiagnostic[] = [];
-  const parsed = LessonsIndexSchema.safeParse(parseYaml(readFileSync(paths.index, 'utf8')));
-  if (!parsed.success) {
-    return [diag('error', INDEX_REL, `index.yaml is invalid: ${parsed.error.issues[0]!.message}`)];
+
+  let graph;
+  try {
+    // existsSync above guarantees the file is present, so this never returns null.
+    graph = loadLessonsGraph(projectRoot);
+  } catch (err) {
+    return [
+      diag(
+        'error',
+        GRAPH_REL,
+        `lessons.json failed to load: ${err instanceof Error ? err.message : String(err)}`,
+      ),
+    ];
   }
 
-  for (const cluster of parsed.data.clusters) {
-    const topicAbs = join(projectRoot, cluster.file);
-    if (!existsSync(topicAbs)) {
-      out.push(
-        diag('error', cluster.file, `topic file for cluster "${cluster.topic}" does not exist.`),
-      );
-      continue;
-    }
-    if (!RULES_HEADING.test(readFileSync(topicAbs, 'utf8'))) {
-      out.push(
-        diag('warning', cluster.file, `topic "${cluster.topic}" is missing a "## Rules" section.`),
-      );
-    }
-    for (const pattern of cluster.triggers.command_patterns) {
-      try {
-        new RegExp(pattern);
-      } catch {
-        out.push(
-          diag(
-            'warning',
-            INDEX_REL,
-            `cluster "${cluster.topic}" command_patterns entry is not a valid regex: ${pattern}`,
-          ),
-        );
-      }
-    }
+  const report = validateLessonsGraph(graph);
+  for (const finding of report.findings) {
+    out.push(diag(finding.level, GRAPH_REL, `[${finding.code}] ${finding.message}`));
   }
 
   const rootRuleAbs = join(projectRoot, ROOT_RULE_REL);

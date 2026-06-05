@@ -83,7 +83,7 @@ describe('renderInit', () => {
         scaffoldType: 'full',
         gitignoreUpdated: false,
         lessons: {
-          created: [`${process.cwd()}/.agentsmesh/lessons/journal.md`],
+          created: [`${process.cwd()}/.agentsmesh/lessons/lessons.json`],
           skipped: [],
           rootRuleUpdated: true,
         },
@@ -92,8 +92,8 @@ describe('renderInit', () => {
 
     const stdout = output.stdout();
     expect(stdout).toContain('Created agentsmesh.yaml');
-    expect(stdout).toContain('Created .agentsmesh/lessons/journal.md');
-    expect(stdout).toContain('Appended Lessons recall paragraph to .agentsmesh/rules/_root.md');
+    expect(stdout).toContain('Created .agentsmesh/lessons/lessons.json');
+    expect(stdout).toContain('Injected the Lessons ritual block into .agentsmesh/rules/_root.md');
     expect(stdout).toContain('Lessons subsystem ready (.agentsmesh/lessons/).');
   });
 
@@ -111,15 +111,17 @@ describe('renderInit', () => {
         gitignoreUpdated: false,
         lessons: {
           created: [],
-          skipped: [`${process.cwd()}/.agentsmesh/lessons/journal.md`],
+          skipped: [`${process.cwd()}/.agentsmesh/lessons/lessons.json`],
           rootRuleUpdated: false,
         },
       },
     });
 
     const stdout = output.stdout();
-    expect(stdout).toContain('Kept .agentsmesh/lessons/journal.md (already exists)');
-    expect(stdout).toContain('.agentsmesh/rules/_root.md already contains the Lessons paragraph');
+    expect(stdout).toContain('Kept .agentsmesh/lessons/lessons.json (already exists)');
+    expect(stdout).toContain(
+      '.agentsmesh/rules/_root.md already carries the current Lessons block',
+    );
   });
 
   it('lessons-only retrofit skips standard init lines and prints the generate hint', () => {
@@ -136,7 +138,7 @@ describe('renderInit', () => {
         gitignoreUpdated: false,
         lessonsOnly: true,
         lessons: {
-          created: [`${process.cwd()}/.agentsmesh/lessons/journal.md`],
+          created: [`${process.cwd()}/.agentsmesh/lessons/lessons.json`],
           skipped: [],
           rootRuleUpdated: true,
         },

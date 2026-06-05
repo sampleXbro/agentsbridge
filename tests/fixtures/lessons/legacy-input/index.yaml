@@ -1,0 +1,25 @@
+version: 1
+clusters:
+  - topic: alpha-rules
+    file: .agentsmesh/lessons/topics/alpha-rules.md
+    summary: Alpha topic covers shared bullets across globs and commands.
+    triggers:
+      file_globs:
+        - "src/alpha/**/*.ts"
+        - "tests/alpha/**/*.test.ts"
+      command_patterns:
+        - "^pnpm test:alpha"
+      keywords:
+        - alpha
+        - "alpha bug"
+
+  - topic: beta-rules
+    file: .agentsmesh/lessons/topics/beta-rules.md
+    summary: Beta topic — shares one glob with alpha and adds a unique keyword.
+    triggers:
+      file_globs:
+        - "src/alpha/**/*.ts"
+        - "src/beta/**/*.ts"
+      command_patterns: []
+      keywords:
+        - beta

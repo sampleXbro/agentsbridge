@@ -1,14 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { lintLessonsSubsystem } from '../../../../src/core/lint/shared/lessons.js';
 
-const ROOT = join(tmpdir(), 'agentsmesh-lessons-lint-test');
-const LESSONS = '.agentsmesh/lessons';
-const INDEX = `${LESSONS}/index.yaml`;
-const TOPICS = `${LESSONS}/topics`;
-const ROOT_RULE = '.agentsmesh/rules/_root.md';
+const LESSONS_REL = '.agentsmesh/lessons';
+const GRAPH_REL = `${LESSONS_REL}/lessons.json`;
+const ROOT_RULE_REL = '.agentsmesh/rules/_root.md';
+
+let ROOT: string;
 
 function write(rel: string, body: string): void {
   const abs = join(ROOT, rel);
@@ -16,127 +16,112 @@ function write(rel: string, body: string): void {
   writeFileSync(abs, body, 'utf8');
 }
 
-function validIndex(): string {
-  return [
-    'version: 1',
-    'clusters:',
-    '  - topic: alpha',
-    `    file: ${TOPICS}/alpha.md`,
-    '    summary: Alpha topic.',
-    '    triggers:',
-    '      file_globs:',
-    '        - "src/**/*.ts"',
-    '      command_patterns: []',
-    '      keywords: []',
-    '',
-  ].join('\n');
-}
-
-function validTopic(): string {
-  return '# Alpha\n\n## Rules (apply unconditionally)\n\n1. Do the thing.\n';
+function validGraph(): string {
+  return JSON.stringify(
+    {
+      version: 1,
+      lessons: {
+        'alpha-rule': {
+          rule: 'Do the thing.',
+          topics: ['alpha'],
+          triggers: ['t-glob'],
+          evidence: [],
+          status: 'active',
+          createdAt: '2026-06-05',
+        },
+      },
+      topics: { alpha: { summary: 'Alpha topic.' } },
+      triggers: { 't-glob': { kind: 'file_glob', pattern: 'src/**/*.ts' } },
+    },
+    null,
+    2,
+  );
 }
 
 function validRootRule(): string {
-  return '---\nroot: true\n---\n\n# Operational Guidelines\n\n## Lessons (MUST do)\n\nbody\n';
+  return '---\nroot: true\n---\n\n# Operational Guidelines\n\n## Lessons (BLOCKING REQUIREMENT — MUST run)\n\nbody\n';
 }
 
-beforeEach(() => mkdirSync(ROOT, { recursive: true }));
-afterEach(() => rmSync(ROOT, { recursive: true, force: true }));
+beforeEach(() => {
+  ROOT = mkdtempSync(join(tmpdir(), 'agentsmesh-lessons-lint-'));
+});
+
+afterEach(() => {
+  rmSync(ROOT, { recursive: true, force: true });
+});
 
 describe('lintLessonsSubsystem', () => {
   it('returns no diagnostics when scope is global', () => {
-    write(INDEX, 'not even yaml: : :');
+    write(GRAPH_REL, '{ malformed');
     expect(lintLessonsSubsystem(ROOT, 'global')).toEqual([]);
   });
 
-  it('returns no diagnostics when index.yaml is absent (subsystem not installed)', () => {
+  it('returns no diagnostics when lessons.json is absent (subsystem not installed)', () => {
     expect(lintLessonsSubsystem(ROOT, 'project')).toEqual([]);
   });
 
-  it('returns no diagnostics for a healthy subsystem', () => {
-    write(INDEX, validIndex());
-    write(`${TOPICS}/alpha.md`, validTopic());
-    write(ROOT_RULE, validRootRule());
+  it('returns no diagnostics for a healthy graph + root rule', () => {
+    write(GRAPH_REL, validGraph());
+    write(ROOT_RULE_REL, validRootRule());
     expect(lintLessonsSubsystem(ROOT, 'project')).toEqual([]);
   });
 
-  it('emits an error when index.yaml fails schema validation', () => {
-    write(INDEX, 'version: 99\nclusters: []\n');
-    write(ROOT_RULE, validRootRule());
+  it('emits an error when lessons.json is malformed JSON', () => {
+    write(GRAPH_REL, '{ not json }');
+    write(ROOT_RULE_REL, validRootRule());
     const diags = lintLessonsSubsystem(ROOT, 'project');
     expect(diags).toHaveLength(1);
-    expect(diags[0]).toMatchObject({
-      level: 'error',
-      file: INDEX,
-      target: 'lessons',
-    });
-    expect(diags[0]!.message).toMatch(/invalid/i);
+    expect(diags[0]).toMatchObject({ level: 'error', file: GRAPH_REL, target: 'lessons' });
   });
 
-  it('emits an error when a cluster references a missing topic file', () => {
-    write(INDEX, validIndex());
-    write(ROOT_RULE, validRootRule());
+  it('surfaces graph integrity findings (dangling topic ref) as errors', () => {
+    const graph = JSON.parse(validGraph()) as Record<string, unknown>;
+    (graph.lessons as Record<string, { topics: string[] }>)['alpha-rule'].topics = ['ghost'];
+    write(GRAPH_REL, JSON.stringify(graph, null, 2));
+    write(ROOT_RULE_REL, validRootRule());
     const diags = lintLessonsSubsystem(ROOT, 'project');
-    expect(diags).toHaveLength(1);
-    expect(diags[0]).toMatchObject({
-      level: 'error',
-      file: `${TOPICS}/alpha.md`,
-      target: 'lessons',
-    });
-    expect(diags[0]!.message).toContain('alpha');
+    expect(diags.some((d) => d.level === 'error' && d.message.includes('DANGLING_TOPIC'))).toBe(
+      true,
+    );
   });
 
-  it('emits a warning when a topic body lacks the "## Rules" heading', () => {
-    write(INDEX, validIndex());
-    write(`${TOPICS}/alpha.md`, '# Alpha\n\nno rules section\n');
-    write(ROOT_RULE, validRootRule());
+  it('surfaces graph integrity findings (orphan trigger) as warnings', () => {
+    const graph = JSON.parse(validGraph()) as Record<string, unknown>;
+    (graph.triggers as Record<string, unknown>)['t-orphan'] = {
+      kind: 'keyword',
+      pattern: 'orphan',
+    };
+    write(GRAPH_REL, JSON.stringify(graph, null, 2));
+    write(ROOT_RULE_REL, validRootRule());
     const diags = lintLessonsSubsystem(ROOT, 'project');
-    expect(diags).toHaveLength(1);
-    expect(diags[0]).toMatchObject({
-      level: 'warning',
-      file: `${TOPICS}/alpha.md`,
-      target: 'lessons',
-    });
-    expect(diags[0]!.message).toMatch(/## Rules/);
-  });
-
-  it('emits a warning when a command_patterns entry is not a valid regex', () => {
-    const idx = validIndex().replace('command_patterns: []', 'command_patterns: ["[unclosed"]');
-    write(INDEX, idx);
-    write(`${TOPICS}/alpha.md`, validTopic());
-    write(ROOT_RULE, validRootRule());
-    const diags = lintLessonsSubsystem(ROOT, 'project');
-    expect(diags).toHaveLength(1);
-    expect(diags[0]).toMatchObject({
-      level: 'warning',
-      file: INDEX,
-      target: 'lessons',
-    });
-    expect(diags[0]!.message).toMatch(/regex/i);
+    expect(diags.some((d) => d.level === 'warning' && d.message.includes('ORPHAN_TRIGGER'))).toBe(
+      true,
+    );
   });
 
   it('emits a warning when the procedural rule paragraph is missing from _root.md', () => {
-    write(INDEX, validIndex());
-    write(`${TOPICS}/alpha.md`, validTopic());
-    write(ROOT_RULE, '---\nroot: true\n---\n\n# Operational Guidelines\n\nno lessons heading\n');
+    write(GRAPH_REL, validGraph());
+    write(
+      ROOT_RULE_REL,
+      '---\nroot: true\n---\n\n# Operational Guidelines\n\nno lessons heading\n',
+    );
     const diags = lintLessonsSubsystem(ROOT, 'project');
     expect(diags).toHaveLength(1);
     expect(diags[0]).toMatchObject({
       level: 'warning',
-      file: ROOT_RULE,
+      file: ROOT_RULE_REL,
       target: 'lessons',
     });
     expect(diags[0]!.message).toMatch(/## Lessons/);
   });
 
   it('emits a warning when _root.md itself is absent', () => {
-    write(INDEX, validIndex());
-    write(`${TOPICS}/alpha.md`, validTopic());
+    write(GRAPH_REL, validGraph());
     const diags = lintLessonsSubsystem(ROOT, 'project');
     expect(diags).toHaveLength(1);
     expect(diags[0]).toMatchObject({
       level: 'warning',
-      file: ROOT_RULE,
+      file: ROOT_RULE_REL,
       target: 'lessons',
     });
   });

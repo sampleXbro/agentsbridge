@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { scaffoldLessons } from '../../../src/lessons/init.js';
@@ -12,57 +12,54 @@ beforeEach(() => {
 });
 
 describe('scaffoldLessons', () => {
-  it('creates journal, index, topics dir, and root rule with procedural paragraph', () => {
+  it('creates lessons.json and injects the managed ritual block into _root.md', () => {
     const result = scaffoldLessons(projectRoot);
     const paths = lessonsPaths(projectRoot);
 
-    expect(existsSync(paths.journal)).toBe(true);
-    expect(existsSync(paths.index)).toBe(true);
-    expect(existsSync(paths.topicsDir)).toBe(true);
-    expect(readFileSync(paths.journal, 'utf8')).toMatch(/^# /);
-    expect(readFileSync(paths.index, 'utf8')).toContain('clusters: []');
+    expect(existsSync(paths.graph)).toBe(true);
+    const graph = JSON.parse(readFileSync(paths.graph, 'utf8')) as Record<string, unknown>;
+    expect(graph).toEqual({ lessons: {}, topics: {}, triggers: {}, version: 1 });
 
     const rootRule = readFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), 'utf8');
-    expect(rootRule).toContain('## Lessons (MUST do — non-negotiable)');
+    expect(rootRule).toContain('<!-- agentsmesh:lessons-contract:start -->');
+    expect(rootRule).toContain('<!-- agentsmesh:lessons-contract:end -->');
+    expect(rootRule).toContain('## Lessons (BLOCKING REQUIREMENT — MUST run, no exceptions)');
 
-    expect(result.created.length).toBeGreaterThan(0);
+    // No legacy artifacts.
+    expect(existsSync(paths.journal)).toBe(false);
+    expect(existsSync(paths.index)).toBe(false);
+    expect(existsSync(paths.topicsDir)).toBe(false);
+
+    expect(result.created).toEqual([paths.graph]);
     expect(result.rootRuleUpdated).toBe(true);
   });
 
-  it('is idempotent — re-running does not duplicate the procedural paragraph', () => {
+  it('is idempotent — re-running keeps a single block and reports graph skipped', () => {
     scaffoldLessons(projectRoot);
     const second = scaffoldLessons(projectRoot);
 
     const rootRule = readFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), 'utf8');
-    const occurrences = rootRule.match(/^## Lessons \(/gm) ?? [];
-    expect(occurrences.length).toBe(1);
+    const starts = rootRule.match(/<!-- agentsmesh:lessons-contract:start -->/g) ?? [];
+    expect(starts.length).toBe(1);
 
-    expect(second.skipped.length).toBeGreaterThan(0);
+    expect(second.created).toEqual([]);
+    expect(second.skipped).toEqual([lessonsPaths(projectRoot).graph]);
     expect(second.rootRuleUpdated).toBe(false);
   });
 
-  it('appends procedural rule to an existing root rule file without overwriting other content', () => {
-    const customRule = `---\nroot: true\ndescription: ""\n---\n\n# Operational Guidelines\n\n## Custom Section\n\nKeep me intact.\n`;
+  it('appends the block to an existing root rule without disturbing other content', () => {
     mkdirSync(join(projectRoot, '.agentsmesh/rules'), { recursive: true });
-    writeFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), customRule, 'utf8');
+    writeFileSync(
+      join(projectRoot, '.agentsmesh/rules/_root.md'),
+      '---\nroot: true\ndescription: ""\n---\n\n# Existing\n\n## Custom Section\n\nKeep me.\n',
+      'utf8',
+    );
 
     scaffoldLessons(projectRoot);
 
     const rootRule = readFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), 'utf8');
     expect(rootRule).toContain('## Custom Section');
-    expect(rootRule).toContain('Keep me intact.');
-    expect(rootRule).toContain('## Lessons (MUST do — non-negotiable)');
-  });
-
-  it('normalizes append when existing root rule does not end with a newline', () => {
-    const noTrailingNewline = `---\nroot: true\ndescription: ""\n---\n\n# Operational Guidelines\n\n## Custom Section\n\nLast line no newline`;
-    mkdirSync(join(projectRoot, '.agentsmesh/rules'), { recursive: true });
-    writeFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), noTrailingNewline, 'utf8');
-
-    scaffoldLessons(projectRoot);
-
-    const rootRule = readFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), 'utf8');
-    expect(rootRule).toMatch(/Last line no newline\n+## Lessons \(/);
-    expect(rootRule.endsWith('\n')).toBe(true);
+    expect(rootRule).toContain('Keep me.');
+    expect(rootRule).toContain('<!-- agentsmesh:lessons-contract:start -->');
   });
 });

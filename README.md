@@ -88,9 +88,7 @@ AGENTS.md
   permissions.yaml
   ignore
   lessons/
-    index.yaml
-    journal.md
-    topics/
+    lessons.json
 ```
 
 ```bash
@@ -116,10 +114,14 @@ agentsmesh check      # CI-friendly drift gate against .agentsmesh/.lock
 - **`check`** — exits non-zero if generated files have drifted from `.agentsmesh/.lock`. Drop into CI.
 
 Use `agentsmesh init --lessons` when you want the optional lessons recall +
-capture subsystem. Agents read `.agentsmesh/lessons/index.yaml`, load only
-matching topic files before edits/commands, and append failures to
-`.agentsmesh/lessons/journal.md`; the procedural rule is projected through the
-normal root rule, so it stays tool-agnostic.
+capture subsystem. The canonical graph at `.agentsmesh/lessons/lessons.json`
+is the single source of truth. Agents query it through one shell command
+before every edit (`agentsmesh lessons query --file <path> --cmd <command>`)
+and capture failures with one shell command after (`agentsmesh lessons add
+"<rule>" --topic <id> --trigger-file <glob>`). Upgrading from a previous
+release? Run `agentsmesh lessons import-md` once to migrate the legacy
+`index.yaml` + `topics/*.md` + `journal.md` into the graph; the CLI deletes
+the legacy files after a successful migration.
 
 If you installed via `npm install -D agentsmesh` (also `pnpm add -D` / `yarn add -D`), prefix each command with `npx`. The CLI ships as both `agentsmesh` and the shorter alias `amsh`.
 
@@ -218,7 +220,7 @@ AgentsMesh canonicalizes all of these — rules, commands, agents, skills, MCP s
 - `hooks.yaml` — pre/post tool hooks.
 - `permissions.yaml` — allow/deny rules where the target supports them.
 - `ignore` — paths the assistant should not read or modify.
-- `lessons/` — optional recall/capture memory: trigger index, append-only journal, and small topic rule files read directly by agents.
+- `lessons/` — optional recall/capture memory: a single JSON graph (`lessons.json`) of lessons + topics + triggers. Agents talk to it via `agentsmesh lessons query` / `agentsmesh lessons add` rather than hand-editing files.
 
 Configuration:
 
@@ -250,6 +252,9 @@ agentsmesh installs list [--global]
 agentsmesh refresh [<name>[,<name>...]] [--dry-run] [--force] [--json] [--global]
 agentsmesh plugin add|list|remove|info [--version <v>] [--id <id>]
 agentsmesh target scaffold <id> [--name <displayName>] [--force]
+agentsmesh lessons query [--file <p>] [--cmd <c>] [--keyword <k>] [--format plain|md|json]
+agentsmesh lessons add "<rule>" --topic <id> [--trigger-file <glob>] [--trigger-cmd <regex>] [--trigger-kw <text>] [--evidence <ref>] [--new-topic --topic-summary "<one line>"]
+agentsmesh lessons topics | show <topic> | deprecate <id> [--superseded-by <id>] | journal | validate | import-md [--force]
 ```
 
 `agentsmesh --help` prints the same surface; `agentsmesh <cmd> --help` is also supported.

@@ -1,0 +1,271 @@
+import { describe, expect, it } from 'vitest';
+import { renderLessons } from '../../../../src/cli/renderers/lessons.js';
+import { useCapturedOutput } from './renderer-test-helpers.js';
+
+describe('renderLessons — query', () => {
+  const output = useCapturedOutput();
+
+  it('plain format prints one rule per line', () => {
+    renderLessons({
+      subcommand: 'query',
+      exitCode: 0,
+      format: 'plain',
+      data: {
+        lessons: [
+          { id: 'a', rule: 'Rule one.', topics: ['t'], triggers: [], evidence: [] },
+          { id: 'b', rule: 'Rule two.', topics: ['t'], triggers: [], evidence: [] },
+        ],
+        query: {},
+        autoMigrated: false,
+      },
+    });
+    const out = output.stdout();
+    expect(out).toContain('Rule one.');
+    expect(out).toContain('Rule two.');
+  });
+
+  it('md format prints a numbered list', () => {
+    renderLessons({
+      subcommand: 'query',
+      exitCode: 0,
+      format: 'md',
+      data: {
+        lessons: [{ id: 'a', rule: 'Rule.', topics: ['t'], triggers: [], evidence: [] }],
+        query: {},
+        autoMigrated: false,
+      },
+    });
+    expect(output.stdout()).toContain('1. Rule.');
+  });
+
+  it('json format prints the data block', () => {
+    renderLessons({
+      subcommand: 'query',
+      exitCode: 0,
+      format: 'json',
+      data: {
+        lessons: [{ id: 'a', rule: 'R.', topics: [], triggers: [], evidence: [] }],
+        query: {},
+        autoMigrated: false,
+      },
+    });
+    const out = output.stdout();
+    const parsed = JSON.parse(out) as { lessons: Array<{ id: string }> };
+    expect(parsed.lessons[0]?.id).toBe('a');
+  });
+
+  it('prints an auto-migration notice on stderr when applicable', () => {
+    renderLessons({
+      subcommand: 'query',
+      exitCode: 0,
+      format: 'plain',
+      data: { lessons: [], query: {}, autoMigrated: true },
+    });
+    expect(output.stderr()).toMatch(/auto-migrated/i);
+  });
+
+  it('prints "(no matches)" when query result is empty in plain format', () => {
+    renderLessons({
+      subcommand: 'query',
+      exitCode: 0,
+      format: 'plain',
+      data: { lessons: [], query: { file: 'src/x.ts' }, autoMigrated: false },
+    });
+    expect(output.stdout()).toMatch(/no matches/i);
+  });
+});
+
+describe('renderLessons — add', () => {
+  const output = useCapturedOutput();
+
+  it('prints the new lesson id and any new triggers', () => {
+    renderLessons({
+      subcommand: 'add',
+      exitCode: 0,
+      data: {
+        id: 'topic-x-rule-1',
+        isNewLesson: true,
+        isNewTopic: false,
+        newTriggerIds: ['t-glob-abc'],
+      },
+    });
+    expect(output.stdout()).toContain('topic-x-rule-1');
+    expect(output.stdout()).toMatch(/new triggers?/i);
+  });
+
+  it('signals idempotency when lesson already existed', () => {
+    renderLessons({
+      subcommand: 'add',
+      exitCode: 0,
+      data: { id: 'x', isNewLesson: false, isNewTopic: false, newTriggerIds: [] },
+    });
+    expect(output.stdout()).toMatch(/existing/i);
+  });
+
+  it('routes errors to stderr', () => {
+    renderLessons({
+      subcommand: 'add',
+      exitCode: 1,
+      error: 'Unknown topic: nope',
+      data: { id: '', isNewLesson: false, isNewTopic: false, newTriggerIds: [] },
+    });
+    expect(output.stderr()).toContain('Unknown topic: nope');
+  });
+});
+
+describe('renderLessons — topics / show / journal / validate / import-md / help', () => {
+  const output = useCapturedOutput();
+
+  it('topics prints id and summary per row', () => {
+    renderLessons({
+      subcommand: 'topics',
+      exitCode: 0,
+      data: { topics: [{ id: 't1', summary: 'Summary 1.' }] },
+    });
+    expect(output.stdout()).toContain('t1');
+    expect(output.stdout()).toContain('Summary 1.');
+  });
+
+  it('show prints the rendered markdown to stdout', () => {
+    renderLessons({
+      subcommand: 'show',
+      exitCode: 0,
+      data: { topic: 't1', markdown: '# t1\n\nbody\n' },
+    });
+    expect(output.stdout()).toContain('# t1');
+    expect(output.stdout()).toContain('body');
+  });
+
+  it('deprecate prints a plain deprecation line', () => {
+    renderLessons({
+      subcommand: 'deprecate',
+      exitCode: 0,
+      data: { id: 'rule-a', supersededBy: null },
+    });
+    expect(output.stdout()).toMatch(/deprecated rule-a/i);
+  });
+
+  it('deprecate prints a supersede line when supersededBy is set', () => {
+    renderLessons({
+      subcommand: 'deprecate',
+      exitCode: 0,
+      data: { id: 'rule-a', supersededBy: 'rule-b' },
+    });
+    expect(output.stdout()).toMatch(/superseded rule-a → rule-b/i);
+  });
+
+  it('import-md without deletions omits the removed-legacy line', () => {
+    renderLessons({
+      subcommand: 'import-md',
+      exitCode: 0,
+      data: {
+        topicCount: 1,
+        lessonCount: 1,
+        triggerCount: 1,
+        wroteGraphPath: '/abs/.agentsmesh/lessons/lessons.json',
+        deletedPaths: [],
+      },
+    });
+    expect(output.stdout()).not.toMatch(/removed legacy/i);
+  });
+
+  it('journal prints chronological entries with createdAt', () => {
+    renderLessons({
+      subcommand: 'journal',
+      exitCode: 0,
+      data: {
+        entries: [
+          { id: 'a', rule: 'A.', createdAt: '2026-06-01', topics: ['t'] },
+          { id: 'b', rule: 'B.', createdAt: '2026-06-02', topics: ['t'] },
+        ],
+      },
+    });
+    const out = output.stdout();
+    expect(out.indexOf('2026-06-01')).toBeGreaterThan(-1);
+    expect(out.indexOf('A.')).toBeGreaterThan(-1);
+    expect(out.indexOf('2026-06-02')).toBeGreaterThan(out.indexOf('2026-06-01'));
+  });
+
+  it('topics prints a placeholder when there are no topics', () => {
+    renderLessons({ subcommand: 'topics', exitCode: 0, data: { topics: [] } });
+    expect(output.stdout()).toMatch(/no topics/i);
+  });
+
+  it('validate prints warning-level findings to stderr', () => {
+    renderLessons({
+      subcommand: 'validate',
+      exitCode: 0,
+      data: {
+        ok: true,
+        findings: [{ level: 'warning', code: 'ORPHAN_TRIGGER', message: 'Trigger t-x unused.' }],
+      },
+    });
+    expect(output.stderr()).toMatch(/warning/i);
+    expect(output.stderr()).toContain('ORPHAN_TRIGGER');
+  });
+
+  it('import-md reports a singular removed-legacy line for exactly one deletion', () => {
+    renderLessons({
+      subcommand: 'import-md',
+      exitCode: 0,
+      data: {
+        topicCount: 1,
+        lessonCount: 1,
+        triggerCount: 1,
+        wroteGraphPath: '/abs/.agentsmesh/lessons/lessons.json',
+        deletedPaths: ['/abs/.agentsmesh/lessons/index.yaml'],
+      },
+    });
+    expect(output.stdout()).toMatch(/removed legacy: 1 path(?!s)/);
+  });
+
+  it('validate ok prints a success line to stdout', () => {
+    renderLessons({
+      subcommand: 'validate',
+      exitCode: 0,
+      data: { ok: true, findings: [] },
+    });
+    expect(output.stdout()).toMatch(/ok/i);
+  });
+
+  it('validate findings print to stderr with level prefix', () => {
+    renderLessons({
+      subcommand: 'validate',
+      exitCode: 1,
+      data: {
+        ok: false,
+        findings: [
+          { level: 'error', code: 'DANGLING_TOPIC', message: 'Lesson x → topic y missing.' },
+        ],
+      },
+    });
+    expect(output.stderr()).toMatch(/error/i);
+    expect(output.stderr()).toContain('DANGLING_TOPIC');
+  });
+
+  it('import-md prints migration counts', () => {
+    renderLessons({
+      subcommand: 'import-md',
+      exitCode: 0,
+      data: {
+        topicCount: 2,
+        lessonCount: 5,
+        triggerCount: 7,
+        wroteGraphPath: '/abs/.agentsmesh/lessons/lessons.json',
+        deletedPaths: ['/abs/.agentsmesh/lessons/index.yaml'],
+      },
+    });
+    const out = output.stdout();
+    expect(out).toContain('2');
+    expect(out).toContain('5');
+    expect(out).toContain('7');
+  });
+
+  it('help prints usage and known subcommands', () => {
+    renderLessons({ subcommand: 'help', exitCode: 0 });
+    const out = output.stdout();
+    expect(out).toMatch(/usage/i);
+    expect(out).toContain('query');
+    expect(out).toContain('add');
+  });
+});

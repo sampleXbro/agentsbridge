@@ -45,9 +45,7 @@ agentsmesh.local.yaml     # Local overrides (gitignored)
   permissions.yaml
   ignore
   lessons/                # Created only with --lessons
-    index.yaml
-    journal.md
-    topics/
+    lessons.json          # Canonical recall/capture graph
 .gitignore                # Updated to exclude agentsmesh.local.yaml
 ```
 
@@ -92,8 +90,8 @@ agentsmesh init --lessons
 agentsmesh generate
 ```
 
-`--lessons` creates `.agentsmesh/lessons/index.yaml`,
-`.agentsmesh/lessons/journal.md`, and `.agentsmesh/lessons/topics/`, then
+`--lessons` scaffolds `.agentsmesh/lessons/lessons.json` (the universal
+recall/capture graph) and
 appends a tool-agnostic recall/capture protocol to `.agentsmesh/rules/_root.md`.
 After `generate`, every enabled target receives the same root rule: agents read
 the index, load only matching topic files before edits or commands, and append

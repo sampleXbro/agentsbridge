@@ -3,7 +3,10 @@ import { COMMANDS, GLOBAL_FLAGS, type HelpFlag } from './help-data.js';
 
 function formatFlags(flags: HelpFlag[], pad = 18): string {
   if (flags.length === 0) return '  (no command-specific flags)';
-  return flags.map((flag) => `  ${flag.name.padEnd(pad)}${flag.description}`).join('\n');
+  // Widen the name column to the longest flag so names never collide with
+  // their descriptions; always leave a ≥2-space gap.
+  const width = Math.max(pad, ...flags.map((flag) => flag.name.length + 2));
+  return flags.map((flag) => `  ${flag.name.padEnd(width)}${flag.description}`).join('\n');
 }
 
 /**

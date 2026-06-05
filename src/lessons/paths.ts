@@ -73,4 +73,6 @@ Rejected excuses: *"the edit is small"* → query it. *"I already know this"* �
 
 Rejected excuses: *"it wasn't really a failure"* → it was. *"I'll capture it later"* → no. *"no topic fits"* → \`agentsmesh lessons topics\` then \`--new-topic\`.
 
+No shell? Use the \`lessons_query\` and \`lessons_add\` MCP tools — same two operations. Run \`agentsmesh lessons --help\` for the full command set (\`show\`, \`deprecate\`, \`journal\`, \`validate\`, \`import-md\`).
+
 **These two commands ARE the system. Skip them and the system does not exist.**`;

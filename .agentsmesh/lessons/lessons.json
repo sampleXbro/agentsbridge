@@ -2012,6 +2012,23 @@
         "t-kw-129cc275"
       ]
     },
+    "fixture-and-assertion-discipline-when-asserting-on-agentsmesh-lessons": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "lesson:e2e-lessons-validate-output"
+      ],
+      "rule": "When asserting on `agentsmesh lessons validate` output, know it prints \"Lessons graph: ok.\" to stdout ONLY when there are zero findings; non-fatal warnings (e.g. UNREACHABLE_LESSON for a lesson with no triggers) are written to stderr and suppress the ok line while exit stays 0. Test fixtures that expect the ok line must seed lessons WITH at least one trigger, or assert on exit code instead.",
+      "status": "active",
+      "topics": [
+        "fixture-and-assertion-discipline"
+      ],
+      "triggers": [
+        "t-glob-1b989d0e",
+        "t-kw-e61f5882",
+        "t-kw-3c5328a3",
+        "t-kw-04b69ea5"
+      ]
+    },
     "frontmatter-and-canonical-shapes-rule-1": {
       "createdAt": "2026-06-05",
       "evidence": [
@@ -10628,6 +10645,10 @@
       "kind": "file_glob",
       "pattern": "src/cli/index.ts"
     },
+    "t-glob-1b989d0e": {
+      "kind": "file_glob",
+      "pattern": "tests/**/*lessons*"
+    },
     "t-glob-1bd6cdf4": {
       "kind": "file_glob",
       "pattern": "src/core/generate/collision.ts"
@@ -11036,6 +11057,10 @@
       "kind": "keyword",
       "pattern": "needs:"
     },
+    "t-kw-04b69ea5": {
+      "kind": "keyword",
+      "pattern": "UNREACHABLE_LESSON"
+    },
     "t-kw-04f2d77c": {
       "kind": "keyword",
       "pattern": "backslash"
@@ -11243,6 +11268,10 @@
     "t-kw-3afd6e04": {
       "kind": "keyword",
       "pattern": "merge marker"
+    },
+    "t-kw-3c5328a3": {
+      "kind": "keyword",
+      "pattern": "Lessons graph: ok"
     },
     "t-kw-3c7f646a": {
       "kind": "keyword",
@@ -11819,6 +11848,10 @@
     "t-kw-e5ea7f39": {
       "kind": "keyword",
       "pattern": "reference rewrite"
+    },
+    "t-kw-e61f5882": {
+      "kind": "keyword",
+      "pattern": "lessons validate"
     },
     "t-kw-e659afa0": {
       "kind": "keyword",

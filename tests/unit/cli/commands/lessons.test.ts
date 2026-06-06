@@ -514,6 +514,42 @@ describe('runLessons query — ranking and caps', () => {
     expect(r.data.lessons.length).toBe(3);
   });
 
+  function seedManyLong(): void {
+    const filler = 'word '.repeat(50).trim(); // ~250 chars ≈ ~63 tokens each
+    const lessons: LessonsGraph['lessons'] = {};
+    for (let i = 0; i < 20; i++) {
+      lessons[`long-${i}`] = {
+        rule: `Long rule ${i} ${filler}`,
+        topics: ['topic-x'],
+        triggers: ['t-broad'],
+        evidence: [],
+        status: 'active',
+        createdAt: '2026-06-01',
+      };
+    }
+    saveLessonsGraph(root, {
+      version: 1,
+      lessons,
+      topics: { 'topic-x': { summary: 'X.' } },
+      triggers: { 't-broad': { kind: 'file_glob', pattern: 'src/**' } },
+    });
+  }
+
+  it('applies a default token budget (trims below the default limit) when none is given', async () => {
+    seedManyLong();
+    const r = await runLessons({ file: 'src/a.ts' }, ['query'], root);
+    if (r.subcommand !== 'query') return;
+    expect(r.data.totalMatches).toBe(20);
+    expect(r.data.lessons.length).toBeLessThan(10); // 400-token budget, not the limit
+  });
+
+  it('--all bypasses the default token budget', async () => {
+    seedManyLong();
+    const r = await runLessons({ file: 'src/a.ts', all: true }, ['query'], root);
+    if (r.subcommand !== 'query') return;
+    expect(r.data.lessons.length).toBe(20);
+  });
+
   it('ranks the rule whose text matches the keyword first', async () => {
     seedMany();
     const r = await runLessons({ file: 'src/a.ts', keyword: 'windows path' }, ['query'], root);

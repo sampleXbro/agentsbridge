@@ -113,6 +113,31 @@ describe('lessonsHandlers.query', () => {
     expect(r.totalMatches).toBe(3);
   });
 
+  it('applies a default token budget when max_tokens is omitted', async () => {
+    const filler = 'word '.repeat(50).trim(); // ~250 chars ≈ ~63 tokens each
+    const lessons: LessonsGraph['lessons'] = {};
+    for (let i = 0; i < 20; i++) {
+      lessons[`b-${i}`] = {
+        rule: `Budget rule ${i} ${filler}`,
+        topics: ['t'],
+        triggers: ['g'],
+        evidence: [],
+        status: 'active',
+        createdAt: '2026-06-01',
+      };
+    }
+    saveLessonsGraph(projectRoot, {
+      version: 1,
+      lessons,
+      topics: { t: { summary: 'T.' } },
+      triggers: { g: { kind: 'file_glob', pattern: 'src/**' } },
+    });
+    const r = await lessonsHandlers.query(ctx, { file: 'src/x.ts' });
+    expect(r.totalMatches).toBe(20);
+    // Default 400-token budget trims below the default 10-result limit.
+    expect(r.lessons.length).toBeLessThan(10);
+  });
+
   it('returns empty when no graph exists', async () => {
     const fresh = await mkdtemp(join(tmpdir(), 'amesh-mcp-fresh-'));
     await writeFile(

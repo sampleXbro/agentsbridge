@@ -135,6 +135,33 @@ describe('queryLessons', () => {
     expect(queryLessons(broken, { command: 'anything' })).toEqual([]);
   });
 
+  it('skips a ReDoS-unsafe command_pattern without executing it (no hang, non-match)', () => {
+    const evil: LessonsGraph = {
+      ...graph,
+      triggers: {
+        ...graph.triggers,
+        'redos-regex': { kind: 'command_pattern', pattern: '(a+)+$' },
+      },
+      lessons: {
+        ...graph.lessons,
+        'redos-rule': {
+          rule: 'RR.',
+          topics: ['t'],
+          triggers: ['redos-regex'],
+          evidence: [],
+          status: 'active',
+          createdAt: '2026-06-01',
+        },
+      },
+    };
+    // A 30-char adversarial input that would hang a backtracking engine.
+    const adversarial = 'a'.repeat(29) + '!';
+    const start = Date.now();
+    const r = queryLessons(evil, { command: adversarial });
+    expect(Date.now() - start).toBeLessThan(1000); // would be seconds if executed
+    expect(r.find((x) => x.id === 'redos-rule')).toBeUndefined();
+  });
+
   it('returns the full Lesson object alongside the id', () => {
     const r = queryLessons(graph, { file: 'src/a.ts' });
     expect(r[0]?.lesson.rule).toBe('G.');

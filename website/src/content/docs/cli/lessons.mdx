@@ -49,7 +49,7 @@ agentsmesh lessons query --file src/x.ts --format json
 ```
 
 :::note[Recall precision]
-Triggers may be shared across lessons in a topic, so a match produces a broad **candidate** set. A query therefore **ranks** candidates (BM25 over rule text fused with trigger specificity) and returns the **top 10 by default** — matching is "this lesson is a candidate", not "you must read all of these". A stderr notice reports how many matched; use `--top <n>`/`--all`/`--max-tokens` to widen. `validate` emits a `HIGH_FANOUT_TRIGGERS` warning when triggers are over-shared; per-lesson trigger refinement is the remaining precision lever.
+Triggers may be shared across lessons in a topic, so a match produces a broad **candidate** set. A query therefore **ranks** candidates (BM25 over rule text fused with trigger specificity) and returns the **top 10 by default, bounded by a ~400-token budget** so mandatory recall stays lean — matching is "this lesson is a candidate", not "you must read all of these". A stderr notice reports how many matched; use `--top <n>`/`--max-tokens <n>` to widen, or `--all` to bypass both caps. `validate` emits a `HIGH_FANOUT_TRIGGERS` warning when triggers are over-shared; per-lesson trigger refinement is the remaining precision lever.
 :::
 
 ## Capture ritual
@@ -106,10 +106,10 @@ entirely — `agentsmesh init --lessons` creates the graph directly.
 | `--keyword <text>` | Free-form task description. Matched against `keyword` triggers (case-insensitive substring). |
 | `--format plain\|md\|json` | Output shape. Default `plain` (one rule per line). |
 | `--top <n>` | Keep only the top `n` relevance-ranked matches. Default 10. |
-| `--all` | Return every match (disable the default cap). |
-| `--max-tokens <n>` | Cap results by cumulative estimated rule-token cost. |
+| `--all` | Return every match (disable both the limit and the token budget). |
+| `--max-tokens <n>` | Cap results by cumulative estimated rule-token cost. Defaults to ~400 when omitted. |
 
-Results are **relevance-ranked** (BM25 over rule text fused with trigger specificity) and capped to the top 10 by default; a truncation notice on stderr reports how many matched. Pass `--all` or a larger `--top` to see the rest.
+Results are **relevance-ranked** (BM25 over rule text fused with trigger specificity) and capped by default to the top 10 **and** a ~400-token budget, so mandatory recall stays lean; the single most-relevant result is always returned even if it alone exceeds the budget. A truncation notice on stderr reports how many matched. Pass `--all` (or a larger `--top`/`--max-tokens`) to see the rest.
 
 ### `add`
 
@@ -118,7 +118,7 @@ Results are **relevance-ranked** (BM25 over rule text fused with trigger specifi
 | `--rule "<text>"` | **Required.** Imperative rule that prevents recurrence. |
 | `--topic <id>` | **Required.** Topic id. Pass `--new-topic --topic-summary "..."` to create one. |
 | `--trigger-file <glob>` | `file_glob` trigger. Opaque — repeat the flag for multiple (commas kept). |
-| `--trigger-cmd <regex>` | `command_pattern` trigger. Opaque — repeat for multiple; must be a valid regex (else capture is rejected). |
+| `--trigger-cmd <regex>` | `command_pattern` trigger. Opaque — repeat for multiple; must be a valid **and** ReDoS-safe regex (an invalid one, or a catastrophic-backtracking one like `(a+)+`, is rejected at capture). |
 | `--trigger-kw <text>` | `keyword` trigger. Opaque — repeat the flag for multiple (commas kept). |
 | `--evidence <ref>` | Evidence reference (`commit:SHA`, `lesson:id`, …). Comma-separate for multiple. |
 | `--rationale <text>` | One-line "why" behind the rule. |

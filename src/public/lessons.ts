@@ -21,10 +21,20 @@ export type {
   TriggerKind,
 } from '../lessons/graph-schema.js';
 
-// Read-only and serialization primitives. NOTE: raw `saveLessonsGraph` is
-// intentionally NOT exported — it bypasses locking and validation. Use
-// `mutateLessonsGraph` for any write so the transaction boundary (lock → load →
-// mutate → validate → atomic save) cannot be circumvented.
+// Migration-aware application APIs — the BLESSED entry points. Each runs the
+// legacy→JSON migration first, so callers never strand a legacy `index.yaml`.
+// Prefer these over the low-level primitives below for ordinary recall/capture.
+export { recallLessons, captureLesson } from '../lessons/recall.js';
+export type { RecallOptions, RecallResult } from '../lessons/recall.js';
+
+// Low-level primitives. NOTE: these do NOT migrate a legacy store — a first
+// read/write via them on a legacy project would create an empty `lessons.json`
+// and strand `index.yaml`. Migration cannot live in `mutateLessonsGraph` because
+// the migrator writes through it (would recurse). If you must use a primitive on
+// a possibly-legacy project, call `maybeAutoMigrateLessons` first, or just use
+// `recallLessons` / `captureLesson` above. Raw `saveLessonsGraph` is
+// intentionally NOT exported — it bypasses locking and validation; use
+// `mutateLessonsGraph` so the transaction boundary cannot be circumvented.
 export {
   graphFilePath,
   loadLessonsGraph,
@@ -35,11 +45,19 @@ export {
 export { mutateLessonsGraph } from '../lessons/mutate.js';
 export type { MutateOptions } from '../lessons/mutate.js';
 
+export { maybeAutoMigrateLessons } from '../lessons/auto-migrate.js';
+
 export { queryLessons } from '../lessons/query.js';
 export type { LessonsQuery, MatchedLesson } from '../lessons/query.js';
 
-export { rankLessons, DEFAULT_RECALL_LIMIT } from '../lessons/ranking.js';
+export {
+  rankLessons,
+  DEFAULT_RECALL_LIMIT,
+  DEFAULT_RECALL_MAX_TOKENS,
+} from '../lessons/ranking.js';
 export type { RankedLesson, RankOptions, RankReason } from '../lessons/ranking.js';
+
+export { isSafeRegexPattern } from '../lessons/regex-safety.js';
 
 export { mergeLessons } from '../lessons/merge.js';
 export type { MergeLessonsOptions, MergeLessonsResult } from '../lessons/merge.js';

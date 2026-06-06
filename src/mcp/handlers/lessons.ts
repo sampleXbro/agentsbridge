@@ -1,9 +1,8 @@
 import type { McpContext } from '../context.js';
-import { addLesson, UnknownTopicError } from '../../lessons/add.js';
+import { UnknownTopicError } from '../../lessons/add.js';
 import { maybeAutoMigrateLessons } from '../../lessons/auto-migrate.js';
 import { tryLoadLessonsGraph } from '../../lessons/graph-store.js';
-import { queryLessons } from '../../lessons/query.js';
-import { DEFAULT_RECALL_LIMIT, rankLessons } from '../../lessons/ranking.js';
+import { captureLesson, recallLessons } from '../../lessons/recall.js';
 
 interface LessonsQueryInput {
   readonly file?: string;
@@ -41,12 +40,10 @@ export const lessonsHandlers = {
     }>;
     totalMatches: number;
   }> {
-    await maybeAutoMigrateLessons(ctx.projectRoot);
-    const graph = tryLoadLessonsGraph(ctx.projectRoot);
-    if (graph === null) return { lessons: [], totalMatches: 0 };
-    const matches = queryLessons(graph, input);
-    const ranked = rankLessons(graph, input, matches, {
-      limit: input.limit ?? DEFAULT_RECALL_LIMIT,
+    // Migration-aware recall; applies the default token budget when the caller
+    // omits max_tokens so mandatory recall stays token-lean.
+    const { lessons: ranked, totalMatches } = await recallLessons(ctx.projectRoot, input, {
+      limit: input.limit,
       maxTokens: input.max_tokens,
     });
     // Compact by default — return only id + rule to keep recall token-cheap.
@@ -65,7 +62,7 @@ export const lessonsHandlers = {
             }
           : { id, rule: lesson.rule },
       ),
-      totalMatches: matches.length,
+      totalMatches,
     };
   },
 
@@ -89,11 +86,10 @@ export const lessonsHandlers = {
     isNewTopic: boolean;
     newTriggerIds: string[];
   }> {
-    // Migrate any legacy store first so capture enriches the real graph instead
-    // of creating lessons.json and stranding the legacy lessons forever.
-    await maybeAutoMigrateLessons(ctx.projectRoot);
+    // captureLesson migrates any legacy store first so capture enriches the real
+    // graph instead of creating lessons.json and stranding the legacy lessons.
     try {
-      return await addLesson(
+      return await captureLesson(
         ctx.projectRoot,
         {
           rule: input.rule,

@@ -1,5 +1,6 @@
 import type { Lesson, LessonsGraph } from './graph-schema.js';
 import { collectMatchedTriggerIds, type LessonsQuery, type MatchedLesson } from './query.js';
+import { bm25, buildCorpus, queryTerms } from './ranking-text.js';
 
 export interface RankReason {
   readonly matchedTriggers: string[];
@@ -29,88 +30,16 @@ export interface RankOptions {
 /** Default recall cap: a broad trigger match returns the most-relevant few, not the whole topic. */
 export const DEFAULT_RECALL_LIMIT = 10;
 
-const K1 = 1.5;
-const B = 0.75;
+/**
+ * Default recall token budget applied by the application APIs (CLI `query`, MCP
+ * `lessons_query`, {@link recallLessons}) when the caller does not specify one.
+ * Mandatory recall runs before every edit/command, so its payload must stay
+ * lean; without a budget a broad match can return ~450+ rule-tokens. `--all`
+ * (CLI) bypasses both caps. The top result is always kept (see RankOptions).
+ */
+export const DEFAULT_RECALL_MAX_TOKENS = 400;
+
 const RRF_K = 60;
-const STOP = new Set([
-  'the',
-  'a',
-  'an',
-  'to',
-  'of',
-  'in',
-  'and',
-  'or',
-  'for',
-  'is',
-  'on',
-  'at',
-  'with',
-  'be',
-  'as',
-  'it',
-  'that',
-  'this',
-  'its',
-  'must',
-]);
-
-function tokenize(text: string): string[] {
-  return text
-    .toLowerCase()
-    .split(/[^a-z0-9]+/)
-    .filter((t) => t.length >= 2 && !STOP.has(t));
-}
-
-function queryTerms(query: LessonsQuery): string[] {
-  const parts: string[] = [];
-  if (query.keyword !== undefined) parts.push(query.keyword);
-  if (query.file !== undefined) parts.push(query.file);
-  if (query.command !== undefined) parts.push(query.command);
-  return tokenize(parts.join(' '));
-}
-
-interface Corpus {
-  readonly idf: Map<string, number>;
-  readonly avgdl: number;
-}
-
-function buildCorpus(graph: LessonsGraph): Corpus {
-  const docs: number[] = [];
-  const df = new Map<string, number>();
-  let total = 0;
-  let n = 0;
-  for (const lesson of Object.values(graph.lessons)) {
-    if (lesson.status !== 'active') continue;
-    const toks = tokenize(lesson.rule);
-    n += 1;
-    total += toks.length;
-    docs.push(toks.length);
-    for (const t of new Set(toks)) df.set(t, (df.get(t) ?? 0) + 1);
-  }
-  // rankLessons short-circuits on empty matches, so the corpus always has >= 1
-  // active lesson when we get here; N is therefore >= 1.
-  const N = Math.max(n, 1);
-  const idf = new Map<string, number>();
-  for (const [t, f] of df) idf.set(t, Math.log(1 + (N - f + 0.5) / (f + 0.5)));
-  return { idf, avgdl: total / N || 1 };
-}
-
-function bm25(terms: readonly string[], ruleText: string, corpus: Corpus): number {
-  const toks = tokenize(ruleText);
-  const dl = toks.length || 1;
-  const tf = new Map<string, number>();
-  for (const t of toks) tf.set(t, (tf.get(t) ?? 0) + 1);
-  let score = 0;
-  for (const t of new Set(terms)) {
-    const f = tf.get(t) ?? 0;
-    if (f === 0) continue;
-    // f > 0 ⇒ the term is in this active lesson's rule ⇒ it is in the corpus idf.
-    const idf = corpus.idf.get(t)!;
-    score += (idf * (f * (K1 + 1))) / (f + K1 * (1 - B + (B * dl) / corpus.avgdl));
-  }
-  return score;
-}
 
 /** Active-lesson reference count per trigger — the fanout used for specificity. */
 function buildFanout(graph: LessonsGraph): Map<string, number> {

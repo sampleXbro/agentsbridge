@@ -16,7 +16,7 @@ Available since **v0.6**. Requires Node.js 20+.
 | `agentsmesh/engine` | Generation, import, lint, diff, check + error taxonomy + `loadProjectContext` + config loaders + the types those functions need. |
 | `agentsmesh/canonical` | `loadCanonical`, `loadCanonicalFiles`, `LoadCanonicalOptions`, and the canonical domain types. |
 | `agentsmesh/targets` | Built-in catalog (`getTargetCatalog`, `getAllDescriptors`, `getDescriptor`), `registerTargetDescriptor` for plugins, and target-descriptor types. |
-| `agentsmesh/lessons` | Lessons recall/capture graph: load/save `lessons.json`, `queryLessons` for recall, `addLesson` for capture, `validateLessonsGraph`, `importLegacyLessons` (one-shot upgrade migrator), and `scaffoldLessons`. |
+| `agentsmesh/lessons` | Lessons recall/capture graph: `recallLessons`/`captureLesson` (migration-aware application APIs), low-level `queryLessons`/`rankLessons`/`addLesson`/`mutateLessonsGraph`, `validateLessonsGraph`, `isSafeRegexPattern`, `importLegacyLessons` (one-shot upgrade migrator), and `scaffoldLessons`. |
 
 Every entrypoint resolves to a real `.d.ts` under strict TypeScript — there is no `TS7016: Could not find a declaration file` for any public symbol. The `tests/consumer-smoke/` job in CI installs the packed tarball into a clean strict-mode TS project on every push and `tsc --noEmit`s every export below.
 
@@ -258,11 +258,10 @@ The canonical graph is `.agentsmesh/lessons/lessons.json`. See the
 
 ```ts
 import {
-  loadLessonsGraph,
+  recallLessons, // migration-aware recall: migrate → load → query → rank
+  captureLesson, // migration-aware capture: migrate → add
   tryLoadLessonsGraph,
-  saveLessonsGraph,
   queryLessons,
-  addLesson,
   validateLessonsGraph,
   importLegacyLessons,
   type LessonsGraph,
@@ -270,27 +269,33 @@ import {
   type ValidationReport,
 } from 'agentsmesh/lessons';
 
-const graph = tryLoadLessonsGraph(process.cwd());
-if (graph) {
-  const hits = queryLessons(graph, { file: 'src/cli/x.ts' });
-  console.log(hits.map((h) => h.lesson.rule));
-}
+// Blessed application APIs — they migrate a legacy index.yaml first, so a first
+// read/write never strands it (the low-level primitives below do not migrate).
+const { lessons, totalMatches } = await recallLessons(process.cwd(), {
+  file: 'src/cli/x.ts',
+});
+console.log(`${lessons.length} of ${totalMatches} shown`, lessons.map((l) => l.lesson.rule));
 
-await addLesson(process.cwd(), {
+await captureLesson(process.cwd(), {
   rule: 'Normalize CLI display paths.',
   topic: 'windows-paths',
   triggers: { files: ['src/cli/**/*.ts'] },
   evidence: ['commit:abc1234'],
 });
 
-const report: ValidationReport = validateLessonsGraph(graph!);
-if (!report.ok) console.error(report.findings);
+const graph = tryLoadLessonsGraph(process.cwd());
+if (graph) {
+  const report: ValidationReport = validateLessonsGraph(graph);
+  if (!report.ok) console.error(report.findings);
+}
 ```
 
-`queryLessons(graph, { file, command, keyword })` returns every `active` lesson
-whose triggers match any supplied predicate. The combination is OR across
-triggers — see the [recall semantics](../lessons/#recall-semantics) for the full
-contract.
+`recallLessons(projectRoot, query, opts?)` is the migration-aware recall entry
+point: it migrates a legacy store, loads the graph, and returns the
+relevance-ranked, capped matches (default top 10 + ~400-token budget). The
+low-level `queryLessons(graph, { file, command, keyword })` returns the raw
+`active` candidate set — OR across triggers — without migrating or ranking. See
+the [recall semantics](../lessons/#recall-semantics) for the full contract.
 
 `addLesson(projectRoot, input, opts?)` is lock-serialized via the same primitive
 as `.generate.lock`. It is idempotent on repeat: re-adding the same rule + topic

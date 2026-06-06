@@ -5952,6 +5952,20 @@
         "t-glob-b39eff4f"
       ]
     },
+    "lessons-system-enforce-the-content-addressed-trigger": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review-2026-06-06-global"
+      ],
+      "rule": "Enforce the content-addressed trigger invariant in graph validation: reject duplicate (kind, pattern) trigger nodes so public mutations cannot bypass deduplication, fanout accounting, and ranking specificity.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-9ccdff8a"
+      ]
+    },
     "lessons-system-ensure-a-public-first-write": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -5974,6 +5988,20 @@
         "review-2026-06-06"
       ],
       "rule": "Export stable error classes thrown by public lessons APIs so callers can distinguish expected conflicts without depending on internal modules.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-7fc51540"
+      ]
+    },
+    "lessons-system-expose-a-high-level-lessons": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review-2026-06-06-global"
+      ],
+      "rule": "Expose a high-level lessons application API for recall, capture, and initialization that owns legacy migration, loading, ranking, and transactional writes; do not require public consumers to compose storage primitives correctly.",
       "status": "active",
       "topics": [
         "lessons-system"
@@ -6086,6 +6114,20 @@
         "t-kw-05eaa965"
       ]
     },
+    "lessons-system-make-the-documented-public-mutatelessons": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review-2026-06-06-global"
+      ],
+      "rule": "Make the documented public mutateLessonsGraph write path legacy-aware, or keep a raw transaction primitive internal; a first low-level public mutation must not create lessons.json and permanently strand an existing legacy store.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-300bbdba"
+      ]
+    },
     "lessons-system-preserve-every-occurrence-of-repeatable": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -6113,6 +6155,38 @@
       "triggers": [
         "t-glob-285fdf8b",
         "t-kw-f3654aad"
+      ]
+    },
+    "lessons-system-recalllessons-capturelesson-take-project": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "lesson:lessons-system-recall-api-shape"
+      ],
+      "rule": "recallLessons/captureLesson take (projectRoot, query, options): recall caps go in the 3rd options arg — recallLessons(root, {keyword}, {limit, maxTokens}). The 2nd arg is LessonsQuery (file/command/keyword only); putting limit/maxTokens there is silently ignored (and is a TS excess-property error in object literals). maxTokens:null disables the default token budget.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-0a664e0b",
+        "t-glob-648edf5a",
+        "t-kw-9520fa61",
+        "t-kw-c8f23353",
+        "t-kw-ae9d9bb9"
+      ]
+    },
+    "lessons-system-reject-or-safely-execute-command": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review-2026-06-06-global"
+      ],
+      "rule": "Reject or safely execute command_pattern regexes with catastrophic-backtracking risk; syntax-valid user-controlled patterns must not be able to hang mandatory lessons recall.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-c9dfc34a"
       ]
     },
     "lessons-system-route-every-lessons-graph-writer": {
@@ -8976,6 +9050,21 @@
         "t-cmd-8c4a10c7"
       ]
     },
+    "verification-workflow-when-locating-a-globally-installed": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review-2026-06-06-global"
+      ],
+      "rule": "When locating a globally installed CLI, use command -v plus npm root -g first; do not make pnpm root -g part of a chained probe because an unconfigured pnpm global bin can fail the whole command.",
+      "status": "active",
+      "topics": [
+        "verification-workflow"
+      ],
+      "triggers": [
+        "t-glob-5e0d226f",
+        "t-cmd-a3f82ec8"
+      ]
+    },
     "watch-and-test-timing-rule-1": {
       "createdAt": "2026-06-05",
       "evidence": [
@@ -10650,6 +10739,10 @@
       "kind": "command_pattern",
       "pattern": "git tag"
     },
+    "t-cmd-a3f82ec8": {
+      "kind": "command_pattern",
+      "pattern": "(npm|pnpm) root -g"
+    },
     "t-cmd-a5d4409e": {
       "kind": "command_pattern",
       "pattern": "git restore"
@@ -10777,6 +10870,10 @@
     "t-glob-08eb6b3f": {
       "kind": "file_glob",
       "pattern": "dist/cli.js"
+    },
+    "t-glob-0a664e0b": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/recall.ts"
     },
     "t-glob-0b59f983": {
       "kind": "file_glob",
@@ -11010,6 +11107,10 @@
       "kind": "file_glob",
       "pattern": ".github/workflows/publish.yml"
     },
+    "t-glob-648edf5a": {
+      "kind": "file_glob",
+      "pattern": "tests/**/*recall*"
+    },
     "t-glob-6511ff88": {
       "kind": "file_glob",
       "pattern": "tsconfig.json"
@@ -11106,6 +11207,10 @@
       "kind": "file_glob",
       "pattern": "tests/**/global-mode*.test.ts"
     },
+    "t-glob-9ccdff8a": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/validate*.ts"
+    },
     "t-glob-a07d1032": {
       "kind": "file_glob",
       "pattern": "src/core/reference/reference-map-targets.ts"
@@ -11185,6 +11290,10 @@
     "t-glob-c47c9030": {
       "kind": "file_glob",
       "pattern": "src/targets/catalog/builtin-targets.ts"
+    },
+    "t-glob-c9dfc34a": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/query.ts"
     },
     "t-glob-ce455bbd": {
       "kind": "file_glob",
@@ -11802,6 +11911,10 @@
       "kind": "keyword",
       "pattern": "text transform"
     },
+    "t-kw-9520fa61": {
+      "kind": "keyword",
+      "pattern": "recallLessons"
+    },
     "t-kw-956e8179": {
       "kind": "keyword",
       "pattern": "homedir"
@@ -11890,6 +12003,10 @@
       "kind": "keyword",
       "pattern": "commit untracked"
     },
+    "t-kw-ae9d9bb9": {
+      "kind": "keyword",
+      "pattern": "recall options"
+    },
     "t-kw-af046336": {
       "kind": "keyword",
       "pattern": "formatLinkPath"
@@ -11957,6 +12074,10 @@
     "t-kw-c8e6e315": {
       "kind": "keyword",
       "pattern": "mirrorGlobalPath"
+    },
+    "t-kw-c8f23353": {
+      "kind": "keyword",
+      "pattern": "captureLesson"
     },
     "t-kw-cb67f62d": {
       "kind": "keyword",

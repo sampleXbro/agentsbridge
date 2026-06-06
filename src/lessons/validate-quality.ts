@@ -1,4 +1,5 @@
 import type { LessonsGraph } from './graph-schema.js';
+import { isSafeRegexPattern } from './regex-safety.js';
 import type { ValidationFinding } from './validate.js';
 
 export function collectDuplicateRules(graph: LessonsGraph, findings: ValidationFinding[]): void {
@@ -31,8 +32,11 @@ export function collectDuplicateRules(graph: LessonsGraph, findings: ValidationF
 /**
  * A `command_pattern` trigger whose pattern is not a valid regex is dead: recall
  * compiles it with `new RegExp` and a throw is swallowed as a non-match, so the
- * lesson silently becomes unreachable via that trigger. Flag it as an error so
- * the transactional write path rejects it at capture time.
+ * lesson silently becomes unreachable via that trigger. A *valid* pattern that
+ * is ReDoS-unsafe (catastrophic backtracking, e.g. `(a+)+`) is worse: recall
+ * would execute it on every command and could hang. Flag both as errors so the
+ * transactional write path rejects them at capture time (recall additionally
+ * skips them at runtime — see regex-safety.ts).
  */
 export function collectInvalidTriggerPatterns(
   graph: LessonsGraph,
@@ -47,6 +51,46 @@ export function collectInvalidTriggerPatterns(
         level: 'error',
         code: 'INVALID_TRIGGER_PATTERN',
         message: `Trigger "${triggerId}" has an invalid command_pattern regex (${trigger.pattern}): ${err instanceof Error ? err.message : String(err)}.`,
+        triggerId,
+      });
+      continue;
+    }
+    if (!isSafeRegexPattern(trigger.pattern)) {
+      findings.push({
+        level: 'error',
+        code: 'UNSAFE_TRIGGER_PATTERN',
+        message: `Trigger "${triggerId}" has a ReDoS-unsafe command_pattern regex (${trigger.pattern}): nested repetition can backtrack catastrophically. Rewrite without a repetition inside a repeated group (e.g. avoid (a+)+).`,
+        triggerId,
+      });
+    }
+  }
+}
+
+/**
+ * Trigger ids are content-addressed from (kind, pattern), so `add` can never
+ * create two nodes for the same pattern. Validation enforces the invariant
+ * structurally — a public/low-level mutation (or hand-edit) that inserts a
+ * second id for an existing (kind, pattern) would bypass deduplication and
+ * distort fanout accounting and ranking specificity. Flag every member of a
+ * duplicate group as an error.
+ */
+export function collectDuplicateTriggers(graph: LessonsGraph, findings: ValidationFinding[]): void {
+  const byKey = new Map<string, string[]>();
+  for (const [triggerId, trigger] of Object.entries(graph.triggers)) {
+    const key = `${trigger.kind}|${trigger.pattern}`;
+    const bucket = byKey.get(key) ?? [];
+    bucket.push(triggerId);
+    byKey.set(key, bucket);
+  }
+  for (const [key, ids] of byKey) {
+    if (ids.length < 2) continue;
+    const sorted = [...ids].sort();
+    for (const triggerId of sorted) {
+      const others = sorted.filter((other) => other !== triggerId);
+      findings.push({
+        level: 'error',
+        code: 'DUPLICATE_TRIGGER',
+        message: `Trigger "${triggerId}" duplicates (kind, pattern) of: ${others.join(', ')} (key: "${key}").`,
         triggerId,
       });
     }

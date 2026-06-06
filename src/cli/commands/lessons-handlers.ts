@@ -1,6 +1,10 @@
 import { tryLoadLessonsGraph } from '../../lessons/graph-store.js';
 import { queryLessons } from '../../lessons/query.js';
-import { DEFAULT_RECALL_LIMIT, rankLessons } from '../../lessons/ranking.js';
+import {
+  DEFAULT_RECALL_LIMIT,
+  DEFAULT_RECALL_MAX_TOKENS,
+  rankLessons,
+} from '../../lessons/ranking.js';
 import { validateLessonsGraph } from '../../lessons/validate.js';
 import {
   emptyGraph,
@@ -66,8 +70,11 @@ export function doQuery(
     return { subcommand: 'query', exitCode: 0, format, data };
   }
   const matches = queryLessons(graph, query);
+  // `--all` bypasses both caps; otherwise apply the default limit + token budget
+  // so mandatory recall stays lean unless the caller overrides via --top/--max-tokens.
   const limit = flags.all === true ? undefined : (numberFlag(flags, 'top') ?? DEFAULT_RECALL_LIMIT);
-  const maxTokens = numberFlag(flags, 'max-tokens') ?? undefined;
+  const maxTokens =
+    flags.all === true ? undefined : (numberFlag(flags, 'max-tokens') ?? DEFAULT_RECALL_MAX_TOKENS);
   const ranked = rankLessons(graph, query, matches, { limit, maxTokens });
   const lessons = ranked.map(({ id, lesson, score }) => ({
     id,

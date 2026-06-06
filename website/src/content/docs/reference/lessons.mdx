@@ -60,10 +60,10 @@ Triggers are content-addressed: the migrator and `agentsmesh lessons add` both d
 `agentsmesh lessons query` returns every `active` lesson whose triggers match **any** supplied field:
 
 - `--file <p>` matches `file_glob` triggers via picomatch with `dot: true`.
-- `--cmd <c>` matches `command_pattern` triggers via `new RegExp(pattern).test(command)`. An invalid regex can't reach the graph — `validate` flags `INVALID_TRIGGER_PATTERN` (error) so the transactional write path rejects such a trigger at capture; at read time a malformed pattern is still defensively treated as a non-match rather than throwing.
+- `--cmd <c>` matches `command_pattern` triggers via regex. An invalid regex can't reach the graph — `validate` flags `INVALID_TRIGGER_PATTERN` (error) so the transactional write path rejects it at capture. A **ReDoS-unsafe** regex (nested repetition, e.g. `(a+)+`) is likewise rejected (`UNSAFE_TRIGGER_PATTERN`) because mandatory recall would execute it on every command and could hang; at read time both malformed and unsafe patterns are defensively skipped (treated as a non-match), never executed. See `isSafeRegexPattern` in the programmatic API.
 - `--keyword <t>` matches `keyword` triggers via `keyword.toLowerCase().includes(pattern.toLowerCase())`.
 
-Combination is OR across triggers per lesson: a lesson is a **candidate** if **any** of its triggers fire from **any** supplied field. Candidates are then **relevance-ranked** — BM25 over the rule text fused (RRF) with trigger specificity (inverse fanout), ties broken by recency then id — and the CLI/MCP return the **top 10 by default** (`--top <n>` / `--all` / `--max-tokens <n>`; MCP `limit`/`max_tokens`). The low-level `queryLessons` export returns the raw unranked candidate set; `rankLessons` applies the ranking + caps.
+Combination is OR across triggers per lesson: a lesson is a **candidate** if **any** of its triggers fire from **any** supplied field. Candidates are then **relevance-ranked** — BM25 over the rule text fused (RRF) with trigger specificity (inverse fanout), ties broken by recency then id — and the CLI/MCP return the **top 10 by default, bounded by a default token budget** (`DEFAULT_RECALL_MAX_TOKENS`, 400) so mandatory recall stays lean. Override with `--top <n>` / `--max-tokens <n>` (MCP `limit`/`max_tokens`); `--all` bypasses both caps. The single most-relevant result is always returned even if it alone exceeds the budget. The low-level `queryLessons` export returns the raw unranked candidate set; `rankLessons` applies the ranking + caps; the migration-aware `recallLessons` application API wraps load → query → rank (and migrates a legacy store first).
 
 ## Validation codes
 
@@ -82,6 +82,8 @@ Combination is OR across triggers per lesson: a lesson is a **candidate** if **a
 | `SUPERSEDE_CYCLE` | error | `supersededBy` links form a cycle. |
 | `INACTIVE_SUPERSEDER` | error | `supersededBy` points at a non-active lesson — the chain dead-ends with no live replacement. |
 | `INVALID_TRIGGER_PATTERN` | error | A `command_pattern` trigger is not a valid regex (would be silently unreachable). |
+| `UNSAFE_TRIGGER_PATTERN` | error | A `command_pattern` trigger is a valid regex but ReDoS-unsafe (nested repetition / star height ≥ 2, e.g. `(a+)+`). Mandatory recall would execute it on every command and could hang, so it is rejected at capture and skipped at read time. |
+| `DUPLICATE_TRIGGER` | error | Two or more trigger ids share the same `(kind, pattern)`. Trigger ids are content-addressed, so `add` cannot create this — it only arises from a low-level mutation or hand-edit, and it would distort dedup, fanout, and ranking specificity. |
 | `UNREACHABLE_LESSON` | warning | An active lesson has zero triggers and can never be recalled. |
 | `HIGH_FANOUT_TRIGGERS` | warning | One summary finding: N triggers each match more than 10 active lessons (recall leans on ranking). |
 | `ORPHAN_TOPIC` | warning | A topic node is not referenced by any lesson. |
@@ -118,15 +120,22 @@ The new graph types and helpers are exported from `agentsmesh/lessons`:
 
 ```ts
 import {
+  // Blessed, migration-aware application APIs — prefer these.
+  recallLessons, // migrate → load → query → rank (+ default token budget)
+  captureLesson, // migrate → add (transactional)
+  // Low-level primitives — do NOT migrate a legacy store; see note below.
   loadLessonsGraph,
   tryLoadLessonsGraph,
   mutateLessonsGraph, // the only write path: lock → load → mutate → validate → atomic save
+  maybeAutoMigrateLessons, // run before a primitive on a possibly-legacy project
   queryLessons, // raw candidate matcher
   rankLessons, // relevance ranking + caps over candidates
+  isSafeRegexPattern, // ReDoS guard for command_pattern regexes
   addLesson,
   mergeLessons,
   validateLessonsGraph,
   importLegacyLessons,
+  DEFAULT_RECALL_MAX_TOKENS,
   type LessonsGraph,
   type Lesson,
   type Topic,
@@ -135,15 +144,18 @@ import {
   type ValidationReport,
 } from 'agentsmesh/lessons';
 // NOTE: raw saveLessonsGraph is intentionally not exported — it bypasses
-// locking + validation. Use mutateLessonsGraph for every write.
+// locking + validation. Use mutateLessonsGraph for every write. The low-level
+// primitives (tryLoadLessonsGraph/mutateLessonsGraph/queryLessons) do NOT
+// migrate a legacy index.yaml — a first read/write through them would strand it.
+// Prefer recallLessons/captureLesson, or call maybeAutoMigrateLessons first.
 
-const graph = tryLoadLessonsGraph(process.cwd());
-if (graph) {
-  const hits = queryLessons(graph, { file: 'src/cli/x.ts' });
-  console.log(hits.map((h) => h.lesson.rule));
-}
+// Migration-aware recall (default token budget applied unless overridden):
+const { lessons, totalMatches } = await recallLessons(process.cwd(), {
+  file: 'src/cli/x.ts',
+});
+console.log(`${lessons.length} of ${totalMatches} shown`);
 
-await addLesson(process.cwd(), {
+await captureLesson(process.cwd(), {
   rule: 'Normalize CLI display paths.',
   topic: 'windows-paths',
   triggers: { files: ['src/cli/**/*.ts'] },
@@ -157,7 +169,7 @@ The recall flow saves tokens by returning only the lessons that match — agents
 
 | Step | Legacy YAML + MD | JSON graph |
 |------|------------------|------------|
-| Recall | Read 400+ line `index.yaml` + matching topic Markdown files. ~2–5k tokens per session. | One `query` call returning only the **relevance-ranked top matches** (default 10; `--top`/`--all`/`--max-tokens` to adjust). Typically a few hundred to ~1.5k tokens; the cap keeps a broad trigger from returning a whole topic. |
+| Recall | Read 400+ line `index.yaml` + matching topic Markdown files. ~2–5k tokens per session. | One `query` call returning only the **relevance-ranked top matches** (default top 10 **and** a ~400-token budget; `--top`/`--max-tokens` to adjust, `--all` to bypass). Typically a few hundred tokens; the caps keep a broad trigger from returning a whole topic. |
 | Capture | Edit `journal.md` + matching `topics/<topic>.md` + reconcile `index.yaml` triggers. Three file ops, often skipped. | One `add` call. Atomic. |
 
 ## See also

@@ -247,6 +247,52 @@ describe('validateLessonsGraph', () => {
     expect(r.ok).toBe(false);
   });
 
+  it('flags a ReDoS-unsafe command_pattern regex as an error', () => {
+    const g = baseGraph();
+    g.triggers['t-redos'] = { kind: 'command_pattern', pattern: '(a+)+$' };
+    g.lessons['a-rule'].triggers = ['t-glob', 't-redos'];
+    const r = validateLessonsGraph(g);
+    expect(r.findings).toContainEqual(
+      expect.objectContaining({
+        level: 'error',
+        code: 'UNSAFE_TRIGGER_PATTERN',
+        triggerId: 't-redos',
+      }),
+    );
+    expect(r.ok).toBe(false);
+  });
+
+  it('does NOT flag a linear command_pattern regex as unsafe', () => {
+    const g = baseGraph();
+    g.triggers['t-cmd'] = { kind: 'command_pattern', pattern: '(npm|pnpm) install .*' };
+    g.lessons['a-rule'].triggers = ['t-glob', 't-cmd'];
+    const r = validateLessonsGraph(g);
+    expect(r.findings.some((f) => f.code === 'UNSAFE_TRIGGER_PATTERN')).toBe(false);
+    expect(r.ok).toBe(true);
+  });
+
+  it('flags duplicate (kind, pattern) trigger nodes as an error (content-addressing)', () => {
+    const g = baseGraph();
+    // Two distinct ids for the same (kind, pattern) — only possible via a
+    // low-level/hand-edit; `add` is content-addressed and cannot create this.
+    g.triggers['t-glob-dup'] = { kind: 'file_glob', pattern: 'src/**' };
+    g.lessons['a-rule'].triggers = ['t-glob', 't-glob-dup'];
+    const r = validateLessonsGraph(g);
+    const dups = r.findings.filter((f) => f.code === 'DUPLICATE_TRIGGER');
+    expect(dups).toHaveLength(2);
+    expect(dups.map((f) => f.triggerId).sort()).toEqual(['t-glob', 't-glob-dup']);
+    expect(r.ok).toBe(false);
+  });
+
+  it('does NOT flag distinct (kind, pattern) triggers as duplicates', () => {
+    const g = baseGraph();
+    g.triggers['t-kw'] = { kind: 'keyword', pattern: 'src/**' }; // same pattern, different kind
+    g.lessons['a-rule'].triggers = ['t-glob', 't-kw'];
+    const r = validateLessonsGraph(g);
+    expect(r.findings.some((f) => f.code === 'DUPLICATE_TRIGGER')).toBe(false);
+    expect(r.ok).toBe(true);
+  });
+
   it('flags schema violations as errors before continuing to other checks', () => {
     const broken = { version: 2, lessons: {}, topics: {}, triggers: {} } as unknown as LessonsGraph;
     const r = validateLessonsGraph(broken);

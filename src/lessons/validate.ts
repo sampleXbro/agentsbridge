@@ -8,6 +8,7 @@ import {
 } from './validate-checks.js';
 import {
   collectDuplicateRules,
+  collectDuplicateTriggers,
   collectFanout,
   collectInvalidTriggerPatterns,
 } from './validate-quality.js';
@@ -48,6 +49,7 @@ export function validateLessonsGraph(graph: LessonsGraph): ValidationReport {
   collectDuplicateRules(graph, findings);
   collectReachability(graph, findings);
   collectInvalidTriggerPatterns(graph, findings);
+  collectDuplicateTriggers(graph, findings);
   collectOrphans(graph, findings);
   collectFanout(graph, findings);
 

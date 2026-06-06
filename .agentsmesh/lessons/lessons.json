@@ -1,5 +1,69 @@
 {
   "lessons": {
+    "agent-orchestration-before-searching-assumed-public-entry": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review-2026-06-06"
+      ],
+      "rule": "Before searching assumed public entry-file paths, enumerate the repository files with rg --files and search only paths that actually exist.",
+      "status": "active",
+      "topics": [
+        "agent-orchestration"
+      ],
+      "triggers": [
+        "t-cmd-cd48106d"
+      ]
+    },
+    "agent-orchestration-resolve-named-skill-paths-from": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "lesson-id"
+      ],
+      "rule": "Resolve named skill paths from the supplied skill-roots table before reading SKILL.md; never assume a project-local .agentsmesh/skills path.",
+      "status": "active",
+      "topics": [
+        "agent-orchestration"
+      ],
+      "triggers": [
+        "t-glob-8fe4e96b",
+        "t-cmd-31dfa72c"
+      ]
+    },
+    "agent-orchestration-when-dispatching-a-read-only": {
+      "createdAt": "2026-06-05",
+      "evidence": [
+        "lesson:feedback_no_mutating_tools_for_review_subagents"
+      ],
+      "rule": "When dispatching a read-only or review subagent, do NOT give it tools that can mutate state — no shell that can run `git checkout`/`git reset`/`git restore`, no file deletes or overwrites. Use a read-only tool profile (e.g. the Explore agent type), confine experimental writes to a fresh temp dir the subagent creates, and commit or stash before fan-out so a stray revert stays recoverable.",
+      "status": "active",
+      "topics": [
+        "agent-orchestration"
+      ],
+      "triggers": [
+        "t-cmd-49d16e5a",
+        "t-cmd-c6b5fd8b",
+        "t-cmd-a5d4409e",
+        "t-kw-34b80ab3",
+        "t-kw-fb5d542a",
+        "t-kw-3070d871",
+        "t-kw-1171e894",
+        "t-kw-866bb6ea"
+      ]
+    },
+    "agent-orchestration-when-spawning-a-subagent-with": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "lesson-id"
+      ],
+      "rule": "When spawning a subagent with fork_context=true, omit agent_type, model, and reasoning_effort because the full-history fork inherits them.",
+      "status": "active",
+      "topics": [
+        "agent-orchestration"
+      ],
+      "triggers": [
+        "t-kw-6829f894"
+      ]
+    },
     "ci-and-release-security-rule-1": {
       "createdAt": "2026-06-05",
       "evidence": [
@@ -1106,12 +1170,14 @@
     "fixture-and-assertion-discipline-rule-1": {
       "createdAt": "2026-06-05",
       "evidence": [
-        "legacy:.agentsmesh/lessons/topics/fixture-and-assertion-discipline.md#rule-1"
+        "legacy:.agentsmesh/lessons/topics/fixture-and-assertion-discipline.md#rule-1",
+        "legacy:.agentsmesh/lessons/topics/generation-collision-source-maps.md#rule-15"
       ],
       "rule": "Assert the exact relative path set and exact count for generated files/dirs — never `some(...)`, prefix matches, or \"at least one\". Cross-check referenced artifacts (e.g. hook wrapper scripts) against the config that points to them.",
       "status": "active",
       "topics": [
-        "fixture-and-assertion-discipline"
+        "fixture-and-assertion-discipline",
+        "generation-collision-source-maps"
       ],
       "triggers": [
         "t-glob-1fe91ebe",
@@ -1143,7 +1209,36 @@
         "t-kw-f4c73005",
         "t-kw-7c2f82c3",
         "t-kw-1df6c8fd",
-        "t-kw-129cc275"
+        "t-kw-129cc275",
+        "t-glob-87a63917",
+        "t-glob-e9f9f003",
+        "t-glob-a23d7b79",
+        "t-glob-c09d2acb",
+        "t-glob-1bd6cdf4",
+        "t-glob-8ce6202e",
+        "t-glob-a07d1032",
+        "t-glob-5995acad",
+        "t-glob-eb76c84a",
+        "t-glob-e6621671",
+        "t-glob-ba152b87",
+        "t-glob-106a67a9",
+        "t-cmd-25ae0863",
+        "t-cmd-7d02fc72",
+        "t-kw-177acbeb",
+        "t-kw-09f37896",
+        "t-kw-498958d8",
+        "t-kw-780152bb",
+        "t-kw-15c6ab40",
+        "t-kw-cb67f62d",
+        "t-kw-b210183e",
+        "t-kw-0acd1d95",
+        "t-kw-0181f5f4",
+        "t-kw-7b9a4665",
+        "t-kw-31aabdd8",
+        "t-kw-24e89449",
+        "t-kw-73333c6a",
+        "t-kw-21a8e9ec",
+        "t-kw-17fd12e3"
       ]
     },
     "fixture-and-assertion-discipline-rule-10": {
@@ -1235,12 +1330,14 @@
     "fixture-and-assertion-discipline-rule-12": {
       "createdAt": "2026-06-05",
       "evidence": [
-        "legacy:.agentsmesh/lessons/topics/fixture-and-assertion-discipline.md#rule-12"
+        "legacy:.agentsmesh/lessons/topics/fixture-and-assertion-discipline.md#rule-12",
+        "legacy:.agentsmesh/lessons/topics/global-mode.md#rule-14"
       ],
       "rule": "Use the correct shape for test helpers: `findGeneratedFile` accepts either a plain string for exact path matching or `{ stringContaining }`/`{ stringMatching }` — `{ exactPath }` does not exist. Check the helper's actual parameter types before use.",
       "status": "active",
       "topics": [
-        "fixture-and-assertion-discipline"
+        "fixture-and-assertion-discipline",
+        "global-mode"
       ],
       "triggers": [
         "t-glob-1fe91ebe",
@@ -1272,7 +1369,33 @@
         "t-kw-f4c73005",
         "t-kw-7c2f82c3",
         "t-kw-1df6c8fd",
-        "t-kw-129cc275"
+        "t-kw-129cc275",
+        "t-glob-eb76c84a",
+        "t-glob-bbff968d",
+        "t-glob-7458228a",
+        "t-glob-e968d417",
+        "t-glob-3e3d7f5b",
+        "t-glob-89b9b30f",
+        "t-glob-91256ca8",
+        "t-glob-b8728451",
+        "t-cmd-2136a61d",
+        "t-cmd-ac418287",
+        "t-cmd-e5052e92",
+        "t-cmd-dbf01710",
+        "t-cmd-f2638ce0",
+        "t-cmd-fe0fbdb4",
+        "t-kw-1dfd56af",
+        "t-kw-ecd6201e",
+        "t-kw-956e8179",
+        "t-kw-1776a2f8",
+        "t-kw-c2fa797f",
+        "t-kw-6f305449",
+        "t-kw-c8e6e315",
+        "t-kw-e3196316",
+        "t-kw-d599429d",
+        "t-kw-c103eb99",
+        "t-kw-baaa73d4",
+        "t-kw-458a71f7"
       ]
     },
     "fixture-and-assertion-discipline-rule-13": {
@@ -1281,7 +1404,8 @@
         "legacy:.agentsmesh/lessons/topics/fixture-and-assertion-discipline.md#rule-13"
       ],
       "rule": "For global-mode structure validation tests, drive `generate()` from `src/core/generate/engine.ts` with `scope: 'global'` and a `ValidatedConfig`-shaped fixture — `runGenerate()` from the CLI returns an exit code, not files.",
-      "status": "active",
+      "status": "superseded",
+      "supersededBy": "global-mode-rule-10",
       "topics": [
         "fixture-and-assertion-discipline"
       ],
@@ -1367,7 +1491,8 @@
         "legacy:.agentsmesh/lessons/topics/fixture-and-assertion-discipline.md#rule-15"
       ],
       "rule": "When codegen-ing module-level array-literal data from per-target imports, patch the existing source file in place between sentinel comments instead of extracting to a new generated module — `descriptor-paths.test.ts` and other per-descriptor import paths trip ESM TDZ when an extra hop captures undefined slots.",
-      "status": "active",
+      "status": "superseded",
+      "supersededBy": "typescript-esm-cycles-rule-2",
       "topics": [
         "fixture-and-assertion-discipline"
       ],
@@ -1410,7 +1535,8 @@
         "legacy:.agentsmesh/lessons/topics/fixture-and-assertion-discipline.md#rule-16"
       ],
       "rule": "Per-target import mappers referenced from a descriptor object literal must live in a third file (`import-mappers.ts`), never in `importer.ts` — descriptor↔importer cycles capture `undefined` in `map:` fields and the runner throws at execution time.",
-      "status": "active",
+      "status": "superseded",
+      "supersededBy": "typescript-esm-cycles-rule-1",
       "topics": [
         "fixture-and-assertion-discipline"
       ],
@@ -1708,12 +1834,16 @@
     "fixture-and-assertion-discipline-rule-8": {
       "createdAt": "2026-06-05",
       "evidence": [
-        "legacy:.agentsmesh/lessons/topics/fixture-and-assertion-discipline.md#rule-8"
+        "legacy:.agentsmesh/lessons/topics/fixture-and-assertion-discipline.md#rule-8",
+        "legacy:.agentsmesh/lessons/topics/typescript-esm-cycles.md#rule-14",
+        "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-27"
       ],
       "rule": "Mock `ValidatedConfig` fixtures (any `mockLoadScopedConfig.mockResolvedValue(...)`) must include every field the schema defaults populate (e.g. `plugins: []`). When a new orchestration step reads `config.X`, grep every mock and add the field before rerunning.",
       "status": "active",
       "topics": [
-        "fixture-and-assertion-discipline"
+        "fixture-and-assertion-discipline",
+        "typescript-esm-cycles",
+        "install-import-pickers"
       ],
       "triggers": [
         "t-glob-1fe91ebe",
@@ -1745,7 +1875,80 @@
         "t-kw-f4c73005",
         "t-kw-7c2f82c3",
         "t-kw-1df6c8fd",
-        "t-kw-129cc275"
+        "t-kw-129cc275",
+        "t-glob-eb76c84a",
+        "t-glob-848355ab",
+        "t-glob-e07c287a",
+        "t-glob-c47c9030",
+        "t-glob-12b9dee9",
+        "t-glob-7d39ded4",
+        "t-glob-4cf8c9e8",
+        "t-glob-6511ff88",
+        "t-glob-85c453ba",
+        "t-cmd-5cc2e657",
+        "t-cmd-355f9276",
+        "t-kw-a9e0c97e",
+        "t-kw-b25e04c5",
+        "t-kw-9138d9ad",
+        "t-kw-5ca8bb9b",
+        "t-kw-4968e049",
+        "t-kw-49dbeaf0",
+        "t-kw-5a3ff25b",
+        "t-kw-59eb7b32",
+        "t-kw-b8002bf1",
+        "t-kw-b2131429",
+        "t-kw-59ebbda5",
+        "t-kw-86674712",
+        "t-kw-19fab1bc",
+        "t-kw-9f989c4c",
+        "t-kw-e08bbdcc",
+        "t-kw-fc1c3506",
+        "t-kw-9f159232",
+        "t-kw-0b49541a",
+        "t-kw-daf3f2d7",
+        "t-kw-f782b599",
+        "t-kw-78dbe6f9",
+        "t-glob-25ede31e",
+        "t-glob-fbb4298f",
+        "t-glob-bf6f2533",
+        "t-glob-7a20529a",
+        "t-glob-20effcc2",
+        "t-glob-3c87d52f",
+        "t-glob-8eea8f9c",
+        "t-glob-2ae846c8",
+        "t-glob-e4faecb1",
+        "t-glob-5ec4aa7e",
+        "t-glob-52d56856",
+        "t-glob-249f92d5",
+        "t-glob-e1fa5112",
+        "t-cmd-2398d904",
+        "t-cmd-34d713b6",
+        "t-cmd-45d8ae56",
+        "t-cmd-cae616a1",
+        "t-cmd-d9dce045",
+        "t-cmd-b66a9431",
+        "t-cmd-2c6e7fc6",
+        "t-cmd-e097d363",
+        "t-kw-122af17e",
+        "t-kw-5eb98593",
+        "t-kw-27cd93f3",
+        "t-kw-a46daf14",
+        "t-kw-21b980fd",
+        "t-kw-360b7d3e",
+        "t-kw-e659afa0",
+        "t-kw-a4ec24a2",
+        "t-kw-1b84052e",
+        "t-kw-a55e6906",
+        "t-kw-2fd1ccde",
+        "t-kw-07501619",
+        "t-kw-785e5c64",
+        "t-kw-3a83756b",
+        "t-kw-1657dff0",
+        "t-kw-8866ab37",
+        "t-kw-8fe9f944",
+        "t-kw-d87bf429",
+        "t-kw-39470111",
+        "t-kw-67b4775f"
       ]
     },
     "fixture-and-assertion-discipline-rule-9": {
@@ -1794,12 +1997,14 @@
     "frontmatter-and-canonical-shapes-rule-1": {
       "createdAt": "2026-06-05",
       "evidence": [
-        "legacy:.agentsmesh/lessons/topics/frontmatter-and-canonical-shapes.md#rule-1"
+        "legacy:.agentsmesh/lessons/topics/frontmatter-and-canonical-shapes.md#rule-1",
+        "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-2"
       ],
       "rule": "Every third-party YAML frontmatter parse on install/import paths — whether the file is `SKILL.md`, command, agent, rule, MDC, or skill-name extraction (`readSkillFrontmatterName()`) — MUST use `tryParseFrontmatter()` / `parseFrontmatterForPath(..., onError)` and emit a \"skipping <path>: <reason>\" warning on failure. Reserve strict `parseFrontmatter()` exclusively for user-authored canonical content under `.agentsmesh/`.",
       "status": "active",
       "topics": [
-        "frontmatter-and-canonical-shapes"
+        "frontmatter-and-canonical-shapes",
+        "install-import-pickers"
       ],
       "triggers": [
         "t-glob-49e2783c",
@@ -1831,7 +2036,48 @@
         "t-kw-edd62ee0",
         "t-kw-63852321",
         "t-kw-da5f9e51",
-        "t-kw-42a9f6c5"
+        "t-kw-42a9f6c5",
+        "t-glob-25ede31e",
+        "t-glob-fbb4298f",
+        "t-glob-bf6f2533",
+        "t-glob-7a20529a",
+        "t-glob-20effcc2",
+        "t-glob-3c87d52f",
+        "t-glob-8eea8f9c",
+        "t-glob-2ae846c8",
+        "t-glob-e4faecb1",
+        "t-glob-5ec4aa7e",
+        "t-glob-52d56856",
+        "t-glob-249f92d5",
+        "t-glob-e1fa5112",
+        "t-cmd-2398d904",
+        "t-cmd-34d713b6",
+        "t-cmd-45d8ae56",
+        "t-cmd-cae616a1",
+        "t-cmd-d9dce045",
+        "t-cmd-b66a9431",
+        "t-cmd-2c6e7fc6",
+        "t-cmd-e097d363",
+        "t-kw-122af17e",
+        "t-kw-5eb98593",
+        "t-kw-27cd93f3",
+        "t-kw-a46daf14",
+        "t-kw-21b980fd",
+        "t-kw-360b7d3e",
+        "t-kw-e659afa0",
+        "t-kw-a4ec24a2",
+        "t-kw-1b84052e",
+        "t-kw-a55e6906",
+        "t-kw-2fd1ccde",
+        "t-kw-07501619",
+        "t-kw-785e5c64",
+        "t-kw-3a83756b",
+        "t-kw-1657dff0",
+        "t-kw-8866ab37",
+        "t-kw-8fe9f944",
+        "t-kw-d87bf429",
+        "t-kw-39470111",
+        "t-kw-67b4775f"
       ]
     },
     "frontmatter-and-canonical-shapes-rule-2": {
@@ -1926,7 +2172,8 @@
         "legacy:.agentsmesh/lessons/topics/frontmatter-and-canonical-shapes.md#rule-4"
       ],
       "rule": "NEVER write a literal `*/` inside any `/* ... */` or JSDoc block comment — including header comments in test files. Replace glob-shaped paths in prose (e.g. `.agentsmesh/skills/*/SKILL.md`) with `skills/{name}/SKILL.md` or `glob: *.md`, or move the glob into a single-line `//` comment outside the block.",
-      "status": "active",
+      "status": "superseded",
+      "supersededBy": "shell-quoting-rule-7",
       "topics": [
         "frontmatter-and-canonical-shapes"
       ],
@@ -2009,12 +2256,14 @@
     "frontmatter-and-canonical-shapes-rule-6": {
       "createdAt": "2026-06-05",
       "evidence": [
-        "legacy:.agentsmesh/lessons/topics/frontmatter-and-canonical-shapes.md#rule-6"
+        "legacy:.agentsmesh/lessons/topics/frontmatter-and-canonical-shapes.md#rule-6",
+        "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-10"
       ],
       "rule": "Manual install staging and persistence MUST share one skill-name derivation helper. If staging reads the name via `readSkillFrontmatterName()` from `SKILL.md` frontmatter, persistence (`pick.skills`) MUST use the same source — never `basename(contentRoot)` on one side and frontmatter on the other.",
       "status": "active",
       "topics": [
-        "frontmatter-and-canonical-shapes"
+        "frontmatter-and-canonical-shapes",
+        "install-import-pickers"
       ],
       "triggers": [
         "t-glob-49e2783c",
@@ -2046,18 +2295,61 @@
         "t-kw-edd62ee0",
         "t-kw-63852321",
         "t-kw-da5f9e51",
-        "t-kw-42a9f6c5"
+        "t-kw-42a9f6c5",
+        "t-glob-25ede31e",
+        "t-glob-fbb4298f",
+        "t-glob-bf6f2533",
+        "t-glob-7a20529a",
+        "t-glob-20effcc2",
+        "t-glob-3c87d52f",
+        "t-glob-8eea8f9c",
+        "t-glob-2ae846c8",
+        "t-glob-e4faecb1",
+        "t-glob-5ec4aa7e",
+        "t-glob-52d56856",
+        "t-glob-249f92d5",
+        "t-glob-e1fa5112",
+        "t-cmd-2398d904",
+        "t-cmd-34d713b6",
+        "t-cmd-45d8ae56",
+        "t-cmd-cae616a1",
+        "t-cmd-d9dce045",
+        "t-cmd-b66a9431",
+        "t-cmd-2c6e7fc6",
+        "t-cmd-e097d363",
+        "t-kw-122af17e",
+        "t-kw-5eb98593",
+        "t-kw-27cd93f3",
+        "t-kw-a46daf14",
+        "t-kw-21b980fd",
+        "t-kw-360b7d3e",
+        "t-kw-e659afa0",
+        "t-kw-a4ec24a2",
+        "t-kw-1b84052e",
+        "t-kw-a55e6906",
+        "t-kw-2fd1ccde",
+        "t-kw-07501619",
+        "t-kw-785e5c64",
+        "t-kw-3a83756b",
+        "t-kw-1657dff0",
+        "t-kw-8866ab37",
+        "t-kw-8fe9f944",
+        "t-kw-d87bf429",
+        "t-kw-39470111",
+        "t-kw-67b4775f"
       ]
     },
     "frontmatter-and-canonical-shapes-rule-7": {
       "createdAt": "2026-06-05",
       "evidence": [
-        "legacy:.agentsmesh/lessons/topics/frontmatter-and-canonical-shapes.md#rule-7"
+        "legacy:.agentsmesh/lessons/topics/frontmatter-and-canonical-shapes.md#rule-7",
+        "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-18"
       ],
       "rule": "Any synthetic canonical entity created from a non-frontmattered source (e.g. `.cursorrules` / `.windsurfrules` root files, marketplace stubs) MUST carry a non-empty `description` (e.g. `Imported from .cursorrules`). Empty descriptions pass unit tests but get dropped by `resolveRulePool()`'s `validateRule` re-filter under `dryRun=true`, even with `--force`.",
       "status": "active",
       "topics": [
-        "frontmatter-and-canonical-shapes"
+        "frontmatter-and-canonical-shapes",
+        "install-import-pickers"
       ],
       "triggers": [
         "t-glob-49e2783c",
@@ -2089,7 +2381,48 @@
         "t-kw-edd62ee0",
         "t-kw-63852321",
         "t-kw-da5f9e51",
-        "t-kw-42a9f6c5"
+        "t-kw-42a9f6c5",
+        "t-glob-25ede31e",
+        "t-glob-fbb4298f",
+        "t-glob-bf6f2533",
+        "t-glob-7a20529a",
+        "t-glob-20effcc2",
+        "t-glob-3c87d52f",
+        "t-glob-8eea8f9c",
+        "t-glob-2ae846c8",
+        "t-glob-e4faecb1",
+        "t-glob-5ec4aa7e",
+        "t-glob-52d56856",
+        "t-glob-249f92d5",
+        "t-glob-e1fa5112",
+        "t-cmd-2398d904",
+        "t-cmd-34d713b6",
+        "t-cmd-45d8ae56",
+        "t-cmd-cae616a1",
+        "t-cmd-d9dce045",
+        "t-cmd-b66a9431",
+        "t-cmd-2c6e7fc6",
+        "t-cmd-e097d363",
+        "t-kw-122af17e",
+        "t-kw-5eb98593",
+        "t-kw-27cd93f3",
+        "t-kw-a46daf14",
+        "t-kw-21b980fd",
+        "t-kw-360b7d3e",
+        "t-kw-e659afa0",
+        "t-kw-a4ec24a2",
+        "t-kw-1b84052e",
+        "t-kw-a55e6906",
+        "t-kw-2fd1ccde",
+        "t-kw-07501619",
+        "t-kw-785e5c64",
+        "t-kw-3a83756b",
+        "t-kw-1657dff0",
+        "t-kw-8866ab37",
+        "t-kw-8fe9f944",
+        "t-kw-d87bf429",
+        "t-kw-39470111",
+        "t-kw-67b4775f"
       ]
     },
     "frontmatter-and-canonical-shapes-rule-8": {
@@ -2138,12 +2471,14 @@
     "frontmatter-and-canonical-shapes-rule-9": {
       "createdAt": "2026-06-05",
       "evidence": [
-        "legacy:.agentsmesh/lessons/topics/frontmatter-and-canonical-shapes.md#rule-9"
+        "legacy:.agentsmesh/lessons/topics/frontmatter-and-canonical-shapes.md#rule-9",
+        "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-19"
       ],
       "rule": "Filter \"boilerplate\" files by intent, not by a single blanket predicate. Maintain one typed map (`stem → 'noise' | 'preserved'`) with three derived predicates: `isBoilerplate` (prevent phantom entities in entity importers / flat-collection classifiers), `isNoiseBoilerplate` (drop in staging + skill supporting-files), `isPreservedBoilerplate` (keep LICENSE/NOTICE/COPYING/README in skill subtrees AND at pack root for legal attribution + consumer context). Both `listSupportingFiles` and `cpFilteredSkill` must use the noise-only predicate at content-staging time.",
       "status": "active",
       "topics": [
-        "frontmatter-and-canonical-shapes"
+        "frontmatter-and-canonical-shapes",
+        "install-import-pickers"
       ],
       "triggers": [
         "t-glob-49e2783c",
@@ -2175,7 +2510,48 @@
         "t-kw-edd62ee0",
         "t-kw-63852321",
         "t-kw-da5f9e51",
-        "t-kw-42a9f6c5"
+        "t-kw-42a9f6c5",
+        "t-glob-25ede31e",
+        "t-glob-fbb4298f",
+        "t-glob-bf6f2533",
+        "t-glob-7a20529a",
+        "t-glob-20effcc2",
+        "t-glob-3c87d52f",
+        "t-glob-8eea8f9c",
+        "t-glob-2ae846c8",
+        "t-glob-e4faecb1",
+        "t-glob-5ec4aa7e",
+        "t-glob-52d56856",
+        "t-glob-249f92d5",
+        "t-glob-e1fa5112",
+        "t-cmd-2398d904",
+        "t-cmd-34d713b6",
+        "t-cmd-45d8ae56",
+        "t-cmd-cae616a1",
+        "t-cmd-d9dce045",
+        "t-cmd-b66a9431",
+        "t-cmd-2c6e7fc6",
+        "t-cmd-e097d363",
+        "t-kw-122af17e",
+        "t-kw-5eb98593",
+        "t-kw-27cd93f3",
+        "t-kw-a46daf14",
+        "t-kw-21b980fd",
+        "t-kw-360b7d3e",
+        "t-kw-e659afa0",
+        "t-kw-a4ec24a2",
+        "t-kw-1b84052e",
+        "t-kw-a55e6906",
+        "t-kw-2fd1ccde",
+        "t-kw-07501619",
+        "t-kw-785e5c64",
+        "t-kw-3a83756b",
+        "t-kw-1657dff0",
+        "t-kw-8866ab37",
+        "t-kw-8fe9f944",
+        "t-kw-d87bf429",
+        "t-kw-39470111",
+        "t-kw-67b4775f"
       ]
     },
     "generation-collision-source-maps-rule-1": {
@@ -2183,7 +2559,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/generation-collision-source-maps.md#rule-1"
       ],
-      "rule": "Whenever a target generates more than one file from the same canonical source, audit the output-source map against the full generator output list so every emitted path participates in rewriting and collision logic — never assume \"one canonical → one artifact\". See L128.",
+      "rule": "Whenever a target generates more than one file from the same canonical source, audit the output-source map against the full generator output list so every emitted path participates in rewriting and collision logic — never assume \"one canonical → one artifact\".",
       "status": "active",
       "topics": [
         "generation-collision-source-maps"
@@ -2225,7 +2601,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/generation-collision-source-maps.md#rule-10"
       ],
-      "rule": "When an importer maps reserved/generated source artifacts back into canonical files, add strict re-import tests that preseed stale outputs (`_ab-agent-*`, `_ab-command-*`, hidden scoped rules) and verify the importer removes them — import is not write-only. See L145.",
+      "rule": "When an importer maps reserved/generated source artifacts back into canonical files, add strict re-import tests that preseed stale outputs (`_ab-agent-*`, `_ab-command-*`, hidden scoped rules) and verify the importer removes them — import is not write-only.",
       "status": "active",
       "topics": [
         "generation-collision-source-maps"
@@ -2267,7 +2643,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/generation-collision-source-maps.md#rule-11"
       ],
-      "rule": "When two targets implement the same import filter/cleanup pattern (e.g. Codex and Windsurf), move the logic into a shared helper and verify both targets against the same strict regression cases — never copy-paste per-target cleanup. See L146.",
+      "rule": "When two targets implement the same import filter/cleanup pattern (e.g. Codex and Windsurf), move the logic into a shared helper and verify both targets against the same strict regression cases — never copy-paste per-target cleanup.",
       "status": "active",
       "topics": [
         "generation-collision-source-maps"
@@ -2309,7 +2685,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/generation-collision-source-maps.md#rule-12"
       ],
-      "rule": "When importing any target artifact, build the normalization map from every supported generated path family so re-import can recover canonical `.agentsmesh/...` links from previously polluted outputs (e.g. cline / claude-code reading Codex-style `.agents/...` links). Never assume same-family pristine inputs. See L147.",
+      "rule": "When importing any target artifact, build the normalization map from every supported generated path family so re-import can recover canonical `.agentsmesh/...` links from previously polluted outputs (e.g. cline / claude-code reading Codex-style `.agents/...` links). Never assume same-family pristine inputs.",
       "status": "active",
       "topics": [
         "generation-collision-source-maps"
@@ -2351,7 +2727,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/generation-collision-source-maps.md#rule-13"
       ],
-      "rule": "When one canonical feature emits multiple artifact families (e.g. Copilot hook JSON + wrapper scripts), centralize the eligibility predicate (\"is this hook runnable?\") in one shared helper and add a regression test comparing referenced artifacts against emitted files. Never duplicate \"is valid\" logic per generator. See L140, L149.",
+      "rule": "When one canonical feature emits multiple artifact families (e.g. Copilot hook JSON + wrapper scripts), centralize the eligibility predicate (\"is this hook runnable?\") in one shared helper and add a regression test comparing referenced artifacts against emitted files. Never duplicate \"is valid\" logic per generator.",
       "status": "active",
       "topics": [
         "generation-collision-source-maps"
@@ -2393,7 +2769,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/generation-collision-source-maps.md#rule-14"
       ],
-      "rule": "When a target generator intentionally drops canonical metadata (e.g. Codex CLI MCP `description`), add or update a target-specific lint warning and cover with unit + CLI e2e tests; unsupported metadata is part of the target contract users must see. See L143.",
+      "rule": "When a target generator intentionally drops canonical metadata (e.g. Codex CLI MCP `description`), add or update a target-specific lint warning and cover with unit + CLI e2e tests; unsupported metadata is part of the target contract users must see.",
       "status": "active",
       "topics": [
         "generation-collision-source-maps"
@@ -2435,8 +2811,9 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/generation-collision-source-maps.md#rule-15"
       ],
-      "rule": "When tests verify generated files or directories, assert the exact relative path set and exact count, and cross-check referenced artifacts (e.g. hook wrapper scripts) against the config that points to them — no `some(...)`, prefix-only, or \"at least one\" checks. See L139.",
-      "status": "active",
+      "rule": "When tests verify generated files or directories, assert the exact relative path set and exact count, and cross-check referenced artifacts (e.g. hook wrapper scripts) against the config that points to them — no `some(...)`, prefix-only, or \"at least one\" checks.",
+      "status": "superseded",
+      "supersededBy": "fixture-and-assertion-discipline-rule-1",
       "topics": [
         "generation-collision-source-maps"
       ],
@@ -2477,7 +2854,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/generation-collision-source-maps.md#rule-16"
       ],
-      "rule": "When a target-format cannot represent all canonical metadata (e.g. Cursor command `description`/`allowed-tools`), add strict re-import-into-existing-project tests that prove unsupported fields are preserved from the canonical destination rather than erased. Empty-project round trips are insufficient. See L144.",
+      "rule": "When a target-format cannot represent all canonical metadata (e.g. Cursor command `description`/`allowed-tools`), add strict re-import-into-existing-project tests that prove unsupported fields are preserved from the canonical destination rather than erased. Empty-project round trips are insufficient.",
       "status": "active",
       "topics": [
         "generation-collision-source-maps"
@@ -2519,8 +2896,9 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/generation-collision-source-maps.md#rule-17"
       ],
-      "rule": "When widening a core type into a union (e.g. `McpServer` gaining URL transports), add explicit type guards at every serializer/generator boundary that needs a specific variant and rerun `pnpm typecheck` before declaring the refactor done. See L121.",
-      "status": "active",
+      "rule": "When widening a core type into a union (e.g. `McpServer` gaining URL transports), add explicit type guards at every serializer/generator boundary that needs a specific variant and rerun `pnpm typecheck` before declaring the refactor done.",
+      "status": "superseded",
+      "supersededBy": "typescript-esm-cycles-rule-4",
       "topics": [
         "generation-collision-source-maps"
       ],
@@ -2561,8 +2939,9 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/generation-collision-source-maps.md#rule-18"
       ],
-      "rule": "In `resolveGen` (engine), check `getBuiltinTargetDefinition(target)` first; if present, delegate entirely to `resolveTargetFeatureGenerator(target, feature, config)` so conversion config (e.g. `commandsToSkills: false`) is always respected. Plugin registry fallback must not bypass builtin conversion logic via `getDescriptor`. See L184.",
-      "status": "active",
+      "rule": "In `resolveGen` (engine), check `getBuiltinTargetDefinition(target)` first; if present, delegate entirely to `resolveTargetFeatureGenerator(target, feature, config)` so conversion config (e.g. `commandsToSkills: false`) is always respected. Plugin registry fallback must not bypass builtin conversion logic via `getDescriptor`.",
+      "status": "superseded",
+      "supersededBy": "typescript-esm-cycles-rule-12",
       "topics": [
         "generation-collision-source-maps"
       ],
@@ -2603,7 +2982,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/generation-collision-source-maps.md#rule-19"
       ],
-      "rule": "When a command validates multiple canonical features in `runLint()`, gate each lint family (commands, MCP, permissions, hooks) by its own feature flag — never nest them all under `hasRules`. Add a regression test for configs that enable non-rule features without `rules`. See L155.",
+      "rule": "When a command validates multiple canonical features in `runLint()`, gate each lint family (commands, MCP, permissions, hooks) by its own feature flag — never nest them all under `hasRules`. Add a regression test for configs that enable non-rule features without `rules`.",
       "status": "active",
       "topics": [
         "generation-collision-source-maps"
@@ -2645,7 +3024,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/generation-collision-source-maps.md#rule-2"
       ],
-      "rule": "When a layout declares `additionalRootDecorationPaths`, add those decoration paths to generate-side source maps and test at least one nested Markdown mirror for canonical link cleanup; decoration paths are generated artifacts, not render-only metadata. See L63.",
+      "rule": "When a layout declares `additionalRootDecorationPaths`, add those decoration paths to generate-side source maps and test at least one nested Markdown mirror for canonical link cleanup; decoration paths are generated artifacts, not render-only metadata.",
       "status": "active",
       "topics": [
         "generation-collision-source-maps"
@@ -2687,8 +3066,9 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/generation-collision-source-maps.md#rule-20"
       ],
-      "rule": "When multiple targets share a common parent directory in global mode (e.g. `.gemini/`), each non-native target must use a namespaced subdirectory (Antigravity → `.gemini/antigravity/`) to avoid path collisions; the collision detector only special-cases `AGENTS.md`. See L176.",
-      "status": "active",
+      "rule": "When multiple targets share a common parent directory in global mode (e.g. `.gemini/`), each non-native target must use a namespaced subdirectory (Antigravity → `.gemini/antigravity/`) to avoid path collisions; the collision detector only special-cases `AGENTS.md`.",
+      "status": "superseded",
+      "supersededBy": "global-mode-rule-5",
       "topics": [
         "generation-collision-source-maps"
       ],
@@ -2729,7 +3109,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/generation-collision-source-maps.md#rule-3"
       ],
-      "rule": "When a target can emit multiple artifact families from the same canonical source (e.g. Copilot `.github/copilot/*.instructions.md` and `.github/instructions/*.md`), build and cache rewrite maps per output path or per artifact family — never key only by target. Add tests for each emitted path family. See L131.",
+      "rule": "When a target can emit multiple artifact families from the same canonical source (e.g. Copilot `.github/copilot/*.instructions.md` and `.github/instructions/*.md`), build and cache rewrite maps per output path or per artifact family — never key only by target. Add tests for each emitted path family.",
       "status": "active",
       "topics": [
         "generation-collision-source-maps"
@@ -2771,7 +3151,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/generation-collision-source-maps.md#rule-4"
       ],
-      "rule": "When resolving conflicting shared artifacts by choosing a preferred/richer content body, keep that chosen result's `status`/`currentContent`; only merge statuses for truly identical content. Never let a discarded result donate drift status to the kept artifact. See L41.",
+      "rule": "When resolving conflicting shared artifacts by choosing a preferred/richer content body, keep that chosen result's `status`/`currentContent`; only merge statuses for truly identical content. Never let a discarded result donate drift status to the kept artifact.",
       "status": "active",
       "topics": [
         "generation-collision-source-maps"
@@ -2813,7 +3193,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/generation-collision-source-maps.md#rule-5"
       ],
-      "rule": "When multiple targets share one output path, compare outputs after normalizing target-specific references back to canonical paths before deciding they conflict; add coverage for rewritten-content overlaps. See L123.",
+      "rule": "When multiple targets share one output path, compare outputs after normalizing target-specific references back to canonical paths before deciding they conflict; add coverage for rewritten-content overlaps.",
       "status": "active",
       "topics": [
         "generation-collision-source-maps"
@@ -2855,7 +3235,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/generation-collision-source-maps.md#rule-6"
       ],
-      "rule": "When skills can originate from packs, add pack-path→target-path entries to the artifact map (alongside canonical `.agentsmesh/skills/...` entries) so the reference rewriter can translate both canonical and pack absolute paths. See L162.",
+      "rule": "When skills can originate from packs, add pack-path→target-path entries to the artifact map (alongside canonical `.agentsmesh/skills/...` entries) so the reference rewriter can translate both canonical and pack absolute paths.",
       "status": "active",
       "topics": [
         "generation-collision-source-maps"
@@ -2897,7 +3277,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/generation-collision-source-maps.md#rule-7"
       ],
-      "rule": "When appending global instructions / root-instruction decoration to generated targets, phrase the canonical location without the literal `.agentsmesh/` substring (e.g. \"the `.agentsmesh` directory at the project root\"), keep legacy paragraph detection for upgrades, and strip both old and new contract blocks on import in the shared root-rule import path. Cover with round-trip e2e. See L92, L163.",
+      "rule": "When appending global instructions / root-instruction decoration to generated targets, phrase the canonical location without the literal `.agentsmesh/` substring (e.g. \"the `.agentsmesh` directory at the project root\"), keep legacy paragraph detection for upgrades, and strip both old and new contract blocks on import in the shared root-rule import path. Cover with round-trip e2e.",
       "status": "active",
       "topics": [
         "generation-collision-source-maps"
@@ -2939,7 +3319,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/generation-collision-source-maps.md#rule-8"
       ],
-      "rule": "When adding a secondary rule projection folder for a target that already has a primary root file (e.g. Codex `AGENTS.md`), default to mirroring only non-root / additional rules — never duplicate the primary root file unless the spec explicitly requires it. See L164.",
+      "rule": "When adding a secondary rule projection folder for a target that already has a primary root file (e.g. Codex `AGENTS.md`), default to mirroring only non-root / additional rules — never duplicate the primary root file unless the spec explicitly requires it.",
       "status": "active",
       "topics": [
         "generation-collision-source-maps"
@@ -2981,7 +3361,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/generation-collision-source-maps.md#rule-9"
       ],
-      "rule": "When enabling a new artifact family for a target, update `reference-map-targets` + import-reference map builders + importer scanners together; do not ship generator/importer surface files first and patch path-translation contracts later. Verify with the target-contract matrix e2e. See L151.",
+      "rule": "When enabling a new artifact family for a target, update `reference-map-targets` + import-reference map builders + importer scanners together; do not ship generator/importer surface files first and patch path-translation contracts later. Verify with the target-contract matrix e2e.",
       "status": "active",
       "topics": [
         "generation-collision-source-maps"
@@ -3023,7 +3403,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/global-mode.md#rule-1"
       ],
-      "rule": "When implementing global mode for any target, add a `global` layout AND `rewriteGeneratedPath` that translates project-level paths (e.g. `.github/`) to global paths (e.g. `.copilot/`). Layout path resolvers alone are not enough — the engine uses `rewriteGeneratedPath` to transform generator output paths before writing. Verify a representative file lands at the correct global location. (L69)",
+      "rule": "When implementing global mode for any target, add a `global` layout AND `rewriteGeneratedPath` that translates project-level paths (e.g. `.github/`) to global paths (e.g. `.copilot/`). Layout path resolvers alone are not enough — the engine uses `rewriteGeneratedPath` to transform generator output paths before writing. Verify a representative file lands at the correct global location.",
       "status": "active",
       "topics": [
         "global-mode"
@@ -3060,12 +3440,14 @@
     "global-mode-rule-10": {
       "createdAt": "2026-06-05",
       "evidence": [
-        "legacy:.agentsmesh/lessons/topics/global-mode.md#rule-10"
+        "legacy:.agentsmesh/lessons/topics/global-mode.md#rule-10",
+        "legacy:.agentsmesh/lessons/topics/fixture-and-assertion-discipline.md#rule-13"
       ],
-      "rule": "For global-mode structure-validation tests, call `generate()` from `src/core/generate/engine.ts` with `scope: 'global'` — not `runGenerate()` from the CLI commands, which returns an exit code (`Promise<number>`) instead of the generated files. Provide a `makeConfig()` helper returning a `ValidatedConfig` with target + features configured. (L180)",
+      "rule": "For global-mode structure-validation tests, call `generate()` from `src/core/generate/engine.ts` with `scope: 'global'` — not `runGenerate()` from the CLI commands, which returns an exit code (`Promise<number>`) instead of the generated files. Provide a `makeConfig()` helper returning a `ValidatedConfig` with target + features configured.",
       "status": "active",
       "topics": [
-        "global-mode"
+        "global-mode",
+        "fixture-and-assertion-discipline"
       ],
       "triggers": [
         "t-glob-eb76c84a",
@@ -3093,7 +3475,37 @@
         "t-kw-d599429d",
         "t-kw-c103eb99",
         "t-kw-baaa73d4",
-        "t-kw-458a71f7"
+        "t-kw-458a71f7",
+        "t-glob-1fe91ebe",
+        "t-glob-593303ad",
+        "t-glob-257fb095",
+        "t-glob-11a8af2c",
+        "t-glob-6139fab0",
+        "t-glob-2741c10d",
+        "t-cmd-95ae48f4",
+        "t-cmd-8e9837a3",
+        "t-kw-3f5f1e88",
+        "t-kw-4af138f5",
+        "t-kw-d3d97884",
+        "t-kw-38c81c71",
+        "t-kw-c128681a",
+        "t-kw-7ae3495a",
+        "t-kw-a3d1ec89",
+        "t-kw-6dcc196d",
+        "t-kw-0bc71226",
+        "t-kw-e40a7698",
+        "t-kw-61cbe8d2",
+        "t-kw-41c52a68",
+        "t-kw-1b06e340",
+        "t-kw-4595dbe4",
+        "t-kw-3d590730",
+        "t-kw-4c148ab9",
+        "t-kw-adad09ac",
+        "t-kw-5ae85b29",
+        "t-kw-f4c73005",
+        "t-kw-7c2f82c3",
+        "t-kw-1df6c8fd",
+        "t-kw-129cc275"
       ]
     },
     "global-mode-rule-11": {
@@ -3101,7 +3513,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/global-mode.md#rule-11"
       ],
-      "rule": "Derive global-mode e2e expectations from each target's descriptor/layout constants (e.g. Windsurf `workflows`, Roo `.roo-code`, Codex `config.toml`), not from historical path helpers. Whenever a path-rewrite helper is retired or global behavior shifts, update e2e assertions from descriptor constants and rerun the e2e Vitest config after `pnpm build`. (L67)",
+      "rule": "Derive global-mode e2e expectations from each target's descriptor/layout constants (e.g. Windsurf `workflows`, Roo `.roo-code`, Codex `config.toml`), not from historical path helpers. Whenever a path-rewrite helper is retired or global behavior shifts, update e2e assertions from descriptor constants and rerun the e2e Vitest config after `pnpm build`.",
       "status": "active",
       "topics": [
         "global-mode"
@@ -3140,7 +3552,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/global-mode.md#rule-12"
       ],
-      "rule": "Keep canonical loader helpers (e.g. `loadCanonicalFiles()`) backward-compatible with BOTH project-root and canonical-dir inputs when adding scope awareness. Sweep every caller before tightening the signature — extend, install, and the loader test suite all pass project roots and expect the helper to locate `.agentsmesh/` itself. (L72)",
+      "rule": "Keep canonical loader helpers (e.g. `loadCanonicalFiles()`) backward-compatible with BOTH project-root and canonical-dir inputs when adding scope awareness. Sweep every caller before tightening the signature — extend, install, and the loader test suite all pass project roots and expect the helper to locate `.agentsmesh/` itself.",
       "status": "active",
       "topics": [
         "global-mode"
@@ -3179,7 +3591,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/global-mode.md#rule-13"
       ],
-      "rule": "When bridging generated global files into an importer fallback path in tests, copy the EXACT generated tree the round-trip needs — including `references/`, `scripts/`, `templates/`, and `assets/` — not just `SKILL.md`. (L59)",
+      "rule": "When bridging generated global files into an importer fallback path in tests, copy the EXACT generated tree the round-trip needs — including `references/`, `scripts/`, `templates/`, and `assets/` — not just `SKILL.md`.",
       "status": "active",
       "topics": [
         "global-mode"
@@ -3218,8 +3630,9 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/global-mode.md#rule-14"
       ],
-      "rule": "For `findGeneratedFile` in global structure tests, pass a plain string for exact path matching or an object with `stringContaining`/`stringMatching`. Never invent `{ exactPath: '...' }` — check the actual signature first. (L181)",
-      "status": "active",
+      "rule": "For `findGeneratedFile` in global structure tests, pass a plain string for exact path matching or an object with `stringContaining`/`stringMatching`. Never invent `{ exactPath: '...' }` — check the actual signature first.",
+      "status": "superseded",
+      "supersededBy": "fixture-and-assertion-discipline-rule-12",
       "topics": [
         "global-mode"
       ],
@@ -3257,7 +3670,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/global-mode.md#rule-2"
       ],
-      "rule": "Follow the full global-mode pattern in one pass: (a) global path constants, (b) `global` layout with `rewriteGeneratedPath`, (c) `mirrorGlobalPath` for cross-agent skill mirroring, (d) `globalCapabilities`, (e) `globalDetectionPaths`, (f) help text + docs. Model from Copilot/Cursor/Roo Code. Update all six together. (L174)",
+      "rule": "Follow the full global-mode pattern in one pass: (a) global path constants, (b) `global` layout with `rewriteGeneratedPath`, (c) `mirrorGlobalPath` for cross-agent skill mirroring, (d) `globalCapabilities`, (e) `globalDetectionPaths`, (f) help text + docs. Model from Copilot/Cursor/Roo Code. Update all six together.",
       "status": "active",
       "topics": [
         "global-mode"
@@ -3296,7 +3709,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/global-mode.md#rule-3"
       ],
-      "rule": "After editing a target's `rewriteGeneratedPath`/global layout, re-audit imports — every referenced constant (e.g. `CURSOR_COMPAT_AGENTS`) must be in the file's import list. Run `pnpm typecheck` and the target's `generate --global` CLI test; treat missing-symbol imports as a release gate. (L169)",
+      "rule": "After editing a target's `rewriteGeneratedPath`/global layout, re-audit imports — every referenced constant (e.g. `CURSOR_COMPAT_AGENTS`) must be in the file's import list. Run `pnpm typecheck` and the target's `generate --global` CLI test; treat missing-symbol imports as a release gate.",
       "status": "active",
       "topics": [
         "global-mode"
@@ -3335,7 +3748,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/global-mode.md#rule-4"
       ],
-      "rule": "When implementing global mode, import every required type (`TargetCapabilities`, `TargetLayout`) from `target.interface.js` and run `pnpm typecheck` immediately after adding the global layout. Do not assume copy-pasted patterns carried all imports. (L172)",
+      "rule": "When implementing global mode, import every required type (`TargetCapabilities`, `TargetLayout`) from `target.interface.js` and run `pnpm typecheck` immediately after adding the global layout. Do not assume copy-pasted patterns carried all imports.",
       "status": "active",
       "topics": [
         "global-mode"
@@ -3372,12 +3785,14 @@
     "global-mode-rule-5": {
       "createdAt": "2026-06-05",
       "evidence": [
-        "legacy:.agentsmesh/lessons/topics/global-mode.md#rule-5"
+        "legacy:.agentsmesh/lessons/topics/global-mode.md#rule-5",
+        "legacy:.agentsmesh/lessons/topics/generation-collision-source-maps.md#rule-20"
       ],
-      "rule": "Namespace global paths under shared parent directories so multiple targets do not collide. If multiple targets share `.gemini/`, `.agents/`, etc., each non-native one MUST use a namespaced subdirectory (e.g. Antigravity → `.gemini/antigravity/`, Gemini CLI native → `.gemini/`). The collision detector only special-cases `AGENTS.md`; other shared-path collisions throw. (L176)",
+      "rule": "Namespace global paths under shared parent directories so multiple targets do not collide. If multiple targets share `.gemini/`, `.agents/`, etc., each non-native one MUST use a namespaced subdirectory (e.g. Antigravity → `.gemini/antigravity/`, Gemini CLI native → `.gemini/`). The collision detector only special-cases `AGENTS.md`; other shared-path collisions throw.",
       "status": "active",
       "topics": [
-        "global-mode"
+        "global-mode",
+        "generation-collision-source-maps"
       ],
       "triggers": [
         "t-glob-eb76c84a",
@@ -3405,18 +3820,48 @@
         "t-kw-d599429d",
         "t-kw-c103eb99",
         "t-kw-baaa73d4",
-        "t-kw-458a71f7"
+        "t-kw-458a71f7",
+        "t-glob-87a63917",
+        "t-glob-e9f9f003",
+        "t-glob-a23d7b79",
+        "t-glob-c09d2acb",
+        "t-glob-1bd6cdf4",
+        "t-glob-8ce6202e",
+        "t-glob-a07d1032",
+        "t-glob-5995acad",
+        "t-glob-e6621671",
+        "t-glob-ba152b87",
+        "t-glob-106a67a9",
+        "t-cmd-25ae0863",
+        "t-cmd-7d02fc72",
+        "t-kw-177acbeb",
+        "t-kw-09f37896",
+        "t-kw-498958d8",
+        "t-kw-780152bb",
+        "t-kw-15c6ab40",
+        "t-kw-cb67f62d",
+        "t-kw-b210183e",
+        "t-kw-0acd1d95",
+        "t-kw-0181f5f4",
+        "t-kw-7b9a4665",
+        "t-kw-31aabdd8",
+        "t-kw-24e89449",
+        "t-kw-73333c6a",
+        "t-kw-21a8e9ec",
+        "t-kw-17fd12e3"
       ]
     },
     "global-mode-rule-6": {
       "createdAt": "2026-06-05",
       "evidence": [
-        "legacy:.agentsmesh/lessons/topics/global-mode.md#rule-6"
+        "legacy:.agentsmesh/lessons/topics/global-mode.md#rule-6",
+        "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-28"
       ],
-      "rule": "In `import` flows, when `scope === 'global'`, only read tool-native subtrees under the home root (e.g. `~/.codex`, `~/.agents/skills`). Never run whole-tree `readDirRecursive` / `importFileDirectory` from `homedir()` — that blows the stack on symlink cycles (e.g. `~/.cache`) and scans the entire home tree. Add a `scope === 'global'` guard. (L170)",
+      "rule": "In `import` flows, when `scope === 'global'`, only read tool-native subtrees under the home root (e.g. `~/.codex`, `~/.agents/skills`). Never run whole-tree `readDirRecursive` / `importFileDirectory` from `homedir()` — that blows the stack on symlink cycles (e.g. `~/.cache`) and scans the entire home tree. Add a `scope === 'global'` guard.",
       "status": "active",
       "topics": [
-        "global-mode"
+        "global-mode",
+        "install-import-pickers"
       ],
       "triggers": [
         "t-glob-eb76c84a",
@@ -3444,7 +3889,48 @@
         "t-kw-d599429d",
         "t-kw-c103eb99",
         "t-kw-baaa73d4",
-        "t-kw-458a71f7"
+        "t-kw-458a71f7",
+        "t-glob-25ede31e",
+        "t-glob-fbb4298f",
+        "t-glob-bf6f2533",
+        "t-glob-7a20529a",
+        "t-glob-20effcc2",
+        "t-glob-3c87d52f",
+        "t-glob-8eea8f9c",
+        "t-glob-2ae846c8",
+        "t-glob-e4faecb1",
+        "t-glob-5ec4aa7e",
+        "t-glob-52d56856",
+        "t-glob-249f92d5",
+        "t-glob-e1fa5112",
+        "t-cmd-2398d904",
+        "t-cmd-34d713b6",
+        "t-cmd-45d8ae56",
+        "t-cmd-cae616a1",
+        "t-cmd-d9dce045",
+        "t-cmd-b66a9431",
+        "t-cmd-2c6e7fc6",
+        "t-cmd-e097d363",
+        "t-kw-122af17e",
+        "t-kw-5eb98593",
+        "t-kw-27cd93f3",
+        "t-kw-a46daf14",
+        "t-kw-21b980fd",
+        "t-kw-360b7d3e",
+        "t-kw-e659afa0",
+        "t-kw-a4ec24a2",
+        "t-kw-1b84052e",
+        "t-kw-a55e6906",
+        "t-kw-2fd1ccde",
+        "t-kw-07501619",
+        "t-kw-785e5c64",
+        "t-kw-3a83756b",
+        "t-kw-1657dff0",
+        "t-kw-8866ab37",
+        "t-kw-8fe9f944",
+        "t-kw-d87bf429",
+        "t-kw-39470111",
+        "t-kw-67b4775f"
       ]
     },
     "global-mode-rule-7": {
@@ -3452,8 +3938,9 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/global-mode.md#rule-7"
       ],
-      "rule": "In any helper that fakes the home directory via env (`HOME`) for `--global` e2e, on `process.platform === 'win32'` ALSO set `USERPROFILE` (and defensively `HOMEDRIVE`/`HOMEPATH`) from the same path, because `os.homedir()` on Windows reads `USERPROFILE`, not `HOME`. Put this in the spawn helper, not at call sites. (L5)",
-      "status": "active",
+      "rule": "In any helper that fakes the home directory via env (`HOME`) for `--global` e2e, on `process.platform === 'win32'` ALSO set `USERPROFILE` (and defensively `HOMEDRIVE`/`HOMEPATH`) from the same path, because `os.homedir()` on Windows reads `USERPROFILE`, not `HOME`. Put this in the spawn helper, not at call sites.",
+      "status": "superseded",
+      "supersededBy": "windows-paths-rule-3",
       "topics": [
         "global-mode"
       ],
@@ -3491,8 +3978,9 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/global-mode.md#rule-8"
       ],
-      "rule": "For temp-dir symlink helpers that stage a fake home (e.g. `createTempProjectRoot(homedir())`), only symlink dot-entries (`.claude/`, `.cursor/`, …) and root-level files. Never symlink non-dot directories like `Desktop`/`Documents` — listings/walks over the project root (`listScopedAgentsFiles`, the 18-target normalizer) will traverse them and hang. (L228)",
-      "status": "active",
+      "rule": "For temp-dir symlink helpers that stage a fake home (e.g. `createTempProjectRoot(homedir())`), only symlink dot-entries (`.claude/`, `.cursor/`, …) and root-level files. Never symlink non-dot directories like `Desktop`/`Documents` — listings/walks over the project root (`listScopedAgentsFiles`, the 18-target normalizer) will traverse them and hang.",
+      "status": "superseded",
+      "supersededBy": "windows-paths-rule-13",
       "topics": [
         "global-mode"
       ],
@@ -3530,7 +4018,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/global-mode.md#rule-9"
       ],
-      "rule": "For `mirrorGlobalPath` skip/dual-mirror tests, derive eligibility from the run's actively-generated targets, not the configured set. `feature-loop.ts` passes the post-filter `targets` array to `mirrorGlobalPath`; using `targetFilter: ['copilot']` removes codex-cli from \"active\" even when it is in `config.targets`. To exercise the codex-cli skip, list both targets in `config.targets` and DO NOT pass `targetFilter`. (L186)",
+      "rule": "For `mirrorGlobalPath` skip/dual-mirror tests, derive eligibility from the run's actively-generated targets, not the configured set. `feature-loop.ts` passes the post-filter `targets` array to `mirrorGlobalPath`; using `targetFilter: ['copilot']` removes codex-cli from \"active\" even when it is in `config.targets`. To exercise the codex-cli skip, list both targets in `config.targets` and DO NOT pass `targetFilter`.",
       "status": "active",
       "topics": [
         "global-mode"
@@ -3569,7 +4057,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-1"
       ],
-      "rule": "Treat `as` on `InstallTarget` as a routing decision, not a feature label. Only set `as` for **flat-collection** sub-packs (no `skillPack`/`rootSkill` marker); leave `as` undefined for skill-pack / root-skill sub-packs so recursion re-runs auto-discovery at the sub-pack root. Always plumb `report.subPackFailures` into `InstallData` so the CLI renderer surfaces partial failures. [L3, L37]",
+      "rule": "Treat `as` on `InstallTarget` as a routing decision, not a feature label. Only set `as` for **flat-collection** sub-packs (no `skillPack`/`rootSkill` marker); leave `as` undefined for skill-pack / root-skill sub-packs so recursion re-runs auto-discovery at the sub-pack root. Always plumb `report.subPackFailures` into `InstallData` so the CLI renderer surfaces partial failures.",
       "status": "active",
       "topics": [
         "install-import-pickers"
@@ -3623,8 +4111,9 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-10"
       ],
-      "rule": "Manual install persistence and staging must share one skill-name derivation. If staging uses `readSkillFrontmatterName()`, persistence must use the same helper — never `basename(contentRoot)`. [L161]",
-      "status": "active",
+      "rule": "Manual install persistence and staging must share one skill-name derivation. If staging uses `readSkillFrontmatterName()`, persistence must use the same helper — never `basename(contentRoot)`.",
+      "status": "superseded",
+      "supersededBy": "frontmatter-and-canonical-shapes-rule-6",
       "topics": [
         "install-import-pickers"
       ],
@@ -3677,7 +4166,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-11"
       ],
-      "rule": "When manual skill replay carries `pick.skills: [name]` but `path` is a collection root (e.g. `skills` or `skills/engineering`), search **all descendant `SKILL.md` paths** under the source root and stage the exact matched skill directories. Don't restrict to umbrella folders that themselves have `SKILL.md`. [L156, L159]",
+      "rule": "When manual skill replay carries `pick.skills: [name]` but `path` is a collection root (e.g. `skills` or `skills/engineering`), search **all descendant `SKILL.md` paths** under the source root and stage the exact matched skill directories. Don't restrict to umbrella folders that themselves have `SKILL.md`.",
       "status": "active",
       "topics": [
         "install-import-pickers"
@@ -3731,7 +4220,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-12"
       ],
-      "rule": "Replay/scoped install narrowing must reach `installAsPack()` — pass the narrowed canonical through every downstream write/materialization path so unrelated settings (`mcp`, `permissions`, `hooks`, `ignore`) don't leak into the resulting pack. [L158]",
+      "rule": "Replay/scoped install narrowing must reach `installAsPack()` — pass the narrowed canonical through every downstream write/materialization path so unrelated settings (`mcp`, `permissions`, `hooks`, `ignore`) don't leak into the resulting pack.",
       "status": "active",
       "topics": [
         "install-import-pickers"
@@ -3785,7 +4274,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-13"
       ],
-      "rule": "Provide an explicit `--as` override that bypasses native-path heuristics; keep native auto-detection as fallback. Install discovery must not be coupled to target-native directory layouts for arbitrary folders. [L102]",
+      "rule": "Provide an explicit `--as` override that bypasses native-path heuristics; keep native auto-detection as fallback. Install discovery must not be coupled to target-native directory layouts for arbitrary folders.",
       "status": "active",
       "topics": [
         "install-import-pickers"
@@ -3839,7 +4328,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-14"
       ],
-      "rule": "Native install discovery is **read-only staging**. Import into a temporary staged copy and derive folder/file scope from importer `fromPath` results — never mutate the source checkout or heuristically traverse it for subtree selection. [L104]",
+      "rule": "Native install discovery is **read-only staging**. Import into a temporary staged copy and derive folder/file scope from importer `fromPath` results — never mutate the source checkout or heuristically traverse it for subtree selection.",
       "status": "active",
       "topics": [
         "install-import-pickers"
@@ -3893,7 +4382,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-15"
       ],
-      "rule": "Incremental pack updates must match by **stable remote identity** (provider + repo/url without ref), not the pinned `github:org/repo@sha`. Refresh stored `source`/`version` metadata after each successful merge. Preserve existing on-disk cache paths when refactoring cache-backed providers. [L105, L119]",
+      "rule": "Incremental pack updates must match by **stable remote identity** (provider + repo/url without ref), not the pinned `github:org/repo@sha`. Refresh stored `source`/`version` metadata after each successful merge. Preserve existing on-disk cache paths when refactoring cache-backed providers.",
       "status": "active",
       "topics": [
         "install-import-pickers"
@@ -3947,7 +4436,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-16"
       ],
-      "rule": "Single-file remote install parsing must cover both `tree/...` (directory) and `blob/...` (file) URLs per supported host. [L98]",
+      "rule": "Single-file remote install parsing must cover both `tree/...` (directory) and `blob/...` (file) URLs per supported host.",
       "status": "active",
       "topics": [
         "install-import-pickers"
@@ -4001,7 +4490,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-17"
       ],
-      "rule": "Pack coverage must include settings features (`mcp`, `permissions`, `hooks`, `ignore`) — not just array resources. Write → load → generate tests must include a real non-dry-run command path. [L103]",
+      "rule": "Pack coverage must include settings features (`mcp`, `permissions`, `hooks`, `ignore`) — not just array resources. Write → load → generate tests must include a real non-dry-run command path.",
       "status": "active",
       "topics": [
         "install-import-pickers"
@@ -4055,8 +4544,9 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-18"
       ],
-      "rule": "Synthetic root-rule canonical entries (`.cursorrules`, `.windsurfrules`, marketplace stubs) MUST carry a non-empty `description` (e.g. `Imported from .cursorrules`) so they survive the dry-run-only re-validation pass in `pool-resolution.ts` (`resolveRulePool` filters by `validateRule` when `dryRun=true`). [L274]",
-      "status": "active",
+      "rule": "Synthetic root-rule canonical entries (`.cursorrules`, `.windsurfrules`, marketplace stubs) MUST carry a non-empty `description` (e.g. `Imported from .cursorrules`) so they survive the dry-run-only re-validation pass in `pool-resolution.ts` (`resolveRulePool` filters by `validateRule` when `dryRun=true`).",
+      "status": "superseded",
+      "supersededBy": "frontmatter-and-canonical-shapes-rule-7",
       "topics": [
         "install-import-pickers"
       ],
@@ -4109,8 +4599,9 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-19"
       ],
-      "rule": "Boilerplate filtering splits intent via one typed map (`stem → 'noise' | 'preserved'`) and three derived predicates: `isBoilerplate` (any — used by entity importers + flat-collection classifier to prevent README/LICENSE from becoming phantom entities), `isNoiseBoilerplate` (drop in staging + skill supporting-files), `isPreservedBoilerplate` (keep in skill subtrees). Both `listSupportingFiles` (canonical/features/skills.ts) AND `cpFilteredSkill` (install/source/skill-repo-filter.ts) must use the noise-only predicate at content-staging time. [L276]",
-      "status": "active",
+      "rule": "Boilerplate filtering splits intent via one typed map (`stem → 'noise' | 'preserved'`) and three derived predicates: `isBoilerplate` (any — used by entity importers + flat-collection classifier to prevent README/LICENSE from becoming phantom entities), `isNoiseBoilerplate` (drop in staging + skill supporting-files), `isPreservedBoilerplate` (keep in skill subtrees). Both `listSupportingFiles` (canonical/features/skills.ts) AND `cpFilteredSkill` (install/source/skill-repo-filter.ts) must use the noise-only predicate at content-staging time.",
+      "status": "superseded",
+      "supersededBy": "frontmatter-and-canonical-shapes-rule-9",
       "topics": [
         "install-import-pickers"
       ],
@@ -4163,8 +4654,9 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-2"
       ],
-      "rule": "Every third-party frontmatter parser on the install/import path — including auxiliary helpers like skill-name extraction (`readSkillFrontmatterName`) and `.mdc` inference (`inferMdcTarget`, `normalizeMdcToCanonical`) — must use `tryParseFrontmatter()` / `parseFrontmatterForPath(..., onError)` and degrade with a \"skipping <path>: <reason>\" warning. Reserve strict `parseFrontmatter()` for user-authored canonical content. Audit by grepping both `parseFrontmatter` and every `src/targets/<id>/importer*.ts`. [L31, L35, L268]",
-      "status": "active",
+      "rule": "Every third-party frontmatter parser on the install/import path — including auxiliary helpers like skill-name extraction (`readSkillFrontmatterName`) and `.mdc` inference (`inferMdcTarget`, `normalizeMdcToCanonical`) — must use `tryParseFrontmatter()` / `parseFrontmatterForPath(..., onError)` and degrade with a \"skipping <path>: <reason>\" warning. Reserve strict `parseFrontmatter()` for user-authored canonical content. Audit by grepping both `parseFrontmatter` and every `src/targets/<id>/importer*.ts`.",
+      "status": "superseded",
+      "supersededBy": "frontmatter-and-canonical-shapes-rule-1",
       "topics": [
         "install-import-pickers"
       ],
@@ -4217,7 +4709,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-20"
       ],
-      "rule": "Plumb upstream `contentRoot` end-to-end (`runSinglePackInstall → executeRunInstallPoolsAndWrite → installAsPack → materializePack/mergeIntoPack`) so `collectPreservedRootFiles(contentRoot)` harvests top-level `README*` / `LICENSE*` / `NOTICE*` / `COPYING*` / `COPYRIGHT*` into the pack root **before** `hashPackContent` runs — preserved files must participate in `content_hash` + the per-file install manifest so uninstall removes them automatically. [L278]",
+      "rule": "Plumb upstream `contentRoot` end-to-end (`runSinglePackInstall → executeRunInstallPoolsAndWrite → installAsPack → materializePack/mergeIntoPack`) so `collectPreservedRootFiles(contentRoot)` harvests top-level `README*` / `LICENSE*` / `NOTICE*` / `COPYING*` / `COPYRIGHT*` into the pack root **before** `hashPackContent` runs — preserved files must participate in `content_hash` + the per-file install manifest so uninstall removes them automatically.",
       "status": "active",
       "topics": [
         "install-import-pickers"
@@ -4271,7 +4763,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-21"
       ],
-      "rule": "`OUTPUT_DIR_TO_FEATURE` and `stripMarkdownExt` in `src/core/reference/validate-generated-markdown-links.ts` must enumerate every target-specific dir (`droids`, `instructions`, `prompts`, `steering`, …) and every double-extension (`.agent.md`, `.instructions.md`, `.prompt.md`) so `canonicalKeyFromOutputPath` produces the same canonical key as the source entity. Treat as a single-source-of-truth table: new target = one row each. [L278]",
+      "rule": "`OUTPUT_DIR_TO_FEATURE` and `stripMarkdownExt` in `src/core/reference/validate-generated-markdown-links.ts` must enumerate every target-specific dir (`droids`, `instructions`, `prompts`, `steering`, …) and every double-extension (`.agent.md`, `.instructions.md`, `.prompt.md`) so `canonicalKeyFromOutputPath` produces the same canonical key as the source entity. Treat as a single-source-of-truth table: new target = one row each.",
       "status": "active",
       "topics": [
         "install-import-pickers"
@@ -4325,7 +4817,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-22"
       ],
-      "rule": "Wrap the terminal `runGenerate()` in **both** `runInstall` and `runUninstall` in try/catch (extracted as `runPostOperationGenerate('install' | 'uninstall', scope, rootBase)` in `src/install/run/post-install-generate.ts`). Downgrade failures to `logger.warn(...)` naming the failure mode — the pack + `installs.yaml` writes are the user's intent and must survive validator brittleness. Same rule for any future best-effort post-operation step (e.g. post-install `agentsmesh lint`). [L258]",
+      "rule": "Wrap the terminal `runGenerate()` in **both** `runInstall` and `runUninstall` in try/catch (extracted as `runPostOperationGenerate('install' | 'uninstall', scope, rootBase)` in `src/install/run/post-install-generate.ts`). Downgrade failures to `logger.warn(...)` naming the failure mode — the pack + `installs.yaml` writes are the user's intent and must survive validator brittleness. Same rule for any future best-effort post-operation step (e.g. post-install `agentsmesh lint`).",
       "status": "active",
       "topics": [
         "install-import-pickers"
@@ -4379,7 +4871,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-23"
       ],
-      "rule": "Per-target skill-import dispatch loops belong behind one `importSkillsDirectory(options, recognizers[])` orchestrator with factory recognizers (`projectedAgentRecognizer`, `commandSkillRecognizer`) that own their own destination write + stale cleanup. Per-target adapters collapse to a config object + recognizer list so new targets can't drift on cleanup order or recognizer ordering. [L252]",
+      "rule": "Per-target skill-import dispatch loops belong behind one `importSkillsDirectory(options, recognizers[])` orchestrator with factory recognizers (`projectedAgentRecognizer`, `commandSkillRecognizer`) that own their own destination write + stale cleanup. Per-target adapters collapse to a config object + recognizer list so new targets can't drift on cleanup order or recognizer ordering.",
       "status": "active",
       "topics": [
         "install-import-pickers"
@@ -4433,7 +4925,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-24"
       ],
-      "rule": "When persisting strict install manifest assertions, inspect the **actual serialized entry shape** first (including field omission and ordering) — don't write expectations from inferred intent. Whenever the manifest type gains required fields, sweep all `toHaveBeenCalledWith` / deep-equality assertions, not just the typed fixture. [L81, L157]",
+      "rule": "When persisting strict install manifest assertions, inspect the **actual serialized entry shape** first (including field omission and ordering) — don't write expectations from inferred intent. Whenever the manifest type gains required fields, sweep all `toHaveBeenCalledWith` / deep-equality assertions, not just the typed fixture.",
       "status": "active",
       "topics": [
         "install-import-pickers"
@@ -4487,7 +4979,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-25"
       ],
-      "rule": "Whenever pack/install manifest persistence semantics change, rerun the full agents/commands/rules/skills matrix and the sibling-item amend cases — not only the user-reported entity. [L152]",
+      "rule": "Whenever pack/install manifest persistence semantics change, rerun the full agents/commands/rules/skills matrix and the sibling-item amend cases — not only the user-reported entity.",
       "status": "active",
       "topics": [
         "install-import-pickers"
@@ -4541,7 +5033,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-26"
       ],
-      "rule": "Skill-pack integration fixtures with broken links must narrow the project's `features:` so the linking entity is NOT generated (e.g. `features: [rules]` when the broken link sits in a skill). Assert pack body + manifest there, not generated target files. Cross-protocol identity assertions (https/ssh/`github:` shorthand) belong in unit tests on `findExistingInstallName`, not integration. [L256]",
+      "rule": "Skill-pack integration fixtures with broken links must narrow the project's `features:` so the linking entity is NOT generated (e.g. `features: [rules]` when the broken link sits in a skill). Assert pack body + manifest there, not generated target files. Cross-protocol identity assertions (https/ssh/`github:` shorthand) belong in unit tests on `findExistingInstallName`, not integration.",
       "status": "active",
       "topics": [
         "install-import-pickers"
@@ -4595,8 +5087,9 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-27"
       ],
-      "rule": "Mock `ValidatedConfig` fixtures returned by `mockLoadScopedConfig.mockResolvedValue` must include every schema-defaulted field (`plugins: []`, etc.) because tests bypass schema validation. Adding any new orchestration step that reads `config.X` requires grepping for every mock and adding the field before rerunning. [L264]",
-      "status": "active",
+      "rule": "Mock `ValidatedConfig` fixtures returned by `mockLoadScopedConfig.mockResolvedValue` must include every schema-defaulted field (`plugins: []`, etc.) because tests bypass schema validation. Adding any new orchestration step that reads `config.X` requires grepping for every mock and adding the field before rerunning.",
+      "status": "superseded",
+      "supersededBy": "fixture-and-assertion-discipline-rule-8",
       "topics": [
         "install-import-pickers"
       ],
@@ -4649,8 +5142,9 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-28"
       ],
-      "rule": "Global import (`scope === 'global'`) must NOT pass `homedir()` as `projectRoot` for recursive scans. Only read tool-native subtrees under home (e.g. `~/.codex`, `~/.agents/skills`); never `readDirRecursive(homedir())` — symlink cycles under `~/.cache` will blow the stack. [L170]",
-      "status": "active",
+      "rule": "Global import (`scope === 'global'`) must NOT pass `homedir()` as `projectRoot` for recursive scans. Only read tool-native subtrees under home (e.g. `~/.codex`, `~/.agents/skills`); never `readDirRecursive(homedir())` — symlink cycles under `~/.cache` will blow the stack.",
+      "status": "superseded",
+      "supersededBy": "global-mode-rule-6",
       "topics": [
         "install-import-pickers"
       ],
@@ -4703,7 +5197,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-29"
       ],
-      "rule": "Importers must clean stale reserved artifacts on re-import (e.g. `_ab-agent-*`, `_ab-command-*`, scoped-rule names). Extract shared filter/cleanup into one helper instead of copy-pasting per target. Import normalization must build the rewrite map from **every supported generated path family** so cross-target re-import recovers canonical `.agentsmesh/...` links from previously polluted outputs. [L145, L146, L147]",
+      "rule": "Importers must clean stale reserved artifacts on re-import (e.g. `_ab-agent-*`, `_ab-command-*`, scoped-rule names). Extract shared filter/cleanup into one helper instead of copy-pasting per target. Import normalization must build the rewrite map from **every supported generated path family** so cross-target re-import recovers canonical `.agentsmesh/...` links from previously polluted outputs.",
       "status": "active",
       "topics": [
         "install-import-pickers"
@@ -4757,7 +5251,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-3"
       ],
-      "rule": "Normalize empty-string CLI flags (`path`, `target`, `as`) to `undefined` inside `readInstallFlags`. Picker auto-pick recursion in `run-install-locked.ts` builds nested flag bags with `target ?? ''`; the rest of the pipeline assumes \"undefined OR non-empty\". [L33]",
+      "rule": "Normalize empty-string CLI flags (`path`, `target`, `as`) to `undefined` inside `readInstallFlags`. Picker auto-pick recursion in `run-install-locked.ts` builds nested flag bags with `target ?? ''`; the rest of the pipeline assumes \"undefined OR non-empty\".",
       "status": "active",
       "topics": [
         "install-import-pickers"
@@ -4811,7 +5305,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-30"
       ],
-      "rule": "When a target-native filename changes, update generation/docs to the new path but keep importer fallbacks for the previous on-disk filename unless the migration is explicitly destructive. [L84]",
+      "rule": "When a target-native filename changes, update generation/docs to the new path but keep importer fallbacks for the previous on-disk filename unless the migration is explicitly destructive.",
       "status": "active",
       "topics": [
         "install-import-pickers"
@@ -4865,8 +5359,9 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-31"
       ],
-      "rule": "Per-target import mappers (custom `ImportEntryMapper`) MUST live in `<target>/import-mappers.ts` — never in `importer.ts`. Putting them in `importer.ts` and importing from `index.ts` forms a cycle: `index.ts → importer.ts → index.ts`, and the descriptor's object literal captures `undefined` for `map:` fields. Function references stored as descriptor fields are safe (live bindings); object literals capturing those references at module-init are not. Establish `import-mappers.ts` even for one mapper. [L208, L212]",
-      "status": "active",
+      "rule": "Per-target import mappers (custom `ImportEntryMapper`) MUST live in `<target>/import-mappers.ts` — never in `importer.ts`. Putting them in `importer.ts` and importing from `index.ts` forms a cycle: `index.ts → importer.ts → index.ts`, and the descriptor's object literal captures `undefined` for `map:` fields. Function references stored as descriptor fields are safe (live bindings); object literals capturing those references at module-init are not. Establish `import-mappers.ts` even for one mapper.",
+      "status": "superseded",
+      "supersededBy": "typescript-esm-cycles-rule-1",
       "topics": [
         "install-import-pickers"
       ],
@@ -4919,7 +5414,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-32"
       ],
-      "rule": "Don't migrate an `ignore` (or any single-output) feature to descriptor `flatFile` mode without re-reading the original importer. `flatFile` writes the FIRST `source` path verbatim — it never merges/dedupes. If the original concatenates multiple files (e.g. cursor merges `.cursorignore` + `.cursorindexingignore`), keep it imperative or extend the runner with `mergedFlatFile`. [L210]",
+      "rule": "Don't migrate an `ignore` (or any single-output) feature to descriptor `flatFile` mode without re-reading the original importer. `flatFile` writes the FIRST `source` path verbatim — it never merges/dedupes. If the original concatenates multiple files (e.g. cursor merges `.cursorignore` + `.cursorindexingignore`), keep it imperative or extend the runner with `mergedFlatFile`.",
       "status": "active",
       "topics": [
         "install-import-pickers"
@@ -4973,7 +5468,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-33"
       ],
-      "rule": "`isLocalSource` for plugin paths must accept Windows drive-letter absolutes — match `/^[A-Za-z]:[/\\\\]/` alongside POSIX (`/…`, `./…`, `../…`, `file:`). Tests that build absolute paths with `resolve()` and feed them as plugin `source` exercise this. [L246]",
+      "rule": "`isLocalSource` for plugin paths must accept Windows drive-letter absolutes — match `/^[A-Za-z]:[/\\\\]/` alongside POSIX (`/…`, `./…`, `../…`, `file:`). Tests that build absolute paths with `resolve()` and feed them as plugin `source` exercise this.",
       "status": "active",
       "topics": [
         "install-import-pickers"
@@ -5027,7 +5522,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-4"
       ],
-      "rule": "Marketplace `--all` recursive installs must omit `--as` (only pass `--path` and `--target`) — `targetFromSubPack`'s first-feature inference forces the manual single-kind path which rejects mixed-content sub-packs. [L37]",
+      "rule": "Marketplace `--all` recursive installs must omit `--as` (only pass `--path` and `--target`) — `targetFromSubPack`'s first-feature inference forces the manual single-kind path which rejects mixed-content sub-packs.",
       "status": "active",
       "topics": [
         "install-import-pickers"
@@ -5081,7 +5576,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-5"
       ],
-      "rule": "Lower the picker's marketplace-branch threshold to `subPacks.length >= 1` when sub-packs come from explicit sources like `.claude-plugin/marketplace.json`. Singleton plugin lists must route through the marketplace branch, not `runSinglePackInstall` against an empty root. The directory-heuristic detector keeps its own `>= 2` floor. [L272]",
+      "rule": "Lower the picker's marketplace-branch threshold to `subPacks.length >= 1` when sub-packs come from explicit sources like `.claude-plugin/marketplace.json`. Singleton plugin lists must route through the marketplace branch, not `runSinglePackInstall` against an empty root. The directory-heuristic detector keeps its own `>= 2` floor.",
       "status": "active",
       "topics": [
         "install-import-pickers"
@@ -5135,7 +5630,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-6"
       ],
-      "rule": "Nested `runInstall` calls from picker auto-pick (single flat collection branch) MUST pass `replay ?? {}` as the 4th arg so the inner `if (replay === undefined)` guard skips `acquireInstallLock()` re-acquisition. Otherwise the inner call deadlocks against the outer's held lock. [L270]",
+      "rule": "Nested `runInstall` calls from picker auto-pick (single flat collection branch) MUST pass `replay ?? {}` as the 4th arg so the inner `if (replay === undefined)` guard skips `acquireInstallLock()` re-acquisition. Otherwise the inner call deadlocks against the outer's held lock.",
       "status": "active",
       "topics": [
         "install-import-pickers"
@@ -5189,7 +5684,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-7"
       ],
-      "rule": "`install --sync` replay must reapply persisted `features` + `pick` from `installs.yaml` before validation/selection (not just the saved path), must carry through the caller's `--force` and related validation flags (never hardcode `force: true`), and the replay parser must accept persisted internal source formats (`github:org/repo@sha`, `blob/...` URLs), not only user-entered URLs. [L99, L100, L101, L98]",
+      "rule": "`install --sync` replay must reapply persisted `features` + `pick` from `installs.yaml` before validation/selection (not just the saved path), must carry through the caller's `--force` and related validation flags (never hardcode `force: true`), and the replay parser must accept persisted internal source formats (`github:org/repo@sha`, `blob/...` URLs), not only user-entered URLs.",
       "status": "active",
       "topics": [
         "install-import-pickers"
@@ -5243,7 +5738,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-8"
       ],
-      "rule": "`install --sync --dry-run` is not provably side-effect free — validate in isolated temp projects or inspect the implementation before pointing it at a live workspace. [L160]",
+      "rule": "`install --sync --dry-run` is not provably side-effect free — validate in isolated temp projects or inspect the implementation before pointing it at a live workspace.",
       "status": "active",
       "topics": [
         "install-import-pickers"
@@ -5297,7 +5792,7 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-9"
       ],
-      "rule": "Persist manual single-item installs by **parent collection path + explicit `pick`**, never the discovered file path. Pack names must describe stable source identity + normalized install scope (not first-picked-item naming). For broader-than-one-path identity, persist aggregated `paths` and match packs by repo identity + feature set so sync replay across multiple folders of the same repo/feature works. [L97, L153, L154]",
+      "rule": "Persist manual single-item installs by **parent collection path + explicit `pick`**, never the discovered file path. Pack names must describe stable source identity + normalized install scope (not first-picked-item naming). For broader-than-one-path identity, persist aggregated `paths` and match packs by repo identity + feature set so sync replay across multiple folders of the same repo/feature works.",
       "status": "active",
       "topics": [
         "install-import-pickers"
@@ -5344,6 +5839,187 @@
         "t-kw-d87bf429",
         "t-kw-39470111",
         "t-kw-67b4775f"
+      ]
+    },
+    "lessons-system-apply-the-same-legacy-auto": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review:2026-06-06-mcp-legacy-probe"
+      ],
+      "rule": "Apply the same legacy auto-migration gate before every CLI and MCP lessons read or write so MCP capture cannot strand legacy lessons.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-c3684e2c",
+        "t-cmd-be67eb02",
+        "t-kw-e678014d"
+      ]
+    },
+    "lessons-system-await-async-transaction-mutators-while": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review:2026-06-06-async-mutator-probe"
+      ],
+      "rule": "Await async transaction mutators while holding the lessons lock, or reject Promise-returning mutators at runtime and in the public type contract.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-300bbdba",
+        "t-kw-05eaa965"
+      ]
+    },
+    "lessons-system-compile-command-pattern-triggers-at": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review:2026-06-06-invalid-regex-probe"
+      ],
+      "rule": "Compile command-pattern triggers at capture and validation boundaries; reject invalid regexes instead of silently making lessons unreachable.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-0b59f983",
+        "t-cmd-56d79bf7"
+      ]
+    },
+    "lessons-system-keep-lessons-reference-documentation-syn": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review:2026-06-06-reference-drift"
+      ],
+      "rule": "Keep lessons reference documentation synchronized with actual exports, ranked recall semantics, validation codes, and write-lock guarantees.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-b39eff4f",
+        "t-kw-07fc7c10"
+      ]
+    },
+    "lessons-system-make-legacy-auto-migration-check": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review:2026-06-06-auto-migrate-race-probe"
+      ],
+      "rule": "Make legacy auto-migration check graph existence under the lessons lock and refuse or merge when another writer creates the graph first.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-d3bf322e",
+        "t-cmd-73382791"
+      ]
+    },
+    "lessons-system-make-public-legacy-import-refuse": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review:2026-06-06-public-import-overwrite-probe"
+      ],
+      "rule": "Make public legacy import refuse an existing lessons graph by default and require explicit overwrite intent inside the locked transaction.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-d3bf322e",
+        "t-kw-05eaa965"
+      ]
+    },
+    "lessons-system-preserve-every-occurrence-of-repeatable": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review:2026-06-06-repeatable-parser-probe"
+      ],
+      "rule": "Preserve every occurrence of repeatable CLI flags in the shared argument parser; do not overwrite earlier trigger values.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-8e1b0ea0"
+      ]
+    },
+    "lessons-system-route-every-lessons-graph-writer": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review:2026-06-06-unlocked-writers"
+      ],
+      "rule": "Route every lessons graph writer, including migration and scaffolding, through the shared locked transaction path.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-0b59f983",
+        "t-cmd-73382791"
+      ]
+    },
+    "lessons-system-split-lessons-modules-by-responsibility": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review:2026-06-06-file-size-audit"
+      ],
+      "rule": "Split lessons modules by responsibility before they exceed the repository 200-line file limit.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-0b5c0a21"
+      ]
+    },
+    "lessons-system-treat-each-repeated-trigger-flag": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review:2026-06-06-trigger-comma-probe"
+      ],
+      "rule": "Treat each repeated trigger flag as one opaque value; never split regex or glob patterns on commas.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-8e1b0ea0",
+        "t-cmd-56d79bf7"
+      ]
+    },
+    "lessons-system-when-testing-direct-legacy-import": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review:2026-06-06-overwrite-probe-failure"
+      ],
+      "rule": "When testing direct legacy-import overwrite behavior, seed the competing graph through the direct API so CLI auto-migration does not consume the legacy fixture first.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-406306ec"
+      ]
+    },
+    "link-rebaser-deterministic-text-cleanup-transforms-ov": {
+      "createdAt": "2026-06-05",
+      "evidence": [],
+      "rationale": "strip-markers' cosmetic cleanup regex mangled code samples in 11 lessons; caught only by corpus verification, not unit tests.",
+      "rule": "Deterministic text-cleanup transforms over rule/doc prose that embeds code samples MUST be deletion-only — never reflow whitespace or punctuation. A cosmetic `replace(/\\s+([,.;:])/g, '$1')` or multi-space collapse corrupts embedded code: `${{ ... }}` → `${{... }}`, `exit 1 ;;` → `exit 1;;`, `[ref]: ...` → `[ref]:...`. To strip a trailing marker that owns its terminal period, make the period part of the marker's own regex match (e.g. `\\bSee\\s+L\\d+\\.?`) instead of post-collapsing `..` afterward. Verify any prose transform against the real corpus and assert ellipses/fences/shell-punctuation survive byte-for-byte.",
+      "status": "active",
+      "topics": [
+        "link-rebaser"
+      ],
+      "triggers": [
+        "t-glob-08cf5afd",
+        "t-glob-5e91e1bb",
+        "t-kw-1d0e5147",
+        "t-kw-9304db48",
+        "t-kw-26809656",
+        "t-kw-d47a0cd6"
       ]
     },
     "link-rebaser-rule-1": {
@@ -5442,7 +6118,8 @@
         "legacy:L135"
       ],
       "rule": "URI-skip patterns (`ssh://`, `git@host:`) must keep the scheme matcher distinct from Windows drive-letter detection — never let a single-letter scheme regex swallow `C:` and block legitimate absolute paths. Add same-file regression for both.",
-      "status": "active",
+      "status": "superseded",
+      "supersededBy": "windows-paths-rule-9",
       "topics": [
         "link-rebaser"
       ],
@@ -5574,7 +6251,8 @@
         "legacy:L203"
       ],
       "rule": "`expandResolvedPaths` must yield the caller's `projectRoot`-shaped path FIRST, then the realpath variant as a tie-breaker — never `unshift(realPath)`. Realpath-first breaks `toProjectRootRelative` on DOS short names (`RUNNER~1` vs `runneradmin`) and symlinked tmpdirs. Audit every `[realpath, original]` loop.",
-      "status": "active",
+      "status": "superseded",
+      "supersededBy": "windows-paths-rule-7",
       "topics": [
         "link-rebaser"
       ],
@@ -5750,7 +6428,8 @@
         "legacy:L198"
       ],
       "rule": "Any code participating in the link-rewrite map (key construction OR lookup) MUST use `pathApi(projectRoot)` from `src/core/path-helpers.ts`. NEVER import `join`/`normalize` from `node:path` directly in `src/core/reference/` or target-side `applyXxxRefs` helpers.",
-      "status": "active",
+      "status": "superseded",
+      "supersededBy": "windows-paths-rule-2",
       "topics": [
         "link-rebaser"
       ],
@@ -5794,7 +6473,8 @@
         "legacy:L200"
       ],
       "rule": "Unit tests using a synthetic POSIX root (e.g. `ROOT = '/proj'`) with link-rewrite map machinery must alias `join`/`normalize` to `posix.join`/`posix.normalize` from `node:path/posix` — host `node:path` is win32 on Windows runners and silently mismatches the map.",
-      "status": "active",
+      "status": "superseded",
+      "supersededBy": "windows-paths-rule-2",
       "topics": [
         "link-rebaser"
       ],
@@ -6542,15 +7222,49 @@
         "t-kw-5ab6ec91"
       ]
     },
+    "shell-quoting-for-inline-typescript-eval-scripts": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review-2026-06-06"
+      ],
+      "rule": "For inline TypeScript eval scripts that need await, wrap the body in an async IIFE unless the runner is explicitly configured for ESM output.",
+      "status": "active",
+      "topics": [
+        "shell-quoting"
+      ],
+      "triggers": [
+        "t-cmd-edcf48e9"
+      ]
+    },
+    "shell-quoting-never-insert-zero-width-or": {
+      "createdAt": "2026-06-05",
+      "evidence": [],
+      "rationale": "A zero-width space used to avoid closing a JSDoc block comment failed pnpm lint (no-irregular-whitespace).",
+      "rule": "Never insert zero-width or other irregular whitespace (e.g. U+200B) into source to dodge an accidental `*/` block-comment close — ESLint `no-irregular-whitespace` fails the lint gate. Reword the prose so the literal `*/` fence never appears (drop the inline example or describe it), rather than hiding a control byte in the comment.",
+      "status": "active",
+      "topics": [
+        "shell-quoting"
+      ],
+      "triggers": [
+        "t-glob-17d4d819",
+        "t-cmd-f77373d3",
+        "t-cmd-b5d550c1",
+        "t-kw-f821d655",
+        "t-kw-4df0ba9f",
+        "t-kw-27b89f58"
+      ]
+    },
     "shell-quoting-rule-1": {
       "createdAt": "2026-06-05",
       "evidence": [
-        "legacy:.agentsmesh/lessons/topics/shell-quoting.md#rule-1"
+        "legacy:.agentsmesh/lessons/topics/shell-quoting.md#rule-1",
+        "legacy:.agentsmesh/lessons/topics/typescript-esm-cycles.md#rule-15"
       ],
       "rule": "For inline Node scripts that use top-level `await`, use ESM `import` syntax; otherwise wrap CommonJS `require` code in an async IIFE. Never mix `require` with top-level `await` in the same heredoc — Node 24 emits `ERR_AMBIGUOUS_MODULE_SYNTAX`.",
       "status": "active",
       "topics": [
-        "shell-quoting"
+        "shell-quoting",
+        "typescript-esm-cycles"
       ],
       "triggers": [
         "t-glob-58cdf534",
@@ -6579,7 +7293,39 @@
         "t-kw-de6bbd15",
         "t-kw-acf7467a",
         "t-kw-839c3044",
-        "t-kw-44978e2d"
+        "t-kw-44978e2d",
+        "t-glob-eb76c84a",
+        "t-glob-848355ab",
+        "t-glob-e07c287a",
+        "t-glob-c47c9030",
+        "t-glob-12b9dee9",
+        "t-glob-7d39ded4",
+        "t-glob-4cf8c9e8",
+        "t-glob-6511ff88",
+        "t-glob-85c453ba",
+        "t-cmd-5cc2e657",
+        "t-cmd-355f9276",
+        "t-kw-a9e0c97e",
+        "t-kw-b25e04c5",
+        "t-kw-9138d9ad",
+        "t-kw-5ca8bb9b",
+        "t-kw-4968e049",
+        "t-kw-49dbeaf0",
+        "t-kw-5a3ff25b",
+        "t-kw-59eb7b32",
+        "t-kw-b8002bf1",
+        "t-kw-b2131429",
+        "t-kw-59ebbda5",
+        "t-kw-86674712",
+        "t-kw-19fab1bc",
+        "t-kw-9f989c4c",
+        "t-kw-e08bbdcc",
+        "t-kw-fc1c3506",
+        "t-kw-9f159232",
+        "t-kw-0b49541a",
+        "t-kw-daf3f2d7",
+        "t-kw-f782b599",
+        "t-kw-78dbe6f9"
       ]
     },
     "shell-quoting-rule-10": {
@@ -6909,7 +7655,8 @@
         "legacy:.agentsmesh/lessons/topics/shell-quoting.md#rule-5"
       ],
       "rule": "For `execSync`/`spawnSync` calls that need shell features like `2>&1`, use `/bin/sh` (or omit `shell` and avoid shell-only syntax). Never hardcode `/bin/zsh` (missing on `ubuntu-latest`) or `/bin/bash` (not guaranteed on minimal images) unless the job explicitly installs that shell.",
-      "status": "active",
+      "status": "superseded",
+      "supersededBy": "windows-paths-rule-17",
       "topics": [
         "shell-quoting"
       ],
@@ -6949,7 +7696,8 @@
         "legacy:.agentsmesh/lessons/topics/shell-quoting.md#rule-6"
       ],
       "rule": "For tests that need merged stdout+stderr cross-platform, use `spawnSync(process.execPath, [...args], { encoding: 'utf-8' })` and concatenate `result.stdout + result.stderr`. Never embed `2>&1` or hardcode any `/bin/*` once Windows is in the CI matrix.",
-      "status": "active",
+      "status": "superseded",
+      "supersededBy": "windows-paths-rule-17",
       "topics": [
         "shell-quoting"
       ],
@@ -6986,12 +7734,16 @@
     "shell-quoting-rule-7": {
       "createdAt": "2026-06-05",
       "evidence": [
-        "legacy:.agentsmesh/lessons/topics/shell-quoting.md#rule-7"
+        "legacy:.agentsmesh/lessons/topics/shell-quoting.md#rule-7",
+        "legacy:.agentsmesh/lessons/topics/frontmatter-and-canonical-shapes.md#rule-4",
+        "legacy:.agentsmesh/lessons/topics/typescript-esm-cycles.md#rule-13"
       ],
       "rule": "Never write a literal `*/` inside any `/* ... */` or `/** ... */` block comment — including JSDoc headers in test files. Globs like `skills/*/SKILL.md` close the comment early and produce misleading parser errors at unrelated lines. Reword to `skills/{name}/SKILL.md`, `glob: *.md`, or move into a `//` single-line comment.",
       "status": "active",
       "topics": [
-        "shell-quoting"
+        "shell-quoting",
+        "frontmatter-and-canonical-shapes",
+        "typescript-esm-cycles"
       ],
       "triggers": [
         "t-glob-58cdf534",
@@ -7020,7 +7772,69 @@
         "t-kw-de6bbd15",
         "t-kw-acf7467a",
         "t-kw-839c3044",
-        "t-kw-44978e2d"
+        "t-kw-44978e2d",
+        "t-glob-49e2783c",
+        "t-glob-f1749c1f",
+        "t-glob-8df49dba",
+        "t-glob-a5fa7b94",
+        "t-glob-3a18de42",
+        "t-glob-d0bbff92",
+        "t-glob-a9cd574a",
+        "t-glob-300145df",
+        "t-glob-e3bf2f23",
+        "t-glob-7f548275",
+        "t-glob-7462f277",
+        "t-glob-62cc99bd",
+        "t-glob-e35197e8",
+        "t-kw-507def8b",
+        "t-kw-e354bd6a",
+        "t-kw-d04c9e1a",
+        "t-kw-5887af17",
+        "t-kw-eb5aee43",
+        "t-kw-b26ac4c5",
+        "t-kw-dfa85fac",
+        "t-kw-e71bc09c",
+        "t-kw-35ab5fcd",
+        "t-kw-9215ef91",
+        "t-kw-f24436d2",
+        "t-kw-f7952774",
+        "t-kw-b95a75f6",
+        "t-kw-edd62ee0",
+        "t-kw-63852321",
+        "t-kw-da5f9e51",
+        "t-kw-42a9f6c5",
+        "t-glob-eb76c84a",
+        "t-glob-848355ab",
+        "t-glob-e07c287a",
+        "t-glob-c47c9030",
+        "t-glob-12b9dee9",
+        "t-glob-7d39ded4",
+        "t-glob-4cf8c9e8",
+        "t-glob-6511ff88",
+        "t-glob-85c453ba",
+        "t-cmd-5cc2e657",
+        "t-cmd-355f9276",
+        "t-kw-a9e0c97e",
+        "t-kw-b25e04c5",
+        "t-kw-9138d9ad",
+        "t-kw-5ca8bb9b",
+        "t-kw-4968e049",
+        "t-kw-49dbeaf0",
+        "t-kw-5a3ff25b",
+        "t-kw-59eb7b32",
+        "t-kw-b8002bf1",
+        "t-kw-b2131429",
+        "t-kw-59ebbda5",
+        "t-kw-86674712",
+        "t-kw-19fab1bc",
+        "t-kw-9f989c4c",
+        "t-kw-e08bbdcc",
+        "t-kw-fc1c3506",
+        "t-kw-9f159232",
+        "t-kw-0b49541a",
+        "t-kw-daf3f2d7",
+        "t-kw-f782b599",
+        "t-kw-78dbe6f9"
       ]
     },
     "shell-quoting-rule-8": {
@@ -7106,12 +7920,16 @@
     "typescript-esm-cycles-rule-1": {
       "createdAt": "2026-06-05",
       "evidence": [
-        "legacy:.agentsmesh/lessons/topics/typescript-esm-cycles.md#rule-1"
+        "legacy:.agentsmesh/lessons/topics/typescript-esm-cycles.md#rule-1",
+        "legacy:.agentsmesh/lessons/topics/fixture-and-assertion-discipline.md#rule-16",
+        "legacy:.agentsmesh/lessons/topics/install-import-pickers.md#rule-31"
       ],
       "rule": "Place every per-target `ImportEntryMapper` referenced by the descriptor object literal in a third file `src/targets/<id>/import-mappers.ts`. Never let `index.ts` import mappers from `importer.ts` and `importer.ts` import the descriptor from `index.ts` — the object literal will capture `undefined` for `map:` fields and silently break import. Create `import-mappers.ts` even when there is only one mapper.",
       "status": "active",
       "topics": [
-        "typescript-esm-cycles"
+        "typescript-esm-cycles",
+        "fixture-and-assertion-discipline",
+        "install-import-pickers"
       ],
       "triggers": [
         "t-glob-eb76c84a",
@@ -7145,7 +7963,78 @@
         "t-kw-0b49541a",
         "t-kw-daf3f2d7",
         "t-kw-f782b599",
-        "t-kw-78dbe6f9"
+        "t-kw-78dbe6f9",
+        "t-glob-1fe91ebe",
+        "t-glob-593303ad",
+        "t-glob-257fb095",
+        "t-glob-11a8af2c",
+        "t-glob-6139fab0",
+        "t-glob-2741c10d",
+        "t-cmd-95ae48f4",
+        "t-cmd-8e9837a3",
+        "t-kw-3f5f1e88",
+        "t-kw-4af138f5",
+        "t-kw-d3d97884",
+        "t-kw-38c81c71",
+        "t-kw-c128681a",
+        "t-kw-7ae3495a",
+        "t-kw-a3d1ec89",
+        "t-kw-6dcc196d",
+        "t-kw-0bc71226",
+        "t-kw-e40a7698",
+        "t-kw-61cbe8d2",
+        "t-kw-41c52a68",
+        "t-kw-1b06e340",
+        "t-kw-4595dbe4",
+        "t-kw-3d590730",
+        "t-kw-4c148ab9",
+        "t-kw-adad09ac",
+        "t-kw-5ae85b29",
+        "t-kw-f4c73005",
+        "t-kw-7c2f82c3",
+        "t-kw-1df6c8fd",
+        "t-kw-129cc275",
+        "t-glob-25ede31e",
+        "t-glob-fbb4298f",
+        "t-glob-bf6f2533",
+        "t-glob-7a20529a",
+        "t-glob-20effcc2",
+        "t-glob-3c87d52f",
+        "t-glob-8eea8f9c",
+        "t-glob-2ae846c8",
+        "t-glob-e4faecb1",
+        "t-glob-5ec4aa7e",
+        "t-glob-52d56856",
+        "t-glob-249f92d5",
+        "t-glob-e1fa5112",
+        "t-cmd-2398d904",
+        "t-cmd-34d713b6",
+        "t-cmd-45d8ae56",
+        "t-cmd-cae616a1",
+        "t-cmd-d9dce045",
+        "t-cmd-b66a9431",
+        "t-cmd-2c6e7fc6",
+        "t-cmd-e097d363",
+        "t-kw-122af17e",
+        "t-kw-5eb98593",
+        "t-kw-27cd93f3",
+        "t-kw-a46daf14",
+        "t-kw-21b980fd",
+        "t-kw-360b7d3e",
+        "t-kw-e659afa0",
+        "t-kw-a4ec24a2",
+        "t-kw-1b84052e",
+        "t-kw-a55e6906",
+        "t-kw-2fd1ccde",
+        "t-kw-07501619",
+        "t-kw-785e5c64",
+        "t-kw-3a83756b",
+        "t-kw-1657dff0",
+        "t-kw-8866ab37",
+        "t-kw-8fe9f944",
+        "t-kw-d87bf429",
+        "t-kw-39470111",
+        "t-kw-67b4775f"
       ]
     },
     "typescript-esm-cycles-rule-10": {
@@ -7199,7 +8088,8 @@
         "legacy:.agentsmesh/lessons/topics/typescript-esm-cycles.md#rule-11"
       ],
       "rule": "Single-letter URI scheme regexes (`^[a-z]+:`) must be kept distinct from Windows drive-letter detection (`^[A-Za-z]:[/\\\\]`). A scheme matcher that swallows `C:` will block legitimate Windows absolute paths from rewriting. Add regression tests covering both shapes in the same file.",
-      "status": "active",
+      "status": "superseded",
+      "supersededBy": "windows-paths-rule-9",
       "topics": [
         "typescript-esm-cycles"
       ],
@@ -7241,12 +8131,14 @@
     "typescript-esm-cycles-rule-12": {
       "createdAt": "2026-06-05",
       "evidence": [
-        "legacy:.agentsmesh/lessons/topics/typescript-esm-cycles.md#rule-12"
+        "legacy:.agentsmesh/lessons/topics/typescript-esm-cycles.md#rule-12",
+        "legacy:.agentsmesh/lessons/topics/generation-collision-source-maps.md#rule-18"
       ],
       "rule": "In `resolveGen` and similar dispatchers with a plugin-registry fallback, check `getBuiltinTargetDefinition(target)` FIRST and delegate to `resolveTargetFeatureGenerator(target, feature, config)` for builtins; otherwise the plugin fallback re-applies the raw generator and bypasses conversion config (e.g. `commandsToSkills: false`). Do not let a generic descriptor lookup serve as the builtin path.",
       "status": "active",
       "topics": [
-        "typescript-esm-cycles"
+        "typescript-esm-cycles",
+        "generation-collision-source-maps"
       ],
       "triggers": [
         "t-glob-eb76c84a",
@@ -7280,7 +8172,35 @@
         "t-kw-0b49541a",
         "t-kw-daf3f2d7",
         "t-kw-f782b599",
-        "t-kw-78dbe6f9"
+        "t-kw-78dbe6f9",
+        "t-glob-87a63917",
+        "t-glob-e9f9f003",
+        "t-glob-a23d7b79",
+        "t-glob-c09d2acb",
+        "t-glob-1bd6cdf4",
+        "t-glob-8ce6202e",
+        "t-glob-a07d1032",
+        "t-glob-5995acad",
+        "t-glob-e6621671",
+        "t-glob-ba152b87",
+        "t-glob-106a67a9",
+        "t-cmd-25ae0863",
+        "t-cmd-7d02fc72",
+        "t-kw-177acbeb",
+        "t-kw-09f37896",
+        "t-kw-498958d8",
+        "t-kw-780152bb",
+        "t-kw-15c6ab40",
+        "t-kw-cb67f62d",
+        "t-kw-b210183e",
+        "t-kw-0acd1d95",
+        "t-kw-0181f5f4",
+        "t-kw-7b9a4665",
+        "t-kw-31aabdd8",
+        "t-kw-24e89449",
+        "t-kw-73333c6a",
+        "t-kw-21a8e9ec",
+        "t-kw-17fd12e3"
       ]
     },
     "typescript-esm-cycles-rule-13": {
@@ -7289,7 +8209,8 @@
         "legacy:.agentsmesh/lessons/topics/typescript-esm-cycles.md#rule-13"
       ],
       "rule": "Never write a literal `*/` inside any `/* ... */` block comment (including JSDoc and file-header blocks). Replace `skills/*/SKILL.md`-style globs in prose with `skills/{name}/SKILL.md` or move them to single-line `//` comments. The same hazard breaks both production sources and test files.",
-      "status": "active",
+      "status": "superseded",
+      "supersededBy": "shell-quoting-rule-7",
       "topics": [
         "typescript-esm-cycles"
       ],
@@ -7333,8 +8254,9 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/typescript-esm-cycles.md#rule-14"
       ],
-      "rule": "(also relevant — primary in `fixture-and-assertion-discipline`) When a command-orchestration test mocks `loadScopedConfig`, the mocked `ValidatedConfig` must include every field the schema defaults populate (e.g. `plugins: []`). Adding an orchestration step that reads `config.X` without updating every `mockLoadScopedConfig.mockResolvedValue` fixture crashes on `undefined`.",
-      "status": "active",
+      "rule": "When a command-orchestration test mocks `loadScopedConfig`, the mocked `ValidatedConfig` must include every field the schema defaults populate (e.g. `plugins: []`). Adding an orchestration step that reads `config.X` without updating every `mockLoadScopedConfig.mockResolvedValue` fixture crashes on `undefined`.",
+      "status": "superseded",
+      "supersededBy": "fixture-and-assertion-discipline-rule-8",
       "topics": [
         "typescript-esm-cycles"
       ],
@@ -7379,7 +8301,8 @@
         "legacy:.agentsmesh/lessons/topics/typescript-esm-cycles.md#rule-15"
       ],
       "rule": "Do not mix CommonJS `require(...)` with top-level `await` in inline `node -e` / heredoc scripts under modern Node — it triggers `ERR_AMBIGUOUS_MODULE_SYNTAX`. Use ESM `import`, or wrap CJS in an async IIFE.",
-      "status": "active",
+      "status": "superseded",
+      "supersededBy": "shell-quoting-rule-1",
       "topics": [
         "typescript-esm-cycles"
       ],
@@ -7421,12 +8344,14 @@
     "typescript-esm-cycles-rule-2": {
       "createdAt": "2026-06-05",
       "evidence": [
-        "legacy:.agentsmesh/lessons/topics/typescript-esm-cycles.md#rule-2"
+        "legacy:.agentsmesh/lessons/topics/typescript-esm-cycles.md#rule-2",
+        "legacy:.agentsmesh/lessons/topics/fixture-and-assertion-discipline.md#rule-15"
       ],
       "rule": "When auto-generating module-level data (e.g. `BUILTIN_TARGETS`) from per-target descriptor imports, patch the existing source file in place between sentinel comments `// <auto-generated:...>` ... `// </auto-generated:...>`. Do NOT extract the array literal to a new generated module — array literals evaluate eagerly and indirection through a separate file adds one more cycle hop that snapshots TDZ-pending imports as `undefined`.",
       "status": "active",
       "topics": [
-        "typescript-esm-cycles"
+        "typescript-esm-cycles",
+        "fixture-and-assertion-discipline"
       ],
       "triggers": [
         "t-glob-eb76c84a",
@@ -7460,7 +8385,37 @@
         "t-kw-0b49541a",
         "t-kw-daf3f2d7",
         "t-kw-f782b599",
-        "t-kw-78dbe6f9"
+        "t-kw-78dbe6f9",
+        "t-glob-1fe91ebe",
+        "t-glob-593303ad",
+        "t-glob-257fb095",
+        "t-glob-11a8af2c",
+        "t-glob-6139fab0",
+        "t-glob-2741c10d",
+        "t-cmd-95ae48f4",
+        "t-cmd-8e9837a3",
+        "t-kw-3f5f1e88",
+        "t-kw-4af138f5",
+        "t-kw-d3d97884",
+        "t-kw-38c81c71",
+        "t-kw-c128681a",
+        "t-kw-7ae3495a",
+        "t-kw-a3d1ec89",
+        "t-kw-6dcc196d",
+        "t-kw-0bc71226",
+        "t-kw-e40a7698",
+        "t-kw-61cbe8d2",
+        "t-kw-41c52a68",
+        "t-kw-1b06e340",
+        "t-kw-4595dbe4",
+        "t-kw-3d590730",
+        "t-kw-4c148ab9",
+        "t-kw-adad09ac",
+        "t-kw-5ae85b29",
+        "t-kw-f4c73005",
+        "t-kw-7c2f82c3",
+        "t-kw-1df6c8fd",
+        "t-kw-129cc275"
       ]
     },
     "typescript-esm-cycles-rule-3": {
@@ -7511,12 +8466,14 @@
     "typescript-esm-cycles-rule-4": {
       "createdAt": "2026-06-05",
       "evidence": [
-        "legacy:.agentsmesh/lessons/topics/typescript-esm-cycles.md#rule-4"
+        "legacy:.agentsmesh/lessons/topics/typescript-esm-cycles.md#rule-4",
+        "legacy:.agentsmesh/lessons/topics/generation-collision-source-maps.md#rule-17"
       ],
       "rule": "Whenever a core type becomes a union (e.g. `McpServer` gaining a URL-transport variant), add explicit type guards at every serializer/generator boundary that requires a specific variant, and rerun `pnpm typecheck` before declaring the refactor done.",
       "status": "active",
       "topics": [
-        "typescript-esm-cycles"
+        "typescript-esm-cycles",
+        "generation-collision-source-maps"
       ],
       "triggers": [
         "t-glob-eb76c84a",
@@ -7550,7 +8507,35 @@
         "t-kw-0b49541a",
         "t-kw-daf3f2d7",
         "t-kw-f782b599",
-        "t-kw-78dbe6f9"
+        "t-kw-78dbe6f9",
+        "t-glob-87a63917",
+        "t-glob-e9f9f003",
+        "t-glob-a23d7b79",
+        "t-glob-c09d2acb",
+        "t-glob-1bd6cdf4",
+        "t-glob-8ce6202e",
+        "t-glob-a07d1032",
+        "t-glob-5995acad",
+        "t-glob-e6621671",
+        "t-glob-ba152b87",
+        "t-glob-106a67a9",
+        "t-cmd-25ae0863",
+        "t-cmd-7d02fc72",
+        "t-kw-177acbeb",
+        "t-kw-09f37896",
+        "t-kw-498958d8",
+        "t-kw-780152bb",
+        "t-kw-15c6ab40",
+        "t-kw-cb67f62d",
+        "t-kw-b210183e",
+        "t-kw-0acd1d95",
+        "t-kw-0181f5f4",
+        "t-kw-7b9a4665",
+        "t-kw-31aabdd8",
+        "t-kw-24e89449",
+        "t-kw-73333c6a",
+        "t-kw-21a8e9ec",
+        "t-kw-17fd12e3"
       ]
     },
     "typescript-esm-cycles-rule-5": {
@@ -8424,12 +9409,14 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/windows-paths.md#rule-13",
         "legacy:L228",
-        "legacy:L170"
+        "legacy:L170",
+        "legacy:.agentsmesh/lessons/topics/global-mode.md#rule-8"
       ],
       "rule": "**Bound symlink-based temp-project setups to dot-entries and root files only.** `createTempProjectRoot(homedir())` must never indiscriminately symlink Desktop/Documents/Downloads — `listScopedAgentsFiles` will recurse into them. Symlink only dot-directories (`.claude/`, `.cursor/`, ...) and root-level files. The same scope guard applies to `global` import: never run whole-tree `readDirRecursive(homedir())` for nested rule discovery; restrict to `~/.codex`, `~/.agents/skills`, etc.",
       "status": "active",
       "topics": [
-        "windows-paths"
+        "windows-paths",
+        "global-mode"
       ],
       "triggers": [
         "t-glob-3932d5a5",
@@ -8459,7 +9446,33 @@
         "t-kw-9f989c4c",
         "t-kw-ef980f10",
         "t-kw-1859526e",
-        "t-kw-bb77e3f7"
+        "t-kw-bb77e3f7",
+        "t-glob-eb76c84a",
+        "t-glob-bbff968d",
+        "t-glob-7458228a",
+        "t-glob-e968d417",
+        "t-glob-3e3d7f5b",
+        "t-glob-89b9b30f",
+        "t-glob-91256ca8",
+        "t-glob-b8728451",
+        "t-cmd-2136a61d",
+        "t-cmd-ac418287",
+        "t-cmd-e5052e92",
+        "t-cmd-dbf01710",
+        "t-cmd-f2638ce0",
+        "t-cmd-fe0fbdb4",
+        "t-kw-1dfd56af",
+        "t-kw-ecd6201e",
+        "t-kw-956e8179",
+        "t-kw-1776a2f8",
+        "t-kw-c2fa797f",
+        "t-kw-6f305449",
+        "t-kw-c8e6e315",
+        "t-kw-e3196316",
+        "t-kw-d599429d",
+        "t-kw-c103eb99",
+        "t-kw-baaa73d4",
+        "t-kw-458a71f7"
       ]
     },
     "windows-paths-rule-14": {
@@ -8592,12 +9605,15 @@
       "createdAt": "2026-06-05",
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/windows-paths.md#rule-17",
-        "legacy:L191"
+        "legacy:L191",
+        "legacy:.agentsmesh/lessons/topics/shell-quoting.md#rule-5",
+        "legacy:.agentsmesh/lessons/topics/shell-quoting.md#rule-6"
       ],
       "rule": "**Tests that need merged stdout+stderr must not hardcode a POSIX shell.** Use `spawnSync(process.execPath, [...args], { encoding: 'utf-8' })` and concatenate `result.stdout + result.stderr`. Never embed `2>&1` or hardcode `/bin/sh` / `/bin/zsh` once Windows is in the CI matrix.",
       "status": "active",
       "topics": [
-        "windows-paths"
+        "windows-paths",
+        "shell-quoting"
       ],
       "triggers": [
         "t-glob-3932d5a5",
@@ -8627,7 +9643,34 @@
         "t-kw-9f989c4c",
         "t-kw-ef980f10",
         "t-kw-1859526e",
-        "t-kw-bb77e3f7"
+        "t-kw-bb77e3f7",
+        "t-glob-58cdf534",
+        "t-glob-ebacd363",
+        "t-cmd-4f9ca035",
+        "t-cmd-3efc6ee1",
+        "t-cmd-b7e554e6",
+        "t-cmd-42e0c859",
+        "t-cmd-852dbc34",
+        "t-cmd-f5e65966",
+        "t-cmd-8ab47a8c",
+        "t-cmd-43e6903e",
+        "t-cmd-813423e2",
+        "t-cmd-69dc7d4e",
+        "t-kw-a899cab3",
+        "t-kw-982aad0f",
+        "t-kw-866d0425",
+        "t-kw-842af211",
+        "t-kw-268f0290",
+        "t-kw-8a4901cf",
+        "t-kw-48d75fbe",
+        "t-kw-a5bea60b",
+        "t-kw-3afd6e04",
+        "t-kw-8371e388",
+        "t-kw-f821d655",
+        "t-kw-de6bbd15",
+        "t-kw-acf7467a",
+        "t-kw-839c3044",
+        "t-kw-44978e2d"
       ]
     },
     "windows-paths-rule-18": {
@@ -8719,12 +9762,15 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/windows-paths.md#rule-2",
         "legacy:L198",
-        "legacy:L200"
+        "legacy:L200",
+        "legacy:.agentsmesh/lessons/topics/link-rebaser.md#rule-18",
+        "legacy:.agentsmesh/lessons/topics/link-rebaser.md#rule-19"
       ],
       "rule": "**Pick `node:path` vs `node:path/posix` by path *format*, not host platform.** Any code in `src/core/reference/` or `applyXxxRefs` helpers that participates in the link-rewrite map (key construction OR lookup) MUST use `pathApi(projectRoot)` from `src/core/path-helpers.ts`. Never import `join`/`normalize` from `node:path` directly there. In synthetic-root unit tests (`ROOT = '/proj'`), alias `join`/`normalize` to `posix.join`/`posix.normalize`.",
       "status": "active",
       "topics": [
-        "windows-paths"
+        "windows-paths",
+        "link-rebaser"
       ],
       "triggers": [
         "t-glob-3932d5a5",
@@ -8754,19 +9800,50 @@
         "t-kw-9f989c4c",
         "t-kw-ef980f10",
         "t-kw-1859526e",
-        "t-kw-bb77e3f7"
+        "t-kw-bb77e3f7",
+        "t-glob-5c64f830",
+        "t-glob-52935bc9",
+        "t-glob-62d587e2",
+        "t-glob-3053790d",
+        "t-glob-0f48b5c8",
+        "t-glob-8ce6202e",
+        "t-glob-c3d4a7ac",
+        "t-glob-3ce2b476",
+        "t-glob-5b739e3e",
+        "t-glob-1948a81e",
+        "t-glob-51b8926c",
+        "t-glob-40333e0c",
+        "t-glob-ac20be13",
+        "t-kw-e2e39b30",
+        "t-kw-9c652c59",
+        "t-kw-e5ea7f39",
+        "t-kw-a0d53e80",
+        "t-kw-102a840c",
+        "t-kw-878551b8",
+        "t-kw-af046336",
+        "t-kw-10fd8bde",
+        "t-kw-77157ae8",
+        "t-kw-401ab808",
+        "t-kw-d369192b",
+        "t-kw-d532cd06",
+        "t-kw-37d87276",
+        "t-kw-4510e8f5",
+        "t-kw-9f5866db",
+        "t-kw-5ab6ec91"
       ]
     },
     "windows-paths-rule-3": {
       "createdAt": "2026-06-05",
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/windows-paths.md#rule-3",
-        "legacy:L5"
+        "legacy:L5",
+        "legacy:.agentsmesh/lessons/topics/global-mode.md#rule-7"
       ],
       "rule": "**Test helpers that fake `$HOME` must set `USERPROFILE` on win32.** `node:os.homedir()` reads `USERPROFILE` (not `HOME`) on Windows. Centralize the translation in the spawn helper, not at every call site.",
       "status": "active",
       "topics": [
-        "windows-paths"
+        "windows-paths",
+        "global-mode"
       ],
       "triggers": [
         "t-glob-3932d5a5",
@@ -8796,7 +9873,33 @@
         "t-kw-9f989c4c",
         "t-kw-ef980f10",
         "t-kw-1859526e",
-        "t-kw-bb77e3f7"
+        "t-kw-bb77e3f7",
+        "t-glob-eb76c84a",
+        "t-glob-bbff968d",
+        "t-glob-7458228a",
+        "t-glob-e968d417",
+        "t-glob-3e3d7f5b",
+        "t-glob-89b9b30f",
+        "t-glob-91256ca8",
+        "t-glob-b8728451",
+        "t-cmd-2136a61d",
+        "t-cmd-ac418287",
+        "t-cmd-e5052e92",
+        "t-cmd-dbf01710",
+        "t-cmd-f2638ce0",
+        "t-cmd-fe0fbdb4",
+        "t-kw-1dfd56af",
+        "t-kw-ecd6201e",
+        "t-kw-956e8179",
+        "t-kw-1776a2f8",
+        "t-kw-c2fa797f",
+        "t-kw-6f305449",
+        "t-kw-c8e6e315",
+        "t-kw-e3196316",
+        "t-kw-d599429d",
+        "t-kw-c103eb99",
+        "t-kw-baaa73d4",
+        "t-kw-458a71f7"
       ]
     },
     "windows-paths-rule-4": {
@@ -8931,12 +10034,14 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/windows-paths.md#rule-7",
         "legacy:L203",
-        "legacy:L202"
+        "legacy:L202",
+        "legacy:.agentsmesh/lessons/topics/link-rebaser.md#rule-14"
       ],
       "rule": "**Prefer the caller's projectRoot-shaped path over realpath; treat realpath as a tie-breaker.** On Windows runners under `RUNNER~1`, `realpathSync.native` expands to the long form (`runneradmin`), and `toProjectRootRelative(short, long)` yields `..\\..\\..` chains. In `expandResolvedPaths` and any `[realpath, original]` loop, the caller-shaped variant must win.",
       "status": "active",
       "topics": [
-        "windows-paths"
+        "windows-paths",
+        "link-rebaser"
       ],
       "triggers": [
         "t-glob-3932d5a5",
@@ -8966,7 +10071,36 @@
         "t-kw-9f989c4c",
         "t-kw-ef980f10",
         "t-kw-1859526e",
-        "t-kw-bb77e3f7"
+        "t-kw-bb77e3f7",
+        "t-glob-5c64f830",
+        "t-glob-52935bc9",
+        "t-glob-62d587e2",
+        "t-glob-3053790d",
+        "t-glob-0f48b5c8",
+        "t-glob-8ce6202e",
+        "t-glob-c3d4a7ac",
+        "t-glob-3ce2b476",
+        "t-glob-5b739e3e",
+        "t-glob-1948a81e",
+        "t-glob-51b8926c",
+        "t-glob-40333e0c",
+        "t-glob-ac20be13",
+        "t-kw-e2e39b30",
+        "t-kw-9c652c59",
+        "t-kw-e5ea7f39",
+        "t-kw-a0d53e80",
+        "t-kw-102a840c",
+        "t-kw-878551b8",
+        "t-kw-af046336",
+        "t-kw-10fd8bde",
+        "t-kw-77157ae8",
+        "t-kw-401ab808",
+        "t-kw-d369192b",
+        "t-kw-d532cd06",
+        "t-kw-37d87276",
+        "t-kw-4510e8f5",
+        "t-kw-9f5866db",
+        "t-kw-5ab6ec91"
       ]
     },
     "windows-paths-rule-8": {
@@ -9017,12 +10151,16 @@
       "evidence": [
         "legacy:.agentsmesh/lessons/topics/windows-paths.md#rule-9",
         "legacy:L135",
-        "legacy:L246"
+        "legacy:L246",
+        "legacy:.agentsmesh/lessons/topics/link-rebaser.md#rule-11",
+        "legacy:.agentsmesh/lessons/topics/typescript-esm-cycles.md#rule-11"
       ],
       "rule": "**URI/scheme detection must not swallow Windows drive letters.** Keep the URI scheme matcher distinct from `[A-Za-z]:[\\\\/]` drive-letter detection. Plugin/source `isLocalSource` classifiers must accept `D:\\foo` alongside POSIX absolutes — `node:path`'s `resolve()` produces drive-letter absolutes on win32. Regression tests cover both `C:` and `ssh://...` in the same file.",
       "status": "active",
       "topics": [
-        "windows-paths"
+        "windows-paths",
+        "link-rebaser",
+        "typescript-esm-cycles"
       ],
       "triggers": [
         "t-glob-3932d5a5",
@@ -9052,11 +10190,73 @@
         "t-kw-9f989c4c",
         "t-kw-ef980f10",
         "t-kw-1859526e",
-        "t-kw-bb77e3f7"
+        "t-kw-bb77e3f7",
+        "t-glob-5c64f830",
+        "t-glob-52935bc9",
+        "t-glob-62d587e2",
+        "t-glob-3053790d",
+        "t-glob-0f48b5c8",
+        "t-glob-8ce6202e",
+        "t-glob-c3d4a7ac",
+        "t-glob-3ce2b476",
+        "t-glob-5b739e3e",
+        "t-glob-1948a81e",
+        "t-glob-51b8926c",
+        "t-glob-40333e0c",
+        "t-glob-ac20be13",
+        "t-kw-e2e39b30",
+        "t-kw-9c652c59",
+        "t-kw-e5ea7f39",
+        "t-kw-a0d53e80",
+        "t-kw-102a840c",
+        "t-kw-878551b8",
+        "t-kw-af046336",
+        "t-kw-10fd8bde",
+        "t-kw-77157ae8",
+        "t-kw-401ab808",
+        "t-kw-d369192b",
+        "t-kw-d532cd06",
+        "t-kw-37d87276",
+        "t-kw-4510e8f5",
+        "t-kw-9f5866db",
+        "t-kw-5ab6ec91",
+        "t-glob-eb76c84a",
+        "t-glob-848355ab",
+        "t-glob-c47c9030",
+        "t-glob-12b9dee9",
+        "t-glob-7d39ded4",
+        "t-glob-4cf8c9e8",
+        "t-glob-6511ff88",
+        "t-glob-85c453ba",
+        "t-cmd-5cc2e657",
+        "t-cmd-355f9276",
+        "t-kw-a9e0c97e",
+        "t-kw-b25e04c5",
+        "t-kw-9138d9ad",
+        "t-kw-5ca8bb9b",
+        "t-kw-4968e049",
+        "t-kw-49dbeaf0",
+        "t-kw-5a3ff25b",
+        "t-kw-59eb7b32",
+        "t-kw-b8002bf1",
+        "t-kw-b2131429",
+        "t-kw-59ebbda5",
+        "t-kw-86674712",
+        "t-kw-19fab1bc",
+        "t-kw-e08bbdcc",
+        "t-kw-fc1c3506",
+        "t-kw-9f159232",
+        "t-kw-0b49541a",
+        "t-kw-daf3f2d7",
+        "t-kw-f782b599",
+        "t-kw-78dbe6f9"
       ]
     }
   },
   "topics": {
+    "agent-orchestration": {
+      "summary": "Subagent/parallel-agent orchestration safety — tool profiles, isolation, destructive-command guards, fan-out discipline."
+    },
     "ci-and-release-security": {
       "summary": "CI workflows + release security — ${{ }} injection, needs cascade, token leakage, supply-chain pinning, fail-closed checksums."
     },
@@ -9077,6 +10277,9 @@
     },
     "install-import-pickers": {
       "summary": "Install pipeline, importers, picker routing, marketplace sub-packs, pack materialization, manifest persistence, sync replay."
+    },
+    "lessons-system": {
+      "summary": "Lessons graph recall, capture, lifecycle, and storage contracts."
     },
     "link-rebaser": {
       "summary": "How reference text is rewritten — protected anchors vs markdown destinations, fenced code, project-root-relative, existence gates, pathApi discipline."
@@ -9119,6 +10322,10 @@
       "kind": "command_pattern",
       "pattern": "install https?://"
     },
+    "t-cmd-31dfa72c": {
+      "kind": "command_pattern",
+      "pattern": "sed.*SKILL.md"
+    },
     "t-cmd-34d713b6": {
       "kind": "command_pattern",
       "pattern": "install --sync"
@@ -9151,9 +10358,17 @@
       "kind": "command_pattern",
       "pattern": "install --all"
     },
+    "t-cmd-49d16e5a": {
+      "kind": "command_pattern",
+      "pattern": "git checkout"
+    },
     "t-cmd-4f9ca035": {
       "kind": "command_pattern",
       "pattern": "^rg "
+    },
+    "t-cmd-56d79bf7": {
+      "kind": "command_pattern",
+      "pattern": "agentsmesh lessons add"
     },
     "t-cmd-5cc2e657": {
       "kind": "command_pattern",
@@ -9166,6 +10381,10 @@
     "t-cmd-6ea72461": {
       "kind": "command_pattern",
       "pattern": "changeset publish"
+    },
+    "t-cmd-73382791": {
+      "kind": "command_pattern",
+      "pattern": "agentsmesh lessons"
     },
     "t-cmd-7d02fc72": {
       "kind": "command_pattern",
@@ -9199,6 +10418,10 @@
       "kind": "command_pattern",
       "pattern": "git tag"
     },
+    "t-cmd-a5d4409e": {
+      "kind": "command_pattern",
+      "pattern": "git restore"
+    },
     "t-cmd-a678d8ce": {
       "kind": "command_pattern",
       "pattern": "gh release"
@@ -9206,6 +10429,10 @@
     "t-cmd-ac418287": {
       "kind": "command_pattern",
       "pattern": "generate --global"
+    },
+    "t-cmd-b5d550c1": {
+      "kind": "command_pattern",
+      "pattern": "eslint"
     },
     "t-cmd-b66a9431": {
       "kind": "command_pattern",
@@ -9215,13 +10442,25 @@
       "kind": "command_pattern",
       "pattern": "node -e"
     },
+    "t-cmd-be67eb02": {
+      "kind": "command_pattern",
+      "pattern": "lessons_add"
+    },
     "t-cmd-c3982e63": {
       "kind": "command_pattern",
       "pattern": "git push origin"
     },
+    "t-cmd-c6b5fd8b": {
+      "kind": "command_pattern",
+      "pattern": "git reset --hard"
+    },
     "t-cmd-cae616a1": {
       "kind": "command_pattern",
       "pattern": "install --force"
+    },
+    "t-cmd-cd48106d": {
+      "kind": "command_pattern",
+      "pattern": "rg -n.*src/index\\.ts|rg -n.*src/lessons\\.ts"
     },
     "t-cmd-d9dce045": {
       "kind": "command_pattern",
@@ -9255,6 +10494,10 @@
       "kind": "command_pattern",
       "pattern": "node dist/cli.js"
     },
+    "t-cmd-edcf48e9": {
+      "kind": "command_pattern",
+      "pattern": "pnpm exec tsx -e"
+    },
     "t-cmd-ef53ec19": {
       "kind": "command_pattern",
       "pattern": "^pnpm test:coverage"
@@ -9271,6 +10514,10 @@
       "kind": "command_pattern",
       "pattern": "/bin/sh"
     },
+    "t-cmd-f77373d3": {
+      "kind": "command_pattern",
+      "pattern": "pnpm lint"
+    },
     "t-cmd-fd015df7": {
       "kind": "command_pattern",
       "pattern": "dist/cli\\.js"
@@ -9279,9 +10526,21 @@
       "kind": "command_pattern",
       "pattern": "uninstall --global"
     },
+    "t-glob-08cf5afd": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/strip-markers.ts"
+    },
     "t-glob-08eb6b3f": {
       "kind": "file_glob",
       "pattern": "dist/cli.js"
+    },
+    "t-glob-0b59f983": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/*.ts"
+    },
+    "t-glob-0b5c0a21": {
+      "kind": "file_glob",
+      "pattern": "src/cli/commands/lessons*.ts"
     },
     "t-glob-0c69c521": {
       "kind": "file_glob",
@@ -9310,6 +10569,10 @@
     "t-glob-151a6581": {
       "kind": "file_glob",
       "pattern": "tests/e2e/helpers/**"
+    },
+    "t-glob-17d4d819": {
+      "kind": "file_glob",
+      "pattern": "src/**/*.ts"
     },
     "t-glob-1948a81e": {
       "kind": "file_glob",
@@ -9359,6 +10622,10 @@
       "kind": "file_glob",
       "pattern": "src/**/readSkillFrontmatterName*.ts"
     },
+    "t-glob-300bbdba": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/mutate.ts"
+    },
     "t-glob-3053790d": {
       "kind": "file_glob",
       "pattern": "src/core/reference/link-token-classifier*.ts"
@@ -9386,6 +10653,10 @@
     "t-glob-40333e0c": {
       "kind": "file_glob",
       "pattern": "tests/**/reference-rewrite*.test.ts"
+    },
+    "t-glob-406306ec": {
+      "kind": "file_glob",
+      "pattern": "tests/unit/lessons/import-legacy.test.ts"
     },
     "t-glob-41b0a32c": {
       "kind": "file_glob",
@@ -9539,9 +10810,17 @@
       "kind": "file_glob",
       "pattern": "src/canonical/features/**"
     },
+    "t-glob-8e1b0ea0": {
+      "kind": "file_glob",
+      "pattern": "src/cli/commands/lessons-helpers.ts"
+    },
     "t-glob-8eea8f9c": {
       "kind": "file_glob",
       "pattern": "src/targets/**/importer*.ts"
+    },
+    "t-glob-8fe4e96b": {
+      "kind": "file_glob",
+      "pattern": "**/SKILL.md"
     },
     "t-glob-91256ca8": {
       "kind": "file_glob",
@@ -9583,6 +10862,10 @@
       "kind": "file_glob",
       "pattern": "tests/**/*windows*"
     },
+    "t-glob-b39eff4f": {
+      "kind": "file_glob",
+      "pattern": "website/src/content/docs/reference/lessons.mdx"
+    },
     "t-glob-b43f25de": {
       "kind": "file_glob",
       "pattern": "src/utils/filesystem/**"
@@ -9611,6 +10894,10 @@
       "kind": "file_glob",
       "pattern": "src/core/generate/output-overlap.ts"
     },
+    "t-glob-c3684e2c": {
+      "kind": "file_glob",
+      "pattern": "src/mcp/handlers/lessons.ts"
+    },
     "t-glob-c3d4a7ac": {
       "kind": "file_glob",
       "pattern": "src/core/reference/validate-generated-markdown-links.ts"
@@ -9634,6 +10921,10 @@
     "t-glob-d23c47d9": {
       "kind": "file_glob",
       "pattern": ".changeset/**"
+    },
+    "t-glob-d3bf322e": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/import-legacy.ts"
     },
     "t-glob-e07c287a": {
       "kind": "file_glob",
@@ -9703,9 +10994,17 @@
       "kind": "keyword",
       "pattern": "backslash"
     },
+    "t-kw-05eaa965": {
+      "kind": "keyword",
+      "pattern": "public lessons API"
+    },
     "t-kw-07501619": {
       "kind": "keyword",
       "pattern": "materialize"
+    },
+    "t-kw-07fc7c10": {
+      "kind": "keyword",
+      "pattern": "lessons documentation"
     },
     "t-kw-09f37896": {
       "kind": "keyword",
@@ -9734,6 +11033,10 @@
     "t-kw-10fd8bde": {
       "kind": "keyword",
       "pattern": "project-root-relative"
+    },
+    "t-kw-1171e894": {
+      "kind": "keyword",
+      "pattern": "parallel agents"
     },
     "t-kw-122af17e": {
       "kind": "keyword",
@@ -9783,6 +11086,10 @@
       "kind": "keyword",
       "pattern": "isLocalSource"
     },
+    "t-kw-1d0e5147": {
+      "kind": "keyword",
+      "pattern": "strip markers"
+    },
     "t-kw-1df6c8fd": {
       "kind": "keyword",
       "pattern": "descriptor schema"
@@ -9815,9 +11122,17 @@
       "kind": "keyword",
       "pattern": "polling"
     },
+    "t-kw-26809656": {
+      "kind": "keyword",
+      "pattern": "regex cleanup"
+    },
     "t-kw-268f0290": {
       "kind": "keyword",
       "pattern": "template literal"
+    },
+    "t-kw-27b89f58": {
+      "kind": "keyword",
+      "pattern": "irregular whitespace"
     },
     "t-kw-27cd93f3": {
       "kind": "keyword",
@@ -9839,9 +11154,17 @@
       "kind": "keyword",
       "pattern": "runInstall"
     },
+    "t-kw-3070d871": {
+      "kind": "keyword",
+      "pattern": "review agent"
+    },
     "t-kw-31aabdd8": {
       "kind": "keyword",
       "pattern": "_ab-command"
+    },
+    "t-kw-34b80ab3": {
+      "kind": "keyword",
+      "pattern": "subagent"
     },
     "t-kw-35ab5fcd": {
       "kind": "keyword",
@@ -9955,6 +11278,10 @@
       "kind": "keyword",
       "pattern": "toPosixPath"
     },
+    "t-kw-4df0ba9f": {
+      "kind": "keyword",
+      "pattern": "jsdoc"
+    },
     "t-kw-4ec7d278": {
       "kind": "keyword",
       "pattern": "fail closed"
@@ -10043,6 +11370,10 @@
       "kind": "keyword",
       "pattern": "post-uninstall"
     },
+    "t-kw-6829f894": {
+      "kind": "keyword",
+      "pattern": "fork_context"
+    },
     "t-kw-68bbb15a": {
       "kind": "keyword",
       "pattern": ".gitattributes"
@@ -10119,6 +11450,10 @@
       "kind": "keyword",
       "pattern": "no-undef"
     },
+    "t-kw-866bb6ea": {
+      "kind": "keyword",
+      "pattern": "fan out"
+    },
     "t-kw-866d0425": {
       "kind": "keyword",
       "pattern": "shell-rc"
@@ -10158,6 +11493,10 @@
     "t-kw-925d9b8d": {
       "kind": "keyword",
       "pattern": "checksum"
+    },
+    "t-kw-9304db48": {
+      "kind": "keyword",
+      "pattern": "text transform"
     },
     "t-kw-956e8179": {
       "kind": "keyword",
@@ -10335,6 +11674,10 @@
       "kind": "keyword",
       "pattern": "exact tree"
     },
+    "t-kw-d47a0cd6": {
+      "kind": "keyword",
+      "pattern": "rewrite prose"
+    },
     "t-kw-d4e6358c": {
       "kind": "keyword",
       "pattern": "setup-bun"
@@ -10415,6 +11758,10 @@
       "kind": "keyword",
       "pattern": "--force"
     },
+    "t-kw-e678014d": {
+      "kind": "keyword",
+      "pattern": "legacy migration"
+    },
     "t-kw-e71bc09c": {
       "kind": "keyword",
       "pattern": "lenient YAML"
@@ -10470,6 +11817,10 @@
     "t-kw-f821d655": {
       "kind": "keyword",
       "pattern": "block comment"
+    },
+    "t-kw-fb5d542a": {
+      "kind": "keyword",
+      "pattern": "dispatch agent"
     },
     "t-kw-fc1c3506": {
       "kind": "keyword",

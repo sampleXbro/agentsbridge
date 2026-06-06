@@ -157,6 +157,36 @@ describe('lessons CLI — import-md (fix #1: no ENOENT without a legacy store)',
     expect(validate.exitCode).toBe(0);
     expect(validate.stdout).toContain('Lessons graph: ok.');
   });
+
+  it('--merge recovers a stranded legacy store into a populated graph (no data loss)', async () => {
+    // Populated graph first...
+    await addLessonCli(dir, 'Graph-only lesson kept on merge', {
+      topic: 'graph-topic',
+      newTopic: true,
+      summary: 'Graph topic',
+      extra: ['--trigger-kw', 'graphkw'],
+    });
+    // ...then a legacy store coexists (the stranded state).
+    mkdirSync(join(dir, '.agentsmesh', 'lessons'), { recursive: true });
+    cpSync(LEGACY_FIXTURE, join(dir, '.agentsmesh', 'lessons'), { recursive: true });
+
+    // Without --merge/--force it refuses and points at --merge.
+    const refused = await runCli('lessons import-md', dir);
+    expect(refused.exitCode).toBe(1);
+    expect(refused.stderr).toContain('--merge');
+
+    const merged = await runCli('lessons import-md --merge --migrated-at 2026-06-06', dir);
+    expect(merged.exitCode).toBe(0);
+    expect(existsSync(join(dir, '.agentsmesh/lessons/index.yaml'))).toBe(false);
+
+    // Both the graph lesson and the migrated legacy lessons are recallable.
+    const graphHit = await runCli('lessons query --keyword graphkw --all', dir);
+    expect(graphHit.stdout).toContain('Graph-only lesson kept on merge');
+    const legacyHit = await runCli('lessons query --keyword alpha --all', dir);
+    expect(legacyHit.exitCode).toBe(0);
+    const validate = await runCli('lessons validate', dir);
+    expect(validate.exitCode).toBe(0);
+  });
 });
 
 describe('lessons CLI — global flag ordering (fix #3)', () => {

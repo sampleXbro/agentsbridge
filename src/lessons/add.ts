@@ -55,9 +55,10 @@ export async function addLesson(
  * ALL topics: a re-captured rule UPSERTS — its new triggers, evidence,
  * rationale, and topic are merged into the existing lesson rather than silently
  * dropped, and no duplicate is created (so the active-only DUPLICATE_RULE check
- * stays satisfied).
+ * stays satisfied). Exported so legacy MERGE recovery can fold each legacy
+ * lesson into an existing graph through the same dedup + content-addressing path.
  */
-function addLessonInto(
+export function addLessonInto(
   graph: LessonsGraph,
   input: AddLessonInput,
   options: AddLessonOptions,

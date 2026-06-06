@@ -5938,6 +5938,20 @@
         "t-cmd-56d79bf7"
       ]
     },
+    "lessons-system-do-not-claim-javascript-regex": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review-2026-06-06-global-v3"
+      ],
+      "rule": "Do not claim JavaScript regex command triggers are provably linear from local quantifier shape alone: unanchored patterns such as a+b can still rescan every start position and become quadratic. Require safe anchoring with a sound analyzer or use a linear-time regex engine.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-ee01c259"
+      ]
+    },
     "lessons-system-do-not-export-a-raw": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -6010,6 +6024,21 @@
         "t-kw-05eaa965"
       ]
     },
+    "lessons-system-every-standalone-lessons-op-that": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "lesson:lessons-system-standalone-ops-migrate"
+      ],
+      "rule": "Every standalone lessons op that reads the graph (strip-markers, recall, any tryLoadLessonsGraph caller on a possibly-legacy project) must call maybeAutoMigrateLessons FIRST; tryLoadLessonsGraph alone returns null without migrating, so a legacy-only store is silently ignored.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-08cf5afd",
+        "t-kw-0e1a8ecb"
+      ]
+    },
     "lessons-system-export-stable-error-classes-thrown": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -6036,6 +6065,21 @@
       ],
       "triggers": [
         "t-glob-7fc51540"
+      ]
+    },
+    "lessons-system-for-a-stranded-legacy-graph": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "lesson:lessons-system-stranded-merge-recovery"
+      ],
+      "rule": "For a stranded legacy+graph state (legacy index.yaml coexisting with a populated lessons.json), provide non-destructive recovery: import-md --merge folds legacy lessons in via addLessonInto (rule-text dedup + content-addressed trigger dedup + topic union); a plain import must refuse and point at --merge (recover) vs --force (overwrite).",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-81a938c7",
+        "t-kw-6e2ad015"
       ]
     },
     "lessons-system-give-mandatory-lessons-recall-a": {
@@ -6127,6 +6171,20 @@
         "t-glob-1c770829"
       ]
     },
+    "lessons-system-make-public-graph-mutation-helpers": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review-2026-06-06-global-v3"
+      ],
+      "rule": "Make public graph mutation helpers migrate before any pre-read early return; stripMarkersInGraph currently returns no-op on a legacy-only store instead of migrating and applying the requested mutation.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-08cf5afd"
+      ]
+    },
     "lessons-system-make-public-legacy-import-refuse": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -6168,6 +6226,20 @@
       ],
       "triggers": [
         "t-glob-8e1b0ea0"
+      ]
+    },
+    "lessons-system-provide-a-lossless-reconciliation-path": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review-2026-06-06-global-v3"
+      ],
+      "rule": "Provide a lossless reconciliation path when legacy index.yaml and a populated lessons.json coexist; auto-migration currently skips forever, while import without force refuses and force overwrites fresh graph content.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-1c770829"
       ]
     },
     "lessons-system-re-export-every-error-class": {
@@ -6220,6 +6292,20 @@
         "t-kw-20503645",
         "t-kw-53259aa5",
         "t-kw-0e525ea1"
+      ]
+    },
+    "lessons-system-reject-duplicate-ids-within-each": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review-2026-06-06-global-v3"
+      ],
+      "rule": "Reject duplicate ids within each lesson's topics and triggers arrays, and duplicate evidence entries if evidence is set-like; duplicate trigger references currently persist and distort fanout and specificity ranking.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-9ccdff8a"
       ]
     },
     "lessons-system-reject-or-safely-execute-command": {
@@ -11251,6 +11337,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/init.ts"
     },
+    "t-glob-81a938c7": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/import-legacy*.ts"
+    },
     "t-glob-848355ab": {
       "kind": "file_glob",
       "pattern": "src/targets/**/importer.ts"
@@ -11506,6 +11596,10 @@
     "t-kw-0dcff6e9": {
       "kind": "keyword",
       "pattern": "separator"
+    },
+    "t-kw-0e1a8ecb": {
+      "kind": "keyword",
+      "pattern": "legacy-only store"
     },
     "t-kw-0e525ea1": {
       "kind": "keyword",
@@ -11890,6 +11984,10 @@
     "t-kw-6dcc196d": {
       "kind": "keyword",
       "pattern": "mockLoadScopedConfig"
+    },
+    "t-kw-6e2ad015": {
+      "kind": "keyword",
+      "pattern": "stranded lessons"
     },
     "t-kw-6f305449": {
       "kind": "keyword",

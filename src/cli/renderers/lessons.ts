@@ -162,5 +162,5 @@ function printHelp(): void {
   logger.info('  strip-markers [--dry-run]');
   logger.info('  journal');
   logger.info('  validate');
-  logger.info('  import-md [--force] [--migrated-at <ISO date>]');
+  logger.info('  import-md [--merge] [--force] [--migrated-at <ISO date>]');
 }

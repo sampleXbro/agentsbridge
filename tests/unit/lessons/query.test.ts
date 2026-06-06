@@ -135,7 +135,7 @@ describe('queryLessons', () => {
     expect(queryLessons(broken, { command: 'anything' })).toEqual([]);
   });
 
-  it('skips a ReDoS-unsafe command_pattern without executing it (no hang, non-match)', () => {
+  it('matches a backtracking-shaped command_pattern in linear time (no hang)', () => {
     const evil: LessonsGraph = {
       ...graph,
       triggers: {
@@ -154,12 +154,39 @@ describe('queryLessons', () => {
         },
       },
     };
-    // A 30-char adversarial input that would hang a backtracking engine.
-    const adversarial = 'a'.repeat(29) + '!';
+    // An adversarial input that would hang a backtracking engine — the linear
+    // engine evaluates it correctly and fast.
     const start = Date.now();
-    const r = queryLessons(evil, { command: adversarial });
-    expect(Date.now() - start).toBeLessThan(1000); // would be seconds if executed
-    expect(r.find((x) => x.id === 'redos-rule')).toBeUndefined();
+    const noMatch = queryLessons(evil, { command: 'a'.repeat(60) + '!' });
+    expect(Date.now() - start).toBeLessThan(1000);
+    expect(noMatch.find((x) => x.id === 'redos-rule')).toBeUndefined(); // trailing '!' ⇒ no $ match
+    expect(
+      queryLessons(evil, { command: 'aaaa' }).find((x) => x.id === 'redos-rule'),
+    ).toBeDefined();
+  });
+
+  it('skips a command_pattern the linear engine cannot evaluate (lookaround) as a non-match', () => {
+    const unsupported: LessonsGraph = {
+      ...graph,
+      triggers: {
+        ...graph.triggers,
+        'la-regex': { kind: 'command_pattern', pattern: '(?=pnpm)pnpm' },
+      },
+      lessons: {
+        ...graph.lessons,
+        'la-rule': {
+          rule: 'LA.',
+          topics: ['t'],
+          triggers: ['la-regex'],
+          evidence: [],
+          status: 'active',
+          createdAt: '2026-06-01',
+        },
+      },
+    };
+    expect(
+      queryLessons(unsupported, { command: 'pnpm test' }).find((x) => x.id === 'la-rule'),
+    ).toBeUndefined();
   });
 
   it('returns the full Lesson object alongside the id', () => {

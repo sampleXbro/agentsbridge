@@ -150,8 +150,13 @@ export async function doImportMd(
   projectRoot: string,
 ): Promise<LessonsCommandResult> {
   const force = flags.force === true;
-  if (!force && existsSync(graphFilePath(projectRoot))) {
-    return errorResult('import-md', 'lessons.json already exists. Pass --force to overwrite.', 1);
+  const merge = flags.merge === true;
+  if (!force && !merge && existsSync(graphFilePath(projectRoot))) {
+    return errorResult(
+      'import-md',
+      'lessons.json already exists. Pass --merge to fold legacy lessons into it (recommended — recovers stranded lessons without data loss), or --force to overwrite.',
+      1,
+    );
   }
   // Guard the legacy read: importLegacyLessons reads index.yaml unconditionally
   // and throws a raw ENOENT when it is absent. Fail with a clean message instead.
@@ -163,7 +168,7 @@ export async function doImportMd(
     );
   }
   const migratedAt = stringFlag(flags, 'migrated-at') ?? todayIso();
-  const report = await importLegacyLessons(projectRoot, { migratedAt, force });
+  const report = await importLegacyLessons(projectRoot, { migratedAt, force, merge });
   const data: LessonsImportMdData = {
     topicCount: report.topicCount,
     lessonCount: report.lessonCount,

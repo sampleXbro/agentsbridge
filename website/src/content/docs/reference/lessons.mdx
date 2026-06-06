@@ -60,7 +60,7 @@ Triggers are content-addressed: the migrator and `agentsmesh lessons add` both d
 `agentsmesh lessons query` returns every `active` lesson whose triggers match **any** supplied field:
 
 - `--file <p>` matches `file_glob` triggers via picomatch with `dot: true`.
-- `--cmd <c>` matches `command_pattern` triggers via regex. Because mandatory recall executes these patterns on every command, they are restricted to a **provably-linear subset** (no quantified groups `(…)+`, no adjacent repetition `a+a+`, no backreferences/lookarounds) — this is **fail closed**: anything not provably linear is rejected, rather than a heuristic that tries to spot the unsafe shapes (every such heuristic has bypasses like `(a|aa)+` or `a+a+`). An invalid regex is flagged `INVALID_TRIGGER_PATTERN`; a valid-but-non-linear one is flagged `UNSAFE_TRIGGER_PATTERN`. Both are rejected at capture and, at read time, defensively skipped (treated as a non-match) — recall never executes a pattern outside the linear subset, so no `command_pattern` can hang it. See `isSafeRegexPattern` in the programmatic API.
+- `--cmd <c>` matches `command_pattern` triggers. Mandatory recall executes these on every command, and a backtracking `RegExp` cannot be proven linear by inspection (even `a+b` is quadratic on a long non-matching input). So command patterns are matched by an in-repo **non-backtracking engine** (a Thompson NFA): matching is linear in the input length for any pattern it can compile, so no pattern — `(a+)+`, `a+a+`, or a 30k-char adversarial command — can hang recall. The engine supports literals, escapes, `.`, char classes, anchors (`^ $ \b`), groups, `|`, and quantifiers (`* + ?`, `{n,m}`). Patterns it cannot evaluate — invalid syntax, **backreferences**, or **lookarounds** — are flagged `UNSAFE_TRIGGER_PATTERN` (or `INVALID_TRIGGER_PATTERN`), rejected at capture, and skipped at read time (fail closed). See `isSafeRegexPattern` in the programmatic API.
 - `--keyword <t>` matches `keyword` triggers via `keyword.toLowerCase().includes(pattern.toLowerCase())`.
 
 Combination is OR across triggers per lesson: a lesson is a **candidate** if **any** of its triggers fire from **any** supplied field. Candidates are then **relevance-ranked** — BM25 over the rule text fused (RRF) with trigger specificity (inverse fanout), ties broken by recency then id — and the CLI/MCP return the **top 10 by default, bounded by a default token budget** (`DEFAULT_RECALL_MAX_TOKENS`, 400) so mandatory recall stays lean. Override with `--top <n>` / `--max-tokens <n>` (MCP `limit`/`max_tokens`); `--all` bypasses both caps. The single most-relevant result is always returned even if it alone exceeds the budget. The low-level `queryLessons` export returns the raw unranked candidate set; `rankLessons` applies the ranking + caps; the migration-aware `recallLessons` application API wraps load → query → rank (and migrates a legacy store first).
@@ -82,8 +82,10 @@ Combination is OR across triggers per lesson: a lesson is a **candidate** if **a
 | `SUPERSEDE_CYCLE` | error | `supersededBy` links form a cycle. |
 | `INACTIVE_SUPERSEDER` | error | `supersededBy` points at a non-active lesson — the chain dead-ends with no live replacement. |
 | `INVALID_TRIGGER_PATTERN` | error | A `command_pattern` trigger is not a valid regex (would be silently unreachable). |
-| `UNSAFE_TRIGGER_PATTERN` | error | A `command_pattern` trigger is a valid regex but outside the provably-linear subset — a quantified group (`(a+)+`, `(a\|aa)+`), adjacent repetition (`a+a+`), or a backreference/lookaround. Mandatory recall would risk catastrophic backtracking, so it is rejected at capture and skipped at read time. |
+| `UNSAFE_TRIGGER_PATTERN` | error | A `command_pattern` the linear matcher cannot evaluate — a backreference or lookaround (features a non-backtracking engine cannot run). Backtracking-prone shapes like `(a+)+` are NOT flagged: the engine runs them in linear time. Rejected at capture, skipped at read time. |
 | `DUPLICATE_TRIGGER` | error | Two or more trigger ids share the same `(kind, pattern)`. Trigger ids are content-addressed, so `add` cannot create this — it only arises from a low-level mutation or hand-edit, and it would distort dedup, fanout, and ranking specificity. |
+| `DUPLICATE_TOPIC_REF` | error | A lesson references the same topic id more than once. `add` unions (dedups); a repeat only arises from a raw mutation and skews accounting. |
+| `DUPLICATE_TRIGGER_REF` | error | A lesson references the same trigger id more than once — double-counts in fanout and skews ranking specificity. |
 | `UNREACHABLE_LESSON` | warning | An active lesson has zero triggers and can never be recalled. |
 | `HIGH_FANOUT_TRIGGERS` | warning | One summary finding: N triggers each match more than 10 active lessons (recall leans on ranking). |
 | `ORPHAN_TOPIC` | warning | A topic node is not referenced by any lesson. |
@@ -133,7 +135,7 @@ import {
   maybeAutoMigrateLessons, // run before a read primitive on a possibly-legacy project
   queryLessons, // raw candidate matcher (no migration, no ranking)
   rankLessons, // relevance ranking + caps over candidates
-  isSafeRegexPattern, // provably-linear command_pattern check
+  isSafeRegexPattern, // true if the linear engine can match the command_pattern
   validateLessonsGraph,
   importLegacyLessons,
   DEFAULT_RECALL_MAX_TOKENS,

@@ -1,3 +1,4 @@
+import { maybeAutoMigrateLessons } from './auto-migrate.js';
 import type { LessonsGraph } from './graph-schema.js';
 import { tryLoadLessonsGraph } from './graph-store.js';
 import { mutateLessonsGraph } from './mutate.js';
@@ -68,13 +69,18 @@ function applyStrip(graph: LessonsGraph): string[] {
 /**
  * Apply {@link stripLegacyMarkers} to every lesson. With `dryRun`, computes the
  * change set without persisting; otherwise writes through the transactional
- * path (locked + validated + atomic). No-op (and no file creation) when no
- * graph exists.
+ * path (locked + validated + atomic). A legacy-only store is migrated first (the
+ * universal first-access upgrade) so its lessons are stripped rather than
+ * silently ignored. No-op (and no file creation) when neither graph nor legacy
+ * store exists.
  */
 export async function stripMarkersInGraph(
   projectRoot: string,
   options: StripMarkersOptions = {},
 ): Promise<StripMarkersReport> {
+  // Migrate a legacy-only store first; otherwise tryLoadLessonsGraph returns null
+  // and a real legacy store would be silently skipped.
+  await maybeAutoMigrateLessons(projectRoot);
   const existing = tryLoadLessonsGraph(projectRoot);
   if (existing === null) return { changedIds: [], changedCount: 0 };
 

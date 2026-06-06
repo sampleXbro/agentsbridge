@@ -23,21 +23,22 @@ afterEach(() => {
   if (dir && existsSync(dir)) rmSync(dir, { recursive: true, force: true });
 });
 
-describe('lessons CLI — ReDoS guard (P1)', () => {
-  // Includes the reviewer-reported bypasses of the old star-height heuristic.
-  it.each(['(a+)+$', '(a|aa)+$', '(a|a?)+$', 'a+a+$'])(
-    'rejects a capture with catastrophic-backtracking command_pattern %j',
+describe('lessons CLI — ReDoS guard (P1, linear engine)', () => {
+  // Patterns the non-backtracking engine cannot evaluate (backreference /
+  // lookaround) are rejected at capture — fail closed.
+  it.each(['(a)\\1', '(?=foo)bar', '(?<!x)y'])(
+    'rejects a capture with an unsupported command_pattern %j',
     async (pattern) => {
       const r = await runCliArgs(
         [
           'lessons',
           'add',
-          'redos rule',
+          'bad rule',
           '--topic',
           'sec',
           '--new-topic',
           '--topic-summary',
-          'security',
+          's',
           '--trigger-cmd',
           pattern,
         ],
@@ -48,34 +49,40 @@ describe('lessons CLI — ReDoS guard (P1)', () => {
     },
   );
 
-  it('accepts a linear command_pattern', async () => {
-    const r = await runCliArgs(
-      [
-        'lessons',
-        'add',
-        'safe rule',
-        '--topic',
-        'sec',
-        '--new-topic',
-        '--topic-summary',
-        'security',
-        '--trigger-cmd',
-        '^git commit',
-      ],
-      dir,
-    );
-    expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('Added lesson');
-  });
+  // Backtracking-shaped patterns are ACCEPTED — the linear engine runs them safely.
+  it.each(['(a+)+$', '(a|aa)+$', 'a+a+$', 'a+b'])(
+    'accepts a backtracking-shaped command_pattern %j (linear engine)',
+    async (pattern) => {
+      const r = await runCliArgs(
+        [
+          'lessons',
+          'add',
+          'shaped rule',
+          '--topic',
+          'sec',
+          '--new-topic',
+          '--topic-summary',
+          's',
+          '--trigger-cmd',
+          pattern,
+        ],
+        dir,
+      );
+      expect(r.exitCode).toBe(0);
+      expect(r.stdout).toContain('Added lesson');
+    },
+  );
 
-  it('recall against an adversarial command returns promptly (no hang)', async () => {
-    await addLessonCli(dir, 'safe recall rule', {
+  it('recall against a 30k-char adversarial command returns promptly (no hang)', async () => {
+    // a+b is quadratic for a backtracking engine on a long non-matching input;
+    // the linear engine evaluates it fast.
+    await addLessonCli(dir, 'quadratic-shaped rule', {
       topic: 'sec',
       newTopic: true,
       summary: 's',
-      extra: ['--trigger-cmd', '^pnpm test'],
+      extra: ['--trigger-cmd', 'a+b'],
     });
-    const adversarial = 'a'.repeat(40) + '!';
+    const adversarial = 'a'.repeat(30_000);
     const start = Date.now();
     const r = await runCli(`lessons query --cmd ${adversarial}`, dir);
     expect(Date.now() - start).toBeLessThan(5000);

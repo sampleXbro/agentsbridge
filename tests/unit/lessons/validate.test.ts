@@ -247,28 +247,60 @@ describe('validateLessonsGraph', () => {
     expect(r.ok).toBe(false);
   });
 
-  it('flags a ReDoS-unsafe command_pattern regex as an error', () => {
+  it('flags a command_pattern the linear engine cannot evaluate as unsafe', () => {
     const g = baseGraph();
-    g.triggers['t-redos'] = { kind: 'command_pattern', pattern: '(a+)+$' };
-    g.lessons['a-rule'].triggers = ['t-glob', 't-redos'];
+    // Lookaround / backreference cannot run on a non-backtracking engine.
+    g.triggers['t-unsupported'] = { kind: 'command_pattern', pattern: '(?=foo)bar' };
+    g.lessons['a-rule'].triggers = ['t-glob', 't-unsupported'];
     const r = validateLessonsGraph(g);
     expect(r.findings).toContainEqual(
       expect.objectContaining({
         level: 'error',
         code: 'UNSAFE_TRIGGER_PATTERN',
-        triggerId: 't-redos',
+        triggerId: 't-unsupported',
       }),
     );
     expect(r.ok).toBe(false);
   });
 
-  it('does NOT flag a linear command_pattern regex as unsafe', () => {
+  it('does NOT flag a backtracking-shaped but engine-linear pattern as unsafe', () => {
     const g = baseGraph();
-    g.triggers['t-cmd'] = { kind: 'command_pattern', pattern: '(npm|pnpm) install .*' };
+    // (a+)+ would ReDoS a RegExp but runs linearly on the engine — accepted.
+    g.triggers['t-cmd'] = { kind: 'command_pattern', pattern: '(a+)+$' };
     g.lessons['a-rule'].triggers = ['t-glob', 't-cmd'];
     const r = validateLessonsGraph(g);
     expect(r.findings.some((f) => f.code === 'UNSAFE_TRIGGER_PATTERN')).toBe(false);
     expect(r.ok).toBe(true);
+  });
+
+  it('flags a duplicate topic reference within a lesson as an error', () => {
+    const g = baseGraph();
+    g.lessons['a-rule'].topics = ['t', 't'];
+    const r = validateLessonsGraph(g);
+    expect(r.findings).toContainEqual(
+      expect.objectContaining({
+        level: 'error',
+        code: 'DUPLICATE_TOPIC_REF',
+        lessonId: 'a-rule',
+        topicId: 't',
+      }),
+    );
+    expect(r.ok).toBe(false);
+  });
+
+  it('flags a duplicate trigger reference within a lesson as an error', () => {
+    const g = baseGraph();
+    g.lessons['a-rule'].triggers = ['t-glob', 't-glob'];
+    const r = validateLessonsGraph(g);
+    expect(r.findings).toContainEqual(
+      expect.objectContaining({
+        level: 'error',
+        code: 'DUPLICATE_TRIGGER_REF',
+        lessonId: 'a-rule',
+        triggerId: 't-glob',
+      }),
+    );
+    expect(r.ok).toBe(false);
   });
 
   it('flags duplicate (kind, pattern) trigger nodes as an error (content-addressing)', () => {

@@ -1,6 +1,6 @@
 import picomatch from 'picomatch';
 import type { Lesson, LessonsGraph, Trigger } from './graph-schema.js';
-import { getSafeCommandRegex } from './regex-safety.js';
+import { getCommandMatcher } from './regex-safety.js';
 
 export interface LessonsQuery {
   /** Project-relative path of the file about to be edited. */
@@ -57,10 +57,11 @@ function triggerMatches(trigger: Trigger, query: LessonsQuery): boolean {
       return picomatch(trigger.pattern, { dot: true })(query.file);
     case 'command_pattern': {
       if (query.command === undefined) return false;
-      // Skip invalid OR ReDoS-unsafe patterns — recall must never execute a
-      // catastrophic-backtracking regex on the hot path (see regex-safety.ts).
-      const re = getSafeCommandRegex(trigger.pattern);
-      return re !== null && re.test(query.command);
+      // Match via the non-backtracking linear engine — recall must never run a
+      // backtracking regex on the hot path (see regex-safety.ts). null = the
+      // pattern is unsupported/over-long; treat as a non-match (fail closed).
+      const matcher = getCommandMatcher(trigger.pattern);
+      return matcher !== null && matcher.test(query.command);
     }
     case 'keyword':
       if (query.keyword === undefined) return false;

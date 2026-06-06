@@ -1,6 +1,7 @@
 import { LessonsGraphSchema, type LessonsGraph } from './graph-schema.js';
 import {
   collectDanglingRefs,
+  collectDuplicateRefs,
   collectLifecycleInvariants,
   collectOrphans,
   collectReachability,
@@ -44,6 +45,7 @@ export function validateLessonsGraph(graph: LessonsGraph): ValidationReport {
   }
 
   collectDanglingRefs(graph, findings);
+  collectDuplicateRefs(graph, findings);
   collectStatusInvariants(graph, findings);
   collectLifecycleInvariants(graph, findings);
   collectDuplicateRules(graph, findings);

@@ -320,6 +320,11 @@ export const COMMANDS: HelpCommand[] = [
       },
       { name: '--new-topic --topic-summary "..."', description: 'add: create a new topic' },
       { name: '--superseded-by <id>', description: 'deprecate: replacement lesson id' },
+      {
+        name: '--merge',
+        description:
+          'import-md: fold legacy lessons into an existing lessons.json (recover stranded)',
+      },
       { name: '--force', description: 'import-md: overwrite existing lessons.json' },
       { name: '--migrated-at <ISO date>', description: 'import-md: stamp on imported lessons' },
     ],

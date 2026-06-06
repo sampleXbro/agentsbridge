@@ -36,6 +36,46 @@ export function collectDanglingRefs(graph: LessonsGraph, findings: ValidationFin
   }
 }
 
+/**
+ * A lesson must reference each topic and trigger at most once. A repeated
+ * reference (only reachable via a raw mutation / hand-edit — `add` unions and so
+ * dedups) double-counts in fanout accounting and skews ranking specificity, so
+ * flag it as an error.
+ */
+export function collectDuplicateRefs(graph: LessonsGraph, findings: ValidationFinding[]): void {
+  for (const [lessonId, lesson] of Object.entries(graph.lessons)) {
+    for (const topicId of firstDuplicates(lesson.topics)) {
+      findings.push({
+        level: 'error',
+        code: 'DUPLICATE_TOPIC_REF',
+        message: `Lesson "${lessonId}" references topic "${topicId}" more than once.`,
+        lessonId,
+        topicId,
+      });
+    }
+    for (const triggerId of firstDuplicates(lesson.triggers)) {
+      findings.push({
+        level: 'error',
+        code: 'DUPLICATE_TRIGGER_REF',
+        message: `Lesson "${lessonId}" references trigger "${triggerId}" more than once.`,
+        lessonId,
+        triggerId,
+      });
+    }
+  }
+}
+
+/** The distinct values that appear two or more times in `ids`, in first-seen order. */
+function firstDuplicates(ids: readonly string[]): string[] {
+  const seen = new Set<string>();
+  const dup = new Set<string>();
+  for (const id of ids) {
+    if (seen.has(id)) dup.add(id);
+    else seen.add(id);
+  }
+  return [...dup];
+}
+
 export function collectStatusInvariants(graph: LessonsGraph, findings: ValidationFinding[]): void {
   for (const [lessonId, lesson] of Object.entries(graph.lessons)) {
     if (lesson.status === 'superseded' && lesson.supersededBy === undefined) {

@@ -81,4 +81,18 @@ describe('parseArgs', () => {
     expect(result.flags.global).toBe(true);
     expect(result.flags.targets).toBe('claude-code');
   });
+
+  it('treats a global --json placed before the command as boolean, not swallowing the command name', () => {
+    const result = parseArgs(['--json', 'lessons', 'topics']);
+    expect(result.command).toBe('lessons');
+    expect(result.args).toEqual(['topics']);
+    expect(result.flags.json).toBe(true);
+  });
+
+  it('treats a global --verbose placed before the command as boolean', () => {
+    const result = parseArgs(['--verbose', 'generate', '--targets', 'claude-code']);
+    expect(result.command).toBe('generate');
+    expect(result.flags.verbose).toBe(true);
+    expect(result.flags.targets).toBe('claude-code');
+  });
 });

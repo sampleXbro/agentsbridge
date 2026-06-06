@@ -50,9 +50,12 @@ export interface ImportLegacyReport {
  * Markdown files, emits the new JSON graph, and (by default) removes every
  * legacy artifact so the project lands in a clean state on the new system.
  *
- * Idempotent over (input, options): the graph output and the deletion list
- * are deterministic, and a second run on the post-migration tree is a no-op
- * (returns zero counts; the legacy files are already gone).
+ * Deterministic over (input, options): the graph output and deletion list are
+ * fixed. Requires the legacy `index.yaml` to exist — it is read unconditionally
+ * and a missing index throws (ENOENT). Callers MUST guard with
+ * `existsSync(lessonsPaths(root).index)` before invoking (see
+ * `maybeAutoMigrateLessons` and the `import-md` handler); re-running on a
+ * post-migration tree, where the legacy files are already gone, throws.
  */
 export async function importLegacyLessons(
   projectRoot: string,

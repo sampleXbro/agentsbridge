@@ -83,6 +83,13 @@ describe('runLessons query', () => {
     expect(r.data.lessons).toEqual([]);
   });
 
+  it('rejects an invalid --format value with a usage error (exit 2)', async () => {
+    seedSimpleGraph();
+    const r = await runLessons({ file: 'src/x.ts', format: 'xml' }, ['query'], root);
+    expect(r.exitCode).toBe(2);
+    expect(r.error).toMatch(/--format/);
+  });
+
   it('returns empty (not error) when lessons.json is missing and no legacy index exists', async () => {
     const r = await runLessons({ file: 'src/x.ts' }, ['query'], root);
     if (r.subcommand !== 'query') return;
@@ -758,5 +765,21 @@ describe('runLessons import-md', () => {
     expect(r.exitCode).toBe(0);
     const reloaded = readFileSync(join(root, '.agentsmesh/lessons/lessons.json'), 'utf8');
     expect(reloaded).not.toContain('topic-x'); // seed-graph topic is gone — replaced by migrated graph
+  });
+
+  it('reports a clean error (no raw ENOENT) when no legacy store exists', async () => {
+    const r = await runLessons({}, ['import-md'], root);
+    expect(r.subcommand).toBe('import-md');
+    expect(r.exitCode).toBe(1);
+    expect(r.error).toMatch(/nothing to migrate/i);
+    expect(r.error).not.toMatch(/ENOENT/);
+  });
+
+  it('--force does not crash when the legacy store is absent', async () => {
+    const r = await runLessons({ force: true }, ['import-md'], root);
+    expect(r.subcommand).toBe('import-md');
+    expect(r.exitCode).toBe(1);
+    expect(r.error).toMatch(/nothing to migrate/i);
+    expect(r.error).not.toMatch(/ENOENT/);
   });
 });

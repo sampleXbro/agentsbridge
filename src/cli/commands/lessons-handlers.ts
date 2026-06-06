@@ -38,6 +38,14 @@ function validatePositiveIntFlag(flags: LessonsFlags, name: string): string | nu
   return null;
 }
 
+/** Returns an error message if --format is present with a value outside plain|md|json, else null. */
+function validateFormatFlag(flags: LessonsFlags): string | null {
+  const v = flags.format;
+  if (v === undefined) return null;
+  if (v === 'plain' || v === 'md' || v === 'json') return null;
+  return 'Invalid --format: expected plain|md|json.';
+}
+
 export function doQuery(
   flags: LessonsFlags,
   projectRoot: string,
@@ -47,6 +55,8 @@ export function doQuery(
   if (topErr !== null) return errorResult('query', topErr, 2);
   const maxTokErr = validatePositiveIntFlag(flags, 'max-tokens');
   if (maxTokErr !== null) return errorResult('query', maxTokErr, 2);
+  const fmtErr = validateFormatFlag(flags);
+  if (fmtErr !== null) return errorResult('query', fmtErr, 2);
 
   const graph = tryLoadLessonsGraph(projectRoot);
   const format = parseFormat(flags);

@@ -5872,6 +5872,22 @@
         "t-kw-05eaa965"
       ]
     },
+    "lessons-system-before-adding-a-flag-name": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "lesson:lessons-system-preserve-every-occurrence-of-repeatable"
+      ],
+      "rule": "Before adding a flag name to the parser's valueless/boolean set (so it stops consuming the next token), confirm no command reads it as a value — e.g. --version is global-boolean for the CLI but value-taking for 'plugin add --version <ref>'/install pinning. Restrict the set to provably boolean-only globals (json, verbose, help).",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-1adbf269",
+        "t-kw-4143c059",
+        "t-kw-719d8353"
+      ]
+    },
     "lessons-system-compile-command-pattern-triggers-at": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -10582,6 +10598,10 @@
       "kind": "file_glob",
       "pattern": "src/cli/commands/watch.ts"
     },
+    "t-glob-1adbf269": {
+      "kind": "file_glob",
+      "pattern": "src/cli/index.ts"
+    },
     "t-glob-1bd6cdf4": {
       "kind": "file_glob",
       "pattern": "src/core/generate/collision.ts"
@@ -11214,6 +11234,10 @@
       "kind": "keyword",
       "pattern": "protected range"
     },
+    "t-kw-4143c059": {
+      "kind": "keyword",
+      "pattern": "valueless flags"
+    },
     "t-kw-41c52a68": {
       "kind": "keyword",
       "pattern": "round-trip"
@@ -11389,6 +11413,10 @@
     "t-kw-70915052": {
       "kind": "keyword",
       "pattern": "pnpm build"
+    },
+    "t-kw-719d8353": {
+      "kind": "keyword",
+      "pattern": "parseArgs boolean flag"
     },
     "t-kw-71efbd00": {
       "kind": "keyword",

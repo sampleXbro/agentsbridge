@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import { addLesson, UnknownTopicError } from '../../lessons/add.js';
 import { graphFilePath } from '../../lessons/graph-store.js';
 import { importLegacyLessons } from '../../lessons/import-legacy.js';
+import { lessonsPaths } from '../../lessons/paths.js';
 import { mergeLessons } from '../../lessons/merge.js';
 import { mutateLessonsGraph } from '../../lessons/mutate.js';
 import { stripMarkersInGraph } from '../../lessons/strip-markers.js';
@@ -151,6 +152,15 @@ export async function doImportMd(
   const force = flags.force === true;
   if (!force && existsSync(graphFilePath(projectRoot))) {
     return errorResult('import-md', 'lessons.json already exists. Pass --force to overwrite.', 1);
+  }
+  // Guard the legacy read: importLegacyLessons reads index.yaml unconditionally
+  // and throws a raw ENOENT when it is absent. Fail with a clean message instead.
+  if (!existsSync(lessonsPaths(projectRoot).index)) {
+    return errorResult(
+      'import-md',
+      'No legacy lessons store found (.agentsmesh/lessons/index.yaml) — nothing to migrate.',
+      1,
+    );
   }
   const migratedAt = stringFlag(flags, 'migrated-at') ?? todayIso();
   const report = await importLegacyLessons(projectRoot, { migratedAt, force });

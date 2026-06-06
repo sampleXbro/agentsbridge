@@ -18,6 +18,14 @@ export interface ParseResult {
   args: string[];
 }
 
+/**
+ * Global flags that are always boolean. They never consume the following token
+ * as a value, so `--json lessons topics` keeps `lessons` as the command instead
+ * of swallowing it as the flag's value. Note: `--version` is intentionally NOT
+ * here — `plugin add --version <ref>` reads it as a value to pin a release.
+ */
+const VALUELESS_FLAGS = new Set(['json', 'verbose', 'help']);
+
 /** Accumulate repeated string flags into an array so `--x a --x b` yields `[a, b]` rather than dropping `a`. */
 function setFlag(flags: CliFlags, name: string, value: string | boolean): void {
   const existing = flags[name];
@@ -48,6 +56,12 @@ export function parseArgs(argv: string[]): ParseResult {
     if (command === 'help' && arg === '--help') return { command: 'help', flags: {}, args: [] };
     if (arg.startsWith('--')) {
       const name = arg.slice(2);
+      // Valueless global flags never take a value — leave the next token (often
+      // the command name) for the parser instead of consuming it.
+      if (VALUELESS_FLAGS.has(name)) {
+        setFlag(flags, name, true);
+        continue;
+      }
       const next = argv[i + 1];
       if (next === undefined || next.startsWith('--')) {
         setFlag(flags, name, true);

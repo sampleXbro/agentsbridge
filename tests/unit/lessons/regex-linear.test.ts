@@ -62,6 +62,17 @@ const EQUIVALENCE: Array<{ pattern: string; inputs: string[] }> = [
   { pattern: '\\Bx', inputs: ['ax', 'x', ' x', 'axb'] },
   { pattern: '[\\.-\\/]+', inputs: ['./', 'a', '/.'] },
   { pattern: 'a{0}b', inputs: ['b', 'ab', 'c'] },
+  // Hex / unicode escapes decode to the right char (matching `new RegExp` w/o u flag):
+  { pattern: '\\x61', inputs: ['a', 'x61', 'x', 'ba'] },
+  { pattern: '\\u0061', inputs: ['a', 'u0061', 'A'] },
+  { pattern: '[\\x61-\\x63]+', inputs: ['abc', 'ABC', 'a1'] },
+  // `\b` INSIDE a class is a backspace (U+0008), not a word boundary:
+  { pattern: '[\\b]', inputs: ['\b', 'b', ''] },
+  // `\xZZ` is not valid hex → literal `x` then `ZZ` (RegExp w/o u flag agrees):
+  { pattern: '\\xZZ', inputs: ['xZZ', 'a'] },
+  // A long ε-chain (accepted, just under the state cap): the iterative closure
+  // must not overflow the call stack (a recursive walk would).
+  { pattern: '(){900}', inputs: ['x', ''] },
 ];
 
 describe('linear engine — equivalence with RegExp on the supported subset', () => {
@@ -91,6 +102,8 @@ describe('linear engine — rejects what it cannot evaluate (fail closed)', () =
     'a\\', // trailing backslash
     'a{1,100000}', // repeat over the engine's bound
     '[a-z', // unterminated class
+    '(){1000}'.repeat(5), // P1a: would overflow a recursive ε-closure — rejected by the state cap
+    'a{1000}'.repeat(10), // P1b: NFA state amplification — rejected by the state cap
   ])('returns null for %j', (pattern) => {
     expect(compileLinearMatcher(pattern)).toBeNull();
   });

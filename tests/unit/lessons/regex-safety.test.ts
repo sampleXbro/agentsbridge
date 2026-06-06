@@ -35,6 +35,8 @@ describe('isSafeRegexPattern', () => {
     '(?<!foo)bar',
     '(', // invalid syntax
     'a{1,100000}', // repeat over the engine's bound
+    '(){1000}'.repeat(5), // ε-chain that would overflow a recursive closure
+    'a{1000}'.repeat(10), // NFA state amplification
   ])('rejects pattern the engine cannot evaluate %j', (pattern) => {
     expect(isSafeRegexPattern(pattern)).toBe(false);
   });

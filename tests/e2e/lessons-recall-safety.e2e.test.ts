@@ -25,8 +25,9 @@ afterEach(() => {
 
 describe('lessons CLI — ReDoS guard (P1, linear engine)', () => {
   // Patterns the non-backtracking engine cannot evaluate (backreference /
-  // lookaround) are rejected at capture — fail closed.
-  it.each(['(a)\\1', '(?=foo)bar', '(?<!x)y'])(
+  // lookaround) or that expand too large (state amplification / ε-chain blowup)
+  // are rejected at capture — fail closed.
+  it.each(['(a)\\1', '(?=foo)bar', '(?<!x)y', 'a{1000}'.repeat(10), '(){1000}'.repeat(5)])(
     'rejects a capture with an unsupported command_pattern %j',
     async (pattern) => {
       const r = await runCliArgs(

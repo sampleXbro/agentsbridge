@@ -5876,6 +5876,21 @@
         "t-kw-67b4775f"
       ]
     },
+    "lessons-system-an-in-repo-non-backtracking": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "lesson:lessons-system-nfa-engine-pitfalls"
+      ],
+      "rule": "An in-repo non-backtracking regex engine must: (a) use an ITERATIVE epsilon-closure — recursion overflows the stack on long ε-chains like (){1000}; (b) bound TOTAL expanded NFA state count (and matched input length), not just pattern length — a{1000} is 6 chars but ~2000 states and match cost is O(states×input); (c) decode \\xHH and \\uHHHH to their chars (and treat \\b inside a class as backspace) to match new RegExp WITHOUT the u flag, not pass them through as literals.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-cd11277c",
+        "t-kw-544706af"
+      ]
+    },
     "lessons-system-apply-the-same-legacy-auto": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -5921,6 +5936,21 @@
         "t-glob-1adbf269",
         "t-kw-4143c059",
         "t-kw-719d8353"
+      ]
+    },
+    "lessons-system-bound-compiled-nfa-size-and": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "811bc509"
+      ],
+      "rule": "Bound compiled NFA size and command-match work, not only source-pattern length: bounded-repeat expansion can turn a short accepted command pattern into thousands of states and make mandatory recall exceed its latency budget.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-f238075d",
+        "t-kw-233ef987"
       ]
     },
     "lessons-system-compile-command-pattern-triggers-at": {
@@ -6097,6 +6127,21 @@
         "t-cmd-541fec4c"
       ]
     },
+    "lessons-system-implement-nfa-epsilon-assertion-closure": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "811bc509"
+      ],
+      "rule": "Implement NFA epsilon/assertion closure iteratively and cap epsilon-chain/state depth: an accepted pattern containing repeated empty groups can overflow the recursive closure stack and make lessons query fail.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-633537fc",
+        "t-kw-8be8afaf"
+      ]
+    },
     "lessons-system-keep-every-lessons-implementation-file": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -6212,6 +6257,21 @@
       ],
       "triggers": [
         "t-glob-300bbdba"
+      ]
+    },
+    "lessons-system-preserve-documented-regex-semantics-in": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "811bc509"
+      ],
+      "rule": "Preserve documented regex semantics in the linear command matcher: reject invalid JavaScript-regex syntax and either implement or explicitly reject every unsupported escape or assertion instead of accepting it with a different meaning.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-f238075d",
+        "t-kw-edafac99"
       ]
     },
     "lessons-system-preserve-every-occurrence-of-repeatable": {
@@ -11269,6 +11329,10 @@
       "kind": "file_glob",
       "pattern": "src/core/reference/link-rebaser-formatting.ts"
     },
+    "t-glob-633537fc": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/regex-linear/nfa.ts"
+    },
     "t-glob-6349b050": {
       "kind": "file_glob",
       "pattern": ".github/workflows/publish.yml"
@@ -11469,6 +11533,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/query.ts"
     },
+    "t-glob-cd11277c": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/regex-linear/*.ts"
+    },
     "t-glob-ce455bbd": {
       "kind": "file_glob",
       "pattern": "src/utils/filesystem/windows-path-safety.ts"
@@ -11540,6 +11608,10 @@
     "t-glob-f1749c1f": {
       "kind": "file_glob",
       "pattern": "src/canonical/loader*.ts"
+    },
+    "t-glob-f238075d": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/regex-linear/**"
     },
     "t-glob-f359d5e7": {
       "kind": "file_glob",
@@ -11700,6 +11772,10 @@
     "t-kw-21b980fd": {
       "kind": "keyword",
       "pattern": "--as"
+    },
+    "t-kw-233ef987": {
+      "kind": "keyword",
+      "pattern": "NFA state"
     },
     "t-kw-23648f62": {
       "kind": "keyword",
@@ -11897,6 +11973,10 @@
       "kind": "keyword",
       "pattern": "dist/cli.js"
     },
+    "t-kw-544706af": {
+      "kind": "keyword",
+      "pattern": "NFA engine"
+    },
     "t-kw-57852623": {
       "kind": "keyword",
       "pattern": "supply chain"
@@ -12084,6 +12164,10 @@
     "t-kw-8a4901cf": {
       "kind": "keyword",
       "pattern": "fish"
+    },
+    "t-kw-8be8afaf": {
+      "kind": "keyword",
+      "pattern": "epsilon closure"
     },
     "t-kw-8db53328": {
       "kind": "keyword",
@@ -12420,6 +12504,10 @@
     "t-kw-ecd6201e": {
       "kind": "keyword",
       "pattern": "global mode"
+    },
+    "t-kw-edafac99": {
+      "kind": "keyword",
+      "pattern": "regex parser"
     },
     "t-kw-edd62ee0": {
       "kind": "keyword",

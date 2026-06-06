@@ -21,7 +21,14 @@ export type AstNode =
   | { k: 'plus'; node: AstNode }
   | { k: 'opt'; node: AstNode };
 
-import { escapeClass, escapeLiteral, expandRepeat, MAX_REPEAT } from './parse-helpers.js';
+import {
+  classEscapeChar,
+  escapeClass,
+  escapeLiteral,
+  expandRepeat,
+  MAX_REPEAT,
+  readUnicodeEscape,
+} from './parse-helpers.js';
 
 export class UnsupportedRegexError extends Error {
   constructor(message: string) {
@@ -145,6 +152,11 @@ export function parseRegex(src: string): AstNode {
     if (c === 'B') return { k: 'assert', kind: 'nonWordB' };
     const cls = escapeClass(c);
     if (cls !== null) return { k: 'class', test: cls };
+    if (c === 'x' || c === 'u') {
+      const { ch, len } = readUnicodeEscape(src, i, c);
+      i += len;
+      return { k: 'char', ch };
+    }
     return { k: 'char', ch: escapeLiteral(c) };
   }
 
@@ -171,7 +183,9 @@ export function parseRegex(src: string): AstNode {
       const e = eat();
       const cls = escapeClass(e);
       if (cls !== null) return cls;
-      lo = escapeLiteral(e);
+      const r = classEscapeChar(src, i, e);
+      i += r.len;
+      lo = r.ch;
     } else {
       lo = eat();
     }
@@ -180,7 +194,10 @@ export function parseRegex(src: string): AstNode {
       let hi: string;
       if (peek() === '\\') {
         i += 1;
-        hi = escapeLiteral(eat());
+        const e2 = eat();
+        const r = classEscapeChar(src, i, e2);
+        i += r.len;
+        hi = r.ch;
       } else {
         hi = eat();
       }

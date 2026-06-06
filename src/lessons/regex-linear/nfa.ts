@@ -24,9 +24,25 @@ export interface LinearMatcher {
   test(input: string): boolean;
 }
 
+/**
+ * Cap on compiled NFA states. A short pattern can still expand to a huge NFA via
+ * counted repetition (`a{1000}` ≈ 2000 states, `a{1000}` ×10 ≈ 20000), and match
+ * cost is O(states × input) — so bounding pattern *length* is not enough.
+ * Builder.alloc throws once this is exceeded; the pattern is then rejected
+ * (UNSAFE) rather than allowed to amplify recall work. Real command patterns are
+ * tiny (< 200 states), so this only rejects pathological expansions.
+ */
+const MAX_NFA_STATES = 2000;
+
+/** Cap on the input length matched against; longer input is truncated (bounds work). */
+const MAX_MATCH_INPUT = 32_768;
+
 class Builder {
   readonly states: State[] = [];
   alloc(): number {
+    if (this.states.length >= MAX_NFA_STATES) {
+      throw new Error(`NFA state limit exceeded (${MAX_NFA_STATES}); pattern expands too large`);
+    }
     this.states.push({ eps: [], asserts: [], chars: [] });
     return this.states.length - 1;
   }
@@ -130,18 +146,28 @@ export function buildMatcher(ast: AstNode): LinearMatcher {
   const states = b.states;
   const accept = end;
 
-  // ε/assertion closure at boundary `pos`, accumulating reachable states into `set`.
+  // ε/assertion closure at boundary `pos`, accumulating reachable states into
+  // `set`. ITERATIVE (explicit stack) — a recursive walk overflows the call
+  // stack on long ε-chains (e.g. `(){1000}` expands to thousands of ε-links).
   const closure = (set: Set<number>, idx: number, input: string, pos: number): void => {
-    if (set.has(idx)) return;
-    set.add(idx);
-    for (const t of states[idx]!.eps) closure(set, t, input, pos);
-    for (const a of states[idx]!.asserts) {
-      if (assertHolds(a.kind, input, pos)) closure(set, a.target, input, pos);
+    const stack = [idx];
+    while (stack.length > 0) {
+      const cur = stack.pop()!;
+      if (set.has(cur)) continue;
+      set.add(cur);
+      for (const t of states[cur]!.eps) if (!set.has(t)) stack.push(t);
+      for (const a of states[cur]!.asserts) {
+        if (assertHolds(a.kind, input, pos) && !set.has(a.target)) stack.push(a.target);
+      }
     }
   };
 
   return {
-    test(input: string): boolean {
+    test(rawInput: string): boolean {
+      // Bound the work: match cost is O(states × input); truncate pathologically
+      // long input so a crafted pattern + huge command cannot exceed the budget.
+      const input =
+        rawInput.length > MAX_MATCH_INPUT ? rawInput.slice(0, MAX_MATCH_INPUT) : rawInput;
       let current = new Set<number>();
       for (let pos = 0; pos <= input.length; pos += 1) {
         closure(current, start, input, pos); // unanchored: seed a start thread here

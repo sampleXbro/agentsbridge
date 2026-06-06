@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { runCli } from './run-cli.js';
+import { runCli, runCliArgs } from './run-cli.js';
 
 const TMP_DIR = join(tmpdir(), 'am-e2e-runcli-' + Date.now());
 
@@ -32,5 +32,22 @@ describe('runCli', () => {
     expect(result.exitCode).toBe(1);
     expect(result.stderr).toContain('Unknown command');
     expect(result.stderr).toContain('foobar');
+  });
+});
+
+describe('runCliArgs', () => {
+  it('preserves a multi-word argv element instead of whitespace-splitting it', async () => {
+    // `runCli` would split "Unknown command" handling, but argv array keeps the
+    // spaced value whole — proven via the unknown-command echo of a spaced token.
+    const result = await runCliArgs(['multi word command'], TMP_DIR);
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).toContain('Unknown command');
+    expect(result.stderr).toContain('multi word command');
+  });
+
+  it('--version through the array runner returns exitCode 0', async () => {
+    const result = await runCliArgs(['--version'], TMP_DIR);
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toMatch(/v\d+\.\d+\.\d+/);
   });
 });

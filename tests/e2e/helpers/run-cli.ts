@@ -26,7 +26,21 @@ export async function runCli(
   cwd: string,
   extraEnv: Record<string, string | undefined> = {},
 ): Promise<RunCliResult> {
-  const argList = args.trim().split(/\s+/).filter(Boolean);
+  return runCliArgs(args.trim().split(/\s+/).filter(Boolean), cwd, extraEnv);
+}
+
+/**
+ * Like {@link runCli} but takes an explicit argv array, so values containing
+ * spaces (a lesson rule, a topic summary) survive intact instead of being
+ * whitespace-split. Use this for `lessons add "<rule>"` and similar.
+ * @param argList - exact argv passed to `dist/cli.js`
+ * @param cwd - Working directory
+ */
+export async function runCliArgs(
+  argList: string[],
+  cwd: string,
+  extraEnv: Record<string, string | undefined> = {},
+): Promise<RunCliResult> {
   // On Windows, `os.homedir()` reads USERPROFILE, not HOME — so tests that
   // redirect the CLI to a fake home via `HOME` must also override USERPROFILE
   // (and HOMEDRIVE/HOMEPATH, which Node consults as a secondary fallback).

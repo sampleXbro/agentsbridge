@@ -193,6 +193,84 @@ describe('addLesson', () => {
     expect(Object.keys(graph.triggers).length).toBe(1);
   });
 
+  it('upserts new triggers and evidence onto an existing rule instead of dropping them', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    const first = await addLesson(root, baseInput);
+    const second = await addLesson(root, {
+      ...baseInput,
+      triggers: { files: ['src/new/**'] },
+      evidence: ['commit:def'],
+    });
+    expect(second.id).toBe(first.id);
+    expect(second.isNewLesson).toBe(false);
+    expect(second.newTriggerIds.length).toBe(1);
+    const graph = loadLessonsGraph(root);
+    const lesson = graph.lessons[first.id];
+    expect(lesson?.triggers.length).toBe(2);
+    expect(lesson?.evidence).toContain('commit:abc');
+    expect(lesson?.evidence).toContain('commit:def');
+  });
+
+  it('adds a new topic to an existing rule when re-captured under it (global dedup, no duplicate)', async () => {
+    seedGraph({
+      version: 1,
+      lessons: {},
+      topics: { 'windows-paths': { summary: 'P.' }, 'shell-quoting': { summary: 'S.' } },
+      triggers: {},
+    });
+    const first = await addLesson(root, baseInput);
+    const second = await addLesson(root, { ...baseInput, topic: 'shell-quoting' });
+    expect(second.id).toBe(first.id);
+    const graph = loadLessonsGraph(root);
+    expect(graph.lessons[first.id]?.topics.slice().sort()).toEqual([
+      'shell-quoting',
+      'windows-paths',
+    ]);
+    expect(Object.keys(graph.lessons)).toEqual([first.id]);
+  });
+
+  it('re-capturing a rule that matches only a DEPRECATED lesson creates a fresh active lesson', async () => {
+    seedGraph({
+      version: 1,
+      lessons: {
+        'windows-paths-dead': {
+          rule: baseInput.rule,
+          topics: ['windows-paths'],
+          triggers: [],
+          evidence: [],
+          status: 'deprecated',
+          createdAt: '2026-06-01',
+        },
+      },
+      topics: baseTopics,
+      triggers: {},
+    });
+    const r = await addLesson(root, baseInput);
+    expect(r.isNewLesson).toBe(true);
+    expect(r.id).not.toBe('windows-paths-dead');
+    const graph = loadLessonsGraph(root);
+    expect(graph.lessons[r.id]?.status).toBe('active');
+    // the dead lesson is untouched (not enriched, still deprecated)
+    expect(graph.lessons['windows-paths-dead']?.status).toBe('deprecated');
+    expect(graph.lessons['windows-paths-dead']?.triggers).toEqual([]);
+  });
+
+  it('rejects an invalid command_pattern regex at capture (transactional validation)', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    await expect(addLesson(root, { ...baseInput, triggers: { commands: ['('] } })).rejects.toThrow(
+      /INVALID_TRIGGER_PATTERN|invalid/i,
+    );
+    // nothing was persisted
+    expect(Object.keys(loadLessonsGraph(root).lessons)).toEqual([]);
+  });
+
+  it('fills in a missing rationale on re-capture (upsert)', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    const first = await addLesson(root, baseInput); // no rationale
+    await addLesson(root, { ...baseInput, rationale: 'incident 2026-06-06' });
+    expect(loadLessonsGraph(root).lessons[first.id]?.rationale).toBe('incident 2026-06-06');
+  });
+
   it('records optional rationale on the lesson', async () => {
     seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
     const result = await addLesson(root, { ...baseInput, rationale: 'incident 2026-05-30' });

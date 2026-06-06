@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { parseGraph, type LessonsGraph } from './graph-schema.js';
 
@@ -21,7 +21,13 @@ export function tryLoadLessonsGraph(projectRoot: string): LessonsGraph | null {
 export function saveLessonsGraph(projectRoot: string, graph: LessonsGraph): void {
   const path = graphFilePath(projectRoot);
   mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, serializeGraph(graph), 'utf8');
+  // Atomic write: a crash mid-write must never truncate the canonical graph.
+  // Write to a sibling temp file, then rename over the target (atomic on the
+  // same filesystem). The lessons lock serializes writers, so the pid-scoped
+  // temp name cannot collide in practice.
+  const tmp = `${path}.${process.pid}.tmp`;
+  writeFileSync(tmp, serializeGraph(graph), 'utf8');
+  renameSync(tmp, path);
 }
 
 /**

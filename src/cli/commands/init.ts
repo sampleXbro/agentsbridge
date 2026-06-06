@@ -115,7 +115,7 @@ export async function runInit(
   // Lessons-only retrofit path: already-initialized project + --lessons.
   // Scaffold lessons without touching the existing config/scaffold.
   if (alreadyInitialized && wantLessons) {
-    const lessons = scaffoldLessons(projectRoot);
+    const lessons = await scaffoldLessons(projectRoot);
     return {
       exitCode: 0,
       data: {
@@ -187,7 +187,7 @@ export async function runInit(
     gitignoreUpdated = await appendToGitignore(projectRoot);
   }
 
-  const lessons = wantLessons ? scaffoldLessons(projectRoot) : undefined;
+  const lessons = wantLessons ? await scaffoldLessons(projectRoot) : undefined;
 
   return {
     exitCode: 0,

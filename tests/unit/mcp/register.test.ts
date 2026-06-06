@@ -10,10 +10,10 @@ function descriptor(name: string): {
 }
 
 describe('register', () => {
-  it('registers exactly 47 tools', () => {
-    expect(TOOL_DESCRIPTORS).toHaveLength(47);
+  it('registers exactly 48 tools', () => {
+    expect(TOOL_DESCRIPTORS).toHaveLength(48);
     const names = TOOL_DESCRIPTORS.map((d) => d.name);
-    expect(new Set(names).size).toBe(47); // no dupes
+    expect(new Set(names).size).toBe(48); // no dupes
   });
   it('registers exactly 17 resources', () => {
     expect(RESOURCE_DESCRIPTORS).toHaveLength(17);

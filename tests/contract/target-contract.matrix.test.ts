@@ -32,8 +32,8 @@ function expectNoTargetSpecificPrefixes(content: string): void {
 }
 
 /** Activate the lessons subsystem: scaffold injects the ritual block into canonical _root.md. */
-function activateLessons(dir: string): void {
-  scaffoldLessons(dir);
+async function activateLessons(dir: string): Promise<void> {
+  await scaffoldLessons(dir);
 }
 
 function expectLessonsRitual(content: string): void {
@@ -102,7 +102,7 @@ describe('target contract matrix (in-process)', () => {
 targets: [${target}]
 features: [rules]
 `);
-    activateLessons(dir);
+    await activateLessons(dir);
 
     expect((await runGenerate({ targets: target }, dir, { printMatrix: false })).exitCode).toBe(0);
     const generated = readGeneratedLessonsRoot(dir, target);
@@ -133,7 +133,7 @@ features: [rules]
 targets: [${target}]
 features: [rules]
 `);
-    activateLessons(dir);
+    await activateLessons(dir);
     expect((await runGenerate({ targets: target }, dir, { printMatrix: false })).exitCode).toBe(0);
     rmSync(join(dir, '.agentsmesh'), { recursive: true, force: true });
 

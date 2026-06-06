@@ -73,11 +73,79 @@ describe('validateLessonsGraph', () => {
     expect(dup).toBeDefined();
   });
 
-  it('treats a deprecated duplicate as still-duplicate (status does not silence the finding)', () => {
+  it('does NOT flag a duplicate when one copy is superseded (so merge repairs duplicates)', () => {
     const g = baseGraph();
-    g.lessons['b-rule'] = { ...g.lessons['a-rule'], status: 'deprecated' };
+    g.lessons['b-rule'] = {
+      ...g.lessons['a-rule'],
+      status: 'superseded',
+      supersededBy: 'a-rule',
+    };
+    const r = validateLessonsGraph(g);
+    expect(r.findings.some((f) => f.code === 'DUPLICATE_RULE')).toBe(false);
+    expect(r.ok).toBe(true);
+  });
+
+  it('still flags a duplicate when BOTH copies are active', () => {
+    const g = baseGraph();
+    g.lessons['b-rule'] = { ...g.lessons['a-rule'] };
     const r = validateLessonsGraph(g);
     expect(r.findings.some((f) => f.code === 'DUPLICATE_RULE')).toBe(true);
+    expect(r.ok).toBe(false);
+  });
+
+  it('flags self-supersession as an error', () => {
+    const g = baseGraph();
+    g.lessons['a-rule'].status = 'superseded';
+    g.lessons['a-rule'].supersededBy = 'a-rule';
+    const r = validateLessonsGraph(g);
+    expect(r.findings).toContainEqual(
+      expect.objectContaining({ level: 'error', code: 'SELF_SUPERSEDED', lessonId: 'a-rule' }),
+    );
+  });
+
+  it('flags a supersession cycle as an error', () => {
+    const g = baseGraph();
+    g.lessons['a-rule'] = { ...g.lessons['a-rule'], status: 'superseded', supersededBy: 'b-rule' };
+    g.lessons['b-rule'] = {
+      rule: 'B.',
+      topics: ['t'],
+      triggers: ['t-glob'],
+      evidence: [],
+      status: 'superseded',
+      supersededBy: 'a-rule',
+      createdAt: '2026-06-05',
+    };
+    const r = validateLessonsGraph(g);
+    expect(r.findings.some((f) => f.code === 'SUPERSEDE_CYCLE')).toBe(true);
+    expect(r.ok).toBe(false);
+  });
+
+  it('errors when a superseder is itself inactive (chain dead-ends)', () => {
+    const g = baseGraph();
+    g.lessons['b-rule'] = {
+      rule: 'B.',
+      topics: ['t'],
+      triggers: ['t-glob'],
+      evidence: [],
+      status: 'deprecated',
+      createdAt: '2026-06-05',
+    };
+    g.lessons['a-rule'] = { ...g.lessons['a-rule'], status: 'superseded', supersededBy: 'b-rule' };
+    const r = validateLessonsGraph(g);
+    expect(r.findings).toContainEqual(
+      expect.objectContaining({ level: 'error', code: 'INACTIVE_SUPERSEDER', lessonId: 'a-rule' }),
+    );
+    expect(r.ok).toBe(false);
+  });
+
+  it('warns when an active lesson has zero triggers (unreachable)', () => {
+    const g = baseGraph();
+    g.lessons['a-rule'].triggers = [];
+    const r = validateLessonsGraph(g);
+    expect(r.findings).toContainEqual(
+      expect.objectContaining({ level: 'warning', code: 'UNREACHABLE_LESSON', lessonId: 'a-rule' }),
+    );
+    expect(r.ok).toBe(true);
   });
 
   it('flags an orphan trigger as a warning', () => {
@@ -142,6 +210,41 @@ describe('validateLessonsGraph', () => {
     expect(r.findings).toContainEqual(
       expect.objectContaining({ level: 'error', code: 'DANGLING_SUPERSEDER', lessonId: 'a-rule' }),
     );
+  });
+
+  it('emits one HIGH_FANOUT_TRIGGERS summary warning when a trigger is over-shared', () => {
+    const g = baseGraph();
+    // 11 active lessons all referencing t-glob → fanout 11 > threshold 10.
+    for (let i = 0; i < 11; i++) {
+      g.lessons[`f-${i}`] = {
+        rule: `Fanout rule ${i}.`,
+        topics: ['t'],
+        triggers: ['t-glob'],
+        evidence: [],
+        status: 'active',
+        createdAt: '2026-06-05',
+      };
+    }
+    const r = validateLessonsGraph(g);
+    const fanout = r.findings.filter((f) => f.code === 'HIGH_FANOUT_TRIGGERS');
+    expect(fanout).toHaveLength(1);
+    expect(fanout[0]?.level).toBe('warning');
+    expect(r.ok).toBe(true);
+  });
+
+  it('flags an invalid command_pattern regex as an error', () => {
+    const g = baseGraph();
+    g.triggers['t-bad'] = { kind: 'command_pattern', pattern: '(' };
+    g.lessons['a-rule'].triggers = ['t-glob', 't-bad'];
+    const r = validateLessonsGraph(g);
+    expect(r.findings).toContainEqual(
+      expect.objectContaining({
+        level: 'error',
+        code: 'INVALID_TRIGGER_PATTERN',
+        triggerId: 't-bad',
+      }),
+    );
+    expect(r.ok).toBe(false);
   });
 
   it('flags schema violations as errors before continuing to other checks', () => {

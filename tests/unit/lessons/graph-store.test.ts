@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -89,6 +89,20 @@ describe('graph-store', () => {
     saveLessonsGraph(root, loadLessonsGraph(root));
     const second = readFileSync(graphFilePath(root), 'utf8');
     expect(second).toBe(first);
+  });
+
+  it('writes atomically, leaving no temp file behind', () => {
+    saveLessonsGraph(root, graph);
+    const leftovers = readdirSync(dirname(graphFilePath(root))).filter((f) => f.endsWith('.tmp'));
+    expect(leftovers).toEqual([]);
+    expect(loadLessonsGraph(root)).toEqual(graph);
+  });
+
+  it('overwrites an existing graph in place', () => {
+    saveLessonsGraph(root, graph);
+    const next: LessonsGraph = { version: 1, lessons: {}, topics: {}, triggers: {} };
+    saveLessonsGraph(root, next);
+    expect(loadLessonsGraph(root)).toEqual(next);
   });
 
   it('tryLoadLessonsGraph returns null when the file is absent', () => {

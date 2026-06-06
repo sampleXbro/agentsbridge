@@ -9,9 +9,12 @@ export interface LessonsQueryData {
     readonly topics: string[];
     readonly triggers: string[];
     readonly evidence: string[];
+    readonly score?: number;
   }>;
   readonly query: { file?: string; command?: string; keyword?: string };
   readonly autoMigrated: boolean;
+  /** Number of lessons that matched before ranking/cap — for truncation notices. */
+  readonly totalMatches?: number;
 }
 
 export interface LessonsAddData {
@@ -33,6 +36,17 @@ export interface LessonsShowData {
 export interface LessonsDeprecateData {
   readonly id: string;
   readonly supersededBy: string | null;
+}
+
+export interface LessonsMergeData {
+  readonly loserId: string;
+  readonly keeperId: string;
+}
+
+export interface LessonsStripMarkersData {
+  readonly changedIds: string[];
+  readonly changedCount: number;
+  readonly dryRun: boolean;
 }
 
 export interface LessonsJournalData {
@@ -70,6 +84,13 @@ export type LessonsCommandResult =
   | { subcommand: 'topics'; exitCode: number; data: LessonsTopicsData; error?: string }
   | { subcommand: 'show'; exitCode: number; data: LessonsShowData; error?: string }
   | { subcommand: 'deprecate'; exitCode: number; data: LessonsDeprecateData; error?: string }
+  | { subcommand: 'merge'; exitCode: number; data: LessonsMergeData; error?: string }
+  | {
+      subcommand: 'strip-markers';
+      exitCode: number;
+      data: LessonsStripMarkersData;
+      error?: string;
+    }
   | { subcommand: 'journal'; exitCode: number; data: LessonsJournalData; error?: string }
   | { subcommand: 'validate'; exitCode: number; data: LessonsValidateData; error?: string }
   | { subcommand: 'import-md'; exitCode: number; data: LessonsImportMdData; error?: string };

@@ -93,13 +93,23 @@ describe('renderLessons — add', () => {
     expect(output.stdout()).toMatch(/new triggers?/i);
   });
 
-  it('signals idempotency when lesson already existed', () => {
+  it('signals a no-change re-capture when lesson already existed with no new triggers', () => {
     renderLessons({
       subcommand: 'add',
       exitCode: 0,
       data: { id: 'x', isNewLesson: false, isNewTopic: false, newTriggerIds: [] },
     });
-    expect(output.stdout()).toMatch(/existing/i);
+    expect(output.stdout()).toMatch(/existing|no change/i);
+  });
+
+  it('reports an upsert when re-capture merged new triggers onto an existing lesson', () => {
+    renderLessons({
+      subcommand: 'add',
+      exitCode: 0,
+      data: { id: 'x', isNewLesson: false, isNewTopic: false, newTriggerIds: ['t-glob-new'] },
+    });
+    expect(output.stdout()).toMatch(/updated lesson: x/i);
+    expect(output.stdout()).toMatch(/\+1 trigger/i);
   });
 
   it('routes errors to stderr', () => {
@@ -110,6 +120,17 @@ describe('renderLessons — add', () => {
       data: { id: '', isNewLesson: false, isNewTopic: false, newTriggerIds: [] },
     });
     expect(output.stderr()).toContain('Unknown topic: nope');
+  });
+
+  it('does not print a bogus "Existing lesson" line on the error path', () => {
+    renderLessons({
+      subcommand: 'add',
+      exitCode: 2,
+      error: 'Missing --rule',
+      data: { id: '', isNewLesson: false, isNewTopic: false, newTriggerIds: [] },
+    });
+    expect(output.stdout()).not.toMatch(/existing lesson/i);
+    expect(output.stderr()).toContain('Missing --rule');
   });
 });
 

@@ -1,0 +1,87 @@
+import type { LessonsGraph } from './graph-schema.js';
+import type { ValidationFinding } from './validate.js';
+
+export function collectDuplicateRules(graph: LessonsGraph, findings: ValidationFinding[]): void {
+  const byKey = new Map<string, string[]>();
+  for (const [lessonId, lesson] of Object.entries(graph.lessons)) {
+    // Only active lessons compete: a superseded/deprecated copy is not recalled,
+    // so it is not a functional duplicate — this is what lets `merge` repair a
+    // duplicate by superseding the loser.
+    if (lesson.status !== 'active') continue;
+    const key = normalizeRule(lesson.rule);
+    const bucket = byKey.get(key) ?? [];
+    bucket.push(lessonId);
+    byKey.set(key, bucket);
+  }
+  for (const [key, ids] of byKey) {
+    if (ids.length < 2) continue;
+    const sorted = [...ids].sort();
+    for (const lessonId of sorted) {
+      const others = sorted.filter((other) => other !== lessonId);
+      findings.push({
+        level: 'error',
+        code: 'DUPLICATE_RULE',
+        message: `Lesson "${lessonId}" duplicates rule text of: ${others.join(', ')} (normalized key: "${key.slice(0, 60)}").`,
+        lessonId,
+      });
+    }
+  }
+}
+
+/**
+ * A `command_pattern` trigger whose pattern is not a valid regex is dead: recall
+ * compiles it with `new RegExp` and a throw is swallowed as a non-match, so the
+ * lesson silently becomes unreachable via that trigger. Flag it as an error so
+ * the transactional write path rejects it at capture time.
+ */
+export function collectInvalidTriggerPatterns(
+  graph: LessonsGraph,
+  findings: ValidationFinding[],
+): void {
+  for (const [triggerId, trigger] of Object.entries(graph.triggers)) {
+    if (trigger.kind !== 'command_pattern') continue;
+    try {
+      new RegExp(trigger.pattern);
+    } catch (err) {
+      findings.push({
+        level: 'error',
+        code: 'INVALID_TRIGGER_PATTERN',
+        message: `Trigger "${triggerId}" has an invalid command_pattern regex (${trigger.pattern}): ${err instanceof Error ? err.message : String(err)}.`,
+        triggerId,
+      });
+    }
+  }
+}
+
+/** Active-fanout threshold above which a trigger is "broad" (recall leans on ranking). */
+const HIGH_FANOUT_THRESHOLD = 10;
+
+/**
+ * One summary warning (not one-per-trigger — that would be noise on a broad
+ * graph) reporting how many triggers fan out past the threshold. Surfaces the
+ * trigger imprecision that ranking compensates for, rather than hiding it.
+ */
+export function collectFanout(graph: LessonsGraph, findings: ValidationFinding[]): void {
+  const fanout = new Map<string, number>();
+  for (const lesson of Object.values(graph.lessons)) {
+    if (lesson.status !== 'active') continue;
+    for (const t of lesson.triggers) fanout.set(t, (fanout.get(t) ?? 0) + 1);
+  }
+  let over = 0;
+  let max = 0;
+  for (const n of fanout.values()) {
+    if (n > HIGH_FANOUT_THRESHOLD) over += 1;
+    if (n > max) max = n;
+  }
+  if (over > 0) {
+    findings.push({
+      level: 'warning',
+      code: 'HIGH_FANOUT_TRIGGERS',
+      message: `${over} trigger(s) each match more than ${HIGH_FANOUT_THRESHOLD} active lessons (max ${max}); recall returns the ranked top by default — consider per-lesson trigger refinement to improve precision.`,
+    });
+  }
+}
+
+function normalizeRule(rule: string): string {
+  return rule.trim().replace(/\s+/g, ' ').toLowerCase();
+}

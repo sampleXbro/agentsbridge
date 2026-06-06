@@ -19,6 +19,28 @@ export function listFlag(flags: LessonsFlags, name: string): string[] {
     .filter((s) => s.length > 0);
 }
 
+/**
+ * Opaque repeated values — each occurrence is one value, NEVER comma-split.
+ * Trigger patterns (regexes like `^foo{1,3}$`, globs like `src/{a,b}/**`)
+ * legitimately contain commas; splitting them would create broken triggers.
+ * Pass the flag multiple times for multiple values.
+ */
+export function repeatedFlag(flags: LessonsFlags, name: string): string[] {
+  const v = flags[name];
+  if (v === undefined || v === false || v === true) return [];
+  if (Array.isArray(v)) return v.filter((s) => s.length > 0);
+  return v.length > 0 ? [v] : [];
+}
+
+export function numberFlag(flags: LessonsFlags, name: string): number | null {
+  const v = flags[name];
+  if (typeof v === 'string' && v.trim().length > 0) {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+}
+
 export function parseFormat(flags: LessonsFlags): LessonsQueryFormat {
   const raw = stringFlag(flags, 'format');
   if (raw === 'md' || raw === 'json' || raw === 'plain') return raw;
@@ -65,7 +87,7 @@ export function renderTopicMarkdown(
 }
 
 /** Subcommands that can fail with a user-facing error and a placeholder data shape. */
-type ErrorableSubcommand = 'add' | 'show' | 'deprecate' | 'import-md';
+type ErrorableSubcommand = 'query' | 'add' | 'show' | 'deprecate' | 'merge' | 'import-md';
 
 export function errorResult(
   subcommand: ErrorableSubcommand,
@@ -73,6 +95,14 @@ export function errorResult(
   exitCode: number,
 ): LessonsCommandResult {
   switch (subcommand) {
+    case 'query':
+      return {
+        subcommand,
+        exitCode,
+        error: message,
+        format: 'plain',
+        data: { lessons: [], query: {}, autoMigrated: false, totalMatches: 0 },
+      };
     case 'add':
       return {
         subcommand,
@@ -84,6 +114,8 @@ export function errorResult(
       return { subcommand, exitCode, error: message, data: { topic: '', markdown: '' } };
     case 'deprecate':
       return { subcommand, exitCode, error: message, data: { id: '', supersededBy: null } };
+    case 'merge':
+      return { subcommand, exitCode, error: message, data: { loserId: '', keeperId: '' } };
     case 'import-md':
       return {
         subcommand,

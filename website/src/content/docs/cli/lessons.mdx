@@ -23,6 +23,8 @@ agentsmesh lessons <subcommand> [args] [flags]
 | `topics` | List every topic with its summary. |
 | `show <topic>` | Render a topic's lessons as Markdown (read-only view). |
 | `deprecate <id>` | Mark a lesson `deprecated`. With `--superseded-by <id>`, mark it `superseded`. |
+| `merge <loser-id> <keeper-id>` | Fold a duplicate lesson into its canonical twin: union the loser's triggers, topics, and evidence onto the keeper, then mark the loser `superseded`. Preserves recall reachability across topics. |
+| `strip-markers` | Remove dead legacy provenance markers (`See L123`, `(L69)`, `[L3]`, "(also relevant …)") from rule prose. `--dry-run` reports without writing. |
 | `journal` | Render lessons chronologically (sorted by `createdAt` then id). |
 | `validate` | Schema + integrity checks. Non-zero exit on errors; warnings do not affect exit code. |
 | `import-md` | One-shot migrator from legacy `index.yaml` + `topics/*.md` + `journal.md`. |
@@ -46,6 +48,10 @@ agentsmesh lessons query --file src/x.ts --format md
 agentsmesh lessons query --file src/x.ts --format json
 ```
 
+:::note[Recall precision]
+Triggers may be shared across lessons in a topic, so a match produces a broad **candidate** set. A query therefore **ranks** candidates (BM25 over rule text fused with trigger specificity) and returns the **top 10 by default** — matching is "this lesson is a candidate", not "you must read all of these". A stderr notice reports how many matched; use `--top <n>`/`--all`/`--max-tokens` to widen. `validate` emits a `HIGH_FANOUT_TRIGGERS` warning when triggers are over-shared; per-lesson trigger refinement is the remaining precision lever.
+:::
+
 ## Capture ritual
 
 Immediately after any failure, agents call:
@@ -54,7 +60,7 @@ Immediately after any failure, agents call:
 agentsmesh lessons add "<imperative rule>" --topic <id> --trigger-file <glob> --evidence <commit-sha|lesson-id>
 ```
 
-Triggers and evidence can be passed multiple times via comma-separated values. The CLI dedupes triggers against the graph and assigns a stable lesson id.
+Each `--trigger-*` value is **opaque** — pass the flag multiple times for multiple triggers; commas are kept verbatim (so regex/globs like `^foo{1,3}$` or `src/{a,b}/**` are safe). `--evidence` is comma-separable. The CLI dedupes triggers against the graph and assigns a stable lesson id.
 
 ```bash
 # Examples
@@ -99,6 +105,11 @@ entirely — `agentsmesh init --lessons` creates the graph directly.
 | `--cmd <command>` | Shell command about to run. Matched against `command_pattern` triggers (regex). |
 | `--keyword <text>` | Free-form task description. Matched against `keyword` triggers (case-insensitive substring). |
 | `--format plain\|md\|json` | Output shape. Default `plain` (one rule per line). |
+| `--top <n>` | Keep only the top `n` relevance-ranked matches. Default 10. |
+| `--all` | Return every match (disable the default cap). |
+| `--max-tokens <n>` | Cap results by cumulative estimated rule-token cost. |
+
+Results are **relevance-ranked** (BM25 over rule text fused with trigger specificity) and capped to the top 10 by default; a truncation notice on stderr reports how many matched. Pass `--all` or a larger `--top` to see the rest.
 
 ### `add`
 
@@ -106,9 +117,9 @@ entirely — `agentsmesh init --lessons` creates the graph directly.
 |------|-------------|
 | `--rule "<text>"` | **Required.** Imperative rule that prevents recurrence. |
 | `--topic <id>` | **Required.** Topic id. Pass `--new-topic --topic-summary "..."` to create one. |
-| `--trigger-file <glob>` | `file_glob` trigger. Comma-separate for multiple. |
-| `--trigger-cmd <regex>` | `command_pattern` trigger. Comma-separate for multiple. |
-| `--trigger-kw <text>` | `keyword` trigger. Comma-separate for multiple. |
+| `--trigger-file <glob>` | `file_glob` trigger. Opaque — repeat the flag for multiple (commas kept). |
+| `--trigger-cmd <regex>` | `command_pattern` trigger. Opaque — repeat for multiple; must be a valid regex (else capture is rejected). |
+| `--trigger-kw <text>` | `keyword` trigger. Opaque — repeat the flag for multiple (commas kept). |
 | `--evidence <ref>` | Evidence reference (`commit:SHA`, `lesson:id`, …). Comma-separate for multiple. |
 | `--rationale <text>` | One-line "why" behind the rule. |
 | `--new-topic` | Allow creating a new topic if missing. Requires `--topic-summary`. |
@@ -119,6 +130,16 @@ entirely — `agentsmesh init --lessons` creates the graph directly.
 | Flag | Description |
 |------|-------------|
 | `--superseded-by <id>` | Replacement lesson id. Without it, the lesson is marked `deprecated`; with it, `superseded`. |
+
+### `merge`
+
+`agentsmesh lessons merge <loser-id> <keeper-id>` — both ids are positional and required. The keeper must be `active`; the loser must not already be `superseded`.
+
+### `strip-markers`
+
+| Flag | Description |
+|------|-------------|
+| `--dry-run` | Report which lessons would change without writing. |
 
 ### `import-md`
 

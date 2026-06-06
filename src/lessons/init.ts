@@ -1,7 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { saveLessonsGraph } from './graph-store.js';
-import type { LessonsGraph } from './graph-schema.js';
+import { mutateLessonsGraph } from './mutate.js';
 import { lessonsPaths } from './paths.js';
 import {
   appendLessonsParagraph,
@@ -26,7 +25,7 @@ export interface ScaffoldLessonsResult {
  *   the sentinels keep the block an identifiable unit for clean round-trip and
  *   let re-running scaffold refresh the wording from one constant.
  */
-export function scaffoldLessons(projectRoot: string): ScaffoldLessonsResult {
+export async function scaffoldLessons(projectRoot: string): Promise<ScaffoldLessonsResult> {
   const paths = lessonsPaths(projectRoot);
   const created: string[] = [];
   const skipped: string[] = [];
@@ -35,8 +34,10 @@ export function scaffoldLessons(projectRoot: string): ScaffoldLessonsResult {
   if (existsSync(paths.graph)) {
     skipped.push(paths.graph);
   } else {
-    const emptyGraph: LessonsGraph = { version: 1, lessons: {}, topics: {}, triggers: {} };
-    saveLessonsGraph(projectRoot, emptyGraph);
+    // Create the empty graph through the transactional path so even the initial
+    // write holds the lock and re-reads under it — it cannot clobber a graph a
+    // concurrent writer just created.
+    await mutateLessonsGraph(projectRoot, () => {});
     created.push(paths.graph);
   }
 

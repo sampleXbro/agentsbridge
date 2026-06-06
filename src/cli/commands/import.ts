@@ -39,7 +39,10 @@ function mapResults(
  * the block is normalized to the current wording — keeping the round-trip
  * byte-stable across wording revisions.
  */
-function ensureImportedLessonsSubsystem(rootBase: string, scope: 'project' | 'global'): void {
+async function ensureImportedLessonsSubsystem(
+  rootBase: string,
+  scope: 'project' | 'global',
+): Promise<void> {
   if (scope !== 'project') return;
 
   const rootRule = join(rootBase, '.agentsmesh/rules/_root.md');
@@ -47,7 +50,7 @@ function ensureImportedLessonsSubsystem(rootBase: string, scope: 'project' | 'gl
   const body = readFileSync(rootRule, 'utf8');
 
   const hasLessons = body.includes(LESSONS_CONTRACT_START) || /^## Lessons \(/m.test(body);
-  if (hasLessons) scaffoldLessons(rootBase);
+  if (hasLessons) await scaffoldLessons(rootBase);
 }
 
 /**
@@ -74,7 +77,7 @@ export async function runImport(
     const results = await target.importFrom(context.rootBase, { scope });
     if (results.length > 0) {
       await seedAgentsmeshMcpEntry(context.rootBase);
-      ensureImportedLessonsSubsystem(context.rootBase, scope);
+      await ensureImportedLessonsSubsystem(context.rootBase, scope);
     }
     return {
       exitCode: 0,
@@ -108,7 +111,7 @@ export async function runImport(
   const results = await descriptor.generators.importFrom(context.rootBase, { scope });
   if (results.length > 0) {
     await seedAgentsmeshMcpEntry(context.rootBase);
-    ensureImportedLessonsSubsystem(context.rootBase, scope);
+    await ensureImportedLessonsSubsystem(context.rootBase, scope);
   }
   return {
     exitCode: 0,

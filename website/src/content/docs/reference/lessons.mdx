@@ -60,10 +60,10 @@ Triggers are content-addressed: the migrator and `agentsmesh lessons add` both d
 `agentsmesh lessons query` returns every `active` lesson whose triggers match **any** supplied field:
 
 - `--file <p>` matches `file_glob` triggers via picomatch with `dot: true`.
-- `--cmd <c>` matches `command_pattern` triggers via `new RegExp(pattern).test(command)`. Invalid regex never throws — it just doesn't match.
+- `--cmd <c>` matches `command_pattern` triggers via `new RegExp(pattern).test(command)`. An invalid regex can't reach the graph — `validate` flags `INVALID_TRIGGER_PATTERN` (error) so the transactional write path rejects such a trigger at capture; at read time a malformed pattern is still defensively treated as a non-match rather than throwing.
 - `--keyword <t>` matches `keyword` triggers via `keyword.toLowerCase().includes(pattern.toLowerCase())`.
 
-Combination is OR across triggers per lesson: a lesson appears in the result if **any** of its triggers fire from **any** supplied field. Results are deduplicated and sorted by lesson id.
+Combination is OR across triggers per lesson: a lesson is a **candidate** if **any** of its triggers fire from **any** supplied field. Candidates are then **relevance-ranked** — BM25 over the rule text fused (RRF) with trigger specificity (inverse fanout), ties broken by recency then id — and the CLI/MCP return the **top 10 by default** (`--top <n>` / `--all` / `--max-tokens <n>`; MCP `limit`/`max_tokens`). The low-level `queryLessons` export returns the raw unranked candidate set; `rankLessons` applies the ranking + caps.
 
 ## Validation codes
 
@@ -78,14 +78,20 @@ Combination is OR across triggers per lesson: a lesson appears in the result if 
 | `DUPLICATE_RULE` | error | Two or more lessons share the same normalized rule text (whitespace-collapsed, lowercased). |
 | `SUPERSEDED_WITHOUT_TARGET` | error | `status: superseded` without a `supersededBy` field. |
 | `ACTIVE_WITH_SUPERSEDER` | error | `status: active` with a `supersededBy` field. |
+| `SELF_SUPERSEDED` | error | A lesson's `supersededBy` points at itself. |
+| `SUPERSEDE_CYCLE` | error | `supersededBy` links form a cycle. |
+| `INACTIVE_SUPERSEDER` | error | `supersededBy` points at a non-active lesson — the chain dead-ends with no live replacement. |
+| `INVALID_TRIGGER_PATTERN` | error | A `command_pattern` trigger is not a valid regex (would be silently unreachable). |
+| `UNREACHABLE_LESSON` | warning | An active lesson has zero triggers and can never be recalled. |
+| `HIGH_FANOUT_TRIGGERS` | warning | One summary finding: N triggers each match more than 10 active lessons (recall leans on ranking). |
 | `ORPHAN_TOPIC` | warning | A topic node is not referenced by any lesson. |
 | `ORPHAN_TRIGGER` | warning | A trigger node is not referenced by any lesson. |
 
-Exit code is non-zero when any `error`-level finding exists. Warnings do not affect the exit code.
+Exit code is non-zero when any `error`-level finding exists. Warnings do not affect the exit code. `DUPLICATE_RULE` considers **active** lessons only, so superseding or deprecating one copy clears it — that is how `merge` repairs a duplicate.
 
 ## Concurrency
 
-Writers acquire a process lock at `.agentsmesh/lessons/.lessons.lock` (mkdir-based, cross-platform). The lock reuses the same primitive as `.generate.lock` and `.install.lock` — stale-eviction by PID, signal cleanup, retry budget. Concurrent `agentsmesh lessons add` calls serialize cleanly; no data is lost.
+**Every mutation routes through one transactional write path** (`mutateLessonsGraph`): acquire the lock → load → mutate → **validate** → atomic temp-write + rename. This includes `add`, `merge`, `deprecate`, `strip-markers`, **migration, and scaffolding** — none write the graph directly. The lock at `.agentsmesh/lessons/.lessons.lock` (mkdir-based, cross-platform) reuses the same primitive as `.generate.lock`/`.install.lock` (stale-eviction by PID, signal cleanup, retry budget). Concurrent writers serialize cleanly, an invalid mutation is never persisted, and a crash mid-write cannot truncate the graph.
 
 ## One-shot upgrade migration
 
@@ -114,9 +120,11 @@ The new graph types and helpers are exported from `agentsmesh/lessons`:
 import {
   loadLessonsGraph,
   tryLoadLessonsGraph,
-  saveLessonsGraph,
-  queryLessons,
+  mutateLessonsGraph, // the only write path: lock → load → mutate → validate → atomic save
+  queryLessons, // raw candidate matcher
+  rankLessons, // relevance ranking + caps over candidates
   addLesson,
+  mergeLessons,
   validateLessonsGraph,
   importLegacyLessons,
   type LessonsGraph,
@@ -126,6 +134,8 @@ import {
   type LessonsQuery,
   type ValidationReport,
 } from 'agentsmesh/lessons';
+// NOTE: raw saveLessonsGraph is intentionally not exported — it bypasses
+// locking + validation. Use mutateLessonsGraph for every write.
 
 const graph = tryLoadLessonsGraph(process.cwd());
 if (graph) {
@@ -147,7 +157,7 @@ The recall flow saves tokens by returning only the lessons that match — agents
 
 | Step | Legacy YAML + MD | JSON graph |
 |------|------------------|------------|
-| Recall | Read 400+ line `index.yaml` + matching topic Markdown files. ~2–5k tokens per session. | One `query` call returning matched rules only. ~100–500 tokens. |
+| Recall | Read 400+ line `index.yaml` + matching topic Markdown files. ~2–5k tokens per session. | One `query` call returning only the **relevance-ranked top matches** (default 10; `--top`/`--all`/`--max-tokens` to adjust). Typically a few hundred to ~1.5k tokens; the cap keeps a broad trigger from returning a whole topic. |
 | Capture | Edit `journal.md` + matching `topics/<topic>.md` + reconcile `index.yaml` triggers. Three file ops, often skipped. | One `add` call. Atomic. |
 
 ## See also

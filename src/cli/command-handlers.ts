@@ -1,3 +1,5 @@
+import type { CliFlags } from './index.js';
+import type { CommandHandler } from './router.js';
 import { handleResult } from './json-handler.js';
 import { emitJson } from './json-output.js';
 import { runGenerate } from './commands/generate.js';
@@ -35,16 +37,25 @@ import { runMcp } from './commands/mcp.js';
 import { runLessons } from './commands/lessons.js';
 import { renderLessons } from './renderers/lessons.js';
 
-export const cmdHandlers: Record<
-  string,
-  (flags: Record<string, string | boolean>, args: string[]) => Promise<void>
-> = {
+/**
+ * Collapse repeated-flag arrays to their last value for the (vast majority of)
+ * commands whose handlers expect a single value per flag. Only `lessons`
+ * consumes repeated flags (multiple `--trigger-file`), so it receives the full
+ * {@link CliFlags} untouched; every other command keeps last-wins semantics.
+ */
+function narrowFlags(flags: CliFlags): Record<string, string | boolean> {
+  const out: Record<string, string | boolean> = {};
+  // A repeated flag is a non-empty array, so the last element is always present.
+  for (const [k, v] of Object.entries(flags)) out[k] = Array.isArray(v) ? v[v.length - 1]! : v;
+  return out;
+}
+
+export const cmdHandlers: Record<string, CommandHandler> = {
   generate: async (flags, _args) => {
     void _args;
-    const result = await runGenerate(flags, undefined, {
-      printMatrix: flags.json !== true,
-    });
-    handleResult('generate', result, flags, () => renderGenerate(result));
+    const nf = narrowFlags(flags);
+    const result = await runGenerate(nf, undefined, { printMatrix: nf.json !== true });
+    handleResult('generate', result, nf, () => renderGenerate(result));
   },
   init: async (flags, _args) => {
     void _args;
@@ -53,48 +64,55 @@ export const cmdHandlers: Record<
       global: flags.global === true,
       lessons: flags.lessons === true,
     });
-    handleResult('init', result, flags, () => renderInit(result));
+    handleResult('init', result, narrowFlags(flags), () => renderInit(result));
   },
   import: async (flags, _args) => {
     void _args;
-    const result = await runImport(flags);
-    handleResult('import', result, flags, () => renderImport(result));
+    const nf = narrowFlags(flags);
+    const result = await runImport(nf);
+    handleResult('import', result, nf, () => renderImport(result));
   },
   diff: async (flags, _args) => {
     void _args;
-    const result = await runDiff(flags);
-    handleResult('diff', result, flags, () => renderDiff(result));
+    const nf = narrowFlags(flags);
+    const result = await runDiff(nf);
+    handleResult('diff', result, nf, () => renderDiff(result));
   },
   lint: async (flags, _args) => {
     void _args;
-    const result = await runLintCmd(flags);
-    handleResult('lint', result, flags, () => renderLint(result));
+    const nf = narrowFlags(flags);
+    const result = await runLintCmd(nf);
+    handleResult('lint', result, nf, () => renderLint(result));
   },
   check: async (flags, _args) => {
     void _args;
-    const result = await runCheck(flags);
-    handleResult('check', result, flags, () => renderCheck(result));
+    const nf = narrowFlags(flags);
+    const result = await runCheck(nf);
+    handleResult('check', result, nf, () => renderCheck(result));
   },
   merge: async (flags, _args) => {
     void _args;
-    const result = await runMerge(flags);
-    handleResult('merge', result, flags, () => renderMerge(result));
+    const nf = narrowFlags(flags);
+    const result = await runMerge(nf);
+    handleResult('merge', result, nf, () => renderMerge(result));
   },
   matrix: async (flags, args) => {
     void args;
-    const result = await runMatrix(flags);
-    handleResult('matrix', result, flags, () =>
-      renderMatrix(result, { verbose: flags.verbose === true }),
+    const nf = narrowFlags(flags);
+    const result = await runMatrix(nf);
+    handleResult('matrix', result, nf, () =>
+      renderMatrix(result, { verbose: nf.verbose === true }),
     );
   },
   watch: async (flags, _args) => {
     void _args;
-    if (flags.json === true) {
+    const nf = narrowFlags(flags);
+    if (nf.json === true) {
       emitJson('watch', { success: false, error: '--json is not supported with watch' });
       process.exit(1);
       return;
     }
-    const handle = await runWatch(flags);
+    const handle = await runWatch(nf);
     const stop = (): void => {
       void handle.stop().then(() => process.exit(0));
     };
@@ -102,42 +120,51 @@ export const cmdHandlers: Record<
     process.on('SIGTERM', stop);
   },
   install: async (flags, args) => {
-    if (flags.json === true) flags.force = true;
-    const result = await runInstall(flags, args, process.cwd());
-    handleResult('install', result, flags, () => renderInstall(result));
+    const nf = narrowFlags(flags);
+    if (nf.json === true) nf.force = true;
+    const result = await runInstall(nf, args, process.cwd());
+    handleResult('install', result, nf, () => renderInstall(result));
   },
   uninstall: async (flags, args) => {
-    if (flags.json === true) flags.force = true;
-    const result = await runUninstall(flags, args, process.cwd());
-    handleResult('uninstall', result, flags, () => renderUninstall(result));
+    const nf = narrowFlags(flags);
+    if (nf.json === true) nf.force = true;
+    const result = await runUninstall(nf, args, process.cwd());
+    handleResult('uninstall', result, nf, () => renderUninstall(result));
   },
   refresh: async (flags, args) => {
-    const result = await runRefresh(flags, args, process.cwd());
-    handleResult('refresh', result, flags, () => renderRefresh(result));
+    const nf = narrowFlags(flags);
+    const result = await runRefresh(nf, args, process.cwd());
+    handleResult('refresh', result, nf, () => renderRefresh(result));
   },
   installs: async (flags, args) => {
-    const result = await runInstalls(flags, args, process.cwd());
-    handleResult('installs', result, flags, () => renderInstalls(result));
+    const nf = narrowFlags(flags);
+    const result = await runInstalls(nf, args, process.cwd());
+    handleResult('installs', result, nf, () => renderInstalls(result));
   },
   plugin: async (flags, args) => {
-    const result = await runPlugin(flags, args, process.cwd());
-    handleResult('plugin', result, flags, () => renderPlugin(result));
+    const nf = narrowFlags(flags);
+    const result = await runPlugin(nf, args, process.cwd());
+    handleResult('plugin', result, nf, () => renderPlugin(result));
   },
   target: async (flags, args) => {
-    const result = await runTarget(flags, args, process.cwd());
-    handleResult('target', result, flags, () => renderTarget(result));
+    const nf = narrowFlags(flags);
+    const result = await runTarget(nf, args, process.cwd());
+    handleResult('target', result, nf, () => renderTarget(result));
   },
   convert: async (flags, _args) => {
     void _args;
-    const result = await runConvert(flags);
-    handleResult('convert', result, flags, () => renderConvert(result));
+    const nf = narrowFlags(flags);
+    const result = await runConvert(nf);
+    handleResult('convert', result, nf, () => renderConvert(result));
   },
   mcp: async (flags, args) => {
-    await runMcp(flags, args);
+    await runMcp(narrowFlags(flags), args);
   },
   lessons: async (flags, args) => {
+    // lessons is the only command that consumes repeated flags — pass the full
+    // (possibly array-valued) flags through; handleResult only needs scalars.
     const result = await runLessons(flags, args, process.cwd());
-    handleResult('lessons', result, flags, () => renderLessons(result));
+    handleResult('lessons', result, narrowFlags(flags), () => renderLessons(result));
     if (result.exitCode !== 0) process.exit(result.exitCode);
   },
 };

@@ -1,12 +1,17 @@
 import type { McpContext } from '../context.js';
 import { addLesson, UnknownTopicError } from '../../lessons/add.js';
+import { maybeAutoMigrateLessons } from '../../lessons/auto-migrate.js';
 import { tryLoadLessonsGraph } from '../../lessons/graph-store.js';
 import { queryLessons } from '../../lessons/query.js';
+import { DEFAULT_RECALL_LIMIT, rankLessons } from '../../lessons/ranking.js';
 
 interface LessonsQueryInput {
   readonly file?: string;
   readonly command?: string;
   readonly keyword?: string;
+  readonly limit?: number;
+  readonly max_tokens?: number;
+  readonly verbose?: boolean;
 }
 
 interface LessonsAddInput {
@@ -26,18 +31,52 @@ export const lessonsHandlers = {
     ctx: McpContext,
     input: LessonsQueryInput,
   ): Promise<{
-    lessons: Array<{ id: string; rule: string; topics: string[]; evidence: string[] }>;
+    lessons: Array<{
+      id: string;
+      rule: string;
+      topics?: string[];
+      triggers?: string[];
+      evidence?: string[];
+      score?: number;
+    }>;
+    totalMatches: number;
   }> {
+    await maybeAutoMigrateLessons(ctx.projectRoot);
     const graph = tryLoadLessonsGraph(ctx.projectRoot);
-    if (graph === null) return { lessons: [] };
+    if (graph === null) return { lessons: [], totalMatches: 0 };
     const matches = queryLessons(graph, input);
+    const ranked = rankLessons(graph, input, matches, {
+      limit: input.limit ?? DEFAULT_RECALL_LIMIT,
+      maxTokens: input.max_tokens,
+    });
+    // Compact by default — return only id + rule to keep recall token-cheap.
+    // Metadata (topics/triggers/evidence/score) is opt-in via `verbose`.
+    const verbose = input.verbose === true;
     return {
-      lessons: matches.map(({ id, lesson }) => ({
-        id,
-        rule: lesson.rule,
-        topics: [...lesson.topics],
-        evidence: [...lesson.evidence],
-      })),
+      lessons: ranked.map(({ id, lesson, score }) =>
+        verbose
+          ? {
+              id,
+              rule: lesson.rule,
+              topics: [...lesson.topics],
+              triggers: [...lesson.triggers],
+              evidence: [...lesson.evidence],
+              score,
+            }
+          : { id, rule: lesson.rule },
+      ),
+      totalMatches: matches.length,
+    };
+  },
+
+  async topics(ctx: McpContext): Promise<{ topics: Array<{ id: string; summary: string }> }> {
+    await maybeAutoMigrateLessons(ctx.projectRoot);
+    const graph = tryLoadLessonsGraph(ctx.projectRoot);
+    if (graph === null) return { topics: [] };
+    return {
+      topics: Object.entries(graph.topics)
+        .map(([id, t]) => ({ id, summary: t.summary }))
+        .sort((a, b) => (a.id < b.id ? -1 : 1)),
     };
   },
 
@@ -50,6 +89,9 @@ export const lessonsHandlers = {
     isNewTopic: boolean;
     newTriggerIds: string[];
   }> {
+    // Migrate any legacy store first so capture enriches the real graph instead
+    // of creating lessons.json and stranding the legacy lessons forever.
+    await maybeAutoMigrateLessons(ctx.projectRoot);
     try {
       return await addLesson(
         ctx.projectRoot,

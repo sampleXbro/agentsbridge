@@ -120,10 +120,10 @@ describe('mcp-server protocol', () => {
     expect(info).toMatchObject({ name: 'agentsmesh-mcp' });
   });
 
-  it('lists exactly 47 tools with unique names', async () => {
+  it('lists exactly 48 tools with unique names', async () => {
     const { tools } = await server.client.listTools();
-    expect(tools).toHaveLength(47);
-    expect(new Set(tools.map((t) => t.name)).size).toBe(47);
+    expect(tools).toHaveLength(48);
+    expect(new Set(tools.map((t) => t.name)).size).toBe(48);
   });
 
   it('lists exactly 17 resources', async () => {

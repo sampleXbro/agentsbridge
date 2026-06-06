@@ -36,13 +36,13 @@ let projectRoot: string;
 let graph: LessonsGraph;
 let liveLessons: string;
 
-beforeEach(() => {
+beforeEach(async () => {
   projectRoot = mkdtempSync(join(tmpdir(), 'amesh-import-real-'));
   liveLessons = join(projectRoot, '.agentsmesh/lessons');
   // Mirror a realistic legacy tree (the committed fixture is small but
   // representative — same kind of edge cases as live data).
   cpSync(FIXTURE_INPUT, liveLessons, { recursive: true });
-  importLegacyLessons(projectRoot, { migratedAt: '2026-06-05', deleteLegacy: false });
+  await importLegacyLessons(projectRoot, { migratedAt: '2026-06-05', deleteLegacy: false });
   graph = loadLessonsGraph(projectRoot);
 });
 

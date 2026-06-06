@@ -12,6 +12,8 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { importLegacyLessons } from '../../../src/lessons/import-legacy.js';
+import { loadLessonsGraph, saveLessonsGraph } from '../../../src/lessons/graph-store.js';
+import type { LessonsGraph } from '../../../src/lessons/graph-schema.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FIXTURE_INPUT = resolve(HERE, '../../fixtures/lessons/legacy-input');
@@ -29,31 +31,31 @@ afterEach(() => {
   rmSync(root, { recursive: true, force: true });
 });
 
-describe('importLegacyLessons', () => {
-  it('writes lessons.json byte-for-byte equal to the committed expected fixture', () => {
-    importLegacyLessons(root, { migratedAt: MIGRATED_AT, deleteLegacy: false });
+describe('importLegacyLessons', async () => {
+  it('writes lessons.json byte-for-byte equal to the committed expected fixture', async () => {
+    await importLegacyLessons(root, { migratedAt: MIGRATED_AT, deleteLegacy: false });
     const got = readFileSync(join(root, '.agentsmesh/lessons/lessons.json'), 'utf8');
     const expected = readFileSync(join(FIXTURE_EXPECTED, 'lessons.json'), 'utf8');
     expect(got).toBe(expected);
   });
 
-  it('DELETES every legacy artifact by default (clean-break upgrade)', () => {
-    const report = importLegacyLessons(root, { migratedAt: MIGRATED_AT });
+  it('DELETES every legacy artifact by default (clean-break upgrade)', async () => {
+    const report = await importLegacyLessons(root, { migratedAt: MIGRATED_AT });
     expect(existsSync(join(root, '.agentsmesh/lessons/index.yaml'))).toBe(false);
     expect(existsSync(join(root, '.agentsmesh/lessons/journal.md'))).toBe(false);
     expect(existsSync(join(root, '.agentsmesh/lessons/topics'))).toBe(false);
     expect(report.deletedPaths.length).toBeGreaterThan(0);
   });
 
-  it('preserves legacy files when deleteLegacy=false (test-only path)', () => {
-    importLegacyLessons(root, { migratedAt: MIGRATED_AT, deleteLegacy: false });
+  it('preserves legacy files when deleteLegacy=false (test-only path)', async () => {
+    await importLegacyLessons(root, { migratedAt: MIGRATED_AT, deleteLegacy: false });
     expect(existsSync(join(root, '.agentsmesh/lessons/index.yaml'))).toBe(true);
     expect(existsSync(join(root, '.agentsmesh/lessons/journal.md'))).toBe(true);
     expect(existsSync(join(root, '.agentsmesh/lessons/topics/alpha-rules.md'))).toBe(true);
   });
 
-  it('returns a report with exact counts and the canonical graph path', () => {
-    const report = importLegacyLessons(root, { migratedAt: MIGRATED_AT });
+  it('returns a report with exact counts and the canonical graph path', async () => {
+    const report = await importLegacyLessons(root, { migratedAt: MIGRATED_AT });
     expect(report.topicCount).toBe(2);
     expect(report.lessonCount).toBe(5);
     expect(report.triggerCount).toBe(7);
@@ -62,24 +64,25 @@ describe('importLegacyLessons', () => {
     );
   });
 
-  it('is safe to re-run on the post-migration tree (legacy files gone → zero counts)', () => {
-    importLegacyLessons(root, { migratedAt: MIGRATED_AT });
+  it('is safe to re-run on the post-migration tree (legacy files gone → zero counts)', async () => {
+    await importLegacyLessons(root, { migratedAt: MIGRATED_AT });
     // index.yaml no longer exists → re-running throws (intended: caller should
     // check before invoking). Verify the first run did its job and the second
     // call cannot accidentally clobber a valid graph from missing inputs.
-    expect(() => importLegacyLessons(root, { migratedAt: MIGRATED_AT })).toThrow();
+    await expect(importLegacyLessons(root, { migratedAt: MIGRATED_AT })).rejects.toThrow();
   });
 
-  it('first migration is byte-deterministic when re-run on a fresh copy', () => {
-    importLegacyLessons(root, { migratedAt: MIGRATED_AT, deleteLegacy: false });
+  it('first migration is byte-deterministic when re-run on a fresh copy', async () => {
+    await importLegacyLessons(root, { migratedAt: MIGRATED_AT, deleteLegacy: false });
     const first = readFileSync(join(root, '.agentsmesh/lessons/lessons.json'), 'utf8');
-    importLegacyLessons(root, { migratedAt: MIGRATED_AT, deleteLegacy: false });
+    // Re-migration over an existing graph requires force (anti-clobber guard).
+    await importLegacyLessons(root, { migratedAt: MIGRATED_AT, deleteLegacy: false, force: true });
     const second = readFileSync(join(root, '.agentsmesh/lessons/lessons.json'), 'utf8');
     expect(second).toBe(first);
   });
 });
 
-describe('importLegacyLessons — edge inputs', () => {
+describe('importLegacyLessons — edge inputs', async () => {
   let edge: string;
 
   beforeEach(() => {
@@ -117,22 +120,98 @@ describe('importLegacyLessons — edge inputs', () => {
       '# Present\n\n## Rules\n\n1. Do the thing. (Evidence: see the design doc)\n2. Plain rule, no evidence.\n\n## Notes\n\nIgnore me.\n',
       'utf8',
     );
-    // topics/missing.md intentionally not written.
+    // Both declared topic files exist so the success-path tests migrate cleanly;
+    // the fail-closed test removes one to exercise the missing-file guard.
+    writeFileSync(
+      join(base, 'topics/missing.md'),
+      '# Missing\n\n## Rules\n\n1. A rule from the second topic.\n',
+      'utf8',
+    );
   });
 
   afterEach(() => {
     rmSync(edge, { recursive: true, force: true });
   });
 
-  it('registers the topic but no lessons for a cluster whose topic file is absent', () => {
-    const report = importLegacyLessons(edge, { migratedAt: MIGRATED_AT, deleteLegacy: false });
-    expect(report.topicCount).toBe(2);
-    // Only present.md contributes lessons; missing.md is skipped.
-    expect(report.lessonCount).toBe(2);
+  it('refuses to overwrite an existing non-empty graph without force (no capture loss)', async () => {
+    const existing: LessonsGraph = {
+      version: 1,
+      lessons: {
+        'kept-1': {
+          rule: 'A freshly captured lesson that must not be erased.',
+          topics: ['t'],
+          triggers: [],
+          evidence: [],
+          status: 'active',
+          createdAt: '2026-06-06',
+        },
+      },
+      topics: { t: { summary: 'T.' } },
+      triggers: {},
+    };
+    saveLessonsGraph(edge, existing);
+    await expect(importLegacyLessons(edge, { migratedAt: MIGRATED_AT })).rejects.toThrow(
+      /already exists|force/i,
+    );
+    // the captured lesson survives, legacy files remain
+    expect(loadLessonsGraph(edge).lessons['kept-1']).toBeDefined();
+    expect(existsSync(join(edge, '.agentsmesh/lessons/index.yaml'))).toBe(true);
   });
 
-  it('keeps only the canonical legacy pointer when an Evidence tail has no L-refs', () => {
-    importLegacyLessons(edge, { migratedAt: MIGRATED_AT, deleteLegacy: false });
+  it('overwrites an existing graph only when force is set', async () => {
+    saveLessonsGraph(edge, {
+      version: 1,
+      lessons: {
+        'kept-1': {
+          rule: 'Old.',
+          topics: ['t'],
+          triggers: [],
+          evidence: [],
+          status: 'active',
+          createdAt: '2026-06-06',
+        },
+      },
+      topics: { t: { summary: 'T.' } },
+      triggers: {},
+    });
+    await importLegacyLessons(edge, { migratedAt: MIGRATED_AT, force: true, deleteLegacy: false });
+    expect(loadLessonsGraph(edge).lessons['kept-1']).toBeUndefined();
+  });
+
+  it('fails closed: throws and deletes nothing when the migrated graph is invalid (duplicate rules)', async () => {
+    const base = join(edge, '.agentsmesh/lessons');
+    // Two identical rules across the two topics → DUPLICATE_RULE (both active).
+    writeFileSync(
+      join(base, 'topics/present.md'),
+      '# Present\n\n## Rules\n\n1. Exact same rule text.\n',
+      'utf8',
+    );
+    writeFileSync(
+      join(base, 'topics/missing.md'),
+      '# Missing\n\n## Rules\n\n1. Exact same rule text.\n',
+      'utf8',
+    );
+    await expect(importLegacyLessons(edge, { migratedAt: MIGRATED_AT })).rejects.toThrow(
+      /invalid|DUPLICATE_RULE/i,
+    );
+    expect(existsSync(join(base, 'index.yaml'))).toBe(true);
+    expect(existsSync(join(base, 'lessons.json'))).toBe(false);
+  });
+
+  it('fails closed: throws and deletes nothing when a declared topic file is absent', async () => {
+    const base = join(edge, '.agentsmesh/lessons');
+    rmSync(join(base, 'topics/missing.md'), { force: true });
+    await expect(importLegacyLessons(edge, { migratedAt: MIGRATED_AT })).rejects.toThrow(
+      /missing|absent/i,
+    );
+    // Legacy artifacts must remain intact, and no graph is written.
+    expect(existsSync(join(base, 'index.yaml'))).toBe(true);
+    expect(existsSync(join(base, 'topics/present.md'))).toBe(true);
+    expect(existsSync(join(base, 'lessons.json'))).toBe(false);
+  });
+
+  it('keeps only the canonical legacy pointer when an Evidence tail has no L-refs', async () => {
+    await importLegacyLessons(edge, { migratedAt: MIGRATED_AT, deleteLegacy: false });
     const graph = JSON.parse(
       readFileSync(join(edge, '.agentsmesh/lessons/lessons.json'), 'utf8'),
     ) as { lessons: Record<string, { evidence: string[] }> };
@@ -140,10 +219,10 @@ describe('importLegacyLessons — edge inputs', () => {
     expect(ruleOne?.evidence).toEqual(['legacy:.agentsmesh/lessons/topics/present.md#rule-1']);
   });
 
-  it('reports zero deletions when no legacy artifacts remain to remove', () => {
-    importLegacyLessons(edge, { migratedAt: MIGRATED_AT, deleteLegacy: false });
+  it('reports zero deletions when no legacy artifacts remain to remove', async () => {
+    await importLegacyLessons(edge, { migratedAt: MIGRATED_AT, deleteLegacy: false });
     // Re-run with deletion on a tree that still has index.yaml/topics but no journal/distill files.
-    const report = importLegacyLessons(edge, { migratedAt: MIGRATED_AT });
+    const report = await importLegacyLessons(edge, { migratedAt: MIGRATED_AT, force: true });
     expect(report.deletedPaths.every((p) => !p.includes('journal'))).toBe(true);
   });
 });

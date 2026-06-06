@@ -8,10 +8,26 @@ import { handleError } from './error-handler.js';
 import { muteLogger } from '../utils/output/logger.js';
 import { cmdHandlers } from './command-handlers.js';
 
+/** A parsed flag value: a string, a boolean (presence), or — when the flag is repeated — an array of its string values. */
+export type CliFlagValue = string | boolean | string[];
+export type CliFlags = Record<string, CliFlagValue>;
+
 export interface ParseResult {
   command: string;
-  flags: Record<string, string | boolean>;
+  flags: CliFlags;
   args: string[];
+}
+
+/** Accumulate repeated string flags into an array so `--x a --x b` yields `[a, b]` rather than dropping `a`. */
+function setFlag(flags: CliFlags, name: string, value: string | boolean): void {
+  const existing = flags[name];
+  if (existing === undefined || typeof value === 'boolean') {
+    flags[name] = value;
+    return;
+  }
+  if (Array.isArray(existing)) existing.push(value);
+  else if (typeof existing === 'string') flags[name] = [existing, value];
+  else flags[name] = value;
 }
 
 /**
@@ -20,7 +36,7 @@ export interface ParseResult {
  * @returns command name and flags object
  */
 export function parseArgs(argv: string[]): ParseResult {
-  const flags: Record<string, string | boolean> = {};
+  const flags: CliFlags = {};
   const args: string[] = [];
   let command = 'help';
 
@@ -34,9 +50,9 @@ export function parseArgs(argv: string[]): ParseResult {
       const name = arg.slice(2);
       const next = argv[i + 1];
       if (next === undefined || next.startsWith('--')) {
-        flags[name] = true;
+        setFlag(flags, name, true);
       } else {
-        flags[name] = next;
+        setFlag(flags, name, next);
         i++;
       }
       continue;

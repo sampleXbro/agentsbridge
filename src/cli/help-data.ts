@@ -288,7 +288,7 @@ export const COMMANDS: HelpCommand[] = [
     name: 'lessons',
     usage: 'agentsmesh lessons <subcommand> [args] [flags]',
     description:
-      'Query and capture lessons from .agentsmesh/lessons/lessons.json. Subcommands: query, add, topics, show, deprecate, journal, validate, import-md.',
+      'Query and capture lessons from .agentsmesh/lessons/lessons.json. Subcommands: query, add, topics, show, deprecate, merge, strip-markers, journal, validate, import-md.',
     flags: [
       {
         name: '--file <path>',
@@ -297,17 +297,23 @@ export const COMMANDS: HelpCommand[] = [
       { name: '--cmd <command>', description: 'query: shell command about to run' },
       { name: '--keyword <text>', description: 'query: free-form task description' },
       { name: '--format plain|md|json', description: 'query: output format (default plain)' },
+      { name: '--top <n>', description: 'query: keep the top n ranked matches (default 10)' },
+      { name: '--all', description: 'query: return every match (no cap)' },
+      { name: '--max-tokens <n>', description: 'query: cap results by cumulative rule-token cost' },
       { name: '--rule "<text>"', description: 'add: imperative rule (required)' },
       { name: '--topic <id>', description: 'add: topic id (required; use --new-topic for new)' },
       {
         name: '--trigger-file <glob>',
-        description: 'add: file_glob trigger (repeatable via comma)',
+        description: 'add: file_glob trigger (repeat the flag; value is opaque)',
       },
       {
         name: '--trigger-cmd <regex>',
-        description: 'add: command_pattern trigger (repeatable via comma)',
+        description: 'add: command_pattern trigger, valid regex (repeat the flag)',
       },
-      { name: '--trigger-kw <text>', description: 'add: keyword trigger (repeatable via comma)' },
+      {
+        name: '--trigger-kw <text>',
+        description: 'add: keyword trigger (repeat the flag; value is opaque)',
+      },
       {
         name: '--evidence <ref>',
         description: 'add: evidence reference (commit:SHA, lesson:id, …)',

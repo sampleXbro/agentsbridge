@@ -140,8 +140,8 @@ function read(dir: string, path: string): string {
 }
 
 /** Activate lessons: scaffold injects the ritual block into canonical _root.md + creates the graph. */
-function activateLessons(dir: string): void {
-  scaffoldLessons(dir);
+async function activateLessons(dir: string): Promise<void> {
+  await scaffoldLessons(dir);
 }
 
 function expectNoTargetSpecificPrefixes(content: string): void {
@@ -296,7 +296,7 @@ describe('target contract matrix', () => {
     async (target) => {
       dir = createCanonicalProject(MATRIX_CONFIG);
       appendGenerateReferenceMatrix(dir);
-      activateLessons(dir);
+      await activateLessons(dir);
 
       const generateResult = await runCli(`generate --targets ${target}`, dir);
       expect(generateResult.exitCode, generateResult.stderr).toBe(0);

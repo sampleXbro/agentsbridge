@@ -11,9 +11,9 @@ beforeEach(() => {
   projectRoot = mkdtempSync(join(tmpdir(), 'lessons-init-'));
 });
 
-describe('scaffoldLessons', () => {
-  it('creates lessons.json and injects the managed ritual block into _root.md', () => {
-    const result = scaffoldLessons(projectRoot);
+describe('scaffoldLessons', async () => {
+  it('creates lessons.json and injects the managed ritual block into _root.md', async () => {
+    const result = await scaffoldLessons(projectRoot);
     const paths = lessonsPaths(projectRoot);
 
     expect(existsSync(paths.graph)).toBe(true);
@@ -34,9 +34,9 @@ describe('scaffoldLessons', () => {
     expect(result.rootRuleUpdated).toBe(true);
   });
 
-  it('is idempotent — re-running keeps a single block and reports graph skipped', () => {
-    scaffoldLessons(projectRoot);
-    const second = scaffoldLessons(projectRoot);
+  it('is idempotent — re-running keeps a single block and reports graph skipped', async () => {
+    await scaffoldLessons(projectRoot);
+    const second = await scaffoldLessons(projectRoot);
 
     const rootRule = readFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), 'utf8');
     const starts = rootRule.match(/<!-- agentsmesh:lessons-contract:start -->/g) ?? [];
@@ -47,7 +47,7 @@ describe('scaffoldLessons', () => {
     expect(second.rootRuleUpdated).toBe(false);
   });
 
-  it('appends the block to an existing root rule without disturbing other content', () => {
+  it('appends the block to an existing root rule without disturbing other content', async () => {
     mkdirSync(join(projectRoot, '.agentsmesh/rules'), { recursive: true });
     writeFileSync(
       join(projectRoot, '.agentsmesh/rules/_root.md'),
@@ -55,7 +55,7 @@ describe('scaffoldLessons', () => {
       'utf8',
     );
 
-    scaffoldLessons(projectRoot);
+    await scaffoldLessons(projectRoot);
 
     const rootRule = readFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), 'utf8');
     expect(rootRule).toContain('## Custom Section');

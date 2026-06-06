@@ -26,10 +26,7 @@ export function queryLessons(graph: LessonsGraph, query: LessonsQuery): MatchedL
     return [];
   }
 
-  const matchedTriggerIds = new Set<string>();
-  for (const [id, trigger] of Object.entries(graph.triggers)) {
-    if (triggerMatches(trigger, query)) matchedTriggerIds.add(id);
-  }
+  const matchedTriggerIds = collectMatchedTriggerIds(graph, query);
 
   const matched: MatchedLesson[] = [];
   for (const [id, lesson] of Object.entries(graph.lessons)) {
@@ -41,6 +38,15 @@ export function queryLessons(graph: LessonsGraph, query: LessonsQuery): MatchedL
 
   matched.sort((a, b) => (a.id < b.id ? -1 : 1));
   return matched;
+}
+
+/** The set of trigger ids that match the query — shared by recall and ranking. */
+export function collectMatchedTriggerIds(graph: LessonsGraph, query: LessonsQuery): Set<string> {
+  const ids = new Set<string>();
+  for (const [id, trigger] of Object.entries(graph.triggers)) {
+    if (triggerMatches(trigger, query)) ids.add(id);
+  }
+  return ids;
 }
 
 function triggerMatches(trigger: Trigger, query: LessonsQuery): boolean {

@@ -158,6 +158,21 @@ describe('importLegacyLessons — edge inputs', async () => {
     expect(existsSync(join(edge, '.agentsmesh/lessons/index.yaml'))).toBe(true);
   });
 
+  it('refuses to overwrite a lesson-less graph that still has topics/triggers without force', async () => {
+    // A graph with metadata but zero lessons must still be treated as populated:
+    // silently replacing its topics/triggers loses curated content.
+    saveLessonsGraph(edge, {
+      version: 1,
+      lessons: {},
+      topics: { 'hand-curated': { summary: 'Do not erase me.' } },
+      triggers: { t1: { kind: 'keyword', pattern: 'keepme' } },
+    });
+    await expect(importLegacyLessons(edge, { migratedAt: MIGRATED_AT })).rejects.toThrow(
+      /already exists|force/i,
+    );
+    expect(loadLessonsGraph(edge).topics['hand-curated']).toBeDefined();
+  });
+
   it('overwrites an existing graph only when force is set', async () => {
     saveLessonsGraph(edge, {
       version: 1,

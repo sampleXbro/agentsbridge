@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { maybeAutoMigrateLessons } from './auto-migrate.js';
 import { mutateLessonsGraph } from './mutate.js';
 import { lessonsPaths } from './paths.js';
 import {
@@ -31,6 +32,9 @@ export async function scaffoldLessons(projectRoot: string): Promise<ScaffoldLess
   const skipped: string[] = [];
 
   mkdirSync(paths.base, { recursive: true });
+  // Migrate a legacy store before scaffolding so a retrofit does not create an
+  // empty graph over still-unmigrated lessons (which would strand them forever).
+  await maybeAutoMigrateLessons(projectRoot);
   if (existsSync(paths.graph)) {
     skipped.push(paths.graph);
   } else {

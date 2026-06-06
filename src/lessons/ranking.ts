@@ -17,7 +17,12 @@ export interface RankedLesson {
 export interface RankOptions {
   /** Keep at most this many results (after ranking). */
   readonly limit?: number;
-  /** Keep results while their cumulative estimated rule-token cost fits. */
+  /**
+   * Best-effort token budget: keep results while their cumulative estimated
+   * rule-token cost fits. The single most-relevant result is ALWAYS returned
+   * even if it alone exceeds the budget — an empty recall for a matched query is
+   * worse for the agent than one slightly-over-budget rule.
+   */
   readonly maxTokens?: number;
 }
 

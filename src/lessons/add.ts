@@ -1,4 +1,5 @@
 import { makeLessonId, mergeTriggers, normalizeRule, todayIso, union } from './add-helpers.js';
+import { maybeAutoMigrateLessons } from './auto-migrate.js';
 import type { LessonsGraph } from './graph-schema.js';
 import { mutateLessonsGraph } from './mutate.js';
 
@@ -43,6 +44,11 @@ export async function addLesson(
   input: AddLessonInput,
   options: AddLessonOptions = {},
 ): Promise<AddLessonResult> {
+  // Migrate a legacy store FIRST so the very first public capture cannot strand
+  // it: creating lessons.json here would otherwise permanently block
+  // auto-migration. No-op (one stat) when a graph already exists. See
+  // maybeAutoMigrateLessons for the under-lock anti-clobber guarantee.
+  await maybeAutoMigrateLessons(projectRoot);
   return mutateLessonsGraph(projectRoot, (graph) => addLessonInto(graph, input, options), {
     retries: options.retries,
   });

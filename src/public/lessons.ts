@@ -58,7 +58,7 @@ export type {
 export { validateLessonsGraph } from '../lessons/validate.js';
 export type { ValidationFinding, ValidationLevel, ValidationReport } from '../lessons/validate.js';
 
-export { importLegacyLessons } from '../lessons/import-legacy.js';
+export { importLegacyLessons, LessonsGraphExistsError } from '../lessons/import-legacy.js';
 export type { ImportLegacyOptions, ImportLegacyReport } from '../lessons/import-legacy.js';
 
 export {

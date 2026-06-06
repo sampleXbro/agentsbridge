@@ -5938,6 +5938,79 @@
         "t-cmd-56d79bf7"
       ]
     },
+    "lessons-system-document-any-intentional-exception-to": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review-2026-06-06"
+      ],
+      "rule": "Document any intentional exception to lessons query token caps, such as always returning the top-ranked lesson even when it exceeds the cap.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-b39eff4f"
+      ]
+    },
+    "lessons-system-ensure-a-public-first-write": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review:2026-06-06-public-add-migration-race-probe"
+      ],
+      "rule": "Ensure a public first write cannot strand an existing legacy lessons store; migrate or reconcile legacy content under the same initialization lock before capture.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-1c770829",
+        "t-glob-6f2d56aa",
+        "t-kw-05eaa965"
+      ]
+    },
+    "lessons-system-export-stable-error-classes-thrown": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review-2026-06-06"
+      ],
+      "rule": "Export stable error classes thrown by public lessons APIs so callers can distinguish expected conflicts without depending on internal modules.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-7fc51540"
+      ]
+    },
+    "lessons-system-give-mandatory-lessons-recall-a": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review-2026-06-06"
+      ],
+      "rule": "Give mandatory lessons recall a bounded default token budget or compact output mode; a count-only default limit can emit many long, weakly related rules and waste context.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-4eefad64",
+        "t-cmd-541fec4c"
+      ]
+    },
+    "lessons-system-keep-every-lessons-implementation-file": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review-2026-06-06"
+      ],
+      "rule": "Keep every lessons implementation file at or below the repository 200-line limit; split ranking helpers by responsibility before completion.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-07cf19c0"
+      ]
+    },
     "lessons-system-keep-lessons-reference-documentation-syn": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -5953,6 +6026,21 @@
         "t-kw-07fc7c10"
       ]
     },
+    "lessons-system-keep-lessons-trigger-fanout-bounded": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review-2026-06-06"
+      ],
+      "rule": "Keep lessons trigger fanout bounded and specific; treat HIGH_FANOUT_TRIGGERS validation warnings as a recall-precision and token-efficiency defect.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-0465888e",
+        "t-cmd-dadbee8a"
+      ]
+    },
     "lessons-system-make-legacy-auto-migration-check": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -5966,6 +6054,21 @@
       "triggers": [
         "t-glob-d3bf322e",
         "t-cmd-73382791"
+      ]
+    },
+    "lessons-system-make-lessons-scaffolding-migrate-an": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review:2026-06-06-scaffold-legacy-probe"
+      ],
+      "rule": "Make lessons scaffolding migrate an existing legacy store instead of creating an empty graph that permanently blocks auto-migration.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-8148e382",
+        "t-glob-1c770829"
       ]
     },
     "lessons-system-make-public-legacy-import-refuse": {
@@ -5997,6 +6100,21 @@
         "t-glob-8e1b0ea0"
       ]
     },
+    "lessons-system-re-export-every-error-class": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "public/lessons.ts:61"
+      ],
+      "rule": "Re-export every error class a public function is documented to throw (e.g. LessonsGraphExistsError) from the package public surface, so consumers can catch it via instanceof rather than string-matching messages.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-285fdf8b",
+        "t-kw-f3654aad"
+      ]
+    },
     "lessons-system-route-every-lessons-graph-writer": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -6026,6 +6144,20 @@
         "t-glob-0b5c0a21"
       ]
     },
+    "lessons-system-treat-any-existing-lessons-graph": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review:2026-06-06-import-metadata-overwrite-probe"
+      ],
+      "rule": "Treat any existing lessons graph content, including topics or triggers without lessons, as populated when deciding whether legacy import requires force.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-d3bf322e"
+      ]
+    },
     "lessons-system-treat-each-repeated-trigger-flag": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -6039,6 +6171,21 @@
       "triggers": [
         "t-glob-8e1b0ea0",
         "t-cmd-56d79bf7"
+      ]
+    },
+    "lessons-system-when-guarding-an-import-migration": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "import-legacy.ts:114"
+      ],
+      "rule": "When guarding an import/migration against clobbering an existing lessons graph, treat the graph as populated if it has ANY lessons, topics, OR triggers — not lessons alone; a metadata-only graph must not be silently overwritten without force.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-d3bf322e",
+        "t-kw-20cd8977"
       ]
     },
     "lessons-system-when-testing-direct-legacy-import": {
@@ -8814,6 +8961,21 @@
         "t-kw-78dbe6f9"
       ]
     },
+    "verification-workflow-run-package-surface-analyzers-such": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review-2026-06-06"
+      ],
+      "rule": "Run package-surface analyzers such as attw only after the build finishes; running them concurrently with a dist-cleaning build can falsely report missing types.",
+      "status": "active",
+      "topics": [
+        "verification-workflow"
+      ],
+      "triggers": [
+        "t-glob-5e0d226f",
+        "t-cmd-8c4a10c7"
+      ]
+    },
     "watch-and-test-timing-rule-1": {
       "createdAt": "2026-06-05",
       "evidence": [
@@ -10341,6 +10503,9 @@
     "typescript-esm-cycles": {
       "summary": "TypeScript strict + ESM cycles — TDZ traps in descriptor literals, third-file import-mappers, lazy registry caches, union narrowing."
     },
+    "verification-workflow": {
+      "summary": "Reliable ordering and interpretation of repository verification gates."
+    },
     "watch-and-test-timing": {
       "summary": "Watch tests, harness import, vi.waitFor budgets, chokidar polling in tests, onCycle synchronization, parallel test isolation."
     },
@@ -10421,6 +10586,10 @@
       "kind": "command_pattern",
       "pattern": "^rg "
     },
+    "t-cmd-541fec4c": {
+      "kind": "command_pattern",
+      "pattern": "agentsmesh lessons query"
+    },
     "t-cmd-56d79bf7": {
       "kind": "command_pattern",
       "pattern": "agentsmesh lessons add"
@@ -10464,6 +10633,10 @@
     "t-cmd-8ab47a8c": {
       "kind": "command_pattern",
       "pattern": "/bin/zsh"
+    },
+    "t-cmd-8c4a10c7": {
+      "kind": "command_pattern",
+      "pattern": "pnpm attw"
     },
     "t-cmd-8e9837a3": {
       "kind": "command_pattern",
@@ -10525,6 +10698,10 @@
       "kind": "command_pattern",
       "pattern": "install --as"
     },
+    "t-cmd-dadbee8a": {
+      "kind": "command_pattern",
+      "pattern": "agentsmesh lessons (query|validate)"
+    },
     "t-cmd-dbf01710": {
       "kind": "command_pattern",
       "pattern": "refresh --global"
@@ -10584,6 +10761,14 @@
     "t-cmd-fe0fbdb4": {
       "kind": "command_pattern",
       "pattern": "uninstall --global"
+    },
+    "t-glob-0465888e": {
+      "kind": "file_glob",
+      "pattern": ".agentsmesh/lessons/lessons.json"
+    },
+    "t-glob-07cf19c0": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/**/*.ts"
     },
     "t-glob-08cf5afd": {
       "kind": "file_glob",
@@ -10653,6 +10838,10 @@
       "kind": "file_glob",
       "pattern": "src/core/generate/collision.ts"
     },
+    "t-glob-1c770829": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/auto-migrate.ts"
+    },
     "t-glob-1fe91ebe": {
       "kind": "file_glob",
       "pattern": "tests/fixtures/**"
@@ -10680,6 +10869,10 @@
     "t-glob-2741c10d": {
       "kind": "file_glob",
       "pattern": "tests/e2e/**/*.test.ts"
+    },
+    "t-glob-285fdf8b": {
+      "kind": "file_glob",
+      "pattern": "src/public/*.ts"
     },
     "t-glob-2ae846c8": {
       "kind": "file_glob",
@@ -10749,6 +10942,10 @@
       "kind": "file_glob",
       "pattern": "SHA256SUMS"
     },
+    "t-glob-4eefad64": {
+      "kind": "file_glob",
+      "pattern": "src/cli/commands/lessons-handlers.ts"
+    },
     "t-glob-51b8926c": {
       "kind": "file_glob",
       "pattern": "tests/**/link-rebaser*.test.ts"
@@ -10780,6 +10977,10 @@
     "t-glob-5c64f830": {
       "kind": "file_glob",
       "pattern": "src/core/reference/link-rebaser*.ts"
+    },
+    "t-glob-5e0d226f": {
+      "kind": "file_glob",
+      "pattern": "package.json"
     },
     "t-glob-5e91e1bb": {
       "kind": "file_glob",
@@ -10821,6 +11022,10 @@
       "kind": "file_glob",
       "pattern": ".github/workflows/release.yml"
     },
+    "t-glob-6f2d56aa": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/add.ts"
+    },
     "t-glob-7458228a": {
       "kind": "file_glob",
       "pattern": "src/cli/scope-context*.ts"
@@ -10852,6 +11057,14 @@
     "t-glob-7f704930": {
       "kind": "file_glob",
       "pattern": ".github/workflows/ci.yml"
+    },
+    "t-glob-7fc51540": {
+      "kind": "file_glob",
+      "pattern": "src/public/lessons.ts"
+    },
+    "t-glob-8148e382": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/init.ts"
     },
     "t-glob-848355ab": {
       "kind": "file_glob",
@@ -11172,6 +11385,10 @@
     "t-kw-1dfd56af": {
       "kind": "keyword",
       "pattern": "--global"
+    },
+    "t-kw-20cd8977": {
+      "kind": "keyword",
+      "pattern": "overwrite clobber populated graph"
     },
     "t-kw-21a8e9ec": {
       "kind": "keyword",
@@ -11900,6 +12117,10 @@
     "t-kw-f24436d2": {
       "kind": "keyword",
       "pattern": "third-party"
+    },
+    "t-kw-f3654aad": {
+      "kind": "keyword",
+      "pattern": "public export error class instanceof"
     },
     "t-kw-f4c73005": {
       "kind": "keyword",

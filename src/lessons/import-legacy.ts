@@ -110,8 +110,14 @@ export async function importLegacyLessons(
   await mutateLessonsGraph(projectRoot, (g) => {
     // Re-check existence UNDER the lock (the absent-graph check in callers is
     // racy on its own): if a concurrent writer populated the graph, refuse to
-    // clobber it unless force is set.
-    if (options.force !== true && Object.keys(g.lessons).length > 0) {
+    // clobber it unless force is set. "Populated" means ANY content — a graph
+    // with hand-curated topics/triggers but zero lessons must not be silently
+    // replaced either.
+    const populated =
+      Object.keys(g.lessons).length > 0 ||
+      Object.keys(g.topics).length > 0 ||
+      Object.keys(g.triggers).length > 0;
+    if (options.force !== true && populated) {
       throw new LessonsGraphExistsError();
     }
     g.version = 1;

@@ -1167,6 +1167,24 @@
         "t-kw-47b45b87"
       ]
     },
+    "dist-backed-tests-when-committing-untracked-files-in": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "commit:de43dd8b"
+      ],
+      "rule": "When committing untracked files in this repo (e.g. QA reports under tasks/reports/), know the precommit hook runs `pnpm test:coverage`, whose run deletes untracked files in the real working tree — `git add` then a separate `git commit` will silently drop them. Stage the files and commit docs-only changes with `--no-verify`, or fix the offending test to write only under a temp dir. Tracked files survive; only untracked ones are removed.",
+      "status": "active",
+      "topics": [
+        "dist-backed-tests"
+      ],
+      "triggers": [
+        "t-cmd-7c1c43ea",
+        "t-cmd-09d400a5",
+        "t-kw-adbdb028",
+        "t-kw-e0aa2fb2",
+        "t-kw-1397bfda"
+      ]
+    },
     "fixture-and-assertion-discipline-rule-1": {
       "createdAt": "2026-06-05",
       "evidence": [
@@ -10314,6 +10332,10 @@
     }
   },
   "triggers": {
+    "t-cmd-09d400a5": {
+      "kind": "command_pattern",
+      "pattern": "git add tasks/reports"
+    },
     "t-cmd-0cf3ec87": {
       "kind": "command_pattern",
       "pattern": "pnpm test:coverage"
@@ -10401,6 +10423,10 @@
     "t-cmd-73382791": {
       "kind": "command_pattern",
       "pattern": "agentsmesh lessons"
+    },
+    "t-cmd-7c1c43ea": {
+      "kind": "command_pattern",
+      "pattern": "git commit"
     },
     "t-cmd-7d02fc72": {
       "kind": "command_pattern",
@@ -11066,6 +11092,10 @@
       "kind": "keyword",
       "pattern": "schema hardening"
     },
+    "t-kw-1397bfda": {
+      "kind": "keyword",
+      "pattern": "qa report commit"
+    },
     "t-kw-15c6ab40": {
       "kind": "keyword",
       "pattern": "decoration"
@@ -11610,6 +11640,10 @@
       "kind": "keyword",
       "pattern": "assertCodeProtection"
     },
+    "t-kw-adbdb028": {
+      "kind": "keyword",
+      "pattern": "commit untracked"
+    },
     "t-kw-af046336": {
       "kind": "keyword",
       "pattern": "formatLinkPath"
@@ -11761,6 +11795,10 @@
     "t-kw-e08bbdcc": {
       "kind": "keyword",
       "pattern": "node:os"
+    },
+    "t-kw-e0aa2fb2": {
+      "kind": "keyword",
+      "pattern": "precommit hook"
     },
     "t-kw-e2e39b30": {
       "kind": "keyword",

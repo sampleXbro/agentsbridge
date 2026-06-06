@@ -5938,6 +5938,34 @@
         "t-cmd-56d79bf7"
       ]
     },
+    "lessons-system-do-not-export-a-raw": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review-2026-06-06-global-v2"
+      ],
+      "rule": "Do not export a raw graph mutator as a stable ordinary-write API when it can strand legacy data; make it internal or require an explicit already-initialized capability, and route public writes through migration-aware application services.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-7fc51540"
+      ]
+    },
+    "lessons-system-do-not-treat-star-height": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review-2026-06-06-global-v2"
+      ],
+      "rule": "Do not treat star-height-only regex analysis as a complete ReDoS guarantee; reject ambiguous repeated alternation, optional-overlap, and overlapping sequential quantifiers, or replace JavaScript regex command triggers with a provably linear matcher.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-ee01c259"
+      ]
+    },
     "lessons-system-document-any-intentional-exception-to": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -6173,6 +6201,25 @@
         "t-kw-9520fa61",
         "t-kw-c8f23353",
         "t-kw-ae9d9bb9"
+      ]
+    },
+    "lessons-system-redos-protection-for-user-supplied": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "lesson:lessons-system-redos-fail-closed"
+      ],
+      "rule": "ReDoS protection for user-supplied regexes executed on a hot path (e.g. lessons command_pattern recall) MUST fail closed: accept only a provably-linear subset and reject everything else. Heuristic \"detect the unsafe shape\" approaches (star-height / nested-repetition detectors) fail open — bypasses include (a|aa)+, (a|a?)+, and a+a+ (no nested repetition, still catastrophic). Either run a linear engine (RE2) or allowlist-reject quantified groups, adjacent repetition, backreferences, and lookarounds.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-ee01c259",
+        "t-glob-c9dfc34a",
+        "t-kw-d3364734",
+        "t-kw-20503645",
+        "t-kw-53259aa5",
+        "t-kw-0e525ea1"
       ]
     },
     "lessons-system-reject-or-safely-execute-command": {
@@ -9035,6 +9082,21 @@
         "t-kw-78dbe6f9"
       ]
     },
+    "verification-workflow-do-not-run-dist-dependent": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review-2026-06-06-global-v2"
+      ],
+      "rule": "Do not run dist-dependent E2E tests concurrently with a build or full test command that cleans and recreates dist; build first, then run those E2E tests serially to avoid false MODULE_NOT_FOUND failures.",
+      "status": "active",
+      "topics": [
+        "verification-workflow"
+      ],
+      "triggers": [
+        "t-glob-7fd56163",
+        "t-cmd-8695c374"
+      ]
+    },
     "verification-workflow-run-package-surface-analyzers-such": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -9048,6 +9110,20 @@
       "triggers": [
         "t-glob-5e0d226f",
         "t-cmd-8c4a10c7"
+      ]
+    },
+    "verification-workflow-verify-a-referenced-source-path": {
+      "createdAt": "2026-06-06",
+      "evidence": [
+        "review-2026-06-06-global-v2"
+      ],
+      "rule": "Verify a referenced source path exists before reading it during review; use rg --files or the actual import path instead of assuming an application.ts module name.",
+      "status": "active",
+      "topics": [
+        "verification-workflow"
+      ],
+      "triggers": [
+        "t-glob-0b59f983"
       ]
     },
     "verification-workflow-when-locating-a-globally-installed": {
@@ -10715,6 +10791,10 @@
       "kind": "command_pattern",
       "pattern": "spawnSync"
     },
+    "t-cmd-8695c374": {
+      "kind": "command_pattern",
+      "pattern": "pnpm (build|test)|vitest.*e2e"
+    },
     "t-cmd-8776ee66": {
       "kind": "command_pattern",
       "pattern": "npm publish"
@@ -11163,6 +11243,10 @@
       "kind": "file_glob",
       "pattern": "src/public/lessons.ts"
     },
+    "t-glob-7fd56163": {
+      "kind": "file_glob",
+      "pattern": "tests/e2e/**/*.ts"
+    },
     "t-glob-8148e382": {
       "kind": "file_glob",
       "pattern": "src/lessons/init.ts"
@@ -11355,6 +11439,10 @@
       "kind": "file_glob",
       "pattern": "scripts/**.sh"
     },
+    "t-glob-ee01c259": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/regex-safety.ts"
+    },
     "t-glob-f066a265": {
       "kind": "file_glob",
       "pattern": "tests/**/*watch*.test.ts"
@@ -11418,6 +11506,10 @@
     "t-kw-0dcff6e9": {
       "kind": "keyword",
       "pattern": "separator"
+    },
+    "t-kw-0e525ea1": {
+      "kind": "keyword",
+      "pattern": "command_pattern"
     },
     "t-kw-102a840c": {
       "kind": "keyword",
@@ -11494,6 +11586,10 @@
     "t-kw-1dfd56af": {
       "kind": "keyword",
       "pattern": "--global"
+    },
+    "t-kw-20503645": {
+      "kind": "keyword",
+      "pattern": "regex safety"
     },
     "t-kw-20cd8977": {
       "kind": "keyword",
@@ -11698,6 +11794,10 @@
     "t-kw-507def8b": {
       "kind": "keyword",
       "pattern": "frontmatter"
+    },
+    "t-kw-53259aa5": {
+      "kind": "keyword",
+      "pattern": "catastrophic backtracking"
     },
     "t-kw-53cd8eec": {
       "kind": "keyword",
@@ -12094,6 +12194,10 @@
     "t-kw-d29cd609": {
       "kind": "keyword",
       "pattern": "x-access-token"
+    },
+    "t-kw-d3364734": {
+      "kind": "keyword",
+      "pattern": "ReDoS"
     },
     "t-kw-d369192b": {
       "kind": "keyword",

@@ -1,102 +1,91 @@
 import { describe, expect, it } from 'vitest';
 import { getSafeCommandRegex, isSafeRegexPattern } from '../../../src/lessons/regex-safety.js';
 
-describe('isSafeRegexPattern', () => {
-  // Patterns drawn from the real lessons graph — all must stay safe so the new
-  // validation error never bricks existing command_pattern triggers.
+describe('isSafeRegexPattern (fail-closed linear subset)', () => {
+  // Accepted: the provably-linear subset. Includes every real-graph pattern
+  // shape so the validation error never bricks existing command_pattern triggers.
   it.each([
     'git commit',
     'pnpm test:coverage',
     'install https?://',
     'sed.*SKILL.md',
     '^pnpm test:e2e',
-    '(npm|pnpm) root -g',
-    '<<EOF',
+    '(npm|pnpm) root -g', // unquantified alternation group
+    '(?:abc)d', // unquantified non-capturing group
+    '(?<name>abc)d', // unquantified named group
     "<<'EOF'",
     'node ./dist/cli.js',
-    '.*foo.*',
-    '(?:abc)+',
-    '(a|b)+',
-    'a{2,5}',
+    '.*foo.*', // two repetitions separated by a required literal — linear
+    'rg -n.*src/index\\.ts|rg -n.*src/lessons\\.ts', // repetitions in different branches
     'https?://example\\.com/.*',
-  ])('treats linear pattern %j as safe', (pattern) => {
+    'a?b?', // optional atoms, no repetition
+    '[a-z]+/[a-z]+', // repetitions separated by a required literal
+    'a+ba+', // repetitions separated by a required atom
+    'a{2,5}', // single bounded quantifier
+    'a{2}b',
+    '(ab)?c', // optional (non-repeating) group is transparent
+    '[\\d]+x', // char class containing an escape, single repetition
+    'a{2,5}?', // lazy bounded quantifier
+    'a*?b', // lazy star, single repetition
+  ])('accepts linear pattern %j', (pattern) => {
     expect(isSafeRegexPattern(pattern)).toBe(true);
   });
 
-  // Catastrophic-backtracking family (star height >= 2).
+  // Rejected: everything outside the linear subset (fail closed).
   it.each([
+    // Reviewer-reported bypasses of the old heuristic:
+    '(a|aa)+$',
+    '(a|a?)+$',
+    'a+a+$',
+    // Nested repetition / quantified groups:
     '(a+)+$',
     '(a+)+',
     '(a*)*',
     '(\\w+)*',
     '([a-z]+)+',
-    '(\\d+)*\\d+',
-    '((\\w+))+',
     '(.*)*',
     '(a{2,})+',
-  ])('treats nested-repetition pattern %j as unsafe', (pattern) => {
+    '(?:abc)+', // quantified non-capturing group
+    '(?<name>abc)+', // quantified named group
+    '(abc)+',
+    // Adjacent repetition (transparent across groups / optionals):
+    '.*.*',
+    '\\w+\\w+',
+    '(a+)(a+)$',
+    'a+b?a+',
+    'a+[bc]+', // repetition then an adjacent repeated char class
+    '((\\w+))+',
+    // Backtracking-only features (RE2-class engines forbid these):
+    '(a)\\1',
+    '\\k<n>x',
+    '(?=foo)bar',
+    '(?!foo)bar',
+    '(?<=foo)bar',
+    '(?<!foo)bar',
+  ])('rejects non-linear pattern %j', (pattern) => {
     expect(isSafeRegexPattern(pattern)).toBe(false);
   });
 
-  it('treats an over-long pattern as unsafe', () => {
+  it('rejects an over-long pattern', () => {
     expect(isSafeRegexPattern('a'.repeat(1001))).toBe(false);
   });
 
-  it('does not hang and reports unsafe for the classic ReDoS pattern', () => {
-    // The detector itself must be cheap regardless of how evil the pattern is.
+  it('the detector itself is cheap on adversarial patterns', () => {
     expect(isSafeRegexPattern('(a+)+(b+)+(c+)+$')).toBe(false);
-  });
-
-  // Group-prefix forms must all parse as ordinary groups (no false positives).
-  it.each([
-    '(?=foo)bar', // lookahead
-    '(?!foo)bar', // negative lookahead
-    '(?<=foo)bar', // lookbehind
-    '(?<!foo)bar', // negative lookbehind
-    '(?<name>ab)+', // named capture, repeated (safe)
-    '(?:ab)+', // non-capturing, repeated (safe)
-  ])('treats group-prefix pattern %j as safe', (pattern) => {
-    expect(isSafeRegexPattern(pattern)).toBe(true);
-  });
-
-  it('flags nested repetition inside a non-capturing group as unsafe', () => {
-    expect(isSafeRegexPattern('(?:\\w+)+')).toBe(false);
-  });
-
-  // Quantifier variants: lazy and brace forms.
-  it.each(['a+?', 'a*?', 'a{2,}?', 'a{2}', 'a{x}b'])(
-    'treats single-quantifier pattern %j as safe',
-    (pattern) => {
-      expect(isSafeRegexPattern(pattern)).toBe(true);
-    },
-  );
-
-  it.each(['(a+?)+', '(a{2,})+?'])(
-    'treats nested lazy/brace repetition %j as unsafe',
-    (pattern) => {
-      expect(isSafeRegexPattern(pattern)).toBe(false);
-    },
-  );
-
-  it('handles a character class containing an escaped bracket', () => {
-    expect(isSafeRegexPattern('[\\]]+')).toBe(true);
-    expect(isSafeRegexPattern('([\\]]+)+')).toBe(false);
-  });
-
-  it('does not crash on an unbalanced close paren (defers to the validity gate)', () => {
-    expect(isSafeRegexPattern('abc)')).toBe(true); // structurally "safe"; invalid regex caught elsewhere
   });
 });
 
 describe('getSafeCommandRegex', () => {
-  it('returns a working RegExp for a safe pattern', () => {
+  it('returns a working RegExp for an accepted pattern', () => {
     const re = getSafeCommandRegex('git\\s+commit');
     expect(re).toBeInstanceOf(RegExp);
     expect(re?.test('git   commit')).toBe(true);
     expect(re?.test('git status')).toBe(false);
   });
 
-  it('returns null for a ReDoS-unsafe pattern (never executed by recall)', () => {
+  it('returns null for a non-linear pattern (recall never executes it)', () => {
+    expect(getSafeCommandRegex('(a|aa)+$')).toBeNull();
+    expect(getSafeCommandRegex('a+a+$')).toBeNull();
     expect(getSafeCommandRegex('(a+)+$')).toBeNull();
   });
 
@@ -108,5 +97,10 @@ describe('getSafeCommandRegex', () => {
     const a = getSafeCommandRegex('memo-test-pattern');
     const b = getSafeCommandRegex('memo-test-pattern');
     expect(a).toBe(b);
+  });
+
+  it('memoizes the null result for a rejected pattern', () => {
+    expect(getSafeCommandRegex('(a+)+x')).toBeNull();
+    expect(getSafeCommandRegex('(a+)+x')).toBeNull(); // second call hits the cached null
   });
 });

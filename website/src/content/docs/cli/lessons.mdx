@@ -118,7 +118,7 @@ Results are **relevance-ranked** (BM25 over rule text fused with trigger specifi
 | `--rule "<text>"` | **Required.** Imperative rule that prevents recurrence. |
 | `--topic <id>` | **Required.** Topic id. Pass `--new-topic --topic-summary "..."` to create one. |
 | `--trigger-file <glob>` | `file_glob` trigger. Opaque — repeat the flag for multiple (commas kept). |
-| `--trigger-cmd <regex>` | `command_pattern` trigger. Opaque — repeat for multiple; must be a valid **and** ReDoS-safe regex (an invalid one, or a catastrophic-backtracking one like `(a+)+`, is rejected at capture). |
+| `--trigger-cmd <regex>` | `command_pattern` trigger. Opaque — repeat for multiple; must be a valid regex within the **provably-linear subset** (no quantified groups `(…)+`, adjacent repetition `a+a+`, backreferences, or lookarounds). Anything else is rejected at capture — recall executes these on every command, so it fails closed against ReDoS. |
 | `--trigger-kw <text>` | `keyword` trigger. Opaque — repeat the flag for multiple (commas kept). |
 | `--evidence <ref>` | Evidence reference (`commit:SHA`, `lesson:id`, …). Comma-separate for multiple. |
 | `--rationale <text>` | One-line "why" behind the rule. |

@@ -59,7 +59,7 @@ export function collectInvalidTriggerPatterns(
       findings.push({
         level: 'error',
         code: 'UNSAFE_TRIGGER_PATTERN',
-        message: `Trigger "${triggerId}" has a ReDoS-unsafe command_pattern regex (${trigger.pattern}): nested repetition can backtrack catastrophically. Rewrite without a repetition inside a repeated group (e.g. avoid (a+)+).`,
+        message: `Trigger "${triggerId}" has a command_pattern regex outside the provably-linear subset (${trigger.pattern}): it can backtrack catastrophically (e.g. a quantified group like (a+)+ or (a|aa)+, adjacent repetition like a+a+, or a backreference/lookaround). Rewrite using a linear pattern.`,
         triggerId,
       });
     }

@@ -14,6 +14,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { captureLesson, recallLessons } from '../../src/lessons/recall.js';
+import { mutateLessonsGraph } from '../../src/lessons/mutate.js';
 import { tryLoadLessonsGraph } from '../../src/lessons/graph-store.js';
 import { lessonsPaths } from '../../src/lessons/paths.js';
 
@@ -84,6 +85,24 @@ describe('recallLessons', () => {
     expect(def.lessons.length).toBeLessThan(10);
     // An explicit null budget (with a high limit) returns the whole match set.
     expect(unlimited.lessons.length).toBe(20);
+  });
+});
+
+describe('mutateLessonsGraph (raw public write path)', () => {
+  it('migrates a legacy store on a first raw mutation — never strands index.yaml', async () => {
+    stageLegacy();
+    // The reviewer probe: a first RAW mutation must NOT create an empty graph
+    // over the legacy store. mutateLessonsGraph migrates before mutating.
+    await mutateLessonsGraph(root, () => {
+      /* no-op edit */
+    });
+    expect(existsSync(lessonsPaths(root).index)).toBe(false);
+    const graph = tryLoadLessonsGraph(root);
+    expect(graph).not.toBeNull();
+    expect(Object.keys(graph!.lessons).length).toBeGreaterThan(0);
+    // Recall then surfaces the migrated legacy lessons (not zero).
+    const recalled = await recallLessons(root, { keyword: 'alpha' }, { maxTokens: null });
+    expect(recalled.totalMatches).toBeGreaterThan(0);
   });
 });
 

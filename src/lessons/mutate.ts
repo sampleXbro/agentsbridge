@@ -1,3 +1,4 @@
+import { maybeAutoMigrateLessons } from './auto-migrate.js';
 import type { LessonsGraph } from './graph-schema.js';
 import { saveLessonsGraph, tryLoadLessonsGraph } from './graph-store.js';
 import { acquireLessonsLock } from './lessons-lock.js';
@@ -12,17 +13,19 @@ function emptyGraph(): LessonsGraph {
 }
 
 /**
- * The single transactional write path for the lessons graph: acquire the lock,
+ * The raw transactional write path (NO legacy migration): acquire the lock,
  * load (or start empty), apply `mutator`, **validate**, and only then persist
- * via the atomic save. Every mutating operation (add, merge, deprecate,
- * strip-markers, …) routes through here so writes are serialized, never
- * truncate the file, and never persist an error-level-invalid graph.
+ * via the atomic save. Writes are serialized, never truncate the file, and never
+ * persist an error-level-invalid graph.
  *
- * The mutator receives the live graph and mutates it in place; its return value
- * is forwarded to the caller. If validation finds any error-level finding, the
- * change is discarded (nothing is written) and the call throws.
+ * INTERNAL — not exported from the public surface. The legacy migrator
+ * (`importLegacyLessons`) and scaffolding (`scaffoldLessons`) write through here
+ * precisely because they must NOT trigger migration: the migrator IS the
+ * migration (calling the migrating `mutateLessonsGraph` would recurse) and
+ * scaffolding deliberately creates a fresh empty graph. Every other writer uses
+ * `mutateLessonsGraph` below so a first write can never strand a legacy store.
  */
-export async function mutateLessonsGraph<T>(
+export async function mutateLessonsGraphLocked<T>(
   projectRoot: string,
   mutator: (graph: LessonsGraph) => T | Promise<T>,
   options: MutateOptions = {},
@@ -49,4 +52,22 @@ export async function mutateLessonsGraph<T>(
   } finally {
     await release();
   }
+}
+
+/**
+ * The public transactional write path: migrate a legacy store FIRST (so even a
+ * first raw mutation cannot create an empty `lessons.json` and strand
+ * `index.yaml`), then run the locked transaction. Every mutating operation
+ * (add, merge, deprecate, strip-markers, …) and any third-party consumer routes
+ * through here. `maybeAutoMigrateLessons` is a no-op (one stat) when a graph
+ * already exists or no legacy index is present, and runs before the lock is
+ * taken, so there is no re-entrancy with the migrator's own locked write.
+ */
+export async function mutateLessonsGraph<T>(
+  projectRoot: string,
+  mutator: (graph: LessonsGraph) => T | Promise<T>,
+  options: MutateOptions = {},
+): Promise<Awaited<T>> {
+  await maybeAutoMigrateLessons(projectRoot);
+  return mutateLessonsGraphLocked(projectRoot, mutator, options);
 }

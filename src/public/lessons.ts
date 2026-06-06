@@ -27,23 +27,24 @@ export type {
 export { recallLessons, captureLesson } from '../lessons/recall.js';
 export type { RecallOptions, RecallResult } from '../lessons/recall.js';
 
-// Low-level primitives. NOTE: these do NOT migrate a legacy store — a first
-// read/write via them on a legacy project would create an empty `lessons.json`
-// and strand `index.yaml`. Migration cannot live in `mutateLessonsGraph` because
-// the migrator writes through it (would recurse). If you must use a primitive on
-// a possibly-legacy project, call `maybeAutoMigrateLessons` first, or just use
-// `recallLessons` / `captureLesson` above. Raw `saveLessonsGraph` is
-// intentionally NOT exported — it bypasses locking and validation; use
-// `mutateLessonsGraph` so the transaction boundary cannot be circumvented.
+// The transactional write path. `mutateLessonsGraph` MIGRATES a legacy store
+// first (so even a first raw write cannot strand `index.yaml`) — it is safe to
+// use directly. Raw `saveLessonsGraph` is intentionally NOT exported — it
+// bypasses locking and validation; use `mutateLessonsGraph` so the transaction
+// boundary (lock → load → mutate → validate → atomic save) cannot be
+// circumvented.
+export { mutateLessonsGraph } from '../lessons/mutate.js';
+export type { MutateOptions } from '../lessons/mutate.js';
+
+// Low-level READ primitives. NOTE: these do NOT migrate — a first read via them
+// on a legacy project sees no graph. Use `recallLessons` (migrating) for recall,
+// or call `maybeAutoMigrateLessons` first.
 export {
   graphFilePath,
   loadLessonsGraph,
   serializeGraph,
   tryLoadLessonsGraph,
 } from '../lessons/graph-store.js';
-
-export { mutateLessonsGraph } from '../lessons/mutate.js';
-export type { MutateOptions } from '../lessons/mutate.js';
 
 export { maybeAutoMigrateLessons } from '../lessons/auto-migrate.js';
 

@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { maybeAutoMigrateLessons } from './auto-migrate.js';
-import { mutateLessonsGraph } from './mutate.js';
+import { mutateLessonsGraphLocked } from './mutate.js';
 import { lessonsPaths } from './paths.js';
 import {
   appendLessonsParagraph,
@@ -41,7 +41,7 @@ export async function scaffoldLessons(projectRoot: string): Promise<ScaffoldLess
     // Create the empty graph through the transactional path so even the initial
     // write holds the lock and re-reads under it — it cannot clobber a graph a
     // concurrent writer just created.
-    await mutateLessonsGraph(projectRoot, () => {});
+    await mutateLessonsGraphLocked(projectRoot, () => {});
     created.push(paths.graph);
   }
 

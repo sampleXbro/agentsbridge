@@ -9,7 +9,7 @@ import {
   parseRulesSection,
 } from './import-legacy-parse.js';
 import { lessonsPaths } from './paths.js';
-import { mutateLessonsGraph } from './mutate.js';
+import { mutateLessonsGraphLocked } from './mutate.js';
 
 export interface ImportLegacyOptions {
   /** ISO date stamped onto every imported lesson's `createdAt`. */
@@ -107,7 +107,7 @@ export async function importLegacyLessons(
   // atomic save. mutate throws on any error-level finding (e.g. two identical
   // legacy rules → DUPLICATE_RULE), so an invalid migration never persists and
   // the legacy source below is left intact (fail closed).
-  await mutateLessonsGraph(projectRoot, (g) => {
+  await mutateLessonsGraphLocked(projectRoot, (g) => {
     // Re-check existence UNDER the lock (the absent-graph check in callers is
     // racy on its own): if a concurrent writer populated the graph, refuse to
     // clobber it unless force is set. "Populated" means ANY content — a graph

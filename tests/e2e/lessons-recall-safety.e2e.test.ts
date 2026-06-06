@@ -24,25 +24,29 @@ afterEach(() => {
 });
 
 describe('lessons CLI — ReDoS guard (P1)', () => {
-  it('rejects a capture with a catastrophic-backtracking command_pattern', async () => {
-    const r = await runCliArgs(
-      [
-        'lessons',
-        'add',
-        'redos rule',
-        '--topic',
-        'sec',
-        '--new-topic',
-        '--topic-summary',
-        'security',
-        '--trigger-cmd',
-        '(a+)+$',
-      ],
-      dir,
-    );
-    expect(r.exitCode).toBe(1);
-    expect(r.stderr).toContain('UNSAFE_TRIGGER_PATTERN');
-  });
+  // Includes the reviewer-reported bypasses of the old star-height heuristic.
+  it.each(['(a+)+$', '(a|aa)+$', '(a|a?)+$', 'a+a+$'])(
+    'rejects a capture with catastrophic-backtracking command_pattern %j',
+    async (pattern) => {
+      const r = await runCliArgs(
+        [
+          'lessons',
+          'add',
+          'redos rule',
+          '--topic',
+          'sec',
+          '--new-topic',
+          '--topic-summary',
+          'security',
+          '--trigger-cmd',
+          pattern,
+        ],
+        dir,
+      );
+      expect(r.exitCode).toBe(1);
+      expect(r.stderr).toContain('UNSAFE_TRIGGER_PATTERN');
+    },
+  );
 
   it('accepts a linear command_pattern', async () => {
     const r = await runCliArgs(

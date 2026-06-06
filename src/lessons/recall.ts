@@ -17,17 +17,18 @@ import {
 /**
  * Migration-aware application APIs for the lessons subsystem.
  *
- * The low-level primitives (`tryLoadLessonsGraph`, `mutateLessonsGraph`,
- * `addLesson`) intentionally do NOT run the legacy→JSON migration: the migrator
- * itself writes through `mutateLessonsGraph`, so embedding migration there would
- * recurse. That left a gap — a downstream consumer (or the public API) doing a
- * first read/write via the primitives would create an empty `lessons.json` and
- * permanently strand a legacy `index.yaml`.
+ * The WRITE path migrates automatically: `mutateLessonsGraph` (and everything
+ * built on it — `addLesson`, `mergeLessons`, deprecate, strip-markers) runs the
+ * legacy→JSON migration before mutating, so even a first raw write can never
+ * create an empty `lessons.json` over an unmigrated `index.yaml`. (The migrator
+ * and scaffolding use the internal `mutateLessonsGraphLocked` to avoid
+ * recursing.)
  *
- * `recallLessons` and `captureLesson` are the blessed entry points: each runs
- * `maybeAutoMigrateLessons` first, so any caller — CLI, MCP, or third-party
- * tooling — migrates a legacy store before reading or writing. Prefer these over
- * the primitives; reach for the primitives only when you have already migrated.
+ * The low-level READ primitives (`tryLoadLessonsGraph`, `loadLessonsGraph`,
+ * `queryLessons`) do NOT migrate — a first read through them on a legacy project
+ * would see no graph. `recallLessons` closes that: it migrates first, then
+ * loads + ranks. `captureLesson` is the symmetric capture entry point. Prefer
+ * these application APIs; reach for the read primitives only post-migration.
  */
 
 export interface RecallOptions {

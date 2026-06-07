@@ -1,41 +1,22 @@
 /**
- * Parser for the linear command_pattern matcher: regex source → AST.
- *
- * Supports the constructs real command triggers use — literals, escapes
- * (`\d \w \s \. …`), `.`, char classes, anchors (`^ $ \b \B`), groups, `|`, and
- * quantifiers (`* + ?`, `{n} {n,} {n,m}`, lazy variants). Throws
- * {@link UnsupportedRegexError} for backreferences and lookarounds — features a
- * non-backtracking (linear) engine cannot evaluate. Bounded `{n,m}` is expanded
- * at parse time; an absurd upper bound is rejected to keep the NFA small.
+ * Parser for the linear command_pattern matcher: regex source → AST. Supports
+ * literals, escapes (`\d \w \s`, `\xHH`, `\uHHHH`, `\cX`, control chars), `.`,
+ * char classes, anchors (`^ $ \b \B`), groups, `|`, and quantifiers (`* + ?`,
+ * `{n,m}`, lazy). Throws {@link UnsupportedRegexError} for backreferences and
+ * lookarounds (a non-backtracking engine cannot evaluate them); bounded `{n,m}`
+ * is expanded at parse time with an upper bound to keep the NFA small.
  */
 
-export type AstNode =
-  | { k: 'empty' }
-  | { k: 'char'; ch: string }
-  | { k: 'any' }
-  | { k: 'class'; test: (c: string) => boolean }
-  | { k: 'assert'; kind: 'start' | 'end' | 'wordB' | 'nonWordB' }
-  | { k: 'concat'; items: AstNode[] }
-  | { k: 'alt'; opts: AstNode[] }
-  | { k: 'star'; node: AstNode }
-  | { k: 'plus'; node: AstNode }
-  | { k: 'opt'; node: AstNode };
-
+import { type AstNode, UnsupportedRegexError } from './ast.js';
 import {
   classEscapeChar,
   escapeClass,
   escapeLiteral,
   expandRepeat,
   MAX_REPEAT,
+  readControlEscape,
   readUnicodeEscape,
 } from './parse-helpers.js';
-
-export class UnsupportedRegexError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'UnsupportedRegexError';
-  }
-}
 
 export function parseRegex(src: string): AstNode {
   let i = 0;
@@ -152,8 +133,8 @@ export function parseRegex(src: string): AstNode {
     if (c === 'B') return { k: 'assert', kind: 'nonWordB' };
     const cls = escapeClass(c);
     if (cls !== null) return { k: 'class', test: cls };
-    if (c === 'x' || c === 'u') {
-      const { ch, len } = readUnicodeEscape(src, i, c);
+    if (c === 'x' || c === 'u' || c === 'c') {
+      const { ch, len } = c === 'c' ? readControlEscape(src, i) : readUnicodeEscape(src, i, c);
       i += len;
       return { k: 'char', ch };
     }

@@ -14,7 +14,7 @@
 import { buildMatcher, type LinearMatcher } from './nfa.js';
 import { parseRegex } from './parse.js';
 
-export type { LinearMatcher } from './nfa.js';
+export type { LinearMatcher, WorkBudget } from './nfa.js';
 
 const cache = new Map<string, LinearMatcher | null>();
 

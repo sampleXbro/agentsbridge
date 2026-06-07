@@ -1,6 +1,17 @@
 import picomatch from 'picomatch';
 import type { Lesson, LessonsGraph, Trigger } from './graph-schema.js';
 import { getCommandMatcher } from './regex-safety.js';
+import type { WorkBudget } from './regex-linear/index.js';
+
+/**
+ * Query-wide budget for command_pattern matching (NFA state-visits). ONE budget
+ * is shared across every trigger in a single recall, so total matching work is
+ * bounded regardless of how many near-cap patterns the graph holds — not just
+ * per pattern. ~5M state-visits ≈ a few hundred ms worst case; a normal query
+ * uses a tiny fraction. When exhausted, remaining command patterns are treated
+ * as non-matches (safe degradation, never a false positive).
+ */
+const COMMAND_MATCH_BUDGET = 5_000_000;
 
 export interface LessonsQuery {
   /** Project-relative path of the file about to be edited. */
@@ -44,13 +55,15 @@ export function queryLessons(graph: LessonsGraph, query: LessonsQuery): MatchedL
 /** The set of trigger ids that match the query — shared by recall and ranking. */
 export function collectMatchedTriggerIds(graph: LessonsGraph, query: LessonsQuery): Set<string> {
   const ids = new Set<string>();
+  // One budget shared across ALL command_pattern triggers in this query.
+  const budget: WorkBudget = { remaining: COMMAND_MATCH_BUDGET };
   for (const [id, trigger] of Object.entries(graph.triggers)) {
-    if (triggerMatches(trigger, query)) ids.add(id);
+    if (triggerMatches(trigger, query, budget)) ids.add(id);
   }
   return ids;
 }
 
-function triggerMatches(trigger: Trigger, query: LessonsQuery): boolean {
+function triggerMatches(trigger: Trigger, query: LessonsQuery, budget: WorkBudget): boolean {
   switch (trigger.kind) {
     case 'file_glob':
       if (query.file === undefined) return false;
@@ -60,8 +73,9 @@ function triggerMatches(trigger: Trigger, query: LessonsQuery): boolean {
       // Match via the non-backtracking linear engine — recall must never run a
       // backtracking regex on the hot path (see regex-safety.ts). null = the
       // pattern is unsupported/over-long; treat as a non-match (fail closed).
+      // The shared budget bounds total command-matching work query-wide.
       const matcher = getCommandMatcher(trigger.pattern);
-      return matcher !== null && matcher.test(query.command);
+      return matcher !== null && matcher.test(query.command, budget);
     }
     case 'keyword':
       if (query.keyword === undefined) return false;

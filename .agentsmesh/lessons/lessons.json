@@ -5876,6 +5876,21 @@
         "t-kw-67b4775f"
       ]
     },
+    "lessons-system-a-non-backtracking-matcher-used": {
+      "createdAt": "2026-06-07",
+      "evidence": [
+        "lesson:lessons-system-recall-work-budget"
+      ],
+      "rule": "A non-backtracking matcher used in mandatory recall needs a QUERY-WIDE work budget shared across all triggers (per-pattern state caps are insufficient: N near-cap patterns sum to N×cost). Bound total NFA work, not input length — do NOT truncate input (truncation misses suffix matches and lets $ falsely match the invented endpoint); instead degrade a budget-exhausted match to a safe non-match. Also match new-RegExp(no-flags) exactly for the documented subset: . excludes \\n \\r U+2028 U+2029; \\cX is a control char; reject (don't pass through) \\xZZ-style and \\c-non-letter rather than silently changing meaning.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-cd11277c",
+        "t-kw-abe95c07"
+      ]
+    },
     "lessons-system-an-in-repo-non-backtracking": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -5968,6 +5983,21 @@
         "t-cmd-56d79bf7"
       ]
     },
+    "lessons-system-differential-test-every-claimed-javascri": {
+      "createdAt": "2026-06-07",
+      "evidence": [
+        "7ee31c40"
+      ],
+      "rule": "Differential-test every claimed JavaScript-regex construct against new RegExp, including dot line terminators, dollar before a final newline, control escapes, classes, and long inputs; do not document full new RegExp semantics while accepted patterns can match differently.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-f238075d",
+        "t-kw-00447f91"
+      ]
+    },
     "lessons-system-do-not-claim-javascript-regex": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -5996,6 +6026,21 @@
         "t-glob-7fc51540"
       ]
     },
+    "lessons-system-do-not-silently-truncate-command": {
+      "createdAt": "2026-06-07",
+      "evidence": [
+        "7ee31c40"
+      ],
+      "rule": "Do not silently truncate command input before regex matching: truncation creates false negatives for suffix matches and false positives for end-anchored patterns by inventing a new end-of-input. Preserve full semantics or explicitly reject over-budget queries.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-633537fc",
+        "t-kw-b6410e25"
+      ]
+    },
     "lessons-system-do-not-treat-star-height": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -6022,6 +6067,21 @@
       ],
       "triggers": [
         "t-glob-b39eff4f"
+      ]
+    },
+    "lessons-system-enforce-an-effective-total-command": {
+      "createdAt": "2026-06-07",
+      "evidence": [
+        "7ee31c40"
+      ],
+      "rule": "Enforce an effective total command-matcher work budget across states, input length, and trigger count: merely capping each NFA at 2000 states still lets one accepted near-cap pattern add multi-second latency to every mandatory recall.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-f238075d",
+        "t-kw-db579650"
       ]
     },
     "lessons-system-enforce-the-content-addressed-trigger": {
@@ -6315,6 +6375,21 @@
       "triggers": [
         "t-glob-285fdf8b",
         "t-kw-f3654aad"
+      ]
+    },
+    "lessons-system-re-run-line-counts-after": {
+      "createdAt": "2026-06-07",
+      "evidence": [
+        "7ee31c40"
+      ],
+      "rule": "Re-run line counts after every lessons matcher change and split helpers before completion; adding semantic support pushed regex-linear/parse.ts beyond the repository's blocking 200-line maximum.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-d3ba8a40",
+        "t-kw-d4f6d2ba"
       ]
     },
     "lessons-system-recalllessons-capturelesson-take-project": {
@@ -7685,6 +7760,20 @@
         "t-kw-4510e8f5",
         "t-kw-9f5866db",
         "t-kw-5ab6ec91"
+      ]
+    },
+    "shell-quoting-construct-control-character-values-direc": {
+      "createdAt": "2026-06-07",
+      "evidence": [
+        "L331"
+      ],
+      "rule": "Construct control-character values directly in inline Node probes; do not interpolate raw control bytes into a JSON string and JSON.parse it, because raw line/control characters make the probe fail before testing the product.",
+      "status": "active",
+      "topics": [
+        "shell-quoting"
+      ],
+      "triggers": [
+        "t-kw-a03e44b6"
       ]
     },
     "shell-quoting-for-inline-typescript-eval-scripts": {
@@ -11553,6 +11642,10 @@
       "kind": "file_glob",
       "pattern": ".changeset/**"
     },
+    "t-glob-d3ba8a40": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/**"
+    },
     "t-glob-d3bf322e": {
       "kind": "file_glob",
       "pattern": "src/lessons/import-legacy.ts"
@@ -11620,6 +11713,10 @@
     "t-glob-fbb4298f": {
       "kind": "file_glob",
       "pattern": "src/install/picker/**"
+    },
+    "t-kw-00447f91": {
+      "kind": "keyword",
+      "pattern": "regex equivalence"
     },
     "t-kw-0181f5f4": {
       "kind": "keyword",
@@ -12229,6 +12326,10 @@
       "kind": "keyword",
       "pattern": "tmpdir"
     },
+    "t-kw-a03e44b6": {
+      "kind": "keyword",
+      "pattern": "control character probe"
+    },
     "t-kw-a0952c3a": {
       "kind": "keyword",
       "pattern": "pnpm test:e2e"
@@ -12268,6 +12369,10 @@
     "t-kw-aaf86e36": {
       "kind": "keyword",
       "pattern": "tsup"
+    },
+    "t-kw-abe95c07": {
+      "kind": "keyword",
+      "pattern": "work budget"
     },
     "t-kw-ac92bf30": {
       "kind": "keyword",
@@ -12320,6 +12425,10 @@
     "t-kw-b40bd704": {
       "kind": "keyword",
       "pattern": "parallel test"
+    },
+    "t-kw-b6410e25": {
+      "kind": "keyword",
+      "pattern": "command truncation"
     },
     "t-kw-b8002bf1": {
       "kind": "keyword",
@@ -12397,6 +12506,10 @@
       "kind": "keyword",
       "pattern": "setup-bun"
     },
+    "t-kw-d4f6d2ba": {
+      "kind": "keyword",
+      "pattern": "file size"
+    },
     "t-kw-d532cd06": {
       "kind": "keyword",
       "pattern": "URI skip"
@@ -12428,6 +12541,10 @@
     "t-kw-daf3f2d7": {
       "kind": "keyword",
       "pattern": "ReferenceError"
+    },
+    "t-kw-db579650": {
+      "kind": "keyword",
+      "pattern": "matcher work budget"
     },
     "t-kw-dd7e2f65": {
       "kind": "keyword",

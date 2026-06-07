@@ -73,6 +73,13 @@ const EQUIVALENCE: Array<{ pattern: string; inputs: string[] }> = [
   // A long ε-chain (accepted, just under the state cap): the iterative closure
   // must not overflow the call stack (a recursive walk would).
   { pattern: '(){900}', inputs: ['x', ''] },
+  // `.` excludes ALL line terminators (\n \r \u2028 \u2029), not just \n:
+  { pattern: 'a.b', inputs: ['axb', 'a\rb', 'a\u2028b', 'a\u2029b', 'a\nb'] },
+  // `$` follows no-`m` semantics: end of input only (not before a final newline):
+  { pattern: 'x$', inputs: ['x', 'x\n', 'xy', 'ax'] },
+  // `\cX` control escapes:
+  { pattern: '\\cA', inputs: ['\x01', 'cA', ''] },
+  { pattern: '\\cZ', inputs: ['\x1a', 'cZ'] },
 ];
 
 describe('linear engine — equivalence with RegExp on the supported subset', () => {
@@ -104,6 +111,7 @@ describe('linear engine — rejects what it cannot evaluate (fail closed)', () =
     '[a-z', // unterminated class
     '(){1000}'.repeat(5), // P1a: would overflow a recursive ε-closure — rejected by the state cap
     'a{1000}'.repeat(10), // P1b: NFA state amplification — rejected by the state cap
+    '\\c1', // \c not followed by a letter — rejected rather than diverge from RegExp
   ])('returns null for %j', (pattern) => {
     expect(compileLinearMatcher(pattern)).toBeNull();
   });
@@ -134,5 +142,21 @@ describe('linear engine — stays linear on adversarial input', () => {
 
   it('memoizes compiled matchers', () => {
     expect(compileLinearMatcher('memo-linear')).toBe(compileLinearMatcher('memo-linear'));
+  });
+
+  it('a shared work budget bounds total work across calls (query-wide)', () => {
+    // A near-cap pattern on a huge input would dominate; the budget caps it.
+    const m = compileLinearMatcher('a{999}b');
+    expect(m).not.toBeNull();
+    const budget = { remaining: 50_000 };
+    const start = Date.now();
+    m!.test('a'.repeat(30_000), budget);
+    expect(Date.now() - start).toBeLessThan(500);
+    expect(budget.remaining).toBeLessThanOrEqual(0); // budget consumed, work bounded
+
+    // A second matcher sharing the now-exhausted budget short-circuits to false
+    // (this is how a query bounds total work across all its triggers).
+    const m2 = compileLinearMatcher('git commit');
+    expect(m2!.test('git commit', budget)).toBe(false);
   });
 });

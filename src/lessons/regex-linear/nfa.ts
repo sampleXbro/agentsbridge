@@ -1,123 +1,34 @@
 /**
- * Thompson NFA compile + linear-time simulation for the command_pattern matcher.
+ * Linear-time simulation of the compiled command_pattern NFA.
  *
- * Compiles the {@link AstNode} tree to an ε-NFA and simulates it WITHOUT
- * backtracking: the active state set is advanced one input character at a time,
- * so matching is O(input × states) regardless of the pattern — no catastrophic
- * backtracking is possible (that is the whole point; a JS `RegExp` cannot give
+ * Simulates the ε-NFA WITHOUT backtracking: the active state set is advanced one
+ * input character at a time, so matching is O(input × states) regardless of the
+ * pattern — no catastrophic backtracking is possible (a JS `RegExp` cannot give
  * this guarantee). Search is unanchored (like `RegExp.test`): a fresh start
  * thread is seeded at every position; `^`/`$`/`\b` are position-gated assertions.
  */
 
-import type { AstNode } from './parse.js';
+import type { AstNode } from './ast.js';
+import { type AssertKind, compileNfa } from './nfa-compile.js';
 
-type AssertKind = 'start' | 'end' | 'wordB' | 'nonWordB';
-
-interface State {
-  eps: number[];
-  asserts: { kind: AssertKind; target: number }[];
-  chars: { test: (c: string) => boolean; target: number }[];
+/**
+ * A shared, mutable work budget. `remaining` is decremented per unit of NFA work
+ * (state visited / transition followed); when it reaches zero the matcher gives
+ * up and reports a non-match. Pass ONE budget across all triggers in a single
+ * recall so total work is bounded query-wide, not just per pattern.
+ */
+export interface WorkBudget {
+  remaining: number;
 }
 
 export interface LinearMatcher {
-  /** True if the pattern matches anywhere in `input` (unanchored, like RegExp.test). */
-  test(input: string): boolean;
-}
-
-/**
- * Cap on compiled NFA states. A short pattern can still expand to a huge NFA via
- * counted repetition (`a{1000}` ≈ 2000 states, `a{1000}` ×10 ≈ 20000), and match
- * cost is O(states × input) — so bounding pattern *length* is not enough.
- * Builder.alloc throws once this is exceeded; the pattern is then rejected
- * (UNSAFE) rather than allowed to amplify recall work. Real command patterns are
- * tiny (< 200 states), so this only rejects pathological expansions.
- */
-const MAX_NFA_STATES = 2000;
-
-/** Cap on the input length matched against; longer input is truncated (bounds work). */
-const MAX_MATCH_INPUT = 32_768;
-
-class Builder {
-  readonly states: State[] = [];
-  alloc(): number {
-    if (this.states.length >= MAX_NFA_STATES) {
-      throw new Error(`NFA state limit exceeded (${MAX_NFA_STATES}); pattern expands too large`);
-    }
-    this.states.push({ eps: [], asserts: [], chars: [] });
-    return this.states.length - 1;
-  }
-}
-
-/** Compile an AST fragment, returning its [start, end] state indices (end has no outgoing). */
-function compileNode(b: Builder, node: AstNode): { start: number; end: number } {
-  switch (node.k) {
-    case 'empty':
-    case 'assert': {
-      const s = b.alloc();
-      const e = b.alloc();
-      if (node.k === 'assert') b.states[s]!.asserts.push({ kind: node.kind, target: e });
-      else b.states[s]!.eps.push(e);
-      return { start: s, end: e };
-    }
-    case 'char':
-    case 'any':
-    case 'class': {
-      const s = b.alloc();
-      const e = b.alloc();
-      const test =
-        node.k === 'char'
-          ? (c: string): boolean => c === node.ch
-          : node.k === 'any'
-            ? (c: string): boolean => c !== '\n'
-            : node.test;
-      b.states[s]!.chars.push({ test, target: e });
-      return { start: s, end: e };
-    }
-    case 'concat': {
-      if (node.items.length === 0) return compileNode(b, { k: 'empty' });
-      let first: { start: number; end: number } | null = null;
-      let prevEnd = -1;
-      for (const item of node.items) {
-        const frag = compileNode(b, item);
-        if (first === null) first = frag;
-        else b.states[prevEnd]!.eps.push(frag.start);
-        prevEnd = frag.end;
-      }
-      return { start: first!.start, end: prevEnd };
-    }
-    case 'alt': {
-      const s = b.alloc();
-      const e = b.alloc();
-      for (const opt of node.opts) {
-        const frag = compileNode(b, opt);
-        b.states[s]!.eps.push(frag.start);
-        b.states[frag.end]!.eps.push(e);
-      }
-      return { start: s, end: e };
-    }
-    case 'opt': {
-      const s = b.alloc();
-      const e = b.alloc();
-      const frag = compileNode(b, node.node);
-      b.states[s]!.eps.push(frag.start, e);
-      b.states[frag.end]!.eps.push(e);
-      return { start: s, end: e };
-    }
-    case 'star': {
-      const s = b.alloc();
-      const e = b.alloc();
-      const frag = compileNode(b, node.node);
-      b.states[s]!.eps.push(frag.start, e);
-      b.states[frag.end]!.eps.push(frag.start, e);
-      return { start: s, end: e };
-    }
-    case 'plus': {
-      const e = b.alloc();
-      const frag = compileNode(b, node.node);
-      b.states[frag.end]!.eps.push(frag.start, e);
-      return { start: frag.start, end: e };
-    }
-  }
+  /**
+   * True if the pattern matches anywhere in `input` (unanchored, like
+   * RegExp.test). Decrements `budget` as it works; if the budget is exhausted it
+   * returns false (a safe non-match — never a false positive, no invented input
+   * endpoint). Without a budget it runs to completion.
+   */
+  test(input: string, budget?: WorkBudget): boolean;
 }
 
 function wordBoundary(input: string, pos: number): boolean {
@@ -139,22 +50,28 @@ function assertHolds(kind: AssertKind, input: string, pos: number): boolean {
   }
 }
 
-/** Build a {@link LinearMatcher} from a compiled NFA. */
+/** Build a {@link LinearMatcher} from an AST (compiles it, then simulates). */
 export function buildMatcher(ast: AstNode): LinearMatcher {
-  const b = new Builder();
-  const { start, end } = compileNode(b, ast);
-  const states = b.states;
-  const accept = end;
+  const { states, start, accept } = compileNfa(ast);
 
   // ε/assertion closure at boundary `pos`, accumulating reachable states into
   // `set`. ITERATIVE (explicit stack) — a recursive walk overflows the call
   // stack on long ε-chains (e.g. `(){1000}` expands to thousands of ε-links).
-  const closure = (set: Set<number>, idx: number, input: string, pos: number): void => {
+  // Decrements the work budget per state visited; stops early when exhausted.
+  const closure = (
+    set: Set<number>,
+    idx: number,
+    input: string,
+    pos: number,
+    budget: WorkBudget,
+  ): void => {
     const stack = [idx];
     while (stack.length > 0) {
+      if (budget.remaining <= 0) return;
       const cur = stack.pop()!;
       if (set.has(cur)) continue;
       set.add(cur);
+      budget.remaining -= 1;
       for (const t of states[cur]!.eps) if (!set.has(t)) stack.push(t);
       for (const a of states[cur]!.asserts) {
         if (assertHolds(a.kind, input, pos) && !set.has(a.target)) stack.push(a.target);
@@ -163,21 +80,24 @@ export function buildMatcher(ast: AstNode): LinearMatcher {
   };
 
   return {
-    test(rawInput: string): boolean {
-      // Bound the work: match cost is O(states × input); truncate pathologically
-      // long input so a crafted pattern + huge command cannot exceed the budget.
-      const input =
-        rawInput.length > MAX_MATCH_INPUT ? rawInput.slice(0, MAX_MATCH_INPUT) : rawInput;
+    // The input is matched in full (no truncation — truncation would miss suffix
+    // matches and let `$` falsely match an invented endpoint). Work is bounded by
+    // the shared budget instead: when it runs out we report a safe non-match.
+    test(input: string, budget?: WorkBudget): boolean {
+      const b: WorkBudget = budget ?? { remaining: Number.POSITIVE_INFINITY };
+      if (b.remaining <= 0) return false;
       let current = new Set<number>();
       for (let pos = 0; pos <= input.length; pos += 1) {
-        closure(current, start, input, pos); // unanchored: seed a start thread here
+        closure(current, start, input, pos, b); // unanchored: seed a start thread here
         if (current.has(accept)) return true;
+        if (b.remaining <= 0) return false; // budget exhausted → safe non-match
         if (pos === input.length) break;
         const ch = input[pos]!;
         const next = new Set<number>();
         for (const s of current) {
+          b.remaining -= 1;
           for (const t of states[s]!.chars) {
-            if (t.test(ch)) closure(next, t.target, input, pos + 1);
+            if (t.test(ch)) closure(next, t.target, input, pos + 1, b);
           }
         }
         current = next;

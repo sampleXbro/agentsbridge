@@ -1,6 +1,6 @@
 /** Helpers for {@link parseRegex}: bounded-repeat expansion and escape handling. */
 
-import type { AstNode } from './parse.js';
+import { type AstNode, UnsupportedRegexError } from './ast.js';
 
 export const MAX_REPEAT = 1000;
 
@@ -64,11 +64,26 @@ export function readUnicodeEscape(src: string, i: number, c: string): { ch: stri
 }
 
 /**
+ * Read a `\cX` control escape (`\cA` → U+0001 … `\cZ` → U+001A). `i` points AFTER
+ * the `c`. `\c` NOT followed by a letter is rejected (fail closed) rather than
+ * silently diverging — `new RegExp` without the `u` flag treats `\c1` as the
+ * literal `\c1`, which the linear engine does not reproduce.
+ */
+export function readControlEscape(src: string, i: number): { ch: string; len: number } {
+  const x = src[i];
+  if (x === undefined || !/[A-Za-z]/.test(x)) {
+    throw new UnsupportedRegexError('\\c must be followed by a letter');
+  }
+  return { ch: String.fromCharCode(x.charCodeAt(0) & 0x1f), len: 1 };
+}
+
+/**
  * The character an escape stands for INSIDE a character class. Unlike outside a
  * class, `\b` is a backspace (U+0008), not a word boundary. `i` points after `e`.
  */
 export function classEscapeChar(src: string, i: number, e: string): { ch: string; len: number } {
   if (e === 'b') return { ch: '\b', len: 0 };
+  if (e === 'c') return readControlEscape(src, i);
   if (e === 'x' || e === 'u') return readUnicodeEscape(src, i, e);
   return { ch: escapeLiteral(e), len: 0 };
 }

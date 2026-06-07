@@ -1,4 +1,5 @@
 import { makeLessonId, mergeTriggers, normalizeRule, todayIso, union } from './add-helpers.js';
+import { type GuardrailWarning, inspectCapturedLesson } from './capture-guardrails.js';
 import type { LessonsGraph } from './graph-schema.js';
 import { mutateLessonsGraph } from './mutate.js';
 
@@ -28,6 +29,8 @@ export interface AddLessonResult {
   readonly isNewLesson: boolean;
   readonly isNewTopic: boolean;
   readonly newTriggerIds: string[];
+  /** Non-blocking capture guardrail warnings for the resulting (merged) lesson. */
+  readonly warnings: GuardrailWarning[];
 }
 
 export class UnknownTopicError extends Error {
@@ -90,7 +93,13 @@ export function addLessonInto(
         ? { rationale: input.rationale }
         : {}),
     };
-    return { id: existingId, isNewLesson: false, isNewTopic, newTriggerIds };
+    return {
+      id: existingId,
+      isNewLesson: false,
+      isNewTopic,
+      newTriggerIds,
+      warnings: inspectCapturedLesson(graph, existingId),
+    };
   }
 
   const id = makeLessonId(graph, input.topic, ruleKey);
@@ -103,7 +112,13 @@ export function addLessonInto(
     createdAt: input.createdAt ?? todayIso(),
     ...(input.rationale === undefined ? {} : { rationale: input.rationale }),
   };
-  return { id, isNewLesson: true, isNewTopic, newTriggerIds };
+  return {
+    id,
+    isNewLesson: true,
+    isNewTopic,
+    newTriggerIds,
+    warnings: inspectCapturedLesson(graph, id),
+  };
 }
 
 /**

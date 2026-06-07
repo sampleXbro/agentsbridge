@@ -59,14 +59,14 @@ export const LESSONS_TOOL_DESCRIPTORS: ToolDescriptor[] = [
   {
     name: 'lessons_query',
     description:
-      'Recall primitive — return active lessons whose triggers match the supplied (file, command, keyword) predicates, relevance-ranked (BM25 over rule text + trigger specificity) and capped to `limit` (default 10). Returns compact `{id, rule}` by default; pass `verbose:true` for topics/triggers/evidence/score. Excludes deprecated and superseded lessons.',
+      'Recall primitive — return active lessons whose triggers match the supplied (file, command, keyword) predicates, relevance-ranked (trigger specificity + per-query topic coherence + BM25 over rule text) and capped to `limit` (default 10). Returns compact `{id, rule}` by default; pass `verbose:true` for topics/triggers/evidence/score. Excludes deprecated and superseded lessons.',
     inputSchema: LessonsQueryInput,
     handler: (ctx, i) => lessonsHandlers.query(ctx, i as never),
   },
   {
     name: 'lessons_add',
     description:
-      'Capture primitive — atomically add a new lesson. Deduplicates triggers against the graph. Idempotent on repeat (same rule + topic → same id, no duplicate triggers).',
+      'Capture primitive — atomically add a new lesson. Deduplicates triggers against the graph. Idempotent on repeat (same rule + topic → same id, no duplicate triggers). Returns non-blocking `warnings` (trigger-hygiene nudges: oversized trigger set, broad globs, keyword-only) — heed them by preferring a few specific triggers.',
     inputSchema: LessonsAddInput,
     handler: (ctx, i) => lessonsHandlers.add(ctx, i as never),
   },

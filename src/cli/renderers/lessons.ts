@@ -9,6 +9,7 @@ import type {
   LessonsAddData,
   LessonsImportMdData,
   LessonsJournalData,
+  LessonsPruneData,
   LessonsQueryData,
   LessonsQueryFormat,
   LessonsShowData,
@@ -55,8 +56,31 @@ export function renderLessons(result: LessonsCommandResult): void {
       return renderJournal(result.data);
     case 'validate':
       return renderValidate(result.data);
+    case 'prune':
+      return renderPrune(result.data);
     case 'import-md':
       return renderImportMd(result.data);
+  }
+}
+
+function renderPrune(data: LessonsPruneData): void {
+  const triggerN = data.removedTriggerIds.length;
+  const lessonN = data.trimmedLessons.length;
+  if (triggerN === 0 && lessonN === 0) {
+    logger.success(`Lessons graph already lean (cap ${data.cap}) — nothing to prune.`);
+    return;
+  }
+  const verb = data.applied ? 'Pruned' : 'Would prune';
+  logger.success(
+    `${verb}: ${triggerN} dead trigger${triggerN === 1 ? '' : 's'} removed, ${lessonN} over-cap lesson${lessonN === 1 ? '' : 's'} trimmed (cap ${data.cap}).`,
+  );
+  for (const t of data.trimmedLessons) {
+    logger.info(`  ${t.id}: -${t.removedCount} → ${t.keptCount} kept`);
+  }
+  if (!data.applied) {
+    logger.warn(
+      'Dry run — pass --apply to write. lessons.json is git-tracked, so prune is reversible.',
+    );
   }
 }
 
@@ -96,6 +120,7 @@ function renderAdd(data: LessonsAddData): void {
     } else {
       logger.info(`Existing lesson: ${data.id} (no change)`);
     }
+    renderGuardrails(data);
     return;
   }
   logger.success(`Added lesson: ${data.id}`);
@@ -103,6 +128,12 @@ function renderAdd(data: LessonsAddData): void {
   if (data.newTriggerIds.length > 0) {
     logger.info(`  new triggers: ${data.newTriggerIds.join(', ')}`);
   }
+  renderGuardrails(data);
+}
+
+/** Non-blocking trigger-hygiene nudges — warn (stderr), never fail the capture. */
+function renderGuardrails(data: LessonsAddData): void {
+  for (const w of data.warnings) logger.warn(`${w.code}: ${w.message}`);
 }
 
 function renderTopics(data: LessonsTopicsData): void {
@@ -162,5 +193,8 @@ function printHelp(): void {
   logger.info('  strip-markers [--dry-run]');
   logger.info('  journal');
   logger.info('  validate');
+  logger.info(
+    '  prune [--apply] [--cap <n>]   (dry-run by default; trims over-cap lessons + dead triggers)',
+  );
   logger.info('  import-md [--merge] [--force] [--migrated-at <ISO date>]');
 }

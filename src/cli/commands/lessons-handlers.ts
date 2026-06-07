@@ -32,6 +32,7 @@ export {
   doMerge,
   doStripMarkers,
 } from './lessons-write-handlers.js';
+export { doPrune } from './lessons-prune-handler.js';
 
 /** Returns an error message if the flag is present but not a positive integer, else null. */
 function validatePositiveIntFlag(flags: LessonsFlags, name: string): string | null {

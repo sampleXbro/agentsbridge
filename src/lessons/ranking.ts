@@ -1,11 +1,13 @@
 import type { Lesson, LessonsGraph } from './graph-schema.js';
 import { collectMatchedTriggerIds, type LessonsQuery, type MatchedLesson } from './query.js';
+import { buildFanout, buildTopicCoherence } from './ranking-signals.js';
 import { bm25, buildCorpus, queryTerms } from './ranking-text.js';
 
 export interface RankReason {
   readonly matchedTriggers: string[];
   readonly bm25: number;
   readonly specificity: number;
+  readonly topicCoherence: number;
 }
 
 export interface RankedLesson {
@@ -41,15 +43,16 @@ export const DEFAULT_RECALL_MAX_TOKENS = 400;
 
 const RRF_K = 60;
 
-/** Active-lesson reference count per trigger — the fanout used for specificity. */
-function buildFanout(graph: LessonsGraph): Map<string, number> {
-  const fanout = new Map<string, number>();
-  for (const lesson of Object.values(graph.lessons)) {
-    if (lesson.status !== 'active') continue;
-    for (const t of lesson.triggers) fanout.set(t, (fanout.get(t) ?? 0) + 1);
-  }
-  return fanout;
-}
+/**
+ * RRF signal weights. Mandatory recall fires on `--file`/`--cmd`, where the
+ * discriminating signal is WHICH trigger matched and how specific it is — rule
+ * prose rarely contains a file path, so raw BM25 is the noisiest signal. So
+ * specificity dominates, topic coherence (a graph signal) sits in the middle,
+ * and rule-text BM25 only breaks ties the structural signals cannot.
+ */
+const SPECIFICITY_WEIGHT = 3;
+const TOPIC_COHERENCE_WEIGHT = 2;
+const BM25_WEIGHT = 1;
 
 /**
  * Competition ranking (1,1,3,…): equal values share a rank so a signal that
@@ -78,11 +81,13 @@ function estTokens(rule: string): number {
 }
 
 /**
- * Rank matched lessons by relevance and apply optional caps. Two lightweight
- * signals are reciprocal-rank-fused (RRF): BM25 over the rule text (so the
- * lesson whose wording best fits the query wins even when many share a trigger)
- * and trigger specificity (inverse fanout — a discriminating trigger beats a
- * topic-wide one). Ties break by recency (createdAt) then id. No embeddings, no
+ * Rank matched lessons by relevance and apply optional caps. Three lightweight
+ * signals are weighted-reciprocal-rank-fused (RRF): trigger specificity (inverse
+ * fanout — a discriminating trigger beats a topic-wide one; highest weight),
+ * per-query topic coherence (a lesson in the topic that dominates this query's
+ * matched set is boosted; middle weight), and BM25 over the rule text (so the
+ * lesson whose wording best fits breaks ties the structural signals cannot;
+ * lowest weight). Ties break by recency (createdAt) then id. No embeddings, no
  * I/O — pure and sub-millisecond.
  */
 export function rankLessons(
@@ -96,6 +101,7 @@ export function rankLessons(
   const terms = queryTerms(query);
   const corpus = buildCorpus(graph);
   const fanout = buildFanout(graph);
+  const coherence = buildTopicCoherence(matches);
   const matchedTriggerIds = collectMatchedTriggerIds(graph, query);
 
   const scored = matches.map(({ id, lesson }) => {
@@ -108,19 +114,29 @@ export function rankLessons(
       lesson,
       bm25: bm25(terms, lesson.rule, corpus),
       specificity,
+      topicCoherence: coherence.get(id) ?? 0,
       matchedTriggers: hitTriggers,
     };
   });
 
   const bm25Ranks = rankMap(scored.map((s) => ({ id: s.id, value: s.bm25 })));
   const specRanks = rankMap(scored.map((s) => ({ id: s.id, value: s.specificity })));
+  const topicRanks = rankMap(scored.map((s) => ({ id: s.id, value: s.topicCoherence })));
 
   const ranked: RankedLesson[] = scored
     .map((s) => ({
       id: s.id,
       lesson: s.lesson,
-      score: 1 / (RRF_K + bm25Ranks.get(s.id)!) + 1 / (RRF_K + specRanks.get(s.id)!),
-      reason: { matchedTriggers: s.matchedTriggers, bm25: s.bm25, specificity: s.specificity },
+      score:
+        SPECIFICITY_WEIGHT / (RRF_K + specRanks.get(s.id)!) +
+        TOPIC_COHERENCE_WEIGHT / (RRF_K + topicRanks.get(s.id)!) +
+        BM25_WEIGHT / (RRF_K + bm25Ranks.get(s.id)!),
+      reason: {
+        matchedTriggers: s.matchedTriggers,
+        bm25: s.bm25,
+        specificity: s.specificity,
+        topicCoherence: s.topicCoherence,
+      },
     }))
     .sort((a, b) => {
       if (b.score !== a.score) return b.score - a.score;

@@ -277,4 +277,20 @@ describe('addLesson', () => {
     const graph = loadLessonsGraph(root);
     expect(graph.lessons[result.id]?.rationale).toBe('incident 2026-05-30');
   });
+
+  it('surfaces a broad-glob guardrail warning on capture without blocking it', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    // baseInput's trigger is a broad glob (globstar + wildcard extension).
+    const r = await addLesson(root, baseInput);
+    expect(r.isNewLesson).toBe(true);
+    expect(r.warnings.map((w) => w.code)).toContain('BROAD_GLOB_TRIGGER');
+    // The capture still persisted — guardrails are non-blocking.
+    expect(loadLessonsGraph(root).lessons[r.id]).toBeDefined();
+  });
+
+  it('returns no guardrail warnings for a lean, specific capture', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    const r = await addLesson(root, { ...baseInput, triggers: { files: ['src/cli/paths.ts'] } });
+    expect(r.warnings).toEqual([]);
+  });
 });

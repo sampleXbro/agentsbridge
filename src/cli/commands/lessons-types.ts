@@ -1,3 +1,4 @@
+import type { GuardrailWarning } from '../../lessons/capture-guardrails.js';
 import type { ValidationFinding } from '../../lessons/validate.js';
 
 export type LessonsQueryFormat = 'plain' | 'md' | 'json';
@@ -22,6 +23,7 @@ export interface LessonsAddData {
   readonly isNewLesson: boolean;
   readonly isNewTopic: boolean;
   readonly newTriggerIds: string[];
+  readonly warnings: GuardrailWarning[];
 }
 
 export interface LessonsTopicsData {
@@ -71,6 +73,18 @@ export interface LessonsImportMdData {
   readonly deletedPaths: string[];
 }
 
+export interface LessonsPruneData {
+  /** False for a dry run (nothing written); true once applied. */
+  readonly applied: boolean;
+  readonly cap: number;
+  readonly removedTriggerIds: string[];
+  readonly trimmedLessons: Array<{
+    readonly id: string;
+    readonly removedCount: number;
+    readonly keptCount: number;
+  }>;
+}
+
 export type LessonsCommandResult =
   | { subcommand: 'help'; exitCode: number; error?: string; data: null }
   | {
@@ -93,4 +107,5 @@ export type LessonsCommandResult =
     }
   | { subcommand: 'journal'; exitCode: number; data: LessonsJournalData; error?: string }
   | { subcommand: 'validate'; exitCode: number; data: LessonsValidateData; error?: string }
-  | { subcommand: 'import-md'; exitCode: number; data: LessonsImportMdData; error?: string };
+  | { subcommand: 'import-md'; exitCode: number; data: LessonsImportMdData; error?: string }
+  | { subcommand: 'prune'; exitCode: number; data: LessonsPruneData; error?: string };

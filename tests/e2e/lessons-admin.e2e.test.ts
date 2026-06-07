@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { runCli } from './helpers/run-cli.js';
+import { runCli, runCliArgs } from './helpers/run-cli.js';
 import { addLessonCli } from './helpers/lessons-cli.js';
 
 const LEGACY_FIXTURE = resolve(process.cwd(), 'tests/fixtures/lessons/legacy-input');
@@ -186,6 +186,62 @@ describe('lessons CLI — import-md (fix #1: no ENOENT without a legacy store)',
     expect(legacyHit.exitCode).toBe(0);
     const validate = await runCli('lessons validate', dir);
     expect(validate.exitCode).toBe(0);
+  });
+});
+
+describe('lessons CLI — prune', () => {
+  it('dry-run reports an over-cap trim without writing, then --apply curates', async () => {
+    // 9 keyword triggers → 1 over the default cap of 8.
+    const extra: string[] = [];
+    for (let i = 0; i < 9; i += 1) extra.push('--trigger-kw', `kw${i}`);
+    const id = await addLessonCli(dir, 'Over-capped lesson', {
+      topic: 'e2e',
+      newTopic: true,
+      summary: 's',
+      extra,
+    });
+
+    const dry = await runCli('lessons prune', dir);
+    expect(dry.exitCode).toBe(0);
+    expect(dry.stdout).toMatch(/would prune/i);
+    expect(dry.stdout).toContain(id);
+    expect(dry.stderr).toMatch(/dry run/i);
+
+    const apply = await runCli('lessons prune --apply', dir);
+    expect(apply.exitCode).toBe(0);
+    expect(apply.stdout).toMatch(/pruned:/i);
+
+    const validate = await runCli('lessons validate', dir);
+    expect(validate.exitCode).toBe(0);
+    expect(validate.stdout).toContain('Lessons graph: ok.');
+  });
+
+  it('rejects a non-positive --cap with exit 2', async () => {
+    const r = await runCli('lessons prune --cap 0', dir);
+    expect(r.exitCode).toBe(2);
+    expect(r.stderr).toMatch(/--cap/);
+  });
+});
+
+describe('lessons CLI — capture guardrails', () => {
+  it('surfaces a broad-glob warning on add without failing the capture', async () => {
+    const r = await runCliArgs(
+      [
+        'lessons',
+        'add',
+        'Broad glob lesson',
+        '--topic',
+        'e2e',
+        '--new-topic',
+        '--topic-summary',
+        's',
+        '--trigger-file',
+        'src/**',
+      ],
+      dir,
+    );
+    expect(r.exitCode).toBe(0);
+    expect(r.stderr).toContain('BROAD_GLOB_TRIGGER');
   });
 });
 

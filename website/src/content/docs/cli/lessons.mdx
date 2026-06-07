@@ -27,6 +27,7 @@ agentsmesh lessons <subcommand> [args] [flags]
 | `strip-markers` | Remove dead legacy provenance markers (`See L123`, `(L69)`, `[L3]`, "(also relevant …)") from rule prose. `--dry-run` reports without writing. |
 | `journal` | Render lessons chronologically (sorted by `createdAt` then id). |
 | `validate` | Schema + integrity checks. Non-zero exit on errors; warnings do not affect exit code. |
+| `prune` | Curate the graph — trim over-cap lessons (drop the least-specific triggers) and remove dead triggers. **Dry-run by default**; `--apply` writes, `--cap <n>` overrides the per-lesson cap (default 8). |
 | `import-md` | One-shot migrator from legacy `index.yaml` + `topics/*.md` + `journal.md`. |
 
 ## Recall ritual
@@ -125,6 +126,8 @@ Results are **relevance-ranked** (BM25 over rule text fused with trigger specifi
 | `--new-topic` | Allow creating a new topic if missing. Requires `--topic-summary`. |
 | `--topic-summary "<text>"` | One-line summary when `--new-topic` creates a topic. |
 
+`add` prints **non-blocking guardrail warnings** to stderr (capture still succeeds) when the resulting lesson has too many triggers (`OVERSIZED_LESSON_TRIGGERS`, cap 8), a broad glob (`BROAD_GLOB_TRIGGER`), or only keyword triggers (`KEYWORD_ONLY_LESSON`, which never fire on `--file`/`--cmd` recall). Prefer a few specific triggers. See the [guardrails reference](../../reference/lessons/#capture-guardrails).
+
 ### `deprecate`
 
 | Flag | Description |
@@ -140,6 +143,15 @@ Results are **relevance-ranked** (BM25 over rule text fused with trigger specifi
 | Flag | Description |
 |------|-------------|
 | `--dry-run` | Report which lessons would change without writing. |
+
+### `prune`
+
+| Flag | Description |
+|------|-------------|
+| `--apply` | Write the curation through the transactional path. **Without it, `prune` is a dry run** that prints the plan and changes nothing. |
+| `--cap <n>` | Per-lesson trigger cap (positive integer; default 8). Over-cap active lessons keep their `n` most-specific triggers; the highest-fanout (least specific) ones are dropped first. |
+
+Dead triggers (referenced by no `active` lesson) are removed regardless of `--cap`. The graph is git-tracked, so an applied prune is reviewable in the diff and revertible. See the [curation reference](../../reference/lessons/#curation-prune).
 
 ### `import-md`
 

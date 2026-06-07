@@ -85,6 +85,7 @@ export const lessonsHandlers = {
     isNewLesson: boolean;
     isNewTopic: boolean;
     newTriggerIds: string[];
+    warnings: Array<{ code: string; message: string }>;
   }> {
     // captureLesson migrates any legacy store first so capture enriches the real
     // graph instead of creating lessons.json and stranding the legacy lessons.

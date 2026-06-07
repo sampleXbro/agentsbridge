@@ -1,6 +1,6 @@
 /**
- * agentsmesh lessons — query / add / topics / show / deprecate / merge / strip-markers / journal / validate / import-md.
- * Auto-migrates from legacy index.yaml + topics/*.md on first invocation.
+ * agentsmesh lessons — query / add / topics / show / deprecate / merge / strip-markers / journal / validate / prune / import-md.
+ * Auto-migrates from legacy index.yaml + topics on first invocation.
  */
 import { maybeAutoMigrateLessons } from '../../lessons/auto-migrate.js';
 import {
@@ -9,6 +9,7 @@ import {
   doImportMd,
   doJournal,
   doMerge,
+  doPrune,
   doQuery,
   doShow,
   doStripMarkers,
@@ -52,6 +53,8 @@ export async function runLessons(
       return doJournal(projectRoot);
     case 'validate':
       return doValidate(projectRoot);
+    case 'prune':
+      return doPrune(flags, projectRoot);
     case 'import-md':
       return doImportMd(flags, projectRoot);
     default:

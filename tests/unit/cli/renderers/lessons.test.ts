@@ -87,6 +87,7 @@ describe('renderLessons — add', () => {
         isNewLesson: true,
         isNewTopic: false,
         newTriggerIds: ['t-glob-abc'],
+        warnings: [],
       },
     });
     expect(output.stdout()).toContain('topic-x-rule-1');
@@ -97,7 +98,7 @@ describe('renderLessons — add', () => {
     renderLessons({
       subcommand: 'add',
       exitCode: 0,
-      data: { id: 'x', isNewLesson: false, isNewTopic: false, newTriggerIds: [] },
+      data: { id: 'x', isNewLesson: false, isNewTopic: false, newTriggerIds: [], warnings: [] },
     });
     expect(output.stdout()).toMatch(/existing|no change/i);
   });
@@ -106,7 +107,13 @@ describe('renderLessons — add', () => {
     renderLessons({
       subcommand: 'add',
       exitCode: 0,
-      data: { id: 'x', isNewLesson: false, isNewTopic: false, newTriggerIds: ['t-glob-new'] },
+      data: {
+        id: 'x',
+        isNewLesson: false,
+        isNewTopic: false,
+        newTriggerIds: ['t-glob-new'],
+        warnings: [],
+      },
     });
     expect(output.stdout()).toMatch(/updated lesson: x/i);
     expect(output.stdout()).toMatch(/\+1 trigger/i);
@@ -117,7 +124,7 @@ describe('renderLessons — add', () => {
       subcommand: 'add',
       exitCode: 1,
       error: 'Unknown topic: nope',
-      data: { id: '', isNewLesson: false, isNewTopic: false, newTriggerIds: [] },
+      data: { id: '', isNewLesson: false, isNewTopic: false, newTriggerIds: [], warnings: [] },
     });
     expect(output.stderr()).toContain('Unknown topic: nope');
   });
@@ -127,10 +134,65 @@ describe('renderLessons — add', () => {
       subcommand: 'add',
       exitCode: 2,
       error: 'Missing --rule',
-      data: { id: '', isNewLesson: false, isNewTopic: false, newTriggerIds: [] },
+      data: { id: '', isNewLesson: false, isNewTopic: false, newTriggerIds: [], warnings: [] },
     });
     expect(output.stdout()).not.toMatch(/existing lesson/i);
     expect(output.stderr()).toContain('Missing --rule');
+  });
+
+  it('prints guardrail warnings (stderr) after a successful capture', () => {
+    renderLessons({
+      subcommand: 'add',
+      exitCode: 0,
+      data: {
+        id: 'topic-x-rule-1',
+        isNewLesson: true,
+        isNewTopic: false,
+        newTriggerIds: ['t-glob-abc'],
+        warnings: [{ code: 'BROAD_GLOB_TRIGGER', message: 'broad glob.' }],
+      },
+    });
+    expect(output.stdout()).toContain('topic-x-rule-1');
+    expect(output.stderr()).toContain('BROAD_GLOB_TRIGGER');
+  });
+});
+
+describe('renderLessons — prune', () => {
+  const output = useCapturedOutput();
+
+  it('dry run reports the plan and flags that nothing was written', () => {
+    renderLessons({
+      subcommand: 'prune',
+      exitCode: 0,
+      data: {
+        applied: false,
+        cap: 8,
+        removedTriggerIds: ['t-dead', 't-orphan'],
+        trimmedLessons: [{ id: 'big', removedCount: 2, keptCount: 8 }],
+      },
+    });
+    expect(output.stdout()).toMatch(/would prune/i);
+    expect(output.stdout()).toMatch(/big: -2 . 8 kept/i);
+    expect(output.stderr()).toMatch(/dry run/i);
+  });
+
+  it('apply reports what was pruned', () => {
+    renderLessons({
+      subcommand: 'prune',
+      exitCode: 0,
+      data: { applied: true, cap: 8, removedTriggerIds: ['t-dead'], trimmedLessons: [] },
+    });
+    expect(output.stdout()).toMatch(/pruned:/i);
+    expect(output.stderr()).not.toMatch(/dry run/i);
+  });
+
+  it('reports a clean graph as nothing to prune', () => {
+    renderLessons({
+      subcommand: 'prune',
+      exitCode: 0,
+      data: { applied: false, cap: 8, removedTriggerIds: [], trimmedLessons: [] },
+    });
+    expect(output.stdout()).toMatch(/nothing to prune/i);
   });
 });
 

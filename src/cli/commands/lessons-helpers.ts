@@ -87,7 +87,7 @@ export function renderTopicMarkdown(
 }
 
 /** Subcommands that can fail with a user-facing error and a placeholder data shape. */
-type ErrorableSubcommand = 'query' | 'add' | 'show' | 'deprecate' | 'merge' | 'import-md';
+type ErrorableSubcommand = 'query' | 'add' | 'show' | 'deprecate' | 'merge' | 'import-md' | 'prune';
 
 export function errorResult(
   subcommand: ErrorableSubcommand,
@@ -108,7 +108,7 @@ export function errorResult(
         subcommand,
         exitCode,
         error: message,
-        data: { id: '', isNewLesson: false, isNewTopic: false, newTriggerIds: [] },
+        data: { id: '', isNewLesson: false, isNewTopic: false, newTriggerIds: [], warnings: [] },
       };
     case 'show':
       return { subcommand, exitCode, error: message, data: { topic: '', markdown: '' } };
@@ -128,6 +128,13 @@ export function errorResult(
           wroteGraphPath: '',
           deletedPaths: [],
         },
+      };
+    case 'prune':
+      return {
+        subcommand,
+        exitCode,
+        error: message,
+        data: { applied: false, cap: 0, removedTriggerIds: [], trimmedLessons: [] },
       };
   }
 }

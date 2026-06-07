@@ -179,6 +179,102 @@ describe('rankLessons', () => {
     expect(ids.slice().sort()).toEqual(['a', 'b']);
   });
 
+  it('weights trigger specificity above rule-text BM25 (the specific match wins despite a weaker text match)', () => {
+    const g: LessonsGraph = {
+      version: 1,
+      lessons: {
+        specific: {
+          rule: 'Plain unrelated rule.',
+          topics: ['t'],
+          triggers: ['narrow'],
+          evidence: [],
+          status: 'active',
+          createdAt: '2026-06-01',
+        },
+        textual: {
+          rule: 'Handle windows path separators carefully.',
+          topics: ['t'],
+          triggers: ['broad'],
+          evidence: [],
+          status: 'active',
+          createdAt: '2026-06-01',
+        },
+        d1: {
+          rule: 'Decoy rule one.',
+          topics: ['t'],
+          triggers: ['broad'],
+          evidence: [],
+          status: 'active',
+          createdAt: '2026-06-01',
+        },
+        d2: {
+          rule: 'Decoy rule two.',
+          topics: ['t'],
+          triggers: ['broad'],
+          evidence: [],
+          status: 'active',
+          createdAt: '2026-06-01',
+        },
+      },
+      topics: { t: { summary: 'T.' } },
+      triggers: {
+        narrow: { kind: 'file_glob', pattern: 'src/cli/foo.ts' },
+        broad: { kind: 'file_glob', pattern: 'src/**' },
+      },
+    };
+    // `textual` has the stronger rule-text match (windows/path), but `specific`
+    // has the discriminating trigger (fanout 1 vs 3). Specificity outweighs BM25.
+    const ids = rankIds(g, { file: 'src/cli/foo.ts', keyword: 'windows path' });
+    expect(ids.indexOf('specific')).toBeLessThan(ids.indexOf('textual'));
+    expect(ids[0]).toBe('specific');
+  });
+
+  it("boosts lessons in the query's dominant matched topic over an equally-specific singleton-topic lesson", () => {
+    const g: LessonsGraph = {
+      version: 1,
+      lessons: {
+        h1: {
+          rule: 'Plain rule one.',
+          topics: ['hot'],
+          triggers: ['broad'],
+          evidence: [],
+          status: 'active',
+          createdAt: '2026-06-01',
+        },
+        h2: {
+          rule: 'Plain rule two.',
+          topics: ['hot'],
+          triggers: ['broad'],
+          evidence: [],
+          status: 'active',
+          createdAt: '2026-06-01',
+        },
+        h3: {
+          rule: 'Plain rule three.',
+          topics: ['hot'],
+          triggers: ['broad'],
+          evidence: [],
+          status: 'active',
+          createdAt: '2026-06-01',
+        },
+        // Newest createdAt — would rank FIRST on the recency tie-break alone.
+        // Topic coherence (it is the lone member of `cold`) pushes it last.
+        cold: {
+          rule: 'Plain rule four.',
+          topics: ['cold'],
+          triggers: ['broad'],
+          evidence: [],
+          status: 'active',
+          createdAt: '2026-06-09',
+        },
+      },
+      topics: { hot: { summary: 'H.' }, cold: { summary: 'C.' } },
+      triggers: { broad: { kind: 'file_glob', pattern: 'src/**' } },
+    };
+    const ids = rankIds(g, { file: 'src/x.ts' });
+    expect(ids[ids.length - 1]).toBe('cold');
+  });
+
   it('returns empty for no matches', () => {
     const g = graph();
     expect(rankLessons(g, { file: 'docs/x.md' }, queryLessons(g, { file: 'docs/x.md' }))).toEqual(

@@ -352,3 +352,68 @@ describe('renderLessons — topics / show / journal / validate / import-md / hel
     expect(out).toContain('add');
   });
 });
+
+describe('renderLessons — stats', () => {
+  const output = useCapturedOutput();
+
+  const report = {
+    totalRecalls: 4,
+    noMatchRate: 0.5,
+    matchCountHistogram: [
+      { bucket: '0', count: 2 },
+      { bucket: '1', count: 2 },
+    ],
+    returnedTokens: { p50: 20, p90: 80, max: 90 },
+    cumulativeRecallTokens: 120,
+    wholeActiveSetTokens: 300,
+    preloadBreakEven: { perActionCheaper: true, ratio: 0.4 },
+    reachability: { keywordOnlyRecallRate: 0.25, keywordOnlyUnreachableLessons: 3 },
+  };
+
+  it('prints the human summary including break-even and reachability', () => {
+    renderLessons({
+      subcommand: 'stats',
+      exitCode: 0,
+      format: 'text',
+      data: { report, hasLog: true },
+    });
+    const out = output.stdout();
+    expect(out).toContain('recalls: 4');
+    expect(out).toContain('no-match: 50.0%');
+    expect(out).toContain('per-action cheaper');
+    expect(out).toContain('keyword-only-unreachable lessons 3');
+  });
+
+  it('prints a hint when no telemetry log exists', () => {
+    renderLessons({
+      subcommand: 'stats',
+      exitCode: 0,
+      format: 'text',
+      data: { report, hasLog: false },
+    });
+    expect(output.stdout()).toContain('AGENTSMESH_LESSONS_TELEMETRY=1');
+  });
+
+  it('reports preload as cheaper when per-action recall exceeds the baseline', () => {
+    const heavy = { ...report, preloadBreakEven: { perActionCheaper: false, ratio: 2.5 } };
+    renderLessons({
+      subcommand: 'stats',
+      exitCode: 0,
+      format: 'text',
+      data: { report: heavy, hasLog: true },
+    });
+    expect(output.stdout()).toContain('preload cheaper');
+  });
+
+  it('json format emits the raw report', () => {
+    renderLessons({
+      subcommand: 'stats',
+      exitCode: 0,
+      format: 'json',
+      data: { report, hasLog: true },
+    });
+    const parsed = JSON.parse(output.stdout());
+    expect(parsed.totalRecalls).toBe(4);
+    expect(parsed.preloadBreakEven.ratio).toBe(0.4);
+  });
+});

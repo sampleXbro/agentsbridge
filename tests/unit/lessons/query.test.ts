@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { LessonsGraph } from '../../../src/lessons/graph-schema.js';
-import { queryLessons } from '../../../src/lessons/query.js';
+import { collectMatchedTriggersByKind, queryLessons } from '../../../src/lessons/query.js';
 
 const graph: LessonsGraph = {
   version: 1,
@@ -106,6 +106,24 @@ describe('queryLessons', () => {
 
   it('returns empty when no predicate is supplied', () => {
     expect(queryLessons(graph, {})).toEqual([]);
+  });
+
+  it('collectMatchedTriggersByKind partitions matched trigger ids by kind', () => {
+    const byKind = collectMatchedTriggersByKind(graph, {
+      file: 'src/a.ts',
+      command: 'pnpm test',
+      keyword: 'windows',
+    });
+    expect([...byKind.file_glob]).toEqual(['t-src-glob']);
+    expect([...byKind.command_pattern]).toEqual(['t-test-cmd']);
+    expect([...byKind.keyword]).toEqual(['t-keyword']);
+  });
+
+  it('collectMatchedTriggersByKind only fills the kinds whose predicate is supplied', () => {
+    const byKind = collectMatchedTriggersByKind(graph, { file: 'src/a.ts' });
+    expect([...byKind.file_glob]).toEqual(['t-src-glob']);
+    expect(byKind.command_pattern.size).toBe(0);
+    expect(byKind.keyword.size).toBe(0);
   });
 
   it('returns empty when nothing matches', () => {

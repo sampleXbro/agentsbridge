@@ -5,14 +5,22 @@ import {
   type AddLessonResult,
 } from './add.js';
 import { maybeAutoMigrateLessons } from './auto-migrate.js';
+import type { LessonsGraph } from './graph-schema.js';
 import { tryLoadLessonsGraph } from './graph-store.js';
-import { queryLessons, type LessonsQuery } from './query.js';
+import {
+  collectMatchedTriggersByKind,
+  queryLessons,
+  type LessonsQuery,
+  type MatchedLesson,
+} from './query.js';
 import {
   DEFAULT_RECALL_LIMIT,
   DEFAULT_RECALL_MAX_TOKENS,
+  estTokens,
   rankLessons,
   type RankedLesson,
 } from './ranking.js';
+import { appendRecallRecord, isTelemetryEnabled } from './telemetry.js';
 
 /**
  * Migration-aware application APIs for the lessons subsystem.
@@ -66,7 +74,40 @@ export async function recallLessons(
     maxTokens:
       options.maxTokens === null ? undefined : (options.maxTokens ?? DEFAULT_RECALL_MAX_TOKENS),
   });
+  recordRecallTelemetry(projectRoot, graph, query, matches, lessons);
   return { lessons, totalMatches: matches.length };
+}
+
+/**
+ * Append one telemetry record for this recall — gated, so the hot path computes
+ * nothing (no provenance pass, no timestamp, no I/O) in the default-off config.
+ */
+function recordRecallTelemetry(
+  projectRoot: string,
+  graph: LessonsGraph,
+  query: LessonsQuery,
+  matches: readonly MatchedLesson[],
+  lessons: readonly RankedLesson[],
+): void {
+  if (!isTelemetryEnabled()) return;
+  const byKind = collectMatchedTriggersByKind(graph, query);
+  const countVia = (set: Set<string>): number =>
+    matches.filter(({ lesson }) => lesson.triggers.some((t) => set.has(t))).length;
+  appendRecallRecord(projectRoot, {
+    ts: new Date().toISOString(),
+    hasFile: query.file !== undefined,
+    hasCommand: query.command !== undefined,
+    hasKeyword: query.keyword !== undefined,
+    totalMatches: matches.length,
+    returnedCount: lessons.length,
+    returnedTokens: lessons.reduce((sum, l) => sum + estTokens(l.lesson.rule), 0),
+    truncated: matches.length > lessons.length,
+    matchedByKind: {
+      file: countVia(byKind.file_glob),
+      command: countVia(byKind.command_pattern),
+      keyword: countVia(byKind.keyword),
+    },
+  });
 }
 
 /**

@@ -1,4 +1,5 @@
 import type { GuardrailWarning } from '../../lessons/capture-guardrails.js';
+import type { RecallStatsReport } from '../../lessons/stats.js';
 import type { ValidationFinding } from '../../lessons/validate.js';
 
 export type LessonsQueryFormat = 'plain' | 'md' | 'json';
@@ -85,6 +86,12 @@ export interface LessonsPruneData {
   }>;
 }
 
+export interface LessonsStatsData {
+  readonly report: RecallStatsReport;
+  /** False when no recall log exists yet (telemetry never enabled). */
+  readonly hasLog: boolean;
+}
+
 export type LessonsCommandResult =
   | { subcommand: 'help'; exitCode: number; error?: string; data: null }
   | {
@@ -108,4 +115,11 @@ export type LessonsCommandResult =
   | { subcommand: 'journal'; exitCode: number; data: LessonsJournalData; error?: string }
   | { subcommand: 'validate'; exitCode: number; data: LessonsValidateData; error?: string }
   | { subcommand: 'import-md'; exitCode: number; data: LessonsImportMdData; error?: string }
-  | { subcommand: 'prune'; exitCode: number; data: LessonsPruneData; error?: string };
+  | { subcommand: 'prune'; exitCode: number; data: LessonsPruneData; error?: string }
+  | {
+      subcommand: 'stats';
+      exitCode: number;
+      format: 'text' | 'json';
+      data: LessonsStatsData;
+      error?: string;
+    };

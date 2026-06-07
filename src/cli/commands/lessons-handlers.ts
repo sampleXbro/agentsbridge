@@ -5,6 +5,8 @@ import {
   DEFAULT_RECALL_MAX_TOKENS,
   rankLessons,
 } from '../../lessons/ranking.js';
+import { summarizeRecall } from '../../lessons/stats.js';
+import { readRecallLog, recallLogExists } from '../../lessons/telemetry.js';
 import { validateLessonsGraph } from '../../lessons/validate.js';
 import {
   emptyGraph,
@@ -123,6 +125,18 @@ export function doJournal(projectRoot: string): LessonsCommandResult {
     });
   const data: LessonsJournalData = { entries };
   return { subcommand: 'journal', exitCode: 0, data };
+}
+
+export function doStats(flags: LessonsFlags, projectRoot: string): LessonsCommandResult {
+  const graph = tryLoadLessonsGraph(projectRoot) ?? emptyGraph();
+  const report = summarizeRecall(readRecallLog(projectRoot), graph);
+  const format = flags.json === true ? 'json' : 'text';
+  return {
+    subcommand: 'stats',
+    exitCode: 0,
+    format,
+    data: { report, hasLog: recallLogExists(projectRoot) },
+  };
 }
 
 export function doValidate(projectRoot: string): LessonsCommandResult {

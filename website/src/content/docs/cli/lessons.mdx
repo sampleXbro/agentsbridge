@@ -27,6 +27,7 @@ agentsmesh lessons <subcommand> [args] [flags]
 | `strip-markers` | Remove dead legacy provenance markers (`See L123`, `(L69)`, `[L3]`, "(also relevant …)") from rule prose. `--dry-run` reports without writing. |
 | `journal` | Render lessons chronologically (sorted by `createdAt` then id). |
 | `validate` | Schema + integrity checks. Non-zero exit on errors; warnings do not affect exit code. |
+| `stats` | Summarize the opt-in recall telemetry log: no-match rate, returned-token percentiles, cumulative recall cost vs. the whole-active-set preload baseline (break-even), and the keyword-only reachability gap. `--json` for raw output. Requires `AGENTSMESH_LESSONS_TELEMETRY=1`. |
 | `prune` | Curate the graph — trim over-cap lessons (drop the least-specific triggers) and remove dead triggers. **Dry-run by default**; `--apply` writes, `--cap <n>` overrides the per-lesson cap (default 8). |
 | `import-md` | One-shot migrator from legacy `index.yaml` + `topics/*.md` + `journal.md`. |
 
@@ -152,6 +153,14 @@ Results are **relevance-ranked** (BM25 over rule text fused with trigger specifi
 | `--cap <n>` | Per-lesson trigger cap (positive integer; default 8). Over-cap active lessons keep their `n` most-specific triggers; the highest-fanout (least specific) ones are dropped first. |
 
 Dead triggers (referenced by no `active` lesson) are removed regardless of `--cap`. The graph is git-tracked, so an applied prune is reviewable in the diff and revertible. See the [curation reference](../../reference/lessons/#curation-prune).
+
+### `stats`
+
+| Flag | Description |
+|------|-------------|
+| `--json` | Emit the raw report object instead of the human summary. |
+
+Mandatory recall runs before every edit and command, so its **frequency** — not its per-call payload — is the real token cost. Set `AGENTSMESH_LESSONS_TELEMETRY=1` to record one append-only row per recall to `.agentsmesh/lessons/recall-log.jsonl` (field-presence booleans only — never the file / command / keyword text). `stats` then reports the no-match rate, returned-token percentiles, cumulative recall cost versus the whole-active-set **preload baseline** (so you can see whether per-action recall beats loading every active rule once), and the keyword-only reachability gap. The log is telemetry, not the canonical graph; add it to your `ignore` if you don't want it tracked.
 
 ### `import-md`
 

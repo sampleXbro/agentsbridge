@@ -76,7 +76,8 @@ function rankMap(items: { id: string; value: number }[]): Map<string, number> {
   return ranks;
 }
 
-function estTokens(rule: string): number {
+/** Crude rule-token estimate (≈4 chars/token) — shared by recall caps and stats. */
+export function estTokens(rule: string): number {
   return Math.ceil(rule.length / 4);
 }
 

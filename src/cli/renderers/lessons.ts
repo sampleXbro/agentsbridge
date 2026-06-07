@@ -13,6 +13,7 @@ import type {
   LessonsQueryData,
   LessonsQueryFormat,
   LessonsShowData,
+  LessonsStatsData,
   LessonsTopicsData,
   LessonsValidateData,
 } from '../commands/lessons-types.js';
@@ -58,9 +59,44 @@ export function renderLessons(result: LessonsCommandResult): void {
       return renderValidate(result.data);
     case 'prune':
       return renderPrune(result.data);
+    case 'stats':
+      return renderStats(result.data, result.format);
     case 'import-md':
       return renderImportMd(result.data);
   }
+}
+
+function pct(x: number): string {
+  return `${(x * 100).toFixed(1)}%`;
+}
+
+function renderStats(data: LessonsStatsData, format: 'text' | 'json'): void {
+  if (format === 'json') {
+    process.stdout.write(`${JSON.stringify(data.report, null, 2)}\n`);
+    return;
+  }
+  if (!data.hasLog) {
+    logger.info('(no recall telemetry yet — set AGENTSMESH_LESSONS_TELEMETRY=1 to record)');
+    return;
+  }
+  const r = data.report;
+  const be = r.preloadBreakEven;
+  logger.info(`recalls: ${r.totalRecalls}   no-match: ${pct(r.noMatchRate)}`);
+  logger.info(
+    `match counts: ${r.matchCountHistogram.map((b) => `${b.bucket}=${b.count}`).join('  ')}`,
+  );
+  logger.info(
+    `returned tokens: p50=${r.returnedTokens.p50} p90=${r.returnedTokens.p90} max=${r.returnedTokens.max}`,
+  );
+  logger.info(
+    `recall tokens cumulative=${r.cumulativeRecallTokens} vs preload baseline=${r.wholeActiveSetTokens}`,
+  );
+  logger.info(
+    `break-even: ${be.perActionCheaper ? 'per-action cheaper' : 'preload cheaper'} (ratio ${be.ratio.toFixed(2)})`,
+  );
+  logger.info(
+    `reachability: keyword-only recalls ${pct(r.reachability.keywordOnlyRecallRate)}, keyword-only-unreachable lessons ${r.reachability.keywordOnlyUnreachableLessons}`,
+  );
 }
 
 function renderPrune(data: LessonsPruneData): void {
@@ -193,6 +229,9 @@ function printHelp(): void {
   logger.info('  strip-markers [--dry-run]');
   logger.info('  journal');
   logger.info('  validate');
+  logger.info(
+    '  stats [--json]   (recall telemetry summary; needs AGENTSMESH_LESSONS_TELEMETRY=1)',
+  );
   logger.info(
     '  prune [--apply] [--cap <n>]   (dry-run by default; trims over-cap lessons + dead triggers)',
   );

@@ -13,7 +13,14 @@ token-justified AND measures whether B actually helps. B lands second, measured 
 
 ---
 
-## Item A — Recall-frequency measurement (instrument, then read the numbers)
+## Item A — Recall-frequency measurement ✅ (instrument, then read the numbers)
+
+**A6 verdict (this corpus: 233 active lessons, 193 triggers, 25-action replay):** no-match 32%;
+returned tokens p50/p90/max = 150/365/382 (budget 400 holding); cumulative recall 4,148 vs
+whole-active-set preload 16,321 → **per-action recall cheaper** (ratio 0.25; preload only wins past
+~98 recalls/session). Keyword-only-unreachable lessons = 2 (small but dark on mandatory recall →
+bounds Item B's payoff here). Caveat: replay (file/cmd supplied), not organic telemetry.
+
 
 **Why:** payload is already lean; the unmeasured cost is recall *frequency* (mandatory query before
 every edit/command). Need real data: no-match rate, returned-token distribution, cumulative recall
@@ -21,7 +28,7 @@ cost vs. whole-active-set cost (the preload alternative), and the keyword-only r
 
 **Design — opt-in, zero-cost-when-off telemetry + a pure aggregator + a `stats` command.**
 
-- [ ] A1. `src/lessons/telemetry.ts` (new, pure + gated writer)
+- [x] A1. `src/lessons/telemetry.ts` (new, pure + gated writer)
       - `buildRecallRecord(input)` → one JSONL record: `ts` (caller-supplied ISO), field-presence
         booleans only (`hasFile/hasCommand/hasKeyword`, **never the values** — privacy + size),
         `totalMatches`, `returnedCount`, `returnedTokens`, `truncatedByLimit`, `truncatedByBudget`,
@@ -32,18 +39,18 @@ cost vs. whole-active-set cost (the preload alternative), and the keyword-only r
       - Tests: gate off = no file written; gate on = exactly one well-formed line per call; record
         shape; no raw file/command/keyword strings ever serialized.
 
-- [ ] A2. Provenance plumbing in `src/lessons/query.ts`
+- [x] A2. Provenance plumbing in `src/lessons/query.ts`
       - Add an optional sibling that returns matched-trigger **kinds** (or a per-kind matched-id set)
         so A1 can fill `matchedByKind` without re-running matching. Hot path stays zero-cost when
         telemetry is off (only compute provenance when enabled).
       - Tests: provenance counts correct for mixed file/cmd/keyword matches.
 
-- [ ] A3. Wire one call into `src/lessons/recall.ts`
+- [x] A3. Wire one call into `src/lessons/recall.ts`
       - After ranking, when gated on, build + append the record. `recallLessons` already returns
         `totalMatches`; reuse it. Caller passes the timestamp (keep recall.ts side-effect explicit).
       - Tests: integration — N recalls with telemetry on → N log lines with expected fields.
 
-- [ ] A4. `src/lessons/stats.ts` (new, pure aggregator)
+- [x] A4. `src/lessons/stats.ts` (new, pure aggregator)
       - `summarizeRecall(log[], graph)` → `StatsReport`: total recalls, no-match rate,
         match-count histogram, returned-token p50/p90, **cumulative recall tokens** (log window),
         **whole-active-set token cost** (Σ est-tokens of active rules = the preload baseline),
@@ -54,7 +61,7 @@ cost vs. whole-active-set cost (the preload alternative), and the keyword-only r
       - Pure function over arrays → fully unit-testable against a synthetic log. Tests assert each
         metric on a known fixture.
 
-- [ ] A5. `agentsmesh lessons stats` CLI subcommand
+- [x] A5. `agentsmesh lessons stats` CLI subcommand
       - `doStats(projectRoot)` in handlers; dispatch in `lessons.ts`; `lessons-types.ts` data type;
         renderer (compact text + `--json`). Forward-slash-normalize any paths.
       - **MCP surface unchanged** — analysis tool is CLI-only, so no added per-session schema token
@@ -62,12 +69,12 @@ cost vs. whole-active-set cost (the preload alternative), and the keyword-only r
       - Tests: handler returns report; renderer text + json; empty-log path = friendly "(no telemetry
         yet — set AGENTSMESH_LESSONS_TELEMETRY=1)".
 
-- [ ] A6. Produce the actual numbers
+- [x] A6. Produce the actual numbers
       - Enable telemetry, run/replay a real working session, run `lessons stats`, **record the verdict
         in the PR**: is per-action recall token-justified vs. preload for this corpus? This is the
         deliverable that the whole item exists for.
 
-- [ ] A7. Docs: README (new `stats` subcommand + telemetry env var), website `reference/lessons.mdx`
+- [x] A7. Docs: README (new `stats` subcommand + telemetry env var), website `reference/lessons.mdx`
       + `cli/lessons.mdx`, CLI `help-data.ts`. Add `recall-log.jsonl` to lessons `ignore` guidance.
 
 **Acceptance:** telemetry off by default (asserted no-write); one clean record per recall when on;

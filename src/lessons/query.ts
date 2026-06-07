@@ -52,15 +52,39 @@ export function queryLessons(graph: LessonsGraph, query: LessonsQuery): MatchedL
   return matched;
 }
 
-/** The set of trigger ids that match the query — shared by recall and ranking. */
-export function collectMatchedTriggerIds(graph: LessonsGraph, query: LessonsQuery): Set<string> {
-  const ids = new Set<string>();
+/** Matched trigger ids split by kind — drives recall telemetry provenance. */
+export interface MatchedTriggersByKind {
+  readonly file_glob: Set<string>;
+  readonly command_pattern: Set<string>;
+  readonly keyword: Set<string>;
+}
+
+/**
+ * Partition the query's matched trigger ids by kind in a single pass. The flat
+ * {@link collectMatchedTriggerIds} delegates here so matching logic and the
+ * shared command-pattern budget live in exactly one place.
+ */
+export function collectMatchedTriggersByKind(
+  graph: LessonsGraph,
+  query: LessonsQuery,
+): MatchedTriggersByKind {
+  const byKind: MatchedTriggersByKind = {
+    file_glob: new Set(),
+    command_pattern: new Set(),
+    keyword: new Set(),
+  };
   // One budget shared across ALL command_pattern triggers in this query.
   const budget: WorkBudget = { remaining: COMMAND_MATCH_BUDGET };
   for (const [id, trigger] of Object.entries(graph.triggers)) {
-    if (triggerMatches(trigger, query, budget)) ids.add(id);
+    if (triggerMatches(trigger, query, budget)) byKind[trigger.kind].add(id);
   }
-  return ids;
+  return byKind;
+}
+
+/** The set of trigger ids that match the query — shared by recall and ranking. */
+export function collectMatchedTriggerIds(graph: LessonsGraph, query: LessonsQuery): Set<string> {
+  const { file_glob, command_pattern, keyword } = collectMatchedTriggersByKind(graph, query);
+  return new Set([...file_glob, ...command_pattern, ...keyword]);
 }
 
 function triggerMatches(trigger: Trigger, query: LessonsQuery, budget: WorkBudget): boolean {

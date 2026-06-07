@@ -1,150 +1,133 @@
-# Lessons → JSON Graph Redesign
+# Lessons recall improvements — measurement + reachability
 
-Goal: replace the YAML-index + per-topic-Markdown lessons store with a single normalized JSON graph, exposed through one `agentsmesh lessons` CLI primitive that any harness (Claude, Cursor, Codex, plain shell) calls. Cut recall token cost from a 456-line index + topic file reads down to a filtered query result. Make capture atomic so the ritual stops being skipped.
+Scope (user-approved): **(A) recall-frequency measurement** and **(B) conceptual-lesson
+reachability**, both **inside the per-action recall model** (no session-preload redesign).
+Out of scope: usefulness-signal/aging (deferred precision work), ReDoS-engine review.
 
-## Decisions locked in (from prior turn)
+Principles: TDD first (failing test → implement). All files ≤200 lines. CLI paths forward-slash
+normalized. No `any`. Docs (README + website + CLI help) updated before "done". `post-feature-qa`
+after each item. Single recall chokepoint = `recallLessons()` in `src/lessons/recall.ts:55`.
 
-- **Dedup on `add`:** never silently auto-deprecate near-duplicates. `lessons validate` flags them so a human resolves the conflict.
-- **Topic taxonomy:** the existing 12 topics stay canonical (referenced from CLAUDE.md). `add` rejects unknown topics unless `--new-topic` is passed.
-- **Evidence:** use lesson IDs and commit SHAs. The `L<line>` journal pointer scheme is retired. Old `L<n>` evidence strings are preserved verbatim on import for traceability but new entries never produce them.
-- **Journal:** becomes a rendered view (`lessons journal`) over the graph; not a source of truth. The current `journal.md` is imported, then frozen as `journal.legacy.md`.
+Sequencing: **A lands first** — it is the instrument that proves the per-action model is/ isn't
+token-justified AND measures whether B actually helps. B lands second, measured by A.
 
-## Non-goals (this iteration)
+---
 
-- No remote sync / multi-repo lesson sharing.
-- No similarity scoring beyond exact-rule-text duplicate detection.
-- No web UI; CLI + MCP tool only.
-- No removal of the old `index.yaml` + `topics/*.md` files until one full release after the new system ships green in CI.
+## Item A — Recall-frequency measurement (instrument, then read the numbers)
 
-## Architecture
+**Why:** payload is already lean; the unmeasured cost is recall *frequency* (mandatory query before
+every edit/command). Need real data: no-match rate, returned-token distribution, cumulative recall
+cost vs. whole-active-set cost (the preload alternative), and the keyword-only reachability gap.
 
-```
-.agentsmesh/lessons/
-  lessons.json            # canonical graph (new SoT)
-  journal.legacy.md       # frozen snapshot of pre-migration journal.md
-  index.yaml              # DEPRECATED, kept read-only for one release
-  topics/*.md             # DEPRECATED, kept read-only for one release
-```
+**Design — opt-in, zero-cost-when-off telemetry + a pure aggregator + a `stats` command.**
 
-### `lessons.json` schema (v1)
+- [ ] A1. `src/lessons/telemetry.ts` (new, pure + gated writer)
+      - `buildRecallRecord(input)` → one JSONL record: `ts` (caller-supplied ISO), field-presence
+        booleans only (`hasFile/hasCommand/hasKeyword`, **never the values** — privacy + size),
+        `totalMatches`, `returnedCount`, `returnedTokens`, `truncatedByLimit`, `truncatedByBudget`,
+        and per-kind match provenance `matchedByKind: {file,command,keyword}`.
+      - `appendRecallRecord(projectRoot, record)` → append one line to
+        `.agentsmesh/lessons/recall-log.jsonl`. **Gated**: no-op unless
+        `AGENTSMESH_LESSONS_TELEMETRY=1`. Off by default → zero files, zero overhead.
+      - Tests: gate off = no file written; gate on = exactly one well-formed line per call; record
+        shape; no raw file/command/keyword strings ever serialized.
 
-```jsonc
-{
-  "version": 1,
-  "lessons":  { "<lesson-id>": { rule, rationale?, topics: [topicId], triggers: [triggerId], evidence: [string], status, supersededBy?, createdAt } },
-  "topics":   { "<topic-id>":  { summary } },
-  "triggers": { "<trigger-id>": { kind: "file_glob"|"command_pattern"|"keyword", pattern } }
-}
-```
+- [ ] A2. Provenance plumbing in `src/lessons/query.ts`
+      - Add an optional sibling that returns matched-trigger **kinds** (or a per-kind matched-id set)
+        so A1 can fill `matchedByKind` without re-running matching. Hot path stays zero-cost when
+        telemetry is off (only compute provenance when enabled).
+      - Tests: provenance counts correct for mixed file/cmd/keyword matches.
 
-- IDs are slugged kebab-case.
-- Trigger nodes are deduplicated (same kind+pattern collapses to one ID), so multiple lessons can share triggers cheaply.
-- File is deterministically sorted (lessons by `createdAt` then id; topics/triggers by id) so diffs are clean.
+- [ ] A3. Wire one call into `src/lessons/recall.ts`
+      - After ranking, when gated on, build + append the record. `recallLessons` already returns
+        `totalMatches`; reuse it. Caller passes the timestamp (keep recall.ts side-effect explicit).
+      - Tests: integration — N recalls with telemetry on → N log lines with expected fields.
 
-### CLI surface (`src/cli/commands/lessons.ts`)
+- [ ] A4. `src/lessons/stats.ts` (new, pure aggregator)
+      - `summarizeRecall(log[], graph)` → `StatsReport`: total recalls, no-match rate,
+        match-count histogram, returned-token p50/p90, **cumulative recall tokens** (log window),
+        **whole-active-set token cost** (Σ est-tokens of active rules = the preload baseline),
+        **break-even verdict** (per-action vs. preload for this corpus), and reachability:
+        `% recalls that fired only via keyword`, `% no-match`, and
+        `keywordOnlyUnreachable` = count of active lessons whose triggers are all `keyword`
+        (invisible to file/cmd-only recall — quantifies the Item B gap).
+      - Pure function over arrays → fully unit-testable against a synthetic log. Tests assert each
+        metric on a known fixture.
 
-| Subcommand | Purpose |
-|---|---|
-| `lessons query --file <p> --cmd <c> --keyword <k> [--format json\|md\|plain]` | Recall primitive. Returns only matched lesson rules. |
-| `lessons add "<rule>" --topic <id> [--trigger-file <glob>]... [--trigger-cmd <regex>]... [--trigger-kw <txt>]... [--evidence <ref>]... [--rationale <text>]` | Capture primitive. Atomic upsert. Prints lesson ID. |
-| `lessons topics` | List canonical topics + summaries. |
-| `lessons show <topic>` | Render a topic's lessons as Markdown (read-only view, matches old topic-file shape). |
-| `lessons deprecate <id> [--superseded-by <id>]` | Mark a lesson `deprecated`. |
-| `lessons journal [--since <iso>]` | Render the historical journal from graph nodes (replaces hand-maintained `journal.md`). |
-| `lessons validate` | Schema + dangling-ref + duplicate-rule-text + unknown-topic checks. Non-zero exit on failure. |
-| `lessons import-md` | One-shot migrator: parse current `index.yaml` + `topics/*.md` + `journal.md` → emit `lessons.json` + `journal.legacy.md`. Idempotent. |
+- [ ] A5. `agentsmesh lessons stats` CLI subcommand
+      - `doStats(projectRoot)` in handlers; dispatch in `lessons.ts`; `lessons-types.ts` data type;
+        renderer (compact text + `--json`). Forward-slash-normalize any paths.
+      - **MCP surface unchanged** — analysis tool is CLI-only, so no added per-session schema token
+        tax on the agent.
+      - Tests: handler returns report; renderer text + json; empty-log path = friendly "(no telemetry
+        yet — set AGENTSMESH_LESSONS_TELEMETRY=1)".
 
-### Public API additions (`src/public/lessons.ts`)
+- [ ] A6. Produce the actual numbers
+      - Enable telemetry, run/replay a real working session, run `lessons stats`, **record the verdict
+        in the PR**: is per-action recall token-justified vs. preload for this corpus? This is the
+        deliverable that the whole item exists for.
 
-New exports (old ones stay during deprecation window):
+- [ ] A7. Docs: README (new `stats` subcommand + telemetry env var), website `reference/lessons.mdx`
+      + `cli/lessons.mdx`, CLI `help-data.ts`. Add `recall-log.jsonl` to lessons `ignore` guidance.
 
-- `loadLessonsGraph(projectRoot): LessonsGraph`
-- `queryLessons(graph, event: ToolEvent): Lesson[]`
-- `addLesson(projectRoot, input: AddLessonInput): { id: string }`
-- `renderTopicMarkdown(graph, topicId): string`
-- `renderJournalMarkdown(graph, opts?): string`
-- `validateLessonsGraph(graph): ValidationReport`
-- `importLegacyLessons(projectRoot): MigrationReport`
+**Acceptance:** telemetry off by default (asserted no-write); one clean record per recall when on;
+`stats` reports no-match rate, token histogram, preload break-even, and keyword-only-unreachable
+count, all verified on a fixture; real-session numbers captured.
 
-### MCP server
+---
 
-`src/mcp/*` gets two thin tools mirroring CLI: `lessons_query` and `lessons_add`. Same arg shape as CLI flags. No new surface — they delegate to the public API.
+## Item B — Conceptual-lesson reachability (engine, single contained change)
 
-### Ritual rewrite
+**Why:** `triggerMatches` keyword case (`query.ts:80-82`) only tests `query.keyword`. A keyword-only
+lesson never fires on a mandatory `--file`/`--cmd` recall unless the agent hand-crafts `--keyword` —
+the least reliable input. Whole class of conceptual lessons is systematically under-recalled.
 
-Edit `.agentsmesh/rules/_root.md` lessons section:
+**Chosen approach (query-side derivation) — rejected alternative noted:**
+Match keyword triggers ALSO against a haystack *derived from the file path + command*, with
+**token/word-boundary** matching. Rejected: auto-deriving keyword triggers at *capture* — pushes
+burden to capture, ignores existing lessons, duplicates data. Query-side derivation is strictly
+better: zero data change, helps every existing keyword lesson immediately.
 
-```
-Recall (BEFORE edit/command):
-  Run: agentsmesh lessons query --file <path> --cmd <command>
-  Apply the returned rules.
+- [ ] B1. `src/lessons/keyword-match.ts` (new, keeps query.ts ≤200)
+      - `deriveHaystack(query)` → tokens from file path (split on `/ . - _` + camelCase) + command
+        (whitespace/punct), lowercased.
+      - `keywordMatches(pattern, query)` → true if pattern matches `query.keyword` (current substring
+        behavior, **byte-identical**) OR matches the derived haystack on **token boundaries**
+        (multi-word patterns must match contiguously; min token len reuses BM25 tokenizer rules to
+        avoid noise). Prevents "cat" firing on "category", "test" firing on everything.
+      - Reuse the existing tokenizer in `ranking-text.ts` if exported; else extract shared.
 
-Capture (IMMEDIATELY after failure):
-  Run: agentsmesh lessons add "<imperative rule>" --topic <id> \
-       --trigger-file <glob> --evidence <commit-sha|lesson-id>
-```
+- [ ] B2. Swap `query.ts` keyword case to `keywordMatches(...)`. No other match logic changes.
+      Bound stays the same (ranking specificity + 400-token budget already cap blast radius).
 
-Then `agentsmesh generate` propagates to every target's CLAUDE.md/AGENTS.md/etc.
+- [ ] B3. Tests (TDD, write first)
+      - keyword "subagent" fires on file `subagent-runner.ts`; "checkout" fires on cmd
+        `git checkout -b`; "cat" does NOT fire on `category.ts`; multi-word "read only" matches
+        `read-only` segment, not scattered tokens.
+      - **Regression**: explicit `--keyword` behavior byte-identical to before.
+      - **Ranking preserved**: an exact `file_glob` match still ranks above a derived-keyword match
+        (specificity/inverse-fanout intact).
+      - e2e: a real keyword-only lesson surfaces on a file-only query.
 
-## Implementation phases
+- [ ] B4. Re-run Item A stats before/after B on the same session → confirm no-match rate drops
+      **without** a runaway returned-count (precision check). This is why A ships first.
 
-Each phase is an independent commit. TDD: failing tests land first within the phase.
+- [ ] B5. Soften (don't remove) the `KEYWORD_ONLY_LESSON` guardrail message — still a useful signal,
+      but no longer "won't surface". Docs: `reference/lessons.mdx` matching section.
 
-- [ ] **Phase 1 — Graph schema + read path**
-  - [ ] `src/lessons/graph-schema.ts`: zod schema for `lessons.json`, `LessonsGraph`/`Lesson`/`Topic`/`Trigger` types.
-  - [ ] `src/lessons/graph-store.ts`: `loadLessonsGraph`, `saveLessonsGraph` (deterministic JSON, trailing newline, sorted keys).
-  - [ ] `src/lessons/query.ts`: `queryLessons(graph, event)` — reuses `matchTriggers` semantics from `matcher.ts`.
-  - [ ] Tests: `graph-schema.test.ts` (round-trip, reject malformed), `graph-store.test.ts` (deterministic write — exact byte-for-byte), `query.test.ts` (file-glob + command-regex + keyword + combined, dedup across topics).
-  - Acceptance: schema rejects unknown fields; query returns lessons in stable order; bytes-on-disk are deterministic.
+**Acceptance:** keyword-only lesson recalled by file-only and cmd-only queries (token-boundary,
+proven by tests); no substring-within-word false positives; explicit `--keyword` regression-clean;
+specificity ranking still favors precise triggers; A's stats show no-match rate down without
+returned-count blowup.
 
-- [ ] **Phase 2 — Migrator (`import-md`)**
-  - [ ] `src/lessons/import-legacy.ts`: parses `index.yaml`, walks each `topics/*.md`, extracts each `## Rules` bullet as a `Lesson`. Preserves existing `(Evidence: L<n>)` text inside the `evidence[]` array verbatim, prefixed `legacy:`.
-  - [ ] Generates topic IDs from existing `topic:` keys, trigger IDs from a deterministic hash of `kind|pattern`.
-  - [ ] Copies `journal.md` → `journal.legacy.md`; does not delete original yet.
-  - [ ] Tests: fixture-based — `tests/fixtures/lessons/legacy-input/` mirrors the real current `.agentsmesh/lessons/` shape; assertion is exact-match against a committed `expected/lessons.json` snapshot. Run on real repo data as integration test (separate test reads live `.agentsmesh/lessons/` and asserts no parse errors + count parity).
-  - Acceptance: migrator is idempotent (second run produces byte-identical output); every existing topic + every journal bullet becomes a node.
+---
 
-- [ ] **Phase 3 — Write path (`addLesson` + `validate`)**
-  - [ ] `src/lessons/add.ts`: upsert lesson, dedup trigger nodes, append to existing topics, reject unknown topic unless `--new-topic`. Returns assigned ID.
-  - [ ] `src/lessons/validate.ts`: schema check, dangling trigger/topic refs, duplicate `rule` text (case- and whitespace-normalized), unknown-topic survey (lessons whose topic is `legacy:*`).
-  - [ ] Concurrency: writes go through `proper-lockfile` on `lessons.json` (already used elsewhere — check existing lock util before adding dep).
-  - [ ] Tests: add-then-query round-trip, add-dup-rule emits a `validate` finding, add with unknown topic without `--new-topic` errors, concurrent-writers test (`Promise.all` two adds → no data loss).
-  - Acceptance: graph remains valid after any successful `add`; `validate` exits non-zero on injected breakage.
+## Cross-cutting / done-criteria
+- [ ] `post-feature-qa` skill after A and after B.
+- [ ] typecheck + eslint + full suite + lessons e2e all green.
+- [ ] README + website (`reference/lessons.mdx`, `cli/lessons.mdx`) + CLI help in sync.
+- [ ] Commit only when the user asks (conventional commits, no co-author trailer).
 
-- [ ] **Phase 4 — CLI command + MCP tools**
-  - [ ] `src/cli/commands/lessons.ts`: commander subcommand tree wiring to public API. ≤200 lines; split per subcommand if needed.
-  - [ ] Wire into `src/cli/program.ts` (or wherever commands register).
-  - [ ] MCP: `mcp__agentsmesh__lessons_query` + `mcp__agentsmesh__lessons_add` — descriptors live next to existing MCP tools.
-  - [ ] Tests: CLI snapshot tests for each subcommand using `runCli` helper; assert exact stdout, exact exit codes, exact files-on-disk diff.
-  - Acceptance: every CLI flag has a test; help text exists for every subcommand.
+---
 
-- [ ] **Phase 5 — Ritual + docs propagation**
-  - [ ] Update `.agentsmesh/rules/_root.md` with the new Recall/Capture ritual (replacing the file-globs+index walk).
-  - [ ] Run `agentsmesh generate` → propagated `CLAUDE.md`, `AGENTS.md`, `.cursor/rules/`, etc. update.
-  - [ ] Update `README.md` lessons section + `website/src/content/docs/reference/lessons.mdx` (create if absent).
-  - [ ] Add `agentsmesh lessons` to the CLI overview docs.
-  - Acceptance: `pnpm typecheck` + `pnpm lint` + `pnpm test` all green; `agentsmesh check` clean.
-
-- [ ] **Phase 6 — Migration runbook + release**
-  - [ ] Add a changeset entry (minor — new public API + new CLI surface; the YAML/MD path still works).
-  - [ ] `import-md` runs automatically once on first `lessons` invocation if `lessons.json` is missing AND `index.yaml` exists; prints a one-time migration notice.
-  - [ ] Add deprecation notice to `loadLessonsIndex`/`readTriggeredLessons` (JSDoc `@deprecated`, runtime no-op warning gated on env flag).
-  - Acceptance: a checkout that has only the legacy files works without manual `import-md`.
-
-- [ ] **Phase 7 — Remove legacy (separate release, not blocking)**
-  - [ ] Track in a follow-up issue. After one minor release with both stores live, delete `index.yaml`, `topics/*.md`, `journal.md`, and the legacy API exports. Not in scope for this PR.
-
-## Verification
-
-- TDD per phase: failing test → implementation → green.
-- `pnpm typecheck && pnpm lint && pnpm test` per phase.
-- `pnpm test:e2e` after Phase 4.
-- Apply `post-feature-qa` skill before declaring Phase 5 done.
-- Manual check: run `agentsmesh lessons query --file src/cli/commands/lessons.ts --cmd "pnpm test"` and confirm output is the expected ≤500-token slice.
-
-## Open risks / watch items
-
-- `proper-lockfile` may not exist as a dep — if not, check `src/utils/` for an existing lock helper before adding a new one (project rule: no target-name hardcoding, no duplicate helpers).
-- Reference rewriter (`src/core/reference/`) may have hard assumptions about `topics/*.md` existing. Sweep for `lessons/topics` references before deleting.
-- Determinism: JSON.stringify key order is engine-defined for non-string keys but stable for string keys in V8. Sort explicitly to be safe; do not rely on insertion order.
-- Path normalization (CLAUDE.md rule): CLI output displaying file paths must `.replaceAll('\\', '/')`. Lessons graph stores patterns as authored — do not normalize them.
+## Prior round (shipped) — guardrails / prune / ranking rebalance: complete (see git log review rounds 1–5).

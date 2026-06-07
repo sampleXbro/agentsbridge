@@ -126,6 +126,22 @@ describe('queryLessons', () => {
     expect(byKind.keyword.size).toBe(0);
   });
 
+  it('surfaces a keyword-only lesson on a file-only query via the derived haystack', () => {
+    // No --keyword supplied; the keyword trigger "windows" fires off the file path.
+    const r = queryLessons(graph, { file: 'src/windows-path-fix.ts' });
+    expect(r.map((x) => x.id)).toContain('kw-only');
+  });
+
+  it('surfaces a keyword-only lesson on a command-only query via the derived haystack', () => {
+    const r = queryLessons(graph, { command: 'wsl windows test' });
+    expect(r.map((x) => x.id)).toContain('kw-only');
+  });
+
+  it('does not fire a keyword trigger on an unrelated file (token-boundary, not substring)', () => {
+    const r = queryLessons(graph, { file: 'src/ranking.ts' });
+    expect(r.map((x) => x.id)).not.toContain('kw-only');
+  });
+
   it('returns empty when nothing matches', () => {
     expect(queryLessons(graph, { file: 'docs/readme.md' })).toEqual([]);
   });

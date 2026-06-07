@@ -83,7 +83,9 @@ count, all verified on a fixture; real-session numbers captured.
 
 ---
 
-## Item B — Conceptual-lesson reachability (engine, single contained change)
+## Item B — Conceptual-lesson reachability ✅ (engine, single contained change)
+
+**B4 result:** keyword triggers now fire off `--file`/`--cmd` tokens (token-boundary). Real-graph proof: a plain edit of `src/lessons/fork-context-*.ts` now surfaces the keyword-only lesson `agent-orchestration-when-spawning-a-subagent-with` (pattern `fork_context`) — previously 100% dark on mandatory recall. Aggregate replay unchanged on generic paths (no false-positive blowup).
 
 **Why:** `triggerMatches` keyword case (`query.ts:80-82`) only tests `query.keyword`. A keyword-only
 lesson never fires on a mandatory `--file`/`--cmd` recall unless the agent hand-crafts `--keyword` —
@@ -95,7 +97,7 @@ Match keyword triggers ALSO against a haystack *derived from the file path + com
 burden to capture, ignores existing lessons, duplicates data. Query-side derivation is strictly
 better: zero data change, helps every existing keyword lesson immediately.
 
-- [ ] B1. `src/lessons/keyword-match.ts` (new, keeps query.ts ≤200)
+- [x] B1. `src/lessons/keyword-match.ts` (new, keeps query.ts ≤200)
       - `deriveHaystack(query)` → tokens from file path (split on `/ . - _` + camelCase) + command
         (whitespace/punct), lowercased.
       - `keywordMatches(pattern, query)` → true if pattern matches `query.keyword` (current substring
@@ -104,10 +106,10 @@ better: zero data change, helps every existing keyword lesson immediately.
         avoid noise). Prevents "cat" firing on "category", "test" firing on everything.
       - Reuse the existing tokenizer in `ranking-text.ts` if exported; else extract shared.
 
-- [ ] B2. Swap `query.ts` keyword case to `keywordMatches(...)`. No other match logic changes.
+- [x] B2. Swap `query.ts` keyword case to `keywordMatches(...)`. No other match logic changes.
       Bound stays the same (ranking specificity + 400-token budget already cap blast radius).
 
-- [ ] B3. Tests (TDD, write first)
+- [x] B3. Tests (TDD, write first)
       - keyword "subagent" fires on file `subagent-runner.ts`; "checkout" fires on cmd
         `git checkout -b`; "cat" does NOT fire on `category.ts`; multi-word "read only" matches
         `read-only` segment, not scattered tokens.
@@ -116,10 +118,10 @@ better: zero data change, helps every existing keyword lesson immediately.
         (specificity/inverse-fanout intact).
       - e2e: a real keyword-only lesson surfaces on a file-only query.
 
-- [ ] B4. Re-run Item A stats before/after B on the same session → confirm no-match rate drops
+- [x] B4. Re-run Item A stats before/after B on the same session → confirm no-match rate drops
       **without** a runaway returned-count (precision check). This is why A ships first.
 
-- [ ] B5. Soften (don't remove) the `KEYWORD_ONLY_LESSON` guardrail message — still a useful signal,
+- [x] B5. Soften (don't remove) the `KEYWORD_ONLY_LESSON` guardrail message — still a useful signal,
       but no longer "won't surface". Docs: `reference/lessons.mdx` matching section.
 
 **Acceptance:** keyword-only lesson recalled by file-only and cmd-only queries (token-boundary,
@@ -130,9 +132,9 @@ returned-count blowup.
 ---
 
 ## Cross-cutting / done-criteria
-- [ ] `post-feature-qa` skill after A and after B.
-- [ ] typecheck + eslint + full suite + lessons e2e all green.
-- [ ] README + website (`reference/lessons.mdx`, `cli/lessons.mdx`) + CLI help in sync.
+- [x] `post-feature-qa` skill after A and after B.
+- [x] typecheck + eslint + full suite + lessons e2e all green.
+- [x] README + website (`reference/lessons.mdx`, `cli/lessons.mdx`) + CLI help in sync.
 - [ ] Commit only when the user asks (conventional commits, no co-author trailer).
 
 ---

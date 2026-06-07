@@ -105,7 +105,7 @@ entirely — `agentsmesh init --lessons` creates the graph directly.
 |------|-------------|
 | `--file <path>` | Project-relative path of the file about to be edited. Matched against `file_glob` triggers. |
 | `--cmd <command>` | Shell command about to run. Matched against `command_pattern` triggers (regex). |
-| `--keyword <text>` | Free-form task description. Matched against `keyword` triggers (case-insensitive substring). |
+| `--keyword <text>` | Free-form task description. Matched against `keyword` triggers (case-insensitive substring). `keyword` triggers also match `--file`/`--cmd` on token boundaries, so conceptual lessons surface without an explicit `--keyword`. |
 | `--format plain\|md\|json` | Output shape. Default `plain` (one rule per line). |
 | `--top <n>` | Keep only the top `n` relevance-ranked matches. Default 10. |
 | `--all` | Return every match (disable both the limit and the token budget). |
@@ -127,7 +127,7 @@ Results are **relevance-ranked** (BM25 over rule text fused with trigger specifi
 | `--new-topic` | Allow creating a new topic if missing. Requires `--topic-summary`. |
 | `--topic-summary "<text>"` | One-line summary when `--new-topic` creates a topic. |
 
-`add` prints **non-blocking guardrail warnings** to stderr (capture still succeeds) when the resulting lesson has too many triggers (`OVERSIZED_LESSON_TRIGGERS`, cap 8), a broad glob (`BROAD_GLOB_TRIGGER`), or only keyword triggers (`KEYWORD_ONLY_LESSON`, which never fire on `--file`/`--cmd` recall). Prefer a few specific triggers. See the [guardrails reference](../../reference/lessons/#capture-guardrails).
+`add` prints **non-blocking guardrail warnings** to stderr (capture still succeeds) when the resulting lesson has too many triggers (`OVERSIZED_LESSON_TRIGGERS`, cap 8), a broad glob (`BROAD_GLOB_TRIGGER`), or only keyword triggers (`KEYWORD_ONLY_LESSON`, which fire on `--file`/`--cmd` recall only when the keyword appears as a path/command token — less reliable than a precise trigger). Prefer a few specific triggers. See the [guardrails reference](../../reference/lessons/#capture-guardrails).
 
 ### `deprecate`
 

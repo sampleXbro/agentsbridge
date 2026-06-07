@@ -2,8 +2,8 @@ import type { LessonsGraph } from './graph-schema.js';
 
 /**
  * Non-blocking capture guardrails. Over-triggering — too many triggers per
- * lesson, broad globs, keyword-only triggers that never fire on the mandatory
- * `--file`/`--cmd` recall path — is the single biggest threat to recall
+ * lesson, broad globs, keyword-only triggers that fire less reliably on the
+ * mandatory `--file`/`--cmd` recall path — is the single biggest threat to recall
  * precision (ranking can only compensate so far). Capture must never be
  * rejected for it (losing a lesson is worse), so these surface as WARNINGS on
  * `add`, steering authors toward a few specific triggers without blocking.
@@ -72,7 +72,7 @@ export function inspectCapturedLesson(graph: LessonsGraph, lessonId: string): Gu
   if (triggers.length > 0 && triggers.every((t) => t.kind === 'keyword')) {
     warnings.push({
       code: 'KEYWORD_ONLY_LESSON',
-      message: `Lesson "${lessonId}" has only keyword triggers; mandatory recall runs on --file/--cmd, so it will rarely surface — add a file_glob or command_pattern trigger.`,
+      message: `Lesson "${lessonId}" has only keyword triggers; mandatory --file/--cmd recall surfaces these only when the keyword appears as a path/command token, so it fires less reliably — add a file_glob or command_pattern trigger for precise recall.`,
     });
   }
 

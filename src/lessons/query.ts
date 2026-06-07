@@ -1,5 +1,6 @@
 import picomatch from 'picomatch';
 import type { Lesson, LessonsGraph, Trigger } from './graph-schema.js';
+import { keywordMatches } from './keyword-match.js';
 import { getCommandMatcher } from './regex-safety.js';
 import type { WorkBudget } from './regex-linear/index.js';
 
@@ -102,7 +103,8 @@ function triggerMatches(trigger: Trigger, query: LessonsQuery, budget: WorkBudge
       return matcher !== null && matcher.test(query.command, budget);
     }
     case 'keyword':
-      if (query.keyword === undefined) return false;
-      return query.keyword.toLowerCase().includes(trigger.pattern.toLowerCase());
+      // Matches the explicit --keyword (substring) OR the file/command tokens, so
+      // keyword-only conceptual lessons surface on mandatory --file/--cmd recall.
+      return keywordMatches(trigger.pattern, query);
   }
 }

@@ -65,6 +65,58 @@ describe('rankLessons', () => {
     expect(ranked[0]?.id).toBe('specific');
   });
 
+  it('keeps specificity intact: a precise file_glob outranks a broad keyword matched via the derived haystack', () => {
+    // `kw` is keyword-only ("cli", high fanout — it also rides on the rule text);
+    // `specific` has a narrow file_glob (fanout 1). A query on the precise path
+    // now surfaces BOTH (keyword fires off the path token "cli"), but the precise
+    // structural match must still rank first.
+    const g: LessonsGraph = {
+      version: 1,
+      lessons: {
+        specific: {
+          rule: 'Validate input first.',
+          topics: ['t'],
+          triggers: ['narrow'],
+          evidence: [],
+          status: 'active',
+          createdAt: '2026-06-01',
+        },
+        kw1: {
+          rule: 'A.',
+          topics: ['t'],
+          triggers: ['kw-cli'],
+          evidence: [],
+          status: 'active',
+          createdAt: '2026-06-01',
+        },
+        kw2: {
+          rule: 'B.',
+          topics: ['t'],
+          triggers: ['kw-cli'],
+          evidence: [],
+          status: 'active',
+          createdAt: '2026-06-01',
+        },
+        kw3: {
+          rule: 'C.',
+          topics: ['t'],
+          triggers: ['kw-cli'],
+          evidence: [],
+          status: 'active',
+          createdAt: '2026-06-01',
+        },
+      },
+      topics: { t: { summary: 'T.' } },
+      triggers: {
+        narrow: { kind: 'file_glob', pattern: 'src/cli/foo.ts' },
+        'kw-cli': { kind: 'keyword', pattern: 'cli' },
+      },
+    };
+    const ids = rankIds(g, { file: 'src/cli/foo.ts' });
+    expect(ids).toContain('kw1'); // derived-keyword match surfaced it
+    expect(ids[0]).toBe('specific'); // but specificity still wins
+  });
+
   it('caps the result count with limit', () => {
     const g = graph();
     const ids = rankIds(g, { file: 'src/x.ts', keyword: 'windows path' }, { limit: 1 });

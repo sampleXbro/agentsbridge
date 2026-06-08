@@ -6,6 +6,7 @@ import type { LessonsGraph } from '../../../src/lessons/graph-schema.js';
 import {
   graphFilePath,
   loadLessonsGraph,
+  loadLessonsGraphResilient,
   saveLessonsGraph,
   serializeGraph,
   tryLoadLessonsGraph,
@@ -134,5 +135,38 @@ describe('graph-store', () => {
     mkdirSync(dirname(path), { recursive: true });
     writeFileSync(path, '{ not json }', 'utf8');
     expect(() => loadLessonsGraph(root)).toThrow();
+  });
+});
+
+describe('loadLessonsGraphResilient', () => {
+  it('reports an absent graph as status "absent" with a null graph', () => {
+    expect(loadLessonsGraphResilient(root)).toEqual({ status: 'absent', graph: null });
+  });
+
+  it('reports a valid graph as status "ok" with the parsed graph', () => {
+    saveLessonsGraph(root, graph);
+    const result = loadLessonsGraphResilient(root);
+    expect(result.status).toBe('ok');
+    expect(result.graph).toEqual(graph);
+  });
+
+  it('reports invalid JSON as status "corrupt" with an Error and a null graph (never throws)', () => {
+    const path = graphFilePath(root);
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, '{ not json }', 'utf8');
+    const result = loadLessonsGraphResilient(root);
+    expect(result.status).toBe('corrupt');
+    expect(result.graph).toBeNull();
+    expect(result.status === 'corrupt' && result.error).toBeInstanceOf(Error);
+  });
+
+  it('reports schema-invalid (but valid JSON) content as status "corrupt"', () => {
+    const path = graphFilePath(root);
+    mkdirSync(dirname(path), { recursive: true });
+    // Valid JSON, but missing required fields → zod parseGraph rejects it.
+    writeFileSync(path, JSON.stringify({ version: 1, lessons: 'not-an-object' }), 'utf8');
+    const result = loadLessonsGraphResilient(root);
+    expect(result.status).toBe('corrupt');
+    expect(result.graph).toBeNull();
   });
 });

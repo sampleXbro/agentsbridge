@@ -8,7 +8,7 @@
  * application APIs migrate first.
  */
 
-import { cpSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -53,6 +53,44 @@ describe('recallLessons', () => {
   it('returns empty (not an error) when no graph and no legacy store exist', async () => {
     const result = await recallLessons(root, { keyword: 'anything' });
     expect(result).toEqual({ lessons: [], totalMatches: 0 });
+  });
+
+  it('degrades to empty + corrupt flag instead of throwing on an unreadable graph', async () => {
+    // Recall is a BLOCKING REQUIREMENT before every edit/command — a corrupt
+    // canonical graph must NOT crash the workflow with a stack trace.
+    const graphPath = lessonsPaths(root).graph;
+    cpSync(FIXTURE, join(root, '.agentsmesh', 'lessons'), { recursive: true }); // ensure dir
+    rmSync(graphPath, { force: true });
+    writeFileSync(graphPath, '{ truncated', 'utf8');
+    const result = await recallLessons(root, { keyword: 'anything' });
+    expect(result.lessons).toEqual([]);
+    expect(result.totalMatches).toBe(0);
+    expect(result.corrupt).toBe(true);
+  });
+
+  it('matches a file_glob lesson when --file is passed as an absolute path', async () => {
+    await captureLesson(
+      root,
+      { rule: 'A lesson under src.', topic: 'paths', triggers: { files: ['src/**/*.ts'] } },
+      { allowNewTopic: true, topicSummary: 'Paths topic' },
+    );
+    const abs = join(root, 'src', 'lessons', 'query.ts');
+    const result = await recallLessons(root, { file: abs }, { maxTokens: null });
+    expect(result.lessons.map((l) => l.lesson.rule)).toEqual(['A lesson under src.']);
+  });
+
+  it('matches a file_glob lesson when --file is a ./-prefixed relative path', async () => {
+    await captureLesson(
+      root,
+      { rule: 'A dotslash lesson.', topic: 'paths', triggers: { files: ['src/**/*.ts'] } },
+      { allowNewTopic: true, topicSummary: 'Paths topic' },
+    );
+    const result = await recallLessons(
+      root,
+      { file: './src/lessons/query.ts' },
+      { maxTokens: null },
+    );
+    expect(result.lessons.map((l) => l.lesson.rule)).toEqual(['A dotslash lesson.']);
   });
 
   it('applies the default token budget, and maxTokens:null disables it', async () => {

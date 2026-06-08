@@ -7,7 +7,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { runCli, runCliArgs } from './helpers/run-cli.js';
@@ -88,6 +88,23 @@ describe('lessons CLI — ReDoS guard (P1, linear engine)', () => {
     const r = await runCli(`lessons query --cmd ${adversarial}`, dir);
     expect(Date.now() - start).toBeLessThan(5000);
     expect(r.exitCode).toBe(0);
+  });
+});
+
+describe('lessons CLI — corrupt graph resilience (P1)', () => {
+  // Recall is a BLOCKING REQUIREMENT before every edit/command, so a corrupt
+  // canonical graph must NOT crash the real binary — it degrades to empty + warn.
+  it('does not crash on a corrupt lessons.json — exits 0 with a warning, no matches', async () => {
+    const graphDir = join(dir, '.agentsmesh', 'lessons');
+    mkdirSync(graphDir, { recursive: true });
+    writeFileSync(join(graphDir, 'lessons.json'), '{ truncated', 'utf8');
+
+    const r = await runCli('lessons query --file src/index.ts --format json', dir);
+    expect(r.exitCode).toBe(0);
+    expect(r.stderr.toLowerCase()).toMatch(/corrupt|unreadable/);
+    const data = JSON.parse(r.stdout) as { lessons: unknown[]; totalMatches: number };
+    expect(data.lessons).toEqual([]);
+    expect(data.totalMatches).toBe(0);
   });
 });
 

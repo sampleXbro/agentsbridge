@@ -6,7 +6,8 @@ import {
 } from './add.js';
 import { maybeAutoMigrateLessons } from './auto-migrate.js';
 import type { LessonsGraph } from './graph-schema.js';
-import { tryLoadLessonsGraph } from './graph-store.js';
+import { loadLessonsGraphResilient } from './graph-store.js';
+import { normalizeRecallFile } from './normalize-query-file.js';
 import {
   collectMatchedTriggersByKind,
   queryLessons,
@@ -54,6 +55,12 @@ export interface RecallResult {
   readonly lessons: RankedLesson[];
   /** How many active lessons matched the query before the caps were applied. */
   readonly totalMatches: number;
+  /**
+   * True when the canonical graph existed but could not be read (corrupt JSON /
+   * schema drift). Recall degrades to empty instead of throwing; callers surface
+   * this so a corrupt graph is a visible warning, not silent zero recall.
+   */
+  readonly corrupt?: boolean;
 }
 
 /**
@@ -66,15 +73,23 @@ export async function recallLessons(
   options: RecallOptions = {},
 ): Promise<RecallResult> {
   await maybeAutoMigrateLessons(projectRoot);
-  const graph = tryLoadLessonsGraph(projectRoot);
-  if (graph === null) return { lessons: [], totalMatches: 0 };
-  const matches = queryLessons(graph, query);
-  const lessons = rankLessons(graph, query, matches, {
+  const load = loadLessonsGraphResilient(projectRoot);
+  if (load.status === 'corrupt') return { lessons: [], totalMatches: 0, corrupt: true };
+  if (load.status === 'absent') return { lessons: [], totalMatches: 0 };
+  const graph = load.graph;
+  // Normalize the file path so a project-relative glob matches regardless of the
+  // shape the caller passed (absolute / ./-prefixed / backslash).
+  const matchQuery: LessonsQuery =
+    query.file === undefined
+      ? query
+      : { ...query, file: normalizeRecallFile(query.file, projectRoot) };
+  const matches = queryLessons(graph, matchQuery);
+  const lessons = rankLessons(graph, matchQuery, matches, {
     limit: options.limit ?? DEFAULT_RECALL_LIMIT,
     maxTokens:
       options.maxTokens === null ? undefined : (options.maxTokens ?? DEFAULT_RECALL_MAX_TOKENS),
   });
-  recordRecallTelemetry(projectRoot, graph, query, matches, lessons);
+  recordRecallTelemetry(projectRoot, graph, matchQuery, matches, lessons);
   return { lessons, totalMatches: matches.length };
 }
 

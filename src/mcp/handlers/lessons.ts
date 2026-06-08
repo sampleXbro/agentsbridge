@@ -88,10 +88,21 @@ export const lessonsHandlers = {
       command: input.command ?? input.cmd,
       keyword: input.keyword,
     };
-    const { lessons: ranked, totalMatches } = await recallLessons(ctx.projectRoot, query, {
+    const {
+      lessons: ranked,
+      totalMatches,
+      corrupt,
+    } = await recallLessons(ctx.projectRoot, query, {
       limit: input.limit,
       maxTokens: input.max_tokens ?? input['max-tokens'],
     });
+    if (corrupt === true) {
+      // Recall degrades to empty rather than throwing; surface the reason on
+      // stderr (stdout is the MCP protocol channel) so the server log shows it.
+      process.stderr.write(
+        'agentsmesh: lessons.json is unreadable (corrupt) — recall returned no lessons. Run `agentsmesh lessons validate`.\n',
+      );
+    }
     // Compact by default — return only id + rule to keep recall token-cheap.
     // Metadata (topics/triggers/evidence/score) is opt-in via `verbose`.
     const verbose = input.verbose === true;

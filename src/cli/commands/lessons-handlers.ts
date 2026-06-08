@@ -1,4 +1,5 @@
-import { tryLoadLessonsGraph } from '../../lessons/graph-store.js';
+import { loadLessonsGraphResilient, tryLoadLessonsGraph } from '../../lessons/graph-store.js';
+import { normalizeRecallFile } from '../../lessons/normalize-query-file.js';
 import { queryLessons } from '../../lessons/query.js';
 import {
   DEFAULT_RECALL_LIMIT,
@@ -66,13 +67,30 @@ export function doQuery(
   const fmtErr = validateFormatFlag(flags);
   if (fmtErr !== null) return errorResult('query', fmtErr, 2);
 
-  const graph = tryLoadLessonsGraph(projectRoot);
   const format = parseFormat(flags);
-  const query = queryFromFlags(flags);
-  if (graph === null) {
+  const raw = queryFromFlags(flags);
+  // Normalize the file path so a project-relative glob matches regardless of the
+  // shape the caller passed (absolute / ./-prefixed / backslash).
+  const query =
+    raw.file === undefined ? raw : { ...raw, file: normalizeRecallFile(raw.file, projectRoot) };
+  const load = loadLessonsGraphResilient(projectRoot);
+  if (load.status === 'corrupt') {
+    // Recall is a blocking requirement before every edit/command — a corrupt
+    // graph must degrade to empty (exit 0), with a warning, not a stack trace.
+    const data: LessonsQueryData = {
+      lessons: [],
+      query,
+      autoMigrated,
+      totalMatches: 0,
+      warning: `lessons.json is unreadable (corrupt) — recall returned no lessons. Run \`agentsmesh lessons validate\`. (${load.error.message})`,
+    };
+    return { subcommand: 'query', exitCode: 0, format, data };
+  }
+  if (load.status === 'absent') {
     const data: LessonsQueryData = { lessons: [], query, autoMigrated, totalMatches: 0 };
     return { subcommand: 'query', exitCode: 0, format, data };
   }
+  const graph = load.graph;
   const matches = queryLessons(graph, query);
   // `--all` bypasses both caps; otherwise apply the default limit + token budget
   // so mandatory recall stays lean unless the caller overrides via --top/--max-tokens.

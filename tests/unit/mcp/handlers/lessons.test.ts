@@ -72,6 +72,23 @@ describe('lessonsHandlers.query', () => {
     expect(r.lessons).toEqual([]);
   });
 
+  it('matches a file glob when --file is passed as an absolute path', async () => {
+    const r = await lessonsHandlers.query(ctx, { file: join(projectRoot, 'src/cli/x.ts') });
+    expect(r.lessons.map((l) => l.id)).toEqual(['topic-x-rule-1']);
+  });
+
+  it('matches a file glob when --file is ./-prefixed', async () => {
+    const r = await lessonsHandlers.query(ctx, { file: './src/cli/x.ts' });
+    expect(r.lessons.map((l) => l.id)).toEqual(['topic-x-rule-1']);
+  });
+
+  it('returns empty (does not throw) when the canonical graph is corrupt', async () => {
+    writeFileSync(graphFilePath(projectRoot), '{ truncated', 'utf8');
+    const r = await lessonsHandlers.query(ctx, { file: 'src/cli/x.ts' });
+    expect(r.lessons).toEqual([]);
+    expect(r.totalMatches).toBe(0);
+  });
+
   it('is compact by default: id + rule only, no metadata', async () => {
     const r = await lessonsHandlers.query(ctx, { file: 'src/cli/x.ts' });
     expect(r.lessons[0]?.id).toBe('topic-x-rule-1');

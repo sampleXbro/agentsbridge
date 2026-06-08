@@ -1,4 +1,12 @@
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -123,6 +131,31 @@ describe('runLessons query', () => {
     if (r.subcommand !== 'query') return;
     expect(r.data.autoMigrated).toBe(true);
     expect(r.data.lessons.length).toBeGreaterThan(0);
+  });
+
+  it('matches a file_glob lesson when --file is an absolute path', async () => {
+    seedSimpleGraph();
+    const r = await runLessons({ file: join(root, 'src/cli/lessons.ts') }, ['query'], root);
+    if (r.subcommand !== 'query') return;
+    expect(r.data.lessons.map((l) => l.id)).toEqual(['topic-x-rule-1']);
+  });
+
+  it('matches a file_glob lesson when --file is ./-prefixed', async () => {
+    seedSimpleGraph();
+    const r = await runLessons({ file: './src/cli/lessons.ts' }, ['query'], root);
+    if (r.subcommand !== 'query') return;
+    expect(r.data.lessons.map((l) => l.id)).toEqual(['topic-x-rule-1']);
+  });
+
+  it('degrades to empty + a warning (exit 0) when lessons.json is corrupt instead of crashing', async () => {
+    mkdirSync(dirname(graphFilePath(root)), { recursive: true });
+    writeFileSync(graphFilePath(root), '{ truncated', 'utf8');
+    const r = await runLessons({ file: 'src/x.ts' }, ['query'], root);
+    expect(r.subcommand).toBe('query');
+    if (r.subcommand !== 'query') return;
+    expect(r.exitCode).toBe(0);
+    expect(r.data.lessons).toEqual([]);
+    expect(r.data.warning).toMatch(/corrupt|unreadable/i);
   });
 });
 

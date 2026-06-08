@@ -17,6 +17,8 @@ export interface LessonsQueryData {
   readonly autoMigrated: boolean;
   /** Number of lessons that matched before ranking/cap — for truncation notices. */
   readonly totalMatches?: number;
+  /** Non-blocking warning (e.g. the canonical graph was corrupt) — shown on stderr. */
+  readonly warning?: string;
 }
 
 export interface LessonsAddData {

@@ -18,6 +18,35 @@ export function tryLoadLessonsGraph(projectRoot: string): LessonsGraph | null {
   return loadLessonsGraph(projectRoot);
 }
 
+/** Outcome of a non-throwing graph load — distinguishes absent from corrupt. */
+export type ResilientGraphLoad =
+  | { status: 'absent'; graph: null }
+  | { status: 'ok'; graph: LessonsGraph }
+  | { status: 'corrupt'; graph: null; error: Error };
+
+/**
+ * Load the canonical graph WITHOUT throwing. Recall is a blocking requirement
+ * before every edit and command, so a corrupt graph (a bad merge conflict in
+ * the git-tracked JSON, a truncated file, or schema drift) must degrade to
+ * "no lessons" rather than crash the agent's whole workflow with a stack trace.
+ * Callers surface the `corrupt` outcome as a user-facing warning; the throwing
+ * {@link loadLessonsGraph} stays the contract for paths that WANT to fail loud
+ * (lint, validate).
+ */
+export function loadLessonsGraphResilient(projectRoot: string): ResilientGraphLoad {
+  const path = graphFilePath(projectRoot);
+  if (!existsSync(path)) return { status: 'absent', graph: null };
+  try {
+    return { status: 'ok', graph: parseGraph(JSON.parse(readFileSync(path, 'utf8'))) };
+  } catch (error) {
+    return {
+      status: 'corrupt',
+      graph: null,
+      error: error instanceof Error ? error : new Error(String(error)),
+    };
+  }
+}
+
 export function saveLessonsGraph(projectRoot: string, graph: LessonsGraph): void {
   const path = graphFilePath(projectRoot);
   mkdirSync(dirname(path), { recursive: true });

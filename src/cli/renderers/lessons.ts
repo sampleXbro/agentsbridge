@@ -135,6 +135,9 @@ function renderQuery(data: LessonsQueryData, format: LessonsQueryFormat): void {
   if (data.autoMigrated) {
     logger.warn('lessons.json was auto-migrated from index.yaml on first invocation.');
   }
+  if (data.warning !== undefined && data.warning.length > 0) {
+    logger.warn(data.warning);
+  }
   if (format === 'json') {
     process.stdout.write(`${JSON.stringify(data, null, 2)}\n`);
     return;

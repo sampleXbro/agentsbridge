@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { join } from 'node:path';
-import { rmSync } from 'node:fs';
+import { existsSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { runInstall } from '../../src/install/run/run-install.js';
 import { listRelativeFiles, readInstallManifest } from '../helpers/install-test-helpers.js';
@@ -43,6 +43,7 @@ describe('install manual --as markdown entities (integration)', () => {
         ),
       ).toEqual(testCase.expectedPackFiles);
       expect(listRelativeFiles(join(project, '.claude'))).toEqual(testCase.expectedGeneratedFiles);
+      expect(existsSync(join(project, 'CLAUDE.md'))).toBe(true);
       expect(readInstallManifest(join(project, '.agentsmesh', 'installs.yaml'))).toEqual({
         version: 1,
         installs: [
@@ -89,9 +90,10 @@ describe('install manual --as markdown entities (integration)', () => {
       ).toEqual([expectedOutput]);
       expect(listRelativeFiles(join(project, '.claude'))).toEqual(
         testCase.kind === 'rules'
-          ? ['CLAUDE.md', 'rules/quality.md']
-          : ['CLAUDE.md', `${testCase.kind}/${expectedOutput}`],
+          ? ['rules/quality.md']
+          : [`${testCase.kind}/${expectedOutput}`],
       );
+      expect(existsSync(join(project, 'CLAUDE.md'))).toBe(true);
       expect(readInstallManifest(join(project, '.agentsmesh', 'installs.yaml')).installs).toEqual([
         {
           as: testCase.kind,
@@ -131,9 +133,10 @@ describe('install manual --as markdown entities (integration)', () => {
       ).toEqual([expectedOutput]);
       expect(listRelativeFiles(join(project, '.claude'))).toEqual(
         testCase.kind === 'rules'
-          ? ['CLAUDE.md', 'rules/quality.md']
-          : ['CLAUDE.md', `${testCase.kind}/${expectedOutput}`],
+          ? ['rules/quality.md']
+          : [`${testCase.kind}/${expectedOutput}`],
       );
+      expect(existsSync(join(project, 'CLAUDE.md'))).toBe(true);
       expect(readInstallManifest(join(project, '.agentsmesh', 'installs.yaml')).installs).toEqual([
         {
           as: testCase.kind,

@@ -47,7 +47,7 @@ features: [rules]
 `,
     );
     execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
-    expect(readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8')).toContain('Use TDD.');
+    expect(readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8')).toContain('Use TDD.');
     const cursorRule = readFileSync(join(TEST_DIR, '.cursor', 'rules', 'general.mdc'), 'utf-8');
     expect(cursorRule).toContain('Use TDD.');
   });
@@ -92,7 +92,7 @@ features: [rules]
 `,
     );
     execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
-    const claudeMd = readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8');
+    const claudeMd = readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8');
     expect(claudeMd).toContain('Use TDD.');
     const cursorRule = readFileSync(join(TEST_DIR, '.cursor', 'rules', 'general.mdc'), 'utf-8');
     expect(cursorRule).toContain('Use TDD.');
@@ -663,7 +663,7 @@ features: [rules, ignore]
     );
     execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
 
-    expect(readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8')).toContain('Use TDD.');
+    expect(readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8')).toContain('Use TDD.');
     expect(readFileSync(join(TEST_DIR, '.claude', 'commands', 'review.md'), 'utf-8')).toContain(
       'Review code.',
     );

@@ -84,7 +84,7 @@ describe('agentsmesh generate process lock (integration)', () => {
     expect(a.code, `first stderr: ${a.stderr}`).toBe(0);
     expect(b.code, `second stderr: ${b.stderr}`).toBe(0);
 
-    const claudeContent = readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8');
+    const claudeContent = readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8');
     const cursorContent = readFileSync(join(TEST_DIR, '.cursor', 'rules', 'general.mdc'), 'utf-8');
     expect(claudeContent).toContain('Use TypeScript');
     expect(cursorContent).toContain('Use TypeScript');

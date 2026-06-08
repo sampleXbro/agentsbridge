@@ -44,10 +44,10 @@ describe('full-sync round trip preservation', () => {
 
       // Verify that hooks, ignore, and root rules propagated appropriately
       if (target === 'claude-code') {
-        fileExists(join(dir, '.claude', 'CLAUDE.md'));
+        fileExists(join(dir, 'CLAUDE.md'));
         // root rule body content must appear in the merged output
-        fileContains(join(dir, '.claude', 'CLAUDE.md'), '# Standards');
-        fileContains(join(dir, '.claude', 'CLAUDE.md'), 'TypeScript strict');
+        fileContains(join(dir, 'CLAUDE.md'), '# Standards');
+        fileContains(join(dir, 'CLAUDE.md'), 'TypeScript strict');
         fileExists(join(dir, '.claude/settings.json'));
         fileContains(join(dir, '.claude/settings.json'), 'Bash(npm run test:*)');
       }

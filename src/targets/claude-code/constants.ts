@@ -2,8 +2,11 @@
 
 export const CLAUDE_CODE_TARGET = 'claude-code';
 
-export const CLAUDE_ROOT = '.claude/CLAUDE.md';
-export const CLAUDE_LEGACY_ROOT = 'CLAUDE.md';
+// Project primary root instruction lives at the repo root (matches `/init` and the
+// overwhelmingly common convention). The nested `.claude/CLAUDE.md` is the global-scope
+// primary and the project-scope legacy location (import fallback + stale cleanup).
+export const CLAUDE_ROOT = 'CLAUDE.md';
+export const CLAUDE_NESTED_ROOT = '.claude/CLAUDE.md';
 export const CLAUDE_RULES_DIR = '.claude/rules';
 export const CLAUDE_COMMANDS_DIR = '.claude/commands';
 export const CLAUDE_AGENTS_DIR = '.claude/agents';

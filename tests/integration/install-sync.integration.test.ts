@@ -60,7 +60,6 @@ describe('install --sync (integration)', () => {
       'skills/demo/SKILL.md',
     ]);
     expect(listRelativeFiles(join(project, '.claude'))).toEqual([
-      'CLAUDE.md',
       'skills/demo/SKILL.md',
     ]);
     expect(readFileSync(join(project, '.claude', 'skills', 'demo', 'SKILL.md'), 'utf8')).toContain(
@@ -117,7 +116,6 @@ describe('install --sync (integration)', () => {
       'pack.yaml',
     ]);
     expect(listRelativeFiles(join(project, '.claude'))).toEqual([
-      'CLAUDE.md',
       'agents/code-archaeologist.md',
       'agents/performance-optimizer.md',
     ]);
@@ -185,7 +183,6 @@ describe('install --sync (integration)', () => {
       'skills/release-manager/references/guide.md',
     ]);
     expect(listRelativeFiles(join(project, '.claude'))).toEqual([
-      'CLAUDE.md',
       'skills/release-manager/SKILL.md',
       'skills/release-manager/references/guide.md',
     ]);
@@ -242,7 +239,6 @@ describe('install --sync (integration)', () => {
     await runInstall({ sync: true, force: true }, [], project);
 
     expect(listRelativeFiles(join(project, '.claude'))).toEqual([
-      'CLAUDE.md',
       'skills/release-manager/SKILL.md',
       'skills/release-manager/references/guide.md',
     ]);

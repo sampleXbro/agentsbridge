@@ -323,7 +323,7 @@ describe('agentsmesh plugin — full generate flow via CLI', () => {
     const result = await runCli('generate', tmpDir);
     expect(result.exitCode).toBe(0);
     expect(await fileExists(join(tmpDir, 'PLUGIN.md'))).toBe(true);
-    expect(await fileExists(join(tmpDir, '.claude', 'CLAUDE.md'))).toBe(true);
+    expect(await fileExists(join(tmpDir, 'CLAUDE.md'))).toBe(true);
   });
 
   it('generate --check detects plugin output is missing', async () => {

@@ -16,13 +16,13 @@ describe('generate', () => {
     if (dir) cleanup(dir);
   });
 
-  it('canonical-full generates .claude/CLAUDE.md from _root.md', async () => {
+  it('canonical-full generates CLAUDE.md from _root.md', async () => {
     dir = createTestProject('canonical-full');
     const r = await runCli('generate', dir);
     expect(r.exitCode).toBe(0);
-    const claudeMd = join(dir, '.claude', 'CLAUDE.md');
+    const claudeMd = join(dir, 'CLAUDE.md');
     fileExists(claudeMd);
-    // root rule body content must be present in .claude/CLAUDE.md
+    // root rule body content must be present in CLAUDE.md
     fileContains(claudeMd, 'TypeScript strict');
     fileContains(claudeMd, 'pnpm only');
   });
@@ -83,7 +83,7 @@ describe('generate', () => {
     dir = createTestProject('canonical-full');
     const r = await runCli('generate --targets claude-code,cursor', dir);
     expect(r.exitCode).toBe(0);
-    fileExists(join(dir, '.claude', 'CLAUDE.md'));
+    fileExists(join(dir, 'CLAUDE.md'));
     fileExists(join(dir, '.cursor', 'rules', 'general.mdc'));
     // Copilot not generated
     try {
@@ -100,7 +100,7 @@ describe('generate', () => {
     const r = await runCli('generate --dry-run', dir);
     expect(r.exitCode).toBe(0);
     expect(r.stdout).toMatch(/dry-run|created|updated/);
-    fileNotExists(join(dir, '.claude', 'CLAUDE.md'));
+    fileNotExists(join(dir, 'CLAUDE.md'));
   });
 
   it('second generate reports 0 created, 0 updated, N unchanged', async () => {
@@ -121,7 +121,7 @@ describe('generate', () => {
     dir = createTestProject('canonical-minimal');
     const r = await runCli('generate', dir);
     expect(r.exitCode).toBe(0);
-    fileExists(join(dir, '.claude', 'CLAUDE.md'));
+    fileExists(join(dir, 'CLAUDE.md'));
     fileExists(join(dir, '.cursor', 'rules', 'general.mdc'));
   });
 
@@ -143,6 +143,6 @@ describe('generate', () => {
     writeFileSync(join(rulesDir, 'non-root.md'), '---\ndescription: Not root\n---\n# Body\n');
     const r = await runCli('generate', dir);
     expect(r.exitCode).toBe(0);
-    fileNotExists(join(dir, '.claude', 'CLAUDE.md'));
+    fileNotExists(join(dir, 'CLAUDE.md'));
   });
 });

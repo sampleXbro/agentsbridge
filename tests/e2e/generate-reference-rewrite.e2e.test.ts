@@ -82,14 +82,15 @@ Prefer strict mode.
     const result = await runCli('generate', dir);
     expect(result.exitCode).toBe(0);
 
-    const claudeRoot = readFileSync(join(dir, '.claude', 'CLAUDE.md'), 'utf-8');
+    const claudeRoot = readFileSync(join(dir, 'CLAUDE.md'), 'utf-8');
     const cursorRoot = readFileSync(join(dir, '.cursor', 'rules', 'general.mdc'), 'utf-8');
     const secondRun = await runCli('generate', dir);
 
-    expect(claudeRoot).toContain('./rules/typescript.md');
-    expect(claudeRoot).toContain('./commands/review.md');
-    expect(claudeRoot).toContain('./agents/reviewer.md');
-    expect(claudeRoot).toContain('./skills/api-gen/references/checklist.md');
+    // Root CLAUDE.md lives at the repo root, so .claude/* refs keep the full prefix.
+    expect(claudeRoot).toContain('.claude/rules/typescript.md');
+    expect(claudeRoot).toContain('.claude/commands/review.md');
+    expect(claudeRoot).toContain('.claude/agents/reviewer.md');
+    expect(claudeRoot).toContain('.claude/skills/api-gen/references/checklist.md');
     expect(claudeRoot).toContain('docs/some-doc.md');
     expect(cursorRoot).toContain('typescript.mdc');
     expect(cursorRoot).toContain('commands/review.md');
@@ -168,7 +169,7 @@ Prefer strict mode.
     const result = await runCli('generate', dir);
     expect(result.exitCode).toBe(0);
 
-    expect(readFileSync(join(dir, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
+    expect(readFileSync(join(dir, 'CLAUDE.md'), 'utf-8')).toContain(
       'skills/post-feature-qa/',
     );
     expect(readFileSync(join(dir, '.cursor', 'rules', 'general.mdc'), 'utf-8')).toContain(

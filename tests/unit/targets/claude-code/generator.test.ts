@@ -26,7 +26,7 @@ function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles 
 }
 
 describe('generateRules (claude-code)', () => {
-  it('generates .claude/CLAUDE.md from root rule body', () => {
+  it('generates root CLAUDE.md from root rule body', () => {
     const canonical = makeCanonical({
       rules: [
         {
@@ -41,7 +41,7 @@ describe('generateRules (claude-code)', () => {
     });
     const results = generateRules(canonical);
     expect(results).toHaveLength(1);
-    expect(results[0]!.path).toBe('.claude/CLAUDE.md');
+    expect(results[0]!.path).toBe('CLAUDE.md');
     expect(results[0]!.content).toContain('# Rules');
     expect(results[0]!.content).toContain('- Use TypeScript');
     expect(results[0]!.content).not.toContain('## AgentsMesh Generation Contract');
@@ -101,7 +101,7 @@ describe('generateRules (claude-code)', () => {
     expect(results[0]!.path).toBe('.claude/rules/typescript.md');
   });
 
-  it('generates .claude/CLAUDE.md + .claude/rules/*.md when both root and non-root rules exist', () => {
+  it('generates root CLAUDE.md + .claude/rules/*.md when both root and non-root rules exist', () => {
     const canonical = makeCanonical({
       rules: [
         {
@@ -125,7 +125,7 @@ describe('generateRules (claude-code)', () => {
     const results = generateRules(canonical);
     expect(results).toHaveLength(2);
     const paths = results.map((r) => r.path).sort();
-    expect(paths).toEqual(['.claude/CLAUDE.md', '.claude/rules/typescript.md'].sort());
+    expect(paths).toEqual(['CLAUDE.md', '.claude/rules/typescript.md'].sort());
     const tsRule = results.find((r) => r.path === '.claude/rules/typescript.md')!;
     expect(tsRule.content).toContain('description: TS rules');
     expect(tsRule.content).toContain('Use strict mode.');
@@ -154,7 +154,7 @@ describe('generateRules (claude-code)', () => {
     });
     const results = generateRules(canonical);
     expect(results).toHaveLength(1);
-    expect(results[0]!.path).toBe('.claude/CLAUDE.md');
+    expect(results[0]!.path).toBe('CLAUDE.md');
   });
 
   it('uses first root rule when multiple roots (edge case)', () => {

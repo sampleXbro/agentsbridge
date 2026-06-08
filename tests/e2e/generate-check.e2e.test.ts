@@ -20,7 +20,7 @@ describe('generate --check', () => {
 
     expect(result.exitCode).toBe(1);
     expect(result.stderr + result.stdout).toMatch(/out of sync|generate --check|would change/i);
-    fileNotExists(join(dir, '.claude', 'CLAUDE.md'));
+    fileNotExists(join(dir, 'CLAUDE.md'));
   });
 
   it('exits 0 when generated files are in sync', async () => {
@@ -38,7 +38,7 @@ describe('generate --check', () => {
     await runCli('generate', dir);
 
     mkdirSync(join(dir, '.claude'), { recursive: true });
-    const claudePath = join(dir, '.claude', 'CLAUDE.md');
+    const claudePath = join(dir, 'CLAUDE.md');
     writeFileSync(claudePath, '# Drifted output\n');
 
     const result = await runCli('generate --check', dir);

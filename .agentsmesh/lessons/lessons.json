@@ -3378,6 +3378,21 @@
         "t-cmd-38934d6c"
       ]
     },
+    "lessons-telemetry-when-an-env-gated-agentsmesh": {
+      "createdAt": "2026-06-08",
+      "evidence": [
+        "lesson:two-tier-lessons-delivery"
+      ],
+      "rule": "When an env-gated agentsmesh feature (e.g. AGENTSMESH_LESSONS_TELEMETRY recall logging) 'does not work' despite the user having exported the var, check WHERE it is exported before assuming it is unset. On zsh, ~/.zshrc is interactive-only; non-interactive shells and agent/harness-spawned subprocesses (which is how recalls run) source ~/.zshenv. A var in ~/.zshrc is invisible to recalls. Prove with 'zsh -c \"echo $VAR\"' (non-interactive) and fix by moving the export to ~/.zshenv.",
+      "status": "active",
+      "topics": [
+        "lessons-telemetry"
+      ],
+      "triggers": [
+        "t-glob-0571e0f3",
+        "t-kw-d96b6e19"
+      ]
+    },
     "link-rebaser-deterministic-text-cleanup-transforms-ov": {
       "createdAt": "2026-06-05",
       "evidence": [],
@@ -5483,6 +5498,9 @@
     "lessons-system": {
       "summary": "Lessons graph recall, capture, lifecycle, and storage contracts."
     },
+    "lessons-telemetry": {
+      "summary": "Env-var propagation + telemetry gotchas for shell-spawned agentsmesh recalls"
+    },
     "link-rebaser": {
       "summary": "How reference text is rewritten — protected anchors vs markdown destinations, fenced code, project-root-relative, existence gates, pathApi discipline."
     },
@@ -5770,6 +5788,10 @@
     "t-glob-0465888e": {
       "kind": "file_glob",
       "pattern": ".agentsmesh/lessons/lessons.json"
+    },
+    "t-glob-0571e0f3": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/telemetry.ts"
     },
     "t-glob-07cf19c0": {
       "kind": "file_glob",
@@ -6350,6 +6372,10 @@
     "t-kw-d6524007": {
       "kind": "keyword",
       "pattern": "VALIDATION_FAILED unrecognized_keys"
+    },
+    "t-kw-d96b6e19": {
+      "kind": "keyword",
+      "pattern": "telemetry stats zshenv env var not recording recall-log"
     },
     "t-kw-db579650": {
       "kind": "keyword",

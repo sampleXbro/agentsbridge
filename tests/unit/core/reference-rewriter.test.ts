@@ -527,7 +527,7 @@ describe('rewriteGeneratedReferences', () => {
       [
         {
           target: 'claude-code',
-          path: '.claude/CLAUDE.md',
+          path: 'CLAUDE.md',
           content:
             'Absolute: /proj/.agentsmesh/rules/typescript.md, /proj/.agentsmesh/commands/review.md, /proj/.agentsmesh/skills/api-gen/references/checklist.md.',
           status: 'created',
@@ -563,7 +563,7 @@ describe('rewriteGeneratedReferences', () => {
     );
 
     expect(rewritten[0]!.content).toBe(
-      'Absolute: ./rules/typescript.md, ./commands/review.md, ./skills/api-gen/references/checklist.md.',
+      'Absolute: .claude/rules/typescript.md, .claude/commands/review.md, .claude/skills/api-gen/references/checklist.md.',
     );
   });
 

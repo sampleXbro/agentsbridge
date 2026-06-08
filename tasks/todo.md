@@ -1,41 +1,23 @@
-# Two-tier lessons delivery (borrowing the superpowers structure)
+# Move claude-code project root instruction: `.claude/CLAUDE.md` → root `CLAUDE.md`
 
-## Goal
-Split the lessons contract into two tiers, using agentsmesh's NATIVE primitives
-(not a SessionStart hook — that event isn't canonical and hooks are `none` on
-21/32 targets, whereas rules+skills are native everywhere):
+Scope: **project only**. Global mode stays `.claude/CLAUDE.md`. Auto-clean legacy `.claude/CLAUDE.md` on generate.
 
-- **Tier 1 (always-on):** trimmed `LESSONS_PROCEDURAL_RULE`, still injected into
-  canonical `.agentsmesh/rules/_root.md` as a managed block → reaches every target.
-  Keeps the *binding* essentials (both commands, BLOCKING framing, recall-scope
-  incl. read-only, capture-scope incl. user pushback, graph path, MCP fallback,
-  pointer to the skill). Drops the *expansive how-to* (full command set, topic
-  workflow, trigger-flag mechanics, exhaustive excuse enumeration).
-- **Tier 2 (on-demand manual):** new canonical `.agentsmesh/skills/lessons/SKILL.md`
-  carrying the full manual. Generates to every skill-supporting target; can grow
-  without bloating always-on context.
-- **Tier 3 (degradation):** targets without skills still get the trimmed Tier-1
-  trigger. Free fallback.
+## Source
+- [ ] `constants.ts`: `CLAUDE_ROOT='CLAUDE.md'`; add `CLAUDE_NESTED_ROOT='.claude/CLAUDE.md'`; drop `CLAUDE_LEGACY_ROOT`.
+- [ ] `index.ts`: project `rootInstructionPath`/managed → root; list legacy `.claude/CLAUDE.md` in project managed.files for stale-clean; global `rootInstructionPath=CLAUDE_NESTED_ROOT` + `rewriteGeneratedPath` maps `CLAUDE_ROOT→CLAUDE_NESTED_ROOT`; importer prefers root then nested (project), nested (global); detection paths.
+- [ ] `generator.ts`: comment fixes only (uses `CLAUDE_ROOT`).
+- [x] checked `core/reference/map.ts` (redundant, no change), `import-maps/claude-code.ts` (ok), `global-instructions.ts` (global-only).
 
-## Design decisions
-- Skill is **create-if-missing** (like `lessons.json`) — canonical, user-owned content,
-  not a managed-block artifact. Seeded by `scaffoldLessons` so init AND the import safety
-  net both produce a cohesive subsystem (graph + root block + skill).
-- Current long `LESSONS_PROCEDURAL_RULE` text captured as `LESSONS_RULE_V2` and added
-  to `LEGACY_RAW_FORMS` (newest-first) so existing projects strip/upgrade exactly once.
+## Tests (red→green, exact paths/counts)
+- [ ] generator.test, contract claude-code, layout-metadata, shared-root-instruction-paths
+- [ ] stale-cleanup: project scope removes legacy `.claude/CLAUDE.md`
+- [ ] link-rebaser suite (depth change from root), generate/import integration + e2e, round-trip, research suites
+- [ ] importer.test (prefer root, fall back to nested)
 
-## Steps (TDD — tests first) — ALL COMPLETE ✅
-1. [x] `src/lessons/skill.ts`: `LESSONS_SKILL_{NAME,DESCRIPTION,BODY}` + `LESSONS_SKILL_FILE`.
-2. [x] Trim `LESSONS_PROCEDURAL_RULE` in `src/lessons/paths.ts` (+ skill pointer).
-3. [x] `lessons-paragraph.ts`: add `LESSONS_RULE_V2` to `LEGACY_RAW_FORMS`.
-4. [x] `src/lessons/init.ts`: seed skill create-if-missing; result created/skipped (graph, skill).
-5. [x] Tests: skill.test (new), paths.test (new Tier-1 contract), lessons-paragraph.test (V2),
-   init.test (creates skill + preserves user-authored skill + idempotent order),
-   init-lessons.integration (created set incl. skill), e2e matrix (skill in expectedImported).
-   Contract matrix needed no change (bypasses CLI safety net; only checks root block).
-6. [x] Renderer already iterates `lessons.created` — skill prints with no change.
-7. [x] Full suite green: 8653 passed, 1 skipped; typecheck + lint clean.
-8. [x] Dogfooded: retrofit → generate (23 created, 20 updated) → `check` = lock in sync.
-9. [x] Docs: README + `cli/init.mdx` + `cli/lessons.mdx`.
-10. [x] post-feature-qa: added the don't-clobber-user-skill edge-case test. Captured the
-    stale-dist e2e lesson (`dist-backed-tests-when-a-change-alters-cli`).
+## Docs
+- [ ] README matrix, website supported-tools.mdx, cli/import.mdx
+
+## Verify — ALL COMPLETE ✅
+- [x] full suite green (8676 passed, e2e incl.); typecheck + lint clean
+- [x] dogfood: `generate` → created root `CLAUDE.md`, auto-removed legacy `.claude/CLAUDE.md`, `check` in sync
+- [x] docs regenerated (matrix:generate → supported-tools.mdx + import.mdx)

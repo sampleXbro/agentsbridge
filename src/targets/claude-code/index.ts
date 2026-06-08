@@ -21,8 +21,8 @@ import {
   CLAUDE_GLOBAL_MCP_JSON,
   CLAUDE_HOOKS_JSON,
   CLAUDE_IGNORE,
-  CLAUDE_LEGACY_ROOT,
   CLAUDE_MCP_JSON,
+  CLAUDE_NESTED_ROOT,
   CLAUDE_ROOT,
   CLAUDE_RULES_DIR,
 } from './constants.js';
@@ -53,7 +53,10 @@ const project: TargetLayout = {
   skillDir: '.claude/skills',
   managedOutputs: {
     dirs: ['.claude/agents', '.claude/commands', '.claude/rules', '.claude/skills'],
-    files: ['.claude/CLAUDE.md', '.claude/settings.json', '.claudeignore', '.mcp.json'],
+    // CLAUDE_NESTED_ROOT is the pre-migration project location; listing it here lets
+    // `cleanupStaleGeneratedOutputs` evict a leftover `.claude/CLAUDE.md` once generation
+    // writes the root `CLAUDE.md`, so Claude Code never concatenates both into context.
+    files: [CLAUDE_ROOT, CLAUDE_NESTED_ROOT, '.claude/settings.json', '.claudeignore', '.mcp.json'],
   },
   paths: {
     rulePath(slug, _rule) {
@@ -69,7 +72,7 @@ const project: TargetLayout = {
 };
 
 const globalLayout: TargetLayout = {
-  rootInstructionPath: CLAUDE_ROOT,
+  rootInstructionPath: CLAUDE_NESTED_ROOT,
   skillDir: '.claude/skills',
   renderPrimaryRootInstruction: renderClaudeGlobalPrimaryInstructions,
   managedOutputs: {
@@ -82,7 +85,7 @@ const globalLayout: TargetLayout = {
       '.agents/skills',
     ],
     files: [
-      '.claude/CLAUDE.md',
+      CLAUDE_NESTED_ROOT,
       '.claude/settings.json',
       CLAUDE_GLOBAL_MCP_JSON,
       CLAUDE_HOOKS_JSON,
@@ -90,6 +93,8 @@ const globalLayout: TargetLayout = {
     ],
   },
   rewriteGeneratedPath(path) {
+    // Generator emits the root file at CLAUDE_ROOT (`CLAUDE.md`); global scope keeps it nested.
+    if (path === CLAUDE_ROOT) return CLAUDE_NESTED_ROOT;
     if (path === CLAUDE_MCP_JSON) return CLAUDE_GLOBAL_MCP_JSON;
     return path;
   },
@@ -155,10 +160,11 @@ export const descriptor = {
   importer: {
     rules: [
       {
-        // Root rule: prefer .claude/CLAUDE.md, fall back to legacy CLAUDE.md (project only).
+        // Root rule: project prefers root CLAUDE.md, falls back to nested .claude/CLAUDE.md;
+        // global reads the nested .claude/CLAUDE.md.
         feature: 'rules',
         mode: 'singleFile',
-        source: { project: [CLAUDE_ROOT, CLAUDE_LEGACY_ROOT], global: [CLAUDE_ROOT] },
+        source: { project: [CLAUDE_ROOT, CLAUDE_NESTED_ROOT], global: [CLAUDE_NESTED_ROOT] },
         canonicalDir: CLAUDE_CANONICAL_RULES_DIR,
         canonicalRootFilename: '_root.md',
         markAsRoot: true,
@@ -204,5 +210,5 @@ export const descriptor = {
     },
   },
   buildImportPaths: buildClaudeCodeImportPaths,
-  detectionPaths: ['CLAUDE.md', '.claude/rules', '.claude/commands'],
+  detectionPaths: [CLAUDE_ROOT, CLAUDE_NESTED_ROOT, '.claude/rules', '.claude/commands'],
 } satisfies TargetDescriptor;

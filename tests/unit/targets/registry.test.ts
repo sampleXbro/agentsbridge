@@ -65,7 +65,7 @@ describe('target registry', () => {
   });
 
   it('exposes built-in targets without manual registration', () => {
-    expect(getTarget('claude-code').primaryRootInstructionPath).toBe('.claude/CLAUDE.md');
+    expect(getTarget('claude-code').primaryRootInstructionPath).toBe('CLAUDE.md');
   });
 
   it('returns all registered targets', () => {

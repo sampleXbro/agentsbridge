@@ -21,7 +21,7 @@ describe('claude-code doc format roundtrip', () => {
     const result = await runCli('generate --targets claude-code', dir);
     expect(result.exitCode, result.stderr).toBe(0);
 
-    const claudeRoot = readFileSync(join(dir, '.claude', 'CLAUDE.md'), 'utf-8');
+    const claudeRoot = readFileSync(join(dir, 'CLAUDE.md'), 'utf-8');
     expect(claudeRoot).toContain('# Standards');
     expect(claudeRoot).not.toContain('root: true');
 

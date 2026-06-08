@@ -78,7 +78,7 @@ Prefer strict mode.
 
     execSync(`node ${CLI_PATH} generate`, { cwd: testDir });
 
-    const claudeRoot = readFileSync(join(testDir, '.claude', 'CLAUDE.md'), 'utf-8');
+    const claudeRoot = readFileSync(join(testDir, 'CLAUDE.md'), 'utf-8');
     const cursorRoot = readFileSync(join(testDir, '.cursor', 'rules', 'general.mdc'), 'utf-8');
     const claudeCommand = readFileSync(join(testDir, '.claude', 'commands', 'review.md'), 'utf-8');
     const claudeAgent = readFileSync(join(testDir, '.claude', 'agents', 'reviewer.md'), 'utf-8');
@@ -87,10 +87,11 @@ Prefer strict mode.
       'utf-8',
     );
 
-    expect(claudeRoot).toContain('./rules/typescript.md');
-    expect(claudeRoot).toContain('./commands/review.md');
-    expect(claudeRoot).toContain('./agents/reviewer.md');
-    expect(claudeRoot).toContain('./skills/api-gen/references/checklist.md');
+    // Root CLAUDE.md lives at the repo root, so .claude/* refs keep the full prefix.
+    expect(claudeRoot).toContain('.claude/rules/typescript.md');
+    expect(claudeRoot).toContain('.claude/commands/review.md');
+    expect(claudeRoot).toContain('.claude/agents/reviewer.md');
+    expect(claudeRoot).toContain('.claude/skills/api-gen/references/checklist.md');
     expect(cursorRoot).toContain('typescript.mdc');
     expect(cursorRoot).toContain('commands/review.md');
     expect(cursorRoot).toContain('agents/reviewer.md');
@@ -166,7 +167,7 @@ Use [.agentsmesh/skills/post-feature-qa/](.agentsmesh/skills/post-feature-qa/) a
 
     execSync(`node ${CLI_PATH} generate`, { cwd: testDir });
 
-    expect(readFileSync(join(testDir, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
+    expect(readFileSync(join(testDir, 'CLAUDE.md'), 'utf-8')).toContain(
       'skills/post-feature-qa/',
     );
     expect(readFileSync(join(testDir, '.cursor', 'rules', 'general.mdc'), 'utf-8')).toContain(

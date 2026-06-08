@@ -2,7 +2,6 @@ import type { TargetPathContract } from './types.js';
 
 export const claudeCodeContract: TargetPathContract = {
   generated: [
-    '.claude/CLAUDE.md',
     '.claude/agents/code-reviewer.md',
     '.claude/agents/researcher.md',
     '.claude/commands/review.md',
@@ -13,6 +12,7 @@ export const claudeCodeContract: TargetPathContract = {
     '.claude/skills/api-generator/template.ts',
     '.claudeignore',
     '.mcp.json',
+    'CLAUDE.md',
   ],
   imported: [
     '.agentsmesh/agents/code-reviewer.md',

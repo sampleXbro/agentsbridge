@@ -37,7 +37,7 @@ describe('watch', () => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 3000));
       // Claude output was generated; cursor output was NOT (--targets filtered).
-      expect(readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
+      expect(readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8')).toContain(
         'Use TypeScript',
       );
       const { existsSync } = await import('node:fs');
@@ -65,7 +65,7 @@ describe('watch', () => {
     });
 
     await new Promise((resolve) => setTimeout(resolve, 3000));
-    expect(readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
+    expect(readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8')).toContain(
       'Use TypeScript',
     );
     expect(stdout.match(/Regenerated\./g) ?? []).toHaveLength(1);
@@ -80,7 +80,7 @@ describe('watch', () => {
     expect(stdout).toContain('Watching');
     expect(stdout).toMatch(/Regenerated|Generated|created|updated/);
     expect(stdout.match(/Regenerated\./g) ?? []).toHaveLength(2);
-    expect(readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
+    expect(readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8')).toContain(
       'Prefer strict mode',
     );
 

@@ -10,7 +10,7 @@ describe('target layout metadata', () => {
   it('returns the project layout for claude-code', () => {
     const layout = getTargetLayout('claude-code');
 
-    expect(layout?.rootInstructionPath).toBe('.claude/CLAUDE.md');
+    expect(layout?.rootInstructionPath).toBe('CLAUDE.md');
     expect(layout?.skillDir).toBe('.claude/skills');
     expect(
       layout?.paths.rulePath('example', {

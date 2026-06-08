@@ -84,7 +84,7 @@ describe('remote git extends end to end', () => {
     const result = await runCli('generate', dir, { AGENTSMESH_ALLOW_LOCAL_GIT: '1' });
 
     expect(result.exitCode).toBe(0);
-    expect(readFileSync(join(dir, '.claude', 'CLAUDE.md'), 'utf-8')).toContain('Local root wins');
+    expect(readFileSync(join(dir, 'CLAUDE.md'), 'utf-8')).toContain('Local root wins');
 
     const settings = JSON.parse(readFileSync(join(dir, '.claude', 'settings.json'), 'utf-8')) as {
       permissions: { allow: string[]; deny: string[] };

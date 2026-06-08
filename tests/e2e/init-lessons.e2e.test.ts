@@ -49,7 +49,7 @@ describe('agentsmesh init --lessons (e2e)', () => {
     const gen = await runCli('generate --targets claude-code', tempDir);
     expect(gen.exitCode).toBe(0);
 
-    const claude = readFileSync(join(tempDir, '.claude/CLAUDE.md'), 'utf8');
+    const claude = readFileSync(join(tempDir, 'CLAUDE.md'), 'utf8');
     expect(claude).toContain('<!-- agentsmesh:lessons-contract:start -->');
     expect(claude).toContain('agentsmesh lessons query');
     // Generation Contract first, then the lessons ritual — both ahead of any

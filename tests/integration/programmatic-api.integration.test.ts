@@ -387,10 +387,10 @@ describe('Programmatic API — generate', () => {
     // Cursor emits an AGENTS.md compat file in project mode; both targets share
     // the project-root AGENTS.md superset.
     expect(paths).toEqual([
-      '.claude/CLAUDE.md',
       '.cursor/AGENTS.md',
       '.cursor/rules/general.mdc',
       'AGENTS.md',
+      'CLAUDE.md',
     ]);
     for (const r of results) {
       expect(r.status).toBe('created');
@@ -411,7 +411,7 @@ describe('Programmatic API — generate', () => {
     });
 
     expect(results.map((r) => r.target).every((t) => t === 'claude-code')).toBe(true);
-    expect(results.map((r) => r.path)).toEqual(['.claude/CLAUDE.md']);
+    expect(results.map((r) => r.path)).toEqual(['CLAUDE.md']);
   });
 });
 

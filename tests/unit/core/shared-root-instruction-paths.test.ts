@@ -77,13 +77,13 @@ describe('computeSharedRootInstructionPaths', () => {
 
   it('separately tracks shared paths per output (multiple shared paths)', () => {
     // amp + factory-droid share AGENTS.md as primary;
-    // claude-code emits .claude/CLAUDE.md alone (not shared);
+    // claude-code emits root CLAUDE.md alone (not shared);
     // codex-cli + windsurf both write AGENTS.md (shared).
     const shared = computeSharedRootInstructionPaths(
       [
         r('amp', 'AGENTS.md'),
         r('factory-droid', 'AGENTS.md'),
-        r('claude-code', '.claude/CLAUDE.md'),
+        r('claude-code', 'CLAUDE.md'),
         r('codex-cli', 'AGENTS.md'),
         r('windsurf', 'AGENTS.md'),
       ],

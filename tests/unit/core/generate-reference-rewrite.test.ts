@@ -106,11 +106,12 @@ describe('generate reference rewriting', () => {
       projectRoot: TEST_DIR,
     });
 
-    expect(results.find((result) => result.path === '.claude/CLAUDE.md')?.content).toContain(
-      './rules/typescript.md',
+    // Root CLAUDE.md sits at repo root, so refs to .claude/* keep the full prefix.
+    expect(results.find((result) => result.path === 'CLAUDE.md')?.content).toContain(
+      '.claude/rules/typescript.md',
     );
-    expect(results.find((result) => result.path === '.claude/CLAUDE.md')?.content).toContain(
-      './commands/review.md',
+    expect(results.find((result) => result.path === 'CLAUDE.md')?.content).toContain(
+      '.claude/commands/review.md',
     );
     expect(
       results.find((result) => result.path === '.cursor/rules/general.mdc')?.content,
@@ -121,7 +122,7 @@ describe('generate reference rewriting', () => {
   });
 
   it.each([
-    ['claude-code', '.claude/CLAUDE.md'],
+    ['claude-code', 'CLAUDE.md'],
     ['cursor', '.cursor/rules/general.mdc'],
     ['copilot', '.github/copilot-instructions.md'],
     ['gemini-cli', 'GEMINI.md'],
@@ -260,9 +261,8 @@ describe('generate reference rewriting', () => {
   );
 
   it('recomputes file status after rewriting generated content', async () => {
-    mkdirSync(join(TEST_DIR, '.claude'), { recursive: true });
     writeFileSync(
-      join(TEST_DIR, '.claude', 'CLAUDE.md'),
+      join(TEST_DIR, 'CLAUDE.md'),
       appendAgentsmeshRootInstructionParagraph(
         'See ./rules/typescript.md, ./commands/review.md, ./agents/reviewer.md, and ./skills/api-gen/references/checklist.md.',
       ),
@@ -276,7 +276,7 @@ describe('generate reference rewriting', () => {
 
     expect(results).toContainEqual(
       expect.objectContaining({
-        path: '.claude/CLAUDE.md',
+        path: 'CLAUDE.md',
         status: 'updated',
       }),
     );

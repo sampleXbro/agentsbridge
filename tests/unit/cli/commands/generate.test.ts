@@ -703,7 +703,7 @@ description: "Root"
       const result = await runGenerate({ check: true }, TEST_DIR);
       expect(result.exitCode).toBe(1);
       renderGenerate(result);
-      expect(output).toContain('[check] created .claude/CLAUDE.md (claude-code)');
+      expect(output).toContain('[check] created CLAUDE.md (claude-code)');
       expect(output).toContain('Generated files are out of sync.');
     } finally {
       process.stderr.write = write;
@@ -763,8 +763,8 @@ description: "Root"
       const result = await runGenerate({}, TEST_DIR, { printMatrix: false });
       expect(result.exitCode).toBe(0);
       renderGenerate(result);
-      expect(output).toMatch(/created \.claude\/CLAUDE\.md/);
-      expect(output).not.toMatch(/~\/\.claude\/CLAUDE\.md/);
+      expect(output).toMatch(/created CLAUDE\.md/);
+      expect(output).not.toMatch(/~\/.*CLAUDE\.md/);
     } finally {
       process.stdout.write = write;
     }
@@ -913,9 +913,7 @@ extends:
 
     try {
       await runGenerate({ 'refresh-cache': true }, TEST_DIR, { printMatrix: false });
-      expect(readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
-        'Fresh cache',
-      );
+      expect(readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8')).toContain('Fresh cache');
     } finally {
       process.env.AGENTSMESH_CACHE = oldCacheEnv;
       vi.unstubAllGlobals();
@@ -960,7 +958,7 @@ packs: {}
 
     const result = await runGenerate({ force: true }, TEST_DIR, { printMatrix: false });
     expect(result.exitCode).toBe(0);
-    expect(existsSync(join(TEST_DIR, '.claude', 'CLAUDE.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, 'CLAUDE.md'))).toBe(true);
   });
 
   it('generates Copilot global outputs under the user home root when --global is set', async () => {

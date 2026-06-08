@@ -7,7 +7,7 @@
 <!-- agentsmesh:lessons-contract:start -->
 ## Lessons (BLOCKING REQUIREMENT — MUST run, no exceptions)
 
-Two shell commands. Skipping either is a process violation; the user will check. The graph at `../.agentsmesh/lessons/lessons.json` is canonical — NEVER edit by hand. The full manual is the `lessons` skill (or `agentsmesh lessons --help`).
+Two shell commands. Skipping either is a process violation; the user will check. The graph at `.agentsmesh/lessons/lessons.json` is canonical — NEVER edit by hand. The full manual is the `lessons` skill (or `agentsmesh lessons --help`).
 
 **Recall — MUST run BEFORE every file edit and every shell command**, including read-only / just-investigating ones (git, ls, cat, test runs, coverage **still count**):
 

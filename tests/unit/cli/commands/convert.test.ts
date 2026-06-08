@@ -66,7 +66,7 @@ describe('runConvert', () => {
     expect(result.data.to).toBe('claude-code');
     expect(result.data.files.length).toBeGreaterThan(0);
 
-    const claudeFile = readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8');
+    const claudeFile = readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8');
     expect(claudeFile).toContain('Use TDD');
   });
 

@@ -122,7 +122,7 @@ export function outputPaths(target: TargetName): OutputPathGroups {
           : target === 'augment-code'
             ? ['.augment/rules/_root.md']
             : target === 'claude-code'
-              ? ['.claude/CLAUDE.md']
+              ? ['CLAUDE.md']
               : target === 'cursor'
                 ? ['.cursor/rules/general.mdc']
                 : target === 'copilot'
@@ -269,7 +269,7 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
           : target === 'gemini-cli'
             ? 'GEMINI.md'
             : target === 'claude-code'
-              ? '.claude/CLAUDE.md'
+              ? 'CLAUDE.md'
               : target === 'cursor'
                 ? '.cursor/rules/general.mdc'
                 : target === 'copilot'

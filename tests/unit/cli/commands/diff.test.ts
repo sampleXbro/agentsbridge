@@ -40,7 +40,7 @@ afterEach(() => {
 });
 
 describe('runDiff', () => {
-  it('returns structured data when .claude/CLAUDE.md would be created', async () => {
+  it('returns structured data when root CLAUDE.md would be created', async () => {
     const result = await runDiff({}, TEST_DIR);
 
     expect(result.exitCode).toBe(0);
@@ -48,27 +48,26 @@ describe('runDiff', () => {
     expect(result.data.files.length).toBeGreaterThan(0);
     expect(result.data.patches.length).toBeGreaterThan(0);
 
-    const claudeFile = result.data.files.find((f) => f.path.includes('.claude/CLAUDE.md'));
+    const claudeFile = result.data.files.find((f) => f.path.includes('CLAUDE.md'));
     expect(claudeFile).toBeDefined();
     expect(claudeFile!.status).toBe('created');
 
-    const claudePatch = result.data.patches.find((p) => p.path.includes('.claude/CLAUDE.md'));
+    const claudePatch = result.data.patches.find((p) => p.path.includes('CLAUDE.md'));
     expect(claudePatch).toBeDefined();
     expect(claudePatch!.patch).toContain('Use TypeScript');
   });
 
   it('returns updated status when file would be updated', async () => {
-    mkdirSync(join(TEST_DIR, '.claude'), { recursive: true });
-    writeFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), '# Old content');
+    writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Old content');
 
     const result = await runDiff({}, TEST_DIR);
 
     expect(result.exitCode).toBe(0);
-    const claudeFile = result.data.files.find((f) => f.path.includes('.claude/CLAUDE.md'));
+    const claudeFile = result.data.files.find((f) => f.path.includes('CLAUDE.md'));
     expect(claudeFile).toBeDefined();
     expect(claudeFile!.status).toBe('updated');
 
-    const claudePatch = result.data.patches.find((p) => p.path.includes('.claude/CLAUDE.md'));
+    const claudePatch = result.data.patches.find((p) => p.path.includes('CLAUDE.md'));
     expect(claudePatch).toBeDefined();
     expect(claudePatch!.patch).toContain('# Old content');
     expect(claudePatch!.patch).toContain('Use TypeScript');
@@ -76,9 +75,8 @@ describe('runDiff', () => {
 
   it('returns empty data when files match', async () => {
     // Write exact content that generator would produce; use claude-code only
-    mkdirSync(join(TEST_DIR, '.claude'), { recursive: true });
     const onDisk = appendAgentsmeshRootInstructionParagraph('# Rules\n- Use TypeScript');
-    writeFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), onDisk);
+    writeFileSync(join(TEST_DIR, 'CLAUDE.md'), onDisk);
 
     const result = await runDiff({ targets: 'claude-code' }, TEST_DIR);
 
@@ -95,7 +93,7 @@ describe('runDiff', () => {
 
     expect(result.exitCode).toBe(0);
     const paths = result.data.files.map((f) => f.path);
-    expect(paths.some((p) => p.includes('.claude/CLAUDE.md'))).toBe(true);
+    expect(paths.some((p) => p.includes('CLAUDE.md'))).toBe(true);
     expect(paths.some((p) => p.includes('_root.mdc'))).toBe(false);
   });
 
@@ -126,7 +124,7 @@ description: "Other"
     expect(result.exitCode).toBe(0);
     const paths = result.data.files.map((f) => f.path);
     expect(paths.some((p) => p.includes('other'))).toBe(true);
-    expect(paths.some((p) => p.includes('.claude/CLAUDE.md'))).toBe(false);
+    expect(paths.some((p) => p.includes('CLAUDE.md'))).toBe(false);
   });
 
   it('diffs Claude global outputs from ~/.agentsmesh when --global is set', async () => {

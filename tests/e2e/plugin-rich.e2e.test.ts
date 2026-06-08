@@ -697,7 +697,7 @@ describe('rich-plugin — coexistence with built-in targets', () => {
 
     expect(await fileExists(join(tmpDir, '.rich', 'ROOT.md'))).toBe(true);
     expect(await fileExists(join(tmpDir, '.rich', 'agents', 'reviewer.md'))).toBe(true);
-    expect(await fileExists(join(tmpDir, '.claude', 'CLAUDE.md'))).toBe(true);
+    expect(await fileExists(join(tmpDir, 'CLAUDE.md'))).toBe(true);
   });
 });
 

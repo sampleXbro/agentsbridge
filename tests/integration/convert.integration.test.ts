@@ -49,7 +49,7 @@ describe('agentsmesh convert (integration)', () => {
       stdio: 'pipe',
     });
 
-    const claudeFile = readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8');
+    const claudeFile = readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8');
     expect(claudeFile).toContain('Use TDD');
     expect(existsSync(join(TEST_DIR, '.agentsmesh'))).toBe(false);
   });

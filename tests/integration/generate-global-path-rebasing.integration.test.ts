@@ -572,7 +572,7 @@ root: true
         env: { ...process.env, HOME: HOME_DIR, USERPROFILE: HOME_DIR },
       });
 
-      const projectClaude = join(PROJECT_DIR, '.claude', 'CLAUDE.md');
+      const projectClaude = join(PROJECT_DIR, 'CLAUDE.md');
       expect(existsSync(projectClaude)).toBe(true);
       const content = readFileSync(projectClaude, 'utf-8');
       expect(content).toContain('Project Root');

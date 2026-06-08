@@ -390,15 +390,15 @@ root: true
       expect(r.exitCode).toBe(0);
 
       fileExists(join(homeDir, '.claude', 'CLAUDE.md'));
-      fileNotExists(join(projectDir, '.claude', 'CLAUDE.md'));
+      fileNotExists(join(projectDir, 'CLAUDE.md'));
     });
 
     it('project mode does not pollute home directory', async () => {
       const r = await runCli('generate', projectDir);
       expect(r.exitCode).toBe(0);
 
-      fileExists(join(projectDir, '.claude', 'CLAUDE.md'));
-      fileContains(join(projectDir, '.claude', 'CLAUDE.md'), 'Project Config');
+      fileExists(join(projectDir, 'CLAUDE.md'));
+      fileContains(join(projectDir, 'CLAUDE.md'), 'Project Config');
 
       // Home directory should not be affected
       fileNotExists(join(homeDir, '.claude', 'CLAUDE.md'));
@@ -408,8 +408,8 @@ root: true
       // Generate project mode
       const r1 = await runCli('generate', projectDir);
       expect(r1.exitCode).toBe(0);
-      fileExists(join(projectDir, '.claude', 'CLAUDE.md'));
-      fileContains(join(projectDir, '.claude', 'CLAUDE.md'), 'Project Config');
+      fileExists(join(projectDir, 'CLAUDE.md'));
+      fileContains(join(projectDir, 'CLAUDE.md'), 'Project Config');
 
       // Generate global mode
       const r2 = await runCli('generate --global', projectDir);
@@ -418,7 +418,7 @@ root: true
       fileContains(join(homeDir, '.claude', 'CLAUDE.md'), 'Global Config');
 
       // Both should coexist
-      fileContains(join(projectDir, '.claude', 'CLAUDE.md'), 'Project Config');
+      fileContains(join(projectDir, 'CLAUDE.md'), 'Project Config');
       fileContains(join(homeDir, '.claude', 'CLAUDE.md'), 'Global Config');
     });
   });
@@ -537,8 +537,8 @@ description: Project skill
       // First generate in project mode
       const r1 = await runCli('generate', projectDir);
       expect(r1.exitCode).toBe(0);
-      fileExists(join(projectDir, '.claude', 'CLAUDE.md'));
-      fileContains(join(projectDir, '.claude', 'CLAUDE.md'), 'Project Config');
+      fileExists(join(projectDir, 'CLAUDE.md'));
+      fileContains(join(projectDir, 'CLAUDE.md'), 'Project Config');
       fileExists(join(projectDir, '.claude', 'skills', 'project-skill', 'SKILL.md'));
 
       // Then generate in global mode
@@ -549,7 +549,7 @@ description: Project skill
       fileExists(join(homeDir, '.claude', 'skills', 'test-skill', 'SKILL.md'));
 
       // Both should coexist independently
-      fileContains(join(projectDir, '.claude', 'CLAUDE.md'), 'Project Config');
+      fileContains(join(projectDir, 'CLAUDE.md'), 'Project Config');
       fileContains(join(homeDir, '.claude', 'CLAUDE.md'), 'Global Config');
     });
 
@@ -580,7 +580,7 @@ description: Project skill
       await runCli('generate --global', projectDir);
 
       // Both should still be correct
-      fileContains(join(projectDir, '.claude', 'CLAUDE.md'), 'Project Config');
+      fileContains(join(projectDir, 'CLAUDE.md'), 'Project Config');
       fileContains(join(homeDir, '.claude', 'CLAUDE.md'), 'Global Config');
     });
   });

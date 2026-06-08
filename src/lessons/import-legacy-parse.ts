@@ -99,12 +99,14 @@ export function parseRulesSection(markdown: string): ParsedRule[] {
     if (m === null) continue;
 
     const ruleIndex = Number(m[1]);
-    let body = m[2] ?? '';
+    // Group 2 `(.+?)` is mandatory in RULE_HEADING's line regex, so it is always
+    // present when the line matched; same for the EVIDENCE tail's `([^)]+)`.
+    let body = m[2]!;
     const evidence: string[] = [];
 
     let tail = EVIDENCE_TAIL_RE.exec(body);
     while (tail !== null) {
-      const refs = tail[1] ?? '';
+      const refs = tail[1]!;
       const matches = refs.match(EVIDENCE_REF_RE);
       if (matches !== null) evidence.unshift(...matches);
       body = body.slice(0, tail.index).trimEnd();

@@ -6,6 +6,7 @@ import {
   EMBEDDED_RULES_END,
   EMBEDDED_RULES_START,
   extractEmbeddedRules,
+  insertAtBodyTop,
   renderEmbeddedRulesBlock,
   replaceManagedBlock,
   ROOT_CONTRACT_END,
@@ -55,6 +56,30 @@ describe('replaceManagedBlock', () => {
 
   it('returns just the block when content is whitespace-only', () => {
     expect(replaceManagedBlock('   \n\t  ', START, END, BLOCK)).toBe(BLOCK);
+  });
+});
+
+describe('insertAtBodyTop', () => {
+  it('returns just the block when content is empty', () => {
+    expect(insertAtBodyTop('', BLOCK)).toBe(BLOCK);
+    expect(insertAtBodyTop('   \n\t', BLOCK)).toBe(BLOCK);
+  });
+
+  it('places the block above plain content (no frontmatter)', () => {
+    expect(insertAtBodyTop('First\n\nSecond', BLOCK)).toBe(`${BLOCK}\n\nFirst\n\nSecond`);
+  });
+
+  it('places the block after frontmatter, never before it', () => {
+    const content = '---\nroot: true\ndescription: ""\n---\n\n# Heading\n\nbody';
+    const result = insertAtBodyTop(content, BLOCK);
+    expect(result).toBe(`---\nroot: true\ndescription: ""\n---\n\n${BLOCK}\n\n# Heading\n\nbody`);
+    // Frontmatter stays verbatim at the very top.
+    expect(result.startsWith('---\nroot: true\ndescription: ""\n---')).toBe(true);
+  });
+
+  it('returns frontmatter + block when the body is empty', () => {
+    const content = '---\nroot: true\n---\n';
+    expect(insertAtBodyTop(content, BLOCK)).toBe(`---\nroot: true\n---\n\n${BLOCK}`);
   });
 });
 

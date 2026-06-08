@@ -1,3 +1,35 @@
+<!-- agentsmesh:root-generation-contract:start -->
+## AgentsMesh Generation Contract
+
+**NEVER edit generated files** (`.claude/`, `.cursor/`, `AGENTS.md`, `.github/copilot-instructions.md`, and similar target outputs) — `agentsmesh generate` overwrites them. **All changes MUST go through `.agentsmesh` first**: edit `rules/_root.md`, `rules/*.md`, `commands/*.md`, `agents/*.md`, `skills/*/SKILL.md` plus supporting files, `mcp.json`, `hooks.yaml`, `permissions.yaml`, and `ignore`; `agentsmesh.yaml` selects targets/features (`agentsmesh.local.yaml` overrides locally); if missing run `agentsmesh init`, use `agentsmesh import --from <tool>` for native configs, `agentsmesh install <source>` or `install --sync` for reusable packs, then run `agentsmesh generate`. Use `diff`, `lint`, `check`, `watch`, `matrix`, `merge`, and `refresh` as needed.
+<!-- agentsmesh:root-generation-contract:end -->
+
+<!-- agentsmesh:lessons-contract:start -->
+## Lessons (BLOCKING REQUIREMENT — MUST run, no exceptions)
+
+Two shell commands. Skipping either is a process violation; the user will check. The graph at `../../.agentsmesh/lessons/lessons.json` is canonical — NEVER edit by hand.
+
+**Recall — MUST run BEFORE every file edit and every shell command. There is no read-only carve-out — the very first action of any turn that will touch a file or run a command is this query:**
+
+1. Run: `agentsmesh lessons query --file <path-about-to-edit> --cmd <command-about-to-run>` (add `--keyword <text>` for task matches).
+2. Apply EVERY returned rule.
+3. Then perform the edit / run the command.
+
+Rejected excuses — each one means *query first*: *"the edit is small"*, *"I already know this"*, *"it's read-only / I'm just looking / just investigating"*, *"this command can't change anything"* (git, ls, cat, test runs, coverage **still count**), *"I'll do it later"*.
+
+**Capture — MUST run IMMEDIATELY after ANY failure or mistake**, yours or anyone's. A failure is NOT limited to red test output — it includes a **user correction or pushback**, a failing test / CI / lint / typecheck, a code-review comment, a regression, a wrong assumption you made, work you had to redo, or behavior that surprised you:
+
+1. Run: `agentsmesh lessons add "<imperative rule>" --topic <id> --trigger-file <glob> --evidence <commit-sha|lesson-id>` (add `--trigger-cmd <regex>` / `--trigger-kw <text>` as needed).
+2. Use `agentsmesh lessons topics` to find the topic id; pass `--new-topic --topic-summary "<one line>"` for a brand-new area.
+3. The CLI writes `lessons.json` atomically — capture is one command.
+
+Rejected excuses: *"it wasn't really a failure"* → it was. *"I'll capture it later"* → no. *"no topic fits"* → `agentsmesh lessons topics` then `--new-topic`.
+
+No shell? Use the `lessons_query` and `lessons_add` MCP tools — same two operations. Run `agentsmesh lessons --help` for the full command set (`show`, `deprecate`, `journal`, `validate`, `import-md`).
+
+**These two commands ARE the system. Skip them and the system does not exist.**
+<!-- agentsmesh:lessons-contract:end -->
+
 # Operational Guidelines
 
 ## Workflow
@@ -66,35 +98,3 @@
   - **Plugins**: every install path picks up `registerTargetDescriptor()` non-`.md` mappers via `getAllRegisteredDescriptorIds()` (`tests/unit/install/importers/target-native-commands-plugin.test.ts`).
   - **Reference rewriting**: `(SPEC.md or equivalent)` prose stays verbatim; real Markdown inline-link destinations rewrite cross-format (`tests/unit/core/link-token-classifier-prose-vs-md-link.test.ts`).
   - **Install**: third-party dir-readers route through `readEntityDirWithMappers`; the 79-repo sweep in `docs/testing/install-compatibility-repos.md` stays green.
-
-<!-- agentsmesh:lessons-contract:start -->
-## Lessons (BLOCKING REQUIREMENT — MUST run, no exceptions)
-
-Two shell commands. Skipping either is a process violation; the user will check. The graph at `../../.agentsmesh/lessons/lessons.json` is canonical — NEVER edit by hand.
-
-**Recall — MUST run BEFORE every file edit and every shell command:**
-
-1. Run: `agentsmesh lessons query --file <path-about-to-edit> --cmd <command-about-to-run>` (add `--keyword <text>` for task matches).
-2. Apply EVERY returned rule.
-3. Then perform the edit / run the command.
-
-Rejected excuses: *"the edit is small"* → query it. *"I already know this"* → query it. *"I'll do it later"* → no.
-
-**Capture — MUST run IMMEDIATELY after any failure** (test, CI, lint, code review, user correction, regression — anyone's mistake):
-
-1. Run: `agentsmesh lessons add "<imperative rule>" --topic <id> --trigger-file <glob> --evidence <commit-sha|lesson-id>` (add `--trigger-cmd <regex>` / `--trigger-kw <text>` as needed).
-2. Use `agentsmesh lessons topics` to find the topic id; pass `--new-topic --topic-summary "<one line>"` for a brand-new area.
-3. The CLI writes `lessons.json` atomically — capture is one command.
-
-Rejected excuses: *"it wasn't really a failure"* → it was. *"I'll capture it later"* → no. *"no topic fits"* → `agentsmesh lessons topics` then `--new-topic`.
-
-No shell? Use the `lessons_query` and `lessons_add` MCP tools — same two operations. Run `agentsmesh lessons --help` for the full command set (`show`, `deprecate`, `journal`, `validate`, `import-md`).
-
-**These two commands ARE the system. Skip them and the system does not exist.**
-<!-- agentsmesh:lessons-contract:end -->
-
-<!-- agentsmesh:root-generation-contract:start -->
-## AgentsMesh Generation Contract
-
-**NEVER edit generated files** (`.claude/`, `.cursor/`, `AGENTS.md`, `.github/copilot-instructions.md`, and similar target outputs) — `agentsmesh generate` overwrites them. **All changes MUST go through `.agentsmesh` first**: edit `rules/_root.md`, `rules/*.md`, `commands/*.md`, `agents/*.md`, `skills/*/SKILL.md` plus supporting files, `mcp.json`, `hooks.yaml`, `permissions.yaml`, and `ignore`; `agentsmesh.yaml` selects targets/features (`agentsmesh.local.yaml` overrides locally); if missing run `agentsmesh init`, use `agentsmesh import --from <tool>` for native configs, `agentsmesh install <source>` or `install --sync` for reusable packs, then run `agentsmesh generate`. Use `diff`, `lint`, `check`, `watch`, `matrix`, `merge`, and `refresh` as needed.
-<!-- agentsmesh:root-generation-contract:end -->

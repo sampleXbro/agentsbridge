@@ -42,6 +42,20 @@ describe('LESSONS_PROCEDURAL_RULE', () => {
     expect(LESSONS_PROCEDURAL_RULE).toMatch(/I'll capture it later/i);
   });
 
+  it('closes the read-only / just-investigating loophole so recall fires on every command', () => {
+    // The exact rationalization that lets an agent skip recall during a
+    // "read-only" investigation. Naming it (and confirming git/test/coverage
+    // still count) is the highest-value recall tweak.
+    expect(LESSONS_PROCEDURAL_RULE).toMatch(/read-only/i);
+    expect(LESSONS_PROCEDURAL_RULE).toMatch(/still count/i);
+  });
+
+  it('defines a failure broadly — a user correction or self-noticed mistake counts, not just red tests', () => {
+    expect(LESSONS_PROCEDURAL_RULE).toMatch(/user correction/i);
+    expect(LESSONS_PROCEDURAL_RULE).toMatch(/not limited to/i);
+    expect(LESSONS_PROCEDURAL_RULE).toMatch(/had to redo|surprised|wrong assumption/i);
+  });
+
   it('names the canonical graph path so init scaffolding stays consistent', () => {
     expect(LESSONS_PROCEDURAL_RULE).toContain('.agentsmesh/lessons/lessons.json');
   });

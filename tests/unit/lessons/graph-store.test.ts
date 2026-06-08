@@ -114,6 +114,19 @@ describe('graph-store', () => {
     expect(tryLoadLessonsGraph(root)).toEqual(graph);
   });
 
+  it('serializes a null nested value without throwing (canonicalizer robustness)', () => {
+    // The canonicalizer is a general JSON walker; a null value must pass through
+    // as `null` rather than being treated as an object (Object.entries(null) throws).
+    const withNull = {
+      version: 1,
+      lessons: {},
+      topics: {},
+      triggers: {},
+      extra: null,
+    } as unknown as LessonsGraph;
+    expect(serializeGraph(withNull)).toContain('"extra": null');
+  });
+
   it('loadLessonsGraph throws on a malformed file', () => {
     saveLessonsGraph(root, graph);
     const path = graphFilePath(root);

@@ -929,6 +929,27 @@
         "t-kw-129cc275"
       ]
     },
+    "fixture-and-assertion-discipline-to-cover-the-1-arm": {
+      "createdAt": "2026-06-07",
+      "evidence": [
+        "develop@lessons-coverage-backfill"
+      ],
+      "rule": "To cover the `-1` arm of an id/createdAt tie-break comparator in lessons code, do NOT route data through saveLessonsGraph (it canonicalizes/sorts keys) or queryLessons (it sorts matches by id ascending) — both pre-sort the input so the comparator never returns -1. Instead write the graph JSON with reverse-ordered keys via raw writeFileSync, or call the pure ranker (rankLessons) directly with a descending `matches` array.",
+      "status": "active",
+      "topics": [
+        "fixture-and-assertion-discipline"
+      ],
+      "triggers": [
+        "t-glob-2e07c687",
+        "t-glob-c9dfc34a",
+        "t-glob-84c63f4c",
+        "t-glob-9b805011",
+        "t-kw-6d98db32",
+        "t-kw-1fca5e27",
+        "t-kw-aff9d120",
+        "t-kw-eeeb356f"
+      ]
+    },
     "fixture-and-assertion-discipline-when-asserting-on-agentsmesh-lessons": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -1142,6 +1163,23 @@
         "t-glob-7f548275",
         "t-glob-7462f277",
         "t-glob-62cc99bd"
+      ]
+    },
+    "frontmatter-and-canonical-shapes-when-programmatically-injecting-a-manage": {
+      "createdAt": "2026-06-07",
+      "evidence": [],
+      "rationale": "First hooks.yaml recall-injector used parse+stringify and wiped the template's schema directive + comments; only caught during real-init verification, required a rewrite to parseDocument.",
+      "rule": "When programmatically injecting a managed unit into a canonical YAML config that can carry comments or a `# yaml-language-server` schema directive (e.g. hooks.yaml), edit via the YAML Document API (`parseDocument` + node mutation + `String(doc)`), NEVER `parse()`→`stringify()` — the round-trip silently drops the schema directive and all comments. Mirror the lessons-paragraph contract: preserve surrounding content, inject only the managed entries.",
+      "status": "active",
+      "topics": [
+        "frontmatter-and-canonical-shapes"
+      ],
+      "triggers": [
+        "t-glob-4bb2d21b",
+        "t-glob-c2fd94f5",
+        "t-kw-34b18081",
+        "t-kw-0d87141e",
+        "t-kw-45ee2cca"
       ]
     },
     "generation-collision-source-maps-rule-1": {
@@ -2941,6 +2979,23 @@
         "t-cmd-dadbee8a"
       ]
     },
+    "lessons-system-keep-mcp-tool-input-schemas": {
+      "createdAt": "2026-06-07",
+      "evidence": [
+        "src/mcp/handlers/lessons.ts:toTriggerList"
+      ],
+      "rule": "Keep MCP tool input schemas tolerant of and symmetric with the CLI surface. lessons_add originally required strict string[] arrays and only the plural field names, so CLI-muscle-memory calls (a bare string, or --trigger-file-style singular keys) hit VALIDATION_FAILED before the handler ran — while lessons_query already folded `cmd`/`max-tokens` aliases. Fix: accept string|string[] (z.union) and CLI-flag aliases in the schema, coerce in the handler mirroring CLI semantics exactly — triggers use repeatedFlag (scalar→[scalar], NEVER comma-split: globs/regexes contain commas), evidence uses listFlag (comma-split a scalar).",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-9df02130",
+        "t-glob-c3684e2c",
+        "t-kw-e1decce5",
+        "t-kw-7dd5abb2"
+      ]
+    },
     "lessons-system-make-legacy-auto-migration-check": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -3167,6 +3222,24 @@
         "t-cmd-73382791"
       ]
     },
+    "lessons-system-run-agentsmesh-lessons-query-before": {
+      "createdAt": "2026-06-07",
+      "evidence": [],
+      "rationale": "Agent skipped mandatory recall during a read-only coverage investigation; user corrected it. The prose excuse list did not name the read-only loophole.",
+      "rule": "Run `agentsmesh lessons query` BEFORE every shell command and file edit, including read-only investigation (git diff/log/status/show, vitest/coverage runs, ls/cat). There is NO read-only carve-out — \"I'm just looking / this can't change anything\" is the exact rationalization that silently skips recall. Query first regardless of whether the command mutates anything.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-cmd-b0d2d4dd",
+        "t-cmd-10d52049",
+        "t-cmd-718d6cf5",
+        "t-kw-eaa32acc",
+        "t-kw-e44a7b85",
+        "t-kw-c20f4631"
+      ]
+    },
     "lessons-system-split-lessons-modules-by-responsibility": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -3210,6 +3283,22 @@
         "t-cmd-56d79bf7"
       ]
     },
+    "lessons-system-when-a-recall-query-primitive": {
+      "createdAt": "2026-06-07",
+      "evidence": [
+        "src/lessons/recall.ts:recordRecallTelemetry"
+      ],
+      "rule": "When a recall/query primitive is instrumented (telemetry, metrics, side effects), route EVERY entry point through it. The CLI `lessons query` handler (doQuery) reimplemented load+query+rank inline instead of calling recallLessons, so it silently skipped recall telemetry — shell-driven `lessons query` recorded nothing and `lessons stats` always reported \"no telemetry yet\" even with AGENTSMESH_LESSONS_TELEMETRY=1. Extract the shared recorder (recordRecallTelemetry) and call it from both CLI and MCP paths.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-4eefad64",
+        "t-kw-519df655",
+        "t-kw-3e99909c"
+      ]
+    },
     "lessons-system-when-guarding-an-import-migration": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -3225,6 +3314,22 @@
         "t-kw-20cd8977"
       ]
     },
+    "lessons-system-when-scaffoldlessons-lessons-init-import": {
+      "createdAt": "2026-06-07",
+      "evidence": [],
+      "rationale": "Adding recall-hook injection to scaffoldLessons made import create hooks.yaml, breaking all 21 target round-trip exact-structure assertions until expectedImported was updated.",
+      "rule": "When `scaffoldLessons` (lessons init/import gate) gains a new canonical side-effect file (e.g. it now writes `.agentsmesh/hooks.yaml`), update the exact-canonical-structure assertions in `tests/e2e/target-contract-matrix.e2e.test.ts` — every target's `expectedImported` set is compared with `toEqual`, so a new file fails all ~21 targets at once. Add it with an `includes` guard (like the `mcp.json`/`lessons.json` pattern) so targets that already import it don't double-count.",
+      "status": "deprecated",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-8148e382",
+        "t-kw-a70c84c3",
+        "t-kw-67f3e58b",
+        "t-kw-8987ca31"
+      ]
+    },
     "lessons-system-when-testing-direct-legacy-import": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -3237,6 +3342,24 @@
       ],
       "triggers": [
         "t-glob-406306ec"
+      ]
+    },
+    "lessons-system-when-the-agentsmesh-cli-lacks": {
+      "createdAt": "2026-06-07",
+      "evidence": [
+        "develop@lessons-coverage-backfill-session"
+      ],
+      "rule": "When the `agentsmesh` CLI lacks the `lessons` subcommand (in-dev feature not in the installed binary), use the MCP lessons tools — but with the MCP SCHEMA field names, not CLI flag names: lessons_query takes `command` (NOT `cmd`), `file`, `keyword`, `max_tokens` (NOT `max-tokens`). A `VALIDATION_FAILED: unrecognized_keys` means a wrong field name — fix it and retry; do NOT abandon mandatory recall on a validation error.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-kw-e86a782c",
+        "t-kw-4875fad7",
+        "t-kw-d6524007",
+        "t-kw-e3a2ec15",
+        "t-cmd-38934d6c"
       ]
     },
     "link-rebaser-deterministic-text-cleanup-transforms-ov": {
@@ -5372,6 +5495,10 @@
       "kind": "command_pattern",
       "pattern": "pnpm test:coverage"
     },
+    "t-cmd-10d52049": {
+      "kind": "command_pattern",
+      "pattern": "vitest"
+    },
     "t-cmd-18d320e9": {
       "kind": "command_pattern",
       "pattern": "pnpm flake:watch"
@@ -5403,6 +5530,10 @@
     "t-cmd-355f9276": {
       "kind": "command_pattern",
       "pattern": "^pnpm lint$"
+    },
+    "t-cmd-38934d6c": {
+      "kind": "command_pattern",
+      "pattern": "agentsmesh lessons (query|add|topics)"
     },
     "t-cmd-3c746c92": {
       "kind": "command_pattern",
@@ -5451,6 +5582,10 @@
     "t-cmd-6ea72461": {
       "kind": "command_pattern",
       "pattern": "changeset publish"
+    },
+    "t-cmd-718d6cf5": {
+      "kind": "command_pattern",
+      "pattern": "test:coverage"
     },
     "t-cmd-73382791": {
       "kind": "command_pattern",
@@ -5515,6 +5650,10 @@
     "t-cmd-ac418287": {
       "kind": "command_pattern",
       "pattern": "generate --global"
+    },
+    "t-cmd-b0d2d4dd": {
+      "kind": "command_pattern",
+      "pattern": "git (diff|log|status|show)"
     },
     "t-cmd-b5d550c1": {
       "kind": "command_pattern",
@@ -5704,6 +5843,10 @@
       "kind": "file_glob",
       "pattern": "src/public/*.ts"
     },
+    "t-glob-2e07c687": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/ranking.ts"
+    },
     "t-glob-300145df": {
       "kind": "file_glob",
       "pattern": "src/**/readSkillFrontmatterName*.ts"
@@ -5751,6 +5894,10 @@
     "t-glob-49e2783c": {
       "kind": "file_glob",
       "pattern": "src/canonical/**/*.ts"
+    },
+    "t-glob-4bb2d21b": {
+      "kind": "file_glob",
+      "pattern": "src/targets/projection/**/*.ts"
     },
     "t-glob-4cf8c9e8": {
       "kind": "file_glob",
@@ -5856,6 +6003,10 @@
       "kind": "file_glob",
       "pattern": "src/targets/**/importer.ts"
     },
+    "t-glob-84c63f4c": {
+      "kind": "file_glob",
+      "pattern": "tests/unit/lessons/ranking.test.ts"
+    },
     "t-glob-85c453ba": {
       "kind": "file_glob",
       "pattern": "tsconfig.*.json"
@@ -5876,9 +6027,17 @@
       "kind": "file_glob",
       "pattern": "**/SKILL.md"
     },
+    "t-glob-9b805011": {
+      "kind": "file_glob",
+      "pattern": "tests/unit/cli/commands/lessons.test.ts"
+    },
     "t-glob-9ccdff8a": {
       "kind": "file_glob",
       "pattern": "src/lessons/validate*.ts"
+    },
+    "t-glob-9df02130": {
+      "kind": "file_glob",
+      "pattern": "src/mcp/tool-tables/lessons-tools.ts"
     },
     "t-glob-a07d1032": {
       "kind": "file_glob",
@@ -5915,6 +6074,10 @@
     "t-glob-b43f25de": {
       "kind": "file_glob",
       "pattern": "src/utils/filesystem/**"
+    },
+    "t-glob-c2fd94f5": {
+      "kind": "file_glob",
+      "pattern": "src/**/*hooks*.ts"
     },
     "t-glob-c3684e2c": {
       "kind": "file_glob",
@@ -5968,6 +6131,10 @@
       "kind": "keyword",
       "pattern": "ValidatedConfig"
     },
+    "t-kw-0d87141e": {
+      "kind": "keyword",
+      "pattern": "parseDocument"
+    },
     "t-kw-0e1a8ecb": {
       "kind": "keyword",
       "pattern": "legacy-only store"
@@ -5991,6 +6158,10 @@
     "t-kw-1d0e5147": {
       "kind": "keyword",
       "pattern": "strip markers"
+    },
+    "t-kw-1fca5e27": {
+      "kind": "keyword",
+      "pattern": "tie-break sort"
     },
     "t-kw-20503645": {
       "kind": "keyword",
@@ -6016,6 +6187,10 @@
       "kind": "keyword",
       "pattern": "review agent"
     },
+    "t-kw-34b18081": {
+      "kind": "keyword",
+      "pattern": "schema directive"
+    },
     "t-kw-34b80ab3": {
       "kind": "keyword",
       "pattern": "subagent"
@@ -6024,13 +6199,29 @@
       "kind": "keyword",
       "pattern": "Lessons graph: ok"
     },
+    "t-kw-3e99909c": {
+      "kind": "keyword",
+      "pattern": "instrumented entry point"
+    },
     "t-kw-4143c059": {
       "kind": "keyword",
       "pattern": "valueless flags"
     },
+    "t-kw-45ee2cca": {
+      "kind": "keyword",
+      "pattern": "hooks.yaml"
+    },
+    "t-kw-4875fad7": {
+      "kind": "keyword",
+      "pattern": "lessons recall"
+    },
     "t-kw-4df0ba9f": {
       "kind": "keyword",
       "pattern": "jsdoc"
+    },
+    "t-kw-519df655": {
+      "kind": "keyword",
+      "pattern": "recall telemetry stats parity"
     },
     "t-kw-53259aa5": {
       "kind": "keyword",
@@ -6040,9 +6231,17 @@
       "kind": "keyword",
       "pattern": "NFA engine"
     },
+    "t-kw-67f3e58b": {
+      "kind": "keyword",
+      "pattern": "target-contract-matrix"
+    },
     "t-kw-6829f894": {
       "kind": "keyword",
       "pattern": "fork_context"
+    },
+    "t-kw-6d98db32": {
+      "kind": "keyword",
+      "pattern": "branch coverage"
     },
     "t-kw-6e2ad015": {
       "kind": "keyword",
@@ -6052,9 +6251,17 @@
       "kind": "keyword",
       "pattern": "parseArgs boolean flag"
     },
+    "t-kw-7dd5abb2": {
+      "kind": "keyword",
+      "pattern": "scalar array coercion alias"
+    },
     "t-kw-866bb6ea": {
       "kind": "keyword",
       "pattern": "fan out"
+    },
+    "t-kw-8987ca31": {
+      "kind": "keyword",
+      "pattern": "expectedImported"
     },
     "t-kw-8be8afaf": {
       "kind": "keyword",
@@ -6072,6 +6279,10 @@
       "kind": "keyword",
       "pattern": "control character probe"
     },
+    "t-kw-a70c84c3": {
+      "kind": "keyword",
+      "pattern": "scaffoldLessons"
+    },
     "t-kw-abe95c07": {
       "kind": "keyword",
       "pattern": "work budget"
@@ -6084,9 +6295,17 @@
       "kind": "keyword",
       "pattern": "recall options"
     },
+    "t-kw-aff9d120": {
+      "kind": "keyword",
+      "pattern": "comparator coverage"
+    },
     "t-kw-b6410e25": {
       "kind": "keyword",
       "pattern": "command truncation"
+    },
+    "t-kw-c20f4631": {
+      "kind": "keyword",
+      "pattern": "coverage"
     },
     "t-kw-c8f23353": {
       "kind": "keyword",
@@ -6104,6 +6323,10 @@
       "kind": "keyword",
       "pattern": "file size"
     },
+    "t-kw-d6524007": {
+      "kind": "keyword",
+      "pattern": "VALIDATION_FAILED unrecognized_keys"
+    },
     "t-kw-db579650": {
       "kind": "keyword",
       "pattern": "matcher work budget"
@@ -6111,6 +6334,18 @@
     "t-kw-e0aa2fb2": {
       "kind": "keyword",
       "pattern": "precommit hook"
+    },
+    "t-kw-e1decce5": {
+      "kind": "keyword",
+      "pattern": "MCP tool input schema CLI parity"
+    },
+    "t-kw-e3a2ec15": {
+      "kind": "keyword",
+      "pattern": "agentsmesh lessons unknown command"
+    },
+    "t-kw-e44a7b85": {
+      "kind": "keyword",
+      "pattern": "investigate"
     },
     "t-kw-e61f5882": {
       "kind": "keyword",
@@ -6120,9 +6355,21 @@
       "kind": "keyword",
       "pattern": "legacy migration"
     },
+    "t-kw-e86a782c": {
+      "kind": "keyword",
+      "pattern": "lessons_query"
+    },
+    "t-kw-eaa32acc": {
+      "kind": "keyword",
+      "pattern": "read-only"
+    },
     "t-kw-edafac99": {
       "kind": "keyword",
       "pattern": "regex parser"
+    },
+    "t-kw-eeeb356f": {
+      "kind": "keyword",
+      "pattern": "canonicalize keys"
     },
     "t-kw-f3654aad": {
       "kind": "keyword",

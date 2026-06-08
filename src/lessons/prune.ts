@@ -54,9 +54,11 @@ export function planPrune(graph: LessonsGraph, options: PruneOptions = {}): Prun
       continue;
     }
     // Most specific (lowest fanout) first; deterministic id tie-break.
+    // This lesson is active, so buildFanout counted all of its triggers — the
+    // lookups always hit (mirrors ranking.ts's fanout invariant).
     const ordered = [...lesson.triggers].sort((a, b) => {
-      const fa = fanout.get(a) ?? 0;
-      const fb = fanout.get(b) ?? 0;
+      const fa = fanout.get(a)!;
+      const fb = fanout.get(b)!;
       return fa !== fb ? fa - fb : a < b ? -1 : 1;
     });
     const drop = new Set(ordered.slice(cap));

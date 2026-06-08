@@ -1,11 +1,23 @@
-import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { runLessons } from '../../../../src/cli/commands/lessons.js';
-import { loadLessonsGraph, saveLessonsGraph } from '../../../../src/lessons/graph-store.js';
+import {
+  graphFilePath,
+  loadLessonsGraph,
+  saveLessonsGraph,
+} from '../../../../src/lessons/graph-store.js';
 import type { LessonsGraph } from '../../../../src/lessons/graph-schema.js';
+
+/** Persist a graph WITHOUT canonicalizing, preserving the literal key order so
+ * the handlers' deterministic id/createdAt sorts receive unsorted input. */
+function writeRawGraph(root: string, graph: LessonsGraph): void {
+  const path = graphFilePath(root);
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, `${JSON.stringify(graph, null, 2)}\n`, 'utf8');
+}
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const LEGACY_FIXTURE = join(HERE, '../../../fixtures/lessons/legacy-input');
@@ -278,6 +290,18 @@ describe('runLessons topics', () => {
     if (r.subcommand !== 'topics') return;
     expect(r.data.topics).toEqual([]);
   });
+
+  it('sorts topics ascending even when persisted in descending order', async () => {
+    writeRawGraph(root, {
+      version: 1,
+      lessons: {},
+      topics: { 'z-t': { summary: 'Z.' }, 'm-t': { summary: 'M.' }, 'a-t': { summary: 'A.' } },
+      triggers: {},
+    });
+    const r = await runLessons({}, ['topics'], root);
+    if (r.subcommand !== 'topics') return;
+    expect(r.data.topics.map((t) => t.id)).toEqual(['a-t', 'm-t', 'z-t']);
+  });
 });
 
 describe('runLessons journal', () => {
@@ -359,6 +383,34 @@ describe('runLessons show — multiple lessons', () => {
     );
     // Deprecated lessons are excluded from the rendered topic.
     expect(r.data.markdown).not.toContain('topic-x-rule-3');
+  });
+});
+
+describe('runLessons show — ordering', () => {
+  it('renders lessons in ascending id order even when persisted descending', async () => {
+    const mk = (rule: string): LessonsGraph['lessons'][string] => ({
+      rule,
+      topics: ['topic-x'],
+      triggers: [],
+      evidence: [],
+      status: 'active',
+      createdAt: '2026-06-01',
+    });
+    writeRawGraph(root, {
+      version: 1,
+      lessons: {
+        'topic-x-rule-3': mk('Third.'),
+        'topic-x-rule-2': mk('Second.'),
+        'topic-x-rule-1': mk('First.'),
+      },
+      topics: { 'topic-x': { summary: 'X.' } },
+      triggers: {},
+    });
+    const r = await runLessons({}, ['show', 'topic-x'], root);
+    if (r.subcommand !== 'show') return;
+    const md = r.data.markdown;
+    expect(md.indexOf('topic-x-rule-1')).toBeLessThan(md.indexOf('topic-x-rule-2'));
+    expect(md.indexOf('topic-x-rule-2')).toBeLessThan(md.indexOf('topic-x-rule-3'));
   });
 });
 
@@ -730,6 +782,13 @@ describe('runLessons validate', () => {
     const r = await runLessons({}, ['validate'], root);
     expect(r.exitCode).toBe(1);
   });
+
+  it('reports ok on a project with no graph (validates the empty graph)', async () => {
+    const r = await runLessons({}, ['validate'], root);
+    if (r.subcommand !== 'validate') return;
+    expect(r.data.ok).toBe(true);
+    expect(r.exitCode).toBe(0);
+  });
 });
 
 describe('runLessons journal', () => {
@@ -761,6 +820,33 @@ describe('runLessons journal', () => {
     const r = await runLessons({}, ['journal'], root);
     if (r.subcommand !== 'journal') return;
     expect(r.data.entries.map((e) => e.id)).toEqual(['a-rule', 'b-rule']);
+  });
+
+  it('sorts by createdAt then id from a descending, mixed-date persisted graph', async () => {
+    const mk = (rule: string, createdAt: string): LessonsGraph['lessons'][string] => ({
+      rule,
+      topics: ['t'],
+      triggers: [],
+      evidence: [],
+      status: 'active',
+      createdAt,
+    });
+    // Persisted descending by id, with a later date on the first key — forces the
+    // journal sort to do real work across both the createdAt and id tie-breaks.
+    writeRawGraph(root, {
+      version: 1,
+      lessons: {
+        zzz: mk('Z.', '2026-06-02'),
+        mmm: mk('M.', '2026-06-01'),
+        aaa: mk('A.', '2026-06-01'),
+      },
+      topics: { t: { summary: '.' } },
+      triggers: {},
+    });
+    const r = await runLessons({}, ['journal'], root);
+    if (r.subcommand !== 'journal') return;
+    // 06-01 group first (id asc: aaa, mmm), then 06-02 (zzz).
+    expect(r.data.entries.map((e) => e.id)).toEqual(['aaa', 'mmm', 'zzz']);
   });
 });
 
@@ -817,5 +903,91 @@ describe('runLessons import-md', () => {
     expect(r.exitCode).toBe(1);
     expect(r.error).toMatch(/nothing to migrate/i);
     expect(r.error).not.toMatch(/ENOENT/);
+  });
+});
+
+describe('runLessons stats', () => {
+  it('dispatches to the stats handler and reports whether a telemetry log exists', async () => {
+    seedSimpleGraph();
+    const r = await runLessons({}, ['stats'], root);
+    expect(r.subcommand).toBe('stats');
+    if (r.subcommand !== 'stats') return;
+    expect(r.exitCode).toBe(0);
+    expect(r.data.hasLog).toBe(false);
+  });
+
+  it('selects json format with --json', async () => {
+    seedSimpleGraph();
+    const r = await runLessons({ json: true }, ['stats'], root);
+    if (r.subcommand !== 'stats') return;
+    expect(r.format).toBe('json');
+  });
+});
+
+describe('runLessons prune', () => {
+  function seedOverCap(): void {
+    const triggers: LessonsGraph['triggers'] = {};
+    const triggerIds: string[] = [];
+    for (let i = 0; i < 12; i++) {
+      const id = `t-${i}`;
+      triggers[id] = { kind: 'file_glob', pattern: `src/p${i}/**` };
+      triggerIds.push(id);
+    }
+    const graph: LessonsGraph = {
+      version: 1,
+      lessons: {
+        big: {
+          rule: 'Over-cap lesson.',
+          topics: ['t'],
+          triggers: triggerIds,
+          evidence: [],
+          status: 'active',
+          createdAt: '2026-06-01',
+        },
+      },
+      topics: { t: { summary: 'T.' } },
+      triggers,
+    };
+    saveLessonsGraph(root, graph);
+  }
+
+  it('dry-runs by default and honors a custom --cap', async () => {
+    seedOverCap();
+    const r = await runLessons({ cap: '3' }, ['prune'], root);
+    expect(r.subcommand).toBe('prune');
+    if (r.subcommand !== 'prune') return;
+    expect(r.exitCode).toBe(0);
+    expect(r.data.applied).toBe(false);
+    expect(r.data.cap).toBe(3);
+    expect(r.data.trimmedLessons[0]?.keptCount).toBe(3);
+    // Dry run wrote nothing — the lesson still has all 12 triggers.
+    expect(loadLessonsGraph(root).lessons.big?.triggers.length).toBe(12);
+  });
+
+  it('--apply trims over-cap lessons and persists the result', async () => {
+    seedOverCap();
+    const r = await runLessons({ apply: true, cap: '3' }, ['prune'], root);
+    if (r.subcommand !== 'prune') return;
+    expect(r.data.applied).toBe(true);
+    expect(loadLessonsGraph(root).lessons.big?.triggers.length).toBe(3);
+  });
+
+  it('rejects an invalid --cap with a usage error (exit 2)', async () => {
+    seedOverCap();
+    const r = await runLessons({ cap: '0' }, ['prune'], root);
+    expect(r.exitCode).toBe(2);
+    expect(r.error).toMatch(/--cap/);
+  });
+
+  it('reports an empty plan on a project with no graph (dry-run and apply)', async () => {
+    const dry = await runLessons({}, ['prune'], root);
+    if (dry.subcommand !== 'prune') return;
+    expect(dry.data.trimmedLessons).toEqual([]);
+    expect(dry.data.removedTriggerIds).toEqual([]);
+
+    const applied = await runLessons({ apply: true }, ['prune'], root);
+    if (applied.subcommand !== 'prune') return;
+    expect(applied.data.applied).toBe(true);
+    expect(applied.data.trimmedLessons).toEqual([]);
   });
 });

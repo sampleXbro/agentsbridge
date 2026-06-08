@@ -90,6 +90,8 @@ export interface LessonsStatsData {
   readonly report: RecallStatsReport;
   /** False when no recall log exists yet (telemetry never enabled). */
   readonly hasLog: boolean;
+  /** Whether telemetry is enabled in THIS process — tailors the empty-log hint. */
+  readonly telemetryEnabled: boolean;
 }
 
 export type LessonsCommandResult =

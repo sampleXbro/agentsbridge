@@ -29,6 +29,8 @@ Thumbs.db
 
 # Lessons — transient distill proposal (drained by distill:apply)
 .agentsmesh/lessons/distill-proposal.md
+# Lessons — opt-in recall telemetry log (runtime artifact, not canonical)
+.agentsmesh/lessons/recall-log.jsonl
 
 # AgentsMesh — local overrides, cache symlink, transient lock write
 .agentsmesh.local.yaml

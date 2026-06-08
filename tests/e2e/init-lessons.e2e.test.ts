@@ -38,9 +38,13 @@ describe('agentsmesh init --lessons (e2e)', () => {
     expect(rootRule).toContain('<!-- agentsmesh:lessons-contract:start -->');
     expect(rootRule).toContain('**Recall');
     expect(rootRule).toContain('**Capture');
+    // The ritual leads the body, after frontmatter, above any other content.
+    expect(rootRule).toContain(
+      '---\n\n<!-- agentsmesh:lessons-contract:start -->',
+    );
   });
 
-  it('generate projects the lessons block into the target root file', async () => {
+  it('generate projects both managed blocks at the TOP of the target root file', async () => {
     await runCli('init --lessons', tempDir);
     const gen = await runCli('generate --targets claude-code', tempDir);
     expect(gen.exitCode).toBe(0);
@@ -48,6 +52,15 @@ describe('agentsmesh init --lessons (e2e)', () => {
     const claude = readFileSync(join(tempDir, '.claude/CLAUDE.md'), 'utf8');
     expect(claude).toContain('<!-- agentsmesh:lessons-contract:start -->');
     expect(claude).toContain('agentsmesh lessons query');
+    // Generation Contract first, then the lessons ritual — both ahead of any
+    // user content / document headings.
+    expect(claude.startsWith('<!-- agentsmesh:root-generation-contract:start -->')).toBe(true);
+    const contractEnd = claude.indexOf('<!-- agentsmesh:root-generation-contract:end -->');
+    const lessonsStart = claude.indexOf('<!-- agentsmesh:lessons-contract:start -->');
+    const body = claude.indexOf('# Project Rules');
+    expect(contractEnd).toBeLessThan(lessonsStart);
+    expect(lessonsStart).toBeGreaterThan(-1);
+    expect(lessonsStart).toBeLessThan(body);
   });
 
   it('retrofits lessons onto an already-initialized project', async () => {

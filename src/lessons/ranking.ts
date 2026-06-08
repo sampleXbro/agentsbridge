@@ -115,7 +115,8 @@ export function rankLessons(
       lesson,
       bm25: bm25(terms, lesson.rule, corpus),
       specificity,
-      topicCoherence: coherence.get(id) ?? 0,
+      // `id` is a matched lesson, and buildTopicCoherence keys every matched id.
+      topicCoherence: coherence.get(id)!,
       matchedTriggers: hitTriggers,
     };
   });

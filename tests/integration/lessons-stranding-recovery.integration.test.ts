@@ -66,6 +66,21 @@ describe('importLegacyLessons merge recovery', () => {
     expect(fromLegacy.totalMatches).toBeGreaterThan(0);
   });
 
+  it('preserves the legacy store on merge when deleteLegacy=false', async () => {
+    stageLegacy();
+    const report = await importLegacyLessons(root, {
+      migratedAt: '2026-06-06',
+      merge: true,
+      deleteLegacy: false,
+    });
+    expect(report.lessonCount).toBeGreaterThan(0);
+    expect(report.deletedPaths).toEqual([]);
+    // The legacy index survives because deletion was opted out of.
+    expect(existsSync(lessonsPaths(root).index)).toBe(true);
+    // ...yet the merge still populated the graph.
+    expect(Object.keys(tryLoadLessonsGraph(root)!.lessons).length).toBeGreaterThan(0);
+  });
+
   it('merge is idempotent — re-running adds nothing new', async () => {
     stageLegacy();
     await importLegacyLessons(root, { migratedAt: '2026-06-06', merge: true });

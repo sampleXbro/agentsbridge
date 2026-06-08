@@ -5,7 +5,14 @@ import type { ToolDescriptor } from './types.js';
 const LessonsQueryInput = z
   .object({
     file: z.string().optional().describe('Project-relative path of the file about to be edited.'),
-    command: z.string().optional().describe('Shell command about to be executed.'),
+    command: z
+      .string()
+      .optional()
+      .describe('Shell command about to be executed (CLI flag: --cmd).'),
+    cmd: z
+      .string()
+      .optional()
+      .describe('Alias of `command` (matches the CLI `--cmd` flag). Use `command` if unsure.'),
     keyword: z.string().optional().describe('Free-form description of the active task.'),
     limit: z
       .number()
@@ -18,7 +25,13 @@ const LessonsQueryInput = z
       .int()
       .positive()
       .optional()
-      .describe('Cap results by cumulative estimated rule-token cost.'),
+      .describe('Cap results by cumulative estimated rule-token cost (CLI flag: --max-tokens).'),
+    'max-tokens': z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe('Alias of `max_tokens` (matches the CLI `--max-tokens` flag).'),
     verbose: z
       .boolean()
       .optional()
@@ -26,26 +39,35 @@ const LessonsQueryInput = z
   })
   .strict();
 
+// List fields accept a bare string OR an array — the handler coerces a scalar to
+// a single value, matching the CLI's tolerance (a string is the common mistake).
+const stringOrStringArray = z.union([z.string(), z.array(z.string())]);
+
 const LessonsAddInput = z
   .object({
     rule: z.string().min(1).describe('Imperative rule that prevents recurrence.'),
     topic: z.string().min(1).describe('Topic id. Use new_topic + topic_summary to create one.'),
-    trigger_files: z
-      .array(z.string())
+    trigger_files: stringOrStringArray
       .optional()
-      .describe('file_glob triggers (e.g. ["src/cli/**/*.ts"])'),
-    trigger_commands: z
-      .array(z.string())
+      .describe('file_glob triggers (e.g. ["src/cli/**/*.ts"] or a single "src/**").'),
+    trigger_file: stringOrStringArray
+      .optional()
+      .describe('Alias of `trigger_files` (matches the CLI `--trigger-file` flag).'),
+    trigger_commands: stringOrStringArray
       .optional()
       .describe('command_pattern triggers — regexes matched against shell commands.'),
-    trigger_keywords: z
-      .array(z.string())
+    trigger_cmd: stringOrStringArray
+      .optional()
+      .describe('Alias of `trigger_commands` (matches the CLI `--trigger-cmd` flag).'),
+    trigger_keywords: stringOrStringArray
       .optional()
       .describe('keyword triggers — case-insensitive substrings of task descriptions.'),
-    evidence: z
-      .array(z.string())
+    trigger_kw: stringOrStringArray
       .optional()
-      .describe('Evidence references (commit:SHA, lesson:id, …).'),
+      .describe('Alias of `trigger_keywords` (matches the CLI `--trigger-kw` flag).'),
+    evidence: stringOrStringArray
+      .optional()
+      .describe('Evidence references (commit:SHA, lesson:id, …). A scalar may be comma-separated.'),
     rationale: z.string().optional().describe('Optional one-line "why" behind the rule.'),
     new_topic: z.boolean().optional().describe('Allow creating a new topic if missing.'),
     topic_summary: z

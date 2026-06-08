@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { doStats } from '../../../../src/cli/commands/lessons-handlers.js';
+import type { LessonsStatsData } from '../../../../src/cli/commands/lessons-types.js';
 import type { LessonsGraph } from '../../../../src/lessons/graph-schema.js';
 import { saveLessonsGraph } from '../../../../src/lessons/graph-store.js';
 import { appendRecallRecord, TELEMETRY_ENV } from '../../../../src/lessons/telemetry.js';
@@ -34,7 +35,7 @@ const graph: LessonsGraph = {
   triggers: { 't-kw': { kind: 'keyword', pattern: 'x' } },
 };
 
-function statsData(result: ReturnType<typeof doStats>) {
+function statsData(result: ReturnType<typeof doStats>): LessonsStatsData {
   if (result.subcommand !== 'stats') throw new Error('expected stats');
   return result.data;
 }
@@ -44,6 +45,8 @@ describe('doStats', () => {
     saveLessonsGraph(root, graph);
     const data = statsData(doStats({}, root));
     expect(data.hasLog).toBe(false);
+    // Default test env has telemetry off, so the renderer shows the "enable it" hint.
+    expect(data.telemetryEnabled).toBe(false);
     expect(data.report.totalRecalls).toBe(0);
     // The graph still yields the static reachability gap.
     expect(data.report.reachability.keywordOnlyUnreachableLessons).toBe(1);

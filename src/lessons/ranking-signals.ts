@@ -35,7 +35,9 @@ export function buildTopicCoherence(matches: readonly MatchedLesson[]): Map<stri
   const coherence = new Map<string, number>();
   for (const { id, lesson } of matches) {
     let best = 0;
-    for (const t of lesson.topics) best = Math.max(best, topicCount.get(t) ?? 0);
+    // Every topic of a matched lesson was counted in the first pass, so the
+    // lookup always hits — assert it (mirrors ranking.ts's fanout invariant).
+    for (const t of lesson.topics) best = Math.max(best, topicCount.get(t)!);
     coherence.set(id, best);
   }
   return coherence;

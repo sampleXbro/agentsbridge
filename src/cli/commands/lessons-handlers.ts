@@ -5,8 +5,9 @@ import {
   DEFAULT_RECALL_MAX_TOKENS,
   rankLessons,
 } from '../../lessons/ranking.js';
+import { recordRecallTelemetry } from '../../lessons/recall.js';
 import { summarizeRecall } from '../../lessons/stats.js';
-import { readRecallLog, recallLogExists } from '../../lessons/telemetry.js';
+import { isTelemetryEnabled, readRecallLog, recallLogExists } from '../../lessons/telemetry.js';
 import { validateLessonsGraph } from '../../lessons/validate.js';
 import {
   emptyGraph,
@@ -79,6 +80,10 @@ export function doQuery(
   const maxTokens =
     flags.all === true ? undefined : (numberFlag(flags, 'max-tokens') ?? DEFAULT_RECALL_MAX_TOKENS);
   const ranked = rankLessons(graph, query, matches, { limit, maxTokens });
+  // Record recall telemetry on the CLI path too (gated; no-op unless opt-in),
+  // so shell-driven `lessons query` is visible to `lessons stats` — parity with
+  // the MCP `lessons_query` tool, which records via recallLessons.
+  recordRecallTelemetry(projectRoot, graph, query, matches, ranked);
   const lessons = ranked.map(({ id, lesson, score }) => ({
     id,
     rule: lesson.rule,
@@ -135,7 +140,11 @@ export function doStats(flags: LessonsFlags, projectRoot: string): LessonsComman
     subcommand: 'stats',
     exitCode: 0,
     format,
-    data: { report, hasLog: recallLogExists(projectRoot) },
+    data: {
+      report,
+      hasLog: recallLogExists(projectRoot),
+      telemetryEnabled: isTelemetryEnabled(),
+    },
   };
 }
 

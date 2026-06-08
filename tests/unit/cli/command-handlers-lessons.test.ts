@@ -29,4 +29,15 @@ describe('cmdHandlers.lessons (dispatch)', () => {
       exit.mockRestore();
     }
   });
+
+  it('does NOT call process.exit on a successful (exit 0) subcommand', async () => {
+    const exit = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+    try {
+      // `topics` succeeds (exit 0) on an empty project — the no-exit branch.
+      await cmdHandlers.lessons!({}, ['topics']);
+      expect(exit).not.toHaveBeenCalled();
+    } finally {
+      exit.mockRestore();
+    }
+  });
 });

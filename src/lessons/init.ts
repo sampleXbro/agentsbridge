@@ -53,7 +53,7 @@ function injectProceduralBlock(projectRoot: string): boolean {
   const rootRule = join(projectRoot, '.agentsmesh/rules/_root.md');
   if (!existsSync(rootRule)) {
     mkdirSync(dirname(rootRule), { recursive: true });
-    const seeded = `---\nroot: true\ndescription: ""\n---\n\n# Operational Guidelines\n\n${LESSONS_PARAGRAPH_BLOCK}\n`;
+    const seeded = `---\nroot: true\ndescription: ""\n---\n\n${LESSONS_PARAGRAPH_BLOCK}\n\n# Operational Guidelines\n`;
     writeFileSync(rootRule, seeded, 'utf8');
     return true;
   }

@@ -7,22 +7,61 @@ import { captureLesson, recallLessons } from '../../lessons/recall.js';
 interface LessonsQueryInput {
   readonly file?: string;
   readonly command?: string;
+  /** CLI-flag alias of `command` (--cmd); folded into `command` below. */
+  readonly cmd?: string;
   readonly keyword?: string;
   readonly limit?: number;
   readonly max_tokens?: number;
+  /** CLI-flag alias of `max_tokens` (--max-tokens); folded in below. */
+  readonly 'max-tokens'?: number;
   readonly verbose?: boolean;
 }
+
+/** A list input the agent may pass as a bare string or an array (CLI parity). */
+type ListInput = string | readonly string[] | undefined;
 
 interface LessonsAddInput {
   readonly rule: string;
   readonly topic: string;
-  readonly trigger_files?: readonly string[];
-  readonly trigger_commands?: readonly string[];
-  readonly trigger_keywords?: readonly string[];
-  readonly evidence?: readonly string[];
+  readonly trigger_files?: ListInput;
+  /** CLI-flag alias of `trigger_files` (--trigger-file); folded in below. */
+  readonly trigger_file?: ListInput;
+  readonly trigger_commands?: ListInput;
+  /** CLI-flag alias of `trigger_commands` (--trigger-cmd); folded in below. */
+  readonly trigger_cmd?: ListInput;
+  readonly trigger_keywords?: ListInput;
+  /** CLI-flag alias of `trigger_keywords` (--trigger-kw); folded in below. */
+  readonly trigger_kw?: ListInput;
+  readonly evidence?: ListInput;
   readonly rationale?: string;
   readonly new_topic?: boolean;
   readonly topic_summary?: string;
+}
+
+/**
+ * Trigger parity with the CLI `repeatedFlag`: a scalar becomes a single value and
+ * commas are NEVER split — globs (`src/{a,b}/**`) and regexes (`^a{1,3}$`)
+ * legitimately contain commas, so splitting would forge broken triggers.
+ */
+function toTriggerList(v: ListInput): string[] {
+  if (v === undefined) return [];
+  if (typeof v === 'string') return v.length > 0 ? [v] : [];
+  return v.filter((s) => s.length > 0);
+}
+
+/**
+ * Evidence parity with the CLI `listFlag`: arrays pass through; a scalar is
+ * comma-split (evidence refs like `commit:SHA` / `lesson:id` never contain commas).
+ */
+function toEvidenceList(v: ListInput): string[] {
+  if (v === undefined) return [];
+  if (typeof v === 'string') {
+    return v
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+  }
+  return v.filter((s) => s.length > 0);
 }
 
 export const lessonsHandlers = {
@@ -41,10 +80,17 @@ export const lessonsHandlers = {
     totalMatches: number;
   }> {
     // Migration-aware recall; applies the default token budget when the caller
-    // omits max_tokens so mandatory recall stays token-lean.
-    const { lessons: ranked, totalMatches } = await recallLessons(ctx.projectRoot, input, {
+    // omits max_tokens so mandatory recall stays token-lean. Fold the CLI-flag
+    // aliases (`cmd`, `max-tokens`) into their canonical fields so agents coming
+    // from the CLI docs are not tripped by the name difference.
+    const query = {
+      file: input.file,
+      command: input.command ?? input.cmd,
+      keyword: input.keyword,
+    };
+    const { lessons: ranked, totalMatches } = await recallLessons(ctx.projectRoot, query, {
       limit: input.limit,
-      maxTokens: input.max_tokens,
+      maxTokens: input.max_tokens ?? input['max-tokens'],
     });
     // Compact by default — return only id + rule to keep recall token-cheap.
     // Metadata (topics/triggers/evidence/score) is opt-in via `verbose`.
@@ -95,12 +141,15 @@ export const lessonsHandlers = {
         {
           rule: input.rule,
           topic: input.topic,
+          // Fold the CLI-flag aliases (singular) into the canonical plural field;
+          // the canonical field wins when both are present (parity with query's
+          // `command ?? cmd`). Each value is coerced from string-or-array.
           triggers: {
-            files: input.trigger_files === undefined ? [] : [...input.trigger_files],
-            commands: input.trigger_commands === undefined ? [] : [...input.trigger_commands],
-            keywords: input.trigger_keywords === undefined ? [] : [...input.trigger_keywords],
+            files: toTriggerList(input.trigger_files ?? input.trigger_file),
+            commands: toTriggerList(input.trigger_commands ?? input.trigger_cmd),
+            keywords: toTriggerList(input.trigger_keywords ?? input.trigger_kw),
           },
-          evidence: input.evidence === undefined ? [] : [...input.evidence],
+          evidence: toEvidenceList(input.evidence),
           rationale: input.rationale,
         },
         {

@@ -351,6 +351,112 @@ describe('renderLessons — topics / show / journal / validate / import-md / hel
     expect(out).toContain('query');
     expect(out).toContain('add');
   });
+
+  it('import-md reports a plural removed-legacy line for more than one deletion', () => {
+    renderLessons({
+      subcommand: 'import-md',
+      exitCode: 0,
+      data: {
+        topicCount: 1,
+        lessonCount: 1,
+        triggerCount: 1,
+        wroteGraphPath: '/abs/.agentsmesh/lessons/lessons.json',
+        deletedPaths: ['/abs/.agentsmesh/lessons/index.yaml', '/abs/.agentsmesh/lessons/topics'],
+      },
+    });
+    expect(output.stdout()).toMatch(/removed legacy: 2 paths/);
+  });
+});
+
+describe('renderLessons — merge / strip-markers', () => {
+  const output = useCapturedOutput();
+
+  it('merge prints a success line on a clean (exit 0) merge', () => {
+    renderLessons({
+      subcommand: 'merge',
+      exitCode: 0,
+      data: { loserId: 'b-lose', keeperId: 'a-keep' },
+    });
+    expect(output.stdout()).toMatch(/merged b-lose → a-keep/i);
+  });
+
+  it('merge prints nothing on a non-zero exit (the error was already surfaced)', () => {
+    renderLessons({
+      subcommand: 'merge',
+      exitCode: 1,
+      error: 'Unknown lesson: ghost',
+      data: { loserId: 'ghost', keeperId: 'a-keep' },
+    });
+    expect(output.stdout()).not.toMatch(/merged/i);
+    expect(output.stderr()).toContain('Unknown lesson: ghost');
+  });
+
+  it('strip-markers reports the stripped count (plural) when markers were removed', () => {
+    renderLessons({
+      subcommand: 'strip-markers',
+      exitCode: 0,
+      data: { changedIds: ['a', 'b'], changedCount: 2, dryRun: false },
+    });
+    expect(output.stdout()).toMatch(/stripped legacy markers from 2 lessons/i);
+  });
+
+  it('strip-markers --dry-run reports a singular would-strip line for exactly one lesson', () => {
+    renderLessons({
+      subcommand: 'strip-markers',
+      exitCode: 0,
+      data: { changedIds: ['a'], changedCount: 1, dryRun: true },
+    });
+    expect(output.stdout()).toMatch(/would strip legacy markers from 1 lesson(?!s)/i);
+  });
+});
+
+describe('renderLessons — add / query coverage gaps', () => {
+  const output = useCapturedOutput();
+
+  it('add announces a brand-new topic alongside the new lesson', () => {
+    renderLessons({
+      subcommand: 'add',
+      exitCode: 0,
+      data: {
+        id: 'fresh-topic-rule-1',
+        isNewLesson: true,
+        isNewTopic: true,
+        newTriggerIds: ['t-glob-abc'],
+        warnings: [],
+      },
+    });
+    expect(output.stdout()).toMatch(/created new topic/i);
+  });
+
+  it('add pluralizes the trigger count on a multi-trigger upsert', () => {
+    renderLessons({
+      subcommand: 'add',
+      exitCode: 0,
+      data: {
+        id: 'x',
+        isNewLesson: false,
+        isNewTopic: false,
+        newTriggerIds: ['t-a', 't-b'],
+        warnings: [],
+      },
+    });
+    expect(output.stdout()).toMatch(/\+2 triggers/i);
+  });
+
+  it('query warns on stderr when the ranked cap hid matches', () => {
+    renderLessons({
+      subcommand: 'query',
+      exitCode: 0,
+      format: 'plain',
+      data: {
+        lessons: [{ id: 'a', rule: 'Rule.', topics: ['t'], triggers: [], evidence: [] }],
+        query: { file: 'src/x.ts' },
+        autoMigrated: false,
+        totalMatches: 5,
+      },
+    });
+    expect(output.stderr()).toMatch(/showing 1 of 5 matches/i);
+  });
 });
 
 describe('renderLessons — stats', () => {
@@ -375,7 +481,7 @@ describe('renderLessons — stats', () => {
       subcommand: 'stats',
       exitCode: 0,
       format: 'text',
-      data: { report, hasLog: true },
+      data: { report, hasLog: true, telemetryEnabled: true },
     });
     const out = output.stdout();
     expect(out).toContain('recalls: 4');
@@ -384,14 +490,30 @@ describe('renderLessons — stats', () => {
     expect(out).toContain('keyword-only-unreachable lessons 3');
   });
 
-  it('prints a hint when no telemetry log exists', () => {
+  it('hints to enable telemetry and run queries when no log exists and telemetry is off', () => {
     renderLessons({
       subcommand: 'stats',
       exitCode: 0,
       format: 'text',
-      data: { report, hasLog: false },
+      data: { report, hasLog: false, telemetryEnabled: false },
     });
-    expect(output.stdout()).toContain('AGENTSMESH_LESSONS_TELEMETRY=1');
+    const out = output.stdout();
+    expect(out).toContain('AGENTSMESH_LESSONS_TELEMETRY=1');
+    // The hint must steer the user to set it during recalls, not during stats.
+    expect(out).toContain('lessons query');
+    expect(out).toContain('NOT during `stats`');
+  });
+
+  it('explains that recalls must run when telemetry is on but the log is still empty', () => {
+    renderLessons({
+      subcommand: 'stats',
+      exitCode: 0,
+      format: 'text',
+      data: { report, hasLog: false, telemetryEnabled: true },
+    });
+    const out = output.stdout();
+    expect(out).toContain('telemetry is ON');
+    expect(out).toContain('lessons query');
   });
 
   it('reports preload as cheaper when per-action recall exceeds the baseline', () => {
@@ -400,7 +522,7 @@ describe('renderLessons — stats', () => {
       subcommand: 'stats',
       exitCode: 0,
       format: 'text',
-      data: { report: heavy, hasLog: true },
+      data: { report: heavy, hasLog: true, telemetryEnabled: true },
     });
     expect(output.stdout()).toContain('preload cheaper');
   });
@@ -410,7 +532,7 @@ describe('renderLessons — stats', () => {
       subcommand: 'stats',
       exitCode: 0,
       format: 'json',
-      data: { report, hasLog: true },
+      data: { report, hasLog: true, telemetryEnabled: true },
     });
     const parsed = JSON.parse(output.stdout());
     expect(parsed.totalRecalls).toBe(4);

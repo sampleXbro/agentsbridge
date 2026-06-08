@@ -81,8 +81,12 @@ export async function recallLessons(
 /**
  * Append one telemetry record for this recall — gated, so the hot path computes
  * nothing (no provenance pass, no timestamp, no I/O) in the default-off config.
+ *
+ * Exported so the CLI `lessons query` handler records identically to this
+ * (MCP) path; both query entry points MUST share this single recorder, or
+ * shell-driven recall would be invisible to `lessons stats`.
  */
-function recordRecallTelemetry(
+export function recordRecallTelemetry(
   projectRoot: string,
   graph: LessonsGraph,
   query: LessonsQuery,

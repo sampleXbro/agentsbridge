@@ -1,4 +1,4 @@
-import { cpSync, existsSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -12,8 +12,19 @@ const LEGACY_FIXTURE = join(
 import { lessonsHandlers } from '../../../../src/mcp/handlers/lessons.js';
 import type { McpContext } from '../../../../src/mcp/context.js';
 import { resolveContext } from '../../../../src/mcp/context.js';
-import { saveLessonsGraph, loadLessonsGraph } from '../../../../src/lessons/graph-store.js';
+import {
+  graphFilePath,
+  saveLessonsGraph,
+  loadLessonsGraph,
+} from '../../../../src/lessons/graph-store.js';
 import type { LessonsGraph } from '../../../../src/lessons/graph-schema.js';
+
+/** Persist a graph WITHOUT canonicalizing, preserving the literal key order. */
+function writeRawGraph(root: string, graph: LessonsGraph): void {
+  const path = graphFilePath(root);
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, `${JSON.stringify(graph, null, 2)}\n`, 'utf8');
+}
 
 let projectRoot: string;
 let ctx: McpContext;
@@ -138,6 +149,58 @@ describe('lessonsHandlers.query', () => {
     expect(r.lessons.length).toBeLessThan(10);
   });
 
+  it('accepts the CLI-flag alias `cmd` for `command`', async () => {
+    saveLessonsGraph(projectRoot, {
+      version: 1,
+      lessons: {
+        'topic-x-rule-1': {
+          rule: 'Run the build first.',
+          topics: ['topic-x'],
+          triggers: ['t-cmd'],
+          evidence: [],
+          status: 'active',
+          createdAt: '2026-06-05',
+        },
+      },
+      topics: { 'topic-x': { summary: 'Topic X.' } },
+      triggers: { 't-cmd': { kind: 'command_pattern', pattern: '^pnpm build' } },
+    });
+    const viaCmd = await lessonsHandlers.query(ctx, { cmd: 'pnpm build --watch' });
+    const viaCommand = await lessonsHandlers.query(ctx, { command: 'pnpm build --watch' });
+    expect(viaCmd.lessons.map((l) => l.id)).toEqual(['topic-x-rule-1']);
+    expect(viaCmd.lessons).toEqual(viaCommand.lessons);
+  });
+
+  it('prefers the canonical `command` over the `cmd` alias when both are present', async () => {
+    const r = await lessonsHandlers.query(ctx, { command: 'src/cli/x', cmd: 'no-match-here' });
+    // `command` wins; with the seed graph (file_glob only) nothing matches a command.
+    expect(r.lessons).toEqual([]);
+  });
+
+  it('accepts the `max-tokens` alias for `max_tokens`', async () => {
+    const filler = 'word '.repeat(50).trim();
+    const lessons: LessonsGraph['lessons'] = {};
+    for (let i = 0; i < 20; i++) {
+      lessons[`b-${i}`] = {
+        rule: `Budget rule ${i} ${filler}`,
+        topics: ['t'],
+        triggers: ['g'],
+        evidence: [],
+        status: 'active',
+        createdAt: '2026-06-01',
+      };
+    }
+    saveLessonsGraph(projectRoot, {
+      version: 1,
+      lessons,
+      topics: { t: { summary: 'T.' } },
+      triggers: { g: { kind: 'file_glob', pattern: 'src/**' } },
+    });
+    const tiny = await lessonsHandlers.query(ctx, { file: 'src/x.ts', 'max-tokens': 70 });
+    expect(tiny.totalMatches).toBe(20);
+    expect(tiny.lessons.length).toBe(1); // a ~70-token budget keeps only the top result
+  });
+
   it('returns empty when no graph exists', async () => {
     const fresh = await mkdtemp(join(tmpdir(), 'amesh-mcp-fresh-'));
     await writeFile(
@@ -195,6 +258,19 @@ describe('lessonsHandlers.topics', () => {
   it('lists topic ids and summaries sorted by id', async () => {
     const r = await lessonsHandlers.topics(ctx);
     expect(r.topics).toEqual([{ id: 'topic-x', summary: 'Topic X.' }]);
+  });
+
+  it('sorts multiple topics by id when stored out of order', async () => {
+    // Write the graph with keys in DESCENDING order (bypassing the canonicalizing
+    // saver) so the handler's id-sort receives genuinely unsorted input.
+    writeRawGraph(projectRoot, {
+      version: 1,
+      lessons: {},
+      topics: { 'z-t': { summary: 'Z.' }, 'm-t': { summary: 'M.' }, 'a-t': { summary: 'A.' } },
+      triggers: {},
+    });
+    const r = await lessonsHandlers.topics(ctx);
+    expect(r.topics.map((t) => t.id)).toEqual(['a-t', 'm-t', 'z-t']);
   });
 
   it('returns no topics when no graph exists', async () => {
@@ -288,5 +364,70 @@ describe('lessonsHandlers.add', () => {
     });
     expect(b.id).toBe(a.id);
     expect(b.isNewLesson).toBe(false);
+  });
+});
+
+describe('lessonsHandlers.add — input coercion + CLI-flag aliases', () => {
+  it('coerces a scalar trigger_files string into a single trigger', async () => {
+    const r = await lessonsHandlers.add(ctx, {
+      rule: 'Scalar trigger.',
+      topic: 'topic-x',
+      trigger_files: 'src/scalar/**',
+    });
+    expect(loadLessonsGraph(projectRoot).lessons[r.id]?.triggers.length).toBe(1);
+  });
+
+  it('never comma-splits a trigger pattern (globs/regexes contain commas)', async () => {
+    const r = await lessonsHandlers.add(ctx, {
+      rule: 'Brace glob.',
+      topic: 'topic-x',
+      trigger_files: 'src/{a,b}/**',
+    });
+    const graph = loadLessonsGraph(projectRoot);
+    const ids = graph.lessons[r.id]?.triggers ?? [];
+    expect(ids.length).toBe(1);
+    expect(graph.triggers[ids[0]!]?.pattern).toBe('src/{a,b}/**');
+  });
+
+  it('comma-splits a scalar evidence string like the CLI', async () => {
+    const r = await lessonsHandlers.add(ctx, {
+      rule: 'Multi evidence.',
+      topic: 'topic-x',
+      evidence: 'commit:a, lesson:b',
+    });
+    expect(loadLessonsGraph(projectRoot).lessons[r.id]?.evidence).toEqual(['commit:a', 'lesson:b']);
+  });
+
+  it('drops an empty-string trigger (coerces to no trigger)', async () => {
+    const r = await lessonsHandlers.add(ctx, {
+      rule: 'Empty trigger string.',
+      topic: 'topic-x',
+      trigger_files: '',
+    });
+    expect(loadLessonsGraph(projectRoot).lessons[r.id]?.triggers).toEqual([]);
+  });
+
+  it('accepts the CLI-flag aliases trigger_file / trigger_cmd / trigger_kw', async () => {
+    const r = await lessonsHandlers.add(ctx, {
+      rule: 'Aliased triggers.',
+      topic: 'topic-x',
+      trigger_file: 'src/**',
+      trigger_cmd: '^pnpm test',
+      trigger_kw: 'windows',
+    });
+    expect(loadLessonsGraph(projectRoot).lessons[r.id]?.triggers.length).toBe(3);
+  });
+
+  it('prefers the canonical plural field over the singular alias when both are present', async () => {
+    const r = await lessonsHandlers.add(ctx, {
+      rule: 'Canonical wins.',
+      topic: 'topic-x',
+      trigger_files: ['src/canon/**'],
+      trigger_file: 'src/ignored/**',
+    });
+    const graph = loadLessonsGraph(projectRoot);
+    const ids = graph.lessons[r.id]?.triggers ?? [];
+    expect(ids.length).toBe(1);
+    expect(graph.triggers[ids[0]!]?.pattern).toBe('src/canon/**');
   });
 });

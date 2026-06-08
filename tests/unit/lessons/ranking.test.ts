@@ -333,4 +333,53 @@ describe('rankLessons', () => {
       [],
     );
   });
+
+  // Build an in-memory graph whose lessons are inserted in a controlled order
+  // (rankLessons consumes the object as-is, so order drives the tie-break sorts).
+  function tied(entries: Array<{ id: string; createdAt: string }>): LessonsGraph {
+    const lessons: LessonsGraph['lessons'] = {};
+    for (const { id, createdAt } of entries) {
+      lessons[id] = {
+        rule: 'Plain rule.',
+        topics: ['t'],
+        triggers: ['broad'],
+        evidence: [],
+        status: 'active',
+        createdAt,
+      };
+    }
+    return {
+      version: 1,
+      lessons,
+      topics: { t: { summary: 'T.' } },
+      triggers: { broad: { kind: 'file_glob', pattern: 'src/**' } },
+    };
+  }
+
+  it('breaks an all-signals tie by ascending id regardless of input match order', () => {
+    // Same score AND same createdAt → id is the only discriminator. queryLessons
+    // always returns id-ascending, so feed rankLessons a DESCENDING match list
+    // directly: it must still reorder to ascending (exercising the "-1" arm of
+    // both the rankMap and the final-sort id tie-breaks, and proving rankLessons
+    // does not depend on its input order).
+    const g = tied([
+      { id: 'aaa', createdAt: '2026-06-01' },
+      { id: 'mmm', createdAt: '2026-06-01' },
+      { id: 'zzz', createdAt: '2026-06-01' },
+    ]);
+    const descending = ['zzz', 'mmm', 'aaa'].map((id) => ({ id, lesson: g.lessons[id]! }));
+    const ids = rankLessons(g, { file: 'src/x.ts' }, descending).map((r) => r.id);
+    expect(ids).toEqual(['aaa', 'mmm', 'zzz']);
+  });
+
+  it('breaks a score tie by recency, newest first (ascending-date input forces a reversal)', () => {
+    // Equal score, distinct createdAt fed oldest-first → the recency comparator
+    // must reverse to newest-first, exercising both of its arms.
+    const g = tied([
+      { id: 'l1', createdAt: '2026-06-01' },
+      { id: 'l2', createdAt: '2026-06-02' },
+      { id: 'l3', createdAt: '2026-06-03' },
+    ]);
+    expect(rankIds(g, { file: 'src/x.ts' })).toEqual(['l3', 'l2', 'l1']);
+  });
 });

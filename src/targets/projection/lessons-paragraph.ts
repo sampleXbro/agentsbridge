@@ -1,8 +1,8 @@
 import { LESSONS_PROCEDURAL_RULE } from '../../lessons/paths.js';
 import {
+  insertAtBodyTop,
   LESSONS_CONTRACT_END,
   LESSONS_CONTRACT_START,
-  replaceManagedBlock,
   stripManagedBlock,
 } from './managed-blocks.js';
 
@@ -21,20 +21,53 @@ ${LESSONS_PROCEDURAL_RULE}
 ${LESSONS_CONTRACT_END}`;
 
 /**
- * Legacy raw (sentinel-less) form: the procedural paragraph as it was appended
- * directly into canonical `_root.md` before the managed-block model. Stripped
- * and upgraded so pre-existing projects converge on the block exactly once.
+ * Prior shipped wording of the procedural rule, before the read-only-excuse /
+ * broadened-failure revision. Retained verbatim (newest-first in
+ * `LEGACY_RAW_FORMS`) so a project generated with it strips/upgrades to the
+ * current block exactly once on the next scaffold. Mirrors the V1..Vn ladder in
+ * `root-instruction-paragraph.ts`.
  */
-const LEGACY_RAW_FORMS = [LESSONS_PROCEDURAL_RULE];
+const LESSONS_RULE_V1 = `## Lessons (BLOCKING REQUIREMENT — MUST run, no exceptions)
 
+Two shell commands. Skipping either is a process violation; the user will check. The graph at \`.agentsmesh/lessons/lessons.json\` is canonical — NEVER edit by hand.
+
+**Recall — MUST run BEFORE every file edit and every shell command:**
+
+1. Run: \`agentsmesh lessons query --file <path-about-to-edit> --cmd <command-about-to-run>\` (add \`--keyword <text>\` for task matches).
+2. Apply EVERY returned rule.
+3. Then perform the edit / run the command.
+
+Rejected excuses: *"the edit is small"* → query it. *"I already know this"* → query it. *"I'll do it later"* → no.
+
+**Capture — MUST run IMMEDIATELY after any failure** (test, CI, lint, code review, user correction, regression — anyone's mistake):
+
+1. Run: \`agentsmesh lessons add "<imperative rule>" --topic <id> --trigger-file <glob> --evidence <commit-sha|lesson-id>\` (add \`--trigger-cmd <regex>\` / \`--trigger-kw <text>\` as needed).
+2. Use \`agentsmesh lessons topics\` to find the topic id; pass \`--new-topic --topic-summary "<one line>"\` for a brand-new area.
+3. The CLI writes \`lessons.json\` atomically — capture is one command.
+
+Rejected excuses: *"it wasn't really a failure"* → it was. *"I'll capture it later"* → no. *"no topic fits"* → \`agentsmesh lessons topics\` then \`--new-topic\`.
+
+No shell? Use the \`lessons_query\` and \`lessons_add\` MCP tools — same two operations. Run \`agentsmesh lessons --help\` for the full command set (\`show\`, \`deprecate\`, \`journal\`, \`validate\`, \`import-md\`).
+
+**These two commands ARE the system. Skip them and the system does not exist.**`;
+
+/**
+ * Legacy raw (sentinel-less) forms: the procedural paragraph as it was appended
+ * directly into canonical `_root.md` before the managed-block model, newest
+ * first. Stripped and upgraded so pre-existing projects converge on the block
+ * exactly once.
+ */
+const LEGACY_RAW_FORMS = [LESSONS_PROCEDURAL_RULE, LESSONS_RULE_V1];
+
+/**
+ * Place the lessons ritual at the TOP of the document body, after any leading
+ * frontmatter (so `_root.md`'s `---…---` stays first). Strips any prior block
+ * or legacy raw form first, so an existing block appended at the end migrates to
+ * the top on the next scaffold.
+ */
 export function appendLessonsParagraph(content: string): string {
-  const withoutLegacy = stripLegacyRawForms(content).trim();
-  return replaceManagedBlock(
-    withoutLegacy,
-    LESSONS_CONTRACT_START,
-    LESSONS_CONTRACT_END,
-    LESSONS_PARAGRAPH_BLOCK,
-  );
+  const withoutPrior = stripLessonsParagraph(content);
+  return insertAtBodyTop(withoutPrior, LESSONS_PARAGRAPH_BLOCK);
 }
 
 export function stripLessonsParagraph(content: string): string {

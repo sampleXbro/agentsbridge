@@ -76,7 +76,18 @@ function renderStats(data: LessonsStatsData, format: 'text' | 'json'): void {
     return;
   }
   if (!data.hasLog) {
-    logger.info('(no recall telemetry yet — set AGENTSMESH_LESSONS_TELEMETRY=1 to record)');
+    if (data.telemetryEnabled) {
+      logger.info(
+        '(telemetry is ON here, but no recall has been recorded yet — telemetry is written by ' +
+          '`lessons query` recalls, not by `stats`. Run some `agentsmesh lessons query …` calls, then re-run stats.)',
+      );
+    } else {
+      logger.info(
+        '(no recall telemetry yet — recording happens during `lessons query` recalls, NOT during `stats`. ' +
+          'Set AGENTSMESH_LESSONS_TELEMETRY=1 in the environment that runs your recalls — your shell for CLI ' +
+          'queries, and/or the MCP server process for agent queries — then run some queries before `stats`.)',
+      );
+    }
     return;
   }
   const r = data.report;

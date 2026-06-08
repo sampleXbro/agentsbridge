@@ -30,11 +30,21 @@ describe('scaffoldLessons', async () => {
     expect(existsSync(paths.index)).toBe(false);
     expect(existsSync(paths.topicsDir)).toBe(false);
 
-    expect(result.created).toEqual([paths.graph]);
+    const skillPath = join(projectRoot, '.agentsmesh/skills/lessons/SKILL.md');
+    expect(result.created).toEqual([paths.graph, skillPath]);
     expect(result.rootRuleUpdated).toBe(true);
   });
 
-  it('is idempotent — re-running keeps a single block and reports graph skipped', async () => {
+  it('seeds the Tier-2 lessons skill with canonical frontmatter', async () => {
+    await scaffoldLessons(projectRoot);
+    const skillPath = join(projectRoot, '.agentsmesh/skills/lessons/SKILL.md');
+    expect(existsSync(skillPath)).toBe(true);
+    const content = readFileSync(skillPath, 'utf8');
+    expect(content.startsWith('---\nname: lessons\n')).toBe(true);
+    expect(content).toContain('agentsmesh lessons import-md');
+  });
+
+  it('is idempotent — re-running keeps a single block and reports graph + skill skipped', async () => {
     await scaffoldLessons(projectRoot);
     const second = await scaffoldLessons(projectRoot);
 
@@ -42,9 +52,23 @@ describe('scaffoldLessons', async () => {
     const starts = rootRule.match(/<!-- agentsmesh:lessons-contract:start -->/g) ?? [];
     expect(starts.length).toBe(1);
 
+    const skillPath = join(projectRoot, '.agentsmesh/skills/lessons/SKILL.md');
     expect(second.created).toEqual([]);
-    expect(second.skipped).toEqual([lessonsPaths(projectRoot).graph]);
+    expect(second.skipped).toEqual([lessonsPaths(projectRoot).graph, skillPath]);
     expect(second.rootRuleUpdated).toBe(false);
+  });
+
+  it('never clobbers a user-authored lessons skill — create-if-missing preserves content', async () => {
+    const skillPath = join(projectRoot, '.agentsmesh/skills/lessons/SKILL.md');
+    mkdirSync(join(projectRoot, '.agentsmesh/skills/lessons'), { recursive: true });
+    const custom = '---\nname: lessons\ndescription: my own manual\n---\n\nCustom body.\n';
+    writeFileSync(skillPath, custom, 'utf8');
+
+    const result = await scaffoldLessons(projectRoot);
+
+    expect(readFileSync(skillPath, 'utf8')).toBe(custom);
+    expect(result.skipped).toContain(skillPath);
+    expect(result.created).not.toContain(skillPath);
   });
 
   it('appends the block to an existing root rule without disturbing other content', async () => {

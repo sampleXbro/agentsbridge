@@ -1,32 +1,41 @@
-# Move agentsmesh managed blocks to the TOP of the main instruction file
+# Two-tier lessons delivery (borrowing the superpowers structure)
 
-**Goal:** The Generation Contract block and the Lessons ritual block should appear at the
-*beginning* of a target's primary root instruction file, not appended at the end.
+## Goal
+Split the lessons contract into two tiers, using agentsmesh's NATIVE primitives
+(not a SessionStart hook — that event isn't canonical and hooks are `none` on
+21/32 targets, whereas rules+skills are native everywhere):
 
-## Design
+- **Tier 1 (always-on):** trimmed `LESSONS_PROCEDURAL_RULE`, still injected into
+  canonical `.agentsmesh/rules/_root.md` as a managed block → reaches every target.
+  Keeps the *binding* essentials (both commands, BLOCKING framing, recall-scope
+  incl. read-only, capture-scope incl. user pushback, graph path, MCP fallback,
+  pointer to the skill). Drops the *expansive how-to* (full command set, topic
+  workflow, trigger-flag mechanics, exhaustive excuse enumeration).
+- **Tier 2 (on-demand manual):** new canonical `.agentsmesh/skills/lessons/SKILL.md`
+  carrying the full manual. Generates to every skill-supporting target; can grow
+  without bloating always-on context.
+- **Tier 3 (degradation):** targets without skills still get the trimmed Tier-1
+  trigger. Free fallback.
 
-- Add a frontmatter-preserving body-top inserter `insertAtBodyTop(content, block)` in
-  `managed-blocks.ts`. It splits any leading `---…---` frontmatter verbatim and places the
-  block at the top of the body (frontmatter stays first).
-- **Generation Contract** (`appendAgentsmeshRootInstructionParagraph`): strip any existing
-  block + legacy forms, then `insertAtBodyTop`. Existing files relocate end→top on regenerate.
-- **Lessons block** (`appendLessonsParagraph`): strip existing block + legacy raw forms, then
-  `insertAtBodyTop` (frontmatter-aware — `_root.md` keeps its frontmatter first).
-- Seed in `lessons/init.ts`: place the block before `# Operational Guidelines`.
-- Canonical `.agentsmesh/rules/_root.md`: move the lessons block to the top of the body.
+## Design decisions
+- Skill is **create-if-missing** (like `lessons.json`) — canonical, user-owned content,
+  not a managed-block artifact. Seeded by `scaffoldLessons` so init AND the import safety
+  net both produce a cohesive subsystem (graph + root block + skill).
+- Current long `LESSONS_PROCEDURAL_RULE` text captured as `LESSONS_RULE_V2` and added
+  to `LEGACY_RAW_FORMS` (newest-first) so existing projects strip/upgrade exactly once.
 
-Order in the generated primary file becomes: Generation Contract → Lessons → user content
-(contract is prepended by the decorator on top of the rendered body that now leads with lessons).
-
-## Tasks (TDD — failing tests first) — ALL COMPLETE ✅
-
-- [x] 1. Updated unit tests (managed-blocks-branches, root-instruction-paragraph, lessons-paragraph).
-- [x] 2. Implemented `insertAtBodyTop` + raw-frontmatter split in `managed-blocks.ts`.
-- [x] 3. Rewrote `appendAgentsmeshRootInstructionParagraph` to strip + insert-at-top.
-- [x] 4. Rewrote `appendLessonsParagraph` to strip + insert-at-top (frontmatter-aware).
-- [x] 5. Updated seed in `src/lessons/init.ts` (block before heading).
-- [x] 6. Added e2e position assertions (contract → lessons → body) in `init-lessons.e2e.test.ts`.
-- [x] 7. Moved the lessons block to the top of canonical `.agentsmesh/rules/_root.md`.
-- [x] 8. Rebuilt local CLI, regenerated 20 target files, verified blocks at top + idempotent.
-- [x] 9. Updated docs: `docs/add-new-target-playbook.md` wording.
-- [x] 10. Full suite 8640 passed; typecheck + lint clean; lessons files ≤200 lines. post-feature-qa done.
+## Steps (TDD — tests first) — ALL COMPLETE ✅
+1. [x] `src/lessons/skill.ts`: `LESSONS_SKILL_{NAME,DESCRIPTION,BODY}` + `LESSONS_SKILL_FILE`.
+2. [x] Trim `LESSONS_PROCEDURAL_RULE` in `src/lessons/paths.ts` (+ skill pointer).
+3. [x] `lessons-paragraph.ts`: add `LESSONS_RULE_V2` to `LEGACY_RAW_FORMS`.
+4. [x] `src/lessons/init.ts`: seed skill create-if-missing; result created/skipped (graph, skill).
+5. [x] Tests: skill.test (new), paths.test (new Tier-1 contract), lessons-paragraph.test (V2),
+   init.test (creates skill + preserves user-authored skill + idempotent order),
+   init-lessons.integration (created set incl. skill), e2e matrix (skill in expectedImported).
+   Contract matrix needed no change (bypasses CLI safety net; only checks root block).
+6. [x] Renderer already iterates `lessons.created` — skill prints with no change.
+7. [x] Full suite green: 8653 passed, 1 skipped; typecheck + lint clean.
+8. [x] Dogfooded: retrofit → generate (23 created, 20 updated) → `check` = lock in sync.
+9. [x] Docs: README + `cli/init.mdx` + `cli/lessons.mdx`.
+10. [x] post-feature-qa: added the don't-clobber-user-skill edge-case test. Captured the
+    stale-dist e2e lesson (`dist-backed-tests-when-a-change-alters-cli`).

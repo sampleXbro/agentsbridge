@@ -309,8 +309,11 @@ describe('target contract matrix', () => {
       if (!expectedImported.includes('.agentsmesh/mcp.json')) {
         expectedImported.push('.agentsmesh/mcp.json');
       }
-      // The import safety net reactivates the subsystem (recreates lessons.json).
+      // The import safety net reactivates the subsystem: it recreates lessons.json
+      // AND re-seeds the Tier-2 lessons skill (create-if-missing) for every target,
+      // even those that emit no skill artifacts of their own.
       expectedImported.push('.agentsmesh/lessons/lessons.json');
+      expectedImported.push('.agentsmesh/skills/lessons/SKILL.md');
       expectedImported.sort();
       expect(canonicalFiles(dir)).toEqual(expectedImported);
 

@@ -564,6 +564,22 @@
         "t-cmd-fd015df7"
       ]
     },
+    "dist-backed-tests-when-a-change-alters-cli": {
+      "createdAt": "2026-06-08",
+      "evidence": [
+        "lesson:two-tier-lessons-delivery"
+      ],
+      "rule": "When a change alters CLI/scaffold/import-safety-net behavior, rebuild (npm run build) BEFORE running e2e/contract tests that exec dist/cli.js via runCli. Source-side test helpers (e.g. activateLessons calling scaffoldLessons directly) use fresh code and pass, masking the staleness; only paths exercised solely through the spawned CLI (e.g. the import safety net) fail — and only for the targets that depend on that path. A partial e2e failure split along 'who runs the new code' is the tell-tale sign of stale dist.",
+      "status": "active",
+      "topics": [
+        "dist-backed-tests"
+      ],
+      "triggers": [
+        "t-glob-ba03e2e3",
+        "t-cmd-ae15e5eb",
+        "t-kw-ed1c9d6e"
+      ]
+    },
     "dist-backed-tests-when-committing-untracked-files-in": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -5651,6 +5667,10 @@
       "kind": "command_pattern",
       "pattern": "generate --global"
     },
+    "t-cmd-ae15e5eb": {
+      "kind": "command_pattern",
+      "pattern": "vitest run .*e2e"
+    },
     "t-cmd-b0d2d4dd": {
       "kind": "command_pattern",
       "pattern": "git (diff|log|status|show)"
@@ -6075,6 +6095,10 @@
       "kind": "file_glob",
       "pattern": "src/utils/filesystem/**"
     },
+    "t-glob-ba03e2e3": {
+      "kind": "file_glob",
+      "pattern": "tests/e2e/**"
+    },
     "t-glob-c2fd94f5": {
       "kind": "file_glob",
       "pattern": "src/**/*hooks*.ts"
@@ -6362,6 +6386,10 @@
     "t-kw-eaa32acc": {
       "kind": "keyword",
       "pattern": "read-only"
+    },
+    "t-kw-ed1c9d6e": {
+      "kind": "keyword",
+      "pattern": "stale dist runCli"
     },
     "t-kw-edafac99": {
       "kind": "keyword",

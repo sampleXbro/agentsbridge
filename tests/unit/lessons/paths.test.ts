@@ -36,10 +36,15 @@ describe('LESSONS_PROCEDURAL_RULE', () => {
     expect(LESSONS_PROCEDURAL_RULE).toMatch(/3\. /);
   });
 
-  it('pre-empts common rationalizations for both rituals', () => {
-    expect(LESSONS_PROCEDURAL_RULE).toMatch(/Rejected excuses/);
-    expect(LESSONS_PROCEDURAL_RULE).toMatch(/the edit is small/i);
-    expect(LESSONS_PROCEDURAL_RULE).toMatch(/I'll capture it later/i);
+  it('delegates the expansive manual to the lessons skill rather than inlining it', () => {
+    // Tier 1 is the minimal always-on trigger; the full how-to (command set,
+    // topic workflow, trigger-flag mechanics, exhaustive excuse list) lives in
+    // the `lessons` skill so it can grow without bloating always-on context.
+    expect(LESSONS_PROCEDURAL_RULE).toMatch(/`lessons` skill/);
+    expect(LESSONS_PROCEDURAL_RULE).not.toContain('import-md');
+    expect(LESSONS_PROCEDURAL_RULE).not.toContain('deprecate');
+    expect(LESSONS_PROCEDURAL_RULE).not.toContain('--trigger-cmd');
+    expect(LESSONS_PROCEDURAL_RULE).not.toContain('--trigger-kw');
   });
 
   it('closes the read-only / just-investigating loophole so recall fires on every command', () => {

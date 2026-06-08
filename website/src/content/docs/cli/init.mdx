@@ -20,7 +20,7 @@ agentsmesh init [flags]
 |------|-------------|
 | `--global` | Initialize canonical home config under `~/.agentsmesh/`. |
 | `--yes` | Auto-import all detected tool configs, then add starter examples only under empty canonical folders (skip categories import already filled). |
-| `--lessons` | Scaffold the project-level lessons recall + capture subsystem and append its procedural rule to `_root.md`. Cannot be combined with `--global`. |
+| `--lessons` | Scaffold the project-level lessons recall + capture subsystem: inject the always-on trigger into `_root.md` and seed the `lessons` skill manual under `skills/lessons/`. Cannot be combined with `--global`. |
 
 ## What init creates
 
@@ -46,6 +46,9 @@ agentsmesh.local.yaml     # Local overrides (gitignored)
   ignore
   lessons/                # Created only with --lessons
     lessons.json          # Canonical recall/capture graph
+  skills/
+    lessons/              # Tier-2 manual, seeded with --lessons
+      SKILL.md            # Full recall/capture operating manual
 .gitignore                # Updated to exclude agentsmesh.local.yaml
 ```
 
@@ -91,11 +94,14 @@ agentsmesh generate
 ```
 
 `--lessons` scaffolds `.agentsmesh/lessons/lessons.json` (the universal
-recall/capture graph) and
-appends a tool-agnostic recall/capture protocol to `.agentsmesh/rules/_root.md`.
-After `generate`, every enabled target receives the same root rule: agents read
-the index, load only matching topic files before edits or commands, and append
-failures to the journal.
+recall/capture graph) and sets up two-tier delivery: it injects a minimal,
+tool-agnostic **trigger** into `.agentsmesh/rules/_root.md` and seeds the full
+operating manual as a `lessons` skill (`.agentsmesh/skills/lessons/SKILL.md`).
+After `generate`, every enabled target receives the always-on trigger through
+its root rule (rules are native everywhere), while skill-capable targets also
+get the on-demand manual. Agents query the graph before edits/commands and
+capture failures after — the trigger is the binding contract, the skill is the
+reference.
 
 Run the same command in an already-initialized project to add lessons
 retroactively; init leaves existing config and canonical files untouched.

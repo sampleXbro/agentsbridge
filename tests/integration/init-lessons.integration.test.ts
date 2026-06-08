@@ -24,7 +24,10 @@ describe('runInit --lessons', () => {
     expect(rootRule).toContain('<!-- agentsmesh:lessons-contract:start -->');
 
     expect(result.data.lessons).toBeDefined();
-    expect(result.data.lessons!.created).toEqual([lessonsPaths(projectRoot).graph]);
+    expect(result.data.lessons!.created).toEqual([
+      lessonsPaths(projectRoot).graph,
+      join(projectRoot, '.agentsmesh/skills/lessons/SKILL.md'),
+    ]);
     expect(result.data.lessons!.rootRuleUpdated).toBe(true);
     expect(result.data.lessonsOnly).toBeUndefined();
   });

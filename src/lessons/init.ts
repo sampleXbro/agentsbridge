@@ -7,6 +7,7 @@ import {
   appendLessonsParagraph,
   LESSONS_PARAGRAPH_BLOCK,
 } from '../targets/projection/lessons-paragraph.js';
+import { LESSONS_SKILL_FILE, LESSONS_SKILL_NAME } from './skill.js';
 
 export interface ScaffoldLessonsResult {
   readonly created: string[];
@@ -19,12 +20,16 @@ export interface ScaffoldLessonsResult {
  * --lessons`, the lessons-only retrofit, and the import safety net.
  *
  * - Creates `.agentsmesh/lessons/lessons.json` (an empty graph) if missing.
- * - Injects the lessons ritual into `.agentsmesh/rules/_root.md` as a managed
- *   block (`<!-- agentsmesh:lessons-contract:start -->` … `:end -->`). The
- *   block is canonical content so it reaches every target — including
- *   rules-directory targets the generation-contract decorator skips — while
- *   the sentinels keep the block an identifiable unit for clean round-trip and
- *   let re-running scaffold refresh the wording from one constant.
+ * - Injects the lessons ritual (Tier 1 — the always-on trigger) into
+ *   `.agentsmesh/rules/_root.md` as a managed block
+ *   (`<!-- agentsmesh:lessons-contract:start -->` … `:end -->`). The block is
+ *   canonical content so it reaches every target — including rules-directory
+ *   targets the generation-contract decorator skips — while the sentinels keep
+ *   the block an identifiable unit for clean round-trip and let re-running
+ *   scaffold refresh the wording from one constant.
+ * - Seeds `.agentsmesh/skills/lessons/SKILL.md` (Tier 2 — the on-demand manual)
+ *   if missing. Create-if-missing (like the graph): it is canonical, user-owned
+ *   content, not a managed block. Targets without skills still get Tier 1.
  */
 export async function scaffoldLessons(projectRoot: string): Promise<ScaffoldLessonsResult> {
   const paths = lessonsPaths(projectRoot);
@@ -45,8 +50,27 @@ export async function scaffoldLessons(projectRoot: string): Promise<ScaffoldLess
     created.push(paths.graph);
   }
 
+  seedLessonsSkill(projectRoot, created, skipped);
+
   const rootRuleUpdated = injectProceduralBlock(projectRoot);
   return { created, skipped, rootRuleUpdated };
+}
+
+/**
+ * Seed the Tier-2 lessons manual at `.agentsmesh/skills/lessons/SKILL.md`.
+ * Create-if-missing: once present it is the user's canonical skill, never
+ * clobbered. Records the path in `created` or `skipped` so the renderer reports
+ * it alongside the graph.
+ */
+function seedLessonsSkill(projectRoot: string, created: string[], skipped: string[]): void {
+  const skillPath = join(projectRoot, '.agentsmesh/skills', LESSONS_SKILL_NAME, 'SKILL.md');
+  if (existsSync(skillPath)) {
+    skipped.push(skillPath);
+    return;
+  }
+  mkdirSync(dirname(skillPath), { recursive: true });
+  writeFileSync(skillPath, `${LESSONS_SKILL_FILE}\n`, 'utf8');
+  created.push(skillPath);
 }
 
 function injectProceduralBlock(projectRoot: string): boolean {

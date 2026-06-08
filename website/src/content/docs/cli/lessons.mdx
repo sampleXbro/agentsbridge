@@ -8,6 +8,8 @@ import { Aside } from '@astrojs/starlight/components';
 
 Query and capture lessons from `.agentsmesh/lessons/lessons.json` — the single source of truth for the recall/capture subsystem. Every harness (Claude, Cursor, Codex, plain shell) calls the same two commands.
 
+The contract is delivered in two tiers. A minimal always-on **trigger** is injected into `.agentsmesh/rules/_root.md`, so it reaches every target through canonical rule generation (rules are native everywhere). The full operating manual — every subcommand below, the topic workflow, trigger flags, and the MCP fallback — is seeded as a `lessons` skill (`.agentsmesh/skills/lessons/SKILL.md`) and surfaced on demand on skill-capable targets. Targets without skills still get the trigger, so the binding contract is universal while the manual stays out of always-on context.
+
 ## Usage
 
 ```bash

@@ -118,7 +118,11 @@ capture subsystem. The canonical graph at `.agentsmesh/lessons/lessons.json`
 is the single source of truth. Agents query it through one shell command
 before every edit (`agentsmesh lessons query --file <path> --cmd <command>`)
 and capture failures with one shell command after (`agentsmesh lessons add
-"<rule>" --topic <id> --trigger-file <glob>`). Upgrading from a previous
+"<rule>" --topic <id> --trigger-file <glob>`). Delivery is two-tier: the
+minimal always-on **trigger** is injected into `.agentsmesh/rules/_root.md`
+so it reaches every target, while the full operating manual is seeded as a
+`lessons` skill (`.agentsmesh/skills/lessons/SKILL.md`) and surfaced on demand
+on skill-capable targets. Upgrading from a previous
 release? Run `agentsmesh lessons import-md` once to migrate the legacy
 `index.yaml` + `topics/*.md` + `journal.md` into the graph; the CLI deletes
 the legacy files after a successful migration.

@@ -30,6 +30,10 @@ assumption you made, work you had to redo, or behavior that surprised you.
 Run `agentsmesh lessons add "<imperative rule>" --topic <id> --trigger-file <glob> --evidence <commit-sha|lesson-id>`.
 
 - Add `--trigger-cmd <regex>` and/or `--trigger-kw <text>` to widen when the lesson fires.
+- Keep each `--trigger-kw` a **short distinctive phrase** (≤5 tokens, e.g. `filterOption cast`),
+  not a sentence. Recall matches a keyword only as a substring of `--keyword` or a contiguous
+  token-run in the file/command, so a long descriptive pattern almost never fires — `add` and
+  `validate` warn `LOW_SIGNAL_KEYWORD` when one is too long.
 - Find the topic id with `agentsmesh lessons topics`.
 - Brand-new area? Pass `--new-topic --topic-summary "<one line>"`.
 

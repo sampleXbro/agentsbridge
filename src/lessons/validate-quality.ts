@@ -1,4 +1,5 @@
 import type { LessonsGraph } from './graph-schema.js';
+import { isLowSignalKeyword, MAX_RECOMMENDED_KEYWORD_TOKENS } from './keyword-signal.js';
 import { isSafeRegexPattern } from './regex-safety.js';
 import type { ValidationFinding } from './validate.js';
 
@@ -122,6 +123,33 @@ export function collectFanout(graph: LessonsGraph, findings: ValidationFinding[]
       level: 'warning',
       code: 'HIGH_FANOUT_TRIGGERS',
       message: `${over} trigger(s) each match more than ${HIGH_FANOUT_THRESHOLD} active lessons (max ${max}); recall returns the ranked top by default — consider per-lesson trigger refinement to improve precision.`,
+    });
+  }
+}
+
+/**
+ * Flag keyword triggers whose pattern is too long to realistically match recall
+ * (see keyword-signal.ts). Only triggers referenced by an ACTIVE lesson are
+ * reported: a long keyword on a superseded/deprecated lesson never recalls
+ * anyway, and an unreferenced one is already an ORPHAN_TRIGGER. This is the
+ * `validate` counterpart to the capture-time LOW_SIGNAL_KEYWORD guardrail, so a
+ * graph built before the guardrail existed still surfaces its dead keywords.
+ */
+export function collectLowSignalKeywords(graph: LessonsGraph, findings: ValidationFinding[]): void {
+  const activeTriggerIds = new Set<string>();
+  for (const lesson of Object.values(graph.lessons)) {
+    if (lesson.status !== 'active') continue;
+    for (const t of lesson.triggers) activeTriggerIds.add(t);
+  }
+  for (const [triggerId, trigger] of Object.entries(graph.triggers)) {
+    if (trigger.kind !== 'keyword') continue;
+    if (!activeTriggerIds.has(triggerId)) continue;
+    if (!isLowSignalKeyword(trigger.pattern)) continue;
+    findings.push({
+      level: 'warning',
+      code: 'LOW_SIGNAL_KEYWORD',
+      message: `Keyword trigger "${triggerId}" carries more than ${MAX_RECOMMENDED_KEYWORD_TOKENS} tokens (${trigger.pattern}); recall matches a keyword only as a substring of --keyword or a contiguous token-run in the file/command, so it rarely fires — use a short distinctive phrase.`,
+      triggerId,
     });
   }
 }

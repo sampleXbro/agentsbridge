@@ -1,18 +1,21 @@
 import type { LessonsGraph } from './graph-schema.js';
+import { isLowSignalKeyword, MAX_RECOMMENDED_KEYWORD_TOKENS } from './keyword-signal.js';
 
 /**
  * Non-blocking capture guardrails. Over-triggering — too many triggers per
  * lesson, broad globs, keyword-only triggers that fire less reliably on the
- * mandatory `--file`/`--cmd` recall path — is the single biggest threat to recall
- * precision (ranking can only compensate so far). Capture must never be
- * rejected for it (losing a lesson is worse), so these surface as WARNINGS on
- * `add`, steering authors toward a few specific triggers without blocking.
+ * mandatory `--file`/`--cmd` recall path, long keyword patterns too specific to
+ * match — is the single biggest threat to recall precision (ranking can only
+ * compensate so far). Capture must never be rejected for it (losing a lesson is
+ * worse), so these surface as WARNINGS on `add`, steering authors toward a few
+ * specific triggers without blocking.
  */
 
 export type GuardrailCode =
   | 'OVERSIZED_LESSON_TRIGGERS'
   | 'BROAD_GLOB_TRIGGER'
-  | 'KEYWORD_ONLY_LESSON';
+  | 'KEYWORD_ONLY_LESSON'
+  | 'LOW_SIGNAL_KEYWORD';
 
 export interface GuardrailWarning {
   readonly code: GuardrailCode;
@@ -73,6 +76,16 @@ export function inspectCapturedLesson(graph: LessonsGraph, lessonId: string): Gu
     warnings.push({
       code: 'KEYWORD_ONLY_LESSON',
       message: `Lesson "${lessonId}" has only keyword triggers; mandatory --file/--cmd recall surfaces these only when the keyword appears as a path/command token, so it fires less reliably — add a file_glob or command_pattern trigger for precise recall.`,
+    });
+  }
+
+  const lowSignal = triggers
+    .filter((t) => t.kind === 'keyword' && isLowSignalKeyword(t.pattern))
+    .map((t) => t.pattern);
+  if (lowSignal.length > 0) {
+    warnings.push({
+      code: 'LOW_SIGNAL_KEYWORD',
+      message: `Lesson "${lessonId}" has long keyword trigger(s) (${lowSignal.join(', ')}); recall matches a keyword only as a substring of --keyword or a contiguous token-run in the file/command, so a pattern past ${MAX_RECOMMENDED_KEYWORD_TOKENS} tokens rarely fires — use a short distinctive phrase.`,
     });
   }
 

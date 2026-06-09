@@ -325,6 +325,52 @@ describe('validateLessonsGraph', () => {
     expect(r.ok).toBe(true);
   });
 
+  it('warns when an active lesson keyword trigger is too long to match (LOW_SIGNAL_KEYWORD)', () => {
+    const g = baseGraph();
+    g.triggers['t-kw-long'] = {
+      kind: 'keyword',
+      pattern: 'antd Form.useForm getFieldsValue Select filterOption FormData generic cast',
+    };
+    g.lessons['a-rule'].triggers = ['t-glob', 't-kw-long'];
+    const r = validateLessonsGraph(g);
+    expect(r.findings).toContainEqual(
+      expect.objectContaining({
+        level: 'warning',
+        code: 'LOW_SIGNAL_KEYWORD',
+        triggerId: 't-kw-long',
+      }),
+    );
+    expect(r.ok).toBe(true);
+  });
+
+  it('does NOT flag a long keyword trigger referenced only by an inactive lesson', () => {
+    const g = baseGraph();
+    g.triggers['t-kw-long'] = {
+      kind: 'keyword',
+      pattern: 'antd Form.useForm getFieldsValue Select filterOption FormData generic cast',
+    };
+    g.lessons['dead'] = {
+      rule: 'Old dead rule.',
+      topics: ['t'],
+      triggers: ['t-kw-long'],
+      evidence: [],
+      status: 'superseded',
+      supersededBy: 'a-rule',
+      createdAt: '2026-06-05',
+    };
+    const r = validateLessonsGraph(g);
+    expect(r.findings.some((f) => f.code === 'LOW_SIGNAL_KEYWORD')).toBe(false);
+  });
+
+  it('does NOT flag a short keyword trigger', () => {
+    const g = baseGraph();
+    g.triggers['t-kw-short'] = { kind: 'keyword', pattern: 'filterOption cast' };
+    g.lessons['a-rule'].triggers = ['t-glob', 't-kw-short'];
+    const r = validateLessonsGraph(g);
+    expect(r.findings.some((f) => f.code === 'LOW_SIGNAL_KEYWORD')).toBe(false);
+    expect(r.ok).toBe(true);
+  });
+
   it('flags schema violations as errors before continuing to other checks', () => {
     const broken = { version: 2, lessons: {}, topics: {}, triggers: {} } as unknown as LessonsGraph;
     const r = validateLessonsGraph(broken);

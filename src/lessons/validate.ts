@@ -12,6 +12,7 @@ import {
   collectDuplicateTriggers,
   collectFanout,
   collectInvalidTriggerPatterns,
+  collectLowSignalKeywords,
 } from './validate-quality.js';
 
 export type ValidationLevel = 'error' | 'warning';
@@ -54,6 +55,7 @@ export function validateLessonsGraph(graph: LessonsGraph): ValidationReport {
   collectDuplicateTriggers(graph, findings);
   collectOrphans(graph, findings);
   collectFanout(graph, findings);
+  collectLowSignalKeywords(graph, findings);
 
   const ok = findings.every((f) => f.level !== 'error');
   return { ok, findings };

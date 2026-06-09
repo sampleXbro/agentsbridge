@@ -76,6 +76,37 @@ describe('inspectCapturedLesson', () => {
     expect(codes(g)).not.toContain('KEYWORD_ONLY_LESSON');
   });
 
+  it('warns when a keyword trigger is too long to ever match recall', () => {
+    const g = graphWith({
+      f1: { kind: 'file_glob', pattern: 'src/auth.ts' },
+      k1: {
+        kind: 'keyword',
+        pattern: 'antd Form.useForm getFieldsValue Select filterOption FormData generic cast',
+      },
+    });
+    expect(codes(g)).toContain('LOW_SIGNAL_KEYWORD');
+  });
+
+  it('does not flag a short distinctive keyword trigger', () => {
+    const g = graphWith({
+      f1: { kind: 'file_glob', pattern: 'src/auth.ts' },
+      k1: { kind: 'keyword', pattern: 'filterOption cast' },
+    });
+    expect(codes(g)).not.toContain('LOW_SIGNAL_KEYWORD');
+  });
+
+  it('emits both KEYWORD_ONLY_LESSON and LOW_SIGNAL_KEYWORD for a keyword-only lesson with a long pattern', () => {
+    const g = graphWith({
+      k1: {
+        kind: 'keyword',
+        pattern: 'antd Form.useForm getFieldsValue Select filterOption FormData generic cast',
+      },
+    });
+    expect(codes(g)).toEqual(
+      expect.arrayContaining(['KEYWORD_ONLY_LESSON', 'LOW_SIGNAL_KEYWORD']),
+    );
+  });
+
   it('returns no warnings for a lean, specific lesson', () => {
     const g = graphWith({
       f1: { kind: 'file_glob', pattern: 'src/auth.ts' },

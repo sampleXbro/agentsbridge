@@ -4100,7 +4100,8 @@
         "shell-quoting"
       ],
       "triggers": [
-        "t-kw-a03e44b6"
+        "t-kw-a03e44b6",
+        "t-cmd-b7e554e6"
       ]
     },
     "shell-quoting-for-inline-typescript-eval-scripts": {
@@ -5815,6 +5816,10 @@
     "t-cmd-b66a9431": {
       "kind": "command_pattern",
       "pattern": "install github:"
+    },
+    "t-cmd-b7e554e6": {
+      "kind": "command_pattern",
+      "pattern": "node -e"
     },
     "t-cmd-be67eb02": {
       "kind": "command_pattern",

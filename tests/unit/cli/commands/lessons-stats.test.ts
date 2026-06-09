@@ -1,7 +1,7 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { doStats } from '../../../../src/cli/commands/lessons-handlers.js';
 import type { LessonsStatsData } from '../../../../src/cli/commands/lessons-types.js';
 import type { LessonsGraph } from '../../../../src/lessons/graph-schema.js';
@@ -13,9 +13,13 @@ const on = { [TELEMETRY_ENV]: '1' };
 
 beforeEach(() => {
   root = mkdtempSync(join(tmpdir(), 'amesh-stats-cmd-'));
+  // Hermetic: doStats reads telemetry state from the live process env, so pin it
+  // OFF here instead of inheriting an ambient AGENTSMESH_LESSONS_TELEMETRY=1.
+  vi.stubEnv(TELEMETRY_ENV, '');
 });
 
 afterEach(() => {
+  vi.unstubAllEnvs();
   rmSync(root, { recursive: true, force: true });
 });
 
@@ -50,6 +54,12 @@ describe('doStats', () => {
     expect(data.report.totalRecalls).toBe(0);
     // The graph still yields the static reachability gap.
     expect(data.report.reachability.keywordOnlyUnreachableLessons).toBe(1);
+  });
+
+  it('reports telemetryEnabled=true when the env opts in', () => {
+    vi.stubEnv(TELEMETRY_ENV, '1');
+    saveLessonsGraph(root, graph);
+    expect(statsData(doStats({}, root)).telemetryEnabled).toBe(true);
   });
 
   it('summarizes a recorded log against the graph', () => {

@@ -94,7 +94,7 @@ async function main(parsed: ParseResult): Promise<void> {
     return;
   }
   if (flags.help === true) {
-    printCommandHelp(command);
+    printCommandHelp(command, args);
     return;
   }
 

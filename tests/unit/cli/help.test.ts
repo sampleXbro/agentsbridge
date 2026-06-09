@@ -67,3 +67,55 @@ describe('printCommandHelp', () => {
     }
   });
 });
+
+describe('printCommandHelp — lessons subcommand focus', () => {
+  function capture(fn: () => void): string {
+    let output = '';
+    const write = process.stdout.write.bind(process.stdout);
+    process.stdout.write = (chunk: string | Uint8Array) => {
+      output += String(chunk);
+      return true;
+    };
+    try {
+      fn();
+    } finally {
+      process.stdout.write = write;
+    }
+    return output;
+  }
+
+  it('focuses `lessons add --help` on add flags plus a worked example', () => {
+    const out = capture(() => printCommandHelp('lessons', ['add']));
+    expect(out).toContain('agentsmesh lessons add');
+    expect(out).toContain('--topic');
+    expect(out).toContain('--trigger-file');
+    expect(out).toContain('Example:');
+    // Focused: flags belonging to other subcommands are excluded.
+    expect(out).not.toContain('--migrated-at'); // import-md
+    expect(out).not.toContain('--max-tokens'); // query
+  });
+
+  it('focuses `lessons query --help` on query flags plus a worked example', () => {
+    const out = capture(() => printCommandHelp('lessons', ['query']));
+    expect(out).toContain('--file');
+    expect(out).toContain('--cmd');
+    expect(out).toContain('Example:');
+    expect(out).not.toContain('--rule');
+    expect(out).not.toContain('--migrated-at');
+  });
+
+  it('falls back to the combined lessons help when no subcommand is given', () => {
+    const out = capture(() => printCommandHelp('lessons'));
+    // Combined view keeps every subcommand's flags.
+    expect(out).toContain('--rule');
+    expect(out).toContain('--max-tokens');
+    expect(out).toContain('--migrated-at');
+  });
+
+  it('handles a subcommand with no usage example or specific flags (topics)', () => {
+    const out = capture(() => printCommandHelp('lessons', ['topics']));
+    expect(out).toContain('agentsmesh lessons topics');
+    expect(out).toContain('(no command-specific flags)');
+    expect(out).not.toContain('Example:');
+  });
+});

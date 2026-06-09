@@ -14,6 +14,7 @@ import {
   todayIso,
   type LessonsFlags,
 } from './lessons-helpers.js';
+import { lessonsAddHint } from './lessons-usage.js';
 import type {
   LessonsAddData,
   LessonsCommandResult,
@@ -40,11 +41,17 @@ export async function doAdd(
   if (rule === null) {
     return errorResult(
       'add',
-      'Missing rule — pass it positionally (`add "<rule>"`) or via --rule.',
+      `Missing rule — pass it positionally (\`add "<rule>"\`) or via --rule.${lessonsAddHint()}`,
       2,
     );
   }
-  if (topic === null) return errorResult('add', 'Missing --topic', 2);
+  if (topic === null) {
+    return errorResult(
+      'add',
+      `Missing --topic — every lesson needs a topic id (run \`agentsmesh lessons topics\` to list them, or pass --new-topic --topic-summary "..." for a new area).${lessonsAddHint()}`,
+      2,
+    );
+  }
 
   try {
     const result = await addLesson(

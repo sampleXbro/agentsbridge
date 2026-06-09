@@ -14,6 +14,21 @@
         "t-cmd-cd48106d"
       ]
     },
+    "agent-orchestration-discover-test-file-paths-with": {
+      "createdAt": "2026-06-08",
+      "evidence": [
+        "review:missing-test-path-2026-06-08"
+      ],
+      "rule": "Discover test file paths with rg --files before passing guessed paths to a multi-file inspection command; one missing path makes the command fail and weakens the audit evidence.",
+      "status": "active",
+      "topics": [
+        "agent-orchestration"
+      ],
+      "triggers": [
+        "t-glob-4c29ad88",
+        "t-cmd-4f9ca035"
+      ]
+    },
     "agent-orchestration-resolve-named-skill-paths-from": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -2625,6 +2640,21 @@
         "t-cmd-e097d363"
       ]
     },
+    "lessons-system-a-keyword-trigger-fires-only": {
+      "createdAt": "2026-06-09",
+      "evidence": [
+        "947735da"
+      ],
+      "rule": "A keyword trigger fires ONLY when its full pattern is a substring of an explicit --keyword, OR its tokens appear as a CONTIGUOUS run inside the --file/--cmd tokens (keyword-match.ts: keywordMatches). Therefore a long descriptive keyword pattern (8+ tokens, e.g. 'antd Form.useForm getFieldsValue Select filterOption FormData generic cast') is effectively DEAD: it is never a substring of a realistic --keyword and never appears contiguously in a file path, so the lesson is reachable only via its file_glob. Author keyword triggers as SHORT distinctive runs (2-4 tokens, e.g. 'filterOption cast'). Proven empirically: long pattern returns (no matches) on a sibling file even with an on-topic --keyword; the short pattern matches.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-7a175889",
+        "t-kw-ebee7e76"
+      ]
+    },
     "lessons-system-a-non-backtracking-matcher-used": {
       "createdAt": "2026-06-07",
       "evidence": [
@@ -3330,6 +3360,21 @@
         "t-kw-20cd8977"
       ]
     },
+    "lessons-system-when-reviewing-or-authoring-a": {
+      "createdAt": "2026-06-09",
+      "evidence": [
+        "947735da"
+      ],
+      "rule": "When reviewing or authoring a lessons graph, do NOT flag narrow file_glob triggers — or trigger-narrowing across a supersede — as a recall regression, and never recommend re-widening a glob to cover a lesson's scope. The system deliberately optimizes for PRECISION: capture-guardrails warns on BROAD_GLOB_TRIGGER ('prefer a path specific to the lesson') and validate treats HIGH_FANOUT_TRIGGERS as a defect. Cross-file reach for general/conceptual lessons is the job of the KEYWORD trigger (conceptual-lesson reachability — keyword triggers fire on the mandatory --file/--cmd recall path), NOT of a broad glob. So the only legitimate question is scope-MATCH (does the lesson have a keyword trigger carrying its general reach?), not breadth. Narrow file_glob + a good keyword trigger is correct by design.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-07cf19c0",
+        "t-kw-8bdcf7aa"
+      ]
+    },
     "lessons-system-when-scaffoldlessons-lessons-init-import": {
       "createdAt": "2026-06-07",
       "evidence": [],
@@ -3376,6 +3421,19 @@
         "t-kw-d6524007",
         "t-kw-e3a2ec15",
         "t-cmd-38934d6c"
+      ]
+    },
+    "lessons-telemetry-run-the-test-suite-with": {
+      "createdAt": "2026-06-08",
+      "evidence": [],
+      "rule": "Run the test suite with AGENTSMESH_LESSONS_TELEMETRY unset (e.g. 'env -u AGENTSMESH_LESSONS_TELEMETRY npx vitest'); a shell exporting it =1 makes lessons-stats tests that assert telemetryEnabled=false fail spuriously, since telemetry-enabled is read from the live process env.",
+      "status": "active",
+      "topics": [
+        "lessons-telemetry"
+      ],
+      "triggers": [
+        "t-glob-41741571",
+        "t-kw-05e1d9a7"
       ]
     },
     "lessons-telemetry-when-an-env-gated-agentsmesh": {
@@ -4372,6 +4430,21 @@
         "t-cmd-69dc7d4e"
       ]
     },
+    "skill-path-resolution-resolve-skill-paths-from-the": {
+      "createdAt": "2026-06-08",
+      "evidence": [
+        "lesson-skill-path-resolution"
+      ],
+      "rule": "Resolve skill paths from the declared skill roots before reading them.",
+      "status": "active",
+      "topics": [
+        "skill-path-resolution"
+      ],
+      "triggers": [
+        "t-glob-8fe4e96b",
+        "t-cmd-d4222599"
+      ]
+    },
     "typescript-esm-cycles-rule-1": {
       "createdAt": "2026-06-05",
       "evidence": [
@@ -4729,6 +4802,36 @@
       "triggers": [
         "t-glob-5e0d226f",
         "t-cmd-8c4a10c7"
+      ]
+    },
+    "verification-workflow-tests-for-env-gated-features": {
+      "createdAt": "2026-06-08",
+      "evidence": [
+        "lesson-test-telemetry-env-leak"
+      ],
+      "rule": "Tests for env-gated features must explicitly set or clear the relevant environment variable instead of assuming the developer environment default.",
+      "status": "deprecated",
+      "topics": [
+        "verification-workflow"
+      ],
+      "triggers": [
+        "t-glob-ed2e9cfd",
+        "t-kw-75645732"
+      ]
+    },
+    "verification-workflow-tests-for-env-gated-features-2": {
+      "createdAt": "2026-06-08",
+      "evidence": [
+        "lesson-test-telemetry-env-leak"
+      ],
+      "rule": "Tests for env-gated features must explicitly set or clear the relevant environment variable instead of assuming the developer environment default.",
+      "status": "active",
+      "topics": [
+        "verification-workflow"
+      ],
+      "triggers": [
+        "t-glob-689ed63b",
+        "t-kw-75645732"
       ]
     },
     "verification-workflow-verify-a-referenced-source-path": {
@@ -5507,6 +5610,9 @@
     "shell-quoting": {
       "summary": "Backticks/quotes in rg, node -e, heredocs; shell-rc edits; cross-shell portability; control bytes via Write tool."
     },
+    "skill-path-resolution": {
+      "summary": "Correctly resolve available skill paths before invoking them"
+    },
     "typescript-esm-cycles": {
       "summary": "TypeScript strict + ESM cycles — TDZ traps in descriptor literals, third-file import-mappers, lazy registry caches, union narrowing."
     },
@@ -5721,6 +5827,10 @@
       "kind": "command_pattern",
       "pattern": "rg -n.*src/index\\.ts|rg -n.*src/lessons\\.ts"
     },
+    "t-cmd-d4222599": {
+      "kind": "command_pattern",
+      "pattern": "sed|cat"
+    },
     "t-cmd-d9dce045": {
       "kind": "command_pattern",
       "pattern": "install --as"
@@ -5925,6 +6035,10 @@
       "kind": "file_glob",
       "pattern": "tests/unit/lessons/import-legacy.test.ts"
     },
+    "t-glob-41741571": {
+      "kind": "file_glob",
+      "pattern": "tests/**/lessons-stats*.test.ts"
+    },
     "t-glob-41b0a32c": {
       "kind": "file_glob",
       "pattern": "vitest.config*"
@@ -5940,6 +6054,10 @@
     "t-glob-4bb2d21b": {
       "kind": "file_glob",
       "pattern": "src/targets/projection/**/*.ts"
+    },
+    "t-glob-4c29ad88": {
+      "kind": "file_glob",
+      "pattern": "tests/**/*.test.ts"
     },
     "t-glob-4cf8c9e8": {
       "kind": "file_glob",
@@ -5997,6 +6115,10 @@
       "kind": "file_glob",
       "pattern": "tsconfig.json"
     },
+    "t-glob-689ed63b": {
+      "kind": "file_glob",
+      "pattern": "tests/unit/cli/commands/lessons-stats.test.ts"
+    },
     "t-glob-6f2d56aa": {
       "kind": "file_glob",
       "pattern": "src/lessons/add.ts"
@@ -6016,6 +6138,10 @@
     "t-glob-771c5cde": {
       "kind": "file_glob",
       "pattern": "tests/helpers/posix-path.ts"
+    },
+    "t-glob-7a175889": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/keyword-match.ts"
     },
     "t-glob-7d39ded4": {
       "kind": "file_glob",
@@ -6149,6 +6275,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/import-legacy.ts"
     },
+    "t-glob-ed2e9cfd": {
+      "kind": "file_glob",
+      "pattern": "tests/**/*test.ts"
+    },
     "t-glob-ee01c259": {
       "kind": "file_glob",
       "pattern": "src/lessons/regex-safety.ts"
@@ -6164,6 +6294,10 @@
     "t-kw-04b69ea5": {
       "kind": "keyword",
       "pattern": "UNREACHABLE_LESSON"
+    },
+    "t-kw-05e1d9a7": {
+      "kind": "keyword",
+      "pattern": "AGENTSMESH_LESSONS_TELEMETRY telemetry test"
     },
     "t-kw-05eaa965": {
       "kind": "keyword",
@@ -6297,6 +6431,10 @@
       "kind": "keyword",
       "pattern": "parseArgs boolean flag"
     },
+    "t-kw-75645732": {
+      "kind": "keyword",
+      "pattern": "environment variable"
+    },
     "t-kw-7dd5abb2": {
       "kind": "keyword",
       "pattern": "scalar array coercion alias"
@@ -6308,6 +6446,10 @@
     "t-kw-8987ca31": {
       "kind": "keyword",
       "pattern": "expectedImported"
+    },
+    "t-kw-8bdcf7aa": {
+      "kind": "keyword",
+      "pattern": "lessons graph review trigger narrow broad glob fanout supersede keyword conceptual reach precision regression"
     },
     "t-kw-8be8afaf": {
       "kind": "keyword",
@@ -6412,6 +6554,10 @@
     "t-kw-eaa32acc": {
       "kind": "keyword",
       "pattern": "read-only"
+    },
+    "t-kw-ebee7e76": {
+      "kind": "keyword",
+      "pattern": "keyword trigger length dead"
     },
     "t-kw-ed1c9d6e": {
       "kind": "keyword",

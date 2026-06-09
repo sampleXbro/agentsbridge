@@ -3038,8 +3038,8 @@
       "triggers": [
         "t-glob-9df02130",
         "t-glob-c3684e2c",
-        "t-kw-e1decce5",
-        "t-kw-7dd5abb2"
+        "t-kw-7dd5abb2",
+        "t-kw-34b00283"
       ]
     },
     "lessons-system-make-legacy-auto-migration-check": {
@@ -3372,7 +3372,7 @@
       ],
       "triggers": [
         "t-glob-07cf19c0",
-        "t-kw-8bdcf7aa"
+        "t-kw-13ec26ba"
       ]
     },
     "lessons-system-when-scaffoldlessons-lessons-init-import": {
@@ -3448,7 +3448,7 @@
       ],
       "triggers": [
         "t-glob-0571e0f3",
-        "t-kw-d96b6e19"
+        "t-kw-574e42b9"
       ]
     },
     "link-rebaser-deterministic-text-cleanup-transforms-ov": {
@@ -3467,6 +3467,19 @@
         "t-kw-9304db48",
         "t-kw-26809656",
         "t-kw-d47a0cd6"
+      ]
+    },
+    "link-rebaser-never-leave-a-scratch-delivery": {
+      "createdAt": "2026-06-09",
+      "evidence": [],
+      "rule": "Never leave a scratch/delivery file at the repo root whose basename matches a canonical artifact (e.g. lessons.json): the reference rewriter is project-root-relative and existence-gated, so 'agentsmesh generate' resolves canonical paths like .agentsmesh/lessons/lessons.json down to the root lessons.json and silently rewrites every generated root-instruction file (CLAUDE.md, GEMINI.md, .goosehints, ...). Use a non-colliding name (lessons.fixed.json) or write outside the repo, then re-run generate.",
+      "status": "active",
+      "topics": [
+        "link-rebaser"
+      ],
+      "triggers": [
+        "t-cmd-25ae0863",
+        "t-kw-969d455a"
       ]
     },
     "link-rebaser-rule-1": {
@@ -6335,6 +6348,10 @@
       "kind": "keyword",
       "pattern": "qa report commit"
     },
+    "t-kw-13ec26ba": {
+      "kind": "keyword",
+      "pattern": "lessons trigger precision"
+    },
     "t-kw-1d0e5147": {
       "kind": "keyword",
       "pattern": "strip markers"
@@ -6366,6 +6383,10 @@
     "t-kw-3070d871": {
       "kind": "keyword",
       "pattern": "review agent"
+    },
+    "t-kw-34b00283": {
+      "kind": "keyword",
+      "pattern": "MCP CLI parity"
     },
     "t-kw-34b18081": {
       "kind": "keyword",
@@ -6411,6 +6432,10 @@
       "kind": "keyword",
       "pattern": "NFA engine"
     },
+    "t-kw-574e42b9": {
+      "kind": "keyword",
+      "pattern": "telemetry zshenv export"
+    },
     "t-kw-67f3e58b": {
       "kind": "keyword",
       "pattern": "target-contract-matrix"
@@ -6447,10 +6472,6 @@
       "kind": "keyword",
       "pattern": "expectedImported"
     },
-    "t-kw-8bdcf7aa": {
-      "kind": "keyword",
-      "pattern": "lessons graph review trigger narrow broad glob fanout supersede keyword conceptual reach precision regression"
-    },
     "t-kw-8be8afaf": {
       "kind": "keyword",
       "pattern": "epsilon closure"
@@ -6462,6 +6483,10 @@
     "t-kw-9520fa61": {
       "kind": "keyword",
       "pattern": "recallLessons"
+    },
+    "t-kw-969d455a": {
+      "kind": "keyword",
+      "pattern": "root artifact collision"
     },
     "t-kw-a03e44b6": {
       "kind": "keyword",
@@ -6515,10 +6540,6 @@
       "kind": "keyword",
       "pattern": "VALIDATION_FAILED unrecognized_keys"
     },
-    "t-kw-d96b6e19": {
-      "kind": "keyword",
-      "pattern": "telemetry stats zshenv env var not recording recall-log"
-    },
     "t-kw-db579650": {
       "kind": "keyword",
       "pattern": "matcher work budget"
@@ -6526,10 +6547,6 @@
     "t-kw-e0aa2fb2": {
       "kind": "keyword",
       "pattern": "precommit hook"
-    },
-    "t-kw-e1decce5": {
-      "kind": "keyword",
-      "pattern": "MCP tool input schema CLI parity"
     },
     "t-kw-e3a2ec15": {
       "kind": "keyword",

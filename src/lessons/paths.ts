@@ -12,6 +12,8 @@ export interface LessonsPaths {
   readonly base: string;
   /** Canonical JSON graph — the single source of truth. */
   readonly graph: string;
+  /** Optional per-project recall tuning (recallLimit / recallMaxTokens). */
+  readonly config: string;
   /** Legacy append-only journal. Used by the migrator only. */
   readonly journal: string;
   /** Legacy YAML trigger index. Used by the migrator only. */
@@ -27,6 +29,7 @@ export function lessonsPaths(projectRoot: string): LessonsPaths {
   return {
     base,
     graph: join(base, 'lessons.json'),
+    config: join(base, 'config.json'),
     journal: join(base, 'journal.md'),
     index: join(base, 'index.yaml'),
     topicsDir: join(base, 'topics'),

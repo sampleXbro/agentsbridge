@@ -1,12 +1,9 @@
 import { loadLessonsGraphResilient, tryLoadLessonsGraph } from '../../lessons/graph-store.js';
 import { normalizeRecallFile } from '../../lessons/normalize-query-file.js';
 import { queryLessons } from '../../lessons/query.js';
-import {
-  DEFAULT_RECALL_LIMIT,
-  DEFAULT_RECALL_MAX_TOKENS,
-  rankLessons,
-} from '../../lessons/ranking.js';
+import { rankLessons } from '../../lessons/ranking.js';
 import { recordRecallTelemetry } from '../../lessons/recall.js';
+import { loadRecallConfig } from '../../lessons/recall-config.js';
 import { summarizeRecall } from '../../lessons/stats.js';
 import { isTelemetryEnabled, readRecallLog, recallLogExists } from '../../lessons/telemetry.js';
 import { validateLessonsGraph } from '../../lessons/validate.js';
@@ -93,11 +90,13 @@ export function doQuery(
   }
   const graph = load.graph;
   const matches = queryLessons(graph, query);
-  // `--all` bypasses both caps; otherwise apply the default limit + token budget
-  // so mandatory recall stays lean unless the caller overrides via --top/--max-tokens.
-  const limit = flags.all === true ? undefined : (numberFlag(flags, 'top') ?? DEFAULT_RECALL_LIMIT);
+  // `--all` bypasses both caps; otherwise apply the per-project caps (which
+  // default to the built-ins) so mandatory recall stays lean unless the caller
+  // overrides via --top/--max-tokens.
+  const cfg = loadRecallConfig(projectRoot);
+  const limit = flags.all === true ? undefined : (numberFlag(flags, 'top') ?? cfg.limit);
   const maxTokens =
-    flags.all === true ? undefined : (numberFlag(flags, 'max-tokens') ?? DEFAULT_RECALL_MAX_TOKENS);
+    flags.all === true ? undefined : (numberFlag(flags, 'max-tokens') ?? cfg.maxTokens);
   const ranked = rankLessons(graph, query, matches, { limit, maxTokens });
   // Record recall telemetry on the CLI path too (gated; no-op unless opt-in),
   // so shell-driven `lessons query` is visible to `lessons stats` — parity with

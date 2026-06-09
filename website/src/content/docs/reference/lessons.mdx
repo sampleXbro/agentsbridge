@@ -69,6 +69,16 @@ Triggers are content-addressed: the migrator and `agentsmesh lessons add` both d
 
 Combination is OR across triggers per lesson: a lesson is a **candidate** if **any** of its triggers fire from **any** supplied field. Candidates are then **relevance-ranked** by a weighted reciprocal-rank fusion (RRF) of three signals — **trigger specificity** (inverse fanout; highest weight, because a discriminating trigger beats a topic-wide one), **per-query topic coherence** (a lesson in the topic that dominates this query's matched set is boosted; middle weight), and **BM25 over the rule text** (lowest weight; on `--file`/`--cmd` recall the rule prose rarely contains a path, so it only breaks ties the structural signals cannot) — with ties broken by recency then id. The CLI/MCP return the **top 10 by default, bounded by a default token budget** (`DEFAULT_RECALL_MAX_TOKENS`, 400) so mandatory recall stays lean. Override with `--top <n>` / `--max-tokens <n>` (MCP `limit`/`max_tokens`); `--all` bypasses both caps. The single most-relevant result is always returned even if it alone exceeds the budget. The low-level `queryLessons` export returns the raw unranked candidate set; `rankLessons` applies the ranking + caps; the migration-aware `recallLessons` application API wraps load → query → rank (and migrates a legacy store first).
 
+## Recall tuning
+
+Optional per-project caps live in `.agentsmesh/lessons/config.json`:
+
+```json
+{ "recallLimit": 5, "recallMaxTokens": 250 }
+```
+
+Both fields are optional and independently fall back to the built-ins (`DEFAULT_RECALL_LIMIT` = 10, `DEFAULT_RECALL_MAX_TOKENS` = 400). Lowering them keeps mandatory `--file`/`--cmd` recall lean on a large, high-fanout graph where recall otherwise returns many lessons per call (see the `stats` break-even / match-count histogram). Per-invocation `--top` / `--max-tokens` / `--all` still override. Reading is fail-safe: a missing or malformed file, or an invalid field (non-positive, non-integer), silently uses the default for that field — recall, a blocking hot path, never throws on config.
+
 ## Validation codes
 
 `agentsmesh lessons validate` returns a list of findings with these codes:

@@ -15,12 +15,11 @@ import {
   type MatchedLesson,
 } from './query.js';
 import {
-  DEFAULT_RECALL_LIMIT,
-  DEFAULT_RECALL_MAX_TOKENS,
   estTokens,
   rankLessons,
   type RankedLesson,
 } from './ranking.js';
+import { loadRecallConfig } from './recall-config.js';
 import { appendRecallRecord, isTelemetryEnabled } from './telemetry.js';
 
 /**
@@ -84,10 +83,12 @@ export async function recallLessons(
       ? query
       : { ...query, file: normalizeRecallFile(query.file, projectRoot) };
   const matches = queryLessons(graph, matchQuery);
+  // Per-project recall tuning is the fallback for unset options; explicit
+  // options (and `maxTokens: null` to disable the budget) still win.
+  const cfg = loadRecallConfig(projectRoot);
   const lessons = rankLessons(graph, matchQuery, matches, {
-    limit: options.limit ?? DEFAULT_RECALL_LIMIT,
-    maxTokens:
-      options.maxTokens === null ? undefined : (options.maxTokens ?? DEFAULT_RECALL_MAX_TOKENS),
+    limit: options.limit ?? cfg.limit,
+    maxTokens: options.maxTokens === null ? undefined : (options.maxTokens ?? cfg.maxTokens),
   });
   recordRecallTelemetry(projectRoot, graph, matchQuery, matches, lessons);
   return { lessons, totalMatches: matches.length };

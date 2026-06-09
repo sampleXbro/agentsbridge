@@ -57,6 +57,8 @@ Run `agentsmesh lessons --help` for everything. Beyond `query` and `add`:
 - `agentsmesh lessons import-md <file>` — bulk-import lessons from Markdown.
 - `agentsmesh lessons stats` — recall-effectiveness telemetry (opt-in).
 
+**Recall tuning (optional).** On a large, high-fanout graph, recall can return many lessons per call. Drop a `.agentsmesh/lessons/config.json` with `{ "recallLimit": 5, "recallMaxTokens": 250 }` to lower the per-recall caps for this project (defaults: 10 / ~400 tokens). Both fields are optional; `--top`/`--max-tokens`/`--all` still override per call.
+
 ## Why this matters
 
 These two commands ARE the system. Skip them and the system does not exist.

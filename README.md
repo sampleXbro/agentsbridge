@@ -268,6 +268,8 @@ agentsmesh lessons stats [--json]                 # recall telemetry summary: no
 
 `agentsmesh --help` prints the same surface; `agentsmesh <cmd> --help` is also supported.
 
+Optional per-project recall tuning lives in `.agentsmesh/lessons/config.json` — `{ "recallLimit": 5, "recallMaxTokens": 250 }` lowers the default per-recall caps (10 / ~400 tokens) for a large, high-fanout graph. Both fields are optional; `--top`/`--max-tokens`/`--all` override per call.
+
 ### Machine-readable output
 
 All commands support `--json` for CI pipelines and scripting:

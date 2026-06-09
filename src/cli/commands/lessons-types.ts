@@ -48,6 +48,13 @@ export interface LessonsMergeData {
   readonly keeperId: string;
 }
 
+export interface LessonsUntriggerData {
+  readonly lessonId: string;
+  readonly triggerId: string;
+  readonly removedTriggerNode: boolean;
+  readonly remainingTriggerCount: number;
+}
+
 export interface LessonsStripMarkersData {
   readonly changedIds: string[];
   readonly changedCount: number;
@@ -110,6 +117,7 @@ export type LessonsCommandResult =
   | { subcommand: 'show'; exitCode: number; data: LessonsShowData; error?: string }
   | { subcommand: 'deprecate'; exitCode: number; data: LessonsDeprecateData; error?: string }
   | { subcommand: 'merge'; exitCode: number; data: LessonsMergeData; error?: string }
+  | { subcommand: 'untrigger'; exitCode: number; data: LessonsUntriggerData; error?: string }
   | {
       subcommand: 'strip-markers';
       exitCode: number;

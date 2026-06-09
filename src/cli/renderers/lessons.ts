@@ -48,6 +48,11 @@ export function renderLessons(result: LessonsCommandResult): void {
         logger.success(`Merged ${result.data.loserId} → ${result.data.keeperId}.`);
       }
       return;
+    case 'untrigger':
+      logger.success(
+        `Removed trigger ${result.data.triggerId} from ${result.data.lessonId} (${result.data.remainingTriggerCount} trigger${result.data.remainingTriggerCount === 1 ? '' : 's'} left)${result.data.removedTriggerNode ? '; trigger node garbage-collected (no other lesson used it)' : ''}.`,
+      );
+      return;
     case 'strip-markers':
       logger.success(
         `${result.data.dryRun ? 'Would strip' : 'Stripped'} legacy markers from ${result.data.changedCount} lesson${result.data.changedCount === 1 ? '' : 's'}.`,
@@ -240,6 +245,7 @@ function printHelp(): void {
   logger.info('  show <topic>');
   logger.info('  deprecate <id> [--superseded-by <id>]');
   logger.info('  merge <loser-id> <keeper-id>');
+  logger.info('  untrigger <lesson-id> <trigger-id>   (detach a trigger; GCs it if now unused)');
   logger.info('  strip-markers [--dry-run]');
   logger.info('  journal');
   logger.info('  validate');

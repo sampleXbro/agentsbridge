@@ -26,6 +26,7 @@ agentsmesh lessons <subcommand> [args] [flags]
 | `show <topic>` | Render a topic's lessons as Markdown (read-only view). |
 | `deprecate <id>` | Mark a lesson `deprecated`. With `--superseded-by <id>`, mark it `superseded`. |
 | `merge <loser-id> <keeper-id>` | Fold a duplicate lesson into its canonical twin: union the loser's triggers, topics, and evidence onto the keeper, then mark the loser `superseded`. Preserves recall reachability across topics. |
+| `untrigger <lesson-id> <trigger-id>` | Detach one trigger from a lesson in place (e.g. drop a dead `LOW_SIGNAL_KEYWORD` keyword, then re-`add` a short one). Garbage-collects the trigger node when no lesson references it anymore. Refuses to remove the only trigger of an `active` lesson. |
 | `strip-markers` | Remove dead legacy provenance markers (`See L123`, `(L69)`, `[L3]`, "(also relevant …)") from rule prose. `--dry-run` reports without writing. |
 | `journal` | Render lessons chronologically (sorted by `createdAt` then id). |
 | `validate` | Schema + integrity checks. Non-zero exit on errors; warnings do not affect exit code. |
@@ -140,6 +141,10 @@ Results are **relevance-ranked** (BM25 over rule text fused with trigger specifi
 ### `merge`
 
 `agentsmesh lessons merge <loser-id> <keeper-id>` — both ids are positional and required. The keeper must be `active`; the loser must not already be `superseded`.
+
+### `untrigger`
+
+`agentsmesh lessons untrigger <lesson-id> <trigger-id>` — both ids are positional and required. Detaches the trigger from the lesson and, if no remaining lesson references it, deletes the trigger node (no `ORPHAN_TRIGGER` left behind). Refuses (exit 1) to remove the only trigger of an `active` lesson, since that would make it unreachable — `add` a replacement trigger first, then `untrigger` the old one. The graph is git-tracked, so the change is reviewable and revertible. This is the clean way to replace a `LOW_SIGNAL_KEYWORD` keyword without the rename/corpse cost of deprecate→re-add.
 
 ### `strip-markers`
 

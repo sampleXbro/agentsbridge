@@ -51,6 +51,7 @@ Run `agentsmesh lessons --help` for everything. Beyond `query` and `add`:
 - `agentsmesh lessons topics` — list topic ids + summaries.
 - `agentsmesh lessons show <id>` — inspect a single lesson.
 - `agentsmesh lessons deprecate <id>` — retire a lesson that no longer holds.
+- `agentsmesh lessons untrigger <id> <trigger-id>` — detach one trigger from a lesson (e.g. to drop a `LOW_SIGNAL_KEYWORD` keyword and re-`add` a short one); garbage-collects the trigger node if no other lesson uses it.
 - `agentsmesh lessons journal` — review recent capture/recall activity.
 - `agentsmesh lessons validate` — check the graph for integrity problems.
 - `agentsmesh lessons import-md <file>` — bulk-import lessons from Markdown.

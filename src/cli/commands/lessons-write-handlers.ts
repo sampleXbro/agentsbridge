@@ -6,6 +6,7 @@ import { lessonsPaths } from '../../lessons/paths.js';
 import { mergeLessons } from '../../lessons/merge.js';
 import { mutateLessonsGraph } from '../../lessons/mutate.js';
 import { stripMarkersInGraph } from '../../lessons/strip-markers.js';
+import { untriggerLesson } from '../../lessons/untrigger.js';
 import {
   errorResult,
   listFlag,
@@ -21,6 +22,7 @@ import type {
   LessonsImportMdData,
   LessonsMergeData,
   LessonsStripMarkersData,
+  LessonsUntriggerData,
 } from './lessons-types.js';
 
 function errMessage(err: unknown): string {
@@ -116,6 +118,29 @@ export async function doDeprecate(
     return { subcommand: 'deprecate', exitCode: 0, data };
   } catch (err) {
     return errorResult('deprecate', errMessage(err), 1);
+  }
+}
+
+export async function doUntrigger(
+  lessonId: string | undefined,
+  triggerId: string | undefined,
+  projectRoot: string,
+): Promise<LessonsCommandResult> {
+  if (lessonId === undefined || lessonId === '' || triggerId === undefined || triggerId === '') {
+    return errorResult(
+      'untrigger',
+      'Usage: agentsmesh lessons untrigger <lesson-id> <trigger-id>',
+      2,
+    );
+  }
+  try {
+    const result = await mutateLessonsGraph(projectRoot, (graph) =>
+      untriggerLesson(graph, lessonId, triggerId),
+    );
+    const data: LessonsUntriggerData = result;
+    return { subcommand: 'untrigger', exitCode: 0, data };
+  } catch (err) {
+    return errorResult('untrigger', errMessage(err), 1);
   }
 }
 

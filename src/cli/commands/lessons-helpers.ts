@@ -87,7 +87,15 @@ export function renderTopicMarkdown(
 }
 
 /** Subcommands that can fail with a user-facing error and a placeholder data shape. */
-type ErrorableSubcommand = 'query' | 'add' | 'show' | 'deprecate' | 'merge' | 'import-md' | 'prune';
+type ErrorableSubcommand =
+  | 'query'
+  | 'add'
+  | 'show'
+  | 'deprecate'
+  | 'merge'
+  | 'untrigger'
+  | 'import-md'
+  | 'prune';
 
 export function errorResult(
   subcommand: ErrorableSubcommand,
@@ -116,6 +124,13 @@ export function errorResult(
       return { subcommand, exitCode, error: message, data: { id: '', supersededBy: null } };
     case 'merge':
       return { subcommand, exitCode, error: message, data: { loserId: '', keeperId: '' } };
+    case 'untrigger':
+      return {
+        subcommand,
+        exitCode,
+        error: message,
+        data: { lessonId: '', triggerId: '', removedTriggerNode: false, remainingTriggerCount: 0 },
+      };
     case 'import-md':
       return {
         subcommand,

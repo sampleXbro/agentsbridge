@@ -288,7 +288,7 @@ export const COMMANDS: HelpCommand[] = [
     name: 'lessons',
     usage: 'agentsmesh lessons <subcommand> [args] [flags]',
     description:
-      'Query and capture lessons from .agentsmesh/lessons/lessons.json. Subcommands: query, add, topics, show, deprecate, merge, strip-markers, journal, validate, import-md.',
+      'Query and capture lessons from .agentsmesh/lessons/lessons.json. Subcommands: query, add, topics, show, deprecate, merge, untrigger, strip-markers, journal, validate, import-md.',
     flags: [
       {
         name: '--file <path>',

@@ -34,6 +34,10 @@ export const LESSONS_USAGE: Record<string, LessonsSubcommandUsage> = {
     usage: 'agentsmesh lessons merge <loser-id> <keeper-id>',
     example: 'agentsmesh lessons merge build-duplicate build-canonical',
   },
+  untrigger: {
+    usage: 'agentsmesh lessons untrigger <lesson-id> <trigger-id>',
+    example: 'agentsmesh lessons untrigger build-old-rule t-kw-8bdcf7aa',
+  },
 };
 
 /** Multi-line usage + example hint appended to add-handler errors. */

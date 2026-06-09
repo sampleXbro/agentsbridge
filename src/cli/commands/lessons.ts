@@ -1,5 +1,5 @@
 /**
- * agentsmesh lessons — query / add / topics / show / deprecate / merge / strip-markers / journal / validate / stats / prune / import-md.
+ * agentsmesh lessons — query / add / topics / show / deprecate / merge / untrigger / strip-markers / journal / validate / stats / prune / import-md.
  * Auto-migrates from legacy index.yaml + topics on first invocation.
  */
 import { maybeAutoMigrateLessons } from '../../lessons/auto-migrate.js';
@@ -15,6 +15,7 @@ import {
   doStats,
   doStripMarkers,
   doTopics,
+  doUntrigger,
   doValidate,
   type LessonsFlags,
 } from './lessons-handlers.js';
@@ -48,6 +49,8 @@ export async function runLessons(
       return doDeprecate(flags, args[1], projectRoot);
     case 'merge':
       return doMerge(args[1], args[2], projectRoot);
+    case 'untrigger':
+      return doUntrigger(args[1], args[2], projectRoot);
     case 'strip-markers':
       return doStripMarkers(flags, projectRoot);
     case 'journal':

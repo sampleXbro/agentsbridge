@@ -35,6 +35,7 @@ export {
   doImportMd,
   doMerge,
   doStripMarkers,
+  doUntrigger,
 } from './lessons-write-handlers.js';
 export { doPrune } from './lessons-prune-handler.js';
 

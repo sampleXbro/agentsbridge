@@ -8,7 +8,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { runCli, runCliArgs } from './helpers/run-cli.js';
@@ -24,6 +24,68 @@ beforeEach(() => {
 
 afterEach(() => {
   if (dir && existsSync(dir)) rmSync(dir, { recursive: true, force: true });
+});
+
+describe('lessons CLI — untrigger', () => {
+  const graphPath = (): string => join(dir, '.agentsmesh/lessons/lessons.json');
+  const readGraph = (): { lessons: Record<string, { triggers: string[] }>; triggers: Record<string, { kind: string; pattern: string }> } =>
+    JSON.parse(readFileSync(graphPath(), 'utf8'));
+
+  it('detaches a trigger and garbage-collects the now-unused node, leaving a valid graph', async () => {
+    const id = await addLessonCli(dir, 'Untrigger me', {
+      topic: 'e2e',
+      newTopic: true,
+      summary: 's',
+      extra: ['--trigger-file', 'src/**/*.ts', '--trigger-kw', 'shortkw'],
+    });
+    const kwEntry = Object.entries(readGraph().triggers).find(
+      ([, t]) => t.kind === 'keyword' && t.pattern === 'shortkw',
+    );
+    const kwId = kwEntry![0];
+
+    const r = await runCli(`lessons untrigger ${id} ${kwId}`, dir);
+    expect(r.exitCode).toBe(0);
+    expect(r.stdout).toMatch(/garbage-collected/i);
+
+    const after = readGraph();
+    expect(after.lessons[id]!.triggers).not.toContain(kwId);
+    expect(after.triggers[kwId]).toBeUndefined();
+
+    const validate = await runCli('lessons validate', dir);
+    expect(validate.exitCode).toBe(0);
+    expect(validate.stdout).toContain('Lessons graph: ok.');
+  });
+
+  it('refuses to remove the only trigger of an active lesson (exit 1)', async () => {
+    const id = await addLessonCli(dir, 'Single trigger lesson', {
+      topic: 'e2e',
+      newTopic: true,
+      summary: 's',
+      extra: ['--trigger-file', 'src/only.ts'],
+    });
+    const onlyTrig = readGraph().lessons[id]!.triggers[0]!;
+    const r = await runCli(`lessons untrigger ${id} ${onlyTrig}`, dir);
+    expect(r.exitCode).toBe(1);
+    expect(r.stderr).toMatch(/only trigger|unreachable/i);
+  });
+
+  it('missing args exits 2', async () => {
+    const r = await runCli('lessons untrigger', dir);
+    expect(r.exitCode).toBe(2);
+    expect(r.stderr).toContain('Usage: agentsmesh lessons untrigger');
+  });
+
+  it('unknown lesson exits 1', async () => {
+    await addLessonCli(dir, 'seed lesson', {
+      topic: 'e2e',
+      newTopic: true,
+      summary: 's',
+      extra: ['--trigger-kw', 'seedkw'],
+    });
+    const r = await runCli('lessons untrigger ghost t-kw-deadbeef', dir);
+    expect(r.exitCode).toBe(1);
+    expect(r.stderr).toContain('Unknown lesson');
+  });
 });
 
 describe('lessons CLI — deprecate', () => {

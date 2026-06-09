@@ -257,9 +257,10 @@ agentsmesh refresh [<name>[,<name>...]] [--dry-run] [--force] [--json] [--global
 agentsmesh plugin add|list|remove|info [--version <v>] [--id <id>]
 agentsmesh target scaffold <id> [--name <displayName>] [--force]
 agentsmesh lessons query [--file <p>] [--cmd <c>] [--keyword <k>] [--format plain|md|json] [--top <n>] [--all] [--max-tokens <n>]  # relevance-ranked (trigger specificity + topic coherence + BM25); top 10 + ~400-token budget by default (--all bypasses)
-agentsmesh lessons add "<rule>" --topic <id> [--trigger-file <glob>] [--trigger-cmd <regex>] [--trigger-kw <text>] [--evidence <ref>] [--new-topic --topic-summary "<one line>"]  # warns (non-blocking) on broad/oversized/keyword-only triggers
+agentsmesh lessons add "<rule>" --topic <id> [--trigger-file <glob>] [--trigger-cmd <regex>] [--trigger-kw <text>] [--evidence <ref>] [--new-topic --topic-summary "<one line>"]  # warns (non-blocking) on broad/oversized/keyword-only/low-signal triggers
 agentsmesh lessons topics | show <topic> | deprecate <id> [--superseded-by <id>] | journal | validate | import-md [--merge|--force]
 agentsmesh lessons merge <loser-id> <keeper-id>   # fold a duplicate into its canonical twin (supersede + union triggers/topics/evidence)
+agentsmesh lessons untrigger <lesson-id> <trigger-id>  # detach one trigger from a lesson (e.g. drop a dead/low-signal keyword); GCs the node if now unused
 agentsmesh lessons strip-markers [--dry-run]      # remove dead legacy provenance markers from rule prose
 agentsmesh lessons prune [--apply] [--cap <n>]    # curate: trim over-cap lessons (drop least-specific triggers) + remove dead triggers (dry-run by default)
 agentsmesh lessons stats [--json]                 # recall telemetry summary: no-match rate, recall-vs-preload break-even, reachability gap (needs AGENTSMESH_LESSONS_TELEMETRY=1)

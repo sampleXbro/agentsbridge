@@ -3385,10 +3385,7 @@
         "lessons-system"
       ],
       "triggers": [
-        "t-glob-8148e382",
-        "t-kw-a70c84c3",
-        "t-kw-67f3e58b",
-        "t-kw-8987ca31"
+        "t-glob-8148e382"
       ]
     },
     "lessons-system-when-testing-direct-legacy-import": {
@@ -4828,7 +4825,6 @@
         "verification-workflow"
       ],
       "triggers": [
-        "t-glob-ed2e9cfd",
         "t-kw-75645732"
       ]
     },
@@ -6288,10 +6284,6 @@
       "kind": "file_glob",
       "pattern": "src/lessons/import-legacy.ts"
     },
-    "t-glob-ed2e9cfd": {
-      "kind": "file_glob",
-      "pattern": "tests/**/*test.ts"
-    },
     "t-glob-ee01c259": {
       "kind": "file_glob",
       "pattern": "src/lessons/regex-safety.ts"
@@ -6436,10 +6428,6 @@
       "kind": "keyword",
       "pattern": "telemetry zshenv export"
     },
-    "t-kw-67f3e58b": {
-      "kind": "keyword",
-      "pattern": "target-contract-matrix"
-    },
     "t-kw-6829f894": {
       "kind": "keyword",
       "pattern": "fork_context"
@@ -6468,10 +6456,6 @@
       "kind": "keyword",
       "pattern": "fan out"
     },
-    "t-kw-8987ca31": {
-      "kind": "keyword",
-      "pattern": "expectedImported"
-    },
     "t-kw-8be8afaf": {
       "kind": "keyword",
       "pattern": "epsilon closure"
@@ -6491,10 +6475,6 @@
     "t-kw-a03e44b6": {
       "kind": "keyword",
       "pattern": "control character probe"
-    },
-    "t-kw-a70c84c3": {
-      "kind": "keyword",
-      "pattern": "scaffoldLessons"
     },
     "t-kw-abe95c07": {
       "kind": "keyword",

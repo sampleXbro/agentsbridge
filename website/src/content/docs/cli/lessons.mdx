@@ -84,6 +84,25 @@ agentsmesh lessons add "Treat the cache as advisory." \
 The graph at `.agentsmesh/lessons/lessons.json` is the single source of truth. Never edit it by hand. The CLI handles deduping, locking, atomic writes, and id assignment.
 </Aside>
 
+## Hook mode (deterministic recall)
+
+The recall ritual asks the agent to **run** recall before each mutating action — an extra model turn every time, and only as reliable as the agent's compliance. On harnesses that support context-injecting tool-call hooks you can make recall **deterministic** instead: a `PostToolUse` hook runs recall automatically and injects the matching lessons into the model's context for its next action — **zero extra model turn, zero compliance dependence**.
+
+Wire it by adding a hook to `.agentsmesh/hooks.yaml` and running `agentsmesh generate`:
+
+```yaml
+PostToolUse:
+  - matcher: Edit|Write|Bash
+    type: command
+    command: agentsmesh lessons hook
+```
+
+`agentsmesh lessons hook` reads the harness's PostToolUse payload from stdin, recalls lessons for the touched `file_path` / `command`, and emits the harness context-injection JSON (`hookSpecificOutput.additionalContext`). It uses the harness `session_id` for [dedup](#query), so a lesson is injected at most once per session even as you re-touch the same file.
+
+It is **reactive**: the first touch of a file is unguarded; every later action is covered — which fits the way agents revisit files. And it is **safe everywhere**: the command is harness-adaptive and a silent no-op (exit 0, no output) on any payload it doesn't recognize, so projecting the hook to a target whose hooks can't inject context (or to a non-hook tool call) does nothing rather than breaking the run.
+
+Harness support for context-injecting `PostToolUse` hooks varies — Claude Code and the GitHub Copilot CLI inject `additionalContext`; some others run the hook but ignore the output. Keep the prose recall ritual as the universal fallback; hook mode is an optimization on top, not a replacement.
+
 ## One-shot upgrade migration
 
 If you're coming from a previous release that used `index.yaml` +

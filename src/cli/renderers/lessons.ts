@@ -29,6 +29,11 @@ export function renderLessons(result: LessonsCommandResult): void {
   switch (result.subcommand) {
     case 'help':
       return printHelp();
+    case 'hook':
+      // Raw harness JSON straight to stdout (no logger/ANSI) — the harness parses
+      // it. Empty output = inject nothing.
+      if (result.data.output.length > 0) process.stdout.write(`${result.data.output}\n`);
+      return;
     case 'query':
       return renderQuery(result.data, result.format);
     case 'add':

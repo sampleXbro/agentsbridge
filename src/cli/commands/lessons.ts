@@ -6,6 +6,7 @@ import { maybeAutoMigrateLessons } from '../../lessons/auto-migrate.js';
 import {
   doAdd,
   doDeprecate,
+  doHook,
   doImportMd,
   doJournal,
   doMerge,
@@ -63,6 +64,10 @@ export async function runLessons(
       return doPrune(flags, projectRoot);
     case 'import-md':
       return doImportMd(flags, projectRoot);
+    case 'hook':
+      // Internal: invoked by a generated PostToolUse hook, not by a human, so it
+      // is intentionally absent from LESSONS_SUBCOMMANDS / help.
+      return doHook(projectRoot);
     default:
       return {
         subcommand: 'help',

@@ -137,4 +137,5 @@ export type LessonsCommandResult =
       format: 'text' | 'json';
       data: LessonsStatsData;
       error?: string;
-    };
+    }
+  | { subcommand: 'hook'; exitCode: number; data: { output: string }; error?: string };

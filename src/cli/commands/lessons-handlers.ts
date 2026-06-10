@@ -1,4 +1,5 @@
 import { tryLoadLessonsGraph } from '../../lessons/graph-store.js';
+import { buildRecallHookOutput } from '../../lessons/hook.js';
 import { listProjectFiles } from '../../lessons/project-files.js';
 import { summarizeRecall } from '../../lessons/stats.js';
 import { isTelemetryEnabled, readRecallLog, recallLogExists } from '../../lessons/telemetry.js';
@@ -87,4 +88,24 @@ export function doValidate(projectRoot: string): LessonsCommandResult {
   const report = validateLessonsGraph(graph, { knownPaths });
   const data: LessonsValidateData = { ok: report.ok, findings: report.findings };
   return { subcommand: 'validate', exitCode: report.ok ? 0 : 1, data };
+}
+
+/**
+ * Hook-mode recall (internal — invoked by a generated PostToolUse hook, not by a
+ * human). Reads the harness hook payload from stdin, recalls lessons for the
+ * touched file/command, and emits the harness context-injection JSON on stdout.
+ * Always exits 0 and stays silent on any unrecognized input, so a wired hook can
+ * never break the harness.
+ */
+export async function doHook(projectRoot: string): Promise<LessonsCommandResult> {
+  const raw = await readStdin();
+  const { output } = await buildRecallHookOutput(raw, projectRoot);
+  return { subcommand: 'hook', exitCode: 0, data: { output } };
+}
+
+async function readStdin(): Promise<string> {
+  if (process.stdin.isTTY === true) return '';
+  const chunks: Buffer[] = [];
+  for await (const chunk of process.stdin) chunks.push(chunk as Buffer);
+  return Buffer.concat(chunks).toString('utf8');
 }

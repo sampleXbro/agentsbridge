@@ -30,6 +30,9 @@ export async function mergeLegacy(
       const result = addLessonInto(g, spec, {
         allowNewTopic: true,
         topicSummary: summaryByTopic.get(spec.topic),
+        // Legacy lessons may predate the ≥1-trigger requirement; recover them
+        // as-is rather than dropping historical knowledge.
+        allowNoTrigger: true,
       });
       if (result.isNewLesson) addedLessons += 1;
       for (const t of result.newTriggerIds) addedTriggers.add(t);

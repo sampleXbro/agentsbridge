@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { addLesson, UnknownTopicError } from '../../lessons/add.js';
+import { addLesson, NoTriggerError, UnknownTopicError } from '../../lessons/add.js';
 import { deprecateLesson } from '../../lessons/deprecate.js';
 import { graphFilePath } from '../../lessons/graph-store.js';
 import { importLegacyLessons } from '../../lessons/import-legacy.js';
@@ -84,6 +84,9 @@ export async function doAdd(
         `Unknown topic: ${err.topic}. Pass --new-topic --topic-summary "..." to create it.`,
         1,
       );
+    }
+    if (err instanceof NoTriggerError) {
+      return errorResult('add', `${err.message}${lessonsAddHint()}`, 2);
     }
     return errorResult('add', errMessage(err), 1);
   }

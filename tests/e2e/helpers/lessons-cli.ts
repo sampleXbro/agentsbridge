@@ -22,6 +22,11 @@ export async function addLessonCli(
   if (opts.newTopic === true)
     args.push('--new-topic', '--topic-summary', opts.summary ?? 'summary');
   if (opts.extra) args.push(...opts.extra);
+  // Every lesson now needs ≥1 trigger; default a file_glob unless the caller
+  // already supplied one of its own (so trigger-specific tests stay in control).
+  if (!(opts.extra ?? []).some((a) => a.startsWith('--trigger-'))) {
+    args.push('--trigger-file', 'src/**');
+  }
   args.push('--json');
   const r = await runCliArgs(args, dir);
   expect(r.exitCode).toBe(0);

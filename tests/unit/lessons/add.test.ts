@@ -53,6 +53,26 @@ describe('addLesson', () => {
     expect(result.id.startsWith('windows-paths-')).toBe(true);
   });
 
+  it('rejects a new lesson with no triggers (unreachable)', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    await expect(
+      addLesson(root, { ...baseInput, triggers: {} }),
+    ).rejects.toThrow(/at least one trigger/i);
+  });
+
+  it('allows re-adding an existing lesson with no new triggers (upsert keeps its triggers)', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    const first = await addLesson(root, baseInput); // has a trigger-file
+    const again = await addLesson(root, {
+      ...baseInput,
+      triggers: {},
+      evidence: ['commit:def'],
+    });
+    expect(again.id).toBe(first.id);
+    expect(again.isNewLesson).toBe(false);
+    expect(loadLessonsGraph(root).lessons[again.id]?.evidence).toContain('commit:def');
+  });
+
   it('rejects an unknown topic without allowNewTopic', async () => {
     await expect(addLesson(root, { ...baseInput, topic: 'nope' }, {})).rejects.toBeInstanceOf(
       UnknownTopicError,

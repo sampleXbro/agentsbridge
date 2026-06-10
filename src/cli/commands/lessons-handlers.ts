@@ -68,6 +68,23 @@ export function doQuery(
 
   const format = parseFormat(flags);
   const raw = queryFromFlags(flags);
+  // A recall must be anchored to something. Zero predicates is a no-op call —
+  // fail loudly so an agent learns to pass the file/command it is about to touch.
+  if (raw.file === undefined && raw.command === undefined && raw.keyword === undefined) {
+    return errorResult(
+      'query',
+      'Recall needs a predicate: pass at least one of --file <path-about-to-edit>, ' +
+        '--cmd <command-about-to-run>, or --keyword <text>.',
+      2,
+    );
+  }
+  // Keyword-only recall silently misses file_glob / command_pattern lessons (the
+  // reliable majority). Allow it, but warn — it is the recall anti-pattern.
+  const keywordOnlyWarning =
+    raw.keyword !== undefined && raw.file === undefined && raw.command === undefined
+      ? 'keyword-only recall misses file_glob and command_pattern lessons — pass ' +
+        '--file <path-about-to-edit> and/or --cmd <command-about-to-run> for complete recall.'
+      : undefined;
   // Normalize the file path so a project-relative glob matches regardless of the
   // shape the caller passed (absolute / ./-prefixed / backslash).
   const query =
@@ -98,7 +115,13 @@ export function doQuery(
     return { subcommand: 'query', exitCode: 0, format, data };
   }
   if (load.status === 'absent') {
-    const data: LessonsQueryData = { lessons: [], query, autoMigrated, totalMatches: 0 };
+    const data: LessonsQueryData = {
+      lessons: [],
+      query,
+      autoMigrated,
+      totalMatches: 0,
+      ...(keywordOnlyWarning ? { warning: keywordOnlyWarning } : {}),
+    };
     return { subcommand: 'query', exitCode: 0, format, data };
   }
   const graph = load.graph;
@@ -123,7 +146,13 @@ export function doQuery(
     evidence: [...lesson.evidence],
     score,
   }));
-  const data: LessonsQueryData = { lessons, query, autoMigrated, totalMatches: matches.length };
+  const data: LessonsQueryData = {
+    lessons,
+    query,
+    autoMigrated,
+    totalMatches: matches.length,
+    ...(keywordOnlyWarning ? { warning: keywordOnlyWarning } : {}),
+  };
   return { subcommand: 'query', exitCode: 0, format, data };
 }
 

@@ -22,6 +22,13 @@ export interface AddLessonOptions {
   readonly allowNewTopic?: boolean;
   readonly topicSummary?: string;
   readonly retries?: number;
+  /**
+   * Skip the "a lesson needs at least one trigger" guard. Set only by the
+   * legacy-merge recovery path, which folds historical lessons that may predate
+   * the requirement; interactive capture (CLI/MCP) always enforces it so a fresh
+   * agent cannot create an unreachable lesson.
+   */
+  readonly allowNoTrigger?: boolean;
 }
 
 export interface AddLessonResult {
@@ -39,6 +46,26 @@ export class UnknownTopicError extends Error {
     super(`Unknown topic: ${topic}. Pass allowNewTopic + topicSummary to create it.`);
     this.name = 'UnknownTopicError';
   }
+}
+
+/** Thrown when a capture would leave a lesson with no trigger (unrecallable). */
+export class NoTriggerError extends Error {
+  readonly code = 'NO_TRIGGER';
+  constructor() {
+    super(
+      'A lesson needs at least one trigger to be recallable. Pass --trigger-file <glob> ' +
+        '(preferred), --trigger-cmd <regex>, or --trigger-kw <text>.',
+    );
+    this.name = 'NoTriggerError';
+  }
+}
+
+function countInputTriggers(triggers: AddLessonInput['triggers']): number {
+  return (
+    (triggers.files?.length ?? 0) +
+    (triggers.commands?.length ?? 0) +
+    (triggers.keywords?.length ?? 0)
+  );
 }
 
 export async function addLesson(
@@ -68,7 +95,11 @@ export function addLessonInto(
 ): AddLessonResult {
   const ruleKey = normalizeRule(input.rule);
   const trimmedRule = input.rule.trim();
+  const existingId = findExistingLessonByRule(graph, ruleKey);
 
+  // Topic validity is checked first so an unknown-topic / missing-summary error
+  // takes precedence over the trigger guard below (clearer, and stable for the
+  // documented exit codes).
   const isNewTopic = graph.topics[input.topic] === undefined;
   if (isNewTopic) {
     if (options.allowNewTopic !== true) throw new UnknownTopicError(input.topic);
@@ -78,8 +109,18 @@ export function addLessonInto(
     graph.topics[input.topic] = { summary: options.topicSummary };
   }
 
+  // A lesson with no trigger can never be recalled. Enforce ≥1 trigger on the
+  // RESULTING lesson (an upsert keeps the existing lesson's triggers, so it may
+  // pass no new ones). Skipped only by legacy-merge recovery.
+  if (options.allowNoTrigger !== true) {
+    const existingTriggers =
+      existingId !== null ? (graph.lessons[existingId]?.triggers.length ?? 0) : 0;
+    if (countInputTriggers(input.triggers) === 0 && existingTriggers === 0) {
+      throw new NoTriggerError();
+    }
+  }
+
   const { triggerIds, newTriggerIds } = mergeTriggers(graph, input.triggers);
-  const existingId = findExistingLessonByRule(graph, ruleKey);
 
   if (existingId !== null) {
     // existingId came from Object.entries(graph.lessons), so it is present.

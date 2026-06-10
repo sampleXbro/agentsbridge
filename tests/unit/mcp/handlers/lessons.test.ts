@@ -72,6 +72,10 @@ describe('lessonsHandlers.query', () => {
     expect(r.lessons).toEqual([]);
   });
 
+  it('rejects a query with no predicate (file/command/keyword)', async () => {
+    await expect(lessonsHandlers.query(ctx, {})).rejects.toThrow(/file.*command.*keyword|predicate/i);
+  });
+
   it('matches a file glob when --file is passed as an absolute path', async () => {
     const r = await lessonsHandlers.query(ctx, { file: join(projectRoot, 'src/cli/x.ts') });
     expect(r.lessons.map((l) => l.id)).toEqual(['topic-x-rule-1']);
@@ -340,10 +344,10 @@ describe('lessonsHandlers.add', () => {
     expect(graph.topics['fresh']?.summary).toBe('Fresh topic.');
   });
 
-  it('adds with no trigger arrays supplied (defaults each to empty)', async () => {
-    const r = await lessonsHandlers.add(ctx, { rule: 'No triggers at all.', topic: 'topic-x' });
-    expect(r.isNewLesson).toBe(true);
-    expect(loadLessonsGraph(projectRoot).lessons[r.id]?.triggers).toEqual([]);
+  it('rejects an add with no triggers (unreachable lesson)', async () => {
+    await expect(
+      lessonsHandlers.add(ctx, { rule: 'No triggers at all.', topic: 'topic-x' }),
+    ).rejects.toThrow(/at least one trigger/i);
   });
 
   it('accepts command and keyword trigger arrays alongside files', async () => {
@@ -410,18 +414,20 @@ describe('lessonsHandlers.add — input coercion + CLI-flag aliases', () => {
     const r = await lessonsHandlers.add(ctx, {
       rule: 'Multi evidence.',
       topic: 'topic-x',
+      trigger_files: 'src/**',
       evidence: 'commit:a, lesson:b',
     });
     expect(loadLessonsGraph(projectRoot).lessons[r.id]?.evidence).toEqual(['commit:a', 'lesson:b']);
   });
 
-  it('drops an empty-string trigger (coerces to no trigger)', async () => {
-    const r = await lessonsHandlers.add(ctx, {
-      rule: 'Empty trigger string.',
-      topic: 'topic-x',
-      trigger_files: '',
-    });
-    expect(loadLessonsGraph(projectRoot).lessons[r.id]?.triggers).toEqual([]);
+  it('rejects an empty-string trigger as no trigger (unreachable lesson)', async () => {
+    await expect(
+      lessonsHandlers.add(ctx, {
+        rule: 'Empty trigger string.',
+        topic: 'topic-x',
+        trigger_files: '',
+      }),
+    ).rejects.toThrow(/at least one trigger/i);
   });
 
   it('accepts the CLI-flag aliases trigger_file / trigger_cmd / trigger_kw', async () => {

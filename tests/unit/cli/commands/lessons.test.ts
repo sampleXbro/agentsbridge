@@ -96,11 +96,21 @@ describe('runLessons query', () => {
     expect(json.format).toBe('json');
   });
 
-  it('returns empty when no flag is supplied', async () => {
+  it('rejects a query with no predicate (exit 2)', async () => {
     seedSimpleGraph();
     const r = await runLessons({}, ['query'], root);
+    expect(r.exitCode).toBe(2);
+    expect(r.error).toMatch(/--file|--cmd|--keyword/);
+  });
+
+  it('warns on keyword-only recall (no --file/--cmd) but still returns results', async () => {
+    seedSimpleGraph();
+    const r = await runLessons({ keyword: 'paths' }, ['query'], root);
+    expect(r.subcommand).toBe('query');
     if (r.subcommand !== 'query') return;
-    expect(r.data.lessons).toEqual([]);
+    expect(r.exitCode).toBe(0);
+    expect(r.data.warning).toMatch(/keyword-only/i);
+    expect(r.data.warning).toMatch(/--file/);
   });
 
   it('rejects an invalid --format value with a usage error (exit 2)', async () => {
@@ -200,7 +210,11 @@ describe('runLessons add', () => {
 
   it('accepts the rule as a positional arg (the documented `add "<rule>" --topic` form)', async () => {
     seedSimpleGraph();
-    const r = await runLessons({ topic: 'topic-x' }, ['add', 'Positional rule body.'], root);
+    const r = await runLessons(
+      { topic: 'topic-x', 'trigger-file': 'src/**' },
+      ['add', 'Positional rule body.'],
+      root,
+    );
     expect(r.subcommand).toBe('add');
     if (r.subcommand !== 'add') return;
     expect(r.exitCode).toBe(0);
@@ -211,7 +225,7 @@ describe('runLessons add', () => {
   it('prefers --rule over the positional arg when both are supplied', async () => {
     seedSimpleGraph();
     const r = await runLessons(
-      { topic: 'topic-x', rule: 'Flag rule.' },
+      { topic: 'topic-x', rule: 'Flag rule.', 'trigger-file': 'src/**' },
       ['add', 'Positional rule.'],
       root,
     );

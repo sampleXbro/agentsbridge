@@ -1,5 +1,5 @@
 import type { McpContext } from '../context.js';
-import { UnknownTopicError } from '../../lessons/add.js';
+import { NoTriggerError, UnknownTopicError } from '../../lessons/add.js';
 import { maybeAutoMigrateLessons } from '../../lessons/auto-migrate.js';
 import { tryLoadLessonsGraph } from '../../lessons/graph-store.js';
 import { captureLesson, recallLessons } from '../../lessons/recall.js';
@@ -89,6 +89,17 @@ export const lessonsHandlers = {
       command: input.command ?? input.cmd,
       keyword: input.keyword,
     };
+    if (query.file === undefined && query.command === undefined && query.keyword === undefined) {
+      throw new Error(
+        'lessons_query: provide at least one of file, command, or keyword to recall against.',
+      );
+    }
+    if (query.file === undefined && query.command === undefined) {
+      process.stderr.write(
+        'agentsmesh: keyword-only recall misses file_glob/command_pattern lessons — ' +
+          'pass file and/or command for complete recall.\n',
+      );
+    }
     const {
       lessons: ranked,
       totalMatches,
@@ -184,6 +195,9 @@ export const lessonsHandlers = {
           `lessons_add: unknown topic "${err.topic}". Pass new_topic=true + topic_summary to create it.`,
           { cause: err },
         );
+      }
+      if (err instanceof NoTriggerError) {
+        throw new Error(`lessons_add: ${err.message}`, { cause: err });
       }
       throw err;
     }

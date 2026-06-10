@@ -92,7 +92,9 @@ export async function handleGenerateOrDryRun(
 
   const release = dryRun
     ? null
-    : await acquireProcessLock(join(context.canonicalDir, '.generate.lock'));
+    : await acquireProcessLock(join(context.canonicalDir, '.generate.lock'), {
+        label: 'generate lock',
+      });
   try {
     if (!dryRun) {
       for (const r of results) {

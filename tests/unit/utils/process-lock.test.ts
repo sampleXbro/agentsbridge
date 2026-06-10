@@ -61,6 +61,40 @@ describe('acquireProcessLock', () => {
     }
   });
 
+  it('surfaces the provided label in the LockAcquisitionError message', async () => {
+    const lockPath = join(TEST_DIR, '.generate.lock');
+    const first = await acquireProcessLock(lockPath);
+    try {
+      const err = await acquireProcessLock(lockPath, {
+        retries: 0,
+        retryDelayMs: 5,
+        staleMs: 60_000,
+        label: 'generate lock',
+      }).catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(LockAcquisitionError);
+      expect((err as LockAcquisitionError).message).toContain('generate lock');
+      expect((err as LockAcquisitionError).label).toBe('generate lock');
+    } finally {
+      await first();
+    }
+  });
+
+  it('defaults the LockAcquisitionError label to a generic "lock" when none is given', async () => {
+    const lockPath = join(TEST_DIR, '.generate.lock');
+    const first = await acquireProcessLock(lockPath);
+    try {
+      const err = await acquireProcessLock(lockPath, {
+        retries: 0,
+        retryDelayMs: 5,
+        staleMs: 60_000,
+      }).catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(LockAcquisitionError);
+      expect((err as LockAcquisitionError).label).toBe('lock');
+    } finally {
+      await first();
+    }
+  });
+
   it('evicts a stale lock (age > staleMs) and acquires it', async () => {
     const lockPath = join(TEST_DIR, '.generate.lock');
     mkdirSync(lockPath, { recursive: true });

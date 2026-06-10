@@ -39,6 +39,8 @@ export interface LockOptions {
   retryDelayMs?: number;
   /** Lock age beyond which an existing lock is treated as stale and evicted. */
   staleMs?: number;
+  /** Human-readable lock name surfaced in LockAcquisitionError, e.g. "lessons lock". */
+  label?: string;
 }
 
 export type LockRelease = () => Promise<void>;
@@ -75,7 +77,7 @@ export async function acquireProcessLock(
 
     if (attempt >= retries) {
       const holder = existing === 'young' ? null : existing;
-      throw new LockAcquisitionError(lockPath, describeHolder(holder));
+      throw new LockAcquisitionError(lockPath, describeHolder(holder), { label: opts.label });
     }
     attempt++;
     await sleep(delay);

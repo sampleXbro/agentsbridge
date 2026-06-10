@@ -29,5 +29,5 @@ export async function acquireLessonsLock(
 ): Promise<LockRelease> {
   const lockPath = lessonsLockPath(projectRoot);
   await mkdir(dirname(lockPath), { recursive: true });
-  return acquireProcessLock(lockPath, opts);
+  return acquireProcessLock(lockPath, { ...opts, label: 'lessons lock' });
 }

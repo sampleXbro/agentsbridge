@@ -98,17 +98,21 @@ export class RemoteFetchError extends AgentsMeshError {
 export class LockAcquisitionError extends AgentsMeshError {
   readonly lockPath: string;
   readonly holder: string;
+  /** Human-readable lock name surfaced in the message, e.g. "lessons lock". */
+  readonly label: string;
 
-  constructor(lockPath: string, holder: string, options?: { cause?: unknown }) {
+  constructor(lockPath: string, holder: string, options?: { cause?: unknown; label?: string }) {
+    const label = options?.label ?? 'lock';
     super(
       'AM_LOCK_ACQUISITION_FAILED',
-      `Could not acquire generate lock at ${lockPath}: currently held by ${holder}. ` +
+      `Could not acquire ${label} at ${lockPath}: currently held by ${holder}. ` +
         `Wait for the other process to finish, or remove ${lockPath} manually if you are sure no agentsmesh process is running.`,
       options,
     );
     this.name = 'LockAcquisitionError';
     this.lockPath = lockPath;
     this.holder = holder;
+    this.label = label;
   }
 }
 

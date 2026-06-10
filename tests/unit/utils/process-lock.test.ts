@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mkdirSync, rmSync, writeFileSync, existsSync, utimesSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -164,5 +164,25 @@ describe('acquireProcessLock', () => {
     // exhaust its retries and reject — never evict the dir nor double-acquire.
     await expect(acquireAttempt).rejects.toBeInstanceOf(LockAcquisitionError);
     expect(existsSync(lockPath)).toBe(true);
+  });
+});
+
+describe('acquireProcessLock — signal handling', () => {
+  it('on SIGINT: removes the lock dir AND re-raises so the process terminates', async () => {
+    const lockPath = join(TEST_DIR, '.signal.lock');
+    await acquireProcessLock(lockPath);
+    expect(existsSync(lockPath)).toBe(true);
+
+    // Stub the re-raise so the test process survives; assert it was attempted —
+    // without it, a registered listener suppresses the default terminate and the
+    // critical section would keep running with its lock already removed.
+    const kill = vi.spyOn(process, 'kill').mockReturnValue(true);
+    try {
+      process.emit('SIGINT', 'SIGINT');
+      expect(existsSync(lockPath)).toBe(false);
+      expect(kill).toHaveBeenCalledWith(process.pid, 'SIGINT');
+    } finally {
+      kill.mockRestore();
+    }
   });
 });

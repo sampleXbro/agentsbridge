@@ -101,25 +101,34 @@ async function tryAcquire(lockPath: string): Promise<LockRelease | null> {
   await writeFile(metadataPath, JSON.stringify(metadata), 'utf-8');
 
   let released = false;
-  const signalHandler = (): void => {
+  const cleanup = (): void => {
     if (released) return;
     released = true;
     try {
       rmSync(lockPath, { recursive: true, force: true });
     } catch {
-      // Best-effort cleanup on signal.
+      // Best-effort cleanup on signal/exit.
     }
+  };
+  const signalHandler = (signal: NodeJS.Signals): void => {
+    cleanup();
+    // Re-raise: a registered listener suppresses the default terminate, so
+    // without this the FIRST Ctrl-C would not exit and the critical section
+    // would keep running after its lock dir was already removed. `once` has
+    // deregistered this listener, so the re-raised signal takes the default
+    // disposition (or reaches any other handler the host registered).
+    process.kill(process.pid, signal);
   };
   process.once('SIGINT', signalHandler);
   process.once('SIGTERM', signalHandler);
-  process.once('exit', signalHandler);
+  process.once('exit', cleanup);
 
   return async () => {
     if (released) return;
     released = true;
     process.off('SIGINT', signalHandler);
     process.off('SIGTERM', signalHandler);
-    process.off('exit', signalHandler);
+    process.off('exit', cleanup);
     await rm(lockPath, { recursive: true, force: true }).catch(() => {});
   };
 }

@@ -1,5 +1,8 @@
 import { z } from 'zod';
 
+/** Schema version this build reads/writes. A graph stamped higher is from a newer CLI. */
+export const CURRENT_GRAPH_VERSION = 1;
+
 const IdSchema = z.string().regex(/^[a-z0-9-]+$/, 'id must be kebab-case');
 const DateSchema = z
   .string()
@@ -40,7 +43,7 @@ const LessonSchema = z
 
 export const LessonsGraphSchema = z
   .object({
-    version: z.literal(1),
+    version: z.literal(CURRENT_GRAPH_VERSION),
     lessons: z.record(IdSchema, LessonSchema),
     topics: z.record(IdSchema, TopicSchema),
     triggers: z.record(IdSchema, TriggerSchema),

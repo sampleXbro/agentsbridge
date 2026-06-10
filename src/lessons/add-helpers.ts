@@ -23,7 +23,13 @@ export function mergeTriggers(
   spec: AddLessonTriggers,
 ): { triggerIds: string[]; newTriggerIds: string[] } {
   const requested: TriggerSpec[] = [
-    ...(spec.files ?? []).map((p): TriggerSpec => ({ kind: 'file_glob', pattern: p })),
+    // Normalize `\` → `/` so a Windows-shaped glob matches: recall relativizes
+    // every `--file` to forward slashes (normalizeRecallFile), so a backslash
+    // pattern stored raw would silently never fire. Normalizing here also lets
+    // a backslash pattern dedupe against the forward-slash node it equals.
+    ...(spec.files ?? []).map(
+      (p): TriggerSpec => ({ kind: 'file_glob', pattern: p.replaceAll('\\', '/') }),
+    ),
     ...(spec.commands ?? []).map((p): TriggerSpec => ({ kind: 'command_pattern', pattern: p })),
     ...(spec.keywords ?? []).map((p): TriggerSpec => ({ kind: 'keyword', pattern: p })),
   ];

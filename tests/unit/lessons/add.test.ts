@@ -95,6 +95,33 @@ describe('addLesson', () => {
     expect(kinds.sort()).toEqual(['command_pattern', 'file_glob', 'keyword']);
   });
 
+  it('normalizes backslashes in file_glob trigger patterns to forward slashes', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    const result = await addLesson(root, {
+      ...baseInput,
+      triggers: { files: ['src\\cli\\**\\*.ts'] },
+    });
+    const graph = loadLessonsGraph(root);
+    const patterns = result.newTriggerIds.map((id) => graph.triggers[id]?.pattern);
+    expect(patterns).toEqual(['src/cli/**/*.ts']);
+  });
+
+  it('dedupes a backslash file_glob against the forward-slash node it normalizes to', async () => {
+    seedGraph({
+      version: 1,
+      lessons: {},
+      topics: baseTopics,
+      triggers: { 't-existing': { kind: 'file_glob', pattern: 'src/cli/**/*.ts' } },
+    });
+    const result = await addLesson(root, {
+      ...baseInput,
+      triggers: { files: ['src\\cli\\**\\*.ts'] },
+    });
+    expect(result.newTriggerIds).toEqual([]);
+    const graph = loadLessonsGraph(root);
+    expect(Object.keys(graph.triggers)).toEqual(['t-existing']);
+  });
+
   it('is idempotent: re-adding the same rule + topic returns the same id and does not duplicate triggers', async () => {
     seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
     const first = await addLesson(root, baseInput);

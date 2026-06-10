@@ -68,6 +68,30 @@ export function collectInvalidTriggerPatterns(
 }
 
 /**
+ * A `file_glob` trigger whose pattern contains a backslash is dead: recall
+ * relativizes every `--file` input to forward slashes (normalizeRecallFile),
+ * so picomatch never matches a backslash pattern and the lesson silently
+ * becomes unreachable via that trigger. `add` normalizes new patterns; this is
+ * the `validate` counterpart that surfaces any backslash pattern stored before
+ * the normalization existed (or inserted by a hand-edit).
+ */
+export function collectBackslashGlobPatterns(
+  graph: LessonsGraph,
+  findings: ValidationFinding[],
+): void {
+  for (const [triggerId, trigger] of Object.entries(graph.triggers)) {
+    if (trigger.kind !== 'file_glob') continue;
+    if (!trigger.pattern.includes('\\')) continue;
+    findings.push({
+      level: 'error',
+      code: 'BACKSLASH_GLOB_PATTERN',
+      message: `Trigger "${triggerId}" has a file_glob pattern with a backslash (${trigger.pattern}); recall normalizes paths to forward slashes, so it never fires. Replace \\ with /.`,
+      triggerId,
+    });
+  }
+}
+
+/**
  * Trigger ids are content-addressed from (kind, pattern), so `add` can never
  * create two nodes for the same pattern. Validation enforces the invariant
  * structurally — a public/low-level mutation (or hand-edit) that inserts a

@@ -60,6 +60,12 @@ export interface RecallResult {
    * this so a corrupt graph is a visible warning, not silent zero recall.
    */
   readonly corrupt?: boolean;
+  /**
+   * Set to the on-disk schema version when the graph is newer than this build
+   * understands. Recall degrades to empty (like `corrupt`) but callers surface
+   * an upgrade hint rather than a "corrupt" warning.
+   */
+  readonly newerVersion?: number;
 }
 
 /**
@@ -74,6 +80,9 @@ export async function recallLessons(
   await maybeAutoMigrateLessons(projectRoot);
   const load = loadLessonsGraphResilient(projectRoot);
   if (load.status === 'corrupt') return { lessons: [], totalMatches: 0, corrupt: true };
+  if (load.status === 'newer-version') {
+    return { lessons: [], totalMatches: 0, newerVersion: load.version };
+  }
   if (load.status === 'absent') return { lessons: [], totalMatches: 0 };
   const graph = load.graph;
   // Normalize the file path so a project-relative glob matches regardless of the

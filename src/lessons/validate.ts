@@ -8,6 +8,7 @@ import {
   collectStatusInvariants,
 } from './validate-checks.js';
 import {
+  collectBackslashGlobPatterns,
   collectDuplicateRules,
   collectDuplicateTriggers,
   collectFanout,
@@ -52,6 +53,7 @@ export function validateLessonsGraph(graph: LessonsGraph): ValidationReport {
   collectDuplicateRules(graph, findings);
   collectReachability(graph, findings);
   collectInvalidTriggerPatterns(graph, findings);
+  collectBackslashGlobPatterns(graph, findings);
   collectDuplicateTriggers(graph, findings);
   collectOrphans(graph, findings);
   collectFanout(graph, findings);

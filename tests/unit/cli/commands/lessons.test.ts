@@ -157,6 +157,22 @@ describe('runLessons query', () => {
     expect(r.data.lessons).toEqual([]);
     expect(r.data.warning).toMatch(/corrupt|unreadable/i);
   });
+
+  it('degrades with an upgrade hint (not "corrupt") when lessons.json is a newer version', async () => {
+    mkdirSync(dirname(graphFilePath(root)), { recursive: true });
+    writeFileSync(
+      graphFilePath(root),
+      JSON.stringify({ version: 2, lessons: {}, topics: {}, triggers: {} }),
+      'utf8',
+    );
+    const r = await runLessons({ file: 'src/x.ts' }, ['query'], root);
+    expect(r.subcommand).toBe('query');
+    if (r.subcommand !== 'query') return;
+    expect(r.exitCode).toBe(0);
+    expect(r.data.lessons).toEqual([]);
+    expect(r.data.warning).toMatch(/newer|upgrade/i);
+    expect(r.data.warning ?? '').not.toMatch(/corrupt/i);
+  });
 });
 
 describe('runLessons add', () => {

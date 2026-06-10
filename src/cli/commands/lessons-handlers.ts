@@ -1,3 +1,4 @@
+import { CURRENT_GRAPH_VERSION } from '../../lessons/graph-schema.js';
 import { loadLessonsGraphResilient, tryLoadLessonsGraph } from '../../lessons/graph-store.js';
 import { normalizeRecallFile } from '../../lessons/normalize-query-file.js';
 import { queryLessons } from '../../lessons/query.js';
@@ -81,6 +82,18 @@ export function doQuery(
       autoMigrated,
       totalMatches: 0,
       warning: `lessons.json is unreadable (corrupt) — recall returned no lessons. Run \`agentsmesh lessons validate\`. (${load.error.message})`,
+    };
+    return { subcommand: 'query', exitCode: 0, format, data };
+  }
+  if (load.status === 'newer-version') {
+    // The graph is fine; this CLI is behind. Degrade to empty with an upgrade
+    // hint instead of the misleading "corrupt" warning.
+    const data: LessonsQueryData = {
+      lessons: [],
+      query,
+      autoMigrated,
+      totalMatches: 0,
+      warning: `lessons.json is version ${load.version}, newer than this build supports (${CURRENT_GRAPH_VERSION}) — recall returned no lessons. Upgrade agentsmesh to read it.`,
     };
     return { subcommand: 'query', exitCode: 0, format, data };
   }

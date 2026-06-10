@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { parseGraph, type LessonsGraph } from './graph-schema.js';
+import { CURRENT_GRAPH_VERSION, parseGraph, type LessonsGraph } from './graph-schema.js';
 
 const GRAPH_REL_PATH = '.agentsmesh/lessons/lessons.json';
 
@@ -22,6 +22,7 @@ export function tryLoadLessonsGraph(projectRoot: string): LessonsGraph | null {
 export type ResilientGraphLoad =
   | { status: 'absent'; graph: null }
   | { status: 'ok'; graph: LessonsGraph }
+  | { status: 'newer-version'; graph: null; version: number }
   | { status: 'corrupt'; graph: null; error: Error };
 
 /**
@@ -32,12 +33,22 @@ export type ResilientGraphLoad =
  * Callers surface the `corrupt` outcome as a user-facing warning; the throwing
  * {@link loadLessonsGraph} stays the contract for paths that WANT to fail loud
  * (lint, validate).
+ *
+ * A graph stamped with a numeric `version` greater than this build's
+ * {@link CURRENT_GRAPH_VERSION} is reported as `newer-version` (not `corrupt`):
+ * the file is fine, the CLI is simply behind, so callers can show an upgrade
+ * hint instead of a misleading "corrupt" warning.
  */
 export function loadLessonsGraphResilient(projectRoot: string): ResilientGraphLoad {
   const path = graphFilePath(projectRoot);
   if (!existsSync(path)) return { status: 'absent', graph: null };
   try {
-    return { status: 'ok', graph: parseGraph(JSON.parse(readFileSync(path, 'utf8'))) };
+    const parsed: unknown = JSON.parse(readFileSync(path, 'utf8'));
+    const version = (parsed as { version?: unknown } | null)?.version;
+    if (typeof version === 'number' && version > CURRENT_GRAPH_VERSION) {
+      return { status: 'newer-version', graph: null, version };
+    }
+    return { status: 'ok', graph: parseGraph(parsed) };
   } catch (error) {
     return {
       status: 'corrupt',

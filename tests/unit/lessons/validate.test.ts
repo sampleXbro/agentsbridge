@@ -27,6 +27,27 @@ describe('validateLessonsGraph', () => {
     expect(r.findings).toEqual([]);
   });
 
+  it('flags a file_glob trigger pattern containing a backslash as an error', () => {
+    const g = baseGraph();
+    g.triggers['t-glob'] = { kind: 'file_glob', pattern: 'src\\**' };
+    const r = validateLessonsGraph(g);
+    expect(r.ok).toBe(false);
+    expect(r.findings).toContainEqual(
+      expect.objectContaining({
+        level: 'error',
+        code: 'BACKSLASH_GLOB_PATTERN',
+        triggerId: 't-glob',
+      }),
+    );
+  });
+
+  it('does not flag a backslash in a command_pattern trigger (only file_glob)', () => {
+    const g = baseGraph();
+    g.triggers['t-glob'] = { kind: 'command_pattern', pattern: 'rg\\s+foo' };
+    const r = validateLessonsGraph(g);
+    expect(r.findings.some((f) => f.code === 'BACKSLASH_GLOB_PATTERN')).toBe(false);
+  });
+
   it('flags a dangling topic reference as an error', () => {
     const g = baseGraph();
     g.lessons['a-rule'].topics = ['missing'];

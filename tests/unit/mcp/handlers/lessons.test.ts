@@ -448,3 +448,62 @@ describe('lessonsHandlers.add — input coercion + CLI-flag aliases', () => {
     expect(graph.triggers[ids[0]!]?.pattern).toBe('src/canon/**');
   });
 });
+
+describe('lessonsHandlers.show', () => {
+  it('returns the topic summary and its lessons with status + metadata', async () => {
+    const r = await lessonsHandlers.show(ctx, { topic: 'topic-x' });
+    expect(r.topic).toBe('topic-x');
+    expect(r.summary).toBe('Topic X.');
+    expect(r.lessons).toEqual([
+      {
+        id: 'topic-x-rule-1',
+        rule: 'Normalize CLI paths.',
+        status: 'active',
+        topics: ['topic-x'],
+        triggers: ['t-glob'],
+        evidence: [],
+      },
+    ]);
+  });
+
+  it('throws on an unknown topic', async () => {
+    await expect(lessonsHandlers.show(ctx, { topic: 'ghost' })).rejects.toThrow(/unknown topic/i);
+  });
+});
+
+describe('lessonsHandlers.deprecate', () => {
+  it('flips a lesson to deprecated and excludes it from subsequent recall', async () => {
+    const before = await lessonsHandlers.query(ctx, { file: 'src/cli/x.ts' });
+    expect(before.lessons.map((l) => l.id)).toEqual(['topic-x-rule-1']);
+
+    const r = await lessonsHandlers.deprecate(ctx, { id: 'topic-x-rule-1' });
+    expect(r).toEqual({ id: 'topic-x-rule-1', status: 'deprecated', supersededBy: null });
+    expect(loadLessonsGraph(projectRoot).lessons['topic-x-rule-1']?.status).toBe('deprecated');
+
+    const after = await lessonsHandlers.query(ctx, { file: 'src/cli/x.ts' });
+    expect(after.lessons).toEqual([]);
+  });
+
+  it('supersedes a lesson when superseded_by points at another lesson', async () => {
+    await lessonsHandlers.add(ctx, {
+      rule: 'The replacement rule.',
+      topic: 'topic-x',
+      trigger_files: ['src/cli/**/*.ts'],
+    });
+    const replacement = loadLessonsGraph(projectRoot);
+    const replacementId = Object.keys(replacement.lessons).find((id) => id !== 'topic-x-rule-1');
+    const r = await lessonsHandlers.deprecate(ctx, {
+      id: 'topic-x-rule-1',
+      superseded_by: replacementId,
+    });
+    expect(r.status).toBe('superseded');
+    expect(r.supersededBy).toBe(replacementId);
+    expect(loadLessonsGraph(projectRoot).lessons['topic-x-rule-1']?.supersededBy).toBe(
+      replacementId,
+    );
+  });
+
+  it('throws on an unknown lesson id', async () => {
+    await expect(lessonsHandlers.deprecate(ctx, { id: 'nope' })).rejects.toThrow(/unknown lesson/i);
+  });
+});

@@ -1,6 +1,24 @@
-import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
+import {
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { dirname, join } from 'node:path';
 import { lessonsPaths } from './paths.js';
+
+/** Keep at most this many recall records; older ones are dropped on truncation. */
+export const MAX_RECALL_LOG_RECORDS = 5000;
+
+/**
+ * Byte size past which {@link appendRecallRecord} truncates the log. Generous
+ * headroom over {@link MAX_RECALL_LOG_RECORDS} worth of records so trimming is
+ * rare (each append pays only a cheap `statSync`, never a full read).
+ */
+const RECALL_LOG_TRIM_TRIGGER_BYTES = 2_000_000;
 
 /**
  * Opt-in recall telemetry. Mandatory recall runs before every edit/command, so
@@ -60,6 +78,29 @@ export function appendRecallRecord(
   const path = recallLogPath(projectRoot);
   mkdirSync(dirname(path), { recursive: true });
   appendFileSync(path, `${JSON.stringify(record)}\n`, 'utf8');
+  // Bound the append-only log: cheap statSync on each write, full rewrite only
+  // when it has grown past the trigger. Keeps a committed `.agentsmesh/` from
+  // accumulating an ever-growing diagnostic file.
+  if (statSync(path).size > RECALL_LOG_TRIM_TRIGGER_BYTES) capRecallLog(projectRoot);
+}
+
+/**
+ * Truncate the recall log to its last {@link MAX_RECALL_LOG_RECORDS} records
+ * (or `maxRecords` when given). No-op when the log is absent or already within
+ * the cap. Rewrites atomically (temp + rename) so a reader never sees a torn
+ * file. Idempotent and safe to call from any startup/append path.
+ */
+export function capRecallLog(projectRoot: string, maxRecords = MAX_RECALL_LOG_RECORDS): void {
+  const path = recallLogPath(projectRoot);
+  if (!existsSync(path)) return;
+  const lines = readFileSync(path, 'utf8')
+    .split('\n')
+    .filter((l) => l.trim().length > 0);
+  if (lines.length <= maxRecords) return;
+  const kept = lines.slice(lines.length - maxRecords);
+  const tmp = `${path}.${process.pid}.tmp`;
+  writeFileSync(tmp, `${kept.join('\n')}\n`, 'utf8');
+  renameSync(tmp, path);
 }
 
 /** True when a recall log exists — distinguishes "never recorded" from "empty". */

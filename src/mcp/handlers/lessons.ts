@@ -3,6 +3,7 @@ import { UnknownTopicError } from '../../lessons/add.js';
 import { maybeAutoMigrateLessons } from '../../lessons/auto-migrate.js';
 import { tryLoadLessonsGraph } from '../../lessons/graph-store.js';
 import { captureLesson, recallLessons } from '../../lessons/recall.js';
+import { lessonsDeprecate, lessonsShow } from './lessons-curation.js';
 
 interface LessonsQueryInput {
   readonly file?: string;
@@ -92,6 +93,7 @@ export const lessonsHandlers = {
       lessons: ranked,
       totalMatches,
       corrupt,
+      newerVersion,
     } = await recallLessons(ctx.projectRoot, query, {
       limit: input.limit,
       maxTokens: input.max_tokens ?? input['max-tokens'],
@@ -101,6 +103,10 @@ export const lessonsHandlers = {
       // stderr (stdout is the MCP protocol channel) so the server log shows it.
       process.stderr.write(
         'agentsmesh: lessons.json is unreadable (corrupt) — recall returned no lessons. Run `agentsmesh lessons validate`.\n',
+      );
+    } else if (newerVersion !== undefined) {
+      process.stderr.write(
+        `agentsmesh: lessons.json is version ${newerVersion}, newer than this build supports — recall returned no lessons. Upgrade agentsmesh to read it.\n`,
       );
     }
     // Compact by default — return only id + rule to keep recall token-cheap.
@@ -133,6 +139,10 @@ export const lessonsHandlers = {
         .sort((a, b) => (a.id < b.id ? -1 : 1)),
     };
   },
+
+  show: lessonsShow,
+
+  deprecate: lessonsDeprecate,
 
   async add(
     ctx: McpContext,

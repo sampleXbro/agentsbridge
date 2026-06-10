@@ -99,4 +99,29 @@ export const LESSONS_TOOL_DESCRIPTORS: ToolDescriptor[] = [
     inputSchema: z.object({}).strict(),
     handler: (ctx) => lessonsHandlers.topics(ctx),
   },
+  {
+    name: 'lessons_show',
+    description:
+      'Inspect a topic — return its summary and every lesson under it (id, rule, status, triggers, evidence), including deprecated/superseded ones. Use to find the id of a stale lesson before lessons_deprecate.',
+    inputSchema: z
+      .object({ topic: z.string().min(1).describe('Topic id to inspect (see lessons_topics).') })
+      .strict(),
+    handler: (ctx, i) => lessonsHandlers.show(ctx, i as never),
+  },
+  {
+    name: 'lessons_deprecate',
+    description:
+      'Curation primitive — retire a lesson so recall stops returning it. With `superseded_by` the lesson is marked superseded by that replacement; without it the lesson is plainly deprecated. Throws on an unknown lesson or superseder.',
+    inputSchema: z
+      .object({
+        id: z.string().min(1).describe('Lesson id to retire (see lessons_show).'),
+        superseded_by: z
+          .string()
+          .min(1)
+          .optional()
+          .describe('Replacement lesson id; omit for a plain deprecation.'),
+      })
+      .strict(),
+    handler: (ctx, i) => lessonsHandlers.deprecate(ctx, i as never),
+  },
 ];

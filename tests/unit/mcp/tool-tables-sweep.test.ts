@@ -84,6 +84,8 @@ const MINIMAL_INPUTS: Record<string, unknown> = {
     trigger_files: ['src/**'],
   },
   lessons_topics: {},
+  lessons_show: { topic: 'sweep-topic' },
+  lessons_deprecate: { id: 'sweep-topic-sweep-lesson' },
 };
 
 beforeEach(async () => {
@@ -110,8 +112,8 @@ afterEach(async () => {
 });
 
 describe('tool-tables sweep — every descriptor handler arrow runs', () => {
-  it('covers all 48 descriptor handlers without exception leak', async () => {
-    expect(TOOL_DESCRIPTORS.length).toBe(48);
+  it('covers all 50 descriptor handlers without exception leak', async () => {
+    expect(TOOL_DESCRIPTORS.length).toBe(50);
     const missingFixtures = TOOL_DESCRIPTORS.filter((d) => !(d.name in MINIMAL_INPUTS));
     expect(missingFixtures.map((d) => d.name)).toEqual([]);
 

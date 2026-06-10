@@ -1,5 +1,6 @@
 import { existsSync } from 'node:fs';
 import { addLesson, UnknownTopicError } from '../../lessons/add.js';
+import { deprecateLesson } from '../../lessons/deprecate.js';
 import { graphFilePath } from '../../lessons/graph-store.js';
 import { importLegacyLessons } from '../../lessons/import-legacy.js';
 import { lessonsPaths } from '../../lessons/paths.js';
@@ -102,20 +103,8 @@ export async function doDeprecate(
   }
   const supersededBy = stringFlag(flags, 'superseded-by');
   try {
-    const data = await mutateLessonsGraph(projectRoot, (graph) => {
-      const target = graph.lessons[lessonId];
-      if (target === undefined) throw new Error(`Unknown lesson: ${lessonId}`);
-      if (supersededBy !== null && graph.lessons[supersededBy] === undefined) {
-        throw new Error(`Unknown superseder: ${supersededBy}`);
-      }
-      graph.lessons[lessonId] = {
-        ...target,
-        status: supersededBy === null ? 'deprecated' : 'superseded',
-        ...(supersededBy === null ? {} : { supersededBy }),
-      };
-      return { id: lessonId, supersededBy };
-    });
-    return { subcommand: 'deprecate', exitCode: 0, data };
+    const { id, supersededBy: by } = await deprecateLesson(projectRoot, lessonId, supersededBy);
+    return { subcommand: 'deprecate', exitCode: 0, data: { id, supersededBy: by } };
   } catch (err) {
     return errorResult('deprecate', errMessage(err), 1);
   }

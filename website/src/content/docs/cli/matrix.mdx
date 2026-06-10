@@ -52,7 +52,7 @@ agentsmesh matrix --global
 
 ## Sample output
 
-Column headers match the `targets` list in your `agentsmesh.yaml` (here: every built-in target). Feature labels include counts when your canonical tree has items (for example `commands (2)` or `additional rules (1)`). Set `NO_COLOR=1` to print plain symbols without ANSI colors. The block below illustrates **project-scope** catalog symbols for that full target list.
+Column headers match the `targets` list in your `agentsmesh.yaml` (here: every built-in target). Feature labels include counts when your canonical tree has items (for example `commands (2)` or `additional rules (1)`). Colors are emitted only when output is an interactive terminal: piped or redirected output (for example `agentsmesh matrix | cat`) prints plain symbols with no ANSI codes, so consumers like scripts and AI agents get clean text. Set `NO_COLOR=1` to force plain symbols even in a terminal, or `FORCE_COLOR=1` to keep colors when piping. The block below illustrates **project-scope** catalog symbols for that full target list.
 
 ```
 ┌────────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┐

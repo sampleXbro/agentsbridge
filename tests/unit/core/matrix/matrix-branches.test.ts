@@ -24,6 +24,7 @@ function baseCanonical(): CanonicalFiles {
 
 afterEach(() => {
   delete process.env['NO_COLOR'];
+  delete process.env['FORCE_COLOR'];
 });
 
 describe('formatVerboseDetails — empty/edge branches', () => {
@@ -72,9 +73,10 @@ describe('formatVerboseDetails — empty/edge branches', () => {
   });
 });
 
-describe('coloredSymbol / noColor branches', () => {
-  it('emits ANSI color codes when NO_COLOR is unset', () => {
+describe('coloredSymbol / color-decision branches', () => {
+  it('emits ANSI color codes when color is forced', () => {
     delete process.env['NO_COLOR'];
+    process.env['FORCE_COLOR'] = '1';
     const out = coloredSymbol('native');
     expect(out).toContain(LEVEL_SYMBOL.native);
     expect(out).toContain('\x1b[32m');
@@ -85,8 +87,15 @@ describe('coloredSymbol / noColor branches', () => {
     expect(coloredSymbol('native')).toBe(LEVEL_SYMBOL.native);
   });
 
-  it('still emits color when NO_COLOR is explicitly empty string', () => {
+  it('emits color for an empty NO_COLOR when color is forced', () => {
     process.env['NO_COLOR'] = '';
+    process.env['FORCE_COLOR'] = '1';
     expect(coloredSymbol('native')).toContain('\x1b[32m');
+  });
+
+  it('strips ANSI codes on a non-TTY when NO_COLOR is unset', () => {
+    delete process.env['NO_COLOR'];
+    delete process.env['FORCE_COLOR'];
+    expect(coloredSymbol('native')).toBe(LEVEL_SYMBOL.native);
   });
 });

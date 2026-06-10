@@ -34,6 +34,10 @@ export function renderLessons(result: LessonsCommandResult): void {
       // it. Empty output = inject nothing.
       if (result.data.output.length > 0) process.stdout.write(`${result.data.output}\n`);
       return;
+    case 'merge-driver':
+      // Git captures the exit code; a successful union merge is silent (a failure
+      // already printed its reason via the error-first check above).
+      return;
     case 'query':
       return renderQuery(result.data, result.format);
     case 'add':

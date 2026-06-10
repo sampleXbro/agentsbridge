@@ -10,6 +10,7 @@ import {
   doImportMd,
   doJournal,
   doMerge,
+  doMergeDriver,
   doPrune,
   doQuery,
   doShow,
@@ -68,6 +69,10 @@ export async function runLessons(
       // Internal: invoked by a generated PostToolUse hook, not by a human, so it
       // is intentionally absent from LESSONS_SUBCOMMANDS / help.
       return doHook(projectRoot);
+    case 'merge-driver':
+      // Internal: invoked by git as a merge driver (args = base ours theirs),
+      // not by a human — intentionally absent from LESSONS_SUBCOMMANDS / help.
+      return doMergeDriver(args.slice(1));
     default:
       return {
         subcommand: 'help',

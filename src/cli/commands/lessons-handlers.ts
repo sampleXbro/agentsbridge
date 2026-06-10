@@ -21,6 +21,7 @@ export type { LessonsFlags } from './lessons-helpers.js';
 // Recall (read-heavy, dedup-aware) lives in its own module; re-exported so the
 // dispatcher keeps importing every handler from here.
 export { doQuery } from './lessons-query-handler.js';
+export { doMergeDriver } from './lessons-merge-driver-handler.js';
 // Write-side handlers live in a sibling module to keep each file focused.
 export {
   doAdd,

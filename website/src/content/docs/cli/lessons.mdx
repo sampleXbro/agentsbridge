@@ -217,7 +217,20 @@ When a recall surfaces a rule that does not belong, you do not need to open `les
 
 `lessons.json` is a single git-tracked file, serialized deterministically (stable key order, trailing newline) so lesson changes show up as readable, reviewable diffs in a PR. Two caveats for teams:
 
-- **Parallel captures on separate branches can conflict** at merge time (both edit the same JSON tables). The deterministic serialization keeps a manual resolution tractable, and `agentsmesh lessons validate` (run in CI via `agentsmesh lint`) catches a botched resolution before it ships. A union merge driver is on the roadmap.
+- **Parallel captures on separate branches** would otherwise conflict at merge time (both edit the same JSON tables). Wire the bundled **union merge driver** and git resolves them automatically — each branch's new lessons/topics/triggers are merged by key, with a deprecated lesson winning a divergent edit. Set it up once per clone:
+
+  ```bash
+  git config merge.agentsmesh-lessons.name "agentsmesh lessons union"
+  git config merge.agentsmesh-lessons.driver "agentsmesh lessons merge-driver %O %A %B"
+  ```
+
+  and commit a `.gitattributes` entry so the driver is used for the graph:
+
+  ```
+  .agentsmesh/lessons/lessons.json merge=agentsmesh-lessons
+  ```
+
+  The driver writes nothing and exits non-zero if a side is unparseable or the merged graph fails validation, so git falls back to ordinary conflict markers rather than persisting a bad merge. `agentsmesh lessons validate` (run in CI via `agentsmesh lint`) is the backstop.
 - **Worktrees / discarded branches**: the graph lives in the working tree, so a lesson captured in a worktree or branch that is later discarded is lost with it. Commit captures you want to keep.
 
 ## See also

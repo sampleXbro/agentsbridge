@@ -79,6 +79,15 @@ export function serializeGraph(graph: LessonsGraph): string {
   return `${JSON.stringify(canonicalize(graph), null, 2)}\n`;
 }
 
+/**
+ * Order-independent canonical string for a value — equal content compares equal
+ * regardless of key insertion order. Used by the merge driver to tell an
+ * unchanged record from a genuinely divergent one.
+ */
+export function stableStringify(value: unknown): string {
+  return JSON.stringify(canonicalize(value));
+}
+
 function canonicalize(value: unknown): unknown {
   if (value === null) return null;
   if (Array.isArray(value)) return value.map(canonicalize);

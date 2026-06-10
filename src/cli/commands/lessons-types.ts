@@ -149,4 +149,5 @@ export type LessonsCommandResult =
       data: LessonsStatsData;
       error?: string;
     }
-  | { subcommand: 'hook'; exitCode: number; data: { output: string }; error?: string };
+  | { subcommand: 'hook'; exitCode: number; data: { output: string }; error?: string }
+  | { subcommand: 'merge-driver'; exitCode: number; data: { merged: boolean }; error?: string };

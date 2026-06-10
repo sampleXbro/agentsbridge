@@ -44,8 +44,8 @@ describe('LESSONS_USAGE — per-subcommand signatures', () => {
     }
   });
 
-  it('surfaces required positionals — `show` documents its <topic> argument', () => {
-    expect(LESSONS_USAGE.show?.usage).toBe('agentsmesh lessons show <topic>');
+  it('surfaces required positionals — `show` documents its <topic|lesson-id> argument', () => {
+    expect(LESSONS_USAGE.show?.usage).toBe('agentsmesh lessons show <topic|lesson-id>');
   });
 
   it('carries the parenthetical summaries for the annotated subcommands', () => {

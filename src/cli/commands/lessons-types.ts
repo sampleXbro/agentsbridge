@@ -19,6 +19,8 @@ export interface LessonsQueryData {
   readonly totalMatches?: number;
   /** Matched lessons hidden because already delivered this session (dedup). */
   readonly suppressed?: number;
+  /** Prefix each plain/md line with the lesson id (the `--ids` flag) for diagnosis. */
+  readonly showIds?: boolean;
   /** Non-blocking warning (e.g. the canonical graph was corrupt) — shown on stderr. */
   readonly warning?: string;
 }
@@ -36,7 +38,8 @@ export interface LessonsTopicsData {
 }
 
 export interface LessonsShowData {
-  readonly topic: string;
+  /** The topic id or lesson id that was shown. */
+  readonly subject: string;
   readonly markdown: string;
 }
 

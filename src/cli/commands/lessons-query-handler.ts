@@ -142,6 +142,7 @@ export function doQuery(
     autoMigrated,
     totalMatches: matches.length,
     ...(suppressed > 0 ? { suppressed } : {}),
+    ...(flags.ids === true ? { showIds: true } : {}),
     ...(keywordOnlyWarning ? { warning: keywordOnlyWarning } : {}),
   };
   return { subcommand: 'query', exitCode: 0, format, data };

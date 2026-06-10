@@ -121,9 +121,9 @@ describe('printCommandHelp — lessons subcommand focus', () => {
     expect(out).not.toContain('Example:');
   });
 
-  it('shows the required <topic> positional for `show --help`, not a [flags] stub', () => {
+  it('shows the required <topic|lesson-id> positional for `show --help`, not a [flags] stub', () => {
     const out = capture(() => printCommandHelp('lessons', ['show']));
-    expect(out).toContain('agentsmesh lessons show <topic>');
+    expect(out).toContain('agentsmesh lessons show <topic|lesson-id>');
     expect(out).not.toContain('show [flags]');
   });
 

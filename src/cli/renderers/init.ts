@@ -74,4 +74,12 @@ function renderLessons(lessons: NonNullable<InitCommandResult['data']['lessons']
   }
   logger.success('Lessons subsystem ready (.agentsmesh/lessons/).');
   logger.info("  Run 'agentsmesh generate' to sync the ritual into every target.");
+  logger.info('');
+  logger.info('  The graph starts empty and grows as agents capture failures. Try the loop:');
+  logger.info(
+    '    capture:  agentsmesh lessons add "<rule>" --topic <id> --new-topic --topic-summary "<line>" --trigger-file "<glob>"',
+  );
+  logger.info('    recall:   agentsmesh lessons query --file <path> --cmd <command>');
+  logger.info('    inspect:  agentsmesh lessons journal   |   lessons show <id>   |   lessons validate');
+  logger.info('  Optional: export AGENTSMESH_LESSONS_TELEMETRY=1 to measure recall cost via `lessons stats`.');
 }

@@ -86,6 +86,39 @@ export function renderTopicMarkdown(
   return `${lines.join('\n')}\n`;
 }
 
+/**
+ * Full detail for a single lesson — the diagnosis view for `show <lesson-id>`.
+ * Resolves each trigger id to its kind + pattern (so an irrelevant recall can be
+ * traced to the trigger that fired and then retired with `deprecate`/`untrigger`).
+ */
+export function renderLessonMarkdown(
+  id: string,
+  lesson: LessonsGraph['lessons'][string],
+  triggers: LessonsGraph['triggers'],
+): string {
+  const lines = [
+    `# ${id}`,
+    '',
+    `**status:** ${lesson.status}    **created:** ${lesson.createdAt}`,
+    '',
+    lesson.rule,
+    '',
+    `**topics:** ${lesson.topics.length > 0 ? lesson.topics.join(', ') : '(none)'}`,
+    '',
+    '**triggers:**',
+  ];
+  if (lesson.triggers.length === 0) lines.push('- (none)');
+  for (const tid of lesson.triggers) {
+    const t = triggers[tid];
+    lines.push(t ? `- ${tid} [${t.kind}] ${t.pattern}` : `- ${tid} [missing trigger node]`);
+  }
+  lines.push('', `**evidence:** ${lesson.evidence.length > 0 ? lesson.evidence.join(', ') : '(none)'}`);
+  if (lesson.supersededBy !== undefined) {
+    lines.push('', `**superseded by:** ${lesson.supersededBy}`);
+  }
+  return `${lines.join('\n')}\n`;
+}
+
 /** Subcommands that can fail with a user-facing error and a placeholder data shape. */
 type ErrorableSubcommand =
   | 'query'
@@ -119,7 +152,7 @@ export function errorResult(
         data: { id: '', isNewLesson: false, isNewTopic: false, newTriggerIds: [], warnings: [] },
       };
     case 'show':
-      return { subcommand, exitCode, error: message, data: { topic: '', markdown: '' } };
+      return { subcommand, exitCode, error: message, data: { subject: '', markdown: '' } };
     case 'deprecate':
       return { subcommand, exitCode, error: message, data: { id: '', supersededBy: null } };
     case 'merge':

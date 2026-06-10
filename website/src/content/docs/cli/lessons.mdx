@@ -23,7 +23,7 @@ agentsmesh lessons <subcommand> [args] [flags]
 | `query` | Recall primitive — return active lessons whose triggers match the supplied file / command / keyword predicates. |
 | `add` | Capture primitive — atomically add a new lesson, deduplicating triggers against the graph. |
 | `topics` | List every topic with its summary. |
-| `show <topic>` | Render a topic's lessons as Markdown (read-only view). |
+| `show <topic\|lesson-id>` | Render a topic's lessons, OR a single lesson by id — its rule, status, topics, and every trigger resolved to its pattern (the diagnosis view for an irrelevant recall). Read-only. |
 | `deprecate <id>` | Mark a lesson `deprecated`. With `--superseded-by <id>`, mark it `superseded`. |
 | `merge <loser-id> <keeper-id>` | Fold a duplicate lesson into its canonical twin: union the loser's triggers, topics, and evidence onto the keeper, then mark the loser `superseded`. Preserves recall reachability across topics. |
 | `untrigger <lesson-id> <trigger-id>` | Detach one trigger from a lesson in place (e.g. drop a dead `LOW_SIGNAL_KEYWORD` keyword, then re-`add` a short one). Garbage-collects the trigger node when no lesson references it anymore. Refuses to remove the only trigger of an `active` lesson. |
@@ -134,6 +134,7 @@ entirely — `agentsmesh init --lessons` creates the graph directly.
 | `--max-tokens <n>` | Cap results by cumulative estimated rule-token cost. **Approximate** — per-rule cost is estimated as `rule.length / 4`, not a real tokenizer. Defaults to ~400 when omitted. |
 | `--session <id>` | Session correlator for recall **dedup**. Lessons already delivered earlier in the same session are suppressed, so each recall carries only what is new. Defaults to the `AGENTSMESH_SESSION_ID` environment variable; opt-in — with no id, recall is fully stateless (unchanged). The per-session set of delivered lesson ids lives in the OS temp dir, never the project. |
 | `--no-dedup` | Force dedup off for this call even when a session id is set — return the full ranked set including already-seen lessons. |
+| `--ids` | Prefix each `plain`/`md` line with the lesson id, so an irrelevant recall can be traced to `lessons show <id>` and retired with `lessons deprecate <id>`. Off by default to keep recall output paste-clean and token-lean (`--format json` always includes ids). |
 
 Pass **at least one predicate** — a query with no `--file`/`--cmd`/`--keyword` is rejected (exit 2). Always anchor recall to the concrete `--file` you're about to edit (and `--cmd` you're about to run); **keyword-only recall is the anti-pattern** — most lessons are keyed to a `file_glob`/`command_pattern` and silently won't surface, so the CLI prints a warning when you query keyword-only.
 
@@ -203,6 +204,21 @@ Recall runs before each edit and each state-changing command (pure-read commands
 | `--merge` | Fold legacy lessons INTO an existing `lessons.json` (rules dedup by text, triggers content-address and dedup, topics union). The recovery path when a legacy `index.yaml` is stranded alongside a populated graph — no data loss. |
 | `--force` | Overwrite an existing `lessons.json`. Default behavior (with neither `--merge` nor `--force`) is to refuse. |
 | `--migrated-at <ISO date>` | Date stamped onto every imported lesson's `createdAt`. Defaults to today. |
+
+## Diagnosing a recall
+
+When a recall surfaces a rule that does not belong, you do not need to open `lessons.json`:
+
+1. `agentsmesh lessons query --file <path> --ids` — re-run the recall with lesson ids attached (or use `--format json`).
+2. `agentsmesh lessons show <lesson-id>` — inspect that lesson: its rule, status, topics, and **every trigger resolved to its pattern**, so you can see exactly which trigger fired.
+3. Fix it in place — `agentsmesh lessons untrigger <lesson-id> <trigger-id>` to drop an over-broad trigger, or `agentsmesh lessons deprecate <lesson-id>` to retire a rule that is wrong or no longer true (a deprecated lesson stops being recalled immediately).
+
+## Team workflow
+
+`lessons.json` is a single git-tracked file, serialized deterministically (stable key order, trailing newline) so lesson changes show up as readable, reviewable diffs in a PR. Two caveats for teams:
+
+- **Parallel captures on separate branches can conflict** at merge time (both edit the same JSON tables). The deterministic serialization keeps a manual resolution tractable, and `agentsmesh lessons validate` (run in CI via `agentsmesh lint`) catches a botched resolution before it ships. A union merge driver is on the roadmap.
+- **Worktrees / discarded branches**: the graph lives in the working tree, so a lesson captured in a worktree or branch that is later discarded is lost with it. Commit captures you want to keep.
 
 ## See also
 

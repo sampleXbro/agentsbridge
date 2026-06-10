@@ -65,7 +65,7 @@ describe('renderLessons — bare `agentsmesh lessons` help menu', () => {
 
   it('shows the required positional for `show`, not a bare `[flags]` stub', () => {
     const out = renderBareHelp();
-    expect(out).toContain('  show <topic>');
+    expect(out).toContain('  show <topic|lesson-id>');
     expect(out).not.toContain('show [flags]');
   });
 });

@@ -4,11 +4,16 @@ import { listProjectFiles } from '../../lessons/project-files.js';
 import { summarizeRecall } from '../../lessons/stats.js';
 import { isTelemetryEnabled, readRecallLog, recallLogExists } from '../../lessons/telemetry.js';
 import { validateLessonsGraph } from '../../lessons/validate.js';
-import { emptyGraph, errorResult, renderTopicMarkdown, type LessonsFlags } from './lessons-helpers.js';
+import {
+  emptyGraph,
+  errorResult,
+  renderLessonMarkdown,
+  renderTopicMarkdown,
+  type LessonsFlags,
+} from './lessons-helpers.js';
 import type {
   LessonsCommandResult,
   LessonsJournalData,
-  LessonsShowData,
   LessonsValidateData,
 } from './lessons-types.js';
 
@@ -35,20 +40,29 @@ export function doTopics(projectRoot: string): LessonsCommandResult {
   return { subcommand: 'topics', exitCode: 0, data: { topics } };
 }
 
-export function doShow(topicArg: string | undefined, projectRoot: string): LessonsCommandResult {
-  if (topicArg === undefined || topicArg === '') {
-    return errorResult('show', 'Usage: agentsmesh lessons show <topic>', 2);
+export function doShow(arg: string | undefined, projectRoot: string): LessonsCommandResult {
+  if (arg === undefined || arg === '') {
+    return errorResult('show', 'Usage: agentsmesh lessons show <topic|lesson-id>', 2);
   }
   const graph = tryLoadLessonsGraph(projectRoot);
-  if (graph === null || graph.topics[topicArg] === undefined) {
-    return errorResult('show', `Unknown topic: ${topicArg}`, 1);
+  if (graph !== null && graph.topics[arg] !== undefined) {
+    const lessons = Object.entries(graph.lessons)
+      .filter(([, l]) => l.topics.includes(arg) && l.status === 'active')
+      .sort(([a], [b]) => (a < b ? -1 : 1));
+    const markdown = renderTopicMarkdown(arg, graph.topics[arg].summary, lessons);
+    return { subcommand: 'show', exitCode: 0, data: { subject: arg, markdown } };
   }
-  const lessons = Object.entries(graph.lessons)
-    .filter(([, l]) => l.topics.includes(topicArg) && l.status === 'active')
-    .sort(([a], [b]) => (a < b ? -1 : 1));
-  const markdown = renderTopicMarkdown(topicArg, graph.topics[topicArg].summary, lessons);
-  const data: LessonsShowData = { topic: topicArg, markdown };
-  return { subcommand: 'show', exitCode: 0, data };
+  // Fall back to lesson-id lookup so a recalled lesson can be inspected by id
+  // (rule, status, topics, and every trigger resolved to its pattern).
+  if (graph !== null && graph.lessons[arg] !== undefined) {
+    const markdown = renderLessonMarkdown(arg, graph.lessons[arg], graph.triggers);
+    return { subcommand: 'show', exitCode: 0, data: { subject: arg, markdown } };
+  }
+  return errorResult(
+    'show',
+    `Unknown topic or lesson id: ${arg}. Run \`agentsmesh lessons topics\` to list topics, or \`agentsmesh lessons journal\` to list lesson ids.`,
+    1,
+  );
 }
 
 export function doJournal(projectRoot: string): LessonsCommandResult {

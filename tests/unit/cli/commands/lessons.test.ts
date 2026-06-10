@@ -532,16 +532,30 @@ describe('runLessons show', () => {
     seedSimpleGraph();
     const r = await runLessons({}, ['show', 'topic-x'], root);
     if (r.subcommand !== 'show') return;
-    expect(r.data.topic).toBe('topic-x');
+    expect(r.data.subject).toBe('topic-x');
     expect(r.data.markdown).toContain('topic-x');
     expect(r.data.markdown).toContain('Normalize display paths.');
   });
 
-  it('errors when topic is missing', async () => {
+  it('shows a single lesson by id, resolving its triggers to patterns', async () => {
+    seedSimpleGraph(); // lesson topic-x-rule-1 with trigger t-glob-src = src/**/*.ts
+    const r = await runLessons({}, ['show', 'topic-x-rule-1'], root);
+    if (r.subcommand !== 'show') return;
+    expect(r.exitCode).toBe(0);
+    expect(r.data.subject).toBe('topic-x-rule-1');
+    expect(r.data.markdown).toContain('Normalize display paths.');
+    expect(r.data.markdown).toContain('**status:** active');
+    // The trigger id resolves to its kind + pattern — the diagnosis the view exists for.
+    expect(r.data.markdown).toContain('t-glob-src');
+    expect(r.data.markdown).toContain('[file_glob] src/**/*.ts');
+  });
+
+  it('errors with a helpful hint when neither a topic nor a lesson id matches', async () => {
     seedSimpleGraph();
     const r = await runLessons({}, ['show', 'nope'], root);
     expect(r.exitCode).toBe(1);
-    expect(r.error).toMatch(/unknown topic/i);
+    expect(r.error).toMatch(/unknown topic or lesson/i);
+    expect(r.error).toMatch(/journal/);
   });
 });
 

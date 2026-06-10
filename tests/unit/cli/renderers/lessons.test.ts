@@ -38,6 +38,21 @@ describe('renderLessons — query', () => {
     expect(output.stdout()).toContain('1. Rule.');
   });
 
+  it('prefixes the lesson id when showIds is set (the --ids diagnosis flag)', () => {
+    renderLessons({
+      subcommand: 'query',
+      exitCode: 0,
+      format: 'plain',
+      data: {
+        lessons: [{ id: 'topic-x-rule-1', rule: 'Rule one.', topics: ['t'], triggers: [], evidence: [] }],
+        query: {},
+        autoMigrated: false,
+        showIds: true,
+      },
+    });
+    expect(output.stdout()).toContain('[topic-x-rule-1] Rule one.');
+  });
+
   it('json format prints the data block', () => {
     renderLessons({
       subcommand: 'query',

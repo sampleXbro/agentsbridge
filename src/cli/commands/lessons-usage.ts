@@ -36,8 +36,9 @@ export const LESSONS_USAGE: Record<string, LessonsSubcommandUsage> = {
     usage: 'agentsmesh lessons topics',
   },
   show: {
-    usage: 'agentsmesh lessons show <topic>',
+    usage: 'agentsmesh lessons show <topic|lesson-id>',
     example: 'agentsmesh lessons show build',
+    summary: 'a topic, or one lesson by id with its triggers resolved',
   },
   deprecate: {
     usage: 'agentsmesh lessons deprecate <id> [--superseded-by <id>]',

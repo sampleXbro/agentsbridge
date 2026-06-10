@@ -163,10 +163,15 @@ function renderQuery(data: LessonsQueryData, format: LessonsQueryFormat): void {
     logger.info('(no matches)');
     return;
   }
+  // `--ids` prefixes each line with the lesson id so an irrelevant recall can be
+  // traced to `show <id>` / `deprecate <id>`. Off by default to keep the plain
+  // output paste-clean and token-lean.
+  const withId = (id: string, rule: string): string =>
+    data.showIds === true ? `[${id}] ${rule}` : rule;
   if (format === 'md') {
-    data.lessons.forEach((l, i) => logger.info(`${i + 1}. ${l.rule}`));
+    data.lessons.forEach((l, i) => logger.info(`${i + 1}. ${withId(l.id, l.rule)}`));
   } else {
-    for (const l of data.lessons) logger.info(l.rule);
+    for (const l of data.lessons) logger.info(withId(l.id, l.rule));
   }
   // Never silently truncate: tell the user (on stderr, keeping stdout paste-clean)
   // when the ranked cap hid matches.

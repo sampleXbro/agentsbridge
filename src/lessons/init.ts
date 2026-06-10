@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path';
 import { maybeAutoMigrateLessons } from './auto-migrate.js';
 import { mutateLessonsGraphLocked } from './mutate.js';
 import { lessonsPaths, toRelPath } from './paths.js';
+import { injectRecallHook } from './recall-hook-scaffold.js';
 import { recallLogPath } from './telemetry.js';
 import { ensureGitignoreEntries } from '../utils/filesystem/gitignore.js';
 import {
@@ -19,6 +20,8 @@ export interface ScaffoldLessonsResult {
   readonly rootRuleUpdated: boolean;
   /** True when the recall-log gitignore entry was added to `.gitignore`. */
   readonly gitignoreUpdated: boolean;
+  /** True when the PostToolUse recall hook was injected into `hooks.yaml`. */
+  readonly recallHookInjected: boolean;
 }
 
 /**
@@ -63,6 +66,9 @@ export async function scaffoldLessons(projectRoot: string): Promise<ScaffoldLess
   seedLessonsSkill(projectRoot, created, updated, skipped);
 
   const rootRuleUpdated = injectProceduralBlock(projectRoot);
+  // Auto-wire deterministic hook-mode recall for hook-capable targets; non-hook
+  // targets keep the always-on paragraph injected above as their fallback.
+  const recallHookInjected = injectRecallHook(projectRoot);
   // Keep the opt-in recall telemetry log out of git. The entry is derived from
   // the telemetry module so the path stays single-sourced; the append is
   // idempotent and coverage-aware, so re-running scaffold (init is documented as
@@ -70,7 +76,7 @@ export async function scaffoldLessons(projectRoot: string): Promise<ScaffoldLess
   const gitignoreUpdated = await ensureGitignoreEntries(projectRoot, [
     toRelPath(projectRoot, recallLogPath(projectRoot)),
   ]);
-  return { created, updated, skipped, rootRuleUpdated, gitignoreUpdated };
+  return { created, updated, skipped, rootRuleUpdated, gitignoreUpdated, recallHookInjected };
 }
 
 /**

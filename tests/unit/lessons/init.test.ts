@@ -33,6 +33,24 @@ describe('scaffoldLessons', async () => {
     const skillPath = join(projectRoot, '.agentsmesh/skills/lessons/SKILL.md');
     expect(result.created).toEqual([paths.graph, skillPath]);
     expect(result.rootRuleUpdated).toBe(true);
+    // No hooks.yaml in this bare scaffold, so the recall hook is a no-op here;
+    // injection-into-an-existing-hooks.yaml is covered by recall-hook-scaffold +
+    // the init --lessons e2e (where init creates hooks.yaml first).
+    expect(result.recallHookInjected).toBe(false);
+  });
+
+  it('injects the recall hook when hooks.yaml already exists', async () => {
+    mkdirSync(join(projectRoot, '.agentsmesh'), { recursive: true });
+    writeFileSync(
+      join(projectRoot, '.agentsmesh/hooks.yaml'),
+      '# yaml-language-server: $schema=./x.json\n',
+      'utf8',
+    );
+    const result = await scaffoldLessons(projectRoot);
+    expect(result.recallHookInjected).toBe(true);
+    expect(readFileSync(join(projectRoot, '.agentsmesh/hooks.yaml'), 'utf8')).toContain(
+      'agentsmesh lessons hook',
+    );
   });
 
   it('seeds the Tier-2 lessons skill with canonical frontmatter', async () => {

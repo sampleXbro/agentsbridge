@@ -72,6 +72,11 @@ function renderLessons(lessons: NonNullable<InitCommandResult['data']['lessons']
       '  Added .agentsmesh/lessons/recall-log.jsonl to .gitignore (opt-in telemetry stays out of git)',
     );
   }
+  if (lessons.recallHookInjected) {
+    logger.success(
+      '  Wired the PostToolUse recall hook into .agentsmesh/hooks.yaml (deterministic recall on hook-capable targets)',
+    );
+  }
   logger.success('Lessons subsystem ready (.agentsmesh/lessons/).');
   logger.info("  Run 'agentsmesh generate' to sync the ritual into every target.");
   logger.info('');

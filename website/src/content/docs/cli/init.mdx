@@ -20,7 +20,7 @@ agentsmesh init [flags]
 |------|-------------|
 | `--global` | Initialize canonical home config under `~/.agentsmesh/`. |
 | `--yes` | Auto-import all detected tool configs, then add starter examples only under empty canonical folders (skip categories import already filled). |
-| `--lessons` | Scaffold the project-level lessons recall + capture subsystem: inject the always-on trigger into `_root.md` and seed the `lessons` skill manual under `skills/lessons/`. Cannot be combined with `--global`. |
+| `--lessons` | Scaffold the project-level lessons recall + capture subsystem: inject the always-on trigger into `_root.md`, seed the `lessons` skill manual under `skills/lessons/`, and wire a `PostToolUse` recall hook into `hooks.yaml` so [hook mode](../lessons/#hook-mode-deterministic-recall) is deterministic on hook-capable targets. Cannot be combined with `--global`. |
 
 ## What init creates
 

@@ -26,6 +26,8 @@ export interface InitData {
     rootRuleUpdated: boolean;
     /** True when the recall-log gitignore entry was added to `.gitignore`. */
     gitignoreUpdated: boolean;
+    /** True when the PostToolUse recall hook was injected into `hooks.yaml`. */
+    recallHookInjected: boolean;
   };
   /**
    * True when --lessons was passed against an already-initialized project,

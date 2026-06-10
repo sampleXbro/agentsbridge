@@ -63,6 +63,20 @@ describe('agentsmesh init --lessons (e2e)', () => {
     expect(lessonsStart).toBeLessThan(body);
   });
 
+  it('auto-wires the PostToolUse recall hook and generate projects it to a hook-capable target', async () => {
+    const init = await runCli('init --lessons', tempDir);
+    expect(init.stdout).toContain('recall hook into .agentsmesh/hooks.yaml');
+
+    const hooksYaml = readFileSync(join(tempDir, '.agentsmesh/hooks.yaml'), 'utf8');
+    expect(hooksYaml).toContain('agentsmesh lessons hook');
+    // The managed YAML injection preserved the schema directive.
+    expect(hooksYaml).toContain('yaml-language-server');
+
+    await runCli('generate --targets claude-code', tempDir);
+    const settings = readFileSync(join(tempDir, '.claude/settings.json'), 'utf8');
+    expect(settings).toContain('agentsmesh lessons hook');
+  });
+
   it('retrofits lessons onto an already-initialized project', async () => {
     const first = await runCli('init', tempDir);
     expect(first.exitCode).toBe(0);

@@ -48,6 +48,9 @@ export default defineConfig({
         'src/config/remote/remote-fetcher.ts',
         'src/install/source/git-pin.ts',
         'src/cli/commands/watch.ts',
+        // Interactive TTY prompt (readline); only the non-TTY early-return is
+        // reachable without mocking stdin. Exercised via install integration.
+        'src/install/core/prompts.ts',
 
         // (4) Per-target legacy linters / importers / format adapters whose
         // primary behavior is large fixture-driven branching: covered by
@@ -70,20 +73,14 @@ export default defineConfig({
         'src/targets/windsurf/importer.ts',
         'src/targets/projection/projected-agent-skill.ts',
 
-        // (5) Install-side per-target hint maps and large URL parser.
-        // The hardcoded ladders in these files are tracked as a separate
-        // refactor (descriptor-driven dispatch) — see `tasks/todo.md`.
-        // Once refactored, the resulting smaller modules will be unit-testable
-        // and should re-enter this threshold.
-        'src/install/native/native-path-pick-infer.ts',
-        'src/install/native/native-path-pick-infer-copilot.ts',
-        'src/install/source/url-parser.ts',
-        'src/install/core/install-manifest.ts',
-        'src/install/core/install-conflicts.ts',
-        'src/install/core/name-generator.ts',
-        'src/install/core/install-entry-selection.ts',
-        'src/install/core/prompts.ts',
-        'src/install/run/run-install-resolve.ts',
+        // (5) Install-side hint maps and URL parser — formerly excluded with
+        // an unlinked "refactor pending" note (arch §3.5). All now re-enter
+        // the threshold: `native-path-pick-infer*` became table-driven and
+        // unit-tested (arch §3.1); `url-parser`, `install-manifest`,
+        // `install-conflicts`, `name-generator`, `install-entry-selection`,
+        // and `run-install-resolve` are fully covered by the existing
+        // install integration/e2e suites. The lone remaining install I/O
+        // boundary (`prompts.ts`) moved to category (3) above.
 
         // (6) Lock-holding orchestration shells. Branching here is mostly
         // delegate-and-route; the underlying handlers (single-pack-install,

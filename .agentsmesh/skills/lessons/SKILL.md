@@ -3,70 +3,46 @@ name: lessons
 description: Full operating manual for the agentsmesh lessons system (recall + capture). Consult when running any `agentsmesh lessons` subcommand (query, add, topics, show, deprecate, journal, validate, import-md), choosing a topic or trigger flags, using the lessons MCP tools, or when unsure how to phrase or capture a lesson.
 ---
 
-# Lessons — full operating manual
+# Lessons — operating manual
 
-The lessons system is two shell commands: **Recall** (before you act) and **Capture**
-(after any failure). The always-on rule in the root instructions is the trigger; this
-skill is the complete reference. The graph at `.agentsmesh/lessons/lessons.json` is
-canonical — NEVER edit it by hand.
+Two commands: **Recall** before you act, **Capture** after any failure. The graph
+`.agentsmesh/lessons/lessons.json` is canonical — never hand-edit.
 
-## Recall — before every file edit and every shell command
+## Recall — before every file edit / shell command (no read-only exception)
 
-There is no read-only carve-out. The very first action of any turn that will touch a
-file or run a command is to run `agentsmesh lessons query --file <path-about-to-edit> --cmd <command-about-to-run>`
-(add `--keyword <text>` to match by task). Apply EVERY returned rule, then act.
+`agentsmesh lessons query --file <path> --cmd <command>` (add `--keyword <text>` to
+match by task), then apply every rule returned. A predicate-less query is rejected;
+**keyword-only recall is the anti-pattern** — most lessons are keyed to a
+`file_glob`/`command_pattern` and won't surface (the CLI warns). Excuses ("small edit",
+"I already know this", "just looking / read-only", "later") all mean: query first.
 
-**Rejected excuses — each one means *query first*:** *"the edit is small"*, *"I already
-know this"*, *"it's read-only / I'm just looking / just investigating"*, *"this command
-can't change anything"* (git, ls, cat, test runs, coverage **still count**), *"I'll do
-it later"*.
+## Capture — immediately after any failure
 
-## Capture — immediately after any failure or mistake
+Any failure counts, not just red tests: a failing test/CI/lint/typecheck, a code
+review, a user correction, a regression, or a wrong assumption — yours or anyone's.
 
-A failure is NOT limited to red test output. It includes a user correction or pushback,
-a failing test / CI / lint / typecheck, a code-review comment, a regression, a wrong
-assumption you made, work you had to redo, or behavior that surprised you.
+`agentsmesh lessons add "<imperative rule>" --topic <id> --trigger-file <glob> --evidence <sha|lesson-id>`
 
-Run `agentsmesh lessons add "<imperative rule>" --topic <id> --trigger-file <glob> --evidence <commit-sha|lesson-id>`.
+- **At least one trigger is required** (capture rejected otherwise — an untriggered
+  lesson can never be recalled). Prefer `--trigger-file`: the most reliable trigger, it
+  fires on `--file` recall. A keyword alone is discouraged (`KEYWORD_ONLY_LESSON`).
+- Widen with `--trigger-cmd <regex>` / `--trigger-kw <text>`. New area:
+  `--new-topic --topic-summary "<line>"` (list ids with `agentsmesh lessons topics`).
 
-- Add `--trigger-cmd <regex>` and/or `--trigger-kw <text>` to widen when the lesson fires.
-- Find the topic id with `agentsmesh lessons topics`.
-- Brand-new area? Pass `--new-topic --topic-summary "<one line>"`.
+## No shell? — MCP tools
 
-**Rejected excuses:** *"it wasn't really a failure"* → it was. *"I'll capture it later"*
-→ no. *"no topic fits"* → `agentsmesh lessons topics` then `--new-topic`.
+`lessons_query`, `lessons_add`, `lessons_topics`, `lessons_show` (inspect a topic),
+`lessons_deprecate` (retire). validate / prune / merge / import-md are CLI-only.
 
-## No shell?
+## Other subcommands
 
-Use the MCP tools — same operations as the CLI: `lessons_query` (recall),
-`lessons_add` (capture), `lessons_topics` (list topics), `lessons_show`
-(inspect a topic's lessons), and `lessons_deprecate` (retire a lesson).
-Maintainer-only ops (validate / prune / merge / import-md) stay CLI-only.
-
-## Full command set
-
-Run `agentsmesh lessons --help` for everything. Beyond `query` and `add`:
-
-- `agentsmesh lessons topics` — list topic ids + summaries.
-- `agentsmesh lessons show <topic>` — inspect a topic's lessons.
-- `agentsmesh lessons deprecate <id> [--superseded-by <id>]` — retire a lesson that no longer holds.
-- `agentsmesh lessons merge <loser-id> <keeper-id>` — fold a duplicate lesson into another.
-- `agentsmesh lessons untrigger <lesson-id> <trigger-id>` — detach one trigger in place.
-- `agentsmesh lessons strip-markers` — strip managed-block markers from rule text.
-- `agentsmesh lessons prune [--apply] [--cap <n>]` — trim over-cap triggers and GC orphan triggers/topics.
-- `agentsmesh lessons journal` — review recent capture/recall activity.
-- `agentsmesh lessons validate` — check the graph for integrity problems.
-- `agentsmesh lessons stats` — recall-effectiveness telemetry (opt-in).
-- `agentsmesh lessons import-md <file>` — bulk-import lessons from Markdown.
+`agentsmesh lessons <cmd>`: `show` · `deprecate` (`--superseded-by`) · `merge` ·
+`untrigger` · `strip-markers` · `prune` (`--apply`; trims over-cap triggers, GCs
+orphan triggers/topics) · `journal` · `validate` · `stats` · `import-md`. Full
+help: `agentsmesh lessons --help`.
 
 ## Recall caps
 
-Per-project caps live in `.agentsmesh/lessons/config.json`: `recallLimit`
-(max lessons per recall) and `recallMaxTokens` (cumulative rule-token budget).
-These config keys are canonical; the `--top` / `--max-tokens` flags are the
-per-call overrides for the same two limits. `recallMaxTokens` is approximate —
-the per-rule cost is estimated as `rule.length / 4`, not a real tokenizer.
-
-## Why this matters
-
-These two commands ARE the system. Skip them and the system does not exist.
+`.agentsmesh/lessons/config.json`: `recallLimit` / `recallMaxTokens` (canonical;
+per-call overrides `--top` / `--max-tokens`). `recallMaxTokens` is approximate —
+`rule.length / 4`, not a real tokenizer.

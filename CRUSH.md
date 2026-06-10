@@ -5,24 +5,15 @@
 <!-- agentsmesh:root-generation-contract:end -->
 
 <!-- agentsmesh:lessons-contract:start -->
-## Lessons (BLOCKING REQUIREMENT — MUST run, no exceptions)
+## Lessons (BLOCKING REQUIREMENT — MUST run both, no exceptions; the user will check)
 
-Two shell commands. Skipping either is a process violation; the user will check. The graph at `.agentsmesh/lessons/lessons.json` is canonical — NEVER edit by hand. The full manual is the `lessons` skill (or `agentsmesh lessons --help`).
+The graph `.agentsmesh/lessons/lessons.json` is canonical — never hand-edit. Full manual: the `lessons` skill.
 
-**Recall — MUST run BEFORE every file edit and every shell command**, including read-only / just-investigating ones (git, ls, cat, test runs, coverage **still count**):
+**Recall — before every file edit and every shell command, read-only included (git/ls/cat/test runs still count):** run `agentsmesh lessons query --file <path-about-to-edit> --cmd <command-about-to-run>` (add `--keyword <text>` to match by task), then apply every rule returned. Pass the real `--file`/`--cmd`: a predicate-less query is rejected, and keyword-only recall misses most lessons. Skipping recall is a process violation.
 
-1. Run: `agentsmesh lessons query --file <path-about-to-edit> --cmd <command-about-to-run>` (add `--keyword <text>` for task matches).
-2. Apply EVERY returned rule.
-3. Then perform the edit / run the command.
+**Capture — immediately after any failure, not limited to red tests** (a failing CI/lint/typecheck, a code review, a user correction, a regression, or a wrong assumption — yours or anyone's): run `agentsmesh lessons add "<imperative rule>" --topic <id> --trigger-file <glob> --evidence <sha|lesson-id>` — one trigger minimum (prefer `--trigger-file`); new area adds `--new-topic --topic-summary "<line>"`.
 
-**Capture — MUST run IMMEDIATELY after ANY failure or mistake**, yours or anyone's. A failure is NOT limited to red test output — a user correction or pushback, a failing test / CI / lint / typecheck, a code-review comment, a regression, a wrong assumption you made, or work you had to redo all count:
-
-1. Run: `agentsmesh lessons add "<imperative rule>" --topic <id> --trigger-file <glob> --evidence <commit-sha|lesson-id>`.
-2. New area? `agentsmesh lessons topics` to find the id, or `--new-topic --topic-summary "<one line>"`.
-
-No shell? Use the `lessons_query` and `lessons_add` MCP tools — same two operations. For trigger flags, the topic workflow, and the full command set, consult the `lessons` skill.
-
-**These two commands ARE the system. Skip them and the system does not exist.**
+No shell? Use the `lessons_query` / `lessons_add` MCP tools. Skip these and the system does not exist.
 <!-- agentsmesh:lessons-contract:end -->
 
 # Operational Guidelines

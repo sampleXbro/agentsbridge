@@ -18,9 +18,10 @@ describe('lessons skill content', () => {
     expect(body).toBe(LESSONS_SKILL_BODY);
   });
 
-  it('carries the expansive how-to that the trimmed Tier-1 trigger drops', () => {
-    // Full command set moved out of the always-on block and into the manual:
-    // every implemented subcommand must be enumerated (L3 docs-sync gate).
+  it('enumerates every implemented subcommand (L3 docs-sync gate)', () => {
+    // The two primaries appear as full commands; the rest are enumerated in the
+    // compact "Other subcommands" line. Assert each NAME is present as a word so
+    // the manual documents the whole surface without repeating the prefix 13×.
     for (const sub of [
       'query',
       'add',
@@ -36,8 +37,10 @@ describe('lessons skill content', () => {
       'stats',
       'import-md',
     ]) {
-      expect(LESSONS_SKILL_BODY).toContain(`agentsmesh lessons ${sub}`);
+      expect(LESSONS_SKILL_BODY).toMatch(new RegExp(`\\b${sub.replace('-', '\\-')}\\b`));
     }
+    expect(LESSONS_SKILL_BODY).toContain('agentsmesh lessons query');
+    expect(LESSONS_SKILL_BODY).toContain('agentsmesh lessons add');
     // Topic + trigger-flag mechanics.
     expect(LESSONS_SKILL_BODY).toContain('--new-topic');
     expect(LESSONS_SKILL_BODY).toContain('--topic-summary');
@@ -45,11 +48,10 @@ describe('lessons skill content', () => {
     expect(LESSONS_SKILL_BODY).toContain('--trigger-kw');
   });
 
-  it('keeps the exhaustive rejected-excuse enumeration for both rituals', () => {
-    expect(LESSONS_SKILL_BODY).toMatch(/Rejected excuses/);
-    expect(LESSONS_SKILL_BODY).toMatch(/the edit is small/i);
-    expect(LESSONS_SKILL_BODY).toMatch(/I'll capture it later/i);
-    expect(LESSONS_SKILL_BODY).toMatch(/it wasn't really a failure/i);
+  it('keeps a recall-excuse killer so the agent cannot rationalize skipping', () => {
+    expect(LESSONS_SKILL_BODY).toMatch(/excuses/i);
+    expect(LESSONS_SKILL_BODY).toMatch(/query first/i);
+    expect(LESSONS_SKILL_BODY).toMatch(/read-only/i);
   });
 
   it('documents the no-shell MCP fallback including the curation tools', () => {
@@ -62,6 +64,13 @@ describe('lessons skill content', () => {
     ]) {
       expect(LESSONS_SKILL_BODY).toContain(tool);
     }
+  });
+
+  it('teaches the recall/capture reachability contract', () => {
+    // Recall must be anchored to --file/--cmd; keyword-only is the anti-pattern.
+    expect(LESSONS_SKILL_BODY).toMatch(/keyword-only/i);
+    // Capture requires at least one trigger.
+    expect(LESSONS_SKILL_BODY).toMatch(/at least one trigger is required/i);
   });
 
   it('documents the recall caps and that recallMaxTokens is approximate', () => {

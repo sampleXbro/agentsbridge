@@ -114,6 +114,8 @@ entirely — `agentsmesh init --lessons` creates the graph directly.
 | `--all` | Return every match (disable both the limit and the token budget). |
 | `--max-tokens <n>` | Cap results by cumulative estimated rule-token cost. **Approximate** — per-rule cost is estimated as `rule.length / 4`, not a real tokenizer. Defaults to ~400 when omitted. |
 
+Pass **at least one predicate** — a query with no `--file`/`--cmd`/`--keyword` is rejected (exit 2). Always anchor recall to the concrete `--file` you're about to edit (and `--cmd` you're about to run); **keyword-only recall is the anti-pattern** — most lessons are keyed to a `file_glob`/`command_pattern` and silently won't surface, so the CLI prints a warning when you query keyword-only.
+
 Results are **relevance-ranked** (BM25 over rule text fused with trigger specificity) and capped by default to the top 10 **and** a ~400-token budget, so mandatory recall stays lean; the single most-relevant result is always returned even if it alone exceeds the budget. A truncation notice on stderr reports how many matched. Pass `--all` (or a larger `--top`/`--max-tokens`) to see the rest.
 
 ### `add`
@@ -130,7 +132,9 @@ Results are **relevance-ranked** (BM25 over rule text fused with trigger specifi
 | `--new-topic` | Allow creating a new topic if missing. Requires `--topic-summary`. |
 | `--topic-summary "<text>"` | One-line summary when `--new-topic` creates a topic. |
 
-`add` prints **non-blocking guardrail warnings** to stderr (capture still succeeds) when the resulting lesson has too many triggers (`OVERSIZED_LESSON_TRIGGERS`, cap 8), a broad glob (`BROAD_GLOB_TRIGGER`), or only keyword triggers (`KEYWORD_ONLY_LESSON`, which fire on `--file`/`--cmd` recall only when the keyword appears as a path/command token — less reliable than a precise trigger). Prefer a few specific triggers. See the [guardrails reference](../../reference/lessons/#capture-guardrails).
+**At least one trigger is required** — `add` errors (exit 2) if you supply none, because an untriggered lesson can never be recalled. Prefer a precise `--trigger-file` glob: it is the most reliable trigger, since it fires on the `--file` recall before every edit.
+
+Beyond that hard requirement, `add` prints **non-blocking guardrail warnings** to stderr (capture still succeeds) when the resulting lesson has too many triggers (`OVERSIZED_LESSON_TRIGGERS`, cap 8), a broad glob (`BROAD_GLOB_TRIGGER`), or only keyword triggers (`KEYWORD_ONLY_LESSON`, which fire on `--file`/`--cmd` recall only when the keyword appears as a path/command token — less reliable than a precise trigger). Prefer a few specific triggers. See the [guardrails reference](../../reference/lessons/#capture-guardrails).
 
 ### `deprecate`
 

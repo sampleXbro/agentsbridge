@@ -23,7 +23,7 @@ describe('scaffoldLessons', async () => {
     const rootRule = readFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), 'utf8');
     expect(rootRule).toContain('<!-- agentsmesh:lessons-contract:start -->');
     expect(rootRule).toContain('<!-- agentsmesh:lessons-contract:end -->');
-    expect(rootRule).toContain('## Lessons (BLOCKING REQUIREMENT — MUST run, no exceptions)');
+    expect(rootRule).toContain('## Lessons (BLOCKING REQUIREMENT');
 
     // No legacy artifacts.
     expect(existsSync(paths.journal)).toBe(false);
@@ -41,7 +41,9 @@ describe('scaffoldLessons', async () => {
     expect(existsSync(skillPath)).toBe(true);
     const content = readFileSync(skillPath, 'utf8');
     expect(content.startsWith('---\nname: lessons\n')).toBe(true);
-    expect(content).toContain('agentsmesh lessons import-md');
+    // The manual enumerates the full command surface (compact list).
+    expect(content).toContain('agentsmesh lessons query');
+    expect(content).toMatch(/\bimport-md\b/);
   });
 
   it('is idempotent — re-running keeps a single block and reports graph + skill skipped', async () => {

@@ -30,10 +30,9 @@ describe('LESSONS_PROCEDURAL_RULE', () => {
     expect(LESSONS_PROCEDURAL_RULE).toContain('MUST');
   });
 
-  it('uses imperative numbered steps so the agent has an explicit serial protocol', () => {
-    expect(LESSONS_PROCEDURAL_RULE).toMatch(/1\. /);
-    expect(LESSONS_PROCEDURAL_RULE).toMatch(/2\. /);
-    expect(LESSONS_PROCEDURAL_RULE).toMatch(/3\. /);
+  it('names both CLI primitives so the agent has the exact recall + capture commands', () => {
+    expect(LESSONS_PROCEDURAL_RULE).toContain('agentsmesh lessons query --file');
+    expect(LESSONS_PROCEDURAL_RULE).toContain('agentsmesh lessons add');
   });
 
   it('delegates the expansive manual to the lessons skill rather than inlining it', () => {

@@ -67,6 +67,11 @@ function renderLessons(lessons: NonNullable<InitCommandResult['data']['lessons']
   } else {
     logger.info('  .agentsmesh/rules/_root.md already carries the current Lessons block');
   }
+  if (lessons.gitignoreUpdated) {
+    logger.success(
+      '  Added .agentsmesh/lessons/recall-log.jsonl to .gitignore (opt-in telemetry stays out of git)',
+    );
+  }
   logger.success('Lessons subsystem ready (.agentsmesh/lessons/).');
   logger.info("  Run 'agentsmesh generate' to sync the ritual into every target.");
 }

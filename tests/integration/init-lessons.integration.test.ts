@@ -30,6 +30,12 @@ describe('runInit --lessons', () => {
     ]);
     expect(result.data.lessons!.rootRuleUpdated).toBe(true);
     expect(result.data.lessonsOnly).toBeUndefined();
+
+    // The opt-in recall telemetry log must be gitignored so it never dirties the worktree.
+    expect(result.data.lessons!.gitignoreUpdated).toBe(true);
+    expect(readFileSync(join(projectRoot, '.gitignore'), 'utf8')).toContain(
+      '.agentsmesh/lessons/recall-log.jsonl',
+    );
   });
 
   it('retrofits the lessons subsystem on an already-initialized project (lessons-only)', async () => {
@@ -51,6 +57,13 @@ describe('runInit --lessons', () => {
     expect(rootRule).toContain('## Custom Section');
     expect(rootRule).toContain('Keep me.');
     expect(rootRule).toContain('<!-- agentsmesh:lessons-contract:start -->');
+
+    // The retrofit path returns early before the standard init gitignore step, so the
+    // lessons scaffold itself must add the recall-log entry (regression: it used to skip it).
+    expect(result.data.lessons!.gitignoreUpdated).toBe(true);
+    expect(readFileSync(join(projectRoot, '.gitignore'), 'utf8')).toContain(
+      '.agentsmesh/lessons/recall-log.jsonl',
+    );
   });
 
   it('is idempotent — re-running --lessons keeps a single block and graph intact', async () => {

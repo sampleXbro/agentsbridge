@@ -99,4 +99,44 @@ describe('scaffoldLessons', async () => {
     expect(rootRule).toContain('Keep me.');
     expect(rootRule).toContain('<!-- agentsmesh:lessons-contract:start -->');
   });
+
+  it('gitignores the opt-in recall-log so telemetry never dirties the worktree', async () => {
+    const result = await scaffoldLessons(projectRoot);
+
+    const gitignore = readFileSync(join(projectRoot, '.gitignore'), 'utf8');
+    expect(gitignore).toContain('.agentsmesh/lessons/recall-log.jsonl');
+    expect(result.gitignoreUpdated).toBe(true);
+  });
+
+  it('appends the recall-log entry idempotently — re-running adds it once, reports no second update', async () => {
+    await scaffoldLessons(projectRoot);
+    const second = await scaffoldLessons(projectRoot);
+
+    const matches = readFileSync(join(projectRoot, '.gitignore'), 'utf8')
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l === '.agentsmesh/lessons/recall-log.jsonl');
+    expect(matches.length).toBe(1);
+    expect(second.gitignoreUpdated).toBe(false);
+  });
+
+  it('preserves existing .gitignore content when appending the recall-log entry', async () => {
+    writeFileSync(join(projectRoot, '.gitignore'), 'node_modules\ndist\n', 'utf8');
+
+    await scaffoldLessons(projectRoot);
+
+    const gitignore = readFileSync(join(projectRoot, '.gitignore'), 'utf8');
+    expect(gitignore).toContain('node_modules');
+    expect(gitignore).toContain('dist');
+    expect(gitignore).toContain('.agentsmesh/lessons/recall-log.jsonl');
+  });
+
+  it('skips the recall-log entry when a broader .agentsmesh/ ignore already covers it', async () => {
+    writeFileSync(join(projectRoot, '.gitignore'), 'node_modules\n.agentsmesh/\n', 'utf8');
+
+    const result = await scaffoldLessons(projectRoot);
+
+    expect(readFileSync(join(projectRoot, '.gitignore'), 'utf8')).not.toContain('recall-log.jsonl');
+    expect(result.gitignoreUpdated).toBe(false);
+  });
 });

@@ -87,6 +87,7 @@ describe('renderInit', () => {
           updated: [],
           skipped: [],
           rootRuleUpdated: true,
+          gitignoreUpdated: false,
         },
       },
     });
@@ -96,6 +97,34 @@ describe('renderInit', () => {
     expect(stdout).toContain('Created .agentsmesh/lessons/lessons.json');
     expect(stdout).toContain('Injected the Lessons ritual block into .agentsmesh/rules/_root.md');
     expect(stdout).toContain('Lessons subsystem ready (.agentsmesh/lessons/).');
+    // The recall-log gitignore line is only printed when the entry was actually added.
+    expect(stdout).not.toContain('recall-log.jsonl to .gitignore');
+  });
+
+  it('reports the recall-log gitignore entry when the lessons scaffold updated .gitignore', () => {
+    renderInit({
+      exitCode: 0,
+      data: {
+        scope: 'project',
+        configFile: 'agentsmesh.yaml',
+        localConfigFile: 'agentsmesh.local.yaml',
+        detectedConfigs: [],
+        imported: [],
+        importedToolCount: 0,
+        scaffoldType: 'none',
+        gitignoreUpdated: false,
+        lessonsOnly: true,
+        lessons: {
+          created: [`${process.cwd()}/.agentsmesh/lessons/lessons.json`],
+          updated: [],
+          skipped: [],
+          rootRuleUpdated: true,
+          gitignoreUpdated: true,
+        },
+      },
+    });
+
+    expect(output.stdout()).toContain('.agentsmesh/lessons/recall-log.jsonl to .gitignore');
   });
 
   it('renders Kept lines for skipped paths and notes the already-present paragraph', () => {
@@ -115,6 +144,7 @@ describe('renderInit', () => {
           updated: [],
           skipped: [`${process.cwd()}/.agentsmesh/lessons/lessons.json`],
           rootRuleUpdated: false,
+          gitignoreUpdated: false,
         },
       },
     });
@@ -144,6 +174,7 @@ describe('renderInit', () => {
           updated: [],
           skipped: [],
           rootRuleUpdated: true,
+          gitignoreUpdated: false,
         },
       },
     });

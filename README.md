@@ -383,6 +383,7 @@ installs against their declared sources. They are orthogonal.
 | `agentsmesh.local.yaml` | **gitignore** | Per-developer overrides. |
 | `.agentsmesh/.lock.tmp` | **gitignore** | Transient. |
 | `.agentsmeshcache` | **gitignore** | Remote-extends cache. |
+| `.agentsmesh/lessons/recall-log.jsonl` | **gitignore** | Opt-in recall telemetry (`AGENTSMESH_LESSONS_TELEMETRY=1`) — a runtime artifact, not the canonical graph. Added by `init --lessons`. |
 | Generated tool folders (`.claude/`, `.cursor/`, `.github/`, `.gemini/`, `CLAUDE.md`, `AGENTS.md`, etc.) | **commit** | AI tools read these at runtime. Committing means a fresh clone has working AI configs without a build step. `agentsmesh check` in CI catches drift between canonical and generated. |
 
 Why generated configs stay committed: the same reason `package-lock.json` does. They're deterministic build output that downstream consumers (in this case, the AI tool itself) read directly. Gitignoring them breaks fresh-clone UX and makes `agentsmesh check` meaningless. PR reviewers also benefit from seeing the projected diff in the format Claude/Cursor/Copilot will actually consume.

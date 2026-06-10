@@ -49,7 +49,7 @@ agentsmesh.local.yaml     # Local overrides (gitignored)
   skills/
     lessons/              # Tier-2 manual, seeded with --lessons
       SKILL.md            # Full recall/capture operating manual
-.gitignore                # Updated to exclude agentsmesh.local.yaml
+.gitignore                # Updated: agentsmesh.local.yaml (+ lessons/recall-log.jsonl with --lessons)
 ```
 
 Files and directories prefixed with `_` are excluded from generation — they exist only as reference templates. The sole exception is `_root.md`, which is always included as the project-wide root rule.
@@ -104,7 +104,10 @@ capture failures after — the trigger is the binding contract, the skill is the
 reference.
 
 Run the same command in an already-initialized project to add lessons
-retroactively; init leaves existing config and canonical files untouched.
+retroactively; init leaves existing config and canonical files untouched. It
+also adds `.agentsmesh/lessons/recall-log.jsonl` to your project's `.gitignore`
+(idempotently), so the opt-in recall telemetry log
+(`AGENTSMESH_LESSONS_TELEMETRY=1`) never dirties your worktree.
 
 ### Initialize global config
 

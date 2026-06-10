@@ -2,7 +2,9 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { maybeAutoMigrateLessons } from './auto-migrate.js';
 import { mutateLessonsGraphLocked } from './mutate.js';
-import { lessonsPaths } from './paths.js';
+import { lessonsPaths, toRelPath } from './paths.js';
+import { recallLogPath } from './telemetry.js';
+import { ensureGitignoreEntries } from '../utils/filesystem/gitignore.js';
 import {
   appendLessonsParagraph,
   LESSONS_PARAGRAPH_BLOCK,
@@ -15,6 +17,8 @@ export interface ScaffoldLessonsResult {
   readonly updated: string[];
   readonly skipped: string[];
   readonly rootRuleUpdated: boolean;
+  /** True when the recall-log gitignore entry was added to `.gitignore`. */
+  readonly gitignoreUpdated: boolean;
 }
 
 /**
@@ -59,7 +63,14 @@ export async function scaffoldLessons(projectRoot: string): Promise<ScaffoldLess
   seedLessonsSkill(projectRoot, created, updated, skipped);
 
   const rootRuleUpdated = injectProceduralBlock(projectRoot);
-  return { created, updated, skipped, rootRuleUpdated };
+  // Keep the opt-in recall telemetry log out of git. The entry is derived from
+  // the telemetry module so the path stays single-sourced; the append is
+  // idempotent and coverage-aware, so re-running scaffold (init is documented as
+  // safe to repeat) and an existing broader `.agentsmesh/` ignore are both no-ops.
+  const gitignoreUpdated = await ensureGitignoreEntries(projectRoot, [
+    toRelPath(projectRoot, recallLogPath(projectRoot)),
+  ]);
+  return { created, updated, skipped, rootRuleUpdated, gitignoreUpdated };
 }
 
 /**

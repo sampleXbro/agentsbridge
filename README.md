@@ -240,7 +240,7 @@ Detailed contracts: [Canonical Config](https://samplexbro.github.io/agentsmesh/c
 ## CLI usage
 
 ```bash
-agentsmesh init [--global] [--yes] [--lessons]
+agentsmesh init [--global | --lessons] [--yes]    # --lessons is project-mode only (rejected with --global)
 agentsmesh generate [--global] [--targets <csv>] [--check] [--dry-run] [--force] [--refresh-cache]
 agentsmesh import --from <target> [--global]
 agentsmesh convert --from <target> --to <target> [--global] [--dry-run]

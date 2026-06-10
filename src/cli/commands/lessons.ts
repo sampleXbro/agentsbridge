@@ -25,6 +25,29 @@ import type { LessonsCommandResult } from './lessons-types.js';
 
 export type { LessonsCommandResult } from './lessons-types.js';
 
+/**
+ * Pre-dispatch legacy migration. `import-md` migrates explicitly (never here).
+ * The RECALL subcommands (`query`, `hook`) must never crash — a corrupt legacy
+ * store degrades to an unmigrated (usually absent) graph, leaving the legacy
+ * files intact for an explicit `import-md` to surface the error loudly. Every
+ * other subcommand keeps the throw: failing a write loudly prevents a fresh
+ * empty graph from permanently stranding an unmigrated legacy store.
+ */
+async function migrateForSubcommand(
+  subcommand: string,
+  projectRoot: string,
+): Promise<boolean> {
+  if (subcommand === 'import-md') return false;
+  if (subcommand === 'query' || subcommand === 'hook') {
+    try {
+      return await maybeAutoMigrateLessons(projectRoot);
+    } catch {
+      return false;
+    }
+  }
+  return maybeAutoMigrateLessons(projectRoot);
+}
+
 export async function runLessons(
   flags: LessonsFlags,
   args: string[],
@@ -35,8 +58,7 @@ export async function runLessons(
     return { subcommand: 'help', exitCode: 0, data: null };
   }
 
-  const autoMigrated =
-    subcommand === 'import-md' ? false : await maybeAutoMigrateLessons(projectRoot);
+  const autoMigrated = await migrateForSubcommand(subcommand, projectRoot);
 
   switch (subcommand) {
     case 'query':

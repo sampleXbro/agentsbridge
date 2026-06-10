@@ -107,8 +107,9 @@ function renderQuery(data: LessonsQueryData, format: LessonsQueryFormat): void {
   // Never silently truncate: tell the user (on stderr, keeping stdout paste-clean)
   // when the ranked cap hid matches.
   if (data.totalMatches !== undefined && data.totalMatches > data.lessons.length) {
+    // `--top` alone still hits the token budget, so name both knobs (or --all).
     logger.warn(
-      `(showing ${data.lessons.length} of ${data.totalMatches} matches — pass --all or --top <n> for more)`,
+      `(showing ${data.lessons.length} of ${data.totalMatches} matches — raise --top <n> with --max-tokens <m>, or pass --all)`,
     );
   }
   // Dedup is opt-in via a session id; note when repeats were hidden so the

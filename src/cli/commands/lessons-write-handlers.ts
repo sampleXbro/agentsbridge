@@ -27,7 +27,10 @@ import type {
 } from './lessons-types.js';
 
 function errMessage(err: unknown): string {
-  return err instanceof Error ? err.message : String(err);
+  const raw = err instanceof Error ? err.message : String(err);
+  // Strip internal function-name prefixes (the transactional write path tags its
+  // errors) so the agent sees a clean, actionable message.
+  return raw.replace(/^(mutateLessonsGraph|mergeLessons):\s*/, '');
 }
 
 export async function doAdd(
@@ -109,7 +112,12 @@ export async function doDeprecate(
     const { id, supersededBy: by } = await deprecateLesson(projectRoot, lessonId, supersededBy);
     return { subcommand: 'deprecate', exitCode: 0, data: { id, supersededBy: by } };
   } catch (err) {
-    return errorResult('deprecate', errMessage(err), 1);
+    const message = errMessage(err);
+    // Point an unknown-id miss at the listing commands instead of dead-ending.
+    const hint = message.startsWith('Unknown lesson')
+      ? ' Run `agentsmesh lessons journal` to list lesson ids (or `lessons query --ids` to see what recalled).'
+      : '';
+    return errorResult('deprecate', `${message}${hint}`, 1);
   }
 }
 
@@ -149,9 +157,7 @@ export async function doMerge(
     const data: LessonsMergeData = result;
     return { subcommand: 'merge', exitCode: 0, data };
   } catch (err) {
-    // Strip the internal function-name prefix so the agent sees a clean message.
-    const message = errMessage(err).replace(/^mergeLessons:\s*/, '');
-    return errorResult('merge', message, 1);
+    return errorResult('merge', errMessage(err), 1);
   }
 }
 

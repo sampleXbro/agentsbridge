@@ -119,3 +119,26 @@ describe('inspectCapturedLesson', () => {
     expect(inspectCapturedLesson(graphWith({}), 'missing')).toEqual([]);
   });
 });
+
+describe('inspectCapturedLesson — STOPWORD_KEYWORD', () => {
+  it('warns when a multi-word keyword contains stopwords (structurally unmatchable run)', () => {
+    // Needle tokenizes to [state, art]; the haystack keeps "of the", so the
+    // phrase can never match contiguously on the --file/--cmd path.
+    const g = graphWith({ k: { kind: 'keyword', pattern: 'state of the art' } });
+    expect(codes(g)).toContain('STOPWORD_KEYWORD');
+  });
+
+  it('does not warn for a stopword-free phrase or a single word', () => {
+    expect(codes(graphWith({ k: { kind: 'keyword', pattern: 'windows paths' } }))).not.toContain(
+      'STOPWORD_KEYWORD',
+    );
+    expect(codes(graphWith({ k: { kind: 'keyword', pattern: 'the' } }))).not.toContain(
+      'STOPWORD_KEYWORD',
+    );
+  });
+
+  it('does not inspect non-keyword triggers', () => {
+    const g = graphWith({ f: { kind: 'file_glob', pattern: 'src/of/the/art.ts' } });
+    expect(codes(g)).not.toContain('STOPWORD_KEYWORD');
+  });
+});

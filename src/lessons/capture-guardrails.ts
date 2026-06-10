@@ -1,5 +1,9 @@
 import type { LessonsGraph } from './graph-schema.js';
-import { isLowSignalKeyword, MAX_RECOMMENDED_KEYWORD_TOKENS } from './keyword-signal.js';
+import {
+  isLowSignalKeyword,
+  keywordNeedleLosesTokens,
+  MAX_RECOMMENDED_KEYWORD_TOKENS,
+} from './keyword-signal.js';
 
 /**
  * Non-blocking capture guardrails. Over-triggering — too many triggers per
@@ -15,7 +19,8 @@ export type GuardrailCode =
   | 'OVERSIZED_LESSON_TRIGGERS'
   | 'BROAD_GLOB_TRIGGER'
   | 'KEYWORD_ONLY_LESSON'
-  | 'LOW_SIGNAL_KEYWORD';
+  | 'LOW_SIGNAL_KEYWORD'
+  | 'STOPWORD_KEYWORD';
 
 export interface GuardrailWarning {
   readonly code: GuardrailCode;
@@ -86,6 +91,16 @@ export function inspectCapturedLesson(graph: LessonsGraph, lessonId: string): Gu
     warnings.push({
       code: 'LOW_SIGNAL_KEYWORD',
       message: `Lesson "${lessonId}" has long keyword trigger(s) (${lowSignal.join(', ')}); recall matches a keyword only as a substring of --keyword or a contiguous token-run in the file/command, so a pattern past ${MAX_RECOMMENDED_KEYWORD_TOKENS} tokens rarely fires — use a short distinctive phrase.`,
+    });
+  }
+
+  const stopworded = triggers
+    .filter((t) => t.kind === 'keyword' && keywordNeedleLosesTokens(t.pattern))
+    .map((t) => t.pattern);
+  if (stopworded.length > 0) {
+    warnings.push({
+      code: 'STOPWORD_KEYWORD',
+      message: `Lesson "${lessonId}" has keyword trigger(s) containing stopwords/short words (${stopworded.join(', ')}); recall filters them from the pattern but NOT from the file/command text, so the phrase can never match contiguously on the --file/--cmd path — drop the stopwords (e.g. "state art" instead of "state of the art").`,
     });
   }
 

@@ -95,7 +95,24 @@ export function doStats(flags: LessonsFlags, projectRoot: string): LessonsComman
 }
 
 export function doValidate(projectRoot: string): LessonsCommandResult {
-  const graph = tryLoadLessonsGraph(projectRoot) ?? emptyGraph();
+  // Recall's corrupt-graph warning routes users HERE, so validate must diagnose
+  // a corrupt file as a structured finding — not dead-end on the raw parse error.
+  let graph;
+  try {
+    graph = tryLoadLessonsGraph(projectRoot) ?? emptyGraph();
+  } catch (err) {
+    const data: LessonsValidateData = {
+      ok: false,
+      findings: [
+        {
+          level: 'error',
+          code: 'CORRUPT_GRAPH',
+          message: `lessons.json could not be parsed (${err instanceof Error ? err.message : String(err)}). The graph is git-tracked — restore it (e.g. \`git checkout -- .agentsmesh/lessons/lessons.json\`) or repair the JSON; recall degrades to empty until then.`,
+        },
+      ],
+    };
+    return { subcommand: 'validate', exitCode: 1, data };
+  }
   // Supply the working-tree file list so dead-`file_glob` triggers surface; null
   // (no git, walk failed) → undefined → the liveness check is skipped, never a
   // false "everything is dead".

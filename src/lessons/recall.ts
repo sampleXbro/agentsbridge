@@ -90,7 +90,16 @@ export async function recallLessons(
   query: LessonsQuery,
   options: RecallOptions = {},
 ): Promise<RecallResult> {
-  await maybeAutoMigrateLessons(projectRoot);
+  // Recall is a blocking dependency and must never crash: a corrupt LEGACY
+  // store (malformed index.yaml) fails migration here, so degrade to whatever
+  // graph state exists (usually absent → empty recall) and leave the legacy
+  // files intact for an explicit `lessons import-md` to surface the error.
+  // WRITE paths keep failing loudly so a fresh graph never strands the legacy.
+  try {
+    await maybeAutoMigrateLessons(projectRoot);
+  } catch {
+    // Degrade; see above.
+  }
   const load = loadLessonsGraphResilient(projectRoot);
   if (load.status === 'corrupt') {
     return { lessons: [], totalMatches: 0, suppressed: 0, corrupt: true };

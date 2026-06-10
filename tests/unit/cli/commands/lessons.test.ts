@@ -1145,3 +1145,63 @@ describe('runLessons prune', () => {
     expect(applied.data.trimmedLessons).toEqual([]);
   });
 });
+
+describe('runLessons — cross-cutting hardening', () => {
+  it('validate diagnoses an unparseable graph as a structured CORRUPT_GRAPH finding', async () => {
+    const path = graphFilePath(root);
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, '{ not json', 'utf8');
+    const r = await runLessons({}, ['validate'], root);
+    if (r.subcommand !== 'validate') throw new Error('expected validate');
+    expect(r.exitCode).toBe(1);
+    expect(r.data.ok).toBe(false);
+    expect(r.data.findings.some((f) => f.code === 'CORRUPT_GRAPH' && f.level === 'error')).toBe(
+      true,
+    );
+    // Routes the user at the recovery path, not a raw parse stack.
+    expect(r.data.findings[0]!.message).toMatch(/git/);
+  });
+
+  it('a corrupt LEGACY store degrades recall to empty but still fails a write loudly', async () => {
+    // Legacy index.yaml present (malformed), no graph: migration throws inside.
+    mkdirSync(join(root, '.agentsmesh/lessons'), { recursive: true });
+    writeFileSync(join(root, '.agentsmesh/lessons/index.yaml'), ':: not yaml ::\n- [', 'utf8');
+
+    // Recall path: must not crash; degrades to an absent graph → empty result.
+    const q = await runLessons({ file: 'src/x.ts' }, ['query'], root);
+    if (q.subcommand !== 'query') throw new Error('expected query');
+    expect(q.exitCode).toBe(0);
+    expect(q.data.lessons).toEqual([]);
+
+    // Write path: keeps the loud failure so a fresh empty graph can never
+    // strand the unmigrated legacy store.
+    await expect(
+      runLessons(
+        { topic: 't', 'new-topic': true, 'topic-summary': 'T.', 'trigger-file': 'src/**' },
+        ['add', 'Rule.'],
+        root,
+      ),
+    ).rejects.toThrow();
+  });
+
+  it('deprecate of an unknown id points at the listing commands', async () => {
+    seedSimpleGraph();
+    const r = await runLessons({}, ['deprecate', 'no-such-id'], root);
+    expect(r.exitCode).toBe(1);
+    expect(r.error).toMatch(/Unknown lesson/);
+    expect(r.error).toMatch(/lessons journal/);
+  });
+
+  it('a rejected add surfaces a clean message without the internal function prefix', async () => {
+    seedSimpleGraph();
+    const r = await runLessons(
+      { topic: 'topic-x', 'trigger-cmd': '(?<=x)y' }, // lookbehind: outside the linear subset
+      ['add', 'Unsafe regex rule.'],
+      root,
+    );
+    expect(r.exitCode).not.toBe(0);
+    expect(r.error).toBeDefined();
+    expect(r.error).not.toContain('mutateLessonsGraph:');
+    expect(r.error).toMatch(/UNSAFE_TRIGGER_PATTERN|refusing to write/);
+  });
+});

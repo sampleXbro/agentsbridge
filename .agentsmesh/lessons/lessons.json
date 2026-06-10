@@ -996,6 +996,21 @@
         "t-kw-3bdacef0"
       ]
     },
+    "fixture-and-assertion-discipline-when-asserting-line-exact-cli": {
+      "createdAt": "2026-06-10",
+      "evidence": [
+        "src/utils/output/logger.ts:50"
+      ],
+      "rule": "When asserting line-exact CLI output captured from stdout (toEqual on split lines, or a /^ {2}\\S/ line regex), strip ANSI color codes first: logger.info wraps every line in cyan escapes (\\x1b[36m...\\x1b[0m) unless NO_COLOR is set, so raw-line assertions see the escape — not the leading spaces — and silently match nothing, even though toContain of the inner text still passes.",
+      "status": "active",
+      "topics": [
+        "fixture-and-assertion-discipline"
+      ],
+      "triggers": [
+        "t-kw-381d10a9",
+        "t-glob-1cc7eae9"
+      ]
+    },
     "fixture-and-assertion-discipline-when-asserting-on-agentsmesh-lessons": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -4104,6 +4119,35 @@
         "t-glob-40333e0c"
       ]
     },
+    "process-locks-when-wiring-any-process-lock": {
+      "createdAt": "2026-06-10",
+      "evidence": [],
+      "rule": "When wiring any process lock through acquireProcessLock (a new *-lock.ts wrapper or an inline call), pass a human-readable label (e.g. 'lessons lock', 'install lock') in LockOptions — LockAcquisitionError builds its message from that label and silently defaults to a generic 'lock', so a forgotten label mislabels the lock in the contention error without failing any test.",
+      "status": "deprecated",
+      "topics": [
+        "process-locks"
+      ],
+      "triggers": [
+        "t-glob-eccf1757",
+        "t-kw-b54b3b44",
+        "t-kw-c402e976"
+      ]
+    },
+    "process-locks-when-wiring-any-process-lock-2": {
+      "createdAt": "2026-06-10",
+      "evidence": [],
+      "rule": "When wiring any process lock through acquireProcessLock (a new *-lock.ts wrapper or an inline call), pass a human-readable label (e.g. 'lessons lock', 'install lock') in LockOptions — LockAcquisitionError builds its message from that label and silently defaults to a generic 'lock', so a forgotten label mislabels the lock in the contention error without failing any test.",
+      "status": "active",
+      "topics": [
+        "process-locks"
+      ],
+      "triggers": [
+        "t-glob-e0110795",
+        "t-glob-5a3df53a",
+        "t-glob-1f849af2",
+        "t-kw-b54b3b44"
+      ]
+    },
     "shell-quoting-construct-control-character-values-direc": {
       "createdAt": "2026-06-07",
       "evidence": [
@@ -5632,6 +5676,9 @@
     "link-rebaser": {
       "summary": "How reference text is rewritten — protected anchors vs markdown destinations, fenced code, project-root-relative, existence gates, pathApi discipline."
     },
+    "process-locks": {
+      "summary": "Process-lock primitive (acquireProcessLock) and per-lock wrappers — per-lock labels, stale/young eviction, signal cleanup, contention messages."
+    },
     "shell-quoting": {
       "summary": "Backticks/quotes in rg, node -e, heredocs; shell-rc edits; cross-shell portability; control bytes via Write tool."
     },
@@ -6008,6 +6055,14 @@
       "kind": "file_glob",
       "pattern": "src/lessons/auto-migrate.ts"
     },
+    "t-glob-1cc7eae9": {
+      "kind": "file_glob",
+      "pattern": "tests/unit/cli/renderers/**/*.test.ts"
+    },
+    "t-glob-1f849af2": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/lessons-lock.ts"
+    },
     "t-glob-1fe91ebe": {
       "kind": "file_glob",
       "pattern": "tests/fixtures/**"
@@ -6119,6 +6174,10 @@
     "t-glob-5995acad": {
       "kind": "file_glob",
       "pattern": "src/targets/**/generator*.ts"
+    },
+    "t-glob-5a3df53a": {
+      "kind": "file_glob",
+      "pattern": "src/install/lock/install-lock.ts"
     },
     "t-glob-5b739e3e": {
       "kind": "file_glob",
@@ -6312,6 +6371,14 @@
       "kind": "file_glob",
       "pattern": "src/lessons/import-legacy.ts"
     },
+    "t-glob-e0110795": {
+      "kind": "file_glob",
+      "pattern": "src/utils/filesystem/process-lock.ts"
+    },
+    "t-glob-eccf1757": {
+      "kind": "file_glob",
+      "pattern": "src/**/*lock*.ts"
+    },
     "t-glob-ee01c259": {
       "kind": "file_glob",
       "pattern": "src/lessons/regex-safety.ts"
@@ -6415,6 +6482,10 @@
     "t-kw-34b80ab3": {
       "kind": "keyword",
       "pattern": "subagent"
+    },
+    "t-kw-381d10a9": {
+      "kind": "keyword",
+      "pattern": "ANSI color stdout assertion"
     },
     "t-kw-3bdacef0": {
       "kind": "keyword",
@@ -6528,6 +6599,10 @@
       "kind": "keyword",
       "pattern": "tool count"
     },
+    "t-kw-b54b3b44": {
+      "kind": "keyword",
+      "pattern": "acquireProcessLock"
+    },
     "t-kw-b6410e25": {
       "kind": "keyword",
       "pattern": "command truncation"
@@ -6535,6 +6610,10 @@
     "t-kw-c20f4631": {
       "kind": "keyword",
       "pattern": "coverage"
+    },
+    "t-kw-c402e976": {
+      "kind": "keyword",
+      "pattern": "LockAcquisitionError"
     },
     "t-kw-c8f23353": {
       "kind": "keyword",

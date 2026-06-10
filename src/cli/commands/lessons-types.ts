@@ -88,6 +88,7 @@ export interface LessonsPruneData {
   readonly applied: boolean;
   readonly cap: number;
   readonly removedTriggerIds: string[];
+  readonly removedTopicIds: string[];
   readonly trimmedLessons: Array<{
     readonly id: string;
     readonly removedCount: number;

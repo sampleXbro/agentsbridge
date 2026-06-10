@@ -149,7 +149,7 @@ export function errorResult(
         subcommand,
         exitCode,
         error: message,
-        data: { applied: false, cap: 0, removedTriggerIds: [], trimmedLessons: [] },
+        data: { applied: false, cap: 0, removedTriggerIds: [], removedTopicIds: [], trimmedLessons: [] },
       };
   }
 }

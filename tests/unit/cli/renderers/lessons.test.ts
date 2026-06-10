@@ -168,10 +168,12 @@ describe('renderLessons — prune', () => {
         applied: false,
         cap: 8,
         removedTriggerIds: ['t-dead', 't-orphan'],
+        removedTopicIds: ['stale-topic'],
         trimmedLessons: [{ id: 'big', removedCount: 2, keptCount: 8 }],
       },
     });
     expect(output.stdout()).toMatch(/would prune/i);
+    expect(output.stdout()).toMatch(/1 orphan topic/i);
     expect(output.stdout()).toMatch(/big: -2 . 8 kept/i);
     expect(output.stderr()).toMatch(/dry run/i);
   });
@@ -180,7 +182,13 @@ describe('renderLessons — prune', () => {
     renderLessons({
       subcommand: 'prune',
       exitCode: 0,
-      data: { applied: true, cap: 8, removedTriggerIds: ['t-dead'], trimmedLessons: [] },
+      data: {
+        applied: true,
+        cap: 8,
+        removedTriggerIds: ['t-dead'],
+        removedTopicIds: [],
+        trimmedLessons: [],
+      },
     });
     expect(output.stdout()).toMatch(/pruned:/i);
     expect(output.stderr()).not.toMatch(/dry run/i);
@@ -190,7 +198,13 @@ describe('renderLessons — prune', () => {
     renderLessons({
       subcommand: 'prune',
       exitCode: 0,
-      data: { applied: false, cap: 8, removedTriggerIds: [], trimmedLessons: [] },
+      data: {
+        applied: false,
+        cap: 8,
+        removedTriggerIds: [],
+        removedTopicIds: [],
+        trimmedLessons: [],
+      },
     });
     expect(output.stdout()).toMatch(/nothing to prune/i);
   });

@@ -117,14 +117,15 @@ function renderStats(data: LessonsStatsData, format: 'text' | 'json'): void {
 
 function renderPrune(data: LessonsPruneData): void {
   const triggerN = data.removedTriggerIds.length;
+  const topicN = data.removedTopicIds.length;
   const lessonN = data.trimmedLessons.length;
-  if (triggerN === 0 && lessonN === 0) {
+  if (triggerN === 0 && topicN === 0 && lessonN === 0) {
     logger.success(`Lessons graph already lean (cap ${data.cap}) — nothing to prune.`);
     return;
   }
   const verb = data.applied ? 'Pruned' : 'Would prune';
   logger.success(
-    `${verb}: ${triggerN} dead trigger${triggerN === 1 ? '' : 's'} removed, ${lessonN} over-cap lesson${lessonN === 1 ? '' : 's'} trimmed (cap ${data.cap}).`,
+    `${verb}: ${triggerN} dead trigger${triggerN === 1 ? '' : 's'} removed, ${topicN} orphan topic${topicN === 1 ? '' : 's'} removed, ${lessonN} over-cap lesson${lessonN === 1 ? '' : 's'} trimmed (cap ${data.cap}).`,
   );
   for (const t of data.trimmedLessons) {
     logger.info(`  ${t.id}: -${t.removedCount} → ${t.keptCount} kept`);

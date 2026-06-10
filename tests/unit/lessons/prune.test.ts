@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { LessonsGraph } from '../../../src/lessons/graph-schema.js';
-import { applyPruneToGraph, planPrune } from '../../../src/lessons/prune.js';
+import { applyPruneToGraph, isEmptyPrunePlan, planPrune } from '../../../src/lessons/prune.js';
 import { validateLessonsGraph } from '../../../src/lessons/validate.js';
 
 function fileGlob(pattern: string): { kind: 'file_glob'; pattern: string } {
@@ -162,6 +162,7 @@ describe('applyPruneToGraph', () => {
     applyPruneToGraph(g, {
       cap: 8,
       removedTriggerIds: [],
+      removedTopicIds: [],
       trimmedLessons: [{ id: 'ghost', removedTriggers: ['t-live'], keptCount: 0 }],
     });
     expect(g.lessons.ghost).toBeUndefined();
@@ -174,5 +175,58 @@ describe('applyPruneToGraph', () => {
     applyPruneToGraph(g, planPrune(g, { cap: 0 }));
     expect(g.lessons.big?.triggers.length).toBeGreaterThanOrEqual(1);
     expect(validateLessonsGraph(g).ok).toBe(true);
+  });
+});
+
+describe('prune — orphan topic GC', () => {
+  function graphWithOrphanTopic(): LessonsGraph {
+    return {
+      version: 1,
+      lessons: {
+        a: {
+          rule: 'A rule.',
+          topics: ['used'],
+          triggers: ['t-a'],
+          evidence: [],
+          status: 'active',
+          createdAt: '2026-06-01',
+        },
+      },
+      topics: { used: { summary: 'Used.' }, orphan: { summary: 'Referenced by nobody.' } },
+      triggers: { 't-a': { kind: 'file_glob', pattern: 'src/**' } },
+    };
+  }
+
+  it('planPrune reports a topic referenced by zero lessons', () => {
+    expect(planPrune(graphWithOrphanTopic()).removedTopicIds).toEqual(['orphan']);
+  });
+
+  it('applyPruneToGraph deletes the orphan topic; graph stays valid', () => {
+    const g = graphWithOrphanTopic();
+    applyPruneToGraph(g, planPrune(g));
+    expect(g.topics.orphan).toBeUndefined();
+    expect(g.topics.used).toBeDefined();
+    expect(validateLessonsGraph(g).ok).toBe(true);
+  });
+
+  it('keeps a topic still referenced by a deprecated lesson', () => {
+    const g = graphWithOrphanTopic();
+    g.lessons.b = {
+      rule: 'B rule.',
+      topics: ['kept-by-dep'],
+      triggers: [],
+      evidence: [],
+      status: 'deprecated',
+      createdAt: '2026-06-01',
+    };
+    g.topics['kept-by-dep'] = { summary: 'Held by a deprecated lesson.' };
+    expect(planPrune(g).removedTopicIds).toEqual(['orphan']);
+  });
+
+  it('isEmptyPrunePlan is false when only a topic would be removed', () => {
+    const plan = planPrune(graphWithOrphanTopic());
+    expect(plan.removedTriggerIds).toEqual([]);
+    expect(plan.trimmedLessons).toEqual([]);
+    expect(isEmptyPrunePlan(plan)).toBe(false);
   });
 });

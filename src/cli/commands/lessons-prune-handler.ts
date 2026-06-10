@@ -14,6 +14,7 @@ function toPruneData(plan: PrunePlan, applied: boolean): LessonsPruneData {
     applied,
     cap: plan.cap,
     removedTriggerIds: plan.removedTriggerIds,
+    removedTopicIds: plan.removedTopicIds,
     trimmedLessons: plan.trimmedLessons.map((t) => ({
       id: t.id,
       removedCount: t.removedTriggers.length,

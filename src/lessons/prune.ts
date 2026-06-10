@@ -27,6 +27,8 @@ export interface LessonTrim {
 export interface PrunePlan {
   /** Triggers removed from the table entirely (dead: no active lesson uses them). */
   readonly removedTriggerIds: string[];
+  /** Topics removed from the table entirely (referenced by zero lessons, any status). */
+  readonly removedTopicIds: string[];
   /** Active lessons trimmed down to the cap. */
   readonly trimmedLessons: LessonTrim[];
   /** The effective per-lesson trigger cap used (clamped to ≥ 1). */
@@ -73,7 +75,18 @@ export function planPrune(graph: LessonsGraph, options: PruneOptions = {}): Prun
     .filter((t) => !live.has(t))
     .sort();
 
-  return { removedTriggerIds, trimmedLessons, cap };
+  // Topic GC: a topic referenced by NO lesson (any status) is dead weight —
+  // `validate` only warns (ORPHAN_TOPIC); prune actually removes it. Trigger
+  // trimming never changes topic references, so this is independent of `live`.
+  const referencedTopics = new Set<string>();
+  for (const lesson of Object.values(graph.lessons)) {
+    for (const topic of lesson.topics) referencedTopics.add(topic);
+  }
+  const removedTopicIds = Object.keys(graph.topics)
+    .filter((t) => !referencedTopics.has(t))
+    .sort();
+
+  return { removedTriggerIds, removedTopicIds, trimmedLessons, cap };
 }
 
 /** Apply a {@link planPrune} result to a loaded graph in place. */
@@ -87,7 +100,11 @@ export function applyPruneToGraph(graph: LessonsGraph, plan: PrunePlan): void {
     graph.lessons[trim.id] = { ...lesson, triggers: lesson.triggers.filter((t) => !drop.has(t)) };
   }
 
-  // 2. Remove dead triggers from the table and strip every remaining reference
+  // 2. Drop orphan topics (referenced by zero lessons). Independent of trigger
+  //    pruning, so it runs unconditionally.
+  for (const topicId of plan.removedTopicIds) delete graph.topics[topicId];
+
+  // 3. Remove dead triggers from the table and strip every remaining reference
   //    (incl. superseded/deprecated lessons) so no dangling reference survives.
   const dead = new Set(plan.removedTriggerIds);
   if (dead.size === 0) return;
@@ -101,5 +118,9 @@ export function applyPruneToGraph(graph: LessonsGraph, plan: PrunePlan): void {
 
 /** True when a plan would change nothing. */
 export function isEmptyPrunePlan(plan: PrunePlan): boolean {
-  return plan.removedTriggerIds.length === 0 && plan.trimmedLessons.length === 0;
+  return (
+    plan.removedTriggerIds.length === 0 &&
+    plan.removedTopicIds.length === 0 &&
+    plan.trimmedLessons.length === 0
+  );
 }

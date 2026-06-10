@@ -23,6 +23,7 @@ import { stringify as yamlStringify } from 'yaml';
 import type { CanonicalFiles } from '../../core/types.js';
 import type { PackMetadata } from './pack-schema.js';
 import { writeFileAtomic, exists, mkdirp } from '../../utils/filesystem/fs.js';
+import { logger } from '../../utils/output/logger.js';
 import {
   prependYamlSchemaDirective,
   stampJsonSchemaField,
@@ -242,7 +243,16 @@ export async function materializePack(
       await rename(tmpDir, finalDir);
     } catch (err) {
       if (swappedOut) {
-        await rename(oldDir, finalDir).catch(() => {});
+        // Restore the prior pack we swapped aside. If even the restore fails the
+        // pack is left only at `oldDir` — surface it loudly so the user can
+        // recover manually rather than silently losing the prior install.
+        await rename(oldDir, finalDir).catch((restoreErr: unknown) => {
+          const detail = restoreErr instanceof Error ? restoreErr.message : String(restoreErr);
+          logger.warn(
+            `Failed to restore the previous pack after a failed atomic swap; ` +
+              `the prior contents remain at "${oldDir}". Recover them manually. (${detail})`,
+          );
+        });
         swappedOut = false;
       }
       throw err;

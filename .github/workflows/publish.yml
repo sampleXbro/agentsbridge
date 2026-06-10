@@ -160,6 +160,18 @@ jobs:
           sha256sum ../agentsmesh-*.tgz | sed 's|  \.\./||' >> SHA256SUMS
           cat SHA256SUMS
 
+      - name: Verify CHANGELOG top entry header
+        # Guard against release notes silently degrading to generic text: the
+        # first `## ` heading in CHANGELOG.md must be a valid `## <semver>` entry
+        # (what changesets emits). Fail loudly here rather than ship "Release vX".
+        run: |
+          TOP=$(grep -m1 '^## ' CHANGELOG.md || true)
+          if ! printf '%s\n' "$TOP" | grep -Eq '^## [0-9]+\.[0-9]+\.[0-9]+'; then
+            echo "CHANGELOG top entry is not a valid '## <version>' header: '$TOP'" >&2
+            exit 1
+          fi
+          echo "CHANGELOG top entry OK: $TOP"
+
       - name: Extract release notes from CHANGELOG
         run: |
           VERSION="${{ steps.version.outputs.version }}"

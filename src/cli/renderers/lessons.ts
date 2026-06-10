@@ -170,6 +170,13 @@ function renderQuery(data: LessonsQueryData, format: LessonsQueryFormat): void {
       `(showing ${data.lessons.length} of ${data.totalMatches} matches — pass --all or --top <n> for more)`,
     );
   }
+  // Dedup is opt-in via a session id; note when repeats were hidden so the
+  // suppression is never silent (stderr, keeping stdout paste-clean).
+  if (data.suppressed !== undefined && data.suppressed > 0) {
+    logger.warn(
+      `(${data.suppressed} already shown this session — deduped; pass --no-dedup to include)`,
+    );
+  }
 }
 
 function renderAdd(data: LessonsAddData): void {

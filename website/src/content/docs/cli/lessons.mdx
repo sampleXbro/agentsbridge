@@ -113,10 +113,14 @@ entirely — `agentsmesh init --lessons` creates the graph directly.
 | `--top <n>` | Keep only the top `n` relevance-ranked matches. Default 10. |
 | `--all` | Return every match (disable both the limit and the token budget). |
 | `--max-tokens <n>` | Cap results by cumulative estimated rule-token cost. **Approximate** — per-rule cost is estimated as `rule.length / 4`, not a real tokenizer. Defaults to ~400 when omitted. |
+| `--session <id>` | Session correlator for recall **dedup**. Lessons already delivered earlier in the same session are suppressed, so each recall carries only what is new. Defaults to the `AGENTSMESH_SESSION_ID` environment variable; opt-in — with no id, recall is fully stateless (unchanged). The per-session set of delivered lesson ids lives in the OS temp dir, never the project. |
+| `--no-dedup` | Force dedup off for this call even when a session id is set — return the full ranked set including already-seen lessons. |
 
 Pass **at least one predicate** — a query with no `--file`/`--cmd`/`--keyword` is rejected (exit 2). Always anchor recall to the concrete `--file` you're about to edit (and `--cmd` you're about to run); **keyword-only recall is the anti-pattern** — most lessons are keyed to a `file_glob`/`command_pattern` and silently won't surface, so the CLI prints a warning when you query keyword-only.
 
 Results are **relevance-ranked** (BM25 over rule text fused with trigger specificity) and capped by default to the top 10 **and** a ~400-token budget, so mandatory recall stays lean; the single most-relevant result is always returned even if it alone exceeds the budget. A truncation notice on stderr reports how many matched. Pass `--all` (or a larger `--top`/`--max-tokens`) to see the rest.
+
+**Session dedup.** Recall is deterministic, so the same `--file` returns the identical rules every time — N recalls touching one area re-deliver the same rules N times. Set `--session <id>` (or export `AGENTSMESH_SESSION_ID`) and lessons already delivered earlier in that session are suppressed *before* ranking, so the caps fill with what is **new**; a stderr note reports how many repeats were hidden. Dedup happens pre-rank so a fresh lesson is never crowded out by a seen one. It is opt-in: with no session id recall is fully stateless, exactly as before. `--no-dedup` overrides it for one call.
 
 ### `add`
 

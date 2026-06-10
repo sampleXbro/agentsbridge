@@ -103,6 +103,7 @@ export const lessonsHandlers = {
     const {
       lessons: ranked,
       totalMatches,
+      suppressed,
       corrupt,
       newerVersion,
     } = await recallLessons(ctx.projectRoot, query, {
@@ -137,6 +138,7 @@ export const lessonsHandlers = {
           : { id, rule: lesson.rule },
       ),
       totalMatches,
+      ...(suppressed > 0 ? { suppressed } : {}),
     };
   },
 

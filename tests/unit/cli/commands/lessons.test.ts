@@ -597,6 +597,35 @@ describe('runLessons deprecate', () => {
   });
 });
 
+describe('runLessons query — session dedup', () => {
+  const seenFiles: string[] = [];
+  afterEach(() => {
+    for (const id of seenFiles.splice(0)) {
+      rmSync(join(tmpdir(), 'agentsmesh-lessons-seen', `${id}.json`), { force: true });
+    }
+  });
+
+  it('suppresses a lesson already delivered this session, restored by --no-dedup', async () => {
+    seedSimpleGraph();
+    const session = `cli-${process.pid}-${seenFiles.length}-dedup`;
+    seenFiles.push(session);
+
+    const r1 = await runLessons({ file: 'src/a.ts', session }, ['query'], root);
+    if (r1.subcommand !== 'query') throw new Error('expected query');
+    expect(r1.data.lessons).toHaveLength(1);
+    expect(r1.data.suppressed).toBeUndefined();
+
+    const r2 = await runLessons({ file: 'src/a.ts', session }, ['query'], root);
+    if (r2.subcommand !== 'query') throw new Error('expected query');
+    expect(r2.data.lessons).toHaveLength(0);
+    expect(r2.data.suppressed).toBe(1);
+
+    const r3 = await runLessons({ file: 'src/a.ts', session, 'no-dedup': true }, ['query'], root);
+    if (r3.subcommand !== 'query') throw new Error('expected query');
+    expect(r3.data.lessons).toHaveLength(1);
+  });
+});
+
 describe('runLessons query — ranking and caps', () => {
   function seedMany(): void {
     const graph: LessonsGraph = {

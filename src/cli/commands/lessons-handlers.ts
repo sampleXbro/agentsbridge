@@ -1,32 +1,20 @@
-import { CURRENT_GRAPH_VERSION } from '../../lessons/graph-schema.js';
-import { loadLessonsGraphResilient, tryLoadLessonsGraph } from '../../lessons/graph-store.js';
-import { normalizeRecallFile } from '../../lessons/normalize-query-file.js';
-import { queryLessons } from '../../lessons/query.js';
-import { rankLessons } from '../../lessons/ranking.js';
-import { recordRecallTelemetry } from '../../lessons/recall.js';
-import { loadRecallConfig } from '../../lessons/recall-config.js';
+import { tryLoadLessonsGraph } from '../../lessons/graph-store.js';
 import { listProjectFiles } from '../../lessons/project-files.js';
 import { summarizeRecall } from '../../lessons/stats.js';
 import { isTelemetryEnabled, readRecallLog, recallLogExists } from '../../lessons/telemetry.js';
 import { validateLessonsGraph } from '../../lessons/validate.js';
-import {
-  emptyGraph,
-  errorResult,
-  numberFlag,
-  parseFormat,
-  queryFromFlags,
-  renderTopicMarkdown,
-  type LessonsFlags,
-} from './lessons-helpers.js';
+import { emptyGraph, errorResult, renderTopicMarkdown, type LessonsFlags } from './lessons-helpers.js';
 import type {
   LessonsCommandResult,
   LessonsJournalData,
-  LessonsQueryData,
   LessonsShowData,
   LessonsValidateData,
 } from './lessons-types.js';
 
 export type { LessonsFlags } from './lessons-helpers.js';
+// Recall (read-heavy, dedup-aware) lives in its own module; re-exported so the
+// dispatcher keeps importing every handler from here.
+export { doQuery } from './lessons-query-handler.js';
 // Write-side handlers live in a sibling module to keep each file focused.
 export {
   doAdd,
@@ -37,128 +25,6 @@ export {
   doUntrigger,
 } from './lessons-write-handlers.js';
 export { doPrune } from './lessons-prune-handler.js';
-
-/** Returns an error message if the flag is present but not a positive integer, else null. */
-function validatePositiveIntFlag(flags: LessonsFlags, name: string): string | null {
-  const v = flags[name];
-  if (v === undefined || v === false) return null;
-  const n = typeof v === 'string' ? Number(v) : NaN;
-  if (!Number.isInteger(n) || n < 1) return `Invalid --${name}: expected a positive integer.`;
-  return null;
-}
-
-/** Returns an error message if --format is present with a value outside plain|md|json, else null. */
-function validateFormatFlag(flags: LessonsFlags): string | null {
-  const v = flags.format;
-  if (v === undefined) return null;
-  if (v === 'plain' || v === 'md' || v === 'json') return null;
-  return 'Invalid --format: expected plain|md|json.';
-}
-
-export function doQuery(
-  flags: LessonsFlags,
-  projectRoot: string,
-  autoMigrated: boolean,
-): LessonsCommandResult {
-  const topErr = validatePositiveIntFlag(flags, 'top');
-  if (topErr !== null) return errorResult('query', topErr, 2);
-  const maxTokErr = validatePositiveIntFlag(flags, 'max-tokens');
-  if (maxTokErr !== null) return errorResult('query', maxTokErr, 2);
-  const fmtErr = validateFormatFlag(flags);
-  if (fmtErr !== null) return errorResult('query', fmtErr, 2);
-
-  const format = parseFormat(flags);
-  const raw = queryFromFlags(flags);
-  // A recall must be anchored to something. Zero predicates is a no-op call —
-  // fail loudly so an agent learns to pass the file/command it is about to touch.
-  if (raw.file === undefined && raw.command === undefined && raw.keyword === undefined) {
-    return errorResult(
-      'query',
-      'Recall needs a predicate: pass at least one of --file <path-about-to-edit>, ' +
-        '--cmd <command-about-to-run>, or --keyword <text>.',
-      2,
-    );
-  }
-  // Keyword-only recall silently misses file_glob / command_pattern lessons (the
-  // reliable majority). Allow it, but warn — it is the recall anti-pattern.
-  const keywordOnlyWarning =
-    raw.keyword !== undefined && raw.file === undefined && raw.command === undefined
-      ? 'keyword-only recall misses file_glob and command_pattern lessons — pass ' +
-        '--file <path-about-to-edit> and/or --cmd <command-about-to-run> for complete recall.'
-      : undefined;
-  // Normalize the file path so a project-relative glob matches regardless of the
-  // shape the caller passed (absolute / ./-prefixed / backslash).
-  const query =
-    raw.file === undefined ? raw : { ...raw, file: normalizeRecallFile(raw.file, projectRoot) };
-  const load = loadLessonsGraphResilient(projectRoot);
-  if (load.status === 'corrupt') {
-    // Recall is a blocking requirement before every edit/command — a corrupt
-    // graph must degrade to empty (exit 0), with a warning, not a stack trace.
-    const data: LessonsQueryData = {
-      lessons: [],
-      query,
-      autoMigrated,
-      totalMatches: 0,
-      warning: `lessons.json is unreadable (corrupt) — recall returned no lessons. Run \`agentsmesh lessons validate\`. (${load.error.message})`,
-    };
-    return { subcommand: 'query', exitCode: 0, format, data };
-  }
-  if (load.status === 'newer-version') {
-    // The graph is fine; this CLI is behind. Degrade to empty with an upgrade
-    // hint instead of the misleading "corrupt" warning.
-    const data: LessonsQueryData = {
-      lessons: [],
-      query,
-      autoMigrated,
-      totalMatches: 0,
-      warning: `lessons.json is version ${load.version}, newer than this build supports (${CURRENT_GRAPH_VERSION}) — recall returned no lessons. Upgrade agentsmesh to read it.`,
-    };
-    return { subcommand: 'query', exitCode: 0, format, data };
-  }
-  if (load.status === 'absent') {
-    const data: LessonsQueryData = {
-      lessons: [],
-      query,
-      autoMigrated,
-      totalMatches: 0,
-      ...(keywordOnlyWarning ? { warning: keywordOnlyWarning } : {}),
-    };
-    return { subcommand: 'query', exitCode: 0, format, data };
-  }
-  const graph = load.graph;
-  const matches = queryLessons(graph, query);
-  // `--all` bypasses both caps; otherwise apply the per-project caps (which
-  // default to the built-ins) so mandatory recall stays lean unless the caller
-  // overrides via --top/--max-tokens.
-  const cfg = loadRecallConfig(projectRoot);
-  const limit = flags.all === true ? undefined : (numberFlag(flags, 'top') ?? cfg.limit);
-  const maxTokens =
-    flags.all === true ? undefined : (numberFlag(flags, 'max-tokens') ?? cfg.maxTokens);
-  const ranked = rankLessons(graph, query, matches, { limit, maxTokens });
-  // Record recall telemetry on the CLI path too (gated; no-op unless opt-in),
-  // so shell-driven `lessons query` is visible to `lessons stats` — parity with
-  // the MCP `lessons_query` tool, which records via recallLessons. `--all` is a
-  // diagnostic dump, not a mandatory recall, so flag it as a bypass.
-  recordRecallTelemetry(projectRoot, graph, query, matches, ranked, {
-    bypassed: flags.all === true,
-  });
-  const lessons = ranked.map(({ id, lesson, score }) => ({
-    id,
-    rule: lesson.rule,
-    topics: [...lesson.topics],
-    triggers: [...lesson.triggers],
-    evidence: [...lesson.evidence],
-    score,
-  }));
-  const data: LessonsQueryData = {
-    lessons,
-    query,
-    autoMigrated,
-    totalMatches: matches.length,
-    ...(keywordOnlyWarning ? { warning: keywordOnlyWarning } : {}),
-  };
-  return { subcommand: 'query', exitCode: 0, format, data };
-}
 
 export function doTopics(projectRoot: string): LessonsCommandResult {
   const graph = tryLoadLessonsGraph(projectRoot) ?? emptyGraph();

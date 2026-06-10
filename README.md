@@ -257,7 +257,7 @@ agentsmesh installs list [--global]
 agentsmesh refresh [<name>[,<name>...]] [--dry-run] [--force] [--json] [--global]
 agentsmesh plugin add|list|remove|info [--version <v>] [--id <id>]
 agentsmesh target scaffold <id> [--name <displayName>] [--force]
-agentsmesh lessons query [--file <p>] [--cmd <c>] [--keyword <k>] [--format plain|md|json] [--top <n>] [--all] [--max-tokens <n>]  # ≥1 predicate required (keyword-only warns: misses file/command lessons); relevance-ranked, top 10 + ~400-token budget by default (--all bypasses)
+agentsmesh lessons query [--file <p>] [--cmd <c>] [--keyword <k>] [--format plain|md|json] [--top <n>] [--all] [--max-tokens <n>] [--session <id>] [--no-dedup]  # ≥1 predicate required (keyword-only warns: misses file/command lessons); relevance-ranked, top 10 + ~400-token budget by default (--all bypasses); --session/AGENTSMESH_SESSION_ID dedups lessons already shown this session
 agentsmesh lessons add "<rule>" --topic <id> --trigger-file <glob> [--trigger-cmd <regex>] [--trigger-kw <text>] [--evidence <ref>] [--new-topic --topic-summary "<one line>"]  # ≥1 trigger required (prefer --trigger-file); warns on broad/oversized/keyword-only triggers
 agentsmesh lessons topics | show <topic> | deprecate <id> [--superseded-by <id>] | journal | validate | import-md [--merge|--force]
 agentsmesh lessons merge <loser-id> <keeper-id>   # fold a duplicate into its canonical twin (supersede + union triggers/topics/evidence)

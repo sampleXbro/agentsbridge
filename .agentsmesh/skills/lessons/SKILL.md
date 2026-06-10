@@ -50,3 +50,9 @@ help: `agentsmesh lessons --help`.
 `.agentsmesh/lessons/config.json`: `recallLimit` / `recallMaxTokens` (canonical;
 per-call overrides `--top` / `--max-tokens`). `recallMaxTokens` is approximate —
 `rule.length / 4`, not a real tokenizer.
+
+## Dedup (opt-in)
+
+Set `--session <id>` (or `AGENTSMESH_SESSION_ID`) and lessons already delivered this
+session are suppressed, so each recall carries only what is new (`--no-dedup` opts
+out). With no session id, recall is fully stateless — unchanged.

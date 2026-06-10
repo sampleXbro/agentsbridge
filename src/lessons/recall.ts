@@ -20,6 +20,7 @@ import {
   type RankedLesson,
 } from './ranking.js';
 import { loadRecallConfig } from './recall-config.js';
+import { commitSeen, filterUnseen, openSessionDedup } from './seen-cache.js';
 import { appendRecallRecord, isTelemetryEnabled, sessionId } from './telemetry.js';
 
 /**
@@ -47,6 +48,13 @@ export interface RecallOptions {
    * pass `null` to disable the budget (return up to `limit` results).
    */
   readonly maxTokens?: number | null;
+  /**
+   * Session correlator for recall dedup. Defaults to `AGENTSMESH_SESSION_ID`;
+   * when set, lessons already delivered this session are suppressed.
+   */
+  readonly sessionId?: string;
+  /** Force dedup off even when a session correlator is present. */
+  readonly noDedup?: boolean;
 }
 
 export interface RecallResult {
@@ -66,6 +74,11 @@ export interface RecallResult {
    * an upgrade hint rather than a "corrupt" warning.
    */
   readonly newerVersion?: number;
+  /**
+   * Count of matched lessons suppressed because they were already delivered
+   * earlier in this session (dedup). 0 when dedup is off or nothing repeated.
+   */
+  readonly suppressed: number;
 }
 
 /**
@@ -79,11 +92,13 @@ export async function recallLessons(
 ): Promise<RecallResult> {
   await maybeAutoMigrateLessons(projectRoot);
   const load = loadLessonsGraphResilient(projectRoot);
-  if (load.status === 'corrupt') return { lessons: [], totalMatches: 0, corrupt: true };
-  if (load.status === 'newer-version') {
-    return { lessons: [], totalMatches: 0, newerVersion: load.version };
+  if (load.status === 'corrupt') {
+    return { lessons: [], totalMatches: 0, suppressed: 0, corrupt: true };
   }
-  if (load.status === 'absent') return { lessons: [], totalMatches: 0 };
+  if (load.status === 'newer-version') {
+    return { lessons: [], totalMatches: 0, suppressed: 0, newerVersion: load.version };
+  }
+  if (load.status === 'absent') return { lessons: [], totalMatches: 0, suppressed: 0 };
   const graph = load.graph;
   // Normalize the file path so a project-relative glob matches regardless of the
   // shape the caller passed (absolute / ./-prefixed / backslash).
@@ -92,17 +107,21 @@ export async function recallLessons(
       ? query
       : { ...query, file: normalizeRecallFile(query.file, projectRoot) };
   const matches = queryLessons(graph, matchQuery);
+  // Dedup BEFORE ranking so the caps fill with fresh lessons (see seen-cache).
+  const dedup = openSessionDedup({ explicit: options.sessionId, disabled: options.noDedup });
+  const forRank = dedup === null ? matches : filterUnseen(dedup, matches);
   // Per-project recall tuning is the fallback for unset options; explicit
   // options (and `maxTokens: null` to disable the budget) still win.
   const cfg = loadRecallConfig(projectRoot);
-  const lessons = rankLessons(graph, matchQuery, matches, {
+  const lessons = rankLessons(graph, matchQuery, forRank, {
     limit: options.limit ?? cfg.limit,
     maxTokens: options.maxTokens === null ? undefined : (options.maxTokens ?? cfg.maxTokens),
   });
+  if (dedup !== null) commitSeen(dedup, lessons.map((l) => l.id));
   // The application/MCP path has no `--all`; recall here is always a mandatory,
   // capped call, so it is never a bypass.
   recordRecallTelemetry(projectRoot, graph, matchQuery, matches, lessons, { bypassed: false });
-  return { lessons, totalMatches: matches.length };
+  return { lessons, totalMatches: matches.length, suppressed: matches.length - forRank.length };
 }
 
 /**

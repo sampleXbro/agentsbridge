@@ -52,7 +52,7 @@ describe('recallLessons', () => {
 
   it('returns empty (not an error) when no graph and no legacy store exist', async () => {
     const result = await recallLessons(root, { keyword: 'anything' });
-    expect(result).toEqual({ lessons: [], totalMatches: 0 });
+    expect(result).toEqual({ lessons: [], totalMatches: 0, suppressed: 0 });
   });
 
   it('degrades to empty + corrupt flag instead of throwing on an unreadable graph', async () => {

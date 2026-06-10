@@ -203,5 +203,15 @@ export const descriptor = {
   },
   buildImportPaths: buildWindsurfImportPaths,
   detectionPaths: ['.windsurfrules', '.windsurf'],
+  nativeInstall: {
+    pickPaths: [
+      {
+        prefix: '.windsurf/rules',
+        feature: 'rules',
+        strategy: { kind: 'basename', suffix: '.md' },
+      },
+    ],
+    dialectHints: [{ frontmatterKey: 'trigger' }],
+  },
   conversionDefaults: { agentsToSkills: true },
 } satisfies TargetDescriptor;

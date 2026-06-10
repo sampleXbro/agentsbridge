@@ -15,7 +15,7 @@ import type {
   GenerateResult,
   LintDiagnostic,
 } from '../../core/types.js';
-import type { ValidatedConfig } from '../../config/core/schema.js';
+import type { ExtendPick, ValidatedConfig } from '../../config/core/schema.js';
 import type { TargetCapabilities, TargetGenerators } from './target.interface.js';
 import type { TargetImporterDescriptor } from './import-descriptor.js';
 
@@ -165,6 +165,54 @@ export interface TargetMetadata {
 }
 
 /**
+ * How a native-install pick rule derives canonical entity names from the files
+ * found under its directory.
+ * - `basename`: recursively collect files ending in `suffix`; name = basename
+ *   minus `suffix` (e.g. `.md`, `.mdc`).
+ * - `skillDir`: skill tree — `{name}/SKILL.md` plus flat top-level `*.md`.
+ * - `firstSegment`: the single segment after the rule prefix is the name
+ *   (e.g. `.claude/skills/{name}/...`).
+ */
+export type NativePickStrategy =
+  | { readonly kind: 'basename'; readonly suffix: string }
+  | { readonly kind: 'skillDir' }
+  | { readonly kind: 'firstSegment' };
+
+/** Maps a native directory prefix to a canonical feature + name strategy. */
+export interface NativePickRule {
+  /** POSIX path prefix under the repo root; matches the dir or any subpath. */
+  readonly prefix: string;
+  /** Canonical feature the matched files contribute to. */
+  readonly feature: 'commands' | 'rules' | 'agents' | 'skills';
+  /** How to derive entity names from the matched directory. */
+  readonly strategy: NativePickStrategy;
+}
+
+/** Frontmatter-dialect hint for `.mdc` flat-file target inference. */
+export interface NativeDialectHint {
+  /** Frontmatter key whose presence identifies this target. */
+  readonly frontmatterKey: string;
+}
+
+/**
+ * Descriptor-driven data for the install subsystem's native-path inference.
+ * Replaces the per-target `if (target === '…')` ladders (arch §3.1): each
+ * target declares its own pick paths / dialect hints instead.
+ */
+export interface NativeInstallSupport {
+  /** Ordered pick-path rules; the first matching prefix wins. */
+  readonly pickPaths?: readonly NativePickRule[];
+  /**
+   * Escape hatch for irreducibly custom inference (e.g. Gemini's `:`-namespaced
+   * command names, Copilot's overlapping `.github/*` dirs). When present it
+   * fully owns inference for this target and `pickPaths` is ignored.
+   */
+  readonly inferPick?: (repoRoot: string, posixPath: string) => Promise<ExtendPick>;
+  /** Frontmatter-dialect hints for `.mdc` flat-file target inference. */
+  readonly dialectHints?: readonly NativeDialectHint[];
+}
+
+/**
  * Full self-describing target descriptor.
  * Bundles everything needed to generate, import, lint, and detect a target.
  */
@@ -217,6 +265,12 @@ export interface TargetDescriptor {
    * Example: codex-cli owns '.agents/skills/', copilot consumes it in global mode.
    */
   readonly sharedArtifacts?: { readonly [pathPrefix: string]: 'owner' | 'consumer' };
+  /**
+   * Descriptor-driven native-install inference data (extends.pick from native
+   * files, `.mdc` dialect hints). Consumed by `src/install/native` and
+   * `src/install/manual` so those modules carry no target-id literals.
+   */
+  readonly nativeInstall?: NativeInstallSupport;
   /**
    * Optional native settings sidecar (e.g. Gemini `.gemini/settings.json` when embedded features are on).
    */

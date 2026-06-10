@@ -162,6 +162,11 @@ export const descriptor = {
     '.codex/agents',
     '.codex/rules',
   ],
+  nativeInstall: {
+    pickPaths: [
+      { prefix: '.codex', feature: 'rules', strategy: { kind: 'basename', suffix: '.md' } },
+    ],
+  },
   excludeFromStarterInit: true,
   conversionDefaults: { commandsToSkills: true, agentsToSkills: false },
 } satisfies TargetDescriptor;

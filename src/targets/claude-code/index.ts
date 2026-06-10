@@ -211,4 +211,20 @@ export const descriptor = {
   },
   buildImportPaths: buildClaudeCodeImportPaths,
   detectionPaths: [CLAUDE_ROOT, CLAUDE_NESTED_ROOT, '.claude/rules', '.claude/commands'],
+  nativeInstall: {
+    pickPaths: [
+      {
+        prefix: '.claude/commands',
+        feature: 'commands',
+        strategy: { kind: 'basename', suffix: '.md' },
+      },
+      { prefix: '.claude/rules', feature: 'rules', strategy: { kind: 'basename', suffix: '.md' } },
+      {
+        prefix: '.claude/agents',
+        feature: 'agents',
+        strategy: { kind: 'basename', suffix: '.md' },
+      },
+      { prefix: '.claude/skills/', feature: 'skills', strategy: { kind: 'firstSegment' } },
+    ],
+  },
 } satisfies TargetDescriptor;

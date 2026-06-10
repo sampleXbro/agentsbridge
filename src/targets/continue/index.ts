@@ -158,5 +158,20 @@ export const descriptor = {
   },
   buildImportPaths: buildContinueImportPaths,
   detectionPaths: ['.continue/rules', '.continue/skills', '.continue/mcpServers'],
+  nativeInstall: {
+    pickPaths: [
+      {
+        prefix: '.continue/rules',
+        feature: 'rules',
+        strategy: { kind: 'basename', suffix: '.md' },
+      },
+      {
+        prefix: '.continue/prompts',
+        feature: 'commands',
+        strategy: { kind: 'basename', suffix: '.md' },
+      },
+      { prefix: '.continue/skills', feature: 'skills', strategy: { kind: 'skillDir' } },
+    ],
+  },
   conversionDefaults: { agentsToSkills: true },
 } satisfies TargetDescriptor;

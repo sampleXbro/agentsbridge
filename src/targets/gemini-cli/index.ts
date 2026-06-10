@@ -27,6 +27,7 @@ import {
   GEMINI_CANONICAL_COMMANDS_DIR,
 } from './constants.js';
 import { importFromGemini } from './importer.js';
+import { inferGeminiPick } from '../../install/native/gemini-install-commands.js';
 import { geminiCommandMapper, geminiRuleMapper } from './import-mappers.js';
 import { lintRules } from './linter.js';
 import { buildGeminiCliImportPaths } from '../../core/reference/import-map-builders.js';
@@ -237,5 +238,6 @@ export const descriptor = {
   },
   buildImportPaths: buildGeminiCliImportPaths,
   detectionPaths: ['GEMINI.md', '.gemini'],
+  nativeInstall: { inferPick: inferGeminiPick },
   conversionDefaults: { agentsToSkills: false },
 } satisfies TargetDescriptor;

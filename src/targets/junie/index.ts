@@ -220,4 +220,20 @@ export const descriptor = {
     '.junie/mcp/mcp.json',
     '.aiignore',
   ],
+  nativeInstall: {
+    pickPaths: [
+      {
+        prefix: '.junie/commands',
+        feature: 'commands',
+        strategy: { kind: 'basename', suffix: '.md' },
+      },
+      { prefix: '.junie/rules', feature: 'rules', strategy: { kind: 'basename', suffix: '.md' } },
+      {
+        prefix: '.junie/agents',
+        feature: 'agents',
+        strategy: { kind: 'basename', suffix: '.md' },
+      },
+      { prefix: '.junie/skills', feature: 'skills', strategy: { kind: 'skillDir' } },
+    ],
+  },
 } satisfies TargetDescriptor;

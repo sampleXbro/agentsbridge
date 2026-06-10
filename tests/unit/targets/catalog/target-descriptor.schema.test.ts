@@ -188,6 +188,62 @@ describe('targetDescriptorSchema', () => {
     ).toThrow();
   });
 
+  it('accepts a descriptor with nativeInstall pickPaths', () => {
+    expect(() =>
+      validateDescriptor({
+        ...minimalDescriptor,
+        nativeInstall: {
+          pickPaths: [
+            { prefix: '.test/rules', feature: 'rules', strategy: { kind: 'basename', suffix: '.md' } },
+            { prefix: '.test/skills', feature: 'skills', strategy: { kind: 'skillDir' } },
+            { prefix: '.test/skills/', feature: 'skills', strategy: { kind: 'firstSegment' } },
+          ],
+          dialectHints: [{ frontmatterKey: 'alwaysApply' }],
+        },
+      }),
+    ).not.toThrow();
+  });
+
+  it('accepts a descriptor with a nativeInstall.inferPick resolver', () => {
+    expect(() =>
+      validateDescriptor({
+        ...minimalDescriptor,
+        nativeInstall: { inferPick: async () => ({}) },
+      }),
+    ).not.toThrow();
+  });
+
+  it('rejects a nativeInstall pick strategy with an unknown kind', () => {
+    expect(() =>
+      validateDescriptor({
+        ...minimalDescriptor,
+        nativeInstall: {
+          pickPaths: [{ prefix: '.test', feature: 'rules', strategy: { kind: 'bogus' } }],
+        },
+      }),
+    ).toThrow();
+  });
+
+  it('rejects a basename strategy missing its suffix', () => {
+    expect(() =>
+      validateDescriptor({
+        ...minimalDescriptor,
+        nativeInstall: {
+          pickPaths: [{ prefix: '.test', feature: 'rules', strategy: { kind: 'basename' } }],
+        },
+      }),
+    ).toThrow();
+  });
+
+  it('rejects unknown keys inside nativeInstall (strict)', () => {
+    expect(() =>
+      validateDescriptor({
+        ...minimalDescriptor,
+        nativeInstall: { bogusKey: true },
+      }),
+    ).toThrow();
+  });
+
   it('validates the rich-plugin descriptor with all optional fields', async () => {
     const { descriptor } = await import('../../../../tests/fixtures/plugins/rich-plugin/index.js');
     expect(() => validateDescriptor(descriptor)).not.toThrow();

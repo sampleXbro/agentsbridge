@@ -9,12 +9,13 @@ import {
 /**
  * The lessons recall/capture ritual, wrapped in managed-block sentinels.
  *
- * Like the root generation contract, the lessons paragraph is NOT canonical
- * content. It is injected into a target's primary root instruction at generate
- * time (only when the lessons subsystem is active) and stripped on import.
- * Sentinels make the block an identifiable unit so round-trip is byte-stable
- * and wording updates propagate from the `LESSONS_PROCEDURAL_RULE` constant on
- * the next `generate` rather than drifting in canonical `_root.md`.
+ * Unlike the generation contract, this block IS canonical content: `init
+ * --lessons` writes it into `.agentsmesh/rules/_root.md` (see `scaffoldLessons`),
+ * so it reaches every target through ordinary canonical rule generation — even
+ * rules-directory targets the generation-contract decorator skips. The sentinels
+ * keep the block an identifiable unit so round-trip is byte-stable and wording
+ * updates propagate from the `LESSONS_PROCEDURAL_RULE` constant the next time
+ * scaffold runs (the legacy-form ladder below upgrades older wordings in place).
  */
 export const LESSONS_PARAGRAPH_BLOCK = `${LESSONS_CONTRACT_START}
 ${LESSONS_PROCEDURAL_RULE}
@@ -83,12 +84,30 @@ No shell? Use the \`lessons_query\` and \`lessons_add\` MCP tools — same two o
 **These two commands ARE the system. Skip them and the system does not exist.**`;
 
 /**
+ * Prior shipped wording — the maximalist two-tier block (BLOCKING REQUIREMENT
+ * header, "read-only included" recall scope, rebuttal pedagogy), before the
+ * Phase-1 revision that scoped recall to mutating actions, exempted pure reads +
+ * the recall query itself, and moved the pedagogy into the `lessons` skill.
+ * Retained verbatim so a project generated with it strips/upgrades to the current
+ * (scoped, compact) block exactly once on the next scaffold.
+ */
+const LESSONS_RULE_V3 = `## Lessons (BLOCKING REQUIREMENT — MUST run both, no exceptions; the user will check)
+
+The graph \`.agentsmesh/lessons/lessons.json\` is canonical — never hand-edit. Full manual: the \`lessons\` skill.
+
+**Recall — before every file edit and every shell command, read-only included (git/ls/cat/test runs still count):** run \`agentsmesh lessons query --file <path-about-to-edit> --cmd <command-about-to-run>\` (add \`--keyword <text>\` to match by task), then apply every rule returned. Pass the real \`--file\`/\`--cmd\`: a predicate-less query is rejected, and keyword-only recall misses most lessons. Skipping recall is a process violation.
+
+**Capture — immediately after any failure, not limited to red tests** (a failing CI/lint/typecheck, a code review, a user correction, a regression, or a wrong assumption — yours or anyone's): run \`agentsmesh lessons add "<imperative rule>" --topic <id> --trigger-file <glob> --evidence <sha|lesson-id>\` — one trigger minimum (prefer \`--trigger-file\`); new area adds \`--new-topic --topic-summary "<line>"\`.
+
+No shell? Use the \`lessons_query\` / \`lessons_add\` MCP tools. Skip these and the system does not exist.`;
+
+/**
  * Legacy raw (sentinel-less) forms: the procedural paragraph as it was appended
  * directly into canonical `_root.md` before the managed-block model, newest
  * first. Stripped and upgraded so pre-existing projects converge on the block
  * exactly once.
  */
-const LEGACY_RAW_FORMS = [LESSONS_PROCEDURAL_RULE, LESSONS_RULE_V2, LESSONS_RULE_V1];
+const LEGACY_RAW_FORMS = [LESSONS_PROCEDURAL_RULE, LESSONS_RULE_V3, LESSONS_RULE_V2, LESSONS_RULE_V1];
 
 /**
  * Place the lessons ritual at the TOP of the document body, after any leading

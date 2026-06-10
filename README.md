@@ -116,7 +116,8 @@ agentsmesh check      # CI-friendly drift gate against .agentsmesh/.lock
 Use `agentsmesh init --lessons` when you want the optional lessons recall +
 capture subsystem. The canonical graph at `.agentsmesh/lessons/lessons.json`
 is the single source of truth. Agents query it through one shell command
-before every edit (`agentsmesh lessons query --file <path> --cmd <command>`)
+before each edit or state-changing command — pure reads are exempt —
+(`agentsmesh lessons query --file <path> --cmd <command>`)
 and capture failures with one shell command after (`agentsmesh lessons add
 "<rule>" --topic <id> --trigger-file <glob>`). Delivery is two-tier: the
 minimal always-on **trigger** is injected into `.agentsmesh/rules/_root.md`

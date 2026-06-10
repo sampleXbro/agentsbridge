@@ -23,11 +23,10 @@ describe('toRelPath', () => {
 });
 
 describe('LESSONS_PROCEDURAL_RULE', () => {
-  it('declares both Recall and Capture rituals as non-negotiable', () => {
+  it('declares both Recall and Capture rituals under a BLOCKING header', () => {
     expect(LESSONS_PROCEDURAL_RULE).toContain('Recall');
     expect(LESSONS_PROCEDURAL_RULE).toContain('Capture');
-    expect(LESSONS_PROCEDURAL_RULE).toContain('process violation');
-    expect(LESSONS_PROCEDURAL_RULE).toContain('MUST');
+    expect(LESSONS_PROCEDURAL_RULE).toContain('BLOCKING');
   });
 
   it('names both CLI primitives so the agent has the exact recall + capture commands', () => {
@@ -46,18 +45,19 @@ describe('LESSONS_PROCEDURAL_RULE', () => {
     expect(LESSONS_PROCEDURAL_RULE).not.toContain('--trigger-kw');
   });
 
-  it('closes the read-only / just-investigating loophole so recall fires on every command', () => {
-    // The exact rationalization that lets an agent skip recall during a
-    // "read-only" investigation. Naming it (and confirming git/test/coverage
-    // still count) is the highest-value recall tweak.
-    expect(LESSONS_PROCEDURAL_RULE).toMatch(/read-only/i);
-    expect(LESSONS_PROCEDURAL_RULE).toMatch(/still count/i);
+  it('scopes recall to mutating actions and exempts pure-read commands + the query itself', () => {
+    // Phase 1: recall fires before edits and STATE-CHANGING commands only.
+    // Pure reads (cat/ls/grep/git-log) and the recall command itself are exempt
+    // — removing the infinite regress and the most-flouted "read-only" clause.
+    expect(LESSONS_PROCEDURAL_RULE).toMatch(/state-changing command/i);
+    expect(LESSONS_PROCEDURAL_RULE).toMatch(/exempt/i);
+    expect(LESSONS_PROCEDURAL_RULE).toMatch(/pure[- ]read/i);
   });
 
-  it('defines a failure broadly — a user correction or self-noticed mistake counts, not just red tests', () => {
+  it('defines a failure broadly — a user correction or wrong assumption counts, not just red tests', () => {
     expect(LESSONS_PROCEDURAL_RULE).toMatch(/user correction/i);
-    expect(LESSONS_PROCEDURAL_RULE).toMatch(/not limited to/i);
-    expect(LESSONS_PROCEDURAL_RULE).toMatch(/had to redo|surprised|wrong assumption/i);
+    expect(LESSONS_PROCEDURAL_RULE).toMatch(/regression/i);
+    expect(LESSONS_PROCEDURAL_RULE).toMatch(/wrong assumption/i);
   });
 
   it('names the canonical graph path so init scaffolding stays consistent', () => {
@@ -72,14 +72,22 @@ describe('LESSONS_PROCEDURAL_RULE', () => {
   it('uses tool-agnostic action verbs so the rule works in any harness', () => {
     // Universal verbs the agent can map to its own toolset.
     expect(LESSONS_PROCEDURAL_RULE).toMatch(/file edit/);
-    expect(LESSONS_PROCEDURAL_RULE).toMatch(/shell command/);
+    expect(LESSONS_PROCEDURAL_RULE).toMatch(/command/);
   });
 
-  it('keeps the forcing language that turns the rule binding rather than advisory', () => {
-    expect(LESSONS_PROCEDURAL_RULE).toContain('BLOCKING REQUIREMENT');
-    expect(LESSONS_PROCEDURAL_RULE).toContain('no exceptions');
-    expect(LESSONS_PROCEDURAL_RULE).toContain('the user will check');
-    expect(LESSONS_PROCEDURAL_RULE).toContain('the system does not exist');
+  it('keeps a BLOCKING frame but moves the maximalist pedagogy into the skill', () => {
+    // The always-on block stays binding ("BLOCKING") but the rebuttal prose
+    // ("process violation", "the user will check", "the system does not exist")
+    // moves to the on-demand skill so it no longer taxes every session.
+    expect(LESSONS_PROCEDURAL_RULE).toContain('BLOCKING');
+    expect(LESSONS_PROCEDURAL_RULE).not.toContain('process violation');
+    expect(LESSONS_PROCEDURAL_RULE).not.toContain('the user will check');
+    expect(LESSONS_PROCEDURAL_RULE).not.toContain('the system does not exist');
+  });
+
+  it('is compact — materially smaller than the prior maximalist block', () => {
+    // Phase 1 trims the always-on per-session tax. Guard against regrowth.
+    expect(LESSONS_PROCEDURAL_RULE.length).toBeLessThan(820);
   });
 
   it('does NOT bake in any Claude Code-specific tool names as required actions', () => {

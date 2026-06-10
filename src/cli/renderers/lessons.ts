@@ -98,18 +98,23 @@ function renderStats(data: LessonsStatsData, format: 'text' | 'json'): void {
   }
   const r = data.report;
   const be = r.preloadBreakEven;
-  logger.info(`recalls: ${r.totalRecalls}   no-match: ${pct(r.noMatchRate)}`);
+  logger.info(
+    `recalls: ${r.totalRecalls}   no-match: ${pct(r.noMatchRate)}   sessions: ${be.sessions}   bypassed(--all): ${r.bypassedRecalls}`,
+  );
   logger.info(
     `match counts: ${r.matchCountHistogram.map((b) => `${b.bucket}=${b.count}`).join('  ')}`,
   );
   logger.info(
     `returned tokens: p50=${r.returnedTokens.p50} p90=${r.returnedTokens.p90} max=${r.returnedTokens.max}`,
   );
+  // Honest per-session comparison: preload is paid once PER session, mandatory
+  // recall excludes --all dumps. ratio = preload / mandatory recall (>1 ⇒ recall wins).
   logger.info(
-    `recall tokens cumulative=${r.cumulativeRecallTokens} vs preload baseline=${r.wholeActiveSetTokens}`,
+    `break-even (per session): preload ${be.sessions}×${r.wholeActiveSetTokens}=${be.preloadTokens} vs mandatory recall=${be.mandatoryRecallTokens} → ` +
+      `${be.recallCheaper ? 'recall cheaper' : 'preload cheaper'} (ratio ${be.ratio.toFixed(2)})`,
   );
   logger.info(
-    `break-even: ${be.perActionCheaper ? 'per-action cheaper' : 'preload cheaper'} (ratio ${be.ratio.toFixed(2)})`,
+    `redundancy: ${pct(r.redundancy.rate)} of delivered rule-tokens are intra-session repeats (coverage ${pct(r.redundancy.coverage)})`,
   );
   logger.info(
     `reachability: keyword-only recalls ${pct(r.reachability.keywordOnlyRecallRate)}, keyword-only-unreachable lessons ${r.reachability.keywordOnlyUnreachableLessons}`,
@@ -210,15 +215,16 @@ function renderJournal(data: LessonsJournalData): void {
 }
 
 function renderValidate(data: LessonsValidateData): void {
-  if (data.ok && data.findings.length === 0) {
-    logger.success('Lessons graph: ok.');
-    return;
-  }
+  // Findings (errors + advisory warnings) go to stderr; the stdout verdict tracks
+  // the EXIT semantics — `ok` means "no error-level findings". Warnings (e.g. a
+  // DEAD_FILE_GLOB) are advisories that don't fail validation, so they're shown
+  // but don't suppress the positive verdict.
   for (const f of data.findings) {
     const line = `${f.level.toUpperCase()} ${f.code}: ${f.message}`;
     if (f.level === 'error') logger.error(line);
     else logger.warn(line);
   }
+  if (data.ok) logger.success('Lessons graph: ok.');
 }
 
 function renderImportMd(data: LessonsImportMdData): void {

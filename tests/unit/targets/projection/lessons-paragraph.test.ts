@@ -70,6 +70,23 @@ No shell? Use the \`lessons_query\` and \`lessons_add\` MCP tools — same two o
 
 **These two commands ARE the system. Skip them and the system does not exist.**`;
 
+/**
+ * The maximalist two-tier wording (BLOCKING REQUIREMENT header, "read-only
+ * included" recall scope, rebuttal pedagogy) shipped before the Phase-1 revision
+ * that scoped recall to mutating actions and moved the pedagogy into the skill.
+ * Kept verbatim so we can prove the strip path upgrades a project generated with
+ * it to the current scoped/compact managed block.
+ */
+const LESSONS_RULE_V3 = `## Lessons (BLOCKING REQUIREMENT — MUST run both, no exceptions; the user will check)
+
+The graph \`.agentsmesh/lessons/lessons.json\` is canonical — never hand-edit. Full manual: the \`lessons\` skill.
+
+**Recall — before every file edit and every shell command, read-only included (git/ls/cat/test runs still count):** run \`agentsmesh lessons query --file <path-about-to-edit> --cmd <command-about-to-run>\` (add \`--keyword <text>\` to match by task), then apply every rule returned. Pass the real \`--file\`/\`--cmd\`: a predicate-less query is rejected, and keyword-only recall misses most lessons. Skipping recall is a process violation.
+
+**Capture — immediately after any failure, not limited to red tests** (a failing CI/lint/typecheck, a code review, a user correction, a regression, or a wrong assumption — yours or anyone's): run \`agentsmesh lessons add "<imperative rule>" --topic <id> --trigger-file <glob> --evidence <sha|lesson-id>\` — one trigger minimum (prefer \`--trigger-file\`); new area adds \`--new-topic --topic-summary "<line>"\`.
+
+No shell? Use the \`lessons_query\` / \`lessons_add\` MCP tools. Skip these and the system does not exist.`;
+
 describe('LESSONS_PARAGRAPH_BLOCK', () => {
   it('wraps the procedural rule body in the lessons-contract sentinels', () => {
     expect(LESSONS_PARAGRAPH_BLOCK.startsWith(LESSONS_CONTRACT_START)).toBe(true);
@@ -186,5 +203,20 @@ describe('stripLessonsParagraph', () => {
     expect(out.match(/## Lessons \(/g)?.length).toBe(1);
     // The expansive enumeration is gone from the always-on block after upgrade.
     expect(out).not.toContain('import-md');
+  });
+
+  it('strips the previous maximalist wording (V3) on the next scaffold', () => {
+    const out = stripLessonsParagraph(`# Root\n\nbody\n\n${LESSONS_RULE_V3}`);
+    expect(out).toBe('# Root\n\nbody');
+    expect(out).not.toContain('## Lessons (');
+  });
+
+  it('upgrades the V3 maximalist wording to the scoped/compact managed block', () => {
+    const out = appendLessonsParagraph(`# Root\n\nbody\n\n${LESSONS_RULE_V3}`);
+    expect(out).toContain(LESSONS_PROCEDURAL_RULE);
+    expect(out.match(/## Lessons \(/g)?.length).toBe(1);
+    // The "read-only included" scope and rebuttal pedagogy are gone post-upgrade.
+    expect(out).not.toContain('read-only included');
+    expect(out).not.toContain('process violation');
   });
 });

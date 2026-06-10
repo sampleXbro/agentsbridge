@@ -15,6 +15,7 @@ import {
   collectInvalidTriggerPatterns,
   collectLowSignalKeywords,
 } from './validate-quality.js';
+import { collectDeadFileGlobs, collectRunnerAnchoredPatterns } from './validate-liveness.js';
 
 export type ValidationLevel = 'error' | 'warning';
 
@@ -33,7 +34,20 @@ export interface ValidationReport {
   readonly findings: ValidationFinding[];
 }
 
-export function validateLessonsGraph(graph: LessonsGraph): ValidationReport {
+export interface ValidateOptions {
+  /**
+   * Working-tree file list (project-relative, forward-slash) for the dead-glob
+   * liveness check. When omitted the check is SKIPPED — the pure write-barrier
+   * call in `mutate.ts` passes nothing, so `add` never walks the tree and a
+   * liveness warning can never block a write. The CLI/lint callers supply it.
+   */
+  readonly knownPaths?: ReadonlySet<string>;
+}
+
+export function validateLessonsGraph(
+  graph: LessonsGraph,
+  options: ValidateOptions = {},
+): ValidationReport {
   const findings: ValidationFinding[] = [];
 
   const schemaResult = LessonsGraphSchema.safeParse(graph);
@@ -58,6 +72,8 @@ export function validateLessonsGraph(graph: LessonsGraph): ValidationReport {
   collectOrphans(graph, findings);
   collectFanout(graph, findings);
   collectLowSignalKeywords(graph, findings);
+  collectRunnerAnchoredPatterns(graph, findings);
+  if (options.knownPaths !== undefined) collectDeadFileGlobs(graph, findings, options.knownPaths);
 
   const ok = findings.every((f) => f.level !== 'error');
   return { ok, findings };

@@ -871,6 +871,35 @@ describe('runLessons validate', () => {
     expect(r.data.ok).toBe(true);
     expect(r.exitCode).toBe(0);
   });
+
+  it('surfaces a dead file_glob trigger (matches no working-tree file) as a warning', async () => {
+    // End-to-end wiring: the handler computes the real working-tree file list
+    // and passes it to validate, so a glob over a path that does not exist here
+    // is flagged. Warning-level, so the graph stays ok / exit 0.
+    const graph: LessonsGraph = {
+      version: 1,
+      lessons: {
+        'x-rule': {
+          rule: 'R.',
+          topics: ['t'],
+          triggers: ['t-dead'],
+          evidence: [],
+          status: 'active',
+          createdAt: '2026-06-05',
+        },
+      },
+      topics: { t: { summary: 'T.' } },
+      triggers: { 't-dead': { kind: 'file_glob', pattern: 'src/long/gone/**/*.ts' } },
+    };
+    saveLessonsGraph(root, graph);
+    const r = await runLessons({}, ['validate'], root);
+    if (r.subcommand !== 'validate') return;
+    expect(
+      r.data.findings.some((f) => f.code === 'DEAD_FILE_GLOB' && f.triggerId === 't-dead'),
+    ).toBe(true);
+    expect(r.data.ok).toBe(true);
+    expect(r.exitCode).toBe(0);
+  });
 });
 
 describe('runLessons journal', () => {

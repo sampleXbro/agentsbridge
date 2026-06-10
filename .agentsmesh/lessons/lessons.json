@@ -3303,7 +3303,7 @@
       "evidence": [],
       "rationale": "Agent skipped mandatory recall during a read-only coverage investigation; user corrected it. The prose excuse list did not name the read-only loophole.",
       "rule": "Run `agentsmesh lessons query` BEFORE every shell command and file edit, including read-only investigation (git diff/log/status/show, vitest/coverage runs, ls/cat). There is NO read-only carve-out — \"I'm just looking / this can't change anything\" is the exact rationalization that silently skips recall. Query first regardless of whether the command mutates anything.",
-      "status": "active",
+      "status": "deprecated",
       "topics": [
         "lessons-system"
       ],
@@ -3328,6 +3328,21 @@
       ],
       "triggers": [
         "t-glob-0b5c0a21"
+      ]
+    },
+    "lessons-system-the-recall-contract-lessons-procedural": {
+      "createdAt": "2026-06-10",
+      "evidence": [
+        "lessons-system-run-agentsmesh-lessons-query-before"
+      ],
+      "rule": "The recall contract (LESSONS_PROCEDURAL_RULE in src/lessons/paths.ts) is deliberately scoped to MUTATING actions — file edits and state-changing commands; pure-read commands (cat/ls/grep/git-log) and the `agentsmesh lessons query` command itself are EXEMPT. Do not reintroduce a 'read-only included / no carve-out' clause: it created an infinite regress (recall before the recall command) and was the most-flouted rule. Keep the always-on block compact (~180 tokens); rebuttal pedagogy lives in the lessons skill, not the always-on block. Wording changes ship via the LEGACY_RAW_FORMS version ladder in lessons-paragraph.ts.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-db7e480d",
+        "t-glob-c1deac29"
       ]
     },
     "lessons-system-treat-any-existing-lessons-graph": {
@@ -6343,6 +6358,10 @@
       "kind": "file_glob",
       "pattern": "tests/e2e/**"
     },
+    "t-glob-c1deac29": {
+      "kind": "file_glob",
+      "pattern": "src/targets/projection/lessons-paragraph.ts"
+    },
     "t-glob-c2fd94f5": {
       "kind": "file_glob",
       "pattern": "src/**/*hooks*.ts"
@@ -6370,6 +6389,10 @@
     "t-glob-d3bf322e": {
       "kind": "file_glob",
       "pattern": "src/lessons/import-legacy.ts"
+    },
+    "t-glob-db7e480d": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/paths.ts"
     },
     "t-glob-e0110795": {
       "kind": "file_glob",

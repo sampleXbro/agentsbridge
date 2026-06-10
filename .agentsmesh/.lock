@@ -1,7 +1,7 @@
 # Auto-generated. DO NOT EDIT MANUALLY.
 # Tracks the state of all config files for team conflict resolution.
 
-generated_at: 2026-06-10T14:34:40.100Z
+generated_at: 2026-06-10T17:13:42.978Z
 generated_by: serhii
 lib_version: 0.22.0
 checksums:
@@ -20,7 +20,7 @@ checksums:
   ignore: sha256:53ad60cb2c945a41619fbb5dd0d43559c8461e4cb35e30f4d98b901c73766e12
   mcp.json: sha256:963782b54cbea4ef4686fd036e87332e1a61042579916222991429e359654921
   permissions.yaml: sha256:c806acb62daf533af836dc113be37e9840a2a9b3e21b984c5909fcfb16eb52f2
-  rules/_root.md: sha256:9794f036226b8a8e528e41d3ee7500018d975987f0d593ec08625f4cccefc98c
+  rules/_root.md: sha256:36ffbebc8f5b757e38fb60d4fb1a7a090c7ed6acf68ad9ecd0ebd93bc7463bcb
   rules/typescript.md: sha256:18f52143dfdd3e219a5c6d6c0feb7283fe74cce99458c46dafcd1c3620ad4fba
   skills/add-agent-target/SKILL.md: sha256:b425055659d29f74dbbe97966f6396e918d96cb0736d1448217656cf26b410f6
   skills/add-agent-target/references/target-addition-checklist.md: sha256:3b658fc204d33995cb15281af1696d8ded09abac26455382c3e8472a1fddafca
@@ -36,7 +36,7 @@ checksums:
   skills/code-reviewer/scripts/review_report_generator.py: sha256:9507bf76ab19c18feac70746554e104a96f03cf51bf82c6c18cf7a53bedc7719
   skills/docs-and-examples/SKILL.md: sha256:3339fe5adc40866cc6d9c75f3b452056ff144ecdaa9b4e7e14c412088948b9be
   skills/homebrew-packaging/SKILL.md: sha256:eb0e1a2075c53efe70bbae7cb6996049ebe75a5b0a40ccb5326f051f07c4e02a
-  skills/lessons/SKILL.md: sha256:98de44ebb775d6c7c38d6087625f2c219e3338c0f332e7e95a3cf0273edbb751
+  skills/lessons/SKILL.md: sha256:cc569857d296ed0579bc1e59146bb00ae8a0cec50bda8f78d080462b19a0a5c9
   skills/library-testing/SKILL.md: sha256:750c0819d76fd3585f4103b772968823f2aecfe31bd2741d5a154c6d5d56903c
   skills/package-release-engineering/SKILL.md: sha256:e2f26fc8d2ab1dca6547e906dd8e044d52339da6c2ca096b8f36f2bd4ecb1664
   skills/post-feature-qa/SKILL.md: sha256:718b292a72e03a890018da90005b184439d0e180b1f3a6708a7606b2024d9eaa

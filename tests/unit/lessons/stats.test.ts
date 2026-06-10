@@ -88,18 +88,82 @@ describe('summarizeRecall', () => {
     expect(r.returnedTokens.p50).toBe(20);
   });
 
-  it('computes the whole-active-set preload baseline and break-even', () => {
+  it('compares preload PER SESSION against mandatory (non---all) recall', () => {
     // Active rules: 40 + 80 chars -> 10 + 20 = 30 est tokens. Deprecated excluded.
-    const cheap = summarizeRecall([rec({ returnedTokens: 5 })], graph); // cumulative 5 < 30
-    expect(cheap.wholeActiveSetTokens).toBe(30);
-    expect(cheap.preloadBreakEven.perActionCheaper).toBe(true);
-
+    // 10 recalls within one session × 9 tokens = 90 mandatory; preload = 30 × 1
+    // session = 30 → preload still cheaper here, ratio = preload/recall = 30/90.
     const heavy = summarizeRecall(
-      Array.from({ length: 10 }, () => rec({ returnedTokens: 9 })),
+      Array.from({ length: 10 }, (_, i) => rec({ ts: `2026-06-07T00:0${i}:00.000Z`, returnedTokens: 9 })),
       graph,
-    ); // 90 > 30
-    expect(heavy.preloadBreakEven.perActionCheaper).toBe(false);
-    expect(heavy.preloadBreakEven.ratio).toBeCloseTo(3, 5);
+    );
+    expect(heavy.wholeActiveSetTokens).toBe(30);
+    expect(heavy.preloadBreakEven.sessions).toBe(1);
+    expect(heavy.preloadBreakEven.preloadTokens).toBe(30);
+    expect(heavy.preloadBreakEven.mandatoryRecallTokens).toBe(90);
+    expect(heavy.preloadBreakEven.recallCheaper).toBe(false);
+    expect(heavy.preloadBreakEven.ratio).toBeCloseTo(30 / 90, 5);
+  });
+
+  it('multiplies preload by the session count — the fix for the single-preload bug', () => {
+    // The SAME 10 light recalls, but each in its own session (>30-min gaps):
+    // preload = 30 × 10 sessions = 300 vs 10 × 9 = 90 mandatory → recall now wins.
+    const spread = summarizeRecall(
+      Array.from({ length: 10 }, (_, i) =>
+        rec({ ts: `2026-06-07T${String(i * 2).padStart(2, '0')}:00:00.000Z`, returnedTokens: 9 }),
+      ),
+      graph,
+    );
+    expect(spread.preloadBreakEven.sessions).toBe(10);
+    expect(spread.preloadBreakEven.preloadTokens).toBe(300);
+    expect(spread.preloadBreakEven.recallCheaper).toBe(true);
+    expect(spread.preloadBreakEven.ratio).toBeCloseTo(300 / 90, 5);
+  });
+
+  it('groups recalls by explicit session id when the harness exports one', () => {
+    const r = summarizeRecall(
+      [rec({ session: 'a' }), rec({ session: 'a' }), rec({ session: 'b' })],
+      graph,
+    );
+    expect(r.preloadBreakEven.sessions).toBe(2);
+  });
+
+  it('excludes --all (bypassed) recalls from the mandatory recall cost', () => {
+    const r = summarizeRecall(
+      [rec({ returnedTokens: 50 }), rec({ returnedTokens: 999, bypassed: true })],
+      graph,
+    );
+    expect(r.bypassedRecalls).toBe(1);
+    expect(r.preloadBreakEven.mandatoryRecallTokens).toBe(50);
+    // The cumulative figure still reflects every byte delivered, dumps included.
+    expect(r.cumulativeRecallTokens).toBe(1049);
+  });
+
+  it('measures intra-session repeat delivery from lesson ids', () => {
+    // Same session (identical ts): `reachable` (10 tokens) delivered twice — the
+    // second delivery is redundant. accounted = 20, redundant = 10 → rate 0.5.
+    const r = summarizeRecall(
+      [rec({ lessonIds: ['reachable'] }), rec({ lessonIds: ['reachable'] })],
+      graph,
+    );
+    expect(r.redundancy.rate).toBe(0.5);
+    expect(r.redundancy.coverage).toBe(1);
+  });
+
+  it('does NOT count a lesson re-delivered in a DIFFERENT session as redundant', () => {
+    const r = summarizeRecall(
+      [
+        rec({ ts: '2026-06-01T00:00:00.000Z', lessonIds: ['reachable'] }),
+        rec({ ts: '2026-06-02T00:00:00.000Z', lessonIds: ['reachable'] }),
+      ],
+      graph,
+    );
+    expect(r.redundancy.rate).toBe(0);
+  });
+
+  it('reports redundancy coverage 0 when records predate the lessonIds field', () => {
+    const r = summarizeRecall([rec({ returnedTokens: 5 })], graph); // no lessonIds
+    expect(r.redundancy.coverage).toBe(0);
+    expect(r.redundancy.rate).toBe(0);
   });
 
   it('measures reachability: keyword-only recall rate and keyword-only-unreachable lessons', () => {
@@ -128,8 +192,9 @@ describe('summarizeRecall', () => {
     const empty: LessonsGraph = { version: 1, lessons: {}, topics: {}, triggers: {} };
     const r = summarizeRecall([rec({ returnedTokens: 50 })], empty);
     expect(r.wholeActiveSetTokens).toBe(0);
+    expect(r.preloadBreakEven.preloadTokens).toBe(0);
     expect(r.preloadBreakEven.ratio).toBe(0);
-    expect(r.preloadBreakEven.perActionCheaper).toBe(false);
+    expect(r.preloadBreakEven.recallCheaper).toBe(false);
     expect(r.reachability.keywordOnlyUnreachableLessons).toBe(0);
   });
 });

@@ -5,6 +5,7 @@ import { queryLessons } from '../../lessons/query.js';
 import { rankLessons } from '../../lessons/ranking.js';
 import { recordRecallTelemetry } from '../../lessons/recall.js';
 import { loadRecallConfig } from '../../lessons/recall-config.js';
+import { listProjectFiles } from '../../lessons/project-files.js';
 import { summarizeRecall } from '../../lessons/stats.js';
 import { isTelemetryEnabled, readRecallLog, recallLogExists } from '../../lessons/telemetry.js';
 import { validateLessonsGraph } from '../../lessons/validate.js';
@@ -136,8 +137,11 @@ export function doQuery(
   const ranked = rankLessons(graph, query, matches, { limit, maxTokens });
   // Record recall telemetry on the CLI path too (gated; no-op unless opt-in),
   // so shell-driven `lessons query` is visible to `lessons stats` — parity with
-  // the MCP `lessons_query` tool, which records via recallLessons.
-  recordRecallTelemetry(projectRoot, graph, query, matches, ranked);
+  // the MCP `lessons_query` tool, which records via recallLessons. `--all` is a
+  // diagnostic dump, not a mandatory recall, so flag it as a bypass.
+  recordRecallTelemetry(projectRoot, graph, query, matches, ranked, {
+    bypassed: flags.all === true,
+  });
   const lessons = ranked.map(({ id, lesson, score }) => ({
     id,
     rule: lesson.rule,
@@ -210,7 +214,11 @@ export function doStats(flags: LessonsFlags, projectRoot: string): LessonsComman
 
 export function doValidate(projectRoot: string): LessonsCommandResult {
   const graph = tryLoadLessonsGraph(projectRoot) ?? emptyGraph();
-  const report = validateLessonsGraph(graph);
+  // Supply the working-tree file list so dead-`file_glob` triggers surface; null
+  // (no git, walk failed) → undefined → the liveness check is skipped, never a
+  // false "everything is dead".
+  const knownPaths = listProjectFiles(projectRoot) ?? undefined;
+  const report = validateLessonsGraph(graph, { knownPaths });
   const data: LessonsValidateData = { ok: report.ok, findings: report.findings };
   return { subcommand: 'validate', exitCode: report.ok ? 0 : 1, data };
 }

@@ -12,6 +12,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadLessonsGraph } from '../../../lessons/graph-store.js';
 import { lessonsPaths } from '../../../lessons/paths.js';
+import { listProjectFiles } from '../../../lessons/project-files.js';
 import { validateLessonsGraph } from '../../../lessons/validate.js';
 import type { TargetLayoutScope } from '../../../targets/catalog/target-descriptor.js';
 import type { LintDiagnostic } from '../../types.js';
@@ -45,7 +46,8 @@ export function lintLessonsSubsystem(
     ];
   }
 
-  const report = validateLessonsGraph(graph);
+  const knownPaths = listProjectFiles(projectRoot) ?? undefined;
+  const report = validateLessonsGraph(graph, { knownPaths });
   for (const finding of report.findings) {
     out.push(diag(finding.level, GRAPH_REL, `[${finding.code}] ${finding.message}`));
   }

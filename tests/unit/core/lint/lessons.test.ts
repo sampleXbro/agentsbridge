@@ -44,6 +44,10 @@ function validRootRule(): string {
 
 beforeEach(() => {
   ROOT = mkdtempSync(join(tmpdir(), 'agentsmesh-lessons-lint-'));
+  // Keep validGraph()'s `src/**/*.ts` trigger LIVE so the dead-`file_glob`
+  // liveness check stays quiet — these tests assert the integrity/heading
+  // diagnostics, not trigger liveness (which has its own unit coverage).
+  write('src/seed.ts', 'export {};\n');
 });
 
 afterEach(() => {

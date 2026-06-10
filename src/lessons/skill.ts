@@ -31,13 +31,17 @@ export const LESSONS_SKILL_BODY = `# Lessons — operating manual
 Two commands: **Recall** before you act, **Capture** after any failure. The graph
 \`.agentsmesh/lessons/lessons.json\` is canonical — never hand-edit.
 
-## Recall — before every file edit / shell command (no read-only exception)
+## Recall — before each file edit and each state-changing command
 
 \`agentsmesh lessons query --file <path> --cmd <command>\` (add \`--keyword <text>\` to
-match by task), then apply every rule returned. A predicate-less query is rejected;
-**keyword-only recall is the anti-pattern** — most lessons are keyed to a
-\`file_glob\`/\`command_pattern\` and won't surface (the CLI warns). Excuses ("small edit",
-"I already know this", "just looking / read-only", "later") all mean: query first.
+match by task), then apply every rule returned. Scope is MUTATING actions: file edits
+and state-changing commands (build/test/install/migrate/git-write). Pure-read commands
+(cat/ls/grep/git-log; read-only) and the recall query itself are **exempt** — no
+infinite regress. A predicate-less query is rejected; **keyword-only recall is the
+anti-pattern** — most lessons are keyed to a \`file_glob\`/\`command_pattern\` and won't
+surface (the CLI warns). Excuses ("small edit", "I already know this", "later") all
+mean: query first — skipping recall on a mutating action is a process violation, and
+the user will check.
 
 ## Capture — immediately after any failure
 

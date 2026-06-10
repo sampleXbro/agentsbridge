@@ -288,7 +288,7 @@ describe('renderLessons — topics / show / journal / validate / import-md / hel
     expect(output.stdout()).toMatch(/no topics/i);
   });
 
-  it('validate prints warning-level findings to stderr', () => {
+  it('validate prints warning-level findings to stderr but still confirms the ok verdict on stdout', () => {
     renderLessons({
       subcommand: 'validate',
       exitCode: 0,
@@ -299,6 +299,8 @@ describe('renderLessons — topics / show / journal / validate / import-md / hel
     });
     expect(output.stderr()).toMatch(/warning/i);
     expect(output.stderr()).toContain('ORPHAN_TRIGGER');
+    // A warning is advisory — `ok` (no errors) is still reported on stdout.
+    expect(output.stdout()).toContain('Lessons graph: ok.');
   });
 
   it('import-md reports a singular removed-legacy line for exactly one deletion', () => {
@@ -486,11 +488,19 @@ describe('renderLessons — stats', () => {
     returnedTokens: { p50: 20, p90: 80, max: 90 },
     cumulativeRecallTokens: 120,
     wholeActiveSetTokens: 300,
-    preloadBreakEven: { perActionCheaper: true, ratio: 0.4 },
+    bypassedRecalls: 1,
+    preloadBreakEven: {
+      sessions: 3,
+      preloadTokens: 900,
+      mandatoryRecallTokens: 120,
+      recallCheaper: true,
+      ratio: 7.5,
+    },
+    redundancy: { rate: 0.4, coverage: 1 },
     reachability: { keywordOnlyRecallRate: 0.25, keywordOnlyUnreachableLessons: 3 },
   };
 
-  it('prints the human summary including break-even and reachability', () => {
+  it('prints the human summary including session break-even, redundancy, and reachability', () => {
     renderLessons({
       subcommand: 'stats',
       exitCode: 0,
@@ -500,7 +510,10 @@ describe('renderLessons — stats', () => {
     const out = output.stdout();
     expect(out).toContain('recalls: 4');
     expect(out).toContain('no-match: 50.0%');
-    expect(out).toContain('per-action cheaper');
+    expect(out).toContain('sessions: 3');
+    expect(out).toContain('bypassed(--all): 1');
+    expect(out).toContain('recall cheaper');
+    expect(out).toContain('redundancy: 40.0%');
     expect(out).toContain('keyword-only-unreachable lessons 3');
   });
 
@@ -530,8 +543,17 @@ describe('renderLessons — stats', () => {
     expect(out).toContain('lessons query');
   });
 
-  it('reports preload as cheaper when per-action recall exceeds the baseline', () => {
-    const heavy = { ...report, preloadBreakEven: { perActionCheaper: false, ratio: 2.5 } };
+  it('reports preload as cheaper when mandatory recall exceeds the per-session preload', () => {
+    const heavy = {
+      ...report,
+      preloadBreakEven: {
+        sessions: 1,
+        preloadTokens: 300,
+        mandatoryRecallTokens: 750,
+        recallCheaper: false,
+        ratio: 0.4,
+      },
+    };
     renderLessons({
       subcommand: 'stats',
       exitCode: 0,
@@ -550,6 +572,7 @@ describe('renderLessons — stats', () => {
     });
     const parsed = JSON.parse(output.stdout());
     expect(parsed.totalRecalls).toBe(4);
-    expect(parsed.preloadBreakEven.ratio).toBe(0.4);
+    expect(parsed.preloadBreakEven.ratio).toBe(7.5);
+    expect(parsed.redundancy.rate).toBe(0.4);
   });
 });

@@ -5,15 +5,15 @@
 <!-- agentsmesh:root-generation-contract:end -->
 
 <!-- agentsmesh:lessons-contract:start -->
-## Lessons (BLOCKING REQUIREMENT — MUST run both, no exceptions; the user will check)
+## Lessons (BLOCKING: recall before mutating, capture after failing)
 
-The graph `.agentsmesh/lessons/lessons.json` is canonical — never hand-edit. Full manual: the `lessons` skill.
+Graph `.agentsmesh/lessons/lessons.json` is canonical — never hand-edit. Manual: the `lessons` skill.
 
-**Recall — before every file edit and every shell command, read-only included (git/ls/cat/test runs still count):** run `agentsmesh lessons query --file <path-about-to-edit> --cmd <command-about-to-run>` (add `--keyword <text>` to match by task), then apply every rule returned. Pass the real `--file`/`--cmd`: a predicate-less query is rejected, and keyword-only recall misses most lessons. Skipping recall is a process violation.
+**Recall** — before each file edit and each state-changing command (build/test/install/migrate/git-write): `agentsmesh lessons query --file <path> --cmd <command>`, then apply every rule. Pure-read commands (cat/ls/grep/git-log) and the recall query itself are exempt.
 
-**Capture — immediately after any failure, not limited to red tests** (a failing CI/lint/typecheck, a code review, a user correction, a regression, or a wrong assumption — yours or anyone's): run `agentsmesh lessons add "<imperative rule>" --topic <id> --trigger-file <glob> --evidence <sha|lesson-id>` — one trigger minimum (prefer `--trigger-file`); new area adds `--new-topic --topic-summary "<line>"`.
+**Capture** — right after any failure (a failing test/CI/lint/typecheck, a code review, a user correction, a regression, or a wrong assumption — yours or anyone's): `agentsmesh lessons add "<rule>" --topic <id> --trigger-file <glob> --evidence <sha|lesson-id>`.
 
-No shell? Use the `lessons_query` / `lessons_add` MCP tools. Skip these and the system does not exist.
+No shell? Use the `lessons_query` / `lessons_add` MCP tools.
 <!-- agentsmesh:lessons-contract:end -->
 
 # Operational Guidelines

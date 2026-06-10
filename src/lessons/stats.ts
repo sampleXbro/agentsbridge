@@ -20,11 +20,33 @@ export interface RecallStatsReport {
   readonly noMatchRate: number;
   readonly matchCountHistogram: HistogramBucket[];
   readonly returnedTokens: { readonly p50: number; readonly p90: number; readonly max: number };
-  /** Σ returned tokens across the log window — the per-action recall cost. */
+  /** Σ returned tokens across the log window, INCLUDING `--all` diagnostic dumps. */
   readonly cumulativeRecallTokens: number;
-  /** Σ est-tokens of every active rule — the one-time session-preload cost. */
+  /** Σ est-tokens of every active rule — the preload cost PER session. */
   readonly wholeActiveSetTokens: number;
-  readonly preloadBreakEven: { readonly perActionCheaper: boolean; readonly ratio: number };
+  /** `--all` recalls (caps off) — excluded from the mandatory break-even. */
+  readonly bypassedRecalls: number;
+  /**
+   * Session-aware preload comparison. The prior model compared cumulative
+   * multi-session recall against a SINGLE preload, which is wrong: preloading the
+   * active set costs `wholeActiveSetTokens` once PER session. Here `preloadTokens`
+   * multiplies by the session count, mandatory (non-`--all`) recall is the recall
+   * side, and `ratio = preloadTokens / mandatoryRecallTokens` (>1 ⇒ recall cheaper).
+   */
+  readonly preloadBreakEven: {
+    readonly sessions: number;
+    readonly preloadTokens: number;
+    readonly mandatoryRecallTokens: number;
+    readonly recallCheaper: boolean;
+    readonly ratio: number;
+  };
+  /**
+   * Intra-session repeat-delivery — the dedup opportunity (Phase 5). `rate` is the
+   * share of delivered rule-tokens that re-deliver a lesson already shown earlier
+   * in the same session; `coverage` is the fraction of recalls carrying lesson ids
+   * (older records lack them, so a low coverage means `rate` is under-measured).
+   */
+  readonly redundancy: { readonly rate: number; readonly coverage: number };
   readonly reachability: {
     /** Of matched recalls, fraction whose matches came ONLY via keyword triggers. */
     readonly keywordOnlyRecallRate: number;
@@ -41,6 +63,9 @@ const BUCKETS: ReadonlyArray<{ label: string; test: (n: number) => boolean }> = 
   { label: '10+', test: (n) => n >= 10 },
 ];
 
+/** A run of recalls is a new session after this idle gap when ids are absent. */
+const SESSION_GAP_MS = 30 * 60 * 1000;
+
 function percentile(values: readonly number[], p: number): number {
   if (values.length === 0) return 0;
   const sorted = [...values].sort((a, b) => a - b);
@@ -50,6 +75,64 @@ function percentile(values: readonly number[], p: number): number {
 
 function isKeywordOnly(graph: LessonsGraph, triggers: readonly string[]): boolean {
   return triggers.length > 0 && triggers.every((t) => graph.triggers[t]?.kind === 'keyword');
+}
+
+/**
+ * Assign each record (in log order) a 0-based session index. Explicit
+ * {@link RecallTelemetryRecord.session} ids group contiguously; records lacking
+ * ids start a new session once the idle gap from the previous record exceeds
+ * {@link SESSION_GAP_MS}. Mirrors the manual >30-min clustering used to audit the
+ * graph, so `stats` needs no env wiring to report a defensible session count.
+ */
+function sessionIndices(records: readonly RecallTelemetryRecord[]): number[] {
+  const out: number[] = [];
+  let group = 0;
+  for (let i = 0; i < records.length; i++) {
+    if (i === 0) {
+      out.push(0);
+      continue;
+    }
+    const cur = records[i]!;
+    const prev = records[i - 1]!;
+    const boundary =
+      cur.session !== undefined || prev.session !== undefined
+        ? cur.session !== prev.session
+        : Date.parse(cur.ts) - Date.parse(prev.ts) > SESSION_GAP_MS;
+    if (boundary) group++;
+    out.push(group);
+  }
+  return out;
+}
+
+function intraSessionRedundancy(
+  records: readonly RecallTelemetryRecord[],
+  indices: readonly number[],
+  graph: LessonsGraph,
+): { rate: number; coverage: number } {
+  const withIds = records.filter((r) => r.lessonIds !== undefined).length;
+  const seen = new Map<number, Set<string>>();
+  let redundant = 0;
+  let accounted = 0;
+  for (let i = 0; i < records.length; i++) {
+    const ids = records[i]!.lessonIds;
+    if (ids === undefined) continue;
+    const g = indices[i]!;
+    let s = seen.get(g);
+    if (s === undefined) {
+      s = new Set();
+      seen.set(g, s);
+    }
+    for (const id of ids) {
+      const tok = estTokens(graph.lessons[id]?.rule ?? '');
+      accounted += tok;
+      if (s.has(id)) redundant += tok;
+      else s.add(id);
+    }
+  }
+  return {
+    rate: accounted === 0 ? 0 : redundant / accounted,
+    coverage: records.length === 0 ? 0 : withIds / records.length,
+  };
 }
 
 export function summarizeRecall(
@@ -63,6 +146,14 @@ export function summarizeRecall(
 
   const active = Object.values(graph.lessons).filter((l) => l.status === 'active');
   const wholeSet = active.reduce((a, l) => a + estTokens(l.rule), 0);
+
+  const indices = sessionIndices(records);
+  const sessions = total === 0 ? 0 : indices[indices.length - 1]! + 1;
+  const bypassedRecalls = records.filter((r) => r.bypassed === true).length;
+  const mandatoryRecallTokens = records
+    .filter((r) => r.bypassed !== true)
+    .reduce((a, r) => a + r.returnedTokens, 0);
+  const preloadTokens = wholeSet * sessions;
 
   const matched = records.filter((r) => r.totalMatches > 0);
   const keywordOnlyRecalls = matched.filter(
@@ -85,10 +176,15 @@ export function summarizeRecall(
     },
     cumulativeRecallTokens: cumulative,
     wholeActiveSetTokens: wholeSet,
+    bypassedRecalls,
     preloadBreakEven: {
-      perActionCheaper: cumulative < wholeSet,
-      ratio: wholeSet === 0 ? 0 : cumulative / wholeSet,
+      sessions,
+      preloadTokens,
+      mandatoryRecallTokens,
+      recallCheaper: mandatoryRecallTokens < preloadTokens,
+      ratio: mandatoryRecallTokens === 0 ? 0 : preloadTokens / mandatoryRecallTokens,
     },
+    redundancy: intraSessionRedundancy(records, indices, graph),
     reachability: {
       keywordOnlyRecallRate: matched.length === 0 ? 0 : keywordOnlyRecalls / matched.length,
       keywordOnlyUnreachableLessons: keywordOnlyUnreachable,

@@ -20,7 +20,7 @@ import {
   type RankedLesson,
 } from './ranking.js';
 import { loadRecallConfig } from './recall-config.js';
-import { appendRecallRecord, isTelemetryEnabled } from './telemetry.js';
+import { appendRecallRecord, isTelemetryEnabled, sessionId } from './telemetry.js';
 
 /**
  * Migration-aware application APIs for the lessons subsystem.
@@ -99,7 +99,9 @@ export async function recallLessons(
     limit: options.limit ?? cfg.limit,
     maxTokens: options.maxTokens === null ? undefined : (options.maxTokens ?? cfg.maxTokens),
   });
-  recordRecallTelemetry(projectRoot, graph, matchQuery, matches, lessons);
+  // The application/MCP path has no `--all`; recall here is always a mandatory,
+  // capped call, so it is never a bypass.
+  recordRecallTelemetry(projectRoot, graph, matchQuery, matches, lessons, { bypassed: false });
   return { lessons, totalMatches: matches.length };
 }
 
@@ -117,11 +119,13 @@ export function recordRecallTelemetry(
   query: LessonsQuery,
   matches: readonly MatchedLesson[],
   lessons: readonly RankedLesson[],
+  options: { readonly bypassed?: boolean } = {},
 ): void {
   if (!isTelemetryEnabled()) return;
   const byKind = collectMatchedTriggersByKind(graph, query);
   const countVia = (set: Set<string>): number =>
     matches.filter(({ lesson }) => lesson.triggers.some((t) => set.has(t))).length;
+  const session = sessionId();
   appendRecallRecord(projectRoot, {
     ts: new Date().toISOString(),
     hasFile: query.file !== undefined,
@@ -136,6 +140,9 @@ export function recordRecallTelemetry(
       command: countVia(byKind.command_pattern),
       keyword: countVia(byKind.keyword),
     },
+    lessonIds: lessons.map((l) => l.id),
+    bypassed: options.bypassed === true,
+    ...(session !== undefined ? { session } : {}),
   });
 }
 

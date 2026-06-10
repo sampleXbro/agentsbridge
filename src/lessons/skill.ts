@@ -22,8 +22,9 @@ export const LESSONS_SKILL_NAME = 'lessons';
 export const LESSONS_SKILL_DESCRIPTION =
   'Full operating manual for the agentsmesh lessons system (recall + capture). ' +
   'Consult when running any `agentsmesh lessons` subcommand (query, add, topics, ' +
-  'show, deprecate, journal, validate, import-md), choosing a topic or trigger ' +
-  'flags, using the lessons MCP tools, or when unsure how to phrase or capture a lesson.';
+  'show, deprecate, merge, untrigger, strip-markers, journal, validate, stats, ' +
+  'prune, import-md), choosing a topic or trigger flags, using the lessons MCP ' +
+  'tools, or when unsure how to phrase or capture a lesson.';
 
 export const LESSONS_SKILL_BODY = `# Lessons — operating manual
 

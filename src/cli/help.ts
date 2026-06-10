@@ -72,7 +72,9 @@ function printLessonsSubcommandHelp(lessons: HelpCommand, sub: string): void {
       description: flag.description.slice(sub.length + 1).trim(),
     }));
   const usage = LESSONS_USAGE[sub];
-  const example = usage !== undefined ? `\n\nExample:\n  ${usage.example}` : '';
+  // No-argument subcommands (topics / journal / validate) carry a signature but
+  // no worked example — render the Example block only when one exists.
+  const example = usage?.example !== undefined ? `\n\nExample:\n  ${usage.example}` : '';
 
   logger.info(`${usage?.usage ?? `agentsmesh lessons ${sub} [flags]`}
 

@@ -6,6 +6,7 @@ import {
   LESSONS_SKILL_FILE,
 } from '../../../src/lessons/skill.js';
 import { parseFrontmatter } from '../../../src/utils/text/markdown.js';
+import { LESSONS_SUBCOMMANDS } from '../../../src/cli/commands/lessons-usage.js';
 
 describe('lessons skill content', () => {
   it('serializes a canonical SKILL.md with the lessons name + a non-empty description', () => {
@@ -46,6 +47,15 @@ describe('lessons skill content', () => {
     expect(LESSONS_SKILL_BODY).toContain('--topic-summary');
     expect(LESSONS_SKILL_BODY).toContain('--trigger-cmd');
     expect(LESSONS_SKILL_BODY).toContain('--trigger-kw');
+  });
+
+  it('frontmatter description names every implemented subcommand (docs-sync gate)', () => {
+    // The harness uses the description to decide when to surface the skill, so it
+    // must enumerate the whole subcommand surface — exactly the canonical list,
+    // no omissions. Tied to LESSONS_SUBCOMMANDS so a new subcommand fails here.
+    for (const sub of LESSONS_SUBCOMMANDS) {
+      expect(LESSONS_SKILL_DESCRIPTION).toMatch(new RegExp(`\\b${sub.replaceAll('-', '\\-')}\\b`));
+    }
   });
 
   it('keeps a recall-excuse killer so the agent cannot rationalize skipping', () => {

@@ -4,6 +4,8 @@
 
 import { describe, it, expect } from 'vitest';
 import { printHelp, printCommandHelp } from '../../../src/cli/help.js';
+import { COMMANDS } from '../../../src/cli/help-data.js';
+import { LESSONS_SUBCOMMANDS } from '../../../src/cli/commands/lessons-usage.js';
 
 describe('printHelp', () => {
   it('prints main help with commands and flags', () => {
@@ -117,5 +119,58 @@ describe('printCommandHelp — lessons subcommand focus', () => {
     expect(out).toContain('agentsmesh lessons topics');
     expect(out).toContain('(no command-specific flags)');
     expect(out).not.toContain('Example:');
+  });
+
+  it('shows the required <topic> positional for `show --help`, not a [flags] stub', () => {
+    const out = capture(() => printCommandHelp('lessons', ['show']));
+    expect(out).toContain('agentsmesh lessons show <topic>');
+    expect(out).not.toContain('show [flags]');
+  });
+
+  it('documents `--dry-run` under `strip-markers --help`', () => {
+    const out = capture(() => printCommandHelp('lessons', ['strip-markers']));
+    expect(out).toContain('agentsmesh lessons strip-markers');
+    expect(out).toContain('--dry-run');
+    expect(out).not.toContain('(no command-specific flags)');
+  });
+
+  it('documents `--apply` and `--cap` under `prune --help`', () => {
+    const out = capture(() => printCommandHelp('lessons', ['prune']));
+    expect(out).toContain('--apply');
+    expect(out).toContain('--cap');
+  });
+
+  it('documents the command-level `--json` under `stats --help`', () => {
+    const out = capture(() => printCommandHelp('lessons', ['stats']));
+    expect(out).toContain('--json');
+    // Distinguish the stats-specific flag from the generic global --json.
+    expect(out).toContain('recall-telemetry report as JSON');
+  });
+
+  it('documents `--rationale` under `add --help`', () => {
+    const out = capture(() => printCommandHelp('lessons', ['add']));
+    expect(out).toContain('--rationale');
+  });
+
+  it('combined `lessons --help` flag wall carries every per-subcommand flag', () => {
+    const out = capture(() => printCommandHelp('lessons'));
+    for (const flag of ['--rationale', '--dry-run', '--apply', '--cap']) {
+      expect(out).toContain(flag);
+    }
+  });
+});
+
+describe('help-data — lessons command description (single source)', () => {
+  it('enumerates exactly the canonical subcommands, generated from LESSONS_SUBCOMMANDS', () => {
+    const lessons = COMMANDS.find((command) => command.name === 'lessons');
+    expect(lessons).toBeDefined();
+    const marker = 'Subcommands: ';
+    const idx = lessons!.description.indexOf(marker);
+    expect(idx).toBeGreaterThan(-1);
+    const listed = lessons!.description
+      .slice(idx + marker.length)
+      .replace(/\.\s*$/, '')
+      .split(', ');
+    expect(listed).toEqual([...LESSONS_SUBCOMMANDS]);
   });
 });

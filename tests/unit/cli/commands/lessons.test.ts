@@ -12,6 +12,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { runLessons } from '../../../../src/cli/commands/lessons.js';
+import { LESSONS_SUBCOMMANDS } from '../../../../src/cli/commands/lessons-usage.js';
 import {
   graphFilePath,
   loadLessonsGraph,
@@ -71,6 +72,24 @@ describe('runLessons — help / unknown', () => {
     expect(r.subcommand).toBe('help');
     expect(r.exitCode).toBe(2);
     expect(r.error).toContain('banana');
+  });
+});
+
+describe('runLessons — dispatcher matches the canonical subcommand list', () => {
+  // Ties LESSONS_SUBCOMMANDS (the source every help surface derives from) to the
+  // real routing: each canonical subcommand must dispatch to its own handler
+  // (subcommand echoed back, never the `help` fallthrough), and only those do.
+  it('routes every LESSONS_SUBCOMMANDS entry to its own handler', async () => {
+    for (const sub of LESSONS_SUBCOMMANDS) {
+      const r = await runLessons({}, [sub], root);
+      expect(r.subcommand).toBe(sub);
+    }
+  });
+
+  it('does not route a subcommand absent from the canonical list', async () => {
+    const r = await runLessons({}, ['not-a-real-subcommand'], root);
+    expect(r.subcommand).toBe('help');
+    expect(r.exitCode).toBe(2);
   });
 });
 

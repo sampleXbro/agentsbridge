@@ -1,3 +1,5 @@
+import { LESSONS_SUBCOMMANDS } from './commands/lessons-usage.js';
+
 export interface HelpFlag {
   name: string;
   description: string;
@@ -287,8 +289,9 @@ export const COMMANDS: HelpCommand[] = [
   {
     name: 'lessons',
     usage: 'agentsmesh lessons <subcommand> [args] [flags]',
-    description:
-      'Query and capture lessons from .agentsmesh/lessons/lessons.json. Subcommands: query, add, topics, show, deprecate, merge, untrigger, strip-markers, journal, validate, import-md.',
+    // Enumeration is generated from the canonical subcommand list so this
+    // description can never drift from the real CLI surface.
+    description: `Query and capture lessons from .agentsmesh/lessons/lessons.json. Subcommands: ${LESSONS_SUBCOMMANDS.join(', ')}.`,
     flags: [
       {
         name: '--file <path>',
@@ -318,8 +321,19 @@ export const COMMANDS: HelpCommand[] = [
         name: '--evidence <ref>',
         description: 'add: evidence reference (commit:SHA, lesson:id, …)',
       },
+      {
+        name: '--rationale <text>',
+        description: 'add: optional why-this-matters note stored on the lesson',
+      },
       { name: '--new-topic --topic-summary "..."', description: 'add: create a new topic' },
       { name: '--superseded-by <id>', description: 'deprecate: replacement lesson id' },
+      { name: '--dry-run', description: 'strip-markers: preview changes; report the count without writing' },
+      {
+        name: '--json',
+        description: 'stats: emit the recall-telemetry report as JSON instead of the text summary',
+      },
+      { name: '--apply', description: 'prune: write the curation (dry-run by default)' },
+      { name: '--cap <n>', description: 'prune: override the per-lesson trigger cap' },
       {
         name: '--merge',
         description:

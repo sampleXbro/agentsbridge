@@ -4,6 +4,7 @@
  * cost when an agent pastes the output into its context.
  */
 import { logger } from '../../utils/output/logger.js';
+import { LESSONS_USAGE } from '../commands/lessons-usage.js';
 import type { LessonsCommandResult } from '../commands/lessons-types.js';
 import type {
   LessonsAddData,
@@ -236,25 +237,11 @@ function printHelp(): void {
   logger.info('Usage: agentsmesh lessons <subcommand> [args] [flags]');
   logger.info('');
   logger.info('Subcommands:');
-  logger.info(
-    '  query [--file <p>] [--cmd <c>] [--keyword <k>] [--format plain|md|json] [--top <n>] [--all] [--max-tokens <n>]',
-  );
-  logger.info(
-    '  add "<rule>" --topic <id> [--trigger-file <glob>]... [--trigger-cmd <regex>]... [--trigger-kw <txt>]... [--evidence <ref>]... [--rationale <text>] [--new-topic --topic-summary "..."]',
-  );
-  logger.info('  topics');
-  logger.info('  show <topic>');
-  logger.info('  deprecate <id> [--superseded-by <id>]');
-  logger.info('  merge <loser-id> <keeper-id>');
-  logger.info('  untrigger <lesson-id> <trigger-id>   (detach a trigger; GCs it if now unused)');
-  logger.info('  strip-markers [--dry-run]');
-  logger.info('  journal');
-  logger.info('  validate');
-  logger.info(
-    '  stats [--json]   (recall telemetry summary; needs AGENTSMESH_LESSONS_TELEMETRY=1)',
-  );
-  logger.info(
-    '  prune [--apply] [--cap <n>]   (dry-run by default; trims over-cap lessons + dead triggers)',
-  );
-  logger.info('  import-md [--merge] [--force] [--migrated-at <ISO date>]');
+  // Derive the menu from the single source of truth so this overview can never
+  // disagree with `agentsmesh lessons <sub> --help` (both read LESSONS_USAGE).
+  for (const entry of Object.values(LESSONS_USAGE)) {
+    const signature = entry.usage.replace(/^agentsmesh lessons /, '');
+    const summary = entry.summary !== undefined ? `   (${entry.summary})` : '';
+    logger.info(`  ${signature}${summary}`);
+  }
 }

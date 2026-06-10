@@ -981,6 +981,21 @@
         "t-kw-eeeb356f"
       ]
     },
+    "fixture-and-assertion-discipline-when-adding-an-mcp-tool": {
+      "createdAt": "2026-06-10",
+      "evidence": [],
+      "rule": "When adding an MCP tool or a field to a shared CLI data type (e.g. PrunePlan/LessonsPruneData, TOOL_DESCRIPTORS), grep ALL inline test fixtures and strict-count assertions repo-wide and run the FULL vitest suite before claiming done — targeted suites miss renderer/e2e fixtures and 'exactly N tools' counts in register/sweep/mcp-server e2e tests.",
+      "status": "active",
+      "topics": [
+        "fixture-and-assertion-discipline"
+      ],
+      "triggers": [
+        "t-glob-38c9bd37",
+        "t-glob-398705da",
+        "t-kw-b4ecc59d",
+        "t-kw-3bdacef0"
+      ]
+    },
     "fixture-and-assertion-discipline-when-asserting-on-agentsmesh-lessons": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -6025,9 +6040,17 @@
       "kind": "file_glob",
       "pattern": "src/core/reference/link-token-classifier*.ts"
     },
+    "t-glob-38c9bd37": {
+      "kind": "file_glob",
+      "pattern": "src/mcp/tool-tables/*.ts"
+    },
     "t-glob-3932d5a5": {
       "kind": "file_glob",
       "pattern": "src/**/path*.ts"
+    },
+    "t-glob-398705da": {
+      "kind": "file_glob",
+      "pattern": "src/cli/commands/lessons-types.ts"
     },
     "t-glob-3a18de42": {
       "kind": "file_glob",
@@ -6393,6 +6416,10 @@
       "kind": "keyword",
       "pattern": "subagent"
     },
+    "t-kw-3bdacef0": {
+      "kind": "keyword",
+      "pattern": "shared data type field"
+    },
     "t-kw-3c5328a3": {
       "kind": "keyword",
       "pattern": "Lessons graph: ok"
@@ -6496,6 +6523,10 @@
     "t-kw-aff9d120": {
       "kind": "keyword",
       "pattern": "comparator coverage"
+    },
+    "t-kw-b4ecc59d": {
+      "kind": "keyword",
+      "pattern": "tool count"
     },
     "t-kw-b6410e25": {
       "kind": "keyword",

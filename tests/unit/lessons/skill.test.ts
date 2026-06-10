@@ -19,8 +19,23 @@ describe('lessons skill content', () => {
   });
 
   it('carries the expansive how-to that the trimmed Tier-1 trigger drops', () => {
-    // Full command set moved out of the always-on block and into the manual.
-    for (const sub of ['show', 'deprecate', 'journal', 'validate', 'import-md', 'topics']) {
+    // Full command set moved out of the always-on block and into the manual:
+    // every implemented subcommand must be enumerated (L3 docs-sync gate).
+    for (const sub of [
+      'query',
+      'add',
+      'topics',
+      'show',
+      'deprecate',
+      'merge',
+      'untrigger',
+      'strip-markers',
+      'prune',
+      'journal',
+      'validate',
+      'stats',
+      'import-md',
+    ]) {
       expect(LESSONS_SKILL_BODY).toContain(`agentsmesh lessons ${sub}`);
     }
     // Topic + trigger-flag mechanics.
@@ -37,9 +52,22 @@ describe('lessons skill content', () => {
     expect(LESSONS_SKILL_BODY).toMatch(/it wasn't really a failure/i);
   });
 
-  it('documents the no-shell MCP fallback', () => {
-    expect(LESSONS_SKILL_BODY).toContain('lessons_query');
-    expect(LESSONS_SKILL_BODY).toContain('lessons_add');
+  it('documents the no-shell MCP fallback including the curation tools', () => {
+    for (const tool of [
+      'lessons_query',
+      'lessons_add',
+      'lessons_topics',
+      'lessons_show',
+      'lessons_deprecate',
+    ]) {
+      expect(LESSONS_SKILL_BODY).toContain(tool);
+    }
+  });
+
+  it('documents the recall caps and that recallMaxTokens is approximate', () => {
+    expect(LESSONS_SKILL_BODY).toContain('recallLimit');
+    expect(LESSONS_SKILL_BODY).toContain('recallMaxTokens');
+    expect(LESSONS_SKILL_BODY).toMatch(/approximate|rule\.length \/ 4/);
   });
 
   it('still names both core commands so the manual is self-contained', () => {

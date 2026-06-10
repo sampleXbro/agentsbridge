@@ -31,7 +31,7 @@ agentsmesh lessons <subcommand> [args] [flags]
 | `journal` | Render lessons chronologically (sorted by `createdAt` then id). |
 | `validate` | Schema + integrity checks. Non-zero exit on errors; warnings do not affect exit code. |
 | `stats` | Summarize the opt-in recall telemetry log: no-match rate, returned-token percentiles, cumulative recall cost vs. the whole-active-set preload baseline (break-even), and the keyword-only reachability gap. `--json` for raw output. Requires `AGENTSMESH_LESSONS_TELEMETRY=1`. |
-| `prune` | Curate the graph — trim over-cap lessons (drop the least-specific triggers) and remove dead triggers. **Dry-run by default**; `--apply` writes, `--cap <n>` overrides the per-lesson cap (default 8). |
+| `prune` | Curate the graph — trim over-cap lessons (drop the least-specific triggers), remove dead triggers, and GC orphan topics (those referenced by no lesson). **Dry-run by default**; `--apply` writes, `--cap <n>` overrides the per-lesson cap (default 8). |
 | `import-md` | One-shot migrator from legacy `index.yaml` + `topics/*.md` + `journal.md`. |
 
 ## Recall ritual
@@ -112,7 +112,7 @@ entirely — `agentsmesh init --lessons` creates the graph directly.
 | `--format plain\|md\|json` | Output shape. Default `plain` (one rule per line). |
 | `--top <n>` | Keep only the top `n` relevance-ranked matches. Default 10. |
 | `--all` | Return every match (disable both the limit and the token budget). |
-| `--max-tokens <n>` | Cap results by cumulative estimated rule-token cost. Defaults to ~400 when omitted. |
+| `--max-tokens <n>` | Cap results by cumulative estimated rule-token cost. **Approximate** — per-rule cost is estimated as `rule.length / 4`, not a real tokenizer. Defaults to ~400 when omitted. |
 
 Results are **relevance-ranked** (BM25 over rule text fused with trigger specificity) and capped by default to the top 10 **and** a ~400-token budget, so mandatory recall stays lean; the single most-relevant result is always returned even if it alone exceeds the budget. A truncation notice on stderr reports how many matched. Pass `--all` (or a larger `--top`/`--max-tokens`) to see the rest.
 
@@ -159,7 +159,7 @@ Results are **relevance-ranked** (BM25 over rule text fused with trigger specifi
 | `--apply` | Write the curation through the transactional path. **Without it, `prune` is a dry run** that prints the plan and changes nothing. |
 | `--cap <n>` | Per-lesson trigger cap (positive integer; default 8). Over-cap active lessons keep their `n` most-specific triggers; the highest-fanout (least specific) ones are dropped first. |
 
-Dead triggers (referenced by no `active` lesson) are removed regardless of `--cap`. The graph is git-tracked, so an applied prune is reviewable in the diff and revertible. See the [curation reference](../../reference/lessons/#curation-prune).
+Dead triggers (referenced by no `active` lesson) and orphan topics (referenced by no lesson at all) are removed regardless of `--cap` — `validate` only warns about these (`ORPHAN_TRIGGER` / `ORPHAN_TOPIC`); `prune` actually removes them. The graph is git-tracked, so an applied prune is reviewable in the diff and revertible. See the [curation reference](../../reference/lessons/#curation-prune).
 
 ### `stats`
 
@@ -167,7 +167,7 @@ Dead triggers (referenced by no `active` lesson) are removed regardless of `--ca
 |------|-------------|
 | `--json` | Emit the raw report object instead of the human summary. |
 
-Mandatory recall runs before every edit and command, so its **frequency** — not its per-call payload — is the real token cost. Set `AGENTSMESH_LESSONS_TELEMETRY=1` to record one append-only row per recall to `.agentsmesh/lessons/recall-log.jsonl` (field-presence booleans only — never the file / command / keyword text). `stats` then reports the no-match rate, returned-token percentiles, cumulative recall cost versus the whole-active-set **preload baseline** (so you can see whether per-action recall beats loading every active rule once), and the keyword-only reachability gap. The log is telemetry, not the canonical graph; add it to your `ignore` if you don't want it tracked.
+Mandatory recall runs before every edit and command, so its **frequency** — not its per-call payload — is the real token cost. Set `AGENTSMESH_LESSONS_TELEMETRY=1` to record one append-only row per recall to `.agentsmesh/lessons/recall-log.jsonl` (field-presence booleans only — never the file / command / keyword text). The log is **size-capped** — it self-truncates to the most recent records once it grows past the cap, so it never accumulates unbounded in a committed `.agentsmesh/`. `stats` then reports the no-match rate, returned-token percentiles, cumulative recall cost versus the whole-active-set **preload baseline** (so you can see whether per-action recall beats loading every active rule once), and the keyword-only reachability gap. The log is telemetry, not the canonical graph; add it to your `ignore` if you don't want it tracked.
 
 ### `import-md`
 

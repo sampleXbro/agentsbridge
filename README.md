@@ -262,7 +262,7 @@ agentsmesh lessons topics | show <topic> | deprecate <id> [--superseded-by <id>]
 agentsmesh lessons merge <loser-id> <keeper-id>   # fold a duplicate into its canonical twin (supersede + union triggers/topics/evidence)
 agentsmesh lessons untrigger <lesson-id> <trigger-id>  # detach one trigger from a lesson (e.g. drop a dead/low-signal keyword); GCs the node if now unused
 agentsmesh lessons strip-markers [--dry-run]      # remove dead legacy provenance markers from rule prose
-agentsmesh lessons prune [--apply] [--cap <n>]    # curate: trim over-cap lessons (drop least-specific triggers) + remove dead triggers (dry-run by default)
+agentsmesh lessons prune [--apply] [--cap <n>]    # curate: trim over-cap lessons (drop least-specific triggers) + remove dead triggers + GC orphan topics (dry-run by default)
 agentsmesh lessons stats [--json]                 # recall telemetry summary: no-match rate, recall-vs-preload break-even, reachability gap (needs AGENTSMESH_LESSONS_TELEMETRY=1)
 ```
 

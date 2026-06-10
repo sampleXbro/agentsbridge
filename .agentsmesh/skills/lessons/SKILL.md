@@ -30,10 +30,6 @@ assumption you made, work you had to redo, or behavior that surprised you.
 Run `agentsmesh lessons add "<imperative rule>" --topic <id> --trigger-file <glob> --evidence <commit-sha|lesson-id>`.
 
 - Add `--trigger-cmd <regex>` and/or `--trigger-kw <text>` to widen when the lesson fires.
-- Keep each `--trigger-kw` a **short distinctive phrase** (≤5 tokens, e.g. `filterOption cast`),
-  not a sentence. Recall matches a keyword only as a substring of `--keyword` or a contiguous
-  token-run in the file/command, so a long descriptive pattern almost never fires — `add` and
-  `validate` warn `LOW_SIGNAL_KEYWORD` when one is too long.
 - Find the topic id with `agentsmesh lessons topics`.
 - Brand-new area? Pass `--new-topic --topic-summary "<one line>"`.
 
@@ -42,22 +38,34 @@ Run `agentsmesh lessons add "<imperative rule>" --topic <id> --trigger-file <glo
 
 ## No shell?
 
-Use the `lessons_query` and `lessons_add` MCP tools — the same two operations.
+Use the MCP tools — same operations as the CLI: `lessons_query` (recall),
+`lessons_add` (capture), `lessons_topics` (list topics), `lessons_show`
+(inspect a topic's lessons), and `lessons_deprecate` (retire a lesson).
+Maintainer-only ops (validate / prune / merge / import-md) stay CLI-only.
 
 ## Full command set
 
 Run `agentsmesh lessons --help` for everything. Beyond `query` and `add`:
 
 - `agentsmesh lessons topics` — list topic ids + summaries.
-- `agentsmesh lessons show <id>` — inspect a single lesson.
-- `agentsmesh lessons deprecate <id>` — retire a lesson that no longer holds.
-- `agentsmesh lessons untrigger <id> <trigger-id>` — detach one trigger from a lesson (e.g. to drop a `LOW_SIGNAL_KEYWORD` keyword and re-`add` a short one); garbage-collects the trigger node if no other lesson uses it.
+- `agentsmesh lessons show <topic>` — inspect a topic's lessons.
+- `agentsmesh lessons deprecate <id> [--superseded-by <id>]` — retire a lesson that no longer holds.
+- `agentsmesh lessons merge <loser-id> <keeper-id>` — fold a duplicate lesson into another.
+- `agentsmesh lessons untrigger <lesson-id> <trigger-id>` — detach one trigger in place.
+- `agentsmesh lessons strip-markers` — strip managed-block markers from rule text.
+- `agentsmesh lessons prune [--apply] [--cap <n>]` — trim over-cap triggers and GC orphan triggers/topics.
 - `agentsmesh lessons journal` — review recent capture/recall activity.
 - `agentsmesh lessons validate` — check the graph for integrity problems.
-- `agentsmesh lessons import-md <file>` — bulk-import lessons from Markdown.
 - `agentsmesh lessons stats` — recall-effectiveness telemetry (opt-in).
+- `agentsmesh lessons import-md <file>` — bulk-import lessons from Markdown.
 
-**Recall tuning (optional).** On a large, high-fanout graph, recall can return many lessons per call. Drop a `.agentsmesh/lessons/config.json` with `{ "recallLimit": 5, "recallMaxTokens": 250 }` to lower the per-recall caps for this project (defaults: 10 / ~400 tokens). Both fields are optional; `--top`/`--max-tokens`/`--all` still override per call.
+## Recall caps
+
+Per-project caps live in `.agentsmesh/lessons/config.json`: `recallLimit`
+(max lessons per recall) and `recallMaxTokens` (cumulative rule-token budget).
+These config keys are canonical; the `--top` / `--max-tokens` flags are the
+per-call overrides for the same two limits. `recallMaxTokens` is approximate —
+the per-rule cost is estimated as `rule.length / 4`, not a real tokenizer.
 
 ## Why this matters
 

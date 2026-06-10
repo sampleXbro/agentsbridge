@@ -52,6 +52,37 @@ export function watchStabilityDelayMs(): number {
   return Math.round(1_500 * coverageScale());
 }
 
+/** Coverage-scaled sleep. The only place a watch test may pause for a duration. */
+export function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Poll a throwing assertion until it passes or the (coverage-scaled) budget
+ * elapses. The watch e2e specs spawn the real CLI, so they cannot pass
+ * `WATCH_TEST_OPTS`; polling on the actual outcome (file content, regen count)
+ * instead of a fixed sleep removes the hardcoded `setTimeout` that made those
+ * specs flaky. `check` throws while the condition is unmet; the final attempt
+ * after the deadline rethrows so the real assertion error surfaces.
+ */
+export async function pollForWatch(
+  check: () => void | Promise<void>,
+  timeoutMs: number = watchWaitTimeoutMs(),
+): Promise<void> {
+  const interval = Math.round(150 * coverageScale());
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    try {
+      await check();
+      return;
+    } catch {
+      // condition not yet met — keep polling
+    }
+    await delay(interval);
+  }
+  await check();
+}
+
 export function createWatchTestDir(): string {
   return join(tmpdir(), `am-watch-${randomBytes(8).toString('hex')}`);
 }

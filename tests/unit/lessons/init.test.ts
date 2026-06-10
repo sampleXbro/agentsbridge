@@ -60,17 +60,28 @@ describe('scaffoldLessons', async () => {
     expect(second.rootRuleUpdated).toBe(false);
   });
 
-  it('never clobbers a user-authored lessons skill — create-if-missing preserves content', async () => {
+  it('refreshes a stale/drifted lessons skill — it is a managed artifact, not user-owned', async () => {
     const skillPath = join(projectRoot, '.agentsmesh/skills/lessons/SKILL.md');
     mkdirSync(join(projectRoot, '.agentsmesh/skills/lessons'), { recursive: true });
-    const custom = '---\nname: lessons\ndescription: my own manual\n---\n\nCustom body.\n';
-    writeFileSync(skillPath, custom, 'utf8');
+    const stale = '---\nname: lessons\ndescription: old manual\n---\n\nOutdated body.\n';
+    writeFileSync(skillPath, stale, 'utf8');
 
     const result = await scaffoldLessons(projectRoot);
 
-    expect(readFileSync(skillPath, 'utf8')).toBe(custom);
-    expect(result.skipped).toContain(skillPath);
+    // Rewritten to the current manual (like the Tier-1 paragraph), reported as updated.
+    expect(readFileSync(skillPath, 'utf8')).not.toBe(stale);
+    expect(readFileSync(skillPath, 'utf8')).toContain('# Lessons — operating manual');
+    expect(result.updated).toContain(skillPath);
     expect(result.created).not.toContain(skillPath);
+    expect(result.skipped).not.toContain(skillPath);
+  });
+
+  it('leaves an already-current lessons skill untouched (reported skipped, not updated)', async () => {
+    await scaffoldLessons(projectRoot);
+    const second = await scaffoldLessons(projectRoot);
+    const skillPath = join(projectRoot, '.agentsmesh/skills/lessons/SKILL.md');
+    expect(second.skipped).toContain(skillPath);
+    expect(second.updated).toEqual([]);
   });
 
   it('appends the block to an existing root rule without disturbing other content', async () => {

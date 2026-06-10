@@ -21,6 +21,7 @@ export interface InitData {
   /** Populated when --lessons is passed; absent otherwise. */
   lessons?: {
     created: string[];
+    updated: string[];
     skipped: string[];
     rootRuleUpdated: boolean;
   };

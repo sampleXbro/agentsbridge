@@ -84,6 +84,7 @@ describe('renderInit', () => {
         gitignoreUpdated: false,
         lessons: {
           created: [`${process.cwd()}/.agentsmesh/lessons/lessons.json`],
+          updated: [],
           skipped: [],
           rootRuleUpdated: true,
         },
@@ -111,6 +112,7 @@ describe('renderInit', () => {
         gitignoreUpdated: false,
         lessons: {
           created: [],
+          updated: [],
           skipped: [`${process.cwd()}/.agentsmesh/lessons/lessons.json`],
           rootRuleUpdated: false,
         },
@@ -118,7 +120,7 @@ describe('renderInit', () => {
     });
 
     const stdout = output.stdout();
-    expect(stdout).toContain('Kept .agentsmesh/lessons/lessons.json (already exists)');
+    expect(stdout).toContain('Kept .agentsmesh/lessons/lessons.json (already current)');
     expect(stdout).toContain(
       '.agentsmesh/rules/_root.md already carries the current Lessons block',
     );
@@ -139,6 +141,7 @@ describe('renderInit', () => {
         lessonsOnly: true,
         lessons: {
           created: [`${process.cwd()}/.agentsmesh/lessons/lessons.json`],
+          updated: [],
           skipped: [],
           rootRuleUpdated: true,
         },

@@ -56,8 +56,11 @@ function renderLessons(lessons: NonNullable<InitCommandResult['data']['lessons']
   for (const path of lessons.created) {
     logger.success(`  Created ${rel(path)}`);
   }
+  for (const path of lessons.updated) {
+    logger.success(`  Refreshed ${rel(path)} (managed — synced to the current manual)`);
+  }
   for (const path of lessons.skipped) {
-    logger.info(`  Kept ${rel(path)} (already exists)`);
+    logger.info(`  Kept ${rel(path)} (already current)`);
   }
   if (lessons.rootRuleUpdated) {
     logger.success('  Injected the Lessons ritual block into .agentsmesh/rules/_root.md');

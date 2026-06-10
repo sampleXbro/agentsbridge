@@ -99,6 +99,14 @@ export interface LessonsPruneData {
     readonly removedCount: number;
     readonly keptCount: number;
   }>;
+  /** Dead `file_glob` triggers detached from lessons that keep ≥1 trigger. */
+  readonly removedDeadGlobs: Array<{
+    readonly id: string;
+    readonly removedCount: number;
+    readonly keptCount: number;
+  }>;
+  /** Active lessons left unreachable (every trigger is a dead glob) — reported only. */
+  readonly unreachableLessons: string[];
 }
 
 export interface LessonsStatsData {

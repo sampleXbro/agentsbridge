@@ -130,22 +130,35 @@ function renderPrune(data: LessonsPruneData): void {
   const triggerN = data.removedTriggerIds.length;
   const topicN = data.removedTopicIds.length;
   const lessonN = data.trimmedLessons.length;
-  if (triggerN === 0 && topicN === 0 && lessonN === 0) {
+  const deadGlobN = data.removedDeadGlobs.length;
+  if (triggerN === 0 && topicN === 0 && lessonN === 0 && deadGlobN === 0) {
     logger.success(`Lessons graph already lean (cap ${data.cap}) — nothing to prune.`);
+    if (data.unreachableLessons.length > 0) renderUnreachable(data.unreachableLessons);
     return;
   }
   const verb = data.applied ? 'Pruned' : 'Would prune';
   logger.success(
-    `${verb}: ${triggerN} dead trigger${triggerN === 1 ? '' : 's'} removed, ${topicN} orphan topic${topicN === 1 ? '' : 's'} removed, ${lessonN} over-cap lesson${lessonN === 1 ? '' : 's'} trimmed (cap ${data.cap}).`,
+    `${verb}: ${deadGlobN} dead glob${deadGlobN === 1 ? '' : 's'} detached, ${triggerN} dead trigger${triggerN === 1 ? '' : 's'} removed, ${topicN} orphan topic${topicN === 1 ? '' : 's'} removed, ${lessonN} over-cap lesson${lessonN === 1 ? '' : 's'} trimmed (cap ${data.cap}).`,
   );
   for (const t of data.trimmedLessons) {
-    logger.info(`  ${t.id}: -${t.removedCount} → ${t.keptCount} kept`);
+    logger.info(`  trim ${t.id}: -${t.removedCount} → ${t.keptCount} kept`);
   }
+  for (const t of data.removedDeadGlobs) {
+    logger.info(`  dead-glob ${t.id}: -${t.removedCount} → ${t.keptCount} kept`);
+  }
+  renderUnreachable(data.unreachableLessons);
   if (!data.applied) {
     logger.warn(
       'Dry run — pass --apply to write. lessons.json is git-tracked, so prune is reversible.',
     );
   }
+}
+
+function renderUnreachable(ids: readonly string[]): void {
+  if (ids.length === 0) return;
+  logger.warn(
+    `${ids.length} lesson${ids.length === 1 ? '' : 's'} unreachable (every trigger is a dead glob) — left intact to avoid stranding; re-point a trigger or deprecate: ${ids.join(', ')}`,
+  );
 }
 
 function renderQuery(data: LessonsQueryData, format: LessonsQueryFormat): void {

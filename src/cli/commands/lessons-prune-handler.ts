@@ -1,10 +1,12 @@
 import { tryLoadLessonsGraph } from '../../lessons/graph-store.js';
 import { mutateLessonsGraph } from '../../lessons/mutate.js';
+import { listProjectFiles } from '../../lessons/project-files.js';
 import {
   applyPruneToGraph,
   isEmptyPrunePlan,
   planPrune,
   type PrunePlan,
+  type PruneOptions,
 } from '../../lessons/prune.js';
 import { emptyGraph, errorResult, numberFlag, type LessonsFlags } from './lessons-helpers.js';
 import type { LessonsCommandResult, LessonsPruneData } from './lessons-types.js';
@@ -20,6 +22,12 @@ function toPruneData(plan: PrunePlan, applied: boolean): LessonsPruneData {
       removedCount: t.removedTriggers.length,
       keptCount: t.keptCount,
     })),
+    removedDeadGlobs: plan.removedDeadGlobs.map((t) => ({
+      id: t.id,
+      removedCount: t.removedTriggers.length,
+      keptCount: t.keptCount,
+    })),
+    unreachableLessons: plan.unreachableLessons,
   };
 }
 
@@ -37,7 +45,10 @@ export async function doPrune(
   if (cap !== null && (!Number.isInteger(cap) || cap < 1)) {
     return errorResult('prune', 'Invalid --cap: expected a positive integer.', 2);
   }
-  const options = cap !== null ? { cap } : {};
+  // Supply the working-tree file list so prune also GCs dead `file_glob` triggers
+  // (without it, prune is trim-and-orphan only, exactly as before).
+  const knownPaths = listProjectFiles(projectRoot) ?? undefined;
+  const options: PruneOptions = { ...(cap !== null ? { cap } : {}), ...(knownPaths ? { knownPaths } : {}) };
 
   // The dispatcher already auto-migrated any legacy store before we get here.
   if (flags.apply !== true) {

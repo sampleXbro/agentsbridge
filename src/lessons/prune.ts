@@ -1,6 +1,7 @@
 import { MAX_RECOMMENDED_TRIGGERS } from './capture-guardrails.js';
 import type { LessonsGraph } from './graph-schema.js';
 import { buildFanout } from './ranking-signals.js';
+import { deadFileGlobIds } from './validate-liveness.js';
 
 /**
  * Graph curation. Two safe, deterministic operations, both reversible via git
@@ -31,6 +32,10 @@ export interface PrunePlan {
   readonly removedTopicIds: string[];
   /** Active lessons trimmed down to the cap. */
   readonly trimmedLessons: LessonTrim[];
+  /** Dead `file_glob` triggers detached from a lesson that still keeps ≥1 trigger. */
+  readonly removedDeadGlobs: LessonTrim[];
+  /** Active lessons left unreachable (every trigger is a dead glob) — REPORTED, not modified (stripping would strand them). */
+  readonly unreachableLessons: string[];
   /** The effective per-lesson trigger cap used (clamped to ≥ 1). */
   readonly cap: number;
 }
@@ -38,6 +43,12 @@ export interface PrunePlan {
 export interface PruneOptions {
   /** Per-lesson trigger cap. Defaults to the capture guardrail recommendation. */
   readonly cap?: number;
+  /**
+   * Working-tree file list (project-relative, forward-slash). When provided,
+   * prune also GCs dead `file_glob` triggers. Omitted → no liveness pruning, so
+   * the transactional write barrier (which has no tree) never strips a glob.
+   */
+  readonly knownPaths?: ReadonlySet<string>;
 }
 
 /** Compute (without mutating) what a prune would change. */
@@ -69,6 +80,30 @@ export function planPrune(graph: LessonsGraph, options: PruneOptions = {}): Prun
     trimmedLessons.push({ id, removedTriggers: [...drop], keptCount: kept.length });
   }
 
+  // Dead-glob GC: detach a dead `file_glob` from a lesson, but only when the
+  // lesson keeps ≥1 other trigger — never strand it. A lesson whose every
+  // (post-trim) trigger is a dead glob is reported as unreachable and left as-is
+  // (stripping its last trigger would make it invalid / unrecallable).
+  const removedDeadGlobs: LessonTrim[] = [];
+  const unreachableLessons: string[] = [];
+  if (options.knownPaths !== undefined) {
+    const dead = deadFileGlobIds(graph, options.knownPaths);
+    if (dead.size > 0) {
+      for (const [id, kept] of keptByLesson) {
+        const deadInLesson = kept.filter((t) => dead.has(t));
+        if (deadInLesson.length === 0) continue;
+        const remaining = kept.filter((t) => !dead.has(t));
+        if (remaining.length >= 1) {
+          keptByLesson.set(id, remaining);
+          removedDeadGlobs.push({ id, removedTriggers: deadInLesson, keptCount: remaining.length });
+        } else {
+          unreachableLessons.push(id);
+        }
+      }
+      unreachableLessons.sort();
+    }
+  }
+
   const live = new Set<string>();
   for (const kept of keptByLesson.values()) for (const t of kept) live.add(t);
   const removedTriggerIds = Object.keys(graph.triggers)
@@ -86,14 +121,15 @@ export function planPrune(graph: LessonsGraph, options: PruneOptions = {}): Prun
     .filter((t) => !referencedTopics.has(t))
     .sort();
 
-  return { removedTriggerIds, removedTopicIds, trimmedLessons, cap };
+  return { removedTriggerIds, removedTopicIds, trimmedLessons, removedDeadGlobs, unreachableLessons, cap };
 }
 
 /** Apply a {@link planPrune} result to a loaded graph in place. */
 export function applyPruneToGraph(graph: LessonsGraph, plan: PrunePlan): void {
-  // 1. Trim over-cap lessons. A trimmed trigger may survive in the table when
-  //    another active lesson still references it, so this only edits the lesson.
-  for (const trim of plan.trimmedLessons) {
+  // 1. Detach per-lesson triggers (cap trims + dead-glob GC). A removed trigger
+  //    may survive in the table when another active lesson still references it,
+  //    so this only edits the lesson; the table GC in step 3 cleans up orphans.
+  for (const trim of [...plan.trimmedLessons, ...(plan.removedDeadGlobs ?? [])]) {
     const lesson = graph.lessons[trim.id];
     if (lesson === undefined) continue;
     const drop = new Set(trim.removedTriggers);
@@ -116,11 +152,12 @@ export function applyPruneToGraph(graph: LessonsGraph, plan: PrunePlan): void {
   for (const t of dead) delete graph.triggers[t];
 }
 
-/** True when a plan would change nothing. */
+/** True when a plan would change nothing (unreachable lessons are report-only). */
 export function isEmptyPrunePlan(plan: PrunePlan): boolean {
   return (
     plan.removedTriggerIds.length === 0 &&
     plan.removedTopicIds.length === 0 &&
-    plan.trimmedLessons.length === 0
+    plan.trimmedLessons.length === 0 &&
+    plan.removedDeadGlobs.length === 0
   );
 }

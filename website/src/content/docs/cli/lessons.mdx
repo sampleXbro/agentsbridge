@@ -31,7 +31,7 @@ agentsmesh lessons <subcommand> [args] [flags]
 | `journal` | Render lessons chronologically (sorted by `createdAt` then id). |
 | `validate` | Schema + integrity + trigger-liveness checks (dead `file_glob`s that match no file in the working tree, runner-anchored `command_pattern`s). Non-zero exit on errors; warnings do not affect exit code. |
 | `stats` | Summarize the opt-in recall telemetry log: no-match rate, returned-token percentiles, cumulative recall cost vs. the whole-active-set preload baseline (break-even), and the keyword-only reachability gap. `--json` for raw output. Requires `AGENTSMESH_LESSONS_TELEMETRY=1`. |
-| `prune` | Curate the graph — trim over-cap lessons (drop the least-specific triggers), remove dead triggers, and GC orphan topics (those referenced by no lesson). **Dry-run by default**; `--apply` writes, `--cap <n>` overrides the per-lesson cap (default 8). |
+| `prune` | Curate the graph — trim over-cap lessons (drop the least-specific triggers), detach **dead `file_glob` triggers** (matching no on-disk file) from any lesson that keeps ≥1 other trigger, remove dead triggers, and GC orphan topics. Lessons whose *every* trigger is a dead glob are reported as unreachable, not stripped (that would strand them). **Dry-run by default**; `--apply` writes, `--cap <n>` overrides the per-lesson cap (default 8). |
 | `import-md` | One-shot migrator from legacy `index.yaml` + `topics/*.md` + `journal.md`. |
 
 ## Recall ritual
@@ -187,7 +187,7 @@ Beyond that hard requirement, `add` prints **non-blocking guardrail warnings** t
 | `--apply` | Write the curation through the transactional path. **Without it, `prune` is a dry run** that prints the plan and changes nothing. |
 | `--cap <n>` | Per-lesson trigger cap (positive integer; default 8). Over-cap active lessons keep their `n` most-specific triggers; the highest-fanout (least specific) ones are dropped first. |
 
-Dead triggers (referenced by no `active` lesson) and orphan topics (referenced by no lesson at all) are removed regardless of `--cap` — `validate` only warns about these (`ORPHAN_TRIGGER` / `ORPHAN_TOPIC`); `prune` actually removes them. The graph is git-tracked, so an applied prune is reviewable in the diff and revertible. See the [curation reference](../../reference/lessons/#curation-prune).
+Dead triggers (referenced by no `active` lesson) and orphan topics (referenced by no lesson at all) are removed regardless of `--cap` — `validate` only warns about these (`ORPHAN_TRIGGER` / `ORPHAN_TOPIC`); `prune` actually removes them. It also **detaches dead `file_glob` triggers** (the ones `validate` flags `DEAD_FILE_GLOB`) from any lesson that keeps another trigger, then GCs the now-orphaned glob — automating the rename-rot cleanup. A lesson whose every trigger is a dead glob is **reported as unreachable and left intact** (stripping its last trigger would strand it); re-point a trigger or `deprecate` it by hand. The graph is git-tracked, so an applied prune is reviewable in the diff and revertible. See the [curation reference](../../reference/lessons/#curation-prune).
 
 ### `stats`
 

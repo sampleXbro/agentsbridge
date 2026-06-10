@@ -182,7 +182,15 @@ export function errorResult(
         subcommand,
         exitCode,
         error: message,
-        data: { applied: false, cap: 0, removedTriggerIds: [], removedTopicIds: [], trimmedLessons: [] },
+        data: {
+          applied: false,
+          cap: 0,
+          removedTriggerIds: [],
+          removedTopicIds: [],
+          trimmedLessons: [],
+          removedDeadGlobs: [],
+          unreachableLessons: [],
+        },
       };
   }
 }

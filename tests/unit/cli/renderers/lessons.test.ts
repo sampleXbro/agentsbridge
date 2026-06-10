@@ -185,6 +185,8 @@ describe('renderLessons — prune', () => {
         removedTriggerIds: ['t-dead', 't-orphan'],
         removedTopicIds: ['stale-topic'],
         trimmedLessons: [{ id: 'big', removedCount: 2, keptCount: 8 }],
+        removedDeadGlobs: [],
+        unreachableLessons: [],
       },
     });
     expect(output.stdout()).toMatch(/would prune/i);
@@ -203,6 +205,8 @@ describe('renderLessons — prune', () => {
         removedTriggerIds: ['t-dead'],
         removedTopicIds: [],
         trimmedLessons: [],
+        removedDeadGlobs: [],
+        unreachableLessons: [],
       },
     });
     expect(output.stdout()).toMatch(/pruned:/i);
@@ -219,6 +223,8 @@ describe('renderLessons — prune', () => {
         removedTriggerIds: [],
         removedTopicIds: [],
         trimmedLessons: [],
+        removedDeadGlobs: [],
+        unreachableLessons: [],
       },
     });
     expect(output.stdout()).toMatch(/nothing to prune/i);

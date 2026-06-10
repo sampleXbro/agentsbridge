@@ -1,4 +1,3 @@
-import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -15,34 +14,38 @@ afterEach(() => {
 });
 
 describe('listProjectFiles', () => {
-  it('lists tracked + untracked-unignored files in a git repo, forward-slash relative', () => {
-    spawnSync('git', ['init', '-q'], { cwd: root });
+  it('lists every on-disk file, project-relative with forward slashes', () => {
     mkdirSync(join(root, 'src', 'nested'), { recursive: true });
     writeFileSync(join(root, 'src', 'a.ts'), 'export const a = 1;\n');
     writeFileSync(join(root, 'src', 'nested', 'b.ts'), 'export const b = 2;\n');
-    writeFileSync(join(root, '.gitignore'), 'ignored.txt\n');
-    writeFileSync(join(root, 'ignored.txt'), 'nope\n');
-    spawnSync('git', ['add', 'src/a.ts'], { cwd: root });
 
     const files = listProjectFiles(root);
     expect(files).not.toBeNull();
-    // tracked (a.ts) + untracked-unignored (b.ts, .gitignore) all present.
     expect(files!.has('src/a.ts')).toBe(true);
     expect(files!.has('src/nested/b.ts')).toBe(true);
-    // .gitignore-excluded file must NOT appear.
-    expect(files!.has('ignored.txt')).toBe(false);
   });
 
-  it('falls back to a directory walk when the path is not a git repo', () => {
-    mkdirSync(join(root, 'pkg'), { recursive: true });
-    writeFileSync(join(root, 'pkg', 'x.ts'), 'x\n');
-    // node_modules is skipped by the fallback walk.
+  it('includes present-but-gitignored files (liveness is on-disk existence, not git tracking)', () => {
+    // A glob over a present build artifact must read as LIVE, not dead — so the
+    // file list must include it even though it is gitignored.
+    mkdirSync(join(root, 'dist'), { recursive: true });
+    writeFileSync(join(root, '.gitignore'), 'dist/\n');
+    writeFileSync(join(root, 'dist', 'cli.js'), '// built\n');
+
+    const files = listProjectFiles(root)!;
+    expect(files.has('dist/cli.js')).toBe(true);
+  });
+
+  it('skips .git and node_modules', () => {
+    writeFileSync(join(root, 'index.ts'), 'x\n');
     mkdirSync(join(root, 'node_modules', 'dep'), { recursive: true });
     writeFileSync(join(root, 'node_modules', 'dep', 'index.js'), 'y\n');
+    mkdirSync(join(root, '.git'), { recursive: true });
+    writeFileSync(join(root, '.git', 'HEAD'), 'ref\n');
 
-    const files = listProjectFiles(root);
-    expect(files).not.toBeNull();
-    expect(files!.has('pkg/x.ts')).toBe(true);
-    expect([...files!].some((p) => p.includes('node_modules'))).toBe(false);
+    const files = listProjectFiles(root)!;
+    expect(files.has('index.ts')).toBe(true);
+    expect([...files].some((p) => p.includes('node_modules'))).toBe(false);
+    expect([...files].some((p) => p.startsWith('.git/'))).toBe(false);
   });
 });

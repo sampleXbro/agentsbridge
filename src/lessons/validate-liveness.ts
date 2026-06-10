@@ -22,6 +22,28 @@ function activeTriggerIds(graph: LessonsGraph): Set<string> {
 }
 
 /**
+ * The set of `file_glob` triggers (referenced by an active lesson) that match NO
+ * path in the working tree — dead, in the liveness sense. Shared by `validate`
+ * (which warns) and `prune` (which can GC them when doing so won't strand a
+ * lesson). `knownPaths` is project-relative, forward-slash.
+ */
+export function deadFileGlobIds(
+  graph: LessonsGraph,
+  knownPaths: ReadonlySet<string>,
+): Set<string> {
+  const active = activeTriggerIds(graph);
+  const paths = [...knownPaths];
+  const dead = new Set<string>();
+  for (const [triggerId, trigger] of Object.entries(graph.triggers)) {
+    if (trigger.kind !== 'file_glob') continue;
+    if (!active.has(triggerId)) continue;
+    const isMatch = picomatch(trigger.pattern, { dot: true });
+    if (!paths.some((p) => isMatch(p))) dead.add(triggerId);
+  }
+  return dead;
+}
+
+/**
  * A `file_glob` (referenced by an active lesson) that matches NO path in the
  * working tree is dead — the lesson is unreachable via that trigger, almost
  * always because a refactor renamed the path it pointed at. Liveness, not
@@ -35,17 +57,11 @@ export function collectDeadFileGlobs(
   findings: ValidationFinding[],
   knownPaths: ReadonlySet<string>,
 ): void {
-  const active = activeTriggerIds(graph);
-  const paths = [...knownPaths];
-  for (const [triggerId, trigger] of Object.entries(graph.triggers)) {
-    if (trigger.kind !== 'file_glob') continue;
-    if (!active.has(triggerId)) continue;
-    const isMatch = picomatch(trigger.pattern, { dot: true });
-    if (paths.some((p) => isMatch(p))) continue;
+  for (const triggerId of deadFileGlobIds(graph, knownPaths)) {
     findings.push({
       level: 'warning',
       code: 'DEAD_FILE_GLOB',
-      message: `file_glob trigger "${triggerId}" (${trigger.pattern}) matches no file in the working tree — the lesson is unreachable via this trigger (a rename likely moved the path). Re-point it at the current path, or detach it with \`lessons untrigger\`.`,
+      message: `file_glob trigger "${triggerId}" (${graph.triggers[triggerId]?.pattern ?? ''}) matches no file in the working tree — the lesson is unreachable via this trigger (a rename likely moved the path). Re-point it at the current path, or detach it with \`lessons untrigger\`, or run \`lessons prune --apply\`.`,
       triggerId,
     });
   }

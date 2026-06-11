@@ -59,6 +59,16 @@ describe('doMergeDriver', () => {
     expect(readFileSync(ours, 'utf8')).toBe(before);
   });
 
+  it('exits 1 when a side is valid JSON but fails the graph schema', () => {
+    writeFileSync(base, JSON.stringify(graph()));
+    writeFileSync(ours, JSON.stringify({ version: 1, lessons: 'not-an-object' }));
+    writeFileSync(theirs, JSON.stringify(graph()));
+    const before = readFileSync(ours, 'utf8');
+    const r = doMergeDriver([base, ours, theirs]);
+    expect(r.exitCode).toBe(1);
+    expect(readFileSync(ours, 'utf8')).toBe(before);
+  });
+
   it('exits 1 on missing arguments', () => {
     expect(doMergeDriver([]).exitCode).toBe(1);
   });

@@ -48,8 +48,38 @@ describe('lessonsConfigWarning', () => {
     expect(w).toMatch(/positive integer/);
   });
 
+  it('warns when the JSON is valid but not an object', () => {
+    writeConfig('42');
+    expect(lessonsConfigWarning(root)).toMatch(/not a JSON object/);
+  });
+
+  it('treats JSON null as a non-object', () => {
+    writeConfig('null');
+    expect(lessonsConfigWarning(root)).toMatch(/not a JSON object/);
+  });
+
+  it('names an invalid recallMaxTokens', () => {
+    writeConfig(JSON.stringify({ recallMaxTokens: -5 }));
+    expect(lessonsConfigWarning(root)).toMatch(/recallMaxTokens/);
+  });
+
+  it('names both fields (and pluralizes) when both are invalid', () => {
+    writeConfig(JSON.stringify({ recallLimit: 0, recallMaxTokens: 'x' }));
+    const w = lessonsConfigWarning(root);
+    expect(w).toMatch(/recallLimit and recallMaxTokens/);
+    expect(w).toMatch(/them/);
+  });
+
   it('does not change the silent loadRecallConfig fallback on a broken config', () => {
     writeConfig('not json');
+    expect(loadRecallConfig(root)).toEqual({
+      limit: DEFAULT_RECALL_LIMIT,
+      maxTokens: DEFAULT_RECALL_MAX_TOKENS,
+    });
+  });
+
+  it('loadRecallConfig falls back when the parsed config is valid JSON but not an object', () => {
+    writeConfig('42');
     expect(loadRecallConfig(root)).toEqual({
       limit: DEFAULT_RECALL_LIMIT,
       maxTokens: DEFAULT_RECALL_MAX_TOKENS,

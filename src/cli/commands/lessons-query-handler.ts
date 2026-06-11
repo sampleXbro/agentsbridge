@@ -125,15 +125,19 @@ export function doQuery(
   if (load.status === 'absent') {
     // A subdir-of-a-project warning already tells the user to cd to the root;
     // otherwise the graph is genuinely not set up here — point at init --lessons.
+    // One of stray/setup is always present, so `warning` is never empty here.
     const stray = strayDirWarning(projectRoot);
-    const setup = stray === undefined ? lessonsSetupHint() : undefined;
-    const warning = mergeWarnings(stray, setup, keywordOnlyWarning, configWarning);
+    const warning = mergeWarnings(
+      stray ?? lessonsSetupHint(),
+      keywordOnlyWarning,
+      configWarning,
+    ) as string;
     const data: LessonsQueryData = {
       lessons: [],
       query,
       autoMigrated,
       totalMatches: 0,
-      ...(warning ? { warning } : {}),
+      warning,
     };
     return { subcommand: 'query', exitCode: 0, format, data };
   }

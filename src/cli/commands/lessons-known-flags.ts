@@ -72,9 +72,9 @@ export function validateLessonsFlags(subcommand: string, flags: LessonsFlags): s
   const allowed = new Set<string>([...known, ...GLOBAL_FLAGS]);
   for (const name of Object.keys(flags)) {
     if (allowed.has(name)) continue;
-    const usage = LESSONS_USAGE[subcommand]?.usage;
-    const hint = usage !== undefined ? `\nUsage: ${usage}` : '';
-    return `Unknown flag --${name} for \`lessons ${subcommand}\`.${hint}`;
+    // Every key in LESSONS_KNOWN_FLAGS is also a LESSONS_USAGE key (the parity
+    // test enforces it), so the signature is always present here.
+    return `Unknown flag --${name} for \`lessons ${subcommand}\`.\nUsage: ${LESSONS_USAGE[subcommand]!.usage}`;
   }
   return null;
 }

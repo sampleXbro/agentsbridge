@@ -88,6 +88,41 @@ describe('runLessons — help / unknown', () => {
   });
 });
 
+describe('runLessons — internal subcommands (hook / merge-driver)', () => {
+  it('routes `hook` to the hook handler and emits nothing on a TTY (no payload)', async () => {
+    const original = process.stdin.isTTY;
+    process.stdin.isTTY = true;
+    try {
+      const r = await runLessons({}, ['hook'], root);
+      expect(r.subcommand).toBe('hook');
+      if (r.subcommand !== 'hook') return;
+      expect(r.data.output).toBe('');
+      expect(r.exitCode).toBe(0);
+    } finally {
+      process.stdin.isTTY = original;
+    }
+  });
+
+  it('routes `merge-driver` to its handler and fails cleanly on missing args', async () => {
+    const r = await runLessons({}, ['merge-driver'], root);
+    expect(r.subcommand).toBe('merge-driver');
+    expect(r.exitCode).toBe(1);
+  });
+});
+
+describe('runLessons untrigger — argument validation', () => {
+  it('errors (exit 2) when the trigger id is missing', async () => {
+    const r = await runLessons({}, ['untrigger', 'rule-a'], root);
+    expect(r.exitCode).toBe(2);
+    expect(r.error).toMatch(/untrigger <lesson-id> <trigger-id>/);
+  });
+
+  it('errors (exit 2) when the lesson id is empty', async () => {
+    const r = await runLessons({}, ['untrigger', '', 't-1'], root);
+    expect(r.exitCode).toBe(2);
+  });
+});
+
 describe('runLessons — dispatcher matches the canonical subcommand list', () => {
   // Ties LESSONS_SUBCOMMANDS (the source every help surface derives from) to the
   // real routing: each canonical subcommand must dispatch to its own handler
@@ -143,6 +178,14 @@ describe('runLessons query', () => {
     expect(r.exitCode).toBe(0);
     expect(r.data.warning).toMatch(/keyword-only/i);
     expect(r.data.warning).toMatch(/--file/);
+  });
+
+  it('sets showIds on the data when --ids is passed with matches', async () => {
+    seedSimpleGraph();
+    const r = await runLessons({ file: 'src/cli/lessons.ts', ids: true }, ['query'], root);
+    if (r.subcommand !== 'query') return;
+    expect(r.data.showIds).toBe(true);
+    expect(r.data.lessons.length).toBeGreaterThan(0);
   });
 
   it('rejects an invalid --format value with a usage error (exit 2)', async () => {
@@ -304,6 +347,21 @@ describe('runLessons add', () => {
     );
     if (r.subcommand !== 'add') return;
     expect(r.data.activationNote).toBeUndefined();
+  });
+
+  it('notes a stray location when capturing in a subdir of a lessons project', async () => {
+    // Ancestor holds a real graph; the capture cwd (sub) has no .agentsmesh.
+    mkdirSync(join(root, '.agentsmesh', 'lessons'), { recursive: true });
+    writeFileSync(join(root, '.agentsmesh', 'lessons', 'lessons.json'), '{}');
+    const sub = join(root, 'packages', 'app');
+    mkdirSync(sub, { recursive: true });
+    const r = await runLessons(
+      { rule: 'Stray rule.', topic: 't', 'new-topic': true, 'topic-summary': 'T.', 'trigger-file': 'src/**/*.ts' },
+      ['add'],
+      sub,
+    );
+    if (r.subcommand !== 'add') return;
+    expect(r.data.locationNote).toMatch(/a lessons project already exists at/);
   });
 
   it('accepts the rule as a positional arg (the documented `add "<rule>" --topic` form)', async () => {
@@ -485,6 +543,20 @@ describe('runLessons journal', () => {
     const r = await runLessons({}, ['journal'], root);
     if (r.subcommand !== 'journal') return;
     expect(r.data.entries).toEqual([]);
+  });
+
+  it('hints at `init --lessons` when the subsystem is not activated', async () => {
+    const r = await runLessons({}, ['journal'], root);
+    if (r.subcommand !== 'journal') return;
+    expect(r.data.setupHint).toMatch(/init --lessons/);
+  });
+
+  it('omits the setup hint once lessons is activated (config.json present)', async () => {
+    mkdirSync(join(root, '.agentsmesh/lessons'), { recursive: true });
+    writeFileSync(join(root, '.agentsmesh/lessons/config.json'), '{"recallLimit":10}');
+    const r = await runLessons({}, ['journal'], root);
+    if (r.subcommand !== 'journal') return;
+    expect(r.data.setupHint).toBeUndefined();
   });
 
   it('breaks createdAt ties by lesson id', async () => {

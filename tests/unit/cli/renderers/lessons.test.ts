@@ -170,6 +170,24 @@ describe('renderLessons — add', () => {
     expect(output.stdout()).toContain('topic-x-rule-1');
     expect(output.stderr()).toContain('BROAD_GLOB_TRIGGER');
   });
+
+  it('warns about a stray location and an unwired subsystem on stderr', () => {
+    renderLessons({
+      subcommand: 'add',
+      exitCode: 0,
+      data: {
+        id: 'topic-x-rule-1',
+        isNewLesson: true,
+        isNewTopic: false,
+        newTriggerIds: [],
+        warnings: [],
+        locationNote: 'a lessons project already exists at /proj.',
+        activationNote: 'recall is not wired into your AI tools yet.',
+      },
+    });
+    expect(output.stderr()).toContain('a lessons project already exists at /proj.');
+    expect(output.stderr()).toContain('recall is not wired into your AI tools yet.');
+  });
 });
 
 describe('renderLessons — prune', () => {
@@ -213,6 +231,24 @@ describe('renderLessons — prune', () => {
     expect(output.stderr()).not.toMatch(/dry run/i);
   });
 
+  it('reports detached dead globs and unreachable lessons', () => {
+    renderLessons({
+      subcommand: 'prune',
+      exitCode: 0,
+      data: {
+        applied: true,
+        cap: 8,
+        removedTriggerIds: [],
+        removedTopicIds: [],
+        trimmedLessons: [],
+        removedDeadGlobs: [{ id: 'rule-a', removedCount: 1, keptCount: 2 }],
+        unreachableLessons: ['rule-b', 'rule-c'],
+      },
+    });
+    expect(output.stdout()).toMatch(/dead-glob rule-a/i);
+    expect(output.stderr()).toMatch(/2 lessons unreachable/i);
+  });
+
   it('reports a clean graph as nothing to prune', () => {
     renderLessons({
       subcommand: 'prune',
@@ -242,6 +278,16 @@ describe('renderLessons — topics / show / journal / validate / import-md / hel
     });
     expect(output.stdout()).toContain('t1');
     expect(output.stdout()).toContain('Summary 1.');
+  });
+
+  it('topics warns with the setup hint when lessons is not activated', () => {
+    renderLessons({
+      subcommand: 'topics',
+      exitCode: 0,
+      data: { topics: [], setupHint: 'run agentsmesh init --lessons' },
+    });
+    expect(output.stdout()).toContain('(no topics)');
+    expect(output.stderr()).toContain('run agentsmesh init --lessons');
   });
 
   it('show prints the rendered markdown to stdout', () => {
@@ -307,6 +353,15 @@ describe('renderLessons — topics / show / journal / validate / import-md / hel
   it('topics prints a placeholder when there are no topics', () => {
     renderLessons({ subcommand: 'topics', exitCode: 0, data: { topics: [] } });
     expect(output.stdout()).toMatch(/no topics/i);
+  });
+
+  it('journal warns with the setup hint when lessons is not activated', () => {
+    renderLessons({
+      subcommand: 'journal',
+      exitCode: 0,
+      data: { entries: [], setupHint: 'run agentsmesh init --lessons' },
+    });
+    expect(output.stderr()).toContain('run agentsmesh init --lessons');
   });
 
   it('validate prints warning-level findings to stderr but still confirms the ok verdict on stdout', () => {
@@ -531,6 +586,16 @@ describe('renderLessons — stats', () => {
     byTriggerKind: { file: 0, command: 0, keyword: 0 },
   };
 
+  it('renders the recall:capture ratio as "—" when no captures were logged', () => {
+    renderLessons({
+      subcommand: 'stats',
+      exitCode: 0,
+      format: 'text',
+      data: { report, captureReport: emptyCapture, hasLog: true, hasCaptureLog: true, telemetryEnabled: true },
+    });
+    expect(output.stdout()).toContain('—');
+  });
+
   it('prints the human summary including session break-even, redundancy, and reachability', () => {
     renderLessons({
       subcommand: 'stats',
@@ -662,5 +727,85 @@ describe('renderLessons — stats', () => {
     expect(out).toContain('captures: 1');
     // The empty "enable telemetry" hint must NOT fire when a capture log exists.
     expect(out).not.toContain('AGENTSMESH_LESSONS_TELEMETRY=1');
+  });
+});
+
+describe('renderLessons — branch coverage for less-common subcommands', () => {
+  const output = useCapturedOutput();
+
+  it('hook writes raw harness JSON to stdout when output is non-empty', () => {
+    renderLessons({ subcommand: 'hook', exitCode: 0, data: { output: '{"x":1}' } });
+    expect(output.stdout()).toContain('{"x":1}');
+  });
+
+  it('hook writes nothing when output is empty', () => {
+    renderLessons({ subcommand: 'hook', exitCode: 0, data: { output: '' } });
+    expect(output.stdout()).toBe('');
+  });
+
+  it('merge-driver renders nothing on a successful (exit 0) union merge', () => {
+    renderLessons({ subcommand: 'merge-driver', exitCode: 0, data: { merged: true } });
+    expect(output.stdout()).toBe('');
+    expect(output.stderr()).toBe('');
+  });
+
+  it('untrigger reports the removed trigger and remaining count (singular)', () => {
+    renderLessons({
+      subcommand: 'untrigger',
+      exitCode: 0,
+      data: { lessonId: 'rule-a', triggerId: 't-1', removedTriggerNode: false, remainingTriggerCount: 1 },
+    });
+    expect(output.stdout()).toMatch(/Removed trigger t-1 from rule-a \(1 trigger left\)/);
+  });
+
+  it('untrigger notes GC when the trigger node was removed (plural count)', () => {
+    renderLessons({
+      subcommand: 'untrigger',
+      exitCode: 0,
+      data: { lessonId: 'rule-a', triggerId: 't-1', removedTriggerNode: true, remainingTriggerCount: 2 },
+    });
+    expect(output.stdout()).toMatch(/2 triggers left.*garbage-collected/);
+  });
+
+  it('query prints a corrupt-graph warning to stderr', () => {
+    renderLessons({
+      subcommand: 'query',
+      exitCode: 0,
+      format: 'plain',
+      data: { lessons: [], query: {}, autoMigrated: false, warning: 'lessons.json is unreadable (corrupt)' },
+    });
+    expect(output.stderr()).toContain('corrupt');
+  });
+
+  it('query notes suppressed (deduped) matches on stderr', () => {
+    renderLessons({
+      subcommand: 'query',
+      exitCode: 0,
+      format: 'plain',
+      data: {
+        lessons: [{ id: 'a', rule: 'Rule.', topics: ['t'], triggers: [], evidence: [] }],
+        query: {},
+        autoMigrated: false,
+        totalMatches: 1,
+        suppressed: 2,
+      },
+    });
+    expect(output.stderr()).toMatch(/2 already shown this session/);
+  });
+
+  it('add reports the auto-pruned summary line (mixed singular/plural)', () => {
+    renderLessons({
+      subcommand: 'add',
+      exitCode: 0,
+      data: {
+        id: 'topic-x-rule-1',
+        isNewLesson: true,
+        isNewTopic: false,
+        newTriggerIds: [],
+        warnings: [],
+        autoPruned: { removedTriggers: 1, removedTopics: 2, detachedDeadGlobs: 0 },
+      },
+    });
+    expect(output.stdout()).toMatch(/auto-pruned: 1 orphan trigger, 2 orphan topics, 0 dead globs detached/);
   });
 });

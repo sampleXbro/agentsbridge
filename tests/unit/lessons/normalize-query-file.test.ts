@@ -38,3 +38,10 @@ describe('normalizeRecallFile', () => {
     );
   });
 });
+
+describe('normalizeRecallFile — boundary', () => {
+  it('falls back to the forward-slashed input when the path IS the project root', () => {
+    // relative(root, root) === '' — must not emit an empty path.
+    expect(normalizeRecallFile('/proj', '/proj')).toBe('/proj');
+  });
+});

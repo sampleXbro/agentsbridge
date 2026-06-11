@@ -71,6 +71,11 @@ describe('isAutoPruneEnabled', () => {
     expect(isAutoPruneEnabled(root)).toBe(true);
   });
 
+  it('is false when the config is valid JSON but not an object', () => {
+    writeConfig(42);
+    expect(isAutoPruneEnabled(root)).toBe(false);
+  });
+
   it('never throws on malformed config (returns false)', () => {
     writeConfig('not json' as unknown);
     mkdirSync(join(root, '.agentsmesh/lessons'), { recursive: true });
@@ -86,6 +91,11 @@ describe('maybeAutoPrune', () => {
     expect(summary).toBeNull();
     // The orphan trigger + topic survive — nothing was pruned.
     expect(Object.keys(loadLessonsGraph(root).triggers)).toContain('t-orphan');
+  });
+
+  it('returns null when enabled but no graph exists yet (nothing to prune)', async () => {
+    writeConfig({ autoPrune: true }); // enabled, but saveLessonsGraph never called
+    expect(await maybeAutoPrune(root, undefined)).toBeNull();
   });
 
   it('GCs orphan triggers and topics when enabled', async () => {

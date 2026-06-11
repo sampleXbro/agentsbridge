@@ -151,17 +151,29 @@ export async function doHook(projectRoot: string): Promise<LessonsCommandResult>
  * unbounded pipe (a runaway or hostile producer) cannot exhaust memory; past the
  * cap we abandon the read and return '' — the caller then injects nothing.
  */
-const MAX_HOOK_STDIN_BYTES = 1_000_000;
+export const MAX_HOOK_STDIN_BYTES = 1_000_000;
 
-async function readStdin(): Promise<string> {
-  if (process.stdin.isTTY === true) return '';
+/**
+ * Accumulate an async byte stream into a UTF-8 string, abandoning the read (and
+ * returning '') once it exceeds `maxBytes`. Exported (and source-injectable) so
+ * the size bound is unit-testable without a real unbounded pipe.
+ */
+export async function readBoundedStream(
+  source: AsyncIterable<Buffer>,
+  maxBytes = MAX_HOOK_STDIN_BYTES,
+): Promise<string> {
   const chunks: Buffer[] = [];
   let total = 0;
-  for await (const chunk of process.stdin) {
+  for await (const chunk of source) {
     const buf = chunk as Buffer;
     total += buf.length;
-    if (total > MAX_HOOK_STDIN_BYTES) return '';
+    if (total > maxBytes) return '';
     chunks.push(buf);
   }
   return Buffer.concat(chunks).toString('utf8');
+}
+
+async function readStdin(): Promise<string> {
+  if (process.stdin.isTTY === true) return '';
+  return readBoundedStream(process.stdin);
 }

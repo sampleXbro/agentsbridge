@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { numberFlag, repeatedFlag } from '../../../../src/cli/commands/lessons-helpers.js';
+import {
+  numberFlag,
+  renderLessonMarkdown,
+  repeatedFlag,
+} from '../../../../src/cli/commands/lessons-helpers.js';
 
 describe('numberFlag', () => {
   it('parses a valid numeric string', () => {
@@ -30,5 +34,44 @@ describe('repeatedFlag', () => {
   });
   it('returns [] for an empty string', () => {
     expect(repeatedFlag({ f: '' }, 'f')).toEqual([]);
+  });
+});
+
+describe('renderLessonMarkdown — branch coverage', () => {
+  const base = {
+    rule: 'A rule.',
+    topics: ['t'],
+    triggers: ['t-1'],
+    evidence: ['commit:abc'],
+    status: 'active' as const,
+    createdAt: '2026-06-05',
+  };
+  const triggers = { 't-1': { kind: 'file_glob' as const, pattern: 'src/**' } };
+
+  it('renders "(none)" for a lesson with no topics, triggers, or evidence', () => {
+    const md = renderLessonMarkdown(
+      'rule-a',
+      { ...base, topics: [], triggers: [], evidence: [] },
+      {},
+    );
+    expect(md).toContain('**topics:** (none)');
+    expect(md).toContain('- (none)');
+    expect(md).toContain('**evidence:** (none)');
+  });
+
+  it('flags a trigger id that resolves to no trigger node', () => {
+    const md = renderLessonMarkdown('rule-a', { ...base, triggers: ['t-missing'] }, {});
+    expect(md).toContain('[missing trigger node]');
+  });
+
+  it('renders resolved triggers, evidence, and a supersededBy line', () => {
+    const md = renderLessonMarkdown(
+      'rule-a',
+      { ...base, supersededBy: 'rule-b' },
+      triggers,
+    );
+    expect(md).toContain('t-1 [file_glob] src/**');
+    expect(md).toContain('commit:abc');
+    expect(md).toContain('**superseded by:** rule-b');
   });
 });

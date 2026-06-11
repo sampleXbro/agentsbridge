@@ -60,3 +60,29 @@ describe('mergeGraphs', () => {
     expect(Object.keys(mergeGraphs(base, ours, theirs).lessons).sort()).toEqual(['a', 'b']);
   });
 });
+
+describe('mergeGraphs — pick() tie-break branches', () => {
+  it('keeps our edit when theirs is identical to base (theirs unchanged)', () => {
+    const base = graph({ lessons: { a: lesson('A.') } });
+    const ours = graph({ lessons: { a: { ...lesson('A.'), evidence: ['ours'] } } });
+    const theirs = JSON.parse(JSON.stringify(base)) as LessonsGraph;
+    expect(mergeGraphs(base, ours, theirs).lessons.a!.evidence).toEqual(['ours']);
+  });
+
+  it('prefers OUR deprecation when ours is deprecated and theirs diverged active', () => {
+    const base = graph({ lessons: { a: lesson('A.') } });
+    const ours = graph({ lessons: { a: lesson('A.', 'deprecated') } });
+    const theirs = graph({ lessons: { a: { ...lesson('A.'), evidence: ['x'] } } });
+    expect(mergeGraphs(base, ours, theirs).lessons.a!.status).toBe('deprecated');
+  });
+
+  it('breaks a both-diverged, neither-deprecated tie deterministically by content', () => {
+    const base = graph({ lessons: { a: lesson('A.') } });
+    const withZ = graph({ lessons: { a: { ...lesson('A.'), evidence: ['zzz'] } } });
+    const withA = graph({ lessons: { a: { ...lesson('A.'), evidence: ['aaa'] } } });
+    // Same winner regardless of which side carries it → both arms of so>st covered.
+    const winA = mergeGraphs(base, withZ, withA).lessons.a!.evidence;
+    const winB = mergeGraphs(base, withA, withZ).lessons.a!.evidence;
+    expect(winA).toEqual(winB);
+  });
+});

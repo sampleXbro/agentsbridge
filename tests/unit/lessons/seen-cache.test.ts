@@ -1,6 +1,6 @@
-import { existsSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { Lesson } from '../../../src/lessons/graph-schema.js';
 import type { MatchedLesson } from '../../../src/lessons/query.js';
@@ -83,5 +83,26 @@ describe('filterUnseen + commitSeen', () => {
     commitSeen(openSessionDedup({ explicit: id1 })!, ['a']);
     const d2 = openSessionDedup({ explicit: id2 })!;
     expect(filterUnseen(d2, [match('a')]).map((m) => m.id)).toEqual(['a']);
+  });
+});
+
+describe('seen-cache — robustness branches', () => {
+  it('treats a non-array seen-cache file as empty (corrupt or foreign content)', () => {
+    const id = uniqueSession();
+    const d1 = openSessionDedup({ explicit: id });
+    expect(d1).not.toBeNull();
+    mkdirSync(dirname(d1!.path), { recursive: true });
+    writeFileSync(d1!.path, JSON.stringify({ not: 'an array' }));
+    const d2 = openSessionDedup({ explicit: id });
+    expect(d2!.seen.size).toBe(0);
+  });
+
+  it('commitSeen writes nothing when every returned id was already seen', () => {
+    const id = uniqueSession();
+    commitSeen(openSessionDedup({ explicit: id })!, ['a', 'b']);
+    const reopened = openSessionDedup({ explicit: id })!;
+    commitSeen(reopened, ['a']); // union size === seen size → early return, no write
+    const after = openSessionDedup({ explicit: id })!;
+    expect([...after.seen].sort()).toEqual(['a', 'b']);
   });
 });

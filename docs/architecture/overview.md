@@ -67,6 +67,7 @@ flowchart LR
   [flows/import.md](./flows/import.md)
   [flows/install.md](./flows/install.md)
   [flows/watch.md](./flows/watch.md)
+  [flows/lessons.md](./flows/lessons.md)
 - Domain boundaries:
   [domains/cli.md](./domains/cli.md)
   [domains/config.md](./domains/config.md)

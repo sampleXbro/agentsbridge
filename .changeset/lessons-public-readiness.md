@@ -16,6 +16,10 @@ external user would hit. No breaking changes to the documented happy path.
 - Running a `lessons` command from a subdirectory of a project now **warns**
   (`query` finds no graph here; `add` flags that it is about to create a stray
   `.agentsmesh`) instead of silently returning empty or writing to the wrong place.
+- Running a `lessons` command in a project initialized **without** `--lessons` no
+  longer dead-ends silently: reads hint to run `agentsmesh init --lessons`, and
+  `lessons add` still captures but warns that recall isn't wired into your AI
+  tools until you activate the subsystem.
 - A present-but-malformed `.agentsmesh/lessons/config.json` now surfaces a stderr
   warning rather than silently reverting to defaults.
 

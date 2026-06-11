@@ -38,6 +38,23 @@ export function lessonsPaths(projectRoot: string): LessonsPaths {
 }
 
 /**
+ * Whether the lessons subsystem was fully set up via `agentsmesh init --lessons`
+ * (or the import safety net) — as opposed to a graph-only state a bare
+ * `lessons add` bootstraps. `config.json` is the tell: `scaffoldLessons` seeds it,
+ * but the transactional capture path never does, so its presence means the
+ * recall ritual + hook + skill were all wired too. When this is false, lessons
+ * may exist on disk but no agent is told to recall them.
+ */
+export function lessonsActivated(projectRoot: string): boolean {
+  return existsSync(lessonsPaths(projectRoot).config);
+}
+
+/** The one-line "you haven't enabled lessons" pointer the read/capture paths show. */
+export function lessonsSetupHint(): string {
+  return 'lessons is not fully set up here — run `agentsmesh init --lessons`, then `agentsmesh generate`, to wire recall + capture into your AI tools.';
+}
+
+/**
  * Walk up from `projectRoot`'s parent looking for an ancestor that holds a
  * `.agentsmesh` directory, returning the first match (or null). Lessons commands
  * resolve their root from the CWD, so an invocation from a subdirectory of a real

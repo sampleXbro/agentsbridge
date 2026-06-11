@@ -145,6 +145,7 @@ function renderAdd(data: LessonsAddData): void {
 /** Non-blocking trigger-hygiene nudges — warn (stderr), never fail the capture. */
 function renderGuardrails(data: LessonsAddData): void {
   if (data.locationNote !== undefined) logger.warn(data.locationNote);
+  if (data.activationNote !== undefined) logger.warn(data.activationNote);
   for (const w of data.warnings) logger.warn(`${w.code}: ${w.message}`);
   const ap = data.autoPruned;
   if (ap !== undefined) {
@@ -157,9 +158,10 @@ function renderGuardrails(data: LessonsAddData): void {
 function renderTopics(data: LessonsTopicsData): void {
   if (data.topics.length === 0) {
     logger.info('(no topics)');
-    return;
+  } else {
+    for (const t of data.topics) logger.info(`${t.id}  ${t.summary}`);
   }
-  for (const t of data.topics) logger.info(`${t.id}  ${t.summary}`);
+  if (data.setupHint !== undefined) logger.warn(data.setupHint);
 }
 
 function renderShow(data: LessonsShowData): void {
@@ -168,6 +170,7 @@ function renderShow(data: LessonsShowData): void {
 
 function renderJournal(data: LessonsJournalData): void {
   for (const e of data.entries) logger.info(`${e.createdAt}  ${e.id}  ${e.rule}`);
+  if (data.setupHint !== undefined) logger.warn(data.setupHint);
 }
 
 function renderImportMd(data: LessonsImportMdData): void {

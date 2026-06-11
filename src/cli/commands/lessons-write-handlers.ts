@@ -8,26 +8,16 @@ import {
 } from '../../lessons/add.js';
 import { captureLesson } from '../../lessons/recall.js';
 import { deprecateLesson } from '../../lessons/deprecate.js';
-import { graphFilePath } from '../../lessons/graph-store.js';
-import { importLegacyLessons } from '../../lessons/import-legacy.js';
-import { ancestorAgentsmeshDir, lessonsPaths } from '../../lessons/paths.js';
+import { ancestorAgentsmeshDir, lessonsActivated } from '../../lessons/paths.js';
 import { mergeLessons } from '../../lessons/merge.js';
 import { mutateLessonsGraph } from '../../lessons/mutate.js';
 import { stripMarkersInGraph } from '../../lessons/strip-markers.js';
 import { untriggerLesson } from '../../lessons/untrigger.js';
-import {
-  errorResult,
-  listFlag,
-  repeatedFlag,
-  stringFlag,
-  todayIso,
-  type LessonsFlags,
-} from './lessons-helpers.js';
+import { errorResult, listFlag, repeatedFlag, stringFlag, type LessonsFlags } from './lessons-helpers.js';
 import { lessonsAddHint } from './lessons-usage.js';
 import type {
   LessonsAddData,
   LessonsCommandResult,
-  LessonsImportMdData,
   LessonsMergeData,
   LessonsStripMarkersData,
   LessonsUntriggerData,
@@ -72,6 +62,12 @@ export async function doAdd(
     !existsSync(join(projectRoot, '.agentsmesh')) && ancestorAgentsmeshDir(projectRoot) !== null
       ? `Capturing into a new .agentsmesh here — a project already exists at ${ancestorAgentsmeshDir(projectRoot)!.replaceAll('\\', '/')}. If that was unintended, cd into it and re-run.`
       : undefined;
+  // When lessons was never activated (no `init --lessons`), a bare `add` writes
+  // only the graph — no recall hook, ritual, or skill — so the capture lands but
+  // no agent is ever told to recall it. Warn so the half-wired state isn't silent.
+  const activationNote = lessonsActivated(projectRoot)
+    ? undefined
+    : 'Captured — but recall is not wired into your AI tools yet (no `init --lessons`). Run `agentsmesh init --lessons`, then `agentsmesh generate`, so agents recall this automatically.';
 
   try {
     // Route through captureLesson (not addLesson directly) so capture telemetry
@@ -95,7 +91,11 @@ export async function doAdd(
         topicSummary: stringFlag(flags, 'topic-summary') ?? undefined,
       },
     );
-    const data: LessonsAddData = locationNote === undefined ? result : { ...result, locationNote };
+    const data: LessonsAddData = {
+      ...result,
+      ...(locationNote ? { locationNote } : {}),
+      ...(activationNote ? { activationNote } : {}),
+    };
     return { subcommand: 'add', exitCode: 0, data };
   } catch (err) {
     if (err instanceof UnknownTopicError) {
@@ -194,38 +194,4 @@ export async function doStripMarkers(
     dryRun,
   };
   return { subcommand: 'strip-markers', exitCode: 0, data };
-}
-
-export async function doImportMd(
-  flags: LessonsFlags,
-  projectRoot: string,
-): Promise<LessonsCommandResult> {
-  const force = flags.force === true;
-  const merge = flags.merge === true;
-  if (!force && !merge && existsSync(graphFilePath(projectRoot))) {
-    return errorResult(
-      'import-md',
-      'lessons.json already exists. Pass --merge to fold legacy lessons into it (recommended — recovers stranded lessons without data loss), or --force to overwrite.',
-      1,
-    );
-  }
-  // Guard the legacy read: importLegacyLessons reads index.yaml unconditionally
-  // and throws a raw ENOENT when it is absent. Fail with a clean message instead.
-  if (!existsSync(lessonsPaths(projectRoot).index)) {
-    return errorResult(
-      'import-md',
-      'No legacy lessons store found (.agentsmesh/lessons/index.yaml) — nothing to migrate.',
-      1,
-    );
-  }
-  const migratedAt = stringFlag(flags, 'migrated-at') ?? todayIso();
-  const report = await importLegacyLessons(projectRoot, { migratedAt, force, merge });
-  const data: LessonsImportMdData = {
-    topicCount: report.topicCount,
-    lessonCount: report.lessonCount,
-    triggerCount: report.triggerCount,
-    wroteGraphPath: report.wroteGraphPath,
-    deletedPaths: report.deletedPaths,
-  };
-  return { subcommand: 'import-md', exitCode: 0, data };
 }

@@ -1,9 +1,10 @@
-import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, it, expect } from 'vitest';
 import {
   ancestorAgentsmeshDir,
+  lessonsActivated,
   lessonsPaths,
   toRelPath,
   LESSONS_PROCEDURAL_RULE,
@@ -47,6 +48,28 @@ describe('ancestorAgentsmeshDir', () => {
   it('ignores a .agentsmesh at the start dir itself (only ancestors count)', () => {
     mkdirSync(join(root, '.agentsmesh'), { recursive: true });
     expect(ancestorAgentsmeshDir(root)).toBeNull();
+  });
+});
+
+describe('lessonsActivated', () => {
+  let root: string;
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), 'amesh-activated-'));
+  });
+  afterEach(() => {
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it('is false when there is no lessons config (graph-only bootstrap or no init --lessons)', () => {
+    mkdirSync(join(root, '.agentsmesh/lessons'), { recursive: true });
+    writeFileSync(join(root, '.agentsmesh/lessons/lessons.json'), '{}');
+    expect(lessonsActivated(root)).toBe(false);
+  });
+
+  it('is true once config.json exists (init --lessons / scaffoldLessons seeded it)', () => {
+    mkdirSync(join(root, '.agentsmesh/lessons'), { recursive: true });
+    writeFileSync(join(root, '.agentsmesh/lessons/config.json'), '{"recallLimit":10}');
+    expect(lessonsActivated(root)).toBe(true);
   });
 });
 

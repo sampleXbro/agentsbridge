@@ -159,6 +159,12 @@ describe('runLessons query', () => {
     expect(r.exitCode).toBe(0);
   });
 
+  it('hints at `init --lessons` when no graph exists (lessons never set up)', async () => {
+    const r = await runLessons({ file: 'src/x.ts' }, ['query'], root);
+    if (r.subcommand !== 'query') return;
+    expect(r.data.warning).toMatch(/init --lessons/);
+  });
+
   it('warns when run from a subdir of a real project (no graph here, ancestor has one)', async () => {
     mkdirSync(join(root, '.agentsmesh'), { recursive: true });
     const sub = join(root, 'packages', 'app');
@@ -260,6 +266,31 @@ describe('runLessons add', () => {
 
     const graph = loadLessonsGraph(root);
     expect(graph.lessons[r.data.id]?.rule).toBe('Strip CRLF from emitted scripts.');
+  });
+
+  it('warns recall is not wired when capturing without `init --lessons` (graph-only)', async () => {
+    seedSimpleGraph(); // writes lessons.json but no config.json → not activated
+    const r = await runLessons(
+      { rule: 'A new rule.', topic: 'topic-x', 'trigger-file': 'src/**/*.ts' },
+      ['add'],
+      root,
+    );
+    if (r.subcommand !== 'add') return;
+    expect(r.exitCode).toBe(0);
+    expect(r.data.activationNote).toMatch(/init --lessons/);
+  });
+
+  it('does NOT warn when lessons is activated (config.json present)', async () => {
+    seedSimpleGraph();
+    mkdirSync(join(root, '.agentsmesh/lessons'), { recursive: true });
+    writeFileSync(join(root, '.agentsmesh/lessons/config.json'), '{"recallLimit":10}');
+    const r = await runLessons(
+      { rule: 'Another rule.', topic: 'topic-x', 'trigger-file': 'src/**/*.ts' },
+      ['add'],
+      root,
+    );
+    if (r.subcommand !== 'add') return;
+    expect(r.data.activationNote).toBeUndefined();
   });
 
   it('accepts the rule as a positional arg (the documented `add "<rule>" --topic` form)', async () => {
@@ -387,6 +418,21 @@ describe('runLessons topics', () => {
     const r = await runLessons({}, ['topics'], root);
     if (r.subcommand !== 'topics') return;
     expect(r.data.topics).toEqual([{ id: 'topic-x', summary: 'Topic X.' }]);
+  });
+
+  it('hints at `init --lessons` when the subsystem is not activated', async () => {
+    const r = await runLessons({}, ['topics'], root);
+    if (r.subcommand !== 'topics') return;
+    expect(r.data.setupHint).toMatch(/init --lessons/);
+  });
+
+  it('omits the setup hint once lessons is activated (config.json present)', async () => {
+    seedSimpleGraph();
+    mkdirSync(join(root, '.agentsmesh/lessons'), { recursive: true });
+    writeFileSync(join(root, '.agentsmesh/lessons/config.json'), '{"recallLimit":10}');
+    const r = await runLessons({}, ['topics'], root);
+    if (r.subcommand !== 'topics') return;
+    expect(r.data.setupHint).toBeUndefined();
   });
 
   it('sorts topics by id regardless of insertion order', async () => {

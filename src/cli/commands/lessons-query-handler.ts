@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { CURRENT_GRAPH_VERSION } from '../../lessons/graph-schema.js';
 import { loadLessonsGraphResilient } from '../../lessons/graph-store.js';
 import { normalizeRecallFile } from '../../lessons/normalize-query-file.js';
-import { ancestorAgentsmeshDir } from '../../lessons/paths.js';
+import { ancestorAgentsmeshDir, lessonsSetupHint } from '../../lessons/paths.js';
 import { queryLessons } from '../../lessons/query.js';
 import { rankLessons } from '../../lessons/ranking.js';
 import { recordRecallTelemetry } from '../../lessons/recall.js';
@@ -123,7 +123,11 @@ export function doQuery(
     return { subcommand: 'query', exitCode: 0, format, data };
   }
   if (load.status === 'absent') {
-    const warning = mergeWarnings(strayDirWarning(projectRoot), keywordOnlyWarning, configWarning);
+    // A subdir-of-a-project warning already tells the user to cd to the root;
+    // otherwise the graph is genuinely not set up here — point at init --lessons.
+    const stray = strayDirWarning(projectRoot);
+    const setup = stray === undefined ? lessonsSetupHint() : undefined;
+    const warning = mergeWarnings(stray, setup, keywordOnlyWarning, configWarning);
     const data: LessonsQueryData = {
       lessons: [],
       query,

@@ -4,6 +4,7 @@ import {
 } from '../../lessons/capture-telemetry.js';
 import { tryLoadLessonsGraph } from '../../lessons/graph-store.js';
 import { buildRecallHookOutput } from '../../lessons/hook.js';
+import { lessonsActivated, lessonsSetupHint } from '../../lessons/paths.js';
 import { listProjectFiles } from '../../lessons/project-files.js';
 import { summarizeCapture } from '../../lessons/stats-capture.js';
 import { summarizeRecall } from '../../lessons/stats.js';
@@ -31,11 +32,11 @@ export { doMergeDriver } from './lessons-merge-driver-handler.js';
 export {
   doAdd,
   doDeprecate,
-  doImportMd,
   doMerge,
   doStripMarkers,
   doUntrigger,
 } from './lessons-write-handlers.js';
+export { doImportMd } from './lessons-import-md-handler.js';
 export { doPrune } from './lessons-prune-handler.js';
 
 export function doTopics(projectRoot: string): LessonsCommandResult {
@@ -43,7 +44,8 @@ export function doTopics(projectRoot: string): LessonsCommandResult {
   const topics = Object.entries(graph.topics)
     .map(([id, t]) => ({ id, summary: t.summary }))
     .sort((a, b) => (a.id < b.id ? -1 : 1));
-  return { subcommand: 'topics', exitCode: 0, data: { topics } };
+  const setupHint = lessonsActivated(projectRoot) ? undefined : lessonsSetupHint();
+  return { subcommand: 'topics', exitCode: 0, data: { topics, ...(setupHint ? { setupHint } : {}) } };
 }
 
 export function doShow(arg: string | undefined, projectRoot: string): LessonsCommandResult {
@@ -79,7 +81,8 @@ export function doJournal(projectRoot: string): LessonsCommandResult {
       if (a.createdAt !== b.createdAt) return a.createdAt < b.createdAt ? -1 : 1;
       return a.id < b.id ? -1 : 1;
     });
-  const data: LessonsJournalData = { entries };
+  const setupHint = lessonsActivated(projectRoot) ? undefined : lessonsSetupHint();
+  const data: LessonsJournalData = { entries, ...(setupHint ? { setupHint } : {}) };
   return { subcommand: 'journal', exitCode: 0, data };
 }
 

@@ -37,10 +37,14 @@ export interface LessonsAddData {
   readonly autoPruned?: AutoPruneSummary;
   /** Set when the capture wrote to a CWD whose graph lives outside the nearest project. */
   readonly locationNote?: string;
+  /** Set when the capture bootstrapped a graph-only state — recall isn't wired into any tool yet. */
+  readonly activationNote?: string;
 }
 
 export interface LessonsTopicsData {
   readonly topics: Array<{ readonly id: string; readonly summary: string }>;
+  /** Set when lessons is not fully set up here (no `init --lessons`) — shown on stderr. */
+  readonly setupHint?: string;
 }
 
 export interface LessonsShowData {
@@ -79,6 +83,8 @@ export interface LessonsJournalData {
     readonly createdAt: string;
     readonly topics: string[];
   }>;
+  /** Set when lessons is not fully set up here (no `init --lessons`) — shown on stderr. */
+  readonly setupHint?: string;
 }
 
 export interface LessonsValidateData {

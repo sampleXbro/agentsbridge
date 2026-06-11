@@ -33,6 +33,8 @@ agentsmesh lessons topics
 
 Run lessons commands from the **project root** (the directory holding `.agentsmesh`). Run from a subdirectory and the CLI warns it found no graph there — `cd` to the root. Mistyped a flag? The command errors and names the unknown flag rather than silently ignoring it (a typoed `--trigger-flie` would otherwise drop a trigger).
 
+If you initialized agentsmesh **without** `--lessons`, the lessons commands still run but tell you the subsystem isn't wired: reads (`query`, `topics`, `journal`) print a one-line hint to run `agentsmesh init --lessons`, and `lessons add` still captures to the graph but warns that **recall isn't wired into your AI tools yet** (no hook, ritual, or skill) until you run `init --lessons` + `generate`. Activate the full subsystem and the hints disappear.
+
 ## Usage
 
 ```bash

@@ -10,6 +10,10 @@
       {
         "command": "jq -r '.tool_input.file_path' | xargs eslint --fix",
         "show_output": true
+      },
+      {
+        "command": "agentsmesh lessons hook",
+        "show_output": true
       }
     ]
   }

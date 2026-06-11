@@ -1,7 +1,7 @@
 # Auto-generated. DO NOT EDIT MANUALLY.
 # Tracks the state of all config files for team conflict resolution.
 
-generated_at: 2026-06-10T18:07:14.253Z
+generated_at: 2026-06-11T09:43:31.070Z
 generated_by: serhii
 lib_version: 0.22.0
 checksums:
@@ -16,11 +16,11 @@ checksums:
   commands/commit.md: sha256:3e6dcc5871ad157c36efe19c162b43cdc0d723a8695fb0d45c1f90cc28fa931c
   commands/review.md: sha256:ba3053410e7cc3271f41ba329056df07c6ccd2f07e2ed3dda601c56e46a77d54
   commands/test.md: sha256:a60932b216ff9eb407c2b38e4459ac4b9606a3aed275f4af84a646eb6c2937e7
-  hooks.yaml: sha256:efe5019c1c61ad2df956e5e3bb54d4b9349b419fb9af008490bc1c77083facfe
+  hooks.yaml: sha256:4c925de0b37cf350fb0002b097f5efca510c4d522ab39b8eb7a0b18052f012f4
   ignore: sha256:53ad60cb2c945a41619fbb5dd0d43559c8461e4cb35e30f4d98b901c73766e12
   mcp.json: sha256:963782b54cbea4ef4686fd036e87332e1a61042579916222991429e359654921
   permissions.yaml: sha256:c806acb62daf533af836dc113be37e9840a2a9b3e21b984c5909fcfb16eb52f2
-  rules/_root.md: sha256:36ffbebc8f5b757e38fb60d4fb1a7a090c7ed6acf68ad9ecd0ebd93bc7463bcb
+  rules/_root.md: sha256:e6c779b67bc76144965251d6a9b917b70b9a8363f815e7535309f7ce030af7eb
   rules/typescript.md: sha256:18f52143dfdd3e219a5c6d6c0feb7283fe74cce99458c46dafcd1c3620ad4fba
   skills/add-agent-target/SKILL.md: sha256:b425055659d29f74dbbe97966f6396e918d96cb0736d1448217656cf26b410f6
   skills/add-agent-target/references/target-addition-checklist.md: sha256:3b658fc204d33995cb15281af1696d8ded09abac26455382c3e8472a1fddafca

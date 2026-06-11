@@ -13,6 +13,11 @@
         "type": "command",
         "bash": "./scripts/posttooluse-0.sh",
         "comment": "Matcher: Edit|Write"
+      },
+      {
+        "type": "command",
+        "bash": "./scripts/posttooluse-1.sh",
+        "comment": "Matcher: Edit|Write|Bash"
       }
     ]
   }

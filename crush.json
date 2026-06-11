@@ -54,6 +54,10 @@
       {
         "matcher": "Edit|Write",
         "command": "jq -r '.tool_input.file_path' | xargs eslint --fix"
+      },
+      {
+        "matcher": "Edit|Write|Bash",
+        "command": "agentsmesh lessons hook"
       }
     ]
   }

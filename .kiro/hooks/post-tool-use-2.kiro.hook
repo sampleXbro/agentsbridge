@@ -1,0 +1,14 @@
+{
+  "name": "post-tool-use 2",
+  "version": "1",
+  "when": {
+    "type": "postToolUse",
+    "tools": [
+      "Edit|Write|Bash"
+    ]
+  },
+  "then": {
+    "type": "shellCommand",
+    "command": "agentsmesh lessons hook"
+  }
+}

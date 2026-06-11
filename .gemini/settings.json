@@ -58,6 +58,16 @@
             "command": "jq -r '.tool_input.file_path' | xargs eslint --fix"
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write|Bash",
+        "hooks": [
+          {
+            "name": "AfterTool-2",
+            "type": "command",
+            "command": "agentsmesh lessons hook"
+          }
+        ]
       }
     ]
   },

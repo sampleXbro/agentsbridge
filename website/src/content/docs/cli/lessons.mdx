@@ -119,7 +119,10 @@ $ agentsmesh lessons query --file src/x.ts
 Auto-migration **deletes the legacy files** after a successful import so the
 project lands in a clean state. Run `agentsmesh lessons import-md` explicitly
 if you prefer to migrate at a specific point in time. New projects skip this
-entirely — `agentsmesh init --lessons` creates the graph directly.
+entirely — `agentsmesh init --lessons` creates the graph directly, alongside
+`.agentsmesh/lessons/config.json` with every tunable at its default
+(`recallLimit`, `recallMaxTokens`, `autoPrune`) so they are discoverable and
+editable. An existing config is never overwritten — your edits are preserved.
 
 ## Flag reference
 

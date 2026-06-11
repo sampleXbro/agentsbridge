@@ -2,7 +2,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { loadRecallConfig } from '../../../src/lessons/recall-config.js';
+import { defaultLessonsConfig, loadRecallConfig } from '../../../src/lessons/recall-config.js';
 import { DEFAULT_RECALL_LIMIT, DEFAULT_RECALL_MAX_TOKENS } from '../../../src/lessons/ranking.js';
 import { recallLessons } from '../../../src/lessons/recall.js';
 import { saveLessonsGraph } from '../../../src/lessons/graph-store.js';
@@ -21,6 +21,24 @@ function writeConfig(content: string): void {
   mkdirSync(join(root, '.agentsmesh/lessons'), { recursive: true });
   writeFileSync(join(root, '.agentsmesh/lessons/config.json'), content);
 }
+
+describe('defaultLessonsConfig', () => {
+  it('materializes every tunable at the same default the readers fall back to', () => {
+    expect(defaultLessonsConfig()).toEqual({
+      recallLimit: DEFAULT_RECALL_LIMIT,
+      recallMaxTokens: DEFAULT_RECALL_MAX_TOKENS,
+      autoPrune: false,
+    });
+  });
+
+  it('round-trips: writing it out then loading yields the in-code recall defaults (no drift)', () => {
+    writeConfig(JSON.stringify(defaultLessonsConfig()));
+    expect(loadRecallConfig(root)).toEqual({
+      limit: DEFAULT_RECALL_LIMIT,
+      maxTokens: DEFAULT_RECALL_MAX_TOKENS,
+    });
+  });
+});
 
 describe('loadRecallConfig', () => {
   it('returns the built-in defaults when no config file exists', () => {

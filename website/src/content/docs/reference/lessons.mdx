@@ -71,10 +71,10 @@ Combination is OR across triggers per lesson: a lesson is a **candidate** if **a
 
 ## Recall tuning
 
-Optional per-project tuning lives in `.agentsmesh/lessons/config.json`:
+Per-project tuning lives in `.agentsmesh/lessons/config.json`, which `agentsmesh init --lessons` writes with every field at its default so the tunables are discoverable in one place (writing the defaults out is behaviour-neutral — a missing field already falls back to the same value):
 
 ```json
-{ "recallLimit": 5, "recallMaxTokens": 250, "autoPrune": true }
+{ "recallLimit": 10, "recallMaxTokens": 400, "autoPrune": false }
 ```
 
 `recallLimit` / `recallMaxTokens` are the **canonical** names for the two recall caps; the per-call `--top` / `--max-tokens` flags are their invocation-time overrides for the same limits (and `--all` disables both). Both fields are optional and independently fall back to the built-ins (`DEFAULT_RECALL_LIMIT` = 10, `DEFAULT_RECALL_MAX_TOKENS` = 400). `recallMaxTokens` is **approximate** — per-rule cost is estimated as `rule.length / 4`, not a real tokenizer, so treat the budget as a soft bound. Lowering them keeps mandatory `--file`/`--cmd` recall lean on a large, high-fanout graph where recall otherwise returns many lessons per call (see the `stats` break-even / match-count histogram). Reading is fail-safe: a missing or malformed file, or an invalid field (non-positive, non-integer), silently uses the default for that field — recall, a blocking hot path, never throws on config.

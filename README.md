@@ -269,7 +269,7 @@ agentsmesh lessons stats [--json]                 # recall + capture telemetry s
 
 `agentsmesh --help` prints the same surface; `agentsmesh <cmd> --help` is also supported.
 
-Optional per-project tuning lives in `.agentsmesh/lessons/config.json` — `{ "recallLimit": 5, "recallMaxTokens": 250 }` lowers the default per-recall caps (10 / ~400 tokens) for a large, high-fanout graph. Add `"autoPrune": true` to automatically GC structural cruft after each capture (orphan triggers/topics + non-stranding dead globs — the safe half of `lessons prune`, never an active lesson, fully git-reversible); off by default. All fields are optional; `--top`/`--max-tokens`/`--all` override the recall caps per call.
+Per-project tuning lives in `.agentsmesh/lessons/config.json`, which `agentsmesh init --lessons` writes with every field at its default (`{ "recallLimit": 10, "recallMaxTokens": 400, "autoPrune": false }`) so the tunables are discoverable in one place. Lower `recallLimit`/`recallMaxTokens` to keep per-recall output lean on a large, high-fanout graph. Set `"autoPrune": true` to automatically GC structural cruft after each capture (orphan triggers/topics + non-stranding dead globs — the safe half of `lessons prune`, never an active lesson, fully git-reversible). All fields are optional (a missing one falls back to its default); `--top`/`--max-tokens`/`--all` override the recall caps per call.
 
 ### Machine-readable output
 

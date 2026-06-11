@@ -4,6 +4,7 @@ import { maybeAutoMigrateLessons } from './auto-migrate.js';
 import { captureLogPath } from './capture-telemetry.js';
 import { mutateLessonsGraphLocked } from './mutate.js';
 import { lessonsPaths, toRelPath } from './paths.js';
+import { defaultLessonsConfig } from './recall-config.js';
 import { injectRecallHook } from './recall-hook-scaffold.js';
 import { recallLogPath } from './telemetry.js';
 import { ensureGitignoreEntries } from '../utils/filesystem/gitignore.js';
@@ -64,6 +65,7 @@ export async function scaffoldLessons(projectRoot: string): Promise<ScaffoldLess
     created.push(paths.graph);
   }
 
+  seedLessonsConfig(projectRoot, created, skipped);
   seedLessonsSkill(projectRoot, created, updated, skipped);
 
   const rootRuleUpdated = injectProceduralBlock(projectRoot);
@@ -109,6 +111,23 @@ function seedLessonsSkill(
   }
   writeFileSync(skillPath, desired, 'utf8');
   updated.push(skillPath);
+}
+
+/**
+ * Write `.agentsmesh/lessons/config.json` with every tunable at its default, so
+ * the recall caps and `autoPrune` are discoverable and editable without reading
+ * the docs. User data, NOT a managed artifact: create-if-missing only — an
+ * existing config (with the user's edits) is left untouched and reported skipped.
+ */
+function seedLessonsConfig(projectRoot: string, created: string[], skipped: string[]): void {
+  const configPath = lessonsPaths(projectRoot).config;
+  if (existsSync(configPath)) {
+    skipped.push(configPath);
+    return;
+  }
+  mkdirSync(dirname(configPath), { recursive: true });
+  writeFileSync(configPath, `${JSON.stringify(defaultLessonsConfig(), null, 2)}\n`, 'utf8');
+  created.push(configPath);
 }
 
 function injectProceduralBlock(projectRoot: string): boolean {

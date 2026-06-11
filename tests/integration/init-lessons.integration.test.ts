@@ -26,6 +26,7 @@ describe('runInit --lessons', () => {
     expect(result.data.lessons).toBeDefined();
     expect(result.data.lessons!.created).toEqual([
       lessonsPaths(projectRoot).graph,
+      lessonsPaths(projectRoot).config,
       join(projectRoot, '.agentsmesh/skills/lessons/SKILL.md'),
     ]);
     expect(result.data.lessons!.rootRuleUpdated).toBe(true);

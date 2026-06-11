@@ -21,6 +21,29 @@ export interface RecallConfig {
   readonly maxTokens: number;
 }
 
+/** Every tunable field with its default — the shape `init --lessons` writes out. */
+export interface LessonsConfigFile {
+  readonly recallLimit: number;
+  readonly recallMaxTokens: number;
+  readonly autoPrune: boolean;
+}
+
+/**
+ * The full default lessons config, materialized by `init --lessons` so every
+ * tunable is discoverable and editable in one place (JSON has no comments). Built
+ * from the same constants the readers fall back to, so writing it out is purely a
+ * no-op for behaviour — only the file becomes visible. `autoPrune` is `false` to
+ * mirror its off-by-default in `auto-prune.ts` (kept a literal here so the recall
+ * hot path's config module never imports the prune machinery).
+ */
+export function defaultLessonsConfig(): LessonsConfigFile {
+  return {
+    recallLimit: DEFAULT_RECALL_LIMIT,
+    recallMaxTokens: DEFAULT_RECALL_MAX_TOKENS,
+    autoPrune: false,
+  };
+}
+
 function positiveInt(value: unknown): number | null {
   return typeof value === 'number' && Number.isInteger(value) && value > 0 ? value : null;
 }

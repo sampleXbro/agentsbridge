@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { scaffoldLessons } from '../../../src/lessons/init.js';
 import { lessonsPaths } from '../../../src/lessons/paths.js';
+import { defaultLessonsConfig } from '../../../src/lessons/recall-config.js';
 
 let projectRoot: string;
 
@@ -31,7 +32,7 @@ describe('scaffoldLessons', async () => {
     expect(existsSync(paths.topicsDir)).toBe(false);
 
     const skillPath = join(projectRoot, '.agentsmesh/skills/lessons/SKILL.md');
-    expect(result.created).toEqual([paths.graph, skillPath]);
+    expect(result.created).toEqual([paths.graph, paths.config, skillPath]);
     expect(result.rootRuleUpdated).toBe(true);
     // No hooks.yaml in this bare scaffold, so the recall hook is a no-op here;
     // injection-into-an-existing-hooks.yaml is covered by recall-hook-scaffold +
@@ -73,8 +74,9 @@ describe('scaffoldLessons', async () => {
     expect(starts.length).toBe(1);
 
     const skillPath = join(projectRoot, '.agentsmesh/skills/lessons/SKILL.md');
+    const paths = lessonsPaths(projectRoot);
     expect(second.created).toEqual([]);
-    expect(second.skipped).toEqual([lessonsPaths(projectRoot).graph, skillPath]);
+    expect(second.skipped).toEqual([paths.graph, paths.config, skillPath]);
     expect(second.rootRuleUpdated).toBe(false);
   });
 
@@ -157,5 +159,32 @@ describe('scaffoldLessons', async () => {
 
     expect(readFileSync(join(projectRoot, '.gitignore'), 'utf8')).not.toContain('recall-log.jsonl');
     expect(result.gitignoreUpdated).toBe(false);
+  });
+
+  it('writes config.json materializing every tunable at its default value', async () => {
+    const result = await scaffoldLessons(projectRoot);
+    const configPath = lessonsPaths(projectRoot).config;
+
+    expect(result.created).toContain(configPath);
+    const parsed = JSON.parse(readFileSync(configPath, 'utf8')) as Record<string, unknown>;
+    expect(parsed).toEqual(defaultLessonsConfig());
+    // Materialized defaults must equal the in-code defaults — writing them out is
+    // behaviour-neutral, only discoverability changes.
+    expect(parsed).toEqual({ recallLimit: 10, recallMaxTokens: 400, autoPrune: false });
+  });
+
+  it('never overwrites an existing config.json — user edits are preserved (reported skipped)', async () => {
+    mkdirSync(join(projectRoot, '.agentsmesh/lessons'), { recursive: true });
+    const configPath = lessonsPaths(projectRoot).config;
+    writeFileSync(configPath, JSON.stringify({ recallLimit: 3, autoPrune: true }), 'utf8');
+
+    const result = await scaffoldLessons(projectRoot);
+
+    expect(result.created).not.toContain(configPath);
+    expect(result.skipped).toContain(configPath);
+    expect(JSON.parse(readFileSync(configPath, 'utf8'))).toEqual({
+      recallLimit: 3,
+      autoPrune: true,
+    });
   });
 });

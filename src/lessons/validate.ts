@@ -14,6 +14,7 @@ import {
   collectFanout,
   collectInvalidTriggerPatterns,
   collectLowSignalKeywords,
+  collectStopwordKeywords,
 } from './validate-quality.js';
 import { collectDeadFileGlobs, collectRunnerAnchoredPatterns } from './validate-liveness.js';
 
@@ -72,6 +73,7 @@ export function validateLessonsGraph(
   collectOrphans(graph, findings);
   collectFanout(graph, findings);
   collectLowSignalKeywords(graph, findings);
+  collectStopwordKeywords(graph, findings);
   collectRunnerAnchoredPatterns(graph, findings);
   if (options.knownPaths !== undefined) collectDeadFileGlobs(graph, findings, options.knownPaths);
 

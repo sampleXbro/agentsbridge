@@ -258,18 +258,18 @@ agentsmesh refresh [<name>[,<name>...]] [--dry-run] [--force] [--json] [--global
 agentsmesh plugin add|list|remove|info [--version <v>] [--id <id>]
 agentsmesh target scaffold <id> [--name <displayName>] [--force]
 agentsmesh lessons query [--file <p>] [--cmd <c>] [--keyword <k>] [--format plain|md|json] [--top <n>] [--all] [--max-tokens <n>] [--session <id>] [--no-dedup]  # ≥1 predicate required (keyword-only warns: misses file/command lessons); relevance-ranked, top 10 + ~400-token budget by default (--all bypasses); --session/AGENTSMESH_SESSION_ID dedups lessons already shown this session
-agentsmesh lessons add "<rule>" --topic <id> --trigger-file <glob> [--trigger-cmd <regex>] [--trigger-kw <text>] [--evidence <ref>] [--new-topic --topic-summary "<one line>"]  # ≥1 trigger required (prefer --trigger-file); warns on broad/oversized/keyword-only triggers
+agentsmesh lessons add "<rule>" --topic <id> --trigger-file <glob> [--trigger-cmd <regex>] [--trigger-kw <text>] [--evidence <ref>] [--new-topic --topic-summary "<one line>"]  # ≥1 EFFECTIVE trigger required (a dead-only capture, e.g. a stopword-only keyword, is rejected); warns on broad/oversized/keyword-only/near-duplicate triggers
 agentsmesh lessons topics | show <topic> | deprecate <id> [--superseded-by <id>] | journal | validate | import-md [--merge|--force]
 agentsmesh lessons merge <loser-id> <keeper-id>   # fold a duplicate into its canonical twin (supersede + union triggers/topics/evidence)
 agentsmesh lessons untrigger <lesson-id> <trigger-id>  # detach one trigger from a lesson (e.g. drop a dead/low-signal keyword); GCs the node if now unused
 agentsmesh lessons strip-markers [--dry-run]      # remove dead legacy provenance markers from rule prose
 agentsmesh lessons prune [--apply] [--cap <n>]    # curate: trim over-cap lessons (drop least-specific triggers) + remove dead triggers + GC orphan topics (dry-run by default)
-agentsmesh lessons stats [--json]                 # recall telemetry summary: no-match rate, recall-vs-preload break-even, reachability gap (needs AGENTSMESH_LESSONS_TELEMETRY=1)
+agentsmesh lessons stats [--json]                 # recall + capture telemetry summary: no-match rate, recall-vs-preload break-even, reachability gap, captures/blocked/recall:capture ratio (needs AGENTSMESH_LESSONS_TELEMETRY=1)
 ```
 
 `agentsmesh --help` prints the same surface; `agentsmesh <cmd> --help` is also supported.
 
-Optional per-project recall tuning lives in `.agentsmesh/lessons/config.json` — `{ "recallLimit": 5, "recallMaxTokens": 250 }` lowers the default per-recall caps (10 / ~400 tokens) for a large, high-fanout graph. Both fields are optional; `--top`/`--max-tokens`/`--all` override per call.
+Optional per-project tuning lives in `.agentsmesh/lessons/config.json` — `{ "recallLimit": 5, "recallMaxTokens": 250 }` lowers the default per-recall caps (10 / ~400 tokens) for a large, high-fanout graph. Add `"autoPrune": true` to automatically GC structural cruft after each capture (orphan triggers/topics + non-stranding dead globs — the safe half of `lessons prune`, never an active lesson, fully git-reversible); off by default. All fields are optional; `--top`/`--max-tokens`/`--all` override the recall caps per call.
 
 ### Machine-readable output
 

@@ -1,6 +1,11 @@
+import {
+  captureLogExists,
+  readCaptureLog,
+} from '../../lessons/capture-telemetry.js';
 import { tryLoadLessonsGraph } from '../../lessons/graph-store.js';
 import { buildRecallHookOutput } from '../../lessons/hook.js';
 import { listProjectFiles } from '../../lessons/project-files.js';
+import { summarizeCapture } from '../../lessons/stats-capture.js';
 import { summarizeRecall } from '../../lessons/stats.js';
 import { isTelemetryEnabled, readRecallLog, recallLogExists } from '../../lessons/telemetry.js';
 import { validateLessonsGraph } from '../../lessons/validate.js';
@@ -81,6 +86,7 @@ export function doJournal(projectRoot: string): LessonsCommandResult {
 export function doStats(flags: LessonsFlags, projectRoot: string): LessonsCommandResult {
   const graph = tryLoadLessonsGraph(projectRoot) ?? emptyGraph();
   const report = summarizeRecall(readRecallLog(projectRoot), graph);
+  const captureReport = summarizeCapture(readCaptureLog(projectRoot));
   const format = flags.json === true ? 'json' : 'text';
   return {
     subcommand: 'stats',
@@ -88,7 +94,9 @@ export function doStats(flags: LessonsFlags, projectRoot: string): LessonsComman
     format,
     data: {
       report,
+      captureReport,
       hasLog: recallLogExists(projectRoot),
+      hasCaptureLog: captureLogExists(projectRoot),
       telemetryEnabled: isTelemetryEnabled(),
     },
   };

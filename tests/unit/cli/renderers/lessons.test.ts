@@ -521,12 +521,22 @@ describe('renderLessons — stats', () => {
     reachability: { keywordOnlyRecallRate: 0.25, keywordOnlyUnreachableLessons: 3 },
   };
 
+  const emptyCapture = {
+    total: 0,
+    blocked: 0,
+    newLessons: 0,
+    upserts: 0,
+    newTopics: 0,
+    withWarnings: 0,
+    byTriggerKind: { file: 0, command: 0, keyword: 0 },
+  };
+
   it('prints the human summary including session break-even, redundancy, and reachability', () => {
     renderLessons({
       subcommand: 'stats',
       exitCode: 0,
       format: 'text',
-      data: { report, hasLog: true, telemetryEnabled: true },
+      data: { report, captureReport: emptyCapture, hasLog: true, hasCaptureLog: false, telemetryEnabled: true },
     });
     const out = output.stdout();
     expect(out).toContain('recalls: 4');
@@ -543,7 +553,7 @@ describe('renderLessons — stats', () => {
       subcommand: 'stats',
       exitCode: 0,
       format: 'text',
-      data: { report, hasLog: false, telemetryEnabled: false },
+      data: { report, captureReport: emptyCapture, hasLog: false, hasCaptureLog: false, telemetryEnabled: false },
     });
     const out = output.stdout();
     expect(out).toContain('AGENTSMESH_LESSONS_TELEMETRY=1');
@@ -557,7 +567,7 @@ describe('renderLessons — stats', () => {
       subcommand: 'stats',
       exitCode: 0,
       format: 'text',
-      data: { report, hasLog: false, telemetryEnabled: true },
+      data: { report, captureReport: emptyCapture, hasLog: false, hasCaptureLog: false, telemetryEnabled: true },
     });
     const out = output.stdout();
     expect(out).toContain('telemetry is ON');
@@ -579,21 +589,78 @@ describe('renderLessons — stats', () => {
       subcommand: 'stats',
       exitCode: 0,
       format: 'text',
-      data: { report: heavy, hasLog: true, telemetryEnabled: true },
+      data: { report: heavy, captureReport: emptyCapture, hasLog: true, hasCaptureLog: false, telemetryEnabled: true },
     });
     expect(output.stdout()).toContain('preload cheaper');
   });
 
-  it('json format emits the raw report', () => {
+  it('json format emits the recall report with the capture aggregate nested under `capture`', () => {
     renderLessons({
       subcommand: 'stats',
       exitCode: 0,
       format: 'json',
-      data: { report, hasLog: true, telemetryEnabled: true },
+      data: {
+        report,
+        captureReport: { ...emptyCapture, total: 2, blocked: 1, newLessons: 1 },
+        hasLog: true,
+        hasCaptureLog: true,
+        telemetryEnabled: true,
+      },
     });
     const parsed = JSON.parse(output.stdout());
     expect(parsed.totalRecalls).toBe(4);
     expect(parsed.preloadBreakEven.ratio).toBe(7.5);
     expect(parsed.redundancy.rate).toBe(0.4);
+    expect(parsed.capture).toMatchObject({ total: 2, blocked: 1, newLessons: 1 });
+  });
+
+  it('prints a Capture block (totals, blocked, trigger-kind mix, recall:capture ratio) when a capture log exists', () => {
+    renderLessons({
+      subcommand: 'stats',
+      exitCode: 0,
+      format: 'text',
+      data: {
+        report, // totalRecalls: 4
+        captureReport: {
+          total: 2,
+          blocked: 1,
+          newLessons: 1,
+          upserts: 0,
+          newTopics: 1,
+          withWarnings: 1,
+          byTriggerKind: { file: 3, command: 1, keyword: 2 },
+        },
+        hasLog: true,
+        hasCaptureLog: true,
+        telemetryEnabled: true,
+      },
+    });
+    const out = output.stdout();
+    expect(out).toContain('captures: 2');
+    expect(out).toContain('blocked: 1');
+    expect(out).toContain('file=3');
+    expect(out).toContain('cmd=1');
+    expect(out).toContain('kw=2');
+    // 4 recalls / 2 captures = 2.00 recalls per capture.
+    expect(out).toContain('recall:capture ratio: 2.00');
+  });
+
+  it('shows the capture block even when no recall log exists (capture-only telemetry)', () => {
+    renderLessons({
+      subcommand: 'stats',
+      exitCode: 0,
+      format: 'text',
+      data: {
+        report,
+        captureReport: { ...emptyCapture, total: 1, newLessons: 1 },
+        hasLog: false,
+        hasCaptureLog: true,
+        telemetryEnabled: true,
+      },
+    });
+    const out = output.stdout();
+    expect(out).toContain('captures: 1');
+    // The empty "enable telemetry" hint must NOT fire when a capture log exists.
+    expect(out).not.toContain('AGENTSMESH_LESSONS_TELEMETRY=1');
   });
 });

@@ -40,3 +40,4 @@ agentsmesh.local.yaml
 .idea
 .vscode/settings.json
 settings.local.json
+.agentsmesh/lessons/capture-log.jsonl

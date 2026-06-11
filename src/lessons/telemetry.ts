@@ -1,13 +1,5 @@
-import {
-  appendFileSync,
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  renameSync,
-  statSync,
-  writeFileSync,
-} from 'node:fs';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
+import { appendJsonl, capJsonl, logExists, readJsonl } from './jsonl-log.js';
 import { lessonsPaths } from './paths.js';
 
 /** Keep at most this many recall records; older ones are dropped on truncation. */
@@ -108,51 +100,26 @@ export function appendRecallRecord(
   env: NodeJS.ProcessEnv = process.env,
 ): void {
   if (!isTelemetryEnabled(env)) return;
-  const path = recallLogPath(projectRoot);
-  mkdirSync(dirname(path), { recursive: true });
-  appendFileSync(path, `${JSON.stringify(record)}\n`, 'utf8');
-  // Bound the append-only log: cheap statSync on each write, full rewrite only
-  // when it has grown past the trigger. Keeps a committed `.agentsmesh/` from
-  // accumulating an ever-growing diagnostic file.
-  if (statSync(path).size > RECALL_LOG_TRIM_TRIGGER_BYTES) capRecallLog(projectRoot);
+  appendJsonl(recallLogPath(projectRoot), record, {
+    maxRecords: MAX_RECALL_LOG_RECORDS,
+    trimTriggerBytes: RECALL_LOG_TRIM_TRIGGER_BYTES,
+  });
 }
 
 /**
  * Truncate the recall log to its last {@link MAX_RECALL_LOG_RECORDS} records
- * (or `maxRecords` when given). No-op when the log is absent or already within
- * the cap. Rewrites atomically (temp + rename) so a reader never sees a torn
- * file. Idempotent and safe to call from any startup/append path.
+ * (or `maxRecords` when given). No-op when absent or already within the cap.
  */
 export function capRecallLog(projectRoot: string, maxRecords = MAX_RECALL_LOG_RECORDS): void {
-  const path = recallLogPath(projectRoot);
-  if (!existsSync(path)) return;
-  const lines = readFileSync(path, 'utf8')
-    .split('\n')
-    .filter((l) => l.trim().length > 0);
-  if (lines.length <= maxRecords) return;
-  const kept = lines.slice(lines.length - maxRecords);
-  const tmp = `${path}.${process.pid}.tmp`;
-  writeFileSync(tmp, `${kept.join('\n')}\n`, 'utf8');
-  renameSync(tmp, path);
+  capJsonl(recallLogPath(projectRoot), maxRecords);
 }
 
 /** True when a recall log exists — distinguishes "never recorded" from "empty". */
 export function recallLogExists(projectRoot: string): boolean {
-  return existsSync(recallLogPath(projectRoot));
+  return logExists(recallLogPath(projectRoot));
 }
 
 /** Read the recall log, skipping any malformed line. Returns [] when absent. */
 export function readRecallLog(projectRoot: string): RecallTelemetryRecord[] {
-  const path = recallLogPath(projectRoot);
-  if (!existsSync(path)) return [];
-  const out: RecallTelemetryRecord[] = [];
-  for (const line of readFileSync(path, 'utf8').split('\n')) {
-    if (line.trim().length === 0) continue;
-    try {
-      out.push(JSON.parse(line) as RecallTelemetryRecord);
-    } catch {
-      // A torn final line (crash mid-append) or hand-edit — skip it, don't fail stats.
-    }
-  }
-  return out;
+  return readJsonl<RecallTelemetryRecord>(recallLogPath(projectRoot));
 }

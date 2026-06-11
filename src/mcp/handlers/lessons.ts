@@ -1,5 +1,5 @@
 import type { McpContext } from '../context.js';
-import { NoTriggerError, UnknownTopicError } from '../../lessons/add.js';
+import { NoTriggerError, UnknownTopicError, UnrecallableLessonError } from '../../lessons/add.js';
 import { maybeAutoMigrateLessons } from '../../lessons/auto-migrate.js';
 import { tryLoadLessonsGraph } from '../../lessons/graph-store.js';
 import { captureLesson, recallLessons } from '../../lessons/recall.js';
@@ -166,6 +166,7 @@ export const lessonsHandlers = {
     isNewTopic: boolean;
     newTriggerIds: string[];
     warnings: Array<{ code: string; message: string }>;
+    autoPruned?: { removedTriggers: number; removedTopics: number; detachedDeadGlobs: number };
   }> {
     // captureLesson migrates any legacy store first so capture enriches the real
     // graph instead of creating lessons.json and stranding the legacy lessons.
@@ -198,7 +199,7 @@ export const lessonsHandlers = {
           { cause: err },
         );
       }
-      if (err instanceof NoTriggerError) {
+      if (err instanceof NoTriggerError || err instanceof UnrecallableLessonError) {
         throw new Error(`lessons_add: ${err.message}`, { cause: err });
       }
       throw err;

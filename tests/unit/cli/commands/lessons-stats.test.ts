@@ -7,6 +7,7 @@ import type { LessonsStatsData } from '../../../../src/cli/commands/lessons-type
 import type { LessonsGraph } from '../../../../src/lessons/graph-schema.js';
 import { saveLessonsGraph } from '../../../../src/lessons/graph-store.js';
 import { appendRecallRecord, TELEMETRY_ENV } from '../../../../src/lessons/telemetry.js';
+import { appendCaptureRecord } from '../../../../src/lessons/capture-telemetry.js';
 
 let root: string;
 const on = { [TELEMETRY_ENV]: '1' };
@@ -83,6 +84,49 @@ describe('doStats', () => {
     expect(data.hasLog).toBe(true);
     expect(data.report.totalRecalls).toBe(1);
     expect(data.report.noMatchRate).toBe(1);
+  });
+
+  it('reports hasCaptureLog=false and a zeroed capture report when no capture ran', () => {
+    saveLessonsGraph(root, graph);
+    const data = statsData(doStats({}, root));
+    expect(data.hasCaptureLog).toBe(false);
+    expect(data.captureReport.total).toBe(0);
+  });
+
+  it('summarizes a recorded capture log alongside the recall report', () => {
+    saveLessonsGraph(root, graph);
+    appendCaptureRecord(
+      root,
+      {
+        ts: '2026-06-11T00:00:00.000Z',
+        isNewLesson: true,
+        isNewTopic: false,
+        newTriggerCount: 1,
+        triggerKinds: { file: 1, command: 0, keyword: 0 },
+        blocked: false,
+        warningCodes: [],
+      },
+      on,
+    );
+    appendCaptureRecord(
+      root,
+      {
+        ts: '2026-06-11T00:01:00.000Z',
+        isNewLesson: false,
+        isNewTopic: false,
+        newTriggerCount: 0,
+        triggerKinds: { file: 0, command: 0, keyword: 1 },
+        blocked: true,
+        warningCodes: [],
+      },
+      on,
+    );
+    const data = statsData(doStats({}, root));
+    expect(data.hasCaptureLog).toBe(true);
+    expect(data.captureReport.total).toBe(2);
+    expect(data.captureReport.blocked).toBe(1);
+    expect(data.captureReport.newLessons).toBe(1);
+    expect(data.captureReport.byTriggerKind).toEqual({ file: 1, command: 0, keyword: 1 });
   });
 
   it('honors --json by selecting the json format', () => {

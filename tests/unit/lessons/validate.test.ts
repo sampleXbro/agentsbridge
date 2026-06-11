@@ -392,6 +392,45 @@ describe('validateLessonsGraph', () => {
     expect(r.ok).toBe(true);
   });
 
+  it('warns on an active stopword/zero-token keyword that can never match the --file/--cmd path (STOPWORD_KEYWORD)', () => {
+    const g = baseGraph();
+    g.triggers['t-kw-stop'] = { kind: 'keyword', pattern: 'state of the art' };
+    g.lessons['a-rule'].triggers = ['t-glob', 't-kw-stop'];
+    const r = validateLessonsGraph(g);
+    expect(r.findings).toContainEqual(
+      expect.objectContaining({
+        level: 'warning',
+        code: 'STOPWORD_KEYWORD',
+        triggerId: 't-kw-stop',
+      }),
+    );
+    // Warn-only: it does not fail validation.
+    expect(r.ok).toBe(true);
+  });
+
+  it('does NOT flag a stopword keyword referenced only by an inactive lesson', () => {
+    const g = baseGraph();
+    g.triggers['t-kw-stop'] = { kind: 'keyword', pattern: 'state of the art' };
+    g.lessons['dead'] = {
+      rule: 'Old dead rule.',
+      topics: ['t'],
+      triggers: ['t-kw-stop'],
+      evidence: [],
+      status: 'deprecated',
+      createdAt: '2026-06-05',
+    };
+    const r = validateLessonsGraph(g);
+    expect(r.findings.some((f) => f.code === 'STOPWORD_KEYWORD')).toBe(false);
+  });
+
+  it('does NOT flag a stopword-free keyword', () => {
+    const g = baseGraph();
+    g.triggers['t-kw-clean'] = { kind: 'keyword', pattern: 'windows paths' };
+    g.lessons['a-rule'].triggers = ['t-glob', 't-kw-clean'];
+    const r = validateLessonsGraph(g);
+    expect(r.findings.some((f) => f.code === 'STOPWORD_KEYWORD')).toBe(false);
+  });
+
   it('flags schema violations as errors before continuing to other checks', () => {
     const broken = { version: 2, lessons: {}, topics: {}, triggers: {} } as unknown as LessonsGraph;
     const r = validateLessonsGraph(broken);

@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   inspectCapturedLesson,
   MAX_RECOMMENDED_TRIGGERS,
+  nearDuplicateWarning,
 } from '../../../src/lessons/capture-guardrails.js';
-import type { LessonsGraph, Trigger } from '../../../src/lessons/graph-schema.js';
+import type { Lesson, LessonsGraph, Trigger } from '../../../src/lessons/graph-schema.js';
 
 function graphWith(triggers: Record<string, Trigger>): LessonsGraph {
   return {
@@ -140,5 +141,63 @@ describe('inspectCapturedLesson — STOPWORD_KEYWORD', () => {
   it('does not inspect non-keyword triggers', () => {
     const g = graphWith({ f: { kind: 'file_glob', pattern: 'src/of/the/art.ts' } });
     expect(codes(g)).not.toContain('STOPWORD_KEYWORD');
+  });
+});
+
+describe('inspectCapturedLesson — DEAD_GLOB (B4, knownPaths supplied)', () => {
+  it('warns when a file_glob matches no path in the working tree', () => {
+    const g = graphWith({ f: { kind: 'file_glob', pattern: 'src/renamed/**/*.ts' } });
+    const out = inspectCapturedLesson(g, 'L', new Set(['src/here.ts', 'README.md']));
+    expect(out.map((w) => w.code)).toContain('DEAD_GLOB');
+  });
+
+  it('does not warn when the glob matches a known path', () => {
+    const g = graphWith({ f: { kind: 'file_glob', pattern: 'src/**/*.ts' } });
+    const out = inspectCapturedLesson(g, 'L', new Set(['src/here.ts']));
+    expect(out.map((w) => w.code)).not.toContain('DEAD_GLOB');
+  });
+
+  it('is skipped entirely when knownPaths is omitted (the pure write-barrier path)', () => {
+    const g = graphWith({ f: { kind: 'file_glob', pattern: 'src/renamed/**/*.ts' } });
+    expect(codes(g)).not.toContain('DEAD_GLOB');
+  });
+});
+
+describe('nearDuplicateWarning (C)', () => {
+  function lesson(rule: string, status: Lesson['status'] = 'active'): Lesson {
+    return { rule, topics: ['t'], triggers: [], evidence: [], status, createdAt: '2026-06-01' };
+  }
+  function graphOf(lessons: Record<string, Lesson>): LessonsGraph {
+    return { version: 1, lessons, topics: { t: { summary: 'T.' } }, triggers: {} };
+  }
+
+  it('fires when a new lesson closely paraphrases an existing active lesson', () => {
+    const g = graphOf({
+      a: lesson('Run the test suite before committing changes.'),
+      b: lesson('Before committing changes run the test suite.'),
+    });
+    const w = nearDuplicateWarning(g, 'b');
+    expect(w?.code).toBe('NEAR_DUPLICATE_LESSON');
+    expect(w?.message).toContain('a');
+  });
+
+  it('is silent for two clearly distinct lessons (below threshold)', () => {
+    const g = graphOf({
+      a: lesson('Normalize CLI display paths to forward slashes.'),
+      b: lesson('Always migrate a legacy store before the first capture.'),
+    });
+    expect(nearDuplicateWarning(g, 'b')).toBeNull();
+  });
+
+  it('ignores deprecated lessons as duplicate candidates', () => {
+    const g = graphOf({
+      a: lesson('Run the test suite before committing changes.', 'deprecated'),
+      b: lesson('Before committing changes run the test suite.'),
+    });
+    expect(nearDuplicateWarning(g, 'b')).toBeNull();
+  });
+
+  it('returns null for an unknown lesson id', () => {
+    expect(nearDuplicateWarning(graphOf({}), 'missing')).toBeNull();
   });
 });

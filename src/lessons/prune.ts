@@ -49,6 +49,13 @@ export interface PruneOptions {
    * the transactional write barrier (which has no tree) never strips a glob.
    */
   readonly knownPaths?: ReadonlySet<string>;
+  /**
+   * Drop the highest-fanout triggers from over-cap active lessons. Defaults to
+   * `true` (the full `lessons prune`). Set `false` for the GC-only subset
+   * (orphan triggers/topics + non-stranding dead-glob detach) that opt-in
+   * auto-prune runs — it never removes a trigger from a within-cap lesson.
+   */
+  readonly trimOverCap?: boolean;
 }
 
 /** Compute (without mutating) what a prune would change. */
@@ -62,7 +69,7 @@ export function planPrune(graph: LessonsGraph, options: PruneOptions = {}): Prun
 
   for (const [id, lesson] of Object.entries(graph.lessons)) {
     if (lesson.status !== 'active') continue;
-    if (lesson.triggers.length <= cap) {
+    if (options.trimOverCap === false || lesson.triggers.length <= cap) {
       keptByLesson.set(id, lesson.triggers);
       continue;
     }

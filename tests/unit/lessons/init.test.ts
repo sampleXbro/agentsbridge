@@ -118,11 +118,12 @@ describe('scaffoldLessons', async () => {
     expect(rootRule).toContain('<!-- agentsmesh:lessons-contract:start -->');
   });
 
-  it('gitignores the opt-in recall-log so telemetry never dirties the worktree', async () => {
+  it('gitignores both opt-in telemetry logs so telemetry never dirties the worktree', async () => {
     const result = await scaffoldLessons(projectRoot);
 
     const gitignore = readFileSync(join(projectRoot, '.gitignore'), 'utf8');
     expect(gitignore).toContain('.agentsmesh/lessons/recall-log.jsonl');
+    expect(gitignore).toContain('.agentsmesh/lessons/capture-log.jsonl');
     expect(result.gitignoreUpdated).toBe(true);
   });
 

@@ -88,7 +88,7 @@ export const LESSONS_TOOL_DESCRIPTORS: ToolDescriptor[] = [
   {
     name: 'lessons_add',
     description:
-      'Capture primitive — atomically add a new lesson. At least one trigger is REQUIRED (the add is rejected otherwise — an untriggered lesson can never be recalled); prefer a precise `trigger_files` glob, the most reliable trigger. Deduplicates triggers against the graph. Idempotent on repeat (same rule + topic → same id, no duplicate triggers). Returns non-blocking `warnings` (trigger-hygiene nudges: oversized trigger set, broad globs, keyword-only) — heed them by preferring a few specific triggers.',
+      'Capture primitive — atomically add a new lesson. At least one EFFECTIVE trigger is REQUIRED — the add is rejected (UNRECALLABLE_LESSON, exit 2) when every trigger is dead on the mandatory file/command recall path (a stopword-only keyword whose needle loses all tokens to stopword filtering, or an invalid/ReDoS command regex). A lesson with a mix of live and dead triggers is NOT rejected. Prefer a precise `trigger_files` glob, the most reliable trigger. Deduplicates triggers against the graph. Idempotent on repeat (same rule + topic → same id, no duplicate triggers). Returns non-blocking `warnings` (trigger-hygiene nudges: oversized trigger set, broad globs, keyword-only, dead glob matching no file in the working tree [DEAD_GLOB], or rule closely paraphrasing an existing active lesson [NEAR_DUPLICATE_LESSON]) — heed them by preferring a few specific triggers.',
     inputSchema: LessonsAddInput,
     handler: (ctx, i) => lessonsHandlers.add(ctx, i as never),
   },

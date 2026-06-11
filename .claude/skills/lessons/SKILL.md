@@ -29,9 +29,13 @@ review, a user correction, a regression, or a wrong assumption — yours or anyo
 
 `agentsmesh lessons add "<imperative rule>" --topic <id> --trigger-file <glob> --evidence <sha|lesson-id>`
 
-- **At least one trigger is required** (capture rejected otherwise — an untriggered
-  lesson can never be recalled). Prefer `--trigger-file`: the most reliable trigger, it
-  fires on `--file` recall. A keyword alone is discouraged (`KEYWORD_ONLY_LESSON`).
+- **At least one _effective_ trigger is required.** A capture is rejected
+  (`UNRECALLABLE_LESSON`) when EVERY trigger is dead on the mandatory `--file`/`--cmd`
+  recall path — a stopword-only keyword ("state of the art"), or an invalid/ReDoS
+  command regex — because the lesson could never be recalled there. Prefer
+  `--trigger-file`: the most reliable trigger, it fires on `--file` recall. A keyword
+  alone is discouraged (`KEYWORD_ONLY_LESSON`); paraphrasing an existing rule warns
+  (`NEAR_DUPLICATE_LESSON` — update that lesson instead).
 - Widen with `--trigger-cmd <regex>` / `--trigger-kw <text>`. New area:
   `--new-topic --topic-summary "<line>"` (list ids with `agentsmesh lessons topics`).
 
@@ -47,11 +51,13 @@ review, a user correction, a regression, or a wrong assumption — yours or anyo
 orphan triggers/topics) · `journal` · `validate` · `stats` · `import-md`. Full
 help: `agentsmesh lessons --help`.
 
-## Recall caps
+## Config (`../../../.agentsmesh/lessons/config.json`)
 
-`../../../.agentsmesh/lessons/config.json`: `recallLimit` / `recallMaxTokens` (canonical;
-per-call overrides `--top` / `--max-tokens`). `recallMaxTokens` is approximate —
-`rule.length / 4`, not a real tokenizer.
+`recallLimit` / `recallMaxTokens` (canonical recall caps; per-call overrides
+`--top` / `--max-tokens`). `recallMaxTokens` is approximate — `rule.length / 4`,
+not a real tokenizer. `autoPrune: true` (default off) auto-GCs structural cruft
+after each capture — orphan triggers/topics + non-stranding dead globs, the safe
+half of `prune`; never trims/strands an active lesson, git-reversible.
 
 ## Dedup (opt-in)
 

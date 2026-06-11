@@ -1,7 +1,18 @@
 import { makeLessonId, mergeTriggers, normalizeRule, todayIso, union } from './add-helpers.js';
-import { type GuardrailWarning, inspectCapturedLesson } from './capture-guardrails.js';
+import { NoTriggerError, UnknownTopicError, UnrecallableLessonError } from './add-errors.js';
+import type { AutoPruneSummary } from './auto-prune.js';
+import {
+  type GuardrailWarning,
+  inspectCapturedLesson,
+  nearDuplicateWarning,
+} from './capture-guardrails.js';
 import type { LessonsGraph } from './graph-schema.js';
 import { mutateLessonsGraph } from './mutate.js';
+import { blockingDeadTriggers } from './trigger-effectiveness.js';
+
+// Re-export the capture rejection errors so existing `from './add.js'` importers
+// (CLI/MCP surfacing, tests) keep working after the split into add-errors.ts.
+export { NoTriggerError, UnknownTopicError, UnrecallableLessonError } from './add-errors.js';
 
 export interface AddLessonTriggers {
   readonly files?: readonly string[];
@@ -29,6 +40,12 @@ export interface AddLessonOptions {
    * agent cannot create an unreachable lesson.
    */
   readonly allowNoTrigger?: boolean;
+  /**
+   * Working-tree file list (project-relative, forward-slash) enabling the
+   * warn-only DEAD_GLOB guardrail. The capture entry point supplies it; the
+   * legacy-merge path omits it, so no tree walk happens off the capture path.
+   */
+  readonly knownPaths?: ReadonlySet<string>;
 }
 
 export interface AddLessonResult {
@@ -38,26 +55,12 @@ export interface AddLessonResult {
   readonly newTriggerIds: string[];
   /** Non-blocking capture guardrail warnings for the resulting (merged) lesson. */
   readonly warnings: GuardrailWarning[];
-}
-
-export class UnknownTopicError extends Error {
-  readonly code = 'UNKNOWN_TOPIC';
-  constructor(public readonly topic: string) {
-    super(`Unknown topic: ${topic}. Pass allowNewTopic + topicSummary to create it.`);
-    this.name = 'UnknownTopicError';
-  }
-}
-
-/** Thrown when a capture would leave a lesson with no trigger (unrecallable). */
-export class NoTriggerError extends Error {
-  readonly code = 'NO_TRIGGER';
-  constructor() {
-    super(
-      'A lesson needs at least one trigger to be recallable. Pass --trigger-file <glob> ' +
-        '(preferred), --trigger-cmd <regex>, or --trigger-kw <text>.',
-    );
-    this.name = 'NoTriggerError';
-  }
+  /**
+   * Counts of structural cruft the opt-in auto-prune cleaned up right after this
+   * capture (config `autoPrune: true`). Present only when something was pruned;
+   * absent when auto-prune is off or there was nothing to clean.
+   */
+  readonly autoPruned?: AutoPruneSummary;
 }
 
 function countInputTriggers(triggers: AddLessonInput['triggers']): number {
@@ -122,6 +125,23 @@ export function addLessonInto(
 
   const { triggerIds, newTriggerIds } = mergeTriggers(graph, input.triggers);
 
+  // A lesson whose RESULTING triggers are ALL dead on the mandatory --file/--cmd
+  // recall path is unrecallable — block it (the symmetric, blocking counterpart
+  // to the warn-only guardrails). Computed on the merged set, so an upsert that
+  // adds a dead trigger to an already-effective lesson is fine. command_pattern
+  // deadness is deferred to the write barrier (see blockingDeadTriggers), so this
+  // block adds the keyword-dead case the barrier passes. Skipped only by
+  // legacy-merge recovery (same escape hatch as the NoTriggerError check above).
+  // A throw here aborts the transactional write, so nothing is persisted.
+  if (options.allowNoTrigger !== true) {
+    const resultingTriggers =
+      existingId !== null ? union(graph.lessons[existingId]!.triggers, triggerIds) : triggerIds;
+    const blockingDead = blockingDeadTriggers(graph, resultingTriggers);
+    if (resultingTriggers.length > 0 && blockingDead.length === resultingTriggers.length) {
+      throw new UnrecallableLessonError(blockingDead);
+    }
+  }
+
   if (existingId !== null) {
     // existingId came from Object.entries(graph.lessons), so it is present.
     const existing = graph.lessons[existingId]!;
@@ -139,7 +159,9 @@ export function addLessonInto(
       isNewLesson: false,
       isNewTopic,
       newTriggerIds,
-      warnings: inspectCapturedLesson(graph, existingId),
+      // Near-duplicate detection is meaningless on an upsert (the lesson IS the
+      // match), so only DEAD_GLOB/hygiene warnings apply here.
+      warnings: inspectCapturedLesson(graph, existingId, options.knownPaths),
     };
   }
 
@@ -153,12 +175,14 @@ export function addLessonInto(
     createdAt: input.createdAt ?? todayIso(),
     ...(input.rationale === undefined ? {} : { rationale: input.rationale }),
   };
+  const warnings = inspectCapturedLesson(graph, id, options.knownPaths);
+  const nearDup = nearDuplicateWarning(graph, id);
   return {
     id,
     isNewLesson: true,
     isNewTopic,
     newTriggerIds,
-    warnings: inspectCapturedLesson(graph, id),
+    warnings: nearDup === null ? warnings : [...warnings, nearDup],
   };
 }
 

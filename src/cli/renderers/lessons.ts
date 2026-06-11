@@ -145,6 +145,12 @@ function renderAdd(data: LessonsAddData): void {
 /** Non-blocking trigger-hygiene nudges — warn (stderr), never fail the capture. */
 function renderGuardrails(data: LessonsAddData): void {
   for (const w of data.warnings) logger.warn(`${w.code}: ${w.message}`);
+  const ap = data.autoPruned;
+  if (ap !== undefined) {
+    logger.info(
+      `  auto-pruned: ${ap.removedTriggers} orphan trigger${ap.removedTriggers === 1 ? '' : 's'}, ${ap.removedTopics} orphan topic${ap.removedTopics === 1 ? '' : 's'}, ${ap.detachedDeadGlobs} dead glob${ap.detachedDeadGlobs === 1 ? '' : 's'} detached (git-reversible)`,
+    );
+  }
 }
 
 function renderTopics(data: LessonsTopicsData): void {

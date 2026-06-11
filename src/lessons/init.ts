@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { maybeAutoMigrateLessons } from './auto-migrate.js';
+import { captureLogPath } from './capture-telemetry.js';
 import { mutateLessonsGraphLocked } from './mutate.js';
 import { lessonsPaths, toRelPath } from './paths.js';
 import { injectRecallHook } from './recall-hook-scaffold.js';
@@ -69,12 +70,14 @@ export async function scaffoldLessons(projectRoot: string): Promise<ScaffoldLess
   // Auto-wire deterministic hook-mode recall for hook-capable targets; non-hook
   // targets keep the always-on paragraph injected above as their fallback.
   const recallHookInjected = injectRecallHook(projectRoot);
-  // Keep the opt-in recall telemetry log out of git. The entry is derived from
-  // the telemetry module so the path stays single-sourced; the append is
-  // idempotent and coverage-aware, so re-running scaffold (init is documented as
-  // safe to repeat) and an existing broader `.agentsmesh/` ignore are both no-ops.
+  // Keep BOTH opt-in telemetry logs (recall + capture) out of git. Entries are
+  // derived from the telemetry modules so the paths stay single-sourced; the
+  // append is idempotent and coverage-aware, so re-running scaffold (init is
+  // documented as safe to repeat) and an existing broader `.agentsmesh/` ignore
+  // are both no-ops.
   const gitignoreUpdated = await ensureGitignoreEntries(projectRoot, [
     toRelPath(projectRoot, recallLogPath(projectRoot)),
+    toRelPath(projectRoot, captureLogPath(projectRoot)),
   ]);
   return { created, updated, skipped, rootRuleUpdated, gitignoreUpdated, recallHookInjected };
 }

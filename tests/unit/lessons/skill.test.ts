@@ -79,8 +79,10 @@ describe('lessons skill content', () => {
   it('teaches the recall/capture reachability contract', () => {
     // Recall must be anchored to --file/--cmd; keyword-only is the anti-pattern.
     expect(LESSONS_SKILL_BODY).toMatch(/keyword-only/i);
-    // Capture requires at least one trigger.
-    expect(LESSONS_SKILL_BODY).toMatch(/at least one trigger is required/i);
+    // Capture requires at least one EFFECTIVE trigger — a dead-only capture is
+    // rejected (UNRECALLABLE_LESSON), not merely warned.
+    expect(LESSONS_SKILL_BODY).toMatch(/at least one .*trigger is required/i);
+    expect(LESSONS_SKILL_BODY).toContain('UNRECALLABLE_LESSON');
   });
 
   it('documents the recall caps and that recallMaxTokens is approximate', () => {

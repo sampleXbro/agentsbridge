@@ -17,25 +17,39 @@ function pct(x: number): string {
 
 export function renderStats(data: LessonsStatsData, format: 'text' | 'json'): void {
   if (format === 'json') {
-    process.stdout.write(`${JSON.stringify(data.report, null, 2)}\n`);
+    // Recall report with the capture aggregate nested under `capture`, so a
+    // single JSON document carries both halves of the telemetry picture.
+    process.stdout.write(
+      `${JSON.stringify({ ...data.report, capture: data.captureReport }, null, 2)}\n`,
+    );
     return;
   }
-  if (!data.hasLog) {
-    if (data.telemetryEnabled) {
-      logger.info(
-        '(telemetry is ON here, but no recall has been recorded yet — telemetry is written by ' +
-          '`lessons query` recalls, not by `stats`. Run some `agentsmesh lessons query …` calls, then re-run stats.)',
-      );
-    } else {
-      logger.info(
-        '(no recall telemetry yet — recording happens during `lessons query` recalls, NOT during `stats`. ' +
-          'Set AGENTSMESH_LESSONS_TELEMETRY=1 in the environment that runs your recalls — your shell for CLI ' +
-          'queries, and/or the MCP server process for agent queries — then run some queries before `stats`.)',
-      );
-    }
+  // The empty hint fires only when NEITHER log exists — a capture-only or
+  // recall-only log still shows its block below.
+  if (!data.hasLog && !data.hasCaptureLog) {
+    renderEmptyStatsHint(data.telemetryEnabled);
     return;
   }
-  const r = data.report;
+  if (data.hasLog) renderRecallStats(data.report);
+  if (data.hasCaptureLog) renderCaptureStats(data);
+}
+
+function renderEmptyStatsHint(telemetryEnabled: boolean): void {
+  if (telemetryEnabled) {
+    logger.info(
+      '(telemetry is ON here, but nothing has been recorded yet — telemetry is written by ' +
+        '`lessons query` recalls and `lessons add` captures, not by `stats`. Run some `agentsmesh lessons` calls, then re-run stats.)',
+    );
+  } else {
+    logger.info(
+      '(no lessons telemetry yet — recording happens during `lessons query` recalls and `lessons add` captures, NOT during `stats`. ' +
+        'Set AGENTSMESH_LESSONS_TELEMETRY=1 in the environment that runs them — your shell for CLI ' +
+        'calls, and/or the MCP server process for agent calls — then re-run `stats`.)',
+    );
+  }
+}
+
+function renderRecallStats(r: LessonsStatsData['report']): void {
   const be = r.preloadBreakEven;
   logger.info(
     `recalls: ${r.totalRecalls}   no-match: ${pct(r.noMatchRate)}   sessions: ${be.sessions}   bypassed(--all): ${r.bypassedRecalls}`,
@@ -58,6 +72,19 @@ export function renderStats(data: LessonsStatsData, format: 'text' | 'json'): vo
   logger.info(
     `reachability: keyword-only recalls ${pct(r.reachability.keywordOnlyRecallRate)}, keyword-only-unreachable lessons ${r.reachability.keywordOnlyUnreachableLessons}`,
   );
+}
+
+function renderCaptureStats(data: LessonsStatsData): void {
+  const c = data.captureReport;
+  const k = c.byTriggerKind;
+  // Recalls-per-capture: a high ratio is healthy (lessons are read far more than
+  // written); a ratio near 0 means capture is outpacing use, or recall is off.
+  const ratio = c.total === 0 ? '—' : (data.report.totalRecalls / c.total).toFixed(2);
+  logger.info(
+    `captures: ${c.total}   blocked: ${c.blocked}   new: ${c.newLessons}   upsert: ${c.upserts}   new-topics: ${c.newTopics}   warned: ${c.withWarnings}`,
+  );
+  logger.info(`capture triggers by kind: file=${k.file}  cmd=${k.command}  kw=${k.keyword}`);
+  logger.info(`recall:capture ratio: ${ratio} recalls per capture`);
 }
 
 export function renderPrune(data: LessonsPruneData): void {

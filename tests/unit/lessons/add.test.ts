@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { addLesson, UnknownTopicError } from '../../../src/lessons/add.js';
+import { addLesson, UnknownTopicError, UnrecallableLessonError } from '../../../src/lessons/add.js';
 import { loadLessonsGraph, saveLessonsGraph } from '../../../src/lessons/graph-store.js';
 import type { LessonsGraph } from '../../../src/lessons/graph-schema.js';
 
@@ -339,5 +339,67 @@ describe('addLesson', () => {
     seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
     const r = await addLesson(root, { ...baseInput, triggers: { files: ['src/cli/paths.ts'] } });
     expect(r.warnings).toEqual([]);
+  });
+
+  it('blocks a new lesson whose only trigger is a stopword-only keyword (unrecallable)', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    await expect(
+      addLesson(root, { ...baseInput, triggers: { keywords: ['state of the art'] } }),
+    ).rejects.toBeInstanceOf(UnrecallableLessonError);
+    // The transactional write aborted — nothing persisted.
+    expect(Object.keys(loadLessonsGraph(root).lessons)).toEqual([]);
+  });
+
+  it('names the dead trigger and the --file/--cmd path in the block message', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    await expect(
+      addLesson(root, { ...baseInput, triggers: { keywords: ['state of the art'] } }),
+    ).rejects.toThrow(/no effective trigger[\s\S]*--file\/--cmd/);
+  });
+
+  it('allows a capture that mixes a dead keyword with a live file_glob (one effective is enough)', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    const r = await addLesson(root, {
+      ...baseInput,
+      triggers: { files: ['src/auth.ts'], keywords: ['state of the art'] },
+    });
+    expect(r.isNewLesson).toBe(true);
+    // The dead keyword still surfaces as a non-blocking warning.
+    expect(r.warnings.map((w) => w.code)).toContain('STOPWORD_KEYWORD');
+  });
+
+  it('allows an upsert that adds a dead trigger to an already-effective lesson', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    const first = await addLesson(root, baseInput); // live file_glob
+    const again = await addLesson(root, {
+      ...baseInput,
+      triggers: { keywords: ['state of the art'] },
+    });
+    expect(again.id).toBe(first.id);
+    expect(again.isNewLesson).toBe(false);
+  });
+
+  it('surfaces a NEAR_DUPLICATE_LESSON warning when a new lesson paraphrases an active one', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    await addLesson(root, {
+      ...baseInput,
+      rule: 'Run the test suite before committing changes.',
+      triggers: { files: ['src/a.ts'] },
+    });
+    const para = await addLesson(root, {
+      ...baseInput,
+      rule: 'Before committing changes run the test suite.',
+      triggers: { files: ['src/b.ts'] },
+    });
+    expect(para.isNewLesson).toBe(true);
+    expect(para.warnings.map((w) => w.code)).toContain('NEAR_DUPLICATE_LESSON');
+  });
+
+  it('does NOT emit NEAR_DUPLICATE_LESSON on an exact re-capture (it upserts instead)', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    await addLesson(root, baseInput);
+    const again = await addLesson(root, baseInput);
+    expect(again.isNewLesson).toBe(false);
+    expect(again.warnings.map((w) => w.code)).not.toContain('NEAR_DUPLICATE_LESSON');
   });
 });

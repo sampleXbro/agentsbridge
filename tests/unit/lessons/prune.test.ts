@@ -93,6 +93,15 @@ describe('planPrune', () => {
     expect(plan.trimmedLessons).toEqual([]);
   });
 
+  it('skips over-cap trimming when trimOverCap is false, but still GCs dead triggers (auto-prune subset)', () => {
+    // The over-cap lesson is NOT trimmed...
+    const plan = planPrune(trimGraph(), { cap: 2, trimOverCap: false });
+    expect(plan.trimmedLessons).toEqual([]);
+    // ...while the GC-only operations (orphan/dead-trigger removal) still run.
+    const dead = planPrune(deadGraph(), { trimOverCap: false });
+    expect(dead.removedTriggerIds).toEqual(['t-dead']);
+  });
+
   it('breaks fanout ties deterministically by ascending trigger id', () => {
     // Three triggers with identical fanout (each referenced only by `solo`) in
     // descending id order — forces the id tie-break in both comparison

@@ -5,15 +5,15 @@
 <!-- agentsmesh:root-generation-contract:end -->
 
 <!-- agentsmesh:lessons-contract:start -->
-## Lessons (BLOCKING: recall before mutating, capture after failing)
+## Lessons (BLOCKING REQUIREMENT — MUST run both, no exceptions; the user will check)
 
 Graph `../../.agentsmesh/lessons/lessons.json` is canonical — never hand-edit. Manual: the `lessons` skill.
 
-**Recall** — before each file edit and each state-changing command (build/test/install/migrate/git-write): `agentsmesh lessons query --file <path> --cmd <command>`, then apply every rule. Pure-read commands (cat/ls/grep/git-log) and the recall query itself are exempt.
+**Recall — MUST run before every file edit and every state-changing command** (build/test/install/migrate/git-write): `agentsmesh lessons query --file <path> --cmd <command>`, then apply every rule. Pure-read commands (cat/ls/grep/git-log) and the recall query itself are exempt.
 
-**Capture** — right after any failure (a failing test/CI/lint/typecheck, a code review, a user correction, a regression, or a wrong assumption — yours or anyone's): `agentsmesh lessons add "<rule>" --topic <id> --trigger-file <glob> --evidence <sha|lesson-id>`.
+**Capture — MUST run immediately after any failure** (a failing test/CI/lint/typecheck, a code review, a user correction, a regression, or a wrong assumption — yours or anyone's): `agentsmesh lessons add "<rule>" --topic <id> --trigger-file <glob> --evidence <sha|lesson-id>`.
 
-No shell? Use the `lessons_query` / `lessons_add` MCP tools.
+No shell? Use the `lessons_query` / `lessons_add` MCP tools. Skip either and the system does not exist.
 <!-- agentsmesh:lessons-contract:end -->
 
 # Operational Guidelines

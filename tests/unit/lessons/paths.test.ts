@@ -75,19 +75,25 @@ describe('LESSONS_PROCEDURAL_RULE', () => {
     expect(LESSONS_PROCEDURAL_RULE).toMatch(/command/);
   });
 
-  it('keeps a BLOCKING frame but moves the maximalist pedagogy into the skill', () => {
-    // The always-on block stays binding ("BLOCKING") but the rebuttal prose
-    // ("process violation", "the user will check", "the system does not exist")
-    // moves to the on-demand skill so it no longer taxes every session.
-    expect(LESSONS_PROCEDURAL_RULE).toContain('BLOCKING');
-    expect(LESSONS_PROCEDURAL_RULE).not.toContain('process violation');
-    expect(LESSONS_PROCEDURAL_RULE).not.toContain('the user will check');
-    expect(LESSONS_PROCEDURAL_RULE).not.toContain('the system does not exist');
+  it('keeps a forceful BLOCKING frame the agent cannot rationalize away', () => {
+    // The always-on block is binding AND forcefully framed: a "BLOCKING
+    // REQUIREMENT — MUST run both" header, the accountability cue ("the user
+    // will check"), and a hard closing ("the system does not exist") so the
+    // ritual is not skipped. What stays OUT is the flouted "read-only included"
+    // clause and the exhaustive rejected-excuse enumeration — those live in the
+    // on-demand `lessons` skill, not the always-on block.
+    expect(LESSONS_PROCEDURAL_RULE).toContain('BLOCKING REQUIREMENT');
+    expect(LESSONS_PROCEDURAL_RULE).toContain('the user will check');
+    expect(LESSONS_PROCEDURAL_RULE).toContain('the system does not exist');
+    expect(LESSONS_PROCEDURAL_RULE).not.toContain('read-only included');
+    expect(LESSONS_PROCEDURAL_RULE).not.toContain('Rejected excuses');
   });
 
-  it('is compact — materially smaller than the prior maximalist block', () => {
-    // Phase 1 trims the always-on per-session tax. Guard against regrowth.
-    expect(LESSONS_PROCEDURAL_RULE.length).toBeLessThan(820);
+  it('is compact — far smaller than the prior maximalist block', () => {
+    // Forceful framing is restored, but the always-on per-session tax stays
+    // bounded: this guards against regrowth toward the ~1450-char maximalist
+    // V1/V2 block, not against the deliberate forceful frame.
+    expect(LESSONS_PROCEDURAL_RULE.length).toBeLessThan(880);
   });
 
   it('does NOT bake in any Claude Code-specific tool names as required actions', () => {

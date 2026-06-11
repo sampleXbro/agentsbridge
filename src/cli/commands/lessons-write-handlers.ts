@@ -8,7 +8,7 @@ import {
 } from '../../lessons/add.js';
 import { captureLesson } from '../../lessons/recall.js';
 import { deprecateLesson } from '../../lessons/deprecate.js';
-import { ancestorAgentsmeshDir, lessonsActivated } from '../../lessons/paths.js';
+import { ancestorLessonsProjectDir, lessonsActivated } from '../../lessons/paths.js';
 import { mergeLessons } from '../../lessons/merge.js';
 import { mutateLessonsGraph } from '../../lessons/mutate.js';
 import { stripMarkersInGraph } from '../../lessons/strip-markers.js';
@@ -58,9 +58,11 @@ export async function doAdd(
 
   // Flag a capture about to create a stray graph in a subdirectory of a real
   // project (computed before capture, which would create .agentsmesh here).
+  const ancestorLessons =
+    existsSync(join(projectRoot, '.agentsmesh')) ? null : ancestorLessonsProjectDir(projectRoot);
   const locationNote =
-    !existsSync(join(projectRoot, '.agentsmesh')) && ancestorAgentsmeshDir(projectRoot) !== null
-      ? `Capturing into a new .agentsmesh here — a project already exists at ${ancestorAgentsmeshDir(projectRoot)!.replaceAll('\\', '/')}. If that was unintended, cd into it and re-run.`
+    ancestorLessons !== null
+      ? `Capturing into a new .agentsmesh here — a lessons project already exists at ${ancestorLessons.replaceAll('\\', '/')}. If that was unintended, cd into it and re-run.`
       : undefined;
   // When lessons was never activated (no `init --lessons`), a bare `add` writes
   // only the graph — no recall hook, ritual, or skill — so the capture lands but

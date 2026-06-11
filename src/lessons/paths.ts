@@ -56,17 +56,22 @@ export function lessonsSetupHint(): string {
 
 /**
  * Walk up from `projectRoot`'s parent looking for an ancestor that holds a
- * `.agentsmesh` directory, returning the first match (or null). Lessons commands
- * resolve their root from the CWD, so an invocation from a subdirectory of a real
- * project silently reads/writes the wrong place — empty recall, or a stray graph
- * created in the subdir. Callers use this to warn (not to relocate: staying
- * CWD-rooted keeps every command consistent) when the user is likely off-root.
+ * lessons GRAPH (`.agentsmesh/lessons/lessons.json`), returning the first match
+ * (or null). Lessons commands resolve their root from the CWD, so an invocation
+ * from a subdirectory of a real lessons project silently reads/writes the wrong
+ * place — empty recall, or a stray graph created in the subdir. Callers use this
+ * to warn (not to relocate: staying CWD-rooted keeps every command consistent).
+ *
+ * It deliberately keys off the graph file, NOT a bare `.agentsmesh` dir: the
+ * global-mode config lives at `~/.agentsmesh` and never holds a lessons graph
+ * (`--lessons` is project-only), so matching `.agentsmesh` alone would fire a
+ * false "a project exists above" on every directory under the home folder.
  */
-export function ancestorAgentsmeshDir(projectRoot: string): string | null {
+export function ancestorLessonsProjectDir(projectRoot: string): string | null {
   let dir = dirname(resolve(projectRoot));
   let prev = '';
   while (dir !== prev) {
-    if (existsSync(join(dir, '.agentsmesh'))) return dir;
+    if (existsSync(lessonsPaths(dir).graph)) return dir;
     prev = dir;
     dir = dirname(dir);
   }

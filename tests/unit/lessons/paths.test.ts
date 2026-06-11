@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, it, expect } from 'vitest';
 import {
-  ancestorAgentsmeshDir,
+  ancestorLessonsProjectDir,
   lessonsActivated,
   lessonsPaths,
   toRelPath,
@@ -23,7 +23,7 @@ describe('lessonsPaths', () => {
   });
 });
 
-describe('ancestorAgentsmeshDir', () => {
+describe('ancestorLessonsProjectDir', () => {
   let root: string;
   beforeEach(() => {
     root = mkdtempSync(join(tmpdir(), 'amesh-ancestor-'));
@@ -32,22 +32,36 @@ describe('ancestorAgentsmeshDir', () => {
     rmSync(root, { recursive: true, force: true });
   });
 
-  it('returns null when no ancestor holds a .agentsmesh directory', () => {
+  /** Create a real lessons graph file under `dir/.agentsmesh/lessons/lessons.json`. */
+  function seedGraphAt(dir: string): void {
+    mkdirSync(join(dir, '.agentsmesh', 'lessons'), { recursive: true });
+    writeFileSync(join(dir, '.agentsmesh', 'lessons', 'lessons.json'), '{}');
+  }
+
+  it('returns null when no ancestor holds a lessons graph', () => {
     const sub = join(root, 'a', 'b');
     mkdirSync(sub, { recursive: true });
-    expect(ancestorAgentsmeshDir(sub)).toBeNull();
+    expect(ancestorLessonsProjectDir(sub)).toBeNull();
   });
 
-  it('finds the nearest ancestor that holds .agentsmesh', () => {
-    mkdirSync(join(root, '.agentsmesh'), { recursive: true });
+  it('finds the nearest ancestor that holds a lessons graph', () => {
+    seedGraphAt(root);
     const sub = join(root, 'pkg', 'src');
     mkdirSync(sub, { recursive: true });
-    expect(ancestorAgentsmeshDir(sub)).toBe(root);
+    expect(ancestorLessonsProjectDir(sub)).toBe(root);
   });
 
-  it('ignores a .agentsmesh at the start dir itself (only ancestors count)', () => {
+  it('ignores a graph at the start dir itself (only ancestors count)', () => {
+    seedGraphAt(root);
+    expect(ancestorLessonsProjectDir(root)).toBeNull();
+  });
+
+  it('ignores a bare .agentsmesh with no lessons graph (e.g. the global-mode config)', () => {
+    // Mirrors ~/.agentsmesh from `init --global`, which never holds a lessons graph.
     mkdirSync(join(root, '.agentsmesh'), { recursive: true });
-    expect(ancestorAgentsmeshDir(root)).toBeNull();
+    const sub = join(root, 'pkg');
+    mkdirSync(sub, { recursive: true });
+    expect(ancestorLessonsProjectDir(sub)).toBeNull();
   });
 });
 

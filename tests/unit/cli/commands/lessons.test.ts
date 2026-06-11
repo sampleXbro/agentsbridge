@@ -165,8 +165,11 @@ describe('runLessons query', () => {
     expect(r.data.warning).toMatch(/init --lessons/);
   });
 
-  it('warns when run from a subdir of a real project (no graph here, ancestor has one)', async () => {
-    mkdirSync(join(root, '.agentsmesh'), { recursive: true });
+  it('warns when run from a subdir of a real lessons project (graph in an ancestor)', async () => {
+    // The ancestor must hold an actual lessons graph — a bare .agentsmesh (e.g.
+    // the global-mode config) must NOT trigger the warning.
+    mkdirSync(join(root, '.agentsmesh', 'lessons'), { recursive: true });
+    writeFileSync(join(root, '.agentsmesh', 'lessons', 'lessons.json'), '{}');
     const sub = join(root, 'packages', 'app');
     mkdirSync(sub, { recursive: true });
     const r = await runLessons({ file: 'src/x.ts' }, ['query'], sub);
@@ -174,6 +177,16 @@ describe('runLessons query', () => {
     expect(r.exitCode).toBe(0);
     expect(r.data.warning).toMatch(/no lessons graph here/i);
     expect(r.data.warning).toMatch(/cd into it/i);
+  });
+
+  it('does NOT warn from a subdir whose ancestor has a bare .agentsmesh but no lessons graph', async () => {
+    mkdirSync(join(root, '.agentsmesh'), { recursive: true }); // global-mode style, no lessons/
+    const sub = join(root, 'packages', 'app');
+    mkdirSync(sub, { recursive: true });
+    const r = await runLessons({ file: 'src/x.ts' }, ['query'], sub);
+    if (r.subcommand !== 'query') return;
+    // The "set up lessons" hint is fine, but never the stray-project warning.
+    expect(r.data.warning ?? '').not.toMatch(/no lessons graph here/i);
   });
 
   it('warns when config.json is present but malformed (still returns results)', async () => {

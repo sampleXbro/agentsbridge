@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { CURRENT_GRAPH_VERSION } from '../../lessons/graph-schema.js';
 import { loadLessonsGraphResilient } from '../../lessons/graph-store.js';
 import { normalizeRecallFile } from '../../lessons/normalize-query-file.js';
-import { ancestorAgentsmeshDir, lessonsSetupHint } from '../../lessons/paths.js';
+import { ancestorLessonsProjectDir, lessonsSetupHint } from '../../lessons/paths.js';
 import { queryLessons } from '../../lessons/query.js';
 import { rankLessons } from '../../lessons/ranking.js';
 import { recordRecallTelemetry } from '../../lessons/recall.js';
@@ -49,9 +49,9 @@ function mergeWarnings(...parts: Array<string | undefined>): string | undefined 
  */
 function strayDirWarning(projectRoot: string): string | undefined {
   if (existsSync(join(projectRoot, '.agentsmesh'))) return undefined;
-  const ancestor = ancestorAgentsmeshDir(projectRoot);
+  const ancestor = ancestorLessonsProjectDir(projectRoot);
   if (ancestor === null) return undefined;
-  return `no lessons graph here — this directory has no .agentsmesh, but a project exists at ${ancestor.replaceAll('\\', '/')}. Run lessons from there (cd into it) for recall to work.`;
+  return `no lessons graph here — this directory has no .agentsmesh, but a lessons project exists at ${ancestor.replaceAll('\\', '/')}. Run lessons from there (cd into it) for recall to work.`;
 }
 
 export function doQuery(

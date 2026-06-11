@@ -2,9 +2,14 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { addLesson, UnknownTopicError, UnrecallableLessonError } from '../../../src/lessons/add.js';
+import {
+  addLesson,
+  RuleTooLongError,
+  UnknownTopicError,
+  UnrecallableLessonError,
+} from '../../../src/lessons/add.js';
 import { loadLessonsGraph, saveLessonsGraph } from '../../../src/lessons/graph-store.js';
-import type { LessonsGraph } from '../../../src/lessons/graph-schema.js';
+import { MAX_RULE_LENGTH, type LessonsGraph } from '../../../src/lessons/graph-schema.js';
 
 let root: string;
 
@@ -401,5 +406,21 @@ describe('addLesson', () => {
     const again = await addLesson(root, baseInput);
     expect(again.isNewLesson).toBe(false);
     expect(again.warnings.map((w) => w.code)).not.toContain('NEAR_DUPLICATE_LESSON');
+  });
+
+  it('rejects a rule longer than MAX_RULE_LENGTH with RuleTooLongError', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    const tooLong = 'a'.repeat(MAX_RULE_LENGTH + 1);
+    await expect(addLesson(root, { ...baseInput, rule: tooLong })).rejects.toBeInstanceOf(
+      RuleTooLongError,
+    );
+  });
+
+  it('accepts a rule exactly at MAX_RULE_LENGTH', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    const atCap = 'a'.repeat(MAX_RULE_LENGTH);
+    const result = await addLesson(root, { ...baseInput, rule: atCap });
+    expect(result.isNewLesson).toBe(true);
+    expect(loadLessonsGraph(root).lessons[result.id]?.rule.length).toBe(MAX_RULE_LENGTH);
   });
 });

@@ -57,6 +57,8 @@ review, a user correction, a regression, or a wrong assumption — yours or anyo
   \`--trigger-file\`: the most reliable trigger, it fires on \`--file\` recall. A keyword
   alone is discouraged (\`KEYWORD_ONLY_LESSON\`); paraphrasing an existing rule warns
   (\`NEAR_DUPLICATE_LESSON\` — update that lesson instead).
+- **One imperative sentence.** A rule over 2000 chars is rejected (\`OVERSIZED_RULE\`) —
+  trim it or split into separate lessons; don't paste a log/diff.
 - Widen with \`--trigger-cmd <regex>\` / \`--trigger-kw <text>\`. New area:
   \`--new-topic --topic-summary "<line>"\` (list ids with \`agentsmesh lessons topics\`).
 

@@ -10,6 +10,29 @@ Query and capture lessons from `.agentsmesh/lessons/lessons.json` — the single
 
 The contract is delivered in two tiers. A minimal always-on **trigger** is injected into `.agentsmesh/rules/_root.md`, so it reaches every target through canonical rule generation (rules are native everywhere). The full operating manual — every subcommand below, the topic workflow, trigger flags, and the MCP fallback — is seeded as a `lessons` skill (`.agentsmesh/skills/lessons/SKILL.md`) and surfaced on demand on skill-capable targets. Targets without skills still get the trigger, so the binding contract is universal while the manual stays out of always-on context.
 
+## Getting started
+
+From an empty project to a working recall + capture loop:
+
+```bash
+# 1. Scaffold the subsystem (graph, config, skill, ritual, recall hook).
+agentsmesh init --lessons
+agentsmesh generate              # project the ritual into every target
+
+# 2. Capture your first lesson after a failure (creates the topic on the fly).
+agentsmesh lessons add "Run tsc --noEmit before committing type changes." \
+  --topic build --new-topic --topic-summary "Build & typecheck rules." \
+  --trigger-file "src/**/*.ts" --evidence commit:abc1234
+
+# 3. Recall it before the next edit / command.
+agentsmesh lessons query --file src/index.ts --cmd "git commit -m wip"
+
+# 4. List what's there.
+agentsmesh lessons topics
+```
+
+Run lessons commands from the **project root** (the directory holding `.agentsmesh`). Run from a subdirectory and the CLI warns it found no graph there — `cd` to the root. Mistyped a flag? The command errors and names the unknown flag rather than silently ignoring it (a typoed `--trigger-flie` would otherwise drop a trigger).
+
 ## Usage
 
 ```bash
@@ -151,7 +174,7 @@ Results are **relevance-ranked** (BM25 over rule text fused with trigger specifi
 
 | Flag | Description |
 |------|-------------|
-| `--rule "<text>"` | **Required.** Imperative rule that prevents recurrence. |
+| `--rule "<text>"` | **Required.** Imperative rule that prevents recurrence. Must be ≤2000 characters — a rule is one sentence, not a pasted log; a longer one is rejected (`OVERSIZED_RULE`, exit 2). Also accepted positionally: `lessons add "<rule>" …`. |
 | `--topic <id>` | **Required.** Topic id. Pass `--new-topic --topic-summary "..."` to create one. |
 | `--trigger-file <glob>` | `file_glob` trigger. Opaque — repeat the flag for multiple (commas kept). |
 | `--trigger-cmd <regex>` | `command_pattern` trigger. Opaque — repeat for multiple. Matched by a non-backtracking linear engine, so any ReDoS-shaped pattern (`(a+)+`, `a+a+`) is safe; only **backreferences** and **lookarounds** (which the engine can't run) are rejected at capture. |

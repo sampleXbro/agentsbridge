@@ -1,18 +1,28 @@
 import { makeLessonId, mergeTriggers, normalizeRule, todayIso, union } from './add-helpers.js';
-import { NoTriggerError, UnknownTopicError, UnrecallableLessonError } from './add-errors.js';
+import {
+  NoTriggerError,
+  RuleTooLongError,
+  UnknownTopicError,
+  UnrecallableLessonError,
+} from './add-errors.js';
 import type { AutoPruneSummary } from './auto-prune.js';
 import {
   type GuardrailWarning,
   inspectCapturedLesson,
   nearDuplicateWarning,
 } from './capture-guardrails.js';
-import type { LessonsGraph } from './graph-schema.js';
+import { MAX_RULE_LENGTH, type LessonsGraph } from './graph-schema.js';
 import { mutateLessonsGraph } from './mutate.js';
 import { blockingDeadTriggers } from './trigger-effectiveness.js';
 
 // Re-export the capture rejection errors so existing `from './add.js'` importers
 // (CLI/MCP surfacing, tests) keep working after the split into add-errors.ts.
-export { NoTriggerError, UnknownTopicError, UnrecallableLessonError } from './add-errors.js';
+export {
+  NoTriggerError,
+  RuleTooLongError,
+  UnknownTopicError,
+  UnrecallableLessonError,
+} from './add-errors.js';
 
 export interface AddLessonTriggers {
   readonly files?: readonly string[];
@@ -98,6 +108,12 @@ export function addLessonInto(
 ): AddLessonResult {
   const ruleKey = normalizeRule(input.rule);
   const trimmedRule = input.rule.trim();
+  // A rule far longer than one sentence is a malformed capture; block it before
+  // it can bloat every recall that surfaces it (the hook also truncates as a
+  // last-resort defense for already-stored / hostile graphs).
+  if (trimmedRule.length > MAX_RULE_LENGTH) {
+    throw new RuleTooLongError(trimmedRule.length, MAX_RULE_LENGTH);
+  }
   const existingId = findExistingLessonByRule(graph, ruleKey);
 
   // Topic validity is checked first so an unknown-topic / missing-summary error

@@ -1,5 +1,13 @@
-import { describe, it, expect } from 'vitest';
-import { lessonsPaths, toRelPath, LESSONS_PROCEDURAL_RULE } from '../../../src/lessons/paths.js';
+import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, it, expect } from 'vitest';
+import {
+  ancestorAgentsmeshDir,
+  lessonsPaths,
+  toRelPath,
+  LESSONS_PROCEDURAL_RULE,
+} from '../../../src/lessons/paths.js';
 import { toPosixPath } from '../../helpers/posix-path.js';
 
 describe('lessonsPaths', () => {
@@ -11,6 +19,34 @@ describe('lessonsPaths', () => {
     expect(toPosixPath(p.journal)).toBe('/proj/.agentsmesh/lessons/journal.md');
     expect(toPosixPath(p.index)).toBe('/proj/.agentsmesh/lessons/index.yaml');
     expect(toPosixPath(p.topicsDir)).toBe('/proj/.agentsmesh/lessons/topics');
+  });
+});
+
+describe('ancestorAgentsmeshDir', () => {
+  let root: string;
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), 'amesh-ancestor-'));
+  });
+  afterEach(() => {
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it('returns null when no ancestor holds a .agentsmesh directory', () => {
+    const sub = join(root, 'a', 'b');
+    mkdirSync(sub, { recursive: true });
+    expect(ancestorAgentsmeshDir(sub)).toBeNull();
+  });
+
+  it('finds the nearest ancestor that holds .agentsmesh', () => {
+    mkdirSync(join(root, '.agentsmesh'), { recursive: true });
+    const sub = join(root, 'pkg', 'src');
+    mkdirSync(sub, { recursive: true });
+    expect(ancestorAgentsmeshDir(sub)).toBe(root);
+  });
+
+  it('ignores a .agentsmesh at the start dir itself (only ancestors count)', () => {
+    mkdirSync(join(root, '.agentsmesh'), { recursive: true });
+    expect(ancestorAgentsmeshDir(root)).toBeNull();
   });
 });
 

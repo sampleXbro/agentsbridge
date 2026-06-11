@@ -1,4 +1,5 @@
-import { join, relative, sep } from 'node:path';
+import { existsSync } from 'node:fs';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 
 /**
  * Default on-disk locations for the lessons subsystem.
@@ -34,6 +35,25 @@ export function lessonsPaths(projectRoot: string): LessonsPaths {
     index: join(base, 'index.yaml'),
     topicsDir: join(base, 'topics'),
   };
+}
+
+/**
+ * Walk up from `projectRoot`'s parent looking for an ancestor that holds a
+ * `.agentsmesh` directory, returning the first match (or null). Lessons commands
+ * resolve their root from the CWD, so an invocation from a subdirectory of a real
+ * project silently reads/writes the wrong place — empty recall, or a stray graph
+ * created in the subdir. Callers use this to warn (not to relocate: staying
+ * CWD-rooted keeps every command consistent) when the user is likely off-root.
+ */
+export function ancestorAgentsmeshDir(projectRoot: string): string | null {
+  let dir = dirname(resolve(projectRoot));
+  let prev = '';
+  while (dir !== prev) {
+    if (existsSync(join(dir, '.agentsmesh'))) return dir;
+    prev = dir;
+    dir = dirname(dir);
+  }
+  return null;
 }
 
 /**

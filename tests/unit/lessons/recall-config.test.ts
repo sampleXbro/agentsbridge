@@ -2,7 +2,11 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { defaultLessonsConfig, loadRecallConfig } from '../../../src/lessons/recall-config.js';
+import {
+  defaultLessonsConfig,
+  lessonsConfigWarning,
+  loadRecallConfig,
+} from '../../../src/lessons/recall-config.js';
 import { DEFAULT_RECALL_LIMIT, DEFAULT_RECALL_MAX_TOKENS } from '../../../src/lessons/ranking.js';
 import { recallLessons } from '../../../src/lessons/recall.js';
 import { saveLessonsGraph } from '../../../src/lessons/graph-store.js';
@@ -21,6 +25,37 @@ function writeConfig(content: string): void {
   mkdirSync(join(root, '.agentsmesh/lessons'), { recursive: true });
   writeFileSync(join(root, '.agentsmesh/lessons/config.json'), content);
 }
+
+describe('lessonsConfigWarning', () => {
+  it('returns null when no config file exists', () => {
+    expect(lessonsConfigWarning(root)).toBeNull();
+  });
+
+  it('returns null for a valid config', () => {
+    writeConfig(JSON.stringify({ recallLimit: 3, recallMaxTokens: 200 }));
+    expect(lessonsConfigWarning(root)).toBeNull();
+  });
+
+  it('warns on unparseable JSON', () => {
+    writeConfig('not json');
+    expect(lessonsConfigWarning(root)).toMatch(/not valid JSON/);
+  });
+
+  it('warns and names an invalid recall field', () => {
+    writeConfig(JSON.stringify({ recallLimit: 0 }));
+    const w = lessonsConfigWarning(root);
+    expect(w).toMatch(/recallLimit/);
+    expect(w).toMatch(/positive integer/);
+  });
+
+  it('does not change the silent loadRecallConfig fallback on a broken config', () => {
+    writeConfig('not json');
+    expect(loadRecallConfig(root)).toEqual({
+      limit: DEFAULT_RECALL_LIMIT,
+      maxTokens: DEFAULT_RECALL_MAX_TOKENS,
+    });
+  });
+});
 
 describe('defaultLessonsConfig', () => {
   it('materializes every tunable at the same default the readers fall back to', () => {

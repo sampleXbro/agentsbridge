@@ -48,6 +48,38 @@ function positiveInt(value: unknown): number | null {
   return typeof value === 'number' && Number.isInteger(value) && value > 0 ? value : null;
 }
 
+/**
+ * Diagnose a present-but-broken `config.json` for a user-facing warning, WITHOUT
+ * changing the silent hot-path fallback in {@link loadRecallConfig}. Returns a
+ * message when the file exists but is unparseable JSON or carries an invalid
+ * recall field (so a typo'd `recallLimit` does not silently revert to the default
+ * with no signal); null when the file is absent or valid. Callers surface it on
+ * stderr — the recall path itself stays non-throwing.
+ */
+export function lessonsConfigWarning(projectRoot: string): string | null {
+  const path = lessonsPaths(projectRoot).config;
+  if (!existsSync(path)) return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(readFileSync(path, 'utf8'));
+  } catch {
+    return `lessons config.json is not valid JSON — using built-in recall defaults. Fix or delete .agentsmesh/lessons/config.json.`;
+  }
+  if (typeof parsed !== 'object' || parsed === null) {
+    return `lessons config.json is not a JSON object — using built-in recall defaults.`;
+  }
+  const cfg = parsed as Record<string, unknown>;
+  const bad: string[] = [];
+  if ('recallLimit' in cfg && positiveInt(cfg.recallLimit) === null) bad.push('recallLimit');
+  if ('recallMaxTokens' in cfg && positiveInt(cfg.recallMaxTokens) === null) {
+    bad.push('recallMaxTokens');
+  }
+  if (bad.length > 0) {
+    return `lessons config.json has invalid ${bad.join(' and ')} (expected a positive integer) — using the default for ${bad.length === 1 ? 'it' : 'them'}.`;
+  }
+  return null;
+}
+
 export function loadRecallConfig(projectRoot: string): RecallConfig {
   const fallback: RecallConfig = {
     limit: DEFAULT_RECALL_LIMIT,

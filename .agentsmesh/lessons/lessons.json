@@ -3288,6 +3288,21 @@
         "t-cmd-56d79bf7"
       ]
     },
+    "lessons-system-when-a-lessons-cli-handler": {
+      "createdAt": "2026-06-11",
+      "evidence": [
+        "lesson:review-2026-06-11"
+      ],
+      "rule": "When a lessons CLI handler reads a flag, add it to LESSONS_USAGE in lessons-usage.ts in the same change — handler-only flags (e.g. --session, --no-dedup, --ids on query) are parsed but invisible in --help and undiscoverable by users",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-9c525d4d",
+        "t-glob-74262634"
+      ]
+    },
     "lessons-system-when-a-recall-query-primitive": {
       "createdAt": "2026-06-07",
       "evidence": [
@@ -3330,6 +3345,21 @@
       "triggers": [
         "t-glob-d3bf322e",
         "t-kw-20cd8977"
+      ]
+    },
+    "lessons-system-when-init-scaffold-gains-a": {
+      "createdAt": "2026-06-11",
+      "evidence": [
+        "commit:c9889d64"
+      ],
+      "rule": "When init/scaffold gains a new canonical artifact (e.g. lessons/config.json from seedLessonsConfig), update EVERY exact-canonical-set assertion that goes through the import safety net or scaffoldLessons — especially tests/e2e/target-contract-matrix.e2e.test.ts (expectedImported) which the original feature commit missed, failing 30 per-target round-trips.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-e06b465d",
+        "t-glob-8148e382"
       ]
     },
     "lessons-system-when-reviewing-or-authoring-a": {
@@ -5995,6 +6025,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/add.ts"
     },
+    "t-glob-74262634": {
+      "kind": "file_glob",
+      "pattern": "src/cli/commands/lessons-usage.ts"
+    },
     "t-glob-7462f277": {
       "kind": "file_glob",
       "pattern": ".agentsmesh/skills/**/SKILL.md"
@@ -6062,6 +6096,10 @@
     "t-glob-9b805011": {
       "kind": "file_glob",
       "pattern": "tests/unit/cli/commands/lessons.test.ts"
+    },
+    "t-glob-9c525d4d": {
+      "kind": "file_glob",
+      "pattern": "src/cli/commands/lessons-query-handler.ts"
     },
     "t-glob-9ccdff8a": {
       "kind": "file_glob",
@@ -6142,6 +6180,10 @@
     "t-glob-e0110795": {
       "kind": "file_glob",
       "pattern": "src/utils/filesystem/process-lock.ts"
+    },
+    "t-glob-e06b465d": {
+      "kind": "file_glob",
+      "pattern": "tests/e2e/target-contract-matrix.e2e.test.ts"
     },
     "t-glob-ee01c259": {
       "kind": "file_glob",

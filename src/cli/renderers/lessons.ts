@@ -144,6 +144,7 @@ function renderAdd(data: LessonsAddData): void {
 
 /** Non-blocking trigger-hygiene nudges — warn (stderr), never fail the capture. */
 function renderGuardrails(data: LessonsAddData): void {
+  if (data.locationNote !== undefined) logger.warn(data.locationNote);
   for (const w of data.warnings) logger.warn(`${w.code}: ${w.message}`);
   const ap = data.autoPruned;
   if (ap !== undefined) {

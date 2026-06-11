@@ -21,6 +21,7 @@ import {
   doValidate,
   type LessonsFlags,
 } from './lessons-handlers.js';
+import { validateLessonsFlags } from './lessons-known-flags.js';
 import type { LessonsCommandResult } from './lessons-types.js';
 
 export type { LessonsCommandResult } from './lessons-types.js';
@@ -56,6 +57,13 @@ export async function runLessons(
   const subcommand = args[0];
   if (subcommand === undefined || subcommand === '') {
     return { subcommand: 'help', exitCode: 0, data: null };
+  }
+
+  // Reject typoed/unknown flags before any side effect: the parser is permissive,
+  // so a silently-ignored `--trigger-flie` would drop a trigger from a capture.
+  const flagError = validateLessonsFlags(subcommand, flags);
+  if (flagError !== null) {
+    return { subcommand: 'help', exitCode: 2, error: flagError, data: null };
   }
 
   const autoMigrated = await migrateForSubcommand(subcommand, projectRoot);

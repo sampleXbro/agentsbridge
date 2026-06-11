@@ -143,9 +143,22 @@ export async function doHook(projectRoot: string): Promise<LessonsCommandResult>
   return { subcommand: 'hook', exitCode: 0, data: { output } };
 }
 
+/**
+ * A PostToolUse hook payload is a few hundred bytes of JSON. Cap the read so an
+ * unbounded pipe (a runaway or hostile producer) cannot exhaust memory; past the
+ * cap we abandon the read and return '' — the caller then injects nothing.
+ */
+const MAX_HOOK_STDIN_BYTES = 1_000_000;
+
 async function readStdin(): Promise<string> {
   if (process.stdin.isTTY === true) return '';
   const chunks: Buffer[] = [];
-  for await (const chunk of process.stdin) chunks.push(chunk as Buffer);
+  let total = 0;
+  for await (const chunk of process.stdin) {
+    const buf = chunk as Buffer;
+    total += buf.length;
+    if (total > MAX_HOOK_STDIN_BYTES) return '';
+    chunks.push(buf);
+  }
   return Buffer.concat(chunks).toString('utf8');
 }

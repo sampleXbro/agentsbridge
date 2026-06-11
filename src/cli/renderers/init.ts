@@ -80,7 +80,14 @@ function renderLessons(lessons: NonNullable<InitCommandResult['data']['lessons']
   logger.success('Lessons subsystem ready (.agentsmesh/lessons/).');
   logger.info("  Run 'agentsmesh generate' to sync the ritual into every target.");
   logger.info('');
-  logger.info('  The graph starts empty and grows as agents capture failures. Try the loop:');
+  // Only claim the graph is empty when THIS run created it; on a re-init over an
+  // existing project the graph may already hold lessons.
+  const graphCreated = lessons.created.some((p) => p.replaceAll('\\', '/').endsWith('lessons.json'));
+  logger.info(
+    graphCreated
+      ? '  The graph starts empty and grows as agents capture failures. Try the loop:'
+      : '  Recall + capture loop:',
+  );
   logger.info(
     '    capture:  agentsmesh lessons add "<rule>" --topic <id> --new-topic --topic-summary "<line>" --trigger-file "<glob>"',
   );

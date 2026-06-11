@@ -1,5 +1,10 @@
 import type { McpContext } from '../context.js';
-import { NoTriggerError, UnknownTopicError, UnrecallableLessonError } from '../../lessons/add.js';
+import {
+  NoTriggerError,
+  RuleTooLongError,
+  UnknownTopicError,
+  UnrecallableLessonError,
+} from '../../lessons/add.js';
 import { maybeAutoMigrateLessons } from '../../lessons/auto-migrate.js';
 import { tryLoadLessonsGraph } from '../../lessons/graph-store.js';
 import { captureLesson, recallLessons } from '../../lessons/recall.js';
@@ -199,7 +204,11 @@ export const lessonsHandlers = {
           { cause: err },
         );
       }
-      if (err instanceof NoTriggerError || err instanceof UnrecallableLessonError) {
+      if (
+        err instanceof NoTriggerError ||
+        err instanceof UnrecallableLessonError ||
+        err instanceof RuleTooLongError
+      ) {
         throw new Error(`lessons_add: ${err.message}`, { cause: err });
       }
       throw err;

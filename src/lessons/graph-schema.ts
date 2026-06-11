@@ -3,6 +3,16 @@ import { z } from 'zod';
 /** Schema version this build reads/writes. A graph stamped higher is from a newer CLI. */
 export const CURRENT_GRAPH_VERSION = 1;
 
+/**
+ * Upper bound on a lesson rule's length, in characters. A rule is one imperative
+ * sentence; this is generous headroom. Enforced as a BLOCK at capture (a longer
+ * rule is a capture defect) and as a defensive TRUNCATION at hook emission, so a
+ * cloned-repo graph with a megabyte-scale rule cannot flood an agent's context.
+ * It is deliberately NOT a schema `.max()`: that would mark such a graph
+ * "corrupt" and disable ALL recall — a worse outcome than truncating one rule.
+ */
+export const MAX_RULE_LENGTH = 2000;
+
 const IdSchema = z.string().regex(/^[a-z0-9-]+$/, 'id must be kebab-case');
 const DateSchema = z
   .string()

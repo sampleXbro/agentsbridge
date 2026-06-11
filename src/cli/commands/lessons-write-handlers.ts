@@ -1,10 +1,16 @@
 import { existsSync } from 'node:fs';
-import { NoTriggerError, UnknownTopicError, UnrecallableLessonError } from '../../lessons/add.js';
+import { join } from 'node:path';
+import {
+  NoTriggerError,
+  RuleTooLongError,
+  UnknownTopicError,
+  UnrecallableLessonError,
+} from '../../lessons/add.js';
 import { captureLesson } from '../../lessons/recall.js';
 import { deprecateLesson } from '../../lessons/deprecate.js';
 import { graphFilePath } from '../../lessons/graph-store.js';
 import { importLegacyLessons } from '../../lessons/import-legacy.js';
-import { lessonsPaths } from '../../lessons/paths.js';
+import { ancestorAgentsmeshDir, lessonsPaths } from '../../lessons/paths.js';
 import { mergeLessons } from '../../lessons/merge.js';
 import { mutateLessonsGraph } from '../../lessons/mutate.js';
 import { stripMarkersInGraph } from '../../lessons/strip-markers.js';
@@ -60,6 +66,13 @@ export async function doAdd(
     );
   }
 
+  // Flag a capture about to create a stray graph in a subdirectory of a real
+  // project (computed before capture, which would create .agentsmesh here).
+  const locationNote =
+    !existsSync(join(projectRoot, '.agentsmesh')) && ancestorAgentsmeshDir(projectRoot) !== null
+      ? `Capturing into a new .agentsmesh here — a project already exists at ${ancestorAgentsmeshDir(projectRoot)!.replaceAll('\\', '/')}. If that was unintended, cd into it and re-run.`
+      : undefined;
+
   try {
     // Route through captureLesson (not addLesson directly) so capture telemetry
     // records EVERY shell-driven add — the MCP path already routes here, and a
@@ -82,7 +95,7 @@ export async function doAdd(
         topicSummary: stringFlag(flags, 'topic-summary') ?? undefined,
       },
     );
-    const data: LessonsAddData = result;
+    const data: LessonsAddData = locationNote === undefined ? result : { ...result, locationNote };
     return { subcommand: 'add', exitCode: 0, data };
   } catch (err) {
     if (err instanceof UnknownTopicError) {
@@ -92,7 +105,11 @@ export async function doAdd(
         1,
       );
     }
-    if (err instanceof NoTriggerError || err instanceof UnrecallableLessonError) {
+    if (
+      err instanceof NoTriggerError ||
+      err instanceof UnrecallableLessonError ||
+      err instanceof RuleTooLongError
+    ) {
       return errorResult('add', `${err.message}${lessonsAddHint()}`, 2);
     }
     return errorResult('add', errMessage(err), 1);

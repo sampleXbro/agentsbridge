@@ -54,6 +54,21 @@ describe('handleResult', () => {
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
 
+  it('surfaces the command-provided error message verbatim in json mode', () => {
+    const render = vi.fn();
+    const flags = { json: true };
+    handleResult(
+      'lessons',
+      { exitCode: 2, error: 'Recall needs a predicate: pass --file/--cmd/--keyword.', data: {} },
+      flags,
+      render,
+    );
+    const output = writeSpy.mock.calls[0]![0] as string;
+    const parsed = JSON.parse(output);
+    expect(parsed.error).toBe('Recall needs a predicate: pass --file/--cmd/--keyword.');
+    expect(exitSpy).toHaveBeenCalledWith(2);
+  });
+
   it('exits non-zero in non-json mode when exitCode is non-zero', () => {
     const render = vi.fn();
     const flags = {};

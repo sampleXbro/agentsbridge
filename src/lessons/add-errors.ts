@@ -14,6 +14,25 @@ export class UnknownTopicError extends Error {
   }
 }
 
+/**
+ * Thrown when a capture's rule text exceeds {@link MAX_RULE_LENGTH}. A rule is
+ * one imperative sentence; a far longer one is a malformed capture (a pasted log,
+ * a whole diff) that would bloat every recall that surfaces it.
+ */
+export class RuleTooLongError extends Error {
+  readonly code = 'OVERSIZED_RULE';
+  constructor(
+    public readonly length: number,
+    public readonly max: number,
+  ) {
+    super(
+      `Lesson rule is ${length} characters (max ${max}). A rule should be one imperative ` +
+        'sentence — trim it to the essential instruction, or split it into separate lessons.',
+    );
+    this.name = 'RuleTooLongError';
+  }
+}
+
 /** Thrown when a capture would leave a lesson with no trigger (unrecallable). */
 export class NoTriggerError extends Error {
   readonly code = 'NO_TRIGGER';

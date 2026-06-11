@@ -1,3 +1,4 @@
+import { MAX_RULE_LENGTH } from './graph-schema.js';
 import { recallLessons } from './recall.js';
 import type { LessonsQuery } from './query.js';
 
@@ -36,6 +37,18 @@ const str = (v: unknown): string | undefined =>
   typeof v === 'string' && v.length > 0 ? v : undefined;
 
 /**
+ * Truncate a rule before injecting it into agent context. Capture already blocks
+ * over-long rules, but a graph from a cloned third-party repo is untrusted input
+ * that may carry a megabyte-scale rule (token exhaustion / context flooding) —
+ * this is the last-resort bound for that path.
+ */
+const TRUNCATION_MARK = ' …[truncated]';
+function clampRule(rule: string): string {
+  if (rule.length <= MAX_RULE_LENGTH) return rule;
+  return rule.slice(0, MAX_RULE_LENGTH - TRUNCATION_MARK.length) + TRUNCATION_MARK;
+}
+
+/**
  * Parse a PostToolUse hook stdin payload, recall lessons for the touched file /
  * command, and return the harness's context-injection JSON (or empty output).
  * `session_id` from the harness drives per-session dedup, so a lesson is injected
@@ -65,7 +78,7 @@ export async function buildRecallHookOutput(
   if (lessons.length === 0) return EMPTY;
 
   const target = file ?? command ?? '';
-  const bullets = lessons.map((l) => `- ${l.lesson.rule}`).join('\n');
+  const bullets = lessons.map((l) => `- ${clampRule(l.lesson.rule)}`).join('\n');
   const additionalContext = `Recalled agentsmesh lessons for ${target} — apply before your next action:\n${bullets}`;
   // Claude Code / Copilot CLI PostToolUse context-injection shape.
   return {

@@ -35,6 +35,8 @@ export interface LessonsAddData {
   readonly warnings: GuardrailWarning[];
   /** Cruft the opt-in auto-prune cleaned right after this capture (present only when it ran). */
   readonly autoPruned?: AutoPruneSummary;
+  /** Set when the capture wrote to a CWD whose graph lives outside the nearest project. */
+  readonly locationNote?: string;
 }
 
 export interface LessonsTopicsData {

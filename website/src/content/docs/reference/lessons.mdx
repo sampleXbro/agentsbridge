@@ -128,6 +128,8 @@ Triggers rot as the codebase moves under them — a rename silently turns a good
 
 **The one exception — `UNRECALLABLE_LESSON` (blocking, exit 2).** Capture IS rejected when every trigger on the resulting lesson is dead on the mandatory `--file`/`--cmd` recall path. A trigger is dead when: (a) it is a `keyword` whose needle loses all tokens to stopword filtering (e.g. "state of the art" → tokens [state, art] cannot fire as a contiguous run — the phrase "cannot fire on the mandatory --file/--cmd recall path"); or (b) it is a `command_pattern` rejected by the linear write barrier as `INVALID_TRIGGER_PATTERN` or `UNSAFE_TRIGGER_PATTERN`. A lesson with a mix — one live `file_glob` and one dead keyword — is NOT rejected; the dead keyword surfaces as a non-blocking `STOPWORD_KEYWORD` warning. Note that a dead keyword can still match via an explicit `--keyword` substring call; the rejection applies only when the mandatory file/command path is the sole remaining route.
 
+**A second blocking case — `OVERSIZED_RULE` (exit 2).** Capture is rejected when the rule text exceeds 2000 characters. A rule is one imperative sentence; a far longer one is a malformed capture (a pasted log or diff) that would bloat every recall surfacing it. Trim it, or split it into separate lessons. The recall hook also truncates any rule over that bound before injecting it into agent context, so a graph from an untrusted cloned repo cannot flood the context with one giant rule (see [Trust model](#trust-model)).
+
 The following are non-blocking warnings. The CLI prints them to stderr (stdout stays paste-clean); MCP returns them in the `warnings` array.
 
 | Code | Meaning |
@@ -160,6 +162,17 @@ Recall runs before each edit and each state-changing command (pure-read commands
 `AGENTSMESH_LESSONS_TELEMETRY=1` also enables a symmetric **capture log** at `.agentsmesh/lessons/capture-log.jsonl` — the counterpart to `recall-log.jsonl`. Each `captureLesson` / `agentsmesh lessons add` call appends one row recording presence/count fields only (never rule text): `isNewLesson`, `isNewTopic`, `newTriggerCount`, `triggerKinds` (`{file, command, keyword}` counts), `blocked` (boolean — true when the capture was rejected as `UNRECALLABLE_LESSON`), `warningCodes` (array of non-blocking warning codes), and optional `session` and `lessonId`.
 
 `agentsmesh lessons stats` prints a **Capture block** (included under a `capture` key in `--json` output) even when only a capture log exists and no recall log is present. The capture block reports: total captures, blocked count, new-lesson vs. upsert split, new-topics count, warned count, trigger-kind breakdown (file / command / keyword shares), and a **recall:capture ratio** (recalls per capture — a health signal for the capture discipline).
+
+## Trust model
+
+`lessons.json` is committed to the repository, so its rules are **project content** — trusted at the same level as the source code, `CLAUDE.md`, and the rest of `.agentsmesh/`. The recall hook injects matching rule text into the agent's context, which makes the graph an input that influences agent behavior.
+
+The practical consequence is for **cloned third-party repositories**: a lesson graph you did not author is untrusted input, exactly like the code in that repo. Review it before relying on its rules, the same way you would read code before running it. agentsmesh does not sanitize rule text — a rule is free prose by design — but it bounds the blast radius:
+
+- **Length cap.** Capture rejects a rule over 2000 characters (`OVERSIZED_RULE`), and the recall hook truncates any rule over that bound before injecting it, so a malformed or hostile graph cannot flood the agent's context with one giant rule.
+- **Hook input bound.** `agentsmesh lessons hook` caps the stdin payload it reads, so a runaway producer cannot exhaust memory.
+- **No code execution.** Recall matches `command_pattern` triggers with a non-backtracking linear engine (no native `RegExp`, so no ReDoS), and never executes a trigger or rule — it only matches and prints.
+- **Telemetry stays local.** The opt-in logs record presence/count fields only (never the file/command/rule text) and never leave the machine.
 
 ## Concurrency
 

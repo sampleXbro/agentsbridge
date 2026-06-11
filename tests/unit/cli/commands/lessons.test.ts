@@ -73,6 +73,19 @@ describe('runLessons — help / unknown', () => {
     expect(r.exitCode).toBe(2);
     expect(r.error).toContain('banana');
   });
+
+  it('rejects an unknown flag before dispatching (exit 2, names the flag)', async () => {
+    const r = await runLessons({ fil: 'src/a.ts' }, ['query'], root);
+    expect(r.subcommand).toBe('help');
+    expect(r.exitCode).toBe(2);
+    expect(r.error).toContain('--fil');
+  });
+
+  it('rejects a typoed trigger flag on add (the silent-data-loss case)', async () => {
+    const r = await runLessons({ 'trigger-flie': 'src/**' }, ['add', 'x'], root);
+    expect(r.exitCode).toBe(2);
+    expect(r.error).toContain('--trigger-flie');
+  });
 });
 
 describe('runLessons — dispatcher matches the canonical subcommand list', () => {
@@ -144,6 +157,28 @@ describe('runLessons query', () => {
     if (r.subcommand !== 'query') return;
     expect(r.data.lessons).toEqual([]);
     expect(r.exitCode).toBe(0);
+  });
+
+  it('warns when run from a subdir of a real project (no graph here, ancestor has one)', async () => {
+    mkdirSync(join(root, '.agentsmesh'), { recursive: true });
+    const sub = join(root, 'packages', 'app');
+    mkdirSync(sub, { recursive: true });
+    const r = await runLessons({ file: 'src/x.ts' }, ['query'], sub);
+    if (r.subcommand !== 'query') return;
+    expect(r.exitCode).toBe(0);
+    expect(r.data.warning).toMatch(/no lessons graph here/i);
+    expect(r.data.warning).toMatch(/cd into it/i);
+  });
+
+  it('warns when config.json is present but malformed (still returns results)', async () => {
+    seedSimpleGraph();
+    mkdirSync(join(root, '.agentsmesh/lessons'), { recursive: true });
+    writeFileSync(join(root, '.agentsmesh/lessons/config.json'), 'not json');
+    const r = await runLessons({ file: 'src/x.ts' }, ['query'], root);
+    if (r.subcommand !== 'query') return;
+    expect(r.exitCode).toBe(0);
+    expect(r.data.lessons.length).toBeGreaterThan(0);
+    expect(r.data.warning).toMatch(/config\.json/);
   });
 
   it('auto-migrates from legacy index.yaml on first query and DELETES legacy artifacts', async () => {

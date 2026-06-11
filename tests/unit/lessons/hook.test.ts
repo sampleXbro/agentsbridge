@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { LessonsGraph } from '../../../src/lessons/graph-schema.js';
+import { MAX_RULE_LENGTH, type LessonsGraph } from '../../../src/lessons/graph-schema.js';
 import { saveLessonsGraph } from '../../../src/lessons/graph-store.js';
 import { buildRecallHookOutput } from '../../../src/lessons/hook.js';
 
@@ -81,5 +81,34 @@ describe('buildRecallHookOutput', () => {
     expect((await buildRecallHookOutput(raw, root)).output).not.toBe('');
     // Second identical PostToolUse in the same session: everything already shown.
     expect((await buildRecallHookOutput(raw, root)).output).toBe('');
+  });
+
+  it('truncates an over-long rule from an untrusted graph before injecting it', async () => {
+    // A cloned-repo graph may carry a megabyte-scale rule; the hook must bound
+    // what it injects regardless of what capture would have rejected.
+    const huge = 'X'.repeat(MAX_RULE_LENGTH * 50);
+    saveLessonsGraph(root, {
+      version: 1,
+      lessons: {
+        big: {
+          rule: huge,
+          topics: ['t'],
+          triggers: ['t-glob'],
+          evidence: [],
+          status: 'active',
+          createdAt: '2026-06-05',
+        },
+      },
+      topics: { t: { summary: 'T.' } },
+      triggers: { 't-glob': { kind: 'file_glob', pattern: 'src/**' } },
+    });
+    const raw = JSON.stringify({ tool_input: { file_path: 'src/x.ts' } });
+    const parsed = JSON.parse((await buildRecallHookOutput(raw, root)).output) as {
+      hookSpecificOutput: { additionalContext: string };
+    };
+    const ctx = parsed.hookSpecificOutput.additionalContext;
+    expect(ctx).toContain('…[truncated]');
+    // Bounded: the injected rule cannot exceed the cap (plus the bullet framing).
+    expect(ctx.length).toBeLessThan(MAX_RULE_LENGTH + 200);
   });
 });

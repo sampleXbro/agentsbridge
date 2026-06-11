@@ -128,6 +128,14 @@ release? Run `agentsmesh lessons import-md` once to migrate the legacy
 `index.yaml` + `topics/*.md` + `journal.md` into the graph; the CLI deletes
 the legacy files after a successful migration.
 
+**Trust model.** `lessons.json` is checked into the repo, so its rules are
+project content — trusted at the same level as the code and `CLAUDE.md`. The
+recall hook injects matching rules into the agent's context, so treat a lesson
+graph from a cloned third-party repo as you would any other code you run: review
+it before relying on its rules. As a guardrail the hook truncates any single
+rule to 2000 characters before injecting it, and capture rejects a rule longer
+than that, so a malformed or oversized rule cannot flood the agent's context.
+
 If you installed via `npm install -D agentsmesh` (also `pnpm add -D` / `yarn add -D`), prefix each command with `npx`. The CLI ships as both `agentsmesh` and the shorter alias `amsh`.
 
 ---
@@ -257,8 +265,8 @@ agentsmesh installs list [--global]
 agentsmesh refresh [<name>[,<name>...]] [--dry-run] [--force] [--json] [--global]
 agentsmesh plugin add|list|remove|info [--version <v>] [--id <id>]
 agentsmesh target scaffold <id> [--name <displayName>] [--force]
-agentsmesh lessons query [--file <p>] [--cmd <c>] [--keyword <k>] [--format plain|md|json] [--top <n>] [--all] [--max-tokens <n>] [--session <id>] [--no-dedup]  # ≥1 predicate required (keyword-only warns: misses file/command lessons); relevance-ranked, top 10 + ~400-token budget by default (--all bypasses); --session/AGENTSMESH_SESSION_ID dedups lessons already shown this session
-agentsmesh lessons add "<rule>" --topic <id> --trigger-file <glob> [--trigger-cmd <regex>] [--trigger-kw <text>] [--evidence <ref>] [--new-topic --topic-summary "<one line>"]  # ≥1 EFFECTIVE trigger required (a dead-only capture, e.g. a stopword-only keyword, is rejected); warns on broad/oversized/keyword-only/near-duplicate triggers
+agentsmesh lessons query [--file <p>] [--cmd <c>] [--keyword <k>] [--format plain|md|json] [--top <n>] [--all] [--max-tokens <n>] [--session <id>] [--no-dedup] [--ids]  # ≥1 predicate required (keyword-only warns: misses file/command lessons); relevance-ranked, top 10 + ~400-token budget by default (--all bypasses); --session/AGENTSMESH_SESSION_ID dedups lessons already shown this session (--no-dedup opts out); --ids prefixes each line with the lesson id
+agentsmesh lessons add "<rule>" --topic <id> --trigger-file <glob> [--trigger-cmd <regex>] [--trigger-kw <text>] [--evidence <ref>] [--rationale <text>] [--new-topic --topic-summary "<one line>"]  # ≥1 EFFECTIVE trigger required (a dead-only capture, e.g. a stopword-only keyword, is rejected); a rule must be ≤2000 chars; warns on broad/oversized/keyword-only/near-duplicate triggers
 agentsmesh lessons topics | show <topic> | deprecate <id> [--superseded-by <id>] | journal | validate | import-md [--merge|--force]
 agentsmesh lessons merge <loser-id> <keeper-id>   # fold a duplicate into its canonical twin (supersede + union triggers/topics/evidence)
 agentsmesh lessons untrigger <lesson-id> <trigger-id>  # detach one trigger from a lesson (e.g. drop a dead/low-signal keyword); GCs the node if now unused

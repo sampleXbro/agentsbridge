@@ -1,10 +1,13 @@
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { CURRENT_GRAPH_VERSION } from '../../lessons/graph-schema.js';
 import { loadLessonsGraphResilient } from '../../lessons/graph-store.js';
 import { normalizeRecallFile } from '../../lessons/normalize-query-file.js';
+import { ancestorAgentsmeshDir } from '../../lessons/paths.js';
 import { queryLessons } from '../../lessons/query.js';
 import { rankLessons } from '../../lessons/ranking.js';
 import { recordRecallTelemetry } from '../../lessons/recall.js';
-import { loadRecallConfig } from '../../lessons/recall-config.js';
+import { loadRecallConfig, lessonsConfigWarning } from '../../lessons/recall-config.js';
 import { commitSeen, filterUnseen, openSessionDedup } from '../../lessons/seen-cache.js';
 import {
   errorResult,
@@ -31,6 +34,24 @@ function validateFormatFlag(flags: LessonsFlags): string | null {
   if (v === undefined) return null;
   if (v === 'plain' || v === 'md' || v === 'json') return null;
   return 'Invalid --format: expected plain|md|json.';
+}
+
+/** Join the non-empty warning parts into one stderr blob (or undefined when none). */
+function mergeWarnings(...parts: Array<string | undefined>): string | undefined {
+  const present = parts.filter((p): p is string => p !== undefined && p.length > 0);
+  return present.length > 0 ? present.join('\n') : undefined;
+}
+
+/**
+ * Warn when recall finds no graph at the CWD but a `.agentsmesh` project exists
+ * in an ancestor — the classic "invoked from a subdirectory" trap, which would
+ * otherwise look like an empty (but valid) recall.
+ */
+function strayDirWarning(projectRoot: string): string | undefined {
+  if (existsSync(join(projectRoot, '.agentsmesh'))) return undefined;
+  const ancestor = ancestorAgentsmeshDir(projectRoot);
+  if (ancestor === null) return undefined;
+  return `no lessons graph here — this directory has no .agentsmesh, but a project exists at ${ancestor.replaceAll('\\', '/')}. Run lessons from there (cd into it) for recall to work.`;
 }
 
 export function doQuery(
@@ -68,6 +89,8 @@ export function doQuery(
   // shape the caller passed (absolute / ./-prefixed / backslash).
   const query =
     raw.file === undefined ? raw : { ...raw, file: normalizeRecallFile(raw.file, projectRoot) };
+  // A present-but-broken config.json must not silently revert to defaults.
+  const configWarning = lessonsConfigWarning(projectRoot) ?? undefined;
   const load = loadLessonsGraphResilient(projectRoot);
   if (load.status === 'corrupt') {
     // Recall is a blocking requirement before every edit/command — a corrupt
@@ -77,7 +100,10 @@ export function doQuery(
       query,
       autoMigrated,
       totalMatches: 0,
-      warning: `lessons.json is unreadable (corrupt) — recall returned no lessons. Run \`agentsmesh lessons validate\`. (${load.error.message})`,
+      warning: mergeWarnings(
+        `lessons.json is unreadable (corrupt) — recall returned no lessons. Run \`agentsmesh lessons validate\`. (${load.error.message})`,
+        configWarning,
+      ),
     };
     return { subcommand: 'query', exitCode: 0, format, data };
   }
@@ -89,17 +115,21 @@ export function doQuery(
       query,
       autoMigrated,
       totalMatches: 0,
-      warning: `lessons.json is version ${load.version}, newer than this build supports (${CURRENT_GRAPH_VERSION}) — recall returned no lessons. Upgrade agentsmesh to read it.`,
+      warning: mergeWarnings(
+        `lessons.json is version ${load.version}, newer than this build supports (${CURRENT_GRAPH_VERSION}) — recall returned no lessons. Upgrade agentsmesh to read it.`,
+        configWarning,
+      ),
     };
     return { subcommand: 'query', exitCode: 0, format, data };
   }
   if (load.status === 'absent') {
+    const warning = mergeWarnings(strayDirWarning(projectRoot), keywordOnlyWarning, configWarning);
     const data: LessonsQueryData = {
       lessons: [],
       query,
       autoMigrated,
       totalMatches: 0,
-      ...(keywordOnlyWarning ? { warning: keywordOnlyWarning } : {}),
+      ...(warning ? { warning } : {}),
     };
     return { subcommand: 'query', exitCode: 0, format, data };
   }
@@ -143,7 +173,10 @@ export function doQuery(
     totalMatches: matches.length,
     ...(suppressed > 0 ? { suppressed } : {}),
     ...(flags.ids === true ? { showIds: true } : {}),
-    ...(keywordOnlyWarning ? { warning: keywordOnlyWarning } : {}),
+    ...((): { warning?: string } => {
+      const warning = mergeWarnings(keywordOnlyWarning, configWarning);
+      return warning ? { warning } : {};
+    })(),
   };
   return { subcommand: 'query', exitCode: 0, format, data };
 }

@@ -438,7 +438,8 @@
         "tests/e2e/lessons-merge-driver.e2e.test.ts"
       ],
       "rule": "An e2e test that runs dist/cli.js as a git merge driver (spawnSync -> git -> node, 3-level process nesting) can transiently fail fork/exec under peak full-suite parallelism and surface as a spurious merge conflict (merge status 1); since the union merge is deterministic, guard it with vitest { retry: N } (re-runs a fresh beforeEach) so a real regression still fails every attempt while only the environmental spawn flake is absorbed, and never treat a single non-zero merge status as a product bug without reproducing it in isolation first.",
-      "status": "active",
+      "status": "superseded",
+      "supersededBy": "windows-paths-on-windows-only-a-git",
       "topics": [
         "dist-backed-tests"
       ],
@@ -5103,6 +5104,20 @@
       "triggers": [
         "t-glob-db7e480d",
         "t-glob-86844292"
+      ]
+    },
+    "windows-paths-on-windows-only-a-git": {
+      "createdAt": "2026-06-12",
+      "evidence": [
+        "tests/e2e/lessons-merge-driver.e2e.test.ts"
+      ],
+      "rule": "On Windows only, a git merge-driver command (or any git-config value git executes via sh) that embeds an absolute CLI path with backslashes fails because sh consumes the backslashes (D:\\a\\...\\dist\\cli.js collapses to D:adistcli.js -> MODULE_NOT_FOUND), so the driver exits non-zero and git reports a spurious merge conflict; normalize the path to forward slashes (replaceAll backslash to slash) before embedding it, since Node accepts forward slashes on Windows.",
+      "status": "active",
+      "topics": [
+        "windows-paths"
+      ],
+      "triggers": [
+        "t-glob-9a12f490"
       ]
     },
     "windows-paths-rule-1": {

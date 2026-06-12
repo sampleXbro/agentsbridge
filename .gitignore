@@ -1,9 +1,10 @@
 # Dependencies
 node_modules
 
-# Repo-local (see root /docs policy)
-docs/
-tasks/
+# Repo-local (see root /docs policy) — anchored: an unanchored docs/ would
+# also ignore nested dirs like website/src/content/docs/
+/docs/
+/tasks/
 
 # Build & coverage
 dist

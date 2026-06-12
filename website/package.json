@@ -16,6 +16,13 @@
     "sharp": "^0.33.5"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild", "sharp"]
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp"
+    ]
+  },
+  "devDependencies": {
+    "starlight-links-validator": "^0.14.3",
+    "zod": "^3.25.76"
   }
 }

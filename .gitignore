@@ -42,3 +42,68 @@ agentsmesh.local.yaml
 .vscode/settings.json
 settings.local.json
 .agentsmesh/lessons/capture-log.jsonl
+
+# Generated agent-target artifacts — dogfooded outputs kept on disk to inspect
+# how `agentsmesh generate` emits each target, but NOT committed. Canonical source
+# lives in .agentsmesh/. Only claude-code and codex-cli outputs stay tracked:
+#   claude-code -> .claude/, CLAUDE.md, .claudeignore, .mcp.json
+#   codex-cli   -> AGENTS.md, .codex/, .agents/skills/
+.aider/
+.amazonq/
+.amp/
+.augment/
+.cline/
+.clinerules/
+.continue/
+.crush/
+.cursor/
+.deepagents/
+.factory/
+.gemini/
+.junie/
+.kilo/
+.kiro/
+.opencode/
+.pi/
+.qwen/
+.roo/
+.rovodev/
+.trae/
+.warp/
+.windsurf/
+.zed/
+# antigravity (shares .agents/ with codex-cli — keep .agents/skills/, drop the rest)
+.agents/rules/
+.agents/workflows/
+# copilot (owns only these paths inside .github/ — workflows/templates stay tracked)
+.github/copilot-instructions.md
+.github/agents/
+.github/instructions/
+.github/prompts/
+.github/skills/
+.github/hooks/
+# top-level root instruction / config files from non-claude/codex targets
+CONVENTIONS.md
+CRUSH.md
+GEMINI.md
+QWEN.md
+replit.md
+crush.json
+opencode.json
+.goosehints
+.roomodes
+.rules
+# per-target ignore files
+.aiderignore
+.aiignore
+.augmentignore
+.clineignore
+.codeiumignore
+.crushignore
+.cursorignore
+.geminiignore
+.gooseignore
+.kilocodeignore
+.kiroignore
+.qwenignore
+.rooignore

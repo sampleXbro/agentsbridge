@@ -41,12 +41,15 @@ vi.mock('node:child_process', () => ({
 
 vi.mock('node:fs/promises', () => ({
   mkdir: mkdirMock,
-  rename: renameMock,
   rm: rmMock,
 }));
 
 vi.mock('../../../src/utils/filesystem/fs.js', () => ({
   exists: existsMock,
+  // git-remote finalizes the cache via the resilient renameWithRetry wrapper, not
+  // a raw fs/promises rename. The mock keeps the same (from, to) call signature,
+  // so the existing call assertions hold.
+  renameWithRetry: renameMock,
 }));
 
 import { fetchGitRemoteExtend } from '../../../src/config/remote/git-remote.js';

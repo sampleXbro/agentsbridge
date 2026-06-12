@@ -32,6 +32,7 @@ export {
   readDirRecursiveNoSymlinks,
 } from './fs-traverse.js';
 export { executableModeFor } from './fs-text-encoding.js';
+export { renameWithRetry, type RenameRetryOptions } from './rename-retry.js';
 
 interface ErrnoLike {
   code?: string;

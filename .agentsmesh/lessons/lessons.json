@@ -432,6 +432,20 @@
         "t-cmd-6ea72461"
       ]
     },
+    "dist-backed-tests-an-e2e-test-that-runs": {
+      "createdAt": "2026-06-12",
+      "evidence": [
+        "tests/e2e/lessons-merge-driver.e2e.test.ts"
+      ],
+      "rule": "An e2e test that runs dist/cli.js as a git merge driver (spawnSync -> git -> node, 3-level process nesting) can transiently fail fork/exec under peak full-suite parallelism and surface as a spurious merge conflict (merge status 1); since the union merge is deterministic, guard it with vitest { retry: N } (re-runs a fresh beforeEach) so a real regression still fails every attempt while only the environmental spawn flake is absorbed, and never treat a single non-zero merge status as a product bug without reproducing it in isolation first.",
+      "status": "active",
+      "topics": [
+        "dist-backed-tests"
+      ],
+      "triggers": [
+        "t-glob-9a12f490"
+      ]
+    },
     "dist-backed-tests-rule-1": {
       "createdAt": "2026-06-05",
       "evidence": [
@@ -447,10 +461,10 @@
         "t-glob-a970d979",
         "t-glob-151a6581",
         "t-glob-d23b21be",
-        "t-cmd-ef53ec19",
         "t-cmd-ed8bfc0c",
         "t-cmd-3c746c92",
-        "t-cmd-fd015df7"
+        "t-cmd-fd015df7",
+        "t-cmd-703162ab"
       ]
     },
     "dist-backed-tests-rule-2": {
@@ -468,10 +482,10 @@
         "t-glob-a970d979",
         "t-glob-151a6581",
         "t-glob-d23b21be",
-        "t-cmd-ef53ec19",
         "t-cmd-ed8bfc0c",
         "t-cmd-3c746c92",
-        "t-cmd-fd015df7"
+        "t-cmd-fd015df7",
+        "t-cmd-703162ab"
       ]
     },
     "dist-backed-tests-rule-3": {
@@ -489,10 +503,10 @@
         "t-glob-a970d979",
         "t-glob-151a6581",
         "t-glob-d23b21be",
-        "t-cmd-ef53ec19",
         "t-cmd-ed8bfc0c",
         "t-cmd-3c746c92",
-        "t-cmd-fd015df7"
+        "t-cmd-fd015df7",
+        "t-cmd-703162ab"
       ]
     },
     "dist-backed-tests-rule-4": {
@@ -510,10 +524,10 @@
         "t-glob-a970d979",
         "t-glob-151a6581",
         "t-glob-d23b21be",
-        "t-cmd-ef53ec19",
         "t-cmd-ed8bfc0c",
         "t-cmd-3c746c92",
-        "t-cmd-fd015df7"
+        "t-cmd-fd015df7",
+        "t-cmd-703162ab"
       ]
     },
     "dist-backed-tests-rule-5": {
@@ -531,10 +545,10 @@
         "t-glob-a970d979",
         "t-glob-151a6581",
         "t-glob-d23b21be",
-        "t-cmd-ef53ec19",
         "t-cmd-ed8bfc0c",
         "t-cmd-3c746c92",
-        "t-cmd-fd015df7"
+        "t-cmd-fd015df7",
+        "t-cmd-703162ab"
       ]
     },
     "dist-backed-tests-rule-6": {
@@ -552,10 +566,10 @@
         "t-glob-a970d979",
         "t-glob-151a6581",
         "t-glob-d23b21be",
-        "t-cmd-ef53ec19",
         "t-cmd-ed8bfc0c",
         "t-cmd-3c746c92",
-        "t-cmd-fd015df7"
+        "t-cmd-fd015df7",
+        "t-cmd-703162ab"
       ]
     },
     "dist-backed-tests-rule-7": {
@@ -573,10 +587,10 @@
         "t-glob-a970d979",
         "t-glob-151a6581",
         "t-glob-d23b21be",
-        "t-cmd-ef53ec19",
         "t-cmd-ed8bfc0c",
         "t-cmd-3c746c92",
-        "t-cmd-fd015df7"
+        "t-cmd-fd015df7",
+        "t-cmd-703162ab"
       ]
     },
     "dist-backed-tests-when-a-change-alters-cli": {
@@ -630,10 +644,9 @@
         "t-glob-593303ad",
         "t-glob-257fb095",
         "t-glob-11a8af2c",
-        "t-cmd-95ae48f4",
-        "t-cmd-8e9837a3",
         "t-kw-0bc71226",
-        "t-kw-129cc275"
+        "t-kw-129cc275",
+        "t-cmd-bde9db6b"
       ]
     },
     "fixture-and-assertion-discipline-rule-10": {
@@ -651,10 +664,9 @@
         "t-glob-593303ad",
         "t-glob-257fb095",
         "t-glob-11a8af2c",
-        "t-cmd-95ae48f4",
-        "t-cmd-8e9837a3",
         "t-kw-0bc71226",
-        "t-kw-129cc275"
+        "t-kw-129cc275",
+        "t-cmd-bde9db6b"
       ]
     },
     "fixture-and-assertion-discipline-rule-11": {
@@ -672,10 +684,9 @@
         "t-glob-593303ad",
         "t-glob-257fb095",
         "t-glob-11a8af2c",
-        "t-cmd-95ae48f4",
-        "t-cmd-8e9837a3",
         "t-kw-0bc71226",
-        "t-kw-129cc275"
+        "t-kw-129cc275",
+        "t-cmd-bde9db6b"
       ]
     },
     "fixture-and-assertion-discipline-rule-12": {
@@ -715,8 +726,6 @@
         "t-glob-593303ad",
         "t-glob-257fb095",
         "t-glob-11a8af2c",
-        "t-cmd-95ae48f4",
-        "t-cmd-8e9837a3",
         "t-kw-0bc71226",
         "t-kw-129cc275"
       ]
@@ -736,10 +745,9 @@
         "t-glob-593303ad",
         "t-glob-257fb095",
         "t-glob-11a8af2c",
-        "t-cmd-95ae48f4",
-        "t-cmd-8e9837a3",
         "t-kw-0bc71226",
-        "t-kw-129cc275"
+        "t-kw-129cc275",
+        "t-cmd-bde9db6b"
       ]
     },
     "fixture-and-assertion-discipline-rule-15": {
@@ -758,8 +766,6 @@
         "t-glob-593303ad",
         "t-glob-257fb095",
         "t-glob-11a8af2c",
-        "t-cmd-95ae48f4",
-        "t-cmd-8e9837a3",
         "t-kw-0bc71226",
         "t-kw-129cc275"
       ]
@@ -780,8 +786,6 @@
         "t-glob-593303ad",
         "t-glob-257fb095",
         "t-glob-11a8af2c",
-        "t-cmd-95ae48f4",
-        "t-cmd-8e9837a3",
         "t-kw-0bc71226",
         "t-kw-129cc275"
       ]
@@ -801,10 +805,9 @@
         "t-glob-593303ad",
         "t-glob-257fb095",
         "t-glob-11a8af2c",
-        "t-cmd-95ae48f4",
-        "t-cmd-8e9837a3",
         "t-kw-0bc71226",
-        "t-kw-129cc275"
+        "t-kw-129cc275",
+        "t-cmd-bde9db6b"
       ]
     },
     "fixture-and-assertion-discipline-rule-3": {
@@ -822,10 +825,9 @@
         "t-glob-593303ad",
         "t-glob-257fb095",
         "t-glob-11a8af2c",
-        "t-cmd-95ae48f4",
-        "t-cmd-8e9837a3",
         "t-kw-0bc71226",
-        "t-kw-129cc275"
+        "t-kw-129cc275",
+        "t-cmd-bde9db6b"
       ]
     },
     "fixture-and-assertion-discipline-rule-4": {
@@ -843,10 +845,9 @@
         "t-glob-593303ad",
         "t-glob-257fb095",
         "t-glob-11a8af2c",
-        "t-cmd-95ae48f4",
-        "t-cmd-8e9837a3",
         "t-kw-0bc71226",
-        "t-kw-129cc275"
+        "t-kw-129cc275",
+        "t-cmd-bde9db6b"
       ]
     },
     "fixture-and-assertion-discipline-rule-5": {
@@ -864,10 +865,9 @@
         "t-glob-593303ad",
         "t-glob-257fb095",
         "t-glob-11a8af2c",
-        "t-cmd-95ae48f4",
-        "t-cmd-8e9837a3",
         "t-kw-0bc71226",
-        "t-kw-129cc275"
+        "t-kw-129cc275",
+        "t-cmd-bde9db6b"
       ]
     },
     "fixture-and-assertion-discipline-rule-6": {
@@ -885,10 +885,9 @@
         "t-glob-593303ad",
         "t-glob-257fb095",
         "t-glob-11a8af2c",
-        "t-cmd-95ae48f4",
-        "t-cmd-8e9837a3",
         "t-kw-0bc71226",
-        "t-kw-129cc275"
+        "t-kw-129cc275",
+        "t-cmd-bde9db6b"
       ]
     },
     "fixture-and-assertion-discipline-rule-7": {
@@ -906,10 +905,9 @@
         "t-glob-593303ad",
         "t-glob-257fb095",
         "t-glob-11a8af2c",
-        "t-cmd-95ae48f4",
-        "t-cmd-8e9837a3",
         "t-kw-0bc71226",
-        "t-kw-129cc275"
+        "t-kw-129cc275",
+        "t-cmd-bde9db6b"
       ]
     },
     "fixture-and-assertion-discipline-rule-8": {
@@ -931,8 +929,8 @@
         "t-glob-12b9dee9",
         "t-glob-7d39ded4",
         "t-glob-6511ff88",
-        "t-cmd-5cc2e657",
-        "t-cmd-355f9276"
+        "t-cmd-3dd013c6",
+        "t-cmd-8a0598a5"
       ]
     },
     "fixture-and-assertion-discipline-rule-9": {
@@ -950,10 +948,9 @@
         "t-glob-593303ad",
         "t-glob-257fb095",
         "t-glob-11a8af2c",
-        "t-cmd-95ae48f4",
-        "t-cmd-8e9837a3",
         "t-kw-0bc71226",
-        "t-kw-129cc275"
+        "t-kw-129cc275",
+        "t-cmd-bde9db6b"
       ]
     },
     "fixture-and-assertion-discipline-to-cover-the-1-arm": {
@@ -4435,8 +4432,8 @@
         "t-glob-12b9dee9",
         "t-glob-7d39ded4",
         "t-glob-6511ff88",
-        "t-cmd-5cc2e657",
-        "t-cmd-355f9276"
+        "t-cmd-3dd013c6",
+        "t-cmd-8a0598a5"
       ]
     },
     "typescript-esm-cycles-rule-10": {
@@ -4454,8 +4451,8 @@
         "t-glob-12b9dee9",
         "t-glob-7d39ded4",
         "t-glob-6511ff88",
-        "t-cmd-5cc2e657",
-        "t-cmd-355f9276"
+        "t-cmd-3dd013c6",
+        "t-cmd-8a0598a5"
       ]
     },
     "typescript-esm-cycles-rule-11": {
@@ -4473,9 +4470,7 @@
         "t-glob-848355ab",
         "t-glob-12b9dee9",
         "t-glob-7d39ded4",
-        "t-glob-6511ff88",
-        "t-cmd-5cc2e657",
-        "t-cmd-355f9276"
+        "t-glob-6511ff88"
       ]
     },
     "typescript-esm-cycles-rule-12": {
@@ -4495,8 +4490,8 @@
         "t-glob-12b9dee9",
         "t-glob-7d39ded4",
         "t-glob-6511ff88",
-        "t-cmd-5cc2e657",
-        "t-cmd-355f9276"
+        "t-cmd-3dd013c6",
+        "t-cmd-8a0598a5"
       ]
     },
     "typescript-esm-cycles-rule-13": {
@@ -4514,9 +4509,7 @@
         "t-glob-848355ab",
         "t-glob-12b9dee9",
         "t-glob-7d39ded4",
-        "t-glob-6511ff88",
-        "t-cmd-5cc2e657",
-        "t-cmd-355f9276"
+        "t-glob-6511ff88"
       ]
     },
     "typescript-esm-cycles-rule-14": {
@@ -4534,9 +4527,7 @@
         "t-glob-848355ab",
         "t-glob-12b9dee9",
         "t-glob-7d39ded4",
-        "t-glob-6511ff88",
-        "t-cmd-5cc2e657",
-        "t-cmd-355f9276"
+        "t-glob-6511ff88"
       ]
     },
     "typescript-esm-cycles-rule-15": {
@@ -4554,9 +4545,7 @@
         "t-glob-848355ab",
         "t-glob-12b9dee9",
         "t-glob-7d39ded4",
-        "t-glob-6511ff88",
-        "t-cmd-5cc2e657",
-        "t-cmd-355f9276"
+        "t-glob-6511ff88"
       ]
     },
     "typescript-esm-cycles-rule-2": {
@@ -4576,8 +4565,8 @@
         "t-glob-12b9dee9",
         "t-glob-7d39ded4",
         "t-glob-6511ff88",
-        "t-cmd-5cc2e657",
-        "t-cmd-355f9276"
+        "t-cmd-3dd013c6",
+        "t-cmd-8a0598a5"
       ]
     },
     "typescript-esm-cycles-rule-3": {
@@ -4595,8 +4584,8 @@
         "t-glob-12b9dee9",
         "t-glob-7d39ded4",
         "t-glob-6511ff88",
-        "t-cmd-5cc2e657",
-        "t-cmd-355f9276"
+        "t-cmd-3dd013c6",
+        "t-cmd-8a0598a5"
       ]
     },
     "typescript-esm-cycles-rule-4": {
@@ -4616,8 +4605,8 @@
         "t-glob-12b9dee9",
         "t-glob-7d39ded4",
         "t-glob-6511ff88",
-        "t-cmd-5cc2e657",
-        "t-cmd-355f9276"
+        "t-cmd-3dd013c6",
+        "t-cmd-8a0598a5"
       ]
     },
     "typescript-esm-cycles-rule-5": {
@@ -4635,8 +4624,8 @@
         "t-glob-12b9dee9",
         "t-glob-7d39ded4",
         "t-glob-6511ff88",
-        "t-cmd-5cc2e657",
-        "t-cmd-355f9276"
+        "t-cmd-3dd013c6",
+        "t-cmd-8a0598a5"
       ]
     },
     "typescript-esm-cycles-rule-6": {
@@ -4654,8 +4643,8 @@
         "t-glob-12b9dee9",
         "t-glob-7d39ded4",
         "t-glob-6511ff88",
-        "t-cmd-5cc2e657",
-        "t-cmd-355f9276"
+        "t-cmd-3dd013c6",
+        "t-cmd-8a0598a5"
       ]
     },
     "typescript-esm-cycles-rule-7": {
@@ -4673,8 +4662,8 @@
         "t-glob-12b9dee9",
         "t-glob-7d39ded4",
         "t-glob-6511ff88",
-        "t-cmd-5cc2e657",
-        "t-cmd-355f9276"
+        "t-cmd-3dd013c6",
+        "t-cmd-8a0598a5"
       ]
     },
     "typescript-esm-cycles-rule-8": {
@@ -4692,8 +4681,8 @@
         "t-glob-12b9dee9",
         "t-glob-7d39ded4",
         "t-glob-6511ff88",
-        "t-cmd-5cc2e657",
-        "t-cmd-355f9276"
+        "t-cmd-3dd013c6",
+        "t-cmd-8a0598a5"
       ]
     },
     "typescript-esm-cycles-rule-9": {
@@ -4711,8 +4700,8 @@
         "t-glob-12b9dee9",
         "t-glob-7d39ded4",
         "t-glob-6511ff88",
-        "t-cmd-5cc2e657",
-        "t-cmd-355f9276"
+        "t-cmd-3dd013c6",
+        "t-cmd-8a0598a5"
       ]
     },
     "verification-workflow-do-not-run-dist-dependent": {
@@ -5549,8 +5538,8 @@
         "t-glob-12b9dee9",
         "t-glob-7d39ded4",
         "t-glob-6511ff88",
-        "t-cmd-5cc2e657",
-        "t-cmd-355f9276"
+        "t-cmd-3dd013c6",
+        "t-cmd-8a0598a5"
       ]
     }
   },
@@ -5654,10 +5643,6 @@
       "kind": "command_pattern",
       "pattern": "install --sync"
     },
-    "t-cmd-355f9276": {
-      "kind": "command_pattern",
-      "pattern": "^pnpm lint$"
-    },
     "t-cmd-38934d6c": {
       "kind": "command_pattern",
       "pattern": "agentsmesh lessons (query|add|topics)"
@@ -5665,6 +5650,10 @@
     "t-cmd-3c746c92": {
       "kind": "command_pattern",
       "pattern": "node ./dist/cli.js"
+    },
+    "t-cmd-3dd013c6": {
+      "kind": "command_pattern",
+      "pattern": "\\b(eslint|lint)\\b"
     },
     "t-cmd-3efc6ee1": {
       "kind": "command_pattern",
@@ -5698,10 +5687,6 @@
       "kind": "command_pattern",
       "pattern": "agentsmesh lessons add"
     },
-    "t-cmd-5cc2e657": {
-      "kind": "command_pattern",
-      "pattern": "^pnpm typecheck$"
-    },
     "t-cmd-69dc7d4e": {
       "kind": "command_pattern",
       "pattern": "<<-"
@@ -5709,6 +5694,10 @@
     "t-cmd-6ea72461": {
       "kind": "command_pattern",
       "pattern": "changeset publish"
+    },
+    "t-cmd-703162ab": {
+      "kind": "command_pattern",
+      "pattern": "\\bcoverage\\b"
     },
     "t-cmd-73382791": {
       "kind": "command_pattern",
@@ -5738,6 +5727,10 @@
       "kind": "command_pattern",
       "pattern": "npm publish"
     },
+    "t-cmd-8a0598a5": {
+      "kind": "command_pattern",
+      "pattern": "\\b(tsc|typecheck)\\b"
+    },
     "t-cmd-8ab47a8c": {
       "kind": "command_pattern",
       "pattern": "/bin/zsh"
@@ -5745,14 +5738,6 @@
     "t-cmd-8c4a10c7": {
       "kind": "command_pattern",
       "pattern": "pnpm attw"
-    },
-    "t-cmd-8e9837a3": {
-      "kind": "command_pattern",
-      "pattern": "^pnpm vitest"
-    },
-    "t-cmd-95ae48f4": {
-      "kind": "command_pattern",
-      "pattern": "^pnpm test"
     },
     "t-cmd-9b9e4933": {
       "kind": "command_pattern",
@@ -5789,6 +5774,10 @@
     "t-cmd-b7e554e6": {
       "kind": "command_pattern",
       "pattern": "node -e"
+    },
+    "t-cmd-bde9db6b": {
+      "kind": "command_pattern",
+      "pattern": "\\b(vitest|test)\\b"
     },
     "t-cmd-be67eb02": {
       "kind": "command_pattern",
@@ -5853,10 +5842,6 @@
     "t-cmd-edcf48e9": {
       "kind": "command_pattern",
       "pattern": "pnpm exec tsx -e"
-    },
-    "t-cmd-ef53ec19": {
-      "kind": "command_pattern",
-      "pattern": "^pnpm test:coverage"
     },
     "t-cmd-f1a7b672": {
       "kind": "command_pattern",
@@ -6177,6 +6162,10 @@
     "t-glob-8fe4e96b": {
       "kind": "file_glob",
       "pattern": "**/SKILL.md"
+    },
+    "t-glob-9a12f490": {
+      "kind": "file_glob",
+      "pattern": "tests/e2e/lessons-merge-driver.e2e.test.ts"
     },
     "t-glob-9b805011": {
       "kind": "file_glob",

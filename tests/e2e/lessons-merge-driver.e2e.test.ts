@@ -5,7 +5,11 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { runCliArgs } from './helpers/run-cli.js';
 
-const CLI_PATH = join(process.cwd(), 'dist', 'cli.js');
+// Forward slashes only: this path is embedded in a git merge-driver command
+// (below) that git runs via `sh`, where a Windows `\` path has its separators
+// eaten as escapes (`D:\a\...\cli.js` -> `D:aagentsmeshdistcli.js` ->
+// MODULE_NOT_FOUND, git reports a conflict). Node accepts `/` on Windows.
+const CLI_PATH = join(process.cwd(), 'dist', 'cli.js').replaceAll('\\', '/');
 
 let dir: string;
 let mainBranch: string;
@@ -43,14 +47,7 @@ beforeEach(async () => {
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
 
 describe('lessons.json git merge driver', () => {
-  // The driver runs `node dist/cli.js` spawned BY git, itself spawned by
-  // spawnSync inside the vitest worker — a 3-level process nesting unique to
-  // this test. Under peak full-suite parallelism that fork/exec can transiently
-  // fail (EAGAIN), and git then records a conflict. The union merge is fully
-  // deterministic, so `retry` re-runs identical inputs from a fresh beforeEach:
-  // a real merge regression fails every attempt (never masked), while only the
-  // environmental spawn flake is absorbed.
-  it('auto-merges two parallel captures with no conflict', { retry: 2 }, async () => {
+  it('auto-merges two parallel captures with no conflict', async () => {
     git('checkout', '-q', '-b', 'branch-x');
     await addLesson('Rule X.', 'tx', 'src/x.ts');
     git('add', '-A');

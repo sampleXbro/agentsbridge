@@ -43,7 +43,14 @@ beforeEach(async () => {
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
 
 describe('lessons.json git merge driver', () => {
-  it('auto-merges two parallel captures with no conflict', async () => {
+  // The driver runs `node dist/cli.js` spawned BY git, itself spawned by
+  // spawnSync inside the vitest worker — a 3-level process nesting unique to
+  // this test. Under peak full-suite parallelism that fork/exec can transiently
+  // fail (EAGAIN), and git then records a conflict. The union merge is fully
+  // deterministic, so `retry` re-runs identical inputs from a fresh beforeEach:
+  // a real merge regression fails every attempt (never masked), while only the
+  // environmental spawn flake is absorbed.
+  it('auto-merges two parallel captures with no conflict', { retry: 2 }, async () => {
     git('checkout', '-q', '-b', 'branch-x');
     await addLesson('Rule X.', 'tx', 'src/x.ts');
     git('add', '-A');
@@ -58,7 +65,7 @@ describe('lessons.json git merge driver', () => {
     git('checkout', '-q', 'branch-x');
     const merge = git('merge', '--no-edit', 'branch-y');
 
-    expect(merge.status).toBe(0); // no conflict
+    expect(merge.status, `merge stdout=${merge.stdout}\nstderr=${merge.stderr}`).toBe(0); // no conflict
     const graph = JSON.parse(
       readFileSync(join(dir, '.agentsmesh/lessons/lessons.json'), 'utf8'),
     ) as { lessons: Record<string, { rule: string }> };

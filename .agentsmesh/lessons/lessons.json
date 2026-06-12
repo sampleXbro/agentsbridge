@@ -628,6 +628,20 @@
         "t-kw-1397bfda"
       ]
     },
+    "fixture-and-assertion-discipline-in-vitest-a-vi-fn": {
+      "createdAt": "2026-06-12",
+      "evidence": [
+        "tests/unit/utils/filesystem/rename-retry.test.ts"
+      ],
+      "rule": "In vitest, a vi.fn mocked to reject on every call (mockRejectedValue, or a mockImplementation that throws) raises a spurious unhandled rejection that fails the test when the function under test ultimately rejects after a retry loop; queue exactly N mockRejectedValueOnce outcomes matching the attempt count and assert with .rejects so every tracked mock promise is consumed.",
+      "status": "active",
+      "topics": [
+        "fixture-and-assertion-discipline"
+      ],
+      "triggers": [
+        "t-glob-d8e040bc"
+      ]
+    },
     "fixture-and-assertion-discipline-rule-1": {
       "createdAt": "2026-06-05",
       "evidence": [
@@ -5091,6 +5105,21 @@
         "t-cmd-2a2e013d"
       ]
     },
+    "windows-paths-a-directory-rename-that-finalizes": {
+      "createdAt": "2026-06-12",
+      "evidence": [
+        "src/utils/filesystem/rename-retry.ts"
+      ],
+      "rule": "A directory rename that finalizes a cache slot right after a child process wrote the tree (e.g. git clone then rename staging->final in git-remote.ts) can throw EPERM/EACCES/EBUSY on Windows because the exited writer handle, an antivirus scan, or the search indexer still pins the fresh files; wrap such post-subprocess directory renames in a bounded retry on transient codes (renameWithRetry) rather than surfacing a spurious fetch failure.",
+      "status": "active",
+      "topics": [
+        "windows-paths"
+      ],
+      "triggers": [
+        "t-glob-6184efaf",
+        "t-glob-f9578eb1"
+      ]
+    },
     "windows-paths-an-ancestor-walk-that-detects": {
       "createdAt": "2026-06-11",
       "evidence": [
@@ -6078,6 +6107,10 @@
       "kind": "file_glob",
       "pattern": "src/core/reference/**/*.ts"
     },
+    "t-glob-6184efaf": {
+      "kind": "file_glob",
+      "pattern": "src/config/remote/git-remote.ts"
+    },
     "t-glob-62627edd": {
       "kind": "file_glob",
       "pattern": "src/**/path-helpers.ts"
@@ -6266,6 +6299,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/import-legacy.ts"
     },
+    "t-glob-d8e040bc": {
+      "kind": "file_glob",
+      "pattern": "tests/unit/utils/filesystem/rename-retry.test.ts"
+    },
     "t-glob-db7e480d": {
       "kind": "file_glob",
       "pattern": "src/lessons/paths.ts"
@@ -6285,6 +6322,10 @@
     "t-glob-f238075d": {
       "kind": "file_glob",
       "pattern": "src/lessons/regex-linear/**"
+    },
+    "t-glob-f9578eb1": {
+      "kind": "file_glob",
+      "pattern": "src/utils/filesystem/rename-retry.ts"
     },
     "t-kw-00447f91": {
       "kind": "keyword",

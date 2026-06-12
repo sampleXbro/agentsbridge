@@ -57,6 +57,8 @@ Triggers are content-addressed: the migrator and `agentsmesh lessons add` both d
 
 ## Recall semantics
 
+In plain terms: a lesson comes back from recall when **any** of its triggers matches the file, command, or keyword you passed. The rest of this section specifies exactly how each trigger kind matches — read it when you need the precise contract; to get started, see the [lessons guide](../../guides/lessons/) instead.
+
 `agentsmesh lessons query` returns every `active` lesson whose triggers match **any** supplied field:
 
 - `--file <p>` matches `file_glob` triggers via picomatch with `dot: true`.

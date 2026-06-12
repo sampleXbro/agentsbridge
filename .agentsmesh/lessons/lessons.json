@@ -5069,6 +5069,38 @@
         "t-cmd-0cf3ec87"
       ]
     },
+    "website-docs-in-website-docs-pages-under": {
+      "createdAt": "2026-06-12",
+      "evidence": [
+        "lesson:session-2026-06-12-quick-start-relative-links"
+      ],
+      "rationale": "Existing quick-start.mdx links like ../guides/installing-skill-packs/ resolve to /getting-started/guides/... (404); copying that convention propagates the bug.",
+      "rule": "In website docs pages under a nested directory (e.g. getting-started/), link to sibling sections with ../../<section>/ not ../<section>/ — Starlight serves pages at /section/page/ with a trailing slash, so ../ resolves inside the page's own directory and the link 404s. Verify by resolving the raw href against the page URL.",
+      "status": "active",
+      "topics": [
+        "website-docs"
+      ],
+      "triggers": [
+        "t-glob-d0a4b76e"
+      ]
+    },
+    "website-docs-in-website-keep-every-dependency": {
+      "createdAt": "2026-06-12",
+      "evidence": [
+        "lesson:website-docs-in-website-docs-pages-under"
+      ],
+      "rationale": "website/pnpm-lock.yaml is not committed, so fresh installs re-resolve ranges; the root repo ships zod 4 which leaks into the website build via Node resolution walk-up.",
+      "rule": "In website/, keep every dependency on a zod-3-compatible version (zod devDep is pinned to ^3.25.76 to satisfy stray bare `zod` imports that otherwise walk up to the repo root's zod 4 and crash Astro's content layer). Before adding a Starlight plugin, check its zod major: a zod-4 plugin (e.g. starlight-links-validator >= 0.15) fails with `.prefault is not a function`; pin the last zod-3 release instead.",
+      "status": "active",
+      "topics": [
+        "website-docs"
+      ],
+      "triggers": [
+        "t-glob-414c9b17",
+        "t-glob-0ecc31c0",
+        "t-cmd-2a2e013d"
+      ]
+    },
     "windows-paths-an-ancestor-walk-that-detects": {
       "createdAt": "2026-06-11",
       "evidence": [
@@ -5574,6 +5606,9 @@
     "watch-and-test-timing": {
       "summary": "Watch tests, harness import, vi.waitFor budgets, chokidar polling in tests, onCycle synchronization, parallel test isolation."
     },
+    "website-docs": {
+      "summary": "Website (Starlight/Astro) docs authoring pitfalls"
+    },
     "windows-paths": {
       "summary": "POSIX vs Windows path handling; separators, realpath divergence, drive letters, CRLF, chokidar polling, basename vs split."
     }
@@ -5602,6 +5637,10 @@
     "t-cmd-25ae0863": {
       "kind": "command_pattern",
       "pattern": "agentsmesh generate"
+    },
+    "t-cmd-2a2e013d": {
+      "kind": "command_pattern",
+      "pattern": "pnpm (-C website )?(add|install|update)"
     },
     "t-cmd-2c6e7fc6": {
       "kind": "command_pattern",
@@ -5875,6 +5914,10 @@
       "kind": "file_glob",
       "pattern": "tests/unit/cli/commands/watch.test.ts"
     },
+    "t-glob-0ecc31c0": {
+      "kind": "file_glob",
+      "pattern": "website/astro.config.mjs"
+    },
     "t-glob-0f48b5c8": {
       "kind": "file_glob",
       "pattern": "src/core/reference/rewriter.ts"
@@ -5978,6 +6021,10 @@
     "t-glob-406306ec": {
       "kind": "file_glob",
       "pattern": "tests/unit/lessons/import-legacy.test.ts"
+    },
+    "t-glob-414c9b17": {
+      "kind": "file_glob",
+      "pattern": "website/package.json"
     },
     "t-glob-41741571": {
       "kind": "file_glob",
@@ -6198,6 +6245,10 @@
     "t-glob-cd11277c": {
       "kind": "file_glob",
       "pattern": "src/lessons/regex-linear/*.ts"
+    },
+    "t-glob-d0a4b76e": {
+      "kind": "file_glob",
+      "pattern": "website/src/content/docs/**/*.mdx"
     },
     "t-glob-d23b21be": {
       "kind": "file_glob",

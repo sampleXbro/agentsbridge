@@ -25,7 +25,7 @@ agentsmesh import --global --from claude-code
 
 ## Supported targets
 
-The table below lists every builtin target's project-scope import root. With `--global`, AgentsMesh uses the user-level paths documented in the global-mode sections below. This table is generated from the target catalog — see [the support matrix](/reference/supported-tools/) for full feature coverage per tool.
+The table below lists every builtin target's project-scope import root. With `--global`, AgentsMesh uses the user-level paths documented in the global-mode sections below. This table is generated from the target catalog — see [the support matrix](../../reference/supported-tools/) for full feature coverage per tool.
 
 {/* agentsmesh:import-targets:start */}
 | Target ID | Tool | Reads from |
@@ -92,7 +92,7 @@ The same canonical structure under `.agentsmesh/` is produced regardless of whic
 | Permissions | `.agentsmesh/permissions.yaml` |
 | Ignore patterns | `.agentsmesh/ignore` |
 
-Each target's native file paths and feature support are listed in the [supported tools matrix](/reference/supported-tools/). Embedded features (e.g., Codex CLI commands projected as skills) are restored to their original canonical format on import — not the projected wrapper.
+Each target's native file paths and feature support are listed in the [supported tools matrix](../../reference/supported-tools/). Embedded features (e.g., Codex CLI commands projected as skills) are restored to their original canonical format on import — not the projected wrapper.
 
 ## Global-mode caveats
 
@@ -132,4 +132,4 @@ Running import twice on the same source is safe. Existing canonical files are me
 
 ## Post-import: MCP server entry
 
-After importing from a tool that manages MCP servers (e.g. `claude-code`, `cursor`, `gemini-cli`), the AgentsMesh self-serve MCP server entry is seeded into `.agentsmesh/mcp.json` if it is not already present. This ensures the [MCP Server](/reference/mcp-server/) entry survives import round-trips and is always available after generation.
+After importing from a tool that manages MCP servers (e.g. `claude-code`, `cursor`, `gemini-cli`), the AgentsMesh self-serve MCP server entry is seeded into `.agentsmesh/mcp.json` if it is not already present. This ensures the [MCP Server](../../reference/mcp-server/) entry survives import round-trips and is always available after generation.

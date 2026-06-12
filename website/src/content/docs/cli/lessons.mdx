@@ -188,7 +188,15 @@ Results are **relevance-ranked** (BM25 over rule text fused with trigger specifi
 
 **At least one EFFECTIVE trigger is required** — `add` errors (`UNRECALLABLE_LESSON`, exit 2) when every trigger on the resulting lesson is dead on the mandatory `--file`/`--cmd` recall path. A trigger is dead when it is a `keyword` whose needle loses all tokens to stopword filtering (e.g. a stopword-only keyword cannot fire on the mandatory --file/--cmd recall path), or a `command_pattern` rejected by the write barrier as invalid or ReDoS-shaped. A lesson with a mix of live and dead triggers is NOT rejected — the dead trigger surfaces as a non-blocking warning. Prefer a precise `--trigger-file` glob: it is the most reliable trigger, since it fires on the `--file` recall before every edit.
 
-Beyond that hard requirement, `add` prints **non-blocking guardrail warnings** to stderr (capture still succeeds) when the resulting lesson has too many triggers (`OVERSIZED_LESSON_TRIGGERS`, cap 8), a broad glob (`BROAD_GLOB_TRIGGER`), only keyword triggers (`KEYWORD_ONLY_LESSON`, which fire on `--file`/`--cmd` recall only when the keyword appears as a path/command token — less reliable than a precise trigger), a dead glob that matches no file in the working tree (`DEAD_GLOB` — likely a rename or typo; re-point it or the lesson is unreachable via that glob), or a rule that closely paraphrases an existing active lesson (`NEAR_DUPLICATE_LESSON`, token-Jaccard ≥ 0.6 — suggests updating the existing lesson instead). Prefer a few specific triggers. See the [guardrails reference](../../reference/lessons/#capture-guardrails).
+Beyond that hard requirement, `add` prints **non-blocking guardrail warnings** to stderr (capture still succeeds):
+
+- `OVERSIZED_LESSON_TRIGGERS` — the lesson has too many triggers (cap 8).
+- `BROAD_GLOB_TRIGGER` — a glob matches large swaths of the tree; prefer a path specific to the lesson.
+- `KEYWORD_ONLY_LESSON` — every trigger is a keyword. These fire on `--file`/`--cmd` recall only when the keyword appears as a path/command token — less reliable than a precise glob.
+- `DEAD_GLOB` — a glob matches no file in the working tree (likely a rename or typo); re-point it or the lesson is unreachable via that glob.
+- `NEAR_DUPLICATE_LESSON` — the rule closely paraphrases an existing active lesson (token-Jaccard ≥ 0.6); consider updating the existing lesson instead.
+
+Prefer a few specific triggers. See the [guardrails reference](../../reference/lessons/#capture-guardrails).
 
 ### `deprecate`
 

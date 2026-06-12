@@ -31,7 +31,13 @@ deny:
   - Bash(rm -rf:*)
   - Read(.env)
   - Read(.env.*)
+
+ask:
+  - Bash(git push:*)
+  - Bash(npm publish:*)
 ```
+
+Three lists are supported: `allow` (run without prompting), `deny` (always blocked), and `ask` (prompt the user before running, where the tool supports it).
 
 ## Pattern syntax
 
@@ -52,7 +58,7 @@ Patterns support wildcards using `:*` suffix for Bash commands:
 
 ## Tool-specific behavior
 
-See the **Permissions** row in the [supported tools matrix](../reference/supported-tools/) for per-target support levels (native, partial, or unsupported).
+See the **Permissions** row in the [supported tools matrix](../../reference/supported-tools/) for per-target support levels (native, partial, or unsupported).
 
 ## Locking permissions from accidental changes
 

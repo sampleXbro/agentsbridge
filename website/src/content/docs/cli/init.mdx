@@ -66,7 +66,7 @@ Running `agentsmesh init --global` creates the same canonical structure under `~
 
 ## Auto-detection
 
-During init, AgentsMesh scans the project for existing AI tool configs from every [supported target](/reference/supported-tools/) — `.claude/`, `.cursor/`, `.github/copilot-instructions.md`, and the rest. For each one found, it prompts you to import.
+During init, AgentsMesh scans the project for existing AI tool configs from every [supported target](../../reference/supported-tools/) — `.claude/`, `.cursor/`, `.github/copilot-instructions.md`, and the rest. For each one found, it prompts you to import.
 
 ## Examples
 
@@ -117,7 +117,7 @@ agentsmesh import --global --from claude-code
 agentsmesh generate --global
 ```
 
-Global init uses `~/.agentsmesh/` as the canonical home-level source of truth. Choose targets in `agentsmesh.yaml` that support global mode (for example `claude-code`, `antigravity`, `codex-cli`, `cursor`); see the [supported tools matrix](../reference/supported-tools#global-mode).
+Global init uses `~/.agentsmesh/` as the canonical home-level source of truth. Choose targets in `agentsmesh.yaml` that support global mode (for example `claude-code`, `antigravity`, `codex-cli`, `cursor`); see the [supported tools matrix](../../reference/supported-tools#global-mode).
 
 ### New project (no existing configs)
 
@@ -137,7 +137,7 @@ agentsmesh generate
 
 ## Generated agentsmesh.yaml
 
-The starter config enables every [supported target](/reference/supported-tools/) (except `codex-cli`, whose root `AGENTS.md` would collide with the other AGENTS.md-first targets) plus all features:
+The starter config enables every [supported target](../../reference/supported-tools/) (except `codex-cli`, whose root `AGENTS.md` would collide with the other AGENTS.md-first targets) plus all features:
 
 ```yaml
 version: 1
@@ -168,7 +168,7 @@ Edit this to match your team's actual tool usage before running `generate`.
 
 ## MCP server
 
-`init` seeds the AgentsMesh self-serve MCP server entry into `.agentsmesh/mcp.json`. After running `agentsmesh generate`, the entry is projected into each target's native MCP config so AI agents can introspect and mutate canonical configuration directly. See [MCP Server](/reference/mcp-server/).
+`init` seeds the AgentsMesh self-serve MCP server entry into `.agentsmesh/mcp.json`. After running `agentsmesh generate`, the entry is projected into each target's native MCP config so AI agents can introspect and mutate canonical configuration directly. See [MCP Server](../../reference/mcp-server/).
 
 ## Next steps
 

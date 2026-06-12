@@ -6,7 +6,7 @@ description: Commands are reusable slash-command prompts in AgentsMesh. They map
 
 import { Aside } from '@astrojs/starlight/components';
 
-Commands are reusable prompts that map to slash commands in tools with native command support. For tools without a native command surface, AgentsMesh either embeds them as projected skills with round-trip metadata or skips command generation — exact per-target behavior is documented in the [supported tools matrix](/reference/supported-tools/#commands).
+Commands are reusable prompts that map to slash commands in tools with native command support. For tools without a native command surface, AgentsMesh either embeds them as projected skills with round-trip metadata or skips command generation — exact per-target behavior is documented in the [supported tools matrix](../../reference/supported-tools/#commands).
 
 ## File format
 
@@ -36,10 +36,11 @@ The filename (without `.md`) becomes the slash command name. The above file at `
 |-------|------|-------------|
 | `description` | `string` | Short description shown in command menus. |
 | `allowed-tools` | `string[]` | Tools the command is allowed to use when invoked. Uses the same tool name format as permissions. |
+| `outputStyle` | `boolean` | Mark this command as an output style (also accepted as `output-style`). Tools with output-style support treat it as a response-formatting preset instead of a regular command. |
 
 ## Tool-specific behavior
 
-See the **Commands** row in the [supported tools matrix](../reference/supported-tools/) for per-target support levels (native, embedded, or unsupported).
+See the **Commands** row in the [supported tools matrix](../../reference/supported-tools/) for per-target support levels (native, embedded, or unsupported).
 
 <Aside type="tip">
   Embedded commands carry AgentsMesh metadata comments so that `agentsmesh import` can restore them to the original `commands/*.md` format without data loss.

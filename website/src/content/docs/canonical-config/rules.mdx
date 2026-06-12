@@ -62,8 +62,8 @@ Prefer Tailwind utility classes over custom CSS.
 ```markdown
 ---
 description: Codex execution rule
-codexEmit: execution
-codexInstructionVariant: override
+codex_emit: execution
+codex_instruction: override
 ---
 
 Always run `pnpm typecheck` before committing.
@@ -75,17 +75,17 @@ Always run `pnpm typecheck` before committing.
 |-------|------|-------------|
 | `root` | `boolean` | Always-applied rule. Required for `_root.md`. |
 | `description` | `string` | Human-readable rule name shown in tool menus. |
-| `targets` | `string[]` | Limit rule to specific tools. Empty = all targets. See the [supported tools matrix](../reference/supported-tools/) for valid IDs. |
+| `targets` | `string[]` | Limit rule to specific tools. Empty = all targets. See the [supported tools matrix](../../reference/supported-tools/) for valid IDs. |
 | `globs` | `string[]` | File patterns this rule applies to (tool-dependent). Uses gitignore-style glob syntax. |
 | `trigger` | `string` | Windsurf activation mode: `always_on`, `model_decision`, `glob`, `manual`. |
-| `codexEmit` | `string` | Codex CLI instruction type: `advisory` or `execution`. |
-| `codexInstructionVariant` | `string` | Codex nested instruction format: `default` or `override`. |
+| `codex_emit` | `string` | Codex CLI instruction type: `advisory` or `execution`. |
+| `codex_instruction` | `string` | Codex nested instruction format: set to `override` to opt in; omit for the default. |
 
 ## Tool-specific behavior
 
-Rules are mapped to each tool's native format during generation. See the **Rules** row in the [supported tools matrix](../reference/supported-tools/) for per-target support levels and the [generate output locations](../cli/generate/#output-locations) for target directory mappings.
+Rules are mapped to each tool's native format during generation. See the **Rules** row in the [supported tools matrix](../../reference/supported-tools/) for per-target support levels and the [generate output locations](../../cli/generate/#output-locations) for target directory mappings.
 
-Some targets fold additional rules into a root or aggregate instruction file. In those cases AgentsMesh wraps each embedded rule in a [managed embedding block](../reference/managed-embedding/) so repeated generation does not append duplicates and import can restore the rule to `.agentsmesh/rules/*.md`.
+Some targets fold additional rules into a root or aggregate instruction file. In those cases AgentsMesh wraps each embedded rule in a [managed embedding block](../../reference/managed-embedding/) so repeated generation does not append duplicates and import can restore the rule to `.agentsmesh/rules/*.md`.
 
 ## File naming
 

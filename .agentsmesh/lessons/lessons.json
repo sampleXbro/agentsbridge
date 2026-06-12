@@ -4719,6 +4719,22 @@
         "t-cmd-8a0598a5"
       ]
     },
+    "verification-workflow-changing-the-public-api-surface": {
+      "createdAt": "2026-06-12",
+      "evidence": [
+        "tests/consumer-smoke/src/smoke.ts"
+      ],
+      "rule": "Changing the public API surface (adding, removing, or renaming exports under src/public/*.ts) must be mirrored in the consumer-smoke fixture tests/consumer-smoke/src/smoke.ts, which compiles against the PACKED TARBALL under strict tsc as a separate release gate (pnpm consumer-smoke) that the normal vitest suite never runs; a stale fixture surfaces only at build/pack time with TS2305/TS2724 missing-export errors.",
+      "status": "active",
+      "topics": [
+        "verification-workflow"
+      ],
+      "triggers": [
+        "t-glob-85da531e",
+        "t-glob-7fc51540",
+        "t-glob-36d72b33"
+      ]
+    },
     "verification-workflow-do-not-run-dist-dependent": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -6027,6 +6043,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/mutate.ts"
     },
+    "t-glob-36d72b33": {
+      "kind": "file_glob",
+      "pattern": "tests/consumer-smoke/src/smoke.ts"
+    },
     "t-glob-38c9bd37": {
       "kind": "file_glob",
       "pattern": "src/mcp/tool-tables/*.ts"
@@ -6190,6 +6210,10 @@
     "t-glob-84c63f4c": {
       "kind": "file_glob",
       "pattern": "tests/unit/lessons/ranking.test.ts"
+    },
+    "t-glob-85da531e": {
+      "kind": "file_glob",
+      "pattern": "src/public/index.ts"
     },
     "t-glob-86844292": {
       "kind": "file_glob",

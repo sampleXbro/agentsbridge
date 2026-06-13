@@ -1,5 +1,5 @@
 ---
-'agentsmesh': major
+'agentsmesh': minor
 ---
 
 feat(lessons)!: JSON graph store, universal CLI primitives, clean break from YAML+MD

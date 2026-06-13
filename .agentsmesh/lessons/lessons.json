@@ -1224,6 +1224,20 @@
         "t-kw-45ee2cca"
       ]
     },
+    "generation-collision-source-maps-adding-a-parameter-to-a": {
+      "createdAt": "2026-06-13",
+      "evidence": [
+        "327aca3"
+      ],
+      "rule": "Adding a parameter to a descriptor hook like emitScopedSettings silently passes undefined at existing test call sites (JS ignores arity mismatch), turning set.has(...) into a runtime TypeError rather than a compile error — when changing such a signature, grep every descriptor.emitScopedSettings!(...) and direct emitter call site under tests/unit/targets and update them before relying on the suite.",
+      "status": "active",
+      "topics": [
+        "generation-collision-source-maps"
+      ],
+      "triggers": [
+        "t-glob-d458a5b8"
+      ]
+    },
     "generation-collision-source-maps-rule-1": {
       "createdAt": "2026-06-05",
       "evidence": [
@@ -1628,6 +1642,35 @@
         "t-cmd-7d02fc72"
       ]
     },
+    "generation-collision-source-maps-when-changing-a-targetdescriptor-hook": {
+      "createdAt": "2026-06-13",
+      "evidence": [
+        "327aca3"
+      ],
+      "rule": "When changing a TargetDescriptor hook contract (e.g. adding enabledFeatures to emitScopedSettings, or capability resolution like getTargetCapabilities), the change must hold for PLUGIN descriptors too, not just builtins: the engine call sites resolve via getBuiltinTargetDefinition(target) ?? getDescriptor(target) with no builtin-vs-plugin branch. Update the rich-plugin reference fixture to the new hook signature AND add a registered-plugin-descriptor test (generateScopedSettingsFeature with a plugin id), or plugin alignment stays unproven.",
+      "status": "active",
+      "topics": [
+        "generation-collision-source-maps"
+      ],
+      "triggers": [
+        "t-glob-d458a5b8",
+        "t-glob-861a9bdb"
+      ]
+    },
+    "global-mode-global-scope-capability-resolution-has": {
+      "createdAt": "2026-06-13",
+      "evidence": [
+        "327aca3"
+      ],
+      "rule": "Global-scope capability resolution has TWO coupled gates in builtin-targets.ts: getTargetCapabilities (raw level) AND getEffectiveTargetSupportLevel (conversion upgrade via supportsConversion). When a target lacks globalSupport, BOTH must short-circuit to none for scope 'global' — fixing only getTargetCapabilities leaves supportsConversion targets (e.g. replit-agent) still reporting embedded in global scope, so matrix/docs diverge from what generate --global actually emits (zero files).",
+      "status": "active",
+      "topics": [
+        "global-mode"
+      ],
+      "triggers": [
+        "t-glob-c47c9030"
+      ]
+    },
     "global-mode-rule-1": {
       "createdAt": "2026-06-05",
       "evidence": [
@@ -1901,6 +1944,21 @@
         "t-cmd-dbf01710",
         "t-cmd-f2638ce0",
         "t-cmd-fe0fbdb4"
+      ]
+    },
+    "install-import-pickers-install-sync-refresh-re-run": {
+      "createdAt": "2026-06-13",
+      "evidence": [
+        "327aca3"
+      ],
+      "rule": "install --sync / refresh re-run install from a SHA-pinned source, so the bridge must thread the PRIOR installs.yaml entry's original_ref AND persisted elevated consent (accepted_elevated) back through InstallReplayScope — otherwise a branch pin freezes to a SHA after the first refresh and sync silently strips previously-consented hooks/permissions/mcp while features still claims them. Also: recorded features must derive from the POST-strip canonical (featuresAfterStrip), not the pre-strip list, or partial consent desyncs features from pack contents even on first install.",
+      "status": "active",
+      "topics": [
+        "install-import-pickers"
+      ],
+      "triggers": [
+        "t-glob-c424af85",
+        "t-glob-b47f5129"
       ]
     },
     "install-import-pickers-rule-1": {
@@ -2809,6 +2867,21 @@
       ],
       "triggers": [
         "t-glob-b39eff4f"
+      ]
+    },
+    "lessons-system-don-t-assume-the-lessons": {
+      "createdAt": "2026-06-13",
+      "evidence": [
+        "327aca3"
+      ],
+      "rule": "Don't assume the lessons recall PostToolUse hook (agentsmesh lessons hook) fires after FAILED commands — Claude Code's PostToolUse is success-only; a non-zero-exit command routes to a separate PostToolUseFailure event (cannot block, shows stderr to Claude). So recall never runs post-failure, and a capture-on-failure nudge cannot ride PostToolUse; it would need PostToolUseFailure or a Stop hook. Verified against code.claude.com/docs/en/hooks.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-71b4b110",
+        "t-glob-629e24b4"
       ]
     },
     "lessons-system-enforce-an-effective-total-command": {
@@ -6135,6 +6208,10 @@
       "kind": "file_glob",
       "pattern": "src/**/path-helpers.ts"
     },
+    "t-glob-629e24b4": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/recall-hook-scaffold.ts"
+    },
     "t-glob-62cc99bd": {
       "kind": "file_glob",
       "pattern": ".agentsmesh/agents/**/*.md"
@@ -6158,6 +6235,10 @@
     "t-glob-6f2d56aa": {
       "kind": "file_glob",
       "pattern": "src/lessons/add.ts"
+    },
+    "t-glob-71b4b110": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/hook.ts"
     },
     "t-glob-74262634": {
       "kind": "file_glob",
@@ -6214,6 +6295,10 @@
     "t-glob-85da531e": {
       "kind": "file_glob",
       "pattern": "src/public/index.ts"
+    },
+    "t-glob-861a9bdb": {
+      "kind": "file_glob",
+      "pattern": "tests/fixtures/plugins/rich-plugin/index.js"
     },
     "t-glob-86844292": {
       "kind": "file_glob",
@@ -6283,6 +6368,10 @@
       "kind": "file_glob",
       "pattern": "src/utils/filesystem/**"
     },
+    "t-glob-b47f5129": {
+      "kind": "file_glob",
+      "pattern": "src/install/run/install-replay.ts"
+    },
     "t-glob-ba03e2e3": {
       "kind": "file_glob",
       "pattern": "tests/e2e/**"
@@ -6298,6 +6387,14 @@
     "t-glob-c3684e2c": {
       "kind": "file_glob",
       "pattern": "src/mcp/handlers/lessons.ts"
+    },
+    "t-glob-c424af85": {
+      "kind": "file_glob",
+      "pattern": "src/install/run/run-install-execute.ts"
+    },
+    "t-glob-c47c9030": {
+      "kind": "file_glob",
+      "pattern": "src/targets/catalog/builtin-targets.ts"
     },
     "t-glob-c9dfc34a": {
       "kind": "file_glob",
@@ -6322,6 +6419,10 @@
     "t-glob-d3bf322e": {
       "kind": "file_glob",
       "pattern": "src/lessons/import-legacy.ts"
+    },
+    "t-glob-d458a5b8": {
+      "kind": "file_glob",
+      "pattern": "src/targets/catalog/target-descriptor.ts"
     },
     "t-glob-d8e040bc": {
       "kind": "file_glob",

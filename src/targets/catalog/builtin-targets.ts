@@ -58,6 +58,19 @@ import { descriptor as zed } from '../zed/index.js';
 
 type TargetFeature = keyof TargetCapabilities;
 
+/** Capabilities for a target that has no support in a given scope. */
+const ALL_NONE_CAPABILITIES: TargetCapabilities = {
+  rules: 'none',
+  additionalRules: 'none',
+  commands: 'none',
+  agents: 'none',
+  skills: 'none',
+  mcp: 'none',
+  hooks: 'none',
+  ignore: 'none',
+  permissions: 'none',
+};
+
 /** @deprecated Use TargetDescriptor from target-descriptor.ts instead */
 export type BuiltinTargetDefinition = TargetDescriptor;
 
@@ -128,10 +141,14 @@ export function getTargetCapabilities(
 ): Record<CapabilityFeatureKey, TargetCapabilityValue> | undefined {
   const descriptor = getBuiltinTargetDefinition(target) ?? getDescriptor(target);
   if (!descriptor) return undefined;
-  const raw =
-    scope === 'global'
-      ? (descriptor.globalSupport?.capabilities ?? descriptor.capabilities)
-      : descriptor.capabilities;
+  if (scope === 'global' && !descriptor.globalSupport) {
+    // A target with no global mode (e.g. cloud-only jules/replit-agent) must
+    // report no support in global scope — never fall back to project
+    // capabilities, or the matrix/docs would claim support that `generate
+    // --global` cannot satisfy (no globalSupport.layout => zero files).
+    return normalizeTargetCapabilities(ALL_NONE_CAPABILITIES);
+  }
+  const raw = scope === 'global' ? descriptor.globalSupport!.capabilities : descriptor.capabilities;
   return normalizeTargetCapabilities(raw);
 }
 
@@ -238,6 +255,9 @@ export function getEffectiveTargetSupportLevel(
 ): SupportLevel {
   const baseLevel = getTargetCapabilities(target, scope)?.[feature]?.level ?? 'none';
   const descriptor = getBuiltinTargetDefinition(target) ?? getDescriptor(target);
+  // No global mode => no scope to project skills into; a conversion upgrade
+  // would falsely report `embedded` while `generate --global` emits nothing.
+  if (scope === 'global' && descriptor && !descriptor.globalSupport) return 'none';
   if (baseLevel === 'none' && isConversionUpgrading(descriptor, feature, config, scope)) {
     return 'embedded';
   }

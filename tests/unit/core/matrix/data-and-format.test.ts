@@ -46,8 +46,38 @@ describe('SUPPORT_MATRIX', () => {
 });
 
 describe('SUPPORT_MATRIX_GLOBAL', () => {
-  it('contains all features', () => {
-    expect(Object.keys(SUPPORT_MATRIX_GLOBAL)).toContain('rules');
+  const ALL_FEATURES = [
+    'rules',
+    'additionalRules',
+    'commands',
+    'agents',
+    'skills',
+    'mcp',
+    'hooks',
+    'ignore',
+    'permissions',
+  ] as const;
+
+  it('contains exactly the standard feature ids', () => {
+    expect(Object.keys(SUPPORT_MATRIX_GLOBAL).sort()).toEqual([...ALL_FEATURES].sort());
+  });
+
+  it('jules reports none for every feature (cloud-only, no globalSupport)', () => {
+    for (const feature of ALL_FEATURES) {
+      expect(SUPPORT_MATRIX_GLOBAL[feature].jules.level).toBe('none');
+    }
+  });
+
+  it('replit-agent reports none for every feature (cloud-only, no globalSupport)', () => {
+    for (const feature of ALL_FEATURES) {
+      expect(SUPPORT_MATRIX_GLOBAL[feature]['replit-agent'].level).toBe('none');
+    }
+  });
+
+  it('claude-code reports native for every feature in global scope (unaffected)', () => {
+    for (const feature of ALL_FEATURES) {
+      expect(SUPPORT_MATRIX_GLOBAL[feature]['claude-code'].level).toBe('native');
+    }
   });
 });
 

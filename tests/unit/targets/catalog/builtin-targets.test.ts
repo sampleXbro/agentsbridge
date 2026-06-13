@@ -78,7 +78,7 @@ describe('getTargetCapabilities', () => {
     expect(globalCaps!.rules).toBeDefined();
   });
 
-  it('falls back to project capabilities when globalSupport is absent', () => {
+  it('reports all-none in global scope when globalSupport is absent (no project fallback)', () => {
     const desc = makeMinimalDescriptor('test-global-caps-fallback', {
       capabilities: {
         rules: 'partial',
@@ -95,15 +95,81 @@ describe('getTargetCapabilities', () => {
     registerTargetDescriptor(desc);
     const caps = getTargetCapabilities('test-global-caps-fallback', 'global');
     expect(caps).toBeDefined();
-    expect(caps!.rules?.level).toBe('partial');
+    for (const feature of [
+      'rules',
+      'additionalRules',
+      'commands',
+      'agents',
+      'skills',
+      'mcp',
+      'hooks',
+      'ignore',
+      'permissions',
+    ] as const) {
+      expect(caps![feature]?.level).toBe('none');
+    }
   });
 
-  it('falls back to project capabilities when no global caps defined', () => {
+  it('reports all-none in global scope for a rules-only target lacking globalSupport', () => {
     const desc = makeMinimalDescriptor('test-no-global-caps');
     registerTargetDescriptor(desc);
     const caps = getTargetCapabilities('test-no-global-caps', 'global');
     expect(caps).toBeDefined();
-    expect(caps!.rules?.level).toBe('native');
+    expect(caps!.rules?.level).toBe('none');
+  });
+
+  it('jules reports all-none in global scope (cloud-only, no globalSupport)', () => {
+    const caps = getTargetCapabilities('jules', 'global');
+    expect(caps).toBeDefined();
+    for (const feature of [
+      'rules',
+      'additionalRules',
+      'commands',
+      'agents',
+      'skills',
+      'mcp',
+      'hooks',
+      'ignore',
+      'permissions',
+    ] as const) {
+      expect(caps![feature]?.level).toBe('none');
+    }
+  });
+
+  it('replit-agent reports all-none in global scope (cloud-only, no globalSupport)', () => {
+    const caps = getTargetCapabilities('replit-agent', 'global');
+    expect(caps).toBeDefined();
+    for (const feature of [
+      'rules',
+      'additionalRules',
+      'commands',
+      'agents',
+      'skills',
+      'mcp',
+      'hooks',
+      'ignore',
+      'permissions',
+    ] as const) {
+      expect(caps![feature]?.level).toBe('none');
+    }
+  });
+
+  it('claude-code (has globalSupport) keeps native global capabilities — unaffected', () => {
+    const caps = getTargetCapabilities('claude-code', 'global');
+    expect(caps).toBeDefined();
+    for (const feature of [
+      'rules',
+      'additionalRules',
+      'commands',
+      'agents',
+      'skills',
+      'mcp',
+      'hooks',
+      'ignore',
+      'permissions',
+    ] as const) {
+      expect(caps![feature]?.level).toBe('native');
+    }
   });
 
   it('returns undefined for completely unknown target', () => {
@@ -236,5 +302,65 @@ describe('capability resolution lockstep (gap #5 — single conversion guard)', 
     } as unknown as ValidatedConfig;
     expect(getEffectiveTargetSupportLevel('codex-cli', 'commands', config)).toBe('none');
     expect(resolveTargetFeatureGenerator('codex-cli', 'commands', config)).toBeUndefined();
+  });
+});
+
+describe('getEffectiveTargetSupportLevel in global scope (no globalSupport => none)', () => {
+  function baseConfig(target: string): ValidatedConfig {
+    return {
+      version: 1,
+      targets: [target],
+      features: ['rules', 'agents', 'commands', 'skills'],
+      extends: [],
+      overrides: {},
+      collaboration: { strategy: 'merge', lock_features: [] },
+      conversions: {},
+    } as unknown as ValidatedConfig;
+  }
+
+  it('jules: every feature is none in global scope', () => {
+    const config = baseConfig('jules');
+    for (const feature of [
+      'rules',
+      'additionalRules',
+      'commands',
+      'agents',
+      'skills',
+      'mcp',
+      'hooks',
+      'ignore',
+      'permissions',
+    ] as const) {
+      expect(getEffectiveTargetSupportLevel('jules', feature, config, 'global')).toBe('none');
+    }
+  });
+
+  it('replit-agent: every feature is none in global scope (no conversion upgrade)', () => {
+    const config = baseConfig('replit-agent');
+    for (const feature of [
+      'rules',
+      'additionalRules',
+      'commands',
+      'agents',
+      'skills',
+      'mcp',
+      'hooks',
+      'ignore',
+      'permissions',
+    ] as const) {
+      expect(getEffectiveTargetSupportLevel('replit-agent', feature, config, 'global')).toBe(
+        'none',
+      );
+    }
+  });
+
+  it('jules: rules is native in project scope (unaffected by global fix)', () => {
+    const config = baseConfig('jules');
+    expect(getEffectiveTargetSupportLevel('jules', 'rules', config, 'project')).toBe('native');
+  });
+
+  it('claude-code: rules stays native in global scope (has globalSupport)', () => {
+    const config = baseConfig('claude-code');
+    expect(getEffectiveTargetSupportLevel('claude-code', 'rules', config, 'global')).toBe('native');
   });
 });

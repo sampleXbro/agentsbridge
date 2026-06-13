@@ -118,6 +118,7 @@ export async function runGenerate(
       flags,
       root,
       options,
+      activeTargets,
     });
   }
 

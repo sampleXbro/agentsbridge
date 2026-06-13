@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { writeFileAtomic } from '../../utils/filesystem/fs.js';
 import { acquireProcessLock } from '../../utils/filesystem/process-lock.js';
 import { cleanupStaleGeneratedOutputs } from '../../core/generate/stale-cleanup.js';
+import { getTargetLayout } from '../../targets/catalog/builtin-targets.js';
 import { ensurePathInsideRoot } from './generate-path.js';
 import { writeLockFile } from './generate-lock.js';
 import type { GenerateData } from '../command-result.js';
@@ -23,13 +24,33 @@ export interface EmptyResultsArgs {
   flags: Record<string, string | boolean>;
   root: string;
   options: RunGenerateOptions;
+  activeTargets: string[];
+}
+
+/**
+ * In global scope, returns `'no-global-support'` when every active target
+ * lacks a global layout (e.g. cloud-only jules/replit-agent). That, not a
+ * missing root rule, is the real reason `generate --global` emitted nothing.
+ */
+function resolveEmptyReason(
+  scope: 'project' | 'global',
+  activeTargets: string[],
+): GenerateData['emptyReason'] {
+  if (scope !== 'global' || activeTargets.length === 0) return undefined;
+  const allLackGlobal = activeTargets.every((t) => getTargetLayout(t, 'global') === undefined);
+  return allLackGlobal ? 'no-global-support' : undefined;
 }
 
 export async function handleEmptyResults(args: EmptyResultsArgs): Promise<GenerateCommandResult> {
-  const { mode, scope, dryRun, context, resolvedExtends, flags, root, options } = args;
+  const { mode, scope, dryRun, context, resolvedExtends, flags, root, options, activeTargets } =
+    args;
+  const emptyReason = resolveEmptyReason(scope, activeTargets);
 
   if (mode === 'check') {
-    return { exitCode: 0, data: { scope, mode, files: [], summary: buildSummary([]) } };
+    return {
+      exitCode: 0,
+      data: { scope, mode, files: [], summary: buildSummary([]), emptyReason },
+    };
   }
 
   if (!dryRun) {
@@ -43,7 +64,10 @@ export async function handleEmptyResults(args: EmptyResultsArgs): Promise<Genera
     renderMatrix(matrixResult, { verbose: flags.verbose === true });
   }
 
-  return { exitCode: 0, data: { scope, mode, files: [], summary: buildSummary([]) } };
+  return {
+    exitCode: 0,
+    data: { scope, mode, files: [], summary: buildSummary([]), emptyReason },
+  };
 }
 
 export function buildCheckResult(

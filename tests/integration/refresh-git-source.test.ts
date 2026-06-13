@@ -19,10 +19,12 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { runRefresh } from '../../src/install/refresh/run-refresh.js';
 import { runInstall } from '../../src/install/run/run-install.js';
 import {
+  appendCommitToMain,
   createBareRepoWithTwoCommits,
   rewindRepoToFirstCommit,
   type BareRepoWithTwoCommits,
 } from './fixtures/refresh-git-source/setup.js';
+import { readInstallManifest } from '../helpers/install-test-helpers.js';
 
 const execFileP = promisify(execFile);
 
@@ -106,6 +108,64 @@ describe('refresh against a git source', () => {
     const v2 = await readFile(skillPath, 'utf8');
     expect(v2).toContain('# v2');
   }, 30_000);
+
+  it('keeps a branch pin tracking main across two consecutive refreshes', async () => {
+    // Rewind upstream so install captures v1 at firstSha via the #main pin.
+    await rewindRepoToFirstCommit(bare.bareRepoPath, bare.firstSha);
+
+    const manifestPath = join(projectRoot, '.agentsmesh', 'installs.yaml');
+    const sourceUrl = `git+file://${bare.bareRepoPath}#main`;
+    const installResult = await runInstall(
+      { force: true, name: 'bare-pack' },
+      [sourceUrl],
+      projectRoot,
+    );
+    expect(installResult.exitCode).toBe(0);
+
+    const afterInstall = readInstallManifest(manifestPath).installs;
+    expect(afterInstall).toHaveLength(1);
+    expect(afterInstall[0]?.original_ref).toBe('main');
+    expect(afterInstall[0]?.version).toBe(bare.firstSha);
+
+    // ── First refresh: upstream advances main → secondSha ──────────────────
+    await execFileP('git', [
+      '--git-dir',
+      bare.bareRepoPath,
+      'update-ref',
+      'refs/heads/main',
+      bare.secondSha,
+    ]);
+    const refresh1 = await runRefresh({ force: true }, [], projectRoot);
+    expect(refresh1.exitCode).toBe(0);
+    expect(refresh1.data.refreshed).toHaveLength(1);
+    expect(refresh1.data.refreshed[0]?.newSha).toBe(bare.secondSha);
+
+    // The pin must still be a branch name, NOT the resolved SHA.
+    const afterRefresh1 = readInstallManifest(manifestPath).installs;
+    expect(afterRefresh1).toHaveLength(1);
+    expect(afterRefresh1[0]?.original_ref).toBe('main');
+    expect(afterRefresh1[0]?.version).toBe(bare.secondSha);
+
+    // ── Second refresh: upstream advances main again → thirdSha ────────────
+    const thirdSha = await appendCommitToMain(bare.bareRepoPath, 'v3');
+    const refresh2 = await runRefresh({ force: true }, [], projectRoot);
+    expect(refresh2.exitCode).toBe(0);
+    // Regression guard: a frozen pin would report `unchanged` here.
+    expect(refresh2.data.unchanged).toHaveLength(0);
+    expect(refresh2.data.refreshed).toHaveLength(1);
+    expect(refresh2.data.refreshed[0]?.newSha).toBe(thirdSha);
+
+    const afterRefresh2 = readInstallManifest(manifestPath).installs;
+    expect(afterRefresh2).toHaveLength(1);
+    expect(afterRefresh2[0]?.original_ref).toBe('main');
+    expect(afterRefresh2[0]?.version).toBe(thirdSha);
+
+    const v3 = await readFile(
+      join(projectRoot, '.agentsmesh', 'packs', 'bare-pack', 'skills', 'a-skill', 'SKILL.md'),
+      'utf8',
+    );
+    expect(v3).toContain('# v3');
+  }, 45_000);
 
   it('refresh leaves unchanged packs when the ref has not moved', async () => {
     // Install at current tip (secondSha since bare has both commits).

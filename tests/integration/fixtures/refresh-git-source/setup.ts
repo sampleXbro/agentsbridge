@@ -73,3 +73,30 @@ export async function rewindRepoToFirstCommit(
 ): Promise<void> {
   await execFileP('git', ['--git-dir', bareRepoPath, 'update-ref', 'refs/heads/main', firstSha]);
 }
+
+/**
+ * Append a new commit directly onto the bare repo's `main` branch and return
+ * the new tip SHA. Used to advance upstream a SECOND time so a multi-cycle
+ * refresh test can prove a branch pin keeps tracking `main`.
+ *
+ * Operates on the bare repo via a throwaway temp clone so no working tree is
+ * required by the caller.
+ */
+export async function appendCommitToMain(bareRepoPath: string, label: string): Promise<string> {
+  const tmpClone = await mkdtemp(join(tmpdir(), 'refresh-advance-'));
+  try {
+    await execFileP('git', ['clone', '-q', '-b', 'main', bareRepoPath, tmpClone]);
+    await execFileP('git', ['config', 'user.email', 'test@test.local'], { cwd: tmpClone });
+    await execFileP('git', ['config', 'user.name', 'test'], { cwd: tmpClone });
+    await writeFile(
+      join(tmpClone, 'skills', 'a-skill', 'SKILL.md'),
+      `---\nname: a-skill\ndescription: ${label}\n---\n# ${label}\n`,
+    );
+    await execFileP('git', ['commit', '-am', label], { cwd: tmpClone });
+    await execFileP('git', ['push', '-q', 'origin', 'main'], { cwd: tmpClone });
+    return (await execFileP('git', ['rev-parse', 'HEAD'], { cwd: tmpClone })).stdout.trim();
+  } finally {
+    const { rm } = await import('node:fs/promises');
+    await rm(tmpClone, { recursive: true, force: true });
+  }
+}

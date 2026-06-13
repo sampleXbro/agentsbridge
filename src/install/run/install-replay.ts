@@ -10,6 +10,20 @@ import { narrowDiscoveredForInstallScope } from '../core/resource-selection.js';
 export interface InstallReplayScope {
   features?: ValidatedConfig['features'];
   pick?: NonNullable<ValidatedConfig['extends'][number]['pick']>;
+  /**
+   * The user's original ref expression (e.g. `main`) as recorded in the prior
+   * installs.yaml entry. Bridges (refresh, sync) thread this through so a
+   * re-install from a SHA-pinned source does not clobber a branch/tag pin with
+   * the resolved SHA — which would freeze the pin and break future refreshes.
+   */
+  originalRef?: string;
+  /**
+   * Elevated-artifact consent recorded in the prior installs.yaml entry.
+   * Bridges replay it so a deterministic re-clone re-applies the same
+   * `--accept-*` decisions automatically, keeping pack contents in sync with
+   * the recorded `features` instead of silently stripping them.
+   */
+  acceptedElevated?: ('hooks' | 'permissions' | 'mcp')[];
 }
 
 export function applyReplayInstallScope(

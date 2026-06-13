@@ -31,6 +31,12 @@ import type { ExtendPick } from '../../config/core/schema.js';
 import type { CanonicalFiles } from '../../core/types.js';
 import type { InstallDiscoveryPrep } from '../core/install-discovery.js';
 import { stripUntrustedElevatedArtifacts } from '../core/elevated-artifacts.js';
+import {
+  consentedArtifactsForManifest,
+  featuresAfterStrip,
+  resolveElevatedConsent,
+  resolveOriginalRef,
+} from './elevated-consent-replay.js';
 
 export interface RunInstallExecuteArgs {
   scope: 'global' | 'project';
@@ -77,19 +83,28 @@ export async function executeRunInstallPoolsAndWrite(
 ): Promise<InstallExecuteResult> {
   const { scope, force, dryRun, tty, useExtends, forceFreshMaterialize, nameOverride, explicitAs } =
     args;
-  const { acceptHooks, acceptPermissions, acceptMcp } = args;
   const { config, context, parsed, sourceForYaml, version, pathInRepo, contentRoot, persisted } =
     args;
   const { replay, prep, implicitPick, narrowed, discoveredFeatures, sourceType } = args;
+
+  // Replayed consent (from a prior installs.yaml entry, via the sync/refresh
+  // bridges) re-applies the user's original `--accept-*` decisions so a
+  // deterministic re-clone does not strip artifacts the user already trusted.
+  const consent = resolveElevatedConsent(
+    {
+      acceptHooks: args.acceptHooks,
+      acceptPermissions: args.acceptPermissions,
+      acceptMcp: args.acceptMcp,
+    },
+    replay,
+  );
 
   // Consent gate: strip elevated artifacts (hooks/permissions/mcp) from any
   // non-local source unless the user explicitly opted in. Done BEFORE pool
   // resolution so the bytes never reach the pack on disk.
   const gated = stripUntrustedElevatedArtifacts(narrowed, {
     sourceKind: parsed.kind,
-    acceptHooks,
-    acceptPermissions,
-    acceptMcp,
+    ...consent,
   });
   if (gated.stripped.length > 0) {
     logger.warn(
@@ -101,8 +116,15 @@ export async function executeRunInstallPoolsAndWrite(
     );
   }
 
+  // Stripped elevated artifacts must also drop out of the recorded `features`,
+  // otherwise installs.yaml/pack.yaml claim hooks/permissions/mcp the pack does
+  // not actually contain (metadata/content desync).
   const { narrowed: effectiveNarrowed, discoveredFeatures: effectiveFeatures } =
-    applyReplayInstallScope(gated.canonical, discoveredFeatures, replay);
+    applyReplayInstallScope(
+      gated.canonical,
+      featuresAfterStrip(discoveredFeatures, gated.stripped),
+      replay,
+    );
   if (!hasInstallableResources(effectiveNarrowed)) {
     throw new Error(
       implicitPick || prep.scopedFeatures
@@ -173,6 +195,9 @@ export async function executeRunInstallPoolsAndWrite(
   const installed = buildInstalledList(selected, entryName);
   const skipped = buildSkippedList(skillsPool, rulesPool, commandsPool, agentsPool, selected);
 
+  const originalRef = resolveOriginalRef(parsed, replay);
+  const acceptedElevated = consentedArtifactsForManifest(effectiveNarrowed, consent);
+
   if (useExtends) {
     await writeInstallAsExtend({
       configDir: context.configDir,
@@ -214,7 +239,8 @@ export async function executeRunInstallPoolsAndWrite(
       sourceType,
       contentRoot,
       forceFreshMaterialize: forceFreshMaterialize,
-      originalRef: parsed.rawRef !== '' ? parsed.rawRef : undefined,
+      originalRef,
+      acceptedElevated,
     });
   }
   await runPostOperationGenerate('install', scope, context.rootBase);

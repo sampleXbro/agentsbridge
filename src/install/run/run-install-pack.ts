@@ -60,6 +60,12 @@ export interface InstallAsPackArgs {
    * rather than re-resolving the already-pinned SHA to itself.
    */
   originalRef?: string;
+  /**
+   * Elevated artifacts the user consented to at install time. Persisted to
+   * `installs.yaml` so the sync/refresh bridges re-apply the same consent when
+   * they replay this install, keeping pack contents in sync with `features`.
+   */
+  acceptedElevated?: ('hooks' | 'permissions' | 'mcp')[];
 }
 
 function pathScope(pathInRepo?: string): Pick<PackMetadata, 'path' | 'paths'> {
@@ -110,6 +116,7 @@ export async function installAsPack(args: InstallAsPackArgs): Promise<void> {
     contentRoot,
     forceFreshMaterialize,
     originalRef,
+    acceptedElevated,
   } = args;
 
   const packsDir = join(canonicalDir, 'packs');
@@ -211,6 +218,7 @@ export async function installAsPack(args: InstallAsPackArgs): Promise<void> {
       paths: persistedPaths,
       as: manualAs,
       originalRef,
+      acceptedElevated,
     }),
   );
 

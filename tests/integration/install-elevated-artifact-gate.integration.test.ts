@@ -20,6 +20,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { runInstall } from '../../src/install/run/run-install.js';
+import { listRelativeFiles, readInstallManifest } from '../helpers/install-test-helpers.js';
 
 const ROOT = join(tmpdir(), 'am-install-elevated-gate');
 
@@ -142,6 +143,55 @@ describe('install — elevated-artifact gate (integration)', () => {
     expect(existsSync(join(packDir, 'hooks.yaml'))).toBe(true);
     expect(existsSync(join(packDir, 'permissions.yaml'))).toBe(false);
     expect(existsSync(join(packDir, 'mcp.json'))).toBe(false);
+  });
+
+  it('persists --accept-hooks consent and replays it on --sync without re-passing the flag', async () => {
+    const upstream = createUpstreamWithElevated();
+    const project = setupProject();
+    const sourceUrl = `git+file://${upstream}#main`;
+    const manifestPath = join(project, '.agentsmesh', 'installs.yaml');
+    const packDir = join(project, '.agentsmesh', 'packs', 'consent-pack');
+
+    // ── Install with hooks-only consent ────────────────────────────────────
+    const install = await runInstall(
+      { force: true, name: 'consent-pack', 'accept-hooks': true },
+      [sourceUrl],
+      project,
+    );
+    expect(install.exitCode).toBe(0);
+
+    // Pack carries hooks.yaml (consented) but not the other two (stripped).
+    expect(listRelativeFiles(packDir)).toEqual([
+      '.agentsmesh-install-manifest.json',
+      'hooks.yaml',
+      'pack.yaml',
+      'rules/_root.md',
+    ]);
+
+    // installs.yaml records the consent so it survives a post-clone replay.
+    const afterInstall = readInstallManifest(manifestPath).installs;
+    expect(afterInstall).toHaveLength(1);
+    expect(afterInstall[0]?.features).toEqual(['rules', 'hooks']);
+    expect(afterInstall[0]?.accepted_elevated).toEqual(['hooks']);
+
+    // ── Simulate post-clone: pack dir gone, only installs.yaml remains ─────
+    rmSync(join(project, '.agentsmesh', 'packs'), { recursive: true, force: true });
+
+    // Sync WITHOUT re-passing --accept-hooks. Persisted consent must re-apply.
+    const sync = await runInstall({ sync: true, force: true }, [], project);
+    expect(sync.exitCode).toBe(0);
+
+    // Hooks survive: no metadata/content desync.
+    expect(listRelativeFiles(packDir)).toEqual([
+      '.agentsmesh-install-manifest.json',
+      'hooks.yaml',
+      'pack.yaml',
+      'rules/_root.md',
+    ]);
+    const afterSync = readInstallManifest(manifestPath).installs;
+    expect(afterSync).toHaveLength(1);
+    expect(afterSync[0]?.features).toEqual(['rules', 'hooks']);
+    expect(afterSync[0]?.accepted_elevated).toEqual(['hooks']);
   });
 
   it('PRESERVES hooks/permissions/mcp from a LOCAL source (already trusted)', async () => {

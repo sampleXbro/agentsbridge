@@ -140,6 +140,18 @@
           },
           "original_ref": {
             "type": "string"
+          },
+          "accepted_elevated": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "hooks",
+                "permissions",
+                "mcp"
+              ]
+            }
           }
         },
         "required": [

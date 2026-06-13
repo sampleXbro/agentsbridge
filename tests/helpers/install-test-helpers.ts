@@ -13,6 +13,9 @@ export interface TestInstallEntry {
   paths?: string[];
   as?: string;
   pick?: Record<string, string[]>;
+  original_ref?: string;
+  refreshed_at?: string;
+  accepted_elevated?: string[];
 }
 
 interface TestInstallManifest {

@@ -1,0 +1,117 @@
+---
+draft: false
+title: Teach Your AI Agents with Lessons
+description: Give AI coding agents a shared memory that learns from your repo — capture a rule after every failure, recall it before every edit, in any AI tool.
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+Lessons give an AI coding agent a **memory of past mistakes**. The agent reads that memory *before* it touches anything, and writes to it *after* something goes wrong — so the same mistake doesn't happen twice, in any tool.
+
+That memory is a single git-tracked file: `.agentsmesh/lessons/lessons.json`. Every agent — Claude Code, Cursor, Codex CLI, Copilot, and the rest — reads and writes the *same* file through two commands.
+
+## The daily loop
+
+Two habits, repeated all day: **recall before you act, capture after a failure**.
+
+<Steps>
+
+1. **Recall** — the agent is about to edit a file or run a state-changing command (build, test, install, git-write). It asks the memory first:
+
+   ```bash
+   agentsmesh lessons query --file src/cli/foo.ts --cmd "pnpm test"
+   ```
+
+   It gets back the rules that match this file or command, and follows them while doing the work. Pure reads (`cat`, `ls`, `grep`) are exempt.
+
+2. **Act** — the agent does the work, applying whatever came back.
+
+3. **Capture** — something went wrong: a failing test, a lint or type error, a code review comment, a regression, or just a wrong assumption. The agent writes the rule down so next time, recall surfaces it:
+
+   ```bash
+   agentsmesh lessons add "Normalize CLI display paths to forward slashes" \
+     --topic windows-paths --trigger-file "src/cli/**/*.ts"
+   ```
+
+</Steps>
+
+That's the whole system. Recall reads the memory, capture writes it, and the loop repeats.
+
+## What's inside one lesson
+
+A lesson is a short **rule** — the thing to remember — plus one or more **triggers** that decide *when* it should resurface:
+
+- **File glob** (e.g. `src/cli/**/*.ts`) — fires when the agent is about to edit a matching file. The most reliable trigger; prefer it.
+- **Command pattern** (a regex) — fires when the agent is about to run a matching shell command.
+- **Keyword** (a short task phrase) — fires when the task description mentions it.
+
+A lesson that could never be recalled is rejected at capture time, and the error tells you why — so the memory never silently fills with unreachable rules.
+
+## Set it up once
+
+<Steps>
+
+1. **Scaffold the subsystem**
+
+   ```bash
+   agentsmesh init --lessons
+   ```
+
+   This creates the empty graph and a default `config.json`, adds an always-on rule ("recall before edits, capture after failures") to `.agentsmesh/rules/_root.md`, seeds the full operating manual as a `lessons` skill, and wires an auto-recall hook where the tool supports hooks.
+
+2. **Project it into every tool**
+
+   ```bash
+   agentsmesh generate
+   ```
+
+   Rules are native in every supported tool, so every agent gets the recall/capture habit. Tools with skills also get the full manual on demand; agents without shell access use the matching MCP tools (`lessons_query` / `lessons_add`).
+
+</Steps>
+
+<Aside type="note">
+  `init --lessons` is project-mode only — the memory belongs to a repo, not to your home directory — and entirely optional: skip the flag and AgentsMesh works exactly as before.
+</Aside>
+
+## A 30-second example
+
+```bash
+# 1. One-time setup
+agentsmesh init --lessons && agentsmesh generate
+
+# 2. You hit a bug: a Windows path broke because of a backslash.
+#    Capture the lesson so it never bites again:
+agentsmesh lessons add "Normalize CLI display paths to forward slashes" \
+  --topic windows-paths \
+  --new-topic --topic-summary "Cross-platform path handling" \
+  --trigger-file "src/cli/**/*.ts"
+
+# 3. Later, before editing a CLI file, the agent recalls it automatically:
+agentsmesh lessons query --file src/cli/foo.ts
+#   -> Normalize CLI display paths to forward slashes
+```
+
+## Shared with your team, reviewed like code
+
+The graph is a normal git-tracked file. A lesson your agent learns today helps every teammate's agent tomorrow, every change shows up in pull requests like any other diff, and anything can be reverted with git.
+
+<Aside type="caution">
+  Because `lessons.json` ships with the repo, its rules are project content — trusted at the same level as the code and the project's instruction files. Review a lesson graph from a cloned third-party repo as you would any other code you run. As a guardrail, recall truncates any single rule to 2000 characters and capture rejects longer ones, so a malformed rule cannot flood an agent's context.
+</Aside>
+
+## Keep the memory healthy
+
+Recall stays lean by default: results are relevance-ranked, capped at the top 10, and bounded by a ~400-token budget. Tune per project in `.agentsmesh/lessons/config.json` (written by `init --lessons` with defaults `{ "recallLimit": 10, "recallMaxTokens": 400, "autoPrune": false }`).
+
+As the codebase moves, triggers can rot — a renamed directory turns a good lesson unreachable. Three commands keep the graph tidy:
+
+```bash
+agentsmesh lessons validate        # schema + integrity + dead-trigger checks
+agentsmesh lessons prune           # curation report (dry-run); --apply writes
+agentsmesh lessons stats           # recall/capture telemetry (opt-in)
+```
+
+## Where to go next
+
+- [`agentsmesh lessons` CLI reference](../../cli/lessons/) — every subcommand and flag, including `merge`, `untrigger`, `deprecate`, and the legacy `import-md` migrator.
+- [Lessons graph reference](../../reference/lessons/) — the schema, recall ranking, validation codes, and the programmatic API.

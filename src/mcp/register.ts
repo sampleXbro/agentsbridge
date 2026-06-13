@@ -10,6 +10,7 @@ import { SKILL_TOOL_DESCRIPTORS } from './tool-tables/skill-tools.js';
 import { SETTINGS_TOOL_DESCRIPTORS } from './tool-tables/settings-tools.js';
 import { ORCHESTRATE_TOOL_DESCRIPTORS } from './tool-tables/orchestrate-tools.js';
 import { INSTALL_TOOL_DESCRIPTORS } from './tool-tables/install-tools.js';
+import { LESSONS_TOOL_DESCRIPTORS } from './tool-tables/lessons-tools.js';
 import type { ResourceDescriptor, ToolDescriptor } from './tool-tables/types.js';
 
 export type { ToolDescriptor, ResourceDescriptor } from './tool-tables/types.js';
@@ -26,6 +27,7 @@ export const TOOL_DESCRIPTORS: ToolDescriptor[] = [
   ...SETTINGS_TOOL_DESCRIPTORS,
   ...ORCHESTRATE_TOOL_DESCRIPTORS,
   ...INSTALL_TOOL_DESCRIPTORS,
+  ...LESSONS_TOOL_DESCRIPTORS,
 ];
 
 export const RESOURCE_DESCRIPTORS: ResourceDescriptor[] = TOOL_DESCRIPTORS.filter(

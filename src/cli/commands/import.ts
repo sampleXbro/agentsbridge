@@ -15,7 +15,7 @@ import { bootstrapPlugins } from '../../plugins/bootstrap-plugins.js';
 import { seedAgentsmeshMcpEntry } from './seed-mcp-entry.js';
 import type { ImportData } from '../command-result.js';
 import { scaffoldLessons } from '../../lessons/init.js';
-import { lessonsPaths } from '../../lessons/paths.js';
+import { LESSONS_CONTRACT_START } from '../../targets/projection/managed-blocks.js';
 
 export interface ImportCommandResult {
   exitCode: number;
@@ -32,15 +32,25 @@ function mapResults(
   }));
 }
 
-function ensureImportedLessonsSubsystem(rootBase: string, scope: 'project' | 'global'): void {
+/**
+ * The lessons ritual is canonical content wrapped in managed-block sentinels.
+ * When an imported `_root.md` carries the block (or a legacy raw heading),
+ * re-run the scaffolder so the subsystem is active (`lessons.json` present) and
+ * the block is normalized to the current wording — keeping the round-trip
+ * byte-stable across wording revisions.
+ */
+async function ensureImportedLessonsSubsystem(
+  rootBase: string,
+  scope: 'project' | 'global',
+): Promise<void> {
   if (scope !== 'project') return;
-  if (existsSync(lessonsPaths(rootBase).index)) return;
 
   const rootRule = join(rootBase, '.agentsmesh/rules/_root.md');
   if (!existsSync(rootRule)) return;
-  if (/^## Lessons \(/m.test(readFileSync(rootRule, 'utf8'))) {
-    scaffoldLessons(rootBase);
-  }
+  const body = readFileSync(rootRule, 'utf8');
+
+  const hasLessons = body.includes(LESSONS_CONTRACT_START) || /^## Lessons \(/m.test(body);
+  if (hasLessons) await scaffoldLessons(rootBase);
 }
 
 /**
@@ -67,7 +77,7 @@ export async function runImport(
     const results = await target.importFrom(context.rootBase, { scope });
     if (results.length > 0) {
       await seedAgentsmeshMcpEntry(context.rootBase);
-      ensureImportedLessonsSubsystem(context.rootBase, scope);
+      await ensureImportedLessonsSubsystem(context.rootBase, scope);
     }
     return {
       exitCode: 0,
@@ -101,7 +111,7 @@ export async function runImport(
   const results = await descriptor.generators.importFrom(context.rootBase, { scope });
   if (results.length > 0) {
     await seedAgentsmeshMcpEntry(context.rootBase);
-    ensureImportedLessonsSubsystem(context.rootBase, scope);
+    await ensureImportedLessonsSubsystem(context.rootBase, scope);
   }
   return {
     exitCode: 0,

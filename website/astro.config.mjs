@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import starlightLinksValidator from 'starlight-links-validator';
 import seoRobotsIntegration from './integrations/seo-robots.mjs';
 import { absoluteFromBase, fromBase, getSiteBase, getSiteOrigin, resolveDeploySite } from './site-url.mjs';
 
@@ -16,7 +17,7 @@ const websiteJsonLd = JSON.stringify({
   alternateName: 'AgentsMesh — AI Coding Config Sync',
   url: docsRoot,
   description:
-    'Open-source AI coding config sync CLI and TypeScript library. One canonical .agentsmesh directory generates native configs for Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf, Codex CLI, Continue, Cline, Kiro, Junie, Roo Code, and Antigravity.',
+    'Open-source AI coding config sync CLI and TypeScript library. One canonical .agentsmesh directory generates native configs for every major AI coding tool — and gives agents a shared lessons memory that learns from failures in your repo.',
   inLanguage: 'en-US',
   publisher: {
     '@type': 'Organization',
@@ -44,10 +45,11 @@ export default defineConfig({
   base: getSiteBase(),
   integrations: [
     starlight({
+      plugins: [starlightLinksValidator({ errorOnRelativeLinks: false })],
       title: 'AgentsMesh',
-      tagline: 'One config. Every AI coding tool. Zero drift.',
+      tagline: 'One config. Every AI coding tool. Agents that learn.',
       description:
-        'AgentsMesh is an open-source AI coding config sync CLI and TypeScript library for Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf, Codex CLI, and more.',
+        'AgentsMesh is an open-source AI coding config sync CLI and TypeScript library for Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf, Codex CLI, and more — with lessons, a shared agent memory that learns from your repo.',
       logo: {
         light: './src/assets/logo-light.svg',
         dark: './src/assets/logo-dark.svg',
@@ -125,8 +127,12 @@ export default defineConfig({
             { label: 'init', slug: 'cli/init' },
             { label: 'generate', slug: 'cli/generate' },
             { label: 'import', slug: 'cli/import' },
+            { label: 'lessons', slug: 'cli/lessons' },
             { label: 'convert', slug: 'cli/convert' },
             { label: 'install', slug: 'cli/install' },
+            { label: 'installs', slug: 'cli/installs' },
+            { label: 'uninstall', slug: 'cli/uninstall' },
+            { label: 'refresh', slug: 'cli/refresh' },
             { label: 'diff', slug: 'cli/diff' },
             { label: 'lint', slug: 'cli/lint' },
             { label: 'watch', slug: 'cli/watch' },
@@ -152,10 +158,12 @@ export default defineConfig({
           label: 'Guides',
           items: [
             { label: 'Adopting AgentsMesh', slug: 'guides/existing-project' },
+            { label: 'Teach Your Agents (Lessons)', slug: 'guides/lessons' },
             { label: 'Multi-Tool Teams', slug: 'guides/multi-tool-teams' },
             { label: 'Sharing Config Across Repos', slug: 'guides/sharing-config' },
             { label: 'CI Drift Detection', slug: 'guides/ci-drift-detection' },
             { label: 'Community Packs', slug: 'guides/community-packs' },
+            { label: 'Installing Skill Packs', slug: 'guides/installing-skill-packs' },
             { label: 'Building Plugins', slug: 'guides/building-plugins' },
             { label: 'Extending AgentsMesh', slug: 'guides/extending' },
             { label: 'Local Dev Overrides', slug: 'guides/local-overrides' },
@@ -165,10 +173,12 @@ export default defineConfig({
           label: 'Reference',
           items: [
             { label: 'Supported Tools Matrix', slug: 'reference/supported-tools' },
+            { label: 'Lessons Graph', slug: 'reference/lessons' },
             { label: 'Generation Pipeline', slug: 'reference/generation-pipeline' },
             { label: 'Managed Embedding', slug: 'reference/managed-embedding' },
             { label: 'Programmatic API', slug: 'reference/programmatic-api' },
             { label: 'MCP Server', slug: 'reference/mcp-server' },
+            { label: 'JSON Schemas', slug: 'reference/json-schemas' },
           ],
         },
       ],

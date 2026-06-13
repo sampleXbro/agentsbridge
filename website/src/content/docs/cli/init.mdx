@@ -20,7 +20,7 @@ agentsmesh init [flags]
 |------|-------------|
 | `--global` | Initialize canonical home config under `~/.agentsmesh/`. |
 | `--yes` | Auto-import all detected tool configs, then add starter examples only under empty canonical folders (skip categories import already filled). |
-| `--lessons` | Scaffold the project-level lessons recall + capture subsystem and append its procedural rule to `_root.md`. Cannot be combined with `--global`. |
+| `--lessons` | Scaffold the project-level lessons recall + capture subsystem: inject the always-on trigger into `_root.md`, seed the `lessons` skill manual under `skills/lessons/`, and wire a `PostToolUse` recall hook into `hooks.yaml` so [hook mode](../lessons/#hook-mode-deterministic-recall) is deterministic on hook-capable targets. Cannot be combined with `--global`. |
 
 ## What init creates
 
@@ -45,10 +45,11 @@ agentsmesh.local.yaml     # Local overrides (gitignored)
   permissions.yaml
   ignore
   lessons/                # Created only with --lessons
-    index.yaml
-    journal.md
-    topics/
-.gitignore                # Updated to exclude agentsmesh.local.yaml
+    lessons.json          # Canonical recall/capture graph
+  skills/
+    lessons/              # Tier-2 manual, seeded with --lessons
+      SKILL.md            # Full recall/capture operating manual
+.gitignore                # Updated: agentsmesh.local.yaml (+ lessons/recall-log.jsonl with --lessons)
 ```
 
 Files and directories prefixed with `_` are excluded from generation — they exist only as reference templates. The sole exception is `_root.md`, which is always included as the project-wide root rule.
@@ -65,7 +66,7 @@ Running `agentsmesh init --global` creates the same canonical structure under `~
 
 ## Auto-detection
 
-During init, AgentsMesh scans the project for existing AI tool configs from every [supported target](/reference/supported-tools/) — `.claude/`, `.cursor/`, `.github/copilot-instructions.md`, and the rest. For each one found, it prompts you to import.
+During init, AgentsMesh scans the project for existing AI tool configs from every [supported target](../../reference/supported-tools/) — `.claude/`, `.cursor/`, `.github/copilot-instructions.md`, and the rest. For each one found, it prompts you to import.
 
 ## Examples
 
@@ -92,15 +93,21 @@ agentsmesh init --lessons
 agentsmesh generate
 ```
 
-`--lessons` creates `.agentsmesh/lessons/index.yaml`,
-`.agentsmesh/lessons/journal.md`, and `.agentsmesh/lessons/topics/`, then
-appends a tool-agnostic recall/capture protocol to `.agentsmesh/rules/_root.md`.
-After `generate`, every enabled target receives the same root rule: agents read
-the index, load only matching topic files before edits or commands, and append
-failures to the journal.
+`--lessons` scaffolds `.agentsmesh/lessons/lessons.json` (the universal
+recall/capture graph) and sets up two-tier delivery: it injects a minimal,
+tool-agnostic **trigger** into `.agentsmesh/rules/_root.md` and seeds the full
+operating manual as a `lessons` skill (`.agentsmesh/skills/lessons/SKILL.md`).
+After `generate`, every enabled target receives the always-on trigger through
+its root rule (rules are native everywhere), while skill-capable targets also
+get the on-demand manual. Agents query the graph before edits/commands and
+capture failures after — the trigger is the binding contract, the skill is the
+reference.
 
 Run the same command in an already-initialized project to add lessons
-retroactively; init leaves existing config and canonical files untouched.
+retroactively; init leaves existing config and canonical files untouched. It
+also adds `.agentsmesh/lessons/recall-log.jsonl` to your project's `.gitignore`
+(idempotently), so the opt-in recall telemetry log
+(`AGENTSMESH_LESSONS_TELEMETRY=1`) never dirties your worktree.
 
 ### Initialize global config
 
@@ -110,7 +117,7 @@ agentsmesh import --global --from claude-code
 agentsmesh generate --global
 ```
 
-Global init uses `~/.agentsmesh/` as the canonical home-level source of truth. Choose targets in `agentsmesh.yaml` that support global mode (for example `claude-code`, `antigravity`, `codex-cli`, `cursor`); see the [supported tools matrix](../reference/supported-tools#global-mode).
+Global init uses `~/.agentsmesh/` as the canonical home-level source of truth. Choose targets in `agentsmesh.yaml` that support global mode (for example `claude-code`, `antigravity`, `codex-cli`, `cursor`); see the [supported tools matrix](../../reference/supported-tools#global-mode).
 
 ### New project (no existing configs)
 
@@ -130,7 +137,7 @@ agentsmesh generate
 
 ## Generated agentsmesh.yaml
 
-The starter config enables every [supported target](/reference/supported-tools/) (except `codex-cli`, whose root `AGENTS.md` would collide with the other AGENTS.md-first targets) plus all features:
+The starter config enables every [supported target](../../reference/supported-tools/) (except `codex-cli`, whose root `AGENTS.md` would collide with the other AGENTS.md-first targets) plus all features:
 
 ```yaml
 version: 1
@@ -161,7 +168,7 @@ Edit this to match your team's actual tool usage before running `generate`.
 
 ## MCP server
 
-`init` seeds the AgentsMesh self-serve MCP server entry into `.agentsmesh/mcp.json`. After running `agentsmesh generate`, the entry is projected into each target's native MCP config so AI agents can introspect and mutate canonical configuration directly. See [MCP Server](/reference/mcp-server/).
+`init` seeds the AgentsMesh self-serve MCP server entry into `.agentsmesh/mcp.json`. After running `agentsmesh generate`, the entry is projected into each target's native MCP config so AI agents can introspect and mutate canonical configuration directly. See [MCP Server](../../reference/mcp-server/).
 
 ## Next steps
 

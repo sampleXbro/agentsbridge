@@ -36,5 +36,8 @@ export async function acquireInstallLock(
   opts: LockOptions = {},
 ): Promise<LockRelease> {
   await mkdir(canonicalDir, { recursive: true });
-  return acquireProcessLock(join(canonicalDir, INSTALL_LOCK_FILENAME), opts);
+  return acquireProcessLock(join(canonicalDir, INSTALL_LOCK_FILENAME), {
+    ...opts,
+    label: 'install lock',
+  });
 }

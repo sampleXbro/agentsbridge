@@ -532,7 +532,6 @@ describe('generate: full canonical → all agents produce all supported outputs'
     });
     const paths = results.map((r) => r.path).sort();
     expect(paths).toEqual([
-      '.claude/CLAUDE.md',
       '.claude/agents/reviewer.md',
       '.claude/commands/review.md',
       '.claude/rules/typescript.md',
@@ -540,6 +539,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.claude/skills/qa/SKILL.md',
       '.claudeignore',
       '.mcp.json',
+      'CLAUDE.md',
     ]);
     const settingsResults = results.filter((r) => r.path === '.claude/settings.json');
     expect(settingsResults).toHaveLength(1);
@@ -752,7 +752,6 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.agents/skills/qa/SKILL.md',
       '.agents/workflows/review.md',
       '.aiignore',
-      '.claude/CLAUDE.md',
       '.claude/agents/reviewer.md',
       '.claude/commands/review.md',
       '.claude/rules/typescript.md',
@@ -812,6 +811,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.windsurf/skills/qa/SKILL.md',
       '.windsurf/workflows/review.md',
       'AGENTS.md',
+      'CLAUDE.md',
       'GEMINI.md',
     ]);
   });

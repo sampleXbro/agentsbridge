@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { delay, pollForWatch, watchStabilityDelayMs } from '../harness/watch.js';
 
 const TEST_DIR = join(tmpdir(), 'am-e2e-watch');
 const CLI_PATH = join(process.cwd(), 'dist', 'cli.js');
@@ -35,12 +36,11 @@ describe('watch', () => {
     });
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      // Poll for the initial regenerate instead of a fixed sleep.
+      await pollForWatch(() => {
+        expect(readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8')).toContain('Use TypeScript');
+      });
       // Claude output was generated; cursor output was NOT (--targets filtered).
-      expect(readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
-        'Use TypeScript',
-      );
-      const { existsSync } = await import('node:fs');
       expect(existsSync(join(TEST_DIR, '.cursor', 'rules'))).toBe(false);
     } finally {
       child.kill('SIGINT');
@@ -64,10 +64,13 @@ describe('watch', () => {
       stdout += String(chunk);
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-    expect(readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
-      'Use TypeScript',
-    );
+    // Initial regenerate happened exactly once…
+    await pollForWatch(() => {
+      expect(readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8')).toContain('Use TypeScript');
+      expect(stdout.match(/Regenerated\./g) ?? []).toHaveLength(1);
+    });
+    // …and the watcher stays idle (no spurious second regen) across a settle window.
+    await delay(watchStabilityDelayMs());
     expect(stdout.match(/Regenerated\./g) ?? []).toHaveLength(1);
 
     writeFileSync(
@@ -75,14 +78,13 @@ describe('watch', () => {
       '---\nroot: true\ndescription: "Updated"\n---\n# Rules\n- Use TypeScript\n- Prefer strict mode\n',
     );
 
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
+    // The source edit triggers exactly one more regenerate.
+    await pollForWatch(() => {
+      expect(stdout.match(/Regenerated\./g) ?? []).toHaveLength(2);
+      expect(readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8')).toContain('Prefer strict mode');
+    });
     expect(stdout).toContain('Watching');
     expect(stdout).toMatch(/Regenerated|Generated|created|updated/);
-    expect(stdout.match(/Regenerated\./g) ?? []).toHaveLength(2);
-    expect(readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
-      'Prefer strict mode',
-    );
 
     child.kill('SIGINT');
     await new Promise((resolve) => child.on('exit', resolve));

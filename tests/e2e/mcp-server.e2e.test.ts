@@ -6,96 +6,13 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
-import { tmpdir } from 'node:os';
-import { randomBytes } from 'node:crypto';
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-
-const CLI_PATH = resolve(process.cwd(), 'dist', 'cli.js');
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-interface McpServer {
-  client: Client;
-  dispose: () => Promise<void>;
-}
-
-interface TextContent {
-  type: 'text';
-  text: string;
-}
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-async function spawnMcpServer(cwd: string): Promise<McpServer> {
-  const transport = new StdioClientTransport({
-    command: 'node',
-    args: [CLI_PATH, 'mcp'],
-    cwd,
-    stderr: 'pipe',
-  });
-  const client = new Client({ name: 'e2e-test', version: '0.0.0' }, { capabilities: {} });
-  await client.connect(transport);
-  return {
-    client,
-    dispose: async () => {
-      try {
-        await client.close();
-      } catch {
-        /* server may already be dead */
-      }
-    },
-  };
-}
-
-function createInitedProject(): string {
-  const dir = join(tmpdir(), 'am-mcp-e2e-' + randomBytes(8).toString('hex'));
-  mkdirSync(dir, { recursive: true });
-
-  // Minimal agentsmesh.yaml
-  writeFileSync(
-    join(dir, 'agentsmesh.yaml'),
-    'version: 1\ntargets: [claude-code]\nfeatures: [rules, mcp]\n',
-  );
-
-  // .agentsmesh canonical directory
-  mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
-  writeFileSync(
-    join(dir, '.agentsmesh', 'rules', '_root.md'),
-    '---\nroot: true\ndescription: Root rule\n---\n# Root\nGlobal agent rules.\n',
-  );
-
-  // .agentsmesh/mcp.json with the seeded agentsmesh entry
-  writeFileSync(
-    join(dir, '.agentsmesh', 'mcp.json'),
-    JSON.stringify(
-      {
-        mcpServers: {
-          agentsmesh: {
-            type: 'stdio',
-            command: 'npx',
-            args: ['-y', 'agentsmesh', 'mcp'],
-          },
-        },
-      },
-      null,
-      2,
-    ) + '\n',
-  );
-
-  return dir;
-}
-
-function parseToolText(result: { content: unknown[] }): unknown {
-  const first = result.content[0] as TextContent;
-  return JSON.parse(first.text) as unknown;
-}
+import { rmSync } from 'node:fs';
+import {
+  createInitedProject,
+  parseToolText,
+  spawnMcpServer,
+  type McpServer,
+} from './helpers/mcp-client.js';
 
 // ---------------------------------------------------------------------------
 // Protocol baseline tests — read-only, shared server instance
@@ -120,10 +37,10 @@ describe('mcp-server protocol', () => {
     expect(info).toMatchObject({ name: 'agentsmesh-mcp' });
   });
 
-  it('lists exactly 45 tools with unique names', async () => {
+  it('lists exactly 50 tools with unique names', async () => {
     const { tools } = await server.client.listTools();
-    expect(tools).toHaveLength(45);
-    expect(new Set(tools.map((t) => t.name)).size).toBe(45);
+    expect(tools).toHaveLength(50);
+    expect(new Set(tools.map((t) => t.name)).size).toBe(50);
   });
 
   it('lists exactly 17 resources', async () => {

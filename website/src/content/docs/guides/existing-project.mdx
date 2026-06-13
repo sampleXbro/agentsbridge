@@ -10,7 +10,7 @@ If your project already has AI tool configs scattered across `.claude/`, `.curso
 
 ## Prerequisites
 
-- AgentsMesh installed — pick any method from the [installation guide](../getting-started/installation/): Homebrew, standalone binary, or `npm install -D agentsmesh` for Node.js projects.
+- AgentsMesh installed — pick any method from the [installation guide](../../getting-started/installation/): Homebrew, standalone binary, or `npm install -D agentsmesh` for Node.js projects.
 - The project already has tool configs in one or more tool directories.
 
 ## Migration steps
@@ -31,7 +31,7 @@ If your project already has AI tool configs scattered across `.claude/`, `.curso
 
    Starter example files are added only for canonical folders that stay empty after import (so imported commands or skills are not duplicated with `example` stubs).
 
-3. **Verify the canonical files**
+2. **Verify the canonical files**
 
    After import, review what was created:
 
@@ -47,7 +47,7 @@ If your project already has AI tool configs scattered across `.claude/`, `.curso
 
    Check that all your rules, commands, agents, and other config came through correctly.
 
-4. **Configure agentsmesh.yaml**
+3. **Configure agentsmesh.yaml**
 
    Set the targets your team actually uses:
 
@@ -68,7 +68,7 @@ If your project already has AI tool configs scattered across `.claude/`, `.curso
      - permissions
    ```
 
-5. **Regenerate for all targets**
+4. **Regenerate for all targets**
 
    ```bash
    agentsmesh generate
@@ -76,7 +76,7 @@ If your project already has AI tool configs scattered across `.claude/`, `.curso
 
    This writes fresh output to each tool directory based on the canonical sources.
 
-6. **Verify nothing unexpected changed**
+5. **Verify nothing unexpected changed**
 
    ```bash
    agentsmesh diff
@@ -84,7 +84,7 @@ If your project already has AI tool configs scattered across `.claude/`, `.curso
 
    The diff should show no changes (since the generated output should match what was imported). If there are differences, review them — they represent normalization that AgentsMesh applied during the round-trip.
 
-7. **Commit everything**
+6. **Commit everything**
 
    ```bash
    git add .agentsmesh/ agentsmesh.yaml .claude/ .cursor/

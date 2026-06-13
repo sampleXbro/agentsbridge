@@ -171,5 +171,15 @@ export const descriptor = {
   },
   buildImportPaths: buildClineImportPaths,
   detectionPaths: ['.clinerules', '.cline'],
+  nativeInstall: {
+    pickPaths: [
+      { prefix: CLINE_SKILLS_DIR, feature: 'skills', strategy: { kind: 'skillDir' } },
+      {
+        prefix: CLINE_WORKFLOWS_DIR,
+        feature: 'commands',
+        strategy: { kind: 'basename', suffix: '.md' },
+      },
+    ],
+  },
   conversionDefaults: { agentsToSkills: true },
 } satisfies TargetDescriptor;

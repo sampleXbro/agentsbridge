@@ -499,10 +499,14 @@ describe('rich-plugin — full generation with content verification', () => {
       version: number;
       scope: string;
       featureCount: number;
+      mcpServers?: Record<string, unknown>;
     };
     expect(settings.version).toBe(1);
     expect(settings.scope).toBe('project');
     expect(settings.featureCount).toBeGreaterThan(0);
+    // The engine threads the enabled-feature set into a PLUGIN's
+    // emitScopedSettings: mcp is enabled here, so the gated key is present.
+    expect(settings.mcpServers).toBeDefined();
   });
 
   it('exact file count matches expected output', async () => {
@@ -697,7 +701,7 @@ describe('rich-plugin — coexistence with built-in targets', () => {
 
     expect(await fileExists(join(tmpDir, '.rich', 'ROOT.md'))).toBe(true);
     expect(await fileExists(join(tmpDir, '.rich', 'agents', 'reviewer.md'))).toBe(true);
-    expect(await fileExists(join(tmpDir, '.claude', 'CLAUDE.md'))).toBe(true);
+    expect(await fileExists(join(tmpDir, 'CLAUDE.md'))).toBe(true);
   });
 });
 

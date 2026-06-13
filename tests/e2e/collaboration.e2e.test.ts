@@ -73,7 +73,7 @@ root: true
 
     const forced = await runCli('generate --force', dir);
     expect(forced.exitCode, forced.stderr).toBe(0);
-    expect(readFileSync(join(dir, '.claude', 'CLAUDE.md'), 'utf8')).toContain('Root changed');
+    expect(readFileSync(join(dir, 'CLAUDE.md'), 'utf8')).toContain('Root changed');
   });
 
   it('strategy=lock with empty lock_features does not block generate', async () => {

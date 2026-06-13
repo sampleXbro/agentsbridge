@@ -155,7 +155,8 @@ export const descriptor = {
       markAsRoot: true,
     },
   },
-  emitScopedSettings(canonical, _scope) {
+  emitScopedSettings(canonical, _scope, enabledFeatures) {
+    if (!enabledFeatures.has('mcp')) return [];
     if (!canonical.mcp || Object.keys(canonical.mcp.mcpServers).length === 0) return [];
     const contextServers: Record<string, unknown> = {};
     for (const [name, server] of Object.entries(canonical.mcp.mcpServers)) {

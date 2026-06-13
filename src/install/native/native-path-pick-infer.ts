@@ -1,21 +1,39 @@
 /**
  * Infer extends.pick from native files under pathInRepo (all install-supported targets).
+ *
+ * Target-specific behavior is declared on each descriptor's `nativeInstall`
+ * block (pick paths + custom resolvers) — this module carries no target-id
+ * literals (arch §3.1).
  */
 
 import { basename, join } from 'node:path';
 import type { ExtendPick } from '../../config/core/schema.js';
+import type { NativePickRule, NativePickStrategy } from '../../targets/catalog/target-descriptor.js';
+import { getDescriptor } from '../../targets/catalog/registry.js';
 import { readDirRecursive } from '../../utils/filesystem/fs.js';
-import { inferGeminiCommandNamesFromFiles } from './gemini-install-commands.js';
-import { GEMINI_COMMANDS_DIR } from '../../targets/gemini-cli/constants.js';
-import { CLINE_SKILLS_DIR, CLINE_WORKFLOWS_DIR } from '../../targets/cline/constants.js';
 import { skillNamesFromNativeSkillDir } from './native-skill-scan.js';
-import { inferCopilotPickFromPath } from './native-path-pick-infer-copilot.js';
 
-async function mdNames(dir: string, ext: string): Promise<string[]> {
-  const files = await readDirRecursive(dir);
-  const e = ext.toLowerCase();
+async function namesForStrategy(
+  scan: string,
+  posixPath: string,
+  rule: NativePickRule,
+  strategy: NativePickStrategy,
+): Promise<string[]> {
+  if (strategy.kind === 'skillDir') {
+    return skillNamesFromNativeSkillDir(scan);
+  }
+  if (strategy.kind === 'firstSegment') {
+    const rel = posixPath.slice(rule.prefix.length);
+    const first = rel.split('/').filter(Boolean)[0];
+    return first ? [first] : [];
+  }
+  const files = await readDirRecursive(scan);
+  const suffix = strategy.suffix;
+  const suffixLower = suffix.toLowerCase();
   return [
-    ...new Set(files.filter((f) => f.toLowerCase().endsWith(e)).map((f) => basename(f, ext))),
+    ...new Set(
+      files.filter((f) => f.toLowerCase().endsWith(suffixLower)).map((f) => basename(f, suffix)),
+    ),
   ].sort();
 }
 
@@ -24,123 +42,20 @@ export async function inferImplicitPickFromNativePath(
   pathInRepoPosix: string,
   target: string,
 ): Promise<ExtendPick> {
+  const nativeInstall = getDescriptor(target)?.nativeInstall;
+  if (!nativeInstall) return {};
+
   const posixPath = pathInRepoPosix.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
-  const scan = join(repoRoot, ...posixPath.split('/'));
 
-  if (target === 'gemini-cli') {
-    if (posixPath === GEMINI_COMMANDS_DIR || posixPath.startsWith(`${GEMINI_COMMANDS_DIR}/`)) {
-      const commands = await inferGeminiCommandNamesFromFiles(repoRoot, posixPath);
-      return commands.length ? { commands } : {};
-    }
-    return {};
+  if (nativeInstall.inferPick) {
+    return nativeInstall.inferPick(repoRoot, posixPath);
   }
 
-  if (target === 'claude-code') {
-    if (posixPath.startsWith('.claude/commands')) {
-      const commands = await mdNames(scan, '.md');
-      return commands.length ? { commands } : {};
-    }
-    if (posixPath.startsWith('.claude/rules')) {
-      const rules = await mdNames(scan, '.md');
-      return rules.length ? { rules } : {};
-    }
-    if (posixPath.startsWith('.claude/agents')) {
-      const agents = await mdNames(scan, '.md');
-      return agents.length ? { agents } : {};
-    }
-    if (posixPath.startsWith('.claude/skills/')) {
-      const rel = posixPath.replace(/^\.claude\/skills\/?/, '');
-      const first = rel.split('/').filter(Boolean)[0];
-      return first ? { skills: [first] } : {};
-    }
-    return {};
-  }
-
-  if (target === 'cursor') {
-    if (posixPath.startsWith('.cursor/rules')) {
-      const rules = await mdNames(scan, '.mdc');
-      return rules.length ? { rules } : {};
-    }
-    if (posixPath.startsWith('.cursor/commands')) {
-      const commands = await mdNames(scan, '.md');
-      return commands.length ? { commands } : {};
-    }
-    if (posixPath.startsWith('.cursor/agents')) {
-      const agents = await mdNames(scan, '.md');
-      return agents.length ? { agents } : {};
-    }
-    if (posixPath.startsWith('.cursor/skills')) {
-      const skills = await skillNamesFromNativeSkillDir(scan);
-      return skills.length ? { skills } : {};
-    }
-    return {};
-  }
-
-  if (target === 'copilot') {
-    return inferCopilotPickFromPath(repoRoot, posixPath);
-  }
-
-  if (target === 'windsurf' && posixPath.startsWith('.windsurf/rules')) {
-    const rules = await mdNames(scan, '.md');
-    return rules.length ? { rules } : {};
-  }
-
-  if (target === 'cline') {
-    if (posixPath.startsWith(CLINE_SKILLS_DIR)) {
-      const skills = await skillNamesFromNativeSkillDir(scan);
-      return skills.length ? { skills } : {};
-    }
-    if (posixPath.startsWith(CLINE_WORKFLOWS_DIR)) {
-      const commands = await mdNames(scan, '.md');
-      return commands.length ? { commands } : {};
-    }
-    return {};
-  }
-
-  if (target === 'continue') {
-    if (posixPath.startsWith('.continue/rules')) {
-      const rules = await mdNames(scan, '.md');
-      return rules.length ? { rules } : {};
-    }
-    if (posixPath.startsWith('.continue/prompts')) {
-      const commands = await mdNames(scan, '.md');
-      return commands.length ? { commands } : {};
-    }
-    if (posixPath.startsWith('.continue/skills')) {
-      const skills = await skillNamesFromNativeSkillDir(scan);
-      return skills.length ? { skills } : {};
-    }
-    return {};
-  }
-
-  if (target === 'junie') {
-    if (posixPath.startsWith('.junie/commands')) {
-      const commands = await mdNames(scan, '.md');
-      return commands.length ? { commands } : {};
-    }
-    if (posixPath.startsWith('.junie/rules')) {
-      const rules = await mdNames(scan, '.md');
-      return rules.length ? { rules } : {};
-    }
-    if (posixPath.startsWith('.junie/agents')) {
-      const agents = await mdNames(scan, '.md');
-      return agents.length ? { agents } : {};
-    }
-    if (posixPath.startsWith('.junie/skills')) {
-      const skills = await skillNamesFromNativeSkillDir(scan);
-      return skills.length ? { skills } : {};
-    }
-    return {};
-  }
-
-  if (target === 'codex-cli' && posixPath.startsWith('.codex')) {
-    const files = await readDirRecursive(scan);
-    const rules = [
-      ...new Set(
-        files.filter((f) => f.toLowerCase().endsWith('.md')).map((f) => basename(f, '.md')),
-      ),
-    ].sort();
-    return rules.length ? { rules } : {};
+  for (const rule of nativeInstall.pickPaths ?? []) {
+    if (posixPath !== rule.prefix && !posixPath.startsWith(rule.prefix)) continue;
+    const scan = join(repoRoot, ...posixPath.split('/'));
+    const names = await namesForStrategy(scan, posixPath, rule, rule.strategy);
+    return names.length ? { [rule.feature]: names } : {};
   }
 
   return {};

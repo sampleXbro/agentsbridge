@@ -29,6 +29,35 @@ describe('renderGenerate', () => {
     expect(output.stdout()).toContain('Generated files are in sync.');
   });
 
+  it('uses the default empty cause when no emptyReason is set', () => {
+    renderGenerate({
+      exitCode: 0,
+      data: {
+        scope: 'global',
+        mode: 'generate',
+        files: [],
+        summary: { created: 0, updated: 0, unchanged: 0 },
+      },
+    });
+    expect(output.stdout()).toContain('no root rule or rules feature disabled');
+    expect(output.stdout()).not.toContain('no global mode');
+  });
+
+  it('reports the no-global-support cause when emptyReason is set', () => {
+    renderGenerate({
+      exitCode: 0,
+      data: {
+        scope: 'global',
+        mode: 'generate',
+        files: [],
+        summary: { created: 0, updated: 0, unchanged: 0 },
+        emptyReason: 'no-global-support',
+      },
+    });
+    expect(output.stdout()).toContain('target has no global mode — try without --global');
+    expect(output.stdout()).not.toContain('no root rule or rules feature disabled');
+  });
+
   it('prints check success when all files are unchanged', () => {
     renderGenerate({
       exitCode: 0,

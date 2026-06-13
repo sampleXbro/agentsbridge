@@ -1,10 +1,10 @@
 ---
 draft: false
-title: AgentsMesh — AI Coding Config Sync for Every Tool
-description: Open-source AI coding config sync for every major AI coding tool. One .agentsmesh source for rules, MCP servers, hooks, skills, agents, project/global config, CI drift checks, packs, plugins, and typed automation.
+title: Sync AI Coding Config and Teach Your Agents
+description: One .agentsmesh directory syncs rules, MCP servers, and skills to every AI coding tool — and gives your agents a memory that learns from your repo.
 template: splash
 hero:
-  tagline: Sync Cursor rules, Claude Code instructions, Copilot prompts, MCP servers, hooks, skills, agents, and permissions from one .agentsmesh directory. Import existing configs, generate native files, and keep project or global setup drift-free.
+  tagline: Write your AI coding rules, commands, skills, MCP servers, and permissions once — generate native config for every tool. Then let your agents learn from your repo with lessons.
   image:
     dark: ../../assets/logo-dark.svg
     light: ../../assets/logo-light.svg
@@ -13,6 +13,10 @@ hero:
       link: ./getting-started/installation/
       icon: right-arrow
       variant: primary
+    - text: Teach Your Agents
+      link: ./guides/lessons/
+      icon: open-book
+      variant: secondary
     - text: Import Existing Config
       link: ./guides/existing-project/
       icon: document
@@ -26,14 +30,6 @@ hero:
 import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
 import CatalogExplorer from '../../components/catalog-explorer/CatalogExplorer.astro';
 import SoftwareApplicationJsonLd from '../../components/SoftwareApplicationJsonLd.astro';
-
-<section class="am-homepage-catalog" aria-labelledby="community-catalog">
-  <h2 id="community-catalog">Community catalog</h2>
-
-  <div class="am-homepage-catalog-intro">Install shared skills, agents, and commands from GitHub, GitLab, git URLs, or local paths with <code>agentsmesh install &lt;source&gt;</code>; list inventory with <code>agentsmesh installs list</code>; remove with <code>agentsmesh uninstall &lt;name&gt;</code>. Packs live in <code>.agentsmesh/packs/</code>, are tracked in <code>.agentsmesh/installs.yaml</code>, and merge with local canonical config during generation. The classifier auto-detects Anthropic-style skill packs and imports skills, agents, references, and per-target commands in one command — see the <a href="./guides/installing-skill-packs/">skill-pack guide</a>.</div>
-
-  <CatalogExplorer />
-</section>
 
 <div style="text-align: center; margin: 2rem 0 3rem;">
   <span style="font-size: 1.1rem; color: var(--sl-color-gray-5);">
@@ -49,11 +45,34 @@ Every AI coding assistant ships a different configuration surface. Claude Code r
 
 AgentsMesh turns that spread into one editable source of truth. Put the real project instructions in `.agentsmesh/`, then generate native files for every enabled tool. Import goes the other direction, so existing tool configs can be adopted without starting from scratch.
 
+## Your agents learn from your repo
+
+Lessons give your AI coding agents a **memory of past mistakes**. When something goes wrong — a failing test, a code review comment, a wrong assumption — the agent captures a short rule. Before it touches the same files again, it recalls that rule automatically. Same mistake, never twice — in any tool, for every teammate, because the memory is one git-tracked file the whole team shares.
+
+```bash
+# One-time setup
+agentsmesh init --lessons && agentsmesh generate
+
+# After a failure, the agent captures the rule:
+agentsmesh lessons add "Normalize CLI display paths to forward slashes" \
+  --topic windows-paths --new-topic --topic-summary "Cross-platform paths" \
+  --trigger-file "src/cli/**/*.ts"
+
+# Before the next edit, it recalls the rule automatically:
+agentsmesh lessons query --file src/cli/foo.ts
+#   -> Normalize CLI display paths to forward slashes
+```
+
+Start with the [lessons guide](./guides/lessons/) or jump to the [`agentsmesh lessons` CLI reference](./cli/lessons/).
+
 ## Most wanted workflows
 
 <CardGrid>
   <Card title="One .agentsmesh source" icon="pencil">
     Manage AI coding rules, prompts, commands, agents, skills, MCP servers, hooks, ignore files, and permissions from one canonical directory.
+  </Card>
+  <Card title="Agents that learn from mistakes" icon="open-book">
+    Capture a lesson after every failure, recall it before every edit. One shared memory works in every tool and helps every teammate. [Teach your agents →](./guides/lessons/)
   </Card>
   <Card title="Bidirectional migration" icon="sync">
     Import existing Claude Code, Cursor, Copilot, Gemini CLI, Windsurf, Codex CLI, and other configs, then generate them back out with round-trip metadata.
@@ -85,6 +104,7 @@ AgentsMesh turns that spread into one editable source of truth. Put the real pro
   hooks.yaml
   permissions.yaml
   ignore
+  lessons/lessons.json
 ```
 
 ```bash
@@ -127,6 +147,13 @@ agentsmesh import --from cursor
 agentsmesh generate
 ```
 
+### Teach your agents (optional)
+
+```bash
+agentsmesh init --lessons
+agentsmesh generate
+```
+
 ### Personal global config
 
 ```bash
@@ -136,6 +163,14 @@ agentsmesh generate --global
 ```
 
 The CLI is available as both `agentsmesh` and the shorter alias `amsh`.
+
+<section class="am-homepage-catalog" aria-labelledby="community-catalog">
+  <h2 id="community-catalog">Community catalog</h2>
+
+  <div class="am-homepage-catalog-intro">Install shared skills, agents, and commands from GitHub, GitLab, git URLs, or local paths with <code>agentsmesh install &lt;source&gt;</code>; list inventory with <code>agentsmesh installs list</code>; remove with <code>agentsmesh uninstall &lt;name&gt;</code>. Packs live in <code>.agentsmesh/packs/</code>, are tracked in <code>.agentsmesh/installs.yaml</code>, and merge with local canonical config during generation. The classifier auto-detects Anthropic-style skill packs and imports skills, agents, references, and per-target commands in one command — see the <a href="./guides/installing-skill-packs/">skill-pack guide</a>.</div>
+
+  <CatalogExplorer />
+</section>
 
 ## Tool coverage and feature matrix
 

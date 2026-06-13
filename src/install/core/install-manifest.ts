@@ -39,6 +39,14 @@ export const installManifestEntrySchema = z.object({
   as: manualInstallAsSchema.optional(),
   refreshed_at: z.string().min(1).optional(),
   original_ref: z.string().optional(),
+  /**
+   * Elevated artifacts (hooks/permissions/mcp) the user explicitly consented
+   * to at install time via `--accept-*`. Persisted so the sync/refresh bridges
+   * can re-apply that consent automatically when they replay the install —
+   * otherwise a deterministic re-clone would silently strip the artifacts and
+   * desync the pack contents from the recorded `features`.
+   */
+  accepted_elevated: z.array(z.enum(['hooks', 'permissions', 'mcp'])).min(1).optional(),
 });
 
 export const installManifestSchema = z.object({
@@ -132,6 +140,7 @@ export function buildInstallManifestEntry(args: {
   as?: ManualInstallAs;
   refreshed_at?: string;
   originalRef?: string;
+  acceptedElevated?: InstallManifestEntry['accepted_elevated'];
 }): InstallManifestEntry {
   return normalizePersistedInstallPaths(
     installManifestEntrySchema.parse({
@@ -147,6 +156,7 @@ export function buildInstallManifestEntry(args: {
       as: args.as,
       refreshed_at: args.refreshed_at,
       original_ref: args.originalRef,
+      accepted_elevated: args.acceptedElevated,
     }),
   );
 }

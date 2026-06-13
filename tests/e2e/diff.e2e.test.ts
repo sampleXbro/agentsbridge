@@ -26,7 +26,7 @@ describe('diff', () => {
     dir = createTestProject('canonical-full');
     await runCli('generate', dir);
     mkdirSync(join(dir, '.claude'), { recursive: true });
-    writeFileSync(join(dir, '.claude', 'CLAUDE.md'), '# Modified content\n');
+    writeFileSync(join(dir, 'CLAUDE.md'), '# Modified content\n');
     const r = await runCli('diff', dir);
     expect(r.exitCode).toBe(0); // diff command always exits 0
     expect(r.stdout + r.stderr).toMatch(/CLAUDE|diff|Modified|[-+]/);
@@ -59,7 +59,7 @@ describe('diff', () => {
     dir = createTestProject('canonical-full');
     await runCli('generate', dir);
     mkdirSync(join(dir, '.claude'), { recursive: true });
-    writeFileSync(join(dir, '.claude', 'CLAUDE.md'), '# Modified for claude only\n');
+    writeFileSync(join(dir, 'CLAUDE.md'), '# Modified for claude only\n');
     const r = await runCli('diff --targets claude-code', dir);
     expect(r.exitCode).toBe(0);
     expect(r.stdout + r.stderr).toMatch(/claude|CLAUDE|Modified/i);

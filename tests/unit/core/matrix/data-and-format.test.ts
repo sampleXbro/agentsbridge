@@ -9,11 +9,14 @@ import { formatMatrix } from '../../../../src/core/matrix/format-table.js';
 import type { CompatibilityRow } from '../../../../src/core/types.js';
 
 const originalNoColor = process.env.NO_COLOR;
+const originalForceColor = process.env.FORCE_COLOR;
 const ANSI_ESCAPE_PATTERN = new RegExp(String.raw`\u001B\[`);
 
 afterEach(() => {
   if (originalNoColor === undefined) delete process.env.NO_COLOR;
   else process.env.NO_COLOR = originalNoColor;
+  if (originalForceColor === undefined) delete process.env.FORCE_COLOR;
+  else process.env.FORCE_COLOR = originalForceColor;
 });
 
 describe('SUPPORT_MATRIX', () => {
@@ -43,8 +46,38 @@ describe('SUPPORT_MATRIX', () => {
 });
 
 describe('SUPPORT_MATRIX_GLOBAL', () => {
-  it('contains all features', () => {
-    expect(Object.keys(SUPPORT_MATRIX_GLOBAL)).toContain('rules');
+  const ALL_FEATURES = [
+    'rules',
+    'additionalRules',
+    'commands',
+    'agents',
+    'skills',
+    'mcp',
+    'hooks',
+    'ignore',
+    'permissions',
+  ] as const;
+
+  it('contains exactly the standard feature ids', () => {
+    expect(Object.keys(SUPPORT_MATRIX_GLOBAL).sort()).toEqual([...ALL_FEATURES].sort());
+  });
+
+  it('jules reports none for every feature (cloud-only, no globalSupport)', () => {
+    for (const feature of ALL_FEATURES) {
+      expect(SUPPORT_MATRIX_GLOBAL[feature].jules.level).toBe('none');
+    }
+  });
+
+  it('replit-agent reports none for every feature (cloud-only, no globalSupport)', () => {
+    for (const feature of ALL_FEATURES) {
+      expect(SUPPORT_MATRIX_GLOBAL[feature]['replit-agent'].level).toBe('none');
+    }
+  });
+
+  it('claude-code reports native for every feature in global scope (unaffected)', () => {
+    for (const feature of ALL_FEATURES) {
+      expect(SUPPORT_MATRIX_GLOBAL[feature]['claude-code'].level).toBe('native');
+    }
   });
 });
 
@@ -55,16 +88,24 @@ describe('coloredSymbol', () => {
     expect(coloredSymbol('none')).toBe(LEVEL_SYMBOL.none);
   });
 
-  it('returns ANSI-wrapped symbol when NO_COLOR is unset', () => {
+  it('returns ANSI-wrapped symbol when color is forced', () => {
     delete process.env.NO_COLOR;
+    process.env.FORCE_COLOR = '1';
     expect(coloredSymbol('native')).toContain(LEVEL_SYMBOL.native);
     expect(coloredSymbol('native')).toMatch(ANSI_ESCAPE_PATTERN);
   });
 
-  it('returns plain symbol when NO_COLOR is empty string', () => {
+  it('treats an empty NO_COLOR as "not disabled" (still colors when forced)', () => {
     process.env.NO_COLOR = '';
+    process.env.FORCE_COLOR = '1';
     expect(coloredSymbol('partial')).toContain(LEVEL_SYMBOL.partial);
     expect(coloredSymbol('partial')).toMatch(ANSI_ESCAPE_PATTERN);
+  });
+
+  it('returns a plain symbol on a non-TTY when NO_COLOR is unset', () => {
+    delete process.env.NO_COLOR;
+    delete process.env.FORCE_COLOR;
+    expect(coloredSymbol('native')).toBe(LEVEL_SYMBOL.native);
   });
 });
 
@@ -90,10 +131,19 @@ describe('formatMatrix', () => {
     expect(out).toContain('Legend:');
   });
 
-  it('renders ANSI codes when NO_COLOR not set', () => {
+  it('renders ANSI codes when color is forced', () => {
     delete process.env.NO_COLOR;
+    process.env.FORCE_COLOR = '1';
     const out = formatMatrix([MAKE_ROW('rules', { 'claude-code': 'native' })], ['claude-code']);
     expect(out).toMatch(ANSI_ESCAPE_PATTERN);
+  });
+
+  it('renders plain symbols on a non-TTY when NO_COLOR is unset', () => {
+    delete process.env.NO_COLOR;
+    delete process.env.FORCE_COLOR;
+    const out = formatMatrix([MAKE_ROW('rules', { 'claude-code': 'native' })], ['claude-code']);
+    expect(out).not.toMatch(ANSI_ESCAPE_PATTERN);
+    expect(out).toContain(LEVEL_SYMBOL.native);
   });
 
   it('uses "none" when target is missing in support map', () => {

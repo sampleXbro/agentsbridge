@@ -1,12 +1,13 @@
 import type { CompatibilityRow } from '../types.js';
 import { matrixColumnLabel } from '../../targets/catalog/matrix-column-labels.js';
 import { LEVEL_SYMBOL, coloredSymbol } from './data.js';
+import { colorEnabled } from '../../utils/output/color.js';
 
 /**
  * Format compatibility matrix as ASCII table with colors.
  */
 export function formatMatrix(rows: CompatibilityRow[], targets: string[]): string {
-  const noColor = process.env.NO_COLOR !== undefined && process.env.NO_COLOR !== '';
+  const useColor = colorEnabled();
 
   const colors = {
     cyan: '\x1b[36m',
@@ -20,7 +21,7 @@ export function formatMatrix(rows: CompatibilityRow[], targets: string[]): strin
   };
 
   const c = (code: string, text: string): string =>
-    noColor ? text : `${code}${text}${colors.reset}`;
+    useColor ? `${code}${text}${colors.reset}` : text;
 
   const visibleLength = (s: string): number => {
     // eslint-disable-next-line no-control-regex -- intentional match on ANSI escape byte
@@ -59,7 +60,7 @@ export function formatMatrix(rows: CompatibilityRow[], targets: string[]): strin
     const cells = [padWithColor(c(colors.cyan, r.feature), featWidth)];
     for (const t of targets) {
       const level = r.support[t] ?? 'none';
-      const sym = noColor ? LEVEL_SYMBOL[level] : coloredSymbol(level);
+      const sym = useColor ? coloredSymbol(level) : LEVEL_SYMBOL[level];
       cells.push(padWithColor(`  ${sym}  `, colWidth));
     }
     return c(colors.dim, '│') + cells.join(c(colors.dim, '│')) + c(colors.dim, '│');

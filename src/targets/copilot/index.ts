@@ -29,6 +29,7 @@ import {
   COPILOT_CANONICAL_RULES_DIR,
 } from './constants.js';
 import { importFromCopilot } from './importer.js';
+import { inferCopilotPickFromPath } from '../../install/native/native-path-pick-infer-copilot.js';
 import {
   copilotAgentMapper,
   copilotCommandMapper,
@@ -261,4 +262,5 @@ export const descriptor = {
     '.github/agents',
     '.github/hooks',
   ],
+  nativeInstall: { inferPick: inferCopilotPickFromPath },
 } satisfies TargetDescriptor;

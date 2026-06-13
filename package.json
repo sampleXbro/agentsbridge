@@ -74,8 +74,6 @@
     "schemas:generate": "tsx scripts/generate-schemas.ts",
     "matrix:generate": "tsx scripts/render-support-matrix.ts",
     "matrix:verify": "tsx scripts/render-support-matrix.ts --verify",
-    "distill": "tsx scripts/distill-lessons.ts",
-    "distill:apply": "tsx scripts/distill-lessons.ts --apply",
     "changeset": "changeset",
     "version": "changeset version",
     "release": "pnpm build && changeset publish",

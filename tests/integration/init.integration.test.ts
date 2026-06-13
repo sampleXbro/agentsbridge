@@ -41,10 +41,10 @@ describe('agentsmesh init (integration)', () => {
     expect(() => execSync(`node ${CLI_PATH} init`, { cwd: TEST_DIR })).toThrow();
   });
 
-  it('init then generate produces .claude/CLAUDE.md', () => {
+  it('init then generate produces CLAUDE.md', () => {
     execSync(`node ${CLI_PATH} init`, { cwd: TEST_DIR });
     execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
-    const claude = readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8');
+    const claude = readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8');
     expect(claude).toContain('Project Rules');
     expect(claude).toContain('synced to all configured tools');
   });

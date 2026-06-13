@@ -59,6 +59,21 @@ describe('acquireInstallLock', () => {
     }
   });
 
+  it('reports "install lock" — not "generate lock" — when contended', async () => {
+    const first = await acquireInstallLock(canonicalDir);
+    try {
+      const err = await acquireInstallLock(canonicalDir, { retries: 0, retryDelayMs: 1 }).catch(
+        (e: unknown) => e,
+      );
+      expect(err).toBeInstanceOf(LockAcquisitionError);
+      expect((err as LockAcquisitionError).message).toContain('install lock');
+      expect((err as LockAcquisitionError).message).not.toContain('generate lock');
+      expect((err as LockAcquisitionError).label).toBe('install lock');
+    } finally {
+      await first();
+    }
+  });
+
   it('re-acquires after release', async () => {
     const first = await acquireInstallLock(canonicalDir);
     await first();

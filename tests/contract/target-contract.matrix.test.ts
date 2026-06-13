@@ -15,7 +15,7 @@ import { TARGET_CONTRACTS, TARGET_SPECIFIC_PREFIXES } from './contracts/index.js
 import { MATRIX_CONFIG } from './matrix-config.js';
 import { assertParsableGeneratedFile } from './parse-generated-shape.js';
 import { canonicalPathsOnDisk, generatedPathsOnDisk } from './matrix-helpers.js';
-import { LESSONS_PROCEDURAL_RULE } from '../../src/lessons/paths.js';
+import { scaffoldLessons } from '../../src/lessons/init.js';
 
 let dir = '';
 
@@ -31,19 +31,17 @@ function expectNoTargetSpecificPrefixes(content: string): void {
   }
 }
 
-function writeLessonsRoot(dir: string): void {
-  writeFileSync(
-    join(dir, '.agentsmesh/rules/_root.md'),
-    `---\nroot: true\ndescription: ""\n---\n\n# Operational Guidelines\n\n${LESSONS_PROCEDURAL_RULE}\n`,
-    'utf8',
-  );
+/** Activate the lessons subsystem: scaffold injects the ritual block into canonical _root.md. */
+async function activateLessons(dir: string): Promise<void> {
+  await scaffoldLessons(dir);
 }
 
 function expectLessonsRitual(content: string): void {
+  expect(content).toContain('<!-- agentsmesh:lessons-contract:start -->');
   expect(content).toContain('**Recall');
   expect(content).toContain('**Capture');
-  expect(content).toContain('.agentsmesh/lessons/index.yaml');
-  expect(content).toContain('.agentsmesh/lessons/journal.md');
+  expect(content).toContain('agentsmesh lessons query');
+  expect(content).toContain('agentsmesh lessons add');
 }
 
 function readGeneratedLessonsRoot(dir: string, target: BuiltinTargetId): string {
@@ -53,7 +51,7 @@ function readGeneratedLessonsRoot(dir: string, target: BuiltinTargetId): string 
     const path = join(dir, rel);
     if (!existsSync(path)) continue;
     const content = readFileSync(path, 'utf-8');
-    if (content.includes('.agentsmesh/lessons/index.yaml')) return content;
+    if (content.includes('agentsmesh lessons query')) return content;
   }
   throw new Error(`${target} did not project the lessons ritual into any generated root file`);
 }
@@ -104,10 +102,12 @@ describe('target contract matrix (in-process)', () => {
 targets: [${target}]
 features: [rules]
 `);
-    writeLessonsRoot(dir);
+    await activateLessons(dir);
 
     expect((await runGenerate({ targets: target }, dir, { printMatrix: false })).exitCode).toBe(0);
-    expectLessonsRitual(readGeneratedLessonsRoot(dir, target));
+    const generated = readGeneratedLessonsRoot(dir, target);
+    expectLessonsRitual(generated);
+    expect(generated).toContain('<!-- agentsmesh:lessons-contract:start -->');
   });
 
   it.each(TARGET_IDS)('import round-trip paths for %s', async (target) => {
@@ -128,17 +128,18 @@ features: [rules]
     }
   });
 
-  it.each(TARGET_IDS)('import preserves the lessons ritual for %s', async (target) => {
+  it.each(TARGET_IDS)('import preserves the lessons ritual block for %s', async (target) => {
     dir = createCanonicalProject(`version: 1
 targets: [${target}]
 features: [rules]
 `);
-    writeLessonsRoot(dir);
+    await activateLessons(dir);
     expect((await runGenerate({ targets: target }, dir, { printMatrix: false })).exitCode).toBe(0);
     rmSync(join(dir, '.agentsmesh'), { recursive: true, force: true });
 
     await getTargetCatalogEntry(target).importFrom(dir, { scope: 'project' });
 
+    // The ritual is canonical content wrapped in sentinels — it round-trips back into _root.md.
     expectLessonsRitual(readFileSync(join(dir, '.agentsmesh/rules/_root.md'), 'utf-8'));
   });
 

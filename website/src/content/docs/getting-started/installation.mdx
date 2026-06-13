@@ -88,7 +88,7 @@ Every canonical config file ships with a generated JSON Schema, so VS Code, JetB
 | `.agentsmesh/packs/<name>/pack.yaml` | `schemas/pack.json` | `install` |
 | `.agentsmesh/packs/<name>/.agentsmesh-install-manifest.json` | `schemas/install-manifest.json` | `install` |
 
-All schemas resolve via the published `https://unpkg.com/agentsmesh@<version>/schemas/<name>.json` URLs (no extension required when AgentsMesh is in `node_modules/`). VS Code needs the [Red Hat YAML extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml); JetBrains IDEs honor the directive out of the box. See the [JSON Schemas reference](../reference/json-schemas/) for the full breakdown, CI validation examples, and SchemaStore plans.
+All schemas resolve via the published `https://unpkg.com/agentsmesh@<version>/schemas/<name>.json` URLs (no extension required when AgentsMesh is in `node_modules/`). VS Code needs the [Red Hat YAML extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml); JetBrains IDEs honor the directive out of the box. See the [JSON Schemas reference](../../reference/json-schemas/) for the full breakdown, CI validation examples, and SchemaStore plans.
 
 ## Use as a TypeScript / Node.js library
 
@@ -98,7 +98,7 @@ In addition to the CLI, AgentsMesh exports a typed programmatic API for scripts,
 import { generate, importFrom, loadCanonical } from 'agentsmesh';
 ```
 
-See the [programmatic API reference](../reference/programmatic-api/) for the full entrypoint table.
+See the [programmatic API reference](../../reference/programmatic-api/) for the full entrypoint table.
 
 ## Add scripts to package.json
 

@@ -1,0 +1,199 @@
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import {
+  NoTriggerError,
+  RuleTooLongError,
+  UnknownTopicError,
+  UnrecallableLessonError,
+} from '../../lessons/add.js';
+import { captureLesson } from '../../lessons/recall.js';
+import { deprecateLesson } from '../../lessons/deprecate.js';
+import { ancestorLessonsProjectDir, lessonsActivated } from '../../lessons/paths.js';
+import { mergeLessons } from '../../lessons/merge.js';
+import { mutateLessonsGraph } from '../../lessons/mutate.js';
+import { stripMarkersInGraph } from '../../lessons/strip-markers.js';
+import { untriggerLesson } from '../../lessons/untrigger.js';
+import { errorResult, listFlag, repeatedFlag, stringFlag, type LessonsFlags } from './lessons-helpers.js';
+import { lessonsAddHint } from './lessons-usage.js';
+import type {
+  LessonsAddData,
+  LessonsCommandResult,
+  LessonsMergeData,
+  LessonsStripMarkersData,
+  LessonsUntriggerData,
+} from './lessons-types.js';
+
+function errMessage(err: unknown): string {
+  const raw = err instanceof Error ? err.message : String(err);
+  // Strip internal function-name prefixes (the transactional write path tags its
+  // errors) so the agent sees a clean, actionable message.
+  return raw.replace(/^(mutateLessonsGraph|mergeLessons):\s*/, '');
+}
+
+export async function doAdd(
+  flags: LessonsFlags,
+  positionalRule: string | undefined,
+  projectRoot: string,
+): Promise<LessonsCommandResult> {
+  // The BLOCKING ritual in CLAUDE.md / README documents `add "<rule>" --topic`,
+  // so accept the rule positionally; an explicit --rule flag takes precedence.
+  const positional =
+    positionalRule !== undefined && positionalRule.length > 0 ? positionalRule : null;
+  const rule = stringFlag(flags, 'rule') ?? positional;
+  const topic = stringFlag(flags, 'topic');
+  if (rule === null) {
+    return errorResult(
+      'add',
+      `Missing rule — pass it positionally (\`add "<rule>"\`) or via --rule.${lessonsAddHint()}`,
+      2,
+    );
+  }
+  if (topic === null) {
+    return errorResult(
+      'add',
+      `Missing --topic — every lesson needs a topic id (run \`agentsmesh lessons topics\` to list them, or pass --new-topic --topic-summary "..." for a new area).${lessonsAddHint()}`,
+      2,
+    );
+  }
+
+  // Flag a capture about to create a stray graph in a subdirectory of a real
+  // project (computed before capture, which would create .agentsmesh here).
+  const ancestorLessons =
+    existsSync(join(projectRoot, '.agentsmesh')) ? null : ancestorLessonsProjectDir(projectRoot);
+  const locationNote =
+    ancestorLessons !== null
+      ? `Capturing into a new .agentsmesh here — a lessons project already exists at ${ancestorLessons.replaceAll('\\', '/')}. If that was unintended, cd into it and re-run.`
+      : undefined;
+  // When lessons was never activated (no `init --lessons`), a bare `add` writes
+  // only the graph — no recall hook, ritual, or skill — so the capture lands but
+  // no agent is ever told to recall it. Warn so the half-wired state isn't silent.
+  const activationNote = lessonsActivated(projectRoot)
+    ? undefined
+    : 'Captured — but recall is not wired into your AI tools yet (no `init --lessons`). Run `agentsmesh init --lessons`, then `agentsmesh generate`, so agents recall this automatically.';
+
+  try {
+    // Route through captureLesson (not addLesson directly) so capture telemetry
+    // records EVERY shell-driven add — the MCP path already routes here, and a
+    // direct addLesson call would leave CLI captures invisible to `lessons stats`.
+    const result = await captureLesson(
+      projectRoot,
+      {
+        rule,
+        topic,
+        triggers: {
+          files: repeatedFlag(flags, 'trigger-file'),
+          commands: repeatedFlag(flags, 'trigger-cmd'),
+          keywords: repeatedFlag(flags, 'trigger-kw'),
+        },
+        evidence: listFlag(flags, 'evidence'),
+        rationale: stringFlag(flags, 'rationale') ?? undefined,
+      },
+      {
+        allowNewTopic: flags['new-topic'] === true,
+        topicSummary: stringFlag(flags, 'topic-summary') ?? undefined,
+      },
+    );
+    const data: LessonsAddData = {
+      ...result,
+      ...(locationNote ? { locationNote } : {}),
+      ...(activationNote ? { activationNote } : {}),
+    };
+    return { subcommand: 'add', exitCode: 0, data };
+  } catch (err) {
+    if (err instanceof UnknownTopicError) {
+      return errorResult(
+        'add',
+        `Unknown topic: ${err.topic}. Pass --new-topic --topic-summary "..." to create it.`,
+        1,
+      );
+    }
+    if (
+      err instanceof NoTriggerError ||
+      err instanceof UnrecallableLessonError ||
+      err instanceof RuleTooLongError
+    ) {
+      return errorResult('add', `${err.message}${lessonsAddHint()}`, 2);
+    }
+    return errorResult('add', errMessage(err), 1);
+  }
+}
+
+export async function doDeprecate(
+  flags: LessonsFlags,
+  lessonId: string | undefined,
+  projectRoot: string,
+): Promise<LessonsCommandResult> {
+  if (lessonId === undefined || lessonId === '') {
+    return errorResult(
+      'deprecate',
+      'Usage: agentsmesh lessons deprecate <id> [--superseded-by <id>]',
+      2,
+    );
+  }
+  const supersededBy = stringFlag(flags, 'superseded-by');
+  try {
+    const { id, supersededBy: by } = await deprecateLesson(projectRoot, lessonId, supersededBy);
+    return { subcommand: 'deprecate', exitCode: 0, data: { id, supersededBy: by } };
+  } catch (err) {
+    const message = errMessage(err);
+    // Point an unknown-id miss at the listing commands instead of dead-ending.
+    const hint = message.startsWith('Unknown lesson')
+      ? ' Run `agentsmesh lessons journal` to list lesson ids (or `lessons query --ids` to see what recalled).'
+      : '';
+    return errorResult('deprecate', `${message}${hint}`, 1);
+  }
+}
+
+export async function doUntrigger(
+  lessonId: string | undefined,
+  triggerId: string | undefined,
+  projectRoot: string,
+): Promise<LessonsCommandResult> {
+  if (lessonId === undefined || lessonId === '' || triggerId === undefined || triggerId === '') {
+    return errorResult(
+      'untrigger',
+      'Usage: agentsmesh lessons untrigger <lesson-id> <trigger-id>',
+      2,
+    );
+  }
+  try {
+    const result = await mutateLessonsGraph(projectRoot, (graph) =>
+      untriggerLesson(graph, lessonId, triggerId),
+    );
+    const data: LessonsUntriggerData = result;
+    return { subcommand: 'untrigger', exitCode: 0, data };
+  } catch (err) {
+    return errorResult('untrigger', errMessage(err), 1);
+  }
+}
+
+export async function doMerge(
+  loserId: string | undefined,
+  keeperId: string | undefined,
+  projectRoot: string,
+): Promise<LessonsCommandResult> {
+  if (loserId === undefined || loserId === '' || keeperId === undefined || keeperId === '') {
+    return errorResult('merge', 'Usage: agentsmesh lessons merge <loser-id> <keeper-id>', 2);
+  }
+  try {
+    const result = await mergeLessons(projectRoot, loserId, keeperId);
+    const data: LessonsMergeData = result;
+    return { subcommand: 'merge', exitCode: 0, data };
+  } catch (err) {
+    return errorResult('merge', errMessage(err), 1);
+  }
+}
+
+export async function doStripMarkers(
+  flags: LessonsFlags,
+  projectRoot: string,
+): Promise<LessonsCommandResult> {
+  const dryRun = flags['dry-run'] === true;
+  const report = await stripMarkersInGraph(projectRoot, { dryRun });
+  const data: LessonsStripMarkersData = {
+    changedIds: report.changedIds,
+    changedCount: report.changedCount,
+    dryRun,
+  };
+  return { subcommand: 'strip-markers', exitCode: 0, data };
+}

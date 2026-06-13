@@ -16,7 +16,7 @@ Available since **v0.6**. Requires Node.js 20+.
 | `agentsmesh/engine` | Generation, import, lint, diff, check + error taxonomy + `loadProjectContext` + config loaders + the types those functions need. |
 | `agentsmesh/canonical` | `loadCanonical`, `loadCanonicalFiles`, `LoadCanonicalOptions`, and the canonical domain types. |
 | `agentsmesh/targets` | Built-in catalog (`getTargetCatalog`, `getAllDescriptors`, `getDescriptor`), `registerTargetDescriptor` for plugins, and target-descriptor types. |
-| `agentsmesh/lessons` | Lesson recall/capture helpers: scaffold lessons, load the trigger index, read triggered topic files, append capture bullets, and reuse distill primitives. |
+| `agentsmesh/lessons` | Lessons recall/capture graph: `recallLessons`/`captureLesson` (migration-aware application APIs), low-level `queryLessons`/`rankLessons`/`addLesson`/`mutateLessonsGraph`, `validateLessonsGraph`, `isSafeRegexPattern`, `importLegacyLessons` (one-shot upgrade migrator), and `scaffoldLessons`. |
 
 Every entrypoint resolves to a real `.d.ts` under strict TypeScript — there is no `TS7016: Could not find a declaration file` for any public symbol. The `tests/consumer-smoke/` job in CI installs the packed tarball into a clean strict-mode TS project on every push and `tsc --noEmit`s every export below.
 
@@ -238,7 +238,7 @@ if (!report.inSync) {
 
 ### `registerTargetDescriptor(descriptor)`
 
-Registers a custom target at runtime after validating it against the same descriptor schema used for plugin packages. Plugins ship one of these as their default export. See [Building Plugins](../guides/building-plugins/) for the full descriptor contract.
+Registers a custom target at runtime after validating it against the same descriptor schema used for plugin packages. Plugins ship one of these as their default export. See [Building Plugins](../../guides/building-plugins/) for the full descriptor contract.
 
 ```ts
 import { registerTargetDescriptor, type TargetDescriptor } from 'agentsmesh';
@@ -251,42 +251,78 @@ After registration, the descriptor participates in `generate`, `importFrom`, `li
 
 ## Lessons recall/capture
 
-### `scaffoldLessons(projectRoot)`
+The canonical graph is `.agentsmesh/lessons/lessons.json`. See the
+[lessons reference](../lessons/) for the full schema and validation codes.
 
-Creates `.agentsmesh/lessons/` and appends the tool-agnostic lessons protocol to
-`.agentsmesh/rules/_root.md`. This is the programmatic equivalent of
-`agentsmesh init --lessons`.
+### Graph-backed primitives (recommended)
 
 ```ts
 import {
-  scaffoldLessons,
-  readTriggeredLessons,
-  appendLessonToJournal,
-  type ToolEvent,
+  recallLessons, // migration-aware recall: migrate → load → query → rank
+  captureLesson, // migration-aware capture: migrate → add
+  tryLoadLessonsGraph,
+  queryLessons,
+  validateLessonsGraph,
+  importLegacyLessons,
+  type LessonsGraph,
+  type LessonsQuery,
+  type ValidationReport,
 } from 'agentsmesh/lessons';
 
-scaffoldLessons(process.cwd());
-
-const event: ToolEvent = { kind: 'bash', command: "rg 'foo' src" };
-const lessons = readTriggeredLessons(process.cwd(), event);
-
-appendLessonToJournal(process.cwd(), {
-  heading: 'Search pattern parsed as a flag',
-  whatWentWrong: 'ripgrep rejected the command before searching',
-  rootCause: 'the pattern started with a dash',
-  rule: 'pass dash-leading patterns with -e',
+// Blessed application APIs — they migrate a legacy index.yaml first, so a first
+// read/write never strands it (the low-level primitives below do not migrate).
+const { lessons, totalMatches } = await recallLessons(process.cwd(), {
+  file: 'src/cli/x.ts',
 });
+console.log(`${lessons.length} of ${totalMatches} shown`, lessons.map((l) => l.lesson.rule));
+
+await captureLesson(process.cwd(), {
+  rule: 'Normalize CLI display paths.',
+  topic: 'windows-paths',
+  triggers: { files: ['src/cli/**/*.ts'] },
+  evidence: ['commit:abc1234'],
+});
+
+const graph = tryLoadLessonsGraph(process.cwd());
+if (graph) {
+  const report: ValidationReport = validateLessonsGraph(graph);
+  if (!report.ok) console.error(report.findings);
+}
 ```
 
-`readTriggeredLessons(projectRoot, event)` loads the single
-`.agentsmesh/lessons/index.yaml`, matches the generic tool event (`edit`,
-`write`, `bash`, or `task`), and reads only the matched topic files. The API has
-no target parameter because lessons are intentionally shared across every
-supported tool through the generated root rule.
+`recallLessons(projectRoot, query, opts?)` is the migration-aware recall entry
+point: it migrates a legacy store, loads the graph, and returns the
+relevance-ranked, capped matches (default top 10 + ~400-token budget). The
+low-level `queryLessons(graph, { file, command, keyword })` returns the raw
+`active` candidate set — OR across triggers — without migrating or ranking. See
+the [recall semantics](../lessons/#recall-semantics) for the full contract.
 
-Lower-level helpers (`parseIndex`, `matchTriggers`, `parseBullets`,
-`hashBullet`, `loadLedger`, `saveLedger`, and `scoreBullet`) remain available
-for custom distillers or IDE integrations.
+`addLesson(projectRoot, input, opts?)` is lock-serialized via the same primitive
+as `.generate.lock`. It is idempotent on repeat: re-adding the same rule + topic
+returns the existing lesson id without duplicating triggers.
+
+### `scaffoldLessons(projectRoot)`
+
+Creates `.agentsmesh/lessons/` with an empty `lessons.json` graph and appends
+the procedural rule to `.agentsmesh/rules/_root.md`. Programmatic equivalent
+of `agentsmesh init --lessons`. Idempotent.
+
+```ts
+import { scaffoldLessons } from 'agentsmesh/lessons';
+scaffoldLessons(process.cwd());
+```
+
+### `importLegacyLessons(projectRoot, { migratedAt })`
+
+One-shot upgrade migrator. Reads any legacy `index.yaml` + `topics/*.md` +
+`journal.md` in the project, emits the new JSON graph, and deletes the legacy
+artifacts. Run once per project on the way to the new release; new projects
+do not need it.
+
+```ts
+import { importLegacyLessons } from 'agentsmesh/lessons';
+importLegacyLessons(process.cwd(), { migratedAt: '2026-06-05' });
+```
 
 ### Catalog inspection
 
@@ -394,7 +430,7 @@ import type {
 } from 'agentsmesh';
 ```
 
-The full descriptor contract — including which fields are required vs optional, the `globalSupport` block shape, and `sharedArtifacts` semantics — is documented in [Building Plugins](../guides/building-plugins/).
+The full descriptor contract — including which fields are required vs optional, the `globalSupport` block shape, and `sharedArtifacts` semantics — is documented in [Building Plugins](../../guides/building-plugins/).
 
 ## Stability
 

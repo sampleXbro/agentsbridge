@@ -20,7 +20,8 @@ export const MARKDOWN_CASES: MarkdownCase[] = [
         '---\ndescription: Backend developer\ntools: Read, Grep, Write\n---\n\nBuild services.\n',
     },
     expectedPackFiles: ['api-architect.md', 'backend-developer.md'],
-    expectedGeneratedFiles: ['CLAUDE.md', 'agents/api-architect.md', 'agents/backend-developer.md'],
+    // Root CLAUDE.md lands at the project root, not under .claude/ (asserted separately).
+    expectedGeneratedFiles: ['agents/api-architect.md', 'agents/backend-developer.md'],
   },
   {
     kind: 'commands',
@@ -29,7 +30,7 @@ export const MARKDOWN_CASES: MarkdownCase[] = [
       'nested/test.md': '---\ndescription: Test\n---\n\nRun tests.\n',
     },
     expectedPackFiles: ['review.md', 'test.md'],
-    expectedGeneratedFiles: ['CLAUDE.md', 'commands/review.md', 'commands/test.md'],
+    expectedGeneratedFiles: ['commands/review.md', 'commands/test.md'],
   },
   {
     kind: 'rules',
@@ -39,7 +40,7 @@ export const MARKDOWN_CASES: MarkdownCase[] = [
       'testing.md': '# Testing\n',
     },
     expectedPackFiles: ['_root.md', 'quality.md', 'testing.md'],
-    expectedGeneratedFiles: ['CLAUDE.md', 'rules/quality.md', 'rules/testing.md'],
+    expectedGeneratedFiles: ['rules/quality.md', 'rules/testing.md'],
   },
 ];
 

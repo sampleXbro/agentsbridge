@@ -1,9 +1,9 @@
 # Auto-generated. DO NOT EDIT MANUALLY.
 # Tracks the state of all config files for team conflict resolution.
 
-generated_at: 2026-06-03T07:59:15.541Z
+generated_at: 2026-06-13T08:11:35.653Z
 generated_by: serhii
-lib_version: 0.21.0
+lib_version: 0.22.0
 checksums:
   agents/code-debugger.md: sha256:33452bf839256a119a602cd10d085bff3cdb8f537ded76e60053bb9d8e5d33bc
   agents/code-documenter.md: sha256:89b4ebd27718bcd50a7283c95ea1ff9cad153b1112cf695f9f1fc22d90ec85ec
@@ -16,11 +16,11 @@ checksums:
   commands/commit.md: sha256:3e6dcc5871ad157c36efe19c162b43cdc0d723a8695fb0d45c1f90cc28fa931c
   commands/review.md: sha256:ba3053410e7cc3271f41ba329056df07c6ccd2f07e2ed3dda601c56e46a77d54
   commands/test.md: sha256:a60932b216ff9eb407c2b38e4459ac4b9606a3aed275f4af84a646eb6c2937e7
-  hooks.yaml: sha256:efe5019c1c61ad2df956e5e3bb54d4b9349b419fb9af008490bc1c77083facfe
+  hooks.yaml: sha256:4c925de0b37cf350fb0002b097f5efca510c4d522ab39b8eb7a0b18052f012f4
   ignore: sha256:53ad60cb2c945a41619fbb5dd0d43559c8461e4cb35e30f4d98b901c73766e12
   mcp.json: sha256:963782b54cbea4ef4686fd036e87332e1a61042579916222991429e359654921
   permissions.yaml: sha256:c806acb62daf533af836dc113be37e9840a2a9b3e21b984c5909fcfb16eb52f2
-  rules/_root.md: sha256:f48efa3f1e1bec995de76804810407528147b22c7f6c459f42b5d0ad2ade11c6
+  rules/_root.md: sha256:62333c1787993d129810026cab35a4a7da49731f2fc039810a4cbd6ca7b797d6
   rules/typescript.md: sha256:18f52143dfdd3e219a5c6d6c0feb7283fe74cce99458c46dafcd1c3620ad4fba
   skills/add-agent-target/SKILL.md: sha256:b425055659d29f74dbbe97966f6396e918d96cb0736d1448217656cf26b410f6
   skills/add-agent-target/references/target-addition-checklist.md: sha256:3b658fc204d33995cb15281af1696d8ded09abac26455382c3e8472a1fddafca
@@ -33,9 +33,10 @@ checksums:
   skills/code-reviewer/references/common_antipatterns.md: sha256:4370210aa18b2b3fc908ec25ada7a6b677350bf6e250cc91d5946119df12bb76
   skills/code-reviewer/scripts/code_quality_checker.py: sha256:dfb5146145f950ff2882d3e7c8c573d62ed2b1912ce78cb7a71463f7aa1bcc96
   skills/code-reviewer/scripts/pr_analyzer.py: sha256:ced1ebc860269807f93749f04526981c47ae2512807c4a4fdc5cf500a207cb53
-  skills/code-reviewer/scripts/review_report_generator.py: sha256:3708949957ade7338b03949d9cd61c1083f14778bea71f19516de4f99518c6d0
+  skills/code-reviewer/scripts/review_report_generator.py: sha256:9507bf76ab19c18feac70746554e104a96f03cf51bf82c6c18cf7a53bedc7719
   skills/docs-and-examples/SKILL.md: sha256:3339fe5adc40866cc6d9c75f3b452056ff144ecdaa9b4e7e14c412088948b9be
   skills/homebrew-packaging/SKILL.md: sha256:eb0e1a2075c53efe70bbae7cb6996049ebe75a5b0a40ccb5326f051f07c4e02a
+  skills/lessons/SKILL.md: sha256:4e71a88cd248788ff11916a68c1e4f885f56fbfc8f426b6be6c169bf56053bba
   skills/library-testing/SKILL.md: sha256:750c0819d76fd3585f4103b772968823f2aecfe31bd2741d5a154c6d5d56903c
   skills/package-release-engineering/SKILL.md: sha256:e2f26fc8d2ab1dca6547e906dd8e044d52339da6c2ca096b8f36f2bd4ecb1664
   skills/post-feature-qa/SKILL.md: sha256:718b292a72e03a890018da90005b184439d0e180b1f3a6708a7606b2024d9eaa
@@ -77,7 +78,7 @@ checksums:
   skills/security-ownership-map/scripts/build_ownership_map.py: sha256:c0454c47c7eb001b6e247cd7e473df1b28a3a148a2dca6b2fe88a74a7602cc9b
   skills/security-ownership-map/scripts/community_maintainers.py: sha256:95adec5458cc85b41d0ae7965b0a17e4e8eaa6aaab274459324580d9a91cc3cc
   skills/security-ownership-map/scripts/query_ownership.py: sha256:0f8d1a1ac3ef807a9b66939a8cdfd02564f4cda018489a3664d37f8c3a7b1b93
-  skills/security-ownership-map/scripts/run_ownership_map.py: sha256:11b2d3dcf26fc5951223a07b3391e6cdd50548b8e187028ffc83884c62b35dc3
+  skills/security-ownership-map/scripts/run_ownership_map.py: sha256:362b547d6133659eb5c4fe889b8b930bea790f31e412f3198671baae09eec692
   skills/senior-developer-autonomous-execution/SKILL.md: sha256:767c18204698ce8ad5d775e1533f463abc953a970122deaa5cf19428299d8900
   skills/senior-developer-avoid-any/SKILL.md: sha256:e320425845df33952964f14555693638e944f70e833e881368ef21e92bb54bd4
   skills/senior-developer-configuration-and-credentials/SKILL.md: sha256:8d8f4f481abd846dcd70e42112a9c15e3ee900e0a61fac47faf654b085c83f2b

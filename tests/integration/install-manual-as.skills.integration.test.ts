@@ -76,7 +76,6 @@ describe('install standalone skill repo (integration)', () => {
 
     const generatedFiles = listRelativeFiles(join(project, '.claude'));
     expect(generatedFiles).toEqual([
-      'CLAUDE.md',
       'skills/code-review-excellence/LICENSE',
       'skills/code-review-excellence/README.md',
       'skills/code-review-excellence/SKILL.md',
@@ -119,7 +118,6 @@ describe('install manual --as skills (integration)', () => {
       'skills/review/templates/plan.md',
     ]);
     expect(listRelativeFiles(join(project, '.claude'))).toEqual([
-      'CLAUDE.md',
       'skills/qa/SKILL.md',
       'skills/review/SKILL.md',
       'skills/review/templates/plan.md',
@@ -155,7 +153,6 @@ describe('install manual --as skills (integration)', () => {
       'skills/review/templates/plan.md',
     ]);
     expect(listRelativeFiles(join(project, '.claude'))).toEqual([
-      'CLAUDE.md',
       'skills/review/SKILL.md',
       'skills/review/templates/plan.md',
     ]);
@@ -191,7 +188,6 @@ describe('install manual --as skills (integration)', () => {
       'skills/review/templates/plan.md',
     ]);
     expect(listRelativeFiles(join(project, '.claude'))).toEqual([
-      'CLAUDE.md',
       'skills/review/SKILL.md',
       'skills/review/templates/plan.md',
     ]);
@@ -235,7 +231,6 @@ describe('install manual --as skills (integration)', () => {
       'skills/review/templates/plan.md',
     ]);
     expect(listRelativeFiles(join(project, '.claude'))).toEqual([
-      'CLAUDE.md',
       'skills/qa/SKILL.md',
       'skills/review/SKILL.md',
       'skills/review/templates/plan.md',

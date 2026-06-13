@@ -32,6 +32,26 @@ describe('parseArgs', () => {
     expect(result.flags.verbose).toBe(true);
   });
 
+  it('accumulates a repeated flag into an array (multiple --trigger-file are preserved)', () => {
+    const result = parseArgs(['lessons', 'add', 'x', '--trigger-file', 'a', '--trigger-file', 'b']);
+    expect(result.flags['trigger-file']).toEqual(['a', 'b']);
+  });
+
+  it('keeps a single occurrence as a plain string (not an array)', () => {
+    const result = parseArgs(['lessons', 'add', 'x', '--trigger-file', 'a']);
+    expect(result.flags['trigger-file']).toBe('a');
+  });
+
+  it('appends a third+ occurrence onto the accumulated array', () => {
+    const result = parseArgs(['lessons', 'add', 'x', '--tf', 'a', '--tf', 'b', '--tf', 'c']);
+    expect(result.flags.tf).toEqual(['a', 'b', 'c']);
+  });
+
+  it('a repeated boolean flag stays the latest boolean (not an array)', () => {
+    const result = parseArgs(['generate', '--verbose', '--verbose']);
+    expect(result.flags.verbose).toBe(true);
+  });
+
   it('parses --version flag as command', () => {
     const result = parseArgs(['--version']);
     expect(result.command).toBe('version');
@@ -59,6 +79,20 @@ describe('parseArgs', () => {
     const result = parseArgs(['generate', '--global', '--targets', 'claude-code']);
     expect(result.command).toBe('generate');
     expect(result.flags.global).toBe(true);
+    expect(result.flags.targets).toBe('claude-code');
+  });
+
+  it('treats a global --json placed before the command as boolean, not swallowing the command name', () => {
+    const result = parseArgs(['--json', 'lessons', 'topics']);
+    expect(result.command).toBe('lessons');
+    expect(result.args).toEqual(['topics']);
+    expect(result.flags.json).toBe(true);
+  });
+
+  it('treats a global --verbose placed before the command as boolean', () => {
+    const result = parseArgs(['--verbose', 'generate', '--targets', 'claude-code']);
+    expect(result.command).toBe('generate');
+    expect(result.flags.verbose).toBe(true);
     expect(result.flags.targets).toBe('claude-code');
   });
 });

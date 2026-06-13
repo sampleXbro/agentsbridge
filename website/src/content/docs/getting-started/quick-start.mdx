@@ -83,7 +83,7 @@ Choose the path that matches your situation.
    agentsmesh init
    ```
 
-   AgentsMesh scans for existing configs from every [supported AI coding tool](/reference/supported-tools/) and prompts you to import each one found.
+   AgentsMesh scans for existing configs from every [supported AI coding tool](../../reference/supported-tools/) and prompts you to import each one found.
 
    To auto-import everything without prompts:
 
@@ -121,6 +121,15 @@ Choose the path that matches your situation.
   After init, `.agentsmesh/` is the only thing you should edit. Generated files in `.claude/`, `.cursor/`, etc. are artifacts — regenerate them, don't edit them directly.
 </Aside>
 
+## Optional: teach your agents
+
+```bash
+agentsmesh init --lessons
+agentsmesh generate
+```
+
+This adds a shared memory your agents read before edits and write after failures, so the same mistake doesn't happen twice — in any tool. It also gitignores `.agentsmesh/lessons/recall-log.jsonl` (opt-in telemetry, a runtime artifact). See [Teach your AI agents with lessons](../../guides/lessons/).
+
 ## Try a community skill pack
 
 ```bash
@@ -129,7 +138,7 @@ agentsmesh installs list                              # see what landed
 agentsmesh uninstall addyosmani-agent-skills          # remove cleanly when done
 ```
 
-The classifier sees `skills/<kebab>/SKILL.md`, multi-tool root rules, and per-target `.claude/commands` / `.gemini/commands` directories, and imports the whole pack in one shot. Per-entity prompts only surface when there are out-of-scope relative links to resolve. See the [skill-pack guide](../guides/installing-skill-packs/) for the full prompt walkthrough, `--force` behavior, and JSON shape; see [`agentsmesh install`](../cli/install/), [`agentsmesh uninstall`](../cli/uninstall/), and [`agentsmesh installs`](../cli/installs/) for flag references.
+The classifier sees `skills/<kebab>/SKILL.md`, multi-tool root rules, and per-target `.claude/commands` / `.gemini/commands` directories, and imports the whole pack in one shot. Per-entity prompts only surface when there are out-of-scope relative links to resolve. See the [skill-pack guide](../../guides/installing-skill-packs/) for the full prompt walkthrough, `--force` behavior, and JSON shape; see [`agentsmesh install`](../../cli/install/), [`agentsmesh uninstall`](../../cli/uninstall/), and [`agentsmesh installs`](../../cli/installs/) for flag references.
 
 ## What to commit and what to gitignore
 
@@ -153,7 +162,8 @@ If your team has a strong reason to gitignore generated configs (monorepo size, 
 
 ## What's next
 
-- Add [rules](../canonical-config/rules/), [commands](../canonical-config/commands/), [agents](../canonical-config/agents/), and [skills](../canonical-config/skills/)
-- Set up [CI drift detection](../guides/ci-drift-detection/)
-- [Share config across repositories](../guides/sharing-config/) with `extends`
-- Browse the full [CLI reference](../cli/)
+- Add [rules](../../canonical-config/rules/), [commands](../../canonical-config/commands/), [agents](../../canonical-config/agents/), and [skills](../../canonical-config/skills/)
+- [Teach your agents with lessons](../../guides/lessons/) — a shared memory that learns from failures
+- Set up [CI drift detection](../../guides/ci-drift-detection/)
+- [Share config across repositories](../../guides/sharing-config/) with `extends`
+- Browse the full [CLI reference](../../cli/)

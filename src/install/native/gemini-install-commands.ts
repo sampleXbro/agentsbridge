@@ -3,6 +3,7 @@
  */
 
 import { join, relative } from 'node:path';
+import type { ExtendPick } from '../../config/core/schema.js';
 import { readDirRecursive } from '../../utils/filesystem/fs.js';
 import { GEMINI_COMMANDS_DIR } from '../../targets/gemini-cli/constants.js';
 
@@ -32,4 +33,14 @@ export async function inferGeminiCommandNamesFromFiles(
     if (name) names.push(name);
   }
   return [...new Set(names)].sort();
+}
+
+/**
+ * Descriptor `nativeInstall.inferPick` for Gemini: commands under
+ * `.gemini/commands` map to `:`-namespaced names; everything else is empty.
+ */
+export async function inferGeminiPick(repoRoot: string, posixPath: string): Promise<ExtendPick> {
+  if (!isUnderGeminiCommands(posixPath)) return {};
+  const commands = await inferGeminiCommandNamesFromFiles(repoRoot, posixPath);
+  return commands.length ? { commands } : {};
 }

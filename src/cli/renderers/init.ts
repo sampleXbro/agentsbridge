@@ -56,13 +56,42 @@ function renderLessons(lessons: NonNullable<InitCommandResult['data']['lessons']
   for (const path of lessons.created) {
     logger.success(`  Created ${rel(path)}`);
   }
+  for (const path of lessons.updated) {
+    logger.success(`  Refreshed ${rel(path)} (managed — synced to the current manual)`);
+  }
   for (const path of lessons.skipped) {
-    logger.info(`  Kept ${rel(path)} (already exists)`);
+    logger.info(`  Kept ${rel(path)} (already current)`);
   }
   if (lessons.rootRuleUpdated) {
-    logger.success('  Appended Lessons recall paragraph to .agentsmesh/rules/_root.md');
+    logger.success('  Injected the Lessons ritual block into .agentsmesh/rules/_root.md');
   } else {
-    logger.info('  .agentsmesh/rules/_root.md already contains the Lessons paragraph');
+    logger.info('  .agentsmesh/rules/_root.md already carries the current Lessons block');
+  }
+  if (lessons.gitignoreUpdated) {
+    logger.success(
+      '  Added .agentsmesh/lessons/recall-log.jsonl to .gitignore (opt-in telemetry stays out of git)',
+    );
+  }
+  if (lessons.recallHookInjected) {
+    logger.success(
+      '  Wired the PostToolUse recall hook into .agentsmesh/hooks.yaml (deterministic recall on hook-capable targets)',
+    );
   }
   logger.success('Lessons subsystem ready (.agentsmesh/lessons/).');
+  logger.info("  Run 'agentsmesh generate' to sync the ritual into every target.");
+  logger.info('');
+  // Only claim the graph is empty when THIS run created it; on a re-init over an
+  // existing project the graph may already hold lessons.
+  const graphCreated = lessons.created.some((p) => p.replaceAll('\\', '/').endsWith('lessons.json'));
+  logger.info(
+    graphCreated
+      ? '  The graph starts empty and grows as agents capture failures. Try the loop:'
+      : '  Recall + capture loop:',
+  );
+  logger.info(
+    '    capture:  agentsmesh lessons add "<rule>" --topic <id> --new-topic --topic-summary "<line>" --trigger-file "<glob>"',
+  );
+  logger.info('    recall:   agentsmesh lessons query --file <path> --cmd <command>');
+  logger.info('    inspect:  agentsmesh lessons journal   |   lessons show <id>   |   lessons validate');
+  logger.info('  Optional: export AGENTSMESH_LESSONS_TELEMETRY=1 to measure recall cost via `lessons stats`.');
 }

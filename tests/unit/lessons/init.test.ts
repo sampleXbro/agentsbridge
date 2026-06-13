@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { scaffoldLessons } from '../../../src/lessons/init.js';
 import { lessonsPaths } from '../../../src/lessons/paths.js';
+import { defaultLessonsConfig } from '../../../src/lessons/recall-config.js';
 
 let projectRoot: string;
 
@@ -11,58 +12,179 @@ beforeEach(() => {
   projectRoot = mkdtempSync(join(tmpdir(), 'lessons-init-'));
 });
 
-describe('scaffoldLessons', () => {
-  it('creates journal, index, topics dir, and root rule with procedural paragraph', () => {
-    const result = scaffoldLessons(projectRoot);
+describe('scaffoldLessons', async () => {
+  it('creates lessons.json and injects the managed ritual block into _root.md', async () => {
+    const result = await scaffoldLessons(projectRoot);
     const paths = lessonsPaths(projectRoot);
 
-    expect(existsSync(paths.journal)).toBe(true);
-    expect(existsSync(paths.index)).toBe(true);
-    expect(existsSync(paths.topicsDir)).toBe(true);
-    expect(readFileSync(paths.journal, 'utf8')).toMatch(/^# /);
-    expect(readFileSync(paths.index, 'utf8')).toContain('clusters: []');
+    expect(existsSync(paths.graph)).toBe(true);
+    const graph = JSON.parse(readFileSync(paths.graph, 'utf8')) as Record<string, unknown>;
+    expect(graph).toEqual({ lessons: {}, topics: {}, triggers: {}, version: 1 });
 
     const rootRule = readFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), 'utf8');
-    expect(rootRule).toContain('## Lessons (MUST do — non-negotiable)');
+    expect(rootRule).toContain('<!-- agentsmesh:lessons-contract:start -->');
+    expect(rootRule).toContain('<!-- agentsmesh:lessons-contract:end -->');
+    expect(rootRule).toContain('## Lessons (BLOCKING REQUIREMENT — MUST run both');
 
-    expect(result.created.length).toBeGreaterThan(0);
+    // No legacy artifacts.
+    expect(existsSync(paths.journal)).toBe(false);
+    expect(existsSync(paths.index)).toBe(false);
+    expect(existsSync(paths.topicsDir)).toBe(false);
+
+    const skillPath = join(projectRoot, '.agentsmesh/skills/lessons/SKILL.md');
+    expect(result.created).toEqual([paths.graph, paths.config, skillPath]);
     expect(result.rootRuleUpdated).toBe(true);
+    // No hooks.yaml in this bare scaffold, so the recall hook is a no-op here;
+    // injection-into-an-existing-hooks.yaml is covered by recall-hook-scaffold +
+    // the init --lessons e2e (where init creates hooks.yaml first).
+    expect(result.recallHookInjected).toBe(false);
   });
 
-  it('is idempotent — re-running does not duplicate the procedural paragraph', () => {
-    scaffoldLessons(projectRoot);
-    const second = scaffoldLessons(projectRoot);
+  it('injects the recall hook when hooks.yaml already exists', async () => {
+    mkdirSync(join(projectRoot, '.agentsmesh'), { recursive: true });
+    writeFileSync(
+      join(projectRoot, '.agentsmesh/hooks.yaml'),
+      '# yaml-language-server: $schema=./x.json\n',
+      'utf8',
+    );
+    const result = await scaffoldLessons(projectRoot);
+    expect(result.recallHookInjected).toBe(true);
+    expect(readFileSync(join(projectRoot, '.agentsmesh/hooks.yaml'), 'utf8')).toContain(
+      'agentsmesh lessons hook',
+    );
+  });
+
+  it('seeds the Tier-2 lessons skill with canonical frontmatter', async () => {
+    await scaffoldLessons(projectRoot);
+    const skillPath = join(projectRoot, '.agentsmesh/skills/lessons/SKILL.md');
+    expect(existsSync(skillPath)).toBe(true);
+    const content = readFileSync(skillPath, 'utf8');
+    expect(content.startsWith('---\nname: lessons\n')).toBe(true);
+    // The manual enumerates the full command surface (compact list).
+    expect(content).toContain('agentsmesh lessons query');
+    expect(content).toMatch(/\bimport-md\b/);
+  });
+
+  it('is idempotent — re-running keeps a single block and reports graph + skill skipped', async () => {
+    await scaffoldLessons(projectRoot);
+    const second = await scaffoldLessons(projectRoot);
 
     const rootRule = readFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), 'utf8');
-    const occurrences = rootRule.match(/^## Lessons \(/gm) ?? [];
-    expect(occurrences.length).toBe(1);
+    const starts = rootRule.match(/<!-- agentsmesh:lessons-contract:start -->/g) ?? [];
+    expect(starts.length).toBe(1);
 
-    expect(second.skipped.length).toBeGreaterThan(0);
+    const skillPath = join(projectRoot, '.agentsmesh/skills/lessons/SKILL.md');
+    const paths = lessonsPaths(projectRoot);
+    expect(second.created).toEqual([]);
+    expect(second.skipped).toEqual([paths.graph, paths.config, skillPath]);
     expect(second.rootRuleUpdated).toBe(false);
   });
 
-  it('appends procedural rule to an existing root rule file without overwriting other content', () => {
-    const customRule = `---\nroot: true\ndescription: ""\n---\n\n# Operational Guidelines\n\n## Custom Section\n\nKeep me intact.\n`;
-    mkdirSync(join(projectRoot, '.agentsmesh/rules'), { recursive: true });
-    writeFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), customRule, 'utf8');
+  it('refreshes a stale/drifted lessons skill — it is a managed artifact, not user-owned', async () => {
+    const skillPath = join(projectRoot, '.agentsmesh/skills/lessons/SKILL.md');
+    mkdirSync(join(projectRoot, '.agentsmesh/skills/lessons'), { recursive: true });
+    const stale = '---\nname: lessons\ndescription: old manual\n---\n\nOutdated body.\n';
+    writeFileSync(skillPath, stale, 'utf8');
 
-    scaffoldLessons(projectRoot);
+    const result = await scaffoldLessons(projectRoot);
+
+    // Rewritten to the current manual (like the Tier-1 paragraph), reported as updated.
+    expect(readFileSync(skillPath, 'utf8')).not.toBe(stale);
+    expect(readFileSync(skillPath, 'utf8')).toContain('# Lessons — operating manual');
+    expect(result.updated).toContain(skillPath);
+    expect(result.created).not.toContain(skillPath);
+    expect(result.skipped).not.toContain(skillPath);
+  });
+
+  it('leaves an already-current lessons skill untouched (reported skipped, not updated)', async () => {
+    await scaffoldLessons(projectRoot);
+    const second = await scaffoldLessons(projectRoot);
+    const skillPath = join(projectRoot, '.agentsmesh/skills/lessons/SKILL.md');
+    expect(second.skipped).toContain(skillPath);
+    expect(second.updated).toEqual([]);
+  });
+
+  it('appends the block to an existing root rule without disturbing other content', async () => {
+    mkdirSync(join(projectRoot, '.agentsmesh/rules'), { recursive: true });
+    writeFileSync(
+      join(projectRoot, '.agentsmesh/rules/_root.md'),
+      '---\nroot: true\ndescription: ""\n---\n\n# Existing\n\n## Custom Section\n\nKeep me.\n',
+      'utf8',
+    );
+
+    await scaffoldLessons(projectRoot);
 
     const rootRule = readFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), 'utf8');
     expect(rootRule).toContain('## Custom Section');
-    expect(rootRule).toContain('Keep me intact.');
-    expect(rootRule).toContain('## Lessons (MUST do — non-negotiable)');
+    expect(rootRule).toContain('Keep me.');
+    expect(rootRule).toContain('<!-- agentsmesh:lessons-contract:start -->');
   });
 
-  it('normalizes append when existing root rule does not end with a newline', () => {
-    const noTrailingNewline = `---\nroot: true\ndescription: ""\n---\n\n# Operational Guidelines\n\n## Custom Section\n\nLast line no newline`;
-    mkdirSync(join(projectRoot, '.agentsmesh/rules'), { recursive: true });
-    writeFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), noTrailingNewline, 'utf8');
+  it('gitignores both opt-in telemetry logs so telemetry never dirties the worktree', async () => {
+    const result = await scaffoldLessons(projectRoot);
 
-    scaffoldLessons(projectRoot);
+    const gitignore = readFileSync(join(projectRoot, '.gitignore'), 'utf8');
+    expect(gitignore).toContain('.agentsmesh/lessons/recall-log.jsonl');
+    expect(gitignore).toContain('.agentsmesh/lessons/capture-log.jsonl');
+    expect(result.gitignoreUpdated).toBe(true);
+  });
 
-    const rootRule = readFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), 'utf8');
-    expect(rootRule).toMatch(/Last line no newline\n+## Lessons \(/);
-    expect(rootRule.endsWith('\n')).toBe(true);
+  it('appends the recall-log entry idempotently — re-running adds it once, reports no second update', async () => {
+    await scaffoldLessons(projectRoot);
+    const second = await scaffoldLessons(projectRoot);
+
+    const matches = readFileSync(join(projectRoot, '.gitignore'), 'utf8')
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l === '.agentsmesh/lessons/recall-log.jsonl');
+    expect(matches.length).toBe(1);
+    expect(second.gitignoreUpdated).toBe(false);
+  });
+
+  it('preserves existing .gitignore content when appending the recall-log entry', async () => {
+    writeFileSync(join(projectRoot, '.gitignore'), 'node_modules\ndist\n', 'utf8');
+
+    await scaffoldLessons(projectRoot);
+
+    const gitignore = readFileSync(join(projectRoot, '.gitignore'), 'utf8');
+    expect(gitignore).toContain('node_modules');
+    expect(gitignore).toContain('dist');
+    expect(gitignore).toContain('.agentsmesh/lessons/recall-log.jsonl');
+  });
+
+  it('skips the recall-log entry when a broader .agentsmesh/ ignore already covers it', async () => {
+    writeFileSync(join(projectRoot, '.gitignore'), 'node_modules\n.agentsmesh/\n', 'utf8');
+
+    const result = await scaffoldLessons(projectRoot);
+
+    expect(readFileSync(join(projectRoot, '.gitignore'), 'utf8')).not.toContain('recall-log.jsonl');
+    expect(result.gitignoreUpdated).toBe(false);
+  });
+
+  it('writes config.json materializing every tunable at its default value', async () => {
+    const result = await scaffoldLessons(projectRoot);
+    const configPath = lessonsPaths(projectRoot).config;
+
+    expect(result.created).toContain(configPath);
+    const parsed = JSON.parse(readFileSync(configPath, 'utf8')) as Record<string, unknown>;
+    expect(parsed).toEqual(defaultLessonsConfig());
+    // Materialized defaults must equal the in-code defaults — writing them out is
+    // behaviour-neutral, only discoverability changes.
+    expect(parsed).toEqual({ recallLimit: 10, recallMaxTokens: 400, autoPrune: false });
+  });
+
+  it('never overwrites an existing config.json — user edits are preserved (reported skipped)', async () => {
+    mkdirSync(join(projectRoot, '.agentsmesh/lessons'), { recursive: true });
+    const configPath = lessonsPaths(projectRoot).config;
+    writeFileSync(configPath, JSON.stringify({ recallLimit: 3, autoPrune: true }), 'utf8');
+
+    const result = await scaffoldLessons(projectRoot);
+
+    expect(result.created).not.toContain(configPath);
+    expect(result.skipped).toContain(configPath);
+    expect(JSON.parse(readFileSync(configPath, 'utf8'))).toEqual({
+      recallLimit: 3,
+      autoPrune: true,
+    });
   });
 });

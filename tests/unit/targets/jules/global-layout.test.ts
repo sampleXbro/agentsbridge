@@ -1,4 +1,13 @@
 import { describe, it, expect } from 'vitest';
+// Import the catalog/matrix barrel first so BUILTIN_TARGETS is fully
+// initialized before the jules descriptor is referenced (avoids a
+// circular-import ordering hazard where individual descriptors read as
+// undefined when a single target module is the entry point).
+import { SUPPORT_MATRIX_GLOBAL } from '../../../../src/core/matrix/data.js';
+import {
+  getTargetCapabilities,
+  getTargetLayout,
+} from '../../../../src/targets/catalog/builtin-targets.js';
 import { descriptor } from '../../../../src/targets/jules/index.js';
 import { JULES_ROOT_FILE } from '../../../../src/targets/jules/constants.js';
 
@@ -59,5 +68,28 @@ describe('jules descriptor layout', () => {
 
   it('project layout has no skillDir', () => {
     expect(descriptor.project.skillDir).toBeUndefined();
+  });
+
+  it('global-scope capabilities resolve to none for every feature', () => {
+    const caps = getTargetCapabilities('jules', 'global');
+    expect(caps).toBeDefined();
+    for (const feature of [
+      'rules',
+      'additionalRules',
+      'commands',
+      'agents',
+      'skills',
+      'mcp',
+      'hooks',
+      'ignore',
+      'permissions',
+    ] as const) {
+      expect(caps![feature]?.level).toBe('none');
+      expect(SUPPORT_MATRIX_GLOBAL[feature].jules.level).toBe('none');
+    }
+  });
+
+  it('has no global layout (generation in global scope is impossible)', () => {
+    expect(getTargetLayout('jules', 'global')).toBeUndefined();
   });
 });

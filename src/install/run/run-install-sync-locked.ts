@@ -41,7 +41,17 @@ export async function handleSync(
           },
           [entry.source],
           projectRoot,
-          { features: entry.features, pick: entry.pick },
+          {
+            features: entry.features,
+            pick: entry.pick,
+            // Preserve the recorded branch/tag pin and elevated-artifact consent
+            // so a deterministic post-clone replay keeps tracking the same ref
+            // and re-applies the accepted hooks/permissions/mcp automatically.
+            ...(entry.original_ref !== undefined ? { originalRef: entry.original_ref } : {}),
+            ...(entry.accepted_elevated !== undefined
+              ? { acceptedElevated: entry.accepted_elevated }
+              : {}),
+          },
         );
         syncInstalled.push(...result.data.installed);
         syncSkipped.push(...result.data.skipped);

@@ -3,6 +3,8 @@ import type { CanonicalRule } from '../../core/types.js';
 
 export const ROOT_CONTRACT_START = '<!-- agentsmesh:root-generation-contract:start -->';
 export const ROOT_CONTRACT_END = '<!-- agentsmesh:root-generation-contract:end -->';
+export const LESSONS_CONTRACT_START = '<!-- agentsmesh:lessons-contract:start -->';
+export const LESSONS_CONTRACT_END = '<!-- agentsmesh:lessons-contract:end -->';
 export const EMBEDDED_RULES_START = '<!-- agentsmesh:embedded-rules:start -->';
 export const EMBEDDED_RULES_END = '<!-- agentsmesh:embedded-rules:end -->';
 export const EMBEDDED_RULE_END = '<!-- agentsmesh:embedded-rule:end -->';
@@ -54,6 +56,29 @@ export function replaceManagedBlock(
 
 export function stripManagedBlock(content: string, start: string, end: string): string {
   return content.replace(managedBlockPattern(start, end), '').trim();
+}
+
+/**
+ * Split a leading `---…---` frontmatter block from the body without parsing the
+ * YAML, so the prefix can be re-emitted byte-for-byte. Returns an empty prefix
+ * when there is no frontmatter.
+ */
+function splitFrontmatterPrefix(content: string): { prefix: string; body: string } {
+  if (content.indexOf('---') !== 0) return { prefix: '', body: content.trim() };
+  const close = content.indexOf('---', 3);
+  if (close === -1) return { prefix: '', body: content.trim() };
+  return { prefix: content.slice(0, close + 3), body: content.slice(close + 3).trim() };
+}
+
+/**
+ * Place `block` at the top of the document body, keeping any leading
+ * frontmatter first. Used to inject the generation-contract and lessons blocks
+ * at the beginning of a target's primary root instruction rather than the end.
+ */
+export function insertAtBodyTop(content: string, block: string): string {
+  const { prefix, body } = splitFrontmatterPrefix(content);
+  const placed = body ? `${block}\n\n${body}` : block;
+  return prefix ? `${prefix}\n\n${placed}` : placed;
 }
 
 function ruleSource(source: string): string {

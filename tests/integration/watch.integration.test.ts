@@ -57,9 +57,9 @@ describe('agentsmesh watch (integration)', () => {
     child.stdout?.on('data', (chunk: Buffer) => chunks.push(chunk));
     child.stderr?.on('data', (chunk: Buffer) => chunks.push(chunk));
 
-    await waitForFile(join(TEST_DIR, '.claude', 'CLAUDE.md'), fileWaitMs());
+    await waitForFile(join(TEST_DIR, 'CLAUDE.md'), fileWaitMs());
 
-    expect(readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
+    expect(readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8')).toContain(
       'Use TypeScript',
     );
 
@@ -98,9 +98,9 @@ description: "Updated"
     child.stdout?.on('data', (chunk: Buffer) => chunks.push(chunk));
     child.stderr?.on('data', (chunk: Buffer) => chunks.push(chunk));
 
-    await waitForFile(join(TEST_DIR, '.claude', 'CLAUDE.md'), fileWaitMs());
+    await waitForFile(join(TEST_DIR, 'CLAUDE.md'), fileWaitMs());
 
-    expect(readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
+    expect(readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8')).toContain(
       'Use TypeScript',
     );
     expect(() => readFileSync(join(TEST_DIR, '.cursor', 'rules', 'general.mdc'))).toThrow();

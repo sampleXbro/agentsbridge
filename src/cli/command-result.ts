@@ -7,6 +7,14 @@ export interface GenerateData {
   mode: 'generate' | 'check' | 'dry-run';
   files: Array<{ path: string; target: string; status: 'created' | 'updated' | 'unchanged' }>;
   summary: { created: number; updated: number; unchanged: number };
+  /**
+   * Why zero files were produced, when known. `no-global-support` means every
+   * active target lacks a global layout (e.g. cloud-only jules/replit-agent in
+   * `--global`); the renderer surfaces that instead of the misleading default
+   * "no root rule / rules feature disabled" cause. Absent when files exist or
+   * the cause is the default one.
+   */
+  emptyReason?: 'no-global-support';
 }
 
 export interface InitData {
@@ -21,8 +29,13 @@ export interface InitData {
   /** Populated when --lessons is passed; absent otherwise. */
   lessons?: {
     created: string[];
+    updated: string[];
     skipped: string[];
     rootRuleUpdated: boolean;
+    /** True when the recall-log gitignore entry was added to `.gitignore`. */
+    gitignoreUpdated: boolean;
+    /** True when the PostToolUse recall hook was injected into `hooks.yaml`. */
+    recallHookInjected: boolean;
   };
   /**
    * True when --lessons was passed against an already-initialized project,

@@ -1,0 +1,133 @@
+{
+  "lessons": {
+    "alpha-rules-rule-1": {
+      "createdAt": "2026-06-05",
+      "evidence": [
+        "legacy:.agentsmesh/lessons/topics/alpha-rules.md#rule-1",
+        "legacy:L7",
+        "legacy:L42"
+      ],
+      "rule": "Always check the alpha flag before reading the alpha buffer.",
+      "status": "active",
+      "topics": [
+        "alpha-rules"
+      ],
+      "triggers": [
+        "t-glob-bba0a7ee",
+        "t-glob-901e98a3",
+        "t-cmd-767dbc03",
+        "t-kw-36b845b6",
+        "t-kw-7e0ed877"
+      ]
+    },
+    "alpha-rules-rule-2": {
+      "createdAt": "2026-06-05",
+      "evidence": [
+        "legacy:.agentsmesh/lessons/topics/alpha-rules.md#rule-2"
+      ],
+      "rule": "Never call `runAlpha` from inside a `withAlpha` block — it deadlocks.",
+      "status": "active",
+      "topics": [
+        "alpha-rules"
+      ],
+      "triggers": [
+        "t-glob-bba0a7ee",
+        "t-glob-901e98a3",
+        "t-cmd-767dbc03",
+        "t-kw-36b845b6",
+        "t-kw-7e0ed877"
+      ]
+    },
+    "alpha-rules-rule-3": {
+      "createdAt": "2026-06-05",
+      "evidence": [
+        "legacy:.agentsmesh/lessons/topics/alpha-rules.md#rule-3",
+        "legacy:L88"
+      ],
+      "rule": "When the alpha config is absent, fall through to defaults rather than throwing.",
+      "status": "active",
+      "topics": [
+        "alpha-rules"
+      ],
+      "triggers": [
+        "t-glob-bba0a7ee",
+        "t-glob-901e98a3",
+        "t-cmd-767dbc03",
+        "t-kw-36b845b6",
+        "t-kw-7e0ed877"
+      ]
+    },
+    "beta-rules-rule-1": {
+      "createdAt": "2026-06-05",
+      "evidence": [
+        "legacy:.agentsmesh/lessons/topics/beta-rules.md#rule-1",
+        "legacy:L91"
+      ],
+      "rule": "Beta routines must run after alpha completes.",
+      "status": "active",
+      "topics": [
+        "beta-rules"
+      ],
+      "triggers": [
+        "t-glob-bba0a7ee",
+        "t-glob-ee6a95a0",
+        "t-kw-bffa803c"
+      ]
+    },
+    "beta-rules-rule-2": {
+      "createdAt": "2026-06-05",
+      "evidence": [
+        "legacy:.agentsmesh/lessons/topics/beta-rules.md#rule-2"
+      ],
+      "rule": "Treat the beta cache as advisory — never authoritative.",
+      "status": "active",
+      "topics": [
+        "beta-rules"
+      ],
+      "triggers": [
+        "t-glob-bba0a7ee",
+        "t-glob-ee6a95a0",
+        "t-kw-bffa803c"
+      ]
+    }
+  },
+  "topics": {
+    "alpha-rules": {
+      "summary": "Alpha topic covers shared bullets across globs and commands."
+    },
+    "beta-rules": {
+      "summary": "Beta topic — shares one glob with alpha and adds a unique keyword."
+    }
+  },
+  "triggers": {
+    "t-cmd-767dbc03": {
+      "kind": "command_pattern",
+      "pattern": "^pnpm test:alpha"
+    },
+    "t-glob-901e98a3": {
+      "kind": "file_glob",
+      "pattern": "tests/alpha/**/*.test.ts"
+    },
+    "t-glob-bba0a7ee": {
+      "kind": "file_glob",
+      "pattern": "src/alpha/**/*.ts"
+    },
+    "t-glob-ee6a95a0": {
+      "kind": "file_glob",
+      "pattern": "src/beta/**/*.ts"
+    },
+    "t-kw-36b845b6": {
+      "kind": "keyword",
+      "pattern": "alpha"
+    },
+    "t-kw-7e0ed877": {
+      "kind": "keyword",
+      "pattern": "alpha bug"
+    },
+    "t-kw-bffa803c": {
+      "kind": "keyword",
+      "pattern": "beta"
+    }
+  },
+  "version": 1
+}

@@ -204,5 +204,22 @@ export const descriptor = {
   },
   buildImportPaths: buildCursorImportPaths,
   detectionPaths: ['.cursor/rules', '.cursor/mcp.json'],
+  nativeInstall: {
+    pickPaths: [
+      { prefix: '.cursor/rules', feature: 'rules', strategy: { kind: 'basename', suffix: '.mdc' } },
+      {
+        prefix: '.cursor/commands',
+        feature: 'commands',
+        strategy: { kind: 'basename', suffix: '.md' },
+      },
+      {
+        prefix: '.cursor/agents',
+        feature: 'agents',
+        strategy: { kind: 'basename', suffix: '.md' },
+      },
+      { prefix: '.cursor/skills', feature: 'skills', strategy: { kind: 'skillDir' } },
+    ],
+    dialectHints: [{ frontmatterKey: 'alwaysApply' }],
+  },
   preservesManualActivation: true,
 } satisfies TargetDescriptor;

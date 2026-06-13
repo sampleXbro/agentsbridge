@@ -20,6 +20,17 @@ import {
   GEMINI_DEFAULT_POLICIES_FILE,
 } from '../../../../src/targets/gemini-cli/constants.js';
 
+const ALL_FEATURES = new Set([
+  'rules',
+  'commands',
+  'agents',
+  'skills',
+  'mcp',
+  'hooks',
+  'ignore',
+  'permissions',
+]);
+
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
   return {
     rules: [],
@@ -327,7 +338,7 @@ describe('generateGeminiSettingsFiles with agents', () => {
         },
       ],
     });
-    const results = generateGeminiSettingsFiles(canonical);
+    const results = generateGeminiSettingsFiles(canonical, ALL_FEATURES);
     expect(results).toHaveLength(1);
     const parsed = JSON.parse(results[0]!.content) as Record<string, unknown>;
     expect((parsed.experimental as Record<string, unknown>)?.enableAgents).toBe(true);
@@ -417,7 +428,7 @@ describe('generateGeminiSettingsFiles (gemini-cli)', () => {
         },
       },
     });
-    const results = generateGeminiSettingsFiles(canonical);
+    const results = generateGeminiSettingsFiles(canonical, ALL_FEATURES);
     expect(results.length).toBe(1);
     expect(results[0]!.path).toBe(GEMINI_SETTINGS);
     const parsed = JSON.parse(results[0]!.content) as Record<string, unknown>;
@@ -429,7 +440,7 @@ describe('generateGeminiSettingsFiles (gemini-cli)', () => {
     const canonical = makeCanonical({
       ignore: ['node_modules', 'dist', '*.log'],
     });
-    const results = generateGeminiSettingsFiles(canonical);
+    const results = generateGeminiSettingsFiles(canonical, ALL_FEATURES);
     expect(results).toEqual([]);
   });
 
@@ -442,7 +453,7 @@ describe('generateGeminiSettingsFiles (gemini-cli)', () => {
         ],
       },
     });
-    const results = generateGeminiSettingsFiles(canonical);
+    const results = generateGeminiSettingsFiles(canonical, ALL_FEATURES);
     expect(results.length).toBe(1);
     const parsed = JSON.parse(results[0]!.content) as Record<string, unknown>;
     expect(parsed.hooks).toBeDefined();
@@ -459,7 +470,7 @@ describe('generateGeminiSettingsFiles (gemini-cli)', () => {
         ],
       },
     });
-    const results = generateGeminiSettingsFiles(canonical);
+    const results = generateGeminiSettingsFiles(canonical, ALL_FEATURES);
     expect(results).toEqual([]);
   });
 
@@ -470,7 +481,7 @@ describe('generateGeminiSettingsFiles (gemini-cli)', () => {
         PostToolUse: [{ matcher: 'Write', command: 'fmt', type: 'command' }],
       },
     });
-    const results = generateGeminiSettingsFiles(canonical);
+    const results = generateGeminiSettingsFiles(canonical, ALL_FEATURES);
     expect(results.length).toBe(1);
     const parsed = JSON.parse(results[0]!.content) as Record<string, unknown>;
     expect(parsed.hooks).toBeDefined();
@@ -486,7 +497,7 @@ describe('generateGeminiSettingsFiles (gemini-cli)', () => {
         PostToolUse: [{ matcher: 'Write', command: 'fmt', type: 'command' }],
       },
     });
-    const results = generateGeminiSettingsFiles(canonical);
+    const results = generateGeminiSettingsFiles(canonical, ALL_FEATURES);
     expect(results.length).toBe(1);
     const parsed = JSON.parse(results[0]!.content) as Record<string, unknown>;
     const hooks = parsed.hooks as Record<string, unknown>;
@@ -496,7 +507,7 @@ describe('generateGeminiSettingsFiles (gemini-cli)', () => {
 
   it('returns empty when no mcp, ignore, hooks, or agents', () => {
     const canonical = makeCanonical();
-    expect(generateGeminiSettingsFiles(canonical)).toEqual([]);
+    expect(generateGeminiSettingsFiles(canonical, ALL_FEATURES)).toEqual([]);
   });
 
   it('adds experimental.enableAgents: true when agents present', () => {
@@ -519,7 +530,7 @@ describe('generateGeminiSettingsFiles (gemini-cli)', () => {
         },
       ],
     });
-    const results = generateGeminiSettingsFiles(canonical);
+    const results = generateGeminiSettingsFiles(canonical, ALL_FEATURES);
     expect(results).toHaveLength(1);
     const parsed = JSON.parse(results[0]!.content) as Record<string, unknown>;
     expect((parsed.experimental as Record<string, unknown>)?.enableAgents).toBe(true);
@@ -542,7 +553,7 @@ describe('generateGeminiSettingsFiles (gemini-cli)', () => {
         PostToolUse: [{ matcher: 'Write', command: 'fmt', type: 'command' }],
       },
     });
-    const results = generateGeminiSettingsFiles(canonical);
+    const results = generateGeminiSettingsFiles(canonical, ALL_FEATURES);
     expect(results.length).toBe(1);
     const parsed = JSON.parse(results[0]!.content) as Record<string, unknown>;
     expect(parsed.mcpServers).toBeDefined();

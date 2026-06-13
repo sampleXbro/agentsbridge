@@ -49,7 +49,7 @@ agentsmesh init --global
 agentsmesh generate --global --targets claude-code,antigravity,codex-cli,cursor
 ```
 
-Reads canonical files from `~/.agentsmesh/` and writes user-level outputs per target (for example Claude Code under `~/.claude/` including `hooks.json`, `~/.claudeignore`, skills under `~/.claude/skills/` and mirrored to `~/.agents/skills/` only when Codex is not also a global target, optional `output-styles/` when `outputStyle: true`, plus `~/.claude.json` for MCP; Antigravity under `~/.gemini/antigravity/`; Codex CLI under `~/.codex/` plus `~/.agents/skills/`; and Cursor under `~/.cursor/` with `rules/*.mdc`, aggregated `AGENTS.md`, MCP, hooks, `cursorignore`, skills, agents, and commands). See the [supported tools matrix](../reference/supported-tools#global-mode) for the full global-mode map.
+Reads canonical files from `~/.agentsmesh/` and writes user-level outputs per target (for example Claude Code under `~/.claude/` including `hooks.json`, `~/.claudeignore`, skills under `~/.claude/skills/` and mirrored to `~/.agents/skills/` only when Codex is not also a global target, optional `output-styles/` when `outputStyle: true`, plus `~/.claude.json` for MCP; Antigravity under `~/.gemini/antigravity/`; Codex CLI under `~/.codex/` plus `~/.agents/skills/`; and Cursor under `~/.cursor/` with `rules/*.mdc`, aggregated `AGENTS.md`, MCP, hooks, `cursorignore`, skills, agents, and commands). See the [supported tools matrix](../../reference/supported-tools#global-mode) for the full global-mode map.
 
 The rest of the maintenance commands (`install`, `diff`, `lint`, `watch`, `check`, `merge`, and `matrix`) also accept `--global` and operate on the same `~/.agentsmesh/` canonical root.
 
@@ -98,7 +98,7 @@ Forces a re-fetch of all remote `extends` sources. Without this flag, AgentsMesh
 
 ## Output locations
 
-Each target writes to its own native directory (e.g. `claude-code` → `.claude/`, `cursor` → `.cursor/`, `copilot` → `.github/`). The shared `AGENTS.md` at the project root is emitted by every target that uses it as a root-instruction surface. See the [supported tools matrix](/reference/supported-tools/) for the exact project-scope and global-scope paths for every target.
+Each target writes to its own native directory (e.g. `claude-code` → `.claude/`, `cursor` → `.cursor/`, `copilot` → `.github/`). The shared `AGENTS.md` at the project root is emitted by every target that uses it as a root-instruction surface. See the [supported tools matrix](../../reference/supported-tools/) for the exact project-scope and global-scope paths for every target.
 
 ## Global mode path resolution
 

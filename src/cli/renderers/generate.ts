@@ -20,7 +20,11 @@ export function renderGenerate(result: GenerateCommandResult): void {
   const { scope, mode, files } = data;
 
   if (files.length === 0) {
-    logger.info('No files to generate (no root rule or rules feature disabled).');
+    if (data.emptyReason === 'no-global-support') {
+      logger.info('No files to generate (target has no global mode — try without --global).');
+    } else {
+      logger.info('No files to generate (no root rule or rules feature disabled).');
+    }
     if (mode === 'check') {
       logger.success('Generated files are in sync.');
     }

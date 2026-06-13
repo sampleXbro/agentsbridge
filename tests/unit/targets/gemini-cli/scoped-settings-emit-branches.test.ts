@@ -27,18 +27,20 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+const ALL_FEATURES = new Set(['rules', 'mcp', 'hooks', 'agents', 'ignore', 'permissions']);
+
 describe('emitScopedGeminiSettings — branch coverage', () => {
   it('returns [] under project scope when ignore.flavor is NOT settings-embedded', () => {
     vi.spyOn(caps, 'getTargetCapabilities').mockReturnValue({
       ignore: { flavor: 'native-ignore-file' },
     } as never);
-    const result = emitScopedGeminiSettings(baseCanonical(), 'project');
+    const result = emitScopedGeminiSettings(baseCanonical(), 'project', ALL_FEATURES);
     expect(result).toEqual([]);
   });
 
   it('returns [] under project scope when getTargetCapabilities returns undefined', () => {
     vi.spyOn(caps, 'getTargetCapabilities').mockReturnValue(undefined as never);
-    const result = emitScopedGeminiSettings(baseCanonical(), 'project');
+    const result = emitScopedGeminiSettings(baseCanonical(), 'project', ALL_FEATURES);
     expect(result).toEqual([]);
   });
 
@@ -46,8 +48,7 @@ describe('emitScopedGeminiSettings — branch coverage', () => {
     // No matter what capabilities return, global skips the project guard.
     const spy = vi.spyOn(caps, 'getTargetCapabilities');
     const canonical = { ...baseCanonical(), ignore: ['build/', '*.log'] };
-    const result = emitScopedGeminiSettings(canonical, 'global');
-    // generateGeminiSettingsFiles will emit at least one settings file for ignore content.
+    const result = emitScopedGeminiSettings(canonical, 'global', ALL_FEATURES);
     expect(Array.isArray(result)).toBe(true);
     expect(spy).not.toHaveBeenCalled();
   });

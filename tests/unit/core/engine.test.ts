@@ -127,7 +127,7 @@ describe('generate', () => {
     });
     expect(results).toHaveLength(4);
     const paths = results.map((r) => r.path).sort();
-    expect(paths).toContain('.claude/CLAUDE.md');
+    expect(paths).toContain('CLAUDE.md');
     expect(paths).toContain('.cursor/rules/general.mdc');
     expect(paths).toContain('.cursor/AGENTS.md');
     expect(paths).toContain('AGENTS.md');
@@ -169,8 +169,7 @@ describe('generate', () => {
 
   it('marks files as updated when content differs', async () => {
     mkdirSync(join(TEST_DIR, '.cursor', 'rules'), { recursive: true });
-    mkdirSync(join(TEST_DIR, '.claude'), { recursive: true });
-    writeFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'Old content');
+    writeFileSync(join(TEST_DIR, 'CLAUDE.md'), 'Old content');
     writeFileSync(join(TEST_DIR, '.cursor', 'rules', 'general.mdc'), 'Old');
     const config = minimalConfig();
     const canonical = canonicalWithRootRule('New content');
@@ -254,7 +253,7 @@ describe('generate', () => {
     const paths = results.map((r) => r.path).sort();
     expect(paths).toContain('.claude/commands/review.md');
     expect(paths).toContain('.cursor/commands/review.md');
-    expect(paths).toContain('.claude/CLAUDE.md');
+    expect(paths).toContain('CLAUDE.md');
     expect(paths).toContain('.cursor/rules/general.mdc');
     expect(paths).toContain('.cursor/AGENTS.md');
     expect(paths).toContain('AGENTS.md');

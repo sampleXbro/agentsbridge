@@ -3,3 +3,6 @@
 # repo root (which has settings for the main package, not this site).
 packages:
   - .
+allowBuilds:
+  esbuild: true
+  sharp: true

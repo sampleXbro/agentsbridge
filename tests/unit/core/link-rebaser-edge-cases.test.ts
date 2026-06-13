@@ -539,8 +539,12 @@ describe('rewriteFileLinks edge cases', () => {
       });
     });
 
-    describe('quoted strings are rewritten', () => {
-      it('rewrites path inside double-quoted string', () => {
+    describe('quoted strings are preserved verbatim', () => {
+      // Single- and double-quoted tokens are string literals in code-like
+      // prose (e.g. `` `scan_root + "/graphify-out/"` ``). Rewriting them
+      // corrupts the snippet. Backticks remain rewritable; see the
+      // inline-code suite above.
+      it('leaves path inside double-quoted string unchanged', () => {
         const result = rewriteFileLinks({
           content: 'Path: "../../docs/guide.md".',
           projectRoot: '/proj',
@@ -549,10 +553,10 @@ describe('rewriteFileLinks edge cases', () => {
           translatePath: (p) => p,
           pathExists: (p) => p === '/proj/docs/guide.md',
         });
-        expect(result.content).toBe('Path: "docs/guide.md".');
+        expect(result.content).toBe('Path: "../../docs/guide.md".');
       });
 
-      it('rewrites path inside single-quoted string', () => {
+      it('leaves path inside single-quoted string unchanged', () => {
         const result = rewriteFileLinks({
           content: "Path: '../../docs/guide.md'.",
           projectRoot: '/proj',
@@ -561,7 +565,7 @@ describe('rewriteFileLinks edge cases', () => {
           translatePath: (p) => p,
           pathExists: (p) => p === '/proj/docs/guide.md',
         });
-        expect(result.content).toBe("Path: 'docs/guide.md'.");
+        expect(result.content).toBe("Path: '../../docs/guide.md'.");
       });
     });
 

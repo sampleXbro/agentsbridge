@@ -452,7 +452,7 @@ describe('runLint', () => {
 
   it('surfaces lessons-subsystem diagnostics through runLint', async () => {
     mkdirSync(join(TEST_DIR, '.agentsmesh', 'lessons'), { recursive: true });
-    writeFileSync(join(TEST_DIR, '.agentsmesh', 'lessons', 'index.yaml'), 'version: 99\n', 'utf8');
+    writeFileSync(join(TEST_DIR, '.agentsmesh', 'lessons', 'lessons.json'), '{ not json }', 'utf8');
     const config = minimalConfig({ features: [] });
     const canonical: CanonicalFiles = {
       rules: [],

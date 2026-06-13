@@ -36,9 +36,9 @@ description: "Project rules"
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
 
 describe('agentsmesh generate (integration)', () => {
-  it('generates .claude/CLAUDE.md from root rule', () => {
+  it('generates CLAUDE.md from root rule', () => {
     execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
-    const content = readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8');
+    const content = readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8');
     expect(content).toContain('Use TypeScript');
   });
 
@@ -51,7 +51,7 @@ describe('agentsmesh generate (integration)', () => {
 
   it('--dry-run does not write files', () => {
     execSync(`node ${CLI_PATH} generate --dry-run`, { cwd: TEST_DIR });
-    expect(() => readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'))).toThrow();
+    expect(() => readFileSync(join(TEST_DIR, 'CLAUDE.md'))).toThrow();
   });
 
   it('no root rule produces no files', () => {
@@ -65,14 +65,14 @@ description: "Other rule"
     );
     rmSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'));
     execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
-    expect(() => readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'))).toThrow();
+    expect(() => readFileSync(join(TEST_DIR, 'CLAUDE.md'))).toThrow();
   });
 
-  it('--targets claude-code generates only .claude/CLAUDE.md', () => {
+  it('--targets claude-code generates only CLAUDE.md', () => {
     execSync(`node ${CLI_PATH} generate --targets claude-code`, {
       cwd: TEST_DIR,
     });
-    expect(readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
+    expect(readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8')).toContain(
       'Use TypeScript',
     );
     expect(() => readFileSync(join(TEST_DIR, '.cursor', 'rules', 'general.mdc'))).toThrow();
@@ -581,7 +581,7 @@ features: [rules]
     expect(readFileSync(join(TEST_DIR, '.github', 'copilot-instructions.md'), 'utf-8')).toContain(
       'Use TypeScript',
     );
-    expect(() => readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'))).toThrow();
+    expect(() => readFileSync(join(TEST_DIR, 'CLAUDE.md'))).toThrow();
     expect(() => readFileSync(join(TEST_DIR, '.cursor', 'rules', 'general.mdc'))).toThrow();
   });
 
@@ -729,7 +729,7 @@ root: true
 `,
     );
     execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
-    const claude = readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8');
+    const claude = readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8');
     expect(claude).toContain('From local (wins)');
     expect(claude).not.toContain('From shared extend');
   });
@@ -741,7 +741,7 @@ root: true
 `,
     );
     execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
-    expect(readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
+    expect(readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8')).toContain(
       'Use TypeScript',
     );
     expect(() => readFileSync(join(TEST_DIR, '.cursor', 'rules', 'general.mdc'))).toThrow();
@@ -770,7 +770,7 @@ extends:
 `,
     );
     execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
-    const claude = readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8');
+    const claude = readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8');
     expect(claude).toContain('From shared extend only');
   });
 
@@ -805,7 +805,7 @@ extends:
       cwd: TEST_DIR,
       env: { ...process.env, AGENTSMESH_CACHE: cacheDir },
     });
-    const claude = readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), 'utf-8');
+    const claude = readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8');
     expect(claude).toContain('From remote github extend (cached)');
     const lock = readFileSync(join(TEST_DIR, '.agentsmesh', '.lock'), 'utf-8');
     expect(lock).toContain('remote-base');

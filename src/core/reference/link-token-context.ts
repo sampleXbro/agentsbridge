@@ -85,13 +85,12 @@ export function shouldRewritePathToken(
   const before = fullContent[start - 1];
   const after = fullContent[end];
   if (isMarkdownReferenceDefinitionDestination(fullContent, start, candidateEnd)) return true;
-  if (
-    (before === "'" && after === "'") ||
-    (before === '"' && after === '"') ||
-    (before === '`' && after === '`')
-  ) {
-    return true;
-  }
+  if (before === '`' && after === '`') return true;
+  // Single/double-quoted tokens are string literals in code-like prose
+  // (e.g. `` `scan_root + "/graphify-out/"` ``) — rewriting them corrupts
+  // the snippet. Keep them verbatim. Backticks above remain rewritable
+  // because inline code is the canonical home of real path references.
+  if ((before === "'" && after === "'") || (before === '"' && after === '"')) return false;
   if (before === '<' && after === '>') return true;
   if (before === '[' && after === ']') {
     if (

@@ -3,6 +3,7 @@ import type { TargetCapabilities } from '../../targets/catalog/target.interface.
 import type { TargetCapabilityValue } from '../../targets/catalog/capabilities.js';
 import { TARGET_IDS } from '../../targets/catalog/target-ids.js';
 import { getTargetCapabilities } from '../../targets/catalog/builtin-targets.js';
+import { colorEnabled } from '../../utils/output/color.js';
 
 const FEATURE_IDS = [
   'rules',
@@ -58,12 +59,8 @@ const ANSI = {
   reset: '\x1b[0m',
 };
 
-function noColor(): boolean {
-  return process.env.NO_COLOR !== undefined && process.env.NO_COLOR !== '';
-}
-
 function colorize(code: string, text: string): string {
-  return noColor() ? text : `${code}${text}${ANSI.reset}`;
+  return colorEnabled() ? `${code}${text}${ANSI.reset}` : text;
 }
 
 export const LEVEL_COLOR: Record<SupportLevel, string> = {

@@ -34,10 +34,13 @@ import {
   RemoteFetchError,
   LockAcquisitionError,
   FileSystemError,
-  appendLessonToJournal,
-  formatLessonBullet,
-  loadLessonsIndex,
-  readTriggeredLessons,
+  loadLessonsGraph,
+  queryLessons,
+  rankLessons,
+  validateLessonsGraph,
+  addLesson,
+  mutateLessonsGraph,
+  DEFAULT_RECALL_LIMIT,
 } from 'agentsmesh';
 
 import type {
@@ -88,11 +91,13 @@ import type {
   GeneratedOutputMerger,
   TargetCapabilities,
   TargetGenerators,
-  AppendLessonResult,
-  LessonCaptureInput,
-  LessonsIndex,
-  ToolEvent,
-  TriggeredLesson,
+  AddLessonInput,
+  AddLessonResult,
+  LessonsGraph,
+  LessonsQuery,
+  MatchedLesson,
+  RankedLesson,
+  ValidationReport,
 } from 'agentsmesh';
 
 // Subpath entrypoints — each must resolve to types, not `any`.
@@ -110,8 +115,9 @@ import {
 } from 'agentsmesh/canonical';
 import { getAllDescriptors as getAllFromSub } from 'agentsmesh/targets';
 import {
-  readTriggeredLessons as readTriggeredLessonsFromSub,
-  type TriggeredLesson as TriggeredLessonFromSub,
+  recallLessons as recallLessonsFromSub,
+  captureLesson as captureLessonFromSub,
+  type RecallResult as RecallResultFromSub,
 } from 'agentsmesh/lessons';
 
 async function exerciseRuntime(): Promise<void> {
@@ -188,21 +194,33 @@ async function exerciseRuntime(): Promise<void> {
   const checkReport: LockSyncReport = await check(checkOpts);
   const _checkFromSub: LockSyncReport = await checkFromSub(checkOpts);
 
-  const lessonsIndex: LessonsIndex = loadLessonsIndex('/tmp/noop');
-  const lessonEvent: ToolEvent = { kind: 'task', text: 'shell quoting' };
-  const triggeredLessons: TriggeredLesson[] = readTriggeredLessons('/tmp/noop', lessonEvent);
-  const triggeredLessonsFromSub: TriggeredLessonFromSub[] = readTriggeredLessonsFromSub(
-    '/tmp/noop',
-    lessonEvent,
-  );
-  const lessonInput: LessonCaptureInput = {
-    heading: 'Example',
-    whatWentWrong: 'Something failed',
-    rootCause: 'The cause was missed',
+  const lessonsGraph: LessonsGraph = loadLessonsGraph('/tmp/noop');
+  const lessonsQuery: LessonsQuery = { file: 'src/x.ts', command: 'pnpm test' };
+  const matchedLessons: MatchedLesson[] = queryLessons(lessonsGraph, lessonsQuery);
+  const rankedLessons: RankedLesson[] = rankLessons(lessonsGraph, lessonsQuery, matchedLessons, {
+    limit: DEFAULT_RECALL_LIMIT,
+  });
+  const lessonsValidation: ValidationReport = validateLessonsGraph(lessonsGraph);
+  const lessonInput: AddLessonInput = {
     rule: 'Check the cause first',
+    topic: 'example',
+    triggers: { files: ['src/x.ts'], commands: ['pnpm test'] },
   };
-  const formattedLesson: string = formatLessonBullet(lessonInput);
-  const appendedLesson: AppendLessonResult = appendLessonToJournal('/tmp/noop', lessonInput);
+  const addedLesson: AddLessonResult = await addLesson('/tmp/noop', lessonInput, {
+    allowNewTopic: true,
+    topicSummary: 'Example.',
+  });
+  const lessonCount: number = await mutateLessonsGraph(
+    '/tmp/noop',
+    (graph) => Object.keys(graph.lessons).length,
+  );
+  const recalledLessons: RecallResultFromSub = await recallLessonsFromSub('/tmp/noop', {
+    keyword: 'shell quoting',
+  });
+  const capturedLesson: AddLessonResult = await captureLessonFromSub('/tmp/noop', lessonInput, {
+    allowNewTopic: true,
+    topicSummary: 'Example.',
+  });
 
   void _fromSub;
   void _canonicalFromSub;
@@ -223,11 +241,14 @@ async function exerciseRuntime(): Promise<void> {
   void _diffSummary;
   void _checkFromSub;
   void checkReport;
-  void lessonsIndex;
-  void triggeredLessons;
-  void triggeredLessonsFromSub;
-  void formattedLesson;
-  void appendedLesson;
+  void lessonsGraph;
+  void matchedLessons;
+  void rankedLessons;
+  void lessonsValidation;
+  void addedLesson;
+  void lessonCount;
+  void recalledLessons;
+  void capturedLesson;
   void lintResult;
   void diffResult;
   void computed;

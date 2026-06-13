@@ -73,6 +73,19 @@ describe('AgentsMeshError taxonomy', () => {
     expect(fsErr.errnoCode).toBe('EACCES');
   });
 
+  it('LockAcquisitionError labels the message per lock and defaults to a generic "lock"', () => {
+    const labelled = new LockAcquisitionError('/p/.lessons.lock', 'pid 42', {
+      label: 'lessons lock',
+    });
+    expect(labelled.label).toBe('lessons lock');
+    expect(labelled.message).toContain('Could not acquire lessons lock at /p/.lessons.lock');
+    expect(labelled.message).not.toContain('generate lock');
+
+    const unlabelled = new LockAcquisitionError('/p/.generate.lock', 'pid 7');
+    expect(unlabelled.label).toBe('lock');
+    expect(unlabelled.message).toContain('Could not acquire lock at /p/.generate.lock');
+  });
+
   it('subclasses are all catchable as AgentsMeshError for consumers who want broad matching', () => {
     const errors = [
       new ConfigNotFoundError('/x'),

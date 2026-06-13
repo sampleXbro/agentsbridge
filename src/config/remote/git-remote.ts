@@ -1,9 +1,9 @@
 import { execFile } from 'node:child_process';
-import { mkdir, rename, rm } from 'node:fs/promises';
+import { mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { URL } from 'node:url';
 import { promisify } from 'node:util';
-import { exists } from '../../utils/filesystem/fs.js';
+import { exists, renameWithRetry } from '../../utils/filesystem/fs.js';
 import { redactUrlSecrets } from '../../utils/output/redact-url-secrets.js';
 import type { FetchRemoteOptions, FetchRemoteResult } from './remote-fetcher.js';
 import type { ParsedGitSource, ParsedGitlabSource } from './remote-source.js';
@@ -51,7 +51,10 @@ export async function fetchGitRemoteExtend(
     await cloneRepo(resolveCloneUrl(parsed), stagedRepoDir);
     if (parsed.ref) await checkoutRef(stagedRepoDir, parsed.ref);
     await rm(cacheRoot, { recursive: true, force: true });
-    await rename(stagedRoot, cacheRoot);
+    // Windows can EPERM this rename: `git clone` just exited and its handle (or
+    // an AV/indexer scan) still pins the freshly-written staged tree. Retry
+    // until the lock clears instead of surfacing a spurious "fetch failed".
+    await renameWithRetry(stagedRoot, cacheRoot);
     return readCachedRepo(cacheRepoDir);
   } catch (err) {
     await rm(stagedRoot, { recursive: true, force: true });

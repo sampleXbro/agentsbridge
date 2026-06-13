@@ -98,7 +98,7 @@ describe('multi-extend precedence e2e', () => {
     const result = await runCli('generate', project, { AGENTSMESH_ALLOW_LOCAL_GIT: '1' });
     expect(result.exitCode, result.stderr).toBe(0);
 
-    expect(readFileSync(join(project, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
+    expect(readFileSync(join(project, 'CLAUDE.md'), 'utf-8')).toContain(
       'Project Override',
     );
 

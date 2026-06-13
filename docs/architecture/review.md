@@ -1,6 +1,6 @@
 # Senior Architectural Review — agentsmesh
 
-**Date:** 2026-04-19
+**Date:** 2026-04-19 — see the [Status addendum (2026-06-09)](#status-addendum--2026-06-09) below before treating any finding as open.
 **Reviewer role:** Senior library architect, TypeScript/CLI/codegen
 **Scope:** Full repository — target system, generation/import pipelines, testing, docs, release surface.
 **Objective:** Identify the highest-leverage changes to make this library scale to more targets, more contributors, and more platforms without regressing reliability. Keep additions simple, keep the contract explicit, and keep verification strict.
@@ -9,6 +9,30 @@ Companion documents:
 - `docs/architecture/add-target-template.md` — canonical structure for adding a new target (project + global).
 - `docs/architecture/testing-strategy.md` — layered testing strategy with per-target contract matrix.
 - `docs/architecture/implementation-tasks.md` — phased work items for mid-tier models.
+
+---
+
+## Status addendum — 2026-06-09
+
+Re-audit of every §3 finding against the current `develop` tree. Each status below was verified directly with `grep`/`wc`/`ls` on 2026-06-09; the original finding text is preserved unchanged as historical context. **Most findings are implemented — only §3.1 (narrowed), §3.12, and §3.13 remain open.**
+
+| Finding | Status | Evidence (verified 2026-06-09) |
+| --- | --- | --- |
+| §3.1 Hardcoded target names in shared code | **Open — narrowed** | The original locations are clean: zero target-id literals in `src/core` production code (the acceptance `rg` over `src/core` returns no hits). Remaining literals are concentrated in two install-side inference modules: `src/install/native/native-path-pick-infer.ts` and `src/install/manual/mdc-target-infer.ts`. |
+| §3.2 Duplicated agent/skill import helpers | **Implemented** | Shared pipeline exists at `src/targets/import/shared/skill-import-pipeline.ts` (with `reserved.ts`); none of the five per-target `*-skills-helpers.ts` files exist anymore. |
+| §3.3 Feature variance in `TargetGenerators` | **Resolved — different design than proposed** | Instead of deleting the extra generator methods, variance is modeled by a flavor-aware `GenerateFeatureContext` (`src/targets/catalog/target.interface.ts`) plus `TargetCapabilityValue.flavor` and the `cap(level, flavor)` helper in `src/targets/catalog/capabilities.ts`; consumed by `src/core/generate/feature-loop.ts`. The intent (serialization variance lives in capabilities, not ad-hoc methods) is met. |
+| §3.4 Scattered global-mode extension points | **Implemented** | `globalSupport` block exists in `src/targets/catalog/target-descriptor.schema.ts` (lines 59, 158) and actively rejects the legacy bare fields (`Use globalSupport instead of legacy field "…"`). 28 target descriptors under `src/targets/*/index.ts` use it. |
+| §3.5 Matrix / README / website drift | **Implemented** | `scripts/render-support-matrix.ts` exists; `package.json` defines `matrix:verify`; CI runs it (`.github/workflows/ci.yml:99`). |
+| §3.6 Output-family / shared-artifact ownership | **Implemented** | Shared-artifact owner registry at `src/targets/catalog/shared-artifact-owner.ts`; descriptors declare `sharedArtifacts` (e.g. `codex-cli`, `amp`, `crush`, `pi-agent`, `replit-agent`); `src/core/reference/rewriter.ts` consumes the registry and contains no target-id string (acceptance met, see §3.1). |
+| §3.7 Detection-path duplication | **Implemented** | `collectDetectionPaths` lives in `src/targets/catalog/detection.ts`, consumed by `src/cli/commands/init-detect.ts`. |
+| §3.8 Library export surface | **Implemented — exceeded** | `package.json` `exports` ships `./engine`, `./canonical`, `./targets`, plus an additional `./lessons` entry, each with `types`/`import`/`default` conditions. |
+| §3.9 Plugin registry | **Implemented** | `registerTargetDescriptor` (`src/targets/catalog/registry.ts`) is exercised by `tests/unit/install/importers/target-native-commands-plugin.test.ts`; descriptor types are public via the `./targets` export. |
+| §3.10 Per-target test boilerplate | **Implemented** | Parametrized contract matrix exists at `tests/contract/target-contract.matrix.test.ts`. |
+| §3.11 Watch test harness | **Implemented** | Shared harness exists at `tests/harness/watch.ts`. |
+| §3.12 Large-file compliance | **Open — original offenders fixed, rule still violated** | The files named in the finding are resolved (`src/core/reference/import-map-builders.ts` is now ≤200 LOC; `gemini-cli`/`codex-cli`/`cursor` `generator.ts` are 1-line re-exports after splits). But 41 non-test files under `src/` currently exceed 200 LOC (verified via `find src -name '*.ts' ! -name '*.test.ts' | xargs wc -l`); worst is `src/install/importers/target-native-commands.ts` at 413, second is `src/targets/import/shared/skill-import-pipeline.ts` (the §3.2 fix itself) at 370. |
+| §3.13 Canonical contract tests | **Open — partial** | `canonical-full` / `canonical-minimal` fixtures exist (`tests/e2e/fixtures/`) and are exercised broadly across e2e suites, but no dedicated canonical-format snapshot test (one schema-validity assertion per feature) was found. |
+
+The sequencing guidance in §4 is superseded accordingly: of the "true blockers" only the §3.1 remainder is open, and the §3.12 backlog has shifted to a new set of files.
 
 ---
 

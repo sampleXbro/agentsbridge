@@ -50,7 +50,9 @@ agentsmesh install --sync
 
 For any non-local source (`github:`, `gitlab:`, `git+...`) AgentsMesh **strips these three artifacts by default** and warns you. To accept them, re-run with the matching `--accept-*` flag (or `--accept-elevated` for all three). Local sources (a directory on disk) are trusted as-is — you already control those bytes.
 
-Additional hardening: `git+file://` sources are blocked by default to prevent local privilege escalation on shared hosts — set `AGENTSMESH_ALLOW_LOCAL_GIT=1` to enable them for closed-network development. Skill supporting-file traversal does not follow symlinks, and credentials are redacted from all error output. See [Fetch hardening](/configuration/extends/#fetch-hardening) for the full list.
+Your consent is recorded in `installs.yaml` (`accepted_elevated`). `install --sync` and `refresh` re-apply it automatically, so a post-clone replay keeps the artifacts you accepted without you re-passing the `--accept-*` flags.
+
+Additional hardening: `git+file://` sources are blocked by default to prevent local privilege escalation on shared hosts — set `AGENTSMESH_ALLOW_LOCAL_GIT=1` to enable them for closed-network development. Skill supporting-file traversal does not follow symlinks, and credentials are redacted from all error output. See [Fetch hardening](../../configuration/extends/#fetch-hardening) for the full list.
 
 ## When to reach for each flag
 

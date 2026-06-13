@@ -1,3 +1,5 @@
+import { LESSONS_SUBCOMMANDS } from './commands/lessons-usage.js';
+
 export interface HelpFlag {
   name: string;
   description: string;
@@ -283,5 +285,62 @@ export const COMMANDS: HelpCommand[] = [
     usage: 'agentsmesh mcp',
     description: 'Start the agentsmesh MCP server (stdio)',
     flags: [],
+  },
+  {
+    name: 'lessons',
+    usage: 'agentsmesh lessons <subcommand> [args] [flags]',
+    // Enumeration is generated from the canonical subcommand list so this
+    // description can never drift from the real CLI surface.
+    description: `Query and capture lessons from .agentsmesh/lessons/lessons.json. Subcommands: ${LESSONS_SUBCOMMANDS.join(', ')}.`,
+    flags: [
+      {
+        name: '--file <path>',
+        description: 'query: project-relative path of the file about to be edited',
+      },
+      { name: '--cmd <command>', description: 'query: shell command about to run' },
+      { name: '--keyword <text>', description: 'query: free-form task description' },
+      { name: '--format plain|md|json', description: 'query: output format (default plain)' },
+      { name: '--top <n>', description: 'query: keep the top n ranked matches (default 10)' },
+      { name: '--all', description: 'query: return every match (no cap)' },
+      { name: '--max-tokens <n>', description: 'query: cap results by cumulative rule-token cost' },
+      { name: '--rule "<text>"', description: 'add: imperative rule (required)' },
+      { name: '--topic <id>', description: 'add: topic id (required; use --new-topic for new)' },
+      {
+        name: '--trigger-file <glob>',
+        description: 'add: file_glob trigger (repeat the flag; value is opaque)',
+      },
+      {
+        name: '--trigger-cmd <regex>',
+        description: 'add: command_pattern trigger, valid regex (repeat the flag)',
+      },
+      {
+        name: '--trigger-kw <text>',
+        description: 'add: keyword trigger (repeat the flag; value is opaque)',
+      },
+      {
+        name: '--evidence <ref>',
+        description: 'add: evidence reference (commit:SHA, lesson:id, …)',
+      },
+      {
+        name: '--rationale <text>',
+        description: 'add: optional why-this-matters note stored on the lesson',
+      },
+      { name: '--new-topic --topic-summary "..."', description: 'add: create a new topic' },
+      { name: '--superseded-by <id>', description: 'deprecate: replacement lesson id' },
+      { name: '--dry-run', description: 'strip-markers: preview changes; report the count without writing' },
+      {
+        name: '--json',
+        description: 'stats: emit the recall-telemetry report as JSON instead of the text summary',
+      },
+      { name: '--apply', description: 'prune: write the curation (dry-run by default)' },
+      { name: '--cap <n>', description: 'prune: override the per-lesson trigger cap' },
+      {
+        name: '--merge',
+        description:
+          'import-md: fold legacy lessons into an existing lessons.json (recover stranded)',
+      },
+      { name: '--force', description: 'import-md: overwrite existing lessons.json' },
+      { name: '--migrated-at <ISO date>', description: 'import-md: stamp on imported lessons' },
+    ],
   },
 ];

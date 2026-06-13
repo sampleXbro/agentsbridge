@@ -4,6 +4,8 @@ import { generateRules } from '../../../../src/targets/zed/generator.js';
 import { descriptor } from '../../../../src/targets/zed/index.js';
 import { ZED_ROOT_FILE, ZED_SETTINGS_FILE } from '../../../../src/targets/zed/constants.js';
 
+const ALL_FEATURES = new Set(['rules', 'mcp', 'hooks', 'ignore', 'permissions', 'agents']);
+
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
   return {
     rules: [],
@@ -148,7 +150,7 @@ describe('emitScopedSettings — MCP format (zed)', () => {
         },
       },
     });
-    const results = descriptor.emitScopedSettings!(canonical, 'project');
+    const results = descriptor.emitScopedSettings!(canonical, 'project', ALL_FEATURES);
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(ZED_SETTINGS_FILE);
     const parsed = JSON.parse(results[0].content);
@@ -161,13 +163,13 @@ describe('emitScopedSettings — MCP format (zed)', () => {
 
   it('returns empty array when mcp is null', () => {
     const canonical = makeCanonical({ mcp: null });
-    const results = descriptor.emitScopedSettings!(canonical, 'project');
+    const results = descriptor.emitScopedSettings!(canonical, 'project', ALL_FEATURES);
     expect(results).toEqual([]);
   });
 
   it('returns empty array when mcpServers is empty', () => {
     const canonical = makeCanonical({ mcp: { mcpServers: {} } });
-    const results = descriptor.emitScopedSettings!(canonical, 'project');
+    const results = descriptor.emitScopedSettings!(canonical, 'project', ALL_FEATURES);
     expect(results).toEqual([]);
   });
 });

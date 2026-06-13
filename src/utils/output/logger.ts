@@ -1,5 +1,7 @@
 // Colored console output
 
+import { colorEnabled } from './color.js';
+
 const C = {
   green: '\x1b[32m',
   red: '\x1b[31m',
@@ -23,20 +25,16 @@ export function redirectLoggerToStderr(): void {
   stdoutRedirectedToStderr = true;
 }
 
+function outStream(): NodeJS.WriteStream {
+  return stdoutRedirectedToStderr ? process.stderr : process.stdout;
+}
+
 function out(text: string): void {
-  if (stdoutRedirectedToStderr) {
-    process.stderr.write(text);
-  } else {
-    process.stdout.write(text);
-  }
+  outStream().write(text);
 }
 
-function noColor(): boolean {
-  return process.env.NO_COLOR !== undefined && process.env.NO_COLOR !== '';
-}
-
-function c(code: string, text: string): string {
-  return noColor() ? text : `${code}${text}${C.reset}`;
+function c(code: string, text: string, stream: NodeJS.WriteStream): string {
+  return colorEnabled(stream) ? `${code}${text}${C.reset}` : text;
 }
 
 function pad(str: string, width: number): string {
@@ -47,24 +45,24 @@ function pad(str: string, width: number): string {
 export const logger = {
   info(msg: string): void {
     if (muted) return;
-    out(c(C.cyan, msg) + '\n');
+    out(c(C.cyan, msg, outStream()) + '\n');
   },
   warn(msg: string): void {
     if (muted) return;
-    process.stderr.write(c(C.yellow, '⚠ ') + msg + '\n');
+    process.stderr.write(c(C.yellow, '⚠ ', process.stderr) + msg + '\n');
   },
   error(msg: string): void {
     if (muted) return;
-    process.stderr.write(c(C.red, '✗ ') + msg + '\n');
+    process.stderr.write(c(C.red, '✗ ', process.stderr) + msg + '\n');
   },
   success(msg: string): void {
     if (muted) return;
-    out(c(C.green, '✓ ') + msg + '\n');
+    out(c(C.green, '✓ ', outStream()) + msg + '\n');
   },
   debug(msg: string): void {
     if (muted) return;
     if (process.env.AGENTSMESH_DEBUG === '1') {
-      out(c(C.cyan, '[debug] ') + msg + '\n');
+      out(c(C.cyan, '[debug] ', outStream()) + msg + '\n');
     }
   },
   table(rows: string[][]): void {

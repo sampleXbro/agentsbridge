@@ -34,6 +34,21 @@ describe('cleanupStaleGeneratedOutputs', () => {
     expect(existsSync(join(TEST_ROOT, 'README.md'))).toBe(true);
   });
 
+  it('removes legacy project .claude/CLAUDE.md when root CLAUDE.md is generated', async () => {
+    mkdirSync(join(TEST_ROOT, '.claude'), { recursive: true });
+    writeFileSync(join(TEST_ROOT, 'CLAUDE.md'), 'root');
+    writeFileSync(join(TEST_ROOT, '.claude', 'CLAUDE.md'), 'legacy');
+
+    await cleanupStaleGeneratedOutputs({
+      projectRoot: TEST_ROOT,
+      targets: ['claude-code'],
+      expectedPaths: ['CLAUDE.md'],
+    });
+
+    expect(existsSync(join(TEST_ROOT, 'CLAUDE.md'))).toBe(true);
+    expect(existsSync(join(TEST_ROOT, '.claude', 'CLAUDE.md'))).toBe(false);
+  });
+
   it('uses global managed outputs for Claude global cleanup', async () => {
     mkdirSync(join(TEST_ROOT, '.claude', 'commands'), { recursive: true });
     writeFileSync(join(TEST_ROOT, '.claude', 'CLAUDE.md'), 'keep');

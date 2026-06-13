@@ -3,26 +3,13 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { delay, pollForWatch, watchStabilityDelayMs } from '../harness/watch.js';
 
 const TEST_DIR = join(tmpdir(), 'am-e2e-watch-features');
 const CLI_PATH = join(process.cwd(), 'dist', 'cli.js');
 
 function regenCount(output: string): number {
   return output.match(/Regenerated\./g)?.length ?? 0;
-}
-
-async function waitFor(check: () => void, timeoutMs = 8000): Promise<void> {
-  const start = Date.now();
-  while (Date.now() - start < timeoutMs) {
-    try {
-      check();
-      return;
-    } catch {
-      // Continue waiting
-    }
-    await new Promise((resolve) => setTimeout(resolve, 200));
-  }
-  check();
 }
 
 beforeEach(() => {
@@ -75,7 +62,7 @@ describe('watch feature coverage', () => {
       stdout += String(chunk);
     });
 
-    await waitFor(() => {
+    await pollForWatch(() => {
       expect(regenCount(stdout)).toBe(1);
       expect(readFileSync(join(TEST_DIR, '.claude', 'commands', 'review.md'), 'utf-8')).toContain(
         'Initial review command',
@@ -86,7 +73,7 @@ describe('watch feature coverage', () => {
       join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'),
       '---\ndescription: Review\n---\nUpdated review command\n',
     );
-    await waitFor(() => {
+    await pollForWatch(() => {
       expect(regenCount(stdout)).toBe(2);
       expect(readFileSync(join(TEST_DIR, '.claude', 'commands', 'review.md'), 'utf-8')).toContain(
         'Updated review command',
@@ -97,7 +84,7 @@ describe('watch feature coverage', () => {
       join(TEST_DIR, '.agentsmesh', 'skills', 'api-generator', 'SKILL.md'),
       '---\ndescription: API generator\n---\n# API Generator\nUpdated skill body\n',
     );
-    await waitFor(() => {
+    await pollForWatch(() => {
       expect(regenCount(stdout)).toBe(3);
       expect(
         readFileSync(join(TEST_DIR, '.claude', 'skills', 'api-generator', 'SKILL.md'), 'utf-8'),
@@ -108,7 +95,7 @@ describe('watch feature coverage', () => {
       join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'),
       '---\ndescription: Review\n---\nSecond command update\n',
     );
-    await waitFor(() => {
+    await pollForWatch(() => {
       expect(regenCount(stdout)).toBe(4);
       expect(readFileSync(join(TEST_DIR, '.claude', 'commands', 'review.md'), 'utf-8')).toContain(
         'Second command update',
@@ -123,7 +110,7 @@ describe('watch feature coverage', () => {
         2,
       ),
     );
-    await waitFor(() => {
+    await pollForWatch(() => {
       expect(regenCount(stdout)).toBe(5);
       expect(readFileSync(join(TEST_DIR, '.mcp.json'), 'utf-8')).toContain('"pnpm"');
     });
@@ -132,19 +119,19 @@ describe('watch feature coverage', () => {
       join(TEST_DIR, '.agentsmesh', 'hooks.yaml'),
       'PostToolUse:\n  - matcher: Write\n    command: eslint --fix "$FILE_PATH"\n',
     );
-    await waitFor(() => {
+    await pollForWatch(() => {
       expect(regenCount(stdout)).toBe(6);
       expect(readFileSync(join(TEST_DIR, '.claude', 'settings.json'), 'utf-8')).toContain(
         'eslint --fix',
       );
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 700));
+    await delay(watchStabilityDelayMs());
     writeFileSync(
       join(TEST_DIR, '.agentsmesh', 'permissions.yaml'),
       'allow:\n  - Read\n  - Grep\n',
     );
-    await waitFor(() => {
+    await pollForWatch(() => {
       expect(regenCount(stdout)).toBe(6);
       expect(readFileSync(join(TEST_DIR, '.claude', 'settings.json'), 'utf-8')).toContain('"Grep"');
       expect(stdout).toContain('Legend:');

@@ -224,6 +224,6 @@ describe('install anthropic skill-pack (integration)', () => {
     for (const name of [...CLAUDE_COMMAND_NAMES, ...GEMINI_COMMAND_NAMES]) {
       expect(existsSync(join(project, '.claude', 'commands', `${name}.md`))).toBe(true);
     }
-    expect(existsSync(join(project, '.claude', 'CLAUDE.md'))).toBe(true);
+    expect(existsSync(join(project, 'CLAUDE.md'))).toBe(true);
   });
 });

@@ -13,6 +13,8 @@ import {
   AMP_MCP_FILE,
 } from '../../../../src/targets/amp/constants.js';
 
+const ALL_FEATURES = new Set(['rules', 'mcp', 'hooks', 'ignore', 'permissions', 'agents']);
+
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
   return {
     rules: [],
@@ -237,7 +239,7 @@ describe('emitScopedSettings — MCP format (amp)', () => {
         },
       },
     });
-    const results = descriptor.emitScopedSettings!(canonical, 'project');
+    const results = descriptor.emitScopedSettings!(canonical, 'project', ALL_FEATURES);
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(AMP_MCP_FILE);
     const parsed = JSON.parse(results[0].content);
@@ -250,13 +252,13 @@ describe('emitScopedSettings — MCP format (amp)', () => {
 
   it('returns empty array when mcp is null', () => {
     const canonical = makeCanonical({ mcp: null });
-    const results = descriptor.emitScopedSettings!(canonical, 'project');
+    const results = descriptor.emitScopedSettings!(canonical, 'project', ALL_FEATURES);
     expect(results).toEqual([]);
   });
 
   it('returns empty array when mcpServers is empty', () => {
     const canonical = makeCanonical({ mcp: { mcpServers: {} } });
-    const results = descriptor.emitScopedSettings!(canonical, 'project');
+    const results = descriptor.emitScopedSettings!(canonical, 'project', ALL_FEATURES);
     expect(results).toEqual([]);
   });
 });

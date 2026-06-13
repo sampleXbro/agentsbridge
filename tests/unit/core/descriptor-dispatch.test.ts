@@ -90,7 +90,7 @@ describe('ruleTargetPath', () => {
 
   it('returns primaryRootInstructionPath for root rule on claude-code', () => {
     const rule = makeRule('_root', { root: true });
-    expect(ruleTargetPath('claude-code', rule)).toBe('.claude/CLAUDE.md');
+    expect(ruleTargetPath('claude-code', rule)).toBe('CLAUDE.md');
   });
 
   it('returns null when rule targets exclude the given target', () => {

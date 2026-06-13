@@ -8,10 +8,34 @@ import { handleError } from './error-handler.js';
 import { muteLogger } from '../utils/output/logger.js';
 import { cmdHandlers } from './command-handlers.js';
 
+/** A parsed flag value: a string, a boolean (presence), or — when the flag is repeated — an array of its string values. */
+export type CliFlagValue = string | boolean | string[];
+export type CliFlags = Record<string, CliFlagValue>;
+
 export interface ParseResult {
   command: string;
-  flags: Record<string, string | boolean>;
+  flags: CliFlags;
   args: string[];
+}
+
+/**
+ * Global flags that are always boolean. They never consume the following token
+ * as a value, so `--json lessons topics` keeps `lessons` as the command instead
+ * of swallowing it as the flag's value. Note: `--version` is intentionally NOT
+ * here — `plugin add --version <ref>` reads it as a value to pin a release.
+ */
+const VALUELESS_FLAGS = new Set(['json', 'verbose', 'help']);
+
+/** Accumulate repeated string flags into an array so `--x a --x b` yields `[a, b]` rather than dropping `a`. */
+function setFlag(flags: CliFlags, name: string, value: string | boolean): void {
+  const existing = flags[name];
+  if (existing === undefined || typeof value === 'boolean') {
+    flags[name] = value;
+    return;
+  }
+  if (Array.isArray(existing)) existing.push(value);
+  else if (typeof existing === 'string') flags[name] = [existing, value];
+  else flags[name] = value;
 }
 
 /**
@@ -20,7 +44,7 @@ export interface ParseResult {
  * @returns command name and flags object
  */
 export function parseArgs(argv: string[]): ParseResult {
-  const flags: Record<string, string | boolean> = {};
+  const flags: CliFlags = {};
   const args: string[] = [];
   let command = 'help';
 
@@ -32,11 +56,17 @@ export function parseArgs(argv: string[]): ParseResult {
     if (command === 'help' && arg === '--help') return { command: 'help', flags: {}, args: [] };
     if (arg.startsWith('--')) {
       const name = arg.slice(2);
+      // Valueless global flags never take a value — leave the next token (often
+      // the command name) for the parser instead of consuming it.
+      if (VALUELESS_FLAGS.has(name)) {
+        setFlag(flags, name, true);
+        continue;
+      }
       const next = argv[i + 1];
       if (next === undefined || next.startsWith('--')) {
-        flags[name] = true;
+        setFlag(flags, name, true);
       } else {
-        flags[name] = next;
+        setFlag(flags, name, next);
         i++;
       }
       continue;
@@ -64,7 +94,7 @@ async function main(parsed: ParseResult): Promise<void> {
     return;
   }
   if (flags.help === true) {
-    printCommandHelp(command);
+    printCommandHelp(command, args);
     return;
   }
 

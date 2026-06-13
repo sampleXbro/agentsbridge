@@ -38,7 +38,7 @@ describe('extends and local overrides', () => {
     const result = await runCli('generate', dir);
 
     expect(result.exitCode).toBe(0);
-    expect(readFileSync(join(dir, '.claude', 'CLAUDE.md'), 'utf-8')).toContain('Local wins');
+    expect(readFileSync(join(dir, 'CLAUDE.md'), 'utf-8')).toContain('Local wins');
   });
 
   it('agentsmesh.local.yaml overrides targets for local generation', async () => {
@@ -48,7 +48,7 @@ describe('extends and local overrides', () => {
     const result = await runCli('generate', dir);
 
     expect(result.exitCode).toBe(0);
-    expect(readFileSync(join(dir, '.claude', 'CLAUDE.md'), 'utf-8')).toContain('TypeScript strict');
+    expect(readFileSync(join(dir, 'CLAUDE.md'), 'utf-8')).toContain('TypeScript strict');
     expect(() => readFileSync(join(dir, '.cursor', 'rules', '_root.mdc'), 'utf-8')).toThrow();
   });
 
@@ -73,7 +73,7 @@ describe('extends and local overrides', () => {
     const result = await runCli('generate', dir);
 
     expect(result.exitCode).toBe(0);
-    expect(readFileSync(join(dir, '.claude', 'CLAUDE.md'), 'utf-8')).toContain('Cached remote');
+    expect(readFileSync(join(dir, 'CLAUDE.md'), 'utf-8')).toContain('Cached remote');
     expect(readFileSync(join(dir, '.agentsmesh', '.lock'), 'utf-8')).toContain('remote-base');
   });
 
@@ -141,7 +141,7 @@ globalThis.fetch = async (input, init) => {
       });
 
       expect(result.exitCode).toBe(0);
-      expect(readFileSync(join(dir, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
+      expect(readFileSync(join(dir, 'CLAUDE.md'), 'utf-8')).toContain(
         'Refreshed remote',
       );
       expect(

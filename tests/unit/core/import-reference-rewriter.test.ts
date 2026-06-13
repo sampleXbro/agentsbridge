@@ -86,7 +86,9 @@ describe('createImportReferenceNormalizer', () => {
     // anchor form.
     expect(normalized).toContain('Markdown: [.agentsmesh/rules/typescript.md](./typescript.md).');
     expect(normalized).toContain('Mention: @.agentsmesh/commands/review.md.');
-    expect(normalized).toContain('Quoted: ".agentsmesh/agents/reviewer.md".');
+    // Quoted tokens are string-literal contexts (code-like prose) and stay
+    // verbatim. The original `.claude/...` path must survive untouched.
+    expect(normalized).toContain('Quoted: ".claude/agents/reviewer.md".');
     expect(normalized).toContain('Parenthesized: (.agentsmesh/skills/api-gen/SKILL.md).');
     expect(normalized).toContain('<.agentsmesh/skills/api-gen/references/checklist.md>.');
     expect(normalized).toContain(

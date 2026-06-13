@@ -9,6 +9,7 @@ import {
 import { TOOL_DESCRIPTORS, RESOURCE_DESCRIPTORS, zodToMcpSchema } from './register.js';
 import { resolveContext } from './context.js';
 import { McpError, redactAbsolutePaths } from './errors.js';
+import { enrichValidationIssues } from './validation-errors.js';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
@@ -79,7 +80,8 @@ export async function startServer(): Promise<void> {
     try {
       const parsed = desc.inputSchema.safeParse(req.params.arguments ?? {});
       if (!parsed.success) {
-        throw new McpError('VALIDATION_FAILED', 'invalid input', parsed.error.issues);
+        const details = enrichValidationIssues(desc.inputSchema, parsed.error.issues);
+        throw new McpError('VALIDATION_FAILED', 'invalid input', details);
       }
       const ctx = await resolveContext({ cwd: process.cwd() });
       const result = await desc.handler(ctx, parsed.data);

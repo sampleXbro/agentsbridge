@@ -54,7 +54,7 @@ The server reads `projectRoot` from the process working directory at startup. No
 
 ## Tools reference
 
-The server exposes **45 tools** grouped by category. All tool errors return a structured envelope `{ code, message, details? }` (see [Error codes](#error-codes)).
+The server exposes **50 tools** grouped by category. All tool errors return a structured envelope `{ code, message, details? }` (see [Error codes](#error-codes)).
 
 ### Canonical reads (8)
 
@@ -141,9 +141,21 @@ The server exposes **45 tools** grouped by category. All tool errors return a st
 | `installs_list` | Read-only inventory of installed packs (NAME / SOURCE / FEATURES / INSTALLED) |
 | `refresh` | Re-fetch and re-apply installed packs against their recorded source/ref. Branch pins re-resolve to the current tip; tag pins re-resolve; SHA pins stay put. Per-pack atomic. |
 
+### Lessons (5)
+
+| Tool | Description |
+|------|-------------|
+| `lessons_query` | Recall primitive — active lessons whose triggers match the supplied file / command / keyword, relevance-ranked and capped |
+| `lessons_add` | Capture primitive — atomically add a lesson; requires at least one effective trigger |
+| `lessons_topics` | List every topic with its summary |
+| `lessons_show` | Render one topic's lessons or a single lesson by id (read-only diagnosis view) |
+| `lessons_deprecate` | Mark a lesson `deprecated`, or `superseded` with a replacement id |
+
+The lessons tools mirror the [`agentsmesh lessons` CLI](../../cli/lessons/) — same predicates, same guardrails — for agents without shell access.
+
 The pack-lifecycle tools always run non-interactively. MCP has no stdin TTY, so the documented `--force` defaults are accepted for every interactive prompt the CLI would surface (bulk select → accept all, broken-link → leave-with-warnings, modified-files → delete-anyway). For finer-grained selection, drive the CLI directly. Input shapes mirror the CLI flags one-for-one (`refresh` accepts `names?: string[]`, `dry_run?`, `global?`); output envelopes match `InstallData` / `UninstallData` / `InstallsListData` / `RefreshData` documented under [`install`](../../cli/install/#json-output), [`uninstall`](../../cli/uninstall/#json-output), [`installs`](../../cli/installs/#json-output), and [`refresh`](../../cli/refresh/#json-output).
 
-All mutation tools and orchestration tools accept an optional `dry_run: true` parameter that returns the planned changes without writing to disk. `install` and `uninstall` also honor `dry_run` (the legacy-manifest migration runs in memory only).
+The canonical mutation tools and orchestration tools accept an optional `dry_run: true` parameter that returns the planned changes without writing to disk. `install` and `uninstall` also honor `dry_run` (the legacy-manifest migration runs in memory only). The `lessons_add` and `lessons_deprecate` tools are the exception — they mutate the lessons graph directly and do not accept `dry_run`.
 
 ## Resources reference
 
@@ -185,6 +197,8 @@ All tool errors return a structured envelope `{ code, message, details? }`.
 | `NO_PROJECT` | No `agentsmesh.yaml` was found in the working directory |
 | `IO_ERROR` | A filesystem read or write failed |
 | `LIMIT_EXCEEDED` | A content or file-count limit was reached |
+| `REFRESH_RESOLVE_FAILED` | A `refresh` could not resolve a pack's source |
+| `REFRESH_APPLY_FAILED` | A `refresh` resolved the source but failed to apply the update |
 
 ## Security
 

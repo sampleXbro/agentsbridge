@@ -38,8 +38,8 @@ afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
 describe('agentsmesh diff (integration)', () => {
   it('shows unified diff when files would be created', () => {
     const out = execSync(`node ${CLI_PATH} diff`, { cwd: TEST_DIR, encoding: 'utf-8' });
-    expect(out).toContain('.claude/CLAUDE.md (current)');
-    expect(out).toContain('.claude/CLAUDE.md (generated)');
+    expect(out).toContain('CLAUDE.md (current)');
+    expect(out).toContain('CLAUDE.md (generated)');
     expect(out).toContain('.cursor/rules/general.mdc');
     expect(out).toContain('Use TypeScript');
     expect(out).toMatch(/\d+ files would be created/);
@@ -47,7 +47,7 @@ describe('agentsmesh diff (integration)', () => {
 
   it('shows unified diff when files would be updated', () => {
     mkdirSync(join(TEST_DIR, '.claude'), { recursive: true });
-    writeFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'), '# Old\n');
+    writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Old\n');
     const out = execSync(`node ${CLI_PATH} diff`, { cwd: TEST_DIR, encoding: 'utf-8' });
     expect(out).toContain('# Old');
     expect(out).toContain('Use TypeScript');
@@ -58,11 +58,11 @@ describe('agentsmesh diff (integration)', () => {
     execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
     const out = execSync(`node ${CLI_PATH} diff`, { cwd: TEST_DIR, encoding: 'utf-8' });
     expect(out).toContain('unchanged');
-    expect(out).not.toContain('--- .claude/CLAUDE.md (current)');
+    expect(out).not.toContain('--- CLAUDE.md (current)');
   });
 
   it('diff does not write any files', () => {
     execSync(`node ${CLI_PATH} diff`, { cwd: TEST_DIR });
-    expect(() => readFileSync(join(TEST_DIR, '.claude', 'CLAUDE.md'))).toThrow();
+    expect(() => readFileSync(join(TEST_DIR, 'CLAUDE.md'))).toThrow();
   });
 });

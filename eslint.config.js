@@ -50,7 +50,11 @@ export default [
     },
   },
   {
-    files: ['tests/unit/**/*.test.ts', 'tests/integration/**/*.test.ts'],
+    files: [
+      'tests/unit/**/*.test.ts',
+      'tests/integration/**/*.test.ts',
+      'tests/e2e/**/*.test.ts',
+    ],
     rules: {
       'no-restricted-imports': [
         'error',

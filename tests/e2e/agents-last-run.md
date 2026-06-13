@@ -1,6 +1,6 @@
 # Agents E2E Last Run Report
 
-_Generated: 2026-06-03T08:16:06.981Z_
+_Generated: 2026-06-13T08:33:36.667Z_
 
 ## Initial — `.agentsmesh/agents/` (canonical fixture)
 
@@ -37,7 +37,7 @@ _Generated: 2026-06-03T08:16:06.981Z_
 └────────────────────┴────────────┘
 
 Legend: ✓ = native  ◆ = embedded  ◐ = partial  – = not supported
-✓ created .claude/CLAUDE.md
+✓ created CLAUDE.md
 ✓ created .claude/rules/typescript.md
 ✓ created .claude/commands/review.md
 ✓ created .claude/agents/code-reviewer.md
@@ -69,7 +69,7 @@ Generated: 11 created, 0 updated, 0 unchanged
 ### Imported files
 
 ```
-✓ .claude/CLAUDE.md → .agentsmesh/rules/_root.md
+✓ CLAUDE.md → .agentsmesh/rules/_root.md
 ✓ .claude/rules/typescript.md → .agentsmesh/rules/typescript.md
 ✓ .claude/commands/review.md → .agentsmesh/commands/review.md
 ✓ .claude/agents/code-reviewer.md → .agentsmesh/agents/code-reviewer.md

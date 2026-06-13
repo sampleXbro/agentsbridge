@@ -57,10 +57,11 @@ Suggest concrete fixes, not vague recommendations.
 | `hooks` | `object` | Agent-level lifecycle hooks. Same format as `hooks.yaml`. |
 | `skills` | `string[]` | Skill names (directories in `.agentsmesh/skills/`) available to this agent. |
 | `memory` | `string` | Path to an external memory file the agent reads at startup. |
+| `outputStyle` | `boolean` | Mark this agent definition as an output style (also accepted as `output-style`), for tools that model output styles as agents. |
 
 ## Tool-specific behavior
 
-See the **Agents** row in the [supported tools matrix](../reference/supported-tools/) for per-target support levels (native, embedded, or unsupported).
+See the **Agents** row in the [supported tools matrix](../../reference/supported-tools/) for per-target support levels (native, embedded, or unsupported).
 
 <Aside type="tip">
   Embedded agents carry metadata so that `agentsmesh import` can restore them from their projected form back to canonical `agents/*.md` format without data loss.

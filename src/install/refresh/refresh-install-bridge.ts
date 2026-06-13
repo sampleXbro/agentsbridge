@@ -74,6 +74,15 @@ export function createRunInstallForRefresh(args: RunInstallForRefreshArgs) {
     const replay: InstallReplayScope = {
       features: entry.features,
       pick: entry.pick,
+      // Preserve the original branch/tag pin so the re-install (pinned at the
+      // new SHA) does not freeze `original_ref` into that SHA — which would
+      // make every subsequent refresh a no-op "unchanged".
+      ...(entry.original_ref !== undefined ? { originalRef: entry.original_ref } : {}),
+      // Re-apply the user's prior elevated-artifact consent so the refresh
+      // keeps the accepted hooks/permissions/mcp instead of stripping them.
+      ...(entry.accepted_elevated !== undefined
+        ? { acceptedElevated: entry.accepted_elevated }
+        : {}),
     };
 
     const sourceForRefresh = buildSourceForRefresh(entry, newSha);

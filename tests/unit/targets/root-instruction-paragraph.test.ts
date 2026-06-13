@@ -39,10 +39,10 @@ describe('appendAgentsmeshRootInstructionParagraph', () => {
   const LEGACY_BODY_V10 =
     '**MUST follow when changing any rule, agent, command, skill, hook, MCP server, permission, or ignore pattern.** `agentsmesh.yaml` selects targets/features (`agentsmesh.local.yaml` overrides locally), and `.agentsmesh` is the only place to add or edit canonical items: `rules/_root.md`, `rules/*.md`, `commands/*.md`, `agents/*.md`, `skills/*/SKILL.md` plus supporting files, `mcp.json`, `hooks.yaml`, `permissions.yaml`, and `ignore`; if missing run `agentsmesh init`, use `agentsmesh import --from <tool>` for native configs, `agentsmesh install <source>` or `install --sync` for reusable packs, then run `agentsmesh generate`. Use `diff`, `lint`, `check`, `watch`, `matrix`, `merge`, and `refresh` as needed; never edit generated tool files.';
 
-  it('appends the headed section to plain content', () => {
+  it('places the headed section at the top, above existing content', () => {
     const result = appendAgentsmeshRootInstructionParagraph('First');
-    expect(result).toContain('First');
-    expect(result).toContain('<!-- agentsmesh:root-generation-contract:start -->');
+    expect(result).toBe(`${AGENTSMESH_ROOT_INSTRUCTION_PARAGRAPH}\n\nFirst`);
+    expect(result.startsWith('<!-- agentsmesh:root-generation-contract:start -->')).toBe(true);
     expect(result).toContain('## AgentsMesh Generation Contract');
     expect(result).toContain('<!-- agentsmesh:root-generation-contract:end -->');
     expect(result).toContain(CURRENT_PROHIBITION_SNIPPET);
@@ -59,7 +59,7 @@ describe('appendAgentsmeshRootInstructionParagraph', () => {
     expect(result.match(/## AgentsMesh Generation Contract/g)).toHaveLength(1);
   });
 
-  it('replaces an existing managed contract block instead of appending another', () => {
+  it('relocates an existing end-of-file managed block to the top, refreshed', () => {
     const existing = [
       'First',
       '<!-- agentsmesh:root-generation-contract:start -->',
@@ -70,8 +70,19 @@ describe('appendAgentsmeshRootInstructionParagraph', () => {
     ].join('\n');
     const result = appendAgentsmeshRootInstructionParagraph(existing);
     expect(result.match(/agentsmesh:root-generation-contract:start/g)).toHaveLength(1);
+    expect(result).toBe(`${AGENTSMESH_ROOT_INSTRUCTION_PARAGRAPH}\n\nFirst`);
+    expect(result.startsWith('<!-- agentsmesh:root-generation-contract:start -->')).toBe(true);
     expect(result).toContain(CURRENT_BODY_SNIPPET);
     expect(result).not.toContain('Old generated text');
+  });
+
+  it('preserves leading frontmatter when placing the block at the top', () => {
+    const existing = '---\nroot: true\n---\n\n# Body heading\n\ncontent';
+    const result = appendAgentsmeshRootInstructionParagraph(existing);
+    expect(result.startsWith('---\nroot: true\n---')).toBe(true);
+    expect(result).toBe(
+      `---\nroot: true\n---\n\n${AGENTSMESH_ROOT_INSTRUCTION_PARAGRAPH}\n\n# Body heading\n\ncontent`,
+    );
   });
 
   it('upgrades the v1 legacy paragraph without a heading', () => {

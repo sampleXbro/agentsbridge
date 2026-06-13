@@ -146,7 +146,7 @@ afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
 
 describe('agents-folder-structure-research: Claude Code (docs §1)', () => {
   const EXPECTED_PATHS = {
-    rules: '.claude/CLAUDE.md', // research: .claude/CLAUDE.md (primary)
+    rules: 'CLAUDE.md', // research: root CLAUDE.md (primary)
     settings: '.claude/settings.json',
     mcp: '.mcp.json',
     agents: '.claude/agents/',
@@ -157,7 +157,7 @@ describe('agents-folder-structure-research: Claude Code (docs §1)', () => {
   };
   // Gaps: .claude/settings.local.json (user-specific, not committed)
 
-  it('generates .claude/CLAUDE.md from root rule', async () => {
+  it('generates root CLAUDE.md from root rule', async () => {
     const results = await generate({
       config: config({ targets: ['claude-code'], features: ['rules'] }),
       canonical: canonicalWithRoot('# Project Rules'),
@@ -1251,7 +1251,7 @@ describe('agents-folder-structure-research: cross-tool matrix (docs quick matrix
       'antigravity',
     ] as const;
     const primaryPaths: Record<(typeof targets)[number], string> = {
-      'claude-code': '.claude/CLAUDE.md',
+      'claude-code': 'CLAUDE.md',
       cursor: '.cursor/rules/general.mdc',
       copilot: '.github/copilot-instructions.md',
       kiro: 'AGENTS.md',

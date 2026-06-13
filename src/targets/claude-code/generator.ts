@@ -25,9 +25,11 @@ export interface RulesOutput {
 }
 
 /**
- * Generate CLAUDE.md from root rule + .claude/rules/*.md from non-root rules.
+ * Generate the root instruction file from the root rule + .claude/rules/*.md from non-root rules.
+ * The root file is emitted at CLAUDE_ROOT (project: `CLAUDE.md`); global scope rewrites it to
+ * `.claude/CLAUDE.md` via the global layout's rewriteGeneratedPath.
  * @param canonical - Loaded canonical files
- * @returns .claude/CLAUDE.md output (from root rule) + .claude/rules/{slug}.md for contextual rules
+ * @returns root instruction output (from root rule) + .claude/rules/{slug}.md for contextual rules
  */
 export function generateRules(canonical: CanonicalFiles): RulesOutput[] {
   const outputs: RulesOutput[] = [];

@@ -146,6 +146,28 @@ const metadataSchema = z
   })
   .passthrough();
 
+const nativePickStrategySchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('basename'), suffix: z.string().min(1) }),
+  z.object({ kind: z.literal('skillDir') }),
+  z.object({ kind: z.literal('firstSegment') }),
+]);
+
+const nativeInstallSchema = z
+  .object({
+    pickPaths: z
+      .array(
+        z.object({
+          prefix: z.string().min(1),
+          feature: z.enum(['commands', 'rules', 'agents', 'skills']),
+          strategy: nativePickStrategySchema,
+        }),
+      )
+      .optional(),
+    inferPick: z.function().optional(),
+    dialectHints: z.array(z.object({ frontmatterKey: z.string().min(1) })).optional(),
+  })
+  .strict();
+
 const targetDescriptorSchemaBase = z
   .object({
     id: z.string().regex(/^[a-z][a-z0-9-]*$/, 'Target id must be lowercase with hyphens'),
@@ -158,6 +180,7 @@ const targetDescriptorSchemaBase = z
     globalSupport: globalSupportSchema.optional(),
     buildImportPaths: z.function(),
     detectionPaths: z.array(z.string()),
+    nativeInstall: nativeInstallSchema.optional(),
     excludeFromStarterInit: z.boolean().optional(),
     conversionDefaults: conversionDefaultsSchema.optional(),
     emitScopedSettings: z.function().optional(),

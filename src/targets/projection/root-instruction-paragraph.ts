@@ -1,5 +1,5 @@
 import {
-  replaceManagedBlock,
+  insertAtBodyTop,
   ROOT_CONTRACT_END,
   ROOT_CONTRACT_START,
   stripManagedBlock,
@@ -111,10 +111,6 @@ export const AGENTSMESH_ROOT_INSTRUCTION_PARAGRAPH = `${ROOT_CONTRACT_START}
 ${ROOT_INSTRUCTION_BODY}
 ${ROOT_CONTRACT_END}`;
 
-function normalizeWhitespace(value: string): string {
-  return value.replace(/\s+/g, ' ').trim();
-}
-
 /** All legacy paragraph forms, newest first. Each is tried for upgrade/strip. */
 const LEGACY_FORMS = [
   AGENTSMESH_CONTRACT_WITH_V10_BODY,
@@ -131,28 +127,15 @@ const LEGACY_FORMS = [
   LEGACY_AGENTSMESH_ROOT_INSTRUCTION_PARAGRAPH,
 ];
 
+/**
+ * Place the generation-contract paragraph at the TOP of a target's primary root
+ * instruction (above existing/user content), refreshing or relocating any prior
+ * block or legacy variant. Stripping is location-independent, so a contract that
+ * was previously appended at the end migrates to the top on the next generate.
+ */
 export function appendAgentsmeshRootInstructionParagraph(content: string): string {
-  const trimmed = content.trim();
-  if (trimmed.includes(ROOT_CONTRACT_START) && trimmed.includes(ROOT_CONTRACT_END)) {
-    return replaceManagedBlock(
-      trimmed,
-      ROOT_CONTRACT_START,
-      ROOT_CONTRACT_END,
-      AGENTSMESH_ROOT_INSTRUCTION_PARAGRAPH,
-    );
-  }
-  const norm = normalizeWhitespace(trimmed);
-  if (norm.includes(normalizeWhitespace(AGENTSMESH_ROOT_INSTRUCTION_PARAGRAPH))) {
-    return trimmed;
-  }
-  for (const legacy of LEGACY_FORMS) {
-    if (norm.includes(normalizeWhitespace(legacy))) {
-      return trimmed.replace(legacy, AGENTSMESH_ROOT_INSTRUCTION_PARAGRAPH);
-    }
-  }
-  return trimmed
-    ? `${trimmed}\n\n${AGENTSMESH_ROOT_INSTRUCTION_PARAGRAPH}`
-    : AGENTSMESH_ROOT_INSTRUCTION_PARAGRAPH;
+  const withoutPrior = stripAgentsmeshRootInstructionParagraph(content);
+  return insertAtBodyTop(withoutPrior, AGENTSMESH_ROOT_INSTRUCTION_PARAGRAPH);
 }
 
 export function stripAgentsmeshRootInstructionParagraph(content: string): string {

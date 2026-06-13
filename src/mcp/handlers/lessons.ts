@@ -8,6 +8,7 @@ import {
 import { maybeAutoMigrateLessons } from '../../lessons/auto-migrate.js';
 import { tryLoadLessonsGraph } from '../../lessons/graph-store.js';
 import { captureLesson, recallLessons } from '../../lessons/recall.js';
+import { McpError } from '../errors.js';
 import { lessonsDeprecate, lessonsShow } from './lessons-curation.js';
 
 interface LessonsQueryInput {
@@ -95,7 +96,8 @@ export const lessonsHandlers = {
       keyword: input.keyword,
     };
     if (query.file === undefined && query.command === undefined && query.keyword === undefined) {
-      throw new Error(
+      throw new McpError(
+        'VALIDATION_FAILED',
         'lessons_query: provide at least one of file, command, or keyword to recall against.',
       );
     }
@@ -198,10 +200,15 @@ export const lessonsHandlers = {
         },
       );
     } catch (err) {
+      // Unknown topic is a missing-referent failure → NOT_FOUND. The other
+      // guardrails (no trigger / unrecallable / oversized rule) are capture
+      // rejections → VALIDATION_FAILED. In both cases surface the domain
+      // machine code in `details.code` so clients keep the precise reason.
       if (err instanceof UnknownTopicError) {
-        throw new Error(
+        throw new McpError(
+          'NOT_FOUND',
           `lessons_add: unknown topic "${err.topic}". Pass new_topic=true + topic_summary to create it.`,
-          { cause: err },
+          { code: err.code },
         );
       }
       if (
@@ -209,7 +216,7 @@ export const lessonsHandlers = {
         err instanceof UnrecallableLessonError ||
         err instanceof RuleTooLongError
       ) {
-        throw new Error(`lessons_add: ${err.message}`, { cause: err });
+        throw new McpError('VALIDATION_FAILED', `lessons_add: ${err.message}`, { code: err.code });
       }
       throw err;
     }

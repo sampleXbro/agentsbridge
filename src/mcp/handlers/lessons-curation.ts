@@ -1,4 +1,5 @@
 import type { McpContext } from '../context.js';
+import { McpError } from '../errors.js';
 import { maybeAutoMigrateLessons } from '../../lessons/auto-migrate.js';
 import { deprecateLesson } from '../../lessons/deprecate.js';
 import type { LessonStatus } from '../../lessons/graph-schema.js';
@@ -35,7 +36,7 @@ export async function lessonsShow(
   const graph = tryLoadLessonsGraph(ctx.projectRoot);
   const topic = graph?.topics[input.topic];
   if (graph === null || topic === undefined) {
-    throw new Error(`lessons_show: unknown topic "${input.topic}".`);
+    throw new McpError('NOT_FOUND', `lessons_show: unknown topic "${input.topic}".`);
   }
   const lessons = Object.entries(graph.lessons)
     .filter(([, l]) => l.topics.includes(input.topic))
@@ -60,8 +61,13 @@ export async function lessonsDeprecate(
     return await deprecateLesson(ctx.projectRoot, input.id, input.superseded_by ?? null);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    // Normalize the core's "Unknown lesson:" / "Unknown superseder:" into the
-    // tool-namespaced phrasing the agent sees.
-    throw new Error(`lessons_deprecate: ${message}`, { cause: err });
+    // A missing lesson or superseder is a NOT_FOUND referent failure — map it so
+    // the client does not see the IO_ERROR catch-all. Any other failure (a real
+    // IO error from the transactional write) falls through to that catch-all and
+    // stays IO_ERROR, so genuine filesystem problems keep their correct code.
+    if (/^Unknown lesson:|^Unknown superseder:/.test(message)) {
+      throw new McpError('NOT_FOUND', `lessons_deprecate: ${message}`);
+    }
+    throw err;
   }
 }

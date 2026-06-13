@@ -18,6 +18,7 @@ import {
   loadLessonsGraph,
 } from '../../../../src/lessons/graph-store.js';
 import type { LessonsGraph } from '../../../../src/lessons/graph-schema.js';
+import { McpError } from '../../../../src/mcp/errors.js';
 
 /** Persist a graph WITHOUT canonicalizing, preserving the literal key order. */
 function writeRawGraph(root: string, graph: LessonsGraph): void {
@@ -511,5 +512,103 @@ describe('lessonsHandlers.deprecate', () => {
 
   it('throws on an unknown lesson id', async () => {
     await expect(lessonsHandlers.deprecate(ctx, { id: 'nope' })).rejects.toThrow(/unknown lesson/i);
+  });
+});
+
+/** Capture the error a rejecting promise throws, asserting it is an McpError. */
+async function captureMcpError(p: Promise<unknown>): Promise<McpError> {
+  try {
+    await p;
+  } catch (e) {
+    if (e instanceof McpError) return e;
+    throw new Error(
+      `expected McpError, got ${e instanceof Error ? e.name : typeof e}: ${String(e)}`,
+      { cause: e },
+    );
+  }
+  throw new Error('expected the promise to reject, but it resolved');
+}
+
+describe('lessonsHandlers — error codes (no IO_ERROR mislabel)', () => {
+  it('query with no predicate is VALIDATION_FAILED', async () => {
+    const err = await captureMcpError(lessonsHandlers.query(ctx, {}));
+    expect(err.code).toBe('VALIDATION_FAILED');
+    expect(err.message).toMatch(/at least one of file, command, or keyword/i);
+  });
+
+  it('add to an unknown topic is NOT_FOUND with UNKNOWN_TOPIC machine code', async () => {
+    const err = await captureMcpError(
+      lessonsHandlers.add(ctx, {
+        rule: 'rejected.',
+        topic: 'ghost-topic',
+        trigger_files: ['src/**/*.ts'],
+      }),
+    );
+    expect(err.code).toBe('NOT_FOUND');
+    expect(err.message).toMatch(/unknown topic/i);
+    expect((err.details as { code?: string }).code).toBe('UNKNOWN_TOPIC');
+  });
+
+  it('add with no triggers is VALIDATION_FAILED with NO_TRIGGER machine code', async () => {
+    const err = await captureMcpError(
+      lessonsHandlers.add(ctx, { rule: 'no triggers.', topic: 'topic-x' }),
+    );
+    expect(err.code).toBe('VALIDATION_FAILED');
+    expect((err.details as { code?: string }).code).toBe('NO_TRIGGER');
+  });
+
+  it('add of an unrecallable lesson is VALIDATION_FAILED with UNRECALLABLE_LESSON machine code', async () => {
+    const err = await captureMcpError(
+      lessonsHandlers.add(ctx, {
+        rule: 'every trigger dead.',
+        topic: 'topic-x',
+        trigger_keywords: ['the of and'],
+      }),
+    );
+    expect(err.code).toBe('VALIDATION_FAILED');
+    expect((err.details as { code?: string }).code).toBe('UNRECALLABLE_LESSON');
+  });
+
+  it('add of an oversized rule is VALIDATION_FAILED with OVERSIZED_RULE machine code', async () => {
+    const err = await captureMcpError(
+      lessonsHandlers.add(ctx, {
+        rule: 'x'.repeat(2001),
+        topic: 'topic-x',
+        trigger_files: ['src/**/*.ts'],
+      }),
+    );
+    expect(err.code).toBe('VALIDATION_FAILED');
+    expect((err.details as { code?: string }).code).toBe('OVERSIZED_RULE');
+  });
+
+  it('add with new_topic but no topic_summary rethrows the underlying error (not swallowed)', async () => {
+    await expect(
+      lessonsHandlers.add(ctx, {
+        rule: 'missing summary.',
+        topic: 'brand-new',
+        new_topic: true,
+        trigger_files: ['src/**/*.ts'],
+      }),
+    ).rejects.toThrow(/topicSummary/i);
+  });
+
+  it('show of an unknown topic is NOT_FOUND', async () => {
+    const err = await captureMcpError(lessonsHandlers.show(ctx, { topic: 'ghost' }));
+    expect(err.code).toBe('NOT_FOUND');
+    expect(err.message).toMatch(/unknown topic/i);
+  });
+
+  it('deprecate of an unknown lesson id is NOT_FOUND', async () => {
+    const err = await captureMcpError(lessonsHandlers.deprecate(ctx, { id: 'nope' }));
+    expect(err.code).toBe('NOT_FOUND');
+    expect(err.message).toMatch(/unknown lesson/i);
+  });
+
+  it('deprecate with an unknown superseder is NOT_FOUND', async () => {
+    const err = await captureMcpError(
+      lessonsHandlers.deprecate(ctx, { id: 'topic-x-rule-1', superseded_by: 'no-such-lesson' }),
+    );
+    expect(err.code).toBe('NOT_FOUND');
+    expect(err.message).toMatch(/unknown superseder/i);
   });
 });

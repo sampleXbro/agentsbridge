@@ -154,7 +154,8 @@ describe('lessons MCP tools — no-mutation error paths', () => {
       arguments: { rule: 'should be rejected', topic: 'no-such-mcp-topic' },
     });
     expect(result.isError).toBe(true);
-    const data = parseToolText(result) as { message: string };
+    const data = parseToolText(result) as { code: string; message: string };
+    expect(data.code).toBe('NOT_FOUND');
     expect(data.message).toContain('unknown topic');
 
     // No graph/topic was created by the failed add.
@@ -171,5 +172,35 @@ describe('lessons MCP tools — no-mutation error paths', () => {
     expect(result.isError).toBe(true);
     const data = parseToolText(result) as { message: string };
     expect(data.message).toContain('topicSummary');
+  });
+
+  it('lessons_query with no predicate is VALIDATION_FAILED (not IO_ERROR)', async () => {
+    const result = await server.client.callTool({ name: 'lessons_query', arguments: {} });
+    expect(result.isError).toBe(true);
+    const data = parseToolText(result) as { code: string; message: string };
+    expect(data.code).toBe('VALIDATION_FAILED');
+    expect(data.message).toContain('at least one of file, command, or keyword');
+  });
+
+  it('lessons_add capture guardrail (no trigger) is VALIDATION_FAILED with NO_TRIGGER detail', async () => {
+    // Seed a real topic so the failure is the trigger guardrail, not unknown-topic.
+    await server.client.callTool({
+      name: 'lessons_add',
+      arguments: {
+        rule: 'A seeded rule.',
+        topic: 'guardrail-topic',
+        topic_summary: 'Guardrail topic.',
+        new_topic: true,
+        trigger_file: 'src/**/*.ts',
+      },
+    });
+    const result = await server.client.callTool({
+      name: 'lessons_add',
+      arguments: { rule: 'No trigger at all.', topic: 'guardrail-topic' },
+    });
+    expect(result.isError).toBe(true);
+    const data = parseToolText(result) as { code: string; details?: { code?: string } };
+    expect(data.code).toBe('VALIDATION_FAILED');
+    expect(data.details?.code).toBe('NO_TRIGGER');
   });
 });

@@ -28,7 +28,14 @@ import { readInstallManifest } from '../helpers/install-test-helpers.js';
 
 const execFileP = promisify(execFile);
 
-describe('refresh against a git source', () => {
+// retry: these tests drive real `git clone`/`checkout` of a local bare repo. On
+// Windows CI the freshly-cloned `.git` can be momentarily invisible to the next
+// `git` process (AV/indexer/handle-release timing — the same transient the
+// fetcher's renameWithRetry already guards), surfacing as a spurious
+// "not a git repository" at checkout. A retry re-runs beforeEach with a fresh
+// bare repo and clone, absorbing the environmental flake; a real refresh-logic
+// regression is deterministic and still fails every attempt.
+describe('refresh against a git source', { retry: 2 }, () => {
   let projectRoot: string;
   let bare: BareRepoWithTwoCommits;
   const ORIGINAL_ALLOW_LOCAL_GIT = process.env.AGENTSMESH_ALLOW_LOCAL_GIT;

@@ -5224,6 +5224,21 @@
         "t-glob-86844292"
       ]
     },
+    "windows-paths-integration-tests-that-drive-a": {
+      "createdAt": "2026-06-13",
+      "evidence": [
+        "7c77764"
+      ],
+      "rule": "Integration tests that drive a real git clone+checkout of a local bare repo (e.g. tests/integration/refresh-git-source) flake on Windows CI with a spurious 'not a git repository' at checkout — the freshly-cloned .git is momentarily invisible to the next git process (the AV/indexer/handle-release timing renameWithRetry already guards in git-remote.ts). Guard the suite with vitest describe(name, { retry: 2 }, fn): a retry re-runs beforeEach with a fresh clone and absorbs the environmental flake, while a deterministic refresh-logic regression still fails every attempt. Prefer retry over it.skipIf(win32) so Windows coverage is kept.",
+      "status": "active",
+      "topics": [
+        "windows-paths"
+      ],
+      "triggers": [
+        "t-glob-3edb9d76",
+        "t-glob-6184efaf"
+      ]
+    },
     "windows-paths-on-windows-only-a-git": {
       "createdAt": "2026-06-12",
       "evidence": [
@@ -6135,6 +6150,10 @@
     "t-glob-3ce2b476": {
       "kind": "file_glob",
       "pattern": "src/core/reference/pack-skill-artifact-paths.ts"
+    },
+    "t-glob-3edb9d76": {
+      "kind": "file_glob",
+      "pattern": "tests/integration/refresh-git-source.test.ts"
     },
     "t-glob-40333e0c": {
       "kind": "file_glob",

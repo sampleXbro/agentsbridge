@@ -90,14 +90,21 @@ function mergeAugmentSettings(existing: string | null, newContent: string): stri
   return JSON.stringify(base, null, 2);
 }
 
-function buildSettingsContent(canonical: CanonicalFiles): string | null {
+function buildSettingsContent(
+  canonical: CanonicalFiles,
+  enabledFeatures: ReadonlySet<string>,
+): string | null {
   const settings: Record<string, unknown> = {};
 
-  if (canonical.mcp && Object.keys(canonical.mcp.mcpServers).length > 0) {
+  if (
+    enabledFeatures.has('mcp') &&
+    canonical.mcp &&
+    Object.keys(canonical.mcp.mcpServers).length > 0
+  ) {
     settings.mcpServers = canonical.mcp.mcpServers;
   }
 
-  if (canonical.hooks && Object.keys(canonical.hooks).length > 0) {
+  if (enabledFeatures.has('hooks') && canonical.hooks && Object.keys(canonical.hooks).length > 0) {
     settings.hooks = serializeHooksForSettings(canonical.hooks);
   }
 
@@ -217,8 +224,8 @@ export const descriptor = {
     ],
     layout: globalLayout,
   },
-  emitScopedSettings(canonical: CanonicalFiles) {
-    const content = buildSettingsContent(canonical);
+  emitScopedSettings(canonical: CanonicalFiles, _scope, enabledFeatures) {
+    const content = buildSettingsContent(canonical, enabledFeatures);
     if (content === null) return [];
     return [{ path: AUGMENT_CODE_SETTINGS_FILE, content }];
   },

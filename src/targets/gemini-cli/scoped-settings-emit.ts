@@ -10,10 +10,11 @@ import { generateGeminiSettingsFiles } from './generator/settings.js';
 export function emitScopedGeminiSettings(
   canonical: CanonicalFiles,
   scope: TargetLayoutScope,
+  enabledFeatures: ReadonlySet<string>,
 ): ReturnType<typeof generateGeminiSettingsFiles> {
   if (scope === 'project') {
     const caps = getTargetCapabilities('gemini-cli', scope);
     if (caps?.ignore.flavor !== 'settings-embedded') return [];
   }
-  return generateGeminiSettingsFiles(canonical);
+  return generateGeminiSettingsFiles(canonical, enabledFeatures);
 }

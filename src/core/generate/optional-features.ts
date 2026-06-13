@@ -86,12 +86,13 @@ export async function generateScopedSettingsFeature(
   canonical: CanonicalFiles,
   projectRoot: string,
   scope: TargetLayoutScope,
+  enabledFeatures: ReadonlySet<string>,
 ): Promise<void> {
   for (const target of targets) {
     const descriptor = getBuiltinTargetDefinition(target) ?? getDescriptor(target);
     const emit = descriptor?.emitScopedSettings;
     if (!emit) continue;
-    const outputs = emit(canonical, scope);
+    const outputs = emit(canonical, scope, enabledFeatures);
     if (outputs.length === 0) continue;
     for (const out of outputs) {
       await emitGeneratedOutput(results, target, out, projectRoot, scope, {

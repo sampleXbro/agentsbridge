@@ -6,6 +6,17 @@ import {
   AUGMENT_CODE_GLOBAL_SETTINGS_FILE,
 } from '../../../../src/targets/augment-code/constants.js';
 
+const ALL_FEATURES = new Set([
+  'rules',
+  'commands',
+  'agents',
+  'skills',
+  'mcp',
+  'hooks',
+  'ignore',
+  'permissions',
+]);
+
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
   return {
     rules: [],
@@ -86,7 +97,7 @@ describe('mergeGeneratedOutputContent (augment-code)', () => {
 describe('emitScopedSettings (augment-code)', () => {
   it('returns null when canonical has no mcp and no hooks', () => {
     const canonical = makeCanonical();
-    const result = descriptor.emitScopedSettings!(canonical);
+    const result = descriptor.emitScopedSettings!(canonical, 'project', ALL_FEATURES);
     expect(result).toEqual([]);
   });
 
@@ -98,7 +109,7 @@ describe('emitScopedSettings (augment-code)', () => {
         },
       },
     });
-    const result = descriptor.emitScopedSettings!(canonical);
+    const result = descriptor.emitScopedSettings!(canonical, 'project', ALL_FEATURES);
     expect(result).toHaveLength(1);
     expect(result[0].path).toBe(AUGMENT_CODE_SETTINGS_FILE);
     const parsed = JSON.parse(result[0].content);
@@ -113,7 +124,7 @@ describe('emitScopedSettings (augment-code)', () => {
         PreToolUse: [{ matcher: 'launch-process', command: 'scripts/check.sh' }],
       },
     });
-    const result = descriptor.emitScopedSettings!(canonical);
+    const result = descriptor.emitScopedSettings!(canonical, 'project', ALL_FEATURES);
     expect(result).toHaveLength(1);
     const parsed = JSON.parse(result[0].content);
     expect(parsed.hooks.PreToolUse).toEqual([
@@ -133,7 +144,7 @@ describe('emitScopedSettings (augment-code)', () => {
         ],
       },
     });
-    const result = descriptor.emitScopedSettings!(canonical);
+    const result = descriptor.emitScopedSettings!(canonical, 'project', ALL_FEATURES);
     expect(result).toHaveLength(1);
     const parsed = JSON.parse(result[0].content);
     const entries = parsed.hooks.PreToolUse;
@@ -153,7 +164,7 @@ describe('emitScopedSettings (augment-code)', () => {
       mcp: { mcpServers: {} },
       hooks: null,
     });
-    const result = descriptor.emitScopedSettings!(canonical);
+    const result = descriptor.emitScopedSettings!(canonical, 'project', ALL_FEATURES);
     expect(result).toEqual([]);
   });
 
@@ -161,7 +172,7 @@ describe('emitScopedSettings (augment-code)', () => {
     const canonical = makeCanonical({
       hooks: {},
     });
-    const result = descriptor.emitScopedSettings!(canonical);
+    const result = descriptor.emitScopedSettings!(canonical, 'project', ALL_FEATURES);
     expect(result).toEqual([]);
   });
 });

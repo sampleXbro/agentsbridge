@@ -16,20 +16,32 @@ function mapHookEvent(event: string): string | null {
   }
 }
 
-/** Emits merged `.gemini/settings.json` when MCP, agents, or hooks contribute native settings. */
-export function generateGeminiSettingsFiles(canonical: CanonicalFiles): RulesOutput[] {
+/**
+ * Emits merged `.gemini/settings.json` when MCP, agents, or hooks contribute native settings.
+ *
+ * Each key is gated on its corresponding feature being present in
+ * `enabledFeatures` so a disabled feature never leaks into the sidecar.
+ */
+export function generateGeminiSettingsFiles(
+  canonical: CanonicalFiles,
+  enabledFeatures: ReadonlySet<string>,
+): RulesOutput[] {
   const settings: Record<string, unknown> = {};
   let hasAnyNativeSettings = false;
 
-  if (canonical.mcp && Object.keys(canonical.mcp.mcpServers).length > 0) {
+  if (
+    enabledFeatures.has('mcp') &&
+    canonical.mcp &&
+    Object.keys(canonical.mcp.mcpServers).length > 0
+  ) {
     settings.mcpServers = canonical.mcp.mcpServers;
     hasAnyNativeSettings = true;
   }
-  if (canonical.agents.length > 0) {
+  if (enabledFeatures.has('agents') && canonical.agents.length > 0) {
     settings.experimental = { enableAgents: true };
     hasAnyNativeSettings = true;
   }
-  if (canonical.hooks) {
+  if (enabledFeatures.has('hooks') && canonical.hooks) {
     const hookEntries = Object.entries(canonical.hooks).flatMap(([event, entries]) => {
       const mappedEvent = mapHookEvent(event);
       if (!mappedEvent || !Array.isArray(entries)) return [];

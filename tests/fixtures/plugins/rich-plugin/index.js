@@ -324,11 +324,18 @@ export const descriptor = {
   },
 
   // ──── Scoped Settings Sidecar ──────────────────────────────────────────────
-  emitScopedSettings(canonical, scope) {
+  // Receives the enabled-feature set so a plugin can gate each key, exactly like
+  // the builtin emitters — proves the engine threads `enabledFeatures` to plugin
+  // descriptors too (not just builtins).
+  emitScopedSettings(canonical, scope, enabledFeatures) {
     const settings = {
       version: 1,
       scope,
       featureCount: canonical.rules.length + canonical.commands.length + canonical.agents.length,
+      // Gated: only present when the mcp feature is enabled for this generate.
+      ...(enabledFeatures?.has('mcp') && canonical.mcp
+        ? { mcpServers: canonical.mcp.mcpServers }
+        : {}),
     };
     return [{ path: '.rich/settings.json', content: JSON.stringify(settings, null, 2) }];
   },

@@ -273,10 +273,17 @@ export interface TargetDescriptor {
   readonly nativeInstall?: NativeInstallSupport;
   /**
    * Optional native settings sidecar (e.g. Gemini `.gemini/settings.json` when embedded features are on).
+   *
+   * `enabledFeatures` is the active feature set for this generate run. Emitters
+   * MUST gate every settings key on its corresponding feature (mcpServers ->
+   * `mcp`, hooks -> `hooks`, agents -> `agents`, permissions -> `permissions`,
+   * ignore-derived keys -> `ignore`) so a disabled feature never leaks into the
+   * sidecar.
    */
   readonly emitScopedSettings?: (
     canonical: CanonicalFiles,
     scope: TargetLayoutScope,
+    enabledFeatures: ReadonlySet<string>,
   ) => readonly { readonly path: string; readonly content: string }[];
   /** Optional target-specific merge strategy for generated outputs. */
   readonly mergeGeneratedOutputContent?: GeneratedOutputMerger;

@@ -128,7 +128,7 @@ export async function generate(ctx: GenerateContext): Promise<GenerateResult[]> 
   );
 
   // Per-target scope extras (e.g. Claude Code output-styles in global mode)
-  const enabledFeatures = new Set(config.features);
+  const enabledFeatures: ReadonlySet<string> = new Set(config.features);
   for (const target of targets) {
     const descriptor = getBuiltinTargetDefinition(target) ?? getDescriptor(target);
     const scopeExtras = descriptor?.globalSupport?.scopeExtras;
@@ -140,7 +140,14 @@ export async function generate(ctx: GenerateContext): Promise<GenerateResult[]> 
 
   // Scoped settings: target-specific sidecars (e.g. Gemini settings.json, plugin settings)
   if (hasMcp || hasIgnore || hasHooks || hasAgents || hasPermissions) {
-    await generateScopedSettingsFeature(results, targets, canonical, projectRoot, scope);
+    await generateScopedSettingsFeature(
+      results,
+      targets,
+      canonical,
+      projectRoot,
+      scope,
+      enabledFeatures,
+    );
   }
 
   // Decoration must run before reference rewriting so that renderPrimaryRootInstruction output

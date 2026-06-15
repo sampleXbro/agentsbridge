@@ -8,6 +8,8 @@ import { generate } from '../../../../src/core/generate/engine.js';
 import { descriptor } from '../../../../src/targets/codex-cli/index.js';
 import { generateHooks } from '../../../../src/targets/codex-cli/generator.js';
 import { importFromCodex } from '../../../../src/targets/codex-cli/importer.js';
+import { importCodexHooks } from '../../../../src/targets/codex-cli/importer-hooks.js';
+import type { ImportResult } from '../../../../src/core/types.js';
 
 const TEST_DIR = join(tmpdir(), 'am-codex-hooks-test');
 
@@ -87,6 +89,33 @@ describe('generateHooks (codex-cli)', () => {
       ),
     ).toEqual([]);
   });
+
+  it('returns empty when canonical hooks is null', () => {
+    expect(generateHooks(canonicalWithHooks(null))).toEqual([]);
+  });
+
+  it('skips non-array hook event entries', () => {
+    const results = generateHooks(
+      canonicalWithHooks({
+        PreToolUse: 'not-an-array' as unknown as CanonicalFiles['hooks'][string],
+        PostToolUse: [{ matcher: 'Write', type: 'command', command: 'prettier' }],
+      }),
+    );
+    expect(results).toEqual([
+      {
+        path: '.codex/hooks.json',
+        content: JSON.stringify(
+          {
+            hooks: {
+              PostToolUse: [{ matcher: 'Write', hooks: [{ type: 'command', command: 'prettier' }] }],
+            },
+          },
+          null,
+          2,
+        ),
+      },
+    ]);
+  });
 });
 
 describe('importFromCodex: hooks', () => {
@@ -125,6 +154,77 @@ describe('importFromCodex: hooks', () => {
       });
     },
   );
+});
+
+describe('importCodexHooks — malformed input guards', () => {
+  async function runImport(raw: string): Promise<ImportResult[]> {
+    mkdirSync(join(TEST_DIR, '.codex'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.codex/hooks.json'), raw);
+    const results: ImportResult[] = [];
+    await importCodexHooks(TEST_DIR, results);
+    return results;
+  }
+
+  it('returns nothing when there is no hooks.json', async () => {
+    const results: ImportResult[] = [];
+    await importCodexHooks(TEST_DIR, results);
+    expect(results).toEqual([]);
+  });
+
+  it('returns nothing for invalid JSON', async () => {
+    expect(await runImport('{ not json')).toEqual([]);
+  });
+
+  it('returns nothing when parsed JSON is not an object', async () => {
+    expect(await runImport(JSON.stringify('a string'))).toEqual([]);
+  });
+
+  it('returns nothing when parsed JSON is null', async () => {
+    expect(await runImport('null')).toEqual([]);
+  });
+
+  it('returns nothing when hooks key is missing', async () => {
+    expect(await runImport(JSON.stringify({ other: 1 }))).toEqual([]);
+  });
+
+  it('returns nothing when hooks is an array', async () => {
+    expect(await runImport(JSON.stringify({ hooks: [] }))).toEqual([]);
+  });
+
+  it('skips events whose value is not an array', async () => {
+    expect(await runImport(JSON.stringify({ hooks: { PreToolUse: 'nope' } }))).toEqual([]);
+  });
+
+  it('skips groups that are not objects and missing-hooks groups', async () => {
+    const results = await runImport(
+      JSON.stringify({ hooks: { PreToolUse: ['scalar', { matcher: 'Bash' }] } }),
+    );
+    expect(results).toEqual([]);
+  });
+
+  it('skips non-object raw hook entries', async () => {
+    const results = await runImport(
+      JSON.stringify({ hooks: { PreToolUse: [{ matcher: 'Bash', hooks: [null, 42] }] } }),
+    );
+    expect(results).toEqual([]);
+  });
+
+  it('defaults a missing matcher to "*" and keeps valid command hooks', async () => {
+    const results = await runImport(
+      JSON.stringify({
+        hooks: {
+          PostToolUse: [{ hooks: [{ type: 'command', command: 'fmt' }] }],
+        },
+      }),
+    );
+    expect(results.filter((r) => r.feature === 'hooks')).toHaveLength(1);
+    const hooks = parseYaml(
+      readFileSync(join(TEST_DIR, '.agentsmesh/hooks.yaml'), 'utf-8'),
+    ) as Record<string, unknown>;
+    expect(hooks).toEqual({
+      PostToolUse: [{ matcher: '*', type: 'command', command: 'fmt' }],
+    });
+  });
 });
 
 describe('codex-cli hook descriptor contract', () => {

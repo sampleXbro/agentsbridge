@@ -66,6 +66,19 @@ describe('importFromRooCode — per-mode rules', () => {
   });
 });
 
+describe('importFromRooCode — per-mode 00-root.md', () => {
+  it('skips a per-mode 00-root.md but imports its siblings', async () => {
+    mkdirSync(join(TEST_DIR, '.roo', 'rules-code'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.roo', 'rules-code', '00-root.md'), '# Should be skipped');
+    writeFileSync(join(TEST_DIR, '.roo', 'rules-code', 'style.md'), 'Style rules here.');
+
+    const results = await importFromRooCode(TEST_DIR);
+    const ruleResults = results.filter((r) => r.feature === 'rules');
+    expect(ruleResults.some((r) => r.toPath.includes('style'))).toBe(true);
+    expect(ruleResults.some((r) => r.toPath.includes('00-root'))).toBe(false);
+  });
+});
+
 describe('importFromRooCode — commands', () => {
   it('imports .roo/commands/*.md as canonical commands', async () => {
     mkdirSync(join(TEST_DIR, ROO_CODE_COMMANDS_DIR), { recursive: true });

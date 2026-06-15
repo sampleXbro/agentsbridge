@@ -670,6 +670,20 @@
         "t-glob-d8e040bc"
       ]
     },
+    "fixture-and-assertion-discipline-opencode-mergeopencodesettings-delegates": {
+      "createdAt": "2026-06-15",
+      "evidence": [
+        "tests/unit/targets/opencode/scoped-settings.test.ts"
+      ],
+      "rule": "opencode mergeOpenCodeSettings delegates to core mergeSettingsJson, which uses the Claude schema and only carries incoming permissions and hooks; it does NOT copy opencode-specific permission or mcp keys from newContent. When asserting the merge-base-present branch, expect base keys preserved and incoming permissions/hooks merged, not an opencode permission key.",
+      "status": "active",
+      "topics": [
+        "fixture-and-assertion-discipline"
+      ],
+      "triggers": [
+        "t-glob-f8afe7f1"
+      ]
+    },
     "fixture-and-assertion-discipline-rule-1": {
       "createdAt": "2026-06-05",
       "evidence": [
@@ -6834,6 +6848,10 @@
     "t-glob-f238075d": {
       "kind": "file_glob",
       "pattern": "src/lessons/regex-linear/**"
+    },
+    "t-glob-f8afe7f1": {
+      "kind": "file_glob",
+      "pattern": "src/targets/opencode/scoped-settings.ts"
     },
     "t-glob-f9578eb1": {
       "kind": "file_glob",

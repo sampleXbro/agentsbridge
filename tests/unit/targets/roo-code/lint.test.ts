@@ -36,4 +36,20 @@ describe('lintPermissions (roo-code)', () => {
     });
     expect(lintPermissions(canonical)).toHaveLength(0);
   });
+
+  it('warns when permissions are set but the ask key is omitted', () => {
+    const canonical = makeCanonical({
+      permissions: { allow: ['Bash'], deny: [] },
+    });
+    const results = lintPermissions(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0].level).toBe('warning');
+  });
+
+  it('returns empty when only an omitted ask and empty allow/deny are present', () => {
+    const canonical = makeCanonical({
+      permissions: { allow: [], deny: [] },
+    });
+    expect(lintPermissions(canonical)).toHaveLength(0);
+  });
 });

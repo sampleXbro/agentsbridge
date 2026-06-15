@@ -10,6 +10,7 @@ import {
   generateIgnore,
   generateHooks,
   generatePermissions,
+  renderQwenGlobalInstructions,
 } from '../../../../src/targets/qwen-code/generator.js';
 import {
   QWEN_ROOT,
@@ -164,6 +165,29 @@ describe('generateRules (qwen-code)', () => {
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(QWEN_ROOT);
     expect(results[0].content).toBe('');
+  });
+
+  it('emits non-root rule with empty body as empty-body frontmatter doc', () => {
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: '/proj/.agentsmesh/rules/empty.md',
+          root: false,
+          targets: [],
+          description: 'Empty rule',
+          globs: [],
+          body: '   \n  ',
+        },
+      ],
+    });
+
+    const results = generateRules(canonical);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(`${QWEN_RULES_DIR}/empty.md`);
+    const parsedRule = parseFrontmatter(results[0].content);
+    expect(parsedRule.frontmatter.description).toBe('Empty rule');
+    expect(parsedRule.body.trim()).toBe('');
   });
 
   it('includes rules explicitly targeting qwen-code', () => {
@@ -405,6 +429,29 @@ describe('generateSkills (qwen-code)', () => {
     const results = generateSkills(makeCanonical({ skills: [] }));
     expect(results).toHaveLength(0);
   });
+
+  it('omits description and emits empty body when skill has neither', () => {
+    const canonical = makeCanonical({
+      skills: [
+        {
+          name: 'bare',
+          source: '/proj/.agentsmesh/skills/bare/SKILL.md',
+          description: '',
+          body: '   ',
+          supportingFiles: [],
+        },
+      ],
+    });
+
+    const results = generateSkills(canonical);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(`${QWEN_SKILLS_DIR}/bare/SKILL.md`);
+    const parsedSkill = parseFrontmatter(results[0].content);
+    expect(parsedSkill.frontmatter.name).toBe('bare');
+    expect(parsedSkill.frontmatter).not.toHaveProperty('description');
+    expect(parsedSkill.body.trim()).toBe('');
+  });
 });
 
 describe('generateMcp (qwen-code)', () => {
@@ -573,5 +620,92 @@ describe('generatePermissions (qwen-code)', () => {
     const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
     expect(parsed).not.toHaveProperty('mcpServers');
     expect(parsed).not.toHaveProperty('hooks');
+  });
+});
+
+describe('renderQwenGlobalInstructions (qwen-code)', () => {
+  it('embeds untargeted non-root rules after the root body', () => {
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: '/proj/.agentsmesh/rules/_root.md',
+          root: true,
+          targets: [],
+          description: '',
+          globs: [],
+          body: '# Root\n\nUse TDD.',
+        },
+        {
+          source: '/proj/.agentsmesh/rules/typescript.md',
+          root: false,
+          targets: [],
+          description: 'TypeScript standards',
+          globs: [],
+          body: 'Use strict mode.',
+        },
+      ],
+    });
+
+    const output = renderQwenGlobalInstructions(canonical);
+
+    expect(output).toContain('Use TDD.');
+    expect(output).toContain('Use strict mode.');
+    expect(output).toContain('agentsmesh:embedded-rules:start');
+  });
+
+  it('embeds rules explicitly targeting qwen-code and excludes other targets', () => {
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: '/proj/.agentsmesh/rules/_root.md',
+          root: true,
+          targets: [],
+          description: '',
+          globs: [],
+          body: '# Root',
+        },
+        {
+          source: '/proj/.agentsmesh/rules/qwen-only.md',
+          root: false,
+          targets: ['qwen-code'],
+          description: '',
+          globs: [],
+          body: 'Qwen specific guidance.',
+        },
+        {
+          source: '/proj/.agentsmesh/rules/cursor-only.md',
+          root: false,
+          targets: ['cursor'],
+          description: '',
+          globs: [],
+          body: 'Cursor specific guidance.',
+        },
+      ],
+    });
+
+    const output = renderQwenGlobalInstructions(canonical);
+
+    expect(output).toContain('Qwen specific guidance.');
+    expect(output).not.toContain('Cursor specific guidance.');
+  });
+
+  it('falls back to empty root body when no root rule exists', () => {
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: '/proj/.agentsmesh/rules/security.md',
+          root: false,
+          targets: [],
+          description: '',
+          globs: [],
+          body: 'No hardcoded secrets.',
+        },
+      ],
+    });
+
+    const output = renderQwenGlobalInstructions(canonical);
+
+    expect(output).toContain('No hardcoded secrets.');
+    expect(output.startsWith('<!-- agentsmesh:embedded-rules:start')).toBe(true);
   });
 });

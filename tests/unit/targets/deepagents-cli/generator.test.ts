@@ -6,11 +6,13 @@ import {
   generateCommands,
   generateAgents,
   generateMcp,
+  generateHooks,
 } from '../../../../src/targets/deepagents-cli/generator.js';
 import {
   DEEPAGENTS_CLI_ROOT_FILE,
   DEEPAGENTS_CLI_SKILLS_DIR,
   DEEPAGENTS_CLI_MCP_FILE,
+  DEEPAGENTS_CLI_HOOKS_FILE,
 } from '../../../../src/targets/deepagents-cli/constants.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
@@ -285,5 +287,39 @@ describe('generateMcp (deepagents-cli)', () => {
     const canonical = makeCanonical({ mcp: { mcpServers: {} } });
     const results = generateMcp(canonical);
     expect(results).toHaveLength(0);
+  });
+});
+
+describe('generateHooks (deepagents-cli)', () => {
+  it('returns [] when hooks is null', () => {
+    expect(generateHooks(makeCanonical())).toHaveLength(0);
+  });
+
+  it('returns [] when hooks object is empty', () => {
+    expect(generateHooks(makeCanonical({ hooks: {} }))).toHaveLength(0);
+  });
+
+  it('returns [] when all hook entries have no command text', () => {
+    expect(
+      generateHooks(makeCanonical({ hooks: { PostToolUse: [{ matcher: 'Write', command: '' }] } })),
+    ).toHaveLength(0);
+  });
+
+  it('emits .deepagents/hooks.json with Claude Code format', () => {
+    const results = generateHooks(
+      makeCanonical({
+        hooks: {
+          PreToolUse: [{ matcher: '*', command: 'echo pre', type: 'command' }],
+        },
+      }),
+    );
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(DEEPAGENTS_CLI_HOOKS_FILE);
+    const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
+    expect(parsed.PreToolUse).toBeDefined();
+  });
+
+  it('returns [] when hook arrays are all empty', () => {
+    expect(generateHooks(makeCanonical({ hooks: { PreToolUse: [] } }))).toHaveLength(0);
   });
 });

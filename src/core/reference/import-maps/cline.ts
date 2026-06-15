@@ -4,10 +4,11 @@ import {
   CLINE_GLOBAL_RULES_DIR,
   CLINE_GLOBAL_WORKFLOWS_DIR,
   CLINE_SKILLS_DIR,
+  CLINE_AGENTS_DIR,
   CLINE_MCP_SETTINGS,
 } from '../../../targets/cline/constants.js';
 import type { TargetLayoutScope } from '../../../targets/catalog/target-descriptor.js';
-import { AB_COMMANDS, AB_RULES } from './constants.js';
+import { AB_AGENTS, AB_COMMANDS, AB_RULES } from './constants.js';
 
 export async function buildClineImportPaths(
   refs: Map<string, string>,
@@ -23,6 +24,9 @@ export async function buildClineImportPaths(
     }
     for (const absPath of await listFiles(projectRoot, CLINE_SKILLS_DIR)) {
       addSkillLikeMapping(refs, rel(projectRoot, absPath), CLINE_SKILLS_DIR);
+    }
+    for (const absPath of await listFiles(projectRoot, CLINE_AGENTS_DIR)) {
+      addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_AGENTS, '.md');
     }
     refs.set(CLINE_MCP_SETTINGS, '.agentsmesh/mcp.json');
     return;
@@ -45,5 +49,8 @@ export async function buildClineImportPaths(
   }
   for (const absPath of await listFiles(projectRoot, '.cline/skills')) {
     addSkillLikeMapping(refs, rel(projectRoot, absPath), '.cline/skills');
+  }
+  for (const absPath of await listFiles(projectRoot, CLINE_AGENTS_DIR)) {
+    addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_AGENTS, '.md');
   }
 }

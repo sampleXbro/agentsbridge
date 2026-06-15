@@ -32,6 +32,7 @@ export const COPILOT_CANONICAL_COMMANDS_DIR = '.agentsmesh/commands';
 export const COPILOT_CANONICAL_AGENTS_DIR = '.agentsmesh/agents';
 export const COPILOT_CANONICAL_SKILLS_DIR = '.agentsmesh/skills';
 export const COPILOT_CANONICAL_HOOKS = '.agentsmesh/hooks.yaml';
+export const COPILOT_CANONICAL_MCP = '.agentsmesh/mcp.json';
 export const COPILOT_LEGACY_HOOKS_DIR = '.github/copilot-hooks';
 
 export const COPILOT_GLOBAL_INSTRUCTIONS = '.copilot/copilot-instructions.md';
@@ -43,3 +44,6 @@ export const COPILOT_GLOBAL_AGENTS_MD = '.copilot/AGENTS.md';
 /** Compatibility mirror paths for skills */
 export const COPILOT_GLOBAL_CLAUDE_SKILLS_DIR = '.claude/skills';
 export const COPILOT_GLOBAL_AGENTS_SKILLS_DIR = '.agents/skills';
+
+/** MCP configuration file (project scope) */
+export const COPILOT_MCP_JSON = '.vscode/mcp.json';

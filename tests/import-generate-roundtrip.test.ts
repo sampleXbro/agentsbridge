@@ -257,13 +257,19 @@ describe('import: Copilot (rules + commands + agents + skills + hooks)', () => {
       join(TEST_DIR, '.github', 'copilot-hooks', 'PostToolUse-0.sh'),
       '#!/bin/bash\nprettier --write "$FILE"',
     );
+    mkdirSync(join(TEST_DIR, '.vscode'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.vscode', 'mcp.json'),
+      JSON.stringify({ servers: { ctx: { type: 'stdio', command: 'npx', args: [], env: {} } } }),
+    );
 
     const results = await importFromCopilot(TEST_DIR);
     const features = [...new Set(results.map((r) => r.feature))].sort();
-    expect(features).toEqual(['agents', 'commands', 'hooks', 'rules', 'skills']);
+    expect(features).toEqual(['agents', 'commands', 'hooks', 'mcp', 'rules', 'skills']);
     expect(results.filter((r) => r.feature === 'rules')).toHaveLength(3);
     expect(results.filter((r) => r.feature === 'commands')).toHaveLength(1);
     expect(results.filter((r) => r.feature === 'skills')).toHaveLength(2);
+    expect(results.filter((r) => r.feature === 'mcp')).toHaveLength(1);
   });
 });
 
@@ -584,6 +590,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.github/instructions/typescript.instructions.md',
       '.github/prompts/review.prompt.md',
       '.github/skills/qa/SKILL.md',
+      '.vscode/mcp.json',
     ]);
     const prompt = results.find((r) => r.path === '.github/prompts/review.prompt.md');
     expect(prompt!.content).toContain('x-agentsmesh-kind: command');
@@ -626,8 +633,8 @@ describe('generate: full canonical → all agents produce all supported outputs'
     });
     const paths = results.map((r) => r.path).sort();
     expect(paths).toEqual([
+      '.cline/agents/reviewer.md',
       '.cline/cline_mcp_settings.json',
-      '.cline/skills/am-agent-reviewer/SKILL.md',
       '.cline/skills/qa/SKILL.md',
       '.clineignore',
       '.clinerules/hooks/posttooluse-0.sh',
@@ -649,6 +656,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.agents/skills/qa/SKILL.md',
       '.codex/agents/reviewer.toml',
       '.codex/config.toml',
+      '.codex/hooks.json',
       '.codex/instructions/typescript.md',
       'AGENTS.md',
     ]);
@@ -716,6 +724,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
     });
     const paths = results.map((r) => r.path).sort();
     expect(paths).toEqual([
+      '.agents/hooks.json',
       '.agents/rules/general.md',
       '.agents/rules/typescript.md',
       '.agents/skills/am-agent-reviewer/SKILL.md',
@@ -745,6 +754,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
 
     const allPaths = results.map((r) => r.path).sort();
     expect(allPaths).toEqual([
+      '.agents/hooks.json',
       '.agents/rules/general.md',
       '.agents/rules/typescript.md',
       '.agents/skills/am-agent-reviewer/SKILL.md',
@@ -758,8 +768,8 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.claude/settings.json',
       '.claude/skills/qa/SKILL.md',
       '.claudeignore',
+      '.cline/agents/reviewer.md',
       '.cline/cline_mcp_settings.json',
-      '.cline/skills/am-agent-reviewer/SKILL.md',
       '.cline/skills/qa/SKILL.md',
       '.clineignore',
       '.clinerules/hooks/posttooluse-0.sh',
@@ -768,6 +778,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.codeiumignore',
       '.codex/agents/reviewer.toml',
       '.codex/config.toml',
+      '.codex/hooks.json',
       '.codex/instructions/typescript.md',
       '.continue/mcpServers/agentsmesh.json',
       '.continue/prompts/review.md',
@@ -804,6 +815,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.junie/rules/typescript.md',
       '.junie/skills/qa/SKILL.md',
       '.mcp.json',
+      '.vscode/mcp.json',
       '.windsurf/hooks.json',
       '.windsurf/mcp_config.example.json',
       '.windsurf/rules/typescript.md',

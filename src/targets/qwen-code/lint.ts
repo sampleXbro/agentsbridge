@@ -1,10 +1,6 @@
 /**
- * qwen-code-specific lint hooks.
+ * Qwen Code target-specific lint hooks.
+ *
+ * lintHooks was removed when hooks capability was promoted to 'native'.
+ * Hooks are now generated via generateHooks() in generator.ts.
  */
-
-import type { CanonicalFiles, LintDiagnostic } from '../../core/types.js';
-
-export function lintHooks(_canonical: CanonicalFiles): LintDiagnostic[] {
-  // TODO(agentsmesh-scaffold): implement target-specific hook validation for qwen-code
-  return [];
-}

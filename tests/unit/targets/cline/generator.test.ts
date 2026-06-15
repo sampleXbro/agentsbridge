@@ -282,7 +282,7 @@ describe('generateSkills (cline)', () => {
 });
 
 describe('generateAgents (cline)', () => {
-  it('projects agents into reserved Cline skill directories with metadata', () => {
+  it('generates native Cline agent definitions', () => {
     const canonical = makeCanonical({
       agents: [
         {
@@ -306,10 +306,15 @@ describe('generateAgents (cline)', () => {
     const results = generateAgents(canonical);
 
     expect(results).toHaveLength(1);
-    expect(results[0]?.path).toBe(`${CLINE_SKILLS_DIR}/am-agent-reviewer/SKILL.md`);
-    expect(results[0]?.content).toContain('x-agentsmesh-kind: agent');
-    expect(results[0]?.content).toContain('x-agentsmesh-name: reviewer');
-    expect(results[0]?.content).toContain('x-agentsmesh-tools:');
+    expect(results[0]?.path).toBe('.cline/agents/reviewer.md');
+    expect(results[0]?.content).toContain('name: reviewer');
+    expect(results[0]?.content).toContain('tools:');
+    expect(results[0]?.content).toContain('x-agentsmesh-disallowed-tools:');
+    expect(results[0]?.content).toContain('x-agentsmesh-permission-mode: ask');
+    expect(results[0]?.content).toContain('x-agentsmesh-max-turns: 9');
+    expect(results[0]?.content).toContain('x-agentsmesh-mcp-servers:');
+    expect(results[0]?.content).toContain('x-agentsmesh-skills:');
+    expect(results[0]?.content).toContain('x-agentsmesh-memory: notes/reviewer.md');
     expect(results[0]?.content).toContain('Review risky changes first.');
   });
 });

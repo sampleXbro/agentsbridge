@@ -52,12 +52,8 @@ describe('per-target lint — empty/edge branches', () => {
     expect(result).toHaveLength(1);
   });
 
-  it('amp lint variants follow the same shape as warp', () => {
-    expect(ampLint.lintHooks(empty)).toEqual([]);
-    expect(ampLint.lintPermissions(empty)).toEqual([]);
+  it('amp lintIgnore emits no diagnostic on empty canonical', () => {
     expect(ampLint.lintIgnore(empty)).toEqual([]);
-    expect(ampLint.lintHooks({ ...empty, hooks: { PostToolUse: [] } })).toEqual([]);
-    expect(ampLint.lintPermissions({ ...empty, permissions: { allow: [], deny: [] } })).toEqual([]);
   });
 
   it('cline lintHooks emits no diagnostic when canonical.hooks is present but empty', () => {

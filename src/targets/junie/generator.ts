@@ -12,7 +12,9 @@ import {
   JUNIE_IGNORE,
   JUNIE_MCP_FILE,
   JUNIE_SKILLS_DIR,
+  JUNIE_GLOBAL_ALLOWLIST,
 } from './constants.js';
+import type { GenerateFeatureContext } from '../catalog/target.interface.js';
 
 export interface JunieOutput {
   path: string;
@@ -118,4 +120,21 @@ export function renderJunieGlobalInstructions(canonical: CanonicalFiles): string
   });
 
   return appendEmbeddedRulesBlock(root?.body.trim() ?? '', nonRootRules);
+}
+
+export function generatePermissions(
+  canonical: CanonicalFiles,
+  ctx?: GenerateFeatureContext,
+): JunieOutput[] {
+  if (ctx?.scope !== 'global') return [];
+  if (!canonical.permissions) return [];
+  const { allow, deny } = canonical.permissions;
+  const ask = canonical.permissions.ask ?? [];
+  if (allow.length === 0 && deny.length === 0 && ask.length === 0) return [];
+  return [
+    {
+      path: JUNIE_GLOBAL_ALLOWLIST,
+      content: JSON.stringify({ allow, deny, ask }, null, 2),
+    },
+  ];
 }

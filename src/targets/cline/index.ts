@@ -1,6 +1,5 @@
 import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
 import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
-import type { ValidatedConfig } from '../../config/core/schema.js';
 import {
   generateRules,
   generateCommands,
@@ -17,6 +16,7 @@ import {
   CLINE_WORKFLOWS_DIR,
   CLINE_HOOKS_DIR,
   CLINE_SKILLS_DIR,
+  CLINE_AGENTS_DIR,
   CLINE_MCP_SETTINGS,
   CLINE_IGNORE,
   CLINE_GLOBAL_RULES_DIR,
@@ -27,8 +27,6 @@ import { importFromCline } from './importer.js';
 import { lintRules } from './linter.js';
 import { lintCommands, lintHooks } from './lint.js';
 import { buildClineImportPaths } from '../../core/reference/import-map-builders.js';
-import { shouldConvertAgentsToSkills } from '../../config/core/conversions.js';
-import { projectedAgentSkillDirName } from '../projection/projected-agent-skill.js';
 
 export const target: TargetGenerators = {
   name: 'cline',
@@ -47,7 +45,13 @@ const project: TargetLayout = {
   rootInstructionPath: CLINE_AGENTS_MD,
   skillDir: '.cline/skills',
   managedOutputs: {
-    dirs: ['.cline/skills', '.clinerules', '.clinerules/hooks', '.clinerules/workflows'],
+    dirs: [
+      CLINE_AGENTS_DIR,
+      '.cline/skills',
+      '.clinerules',
+      '.clinerules/hooks',
+      '.clinerules/workflows',
+    ],
     files: [
       'AGENTS.md',
       '.cline/cline_mcp_settings.json',
@@ -62,10 +66,8 @@ const project: TargetLayout = {
     commandPath(name, _config) {
       return `${CLINE_WORKFLOWS_DIR}/${name}.md`;
     },
-    agentPath(name, config: ValidatedConfig) {
-      return shouldConvertAgentsToSkills(config, 'cline')
-        ? `.cline/skills/${projectedAgentSkillDirName(name)}/SKILL.md`
-        : null;
+    agentPath(name) {
+      return `${CLINE_AGENTS_DIR}/${name}.md`;
     },
   },
 };
@@ -78,6 +80,7 @@ const globalLayout: TargetLayout = {
       CLINE_GLOBAL_WORKFLOWS_DIR,
       CLINE_GLOBAL_HOOKS_DIR,
       CLINE_SKILLS_DIR,
+      CLINE_AGENTS_DIR,
       '.agents/skills',
     ],
     files: [CLINE_MCP_SETTINGS, CLINE_IGNORE],
@@ -108,10 +111,8 @@ const globalLayout: TargetLayout = {
     commandPath(name, _config) {
       return `${CLINE_GLOBAL_WORKFLOWS_DIR}/${name}.md`;
     },
-    agentPath(name, config: ValidatedConfig) {
-      return shouldConvertAgentsToSkills(config, 'cline')
-        ? `.cline/skills/${projectedAgentSkillDirName(name)}/SKILL.md`
-        : null;
+    agentPath(name) {
+      return `${CLINE_AGENTS_DIR}/${name}.md`;
     },
   },
 };
@@ -120,7 +121,7 @@ const globalCapabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'native',
   commands: cap('native', 'workflows'),
-  agents: 'embedded',
+  agents: 'native',
   skills: 'native',
   mcp: 'native',
   hooks: 'native',
@@ -141,7 +142,7 @@ export const descriptor = {
     rules: 'native',
     additionalRules: 'native',
     commands: cap('native', 'workflows'),
-    agents: 'embedded',
+    agents: 'native',
     skills: 'native',
     mcp: 'native',
     hooks: 'native',
@@ -164,6 +165,7 @@ export const descriptor = {
       CLINE_GLOBAL_WORKFLOWS_DIR,
       CLINE_GLOBAL_HOOKS_DIR,
       CLINE_SKILLS_DIR,
+      CLINE_AGENTS_DIR,
       CLINE_MCP_SETTINGS,
       CLINE_IGNORE,
     ],

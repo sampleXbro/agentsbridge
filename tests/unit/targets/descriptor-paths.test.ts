@@ -246,16 +246,18 @@ describe('descriptor.project.paths.agentPath', () => {
     expect(result).toBe('.gemini/skills/am-agent-reviewer/SKILL.md');
   });
 
-  it('cline default (conversion ON): returns path under .cline/skills/', () => {
+  it('cline default: returns native agent path', () => {
     const result = cline.project.paths.agentPath('reviewer', config);
-    expect(result).toBe('.cline/skills/am-agent-reviewer/SKILL.md');
+    expect(result).toBe('.cline/agents/reviewer.md');
   });
 
-  it('cline with conversion OFF: returns null', () => {
+  it('cline with conversion OFF: still returns native agent path', () => {
     const configWithConversionOff = baseConfig({
       conversions: { agents_to_skills: { cline: false } },
     });
-    expect(cline.project.paths.agentPath('reviewer', configWithConversionOff)).toBeNull();
+    expect(cline.project.paths.agentPath('reviewer', configWithConversionOff)).toBe(
+      '.cline/agents/reviewer.md',
+    );
   });
 
   it('codex-cli: returns .codex/agents/{name}.toml', () => {

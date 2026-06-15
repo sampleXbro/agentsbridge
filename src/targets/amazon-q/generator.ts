@@ -4,9 +4,10 @@
  * Generates `.amazonq/rules/<slug>.md` for non-root rules.
  * The root rule is written to `.amazonq/rules/_root.md`.
  * MCP is written to `.amazonq/mcp.json`.
+ * Agents are written to `.amazonq/cli-agents/<name>.json`.
  *
- * Amazon Q Developer does not have native commands, agents, skills, hooks,
- * ignore, or permissions — those canonical features are not generated.
+ * Hooks and permissions are per-agent only in Amazon Q CLI and cannot be
+ * generated as standalone files — they emit partial lint warnings instead.
  */
 
 import { basename } from 'node:path';
@@ -16,6 +17,7 @@ import {
   AMAZON_Q_TARGET,
   AMAZON_Q_RULES_DIR,
   AMAZON_Q_MCP_FILE,
+  AMAZON_Q_AGENTS_DIR,
 } from './constants.js';
 
 export function generateRules(canonical: CanonicalFiles): FeatureGeneratorOutput[] {
@@ -33,6 +35,22 @@ export function generateRules(canonical: CanonicalFiles): FeatureGeneratorOutput
   }
 
   return outputs;
+}
+
+export function generateAgents(canonical: CanonicalFiles): FeatureGeneratorOutput[] {
+  return canonical.agents.map((agent) => ({
+    path: `${AMAZON_Q_AGENTS_DIR}/${agent.name}.json`,
+    content: JSON.stringify(
+      {
+        name: agent.name,
+        ...(agent.description ? { description: agent.description } : {}),
+        systemPrompt: agent.body.trim(),
+        ...(agent.tools.length > 0 ? { allowedTools: agent.tools } : {}),
+      },
+      null,
+      2,
+    ),
+  }));
 }
 
 export function generateMcp(canonical: CanonicalFiles): FeatureGeneratorOutput[] {

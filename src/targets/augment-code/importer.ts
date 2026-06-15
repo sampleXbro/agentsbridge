@@ -20,6 +20,7 @@ import { importEmbeddedSkills } from '../import/embedded-skill.js';
 import {
   serializeImportedRuleWithFallback,
   serializeImportedCommandWithFallback,
+  serializeImportedAgentWithFallback,
 } from '../import/import-metadata.js';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
 import { importAugmentSettings, importAugmentIgnore } from './settings-helpers.js';
@@ -27,14 +28,17 @@ import {
   AUGMENT_CODE_TARGET,
   AUGMENT_CODE_RULES_DIR,
   AUGMENT_CODE_COMMANDS_DIR,
+  AUGMENT_CODE_AGENTS_DIR,
   AUGMENT_CODE_SKILLS_DIR,
   AUGMENT_CODE_SETTINGS_FILE,
   AUGMENT_CODE_IGNORE_FILE,
   AUGMENT_CODE_GLOBAL_RULES_DIR,
   AUGMENT_CODE_GLOBAL_COMMANDS_DIR,
+  AUGMENT_CODE_GLOBAL_AGENTS_DIR,
   AUGMENT_CODE_GLOBAL_SKILLS_DIR,
   AUGMENT_CODE_GLOBAL_SETTINGS_FILE,
   AUGMENT_CODE_CANONICAL_RULES_DIR,
+  AUGMENT_CODE_CANONICAL_AGENTS_DIR,
 } from './constants.js';
 
 type Normalize = (content: string, sourceFile: string, destinationFile: string) => string;
@@ -130,6 +134,36 @@ async function importCommands(
   );
 }
 
+async function importAgents(
+  projectRoot: string,
+  results: ImportResult[],
+  normalize: Normalize,
+  scope: TargetLayoutScope,
+): Promise<void> {
+  const agentsDir = scope === 'global' ? AUGMENT_CODE_GLOBAL_AGENTS_DIR : AUGMENT_CODE_AGENTS_DIR;
+  const destDir = join(projectRoot, AUGMENT_CODE_CANONICAL_AGENTS_DIR);
+
+  results.push(
+    ...(await importFileDirectory({
+      srcDir: join(projectRoot, agentsDir),
+      destDir,
+      extensions: ['.md'],
+      fromTool: AUGMENT_CODE_TARGET,
+      normalize,
+      mapEntry: async ({ relativePath, normalizeTo }) => {
+        const destPath = join(destDir, relativePath);
+        const { frontmatter, body } = parseFrontmatter(normalizeTo(destPath));
+        return {
+          destPath,
+          toPath: `${AUGMENT_CODE_CANONICAL_AGENTS_DIR}/${relativePath}`,
+          feature: 'agents',
+          content: await serializeImportedAgentWithFallback(destPath, frontmatter, body),
+        };
+      },
+    })),
+  );
+}
+
 export async function importFromAugmentCode(
   projectRoot: string,
   options: { scope?: TargetLayoutScope } = {},
@@ -140,6 +174,7 @@ export async function importFromAugmentCode(
 
   await importRules(projectRoot, results, normalize, scope);
   await importCommands(projectRoot, results, normalize, scope);
+  await importAgents(projectRoot, results, normalize, scope);
 
   const skillsDir = scope === 'global' ? AUGMENT_CODE_GLOBAL_SKILLS_DIR : AUGMENT_CODE_SKILLS_DIR;
   await importEmbeddedSkills(projectRoot, skillsDir, AUGMENT_CODE_TARGET, results, normalize);

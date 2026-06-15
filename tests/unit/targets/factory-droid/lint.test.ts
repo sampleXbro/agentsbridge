@@ -1,10 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
-import {
-  lintHooks,
-  lintPermissions,
-  lintIgnore,
-} from '../../../../src/targets/factory-droid/lint.js';
+import { lintPermissions, lintIgnore } from '../../../../src/targets/factory-droid/lint.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
   return {
@@ -19,29 +15,6 @@ function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles 
     ...overrides,
   };
 }
-
-describe('lintHooks (factory-droid)', () => {
-  it('returns empty when no hooks', () => {
-    expect(lintHooks(makeCanonical())).toHaveLength(0);
-  });
-
-  it('returns empty when hooks object has empty arrays', () => {
-    expect(lintHooks(makeCanonical({ hooks: { preGenerate: [], postGenerate: [] } }))).toHaveLength(
-      0,
-    );
-  });
-
-  it('warns when hooks have entries', () => {
-    const result = lintHooks(
-      makeCanonical({
-        hooks: { preGenerate: [{ command: 'echo test' }] },
-      }),
-    );
-    expect(result).toHaveLength(1);
-    expect(result[0].level).toBe('warning');
-    expect(result[0].target).toBe('factory-droid');
-  });
-});
 
 describe('lintPermissions (factory-droid)', () => {
   it('returns empty when no permissions', () => {

@@ -15,6 +15,7 @@ import {
   generateMcp,
   generateIgnore,
   generateAgents,
+  generatePermissions,
 } from './generator.js';
 import {
   ROO_CODE_ROOT_RULE,
@@ -42,6 +43,7 @@ import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromRooCode } from './importer.js';
 import { rooCommandMapper, rooNonRootRuleMapper } from './import-mappers.js';
 import { lintRules } from './linter.js';
+import { lintPermissions } from './lint.js';
 import { buildRooCodeImportPaths } from '../../core/reference/import-map-builders.js';
 
 export const target: TargetGenerators = {
@@ -53,6 +55,7 @@ export const target: TargetGenerators = {
   generateMcp,
   generateIgnore,
   generateAgents,
+  generatePermissions,
   importFrom: importFromRooCode,
 };
 
@@ -180,7 +183,7 @@ const globalCapabilities: TargetCapabilities = {
   mcp: 'native',
   hooks: 'none',
   ignore: 'native',
-  permissions: 'none',
+  permissions: 'partial',
 };
 
 export const descriptor = {
@@ -201,11 +204,12 @@ export const descriptor = {
     mcp: 'native',
     hooks: 'none',
     ignore: 'native',
-    permissions: 'none',
+    permissions: 'partial',
   },
   emptyImportMessage:
     'No Roo Code config found (.roo/rules, .roo/commands, .roo/skills, .roo/mcp.json, .rooignore, or .roorules).',
   lintRules,
+  lint: { permissions: lintPermissions },
   project,
   globalSupport: {
     capabilities: globalCapabilities,

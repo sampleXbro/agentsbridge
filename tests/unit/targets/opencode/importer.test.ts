@@ -203,3 +203,40 @@ describe('importFromOpenCode — MCP (custom opencode.json format)', () => {
     expect(results.find((r) => r.toPath === '.agentsmesh/mcp.json')).toBeUndefined();
   });
 });
+
+describe('importFromOpenCode — permissions', () => {
+  it('imports supported string permission values alongside MCP config', async () => {
+    writeFileSync(
+      join(TEST_DIR, OPENCODE_CONFIG_FILE),
+      JSON.stringify({
+        mcp: {
+          filesystem: {
+            type: 'local',
+            command: ['npx', '-y', '@modelcontextprotocol/server-filesystem'],
+          },
+        },
+        permission: {
+          read: 'allow',
+          bash: 'ask',
+          webfetch: 'deny',
+          edit: 'sometimes',
+          nested: { '*': 'allow' },
+        },
+      }),
+    );
+
+    const results = await importFromOpenCode(TEST_DIR);
+
+    expect(toPaths(results)).toContain('.agentsmesh/mcp.json');
+    expect(toPaths(results)).toContain('.agentsmesh/permissions.yaml');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'permissions.yaml'), 'utf-8');
+    expect(content).toContain('allow:');
+    expect(content).toContain('- read');
+    expect(content).toContain('ask:');
+    expect(content).toContain('- bash');
+    expect(content).toContain('deny:');
+    expect(content).toContain('- webfetch');
+    expect(content).not.toContain('sometimes');
+    expect(content).not.toContain('nested');
+  });
+});

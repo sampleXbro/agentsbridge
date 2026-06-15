@@ -28,7 +28,7 @@ describe('cline global layout — paths', () => {
     );
   });
 
-  it('resolves agent path to .cline/skills/ (embedded as skill)', () => {
+  it('resolves agent path to native .cline/agents/', () => {
     expect(
       layout.paths.agentPath('my-agent', {
         features: [],
@@ -39,7 +39,7 @@ describe('cline global layout — paths', () => {
         collaboration: { strategy: 'merge', lock_features: [] },
         conversions: { agents_to_skills: { cline: true } },
       }),
-    ).toBe('.cline/skills/am-agent-my-agent/SKILL.md');
+    ).toBe('.cline/agents/my-agent.md');
   });
 });
 

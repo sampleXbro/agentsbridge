@@ -14,7 +14,7 @@ import type { ImportResult } from '../../core/types.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
 import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/filesystem/fs.js';
 import { importFileDirectory } from '../import/import-orchestrator.js';
-import { mapClineWorkflowFile } from './importer-mappers.js';
+import { mapClineAgentFile, mapClineWorkflowFile } from './importer-mappers.js';
 import { importClineRules } from './importer-rules.js';
 import {
   CLINE_TARGET,
@@ -22,6 +22,8 @@ import {
   CLINE_WORKFLOWS_DIR,
   CLINE_CANONICAL_COMMANDS_DIR,
   CLINE_CANONICAL_IGNORE,
+  CLINE_AGENTS_DIR,
+  CLINE_CANONICAL_AGENTS_DIR,
 } from './constants.js';
 import { importClineMcp } from './mcp-mapper.js';
 import { importClineSkills } from './skills-adapter.js';
@@ -80,6 +82,17 @@ export async function importFromCline(projectRoot: string): Promise<ImportResult
   }
 
   await importClineSkills(projectRoot, results, normalize);
+  results.push(
+    ...(await importFileDirectory({
+      srcDir: join(projectRoot, CLINE_AGENTS_DIR),
+      destDir: join(projectRoot, CLINE_CANONICAL_AGENTS_DIR),
+      extensions: ['.md'],
+      fromTool: 'cline',
+      normalize,
+      mapEntry: ({ relativePath, normalizeTo }) =>
+        mapClineAgentFile(relativePath, join(projectRoot, CLINE_CANONICAL_AGENTS_DIR), normalizeTo),
+    })),
+  );
   await importClineHooks(projectRoot, results);
 
   return results;

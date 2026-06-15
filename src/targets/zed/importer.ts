@@ -9,9 +9,15 @@
 import type { ImportResult } from '../../core/types.js';
 import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
+import { importEmbeddedSkills } from '../import/embedded-skill.js';
 import { runDescriptorImport } from '../import/descriptor-import-runner.js';
 import { importZedMcp } from './mcp-import.js';
-import { ZED_TARGET, ZED_SETTINGS_FILE, ZED_GLOBAL_SETTINGS_FILE } from './constants.js';
+import {
+  ZED_TARGET,
+  ZED_SETTINGS_FILE,
+  ZED_SKILLS_DIR,
+  ZED_GLOBAL_SETTINGS_FILE,
+} from './constants.js';
 import { descriptor } from './index.js';
 
 export async function importFromZed(
@@ -23,6 +29,10 @@ export async function importFromZed(
   const normalize = await createImportReferenceNormalizer(ZED_TARGET, projectRoot, scope);
 
   results.push(...(await runDescriptorImport(descriptor, projectRoot, scope, { normalize })));
+
+  if (scope === 'project') {
+    await importEmbeddedSkills(projectRoot, ZED_SKILLS_DIR, ZED_TARGET, results, normalize);
+  }
 
   const mcpFile = scope === 'global' ? ZED_GLOBAL_SETTINGS_FILE : ZED_SETTINGS_FILE;
   await importZedMcp(projectRoot, mcpFile, results);

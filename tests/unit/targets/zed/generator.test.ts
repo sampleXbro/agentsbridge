@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
-import { generateRules } from '../../../../src/targets/zed/generator.js';
+import { generateRules, generateSkills } from '../../../../src/targets/zed/generator.js';
 import { descriptor } from '../../../../src/targets/zed/index.js';
 import { ZED_ROOT_FILE, ZED_SETTINGS_FILE } from '../../../../src/targets/zed/constants.js';
 
@@ -133,6 +133,53 @@ describe('generateRules (zed)', () => {
     const canonical = makeCanonical({ rules: [] });
     const results = generateRules(canonical);
     expect(results).toHaveLength(0);
+  });
+});
+
+describe('generateSkills (zed)', () => {
+  it('returns empty when no skills', () => {
+    expect(generateSkills(makeCanonical())).toHaveLength(0);
+  });
+
+  it('generates .agents/skills/{name}/SKILL.md', () => {
+    const canonical = makeCanonical({
+      skills: [
+        {
+          name: 'api-generator',
+          source: '/proj/.agentsmesh/skills/api-generator/SKILL.md',
+          description: 'Generate API routes',
+          body: '# API Generator\n\nGenerate routes.',
+          supportingFiles: [],
+        },
+      ],
+    });
+    const results = generateSkills(canonical);
+    expect(results.length).toBeGreaterThanOrEqual(1);
+    expect(results.some((r) => r.path === '.agents/skills/api-generator/SKILL.md')).toBe(true);
+    const skill = results.find((r) => r.path === '.agents/skills/api-generator/SKILL.md')!;
+    expect(skill.content).toContain('name: api-generator');
+  });
+
+  it('generates supporting files alongside SKILL.md', () => {
+    const canonical = makeCanonical({
+      skills: [
+        {
+          name: 'api-generator',
+          source: '/proj/.agentsmesh/skills/api-generator/SKILL.md',
+          description: 'Generate API routes',
+          body: '# API Generator',
+          supportingFiles: [
+            { relativePath: 'references/route-checklist.md', content: '# Checklist' },
+            { relativePath: 'template.ts', content: 'export {};' },
+          ],
+        },
+      ],
+    });
+    const results = generateSkills(canonical);
+    const paths = results.map((r) => r.path);
+    expect(paths).toContain('.agents/skills/api-generator/SKILL.md');
+    expect(paths).toContain('.agents/skills/api-generator/references/route-checklist.md');
+    expect(paths).toContain('.agents/skills/api-generator/template.ts');
   });
 });
 

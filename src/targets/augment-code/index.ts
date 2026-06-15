@@ -18,7 +18,7 @@
 
 import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
 import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
-import { generateRules, generateCommands, generateSkills, generateIgnore } from './generator.js';
+import { generateRules, generateCommands, generateAgents, generateSkills, generateIgnore } from './generator.js';
 import { importFromAugmentCode } from './importer.js';
 import { lintRules } from './linter.js';
 import { lintHooks } from './lint.js';
@@ -29,11 +29,13 @@ import {
   AUGMENT_CODE_TARGET,
   AUGMENT_CODE_RULES_DIR,
   AUGMENT_CODE_COMMANDS_DIR,
+  AUGMENT_CODE_AGENTS_DIR,
   AUGMENT_CODE_SKILLS_DIR,
   AUGMENT_CODE_SETTINGS_FILE,
   AUGMENT_CODE_IGNORE_FILE,
   AUGMENT_CODE_GLOBAL_RULES_DIR,
   AUGMENT_CODE_GLOBAL_COMMANDS_DIR,
+  AUGMENT_CODE_GLOBAL_AGENTS_DIR,
   AUGMENT_CODE_GLOBAL_SKILLS_DIR,
   AUGMENT_CODE_GLOBAL_SETTINGS_FILE,
 } from './constants.js';
@@ -42,6 +44,7 @@ export const target: TargetGenerators = {
   name: AUGMENT_CODE_TARGET,
   generateRules,
   generateCommands,
+  generateAgents,
   generateSkills,
   generateIgnore,
   importFrom: importFromAugmentCode,
@@ -115,7 +118,7 @@ function buildSettingsContent(
 const project: TargetLayout = {
   skillDir: AUGMENT_CODE_SKILLS_DIR,
   managedOutputs: {
-    dirs: [AUGMENT_CODE_RULES_DIR, AUGMENT_CODE_COMMANDS_DIR, AUGMENT_CODE_SKILLS_DIR],
+    dirs: [AUGMENT_CODE_RULES_DIR, AUGMENT_CODE_COMMANDS_DIR, AUGMENT_CODE_AGENTS_DIR, AUGMENT_CODE_SKILLS_DIR],
     files: [AUGMENT_CODE_SETTINGS_FILE, AUGMENT_CODE_IGNORE_FILE],
   },
   paths: {
@@ -125,8 +128,8 @@ const project: TargetLayout = {
     commandPath(name) {
       return `${AUGMENT_CODE_COMMANDS_DIR}/${name}.md`;
     },
-    agentPath(_name) {
-      return null;
+    agentPath(name) {
+      return `${AUGMENT_CODE_AGENTS_DIR}/${name}.md`;
     },
   },
 };
@@ -137,6 +140,7 @@ const globalLayout: TargetLayout = {
     dirs: [
       AUGMENT_CODE_GLOBAL_RULES_DIR,
       AUGMENT_CODE_GLOBAL_COMMANDS_DIR,
+      AUGMENT_CODE_GLOBAL_AGENTS_DIR,
       AUGMENT_CODE_GLOBAL_SKILLS_DIR,
     ],
     files: [AUGMENT_CODE_GLOBAL_SETTINGS_FILE],
@@ -148,6 +152,8 @@ const globalLayout: TargetLayout = {
     if (path.startsWith(`${AUGMENT_CODE_COMMANDS_DIR}/`)) {
       return path.replace(`${AUGMENT_CODE_COMMANDS_DIR}/`, `${AUGMENT_CODE_GLOBAL_COMMANDS_DIR}/`);
     }
+    // AUGMENT_CODE_AGENTS_DIR === AUGMENT_CODE_GLOBAL_AGENTS_DIR ('.augment/agents'),
+    // so no path rewrite needed — agent paths are identical in project and global scope.
     if (path.startsWith(`${AUGMENT_CODE_SKILLS_DIR}/`)) {
       return path.replace(`${AUGMENT_CODE_SKILLS_DIR}/`, `${AUGMENT_CODE_GLOBAL_SKILLS_DIR}/`);
     }
@@ -167,8 +173,8 @@ const globalLayout: TargetLayout = {
     commandPath(name) {
       return `${AUGMENT_CODE_GLOBAL_COMMANDS_DIR}/${name}.md`;
     },
-    agentPath(_name) {
-      return null;
+    agentPath(name) {
+      return `${AUGMENT_CODE_GLOBAL_AGENTS_DIR}/${name}.md`;
     },
   },
 };
@@ -177,7 +183,7 @@ const capabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'native',
   commands: 'native',
-  agents: 'none',
+  agents: 'native',
   skills: 'native',
   mcp: 'native',
   hooks: 'native',
@@ -189,7 +195,7 @@ const globalCapabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'native',
   commands: 'native',
-  agents: 'none',
+  agents: 'native',
   skills: 'native',
   mcp: 'native',
   hooks: 'none',

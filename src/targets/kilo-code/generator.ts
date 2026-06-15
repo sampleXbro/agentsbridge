@@ -19,6 +19,7 @@ import {
   KILO_CODE_SKILLS_DIR,
   KILO_CODE_MCP_FILE,
   KILO_CODE_IGNORE,
+  KILO_CONFIG_FILE,
 } from './constants.js';
 
 export interface KiloCodeOutput {
@@ -103,6 +104,18 @@ export function generateMcp(canonical: CanonicalFiles): KiloCodeOutput[] {
 export function generateIgnore(canonical: CanonicalFiles): KiloCodeOutput[] {
   if (canonical.ignore.length === 0) return [];
   return [{ path: KILO_CODE_IGNORE, content: canonical.ignore.join('\n') }];
+}
+
+export function generatePermissions(canonical: CanonicalFiles): KiloCodeOutput[] {
+  if (!canonical.permissions) return [];
+  const { allow, deny } = canonical.permissions;
+  const ask = canonical.permissions.ask ?? [];
+  if (allow.length === 0 && deny.length === 0 && ask.length === 0) return [];
+  const permission: Record<string, 'allow' | 'ask' | 'deny'> = {};
+  for (const name of allow) permission[name] = 'allow';
+  for (const name of ask) permission[name] = 'ask';
+  for (const name of deny) permission[name] = 'deny';
+  return [{ path: KILO_CONFIG_FILE, content: JSON.stringify({ permission }, null, 2) }];
 }
 
 export function generateSkills(canonical: CanonicalFiles): KiloCodeOutput[] {

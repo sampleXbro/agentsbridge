@@ -12,6 +12,7 @@ export const kiloCodeContract: TargetPathContract = {
     '.kilo/skills/api-generator/template.ts',
     '.kilocodeignore',
     'AGENTS.md',
+    'kilo.jsonc',
   ],
   imported: [
     '.agentsmesh/agents/code-reviewer.md',

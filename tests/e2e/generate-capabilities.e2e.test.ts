@@ -562,7 +562,7 @@ features: [rules, commands, skills, mcp]
     fileContains(join(dir, '.continue', 'prompts', 'review.md'), 'description: Code review');
     fileContains(join(dir, '.continue', 'prompts', 'review.md'), 'x-agentsmesh-allowed-tools:');
     fileContains(join(dir, '.continue', 'prompts', 'review.md'), 'Bash(git diff)');
-    fileNotContains(join(dir, '.continue', 'prompts', 'review.md'), 'invokable:');
+    fileContains(join(dir, '.continue', 'prompts', 'review.md'), 'invokable: true');
     fileNotContains(join(dir, '.continue', 'prompts', 'review.md'), '\nname:');
 
     fileContains(join(dir, '.continue', 'skills', 'api-generator', 'SKILL.md'), '# API Generator');

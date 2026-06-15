@@ -6,6 +6,7 @@ import {
   generateSkills,
   generateAgents,
   generateMcp,
+  generateHooks,
 } from '../../../../src/targets/antigravity/generator.js';
 import {
   ANTIGRAVITY_RULES_ROOT,
@@ -13,6 +14,7 @@ import {
   ANTIGRAVITY_WORKFLOWS_DIR,
   ANTIGRAVITY_SKILLS_DIR,
   ANTIGRAVITY_MCP_CONFIG,
+  ANTIGRAVITY_HOOKS_FILE,
 } from '../../../../src/targets/antigravity/constants.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
@@ -272,5 +274,27 @@ describe('generateMcp (antigravity)', () => {
   it('returns empty array when mcpServers is empty', () => {
     const results = generateMcp(makeCanonical({ mcp: { mcpServers: {} } }));
     expect(results).toEqual([]);
+  });
+});
+
+describe('generateHooks (antigravity)', () => {
+  it('returns [] when hooks is null', () => {
+    expect(generateHooks(makeCanonical())).toHaveLength(0);
+  });
+
+  it('returns [] when hooks is empty', () => {
+    expect(generateHooks(makeCanonical({ hooks: {} }))).toHaveLength(0);
+  });
+
+  it('emits .agents/hooks.json in Claude Code format', () => {
+    const results = generateHooks(
+      makeCanonical({
+        hooks: { PreToolUse: [{ matcher: '*', command: 'echo hook', type: 'command' }] },
+      }),
+    );
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(ANTIGRAVITY_HOOKS_FILE);
+    const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
+    expect(parsed.PreToolUse).toBeDefined();
   });
 });

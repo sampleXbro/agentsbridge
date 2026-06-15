@@ -1,29 +1,13 @@
 /**
- * Factory Droid-specific lint hooks.
+ * Factory Droid-specific lint warnings.
  *
- * Factory Droid does not support hooks (they live in settings.json via
- * PreToolUse/PostToolUse events), permissions (CLI-flag-only), or ignore
- * (relies on .gitignore) as standalone config files. Commands are projected
- * as skills via supportsConversion.
+ * Factory Droid has no native permissions (CLI-flag-only) or ignore
+ * (relies on .gitignore) config files. Hooks are natively supported via
+ * .factory/hooks.json. Commands are projected as skills via supportsConversion.
  */
 
 import type { CanonicalFiles, LintDiagnostic } from '../../core/types.js';
 import { createWarning } from '../../core/lint/shared/helpers.js';
-
-export function lintHooks(canonical: CanonicalFiles): LintDiagnostic[] {
-  if (!canonical.hooks) return [];
-  const hasEntries = Object.values(canonical.hooks).some(
-    (entries) => Array.isArray(entries) && entries.length > 0,
-  );
-  if (!hasEntries) return [];
-  return [
-    createWarning(
-      '.agentsmesh/hooks.yaml',
-      'factory-droid',
-      'Factory Droid hooks are configured via settings.json events (PreToolUse/PostToolUse), not standalone files; canonical hooks are not projected.',
-    ),
-  ];
-}
 
 export function lintPermissions(canonical: CanonicalFiles): LintDiagnostic[] {
   if (!canonical.permissions) return [];

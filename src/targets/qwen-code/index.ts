@@ -1,23 +1,11 @@
 /**
  * Qwen Code target descriptor.
- *
- * Qwen Code is Alibaba's CLI coding agent (qwen.ai/qwencode), powered by Qwen3 models.
- * Config lives under `.qwen/` at project level and `~/.qwen/` globally.
- *
- * Generation emits:
- *   - `QWEN.md`                — root rule (primary instructions)
- *   - `.qwen/rules/*.md`       — scoped additional rules
- *   - `.qwen/commands/*.md`    — slash commands
- *   - `.qwen/agents/*.md`      — sub-agent definitions
- *   - `.qwen/skills/<name>/`   — skill bundles (SKILL.md + supporting files)
- *   - `.qwen/settings.json`    — MCP server configuration
- *   - `.qwenignore`            — file ignore patterns
- *
- * Import reads all of the above from a project or global scope.
+ * Config: `.qwen/` (project), `~/.qwen/` (global).
+ * settings.json holds MCP, hooks, and permissions (merged via mergeGeneratedOutputContent).
  */
 
 import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
-import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
+import type { TargetDescriptor, TargetLayout, GeneratedOutputMerger } from '../catalog/target-descriptor.js';
 import {
   generateRules,
   generateCommands,
@@ -25,11 +13,14 @@ import {
   generateSkills,
   generateMcp,
   generateIgnore,
+  generateHooks,
+  generatePermissions,
   renderQwenGlobalInstructions,
 } from './generator.js';
 import { importFromQwenCode } from './importer.js';
 import { lintRules } from './linter.js';
 import { buildQwenCodeImportPaths } from '../../core/reference/import-map-builders.js';
+import { qwenCodeImporterSpec } from './importer-spec.js';
 import {
   QWEN_CODE_TARGET,
   QWEN_ROOT,
@@ -44,9 +35,6 @@ import {
   QWEN_GLOBAL_COMMANDS_DIR,
   QWEN_GLOBAL_AGENTS_DIR,
   QWEN_GLOBAL_SKILLS_DIR,
-  QWEN_CANONICAL_RULES_DIR,
-  QWEN_CANONICAL_COMMANDS_DIR,
-  QWEN_CANONICAL_AGENTS_DIR,
 } from './constants.js';
 
 export const target: TargetGenerators = {
@@ -58,6 +46,8 @@ export const target: TargetGenerators = {
   generateSkills,
   generateMcp,
   generateIgnore,
+  generateHooks,
+  generatePermissions,
   importFrom: importFromQwenCode,
 };
 
@@ -128,9 +118,9 @@ const capabilities: TargetCapabilities = {
   agents: 'native',
   skills: 'native',
   mcp: 'native',
-  hooks: 'none',
+  hooks: 'native',
   ignore: 'native',
-  permissions: 'none',
+  permissions: 'native',
 };
 
 const globalCapabilities: TargetCapabilities = {
@@ -140,9 +130,36 @@ const globalCapabilities: TargetCapabilities = {
   agents: 'native',
   skills: 'native',
   mcp: 'native',
-  hooks: 'none',
+  hooks: 'native',
   ignore: 'none',
-  permissions: 'none',
+  permissions: 'native',
+};
+
+function parseJsonObject(s: string | null | undefined): Record<string, unknown> {
+  if (!s) return {};
+  try {
+    const p: unknown = JSON.parse(s);
+    return p !== null && typeof p === 'object' && !Array.isArray(p)
+      ? (p as Record<string, unknown>)
+      : {};
+  } catch {
+    return {};
+  }
+}
+
+const mergeQwenSettings: GeneratedOutputMerger = (existing, pending, newContent, resolvedPath) => {
+  if (resolvedPath !== QWEN_SETTINGS && resolvedPath !== QWEN_GLOBAL_SETTINGS) return null;
+  // Use in-memory pending result as base (preferred over stale disk content)
+  const base = parseJsonObject(pending?.content ?? existing);
+  try {
+    const incoming = JSON.parse(newContent) as Record<string, unknown>;
+    if (incoming.mcpServers !== undefined) base.mcpServers = incoming.mcpServers;
+    if (incoming.hooks !== undefined) base.hooks = incoming.hooks;
+    if (incoming.permissions !== undefined) base.permissions = incoming.permissions;
+  } catch {
+    return pending?.content ?? existing ?? newContent;
+  }
+  return JSON.stringify(base, null, 2);
 };
 
 export const descriptor = {
@@ -170,74 +187,8 @@ export const descriptor = {
     ],
     layout: globalLayout,
   },
-  importer: {
-    rules: [
-      {
-        feature: 'rules' as const,
-        mode: 'singleFile' as const,
-        source: {
-          project: [QWEN_ROOT],
-          global: [QWEN_GLOBAL_ROOT],
-        },
-        canonicalDir: QWEN_CANONICAL_RULES_DIR,
-        canonicalRootFilename: '_root.md',
-        markAsRoot: true,
-      },
-      {
-        feature: 'rules' as const,
-        mode: 'directory' as const,
-        source: {
-          project: [QWEN_RULES_DIR],
-          global: [],
-        },
-        canonicalDir: QWEN_CANONICAL_RULES_DIR,
-        extensions: ['.md'],
-        preset: 'rule' as const,
-      },
-    ],
-    commands: {
-      feature: 'commands' as const,
-      mode: 'directory' as const,
-      source: {
-        project: [QWEN_COMMANDS_DIR],
-        global: [QWEN_GLOBAL_COMMANDS_DIR],
-      },
-      canonicalDir: QWEN_CANONICAL_COMMANDS_DIR,
-      extensions: ['.md'],
-      preset: 'command' as const,
-    },
-    agents: {
-      feature: 'agents' as const,
-      mode: 'directory' as const,
-      source: {
-        project: [QWEN_AGENTS_DIR],
-        global: [QWEN_GLOBAL_AGENTS_DIR],
-      },
-      canonicalDir: QWEN_CANONICAL_AGENTS_DIR,
-      extensions: ['.md'],
-      preset: 'agent' as const,
-    },
-    mcp: {
-      feature: 'mcp' as const,
-      mode: 'mcpJson' as const,
-      source: {
-        project: [QWEN_SETTINGS],
-        global: [QWEN_GLOBAL_SETTINGS],
-      },
-      canonicalDir: '.agentsmesh',
-      canonicalFilename: '.agentsmesh/mcp.json',
-    },
-    ignore: {
-      feature: 'ignore' as const,
-      mode: 'flatFile' as const,
-      source: {
-        project: [QWEN_IGNORE],
-        global: [],
-      },
-      canonicalDir: '.agentsmesh',
-      canonicalFilename: '.agentsmesh/ignore',
-    },
-  },
+  mergeGeneratedOutputContent: mergeQwenSettings,
+  importer: qwenCodeImporterSpec,
   buildImportPaths: buildQwenCodeImportPaths,
   detectionPaths: [QWEN_ROOT, '.qwen/settings.json', '.qwen/commands', '.qwen/rules'],
 } satisfies TargetDescriptor;

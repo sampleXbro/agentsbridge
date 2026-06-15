@@ -6,8 +6,10 @@ import {
   projectedAgentSkillDirName,
   serializeProjectedAgentSkill,
 } from '../projection/projected-agent-skill.js';
+import { buildClaudeHooksObjectFromCanonical } from '../claude-code/hooks-format.js';
 import {
   ANTIGRAVITY_GLOBAL_ROOT,
+  ANTIGRAVITY_HOOKS_FILE,
   ANTIGRAVITY_MCP_CONFIG,
   ANTIGRAVITY_RULES_ROOT,
   ANTIGRAVITY_RULES_DIR,
@@ -83,6 +85,17 @@ export function renderAntigravityGlobalInstructions(canonical: CanonicalFiles): 
   });
 
   return appendEmbeddedRulesBlock(root?.body.trim() ?? '', nonRootRules);
+}
+
+export function generateHooks(canonical: CanonicalFiles): AntigravityOutput[] {
+  if (!canonical.hooks || Object.keys(canonical.hooks).length === 0) return [];
+  const hooks = buildClaudeHooksObjectFromCanonical(canonical);
+  if (Object.keys(hooks).length === 0) return [];
+  return [{ path: ANTIGRAVITY_HOOKS_FILE, content: JSON.stringify(hooks, null, 2) }];
+}
+
+export function generatePermissions(_canonical: CanonicalFiles): AntigravityOutput[] {
+  return [];
 }
 
 export { ANTIGRAVITY_GLOBAL_ROOT };

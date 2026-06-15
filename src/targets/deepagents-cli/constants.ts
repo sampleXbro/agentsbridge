@@ -22,10 +22,12 @@ export const DEEPAGENTS_CLI_TARGET = 'deepagents-cli';
 export const DEEPAGENTS_CLI_ROOT_FILE = '.deepagents/AGENTS.md';
 export const DEEPAGENTS_CLI_SKILLS_DIR = '.deepagents/skills';
 export const DEEPAGENTS_CLI_MCP_FILE = '.mcp.json';
+export const DEEPAGENTS_CLI_HOOKS_FILE = '.deepagents/hooks.json';
 
 export const DEEPAGENTS_CLI_GLOBAL_ROOT_FILE = '.deepagents/AGENTS.md';
 export const DEEPAGENTS_CLI_GLOBAL_SKILLS_DIR = '.deepagents/skills';
 export const DEEPAGENTS_CLI_GLOBAL_MCP_FILE = '.deepagents/.mcp.json';
+export const DEEPAGENTS_CLI_GLOBAL_HOOKS_FILE = '.deepagents/hooks.json';
 
 // Canonical paths
 export const DEEPAGENTS_CLI_CANONICAL_RULES_DIR = '.agentsmesh/rules';

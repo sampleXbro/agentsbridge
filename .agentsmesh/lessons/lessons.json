@@ -628,6 +628,34 @@
         "t-kw-1397bfda"
       ]
     },
+    "fixture-and-assertion-discipline-after-changing-a-target-capability": {
+      "createdAt": "2026-06-14",
+      "evidence": [
+        "top-tier-capability-focused-failures-2026-06-14"
+      ],
+      "rule": "After changing a target capability or output path, update every exact capability assertion and strict target contract in the same TDD slice; focused target tests intentionally encode the previous contract.",
+      "status": "active",
+      "topics": [
+        "fixture-and-assertion-discipline"
+      ],
+      "triggers": [
+        "t-glob-c225e5cc"
+      ]
+    },
+    "fixture-and-assertion-discipline-after-updating-a-target-s": {
+      "createdAt": "2026-06-14",
+      "evidence": [],
+      "rationale": "Hand-editing the README/MDX is error-prone; the render script is the source of truth for the generated matrix blocks.",
+      "rule": "After updating a target's capabilities (e.g. commands from none → native), run `node --import tsx/esm scripts/render-support-matrix.ts` (not just matrix verify) to regenerate the MDX, then confirm verify passes — the script both updates the docs AND validates them.",
+      "status": "active",
+      "topics": [
+        "fixture-and-assertion-discipline"
+      ],
+      "triggers": [
+        "t-glob-9f0a5990",
+        "t-kw-364764c2"
+      ]
+    },
     "fixture-and-assertion-discipline-in-vitest-a-vi-fn": {
       "createdAt": "2026-06-12",
       "evidence": [
@@ -968,6 +996,20 @@
         "t-cmd-bde9db6b"
       ]
     },
+    "fixture-and-assertion-discipline-strict-generated-artifact-contract-array": {
+      "createdAt": "2026-06-14",
+      "evidence": [
+        "cline-contract-order-failure-2026-06-14"
+      ],
+      "rule": "Strict generated artifact contract arrays must remain in the exact sorted order returned by generatedPathsOnDisk; when adding a path, compare adjacent full paths rather than appending by feature.",
+      "status": "active",
+      "topics": [
+        "fixture-and-assertion-discipline"
+      ],
+      "triggers": [
+        "t-glob-d9afca50"
+      ]
+    },
     "fixture-and-assertion-discipline-to-cover-the-1-arm": {
       "createdAt": "2026-06-07",
       "evidence": [
@@ -1002,6 +1044,20 @@
         "t-glob-398705da",
         "t-kw-b4ecc59d",
         "t-kw-3bdacef0"
+      ]
+    },
+    "fixture-and-assertion-discipline-when-adding-commands-support-to": {
+      "createdAt": "2026-06-14",
+      "evidence": [],
+      "rationale": "The import-map builder is a separate file from the generator and importer; it's easy to forget when adding a new capability to a target.",
+      "rule": "When adding commands support to a target, also update the target's import-map builder (src/core/reference/import-maps/<target>.ts) to list the commands directory — missing this causes import round-trip reference rewriting tests to fail even when generator, descriptor, and importer are all correct.",
+      "status": "active",
+      "topics": [
+        "fixture-and-assertion-discipline"
+      ],
+      "triggers": [
+        "t-glob-71d466f5",
+        "t-kw-c5bd6c0b"
       ]
     },
     "fixture-and-assertion-discipline-when-asserting-line-exact-cli": {
@@ -1236,6 +1292,20 @@
       ],
       "triggers": [
         "t-glob-d458a5b8"
+      ]
+    },
+    "generation-collision-source-maps-feature-generators-that-share-one": {
+      "createdAt": "2026-06-14",
+      "evidence": [
+        "opencode-mcp-permissions-merge-failure"
+      ],
+      "rule": "Feature generators that share one output file cannot rely on descriptor.mergeGeneratedOutputContent unless they run through optional-features merging; verify engine ordering and route shared JSON settings through emitScopedSettings or another merge-aware path.",
+      "status": "active",
+      "topics": [
+        "generation-collision-source-maps"
+      ],
+      "triggers": [
+        "t-glob-b8433f47"
       ]
     },
     "generation-collision-source-maps-rule-1": {
@@ -3078,6 +3148,20 @@
         "t-kw-34b00283"
       ]
     },
+    "lessons-system-list-existing-lesson-topics-before": {
+      "createdAt": "2026-06-14",
+      "evidence": [
+        "unknown-topic-workflow-20260614"
+      ],
+      "rule": "List existing lesson topics before capturing into an uncertain topic id.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-0465888e"
+      ]
+    },
     "lessons-system-make-legacy-auto-migration-check": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -4501,6 +4585,216 @@
         "t-cmd-d4222599"
       ]
     },
+    "skill-path-resolution-resolve-skill-paths-from-the-2": {
+      "createdAt": "2026-06-14",
+      "evidence": [
+        "lesson-path-resolution-20260614"
+      ],
+      "rule": "Resolve skill paths from the repository-local skill root when a listed home-directory alias is absent.",
+      "status": "active",
+      "topics": [
+        "skill-path-resolution"
+      ],
+      "triggers": [
+        "t-glob-e9606afe"
+      ]
+    },
+    "source-verification-re-open-official-documentation-from": {
+      "createdAt": "2026-06-14",
+      "evidence": [
+        "22b0d0"
+      ],
+      "rule": "Re-open official documentation from a fresh search result when a stale browser reference fails.",
+      "status": "active",
+      "topics": [
+        "source-verification"
+      ],
+      "triggers": [
+        "t-glob-e1afdd1c"
+      ]
+    },
+    "subagent-delegation-when-spawning-a-full-history": {
+      "createdAt": "2026-06-14",
+      "evidence": [
+        "tool-error-full-history-role-override"
+      ],
+      "rule": "When spawning a full-history subagent, omit agent_type/model/reasoning overrides; use a clean context if a specialized role is required.",
+      "status": "active",
+      "topics": [
+        "subagent-delegation"
+      ],
+      "triggers": [
+        "t-glob-25cdb7ed"
+      ]
+    },
+    "target-capability-audits-capability-audits-for-agentsmesh-are": {
+      "createdAt": "2026-06-14",
+      "evidence": [
+        "user-correction-2026-06-14"
+      ],
+      "rule": "Capability audits for agentsmesh are expansion-first: preserve working experimental, compatibility, and unofficial target projections; do not downgrade or remove support merely because the vendor surface is experimental or not the preferred path. Add newly available features and document limitations.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-9f0a5990"
+      ]
+    },
+    "target-capability-audits-when-extracting-capabilities-to-a": {
+      "createdAt": "2026-06-15",
+      "evidence": [
+        "task-13-antigravity-hooks"
+      ],
+      "rule": "When extracting capabilities to a separate file to stay under the 200-line limit, export named constants (e.g. `projectCapabilities`, `globalCapabilities`) rather than the same names as the inline variables in index.ts — this avoids name shadowing and import confusion when the old variables are removed.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-9f0a5990"
+      ]
+    },
+    "target-capability-expansion-before-reading-a-target-implementation": {
+      "createdAt": "2026-06-14",
+      "evidence": [
+        "missing-cline-files-2026-06-14"
+      ],
+      "rule": "Before reading a target implementation, list its files or search for the symbol; do not assume split generator/importer filenames because many targets keep them in aggregate files.",
+      "status": "active",
+      "topics": [
+        "target-capability-expansion"
+      ],
+      "triggers": [
+        "t-glob-783cbbfe"
+      ]
+    },
+    "target-capability-expansion-conversion-disable-flags-must-suppress": {
+      "createdAt": "2026-06-14",
+      "evidence": [
+        "cline-native-conversion-guard-2026-06-14"
+      ],
+      "rule": "Conversion-disable flags must suppress only conversion-derived embedded generators; once a target gains native support, conversion settings must not disable its native generator.",
+      "status": "active",
+      "topics": [
+        "target-capability-expansion"
+      ],
+      "triggers": [
+        "t-glob-c47c9030"
+      ]
+    },
+    "target-capability-expansion-do-not-combine-an-expected": {
+      "createdAt": "2026-06-14",
+      "evidence": [
+        "rg-no-match-2026-06-14"
+      ],
+      "rule": "Do not combine an expected no-match rg probe after another read command when failure capture is mandatory; run no-match-tolerant searches separately or use an explicit read-only fallback.",
+      "status": "active",
+      "topics": [
+        "target-capability-expansion"
+      ],
+      "triggers": [
+        "t-glob-a2e61f30"
+      ]
+    },
+    "target-capability-expansion-native-target-agent-formats-that": {
+      "createdAt": "2026-06-14",
+      "evidence": [
+        "cline-focused-red-2026-06-14"
+      ],
+      "rule": "Native target agent formats that omit canonical fields must carry those fields in x-agentsmesh extension metadata, and their import mapper must explicitly translate the extensions back before fallback serialization.",
+      "status": "active",
+      "topics": [
+        "target-capability-expansion"
+      ],
+      "triggers": [
+        "t-glob-17bd0955"
+      ]
+    },
+    "target-capability-expansion-when-a-target-gains-support": {
+      "createdAt": "2026-06-14",
+      "evidence": [
+        "full-test-opencode-lint-2026-06-14"
+      ],
+      "rule": "When a target gains support for a previously linted unsupported feature, remove or rewrite branch tests for the obsolete lint helper in the same capability slice.",
+      "status": "active",
+      "topics": [
+        "target-capability-expansion"
+      ],
+      "triggers": [
+        "t-glob-759713e1"
+      ]
+    },
+    "target-capability-expansion-when-a-target-output-family": {
+      "createdAt": "2026-06-14",
+      "evidence": [
+        "targeted-e2e-2026-06-14"
+      ],
+      "rule": "When a target output family changes, update shared E2E manifest helpers and reference-matrix expectations in addition to generation assertions; these helpers may encode the old path independently.",
+      "status": "active",
+      "topics": [
+        "target-capability-expansion"
+      ],
+      "triggers": [
+        "t-glob-7fd56163"
+      ]
+    },
+    "target-capability-expansion-when-expanding-a-target-from": {
+      "createdAt": "2026-06-14",
+      "evidence": [
+        "full-test-2026-06-14"
+      ],
+      "rule": "When expanding a target from agent-to-skill projection to native agent files, update strict path contracts and preserve canonical-only metadata in extension frontmatter so generate-import round trips remain lossless.",
+      "status": "active",
+      "topics": [
+        "target-capability-expansion"
+      ],
+      "triggers": [
+        "t-glob-9de1df62"
+      ]
+    },
+    "target-capability-expansion-when-repo-wide-format-check": {
+      "createdAt": "2026-06-14",
+      "evidence": [
+        "format-check-2026-06-14"
+      ],
+      "rule": "When repo-wide format:check reports pre-existing drift, format only touched files and recheck that subset; do not rewrite unrelated source files.",
+      "status": "active",
+      "topics": [
+        "target-capability-expansion"
+      ],
+      "triggers": [
+        "t-glob-75e89e62"
+      ]
+    },
+    "test-execution-with-this-vitest-setup-pnpm": {
+      "createdAt": "2026-06-14",
+      "evidence": [
+        "focused-test-command-2026-06-14"
+      ],
+      "rule": "With this Vitest setup, pnpm test -- <files> does not reliably restrict execution because the package script already ends in vitest run; use pnpm exec vitest run <files> for focused tests.",
+      "status": "active",
+      "topics": [
+        "test-execution"
+      ],
+      "triggers": [
+        "t-glob-4c29ad88"
+      ]
+    },
+    "typescript-contracts-after-adding-a-new-target": {
+      "createdAt": "2026-06-14",
+      "evidence": [
+        "codex-hooks-output-type-error"
+      ],
+      "rule": "After adding a new target generator module, verify the target-local output type name before importing it; neighboring targets use different names even when the shape is identical.",
+      "status": "active",
+      "topics": [
+        "typescript-contracts"
+      ],
+      "triggers": [
+        "t-glob-9de1df62"
+      ]
+    },
     "typescript-esm-cycles-rule-1": {
       "createdAt": "2026-06-05",
       "evidence": [
@@ -5734,6 +6028,24 @@
     "skill-path-resolution": {
       "summary": "Correctly resolve available skill paths before invoking them"
     },
+    "source-verification": {
+      "summary": "Recover reliably from official documentation lookup failures."
+    },
+    "subagent-delegation": {
+      "summary": "Constraints and reliable patterns for delegating work to subagents."
+    },
+    "target-capability-audits": {
+      "summary": "Policy for auditing and expanding target feature support."
+    },
+    "target-capability-expansion": {
+      "summary": "Rules for additive target capability upgrades"
+    },
+    "test-execution": {
+      "summary": "Reliable focused and full test command patterns."
+    },
+    "typescript-contracts": {
+      "summary": "TypeScript contract and local type-name verification."
+    },
     "typescript-esm-cycles": {
       "summary": "TypeScript strict + ESM cycles — TDZ traps in descriptor literals, third-file import-mappers, lazy registry caches, union narrowing."
     },
@@ -6071,6 +6383,10 @@
       "kind": "file_glob",
       "pattern": "tests/e2e/helpers/**"
     },
+    "t-glob-17bd0955": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/generator.ts"
+    },
     "t-glob-17d4d819": {
       "kind": "file_glob",
       "pattern": "src/**/*.ts"
@@ -6118,6 +6434,10 @@
     "t-glob-257fb095": {
       "kind": "file_glob",
       "pattern": "tests/harness/**"
+    },
+    "t-glob-25cdb7ed": {
+      "kind": "file_glob",
+      "pattern": "AGENTS.md"
     },
     "t-glob-285fdf8b": {
       "kind": "file_glob",
@@ -6259,6 +6579,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/hook.ts"
     },
+    "t-glob-71d466f5": {
+      "kind": "file_glob",
+      "pattern": "src/core/reference/import-maps/*.ts"
+    },
     "t-glob-74262634": {
       "kind": "file_glob",
       "pattern": "src/cli/commands/lessons-usage.ts"
@@ -6267,13 +6591,25 @@
       "kind": "file_glob",
       "pattern": ".agentsmesh/skills/**/SKILL.md"
     },
+    "t-glob-759713e1": {
+      "kind": "file_glob",
+      "pattern": "tests/unit/targets/per-target-lint-branches.test.ts"
+    },
     "t-glob-75de7d28": {
       "kind": "file_glob",
       "pattern": "src/core/path-helpers.ts"
     },
+    "t-glob-75e89e62": {
+      "kind": "file_glob",
+      "pattern": "src/targets/opencode/index.ts"
+    },
     "t-glob-771c5cde": {
       "kind": "file_glob",
       "pattern": "tests/helpers/posix-path.ts"
+    },
+    "t-glob-783cbbfe": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*"
     },
     "t-glob-7a175889": {
       "kind": "file_glob",
@@ -6355,13 +6691,25 @@
       "kind": "file_glob",
       "pattern": "src/lessons/validate*.ts"
     },
+    "t-glob-9de1df62": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/generator/*.ts"
+    },
     "t-glob-9df02130": {
       "kind": "file_glob",
       "pattern": "src/mcp/tool-tables/lessons-tools.ts"
     },
+    "t-glob-9f0a5990": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/index.ts"
+    },
     "t-glob-a23d7b79": {
       "kind": "file_glob",
       "pattern": "src/core/generate/feature-loop.ts"
+    },
+    "t-glob-a2e61f30": {
+      "kind": "file_glob",
+      "pattern": "src/targets/opencode/**"
     },
     "t-glob-a5fc7764": {
       "kind": "file_glob",
@@ -6391,6 +6739,10 @@
       "kind": "file_glob",
       "pattern": "src/install/run/install-replay.ts"
     },
+    "t-glob-b8433f47": {
+      "kind": "file_glob",
+      "pattern": "src/targets/opencode/*.ts"
+    },
     "t-glob-ba03e2e3": {
       "kind": "file_glob",
       "pattern": "tests/e2e/**"
@@ -6398,6 +6750,10 @@
     "t-glob-c1deac29": {
       "kind": "file_glob",
       "pattern": "src/targets/projection/lessons-paragraph.ts"
+    },
+    "t-glob-c225e5cc": {
+      "kind": "file_glob",
+      "pattern": "tests/unit/targets/**/*.test.ts"
     },
     "t-glob-c2fd94f5": {
       "kind": "file_glob",
@@ -6447,6 +6803,10 @@
       "kind": "file_glob",
       "pattern": "tests/unit/utils/filesystem/rename-retry.test.ts"
     },
+    "t-glob-d9afca50": {
+      "kind": "file_glob",
+      "pattern": "tests/contract/contracts/*.ts"
+    },
     "t-glob-db7e480d": {
       "kind": "file_glob",
       "pattern": "src/lessons/paths.ts"
@@ -6458,6 +6818,14 @@
     "t-glob-e06b465d": {
       "kind": "file_glob",
       "pattern": "tests/e2e/target-contract-matrix.e2e.test.ts"
+    },
+    "t-glob-e1afdd1c": {
+      "kind": "file_glob",
+      "pattern": "src/targets/codex-cli/**"
+    },
+    "t-glob-e9606afe": {
+      "kind": "file_glob",
+      "pattern": ".agentsmesh/skills/**"
     },
     "t-glob-ee01c259": {
       "kind": "file_glob",
@@ -6566,6 +6934,10 @@
     "t-kw-34b80ab3": {
       "kind": "keyword",
       "pattern": "subagent"
+    },
+    "t-kw-364764c2": {
+      "kind": "keyword",
+      "pattern": "matrix verify drift capability"
     },
     "t-kw-381d10a9": {
       "kind": "keyword",
@@ -6690,6 +7062,10 @@
     "t-kw-b6410e25": {
       "kind": "keyword",
       "pattern": "command truncation"
+    },
+    "t-kw-c5bd6c0b": {
+      "kind": "keyword",
+      "pattern": "commands import-map reference rewrite target"
     },
     "t-kw-c8f23353": {
       "kind": "keyword",

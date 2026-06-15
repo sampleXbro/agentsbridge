@@ -51,15 +51,24 @@ describe('zed emitScopedSettings — feature gating', () => {
 });
 
 describe('amp emitScopedSettings — feature gating', () => {
-  it('emits amp.mcpServers when mcp is enabled', () => {
+  it('emits amp.mcpServers when mcp is enabled (hooks not in features)', () => {
     const out = ampDescriptor.emitScopedSettings!(fullCanonical(), 'project', WITH_MCP);
     expect(out).toHaveLength(1);
     expect(out[0].path).toBe(AMP_MCP_FILE);
     expect(parse(out[0].content)).toHaveProperty('amp.mcpServers');
   });
 
-  it('emits nothing when mcp is disabled', () => {
+  it('emits amp.hooks when hooks enabled and mcp disabled', () => {
     const out = ampDescriptor.emitScopedSettings!(fullCanonical(), 'project', WITHOUT_MCP);
+    expect(out).toHaveLength(1);
+    expect(out[0].path).toBe(AMP_MCP_FILE);
+    const json = parse(out[0].content);
+    expect(json).toHaveProperty('amp.hooks');
+    expect(json).not.toHaveProperty('amp.mcpServers');
+  });
+
+  it('emits nothing when neither mcp nor hooks is enabled', () => {
+    const out = ampDescriptor.emitScopedSettings!(fullCanonical(), 'project', new Set(['rules']));
     expect(out).toEqual([]);
   });
 });

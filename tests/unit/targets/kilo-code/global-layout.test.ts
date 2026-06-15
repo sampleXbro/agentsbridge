@@ -18,6 +18,8 @@ import {
   KILO_CODE_GLOBAL_SKILLS_DIR,
   KILO_CODE_GLOBAL_MCP_FILE,
   KILO_CODE_GLOBAL_IGNORE,
+  KILO_CONFIG_FILE,
+  KILO_GLOBAL_CONFIG_FILE,
 } from '../../../../src/targets/kilo-code/constants.js';
 
 describe('kilo-code global layout — paths', () => {
@@ -63,6 +65,7 @@ describe('kilo-code global layout — paths', () => {
       KILO_CODE_GLOBAL_AGENTS_MD,
       KILO_CODE_GLOBAL_MCP_FILE,
       KILO_CODE_GLOBAL_IGNORE,
+      KILO_GLOBAL_CONFIG_FILE,
     ]);
   });
 });
@@ -106,6 +109,10 @@ describe('kilo-code global layout — rewriteGeneratedPath', () => {
   it('keeps .kilocodeignore unchanged', () => {
     expect(rewrite(KILO_CODE_GLOBAL_IGNORE)).toBe(KILO_CODE_GLOBAL_IGNORE);
   });
+
+  it('rewrites kilo.jsonc to .config/kilo/kilo.jsonc for global scope', () => {
+    expect(rewrite(KILO_CONFIG_FILE)).toBe(KILO_GLOBAL_CONFIG_FILE);
+  });
 });
 
 describe('kilo-code global layout — mirrorGlobalPath', () => {
@@ -142,7 +149,7 @@ describe('kilo-code global layout — mirrorGlobalPath', () => {
 });
 
 describe('kilo-code global layout — capabilities', () => {
-  it('exposes the same native capabilities in global as in project (hooks/permissions: none)', () => {
+  it('exposes the same native capabilities in global as in project (hooks: none, permissions: native)', () => {
     expect(getTargetCapabilities('kilo-code', 'global')).toEqual({
       rules: { level: 'native' },
       additionalRules: { level: 'native' },
@@ -152,7 +159,7 @@ describe('kilo-code global layout — capabilities', () => {
       mcp: { level: 'native' },
       hooks: { level: 'none' },
       ignore: { level: 'native' },
-      permissions: { level: 'none' },
+      permissions: { level: 'native' },
     });
   });
 

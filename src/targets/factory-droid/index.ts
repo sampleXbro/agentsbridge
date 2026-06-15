@@ -6,13 +6,13 @@
  *   - `.factory/skills/`     — skill bundles
  *   - `.factory/droids/`     — native droid definitions from canonical agents
  *   - `.factory/mcp.json`    — MCP servers
+ *   - `.factory/hooks.json`  — lifecycle hooks (Claude Code format)
  *
  * Import reads `AGENTS.md`, `.factory/skills/`, and `.factory/mcp.json`.
  *
- * Factory Droid has native support for agents (droids), skills, and MCP.
- * Commands are projected as skills. Hooks, ignore, and permissions have
- * no file-based config — lint warnings are emitted when those canonical
- * features are present.
+ * Factory Droid has native support for agents (droids), skills, MCP, and hooks.
+ * Commands are projected as skills. Ignore and permissions have no file-based
+ * config — lint warnings are emitted when those canonical features are present.
  */
 
 import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
@@ -23,6 +23,7 @@ import {
   generateAgents,
   generateSkills,
   generateMcp,
+  generateHooks,
 } from './generator.js';
 import {
   FACTORY_DROID_TARGET,
@@ -30,15 +31,17 @@ import {
   FACTORY_DROID_SKILLS_DIR,
   FACTORY_DROID_DROIDS_DIR,
   FACTORY_DROID_MCP_FILE,
+  FACTORY_DROID_HOOKS_FILE,
   FACTORY_DROID_GLOBAL_ROOT_FILE,
   FACTORY_DROID_GLOBAL_SKILLS_DIR,
   FACTORY_DROID_GLOBAL_DROIDS_DIR,
   FACTORY_DROID_GLOBAL_MCP_FILE,
+  FACTORY_DROID_GLOBAL_HOOKS_FILE,
   FACTORY_DROID_CANONICAL_RULES_DIR,
 } from './constants.js';
 import { importFromFactoryDroid } from './importer.js';
 import { lintRules } from './linter.js';
-import { lintHooks, lintPermissions, lintIgnore } from './lint.js';
+import { lintPermissions, lintIgnore } from './lint.js';
 import { buildFactoryDroidImportPaths } from '../../core/reference/import-map-builders.js';
 import { commandSkillDirName } from '../codex-cli/command-skill.js';
 
@@ -50,6 +53,7 @@ export const target: TargetGenerators = {
   generateAgents,
   generateSkills,
   generateMcp,
+  generateHooks,
   importFrom: importFromFactoryDroid,
 };
 
@@ -58,7 +62,7 @@ const project: TargetLayout = {
   skillDir: FACTORY_DROID_SKILLS_DIR,
   managedOutputs: {
     dirs: [FACTORY_DROID_SKILLS_DIR, FACTORY_DROID_DROIDS_DIR],
-    files: [FACTORY_DROID_ROOT_FILE, FACTORY_DROID_MCP_FILE],
+    files: [FACTORY_DROID_ROOT_FILE, FACTORY_DROID_HOOKS_FILE, FACTORY_DROID_MCP_FILE],
   },
   paths: {
     rulePath(_slug) {
@@ -78,7 +82,7 @@ const globalLayout: TargetLayout = {
   skillDir: FACTORY_DROID_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [FACTORY_DROID_GLOBAL_SKILLS_DIR, FACTORY_DROID_GLOBAL_DROIDS_DIR],
-    files: [FACTORY_DROID_GLOBAL_ROOT_FILE, FACTORY_DROID_GLOBAL_MCP_FILE],
+    files: [FACTORY_DROID_GLOBAL_ROOT_FILE, FACTORY_DROID_GLOBAL_HOOKS_FILE, FACTORY_DROID_GLOBAL_MCP_FILE],
   },
   rewriteGeneratedPath(path) {
     if (path === FACTORY_DROID_ROOT_FILE) return FACTORY_DROID_GLOBAL_ROOT_FILE;
@@ -111,7 +115,7 @@ const capabilities: TargetCapabilities = {
   agents: 'native',
   skills: 'native',
   mcp: 'native',
-  hooks: 'none',
+  hooks: 'native',
   ignore: 'none',
   permissions: 'none',
 };
@@ -130,7 +134,6 @@ export const descriptor = {
     'No Factory Droid config found (AGENTS.md, .factory/skills, or .factory/mcp.json).',
   lintRules,
   lint: {
-    hooks: lintHooks,
     permissions: lintPermissions,
     ignore: lintIgnore,
   },

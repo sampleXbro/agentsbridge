@@ -52,12 +52,16 @@ describe('trae descriptor global layout', () => {
     expect(rewrite(TRAE_IGNORE)).toBeNull();
   });
 
-  it('globalSupport.capabilities has no commands, agents, hooks, or permissions', () => {
+  it('globalSupport.capabilities has no agents, hooks, or permissions', () => {
     const caps = descriptor.globalSupport!.capabilities;
-    expect(caps.commands).toBe('none');
     expect(caps.agents).toBe('none');
     expect(caps.hooks).toBe('none');
     expect(caps.permissions).toBe('none');
+  });
+
+  it('globalSupport.capabilities has native commands', () => {
+    const caps = descriptor.globalSupport!.capabilities;
+    expect(caps.commands).toBe('native');
   });
 
   it('globalSupport.capabilities has native rules, additionalRules, skills, mcp', () => {

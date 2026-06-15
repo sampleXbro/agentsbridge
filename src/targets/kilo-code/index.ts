@@ -10,13 +10,14 @@
  *   - `.kilo/mcp.json`         — MCP servers (mcpServers wrapper)
  *   - `.kilocodeignore`        — ignore patterns (legacy filename, only
  *                                natively-loaded ignore in kilo today)
+ *   - `kilo.jsonc`             — permissions (permission key)
  *
  * Import covers BOTH new and legacy layouts so existing kilo / Roo-era users
  * round-trip cleanly.
  */
 
-import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
-import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
+import type { TargetGenerators } from '../catalog/target.interface.js';
+import type { TargetDescriptor } from '../catalog/target-descriptor.js';
 import {
   generateRules,
   generateCommands,
@@ -24,16 +25,11 @@ import {
   generateSkills,
   generateMcp,
   generateIgnore,
+  generatePermissions,
 } from './generator.js';
 import {
   KILO_CODE_TARGET,
   KILO_CODE_ROOT_RULE,
-  KILO_CODE_RULES_DIR,
-  KILO_CODE_COMMANDS_DIR,
-  KILO_CODE_AGENTS_DIR,
-  KILO_CODE_SKILLS_DIR,
-  KILO_CODE_MCP_FILE,
-  KILO_CODE_IGNORE,
   KILO_CODE_LEGACY_RULES_DIR,
   KILO_CODE_LEGACY_WORKFLOWS_DIR,
   KILO_CODE_LEGACY_SKILLS_DIR,
@@ -46,19 +42,25 @@ import {
   KILO_CODE_GLOBAL_SKILLS_DIR,
   KILO_CODE_GLOBAL_MCP_FILE,
   KILO_CODE_GLOBAL_IGNORE,
-  KILO_CODE_GLOBAL_AGENTS_SKILLS_DIR,
+  KILO_CODE_RULES_DIR,
+  KILO_CODE_COMMANDS_DIR,
+  KILO_CODE_AGENTS_DIR,
+  KILO_CODE_SKILLS_DIR,
+  KILO_CODE_MCP_FILE,
+  KILO_CODE_IGNORE,
   KILO_CODE_CANONICAL_RULES_DIR,
   KILO_CODE_CANONICAL_COMMANDS_DIR,
   KILO_CODE_CANONICAL_AGENTS_DIR,
   KILO_CODE_CANONICAL_MCP,
   KILO_CODE_CANONICAL_IGNORE,
 } from './constants.js';
-import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromKiloCode } from './importer.js';
 import { kiloAgentMapper, kiloCommandMapper, kiloNonRootRuleMapper } from './import-mappers.js';
 import { lintRules } from './linter.js';
-import { lintHooks, lintPermissions } from './lint.js';
+import { lintHooks } from './lint.js';
 import { buildKiloCodeImportPaths } from '../../core/reference/import-map-builders.js';
+import { mergeKiloConfig } from './merge.js';
+import { project, globalLayout, capabilities, globalCapabilities } from './layout.js';
 
 export const target: TargetGenerators = {
   name: KILO_CODE_TARGET,
@@ -69,72 +71,8 @@ export const target: TargetGenerators = {
   generateSkills,
   generateMcp,
   generateIgnore,
+  generatePermissions,
   importFrom: importFromKiloCode,
-};
-
-const project: TargetLayout = {
-  rootInstructionPath: KILO_CODE_ROOT_RULE,
-  skillDir: KILO_CODE_SKILLS_DIR,
-  managedOutputs: {
-    dirs: [KILO_CODE_RULES_DIR, KILO_CODE_COMMANDS_DIR, KILO_CODE_AGENTS_DIR, KILO_CODE_SKILLS_DIR],
-    files: [KILO_CODE_ROOT_RULE, KILO_CODE_MCP_FILE, KILO_CODE_IGNORE],
-  },
-  paths: {
-    rulePath(slug, _rule) {
-      return `${KILO_CODE_RULES_DIR}/${slug}.md`;
-    },
-    commandPath(name, _config) {
-      return `${KILO_CODE_COMMANDS_DIR}/${name}.md`;
-    },
-    agentPath(name, _config) {
-      return `${KILO_CODE_AGENTS_DIR}/${name}.md`;
-    },
-  },
-};
-
-const globalLayout: TargetLayout = {
-  rootInstructionPath: KILO_CODE_GLOBAL_AGENTS_MD,
-  skillDir: KILO_CODE_GLOBAL_SKILLS_DIR,
-  managedOutputs: {
-    dirs: [
-      KILO_CODE_GLOBAL_RULES_DIR,
-      KILO_CODE_GLOBAL_COMMANDS_DIR,
-      KILO_CODE_GLOBAL_AGENTS_DIR,
-      KILO_CODE_GLOBAL_SKILLS_DIR,
-      KILO_CODE_GLOBAL_AGENTS_SKILLS_DIR,
-    ],
-    files: [KILO_CODE_GLOBAL_AGENTS_MD, KILO_CODE_GLOBAL_MCP_FILE, KILO_CODE_GLOBAL_IGNORE],
-  },
-  rewriteGeneratedPath(path) {
-    if (path === KILO_CODE_ROOT_RULE) return KILO_CODE_GLOBAL_AGENTS_MD;
-    return path;
-  },
-  mirrorGlobalPath(path, activeTargets) {
-    return mirrorSkillsToAgents(path, KILO_CODE_GLOBAL_SKILLS_DIR, activeTargets);
-  },
-  paths: {
-    rulePath(slug, _rule) {
-      return `${KILO_CODE_GLOBAL_RULES_DIR}/${slug}.md`;
-    },
-    commandPath(name, _config) {
-      return `${KILO_CODE_GLOBAL_COMMANDS_DIR}/${name}.md`;
-    },
-    agentPath(name, _config) {
-      return `${KILO_CODE_GLOBAL_AGENTS_DIR}/${name}.md`;
-    },
-  },
-};
-
-const capabilities: TargetCapabilities = {
-  rules: 'native',
-  additionalRules: 'native',
-  commands: 'native',
-  agents: 'native',
-  skills: 'native',
-  mcp: 'native',
-  hooks: 'none',
-  ignore: 'native',
-  permissions: 'none',
 };
 
 export const descriptor = {
@@ -152,11 +90,11 @@ export const descriptor = {
   lintRules,
   lint: {
     hooks: lintHooks,
-    permissions: lintPermissions,
   },
+  mergeGeneratedOutputContent: mergeKiloConfig,
   project,
   globalSupport: {
-    capabilities,
+    capabilities: globalCapabilities,
     detectionPaths: [
       KILO_CODE_GLOBAL_AGENTS_MD,
       KILO_CODE_GLOBAL_RULES_DIR,

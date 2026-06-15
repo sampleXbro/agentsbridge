@@ -1,0 +1,109 @@
+/**
+ * Kilo Code project and global layout definitions, plus capability objects.
+ */
+
+import type { TargetCapabilities } from '../catalog/target.interface.js';
+import type { TargetLayout } from '../catalog/target-descriptor.js';
+import {
+  KILO_CODE_ROOT_RULE,
+  KILO_CODE_RULES_DIR,
+  KILO_CODE_COMMANDS_DIR,
+  KILO_CODE_AGENTS_DIR,
+  KILO_CODE_SKILLS_DIR,
+  KILO_CODE_MCP_FILE,
+  KILO_CODE_IGNORE,
+  KILO_CODE_GLOBAL_AGENTS_MD,
+  KILO_CODE_GLOBAL_RULES_DIR,
+  KILO_CODE_GLOBAL_COMMANDS_DIR,
+  KILO_CODE_GLOBAL_AGENTS_DIR,
+  KILO_CODE_GLOBAL_SKILLS_DIR,
+  KILO_CODE_GLOBAL_MCP_FILE,
+  KILO_CODE_GLOBAL_IGNORE,
+  KILO_CODE_GLOBAL_AGENTS_SKILLS_DIR,
+  KILO_CONFIG_FILE,
+  KILO_GLOBAL_CONFIG_FILE,
+} from './constants.js';
+import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
+
+export const project: TargetLayout = {
+  rootInstructionPath: KILO_CODE_ROOT_RULE,
+  skillDir: KILO_CODE_SKILLS_DIR,
+  managedOutputs: {
+    dirs: [KILO_CODE_RULES_DIR, KILO_CODE_COMMANDS_DIR, KILO_CODE_AGENTS_DIR, KILO_CODE_SKILLS_DIR],
+    files: [KILO_CODE_ROOT_RULE, KILO_CODE_MCP_FILE, KILO_CODE_IGNORE, KILO_CONFIG_FILE],
+  },
+  paths: {
+    rulePath(slug, _rule) {
+      return `${KILO_CODE_RULES_DIR}/${slug}.md`;
+    },
+    commandPath(name, _config) {
+      return `${KILO_CODE_COMMANDS_DIR}/${name}.md`;
+    },
+    agentPath(name, _config) {
+      return `${KILO_CODE_AGENTS_DIR}/${name}.md`;
+    },
+  },
+};
+
+export const globalLayout: TargetLayout = {
+  rootInstructionPath: KILO_CODE_GLOBAL_AGENTS_MD,
+  skillDir: KILO_CODE_GLOBAL_SKILLS_DIR,
+  managedOutputs: {
+    dirs: [
+      KILO_CODE_GLOBAL_RULES_DIR,
+      KILO_CODE_GLOBAL_COMMANDS_DIR,
+      KILO_CODE_GLOBAL_AGENTS_DIR,
+      KILO_CODE_GLOBAL_SKILLS_DIR,
+      KILO_CODE_GLOBAL_AGENTS_SKILLS_DIR,
+    ],
+    files: [
+      KILO_CODE_GLOBAL_AGENTS_MD,
+      KILO_CODE_GLOBAL_MCP_FILE,
+      KILO_CODE_GLOBAL_IGNORE,
+      KILO_GLOBAL_CONFIG_FILE,
+    ],
+  },
+  rewriteGeneratedPath(path) {
+    if (path === KILO_CODE_ROOT_RULE) return KILO_CODE_GLOBAL_AGENTS_MD;
+    if (path === KILO_CONFIG_FILE) return KILO_GLOBAL_CONFIG_FILE;
+    return path;
+  },
+  mirrorGlobalPath(path, activeTargets) {
+    return mirrorSkillsToAgents(path, KILO_CODE_GLOBAL_SKILLS_DIR, activeTargets);
+  },
+  paths: {
+    rulePath(slug, _rule) {
+      return `${KILO_CODE_GLOBAL_RULES_DIR}/${slug}.md`;
+    },
+    commandPath(name, _config) {
+      return `${KILO_CODE_GLOBAL_COMMANDS_DIR}/${name}.md`;
+    },
+    agentPath(name, _config) {
+      return `${KILO_CODE_GLOBAL_AGENTS_DIR}/${name}.md`;
+    },
+  },
+};
+
+export const capabilities: TargetCapabilities = {
+  rules: 'native',
+  additionalRules: 'native',
+  commands: 'native',
+  agents: 'native',
+  skills: 'native',
+  mcp: 'native',
+  hooks: 'none',
+  ignore: 'native',
+  permissions: 'native',
+};
+
+export const globalCapabilities: TargetCapabilities = {
+  rules: 'native',
+  additionalRules: 'native',
+  commands: 'native',
+  agents: 'native',
+  skills: 'native',
+  mcp: 'native',
+  hooks: 'none',
+  ignore: 'native',
+  permissions: 'native',
+};

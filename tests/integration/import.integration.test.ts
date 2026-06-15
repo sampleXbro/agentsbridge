@@ -462,7 +462,7 @@ features: [agents]
     [
       'cline',
       '.cline/skills/am-agent-reviewer/SKILL.md',
-      '.cline/skills/am-agent-reviewer/SKILL.md',
+      '.cline/agents/reviewer.md',
     ],
     ['codex-cli', '.agents/skills/am-agent-reviewer/SKILL.md', '.codex/agents/reviewer.toml'],
     [

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
-import { lintHooks, lintPermissions, lintIgnore } from '../../../../src/targets/rovodev/lint.js';
+import { lintIgnore } from '../../../../src/targets/rovodev/lint.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
   return {
@@ -15,57 +15,6 @@ function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles 
     ...overrides,
   };
 }
-
-describe('lintHooks (rovodev)', () => {
-  it('returns empty when no hooks', () => {
-    expect(lintHooks(makeCanonical())).toHaveLength(0);
-  });
-
-  it('returns empty when hooks object has empty arrays', () => {
-    expect(lintHooks(makeCanonical({ hooks: { preGenerate: [], postGenerate: [] } }))).toHaveLength(
-      0,
-    );
-  });
-
-  it('warns when hooks have entries', () => {
-    const result = lintHooks(
-      makeCanonical({
-        hooks: { preGenerate: [{ command: 'echo test' }] },
-      }),
-    );
-    expect(result).toHaveLength(1);
-    expect(result[0].level).toBe('warning');
-    expect(result[0].target).toBe('rovodev');
-  });
-});
-
-describe('lintPermissions (rovodev)', () => {
-  it('returns empty when no permissions', () => {
-    expect(lintPermissions(makeCanonical())).toHaveLength(0);
-  });
-
-  it('returns empty when permissions are all empty', () => {
-    expect(
-      lintPermissions(makeCanonical({ permissions: { allow: [], deny: [], ask: [] } })),
-    ).toHaveLength(0);
-  });
-
-  it('warns when permissions have entries', () => {
-    const result = lintPermissions(
-      makeCanonical({ permissions: { allow: ['Bash'], deny: [], ask: [] } }),
-    );
-    expect(result).toHaveLength(1);
-    expect(result[0].level).toBe('warning');
-    expect(result[0].target).toBe('rovodev');
-  });
-
-  it('warns when permissions have entries but no ask field', () => {
-    const result = lintPermissions(makeCanonical({ permissions: { allow: ['Bash'], deny: [] } }));
-    expect(result).toHaveLength(1);
-    expect(result[0].level).toBe('warning');
-    expect(result[0].target).toBe('rovodev');
-  });
-});
 
 describe('lintIgnore (rovodev)', () => {
   it('returns empty when no ignore patterns', () => {

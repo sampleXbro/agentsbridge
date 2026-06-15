@@ -168,13 +168,27 @@ function assertAllAgentFields(filePath: string, name: AgentName): void {
 
 function projectedAgentSkillPath(target: string, name: string): string {
   switch (target) {
-    case 'cline':
-      return `.cline/skills/am-agent-${name}/SKILL.md`;
     case 'windsurf':
       return `.windsurf/skills/am-agent-${name}/SKILL.md`;
     default:
       throw new Error(`Unsupported projected-agent target: ${target}`);
   }
+}
+
+function assertClineNativeAgentFields(filePath: string, name: AgentName): void {
+  fileExists(filePath);
+  const agent = getAgent(name);
+  const fm = parseFm(filePath);
+  const raw = readFileSync(filePath, 'utf-8');
+
+  expect(String(fm.name ?? ''), `${name}: native name`).toBe(name);
+  expect(String(fm.description ?? ''), `${name}: native description`).toBe(agent.description);
+  expect(String(fm.model ?? ''), `${name}: native model`).toBe(agent.model);
+  expect(toStringArray(fm.tools), `${name}: native tools`).toEqual(agent.tools);
+  expect(toStringArray(fm['x-agentsmesh-disallowed-tools'])).toEqual(agent.disallowedTools);
+  expect(String(fm['x-agentsmesh-permission-mode'] ?? '')).toBe(agent.permissionMode);
+  expect(Number(fm['x-agentsmesh-max-turns'] ?? 0)).toBe(agent.maxTurns);
+  expect(raw, `${name}: native body snippet`).toContain(agent.bodySnippet);
 }
 
 function assertProjectedAgentFields(filePath: string, name: AgentName): void {
@@ -262,20 +276,29 @@ describe('agents: generate from canonical fixture', () => {
     }
   });
 
+  // ── cline (native .cline/agents/*.md) ──────────────────────────────────
+
+  it('cline: generates native agents with round-trip extension metadata', async () => {
+    dir = setupCanonicalProject();
+    const r = await runCli('generate --targets cline', dir);
+    expect(r.exitCode, r.stderr).toBe(0);
+
+    for (const name of AGENT_NAMES) {
+      assertClineNativeAgentFields(join(dir, '.cline', 'agents', `${name}.md`), name);
+    }
+  });
+
   // ── embedded agent targets (projected into skills) ─────────────────────
 
-  it.each(['cline', 'windsurf'] as const)(
-    '%s: generates projected agent skills with round-trip metadata',
-    async (target) => {
-      dir = setupCanonicalProject();
-      const r = await runCli(`generate --targets ${target}`, dir);
-      expect(r.exitCode, r.stderr).toBe(0);
+  it('windsurf: generates projected agent skills with round-trip metadata', async () => {
+    dir = setupCanonicalProject();
+    const r = await runCli('generate --targets windsurf', dir);
+    expect(r.exitCode, r.stderr).toBe(0);
 
-      for (const name of AGENT_NAMES) {
-        assertProjectedAgentFields(join(dir, projectedAgentSkillPath(target, name)), name);
-      }
-    },
-  );
+    for (const name of AGENT_NAMES) {
+      assertProjectedAgentFields(join(dir, projectedAgentSkillPath('windsurf', name)), name);
+    }
+  });
 
   // ── codex-cli (native .codex/agents/*.toml) ────────────────────────────
 
@@ -420,7 +443,7 @@ describe('agents: import back to canonical', () => {
   });
 
   it.each(['cline', 'windsurf', 'gemini-cli'] as const)(
-    '%s: importing projected agent skills restores canonical agents with all fields',
+    '%s: importing generated agent outputs restores canonical agents with all fields',
     async (target) => {
       dir = setupCanonicalProject();
 
@@ -637,9 +660,9 @@ describe('agents: round-trip (generate → import → compare with canonical fix
 
 const REPORT_PATH = join(process.cwd(), 'tests', 'e2e', 'agents-last-run.md');
 const NATIVE_TARGETS = ['claude-code', 'cursor'] as const;
-const EMBEDDED_TARGETS = ['cline', 'windsurf'] as const;
+const EMBEDDED_TARGETS = ['windsurf'] as const;
 const NATIVE_AGENT_TOML_TARGETS = ['codex-cli'] as const;
-const NATIVE_AGENT_MD_TARGETS = ['gemini-cli'] as const;
+const NATIVE_AGENT_MD_TARGETS = ['gemini-cli', 'cline'] as const;
 
 function agentBlock(dir: string, file: string): string {
   const fm = parseFm(join(dir, file));
@@ -780,13 +803,14 @@ describe('agents: file manifest (written to tests/e2e/agents-last-run.md)', () =
       }
     }
 
-    // ── NATIVE AGENT TARGETS (.codex/agents/*.toml, .gemini/agents/*.md) ───
+    // ── NATIVE AGENT TARGETS ───────────────────────────────────────────────
     lines.push(`\n## Native agent targets\n`);
     for (const target of [...NATIVE_AGENT_TOML_TARGETS, ...NATIVE_AGENT_MD_TARGETS]) {
       const r = await runCli(`generate --targets ${target}`, manifestDir);
       expect(r.exitCode, r.stderr).toBe(0);
       const ext = target === 'codex-cli' ? '.toml' : '.md';
-      const agentDir = join(manifestDir, target === 'codex-cli' ? '.codex' : '.gemini', 'agents');
+      const targetDir = target === 'codex-cli' ? '.codex' : target === 'cline' ? '.cline' : '.gemini';
+      const agentDir = join(manifestDir, targetDir, 'agents');
       lines.push(`### ${target}: exit=${r.exitCode}\n`);
       if (existsSync(agentDir)) {
         for (const name of AGENT_NAMES) {

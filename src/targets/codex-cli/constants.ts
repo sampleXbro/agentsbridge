@@ -22,6 +22,7 @@ export const CODEX_SKILLS_FALLBACK_DIR = '.codex/skills';
 
 /** Project-level config file (MCP servers and other overrides) */
 export const CODEX_CONFIG_TOML = '.codex/config.toml';
+export const CODEX_HOOKS_FILE = '.codex/hooks.json';
 
 /** Canonical markdown mirrors for additional generated rules */
 export const CODEX_INSTRUCTIONS_DIR = '.codex/instructions';
@@ -37,6 +38,7 @@ export const CODEX_CANONICAL_COMMANDS_DIR = '.agentsmesh/commands';
 export const CODEX_CANONICAL_AGENTS_DIR = '.agentsmesh/agents';
 export const CODEX_CANONICAL_SKILLS_DIR = '.agentsmesh/skills';
 export const CODEX_CANONICAL_MCP = '.agentsmesh/mcp.json';
+export const CODEX_CANONICAL_HOOKS = '.agentsmesh/hooks.yaml';
 
 export const CODEX_RULE_EMBED_MARKER = 'am-codex-rule:v1';
 export const CODEX_RULE_EMBED_JSON_PREFIX = '# am-json: ';

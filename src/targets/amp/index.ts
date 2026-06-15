@@ -15,11 +15,11 @@ import type { TargetCapabilities, TargetGenerators } from '../catalog/target.int
 import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
 import { commandSkillDirName } from '../codex-cli/command-skill.js';
 import { projectedAgentSkillDirName } from '../projection/projected-agent-skill.js';
-import { generateRules, generateCommands, generateAgents, generateSkills } from './generator.js';
+import { generateRules, generateCommands, generateAgents, generateSkills, buildAmpScopedSettings } from './generator.js';
 import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromAmp } from './importer.js';
 import { lintRules } from './linter.js';
-import { lintHooks, lintPermissions, lintIgnore } from './lint.js';
+import { lintIgnore } from './lint.js';
 import { buildAmpImportPaths } from '../../core/reference/import-map-builders.js';
 import {
   AMP_TARGET,
@@ -96,13 +96,13 @@ const globalLayout: TargetLayout = {
 const capabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'embedded',
-  commands: 'none',
+  commands: 'native',
   agents: 'none',
   skills: 'native',
   mcp: 'native',
-  hooks: 'none',
+  hooks: 'native',
   ignore: 'none',
-  permissions: 'none',
+  permissions: 'native',
 };
 
 function mergeAmpSettings(existing: string | null, newContent: string): string {
@@ -120,9 +120,9 @@ function mergeAmpSettings(existing: string | null, newContent: string): string {
   const incoming: unknown = JSON.parse(newContent);
   if (incoming === null || typeof incoming !== 'object' || Array.isArray(incoming)) return existing;
   const overlay = incoming as Record<string, unknown>;
-  if (overlay['amp.mcpServers'] !== undefined) {
-    base['amp.mcpServers'] = overlay['amp.mcpServers'];
-  }
+  if (overlay['amp.mcpServers'] !== undefined) base['amp.mcpServers'] = overlay['amp.mcpServers'];
+  if (overlay['amp.hooks'] !== undefined) base['amp.hooks'] = overlay['amp.hooks'];
+  if (overlay['amp.permissions'] !== undefined) base['amp.permissions'] = overlay['amp.permissions'];
   return JSON.stringify(base, null, 2);
 }
 
@@ -139,8 +139,6 @@ export const descriptor = {
   emptyImportMessage: 'No Amp config found (AGENTS.md, .agents/skills, or .amp/settings.json).',
   lintRules,
   lint: {
-    hooks: lintHooks,
-    permissions: lintPermissions,
     ignore: lintIgnore,
   },
   supportsConversion: { commands: true, agents: true },
@@ -164,18 +162,11 @@ export const descriptor = {
     },
   },
   emitScopedSettings(canonical, _scope, enabledFeatures) {
-    if (!enabledFeatures.has('mcp')) return [];
-    if (!canonical.mcp || Object.keys(canonical.mcp.mcpServers).length === 0) return [];
-    return [
-      {
-        path: AMP_MCP_FILE,
-        content: JSON.stringify({ 'amp.mcpServers': canonical.mcp.mcpServers }, null, 2),
-      },
-    ];
+    return buildAmpScopedSettings(canonical, enabledFeatures);
   },
-  mergeGeneratedOutputContent(existing, _pending, newContent, resolvedPath) {
+  mergeGeneratedOutputContent(existing, pending, newContent, resolvedPath) {
     if (resolvedPath === AMP_MCP_FILE || resolvedPath === AMP_GLOBAL_MCP_FILE) {
-      return mergeAmpSettings(existing, newContent);
+      return mergeAmpSettings(pending?.content ?? existing, newContent);
     }
     return null;
   },

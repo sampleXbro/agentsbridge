@@ -11,35 +11,42 @@
  * Features:
  *   - rules: native (directory of .md files)
  *   - mcp: native (.amazonq/mcp.json / ~/.aws/amazonq/mcp.json)
- *   - commands/agents/skills/hooks/ignore/permissions: none
+ *   - agents: native (.amazonq/cli-agents/{name}.json)
+ *   - hooks: partial (per-agent only; canonical hooks not projected as standalone)
+ *   - permissions: partial (per-agent allowedTools; canonical permissions not projected)
+ *   - commands/skills/ignore: none
  */
 
-import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
+import type { TargetGenerators } from '../catalog/target.interface.js';
 import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
-import { generateRules, generateMcp } from './generator.js';
+import { generateRules, generateMcp, generateAgents } from './generator.js';
 import { importFromAmazonQ } from './importer.js';
 import { lintRules } from './linter.js';
+import { lintHooks, lintPermissions } from './lint.js';
 import { buildAmazonQImportPaths } from '../../core/reference/import-map-builders.js';
+import { amazonQImporterSpec } from './importer-spec.js';
+import { projectCapabilities, globalCapabilities } from './capabilities.js';
 import {
   AMAZON_Q_TARGET,
   AMAZON_Q_RULES_DIR,
   AMAZON_Q_MCP_FILE,
+  AMAZON_Q_AGENTS_DIR,
   AMAZON_Q_GLOBAL_RULES_DIR,
   AMAZON_Q_GLOBAL_MCP_FILE,
-  AMAZON_Q_CANONICAL_RULES_DIR,
-  AMAZON_Q_CANONICAL_MCP,
+  AMAZON_Q_GLOBAL_AGENTS_DIR,
 } from './constants.js';
 
 export const target: TargetGenerators = {
   name: AMAZON_Q_TARGET,
   generateRules,
   generateMcp,
+  generateAgents,
   importFrom: importFromAmazonQ,
 };
 
 const project: TargetLayout = {
   managedOutputs: {
-    dirs: [AMAZON_Q_RULES_DIR],
+    dirs: [AMAZON_Q_RULES_DIR, AMAZON_Q_AGENTS_DIR],
     files: [AMAZON_Q_MCP_FILE],
   },
   paths: {
@@ -49,18 +56,21 @@ const project: TargetLayout = {
     commandPath(_name, _config) {
       return null;
     },
-    agentPath(_name, _config) {
-      return null;
+    agentPath(name, _config) {
+      return `${AMAZON_Q_AGENTS_DIR}/${name}.json`;
     },
   },
 };
 
 const globalLayout: TargetLayout = {
   managedOutputs: {
-    dirs: [AMAZON_Q_GLOBAL_RULES_DIR],
+    dirs: [AMAZON_Q_GLOBAL_RULES_DIR, AMAZON_Q_GLOBAL_AGENTS_DIR],
     files: [AMAZON_Q_GLOBAL_MCP_FILE],
   },
   rewriteGeneratedPath(path: string) {
+    if (path.startsWith(`${AMAZON_Q_AGENTS_DIR}/`)) {
+      return path.replace(`${AMAZON_Q_AGENTS_DIR}/`, `${AMAZON_Q_GLOBAL_AGENTS_DIR}/`);
+    }
     if (path.startsWith(`${AMAZON_Q_RULES_DIR}/`)) {
       return path.replace(`${AMAZON_Q_RULES_DIR}/`, `${AMAZON_Q_GLOBAL_RULES_DIR}/`);
     }
@@ -76,22 +86,10 @@ const globalLayout: TargetLayout = {
     commandPath(_name, _config) {
       return null;
     },
-    agentPath(_name, _config) {
-      return null;
+    agentPath(name, _config) {
+      return `${AMAZON_Q_GLOBAL_AGENTS_DIR}/${name}.json`;
     },
   },
-};
-
-const globalCapabilities: TargetCapabilities = {
-  rules: 'native',
-  additionalRules: 'none',
-  commands: 'none',
-  agents: 'none',
-  skills: 'none',
-  mcp: 'native',
-  hooks: 'none',
-  ignore: 'none',
-  permissions: 'none',
 };
 
 export const descriptor = {
@@ -103,48 +101,21 @@ export const descriptor = {
     shortDescription: 'AWS AI coding assistant',
   },
   generators: target,
-  capabilities: {
-    rules: 'native',
-    additionalRules: 'none',
-    commands: 'none',
-    agents: 'none',
-    skills: 'none',
-    mcp: 'native',
-    hooks: 'none',
-    ignore: 'none',
-    permissions: 'none',
-  },
-  emptyImportMessage: 'No Amazon Q Developer config found (.amazonq/rules/ or .amazonq/mcp.json).',
+  capabilities: projectCapabilities,
+  emptyImportMessage:
+    'No Amazon Q Developer config found (.amazonq/rules/, .amazonq/cli-agents/, or .amazonq/mcp.json).',
   lintRules,
+  lint: {
+    hooks: lintHooks,
+    permissions: lintPermissions,
+  },
   project,
   globalSupport: {
     capabilities: globalCapabilities,
-    detectionPaths: [AMAZON_Q_GLOBAL_RULES_DIR, AMAZON_Q_GLOBAL_MCP_FILE],
+    detectionPaths: [AMAZON_Q_GLOBAL_RULES_DIR, AMAZON_Q_GLOBAL_MCP_FILE, AMAZON_Q_GLOBAL_AGENTS_DIR],
     layout: globalLayout,
   },
-  importer: {
-    rules: {
-      feature: 'rules',
-      mode: 'directory',
-      source: {
-        project: [AMAZON_Q_RULES_DIR],
-        global: [AMAZON_Q_GLOBAL_RULES_DIR],
-      },
-      canonicalDir: AMAZON_Q_CANONICAL_RULES_DIR,
-      extensions: ['.md'],
-      preset: 'rule',
-    },
-    mcp: {
-      feature: 'mcp',
-      mode: 'mcpJson',
-      source: {
-        project: [AMAZON_Q_MCP_FILE],
-        global: [AMAZON_Q_GLOBAL_MCP_FILE],
-      },
-      canonicalDir: '.agentsmesh',
-      canonicalFilename: AMAZON_Q_CANONICAL_MCP,
-    },
-  },
+  importer: amazonQImporterSpec,
   buildImportPaths: buildAmazonQImportPaths,
-  detectionPaths: [AMAZON_Q_RULES_DIR, AMAZON_Q_MCP_FILE],
+  detectionPaths: [AMAZON_Q_RULES_DIR, AMAZON_Q_AGENTS_DIR, AMAZON_Q_MCP_FILE],
 } satisfies TargetDescriptor;

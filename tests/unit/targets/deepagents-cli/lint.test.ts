@@ -1,10 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
-import {
-  lintHooks,
-  lintPermissions,
-  lintIgnore,
-} from '../../../../src/targets/deepagents-cli/lint.js';
+import { lintPermissions, lintIgnore } from '../../../../src/targets/deepagents-cli/lint.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
   return {
@@ -19,30 +15,6 @@ function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles 
     ...overrides,
   };
 }
-
-describe('lintHooks (deepagents-cli)', () => {
-  it('returns warning when hooks exist', () => {
-    const canonical = makeCanonical({
-      hooks: { preCommit: [{ command: 'pnpm lint' }] },
-    });
-
-    const results = lintHooks(canonical);
-
-    expect(results).toHaveLength(1);
-    expect(results[0].level).toBe('warning');
-    expect(results[0].target).toBe('deepagents-cli');
-  });
-
-  it('returns empty when hooks is null', () => {
-    const canonical = makeCanonical({ hooks: null });
-    expect(lintHooks(canonical)).toHaveLength(0);
-  });
-
-  it('returns empty when all hook arrays are empty', () => {
-    const canonical = makeCanonical({ hooks: {} });
-    expect(lintHooks(canonical)).toHaveLength(0);
-  });
-});
 
 describe('lintPermissions (deepagents-cli)', () => {
   it('returns warning when permissions exist', () => {

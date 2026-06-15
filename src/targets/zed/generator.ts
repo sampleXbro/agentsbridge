@@ -10,12 +10,17 @@
  */
 
 import type { CanonicalFiles } from '../../core/types.js';
+import { generateEmbeddedSkills } from '../import/embedded-skill.js';
 import { appendEmbeddedRulesBlock } from '../projection/managed-blocks.js';
-import { ZED_TARGET, ZED_ROOT_FILE } from './constants.js';
+import { ZED_TARGET, ZED_ROOT_FILE, ZED_SKILLS_DIR } from './constants.js';
 
 export interface ZedOutput {
   path: string;
   content: string;
+}
+
+export function generateSkills(canonical: CanonicalFiles): ZedOutput[] {
+  return generateEmbeddedSkills(canonical, ZED_SKILLS_DIR);
 }
 
 export function generateRules(canonical: CanonicalFiles): ZedOutput[] {

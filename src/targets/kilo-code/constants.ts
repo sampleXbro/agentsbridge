@@ -11,11 +11,15 @@
  *     this layout for users migrating from earlier kilo or Roo-era setups.
  *
  * Hooks are not supported by kilo (no user-facing lifecycle hook system).
- * Permissions are out of scope for v1 because they require generating
- * `kilo.jsonc`.
+ * Permissions are projected into `kilo.jsonc` via the `permission` key.
  */
 
 export const KILO_CODE_TARGET = 'kilo-code';
+
+/** Project-level permissions config file. */
+export const KILO_CONFIG_FILE = 'kilo.jsonc';
+/** Global-level permissions config file (under ~/.config/kilo/). */
+export const KILO_GLOBAL_CONFIG_FILE = '.config/kilo/kilo.jsonc';
 
 // Project-level paths — new layout (generated)
 export const KILO_CODE_DIR = '.kilo';

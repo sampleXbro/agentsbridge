@@ -18,7 +18,8 @@ import {
   serializeProjectedAgentSkill,
 } from '../projection/projected-agent-skill.js';
 import { commandSkillDirName, serializeCommandSkill } from '../codex-cli/command-skill.js';
-import { AMP_TARGET, AMP_ROOT_FILE, AMP_SKILLS_DIR } from './constants.js';
+import { buildClaudeHooksObjectFromCanonical } from '../claude-code/hooks-format.js';
+import { AMP_TARGET, AMP_ROOT_FILE, AMP_SKILLS_DIR, AMP_MCP_FILE } from './constants.js';
 
 export interface AmpOutput {
   path: string;
@@ -55,4 +56,35 @@ export function generateAgents(canonical: CanonicalFiles): AmpOutput[] {
     path: `${AMP_SKILLS_DIR}/${projectedAgentSkillDirName(agent.name)}/SKILL.md`,
     content: serializeProjectedAgentSkill(agent),
   }));
+}
+
+export function buildAmpScopedSettings(
+  canonical: CanonicalFiles,
+  enabledFeatures: ReadonlySet<string>,
+): AmpOutput[] {
+  const outputs: AmpOutput[] = [];
+  if (enabledFeatures.has('mcp') && canonical.mcp && Object.keys(canonical.mcp.mcpServers).length > 0) {
+    outputs.push({
+      path: AMP_MCP_FILE,
+      content: JSON.stringify({ 'amp.mcpServers': canonical.mcp.mcpServers }, null, 2),
+    });
+  }
+  if (enabledFeatures.has('hooks') && canonical.hooks && Object.keys(canonical.hooks).length > 0) {
+    const hooks = buildClaudeHooksObjectFromCanonical(canonical);
+    if (Object.keys(hooks).length > 0) {
+      outputs.push({ path: AMP_MCP_FILE, content: JSON.stringify({ 'amp.hooks': hooks }, null, 2) });
+    }
+  }
+  if (enabledFeatures.has('permissions') && canonical.permissions) {
+    const { allow, deny } = canonical.permissions;
+    const ask = canonical.permissions.ask ?? [];
+    if (allow.length > 0 || deny.length > 0 || ask.length > 0) {
+      const permissions: Record<string, string[]> = {};
+      if (allow.length > 0) permissions.allow = allow;
+      if (deny.length > 0) permissions.deny = deny;
+      if (ask.length > 0) permissions.ask = ask;
+      outputs.push({ path: AMP_MCP_FILE, content: JSON.stringify({ 'amp.permissions': permissions }, null, 2) });
+    }
+  }
+  return outputs;
 }

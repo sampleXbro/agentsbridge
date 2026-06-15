@@ -8,6 +8,8 @@ import {
   generateSkills,
   generateMcp,
   generateIgnore,
+  generateHooks,
+  generatePermissions,
 } from '../../../../src/targets/qwen-code/generator.js';
 import {
   QWEN_ROOT,
@@ -457,5 +459,119 @@ describe('generateIgnore (qwen-code)', () => {
   it('returns empty when no ignore patterns exist', () => {
     const results = generateIgnore(makeCanonical({ ignore: [] }));
     expect(results).toHaveLength(0);
+  });
+});
+
+describe('generateHooks (qwen-code)', () => {
+  it('returns empty when hooks is null', () => {
+    const results = generateHooks(makeCanonical({ hooks: null }));
+    expect(results).toHaveLength(0);
+  });
+
+  it('returns empty when hooks is an empty object', () => {
+    const results = generateHooks(makeCanonical({ hooks: {} }));
+    expect(results).toHaveLength(0);
+  });
+
+  it('emits settings.json with hooks key', () => {
+    const canonical = makeCanonical({
+      hooks: {
+        PreToolUse: [
+          { matcher: 'Bash', command: 'echo pre', type: 'command' as const },
+        ],
+      },
+    });
+    const results = generateHooks(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(QWEN_SETTINGS);
+    const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
+    expect(parsed).toHaveProperty('hooks');
+    expect(parsed).not.toHaveProperty('mcpServers');
+    expect(parsed).not.toHaveProperty('permissions');
+  });
+
+  it('returns empty when all hook events produce no valid entries', () => {
+    // hooks present but all entries have no command/prompt text
+    const canonical = makeCanonical({
+      hooks: {
+        PreToolUse: [{ matcher: 'Bash', command: '', type: 'command' as const }],
+      },
+    });
+    const results = generateHooks(canonical);
+    expect(results).toHaveLength(0);
+  });
+});
+
+describe('generatePermissions (qwen-code)', () => {
+  it('returns empty when permissions is null', () => {
+    const results = generatePermissions(makeCanonical({ permissions: null }));
+    expect(results).toHaveLength(0);
+  });
+
+  it('returns empty when all permission lists are empty', () => {
+    const results = generatePermissions(
+      makeCanonical({ permissions: { allow: [], deny: [], ask: [] } }),
+    );
+    expect(results).toHaveLength(0);
+  });
+
+  it('emits settings.json with permissions.allow', () => {
+    const canonical = makeCanonical({
+      permissions: { allow: ['Bash(git diff)', 'Read'], deny: [], ask: [] },
+    });
+    const results = generatePermissions(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(QWEN_SETTINGS);
+    const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
+    expect(parsed).toHaveProperty('permissions');
+    const perms = parsed['permissions'] as Record<string, unknown>;
+    expect(perms['allow']).toEqual(['Bash(git diff)', 'Read']);
+    expect(perms).not.toHaveProperty('deny');
+    expect(perms).not.toHaveProperty('ask');
+  });
+
+  it('emits settings.json with permissions.deny', () => {
+    const canonical = makeCanonical({
+      permissions: { allow: [], deny: ['Bash(rm -rf)'], ask: [] },
+    });
+    const results = generatePermissions(canonical);
+    expect(results).toHaveLength(1);
+    const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
+    const perms = parsed['permissions'] as Record<string, unknown>;
+    expect(perms['deny']).toEqual(['Bash(rm -rf)']);
+    expect(perms).not.toHaveProperty('allow');
+  });
+
+  it('emits settings.json with permissions.ask when non-empty', () => {
+    const canonical = makeCanonical({
+      permissions: { allow: [], deny: [], ask: ['WebSearch'] },
+    });
+    const results = generatePermissions(canonical);
+    expect(results).toHaveLength(1);
+    const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
+    const perms = parsed['permissions'] as Record<string, unknown>;
+    expect(perms['ask']).toEqual(['WebSearch']);
+  });
+
+  it('omits ask key when ask is undefined', () => {
+    const canonical = makeCanonical({
+      permissions: { allow: ['Read'], deny: [] },
+    });
+    const results = generatePermissions(canonical);
+    expect(results).toHaveLength(1);
+    const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
+    const perms = parsed['permissions'] as Record<string, unknown>;
+    expect(perms).not.toHaveProperty('ask');
+    expect(perms['allow']).toEqual(['Read']);
+  });
+
+  it('does not emit mcpServers or hooks keys', () => {
+    const canonical = makeCanonical({
+      permissions: { allow: ['Read'], deny: [], ask: [] },
+    });
+    const results = generatePermissions(canonical);
+    const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
+    expect(parsed).not.toHaveProperty('mcpServers');
+    expect(parsed).not.toHaveProperty('hooks');
   });
 });

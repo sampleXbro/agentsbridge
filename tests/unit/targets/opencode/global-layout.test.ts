@@ -143,7 +143,7 @@ describe('opencode global layout — capabilities', () => {
       mcp: { level: 'native' },
       hooks: { level: 'none' },
       ignore: { level: 'none' },
-      permissions: { level: 'none' },
+      permissions: { level: 'native' },
     });
   });
 
@@ -267,5 +267,39 @@ describe('opencode global frontmatter preservation', () => {
     const server = servers['test-server'] as Record<string, unknown>;
     expect(server.type).toBe('local');
     expect(server.command).toEqual(['npx', '-y', '@test/mcp']);
+  });
+
+  it('merges MCP and permissions into global opencode.json', async () => {
+    const results = await generate({
+      config: { ...makeGlobalConfig(), features: ['mcp', 'permissions'] } as ValidatedConfig,
+      canonical: makeCanonical({
+        mcp: {
+          mcpServers: {
+            'test-server': { type: 'stdio', command: 'npx', args: ['-y', '@test/mcp'], env: {} },
+          },
+        },
+        permissions: { allow: ['read'], ask: ['bash'], deny: ['edit'] },
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const configs = results.filter(
+      (result) => result.target === 'opencode' && result.path === OPENCODE_GLOBAL_CONFIG_FILE,
+    );
+    expect(configs).toHaveLength(1);
+    expect(JSON.parse(configs[0]!.content)).toEqual({
+      mcp: {
+        'test-server': {
+          type: 'local',
+          command: ['npx', '-y', '@test/mcp'],
+        },
+      },
+      permission: {
+        read: 'allow',
+        bash: 'ask',
+        edit: 'deny',
+      },
+    });
   });
 });

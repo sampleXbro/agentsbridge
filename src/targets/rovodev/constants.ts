@@ -26,5 +26,6 @@ export const ROVODEV_GLOBAL_DIR = '.rovodev';
 export const ROVODEV_GLOBAL_ROOT_FILE = '.rovodev/AGENTS.md';
 export const ROVODEV_GLOBAL_SKILLS_DIR = '.rovodev/skills';
 export const ROVODEV_GLOBAL_MCP_FILE = '.rovodev/mcp.json';
+export const ROVODEV_GLOBAL_CONFIG_FILE = '.rovodev/config.yml';
 
 export const ROVODEV_CANONICAL_RULES_DIR = '.agentsmesh/rules';

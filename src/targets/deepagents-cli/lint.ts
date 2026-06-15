@@ -1,28 +1,14 @@
 /**
- * Deep Agents CLI-specific lint hooks.
+ * Deep Agents CLI-specific lint functions.
  *
- * Deep Agents CLI does not support hooks, permissions, or ignore as
+ * Deep Agents CLI does not support permissions or ignore as
  * standalone project config files. Commands and agents are projected
- * as skills via supportsConversion.
+ * as skills via supportsConversion. Hooks are natively supported
+ * via `.deepagents/hooks.json`.
  */
 
 import type { CanonicalFiles, LintDiagnostic } from '../../core/types.js';
 import { createWarning } from '../../core/lint/shared/helpers.js';
-
-export function lintHooks(canonical: CanonicalFiles): LintDiagnostic[] {
-  if (!canonical.hooks) return [];
-  const hasEntries = Object.values(canonical.hooks).some(
-    (entries) => Array.isArray(entries) && entries.length > 0,
-  );
-  if (!hasEntries) return [];
-  return [
-    createWarning(
-      '.agentsmesh/hooks.yaml',
-      'deepagents-cli',
-      'Deep Agents CLI hooks are global-only (~/.deepagents/hooks.json); project-level canonical hooks are not projected.',
-    ),
-  ];
-}
 
 export function lintPermissions(canonical: CanonicalFiles): LintDiagnostic[] {
   if (!canonical.permissions) return [];

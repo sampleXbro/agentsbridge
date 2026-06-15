@@ -17,6 +17,7 @@ export const ZED_TARGET = 'zed';
 // Project-level paths
 export const ZED_ROOT_FILE = '.rules';
 export const ZED_SETTINGS_FILE = '.zed/settings.json';
+export const ZED_SKILLS_DIR = '.agents/skills';
 
 // Global-level paths (~/.config/zed/)
 export const ZED_GLOBAL_DIR = '.config/zed';

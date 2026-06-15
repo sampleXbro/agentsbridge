@@ -1,33 +1,14 @@
-import { describe, it, expect } from 'vitest';
-import type { CanonicalFiles } from '../../../../src/core/types.js';
-import { lintHooks } from '../../../../src/targets/qwen-code/lint.js';
+/**
+ * Qwen Code lint tests.
+ *
+ * lintHooks was removed when hooks capability was promoted to 'native'.
+ * Hooks are now generated via generateHooks() in generator.ts.
+ */
 
-function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
-  return {
-    rules: [],
-    commands: [],
-    agents: [],
-    skills: [],
-    mcp: null,
-    permissions: null,
-    hooks: null,
-    ignore: [],
-    ...overrides,
-  };
-}
+import { describe, it } from 'vitest';
 
-describe('lintHooks (qwen-code)', () => {
-  it('returns empty diagnostics (stub)', () => {
-    const canonical = makeCanonical({
-      hooks: {
-        PreGenerate: [{ command: 'echo hello', pattern: '' }],
-      },
-    });
-    expect(lintHooks(canonical)).toHaveLength(0);
-  });
-
-  it('returns empty when hooks is null', () => {
-    const canonical = makeCanonical({ hooks: null });
-    expect(lintHooks(canonical)).toHaveLength(0);
+describe('qwen-code lint', () => {
+  it('has no stale lintHooks stub (hooks is now native)', () => {
+    // lintHooks was removed — this test documents the intentional absence
   });
 });

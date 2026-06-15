@@ -84,3 +84,9 @@ export function generateAgents(canonical: CanonicalFiles): RooCodeOutput[] {
   });
   return [{ path: ROO_CODE_MODES_FILE, content: yamlStringify({ customModes }) }];
 }
+
+// Roo Code permissions (roo-cline.allowedCommands) live in VS Code settings.json;
+// no config file is emitted by agentsmesh.
+export function generatePermissions(_canonical: CanonicalFiles): RooCodeOutput[] {
+  return [];
+}

@@ -33,7 +33,7 @@ export function lintPermissions(canonical: CanonicalFiles): LintDiagnostic[] {
     createWarning(
       '.agentsmesh/permissions.yaml',
       'warp',
-      'Warp permissions are UI-managed; canonical permissions are not projected.',
+      'Warp permissions are managed via Agent Profiles in the Warp UI (Agent Profiles → Allowed/Blocked commands); canonical permissions are not projected as config files.',
     ),
   ];
 }

@@ -174,10 +174,10 @@ You are an expert code reviewer. Focus on security and performance.`,
   });
 
   it.each([
-    ['cline', '.cline/skills/am-agent-code-reviewer/SKILL.md', 'x-agentsmesh-kind: agent'],
+    ['cline', '.cline/agents/code-reviewer.md', 'name: code-reviewer'],
     ['codex-cli', '.codex/agents/code-reviewer.toml', 'name = "code-reviewer"'],
     ['windsurf', '.windsurf/skills/am-agent-code-reviewer/SKILL.md', 'x-agentsmesh-kind: agent'],
-  ] as const)('projects agents into skills for %s', (target, agentPath, contentCheck) => {
+  ] as const)('generates agent outputs for %s', (target, agentPath, contentCheck) => {
     writeFileSync(
       join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1

@@ -17,6 +17,7 @@ export const opencodeContract: TargetPathContract = {
     '.agentsmesh/agents/researcher.md',
     '.agentsmesh/commands/review.md',
     '.agentsmesh/mcp.json',
+    '.agentsmesh/permissions.yaml',
     '.agentsmesh/rules/_root.md',
     '.agentsmesh/rules/typescript.md',
     '.agentsmesh/skills/api-generator/SKILL.md',

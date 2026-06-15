@@ -67,7 +67,7 @@ features:
     expect(prompt).toContain('Bash(git diff)');
     expect(prompt).toContain('Review current changes for quality.');
     expect(prompt).not.toContain('\nname:');
-    expect(prompt).not.toContain('invokable:');
+    expect(prompt).toContain('invokable: true');
 
     const skill = read(projectDir, '.continue/skills/api-generator/SKILL.md');
     expect(skill).toContain('description: Generate API endpoints');

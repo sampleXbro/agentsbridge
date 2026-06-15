@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { parse as yamlParse } from 'yaml';
 import { getBuiltinTargetDefinition } from '../../../../src/targets/catalog/builtin-targets.js';
 import { generate } from '../../../../src/core/generate/engine.js';
 import type { ValidatedConfig } from '../../../../src/config/core/schema.js';
@@ -13,6 +14,7 @@ import {
   ROVODEV_GLOBAL_ROOT_FILE,
   ROVODEV_GLOBAL_SKILLS_DIR,
   ROVODEV_GLOBAL_MCP_FILE,
+  ROVODEV_GLOBAL_CONFIG_FILE,
 } from '../../../../src/targets/rovodev/constants.js';
 
 describe('rovodev global layout', () => {
@@ -56,9 +58,12 @@ describe('rovodev global layout', () => {
   it('globalSupport.capabilities disables unsupported features', () => {
     expect(descriptor.globalSupport!.capabilities.commands).toBe('none');
     expect(descriptor.globalSupport!.capabilities.agents).toBe('none');
-    expect(descriptor.globalSupport!.capabilities.hooks).toBe('none');
     expect(descriptor.globalSupport!.capabilities.ignore).toBe('none');
-    expect(descriptor.globalSupport!.capabilities.permissions).toBe('none');
+  });
+
+  it('globalSupport.capabilities supports hooks and permissions natively', () => {
+    expect(descriptor.globalSupport!.capabilities.hooks).toBe('native');
+    expect(descriptor.globalSupport!.capabilities.permissions).toBe('native');
   });
 
   it('globalSupport has detection paths', () => {
@@ -103,6 +108,9 @@ describe('rovodev global layout', () => {
     );
     expect(descriptor.globalSupport!.layout.managedOutputs!.files).toContain(
       ROVODEV_GLOBAL_MCP_FILE,
+    );
+    expect(descriptor.globalSupport!.layout.managedOutputs!.files).toContain(
+      ROVODEV_GLOBAL_CONFIG_FILE,
     );
   });
 
@@ -238,5 +246,105 @@ describe('rovodev global frontmatter preservation', () => {
     const server = servers['test-server'] as Record<string, unknown>;
     expect(server.command).toBe('npx');
     expect(server.args).toEqual(['-y', '@test/mcp']);
+  });
+});
+
+describe('rovodev emitScopedSettings', () => {
+  const descriptor = getBuiltinTargetDefinition('rovodev')!;
+
+  function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
+    return {
+      rules: [],
+      commands: [],
+      agents: [],
+      skills: [],
+      mcp: null,
+      permissions: null,
+      hooks: null,
+      ignore: [],
+      ...overrides,
+    };
+  }
+
+  it('returns [] for project scope', () => {
+    const canonical = makeCanonical({
+      hooks: { preGenerate: [{ command: 'echo hi' }] },
+    });
+    const result = descriptor.emitScopedSettings!(canonical, 'project', new Set(['hooks']));
+    expect(result).toHaveLength(0);
+  });
+
+  it('returns [] for global scope with no hooks or permissions', () => {
+    const canonical = makeCanonical();
+    const result = descriptor.emitScopedSettings!(canonical, 'global', new Set(['hooks', 'permissions']));
+    expect(result).toHaveLength(0);
+  });
+
+  it('returns [] for global scope with empty hooks arrays', () => {
+    const canonical = makeCanonical({ hooks: { preGenerate: [], postGenerate: [] } });
+    const result = descriptor.emitScopedSettings!(canonical, 'global', new Set(['hooks']));
+    expect(result).toHaveLength(0);
+  });
+
+  it('returns [] for global scope with empty permissions', () => {
+    const canonical = makeCanonical({ permissions: { allow: [], deny: [], ask: [] } });
+    const result = descriptor.emitScopedSettings!(canonical, 'global', new Set(['permissions']));
+    expect(result).toHaveLength(0);
+  });
+
+  it('emits config.yml with eventHooks when hooks present', () => {
+    const canonical = makeCanonical({
+      hooks: { preGenerate: [{ command: 'echo pre' }] },
+    });
+    const result = descriptor.emitScopedSettings!(canonical, 'global', new Set(['hooks']));
+    expect(result).toHaveLength(1);
+    expect(result[0].path).toBe(ROVODEV_GLOBAL_CONFIG_FILE);
+    const parsed = yamlParse(result[0].content) as Record<string, unknown>;
+    expect(parsed).toHaveProperty('eventHooks');
+    expect(parsed).not.toHaveProperty('toolPermissions');
+  });
+
+  it('emits config.yml with toolPermissions when permissions present', () => {
+    const canonical = makeCanonical({
+      permissions: { allow: ['Bash(**)'], deny: [], ask: [] },
+    });
+    const result = descriptor.emitScopedSettings!(canonical, 'global', new Set(['permissions']));
+    expect(result).toHaveLength(1);
+    expect(result[0].path).toBe(ROVODEV_GLOBAL_CONFIG_FILE);
+    const parsed = yamlParse(result[0].content) as Record<string, unknown>;
+    expect(parsed).toHaveProperty('toolPermissions');
+    expect(parsed).not.toHaveProperty('eventHooks');
+    const perms = parsed.toolPermissions as Record<string, unknown>;
+    expect(perms.allow).toEqual(['Bash(**)']);
+    expect(perms.deny).toBeUndefined();
+  });
+
+  it('emits config.yml with both sections when both present', () => {
+    const canonical = makeCanonical({
+      hooks: { preGenerate: [{ command: 'echo pre' }] },
+      permissions: { allow: ['Bash(**)'], deny: ['rm(**)', 'sudo'], ask: [] },
+    });
+    const result = descriptor.emitScopedSettings!(
+      canonical,
+      'global',
+      new Set(['hooks', 'permissions']),
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0].path).toBe(ROVODEV_GLOBAL_CONFIG_FILE);
+    const parsed = yamlParse(result[0].content) as Record<string, unknown>;
+    expect(parsed).toHaveProperty('eventHooks');
+    expect(parsed).toHaveProperty('toolPermissions');
+  });
+
+  it('respects disabled features — no hooks emitted when feature disabled', () => {
+    const canonical = makeCanonical({
+      hooks: { preGenerate: [{ command: 'echo pre' }] },
+      permissions: { allow: ['Bash(**)'], deny: [], ask: [] },
+    });
+    const result = descriptor.emitScopedSettings!(canonical, 'global', new Set(['permissions']));
+    expect(result).toHaveLength(1);
+    const parsed = yamlParse(result[0].content) as Record<string, unknown>;
+    expect(parsed).not.toHaveProperty('eventHooks');
+    expect(parsed).toHaveProperty('toolPermissions');
   });
 });

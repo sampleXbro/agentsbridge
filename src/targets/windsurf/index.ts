@@ -154,7 +154,7 @@ const globalCapabilities: TargetCapabilities = {
   commands: cap('native', 'workflows'),
   agents: 'embedded',
   skills: 'native',
-  mcp: 'partial',
+  mcp: 'native',
   hooks: 'native',
   ignore: 'native',
   permissions: 'none',

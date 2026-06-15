@@ -22,12 +22,15 @@ import { importEmbeddedSkills } from '../import/embedded-skill.js';
 import { runDescriptorImport } from '../import/descriptor-import-runner.js';
 import { writeMcpWithMerge } from '../import/mcp-merge.js';
 import { readFileSafe } from '../../utils/filesystem/fs.js';
+import { mkdirp, writeFileAtomic } from '../../utils/filesystem/fs.js';
+import { stringify as stringifyYaml } from 'yaml';
 import {
   OPENCODE_TARGET,
   OPENCODE_SKILLS_DIR,
   OPENCODE_CONFIG_FILE,
   OPENCODE_GLOBAL_CONFIG_FILE,
   OPENCODE_CANONICAL_MCP,
+  OPENCODE_CANONICAL_PERMISSIONS,
 } from './constants.js';
 import { descriptor } from './index.js';
 
@@ -101,6 +104,42 @@ async function importMcp(
   });
 }
 
+async function importPermissions(
+  projectRoot: string,
+  scope: TargetLayoutScope,
+  results: ImportResult[],
+): Promise<void> {
+  const configFile = scope === 'global' ? OPENCODE_GLOBAL_CONFIG_FILE : OPENCODE_CONFIG_FILE;
+  const srcPath = join(projectRoot, configFile);
+  const content = await readFileSafe(srcPath);
+  if (content === null) return;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    return;
+  }
+  if (!parsed || typeof parsed !== 'object') return;
+  const permission = (parsed as Record<string, unknown>).permission;
+  if (!permission || typeof permission !== 'object' || Array.isArray(permission)) return;
+  const canonical = { allow: [] as string[], ask: [] as string[], deny: [] as string[] };
+  for (const [name, level] of Object.entries(permission)) {
+    if (level === 'allow') canonical.allow.push(name);
+    if (level === 'ask') canonical.ask.push(name);
+    if (level === 'deny') canonical.deny.push(name);
+  }
+  if (canonical.allow.length + canonical.ask.length + canonical.deny.length === 0) return;
+  const destPath = join(projectRoot, OPENCODE_CANONICAL_PERMISSIONS);
+  await mkdirp(join(projectRoot, '.agentsmesh'));
+  await writeFileAtomic(destPath, stringifyYaml(canonical));
+  results.push({
+    feature: 'permissions',
+    fromTool: OPENCODE_TARGET,
+    fromPath: srcPath,
+    toPath: OPENCODE_CANONICAL_PERMISSIONS,
+  });
+}
+
 export async function importFromOpenCode(
   projectRoot: string,
   options: { scope?: TargetLayoutScope } = {},
@@ -114,6 +153,7 @@ export async function importFromOpenCode(
   await importEmbeddedSkills(projectRoot, OPENCODE_SKILLS_DIR, OPENCODE_TARGET, results, normalize);
 
   await importMcp(projectRoot, scope, results);
+  await importPermissions(projectRoot, scope, results);
 
   return results;
 }

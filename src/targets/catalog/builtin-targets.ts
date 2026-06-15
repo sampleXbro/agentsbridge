@@ -222,6 +222,8 @@ function isFeatureSuppressedByConversion(
   scope: TargetLayoutScope,
 ): boolean {
   if (!descriptor || !config) return false;
+  const baseLevel = getTargetCapabilities(descriptor.id, scope)?.[feature]?.level ?? 'none';
+  if (baseLevel === 'native' || baseLevel === 'partial') return false;
   if (feature === 'commands' && descriptor.supportsConversion?.commands) {
     return !shouldConvertCommandsToSkills(config, descriptor.id, true, scope);
   }

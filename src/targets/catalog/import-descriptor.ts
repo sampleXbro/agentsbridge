@@ -98,6 +98,11 @@ export interface ImportFeatureSpec {
   readonly markAsRoot?: boolean;
   /** For `flatFile` and `mcpJson`: canonical destination filename. */
   readonly canonicalFilename?: string;
+  /**
+   * For `mcpJson` mode: the top-level JSON key holding the server map in the
+   * source file. Defaults to `mcpServers`. VS Code / Copilot use `servers`.
+   */
+  readonly mcpServersKey?: string;
 }
 
 export interface TargetImporterDescriptor {

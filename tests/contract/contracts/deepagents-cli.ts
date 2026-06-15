@@ -3,6 +3,7 @@ import type { TargetPathContract } from './types.js';
 export const deepagentsCliContract: TargetPathContract = {
   generated: [
     '.deepagents/AGENTS.md',
+    '.deepagents/hooks.json',
     '.deepagents/skills/am-agent-code-reviewer/SKILL.md',
     '.deepagents/skills/am-agent-researcher/SKILL.md',
     '.deepagents/skills/am-command-review/SKILL.md',

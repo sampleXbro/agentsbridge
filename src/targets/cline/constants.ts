@@ -17,6 +17,7 @@ export const CLINE_MCP_SETTINGS_LEGACY = '.cline/mcp_settings.json';
 
 /** Skills directory prefix */
 export const CLINE_SKILLS_DIR = '.cline/skills';
+export const CLINE_AGENTS_DIR = '.cline/agents';
 
 /** Workflows directory (.clinerules/workflows/*.md → canonical commands) */
 export const CLINE_WORKFLOWS_DIR = '.clinerules/workflows';

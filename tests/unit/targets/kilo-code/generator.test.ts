@@ -8,6 +8,7 @@ import {
   generateMcp,
   generateIgnore,
   generateSkills,
+  generatePermissions,
 } from '../../../../src/targets/kilo-code/generator.js';
 import {
   KILO_CODE_ROOT_RULE,
@@ -17,6 +18,7 @@ import {
   KILO_CODE_SKILLS_DIR,
   KILO_CODE_MCP_FILE,
   KILO_CODE_IGNORE,
+  KILO_CONFIG_FILE,
 } from '../../../../src/targets/kilo-code/constants.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
@@ -370,6 +372,59 @@ describe('generateIgnore (kilo-code)', () => {
 
   it('returns empty array when no ignore patterns', () => {
     expect(generateIgnore(makeCanonical())).toEqual([]);
+  });
+});
+
+describe('generatePermissions (kilo-code)', () => {
+  it('returns [] when permissions is null', () => {
+    expect(generatePermissions(makeCanonical())).toEqual([]);
+  });
+
+  it('returns [] when all permission arrays are empty', () => {
+    expect(
+      generatePermissions(makeCanonical({ permissions: { allow: [], deny: [], ask: [] } })),
+    ).toEqual([]);
+  });
+
+  it('emits kilo.jsonc with permission key', () => {
+    const result = generatePermissions(
+      makeCanonical({
+        permissions: { allow: ['Read', 'Write'], deny: ['Bash'], ask: ['Edit'] },
+      }),
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0].path).toBe(KILO_CONFIG_FILE);
+    const parsed = JSON.parse(result[0].content) as { permission: Record<string, string> };
+    expect(parsed.permission).toEqual({ Read: 'allow', Write: 'allow', Bash: 'deny', Edit: 'ask' });
+  });
+
+  it('emits kilo.jsonc when only allow is populated', () => {
+    const result = generatePermissions(
+      makeCanonical({ permissions: { allow: ['Read'], deny: [], ask: [] } }),
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0].path).toBe(KILO_CONFIG_FILE);
+    const parsed = JSON.parse(result[0].content) as { permission: Record<string, string> };
+    expect(parsed.permission).toEqual({ Read: 'allow' });
+  });
+
+  it('emits kilo.jsonc when only deny is populated', () => {
+    const result = generatePermissions(
+      makeCanonical({ permissions: { allow: [], deny: ['Bash'], ask: [] } }),
+    );
+    expect(result).toHaveLength(1);
+    const parsed = JSON.parse(result[0].content) as { permission: Record<string, string> };
+    expect(parsed.permission).toEqual({ Bash: 'deny' });
+  });
+
+  it('emits kilo.jsonc when only ask is populated', () => {
+    const result = generatePermissions(
+      makeCanonical({ permissions: { allow: [], deny: [], ask: ['Bash'] } }),
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0].path).toBe(KILO_CONFIG_FILE);
+    const parsed = JSON.parse(result[0].content) as { permission: Record<string, string> };
+    expect(parsed.permission).toEqual({ Bash: 'ask' });
   });
 });
 

@@ -9,9 +9,11 @@ import {
   DEEPAGENTS_CLI_ROOT_FILE,
   DEEPAGENTS_CLI_SKILLS_DIR,
   DEEPAGENTS_CLI_MCP_FILE,
+  DEEPAGENTS_CLI_HOOKS_FILE,
   DEEPAGENTS_CLI_GLOBAL_ROOT_FILE,
   DEEPAGENTS_CLI_GLOBAL_SKILLS_DIR,
   DEEPAGENTS_CLI_GLOBAL_MCP_FILE,
+  DEEPAGENTS_CLI_GLOBAL_HOOKS_FILE,
 } from '../../../../src/targets/deepagents-cli/constants.js';
 
 describe('deepagents-cli global layout', () => {
@@ -47,16 +49,23 @@ describe('deepagents-cli global layout', () => {
     expect(rewrite('some/other/path.md')).toBe('some/other/path.md');
   });
 
+  it('project capabilities.hooks is native', () => {
+    expect(descriptor.capabilities.hooks).toBe('native');
+  });
+
   it('globalSupport.capabilities matches project capabilities for supported features', () => {
     expect(descriptor.globalSupport!.capabilities.rules).toBe('native');
     expect(descriptor.globalSupport!.capabilities.skills).toBe('native');
     expect(descriptor.globalSupport!.capabilities.mcp).toBe('native');
   });
 
+  it('globalSupport.capabilities.hooks is native', () => {
+    expect(descriptor.globalSupport!.capabilities.hooks).toBe('native');
+  });
+
   it('globalSupport.capabilities disables unsupported features', () => {
     expect(descriptor.globalSupport!.capabilities.commands).toBe('none');
     expect(descriptor.globalSupport!.capabilities.agents).toBe('none');
-    expect(descriptor.globalSupport!.capabilities.hooks).toBe('none');
     expect(descriptor.globalSupport!.capabilities.ignore).toBe('none');
     expect(descriptor.globalSupport!.capabilities.permissions).toBe('none');
   });
@@ -83,6 +92,13 @@ describe('deepagents-cli global layout', () => {
     expect(descriptor.project.managedOutputs!.dirs).toContain(DEEPAGENTS_CLI_SKILLS_DIR);
     expect(descriptor.project.managedOutputs!.files).toContain(DEEPAGENTS_CLI_ROOT_FILE);
     expect(descriptor.project.managedOutputs!.files).toContain(DEEPAGENTS_CLI_MCP_FILE);
+    expect(descriptor.project.managedOutputs!.files).toContain(DEEPAGENTS_CLI_HOOKS_FILE);
+  });
+
+  it('globalLayout managedOutputs includes global hooks file', () => {
+    expect(descriptor.globalSupport!.layout.managedOutputs!.files).toContain(
+      DEEPAGENTS_CLI_GLOBAL_HOOKS_FILE,
+    );
   });
 
   it('detection paths include project-level paths', () => {

@@ -162,6 +162,8 @@ export function generateAgents(canonical: CanonicalFiles): RulesOutput[] {
 /**
  * Generate .github/hooks/agentsmesh.json from canonical hooks.
  */
+export { generateMcp } from './mcp-generator.js';
+
 export function generateHooks(canonical: CanonicalFiles): RulesOutput[] {
   if (!canonical.hooks) return [];
   const hooks = Object.fromEntries(

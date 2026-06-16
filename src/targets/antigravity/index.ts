@@ -1,6 +1,5 @@
-import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
+import type { TargetGenerators } from '../catalog/target.interface.js';
 import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
-import { cap } from '../catalog/capabilities.js';
 import { projectedAgentSkillDirName } from '../projection/projected-agent-skill.js';
 import {
   generateRules,
@@ -8,6 +7,8 @@ import {
   generateAgents,
   generateSkills,
   generateMcp,
+  generateHooks,
+  generatePermissions,
   renderAntigravityGlobalInstructions,
 } from './generator.js';
 import {
@@ -15,6 +16,8 @@ import {
   ANTIGRAVITY_GLOBAL_ROOT,
   ANTIGRAVITY_GLOBAL_SKILLS_DIR,
   ANTIGRAVITY_GLOBAL_WORKFLOWS_DIR,
+  ANTIGRAVITY_HOOKS_FILE,
+  ANTIGRAVITY_GLOBAL_HOOKS_FILE,
   ANTIGRAVITY_MCP_CONFIG,
   ANTIGRAVITY_RULES_ROOT,
   ANTIGRAVITY_RULES_DIR,
@@ -24,9 +27,11 @@ import {
   ANTIGRAVITY_CANONICAL_MCP,
   ANTIGRAVITY_CANONICAL_RULES_DIR,
 } from './constants.js';
+import { projectCapabilities, globalCapabilities } from './capabilities.js';
 import { importFromAntigravity } from './importer.js';
 import { nonRootRuleMapper, workflowMapper } from './import-mappers.js';
 import { lintRules } from './linter.js';
+import { lintPermissions } from './lint.js';
 import { buildAntigravityImportPaths } from '../../core/reference/import-map-builders.js';
 
 export const target: TargetGenerators = {
@@ -37,6 +42,8 @@ export const target: TargetGenerators = {
   generateAgents,
   generateSkills,
   generateMcp,
+  generateHooks,
+  generatePermissions,
   importFrom: importFromAntigravity,
 };
 
@@ -55,7 +62,7 @@ const project: TargetLayout = {
   // doesn't leave both behind.
   managedOutputs: {
     dirs: [ANTIGRAVITY_RULES_DIR, ANTIGRAVITY_WORKFLOWS_DIR, ANTIGRAVITY_SKILLS_DIR],
-    files: [ANTIGRAVITY_RULES_ROOT],
+    files: [ANTIGRAVITY_RULES_ROOT, ANTIGRAVITY_HOOKS_FILE],
   },
   rewriteGeneratedPath(path) {
     if (path === ANTIGRAVITY_MCP_CONFIG) return null;
@@ -80,9 +87,10 @@ const globalLayout: TargetLayout = {
   skillDir: ANTIGRAVITY_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [ANTIGRAVITY_GLOBAL_SKILLS_DIR, ANTIGRAVITY_GLOBAL_WORKFLOWS_DIR],
-    files: [ANTIGRAVITY_GLOBAL_ROOT, ANTIGRAVITY_GLOBAL_MCP_CONFIG],
+    files: [ANTIGRAVITY_GLOBAL_ROOT, ANTIGRAVITY_GLOBAL_MCP_CONFIG, ANTIGRAVITY_GLOBAL_HOOKS_FILE],
   },
   rewriteGeneratedPath(path) {
+    if (path === ANTIGRAVITY_HOOKS_FILE) return ANTIGRAVITY_GLOBAL_HOOKS_FILE;
     if (path === ANTIGRAVITY_RULES_ROOT) return ANTIGRAVITY_GLOBAL_ROOT;
     if (path.startsWith(`${ANTIGRAVITY_RULES_DIR}/`)) return null;
     if (path.startsWith('.agents/skills/')) {
@@ -111,18 +119,6 @@ const globalLayout: TargetLayout = {
   },
 };
 
-const globalCapabilities: TargetCapabilities = {
-  rules: 'native',
-  additionalRules: 'embedded',
-  commands: cap('partial', 'workflows'),
-  agents: 'none',
-  skills: 'native',
-  mcp: 'native',
-  hooks: 'none',
-  ignore: 'none',
-  permissions: 'none',
-};
-
 export const descriptor = {
   id: 'antigravity',
   metadata: {
@@ -132,21 +128,14 @@ export const descriptor = {
     shortDescription: "Google's agentic IDE",
   },
   generators: target,
-  capabilities: {
-    rules: 'native',
-    additionalRules: 'native',
-    commands: cap('partial', 'workflows'),
-    agents: 'none',
-    skills: 'native',
-    mcp: 'none',
-    hooks: 'none',
-    ignore: 'none',
-    permissions: 'none',
-  },
+  capabilities: projectCapabilities,
   emptyImportMessage:
     'No Antigravity config found (.agents/rules/, .agents/skills/, or .agents/workflows/).',
   supportsConversion: { agents: true },
   lintRules,
+  lint: {
+    permissions: lintPermissions,
+  },
   project,
   globalSupport: {
     capabilities: globalCapabilities,

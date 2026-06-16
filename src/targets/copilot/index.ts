@@ -1,5 +1,5 @@
 import { basename } from 'node:path';
-import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
+import type { TargetGenerators } from '../catalog/target.interface.js';
 import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
 import {
   generateRules,
@@ -7,16 +7,17 @@ import {
   generateAgents,
   generateSkills,
   generateHooks,
+  generateMcp,
   renderCopilotGlobalInstructions,
 } from './generator.js';
 import {
   COPILOT_INSTRUCTIONS,
   COPILOT_INSTRUCTIONS_DIR,
   COPILOT_AGENTS_DIR,
-  COPILOT_CONTEXT_DIR,
   COPILOT_PROMPTS_DIR,
   COPILOT_SKILLS_DIR,
   COPILOT_HOOKS_DIR,
+  COPILOT_MCP_JSON,
   COPILOT_GLOBAL_INSTRUCTIONS,
   COPILOT_GLOBAL_AGENTS_DIR,
   COPILOT_GLOBAL_SKILLS_DIR,
@@ -24,24 +25,17 @@ import {
   COPILOT_GLOBAL_AGENTS_SKILLS_DIR,
   COPILOT_GLOBAL_AGENTS_MD,
   COPILOT_GLOBAL_CLAUDE_SKILLS_DIR,
-  COPILOT_CANONICAL_AGENTS_DIR,
-  COPILOT_CANONICAL_COMMANDS_DIR,
-  COPILOT_CANONICAL_RULES_DIR,
 } from './constants.js';
 import { importFromCopilot } from './importer.js';
 import { inferCopilotPickFromPath } from '../../install/native/native-path-pick-infer-copilot.js';
-import {
-  copilotAgentMapper,
-  copilotCommandMapper,
-  copilotLegacyRuleMapper,
-  copilotNewRuleMapper,
-} from './import-mappers.js';
 import { lintRules } from './linter.js';
 import { buildCopilotImportPaths } from '../../core/reference/import-map-builders.js';
 import { commandPromptPath } from './command-prompt.js';
 import { lintCommands, lintHooks } from './lint.js';
 import { addHookScriptAssets } from './hook-assets.js';
 import { generateCopilotGlobalExtras } from './scope-extras.js';
+import { copilotImporterSpec } from './importer-spec.js';
+import { projectCapabilities, globalCapabilities } from './capabilities.js';
 
 export const target: TargetGenerators = {
   name: 'copilot',
@@ -51,6 +45,7 @@ export const target: TargetGenerators = {
   generateAgents,
   generateSkills,
   generateHooks,
+  generateMcp,
   importFrom: importFromCopilot,
 };
 
@@ -71,7 +66,7 @@ const project: TargetLayout = {
       '.github/skills',
       '.github/hooks/scripts',
     ],
-    files: ['.github/copilot-instructions.md', '.github/hooks/agentsmesh.json'],
+    files: ['.github/copilot-instructions.md', '.github/hooks/agentsmesh.json', COPILOT_MCP_JSON],
   },
   paths: {
     rulePath(slug, _rule) {
@@ -125,6 +120,10 @@ const globalLayout: TargetLayout = {
     if (path.startsWith(`${COPILOT_HOOKS_DIR}/`)) {
       return null;
     }
+    // Skip MCP in global mode (no .vscode/ equivalent for global)
+    if (path === COPILOT_MCP_JSON) {
+      return null;
+    }
     return path;
   },
   mirrorGlobalPath(path, activeTargets) {
@@ -149,18 +148,6 @@ const globalLayout: TargetLayout = {
   },
 };
 
-const globalCapabilities: TargetCapabilities = {
-  rules: 'native',
-  additionalRules: 'native',
-  commands: 'native',
-  agents: 'native',
-  skills: 'native',
-  mcp: 'none',
-  hooks: 'none',
-  ignore: 'none',
-  permissions: 'none',
-};
-
 export const descriptor = {
   id: 'copilot',
   metadata: {
@@ -170,17 +157,7 @@ export const descriptor = {
     shortDescription: "GitHub's AI pair programmer",
   },
   generators: target,
-  capabilities: {
-    rules: 'native',
-    additionalRules: 'native',
-    commands: 'native',
-    agents: 'native',
-    skills: 'native',
-    mcp: 'none',
-    hooks: 'partial',
-    ignore: 'none',
-    permissions: 'none',
-  },
+  capabilities: projectCapabilities,
   emptyImportMessage:
     'No Copilot config found (.github/copilot-instructions.md, .github/copilot or .github/instructions, .github/prompts, .github/skills, .github/agents, or .github/hooks).',
   lintRules,
@@ -204,54 +181,7 @@ export const descriptor = {
     layout: globalLayout,
     scopeExtras: generateCopilotGlobalExtras,
   },
-  importer: {
-    rules: [
-      {
-        // Root: scope-aware singleFile.
-        feature: 'rules',
-        mode: 'singleFile',
-        source: { project: [COPILOT_INSTRUCTIONS], global: [COPILOT_GLOBAL_INSTRUCTIONS] },
-        canonicalDir: COPILOT_CANONICAL_RULES_DIR,
-        canonicalRootFilename: '_root.md',
-        markAsRoot: true,
-      },
-      {
-        // Legacy `.github/copilot/*.instructions.md` — project only.
-        feature: 'rules',
-        mode: 'directory',
-        source: { project: [COPILOT_CONTEXT_DIR] },
-        canonicalDir: COPILOT_CANONICAL_RULES_DIR,
-        extensions: ['.instructions.md'],
-        map: copilotLegacyRuleMapper,
-      },
-      {
-        // New `.github/instructions/*.{instructions.md,md}` — project only,
-        // uses `applyTo` instead of `globs`.
-        feature: 'rules',
-        mode: 'directory',
-        source: { project: [COPILOT_INSTRUCTIONS_DIR] },
-        canonicalDir: COPILOT_CANONICAL_RULES_DIR,
-        extensions: ['.instructions.md', '.md'],
-        map: copilotNewRuleMapper,
-      },
-    ],
-    commands: {
-      feature: 'commands',
-      mode: 'directory',
-      source: { project: [COPILOT_PROMPTS_DIR], global: [COPILOT_GLOBAL_PROMPTS_DIR] },
-      canonicalDir: COPILOT_CANONICAL_COMMANDS_DIR,
-      extensions: ['.prompt.md'],
-      map: copilotCommandMapper,
-    },
-    agents: {
-      feature: 'agents',
-      mode: 'directory',
-      source: { project: [COPILOT_AGENTS_DIR], global: [COPILOT_GLOBAL_AGENTS_DIR] },
-      canonicalDir: COPILOT_CANONICAL_AGENTS_DIR,
-      extensions: ['.agent.md'],
-      map: copilotAgentMapper,
-    },
-  },
+  importer: copilotImporterSpec,
   buildImportPaths: buildCopilotImportPaths,
   detectionPaths: [
     '.github/copilot-instructions.md',

@@ -1,38 +1,64 @@
-# Fix lessons --help drift (4 issues) — single-source + strict tests
+# Top-Tier Target Capability Audit (COMPLETE)
 
-## Root cause
-The lessons subcommand set / flags / usage signatures are duplicated across 4 help
-surfaces with no shared source, so they drifted from the real CLI (the `runLessons`
-dispatcher in `src/cli/commands/lessons.ts` is the runtime truth: 13 subcommands).
+- [x] Read architecture, source-driven development, and post-feature QA guidance.
+- [x] Identify the working top-tier target set and current capability maps.
+- [x] Verify every working-scope target against current official documentation/source.
+- [x] Write failing tests for each confirmed support mismatch.
+- [x] Implement confirmed target support changes.
+- [x] Regenerate README and website support matrices; update target detail docs.
+- [x] Run focused tests, full verification stack, and post-feature QA.
 
-## Design: one canonical source, everything else derives-or-asserts against it
-`src/cli/commands/lessons-usage.ts` becomes the single source:
-- `LESSONS_USAGE` covers ALL 13 subcommands (add 8: topics, show, strip-markers,
-  journal, validate, stats, prune, import-md). `example?` optional; add `summary?`
-  for the parenthetical notes.
-- `LESSONS_SUBCOMMANDS = Object.keys(LESSONS_USAGE)` — the canonical ordered list.
+Covered: Claude Code, Codex CLI, Cursor, GitHub Copilot, Gemini CLI, Cline,
+Windsurf, Kiro, Continue, OpenCode.
 
-## Tasks (TDD: failing test first, then implement) — ALL DONE
-- [x] 1. lessons-usage.ts: complete LESSONS_USAGE (13) + summary/optional example +
-      LESSONS_SUBCOMMANDS. Strict test lessons-usage.test.ts (exact list, keys, prefix, show<topic>).
-- [x] 2. help.ts: guarded `usage?.example` (topics exemplar still valid).
-- [x] 3. renderers/lessons.ts printHelp derived from LESSONS_USAGE. Test lessons-help.test.ts
-      (bare menu == LESSONS_SUBCOMMANDS, ANSI-stripped exact lines).
-- [x] 4. help-data.ts: description generated from LESSONS_SUBCOMMANDS + 5 flags added.
-      Tests in help.test.ts (description toEqual list; per-sub show/strip-markers/prune/stats).
-- [x] 5. lessons.test.ts: dispatcher↔canonical parity block.
-- [x] 6. skill.ts description = all 13; skill.test.ts strict description gate.
-- [x] 7. Regenerated: build → init --lessons (canonical SKILL.md) → generate (23 target copies).
-- [x] 8. Verified: 104 targeted tests + full suite (8806, 1 flaky watch), typecheck, lint,
-      `agentsmesh check` in sync. End-to-end CLI confirmed all 4 issues.
+---
 
-## Notes
-- Shared working tree: many unrelated modified files (process-lock/install-lock/gitignore/
-  errors/init/README/website + lessons.json captures + .lock) are a CONCURRENT session's
-  work — NOT touched, NOT mine. My change is surgical to the lessons help surface.
-- Captured lesson: strip ANSI before line-exact CLI stdout assertions.
+# Full Target Capability Audit — Gap Filling (23 gaps across 30 targets)
 
-## Constraints (from lessons recall)
-- Files <=200 lines (lessons-usage.ts will be ~100 — ok).
-- No irregular whitespace / no literal block-comment fence in comments.
-- Lock strict tests to OBSERVED rendered output, not inferred intent.
+Full plan: `tasks/plan.md`
+
+## Phase 1: MCP gaps (Goose global + Copilot project)
+
+- [ ] Task 1: Goose MCP — `generateMcp()`, global caps `native`, YAML `extensions` in `~/.config/goose/config.yaml`
+- [ ] Task 2: Copilot MCP — `generateMcp()`, project caps `native`, JSON `servers` in `.vscode/mcp.json`
+
+**Checkpoint 1**: `pnpm test && pnpm build` green
+
+## Phase 2: Agent gaps (Augment Code, Amazon Q, Zed skills)
+
+- [ ] Task 3: Augment Code agents — `generateAgents()`, `.augment/agents/*.md` (YAML frontmatter), both scopes `native`
+- [ ] Task 4: Amazon Q — `generateAgents()`, `.amazonq/cli-agents/*.json` with inline hooks + permissions; agents `native`, hooks `partial`, permissions `native`
+- [ ] Task 5: Zed skills — `generateSkills()`, `.agents/skills/` shared path, Zed as `consumer`, `skills: 'native'`
+
+**Checkpoint 2**: `pnpm test && pnpm build` green
+
+## Phase 3: Permissions & Commands (Junie, Kilo Code, Trae, Warp, Roo Code)
+
+- [ ] Task 6: Junie permissions — `generatePermissions()`, `~/.junie/allowlist.json`, global caps `native`
+- [ ] Task 7: Kilo Code permissions — `generatePermissions()`, `permission` key in `kilo.jsonc`, both scopes `native`
+- [ ] Task 8: Trae commands — `generateCommands()`, `.trae/commands/*.md`, both scopes `native`; investigate Trae agents
+- [ ] Task 9: Warp + Roo Code — declaration-only `permissions: 'partial'` + lint warnings; Windsurf agents confirmed unchanged
+
+**Checkpoint 3**: `pnpm test && pnpm build` green
+
+## Phase 4: Hooks batch (Factory Droid, Deep Agents CLI, Rovo Dev, Antigravity, Qwen Code)
+
+- [ ] Task 10: Factory Droid hooks — `generateHooks()`, `.factory/hooks.json`, 9 events, both scopes `native`
+- [ ] Task 11: Deep Agents CLI hooks — `generateHooks()`, `.deepagents/hooks.json`, both scopes `native`
+- [ ] Task 12: Rovo Dev hooks + permissions — `emitScopedSettings()`, `~/.rovodev/config.yml`, global `native` for both; project `none`
+- [ ] Task 13: Antigravity hooks — `generateHooks()`, `.agents/hooks.json` / `~/.gemini/config/hooks.json`, both scopes `native`
+- [ ] Task 14: Qwen Code hooks + permissions — extend `settings.json` emitter; both scopes `native`
+
+**Checkpoint 4**: `pnpm test && pnpm build` green
+
+## Phase 5: Amp (3 gaps) + Antigravity permissions
+
+- [ ] Task 15: Amp commands + hooks + permissions — `generateCommands()`, extend settings.json emitter; check `.agents/commands/` ownership
+- [ ] Task 16: Antigravity permissions — declaration `partial`, lint guidance pointing to hooks system
+
+**Checkpoint 5**: `pnpm test && pnpm build` green; all 23 gaps addressed
+
+## Phase 6: Docs & QA
+
+- [ ] Task 17: Regenerate README + website `supported-tools.mdx` matrices for all 23 changes
+- [ ] Task 18: Post-feature QA (edge cases, empty inputs, E2E smoke per target)

@@ -6,6 +6,7 @@ import {
   generateCommands,
   generateAgents,
   generateMcp,
+  generatePermissions,
   generateSkills,
 } from '../../../../src/targets/opencode/generator.js';
 import {
@@ -420,6 +421,38 @@ describe('generateMcp (opencode)', () => {
 
   it('returns empty array when mcpServers is empty', () => {
     expect(generateMcp(makeCanonical({ mcp: { mcpServers: {} } }))).toEqual([]);
+  });
+});
+
+describe('generatePermissions (opencode)', () => {
+  it('generates opencode.json permission entries with deny precedence', () => {
+    const results = generatePermissions(
+      makeCanonical({
+        permissions: {
+          allow: ['read', 'bash'],
+          ask: ['bash', 'edit'],
+          deny: ['bash', 'webfetch'],
+        },
+      }),
+    );
+
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(OPENCODE_CONFIG_FILE);
+    expect(JSON.parse(results[0].content)).toEqual({
+      permission: {
+        read: 'allow',
+        bash: 'deny',
+        edit: 'ask',
+        webfetch: 'deny',
+      },
+    });
+  });
+
+  it('returns empty when permissions are missing or empty', () => {
+    expect(generatePermissions(makeCanonical())).toEqual([]);
+    expect(
+      generatePermissions(makeCanonical({ permissions: { allow: [], ask: [], deny: [] } })),
+    ).toEqual([]);
   });
 });
 

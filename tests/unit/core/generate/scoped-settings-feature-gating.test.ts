@@ -74,9 +74,13 @@ describe('generate — scoped settings feature gating', () => {
       projectRoot: TEST_DIR,
     });
 
-    // amp + zed sidecars only project mcp -> must not be emitted at all.
-    expect(results.some((r) => r.path === '.amp/settings.json')).toBe(false);
+    // zed sidecar only projects mcp -> must not be emitted at all.
     expect(results.some((r) => r.path === '.zed/settings.json')).toBe(false);
+
+    // amp now projects hooks too -> emitted, but without amp.mcpServers.
+    const amp = settingsFor(results, '.amp/settings.json');
+    expect(amp).not.toHaveProperty('amp.mcpServers');
+    expect(amp).toHaveProperty('amp.hooks');
 
     // gemini projects hooks too -> emitted, but without mcpServers.
     const gemini = settingsFor(results, '.gemini/settings.json');

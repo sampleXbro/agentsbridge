@@ -12,7 +12,7 @@
 
 import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
 import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
-import { generateRules } from './generator.js';
+import { generateRules, generateSkills } from './generator.js';
 import { importFromZed } from './importer.js';
 import { lintRules } from './linter.js';
 import { lintHooks, lintPermissions, lintIgnore } from './lint.js';
@@ -21,6 +21,7 @@ import {
   ZED_TARGET,
   ZED_ROOT_FILE,
   ZED_SETTINGS_FILE,
+  ZED_SKILLS_DIR,
   ZED_GLOBAL_SETTINGS_FILE,
   ZED_CANONICAL_RULES_DIR,
 } from './constants.js';
@@ -29,13 +30,15 @@ export const target: TargetGenerators = {
   name: ZED_TARGET,
   primaryRootInstructionPath: ZED_ROOT_FILE,
   generateRules,
+  generateSkills,
   importFrom: importFromZed,
 };
 
 const project: TargetLayout = {
   rootInstructionPath: ZED_ROOT_FILE,
+  skillDir: ZED_SKILLS_DIR,
   managedOutputs: {
-    dirs: [],
+    dirs: [ZED_SKILLS_DIR],
     files: [ZED_ROOT_FILE, ZED_SETTINGS_FILE],
   },
   paths: {
@@ -79,7 +82,7 @@ const capabilities: TargetCapabilities = {
   additionalRules: 'embedded',
   commands: 'none',
   agents: 'none',
-  skills: 'none',
+  skills: 'native',
   mcp: 'native',
   hooks: 'none',
   ignore: 'none',
@@ -174,6 +177,9 @@ export const descriptor = {
       return mergeZedSettings(existing, newContent);
     }
     return null;
+  },
+  sharedArtifacts: {
+    '.agents/skills/': 'consumer',
   },
   buildImportPaths: buildZedImportPaths,
   detectionPaths: [ZED_ROOT_FILE, ZED_SETTINGS_FILE],

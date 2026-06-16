@@ -29,7 +29,7 @@ describe('builtin targets', () => {
     expect(cursor?.capabilities.permissions).toBe('partial');
     expect(kiro?.generators.primaryRootInstructionPath).toBe('AGENTS.md');
     expect(kiro?.capabilities.rules).toBe('native');
-    expect(kiro?.capabilities.commands).toBe('none');
+    expect(kiro?.capabilities.commands).toBe('embedded');
     expect(kiro?.capabilities.hooks).toBe('native');
   });
 

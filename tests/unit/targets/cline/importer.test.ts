@@ -13,6 +13,7 @@ import {
   CLINE_MCP_SETTINGS,
   CLINE_SKILLS_DIR,
   CLINE_WORKFLOWS_DIR,
+  CLINE_AGENTS_DIR,
 } from '../../../../src/targets/cline/constants.js';
 
 const TEST_DIR = join(tmpdir(), 'am-cline-importer-test');
@@ -157,6 +158,43 @@ describe('importFromCline', () => {
     expect(content).toContain('name: reviewer');
     expect(content).toContain('description: Review specialist');
     expect(content).toContain('Review risky changes first.');
+  });
+
+  it('imports native agents and restores agentsmesh extension metadata', async () => {
+    mkdirSync(join(TEST_DIR, CLINE_AGENTS_DIR), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, CLINE_AGENTS_DIR, 'reviewer.md'),
+      [
+        '---',
+        'name: reviewer',
+        'description: Review specialist',
+        'tools:',
+        '  - Read',
+        'model: sonnet',
+        'x-agentsmesh-disallowed-tools:',
+        '  - Bash(rm -rf *)',
+        'x-agentsmesh-permission-mode: ask',
+        'x-agentsmesh-max-turns: 9',
+        'x-agentsmesh-mcp-servers:',
+        '  - context7',
+        'x-agentsmesh-skills:',
+        '  - post-feature-qa',
+        'x-agentsmesh-memory: notes/reviewer.md',
+        '---',
+        '',
+        'Review risky changes first.',
+      ].join('\n'),
+    );
+
+    await importFromCline(TEST_DIR);
+
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'), 'utf-8');
+    expect(content).toContain('disallowedTools:');
+    expect(content).toContain('permissionMode: ask');
+    expect(content).toContain('maxTurns: 9');
+    expect(content).toContain('mcpServers:');
+    expect(content).toContain('skills:');
+    expect(content).toContain('memory: notes/reviewer.md');
   });
 
   it('imports skill supporting files', async () => {

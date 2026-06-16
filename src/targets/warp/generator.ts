@@ -59,3 +59,9 @@ export function generateMcp(canonical: CanonicalFiles): WarpOutput[] {
   const content = JSON.stringify({ mcpServers: canonical.mcp.mcpServers }, null, 2);
   return [{ path: WARP_MCP_FILE, content }];
 }
+
+// Warp permissions are managed via Agent Profiles in the Warp UI;
+// no config file is emitted.
+export function generatePermissions(_canonical: CanonicalFiles): WarpOutput[] {
+  return [];
+}

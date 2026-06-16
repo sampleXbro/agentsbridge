@@ -111,7 +111,9 @@ export function outputPaths(target: TargetName): OutputPathGroups {
   const agentSkill =
     target === 'codex-cli'
       ? '.codex/agents/code-reviewer.toml'
-      : `${skillDir(target)}/${projectedAgentSkillDirName('code-reviewer')}/SKILL.md`;
+      : target === 'cline'
+        ? '.cline/agents/code-reviewer.md'
+        : `${skillDir(target)}/${projectedAgentSkillDirName('code-reviewer')}/SKILL.md`;
 
   return {
     root:
@@ -386,6 +388,8 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
                 ? '.kiro/agents/code-reviewer.md'
                 : target === 'gemini-cli'
                   ? '.gemini/agents/code-reviewer.md'
+                  : target === 'cline'
+                    ? '.cline/agents/code-reviewer.md'
                   : target === 'codex-cli'
                     ? '.codex/agents/code-reviewer.toml'
                     : target === 'kilo-code'

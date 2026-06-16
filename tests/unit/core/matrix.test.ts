@@ -147,6 +147,7 @@ describe('buildCompatibilityMatrix', () => {
     const permRow = rows.find((r) => r.feature.startsWith('permissions'));
     expect(permRow?.support['cursor']).toBe('partial');
     expect(permRow?.support['claude-code']).toBe('native');
+    expect(permRow?.support['opencode']).toBe('native');
   });
 
   it('respects target filter from config', () => {
@@ -178,10 +179,10 @@ describe('buildCompatibilityMatrix', () => {
     expect(rows.find((r) => r.feature.startsWith('commands'))?.feature).toBe('commands (2)');
     expect(rows.find((r) => r.feature.startsWith('skills'))?.feature).toBe('skills (1)');
     expect(rows.find((r) => r.feature.startsWith('commands'))?.support['copilot']).toBe('native');
-    expect(rows.find((r) => r.feature.startsWith('commands'))?.support.continue).toBe('embedded');
+    expect(rows.find((r) => r.feature.startsWith('commands'))?.support.continue).toBe('native');
     expect(rows.find((r) => r.feature.startsWith('commands'))?.support.junie).toBe('native');
     expect(rows.find((r) => r.feature.startsWith('commands'))?.support.kiro).toBe('embedded');
-    expect(rows.find((r) => r.feature.startsWith('skills'))?.support.continue).toBe('embedded');
+    expect(rows.find((r) => r.feature.startsWith('skills'))?.support.continue).toBe('native');
     expect(rows.find((r) => r.feature.startsWith('skills'))?.support.junie).toBe('native');
     expect(rows.find((r) => r.feature.startsWith('skills'))?.support.kiro).toBe('native');
     expect(rows.find((r) => r.feature.startsWith('commands'))?.support['codex-cli']).toBe(
@@ -229,7 +230,7 @@ describe('buildCompatibilityMatrix', () => {
       r.feature.startsWith('agents'),
     );
     expect(row?.support['gemini-cli']).toBe('native');
-    expect(row?.support.cline).toBe('embedded');
+    expect(row?.support.cline).toBe('native');
     expect(row?.support['codex-cli']).toBe('native');
     expect(row?.support.windsurf).toBe('embedded');
   });
@@ -314,6 +315,7 @@ describe('buildCompatibilityMatrix', () => {
     const rows = buildCompatibilityMatrix(config, canonical);
     expect(rows.find((r) => r.feature.startsWith('hooks'))?.feature).toBe('hooks (1)');
     expect(rows.find((r) => r.feature.startsWith('hooks'))?.support['copilot']).toBe('partial');
+    expect(rows.find((r) => r.feature.startsWith('hooks'))?.support['codex-cli']).toBe('partial');
     expect(rows.find((r) => r.feature.startsWith('hooks'))?.support.kiro).toBe('native');
   });
 

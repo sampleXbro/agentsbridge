@@ -48,9 +48,9 @@ features:
       .filter((path) => !path.startsWith('.agentsmeshcache'))
       .sort();
     expect(generatedPaths).toEqual([
+      '.cline/agents/code-reviewer.md',
+      '.cline/agents/researcher.md',
       '.cline/cline_mcp_settings.json',
-      '.cline/skills/am-agent-code-reviewer/SKILL.md',
-      '.cline/skills/am-agent-researcher/SKILL.md',
       '.cline/skills/api-generator/SKILL.md',
       '.cline/skills/api-generator/references/route-checklist.md',
       '.cline/skills/api-generator/template.ts',
@@ -86,13 +86,11 @@ features:
     expect(skillTemplate).toContain("import { z } from 'zod';");
     expect(skillTemplate).toContain('export const createRouteSchema = z.object');
 
-    const projectedReviewer = read(projectDir, '.cline/skills/am-agent-code-reviewer/SKILL.md');
-    expect(projectedReviewer).toContain('x-agentsmesh-kind: agent');
-    expect(projectedReviewer).toContain('x-agentsmesh-name: code-reviewer');
-    expect(projectedReviewer).toContain('You are a code reviewer.');
-    const projectedResearcher = read(projectDir, '.cline/skills/am-agent-researcher/SKILL.md');
-    expect(projectedResearcher).toContain('x-agentsmesh-kind: agent');
-    expect(projectedResearcher).toContain('x-agentsmesh-name: researcher');
+    const reviewer = read(projectDir, '.cline/agents/code-reviewer.md');
+    expect(reviewer).toContain('name: code-reviewer');
+    expect(reviewer).toContain('You are a code reviewer.');
+    const researcher = read(projectDir, '.cline/agents/researcher.md');
+    expect(researcher).toContain('name: researcher');
 
     const hook = read(projectDir, '.clinerules/hooks/posttooluse-0.sh');
     expect(hook).toContain('#!/usr/bin/env bash');

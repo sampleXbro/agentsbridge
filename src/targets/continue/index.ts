@@ -111,9 +111,9 @@ export const descriptor = {
   capabilities: {
     rules: 'native',
     additionalRules: 'native',
-    commands: 'embedded',
+    commands: 'native',
     agents: 'none',
-    skills: 'embedded',
+    skills: 'native',
     mcp: 'native',
     hooks: 'none',
     ignore: 'none',

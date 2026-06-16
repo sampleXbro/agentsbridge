@@ -1,17 +1,13 @@
 /**
  * Generate Cline config files from canonical sources.
  * Cline uses .clinerules (rules, workflows), .clineignore, .cline/cline_mcp_settings.json, .cline/skills (skills).
- * Supports rules, workflows (from canonical commands), ignore, MCP, skills. Skips agents, hooks, permissions.
+ * Supports rules, workflows, agents, ignore, MCP, skills, and hooks.
  */
 
 import { basename } from 'node:path';
 import type { CanonicalFiles } from '../../core/types.js';
 import { hasHookCommand } from '../../core/hook-command.js';
 import { serializeFrontmatter } from '../../utils/text/markdown.js';
-import {
-  projectedAgentSkillDirName,
-  serializeProjectedAgentSkill,
-} from '../projection/projected-agent-skill.js';
 import {
   CLINE_RULES_DIR,
   CLINE_AGENTS_MD,
@@ -21,6 +17,8 @@ import {
   CLINE_WORKFLOWS_DIR,
   CLINE_HOOKS_DIR,
 } from './constants.js';
+
+export { generateAgents } from './agent-generator.js';
 
 export interface RulesOutput {
   path: string;
@@ -110,16 +108,6 @@ export function generateMcp(canonical: CanonicalFiles): RulesOutput[] {
   if (!canonical.mcp || Object.keys(canonical.mcp.mcpServers).length === 0) return [];
   const content = JSON.stringify({ mcpServers: canonical.mcp.mcpServers }, null, 2);
   return [{ path: CLINE_MCP_SETTINGS, content }];
-}
-
-/**
- * Generate projected agent skills for Cline from canonical agents.
- */
-export function generateAgents(canonical: CanonicalFiles): RulesOutput[] {
-  return canonical.agents.map((agent) => ({
-    path: `${CLINE_SKILLS_DIR}/${projectedAgentSkillDirName(agent.name)}/SKILL.md`,
-    content: serializeProjectedAgentSkill(agent),
-  }));
 }
 
 function safeEventName(event: string): string {

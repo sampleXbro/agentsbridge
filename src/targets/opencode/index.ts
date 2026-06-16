@@ -14,15 +14,9 @@
  * the canonical `AGENTS.md` path only.
  */
 
-import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
-import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
-import {
-  generateRules,
-  generateCommands,
-  generateAgents,
-  generateSkills,
-  generateMcp,
-} from './generator.js';
+import type { TargetGenerators } from '../catalog/target.interface.js';
+import type { TargetDescriptor } from '../catalog/target-descriptor.js';
+import { generateRules, generateCommands, generateAgents, generateSkills } from './generator.js';
 import {
   OPENCODE_TARGET,
   OPENCODE_ROOT_RULE,
@@ -37,12 +31,10 @@ import {
   OPENCODE_GLOBAL_AGENTS_DIR,
   OPENCODE_GLOBAL_SKILLS_DIR,
   OPENCODE_GLOBAL_CONFIG_FILE,
-  OPENCODE_GLOBAL_AGENTS_SKILLS_DIR,
   OPENCODE_CANONICAL_RULES_DIR,
   OPENCODE_CANONICAL_COMMANDS_DIR,
   OPENCODE_CANONICAL_AGENTS_DIR,
 } from './constants.js';
-import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromOpenCode } from './importer.js';
 import {
   opencodeAgentMapper,
@@ -50,8 +42,10 @@ import {
   opencodeNonRootRuleMapper,
 } from './import-mappers.js';
 import { lintRules } from './linter.js';
-import { lintHooks, lintPermissions, lintIgnore } from './lint.js';
+import { lintHooks, lintIgnore } from './lint.js';
 import { buildOpencodeImportPaths } from '../../core/reference/import-map-builders.js';
+import { emitOpenCodeScopedSettings, mergeOpenCodeSettings } from './scoped-settings.js';
+import { capabilities, globalLayout, project } from './layout.js';
 
 export const target: TargetGenerators = {
   name: OPENCODE_TARGET,
@@ -60,74 +54,7 @@ export const target: TargetGenerators = {
   generateCommands,
   generateAgents,
   generateSkills,
-  generateMcp,
   importFrom: importFromOpenCode,
-};
-
-const project: TargetLayout = {
-  rootInstructionPath: OPENCODE_ROOT_RULE,
-  skillDir: OPENCODE_SKILLS_DIR,
-  managedOutputs: {
-    dirs: [OPENCODE_RULES_DIR, OPENCODE_COMMANDS_DIR, OPENCODE_AGENTS_DIR, OPENCODE_SKILLS_DIR],
-    files: [OPENCODE_ROOT_RULE, OPENCODE_CONFIG_FILE],
-  },
-  paths: {
-    rulePath(slug) {
-      return `${OPENCODE_RULES_DIR}/${slug}.md`;
-    },
-    commandPath(name) {
-      return `${OPENCODE_COMMANDS_DIR}/${name}.md`;
-    },
-    agentPath(name) {
-      return `${OPENCODE_AGENTS_DIR}/${name}.md`;
-    },
-  },
-};
-
-const globalLayout: TargetLayout = {
-  rootInstructionPath: OPENCODE_GLOBAL_AGENTS_MD,
-  skillDir: OPENCODE_GLOBAL_SKILLS_DIR,
-  managedOutputs: {
-    dirs: [
-      OPENCODE_GLOBAL_RULES_DIR,
-      OPENCODE_GLOBAL_COMMANDS_DIR,
-      OPENCODE_GLOBAL_AGENTS_DIR,
-      OPENCODE_GLOBAL_SKILLS_DIR,
-      OPENCODE_GLOBAL_AGENTS_SKILLS_DIR,
-    ],
-    files: [OPENCODE_GLOBAL_AGENTS_MD, OPENCODE_GLOBAL_CONFIG_FILE],
-  },
-  rewriteGeneratedPath(path) {
-    if (path === OPENCODE_ROOT_RULE) return OPENCODE_GLOBAL_AGENTS_MD;
-    if (path === OPENCODE_CONFIG_FILE) return OPENCODE_GLOBAL_CONFIG_FILE;
-    return path;
-  },
-  mirrorGlobalPath(path, activeTargets) {
-    return mirrorSkillsToAgents(path, OPENCODE_GLOBAL_SKILLS_DIR, activeTargets);
-  },
-  paths: {
-    rulePath(slug) {
-      return `${OPENCODE_GLOBAL_RULES_DIR}/${slug}.md`;
-    },
-    commandPath(name) {
-      return `${OPENCODE_GLOBAL_COMMANDS_DIR}/${name}.md`;
-    },
-    agentPath(name) {
-      return `${OPENCODE_GLOBAL_AGENTS_DIR}/${name}.md`;
-    },
-  },
-};
-
-const capabilities: TargetCapabilities = {
-  rules: 'native',
-  additionalRules: 'native',
-  commands: 'native',
-  agents: 'native',
-  skills: 'native',
-  mcp: 'native',
-  hooks: 'none',
-  ignore: 'none',
-  permissions: 'none',
 };
 
 export const descriptor = {
@@ -145,7 +72,6 @@ export const descriptor = {
   lintRules,
   lint: {
     hooks: lintHooks,
-    permissions: lintPermissions,
     ignore: lintIgnore,
   },
   project,
@@ -161,6 +87,8 @@ export const descriptor = {
     ],
     layout: globalLayout,
   },
+  mergeGeneratedOutputContent: mergeOpenCodeSettings,
+  emitScopedSettings: emitOpenCodeScopedSettings,
   importer: {
     rules: [
       {

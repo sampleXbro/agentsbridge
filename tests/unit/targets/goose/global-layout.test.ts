@@ -12,6 +12,7 @@ import {
   GOOSE_GLOBAL_IGNORE,
   GOOSE_SKILLS_DIR,
   GOOSE_GLOBAL_SKILLS_DIR,
+  GOOSE_GLOBAL_CONFIG,
 } from '../../../../src/targets/goose/constants.js';
 
 describe('goose global layout', () => {
@@ -41,8 +42,14 @@ describe('goose global layout', () => {
     expect(rewrite(skillPath, '')).toBe(skillPath);
   });
 
-  it('globalSupport.capabilities matches project capabilities', () => {
-    expect(descriptor.globalSupport!.capabilities).toEqual(descriptor.capabilities);
+  it('globalSupport.capabilities has mcp native (project has none)', () => {
+    expect(descriptor.globalSupport!.capabilities.mcp).toBe('native');
+    expect(descriptor.capabilities.mcp).toBe('none');
+  });
+
+  it('rewriteGeneratedPath passes through global config path unchanged', () => {
+    const rewrite = descriptor.globalSupport!.layout.rewriteGeneratedPath!;
+    expect(rewrite(GOOSE_GLOBAL_CONFIG, '')).toBe(GOOSE_GLOBAL_CONFIG);
   });
 
   it('globalSupport has detection paths', () => {

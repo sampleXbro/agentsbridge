@@ -43,3 +43,4 @@ export const OPENCODE_CANONICAL_RULES_DIR = '.agentsmesh/rules';
 export const OPENCODE_CANONICAL_COMMANDS_DIR = '.agentsmesh/commands';
 export const OPENCODE_CANONICAL_AGENTS_DIR = '.agentsmesh/agents';
 export const OPENCODE_CANONICAL_MCP = '.agentsmesh/mcp.json';
+export const OPENCODE_CANONICAL_PERMISSIONS = '.agentsmesh/permissions.yaml';

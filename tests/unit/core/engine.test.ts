@@ -1852,7 +1852,7 @@ describe('generate Windsurf', () => {
     });
 
     expect(results.some((r) => r.path === '.gemini/agents/reviewer.md')).toBe(true);
-    expect(results.some((r) => r.path === '.cline/skills/am-agent-reviewer/SKILL.md')).toBe(true);
+    expect(results.some((r) => r.path === '.cline/agents/reviewer.md')).toBe(true);
     expect(results.some((r) => r.path === '.codex/agents/reviewer.toml')).toBe(true);
     expect(results.some((r) => r.path === '.windsurf/skills/am-agent-reviewer/SKILL.md')).toBe(
       true,
@@ -1898,7 +1898,7 @@ describe('generate Windsurf', () => {
 
     // gemini-cli: false = native agents → produces .gemini/agents/*
     expect(results.some((r) => r.path === '.gemini/agents/reviewer.md')).toBe(true);
-    expect(results.some((r) => r.path === '.cline/skills/am-agent-reviewer/SKILL.md')).toBe(true);
+    expect(results.some((r) => r.path === '.cline/agents/reviewer.md')).toBe(true);
     expect(results.some((r) => r.path === '.codex/agents/reviewer.toml')).toBe(true);
     expect(results.some((r) => r.path === '.windsurf/skills/am-agent-reviewer/SKILL.md')).toBe(
       false,

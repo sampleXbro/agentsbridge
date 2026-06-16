@@ -97,7 +97,7 @@ describe('generateRules (continue)', () => {
 });
 
 describe('generateCommands (continue)', () => {
-  it('projects commands as prompt files in .continue/prompts/ without invokable flag', () => {
+  it('projects commands as invokable prompt files in .continue/prompts/', () => {
     const canonical = makeCanonical({
       commands: [
         {
@@ -113,7 +113,7 @@ describe('generateCommands (continue)', () => {
     const results = generateCommands(canonical);
     expect(results).toHaveLength(1);
     expect(results[0]?.path).toBe(`${CONTINUE_PROMPTS_DIR}/review.md`);
-    expect(results[0]?.content).not.toContain('invokable:');
+    expect(results[0]?.content).toContain('invokable: true');
     expect(results[0]?.content).toContain('x-agentsmesh-kind: command');
     expect(results[0]?.content).toContain('x-agentsmesh-allowed-tools:');
   });

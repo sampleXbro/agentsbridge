@@ -2,16 +2,18 @@ import { addSimpleFileMapping, addSkillLikeMapping, listFiles, rel } from '../im
 import {
   AUGMENT_CODE_RULES_DIR,
   AUGMENT_CODE_COMMANDS_DIR,
+  AUGMENT_CODE_AGENTS_DIR,
   AUGMENT_CODE_SKILLS_DIR,
   AUGMENT_CODE_SETTINGS_FILE,
   AUGMENT_CODE_IGNORE_FILE,
   AUGMENT_CODE_GLOBAL_RULES_DIR,
   AUGMENT_CODE_GLOBAL_COMMANDS_DIR,
+  AUGMENT_CODE_GLOBAL_AGENTS_DIR,
   AUGMENT_CODE_GLOBAL_SKILLS_DIR,
   AUGMENT_CODE_GLOBAL_SETTINGS_FILE,
 } from '../../../targets/augment-code/constants.js';
 import type { TargetLayoutScope } from '../../../targets/catalog/target-descriptor.js';
-import { AB_RULES, AB_COMMANDS } from './constants.js';
+import { AB_RULES, AB_COMMANDS, AB_AGENTS } from './constants.js';
 
 export async function buildAugmentCodeImportPaths(
   refs: Map<string, string>,
@@ -25,6 +27,9 @@ export async function buildAugmentCodeImportPaths(
     for (const absPath of await listFiles(projectRoot, AUGMENT_CODE_GLOBAL_COMMANDS_DIR)) {
       addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_COMMANDS, '.md');
     }
+    for (const absPath of await listFiles(projectRoot, AUGMENT_CODE_GLOBAL_AGENTS_DIR)) {
+      addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_AGENTS, '.md');
+    }
     for (const absPath of await listFiles(projectRoot, AUGMENT_CODE_GLOBAL_SKILLS_DIR)) {
       addSkillLikeMapping(refs, rel(projectRoot, absPath), AUGMENT_CODE_GLOBAL_SKILLS_DIR);
     }
@@ -37,6 +42,9 @@ export async function buildAugmentCodeImportPaths(
   }
   for (const absPath of await listFiles(projectRoot, AUGMENT_CODE_COMMANDS_DIR)) {
     addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_COMMANDS, '.md');
+  }
+  for (const absPath of await listFiles(projectRoot, AUGMENT_CODE_AGENTS_DIR)) {
+    addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_AGENTS, '.md');
   }
   for (const absPath of await listFiles(projectRoot, AUGMENT_CODE_SKILLS_DIR)) {
     addSkillLikeMapping(refs, rel(projectRoot, absPath), AUGMENT_CODE_SKILLS_DIR);

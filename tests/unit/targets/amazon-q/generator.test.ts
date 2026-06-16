@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
-import { generateRules, generateMcp } from '../../../../src/targets/amazon-q/generator.js';
+import { generateRules, generateMcp, generateAgents } from '../../../../src/targets/amazon-q/generator.js';
 import {
   AMAZON_Q_RULES_DIR,
   AMAZON_Q_MCP_FILE,
+  AMAZON_Q_AGENTS_DIR,
 } from '../../../../src/targets/amazon-q/constants.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
@@ -151,6 +152,114 @@ describe('generateRules (amazon-q)', () => {
 
     const results = generateRules(canonical);
     expect(results[0].content).toBe('# Rule\n\nContent.');
+  });
+});
+
+describe('generateAgents (amazon-q)', () => {
+  it('returns empty when no agents', () => {
+    expect(generateAgents(makeCanonical())).toHaveLength(0);
+  });
+
+  it('generates .amazonq/cli-agents/{name}.json with systemPrompt', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          source: '/proj/.agentsmesh/agents/reviewer.md',
+          name: 'reviewer',
+          description: 'Reviews code',
+          tools: ['Read', 'Grep'],
+          disallowedTools: [],
+          model: '',
+          permissionMode: 'default',
+          maxTurns: 0,
+          mcpServers: [],
+          hooks: {},
+          skills: [],
+          memory: '',
+          body: 'You review code carefully.',
+        },
+      ],
+    });
+    const results = generateAgents(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(`${AMAZON_Q_AGENTS_DIR}/reviewer.json`);
+    const parsed = JSON.parse(results[0].content) as {
+      name: string;
+      description: string;
+      systemPrompt: string;
+      allowedTools: string[];
+    };
+    expect(parsed.name).toBe('reviewer');
+    expect(parsed.description).toBe('Reviews code');
+    expect(parsed.systemPrompt).toContain('You review code carefully');
+    expect(parsed.allowedTools).toEqual(['Read', 'Grep']);
+  });
+
+  it('omits description when empty', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          source: '/proj/.agentsmesh/agents/helper.md',
+          name: 'helper',
+          description: '',
+          tools: [],
+          disallowedTools: [],
+          model: '',
+          permissionMode: 'default',
+          maxTurns: 0,
+          mcpServers: [],
+          hooks: {},
+          skills: [],
+          memory: '',
+          body: 'You help.',
+        },
+      ],
+    });
+    const results = generateAgents(canonical);
+    const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
+    expect(parsed).not.toHaveProperty('description');
+    expect(parsed).not.toHaveProperty('allowedTools');
+  });
+
+  it('generates multiple agents', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          source: '/proj/.agentsmesh/agents/a.md',
+          name: 'a',
+          description: '',
+          tools: [],
+          disallowedTools: [],
+          model: '',
+          permissionMode: 'default',
+          maxTurns: 0,
+          mcpServers: [],
+          hooks: {},
+          skills: [],
+          memory: '',
+          body: 'Agent A.',
+        },
+        {
+          source: '/proj/.agentsmesh/agents/b.md',
+          name: 'b',
+          description: 'Agent B',
+          tools: ['Write'],
+          disallowedTools: [],
+          model: '',
+          permissionMode: 'default',
+          maxTurns: 0,
+          mcpServers: [],
+          hooks: {},
+          skills: [],
+          memory: '',
+          body: 'Agent B.',
+        },
+      ],
+    });
+    const results = generateAgents(canonical);
+    expect(results).toHaveLength(2);
+    expect(results[0].path).toBe(`${AMAZON_Q_AGENTS_DIR}/a.json`);
+    expect(results[1].path).toBe(`${AMAZON_Q_AGENTS_DIR}/b.json`);
   });
 });
 

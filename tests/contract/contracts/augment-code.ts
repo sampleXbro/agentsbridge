@@ -2,6 +2,8 @@ import type { TargetPathContract } from './types.js';
 
 export const augmentCodeContract: TargetPathContract = {
   generated: [
+    '.augment/agents/code-reviewer.md',
+    '.augment/agents/researcher.md',
     '.augment/commands/review.md',
     '.augment/rules/_root.md',
     '.augment/rules/typescript.md',
@@ -12,6 +14,8 @@ export const augmentCodeContract: TargetPathContract = {
     '.augmentignore',
   ],
   imported: [
+    '.agentsmesh/agents/code-reviewer.md',
+    '.agentsmesh/agents/researcher.md',
     '.agentsmesh/commands/review.md',
     '.agentsmesh/hooks.yaml',
     '.agentsmesh/ignore',

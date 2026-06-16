@@ -6,11 +6,13 @@ import {
   generateCommands,
   generateAgents,
   generateIgnore,
+  generateMcp,
 } from '../../../../src/targets/goose/generator.js';
 import {
   GOOSE_ROOT_FILE,
   GOOSE_SKILLS_DIR,
   GOOSE_IGNORE,
+  GOOSE_GLOBAL_CONFIG,
 } from '../../../../src/targets/goose/constants.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
@@ -244,5 +246,46 @@ describe('generateIgnore (goose)', () => {
     const canonical = makeCanonical({ ignore: [] });
     const results = generateIgnore(canonical);
     expect(results).toHaveLength(0);
+  });
+});
+
+describe('generateMcp (goose)', () => {
+  it('returns empty for project scope', () => {
+    const canonical = makeCanonical({
+      mcp: { mcpServers: { 'my-server': { command: 'cmd', args: [], env: {}, type: 'stdio' } } },
+    });
+    const results = generateMcp(canonical, { capability: { level: 'none' }, scope: 'project' });
+    expect(results).toHaveLength(0);
+  });
+
+  it('returns empty for global scope with no MCP servers', () => {
+    const results = generateMcp(makeCanonical({ mcp: null }), {
+      capability: { level: 'native' },
+      scope: 'global',
+    });
+    expect(results).toHaveLength(0);
+  });
+
+  it('generates config.yaml with extensions block for global scope', () => {
+    const canonical = makeCanonical({
+      mcp: {
+        mcpServers: {
+          'my-server': {
+            command: '/usr/local/bin/my-mcp',
+            args: ['--port', '3000'],
+            env: { API_KEY: 'abc' },
+            type: 'stdio',
+          },
+        },
+      },
+    });
+    const results = generateMcp(canonical, { capability: { level: 'native' }, scope: 'global' });
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(GOOSE_GLOBAL_CONFIG);
+    expect(results[0].content).toContain('extensions:');
+    expect(results[0].content).toContain('my-server:');
+    expect(results[0].content).toContain('cmd: /usr/local/bin/my-mcp');
+    expect(results[0].content).toContain('type: stdio');
+    expect(results[0].content).toContain('API_KEY');
   });
 });

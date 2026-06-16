@@ -68,6 +68,12 @@ describe('per-target lint helpers', () => {
       expect(diags[0]!.level).toBe('warning');
     });
 
+  });
+
+  describe.each([
+    ['goose', goose],
+    ['zed', zed],
+  ] as const)('%s permissions', (_name, mod) => {
     it('lintPermissions returns [] when canonical.permissions is null', () => {
       expect(mod.lintPermissions(emptyCanonical())).toEqual([]);
     });

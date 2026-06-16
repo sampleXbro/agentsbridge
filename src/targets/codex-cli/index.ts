@@ -8,6 +8,7 @@ import {
   generateAgents,
   generateSkills,
   generateMcp,
+  generateHooks,
   renderCodexGlobalInstructions,
 } from './generator.js';
 import {
@@ -17,6 +18,7 @@ import {
   CODEX_AGENTS_DIR,
   CODEX_INSTRUCTIONS_DIR,
   CODEX_RULES_DIR,
+  CODEX_HOOKS_FILE,
 } from './constants.js';
 import { importFromCodex } from './importer.js';
 import { lintRules } from './linter.js';
@@ -34,6 +36,7 @@ export const target: TargetGenerators = {
   generateAgents,
   generateSkills,
   generateMcp,
+  generateHooks,
   importFrom: importFromCodex,
 };
 
@@ -47,7 +50,7 @@ const project: TargetLayout = {
   skillDir: '.agents/skills',
   managedOutputs: {
     dirs: ['.agents/skills', '.codex/agents', '.codex/instructions'],
-    files: ['AGENTS.md', '.codex/config.toml'],
+    files: ['AGENTS.md', '.codex/config.toml', CODEX_HOOKS_FILE],
   },
   paths: {
     rulePath(_slug, rule) {
@@ -75,7 +78,7 @@ const globalLayout: TargetLayout = {
   skillDir: CODEX_SKILLS_DIR,
   managedOutputs: {
     dirs: ['.agents/skills', '.codex/agents', '.codex/rules'],
-    files: [CODEX_GLOBAL_AGENTS_MD, '.codex/config.toml'],
+    files: [CODEX_GLOBAL_AGENTS_MD, '.codex/config.toml', CODEX_HOOKS_FILE],
   },
   rewriteGeneratedPath(path) {
     if (path === AGENTS_MD) return CODEX_GLOBAL_AGENTS_MD;
@@ -106,7 +109,7 @@ const globalCapabilities: TargetCapabilities = {
   agents: 'native',
   skills: 'native',
   mcp: 'native',
-  hooks: 'none',
+  hooks: 'partial',
   ignore: 'none',
   permissions: 'none',
 };
@@ -127,7 +130,7 @@ export const descriptor = {
     agents: 'native',
     skills: 'native',
     mcp: 'native',
-    hooks: 'none',
+    hooks: 'partial',
     ignore: 'none',
     permissions: 'none',
   },
@@ -146,6 +149,7 @@ export const descriptor = {
       '.codex/config.toml',
       '.codex/agents',
       '.codex/rules',
+      CODEX_HOOKS_FILE,
       '.agents/skills',
     ],
     layout: globalLayout,
@@ -161,6 +165,7 @@ export const descriptor = {
     '.codex/config.toml',
     '.codex/agents',
     '.codex/rules',
+    CODEX_HOOKS_FILE,
   ],
   nativeInstall: {
     pickPaths: [

@@ -177,7 +177,7 @@ async function runFlatFile(
   return [];
 }
 
-function parseMcpJson(content: string): Record<string, McpServer> {
+function parseMcpJson(content: string, serversKey = 'mcpServers'): Record<string, McpServer> {
   let parsed: unknown;
   try {
     parsed = JSON.parse(content);
@@ -185,7 +185,7 @@ function parseMcpJson(content: string): Record<string, McpServer> {
     return {};
   }
   if (!parsed || typeof parsed !== 'object') return {};
-  const raw = (parsed as Record<string, unknown>).mcpServers;
+  const raw = (parsed as Record<string, unknown>)[serversKey];
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
   const out: Record<string, McpServer> = {};
   for (const [name, value] of Object.entries(raw)) {
@@ -229,7 +229,7 @@ async function runMcpJson(
     const srcPath = join(projectRoot, rel);
     const content = await readFileSafe(srcPath);
     if (content === null) continue;
-    const imported = parseMcpJson(content);
+    const imported = parseMcpJson(content, spec.mcpServersKey);
     if (Object.keys(imported).length === 0) return [];
     await writeMcpWithMerge(projectRoot, canonicalPath, imported);
     return [{ fromTool, fromPath: srcPath, toPath: canonicalPath, feature: spec.feature }];

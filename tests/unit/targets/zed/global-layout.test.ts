@@ -50,8 +50,16 @@ describe('zed global layout', () => {
     expect(descriptor.supportsConversion).toBeUndefined();
   });
 
-  it('does not declare sharedArtifacts', () => {
-    expect(descriptor.sharedArtifacts).toBeUndefined();
+  it('declares sharedArtifacts as consumer for .agents/skills/', () => {
+    expect(descriptor.sharedArtifacts).toEqual({ '.agents/skills/': 'consumer' });
+  });
+
+  it('project capabilities have native skills', () => {
+    expect(descriptor.capabilities.skills).toBe('native');
+  });
+
+  it('global capabilities keep skills as none', () => {
+    expect(descriptor.globalSupport!.capabilities.skills).toBe('none');
   });
 });
 

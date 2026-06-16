@@ -8,6 +8,7 @@ import {
   generateMcp,
   generateIgnore,
   generateSkills,
+  generatePermissions,
 } from '../../../../src/targets/junie/generator.js';
 import {
   JUNIE_DOT_AGENTS,
@@ -17,6 +18,7 @@ import {
   JUNIE_IGNORE,
   JUNIE_RULES_DIR,
   JUNIE_SKILLS_DIR,
+  JUNIE_GLOBAL_ALLOWLIST,
 } from '../../../../src/targets/junie/constants.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
@@ -240,5 +242,41 @@ describe('generateSkills (junie)', () => {
     expect(parsedSkill.frontmatter.name).toBe('api-generator');
     expect(parsedSkill.frontmatter.description).toBe('API Generator');
     expect(parsedSkill.body).toContain('Use `references/route-checklist.md`.');
+  });
+});
+
+describe('generatePermissions (junie)', () => {
+  it('returns empty for project scope', () => {
+    const canonical = makeCanonical({
+      permissions: { allow: ['*'], deny: [], ask: [] },
+    });
+    const results = generatePermissions(canonical, { capability: { level: 'none' }, scope: 'project' });
+    expect(results).toHaveLength(0);
+  });
+
+  it('returns empty for global scope with no permissions', () => {
+    const results = generatePermissions(makeCanonical({ permissions: null }), { capability: { level: 'native' }, scope: 'global' });
+    expect(results).toHaveLength(0);
+  });
+
+  it('returns empty when all arrays are empty', () => {
+    const results = generatePermissions(
+      makeCanonical({ permissions: { allow: [], deny: [], ask: [] } }),
+      { capability: { level: 'native' }, scope: 'global' },
+    );
+    expect(results).toHaveLength(0);
+  });
+
+  it('generates allowlist.json for global scope', () => {
+    const canonical = makeCanonical({
+      permissions: { allow: ['Bash', 'Read'], deny: ['Write'], ask: ['MCP'] },
+    });
+    const results = generatePermissions(canonical, { capability: { level: 'native' }, scope: 'global' });
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(JUNIE_GLOBAL_ALLOWLIST);
+    const parsed = JSON.parse(results[0].content) as { allow: string[]; deny: string[]; ask: string[] };
+    expect(parsed.allow).toEqual(['Bash', 'Read']);
+    expect(parsed.deny).toEqual(['Write']);
+    expect(parsed.ask).toEqual(['MCP']);
   });
 });

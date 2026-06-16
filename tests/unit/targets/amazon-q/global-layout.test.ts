@@ -25,11 +25,14 @@ describe('amazon-q descriptor', () => {
 
   it('declares none for unsupported features', () => {
     expect(descriptor.capabilities.commands).toBe('none');
-    expect(descriptor.capabilities.agents).toBe('none');
     expect(descriptor.capabilities.skills).toBe('none');
-    expect(descriptor.capabilities.hooks).toBe('none');
     expect(descriptor.capabilities.ignore).toBe('none');
+    expect(descriptor.capabilities.hooks).toBe('none');
     expect(descriptor.capabilities.permissions).toBe('none');
+  });
+
+  it('declares native agents capability', () => {
+    expect(descriptor.capabilities.agents).toBe('native');
   });
 
   it('has correct project detection paths', () => {

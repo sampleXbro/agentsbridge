@@ -7,12 +7,14 @@ import {
   generateCommands,
   generateAgents,
   generateMcp,
+  generateHooks,
 } from '../../../../src/targets/factory-droid/generator.js';
 import {
   FACTORY_DROID_ROOT_FILE,
   FACTORY_DROID_SKILLS_DIR,
   FACTORY_DROID_DROIDS_DIR,
   FACTORY_DROID_MCP_FILE,
+  FACTORY_DROID_HOOKS_FILE,
 } from '../../../../src/targets/factory-droid/constants.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
@@ -261,6 +263,40 @@ describe('generateAgents (factory-droid)', () => {
     const canonical = makeCanonical({ agents: [] });
     const results = generateAgents(canonical);
     expect(results).toHaveLength(0);
+  });
+});
+
+describe('generateHooks (factory-droid)', () => {
+  it('returns [] when hooks is null', () => {
+    expect(generateHooks(makeCanonical())).toHaveLength(0);
+  });
+
+  it('returns [] when hooks object is empty', () => {
+    expect(generateHooks(makeCanonical({ hooks: {} }))).toHaveLength(0);
+  });
+
+  it('emits .factory/hooks.json with Claude Code format', () => {
+    const results = generateHooks(
+      makeCanonical({
+        hooks: {
+          PreToolUse: [
+            {
+              matcher: '*',
+              command: 'echo pre',
+              type: 'command',
+            },
+          ],
+        },
+      }),
+    );
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(FACTORY_DROID_HOOKS_FILE);
+    const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
+    expect(parsed.PreToolUse).toBeDefined();
+  });
+
+  it('returns [] when hooks entries are all empty arrays', () => {
+    expect(generateHooks(makeCanonical({ hooks: { PreToolUse: [] } }))).toHaveLength(0);
   });
 });
 

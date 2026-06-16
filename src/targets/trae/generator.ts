@@ -1,10 +1,12 @@
 import { basename } from 'node:path';
 import type { CanonicalFiles } from '../../core/types.js';
 import { generateEmbeddedSkills } from '../import/embedded-skill.js';
+import { serializeFrontmatter } from '../../utils/text/markdown.js';
 import {
   TRAE_TARGET,
   TRAE_PROJECT_RULES,
   TRAE_RULES_DIR,
+  TRAE_COMMANDS_DIR,
   TRAE_SKILLS_DIR,
   TRAE_MCP_FILE,
   TRAE_IGNORE,
@@ -34,6 +36,17 @@ export function generateRules(canonical: CanonicalFiles): TraeOutput[] {
   }
 
   return outputs;
+}
+
+export function generateCommands(canonical: CanonicalFiles): TraeOutput[] {
+  return canonical.commands.map((command) => {
+    const frontmatter: Record<string, unknown> = {};
+    if (command.description) frontmatter.description = command.description;
+    return {
+      path: `${TRAE_COMMANDS_DIR}/${command.name}.md`,
+      content: serializeFrontmatter(frontmatter, command.body.trim() || ''),
+    };
+  });
 }
 
 export function generateSkills(canonical: CanonicalFiles): TraeOutput[] {

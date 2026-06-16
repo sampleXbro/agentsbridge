@@ -32,7 +32,11 @@ export const TRAE_GLOBAL_MCP_FILE = '.trae/mcp.json';
 // Compatibility mirror path for skills
 export const TRAE_GLOBAL_AGENTS_SKILLS_DIR = '.agents/skills';
 
+export const TRAE_COMMANDS_DIR = `${TRAE_DIR}/commands`;
+export const TRAE_GLOBAL_COMMANDS_DIR = '.trae/commands'; // same path, relative to home in global mode
+
 // Canonical paths (reference only)
 export const TRAE_CANONICAL_RULES_DIR = '.agentsmesh/rules';
+export const TRAE_CANONICAL_COMMANDS_DIR = '.agentsmesh/commands';
 export const TRAE_CANONICAL_MCP = '.agentsmesh/mcp.json';
 export const TRAE_CANONICAL_IGNORE = '.agentsmesh/ignore';

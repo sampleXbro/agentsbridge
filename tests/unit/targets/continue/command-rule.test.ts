@@ -23,7 +23,7 @@ describe('continue command rules', () => {
     expect(continueCommandRulePath('review')).toBe('.continue/prompts/review.md');
   });
 
-  it('serializes command prompts with round-trip metadata but without invokable flag', () => {
+  it('serializes invokable command prompts with round-trip metadata', () => {
     const output = serializeCommandRule(
       makeCommand({
         description: 'Review the diff',
@@ -31,7 +31,7 @@ describe('continue command rules', () => {
       }),
     );
 
-    expect(output).not.toContain('invokable:');
+    expect(output).toContain('invokable: true');
     expect(output).toContain('x-agentsmesh-kind: command');
     expect(output).toContain('x-agentsmesh-name: review');
     expect(output).toContain('x-agentsmesh-allowed-tools:');

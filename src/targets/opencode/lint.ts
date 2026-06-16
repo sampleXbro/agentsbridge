@@ -4,7 +4,7 @@
  * OpenCode hooks are plugin-based (TypeScript/JavaScript lifecycle events),
  * not config-based. agentsmesh cannot generate plugin code from canonical hooks.
  *
- * Permissions and ignore live in `opencode.json` but are not generated in v1.
+ * Ignore lives in `opencode.json` but is not generated from the canonical ignore file.
  */
 
 import type { CanonicalFiles, LintDiagnostic } from '../../core/types.js';
@@ -21,20 +21,6 @@ export function lintHooks(canonical: CanonicalFiles): LintDiagnostic[] {
       '.agentsmesh/hooks.yaml',
       'opencode',
       'opencode hooks are plugin-based (TypeScript/JavaScript); canonical config hooks are not projected.',
-    ),
-  ];
-}
-
-export function lintPermissions(canonical: CanonicalFiles): LintDiagnostic[] {
-  if (!canonical.permissions) return [];
-  const { allow, deny } = canonical.permissions;
-  const ask = canonical.permissions.ask ?? [];
-  if (allow.length === 0 && deny.length === 0 && ask.length === 0) return [];
-  return [
-    createWarning(
-      '.agentsmesh/permissions.yaml',
-      'opencode',
-      'opencode permissions live in opencode.json, which agentsmesh does not generate in v1; canonical permissions are not projected.',
     ),
   ];
 }

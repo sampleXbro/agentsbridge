@@ -7,6 +7,7 @@ import {
   generateSkills,
   generateMcp,
   generateIgnore,
+  generatePermissions,
   renderJunieGlobalInstructions,
 } from './generator.js';
 import {
@@ -22,6 +23,7 @@ import {
   JUNIE_GLOBAL_COMMANDS_DIR,
   JUNIE_GLOBAL_MCP_FILE,
   JUNIE_GLOBAL_AGENTS_SKILLS_DIR,
+  JUNIE_GLOBAL_ALLOWLIST,
   JUNIE_SKILLS_DIR,
   JUNIE_CANONICAL_RULES_DIR,
   JUNIE_CANONICAL_COMMANDS_DIR,
@@ -44,6 +46,7 @@ export const target: TargetGenerators = {
   generateSkills,
   generateMcp,
   generateIgnore,
+  generatePermissions,
   importFrom: importFromJunie,
 };
 
@@ -78,7 +81,7 @@ const globalLayout: TargetLayout = {
       JUNIE_GLOBAL_COMMANDS_DIR,
       JUNIE_GLOBAL_AGENTS_SKILLS_DIR,
     ],
-    files: [JUNIE_GLOBAL_AGENTS_MD, JUNIE_GLOBAL_MCP_FILE],
+    files: [JUNIE_GLOBAL_AGENTS_MD, JUNIE_GLOBAL_MCP_FILE, JUNIE_GLOBAL_ALLOWLIST],
   },
   rewriteGeneratedPath(path) {
     // Transform project-level paths to global ~/.junie/ paths
@@ -131,7 +134,7 @@ const globalCapabilities: TargetCapabilities = {
   mcp: 'native',
   hooks: 'none',
   ignore: 'none',
-  permissions: 'none',
+  permissions: 'native',
 };
 
 export const descriptor = {

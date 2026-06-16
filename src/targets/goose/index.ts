@@ -21,9 +21,11 @@ import {
   generateAgents,
   generateSkills,
   generateIgnore,
+  generateMcp,
 } from './generator.js';
 import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromGoose } from './importer.js';
+import { gooseImporter } from './importer-spec.js';
 import { lintRules } from './linter.js';
 import { lintHooks, lintPermissions, lintMcp } from './lint.js';
 import { buildGooseImportPaths } from '../../core/reference/import-map-builders.js';
@@ -34,9 +36,8 @@ import {
   GOOSE_IGNORE,
   GOOSE_GLOBAL_ROOT_FILE,
   GOOSE_GLOBAL_IGNORE,
+  GOOSE_GLOBAL_CONFIG,
   GOOSE_GLOBAL_SKILLS_DIR,
-  GOOSE_CANONICAL_RULES_DIR,
-  GOOSE_CANONICAL_IGNORE,
 } from './constants.js';
 
 export const target: TargetGenerators = {
@@ -47,6 +48,7 @@ export const target: TargetGenerators = {
   generateAgents,
   generateSkills,
   generateIgnore,
+  generateMcp,
   importFrom: importFromGoose,
 };
 
@@ -75,7 +77,7 @@ const globalLayout: TargetLayout = {
   skillDir: GOOSE_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [GOOSE_GLOBAL_SKILLS_DIR],
-    files: [GOOSE_GLOBAL_ROOT_FILE, GOOSE_GLOBAL_IGNORE],
+    files: [GOOSE_GLOBAL_ROOT_FILE, GOOSE_GLOBAL_IGNORE, GOOSE_GLOBAL_CONFIG],
   },
   rewriteGeneratedPath(path) {
     if (path === GOOSE_ROOT_FILE) return GOOSE_GLOBAL_ROOT_FILE;
@@ -113,6 +115,18 @@ const capabilities: TargetCapabilities = {
   permissions: 'none',
 };
 
+const globalCapabilities: TargetCapabilities = {
+  rules: 'native',
+  additionalRules: 'embedded',
+  commands: 'none',
+  agents: 'none',
+  skills: 'native',
+  mcp: 'native',
+  hooks: 'none',
+  ignore: 'native',
+  permissions: 'none',
+};
+
 export const descriptor = {
   id: GOOSE_TARGET,
   metadata: {
@@ -133,33 +147,16 @@ export const descriptor = {
   supportsConversion: { commands: true, agents: true },
   project,
   globalSupport: {
-    capabilities,
-    detectionPaths: [GOOSE_GLOBAL_ROOT_FILE, GOOSE_GLOBAL_IGNORE, GOOSE_GLOBAL_SKILLS_DIR],
+    capabilities: globalCapabilities,
+    detectionPaths: [
+      GOOSE_GLOBAL_ROOT_FILE,
+      GOOSE_GLOBAL_IGNORE,
+      GOOSE_GLOBAL_SKILLS_DIR,
+      GOOSE_GLOBAL_CONFIG,
+    ],
     layout: globalLayout,
   },
-  importer: {
-    rules: {
-      feature: 'rules',
-      mode: 'singleFile',
-      source: {
-        project: [GOOSE_ROOT_FILE],
-        global: [GOOSE_GLOBAL_ROOT_FILE],
-      },
-      canonicalDir: GOOSE_CANONICAL_RULES_DIR,
-      canonicalRootFilename: '_root.md',
-      markAsRoot: true,
-    },
-    ignore: {
-      feature: 'ignore',
-      mode: 'flatFile',
-      source: {
-        project: [GOOSE_IGNORE],
-        global: [GOOSE_GLOBAL_IGNORE],
-      },
-      canonicalDir: '.agentsmesh',
-      canonicalFilename: GOOSE_CANONICAL_IGNORE,
-    },
-  },
+  importer: gooseImporter,
   sharedArtifacts: {
     '.agents/skills/': 'consumer',
   },

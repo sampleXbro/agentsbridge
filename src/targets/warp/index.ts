@@ -23,6 +23,7 @@ import {
   generateAgents,
   generateSkills,
   generateMcp,
+  generatePermissions,
 } from './generator.js';
 import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromWarp } from './importer.js';
@@ -47,6 +48,7 @@ export const target: TargetGenerators = {
   generateAgents,
   generateSkills,
   generateMcp,
+  generatePermissions,
   importFrom: importFromWarp,
 };
 
@@ -111,7 +113,7 @@ const capabilities: TargetCapabilities = {
   mcp: 'native',
   hooks: 'none',
   ignore: 'none',
-  permissions: 'none',
+  permissions: 'partial',
 };
 
 const globalCapabilities: TargetCapabilities = {
@@ -123,7 +125,7 @@ const globalCapabilities: TargetCapabilities = {
   mcp: 'none',
   hooks: 'none',
   ignore: 'none',
-  permissions: 'none',
+  permissions: 'partial',
 };
 
 export const descriptor = {

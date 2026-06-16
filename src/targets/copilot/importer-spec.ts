@@ -1,0 +1,88 @@
+/**
+ * Copilot importer descriptor — declarative scan+map rules dispatched by the
+ * shared `runDescriptorImport` orchestrator.
+ *
+ * MCP round-trips through `.vscode/mcp.json`. Copilot writes the server map under
+ * the VS Code `servers` key (not `mcpServers`), so the spec sets `mcpServersKey`.
+ */
+
+import type { TargetImporterDescriptor } from '../catalog/import-descriptor.js';
+import {
+  COPILOT_INSTRUCTIONS,
+  COPILOT_INSTRUCTIONS_DIR,
+  COPILOT_CONTEXT_DIR,
+  COPILOT_PROMPTS_DIR,
+  COPILOT_AGENTS_DIR,
+  COPILOT_MCP_JSON,
+  COPILOT_GLOBAL_INSTRUCTIONS,
+  COPILOT_GLOBAL_PROMPTS_DIR,
+  COPILOT_GLOBAL_AGENTS_DIR,
+  COPILOT_CANONICAL_AGENTS_DIR,
+  COPILOT_CANONICAL_COMMANDS_DIR,
+  COPILOT_CANONICAL_RULES_DIR,
+  COPILOT_CANONICAL_MCP,
+} from './constants.js';
+import {
+  copilotAgentMapper,
+  copilotCommandMapper,
+  copilotLegacyRuleMapper,
+  copilotNewRuleMapper,
+} from './import-mappers.js';
+
+export const copilotImporterSpec: TargetImporterDescriptor = {
+  rules: [
+    {
+      // Root: scope-aware singleFile.
+      feature: 'rules',
+      mode: 'singleFile',
+      source: { project: [COPILOT_INSTRUCTIONS], global: [COPILOT_GLOBAL_INSTRUCTIONS] },
+      canonicalDir: COPILOT_CANONICAL_RULES_DIR,
+      canonicalRootFilename: '_root.md',
+      markAsRoot: true,
+    },
+    {
+      // Legacy `.github/copilot/*.instructions.md` — project only.
+      feature: 'rules',
+      mode: 'directory',
+      source: { project: [COPILOT_CONTEXT_DIR] },
+      canonicalDir: COPILOT_CANONICAL_RULES_DIR,
+      extensions: ['.instructions.md'],
+      map: copilotLegacyRuleMapper,
+    },
+    {
+      // New `.github/instructions/*.{instructions.md,md}` — project only,
+      // uses `applyTo` instead of `globs`.
+      feature: 'rules',
+      mode: 'directory',
+      source: { project: [COPILOT_INSTRUCTIONS_DIR] },
+      canonicalDir: COPILOT_CANONICAL_RULES_DIR,
+      extensions: ['.instructions.md', '.md'],
+      map: copilotNewRuleMapper,
+    },
+  ],
+  commands: {
+    feature: 'commands',
+    mode: 'directory',
+    source: { project: [COPILOT_PROMPTS_DIR], global: [COPILOT_GLOBAL_PROMPTS_DIR] },
+    canonicalDir: COPILOT_CANONICAL_COMMANDS_DIR,
+    extensions: ['.prompt.md'],
+    map: copilotCommandMapper,
+  },
+  agents: {
+    feature: 'agents',
+    mode: 'directory',
+    source: { project: [COPILOT_AGENTS_DIR], global: [COPILOT_GLOBAL_AGENTS_DIR] },
+    canonicalDir: COPILOT_CANONICAL_AGENTS_DIR,
+    extensions: ['.agent.md'],
+    map: copilotAgentMapper,
+  },
+  mcp: {
+    // `.vscode/mcp.json` uses the VS Code `servers` key (project scope only).
+    feature: 'mcp',
+    mode: 'mcpJson',
+    source: { project: [COPILOT_MCP_JSON] },
+    canonicalDir: '.agentsmesh',
+    canonicalFilename: COPILOT_CANONICAL_MCP,
+    mcpServersKey: 'servers',
+  },
+};

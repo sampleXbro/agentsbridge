@@ -23,6 +23,7 @@ export const GOOSE_IGNORE = '.gooseignore';
 export const GOOSE_GLOBAL_DIR = '.config/goose';
 export const GOOSE_GLOBAL_ROOT_FILE = `${GOOSE_GLOBAL_DIR}/.goosehints`;
 export const GOOSE_GLOBAL_IGNORE = `${GOOSE_GLOBAL_DIR}/.gooseignore`;
+export const GOOSE_GLOBAL_CONFIG = `${GOOSE_GLOBAL_DIR}/config.yaml`;
 export const GOOSE_GLOBAL_SKILLS_DIR = '.agents/skills';
 
 // Canonical paths

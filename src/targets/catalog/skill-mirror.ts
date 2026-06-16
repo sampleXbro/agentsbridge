@@ -27,6 +27,7 @@ const NATIVE_AGENTS_SKILL_WRITERS: readonly string[] = [
   'codex-cli',
   'goose',
   'replit-agent',
+  'zed',
 ];
 
 /**

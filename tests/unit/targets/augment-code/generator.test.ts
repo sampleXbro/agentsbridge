@@ -5,12 +5,14 @@ import {
   generateCommands,
   generateSkills,
   generateIgnore,
+  generateAgents,
 } from '../../../../src/targets/augment-code/generator.js';
 import {
   AUGMENT_CODE_RULES_DIR,
   AUGMENT_CODE_COMMANDS_DIR,
   AUGMENT_CODE_SKILLS_DIR,
   AUGMENT_CODE_IGNORE_FILE,
+  AUGMENT_CODE_AGENTS_DIR,
 } from '../../../../src/targets/augment-code/constants.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
@@ -233,6 +235,67 @@ describe('generateSkills (augment-code)', () => {
     );
     expect(results[0].content).toContain('name: api-generator');
     expect(results[0].content).toContain('Generate API endpoints');
+  });
+});
+
+describe('generateAgents (augment-code)', () => {
+  it('returns empty when no agents', () => {
+    expect(generateAgents(makeCanonical())).toHaveLength(0);
+  });
+
+  it('generates .augment/agents/*.md with name + description frontmatter', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          source: '/proj/.agentsmesh/agents/reviewer.md',
+          name: 'reviewer',
+          description: 'Reviews code',
+          tools: [],
+          disallowedTools: [],
+          model: '',
+          permissionMode: 'default',
+          maxTurns: 0,
+          mcpServers: [],
+          hooks: {},
+          skills: [],
+          memory: '',
+          body: 'You review code.',
+        },
+      ],
+    });
+    const results = generateAgents(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(`${AUGMENT_CODE_AGENTS_DIR}/reviewer.md`);
+    expect(results[0].content).toContain('name: reviewer');
+    expect(results[0].content).toContain('description: Reviews code');
+    expect(results[0].content).toContain('You review code.');
+  });
+
+  it('omits description when empty', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          source: '/proj/.agentsmesh/agents/minimal.md',
+          name: 'minimal',
+          description: '',
+          tools: [],
+          disallowedTools: [],
+          model: '',
+          permissionMode: 'default',
+          maxTurns: 0,
+          mcpServers: [],
+          hooks: {},
+          skills: [],
+          memory: '',
+          body: 'Minimal agent body.',
+        },
+      ],
+    });
+    const results = generateAgents(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0].content).toContain('name: minimal');
+    expect(results[0].content).not.toContain('description:');
+    expect(results[0].content).toContain('Minimal agent body.');
   });
 });
 

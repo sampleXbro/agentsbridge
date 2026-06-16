@@ -28,6 +28,7 @@ import { importMcp } from './mcp-helpers.js';
 import { importSkills } from './skills-adapter.js';
 import { importCodexAgentsFromToml } from './importer-agents.js';
 import { importCodexRules } from './importer-rules.js';
+import { importCodexHooks } from './importer-hooks.js';
 
 /**
  * Import Codex config into canonical .agentsmesh/.
@@ -53,6 +54,7 @@ export async function importFromCodex(
   await importSkills(projectRoot, results, normalize);
   await importCodexAgentsFromToml(projectRoot, results, normalize);
   await importMcp(projectRoot, results);
+  await importCodexHooks(projectRoot, results);
 
   return results;
 }

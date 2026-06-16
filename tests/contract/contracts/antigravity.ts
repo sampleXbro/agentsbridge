@@ -2,6 +2,7 @@ import type { TargetPathContract } from './types.js';
 
 export const antigravityContract: TargetPathContract = {
   generated: [
+    '.agents/hooks.json',
     '.agents/rules/general.md',
     '.agents/rules/typescript.md',
     '.agents/skills/am-agent-code-reviewer/SKILL.md',

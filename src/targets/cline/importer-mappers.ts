@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
 import {
+  serializeImportedAgentWithFallback,
   serializeImportedCommandWithFallback,
   serializeImportedRuleWithFallback,
 } from '../import/import-metadata.js';
@@ -84,5 +85,35 @@ export async function mapClineWorkflowFile(
       },
       actualBody,
     ),
+  };
+}
+
+export async function mapClineAgentFile(
+  relativePath: string,
+  destDir: string,
+  normalizeTo: (destinationFile: string) => string,
+): Promise<ImportFileMapping> {
+  const destPath = join(destDir, relativePath);
+  const { frontmatter, body } = parseFrontmatter(normalizeTo(destPath));
+  const canonicalFrontmatter: Record<string, unknown> = { ...frontmatter };
+  const extensions: Record<string, string> = {
+    disallowedTools: 'x-agentsmesh-disallowed-tools',
+    permissionMode: 'x-agentsmesh-permission-mode',
+    maxTurns: 'x-agentsmesh-max-turns',
+    mcpServers: 'x-agentsmesh-mcp-servers',
+    hooks: 'x-agentsmesh-hooks',
+    skills: 'x-agentsmesh-skills',
+    memory: 'x-agentsmesh-memory',
+  };
+  for (const [canonicalKey, extensionKey] of Object.entries(extensions)) {
+    if (Object.prototype.hasOwnProperty.call(frontmatter, extensionKey)) {
+      canonicalFrontmatter[canonicalKey] = frontmatter[extensionKey];
+    }
+  }
+  return {
+    destPath,
+    toPath: `.agentsmesh/agents/${relativePath}`,
+    feature: 'agents',
+    content: await serializeImportedAgentWithFallback(destPath, canonicalFrontmatter, body),
   };
 }

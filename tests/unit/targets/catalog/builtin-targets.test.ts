@@ -280,13 +280,13 @@ describe('capability resolution lockstep (gap #5 — single conversion guard)', 
 
   it('cline agents: support level and generator agree when conversion is disabled', () => {
     const config = configWithAgentsConversion('cline', false);
-    expect(getEffectiveTargetSupportLevel('cline', 'agents', config)).toBe('none');
-    expect(resolveTargetFeatureGenerator('cline', 'agents', config)).toBeUndefined();
+    expect(getEffectiveTargetSupportLevel('cline', 'agents', config)).toBe('native');
+    expect(resolveTargetFeatureGenerator('cline', 'agents', config)).toBeDefined();
   });
 
   it('cline agents: support level and generator agree when conversion is enabled', () => {
     const config = configWithAgentsConversion('cline', true);
-    expect(getEffectiveTargetSupportLevel('cline', 'agents', config)).toBe('embedded');
+    expect(getEffectiveTargetSupportLevel('cline', 'agents', config)).toBe('native');
     expect(resolveTargetFeatureGenerator('cline', 'agents', config)).toBeDefined();
   });
 

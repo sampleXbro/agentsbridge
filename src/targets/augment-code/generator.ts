@@ -14,13 +14,14 @@
  */
 
 import { basename } from 'node:path';
-import type { CanonicalFiles, CanonicalCommand, CanonicalRule } from '../../core/types.js';
+import type { CanonicalFiles, CanonicalCommand, CanonicalRule, CanonicalAgent } from '../../core/types.js';
 import { generateEmbeddedSkills } from '../import/embedded-skill.js';
 import { serializeFrontmatter } from '../../utils/text/markdown.js';
 import {
   AUGMENT_CODE_TARGET,
   AUGMENT_CODE_RULES_DIR,
   AUGMENT_CODE_COMMANDS_DIR,
+  AUGMENT_CODE_AGENTS_DIR,
   AUGMENT_CODE_SKILLS_DIR,
   AUGMENT_CODE_IGNORE_FILE,
 } from './constants.js';
@@ -89,6 +90,19 @@ export function generateCommands(canonical: CanonicalFiles): AugmentCodeOutput[]
   return canonical.commands.map((command) => ({
     path: `${AUGMENT_CODE_COMMANDS_DIR}/${command.name}.md`,
     content: serializeFrontmatter(commandFrontmatter(command), command.body.trim()),
+  }));
+}
+
+function agentFrontmatter(agent: CanonicalAgent): Record<string, unknown> {
+  const fm: Record<string, unknown> = { name: agent.name };
+  if (agent.description) fm.description = agent.description;
+  return fm;
+}
+
+export function generateAgents(canonical: CanonicalFiles): AugmentCodeOutput[] {
+  return canonical.agents.map((agent) => ({
+    path: `${AUGMENT_CODE_AGENTS_DIR}/${agent.name}.md`,
+    content: serializeFrontmatter(agentFrontmatter(agent), agent.body.trim()),
   }));
 }
 

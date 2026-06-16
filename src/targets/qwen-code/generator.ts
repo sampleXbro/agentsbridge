@@ -7,7 +7,7 @@
  *   - `.qwen/commands/*.md`    — slash commands
  *   - `.qwen/agents/*.md`      — agent definitions
  *   - `.qwen/skills/<name>/`   — skill bundles
- *   - `.qwen/settings.json`    — MCP servers config
+ *   - `.qwen/settings.json`    — MCP servers, hooks, permissions config
  *   - `.qwenignore`            — ignore patterns
  */
 
@@ -15,6 +15,7 @@ import { basename } from 'node:path';
 import type { CanonicalFiles } from '../../core/types.js';
 import { serializeFrontmatter } from '../../utils/text/markdown.js';
 import { appendEmbeddedRulesBlock } from '../projection/managed-blocks.js';
+import { buildClaudeHooksObjectFromCanonical } from '../claude-code/hooks-format.js';
 import {
   QWEN_CODE_TARGET,
   QWEN_ROOT,
@@ -136,6 +137,32 @@ export function generateMcp(canonical: CanonicalFiles): QwenCodeOutput[] {
 export function generateIgnore(canonical: CanonicalFiles): QwenCodeOutput[] {
   if (!canonical.ignore || canonical.ignore.length === 0) return [];
   return [{ path: QWEN_IGNORE, content: canonical.ignore.join('\n') }];
+}
+
+/**
+ * Generate .qwen/settings.json with hooks from canonical hooks config.
+ * Qwen Code shares the Claude Code hooks format under the `hooks` key.
+ */
+export function generateHooks(canonical: CanonicalFiles): QwenCodeOutput[] {
+  if (!canonical.hooks || Object.keys(canonical.hooks).length === 0) return [];
+  const hooks = buildClaudeHooksObjectFromCanonical(canonical);
+  if (Object.keys(hooks).length === 0) return [];
+  return [{ path: QWEN_SETTINGS, content: JSON.stringify({ hooks }, null, 2) }];
+}
+
+/**
+ * Generate .qwen/settings.json with permissions from canonical permissions config.
+ */
+export function generatePermissions(canonical: CanonicalFiles): QwenCodeOutput[] {
+  if (!canonical.permissions) return [];
+  const { allow, deny } = canonical.permissions;
+  const ask = canonical.permissions.ask ?? [];
+  if (allow.length === 0 && deny.length === 0 && ask.length === 0) return [];
+  const permissions: Record<string, string[]> = {};
+  if (allow.length > 0) permissions.allow = allow;
+  if (deny.length > 0) permissions.deny = deny;
+  if (ask.length > 0) permissions.ask = ask;
+  return [{ path: QWEN_SETTINGS, content: JSON.stringify({ permissions }, null, 2) }];
 }
 
 /**

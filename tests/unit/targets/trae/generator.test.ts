@@ -6,6 +6,7 @@ import {
   generateSkills,
   generateMcp,
   generateIgnore,
+  generateCommands,
 } from '../../../../src/targets/trae/generator.js';
 import {
   TRAE_PROJECT_RULES,
@@ -13,6 +14,7 @@ import {
   TRAE_SKILLS_DIR,
   TRAE_MCP_FILE,
   TRAE_IGNORE,
+  TRAE_COMMANDS_DIR,
 } from '../../../../src/targets/trae/constants.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
@@ -245,5 +247,80 @@ describe('generateIgnore (trae)', () => {
 
   it('returns empty for empty ignore list', () => {
     expect(generateIgnore(makeCanonical())).toHaveLength(0);
+  });
+});
+
+describe('generateCommands (trae)', () => {
+  it('generates .trae/commands/{name}.md for each command', () => {
+    const canonical = makeCanonical({
+      commands: [
+        {
+          name: 'review',
+          description: 'Code review',
+          body: 'Review this code.',
+          source: '/proj/.agentsmesh/commands/review.md',
+        },
+      ],
+    });
+    const results = generateCommands(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(`${TRAE_COMMANDS_DIR}/review.md`);
+    expect(results[0].content).toContain('Review this code.');
+  });
+
+  it('includes description in frontmatter when present', () => {
+    const canonical = makeCanonical({
+      commands: [
+        {
+          name: 'test',
+          description: 'Run tests',
+          body: 'Run all tests.',
+          source: '/proj/.agentsmesh/commands/test.md',
+        },
+      ],
+    });
+    const results = generateCommands(canonical);
+    const { frontmatter } = parseFrontmatter(results[0].content);
+    expect(frontmatter.description).toBe('Run tests');
+  });
+
+  it('emits empty body when command body is blank', () => {
+    const canonical = makeCanonical({
+      commands: [
+        {
+          name: 'noop',
+          description: 'Does nothing',
+          body: '   \n  ',
+          source: '/proj/.agentsmesh/commands/noop.md',
+        },
+      ],
+    });
+    const results = generateCommands(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(`${TRAE_COMMANDS_DIR}/noop.md`);
+    const { frontmatter, body } = parseFrontmatter(results[0].content);
+    expect(frontmatter.description).toBe('Does nothing');
+    expect(body.trim()).toBe('');
+  });
+
+  it('omits description frontmatter when description is empty', () => {
+    const canonical = makeCanonical({
+      commands: [
+        {
+          name: 'bare',
+          description: '',
+          body: 'Run it.',
+          source: '/proj/.agentsmesh/commands/bare.md',
+        },
+      ],
+    });
+    const results = generateCommands(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0].content).not.toContain('description:');
+    expect(results[0].content).toContain('Run it.');
+  });
+
+  it('returns empty array when no commands', () => {
+    expect(generateCommands(makeCanonical())).toHaveLength(0);
   });
 });

@@ -8,6 +8,7 @@ import {
   generateIgnore,
   generateSkills,
   generateAgents,
+  generatePermissions,
 } from '../../../../src/targets/roo-code/generator.js';
 import {
   ROO_CODE_ROOT_RULE,
@@ -119,6 +120,44 @@ describe('generateRules (roo-code)', () => {
   it('returns empty array when no rules', () => {
     expect(generateRules(makeCanonical())).toEqual([]);
   });
+
+  it('emits empty content for a root rule with a blank body', () => {
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: '/proj/.agentsmesh/rules/_root.md',
+          root: true,
+          targets: [],
+          description: '',
+          globs: [],
+          body: '   \n  ',
+        },
+      ],
+    });
+    const results = generateRules(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(ROO_CODE_ROOT_RULE);
+    expect(results[0].content).toBe('');
+  });
+
+  it('emits empty content for a non-root rule with a blank body', () => {
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: '/proj/.agentsmesh/rules/empty.md',
+          root: false,
+          targets: [],
+          description: '',
+          globs: [],
+          body: '\n\n',
+        },
+      ],
+    });
+    const results = generateRules(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(`${ROO_CODE_RULES_DIR}/empty.md`);
+    expect(results[0].content).toBe('');
+  });
 });
 
 describe('generateCommands (roo-code)', () => {
@@ -171,6 +210,24 @@ describe('generateCommands (roo-code)', () => {
     const results = generateCommands(canonical);
     expect(results[0].content).not.toContain('description:');
     expect(results[0].content).toContain('Commit changes.');
+  });
+
+  it('emits empty body when command body is blank', () => {
+    const canonical = makeCanonical({
+      commands: [
+        {
+          source: '/proj/.agentsmesh/commands/noop.md',
+          name: 'noop',
+          description: 'Does nothing',
+          allowedTools: [],
+          body: '   \n  ',
+        },
+      ],
+    });
+    const results = generateCommands(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(`${ROO_CODE_COMMANDS_DIR}/noop.md`);
+    expect(results[0].content).toContain('description: Does nothing');
   });
 
   it('returns empty array when no commands', () => {
@@ -363,5 +420,18 @@ describe('generateSkills (roo-code)', () => {
         (r) => r.path === `${ROO_CODE_SKILLS_DIR}/typescript-pro/references/advanced-types.md`,
       ),
     ).toBe(true);
+  });
+});
+
+describe('generatePermissions (roo-code)', () => {
+  it('emits no files even when canonical permissions are present', () => {
+    const canonical = makeCanonical({
+      permissions: { allow: ['Bash(git diff)'], deny: ['Bash(rm -rf)'], ask: ['WebSearch'] },
+    });
+    expect(generatePermissions(canonical)).toEqual([]);
+  });
+
+  it('emits no files when permissions are null', () => {
+    expect(generatePermissions(makeCanonical())).toEqual([]);
   });
 });

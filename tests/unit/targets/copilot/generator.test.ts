@@ -5,6 +5,7 @@ import {
   generateHooks,
   generateAgents,
   generateSkills,
+  generateMcp,
 } from '../../../../src/targets/copilot/generator.js';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
 import { COPILOT_PROMPTS_DIR } from '../../../../src/targets/copilot/constants.js';
@@ -460,5 +461,52 @@ describe('generateHooks (copilot)', () => {
   it('returns empty when hooks has no entries', () => {
     const canonical = makeCanonical({ hooks: {} });
     expect(generateHooks(canonical)).toEqual([]);
+  });
+});
+
+describe('generateMcp (copilot)', () => {
+  it('returns empty when no MCP servers', () => {
+    const canonical = makeCanonical({ mcp: null });
+    const results = generateMcp(canonical);
+    expect(results).toHaveLength(0);
+  });
+
+  it('returns empty when MCP servers are empty', () => {
+    const canonical = makeCanonical({ mcp: { mcpServers: {} } });
+    const results = generateMcp(canonical);
+    expect(results).toHaveLength(0);
+  });
+
+  it('returns empty for global scope', () => {
+    const canonical = makeCanonical({
+      mcp: {
+        mcpServers: {
+          'my-server': { type: 'stdio', command: 'cmd', args: [], env: {} },
+        },
+      },
+    });
+    const results = generateMcp(canonical, { capability: { level: 'none' }, scope: 'global' });
+    expect(results).toHaveLength(0);
+  });
+
+  it('generates .vscode/mcp.json with servers key for project scope', () => {
+    const canonical = makeCanonical({
+      mcp: {
+        mcpServers: {
+          context7: { type: 'stdio', command: 'npx', args: ['-y', '@upstash/context7-mcp'], env: {} },
+        },
+      },
+    });
+    const results = generateMcp(canonical, { capability: { level: 'native' }, scope: 'project' });
+    expect(results).toHaveLength(1);
+    expect(results[0]!.path).toBe('.vscode/mcp.json');
+    const parsed = JSON.parse(results[0]!.content) as { servers: Record<string, unknown> };
+    expect(parsed).toHaveProperty('servers');
+    expect(parsed.servers).toHaveProperty('context7');
+    expect(parsed).not.toHaveProperty('mcpServers');
+    const server = parsed.servers['context7'] as { command: string; args: string[]; type: string };
+    expect(server.command).toBe('npx');
+    expect(server.args).toEqual(['-y', '@upstash/context7-mcp']);
+    expect(server.type).toBe('stdio');
   });
 });

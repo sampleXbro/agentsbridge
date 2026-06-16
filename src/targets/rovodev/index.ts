@@ -2,18 +2,20 @@
  * Rovo Dev target descriptor.
  *
  * Generation emits:
- *   - `AGENTS.md`          — root rule + embedded additional rules
- *   - `.rovodev/skills/`   — skill bundles (+ projected commands/agents)
- *   - `.rovodev/mcp.json`  — MCP servers
+ *   - `AGENTS.md`              — root rule + embedded additional rules
+ *   - `.rovodev/skills/`       — skill bundles (+ projected commands/agents)
+ *   - `.rovodev/mcp.json`      — MCP servers
+ *   - `.rovodev/config.yml`    — hooks + permissions (global only)
  *
  * Import reads `AGENTS.md`, `.rovodev/skills/`, and `.rovodev/mcp.json`.
  *
  * Global mode reads/writes `~/.rovodev/AGENTS.md`, `~/.rovodev/skills/`,
- * and `~/.rovodev/mcp.json`.
+ * `~/.rovodev/mcp.json`, and `~/.rovodev/config.yml`.
  */
 
 import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
 import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
+import type { CanonicalFiles } from '../../core/types.js';
 import { commandSkillDirName } from '../codex-cli/command-skill.js';
 import { projectedAgentSkillDirName } from '../projection/projected-agent-skill.js';
 import {
@@ -26,7 +28,8 @@ import {
 import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromRovodev } from './importer.js';
 import { lintRules } from './linter.js';
-import { lintHooks, lintPermissions, lintIgnore } from './lint.js';
+import { lintIgnore } from './lint.js';
+import { buildRovodevConfig, mergeRovodevConfig } from './settings.js';
 import { buildRovodevImportPaths } from '../../core/reference/import-map-builders.js';
 import {
   ROVODEV_TARGET,
@@ -37,6 +40,7 @@ import {
   ROVODEV_GLOBAL_ROOT_FILE,
   ROVODEV_GLOBAL_SKILLS_DIR,
   ROVODEV_GLOBAL_MCP_FILE,
+  ROVODEV_GLOBAL_CONFIG_FILE,
   ROVODEV_CANONICAL_RULES_DIR,
 } from './constants.js';
 
@@ -76,7 +80,7 @@ const globalLayout: TargetLayout = {
   skillDir: ROVODEV_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [ROVODEV_GLOBAL_SKILLS_DIR],
-    files: [ROVODEV_GLOBAL_ROOT_FILE, ROVODEV_GLOBAL_MCP_FILE],
+    files: [ROVODEV_GLOBAL_ROOT_FILE, ROVODEV_GLOBAL_MCP_FILE, ROVODEV_GLOBAL_CONFIG_FILE],
   },
   rewriteGeneratedPath(path) {
     if (path === ROVODEV_ROOT_FILE) return ROVODEV_GLOBAL_ROOT_FILE;
@@ -121,9 +125,9 @@ const globalCapabilities: TargetCapabilities = {
   agents: 'none',
   skills: 'native',
   mcp: 'native',
-  hooks: 'none',
+  hooks: 'native',
   ignore: 'none',
-  permissions: 'none',
+  permissions: 'native',
 };
 
 export const descriptor = {
@@ -140,8 +144,6 @@ export const descriptor = {
     'No Rovo Dev config found (AGENTS.md, .rovodev/skills, or .rovodev/mcp.json).',
   lintRules,
   lint: {
-    hooks: lintHooks,
-    permissions: lintPermissions,
     ignore: lintIgnore,
   },
   supportsConversion: { commands: true, agents: true },
@@ -150,6 +152,18 @@ export const descriptor = {
     capabilities: globalCapabilities,
     detectionPaths: [ROVODEV_GLOBAL_DIR, ROVODEV_GLOBAL_ROOT_FILE, ROVODEV_GLOBAL_SKILLS_DIR],
     layout: globalLayout,
+  },
+  emitScopedSettings(
+    canonical: CanonicalFiles,
+    scope,
+    enabledFeatures,
+  ): readonly { readonly path: string; readonly content: string }[] {
+    if (scope !== 'global') return [];
+    return buildRovodevConfig(canonical, enabledFeatures);
+  },
+  mergeGeneratedOutputContent(existing, _pending, newContent, resolvedPath) {
+    if (resolvedPath !== ROVODEV_GLOBAL_CONFIG_FILE) return null;
+    return mergeRovodevConfig(existing, newContent);
   },
   importer: {
     rules: {

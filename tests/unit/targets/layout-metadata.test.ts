@@ -27,7 +27,7 @@ describe('target layout metadata', () => {
   it('returns managed outputs from descriptor metadata', () => {
     expect(getTargetManagedOutputs('codex-cli')).toEqual({
       dirs: ['.agents/skills', '.codex/agents', '.codex/instructions'],
-      files: ['AGENTS.md', '.codex/config.toml'],
+      files: ['AGENTS.md', '.codex/config.toml', '.codex/hooks.json'],
     });
   });
 
@@ -100,13 +100,19 @@ describe('target layout metadata', () => {
         skillDir: '.gemini/antigravity/skills',
         managedOutputs: {
           dirs: ['.gemini/antigravity/skills', '.gemini/antigravity/workflows'],
-          files: ['.gemini/antigravity/GEMINI.md', '.gemini/antigravity/mcp_config.json'],
+          files: [
+            '.gemini/antigravity/GEMINI.md',
+            '.gemini/antigravity/mcp_config.json',
+            '.gemini/config/hooks.json',
+          ],
         },
         paths: expect.objectContaining({
           rulePath: expect.any(Function),
           commandPath: expect.any(Function),
           agentPath: expect.any(Function),
         }),
+        renderPrimaryRootInstruction: expect.any(Function),
+        rewriteGeneratedPath: expect.any(Function),
       }),
     );
     const mockConfig = {} as import('../../../src/config/core/schema.js').ValidatedConfig;
@@ -168,7 +174,7 @@ describe('target layout metadata', () => {
         skillDir: '.agents/skills',
         managedOutputs: {
           dirs: ['.agents/skills', '.codex/agents', '.codex/rules'],
-          files: ['.codex/AGENTS.md', '.codex/config.toml'],
+          files: ['.codex/AGENTS.md', '.codex/config.toml', '.codex/hooks.json'],
         },
         paths: expect.objectContaining({
           rulePath: expect.any(Function),
@@ -190,6 +196,7 @@ describe('target layout metadata', () => {
             'Documents/Cline/Workflows',
             'Documents/Cline/Hooks',
             '.cline/skills',
+            '.cline/agents',
             '.agents/skills',
           ],
           files: ['.cline/cline_mcp_settings.json', '.clineignore'],
@@ -224,6 +231,7 @@ describe('target layout metadata', () => {
       'Documents/Cline/Workflows',
       'Documents/Cline/Hooks',
       '.cline/skills',
+      '.cline/agents',
       '.cline/cline_mcp_settings.json',
       '.clineignore',
     ]);

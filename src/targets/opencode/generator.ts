@@ -117,6 +117,16 @@ export function generateMcp(canonical: CanonicalFiles): OpenCodeOutput[] {
   ];
 }
 
+export function generatePermissions(canonical: CanonicalFiles): OpenCodeOutput[] {
+  if (!canonical.permissions) return [];
+  const permission: Record<string, 'allow' | 'ask' | 'deny'> = {};
+  for (const name of canonical.permissions.allow) permission[name] = 'allow';
+  for (const name of canonical.permissions.ask ?? []) permission[name] = 'ask';
+  for (const name of canonical.permissions.deny) permission[name] = 'deny';
+  if (Object.keys(permission).length === 0) return [];
+  return [{ path: OPENCODE_CONFIG_FILE, content: JSON.stringify({ permission }, null, 2) }];
+}
+
 export function generateSkills(canonical: CanonicalFiles): OpenCodeOutput[] {
   return generateEmbeddedSkills(canonical, OPENCODE_SKILLS_DIR);
 }

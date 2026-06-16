@@ -126,7 +126,7 @@ const globalLayout: TargetLayout = {
 const globalCapabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'native',
-  commands: 'none',
+  commands: 'embedded',
   agents: 'native',
   skills: 'native',
   mcp: 'native',
@@ -147,7 +147,7 @@ export const descriptor = {
   capabilities: {
     rules: 'native',
     additionalRules: 'native',
-    commands: 'none',
+    commands: 'embedded',
     agents: 'native',
     skills: 'native',
     mcp: 'native',

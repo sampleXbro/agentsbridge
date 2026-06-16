@@ -29,6 +29,7 @@ export function continueCommandRulePath(name: string): string {
 export function serializeCommandRule(command: CanonicalCommand): string {
   const frontmatter: Record<string, unknown> = {
     description: command.description || undefined,
+    invokable: true,
     'x-agentsmesh-kind': 'command',
     'x-agentsmesh-name': command.name,
     'x-agentsmesh-allowed-tools':

@@ -1070,8 +1070,7 @@
         "fixture-and-assertion-discipline"
       ],
       "triggers": [
-        "t-glob-71d466f5",
-        "t-kw-c5bd6c0b"
+        "t-glob-71d466f5"
       ]
     },
     "fixture-and-assertion-discipline-when-asserting-line-exact-cli": {
@@ -4761,7 +4760,7 @@
         "target-capability-expansion"
       ],
       "triggers": [
-        "t-glob-783cbbfe"
+        "t-glob-b180e7b2"
       ]
     },
     "target-capability-expansion-conversion-disable-flags-must-suppress": {
@@ -5282,6 +5281,35 @@
       "triggers": [
         "t-glob-5e0d226f",
         "t-cmd-8c4a10c7"
+      ]
+    },
+    "verification-workflow-tests-e2e-agents-last-run": {
+      "createdAt": "2026-06-18",
+      "evidence": [],
+      "rule": "tests/e2e/agents-last-run.md is a git-TRACKED report that the agents e2e suite rewrites with a fresh _Generated: <timestamp>_ on every run, so it shows as modified after any full or e2e test run. Revert it (git checkout --) before staging a release commit so the timestamp churn never lands; better, it should be gitignored or written to a temp path.",
+      "status": "superseded",
+      "supersededBy": "verification-workflow-tests-e2e-agents-last-run-2",
+      "topics": [
+        "verification-workflow"
+      ],
+      "triggers": [
+        "t-glob-6200f5c1"
+      ]
+    },
+    "verification-workflow-tests-e2e-agents-last-run-2": {
+      "createdAt": "2026-06-18",
+      "evidence": [
+        "lesson:verification-workflow-tests-e2e-agents-last-run"
+      ],
+      "rationale": "The file was gitignored to stop timestamp dirty-tree churn; the old lesson assuming it is git-tracked is now wrong.",
+      "rule": "tests/e2e/agents-last-run.md is gitignored (added to .gitignore, untracked via `git rm --cached`); the agents e2e suite still rewrites it on disk each run for inspection but it is no longer committed. Do NOT re-track or commit it, and do NOT use `git checkout --` to \"restore\" it. Any test-written diagnostic report carrying a fresh `_Generated: <timestamp>_` line must stay gitignored (or write to a temp path) — never a committed fixture — so e2e/full test runs leave the working tree clean.",
+      "status": "active",
+      "topics": [
+        "verification-workflow"
+      ],
+      "triggers": [
+        "t-glob-892c1e39",
+        "t-glob-6200f5c1"
       ]
     },
     "verification-workflow-tests-for-env-gated-features": {
@@ -6730,6 +6758,10 @@
       "kind": "file_glob",
       "pattern": "src/config/remote/git-remote.ts"
     },
+    "t-glob-6200f5c1": {
+      "kind": "file_glob",
+      "pattern": "tests/e2e/agents.e2e.test.ts"
+    },
     "t-glob-62627edd": {
       "kind": "file_glob",
       "pattern": "src/**/path-helpers.ts"
@@ -6798,10 +6830,6 @@
       "kind": "file_glob",
       "pattern": "tests/helpers/posix-path.ts"
     },
-    "t-glob-783cbbfe": {
-      "kind": "file_glob",
-      "pattern": "src/targets/*"
-    },
     "t-glob-7a175889": {
       "kind": "file_glob",
       "pattern": "src/lessons/keyword-match.ts"
@@ -6857,6 +6885,10 @@
     "t-glob-87a63917": {
       "kind": "file_glob",
       "pattern": "src/core/generate/**/*.ts"
+    },
+    "t-glob-892c1e39": {
+      "kind": "file_glob",
+      "pattern": "tests/e2e/agents-last-run.md"
     },
     "t-glob-895a6107": {
       "kind": "file_glob",
@@ -6929,6 +6961,10 @@
     "t-glob-b13cc3e2": {
       "kind": "file_glob",
       "pattern": "tests/**/*windows*"
+    },
+    "t-glob-b180e7b2": {
+      "kind": "file_glob",
+      "pattern": "src/targets/**"
     },
     "t-glob-b39eff4f": {
       "kind": "file_glob",
@@ -7281,10 +7317,6 @@
     "t-kw-b6410e25": {
       "kind": "keyword",
       "pattern": "command truncation"
-    },
-    "t-kw-c5bd6c0b": {
-      "kind": "keyword",
-      "pattern": "commands import-map reference rewrite target"
     },
     "t-kw-c8f23353": {
       "kind": "keyword",

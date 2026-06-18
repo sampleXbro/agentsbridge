@@ -29,6 +29,9 @@ Thumbs.db
 .agentsmesh/lessons/distill-proposal.md
 # Lessons — opt-in recall telemetry log (runtime artifact, not canonical)
 .agentsmesh/lessons/recall-log.jsonl
+# Agents e2e diagnostic report — rewritten with a fresh timestamp on every run
+# (see tests/e2e/agents.e2e.test.ts). Kept on disk to inspect the last run, not committed.
+tests/e2e/agents-last-run.md
 
 # AgentsMesh — local overrides, cache symlink, transient lock write
 .agentsmesh.local.yaml

@@ -2,7 +2,7 @@ import { basename, join } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
 import {
   readFileSafe,
-  readDirRecursive,
+  readDirRecursiveNoSymlinks,
   writeFileAtomic,
   mkdirp,
 } from '../../utils/filesystem/fs.js';
@@ -18,7 +18,7 @@ export async function importCodexAgentsFromToml(
   const agentsPath = join(projectRoot, CODEX_AGENTS_DIR);
   const agentsDestDir = join(projectRoot, CODEX_CANONICAL_AGENTS_DIR);
   try {
-    const agentFiles = await readDirRecursive(agentsPath);
+    const agentFiles = await readDirRecursiveNoSymlinks(agentsPath);
     const tomlFiles = agentFiles.filter((f) => f.endsWith('.toml'));
     for (const srcPath of tomlFiles) {
       const content = await readFileSafe(srcPath);

@@ -2,7 +2,7 @@ import { basename, dirname, join, relative } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
 import {
   readFileSafe,
-  readDirRecursive,
+  readDirRecursiveNoSymlinks,
   writeFileAtomic,
   mkdirp,
 } from '../../utils/filesystem/fs.js';
@@ -18,7 +18,7 @@ export async function importClaudeSkills(
   const skillsBaseDir = join(projectRoot, CLAUDE_SKILLS_DIR);
   const destBase = join(projectRoot, CLAUDE_CANONICAL_SKILLS_DIR);
 
-  const allFiles = await readDirRecursive(skillsBaseDir);
+  const allFiles = await readDirRecursiveNoSymlinks(skillsBaseDir);
   const skillMdFiles = allFiles.filter((f) => f.endsWith('SKILL.md'));
 
   for (const skillMdPath of skillMdFiles) {
@@ -44,7 +44,7 @@ export async function importClaudeSkills(
       continue;
     }
 
-    const skillFiles = await readDirRecursive(skillDir);
+    const skillFiles = await readDirRecursiveNoSymlinks(skillDir);
     for (const filePath of skillFiles) {
       const fileContent = await readFileSafe(filePath);
       if (fileContent === null) continue;

@@ -1,4 +1,64 @@
 import { URL } from 'node:url';
+import { redactUrlSecrets } from '../../utils/output/redact-url-secrets.js';
+
+/**
+ * Whether `url`'s transport is permitted for a git remote. `https`/`ssh` are
+ * always allowed. `http` strips transport security (a MITM can swap cloned
+ * bytes before SHA pinning) and `file` is a local-FS trust boundary (a planted
+ * world-writable repo becomes priv-esc once hooks/permissions/mcp are emitted)
+ * — both are gated behind explicit env opt-ins. Anything that does not parse as
+ * a URL (e.g. scp-style `git@host:path`) is refused. Unknown transports such as
+ * `git:`/`ext:` are never allowed.
+ */
+function gitProtocolOptIns(): { http: boolean; file: boolean } {
+  const on = (v: string | undefined): boolean => v === '1' || v === 'true';
+  return {
+    http: on(process.env.AGENTSMESH_ALLOW_INSECURE_GIT),
+    file: on(process.env.AGENTSMESH_ALLOW_LOCAL_GIT),
+  };
+}
+
+export function isAllowedGitProtocol(url: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+  const { http, file } = gitProtocolOptIns();
+  const allowed = ['https:', 'ssh:'];
+  if (http) allowed.push('http:');
+  if (file) allowed.push('file:');
+  return allowed.includes(parsed.protocol);
+}
+
+/**
+ * Colon-separated transports git itself may use, for the `GIT_ALLOW_PROTOCOL`
+ * env on every spawned git process. Defense-in-depth against a remote
+ * redirecting (or `insteadOf`/submodule) to a dangerous transport mid-clone
+ * (e.g. `https` -> `ext::sh -c …` RCE, or `file://`). Mirrors the URL allowlist.
+ */
+export function gitAllowProtocolEnv(): string {
+  const { http, file } = gitProtocolOptIns();
+  const protos = ['https', 'ssh'];
+  if (http) protos.push('http');
+  if (file) protos.push('file');
+  return protos.join(':');
+}
+
+/**
+ * Throw if `url`'s transport is not allowed. Call this before any git network
+ * operation (clone, ls-remote) reachable from an attacker-influenced source —
+ * notably the `install <source>` path, which must not bypass this gate.
+ */
+export function assertAllowedGitUrl(url: string): void {
+  if (isAllowedGitProtocol(url)) return;
+  throw new Error(
+    `agentsmesh refuses a git remote with a disallowed transport: "${redactUrlSecrets(url)}". ` +
+      'Allowed: https, ssh. Set AGENTSMESH_ALLOW_INSECURE_GIT=1 to permit http, ' +
+      'AGENTSMESH_ALLOW_LOCAL_GIT=1 to permit file.',
+  );
+}
 
 export interface ParsedGithubSource {
   org: string;
@@ -77,32 +137,10 @@ export function parseGitSource(source: string): ParsedGitSource | null {
   const ref = hashIdx < 0 ? undefined : rest.slice(hashIdx + 1).trim();
   if (!url || (hashIdx >= 0 && !ref)) return null;
 
-  let parsedUrl: URL;
-  try {
-    parsedUrl = new URL(url);
-  } catch {
-    return null;
-  }
-  // `http:` strips transport security — a MITM on any hop can swap the
-  // cloned bytes before SHA pinning resolves. Reject by default; allow via
-  // explicit env opt-in for closed-network development.
-  const allowInsecure =
-    process.env.AGENTSMESH_ALLOW_INSECURE_GIT === '1' ||
-    process.env.AGENTSMESH_ALLOW_INSECURE_GIT === 'true';
-  // `file:` is a local-FS trust boundary. On shared/multi-tenant hosts a
-  // `git+file:///tmp/world-writable-repo` could let another local user plant
-  // the repo we silently consume — and downstream emission of hooks /
-  // permissions / mcp into the user's tool settings turns that into a
-  // priv-esc. Gate behind explicit env opt-in.
-  const allowLocalGit =
-    process.env.AGENTSMESH_ALLOW_LOCAL_GIT === '1' ||
-    process.env.AGENTSMESH_ALLOW_LOCAL_GIT === 'true';
-  const allowed: string[] = ['https:', 'ssh:'];
-  if (allowInsecure) allowed.push('http:');
-  if (allowLocalGit) allowed.push('file:');
-  if (!allowed.includes(parsedUrl.protocol)) {
-    return null;
-  }
+  // Transport allowlist (https/ssh by default; http/file behind env opt-ins).
+  // Shared with the install ref-resolution path via assertAllowedGitUrl so both
+  // entry points enforce the same gate.
+  if (!isAllowedGitProtocol(url)) return null;
   return { url, ref };
 }
 

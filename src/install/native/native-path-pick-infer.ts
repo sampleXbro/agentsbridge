@@ -8,9 +8,12 @@
 
 import { basename, join } from 'node:path';
 import type { ExtendPick } from '../../config/core/schema.js';
-import type { NativePickRule, NativePickStrategy } from '../../targets/catalog/target-descriptor.js';
+import type {
+  NativePickRule,
+  NativePickStrategy,
+} from '../../targets/catalog/target-descriptor.js';
 import { getDescriptor } from '../../targets/catalog/registry.js';
-import { readDirRecursive } from '../../utils/filesystem/fs.js';
+import { readDirRecursiveNoSymlinks } from '../../utils/filesystem/fs.js';
 import { skillNamesFromNativeSkillDir } from './native-skill-scan.js';
 
 async function namesForStrategy(
@@ -27,7 +30,7 @@ async function namesForStrategy(
     const first = rel.split('/').filter(Boolean)[0];
     return first ? [first] : [];
   }
-  const files = await readDirRecursive(scan);
+  const files = await readDirRecursiveNoSymlinks(scan);
   const suffix = strategy.suffix;
   const suffixLower = suffix.toLowerCase();
   return [

@@ -3,7 +3,7 @@ import { stringify as stringifyYaml } from 'yaml';
 import { join } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
 import {
-  readDirRecursive,
+  readDirRecursiveNoSymlinks,
   readFileSafe,
   writeFileAtomic,
   mkdirp,
@@ -48,7 +48,7 @@ export async function importGeminiPolicies(projectRoot: string): Promise<ImportR
   const policiesDir = join(projectRoot, GEMINI_POLICIES_DIR);
   let policyFiles: string[];
   try {
-    policyFiles = await readDirRecursive(policiesDir);
+    policyFiles = await readDirRecursiveNoSymlinks(policiesDir);
   } catch {
     return results;
   }

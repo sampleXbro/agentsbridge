@@ -9,7 +9,7 @@ import { serializeImportedRuleWithFallback } from '../import/import-metadata.js'
 import { toGlobsArray } from '../import/shared-import-helpers.js';
 import {
   mkdirp,
-  readDirRecursive,
+  readDirRecursiveNoSymlinks,
   readFileSafe,
   writeFileAtomic,
 } from '../../utils/filesystem/fs.js';
@@ -110,7 +110,7 @@ async function importNonRootRules(
 /** Kiro hooks live in `.kiro.hook` files with a custom JSON schema; not declarable through the runner. */
 async function importHooks(projectRoot: string, results: ImportResult[]): Promise<void> {
   const hooks: Hooks = {};
-  for (const absPath of await readDirRecursive(join(projectRoot, KIRO_HOOKS_DIR))) {
+  for (const absPath of await readDirRecursiveNoSymlinks(join(projectRoot, KIRO_HOOKS_DIR))) {
     if (!absPath.endsWith('.kiro.hook')) continue;
     const parsed = parseKiroHookFile((await readFileSafe(absPath)) ?? '');
     if (!parsed) continue;

@@ -2,7 +2,7 @@ import { basename, dirname, join, relative } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
 import {
   readFileSafe,
-  readDirRecursive,
+  readDirRecursiveNoSymlinks,
   writeFileAtomic,
   mkdirp,
 } from '../../utils/filesystem/fs.js';
@@ -28,7 +28,7 @@ export async function importGeminiSkillsAndAgents(
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
 ): Promise<void> {
   const geminiSkillsPath = join(projectRoot, GEMINI_SKILLS_DIR);
-  const skillDirs = await readDirRecursive(geminiSkillsPath);
+  const skillDirs = await readDirRecursiveNoSymlinks(geminiSkillsPath);
   const skillMdFiles = skillDirs.filter((f) => basename(f) === 'SKILL.md');
   for (const srcPath of skillMdFiles) {
     const content = await readFileSafe(srcPath);
@@ -67,7 +67,7 @@ export async function importGeminiSkillsAndAgents(
       toPath: `${GEMINI_CANONICAL_SKILLS_DIR}/${skillName}/SKILL.md`,
       feature: 'skills',
     });
-    const allSkillFiles = await readDirRecursive(dirname(srcPath));
+    const allSkillFiles = await readDirRecursiveNoSymlinks(dirname(srcPath));
     for (const absPath of allSkillFiles) {
       if (absPath === srcPath) continue;
       const supportContent = await readFileSafe(absPath);
@@ -87,7 +87,7 @@ export async function importGeminiSkillsAndAgents(
 
   const geminiAgentsPath = join(projectRoot, GEMINI_AGENTS_DIR);
   try {
-    const agentFiles = await readDirRecursive(geminiAgentsPath);
+    const agentFiles = await readDirRecursiveNoSymlinks(geminiAgentsPath);
     const agentMdFiles = agentFiles.filter((f) => f.endsWith('.md'));
     for (const srcPath of agentMdFiles) {
       const content = await readFileSafe(srcPath);

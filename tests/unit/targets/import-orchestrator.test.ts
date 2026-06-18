@@ -8,7 +8,7 @@ const mockWriteFileAtomic = vi.hoisted(() => vi.fn());
 const mockMkdirp = vi.hoisted(() => vi.fn());
 
 vi.mock('../../../src/utils/filesystem/fs.js', () => ({
-  readDirRecursive: mockReadDirRecursive,
+  readDirRecursiveNoSymlinks: mockReadDirRecursive,
   readFileSafe: mockReadFileSafe,
   writeFileAtomic: mockWriteFileAtomic,
   mkdirp: mockMkdirp,

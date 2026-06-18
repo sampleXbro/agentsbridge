@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { skillNamesFromNativeSkillDir } from '../../../src/install/native/native-skill-scan.js';
-import { readDirRecursive } from '../../../src/utils/filesystem/fs.js';
+import { readDirRecursiveNoSymlinks } from '../../../src/utils/filesystem/fs.js';
 
 vi.mock('../../../src/utils/filesystem/fs.js');
-const mockReadDirRecursive = vi.mocked(readDirRecursive);
+const mockReadDirRecursive = vi.mocked(readDirRecursiveNoSymlinks);
 
 describe('skillNamesFromNativeSkillDir', () => {
   beforeEach(() => {

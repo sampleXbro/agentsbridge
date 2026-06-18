@@ -19,43 +19,32 @@ describe('lessons skill content', () => {
     expect(body).toBe(LESSONS_SKILL_BODY);
   });
 
-  it('enumerates every implemented subcommand (L3 docs-sync gate)', () => {
-    // The two primaries appear as full commands; the rest are enumerated in the
-    // compact "Other subcommands" line. Assert each NAME is present as a word so
-    // the manual documents the whole surface without repeating the prefix 13×.
-    for (const sub of [
-      'query',
-      'add',
-      'topics',
-      'show',
-      'deprecate',
-      'merge',
-      'untrigger',
-      'strip-markers',
-      'prune',
-      'journal',
-      'validate',
-      'stats',
-      'import-md',
-    ]) {
-      expect(LESSONS_SKILL_BODY).toMatch(new RegExp(`\\b${sub.replace('-', '\\-')}\\b`));
-    }
-    expect(LESSONS_SKILL_BODY).toContain('agentsmesh lessons query');
-    expect(LESSONS_SKILL_BODY).toContain('agentsmesh lessons add');
-    // Topic + trigger-flag mechanics.
-    expect(LESSONS_SKILL_BODY).toContain('--new-topic');
-    expect(LESSONS_SKILL_BODY).toContain('--topic-summary');
-    expect(LESSONS_SKILL_BODY).toContain('--trigger-cmd');
-    expect(LESSONS_SKILL_BODY).toContain('--trigger-kw');
+  it('points to --help for the full flag/subcommand reference (skill kept short)', () => {
+    // Best practice: move command/flag detail to tool help instead of restating it
+    // in the skill. The names stay (docs-sync below) but per-flag mechanics live in
+    // `agentsmesh lessons --help`, and the essential capture trigger flag remains.
+    expect(LESSONS_SKILL_BODY).toContain('agentsmesh lessons --help');
+    expect(LESSONS_SKILL_BODY).toContain('--trigger-file');
   });
 
-  it('frontmatter description names every implemented subcommand (docs-sync gate)', () => {
-    // The harness uses the description to decide when to surface the skill, so it
-    // must enumerate the whole subcommand surface — exactly the canonical list,
-    // no omissions. Tied to LESSONS_SUBCOMMANDS so a new subcommand fails here.
+  it('body names every implemented subcommand (docs-sync gate)', () => {
+    // Best practice keeps the DESCRIPTION short (triggers only), so the full
+    // subcommand surface is documented in the body. Tied to LESSONS_SUBCOMMANDS so
+    // a new subcommand fails here until the manual documents it.
     for (const sub of LESSONS_SUBCOMMANDS) {
-      expect(LESSONS_SKILL_DESCRIPTION).toMatch(new RegExp(`\\b${sub.replaceAll('-', '\\-')}\\b`));
+      expect(LESSONS_SKILL_BODY).toMatch(new RegExp(`\\b${sub.replaceAll('-', '\\-')}\\b`));
     }
+  });
+
+  it('keeps a short, trigger-first description (skill best practice)', () => {
+    // superpowers writing-skills / Anthropic: third-person, "Use when…", triggers
+    // only, no workflow summary, short. A workflow summary makes agents follow the
+    // description instead of reading the skill body.
+    expect(LESSONS_SKILL_DESCRIPTION.startsWith('Use when')).toBe(true);
+    expect(LESSONS_SKILL_DESCRIPTION.length).toBeLessThanOrEqual(200);
+    // Carries both binding triggers, so it self-surfaces as the always-on fallback.
+    expect(LESSONS_SKILL_DESCRIPTION).toMatch(/edit a file|state-changing/i);
+    expect(LESSONS_SKILL_DESCRIPTION).toMatch(/failure|correction/i);
   });
 
   it('keeps a recall-excuse killer so the agent cannot rationalize skipping', () => {
@@ -85,10 +74,14 @@ describe('lessons skill content', () => {
     expect(LESSONS_SKILL_BODY).toContain('UNRECALLABLE_LESSON');
   });
 
-  it('documents the recall caps and that recallMaxTokens is approximate', () => {
-    expect(LESSONS_SKILL_BODY).toContain('recallLimit');
-    expect(LESSONS_SKILL_BODY).toContain('recallMaxTokens');
-    expect(LESSONS_SKILL_BODY).toMatch(/approximate|rule\.length \/ 4/);
+  it('documents the before-final lesson gate and capture/non-capture receipt', () => {
+    expect(LESSONS_SKILL_BODY).toContain('## Lesson gate — before final response');
+    expect(LESSONS_SKILL_BODY).toMatch(/self-critique/i);
+    expect(LESSONS_SKILL_BODY).toMatch(/useful surprise/i);
+    expect(LESSONS_SKILL_BODY).toMatch(/non-obvious fix/i);
+    expect(LESSONS_SKILL_BODY).toContain('Lesson: captured <id>');
+    expect(LESSONS_SKILL_BODY).toContain('Lesson: none');
+    expect(LESSONS_SKILL_BODY).toMatch(/Do not capture one-off facts/i);
   });
 
   it('still names both core commands so the manual is self-contained', () => {

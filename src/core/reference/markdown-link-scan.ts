@@ -33,8 +33,11 @@ export interface MarkdownLinkToken {
 }
 
 const FENCED_BLOCK = /^(?:```|~~~)[^\n]*\n[\s\S]*?^(?:```|~~~)/gm;
-const INLINE_LINK = /(!?)\[[^\]\n]*\]\(([^)\n]+)\)/g;
-const REFERENCE_DEF = /^\s*\[([^\]\n]+)\]:\s*(.+?)\s*$/gm;
+// `d` (hasIndices): we read the destination group's exact start offset rather
+// than searching for `(` — a label containing `(` would otherwise misplace the
+// span and corrupt offset-based rewrites.
+const INLINE_LINK = /(!?)\[[^\]\n]*\]\(([^)\n]+)\)/dg;
+const REFERENCE_DEF = /^\s*\[([^\]\n]+)\]:\s*(.+?)\s*$/dgm;
 
 /** Return fenced code-block byte ranges (`[start, end)`). */
 export function getFencedCodeRanges(content: string): Array<readonly [number, number]> {
@@ -53,13 +56,32 @@ function isInRanges(offset: number, ranges: ReadonlyArray<readonly [number, numb
   return false;
 }
 
-/** Strip an optional `"title"` / `'title'` suffix and surrounding `<...>` from a destination. */
+/**
+ * Locate the bare destination path within a raw destination string, returning
+ * its `[start, length)` span relative to `raw`. Excludes surrounding whitespace,
+ * an optional `"title"`/`'title'` suffix, and a wrapping `<...>`. Returning a
+ * span (not just the string) lets callers compute an offset-accurate rewrite
+ * range that touches only the path and preserves any title.
+ */
+function destPathSpan(raw: string): { start: number; length: number } {
+  const leading = raw.length - raw.trimStart().length;
+  const inner = raw.trim();
+  let length = inner.length;
+  const titleMatch = /^(.*?)\s+(["'])([\s\S]*?)\2\s*$/.exec(inner);
+  if (titleMatch?.[1] !== undefined) length = titleMatch[1].trimEnd().length;
+  let start = leading;
+  const pathPart = inner.slice(0, length);
+  if (pathPart.length >= 2 && pathPart.startsWith('<') && pathPart.endsWith('>')) {
+    start += 1;
+    length -= 2;
+  }
+  return { start, length };
+}
+
+/** The bare destination path: `"title"`/`'title'` suffix and `<...>` removed. */
 function normalizeDestination(raw: string): string {
-  let s = raw.trim();
-  const titleMatch = /^(.*?)\s+(["'])([\s\S]*?)\2\s*$/.exec(s);
-  if (titleMatch?.[1] !== undefined) s = titleMatch[1].trim();
-  if (s.startsWith('<') && s.endsWith('>')) s = s.slice(1, -1).trim();
-  return s;
+  const { start, length } = destPathSpan(raw);
+  return raw.slice(start, start + length);
 }
 
 /**
@@ -76,16 +98,14 @@ export function scanMarkdownLinks(content: string): readonly MarkdownLinkToken[]
     if (isInRanges(idx, fenced)) continue;
     const isImage = match[1] === '!';
     const inner = match[2];
-    if (inner === undefined) continue;
-    // Offset of the destination within the original content: position of `(` + 1.
-    const openParen = content.indexOf('(', idx);
-    if (openParen < 0) continue;
-    const destOffset = openParen + 1;
+    const destSpan = match.indices?.[2];
+    if (inner === undefined || destSpan === undefined) continue;
+    const span = destPathSpan(inner);
     out.push({
       kind: isImage ? 'image' : 'inline',
       destination: normalizeDestination(inner),
-      destinationOffset: destOffset,
-      destinationLength: inner.length,
+      destinationOffset: destSpan[0] + span.start,
+      destinationLength: span.length,
     });
   }
 
@@ -94,24 +114,15 @@ export function scanMarkdownLinks(content: string): readonly MarkdownLinkToken[]
     if (isInRanges(idx, fenced)) continue;
     const label = (match[1] ?? '').trim();
     const rawDest = match[2] ?? '';
-    if (label === '' || rawDest.trim() === '') continue;
-    const lineStart = idx;
-    const labelClose = content.indexOf(']:', lineStart);
-    if (labelClose < 0) continue;
-    // Skip `]:` and any whitespace before the destination starts.
-    let destStart = labelClose + 2;
-    while (
-      destStart < content.length &&
-      (content[destStart] === ' ' || content[destStart] === '\t')
-    ) {
-      destStart += 1;
-    }
+    const destSpan = match.indices?.[2];
+    if (label === '' || rawDest.trim() === '' || destSpan === undefined) continue;
+    const span = destPathSpan(rawDest);
     out.push({
       kind: 'reference-def',
       destination: normalizeDestination(rawDest),
       label,
-      destinationOffset: destStart,
-      destinationLength: rawDest.trimEnd().length,
+      destinationOffset: destSpan[0] + span.start,
+      destinationLength: span.length,
     });
   }
 

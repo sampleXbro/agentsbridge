@@ -51,21 +51,27 @@ export function assertNoBasenameCollisions(
   paths: readonly string[],
   stripExt: string,
 ): void {
-  const seen = new Map<string, string>();
+  // Key case-INSENSITIVELY: `Build.md` and `build.md` are distinct slugs on
+  // Linux/CI but collapse to the same file on Windows/macOS, where the second
+  // write silently clobbers the first. Report both original-cased names.
+  const seen = new Map<string, { path: string; slug: string }>();
   for (const p of paths) {
     const fwdIdx = p.lastIndexOf('/');
     const bckIdx = p.lastIndexOf('\\');
     const idx = Math.max(fwdIdx, bckIdx);
     const base = idx === -1 ? p : p.slice(idx + 1);
     const slug = base.endsWith(stripExt) ? base.slice(0, -stripExt.length) : base;
-    const prior = seen.get(slug);
-    if (prior !== undefined && prior !== p) {
+    const key = slug.toLowerCase();
+    const prior = seen.get(key);
+    if (prior !== undefined && prior.path !== p) {
+      const detail =
+        prior.slug === slug ? `"${slug}"` : `"${prior.slug}" vs "${slug}" (case-insensitive)`;
       throw new CanonicalNameError(
         feature,
         slug,
-        `canonical ${feature} files collide on slug "${slug}": ${prior} vs ${p}. Rename one.`,
+        `canonical ${feature} files collide on slug ${detail}: ${prior.path} vs ${p}. Rename one.`,
       );
     }
-    seen.set(slug, p);
+    seen.set(key, { path: p, slug });
   }
 }

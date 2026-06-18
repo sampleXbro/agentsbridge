@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
 import {
   readFileSafe,
-  readDirRecursive,
+  readDirRecursiveNoSymlinks,
   writeFileAtomic,
   mkdirp,
 } from '../../utils/filesystem/fs.js';
@@ -80,7 +80,7 @@ export async function importClineRules(
         feature: 'rules',
       });
     } else {
-      const ruleFiles = await readDirRecursive(clineRulesPath);
+      const ruleFiles = await readDirRecursiveNoSymlinks(clineRulesPath);
       const mdFiles = ruleFiles
         .filter((f) => f.endsWith('.md') && !f.includes('/workflows/'))
         .sort();

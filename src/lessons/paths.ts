@@ -111,12 +111,12 @@ export function toRelPath(projectRoot: string, absolute: string): string {
  * survives generate → import → generate round-trip; only the wording inside each
  * block is tightened for maximum agent compliance.
  */
-export const LESSONS_PROCEDURAL_RULE = `## Lessons (BLOCKING REQUIREMENT — MUST run both, no exceptions; the user will check)
+export const LESSONS_PROCEDURAL_RULE = `## Lessons (BLOCKING)
 
-Graph \`.agentsmesh/lessons/lessons.json\` is canonical — never hand-edit. Manual: the \`lessons\` skill.
+Graph \`.agentsmesh/lessons/lessons.json\` is canonical; never hand-edit it. Manual: \`lessons\` skill.
 
-**Recall — MUST run before every file edit and every state-changing command** (build/test/install/migrate/git-write): \`agentsmesh lessons query --file <path> --cmd <command>\`, then apply every rule. Pure-read commands (cat/ls/grep/git-log) and the recall query itself are exempt.
+**Recall:** before every file edit or state-changing command, MUST run \`agentsmesh lessons query --file <path> --cmd <command>\` and obey matches. Pure-read commands and recall itself are exempt.
 
-**Capture — MUST run immediately after any failure** (a failing test/CI/lint/typecheck, a code review, a user correction, a regression, or a wrong assumption — yours or anyone's): \`agentsmesh lessons add "<rule>" --topic <id> --trigger-file <glob> --evidence <sha|lesson-id>\`.
+**Capture:** after any failure, user correction, regression, wrong assumption, useful surprise, repeated friction, or non-obvious fix, MUST self-critique and run \`agentsmesh lessons add "<imperative rule>" --topic <id> --trigger-file <glob> --evidence <sha|lesson-id>\`.
 
-No shell? Use the \`lessons_query\` / \`lessons_add\` MCP tools. Skip either and the system does not exist.`;
+**Before final:** report \`Lesson: captured <id>\` or \`Lesson: none\`. No recall/capture gate = task incomplete. No shell: use \`lessons_query\` / \`lessons_add\`.`;

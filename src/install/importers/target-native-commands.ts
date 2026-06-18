@@ -28,7 +28,7 @@ import { parseCommands } from '../../canonical/features/commands.js';
 import { parseRules, type ParseFrontmatterOptions } from '../../canonical/features/rules.js';
 import {
   mkdirp,
-  readDirRecursive,
+  readDirRecursiveNoSymlinks,
   readFileSafe,
   writeFileAtomic,
 } from '../../utils/filesystem/fs.js';
@@ -218,7 +218,7 @@ async function readToolNativeEntities<K extends DirectoryEntityKind>(
 ): Promise<ToolNativeEntitiesResult<K>> {
   const specs = directorySpecsFor(getDescriptor(targetId)?.importer, kind);
 
-  const allFiles = await readDirRecursive(srcDir);
+  const allFiles = await readDirRecursiveNoSymlinks(srcDir);
   // Combined non-`.md` extension set across every spec for this target+kind
   // (rules' importer can be an array — Copilot, Cursor variants). We only
   // stage files an actual mapper claims via extension; canonical `.md` keeps

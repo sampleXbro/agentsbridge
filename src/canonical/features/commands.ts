@@ -4,7 +4,7 @@
 
 import { basename } from 'node:path';
 import type { CanonicalCommand } from '../../core/types.js';
-import { readFileSafe, readDirRecursive } from '../../utils/filesystem/fs.js';
+import { readFileSafe, readDirRecursiveNoSymlinks } from '../../utils/filesystem/fs.js';
 import { parseOrSkipFrontmatter } from '../../utils/text/markdown.js';
 import type { ParseFrontmatterOptions } from './rules.js';
 import { assertCanonicalName, assertNoBasenameCollisions } from './validate-name.js';
@@ -50,7 +50,8 @@ export async function parseCommands(
   commandsDir: string,
   opts: ParseCommandsOptions = {},
 ): Promise<CanonicalCommand[]> {
-  const files = await readDirRecursive(commandsDir);
+  // No-symlinks: see parseRules — host-secret exfiltration guard.
+  const files = await readDirRecursiveNoSymlinks(commandsDir);
   const mdFiles = files.filter((f) => f.endsWith('.md') && !basename(f).startsWith('_'));
   warnIfUnrecognizedResourceFormats('commands', commandsDir, files, mdFiles, {
     handledByOtherReader: opts.handledByOtherReader,

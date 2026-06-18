@@ -68,6 +68,53 @@ describe('scanMarkdownLinks', () => {
   });
 });
 
+describe('scanMarkdownLinks — destination span fidelity', () => {
+  function sliceOf(content: string, index = 0): string {
+    const t = scanMarkdownLinks(content)[index]!;
+    return content.slice(t.destinationOffset, t.destinationOffset + t.destinationLength);
+  }
+
+  it('locates the destination when the link label contains parentheses', () => {
+    const content = 'run [build (CI)](scripts/build.md) now';
+    const t = scanMarkdownLinks(content)[0]!;
+    expect(t.destination).toBe('scripts/build.md');
+    expect(sliceOf(content)).toBe('scripts/build.md');
+  });
+
+  it('excludes the title suffix from the inline destination span', () => {
+    const content = '[t](path.md "My Title")';
+    expect(scanMarkdownLinks(content)[0]!.destination).toBe('path.md');
+    expect(sliceOf(content)).toBe('path.md');
+  });
+
+  it('excludes the title suffix from a reference-def destination span', () => {
+    const content = '[k]: refs/topic.md "Topic Title"\n';
+    const ref = scanMarkdownLinks(content).find((t) => t.kind === 'reference-def')!;
+    expect(ref.destination).toBe('refs/topic.md');
+    expect(
+      content.slice(ref.destinationOffset, ref.destinationOffset + ref.destinationLength),
+    ).toBe('refs/topic.md');
+  });
+
+  it('reports a span whose slice equals the destination for <bracketed> links', () => {
+    expect(sliceOf('[t](<a/b.md>)')).toBe('a/b.md');
+  });
+
+  it('skips a reference definition whose label is whitespace-only', () => {
+    const refs = scanMarkdownLinks('[ ]: dest.md\n').filter((t) => t.kind === 'reference-def');
+    expect(refs).toEqual([]);
+  });
+
+  it('rewriting via the reported span replaces only the path, preserving the title', () => {
+    const content = '[t](old.md "Keep Title")';
+    const t = scanMarkdownLinks(content)[0]!;
+    const out = applyRangeRewrites(content, [
+      { offset: t.destinationOffset, length: t.destinationLength, replacement: 'new.md' },
+    ]);
+    expect(out).toBe('[t](new.md "Keep Title")');
+  });
+});
+
 describe('applyRangeRewrites', () => {
   it('returns the input unchanged when no rewrites are supplied', () => {
     expect(applyRangeRewrites('hello', [])).toBe('hello');

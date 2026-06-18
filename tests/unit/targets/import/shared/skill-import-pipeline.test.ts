@@ -87,13 +87,13 @@ Just body`;
     rmSync(dir, { recursive: true, force: true });
   });
 
-  it('readNativeSkill skips entries whose file content cannot be read (broken symlink)', async () => {
+  it('readNativeSkill skips a symlinked support file (no-follow exfiltration guard)', async () => {
     const dir = join(tmpdir(), `am-skill-broken-${randomBytes(6).toString('hex')}`);
     mkdirSync(join(dir, 'my-skill'), { recursive: true });
     writeFileSync(join(dir, 'my-skill', 'SKILL.md'), '---\nname: my-skill\n---\n\nx');
-    // Broken symlink: target does not exist. readDirRecursive returns the symlink path,
-    // then readFileSafe returns null on ENOENT, exercising the `content === null continue`
-    // branch in readNativeSkill.
+    // A symlinked support file is skipped by the no-follow reader before it is ever
+    // read, so only SKILL.md is imported — a planted symlink cannot pull external
+    // bytes into the skill.
     symlinkSync(join(dir, 'my-skill', '.does-not-exist'), join(dir, 'my-skill', 'references.md'));
 
     const entries = await readNativeSkill(join(dir, 'my-skill'));

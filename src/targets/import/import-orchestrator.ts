@@ -1,7 +1,7 @@
 import { dirname, relative } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
 import {
-  readDirRecursive,
+  readDirRecursiveNoSymlinks,
   readFileSafe,
   writeFileAtomic,
   mkdirp,
@@ -37,7 +37,7 @@ function matchesExtension(path: string, extensions: string[]): boolean {
 }
 
 export async function importFileDirectory(opts: ImportFileOptions): Promise<ImportResult[]> {
-  const files = await readDirRecursive(opts.srcDir);
+  const files = await readDirRecursiveNoSymlinks(opts.srcDir);
   const matchedFiles = files.filter((path) => matchesExtension(path, opts.extensions));
   const results: ImportResult[] = [];
 

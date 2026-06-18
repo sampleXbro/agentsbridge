@@ -1,66 +1,53 @@
 ---
 name: lessons
-description: Full operating manual for the agentsmesh lessons system (recall + capture). Consult when running any `agentsmesh lessons` subcommand (query, add, topics, show, deprecate, merge, untrigger, strip-markers, journal, validate, stats, prune, import-md), choosing a topic or trigger flags, using the lessons MCP tools, or when unsure how to phrase or capture a lesson.
+description: Use when about to edit a file or run a state-changing command, or after any failure, correction, or surprising result.
 ---
 
-# Lessons — operating manual
+# Lessons — operating manual (Iron Law)
 
-Two commands: **Recall** before you act, **Capture** after any failure. The graph
+## The Iron Law
+
+**NO MUTATION WITHOUT RECALL. NO COMPLETION WITHOUT A CAPTURE DECISION.**
+
+Violating the letter is violating the spirit. Edited a file or ran a state-changing
+command without recall? Process violation. Did the turn hit a failure / correction /
+regression / wrong assumption / surprise and you have not captured (nor stated
+`Lesson: none`)? The task is INCOMPLETE — and the user will check. The graph
 `.agentsmesh/lessons/lessons.json` is canonical — never hand-edit.
 
 ## Recall — before each file edit and each state-changing command
 
-`agentsmesh lessons query --file <path> --cmd <command>` (add `--keyword <text>` to
-match by task), then apply every rule returned. Scope is MUTATING actions: file edits
-and state-changing commands (build/test/install/migrate/git-write). Pure-read commands
-(cat/ls/grep/git-log; read-only) and the recall query itself are **exempt** — no
-infinite regress. A predicate-less query is rejected; **keyword-only recall is the
-anti-pattern** — most lessons are keyed to a `file_glob`/`command_pattern` and won't
-surface (the CLI warns). Excuses ("small edit", "I already know this", "later") all
-mean: query first — skipping recall on a mutating action is a process violation, and
-the user will check.
+`agentsmesh lessons query --file <path> --cmd <command>`, then apply every rule.
+Pure-read commands (read-only) and the query itself are exempt. **keyword-only recall
+is the anti-pattern** — lessons are keyed to a `file_glob`/`command_pattern`.
 
-## Capture — immediately after any failure
+## Capture — Gate Function (before any completion claim)
 
-Any failure counts, not just red tests: a failing test/CI/lint/typecheck, a code
-review, a user correction, a regression, or a wrong assumption — yours or anyone's.
+1. **SELF-CRITIQUE**: any failure, correction, regression, wrong assumption,
+   useful surprise, repeated friction, or non-obvious fix? Failing
+   tests/lint/typecheck and user/review corrections — yours or anyone's — all count.
+2. **CAPTURE** a reusable imperative rule with an effective trigger (else say so):
+   `agentsmesh lessons add "<rule>" --topic <id> --trigger-file <glob>`
+3. **RECEIPT**: emit `Lesson: captured <id>` or `Lesson: none`.
 
-`agentsmesh lessons add "<imperative rule>" --topic <id> --trigger-file <glob> --evidence <sha|lesson-id>`
+At least one _effective_ trigger is required or the capture is rejected
+(`UNRECALLABLE_LESSON`); prefer `--trigger-file`. No shell → MCP `lessons_query`,
+`lessons_add`, `lessons_topics`, `lessons_show`, `lessons_deprecate`. Run
+`agentsmesh lessons --help` for every subcommand and flag: query, add, topics, show,
+deprecate, merge, untrigger, strip-markers, prune, journal, validate, stats, import-md.
 
-- **At least one _effective_ trigger is required.** A capture is rejected
-  (`UNRECALLABLE_LESSON`) when EVERY trigger is dead on the mandatory `--file`/`--cmd`
-  recall path — a stopword-only keyword ("state of the art"), or an invalid/ReDoS
-  command regex — because the lesson could never be recalled there. Prefer
-  `--trigger-file`: the most reliable trigger, it fires on `--file` recall. A keyword
-  alone is discouraged (`KEYWORD_ONLY_LESSON`); paraphrasing an existing rule warns
-  (`NEAR_DUPLICATE_LESSON` — update that lesson instead).
-- **One imperative sentence.** A rule over 2000 chars is rejected (`OVERSIZED_RULE`) —
-  trim it or split into separate lessons; don't paste a log/diff.
-- Widen with `--trigger-cmd <regex>` / `--trigger-kw <text>`. New area:
-  `--new-topic --topic-summary "<line>"` (list ids with `agentsmesh lessons topics`).
+### Rationalization Prevention — these excuses mean STOP
 
-## No shell? — MCP tools
+| Excuse | Reality |
+| --- | --- |
+| "Small edit / I already know this / later" | Query first — skipping recall is a process violation |
+| "Nothing reusable here" | You hit a failure/surprise — name it or capture it |
+| "My own TDD red, not a real failure" | A red you did not predict IS a lesson |
+| "I fixed one site; the twin is obvious" | Capture it — the unfixed twin is what gets missed |
+| "Different words, so the rule doesn't apply" | Spirit over letter |
 
-`lessons_query`, `lessons_add`, `lessons_topics`, `lessons_show` (inspect a topic),
-`lessons_deprecate` (retire). validate / prune / merge / import-md are CLI-only.
+## Lesson gate — before final response
 
-## Other subcommands
-
-`agentsmesh lessons <cmd>`: `show` · `deprecate` (`--superseded-by`) · `merge` ·
-`untrigger` · `strip-markers` · `prune` (`--apply`; trims over-cap triggers, GCs
-orphan triggers/topics) · `journal` · `validate` · `stats` · `import-md`. Full
-help: `agentsmesh lessons --help`.
-
-## Config (`.agentsmesh/lessons/config.json`)
-
-`recallLimit` / `recallMaxTokens` (canonical recall caps; per-call overrides
-`--top` / `--max-tokens`). `recallMaxTokens` is approximate — `rule.length / 4`,
-not a real tokenizer. `autoPrune: true` (default off) auto-GCs structural cruft
-after each capture — orphan triggers/topics + non-stranding dead globs, the safe
-half of `prune`; never trims/strands an active lesson, git-reversible.
-
-## Dedup (opt-in)
-
-Set `--session <id>` (or `AGENTSMESH_SESSION_ID`) and lessons already delivered this
-session are suppressed, so each recall carries only what is new (`--no-dedup` opts
-out). With no session id, recall is fully stateless — unchanged.
+The final response MUST carry the receipt: `Lesson: captured <id>` or `Lesson: none`.
+No receipt = task incomplete. Do not capture one-off facts, task summaries, or project
+context — only reusable imperative rules with an effective trigger.

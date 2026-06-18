@@ -52,7 +52,7 @@ For any non-local source (`github:`, `gitlab:`, `git+...`) AgentsMesh **strips t
 
 Your consent is recorded in `installs.yaml` (`accepted_elevated`). `install --sync` and `refresh` re-apply it automatically, so a post-clone replay keeps the artifacts you accepted without you re-passing the `--accept-*` flags.
 
-Additional hardening: `git+file://` sources are blocked by default to prevent local privilege escalation on shared hosts — set `AGENTSMESH_ALLOW_LOCAL_GIT=1` to enable them for closed-network development. Skill supporting-file traversal does not follow symlinks, and credentials are redacted from all error output. See [Fetch hardening](../../configuration/extends/#fetch-hardening) for the full list.
+Additional hardening: git transports are allowlisted (`https`/`ssh` by default; `git+http://` needs `AGENTSMESH_ALLOW_INSECURE_GIT=1`, `git+file://` needs `AGENTSMESH_ALLOW_LOCAL_GIT=1`, all others refused) and the check runs **before** any `git ls-remote`/clone, so the `install` path cannot be steered to an internal host or arbitrary local repo. Canonical entity traversal (rules, commands, agents, and skill supporting files) does not follow symlinks, and credentials are redacted from all error output. See [Fetch hardening](../../configuration/extends/#fetch-hardening) for the full list.
 
 ## When to reach for each flag
 

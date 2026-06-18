@@ -2,7 +2,7 @@ import { extname, join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import type { ImportResult, McpServer } from '../../core/types.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
-import { readDirRecursive, readFileSafe } from '../../utils/filesystem/fs.js';
+import { readDirRecursiveNoSymlinks, readFileSafe } from '../../utils/filesystem/fs.js';
 import { importEmbeddedSkills } from '../import/embedded-skill.js';
 import { runDescriptorImport } from '../import/descriptor-import-runner.js';
 import { writeMcpWithMerge } from '../import/mcp-merge.js';
@@ -26,14 +26,29 @@ function readMcpServers(content: string, extension: string): Record<string, McpS
   for (const [name, value] of Object.entries(rawServers)) {
     if (!value || typeof value !== 'object' || Array.isArray(value)) continue;
     const server = value as Record<string, unknown>;
-    if (typeof server.command !== 'string') continue;
-    servers[name] = {
-      type: typeof server.type === 'string' ? server.type : 'stdio',
-      command: server.command,
-      args: toStringArray(server.args),
-      env: toStringRecord(server.env),
-      description: typeof server.description === 'string' ? server.description : undefined,
-    };
+    const description = typeof server.description === 'string' ? server.description : undefined;
+    if (typeof server.command === 'string') {
+      servers[name] = {
+        type: typeof server.type === 'string' ? server.type : 'stdio',
+        command: server.command,
+        args: toStringArray(server.args),
+        env: toStringRecord(server.env),
+        description,
+      };
+      continue;
+    }
+    // URL/HTTP/SSE servers (no command). Without this branch a generate ->
+    // re-import round-trip through Continue silently drops every remote server,
+    // mirroring the cline bug — Continue's generator emits url servers verbatim.
+    if (typeof server.url === 'string') {
+      servers[name] = {
+        type: typeof server.type === 'string' ? server.type : 'http',
+        url: server.url,
+        headers: toStringRecord(server.headers),
+        env: toStringRecord(server.env),
+        description,
+      };
+    }
   }
   return servers;
 }
@@ -44,8 +59,8 @@ function readMcpServers(content: string, extension: string): Record<string, McpS
  * merge today, so this stays imperative.
  */
 async function importMcp(projectRoot: string, results: ImportResult[]): Promise<void> {
-  const files = (await readDirRecursive(join(projectRoot, CONTINUE_MCP_DIR))).filter((file) =>
-    ['.json', '.yaml', '.yml'].includes(extname(file)),
+  const files = (await readDirRecursiveNoSymlinks(join(projectRoot, CONTINUE_MCP_DIR))).filter(
+    (file) => ['.json', '.yaml', '.yml'].includes(extname(file)),
   );
   const merged: Record<string, McpServer> = {};
   const importedFrom: string[] = [];

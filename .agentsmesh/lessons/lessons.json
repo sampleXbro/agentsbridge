@@ -2030,6 +2030,19 @@
         "t-cmd-fe0fbdb4"
       ]
     },
+    "install-import-pickers-every-per-target-mcp-importer": {
+      "createdAt": "2026-06-18",
+      "evidence": [],
+      "rule": "Every per-target MCP importer/mapper must handle the full McpServer union — a command (stdio) branch AND a url (http/sse) branch; a stdio-only mapper that requires command silently drops remote URL/SSE servers on the generate->import round-trip, so audit and fix all sibling target mappers when fixing one. Prefer reusing the shared parseMcpJson over per-target reimplementations.",
+      "status": "active",
+      "topics": [
+        "install-import-pickers"
+      ],
+      "triggers": [
+        "t-glob-f394f32c",
+        "t-glob-72016213"
+      ]
+    },
     "install-import-pickers-install-sync-refresh-re-run": {
       "createdAt": "2026-06-13",
       "evidence": [
@@ -2775,6 +2788,18 @@
         "t-kw-abe95c07"
       ]
     },
+    "lessons-system-a-skill-meant-as-a": {
+      "createdAt": "2026-06-18",
+      "evidence": [],
+      "rule": "A skill meant as a fallback for an always-on rule MUST encode its binding triggers in the frontmatter description (the harness's discovery signal) — e.g. 'recall before every mutation, capture after every failure' — not merely 'consult when running X subcommands'. A reactive description only surfaces the skill once the agent already decided to use it, so it never fires proactively as the fallback; lead the description with the WHEN, then enumerate the how-to.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-ed0be781"
+      ]
+    },
     "lessons-system-an-in-repo-non-backtracking": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -3425,6 +3450,19 @@
       ],
       "triggers": [
         "t-glob-0b5c0a21"
+      ]
+    },
+    "lessons-system-the-canonical-agentsmesh-skills-lessons": {
+      "createdAt": "2026-06-18",
+      "evidence": [],
+      "rule": "The canonical .agentsmesh/skills/lessons/SKILL.md is a SCAFFOLDED artifact, not hand-authored: its body is LESSONS_SKILL_BODY in src/lessons/skill.ts, written by scaffoldLessons (init.ts) and re-synced on 'init --lessons'. To change the lessons skill, edit the constant, re-scaffold, then 'generate' to propagate to targets — and preserve every string asserted by tests/unit/lessons/skill.test.ts (the docs-sync gates) or that test fails.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-ed0be781",
+        "t-glob-8148e382"
       ]
     },
     "lessons-system-the-recall-contract-lessons-procedural": {
@@ -4235,6 +4273,49 @@
         "t-kw-b54b3b44"
       ]
     },
+    "security-a-directory-reader-that-ingests": {
+      "createdAt": "2026-06-18",
+      "evidence": [],
+      "rule": "A directory reader that ingests untrusted native/pack content into canonical or a redistributable pack must not follow escaping symlinks; when hardening one reader (e.g. the canonical rules/commands/agents parsers), fix EVERY sibling reader — the native import readers (import-orchestrator, skill-import-pipeline, target-native-commands, per-target importers) share the exact same exfiltration class, so half-fixing leaves host-secret exfiltration open. For untrusted git clones also set core.symlinks=false.",
+      "status": "active",
+      "topics": [
+        "security"
+      ],
+      "triggers": [
+        "t-glob-7f76b340",
+        "t-glob-60971e07",
+        "t-glob-895a6107"
+      ]
+    },
+    "security-when-hardening-a-git-spawn": {
+      "createdAt": "2026-06-18",
+      "evidence": [
+        "src/config/remote/git-remote.ts:104",
+        "116"
+      ],
+      "rule": "When hardening a git spawn site against SSRF/redirect (assertAllowedGitUrl + GIT_ALLOW_PROTOCOL), apply the SAME guard to ALL git spawn runners — the clone runner in src/config/remote/git-remote.ts, not just ls-remote in src/install/source/git-pin.ts. String-level parseGitSource validation does not constrain server-side redirects during clone.",
+      "status": "active",
+      "topics": [
+        "security"
+      ],
+      "triggers": [
+        "t-glob-6184efaf",
+        "t-cmd-0b25c71e"
+      ]
+    },
+    "security-when-hardening-git-transport-security": {
+      "createdAt": "2026-06-18",
+      "evidence": [],
+      "rule": "When hardening git transport security, apply the protocol allowlist (assertAllowedGitUrl) AND GIT_ALLOW_PROTOCOL to BOTH spawn sites — the ls-remote/ref-resolution runner (git-pin.ts) and the clone runner (git-remote.ts) — and set core.symlinks=false on clone; hardening only ls-remote leaves redirect-during-clone (https->ext:: RCE, file:// read) reachable.",
+      "status": "active",
+      "topics": [
+        "security"
+      ],
+      "triggers": [
+        "t-glob-6184efaf",
+        "t-glob-d8072e60"
+      ]
+    },
     "shell-quoting-construct-control-character-values-direc": {
       "createdAt": "2026-06-07",
       "evidence": [
@@ -4781,6 +4862,63 @@
         "t-glob-75e89e62"
       ]
     },
+    "test-execution-do-not-run-pnpm-stashed": {
+      "createdAt": "2026-06-17",
+      "evidence": [
+        "ignored-vitest-missing-deps-2026-06-17"
+      ],
+      "rule": "Do not run pnpm-stashed node_modules/.ignored_* package binaries directly; those directories can lack dependency resolution, so repair the install or use a complete known-good tool path instead.",
+      "status": "active",
+      "topics": [
+        "test-execution"
+      ],
+      "triggers": [
+        "t-cmd-e94ef0dd"
+      ]
+    },
+    "test-execution-set-ci-true-when-running": {
+      "createdAt": "2026-06-17",
+      "evidence": [
+        "pnpm-non-tty-failure-2026-06-17"
+      ],
+      "rule": "Set CI=true when running pnpm test or vitest from non-interactive agents so pnpm will not abort a tool-managed install purge for lack of TTY.",
+      "status": "active",
+      "topics": [
+        "test-execution"
+      ],
+      "triggers": [
+        "t-cmd-79806ff2"
+      ]
+    },
+    "test-execution-use-tsx-instead-of-plain": {
+      "createdAt": "2026-06-17",
+      "evidence": [
+        "node-ts-js-import-mismatch-2026-06-17"
+      ],
+      "rule": "Use tsx instead of plain node when probing source TypeScript modules that contain .js-relative imports; Node can load the TS entry but will not resolve sibling .js specifiers to .ts source files.",
+      "status": "active",
+      "topics": [
+        "test-execution"
+      ],
+      "triggers": [
+        "t-cmd-e4182599"
+      ]
+    },
+    "test-execution-when-the-pnpm-shim-tries": {
+      "createdAt": "2026-06-17",
+      "evidence": [
+        "pnpm-lockfile-config-mismatch-2026-06-17"
+      ],
+      "rule": "When the pnpm shim tries to recreate node_modules or fails frozen-lockfile config checks during a focused test run, avoid further pnpm test invocations and run the local test binary directly until dependencies are repaired.",
+      "status": "active",
+      "topics": [
+        "test-execution"
+      ],
+      "triggers": [
+        "t-glob-5e0d226f",
+        "t-cmd-79806ff2"
+      ]
+    },
     "test-execution-with-this-vitest-setup-pnpm": {
       "createdAt": "2026-06-14",
       "evidence": [
@@ -5173,6 +5311,18 @@
       "triggers": [
         "t-glob-689ed63b",
         "t-kw-75645732"
+      ]
+    },
+    "verification-workflow-the-coverage-gate-is-global": {
+      "createdAt": "2026-06-18",
+      "evidence": [],
+      "rule": "The coverage gate is GLOBAL (vitest.config thresholds over the included set), not per-file. v8 counts the right-hand operand of defensive `?? fallback` / `=== undefined` guards on regex match groups (forced by noUncheckedIndexedAccess: match.index, match[n], match.indices[n]) as branches that are UNREACHABLE at runtime. When raising branch coverage, cover the reachable logic and rely on the global threshold — do NOT add ! non-null assertions (lint-forbidden), v8-ignore comments (the repo uses none), or contrived tests to juice an individual file's branch %.",
+      "status": "active",
+      "topics": [
+        "verification-workflow"
+      ],
+      "triggers": [
+        "t-glob-8ade9a3e"
       ]
     },
     "verification-workflow-the-husky-pre-commit-hook": {
@@ -6036,6 +6186,9 @@
     "process-locks": {
       "summary": "Process-lock primitive (acquireProcessLock) and per-lock wrappers — per-lock labels, stale/young eviction, signal cleanup, contention messages."
     },
+    "security": {
+      "summary": "Security hardening invariants for agentsmesh (SSRF, transport allowlists, symlink/tar safety)."
+    },
     "shell-quoting": {
       "summary": "Backticks/quotes in rg, node -e, heredocs; shell-rc edits; cross-shell portability; control bytes via Write tool."
     },
@@ -6080,6 +6233,10 @@
     "t-cmd-09d400a5": {
       "kind": "command_pattern",
       "pattern": "git add tasks/reports"
+    },
+    "t-cmd-0b25c71e": {
+      "kind": "command_pattern",
+      "pattern": "git\\s+(clone|ls-remote|fetch)"
     },
     "t-cmd-0cf3ec87": {
       "kind": "command_pattern",
@@ -6176,6 +6333,10 @@
     "t-cmd-73382791": {
       "kind": "command_pattern",
       "pattern": "agentsmesh lessons"
+    },
+    "t-cmd-79806ff2": {
+      "kind": "command_pattern",
+      "pattern": "pnpm (vitest|test)( |$)"
     },
     "t-cmd-7c1c43ea": {
       "kind": "command_pattern",
@@ -6301,6 +6462,10 @@
       "kind": "command_pattern",
       "pattern": "git push --force"
     },
+    "t-cmd-e4182599": {
+      "kind": "command_pattern",
+      "pattern": "node (--input-type=module|-e)"
+    },
     "t-cmd-e5052e92": {
       "kind": "command_pattern",
       "pattern": "import --global"
@@ -6308,6 +6473,10 @@
     "t-cmd-e86f6687": {
       "kind": "command_pattern",
       "pattern": "windows-latest"
+    },
+    "t-cmd-e94ef0dd": {
+      "kind": "command_pattern",
+      "pattern": "node node_modules/\\.ignored_"
     },
     "t-cmd-ed8bfc0c": {
       "kind": "command_pattern",
@@ -6553,6 +6722,10 @@
       "kind": "file_glob",
       "pattern": "src/core/reference/**/*.ts"
     },
+    "t-glob-60971e07": {
+      "kind": "file_glob",
+      "pattern": "src/targets/import/import-orchestrator.ts"
+    },
     "t-glob-6184efaf": {
       "kind": "file_glob",
       "pattern": "src/config/remote/git-remote.ts"
@@ -6597,6 +6770,10 @@
       "kind": "file_glob",
       "pattern": "src/core/reference/import-maps/*.ts"
     },
+    "t-glob-72016213": {
+      "kind": "file_glob",
+      "pattern": "src/targets/continue/importer.ts"
+    },
     "t-glob-74262634": {
       "kind": "file_glob",
       "pattern": "src/cli/commands/lessons-usage.ts"
@@ -6637,6 +6814,10 @@
       "kind": "file_glob",
       "pattern": ".agentsmesh/rules/**/*.md"
     },
+    "t-glob-7f76b340": {
+      "kind": "file_glob",
+      "pattern": "src/targets/import/shared/skill-import-pipeline.ts"
+    },
     "t-glob-7fc51540": {
       "kind": "file_glob",
       "pattern": "src/public/lessons.ts"
@@ -6676,6 +6857,14 @@
     "t-glob-87a63917": {
       "kind": "file_glob",
       "pattern": "src/core/generate/**/*.ts"
+    },
+    "t-glob-895a6107": {
+      "kind": "file_glob",
+      "pattern": "src/install/importers/target-native-commands.ts"
+    },
+    "t-glob-8ade9a3e": {
+      "kind": "file_glob",
+      "pattern": "vitest.config.ts"
     },
     "t-glob-8df49dba": {
       "kind": "file_glob",
@@ -6813,6 +7002,10 @@
       "kind": "file_glob",
       "pattern": "src/targets/catalog/target-descriptor.ts"
     },
+    "t-glob-d8072e60": {
+      "kind": "file_glob",
+      "pattern": "src/install/source/git-pin.ts"
+    },
     "t-glob-d8e040bc": {
       "kind": "file_glob",
       "pattern": "tests/unit/utils/filesystem/rename-retry.test.ts"
@@ -6841,6 +7034,10 @@
       "kind": "file_glob",
       "pattern": ".agentsmesh/skills/**"
     },
+    "t-glob-ed0be781": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/skill.ts"
+    },
     "t-glob-ee01c259": {
       "kind": "file_glob",
       "pattern": "src/lessons/regex-safety.ts"
@@ -6848,6 +7045,10 @@
     "t-glob-f238075d": {
       "kind": "file_glob",
       "pattern": "src/lessons/regex-linear/**"
+    },
+    "t-glob-f394f32c": {
+      "kind": "file_glob",
+      "pattern": "src/targets/cline/mcp-mapper.ts"
     },
     "t-glob-f8afe7f1": {
       "kind": "file_glob",

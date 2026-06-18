@@ -134,6 +134,36 @@ describe('importFromContinue — mcp', () => {
     expect(content).toContain('context7');
     expect(content).toContain('@ctx/mcp');
   });
+
+  it('imports url/HTTP/SSE MCP servers (no command), defaulting a typeless url server to http', async () => {
+    mkdirSync(join(TEST_DIR, CONTINUE_MCP_DIR), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, CONTINUE_MCP_DIR, 'remote.json'),
+      JSON.stringify({
+        mcpServers: {
+          remote: { type: 'sse', url: 'https://mcp.example.com/sse', headers: { A: 'b' } },
+          // No `type` → defaults to 'http'.
+          plain: { url: 'https://mcp.example.com/http' },
+        },
+      }),
+    );
+    // An empty YAML file in the merge dir must be tolerated (parses to nothing).
+    writeFileSync(join(TEST_DIR, CONTINUE_MCP_DIR, 'empty.yaml'), '');
+
+    const results = await importFromContinue(TEST_DIR);
+    expect(results.filter((result) => result.feature === 'mcp')).toHaveLength(1);
+    const mcp = JSON.parse(readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf-8')) as {
+      mcpServers: Record<string, { type: string; url: string }>;
+    };
+    expect(mcp.mcpServers.remote).toMatchObject({
+      type: 'sse',
+      url: 'https://mcp.example.com/sse',
+    });
+    expect(mcp.mcpServers.plain).toMatchObject({
+      type: 'http',
+      url: 'https://mcp.example.com/http',
+    });
+  });
 });
 
 describe('importFromContinue — skills', () => {

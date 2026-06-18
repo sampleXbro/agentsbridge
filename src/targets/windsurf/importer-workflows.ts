@@ -6,7 +6,7 @@ import { join, relative } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
 import {
   readFileSafe,
-  readDirRecursive,
+  readDirRecursiveNoSymlinks,
   writeFileAtomic,
   mkdirp,
 } from '../../utils/filesystem/fs.js';
@@ -40,7 +40,7 @@ export async function importWorkflows(
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
 ): Promise<void> {
   const workflowsDir = join(projectRoot, WINDSURF_WORKFLOWS_DIR);
-  const workflowFiles = await readDirRecursive(workflowsDir);
+  const workflowFiles = await readDirRecursiveNoSymlinks(workflowsDir);
   const workflowMdFiles = workflowFiles.filter((f) => f.endsWith('.md'));
   const destCommandsDir = join(projectRoot, WINDSURF_CANONICAL_COMMANDS_DIR);
   for (const srcPath of workflowMdFiles) {

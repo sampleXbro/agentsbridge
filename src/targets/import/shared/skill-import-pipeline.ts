@@ -7,7 +7,7 @@ import { join, basename, dirname, relative } from 'node:path';
 import type { ImportResult } from '../../../core/types.js';
 import {
   readFileSafe,
-  readDirRecursive,
+  readDirRecursiveNoSymlinks,
   writeFileAtomic,
   mkdirp,
 } from '../../../utils/filesystem/fs.js';
@@ -51,7 +51,7 @@ export interface SkillEntry {
  * Filters out reserved artifact names.
  */
 export async function readNativeSkill(skillDir: string): Promise<SkillEntry[]> {
-  const allFiles = await readDirRecursive(skillDir).catch(() => []);
+  const allFiles = await readDirRecursiveNoSymlinks(skillDir).catch(() => []);
   const entries: SkillEntry[] = [];
 
   for (const absPath of allFiles) {
@@ -160,7 +160,7 @@ export async function findDirectorySkills(skillsDir: string): Promise<Map<string
   const skills = new Map<string, string>();
 
   try {
-    const allFiles = await readDirRecursive(skillsDir);
+    const allFiles = await readDirRecursiveNoSymlinks(skillsDir);
     const skillMdFiles = allFiles.filter((f) => basename(f) === 'SKILL.md');
 
     for (const skillMdPath of skillMdFiles) {

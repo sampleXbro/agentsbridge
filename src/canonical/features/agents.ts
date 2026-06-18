@@ -4,7 +4,7 @@
 
 import { basename } from 'node:path';
 import type { CanonicalAgent, Hooks } from '../../core/types.js';
-import { readFileSafe, readDirRecursive } from '../../utils/filesystem/fs.js';
+import { readFileSafe, readDirRecursiveNoSymlinks } from '../../utils/filesystem/fs.js';
 import { parseOrSkipFrontmatter } from '../../utils/text/markdown.js';
 import type { ParseFrontmatterOptions } from './rules.js';
 import { assertCanonicalName, assertNoBasenameCollisions } from './validate-name.js';
@@ -70,7 +70,8 @@ export async function parseAgents(
   agentsDir: string,
   opts: ParseFrontmatterOptions = {},
 ): Promise<CanonicalAgent[]> {
-  const files = await readDirRecursive(agentsDir);
+  // No-symlinks: see parseRules — host-secret exfiltration guard.
+  const files = await readDirRecursiveNoSymlinks(agentsDir);
   const mdFiles = files.filter((f) => f.endsWith('.md') && !basename(f).startsWith('_'));
   warnIfUnrecognizedResourceFormats('agents', agentsDir, files, mdFiles, {
     handledByOtherReader: opts.handledByOtherReader,

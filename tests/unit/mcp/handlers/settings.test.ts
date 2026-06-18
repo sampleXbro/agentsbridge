@@ -3,6 +3,7 @@ import { mkdtemp, rm, mkdir, writeFile, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { settingsHandlers } from '../../../../src/mcp/handlers/settings.js';
+import { parseHooks } from '../../../../src/canonical/features/hooks.js';
 import { resolveContext } from '../../../../src/mcp/context.js';
 import type { McpContext } from '../../../../src/mcp/context.js';
 
@@ -312,6 +313,41 @@ describe('settingsHandlers', () => {
     expect(written).not.toContain('PreToolUse');
   });
 
+  it('updateHooks normalizes the nested native form so parseHooks recovers it', async () => {
+    // The nested {matcher, hooks:[{type, command}]} form is the shape a client
+    // reads from Claude Code settings.json. Written verbatim it would be dropped
+    // by parseHooks (canonical hooks are flat) — verify it survives round-trip.
+    const nested = {
+      PostToolUse: [
+        {
+          matcher: 'Write',
+          hooks: [
+            { type: 'command', command: 'echo a' },
+            { type: 'command', command: 'echo b' },
+          ],
+        },
+      ],
+    };
+    await settingsHandlers.updateHooks(ctx, { hooks: nested as never });
+    const parsed = await parseHooks(join(projectRoot, '.agentsmesh/hooks.yaml'));
+    expect(parsed).not.toBeNull();
+    expect(parsed?.PostToolUse).toEqual([
+      { matcher: 'Write', command: 'echo a', type: 'command' },
+      { matcher: 'Write', command: 'echo b', type: 'command' },
+    ]);
+  });
+
+  it('updateHooks preserves the already-flat form unchanged', async () => {
+    const flat = {
+      PreToolUse: [{ matcher: 'Bash', command: 'echo flat', type: 'command' }],
+    };
+    await settingsHandlers.updateHooks(ctx, { hooks: flat as never });
+    const parsed = await parseHooks(join(projectRoot, '.agentsmesh/hooks.yaml'));
+    expect(parsed?.PreToolUse).toEqual([
+      { matcher: 'Bash', command: 'echo flat', type: 'command' },
+    ]);
+  });
+
   // ─── ignore ───
 
   it('updateIgnore replace mode replaces patterns', async () => {
@@ -358,6 +394,19 @@ describe('settingsHandlers', () => {
     const raw = await readFile(join(projectRoot, '.agentsmesh/mcp.json'), 'utf8');
     const parsed = JSON.parse(raw) as { mcpServers: Record<string, unknown> };
     expect(parsed.mcpServers['my-server']).toBeDefined();
+  });
+
+  it('rejects a write whose content exceeds the 1 MiB cap', async () => {
+    await expect(
+      settingsHandlers.updateIgnore(ctx, { patterns: ['x'.repeat(1024 * 1024 + 16)] }),
+    ).rejects.toThrow(/LIMIT_EXCEEDED|1 MiB/);
+  });
+
+  it('updatePermissions append mode unions new entries with the existing list', async () => {
+    const r = await settingsHandlers.updatePermissions(ctx, { allow: ['NewTool'], mode: 'append' });
+    expect(r.written).toBe(true);
+    const after = await readFile(join(projectRoot, '.agentsmesh/permissions.yaml'), 'utf8');
+    expect(after).toContain('NewTool');
   });
 
   it('updatePermissions dry_run returns written: false without writing', async () => {

@@ -5,6 +5,7 @@ import { URL } from 'node:url';
 import { promisify } from 'node:util';
 import { exists, renameWithRetry } from '../../utils/filesystem/fs.js';
 import { redactUrlSecrets } from '../../utils/output/redact-url-secrets.js';
+import { assertAllowedGitUrl, gitAllowProtocolEnv } from './remote-source.js';
 import type { FetchRemoteOptions, FetchRemoteResult } from './remote-fetcher.js';
 import type { ParsedGitSource, ParsedGitlabSource } from './remote-source.js';
 
@@ -101,7 +102,14 @@ function resolveCloneUrl(parsed: ParsedGitSource | ParsedGitlabSource): string {
 
 async function cloneRepo(cloneUrl: string, repoDir: string): Promise<void> {
   ensureNotFlag(cloneUrl, 'clone-url');
-  await runGit(['clone', cloneUrl, repoDir]);
+  // Same transport allowlist the ls-remote/ref-resolution path enforces: this
+  // is the spawn that actually downloads repo bytes, so it must not be skipped.
+  assertAllowedGitUrl(cloneUrl);
+  // core.symlinks=false: git writes any symlink in the (untrusted) repo as a
+  // plain text file holding the link target, so a planted `keys -> ~/.ssh/id_rsa`
+  // cannot exfiltrate host secrets when the cloned tree is later imported or
+  // materialized into a pack. Mirrors the tarball extractor's symlink rejection.
+  await runGit(['clone', '-c', 'core.symlinks=false', cloneUrl, repoDir]);
 }
 
 async function checkoutRef(repoDir: string, ref: string): Promise<void> {
@@ -119,6 +127,9 @@ async function runGit(args: string[], cwd?: string): Promise<string> {
     env: {
       ...process.env,
       GIT_TERMINAL_PROMPT: '0',
+      // Constrain transports git may use (incl. mid-clone redirects/insteadOf)
+      // to the same allowlist the clone URL itself passed.
+      GIT_ALLOW_PROTOCOL: gitAllowProtocolEnv(),
     },
   });
   return stdout.trim();

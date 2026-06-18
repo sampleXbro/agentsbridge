@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 type ExecFileCallback = (error: Error | null, stdout: string, stderr: string) => void;
 type ExecFileOptions = { env?: NodeJS.ProcessEnv };
@@ -55,6 +55,15 @@ function queueGitFailure(message: string): void {
 describe('git pin helpers', () => {
   beforeEach(() => {
     execFileMock.mockReset();
+    // Isolate the transport opt-ins: without this the rejection test reads the
+    // ambient shell and stops locking the contract when a dev has them set.
+    delete process.env.AGENTSMESH_ALLOW_INSECURE_GIT;
+    delete process.env.AGENTSMESH_ALLOW_LOCAL_GIT;
+  });
+
+  afterEach(() => {
+    delete process.env.AGENTSMESH_ALLOW_INSECURE_GIT;
+    delete process.env.AGENTSMESH_ALLOW_LOCAL_GIT;
   });
 
   it('reports whether git is available', async () => {
@@ -118,5 +127,39 @@ describe('git pin helpers', () => {
     await expect(
       resolveRemoteRefForInstall('HEAD', 'https://example.com/org/repo.git'),
     ).rejects.toThrow('Could not resolve HEAD for https://example.com/org/repo.git');
+  });
+
+  it('rejects http/file/git transports before spawning git (SSRF / local-probe guard)', async () => {
+    for (const url of ['http://169.254.169.254/latest', 'file:///tmp/secret', 'git://evil/x']) {
+      await expect(gitLsRemoteResolve(url, 'main')).rejects.toThrow(/disallowed transport/i);
+      await expect(resolveRemoteRefForInstall('main', url)).rejects.toThrow(
+        /disallowed transport/i,
+      );
+    }
+    // scp-style URLs are not parseable as URLs and are likewise refused.
+    await expect(resolveRemoteRefForInstall('main', 'git@evil.com:org/repo')).rejects.toThrow(
+      /disallowed transport/i,
+    );
+    expect(execFileMock).not.toHaveBeenCalled();
+  });
+
+  it('sets GIT_ALLOW_PROTOCOL=https:ssh on the spawned git process by default', async () => {
+    queueGitSuccess('ABCDEFABCDEFABCDEFABCDEFABCDEFABCDEFABCD\tHEAD\n');
+    await resolveRemoteRefForInstall('', 'https://example.com/org/repo.git');
+    expect(execFileMock.mock.calls[0]?.[2]?.env?.GIT_ALLOW_PROTOCOL).toBe('https:ssh');
+  });
+
+  it('widens GIT_ALLOW_PROTOCOL when the insecure opt-in is set', async () => {
+    process.env.AGENTSMESH_ALLOW_INSECURE_GIT = '1';
+    queueGitSuccess('ABCDEFABCDEFABCDEFABCDEFABCDEFABCDEFABCD\tHEAD\n');
+    await resolveRemoteRefForInstall('', 'https://example.com/org/repo.git');
+    expect(execFileMock.mock.calls[0]?.[2]?.env?.GIT_ALLOW_PROTOCOL).toBe('https:ssh:http');
+  });
+
+  it('still resolves a direct sha for any remoteUrl without validating it', async () => {
+    await expect(
+      resolveRemoteRefForInstall('ABCDEFABCDEFABCDEFABCDEFABCDEFABCDEFABCD', 'file:///whatever'),
+    ).resolves.toBe('abcdefabcdefabcdefabcdefabcdefabcdefabcd');
+    expect(execFileMock).not.toHaveBeenCalled();
   });
 });

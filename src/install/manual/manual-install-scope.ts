@@ -1,7 +1,7 @@
 import { basename, dirname, join, relative } from 'node:path';
 import { cp, mkdtemp, stat, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { mkdirp, readDirRecursive, readFileSafe } from '../../utils/filesystem/fs.js';
+import { mkdirp, readDirRecursiveNoSymlinks, readFileSafe } from '../../utils/filesystem/fs.js';
 import { isSkillPackLayout } from '../../canonical/load/skill-pack-load.js';
 import { readSkillFrontmatterName, cpFilteredSkill } from '../source/skill-repo-filter.js';
 import { isBoilerplate } from '../importers/boilerplate-filter.js';
@@ -64,7 +64,7 @@ async function stageMarkdownCollection(
   const info = await stat(sourceRoot);
   if (info.isFile()) return stageSingleFile(sourceRoot, destinationDir, acceptMdc);
 
-  const files = (await readDirRecursive(sourceRoot)).filter(
+  const files = (await readDirRecursiveNoSymlinks(sourceRoot)).filter(
     (file) => isAcceptedFile(file, acceptMdc) && !isBoilerplate(basename(file)),
   );
   if (files.length === 0) {
@@ -125,7 +125,7 @@ async function stagePreferredSkills(
 
   const wanted = new Set(preferredSkillNames);
   const matches = new Map<string, string>();
-  for (const file of await readDirRecursive(sourceRoot)) {
+  for (const file of await readDirRecursiveNoSymlinks(sourceRoot)) {
     if (!file.endsWith('/SKILL.md') && !file.endsWith('\\SKILL.md')) continue;
     const skillDir = dirname(file);
     const skillName = basename(skillDir);
@@ -183,7 +183,7 @@ async function stageSkills(
       return;
     }
     await mkdirp(destinationDir);
-    const entries = await readDirRecursive(sourceRoot);
+    const entries = await readDirRecursiveNoSymlinks(sourceRoot);
     const roots = new Set<string>();
     for (const file of entries.filter(
       (entry) => entry.endsWith('/SKILL.md') || entry.endsWith('\\SKILL.md'),

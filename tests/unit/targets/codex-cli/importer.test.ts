@@ -183,29 +183,28 @@ describe('importFromCodex: skills', () => {
     expect(content).toContain('# Fallback skill');
   });
 
-  it('imports symlinked skills from .codex/skills fallback', async () => {
+  it('does NOT follow a symlinked skill dir in .codex/skills (host-secret exfiltration guard)', async (ctx) => {
+    // Security: the import reader does not follow symlinks. A symlinked skill dir is
+    // skipped — otherwise an attacker could point it at a secrets directory and have
+    // its bytes copied into canonical / a redistributed pack. Real skill dirs import
+    // normally; only symlinked entries are dropped.
     const sourceDir = join(TEST_DIR, 'source-skill');
     mkdirSync(sourceDir, { recursive: true });
     writeFileSync(join(sourceDir, 'SKILL.md'), '# Symlinked skill');
-    writeFileSync(join(sourceDir, 'README.md'), 'linked docs');
 
     const fallbackDir = join(TEST_DIR, CODEX_SKILLS_FALLBACK_DIR);
     mkdirSync(fallbackDir, { recursive: true });
-    symlinkSync(sourceDir, join(fallbackDir, 'linked-skill'), 'dir');
+    try {
+      symlinkSync(sourceDir, join(fallbackDir, 'linked-skill'), 'dir');
+    } catch {
+      return ctx.skip(); // unprivileged runner cannot create symlinks
+    }
 
     const results = await importFromCodex(TEST_DIR);
-
-    expect(
-      results.find((r) => r.toPath === '.agentsmesh/skills/linked-skill/SKILL.md'),
-    ).toBeDefined();
-    expect(
-      results.find((r) => r.toPath === '.agentsmesh/skills/linked-skill/README.md'),
-    ).toBeDefined();
-    const content = readFileSync(
-      join(TEST_DIR, '.agentsmesh', 'skills', 'linked-skill', 'SKILL.md'),
-      'utf-8',
+    expect(results.find((r) => r.toPath.includes('linked-skill'))).toBeUndefined();
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'skills', 'linked-skill', 'SKILL.md'))).toBe(
+      false,
     );
-    expect(content).toContain('# Symlinked skill');
   });
 
   it('imports metadata-tagged command skills back into canonical commands', async () => {

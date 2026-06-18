@@ -53,22 +53,24 @@ targets:
 
 With a single target, `agentsmesh watch` regenerates significantly faster.
 
-## What local overrides can and cannot do
-
-**Can do:**
-- Narrow `targets` to a subset of what `agentsmesh.yaml` defines
-- Narrow `features` to a subset of what `agentsmesh.yaml` defines
-
-**Cannot do:**
-- Add targets not in `agentsmesh.yaml`
-- Add features not in `agentsmesh.yaml`
-- Override `extends`, `collaboration`, or `conversions`
-
-This prevents local overrides from creating config that the rest of the team doesn't know about.
-
 ## Merge behavior
 
-When AgentsMesh loads config, it first reads `agentsmesh.yaml`, then applies `agentsmesh.local.yaml` on top. The local file is strictly a narrowing override — it cannot expand scope.
+When AgentsMesh loads config it first reads `agentsmesh.yaml`, then applies `agentsmesh.local.yaml` on top. Each field merges differently:
+
+| Field | Local merge behavior |
+| --- | --- |
+| `targets` | **Replaces** the project list when non-empty |
+| `features` | **Replaces** the project list when non-empty |
+| `extends` | **Appended** to the project's `extends` |
+| `conversions` | **Deep-merged** over the project's `conversions` |
+| `overrides` | **Deep-merged** over the project's `overrides` |
+| `collaboration` | Ignored (cannot be set locally) |
+
+Because `targets` and `features` *replace* rather than intersect, a local list does not have to be a subset of `agentsmesh.yaml`. The common use is to **narrow** scope (generate for fewer tools/features locally), but a local file **can also add** a target or feature the shared config omits — it will be generated on your machine only. The local file is gitignored, so anything it adds affects your checkout and not your teammates or CI.
+
+:::caution
+Because a local file can expand scope, keep it minimal — list only the targets/features you actually want locally. If a teammate reports config you don't see, check whether your `agentsmesh.local.yaml` is adding something the shared config doesn't define.
+:::
 
 ## Team onboarding note
 

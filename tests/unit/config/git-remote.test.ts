@@ -82,10 +82,16 @@ describe('fetchGitRemoteExtend', () => {
     rmMock.mockReset().mockResolvedValue(undefined);
     existsMock.mockReset();
     delete process.env.AGENTSMESH_GITLAB_TOKEN;
+    // Isolate the transport opt-ins so the allowlist behaves deterministically
+    // regardless of the ambient shell.
+    delete process.env.AGENTSMESH_ALLOW_INSECURE_GIT;
+    delete process.env.AGENTSMESH_ALLOW_LOCAL_GIT;
   });
 
   afterEach(() => {
     delete process.env.AGENTSMESH_GITLAB_TOKEN;
+    delete process.env.AGENTSMESH_ALLOW_INSECURE_GIT;
+    delete process.env.AGENTSMESH_ALLOW_LOCAL_GIT;
     vi.restoreAllMocks();
   });
 
@@ -160,6 +166,8 @@ describe('fetchGitRemoteExtend', () => {
 
     expect(execFileMock.mock.calls[0]?.[1]).toEqual([
       'clone',
+      '-c',
+      'core.symlinks=false',
       'https://oauth2:secret%20token@gitlab.com/team/subteam/project.git',
       join('/tmp/cache/gitlab__team_subteam_project__release_v1.tmp/repo'),
     ]);
@@ -193,6 +201,8 @@ describe('fetchGitRemoteExtend', () => {
       'git',
       [
         'clone',
+        '-c',
+        'core.symlinks=false',
         'ssh://git@gitlab.com/team/project.git',
         join('/tmp/cache/gitlab__team_project__HEAD.tmp/repo'),
       ],
@@ -213,7 +223,7 @@ describe('fetchGitRemoteExtend', () => {
 
     await expect(
       fetchGitRemoteExtend(
-        { url: 'file:///tmp/example.git' },
+        { url: 'https://example.com/repo.git' },
         'shared-rules',
         { allowOfflineFallback: false, refresh: true },
         '/tmp/cache',
@@ -237,7 +247,7 @@ describe('fetchGitRemoteExtend', () => {
 
     await expect(
       fetchGitRemoteExtend(
-        { url: 'file:///tmp/example.git' },
+        { url: 'https://example.com/repo.git' },
         'shared-rules',
         { allowOfflineFallback: false, refresh: true },
         '/tmp/cache',
@@ -246,5 +256,80 @@ describe('fetchGitRemoteExtend', () => {
     ).rejects.toBe('boom-string-failure');
 
     expect(execFileMock).toHaveBeenCalledOnce();
+  });
+
+  it('falls back to cache on a non-Error rejection, stringifying it for the warning', async () => {
+    existsMock.mockResolvedValue(true); // cached repo present
+    execFileMock.mockImplementationOnce(
+      (_file: string, _args: string[], _options: ExecFileOptions, callback: ExecFileCallback) => {
+        callback('boom-string' as unknown as Error, '', ''); // clone rejects a non-Error
+      },
+    );
+    queueGitSuccess('cached-sha\n'); // rev-parse on the cached repo
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const result = await fetchGitRemoteExtend(
+      { url: 'https://example.com/repo.git' },
+      'shared-rules',
+      { refresh: true },
+      '/tmp/cache',
+      buildCacheKey,
+    );
+
+    expect(result.version).toBe('cached-sha');
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('using cached version'));
+  });
+
+  it('rejects a disallowed clone transport before invoking git (http/ext SSRF/RCE guard)', async () => {
+    existsMock.mockResolvedValue(false);
+    for (const url of ['http://169.254.169.254/repo.git', 'ext::sh -c id', 'git://evil/repo.git']) {
+      await expect(
+        fetchGitRemoteExtend(
+          { url },
+          'shared-rules',
+          { allowOfflineFallback: false },
+          '/tmp/cache',
+          buildCacheKey,
+        ),
+      ).rejects.toThrow(/disallowed transport/i);
+    }
+    expect(execFileMock).not.toHaveBeenCalled();
+  });
+
+  it('sets GIT_ALLOW_PROTOCOL=https:ssh on every spawned git process', async () => {
+    existsMock.mockResolvedValue(false);
+    queueGitSuccess(''); // clone
+    queueGitSuccess('fresh-sha\n'); // rev-parse HEAD
+
+    await fetchGitRemoteExtend(
+      { url: 'https://example.com/repo.git' },
+      'shared-rules',
+      { allowOfflineFallback: false },
+      '/tmp/cache',
+      buildCacheKey,
+    );
+
+    for (const call of execFileMock.mock.calls) {
+      expect((call[2] as ExecFileOptions).env?.GIT_ALLOW_PROTOCOL).toBe('https:ssh');
+    }
+  });
+
+  it('widens GIT_ALLOW_PROTOCOL and the clone allowlist when the file opt-in is set', async () => {
+    process.env.AGENTSMESH_ALLOW_LOCAL_GIT = '1';
+    existsMock.mockResolvedValue(false);
+    queueGitSuccess(''); // clone
+    queueGitSuccess('fresh-sha\n'); // rev-parse HEAD
+
+    await fetchGitRemoteExtend(
+      { url: 'file:///tmp/example.git' },
+      'shared-rules',
+      { allowOfflineFallback: false },
+      '/tmp/cache',
+      buildCacheKey,
+    );
+
+    expect((execFileMock.mock.calls[0]?.[2] as ExecFileOptions).env?.GIT_ALLOW_PROTOCOL).toBe(
+      'https:ssh:file',
+    );
   });
 });

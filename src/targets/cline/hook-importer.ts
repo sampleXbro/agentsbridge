@@ -12,7 +12,7 @@ import { join, basename, dirname } from 'node:path';
 import { stringify as yamlStringify } from 'yaml';
 import type { ImportResult } from '../../core/types.js';
 import {
-  readDirRecursive,
+  readDirRecursiveNoSymlinks,
   readFileSafe,
   writeFileAtomic,
   mkdirp,
@@ -33,7 +33,7 @@ async function loadHooksFromDir(
   dir: string,
   hooks: Record<string, Array<{ matcher: string; command: string }>>,
 ): Promise<void> {
-  const files = await readDirRecursive(dir).catch(() => []);
+  const files = await readDirRecursiveNoSymlinks(dir).catch(() => []);
   const shFiles = files.filter((f) => basename(f).endsWith('.sh') && dirname(f) === dir);
   for (const srcPath of shFiles) {
     const content = await readFileSafe(srcPath);

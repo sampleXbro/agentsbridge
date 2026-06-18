@@ -6,7 +6,7 @@ import { join, dirname, basename } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
 import {
   readFileSafe,
-  readDirRecursive,
+  readDirRecursiveNoSymlinks,
   writeFileAtomic,
   mkdirp,
 } from '../../utils/filesystem/fs.js';
@@ -56,7 +56,7 @@ export function extractWrapperCommand(content: string): string {
  */
 export async function importHooks(projectRoot: string, results: ImportResult[]): Promise<void> {
   const hooksDir = join(projectRoot, COPILOT_HOOKS_DIR);
-  const allFiles = await readDirRecursive(hooksDir).catch(() => []);
+  const allFiles = await readDirRecursiveNoSymlinks(hooksDir).catch(() => []);
   const jsonFiles = allFiles.filter((file) => file.endsWith('.json'));
   const hooks: Record<string, Array<{ matcher: string; command: string; type: string }>> = {};
 
@@ -94,7 +94,7 @@ export async function importHooks(projectRoot: string, results: ImportResult[]):
   }
 
   const legacyDir = join(projectRoot, COPILOT_LEGACY_HOOKS_DIR);
-  const legacyFiles = await readDirRecursive(legacyDir).catch(() => []);
+  const legacyFiles = await readDirRecursiveNoSymlinks(legacyDir).catch(() => []);
   const shFiles = legacyFiles.filter(
     (file) => dirname(file) === legacyDir && /^[^-]+-\d+\.sh$/i.test(basename(file)),
   );

@@ -5,6 +5,7 @@ import type { McpContext } from '../context.js';
 import { McpError } from '../errors.js';
 import { MAX_FILE_SIZE_BYTES } from '../limits.js';
 import { safeConfigWrite } from '../writers/safe-config-write.js';
+import { normalizeHooksRecord } from '../writers/normalize-hooks.js';
 import { configSchema } from '../../config/core/schema.js';
 import { parseMcp } from '../../canonical/features/mcp.js';
 import type { McpConfig } from '../../core/mcp-types.js';
@@ -195,7 +196,9 @@ export const settingsHandlers = {
   ): Promise<{ path: string; written: boolean }> {
     const path = resolve(ctx.projectRoot, '.agentsmesh/hooks.yaml');
     if (input.dry_run === true) return { path, written: false };
-    await atomicWrite(path, stringifyYaml(input.hooks));
+    // Flatten the nested native form to the flat canonical shape so parseHooks
+    // can recover it; a verbatim nested write is silently dropped on generate.
+    await atomicWrite(path, stringifyYaml(normalizeHooksRecord(input.hooks)));
     return { path, written: true };
   },
 

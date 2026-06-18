@@ -6,6 +6,18 @@ import {
   stripManagedBlock,
 } from './managed-blocks.js';
 
+const LEGACY_RAW_FORMS = [
+  `## Lessons (BLOCKING REQUIREMENT — MUST run both, no exceptions; the user will check)
+
+Graph \`.agentsmesh/lessons/lessons.json\` is canonical — never hand-edit. Manual: the \`lessons\` skill.
+
+**Recall — MUST run before every file edit and every state-changing command** (build/test/install/migrate/git-write): \`agentsmesh lessons query --file <path> --cmd <command>\`, then apply every rule. Pure-read commands (cat/ls/grep/git-log) and the recall query itself are exempt.
+
+**Capture — MUST run immediately after any failure** (a failing test/CI/lint/typecheck, a code review, a user correction, a regression, or a wrong assumption — yours or anyone's): \`agentsmesh lessons add "<rule>" --topic <id> --trigger-file <glob> --evidence <sha|lesson-id>\`.
+
+No shell? Use the \`lessons_query\` / \`lessons_add\` MCP tools. Skip either and the system does not exist.`,
+];
+
 /**
  * The lessons recall/capture ritual, wrapped in managed-block sentinels.
  *
@@ -38,14 +50,13 @@ export function stripLessonsParagraph(content: string): string {
 }
 
 /**
- * Defensive strip of a SENTINEL-LESS copy of the current procedural rule, so a
- * hand-pasted or merge-mangled raw paragraph de-duplicates on the next scaffold
- * instead of leaving a second copy beside the managed block. The lessons feature
- * is unreleased, so there is no prior-wording migration ladder to carry — only
- * the current wording is recognised.
+ * Defensive strip of a SENTINEL-LESS copy of a procedural rule, so a hand-pasted
+ * or merge-mangled raw paragraph de-duplicates on the next scaffold instead of
+ * leaving a second copy beside the managed block.
  */
 function stripRawProceduralRule(content: string): string {
-  return content
-    .replace(`\n\n${LESSONS_PROCEDURAL_RULE}`, '')
-    .replace(LESSONS_PROCEDURAL_RULE, '');
+  return [LESSONS_PROCEDURAL_RULE, ...LEGACY_RAW_FORMS].reduce(
+    (next, rule) => next.replace(`\n\n${rule}`, '').replace(rule, ''),
+    content,
+  );
 }

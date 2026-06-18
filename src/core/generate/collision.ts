@@ -136,7 +136,28 @@ export function resolveOutputCollisions(results: GenerateResult[]): GenerateResu
     deduped[existingIdx] = mergeDuplicateMetadata(existing, result);
   }
 
+  assertNoCaseOnlyPathCollisions(deduped);
   return deduped;
+}
+
+/**
+ * After exact-path dedup, two *distinct* output paths that differ only by case
+ * (e.g. `commands/Build.md` and `commands/build.md`) still resolve to the same
+ * file on case-insensitive filesystems (Windows/macOS), where the second write
+ * silently clobbers the first. Surface it as a hard error instead.
+ */
+function assertNoCaseOnlyPathCollisions(results: readonly GenerateResult[]): void {
+  const byLower = new Map<string, GenerateResult>();
+  for (const result of results) {
+    const key = result.path.toLowerCase();
+    const prior = byLower.get(key);
+    if (prior !== undefined && prior.path !== result.path) {
+      throw new Error(
+        `Case-only path collision: "${prior.path}" (${prior.target}) and "${result.path}" (${result.target}) resolve to the same file on case-insensitive filesystems (Windows/macOS). Rename one canonical source.`,
+      );
+    }
+    byLower.set(key, result);
+  }
 }
 
 export function refreshResultStatus(result: GenerateResult): GenerateResult {

@@ -1,14 +1,14 @@
 ---
 draft: false
 title: Local Overrides
-description: agentsmesh.local.yaml is gitignored and lets individual developers narrow their local setup without affecting the shared team config.
+description: agentsmesh.local.yaml is gitignored and lets individual developers customize their local setup without affecting the shared team config.
 ---
 
 `agentsmesh.local.yaml` is gitignored and allows individual developers to customize their local setup without affecting the shared `agentsmesh.yaml` that the rest of the team uses.
 
-## Key constraint
+## How merging works
 
-Local overrides can only **narrow** the scope — they cannot add targets or features that `agentsmesh.yaml` doesn't already define.
+`targets` and `features` from the local file **replace** the project values when present, so the common use is to **narrow** scope locally. Because it is a replace (not an intersection), a local file **can also add** a target or feature the shared config omits — it will generate on your machine only. See [Merge behavior](#merge-behavior) for the full per-field rules.
 
 ## Common use cases
 
@@ -58,4 +58,15 @@ agentsmesh.local.yaml
 
 ## Merge behavior
 
-When AgentsMesh loads config, it merges local overrides on top of the project config. Local overrides take precedence for `targets` and `features`, but not for `extends`, `collaboration`, or `conversions` — those always come from the committed `agentsmesh.yaml`.
+When AgentsMesh loads config it merges local overrides on top of the project config, per field:
+
+| Field | Local merge behavior |
+| --- | --- |
+| `targets` | **Replaces** the project list when non-empty |
+| `features` | **Replaces** the project list when non-empty |
+| `extends` | **Appended** to the project's `extends` |
+| `conversions` | **Deep-merged** over the project's `conversions` |
+| `overrides` | **Deep-merged** over the project's `overrides` |
+| `collaboration` | Ignored (always comes from `agentsmesh.yaml`) |
+
+Because `targets`/`features` replace and `extends`/`conversions` merge, a local file can change what is generated on your machine beyond a strict subset of `agentsmesh.yaml`. Keep it minimal and remember it only affects your gitignored checkout — not teammates or CI.

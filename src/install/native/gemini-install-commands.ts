@@ -4,7 +4,7 @@
 
 import { join, relative } from 'node:path';
 import type { ExtendPick } from '../../config/core/schema.js';
-import { readDirRecursive } from '../../utils/filesystem/fs.js';
+import { readDirRecursiveNoSymlinks } from '../../utils/filesystem/fs.js';
 import { GEMINI_COMMANDS_DIR } from '../../targets/gemini-cli/constants.js';
 
 /** True when pathInRepo (POSIX, trimmed) is `.gemini/commands` or a subpath. */
@@ -22,7 +22,7 @@ export async function inferGeminiCommandNamesFromFiles(
 ): Promise<string[]> {
   const commandsRoot = join(repoRoot, ...GEMINI_COMMANDS_DIR.split('/'));
   const scanDir = join(repoRoot, ...pathInRepoPosix.split('/'));
-  const files = await readDirRecursive(scanDir);
+  const files = await readDirRecursiveNoSymlinks(scanDir);
   const names: string[] = [];
   for (const f of files) {
     if (!/\.(toml|md)$/i.test(f)) continue;

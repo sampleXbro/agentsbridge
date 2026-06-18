@@ -6,7 +6,7 @@ import { join, relative } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
 import {
   readFileSafe,
-  readDirRecursive,
+  readDirRecursiveNoSymlinks,
   writeFileAtomic,
   mkdirp,
 } from '../../utils/filesystem/fs.js';
@@ -23,7 +23,7 @@ export async function importCodexNonRootRuleFiles(
   const results: ImportResult[] = [];
   const codexRulesPath = join(projectRoot, CODEX_RULES_DIR);
   try {
-    const ruleFiles = await readDirRecursive(codexRulesPath);
+    const ruleFiles = await readDirRecursiveNoSymlinks(codexRulesPath);
     const mdFiles = ruleFiles.filter((f) => f.endsWith('.md'));
     for (const srcPath of mdFiles) {
       const content = await readFileSafe(srcPath);

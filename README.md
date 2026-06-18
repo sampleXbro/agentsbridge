@@ -445,6 +445,7 @@ Every config file ships with a generated JSON Schema, so VS Code, JetBrains, and
 | `AGENTSMESH_CACHE` | `~/.agentsmesh/cache` | Override the remote-extends / tarball cache directory (the gitignored `.agentsmeshcache` in the project is a symlink to it). Must be an absolute path. |
 | `AGENTSMESH_MAX_TARBALL_MB` | `500` | Maximum GitHub tarball size in MiB the install command will accept. Allowed range: `1`–`4096`. Increase this when installing from large monorepos. |
 | `AGENTSMESH_STRICT_PLUGINS` | `0` | When set to `1`, a failed plugin descriptor import fails the build instead of warning-and-skip. Useful in CI where a missing plugin target is a regression. |
+| `AGENTSMESH_ALLOW_INSECURE_GIT` | `0` | When set to `1`, enables insecure `git+http://` transports in `extends` and `install`. Disabled by default because `http` strips transport security (a MITM can swap cloned bytes before the SHA is pinned). The transport allowlist (`https`/`ssh` only, plus opt-ins) is enforced before any `git ls-remote`/clone. |
 | `AGENTSMESH_ALLOW_LOCAL_GIT` | `0` | When set to `1`, enables `git+file://` sources in `extends` and `install`. Disabled by default because on shared hosts a world-writable repo could be planted by another user and combined with elevated-artifact emission for local privilege escalation. |
 
 ---

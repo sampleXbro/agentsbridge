@@ -14,6 +14,7 @@ import {
 } from '../../../src/canonical/features/validate-name.js';
 import { parseAgents } from '../../../src/canonical/features/agents.js';
 import { parseCommands } from '../../../src/canonical/features/commands.js';
+import { parseRules } from '../../../src/canonical/features/rules.js';
 import { parseSkillDirectory, parseSkills } from '../../../src/canonical/features/skills.js';
 
 let dir: string;
@@ -62,6 +63,24 @@ describe('assertNoBasenameCollisions (F4)', () => {
     ).toThrow(/collide on slug "foo"/);
   });
 
+  it('rejects case-only collisions (last-write-wins on Windows/macOS)', () => {
+    expect(() =>
+      assertNoBasenameCollisions(
+        'command',
+        ['/p/commands/Build.md', '/p/commands/build.md'],
+        '.md',
+      ),
+    ).toThrow(/collide on slug/i);
+    // Both original-cased names are surfaced for the user.
+    expect(() =>
+      assertNoBasenameCollisions(
+        'command',
+        ['/p/commands/Build.md', '/p/commands/build.md'],
+        '.md',
+      ),
+    ).toThrow(/Build[\s\S]*build|build[\s\S]*Build/);
+  });
+
   it('does not flag the same exact path listed twice', () => {
     expect(() =>
       assertNoBasenameCollisions('agent', ['/p/agents/x.md', '/p/agents/x.md'], '.md'),
@@ -92,6 +111,21 @@ describe('parseAgents wiring', () => {
     writeFileSync(join(dir, 'foo.md'), '---\nname: a\n---\nbody\n');
     writeFileSync(join(dir, 'sub', 'foo.md'), '---\nname: b\n---\nbody\n');
     await expect(parseAgents(dir)).rejects.toThrow(/collide on slug "foo"/);
+  });
+});
+
+describe('parseRules wiring', () => {
+  it('throws on nested basename collision (silent rule-drop guard)', async () => {
+    mkdirSync(join(dir, 'sub'), { recursive: true });
+    writeFileSync(join(dir, 'foo.md'), '---\ndescription: a\n---\nbody\n');
+    writeFileSync(join(dir, 'sub', 'foo.md'), '---\ndescription: b\n---\nbody\n');
+    await expect(parseRules(dir)).rejects.toThrow(/collide on slug "foo"/);
+  });
+
+  it('allows a single _root.md alongside other rules', async () => {
+    writeFileSync(join(dir, '_root.md'), '---\ndescription: r\n---\nroot\n');
+    writeFileSync(join(dir, 'a.md'), '---\ndescription: a\n---\nbody\n');
+    await expect(parseRules(dir)).resolves.toHaveLength(2);
   });
 });
 

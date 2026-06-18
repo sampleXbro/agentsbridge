@@ -78,6 +78,15 @@ describe('resolveOutputCollisions — extra branches', () => {
     ).toThrow(/Conflicting generated outputs/);
   });
 
+  it('throws on case-only path collisions (Windows/macOS clobber)', () => {
+    expect(() =>
+      resolveOutputCollisions([
+        makeResult({ target: 'cursor', path: '.cursor/commands/Build.md', content: 'a' }),
+        makeResult({ target: 'cursor', path: '.cursor/commands/build.md', content: 'b' }),
+      ]),
+    ).toThrow(/case-only path collision/i);
+  });
+
   it('returns codex when codex content equal length to other (no codex win)', () => {
     // codex content has equal length to other → codex richer returns null → throws.
     expect(() =>

@@ -4,7 +4,7 @@
 
 import { join, basename } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
-import { readDirRecursive, readFileSafe } from '../../utils/filesystem/fs.js';
+import { readDirRecursiveNoSymlinks, readFileSafe } from '../../utils/filesystem/fs.js';
 import {
   findDirectorySkills,
   importDirectorySkill,
@@ -36,7 +36,7 @@ export async function importSkills(
   }
 
   // Import flat skills (remaining .md files not in directories)
-  const allFiles = await readDirRecursive(skillsDir).catch(() => []);
+  const allFiles = await readDirRecursiveNoSymlinks(skillsDir).catch(() => []);
   const mdFiles = allFiles.filter((f) => f.endsWith('.md'));
   const handledPaths = new Set(
     Array.from(directorySkills.values()).flatMap((dir) =>

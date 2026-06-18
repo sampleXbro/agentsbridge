@@ -4,9 +4,9 @@
 
 import { basename } from 'node:path';
 import type { CanonicalRule } from '../../core/types.js';
-import { readFileSafe, readDirRecursive } from '../../utils/filesystem/fs.js';
+import { readFileSafe, readDirRecursiveNoSymlinks } from '../../utils/filesystem/fs.js';
 import { parseOrSkipFrontmatter } from '../../utils/text/markdown.js';
-import { assertCanonicalName } from './validate-name.js';
+import { assertCanonicalName, assertNoBasenameCollisions } from './validate-name.js';
 import {
   warnIfUnrecognizedResourceFormats,
   type UnrecognizedFormatsWarningOptions,
@@ -45,7 +45,9 @@ export async function parseRules(
   rulesDir: string,
   opts: ParseFrontmatterOptions = {},
 ): Promise<CanonicalRule[]> {
-  const files = await readDirRecursive(rulesDir);
+  // No-symlinks: a symlinked rule file could point at a host secret and would
+  // otherwise be read into canonical and copied into a redistributed pack.
+  const files = await readDirRecursiveNoSymlinks(rulesDir);
   const mdFiles = files.filter((f) => {
     if (!f.endsWith('.md')) return false;
     const name = basename(f, '.md');
@@ -54,6 +56,10 @@ export async function parseRules(
   warnIfUnrecognizedResourceFormats('rules', rulesDir, files, mdFiles, {
     handledByOtherReader: opts.handledByOtherReader,
   });
+  // Two rules with the same slug (e.g. rules/foo.md + rules/sub/foo.md, or a
+  // duplicate _root.md) collapse in the generate loop — the second silently
+  // splices out the first before any output-collision check. Fail at parse time.
+  assertNoBasenameCollisions('rule', mdFiles, '.md');
   const rules: CanonicalRule[] = [];
   for (const path of mdFiles) {
     const content = await readFileSafe(path);

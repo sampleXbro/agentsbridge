@@ -13,37 +13,50 @@ import {
   CLINE_CANONICAL_MCP,
 } from './constants.js';
 
+/** Filter an unknown record down to its string-valued string-keyed entries. */
+function toStringRecord(raw: unknown): Record<string, string> {
+  if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  return Object.fromEntries(
+    Object.entries(raw).filter((entry): entry is [string, string] => typeof entry[1] === 'string'),
+  );
+}
+
 export function mapClineServerToCanonical(raw: unknown): McpServer | null {
   if (!raw || typeof raw !== 'object') return null;
   const obj = raw as Record<string, unknown>;
-  const command = typeof obj.command === 'string' ? obj.command : '';
-  if (!command) return null;
-  const type =
-    typeof obj.type === 'string'
-      ? obj.type
-      : typeof obj.transportType === 'string'
-        ? obj.transportType
-        : 'stdio';
-  const args = Array.isArray(obj.args)
-    ? obj.args.filter((x): x is string => typeof x === 'string')
-    : [];
-  const envRaw = obj.env;
-  const env: Record<string, string> =
-    envRaw !== null && typeof envRaw === 'object' && !Array.isArray(envRaw)
-      ? Object.fromEntries(
-          Object.entries(envRaw).filter(
-            (entry): entry is [string, string] => typeof entry[1] === 'string',
-          ),
-        )
-      : {};
+  const transport = typeof obj.type === 'string' ? obj.type : undefined;
+  const transportType = typeof obj.transportType === 'string' ? obj.transportType : undefined;
+  const env = toStringRecord(obj.env);
   const description = typeof obj.description === 'string' ? obj.description : undefined;
-  return {
-    ...(description !== undefined && { description }),
-    type,
-    command,
-    args,
-    env,
-  };
+
+  const command = typeof obj.command === 'string' ? obj.command : '';
+  if (command) {
+    const args = Array.isArray(obj.args)
+      ? obj.args.filter((x): x is string => typeof x === 'string')
+      : [];
+    return {
+      ...(description !== undefined && { description }),
+      type: transport ?? transportType ?? 'stdio',
+      command,
+      args,
+      env,
+    };
+  }
+
+  // URL/HTTP/SSE servers carry a `url` and no `command`. Without this branch a
+  // generate -> re-import round-trip through Cline silently drops every remote
+  // MCP server (cline's generator emits canonical url servers verbatim).
+  if (typeof obj.url === 'string') {
+    return {
+      ...(description !== undefined && { description }),
+      type: transport ?? transportType ?? 'http',
+      url: obj.url,
+      headers: toStringRecord(obj.headers),
+      env,
+    };
+  }
+
+  return null;
 }
 
 export async function importClineMcp(projectRoot: string, results: ImportResult[]): Promise<void> {

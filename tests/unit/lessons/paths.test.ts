@@ -127,10 +127,12 @@ describe('LESSONS_PROCEDURAL_RULE', () => {
     expect(LESSONS_PROCEDURAL_RULE).toMatch(/pure[- ]read/i);
   });
 
-  it('defines a failure broadly — a user correction or wrong assumption counts, not just red tests', () => {
+  it('defines capture broadly — learning moments count, not just red tests', () => {
     expect(LESSONS_PROCEDURAL_RULE).toMatch(/user correction/i);
     expect(LESSONS_PROCEDURAL_RULE).toMatch(/regression/i);
     expect(LESSONS_PROCEDURAL_RULE).toMatch(/wrong assumption/i);
+    expect(LESSONS_PROCEDURAL_RULE).toMatch(/useful surprise/i);
+    expect(LESSONS_PROCEDURAL_RULE).toMatch(/non-obvious fix/i);
   });
 
   it('names the canonical graph path so init scaffolding stays consistent', () => {
@@ -149,15 +151,16 @@ describe('LESSONS_PROCEDURAL_RULE', () => {
   });
 
   it('keeps a forceful BLOCKING frame the agent cannot rationalize away', () => {
-    // The always-on block is binding AND forcefully framed: a "BLOCKING
-    // REQUIREMENT — MUST run both" header, the accountability cue ("the user
-    // will check"), and a hard closing ("the system does not exist") so the
-    // ritual is not skipped. What stays OUT is the flouted "read-only included"
-    // clause and the exhaustive rejected-excuse enumeration — those live in the
-    // on-demand `lessons` skill, not the always-on block.
-    expect(LESSONS_PROCEDURAL_RULE).toContain('BLOCKING REQUIREMENT');
-    expect(LESSONS_PROCEDURAL_RULE).toContain('the user will check');
-    expect(LESSONS_PROCEDURAL_RULE).toContain('the system does not exist');
+    // The always-on block is binding and visible: a BLOCKING header plus a
+    // before-final receipt make the ritual checkable without inlining the full
+    // manual. What stays OUT is the flouted "read-only included" clause and the
+    // exhaustive rejected-excuse enumeration — those live in the on-demand
+    // `lessons` skill, not the always-on block.
+    expect(LESSONS_PROCEDURAL_RULE).toContain('BLOCKING');
+    expect(LESSONS_PROCEDURAL_RULE).toContain('Before final');
+    expect(LESSONS_PROCEDURAL_RULE).toContain('Lesson: captured <id>');
+    expect(LESSONS_PROCEDURAL_RULE).toContain('Lesson: none');
+    expect(LESSONS_PROCEDURAL_RULE).toContain('task incomplete');
     expect(LESSONS_PROCEDURAL_RULE).not.toContain('read-only included');
     expect(LESSONS_PROCEDURAL_RULE).not.toContain('Rejected excuses');
   });
@@ -166,7 +169,7 @@ describe('LESSONS_PROCEDURAL_RULE', () => {
     // Forceful framing is restored, but the always-on per-session tax stays
     // bounded: this guards against regrowth toward the ~1450-char maximalist
     // V1/V2 block, not against the deliberate forceful frame.
-    expect(LESSONS_PROCEDURAL_RULE.length).toBeLessThan(880);
+    expect(LESSONS_PROCEDURAL_RULE.length).toBeLessThan(900);
   });
 
   it('does NOT bake in any Claude Code-specific tool names as required actions', () => {

@@ -3,7 +3,7 @@ import { dirname, join, relative } from 'node:path';
 import type { CanonicalFiles, ImportResult } from '../../core/types.js';
 import {
   mkdirp,
-  readDirRecursive,
+  readDirRecursiveNoSymlinks,
   readFileSafe,
   writeFileAtomic,
 } from '../../utils/filesystem/fs.js';
@@ -132,7 +132,7 @@ export async function importEmbeddedSkills(
       feature: 'skills',
     });
 
-    const sourceFiles = await readDirRecursive(sourceSkillDir);
+    const sourceFiles = await readDirRecursiveNoSymlinks(sourceSkillDir);
     for (const sourcePath of sourceFiles) {
       if (sourcePath === sourceSkillFile) continue;
       const relativePath = relative(sourceSkillDir, sourcePath).replace(/\\/g, '/');

@@ -3,7 +3,7 @@ import type { ImportResult } from '../../core/types.js';
 import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 import {
   readFileSafe,
-  readDirRecursive,
+  readDirRecursiveNoSymlinks,
   writeFileAtomic,
   mkdirp,
 } from '../../utils/filesystem/fs.js';
@@ -149,7 +149,7 @@ async function importInstructionMirrors(
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
 ): Promise<void> {
   try {
-    const files = await readDirRecursive(join(projectRoot, CODEX_INSTRUCTIONS_DIR));
+    const files = await readDirRecursiveNoSymlinks(join(projectRoot, CODEX_INSTRUCTIONS_DIR));
     const instructionFiles = files.filter((file) => file.endsWith('.md'));
     const instructionsRoot = join(projectRoot, CODEX_INSTRUCTIONS_DIR);
     for (const srcPath of instructionFiles) {

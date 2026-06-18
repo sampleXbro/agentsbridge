@@ -3,11 +3,11 @@
  */
 
 import { basename, dirname, relative } from 'node:path';
-import { readDirRecursive } from '../../utils/filesystem/fs.js';
+import { readDirRecursiveNoSymlinks } from '../../utils/filesystem/fs.js';
 
 /** Names from `.../{name}/SKILL.md` plus top-level `*.md` in scanRoot (flat skills). */
 export async function skillNamesFromNativeSkillDir(scanRoot: string): Promise<string[]> {
-  const files = await readDirRecursive(scanRoot);
+  const files = await readDirRecursiveNoSymlinks(scanRoot);
   const names = new Set<string>();
   for (const f of files) {
     if (basename(f) === 'SKILL.md') {

@@ -62,3 +62,12 @@ Full plan: `tasks/plan.md`
 
 - [ ] Task 17: Regenerate README + website `supported-tools.mdx` matrices for all 23 changes
 - [ ] Task 18: Post-feature QA (edge cases, empty inputs, E2E smoke per target)
+
+---
+
+# Lessons Prompt Tightening
+
+- [x] Inspect current lessons source and tests.
+- [x] Write failing tests for the lesson gate wording.
+- [x] Update the canonical root lesson prompt and managed lessons skill.
+- [x] Run targeted verification and post-feature QA.

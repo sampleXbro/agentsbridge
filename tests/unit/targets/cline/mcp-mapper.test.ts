@@ -41,6 +41,58 @@ describe('cline MCP mapper', () => {
     });
   });
 
+  it('maps url-only HTTP/SSE servers (no command) instead of dropping them', () => {
+    expect(
+      mapClineServerToCanonical({
+        type: 'http',
+        url: 'https://mcp.example.com',
+        headers: { Authorization: 'Bearer x', INVALID: 9 },
+        env: { TOKEN: 'abc' },
+        description: 'Remote',
+      }),
+    ).toEqual({
+      type: 'http',
+      url: 'https://mcp.example.com',
+      headers: { Authorization: 'Bearer x' },
+      env: { TOKEN: 'abc' },
+      description: 'Remote',
+    });
+    // Defaults type to 'http' when absent, and honors transportType.
+    expect(mapClineServerToCanonical({ url: 'https://x' })).toEqual({
+      type: 'http',
+      url: 'https://x',
+      headers: {},
+      env: {},
+    });
+    expect(mapClineServerToCanonical({ transportType: 'sse', url: 'https://x' })).toEqual({
+      type: 'sse',
+      url: 'https://x',
+      headers: {},
+      env: {},
+    });
+  });
+
+  it('imports a url-only MCP server through the full importClineMcp path', async () => {
+    const dir = createTempDir();
+    mkdirSync(join(dir, '.cline'), { recursive: true });
+    writeFileSync(
+      join(dir, '.cline', 'cline_mcp_settings.json'),
+      JSON.stringify({
+        mcpServers: {
+          remote: { type: 'sse', url: 'https://mcp.example.com/sse', headers: { A: 'b' } },
+        },
+      }),
+    );
+    const results: ImportResult[] = [];
+    await importClineMcp(dir, results);
+    expect(results.map(({ feature, toPath }) => ({ feature, toPath }))).toEqual([
+      { feature: 'mcp', toPath: '.agentsmesh/mcp.json' },
+    ]);
+    const mcp = readFileSync(join(dir, '.agentsmesh', 'mcp.json'), 'utf-8');
+    expect(mcp).toContain('"remote"');
+    expect(mcp).toContain('https://mcp.example.com/sse');
+  });
+
   it('returns without writing anything for malformed or empty MCP settings', async () => {
     const invalidDir = createTempDir();
     mkdirSync(join(invalidDir, '.cline'), { recursive: true });

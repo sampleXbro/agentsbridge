@@ -2,7 +2,7 @@ import { join, dirname } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
 import {
   readFileSafe,
-  readDirRecursive,
+  readDirRecursiveNoSymlinks,
   writeFileAtomic,
   mkdirp,
   exists,
@@ -45,11 +45,11 @@ export async function hasGlobalCursorArtifacts(projectRoot: string): Promise<boo
     const stat = await readFileSafe(p);
     if (stat !== null && stat.trim() !== '') return true;
   }
-  const skillFiles = await readDirRecursive(join(projectRoot, CURSOR_SKILLS_DIR));
+  const skillFiles = await readDirRecursiveNoSymlinks(join(projectRoot, CURSOR_SKILLS_DIR));
   if (skillFiles.some((f) => f.endsWith('.md'))) return true;
-  const agentFiles = await readDirRecursive(join(projectRoot, CURSOR_AGENTS_DIR));
+  const agentFiles = await readDirRecursiveNoSymlinks(join(projectRoot, CURSOR_AGENTS_DIR));
   if (agentFiles.some((f) => f.endsWith('.md'))) return true;
-  const commandFiles = await readDirRecursive(join(projectRoot, CURSOR_COMMANDS_DIR));
+  const commandFiles = await readDirRecursiveNoSymlinks(join(projectRoot, CURSOR_COMMANDS_DIR));
   if (commandFiles.some((f) => f.endsWith('.md'))) return true;
   return false;
 }

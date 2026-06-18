@@ -10,6 +10,16 @@ import {
 } from '../../../../src/targets/projection/managed-blocks.js';
 import { LESSONS_PROCEDURAL_RULE } from '../../../../src/lessons/paths.js';
 
+const LEGACY_RAW_RULE = `## Lessons (BLOCKING REQUIREMENT — MUST run both, no exceptions; the user will check)
+
+Graph \`.agentsmesh/lessons/lessons.json\` is canonical — never hand-edit. Manual: the \`lessons\` skill.
+
+**Recall — MUST run before every file edit and every state-changing command** (build/test/install/migrate/git-write): \`agentsmesh lessons query --file <path> --cmd <command>\`, then apply every rule. Pure-read commands (cat/ls/grep/git-log) and the recall query itself are exempt.
+
+**Capture — MUST run immediately after any failure** (a failing test/CI/lint/typecheck, a code review, a user correction, a regression, or a wrong assumption — yours or anyone's): \`agentsmesh lessons add "<rule>" --topic <id> --trigger-file <glob> --evidence <sha|lesson-id>\`.
+
+No shell? Use the \`lessons_query\` / \`lessons_add\` MCP tools. Skip either and the system does not exist.`;
+
 describe('LESSONS_PARAGRAPH_BLOCK', () => {
   it('wraps the procedural rule body in the lessons-contract sentinels', () => {
     expect(LESSONS_PARAGRAPH_BLOCK.startsWith(LESSONS_CONTRACT_START)).toBe(true);
@@ -77,6 +87,13 @@ describe('stripLessonsParagraph', () => {
 
   it('removes a sentinel-less raw copy of the current rule appended at the end', () => {
     const raw = `# Root\n\nbody\n\n${LESSONS_PROCEDURAL_RULE}`;
+    const out = stripLessonsParagraph(raw);
+    expect(out).toBe('# Root\n\nbody');
+    expect(out).not.toContain('## Lessons (');
+  });
+
+  it('removes a sentinel-less raw copy of prior wording appended at the end', () => {
+    const raw = `# Root\n\nbody\n\n${LEGACY_RAW_RULE}`;
     const out = stripLessonsParagraph(raw);
     expect(out).toBe('# Root\n\nbody');
     expect(out).not.toContain('## Lessons (');

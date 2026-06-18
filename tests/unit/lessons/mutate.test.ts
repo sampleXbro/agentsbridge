@@ -69,6 +69,52 @@ describe('mutateLessonsGraph', () => {
     expect(loadLessonsGraph(root).lessons['a-1']?.topics).toEqual(['t']);
   });
 
+  function seedWithPreexistingBadTrigger(): void {
+    const graph: LessonsGraph = {
+      version: 1,
+      lessons: {
+        'a-1': {
+          rule: 'A rule.',
+          topics: ['t'],
+          triggers: ['bad'],
+          evidence: [],
+          status: 'active',
+          createdAt: '2026-06-05',
+        },
+      },
+      topics: { t: { summary: 'T.' } },
+      // Unbalanced group: `new RegExp('(')` throws -> INVALID_TRIGGER_PATTERN.
+      triggers: { bad: { kind: 'command_pattern', pattern: '(' } },
+    };
+    saveLessonsGraph(root, graph);
+  }
+
+  it('does not let a PRE-EXISTING invalid trigger block an unrelated mutation (poison-pill)', async () => {
+    seedWithPreexistingBadTrigger();
+    await expect(
+      mutateLessonsGraph(root, (g) => {
+        g.topics['t2'] = { summary: 'T2.' };
+        return 'ok';
+      }),
+    ).resolves.toBe('ok');
+    // The unrelated mutation persisted, and the pre-existing bad trigger is left
+    // in place (not silently dropped) for the user to repair deliberately.
+    expect(loadLessonsGraph(root).topics['t2']?.summary).toBe('T2.');
+    expect(loadLessonsGraph(root).triggers['bad']?.pattern).toBe('(');
+  });
+
+  it('still blocks a mutation that INTRODUCES a new invalid trigger', async () => {
+    seed();
+    await expect(
+      mutateLessonsGraph(root, (g) => {
+        g.triggers['newbad'] = { kind: 'command_pattern', pattern: '(' };
+        g.lessons['a-1']!.triggers = ['x', 'newbad'];
+      }),
+    ).rejects.toThrow(/INVALID_TRIGGER_PATTERN|invalid/i);
+    // Original graph untouched.
+    expect(loadLessonsGraph(root).triggers['newbad']).toBeUndefined();
+  });
+
   it('serializes concurrent mutators without losing writes', async () => {
     seed();
     await Promise.all(

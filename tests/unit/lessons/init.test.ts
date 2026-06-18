@@ -24,7 +24,8 @@ describe('scaffoldLessons', async () => {
     const rootRule = readFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), 'utf8');
     expect(rootRule).toContain('<!-- agentsmesh:lessons-contract:start -->');
     expect(rootRule).toContain('<!-- agentsmesh:lessons-contract:end -->');
-    expect(rootRule).toContain('## Lessons (BLOCKING REQUIREMENT — MUST run both');
+    expect(rootRule).toContain('## Lessons (BLOCKING)');
+    expect(rootRule).toContain('Lesson: none');
 
     // No legacy artifacts.
     expect(existsSync(paths.journal)).toBe(false);

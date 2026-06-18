@@ -4,7 +4,7 @@
 
 import { basename, join } from 'node:path';
 import type { ExtendPick } from '../../config/core/schema.js';
-import { readDirRecursive } from '../../utils/filesystem/fs.js';
+import { readDirRecursiveNoSymlinks } from '../../utils/filesystem/fs.js';
 import { COPILOT_PROMPTS_DIR } from '../../targets/copilot/constants.js';
 import { skillNamesFromNativeSkillDir } from './native-skill-scan.js';
 
@@ -14,7 +14,7 @@ export async function inferCopilotPickFromPath(
 ): Promise<ExtendPick> {
   const scan = join(repoRoot, ...posixPath.split('/'));
   if (posixPath.startsWith(COPILOT_PROMPTS_DIR)) {
-    const files = await readDirRecursive(scan);
+    const files = await readDirRecursiveNoSymlinks(scan);
     const commands = [
       ...new Set(
         files
@@ -25,7 +25,7 @@ export async function inferCopilotPickFromPath(
     return commands.length ? { commands } : {};
   }
   if (posixPath.startsWith('.github/copilot') && !posixPath.includes('copilot-instructions.md')) {
-    const files = await readDirRecursive(scan);
+    const files = await readDirRecursiveNoSymlinks(scan);
     const rules = [
       ...new Set(
         files
@@ -36,7 +36,7 @@ export async function inferCopilotPickFromPath(
     return rules.length ? { rules } : {};
   }
   if (posixPath.startsWith('.github/instructions')) {
-    const files = await readDirRecursive(scan);
+    const files = await readDirRecursiveNoSymlinks(scan);
     const names = new Set<string>();
     for (const f of files) {
       const b = basename(f);
@@ -52,7 +52,7 @@ export async function inferCopilotPickFromPath(
     return skills.length ? { skills } : {};
   }
   if (posixPath.startsWith('.github/agents')) {
-    const files = await readDirRecursive(scan);
+    const files = await readDirRecursiveNoSymlinks(scan);
     const agents = [
       ...new Set(
         files

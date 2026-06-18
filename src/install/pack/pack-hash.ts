@@ -3,7 +3,7 @@
  */
 
 import { relative } from 'node:path';
-import { readDirRecursive } from '../../utils/filesystem/fs.js';
+import { readDirRecursiveNoSymlinks } from '../../utils/filesystem/fs.js';
 import { hashFile, hashContent } from '../../utils/crypto/hash.js';
 
 const PACK_YAML = 'pack.yaml';
@@ -13,7 +13,7 @@ const PACK_YAML = 'pack.yaml';
  * Returns a stable hash string prefixed with "sha256:".
  */
 export async function hashPackContent(packDir: string): Promise<string> {
-  const files = await readDirRecursive(packDir);
+  const files = await readDirRecursiveNoSymlinks(packDir);
 
   const entries: string[] = [];
   for (const fullPath of files.sort()) {

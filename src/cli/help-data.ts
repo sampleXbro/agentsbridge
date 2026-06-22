@@ -24,7 +24,9 @@ export const COMMANDS: HelpCommand[] = [
     name: 'init',
     usage: 'agentsmesh init [flags]',
     description:
-      'Create agentsmesh.yaml, agentsmesh.local.yaml, and canonical .agentsmesh scaffold',
+      'Create agentsmesh.yaml, agentsmesh.local.yaml, and canonical .agentsmesh scaffold. ' +
+      'On a project-scope TTY runs an interactive wizard (targets, lessons, import, generate); ' +
+      '--yes, --json, --global, and non-TTY/CI run non-interactively with current behavior.',
     flags: [
       {
         name: '--global',
@@ -327,7 +329,10 @@ export const COMMANDS: HelpCommand[] = [
       },
       { name: '--new-topic --topic-summary "..."', description: 'add: create a new topic' },
       { name: '--superseded-by <id>', description: 'deprecate: replacement lesson id' },
-      { name: '--dry-run', description: 'strip-markers: preview changes; report the count without writing' },
+      {
+        name: '--dry-run',
+        description: 'strip-markers: preview changes; report the count without writing',
+      },
       {
         name: '--json',
         description: 'stats: emit the recall-telemetry report as JSON instead of the text summary',

@@ -22,6 +22,19 @@ agentsmesh init [flags]
 | `--yes` | Auto-import all detected tool configs, then add starter examples only under empty canonical folders (skip categories import already filled). |
 | `--lessons` | Scaffold the project-level lessons recall + capture subsystem: inject the always-on trigger into `_root.md`, seed the `lessons` skill manual under `skills/lessons/`, and wire a `PostToolUse` recall hook into `hooks.yaml` so [hook mode](../lessons/#hook-mode-deterministic-recall) is deterministic on hook-capable targets. Cannot be combined with `--global`. |
 
+## Interactive wizard
+
+Running `agentsmesh init` in a project on an interactive terminal launches a short wizard:
+
+1. **Import** — if existing tool configs are detected (Cursor, Claude Code, …), offers to import them into `.agentsmesh/`.
+2. **Targets** — multi-select which tools to generate config for (the starter set is pre-checked).
+3. **Lessons** — enable the shared recall/capture memory (default **yes**).
+4. **Generate** — optionally run `generate` immediately.
+
+Cancel (Ctrl-C) at any point writes nothing.
+
+The wizard is skipped — and the original non-interactive behavior runs — when any of these is true: `--yes`, `--json`, `--global`, or a non-TTY/CI environment. This keeps scripted and CI usage stable.
+
 ## What init creates
 
 Running `agentsmesh init` in a project root creates:

@@ -111,7 +111,7 @@ agentsmesh generate   # produce native configs for every enabled tool
 agentsmesh check      # CI-friendly drift gate against .agentsmesh/.lock
 ```
 
-- **`init`** — creates `agentsmesh.yaml`, `agentsmesh.local.yaml`, and the canonical `.agentsmesh/` directory.
+- **`init`** — creates `agentsmesh.yaml`, `agentsmesh.local.yaml`, and the canonical `.agentsmesh/` directory. On a project-scope TTY it runs an interactive wizard (pick targets, enable lessons, import any detected tool configs, optionally generate). Pass `--yes` (auto-import + defaults), `--json`, or run in a non-TTY/CI shell to skip the wizard and keep the original non-interactive behavior.
 - **`generate`** — writes `CLAUDE.md`, `AGENTS.md`, `.cursor/`, `.github/copilot-instructions.md`, etc. from canonical sources.
 - **`check`** — exits non-zero if generated files have drifted from `.agentsmesh/.lock`. Drop into CI.
 
@@ -275,7 +275,8 @@ Detailed contracts: [Canonical Config](https://samplexbro.github.io/agentsmesh/c
 ## CLI usage
 
 ```bash
-agentsmesh init [--global | --lessons] [--yes]    # --lessons is project-mode only (rejected with --global)
+agentsmesh init                                   # interactive wizard on a project-scope TTY
+agentsmesh init [--global | --lessons] [--yes]    # non-interactive; --lessons is project-mode only (rejected with --global)
 agentsmesh generate [--global] [--targets <csv>] [--check] [--dry-run] [--force] [--refresh-cache]
 agentsmesh import --from <target> [--global]
 agentsmesh convert --from <target> --to <target> [--global] [--dry-run]

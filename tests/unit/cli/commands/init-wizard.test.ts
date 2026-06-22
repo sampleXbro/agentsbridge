@@ -93,6 +93,24 @@ describe('runInitWizard (project)', () => {
     expect(result.data.lessons).toBeUndefined();
   });
 
+  it('hints how to add lessons later when the user declines them', async () => {
+    const context = resolveScopeContext(TEST_DIR, 'project');
+    let note = '';
+    const prompter: Prompter = {
+      ...fakePrompter({ targets: ['claude-code'], lessons: false, generate: false }),
+      note: (message) => {
+        note = message;
+      },
+    };
+    await runInitWizard(prompter, {
+      projectRoot: TEST_DIR,
+      context,
+      detected: [],
+      defaultTargets: undefined,
+    });
+    expect(note).toContain('agentsmesh init --lessons');
+  });
+
   it('cancels cleanly at target selection — nothing written', async () => {
     const context = resolveScopeContext(TEST_DIR, 'project');
     const result = await runInitWizard(fakePrompter({ targets: CANCEL }), {

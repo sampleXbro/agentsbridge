@@ -151,7 +151,11 @@ export async function runInitWizard(
   // 7. Summary
   const generateCmd = scope === 'global' ? 'agentsmesh generate --global' : 'agentsmesh generate';
   const summary = [`Targets: ${targets.length} (${targets.join(', ')})`];
-  if (scope === 'project') summary.push(`Lessons: ${lessons ? 'enabled' : 'off'}`);
+  if (scope === 'project') {
+    summary.push(
+      lessons ? 'Lessons: enabled' : "Lessons: off — add it later with 'agentsmesh init --lessons'",
+    );
+  }
   summary.push(doGenerate ? `Generated: ${generatedCount} file(s)` : `Next: run '${generateCmd}'`);
   prompter.note(summary.join('\n'), 'Setup complete');
   prompter.outro(`agentsmesh is ready. Edit .agentsmesh/ then run '${generateCmd}' to sync.`);

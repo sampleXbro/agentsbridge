@@ -9,7 +9,7 @@ describe('createClackPrompter', () => {
       'intro',
       'outro',
       'note',
-      'confirm',
+      'select',
       'multiselect',
       'isCancel',
       'cancel',

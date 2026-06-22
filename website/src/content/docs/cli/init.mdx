@@ -26,12 +26,12 @@ agentsmesh init [flags]
 
 On an interactive terminal, `agentsmesh init` runs a short wizard:
 
-1. **Import** — if existing tool configs are detected (Cursor, Claude Code, …), asks once whether to import them all into `.agentsmesh/`.
-2. **Targets** — multi-select which tools to generate for. Nothing is pre-selected, so you must pick at least one; the recommended tools are listed first.
+1. **Targets** — multi-select which tools to generate for. Nothing is pre-selected, so you must pick at least one; the recommended tools are listed first.
+2. **Import** — if existing tool configs are detected (Cursor, Claude Code, …), asks whether to import them all into `.agentsmesh/`.
 3. **Lessons** — enable the shared recall/capture memory (default **yes**).
 4. **Generate** — optionally run `generate` right away.
 
-Nothing is written until the end, so **Ctrl-C cancels cleanly** — no partial files.
+Every step after the first offers a **↩ Back** choice to return to the previous step and change an answer (your earlier selections are kept). Nothing is written until the end, so **Ctrl-C cancels cleanly** — no partial files.
 
 | Scope | Wizard behavior |
 |-------|-----------------|

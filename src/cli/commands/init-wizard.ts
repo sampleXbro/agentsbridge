@@ -1,10 +1,11 @@
 // src/cli/commands/init-wizard.ts
 /**
- * Interactive init wizard. Collects all answers first, then applies them via
- * applyInitPlan, then optionally runs generate. Cancelling at any prompt writes
- * nothing. Scope-aware: in global scope the target list is restricted to
- * global-capable targets and the Lessons step is skipped entirely (lessons is
- * project-only).
+ * Interactive init wizard with step-back navigation. Steps run in order, each
+ * persisting its answer; a "↩ Back" choice returns to the previous step (prior
+ * answers are restored). All answers are collected before any write, so
+ * cancelling at any step leaves the tree untouched. Scope-aware: global
+ * restricts targets to global-capable tools and skips the Lessons step entirely
+ * (lessons is project-only).
  */
 
 import type { ConfigScope, ScopeContext } from '../../config/core/scope.js';
@@ -21,12 +22,15 @@ import {
   type InitCommandResult,
   type InitPlan,
 } from './init-apply.js';
-import type { MultiselectOption, Prompter } from '../prompts/prompter.js';
+import type { MultiselectOption, Prompter, SelectOption } from '../prompts/prompter.js';
+
+/** Internal select value for the "↩ Back" choice (cannot collide with a tool id). */
+const BACK = '__back__';
 
 /**
  * Selectable targets for the given scope, ordered for discovery. Nothing is
- * pre-selected — the user must actively pick at least one (enforced by the
- * multiselect's `required` flag).
+ * pre-selected by default — the user must actively pick at least one (enforced
+ * by the multiselect's `required` flag).
  * - project: every builtin target, recommended (starter) set first then alphabetical.
  * - global: only global-capable targets, alphabetical.
  */
@@ -45,6 +49,41 @@ export function buildTargetOptions(scope: ConfigScope): MultiselectOption[] {
     label: id,
     hint: starterSet.has(id) ? 'recommended' : undefined,
   }));
+}
+
+type StepResult = 'next' | 'back' | 'cancel';
+
+interface Answers {
+  targets: string[];
+  doImport?: boolean;
+  lessons?: boolean;
+  doGenerate?: boolean;
+}
+
+/** A Yes/No question rendered as a select so it can carry a "↩ Back" choice. */
+async function yesNoStep(
+  prompter: Prompter,
+  message: string,
+  recommended: boolean,
+  prior: boolean | undefined,
+  canGoBack: boolean,
+  set: (value: boolean) => void,
+): Promise<StepResult> {
+  const options: SelectOption[] = [
+    { value: 'yes', label: 'Yes' },
+    { value: 'no', label: 'No' },
+  ];
+  if (canGoBack) options.push({ value: BACK, label: '↩ Back' });
+
+  const answer = await prompter.select({
+    message,
+    options,
+    initialValue: (prior ?? recommended) ? 'yes' : 'no',
+  });
+  if (prompter.isCancel(answer)) return 'cancel';
+  if (answer === BACK) return 'back';
+  set(answer === 'yes');
+  return 'next';
 }
 
 function cancelledResult(scope: ScopeContext['scope']): InitCommandResult {
@@ -75,62 +114,94 @@ export async function runInitWizard(
 ): Promise<InitCommandResult> {
   const scope = ctx.context.scope;
   prompter.intro(scope === 'global' ? 'agentsmesh init --global' : 'agentsmesh init');
-  const bail = (): InitCommandResult => {
-    prompter.cancel('Cancelled — no changes written.');
-    return cancelledResult(scope);
-  };
 
-  // 1. Import detected configs?
-  let doImport = false;
-  if (ctx.detected.length > 0) {
-    const ans = await prompter.confirm({
-      message: `Found existing config for: ${ctx.detected.join(', ')}. Import into .agentsmesh?`,
-      initialValue: true,
+  const answers: Answers = { targets: [] };
+
+  // Step list, in display order. Each runs a prompt and returns a navigation
+  // result; the loop below moves forward on 'next', backward on 'back'.
+  const steps: Array<(canGoBack: boolean) => Promise<StepResult>> = [];
+
+  // 1. Targets (always first → nothing to go back to; selection persists across back).
+  steps.push(async () => {
+    const answer = await prompter.multiselect({
+      message: 'Which tools should agentsmesh generate config for? (select at least one)',
+      options: buildTargetOptions(scope),
+      initialValues: answers.targets,
+      required: true,
     });
-    if (prompter.isCancel(ans)) return bail();
-    doImport = ans === true;
+    if (prompter.isCancel(answer)) return 'cancel';
+    answers.targets = answer as string[];
+    return 'next';
+  });
+
+  // 2. Import detected configs? (only when something was detected)
+  if (ctx.detected.length > 0) {
+    steps.push((canGoBack) =>
+      yesNoStep(
+        prompter,
+        `Found existing config for: ${ctx.detected.join(', ')}. Import into .agentsmesh?`,
+        true,
+        answers.doImport,
+        canGoBack,
+        (v) => {
+          answers.doImport = v;
+        },
+      ),
+    );
   }
 
-  // 2. Targets — nothing pre-selected; `required` blocks an empty submission.
-  const targetsAns = await prompter.multiselect({
-    message: 'Which tools should agentsmesh generate config for? (select at least one)',
-    options: buildTargetOptions(scope),
-    required: true,
-  });
-  if (prompter.isCancel(targetsAns)) return bail();
-  const targets = targetsAns as string[];
-
-  // 3. Lessons — project scope only (lessons is never available in global mode).
-  let lessons = false;
+  // 3. Lessons (project scope only — never offered in global mode).
   if (scope === 'project') {
-    const lessonsAns = await prompter.confirm({
-      message: 'Enable Lessons (shared memory: recall before edits, capture after failures)?',
-      initialValue: true,
-    });
-    if (prompter.isCancel(lessonsAns)) return bail();
-    lessons = lessonsAns === true;
+    steps.push((canGoBack) =>
+      yesNoStep(
+        prompter,
+        'Enable Lessons (shared memory: recall before edits, capture after failures)?',
+        true,
+        answers.lessons,
+        canGoBack,
+        (v) => {
+          answers.lessons = v;
+        },
+      ),
+    );
   }
 
   // 4. Generate now?
-  const generateAns = await prompter.confirm({
-    message: 'Run generate now to write tool config files?',
-    initialValue: true,
-  });
-  if (prompter.isCancel(generateAns)) return bail();
-  const doGenerate = generateAns === true;
+  steps.push((canGoBack) =>
+    yesNoStep(
+      prompter,
+      'Run generate now to write tool config files?',
+      true,
+      answers.doGenerate,
+      canGoBack,
+      (v) => {
+        answers.doGenerate = v;
+      },
+    ),
+  );
 
-  // 5. Apply (first disk writes happen here)
+  // Drive the machine: forward on 'next', back one step on 'back'.
+  for (let pos = 0; pos < steps.length; ) {
+    const result = await steps[pos]!(pos > 0);
+    if (result === 'cancel') {
+      prompter.cancel('Cancelled — no changes written.');
+      return cancelledResult(scope);
+    }
+    pos = result === 'back' ? Math.max(0, pos - 1) : pos + 1;
+  }
+
+  // Apply (first disk writes happen here).
   const plan: InitPlan = {
     scope,
-    targets,
+    targets: answers.targets,
     defaultTargets: ctx.defaultTargets,
     detected: ctx.detected,
-    doImport,
-    lessons,
+    doImport: answers.doImport ?? false,
+    lessons: answers.lessons ?? false,
   };
   const data = await applyInitPlan(ctx.projectRoot, ctx.context, plan);
 
-  // 6. Generate
+  const doGenerate = answers.doGenerate ?? false;
   let generatedCount = 0;
   if (doGenerate) {
     const gen = await runGenerate(scope === 'global' ? { global: true } : {}, ctx.projectRoot, {
@@ -139,12 +210,13 @@ export async function runInitWizard(
     generatedCount = gen.data.summary.created + gen.data.summary.updated;
   }
 
-  // 7. Summary
   const generateCmd = scope === 'global' ? 'agentsmesh generate --global' : 'agentsmesh generate';
-  const summary = [`Targets: ${targets.length} (${targets.join(', ')})`];
+  const summary = [`Targets: ${answers.targets.length} (${answers.targets.join(', ')})`];
   if (scope === 'project') {
     summary.push(
-      lessons ? 'Lessons: enabled' : "Lessons: off — add it later with 'agentsmesh init --lessons'",
+      answers.lessons
+        ? 'Lessons: enabled'
+        : "Lessons: off — add it later with 'agentsmesh init --lessons'",
     );
   }
   summary.push(doGenerate ? `Generated: ${generatedCount} file(s)` : `Next: run '${generateCmd}'`);

@@ -24,6 +24,11 @@ interface Scripted {
   generate?: boolean | symbol;
 }
 
+function choice(v: boolean | symbol): string | symbol {
+  return typeof v === 'symbol' ? v : v ? 'yes' : 'no';
+}
+
+// Answers the yes/no `select` steps by message; multiselect returns scripted targets.
 function fakePrompter(a: Scripted): Prompter {
   return {
     intro: () => {},
@@ -31,13 +36,13 @@ function fakePrompter(a: Scripted): Prompter {
     note: () => {},
     cancel: () => {},
     isCancel: (v) => v === CANCEL,
-    confirm: async ({ message }) => {
-      if (message.startsWith('Found existing')) return a.import ?? true;
-      if (message.startsWith('Enable Lessons')) return a.lessons ?? true;
-      if (message.startsWith('Run generate')) return a.generate ?? false;
-      throw new Error(`unexpected confirm: ${message}`);
-    },
     multiselect: async () => a.targets ?? [],
+    select: async ({ message }) => {
+      if (message.startsWith('Found existing')) return choice(a.import ?? true);
+      if (message.startsWith('Enable Lessons')) return choice(a.lessons ?? true);
+      if (message.startsWith('Run generate')) return choice(a.generate ?? false);
+      throw new Error(`unexpected select: ${message}`);
+    },
   };
 }
 
@@ -127,6 +132,44 @@ describe('runInitWizard (project)', () => {
     expect(captured?.initialValues ?? []).toEqual([]); // nothing pre-checked
   });
 
+  it('lets the user go Back to a prior step; the selection persists and the new answer wins', async () => {
+    const context = resolveScopeContext(TEST_DIR, 'project');
+    // No detected configs → steps: Targets, Lessons, Generate.
+    const multiselectReturns = [['claude-code'], ['cursor']];
+    const selectReturns = ['__back__', 'no', 'no']; // Lessons→Back, Lessons→no, Generate→no
+    let msCall = 0;
+    let selCall = 0;
+    const initialValuesSeen: (readonly string[] | undefined)[] = [];
+    const prompter: Prompter = {
+      intro: () => {},
+      outro: () => {},
+      note: () => {},
+      cancel: () => {},
+      isCancel: () => false,
+      multiselect: async (opts) => {
+        initialValuesSeen.push(opts.initialValues);
+        return multiselectReturns[msCall++]!;
+      },
+      select: async () => selectReturns[selCall++]!,
+    };
+
+    await runInitWizard(prompter, {
+      projectRoot: TEST_DIR,
+      context,
+      detected: [],
+      defaultTargets: undefined,
+    });
+
+    // Targets was shown twice (Back re-ran it); the revisit restored the prior pick.
+    expect(msCall).toBe(2);
+    expect(initialValuesSeen[0]).toEqual([]); // first visit: nothing pre-checked
+    expect(initialValuesSeen[1]).toEqual(['claude-code']); // back-revisit: prior pick restored
+    // The corrected target wins.
+    const config = readFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'utf-8');
+    expect(config).toContain('- cursor');
+    expect(config).not.toContain('- claude-code');
+  });
+
   it('cancels cleanly at target selection — nothing written', async () => {
     const context = resolveScopeContext(TEST_DIR, 'project');
     const result = await runInitWizard(fakePrompter({ targets: CANCEL }), {
@@ -161,9 +204,9 @@ describe('runInitWizard (global) — interactive, but no lessons', () => {
       note: () => {},
       cancel: () => {},
       isCancel: () => false,
-      confirm: async ({ message }) => {
+      select: async ({ message }) => {
         asked.push(message);
-        return false; // decline generate (and import, though none is detected)
+        return 'no'; // decline generate (and import, though none is detected)
       },
       multiselect: async () => ['claude-code'],
     };

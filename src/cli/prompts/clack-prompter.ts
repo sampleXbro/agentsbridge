@@ -8,8 +8,12 @@ export function createClackPrompter(): Prompter {
     intro: (title) => clack.intro(title),
     outro: (message) => clack.outro(message),
     note: (message, title) => clack.note(message, title),
-    confirm: (options) =>
-      clack.confirm({ message: options.message, initialValue: options.initialValue ?? true }),
+    select: (options) =>
+      clack.select({
+        message: options.message,
+        options: options.options.map((o) => ({ value: o.value, label: o.label, hint: o.hint })),
+        initialValue: options.initialValue,
+      }) as Promise<string | symbol>,
     multiselect: (options) =>
       clack.multiselect({
         message: options.message,

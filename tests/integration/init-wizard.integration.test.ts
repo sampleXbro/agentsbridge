@@ -13,7 +13,7 @@ afterEach(() => {
   rmSync(TEST_DIR, { recursive: true, force: true });
 });
 
-// Declines import/lessons/generate (all confirms → false); selects the given targets.
+// Declines import/lessons/generate (all yes/no steps → 'no'); selects the given targets.
 function scripted(targets: string[]): Prompter {
   return {
     intro: () => {},
@@ -21,7 +21,7 @@ function scripted(targets: string[]): Prompter {
     note: () => {},
     cancel: () => {},
     isCancel: () => false,
-    confirm: async () => false,
+    select: async () => 'no',
     multiselect: async () => targets,
   };
 }
@@ -85,9 +85,9 @@ describe('lessons is never available in global mode', () => {
       note: () => {},
       cancel: () => {},
       isCancel: () => false,
-      confirm: async ({ message }) => {
+      select: async ({ message }) => {
         asked.push(message);
-        return false;
+        return 'no';
       },
       multiselect: async () => {
         multiselectCalled = true;
@@ -116,9 +116,9 @@ describe('already-initialized project', () => {
       note: () => {},
       cancel: () => {},
       isCancel: () => false,
-      confirm: async () => {
+      select: async () => {
         prompted = true;
-        return true;
+        return 'no';
       },
       multiselect: async () => {
         prompted = true;

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { resolveScopeContext } from '../../../../src/config/core/scope.js';
 import { runInitWizard, buildTargetOptions } from '../../../../src/cli/commands/init-wizard.js';
-import type { Prompter } from '../../../../src/cli/prompts/prompter.js';
+import type { MultiselectOptions, Prompter } from '../../../../src/cli/prompts/prompter.js';
 import { BUILTIN_TARGET_IDS } from '../../../../src/targets/catalog/target-ids.js';
 import {
   starterInitTargetIds,
@@ -42,21 +42,17 @@ function fakePrompter(a: Scripted): Prompter {
 }
 
 describe('buildTargetOptions', () => {
-  it('project: lists every builtin target once, starter set first then alphabetical', () => {
-    const { options, initialValues } = buildTargetOptions('project');
-    const values = options.map((o) => o.value);
+  it('project: lists every builtin target once, recommended set first then alphabetical', () => {
+    const values = buildTargetOptions('project').map((o) => o.value);
+    const starter = [...starterInitTargetIds()];
     expect(new Set(values).size).toBe(values.length);
     expect([...values].sort()).toEqual([...BUILTIN_TARGET_IDS].sort());
-    expect(values.slice(0, initialValues.length)).toEqual([...starterInitTargetIds()]);
-    expect(initialValues).toEqual([...starterInitTargetIds()]);
+    expect(values.slice(0, starter.length)).toEqual(starter);
   });
 
-  it('global: only global-capable targets, all pre-checked, a strict subset', () => {
-    const { options, initialValues } = buildTargetOptions('global');
-    const values = options.map((o) => o.value);
-    const global = [...globalInitTargetIds()].sort();
-    expect([...values].sort()).toEqual(global);
-    expect([...initialValues].sort()).toEqual(global);
+  it('global: only global-capable targets, a strict subset', () => {
+    const values = buildTargetOptions('global').map((o) => o.value);
+    expect([...values].sort()).toEqual([...globalInitTargetIds()].sort());
     expect(values.length).toBeGreaterThan(0);
     expect(values.length).toBeLessThan(BUILTIN_TARGET_IDS.length);
   });
@@ -109,6 +105,26 @@ describe('runInitWizard (project)', () => {
       defaultTargets: undefined,
     });
     expect(note).toContain('agentsmesh init --lessons');
+  });
+
+  it('pre-selects no targets and requires at least one (even when configs are detected)', async () => {
+    const context = resolveScopeContext(TEST_DIR, 'project');
+    let captured: MultiselectOptions | undefined;
+    const prompter: Prompter = {
+      ...fakePrompter({ import: true, targets: ['claude-code'], lessons: false, generate: false }),
+      multiselect: async (opts) => {
+        captured = opts;
+        return ['claude-code'];
+      },
+    };
+    await runInitWizard(prompter, {
+      projectRoot: TEST_DIR,
+      context,
+      detected: ['claude-code'],
+      defaultTargets: undefined,
+    });
+    expect(captured?.required).toBe(true);
+    expect(captured?.initialValues ?? []).toEqual([]); // nothing pre-checked
   });
 
   it('cancels cleanly at target selection — nothing written', async () => {

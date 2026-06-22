@@ -2,7 +2,7 @@
 'agentsmesh': minor
 ---
 
-Add an interactive `init` wizard. On an interactive TTY, `agentsmesh init` now asks which targets to generate for (the starter set is pre-checked), whether to import any detected tool configs, optionally whether to enable Lessons, and whether to run `generate` immediately — writing a tailored `agentsmesh.yaml`.
+Add an interactive `init` wizard. On an interactive TTY, `agentsmesh init` now asks which targets to generate for (none pre-selected — you pick at least one), whether to import any detected tool configs, optionally whether to enable Lessons, and whether to run `generate` immediately — writing a tailored `agentsmesh.yaml`.
 
 The wizard runs in both project and `--global` scope. In `--global` it restricts the target list to global-capable tools and skips the Lessons step entirely (lessons is project-only, enforced at the writer).
 

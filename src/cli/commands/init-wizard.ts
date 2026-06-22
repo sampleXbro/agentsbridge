@@ -24,33 +24,27 @@ import {
 import type { MultiselectOption, Prompter } from '../prompts/prompter.js';
 
 /**
- * Selectable targets + the pre-checked set for the given scope.
- * - project: every builtin target, starter set first then alphabetical, starter pre-checked.
- * - global: only global-capable targets (alphabetical), all pre-checked.
+ * Selectable targets for the given scope, ordered for discovery. Nothing is
+ * pre-selected — the user must actively pick at least one (enforced by the
+ * multiselect's `required` flag).
+ * - project: every builtin target, recommended (starter) set first then alphabetical.
+ * - global: only global-capable targets, alphabetical.
  */
-export function buildTargetOptions(scope: ConfigScope): {
-  options: MultiselectOption[];
-  initialValues: string[];
-} {
+export function buildTargetOptions(scope: ConfigScope): MultiselectOption[] {
   if (scope === 'global') {
-    const ids = [...globalInitTargetIds()].sort();
-    const options: MultiselectOption[] = ids.map((id) => ({
-      value: id,
-      label: id,
-      hint: 'global',
-    }));
-    return { options, initialValues: ids };
+    return [...globalInitTargetIds()]
+      .sort()
+      .map((id) => ({ value: id, label: id, hint: 'global' }));
   }
 
   const starter = [...starterInitTargetIds()];
   const starterSet = new Set<string>(starter);
   const rest = [...BUILTIN_TARGET_IDS].filter((id) => !starterSet.has(id)).sort();
-  const options: MultiselectOption[] = [...starter, ...rest].map((id) => ({
+  return [...starter, ...rest].map((id) => ({
     value: id,
     label: id,
-    hint: starterSet.has(id) ? 'starter' : undefined,
+    hint: starterSet.has(id) ? 'recommended' : undefined,
   }));
-  return { options, initialValues: starter };
 }
 
 function cancelledResult(scope: ScopeContext['scope']): InitCommandResult {
@@ -97,13 +91,10 @@ export async function runInitWizard(
     doImport = ans === true;
   }
 
-  // 2. Targets
-  const { options, initialValues } = buildTargetOptions(scope);
-  const initial = doImport && ctx.detected.length > 0 ? [...ctx.detected] : initialValues;
+  // 2. Targets — nothing pre-selected; `required` blocks an empty submission.
   const targetsAns = await prompter.multiselect({
-    message: 'Which tools should agentsmesh generate config for?',
-    options,
-    initialValues: initial,
+    message: 'Which tools should agentsmesh generate config for? (select at least one)',
+    options: buildTargetOptions(scope),
     required: true,
   });
   if (prompter.isCancel(targetsAns)) return bail();

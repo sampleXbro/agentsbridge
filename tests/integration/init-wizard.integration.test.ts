@@ -48,7 +48,7 @@ describe('runInit with injected prompter (interactive path)', () => {
     expect(config).toContain('- cursor');
   });
 
-  it('ignores the prompter in global scope (non-interactive in v1)', async () => {
+  it('runs the wizard in global scope and writes the selected global target', async () => {
     const homeDir = join(TEST_DIR, 'home');
     mkdirSync(homeDir, { recursive: true });
     vi.stubEnv('HOME', homeDir);
@@ -59,7 +59,8 @@ describe('runInit with injected prompter (interactive path)', () => {
       { prompter: scripted(['claude-code']) },
     );
     expect(result.data.scope).toBe('global');
-    expect(existsSync(join(homeDir, '.agentsmesh', 'agentsmesh.yaml'))).toBe(true);
+    const config = readFileSync(join(homeDir, '.agentsmesh', 'agentsmesh.yaml'), 'utf-8');
+    expect(config).toContain('- claude-code');
   });
 });
 
@@ -70,25 +71,26 @@ describe('lessons is never available in global mode', () => {
     );
   });
 
-  it('never enters the wizard in global scope — no prompt, no lessons scaffolded', async () => {
+  it('enters the wizard in global scope but never asks about lessons / scaffolds none', async () => {
     const homeDir = join(TEST_DIR, 'home');
     mkdirSync(homeDir, { recursive: true });
     vi.stubEnv('HOME', homeDir);
     vi.stubEnv('USERPROFILE', homeDir);
 
-    let prompted = false;
+    let multiselectCalled = false;
+    const asked: string[] = [];
     const spy: Prompter = {
       intro: () => {},
       outro: () => {},
       note: () => {},
       cancel: () => {},
       isCancel: () => false,
-      confirm: async () => {
-        prompted = true;
-        return true;
+      confirm: async ({ message }) => {
+        asked.push(message);
+        return false;
       },
       multiselect: async () => {
-        prompted = true;
+        multiselectCalled = true;
         return ['claude-code'];
       },
     };
@@ -96,7 +98,8 @@ describe('lessons is never available in global mode', () => {
     const result = await runInit(join(TEST_DIR, 'ws'), { global: true }, { prompter: spy });
 
     expect(result.data.scope).toBe('global');
-    expect(prompted).toBe(false);
+    expect(multiselectCalled).toBe(true); // the wizard WAS entered in global scope
+    expect(asked.some((m) => m.startsWith('Enable Lessons'))).toBe(false); // lessons never offered
     expect(existsSync(join(homeDir, '.agentsmesh', 'lessons', 'lessons.json'))).toBe(false);
   });
 });

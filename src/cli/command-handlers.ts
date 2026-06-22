@@ -60,13 +60,12 @@ export const cmdHandlers: Record<string, CommandHandler> = {
   },
   init: async (flags, _args) => {
     void _args;
-    // Interactive only on a real project-scope TTY; --yes/--json/--global bypass it.
+    // Interactive on a real TTY (project or --global); --yes/--json/non-TTY bypass it.
     const interactive =
       process.stdin.isTTY === true &&
       process.stdout.isTTY === true &&
       flags.yes !== true &&
-      flags.json !== true &&
-      flags.global !== true;
+      flags.json !== true;
     const deps = interactive ? { prompter: createClackPrompter() } : {};
     const result = await runInit(
       process.cwd(),

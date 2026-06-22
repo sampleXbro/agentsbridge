@@ -24,16 +24,16 @@ agentsmesh init [flags]
 
 ## Interactive wizard
 
-Running `agentsmesh init` in a project on an interactive terminal launches a short wizard:
+Running `agentsmesh init` on an interactive terminal launches a short wizard:
 
 1. **Import** — if existing tool configs are detected (Cursor, Claude Code, …), offers to import them into `.agentsmesh/`.
 2. **Targets** — multi-select which tools to generate config for (the starter set is pre-checked).
-3. **Lessons** — enable the shared recall/capture memory (default **yes**).
+3. **Lessons** — enable the shared recall/capture memory (default **yes**). _Project scope only — this step is skipped under `--global`, since lessons is project-only._
 4. **Generate** — optionally run `generate` immediately.
 
 Cancel (Ctrl-C) at any point writes nothing.
 
-The wizard is skipped — and the original non-interactive behavior runs — when any of these is true: `--yes`, `--json`, `--global`, or a non-TTY/CI environment. This keeps scripted and CI usage stable.
+The wizard runs in both project and `--global` scope. Under `--global` it restricts the target list to global-capable tools and omits the Lessons step. It is skipped entirely — and the original non-interactive behavior runs — when any of these is true: `--yes`, `--json`, or a non-TTY/CI environment. This keeps scripted and CI usage stable.
 
 ## What init creates
 

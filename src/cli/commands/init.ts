@@ -8,7 +8,7 @@
 import { join } from 'node:path';
 import { exists } from '../../utils/filesystem/fs.js';
 import type { BuiltinTargetId } from '../../targets/catalog/target-ids.js';
-import { BUILTIN_TARGETS } from '../../targets/catalog/builtin-targets.js';
+import { globalInitTargetIds } from '../../targets/catalog/init-starter-targets.js';
 import { resolveScopeContext, type ConfigScope } from '../../config/core/scope.js';
 import { scaffoldLessons } from '../../lessons/init.js';
 import { detectExistingConfigs } from './init-detect.js';
@@ -25,9 +25,7 @@ import type { Prompter } from '../prompts/prompter.js';
 export type { InitCommandResult } from './init-apply.js';
 export { detectExistingConfigs };
 
-const GLOBAL_INIT_TARGETS: BuiltinTargetId[] = BUILTIN_TARGETS.filter(
-  (target) => target.globalSupport !== undefined,
-).map((target) => target.id as BuiltinTargetId);
+const GLOBAL_INIT_TARGETS: readonly BuiltinTargetId[] = globalInitTargetIds();
 
 /**
  * Run the init command.
@@ -82,9 +80,15 @@ export async function runInit(
       : detected;
   const defaultTargets = scope === 'global' ? GLOBAL_INIT_TARGETS : undefined;
 
-  // Interactive wizard: project scope, prompter injected, not --yes.
-  if (deps.prompter !== undefined && scope === 'project' && options.yes !== true) {
-    return runInitWizard(deps.prompter, { projectRoot, context, detected: existing });
+  // Interactive wizard: prompter injected (project or global), not --yes.
+  // The wizard itself is scope-aware (global skips the lessons step).
+  if (deps.prompter !== undefined && options.yes !== true) {
+    return runInitWizard(deps.prompter, {
+      projectRoot,
+      context,
+      detected: existing,
+      defaultTargets,
+    });
   }
 
   const doImport = existing.length > 0 && options.yes === true;

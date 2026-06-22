@@ -6,7 +6,10 @@ import { resolveScopeContext } from '../../../../src/config/core/scope.js';
 import { runInitWizard, buildTargetOptions } from '../../../../src/cli/commands/init-wizard.js';
 import type { Prompter } from '../../../../src/cli/prompts/prompter.js';
 import { BUILTIN_TARGET_IDS } from '../../../../src/targets/catalog/target-ids.js';
-import { starterInitTargetIds } from '../../../../src/targets/catalog/init-starter-targets.js';
+import {
+  starterInitTargetIds,
+  globalInitTargetIds,
+} from '../../../../src/targets/catalog/init-starter-targets.js';
 
 const TEST_DIR = join(tmpdir(), 'am-init-wizard-test');
 const CANCEL = Symbol('cancel');
@@ -39,26 +42,32 @@ function fakePrompter(a: Scripted): Prompter {
 }
 
 describe('buildTargetOptions', () => {
-  it('lists every builtin target once, starter set first then alphabetical', () => {
-    const { options, starter } = buildTargetOptions();
+  it('project: lists every builtin target once, starter set first then alphabetical', () => {
+    const { options, initialValues } = buildTargetOptions('project');
     const values = options.map((o) => o.value);
     expect(new Set(values).size).toBe(values.length);
     expect([...values].sort()).toEqual([...BUILTIN_TARGET_IDS].sort());
-    expect(values.slice(0, starter.length)).toEqual([...starterInitTargetIds()]);
-    expect(starter).toEqual([...starterInitTargetIds()]);
+    expect(values.slice(0, initialValues.length)).toEqual([...starterInitTargetIds()]);
+    expect(initialValues).toEqual([...starterInitTargetIds()]);
+  });
+
+  it('global: only global-capable targets, all pre-checked, a strict subset', () => {
+    const { options, initialValues } = buildTargetOptions('global');
+    const values = options.map((o) => o.value);
+    const global = [...globalInitTargetIds()].sort();
+    expect([...values].sort()).toEqual(global);
+    expect([...initialValues].sort()).toEqual(global);
+    expect(values.length).toBeGreaterThan(0);
+    expect(values.length).toBeLessThan(BUILTIN_TARGET_IDS.length);
   });
 });
 
-describe('runInitWizard', () => {
+describe('runInitWizard (project)', () => {
   it('writes config with exactly the selected targets, scaffolds lessons, skips generate', async () => {
     const context = resolveScopeContext(TEST_DIR, 'project');
     const result = await runInitWizard(
       fakePrompter({ targets: ['claude-code', 'cursor'], lessons: true, generate: false }),
-      {
-        projectRoot: TEST_DIR,
-        context,
-        detected: [],
-      },
+      { projectRoot: TEST_DIR, context, detected: [], defaultTargets: undefined },
     );
 
     expect(result.exitCode).toBe(0);
@@ -76,7 +85,7 @@ describe('runInitWizard', () => {
     const context = resolveScopeContext(TEST_DIR, 'project');
     const result = await runInitWizard(
       fakePrompter({ import: true, targets: ['claude-code'], lessons: false, generate: false }),
-      { projectRoot: TEST_DIR, context, detected: ['claude-code'] },
+      { projectRoot: TEST_DIR, context, detected: ['claude-code'], defaultTargets: undefined },
     );
     expect(result.data.scaffoldType).toBe('gap-fill');
     const root = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
@@ -90,9 +99,54 @@ describe('runInitWizard', () => {
       projectRoot: TEST_DIR,
       context,
       detected: [],
+      defaultTargets: undefined,
     });
     expect(result.data.cancelled).toBe(true);
     expect(existsSync(join(TEST_DIR, 'agentsmesh.yaml'))).toBe(false);
     expect(existsSync(join(TEST_DIR, '.agentsmesh'))).toBe(false);
+  });
+});
+
+describe('runInitWizard (global) — interactive, but no lessons', () => {
+  it('restricts to global targets, never asks about lessons, writes home config, scaffolds none', async () => {
+    const home = join(TEST_DIR, 'home');
+    const workspace = join(TEST_DIR, 'workspace');
+    mkdirSync(workspace, { recursive: true });
+    const globalDir = join(home, '.agentsmesh');
+    const context = {
+      scope: 'global' as const,
+      rootBase: home,
+      configDir: globalDir,
+      canonicalDir: globalDir,
+    };
+
+    const asked: string[] = [];
+    const prompter: Prompter = {
+      intro: () => {},
+      outro: () => {},
+      note: () => {},
+      cancel: () => {},
+      isCancel: () => false,
+      confirm: async ({ message }) => {
+        asked.push(message);
+        return false; // decline generate (and import, though none is detected)
+      },
+      multiselect: async () => ['claude-code'],
+    };
+
+    const result = await runInitWizard(prompter, {
+      projectRoot: workspace,
+      context,
+      detected: [],
+      defaultTargets: [...globalInitTargetIds()],
+    });
+
+    expect(result.data.scope).toBe('global');
+    expect(asked.some((m) => m.startsWith('Enable Lessons'))).toBe(false);
+    expect(result.data.lessons).toBeUndefined();
+    const config = readFileSync(join(globalDir, 'agentsmesh.yaml'), 'utf-8');
+    expect(config).toContain('- claude-code');
+    expect(existsSync(join(workspace, '.agentsmesh', 'lessons', 'lessons.json'))).toBe(false);
+    expect(existsSync(join(globalDir, 'lessons', 'lessons.json'))).toBe(false);
   });
 });

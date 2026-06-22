@@ -6,6 +6,7 @@ import { runGenerate } from './commands/generate.js';
 import { renderGenerate } from './renderers/generate.js';
 import { runInit } from './commands/init.js';
 import { renderInit } from './renderers/init.js';
+import { createClackPrompter } from './prompts/clack-prompter.js';
 import { runImport } from './commands/import.js';
 import { runDiff } from './commands/diff.js';
 import { runLintCmd } from './commands/lint.js';
@@ -59,12 +60,30 @@ export const cmdHandlers: Record<string, CommandHandler> = {
   },
   init: async (flags, _args) => {
     void _args;
-    const result = await runInit(process.cwd(), {
-      yes: flags.yes === true,
-      global: flags.global === true,
-      lessons: flags.lessons === true,
-    });
-    handleResult('init', result, narrowFlags(flags), () => renderInit(result));
+    // Interactive only on a real project-scope TTY; --yes/--json/--global bypass it.
+    const interactive =
+      process.stdin.isTTY === true &&
+      process.stdout.isTTY === true &&
+      flags.yes !== true &&
+      flags.json !== true &&
+      flags.global !== true;
+    const deps = interactive ? { prompter: createClackPrompter() } : {};
+    const result = await runInit(
+      process.cwd(),
+      {
+        yes: flags.yes === true,
+        global: flags.global === true,
+        lessons: flags.lessons === true,
+      },
+      deps,
+    );
+    // In interactive mode clack already rendered intro/summary/outro — skip renderInit.
+    handleResult(
+      'init',
+      result,
+      narrowFlags(flags),
+      interactive ? () => {} : () => renderInit(result),
+    );
   },
   import: async (flags, _args) => {
     void _args;

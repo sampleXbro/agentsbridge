@@ -149,21 +149,37 @@ describe('cmdHandlers', () => {
     await cmdHandlers.init({}, []);
     await cmdHandlers.init({ lessons: true }, []);
 
-    expect(runInit).toHaveBeenNthCalledWith(1, process.cwd(), {
-      yes: true,
-      global: true,
-      lessons: false,
-    });
-    expect(runInit).toHaveBeenNthCalledWith(2, process.cwd(), {
-      yes: false,
-      global: false,
-      lessons: false,
-    });
-    expect(runInit).toHaveBeenNthCalledWith(3, process.cwd(), {
-      yes: false,
-      global: false,
-      lessons: true,
-    });
+    // Non-TTY test runs → interactive=false → no prompter injected (third arg is {}).
+    expect(runInit).toHaveBeenNthCalledWith(
+      1,
+      process.cwd(),
+      {
+        yes: true,
+        global: true,
+        lessons: false,
+      },
+      {},
+    );
+    expect(runInit).toHaveBeenNthCalledWith(
+      2,
+      process.cwd(),
+      {
+        yes: false,
+        global: false,
+        lessons: false,
+      },
+      {},
+    );
+    expect(runInit).toHaveBeenNthCalledWith(
+      3,
+      process.cwd(),
+      {
+        yes: false,
+        global: false,
+        lessons: true,
+      },
+      {},
+    );
     expect(renderInit).toHaveBeenCalledTimes(3);
   });
 

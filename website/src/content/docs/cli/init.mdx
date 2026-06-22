@@ -24,16 +24,30 @@ agentsmesh init [flags]
 
 ## Interactive wizard
 
-Running `agentsmesh init` on an interactive terminal launches a short wizard:
+On an interactive terminal, `agentsmesh init` runs a short wizard:
 
-1. **Import** — if existing tool configs are detected (Cursor, Claude Code, …), offers to import them into `.agentsmesh/`.
-2. **Targets** — multi-select which tools to generate config for (the starter set is pre-checked).
-3. **Lessons** — enable the shared recall/capture memory (default **yes**). _Project scope only — this step is skipped under `--global`, since lessons is project-only._
-4. **Generate** — optionally run `generate` immediately.
+1. **Import** — if existing tool configs are detected (Cursor, Claude Code, …), asks once whether to import them all into `.agentsmesh/`.
+2. **Targets** — multi-select which tools to generate for (the starter set is pre-checked).
+3. **Lessons** — enable the shared recall/capture memory (default **yes**).
+4. **Generate** — optionally run `generate` right away.
 
-Cancel (Ctrl-C) at any point writes nothing.
+Nothing is written until the end, so **Ctrl-C cancels cleanly** — no partial files.
 
-The wizard runs in both project and `--global` scope. Under `--global` it restricts the target list to global-capable tools and omits the Lessons step. It is skipped entirely — and the original non-interactive behavior runs — when any of these is true: `--yes`, `--json`, or a non-TTY/CI environment. This keeps scripted and CI usage stable.
+| Scope | Wizard behavior |
+|-------|-----------------|
+| project | All four steps above. |
+| `--global` | Target list limited to global-capable tools; the **Lessons step is omitted** (lessons is project-only). |
+
+The wizard is **skipped** — and the original non-interactive behavior runs — with `--yes`, `--json`, or in a non-TTY/CI shell. Scripted and CI usage is unchanged.
+
+## Already initialized
+
+Once `agentsmesh.yaml` exists, init is protective:
+
+- `agentsmesh init` (or `--global`) → stops with **`Already initialized. agentsmesh.yaml exists. Remove it first to re-init.`** Nothing changes; the wizard never starts.
+- `agentsmesh init --lessons` → **adds the lessons subsystem retroactively** without touching your config or scaffold (see [Enable lessons recall](#enable-lessons-recall)). Idempotent — safe to re-run.
+
+To start fresh, delete `agentsmesh.yaml` (and `.agentsmesh/` for a clean slate) and run `init` again.
 
 ## What init creates
 
@@ -79,7 +93,7 @@ Running `agentsmesh init --global` creates the same canonical structure under `~
 
 ## Auto-detection
 
-During init, AgentsMesh scans the project for existing AI tool configs from every [supported target](../../reference/supported-tools/) — `.claude/`, `.cursor/`, `.github/copilot-instructions.md`, and the rest. For each one found, it prompts you to import.
+During init, AgentsMesh scans the project for existing AI tool configs from every [supported target](../../reference/supported-tools/) — `.claude/`, `.cursor/`, `.github/copilot-instructions.md`, and the rest. The wizard offers to import everything it finds (a single yes/no); `--yes` imports all of them non-interactively.
 
 ## Examples
 
@@ -89,7 +103,7 @@ During init, AgentsMesh scans the project for existing AI tool configs from ever
 agentsmesh init
 ```
 
-Prompts for each detected config. You can accept or skip each one individually.
+Launches the [wizard](#interactive-wizard): import detected configs, pick targets, toggle lessons, optionally generate.
 
 ### Auto-import everything
 
@@ -101,26 +115,16 @@ Imports all detected configs without prompting, then writes the same starter fil
 
 ### Enable lessons recall
 
+`--lessons` works on a **fresh or already-initialized** project — it's how you add lessons later if you skipped them during init:
+
 ```bash
-agentsmesh init --lessons
+agentsmesh init --lessons   # fresh, or retroactively on an existing project
 agentsmesh generate
 ```
 
-`--lessons` scaffolds `.agentsmesh/lessons/lessons.json` (the universal
-recall/capture graph) and sets up two-tier delivery: it injects a minimal,
-tool-agnostic **trigger** into `.agentsmesh/rules/_root.md` and seeds the full
-operating manual as a `lessons` skill (`.agentsmesh/skills/lessons/SKILL.md`).
-After `generate`, every enabled target receives the always-on trigger through
-its root rule (rules are native everywhere), while skill-capable targets also
-get the on-demand manual. Agents query the graph before edits/commands and
-capture failures after — the trigger is the binding contract, the skill is the
-reference.
+It scaffolds the recall/capture graph (`.agentsmesh/lessons/lessons.json`), injects a tool-agnostic **trigger** into `.agentsmesh/rules/_root.md`, and seeds the full operating manual as a `lessons` skill. After `generate`, every target gets the always-on trigger (rules are native everywhere) and skill-capable targets also get the on-demand manual — agents query the graph before edits/commands and capture failures after.
 
-Run the same command in an already-initialized project to add lessons
-retroactively; init leaves existing config and canonical files untouched. It
-also adds `.agentsmesh/lessons/recall-log.jsonl` to your project's `.gitignore`
-(idempotently), so the opt-in recall telemetry log
-(`AGENTSMESH_LESSONS_TELEMETRY=1`) never dirties your worktree.
+On an existing project it leaves your config and canonical files untouched and is idempotent; it also adds `.agentsmesh/lessons/recall-log.jsonl` to `.gitignore` so opt-in telemetry never dirties the worktree. Cannot be combined with `--global` (lessons is project-only).
 
 ### Initialize global config
 
@@ -145,7 +149,7 @@ agentsmesh generate
 ```
 
 <Aside type="note">
-  If `.agentsmesh/` already exists, `init` will not overwrite it. It only creates files that don't exist yet.
+  If the project is already initialized (`agentsmesh.yaml` exists), `init` stops with an "already initialized" error instead of overwriting anything. Use `agentsmesh init --lessons` to add lessons to an existing project, or remove `agentsmesh.yaml` to re-init. See [Already initialized](#already-initialized).
 </Aside>
 
 ## Generated agentsmesh.yaml

@@ -76,12 +76,15 @@ export const cmdHandlers: Record<string, CommandHandler> = {
       },
       deps,
     );
-    // In interactive mode clack already rendered intro/summary/outro — skip renderInit.
+    // Only an actual wizard run renders its own output (clack intro/summary/outro).
+    // The lessons-only retrofit on an already-initialized project returns without a
+    // wizard, so it still needs renderInit. (A plain re-init throws before returning.)
+    const wizardRan = interactive && result.data.lessonsOnly !== true;
     handleResult(
       'init',
       result,
       narrowFlags(flags),
-      interactive ? () => {} : () => renderInit(result),
+      wizardRan ? () => {} : () => renderInit(result),
     );
   },
   import: async (flags, _args) => {

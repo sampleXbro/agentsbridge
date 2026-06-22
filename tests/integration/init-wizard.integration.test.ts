@@ -103,3 +103,47 @@ describe('lessons is never available in global mode', () => {
     expect(existsSync(join(homeDir, '.agentsmesh', 'lessons', 'lessons.json'))).toBe(false);
   });
 });
+
+describe('already-initialized project', () => {
+  // A recording prompter that fails the test if the wizard ever touches it.
+  function recordingPrompter(): { prompter: Prompter; wasPrompted: () => boolean } {
+    let prompted = false;
+    const prompter: Prompter = {
+      intro: () => {
+        prompted = true;
+      },
+      outro: () => {},
+      note: () => {},
+      cancel: () => {},
+      isCancel: () => false,
+      confirm: async () => {
+        prompted = true;
+        return true;
+      },
+      multiselect: async () => {
+        prompted = true;
+        return ['claude-code'];
+      },
+    };
+    return { prompter, wasPrompted: () => prompted };
+  }
+
+  it('throws "Already initialized" without entering the wizard', async () => {
+    await runInit(TEST_DIR, {}); // first init creates agentsmesh.yaml + scaffold
+    const { prompter, wasPrompted } = recordingPrompter();
+
+    await expect(runInit(TEST_DIR, {}, { prompter })).rejects.toThrow(/already initialized/i);
+    expect(wasPrompted()).toBe(false);
+  });
+
+  it('--lessons retrofits the lessons subsystem without entering the wizard', async () => {
+    await runInit(TEST_DIR, {}); // first init creates the project (incl. rules/_root.md)
+    const { prompter, wasPrompted } = recordingPrompter();
+
+    const result = await runInit(TEST_DIR, { lessons: true }, { prompter });
+
+    expect(result.data.lessonsOnly).toBe(true);
+    expect(wasPrompted()).toBe(false);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'lessons', 'lessons.json'))).toBe(true);
+  });
+});

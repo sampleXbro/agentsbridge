@@ -183,6 +183,52 @@ describe('cmdHandlers', () => {
     expect(renderInit).toHaveBeenCalledTimes(3);
   });
 
+  it('renders the lessons-only retrofit even on an interactive TTY (output not swallowed)', async () => {
+    const stdin = process.stdin.isTTY;
+    const stdout = process.stdout.isTTY;
+    process.stdin.isTTY = true;
+    process.stdout.isTTY = true;
+    try {
+      vi.mocked(runInit).mockResolvedValueOnce({
+        exitCode: 0,
+        data: {
+          ...initResult.data,
+          scaffoldType: 'none',
+          lessonsOnly: true,
+          lessons: {
+            created: [],
+            updated: [],
+            skipped: [],
+            rootRuleUpdated: false,
+            gitignoreUpdated: false,
+            recallHookInjected: false,
+          },
+        },
+      });
+      await cmdHandlers.init({ lessons: true }, []);
+      // Retrofit returns without a wizard → its summary must still be rendered.
+      expect(renderInit).toHaveBeenCalledTimes(1);
+    } finally {
+      process.stdin.isTTY = stdin;
+      process.stdout.isTTY = stdout;
+    }
+  });
+
+  it('suppresses renderInit when the wizard actually ran on an interactive TTY', async () => {
+    const stdin = process.stdin.isTTY;
+    const stdout = process.stdout.isTTY;
+    process.stdin.isTTY = true;
+    process.stdout.isTTY = true;
+    try {
+      // default initResult (lessonsOnly undefined) → wizard path → clack rendered.
+      await cmdHandlers.init({}, []);
+      expect(renderInit).not.toHaveBeenCalled();
+    } finally {
+      process.stdin.isTTY = stdin;
+      process.stdout.isTTY = stdout;
+    }
+  });
+
   it('delegates import, diff, lint, check, and merge to their renderers', async () => {
     await cmdHandlers.import({ from: 'cursor' }, []);
     await cmdHandlers.diff({ targets: 'cursor' }, []);

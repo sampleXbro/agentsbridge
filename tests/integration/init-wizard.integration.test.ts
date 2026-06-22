@@ -62,3 +62,41 @@ describe('runInit with injected prompter (interactive path)', () => {
     expect(existsSync(join(homeDir, '.agentsmesh', 'agentsmesh.yaml'))).toBe(true);
   });
 });
+
+describe('lessons is never available in global mode', () => {
+  it('rejects --global --lessons (CLI-level guard)', async () => {
+    await expect(runInit(join(TEST_DIR, 'ws'), { global: true, lessons: true })).rejects.toThrow(
+      /project-mode only/i,
+    );
+  });
+
+  it('never enters the wizard in global scope — no prompt, no lessons scaffolded', async () => {
+    const homeDir = join(TEST_DIR, 'home');
+    mkdirSync(homeDir, { recursive: true });
+    vi.stubEnv('HOME', homeDir);
+    vi.stubEnv('USERPROFILE', homeDir);
+
+    let prompted = false;
+    const spy: Prompter = {
+      intro: () => {},
+      outro: () => {},
+      note: () => {},
+      cancel: () => {},
+      isCancel: () => false,
+      confirm: async () => {
+        prompted = true;
+        return true;
+      },
+      multiselect: async () => {
+        prompted = true;
+        return ['claude-code'];
+      },
+    };
+
+    const result = await runInit(join(TEST_DIR, 'ws'), { global: true }, { prompter: spy });
+
+    expect(result.data.scope).toBe('global');
+    expect(prompted).toBe(false);
+    expect(existsSync(join(homeDir, '.agentsmesh', 'lessons', 'lessons.json'))).toBe(false);
+  });
+});

@@ -47,3 +47,33 @@ describe('applyInitPlan (project, no import)', () => {
     expect(existsSync(join(TEST_DIR, '.agentsmesh', 'lessons', 'lessons.json'))).toBe(true);
   });
 });
+
+describe('applyInitPlan (global scope — lessons never available)', () => {
+  it('does NOT scaffold lessons in global scope even when plan.lessons is true', async () => {
+    const home = join(TEST_DIR, 'home');
+    const workspace = join(TEST_DIR, 'workspace');
+    mkdirSync(workspace, { recursive: true });
+    const globalDir = join(home, '.agentsmesh');
+    const context = {
+      scope: 'global' as const,
+      rootBase: home,
+      configDir: globalDir,
+      canonicalDir: globalDir,
+    };
+    const plan: InitPlan = {
+      scope: 'global',
+      targets: ['claude-code'],
+      defaultTargets: ['claude-code'],
+      detected: [],
+      doImport: false,
+      lessons: true,
+    };
+
+    const data = await applyInitPlan(workspace, context, plan);
+
+    // Lessons is project-only — global must never scaffold it, regardless of plan.lessons.
+    expect(data.lessons).toBeUndefined();
+    expect(existsSync(join(workspace, '.agentsmesh', 'lessons', 'lessons.json'))).toBe(false);
+    expect(existsSync(join(globalDir, 'lessons', 'lessons.json'))).toBe(false);
+  });
+});

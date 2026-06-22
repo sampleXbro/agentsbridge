@@ -116,7 +116,10 @@ export async function applyInitPlan(
     gitignoreUpdated = await ensureGitignoreEntries(projectRoot, GITIGNORE_ENTRIES);
   }
 
-  const lessons = plan.lessons ? await scaffoldLessons(projectRoot) : undefined;
+  // Lessons live in the project tree and are never available in global scope —
+  // enforce that invariant here at the writer, not just at the CLI flag guard.
+  const lessons =
+    plan.lessons && plan.scope === 'project' ? await scaffoldLessons(projectRoot) : undefined;
 
   return {
     scope: plan.scope,

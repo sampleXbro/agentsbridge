@@ -1,67 +1,40 @@
 /**
  * agentsmesh init — create agentsmesh.yaml and .agentsmesh/ scaffold.
  * With --yes: auto-import detected configs, then add example scaffold only where canonical paths stayed empty.
+ * On a project-scope TTY (no --yes/--json/--global), the command handler injects a Prompter and the
+ * interactive wizard runs instead — see init-wizard.ts.
  */
 
-import { join, relative } from 'node:path';
-import { exists, writeFileAtomic } from '../../utils/filesystem/fs.js';
-import { ensureGitignoreEntries } from '../../utils/filesystem/gitignore.js';
-import { BUILTIN_TARGETS } from '../../targets/catalog/builtin-targets.js';
-import type { ImportResult } from '../../core/types.js';
-import { buildConfig, LOCAL_TEMPLATE } from './init-templates.js';
-import { detectExistingConfigs } from './init-detect.js';
-import { writeScaffoldFull, writeScaffoldGapFill } from './init-scaffold.js';
-import { resolveScopeContext, type ConfigScope } from '../../config/core/scope.js';
+import { join } from 'node:path';
+import { exists } from '../../utils/filesystem/fs.js';
 import type { BuiltinTargetId } from '../../targets/catalog/target-ids.js';
-import type { InitData } from '../command-result.js';
+import { globalInitTargetIds } from '../../targets/catalog/init-starter-targets.js';
+import { resolveScopeContext, type ConfigScope } from '../../config/core/scope.js';
 import { scaffoldLessons } from '../../lessons/init.js';
+import { detectExistingConfigs } from './init-detect.js';
+import {
+  applyInitPlan,
+  CONFIG_FILENAME,
+  LOCAL_CONFIG_FILENAME,
+  type InitCommandResult,
+  type InitPlan,
+} from './init-apply.js';
+import { runInitWizard } from './init-wizard.js';
+import type { Prompter } from '../prompts/prompter.js';
 
-export interface InitCommandResult {
-  exitCode: number;
-  data: InitData;
-}
-
-const CONFIG_FILENAME = 'agentsmesh.yaml';
-const LOCAL_CONFIG_FILENAME = 'agentsmesh.local.yaml';
-// Packs are materialized derivatives of installs.yaml — same model as node_modules.
-// `agentsmesh install --sync` reproduces them deterministically post-clone.
-// Generated target folders (.claude/, .cursor/, .github/, .gemini/, etc.) are NOT
-// in this list — they are committed by default so fresh clones have AI configs
-// available without a build step. Use `agentsmesh check` in CI to detect drift.
-const GITIGNORE_ENTRIES = [
-  'agentsmesh.local.yaml',
-  '.agentsmeshcache',
-  '.agentsmesh/.lock.tmp',
-  '.agentsmesh/packs/',
-];
-
-/** Importers derived from target descriptors — no manual registration needed. */
-const IMPORTERS: Record<string, (root: string, scope: ConfigScope) => Promise<ImportResult[]>> =
-  Object.fromEntries(
-    BUILTIN_TARGETS.map((d) => [
-      d.id,
-      (root: string, scope: ConfigScope) => d.generators.importFrom(root, { scope }),
-    ]),
-  );
-const GLOBAL_INIT_TARGETS: BuiltinTargetId[] = BUILTIN_TARGETS.filter(
-  (target) => target.globalSupport !== undefined,
-).map((target) => target.id as BuiltinTargetId);
-
+export type { InitCommandResult } from './init-apply.js';
 export { detectExistingConfigs };
+
+const GLOBAL_INIT_TARGETS: readonly BuiltinTargetId[] = globalInitTargetIds();
 
 /**
  * Run the init command.
- * @param projectRoot - Project root (default process.cwd())
- * @param options - Optional flags: yes (auto-import without prompting),
- *   global (init global scope), lessons (scaffold the lessons subsystem;
- *   project-mode only; non-destructive — works on an already-initialized
- *   project to add lessons retroactively).
- * @throws Error if already initialized (unless --lessons was passed to
- *   retroactively add the lessons subsystem to an existing init)
+ * @throws Error if already initialized (unless --lessons retrofits an existing init).
  */
 export async function runInit(
   projectRoot: string,
   options: { yes?: boolean; global?: boolean; lessons?: boolean } = {},
+  deps: { prompter?: Prompter } = {},
 ): Promise<InitCommandResult> {
   const scope: ConfigScope = options.global === true ? 'global' : 'project';
   const wantLessons = options.lessons === true;
@@ -74,8 +47,7 @@ export async function runInit(
   const configPath = join(context.configDir, CONFIG_FILENAME);
   const alreadyInitialized = await exists(configPath);
 
-  // Lessons-only retrofit path: already-initialized project + --lessons.
-  // Scaffold lessons without touching the existing config/scaffold.
+  // Lessons-only retrofit: already-initialized project + --lessons.
   if (alreadyInitialized && wantLessons) {
     const lessons = await scaffoldLessons(projectRoot);
     return {
@@ -108,61 +80,26 @@ export async function runInit(
       : detected;
   const defaultTargets = scope === 'global' ? GLOBAL_INIT_TARGETS : undefined;
 
-  const imported: Array<{ from: string; to: string }> = [];
-  let scaffoldType: 'full' | 'gap-fill' | 'none';
-  let importedToolCount = 0;
-
-  if (existing.length > 0) {
-    if (options.yes) {
-      for (const toolId of existing) {
-        const importerFn = IMPORTERS[toolId];
-        if (!importerFn) continue;
-        const results = await importerFn(context.rootBase, scope);
-        for (const r of results) {
-          imported.push({
-            from: relative(context.rootBase, r.fromPath).replaceAll('\\', '/'),
-            to: r.toPath.replaceAll('\\', '/'),
-          });
-        }
-      }
-      importedToolCount = existing.length;
-
-      await writeScaffoldGapFill(context.canonicalDir);
-      scaffoldType = 'gap-fill';
-      await writeFileAtomic(configPath, buildConfig(existing, defaultTargets));
-    } else {
-      await writeScaffoldFull(context.canonicalDir);
-      scaffoldType = 'full';
-      await writeFileAtomic(configPath, buildConfig([], defaultTargets));
-    }
-  } else {
-    await writeScaffoldFull(context.canonicalDir);
-    scaffoldType = 'full';
-    await writeFileAtomic(configPath, buildConfig([], defaultTargets));
+  // Interactive wizard: prompter injected (project or global), not --yes.
+  // The wizard itself is scope-aware (global skips the lessons step).
+  if (deps.prompter !== undefined && options.yes !== true) {
+    return runInitWizard(deps.prompter, {
+      projectRoot,
+      context,
+      detected: existing,
+      defaultTargets,
+    });
   }
 
-  const localPath = join(context.configDir, LOCAL_CONFIG_FILENAME);
-  await writeFileAtomic(localPath, LOCAL_TEMPLATE);
-
-  let gitignoreUpdated = false;
-  if (scope === 'project') {
-    gitignoreUpdated = await ensureGitignoreEntries(projectRoot, GITIGNORE_ENTRIES);
-  }
-
-  const lessons = wantLessons ? await scaffoldLessons(projectRoot) : undefined;
-
-  return {
-    exitCode: 0,
-    data: {
-      scope,
-      configFile: CONFIG_FILENAME,
-      localConfigFile: LOCAL_CONFIG_FILENAME,
-      detectedConfigs: existing,
-      imported,
-      importedToolCount,
-      scaffoldType,
-      gitignoreUpdated,
-      lessons,
-    },
+  const doImport = existing.length > 0 && options.yes === true;
+  const plan: InitPlan = {
+    scope,
+    targets: doImport ? existing : [],
+    defaultTargets,
+    detected: existing,
+    doImport,
+    lessons: wantLessons,
   };
+  const data = await applyInitPlan(projectRoot, context, plan);
+  return { exitCode: 0, data };
 }

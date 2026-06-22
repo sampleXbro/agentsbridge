@@ -17,6 +17,7 @@ import {
 } from './builtin-target-ids-generated.js';
 
 export const TARGET_IDS = BUILTIN_TARGET_IDS;
+export { BUILTIN_TARGET_IDS };
 export type { BuiltinTargetId };
 export { isBuiltinTargetId };
 

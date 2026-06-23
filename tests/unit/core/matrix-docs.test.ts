@@ -145,7 +145,7 @@ describe('compatibility matrix docs', () => {
     for (const target of ['antigravity', 'roo-code']) {
       expect(cliDocs).toContain(target);
     }
-    expect(cliDocs).toContain('Legend: ✓ = native  ◆ = embedded  ◐ = partial  – = not supported');
+    expect(cliDocs).toContain('✓ native  ◆ embedded  ◐ partial  – none');
     expect(cliDocs).toContain('additional rules');
     expect(cliDocs).toContain('metadata for round-trip import');
     expect(cliDocs).not.toContain('| `native` |');

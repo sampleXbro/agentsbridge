@@ -27,7 +27,7 @@ describe('renderMatrix', () => {
       { verbose: true },
     );
 
-    expect(output.stdout()).toContain('Feature');
+    expect(output.stdout()).toContain('Target');
     expect(output.stdout()).toContain('rules');
     expect(output.stdout()).toContain('cursor supports native rules');
   });

@@ -55,21 +55,16 @@ agentsmesh matrix --global
 Column headers match the `targets` list in your `agentsmesh.yaml` (here: every built-in target). Feature labels include counts when your canonical tree has items (for example `commands (2)` or `additional rules (1)`). Colors are emitted only when output is an interactive terminal: piped or redirected output (for example `agentsmesh matrix | cat`) prints plain symbols with no ANSI codes, so consumers like scripts and AI agents get clean text. Set `NO_COLOR=1` to force plain symbols even in a terminal, or `FORCE_COLOR=1` to keep colors when piping. The block below illustrates **project-scope** catalog symbols for that full target list.
 
 ```
-┌────────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┐
-│Feature         │Claude      │cursor      │copilot     │continue    │junie       │kiro        │gemini-cli  │cline       │codex-cli   │windsurf    │antigravity │roo-code    │
-├────────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┤
-│rules           │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │
-│additional rules│  ✓         │  ◆         │  ✓         │  ✓         │  ✓         │  ✓         │  ◆         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │
-│commands        │  ✓         │  ✓         │  ✓         │  ◆         │  ◆         │  –         │  ✓         │  ✓         │  ◆         │  ✓         │  ◐         │  ✓         │
-│agents          │  ✓         │  ✓         │  ✓         │  –         │  ◆         │  ✓         │  ✓         │  ◆         │  ✓         │  ◆         │  –         │  –         │
-│skills          │  ✓         │  ✓         │  ✓         │  ◆         │  ◆         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │
-│mcp             │  ✓         │  ✓         │  –         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ✓         │  ◐         │  –         │  ✓         │
-│hooks           │  ✓         │  ✓         │  ◐         │  –         │  –         │  ✓         │  ◐         │  ✓         │  –         │  ✓         │  –         │  –         │
-│ignore          │  ✓         │  ✓         │  –         │  –         │  ✓         │  ✓         │  ✓         │  ✓         │  –         │  ✓         │  –         │  ✓         │
-│permissions     │  ✓         │  ◐         │  –         │  –         │  –         │  –         │  ◐         │  –         │  –         │  –         │  –         │  –         │
-└────────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┘
+Target          Rul  +Ru  Cmd  Agt  Skl  MCP  Hok  Ign  Prm
+──────────────  ───  ───  ───  ───  ───  ───  ───  ───  ───
+Claude           ✓    ✓    ✓    ✓    ✓    ✓    ✓    ✓    ✓
+antigravity      ✓    ✓    ◐    –    ✓    –    –    –    ◐
+cursor           ✓    ◆    ✓    ✓    ✓    ✓    ✓    ✓    ◐
+roo-code         ✓    ✓    ✓    –    ✓    ✓    –    ✓    –
 
-Legend: ✓ = native  ◆ = embedded  ◐ = partial  – = not supported
+✓ native  ◆ embedded  ◐ partial  – none
+Rul rules · +Ru additional rules · Cmd commands · Agt agents · Skl skills
+MCP mcp · Hok hooks · Ign ignore · Prm permissions
 ```
 
 ## Legend

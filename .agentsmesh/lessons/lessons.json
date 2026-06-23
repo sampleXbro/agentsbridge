@@ -432,6 +432,19 @@
         "t-cmd-6ea72461"
       ]
     },
+    "coverage-analysis-to-diagnose-a-codecov-patch": {
+      "createdAt": "2026-06-23",
+      "evidence": [],
+      "rule": "To diagnose a Codecov patch/diff-coverage failure in this repo, parse `coverage/coverage-final.json` (istanbul: per-file `s`/`statementMap`, `b`/`branchMap`) for the EXACT uncovered statement and branch lines. Do NOT trust the v8 TEXT table's \"Uncovered Line #s\": it truncates long paths, conflates line-vs-branch, and lists multiple same-basename files (e.g. `cli/commands/init.ts` vs `lessons/init.ts`), so it can show a gap as \"still 60,76\" when the JSON proves the file is 100%. Generate coverage with the local binary `COVERAGE=1 node_modules/.bin/vitest run --coverage` (NOT `pnpm test:coverage` — pnpm 11 trips frozen-install on the pnpm-10 lockfile). Distinguish unreachable defensive branches (e.g. `x ?? false` where x is always assigned) from real gaps; don't chase 100%.",
+      "status": "active",
+      "topics": [
+        "coverage-analysis"
+      ],
+      "triggers": [
+        "t-cmd-a29b2eff",
+        "t-kw-8098ffea"
+      ]
+    },
     "dist-backed-tests-an-e2e-test-that-runs": {
       "createdAt": "2026-06-12",
       "evidence": [
@@ -6376,6 +6389,9 @@
     "ci-and-release-security": {
       "summary": "CI workflows + release security — ${{ }} injection, needs cascade, token leakage, supply-chain pinning, fail-closed checksums."
     },
+    "coverage-analysis": {
+      "summary": "Diagnosing code-coverage / Codecov patch gaps: parse coverage-final.json for ground truth; run vitest coverage via the local binary."
+    },
     "dist-backed-tests": {
       "summary": "e2e and integration tests that exec dist/cli.js; require fresh build; avoid parallel rebuilds."
     },
@@ -6618,6 +6634,10 @@
     "t-cmd-9b9e4933": {
       "kind": "command_pattern",
       "pattern": "git tag"
+    },
+    "t-cmd-a29b2eff": {
+      "kind": "command_pattern",
+      "pattern": "coverage"
     },
     "t-cmd-a3f82ec8": {
       "kind": "command_pattern",
@@ -7526,6 +7546,10 @@
     "t-kw-7dd5abb2": {
       "kind": "keyword",
       "pattern": "scalar array coercion alias"
+    },
+    "t-kw-8098ffea": {
+      "kind": "keyword",
+      "pattern": "codecov"
     },
     "t-kw-866bb6ea": {
       "kind": "keyword",

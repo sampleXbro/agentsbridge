@@ -96,8 +96,13 @@ export const cmdHandlers: Record<string, CommandHandler> = {
   import: async (flags, _args) => {
     void _args;
     const nf = narrowFlags(flags);
+    ui.intro('agentsmesh import');
+    const sp = ui.spinner();
+    sp.start('Importing…');
     const result = await runImport(nf);
+    sp.stop('Import complete');
     handleResult('import', result, nf, () => renderImport(result));
+    ui.outro('Done');
   },
   diff: async (flags, _args) => {
     void _args;
@@ -149,19 +154,34 @@ export const cmdHandlers: Record<string, CommandHandler> = {
   install: async (flags, args) => {
     const nf = narrowFlags(flags);
     if (nf.json === true) nf.force = true;
+    ui.intro('agentsmesh install');
+    const sp = ui.spinner();
+    sp.start('Installing…');
     const result = await runInstall(nf, args, process.cwd());
+    sp.stop('Install complete');
     handleResult('install', result, nf, () => renderInstall(result));
+    ui.outro('Done');
   },
   uninstall: async (flags, args) => {
     const nf = narrowFlags(flags);
     if (nf.json === true) nf.force = true;
+    ui.intro('agentsmesh uninstall');
+    const sp = ui.spinner();
+    sp.start('Removing…');
     const result = await runUninstall(nf, args, process.cwd());
+    sp.stop('Uninstall complete');
     handleResult('uninstall', result, nf, () => renderUninstall(result));
+    ui.outro('Done');
   },
   refresh: async (flags, args) => {
     const nf = narrowFlags(flags);
+    ui.intro('agentsmesh refresh');
+    const sp = ui.spinner();
+    sp.start('Refreshing…');
     const result = await runRefresh(nf, args, process.cwd());
+    sp.stop('Refresh complete');
     handleResult('refresh', result, nf, () => renderRefresh(result));
+    ui.outro('Done');
   },
   installs: async (flags, args) => {
     const nf = narrowFlags(flags);
@@ -181,8 +201,13 @@ export const cmdHandlers: Record<string, CommandHandler> = {
   convert: async (flags, _args) => {
     void _args;
     const nf = narrowFlags(flags);
+    ui.intro('agentsmesh convert');
+    const sp = ui.spinner();
+    sp.start('Converting…');
     const result = await runConvert(nf);
+    sp.stop('Convert complete');
     handleResult('convert', result, nf, () => renderConvert(result));
+    ui.outro('Done');
   },
   mcp: async (flags, args) => {
     await runMcp(narrowFlags(flags), args);

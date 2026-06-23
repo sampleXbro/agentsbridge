@@ -2,7 +2,7 @@
  * Human-readable renderer for install command output.
  */
 
-import { logger } from '../../utils/output/logger.js';
+import { ui } from '../ui/ui.js';
 import type { InstallCommandResult } from '../commands/install.js';
 
 export function renderInstall(result: InstallCommandResult): void {
@@ -20,25 +20,26 @@ export function renderInstall(result: InstallCommandResult): void {
         return `${count} ${k}${count > 1 ? 's' : ''}`;
       })
       .join(', ');
-    logger.success(`Installed ${summary}.`);
+    ui.success(`Installed ${summary}.`);
+    ui.note(`Installed ${summary}.`, 'Install');
   }
 
   if (data.skipped.length > 0) {
     for (const s of data.skipped) {
-      logger.warn(`Skipped ${s.kind} "${s.name}": ${s.reason}`);
+      ui.warn(`Skipped ${s.kind} "${s.name}": ${s.reason}`);
     }
   }
 
   if (data.brokenResources && data.brokenResources.length > 0) {
     const count = data.brokenResources.length;
-    logger.warn(
+    ui.warn(
       `Skipped ${count} file${count > 1 ? 's' : ''} with invalid frontmatter; see --json for details.`,
     );
   }
 
   if (data.subPackFailures && data.subPackFailures.length > 0) {
     for (const f of data.subPackFailures) {
-      logger.warn(`Sub-pack "${f.name}" (${f.path}) failed: ${f.error}`);
+      ui.warn(`Sub-pack "${f.name}" (${f.path}) failed: ${f.error}`);
     }
   }
 }

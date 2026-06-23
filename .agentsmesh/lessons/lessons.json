@@ -594,6 +594,19 @@
         "t-cmd-703162ab"
       ]
     },
+    "dist-backed-tests-tests-e2e-agents-last-run": {
+      "createdAt": "2026-06-23",
+      "evidence": [],
+      "rationale": "During release prep the file showed as dirty after every full test run and had to be reverted twice before committing; a naive `git add -A` would commit spurious timestamp churn.",
+      "rule": "`tests/e2e/agents-last-run.md` is tracked but regenerated (timestamp-only churn) by the e2e test suite, so it shows as dirty after `pnpm test`. Do NOT commit its change — `git checkout -- tests/e2e/agents-last-run.md` and stage files explicitly (never `git add -A`). The repo intends it untracked (commit 0a09e16 \"stop tracking\") but it is still tracked, so the churn keeps reappearing.",
+      "status": "active",
+      "topics": [
+        "dist-backed-tests"
+      ],
+      "triggers": [
+        "t-glob-892c1e39"
+      ]
+    },
     "dist-backed-tests-when-a-change-alters-cli": {
       "createdAt": "2026-06-08",
       "evidence": [
@@ -4361,6 +4374,32 @@
         "t-kw-b54b3b44"
       ]
     },
+    "readme-authoring-when-trimming-or-rewriting-readme": {
+      "createdAt": "2026-06-23",
+      "evidence": [],
+      "rationale": "User correction: a lean rewrite dropped the init wizard and auto link rebasing; the user had to ask for a deep feature re-check and a second rewrite.",
+      "rule": "When trimming or rewriting README.md, do not sacrifice feature coverage for brevity. Cross-check the rewrite against the actual feature set (website/src/content/docs/** and src/cli/help-data.ts) and keep the differentiators — especially the `init` interactive wizard (targets → import → lessons → generate) and automatic link rebasing (canonical refs like `.agentsmesh/skills/.../x` rewritten to each target's native path). The readme skill's \"lean\" default must not silently drop recently-added or distinguishing features.",
+      "status": "active",
+      "topics": [
+        "readme-authoring"
+      ],
+      "triggers": [
+        "t-glob-d044343b"
+      ]
+    },
+    "readme-codegen-blocks-when-trimming-or-rewriting-readme": {
+      "createdAt": "2026-06-23",
+      "evidence": [],
+      "rationale": "A README cleanup can delete the wide matrix tables as \"clutter\", which breaks matrix:generate (throws on missing markers) and matrix-docs.test.ts (pins the first |Feature| table + exact global-scope heading).",
+      "rule": "When trimming or rewriting README.md, preserve the auto-generated marker blocks `<!-- agentsmesh:support-matrix:project -->`, `<!-- agentsmesh:support-matrix:global -->`, and `<!-- agentsmesh:tool-list -->`; keep the exact heading `### Global scope (`agentsmesh generate --global`)` directly above the global matrix; and keep the project matrix as the FIRST `| Feature ` table (give other tables a different first column, e.g. `| Command |`). `scripts/render-support-matrix.ts` throws on missing matrix markers and `tests/unit/core/matrix-docs.test.ts` pins this layout — finish with `pnpm matrix:generate && pnpm matrix:verify`.",
+      "status": "active",
+      "topics": [
+        "readme-codegen-blocks"
+      ],
+      "triggers": [
+        "t-glob-d044343b"
+      ]
+    },
     "security-a-directory-reader-that-ingests": {
       "createdAt": "2026-06-18",
       "evidence": [],
@@ -5793,6 +5832,19 @@
         "t-cmd-2a2e013d"
       ]
     },
+    "website-docs-when-applying-a-readability-quality": {
+      "createdAt": "2026-06-23",
+      "evidence": [],
+      "rationale": "A readability audit flagged 10 pages; on inspection 9 already had clear leads and good structure, so editing on the audit's say-so would have degraded good docs.",
+      "rule": "When applying a readability/quality audit to website docs, verify each of the audit subagent's specific claims against the real file before editing — survey agents over-flag (e.g. claim a page \"has no lead\" when it opens with one, mis-count lines, or call distinct sections \"duplicated\"). Don't churn already-good pages; only edit where the real file genuinely needs it. Verify doc edits with `npx astro build` in `website/` (~6s; it builds all pages and validates every internal link).",
+      "status": "active",
+      "topics": [
+        "website-docs"
+      ],
+      "triggers": [
+        "t-glob-d0a4b76e"
+      ]
+    },
     "windows-paths-a-directory-rename-that-finalizes": {
       "createdAt": "2026-06-12",
       "evidence": [
@@ -6335,6 +6387,12 @@
     },
     "process-locks": {
       "summary": "Process-lock primitive (acquireProcessLock) and per-lock wrappers — per-lock labels, stale/young eviction, signal cleanup, contention messages."
+    },
+    "readme-authoring": {
+      "summary": "README.md content discipline — preserve feature coverage and differentiators when trimming or applying the lean readme skill."
+    },
+    "readme-codegen-blocks": {
+      "summary": "README.md auto-generated marker blocks (support matrix, tool list) and the generator/tests that pin their layout."
     },
     "security": {
       "summary": "Security hardening invariants for agentsmesh (SSRF, transport allowlists, symlink/tar safety)."
@@ -7167,6 +7225,10 @@
     "t-glob-cd11277c": {
       "kind": "file_glob",
       "pattern": "src/lessons/regex-linear/*.ts"
+    },
+    "t-glob-d044343b": {
+      "kind": "file_glob",
+      "pattern": "README.md"
     },
     "t-glob-d0a4b76e": {
       "kind": "file_glob",

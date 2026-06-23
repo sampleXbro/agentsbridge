@@ -4400,6 +4400,19 @@
         "t-glob-d044343b"
       ]
     },
+    "release-changesets-when-auditing-which-changes-since": {
+      "createdAt": "2026-06-23",
+      "evidence": [],
+      "rationale": "A release audit found a feat(skills) commit that needed no changeset (repo-internal only) and an unlabeled MCP bug fix that did — classification hinges on the npm files surface.",
+      "rule": "When auditing which changes since the last release tag need a changeset, only the npm-published surface is user-facing: `src/`, `schemas/`, `package.json` (deps/exports), and `README.md` (the package `files` field is dist/schemas/README.md/CHANGELOG.md/LICENSE). Changes confined to `.agentsmesh/`, `.claude/`, `.agents/`, `tests/`, `website/`, or `docs/` ship nothing and need NO changeset — even a `feat(...)`-prefixed commit (e.g. adding a repo-internal skill). Enumerate with `git log v<last-tag>..HEAD --no-merges` and map every user-facing commit to a changeset.",
+      "status": "active",
+      "topics": [
+        "release-changesets"
+      ],
+      "triggers": [
+        "t-glob-b1cdb41a"
+      ]
+    },
     "security-a-directory-reader-that-ingests": {
       "createdAt": "2026-06-18",
       "evidence": [],
@@ -6394,6 +6407,9 @@
     "readme-codegen-blocks": {
       "summary": "README.md auto-generated marker blocks (support matrix, tool list) and the generator/tests that pin their layout."
     },
+    "release-changesets": {
+      "summary": "Changeset authoring/auditing — which changes are user-facing (npm files surface) vs repo-internal, and mapping commits to changesets."
+    },
     "security": {
       "summary": "Security hardening invariants for agentsmesh (SSRF, transport allowlists, symlink/tar safety)."
     },
@@ -7169,6 +7185,10 @@
     "t-glob-b180e7b2": {
       "kind": "file_glob",
       "pattern": "src/targets/**"
+    },
+    "t-glob-b1cdb41a": {
+      "kind": "file_glob",
+      "pattern": ".changeset/*.md"
     },
     "t-glob-b39eff4f": {
       "kind": "file_glob",

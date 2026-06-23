@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.26.0
+
+### Minor Changes
+
+- 32c21ef: Prettier CLI on a real terminal via `@clack/prompts`: `generate`, `install`, `uninstall`, `refresh`, `import`, and `convert` now show spinners, styled status lines, and boxed summaries. Output stays plain and parseable when piped, in CI, or with `--json`/`NO_COLOR` — no escape bytes leak into scripted or machine-read output.
+
+  `agentsmesh matrix` now renders a vertical (transposed) table — targets as rows, features as compact symbol columns with a legend and abbreviation key — so it fits a normal terminal instead of overflowing horizontally across ~30 columns.
+
+- 51cb54f: Add an interactive `init` wizard. On an interactive TTY, `agentsmesh init` now asks which targets to generate for (none pre-selected — you pick at least one), whether to import any detected tool configs, optionally whether to enable Lessons, and whether to run `generate` immediately — writing a tailored `agentsmesh.yaml`. Every step after the first offers a **↩ Back** choice to revisit and change an earlier answer.
+
+  The wizard runs in both project and `--global` scope. In `--global` it restricts the target list to global-capable tools and skips the Lessons step entirely (lessons is project-only, enforced at the writer).
+
+  Fully backward compatible: the wizard is skipped and the original non-interactive behavior runs whenever `--yes`, `--json`, or a non-TTY/CI environment is detected. Scripted and CI usage is unchanged. Cancelling (Ctrl-C) at any prompt writes nothing.
+
+### Patch Changes
+
+- 28d8138: Fixed: the MCP server's `generate` tool now persists `.agentsmesh/.lock`. It previously reimplemented file-writing and skipped the lockfile (while still reporting `lockfileUpdated: true`), which left `agentsmesh check` permanently drifted in CI for projects that generate through the MCP server. The handler now delegates to the same path as `agentsmesh generate`, so it writes target files, cleans stale outputs, and updates the lock identically.
+- c6cdeab: Rewrote `README.md` for a faster first read: a 60-second quickstart, a clearer before/after, and a tightened feature overview that now documents the interactive `init` wizard and automatic link rebasing — while still covering every feature and preserving the generated support-matrix tables. Added a "Minimal config" example to the `agentsmesh.yaml` reference page so new projects see the start-here config before the full reference.
+
 ## 0.25.0
 
 ### Minor Changes

@@ -432,6 +432,19 @@
         "t-cmd-6ea72461"
       ]
     },
+    "cli-presentation-a-clack-clack-prompts-spinner": {
+      "createdAt": "2026-06-23",
+      "evidence": [],
+      "rule": "A clack (@clack/prompts) spinner owns its terminal line — ANY stdout written while it is active corrupts the layout (the next block's first line concatenates onto the spinner line, e.g. the matrix header shifting after \"Generating…\"). Never wrap a call that prints DURING its run in a spinner: `generate` renders the compatibility matrix mid-run via `printMatrix`, so pass `printMatrix: false` and render the matrix AFTER `sp.stop()`/`ui.outro()`. Commands whose runX is silent (output only via the renderer, which runs after) are spinner-safe — verified install/refresh/import/convert/uninstall have 0 direct output calls during their run.",
+      "status": "active",
+      "topics": [
+        "cli-presentation"
+      ],
+      "triggers": [
+        "t-glob-8173701c",
+        "t-kw-3bb206ca"
+      ]
+    },
     "coverage-analysis-to-diagnose-a-codecov-patch": {
       "createdAt": "2026-06-23",
       "evidence": [],
@@ -6414,6 +6427,9 @@
     "ci-and-release-security": {
       "summary": "CI workflows + release security — ${{ }} injection, needs cascade, token leakage, supply-chain pinning, fail-closed checksums."
     },
+    "cli-presentation": {
+      "summary": "CLI presentation/clack: spinner line-ownership, TTY-gating, where to render bulk output relative to the spinner."
+    },
     "coverage-analysis": {
       "summary": "Diagnosing code-coverage / Codecov patch gaps: parse coverage-final.json for ground truth; run vitest coverage via the local binary."
     },
@@ -7510,6 +7526,10 @@
     "t-kw-381d10a9": {
       "kind": "keyword",
       "pattern": "ANSI color stdout assertion"
+    },
+    "t-kw-3bb206ca": {
+      "kind": "keyword",
+      "pattern": "clack spinner"
     },
     "t-kw-3bdacef0": {
       "kind": "keyword",

@@ -20,6 +20,28 @@ import { runConvert } from '../../../src/cli/commands/convert.js';
 import { renderConvert } from '../../../src/cli/renderers/convert.js';
 import { handleResult } from '../../../src/cli/json-handler.js';
 
+const uiCalls: string[] = [];
+vi.mock('../../../src/cli/ui/ui.js', () => {
+  const sp = {
+    start: () => uiCalls.push('spin.start'),
+    stop: () => uiCalls.push('spin.stop'),
+    message: () => {},
+  };
+  return {
+    ui: {
+      intro: () => uiCalls.push('intro'),
+      outro: () => uiCalls.push('outro'),
+      note: () => uiCalls.push('note'),
+      spinner: () => sp,
+      success: () => {},
+      error: () => {},
+      warn: () => {},
+      info: () => {},
+      step: () => {},
+    },
+    createUi: () => ({}),
+  };
+});
 vi.mock('../../../src/cli/commands/generate.js', () => ({ runGenerate: vi.fn() }));
 vi.mock('../../../src/cli/commands/init.js', () => ({ runInit: vi.fn() }));
 vi.mock('../../../src/cli/commands/import.js', () => ({ runImport: vi.fn() }));
@@ -267,5 +289,11 @@ describe('cmdHandlers', () => {
       expect.any(Function),
     );
     expect(renderConvert).toHaveBeenCalledWith(convertResult);
+  });
+
+  it('frames the generate run with ui intro, spinner, and outro', async () => {
+    uiCalls.length = 0;
+    await cmdHandlers.generate({}, []);
+    expect(uiCalls).toEqual(['intro', 'spin.start', 'spin.stop', 'outro']);
   });
 });

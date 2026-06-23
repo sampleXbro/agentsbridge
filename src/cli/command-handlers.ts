@@ -37,6 +37,7 @@ import { renderConvert } from './renderers/convert.js';
 import { runMcp } from './commands/mcp.js';
 import { runLessons } from './commands/lessons.js';
 import { renderLessons } from './renderers/lessons.js';
+import { ui } from './ui/ui.js';
 
 /**
  * Collapse repeated-flag arrays to their last value for the (vast majority of)
@@ -55,8 +56,13 @@ export const cmdHandlers: Record<string, CommandHandler> = {
   generate: async (flags, _args) => {
     void _args;
     const nf = narrowFlags(flags);
+    ui.intro('agentsmesh generate');
+    const sp = ui.spinner();
+    sp.start('Generating tool config…');
     const result = await runGenerate(nf, undefined, { printMatrix: nf.json !== true });
+    sp.stop('Generate complete');
     handleResult('generate', result, nf, () => renderGenerate(result));
+    ui.outro('Done');
   },
   init: async (flags, _args) => {
     void _args;

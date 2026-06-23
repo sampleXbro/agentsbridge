@@ -2,7 +2,7 @@
  * Human-readable renderer for generate command output.
  */
 
-import { logger } from '../../utils/output/logger.js';
+import { ui } from '../ui/ui.js';
 import type { GenerateCommandResult } from '../commands/generate.js';
 
 /**
@@ -21,12 +21,12 @@ export function renderGenerate(result: GenerateCommandResult): void {
 
   if (files.length === 0) {
     if (data.emptyReason === 'no-global-support') {
-      logger.info('No files to generate (target has no global mode — try without --global).');
+      ui.info('No files to generate (target has no global mode — try without --global).');
     } else {
-      logger.info('No files to generate (no root rule or rules feature disabled).');
+      ui.info('No files to generate (no root rule or rules feature disabled).');
     }
     if (mode === 'check') {
-      logger.success('Generated files are in sync.');
+      ui.success('Generated files are in sync.');
     }
     return;
   }
@@ -34,19 +34,19 @@ export function renderGenerate(result: GenerateCommandResult): void {
   if (mode === 'check') {
     const drifted = files.filter((f) => f.status !== 'unchanged');
     if (drifted.length === 0) {
-      logger.success('Generated files are in sync.');
+      ui.success('Generated files are in sync.');
       return;
     }
     for (const f of drifted) {
-      logger.error(`[check] ${f.status} ${formatDisplayPath(scope, f.path)} (${f.target})`);
+      ui.error(`[check] ${f.status} ${formatDisplayPath(scope, f.path)} (${f.target})`);
     }
-    logger.error("Generated files are out of sync. Run 'agentsmesh generate' to update them.");
+    ui.error("Generated files are out of sync. Run 'agentsmesh generate' to update them.");
     return;
   }
 
   if (mode === 'dry-run') {
     for (const f of files) {
-      logger.info(`[dry-run] ${f.status} ${formatDisplayPath(scope, f.path)} (${f.target})`);
+      ui.info(`[dry-run] ${f.status} ${formatDisplayPath(scope, f.path)} (${f.target})`);
     }
     return;
   }
@@ -54,14 +54,15 @@ export function renderGenerate(result: GenerateCommandResult): void {
   // Normal generate mode
   for (const f of files) {
     if (f.status === 'created' || f.status === 'updated') {
-      logger.success(`${f.status} ${formatDisplayPath(scope, f.path)}`);
+      ui.success(`${f.status} ${formatDisplayPath(scope, f.path)}`);
     }
   }
 
   const { created, updated, unchanged } = data.summary;
   if (created > 0 || updated > 0) {
-    logger.info(`Generated: ${created} created, ${updated} updated, ${unchanged} unchanged`);
+    ui.note(`${created} created · ${updated} updated · ${unchanged} unchanged`, 'Generated');
+    ui.info(`Generated: ${created} created, ${updated} updated, ${unchanged} unchanged`);
   } else {
-    logger.info(`Nothing changed. (${unchanged} unchanged)`);
+    ui.info(`Nothing changed. (${unchanged} unchanged)`);
   }
 }

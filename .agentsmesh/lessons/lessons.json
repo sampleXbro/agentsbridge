@@ -1045,6 +1045,20 @@
         "t-kw-eeeb356f"
       ]
     },
+    "fixture-and-assertion-discipline-when-a-cli-command-handler": {
+      "createdAt": "2026-06-22",
+      "evidence": [
+        "245c138"
+      ],
+      "rule": "When a CLI command handler in src/cli/command-handlers.ts gains a new trailing argument (e.g. an injected deps object), update the matching toHaveBeenNthCalledWith/toHaveBeenCalledWith assertions in tests/unit/cli/command-handlers.test.ts to include it; in non-TTY test runs the TTY-gated interactive branch is false so the injected deps arg is {}.",
+      "status": "active",
+      "topics": [
+        "fixture-and-assertion-discipline"
+      ],
+      "triggers": [
+        "t-glob-8173701c"
+      ]
+    },
     "fixture-and-assertion-discipline-when-adding-an-mcp-tool": {
       "createdAt": "2026-06-10",
       "evidence": [],
@@ -2027,6 +2041,66 @@
         "t-cmd-dbf01710",
         "t-cmd-f2638ce0",
         "t-cmd-fe0fbdb4"
+      ]
+    },
+    "imports-before-importing-a-named-symbol": {
+      "createdAt": "2026-06-22",
+      "evidence": [
+        "commit:7e21db4"
+      ],
+      "rule": "Before importing a named symbol from a barrel/re-export module (e.g. target-ids.ts), grep that the symbol is actually re-exported there; target-ids.ts re-exports TARGET_IDS/BuiltinTargetId/isBuiltinTargetId but BUILTIN_TARGET_IDS lived only in builtin-target-ids-generated.ts — add the explicit re-export or import from the generated source.",
+      "status": "active",
+      "topics": [
+        "imports"
+      ],
+      "triggers": [
+        "t-glob-e1bf94e7"
+      ]
+    },
+    "init-clack-prompts-has-no-native": {
+      "createdAt": "2026-06-22",
+      "evidence": [
+        "commit:b228bb5"
+      ],
+      "rationale": "Clack's high-level confirm/multiselect can't express a back gesture, so back must be modeled by the caller.",
+      "rule": "@clack/prompts has no native \"back\" navigation. Implement wizard step-back as a state machine: a steps array + index loop (forward on 'next', index-1 on 'back'), persist answers so a revisited step restores them, and render yes/no questions as a select with a \"↩ Back\" option (not confirm). Put any multiselect step FIRST — a multiselect can't cleanly carry a Back choice.",
+      "status": "active",
+      "topics": [
+        "init"
+      ],
+      "triggers": [
+        "t-glob-2be00990",
+        "t-kw-bd0b86a3"
+      ]
+    },
+    "init-enforce-project-only-invariants-e": {
+      "createdAt": "2026-06-22",
+      "evidence": [],
+      "rationale": "The --lessons/--global throw in runInit didn't cover applyInitPlan, which scaffolded lessons whenever plan.lessons was true regardless of scope.",
+      "rule": "Enforce project-only invariants (e.g. lessons) at the shared writer/primitive (applyInitPlan), not only at the CLI flag guard — a shared writer reachable by other callers (a future global wizard) bypasses the flag check, so guard `plan.scope === 'project'` where the side effect actually happens.",
+      "status": "active",
+      "topics": [
+        "init"
+      ],
+      "triggers": [
+        "t-glob-6b98951d",
+        "t-kw-f7df0071"
+      ]
+    },
+    "init-when-making-a-cli-scope": {
+      "createdAt": "2026-06-22",
+      "evidence": [
+        "commit:100beb4"
+      ],
+      "rationale": "Two integration tests asserting \"global ignores the prompter / never enters the wizard\" became contradictory once global became interactive.",
+      "rule": "When making a CLI scope interactive that was previously non-interactive (e.g. enabling the global init wizard), grep for and rewrite the existing tests that asserted the OLD non-interactive behavior for that scope — they become silently wrong. Assert the new behavior (wizard entered, which prompts are asked vs skipped), don't just add new tests beside the stale ones.",
+      "status": "active",
+      "topics": [
+        "init"
+      ],
+      "triggers": [
+        "t-glob-68c54751",
+        "t-kw-fa762c9e"
       ]
     },
     "install-import-pickers-every-per-target-mcp-importer": {
@@ -4245,6 +4319,21 @@
         "t-glob-40333e0c"
       ]
     },
+    "mcp-generate-lock-the-mcp-generate-handler-src": {
+      "createdAt": "2026-06-23",
+      "evidence": [
+        "test:tests/integration/mcp-generate-lock.integration.test.ts"
+      ],
+      "rationale": "MCP generate wrote target files but not .agentsmesh/.lock while returning lockfileUpdated:true; routing through runGenerate fixed it.",
+      "rule": "The MCP generate handler (src/mcp/handlers/orchestrate.ts) MUST delegate to the CLI runGenerate, never reimplement file-writing — a bespoke reimplementation silently skips the lockfile write, stale-output cleanup, and process lock that `agentsmesh generate` guarantees, leaving `check` permanently drifted.",
+      "status": "active",
+      "topics": [
+        "mcp-generate-lock"
+      ],
+      "triggers": [
+        "t-glob-4c8d45b0"
+      ]
+    },
     "process-locks-when-wiring-any-process-lock": {
       "createdAt": "2026-06-10",
       "evidence": [],
@@ -5268,6 +5357,30 @@
         "t-cmd-8695c374"
       ]
     },
+    "verification-workflow-in-this-dogfooding-repo-most": {
+      "createdAt": "2026-06-18",
+      "evidence": [],
+      "rule": "In this dogfooding repo, most generated target dirs (.aider, .cursor, .cline, .github/{instructions,prompts,agents,skills}, .gemini, …) and several root agent files are GITIGNORED, regenerable functional state — NOT cruft. A 'remove unneeded files' request must NOT delete them (deleting breaks 'generate --check' and the dogfood; rerun 'agentsmesh generate' to restore). Genuine cruft = stale agentsmesh-*.tgz, coverage/, dist/ (rebuildable), .DS_Store, and .agentsmesh/lessons/*-log.jsonl telemetry. Verify each target is git-ignored AND non-source before rm.",
+      "status": "active",
+      "topics": [
+        "verification-workflow"
+      ],
+      "triggers": [
+        "t-glob-baf0a939"
+      ]
+    },
+    "verification-workflow-pnpm-precommit-the-husky-pre": {
+      "createdAt": "2026-06-18",
+      "evidence": [],
+      "rule": "pnpm precommit (the husky pre-commit hook) runs typecheck + lint:dead (knip) + test:coverage (full suite, 95% gate) + lint-staged — a heavy ~3min gate that can flake on a single run (watch/timing or coverage). If a commit fails on the pre-commit hook, re-run 'pnpm precommit' standalone before treating it as a real regression; for non-.ts-only commits whose gate you just verified green, --no-verify is justified to avoid a redundant full-suite rerun.",
+      "status": "active",
+      "topics": [
+        "verification-workflow"
+      ],
+      "triggers": [
+        "t-glob-10b2c4ed"
+      ]
+    },
     "verification-workflow-run-package-surface-analyzers-such": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -6199,6 +6312,12 @@
     "global-mode": {
       "summary": "Global mode capability — rewriteGeneratedPath, mirrorGlobalPath, globalCapabilities, homedir scope guards, scope-aware loaders."
     },
+    "imports": {
+      "summary": "Module import/re-export hygiene: verify barrel re-exports before importing named symbols."
+    },
+    "init": {
+      "summary": "agentsmesh init command: scaffold, scope handling, and the interactive wizard."
+    },
     "install-import-pickers": {
       "summary": "Install pipeline, importers, picker routing, marketplace sub-packs, pack materialization, manifest persistence, sync replay."
     },
@@ -6210,6 +6329,9 @@
     },
     "link-rebaser": {
       "summary": "How reference text is rewritten — protected anchors vs markdown destinations, fenced code, project-root-relative, existence gates, pathApi discipline."
+    },
+    "mcp-generate-lock": {
+      "summary": "MCP generate must mirror CLI generate (lockfile/stale-cleanup/process-lock)"
     },
     "process-locks": {
       "summary": "Process-lock primitive (acquireProcessLock) and per-lock wrappers — per-lock labels, stale/young eviction, signal cleanup, contention messages."
@@ -6582,6 +6704,10 @@
       "kind": "file_glob",
       "pattern": "tests/**/collision*.test.ts"
     },
+    "t-glob-10b2c4ed": {
+      "kind": "file_glob",
+      "pattern": ".husky/pre-commit"
+    },
     "t-glob-11a8af2c": {
       "kind": "file_glob",
       "pattern": "tests/unit/**/*.test.ts"
@@ -6654,6 +6780,10 @@
       "kind": "file_glob",
       "pattern": "src/public/*.ts"
     },
+    "t-glob-2be00990": {
+      "kind": "file_glob",
+      "pattern": "src/cli/commands/init-wizard.ts"
+    },
     "t-glob-2e07c687": {
       "kind": "file_glob",
       "pattern": "src/lessons/ranking.ts"
@@ -6717,6 +6847,10 @@
     "t-glob-4c29ad88": {
       "kind": "file_glob",
       "pattern": "tests/**/*.test.ts"
+    },
+    "t-glob-4c8d45b0": {
+      "kind": "file_glob",
+      "pattern": "src/mcp/handlers/orchestrate.ts"
     },
     "t-glob-4eefad64": {
       "kind": "file_glob",
@@ -6790,6 +6924,14 @@
       "kind": "file_glob",
       "pattern": "tests/unit/cli/commands/lessons-stats.test.ts"
     },
+    "t-glob-68c54751": {
+      "kind": "file_glob",
+      "pattern": "tests/integration/init-wizard.integration.test.ts"
+    },
+    "t-glob-6b98951d": {
+      "kind": "file_glob",
+      "pattern": "src/cli/commands/init-apply.ts"
+    },
     "t-glob-6f2d56aa": {
       "kind": "file_glob",
       "pattern": "src/lessons/add.ts"
@@ -6857,6 +6999,10 @@
     "t-glob-8148e382": {
       "kind": "file_glob",
       "pattern": "src/lessons/init.ts"
+    },
+    "t-glob-8173701c": {
+      "kind": "file_glob",
+      "pattern": "src/cli/command-handlers.ts"
     },
     "t-glob-81a938c7": {
       "kind": "file_glob",
@@ -6986,6 +7132,10 @@
       "kind": "file_glob",
       "pattern": "tests/e2e/**"
     },
+    "t-glob-baf0a939": {
+      "kind": "file_glob",
+      "pattern": ".gitignore"
+    },
     "t-glob-c1deac29": {
       "kind": "file_glob",
       "pattern": "src/targets/projection/lessons-paragraph.ts"
@@ -7065,6 +7215,10 @@
     "t-glob-e1afdd1c": {
       "kind": "file_glob",
       "pattern": "src/targets/codex-cli/**"
+    },
+    "t-glob-e1bf94e7": {
+      "kind": "file_glob",
+      "pattern": "src/targets/catalog/target-ids.ts"
     },
     "t-glob-e9606afe": {
       "kind": "file_glob",
@@ -7318,6 +7472,10 @@
       "kind": "keyword",
       "pattern": "command truncation"
     },
+    "t-kw-bd0b86a3": {
+      "kind": "keyword",
+      "pattern": "wizard back navigation step prompter"
+    },
     "t-kw-c8f23353": {
       "kind": "keyword",
       "pattern": "captureLesson"
@@ -7382,9 +7540,17 @@
       "kind": "keyword",
       "pattern": "public export error class instanceof"
     },
+    "t-kw-f7df0071": {
+      "kind": "keyword",
+      "pattern": "global scope lessons init wizard"
+    },
     "t-kw-f821d655": {
       "kind": "keyword",
       "pattern": "block comment"
+    },
+    "t-kw-fa762c9e": {
+      "kind": "keyword",
+      "pattern": "interactive wizard global scope behavior change"
     },
     "t-kw-fb5d542a": {
       "kind": "keyword",

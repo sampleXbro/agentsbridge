@@ -95,5 +95,12 @@ export function formatMatrix(rows: CompatibilityRow[], targets: string[]): strin
     c(COLORS.dim, '–') +
     ' none';
 
-  return [header, rule, ...body, '', legend].join('\n');
+  // A separator rule under the header and under every row, so the eye can track
+  // a single target straight across the wide grid.
+  const lines = [header, rule];
+  for (const row of body) {
+    lines.push(row, rule);
+  }
+  lines.push('', legend);
+  return lines.join('\n');
 }

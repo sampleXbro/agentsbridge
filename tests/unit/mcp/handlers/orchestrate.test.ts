@@ -40,10 +40,12 @@ vi.mock('../../../../src/cli/commands/convert.js', () => ({
   runConvert: mockRunConvert,
 }));
 
-// ─── mock writeFileAtomic ─────────────────────────────────────────────────────
+// ─── mock CLI generate (the MCP generate handler delegates to it) ─────────────
 
-vi.mock('../../../../src/utils/filesystem/fs.js', () => ({
-  writeFileAtomic: vi.fn().mockResolvedValue(undefined),
+const mockRunGenerate = vi.fn();
+
+vi.mock('../../../../src/cli/commands/generate.js', () => ({
+  runGenerate: mockRunGenerate,
 }));
 
 // ─── import handler after mocks ───────────────────────────────────────────────
@@ -66,14 +68,11 @@ const baseProjectContext = {
   canonicalDir: '/project/.agentsmesh',
 };
 
-function makeGenerateResults(overrides: Partial<GenerateResult>[] = []): GenerateResult[] {
-  return overrides.map((o) => ({
-    target: 'claude-code',
-    path: '.claude/CLAUDE.md',
-    content: '# rules',
-    status: 'created' as const,
-    ...o,
-  }));
+function makeRunResult(
+  files: Array<{ path: string; target: string; status: 'created' | 'updated' | 'unchanged' }>,
+  summary: { created: number; updated: number; unchanged: number },
+): { exitCode: number; data: unknown } {
+  return { exitCode: 0, data: { scope: 'project', mode: 'generate', files, summary } };
 }
 
 beforeEach(() => {
@@ -84,80 +83,105 @@ beforeEach(() => {
 // ─── tests ────────────────────────────────────────────────────────────────────
 
 describe('orchestrateHandlers.generate', () => {
-  it('returns summary shape without files when verbose is false', async () => {
-    const results = makeGenerateResults([
-      { status: 'created', path: 'a.md', target: 'claude-code' },
-      { status: 'updated', path: 'b.md', target: 'cursor' },
-    ]);
-    mockGenerate.mockResolvedValue(results);
+  it('delegates to runGenerate and maps the written-file summary', async () => {
+    mockRunGenerate.mockResolvedValue(
+      makeRunResult(
+        [
+          { path: 'a.md', target: 'claude-code', status: 'created' },
+          { path: 'b.md', target: 'cursor', status: 'updated' },
+          { path: 'c.md', target: 'cursor', status: 'unchanged' },
+        ],
+        { created: 1, updated: 1, unchanged: 1 },
+      ),
+    );
 
-    const out = await orchestrateHandlers.generate(ctx, { dry_run: true });
+    const out = await orchestrateHandlers.generate(ctx, {});
 
+    expect(mockRunGenerate).toHaveBeenCalledWith({ 'dry-run': false }, '/project', {
+      printMatrix: false,
+    });
     expect(out.filesWritten).toBe(2);
     expect(out.byTarget['claude-code'].filesWritten).toBe(1);
     expect(out.byTarget['cursor'].filesWritten).toBe(1);
-    expect(out.lockfileUpdated).toBe(false);
+    expect(out.lockfileUpdated).toBe(true);
     expect(out.errors).toEqual([]);
     expect(out.warnings).toEqual([]);
     expect('files' in out).toBe(false);
   });
 
-  it('includes files array when verbose is true', async () => {
-    const results = makeGenerateResults([
-      { status: 'created', path: 'x.md', target: 'claude-code' },
-    ]);
-    mockGenerate.mockResolvedValue(results);
+  it('reports lockfileUpdated=false for a dry_run', async () => {
+    mockRunGenerate.mockResolvedValue(
+      makeRunResult([], { created: 0, updated: 0, unchanged: 0 }),
+    );
 
-    const out = await orchestrateHandlers.generate(ctx, { verbose: true, dry_run: true });
+    const out = await orchestrateHandlers.generate(ctx, { dry_run: true });
+
+    expect(mockRunGenerate).toHaveBeenCalledWith({ 'dry-run': true }, '/project', {
+      printMatrix: false,
+    });
+    expect(out.lockfileUpdated).toBe(false);
+    expect(out.filesWritten).toBe(0);
+  });
+
+  it('includes the actionable file paths when verbose is true', async () => {
+    mockRunGenerate.mockResolvedValue(
+      makeRunResult(
+        [{ path: 'x.md', target: 'claude-code', status: 'created' }],
+        { created: 1, updated: 0, unchanged: 0 },
+      ),
+    );
+
+    const out = await orchestrateHandlers.generate(ctx, { verbose: true });
 
     expect(out.files).toEqual(['x.md']);
   });
 
-  it('throws IO_ERROR when engine throws a generic error', async () => {
-    mockGenerate.mockRejectedValue(new Error('some io failure'));
+  it('forwards a non-empty targets filter as a comma list', async () => {
+    mockRunGenerate.mockResolvedValue(makeRunResult([], { created: 0, updated: 0, unchanged: 0 }));
+
+    await orchestrateHandlers.generate(ctx, { targets: ['claude-code', 'cursor'], dry_run: true });
+
+    expect(mockRunGenerate).toHaveBeenCalledWith(
+      { 'dry-run': true, targets: 'claude-code,cursor' },
+      '/project',
+      { printMatrix: false },
+    );
+  });
+
+  it('omits the targets flag when input.targets is empty', async () => {
+    mockRunGenerate.mockResolvedValue(makeRunResult([], { created: 0, updated: 0, unchanged: 0 }));
+
+    await orchestrateHandlers.generate(ctx, { targets: [], dry_run: true });
+
+    expect(mockRunGenerate).toHaveBeenCalledWith({ 'dry-run': true }, '/project', {
+      printMatrix: false,
+    });
+  });
+
+  it('throws IO_ERROR when runGenerate throws a generic error', async () => {
+    mockRunGenerate.mockRejectedValue(new Error('some io failure'));
 
     await expect(orchestrateHandlers.generate(ctx, {})).rejects.toMatchObject({
       code: 'IO_ERROR',
     });
   });
 
-  it('throws LOCK_HELD when engine error message contains "lock"', async () => {
-    mockGenerate.mockRejectedValue(new Error('cannot acquire lock file'));
+  it('throws LOCK_HELD when the error message contains "lock"', async () => {
+    mockRunGenerate.mockRejectedValue(new Error('Could not acquire generate lock'));
 
     await expect(orchestrateHandlers.generate(ctx, {})).rejects.toMatchObject({
       code: 'LOCK_HELD',
     });
   });
 
-  it('writes files via writeFileAtomic when dry_run is false', async () => {
-    const fsMod = await import('../../../../src/utils/filesystem/fs.js');
-    const writeMock = fsMod.writeFileAtomic as unknown as ReturnType<typeof vi.fn>;
-    const results = makeGenerateResults([
-      { status: 'created', path: 'a.md', target: 'claude-code' },
-      { status: 'updated', path: 'b.md', target: 'claude-code' },
-      { status: 'skipped', path: 'c.md', target: 'cursor' },
-    ]);
-    mockGenerate.mockResolvedValue(results);
-
-    const out = await orchestrateHandlers.generate(ctx, {});
-
-    expect(out.filesWritten).toBe(2);
-    expect(out.lockfileUpdated).toBe(true);
-    expect(writeMock).toHaveBeenCalledTimes(2);
-  });
-
-  it('applies the targets filter (input.targets non-empty)', async () => {
-    mockGenerate.mockResolvedValue([]);
-    await orchestrateHandlers.generate(ctx, { targets: ['claude-code'], dry_run: true });
-    expect(mockGenerate).toHaveBeenCalledWith(
-      expect.objectContaining({ targetFilter: ['claude-code'] }),
+  it('throws VALIDATION_FAILED for an unknown target', async () => {
+    mockRunGenerate.mockRejectedValue(
+      new Error('Unknown target(s) in --targets: nope. Available: claude-code'),
     );
-  });
 
-  it('omits the targets filter when input.targets is empty', async () => {
-    mockGenerate.mockResolvedValue([]);
-    await orchestrateHandlers.generate(ctx, { targets: [], dry_run: true });
-    expect(mockGenerate).toHaveBeenCalledWith(expect.objectContaining({ targetFilter: undefined }));
+    await expect(
+      orchestrateHandlers.generate(ctx, { targets: ['nope'] }),
+    ).rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
   });
 });
 

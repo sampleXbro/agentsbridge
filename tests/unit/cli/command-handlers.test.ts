@@ -20,6 +20,28 @@ import { runConvert } from '../../../src/cli/commands/convert.js';
 import { renderConvert } from '../../../src/cli/renderers/convert.js';
 import { handleResult } from '../../../src/cli/json-handler.js';
 
+const uiCalls: string[] = [];
+vi.mock('../../../src/cli/ui/ui.js', () => {
+  const sp = {
+    start: () => uiCalls.push('spin.start'),
+    stop: () => uiCalls.push('spin.stop'),
+    message: () => {},
+  };
+  return {
+    ui: {
+      intro: () => uiCalls.push('intro'),
+      outro: () => uiCalls.push('outro'),
+      note: () => uiCalls.push('note'),
+      spinner: () => sp,
+      success: () => {},
+      error: () => {},
+      warn: () => {},
+      info: () => {},
+      step: () => {},
+    },
+    createUi: () => ({}),
+  };
+});
 vi.mock('../../../src/cli/commands/generate.js', () => ({ runGenerate: vi.fn() }));
 vi.mock('../../../src/cli/commands/init.js', () => ({ runInit: vi.fn() }));
 vi.mock('../../../src/cli/commands/import.js', () => ({ runImport: vi.fn() }));
@@ -140,8 +162,11 @@ describe('cmdHandlers', () => {
   it('renders generate output in text mode and keeps matrix printing enabled', async () => {
     await cmdHandlers.generate({}, []);
 
-    expect(runGenerate).toHaveBeenCalledWith({}, undefined, { printMatrix: true });
+    expect(runGenerate).toHaveBeenCalledWith({}, undefined, { printMatrix: false });
     expect(renderGenerate).toHaveBeenCalledWith(generateResult);
+    // The matrix is rendered AFTER the spinner/frame closes (not during runGenerate).
+    expect(runMatrix).toHaveBeenCalled();
+    expect(renderMatrix).toHaveBeenCalled();
   });
 
   it('maps init flags to typed options', async () => {
@@ -149,22 +174,84 @@ describe('cmdHandlers', () => {
     await cmdHandlers.init({}, []);
     await cmdHandlers.init({ lessons: true }, []);
 
-    expect(runInit).toHaveBeenNthCalledWith(1, process.cwd(), {
-      yes: true,
-      global: true,
-      lessons: false,
-    });
-    expect(runInit).toHaveBeenNthCalledWith(2, process.cwd(), {
-      yes: false,
-      global: false,
-      lessons: false,
-    });
-    expect(runInit).toHaveBeenNthCalledWith(3, process.cwd(), {
-      yes: false,
-      global: false,
-      lessons: true,
-    });
+    // Non-TTY test runs → interactive=false → no prompter injected (third arg is {}).
+    expect(runInit).toHaveBeenNthCalledWith(
+      1,
+      process.cwd(),
+      {
+        yes: true,
+        global: true,
+        lessons: false,
+      },
+      {},
+    );
+    expect(runInit).toHaveBeenNthCalledWith(
+      2,
+      process.cwd(),
+      {
+        yes: false,
+        global: false,
+        lessons: false,
+      },
+      {},
+    );
+    expect(runInit).toHaveBeenNthCalledWith(
+      3,
+      process.cwd(),
+      {
+        yes: false,
+        global: false,
+        lessons: true,
+      },
+      {},
+    );
     expect(renderInit).toHaveBeenCalledTimes(3);
+  });
+
+  it('renders the lessons-only retrofit even on an interactive TTY (output not swallowed)', async () => {
+    const stdin = process.stdin.isTTY;
+    const stdout = process.stdout.isTTY;
+    process.stdin.isTTY = true;
+    process.stdout.isTTY = true;
+    try {
+      vi.mocked(runInit).mockResolvedValueOnce({
+        exitCode: 0,
+        data: {
+          ...initResult.data,
+          scaffoldType: 'none',
+          lessonsOnly: true,
+          lessons: {
+            created: [],
+            updated: [],
+            skipped: [],
+            rootRuleUpdated: false,
+            gitignoreUpdated: false,
+            recallHookInjected: false,
+          },
+        },
+      });
+      await cmdHandlers.init({ lessons: true }, []);
+      // Retrofit returns without a wizard → its summary must still be rendered.
+      expect(renderInit).toHaveBeenCalledTimes(1);
+    } finally {
+      process.stdin.isTTY = stdin;
+      process.stdout.isTTY = stdout;
+    }
+  });
+
+  it('suppresses renderInit when the wizard actually ran on an interactive TTY', async () => {
+    const stdin = process.stdin.isTTY;
+    const stdout = process.stdout.isTTY;
+    process.stdin.isTTY = true;
+    process.stdout.isTTY = true;
+    try {
+      // default initResult (lessonsOnly undefined) → wizard path → clack rendered.
+      await cmdHandlers.init({}, []);
+      expect(renderInit).not.toHaveBeenCalled();
+    } finally {
+      process.stdin.isTTY = stdin;
+      process.stdout.isTTY = stdout;
+    }
   });
 
   it('delegates import, diff, lint, check, and merge to their renderers', async () => {
@@ -205,5 +292,11 @@ describe('cmdHandlers', () => {
       expect.any(Function),
     );
     expect(renderConvert).toHaveBeenCalledWith(convertResult);
+  });
+
+  it('frames the generate run with ui intro, spinner, and outro', async () => {
+    uiCalls.length = 0;
+    await cmdHandlers.generate({}, []);
+    expect(uiCalls).toEqual(['intro', 'spin.start', 'spin.stop', 'outro']);
   });
 });

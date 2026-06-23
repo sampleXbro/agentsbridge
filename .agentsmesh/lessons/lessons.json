@@ -432,6 +432,32 @@
         "t-cmd-6ea72461"
       ]
     },
+    "cli-presentation-a-clack-clack-prompts-spinner": {
+      "createdAt": "2026-06-23",
+      "evidence": [],
+      "rule": "A clack (@clack/prompts) spinner owns its terminal line — ANY stdout written while it is active corrupts the layout (the next block's first line concatenates onto the spinner line, e.g. the matrix header shifting after \"Generating…\"). Never wrap a call that prints DURING its run in a spinner: `generate` renders the compatibility matrix mid-run via `printMatrix`, so pass `printMatrix: false` and render the matrix AFTER `sp.stop()`/`ui.outro()`. Commands whose runX is silent (output only via the renderer, which runs after) are spinner-safe — verified install/refresh/import/convert/uninstall have 0 direct output calls during their run.",
+      "status": "active",
+      "topics": [
+        "cli-presentation"
+      ],
+      "triggers": [
+        "t-glob-8173701c",
+        "t-kw-3bb206ca"
+      ]
+    },
+    "coverage-analysis-to-diagnose-a-codecov-patch": {
+      "createdAt": "2026-06-23",
+      "evidence": [],
+      "rule": "To diagnose a Codecov patch/diff-coverage failure in this repo, parse `coverage/coverage-final.json` (istanbul: per-file `s`/`statementMap`, `b`/`branchMap`) for the EXACT uncovered statement and branch lines. Do NOT trust the v8 TEXT table's \"Uncovered Line #s\": it truncates long paths, conflates line-vs-branch, and lists multiple same-basename files (e.g. `cli/commands/init.ts` vs `lessons/init.ts`), so it can show a gap as \"still 60,76\" when the JSON proves the file is 100%. Generate coverage with the local binary `COVERAGE=1 node_modules/.bin/vitest run --coverage` (NOT `pnpm test:coverage` — pnpm 11 trips frozen-install on the pnpm-10 lockfile). Distinguish unreachable defensive branches (e.g. `x ?? false` where x is always assigned) from real gaps; don't chase 100%.",
+      "status": "active",
+      "topics": [
+        "coverage-analysis"
+      ],
+      "triggers": [
+        "t-cmd-a29b2eff",
+        "t-kw-8098ffea"
+      ]
+    },
     "dist-backed-tests-an-e2e-test-that-runs": {
       "createdAt": "2026-06-12",
       "evidence": [
@@ -592,6 +618,19 @@
         "t-cmd-3c746c92",
         "t-cmd-fd015df7",
         "t-cmd-703162ab"
+      ]
+    },
+    "dist-backed-tests-tests-e2e-agents-last-run": {
+      "createdAt": "2026-06-23",
+      "evidence": [],
+      "rationale": "During release prep the file showed as dirty after every full test run and had to be reverted twice before committing; a naive `git add -A` would commit spurious timestamp churn.",
+      "rule": "`tests/e2e/agents-last-run.md` is tracked but regenerated (timestamp-only churn) by the e2e test suite, so it shows as dirty after `pnpm test`. Do NOT commit its change — `git checkout -- tests/e2e/agents-last-run.md` and stage files explicitly (never `git add -A`). The repo intends it untracked (commit 0a09e16 \"stop tracking\") but it is still tracked, so the churn keeps reappearing.",
+      "status": "active",
+      "topics": [
+        "dist-backed-tests"
+      ],
+      "triggers": [
+        "t-glob-892c1e39"
       ]
     },
     "dist-backed-tests-when-a-change-alters-cli": {
@@ -1043,6 +1082,20 @@
         "t-kw-1fca5e27",
         "t-kw-aff9d120",
         "t-kw-eeeb356f"
+      ]
+    },
+    "fixture-and-assertion-discipline-when-a-cli-command-handler": {
+      "createdAt": "2026-06-22",
+      "evidence": [
+        "245c138"
+      ],
+      "rule": "When a CLI command handler in src/cli/command-handlers.ts gains a new trailing argument (e.g. an injected deps object), update the matching toHaveBeenNthCalledWith/toHaveBeenCalledWith assertions in tests/unit/cli/command-handlers.test.ts to include it; in non-TTY test runs the TTY-gated interactive branch is false so the injected deps arg is {}.",
+      "status": "active",
+      "topics": [
+        "fixture-and-assertion-discipline"
+      ],
+      "triggers": [
+        "t-glob-8173701c"
       ]
     },
     "fixture-and-assertion-discipline-when-adding-an-mcp-tool": {
@@ -1740,6 +1793,18 @@
         "t-glob-861a9bdb"
       ]
     },
+    "git-commit-hygiene-in-this-repo-docs-is": {
+      "createdAt": "2026-06-23",
+      "evidence": [],
+      "rule": "In this repo `/docs/` is gitignored (root /docs policy), so design specs under `docs/superpowers/specs/` are intentionally LOCAL/untracked and `git add docs/...` silently no-ops (prints \"paths are ignored\"). Before any `git commit`, stage with EXPLICIT pathspecs and verify `git diff --cached --stat` (or `git status`) first: a bare `git commit` right after an ignored/empty `git add` commits whatever else is already staged — here it committed the still-uncommitted, unattributed `package.json` precommit edit under a \"docs(spec)\" message. Undo such a slip with `git reset HEAD~1` (mixed) since it isn't pushed.",
+      "status": "active",
+      "topics": [
+        "git-commit-hygiene"
+      ],
+      "triggers": [
+        "t-cmd-7c1c43ea"
+      ]
+    },
     "global-mode-global-scope-capability-resolution-has": {
       "createdAt": "2026-06-13",
       "evidence": [
@@ -2027,6 +2092,66 @@
         "t-cmd-dbf01710",
         "t-cmd-f2638ce0",
         "t-cmd-fe0fbdb4"
+      ]
+    },
+    "imports-before-importing-a-named-symbol": {
+      "createdAt": "2026-06-22",
+      "evidence": [
+        "commit:7e21db4"
+      ],
+      "rule": "Before importing a named symbol from a barrel/re-export module (e.g. target-ids.ts), grep that the symbol is actually re-exported there; target-ids.ts re-exports TARGET_IDS/BuiltinTargetId/isBuiltinTargetId but BUILTIN_TARGET_IDS lived only in builtin-target-ids-generated.ts — add the explicit re-export or import from the generated source.",
+      "status": "active",
+      "topics": [
+        "imports"
+      ],
+      "triggers": [
+        "t-glob-e1bf94e7"
+      ]
+    },
+    "init-clack-prompts-has-no-native": {
+      "createdAt": "2026-06-22",
+      "evidence": [
+        "commit:b228bb5"
+      ],
+      "rationale": "Clack's high-level confirm/multiselect can't express a back gesture, so back must be modeled by the caller.",
+      "rule": "@clack/prompts has no native \"back\" navigation. Implement wizard step-back as a state machine: a steps array + index loop (forward on 'next', index-1 on 'back'), persist answers so a revisited step restores them, and render yes/no questions as a select with a \"↩ Back\" option (not confirm). Put any multiselect step FIRST — a multiselect can't cleanly carry a Back choice.",
+      "status": "active",
+      "topics": [
+        "init"
+      ],
+      "triggers": [
+        "t-glob-2be00990",
+        "t-kw-bd0b86a3"
+      ]
+    },
+    "init-enforce-project-only-invariants-e": {
+      "createdAt": "2026-06-22",
+      "evidence": [],
+      "rationale": "The --lessons/--global throw in runInit didn't cover applyInitPlan, which scaffolded lessons whenever plan.lessons was true regardless of scope.",
+      "rule": "Enforce project-only invariants (e.g. lessons) at the shared writer/primitive (applyInitPlan), not only at the CLI flag guard — a shared writer reachable by other callers (a future global wizard) bypasses the flag check, so guard `plan.scope === 'project'` where the side effect actually happens.",
+      "status": "active",
+      "topics": [
+        "init"
+      ],
+      "triggers": [
+        "t-glob-6b98951d",
+        "t-kw-f7df0071"
+      ]
+    },
+    "init-when-making-a-cli-scope": {
+      "createdAt": "2026-06-22",
+      "evidence": [
+        "commit:100beb4"
+      ],
+      "rationale": "Two integration tests asserting \"global ignores the prompter / never enters the wizard\" became contradictory once global became interactive.",
+      "rule": "When making a CLI scope interactive that was previously non-interactive (e.g. enabling the global init wizard), grep for and rewrite the existing tests that asserted the OLD non-interactive behavior for that scope — they become silently wrong. Assert the new behavior (wizard entered, which prompts are asked vs skipped), don't just add new tests beside the stale ones.",
+      "status": "active",
+      "topics": [
+        "init"
+      ],
+      "triggers": [
+        "t-glob-68c54751",
+        "t-kw-fa762c9e"
       ]
     },
     "install-import-pickers-every-per-target-mcp-importer": {
@@ -4245,6 +4370,48 @@
         "t-glob-40333e0c"
       ]
     },
+    "mcp-generate-lock-the-mcp-generate-handler-src": {
+      "createdAt": "2026-06-23",
+      "evidence": [
+        "test:tests/integration/mcp-generate-lock.integration.test.ts"
+      ],
+      "rationale": "MCP generate wrote target files but not .agentsmesh/.lock while returning lockfileUpdated:true; routing through runGenerate fixed it.",
+      "rule": "The MCP generate handler (src/mcp/handlers/orchestrate.ts) MUST delegate to the CLI runGenerate, never reimplement file-writing — a bespoke reimplementation silently skips the lockfile write, stale-output cleanup, and process lock that `agentsmesh generate` guarantees, leaving `check` permanently drifted.",
+      "status": "active",
+      "topics": [
+        "mcp-generate-lock"
+      ],
+      "triggers": [
+        "t-glob-4c8d45b0"
+      ]
+    },
+    "pnpm-lockfile-in-this-repo-run-dev": {
+      "createdAt": "2026-06-23",
+      "evidence": [],
+      "rule": "In this repo, run dev tooling via `node_modules/.bin/<tool>` (vitest, tsup, tsx, changeset) — NOT `pnpm <script>` / `pnpm exec`. Any pnpm-11 invocation runs a deps-status-check that strips the pnpm-10 `hono` override from `pnpm-lock.yaml`, re-breaking CI's `--frozen-lockfile`. After build/test/changeset runs, check `git status`; if `pnpm-lock.yaml`, `.agentsmesh/.lock` (timestamp-only), or `tests/e2e/agents-last-run.md` show as modified, `git checkout -- <them>` before committing — they are spurious churn.",
+      "status": "active",
+      "topics": [
+        "pnpm-lockfile"
+      ],
+      "triggers": [
+        "t-glob-9499d1a7",
+        "t-cmd-64a39b90"
+      ]
+    },
+    "pnpm-lockfile-the-committed-pnpm-lock-yaml": {
+      "createdAt": "2026-06-23",
+      "evidence": [],
+      "rationale": "CI frozen install failed because package.json's hono override was missing from the lockfile; local pnpm 11 reported the lockfile up-to-date and would not add it, so the fix required regenerating with pnpm 10.",
+      "rule": "The committed `pnpm-lock.yaml` `overrides:` block must match `package.json` `pnpm.overrides` exactly, or CI's `pnpm install --frozen-lockfile` fails with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH. CI runs pnpm 10 (pinned via `pnpm/action-setup` `version: 10`); local pnpm 11 will NOT repair the mismatch — `pnpm install --lockfile-only` reports \"Already up to date\" and leaves the overrides snapshot stale. Regenerate with the CI major and verify with it: `CI=true npx -y pnpm@10 install --lockfile-only` then `CI=true npx -y pnpm@10 install --frozen-lockfile` must exit 0 before committing.",
+      "status": "active",
+      "topics": [
+        "pnpm-lockfile"
+      ],
+      "triggers": [
+        "t-glob-9499d1a7",
+        "t-cmd-b25b679a"
+      ]
+    },
     "process-locks-when-wiring-any-process-lock": {
       "createdAt": "2026-06-10",
       "evidence": [],
@@ -4270,6 +4437,45 @@
         "t-glob-5a3df53a",
         "t-glob-1f849af2",
         "t-kw-b54b3b44"
+      ]
+    },
+    "readme-authoring-when-trimming-or-rewriting-readme": {
+      "createdAt": "2026-06-23",
+      "evidence": [],
+      "rationale": "User correction: a lean rewrite dropped the init wizard and auto link rebasing; the user had to ask for a deep feature re-check and a second rewrite.",
+      "rule": "When trimming or rewriting README.md, do not sacrifice feature coverage for brevity. Cross-check the rewrite against the actual feature set (website/src/content/docs/** and src/cli/help-data.ts) and keep the differentiators — especially the `init` interactive wizard (targets → import → lessons → generate) and automatic link rebasing (canonical refs like `.agentsmesh/skills/.../x` rewritten to each target's native path). The readme skill's \"lean\" default must not silently drop recently-added or distinguishing features.",
+      "status": "active",
+      "topics": [
+        "readme-authoring"
+      ],
+      "triggers": [
+        "t-glob-d044343b"
+      ]
+    },
+    "readme-codegen-blocks-when-trimming-or-rewriting-readme": {
+      "createdAt": "2026-06-23",
+      "evidence": [],
+      "rationale": "A README cleanup can delete the wide matrix tables as \"clutter\", which breaks matrix:generate (throws on missing markers) and matrix-docs.test.ts (pins the first |Feature| table + exact global-scope heading).",
+      "rule": "When trimming or rewriting README.md, preserve the auto-generated marker blocks `<!-- agentsmesh:support-matrix:project -->`, `<!-- agentsmesh:support-matrix:global -->`, and `<!-- agentsmesh:tool-list -->`; keep the exact heading `### Global scope (`agentsmesh generate --global`)` directly above the global matrix; and keep the project matrix as the FIRST `| Feature ` table (give other tables a different first column, e.g. `| Command |`). `scripts/render-support-matrix.ts` throws on missing matrix markers and `tests/unit/core/matrix-docs.test.ts` pins this layout — finish with `pnpm matrix:generate && pnpm matrix:verify`.",
+      "status": "active",
+      "topics": [
+        "readme-codegen-blocks"
+      ],
+      "triggers": [
+        "t-glob-d044343b"
+      ]
+    },
+    "release-changesets-when-auditing-which-changes-since": {
+      "createdAt": "2026-06-23",
+      "evidence": [],
+      "rationale": "A release audit found a feat(skills) commit that needed no changeset (repo-internal only) and an unlabeled MCP bug fix that did — classification hinges on the npm files surface.",
+      "rule": "When auditing which changes since the last release tag need a changeset, only the npm-published surface is user-facing: `src/`, `schemas/`, `package.json` (deps/exports), and `README.md` (the package `files` field is dist/schemas/README.md/CHANGELOG.md/LICENSE). Changes confined to `.agentsmesh/`, `.claude/`, `.agents/`, `tests/`, `website/`, or `docs/` ship nothing and need NO changeset — even a `feat(...)`-prefixed commit (e.g. adding a repo-internal skill). Enumerate with `git log v<last-tag>..HEAD --no-merges` and map every user-facing commit to a changeset.",
+      "status": "active",
+      "topics": [
+        "release-changesets"
+      ],
+      "triggers": [
+        "t-glob-b1cdb41a"
       ]
     },
     "security-a-directory-reader-that-ingests": {
@@ -5268,6 +5474,30 @@
         "t-cmd-8695c374"
       ]
     },
+    "verification-workflow-in-this-dogfooding-repo-most": {
+      "createdAt": "2026-06-18",
+      "evidence": [],
+      "rule": "In this dogfooding repo, most generated target dirs (.aider, .cursor, .cline, .github/{instructions,prompts,agents,skills}, .gemini, …) and several root agent files are GITIGNORED, regenerable functional state — NOT cruft. A 'remove unneeded files' request must NOT delete them (deleting breaks 'generate --check' and the dogfood; rerun 'agentsmesh generate' to restore). Genuine cruft = stale agentsmesh-*.tgz, coverage/, dist/ (rebuildable), .DS_Store, and .agentsmesh/lessons/*-log.jsonl telemetry. Verify each target is git-ignored AND non-source before rm.",
+      "status": "active",
+      "topics": [
+        "verification-workflow"
+      ],
+      "triggers": [
+        "t-glob-baf0a939"
+      ]
+    },
+    "verification-workflow-pnpm-precommit-the-husky-pre": {
+      "createdAt": "2026-06-18",
+      "evidence": [],
+      "rule": "pnpm precommit (the husky pre-commit hook) runs typecheck + lint:dead (knip) + test:coverage (full suite, 95% gate) + lint-staged — a heavy ~3min gate that can flake on a single run (watch/timing or coverage). If a commit fails on the pre-commit hook, re-run 'pnpm precommit' standalone before treating it as a real regression; for non-.ts-only commits whose gate you just verified green, --no-verify is justified to avoid a redundant full-suite rerun.",
+      "status": "active",
+      "topics": [
+        "verification-workflow"
+      ],
+      "triggers": [
+        "t-glob-10b2c4ed"
+      ]
+    },
     "verification-workflow-run-package-surface-analyzers-such": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -5678,6 +5908,19 @@
         "t-glob-414c9b17",
         "t-glob-0ecc31c0",
         "t-cmd-2a2e013d"
+      ]
+    },
+    "website-docs-when-applying-a-readability-quality": {
+      "createdAt": "2026-06-23",
+      "evidence": [],
+      "rationale": "A readability audit flagged 10 pages; on inspection 9 already had clear leads and good structure, so editing on the audit's say-so would have degraded good docs.",
+      "rule": "When applying a readability/quality audit to website docs, verify each of the audit subagent's specific claims against the real file before editing — survey agents over-flag (e.g. claim a page \"has no lead\" when it opens with one, mis-count lines, or call distinct sections \"duplicated\"). Don't churn already-good pages; only edit where the real file genuinely needs it. Verify doc edits with `npx astro build` in `website/` (~6s; it builds all pages and validates every internal link).",
+      "status": "active",
+      "topics": [
+        "website-docs"
+      ],
+      "triggers": [
+        "t-glob-d0a4b76e"
       ]
     },
     "windows-paths-a-directory-rename-that-finalizes": {
@@ -6184,6 +6427,12 @@
     "ci-and-release-security": {
       "summary": "CI workflows + release security — ${{ }} injection, needs cascade, token leakage, supply-chain pinning, fail-closed checksums."
     },
+    "cli-presentation": {
+      "summary": "CLI presentation/clack: spinner line-ownership, TTY-gating, where to render bulk output relative to the spinner."
+    },
+    "coverage-analysis": {
+      "summary": "Diagnosing code-coverage / Codecov patch gaps: parse coverage-final.json for ground truth; run vitest coverage via the local binary."
+    },
     "dist-backed-tests": {
       "summary": "e2e and integration tests that exec dist/cli.js; require fresh build; avoid parallel rebuilds."
     },
@@ -6196,8 +6445,17 @@
     "generation-collision-source-maps": {
       "summary": "Generation pipeline — output-source map completeness, shared artifact collision, multi-output rewrite maps, decoration as artifacts."
     },
+    "git-commit-hygiene": {
+      "summary": "Staging/commit discipline: explicit pathspecs, verify staged set, /docs is gitignored (local specs)."
+    },
     "global-mode": {
       "summary": "Global mode capability — rewriteGeneratedPath, mirrorGlobalPath, globalCapabilities, homedir scope guards, scope-aware loaders."
+    },
+    "imports": {
+      "summary": "Module import/re-export hygiene: verify barrel re-exports before importing named symbols."
+    },
+    "init": {
+      "summary": "agentsmesh init command: scaffold, scope handling, and the interactive wizard."
     },
     "install-import-pickers": {
       "summary": "Install pipeline, importers, picker routing, marketplace sub-packs, pack materialization, manifest persistence, sync replay."
@@ -6211,8 +6469,23 @@
     "link-rebaser": {
       "summary": "How reference text is rewritten — protected anchors vs markdown destinations, fenced code, project-root-relative, existence gates, pathApi discipline."
     },
+    "mcp-generate-lock": {
+      "summary": "MCP generate must mirror CLI generate (lockfile/stale-cleanup/process-lock)"
+    },
+    "pnpm-lockfile": {
+      "summary": "pnpm lockfile overrides ↔ package.json consistency and pnpm-version parity with CI (CI uses pnpm 10)."
+    },
     "process-locks": {
       "summary": "Process-lock primitive (acquireProcessLock) and per-lock wrappers — per-lock labels, stale/young eviction, signal cleanup, contention messages."
+    },
+    "readme-authoring": {
+      "summary": "README.md content discipline — preserve feature coverage and differentiators when trimming or applying the lean readme skill."
+    },
+    "readme-codegen-blocks": {
+      "summary": "README.md auto-generated marker blocks (support matrix, tool list) and the generator/tests that pin their layout."
+    },
+    "release-changesets": {
+      "summary": "Changeset authoring/auditing — which changes are user-facing (npm files surface) vs repo-internal, and mapping commits to changesets."
     },
     "security": {
       "summary": "Security hardening invariants for agentsmesh (SSRF, transport allowlists, symlink/tar safety)."
@@ -6346,6 +6619,10 @@
       "kind": "command_pattern",
       "pattern": "agentsmesh lessons add"
     },
+    "t-cmd-64a39b90": {
+      "kind": "command_pattern",
+      "pattern": "pnpm exec"
+    },
     "t-cmd-69dc7d4e": {
       "kind": "command_pattern",
       "pattern": "<<-"
@@ -6406,6 +6683,10 @@
       "kind": "command_pattern",
       "pattern": "git tag"
     },
+    "t-cmd-a29b2eff": {
+      "kind": "command_pattern",
+      "pattern": "coverage"
+    },
     "t-cmd-a3f82ec8": {
       "kind": "command_pattern",
       "pattern": "(npm|pnpm) root -g"
@@ -6425,6 +6706,10 @@
     "t-cmd-ae15e5eb": {
       "kind": "command_pattern",
       "pattern": "vitest run .*e2e"
+    },
+    "t-cmd-b25b679a": {
+      "kind": "command_pattern",
+      "pattern": "pnpm install"
     },
     "t-cmd-b5d550c1": {
       "kind": "command_pattern",
@@ -6582,6 +6867,10 @@
       "kind": "file_glob",
       "pattern": "tests/**/collision*.test.ts"
     },
+    "t-glob-10b2c4ed": {
+      "kind": "file_glob",
+      "pattern": ".husky/pre-commit"
+    },
     "t-glob-11a8af2c": {
       "kind": "file_glob",
       "pattern": "tests/unit/**/*.test.ts"
@@ -6654,6 +6943,10 @@
       "kind": "file_glob",
       "pattern": "src/public/*.ts"
     },
+    "t-glob-2be00990": {
+      "kind": "file_glob",
+      "pattern": "src/cli/commands/init-wizard.ts"
+    },
     "t-glob-2e07c687": {
       "kind": "file_glob",
       "pattern": "src/lessons/ranking.ts"
@@ -6717,6 +7010,10 @@
     "t-glob-4c29ad88": {
       "kind": "file_glob",
       "pattern": "tests/**/*.test.ts"
+    },
+    "t-glob-4c8d45b0": {
+      "kind": "file_glob",
+      "pattern": "src/mcp/handlers/orchestrate.ts"
     },
     "t-glob-4eefad64": {
       "kind": "file_glob",
@@ -6790,6 +7087,14 @@
       "kind": "file_glob",
       "pattern": "tests/unit/cli/commands/lessons-stats.test.ts"
     },
+    "t-glob-68c54751": {
+      "kind": "file_glob",
+      "pattern": "tests/integration/init-wizard.integration.test.ts"
+    },
+    "t-glob-6b98951d": {
+      "kind": "file_glob",
+      "pattern": "src/cli/commands/init-apply.ts"
+    },
     "t-glob-6f2d56aa": {
       "kind": "file_glob",
       "pattern": "src/lessons/add.ts"
@@ -6858,6 +7163,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/init.ts"
     },
+    "t-glob-8173701c": {
+      "kind": "file_glob",
+      "pattern": "src/cli/command-handlers.ts"
+    },
     "t-glob-81a938c7": {
       "kind": "file_glob",
       "pattern": "src/lessons/import-legacy*.ts"
@@ -6909,6 +7218,10 @@
     "t-glob-8fe4e96b": {
       "kind": "file_glob",
       "pattern": "**/SKILL.md"
+    },
+    "t-glob-9499d1a7": {
+      "kind": "file_glob",
+      "pattern": "pnpm-lock.yaml"
     },
     "t-glob-9a12f490": {
       "kind": "file_glob",
@@ -6966,6 +7279,10 @@
       "kind": "file_glob",
       "pattern": "src/targets/**"
     },
+    "t-glob-b1cdb41a": {
+      "kind": "file_glob",
+      "pattern": ".changeset/*.md"
+    },
     "t-glob-b39eff4f": {
       "kind": "file_glob",
       "pattern": "website/src/content/docs/reference/lessons.mdx"
@@ -6985,6 +7302,10 @@
     "t-glob-ba03e2e3": {
       "kind": "file_glob",
       "pattern": "tests/e2e/**"
+    },
+    "t-glob-baf0a939": {
+      "kind": "file_glob",
+      "pattern": ".gitignore"
     },
     "t-glob-c1deac29": {
       "kind": "file_glob",
@@ -7017,6 +7338,10 @@
     "t-glob-cd11277c": {
       "kind": "file_glob",
       "pattern": "src/lessons/regex-linear/*.ts"
+    },
+    "t-glob-d044343b": {
+      "kind": "file_glob",
+      "pattern": "README.md"
     },
     "t-glob-d0a4b76e": {
       "kind": "file_glob",
@@ -7065,6 +7390,10 @@
     "t-glob-e1afdd1c": {
       "kind": "file_glob",
       "pattern": "src/targets/codex-cli/**"
+    },
+    "t-glob-e1bf94e7": {
+      "kind": "file_glob",
+      "pattern": "src/targets/catalog/target-ids.ts"
     },
     "t-glob-e9606afe": {
       "kind": "file_glob",
@@ -7198,6 +7527,10 @@
       "kind": "keyword",
       "pattern": "ANSI color stdout assertion"
     },
+    "t-kw-3bb206ca": {
+      "kind": "keyword",
+      "pattern": "clack spinner"
+    },
     "t-kw-3bdacef0": {
       "kind": "keyword",
       "pattern": "shared data type field"
@@ -7266,6 +7599,10 @@
       "kind": "keyword",
       "pattern": "scalar array coercion alias"
     },
+    "t-kw-8098ffea": {
+      "kind": "keyword",
+      "pattern": "codecov"
+    },
     "t-kw-866bb6ea": {
       "kind": "keyword",
       "pattern": "fan out"
@@ -7317,6 +7654,10 @@
     "t-kw-b6410e25": {
       "kind": "keyword",
       "pattern": "command truncation"
+    },
+    "t-kw-bd0b86a3": {
+      "kind": "keyword",
+      "pattern": "wizard back navigation step prompter"
     },
     "t-kw-c8f23353": {
       "kind": "keyword",
@@ -7382,9 +7723,17 @@
       "kind": "keyword",
       "pattern": "public export error class instanceof"
     },
+    "t-kw-f7df0071": {
+      "kind": "keyword",
+      "pattern": "global scope lessons init wizard"
+    },
     "t-kw-f821d655": {
       "kind": "keyword",
       "pattern": "block comment"
+    },
+    "t-kw-fa762c9e": {
+      "kind": "keyword",
+      "pattern": "interactive wizard global scope behavior change"
     },
     "t-kw-fb5d542a": {
       "kind": "keyword",

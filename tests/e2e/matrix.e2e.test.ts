@@ -71,8 +71,9 @@ features:
 
     expect(codex.exitCode).toBe(0);
     expect(windsurf.exitCode).toBe(0);
-    expect(codex.stdout.split('\n').find((line) => line.includes('commands'))).toContain('–');
-    expect(windsurf.stdout.split('\n').find((line) => line.includes('agents'))).toContain('–');
+    // Transposed: one row per target; the codex-cli / windsurf row carries the – cell.
+    expect(codex.stdout.split('\n').find((line) => line.includes('codex'))).toContain('–');
+    expect(windsurf.stdout.split('\n').find((line) => line.includes('windsurf'))).toContain('–');
   });
 
   it('--global prints the matrix for $HOME/.agentsmesh', async () => {
@@ -91,9 +92,9 @@ features:
 
     const r = await runCli('matrix --global', dir, { HOME: fakeHome });
     expect(r.exitCode, r.stderr).toBe(0);
-    // Matrix output uses display names ("Claude") and a Feature column.
+    // Matrix output uses display names ("Claude") and a Target column.
     expect(r.stdout).toMatch(/Claude/);
-    expect(r.stdout).toMatch(/Feature/);
-    expect(r.stdout).toMatch(/rules/);
+    expect(r.stdout).toMatch(/Target/);
+    expect(r.stdout).toMatch(/Rules/);
   });
 });

@@ -1,13 +1,11 @@
 import type { McpContext } from '../context.js';
 import {
   loadProjectContext,
-  generate as engineGenerate,
   lint as engineLint,
   check as engineCheck,
   diff as engineDiff,
 } from '../../public/index.js';
-import { writeFileAtomic } from '../../utils/filesystem/fs.js';
-import { ensurePathInsideRoot } from '../../cli/commands/generate-path.js';
+import { runGenerate } from '../../cli/commands/generate.js';
 import {
   type CheckHandlerResult,
   type DiffHandlerResult,
@@ -31,42 +29,34 @@ async function generate(
   input: { targets?: string[]; features?: string[]; verbose?: boolean; dry_run?: boolean },
 ): Promise<GenerateHandlerResult> {
   try {
-    const pctx = await loadProjectContext(ctx.projectRoot);
-    const targetFilter = input.targets && input.targets.length > 0 ? input.targets : undefined;
-
-    const results = await engineGenerate({
-      config: pctx.config,
-      canonical: pctx.canonical,
-      projectRoot: pctx.projectRoot,
-      scope: pctx.scope,
-      targetFilter,
-    });
-
-    const actionable = results.filter((r) => r.status !== 'skipped');
-    const written = actionable.filter((r) => r.status === 'created' || r.status === 'updated');
-
-    if (!input.dry_run) {
-      for (const r of written) {
-        const fullPath = ensurePathInsideRoot(pctx.projectRoot, r.path, r.target);
-        await writeFileAtomic(fullPath, r.content);
-      }
+    // Delegate to the CLI generate so the MCP path stays byte-for-byte
+    // identical to `agentsmesh generate`: it writes target files, cleans stale
+    // outputs, and — critically — persists `.agentsmesh/.lock`. Reimplementing
+    // file-writing here previously skipped the lockfile and left `check`
+    // permanently drifted. `printMatrix: false` suppresses the matrix render.
+    const flags: Record<string, string | boolean> = { 'dry-run': input.dry_run === true };
+    if (input.targets && input.targets.length > 0) {
+      flags.targets = input.targets.join(',');
     }
 
+    const { data } = await runGenerate(flags, ctx.projectRoot, { printMatrix: false });
+
+    const written = data.files.filter((f) => f.status === 'created' || f.status === 'updated');
     const byTarget: Record<string, { filesWritten: number }> = {};
-    for (const r of written) {
-      const entry = byTarget[r.target] ?? { filesWritten: 0 };
-      byTarget[r.target] = { filesWritten: entry.filesWritten + 1 };
+    for (const f of written) {
+      const entry = byTarget[f.target] ?? { filesWritten: 0 };
+      byTarget[f.target] = { filesWritten: entry.filesWritten + 1 };
     }
 
     const result: GenerateHandlerResult = {
       filesWritten: written.length,
       byTarget,
-      lockfileUpdated: !input.dry_run && written.length >= 0,
+      lockfileUpdated: input.dry_run !== true,
       errors: [],
       warnings: [],
     };
 
-    if (input.verbose === true) result.files = actionable.map((r) => r.path);
+    if (input.verbose === true) result.files = data.files.map((f) => f.path);
     return result;
   } catch (e) {
     wrapEngineError(e);

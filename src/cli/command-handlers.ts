@@ -6,6 +6,7 @@ import { runGenerate } from './commands/generate.js';
 import { renderGenerate } from './renderers/generate.js';
 import { runInit } from './commands/init.js';
 import { renderInit } from './renderers/init.js';
+import { createClackPrompter } from './prompts/clack-prompter.js';
 import { runImport } from './commands/import.js';
 import { runDiff } from './commands/diff.js';
 import { runLintCmd } from './commands/lint.js';
@@ -36,6 +37,7 @@ import { renderConvert } from './renderers/convert.js';
 import { runMcp } from './commands/mcp.js';
 import { runLessons } from './commands/lessons.js';
 import { renderLessons } from './renderers/lessons.js';
+import { ui } from './ui/ui.js';
 
 /**
  * Collapse repeated-flag arrays to their last value for the (vast majority of)
@@ -54,23 +56,59 @@ export const cmdHandlers: Record<string, CommandHandler> = {
   generate: async (flags, _args) => {
     void _args;
     const nf = narrowFlags(flags);
-    const result = await runGenerate(nf, undefined, { printMatrix: nf.json !== true });
+    ui.intro('agentsmesh generate');
+    const sp = ui.spinner();
+    sp.start('Generating tool config…');
+    // Suppress the in-run matrix print — it would write over the active
+    // spinner's line. Render it cleanly after the frame closes (below).
+    const result = await runGenerate(nf, undefined, { printMatrix: false });
+    sp.stop('Generate complete');
     handleResult('generate', result, nf, () => renderGenerate(result));
+    ui.outro('Done');
+    if (nf.json !== true) {
+      const matrixResult = await runMatrix(nf, process.cwd());
+      renderMatrix(matrixResult, { verbose: nf.verbose === true });
+    }
   },
   init: async (flags, _args) => {
     void _args;
-    const result = await runInit(process.cwd(), {
-      yes: flags.yes === true,
-      global: flags.global === true,
-      lessons: flags.lessons === true,
-    });
-    handleResult('init', result, narrowFlags(flags), () => renderInit(result));
+    // Interactive on a real TTY (project or --global); --yes/--json/non-TTY bypass it.
+    const interactive =
+      process.stdin.isTTY === true &&
+      process.stdout.isTTY === true &&
+      flags.yes !== true &&
+      flags.json !== true;
+    const deps = interactive ? { prompter: createClackPrompter() } : {};
+    const result = await runInit(
+      process.cwd(),
+      {
+        yes: flags.yes === true,
+        global: flags.global === true,
+        lessons: flags.lessons === true,
+      },
+      deps,
+    );
+    // Only an actual wizard run renders its own output (clack intro/summary/outro).
+    // The lessons-only retrofit on an already-initialized project returns without a
+    // wizard, so it still needs renderInit. (A plain re-init throws before returning.)
+    const wizardRan = interactive && result.data.lessonsOnly !== true;
+    handleResult(
+      'init',
+      result,
+      narrowFlags(flags),
+      wizardRan ? () => {} : () => renderInit(result),
+    );
   },
   import: async (flags, _args) => {
     void _args;
     const nf = narrowFlags(flags);
+    ui.intro('agentsmesh import');
+    const sp = ui.spinner();
+    sp.start('Importing…');
     const result = await runImport(nf);
+    sp.stop('Import complete');
     handleResult('import', result, nf, () => renderImport(result));
+    ui.outro('Done');
   },
   diff: async (flags, _args) => {
     void _args;
@@ -122,19 +160,34 @@ export const cmdHandlers: Record<string, CommandHandler> = {
   install: async (flags, args) => {
     const nf = narrowFlags(flags);
     if (nf.json === true) nf.force = true;
+    ui.intro('agentsmesh install');
+    const sp = ui.spinner();
+    sp.start('Installing…');
     const result = await runInstall(nf, args, process.cwd());
+    sp.stop('Install complete');
     handleResult('install', result, nf, () => renderInstall(result));
+    ui.outro('Done');
   },
   uninstall: async (flags, args) => {
     const nf = narrowFlags(flags);
     if (nf.json === true) nf.force = true;
+    ui.intro('agentsmesh uninstall');
+    const sp = ui.spinner();
+    sp.start('Removing…');
     const result = await runUninstall(nf, args, process.cwd());
+    sp.stop('Uninstall complete');
     handleResult('uninstall', result, nf, () => renderUninstall(result));
+    ui.outro('Done');
   },
   refresh: async (flags, args) => {
     const nf = narrowFlags(flags);
+    ui.intro('agentsmesh refresh');
+    const sp = ui.spinner();
+    sp.start('Refreshing…');
     const result = await runRefresh(nf, args, process.cwd());
+    sp.stop('Refresh complete');
     handleResult('refresh', result, nf, () => renderRefresh(result));
+    ui.outro('Done');
   },
   installs: async (flags, args) => {
     const nf = narrowFlags(flags);
@@ -154,8 +207,13 @@ export const cmdHandlers: Record<string, CommandHandler> = {
   convert: async (flags, _args) => {
     void _args;
     const nf = narrowFlags(flags);
+    ui.intro('agentsmesh convert');
+    const sp = ui.spinner();
+    sp.start('Converting…');
     const result = await runConvert(nf);
+    sp.stop('Convert complete');
     handleResult('convert', result, nf, () => renderConvert(result));
+    ui.outro('Done');
   },
   mcp: async (flags, args) => {
     await runMcp(narrowFlags(flags), args);

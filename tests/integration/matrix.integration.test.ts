@@ -38,9 +38,9 @@ afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
 describe('agentsmesh matrix (integration)', () => {
   it('prints compatibility table with rules row', () => {
     const out = execSync(`node ${CLI_PATH} matrix`, { cwd: TEST_DIR, encoding: 'utf-8' });
-    expect(out).toContain('Feature');
-    expect(out).toContain('rules');
-    expect(out).toContain('Legend');
+    expect(out).toContain('Target');
+    expect(out).toContain('Rules');
+    expect(out).toContain('native');
     expect(out).toMatch(/[✓✓]/);
   });
 
@@ -57,8 +57,9 @@ Use strict TypeScript.
 
     const out = execSync(`node ${CLI_PATH} matrix`, { cwd: TEST_DIR, encoding: 'utf-8' });
 
-    expect(out).toContain('additional rules (1)');
-    expect(out.split('\n').find((line) => line.includes('additional rules'))).toContain('◆');
+    expect(out).toContain('Additional Rules');
+    // Transposed: the embedded (◆) symbol appears in a target row's Additional Rules column.
+    expect(out).toContain('◆');
   });
 
   it('respects --targets filter', () => {
@@ -67,7 +68,7 @@ Use strict TypeScript.
       encoding: 'utf-8',
     });
     expect(out).toContain('Claude');
-    expect(out).toContain('rules');
+    expect(out).toContain('Rules');
   });
 
   it('--verbose adds per-file details', () => {

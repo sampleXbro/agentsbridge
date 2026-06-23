@@ -114,21 +114,22 @@ const MAKE_ROW = (
   support: Record<string, 'native' | 'none' | 'partial' | 'embedded'>,
 ): CompatibilityRow => ({
   feature,
+  count: 0,
   support,
 });
 
-describe('formatMatrix', () => {
-  it('renders ASCII table with NO_COLOR', () => {
+describe('formatMatrix (transposed)', () => {
+  it('renders transposed table with NO_COLOR', () => {
     process.env.NO_COLOR = '1';
     const out = formatMatrix(
       [MAKE_ROW('rules', { 'claude-code': 'native', cursor: 'embedded' })],
       ['claude-code', 'cursor'],
     );
-    expect(out).toContain('Feature');
-    expect(out).toContain('rules');
+    expect(out).toContain('Target');
+    expect(out).toContain('Rules');
     expect(out).toContain(LEVEL_SYMBOL.native);
     expect(out).toContain(LEVEL_SYMBOL.embedded);
-    expect(out).toContain('Legend:');
+    expect(out).toContain('native');
   });
 
   it('renders ANSI codes when color is forced', () => {
@@ -155,12 +156,66 @@ describe('formatMatrix', () => {
   it('handles single target', () => {
     process.env.NO_COLOR = '1';
     const out = formatMatrix([MAKE_ROW('rules', { x: 'native' })], ['x']);
-    expect(out).toContain('rules');
+    expect(out).toContain('Rules');
   });
 
   it('handles empty rows', () => {
     process.env.NO_COLOR = '1';
     const out = formatMatrix([], ['claude-code']);
-    expect(out).toContain('Feature');
+    expect(out).toContain('Target');
+  });
+});
+
+describe('formatMatrix (transposed, NO_COLOR)', () => {
+  const rows: CompatibilityRow[] = [
+    { feature: 'rules', count: 0, support: { 'claude-code': 'native', cursor: 'native' } },
+    { feature: 'commands', count: 0, support: { 'claude-code': 'native', cursor: 'embedded' } },
+    { feature: 'permissions', count: 0, support: { 'claude-code': 'native', cursor: 'partial' } },
+  ];
+  const targets = ['claude-code', 'cursor'];
+
+  it('renders one row per target with feature symbol columns', () => {
+    const prev = process.env.NO_COLOR;
+    process.env.NO_COLOR = '1';
+    try {
+      const out = formatMatrix(rows, targets);
+      const lines = out.split('\n');
+      expect(lines[0]).toMatch(/^Target\s+Rules\s+Commands\s+Permissions\s*$/);
+      const claude = lines.find((l) => l.startsWith('Claude'))!;
+      expect(claude).toMatch(/^Claude\s+✓\s+✓\s+✓\s*$/);
+      const cursor = lines.find((l) => l.startsWith('cursor'))!;
+      expect(cursor).toMatch(/^cursor\s+✓\s+◆\s+◐\s*$/);
+      expect(out).toContain('✓ native');
+      expect(out).toContain('Commands');
+      expect(out).toContain('Permissions');
+    } finally {
+      if (prev === undefined) delete process.env.NO_COLOR;
+      else process.env.NO_COLOR = prev;
+    }
+  });
+
+  it('sorts target rows by display label and stays within 80 visible cols', () => {
+    const prev = process.env.NO_COLOR;
+    process.env.NO_COLOR = '1';
+    try {
+      const r: CompatibilityRow[] = [
+        { feature: 'rules', count: 0, support: { zed: 'native', aider: 'native', 'claude-code': 'native' } },
+      ];
+      const out = formatMatrix(r, ['zed', 'aider', 'claude-code']);
+      // Labels: aider→'aider', claude-code→'Claude', zed→'zed'; localeCompare order: aider < Claude < zed
+      // Filter body rows: lines that contain ✓ but do NOT start with ✓ (the legend starts with ✓)
+      const order = out
+        .split('\n')
+        .filter((l) => /✓/.test(l) && !/^\s*✓/.test(l))
+        .map((l) => l.trim().split(/\s+/)[0]);
+      expect(order).toEqual(['aider', 'Claude', 'zed']);
+      for (const line of out.split('\n')) {
+        const visible = line.replace(/\[[0-9;]*m/g, '');
+        expect([...visible].length).toBeLessThanOrEqual(80);
+      }
+    } finally {
+      if (prev === undefined) delete process.env.NO_COLOR;
+      else process.env.NO_COLOR = prev;
+    }
   });
 });

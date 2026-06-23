@@ -8,6 +8,19 @@ import { Aside } from '@astrojs/starlight/components';
 
 `agentsmesh.yaml` is the main project configuration file. It is created by `agentsmesh init` and committed to the repository.
 
+## Minimal config
+
+At minimum, set `version` and at least one target. Every feature is enabled by default, so this is enough to run `agentsmesh generate`:
+
+```yaml
+version: 1
+targets:
+  - claude-code
+  - cursor
+```
+
+Everything else — `features`, `extends`, `collaboration`, `overrides`, and `conversions` — is optional. The full example below shows them all.
+
 ## Full example
 
 ```yaml

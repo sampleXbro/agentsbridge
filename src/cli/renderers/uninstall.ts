@@ -5,7 +5,7 @@
  * Forward-slash paths only.
  */
 
-import { logger } from '../../utils/output/logger.js';
+import { ui } from '../ui/ui.js';
 import type { UninstallCommandResult } from '../commands/uninstall.js';
 
 export function renderUninstall(result: UninstallCommandResult): void {
@@ -13,27 +13,28 @@ export function renderUninstall(result: UninstallCommandResult): void {
 
   if (data.dryRun) {
     if (data.removed.length === 0) {
-      logger.info('[dry-run] No installs matched.');
+      ui.info('[dry-run] No installs matched.');
       return;
     }
-    logger.info(`[dry-run] Would uninstall ${data.removed.length} pack(s):`);
+    ui.info(`[dry-run] Would uninstall ${data.removed.length} pack(s):`);
     for (const r of data.removed) {
       const where = r.pack_path === null ? 'extends-only' : r.pack_path;
-      logger.info(`  - ${r.name} (${where})`);
+      ui.info(`  - ${r.name} (${where})`);
     }
     return;
   }
 
   if (data.removed.length > 0) {
     const names = data.removed.map((r) => `"${r.name}"`).join(', ');
-    logger.success(`Uninstalled ${data.removed.length} pack(s): ${names}.`);
+    ui.success(`Uninstalled ${data.removed.length} pack(s): ${names}.`);
+    ui.note(`Uninstalled ${data.removed.length} pack(s): ${names}.`, 'Uninstall');
   }
 
   for (const s of data.skipped) {
-    logger.warn(`Skipped "${s.name}": ${s.reason}`);
+    ui.warn(`Skipped "${s.name}": ${s.reason}`);
   }
 
   for (const f of data.failed) {
-    logger.error(`Failed "${f.name}": ${f.reason}`);
+    ui.error(`Failed "${f.name}": ${f.reason}`);
   }
 }

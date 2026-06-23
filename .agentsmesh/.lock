@@ -1,9 +1,9 @@
 # Auto-generated. DO NOT EDIT MANUALLY.
 # Tracks the state of all config files for team conflict resolution.
 
-generated_at: 2026-06-18T13:47:15.708Z
+generated_at: 2026-06-23T08:15:25.523Z
 generated_by: serhii
-lib_version: 0.24.0
+lib_version: 0.25.0
 checksums:
   agents/code-debugger.md: sha256:33452bf839256a119a602cd10d085bff3cdb8f537ded76e60053bb9d8e5d33bc
   agents/code-documenter.md: sha256:89b4ebd27718bcd50a7283c95ea1ff9cad153b1112cf695f9f1fc22d90ec85ec
@@ -43,6 +43,7 @@ checksums:
   skills/post-feature-qa/references/edge-case-checklist.md: sha256:77bb7a50f3dd281003e146a5313a85799603739e049646502904d0b7b8451c70
   skills/prepare-release/SKILL.md: sha256:317c425107b1969a2372b430541e21c85a91715f24acf1e0267ac26e734cddb3
   skills/quality-gates/SKILL.md: sha256:0b7225be0afd7a9528904e4aae9816aaecc8915f0eecba987676f936ac6c06f3
+  skills/readme/SKILL.md: sha256:9f1053f467a59b2ab95915c1eac04a34ba58c62ef44cbe1d5e8ddd49015b09bb
   skills/release-manager/README.md: sha256:843ec66e67981e89493d55fd7aa0f68a98cf7bf6c5a23175e7f6bb2e79585c76
   skills/release-manager/SKILL.md: sha256:bef37ef3b482776f344fc3bc841bda06a588e6d0adc167fbc8f434c5449266e5
   skills/release-manager/assets/sample_commits.json: sha256:83a0b9c9bcb198e18bc6943a98610c8b1f4cd827d7b82806b8e1b4b531dc6f9b

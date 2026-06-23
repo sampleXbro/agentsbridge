@@ -43,6 +43,11 @@ export interface InitData {
    * were left untouched).
    */
   lessonsOnly?: boolean;
+  /**
+   * True when the interactive wizard was cancelled (Ctrl-C). Nothing was
+   * written; every other field carries its empty/none value.
+   */
+  cancelled?: boolean;
 }
 
 export interface ImportData {

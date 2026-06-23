@@ -3,7 +3,7 @@
  * install/uninstall renderer style: per-line summary, forward-slash paths only.
  */
 
-import { logger } from '../../utils/output/logger.js';
+import { ui } from '../ui/ui.js';
 import type { RefreshCommandResult } from '../../install/refresh/refresh-result.js';
 
 export function renderRefresh(result: RefreshCommandResult): void {
@@ -11,37 +11,38 @@ export function renderRefresh(result: RefreshCommandResult): void {
 
   if (data.dryRun) {
     if (data.refreshed.length === 0 && data.unchanged.length === 0) {
-      logger.info('[dry-run] No packs to refresh.');
+      ui.info('[dry-run] No packs to refresh.');
       return;
     }
-    logger.info(
+    ui.info(
       `[dry-run] Would refresh ${data.refreshed.length} pack(s); ${data.unchanged.length} unchanged.`,
     );
     for (const r of data.refreshed) {
-      logger.info(`  - ${r.name}: ${r.oldSha ?? '—'} → ${r.newSha}`);
+      ui.info(`  - ${r.name}: ${r.oldSha ?? '—'} → ${r.newSha}`);
     }
     for (const u of data.unchanged) {
-      logger.info(`  - ${u.name}: unchanged at ${u.ref}`);
+      ui.info(`  - ${u.name}: unchanged at ${u.ref}`);
     }
     return;
   }
 
   if (data.refreshed.length > 0) {
-    logger.success(`Refreshed ${data.refreshed.length} pack(s):`);
+    ui.success(`Refreshed ${data.refreshed.length} pack(s):`);
+    ui.note(`Refreshed ${data.refreshed.length} pack(s).`, 'Refresh');
     for (const r of data.refreshed) {
-      logger.info(`  - ${r.name}: ${r.oldSha ?? '—'} → ${r.newSha}`);
+      ui.info(`  - ${r.name}: ${r.oldSha ?? '—'} → ${r.newSha}`);
     }
   }
 
   for (const u of data.unchanged) {
-    logger.info(`Pack "${u.name}" unchanged at ${u.ref}.`);
+    ui.info(`Pack "${u.name}" unchanged at ${u.ref}.`);
   }
 
   for (const s of data.skipped) {
-    logger.warn(`Skipped "${s.name}": ${s.reason}`);
+    ui.warn(`Skipped "${s.name}": ${s.reason}`);
   }
 
   for (const f of data.failed) {
-    logger.error(`Failed "${f.name}" (${f.phase}): ${f.error}`);
+    ui.error(`Failed "${f.name}" (${f.phase}): ${f.error}`);
   }
 }

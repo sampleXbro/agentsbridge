@@ -492,7 +492,7 @@ describe('formatVerboseDetails', () => {
 });
 
 describe('formatMatrix', () => {
-  it('formats rows as ASCII table', () => {
+  it('formats rows as transposed table (targets as rows, features as columns)', () => {
     const rows = [
       {
         feature: 'rules',
@@ -501,14 +501,14 @@ describe('formatMatrix', () => {
       },
     ];
     const out = formatMatrix(rows, ['claude-code', 'cursor']);
-    expect(out).toContain('Feature');
+    expect(out).toContain('Target');
     expect(out).toContain('Claude');
     expect(out).toContain('cursor');
-    expect(out).toContain('rules');
+    expect(out).toContain('Rul');
     expect(out).toMatch(/[✓]/);
   });
 
-  it('includes legend', () => {
+  it('includes legend and full-name feature header', () => {
     const rows = [
       {
         feature: 'rules',
@@ -518,6 +518,6 @@ describe('formatMatrix', () => {
     ];
     const out = formatMatrix(rows, ['claude-code']);
     expect(out).toContain('native');
-    expect(out).toContain('Legend');
+    expect(out).toContain('Rules');
   });
 });

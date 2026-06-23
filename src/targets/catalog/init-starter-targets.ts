@@ -16,3 +16,14 @@ export function starterInitTargetIds(): readonly BuiltinTargetId[] {
     .map((d) => d.id)
     .filter(isBuiltinTargetId);
 }
+
+/**
+ * Targets eligible for global (`--global`) init — those whose descriptor declares
+ * a `globalSupport` layout. Single source for both the non-interactive global
+ * default set and the interactive global wizard's selectable options.
+ */
+export function globalInitTargetIds(): readonly BuiltinTargetId[] {
+  return BUILTIN_TARGETS.filter((d) => d.globalSupport !== undefined)
+    .map((d) => d.id)
+    .filter(isBuiltinTargetId);
+}

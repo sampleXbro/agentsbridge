@@ -1805,6 +1805,18 @@
         "t-cmd-7c1c43ea"
       ]
     },
+    "git-commit-hygiene-other-processes-pack-install-refresh": {
+      "createdAt": "2026-06-23",
+      "evidence": [],
+      "rule": "Other processes (pack install/refresh, the harness) can `git add` files mid-session in this repo — e.g. installed-skill packs under `.claude/skills/`, `.agents/skills/`, `.agentsmesh/packs/` get pre-staged (`A `). So before `git commit`, run `git diff --cached --name-only` as a SEPARATE step and READ it; NEVER `&&`-chain the verify with the commit (you can't react, and you'll commit pre-staged unrelated files under the wrong message). Stage with explicit pathspecs; undo a slip with `git reset --mixed HEAD~1` (not pushed) then re-stage only your files.",
+      "status": "active",
+      "topics": [
+        "git-commit-hygiene"
+      ],
+      "triggers": [
+        "t-cmd-7c1c43ea"
+      ]
+    },
     "global-mode-global-scope-capability-resolution-has": {
       "createdAt": "2026-06-13",
       "evidence": [

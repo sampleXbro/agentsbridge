@@ -1780,6 +1780,18 @@
         "t-glob-861a9bdb"
       ]
     },
+    "git-commit-hygiene-in-this-repo-docs-is": {
+      "createdAt": "2026-06-23",
+      "evidence": [],
+      "rule": "In this repo `/docs/` is gitignored (root /docs policy), so design specs under `docs/superpowers/specs/` are intentionally LOCAL/untracked and `git add docs/...` silently no-ops (prints \"paths are ignored\"). Before any `git commit`, stage with EXPLICIT pathspecs and verify `git diff --cached --stat` (or `git status`) first: a bare `git commit` right after an ignored/empty `git add` commits whatever else is already staged — here it committed the still-uncommitted, unattributed `package.json` precommit edit under a \"docs(spec)\" message. Undo such a slip with `git reset HEAD~1` (mixed) since it isn't pushed.",
+      "status": "active",
+      "topics": [
+        "git-commit-hygiene"
+      ],
+      "triggers": [
+        "t-cmd-7c1c43ea"
+      ]
+    },
     "global-mode-global-scope-capability-resolution-has": {
       "createdAt": "2026-06-13",
       "evidence": [
@@ -6403,6 +6415,9 @@
     },
     "generation-collision-source-maps": {
       "summary": "Generation pipeline — output-source map completeness, shared artifact collision, multi-output rewrite maps, decoration as artifacts."
+    },
+    "git-commit-hygiene": {
+      "summary": "Staging/commit discipline: explicit pathspecs, verify staged set, /docs is gitignored (local specs)."
     },
     "global-mode": {
       "summary": "Global mode capability — rewriteGeneratedPath, mirrorGlobalPath, globalCapabilities, homedir scope guards, scope-aware loaders."

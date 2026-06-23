@@ -1,83 +1,86 @@
-import type { CompatibilityRow } from '../types.js';
+import type { CompatibilityRow, SupportLevel } from '../types.js';
 import { matrixColumnLabel } from '../../targets/catalog/matrix-column-labels.js';
 import { LEVEL_SYMBOL, coloredSymbol } from './data.js';
 import { colorEnabled } from '../../utils/output/color.js';
 
-/**
- * Format compatibility matrix as ASCII table with colors.
- */
+const COLORS = {
+  bold: '\x1b[1m',
+  dim: '\x1b[2m',
+  cyan: '\x1b[36m',
+  magenta: '\x1b[35m',
+  green: '\x1b[32m',
+  blue: '\x1b[34m',
+  yellow: '\x1b[33m',
+  reset: '\x1b[0m',
+};
+
+const FEATURE_ABBR: Record<string, string> = {
+  rules: 'Rul',
+  'additional rules': '+Ru',
+  commands: 'Cmd',
+  agents: 'Agt',
+  skills: 'Skl',
+  mcp: 'MCP',
+  hooks: 'Hok',
+  ignore: 'Ign',
+  permissions: 'Prm',
+};
+
+function baseName(feature: string): string {
+  return feature.replace(/\s*\(\d+\)\s*$/, '').trim();
+}
+
+function abbr(feature: string): string {
+  const base = baseName(feature);
+  return (FEATURE_ABBR[base] ?? base.slice(0, 3).padEnd(3)).slice(0, 3);
+}
+
+/** Transposed compatibility matrix: one row per target, one symbol column per feature. */
 export function formatMatrix(rows: CompatibilityRow[], targets: string[]): string {
   const useColor = colorEnabled();
+  const c = (code: string, text: string): string => (useColor ? `${code}${text}${COLORS.reset}` : text);
+  const COL = 3;
+  const GAP = '  ';
 
-  const colors = {
-    cyan: '\x1b[36m',
-    magenta: '\x1b[35m',
-    bold: '\x1b[1m',
-    dim: '\x1b[2m',
-    green: '\x1b[32m',
-    blue: '\x1b[34m',
-    yellow: '\x1b[33m',
-    reset: '\x1b[0m',
-  };
+  const labeled = targets
+    .map((t) => ({ t, label: matrixColumnLabel(t) }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+  const targetWidth = Math.max(6, ...labeled.map((x) => x.label.length));
 
-  const c = (code: string, text: string): string =>
-    useColor ? `${code}${text}${colors.reset}` : text;
+  const header =
+    c(COLORS.bold + COLORS.cyan, 'Target'.padEnd(targetWidth)) +
+    GAP +
+    rows.map((r) => c(COLORS.bold + COLORS.magenta, abbr(r.feature).padEnd(COL))).join(GAP);
 
-  const visibleLength = (s: string): number => {
-    // eslint-disable-next-line no-control-regex -- intentional match on ANSI escape byte
-    return s.replace(/\u001b\[[0-9;]*m/g, '').length;
-  };
+  const rule =
+    c(COLORS.dim, '─'.repeat(targetWidth)) +
+    GAP +
+    rows.map(() => c(COLORS.dim, '─'.repeat(COL))).join(GAP);
 
-  const padWithColor = (s: string, targetWidth: number): string => {
-    const visible = visibleLength(s);
-    const padding = Math.max(0, targetWidth - visible);
-    return s + ' '.repeat(padding);
-  };
-
-  const maxTargetLen = Math.max(12, ...targets.map((t) => t.length));
-  const targetLabels = targets.map((t) => matrixColumnLabel(t));
-  const colWidth = Math.max(8, maxTargetLen);
-  const featWidth = Math.max(12, ...rows.map((r) => r.feature.length));
-
-  const border = (widths: number[]): string =>
-    c(colors.dim, '┌' + widths.map((w) => '─'.repeat(w)).join('┬') + '┐');
-  const sep = (widths: number[]): string =>
-    c(colors.dim, '├' + widths.map((w) => '─'.repeat(w)).join('┼') + '┤');
-  const bottom = (widths: number[]): string =>
-    c(colors.dim, '└' + widths.map((w) => '─'.repeat(w)).join('┴') + '┘');
-
-  const cols = [featWidth, ...targets.map(() => colWidth)];
-  const top = border(cols);
-
-  const headerCells = [
-    padWithColor(c(colors.bold + colors.cyan, 'Feature'), featWidth),
-    ...targetLabels.map((l) => padWithColor(c(colors.bold + colors.magenta, l), colWidth)),
-  ];
-  const header = c(colors.dim, '│') + headerCells.join(c(colors.dim, '│')) + c(colors.dim, '│');
-  const headerSep = sep(cols);
-
-  const bodyRows = rows.map((r) => {
-    const cells = [padWithColor(c(colors.cyan, r.feature), featWidth)];
-    for (const t of targets) {
-      const level = r.support[t] ?? 'none';
+  const body = labeled.map(({ t, label }) => {
+    const cells = rows.map((r) => {
+      const level = (r.support[t] ?? 'none') as SupportLevel;
       const sym = useColor ? coloredSymbol(level) : LEVEL_SYMBOL[level];
-      cells.push(padWithColor(`  ${sym}  `, colWidth));
-    }
-    return c(colors.dim, '│') + cells.join(c(colors.dim, '│')) + c(colors.dim, '│');
+      return sym + ' '.repeat(COL - 1);
+    });
+    return c(COLORS.cyan, label.padEnd(targetWidth)) + GAP + cells.join(GAP);
   });
 
-  const bot = bottom(cols);
+  const legend =
+    c(COLORS.green, '✓') +
+    ' native  ' +
+    c(COLORS.blue, '◆') +
+    ' embedded  ' +
+    c(COLORS.yellow, '◐') +
+    ' partial  ' +
+    c(COLORS.dim, '–') +
+    ' none';
 
-  const lines = [top, header, headerSep, ...bodyRows, bot];
-  lines.push('');
+  const keyParts = rows.map((r) => `${abbr(r.feature)} ${baseName(r.feature)}`);
+  const keyLines: string[] = [];
+  for (let i = 0; i < keyParts.length; i += 5) {
+    keyLines.push(c(COLORS.dim, keyParts.slice(i, i + 5).join(' · ')));
+  }
 
-  const legendItems = [
-    c(colors.green, '✓') + ' = native',
-    c(colors.blue, '◆') + ' = embedded',
-    c(colors.yellow, '◐') + ' = partial',
-    c(colors.dim, '–') + ' = not supported',
-  ];
-  lines.push(c(colors.bold, 'Legend: ') + legendItems.join('  '));
-
-  return lines.join('\n');
+  return [header, rule, ...body, '', legend, ...keyLines].join('\n');
 }

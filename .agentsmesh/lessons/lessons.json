@@ -4372,6 +4372,19 @@
         "t-glob-4c8d45b0"
       ]
     },
+    "pnpm-lockfile-in-this-repo-run-dev": {
+      "createdAt": "2026-06-23",
+      "evidence": [],
+      "rule": "In this repo, run dev tooling via `node_modules/.bin/<tool>` (vitest, tsup, tsx, changeset) — NOT `pnpm <script>` / `pnpm exec`. Any pnpm-11 invocation runs a deps-status-check that strips the pnpm-10 `hono` override from `pnpm-lock.yaml`, re-breaking CI's `--frozen-lockfile`. After build/test/changeset runs, check `git status`; if `pnpm-lock.yaml`, `.agentsmesh/.lock` (timestamp-only), or `tests/e2e/agents-last-run.md` show as modified, `git checkout -- <them>` before committing — they are spurious churn.",
+      "status": "active",
+      "topics": [
+        "pnpm-lockfile"
+      ],
+      "triggers": [
+        "t-glob-9499d1a7",
+        "t-cmd-64a39b90"
+      ]
+    },
     "pnpm-lockfile-the-committed-pnpm-lock-yaml": {
       "createdAt": "2026-06-23",
       "evidence": [],
@@ -6589,6 +6602,10 @@
     "t-cmd-56d79bf7": {
       "kind": "command_pattern",
       "pattern": "agentsmesh lessons add"
+    },
+    "t-cmd-64a39b90": {
+      "kind": "command_pattern",
+      "pattern": "pnpm exec"
     },
     "t-cmd-69dc7d4e": {
       "kind": "command_pattern",

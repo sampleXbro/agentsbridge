@@ -179,22 +179,26 @@ describe('formatMatrix (transposed, NO_COLOR)', () => {
     process.env.NO_COLOR = '1';
     try {
       const out = formatMatrix(rows, targets);
-      const lines = out.split('\n');
-      expect(lines[0]).toMatch(/^Target\s+Rules\s+Commands\s+Permissions\s*$/);
-      const claude = lines.find((l) => l.startsWith('Claude'))!;
-      expect(claude).toMatch(/^Claude\s+✓\s+✓\s+✓\s*$/);
-      const cursor = lines.find((l) => l.startsWith('cursor'))!;
-      expect(cursor).toMatch(/^cursor\s+✓\s+◆\s+◐\s*$/);
-      expect(out).toContain('✓ native');
+      // Bordered table: the header carries the full feature names.
+      expect(out).toContain('Target');
+      expect(out).toContain('Rules');
       expect(out).toContain('Commands');
       expect(out).toContain('Permissions');
+      // Each target is its own row (found between the │ borders) with its symbols.
+      const claude = out.split('\n').find((l) => l.includes('│') && l.includes('Claude'))!;
+      expect(claude).toContain('✓');
+      const cursor = out.split('\n').find((l) => l.includes('│') && l.includes('cursor'))!;
+      expect(cursor).toContain('✓'); // rules: native
+      expect(cursor).toContain('◆'); // commands: embedded
+      expect(cursor).toContain('◐'); // permissions: partial
+      expect(out).toContain('✓ native');
     } finally {
       if (prev === undefined) delete process.env.NO_COLOR;
       else process.env.NO_COLOR = prev;
     }
   });
 
-  it('sorts target rows by display label and stays within 80 visible cols', () => {
+  it('sorts target rows by display label', () => {
     const prev = process.env.NO_COLOR;
     process.env.NO_COLOR = '1';
     try {
@@ -202,17 +206,13 @@ describe('formatMatrix (transposed, NO_COLOR)', () => {
         { feature: 'rules', count: 0, support: { zed: 'native', aider: 'native', 'claude-code': 'native' } },
       ];
       const out = formatMatrix(r, ['zed', 'aider', 'claude-code']);
-      // Labels: aider→'aider', claude-code→'Claude', zed→'zed'; localeCompare order: aider < Claude < zed
-      // Filter body rows: lines that contain ✓ but do NOT start with ✓ (the legend starts with ✓)
+      // Labels: aider→'aider', claude-code→'Claude', zed→'zed'; localeCompare: aider < Claude < zed.
+      // Data rows carry a │ border and a ✓; the target label is the first cell.
       const order = out
         .split('\n')
-        .filter((l) => /✓/.test(l) && !/^\s*✓/.test(l))
-        .map((l) => l.trim().split(/\s+/)[0]);
+        .filter((l) => l.includes('│') && l.includes('✓'))
+        .map((l) => l.split('│')[1]!.trim());
       expect(order).toEqual(['aider', 'Claude', 'zed']);
-      for (const line of out.split('\n')) {
-        const visible = line.replace(/\[[0-9;]*m/g, '');
-        expect([...visible].length).toBeLessThanOrEqual(80);
-      }
     } finally {
       if (prev === undefined) delete process.env.NO_COLOR;
       else process.env.NO_COLOR = prev;

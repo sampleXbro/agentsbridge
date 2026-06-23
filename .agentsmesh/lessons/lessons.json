@@ -4347,6 +4347,20 @@
         "t-glob-4c8d45b0"
       ]
     },
+    "pnpm-lockfile-the-committed-pnpm-lock-yaml": {
+      "createdAt": "2026-06-23",
+      "evidence": [],
+      "rationale": "CI frozen install failed because package.json's hono override was missing from the lockfile; local pnpm 11 reported the lockfile up-to-date and would not add it, so the fix required regenerating with pnpm 10.",
+      "rule": "The committed `pnpm-lock.yaml` `overrides:` block must match `package.json` `pnpm.overrides` exactly, or CI's `pnpm install --frozen-lockfile` fails with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH. CI runs pnpm 10 (pinned via `pnpm/action-setup` `version: 10`); local pnpm 11 will NOT repair the mismatch — `pnpm install --lockfile-only` reports \"Already up to date\" and leaves the overrides snapshot stale. Regenerate with the CI major and verify with it: `CI=true npx -y pnpm@10 install --lockfile-only` then `CI=true npx -y pnpm@10 install --frozen-lockfile` must exit 0 before committing.",
+      "status": "active",
+      "topics": [
+        "pnpm-lockfile"
+      ],
+      "triggers": [
+        "t-glob-9499d1a7",
+        "t-cmd-b25b679a"
+      ]
+    },
     "process-locks-when-wiring-any-process-lock": {
       "createdAt": "2026-06-10",
       "evidence": [],
@@ -6398,6 +6412,9 @@
     "mcp-generate-lock": {
       "summary": "MCP generate must mirror CLI generate (lockfile/stale-cleanup/process-lock)"
     },
+    "pnpm-lockfile": {
+      "summary": "pnpm lockfile overrides ↔ package.json consistency and pnpm-version parity with CI (CI uses pnpm 10)."
+    },
     "process-locks": {
       "summary": "Process-lock primitive (acquireProcessLock) and per-lock wrappers — per-lock labels, stale/young eviction, signal cleanup, contention messages."
     },
@@ -6621,6 +6638,10 @@
     "t-cmd-ae15e5eb": {
       "kind": "command_pattern",
       "pattern": "vitest run .*e2e"
+    },
+    "t-cmd-b25b679a": {
+      "kind": "command_pattern",
+      "pattern": "pnpm install"
     },
     "t-cmd-b5d550c1": {
       "kind": "command_pattern",
@@ -7129,6 +7150,10 @@
     "t-glob-8fe4e96b": {
       "kind": "file_glob",
       "pattern": "**/SKILL.md"
+    },
+    "t-glob-9499d1a7": {
+      "kind": "file_glob",
+      "pattern": "pnpm-lock.yaml"
     },
     "t-glob-9a12f490": {
       "kind": "file_glob",

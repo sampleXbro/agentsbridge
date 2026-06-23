@@ -18,7 +18,7 @@ describe('generate reporting', () => {
     const result = await runCli('generate', dir);
 
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('Feature');
+    expect(result.stdout).toContain('Target');
     expect(result.stdout).toMatch(/claude-code|cursor|copilot|windsurf/i);
     fileContains(join(dir, 'CLAUDE.md'), 'TypeScript strict');
   });

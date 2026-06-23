@@ -76,7 +76,7 @@ export function formatMatrix(rows: CompatibilityRow[], targets: string[]): strin
     c(COLORS.dim, '–') +
     ' none';
 
-  const keyParts = rows.map((r) => `${abbr(r.feature)} ${baseName(r.feature)}`);
+  const keyParts = rows.map((r) => `${abbr(r.feature)} ${r.feature}`);
   const keyLines: string[] = [];
   for (let i = 0; i < keyParts.length; i += 5) {
     keyLines.push(c(COLORS.dim, keyParts.slice(i, i + 5).join(' · ')));

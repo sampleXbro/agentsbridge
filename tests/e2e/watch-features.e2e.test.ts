@@ -134,7 +134,7 @@ describe('watch feature coverage', () => {
     await pollForWatch(() => {
       expect(regenCount(stdout)).toBe(6);
       expect(readFileSync(join(TEST_DIR, '.claude', 'settings.json'), 'utf-8')).toContain('"Grep"');
-      expect(stdout).toContain('Legend:');
+      expect(stdout).toContain('✓ native');
     });
 
     child.kill('SIGINT');

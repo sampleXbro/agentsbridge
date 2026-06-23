@@ -27,7 +27,9 @@ const FEATURE_ABBR: Record<string, string> = {
 };
 
 function baseName(feature: string): string {
-  return feature.replace(/\s*\(\d+\)\s*$/, '').trim();
+  // Strip any trailing count parenthetical so the abbr lookup hits — e.g.
+  // "commands (9)" and "mcp (3 servers)" both map to their feature key.
+  return feature.replace(/\s*\([^)]*\)\s*$/, '').trim();
 }
 
 function abbr(feature: string): string {

@@ -46,6 +46,18 @@ describe('applyInitPlan (project, no import)', () => {
     expect(data.lessons).toBeDefined();
     expect(existsSync(join(TEST_DIR, '.agentsmesh', 'lessons', 'lessons.json'))).toBe(true);
   });
+
+  it('skips a detected tool that has no importer (unknown id) but still counts it', async () => {
+    const context = resolveScopeContext(TEST_DIR, 'project');
+    const plan = projectPlan({ doImport: true, detected: ['nonexistent-tool'] });
+    const data = await applyInitPlan(TEST_DIR, context, plan);
+
+    // No importer exists for the unknown id, so the import loop hits `continue`
+    // and nothing is moved, but toolIds.length still counts the detected entry.
+    expect(data.imported).toEqual([]);
+    expect(data.importedToolCount).toBe(1);
+    expect(data.scaffoldType).toBe('gap-fill');
+  });
 });
 
 describe('applyInitPlan (global scope — lessons never available)', () => {

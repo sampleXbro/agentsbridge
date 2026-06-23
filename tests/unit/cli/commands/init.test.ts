@@ -7,6 +7,7 @@ import { mkdirSync, writeFileSync, rmSync, readFileSync, existsSync } from 'node
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { runInit, detectExistingConfigs } from '../../../../src/cli/commands/init.js';
+import { resolveScopeContext } from '../../../../src/config/core/scope.js';
 
 const TEST_DIR = join(tmpdir(), 'am-init-test');
 
@@ -489,5 +490,63 @@ describe('runInit — global mode', () => {
     expect(existsSync(join(homeDir, '.agentsmesh', 'rules', '_root.md'))).toBe(true);
     expect(existsSync(join(homeDir, '.agentsmesh', 'agentsmesh.local.yaml'))).toBe(true);
     expect(existsSync(join(homeDir, '.gitignore'))).toBe(false);
+  });
+
+  it('non-interactive global init (no prompter, no --yes) writes the global agentsmesh.yaml', async () => {
+    const homeDir = join(TEST_DIR, 'home');
+    mkdirSync(homeDir, { recursive: true });
+    vi.stubEnv('HOME', homeDir);
+    vi.stubEnv('USERPROFILE', homeDir);
+
+    const result = await runInit(join(TEST_DIR, 'workspace'), { global: true });
+
+    expect(result.exitCode).toBe(0);
+    expect(result.data.scope).toBe('global');
+    const globalConfigDir = resolveScopeContext(join(TEST_DIR, 'workspace'), 'global').configDir;
+    expect(globalConfigDir).toBe(join(homeDir, '.agentsmesh'));
+    expect(existsSync(join(globalConfigDir, 'agentsmesh.yaml'))).toBe(true);
+    expect(result.data.detectedConfigs).toEqual([]);
+  });
+
+  it('non-interactive global init filters detected configs to global-capable ids', async () => {
+    const homeDir = join(TEST_DIR, 'home');
+    mkdirSync(join(homeDir, '.claude'), { recursive: true });
+    writeFileSync(join(homeDir, '.claude', 'CLAUDE.md'), '# Global Rules\n');
+    vi.stubEnv('HOME', homeDir);
+    vi.stubEnv('USERPROFILE', homeDir);
+
+    // Sanity: detection in global scope sees the pre-created claude-code config.
+    const detected = await detectExistingConfigs(homeDir, 'global');
+    expect(detected).toContain('claude-code');
+
+    const result = await runInit(join(TEST_DIR, 'workspace'), { global: true });
+
+    expect(result.exitCode).toBe(0);
+    expect(result.data.scope).toBe('global');
+    // The line-76 filter keeps only global-capable ids; claude-code qualifies.
+    expect(result.data.detectedConfigs).toEqual(['claude-code']);
+    const globalConfigDir = resolveScopeContext(join(TEST_DIR, 'workspace'), 'global').configDir;
+    expect(existsSync(join(globalConfigDir, 'agentsmesh.yaml'))).toBe(true);
+  });
+});
+
+describe('runInit — lessons-only retrofit (already initialized)', () => {
+  it('retrofits lessons via runInit on an already-initialized project', async () => {
+    const projectRoot = join(TEST_DIR, 'retrofit');
+    mkdirSync(projectRoot, { recursive: true });
+    // Pre-existing init WITHOUT lessons.
+    writeFileSync(join(projectRoot, 'agentsmesh.yaml'), 'version: 1\ntargets:\n  - claude-code\n');
+
+    const result = await runInit(projectRoot, { lessons: true });
+
+    expect(result.exitCode).toBe(0);
+    expect(result.data.lessonsOnly).toBe(true);
+    expect(result.data.lessons).toBeDefined();
+    expect(result.data.scaffoldType).toBe('none');
+    expect(result.data.imported).toEqual([]);
+    expect(result.data.detectedConfigs).toEqual([]);
+    expect(result.data.gitignoreUpdated).toBe(false);
+    // Retrofit actually scaffolded the lessons graph in the project tree.
+    expect(existsSync(join(projectRoot, '.agentsmesh', 'lessons', 'lessons.json'))).toBe(true);
   });
 });

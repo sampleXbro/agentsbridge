@@ -182,6 +182,77 @@ describe('runInitWizard (project)', () => {
     expect(existsSync(join(TEST_DIR, 'agentsmesh.yaml'))).toBe(false);
     expect(existsSync(join(TEST_DIR, '.agentsmesh'))).toBe(false);
   });
+
+  it('runs generate when the user accepts: writes target artifacts and reports the count', async () => {
+    const context = resolveScopeContext(TEST_DIR, 'project');
+    let note = '';
+    const prompter: Prompter = {
+      ...fakePrompter({ targets: ['claude-code'], lessons: false, generate: true }),
+      note: (message) => {
+        note = message;
+      },
+    };
+    const result = await runInitWizard(prompter, {
+      projectRoot: TEST_DIR,
+      context,
+      detected: [],
+      defaultTargets: undefined,
+    });
+
+    expect(result.exitCode).toBe(0);
+    expect(result.data.cancelled).toBeUndefined();
+    // Generate step ran: summary reports the exact file count, not the "Next: run" hint.
+    // The starter scaffold has only underscore-prefixed examples (not emitted), so
+    // claude-code writes exactly two real artifacts: CLAUDE.md and .mcp.json.
+    expect(note).toContain('Generated: 2 file(s)');
+    expect(note).not.toContain("Next: run 'agentsmesh generate'");
+    expect(existsSync(join(TEST_DIR, 'CLAUDE.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.mcp.json'))).toBe(true);
+  });
+
+  it('cancels cleanly at a yes/no step — nothing written', async () => {
+    const context = resolveScopeContext(TEST_DIR, 'project');
+    // Targets chosen, then the user cancels (Ctrl-C) at the Lessons yes/no step.
+    const result = await runInitWizard(
+      fakePrompter({ targets: ['claude-code'], lessons: CANCEL }),
+      { projectRoot: TEST_DIR, context, detected: [], defaultTargets: undefined },
+    );
+    expect(result.data.cancelled).toBe(true);
+    expect(existsSync(join(TEST_DIR, 'agentsmesh.yaml'))).toBe(false);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh'))).toBe(false);
+  });
+
+  it('restores a prior No answer when a yes/no step is revisited via Back', async () => {
+    const context = resolveScopeContext(TEST_DIR, 'project');
+    // Steps (no detected configs): Targets, Lessons, Generate.
+    // Lessons=no, then Back from Generate to Lessons: the revisit must default to the
+    // prior "no" (the `prior ?? recommended` branch + the ternary 'no'), not recommended "yes".
+    const selectReturns = ['no', '__back__', 'no', 'no'];
+    let selCall = 0;
+    const initialValuesSeen: (string | undefined)[] = [];
+    const prompter: Prompter = {
+      intro: () => {},
+      outro: () => {},
+      note: () => {},
+      cancel: () => {},
+      isCancel: () => false,
+      multiselect: async () => ['claude-code'],
+      select: async ({ initialValue }) => {
+        initialValuesSeen.push(initialValue);
+        return selectReturns[selCall++]!;
+      },
+    };
+
+    await runInitWizard(prompter, {
+      projectRoot: TEST_DIR,
+      context,
+      detected: [],
+      defaultTargets: undefined,
+    });
+
+    expect(initialValuesSeen[0]).toBe('yes'); // Lessons first visit → recommended default
+    expect(initialValuesSeen[2]).toBe('no'); // Lessons revisit after Back → prior 'no' restored
+  });
 });
 
 describe('runInitWizard (global) — interactive, but no lessons', () => {
@@ -225,5 +296,60 @@ describe('runInitWizard (global) — interactive, but no lessons', () => {
     expect(config).toContain('- claude-code');
     expect(existsSync(join(workspace, '.agentsmesh', 'lessons', 'lessons.json'))).toBe(false);
     expect(existsSync(join(globalDir, 'lessons', 'lessons.json'))).toBe(false);
+  });
+
+  it('runs generate in global scope when accepted: passes { global: true } and reports the count', async () => {
+    const home = join(TEST_DIR, 'home');
+    const workspace = join(TEST_DIR, 'workspace');
+    mkdirSync(workspace, { recursive: true });
+    const globalDir = join(home, '.agentsmesh');
+    // runGenerate re-resolves global scope via os.homedir(); point it at our temp home
+    // so the in-process generate loads the config applyInitPlan just wrote under globalDir.
+    const savedHome = process.env.HOME;
+    const savedUserProfile = process.env.USERPROFILE;
+    process.env.HOME = home;
+    process.env.USERPROFILE = home;
+    try {
+      const context = {
+        scope: 'global' as const,
+        rootBase: home,
+        configDir: globalDir,
+        canonicalDir: globalDir,
+      };
+      let note = '';
+      const prompter: Prompter = {
+        intro: () => {},
+        outro: () => {},
+        note: (message) => {
+          note = message;
+        },
+        cancel: () => {},
+        isCancel: () => false,
+        select: async () => 'yes', // accept generate
+        multiselect: async () => ['claude-code'],
+      };
+
+      const result = await runInitWizard(prompter, {
+        projectRoot: workspace,
+        context,
+        detected: [],
+        defaultTargets: [...globalInitTargetIds()],
+      });
+
+      expect(result.data.scope).toBe('global');
+      // Config landed in the global dir, and the generate step ran with the exact count.
+      const config = readFileSync(join(globalDir, 'agentsmesh.yaml'), 'utf-8');
+      expect(config).toContain('- claude-code');
+      // claude-code global emits exactly two artifacts under home: .claude/CLAUDE.md and .claude.json.
+      expect(note).toContain('Generated: 2 file(s)');
+      expect(note).not.toContain("Next: run 'agentsmesh generate --global'");
+      expect(existsSync(join(home, '.claude', 'CLAUDE.md'))).toBe(true);
+      expect(existsSync(join(home, '.claude.json'))).toBe(true);
+    } finally {
+      if (savedHome === undefined) delete process.env.HOME;
+      else process.env.HOME = savedHome;
+      if (savedUserProfile === undefined) delete process.env.USERPROFILE;
+      else process.env.USERPROFILE = savedUserProfile;
+    }
   });
 });

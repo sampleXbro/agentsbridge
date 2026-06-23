@@ -508,7 +508,7 @@ describe('formatMatrix', () => {
     expect(out).toMatch(/[✓]/);
   });
 
-  it('includes legend and key', () => {
+  it('includes legend and full-name feature header', () => {
     const rows = [
       {
         feature: 'rules',
@@ -518,6 +518,6 @@ describe('formatMatrix', () => {
     ];
     const out = formatMatrix(rows, ['claude-code']);
     expect(out).toContain('native');
-    expect(out).toContain('Rul rules');
+    expect(out).toContain('Rules');
   });
 });

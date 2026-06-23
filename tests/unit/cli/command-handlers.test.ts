@@ -162,8 +162,11 @@ describe('cmdHandlers', () => {
   it('renders generate output in text mode and keeps matrix printing enabled', async () => {
     await cmdHandlers.generate({}, []);
 
-    expect(runGenerate).toHaveBeenCalledWith({}, undefined, { printMatrix: true });
+    expect(runGenerate).toHaveBeenCalledWith({}, undefined, { printMatrix: false });
     expect(renderGenerate).toHaveBeenCalledWith(generateResult);
+    // The matrix is rendered AFTER the spinner/frame closes (not during runGenerate).
+    expect(runMatrix).toHaveBeenCalled();
+    expect(renderMatrix).toHaveBeenCalled();
   });
 
   it('maps init flags to typed options', async () => {

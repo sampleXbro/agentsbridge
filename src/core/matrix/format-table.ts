@@ -14,35 +14,48 @@ const COLORS = {
   reset: '\x1b[0m',
 };
 
-const FEATURE_ABBR: Record<string, string> = {
-  rules: 'Rul',
-  'additional rules': '+Ru',
-  commands: 'Cmd',
-  agents: 'Agt',
-  skills: 'Skl',
+/** Full display label per feature, keyed by the base name (count suffix stripped). */
+const FEATURE_LABEL: Record<string, string> = {
+  rules: 'Rules',
+  'additional rules': 'Additional Rules',
+  commands: 'Commands',
+  agents: 'Agents',
+  skills: 'Skills',
   mcp: 'MCP',
-  hooks: 'Hok',
-  ignore: 'Ign',
-  permissions: 'Prm',
+  hooks: 'Hooks',
+  ignore: 'Ignore',
+  permissions: 'Permissions',
 };
 
+/** Drop a trailing count parenthetical — "commands (9)" / "mcp (3 servers)" → base. */
 function baseName(feature: string): string {
-  // Strip any trailing count parenthetical so the abbr lookup hits — e.g.
-  // "commands (9)" and "mcp (3 servers)" both map to their feature key.
   return feature.replace(/\s*\([^)]*\)\s*$/, '').trim();
 }
 
-function abbr(feature: string): string {
+function featureLabel(feature: string): string {
   const base = baseName(feature);
-  return (FEATURE_ABBR[base] ?? base.slice(0, 3).padEnd(3)).slice(0, 3);
+  return FEATURE_LABEL[base] ?? base.charAt(0).toUpperCase() + base.slice(1);
 }
 
-/** Transposed compatibility matrix: one row per target, one symbol column per feature. */
+/** Center `text` (assumed visible length === text.length) within `width`. */
+function center(text: string, width: number): string {
+  const pad = Math.max(0, width - text.length);
+  const left = Math.floor(pad / 2);
+  return ' '.repeat(left) + text + ' '.repeat(pad - left);
+}
+
+/**
+ * Transposed compatibility matrix: one row per target, one full-name column per
+ * feature. Targets are sorted by display label; the feature symbol is centered
+ * under its column header. Color is gated by `colorEnabled()`.
+ */
 export function formatMatrix(rows: CompatibilityRow[], targets: string[]): string {
   const useColor = colorEnabled();
   const c = (code: string, text: string): string => (useColor ? `${code}${text}${COLORS.reset}` : text);
-  const COL = 3;
   const GAP = '  ';
+
+  const labels = rows.map((r) => featureLabel(r.feature));
+  const colW = labels.map((l) => Math.max(3, l.length));
 
   const labeled = targets
     .map((t) => ({ t, label: matrixColumnLabel(t) }))
@@ -52,18 +65,22 @@ export function formatMatrix(rows: CompatibilityRow[], targets: string[]): strin
   const header =
     c(COLORS.bold + COLORS.cyan, 'Target'.padEnd(targetWidth)) +
     GAP +
-    rows.map((r) => c(COLORS.bold + COLORS.magenta, abbr(r.feature).padEnd(COL))).join(GAP);
+    labels.map((l, i) => c(COLORS.bold + COLORS.magenta, center(l, colW[i]!))).join(GAP);
 
   const rule =
     c(COLORS.dim, '─'.repeat(targetWidth)) +
     GAP +
-    rows.map(() => c(COLORS.dim, '─'.repeat(COL))).join(GAP);
+    colW.map((w) => c(COLORS.dim, '─'.repeat(w))).join(GAP);
 
   const body = labeled.map(({ t, label }) => {
-    const cells = rows.map((r) => {
+    const cells = rows.map((r, i) => {
       const level = (r.support[t] ?? 'none') as SupportLevel;
       const sym = useColor ? coloredSymbol(level) : LEVEL_SYMBOL[level];
-      return sym + ' '.repeat(COL - 1);
+      // The symbol is one visible char; center it in the column (color codes
+      // add no visible width, so center on the plain symbol then color is fine).
+      const pad = colW[i]! - 1;
+      const left = Math.floor(pad / 2);
+      return ' '.repeat(left) + sym + ' '.repeat(pad - left);
     });
     return c(COLORS.cyan, label.padEnd(targetWidth)) + GAP + cells.join(GAP);
   });
@@ -78,11 +95,5 @@ export function formatMatrix(rows: CompatibilityRow[], targets: string[]): strin
     c(COLORS.dim, '–') +
     ' none';
 
-  const keyParts = rows.map((r) => `${abbr(r.feature)} ${r.feature}`);
-  const keyLines: string[] = [];
-  for (let i = 0; i < keyParts.length; i += 5) {
-    keyLines.push(c(COLORS.dim, keyParts.slice(i, i + 5).join(' · ')));
-  }
-
-  return [header, rule, ...body, '', legend, ...keyLines].join('\n');
+  return [header, rule, ...body, '', legend].join('\n');
 }

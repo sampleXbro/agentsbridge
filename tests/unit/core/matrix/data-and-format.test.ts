@@ -126,7 +126,7 @@ describe('formatMatrix (transposed)', () => {
       ['claude-code', 'cursor'],
     );
     expect(out).toContain('Target');
-    expect(out).toContain('rules');
+    expect(out).toContain('Rules');
     expect(out).toContain(LEVEL_SYMBOL.native);
     expect(out).toContain(LEVEL_SYMBOL.embedded);
     expect(out).toContain('native');
@@ -156,7 +156,7 @@ describe('formatMatrix (transposed)', () => {
   it('handles single target', () => {
     process.env.NO_COLOR = '1';
     const out = formatMatrix([MAKE_ROW('rules', { x: 'native' })], ['x']);
-    expect(out).toContain('Rul');
+    expect(out).toContain('Rules');
   });
 
   it('handles empty rows', () => {
@@ -180,14 +180,14 @@ describe('formatMatrix (transposed, NO_COLOR)', () => {
     try {
       const out = formatMatrix(rows, targets);
       const lines = out.split('\n');
-      expect(lines[0]).toMatch(/^Target\s+Rul\s+Cmd\s+Prm\s*$/);
+      expect(lines[0]).toMatch(/^Target\s+Rules\s+Commands\s+Permissions\s*$/);
       const claude = lines.find((l) => l.startsWith('Claude'))!;
       expect(claude).toMatch(/^Claude\s+✓\s+✓\s+✓\s*$/);
       const cursor = lines.find((l) => l.startsWith('cursor'))!;
       expect(cursor).toMatch(/^cursor\s+✓\s+◆\s+◐\s*$/);
       expect(out).toContain('✓ native');
-      expect(out).toContain('Rul rules');
-      expect(out).toContain('Prm permissions');
+      expect(out).toContain('Commands');
+      expect(out).toContain('Permissions');
     } finally {
       if (prev === undefined) delete process.env.NO_COLOR;
       else process.env.NO_COLOR = prev;

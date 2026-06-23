@@ -59,10 +59,16 @@ export const cmdHandlers: Record<string, CommandHandler> = {
     ui.intro('agentsmesh generate');
     const sp = ui.spinner();
     sp.start('Generating tool config…');
-    const result = await runGenerate(nf, undefined, { printMatrix: nf.json !== true });
+    // Suppress the in-run matrix print — it would write over the active
+    // spinner's line. Render it cleanly after the frame closes (below).
+    const result = await runGenerate(nf, undefined, { printMatrix: false });
     sp.stop('Generate complete');
     handleResult('generate', result, nf, () => renderGenerate(result));
     ui.outro('Done');
+    if (nf.json !== true) {
+      const matrixResult = await runMatrix(nf, process.cwd());
+      renderMatrix(matrixResult, { verbose: nf.verbose === true });
+    }
   },
   init: async (flags, _args) => {
     void _args;

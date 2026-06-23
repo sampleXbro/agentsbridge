@@ -39,7 +39,7 @@ describe('agentsmesh matrix (integration)', () => {
   it('prints compatibility table with rules row', () => {
     const out = execSync(`node ${CLI_PATH} matrix`, { cwd: TEST_DIR, encoding: 'utf-8' });
     expect(out).toContain('Target');
-    expect(out).toContain('rules');
+    expect(out).toContain('Rules');
     expect(out).toContain('native');
     expect(out).toMatch(/[✓✓]/);
   });
@@ -57,8 +57,8 @@ Use strict TypeScript.
 
     const out = execSync(`node ${CLI_PATH} matrix`, { cwd: TEST_DIR, encoding: 'utf-8' });
 
-    expect(out).toContain('additional rules (1)');
-    // Transposed: the embedded (◆) symbol appears in a target row's +Ru column.
+    expect(out).toContain('Additional Rules');
+    // Transposed: the embedded (◆) symbol appears in a target row's Additional Rules column.
     expect(out).toContain('◆');
   });
 
@@ -68,7 +68,7 @@ Use strict TypeScript.
       encoding: 'utf-8',
     });
     expect(out).toContain('Claude');
-    expect(out).toContain('rules');
+    expect(out).toContain('Rules');
   });
 
   it('--verbose adds per-file details', () => {

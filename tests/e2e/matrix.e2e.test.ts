@@ -95,6 +95,6 @@ features:
     // Matrix output uses display names ("Claude") and a Target column.
     expect(r.stdout).toMatch(/Claude/);
     expect(r.stdout).toMatch(/Target/);
-    expect(r.stdout).toMatch(/rules/);
+    expect(r.stdout).toMatch(/Rules/);
   });
 });

@@ -1,13 +1,13 @@
-# yaml-language-server: $schema=https://unpkg.com/agentsmesh@0.20.0/schemas/pack.json
+# yaml-language-server: $schema=https://unpkg.com/agentsmesh@0.25.0/schemas/pack.json
 name: mattpocock-skills-skills
-source: github:mattpocock/skills@e3b90b5238f38cdea5996e16861dcae28ef52eda
-version: e3b90b5238f38cdea5996e16861dcae28ef52eda
+source: github:mattpocock/skills@6eeb81b5fcfeeb5bd531dd47ab2f9f2bbea27461
+version: 6eeb81b5fcfeeb5bd531dd47ab2f9f2bbea27461
 source_kind: github
-installed_at: 2026-05-29T13:33:59.144Z
-updated_at: 2026-05-29T13:33:59.144Z
+installed_at: 2026-06-23T16:09:21.133Z
+updated_at: 2026-06-23T16:09:21.133Z
 features:
   - skills
 path: skills/productivity
 as: skills
-content_hash: sha256:e55bf71f63e4550b28e942ba04f88d853cb93d7d91f7788a590f46102a61472f
+content_hash: sha256:b2848e2f170d699f7b3de5c9d686af4f3cf9903c5b74724916bb7ae476df3e7d
 license: null

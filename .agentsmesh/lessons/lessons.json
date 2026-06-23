@@ -4939,6 +4939,50 @@
         "t-glob-25cdb7ed"
       ]
     },
+    "target-capabilities-deepagents-cli-target-wraps-langchain": {
+      "createdAt": "2026-06-23",
+      "evidence": [
+        "https://github.com/langchain-ai/deepagents/blob/main/libs/code/deepagents_code/subagents.py"
+      ],
+      "rule": "deepagents-cli target wraps LangChain \"Deep Agents Code\" (libs/code/deepagents_code), which loads custom subagents from the filesystem as Markdown+YAML-frontmatter at .deepagents/agents/{name}/AGENTS.md (project) and ~/.deepagents/{agent}/agents/{name}/AGENTS.md (user); declare agents as native, not none.",
+      "status": "active",
+      "topics": [
+        "target-capabilities"
+      ],
+      "triggers": [
+        "t-glob-87083445",
+        "t-kw-89bf9a2d"
+      ]
+    },
+    "target-capabilities-when-auditing-the-antigravity-target": {
+      "createdAt": "2026-06-23",
+      "evidence": [],
+      "rule": "When auditing the antigravity target's permissions capability, treat the official allowlist-denylist/permissions docs (Allow/Ask/Deny, app-managed project permissions) as the source of truth; only third-party blogs claim a committable .antigravity/settings.json with antigravity.commands.alwaysAllow/alwaysDeny keys, so cap any permissions upgrade at embedded with explicit low/medium confidence rather than native.",
+      "status": "active",
+      "topics": [
+        "target-capabilities"
+      ],
+      "triggers": [
+        "t-glob-0fcbb69f",
+        "t-kw-ddc1bdcc"
+      ]
+    },
+    "target-capabilities-when-declaring-the-copilot-hooks": {
+      "createdAt": "2026-06-23",
+      "evidence": [
+        "https://docs.github.com/en/copilot/reference/hooks-reference",
+        "https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-hooks"
+      ],
+      "rule": "When declaring the copilot hooks capability, use 'native' (not 'partial') for project scope: Copilot CLI auto-loads .github/hooks/*.json at startup and agentsmesh fully owns/round-trips .github/hooks/agentsmesh.json. Global hooks are also native via ~/.copilot/hooks/*.json (same JSON format).",
+      "status": "active",
+      "topics": [
+        "target-capabilities"
+      ],
+      "triggers": [
+        "t-glob-ab07d638",
+        "t-kw-8087e0cf"
+      ]
+    },
     "target-capability-audits-capability-audits-for-agentsmesh-are": {
       "createdAt": "2026-06-14",
       "evidence": [
@@ -4951,6 +4995,35 @@
       ],
       "triggers": [
         "t-glob-9f0a5990"
+      ]
+    },
+    "target-capability-audits-for-qwen-code-global-additionalrules": {
+      "createdAt": "2026-06-23",
+      "evidence": [
+        "https://github.com/QwenLM/qwen-code/pull/3339"
+      ],
+      "rule": "For qwen-code, global additionalRules is native, not embedded: Qwen Code auto-loads ~/.qwen/rules/**/*.md (md + optional YAML frontmatter with description/paths) globally per PR #3339 (merged 2026-04-17), mirroring project .qwen/rules/. Wire a global rules dir constant + global layout rewrite + importer-spec global source instead of embedding into ~/.qwen/QWEN.md.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-009c44d8",
+        "t-kw-db955d8e"
+      ]
+    },
+    "target-capability-audits-goose-supports-file-based-tool": {
+      "createdAt": "2026-06-23",
+      "evidence": [
+        "https://github.com/block/goose/blob/main/crates/goose/src/config/permission.rs"
+      ],
+      "rule": "Goose supports file-based tool permissions natively in GLOBAL scope only via ~/.config/goose/permission.yaml — a YAML map keyed by category (user, smart_approve) where each category has always_allow/ask_before/never_allow string lists (verified in crates/goose/src/config/permission.rs). agentsmesh owns the `user` block (allow→always_allow, deny→never_allow, ask→ask_before) and MUST merge-preserve the runtime `smart_approve` cache. There is NO project-level permission.yaml, so project permissions stays 'none'. MCP and permissions are both global-only for Goose.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-aa152d85"
       ]
     },
     "target-capability-audits-when-extracting-capabilities-to-a": {
@@ -6514,6 +6587,9 @@
     "subagent-delegation": {
       "summary": "Constraints and reliable patterns for delegating work to subagents."
     },
+    "target-capabilities": {
+      "summary": "Per-target feature capability declarations vs real tool support levels (native/embedded/partial/none)."
+    },
     "target-capability-audits": {
       "summary": "Policy for auditing and expanding target feature support."
     },
@@ -6831,6 +6907,10 @@
       "kind": "command_pattern",
       "pattern": "uninstall --global"
     },
+    "t-glob-009c44d8": {
+      "kind": "file_glob",
+      "pattern": "src/targets/qwen-code/**"
+    },
     "t-glob-0465888e": {
       "kind": "file_glob",
       "pattern": ".agentsmesh/lessons/lessons.json"
@@ -6874,6 +6954,10 @@
     "t-glob-0f48b5c8": {
       "kind": "file_glob",
       "pattern": "src/core/reference/rewriter.ts"
+    },
+    "t-glob-0fcbb69f": {
+      "kind": "file_glob",
+      "pattern": "src/targets/antigravity/**"
     },
     "t-glob-106a67a9": {
       "kind": "file_glob",
@@ -7203,6 +7287,10 @@
       "kind": "file_glob",
       "pattern": "tests/unit/lessons/paths.test.ts"
     },
+    "t-glob-87083445": {
+      "kind": "file_glob",
+      "pattern": "src/targets/deepagents-cli/**"
+    },
     "t-glob-87a63917": {
       "kind": "file_glob",
       "pattern": "src/core/generate/**/*.ts"
@@ -7279,9 +7367,17 @@
       "kind": "file_glob",
       "pattern": "tests/e2e/helpers/run-cli.ts"
     },
+    "t-glob-aa152d85": {
+      "kind": "file_glob",
+      "pattern": "src/targets/goose/**"
+    },
     "t-glob-aacd9271": {
       "kind": "file_glob",
       "pattern": "tests/**/watch*.test.ts"
+    },
+    "t-glob-ab07d638": {
+      "kind": "file_glob",
+      "pattern": "src/targets/copilot/capabilities.ts"
     },
     "t-glob-b13cc3e2": {
       "kind": "file_glob",
@@ -7611,6 +7707,10 @@
       "kind": "keyword",
       "pattern": "scalar array coercion alias"
     },
+    "t-kw-8087e0cf": {
+      "kind": "keyword",
+      "pattern": "copilot hooks capability"
+    },
     "t-kw-8098ffea": {
       "kind": "keyword",
       "pattern": "codecov"
@@ -7618,6 +7718,10 @@
     "t-kw-866bb6ea": {
       "kind": "keyword",
       "pattern": "fan out"
+    },
+    "t-kw-89bf9a2d": {
+      "kind": "keyword",
+      "pattern": "deepagents agents capability"
     },
     "t-kw-8be8afaf": {
       "kind": "keyword",
@@ -7694,6 +7798,14 @@
     "t-kw-db579650": {
       "kind": "keyword",
       "pattern": "matcher work budget"
+    },
+    "t-kw-db955d8e": {
+      "kind": "keyword",
+      "pattern": "qwen-code global additionalRules rules directory"
+    },
+    "t-kw-ddc1bdcc": {
+      "kind": "keyword",
+      "pattern": "antigravity permissions capability"
     },
     "t-kw-e0aa2fb2": {
       "kind": "keyword",

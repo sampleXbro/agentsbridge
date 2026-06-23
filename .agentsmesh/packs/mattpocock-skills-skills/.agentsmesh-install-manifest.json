@@ -1,15 +1,21 @@
 {
-  "$schema": "https://unpkg.com/agentsmesh@0.20.0/schemas/install-manifest.json",
+  "$schema": "https://unpkg.com/agentsmesh@0.25.0/schemas/install-manifest.json",
   "name": "mattpocock-skills-skills",
-  "source": "github:mattpocock/skills@e3b90b5238f38cdea5996e16861dcae28ef52eda",
-  "installed_at": "2026-05-29T13:33:59.144Z",
+  "source": "github:mattpocock/skills@6eeb81b5fcfeeb5bd531dd47ab2f9f2bbea27461",
+  "installed_at": "2026-06-23T16:09:21.133Z",
   "extends_id": null,
   "source_type": null,
   "files": {
-    "README.md": "sha256:abc31971ebc8aae5635887d1e7e260650277450b3090a9471f445e5e12d64cb1",
-    "skills/caveman/SKILL.md": "sha256:b4bb6fe3bf3da222993ca0aee5e7c6f5368b182dd30ce1172e8f8e3280eb7052",
-    "skills/grill-me/SKILL.md": "sha256:74147eb6010a65957efef2b9e0f0b3ff935c1def7fc117697151b1d0f3610556",
-    "skills/handoff/SKILL.md": "sha256:d215dd8f2a19bf85fdaf67a3cdb5077641f6b4108f229ba79579414793d7b0a3",
-    "skills/write-a-skill/SKILL.md": "sha256:be8f20e66309258034b82a7db5040b03798aa40546f9d387662c2bd86be23123"
+    "README.md": "sha256:3d6edecd358540166636a7c3a17c944665e6779d9e081392996d470a098f9fa6",
+    "skills/grill-me/SKILL.md": "sha256:6189dfceb7304a6e5558f75d87e68fa3bc7fcf7ba120e44f21f8a61fe01eba54",
+    "skills/grilling/SKILL.md": "sha256:fe00af3e1815f97c0a7644605479328a726b5cd95ba6ef56a4be2a92fae6c20f",
+    "skills/handoff/SKILL.md": "sha256:94bee8c16cbfcf9f1e15187f7e5d0d5a93c4adb7c512feceecaab80c8ff7c059",
+    "skills/teach/GLOSSARY-FORMAT.md": "sha256:d177def491519d97873291f2e860d8f1d60ead78feecb82eee022177958069c6",
+    "skills/teach/LEARNING-RECORD-FORMAT.md": "sha256:855f81017625256584bbf62bd5edb9b0c86605c4cc1139c56acc36b802595d17",
+    "skills/teach/MISSION-FORMAT.md": "sha256:8da6d3ac84eb2eb19f17c260b6acf01c560d3ac7a4501c415eea0e985602f4d7",
+    "skills/teach/RESOURCES-FORMAT.md": "sha256:2bc634a64b0d0daa10904f9222e7aa0d361420dfacabbf092fbe3a72222edc08",
+    "skills/teach/SKILL.md": "sha256:6d2dbe5e03084cf26fef66b535127b36cd1bcbe9478e26b0626029cd51dc2259",
+    "skills/writing-great-skills/GLOSSARY.md": "sha256:df0d042f2b69b8a952bd4b0e6904e2eb316f0203c1a5f09169da7f75a5575a61",
+    "skills/writing-great-skills/SKILL.md": "sha256:7c6ba7ec25bb2c0e173c52cdc2da878aef0b083ec19a9c1799934e480c8833cc"
   }
 }

@@ -3,6 +3,7 @@
  *
  * Reads:
  *   - `AGENTS.md`      -- root rule
+ *   - `.pi/prompts/`   -- native prompt templates -> canonical commands
  *   - `.pi/skills/`    -- skill bundles
  */
 

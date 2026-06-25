@@ -3,15 +3,15 @@
  *
  * Generation emits:
  *   - `AGENTS.md`        -- root rule + embedded additional rules
+ *   - `.pi/prompts/`     -- native prompt templates (slash commands)
  *   - `.pi/skills/`      -- skill bundles
  *
- * Import reads `AGENTS.md` and `.pi/skills/`.
+ * Import reads `AGENTS.md`, `.pi/prompts/`, and `.pi/skills/`.
  * Pi also reads `CLAUDE.md` as a fallback but we generate to `AGENTS.md`.
  */
 
 import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
 import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
-import { commandSkillDirName } from '../codex-cli/command-skill.js';
 import { projectedAgentSkillDirName } from '../projection/projected-agent-skill.js';
 import { generateRules, generateCommands, generateAgents, generateSkills } from './generator.js';
 import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
@@ -23,9 +23,12 @@ import {
   PI_AGENT_TARGET,
   PI_AGENT_ROOT_FILE,
   PI_AGENT_SKILLS_DIR,
+  PI_AGENT_COMMANDS_DIR,
   PI_AGENT_GLOBAL_ROOT_FILE,
   PI_AGENT_GLOBAL_SKILLS_DIR,
+  PI_AGENT_GLOBAL_COMMANDS_DIR,
   PI_AGENT_CANONICAL_RULES_DIR,
+  PI_AGENT_CANONICAL_COMMANDS_DIR,
 } from './constants.js';
 
 export const target: TargetGenerators = {
@@ -42,7 +45,7 @@ const project: TargetLayout = {
   rootInstructionPath: PI_AGENT_ROOT_FILE,
   skillDir: PI_AGENT_SKILLS_DIR,
   managedOutputs: {
-    dirs: [PI_AGENT_SKILLS_DIR],
+    dirs: [PI_AGENT_SKILLS_DIR, PI_AGENT_COMMANDS_DIR],
     files: [PI_AGENT_ROOT_FILE],
   },
   paths: {
@@ -50,7 +53,7 @@ const project: TargetLayout = {
       return PI_AGENT_ROOT_FILE;
     },
     commandPath(name) {
-      return `${PI_AGENT_SKILLS_DIR}/${commandSkillDirName(name)}/SKILL.md`;
+      return `${PI_AGENT_COMMANDS_DIR}/${name}.md`;
     },
     agentPath(name) {
       return `${PI_AGENT_SKILLS_DIR}/${projectedAgentSkillDirName(name)}/SKILL.md`;
@@ -62,11 +65,14 @@ const globalLayout: TargetLayout = {
   rootInstructionPath: PI_AGENT_GLOBAL_ROOT_FILE,
   skillDir: PI_AGENT_GLOBAL_SKILLS_DIR,
   managedOutputs: {
-    dirs: [PI_AGENT_GLOBAL_SKILLS_DIR],
+    dirs: [PI_AGENT_GLOBAL_SKILLS_DIR, PI_AGENT_GLOBAL_COMMANDS_DIR],
     files: [PI_AGENT_GLOBAL_ROOT_FILE],
   },
   rewriteGeneratedPath(path) {
     if (path === PI_AGENT_ROOT_FILE) return PI_AGENT_GLOBAL_ROOT_FILE;
+    if (path.startsWith(`${PI_AGENT_COMMANDS_DIR}/`)) {
+      return path.replace(`${PI_AGENT_COMMANDS_DIR}/`, `${PI_AGENT_GLOBAL_COMMANDS_DIR}/`);
+    }
     if (path.startsWith(`${PI_AGENT_SKILLS_DIR}/`)) {
       return path.replace(`${PI_AGENT_SKILLS_DIR}/`, `${PI_AGENT_GLOBAL_SKILLS_DIR}/`);
     }
@@ -80,7 +86,7 @@ const globalLayout: TargetLayout = {
       return PI_AGENT_GLOBAL_ROOT_FILE;
     },
     commandPath(name) {
-      return `${PI_AGENT_GLOBAL_SKILLS_DIR}/${commandSkillDirName(name)}/SKILL.md`;
+      return `${PI_AGENT_GLOBAL_COMMANDS_DIR}/${name}.md`;
     },
     agentPath(name) {
       return `${PI_AGENT_GLOBAL_SKILLS_DIR}/${projectedAgentSkillDirName(name)}/SKILL.md`;
@@ -91,7 +97,7 @@ const globalLayout: TargetLayout = {
 const capabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'embedded',
-  commands: 'none',
+  commands: 'native',
   agents: 'none',
   skills: 'native',
   mcp: 'none',
@@ -105,7 +111,7 @@ export const descriptor = {
   metadata: {
     displayName: 'Pi Agent',
     category: 'cli',
-    officialUrl: 'https://github.com/pi-labs/pi-agent',
+    officialUrl: 'https://github.com/earendil-works/pi',
     shortDescription: 'Pi coding agent',
   },
   generators: target,
@@ -118,7 +124,7 @@ export const descriptor = {
     ignore: lintIgnore,
     mcp: lintMcp,
   },
-  supportsConversion: { commands: true, agents: true },
+  supportsConversion: { agents: true },
   project,
   globalSupport: {
     capabilities,
@@ -136,6 +142,17 @@ export const descriptor = {
       canonicalDir: PI_AGENT_CANONICAL_RULES_DIR,
       canonicalRootFilename: '_root.md',
       markAsRoot: true,
+    },
+    commands: {
+      feature: 'commands',
+      mode: 'directory',
+      source: {
+        project: [PI_AGENT_COMMANDS_DIR],
+        global: [PI_AGENT_GLOBAL_COMMANDS_DIR],
+      },
+      canonicalDir: PI_AGENT_CANONICAL_COMMANDS_DIR,
+      extensions: ['.md'],
+      preset: 'command',
     },
   },
   sharedArtifacts: {

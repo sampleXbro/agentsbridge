@@ -55,7 +55,6 @@ const TARGETS_WITH_PROJECTED_COMMANDS = new Set<TargetName>([
   'goose',
   'jules',
   'kiro',
-  'pi-agent',
   'replit-agent',
   'rovodev',
   'trae',

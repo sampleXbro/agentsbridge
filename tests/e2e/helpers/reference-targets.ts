@@ -229,7 +229,9 @@ export function outputPaths(target: TargetName): OutputPathGroups {
                                     ? '.qwen/commands/review.md'
                                     : target === 'factory-droid'
                                       ? '.factory/commands/review.md'
-                                      : `${skillDir(target)}/${commandSkillDirName('review')}/SKILL.md`,
+                                      : target === 'pi-agent'
+                                        ? '.pi/prompts/review.md'
+                                        : `${skillDir(target)}/${commandSkillDirName('review')}/SKILL.md`,
     ],
     agent: [
       target === 'claude-code'
@@ -376,7 +378,9 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
                                     ? '.qwen/commands/review.md'
                                     : target === 'factory-droid'
                                       ? '.factory/commands/review.md'
-                                      : '.windsurf/workflows/review.md',
+                                      : target === 'pi-agent'
+                                        ? '.pi/prompts/review.md'
+                                        : '.windsurf/workflows/review.md',
     agent:
       target === 'claude-code'
         ? '.claude/agents/code-reviewer.md'

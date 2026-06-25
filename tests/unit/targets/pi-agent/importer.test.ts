@@ -26,6 +26,26 @@ describe('importFromPiAgent', () => {
     projectRoot = '';
   });
 
+  it('imports native prompt templates from .pi/prompts/', async () => {
+    projectRoot = setupFixture({
+      '.pi/prompts/review.md':
+        '---\ndescription: Review staged changes\n---\n\nReview the staged changes ($ARGUMENTS).',
+    });
+
+    const results = await importFromPiAgent(projectRoot);
+
+    const commandResult = results.find((r) => r.feature === 'commands');
+    expect(commandResult).toBeDefined();
+    expect(commandResult!.toPath).toBe('.agentsmesh/commands/review.md');
+
+    const { readFileSync } = await import('node:fs');
+    const written = readFileSync(join(projectRoot, '.agentsmesh/commands/review.md'), 'utf-8');
+    expect(written).toContain('description: Review staged changes');
+    expect(written).toContain('Review the staged changes ($ARGUMENTS).');
+
+    rmSync(projectRoot, { recursive: true, force: true });
+  });
+
   it('imports AGENTS.md as root rule', async () => {
     projectRoot = setupFixture({
       'AGENTS.md': '# Project Instructions\n\nUse TDD.',

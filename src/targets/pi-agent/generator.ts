@@ -3,21 +3,28 @@
  *
  * Emits:
  *   - `AGENTS.md`        -- root rule + embedded non-root rules
+ *   - `.pi/prompts/`     -- native prompt templates (slash commands)
  *   - `.pi/skills/`      -- skill bundles
  *
- * Pi uses `AGENTS.md` at project root for instructions and `.pi/skills/`
- * for skill bundles following the Agent Skills standard (SKILL.md).
+ * Pi uses `AGENTS.md` at project root for instructions, `.pi/prompts/` for
+ * prompt templates, and `.pi/skills/` for skill bundles following the Agent
+ * Skills standard (SKILL.md).
  */
 
 import type { CanonicalFiles } from '../../core/types.js';
 import { generateEmbeddedSkills } from '../import/embedded-skill.js';
 import { appendEmbeddedRulesBlock } from '../projection/managed-blocks.js';
+import { serializeFrontmatter } from '../../utils/text/markdown.js';
 import {
   projectedAgentSkillDirName,
   serializeProjectedAgentSkill,
 } from '../projection/projected-agent-skill.js';
-import { commandSkillDirName, serializeCommandSkill } from '../codex-cli/command-skill.js';
-import { PI_AGENT_TARGET, PI_AGENT_ROOT_FILE, PI_AGENT_SKILLS_DIR } from './constants.js';
+import {
+  PI_AGENT_TARGET,
+  PI_AGENT_ROOT_FILE,
+  PI_AGENT_SKILLS_DIR,
+  PI_AGENT_COMMANDS_DIR,
+} from './constants.js';
 
 export interface PiAgentOutput {
   path: string;
@@ -43,10 +50,16 @@ export function generateSkills(canonical: CanonicalFiles): PiAgentOutput[] {
 }
 
 export function generateCommands(canonical: CanonicalFiles): PiAgentOutput[] {
-  return canonical.commands.map((command) => ({
-    path: `${PI_AGENT_SKILLS_DIR}/${commandSkillDirName(command.name)}/SKILL.md`,
-    content: serializeCommandSkill(command),
-  }));
+  return canonical.commands.map((command) => {
+    // Pi prompt templates support only `description` (+ `argument-hint`) in
+    // frontmatter; canonical allowedTools have no equivalent and are dropped.
+    const frontmatter: Record<string, unknown> = {};
+    if (command.description) frontmatter.description = command.description;
+    return {
+      path: `${PI_AGENT_COMMANDS_DIR}/${command.name}.md`,
+      content: serializeFrontmatter(frontmatter, command.body.trim() || ''),
+    };
+  });
 }
 
 export function generateAgents(canonical: CanonicalFiles): PiAgentOutput[] {

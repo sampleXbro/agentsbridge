@@ -5344,6 +5344,21 @@
         "t-kw-797b277a"
       ]
     },
+    "target-capability-audits-when-a-target-gains-a": {
+      "createdAt": "2026-06-25",
+      "evidence": [
+        "commit:ed90714"
+      ],
+      "rule": "When a target gains a NEW generated managed-output file (added to layout.managedOutputs.files), update TWO exact-file-set assertions, not just one: the target's contract (tests/contract/contracts/<id>.ts generated[]) AND its per-target dirTreeExactly assertion in tests/e2e/generate-capabilities.e2e.test.ts. The contract round-trip test passing in-process does not cover the e2e dirTreeExactly, which spawns the built CLI and lists every file — so a new file (e.g. .aider.conf.yml) fails there with an exact-tree mismatch until you add it (in sorted order) to both lists.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-35a0a200",
+        "t-kw-535bc930"
+      ]
+    },
     "target-capability-audits-when-changing-a-target-s": {
       "createdAt": "2026-06-25",
       "evidence": [
@@ -7465,6 +7480,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/mutate.ts"
     },
+    "t-glob-35a0a200": {
+      "kind": "file_glob",
+      "pattern": "tests/e2e/generate-capabilities.e2e.test.ts"
+    },
     "t-glob-36d72b33": {
       "kind": "file_glob",
       "pattern": "tests/consumer-smoke/src/smoke.ts"
@@ -8184,6 +8203,10 @@
     "t-kw-53259aa5": {
       "kind": "keyword",
       "pattern": "catastrophic backtracking"
+    },
+    "t-kw-535bc930": {
+      "kind": "keyword",
+      "pattern": "new generated file dirTreeExactly generate-capabilities contract exact tree"
     },
     "t-kw-544706af": {
       "kind": "keyword",

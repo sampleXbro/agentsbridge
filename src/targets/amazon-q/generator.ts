@@ -44,7 +44,7 @@ export function generateAgents(canonical: CanonicalFiles): FeatureGeneratorOutpu
       {
         name: agent.name,
         ...(agent.description ? { description: agent.description } : {}),
-        systemPrompt: agent.body.trim(),
+        prompt: agent.body.trim(),
         ...(agent.tools.length > 0 ? { allowedTools: agent.tools } : {}),
       },
       null,

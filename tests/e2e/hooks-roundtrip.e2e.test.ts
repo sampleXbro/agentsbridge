@@ -32,7 +32,7 @@ describe('hooks round-trip e2e', () => {
         '  - matcher: Bash',
         '    command: env FOO="$BAR" sh -lc \'printf "%s" "$FOO"\'',
         '    timeout: 1500',
-        'Notification:',
+        'UserPromptSubmit:',
         '  - matcher: ".*"',
         '    type: prompt',
         '    command: \'echo "notify:$MESSAGE"\'',
@@ -40,28 +40,20 @@ describe('hooks round-trip e2e', () => {
       ].join('\n'),
     );
 
+    // Cursor uses camelCase event names and a flat hook array; UserPromptSubmit -> beforeSubmitPrompt.
     expect((await runCli('generate --targets cursor', dir)).exitCode).toBe(0);
     expect(readJson(join(dir, '.cursor', 'hooks.json'))).toEqual({
       version: 1,
       hooks: {
-        PreToolUse: [
+        preToolUse: [
           {
+            type: 'command',
+            command: 'env FOO="$BAR" sh -lc \'printf "%s" "$FOO"\'',
             matcher: 'Bash',
-            hooks: [
-              {
-                type: 'command',
-                command: 'env FOO="$BAR" sh -lc \'printf "%s" "$FOO"\'',
-                timeout: 1500,
-              },
-            ],
+            timeout: 1500,
           },
         ],
-        Notification: [
-          {
-            matcher: '.*',
-            hooks: [{ type: 'prompt', prompt: 'echo "notify:$MESSAGE"' }],
-          },
-        ],
+        beforeSubmitPrompt: [{ type: 'prompt', prompt: 'echo "notify:$MESSAGE"', matcher: '.*' }],
       },
     });
 
@@ -76,7 +68,7 @@ describe('hooks round-trip e2e', () => {
           timeout: 1500,
         },
       ],
-      Notification: [{ matcher: '.*', type: 'prompt', command: 'echo "notify:$MESSAGE"' }],
+      UserPromptSubmit: [{ matcher: '.*', type: 'prompt', command: 'echo "notify:$MESSAGE"' }],
     });
   });
 

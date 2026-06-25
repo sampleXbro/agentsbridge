@@ -251,14 +251,15 @@ describe('cursor global frontmatter preservation', () => {
     expect(parsed).toHaveProperty('version', 1);
     expect(parsed).toHaveProperty('hooks');
     const hooksObj = parsed.hooks as Record<string, unknown>;
-    expect(hooksObj).toHaveProperty('PreToolUse');
-    const entries = hooksObj.PreToolUse as Array<Record<string, unknown>>;
+    // Cursor uses camelCase event names and a flat hook array.
+    expect(hooksObj).toHaveProperty('preToolUse');
+    expect(hooksObj).not.toHaveProperty('PreToolUse');
+    const entries = hooksObj.preToolUse as Array<Record<string, unknown>>;
     expect(entries).toHaveLength(1);
     expect(entries[0]!.matcher).toBe('Bash');
-    const hooks = entries[0]!.hooks as Array<Record<string, unknown>>;
-    expect(hooks).toHaveLength(1);
-    expect(hooks[0]!.type).toBe('command');
-    expect(hooks[0]!.command).toBe('./scripts/validate.sh');
-    expect(hooks[0]!.timeout).toBe(30);
+    expect(entries[0]!.type).toBe('command');
+    expect(entries[0]!.command).toBe('./scripts/validate.sh');
+    expect(entries[0]!.timeout).toBe(30);
+    expect(entries[0]).not.toHaveProperty('hooks');
   });
 });

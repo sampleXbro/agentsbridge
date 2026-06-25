@@ -143,7 +143,7 @@ describe('stageNativeInstallScope Claude Code and Cursor', () => {
       files: {
         '.cursor/hooks.json': JSON.stringify({
           hooks: {
-            PostToolUse: [{ matcher: 'Write', hooks: [{ type: 'command', command: 'echo ok' }] }],
+            postToolUse: [{ matcher: 'Write', type: 'command', command: 'echo ok' }],
           },
         }),
       },

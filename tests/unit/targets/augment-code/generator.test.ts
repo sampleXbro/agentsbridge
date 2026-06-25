@@ -48,7 +48,7 @@ describe('generateRules (augment-code)', () => {
 
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(`${AUGMENT_CODE_RULES_DIR}/_root.md`);
-    expect(results[0].content).toContain('always_apply: true');
+    expect(results[0].content).toContain('type: always_apply');
     expect(results[0].content).toContain('Use TDD.');
   });
 
@@ -70,7 +70,7 @@ describe('generateRules (augment-code)', () => {
 
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(`${AUGMENT_CODE_RULES_DIR}/typescript.md`);
-    expect(results[0].content).toContain('always_apply: true');
+    expect(results[0].content).toContain('type: always_apply');
     expect(results[0].content).toContain('Use strict TypeScript.');
   });
 
@@ -93,7 +93,7 @@ describe('generateRules (augment-code)', () => {
 
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(`${AUGMENT_CODE_RULES_DIR}/security.md`);
-    expect(results[0].content).toContain('agent_requested: true');
+    expect(results[0].content).toContain('type: agent_requested');
     expect(results[0].content).toContain('description: Security rules for auth endpoints');
   });
 
@@ -114,7 +114,7 @@ describe('generateRules (augment-code)', () => {
     const results = generateRules(canonical);
 
     expect(results).toHaveLength(1);
-    expect(results[0].content).toContain('agent_requested: true');
+    expect(results[0].content).toContain('type: agent_requested');
     expect(results[0].content).toContain('globs:');
     expect(results[0].content).toContain('src/api/**/*.ts');
   });
@@ -155,7 +155,7 @@ describe('generateRules (augment-code)', () => {
 
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(`${AUGMENT_CODE_RULES_DIR}/deploy.md`);
-    expect(results[0].content).toContain('agent_requested: true');
+    expect(results[0].content).toContain('type: agent_requested');
     expect(results[0].content).toContain('description: Deployment checklist');
     expect(results[0].content).not.toContain('always_apply');
   });

@@ -66,7 +66,7 @@ describe('global mode round-trip: AugmentCode', () => {
     // Rules emitted to ~/.augment/rules/
     fileExists(join(homeDir, '.augment', 'rules', '_root.md'));
     fileContains(join(homeDir, '.augment', 'rules', '_root.md'), 'AugmentCode root body');
-    fileContains(join(homeDir, '.augment', 'rules', '_root.md'), 'always_apply: true');
+    fileContains(join(homeDir, '.augment', 'rules', '_root.md'), 'type: always_apply');
 
     fileExists(join(homeDir, '.augment', 'rules', 'typescript.md'));
     fileContains(join(homeDir, '.augment', 'rules', 'typescript.md'), 'Use strict mode');
@@ -77,10 +77,7 @@ describe('global mode round-trip: AugmentCode', () => {
 
     // Skills emitted to ~/.augment/skills/
     fileExists(join(homeDir, '.augment', 'skills', 'augment-skill', 'SKILL.md'));
-    fileContains(
-      join(homeDir, '.augment', 'skills', 'augment-skill', 'SKILL.md'),
-      'Skill content',
-    );
+    fileContains(join(homeDir, '.augment', 'skills', 'augment-skill', 'SKILL.md'), 'Skill content');
     expect(
       markdownFrontmatter(join(homeDir, '.augment', 'skills', 'augment-skill', 'SKILL.md')).name,
     ).toBe('augment-skill');

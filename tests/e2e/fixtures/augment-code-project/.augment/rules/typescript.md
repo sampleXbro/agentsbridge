@@ -1,5 +1,5 @@
 ---
-always_apply: true
+type: always_apply
 description: TypeScript coding standards for this project
 ---
 

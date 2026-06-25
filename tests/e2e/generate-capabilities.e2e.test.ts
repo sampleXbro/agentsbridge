@@ -390,14 +390,16 @@ features: [rules, commands, agents, skills, hooks, mcp, ignore]
 
     const hooks = readJson(join(dir, '.cursor', 'hooks.json'));
     expect(hooks).toMatchObject({ version: 1 });
-    expect(hooks).toHaveProperty('hooks.PostToolUse');
+    // Cursor uses camelCase event names and a flat hook array.
+    expect(hooks).toHaveProperty('hooks.postToolUse');
 
-    const postToolUse = (hooks.hooks as Record<string, unknown>).PostToolUse as Array<
+    const postToolUse = (hooks.hooks as Record<string, unknown>).postToolUse as Array<
       Record<string, unknown>
     >;
     expect(Array.isArray(postToolUse)).toBe(true);
     expect(postToolUse[0]).toHaveProperty('matcher', 'Write|Edit');
-    expect(postToolUse[0]).toHaveProperty('hooks');
+    expect(postToolUse[0]).toHaveProperty('command');
+    expect(postToolUse[0]).not.toHaveProperty('hooks');
 
     const mcp = readJson(join(dir, '.cursor', 'mcp.json'));
     expect(mcp).toHaveProperty('mcpServers.context7.command', 'npx');
@@ -1026,10 +1028,7 @@ features: [rules, skills, ignore]
 
     fileContains(join(dir, 'CONVENTIONS.md'), '# Standards');
     fileNotContains(join(dir, 'CONVENTIONS.md'), 'root: true');
-    fileContains(
-      join(dir, '.aider', 'skills', 'api-generator', 'SKILL.md'),
-      'name: api-generator',
-    );
+    fileContains(join(dir, '.aider', 'skills', 'api-generator', 'SKILL.md'), 'name: api-generator');
     fileContains(join(dir, '.aiderignore'), '.env');
   });
 });

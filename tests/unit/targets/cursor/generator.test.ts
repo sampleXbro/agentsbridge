@@ -9,6 +9,7 @@ import {
   generateHooks,
   generateIgnore,
 } from '../../../../src/targets/cursor/generator.js';
+import { cursorHooksToCanonical } from '../../../../src/targets/cursor/hook-format.js';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
 import { serializeFrontmatter } from '../../../../src/utils/text/markdown.js';
 
@@ -601,7 +602,7 @@ describe('generatePermissions (cursor)', () => {
 });
 
 describe('generateHooks (cursor)', () => {
-  it('generates .cursor/hooks.json from canonical hooks', () => {
+  it('generates .cursor/hooks.json with camelCase events and a flat hook array', () => {
     const canonical = makeCanonical({
       hooks: {
         PostToolUse: [{ matcher: 'Write|Edit', command: 'prettier --write $FILE_PATH' }],
@@ -612,14 +613,19 @@ describe('generateHooks (cursor)', () => {
     expect(results[0]!.path).toBe('.cursor/hooks.json');
     const parsed = JSON.parse(results[0]!.content) as {
       version: number;
-      hooks: { PostToolUse: Array<{ matcher: string; hooks: unknown[] }> };
+      hooks: { postToolUse: Array<{ matcher?: string; type: string; command: string }> };
     };
     expect(parsed.version).toBe(1);
-    expect(parsed.hooks.PostToolUse).toHaveLength(1);
-    expect(parsed.hooks.PostToolUse[0]).toMatchObject({
+    // Canonical PascalCase event maps to Cursor's camelCase event name.
+    expect(parsed.hooks).not.toHaveProperty('PostToolUse');
+    expect(parsed.hooks.postToolUse).toHaveLength(1);
+    expect(parsed.hooks.postToolUse[0]).toMatchObject({
+      type: 'command',
+      command: 'prettier --write $FILE_PATH',
       matcher: 'Write|Edit',
-      hooks: [{ type: 'command', command: 'prettier --write $FILE_PATH' }],
     });
+    // Flat array — no nested { matcher, hooks: [...] } wrapper.
+    expect(parsed.hooks.postToolUse[0]).not.toHaveProperty('hooks');
   });
 
   it('returns empty when hooks is null', () => {
@@ -628,6 +634,14 @@ describe('generateHooks (cursor)', () => {
 
   it('returns empty when hooks has no entries', () => {
     expect(generateHooks(makeCanonical({ hooks: {} }))).toEqual([]);
+  });
+
+  it('returns empty when only unmappable events are present', () => {
+    // Notification has no Cursor equivalent and is dropped.
+    const canonical = makeCanonical({
+      hooks: { Notification: [{ matcher: '*', command: 'notify' }] },
+    });
+    expect(generateHooks(canonical)).toEqual([]);
   });
 
   it('generates prompt-type hooks when type is prompt', () => {
@@ -646,9 +660,9 @@ describe('generateHooks (cursor)', () => {
     const results = generateHooks(canonical);
     expect(results).toHaveLength(1);
     const parsed = JSON.parse(results[0]!.content) as {
-      hooks: { PostToolUse: Array<{ matcher: string; hooks: unknown[] }> };
+      hooks: { postToolUse: Array<{ type: string; prompt?: string; command: string }> };
     };
-    expect(parsed.hooks.PostToolUse[0]!.hooks[0]!).toMatchObject({
+    expect(parsed.hooks.postToolUse[0]!).toMatchObject({
       type: 'prompt',
       prompt: 'Run prettier on the edited file',
     });
@@ -670,9 +684,9 @@ describe('generateHooks (cursor)', () => {
     const results = generateHooks(canonical);
     expect(results).toHaveLength(1);
     const parsed = JSON.parse(results[0]!.content) as {
-      hooks: { PostToolUse: Array<{ hooks: Array<{ timeout?: number }> }> };
+      hooks: { postToolUse: Array<{ timeout?: number }> };
     };
-    expect(parsed.hooks.PostToolUse[0]!.hooks[0]!.timeout).toBe(5000);
+    expect(parsed.hooks.postToolUse[0]!.timeout).toBe(5000);
   });
 
   it('returns empty when all hook entries lack command and prompt', () => {
@@ -695,8 +709,24 @@ describe('generateHooks (cursor)', () => {
     const results = generateHooks(canonical);
     expect(results).toHaveLength(1);
     const parsed = JSON.parse(results[0]!.content) as { hooks: Record<string, unknown> };
-    expect(parsed.hooks.PostToolUse).toBeDefined();
-    expect(parsed.hooks.PreToolUse).toBeUndefined();
+    expect(parsed.hooks.postToolUse).toBeDefined();
+    expect(parsed.hooks.preToolUse).toBeUndefined();
+  });
+
+  it('round-trips canonical -> cursor -> canonical for mapped events', () => {
+    const canonical = makeCanonical({
+      hooks: {
+        PreToolUse: [{ matcher: 'Bash', type: 'command' as const, command: 'echo hi', timeout: 3 }],
+        UserPromptSubmit: [{ matcher: '', type: 'command' as const, command: 'validate' }],
+      },
+    });
+    const json = JSON.parse(generateHooks(canonical)[0]!.content) as {
+      hooks: Record<string, unknown>;
+    };
+    expect(cursorHooksToCanonical(json.hooks)).toEqual({
+      PreToolUse: [{ matcher: 'Bash', type: 'command', command: 'echo hi', timeout: 3 }],
+      UserPromptSubmit: [{ matcher: '', type: 'command', command: 'validate' }],
+    });
   });
 });
 

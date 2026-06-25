@@ -774,7 +774,7 @@ describe('generate hooks', () => {
     expect(cursorHooks).toBeDefined();
     const cursorHooksParsed = JSON.parse(cursorHooks!.content) as Record<string, unknown>;
     expect(cursorHooksParsed.hooks).toBeDefined();
-    expect((cursorHooksParsed.hooks as Record<string, unknown>).PostToolUse).toBeDefined();
+    expect((cursorHooksParsed.hooks as Record<string, unknown>).postToolUse).toBeDefined();
   });
 });
 

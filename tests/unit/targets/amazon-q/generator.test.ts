@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
-import { generateRules, generateMcp, generateAgents } from '../../../../src/targets/amazon-q/generator.js';
+import {
+  generateRules,
+  generateMcp,
+  generateAgents,
+} from '../../../../src/targets/amazon-q/generator.js';
 import {
   AMAZON_Q_RULES_DIR,
   AMAZON_Q_MCP_FILE,
@@ -160,7 +164,7 @@ describe('generateAgents (amazon-q)', () => {
     expect(generateAgents(makeCanonical())).toHaveLength(0);
   });
 
-  it('generates .amazonq/cli-agents/{name}.json with systemPrompt', () => {
+  it('generates .amazonq/cli-agents/{name}.json with the official prompt key', () => {
     const canonical = makeCanonical({
       agents: [
         {
@@ -186,12 +190,14 @@ describe('generateAgents (amazon-q)', () => {
     const parsed = JSON.parse(results[0].content) as {
       name: string;
       description: string;
-      systemPrompt: string;
+      prompt: string;
       allowedTools: string[];
     };
     expect(parsed.name).toBe('reviewer');
     expect(parsed.description).toBe('Reviews code');
-    expect(parsed.systemPrompt).toContain('You review code carefully');
+    expect(parsed.prompt).toContain('You review code carefully');
+    // The AWS agent-v1.json schema uses `prompt`, not `systemPrompt` — guard against regression.
+    expect(parsed).not.toHaveProperty('systemPrompt');
     expect(parsed.allowedTools).toEqual(['Read', 'Grep']);
   });
 

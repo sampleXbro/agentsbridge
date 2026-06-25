@@ -44,6 +44,21 @@
         "t-cmd-31dfa72c"
       ]
     },
+    "agent-orchestration-when-a-subagent-audit-lane": {
+      "createdAt": "2026-06-24",
+      "evidence": [
+        "usage-limit-subagent-2026-06-24"
+      ],
+      "rule": "When a subagent audit lane fails because of a usage-limit reset window, close the failed lane and retry that same target after the reset before declaring the multi-target audit complete.",
+      "status": "active",
+      "topics": [
+        "agent-orchestration",
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-e17eb287"
+      ]
+    },
     "agent-orchestration-when-dispatching-a-read-only": {
       "createdAt": "2026-06-05",
       "evidence": [
@@ -707,6 +722,21 @@
       ],
       "triggers": [
         "t-glob-d8e040bc"
+      ]
+    },
+    "fixture-and-assertion-discipline-opencode-declares-additionalrules-mcp-pe": {
+      "createdAt": "2026-06-24",
+      "evidence": [
+        "lesson:fixture-and-assertion-discipline-opencode-mergeopencodesettings-delegates"
+      ],
+      "rule": "opencode declares additionalRules/mcp/permissions native but is broken: (1) generated .opencode/rules/*.md are inert because OpenCode does NOT auto-read .opencode/rules/ — additional instruction files must be listed in the opencode.json `instructions` array (which agentsmesh never emits); (2) mergeOpenCodeSettings delegates to core mergeSettingsJson (Claude schema, only carries `permissions`/`hooks`), so regenerating over an existing opencode.json silently DROPS the freshly-generated `mcp` and `permission` keys. Fix needs an opencode-specific merger overlaying mcp/permission/instructions, plus emitting an `instructions` glob for .opencode/rules.",
+      "status": "active",
+      "topics": [
+        "fixture-and-assertion-discipline"
+      ],
+      "triggers": [
+        "t-glob-f8afe7f1",
+        "t-kw-9cc52861"
       ]
     },
     "fixture-and-assertion-discipline-opencode-mergeopencodesettings-delegates": {
@@ -1791,6 +1821,20 @@
       "triggers": [
         "t-glob-d458a5b8",
         "t-glob-861a9bdb"
+      ]
+    },
+    "git-commit-hygiene-before-creating-a-new-standalone": {
+      "createdAt": "2026-06-24",
+      "evidence": [
+        "target-capability-audit-2026-06-24"
+      ],
+      "rule": "Before creating a new standalone markdown document, check whether the intended directory is ignored; in this repo new files under docs/ and tasks/ are ignored, so use a tracked path or intentionally force-add.",
+      "status": "active",
+      "topics": [
+        "git-commit-hygiene"
+      ],
+      "triggers": [
+        "t-cmd-3b496323"
       ]
     },
     "git-commit-hygiene-in-this-repo-docs-is": {
@@ -2892,6 +2936,22 @@
         "t-cmd-b66a9431",
         "t-cmd-2c6e7fc6",
         "t-cmd-e097d363"
+      ]
+    },
+    "kilo-code-config-surface-for-kilo-code-current-kilo": {
+      "createdAt": "2026-06-24",
+      "evidence": [
+        "https://kilo.ai/docs/automate/mcp/using-in-cli",
+        "https://kilo.ai/docs/customize/custom-rules"
+      ],
+      "rule": "For kilo-code, current Kilo v7 (Kilo/OpenCode CLI) reads MCP under the `mcp` key inside `kilo.jsonc` (project `kilo.jsonc` or `.kilo/kilo.jsonc`; global `~/.config/kilo/kilo.jsonc`) and reads `.kilo/rules/*.md` only when listed under the `instructions` key — `.kilo/mcp.json` + `mcpServers` wrapper and auto-loaded `.kilo/rules` are LEGACY (`.kilocode/`); generating to the new `.kilo/` layout without writing `mcp`/`instructions` keys produces files current Kilo will not load.",
+      "status": "active",
+      "topics": [
+        "kilo-code-config-surface"
+      ],
+      "triggers": [
+        "t-glob-7e7851c6",
+        "t-kw-c65f9220"
       ]
     },
     "lessons-system-a-keyword-trigger-fires-only": {
@@ -4939,6 +4999,50 @@
         "t-glob-25cdb7ed"
       ]
     },
+    "target-capabilities-amp-s-real-amp-hooks": {
+      "createdAt": "2026-06-24",
+      "evidence": [
+        "https://ampcode.com/manual"
+      ],
+      "rule": "Amp's real amp.hooks is a flat ARRAY of rule objects [{id, compatibilityDate, on:{event:'tool:pre-execute'|'tool:post-execute', tool:[...], 'input.contains':'...'}, action:{type:'send-user-message'|'redact-tool-input', message:'...'}}] read from .amp/settings.json and ~/.config/amp/settings.json; agentsmesh emits a Claude-Code-shaped OBJECT keyed by event ({event:[{matcher,hooks:[{type,command}]}]}) under amp.hooks and has NO hooks importer, so the round-trip is broken. Do not declare amp hooks 'native' — it is 'embedded' at best until the emitter matches Amp's array schema and an importer exists.",
+      "status": "active",
+      "topics": [
+        "target-capabilities"
+      ],
+      "triggers": [
+        "t-glob-8a2915ac",
+        "t-kw-b600f0d0"
+      ]
+    },
+    "target-capabilities-copilot-has-no-global-copilot": {
+      "createdAt": "2026-06-24",
+      "evidence": [
+        "https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-config-dir-reference"
+      ],
+      "rationale": "Global commands declared native but Copilot CLI never reads ~/.copilot/prompts; output is silently inert.",
+      "rule": "Copilot has NO global ~/.copilot/prompts/ surface: the official ~/.copilot config-dir reference enumerates all top-level items (agents, skills, hooks, instructions, copilot-instructions.md) and lists no prompts dir; .prompt.md is a VS Code/IDE feature. Do not declare global commands:native for copilot or emit .copilot/prompts/*.prompt.md — it is a phantom (inert) path.",
+      "status": "active",
+      "topics": [
+        "target-capabilities"
+      ],
+      "triggers": [
+        "t-glob-dd0e31f0"
+      ]
+    },
+    "target-capabilities-deepagents-cli-hooks-are-not": {
+      "createdAt": "2026-06-24",
+      "evidence": [
+        "lesson:target-capabilities-deepagents-cli-target-wraps-langchain"
+      ],
+      "rule": "deepagents-cli hooks are NOT Claude Code format: Deep Agents Code reads hooks.json as {\\\"hooks\\\":[{\\\"command\\\":[...],\\\"events\\\":[\\\"session.start\\\",\\\"session.end\\\",\\\"tool.error\\\",...]}]} (array of command+events objects), not the PreToolUse/PostToolUse matcher object buildClaudeHooksObjectFromCanonical emits; the generator emits the wrong schema and there is no hooks importer, so hooks:native is generate-only and produces an invalid file. Emit the deepagents array schema and wire a hooks importer.",
+      "status": "active",
+      "topics": [
+        "target-capabilities"
+      ],
+      "triggers": [
+        "t-glob-a386fcc3"
+      ]
+    },
     "target-capabilities-deepagents-cli-target-wraps-langchain": {
       "createdAt": "2026-06-23",
       "evidence": [
@@ -4952,6 +5056,36 @@
       "triggers": [
         "t-glob-87083445",
         "t-kw-89bf9a2d"
+      ]
+    },
+    "target-capabilities-for-kilo-code-the-new": {
+      "createdAt": "2026-06-24",
+      "evidence": [
+        "https://kilo.ai/docs/customize/custom-rules",
+        "https://kilo.ai/docs/automate/mcp/using-in-kilo-code",
+        "https://kilo.ai/docs/customize/custom-subagents"
+      ],
+      "rule": "For kilo-code, the new-layout `.kilo/rules/*.md` files are NOT auto-loaded by Kilo Code — each must be registered under the `instructions` array in `kilo.jsonc` (only legacy `.kilocode/rules/` auto-loads). Generating standalone `.kilo/rules/<slug>.md` without writing an `instructions` entry leaves additionalRules silently inert. Also: kilo global commands/agents live at `~/.config/kilo/commands|agents` (NOT `~/.kilo/`), global skills live at `~/.kilo/skills`, and MCP belongs in `kilo.jsonc` top-level `mcp` key (not `.kilo/mcp.json` `mcpServers`).",
+      "status": "active",
+      "topics": [
+        "target-capabilities"
+      ],
+      "triggers": [
+        "t-glob-497f5415"
+      ]
+    },
+    "target-capabilities-for-the-crush-target-only": {
+      "createdAt": "2026-06-24",
+      "evidence": [
+        "https://github.com/charmbracelet/crush/blob/main/internal/config/config.go"
+      ],
+      "rule": "For the crush target, only emit permissions.allowed_tools in crush.json — Crush's Go Permissions struct has no denied_tools field (json:\"allowed_tools\" only), so generated denied_tools is silently ignored; also permissions is a real on-disk crush.json key (read from project crush.json and global ~/.config/crush/crush.json), so it must be declared native, not partial/none.",
+      "status": "active",
+      "topics": [
+        "target-capabilities"
+      ],
+      "triggers": [
+        "t-glob-b80b011c"
       ]
     },
     "target-capabilities-when-auditing-the-antigravity-target": {
@@ -4997,6 +5131,52 @@
         "t-glob-9f0a5990"
       ]
     },
+    "target-capability-audits-cline-has-no-global-agent": {
+      "createdAt": "2026-06-24",
+      "evidence": [
+        "https://docs.cline.bot/cli/cli-reference"
+      ],
+      "rule": "Cline has NO global agent-definition surface: the official ~/.cline/ tree is data/settings/{providers.json,rules/,skills/}, data/teams/, data/sessions/, data/logs/, plugins/ — no agents.yaml and no agents/ dir. agents.yaml exists ONLY at project .cline/agents.yaml (single YAML file, not a .cline/agents/*.md directory). Do not declare cline globalCapabilities.agents as 'native' and do not emit global ~/.cline/agents/*.md; global agents support is effectively none.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-08570b7a",
+        "t-kw-d47cffbf"
+      ]
+    },
+    "target-capability-audits-cursor-ide-permissions-are-file": {
+      "createdAt": "2026-06-24",
+      "evidence": [
+        "https://cursor.com/docs/reference/permissions"
+      ],
+      "rule": "Cursor IDE permissions are file-based and disk-ownable via .cursor/permissions.json (project) and ~/.cursor/permissions.json (global), JSONC, top-level keys mcpAllowlist/terminalAllowlist/autoRun{allow_instructions,block_instructions} — NOT GUI-only, so 'partial'/'none' under-declares; but canonical allow/deny/ask does not round-trip losslessly (no enforceable deny/ask, allow must be split terminal-vs-MCP). The legacy importer's .cursor/settings.json permissions key is an undocumented phantom path; the real file is .cursor/permissions.json.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-5647ec65"
+      ]
+    },
+    "target-capability-audits-for-codex-cli-codex-instructions": {
+      "createdAt": "2026-06-24",
+      "evidence": [
+        "https://developers.openai.com/codex/config-reference",
+        "https://developers.openai.com/codex/mcp",
+        "https://developers.openai.com/codex/rules"
+      ],
+      "rule": "For codex-cli, `.codex/instructions/<slug>.md` is NOT a surface Codex reads (config reference marks `instructions` as reserved/future-use); Codex's real additional-rule surfaces are nested `AGENTS.md`/`AGENTS.override.md` (advisory) and `.codex/rules/*.rules` (execution policy, Starlark prefix_rule). Do not treat the instructions-mirror emit as a native additionalRules surface. Also: codex MCP `.codex/config.toml` natively supports streamable-HTTP servers via `url`/`bearer_token_env_var`/`http_headers`/`env_http_headers` (not experimental), and that file is Codex's primary config — generateMcp overwriting it whole drops both HTTP servers and all non-MCP user config.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-e1afdd1c",
+        "t-kw-3f61d5a5"
+      ]
+    },
     "target-capability-audits-for-qwen-code-global-additionalrules": {
       "createdAt": "2026-06-23",
       "evidence": [
@@ -5010,6 +5190,21 @@
       "triggers": [
         "t-glob-009c44d8",
         "t-kw-db955d8e"
+      ]
+    },
+    "target-capability-audits-for-the-continue-target-permissions": {
+      "createdAt": "2026-06-24",
+      "evidence": [
+        "https://docs.continue.dev/cli/tool-permissions"
+      ],
+      "rule": "For the Continue target, permissions live ONLY in the global ~/.continue/permissions.yaml (Continue CLI surface, top-level keys allow/ask/exclude) — there is NO project-level permissions file; raise permissions capability for global scope only, keep project permissions=none. Hooks are NOT in Continue's config.yaml schema (verified against docs/reference and config_schema.json), so hooks must stay none for both scopes.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-570abc49",
+        "t-kw-3cbd6157"
       ]
     },
     "target-capability-audits-goose-supports-file-based-tool": {
@@ -5026,6 +5221,72 @@
         "t-glob-aa152d85"
       ]
     },
+    "target-capability-audits-goose-supports-lifecycle-hooks-via": {
+      "createdAt": "2026-06-24",
+      "evidence": [
+        "lesson:target-capability-audits-goose-supports-file-based-tool"
+      ],
+      "rule": "Goose supports lifecycle hooks via the Open Plugin Specification v1.0.0: a `hooks/hooks.json` file inside a plugin dir at `<project>/.agents/plugins/<name>/` (project scope) and `~/.agents/plugins/<name>/` (global scope), auto-discovered at startup (released 2026-05-14). Schema: top-level `hooks` object keyed by event (PreToolUse/PostToolUse/PostToolUseFailure/SessionStart/SessionEnd/UserPromptSubmit/...), each an array of `{matcher?, hooks:[{type:\"command\", command}]}`. This maps onto canonical Hooks (event -> HookEntry{matcher,command,type}), so hooks is UNDER-declared as 'none' for both scopes; both project and global are file-based and round-trippable. Note the plugin-dir nesting (agentsmesh must own a plugin <name> dir), unlike Claude Code's single settings hooks key.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-aa152d85",
+        "t-kw-0bea3e46"
+      ]
+    },
+    "target-capability-audits-pi-pi-agent-natively-supports": {
+      "createdAt": "2026-06-24",
+      "evidence": [
+        "https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/prompt-templates.md"
+      ],
+      "rule": "Pi (pi-agent) natively supports prompt templates as command surface: project `.pi/prompts/*.md` and global `~/.pi/agent/prompts/*.md` (non-recursive, filename = command name, YAML frontmatter `description` + `argument-hint`, `$1`/`$ARGUMENTS` substitution). Treat `commands` as a native, round-trippable file surface — do not leave it declared `none` while only projecting commands as `.pi/skills/` bundles via supportsConversion.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-948fae05",
+        "t-kw-725f99c9"
+      ]
+    },
+    "target-capability-audits-when-a-target-declares-a": {
+      "createdAt": "2026-06-24",
+      "evidence": [
+        "codex-cli-hooks-native-2026-06-24"
+      ],
+      "rationale": "codex-cli declared hooks=partial yet had generateHooks + importCodexHooks + round-trip tests + managedOutputs; partial was wrong, native was correct.",
+      "rule": "When a target declares a feature `partial` but already ships a REAL generator AND importer for it (a dedicated on-disk file the tool reads, round-trip tested) — not a no-op stub — the level is a mislabel: raise it to `native`. `partial` is reserved for features that have only a no-op `generateX` returning [] plus a `lint.<feature>` warning (GUI/cloud-only surfaces agentsmesh cannot write). Diagnostic: a `partial` feature with no `lint.<feature>` stub and a wired generator in `target.generators` is almost certainly mislabeled.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-9f0a5990",
+        "t-kw-c6d64f2b",
+        "t-kw-797b277a"
+      ]
+    },
+    "target-capability-audits-when-changing-a-target-s": {
+      "createdAt": "2026-06-25",
+      "evidence": [
+        "cursor-hooks-format-2026-06-25"
+      ],
+      "rationale": "Cursor hooks format fix (PascalCase nested -> camelCase flat) broke 9 cross-cutting test files beyond the cursor unit dir.",
+      "rule": "When changing a target's generated FILE FORMAT (hook event names, object shape, or top-level key — not just the path), grep the ENTIRE tests/ tree before claiming the slice done, not just tests/unit/targets/<id>/. Format changes have wide blast radius: cross-cutting fixtures and assertions live in tests/unit/core/engine.test.ts, tests/import-generate-roundtrip.test.ts, tests/integration/*-merge & generate.integration, tests/e2e/{import,generate}-capabilities, global-roundtrip-*, hooks-roundtrip, and tests/e2e/fixtures/<target>-project/. Update every one in the same TDD slice.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-c6e66385",
+        "t-glob-08277af8",
+        "t-glob-17bd0955",
+        "t-kw-e48528c1",
+        "t-kw-057477d3"
+      ]
+    },
     "target-capability-audits-when-extracting-capabilities-to-a": {
       "createdAt": "2026-06-15",
       "evidence": [
@@ -5038,6 +5299,20 @@
       ],
       "triggers": [
         "t-glob-9f0a5990"
+      ]
+    },
+    "target-capability-expansion-amazon-q-cli-reads-rules": {
+      "createdAt": "2026-06-24",
+      "evidence": [
+        "https://github.com/aws/amazon-q-developer-cli/issues/3451"
+      ],
+      "rule": "Amazon Q CLI reads rules ONLY from project .amazonq/rules/**/*.md (auto-loaded directory of multiple .md files); it has NO global rules dir on disk (open feature request aws/amazon-q-developer-cli#3451 asks for ~/.amazonq/rules, not ~/.aws/amazonq/rules). Keep amazon-q additionalRules native for PROJECT but none for GLOBAL; the ~/.aws/amazonq/ root is real only for MCP/agents.",
+      "status": "active",
+      "topics": [
+        "target-capability-expansion"
+      ],
+      "triggers": [
+        "t-glob-9ded79e4"
       ]
     },
     "target-capability-expansion-before-reading-a-target-implementation": {
@@ -5080,6 +5355,21 @@
       ],
       "triggers": [
         "t-glob-a2e61f30"
+      ]
+    },
+    "target-capability-expansion-for-opencode-targets-additionalrules-emi": {
+      "createdAt": "2026-06-24",
+      "evidence": [
+        "https://opencode.ai/docs/rules/"
+      ],
+      "rule": "For opencode targets, additionalRules emitted to .opencode/rules/ are NOT auto-loaded by opencode (only AGENTS.md/CLAUDE.md are); to make additionalRules genuinely native, the generator must also write an \"instructions\" array (e.g. [\".opencode/rules/*.md\"]) into opencode.json, otherwise the rule files are orphaned and additionalRules is over-declared as native.",
+      "status": "active",
+      "topics": [
+        "target-capability-expansion"
+      ],
+      "triggers": [
+        "t-glob-b8433f47",
+        "t-kw-73739274"
       ]
     },
     "target-capability-expansion-native-target-agent-formats-that": {
@@ -5150,6 +5440,21 @@
       ],
       "triggers": [
         "t-glob-75e89e62"
+      ]
+    },
+    "target-deepagents-cli-deepagents-cli-globals-are-per": {
+      "createdAt": "2026-06-24",
+      "evidence": [
+        "https://docs.langchain.com/oss/python/deepagents/code/data-locations",
+        "https://reference.langchain.com/python/deepagents-code/hooks"
+      ],
+      "rule": "deepagents-cli globals are per-agent: user memory is ~/.deepagents/{assistant_id}/AGENTS.md and user skills are ~/.deepagents/{assistant_id}/skills/ (NOT flat ~/.deepagents/AGENTS.md or ~/.deepagents/skills). Its hooks.json is {\"hooks\":[{\"command\":[..],\"events\":[\"session.start\"]}]} loaded only from ~/.deepagents/hooks.json — NOT the Claude-Code PreToolUse/matcher object shape, and there is no project hooks surface. deepagents also has native on-disk agents dirs (.deepagents/agents/{name}/AGENTS.md project, ~/.deepagents/{agent}/agents/{name}/AGENTS.md global).",
+      "status": "active",
+      "topics": [
+        "target-deepagents-cli"
+      ],
+      "triggers": [
+        "t-glob-87083445"
       ]
     },
     "test-execution-do-not-run-pnpm-stashed": {
@@ -6545,6 +6850,9 @@
     "install-import-pickers": {
       "summary": "Install pipeline, importers, picker routing, marketplace sub-packs, pack materialization, manifest persistence, sync replay."
     },
+    "kilo-code-config-surface": {
+      "summary": "Real current config-surface facts for the kilo-code target (kilo.jsonc keys, MCP/rules loading, plugin-only hooks)."
+    },
     "lessons-system": {
       "summary": "Lessons graph recall, capture, lifecycle, and storage contracts."
     },
@@ -6595,6 +6903,9 @@
     },
     "target-capability-expansion": {
       "summary": "Rules for additive target capability upgrades"
+    },
+    "target-deepagents-cli": {
+      "summary": "Verified on-disk config contract for the deepagents-cli target (paths, scopes, hooks format)."
     },
     "test-execution": {
       "summary": "Reliable focused and full test command patterns."
@@ -6666,6 +6977,10 @@
     "t-cmd-38934d6c": {
       "kind": "command_pattern",
       "pattern": "agentsmesh lessons (query|add|topics)"
+    },
+    "t-cmd-3b496323": {
+      "kind": "command_pattern",
+      "pattern": "apply_patch add document|apply_patch add .*markdown|apply_patch add .*\\.md"
     },
     "t-cmd-3c746c92": {
       "kind": "command_pattern",
@@ -6923,6 +7238,14 @@
       "kind": "file_glob",
       "pattern": "src/lessons/**/*.ts"
     },
+    "t-glob-08277af8": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/hook-format.ts"
+    },
+    "t-glob-08570b7a": {
+      "kind": "file_glob",
+      "pattern": "src/targets/cline/index.ts"
+    },
     "t-glob-08cf5afd": {
       "kind": "file_glob",
       "pattern": "src/lessons/strip-markers.ts"
@@ -7095,6 +7418,10 @@
       "kind": "file_glob",
       "pattern": "vitest.config*"
     },
+    "t-glob-497f5415": {
+      "kind": "file_glob",
+      "pattern": "src/targets/kilo-code/**"
+    },
     "t-glob-49e2783c": {
       "kind": "file_glob",
       "pattern": "src/canonical/**/*.ts"
@@ -7122,6 +7449,14 @@
     "t-glob-52935bc9": {
       "kind": "file_glob",
       "pattern": "src/core/reference/link-rebaser-helpers.ts"
+    },
+    "t-glob-5647ec65": {
+      "kind": "file_glob",
+      "pattern": "src/targets/cursor/**"
+    },
+    "t-glob-570abc49": {
+      "kind": "file_glob",
+      "pattern": "src/targets/continue/index.ts"
     },
     "t-glob-593303ad": {
       "kind": "file_glob",
@@ -7239,6 +7574,10 @@
       "kind": "file_glob",
       "pattern": "src/config/core/conversions.ts"
     },
+    "t-glob-7e7851c6": {
+      "kind": "file_glob",
+      "pattern": "src/targets/kilo-code/**/*.ts"
+    },
     "t-glob-7f548275": {
       "kind": "file_glob",
       "pattern": ".agentsmesh/rules/**/*.md"
@@ -7303,6 +7642,10 @@
       "kind": "file_glob",
       "pattern": "src/install/importers/target-native-commands.ts"
     },
+    "t-glob-8a2915ac": {
+      "kind": "file_glob",
+      "pattern": "src/targets/amp/**"
+    },
     "t-glob-8ade9a3e": {
       "kind": "file_glob",
       "pattern": "vitest.config.ts"
@@ -7318,6 +7661,10 @@
     "t-glob-8fe4e96b": {
       "kind": "file_glob",
       "pattern": "**/SKILL.md"
+    },
+    "t-glob-948fae05": {
+      "kind": "file_glob",
+      "pattern": "src/targets/pi-agent/**"
     },
     "t-glob-9499d1a7": {
       "kind": "file_glob",
@@ -7343,6 +7690,10 @@
       "kind": "file_glob",
       "pattern": "src/targets/*/generator/*.ts"
     },
+    "t-glob-9ded79e4": {
+      "kind": "file_glob",
+      "pattern": "src/targets/amazon-q/capabilities.ts"
+    },
     "t-glob-9df02130": {
       "kind": "file_glob",
       "pattern": "src/mcp/tool-tables/lessons-tools.ts"
@@ -7358,6 +7709,10 @@
     "t-glob-a2e61f30": {
       "kind": "file_glob",
       "pattern": "src/targets/opencode/**"
+    },
+    "t-glob-a386fcc3": {
+      "kind": "file_glob",
+      "pattern": "src/targets/deepagents-cli/generator.ts"
     },
     "t-glob-a5fc7764": {
       "kind": "file_glob",
@@ -7403,6 +7758,10 @@
       "kind": "file_glob",
       "pattern": "src/install/run/install-replay.ts"
     },
+    "t-glob-b80b011c": {
+      "kind": "file_glob",
+      "pattern": "src/targets/crush/**"
+    },
     "t-glob-b8433f47": {
       "kind": "file_glob",
       "pattern": "src/targets/opencode/*.ts"
@@ -7438,6 +7797,10 @@
     "t-glob-c47c9030": {
       "kind": "file_glob",
       "pattern": "src/targets/catalog/builtin-targets.ts"
+    },
+    "t-glob-c6e66385": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/generator/hooks.ts"
     },
     "t-glob-c9dfc34a": {
       "kind": "file_glob",
@@ -7487,6 +7850,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/paths.ts"
     },
+    "t-glob-dd0e31f0": {
+      "kind": "file_glob",
+      "pattern": "src/targets/copilot/**"
+    },
     "t-glob-e0110795": {
       "kind": "file_glob",
       "pattern": "src/utils/filesystem/process-lock.ts"
@@ -7494,6 +7861,10 @@
     "t-glob-e06b465d": {
       "kind": "file_glob",
       "pattern": "tests/e2e/target-contract-matrix.e2e.test.ts"
+    },
+    "t-glob-e17eb287": {
+      "kind": "file_glob",
+      "pattern": ".agents/skills/update-target-capabilities/SKILL.md"
     },
     "t-glob-e1afdd1c": {
       "kind": "file_glob",
@@ -7539,6 +7910,10 @@
       "kind": "keyword",
       "pattern": "UNREACHABLE_LESSON"
     },
+    "t-kw-057477d3": {
+      "kind": "keyword",
+      "pattern": "target output format blast radius tests"
+    },
     "t-kw-05e1d9a7": {
       "kind": "keyword",
       "pattern": "AGENTSMESH_LESSONS_TELEMETRY telemetry test"
@@ -7554,6 +7929,10 @@
     "t-kw-0bc71226": {
       "kind": "keyword",
       "pattern": "ValidatedConfig"
+    },
+    "t-kw-0bea3e46": {
+      "kind": "keyword",
+      "pattern": "goose hooks"
     },
     "t-kw-0d87141e": {
       "kind": "keyword",
@@ -7647,9 +8026,17 @@
       "kind": "keyword",
       "pattern": "Lessons graph: ok"
     },
+    "t-kw-3cbd6157": {
+      "kind": "keyword",
+      "pattern": "continue permissions hooks capability"
+    },
     "t-kw-3e99909c": {
       "kind": "keyword",
       "pattern": "instrumented entry point"
+    },
+    "t-kw-3f61d5a5": {
+      "kind": "keyword",
+      "pattern": "codex additionalRules instructions mcp config.toml http"
     },
     "t-kw-4143c059": {
       "kind": "keyword",
@@ -7699,9 +8086,21 @@
       "kind": "keyword",
       "pattern": "parseArgs boolean flag"
     },
+    "t-kw-725f99c9": {
+      "kind": "keyword",
+      "pattern": "pi-agent commands prompt templates"
+    },
+    "t-kw-73739274": {
+      "kind": "keyword",
+      "pattern": "opencode additionalRules instructions"
+    },
     "t-kw-75645732": {
       "kind": "keyword",
       "pattern": "environment variable"
+    },
+    "t-kw-797b277a": {
+      "kind": "keyword",
+      "pattern": "raise capability partial to native"
     },
     "t-kw-7dd5abb2": {
       "kind": "keyword",
@@ -7739,6 +8138,10 @@
       "kind": "keyword",
       "pattern": "root artifact collision"
     },
+    "t-kw-9cc52861": {
+      "kind": "keyword",
+      "pattern": "opencode instructions mcp permission clobber additionalRules"
+    },
     "t-kw-a03e44b6": {
       "kind": "keyword",
       "pattern": "control character probe"
@@ -7767,6 +8170,10 @@
       "kind": "keyword",
       "pattern": "acquireProcessLock"
     },
+    "t-kw-b600f0d0": {
+      "kind": "keyword",
+      "pattern": "amp hooks capability"
+    },
     "t-kw-b6410e25": {
       "kind": "keyword",
       "pattern": "command truncation"
@@ -7774,6 +8181,14 @@
     "t-kw-bd0b86a3": {
       "kind": "keyword",
       "pattern": "wizard back navigation step prompter"
+    },
+    "t-kw-c65f9220": {
+      "kind": "keyword",
+      "pattern": "kilo-code mcp config surface"
+    },
+    "t-kw-c6d64f2b": {
+      "kind": "keyword",
+      "pattern": "capability level partial native mislabel"
     },
     "t-kw-c8f23353": {
       "kind": "keyword",
@@ -7786,6 +8201,10 @@
     "t-kw-d47a0cd6": {
       "kind": "keyword",
       "pattern": "rewrite prose"
+    },
+    "t-kw-d47cffbf": {
+      "kind": "keyword",
+      "pattern": "cline global agents capability"
     },
     "t-kw-d4f6d2ba": {
       "kind": "keyword",
@@ -7814,6 +8233,10 @@
     "t-kw-e3a2ec15": {
       "kind": "keyword",
       "pattern": "agentsmesh lessons unknown command"
+    },
+    "t-kw-e48528c1": {
+      "kind": "keyword",
+      "pattern": "change generated file format event names shape"
     },
     "t-kw-e61f5882": {
       "kind": "keyword",

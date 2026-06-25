@@ -4,7 +4,7 @@
 
 import { join, dirname } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
-import { getHookCommand, getHookPrompt, hasHookText } from '../../core/hook-command.js';
+import { cursorHooksToCanonical } from './hook-format.js';
 import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/filesystem/fs.js';
 import { stringify as yamlStringify } from 'yaml';
 import {
@@ -17,37 +17,7 @@ import {
   CURSOR_CANONICAL_IGNORE,
 } from './constants.js';
 
-/**
- * Convert Cursor settings.json hooks to canonical hooks.yaml format.
- * Cursor uses same structure as Claude Code: { event: [{ matcher, hooks: [{ type, command }] }] }
- */
-export function cursorHooksToCanonical(hooks: Record<string, unknown>): Record<string, unknown[]> {
-  const result: Record<string, unknown[]> = {};
-  for (const [event, entries] of Object.entries(hooks)) {
-    if (!Array.isArray(entries)) continue;
-    const canonical: Array<Record<string, unknown>> = [];
-    for (const entry of entries) {
-      if (!entry || typeof entry !== 'object') continue;
-      const e = entry as Record<string, unknown>;
-      const matcher = typeof e.matcher === 'string' ? e.matcher : '';
-      if (!matcher) continue;
-      const hookList = Array.isArray(e.hooks) ? (e.hooks as Array<Record<string, unknown>>) : [];
-      for (const hook of hookList) {
-        const type = hook.type === 'prompt' ? 'prompt' : 'command';
-        if (!hasHookText({ ...hook, type })) continue;
-        const value =
-          type === 'prompt'
-            ? getHookPrompt(hook) || getHookCommand(hook)
-            : getHookCommand(hook) || getHookPrompt(hook);
-        const item: Record<string, unknown> = { matcher, type, command: value };
-        if (typeof hook.timeout === 'number') item.timeout = hook.timeout;
-        canonical.push(item);
-      }
-    }
-    if (canonical.length > 0) result[event] = canonical;
-  }
-  return result;
-}
+export { cursorHooksToCanonical };
 
 export async function importSettings(projectRoot: string, results: ImportResult[]): Promise<void> {
   let hooksImportedFromHooksJson = false;

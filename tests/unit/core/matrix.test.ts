@@ -315,7 +315,7 @@ describe('buildCompatibilityMatrix', () => {
     const rows = buildCompatibilityMatrix(config, canonical);
     expect(rows.find((r) => r.feature.startsWith('hooks'))?.feature).toBe('hooks (1)');
     expect(rows.find((r) => r.feature.startsWith('hooks'))?.support['copilot']).toBe('partial');
-    expect(rows.find((r) => r.feature.startsWith('hooks'))?.support['codex-cli']).toBe('partial');
+    expect(rows.find((r) => r.feature.startsWith('hooks'))?.support['codex-cli']).toBe('native');
     expect(rows.find((r) => r.feature.startsWith('hooks'))?.support.kiro).toBe('native');
   });
 

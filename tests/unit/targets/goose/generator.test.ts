@@ -7,12 +7,14 @@ import {
   generateAgents,
   generateIgnore,
   generateMcp,
+  generateHooks,
 } from '../../../../src/targets/goose/generator.js';
 import {
   GOOSE_ROOT_FILE,
   GOOSE_SKILLS_DIR,
   GOOSE_IGNORE,
   GOOSE_GLOBAL_CONFIG,
+  GOOSE_HOOKS_FILE,
 } from '../../../../src/targets/goose/constants.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
@@ -287,5 +289,38 @@ describe('generateMcp (goose)', () => {
     expect(results[0].content).toContain('cmd: /usr/local/bin/my-mcp');
     expect(results[0].content).toContain('type: stdio');
     expect(results[0].content).toContain('API_KEY');
+  });
+});
+
+describe('generateHooks (goose)', () => {
+  it('returns [] when hooks is null', () => {
+    expect(generateHooks(makeCanonical())).toHaveLength(0);
+  });
+
+  it('emits the plugin hooks.json wrapped under a top-level "hooks" key', () => {
+    const results = generateHooks(
+      makeCanonical({
+        hooks: {
+          PostToolUse: [
+            { matcher: 'Write|Edit', command: 'prettier --write $FILE_PATH', type: 'command' },
+          ],
+        },
+      }),
+    );
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(GOOSE_HOOKS_FILE);
+    const parsed = JSON.parse(results[0].content) as { hooks?: Record<string, unknown> };
+    expect(parsed.PostToolUse).toBeUndefined();
+    expect(parsed.hooks).toBeDefined();
+    expect(parsed.hooks!.PostToolUse).toBeDefined();
+  });
+
+  it('drops prompt-type handlers (Open Plugin hooks are command-only)', () => {
+    const results = generateHooks(
+      makeCanonical({
+        hooks: { UserPromptSubmit: [{ matcher: '.*', type: 'prompt', command: 'Review this' }] },
+      }),
+    );
+    expect(results).toHaveLength(0);
   });
 });

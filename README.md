@@ -183,7 +183,7 @@ AgentsMesh generates native config for every major AI coding assistant — plus 
 | Agents | — | Native | — | — | Native | Native | Native | Native | — | Native | — | Native | — | Native | Native | — | — | Native | Native | Native | Native | — | Native | — | Native | — | — | — | Embedded | — |
 | Skills | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
 | MCP Servers | — | Native | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | — | Native | Native | Native | Native | — | Native | — | Native | Native | Native | Native | Partial | Native |
-| Hooks | — | — | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Partial | — | — | — | — | Native | — | — | Native | — | — | — | — | — | Native | — |
+| Hooks | — | — | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Partial | Native | — | — | — | Native | — | — | Native | — | — | — | — | — | Native | — |
 | Ignore | Native | — | — | — | Native | Native | Native | — | — | — | Native | Native | — | — | Native (settings-embedded) | Native | — | Native | Native | Native | — | — | Native | — | Native | — | Native | — | Native | — |
 | Permissions | — | — | Native | Partial | — | Native | — | — | — | — | Partial | Partial | — | — | Partial | — | — | — | Native | — | Native | — | Native | — | Partial | — | — | Partial | — | — |
 <!-- /agentsmesh:support-matrix:project -->
@@ -199,7 +199,7 @@ AgentsMesh generates native config for every major AI coding assistant — plus 
 | Agents | — | Native | — | — | Native | Native | Native | Native | — | Native | — | Native | — | Native | Native | — | — | Native | Native | Native | Native | — | Native | — | Partial | — | — | — | Embedded | — |
 | Skills | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | — |
 | MCP Servers | — | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | — | Native | — | Native | Native | Native | — | Native | Native |
-| Hooks | — | — | Native | Native | — | Native | Native | Native | — | — | Native | Native | Native | Native | Partial | — | — | — | — | — | — | — | Native | — | — | Native | — | — | Native | — |
+| Hooks | — | — | Native | Native | — | Native | Native | Native | — | — | Native | Native | Native | Native | Partial | Native | — | — | — | — | — | — | Native | — | — | Native | — | — | Native | — |
 | Ignore | Native | — | — | — | — | Native | Native | — | — | — | — | Native | — | — | — | Native | — | — | Native | Native | — | — | — | — | Native | — | — | — | Native | — |
 | Permissions | — | — | Native | Partial | — | Native | — | — | Native | — | — | — | — | — | Native | — | — | Native | Native | — | Native | — | Native | — | Partial | Native | — | Partial | — | — |
 <!-- /agentsmesh:support-matrix:global -->

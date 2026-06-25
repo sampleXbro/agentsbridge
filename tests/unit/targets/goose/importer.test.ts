@@ -79,4 +79,37 @@ describe('importFromGoose', () => {
 
     rmSync(projectRoot, { recursive: true, force: true });
   });
+
+  it('imports plugin hooks.json into canonical hooks.yaml', async () => {
+    projectRoot = setupFixture({
+      '.agents/plugins/agentsmesh/hooks/hooks.json': JSON.stringify(
+        {
+          hooks: {
+            PostToolUse: [
+              {
+                matcher: 'Write|Edit',
+                hooks: [{ type: 'command', command: 'prettier --write $FILE_PATH' }],
+              },
+            ],
+          },
+        },
+        null,
+        2,
+      ),
+    });
+
+    const results = await importFromGoose(projectRoot);
+
+    const hooksResult = results.find((r) => r.feature === 'hooks');
+    expect(hooksResult).toBeDefined();
+    expect(hooksResult!.fromTool).toBe('goose');
+    expect(hooksResult!.toPath).toBe('.agentsmesh/hooks.yaml');
+
+    const { readFileSync } = await import('node:fs');
+    const written = readFileSync(join(projectRoot, '.agentsmesh/hooks.yaml'), 'utf-8');
+    expect(written).toContain('PostToolUse');
+    expect(written).toContain('prettier --write $FILE_PATH');
+
+    rmSync(projectRoot, { recursive: true, force: true });
+  });
 });

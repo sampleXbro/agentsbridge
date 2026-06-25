@@ -14,7 +14,7 @@ export const projectCapabilities: TargetCapabilities = {
   agents: 'native',
   skills: 'native',
   mcp: 'native',
-  hooks: 'partial',
+  hooks: 'native',
   ignore: 'none',
   permissions: 'none',
 };

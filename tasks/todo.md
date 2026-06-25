@@ -26,7 +26,7 @@ several of its claims (e.g. Trae commands/agents file-surface; Continue hooks).
 - [ ] warp mcp path → `.warp/.mcp.json` / `~/.warp/.mcp.json`
 - [x] augment-code rules frontmatter key `type` (DONE)
 - [ ] aider rules: wire `CONVENTIONS.md` via `.aider.conf.yml` `read:`
-- [ ] copilot hooks/project `partial → native` (`.github/hooks/*.json`)
+- [x] copilot hooks/project `partial → native` (`.github/hooks/*.json`) — DONE (round-trip already shipped). Follow-up: copilot GLOBAL hooks native via `~/.copilot/hooks/*.json` (needs global-mode wiring; lesson-confirmed).
 - [ ] factory-droid hooks + agents: ADD importer (generate-only today)
 - [ ] opencode mcp+permissions settings-merge base; additionalRules via `instructions` key
 - [ ] roo-code rules/global path `~/.roo/rules/`

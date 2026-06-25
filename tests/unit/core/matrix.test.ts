@@ -150,6 +150,26 @@ describe('buildCompatibilityMatrix', () => {
     expect(permRow?.support['opencode']).toBe('native');
   });
 
+  it('shows continue permissions native at global scope only (project stays none)', () => {
+    const config: ValidatedConfig = {
+      ...baseConfig,
+      targets: ['continue'],
+      features: ['permissions'],
+    };
+    const canonical: CanonicalFiles = {
+      ...emptyCanonical,
+      permissions: { allow: ['Read'], deny: [] },
+    };
+    const projectRows = buildCompatibilityMatrix(config, canonical, 'project');
+    const globalRows = buildCompatibilityMatrix(config, canonical, 'global');
+    expect(projectRows.find((r) => r.feature.startsWith('permissions'))?.support['continue']).toBe(
+      'none',
+    );
+    expect(globalRows.find((r) => r.feature.startsWith('permissions'))?.support['continue']).toBe(
+      'native',
+    );
+  });
+
   it('respects target filter from config', () => {
     const config: ValidatedConfig = {
       ...baseConfig,

@@ -6,7 +6,9 @@ audit (`target-capability-audit-2026-06-24.md`) against live code + primary docs
 NOTE: this supersedes the unverified "23 gaps" plan below — verification REJECTED
 several of its claims (e.g. Trae commands/agents file-surface; Continue hooks).
 
-## Shipped ✅ (uncommitted, one-commit-at-end)
+## Shipped ✅ (committed on develop)
+- [x] factory-droid agents — added importer.agents directory spec (agent preset); native droids now round-trip to `.agentsmesh/agents/*`. commit b2ccc64.
+- [x] factory-droid hooks — wrapped `{hooks}` format fix + new importer; extracted shared `wrapped-command-hooks` helper (codex-cli + factory-droid). commit efd0c6f.
 - [x] codex-cli hooks `partial → native` (both scopes) — changeset, full QA.
 - [x] amazon-q agents `systemPrompt → prompt` key fix (gen + import + fallback) — changeset, full QA.
 - [x] cursor hooks format fix — camelCase events + flat array (was PascalCase nested, never fired); round-trip + dropped-event lint warning; changeset, full QA (13-file blast radius).

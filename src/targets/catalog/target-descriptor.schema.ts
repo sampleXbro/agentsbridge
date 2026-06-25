@@ -78,6 +78,7 @@ type GeneratorsShape = z.infer<typeof generatorsSchema>;
 interface DescriptorShape {
   readonly generators: GeneratorsShape;
   readonly emitScopedSettings?: unknown;
+  readonly globalSupport?: { readonly scopeExtras?: unknown };
 }
 
 const generatorRequirements = [
@@ -106,22 +107,32 @@ function validateCapabilityImplementations(
   ctx: z.RefinementCtx,
   pathPrefix: readonly (string | number)[],
 ): void {
+  // `scopeExtras` runs only at global scope, so it can satisfy a settings-backed
+  // capability (mcp/hooks/ignore/permissions) when validating global caps —
+  // e.g. Continue emits ~/.continue/permissions.yaml from its scopeExtras.
+  const isGlobalScope = pathPrefix[0] === 'globalSupport';
+  const hasScopeExtras =
+    isGlobalScope && typeof descriptor.globalSupport?.scopeExtras === 'function';
   for (const requirement of generatorRequirements) {
     const level = capabilityLevel(capabilities[requirement.feature]);
     if (level === 'none') continue;
+    const settingsBacked = canUseScopedSettings(requirement.feature);
     const hasGenerator = typeof descriptor.generators[requirement.generator] === 'function';
     const hasSettingsEmitter =
-      canUseScopedSettings(requirement.feature) &&
-      typeof descriptor.emitScopedSettings === 'function';
-    if (hasGenerator || hasSettingsEmitter) continue;
+      settingsBacked && typeof descriptor.emitScopedSettings === 'function';
+    const hasScopeExtrasEmitter = settingsBacked && hasScopeExtras;
+    if (hasGenerator || hasSettingsEmitter || hasScopeExtrasEmitter) continue;
+    const settingsHint = settingsBacked
+      ? isGlobalScope
+        ? ' or emitScopedSettings or globalSupport.scopeExtras'
+        : ' or emitScopedSettings'
+      : '';
     ctx.addIssue({
       code: 'custom',
       path: [...pathPrefix, requirement.feature],
       message:
         `Capability "${requirement.feature}" is "${level}" but ` +
-        `generators.${requirement.generator}` +
-        (canUseScopedSettings(requirement.feature) ? ' or emitScopedSettings' : '') +
-        ' is missing.',
+        `generators.${requirement.generator}${settingsHint} is missing.`,
     });
   }
 }

@@ -175,8 +175,12 @@ describe('global mode round-trip: Continue', () => {
       '{"mcpServers":{"test":{"command":"node","args":[]}}}',
     );
     writeFileSync(
+      join(canonicalDir, 'permissions.yaml'),
+      'allow:\n  - Read(*)\nask:\n  - Bash\ndeny:\n  - Write\n',
+    );
+    writeFileSync(
       join(canonicalDir, 'agentsmesh.yaml'),
-      'version: 1\ntargets: [continue]\nfeatures: [rules, commands, skills, mcp]\n',
+      'version: 1\ntargets: [continue]\nfeatures: [rules, commands, skills, mcp, permissions]\n',
     );
 
     const gen = await runCli('generate --global --targets continue', projectDir);
@@ -232,10 +236,18 @@ describe('global mode round-trip: Continue', () => {
     fileContains(join(homeDir, '.continue', 'config.yaml'), 'prompts');
     fileContains(join(homeDir, '.continue', 'config.yaml'), 'mcpServers');
 
+    // 9. Permissions (docs: ~/.continue/permissions.yaml — allow/ask/exclude)
+    fileExists(join(homeDir, '.continue', 'permissions.yaml'));
+    fileContains(join(homeDir, '.continue', 'permissions.yaml'), 'allow');
+    fileContains(join(homeDir, '.continue', 'permissions.yaml'), 'Read(*)');
+    fileContains(join(homeDir, '.continue', 'permissions.yaml'), 'exclude');
+    fileContains(join(homeDir, '.continue', 'permissions.yaml'), 'Write');
+
     dirFilesExactly(join(homeDir, '.continue'), [
       'AGENTS.md',
       'config.yaml',
       'mcpServers/agentsmesh.json',
+      'permissions.yaml',
       'prompts/explain.md',
       'rules/general.md',
       'rules/style.md',
@@ -262,5 +274,11 @@ describe('global mode round-trip: Continue', () => {
     fileExists(join(canonicalDir, 'skills', 'continue-skill', 'SKILL.md'));
     fileExists(join(canonicalDir, 'skills', 'continue-skill', 'references', 'context.md'));
     fileExists(join(canonicalDir, 'mcp.json'));
+
+    // Permissions round-trip: ~/.continue/permissions.yaml (exclude) → canonical (deny)
+    fileExists(join(canonicalDir, 'permissions.yaml'));
+    fileContains(join(canonicalDir, 'permissions.yaml'), 'Read(*)');
+    fileContains(join(canonicalDir, 'permissions.yaml'), 'deny');
+    fileContains(join(canonicalDir, 'permissions.yaml'), 'Write');
   });
 });

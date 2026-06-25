@@ -42,3 +42,4 @@ export const AUGMENT_CODE_CANONICAL_AGENTS_DIR = '.agentsmesh/agents';
 export const AUGMENT_CODE_CANONICAL_MCP = '.agentsmesh/mcp.json';
 export const AUGMENT_CODE_CANONICAL_HOOKS = '.agentsmesh/hooks.yaml';
 export const AUGMENT_CODE_CANONICAL_IGNORE = '.agentsmesh/ignore';
+export const AUGMENT_CODE_CANONICAL_PERMISSIONS = '.agentsmesh/permissions.yaml';

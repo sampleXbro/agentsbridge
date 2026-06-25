@@ -170,6 +170,26 @@ describe('buildCompatibilityMatrix', () => {
     );
   });
 
+  it('shows augment-code permissions native at global scope only (project stays none)', () => {
+    const config: ValidatedConfig = {
+      ...baseConfig,
+      targets: ['augment-code'],
+      features: ['permissions'],
+    };
+    const canonical: CanonicalFiles = {
+      ...emptyCanonical,
+      permissions: { allow: ['view'], deny: [] },
+    };
+    const projectRows = buildCompatibilityMatrix(config, canonical, 'project');
+    const globalRows = buildCompatibilityMatrix(config, canonical, 'global');
+    expect(
+      projectRows.find((r) => r.feature.startsWith('permissions'))?.support['augment-code'],
+    ).toBe('none');
+    expect(
+      globalRows.find((r) => r.feature.startsWith('permissions'))?.support['augment-code'],
+    ).toBe('native');
+  });
+
   it('shows goose permissions native at global scope only (project stays none)', () => {
     const config: ValidatedConfig = {
       ...baseConfig,

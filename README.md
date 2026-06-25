@@ -201,7 +201,7 @@ AgentsMesh generates native config for every major AI coding assistant — plus 
 | MCP Servers | — | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | — | Native | — | Native | Native | Native | — | Native | Native |
 | Hooks | — | — | Native | Native | — | Native | Native | Native | — | — | Native | Native | Native | Native | Partial | Native | — | — | — | — | — | — | Native | — | — | Native | — | — | Native | — |
 | Ignore | Native | — | — | — | — | Native | Native | — | — | — | — | Native | — | — | — | Native | — | — | Native | Native | — | — | — | — | Native | — | — | — | Native | — |
-| Permissions | — | — | Native | Partial | — | Native | — | — | Native | — | — | — | — | — | Native | Native | — | Native | Native | — | Native | — | Native | — | Partial | Native | — | Partial | — | — |
+| Permissions | — | — | Native | Partial | Native | Native | — | — | Native | — | — | — | — | — | Native | Native | — | Native | Native | — | Native | — | Native | — | Partial | Native | — | Partial | — | — |
 <!-- /agentsmesh:support-matrix:global -->
 
 See the [full feature matrix](https://samplexbro.github.io/agentsmesh/reference/supported-tools/) for native vs. embedded details and per-tool global paths.

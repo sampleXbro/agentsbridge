@@ -181,7 +181,9 @@ export async function importFromAugmentCode(
 
   const settingsFile =
     scope === 'global' ? AUGMENT_CODE_GLOBAL_SETTINGS_FILE : AUGMENT_CODE_SETTINGS_FILE;
-  await importAugmentSettings(projectRoot, settingsFile, results);
+  await importAugmentSettings(projectRoot, settingsFile, results, {
+    includePermissions: scope === 'global',
+  });
 
   if (scope === 'project') {
     await importAugmentIgnore(projectRoot, AUGMENT_CODE_IGNORE_FILE, results);

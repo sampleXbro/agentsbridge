@@ -1,12 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { parse as parseYaml } from 'yaml';
 import { getBuiltinTargetDefinition } from '../../../../src/targets/catalog/builtin-targets.js';
 import { generate } from '../../../../src/core/generate/engine.js';
 import type { ValidatedConfig } from '../../../../src/config/core/schema.js';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
 import {
   AIDER_CONVENTIONS,
+  AIDER_CONF_FILE,
   AIDER_IGNORE,
   AIDER_GLOBAL_CONVENTIONS,
   AIDER_GLOBAL_IGNORE,
@@ -45,6 +47,25 @@ describe('aider global layout', () => {
   it('rewriteGeneratedPath passes through unknown paths unchanged', () => {
     const rewrite = descriptor.globalSupport!.layout.rewriteGeneratedPath!;
     expect(rewrite('some/unknown/path.txt', '')).toBe('some/unknown/path.txt');
+  });
+
+  it('rewriteGeneratedPath suppresses .aider.conf.yml in global mode', () => {
+    const rewrite = descriptor.globalSupport!.layout.rewriteGeneratedPath!;
+    expect(rewrite(AIDER_CONF_FILE, '')).toBeNull();
+  });
+
+  it('mergeGeneratedOutputContent unions read: and preserves existing keys', () => {
+    const merge = descriptor.mergeGeneratedOutputContent!;
+    const existing = 'model: gpt-4o\nread:\n  - PROJECT.md\n';
+    const merged = merge(existing, undefined, 'read:\n  - CONVENTIONS.md\n', AIDER_CONF_FILE);
+    const parsed = parseYaml(merged!) as { model?: string; read?: string[] };
+    expect(parsed.model).toBe('gpt-4o');
+    expect(parsed.read).toEqual(['PROJECT.md', 'CONVENTIONS.md']);
+  });
+
+  it('mergeGeneratedOutputContent ignores non-conf paths', () => {
+    const merge = descriptor.mergeGeneratedOutputContent!;
+    expect(merge('x', undefined, 'y', AIDER_CONVENTIONS)).toBeNull();
   });
 
   it('globalSupport.capabilities matches project capabilities', () => {
@@ -134,5 +155,32 @@ describe('aider global frontmatter preservation', () => {
     const rule = results.find((r) => r.target === 'aider' && r.path === AIDER_GLOBAL_CONVENTIONS);
     expect(rule).toBeDefined();
     expect(rule!.content).toContain('Use TDD and strict TypeScript.');
+    // The conf wiring is project-only — it must NOT appear in global mode.
+    expect(results.find((r) => r.target === 'aider' && r.path === AIDER_CONF_FILE)).toBeUndefined();
+  });
+
+  it('emits .aider.conf.yml wiring CONVENTIONS.md in project mode', async () => {
+    const results = await generate({
+      config: { ...makeGlobalConfig(), features: ['rules'] } as ValidatedConfig,
+      canonical: makeCanonical({
+        rules: [
+          {
+            source: '/proj/.agentsmesh/rules/_root.md',
+            root: true,
+            targets: [],
+            description: '',
+            globs: [],
+            body: 'Use TDD.',
+          },
+        ],
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'project',
+    });
+
+    const conf = results.find((r) => r.target === 'aider' && r.path === AIDER_CONF_FILE);
+    expect(conf).toBeDefined();
+    const parsed = parseYaml(conf!.content) as { read?: string[] };
+    expect(parsed.read).toEqual(['CONVENTIONS.md']);
   });
 });

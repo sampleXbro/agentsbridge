@@ -14,7 +14,12 @@
  */
 
 import { basename } from 'node:path';
-import type { CanonicalFiles, CanonicalCommand, CanonicalRule, CanonicalAgent } from '../../core/types.js';
+import type {
+  CanonicalFiles,
+  CanonicalCommand,
+  CanonicalRule,
+  CanonicalAgent,
+} from '../../core/types.js';
 import { generateEmbeddedSkills } from '../import/embedded-skill.js';
 import { serializeFrontmatter } from '../../utils/text/markdown.js';
 import {
@@ -32,23 +37,21 @@ export interface AugmentCodeOutput {
 }
 
 /**
- * Maps a canonical trigger / globs to AugmentCode frontmatter.
- * - `always_apply: true`   — always included (no globs, not manual)
- * - `agent_requested: true` + `description` — agent decides based on description
+ * Maps a canonical trigger / globs to AugmentCode rule frontmatter.
+ * AugmentCode uses a single `type` key (not boolean flags):
+ * - `type: always_apply`    — always included (no globs, not manual)
+ * - `type: agent_requested` + `description` — agent decides based on description
  */
 function ruleFrontmatter(rule: CanonicalRule): Record<string, unknown> {
   const fm: Record<string, unknown> = {};
-  if (rule.description) {
-    fm.description = rule.description;
-  }
   if (rule.globs.length > 0 || rule.trigger === 'manual' || rule.trigger === 'model_decision') {
     // Manual and model_decision become agent_requested; glob-triggered also
-    fm.agent_requested = true;
-    if (rule.globs.length > 0) {
-      fm.globs = rule.globs;
-    }
+    fm.type = 'agent_requested';
+    if (rule.description) fm.description = rule.description;
+    if (rule.globs.length > 0) fm.globs = rule.globs;
   } else {
-    fm.always_apply = true;
+    fm.type = 'always_apply';
+    if (rule.description) fm.description = rule.description;
   }
   return fm;
 }
@@ -67,8 +70,8 @@ export function generateRules(canonical: CanonicalFiles): AugmentCodeOutput[] {
   for (const rule of canonical.rules) {
     if (rule.targets.length > 0 && !rule.targets.includes(AUGMENT_CODE_TARGET)) continue;
     if (rule.root) {
-      // Root rule -> _root.md (always_apply)
-      const fm: Record<string, unknown> = { always_apply: true };
+      // Root rule -> _root.md (type: always_apply)
+      const fm: Record<string, unknown> = { type: 'always_apply' };
       if (rule.description) fm.description = rule.description;
       outputs.push({
         path: `${AUGMENT_CODE_RULES_DIR}/_root.md`,

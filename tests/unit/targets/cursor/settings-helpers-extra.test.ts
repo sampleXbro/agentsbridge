@@ -19,49 +19,52 @@ afterEach(() => {
 });
 
 describe('cursorHooksToCanonical — uncovered branches', () => {
-  it('skips entries when type=command and getHookCommand falls back to prompt', () => {
+  it('falls back to prompt text when type=command has no command', () => {
     const hooks = cursorHooksToCanonical({
-      Foo: [
-        {
-          matcher: '*',
-          hooks: [{ type: 'command', prompt: 'fallback prompt' }],
-        },
-      ],
+      preToolUse: [{ matcher: '*', type: 'command', prompt: 'fallback prompt' }],
     });
-    // type='command' falls back to prompt when no command — this also exercises the 'command || prompt' branch
     expect(hooks).toEqual({
-      Foo: [{ matcher: '*', type: 'command', command: 'fallback prompt' }],
+      PreToolUse: [{ matcher: '*', type: 'command', command: 'fallback prompt' }],
     });
   });
 
   it('keeps timeout when number, omits when not number', () => {
     const hooks = cursorHooksToCanonical({
-      X: [
-        {
-          matcher: '*',
-          hooks: [
-            { type: 'command', command: 'a', timeout: 5 },
-            { type: 'command', command: 'b', timeout: '10' },
-          ],
-        },
+      postToolUse: [
+        { matcher: '*', type: 'command', command: 'a', timeout: 5 },
+        { matcher: '*', type: 'command', command: 'b', timeout: '10' },
       ],
     });
-    expect(hooks.X).toEqual([
+    expect(hooks.PostToolUse).toEqual([
       { matcher: '*', type: 'command', command: 'a', timeout: 5 },
       { matcher: '*', type: 'command', command: 'b' },
     ]);
   });
 
-  it('falls back to empty hooks when e.hooks is not array', () => {
+  it('drops events with no Cursor->canonical mapping', () => {
     const hooks = cursorHooksToCanonical({
-      X: [{ matcher: '*', hooks: 'not array' }],
+      unknownEvent: [{ matcher: '*', type: 'command', command: 'a' }],
     });
     expect(hooks).toEqual({});
   });
 
-  it('skips matcher when not string', () => {
+  it('skips non-array event values', () => {
+    const hooks = cursorHooksToCanonical({ preToolUse: 'not array' });
+    expect(hooks).toEqual({});
+  });
+
+  it('defaults a missing/non-string matcher to empty string', () => {
     const hooks = cursorHooksToCanonical({
-      X: [{ matcher: 42, hooks: [{ type: 'command', command: 'a' }] }],
+      preToolUse: [{ matcher: 42, type: 'command', command: 'a' }],
+    });
+    expect(hooks).toEqual({
+      PreToolUse: [{ matcher: '', type: 'command', command: 'a' }],
+    });
+  });
+
+  it('skips entries with no command or prompt text', () => {
+    const hooks = cursorHooksToCanonical({
+      preToolUse: [{ matcher: '*', type: 'command' }],
     });
     expect(hooks).toEqual({});
   });
@@ -123,12 +126,12 @@ describe('importSettings — uncovered branches', () => {
     expect(results.filter((r) => r.feature === 'hooks')).toEqual([]);
   });
 
-  it('skips hooks from settings when canonical hooks is empty (matcher missing)', async () => {
+  it('skips hooks from settings when entries have no command/prompt text', async () => {
     mkdirSync(join(dir, '.cursor'), { recursive: true });
     writeFileSync(
       join(dir, '.cursor', 'settings.json'),
       JSON.stringify({
-        hooks: { PreToolUse: [{ hooks: [{ type: 'command', command: 'a' }] }] },
+        hooks: { preToolUse: [{ matcher: '*', type: 'command' }] },
       }),
     );
     const results: ImportResult[] = [];

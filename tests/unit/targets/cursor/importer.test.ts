@@ -378,14 +378,12 @@ describe('importFromCursor — settings.json decomposition', () => {
   it('imports hooks to .agentsmesh/hooks.yaml', async () => {
     mkdirSync(join(TEST_DIR, '.cursor'), { recursive: true });
     writeFileSync(
-      join(TEST_DIR, '.cursor', 'settings.json'),
+      join(TEST_DIR, '.cursor', 'hooks.json'),
       JSON.stringify({
+        version: 1,
         hooks: {
-          PostToolUse: [
-            {
-              matcher: 'Write',
-              hooks: [{ type: 'command', command: 'prettier --write $FILE_PATH' }],
-            },
+          postToolUse: [
+            { matcher: 'Write', type: 'command', command: 'prettier --write $FILE_PATH' },
           ],
         },
       }),
@@ -394,6 +392,7 @@ describe('importFromCursor — settings.json decomposition', () => {
     const hooksResult = results.find((r) => r.feature === 'hooks');
     expect(hooksResult).toBeDefined();
     const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'hooks.yaml'), 'utf-8');
+    // Cursor's camelCase event maps back to the canonical PascalCase name.
     expect(content).toContain('PostToolUse');
     expect(content).toContain('prettier');
   });

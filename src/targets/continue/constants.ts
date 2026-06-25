@@ -11,7 +11,10 @@ export const CONTINUE_SKILLS_DIR = '.continue/skills';
 
 export const CONTINUE_GLOBAL_AGENTS_MD = '.continue/AGENTS.md';
 export const CONTINUE_GLOBAL_CONFIG = '.continue/config.yaml';
+/** Personal tool permissions (global tier only — project tier is unsupported upstream). */
+export const CONTINUE_GLOBAL_PERMISSIONS = '.continue/permissions.yaml';
 
 export const CONTINUE_CANONICAL_RULES_DIR = '.agentsmesh/rules';
 export const CONTINUE_CANONICAL_COMMANDS_DIR = '.agentsmesh/commands';
 export const CONTINUE_CANONICAL_MCP = '.agentsmesh/mcp.json';
+export const CONTINUE_CANONICAL_PERMISSIONS = '.agentsmesh/permissions.yaml';

@@ -21,6 +21,8 @@ describe('amazon-q descriptor', () => {
   it('declares native rules and mcp capabilities', () => {
     expect(descriptor.capabilities.rules).toBe('native');
     expect(descriptor.capabilities.mcp).toBe('native');
+    // Non-root rules are emitted as separate .amazonq/rules/<slug>.md files and imported back.
+    expect(descriptor.capabilities.additionalRules).toBe('native');
   });
 
   it('declares none for unsupported features', () => {
@@ -56,6 +58,9 @@ describe('amazon-q global layout', () => {
   it('global capabilities declare native rules and mcp', () => {
     expect(descriptor.globalSupport?.capabilities.rules).toBe('native');
     expect(descriptor.globalSupport?.capabilities.mcp).toBe('native');
+    // Amazon Q has no global rules dir on disk (~/.aws/amazonq/ is MCP/agents only),
+    // so additionalRules stays none for global.
+    expect(descriptor.globalSupport?.capabilities.additionalRules).toBe('none');
   });
 
   it('global detection paths include rules dir and mcp file', () => {

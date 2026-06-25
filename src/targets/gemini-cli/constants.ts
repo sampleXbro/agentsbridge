@@ -68,3 +68,5 @@ export const GEMINI_GLOBAL_SETTINGS = '.gemini/settings.json';
 export const GEMINI_GLOBAL_COMMANDS_DIR = '.gemini/commands';
 export const GEMINI_GLOBAL_SKILLS_DIR = '.gemini/skills';
 export const GEMINI_GLOBAL_AGENTS_DIR = '.gemini/agents';
+/** User-tier policy file (~/.gemini/policies/permissions.toml). Same relative path as project. */
+export const GEMINI_GLOBAL_POLICIES_FILE = '.gemini/policies/permissions.toml';

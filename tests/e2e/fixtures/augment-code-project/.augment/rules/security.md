@@ -1,5 +1,5 @@
 ---
-agent_requested: true
+type: agent_requested
 description: Security guidelines — apply when handling auth, secrets, or HTTP endpoints
 globs:
   - "src/auth/**/*.ts"

@@ -110,3 +110,4 @@ opencode.json
 .kiroignore
 .qwenignore
 .rooignore
+.aider.conf.yml

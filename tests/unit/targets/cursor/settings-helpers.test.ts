@@ -22,20 +22,15 @@ describe('cursor settings helpers', () => {
     return dir;
   }
 
-  it('normalizes Cursor hooks and ignores malformed entries', () => {
+  it('normalizes Cursor hooks (camelCase events, flat array) and ignores malformed entries', () => {
     const hooks = cursorHooksToCanonical({
-      PreToolUse: [
-        {
-          matcher: 'src/**/*.ts',
-          hooks: [
-            { type: 'command', command: 'pnpm lint', timeout: 5 },
-            { type: 'prompt', prompt: 'Ask for approval' },
-            { type: 'command' },
-          ],
-        },
-        { matcher: '', hooks: [{ type: 'command', command: 'skip' }] },
+      preToolUse: [
+        { matcher: 'src/**/*.ts', type: 'command', command: 'pnpm lint', timeout: 5 },
+        { matcher: 'src/**/*.ts', type: 'prompt', prompt: 'Ask for approval' },
+        { type: 'command' },
         null,
       ],
+      unknownEvent: [{ matcher: '*', type: 'command', command: 'dropped' }],
       Invalid: 'nope',
     });
 
@@ -53,18 +48,15 @@ describe('cursor settings helpers', () => {
     writeFileSync(
       join(dir, '.cursor', 'hooks.json'),
       JSON.stringify({
-        hooks: {
-          PreToolUse: [{ matcher: '*', hooks: [{ type: 'command', command: 'pnpm lint' }] }],
-        },
+        version: 1,
+        hooks: { preToolUse: [{ matcher: '*', type: 'command', command: 'pnpm lint' }] },
       }),
     );
     writeFileSync(
       join(dir, '.cursor', 'settings.json'),
       JSON.stringify({
         permissions: { allow: ['Read', 7], deny: ['Bash'] },
-        hooks: {
-          PostToolUse: [{ matcher: '*', hooks: [{ type: 'command', command: 'pnpm test' }] }],
-        },
+        hooks: { postToolUse: [{ matcher: '*', type: 'command', command: 'pnpm test' }] },
       }),
     );
 
@@ -89,9 +81,7 @@ describe('cursor settings helpers', () => {
     writeFileSync(
       join(dir, '.cursor', 'settings.json'),
       JSON.stringify({
-        hooks: {
-          PostToolUse: [{ matcher: '*', hooks: [{ type: 'prompt', prompt: 'Summarize changes' }] }],
-        },
+        hooks: { postToolUse: [{ matcher: '*', type: 'prompt', prompt: 'Summarize changes' }] },
       }),
     );
 

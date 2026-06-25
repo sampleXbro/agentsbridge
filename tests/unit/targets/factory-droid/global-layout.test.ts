@@ -26,7 +26,7 @@ describe('factory-droid descriptor shape', () => {
   it('has capabilities', () => {
     expect(descriptor.capabilities.rules).toBe('native');
     expect(descriptor.capabilities.additionalRules).toBe('embedded');
-    expect(descriptor.capabilities.commands).toBe('none');
+    expect(descriptor.capabilities.commands).toBe('native');
     expect(descriptor.capabilities.agents).toBe('native');
     expect(descriptor.capabilities.skills).toBe('native');
     expect(descriptor.capabilities.mcp).toBe('native');
@@ -41,8 +41,11 @@ describe('factory-droid descriptor shape', () => {
     expect(descriptor.detectionPaths).toContain(FACTORY_DROID_DROIDS_DIR);
   });
 
-  it('has supportsConversion for commands', () => {
-    expect(descriptor.supportsConversion).toEqual({ commands: true });
+  it('emits native commands (no skill projection)', () => {
+    expect(descriptor.supportsConversion).toBeUndefined();
+    expect(descriptor.project.paths.commandPath('review', {} as never)).toBe(
+      '.factory/commands/review.md',
+    );
   });
 
   it('project layout has rootInstructionPath', () => {

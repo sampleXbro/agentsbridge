@@ -37,7 +37,7 @@ function featureLabel(feature: string): string {
   return FEATURE_LABEL[base] ?? base.charAt(0).toUpperCase() + base.slice(1);
 }
 
-/** Center `text` (assumed visible length === text.length) within `width`. */
+/** Center plain `text` (visible length === text.length) within `width`. */
 function center(text: string, width: number): string {
   const pad = Math.max(0, width - text.length);
   const left = Math.floor(pad / 2);
@@ -45,45 +45,49 @@ function center(text: string, width: number): string {
 }
 
 /**
- * Transposed compatibility matrix: one row per target, one full-name column per
- * feature. Targets are sorted by display label; the feature symbol is centered
- * under its column header. Color is gated by `colorEnabled()`.
+ * Transposed compatibility matrix rendered as a bordered box table: one row per
+ * target, one full-name column per feature, with a separator rule under the
+ * header and every row. Color is gated by `colorEnabled()`.
  */
 export function formatMatrix(rows: CompatibilityRow[], targets: string[]): string {
   const useColor = colorEnabled();
   const c = (code: string, text: string): string => (useColor ? `${code}${text}${COLORS.reset}` : text);
-  const GAP = '  ';
 
   const labels = rows.map((r) => featureLabel(r.feature));
-  const colW = labels.map((l) => Math.max(3, l.length));
-
+  const featW = labels.map((l) => Math.max(3, l.length));
   const labeled = targets
     .map((t) => ({ t, label: matrixColumnLabel(t) }))
     .sort((a, b) => a.label.localeCompare(b.label));
-  const targetWidth = Math.max(6, ...labeled.map((x) => x.label.length));
+  const targetW = Math.max(6, ...labeled.map((x) => x.label.length));
+  const widths = [targetW, ...featW];
 
-  const header =
-    c(COLORS.bold + COLORS.cyan, 'Target'.padEnd(targetWidth)) +
-    GAP +
-    labels.map((l, i) => c(COLORS.bold + COLORS.magenta, center(l, colW[i]!))).join(GAP);
+  const hline = (l: string, m: string, r: string): string =>
+    c(COLORS.dim, l + widths.map((w) => '─'.repeat(w + 2)).join(m) + r);
+  const V = c(COLORS.dim, '│');
+  const wrapRow = (cells: string[]): string => V + cells.map((cell) => ` ${cell} `).join(V) + V;
 
-  const rule =
-    c(COLORS.dim, '─'.repeat(targetWidth)) +
-    GAP +
-    colW.map((w) => c(COLORS.dim, '─'.repeat(w))).join(GAP);
+  const header = wrapRow([
+    c(COLORS.bold + COLORS.cyan, 'Target'.padEnd(targetW)),
+    ...labels.map((l, i) => c(COLORS.bold + COLORS.magenta, center(l, featW[i]!))),
+  ]);
 
-  const body = labeled.map(({ t, label }) => {
-    const cells = rows.map((r, i) => {
-      const level = (r.support[t] ?? 'none') as SupportLevel;
-      const sym = useColor ? coloredSymbol(level) : LEVEL_SYMBOL[level];
-      // The symbol is one visible char; center it in the column (color codes
-      // add no visible width, so center on the plain symbol then color is fine).
-      const pad = colW[i]! - 1;
-      const left = Math.floor(pad / 2);
-      return ' '.repeat(left) + sym + ' '.repeat(pad - left);
-    });
-    return c(COLORS.cyan, label.padEnd(targetWidth)) + GAP + cells.join(GAP);
+  const lines: string[] = [hline('┌', '┬', '┐'), header, hline('├', '┼', '┤')];
+  labeled.forEach(({ t, label }, idx) => {
+    const cells = [
+      c(COLORS.cyan, label.padEnd(targetW)),
+      ...rows.map((r, i) => {
+        const level = (r.support[t] ?? 'none') as SupportLevel;
+        const sym = useColor ? coloredSymbol(level) : LEVEL_SYMBOL[level];
+        // The symbol is one visible char; center it within the column.
+        const pad = featW[i]! - 1;
+        const left = Math.floor(pad / 2);
+        return ' '.repeat(left) + sym + ' '.repeat(pad - left);
+      }),
+    ];
+    lines.push(wrapRow(cells));
+    lines.push(idx === labeled.length - 1 ? hline('└', '┴', '┘') : hline('├', '┼', '┤'));
   });
+  if (labeled.length === 0) lines.push(hline('└', '┴', '┘'));
 
   const legend =
     c(COLORS.green, '✓') +
@@ -95,12 +99,5 @@ export function formatMatrix(rows: CompatibilityRow[], targets: string[]): strin
     c(COLORS.dim, '–') +
     ' none';
 
-  // A separator rule under the header and under every row, so the eye can track
-  // a single target straight across the wide grid.
-  const lines = [header, rule];
-  for (const row of body) {
-    lines.push(row, rule);
-  }
-  lines.push('', legend);
-  return lines.join('\n');
+  return [...lines, '', legend].join('\n');
 }

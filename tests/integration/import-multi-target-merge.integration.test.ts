@@ -258,13 +258,9 @@ describe('import: multi-target sequential merge (integration)', () => {
     writeFileSync(
       join(TEST_DIR, '.cursor', 'hooks.json'),
       JSON.stringify({
+        version: 1,
         hooks: {
-          PostToolUse: [
-            {
-              matcher: 'Edit',
-              hooks: [{ type: 'command', command: 'hooks_from_cursor' }],
-            },
-          ],
+          postToolUse: [{ matcher: 'Edit', type: 'command', command: 'hooks_from_cursor' }],
         },
       }),
     );

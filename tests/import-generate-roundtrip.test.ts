@@ -196,11 +196,13 @@ describe('import: Cursor (all features)', () => {
     );
     writeFileSync(
       join(TEST_DIR, '.cursor', 'settings.json'),
+      JSON.stringify({ permissions: { allow: ['Read'], deny: [] } }),
+    );
+    writeFileSync(
+      join(TEST_DIR, '.cursor', 'hooks.json'),
       JSON.stringify({
-        permissions: { allow: ['Read'], deny: [] },
-        hooks: {
-          PostToolUse: [{ matcher: 'Write', hooks: [{ type: 'command', command: 'prettier' }] }],
-        },
+        version: 1,
+        hooks: { postToolUse: [{ matcher: 'Write', type: 'command', command: 'prettier' }] },
       }),
     );
     writeFileSync(join(TEST_DIR, '.cursorignore'), 'node_modules\n');

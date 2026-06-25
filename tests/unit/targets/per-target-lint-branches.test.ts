@@ -49,7 +49,6 @@ function withPermissions(
 
 describe('per-target lint helpers', () => {
   describe.each([
-    ['goose', goose],
     ['opencode', opencode],
     ['zed', zed],
     ['kilo-code', kilo],
@@ -67,7 +66,6 @@ describe('per-target lint helpers', () => {
       expect(diags).toHaveLength(1);
       expect(diags[0]!.level).toBe('warning');
     });
-
   });
 
   describe.each([

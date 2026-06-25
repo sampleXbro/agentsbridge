@@ -179,6 +179,37 @@ describe('targetDescriptorSchema', () => {
     ).not.toThrow();
   });
 
+  it('accepts a global settings-backed capability satisfied by scopeExtras', () => {
+    expect(() =>
+      validateDescriptor({
+        ...minimalDescriptor,
+        globalSupport: {
+          capabilities: { ...minimalDescriptor.capabilities, permissions: 'native' },
+          detectionPaths: ['.test-global'],
+          layout: minimalDescriptor.project,
+          scopeExtras: async () => [],
+        },
+      }),
+    ).not.toThrow();
+  });
+
+  it('does not let scopeExtras satisfy a project-scope settings-backed capability', () => {
+    // scopeExtras runs at global scope only, so a project-scope native permissions
+    // capability still requires generatePermissions/emitScopedSettings.
+    expect(() =>
+      validateDescriptor({
+        ...minimalDescriptor,
+        capabilities: { ...minimalDescriptor.capabilities, permissions: 'native' },
+        globalSupport: {
+          capabilities: minimalDescriptor.capabilities,
+          detectionPaths: ['.test-global'],
+          layout: minimalDescriptor.project,
+          scopeExtras: async () => [],
+        },
+      }),
+    ).toThrow(/generatePermissions/);
+  });
+
   it('rejects null lintRules replaced with non-function non-null', () => {
     expect(() =>
       validateDescriptor({
@@ -194,7 +225,11 @@ describe('targetDescriptorSchema', () => {
         ...minimalDescriptor,
         nativeInstall: {
           pickPaths: [
-            { prefix: '.test/rules', feature: 'rules', strategy: { kind: 'basename', suffix: '.md' } },
+            {
+              prefix: '.test/rules',
+              feature: 'rules',
+              strategy: { kind: 'basename', suffix: '.md' },
+            },
             { prefix: '.test/skills', feature: 'skills', strategy: { kind: 'skillDir' } },
             { prefix: '.test/skills/', feature: 'skills', strategy: { kind: 'firstSegment' } },
           ],

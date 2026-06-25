@@ -8,8 +8,10 @@ import type { CanonicalFiles } from '../../../../src/core/types.js';
 import {
   PI_AGENT_ROOT_FILE,
   PI_AGENT_SKILLS_DIR,
+  PI_AGENT_COMMANDS_DIR,
   PI_AGENT_GLOBAL_ROOT_FILE,
   PI_AGENT_GLOBAL_SKILLS_DIR,
+  PI_AGENT_GLOBAL_COMMANDS_DIR,
 } from '../../../../src/targets/pi-agent/constants.js';
 
 describe('pi-agent global layout', () => {
@@ -51,8 +53,8 @@ describe('pi-agent global layout', () => {
     expect(descriptor.sharedArtifacts).toEqual({ '.agents/skills/': 'consumer' });
   });
 
-  it('descriptor supports conversion for commands and agents', () => {
-    expect(descriptor.supportsConversion).toEqual({ commands: true, agents: true });
+  it('descriptor projects agents only (commands are native)', () => {
+    expect(descriptor.supportsConversion).toEqual({ agents: true });
   });
 
   it('descriptor has correct id', () => {
@@ -67,7 +69,7 @@ describe('pi-agent global layout', () => {
     expect(descriptor.capabilities).toEqual({
       rules: 'native',
       additionalRules: 'embedded',
-      commands: 'none',
+      commands: 'native',
       agents: 'none',
       skills: 'native',
       mcp: 'none',
@@ -79,14 +81,14 @@ describe('pi-agent global layout', () => {
 
   it('project layout has managed outputs', () => {
     expect(descriptor.project.managedOutputs).toEqual({
-      dirs: [PI_AGENT_SKILLS_DIR],
+      dirs: [PI_AGENT_SKILLS_DIR, PI_AGENT_COMMANDS_DIR],
       files: [PI_AGENT_ROOT_FILE],
     });
   });
 
   it('global layout has managed outputs', () => {
     expect(descriptor.globalSupport!.layout.managedOutputs).toEqual({
-      dirs: [PI_AGENT_GLOBAL_SKILLS_DIR],
+      dirs: [PI_AGENT_GLOBAL_SKILLS_DIR, PI_AGENT_GLOBAL_COMMANDS_DIR],
       files: [PI_AGENT_GLOBAL_ROOT_FILE],
     });
   });
@@ -95,10 +97,10 @@ describe('pi-agent global layout', () => {
     expect(descriptor.project.paths.rulePath('typescript')).toBe(PI_AGENT_ROOT_FILE);
   });
 
-  it('project layout resolves command paths to skills dir', () => {
-    const path = descriptor.project.paths.commandPath('review');
-    expect(path).toContain(PI_AGENT_SKILLS_DIR);
-    expect(path).toContain('SKILL.md');
+  it('project layout resolves command paths to native prompts dir', () => {
+    expect(descriptor.project.paths.commandPath('review')).toBe(
+      `${PI_AGENT_COMMANDS_DIR}/review.md`,
+    );
   });
 
   it('project layout resolves agent paths to skills dir', () => {
@@ -113,10 +115,10 @@ describe('pi-agent global layout', () => {
     );
   });
 
-  it('global layout resolves command paths to global skills dir', () => {
-    const path = descriptor.globalSupport!.layout.paths.commandPath('review');
-    expect(path).toContain(PI_AGENT_GLOBAL_SKILLS_DIR);
-    expect(path).toContain('SKILL.md');
+  it('global layout resolves command paths to global prompts dir', () => {
+    expect(descriptor.globalSupport!.layout.paths.commandPath('review')).toBe(
+      `${PI_AGENT_GLOBAL_COMMANDS_DIR}/review.md`,
+    );
   });
 
   it('global layout resolves agent paths to global skills dir', () => {

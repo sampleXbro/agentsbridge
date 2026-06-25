@@ -12,6 +12,7 @@ import {
 import {
   FACTORY_DROID_ROOT_FILE,
   FACTORY_DROID_SKILLS_DIR,
+  FACTORY_DROID_COMMANDS_DIR,
   FACTORY_DROID_DROIDS_DIR,
   FACTORY_DROID_MCP_FILE,
   FACTORY_DROID_HOOKS_FILE,
@@ -192,7 +193,7 @@ describe('generateSkills (factory-droid)', () => {
 });
 
 describe('generateCommands (factory-droid)', () => {
-  it('projects commands as skills', () => {
+  it('emits native .factory/commands/<name>.md slash commands', () => {
     const canonical = makeCanonical({
       commands: [
         {
@@ -208,13 +209,11 @@ describe('generateCommands (factory-droid)', () => {
     const results = generateCommands(canonical);
 
     expect(results).toHaveLength(1);
-    expect(results[0].path).toBe(`${FACTORY_DROID_SKILLS_DIR}/am-command-review/SKILL.md`);
+    expect(results[0].path).toBe(`${FACTORY_DROID_COMMANDS_DIR}/review.md`);
     const parsedCmd = parseFrontmatter(results[0].content);
-    expect(parsedCmd.frontmatter.name).toBe('am-command-review');
     expect(parsedCmd.frontmatter.description).toBe('Review code changes');
-    expect(parsedCmd.frontmatter['x-agentsmesh-kind']).toBe('command');
-    expect(parsedCmd.frontmatter['x-agentsmesh-name']).toBe('review');
-    expect(parsedCmd.frontmatter['x-agentsmesh-allowed-tools']).toEqual(['Bash', 'Read']);
+    expect(parsedCmd.frontmatter['allowed-tools']).toEqual(['Bash', 'Read']);
+    expect(parsedCmd.frontmatter['x-agentsmesh-kind']).toBeUndefined();
     expect(parsedCmd.body).toContain('Run code review.');
   });
 
@@ -275,7 +274,7 @@ describe('generateHooks (factory-droid)', () => {
     expect(generateHooks(makeCanonical({ hooks: {} }))).toHaveLength(0);
   });
 
-  it('emits .factory/hooks.json with Claude Code format', () => {
+  it('emits .factory/hooks.json wrapped under a top-level "hooks" key', () => {
     const results = generateHooks(
       makeCanonical({
         hooks: {
@@ -291,8 +290,22 @@ describe('generateHooks (factory-droid)', () => {
     );
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(FACTORY_DROID_HOOKS_FILE);
-    const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
-    expect(parsed.PreToolUse).toBeDefined();
+    const parsed = JSON.parse(results[0].content) as { hooks?: Record<string, unknown> };
+    // Factory Droid nests events under "hooks" (codex-cli shape), NOT bare top-level.
+    expect(parsed.PreToolUse).toBeUndefined();
+    expect(parsed.hooks).toBeDefined();
+    expect(parsed.hooks!.PreToolUse).toBeDefined();
+  });
+
+  it('drops prompt-type handlers (Factory hooks are command-only)', () => {
+    const results = generateHooks(
+      makeCanonical({
+        hooks: {
+          UserPromptSubmit: [{ matcher: '.*', type: 'prompt', command: 'Review this' }],
+        },
+      }),
+    );
+    expect(results).toHaveLength(0);
   });
 
   it('returns [] when hooks entries are all empty arrays', () => {

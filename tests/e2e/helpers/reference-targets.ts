@@ -227,7 +227,11 @@ export function outputPaths(target: TargetName): OutputPathGroups {
                                   ? '.augment/commands/review.md'
                                   : target === 'qwen-code'
                                     ? '.qwen/commands/review.md'
-                                    : `${skillDir(target)}/${commandSkillDirName('review')}/SKILL.md`,
+                                    : target === 'factory-droid'
+                                      ? '.factory/commands/review.md'
+                                      : target === 'pi-agent'
+                                        ? '.pi/prompts/review.md'
+                                        : `${skillDir(target)}/${commandSkillDirName('review')}/SKILL.md`,
     ],
     agent: [
       target === 'claude-code'
@@ -373,8 +377,10 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
                                   : target === 'qwen-code'
                                     ? '.qwen/commands/review.md'
                                     : target === 'factory-droid'
-                                      ? `.factory/skills/${commandSkillDirName('review')}/SKILL.md`
-                                      : '.windsurf/workflows/review.md',
+                                      ? '.factory/commands/review.md'
+                                      : target === 'pi-agent'
+                                        ? '.pi/prompts/review.md'
+                                        : '.windsurf/workflows/review.md',
     agent:
       target === 'claude-code'
         ? '.claude/agents/code-reviewer.md'
@@ -390,17 +396,17 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
                   ? '.gemini/agents/code-reviewer.md'
                   : target === 'cline'
                     ? '.cline/agents/code-reviewer.md'
-                  : target === 'codex-cli'
-                    ? '.codex/agents/code-reviewer.toml'
-                    : target === 'kilo-code'
-                      ? '.kilo/agents/code-reviewer.md'
-                      : target === 'opencode'
-                        ? '.opencode/agents/code-reviewer.md'
-                        : target === 'qwen-code'
-                          ? '.qwen/agents/code-reviewer.md'
-                          : target === 'factory-droid'
-                            ? '.factory/droids/code-reviewer.md'
-                            : `${skills}/${projectedAgentSkillDirName('code-reviewer')}/SKILL.md`,
+                    : target === 'codex-cli'
+                      ? '.codex/agents/code-reviewer.toml'
+                      : target === 'kilo-code'
+                        ? '.kilo/agents/code-reviewer.md'
+                        : target === 'opencode'
+                          ? '.opencode/agents/code-reviewer.md'
+                          : target === 'qwen-code'
+                            ? '.qwen/agents/code-reviewer.md'
+                            : target === 'factory-droid'
+                              ? '.factory/droids/code-reviewer.md'
+                              : `${skills}/${projectedAgentSkillDirName('code-reviewer')}/SKILL.md`,
     skill: `${geminiCompatSkills}/api-generator/SKILL.md`,
     template: `${geminiCompatSkills}/api-generator/template.ts`,
     checklist,

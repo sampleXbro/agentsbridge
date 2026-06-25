@@ -17,11 +17,14 @@ export const PI_AGENT_TARGET = 'pi-agent';
 // Project-level paths
 export const PI_AGENT_ROOT_FILE = 'AGENTS.md';
 export const PI_AGENT_SKILLS_DIR = '.pi/skills';
+export const PI_AGENT_COMMANDS_DIR = '.pi/prompts';
 
 // Global-level paths (~/.pi/agent/)
 export const PI_AGENT_GLOBAL_DIR = '.pi/agent';
 export const PI_AGENT_GLOBAL_ROOT_FILE = `${PI_AGENT_GLOBAL_DIR}/AGENTS.md`;
 export const PI_AGENT_GLOBAL_SKILLS_DIR = `${PI_AGENT_GLOBAL_DIR}/skills`;
+export const PI_AGENT_GLOBAL_COMMANDS_DIR = `${PI_AGENT_GLOBAL_DIR}/prompts`;
 
 // Canonical paths
 export const PI_AGENT_CANONICAL_RULES_DIR = '.agentsmesh/rules';
+export const PI_AGENT_CANONICAL_COMMANDS_DIR = '.agentsmesh/commands';

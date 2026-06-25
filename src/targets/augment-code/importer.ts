@@ -50,12 +50,12 @@ function canonicalRuleMeta(
 ): Record<string, unknown> {
   const meta: Record<string, unknown> = {
     root: isRoot,
-    description:
-      typeof frontmatter.description === 'string' ? frontmatter.description : undefined,
+    description: typeof frontmatter.description === 'string' ? frontmatter.description : undefined,
     globs: Array.isArray(frontmatter.globs) ? frontmatter.globs : [],
   };
-  // agent_requested maps to model_decision trigger
-  if (frontmatter.agent_requested === true) {
+  // AugmentCode `type: agent_requested` maps to the model_decision trigger.
+  // Accept the legacy boolean `agent_requested: true` for backward compatibility.
+  if (frontmatter.type === 'agent_requested' || frontmatter.agent_requested === true) {
     meta.trigger = 'model_decision';
   }
   return meta;
@@ -181,7 +181,9 @@ export async function importFromAugmentCode(
 
   const settingsFile =
     scope === 'global' ? AUGMENT_CODE_GLOBAL_SETTINGS_FILE : AUGMENT_CODE_SETTINGS_FILE;
-  await importAugmentSettings(projectRoot, settingsFile, results);
+  await importAugmentSettings(projectRoot, settingsFile, results, {
+    includePermissions: scope === 'global',
+  });
 
   if (scope === 'project') {
     await importAugmentIgnore(projectRoot, AUGMENT_CODE_IGNORE_FILE, results);

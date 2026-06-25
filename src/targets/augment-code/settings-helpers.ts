@@ -17,7 +17,7 @@
  */
 
 import { join, dirname } from 'node:path';
-import type { ImportResult, McpServer } from '../../core/types.js';
+import type { ImportResult, McpServer, Permissions } from '../../core/types.js';
 import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/filesystem/fs.js';
 import { writeMcpWithMerge } from '../import/mcp-merge.js';
 import { stringify as yamlStringify } from 'yaml';
@@ -26,7 +26,36 @@ import {
   AUGMENT_CODE_CANONICAL_MCP,
   AUGMENT_CODE_CANONICAL_HOOKS,
   AUGMENT_CODE_CANONICAL_IGNORE,
+  AUGMENT_CODE_CANONICAL_PERMISSIONS,
 } from './constants.js';
+
+/**
+ * Convert Augment `toolPermissions` entries back to canonical permissions.
+ * Only the simple allow/deny/ask-user types map to canonical allow/deny/ask;
+ * advanced policies (webhook-policy, script-policy, shellInputRegex) have no
+ * canonical equivalent and are skipped.
+ */
+function parseToolPermissions(raw: unknown): Permissions | null {
+  if (!Array.isArray(raw)) return null;
+  const allow: string[] = [];
+  const deny: string[] = [];
+  const ask: string[] = [];
+  for (const entry of raw) {
+    if (!entry || typeof entry !== 'object') continue;
+    const e = entry as Record<string, unknown>;
+    const toolName = typeof e.toolName === 'string' ? e.toolName : undefined;
+    const permission = e.permission as Record<string, unknown> | undefined;
+    if (!toolName || !permission || typeof permission !== 'object') continue;
+    if (e.shellInputRegex !== undefined) continue;
+    if (permission.type === 'allow') allow.push(toolName);
+    else if (permission.type === 'deny') deny.push(toolName);
+    else if (permission.type === 'ask-user') ask.push(toolName);
+  }
+  if (allow.length === 0 && deny.length === 0 && ask.length === 0) return null;
+  const permissions: Permissions = { allow, deny };
+  if (ask.length > 0) permissions.ask = ask;
+  return permissions;
+}
 
 /**
  * Convert AugmentCode settings.json hooks format to canonical hooks.yaml format.
@@ -63,6 +92,7 @@ export async function importAugmentSettings(
   projectRoot: string,
   settingsPath: string,
   results: ImportResult[],
+  options: { includePermissions?: boolean } = {},
 ): Promise<void> {
   const content = await readFileSafe(join(projectRoot, settingsPath));
   if (content === null) return;
@@ -99,6 +129,22 @@ export async function importAugmentSettings(
         fromPath: join(projectRoot, settingsPath),
         toPath: AUGMENT_CODE_CANONICAL_HOOKS,
         feature: 'hooks',
+      });
+    }
+  }
+
+  // Permissions are global-only (~/.augment/settings.json, Auggie CLI).
+  if (options.includePermissions) {
+    const permissions = parseToolPermissions(settings.toolPermissions);
+    if (permissions) {
+      const destPath = join(projectRoot, AUGMENT_CODE_CANONICAL_PERMISSIONS);
+      await mkdirp(dirname(destPath));
+      await writeFileAtomic(destPath, yamlStringify(permissions));
+      results.push({
+        fromTool: AUGMENT_CODE_TARGET,
+        fromPath: join(projectRoot, settingsPath),
+        toPath: AUGMENT_CODE_CANONICAL_PERMISSIONS,
+        feature: 'permissions',
       });
     }
   }

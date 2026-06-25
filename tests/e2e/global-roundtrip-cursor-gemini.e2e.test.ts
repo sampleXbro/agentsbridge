@@ -112,9 +112,9 @@ describe('global mode round-trip: Cursor', () => {
     fileExists(join(homeDir, '.cursor', 'hooks.json'));
     validJson(join(homeDir, '.cursor', 'hooks.json'));
     const cursorHooks = JSON.parse(readText(join(homeDir, '.cursor', 'hooks.json'))) as {
-      hooks?: { PreToolUse?: unknown };
+      hooks?: { preToolUse?: unknown };
     };
-    expect(cursorHooks.hooks?.PreToolUse).toBeDefined();
+    expect(cursorHooks.hooks?.preToolUse).toBeDefined();
 
     // 8. MCP (docs: ~/.cursor/mcp.json)
     fileExists(join(homeDir, '.cursor', 'mcp.json'));

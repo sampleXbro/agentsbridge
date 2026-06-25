@@ -4,6 +4,21 @@
 
 import type { CanonicalFiles, LintDiagnostic } from '../../core/types.js';
 import { createWarning } from '../../core/lint/shared/helpers.js';
+import { unmappedCursorHookEvents } from './hook-format.js';
+
+/** Warn when canonical hook events have no Cursor equivalent (dropped on generate). */
+export function lintHooks(canonical: CanonicalFiles): LintDiagnostic[] {
+  if (!canonical.hooks) return [];
+  const unmapped = unmappedCursorHookEvents(canonical.hooks);
+  if (unmapped.length === 0) return [];
+  return [
+    createWarning(
+      '.agentsmesh/hooks.yaml',
+      'cursor',
+      `Cursor has no equivalent for hook event(s) ${unmapped.join(', ')}; they are not projected to .cursor/hooks.json.`,
+    ),
+  ];
+}
 
 export function lintCommands(canonical: CanonicalFiles): LintDiagnostic[] {
   return canonical.commands

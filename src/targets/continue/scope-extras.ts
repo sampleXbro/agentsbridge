@@ -2,8 +2,9 @@ import { join } from 'node:path';
 import type { ScopeExtrasFn } from '../catalog/target-descriptor.js';
 import type { GenerateResult } from '../../core/types.js';
 import { readFileSafe } from '../../utils/filesystem/fs.js';
-import { CONTINUE_GLOBAL_AGENTS_MD } from './constants.js';
+import { CONTINUE_GLOBAL_AGENTS_MD, CONTINUE_GLOBAL_PERMISSIONS } from './constants.js';
 import { generateContinueGlobalConfig } from './global-config.js';
+import { serializeContinuePermissions } from './permissions.js';
 
 function computeStatus(existing: string | null, content: string): GenerateResult['status'] {
   if (existing === null) return 'created';
@@ -27,20 +28,37 @@ export const generateContinueScopeExtras: ScopeExtrasFn = async (
     enabledFeatures,
   );
 
-  if (scope !== 'global' || !enabledFeatures.has('rules')) return configResults;
-  const root = canonical.rules.find((r) => r.root);
-  if (!root) return configResults;
+  if (scope !== 'global') return configResults;
+  const results = [...configResults];
 
-  const content = root.body.trim();
-  const existing = await readFileSafe(join(projectRoot, CONTINUE_GLOBAL_AGENTS_MD));
-  return [
-    ...configResults,
-    {
-      target: 'continue',
-      path: CONTINUE_GLOBAL_AGENTS_MD,
-      content,
-      currentContent: existing ?? undefined,
-      status: computeStatus(existing, content),
-    },
-  ];
+  if (enabledFeatures.has('permissions')) {
+    const content = serializeContinuePermissions(canonical.permissions);
+    if (content) {
+      const existing = await readFileSafe(join(projectRoot, CONTINUE_GLOBAL_PERMISSIONS));
+      results.push({
+        target: 'continue',
+        path: CONTINUE_GLOBAL_PERMISSIONS,
+        content,
+        currentContent: existing ?? undefined,
+        status: computeStatus(existing, content),
+      });
+    }
+  }
+
+  if (enabledFeatures.has('rules')) {
+    const root = canonical.rules.find((r) => r.root);
+    if (root) {
+      const content = root.body.trim();
+      const existing = await readFileSafe(join(projectRoot, CONTINUE_GLOBAL_AGENTS_MD));
+      results.push({
+        target: 'continue',
+        path: CONTINUE_GLOBAL_AGENTS_MD,
+        content,
+        currentContent: existing ?? undefined,
+        status: computeStatus(existing, content),
+      });
+    }
+  }
+
+  return results;
 };

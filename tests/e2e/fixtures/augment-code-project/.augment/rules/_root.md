@@ -1,5 +1,5 @@
 ---
-always_apply: true
+type: always_apply
 description: Core project guidelines applied to every session
 ---
 

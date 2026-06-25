@@ -9,9 +9,11 @@ import {
 } from '../../../../src/targets/aider/generator.js';
 import {
   AIDER_CONVENTIONS,
+  AIDER_CONF_FILE,
   AIDER_SKILLS_DIR,
   AIDER_IGNORE,
 } from '../../../../src/targets/aider/constants.js';
+import { parse as parseYaml } from 'yaml';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
   return {
@@ -44,9 +46,35 @@ describe('generateRules (aider)', () => {
 
     const results = generateRules(canonical);
 
-    expect(results).toHaveLength(1);
-    expect(results[0].path).toBe(AIDER_CONVENTIONS);
-    expect(results[0].content).toContain('Use TDD and strict TypeScript.');
+    const conventions = results.find((r) => r.path === AIDER_CONVENTIONS);
+    expect(conventions).toBeDefined();
+    expect(conventions!.content).toContain('Use TDD and strict TypeScript.');
+  });
+
+  it('wires CONVENTIONS.md via .aider.conf.yml read: (aider has no auto-discovery)', () => {
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: '/proj/.agentsmesh/rules/_root.md',
+          root: true,
+          targets: [],
+          description: '',
+          globs: [],
+          body: 'Use TDD.',
+        },
+      ],
+    });
+
+    const results = generateRules(canonical);
+    const conf = results.find((r) => r.path === AIDER_CONF_FILE);
+    expect(conf).toBeDefined();
+    const parsed = parseYaml(conf!.content) as { read?: unknown };
+    expect(parsed.read).toEqual(['CONVENTIONS.md']);
+  });
+
+  it('emits no .aider.conf.yml when there are no rules', () => {
+    const results = generateRules(makeCanonical({ rules: [] }));
+    expect(results.find((r) => r.path === AIDER_CONF_FILE)).toBeUndefined();
   });
 
   it('embeds non-root rules in CONVENTIONS.md', () => {
@@ -73,10 +101,10 @@ describe('generateRules (aider)', () => {
 
     const results = generateRules(canonical);
 
-    expect(results).toHaveLength(1);
-    expect(results[0].path).toBe(AIDER_CONVENTIONS);
-    expect(results[0].content).toContain('# Root instructions');
-    expect(results[0].content).toContain('Use strict mode.');
+    const conventions = results.find((r) => r.path === AIDER_CONVENTIONS);
+    expect(conventions).toBeDefined();
+    expect(conventions!.content).toContain('# Root instructions');
+    expect(conventions!.content).toContain('Use strict mode.');
   });
 
   it('filters rules targeted to other tools', () => {
@@ -103,8 +131,9 @@ describe('generateRules (aider)', () => {
 
     const results = generateRules(canonical);
 
-    expect(results).toHaveLength(1);
-    expect(results[0].content).not.toContain('Only for Cursor.');
+    const conventions = results.find((r) => r.path === AIDER_CONVENTIONS);
+    expect(conventions).toBeDefined();
+    expect(conventions!.content).not.toContain('Only for Cursor.');
   });
 
   it('returns empty when no rules exist', () => {
@@ -137,10 +166,10 @@ describe('generateRules (aider)', () => {
 
     const results = generateRules(canonical);
 
-    expect(results).toHaveLength(1);
-    expect(results[0].path).toBe(AIDER_CONVENTIONS);
-    expect(results[0].content).toContain('Use strict mode.');
-    expect(results[0].content).toContain('No secrets.');
+    const conventions = results.find((r) => r.path === AIDER_CONVENTIONS);
+    expect(conventions).toBeDefined();
+    expect(conventions!.content).toContain('Use strict mode.');
+    expect(conventions!.content).toContain('No secrets.');
   });
 });
 

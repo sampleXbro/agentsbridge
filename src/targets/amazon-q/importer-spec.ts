@@ -23,9 +23,7 @@ import {
  * Maps an Amazon Q `.amazonq/cli-agents/{name}.json` file to a canonical
  * `.agentsmesh/agents/{name}.md` agent file.
  */
-async function amazonQAgentMapper(
-  ctx: ImportEntryContext,
-): Promise<ImportEntryMapping | null> {
+async function amazonQAgentMapper(ctx: ImportEntryContext): Promise<ImportEntryMapping | null> {
   const agentName = basename(ctx.relativePath, '.json');
   const destRelPath = `${agentName}.md`;
   const destPath = join(ctx.destDir, destRelPath);
@@ -45,7 +43,14 @@ async function amazonQAgentMapper(
   const tools = Array.isArray(raw.allowedTools)
     ? (raw.allowedTools as unknown[]).filter((t): t is string => typeof t === 'string')
     : [];
-  const body = typeof raw.systemPrompt === 'string' ? raw.systemPrompt : '';
+  // Amazon Q's agent-v1.json schema uses `prompt`; accept the legacy `systemPrompt`
+  // key as a fallback so previously generated agent files still round-trip.
+  const body =
+    typeof raw.prompt === 'string'
+      ? raw.prompt
+      : typeof raw.systemPrompt === 'string'
+        ? raw.systemPrompt
+        : '';
 
   const content = await serializeImportedAgentWithFallback(
     destPath,

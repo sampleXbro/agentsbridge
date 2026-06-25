@@ -199,7 +199,7 @@ export const descriptor = {
     rules: 'native',
     additionalRules: 'native',
     commands: 'native',
-    agents: 'partial',
+    agents: 'native',
     skills: 'native',
     mcp: 'native',
     hooks: 'none',

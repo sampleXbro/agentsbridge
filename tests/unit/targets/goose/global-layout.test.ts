@@ -13,7 +13,9 @@ import {
   GOOSE_SKILLS_DIR,
   GOOSE_GLOBAL_SKILLS_DIR,
   GOOSE_GLOBAL_CONFIG,
+  GOOSE_GLOBAL_PERMISSIONS,
 } from '../../../../src/targets/goose/constants.js';
+import { parse as parseYaml } from 'yaml';
 
 describe('goose global layout', () => {
   const descriptor = getBuiltinTargetDefinition('goose')!;
@@ -45,6 +47,11 @@ describe('goose global layout', () => {
   it('globalSupport.capabilities has mcp native (project has none)', () => {
     expect(descriptor.globalSupport!.capabilities.mcp).toBe('native');
     expect(descriptor.capabilities.mcp).toBe('none');
+  });
+
+  it('globalSupport.capabilities has permissions native (project has none)', () => {
+    expect(descriptor.globalSupport!.capabilities.permissions).toBe('native');
+    expect(descriptor.capabilities.permissions).toBe('none');
   });
 
   it('rewriteGeneratedPath passes through global config path unchanged', () => {
@@ -135,5 +142,29 @@ describe('goose global frontmatter preservation', () => {
     const rule = results.find((r) => r.target === 'goose' && r.path === GOOSE_GLOBAL_ROOT_FILE);
     expect(rule).toBeDefined();
     expect(rule!.content).toContain('Use TDD and strict TypeScript.');
+  });
+
+  it('emits ~/.config/goose/permission.yaml from canonical permissions via scopeExtras', async () => {
+    const results = await generate({
+      config: {
+        version: 1,
+        targets: ['goose'],
+        features: ['permissions'],
+        extends: [],
+        overrides: {},
+        collaboration: { strategy: 'merge', lock_features: [] },
+      } as ValidatedConfig,
+      canonical: makeCanonical({
+        permissions: { allow: ['developer__shell'], deny: ['developer__rm'], ask: [] },
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const perm = results.find((r) => r.target === 'goose' && r.path === GOOSE_GLOBAL_PERMISSIONS);
+    expect(perm).toBeDefined();
+    const parsed = parseYaml(perm!.content) as Record<string, Record<string, unknown>>;
+    expect(parsed.user.always_allow).toEqual(['developer__shell']);
+    expect(parsed.user.never_allow).toEqual(['developer__rm']);
   });
 });

@@ -169,7 +169,7 @@ describe('augment-code global frontmatter preservation', () => {
     );
     expect(rule).toBeDefined();
     expect(rule!.content).toContain('description: TypeScript standards');
-    expect(rule!.content).toContain('agent_requested: true');
+    expect(rule!.content).toContain('type: agent_requested');
     expect(rule!.content).toContain('src/**/*.ts');
     expect(rule!.content).toContain('Use strict mode.');
   });

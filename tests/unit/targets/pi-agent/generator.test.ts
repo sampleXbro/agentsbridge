@@ -9,6 +9,7 @@ import {
 import {
   PI_AGENT_ROOT_FILE,
   PI_AGENT_SKILLS_DIR,
+  PI_AGENT_COMMANDS_DIR,
 } from '../../../../src/targets/pi-agent/constants.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
@@ -222,7 +223,7 @@ describe('generateSkills (pi-agent)', () => {
 });
 
 describe('generateCommands (pi-agent)', () => {
-  it('projects commands as skills', () => {
+  it('emits native .pi/prompts/<name>.md prompt templates', () => {
     const canonical = makeCanonical({
       commands: [
         {
@@ -238,16 +239,12 @@ describe('generateCommands (pi-agent)', () => {
     const results = generateCommands(canonical);
 
     expect(results).toHaveLength(1);
-    expect(results[0].path).toContain(`${PI_AGENT_SKILLS_DIR}/`);
-    expect(results[0].path).toContain('SKILL.md');
-    expect(results[0].content).toContain('review');
-    const cmd = results.find((r) => r.path.endsWith('SKILL.md'));
-    expect(cmd!.content).toContain('x-agentsmesh-kind: command');
-    expect(cmd!.content).toContain('x-agentsmesh-name: review');
-    expect(cmd!.content).toContain('name: am-command-review');
-    expect(cmd!.content).toContain('description: Review code changes');
-    expect(cmd!.content).toContain('x-agentsmesh-allowed-tools:');
-    expect(cmd!.content).toContain('- Read');
+    expect(results[0].path).toBe(`${PI_AGENT_COMMANDS_DIR}/review.md`);
+    expect(results[0].content).toContain('description: Review code changes');
+    expect(results[0].content).toContain('Run code review.');
+    // Pi prompt templates have no skill-projection frontmatter.
+    expect(results[0].content).not.toContain('x-agentsmesh-kind');
+    expect(results[0].content).not.toContain('SKILL.md');
   });
 
   it('returns empty when no commands exist', () => {

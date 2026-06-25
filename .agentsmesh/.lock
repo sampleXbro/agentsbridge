@@ -1,7 +1,7 @@
 # Auto-generated. DO NOT EDIT MANUALLY.
 # Tracks the state of all config files for team conflict resolution.
 
-generated_at: 2026-06-23T08:15:25.523Z
+generated_at: 2026-06-25T20:20:44.664Z
 generated_by: serhii
 lib_version: 0.25.0
 checksums:
@@ -123,8 +123,8 @@ checksums:
   skills/typescript-pro/references/type-guards.md: sha256:86f0452f173414a37fd69ecdc663f42ec903b5eb1eaa9a3ebad213780e58b197
   skills/typescript-pro/references/utility-types.md: sha256:89856b5cfc91cad3f827d882e05ba229d3385adf52c3fa5c57f6cebe8833e5e6
   skills/typescript-quality-gates/SKILL.md: sha256:7deae185cdfbfd93c3f904c290d26a2fd9a4b9c5b5d754d3ddb2915282dedce7
-  skills/update-target-capabilities/SKILL.md: sha256:f9e639ccfaa81cf699dced134f1acdf7dc95062a91e9a433e1518dcc629d5b25
-  skills/update-target-capabilities/references/capability-update-checklist.md: sha256:c2ad970fc533041974972e7641c366180c7c1b780f5efc88105dc5927150b711
+  skills/update-target-capabilities/SKILL.md: sha256:f5faa297046d8c710118ce218e4048452162ead4eb35b4594a0f401def455e42
+  skills/update-target-capabilities/references/capability-update-checklist.md: sha256:b83a4e9ca4a9a4bd528421983500aab513bc32cffcad573425598854d0326256
 extends:
   shared-samplexbro-rules: 0b393ecfeb7419d648d4c36203998d11ad3a0fdc
 packs:
@@ -133,5 +133,5 @@ packs:
   composiohq-awesome-claude-skills-skills: sha256:6b63e9d8e01c904ed85fcff5dd9e368ab37e68b904b2170454c3104feb82cd3d
   devsforge-orchestrator-skills: sha256:9228afa4fd2aedaca2403e7c2afbce0c18e4204793ede6e649a777eed9eb3231
   joeking-ly-claude-skills-arsenal-skills: sha256:63b24277c3d09607506971957d40f95139385193eaf8b02a92d68ca6f8af15ec
-  mattpocock-skills-skills: sha256:e55bf71f63e4550b28e942ba04f88d853cb93d7d91f7788a590f46102a61472f
+  mattpocock-skills-skills: sha256:b2848e2f170d699f7b3de5c9d686af4f3cf9903c5b74724916bb7ae476df3e7d
   njengah-claude-code-cheat-sheet-agents: sha256:6b0a573bc4a725d0a5d38d323d19382f7a24bd948885d3555b94cbca47a05cbf

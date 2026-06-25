@@ -6,6 +6,7 @@
  *   - `.agents/skills/`              — skill bundles
  *   - `.gooseignore`                 — ignore patterns
  *   - `.config/goose/config.yaml`    — MCP extensions (global scope only)
+ *   - `.agents/plugins/agentsmesh/hooks/hooks.json` — lifecycle hooks
  */
 
 import { stringify as yamlStringify } from 'yaml';
@@ -19,12 +20,14 @@ import {
   serializeProjectedAgentSkill,
 } from '../projection/projected-agent-skill.js';
 import { commandSkillDirName, serializeCommandSkill } from '../codex-cli/command-skill.js';
+import { buildWrappedCommandHooks } from '../import/wrapped-command-hooks.js';
 import {
   GOOSE_TARGET,
   GOOSE_ROOT_FILE,
   GOOSE_SKILLS_DIR,
   GOOSE_IGNORE,
   GOOSE_GLOBAL_CONFIG,
+  GOOSE_HOOKS_FILE,
 } from './constants.js';
 
 export interface GooseOutput {
@@ -69,6 +72,10 @@ export function generateIgnore(canonical: CanonicalFiles): GooseOutput[] {
   return [{ path: GOOSE_IGNORE, content: canonical.ignore.join('\n') }];
 }
 
+export function generateHooks(canonical: CanonicalFiles): GooseOutput[] {
+  return buildWrappedCommandHooks(canonical, GOOSE_HOOKS_FILE);
+}
+
 interface GooseExtension {
   args?: string[];
   bundled: null;
@@ -100,7 +107,10 @@ function mcpServerToExtension(name: string, server: McpServer): GooseExtension {
   return { ...base, uri: server.url };
 }
 
-export function generateMcp(canonical: CanonicalFiles, ctx?: GenerateFeatureContext): GooseOutput[] {
+export function generateMcp(
+  canonical: CanonicalFiles,
+  ctx?: GenerateFeatureContext,
+): GooseOutput[] {
   if (ctx?.scope !== 'global') return [];
   if (!canonical.mcp || Object.keys(canonical.mcp.mcpServers).length === 0) return [];
   const extensions = Object.fromEntries(

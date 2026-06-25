@@ -249,6 +249,7 @@ describe('target layout metadata', () => {
             '.continue/mcpServers/agentsmesh.json',
             '.continue/AGENTS.md',
             '.continue/config.yaml',
+            '.continue/permissions.yaml',
           ],
         },
         paths: expect.objectContaining({

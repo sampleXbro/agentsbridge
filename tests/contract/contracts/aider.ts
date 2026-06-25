@@ -2,6 +2,7 @@ import type { TargetPathContract } from './types.js';
 
 export const aiderContract: TargetPathContract = {
   generated: [
+    '.aider.conf.yml',
     '.aider/skills/am-agent-code-reviewer/SKILL.md',
     '.aider/skills/am-agent-researcher/SKILL.md',
     '.aider/skills/am-command-review/SKILL.md',

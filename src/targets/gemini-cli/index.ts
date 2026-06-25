@@ -22,6 +22,7 @@ import {
   GEMINI_GLOBAL_COMMANDS_DIR,
   GEMINI_GLOBAL_SKILLS_DIR,
   GEMINI_GLOBAL_AGENTS_DIR,
+  GEMINI_GLOBAL_POLICIES_FILE,
   GEMINI_SETTINGS,
   GEMINI_CANONICAL_RULES_DIR,
   GEMINI_CANONICAL_COMMANDS_DIR,
@@ -106,7 +107,12 @@ const globalLayout: TargetLayout = {
   skillDir: GEMINI_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [GEMINI_GLOBAL_COMMANDS_DIR, GEMINI_GLOBAL_SKILLS_DIR, GEMINI_GLOBAL_AGENTS_DIR],
-    files: [GEMINI_GLOBAL_ROOT, GEMINI_GLOBAL_COMPAT_AGENTS, GEMINI_GLOBAL_SETTINGS],
+    files: [
+      GEMINI_GLOBAL_ROOT,
+      GEMINI_GLOBAL_COMPAT_AGENTS,
+      GEMINI_GLOBAL_SETTINGS,
+      GEMINI_GLOBAL_POLICIES_FILE,
+    ],
   },
   rewriteGeneratedPath(path) {
     // Transform project-level paths to global ~/.gemini/ paths
@@ -128,8 +134,8 @@ const globalLayout: TargetLayout = {
     if (path.startsWith(`${GEMINI_AGENTS_DIR}/`)) {
       return path.replace(`${GEMINI_AGENTS_DIR}/`, `${GEMINI_GLOBAL_AGENTS_DIR}/`);
     }
-    // Skip policies and ignore in global mode
-    if (path.startsWith('.gemini/policies/') || path === '.geminiignore') {
+    // User-tier policies ARE loaded by the engine globally; only ignore is suppressed.
+    if (path === '.geminiignore') {
       return null;
     }
     return path;
@@ -168,7 +174,7 @@ const globalCapabilities: TargetCapabilities = {
   mcp: 'native',
   hooks: 'partial',
   ignore: 'none',
-  permissions: 'none',
+  permissions: 'native',
 };
 
 export const descriptor = {

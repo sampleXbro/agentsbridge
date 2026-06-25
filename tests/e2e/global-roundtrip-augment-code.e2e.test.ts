@@ -56,8 +56,12 @@ describe('global mode round-trip: AugmentCode', () => {
       ),
     );
     writeFileSync(
+      join(canonicalDir, 'permissions.yaml'),
+      'allow:\n  - view\ndeny:\n  - remove-files\nask:\n  - launch-process\n',
+    );
+    writeFileSync(
       join(canonicalDir, 'agentsmesh.yaml'),
-      'version: 1\ntargets: [augment-code]\nfeatures: [rules, commands, skills, mcp]\n',
+      'version: 1\ntargets: [augment-code]\nfeatures: [rules, commands, skills, mcp, permissions]\n',
     );
 
     const gen = await runCli('generate --global --targets augment-code', projectDir);
@@ -66,7 +70,7 @@ describe('global mode round-trip: AugmentCode', () => {
     // Rules emitted to ~/.augment/rules/
     fileExists(join(homeDir, '.augment', 'rules', '_root.md'));
     fileContains(join(homeDir, '.augment', 'rules', '_root.md'), 'AugmentCode root body');
-    fileContains(join(homeDir, '.augment', 'rules', '_root.md'), 'always_apply: true');
+    fileContains(join(homeDir, '.augment', 'rules', '_root.md'), 'type: always_apply');
 
     fileExists(join(homeDir, '.augment', 'rules', 'typescript.md'));
     fileContains(join(homeDir, '.augment', 'rules', 'typescript.md'), 'Use strict mode');
@@ -77,20 +81,21 @@ describe('global mode round-trip: AugmentCode', () => {
 
     // Skills emitted to ~/.augment/skills/
     fileExists(join(homeDir, '.augment', 'skills', 'augment-skill', 'SKILL.md'));
-    fileContains(
-      join(homeDir, '.augment', 'skills', 'augment-skill', 'SKILL.md'),
-      'Skill content',
-    );
+    fileContains(join(homeDir, '.augment', 'skills', 'augment-skill', 'SKILL.md'), 'Skill content');
     expect(
       markdownFrontmatter(join(homeDir, '.augment', 'skills', 'augment-skill', 'SKILL.md')).name,
     ).toBe('augment-skill');
 
-    // MCP embedded in ~/.augment/settings.json
+    // MCP + tool permissions embedded in ~/.augment/settings.json
     fileExists(join(homeDir, '.augment', 'settings.json'));
     validJson(join(homeDir, '.augment', 'settings.json'));
-    expect(
-      JSON.parse(readText(join(homeDir, '.augment', 'settings.json'))).mcpServers,
-    ).toHaveProperty('context7');
+    const globalSettings = JSON.parse(readText(join(homeDir, '.augment', 'settings.json')));
+    expect(globalSettings.mcpServers).toHaveProperty('context7');
+    expect(globalSettings.toolPermissions).toEqual([
+      { toolName: 'view', permission: { type: 'allow' } },
+      { toolName: 'remove-files', permission: { type: 'deny' } },
+      { toolName: 'launch-process', permission: { type: 'ask-user' } },
+    ]);
 
     // .augmentignore must NOT be emitted in global mode
     fileNotExists(join(homeDir, '.augmentignore'));
@@ -124,5 +129,11 @@ describe('global mode round-trip: AugmentCode', () => {
 
     fileExists(join(canonicalDir, 'mcp.json'));
     validJson(join(canonicalDir, 'mcp.json'));
+
+    // Permissions round-trip: ~/.augment/settings.json toolPermissions → canonical
+    fileExists(join(canonicalDir, 'permissions.yaml'));
+    fileContains(join(canonicalDir, 'permissions.yaml'), 'view');
+    fileContains(join(canonicalDir, 'permissions.yaml'), 'remove-files');
+    fileContains(join(canonicalDir, 'permissions.yaml'), 'launch-process');
   });
 });

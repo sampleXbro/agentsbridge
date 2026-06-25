@@ -72,9 +72,7 @@ description: "Other rule"
     execSync(`node ${CLI_PATH} generate --targets claude-code`, {
       cwd: TEST_DIR,
     });
-    expect(readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8')).toContain(
-      'Use TypeScript',
-    );
+    expect(readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8')).toContain('Use TypeScript');
     expect(() => readFileSync(join(TEST_DIR, '.cursor', 'rules', 'general.mdc'))).toThrow();
   });
 
@@ -431,8 +429,8 @@ PreToolUse:
       readFileSync(join(TEST_DIR, '.cursor', 'hooks.json'), 'utf-8'),
     ) as { hooks?: Record<string, unknown> };
     expect(cursorHooks.hooks).toBeDefined();
-    expect(cursorHooks.hooks!.PostToolUse).toBeDefined();
-    expect(cursorHooks.hooks!.PreToolUse).toBeDefined();
+    expect(cursorHooks.hooks!.postToolUse).toBeDefined();
+    expect(cursorHooks.hooks!.preToolUse).toBeDefined();
   });
 
   it('generates skill files when skills feature enabled', () => {
@@ -741,9 +739,7 @@ root: true
 `,
     );
     execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
-    expect(readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8')).toContain(
-      'Use TypeScript',
-    );
+    expect(readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8')).toContain('Use TypeScript');
     expect(() => readFileSync(join(TEST_DIR, '.cursor', 'rules', 'general.mdc'))).toThrow();
   });
 

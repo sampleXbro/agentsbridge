@@ -107,7 +107,9 @@ describe('generateHooks (codex-cli)', () => {
         content: JSON.stringify(
           {
             hooks: {
-              PostToolUse: [{ matcher: 'Write', hooks: [{ type: 'command', command: 'prettier' }] }],
+              PostToolUse: [
+                { matcher: 'Write', hooks: [{ type: 'command', command: 'prettier' }] },
+              ],
             },
           },
           null,
@@ -228,13 +230,13 @@ describe('importCodexHooks — malformed input guards', () => {
 });
 
 describe('codex-cli hook descriptor contract', () => {
-  it('declares partial hook support with managed hooks.json detection', () => {
+  it('declares native hook support with managed hooks.json round-trip', () => {
     expect(descriptor.capabilities).toMatchObject({
-      hooks: 'partial',
+      hooks: 'native',
       permissions: 'none',
     });
     expect(descriptor.globalSupport?.capabilities).toMatchObject({
-      hooks: 'partial',
+      hooks: 'native',
       permissions: 'none',
     });
     expect(descriptor.project.managedOutputs?.files).toContain('.codex/hooks.json');

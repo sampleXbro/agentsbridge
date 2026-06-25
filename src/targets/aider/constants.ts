@@ -17,6 +17,10 @@ export const AIDER_TARGET = 'aider';
 export const AIDER_CONVENTIONS = 'CONVENTIONS.md';
 export const AIDER_SKILLS_DIR = '.aider/skills';
 export const AIDER_IGNORE = '.aiderignore';
+// Aider has no CONVENTIONS.md auto-discovery; it must be wired via the
+// project `.aider.conf.yml` `read:` key (project scope only — the home-level
+// config's `read:` path semantics differ and are out of scope here).
+export const AIDER_CONF_FILE = '.aider.conf.yml';
 
 // Global-level paths (user home directory)
 export const AIDER_GLOBAL_CONVENTIONS = 'CONVENTIONS.md';

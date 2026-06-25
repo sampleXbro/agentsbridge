@@ -31,7 +31,7 @@ import { importFromCursor } from './importer.js';
 import { cursorAgentMapper, cursorCommandMapper } from './import-mappers.js';
 import { lintRules } from './linter.js';
 import { buildCursorImportPaths } from '../../core/reference/import-map-builders.js';
-import { lintCommands, lintMcp, lintPermissions } from './lint.js';
+import { lintCommands, lintMcp, lintPermissions, lintHooks } from './lint.js';
 
 export const target: TargetGenerators = {
   name: 'cursor',
@@ -125,7 +125,7 @@ const globalLayout: TargetLayout = {
 
 const globalCapabilities: TargetCapabilities = {
   rules: 'native',
-  additionalRules: 'embedded',
+  additionalRules: 'native',
   commands: 'native',
   agents: 'native',
   skills: 'native',
@@ -146,7 +146,7 @@ export const descriptor = {
   generators: target,
   capabilities: {
     rules: 'native',
-    additionalRules: 'embedded',
+    additionalRules: 'native',
     commands: 'native',
     agents: 'native',
     skills: 'native',
@@ -162,6 +162,7 @@ export const descriptor = {
     commands: lintCommands,
     mcp: lintMcp,
     permissions: lintPermissions,
+    hooks: lintHooks,
   },
   project,
   globalSupport: {

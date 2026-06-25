@@ -1,30 +1,21 @@
 /**
- * Goose-specific lint hooks.
+ * Goose-specific lint warnings.
  *
- * Goose does not support hooks, MCP (project-level), or permissions
- * as standalone config files. Commands and agents are projected as
- * skills via supportsConversion.
+ * Goose supports lifecycle hooks natively (Open Plugin Specification), so hooks
+ * are generated, not warned about. Project-level MCP and permissions have no
+ * standalone project config file. Commands and agents are projected as skills
+ * via supportsConversion.
  */
 
 import type { CanonicalFiles, LintDiagnostic } from '../../core/types.js';
+import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 import { createWarning } from '../../core/lint/shared/helpers.js';
 
-export function lintHooks(canonical: CanonicalFiles): LintDiagnostic[] {
-  if (!canonical.hooks) return [];
-  const hasEntries = Object.values(canonical.hooks).some(
-    (entries) => Array.isArray(entries) && entries.length > 0,
-  );
-  if (!hasEntries) return [];
-  return [
-    createWarning(
-      '.agentsmesh/hooks.yaml',
-      'goose',
-      'Goose has no lifecycle hook system; canonical hooks are not projected.',
-    ),
-  ];
-}
-
-export function lintPermissions(canonical: CanonicalFiles): LintDiagnostic[] {
+export function lintPermissions(canonical: CanonicalFiles, options?: unknown): LintDiagnostic[] {
+  // Permissions are native at global scope (~/.config/goose/permission.yaml);
+  // only project scope (no permission file) warrants a warning.
+  const scope = (options as { scope?: TargetLayoutScope } | undefined)?.scope;
+  if (scope === 'global') return [];
   if (!canonical.permissions) return [];
   const { allow, deny } = canonical.permissions;
   const ask = canonical.permissions.ask ?? [];
@@ -33,7 +24,7 @@ export function lintPermissions(canonical: CanonicalFiles): LintDiagnostic[] {
     createWarning(
       '.agentsmesh/permissions.yaml',
       'goose',
-      'Goose permissions are managed at runtime via permission.yaml in ~/.config/goose/; canonical permissions are not projected.',
+      'Goose applies tool permissions only at global scope (~/.config/goose/permission.yaml); project-scope permissions are not projected.',
     ),
   ];
 }

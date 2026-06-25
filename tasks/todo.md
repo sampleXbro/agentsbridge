@@ -1,3 +1,98 @@
+# Capability correction campaign — VERIFIED QUEUE (current)
+
+Source: per-target adversarial verification (`wf_745aa03f-dad`) of the external
+audit (`target-capability-audit-2026-06-24.md`) against live code + primary docs.
+85 actionable findings, 8 rejected, 13 need-human, 26/30 targets verified.
+NOTE: this supersedes the unverified "23 gaps" plan below — verification REJECTED
+several of its claims (e.g. Trae commands/agents file-surface; Continue hooks).
+
+## Shipped ✅ (committed on develop)
+- [x] factory-droid agents — added importer.agents directory spec (agent preset); native droids now round-trip to `.agentsmesh/agents/*`. commit b2ccc64.
+- [x] factory-droid hooks — wrapped `{hooks}` format fix + new importer; extracted shared `wrapped-command-hooks` helper (codex-cli + factory-droid). commit efd0c6f.
+- [x] codex-cli hooks `partial → native` (both scopes) — changeset, full QA.
+- [x] amazon-q agents `systemPrompt → prompt` key fix (gen + import + fallback) — changeset, full QA.
+- [x] cursor hooks format fix — camelCase events + flat array (was PascalCase nested, never fired); round-trip + dropped-event lint warning; changeset, full QA (13-file blast radius).
+- [x] amazon-q additionalRules project `none → native` (already emits/imports `.amazonq/rules/<slug>.md`); global stays none (no global rules dir on disk); changeset.
+- [x] augment-code rule frontmatter `type` key (was boolean `always_apply`/`agent_requested`); import accepts both; changeset, full QA.
+
+## Corrections from primary-source verification (findings the audit got wrong)
+- warp mcp/project: NOT a wrong-path bug — Warp reads `.mcp.json` at repo root too (shared provider path). Leave project as-is. Only warp **global** MCP (`~/.warp/.mcp.json`) is a genuine under-declaration, but it needs global-mode generation wiring (gating + path rebase) — deferred to a focused slice.
+
+## Tier 1 — broken/wrong native (fix-in-place, expansion-safe). HIGHEST PRIORITY.
+- [ ] antigravity rules/global path → `~/.gemini/GEMINI.md`
+- [ ] antigravity mcp/global path → `~/.gemini/config/mcp_config.json`
+- [ ] antigravity hooks shape (named-hook nesting) + ADD importer
+- [ ] antigravity skills/global path → `~/.gemini/config/skills/`
+- [x] cursor hooks: PascalCase→camelCase events + FLAT array shape — silent no-fire (DONE)
+- [ ] cline hooks: filename-IS-event format (`.clinerules/hooks/<EventName>`)
+- [ ] warp mcp path → `.warp/.mcp.json` / `~/.warp/.mcp.json`
+- [x] augment-code rules frontmatter key `type` (DONE)
+- [ ] aider rules: wire `CONVENTIONS.md` via `.aider.conf.yml` `read:`
+- [x] copilot hooks/project `partial → native` (`.github/hooks/*.json`) — DONE (round-trip already shipped). Follow-up: copilot GLOBAL hooks native via `~/.copilot/hooks/*.json` (needs global-mode wiring; lesson-confirmed).
+- [x] roo-code agents/project `partial → native` — added `.roomodes` importer (round-trip completion); global stays partial (VS Code globalStorage). roo global rules path was ALREADY correct (`~/.roo/rules`) — audit false positive.
+- [x] cursor additionalRules `embedded → native` (both scopes) — mislabel; per-rule `.cursor/rules/*.mdc` already round-trips.
+- [x] crush global MCP import fix — scope-blind reader now reads `~/.config/crush/crush.json` in global (also fixes global hooks import).
+- [x] gemini-cli permissions/global `none → native` — un-suppressed `.gemini/policies/*.toml` in global layout; project stays partial (workspace policies disabled upstream).
+
+## Rejected by recipe-verification (do NOT implement)
+- kiro permissions: claimed `~/.kiro/settings/permissions.yaml` (key=rules) is FABRICATED — Kiro permissions live exclusively inside per-agent JSON (allowedTools / toolsSettings). Keep `none`.
+
+## Recipe workflow (wf_c3fdbbf0-b93) produced code-grounded recipes for the next batch:
+factory-droid agents (add importer, low) · factory-droid hooks (add importer + format, medium) ·
+augment-code permissions/GLOBAL-only (medium; project has no settings.json) · continue permissions/global (medium) ·
+goose hooks (new gen+import, medium; delete false lintHooks warning) · factory-droid commands (involved-refactor: skill-projection -> native, last).
+- [ ] factory-droid hooks + agents: ADD importer (generate-only today)
+- [ ] opencode mcp+permissions settings-merge base; additionalRules via `instructions` key
+- [ ] roo-code rules/global path `~/.roo/rules/`
+- [ ] kilo-code global paths `~/.config/kilo/*`; mcp key; permissions import
+- [ ] amp permissions shape (`amp.permissions`) + import
+- [ ] crush permissions shape (`permissions.allowed_tools`)
+- [ ] claude-code hooks/permissions settings.json location (verify current emit)
+- [ ] codex-cli mcp streamable-HTTP + config.toml merge (P1)
+- [ ] deepagents rules/skills global per-agent paths
+- [ ] gemini-cli permissions via `.gemini/policies/*.toml`
+- [ ] continue rules/global → embedded in `config.yaml`
+
+## Tier 2 — under-declared (none/partial → native, expansion). HIGH PRIORITY.
+- [ ] amazon-q additionalRules/project `none → native`
+- [ ] cursor additionalRules `embedded → native`
+- [ ] pi-agent commands `none → native` — SPEC VERIFIED (earendil-works/pi, prompt-templates.md):
+      project `.pi/prompts/<name>.md`, global `~/.pi/agent/prompts/<name>.md`; filename = command name;
+      frontmatter `description` + `argument-hint` (both optional); args `$1`/`$@`/`$ARGUMENTS`.
+      NOTE: not a clean additive — pi currently PROJECTS commands→skills (commandPath → .pi/skills/.../SKILL.md,
+      supportsConversion.commands=true). Native prompts REPLACE that projection: update project+global commandPath
+      to `.pi/prompts/<name>.md` / `.pi/agent/prompts/<name>.md`, add a commands importer (directory mode),
+      reconsider supportsConversion.commands, update contract + reference map + tests. Medium effort.
+      Fix metadata.officialUrl too: real repo is github.com/earendil-works/pi (npm @earendil-works/pi-coding-agent),
+      NOT pi-labs/pi-agent.
+- [ ] factory-droid commands `none → native`; permissions → embedded
+- [ ] goose hooks `none → native`
+- [ ] kiro permissions/global `none → native`
+- [ ] kilo permissions; warp mcp/global + ignore/project + additionalRules
+- [ ] augment hooks/global + permissions; continue permissions/global + commands/global
+- [ ] copilot hooks/global + mcp/global; crush mcp/hooks/commands global
+- [ ] gemini permissions/global; roo agents/project; deepagents agents; junie hooks/permissions
+- [ ] jules mcp `none → partial`
+- [ ] trae hooks (LOW confidence — confirm primary source first)
+
+## Downgrades / removals (native→none/partial) — BREAKING, needs decision.
+- [ ] claude-code ignore `→ none`; amp hooks `→ none`; cline agents `→ none`
+- [ ] aider skills `→ none`; copilot commands/global `→ none`; roo ignore/global `→ none`
+- [ ] cline mcp/project `→ partial`; roo mcp+agents/global `→ partial`
+- [ ] replit mcp `→ partial`; codex additionalRules/project `→ partial`
+
+## Needs-human (judgement calls)
+kiro permissions/project, claude-code frontmatter globs→paths, copilot ignore/permissions,
+kilo global read semantics, warp/replit global rules (UI partial?), goose permissions/global,
+cline mcp/global path, gemini hooks (partial-emits-file?), junie permissions/project.
+
+## Not yet verified (session limit) — follow-up verification pass needed
+qwen-code, rovodev, windsurf, zed
+
+---
+
+# (SUPERSEDED, UNVERIFIED) Prior-session plans below — kept for history
+
 # Top-Tier Target Capability Audit (COMPLETE)
 
 - [x] Read architecture, source-driven development, and post-feature QA guidance.

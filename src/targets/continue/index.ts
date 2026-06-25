@@ -16,6 +16,7 @@ import {
   CONTINUE_SKILLS_DIR,
   CONTINUE_GLOBAL_AGENTS_MD,
   CONTINUE_GLOBAL_CONFIG,
+  CONTINUE_GLOBAL_PERMISSIONS,
   CONTINUE_CANONICAL_RULES_DIR,
   CONTINUE_CANONICAL_COMMANDS_DIR,
 } from './constants.js';
@@ -66,7 +67,12 @@ const globalLayout: TargetLayout = {
   skillDir: CONTINUE_SKILLS_DIR,
   managedOutputs: {
     dirs: [CONTINUE_RULES_DIR, CONTINUE_PROMPTS_DIR, CONTINUE_SKILLS_DIR, '.agents/skills'],
-    files: [CONTINUE_MCP_FILE, CONTINUE_GLOBAL_AGENTS_MD, CONTINUE_GLOBAL_CONFIG],
+    files: [
+      CONTINUE_MCP_FILE,
+      CONTINUE_GLOBAL_AGENTS_MD,
+      CONTINUE_GLOBAL_CONFIG,
+      CONTINUE_GLOBAL_PERMISSIONS,
+    ],
   },
   mirrorGlobalPath(path, _activeTargets) {
     if (path.startsWith(`${CONTINUE_SKILLS_DIR}/`)) {
@@ -96,7 +102,7 @@ const globalCapabilities: TargetCapabilities = {
   mcp: 'native',
   hooks: 'none',
   ignore: 'none',
-  permissions: 'none',
+  permissions: 'native',
 };
 
 export const descriptor = {

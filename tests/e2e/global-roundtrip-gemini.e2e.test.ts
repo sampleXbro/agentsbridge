@@ -56,8 +56,12 @@ describe('global mode round-trip: Gemini CLI', () => {
       'PreToolUse:\n  - matcher: ".*"\n    type: command\n    command: echo test\n',
     );
     writeFileSync(
+      join(canonicalDir, 'permissions.yaml'),
+      'allow:\n  - Read\ndeny:\n  - Bash(curl:*)\n',
+    );
+    writeFileSync(
       join(canonicalDir, 'agentsmesh.yaml'),
-      'version: 1\ntargets: [gemini-cli]\nfeatures: [rules, commands, agents, skills, mcp, hooks]\n',
+      'version: 1\ntargets: [gemini-cli]\nfeatures: [rules, commands, agents, skills, mcp, hooks, permissions]\n',
     );
 
     const gen = await runCli('generate --global --targets gemini-cli', projectDir);
@@ -83,11 +87,14 @@ describe('global mode round-trip: Gemini CLI', () => {
     fileExists(join(homeDir, '.agents', 'skills', 'gemini-skill', 'references', 'brief.md'));
     fileContains(join(homeDir, '.gemini', 'AGENTS.md'), 'Gemini guidelines');
     markdownHasNoFrontmatter(join(homeDir, '.gemini', 'AGENTS.md'));
+    validToml(join(homeDir, '.gemini', 'policies', 'permissions.toml'));
+    fileContains(join(homeDir, '.gemini', 'policies', 'permissions.toml'), 'run_shell_command');
     dirFilesExactly(join(homeDir, '.gemini'), [
       'AGENTS.md',
       'GEMINI.md',
       'agents/scout.md',
       'commands/test.toml',
+      'policies/permissions.toml',
       'settings.json',
       'skills/gemini-skill/SKILL.md',
       'skills/gemini-skill/references/brief.md',
@@ -110,5 +117,7 @@ describe('global mode round-trip: Gemini CLI', () => {
     fileContains(join(canonicalDir, 'agents', 'scout.md'), 'Explore the codebase');
     fileExists(join(canonicalDir, 'mcp.json'));
     fileExists(join(canonicalDir, 'hooks.yaml'));
+    fileExists(join(canonicalDir, 'permissions.yaml'));
+    fileContains(join(canonicalDir, 'permissions.yaml'), 'Read');
   });
 });

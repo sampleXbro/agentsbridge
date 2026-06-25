@@ -99,7 +99,7 @@ describe('buildCompatibilityMatrix', () => {
 
     expect(additionalRulesRow).toBeDefined();
     expect(additionalRulesRow?.support['claude-code']).toBe('native');
-    expect(additionalRulesRow?.support.cursor).toBe('embedded');
+    expect(additionalRulesRow?.support.cursor).toBe('native');
     expect(additionalRulesRow?.support['gemini-cli']).toBe('embedded');
     expect(additionalRulesRow?.support['codex-cli']).toBe('native');
     expect(additionalRulesRow?.support.junie).toBe('native');
@@ -130,7 +130,7 @@ describe('buildCompatibilityMatrix', () => {
     const rows = buildCompatibilityMatrix(config, canonical, 'global');
     const additionalRulesRow = rows.find((r) => r.feature === 'additional rules (1)');
 
-    expect(additionalRulesRow?.support.cursor).toBe('embedded');
+    expect(additionalRulesRow?.support.cursor).toBe('native');
     expect(additionalRulesRow?.support['gemini-cli']).toBe('embedded');
     expect(additionalRulesRow?.support['codex-cli']).toBe('embedded');
     expect(additionalRulesRow?.support.junie).toBe('embedded');
@@ -148,6 +148,66 @@ describe('buildCompatibilityMatrix', () => {
     expect(permRow?.support['cursor']).toBe('partial');
     expect(permRow?.support['claude-code']).toBe('native');
     expect(permRow?.support['opencode']).toBe('native');
+  });
+
+  it('shows continue permissions native at global scope only (project stays none)', () => {
+    const config: ValidatedConfig = {
+      ...baseConfig,
+      targets: ['continue'],
+      features: ['permissions'],
+    };
+    const canonical: CanonicalFiles = {
+      ...emptyCanonical,
+      permissions: { allow: ['Read'], deny: [] },
+    };
+    const projectRows = buildCompatibilityMatrix(config, canonical, 'project');
+    const globalRows = buildCompatibilityMatrix(config, canonical, 'global');
+    expect(projectRows.find((r) => r.feature.startsWith('permissions'))?.support['continue']).toBe(
+      'none',
+    );
+    expect(globalRows.find((r) => r.feature.startsWith('permissions'))?.support['continue']).toBe(
+      'native',
+    );
+  });
+
+  it('shows augment-code permissions native at global scope only (project stays none)', () => {
+    const config: ValidatedConfig = {
+      ...baseConfig,
+      targets: ['augment-code'],
+      features: ['permissions'],
+    };
+    const canonical: CanonicalFiles = {
+      ...emptyCanonical,
+      permissions: { allow: ['view'], deny: [] },
+    };
+    const projectRows = buildCompatibilityMatrix(config, canonical, 'project');
+    const globalRows = buildCompatibilityMatrix(config, canonical, 'global');
+    expect(
+      projectRows.find((r) => r.feature.startsWith('permissions'))?.support['augment-code'],
+    ).toBe('none');
+    expect(
+      globalRows.find((r) => r.feature.startsWith('permissions'))?.support['augment-code'],
+    ).toBe('native');
+  });
+
+  it('shows goose permissions native at global scope only (project stays none)', () => {
+    const config: ValidatedConfig = {
+      ...baseConfig,
+      targets: ['goose'],
+      features: ['permissions'],
+    };
+    const canonical: CanonicalFiles = {
+      ...emptyCanonical,
+      permissions: { allow: ['Read'], deny: [] },
+    };
+    const projectRows = buildCompatibilityMatrix(config, canonical, 'project');
+    const globalRows = buildCompatibilityMatrix(config, canonical, 'global');
+    expect(projectRows.find((r) => r.feature.startsWith('permissions'))?.support['goose']).toBe(
+      'none',
+    );
+    expect(globalRows.find((r) => r.feature.startsWith('permissions'))?.support['goose']).toBe(
+      'native',
+    );
   });
 
   it('respects target filter from config', () => {
@@ -314,8 +374,9 @@ describe('buildCompatibilityMatrix', () => {
     };
     const rows = buildCompatibilityMatrix(config, canonical);
     expect(rows.find((r) => r.feature.startsWith('hooks'))?.feature).toBe('hooks (1)');
-    expect(rows.find((r) => r.feature.startsWith('hooks'))?.support['copilot']).toBe('partial');
-    expect(rows.find((r) => r.feature.startsWith('hooks'))?.support['codex-cli']).toBe('partial');
+    expect(rows.find((r) => r.feature.startsWith('hooks'))?.support['gemini-cli']).toBe('partial');
+    expect(rows.find((r) => r.feature.startsWith('hooks'))?.support['copilot']).toBe('native');
+    expect(rows.find((r) => r.feature.startsWith('hooks'))?.support['codex-cli']).toBe('native');
     expect(rows.find((r) => r.feature.startsWith('hooks'))?.support.kiro).toBe('native');
   });
 

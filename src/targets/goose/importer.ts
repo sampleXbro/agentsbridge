@@ -6,11 +6,15 @@
  *   - `.agents/skills/`   — skill bundles
  *   - `.gooseignore`      — ignore patterns
  *   - `.agents/plugins/agentsmesh/hooks/hooks.json` — lifecycle hooks
+ *   - `.config/goose/permission.yaml` — tool permissions (global scope only)
  */
 
+import { dirname, join } from 'node:path';
+import { stringify as stringifyYaml } from 'yaml';
 import type { ImportResult } from '../../core/types.js';
 import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
+import { mkdirp, readFileSafe, writeFileAtomic } from '../../utils/filesystem/fs.js';
 import { importEmbeddedSkills } from '../import/embedded-skill.js';
 import { runDescriptorImport } from '../import/descriptor-import-runner.js';
 import { importWrappedCommandHooks } from '../import/wrapped-command-hooks.js';
@@ -20,7 +24,10 @@ import {
   GOOSE_GLOBAL_SKILLS_DIR,
   GOOSE_HOOKS_FILE,
   GOOSE_CANONICAL_HOOKS,
+  GOOSE_GLOBAL_PERMISSIONS,
+  GOOSE_CANONICAL_PERMISSIONS,
 } from './constants.js';
+import { parseGoosePermissions } from './permissions.js';
 import { descriptor } from './index.js';
 
 export async function importFromGoose(
@@ -46,5 +53,25 @@ export async function importFromGoose(
     results,
   });
 
+  // Permissions are global-only (~/.config/goose/permission.yaml).
+  if (scope === 'global') await importPermissions(projectRoot, results);
+
   return results;
+}
+
+async function importPermissions(projectRoot: string, results: ImportResult[]): Promise<void> {
+  const srcPath = join(projectRoot, GOOSE_GLOBAL_PERMISSIONS);
+  const content = await readFileSafe(srcPath);
+  if (content === null) return;
+  const permissions = parseGoosePermissions(content);
+  if (!permissions) return;
+  const destPath = join(projectRoot, GOOSE_CANONICAL_PERMISSIONS);
+  await mkdirp(dirname(destPath));
+  await writeFileAtomic(destPath, stringifyYaml(permissions).trimEnd() + '\n');
+  results.push({
+    fromTool: GOOSE_TARGET,
+    fromPath: srcPath,
+    toPath: GOOSE_CANONICAL_PERMISSIONS,
+    feature: 'permissions',
+  });
 }

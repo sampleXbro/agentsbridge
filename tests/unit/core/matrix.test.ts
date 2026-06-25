@@ -170,6 +170,26 @@ describe('buildCompatibilityMatrix', () => {
     );
   });
 
+  it('shows goose permissions native at global scope only (project stays none)', () => {
+    const config: ValidatedConfig = {
+      ...baseConfig,
+      targets: ['goose'],
+      features: ['permissions'],
+    };
+    const canonical: CanonicalFiles = {
+      ...emptyCanonical,
+      permissions: { allow: ['Read'], deny: [] },
+    };
+    const projectRows = buildCompatibilityMatrix(config, canonical, 'project');
+    const globalRows = buildCompatibilityMatrix(config, canonical, 'global');
+    expect(projectRows.find((r) => r.feature.startsWith('permissions'))?.support['goose']).toBe(
+      'none',
+    );
+    expect(globalRows.find((r) => r.feature.startsWith('permissions'))?.support['goose']).toBe(
+      'native',
+    );
+  });
+
   it('respects target filter from config', () => {
     const config: ValidatedConfig = {
       ...baseConfig,

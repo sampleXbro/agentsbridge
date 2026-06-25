@@ -27,6 +27,7 @@ import {
 import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromGoose } from './importer.js';
 import { gooseImporter } from './importer-spec.js';
+import { generateGooseScopeExtras } from './scope-extras.js';
 import { lintRules } from './linter.js';
 import { lintPermissions, lintMcp } from './lint.js';
 import { buildGooseImportPaths } from '../../core/reference/import-map-builders.js';
@@ -40,6 +41,7 @@ import {
   GOOSE_GLOBAL_IGNORE,
   GOOSE_GLOBAL_CONFIG,
   GOOSE_GLOBAL_SKILLS_DIR,
+  GOOSE_GLOBAL_PERMISSIONS,
 } from './constants.js';
 
 export const target: TargetGenerators = {
@@ -80,7 +82,13 @@ const globalLayout: TargetLayout = {
   skillDir: GOOSE_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [GOOSE_GLOBAL_SKILLS_DIR],
-    files: [GOOSE_GLOBAL_ROOT_FILE, GOOSE_GLOBAL_IGNORE, GOOSE_GLOBAL_CONFIG, GOOSE_HOOKS_FILE],
+    files: [
+      GOOSE_GLOBAL_ROOT_FILE,
+      GOOSE_GLOBAL_IGNORE,
+      GOOSE_GLOBAL_CONFIG,
+      GOOSE_HOOKS_FILE,
+      GOOSE_GLOBAL_PERMISSIONS,
+    ],
   },
   rewriteGeneratedPath(path) {
     if (path === GOOSE_ROOT_FILE) return GOOSE_GLOBAL_ROOT_FILE;
@@ -127,7 +135,7 @@ const globalCapabilities: TargetCapabilities = {
   mcp: 'native',
   hooks: 'native',
   ignore: 'native',
-  permissions: 'none',
+  permissions: 'native',
 };
 
 export const descriptor = {
@@ -157,6 +165,7 @@ export const descriptor = {
       GOOSE_GLOBAL_CONFIG,
     ],
     layout: globalLayout,
+    scopeExtras: generateGooseScopeExtras,
   },
   importer: gooseImporter,
   sharedArtifacts: {

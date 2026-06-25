@@ -8,9 +8,14 @@
  */
 
 import type { CanonicalFiles, LintDiagnostic } from '../../core/types.js';
+import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 import { createWarning } from '../../core/lint/shared/helpers.js';
 
-export function lintPermissions(canonical: CanonicalFiles): LintDiagnostic[] {
+export function lintPermissions(canonical: CanonicalFiles, options?: unknown): LintDiagnostic[] {
+  // Permissions are native at global scope (~/.config/goose/permission.yaml);
+  // only project scope (no permission file) warrants a warning.
+  const scope = (options as { scope?: TargetLayoutScope } | undefined)?.scope;
+  if (scope === 'global') return [];
   if (!canonical.permissions) return [];
   const { allow, deny } = canonical.permissions;
   const ask = canonical.permissions.ask ?? [];
@@ -19,7 +24,7 @@ export function lintPermissions(canonical: CanonicalFiles): LintDiagnostic[] {
     createWarning(
       '.agentsmesh/permissions.yaml',
       'goose',
-      'Goose permissions are managed at runtime via permission.yaml in ~/.config/goose/; canonical permissions are not projected.',
+      'Goose applies tool permissions only at global scope (~/.config/goose/permission.yaml); project-scope permissions are not projected.',
     ),
   ];
 }

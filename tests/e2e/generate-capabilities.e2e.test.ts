@@ -1014,6 +1014,7 @@ features: [rules, skills, ignore]
       '.agentsmesh/skills/api-generator/references/route-checklist.md',
       '.agentsmesh/skills/api-generator/template.ts',
       '.agentsmeshcache',
+      '.aider.conf.yml',
       '.aider/',
       '.aider/skills/',
       '.aider/skills/api-generator/',

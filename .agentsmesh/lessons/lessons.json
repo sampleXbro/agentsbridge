@@ -5133,6 +5133,21 @@
         "t-kw-8087e0cf"
       ]
     },
+    "target-capability-audits-after-changing-a-target-s": {
+      "createdAt": "2026-06-25",
+      "evidence": [
+        "commit:efd0c6f"
+      ],
+      "rule": "After changing a target's importFrom/importer logic, rebuild dist (pnpm build) BEFORE running the e2e round-trip matrix: tests/e2e/target-contract-matrix.e2e.test.ts spawns the built dist/cli.js via runCli, while tests/contract/target-contract.matrix.test.ts calls importFrom in-process. If the contract round-trip passes but the e2e round-trip fails with a missing/extra canonical file (e.g. .agentsmesh/hooks.yaml), the dist is stale — rebuild, don't chase the importer.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-e06b465d",
+        "t-kw-5c8c2424"
+      ]
+    },
     "target-capability-audits-capability-audits-for-agentsmesh-are": {
       "createdAt": "2026-06-14",
       "evidence": [
@@ -8116,6 +8131,10 @@
     "t-kw-574e42b9": {
       "kind": "keyword",
       "pattern": "telemetry zshenv export"
+    },
+    "t-kw-5c8c2424": {
+      "kind": "keyword",
+      "pattern": "e2e round-trip stale dist rebuild importer contract passes e2e fails"
     },
     "t-kw-6829f894": {
       "kind": "keyword",

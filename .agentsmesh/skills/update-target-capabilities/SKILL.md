@@ -1,36 +1,42 @@
 ---
 name: update-target-capabilities
-description: Use when an AI tool gains support for a feature agentsmesh does not yet expose, and you must raise an existing target's capability for project and/or global scope (rules, additionalRules, commands, agents, skills, mcp, hooks, ignore, permissions). Also use to audit every target for capability gaps. Covers research, descriptor wiring, round-trip symmetry, settings-merge safety, plugin safety, strict TDD, two-stage review, and matrix/docs sync.
+description: Use when an AI tool gains support for a feature agentsmesh does not yet expose — or exposes wrongly — and you must raise or correct an existing target's capability for project and/or global scope (rules, additionalRules, commands, agents, skills, mcp, hooks, ignore, permissions). Also use to audit every target for capability gaps, or to act on an audit/feature-request someone else wrote. Start by verifying the claim against the tool's OWN primary docs — such findings are frequently fabricated, stale, or wrong-scoped, so be ready to reject. Covers verification-first research, descriptor wiring, round-trip symmetry, global-only scopeExtras emission, settings-merge and plugin safety, format/path-change blast radius, strict TDD, two-stage review, and matrix/docs sync.
 ---
 
 ## Purpose
 
 # Update Target Capabilities
 
-Use this skill when an existing target already lives in `src/targets/<target>/` and the underlying tool has started supporting a canonical feature that agentsmesh declares as `none` (or under-declares as `partial`). The job is to raise that capability — correctly, for the right scope(s), with the generate **and** import sides symmetric — and to prove it.
+Use this skill when an existing target already lives in `src/targets/<target>/` and the underlying tool has started supporting a canonical feature that agentsmesh declares as `none` (or under-declares as `partial`/`embedded`) — **or** declares as `native` but doesn't actually work (wrong path, wrong key, wrong shape, generate-only with no importer, or a file the tool never reads). The job is to raise or correct that capability — for the right scope(s), with the generate **and** import sides symmetric — and to prove it.
+
+> **The meta-rule: verify the claim before you build it.** Most invocations of this skill act on a *claim* — an audit row, a feature-request, a changelog rumor, or a comment in our own code. In real use, a large fraction of those claims are wrong: the surface is fabricated (no such file exists), already-correct (the claim is stale), wrong-scoped (claimed "both scopes" but the tool only reads it globally), or GUI-only (no writable file → `partial`, not `native`). Treat every claim as a hypothesis and confirm it against the tool's **own** primary docs/source before writing a line. Rejecting a bad finding is a successful outcome — ship a guess and you ship a broken capability the matrix now advertises as real.
 
 This is the skill `add-agent-target` defers to under "changing capability levels for an existing target." Use `add-agent-target` only for a brand-new target id; use `add-global-mode-target` only for first-time global wiring of a target that predates global support.
 
-Read `.agentsmesh/skills/update-target-capabilities/references/capability-update-checklist.md` before editing code. It holds the decision matrices and the full touchpoint/test/review list.
+Read `.agentsmesh/skills/update-target-capabilities/references/capability-update-checklist.md` before editing code. It holds the decision matrices, the format/path-change blast-radius list, and the full touchpoint/test/review list.
 
 ## When To Use
 
 - A tool shipped a new feature surface (a config file, a settings key, a hooks format) that agentsmesh does not yet generate or import.
-- You are auditing all targets for gaps ("which features do tools now support that we declare `none`?").
-- A capability is declared `partial` but the tool now has a file-based surface agentsmesh could own natively.
-- You are tightening an existing capability: making a generate-only `native` feature actually round-trip.
+- You are auditing all targets for gaps ("which features do tools now support that we declare `none`?"), or working through an audit/feature-request someone else produced (verify each row — see the meta-rule).
+- A capability is declared `partial`/`embedded` but the tool now has a dedicated file surface agentsmesh could own natively.
+- A capability is declared `native` but is **broken**: wrong path/key/shape, a file the tool never reads, or generate-only with no importer. Fixing it so the tool actually loads it (or so it round-trips) is in scope and counts as a real capability gain even though the matrix level doesn't move.
 
 ## Do Not Use This Skill For
 
 - Adding a brand-new target id — use `add-agent-target`.
 - First-time global-mode architecture for a target — use `add-global-mode-target`.
-- Pure refactors that do not change any capability level.
+- Pure refactors that do not change any capability level or fix any broken surface.
+- Downgrades/removals (`native → none/partial`) — those are breaking changes that need a product decision, not this skill's expansion-first flow.
 
 ## Non-Negotiable Rules
 
 ### MUST
 
-- **Research the real, current format from primary sources** before touching code: the tool's official docs/changelog, the exact file path, the exact JSON/YAML/Markdown shape, and the exact top-level key. Separate the target product from the assistant runtime (a generated `codex-cli` target ≠ Codex desktop).
+- **Verify the claim against the tool's own primary docs/source first — and reject what doesn't hold up.** A claim is real only when you can point at the tool's docs/source that say it reads this file/key in this shape at this scope. Reject (and write down why) when you find: a **fabricated** surface (no such file/key exists — e.g. a permissions path the tool never reads); an **already-correct** state (the claim is stale; the current code is right); a **wrong scope** (claimed "both" but the tool only reads it globally, or vice versa); or a **GUI/cloud-only** surface (no writable file → `partial`, not `native`). Do not trust the audit row, *our own code comments*, the README, or memory — they are exactly what produced the wrong claims. A rejection with evidence is a complete, valuable result.
+- **Research the real, current format from primary sources** (only after the claim survives verification): the exact file path, the exact JSON/YAML/Markdown shape, and the exact top-level key (`mcpServers` vs `servers` vs `extensions` vs `context_servers` all differ). Separate the target product from the assistant runtime (a generated `codex-cli` target ≠ Codex desktop), and note when a project moved orgs/paths (e.g. Goose → AAIF).
+- **Global-only settings-backed features emit via `globalSupport.scopeExtras`, not a plain `generateX`.** The permissions/settings feature loop invokes generators *without* a scope, and `resolveTargetFeatureGenerator` does not gate by level — so a plain `generatePermissions`/`generateX` for a feature that's `native` global but `none` project will **leak the file into project scope**. Emit it from `scopeExtras` (which receives the scope) and gate on `scope === 'global'`; the descriptor schema accepts `scopeExtras` as the implementation of a settings-backed global capability. (MCP/hooks generators *do* receive a `ctx` and can scope-gate via `ctx?.scope`.)
+- **When two or more targets share a file format, extract one shared helper instead of duplicating per-target logic** (e.g. the wrapped command-hook serialize/import shared by codex-cli, factory-droid, and goose). Existing targets' tests then prove the extraction is behavior-preserving. Duplicated per-target format logic is the anti-pattern the architecture guide calls out.
 - **Decide the level per scope, independently.** Project and global capabilities are separate fields and frequently differ (e.g. Goose MCP is global-only; Rovo Dev hooks/permissions are global-only). Use the level matrix in the checklist: `native` (dedicated file/key), `embedded` (folded into another file), `partial` (tool supports it but only via UI/managed settings agentsmesh cannot write), `none`.
 - **Round-trip symmetry is the first-class requirement.** A `native` generate side MUST have a matching import side, or the capability is broken — this is the trap that slips through most often. After wiring a generator, wire the importer (descriptor `importer` block or custom `importFrom`) and assert canonical output in a test. The support matrix says "Native"; users read that as both directions.
 - **`partial` requires a no-op generator stub plus a lint warning.** The descriptor schema requires a `generateX` returning `[]` even when the level is `partial`; add a `lint.<feature>` warning (reuse `createWarning`) pointing the user at the tool's UI/settings.
@@ -46,9 +52,11 @@ Read `.agentsmesh/skills/update-target-capabilities/references/capability-update
 
 ### MUST NOT
 
+- Do not implement a claim you could not confirm from the tool's own primary source — reject it with a one-line reason instead.
 - Do not declare `native` and ship generate-only — that is a broken round-trip, not a feature.
-- Do not infer the format from old fixtures, the README, or memory.
+- Do not infer the format from old fixtures, the README, our own code comments, or memory.
 - Do not add a generator for a feature the tool only manages in its GUI — that is `partial`, with a lint warning.
+- Do not use a plain `generateX` for a global-only feature — it leaks into project scope (use `scopeExtras`).
 - Do not let `index.ts` cross 200 lines "temporarily."
 - Do not update README without the website page, or vice versa.
 - Do not hand-edit `package.json` version or the matrix tables; they are generated.
@@ -57,15 +65,16 @@ Read `.agentsmesh/skills/update-target-capabilities/references/capability-update
 
 Run this with `superpowers:subagent-driven-development` when touching more than one target/feature — one implementer subagent per (target, feature), each under `superpowers:test-driven-development`, followed by the two-stage review below. One target/feature per implementer; never parallel-edit the same target.
 
+0. **Verify the claim** — confirm the surface exists, in this shape, at this scope, from the tool's own docs/source. If it fails (fabricated / already-correct / wrong-scope / GUI-only), stop and report the rejection with evidence. When verifying a batch (an audit), fan out one read-only verifier per candidate and gate implementation on the verdicts — the cost is small next to shipping a broken native.
 1. **Research** — record the exact path, format, top-level key, and per-scope support level. Resolve every unknown from primary sources before coding.
 2. **Decide levels** — set `capabilities` and `globalSupport.capabilities` independently using the level matrix.
 3. **Tests first** — generator/emitter edge cases, strict contract arrays, global-layout capability assertions; for round-trip, a generate→import equality test.
 4. **Implement the descriptor wiring** — constants (project + global), generator OR `emitScopedSettings` OR `mergeGeneratedOutputContent`, capabilities, `managedOutputs`, `rewriteGeneratedPath`, the **importer** (round-trip), and the `partial` lint stub. Reuse shared helpers (`buildClaudeHooksObjectFromCanonical`, `createWarning`, `mergeSettingsJson`).
 5. **Split for size** — extract to keep every file ≤ 200 lines.
-6. **References + docs** — wire import-maps if new ref-bearing dirs were added; run `pnpm schemas:generate && pnpm matrix:generate`; sync README + supported-tools page.
+6. **References + docs (mind the blast radius)** — wire import-maps if new ref-bearing dirs were added; run `pnpm schemas:generate && pnpm matrix:generate`. A new generated file, a changed output path, or a projection→native move ripples far beyond the descriptor — update the contract arrays, the e2e exclusion sets, **both** `reference-targets.ts` chains, the per-target `dirTreeExactly`, and layout/matrix tests in lockstep (full list in the checklist's blast-radius section). `grep -rn '<old-path-or-shape>' tests/` before declaring done. A global-only level change still moves the rendered matrix (`SUPPORT_MATRIX_GLOBAL`), so README + website must be regenerated.
 7. **Review (two-stage, read-only Explore subagents)** — first spec compliance (does it match the researched format + scope levels + round-trip?), then code quality (no `any`, explicit return types, ≤ 200 lines, helper reuse, no shared hardcoding). Fix and re-review until both pass.
 8. **Double-check pass** — verify the four cross-cutting contracts explicitly: round-trip symmetry, settings-merge base, plugin safety, and matrix/README/website agreement. See the checklist's "Double-Check" section.
-9. **Changeset + QA** — add a `minor` changeset (new capability is a backward-compatible feature); run `post-feature-qa`; run the full verification stack.
+9. **Changeset + QA** — `minor` for a level raise (new backward-compatible capability), `patch` for a same-level fix (a broken/wrong `native` made functional). No `major`: generated files are artifacts, so changed output is not a breaking change. Run `post-feature-qa`; run the full verification stack.
 
 ## Required Verification
 
@@ -73,22 +82,25 @@ Before claiming completion, every command must pass:
 
 - `pnpm typecheck`
 - `pnpm lint`
+- `pnpm build` — **before** any e2e/round-trip run. The e2e matrix spawns the built `dist/cli.js`; the in-process contract test does not. If the contract round-trip passes but the e2e fails with a missing/extra/relocated file, the dist is stale — rebuild, don't chase the importer.
 - `pnpm test`
 - `pnpm matrix:verify`
-- `pnpm build` (integration/e2e need the built dist)
 
-Run narrower target-scoped tests while iterating, but do not skip the full stack at the end.
+Run narrower target-scoped tests while iterating, but do not skip the full stack at the end. (Note: a few test runs rewrite `tests/e2e/agents-last-run.md` as a side effect — `git checkout --` that file before committing so it doesn't ride along.)
 
 ## Completion Standard
 
 The task is not done until all of the following are true:
 
+- Either the claim was **confirmed** from the tool's own primary source and implemented, or it was **rejected** with a one-line evidence-backed reason — never implemented on faith.
 - The new level is declared in the descriptor for each scope it applies to, and `pnpm matrix:verify` passes.
 - Generate **and** import are both covered by tests for every level raised to `native`; round-trip preserves content where the format permits.
+- Global-only features emit via `scopeExtras` (not a project-leaking `generateX`), gated to `scope === 'global'`, with project scope staying `none`.
 - `partial` features have a no-op generator stub and a lint warning verified by tests.
 - Multi-write settings files merge with a `pending?.content ?? existing` base; single-combined-write mergers are left untouched.
+- Every output path/format change is reflected in all blast-radius sites (contract arrays, e2e exclusion sets, both `reference-targets` chains, `dirTreeExactly`, layout/matrix tests) — verified by a tree-wide grep for the old string.
 - No file exceeds 200 lines; no target-name branch was added to shared/core.
-- Plugin path holds (rich-plugin fixture updated only if a hook contract changed).
+- Plugin path holds (rich-plugin fixture updated only if a hook *contract* changed).
 - README matrix and the website supported-tools page agree with the descriptor.
-- A `minor` changeset exists; `post-feature-qa` has been applied and any gaps closed.
+- A changeset exists at the right level — `minor` for a new capability (level raise), `patch` for a same-level fix that makes an existing `native` claim actually work. `post-feature-qa` has been applied and any gaps closed.
 - The full verification stack passes.

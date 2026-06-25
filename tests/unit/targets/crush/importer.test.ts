@@ -3,6 +3,7 @@ import { mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { importFromCrush } from '../../../../src/targets/crush/importer.js';
+import { toPosixPath } from '../../../helpers/posix-path.js';
 
 async function writeJson(path: string, data: unknown): Promise<void> {
   await writeFile(path, JSON.stringify(data, null, 2), 'utf-8');
@@ -72,7 +73,7 @@ describe('importFromCrush', () => {
     const mcpResult = results.find((r) => r.feature === 'mcp');
     expect(mcpResult).toBeDefined();
     expect(mcpResult!.toPath).toBe('.agentsmesh/mcp.json');
-    expect(mcpResult!.fromPath).toContain('.config/crush/crush.json');
+    expect(toPosixPath(mcpResult!.fromPath)).toContain('.config/crush/crush.json');
     const { readFile } = await import('node:fs/promises');
     const parsed = JSON.parse(
       await readFile(join(projectRoot, '.agentsmesh/mcp.json'), 'utf-8'),

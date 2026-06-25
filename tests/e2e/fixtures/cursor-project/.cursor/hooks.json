@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "hooks": {
+    "postToolUse": [
+      { "matcher": "Write|Edit", "type": "command", "command": "prettier --write $FILE_PATH", "timeout": 30 }
+    ]
+  }
+}

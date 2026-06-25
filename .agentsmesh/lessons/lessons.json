@@ -5133,6 +5133,21 @@
         "t-kw-8087e0cf"
       ]
     },
+    "target-capability-audits-a-test-fixture-placed-under": {
+      "createdAt": "2026-06-25",
+      "evidence": [
+        "commit:ed90714"
+      ],
+      "rule": "A test fixture placed under a path the repo .gitignores (e.g. tests/e2e/fixtures/<x>/.cursor/, .github/hooks/) is SILENTLY dropped by `git add` (the gitignore no-op), so it never reaches CI while existing on your disk. Signature: a fixture-reading test passes locally but fails on CI with \"Expected file to exist\" or missing-derived-output (e.g. cursor import producing no .agentsmesh/hooks.yaml). Fix: `git add -f <fixture>` and confirm with `git ls-files <fixture>`. When adding any fixture file, check `git check-ignore -v <path>` first; sibling fixtures may be tracked from a prior force-add while your new one is blocked.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-72a39ab6",
+        "t-kw-265fd6c5"
+      ]
+    },
     "target-capability-audits-after-changing-a-target-s": {
       "createdAt": "2026-06-25",
       "evidence": [
@@ -5391,6 +5406,21 @@
       "triggers": [
         "t-glob-960c3805",
         "t-kw-1b4e1dda"
+      ]
+    },
+    "target-capability-audits-when-dozens-of-cli-renderer": {
+      "createdAt": "2026-06-25",
+      "evidence": [
+        "commit:ed90714"
+      ],
+      "rule": "When dozens of CLI renderer / logger color tests fail LOCALLY (e.g. \"respects NO_COLOR env\", check/generate/install/lint renderers) but CI is green, suspect FORCE_COLOR in your shell, not a regression. The harness sets FORCE_COLOR=3; FORCE_COLOR overrides NO_COLOR, so tests that assert no-ANSI output while only clearing NO_COLOR (not FORCE_COLOR) emit color and fail. Confirm with `node -e \"console.log(process.env.FORCE_COLOR)\"`; run/commit with `env -u FORCE_COLOR <cmd>` so the pre-commit hook's suite (and these tests) pass. This also explains a pre-commit hook that fails locally on a markdown-only commit.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-cmd-08ecd38a",
+        "t-kw-8738d72d"
       ]
     },
     "target-capability-audits-when-extracting-capabilities-to-a": {
@@ -7036,6 +7066,10 @@
     }
   },
   "triggers": {
+    "t-cmd-08ecd38a": {
+      "kind": "command_pattern",
+      "pattern": "git commit,vitest run"
+    },
     "t-cmd-09d400a5": {
       "kind": "command_pattern",
       "pattern": "git add tasks/reports"
@@ -7656,6 +7690,10 @@
       "kind": "file_glob",
       "pattern": "src/targets/continue/importer.ts"
     },
+    "t-glob-72a39ab6": {
+      "kind": "file_glob",
+      "pattern": "tests/e2e/fixtures/**"
+    },
     "t-glob-74262634": {
       "kind": "file_glob",
       "pattern": "src/cli/commands/lessons-usage.ts"
@@ -8120,6 +8158,10 @@
       "kind": "keyword",
       "pattern": "NFA state"
     },
+    "t-kw-265fd6c5": {
+      "kind": "keyword",
+      "pattern": "fixture gitignored force-add CI-red local-green missing file"
+    },
     "t-kw-26809656": {
       "kind": "keyword",
       "pattern": "regex cleanup"
@@ -8267,6 +8309,10 @@
     "t-kw-866bb6ea": {
       "kind": "keyword",
       "pattern": "fan out"
+    },
+    "t-kw-8738d72d": {
+      "kind": "keyword",
+      "pattern": "FORCE_COLOR renderer color tests fail locally CI green"
     },
     "t-kw-89bf9a2d": {
       "kind": "keyword",

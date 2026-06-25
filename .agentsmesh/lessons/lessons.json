@@ -5191,6 +5191,21 @@
         "t-glob-5647ec65"
       ]
     },
+    "target-capability-audits-for-a-global-only-settings": {
+      "createdAt": "2026-06-25",
+      "evidence": [
+        "commit:4d31ea5"
+      ],
+      "rule": "For a GLOBAL-ONLY settings-backed capability (permissions/mcp/hooks/ignore native at global but none at project), generate via globalSupport.scopeExtras (scope-aware), NOT a plain generators.generateX. The engine's generatePermissionsFeature calls gen(canonical) with no scope, and resolveTargetFeatureGenerator returns the generator regardless of capability level, so a generateX would leak the file into project scope. The descriptor schema's validateCapabilityImplementations accepts globalSupport.scopeExtras as a valid implementation for settings-backed features at global scope only.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-3851162d",
+        "t-kw-cfaa4738"
+      ]
+    },
     "target-capability-audits-for-codex-cli-codex-instructions": {
       "createdAt": "2026-06-24",
       "evidence": [
@@ -7424,6 +7439,10 @@
       "kind": "file_glob",
       "pattern": "tests/consumer-smoke/src/smoke.ts"
     },
+    "t-glob-3851162d": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/scope-extras.ts"
+    },
     "t-glob-38c9bd37": {
       "kind": "file_glob",
       "pattern": "src/mcp/tool-tables/*.ts"
@@ -8259,6 +8278,10 @@
     "t-kw-c8f23353": {
       "kind": "keyword",
       "pattern": "captureLesson"
+    },
+    "t-kw-cfaa4738": {
+      "kind": "keyword",
+      "pattern": "global-only permissions scopeExtras generateX leaks project scope"
     },
     "t-kw-d3364734": {
       "kind": "keyword",

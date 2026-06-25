@@ -6,7 +6,7 @@
  *   - `.factory/skills/`     — skill bundles
  *   - `.factory/droids/`     — native droid definitions from canonical agents
  *   - `.factory/mcp.json`    — MCP servers
- *   - `.factory/hooks.json`  — lifecycle hooks (Claude Code format)
+ *   - `.factory/hooks.json`  — command hooks, wrapped under a top-level `hooks` key
  *
  * Import reads `AGENTS.md`, `.factory/droids/`, `.factory/skills/`, and
  * `.factory/mcp.json`.

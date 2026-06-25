@@ -275,7 +275,7 @@ describe('generateHooks (factory-droid)', () => {
     expect(generateHooks(makeCanonical({ hooks: {} }))).toHaveLength(0);
   });
 
-  it('emits .factory/hooks.json with Claude Code format', () => {
+  it('emits .factory/hooks.json wrapped under a top-level "hooks" key', () => {
     const results = generateHooks(
       makeCanonical({
         hooks: {
@@ -291,8 +291,22 @@ describe('generateHooks (factory-droid)', () => {
     );
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(FACTORY_DROID_HOOKS_FILE);
-    const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
-    expect(parsed.PreToolUse).toBeDefined();
+    const parsed = JSON.parse(results[0].content) as { hooks?: Record<string, unknown> };
+    // Factory Droid nests events under "hooks" (codex-cli shape), NOT bare top-level.
+    expect(parsed.PreToolUse).toBeUndefined();
+    expect(parsed.hooks).toBeDefined();
+    expect(parsed.hooks!.PreToolUse).toBeDefined();
+  });
+
+  it('drops prompt-type handlers (Factory hooks are command-only)', () => {
+    const results = generateHooks(
+      makeCanonical({
+        hooks: {
+          UserPromptSubmit: [{ matcher: '.*', type: 'prompt', command: 'Review this' }],
+        },
+      }),
+    );
+    expect(results).toHaveLength(0);
   });
 
   it('returns [] when hooks entries are all empty arrays', () => {

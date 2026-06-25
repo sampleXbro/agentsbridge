@@ -14,7 +14,7 @@ import type { CanonicalFiles } from '../../core/types.js';
 import { generateEmbeddedSkills } from '../import/embedded-skill.js';
 import { appendEmbeddedRulesBlock } from '../projection/managed-blocks.js';
 import { commandSkillDirName, serializeCommandSkill } from '../codex-cli/command-skill.js';
-import { buildClaudeHooksObjectFromCanonical } from '../claude-code/hooks-format.js';
+import { buildWrappedCommandHooks } from '../import/wrapped-command-hooks.js';
 import { serializeDroid } from './droid-serializer.js';
 import {
   FACTORY_DROID_TARGET,
@@ -63,10 +63,7 @@ export function generateAgents(canonical: CanonicalFiles): FactoryDroidOutput[] 
 }
 
 export function generateHooks(canonical: CanonicalFiles): FactoryDroidOutput[] {
-  if (!canonical.hooks || Object.keys(canonical.hooks).length === 0) return [];
-  const hooks = buildClaudeHooksObjectFromCanonical(canonical);
-  if (Object.keys(hooks).length === 0) return [];
-  return [{ path: FACTORY_DROID_HOOKS_FILE, content: JSON.stringify(hooks, null, 2) }];
+  return buildWrappedCommandHooks(canonical, FACTORY_DROID_HOOKS_FILE);
 }
 
 export function generateMcp(canonical: CanonicalFiles): FactoryDroidOutput[] {

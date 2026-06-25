@@ -16,6 +16,7 @@ export const factoryDroidContract: TargetPathContract = {
     '.agentsmesh/agents/code-reviewer.md',
     '.agentsmesh/agents/researcher.md',
     '.agentsmesh/commands/review.md',
+    '.agentsmesh/hooks.yaml',
     '.agentsmesh/mcp.json',
     '.agentsmesh/rules/_root.md',
     '.agentsmesh/skills/api-generator/SKILL.md',

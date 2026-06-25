@@ -43,7 +43,15 @@ several of its claims (e.g. Trae commands/agents file-surface; Continue hooks).
 ## Tier 2 — under-declared (none/partial → native, expansion). HIGH PRIORITY.
 - [ ] amazon-q additionalRules/project `none → native`
 - [ ] cursor additionalRules `embedded → native`
-- [ ] pi-agent commands `none → native`
+- [ ] pi-agent commands `none → native` — SPEC VERIFIED (earendil-works/pi, prompt-templates.md):
+      project `.pi/prompts/<name>.md`, global `~/.pi/agent/prompts/<name>.md`; filename = command name;
+      frontmatter `description` + `argument-hint` (both optional); args `$1`/`$@`/`$ARGUMENTS`.
+      NOTE: not a clean additive — pi currently PROJECTS commands→skills (commandPath → .pi/skills/.../SKILL.md,
+      supportsConversion.commands=true). Native prompts REPLACE that projection: update project+global commandPath
+      to `.pi/prompts/<name>.md` / `.pi/agent/prompts/<name>.md`, add a commands importer (directory mode),
+      reconsider supportsConversion.commands, update contract + reference map + tests. Medium effort.
+      Fix metadata.officialUrl too: real repo is github.com/earendil-works/pi (npm @earendil-works/pi-coding-agent),
+      NOT pi-labs/pi-agent.
 - [ ] factory-droid commands `none → native`; permissions → embedded
 - [ ] goose hooks `none → native`
 - [ ] kiro permissions/global `none → native`

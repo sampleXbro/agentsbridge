@@ -21,7 +21,6 @@ const TARGETS = Object.keys(TARGET_CONTRACTS) as TargetName[];
 const TARGETS_WITHOUT_AGENT_OUTPUT = new Set<TargetName>([
   'amazon-q',
   'augment-code',
-  'factory-droid',
   'jules',
   'roo-code',
   'trae',

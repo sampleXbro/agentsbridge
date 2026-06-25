@@ -8,7 +8,8 @@
  *   - `.factory/mcp.json`    — MCP servers
  *   - `.factory/hooks.json`  — lifecycle hooks (Claude Code format)
  *
- * Import reads `AGENTS.md`, `.factory/skills/`, and `.factory/mcp.json`.
+ * Import reads `AGENTS.md`, `.factory/droids/`, `.factory/skills/`, and
+ * `.factory/mcp.json`.
  *
  * Factory Droid has native support for agents (droids), skills, MCP, and hooks.
  * Commands are projected as skills. Ignore and permissions have no file-based
@@ -38,6 +39,7 @@ import {
   FACTORY_DROID_GLOBAL_MCP_FILE,
   FACTORY_DROID_GLOBAL_HOOKS_FILE,
   FACTORY_DROID_CANONICAL_RULES_DIR,
+  FACTORY_DROID_CANONICAL_AGENTS_DIR,
 } from './constants.js';
 import { importFromFactoryDroid } from './importer.js';
 import { lintRules } from './linter.js';
@@ -82,7 +84,11 @@ const globalLayout: TargetLayout = {
   skillDir: FACTORY_DROID_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [FACTORY_DROID_GLOBAL_SKILLS_DIR, FACTORY_DROID_GLOBAL_DROIDS_DIR],
-    files: [FACTORY_DROID_GLOBAL_ROOT_FILE, FACTORY_DROID_GLOBAL_HOOKS_FILE, FACTORY_DROID_GLOBAL_MCP_FILE],
+    files: [
+      FACTORY_DROID_GLOBAL_ROOT_FILE,
+      FACTORY_DROID_GLOBAL_HOOKS_FILE,
+      FACTORY_DROID_GLOBAL_MCP_FILE,
+    ],
   },
   rewriteGeneratedPath(path) {
     if (path === FACTORY_DROID_ROOT_FILE) return FACTORY_DROID_GLOBAL_ROOT_FILE;
@@ -159,6 +165,17 @@ export const descriptor = {
       canonicalDir: FACTORY_DROID_CANONICAL_RULES_DIR,
       canonicalRootFilename: '_root.md',
       markAsRoot: true,
+    },
+    agents: {
+      feature: 'agents',
+      mode: 'directory',
+      source: {
+        project: [FACTORY_DROID_DROIDS_DIR],
+        global: [FACTORY_DROID_GLOBAL_DROIDS_DIR],
+      },
+      canonicalDir: FACTORY_DROID_CANONICAL_AGENTS_DIR,
+      extensions: ['.md'],
+      preset: 'agent',
     },
   },
   buildImportPaths: buildFactoryDroidImportPaths,

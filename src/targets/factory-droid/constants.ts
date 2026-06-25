@@ -43,3 +43,4 @@ export const FACTORY_DROID_GLOBAL_HOOKS_FILE = '.factory/hooks.json';
 
 // Canonical paths
 export const FACTORY_DROID_CANONICAL_RULES_DIR = '.agentsmesh/rules';
+export const FACTORY_DROID_CANONICAL_AGENTS_DIR = '.agentsmesh/agents';

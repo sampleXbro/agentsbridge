@@ -57,6 +57,45 @@ describe('importFromFactoryDroid', () => {
     rmSync(projectRoot, { recursive: true, force: true });
   });
 
+  it('imports agents (droids) from .factory/droids/', async () => {
+    projectRoot = setupFixture({
+      '.factory/droids/code-reviewer.md':
+        '---\nname: code-reviewer\ndescription: Code review specialist\nmodel: sonnet\ntools:\n  - Read\n  - Glob\n  - Grep\n---\n\nYou are a code reviewer.',
+    });
+
+    const results = await importFromFactoryDroid(projectRoot);
+
+    const agentResult = results.find((r) => r.feature === 'agents');
+    expect(agentResult).toBeDefined();
+    expect(agentResult!.fromTool).toBe('factory-droid');
+    expect(agentResult!.toPath).toBe('.agentsmesh/agents/code-reviewer.md');
+
+    const { readFileSync } = await import('node:fs');
+    const written = readFileSync(join(projectRoot, '.agentsmesh/agents/code-reviewer.md'), 'utf-8');
+    expect(written).toContain('name: code-reviewer');
+    expect(written).toContain('description: Code review specialist');
+    expect(written).toContain('model: sonnet');
+    expect(written).toContain('Read');
+    expect(written).toContain('You are a code reviewer.');
+
+    rmSync(projectRoot, { recursive: true, force: true });
+  });
+
+  it('imports agents (droids) from global scope', async () => {
+    projectRoot = setupFixture({
+      '.factory/droids/researcher.md':
+        '---\nname: researcher\ndescription: Research specialist\nmodel: haiku\n---\n\nYou research things.',
+    });
+
+    const results = await importFromFactoryDroid(projectRoot, { scope: 'global' });
+
+    const agentResult = results.find((r) => r.feature === 'agents');
+    expect(agentResult).toBeDefined();
+    expect(agentResult!.toPath).toBe('.agentsmesh/agents/researcher.md');
+
+    rmSync(projectRoot, { recursive: true, force: true });
+  });
+
   it('imports MCP from .factory/mcp.json', async () => {
     projectRoot = setupFixture({
       '.factory/mcp.json': JSON.stringify(

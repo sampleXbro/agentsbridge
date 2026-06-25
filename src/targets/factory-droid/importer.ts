@@ -3,6 +3,7 @@
  *
  * Reads:
  *   - `AGENTS.md`          — root rule
+ *   - `.factory/droids/`   — native droid definitions → canonical agents
  *   - `.factory/skills/`   — skill bundles
  *   - `.factory/mcp.json`  — MCP servers
  */

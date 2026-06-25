@@ -3,6 +3,8 @@ import { mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { importFromRooCode } from '../../../../src/targets/roo-code/importer.js';
+import { generateAgents } from '../../../../src/targets/roo-code/generator.js';
+import { descriptor } from '../../../../src/targets/roo-code/index.js';
 import {
   ROO_CODE_RULES_DIR,
   ROO_CODE_COMMANDS_DIR,
@@ -11,7 +13,9 @@ import {
   ROO_CODE_IGNORE,
   ROO_CODE_ROOT_RULE,
   ROO_CODE_ROOT_RULE_FALLBACK,
+  ROO_CODE_MODES_FILE,
 } from '../../../../src/targets/roo-code/constants.js';
+import type { CanonicalFiles } from '../../../../src/core/types.js';
 
 const TEST_DIR = join(tmpdir(), 'am-roo-code-importer-test');
 
@@ -136,6 +140,69 @@ describe('importFromRooCode — skills', () => {
 
     const results = await importFromRooCode(TEST_DIR);
     expect(results.some((r) => r.feature === 'skills')).toBe(true);
+  });
+});
+
+describe('importFromRooCode — agents (.roomodes)', () => {
+  it('declares project agents native and keeps global agents partial', () => {
+    expect(descriptor.capabilities.agents).toBe('native');
+    expect(descriptor.globalSupport?.capabilities.agents).toBe('partial');
+  });
+
+  it('imports customModes from .roomodes as canonical agents', async () => {
+    writeFileSync(
+      join(TEST_DIR, ROO_CODE_MODES_FILE),
+      'customModes:\n  - slug: reviewer\n    name: Reviewer\n    description: Reviews code\n    roleDefinition: You review code carefully.\n',
+    );
+
+    const results = await importFromRooCode(TEST_DIR);
+    const agentResults = results.filter((r) => r.feature === 'agents');
+    expect(agentResults).toHaveLength(1);
+    expect(agentResults[0]!.toPath).toBe('.agentsmesh/agents/reviewer.md');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'), 'utf-8');
+    expect(content).toContain('name: Reviewer');
+    expect(content).toContain('You review code carefully.');
+  });
+
+  it('round-trips canonical agents through .roomodes', async () => {
+    const canonical = {
+      rules: [],
+      commands: [],
+      agents: [
+        {
+          source: '/proj/.agentsmesh/agents/reviewer.md',
+          name: 'Reviewer',
+          description: 'Reviews code',
+          tools: [],
+          disallowedTools: [],
+          model: '',
+          permissionMode: 'default' as const,
+          maxTurns: 0,
+          mcpServers: [],
+          hooks: {},
+          skills: [],
+          memory: '',
+          body: 'Review carefully.',
+        },
+      ],
+      skills: [],
+      mcp: null,
+      permissions: null,
+      hooks: null,
+      ignore: [],
+    } satisfies CanonicalFiles;
+    writeFileSync(join(TEST_DIR, ROO_CODE_MODES_FILE), generateAgents(canonical)[0]!.content);
+
+    await importFromRooCode(TEST_DIR);
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'), 'utf-8');
+    expect(content).toContain('name: Reviewer');
+    expect(content).toContain('Review carefully.');
+  });
+
+  it('ignores malformed .roomodes (no customModes array)', async () => {
+    writeFileSync(join(TEST_DIR, ROO_CODE_MODES_FILE), 'customModes: not-an-array\n');
+    const results = await importFromRooCode(TEST_DIR);
+    expect(results.filter((r) => r.feature === 'agents')).toHaveLength(0);
   });
 });
 

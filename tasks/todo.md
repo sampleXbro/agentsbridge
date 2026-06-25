@@ -27,6 +27,7 @@ several of its claims (e.g. Trae commands/agents file-surface; Continue hooks).
 - [x] augment-code rules frontmatter key `type` (DONE)
 - [ ] aider rules: wire `CONVENTIONS.md` via `.aider.conf.yml` `read:`
 - [x] copilot hooks/project `partial → native` (`.github/hooks/*.json`) — DONE (round-trip already shipped). Follow-up: copilot GLOBAL hooks native via `~/.copilot/hooks/*.json` (needs global-mode wiring; lesson-confirmed).
+- [x] roo-code agents/project `partial → native` — added `.roomodes` importer (round-trip completion); global stays partial (VS Code globalStorage). roo global rules path was ALREADY correct (`~/.roo/rules`) — audit false positive.
 - [ ] factory-droid hooks + agents: ADD importer (generate-only today)
 - [ ] opencode mcp+permissions settings-merge base; additionalRules via `instructions` key
 - [ ] roo-code rules/global path `~/.roo/rules/`

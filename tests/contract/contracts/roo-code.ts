@@ -13,6 +13,8 @@ export const rooCodeContract: TargetPathContract = {
     '.roomodes',
   ],
   imported: [
+    '.agentsmesh/agents/code-reviewer.md',
+    '.agentsmesh/agents/researcher.md',
     '.agentsmesh/commands/review.md',
     '.agentsmesh/ignore',
     '.agentsmesh/mcp.json',

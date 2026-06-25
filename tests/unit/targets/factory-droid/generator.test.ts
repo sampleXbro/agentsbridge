@@ -12,6 +12,7 @@ import {
 import {
   FACTORY_DROID_ROOT_FILE,
   FACTORY_DROID_SKILLS_DIR,
+  FACTORY_DROID_COMMANDS_DIR,
   FACTORY_DROID_DROIDS_DIR,
   FACTORY_DROID_MCP_FILE,
   FACTORY_DROID_HOOKS_FILE,
@@ -192,7 +193,7 @@ describe('generateSkills (factory-droid)', () => {
 });
 
 describe('generateCommands (factory-droid)', () => {
-  it('projects commands as skills', () => {
+  it('emits native .factory/commands/<name>.md slash commands', () => {
     const canonical = makeCanonical({
       commands: [
         {
@@ -208,13 +209,11 @@ describe('generateCommands (factory-droid)', () => {
     const results = generateCommands(canonical);
 
     expect(results).toHaveLength(1);
-    expect(results[0].path).toBe(`${FACTORY_DROID_SKILLS_DIR}/am-command-review/SKILL.md`);
+    expect(results[0].path).toBe(`${FACTORY_DROID_COMMANDS_DIR}/review.md`);
     const parsedCmd = parseFrontmatter(results[0].content);
-    expect(parsedCmd.frontmatter.name).toBe('am-command-review');
     expect(parsedCmd.frontmatter.description).toBe('Review code changes');
-    expect(parsedCmd.frontmatter['x-agentsmesh-kind']).toBe('command');
-    expect(parsedCmd.frontmatter['x-agentsmesh-name']).toBe('review');
-    expect(parsedCmd.frontmatter['x-agentsmesh-allowed-tools']).toEqual(['Bash', 'Read']);
+    expect(parsedCmd.frontmatter['allowed-tools']).toEqual(['Bash', 'Read']);
+    expect(parsedCmd.frontmatter['x-agentsmesh-kind']).toBeUndefined();
     expect(parsedCmd.body).toContain('Run code review.');
   });
 

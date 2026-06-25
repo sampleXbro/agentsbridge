@@ -13,13 +13,14 @@
 import type { CanonicalFiles } from '../../core/types.js';
 import { generateEmbeddedSkills } from '../import/embedded-skill.js';
 import { appendEmbeddedRulesBlock } from '../projection/managed-blocks.js';
-import { commandSkillDirName, serializeCommandSkill } from '../codex-cli/command-skill.js';
+import { serializeFrontmatter } from '../../utils/text/markdown.js';
 import { buildWrappedCommandHooks } from '../import/wrapped-command-hooks.js';
 import { serializeDroid } from './droid-serializer.js';
 import {
   FACTORY_DROID_TARGET,
   FACTORY_DROID_ROOT_FILE,
   FACTORY_DROID_SKILLS_DIR,
+  FACTORY_DROID_COMMANDS_DIR,
   FACTORY_DROID_DROIDS_DIR,
   FACTORY_DROID_MCP_FILE,
   FACTORY_DROID_HOOKS_FILE,
@@ -49,10 +50,18 @@ export function generateSkills(canonical: CanonicalFiles): FactoryDroidOutput[] 
 }
 
 export function generateCommands(canonical: CanonicalFiles): FactoryDroidOutput[] {
-  return canonical.commands.map((command) => ({
-    path: `${FACTORY_DROID_SKILLS_DIR}/${commandSkillDirName(command.name)}/SKILL.md`,
-    content: serializeCommandSkill(command),
-  }));
+  return canonical.commands.map((command) => {
+    const frontmatter: Record<string, unknown> = {
+      description: command.description || undefined,
+      'allowed-tools': command.allowedTools.length > 0 ? command.allowedTools : undefined,
+    };
+    if (frontmatter.description === undefined) delete frontmatter.description;
+    if (frontmatter['allowed-tools'] === undefined) delete frontmatter['allowed-tools'];
+    return {
+      path: `${FACTORY_DROID_COMMANDS_DIR}/${command.name}.md`,
+      content: serializeFrontmatter(frontmatter, command.body.trim() || ''),
+    };
+  });
 }
 
 export function generateAgents(canonical: CanonicalFiles): FactoryDroidOutput[] {

@@ -3,17 +3,18 @@
  *
  * Generation emits:
  *   - `AGENTS.md`            — root rule + embedded additional rules
+ *   - `.factory/commands/`   — native slash commands
  *   - `.factory/skills/`     — skill bundles
  *   - `.factory/droids/`     — native droid definitions from canonical agents
  *   - `.factory/mcp.json`    — MCP servers
  *   - `.factory/hooks.json`  — command hooks, wrapped under a top-level `hooks` key
  *
- * Import reads `AGENTS.md`, `.factory/droids/`, `.factory/skills/`, and
- * `.factory/mcp.json`.
+ * Import reads `AGENTS.md`, `.factory/commands/`, `.factory/droids/`,
+ * `.factory/skills/`, and `.factory/mcp.json`.
  *
- * Factory Droid has native support for agents (droids), skills, MCP, and hooks.
- * Commands are projected as skills. Ignore and permissions have no file-based
- * config — lint warnings are emitted when those canonical features are present.
+ * Factory Droid has native support for commands, agents (droids), skills, MCP,
+ * and hooks. Ignore and permissions have no file-based config — lint warnings
+ * are emitted when those canonical features are present.
  */
 
 import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
@@ -30,22 +31,24 @@ import {
   FACTORY_DROID_TARGET,
   FACTORY_DROID_ROOT_FILE,
   FACTORY_DROID_SKILLS_DIR,
+  FACTORY_DROID_COMMANDS_DIR,
   FACTORY_DROID_DROIDS_DIR,
   FACTORY_DROID_MCP_FILE,
   FACTORY_DROID_HOOKS_FILE,
   FACTORY_DROID_GLOBAL_ROOT_FILE,
   FACTORY_DROID_GLOBAL_SKILLS_DIR,
+  FACTORY_DROID_GLOBAL_COMMANDS_DIR,
   FACTORY_DROID_GLOBAL_DROIDS_DIR,
   FACTORY_DROID_GLOBAL_MCP_FILE,
   FACTORY_DROID_GLOBAL_HOOKS_FILE,
   FACTORY_DROID_CANONICAL_RULES_DIR,
   FACTORY_DROID_CANONICAL_AGENTS_DIR,
+  FACTORY_DROID_CANONICAL_COMMANDS_DIR,
 } from './constants.js';
 import { importFromFactoryDroid } from './importer.js';
 import { lintRules } from './linter.js';
 import { lintPermissions, lintIgnore } from './lint.js';
 import { buildFactoryDroidImportPaths } from '../../core/reference/import-map-builders.js';
-import { commandSkillDirName } from '../codex-cli/command-skill.js';
 
 export const target: TargetGenerators = {
   name: FACTORY_DROID_TARGET,
@@ -63,7 +66,7 @@ const project: TargetLayout = {
   rootInstructionPath: FACTORY_DROID_ROOT_FILE,
   skillDir: FACTORY_DROID_SKILLS_DIR,
   managedOutputs: {
-    dirs: [FACTORY_DROID_SKILLS_DIR, FACTORY_DROID_DROIDS_DIR],
+    dirs: [FACTORY_DROID_SKILLS_DIR, FACTORY_DROID_COMMANDS_DIR, FACTORY_DROID_DROIDS_DIR],
     files: [FACTORY_DROID_ROOT_FILE, FACTORY_DROID_HOOKS_FILE, FACTORY_DROID_MCP_FILE],
   },
   paths: {
@@ -71,7 +74,7 @@ const project: TargetLayout = {
       return FACTORY_DROID_ROOT_FILE;
     },
     commandPath(name) {
-      return `${FACTORY_DROID_SKILLS_DIR}/${commandSkillDirName(name)}/SKILL.md`;
+      return `${FACTORY_DROID_COMMANDS_DIR}/${name}.md`;
     },
     agentPath(name) {
       return `${FACTORY_DROID_DROIDS_DIR}/${name}.md`;
@@ -83,7 +86,11 @@ const globalLayout: TargetLayout = {
   rootInstructionPath: FACTORY_DROID_GLOBAL_ROOT_FILE,
   skillDir: FACTORY_DROID_GLOBAL_SKILLS_DIR,
   managedOutputs: {
-    dirs: [FACTORY_DROID_GLOBAL_SKILLS_DIR, FACTORY_DROID_GLOBAL_DROIDS_DIR],
+    dirs: [
+      FACTORY_DROID_GLOBAL_SKILLS_DIR,
+      FACTORY_DROID_GLOBAL_COMMANDS_DIR,
+      FACTORY_DROID_GLOBAL_DROIDS_DIR,
+    ],
     files: [
       FACTORY_DROID_GLOBAL_ROOT_FILE,
       FACTORY_DROID_GLOBAL_HOOKS_FILE,
@@ -106,7 +113,7 @@ const globalLayout: TargetLayout = {
       return FACTORY_DROID_GLOBAL_ROOT_FILE;
     },
     commandPath(name) {
-      return `${FACTORY_DROID_GLOBAL_SKILLS_DIR}/${commandSkillDirName(name)}/SKILL.md`;
+      return `${FACTORY_DROID_GLOBAL_COMMANDS_DIR}/${name}.md`;
     },
     agentPath(name) {
       return `${FACTORY_DROID_GLOBAL_DROIDS_DIR}/${name}.md`;
@@ -117,7 +124,7 @@ const globalLayout: TargetLayout = {
 const capabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'embedded',
-  commands: 'none',
+  commands: 'native',
   agents: 'native',
   skills: 'native',
   mcp: 'native',
@@ -143,7 +150,6 @@ export const descriptor = {
     permissions: lintPermissions,
     ignore: lintIgnore,
   },
-  supportsConversion: { commands: true },
   project,
   globalSupport: {
     capabilities,
@@ -165,6 +171,17 @@ export const descriptor = {
       canonicalDir: FACTORY_DROID_CANONICAL_RULES_DIR,
       canonicalRootFilename: '_root.md',
       markAsRoot: true,
+    },
+    commands: {
+      feature: 'commands',
+      mode: 'directory',
+      source: {
+        project: [FACTORY_DROID_COMMANDS_DIR],
+        global: [FACTORY_DROID_GLOBAL_COMMANDS_DIR],
+      },
+      canonicalDir: FACTORY_DROID_CANONICAL_COMMANDS_DIR,
+      extensions: ['.md'],
+      preset: 'command',
     },
     agents: {
       feature: 'agents',

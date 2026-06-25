@@ -52,7 +52,6 @@ const TARGETS_WITH_PROJECTED_COMMANDS = new Set<TargetName>([
   'codex-cli',
   'crush',
   'deepagents-cli',
-  'factory-droid',
   'goose',
   'jules',
   'kiro',

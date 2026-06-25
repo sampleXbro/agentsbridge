@@ -41,6 +41,26 @@ describe('importFromFactoryDroid', () => {
     rmSync(projectRoot, { recursive: true, force: true });
   });
 
+  it('imports native commands from .factory/commands/', async () => {
+    projectRoot = setupFixture({
+      '.factory/commands/review.md':
+        '---\ndescription: Review code changes\nallowed-tools:\n  - Bash\n  - Read\n---\n\nRun a code review.',
+    });
+
+    const results = await importFromFactoryDroid(projectRoot);
+
+    const commandResult = results.find((r) => r.feature === 'commands');
+    expect(commandResult).toBeDefined();
+    expect(commandResult!.toPath).toBe('.agentsmesh/commands/review.md');
+
+    const { readFileSync } = await import('node:fs');
+    const written = readFileSync(join(projectRoot, '.agentsmesh/commands/review.md'), 'utf-8');
+    expect(written).toContain('description: Review code changes');
+    expect(written).toContain('Run a code review.');
+
+    rmSync(projectRoot, { recursive: true, force: true });
+  });
+
   it('imports skills from .factory/skills/', async () => {
     projectRoot = setupFixture({
       '.factory/skills/debugging/SKILL.md':

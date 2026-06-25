@@ -1390,6 +1390,22 @@
         "t-glob-d458a5b8"
       ]
     },
+    "generation-collision-source-maps-factory-droid-hooks-json-wraps": {
+      "createdAt": "2026-06-25",
+      "evidence": [
+        "https://docs.factory.ai/reference/hooks-reference"
+      ],
+      "rationale": "factory-droid generator emits Claude Code bare shape (no \"hooks\" wrapper) which Factory Droid cannot read; importer for hooks is missing entirely, so round-trip drops hooks.",
+      "rule": "Factory Droid hooks.json wraps event names under a top-level \"hooks\" key ({ \"hooks\": { \"PreToolUse\": [{matcher, hooks:[{type,command}]}] } }) per docs.factory.ai, exactly like codex-cli — NOT the bare top-level Claude Code shape. The factory-droid generateHooks must JSON.stringify({ hooks }, …) (replace buildClaudeHooksObjectFromCanonical's bare output), and its importer must read parsed.hooks (model importCodexHooks, not importClaudeHooksJson).",
+      "status": "active",
+      "topics": [
+        "generation-collision-source-maps"
+      ],
+      "triggers": [
+        "t-glob-cc00a64d",
+        "t-glob-c8eff4c3"
+      ]
+    },
     "generation-collision-source-maps-feature-generators-that-share-one": {
       "createdAt": "2026-06-14",
       "evidence": [
@@ -5177,6 +5193,21 @@
         "t-kw-3f61d5a5"
       ]
     },
+    "target-capability-audits-for-gemini-cli-permissions-global": {
+      "createdAt": "2026-06-25",
+      "evidence": [
+        "https://github.com/google-gemini/gemini-cli/blob/main/docs/reference/policy-engine.md"
+      ],
+      "rule": "For Gemini CLI permissions, global (User-tier ~/.gemini/policies/*.toml) is fully loaded by the policy engine and is the recommended location, but project/workspace-tier ($WORKSPACE_ROOT/.gemini/policies/*.toml) is temporarily DISABLED upstream (issue #18186, PR #20522). So gemini-cli global permissions should be 'native' while project stays 'partial'; never raise the project permissions level above partial.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-9213e8f5",
+        "t-kw-439288b5"
+      ]
+    },
     "target-capability-audits-for-qwen-code-global-additionalrules": {
       "createdAt": "2026-06-23",
       "evidence": [
@@ -7662,6 +7693,10 @@
       "kind": "file_glob",
       "pattern": "**/SKILL.md"
     },
+    "t-glob-9213e8f5": {
+      "kind": "file_glob",
+      "pattern": "src/targets/gemini-cli/**"
+    },
     "t-glob-948fae05": {
       "kind": "file_glob",
       "pattern": "src/targets/pi-agent/**"
@@ -7802,9 +7837,17 @@
       "kind": "file_glob",
       "pattern": "src/targets/*/generator/hooks.ts"
     },
+    "t-glob-c8eff4c3": {
+      "kind": "file_glob",
+      "pattern": "src/targets/factory-droid/importer.ts"
+    },
     "t-glob-c9dfc34a": {
       "kind": "file_glob",
       "pattern": "src/lessons/query.ts"
+    },
+    "t-glob-cc00a64d": {
+      "kind": "file_glob",
+      "pattern": "src/targets/factory-droid/generator.ts"
     },
     "t-glob-cd11277c": {
       "kind": "file_glob",
@@ -8041,6 +8084,10 @@
     "t-kw-4143c059": {
       "kind": "keyword",
       "pattern": "valueless flags"
+    },
+    "t-kw-439288b5": {
+      "kind": "keyword",
+      "pattern": "gemini permissions policies"
     },
     "t-kw-45ee2cca": {
       "kind": "keyword",

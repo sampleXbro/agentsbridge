@@ -75,8 +75,8 @@ describe('gemini-cli global layout — rewriteGeneratedPath', () => {
     expect(rewrite('.gemini/agents/reviewer.md')).toBe('.gemini/agents/reviewer.md');
   });
 
-  it('suppresses .gemini/policies/ in global mode (returns null)', () => {
-    expect(rewrite('.gemini/policies/permissions.toml')).toBeNull();
+  it('emits .gemini/policies/ in global mode (User-tier policies are loaded)', () => {
+    expect(rewrite('.gemini/policies/permissions.toml')).toBe('.gemini/policies/permissions.toml');
   });
 
   it('suppresses .geminiignore in global mode (returns null)', () => {

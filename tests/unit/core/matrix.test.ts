@@ -99,7 +99,7 @@ describe('buildCompatibilityMatrix', () => {
 
     expect(additionalRulesRow).toBeDefined();
     expect(additionalRulesRow?.support['claude-code']).toBe('native');
-    expect(additionalRulesRow?.support.cursor).toBe('embedded');
+    expect(additionalRulesRow?.support.cursor).toBe('native');
     expect(additionalRulesRow?.support['gemini-cli']).toBe('embedded');
     expect(additionalRulesRow?.support['codex-cli']).toBe('native');
     expect(additionalRulesRow?.support.junie).toBe('native');
@@ -130,7 +130,7 @@ describe('buildCompatibilityMatrix', () => {
     const rows = buildCompatibilityMatrix(config, canonical, 'global');
     const additionalRulesRow = rows.find((r) => r.feature === 'additional rules (1)');
 
-    expect(additionalRulesRow?.support.cursor).toBe('embedded');
+    expect(additionalRulesRow?.support.cursor).toBe('native');
     expect(additionalRulesRow?.support['gemini-cli']).toBe('embedded');
     expect(additionalRulesRow?.support['codex-cli']).toBe('embedded');
     expect(additionalRulesRow?.support.junie).toBe('embedded');

@@ -60,6 +60,35 @@ describe('importFromCrush', () => {
     expect(parsed['mcpServers']).toHaveProperty('filesystem');
   });
 
+  it('imports MCP servers from global ~/.config/crush/crush.json when scope=global', async () => {
+    await mkdir(join(projectRoot, '.config', 'crush'), { recursive: true });
+    await writeJson(join(projectRoot, '.config', 'crush', 'crush.json'), {
+      $schema: 'https://charm.land/crush.json',
+      mcp: { filesystem: { type: 'stdio', command: 'node', args: ['/path/to/server.js'] } },
+    });
+
+    const results = await importFromCrush(projectRoot, { scope: 'global' });
+
+    const mcpResult = results.find((r) => r.feature === 'mcp');
+    expect(mcpResult).toBeDefined();
+    expect(mcpResult!.toPath).toBe('.agentsmesh/mcp.json');
+    expect(mcpResult!.fromPath).toContain('.config/crush/crush.json');
+    const { readFile } = await import('node:fs/promises');
+    const parsed = JSON.parse(
+      await readFile(join(projectRoot, '.agentsmesh/mcp.json'), 'utf-8'),
+    ) as { mcpServers: Record<string, unknown> };
+    expect(parsed.mcpServers).toHaveProperty('filesystem');
+  });
+
+  it('does not read project crush.json in global scope', async () => {
+    await writeJson(join(projectRoot, 'crush.json'), {
+      mcp: { projectonly: { type: 'stdio', command: 'node', args: [] } },
+    });
+
+    const results = await importFromCrush(projectRoot, { scope: 'global' });
+    expect(results.find((r) => r.feature === 'mcp')).toBeUndefined();
+  });
+
   it('imports hooks from crush.json hooks key', async () => {
     await writeJson(join(projectRoot, 'crush.json'), {
       hooks: {
@@ -81,11 +110,7 @@ describe('importFromCrush', () => {
   });
 
   it('imports ignore patterns from .crushignore', async () => {
-    await writeFile(
-      join(projectRoot, '.crushignore'),
-      'node_modules/\ndist/\n*.log',
-      'utf-8',
-    );
+    await writeFile(join(projectRoot, '.crushignore'), 'node_modules/\ndist/\n*.log', 'utf-8');
 
     const results = await importFromCrush(projectRoot);
 

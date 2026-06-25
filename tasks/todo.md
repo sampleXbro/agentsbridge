@@ -28,6 +28,17 @@ several of its claims (e.g. Trae commands/agents file-surface; Continue hooks).
 - [ ] aider rules: wire `CONVENTIONS.md` via `.aider.conf.yml` `read:`
 - [x] copilot hooks/project `partial → native` (`.github/hooks/*.json`) — DONE (round-trip already shipped). Follow-up: copilot GLOBAL hooks native via `~/.copilot/hooks/*.json` (needs global-mode wiring; lesson-confirmed).
 - [x] roo-code agents/project `partial → native` — added `.roomodes` importer (round-trip completion); global stays partial (VS Code globalStorage). roo global rules path was ALREADY correct (`~/.roo/rules`) — audit false positive.
+- [x] cursor additionalRules `embedded → native` (both scopes) — mislabel; per-rule `.cursor/rules/*.mdc` already round-trips.
+- [x] crush global MCP import fix — scope-blind reader now reads `~/.config/crush/crush.json` in global (also fixes global hooks import).
+- [x] gemini-cli permissions/global `none → native` — un-suppressed `.gemini/policies/*.toml` in global layout; project stays partial (workspace policies disabled upstream).
+
+## Rejected by recipe-verification (do NOT implement)
+- kiro permissions: claimed `~/.kiro/settings/permissions.yaml` (key=rules) is FABRICATED — Kiro permissions live exclusively inside per-agent JSON (allowedTools / toolsSettings). Keep `none`.
+
+## Recipe workflow (wf_c3fdbbf0-b93) produced code-grounded recipes for the next batch:
+factory-droid agents (add importer, low) · factory-droid hooks (add importer + format, medium) ·
+augment-code permissions/GLOBAL-only (medium; project has no settings.json) · continue permissions/global (medium) ·
+goose hooks (new gen+import, medium; delete false lintHooks warning) · factory-droid commands (involved-refactor: skill-projection -> native, last).
 - [ ] factory-droid hooks + agents: ADD importer (generate-only today)
 - [ ] opencode mcp+permissions settings-merge base; additionalRules via `instructions` key
 - [ ] roo-code rules/global path `~/.roo/rules/`

@@ -24,6 +24,7 @@ import {
   CRUSH_SKILLS_DIR,
   CRUSH_GLOBAL_SKILLS_DIR,
   CRUSH_CONFIG_FILE,
+  CRUSH_GLOBAL_CONFIG_FILE,
   CRUSH_CANONICAL_MCP,
 } from './constants.js';
 
@@ -40,7 +41,7 @@ export async function importFromCrush(
   const skillsDir = scope === 'global' ? CRUSH_GLOBAL_SKILLS_DIR : CRUSH_SKILLS_DIR;
   await importEmbeddedSkills(projectRoot, skillsDir, CRUSH_TARGET, results, normalize);
 
-  await importCrushConfigJson(projectRoot, results);
+  await importCrushConfigJson(projectRoot, scope, results);
 
   return results;
 }
@@ -52,9 +53,12 @@ export async function importFromCrush(
  */
 async function importCrushConfigJson(
   projectRoot: string,
+  scope: TargetLayoutScope,
   results: ImportResult[],
 ): Promise<void> {
-  const configPath = join(projectRoot, CRUSH_CONFIG_FILE);
+  // Crush's global config lives at ~/.config/crush/crush.json (projectRoot = homedir in global scope).
+  const configRel = scope === 'global' ? CRUSH_GLOBAL_CONFIG_FILE : CRUSH_CONFIG_FILE;
+  const configPath = join(projectRoot, configRel);
   const content = await readFileSafe(configPath);
   if (content === null) return;
 

@@ -5148,6 +5148,21 @@
         "t-kw-5c8c2424"
       ]
     },
+    "target-capability-audits-augment-code-tool-permissions-are": {
+      "createdAt": "2026-06-25",
+      "evidence": [
+        "commit:9492875"
+      ],
+      "rule": "Augment Code tool permissions are GLOBAL/CLI-only: `toolPermissions` lives in the personal `~/.augment/settings.json` ([{toolName, permission:{type: allow|deny|ask-user}}], maps to canonical allow/deny/ask) and per docs.augmentcode.com/cli/permissions applies only in the Auggie CLI, NOT the IDE extension and NOT project `.augment/settings.json`. So raise permissions to native for GLOBAL scope only (gate it in buildSettingsContent on scope==='global' and import on scope==='global'); project stays none. General rule: confirm a capability's real scope from the tool's own docs, not from agentsmesh's own code comments — an internal comment claiming a key exists is not primary-source verification.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-eac2566f",
+        "t-kw-9479ae91"
+      ]
+    },
     "target-capability-audits-capability-audits-for-agentsmesh-are": {
       "createdAt": "2026-06-14",
       "evidence": [
@@ -7955,6 +7970,10 @@
       "kind": "file_glob",
       "pattern": ".agentsmesh/skills/**"
     },
+    "t-glob-eac2566f": {
+      "kind": "file_glob",
+      "pattern": "src/targets/augment-code/*.ts"
+    },
     "t-glob-ed0be781": {
       "kind": "file_glob",
       "pattern": "src/lessons/skill.ts"
@@ -8214,6 +8233,10 @@
     "t-kw-9304db48": {
       "kind": "keyword",
       "pattern": "text transform"
+    },
+    "t-kw-9479ae91": {
+      "kind": "keyword",
+      "pattern": "augment toolPermissions global CLI-only scope verify docs not code comment"
     },
     "t-kw-9520fa61": {
       "kind": "keyword",

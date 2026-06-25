@@ -5363,6 +5363,21 @@
         "t-kw-057477d3"
       ]
     },
+    "target-capability-audits-when-changing-a-target-s-2": {
+      "createdAt": "2026-06-25",
+      "evidence": [
+        "commit:dcbe440"
+      ],
+      "rule": "When changing a target's command/agent/skill/root native OUTPUT path (e.g. command projection→native), update BOTH ternary chains in tests/e2e/helpers/reference-targets.ts: outputPaths() AND expectedRefs(). The generate/round-trip matrix test reads expectedRefs(target).command for its expectAnyPathTail assertions, so editing only outputPaths leaves the test asserting the stale path and it fails with \"expected <new body> to contain <old path tail>\".",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-960c3805",
+        "t-kw-1b4e1dda"
+      ]
+    },
     "target-capability-audits-when-extracting-capabilities-to-a": {
       "createdAt": "2026-06-15",
       "evidence": [
@@ -7754,6 +7769,10 @@
       "kind": "file_glob",
       "pattern": "pnpm-lock.yaml"
     },
+    "t-glob-960c3805": {
+      "kind": "file_glob",
+      "pattern": "tests/e2e/helpers/reference-targets.ts"
+    },
     "t-glob-9a12f490": {
       "kind": "file_glob",
       "pattern": "tests/e2e/lessons-merge-driver.e2e.test.ts"
@@ -8057,6 +8076,10 @@
     "t-kw-13ec26ba": {
       "kind": "keyword",
       "pattern": "lessons trigger precision"
+    },
+    "t-kw-1b4e1dda": {
+      "kind": "keyword",
+      "pattern": "reference-targets two chains outputPaths expectedRefs command path"
     },
     "t-kw-1d0e5147": {
       "kind": "keyword",

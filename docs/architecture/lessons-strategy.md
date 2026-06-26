@@ -135,12 +135,18 @@ gone or its contract changed. Bias capture toward contract-level triggers (the
 kernel from #3). A stale-but-still-firing lesson is the "worse than nothing" case
 (#2) — the harness in A also surfaces it as a false positive.
 
-### D — Trigger determinism (closes G1) — **smallest, last**
-Promote pre-edit recall from instruction-gated to a real `PreToolUse` block on
-`Edit|Write` (the `PostToolUse` plumbing already exists). Optionally add
-embedding similarity as an **additional** ranking signal in `ranking-signals.ts`
-(the kept kernel from #6/#7) — never a replacement, and behind the harness so it
-must prove it improves precision/recall.
+### D — Trigger determinism (closes G1) — **determinism core SHIPPED (2026-06-26)**
+Pre-edit recall is no longer instruction-gated. `buildRecallHookOutput`
+(`src/lessons/hook.ts`) is now event-aware — it echoes the harness's
+`hook_event_name` and injects matching lessons via `hookSpecificOutput.additionalContext`,
+so the same `agentsmesh lessons hook` command works as a **PreToolUse** hook that
+guards the FIRST touch (injects BEFORE the edit, no blocking) or a PostToolUse
+fallback. The scaffold (`recall-hook-scaffold.ts`) now wires BOTH events; session
+dedup keeps a lesson injected at most once. Verified unit + e2e; corrected the
+docs that wrongly claimed PreToolUse can't inject context (it can — primary-source
+verified). **Deferred:** embedding similarity as an additional ranking signal in
+`ranking-signals.ts` (the kept kernel from #6/#7) — a separate, heavier effort
+(needs an embedding model), to be admitted only if it moves the harness number.
 
 ---
 

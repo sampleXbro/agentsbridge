@@ -111,24 +111,28 @@ The graph at `.agentsmesh/lessons/lessons.json` is the single source of truth. N
 
 ## Hook mode (deterministic recall)
 
-The recall ritual asks the agent to **run** recall before each mutating action — an extra model turn every time, and only as reliable as the agent's compliance. On harnesses that support context-injecting tool-call hooks, recall is **deterministic** instead: a `PostToolUse` hook runs recall automatically and injects the matching lessons into the model's context for its next action — **zero extra model turn, zero compliance dependence**.
+The recall ritual asks the agent to **run** recall before each mutating action — an extra model turn every time, and only as reliable as the agent's compliance. On harnesses that support context-injecting tool-call hooks, recall is **deterministic** instead: a `PreToolUse` hook runs recall automatically and injects the matching lessons into the model's context **before** the action — **zero extra model turn, zero compliance dependence**.
 
-**`agentsmesh init --lessons` wires this automatically.** It injects a `PostToolUse` recall hook into `.agentsmesh/hooks.yaml`, so `generate` projects it to every hook-capable target (Claude Code, Cursor, Copilot, …). Targets with no hook support simply keep the always-on lessons paragraph in their root instruction as the universal fallback. The injected entry:
+**`agentsmesh init --lessons` wires this automatically.** It injects a recall hook under **both** `PreToolUse` (guards the **first touch** — recall injects before the edit) and `PostToolUse` (covers later actions and harnesses that support only post-call injection) into `.agentsmesh/hooks.yaml`, so `generate` projects them to every hook-capable target (Claude Code, Cursor, Copilot, …). Targets with no hook support simply keep the always-on lessons paragraph in their root instruction as the universal fallback. The injected entries:
 
 ```yaml
+PreToolUse:
+  - matcher: Edit|Write|Bash
+    type: command
+    command: agentsmesh lessons hook
 PostToolUse:
   - matcher: Edit|Write|Bash
     type: command
     command: agentsmesh lessons hook
 ```
 
-(Scaffolded lessons before this was automatic? Re-run `agentsmesh init --lessons` — it adds the hook idempotently — or paste the block above into your `hooks.yaml`.)
+(Scaffolded lessons before this was automatic? Re-run `agentsmesh init --lessons` — it adds the hooks idempotently — or paste the block above into your `hooks.yaml`.)
 
-`agentsmesh lessons hook` reads the harness's PostToolUse payload from stdin, recalls lessons for the touched `file_path` / `command`, and emits the harness context-injection JSON (`hookSpecificOutput.additionalContext`). It uses the harness `session_id` for [dedup](#query), so a lesson is injected at most once per session even as you re-touch the same file.
+`agentsmesh lessons hook` reads the harness's hook payload from stdin, **echoes its `hook_event_name`** so the same command serves as a `PreToolUse` or `PostToolUse` hook, recalls lessons for the touched `file_path` / `command`, and emits the harness context-injection JSON (`hookSpecificOutput.additionalContext`). It uses the harness `session_id` for [dedup](#query), so a lesson is injected at most once per session: the `PreToolUse` hook surfaces it before the first touch, and the `PostToolUse` hook's later runs de-duplicate to nothing.
 
-It is **reactive**: the first touch of a file is unguarded; every later action is covered — which fits the way agents revisit files. And it is **safe everywhere**: the command is harness-adaptive and a silent no-op (exit 0, no output) on any payload it doesn't recognize, so projecting the hook to a target whose hooks can't inject context (or to a non-hook tool call) does nothing rather than breaking the run.
+It is **safe everywhere**: the command is harness-adaptive and a silent no-op (exit 0, no output) on any payload it doesn't recognize, so projecting the hook to a target whose hooks can't inject context (or to a non-hook tool call) does nothing rather than breaking the run.
 
-**Why `PostToolUse` and not `PreToolUse`?** Pre-tool hooks can only *gate* an action (allow/deny/ask) — they cannot inject text into the model's context — so a pre-action recall could only surface lessons by blocking the tool with the rules in a denial reason, which forces a permission interrupt and a retry on every action. `PostToolUse` is the only event that injects context (`additionalContext`), hence the reactive design. Capture stays model-driven for the same reason: a hook can't judge "this was a failure worth a lesson" or author the rule — it can only run, not reason — so the agent still issues `lessons add` itself.
+**Why both `PreToolUse` and `PostToolUse`?** `PreToolUse` fires before the tool runs and **can inject context** via `hookSpecificOutput.additionalContext`, so it guards the **first touch** of a file — the matching lessons reach the model before the edit, with no blocking and no permission interrupt. `PostToolUse` is kept as the fallback for harnesses that support post-call context injection but not pre-call. Capture, by contrast, stays model-driven: a hook can't judge "this was a failure worth a lesson" or author the rule — it can only run, not reason — so the agent still issues `lessons add` itself.
 
 ## One-shot upgrade migration
 

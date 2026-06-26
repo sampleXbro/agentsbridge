@@ -5673,7 +5673,8 @@
       ],
       "triggers": [
         "t-kw-4c23a772",
-        "t-kw-a5ed6024"
+        "t-kw-a5ed6024",
+        "t-glob-65f0c371"
       ]
     },
     "test-execution-set-ci-true-when-running": {
@@ -7734,6 +7735,10 @@
     "t-glob-6511ff88": {
       "kind": "file_glob",
       "pattern": "tsconfig.json"
+    },
+    "t-glob-65f0c371": {
+      "kind": "file_glob",
+      "pattern": "**/*.test.ts"
     },
     "t-glob-689ed63b": {
       "kind": "file_glob",

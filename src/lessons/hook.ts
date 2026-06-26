@@ -3,26 +3,27 @@ import { recallLessons } from './recall.js';
 import type { LessonsQuery } from './query.js';
 
 /**
- * Hook-mode recall: the runtime engine behind a generated PostToolUse hook.
+ * Hook-mode recall: the runtime engine behind a generated tool-call hook.
  *
  * A prose contract asks the agent to RUN recall before every mutating action —
  * an extra model turn each time, and only as reliable as the agent's compliance.
- * A PostToolUse hook instead runs recall deterministically AFTER each tool call
- * and injects the matching lessons into the model's context for its NEXT action:
- * zero extra model turn, zero compliance dependence. It is reactive (the first
- * touch of a file is unguarded; every later action is covered), which pairs with
- * the agent revisiting the same files.
+ * A hook runs recall deterministically and injects the matching lessons into the
+ * model's context with zero extra model turn and zero compliance dependence. The
+ * command is EVENT-AWARE: it echoes the harness's `hook_event_name`, so the same
+ * command serves as a PreToolUse hook that guards the FIRST touch of a file
+ * (injecting BEFORE the edit) and/or a PostToolUse hook that covers later actions.
  *
- * Only some harnesses can inject context from a tool-call hook (Claude Code /
- * Copilot CLI PostToolUse `additionalContext`). This command is harness-adaptive:
- * it reads the hook's stdin JSON, and on anything it does not recognize — a parse
- * failure, a shape without a file/command, or zero matches — it emits NOTHING. A
- * hook must never break the harness or inject noise, so every failure path is a
- * silent no-op (and the command always exits 0).
+ * Only some harnesses can inject context from a tool-call hook (Claude Code
+ * supports PreToolUse + PostToolUse `additionalContext`; some support only Post).
+ * This command is harness-adaptive: it reads the hook's stdin JSON, and on
+ * anything it does not recognize — a parse failure, a shape without a
+ * file/command, or zero matches — it emits NOTHING. A hook must never break the
+ * harness or inject noise, so every failure path is a silent no-op (exit 0).
  */
 
 interface HookStdin {
   readonly session_id?: unknown;
+  readonly hook_event_name?: unknown;
   readonly tool_input?: { readonly file_path?: unknown; readonly command?: unknown } | null;
 }
 
@@ -68,6 +69,11 @@ export async function buildRecallHookOutput(
   const command = str(parsed.tool_input?.command);
   if (file === undefined && command === undefined) return EMPTY;
 
+  // Echo the harness's event so the SAME command serves as a PreToolUse first-touch
+  // guard (injects BEFORE the edit) or a PostToolUse reactive hook; default to
+  // PostToolUse for back-compat and unrecognized events.
+  const event = parsed.hook_event_name === 'PreToolUse' ? 'PreToolUse' : 'PostToolUse';
+
   const query: LessonsQuery = {
     ...(file !== undefined ? { file } : {}),
     ...(command !== undefined ? { command } : {}),
@@ -80,10 +86,10 @@ export async function buildRecallHookOutput(
   const target = file ?? command ?? '';
   const bullets = lessons.map((l) => `- ${clampRule(l.lesson.rule)}`).join('\n');
   const additionalContext = `Recalled agentsmesh lessons for ${target} — apply before your next action:\n${bullets}`;
-  // Claude Code / Copilot CLI PostToolUse context-injection shape.
+  // Claude Code / Copilot CLI tool-call context-injection shape (Pre or Post).
   return {
     output: JSON.stringify({
-      hookSpecificOutput: { hookEventName: 'PostToolUse', additionalContext },
+      hookSpecificOutput: { hookEventName: event, additionalContext },
     }),
   };
 }

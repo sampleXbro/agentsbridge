@@ -14,15 +14,16 @@ beforeEach(() => {
 });
 afterEach(() => rmSync(root, { recursive: true, force: true }));
 
-function postToolUseCommands(): string[] {
-  const parsed = parseYaml(readFileSync(hooksPath(), 'utf8')) as {
-    PostToolUse?: Array<{ command?: string }>;
-  };
-  return (parsed.PostToolUse ?? []).map((h) => h.command ?? '');
+function eventCommands(event: 'PreToolUse' | 'PostToolUse'): string[] {
+  const parsed = parseYaml(readFileSync(hooksPath(), 'utf8')) as Record<
+    string,
+    Array<{ command?: string }> | undefined
+  >;
+  return (parsed[event] ?? []).map((h) => h.command ?? '');
 }
 
 describe('injectRecallHook', () => {
-  it('adds a PostToolUse recall hook, preserving the schema directive + comments', () => {
+  it('adds a PreToolUse (first-touch) + PostToolUse recall hook, preserving directive + comments', () => {
     writeFileSync(
       hooksPath(),
       '# yaml-language-server: $schema=./schema.json\n# Lifecycle hooks — example\n',
@@ -32,7 +33,8 @@ describe('injectRecallHook', () => {
     const text = readFileSync(hooksPath(), 'utf8');
     expect(text).toContain('# yaml-language-server: $schema=./schema.json');
     expect(text).toContain('# Lifecycle hooks — example');
-    expect(postToolUseCommands()).toContain(RECALL_HOOK_COMMAND);
+    expect(eventCommands('PreToolUse')).toContain(RECALL_HOOK_COMMAND);
+    expect(eventCommands('PostToolUse')).toContain(RECALL_HOOK_COMMAND);
   });
 
   it('is idempotent by command — a second run adds nothing and changes nothing', () => {
@@ -41,17 +43,19 @@ describe('injectRecallHook', () => {
     const after1 = readFileSync(hooksPath(), 'utf8');
     expect(injectRecallHook(root)).toBe(false);
     expect(readFileSync(hooksPath(), 'utf8')).toBe(after1);
-    expect(postToolUseCommands().filter((c) => c === RECALL_HOOK_COMMAND)).toHaveLength(1);
+    expect(eventCommands('PreToolUse').filter((c) => c === RECALL_HOOK_COMMAND)).toHaveLength(1);
+    expect(eventCommands('PostToolUse').filter((c) => c === RECALL_HOOK_COMMAND)).toHaveLength(1);
   });
 
-  it('preserves an existing user PostToolUse hook and appends the recall one', () => {
+  it('preserves an existing user PostToolUse hook and appends the recall one to each event', () => {
     writeFileSync(
       hooksPath(),
       'PostToolUse:\n  - matcher: Edit\n    type: command\n    command: npm run lint\n',
       'utf8',
     );
     expect(injectRecallHook(root)).toBe(true);
-    expect(postToolUseCommands()).toEqual(['npm run lint', RECALL_HOOK_COMMAND]);
+    expect(eventCommands('PostToolUse')).toEqual(['npm run lint', RECALL_HOOK_COMMAND]);
+    expect(eventCommands('PreToolUse')).toEqual([RECALL_HOOK_COMMAND]);
   });
 
   it('does not create hooks.yaml when absent — only injects into an existing file', () => {

@@ -53,7 +53,7 @@ flowchart TD
     Init[agentsmesh init --lessons]
     Init --> G1[creates the empty graph<br/>+ a default config.json]
     Init --> G2[adds an always-on rule:<br/>recall before edits, capture after failures]
-    Init --> G3[wires an auto-recall hook<br/>after each tool action]
+    Init --> G3[wires an auto-recall hook<br/>before and after each tool action]
     G1 --> Gen[agentsmesh generate]
     G2 --> Gen
     G3 --> Gen

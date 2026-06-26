@@ -1,0 +1,150 @@
+{
+  "topN": 10,
+  "graph": {
+    "version": 1,
+    "topics": {
+      "yaml-config": { "summary": "Editing canonical YAML config files." },
+      "path-display": { "summary": "User-facing path rendering." },
+      "test-execution": { "summary": "Running the test suite." },
+      "workflow": { "summary": "Development workflow discipline." }
+    },
+    "triggers": {
+      "t-hooks-yaml": { "kind": "file_glob", "pattern": "**/hooks.yaml" },
+      "t-permissions-yaml": { "kind": "file_glob", "pattern": "**/permissions.yaml" },
+      "t-cli-commands": { "kind": "file_glob", "pattern": "src/cli/commands/*.ts" },
+      "t-run-tests": { "kind": "command_pattern", "pattern": "vitest run" },
+      "t-tdd": { "kind": "keyword", "pattern": "tdd" }
+    },
+    "lessons": {
+      "l-hooks-yaml-doc-api": {
+        "rule": "When editing hooks.yaml, mutate via the YAML Document API; never parse then stringify.",
+        "topics": ["yaml-config"],
+        "triggers": ["t-hooks-yaml"],
+        "evidence": ["fixture:planted-fault"],
+        "status": "active",
+        "createdAt": "2026-06-01"
+      },
+      "l-permissions-yaml-merge": {
+        "rule": "When editing permissions.yaml, merge managed entries; never overwrite user-authored rules.",
+        "topics": ["yaml-config"],
+        "triggers": ["t-permissions-yaml"],
+        "evidence": ["fixture:planted-fault"],
+        "status": "active",
+        "createdAt": "2026-06-02"
+      },
+      "l-cli-forward-slash": {
+        "rule": "In CLI command output, normalize file paths to forward slashes before printing.",
+        "topics": ["path-display"],
+        "triggers": ["t-cli-commands"],
+        "evidence": ["fixture:planted-fault"],
+        "status": "active",
+        "createdAt": "2026-06-03"
+      },
+      "l-tests-build-first": {
+        "rule": "Build before running integration tests that spawn dist/cli.js, or they run against stale output.",
+        "topics": ["test-execution"],
+        "triggers": ["t-run-tests"],
+        "evidence": ["fixture:planted-fault"],
+        "status": "active",
+        "createdAt": "2026-06-04"
+      },
+      "l-tdd-first": {
+        "rule": "Write the failing test before the implementation.",
+        "topics": ["workflow"],
+        "triggers": ["t-tdd"],
+        "evidence": ["fixture:planted-fault"],
+        "status": "active",
+        "createdAt": "2026-06-05"
+      },
+      "l-deprecated-old-cmd": {
+        "rule": "Use npm test to run the suite.",
+        "topics": ["test-execution"],
+        "triggers": ["t-run-tests"],
+        "evidence": ["fixture:planted-fault"],
+        "status": "deprecated",
+        "createdAt": "2026-01-01"
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "edit-hooks-yaml",
+      "description": "Editing hooks.yaml must recall the Document-API lesson and nothing else.",
+      "query": { "file": ".agentsmesh/hooks.yaml" },
+      "shouldRetrieve": ["l-hooks-yaml-doc-api"],
+      "shouldNotRetrieve": [
+        "l-permissions-yaml-merge",
+        "l-cli-forward-slash",
+        "l-tests-build-first",
+        "l-tdd-first",
+        "l-deprecated-old-cmd"
+      ]
+    },
+    {
+      "id": "edit-permissions-yaml",
+      "description": "Adjacency probe: a sibling YAML lesson must NOT leak into a different YAML file.",
+      "query": { "file": ".agentsmesh/permissions.yaml" },
+      "shouldRetrieve": ["l-permissions-yaml-merge"],
+      "shouldNotRetrieve": [
+        "l-hooks-yaml-doc-api",
+        "l-cli-forward-slash",
+        "l-tests-build-first",
+        "l-tdd-first",
+        "l-deprecated-old-cmd"
+      ]
+    },
+    {
+      "id": "edit-cli-command",
+      "description": "Editing a CLI command file recalls the path-display lesson only.",
+      "query": { "file": "src/cli/commands/init.ts" },
+      "shouldRetrieve": ["l-cli-forward-slash"],
+      "shouldNotRetrieve": [
+        "l-hooks-yaml-doc-api",
+        "l-permissions-yaml-merge",
+        "l-tests-build-first",
+        "l-tdd-first",
+        "l-deprecated-old-cmd"
+      ]
+    },
+    {
+      "id": "run-vitest",
+      "description": "A vitest command recalls the build-first lesson; the deprecated lesson on the same trigger must stay silent.",
+      "query": { "command": "pnpm exec vitest run tests/unit" },
+      "shouldRetrieve": ["l-tests-build-first"],
+      "shouldNotRetrieve": [
+        "l-hooks-yaml-doc-api",
+        "l-permissions-yaml-merge",
+        "l-cli-forward-slash",
+        "l-tdd-first",
+        "l-deprecated-old-cmd"
+      ]
+    },
+    {
+      "id": "keyword-tdd",
+      "description": "A keyword-only task context recalls the conceptual TDD lesson.",
+      "query": { "keyword": "set up the tdd harness" },
+      "shouldRetrieve": ["l-tdd-first"],
+      "shouldNotRetrieve": [
+        "l-hooks-yaml-doc-api",
+        "l-permissions-yaml-merge",
+        "l-cli-forward-slash",
+        "l-tests-build-first",
+        "l-deprecated-old-cmd"
+      ]
+    },
+    {
+      "id": "adjacent-readme",
+      "description": "Pure false-positive probe: an unrelated file must fire nothing.",
+      "query": { "file": "README.md" },
+      "shouldRetrieve": [],
+      "shouldNotRetrieve": [
+        "l-hooks-yaml-doc-api",
+        "l-permissions-yaml-merge",
+        "l-cli-forward-slash",
+        "l-tests-build-first",
+        "l-tdd-first",
+        "l-deprecated-old-cmd"
+      ]
+    }
+  ]
+}

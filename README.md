@@ -112,7 +112,7 @@ The memory is one git-tracked file, `.agentsmesh/lessons/lessons.json`, and ever
 agentsmesh init --lessons && agentsmesh generate   # wire the recall/capture loop once
 ```
 
-`init --lessons` drops a small always-on rule into `.agentsmesh/rules/_root.md` (so every target gets the habit), seeds the full operating manual as a `lessons` skill where supported, and wires a `PostToolUse` recall hook on hook-capable tools; agents without shell access use the matching MCP tools (`lessons_query` / `lessons_add`). Because the graph is a normal git-tracked file, a lesson one agent learns today helps every teammate's agent tomorrow, and every change is reviewable like any other diff.
+`init --lessons` drops a small always-on rule into `.agentsmesh/rules/_root.md` (so every target gets the habit), seeds the full operating manual as a `lessons` skill where supported, and wires a recall hook (a `PreToolUse` first-touch guard plus a `PostToolUse` fallback) on hook-capable tools; agents without shell access use the matching MCP tools (`lessons_query` / `lessons_add`). Because the graph is a normal git-tracked file, a lesson one agent learns today helps every teammate's agent tomorrow, and every change is reviewable like any other diff.
 
 Full walkthrough: [Teach your AI agents with lessons](https://samplexbro.github.io/agentsmesh/guides/lessons/) · [`agentsmesh lessons` reference](https://samplexbro.github.io/agentsmesh/cli/lessons/).
 

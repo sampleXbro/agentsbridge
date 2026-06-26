@@ -11,6 +11,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { parse as parseYaml } from 'yaml';
 import { runCli } from './helpers/run-cli.js';
 
 let tempDir: string;
@@ -63,12 +64,14 @@ describe('agentsmesh init --lessons (e2e)', () => {
     expect(lessonsStart).toBeLessThan(body);
   });
 
-  it('auto-wires the PostToolUse recall hook and generate projects it to a hook-capable target', async () => {
+  it('auto-wires the PreToolUse (first-touch) + PostToolUse recall hook and generate projects it', async () => {
     const init = await runCli('init --lessons', tempDir);
     expect(init.stdout).toContain('recall hook into .agentsmesh/hooks.yaml');
 
     const hooksYaml = readFileSync(join(tempDir, '.agentsmesh/hooks.yaml'), 'utf8');
-    expect(hooksYaml).toContain('agentsmesh lessons hook');
+    const parsed = parseYaml(hooksYaml) as Record<string, Array<{ command?: string }> | undefined>;
+    expect((parsed.PreToolUse ?? []).map((h) => h.command)).toContain('agentsmesh lessons hook');
+    expect((parsed.PostToolUse ?? []).map((h) => h.command)).toContain('agentsmesh lessons hook');
     // The managed YAML injection preserved the schema directive.
     expect(hooksYaml).toContain('yaml-language-server');
 

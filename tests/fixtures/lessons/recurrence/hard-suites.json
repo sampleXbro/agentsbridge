@@ -1,0 +1,230 @@
+{
+  "suites": [
+    {
+      "name": "specificity-dominance",
+      "topN": 10,
+      "graph": {
+        "version": 1,
+        "topics": { "io": { "summary": "io" } },
+        "triggers": {
+          "t-narrow": { "kind": "file_glob", "pattern": "src/app/config.ts" },
+          "t-broad": { "kind": "file_glob", "pattern": "src/**/*.ts" }
+        },
+        "lessons": {
+          "l-narrow": { "rule": "io rule", "topics": ["io"], "triggers": ["t-narrow"], "evidence": ["fixture"], "status": "active", "createdAt": "2026-06-01" },
+          "l-broad-a": { "rule": "io rule", "topics": ["io"], "triggers": ["t-broad"], "evidence": ["fixture"], "status": "active", "createdAt": "2026-06-01" },
+          "l-broad-b": { "rule": "io rule", "topics": ["io"], "triggers": ["t-broad"], "evidence": ["fixture"], "status": "active", "createdAt": "2026-06-01" }
+        }
+      },
+      "cases": [
+        {
+          "id": "narrow-beats-broad",
+          "description": "Both globs match the file; specificity (weight 3, inverse fanout) puts the narrow lesson first.",
+          "query": { "file": "src/app/config.ts" },
+          "topN": 1,
+          "shouldRetrieve": ["l-narrow"],
+          "shouldNotRetrieve": ["l-broad-a", "l-broad-b"]
+        }
+      ]
+    },
+    {
+      "name": "topic-coherence",
+      "topN": 10,
+      "graph": {
+        "version": 1,
+        "topics": { "topic-a": { "summary": "a" }, "topic-b": { "summary": "b" } },
+        "triggers": {
+          "t-q": { "kind": "file_glob", "pattern": "src/q/*.ts" },
+          "t-other": { "kind": "file_glob", "pattern": "src/other/*.ts" }
+        },
+        "lessons": {
+          "l-a1": { "rule": "shared rule text", "topics": ["topic-a"], "triggers": ["t-q"], "evidence": ["fixture"], "status": "active", "createdAt": "2026-06-02" },
+          "l-a2": { "rule": "shared rule text", "topics": ["topic-a"], "triggers": ["t-q"], "evidence": ["fixture"], "status": "active", "createdAt": "2026-06-01" },
+          "l-b1": { "rule": "shared rule text", "topics": ["topic-b"], "triggers": ["t-q"], "evidence": ["fixture"], "status": "active", "createdAt": "2026-06-03" },
+          "l-b2": { "rule": "shared rule text", "topics": ["topic-b"], "triggers": ["t-other"], "evidence": ["fixture"], "status": "active", "createdAt": "2026-06-01" },
+          "l-b3": { "rule": "shared rule text", "topics": ["topic-b"], "triggers": ["t-other"], "evidence": ["fixture"], "status": "active", "createdAt": "2026-06-01" },
+          "l-b4": { "rule": "shared rule text", "topics": ["topic-b"], "triggers": ["t-other"], "evidence": ["fixture"], "status": "active", "createdAt": "2026-06-01" }
+        }
+      },
+      "cases": [
+        {
+          "id": "matched-set-coherence-not-corpus",
+          "description": "Matched set {a1,a2,b1} has more topic-a; the CORPUS has more topic-b (b2,b3,b4 do not match). Coherence is matched-set-local, so the topic-a lessons win — a corpus-global coherence would flip this and leak b1.",
+          "query": { "file": "src/q/a.ts" },
+          "topN": 2,
+          "shouldRetrieve": ["l-a1", "l-a2"],
+          "shouldNotRetrieve": ["l-b1", "l-b2", "l-b3", "l-b4"]
+        }
+      ]
+    },
+    {
+      "name": "truncation-and-tiebreak",
+      "topN": 10,
+      "graph": {
+        "version": 1,
+        "topics": { "tie": { "summary": "tie" } },
+        "triggers": { "t-y": { "kind": "file_glob", "pattern": "src/y/*.ts" } },
+        "lessons": {
+          "l-1": { "rule": "same rule", "topics": ["tie"], "triggers": ["t-y"], "evidence": ["fixture"], "status": "active", "createdAt": "2026-06-05" },
+          "l-2": { "rule": "same rule", "topics": ["tie"], "triggers": ["t-y"], "evidence": ["fixture"], "status": "active", "createdAt": "2026-06-04" },
+          "l-3": { "rule": "same rule", "topics": ["tie"], "triggers": ["t-y"], "evidence": ["fixture"], "status": "active", "createdAt": "2026-06-03" },
+          "l-4": { "rule": "same rule", "topics": ["tie"], "triggers": ["t-y"], "evidence": ["fixture"], "status": "active", "createdAt": "2026-06-02" },
+          "l-5": { "rule": "same rule", "topics": ["tie"], "triggers": ["t-y"], "evidence": ["fixture"], "status": "active", "createdAt": "2026-06-01" }
+        }
+      },
+      "cases": [
+        {
+          "id": "newest-two-survive-truncation",
+          "description": "Five identical-score lessons; top-N=2 keeps the two newest (createdAt tie-break, newer first).",
+          "query": { "file": "src/y/a.ts" },
+          "topN": 2,
+          "shouldRetrieve": ["l-1", "l-2"],
+          "shouldNotRetrieve": ["l-3", "l-4", "l-5"]
+        }
+      ]
+    },
+    {
+      "name": "status-exclusion",
+      "topN": 10,
+      "graph": {
+        "version": 1,
+        "topics": { "status": { "summary": "status" } },
+        "triggers": { "t-z": { "kind": "file_glob", "pattern": "src/z/*.ts" } },
+        "lessons": {
+          "l-active": { "rule": "active rule", "topics": ["status"], "triggers": ["t-z"], "evidence": ["fixture"], "status": "active", "createdAt": "2026-06-03" },
+          "l-deprecated": { "rule": "deprecated rule", "topics": ["status"], "triggers": ["t-z"], "evidence": ["fixture"], "status": "deprecated", "createdAt": "2026-06-02" },
+          "l-superseded": { "rule": "superseded rule", "topics": ["status"], "triggers": ["t-z"], "evidence": ["fixture"], "status": "superseded", "supersededBy": "l-active", "createdAt": "2026-06-01" }
+        }
+      },
+      "cases": [
+        {
+          "id": "only-active-fires",
+          "description": "Deprecated and superseded lessons on the same matching trigger must stay silent.",
+          "query": { "file": "src/z/a.ts" },
+          "shouldRetrieve": ["l-active"],
+          "shouldNotRetrieve": ["l-deprecated", "l-superseded"]
+        }
+      ]
+    },
+    {
+      "name": "multi-trigger-specificity",
+      "topN": 10,
+      "graph": {
+        "version": 1,
+        "topics": { "mt": { "summary": "mt" } },
+        "triggers": {
+          "t-narrow2": { "kind": "file_glob", "pattern": "src/m/a.ts" },
+          "t-broad2": { "kind": "file_glob", "pattern": "src/m/*.ts" }
+        },
+        "lessons": {
+          "l-multi": { "rule": "mt rule", "topics": ["mt"], "triggers": ["t-narrow2", "t-broad2"], "evidence": ["fixture"], "status": "active", "createdAt": "2026-06-01" },
+          "l-broad-only": { "rule": "mt rule", "topics": ["mt"], "triggers": ["t-broad2"], "evidence": ["fixture"], "status": "active", "createdAt": "2026-06-01" }
+        }
+      },
+      "cases": [
+        {
+          "id": "max-over-hit-triggers",
+          "description": "A lesson hitting both a narrow (fanout 1) and broad (fanout 2) trigger inherits the narrow specificity and outranks the broad-only lesson.",
+          "query": { "file": "src/m/a.ts" },
+          "topN": 1,
+          "shouldRetrieve": ["l-multi"],
+          "shouldNotRetrieve": ["l-broad-only"]
+        }
+      ]
+    },
+    {
+      "name": "keyword-semantics",
+      "topN": 10,
+      "graph": {
+        "version": 1,
+        "topics": { "kw": { "summary": "kw" } },
+        "triggers": {
+          "t-readonly": { "kind": "keyword", "pattern": "read only" },
+          "t-build": { "kind": "keyword", "pattern": "build" },
+          "t-stop": { "kind": "keyword", "pattern": "the" }
+        },
+        "lessons": {
+          "l-readonly": { "rule": "readonly rule", "topics": ["kw"], "triggers": ["t-readonly"], "evidence": ["fixture"], "status": "active", "createdAt": "2026-06-01" },
+          "l-build": { "rule": "build rule", "topics": ["kw"], "triggers": ["t-build"], "evidence": ["fixture"], "status": "active", "createdAt": "2026-06-02" },
+          "l-stop": { "rule": "stop rule", "topics": ["kw"], "triggers": ["t-stop"], "evidence": ["fixture"], "status": "active", "createdAt": "2026-06-03" }
+        }
+      },
+      "cases": [
+        {
+          "id": "token-run-must-be-contiguous",
+          "description": "'read only' must NOT match 'read_the_only' — the unfiltered haystack keeps 'the' as a separator.",
+          "query": { "file": "docs/read_the_only_guide.md" },
+          "shouldRetrieve": [],
+          "shouldNotRetrieve": ["l-readonly", "l-build", "l-stop"]
+        },
+        {
+          "id": "token-run-contiguous-matches",
+          "description": "'read only' matches 'read_only' — adjacent tokens.",
+          "query": { "file": "docs/read_only.md" },
+          "shouldRetrieve": ["l-readonly"],
+          "shouldNotRetrieve": ["l-build", "l-stop"]
+        },
+        {
+          "id": "explicit-keyword-is-substring",
+          "description": "Explicit --keyword uses substring match: 'build' fires on 'rebuilding'.",
+          "query": { "keyword": "rebuilding system first" },
+          "shouldRetrieve": ["l-build"],
+          "shouldNotRetrieve": ["l-readonly", "l-stop"]
+        },
+        {
+          "id": "stopword-only-pattern-never-matches",
+          "description": "A stopword-only keyword pattern tokenizes to empty and must never match, even on a literal 'the' in the path.",
+          "query": { "file": "the_best_practices.md" },
+          "shouldRetrieve": [],
+          "shouldNotRetrieve": ["l-readonly", "l-build", "l-stop"]
+        }
+      ]
+    },
+    {
+      "name": "bm25-tiebreak",
+      "topN": 10,
+      "graph": {
+        "version": 1,
+        "topics": { "bm": { "summary": "bm" } },
+        "triggers": { "t-bm": { "kind": "file_glob", "pattern": "src/bm/*.ts" } },
+        "lessons": {
+          "l-bm-hit": { "rule": "config management guide", "topics": ["bm"], "triggers": ["t-bm"], "evidence": ["fixture"], "status": "active", "createdAt": "2026-06-01" },
+          "l-bm-miss": { "rule": "deployment release notes", "topics": ["bm"], "triggers": ["t-bm"], "evidence": ["fixture"], "status": "active", "createdAt": "2026-06-02" }
+        }
+      },
+      "cases": [
+        {
+          "id": "rule-text-overlap-breaks-tie",
+          "description": "Both lessons tie on specificity and coherence, and the newer createdAt favors l-bm-miss. Only BM25 over the rule text lifts l-bm-hit, whose rule shares the query term 'config'; disabling BM25 makes l-bm-miss win and this case fail.",
+          "query": { "file": "src/bm/config.ts" },
+          "topN": 1,
+          "shouldRetrieve": ["l-bm-hit"],
+          "shouldNotRetrieve": ["l-bm-miss"]
+        }
+      ]
+    },
+    {
+      "name": "id-tiebreak",
+      "topN": 10,
+      "graph": {
+        "version": 1,
+        "topics": { "idt": { "summary": "idt" } },
+        "triggers": { "t-id": { "kind": "file_glob", "pattern": "src/id/*.ts" } },
+        "lessons": {
+          "l-id-a": { "rule": "same", "topics": ["idt"], "triggers": ["t-id"], "evidence": ["fixture"], "status": "active", "createdAt": "2026-06-01" },
+          "l-id-b": { "rule": "same", "topics": ["idt"], "triggers": ["t-id"], "evidence": ["fixture"], "status": "active", "createdAt": "2026-06-01" }
+        }
+      },
+      "cases": [
+        {
+          "id": "id-ascending-final-tiebreak",
+          "description": "Two lessons identical on every signal AND createdAt; the final id-ascending tie-break must put l-id-a first. Reversing the id tie-break makes this case fail.",
+          "query": { "file": "src/id/x.ts" },
+          "topN": 1,
+          "shouldRetrieve": ["l-id-a"],
+          "shouldNotRetrieve": ["l-id-b"]
+        }
+      ]
+    }
+  ]
+}

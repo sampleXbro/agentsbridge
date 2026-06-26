@@ -3124,6 +3124,24 @@
         "t-kw-233ef987"
       ]
     },
+    "lessons-system-claude-code-s-pretooluse-hook": {
+      "createdAt": "2026-06-26",
+      "evidence": [
+        "code.claude.com/docs/en/hooks"
+      ],
+      "rationale": "A documented false belief drove the reactive PostToolUse-only design; the first touch was left unguarded.",
+      "rule": "Claude Code's PreToolUse hook DOES support `hookSpecificOutput.additionalContext` (inject context to the model BEFORE the tool runs) — verified against code.claude.com/docs/en/hooks. This contradicts the old belief that PreToolUse can only gate (allow/deny/ask). So deterministic pre-edit recall is possible: a PreToolUse hook injects matching lessons before the FIRST touch, with no blocking and no permission interrupt (additionalContext is additive; absent permissionDecision the tool proceeds). Do not claim PreToolUse cannot inject context.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-71b4b110",
+        "t-glob-629e24b4",
+        "t-kw-e7051f63",
+        "t-kw-3eb8fd73"
+      ]
+    },
     "lessons-system-compile-command-pattern-triggers-at": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -8281,6 +8299,10 @@
       "kind": "keyword",
       "pattern": "instrumented entry point"
     },
+    "t-kw-3eb8fd73": {
+      "kind": "keyword",
+      "pattern": "additionalContext"
+    },
     "t-kw-3f61d5a5": {
       "kind": "keyword",
       "pattern": "codex additionalRules instructions mcp config.toml http"
@@ -8536,6 +8558,10 @@
     "t-kw-e678014d": {
       "kind": "keyword",
       "pattern": "legacy migration"
+    },
+    "t-kw-e7051f63": {
+      "kind": "keyword",
+      "pattern": "PreToolUse"
     },
     "t-kw-e86a782c": {
       "kind": "keyword",

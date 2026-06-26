@@ -72,10 +72,28 @@ Driven by a design+grounding pass, in-loop TDD, and an adversarial review agent
 - NOT measured (honest limits): lesson EFFECTIVENESS/obedience; whether the 23.5%
   command-patterns match commands agents actually run.
 
+### Step D — deterministic recall (PreToolUse first-touch guard) — DONE
+Verified that Claude Code's PreToolUse supports `additionalContext` (primary source) —
+the old docs/code wrongly believed it can't, which forced the reactive-only design.
+- [x] `buildRecallHookOutput` event-aware: echoes `hook_event_name`, defaults to
+      PostToolUse; injects lessons BEFORE the edit when run as PreToolUse.
+- [x] `recall-hook-scaffold` injects the recall hook under BOTH PreToolUse + PostToolUse;
+      session dedup prevents double-injection.
+- [x] Unit + e2e green (incl. real-CLI PreToolUse assertion); 100% line coverage; rebuilt
+      dist for e2e; tsc + eslint clean.
+- [x] Docs corrected: cli/lessons.mdx (rewrote the false "why not PreToolUse" section),
+      README, architecture flow, strategy doc. Lesson captured.
+- [x] Adversarial review: ship — Axis-5 (harness portability) is pre-existing (PostToolUse
+      already emitted the same JSON to all targets); Post is the documented fallback.
+- NOT done (deferred): embedding-similarity ranking signal (separate, needs a model).
+- NOTE: not dogfooded into THIS repo's hooks.yaml (would regenerate every tracked target
+  artifact — large churn); do `init --lessons`/edit hooks.yaml + `generate` separately.
+
 ### Out of scope (noted fast-follows)
 `lessons recurrence` CLI subcommand (review §5: avoid CLI-surface growth; gate is a
 test) · effectiveness/obeyed instrumentation (needs labeled outcomes) · Workstreams
-B (two-party authorship), C (liveness/staleness), D (PreToolUse + embedding signal).
+B (two-party authorship), C (liveness/staleness mostly already in `validate`),
+D-embeddings (ranking signal, needs a model).
 
 ---
 

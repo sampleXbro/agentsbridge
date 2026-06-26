@@ -38,8 +38,8 @@ afterEach(() => {
   rmSync(dir, { recursive: true, force: true });
 });
 
-describe('lessons hook (PostToolUse recall)', () => {
-  it('injects matching lessons as additionalContext for a piped file-edit payload', async () => {
+describe('lessons hook (event-aware recall)', () => {
+  it('injects matching lessons as additionalContext for a piped file-edit payload (defaults to PostToolUse)', async () => {
     const { stdout, exitCode } = await runHook(
       dir,
       JSON.stringify({ tool_name: 'Edit', tool_input: { file_path: 'src/x.ts' } }),
@@ -49,6 +49,23 @@ describe('lessons hook (PostToolUse recall)', () => {
       hookSpecificOutput: { hookEventName: string; additionalContext: string };
     };
     expect(parsed.hookSpecificOutput.hookEventName).toBe('PostToolUse');
+    expect(parsed.hookSpecificOutput.additionalContext).toContain('Hook rule X.');
+  });
+
+  it('echoes PreToolUse so the same command guards the first touch (injects before the edit)', async () => {
+    const { stdout, exitCode } = await runHook(
+      dir,
+      JSON.stringify({
+        hook_event_name: 'PreToolUse',
+        tool_name: 'Edit',
+        tool_input: { file_path: 'src/x.ts' },
+      }),
+    );
+    expect(exitCode).toBe(0);
+    const parsed = JSON.parse(stdout) as {
+      hookSpecificOutput: { hookEventName: string; additionalContext: string };
+    };
+    expect(parsed.hookSpecificOutput.hookEventName).toBe('PreToolUse');
     expect(parsed.hookSpecificOutput.additionalContext).toContain('Hook rule X.');
   });
 

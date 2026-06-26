@@ -65,6 +65,30 @@ describe('buildRecallHookOutput', () => {
     expect(parsed.hookSpecificOutput.additionalContext).toContain('src/x.ts');
   });
 
+  it('echoes hook_event_name so the SAME command guards the first touch as a PreToolUse hook', async () => {
+    const raw = JSON.stringify({
+      hook_event_name: 'PreToolUse',
+      tool_name: 'Edit',
+      tool_input: { file_path: 'src/x.ts' },
+    });
+    const parsed = JSON.parse((await buildRecallHookOutput(raw, root)).output) as {
+      hookSpecificOutput: { hookEventName: string; additionalContext: string };
+    };
+    expect(parsed.hookSpecificOutput.hookEventName).toBe('PreToolUse');
+    expect(parsed.hookSpecificOutput.additionalContext).toContain('Rule A.');
+  });
+
+  it('defaults to PostToolUse for an absent or unrecognized event name (backward compatible)', async () => {
+    const raw = JSON.stringify({
+      hook_event_name: 'SomethingElse',
+      tool_input: { file_path: 'src/x.ts' },
+    });
+    const parsed = JSON.parse((await buildRecallHookOutput(raw, root)).output) as {
+      hookSpecificOutput: { hookEventName: string };
+    };
+    expect(parsed.hookSpecificOutput.hookEventName).toBe('PostToolUse');
+  });
+
   it('recalls against a command for a Bash tool call', async () => {
     const raw = JSON.stringify({ tool_name: 'Bash', tool_input: { command: 'npx vitest run' } });
     const out = (await buildRecallHookOutput(raw, root)).output;

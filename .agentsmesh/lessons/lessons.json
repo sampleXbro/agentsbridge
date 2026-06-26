@@ -1128,6 +1128,23 @@
         "t-glob-8173701c"
       ]
     },
+    "fixture-and-assertion-discipline-when-adding-a-ranking-discrimination": {
+      "createdAt": "2026-06-26",
+      "evidence": [
+        "tests/integration/lessons-recurrence.integration.test.ts"
+      ],
+      "rationale": "A green gate on trigger-disjoint or loose-topN cases proves only plumbing, not ranker discriminability.",
+      "rule": "When adding a ranking-discrimination case to the lessons recurrence harness fixture (tests/fixtures/lessons/recurrence/*.json), use a TIGHT per-case topN (1 or 2): at a loose topN every matched lesson is retrieved, so a matched lesson can never be forbidden and rank order is never exercised — the case then only proves trigger plumbing, not discriminability. Also ensure the matched set is a strict SUBSET of the graph when testing matched-set-local signals (topic coherence), and VALIDATE the whole fixture by mutation-testing the ranker (flip RRF weights/tie-breaks, disable a signal) and confirming the gate turns red.",
+      "status": "active",
+      "topics": [
+        "fixture-and-assertion-discipline"
+      ],
+      "triggers": [
+        "t-glob-dc08e1d8",
+        "t-kw-50851a9b",
+        "t-kw-575b3002"
+      ]
+    },
     "fixture-and-assertion-discipline-when-adding-an-mcp-tool": {
       "createdAt": "2026-06-10",
       "evidence": [],
@@ -2968,6 +2985,24 @@
       "triggers": [
         "t-glob-7e7851c6",
         "t-kw-c65f9220"
+      ]
+    },
+    "lessons-system-a-command-pattern-trigger-s": {
+      "createdAt": "2026-06-26",
+      "evidence": [
+        "src/lessons/reachability.ts"
+      ],
+      "rationale": "Conflating valid command_patterns with verified file-glob reachability overstates graph health.",
+      "rule": "A command_pattern trigger's reachability cannot be verified statically the way a file_glob's can: a file_glob is dead/live against the working tree (deadFileGlobIds matches real files), but a command_pattern only has \"compiles/valid\" (isSafeRegexPattern) — there is no command corpus to test \"matches a real command.\" Any lessons reachability/liveness audit MUST keep these tiers separate (file-reachable = verified vs the tree, command-pattern = valid-but-unverified), never sum them into one \"reachable\" bucket.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-71436975",
+        "t-glob-09987b10",
+        "t-kw-26b43334",
+        "t-kw-ace667f6"
       ]
     },
     "lessons-system-a-keyword-trigger-fires-only": {
@@ -5607,6 +5642,22 @@
         "t-cmd-e94ef0dd"
       ]
     },
+    "test-execution-place-agentsmesh-src-unit-tests": {
+      "createdAt": "2026-06-26",
+      "evidence": [
+        "vitest.config.ts:7 include=tests/**; vitest.config.ts:17 coverage.include=src/**/*.ts"
+      ],
+      "rationale": "Colocated src tests neither run nor measure correctly under this repo's vitest config.",
+      "rule": "Place agentsmesh src unit tests under tests/unit/<area>/ importing ../../../src/...js — NEVER colocated as src/**/*.test.ts: vitest.config.ts `include` is tests/** only (a colocated test silently never runs) and coverage `include` is src/**/*.ts (a colocated *.test.ts gets measured as production code, polluting the 95% gate). The CLAUDE.md \"colocate {module}.test.ts\" wording is overridden by the actual vitest config.",
+      "status": "active",
+      "topics": [
+        "test-execution"
+      ],
+      "triggers": [
+        "t-kw-4c23a772",
+        "t-kw-a5ed6024"
+      ]
+    },
     "test-execution-set-ci-true-when-running": {
       "createdAt": "2026-06-17",
       "evidence": [
@@ -7394,6 +7445,10 @@
       "kind": "file_glob",
       "pattern": "dist/cli.js"
     },
+    "t-glob-09987b10": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/validate-liveness.ts"
+    },
     "t-glob-0a664e0b": {
       "kind": "file_glob",
       "pattern": "src/lessons/recall.ts"
@@ -7677,6 +7732,10 @@
     "t-glob-6f2d56aa": {
       "kind": "file_glob",
       "pattern": "src/lessons/add.ts"
+    },
+    "t-glob-71436975": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/reachability.ts"
     },
     "t-glob-71b4b110": {
       "kind": "file_glob",
@@ -8018,6 +8077,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/paths.ts"
     },
+    "t-glob-dc08e1d8": {
+      "kind": "file_glob",
+      "pattern": "tests/fixtures/lessons/recurrence/**"
+    },
     "t-glob-dd0e31f0": {
       "kind": "file_glob",
       "pattern": "src/targets/copilot/**"
@@ -8166,6 +8229,10 @@
       "kind": "keyword",
       "pattern": "regex cleanup"
     },
+    "t-kw-26b43334": {
+      "kind": "keyword",
+      "pattern": "reachability audit"
+    },
     "t-kw-27b89f58": {
       "kind": "keyword",
       "pattern": "irregular whitespace"
@@ -8234,9 +8301,17 @@
       "kind": "keyword",
       "pattern": "lessons recall"
     },
+    "t-kw-4c23a772": {
+      "kind": "keyword",
+      "pattern": "colocate"
+    },
     "t-kw-4df0ba9f": {
       "kind": "keyword",
       "pattern": "jsdoc"
+    },
+    "t-kw-50851a9b": {
+      "kind": "keyword",
+      "pattern": "recurrence harness"
     },
     "t-kw-519df655": {
       "kind": "keyword",
@@ -8257,6 +8332,10 @@
     "t-kw-574e42b9": {
       "kind": "keyword",
       "pattern": "telemetry zshenv export"
+    },
+    "t-kw-575b3002": {
+      "kind": "keyword",
+      "pattern": "discrimination"
     },
     "t-kw-5c8c2424": {
       "kind": "keyword",
@@ -8346,9 +8425,17 @@
       "kind": "keyword",
       "pattern": "control character probe"
     },
+    "t-kw-a5ed6024": {
+      "kind": "keyword",
+      "pattern": "test placement"
+    },
     "t-kw-abe95c07": {
       "kind": "keyword",
       "pattern": "work budget"
+    },
+    "t-kw-ace667f6": {
+      "kind": "keyword",
+      "pattern": "liveness"
     },
     "t-kw-adbdb028": {
       "kind": "keyword",

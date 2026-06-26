@@ -1,4 +1,85 @@
-# Capability correction campaign — VERIFIED QUEUE (current)
+# Lessons feedback — strategy doc + Workstream A (recurrence harness) — CURRENT
+
+Community feedback on the lessons feature converged on one gap: the graph is
+verified **write-side** (well-formed, recallable) but not **operationally** (does
+the *right* lesson fire at recurrence, and stay silent on adjacent contexts).
+Two-gate model: **admission gate** (status lifecycle, exists) vs **protection
+gate** (planted-fault recurrence harness — this task).
+
+### Strategy doc
+- [x] `docs/architecture/lessons-strategy.md` — feedback analysis, two-gate
+      model, four workstreams, sequencing, Workstream A design.
+
+### Workstream A — recurrence harness (TDD-first)
+Pure engine over the existing pure ranker (`queryLessons` → `rankLessons`), run
+against a **controlled fixture graph** (never the real graph, never the
+graph-quality validator → measures discriminability, not hygiene).
+- [x] Recall gate: `lessons_query` for every path/command group.
+- [x] `src/lessons/recurrence/types.ts` — case/suite/outcome/metrics/report types.
+- [x] `metrics.ts` (+ `tests/unit/lessons/recurrence-metrics.test.ts`) — bidirectional
+      micro-averaged precision / recall / false-positive-rate.
+- [x] `evaluate.ts` (+ `recurrence-evaluate.test.ts`) — `evaluateCase`
+      (real ranker, top-N) + `runRecurrenceSuite`; proves it *detects* a planted FP.
+- [x] `suite.ts` (+ `recurrence-suite.test.ts`) — zod schema + invariants
+      (complete labeling, disjoint, ids exist, expected=active, unique ids).
+- [x] `tests/fixtures/lessons/recurrence/suite.json` — planted faults + decoys +
+      adjacent negatives + a deprecated lesson that must never fire.
+- [x] `tests/integration/lessons-recurrence.integration.test.ts` — CI gate: exact
+      per-case retrieval sets + precision=1, recall=1, fpRate=0, zero regressions.
+- NOTE: tests live under `tests/unit/lessons/` (NOT colocated in `src/`) — vitest
+  `include` is `tests/**` only; coverage `include` is `src/**`. Lesson captured.
+
+### Verify
+- [x] Focused `node_modules/.bin/vitest run` → 25 green; full lessons dir 555 green.
+- [x] First-run gate numbers: precision 1.0, recall 1.0, fpRate 0.0 (5 TP / 0 FN / 0 FP / 31 TN).
+- [x] Each `src/lessons/recurrence/*.ts` ≤ 200 lines (max 88); 100% coverage; tsc + eslint clean.
+- [x] post-feature-qa skill applied.
+
+### Constraints (from recall)
+Every `src/lessons/**` file ≤ 200 lines; precision-optimized triggers (narrow
+file_glob + keyword); `pnpm exec vitest run <files>`; strict exact-set assertions.
+
+### Step #1 — Harden the harness (make 1.0 mean discrimination) — DONE
+Driven by a design fan-out (stressor taxonomy) + an adversarial-review workflow
+(refute → triage) + empirical mutation testing.
+- [x] Per-case `topN` override (types + schema + evaluate) so discrimination cases
+      use a tight cap; loose topN only proves trigger plumbing.
+- [x] Multi-suite fixture + `loadSuites`/`parseSuites`: 8 mechanism suites
+      (specificity, topic-coherence [matched-subset], truncation+createdAt-tiebreak,
+      status-exclusion [deprecated+superseded], multi-trigger max-specificity,
+      keyword-semantics [contiguity/substring/stopword], bm25-tiebreak, id-tiebreak).
+- [x] Review fixes: topic-coherence now matched-subset + exact-order (was masked by
+      `.sort()` and matched-set==corpus); added bm25-tiebreak + id-tiebreak (signals
+      that previously survived disabling).
+- [x] Suite-level negative control proves the gate reports a leak.
+- [x] Mutation testing: 7/7 ranker regressions (specificity/coherence/bm25 weights,
+      createdAt + id tie-breaks, stopword filter, status filter) turn the gate RED.
+- [x] 51 tests green · 100% coverage · tsc + eslint clean · all files ≤200 lines.
+
+### Step A.2 — second instrument over the REAL graph — DONE
+Static reachability audit (`src/lessons/reachability.ts`) + telemetry health summary.
+Driven by a design+grounding pass, in-loop TDD, and an adversarial review agent
+(which caught the command-vs-glob asymmetry — fixed by splitting the tier).
+- [x] `auditReachability` (pure) — tiers active lessons file-reachable / command-pattern
+      / keyword-only / inert; reuses canonical predicates (deadFileGlobIds,
+      isSafeRegexPattern, keyword liveness). Unit + integration tests, 100% coverage.
+- [x] Honest tier split: file-reachable (verified vs tree) ≠ command-pattern (valid only).
+- [x] Real-graph finding: 358 active → 76.0% file-reachable, 23.5% command-pattern,
+      0.6% keyword-only, **0% inert**. Globs mostly narrow (not breadth-inflated).
+- [x] Telemetry (2083 recalls): 41% no-match / 48% deduped / 11% delivered; file-edit
+      queries 5.8% no-match. Verdict: lessons here are NOT write-only artifacts.
+- [x] 588 tests green · tsc + eslint clean · ≤200 lines · no churn.
+- NOT measured (honest limits): lesson EFFECTIVENESS/obedience; whether the 23.5%
+  command-patterns match commands agents actually run.
+
+### Out of scope (noted fast-follows)
+`lessons recurrence` CLI subcommand (review §5: avoid CLI-surface growth; gate is a
+test) · effectiveness/obeyed instrumentation (needs labeled outcomes) · Workstreams
+B (two-party authorship), C (liveness/staleness), D (PreToolUse + embedding signal).
+
+---
+
+# Capability correction campaign — VERIFIED QUEUE (separate active track)
 
 Source: per-target adversarial verification (`wf_745aa03f-dad`) of the external
 audit (`target-capability-audit-2026-06-24.md`) against live code + primary docs.

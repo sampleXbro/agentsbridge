@@ -460,6 +460,19 @@
         "t-kw-3bb206ca"
       ]
     },
+    "coverage-analysis-agentsmesh-coverage-thresholds-in-vitest": {
+      "createdAt": "2026-06-28",
+      "evidence": [],
+      "rationale": "During release prep the prepare-release skill stated 90/90/84 but the real config enforces 95/95/95; branches passed at only 95.02%, a margin my load-plugin canonicalize change nearly consumed.",
+      "rule": "agentsmesh coverage thresholds in vitest.config.ts are lines/functions/branches = 95/95/95 — NOT the 90/90/84 the prepare-release skill claims. Branch coverage runs razor-thin (~95.02%), so any change that adds an uncovered branch (a new fallback/guard path) can fail the gate. Add tests for every new branch and verify with `COVERAGE=1 node_modules/.bin/vitest run --coverage` (never `pnpm test:coverage` — pnpm trips the frozen-lockfile/hono-override issue).",
+      "status": "active",
+      "topics": [
+        "coverage-analysis"
+      ],
+      "triggers": [
+        "t-glob-8ade9a3e"
+      ]
+    },
     "coverage-analysis-to-diagnose-a-codecov-patch": {
       "createdAt": "2026-06-23",
       "evidence": [],
@@ -1203,6 +1216,19 @@
         "t-kw-e61f5882",
         "t-kw-3c5328a3",
         "t-kw-04b69ea5"
+      ]
+    },
+    "fixture-and-assertion-discipline-when-testing-realpath-based-path": {
+      "createdAt": "2026-06-27",
+      "evidence": [],
+      "rationale": "A symlink-escape regression test was falsely green on macOS until projectRoot was realpath'd, because the canonicalize fallback compared a /var path against a /private/var root.",
+      "rule": "When testing realpath-based path containment (e.g. plugin source containment in src/plugins/load-plugin.ts) with `mkdtemp` tmp dirs, realpath the projectRoot before passing it to the code under test. On macOS the tmp dir resolves through /private (/var → /private/var), so a raw `mkdtempSync` projectRoot makes the prefix check pass/fail for the WRONG reason (a /var-vs-/private/var shape mismatch instead of the symlink/traversal under test), which can mask a real containment gap and make a should-be-red test falsely green.",
+      "status": "active",
+      "topics": [
+        "fixture-and-assertion-discipline"
+      ],
+      "triggers": [
+        "t-glob-49133422"
       ]
     },
     "frontmatter-and-canonical-shapes-rule-1": {
@@ -2225,6 +2251,19 @@
       "triggers": [
         "t-glob-6b98951d",
         "t-kw-f7df0071"
+      ]
+    },
+    "init-the-standalone-agentsmesh-import-command": {
+      "createdAt": "2026-06-27",
+      "evidence": [],
+      "rationale": "The growth plan drafted \"npx agentsmesh import → found your configs\" but import needs --from; the auto-detect import is an init feature. Caught by checking import --help before writing docs.",
+      "rule": "The standalone `agentsmesh import` command REQUIRES `--from <target>` and imports exactly one tool — it does NOT auto-detect. The auto-detect-and-import-all-existing-configs behavior lives in `agentsmesh init` (interactive wizard import step) and `agentsmesh init --yes` (non-interactive). When writing README/website/marketing copy, do not present bare `agentsmesh import` (or `npx agentsmesh import`) as an auto-detecting \"import everything\" command — lead the existing-repo path with `init`/`init --yes`.",
+      "status": "active",
+      "topics": [
+        "init"
+      ],
+      "triggers": [
+        "t-glob-d044343b"
       ]
     },
     "init-when-making-a-cli-scope": {
@@ -4631,6 +4670,19 @@
         "t-glob-7f76b340",
         "t-glob-60971e07",
         "t-glob-895a6107"
+      ]
+    },
+    "security-the-extends-elevated-artifact-gate": {
+      "createdAt": "2026-06-27",
+      "evidence": [],
+      "rationale": "Adding the default-strip consent gate to the shared extends load path changed existing tests that relied on remote extends merging elevated artifacts; future edits must keep that coupling in mind.",
+      "rule": "The extends elevated-artifact gate (`gateExtendElevatedArtifacts` in src/canonical/extends/, applied inside `loadCanonicalWithExtends`) strips hooks/permissions/mcp from REMOTE extends (github/gitlab/git, incl. git+file://) by default; only `accept: [...]` on the entry keeps them, and LOCAL extends are trusted as-is. When changing this gate, the remote-extend tests that supply elevated artifacts via git+file:// — tests/e2e/multi-extend-precedence.e2e.test.ts, tests/e2e/extends-remote.e2e.test.ts, tests/integration/extends.integration.test.ts — depend on `accept:` on the remote entry and silently lose those artifacts (changed assertions) without it.",
+      "status": "active",
+      "topics": [
+        "security"
+      ],
+      "triggers": [
+        "t-glob-e1dcfcaa"
       ]
     },
     "security-when-hardening-a-git-spawn": {
@@ -7640,6 +7692,10 @@
       "kind": "file_glob",
       "pattern": "vitest.config*"
     },
+    "t-glob-49133422": {
+      "kind": "file_glob",
+      "pattern": "tests/unit/plugins/**/*.ts"
+    },
     "t-glob-497f5415": {
       "kind": "file_glob",
       "pattern": "src/targets/kilo-code/**"
@@ -8127,6 +8183,10 @@
     "t-glob-e1bf94e7": {
       "kind": "file_glob",
       "pattern": "src/targets/catalog/target-ids.ts"
+    },
+    "t-glob-e1dcfcaa": {
+      "kind": "file_glob",
+      "pattern": "src/canonical/extends/**/*.ts"
     },
     "t-glob-e9606afe": {
       "kind": "file_glob",

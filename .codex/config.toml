@@ -1,3 +1,7 @@
+[mcp_servers.agentsmesh]
+command = "npx"
+args = ["-y", "agentsmesh", "mcp"]
+
 [mcp_servers.context7]
 command = "npx"
 args = ["-y", "@upstash/context7-mcp"]
@@ -6,7 +10,3 @@ args = ["-y", "@upstash/context7-mcp"]
 command = "npx"
 args = ["-y", "@modelcontextprotocol/server-github"]
 env = { GITHUB_TOKEN = "$GITHUB_TOKEN" }
-
-[mcp_servers.agentsmesh]
-command = "npx"
-args = ["-y", "agentsmesh", "mcp"]

@@ -1,5 +1,15 @@
 {
   "mcpServers": {
+    "agentsmesh": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "agentsmesh",
+        "mcp"
+      ],
+      "env": {}
+    },
     "context7": {
       "type": "stdio",
       "command": "npx",
@@ -20,16 +30,6 @@
       "env": {
         "GITHUB_TOKEN": "$GITHUB_TOKEN"
       }
-    },
-    "agentsmesh": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "-y",
-        "agentsmesh",
-        "mcp"
-      ],
-      "env": {}
     }
   }
 }

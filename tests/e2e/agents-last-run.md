@@ -1,6 +1,6 @@
 # Agents E2E Last Run Report
 
-_Generated: 2026-06-18T14:08:20.767Z_
+_Generated: 2026-06-28T09:53:37.303Z_
 
 ## Initial — `.agentsmesh/agents/` (canonical fixture)
 
@@ -22,21 +22,6 @@ _Generated: 2026-06-18T14:08:20.767Z_
 ### Generated files
 
 ```
-┌────────────────────┬────────────┐
-│Feature             │Claude      │
-├────────────────────┼────────────┤
-│rules               │  ✓         │
-│additional rules (1)│  ✓         │
-│commands (1)        │  ✓         │
-│agents (2)          │  ✓         │
-│skills (1)          │  ✓         │
-│mcp (1 servers)     │  ✓         │
-│hooks (1)           │  ✓         │
-│ignore              │  ✓         │
-│permissions         │  ✓         │
-└────────────────────┴────────────┘
-
-Legend: ✓ = native  ◆ = embedded  ◐ = partial  – = not supported
 ✓ created CLAUDE.md
 ✓ created .claude/rules/typescript.md
 ✓ created .claude/commands/review.md
@@ -49,6 +34,13 @@ Legend: ✓ = native  ◆ = embedded  ◐ = partial  – = not supported
 ✓ created .claude/settings.json
 ✓ created .claudeignore
 Generated: 11 created, 0 updated, 0 unchanged
+┌────────┬───────┬──────────────────┬──────────┬────────┬────────┬─────┬───────┬────────┬─────────────┐
+│ Target │ Rules │ Additional Rules │ Commands │ Agents │ Skills │ MCP │ Hooks │ Ignore │ Permissions │
+├────────┼───────┼──────────────────┼──────────┼────────┼────────┼─────┼───────┼────────┼─────────────┤
+│ Claude │   ✓   │        ✓         │    ✓     │   ✓    │   ✓    │  ✓  │   ✓   │   ✓    │      ✓      │
+└────────┴───────┴──────────────────┴──────────┴────────┴────────┴─────┴───────┴────────┴─────────────┘
+
+✓ native  ◆ embedded  ◐ partial  – none
 ```
 
 #### Agent files in `.claude/agents/`
@@ -104,21 +96,6 @@ Imported 12 file(s). Run 'agentsmesh generate' to sync to other tools.
 ### Generated files
 
 ```
-┌────────────────────┬────────────┐
-│Feature             │cursor      │
-├────────────────────┼────────────┤
-│rules               │  ✓         │
-│additional rules (1)│  ◆         │
-│commands (1)        │  ✓         │
-│agents (2)          │  ✓         │
-│skills (1)          │  ✓         │
-│mcp (2 servers)     │  ✓         │
-│hooks (1)           │  ✓         │
-│ignore              │  ✓         │
-│permissions         │  ◐         │
-└────────────────────┴────────────┘
-
-Legend: ✓ = native  ◆ = embedded  ◐ = partial  – = not supported
 ✓ created AGENTS.md
 ✓ created .cursor/rules/general.mdc
 ✓ created .cursor/rules/typescript.mdc
@@ -133,6 +110,13 @@ Legend: ✓ = native  ◆ = embedded  ◐ = partial  – = not supported
 ✓ created .cursor/hooks.json
 ✓ created .cursorignore
 Generated: 13 created, 0 updated, 0 unchanged
+┌────────┬───────┬──────────────────┬──────────┬────────┬────────┬─────┬───────┬────────┬─────────────┐
+│ Target │ Rules │ Additional Rules │ Commands │ Agents │ Skills │ MCP │ Hooks │ Ignore │ Permissions │
+├────────┼───────┼──────────────────┼──────────┼────────┼────────┼─────┼───────┼────────┼─────────────┤
+│ cursor │   ✓   │        ✓         │    ✓     │   ✓    │   ✓    │  ✓  │   ✓   │   ✓    │      ◐      │
+└────────┴───────┴──────────────────┴──────────┴────────┴────────┴─────┴───────┴────────┴─────────────┘
+
+✓ native  ◆ embedded  ◐ partial  – none
 ```
 
 #### Agent files in `.cursor/agents/`
@@ -187,21 +171,6 @@ Imported 11 file(s). Run 'agentsmesh generate' to sync to other tools.
 ### Generated files
 
 ```
-┌────────────────────┬────────────┐
-│Feature             │copilot     │
-├────────────────────┼────────────┤
-│rules               │  ✓         │
-│additional rules (1)│  ✓         │
-│commands (1)        │  ✓         │
-│agents (2)          │  ✓         │
-│skills (1)          │  ✓         │
-│mcp (2 servers)     │  ✓         │
-│hooks (1)           │  ◐         │
-│ignore              │  –         │
-│permissions         │  –         │
-└────────────────────┴────────────┘
-
-Legend: ✓ = native  ◆ = embedded  ◐ = partial  – = not supported
 ✓ created .github/copilot-instructions.md
 ✓ created .github/instructions/typescript.instructions.md
 ✓ created .github/prompts/review.prompt.md
@@ -214,6 +183,13 @@ Legend: ✓ = native  ◆ = embedded  ◐ = partial  – = not supported
 ✓ created .github/hooks/agentsmesh.json
 ✓ created .github/hooks/scripts/posttooluse-0.sh
 Generated: 11 created, 0 updated, 0 unchanged
+┌─────────┬───────┬──────────────────┬──────────┬────────┬────────┬─────┬───────┬────────┬─────────────┐
+│ Target  │ Rules │ Additional Rules │ Commands │ Agents │ Skills │ MCP │ Hooks │ Ignore │ Permissions │
+├─────────┼───────┼──────────────────┼──────────┼────────┼────────┼─────┼───────┼────────┼─────────────┤
+│ copilot │   ✓   │        ✓         │    ✓     │   ✓    │   ✓    │  ✓  │   ✓   │   –    │      –      │
+└─────────┴───────┴──────────────────┴──────────┴────────┴────────┴─────┴───────┴────────┴─────────────┘
+
+✓ native  ◆ embedded  ◐ partial  – none
 ```
 
 #### Agents in `.github/agents/*.agent.md`

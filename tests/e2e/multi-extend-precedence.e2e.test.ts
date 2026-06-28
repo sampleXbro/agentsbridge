@@ -81,6 +81,7 @@ describe('multi-extend precedence e2e', () => {
         '  - name: remote-base',
         `    source: git+file://${remoteRepo}#main`,
         '    features: [rules, hooks, permissions, mcp]',
+        '    accept: [hooks, permissions, mcp]',
         '  - name: shared-base',
         '    source: ../shared',
         '    features: [rules, hooks, permissions, mcp]',
@@ -98,9 +99,7 @@ describe('multi-extend precedence e2e', () => {
     const result = await runCli('generate', project, { AGENTSMESH_ALLOW_LOCAL_GIT: '1' });
     expect(result.exitCode, result.stderr).toBe(0);
 
-    expect(readFileSync(join(project, 'CLAUDE.md'), 'utf-8')).toContain(
-      'Project Override',
-    );
+    expect(readFileSync(join(project, 'CLAUDE.md'), 'utf-8')).toContain('Project Override');
 
     const settings = JSON.parse(
       readFileSync(join(project, '.claude', 'settings.json'), 'utf-8'),

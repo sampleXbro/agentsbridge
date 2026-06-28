@@ -77,6 +77,7 @@ describe('remote git extends end to end', () => {
         '  - name: remote-base',
         `    source: git+file://${remoteRepo}#main`,
         '    features: [rules, permissions]',
+        '    accept: [permissions]',
         '',
       ].join('\n'),
     );

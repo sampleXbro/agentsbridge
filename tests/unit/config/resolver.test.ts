@@ -46,6 +46,7 @@ describe('resolveExtendPaths', () => {
       name: 'base',
       resolvedPath: sharedDir,
       features: ['rules'],
+      isRemote: false,
     });
   });
 
@@ -196,11 +197,17 @@ describe('resolveExtendPaths', () => {
     ]);
     const result = await resolveExtendPaths(config, TEST_ROOT);
     expect(result).toHaveLength(2);
-    expect(result[0]).toEqual({ name: 'base', resolvedPath: dir1, features: ['rules'] });
+    expect(result[0]).toEqual({
+      name: 'base',
+      resolvedPath: dir1,
+      features: ['rules'],
+      isRemote: false,
+    });
     expect(result[1]).toEqual({
       name: 'ts',
       resolvedPath: dir2,
       features: ['rules', 'skills'],
+      isRemote: false,
     });
   });
 });

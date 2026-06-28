@@ -80,6 +80,7 @@ describe('generate with remote extends', () => {
         '  - name: remote-base',
         `    source: git+file://${remoteRepo}#main`,
         '    features: [rules, permissions]',
+        '    accept: [permissions]',
         '',
       ].join('\n'),
     );

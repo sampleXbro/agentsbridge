@@ -1,9 +1,9 @@
 # Auto-generated. DO NOT EDIT MANUALLY.
 # Tracks the state of all config files for team conflict resolution.
 
-generated_at: 2026-06-26T11:43:44.292Z
+generated_at: 2026-06-28T08:24:23.895Z
 generated_by: serhii
-lib_version: 0.25.0
+lib_version: 0.28.0
 checksums:
   agents/code-debugger.md: sha256:33452bf839256a119a602cd10d085bff3cdb8f537ded76e60053bb9d8e5d33bc
   agents/code-documenter.md: sha256:89b4ebd27718bcd50a7283c95ea1ff9cad153b1112cf695f9f1fc22d90ec85ec
@@ -16,7 +16,7 @@ checksums:
   commands/commit.md: sha256:3e6dcc5871ad157c36efe19c162b43cdc0d723a8695fb0d45c1f90cc28fa931c
   commands/review.md: sha256:ba3053410e7cc3271f41ba329056df07c6ccd2f07e2ed3dda601c56e46a77d54
   commands/test.md: sha256:a60932b216ff9eb407c2b38e4459ac4b9606a3aed275f4af84a646eb6c2937e7
-  hooks.yaml: sha256:4c925de0b37cf350fb0002b097f5efca510c4d522ab39b8eb7a0b18052f012f4
+  hooks.yaml: sha256:7178c303c20d0078994532a7f4a65314f1a8eb3e6614fcd88b40dbdaa6d1dcc6
   ignore: sha256:53ad60cb2c945a41619fbb5dd0d43559c8461e4cb35e30f4d98b901c73766e12
   mcp.json: sha256:963782b54cbea4ef4686fd036e87332e1a61042579916222991429e359654921
   permissions.yaml: sha256:c806acb62daf533af836dc113be37e9840a2a9b3e21b984c5909fcfb16eb52f2

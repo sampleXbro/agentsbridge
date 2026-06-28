@@ -8,6 +8,15 @@
           "command": "echo \"Running: $(jq -r '.tool_input.command' < /dev/stdin)\""
         }
       ]
+    },
+    {
+      "matcher": "Edit|Write|Bash",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "agentsmesh lessons hook"
+        }
+      ]
     }
   ],
   "PostToolUse": [

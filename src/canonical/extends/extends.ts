@@ -11,7 +11,9 @@ import { loadCanonicalFiles } from '../load/loader.js';
 import { mergeCanonicalFiles } from '../load/merge.js';
 import { loadCanonicalForExtend } from './extend-load.js';
 import { applyExtendPick } from './extend-pick.js';
+import { gateExtendElevatedArtifacts } from './extend-elevated.js';
 import { loadPacksCanonical } from '../load/pack-load.js';
+import { logger } from '../../utils/output/logger.js';
 
 const FEATURE_TO_KEYS: Record<string, (keyof CanonicalFiles)[]> = {
   rules: ['rules'],
@@ -87,7 +89,15 @@ export async function loadCanonicalWithExtends(
   for (const ext of resolvedExtends) {
     const extCanonical = await loadCanonicalForExtend(ext);
     const filtered = filterCanonicalByFeatures(extCanonical, ext.features);
-    const picked = applyExtendPick(filtered, ext.features, ext.pick, ext.name);
+    const gated = gateExtendElevatedArtifacts(filtered, ext);
+    if (gated.stripped.length > 0) {
+      const list = gated.stripped.join(', ');
+      logger.warn(
+        `[agentsmesh] Extend "${ext.name}": stripped elevated artifacts from a remote source: ` +
+          `${list}. Add \`accept: [${list}]\` to this extends entry in agentsmesh.yaml to keep them.`,
+      );
+    }
+    const picked = applyExtendPick(gated.canonical, ext.features, ext.pick, ext.name);
     merged = mergeCanonicalFiles(merged, picked);
   }
 

@@ -209,6 +209,17 @@
               }
             },
             "additionalProperties": false
+          },
+          "accept": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "hooks",
+                "permissions",
+                "mcp"
+              ]
+            }
           }
         },
         "required": [

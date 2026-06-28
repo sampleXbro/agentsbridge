@@ -9,6 +9,7 @@ import type { ExtendPick, ValidatedConfig } from '../core/schema.js';
 import { exists } from '../../utils/filesystem/fs.js';
 import { fetchRemoteExtend, getCacheDir } from '../remote/remote-fetcher.js';
 import { isSupportedRemoteSource } from '../remote/remote-source.js';
+import type { ElevatedArtifact } from '../../install/core/elevated-artifacts.js';
 
 /** Resolved extend: source path resolved to absolute directory */
 export interface ResolvedExtend {
@@ -22,6 +23,15 @@ export interface ResolvedExtend {
   /** Repo-relative path for discovery (skill packs, nested layouts). */
   path?: string;
   pick?: ExtendPick;
+  /**
+   * Whether the source is a remote (github/gitlab/git, incl. git+file://) vs a
+   * local path. Drives the elevated-artifact consent gate — remote sources have
+   * hooks/permissions/mcp stripped unless listed in `accept`. Always set by the
+   * resolver so the gate never falls back to an insecure default.
+   */
+  isRemote: boolean;
+  /** Per-entry consent for elevated artifacts from a remote source. */
+  accept?: ElevatedArtifact[];
 }
 
 export interface ResolveExtendOptions {
@@ -84,6 +94,8 @@ export async function resolveExtendPaths(
         version: fetched.version,
         path: ext.path,
         pick: ext.pick,
+        isRemote: true,
+        accept: ext.accept,
       });
       continue;
     }
@@ -105,6 +117,8 @@ export async function resolveExtendPaths(
       as: ext.as,
       path: ext.path,
       pick: ext.pick,
+      isRemote: false,
+      accept: ext.accept,
     });
   }
 

@@ -12,3 +12,15 @@ PostToolUse:
   - matcher: Edit|Write|Bash
     type: command
     command: agentsmesh lessons hook
+UserPromptSubmit:
+  - matcher: "*"
+    type: command
+    command: agentsmesh lessons hook
+PostToolUseFailure:
+  - matcher: "*"
+    type: command
+    command: agentsmesh lessons hook
+SessionStart:
+  - matcher: "*"
+    type: command
+    command: agentsmesh lessons hook

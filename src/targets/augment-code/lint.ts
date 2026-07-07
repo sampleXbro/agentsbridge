@@ -6,7 +6,10 @@
  */
 
 import type { CanonicalFiles, LintDiagnostic } from '../../core/types.js';
-import { createUnsupportedHookWarning } from '../../core/lint/shared/helpers.js';
+import {
+  createUnsupportedHookWarning,
+  unsupportedHookEventNames,
+} from '../../core/lint/shared/helpers.js';
 
 const SUPPORTED_HOOK_EVENTS = [
   'PreToolUse',
@@ -18,12 +21,9 @@ const SUPPORTED_HOOK_EVENTS = [
 
 export function lintHooks(canonical: CanonicalFiles): LintDiagnostic[] {
   if (!canonical.hooks || Object.keys(canonical.hooks).length === 0) return [];
-  const supportedSet = new Set<string>(SUPPORTED_HOOK_EVENTS);
-  return Object.keys(canonical.hooks)
-    .filter((event) => !supportedSet.has(event))
-    .map((event) =>
-      createUnsupportedHookWarning(event, 'augment-code', SUPPORTED_HOOK_EVENTS, {
-        unsupportedBy: 'AugmentCode hooks',
-      }),
-    );
+  return unsupportedHookEventNames(canonical.hooks, SUPPORTED_HOOK_EVENTS).map((event) =>
+    createUnsupportedHookWarning(event, 'augment-code', SUPPORTED_HOOK_EVENTS, {
+      unsupportedBy: 'AugmentCode hooks',
+    }),
+  );
 }

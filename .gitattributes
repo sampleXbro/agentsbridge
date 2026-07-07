@@ -62,3 +62,4 @@ LICENSE         text eol=lf
 pnpm-lock.yaml  text eol=lf
 package-lock.json text eol=lf
 .agentsmesh/.lock text eol=lf
+.agentsmesh/lessons/lessons.json merge=agentsmesh-lessons

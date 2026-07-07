@@ -1,3 +1,136 @@
+# Lessons coverage completion — capture/recall at the right time, for all types (ACTIVE)
+
+**Goal (user):** lessons must be *captured and queried when they are really needed*; general,
+scoped, and keyword lessons must all reach context at the right moment; cover all cases.
+
+**Design correction from recall (obey — these are captured lessons):**
+- General/conceptual reach is the **KEYWORD trigger's** job, NOT a broad glob or a new
+  "general lesson type" (merge-graph lesson: "narrow file_glob + good keyword trigger is
+  correct by design; the only legitimate question is scope-MATCH, not breadth"). ⇒ **DO NOT
+  add a graph-schema `scope`/`always` field or version bump.** Fix the *input* to keyword
+  matching instead. Keyword lessons ARE the general type; they're starved because the only
+  haystack is file-path/command tokens (`keyword-match.ts:30`), never the task text.
+- Capture-on-failure CANNOT ride PostToolUse (success-only); use **PostToolUseFailure or
+  Stop** (recall-hook-scaffold lesson, verified vs code.claude.com/docs/en/hooks).
+- Every `src/lessons/**` file ≤200 lines; re-run line counts after matcher changes; split.
+- `recallLessons(root, {file/command/keyword}, {limit,maxTokens})` — caps go in the 3rd arg.
+- Descriptor-driven, NO target-name hardcoding; tighten `TargetDescriptor` ⇒ update every
+  plugin/mock fixture + full suite (rich-plugin fixture), not just catalog tests.
+
+**Coverage model (what "all types reach context when needed" means here):**
+- scoped-by-file → `file_glob` (exists, works) · scoped-by-command → `command_pattern` (exists)
+- keyword/conceptual/"general" → `keyword` trigger (exists) — **fix its input** (Slice 1)
+- truly-universal (no distinctive keyword) → always-on rules / non-hook preload block (Slice 3)
+
+## STATUS (as of this session) — honest disposition
+
+**SHIPPED & verified (8076 unit + 23 e2e green, tsc/eslint clean, ≤200 lines, ≥95% cov):**
+- ✅ Slice 1 — UserPromptSubmit keyword recall over task text (the keystone). Wired + projected
+  to every capable target (cursor→beforeSubmitPrompt, claude-code, copilot, kiro, windsurf); dropped
+  cleanly elsewhere. Activates the ~30% keyword-trigger graph that was provably dead.
+- ✅ Slice 2 + 3(events) — capture-on-failure nudge via PostToolUseFailure (advisory, once/session,
+  pre-filled trigger). Uniform `BEST_EFFORT_HOOK_EVENTS` so whitelist targets drop it with NO
+  unfixable lint nag (one shared `unsupportedHookEventNames` helper; cursor + 4 others refactored).
+- ✅ NotebookEdit recall (read `notebook_path`, not just `file_path`).
+- ✅ Seen-cache project-namespacing (fixes cross-project dedup collision under a shared session id).
+- ✅ Non-hook conceptual recall via PROSE (paragraph + skill), NOT a static preload. The always-on
+  paragraph (`LESSONS_PROCEDURAL_RULE`) and the `lessons` skill now tell the agent to also run
+  `lessons query --keyword "<task terms>"` (CLI) / `lessons_query` `keyword` (MCP) at task start —
+  the manual equivalent of the UserPromptSubmit hook. Verified reaching aider's AGENTS.md + the
+  claude-code SKILL.md. Complete + relevance-filtered + always-live; no static digest, no staleness.
+- ✅ Docs synced: README + website `cli/lessons.mdx` (astro build green, links valid).
+
+  NOTE — the earlier static PRELOAD block was BUILT then REMOVED after review: a query-less static
+  digest can't be complete AND bounded AND relevant (a token cap silently drops the tail on a large
+  graph), it goes stale between `init` runs, and it's redundant on hook targets. Prose-driven dynamic
+  recall (above) is strictly better — it queries the whole graph, filtered to the task, always live.
+  Preload lesson deprecated (`lessons-system-the-lessons-preload-block-preload`).
+
+**SHIPPED (later) — `scope: 'always'` (graph-tracked always-on lessons) — REVERSAL, justified:**
+- ✅ Earlier I dropped a "general lesson type" believing keyword recall covered general reach. The
+  user's counterexample refuted the premise: an AMBIENT lesson (e.g. "comment style" on prompt "add a
+  feature") is named by NO query — no keyword OR semantic match can surface it. That case needs
+  always-on delivery. Distinct from a broad-glob (still forbidden) and from named-conceptual keyword.
+- ✅ `scope:'always'` on lessons (graph schema v2; version bump w/ 1|2 read, upgrade-on-write, old CLI
+  degrades via newer-version). Capture: `lessons add --scope always` / MCP `scope` (no trigger needed,
+  gates skipped). Recall: excluded from triggered recall; delivered on every task via the
+  UserPromptSubmit hook (unions always-lessons), `lessons query --always` (CLI), `lessons_query
+  always` (MCP) — token-bounded, session-deduped. Single source of truth kept (lives in the graph).
+- Verified end-to-end: `--scope always` → v2 graph no-trigger; `query --always` returns it; triggered
+  query excludes it. 8093 unit + lessons e2e/integration green.
+
+**DROPPED — contradict deliberate PRECISION design (verified vs code/tests; lessons captured):**
+- ✗ Broad-glob "general" lesson (a wide `file_glob` to fake generality) → the merge-graph lesson: general
+  reach is the KEYWORD trigger's job (named) or `scope:always` (ambient), NOT a broad glob.
+  ✗ keyword two-token floor + ✗ stopword-haystack → keyword-match.test.ts asserts distinctive
+  single-token triggers ('subagent','checkout') fire by design; low-signal tokens are handled at
+  CAPTURE time by guardrails. Captured as `lessons-system-do-not-add-a-two`.
+
+**DEFERRED — larger / judgement-call (tracked, not started):**
+- ⏭ Harness-adaptive hook I/O (#13) — per-target stdin/stdout adaptation; large per-target research.
+- ⏭ Dedup TTL / sticky re-show — deliberate anti-spam today; a behavior-change judgement call that
+  wants measurement before flipping the default.
+- ⏭ SubagentStart recall — low value (SubagentStart carries no task text, verified vs docs).
+- ⏭ Telemetry drop-provenance (droppedByDedup/droppedByBudget) — safe nicety.
+- ⏭ Regenerate this repo's tracked target artifacts (deliberately NOT dogfooded — large churn; do as
+  a separate `init --lessons` + `generate` commit).
+
+---
+
+## Slice 1 — Keyword recall over task intent (keystone; no schema change) — TDD
+- [ ] `hook.ts`: extend `HookStdin` to read the prompt field (UserPromptSubmit) + any plan text;
+      build `{ keyword: promptText }` when no file/command; keep file/command path byte-identical.
+- [ ] Event-aware output for `UserPromptSubmit` (+ `SessionStart` where supported): correct
+      `hookSpecificOutput`/stdout shape per Claude Code semantics — VERIFY vs primary source
+      (claude-code-guide + code.claude.com/docs/en/hooks) before coding the output shape.
+- [ ] `recall-hook-scaffold.ts`: inject the recall command under `UserPromptSubmit` (and
+      `SessionStart`) in canonical `hooks.yaml` via the YAML Document API (preserve comments);
+      per-target projection drops unsupported events (VERIFY projection drops, not errors).
+- [ ] Tests: `hook.test.ts` (prompt→keyword query; unknown event no-op), scaffold wiring test,
+      e2e real-CLI UserPromptSubmit assertion. Rebuild dist before e2e; run e2e serially.
+- [ ] Effect: keyword-triggered (general/conceptual) lessons finally fire on the richest signal.
+
+## Slice 2 — Deterministic capture-on-failure nudge (PostToolUseFailure) — RUNTIME DONE
+- [x] `capture-nudge.ts` + `hook.ts` dispatch: on `PostToolUseFailure` (NOT PostToolUse — success-only)
+      inject an advisory capture-decision nudge with a ready-to-paste `--trigger-file`/`--trigger-cmd`
+      derived from the parsed file/command. Single-party authorship preserved (advisory only).
+- [x] Once-per-session guard (reuses seen-cache sentinel) so a TDD red-green loop is not spammed.
+- [x] Tests: `capture-nudge.test.ts` (all branches) + `hook.test.ts` PostToolUseFailure cases. 100% cov.
+- [→] SCAFFOLD WIRING of PostToolUseFailure MOVED to Slice 3: it is a non-canonical (Claude passthrough)
+      event; universal wiring makes cursor's unmapped-event lint nag every cursor user unfixably. Gate it
+      via the per-target descriptor supported-events model (Slice 3) — no target-name special-casing.
+
+## Slice 3 — Portability: real content for non-hook targets + descriptor-driven events — TDD
+- [ ] Non-hook targets (aider/continue/zed/warp/trae/junie/roo/replit/jules/pi/rovodev): a
+      token-capped "preload block" (second managed sentinel in `_root.md`) inlining the rule text
+      of top keyword/high-value lessons; refreshed on `generate`. Universal fallback = real content.
+- [ ] Drive the wired event set from target capability descriptors (add `supportedHookEvents` or
+      reuse per-target hook-format maps); stop hardcoding `RECALL_EVENTS`. Update rich-plugin fixture.
+- [ ] Harness-adaptive hook I/O (#13): adapt stdin field names + stdout shape per target; per-target
+      hook I/O tests. Corrupt-graph should fall back to paragraph, not silent nothing.
+
+## Slice 4 — Ranking/dedup sharp edges — TDD
+- [ ] Session dedup TTL + per-lesson `sticky` re-show window (dominant empirical miss: ~56% of
+      recalls matched-but-suppressed by dedup). Store `{id,ts}`; config re-show window.
+- [ ] Two-token floor on file/command-derived keyword path (kill single-token false positives).
+- [ ] Project-namespaced seen-cache key (hash projectRoot) — fix cross-project collision.
+- [ ] Shared stopword-filtered haystack tokenization so multi-word stopword keywords can match
+      (or soft-block STOPWORD_KEYWORD). Bounded token budget preserved.
+
+## Slice 5 — Subagent recall + multi-file/notebook parsing + observability — TDD
+- [ ] SubagentStart recall (capability-gated) with the subagent's OWN session correlator.
+- [ ] Parse `notebook_path` and multi-file/`edits[]` payloads (recall per touched path).
+- [ ] Telemetry: split `droppedByDedup`/`droppedByBudget` + top-K dropped ids (presence-only).
+
+## Cross-cutting (every slice)
+- [ ] TDD: failing test first. ≤200 lines/file. tsc + eslint clean. post-feature-qa skill.
+- [ ] Docs sync: README + website (`supported-tools.mdx` if capabilities change) + architecture
+      flow (`docs/architecture/flows/lessons.md`) + strategy/investigation docs.
+- [ ] Regenerate target artifacts + lock + lessons graph only as a final, separate step.
+- [ ] Capture lessons from failures/corrections; report `Lesson: captured <id>`/`none`.
+
+---
+
 # Lessons feedback — strategy doc + Workstream A (recurrence harness) — CURRENT
 
 Community feedback on the lessons feature converged on one gap: the graph is

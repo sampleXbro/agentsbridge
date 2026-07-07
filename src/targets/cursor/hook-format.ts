@@ -7,6 +7,7 @@
  * Claude-style PascalCase event names, so both directions are mapped here.
  */
 
+import { BEST_EFFORT_HOOK_EVENTS } from '../../core/hook-types.js';
 import type { HookEntry, Hooks } from '../../core/types.js';
 import { getHookText, hasHookText } from '../../core/hook-command.js';
 
@@ -35,13 +36,18 @@ export interface CursorHook {
   timeout?: number;
 }
 
-/** Canonical event names Cursor cannot represent — dropped on generate. */
+/**
+ * Canonical event names Cursor cannot represent — dropped on generate. Excludes
+ * BEST_EFFORT_HOOK_EVENTS (agentsmesh-injected recall/capture events): dropping
+ * one is not user data loss, so warning about it would be permanent and unfixable.
+ */
 export function unmappedCursorHookEvents(hooks: Hooks): string[] {
   return Object.keys(hooks).filter(
     (event) =>
       Array.isArray(hooks[event]) &&
       (hooks[event] as HookEntry[]).length > 0 &&
-      !(event in CANONICAL_TO_CURSOR),
+      !(event in CANONICAL_TO_CURSOR) &&
+      !BEST_EFFORT_HOOK_EVENTS.has(event),
   );
 }
 

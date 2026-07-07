@@ -1,7 +1,7 @@
 # Auto-generated. DO NOT EDIT MANUALLY.
 # Tracks the state of all config files for team conflict resolution.
 
-generated_at: 2026-06-28T08:24:23.895Z
+generated_at: 2026-07-05T17:58:27.534Z
 generated_by: serhii
 lib_version: 0.28.0
 checksums:
@@ -16,11 +16,11 @@ checksums:
   commands/commit.md: sha256:3e6dcc5871ad157c36efe19c162b43cdc0d723a8695fb0d45c1f90cc28fa931c
   commands/review.md: sha256:ba3053410e7cc3271f41ba329056df07c6ccd2f07e2ed3dda601c56e46a77d54
   commands/test.md: sha256:a60932b216ff9eb407c2b38e4459ac4b9606a3aed275f4af84a646eb6c2937e7
-  hooks.yaml: sha256:7178c303c20d0078994532a7f4a65314f1a8eb3e6614fcd88b40dbdaa6d1dcc6
+  hooks.yaml: sha256:084f6e97314104d875a11ca592a300b34beba1ed7ac0a2bfa654bc80835f6758
   ignore: sha256:53ad60cb2c945a41619fbb5dd0d43559c8461e4cb35e30f4d98b901c73766e12
   mcp.json: sha256:963782b54cbea4ef4686fd036e87332e1a61042579916222991429e359654921
   permissions.yaml: sha256:c806acb62daf533af836dc113be37e9840a2a9b3e21b984c5909fcfb16eb52f2
-  rules/_root.md: sha256:4e3fc8d1289ef0905cad8b8b29bb83e0a4cc07649820eda4baede9a0a0f91c13
+  rules/_root.md: sha256:e692a964db2883ba9f9c3feafd78d17659e23122156e17f710de730813c10006
   rules/typescript.md: sha256:18f52143dfdd3e219a5c6d6c0feb7283fe74cce99458c46dafcd1c3620ad4fba
   skills/add-agent-target/SKILL.md: sha256:b425055659d29f74dbbe97966f6396e918d96cb0736d1448217656cf26b410f6
   skills/add-agent-target/references/target-addition-checklist.md: sha256:3b658fc204d33995cb15281af1696d8ded09abac26455382c3e8472a1fddafca
@@ -36,7 +36,7 @@ checksums:
   skills/code-reviewer/scripts/review_report_generator.py: sha256:9507bf76ab19c18feac70746554e104a96f03cf51bf82c6c18cf7a53bedc7719
   skills/docs-and-examples/SKILL.md: sha256:3339fe5adc40866cc6d9c75f3b452056ff144ecdaa9b4e7e14c412088948b9be
   skills/homebrew-packaging/SKILL.md: sha256:eb0e1a2075c53efe70bbae7cb6996049ebe75a5b0a40ccb5326f051f07c4e02a
-  skills/lessons/SKILL.md: sha256:a9d30c6a36ad9522a9d64d7658641c95f965cd10f498a141110d9dd9f2e3926b
+  skills/lessons/SKILL.md: sha256:1ff8a2851ccb98ab24879fd12dafa64edaec19551c70b3f3cad7a550a2b61d04
   skills/library-testing/SKILL.md: sha256:750c0819d76fd3585f4103b772968823f2aecfe31bd2741d5a154c6d5d56903c
   skills/package-release-engineering/SKILL.md: sha256:e2f26fc8d2ab1dca6547e906dd8e044d52339da6c2ca096b8f36f2bd4ecb1664
   skills/post-feature-qa/SKILL.md: sha256:718b292a72e03a890018da90005b184439d0e180b1f3a6708a7606b2024d9eaa

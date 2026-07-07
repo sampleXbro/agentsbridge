@@ -3,6 +3,7 @@ import {
   createCommandMetadataWarning,
   createUnsupportedHookWarning,
   createWarning,
+  unsupportedHookEventNames,
 } from '../../../../src/core/lint/shared/helpers.js';
 
 describe('createWarning', () => {
@@ -66,5 +67,29 @@ describe('createUnsupportedHookWarning — Oxford comma', () => {
   it('falls back to target when unsupportedBy is not provided', () => {
     const out = createUnsupportedHookWarning('UnknownHook', 'cline', ['PreToolUse']);
     expect(out.message).toContain('not supported by cline');
+  });
+});
+
+describe('unsupportedHookEventNames', () => {
+  it('returns [] for null/empty hooks', () => {
+    expect(unsupportedHookEventNames(null, ['PreToolUse'])).toEqual([]);
+    expect(unsupportedHookEventNames({}, ['PreToolUse'])).toEqual([]);
+  });
+
+  it('returns events that are not in the supported set', () => {
+    expect(
+      unsupportedHookEventNames({ PreToolUse: [], Notification: [] }, ['PreToolUse']),
+    ).toEqual(['Notification']);
+  });
+
+  it('excludes BEST_EFFORT_HOOK_EVENTS so the recall/capture scaffold never nags', () => {
+    // PostToolUseFailure + SessionStart are agentsmesh-injected best-effort recall
+    // refinements; dropping one is not user data loss, so neither is reported.
+    expect(
+      unsupportedHookEventNames(
+        { PostToolUseFailure: [], SessionStart: [], Notification: [] },
+        ['PreToolUse'],
+      ),
+    ).toEqual(['Notification']);
   });
 });

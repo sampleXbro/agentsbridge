@@ -3,7 +3,11 @@
  */
 
 import type { CanonicalFiles, LintDiagnostic } from '../../core/types.js';
-import { createWarning, createUnsupportedHookWarning } from '../../core/lint/shared/helpers.js';
+import {
+  createWarning,
+  createUnsupportedHookWarning,
+  unsupportedHookEventNames,
+} from '../../core/lint/shared/helpers.js';
 
 export function lintCommands(canonical: CanonicalFiles): LintDiagnostic[] {
   return canonical.commands
@@ -20,8 +24,7 @@ export function lintCommands(canonical: CanonicalFiles): LintDiagnostic[] {
 export function lintHooks(canonical: CanonicalFiles): LintDiagnostic[] {
   if (!canonical.hooks || Object.keys(canonical.hooks).length === 0) return [];
   const supported = ['PreToolUse', 'PostToolUse', 'Notification'] as const;
-  const supportedSet = new Set(supported);
-  return Object.keys(canonical.hooks)
-    .filter((event) => !supportedSet.has(event as never))
-    .map((event) => createUnsupportedHookWarning(event, 'gemini-cli', supported));
+  return unsupportedHookEventNames(canonical.hooks, supported).map((event) =>
+    createUnsupportedHookWarning(event, 'gemini-cli', supported),
+  );
 }

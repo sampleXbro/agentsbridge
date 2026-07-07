@@ -47,7 +47,9 @@ describe('outcome-log persistence (telemetry side-channel)', () => {
   it('appends and reads back records when telemetry is enabled', () => {
     appendOutcomeEvent(root, delivered('l1', 'k1', 's1'), ON);
     appendOutcomeEvent(root, failure('k1', 's1'), ON);
-    expect(outcomeLogPath(root).endsWith('.agentsmesh/lessons/outcome-log.jsonl')).toBe(true);
+    expect(
+      outcomeLogPath(root).replaceAll('\\', '/').endsWith('.agentsmesh/lessons/outcome-log.jsonl'),
+    ).toBe(true);
     expect(readOutcomeLog(root)).toEqual([delivered('l1', 'k1', 's1'), failure('k1', 's1')]);
   });
 });

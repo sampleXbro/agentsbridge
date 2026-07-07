@@ -741,6 +741,21 @@
         "t-kw-364764c2"
       ]
     },
+    "fixture-and-assertion-discipline-in-path-equality-endswith-test": {
+      "createdAt": "2026-07-07",
+      "evidence": [
+        "lesson:fixture-and-assertion-discipline-rule-4"
+      ],
+      "rationale": "CI matrix includes windows-latest; join() yields backslashes there.",
+      "rule": "In path-equality/endsWith test assertions, normalize the native `join()` result with `.replaceAll('\\\\', '/')` (or `toPosixPath`) before comparing to a forward-slash literal — an un-normalized assertion passes on macOS/Linux but fails on Windows CI with 'expected false to be true'.",
+      "status": "active",
+      "topics": [
+        "fixture-and-assertion-discipline"
+      ],
+      "triggers": [
+        "t-glob-4c29ad88"
+      ]
+    },
     "fixture-and-assertion-discipline-in-vitest-a-vi-fn": {
       "createdAt": "2026-06-12",
       "evidence": [
@@ -9048,5 +9063,5 @@
       "pattern": "lessons json schema contract golden"
     }
   },
-  "version": 1
+  "version": 2
 }

@@ -127,6 +127,36 @@ describe('renderInit', () => {
     expect(output.stdout()).toContain('.agentsmesh/lessons/recall-log.jsonl to .gitignore');
   });
 
+  it('reports the merge-driver .gitattributes binding and prints the per-clone git-config hint', () => {
+    renderInit({
+      exitCode: 0,
+      data: {
+        scope: 'project',
+        configFile: 'agentsmesh.yaml',
+        localConfigFile: 'agentsmesh.local.yaml',
+        detectedConfigs: [],
+        imported: [],
+        importedToolCount: 0,
+        scaffoldType: 'none',
+        gitignoreUpdated: false,
+        lessonsOnly: true,
+        lessons: {
+          created: [`${process.cwd()}/.agentsmesh/lessons/lessons.json`],
+          updated: [],
+          skipped: [],
+          rootRuleUpdated: true,
+          gitignoreUpdated: false,
+          gitattributesUpdated: true,
+          recallHookInjected: false,
+        },
+      },
+    });
+
+    const stdout = output.stdout();
+    expect(stdout).toContain('merge driver in .gitattributes');
+    expect(stdout).toContain('git config merge.agentsmesh-lessons.driver');
+  });
+
   it('renders Kept lines for skipped paths and notes the already-present paragraph', () => {
     renderInit({
       exitCode: 0,

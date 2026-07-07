@@ -19,7 +19,7 @@ describe('scaffoldLessons', async () => {
 
     expect(existsSync(paths.graph)).toBe(true);
     const graph = JSON.parse(readFileSync(paths.graph, 'utf8')) as Record<string, unknown>;
-    expect(graph).toEqual({ lessons: {}, topics: {}, triggers: {}, version: 1 });
+    expect(graph).toEqual({ lessons: {}, topics: {}, triggers: {}, version: 2 });
 
     const rootRule = readFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), 'utf8');
     expect(rootRule).toContain('<!-- agentsmesh:lessons-contract:start -->');
@@ -121,13 +121,28 @@ describe('scaffoldLessons', async () => {
     expect(rootRule).toContain('<!-- agentsmesh:lessons-contract:start -->');
   });
 
-  it('gitignores both opt-in telemetry logs so telemetry never dirties the worktree', async () => {
+  it('gitignores every opt-in telemetry log so telemetry never dirties the worktree', async () => {
     const result = await scaffoldLessons(projectRoot);
 
     const gitignore = readFileSync(join(projectRoot, '.gitignore'), 'utf8');
     expect(gitignore).toContain('.agentsmesh/lessons/recall-log.jsonl');
     expect(gitignore).toContain('.agentsmesh/lessons/capture-log.jsonl');
+    expect(gitignore).toContain('.agentsmesh/lessons/outcome-log.jsonl');
     expect(result.gitignoreUpdated).toBe(true);
+  });
+
+  it('binds lessons.json to the merge driver in .gitattributes (committable, idempotent)', async () => {
+    const first = await scaffoldLessons(projectRoot);
+    expect(first.gitattributesUpdated).toBe(true);
+    const attrs = readFileSync(join(projectRoot, '.gitattributes'), 'utf8');
+    expect(attrs).toContain('.agentsmesh/lessons/lessons.json merge=agentsmesh-lessons');
+
+    const second = await scaffoldLessons(projectRoot);
+    expect(second.gitattributesUpdated).toBe(false);
+    const lines = readFileSync(join(projectRoot, '.gitattributes'), 'utf8')
+      .split('\n')
+      .filter((l) => l.trim() === '.agentsmesh/lessons/lessons.json merge=agentsmesh-lessons');
+    expect(lines.length).toBe(1);
   });
 
   it('appends the recall-log entry idempotently — re-running adds it once, reports no second update', async () => {

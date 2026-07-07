@@ -65,6 +65,14 @@ describe('lessons skill content', () => {
     }
   });
 
+  it('names operational + decision-guard capture targets and steers triggers to the recurrence surface', () => {
+    // Field blind spots: operational/tooling failures and "reviewed then deliberately kept"
+    // decisions were never captured; and triggers were pinned to the discovery site.
+    expect(LESSONS_SKILL_BODY).toContain('--trigger-cmd');
+    expect(LESSONS_SKILL_BODY).toMatch(/deliberately REJECTED/i);
+    expect(LESSONS_SKILL_BODY).toMatch(/file-CLASS where it will RECUR/i);
+  });
+
   it('teaches the recall/capture reachability contract', () => {
     // Recall must be anchored to --file/--cmd; keyword-only is the anti-pattern.
     expect(LESSONS_SKILL_BODY).toMatch(/keyword-only/i);

@@ -179,7 +179,7 @@ describe('lessons MCP tools — no-mutation error paths', () => {
     expect(result.isError).toBe(true);
     const data = parseToolText(result) as { code: string; message: string };
     expect(data.code).toBe('VALIDATION_FAILED');
-    expect(data.message).toContain('at least one of file, command, or keyword');
+    expect(data.message).toContain('at least one of file, command, keyword');
   });
 
   it('lessons_add capture guardrail (no trigger) is VALIDATION_FAILED with NO_TRIGGER detail', async () => {

@@ -17,12 +17,9 @@ import {
   type LessonsQuery,
   type MatchedLesson,
 } from './query.js';
-import {
-  estTokens,
-  rankLessons,
-  type RankedLesson,
-} from './ranking.js';
+import { estTokens, rankLessons, type RankedLesson } from './ranking.js';
 import { loadRecallConfig } from './recall-config.js';
+import { loadEffectiveness } from './outcome-log.js';
 import { commitSeen, filterUnseen, openSessionDedup } from './seen-cache.js';
 import { appendRecallRecord, isTelemetryEnabled, sessionId } from './telemetry.js';
 
@@ -120,7 +117,11 @@ export async function recallLessons(
       : { ...query, file: normalizeRecallFile(query.file, projectRoot) };
   const matches = queryLessons(graph, matchQuery);
   // Dedup BEFORE ranking so the caps fill with fresh lessons (see seen-cache).
-  const dedup = openSessionDedup({ explicit: options.sessionId, disabled: options.noDedup });
+  const dedup = openSessionDedup({
+    explicit: options.sessionId,
+    disabled: options.noDedup,
+    projectRoot,
+  });
   const forRank = dedup === null ? matches : filterUnseen(dedup, matches);
   // Per-project recall tuning is the fallback for unset options; explicit
   // options (and `maxTokens: null` to disable the budget) still win.
@@ -128,8 +129,15 @@ export async function recallLessons(
   const lessons = rankLessons(graph, matchQuery, forRank, {
     limit: options.limit ?? cfg.limit,
     maxTokens: options.maxTokens === null ? undefined : (options.maxTokens ?? cfg.maxTokens),
+    // Down-rank proven fire-but-fail lessons (empty ⇒ neutral, so recall is
+    // unchanged until the outcome log has real signal). Read from the side-channel.
+    effectiveness: loadEffectiveness(projectRoot),
   });
-  if (dedup !== null) commitSeen(dedup, lessons.map((l) => l.id));
+  if (dedup !== null)
+    commitSeen(
+      dedup,
+      lessons.map((l) => l.id),
+    );
   // The application/MCP path has no `--all`; recall here is always a mandatory,
   // capped call, so it is never a bypass.
   recordRecallTelemetry(projectRoot, graph, matchQuery, matches, lessons, { bypassed: false });

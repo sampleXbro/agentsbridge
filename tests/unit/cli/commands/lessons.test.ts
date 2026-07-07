@@ -19,6 +19,22 @@ import {
   saveLessonsGraph,
 } from '../../../../src/lessons/graph-store.js';
 import type { LessonsGraph } from '../../../../src/lessons/graph-schema.js';
+import { appendOutcomeEvent, type OutcomeEvent } from '../../../../src/lessons/outcome-log.js';
+
+const TELEMETRY_ON = { AGENTSMESH_LESSONS_TELEMETRY: '1' } as NodeJS.ProcessEnv;
+const failEvent = (contextKey: string): OutcomeEvent => ({
+  ts: '2026-01-01T00:00:00Z',
+  kind: 'failure',
+  contextKey,
+  session: 's',
+});
+const deliveredEvent = (lessonId: string, contextKey: string): OutcomeEvent => ({
+  ts: '2026-01-01T00:00:00Z',
+  kind: 'delivered',
+  lessonId,
+  contextKey,
+  session: 's',
+});
 
 /** Persist a graph WITHOUT canonicalizing, preserving the literal key order so
  * the handlers' deterministic id/createdAt sorts receive unsorted input. */
@@ -149,6 +165,19 @@ describe('runLessons query', () => {
     if (r.subcommand !== 'query') return;
     expect(r.data.lessons.map((l) => l.id)).toEqual(['topic-x-rule-1']);
     expect(r.data.lessons[0]?.rule).toBe('Normalize display paths.');
+  });
+
+  it('--always returns the always-on lessons with no predicate', async () => {
+    seedSimpleGraph();
+    await runLessons(
+      { rule: 'Write comments per the repo style.', topic: 'topic-x', scope: 'always' },
+      ['add'],
+      root,
+    );
+    const r = await runLessons({ always: true }, ['query'], root);
+    if (r.subcommand !== 'query') return;
+    expect(r.exitCode).toBe(0);
+    expect(r.data.lessons.some((l) => l.rule === 'Write comments per the repo style.')).toBe(true);
   });
 
   it('honors --format plain | md | json', async () => {
@@ -288,7 +317,7 @@ describe('runLessons query', () => {
     mkdirSync(dirname(graphFilePath(root)), { recursive: true });
     writeFileSync(
       graphFilePath(root),
-      JSON.stringify({ version: 2, lessons: {}, topics: {}, triggers: {} }),
+      JSON.stringify({ version: 99, lessons: {}, topics: {}, triggers: {} }),
       'utf8',
     );
     const r = await runLessons({ file: 'src/x.ts' }, ['query'], root);
@@ -324,6 +353,25 @@ describe('runLessons add', () => {
     expect(graph.lessons[r.data.id]?.rule).toBe('Strip CRLF from emitted scripts.');
   });
 
+  it('captures an always-on lesson via --scope always with no trigger', async () => {
+    seedSimpleGraph();
+    const r = await runLessons(
+      { rule: 'Write comments per the repo style.', topic: 'topic-x', scope: 'always' },
+      ['add'],
+      root,
+    );
+    if (r.subcommand !== 'add') return;
+    expect(r.exitCode).toBe(0);
+    expect(loadLessonsGraph(root).lessons[r.data.id]?.scope).toBe('always');
+  });
+
+  it('rejects --scope other than always', async () => {
+    seedSimpleGraph();
+    const r = await runLessons({ rule: 'X.', topic: 'topic-x', scope: 'sometimes' }, ['add'], root);
+    if (r.subcommand !== 'add') return;
+    expect(r.exitCode).not.toBe(0);
+  });
+
   it('warns recall is not wired when capturing without `init --lessons` (graph-only)', async () => {
     seedSimpleGraph(); // writes lessons.json but no config.json → not activated
     const r = await runLessons(
@@ -356,7 +404,13 @@ describe('runLessons add', () => {
     const sub = join(root, 'packages', 'app');
     mkdirSync(sub, { recursive: true });
     const r = await runLessons(
-      { rule: 'Stray rule.', topic: 't', 'new-topic': true, 'topic-summary': 'T.', 'trigger-file': 'src/**/*.ts' },
+      {
+        rule: 'Stray rule.',
+        topic: 't',
+        'new-topic': true,
+        'topic-summary': 'T.',
+        'trigger-file': 'src/**/*.ts',
+      },
       ['add'],
       sub,
     );
@@ -1107,6 +1161,32 @@ describe('runLessons validate', () => {
       r.data.findings.some((f) => f.code === 'DEAD_FILE_GLOB' && f.triggerId === 't-dead'),
     ).toBe(true);
     expect(r.data.ok).toBe(true);
+    expect(r.exitCode).toBe(0);
+  });
+
+  it('surfaces the log-derived health view (uncovered repeat failure) as a warning, exit 0', async () => {
+    seedSimpleGraph();
+    appendOutcomeEvent(root, failEvent('file:docs/gap.ts'), TELEMETRY_ON);
+    appendOutcomeEvent(root, failEvent('file:docs/gap.ts'), TELEMETRY_ON);
+    const r = await runLessons({}, ['validate'], root);
+    if (r.subcommand !== 'validate') return;
+    expect(r.data.findings.some((f) => f.code === 'UNCOVERED_FAILURE')).toBe(true);
+    expect(r.data.ok).toBe(true);
+    expect(r.exitCode).toBe(0);
+  });
+
+  it('flags an ineffective lesson (delivered, never helped) as a warning, exit 0', async () => {
+    seedSimpleGraph();
+    for (const k of ['k1', 'k2', 'k3'])
+      appendOutcomeEvent(root, deliveredEvent('topic-x-rule-1', k), TELEMETRY_ON);
+    for (const k of ['k1', 'k2', 'k3']) appendOutcomeEvent(root, failEvent(k), TELEMETRY_ON);
+    const r = await runLessons({}, ['validate'], root);
+    if (r.subcommand !== 'validate') return;
+    expect(
+      r.data.findings.some(
+        (f) => f.code === 'INEFFECTIVE_LESSON' && f.lessonId === 'topic-x-rule-1',
+      ),
+    ).toBe(true);
     expect(r.exitCode).toBe(0);
   });
 });

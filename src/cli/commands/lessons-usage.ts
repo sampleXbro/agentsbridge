@@ -23,12 +23,12 @@ export interface LessonsSubcommandUsage {
 export const LESSONS_USAGE: Record<string, LessonsSubcommandUsage> = {
   query: {
     usage:
-      'agentsmesh lessons query [--file <path>] [--cmd <command>] [--keyword <text>] [--format plain|md|json] [--top <n>] [--all] [--max-tokens <n>] [--session <id>] [--no-dedup] [--ids]',
+      'agentsmesh lessons query [--file <path>] [--cmd <command>] [--keyword <text>] [--always] [--format plain|md|json] [--top <n>] [--all] [--max-tokens <n>] [--session <id>] [--no-dedup] [--ids]',
     example: 'agentsmesh lessons query --file src/app/page.tsx --cmd "git commit -m wip"',
   },
   add: {
     usage:
-      'agentsmesh lessons add "<rule>" --topic <id> [--trigger-file <glob>]... [--trigger-cmd <regex>]... [--trigger-kw <text>]... [--evidence <ref>]... [--rationale <text>] [--new-topic --topic-summary "..."]',
+      'agentsmesh lessons add "<rule>" --topic <id> [--trigger-file <glob>]... [--trigger-cmd <regex>]... [--trigger-kw <text>]... [--evidence <ref>]... [--rationale <text>] [--new-topic --topic-summary "..."] [--scope always]',
     example:
       'agentsmesh lessons add "Run tsc --noEmit before committing type changes" --topic build --trigger-file "src/**/*.ts" --evidence commit:abc1234',
   },

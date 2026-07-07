@@ -173,12 +173,27 @@ describe('loadLessonsGraphResilient', () => {
   it('reports a graph with a newer numeric version as "newer-version", not "corrupt"', () => {
     const path = graphFilePath(root);
     mkdirSync(dirname(path), { recursive: true });
-    // A future schema (version 2) is valid JSON but unknown to this CLI. It must
+    // A future schema (version 3) is valid JSON but unknown to this CLI. It must
     // degrade with an upgrade hint, not be mislabeled corrupt.
-    writeFileSync(path, JSON.stringify({ version: 2, lessons: {}, topics: {}, triggers: {} }), 'utf8');
+    writeFileSync(
+      path,
+      JSON.stringify({ version: 3, lessons: {}, topics: {}, triggers: {} }),
+      'utf8',
+    );
     const result = loadLessonsGraphResilient(root);
     expect(result.status).toBe('newer-version');
     expect(result.graph).toBeNull();
-    expect(result.status === 'newer-version' && result.version).toBe(2);
+    expect(result.status === 'newer-version' && result.version).toBe(3);
+  });
+
+  it('accepts a current v2 graph (not newer-version)', () => {
+    const path = graphFilePath(root);
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(
+      path,
+      JSON.stringify({ version: 2, lessons: {}, topics: {}, triggers: {} }),
+      'utf8',
+    );
+    expect(loadLessonsGraphResilient(root).status).toBe('ok');
   });
 });

@@ -18,20 +18,36 @@ import { tokenize } from './ranking-text.js';
  * non-adjacent "read the only".
  */
 
-/** Lowercase alphanumeric tokens, order-preserving and UNFILTERED (keeps stopwords). */
-function splitTokens(text: string): string[] {
-  return text
-    .toLowerCase()
-    .split(/[^a-z0-9]+/)
-    .filter((t) => t.length > 0);
-}
-
-/** Tokens implied by the current edit/command — the recall's task context. */
+/**
+ * Tokens implied by the current edit/command — the recall's task context.
+ *
+ * Each identifier contributes BOTH its whole lowercased form AND its camelCase /
+ * acronym sub-words. Retaining the whole token keeps this fully backward
+ * compatible — every keyword trigger that matched before still matches — while the
+ * sub-words give conceptual reach a compressed file path otherwise hides: `guard`
+ * now reaches `useLeaveGuard`, `selector` reaches `InvoiceCompanySelector`. A
+ * sub-word run follows its whole token, so a multi-word needle (`company selector`)
+ * still matches as a contiguous run. UNFILTERED (stopwords kept) so "read only"
+ * cannot match the non-adjacent "read the only".
+ */
 function deriveHaystackTokens(query: LessonsQuery): string[] {
   const parts: string[] = [];
   if (query.file !== undefined) parts.push(query.file);
   if (query.command !== undefined) parts.push(query.command);
-  return parts.length === 0 ? [] : splitTokens(parts.join(' '));
+  if (parts.length === 0) return [];
+  const out: string[] = [];
+  for (const raw of parts.join(' ').split(/[^A-Za-z0-9]+/)) {
+    if (raw.length === 0) continue;
+    out.push(raw.toLowerCase());
+    const sub = raw
+      .replace(/([a-z0-9])([A-Z])/g, '$1 $2') // camelCase / digit→Upper boundary
+      .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2') // ACRONYM→Word boundary
+      .toLowerCase()
+      .split(' ')
+      .filter((t) => t.length > 0);
+    if (sub.length > 1) out.push(...sub);
+  }
+  return out;
 }
 
 /** True when `needle` appears as a contiguous run inside `hay`. */

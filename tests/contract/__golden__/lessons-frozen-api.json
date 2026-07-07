@@ -1,0 +1,522 @@
+{
+  "graphVersion": 2,
+  "graphSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "version": {
+        "anyOf": [
+          {
+            "type": "number",
+            "const": 1
+          },
+          {
+            "type": "number",
+            "const": 2
+          }
+        ]
+      },
+      "lessons": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "additionalProperties": {
+          "type": "object",
+          "properties": {
+            "rule": {
+              "type": "string",
+              "minLength": 1
+            },
+            "rationale": {
+              "type": "string",
+              "minLength": 1
+            },
+            "topics": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z0-9-]+$"
+              }
+            },
+            "triggers": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z0-9-]+$"
+              }
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "active",
+                "deprecated",
+                "superseded"
+              ]
+            },
+            "supersededBy": {
+              "type": "string",
+              "pattern": "^[a-z0-9-]+$"
+            },
+            "createdAt": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}(T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,3})?Z?)?$"
+            },
+            "scope": {
+              "type": "string",
+              "const": "always"
+            }
+          },
+          "required": [
+            "rule",
+            "topics",
+            "triggers",
+            "evidence",
+            "status",
+            "createdAt"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "topics": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "additionalProperties": {
+          "type": "object",
+          "properties": {
+            "summary": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "summary"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "triggers": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "additionalProperties": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "file_glob",
+                "command_pattern",
+                "keyword"
+              ]
+            },
+            "pattern": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "kind",
+            "pattern"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "version",
+      "lessons",
+      "topics",
+      "triggers"
+    ],
+    "additionalProperties": false
+  },
+  "subcommands": [
+    "query",
+    "add",
+    "topics",
+    "show",
+    "deprecate",
+    "merge",
+    "untrigger",
+    "strip-markers",
+    "journal",
+    "validate",
+    "stats",
+    "prune",
+    "import-md"
+  ],
+  "usage": {
+    "query": {
+      "usage": "agentsmesh lessons query [--file <path>] [--cmd <command>] [--keyword <text>] [--always] [--format plain|md|json] [--top <n>] [--all] [--max-tokens <n>] [--session <id>] [--no-dedup] [--ids]",
+      "example": "agentsmesh lessons query --file src/app/page.tsx --cmd \"git commit -m wip\""
+    },
+    "add": {
+      "usage": "agentsmesh lessons add \"<rule>\" --topic <id> [--trigger-file <glob>]... [--trigger-cmd <regex>]... [--trigger-kw <text>]... [--evidence <ref>]... [--rationale <text>] [--new-topic --topic-summary \"...\"] [--scope always]",
+      "example": "agentsmesh lessons add \"Run tsc --noEmit before committing type changes\" --topic build --trigger-file \"src/**/*.ts\" --evidence commit:abc1234"
+    },
+    "topics": {
+      "usage": "agentsmesh lessons topics"
+    },
+    "show": {
+      "usage": "agentsmesh lessons show <topic|lesson-id>",
+      "example": "agentsmesh lessons show build",
+      "summary": "a topic, or one lesson by id with its triggers resolved"
+    },
+    "deprecate": {
+      "usage": "agentsmesh lessons deprecate <id> [--superseded-by <id>]",
+      "example": "agentsmesh lessons deprecate build-old-rule --superseded-by build-new-rule"
+    },
+    "merge": {
+      "usage": "agentsmesh lessons merge <loser-id> <keeper-id>",
+      "example": "agentsmesh lessons merge build-duplicate build-canonical"
+    },
+    "untrigger": {
+      "usage": "agentsmesh lessons untrigger <lesson-id> <trigger-id>",
+      "example": "agentsmesh lessons untrigger build-old-rule t-kw-8bdcf7aa",
+      "summary": "detach a trigger; GCs it if now unused"
+    },
+    "strip-markers": {
+      "usage": "agentsmesh lessons strip-markers [--dry-run]",
+      "example": "agentsmesh lessons strip-markers --dry-run"
+    },
+    "journal": {
+      "usage": "agentsmesh lessons journal"
+    },
+    "validate": {
+      "usage": "agentsmesh lessons validate"
+    },
+    "stats": {
+      "usage": "agentsmesh lessons stats [--json]",
+      "summary": "recall telemetry summary; needs AGENTSMESH_LESSONS_TELEMETRY=1"
+    },
+    "prune": {
+      "usage": "agentsmesh lessons prune [--apply] [--cap <n>]",
+      "example": "agentsmesh lessons prune --apply",
+      "summary": "dry-run by default; trims over-cap lessons + dead triggers"
+    },
+    "import-md": {
+      "usage": "agentsmesh lessons import-md [--merge] [--force] [--migrated-at <ISO date>]",
+      "example": "agentsmesh lessons import-md --merge"
+    }
+  },
+  "globalFlags": [
+    "json",
+    "verbose",
+    "help"
+  ],
+  "knownFlags": {
+    "query": [
+      "file",
+      "cmd",
+      "command",
+      "keyword",
+      "always",
+      "format",
+      "top",
+      "all",
+      "max-tokens",
+      "session",
+      "no-dedup",
+      "ids"
+    ],
+    "add": [
+      "rule",
+      "topic",
+      "trigger-file",
+      "trigger-cmd",
+      "trigger-kw",
+      "evidence",
+      "rationale",
+      "new-topic",
+      "topic-summary",
+      "scope"
+    ],
+    "topics": [],
+    "show": [],
+    "deprecate": [
+      "superseded-by"
+    ],
+    "merge": [],
+    "untrigger": [],
+    "strip-markers": [
+      "dry-run"
+    ],
+    "journal": [],
+    "validate": [],
+    "stats": [
+      "json"
+    ],
+    "prune": [
+      "apply",
+      "cap"
+    ],
+    "import-md": [
+      "merge",
+      "force",
+      "migrated-at"
+    ]
+  },
+  "mcpTools": [
+    {
+      "name": "lessons_query",
+      "description": "Recall primitive — return active lessons whose triggers match the supplied (file, command, keyword) predicates, relevance-ranked (trigger specificity + per-query topic coherence + BM25 over rule text) and capped to `limit` (default 10). Pass at least one predicate OR `always:true` (a call with neither is rejected); always include `file` for an edit and `command` for a shell command — keyword-only recall misses file/command-scoped lessons. `always:true` additionally prepends the universal always-on lessons. Returns compact `{id, rule}` by default; pass `verbose:true` for topics/triggers/evidence/score. Excludes deprecated and superseded lessons.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "file": {
+            "description": "Project-relative path of the file about to be edited.",
+            "type": "string"
+          },
+          "command": {
+            "description": "Shell command about to be executed (CLI flag: --cmd).",
+            "type": "string"
+          },
+          "cmd": {
+            "description": "Alias of `command` (matches the CLI `--cmd` flag). Use `command` if unsure.",
+            "type": "string"
+          },
+          "keyword": {
+            "description": "Free-form description of the active task.",
+            "type": "string"
+          },
+          "limit": {
+            "description": "Max ranked lessons to return (default 10). Results are relevance-ranked.",
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "max_tokens": {
+            "description": "Cap results by cumulative estimated rule-token cost (CLI flag: --max-tokens).",
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "max-tokens": {
+            "description": "Alias of `max_tokens` (matches the CLI `--max-tokens` flag).",
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "verbose": {
+            "description": "Include topics/triggers/evidence/score. Default false (compact: id + rule only).",
+            "type": "boolean"
+          },
+          "always": {
+            "description": "Include the UNIVERSAL always-on lessons (standards that apply to every task, e.g. comment/test conventions) — they are excluded from triggered recall and delivered here. Set true at task start; no predicate is required when `always` is the only field.",
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "lessons_add",
+      "description": "Capture primitive — atomically add a new lesson. At least one EFFECTIVE trigger is REQUIRED — the add is rejected (UNRECALLABLE_LESSON, exit 2) when every trigger is dead on the mandatory file/command recall path (a stopword-only keyword whose needle loses all tokens to stopword filtering, or an invalid/ReDoS command regex). A lesson with a mix of live and dead triggers is NOT rejected. Prefer a precise `trigger_files` glob, the most reliable trigger. Deduplicates triggers against the graph. Idempotent on repeat (same rule + topic → same id, no duplicate triggers). Returns non-blocking `warnings` (trigger-hygiene nudges: oversized trigger set, broad globs, keyword-only, dead glob matching no file in the working tree [DEAD_GLOB], or rule closely paraphrasing an existing active lesson [NEAR_DUPLICATE_LESSON]) — heed them by preferring a few specific triggers.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "rule": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Imperative rule that prevents recurrence."
+          },
+          "topic": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Topic id. Use new_topic + topic_summary to create one."
+          },
+          "trigger_files": {
+            "description": "file_glob triggers (e.g. [\"src/cli/**/*.ts\"] or a single \"src/**\").",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "trigger_file": {
+            "description": "Alias of `trigger_files` (matches the CLI `--trigger-file` flag).",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "trigger_commands": {
+            "description": "command_pattern triggers — regexes matched against shell commands.",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "trigger_cmd": {
+            "description": "Alias of `trigger_commands` (matches the CLI `--trigger-cmd` flag).",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "trigger_keywords": {
+            "description": "keyword triggers — case-insensitive substrings of task descriptions.",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "trigger_kw": {
+            "description": "Alias of `trigger_keywords` (matches the CLI `--trigger-kw` flag).",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "evidence": {
+            "description": "Evidence references (commit:SHA, lesson:id, …). A scalar may be comma-separated.",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "rationale": {
+            "description": "Optional one-line \"why\" behind the rule.",
+            "type": "string"
+          },
+          "new_topic": {
+            "description": "Allow creating a new topic if missing.",
+            "type": "boolean"
+          },
+          "topic_summary": {
+            "description": "Required when new_topic creates a topic. One-line summary.",
+            "type": "string"
+          },
+          "scope": {
+            "description": "Set \"always\" for a UNIVERSAL always-on lesson (a standard that applies to every task, e.g. a comment/test convention) — it needs no trigger and is delivered on every task instead of matched. Omit for a normal triggered lesson.",
+            "type": "string",
+            "const": "always"
+          }
+        },
+        "required": [
+          "rule",
+          "topic"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "lessons_topics",
+      "description": "List every topic id and summary — call before lessons_add to choose a valid --topic instead of guessing (which would create an unintended new topic).",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "lessons_show",
+      "description": "Inspect a topic — return its summary and every lesson under it (id, rule, status, triggers, evidence), including deprecated/superseded ones. Use to find the id of a stale lesson before lessons_deprecate.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "topic": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Topic id to inspect (see lessons_topics)."
+          }
+        },
+        "required": [
+          "topic"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "lessons_deprecate",
+      "description": "Curation primitive — retire a lesson so recall stops returning it. With `superseded_by` the lesson is marked superseded by that replacement; without it the lesson is plainly deprecated. Throws on an unknown lesson or superseder.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Lesson id to retire (see lessons_show)."
+          },
+          "superseded_by": {
+            "description": "Replacement lesson id; omit for a plain deprecation.",
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

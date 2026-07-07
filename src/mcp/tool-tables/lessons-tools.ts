@@ -36,6 +36,12 @@ const LessonsQueryInput = z
       .boolean()
       .optional()
       .describe('Include topics/triggers/evidence/score. Default false (compact: id + rule only).'),
+    always: z
+      .boolean()
+      .optional()
+      .describe(
+        'Include the UNIVERSAL always-on lessons (standards that apply to every task, e.g. comment/test conventions) — they are excluded from triggered recall and delivered here. Set true at task start; no predicate is required when `always` is the only field.',
+      ),
   })
   .strict();
 
@@ -74,6 +80,12 @@ const LessonsAddInput = z
       .string()
       .optional()
       .describe('Required when new_topic creates a topic. One-line summary.'),
+    scope: z
+      .literal('always')
+      .optional()
+      .describe(
+        'Set "always" for a UNIVERSAL always-on lesson (a standard that applies to every task, e.g. a comment/test convention) — it needs no trigger and is delivered on every task instead of matched. Omit for a normal triggered lesson.',
+      ),
   })
   .strict();
 
@@ -81,7 +93,7 @@ export const LESSONS_TOOL_DESCRIPTORS: ToolDescriptor[] = [
   {
     name: 'lessons_query',
     description:
-      'Recall primitive — return active lessons whose triggers match the supplied (file, command, keyword) predicates, relevance-ranked (trigger specificity + per-query topic coherence + BM25 over rule text) and capped to `limit` (default 10). Pass at least one predicate (a predicate-less call is rejected); always include `file` for an edit and `command` for a shell command — keyword-only recall misses file/command-scoped lessons. Returns compact `{id, rule}` by default; pass `verbose:true` for topics/triggers/evidence/score. Excludes deprecated and superseded lessons.',
+      'Recall primitive — return active lessons whose triggers match the supplied (file, command, keyword) predicates, relevance-ranked (trigger specificity + per-query topic coherence + BM25 over rule text) and capped to `limit` (default 10). Pass at least one predicate OR `always:true` (a call with neither is rejected); always include `file` for an edit and `command` for a shell command — keyword-only recall misses file/command-scoped lessons. `always:true` additionally prepends the universal always-on lessons. Returns compact `{id, rule}` by default; pass `verbose:true` for topics/triggers/evidence/score. Excludes deprecated and superseded lessons.',
     inputSchema: LessonsQueryInput,
     handler: (ctx, i) => lessonsHandlers.query(ctx, i as never),
   },

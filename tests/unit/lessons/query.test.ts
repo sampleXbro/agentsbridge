@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { LessonsGraph } from '../../../src/lessons/graph-schema.js';
-import { collectMatchedTriggersByKind, queryLessons } from '../../../src/lessons/query.js';
+import {
+  collectAlwaysLessons,
+  collectMatchedTriggersByKind,
+  queryLessons,
+} from '../../../src/lessons/query.js';
 
 const graph: LessonsGraph = {
   version: 1,
@@ -106,6 +110,29 @@ describe('queryLessons', () => {
 
   it('returns empty when no predicate is supplied', () => {
     expect(queryLessons(graph, {})).toEqual([]);
+  });
+
+  it('excludes always-on lessons from triggered recall but collects them separately', () => {
+    // An always-lesson that ALSO matches a file trigger must NOT surface via
+    // queryLessons (it is delivered on every task), but collectAlwaysLessons returns it.
+    const g: LessonsGraph = {
+      version: 2,
+      lessons: {
+        'always-one': {
+          rule: 'A.',
+          topics: ['t'],
+          triggers: ['t-src-glob'],
+          evidence: [],
+          status: 'active',
+          scope: 'always',
+          createdAt: '2026-06-01',
+        },
+      },
+      topics: { t: { summary: 'T.' } },
+      triggers: { 't-src-glob': { kind: 'file_glob', pattern: 'src/**' } },
+    };
+    expect(queryLessons(g, { file: 'src/a.ts' })).toEqual([]);
+    expect(collectAlwaysLessons(g).map((m) => m.id)).toEqual(['always-one']);
   });
 
   it('collectMatchedTriggersByKind partitions matched trigger ids by kind', () => {

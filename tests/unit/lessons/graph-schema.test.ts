@@ -40,6 +40,35 @@ describe('parseGraph', () => {
     expect(g.triggers).toEqual({});
   });
 
+  it('accepts a v2 graph and an always-scoped, trigger-less lesson', () => {
+    const g = parseGraph({
+      version: 2,
+      lessons: {
+        'always-one': {
+          rule: 'Write comments per the repo style.',
+          topics: ['style'],
+          triggers: [],
+          evidence: [],
+          status: 'active',
+          scope: 'always',
+          createdAt: '2026-06-05',
+        },
+      },
+      topics: { style: { summary: 'Style.' } },
+      triggers: {},
+    });
+    expect(g.version).toBe(2);
+    expect(g.lessons['always-one']?.scope).toBe('always');
+  });
+
+  it('rejects a scope value other than "always"', () => {
+    const bad = clone() as typeof goodGraph & {
+      lessons: { 'rule-one': { scope?: string } };
+    };
+    bad.lessons['rule-one'].scope = 'sometimes';
+    expect(() => parseGraph(bad)).toThrow();
+  });
+
   it('accepts optional rationale and supersededBy', () => {
     const bad = clone();
     bad.lessons['rule-one'] = {

@@ -3,7 +3,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { injectRecallHook, RECALL_HOOK_COMMAND } from '../../../src/lessons/recall-hook-scaffold.js';
+import {
+  injectRecallHook,
+  RECALL_HOOK_COMMAND,
+} from '../../../src/lessons/recall-hook-scaffold.js';
 
 let root: string;
 const hooksPath = (): string => join(root, '.agentsmesh', 'hooks.yaml');
@@ -14,16 +17,20 @@ beforeEach(() => {
 });
 afterEach(() => rmSync(root, { recursive: true, force: true }));
 
-function eventCommands(event: 'PreToolUse' | 'PostToolUse'): string[] {
+type Ev = 'PreToolUse' | 'PostToolUse' | 'UserPromptSubmit' | 'PostToolUseFailure' | 'SessionStart';
+function eventEntries(event: Ev): Array<{ command?: string; matcher?: string }> {
   const parsed = parseYaml(readFileSync(hooksPath(), 'utf8')) as Record<
     string,
-    Array<{ command?: string }> | undefined
+    Array<{ command?: string; matcher?: string }> | undefined
   >;
-  return (parsed[event] ?? []).map((h) => h.command ?? '');
+  return parsed[event] ?? [];
+}
+function eventCommands(event: Ev): string[] {
+  return eventEntries(event).map((h) => h.command ?? '');
 }
 
 describe('injectRecallHook', () => {
-  it('adds a PreToolUse (first-touch) + PostToolUse recall hook, preserving directive + comments', () => {
+  it('adds PreToolUse + PostToolUse + UserPromptSubmit recall hooks, preserving directive + comments', () => {
     writeFileSync(
       hooksPath(),
       '# yaml-language-server: $schema=./schema.json\n# Lifecycle hooks — example\n',
@@ -35,6 +42,18 @@ describe('injectRecallHook', () => {
     expect(text).toContain('# Lifecycle hooks — example');
     expect(eventCommands('PreToolUse')).toContain(RECALL_HOOK_COMMAND);
     expect(eventCommands('PostToolUse')).toContain(RECALL_HOOK_COMMAND);
+    // UserPromptSubmit carries the task text — the only event that can recall
+    // keyword/conceptual lessons against task intent. It has no tool matcher.
+    expect(eventCommands('UserPromptSubmit')).toContain(RECALL_HOOK_COMMAND);
+    const prompt = eventEntries('UserPromptSubmit').find((h) => h.command === RECALL_HOOK_COMMAND);
+    expect(prompt?.matcher).toBe('*');
+    // Tool-call events keep the mutating-tool matcher.
+    const pre = eventEntries('PreToolUse').find((h) => h.command === RECALL_HOOK_COMMAND);
+    expect(pre?.matcher).toBe('Edit|Write|Bash');
+    // PostToolUseFailure carries the capture-on-failure nudge (best-effort; Claude only).
+    expect(eventCommands('PostToolUseFailure')).toContain(RECALL_HOOK_COMMAND);
+    // SessionStart resets recall dedup after a context compaction (best-effort).
+    expect(eventCommands('SessionStart')).toContain(RECALL_HOOK_COMMAND);
   });
 
   it('is idempotent by command — a second run adds nothing and changes nothing', () => {
@@ -45,6 +64,13 @@ describe('injectRecallHook', () => {
     expect(readFileSync(hooksPath(), 'utf8')).toBe(after1);
     expect(eventCommands('PreToolUse').filter((c) => c === RECALL_HOOK_COMMAND)).toHaveLength(1);
     expect(eventCommands('PostToolUse').filter((c) => c === RECALL_HOOK_COMMAND)).toHaveLength(1);
+    expect(eventCommands('UserPromptSubmit').filter((c) => c === RECALL_HOOK_COMMAND)).toHaveLength(
+      1,
+    );
+    expect(
+      eventCommands('PostToolUseFailure').filter((c) => c === RECALL_HOOK_COMMAND),
+    ).toHaveLength(1);
+    expect(eventCommands('SessionStart').filter((c) => c === RECALL_HOOK_COMMAND)).toHaveLength(1);
   });
 
   it('preserves an existing user PostToolUse hook and appends the recall one to each event', () => {
@@ -56,6 +82,9 @@ describe('injectRecallHook', () => {
     expect(injectRecallHook(root)).toBe(true);
     expect(eventCommands('PostToolUse')).toEqual(['npm run lint', RECALL_HOOK_COMMAND]);
     expect(eventCommands('PreToolUse')).toEqual([RECALL_HOOK_COMMAND]);
+    expect(eventCommands('UserPromptSubmit')).toEqual([RECALL_HOOK_COMMAND]);
+    expect(eventCommands('PostToolUseFailure')).toEqual([RECALL_HOOK_COMMAND]);
+    expect(eventCommands('SessionStart')).toEqual([RECALL_HOOK_COMMAND]);
   });
 
   it('does not create hooks.yaml when absent — only injects into an existing file', () => {

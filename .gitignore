@@ -27,8 +27,9 @@ Thumbs.db
 
 # Lessons — transient distill proposal (drained by distill:apply)
 .agentsmesh/lessons/distill-proposal.md
-# Lessons — opt-in recall telemetry log (runtime artifact, not canonical)
+# Lessons — opt-in telemetry logs (runtime artifacts, not canonical, per-machine)
 .agentsmesh/lessons/recall-log.jsonl
+.agentsmesh/lessons/outcome-log.jsonl
 # Agents e2e diagnostic report — rewritten with a fresh timestamp on every run
 # (see tests/e2e/agents.e2e.test.ts). Kept on disk to inspect the last run, not committed.
 tests/e2e/agents-last-run.md

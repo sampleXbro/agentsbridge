@@ -94,6 +94,24 @@
         "t-kw-6829f894"
       ]
     },
+    "agent-orchestration-when-spawning-review-audit-verify": {
+      "createdAt": "2026-07-04",
+      "evidence": [
+        "session:594556ae-968d-40b3-b628-6a4a67269511"
+      ],
+      "rationale": "On 2026-07-03 an adversarial code-review workflow used the default (full-tool) agent type; a verifier reverted src/lessons/hook.ts to stale HEAD, wiping uncommitted feature work — a recurrence of the 2026-06-05 lessons.json incident.",
+      "rule": "When spawning review/audit/verify subagents via the Workflow tool, set agentType:'Explore' (or another read-only profile) on EVERY agent() call — the default workflow agent has full tools and will run git checkout/restore/reset to \"clean up,\" silently reverting uncommitted work in the parent tree. Also add an explicit no-git-mutation line to the prompt, and git status/diff the tree after the workflow before trusting it.",
+      "status": "active",
+      "topics": [
+        "agent-orchestration"
+      ],
+      "triggers": [
+        "t-kw-606bb3e1",
+        "t-kw-3070d871",
+        "t-kw-20729232",
+        "t-kw-ab6ac577"
+      ]
+    },
     "ci-and-release-security-rule-1": {
       "createdAt": "2026-06-05",
       "evidence": [
@@ -721,6 +739,21 @@
       "triggers": [
         "t-glob-9f0a5990",
         "t-kw-364764c2"
+      ]
+    },
+    "fixture-and-assertion-discipline-in-path-equality-endswith-test": {
+      "createdAt": "2026-07-07",
+      "evidence": [
+        "lesson:fixture-and-assertion-discipline-rule-4"
+      ],
+      "rationale": "CI matrix includes windows-latest; join() yields backslashes there.",
+      "rule": "In path-equality/endsWith test assertions, normalize the native `join()` result with `.replaceAll('\\\\', '/')` (or `toPosixPath`) before comparing to a forward-slash literal — an un-normalized assertion passes on macOS/Linux but fails on Windows CI with 'expected false to be true'.",
+      "status": "active",
+      "topics": [
+        "fixture-and-assertion-discipline"
+      ],
+      "triggers": [
+        "t-glob-4c29ad88"
       ]
     },
     "fixture-and-assertion-discipline-in-vitest-a-vi-fn": {
@@ -2253,6 +2286,21 @@
         "t-kw-f7df0071"
       ]
     },
+    "init-the-lessons-scaffold-result-shape": {
+      "createdAt": "2026-07-04",
+      "evidence": [
+        "session:594556ae-968d-40b3-b628-6a4a67269511"
+      ],
+      "rationale": "Adding gitattributesUpdated required editing the interface in init.ts and the inline structural dup in command-result.ts; only the renderer usage surfaced the miss via tsc.",
+      "rule": "The lessons scaffold result shape is defined TWICE — ScaffoldLessonsResult in src/lessons/init.ts and a structural duplicate as InitData.lessons in src/cli/command-result.ts. When adding/removing a field, update BOTH: tsc only flags the renderer that READS a missing field, not the duplicated type definition, so a field added to one side silently type-checks until the renderer breaks.",
+      "status": "deprecated",
+      "topics": [
+        "init"
+      ],
+      "triggers": [
+        "t-glob-8148e382"
+      ]
+    },
     "init-the-standalone-agentsmesh-import-command": {
       "createdAt": "2026-06-27",
       "evidence": [],
@@ -3211,6 +3259,22 @@
         "t-kw-00447f91"
       ]
     },
+    "lessons-system-do-not-add-a-two": {
+      "createdAt": "2026-07-02",
+      "evidence": [
+        "tests/unit/lessons/keyword-match.test.ts"
+      ],
+      "rule": "Do NOT add a two-token minimum floor to keyword-match derived-haystack matching (keyword-match.ts containsRun path). Distinctive single-token keyword triggers ('subagent', 'checkout') firing on file/command tokens is DELIBERATE — keyword-match.test.ts asserts it. Single-token false positives ('test','config') are handled at CAPTURE time by the LOW_SIGNAL_KEYWORD/STOPWORD guardrails, not by a match-time floor. General rule: several lessons-recall 'improvements' (broad-glob general type, keyword floor, stopword-haystack) contradict the deliberate precision design — verify against keyword-match.test.ts and the merge-graph precision lesson before changing matcher semantics.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-7a175889",
+        "t-glob-5fa55e64",
+        "t-kw-012b2936"
+      ]
+    },
     "lessons-system-do-not-claim-javascript-regex": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -3400,6 +3464,24 @@
         "t-kw-6e2ad015"
       ]
     },
+    "lessons-system-for-lesson-trigger-scope-distinguish": {
+      "createdAt": "2026-07-05",
+      "evidence": [
+        "lesson:lessons-system-when-reviewing-or-authoring-a"
+      ],
+      "rationale": "Supersedes lessons-system-when-reviewing-or-authoring-a: field usage showed keyword triggers near-useless for cross-file reach (concept vocab absent from file paths); file-class globs are the working recurrence-surface mechanism.",
+      "rule": "For lesson-trigger scope, distinguish three kinds: a DISCOVERY-SITE pin (the single file a bug was found in — too narrow; it will NOT fire when the same general/library behavior recurs elsewhere), a FILE-CLASS glob (e.g. **/ui/*Selector*.tsx, **/lib/use*Form*.ts — the class of files where the behavior recurs; PRECISE and the correct recurrence surface for library/framework-behavior lessons), and a BROAD glob (src/** — HIGH_FANOUT noise, avoid). Trigger general/library-behavior lessons on the file-CLASS recurrence surface — NOT the discovery site, NOT a broad glob. Do NOT rely on keyword triggers for cross-file reach on the --file/--cmd path: a concept's vocabulary (labelInValue, useBlocker) rarely appears in the file paths where it recurs, so keyword triggers fire mainly on prompt text — the file-class glob is the reliable mechanism (production field evidence, 2026-07-05).",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-9d091cc6",
+        "t-glob-d40017a0",
+        "t-glob-c9dfc34a",
+        "t-glob-6c89621d"
+      ]
+    },
     "lessons-system-give-mandatory-lessons-recall-a": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -3489,6 +3571,55 @@
         "t-glob-c3684e2c",
         "t-kw-7dd5abb2",
         "t-kw-34b00283"
+      ]
+    },
+    "lessons-system-keyword-match-s-derived-haystack": {
+      "createdAt": "2026-07-05",
+      "evidence": [
+        "session:594556ae-968d-40b3-b628-6a4a67269511"
+      ],
+      "rationale": "Field evidence showed keyword recall near-useless because concept vocab is compressed into camelCase file identifiers; splitting sub-words (whole token retained) closes part of that gap without embeddings.",
+      "rule": "keyword-match's derived haystack (keyword-match.ts deriveHaystackTokens) now splits camelCase and ACRONYM→Word boundaries into sub-words WHILE retaining each identifier's whole lowercased token. So it stays backward compatible (whole-token matches still fire) and token-exact (no substring bleed — 'cat' still misses 'category'), but a distinctive sub-word keyword ('guard') now reaches camelCase-named files ('useLeaveGuard.ts'). It does NOT split lowercase-joined identifiers ('readonly'). When changing matcher semantics, retain the whole token for backward compatibility, keep it token-exact (no floor, no substring), and verify against keyword-match.test.ts.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-7a175889",
+        "t-glob-a3504901"
+      ]
+    },
+    "lessons-system-lesson-coverage-checks-hook-ts": {
+      "createdAt": "2026-07-05",
+      "evidence": [
+        "session:594556ae-968d-40b3-b628-6a4a67269511"
+      ],
+      "rationale": "Two independent review agents flagged the raw-vs-normalized asymmetry as a bug and recommended normalizing the coverage query, which would break command_pattern coverage.",
+      "rule": "Lesson COVERAGE checks (hook.ts hasCoveringLesson) must query with the RAW command, NOT the normalized contextKey class. A command_pattern trigger is a regex matched against the FULL command, so normalizing 'git commit -m x' to the class 'git commit' makes a trigger like /git commit -m/ miss → false 'uncovered' escalations. The asymmetry is deliberate: the recurrence KEY (contextKey/normalizeCommand) normalizes to GROUP failures by action; the coverage QUERY uses the raw command to MATCH triggers accurately. Do not \"fix\" this into consistency.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-71b4b110",
+        "t-glob-e3bd9564",
+        "t-glob-d7206b5d"
+      ]
+    },
+    "lessons-system-lessons-split-by-reach-named": {
+      "createdAt": "2026-07-03",
+      "evidence": [
+        "lessons-system-do-not-add-a-two"
+      ],
+      "rule": "Lessons split by REACH: named-conceptual (concept appears in the task text → keyword trigger + UserPromptSubmit recall); scoped (file_glob/command_pattern); and AMBIENT/universal — applies to every task but is named by NO query (e.g. 'comment style' on prompt 'add a feature'). No query-based recall (keyword OR semantic) can surface an ambient lesson, so it needs scope:'always' (graph-tracked, no trigger, delivered on every task via the UserPromptSubmit hook + 'lessons query --always'). scope:'always' is DISTINCT from a broad file_glob (still forbidden — dilutes triggered precision): it is not matched at all, just always delivered. Don't try to fix ambient recall by widening globs or adding a keyword — use scope:always.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-f6905ae6",
+        "t-glob-a93a3ef5",
+        "t-kw-aa93e0e6"
       ]
     },
     "lessons-system-list-existing-lesson-topics-before": {
@@ -3742,6 +3873,38 @@
       ],
       "triggers": []
     },
+    "lessons-system-scope-always-lessons-are-delivered": {
+      "createdAt": "2026-07-03",
+      "evidence": [
+        "src/targets/projection/lessons-always.ts"
+      ],
+      "rule": "scope:'always' lessons are delivered RULE-PARITY: renderAlwaysLessonsBlock (lessons-always.ts) is projected at GENERATE time by the root-instruction-decorator into every target's root instruction as binding directives — NOT by trigger recall (they have no trigger). Graph schema is v2 with LAZY version stamping (graphSchemaVersion: v2 only when a lesson has a scope, else v1) so a project that never uses --always keeps a v1 graph older CLIs still read; the schema version accepts 1|2. The always-block MUST be stripped on import (stripAlwaysLessonsBlock in import-metadata-core) or it round-trips into canonical _root.md. applyAlwaysLessonsBlock is a VERBATIM no-op when there's no block and none present, so projects without always-lessons keep byte-identical generated output.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-f6905ae6",
+        "t-glob-b1aaff05",
+        "t-kw-f169d21b"
+      ]
+    },
+    "lessons-system-session-recall-dedup-seen-cache": {
+      "createdAt": "2026-07-03",
+      "evidence": [
+        "lessons-system-when-wiring-lessons-recall-hooks"
+      ],
+      "rule": "Session recall dedup (seen-cache) assumes a delivered lesson STAYS in the model's context — but a long chat gets compacted/summarized and can drop it, while dedup (keyed by session_id, which survives compaction) keeps suppressing it: the two desync and the lesson is lost. Tie dedup to the CONTEXT lifecycle, not the wall clock: on SessionStart source 'compact'/'clear' (Claude Code fires this; source in startup|resume|clear|compact), clearSeen() so the next recall re-injects. startup/resume KEEP the set (resume restores prior context). A blind TTL only approximates this — SessionStart(compact) is the exact signal.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-405208da",
+        "t-glob-71b4b110",
+        "t-kw-cca8cf8e"
+      ]
+    },
     "lessons-system-split-lessons-modules-by-responsibility": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -3769,6 +3932,37 @@
         "t-glob-8148e382"
       ]
     },
+    "lessons-system-the-effectiveness-derivation-effectivene": {
+      "createdAt": "2026-07-06",
+      "evidence": [
+        "session:594556ae-968d-40b3-b628-6a4a67269511"
+      ],
+      "rationale": "Added an effectiveness/benefit block to lessons stats; the outcome-log signal now has three consumers and one shared threshold, and the held-rate metric must stay honestly labeled.",
+      "rule": "The effectiveness derivation (effectiveness() in outcome-log.ts) now feeds THREE outputs that must stay consistent: recall down-ranking (loadEffectiveness → ranking), the validate health view (collectHealthFindings), and the lessons-stats effectiveness block (summarizeEffectiveness). The ineffective threshold is single-sourced as INEFFECTIVE_MIN_DELIVERIES (exported from validate-health) — reuse it, don't re-hardcode. Stats presents 'held rate' as a COARSE upper bound (a delivery with no recorded repeat ≠ proof of prevention) — never label it as mistakes prevented.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-c88404c0",
+        "t-glob-5c14835c",
+        "t-glob-e3bd9564"
+      ]
+    },
+    "lessons-system-the-lessons-preload-block-preload": {
+      "createdAt": "2026-07-02",
+      "evidence": [
+        "src/lessons/preload.ts"
+      ],
+      "rule": "The lessons preload block (preload.ts, injectLessonsPreload) is DYNAMIC (graph-derived) but lives in STATIC canonical .agentsmesh/rules/_root.md as a managed block. It refreshes only on scaffoldLessons (init --lessons / import), NOT on generate or capture — so it goes stale as the graph grows between inits. Deliberate: refreshing on capture would git-churn a tracked file every 'lessons add', and refreshing on generate would make generate mutate canonical source. If freshness matters, re-run 'init --lessons', or add a generate-time refresh (a UX trade-off: generate then mutates _root.md).",
+      "status": "deprecated",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-8148e382"
+      ]
+    },
     "lessons-system-the-recall-contract-lessons-procedural": {
       "createdAt": "2026-06-10",
       "evidence": [
@@ -3782,6 +3976,37 @@
       "triggers": [
         "t-glob-db7e480d",
         "t-glob-c1deac29"
+      ]
+    },
+    "lessons-system-the-recall-hook-hook-ts": {
+      "createdAt": "2026-07-06",
+      "evidence": [
+        "session:594556ae-968d-40b3-b628-6a4a67269511"
+      ],
+      "rationale": "Effectiveness was blind because failures came only from the Claude-specific PostToolUseFailure event; broadening detection to any error-bearing payload makes it portable and fixes a latent delivery mis-record.",
+      "rule": "The recall hook (hook.ts) detects a tool FAILURE by EITHER hook_event_name==='PostToolUseFailure' OR a non-empty tool_error in the payload — so failure recording is portable to harnesses that signal errors on a normally-named tool-call event, not just Claude Code's dedicated failure event. A detected failure MUST route to the failure branch (recordFailure + capture nudge), never fall through to emitRecall, or the failed action is mis-recorded as a successful DELIVERY — inflating deliveries and corrupting the effectiveness held-rate.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-71b4b110"
+      ]
+    },
+    "lessons-system-to-deliver-conceptual-general-lessons": {
+      "createdAt": "2026-07-02",
+      "evidence": [
+        "lessons-system-the-lessons-preload-block-preload"
+      ],
+      "rule": "To deliver conceptual/general lessons to NON-HOOK targets, use PROSE-DRIVEN dynamic recall — the always-on paragraph (LESSONS_PROCEDURAL_RULE) + lessons skill instruct the agent to run 'lessons query --keyword \"<task terms>\"' (CLI) / lessons_query keyword (MCP) at task start. Do NOT build a static preload digest baked into _root.md: a query-less static block cannot be complete AND bounded AND relevant (a token cap silently drops the tail on a large graph), goes stale between init runs, and is redundant on hook targets. Dynamic recall queries the whole graph filtered to the task — always live.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-db7e480d",
+        "t-glob-ed0be781",
+        "t-kw-0af10961"
       ]
     },
     "lessons-system-treat-any-existing-lessons-graph": {
@@ -3908,13 +4133,13 @@
         "947735da"
       ],
       "rule": "When reviewing or authoring a lessons graph, do NOT flag narrow file_glob triggers — or trigger-narrowing across a supersede — as a recall regression, and never recommend re-widening a glob to cover a lesson's scope. The system deliberately optimizes for PRECISION: capture-guardrails warns on BROAD_GLOB_TRIGGER ('prefer a path specific to the lesson') and validate treats HIGH_FANOUT_TRIGGERS as a defect. Cross-file reach for general/conceptual lessons is the job of the KEYWORD trigger (conceptual-lesson reachability — keyword triggers fire on the mandatory --file/--cmd recall path), NOT of a broad glob. So the only legitimate question is scope-MATCH (does the lesson have a keyword trigger carrying its general reach?), not breadth. Narrow file_glob + a good keyword trigger is correct by design.",
-      "status": "active",
+      "status": "superseded",
+      "supersededBy": "lessons-system-for-lesson-trigger-scope-distinguish",
       "topics": [
         "lessons-system"
       ],
       "triggers": [
-        "t-glob-07cf19c0",
-        "t-kw-13ec26ba"
+        "t-glob-07cf19c0"
       ]
     },
     "lessons-system-when-scaffoldlessons-lessons-init-import": {
@@ -3962,6 +4187,37 @@
         "t-cmd-38934d6c"
       ]
     },
+    "lessons-system-when-wiring-lessons-recall-hooks": {
+      "createdAt": "2026-07-02",
+      "evidence": [
+        "code.claude.com/docs/en/hooks"
+      ],
+      "rule": "When wiring lessons recall hooks, only UserPromptSubmit carries the prompt/task text, so it is the ONLY event that can seed keyword recall over task intent; SessionStart (source/model only) and SubagentStart (agent_type only) carry NO task text and can deliver only curated/general lessons — do not try to keyword-recall from them. Verified vs code.claude.com/docs/en/hooks.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-71b4b110",
+        "t-glob-629e24b4",
+        "t-kw-d2cb2e25"
+      ]
+    },
+    "lessons-telemetry-before-proposing-an-istelemetryenabled-g": {
+      "createdAt": "2026-07-04",
+      "evidence": [
+        "src/lessons/recall.ts:138"
+      ],
+      "rule": "Before proposing an isTelemetryEnabled() gate around a lessons read like loadEffectiveness, verify the reader threads env and check tests that write the log under an explicit ON env yet call recallLessons with no process.env telemetry set — gating the read would break those reorder assertions since loadEffectiveness reads unconditionally by design.",
+      "status": "active",
+      "topics": [
+        "lessons-telemetry"
+      ],
+      "triggers": [
+        "t-glob-0a664e0b",
+        "t-cmd-3ef57d47"
+      ]
+    },
     "lessons-telemetry-run-the-test-suite-with": {
       "createdAt": "2026-06-08",
       "evidence": [],
@@ -3988,6 +4244,21 @@
       "triggers": [
         "t-glob-0571e0f3",
         "t-kw-574e42b9"
+      ]
+    },
+    "lessons-the-lessons-graph-has-no": {
+      "createdAt": "2026-07-03",
+      "evidence": [
+        "src/lessons/graph-schema.ts"
+      ],
+      "rule": "The lessons graph has NO generated JSON Schema in schemas/; it is validated only by the in-code Zod LessonsGraphSchema (src/lessons/graph-schema.ts) and is deliberately excluded from buildAllSchemas/generate-schemas.ts — for a graph-schema contract golden, mint it from z.toJSONSchema(LessonsGraphSchema), do not look for a schemas/lessons.json file.",
+      "status": "active",
+      "topics": [
+        "lessons"
+      ],
+      "triggers": [
+        "t-glob-3eaea188",
+        "t-kw-fcd36912"
       ]
     },
     "link-rebaser-deterministic-text-cleanup-transforms-ov": {
@@ -6257,6 +6528,22 @@
         "t-glob-0b59f983"
       ]
     },
+    "verification-workflow-when-a-shared-helper-extraction": {
+      "createdAt": "2026-07-03",
+      "evidence": [
+        "src/core/lint/shared/helpers.ts (unsupportedHookEventNames); tests/e2e/lint-capabilities.e2e.test.ts"
+      ],
+      "rationale": "A DRY extraction added new unit tests for the suppression but left tests/e2e/lint-capabilities.e2e.test.ts asserting gemini-cli warns on UserPromptSubmit (now a best-effort event) — only the full suite caught it.",
+      "rule": "When a shared-helper extraction intentionally changes lint/behavior output (e.g. unsupportedHookEventNames now silencing BEST_EFFORT_HOOK_EVENTS), grep EVERY test tier — e2e and integration, not just the unit tests you add alongside the refactor — for assertions on the OLD behavior and update the stragglers; unit-green does not prove the change fully propagated.",
+      "status": "active",
+      "topics": [
+        "verification-workflow"
+      ],
+      "triggers": [
+        "t-glob-b4b3fc5c",
+        "t-glob-6e7640eb"
+      ]
+    },
     "verification-workflow-when-locating-a-globally-installed": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -7111,6 +7398,9 @@
     "kilo-code-config-surface": {
       "summary": "Real current config-surface facts for the kilo-code target (kilo.jsonc keys, MCP/rules loading, plugin-only hooks)."
     },
+    "lessons": {
+      "summary": "Lessons subsystem architecture, frozen-API surfaces, and contract-test golden sources."
+    },
     "lessons-system": {
       "summary": "Lessons graph recall, capture, lifecycle, and storage contracts."
     },
@@ -7251,6 +7541,10 @@
     "t-cmd-3dd013c6": {
       "kind": "command_pattern",
       "pattern": "\\b(eslint|lint)\\b"
+    },
+    "t-cmd-3ef57d47": {
+      "kind": "command_pattern",
+      "pattern": "vitest.*effectiveness"
     },
     "t-cmd-3efc6ee1": {
       "kind": "command_pattern",
@@ -7668,6 +7962,10 @@
       "kind": "file_glob",
       "pattern": "src/core/reference/pack-skill-artifact-paths.ts"
     },
+    "t-glob-3eaea188": {
+      "kind": "file_glob",
+      "pattern": "src/schemas/schema-generator.ts"
+    },
     "t-glob-3edb9d76": {
       "kind": "file_glob",
       "pattern": "tests/integration/refresh-git-source.test.ts"
@@ -7675,6 +7973,10 @@
     "t-glob-40333e0c": {
       "kind": "file_glob",
       "pattern": "tests/**/reference-rewrite*.test.ts"
+    },
+    "t-glob-405208da": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/seen-cache.ts"
     },
     "t-glob-406306ec": {
       "kind": "file_glob",
@@ -7748,6 +8050,10 @@
       "kind": "file_glob",
       "pattern": "src/install/lock/install-lock.ts"
     },
+    "t-glob-5c14835c": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/stats-effectiveness.ts"
+    },
     "t-glob-5e0d226f": {
       "kind": "file_glob",
       "pattern": "package.json"
@@ -7755,6 +8061,10 @@
     "t-glob-5e91e1bb": {
       "kind": "file_glob",
       "pattern": "src/core/reference/**/*.ts"
+    },
+    "t-glob-5fa55e64": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/keyword-signal.ts"
     },
     "t-glob-60971e07": {
       "kind": "file_glob",
@@ -7807,6 +8117,14 @@
     "t-glob-6b98951d": {
       "kind": "file_glob",
       "pattern": "src/cli/commands/init-apply.ts"
+    },
+    "t-glob-6c89621d": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/trigger-effectiveness.ts"
+    },
+    "t-glob-6e7640eb": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/lint.ts"
     },
     "t-glob-6f2d56aa": {
       "kind": "file_glob",
@@ -7984,6 +8302,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/validate*.ts"
     },
+    "t-glob-9d091cc6": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/capture-guardrails.ts"
+    },
     "t-glob-9de1df62": {
       "kind": "file_glob",
       "pattern": "src/targets/*/generator/*.ts"
@@ -8008,6 +8330,10 @@
       "kind": "file_glob",
       "pattern": "src/targets/opencode/**"
     },
+    "t-glob-a3504901": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/ranking-text.ts"
+    },
     "t-glob-a386fcc3": {
       "kind": "file_glob",
       "pattern": "src/targets/deepagents-cli/generator.ts"
@@ -8015,6 +8341,10 @@
     "t-glob-a5fc7764": {
       "kind": "file_glob",
       "pattern": "tests/**/*posix*"
+    },
+    "t-glob-a93a3ef5": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/recall-always.ts"
     },
     "t-glob-a970d979": {
       "kind": "file_glob",
@@ -8040,6 +8370,10 @@
       "kind": "file_glob",
       "pattern": "src/targets/**"
     },
+    "t-glob-b1aaff05": {
+      "kind": "file_glob",
+      "pattern": "src/core/generate/root-instruction-decorator.ts"
+    },
     "t-glob-b1cdb41a": {
       "kind": "file_glob",
       "pattern": ".changeset/*.md"
@@ -8055,6 +8389,10 @@
     "t-glob-b47f5129": {
       "kind": "file_glob",
       "pattern": "src/install/run/install-replay.ts"
+    },
+    "t-glob-b4b3fc5c": {
+      "kind": "file_glob",
+      "pattern": "src/core/lint/shared/**/*.ts"
     },
     "t-glob-b80b011c": {
       "kind": "file_glob",
@@ -8100,6 +8438,10 @@
       "kind": "file_glob",
       "pattern": "src/targets/*/generator/hooks.ts"
     },
+    "t-glob-c88404c0": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/outcome-log.ts"
+    },
     "t-glob-c8eff4c3": {
       "kind": "file_glob",
       "pattern": "src/targets/factory-droid/importer.ts"
@@ -8136,9 +8478,17 @@
       "kind": "file_glob",
       "pattern": "src/lessons/import-legacy.ts"
     },
+    "t-glob-d40017a0": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/capture-nudge.ts"
+    },
     "t-glob-d458a5b8": {
       "kind": "file_glob",
       "pattern": "src/targets/catalog/target-descriptor.ts"
+    },
+    "t-glob-d7206b5d": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/context-key.ts"
     },
     "t-glob-d8072e60": {
       "kind": "file_glob",
@@ -8188,6 +8538,10 @@
       "kind": "file_glob",
       "pattern": "src/canonical/extends/**/*.ts"
     },
+    "t-glob-e3bd9564": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/validate-health.ts"
+    },
     "t-glob-e9606afe": {
       "kind": "file_glob",
       "pattern": ".agentsmesh/skills/**"
@@ -8212,6 +8566,10 @@
       "kind": "file_glob",
       "pattern": "src/targets/cline/mcp-mapper.ts"
     },
+    "t-glob-f6905ae6": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/graph-schema.ts"
+    },
     "t-glob-f8afe7f1": {
       "kind": "file_glob",
       "pattern": "src/targets/opencode/scoped-settings.ts"
@@ -8223,6 +8581,10 @@
     "t-kw-00447f91": {
       "kind": "keyword",
       "pattern": "regex equivalence"
+    },
+    "t-kw-012b2936": {
+      "kind": "keyword",
+      "pattern": "keyword floor"
     },
     "t-kw-04b69ea5": {
       "kind": "keyword",
@@ -8243,6 +8605,10 @@
     "t-kw-07fc7c10": {
       "kind": "keyword",
       "pattern": "lessons documentation"
+    },
+    "t-kw-0af10961": {
+      "kind": "keyword",
+      "pattern": "preload"
     },
     "t-kw-0bc71226": {
       "kind": "keyword",
@@ -8276,10 +8642,6 @@
       "kind": "keyword",
       "pattern": "qa report commit"
     },
-    "t-kw-13ec26ba": {
-      "kind": "keyword",
-      "pattern": "lessons trigger precision"
-    },
     "t-kw-1b4e1dda": {
       "kind": "keyword",
       "pattern": "reference-targets two chains outputPaths expectedRefs command path"
@@ -8295,6 +8657,10 @@
     "t-kw-20503645": {
       "kind": "keyword",
       "pattern": "regex safety"
+    },
+    "t-kw-20729232": {
+      "kind": "keyword",
+      "pattern": "review subagent"
     },
     "t-kw-20cd8977": {
       "kind": "keyword",
@@ -8428,6 +8794,10 @@
       "kind": "keyword",
       "pattern": "e2e round-trip stale dist rebuild importer contract passes e2e fails"
     },
+    "t-kw-606bb3e1": {
+      "kind": "keyword",
+      "pattern": "review workflow"
+    },
     "t-kw-6829f894": {
       "kind": "keyword",
       "pattern": "fork_context"
@@ -8516,6 +8886,14 @@
       "kind": "keyword",
       "pattern": "test placement"
     },
+    "t-kw-aa93e0e6": {
+      "kind": "keyword",
+      "pattern": "always-on lesson"
+    },
+    "t-kw-ab6ac577": {
+      "kind": "keyword",
+      "pattern": "adversarial review"
+    },
     "t-kw-abe95c07": {
       "kind": "keyword",
       "pattern": "work budget"
@@ -8568,9 +8946,17 @@
       "kind": "keyword",
       "pattern": "captureLesson"
     },
+    "t-kw-cca8cf8e": {
+      "kind": "keyword",
+      "pattern": "compaction"
+    },
     "t-kw-cfaa4738": {
       "kind": "keyword",
       "pattern": "global-only permissions scopeExtras generateX leaks project scope"
+    },
+    "t-kw-d2cb2e25": {
+      "kind": "keyword",
+      "pattern": "UserPromptSubmit"
     },
     "t-kw-d3364734": {
       "kind": "keyword",
@@ -8648,6 +9034,10 @@
       "kind": "keyword",
       "pattern": "canonicalize keys"
     },
+    "t-kw-f169d21b": {
+      "kind": "keyword",
+      "pattern": "always lesson"
+    },
     "t-kw-f3654aad": {
       "kind": "keyword",
       "pattern": "public export error class instanceof"
@@ -8667,7 +9057,11 @@
     "t-kw-fb5d542a": {
       "kind": "keyword",
       "pattern": "dispatch agent"
+    },
+    "t-kw-fcd36912": {
+      "kind": "keyword",
+      "pattern": "lessons json schema contract golden"
     }
   },
-  "version": 1
+  "version": 2
 }

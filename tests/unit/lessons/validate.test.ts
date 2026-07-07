@@ -432,7 +432,12 @@ describe('validateLessonsGraph', () => {
   });
 
   it('flags schema violations as errors before continuing to other checks', () => {
-    const broken = { version: 2, lessons: {}, topics: {}, triggers: {} } as unknown as LessonsGraph;
+    const broken = {
+      version: 99,
+      lessons: {},
+      topics: {},
+      triggers: {},
+    } as unknown as LessonsGraph;
     const r = validateLessonsGraph(broken);
     expect(r.ok).toBe(false);
     expect(r.findings.some((f) => f.code === 'SCHEMA_INVALID')).toBe(true);

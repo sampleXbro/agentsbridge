@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   inspectCapturedLesson,
   MAX_RECOMMENDED_TRIGGERS,
-  nearDuplicateWarning,
+  WIDE_GLOB_MATCH_COUNT,
 } from '../../../src/lessons/capture-guardrails.js';
+import { nearDuplicateWarning } from '../../../src/lessons/capture-near-duplicate.js';
 import type { Lesson, LessonsGraph, Trigger } from '../../../src/lessons/graph-schema.js';
 
 function graphWith(triggers: Record<string, Trigger>): LessonsGraph {
@@ -61,6 +62,37 @@ describe('inspectCapturedLesson', () => {
     },
   );
 
+  it('warns WIDE_GLOB_MATCH when a non-broad glob matches many working-tree files', () => {
+    const g = graphWith({ f: { kind: 'file_glob', pattern: 'src/lib/*.ts' } });
+    const paths = new Set(
+      Array.from({ length: WIDE_GLOB_MATCH_COUNT + 1 }, (_, i) => `src/lib/f${i}.ts`),
+    );
+    expect(inspectCapturedLesson(g, 'L', paths).map((w) => w.code)).toContain('WIDE_GLOB_MATCH');
+  });
+
+  it('does not warn WIDE_GLOB_MATCH when the glob matches few files', () => {
+    const g = graphWith({ f: { kind: 'file_glob', pattern: 'src/lib/*.ts' } });
+    const paths = new Set(['src/lib/a.ts', 'src/lib/b.ts']);
+    expect(inspectCapturedLesson(g, 'L', paths).map((w) => w.code)).not.toContain(
+      'WIDE_GLOB_MATCH',
+    );
+  });
+
+  it('does not double-flag a structurally-broad glob as WIDE_GLOB_MATCH (BROAD_GLOB owns it)', () => {
+    const g = graphWith({ f: { kind: 'file_glob', pattern: 'src/**/*.ts' } });
+    const paths = new Set(
+      Array.from({ length: WIDE_GLOB_MATCH_COUNT + 1 }, (_, i) => `src/x/f${i}.ts`),
+    );
+    const out = inspectCapturedLesson(g, 'L', paths).map((w) => w.code);
+    expect(out).toContain('BROAD_GLOB_TRIGGER');
+    expect(out).not.toContain('WIDE_GLOB_MATCH');
+  });
+
+  it('skips the breadth check when no working-tree paths are supplied (write-barrier path)', () => {
+    const g = graphWith({ f: { kind: 'file_glob', pattern: 'src/lib/*.ts' } });
+    expect(codes(g)).not.toContain('WIDE_GLOB_MATCH'); // codes() passes no knownPaths
+  });
+
   it('warns when a lesson has only keyword triggers (dormant on --file/--cmd recall)', () => {
     const g = graphWith({
       k1: { kind: 'keyword', pattern: 'auth' },
@@ -103,9 +135,7 @@ describe('inspectCapturedLesson', () => {
         pattern: 'antd Form.useForm getFieldsValue Select filterOption FormData generic cast',
       },
     });
-    expect(codes(g)).toEqual(
-      expect.arrayContaining(['KEYWORD_ONLY_LESSON', 'LOW_SIGNAL_KEYWORD']),
-    );
+    expect(codes(g)).toEqual(expect.arrayContaining(['KEYWORD_ONLY_LESSON', 'LOW_SIGNAL_KEYWORD']));
   });
 
   it('returns no warnings for a lean, specific lesson', () => {

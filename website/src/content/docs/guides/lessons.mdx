@@ -99,6 +99,8 @@ agentsmesh lessons query --file src/cli/foo.ts
 
 The graph is a normal git-tracked file. A lesson your agent learns today helps every teammate's agent tomorrow, every change shows up in pull requests like any other diff, and anything can be reverted with git.
 
+Every agent shares that one graph. A rule captured by one tool — Cursor, Aider, Claude Code, or any other — is recalled by all of them, because recall reaches each agent either through an automatic hook (on tools that support hooks) or the always-on lessons paragraph in its instructions, and any agent can query or capture through the CLI or the `lessons_query` / `lessons_add` MCP tools. One memory, every assistant.
+
 <Aside type="caution">
   Because `lessons.json` ships with the repo, its rules are project content — trusted at the same level as the code and the project's instruction files. Review a lesson graph from a cloned third-party repo as you would any other code you run. As a guardrail, recall truncates any single rule to 2000 characters and capture rejects longer ones, so a malformed rule cannot flood an agent's context.
 </Aside>
@@ -114,6 +116,10 @@ agentsmesh lessons validate        # schema + integrity + dead-trigger checks
 agentsmesh lessons prune           # curation report (dry-run); --apply writes
 agentsmesh lessons stats           # recall/capture telemetry (opt-in)
 ```
+
+<Aside type="note">
+  Turn on **effectiveness tracking** with `export AGENTSMESH_LESSONS_TELEMETRY=1`. agentsmesh then records whether a delivered lesson actually prevented the repeat, quietly **down-ranks rules that never help**, and `validate` starts flagging `INEFFECTIVE_LESSON` (delivered but never helped) and `UNCOVERED_FAILURE` (a repeat failure with no lesson) as warnings. It is off by default (zero cost) and **per-machine** — the shared graph is your rules; effectiveness is measured against your own history.
+</Aside>
 
 ## Where to go next
 

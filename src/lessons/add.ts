@@ -6,11 +6,8 @@ import {
   UnrecallableLessonError,
 } from './add-errors.js';
 import type { AutoPruneSummary } from './auto-prune.js';
-import {
-  type GuardrailWarning,
-  inspectCapturedLesson,
-  nearDuplicateWarning,
-} from './capture-guardrails.js';
+import { type GuardrailWarning, inspectCapturedLesson } from './capture-guardrails.js';
+import { nearDuplicateWarning } from './capture-near-duplicate.js';
 import { MAX_RULE_LENGTH, type LessonsGraph } from './graph-schema.js';
 import { mutateLessonsGraph } from './mutate.js';
 import { blockingDeadTriggers } from './trigger-effectiveness.js';
@@ -37,6 +34,8 @@ export interface AddLessonInput {
   readonly evidence?: readonly string[];
   readonly rationale?: string;
   readonly createdAt?: string;
+  /** `'always'` = a universal always-on lesson (no trigger needed; gates skipped). */
+  readonly scope?: 'always';
 }
 
 export interface AddLessonOptions {
@@ -128,10 +127,15 @@ export function addLessonInto(
     graph.topics[input.topic] = { summary: options.topicSummary };
   }
 
+  // An ALWAYS-ON lesson (scope:'always') is delivered on every task, not matched
+  // by triggers, so it needs none — skip the trigger gates for it (as legacy-merge
+  // recovery also does).
+  const skipTriggerGates = options.allowNoTrigger === true || input.scope === 'always';
+
   // A lesson with no trigger can never be recalled. Enforce ≥1 trigger on the
   // RESULTING lesson (an upsert keeps the existing lesson's triggers, so it may
-  // pass no new ones). Skipped only by legacy-merge recovery.
-  if (options.allowNoTrigger !== true) {
+  // pass no new ones).
+  if (!skipTriggerGates) {
     const existingTriggers =
       existingId !== null ? (graph.lessons[existingId]?.triggers.length ?? 0) : 0;
     if (countInputTriggers(input.triggers) === 0 && existingTriggers === 0) {
@@ -146,10 +150,10 @@ export function addLessonInto(
   // to the warn-only guardrails). Computed on the merged set, so an upsert that
   // adds a dead trigger to an already-effective lesson is fine. command_pattern
   // deadness is deferred to the write barrier (see blockingDeadTriggers), so this
-  // block adds the keyword-dead case the barrier passes. Skipped only by
-  // legacy-merge recovery (same escape hatch as the NoTriggerError check above).
+  // block adds the keyword-dead case the barrier passes. Skipped for the same
+  // cases as the NoTriggerError check above (legacy-merge, always-on lessons).
   // A throw here aborts the transactional write, so nothing is persisted.
-  if (options.allowNoTrigger !== true) {
+  if (!skipTriggerGates) {
     const resultingTriggers =
       existingId !== null ? union(graph.lessons[existingId]!.triggers, triggerIds) : triggerIds;
     const blockingDead = blockingDeadTriggers(graph, resultingTriggers);
@@ -169,6 +173,8 @@ export function addLessonInto(
       ...(existing.rationale === undefined && input.rationale !== undefined
         ? { rationale: input.rationale }
         : {}),
+      // Re-capturing a rule with --scope always promotes it to always-on.
+      ...(input.scope === 'always' ? { scope: 'always' as const } : {}),
     };
     return {
       id: existingId,
@@ -190,6 +196,7 @@ export function addLessonInto(
     status: 'active',
     createdAt: input.createdAt ?? todayIso(),
     ...(input.rationale === undefined ? {} : { rationale: input.rationale }),
+    ...(input.scope === 'always' ? { scope: 'always' as const } : {}),
   };
   const warnings = inspectCapturedLesson(graph, id, options.knownPaths);
   const nearDup = nearDuplicateWarning(graph, id);

@@ -8,6 +8,7 @@ import type { LessonsGraph } from '../../../../src/lessons/graph-schema.js';
 import { saveLessonsGraph } from '../../../../src/lessons/graph-store.js';
 import { appendRecallRecord, TELEMETRY_ENV } from '../../../../src/lessons/telemetry.js';
 import { appendCaptureRecord } from '../../../../src/lessons/capture-telemetry.js';
+import { appendOutcomeEvent } from '../../../../src/lessons/outcome-log.js';
 
 let root: string;
 const on = { [TELEMETRY_ENV]: '1' };
@@ -55,6 +56,44 @@ describe('doStats', () => {
     expect(data.report.totalRecalls).toBe(0);
     // The graph still yields the static reachability gap.
     expect(data.report.reachability.keywordOnlyUnreachableLessons).toBe(1);
+  });
+
+  it('reports hasOutcomeLog=false with a neutral effectiveness block when no outcome log exists', () => {
+    saveLessonsGraph(root, graph);
+    const data = statsData(doStats({}, root));
+    expect(data.hasOutcomeLog).toBe(false);
+    expect(data.effectiveness).toEqual({
+      deliveries: 0,
+      lessonsDelivered: 0,
+      failuresObserved: 0,
+      heldRate: 1,
+      ineffectiveLessons: 0,
+    });
+  });
+
+  it('summarizes the benefit side from the outcome log', () => {
+    saveLessonsGraph(root, graph);
+    appendOutcomeEvent(
+      root,
+      {
+        ts: '2026-01-01T00:00:00Z',
+        kind: 'delivered',
+        lessonId: 'kw',
+        contextKey: 'file:src/x.ts',
+        session: 's1',
+      },
+      on,
+    );
+    appendOutcomeEvent(
+      root,
+      { ts: '2026-01-01T00:00:01Z', kind: 'failure', contextKey: 'file:src/x.ts', session: 's1' },
+      on,
+    );
+    const data = statsData(doStats({}, root));
+    expect(data.hasOutcomeLog).toBe(true);
+    expect(data.effectiveness.deliveries).toBe(1);
+    expect(data.effectiveness.failuresObserved).toBe(1);
+    expect(data.effectiveness.heldRate).toBe(0); // delivered, then the same action failed
   });
 
   it('reports telemetryEnabled=true when the env opts in', () => {

@@ -1,6 +1,6 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import type { MatchedLesson } from './query.js';
 import { sessionId as envSessionId } from './telemetry.js';
 
@@ -30,6 +30,14 @@ export interface OpenDedupOptions {
   /** Force dedup off (CLI `--no-dedup`) even when a correlator is present. */
   readonly disabled?: boolean;
   readonly env?: NodeJS.ProcessEnv;
+  /**
+   * Project root. Namespaces the seen file by a hash of the resolved root, so two
+   * projects sharing one fixed `AGENTSMESH_SESSION_ID` (e.g. a CI runner that
+   * exports it once) keep SEPARATE dedup state — otherwise project B inherits
+   * project A's "seen" set and suppresses coincidentally-colliding lesson ids.
+   * Omitted → the legacy flat path (unchanged behavior).
+   */
+  readonly projectRoot?: string;
 }
 
 /**
@@ -44,13 +52,37 @@ export function openSessionDedup(options: OpenDedupOptions = {}): SessionDedup |
       ? options.explicit.trim()
       : envSessionId(options.env);
   if (id === undefined) return null;
-  const path = seenPath(id);
+  const path = seenPath(id, options.projectRoot);
   return { sessionId: id, seen: loadSeen(path), path };
 }
 
-function seenPath(id: string): string {
+/** Short, stable, dependency-free hash (djb2) of a string, base-36. */
+function shortHash(value: string): string {
+  let h = 5381;
+  for (let i = 0; i < value.length; i += 1) h = ((h << 5) + h + value.charCodeAt(i)) >>> 0;
+  return h.toString(36);
+}
+
+function seenPath(id: string, projectRoot?: string): string {
   const safe = id.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 200);
-  return join(tmpdir(), SEEN_DIR, `${safe}.json`);
+  // Namespace by a hash of the resolved project root (per-project × per-session).
+  const scoped = projectRoot === undefined ? safe : `${safe}__${shortHash(resolve(projectRoot))}`;
+  return join(tmpdir(), SEEN_DIR, `${scoped}.json`);
+}
+
+/**
+ * Discard the per-session seen set, so subsequent recalls re-inject as if fresh.
+ * Called when the model's context was actually reset — a `SessionStart`
+ * `compact`/`clear` — so dedup (which assumes a delivered lesson stays in context)
+ * does not keep suppressing lessons the summarization dropped. Best-effort: a
+ * failed remove just leaves the stale set, degrading to today's behavior.
+ */
+export function clearSeen(sessionId: string, projectRoot?: string): void {
+  try {
+    rmSync(seenPath(sessionId, projectRoot), { force: true });
+  } catch {
+    // Never let a dedup-reset failure break the blocking recall path.
+  }
 }
 
 function loadSeen(path: string): Set<string> {

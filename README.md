@@ -143,6 +143,10 @@ The memory is one git-tracked file, `.agentsmesh/lessons/lessons.json`, and ever
 - **Recall** — before an edit or a state-changing command, the agent runs `agentsmesh lessons query --file <path> --cmd <command>` and follows the rules that match.
 - **Capture** — right after a failure (red test, lint error, review comment, wrong assumption), it saves the rule with `agentsmesh lessons add "<rule>" --topic <id> --trigger-file <glob>`.
 
+Rules can be **scoped** (fire only on a matching file, command, or keyword) or **always-on** (`--scope always`) for universal standards that apply to every task — delivered on each task automatically, no trigger needed.
+
+Opt in with `AGENTSMESH_LESSONS_TELEMETRY=1` and agentsmesh goes a step further — it tracks whether a recalled lesson actually **prevented** the repeat, quietly down-ranks rules that never help, and flags them in `agentsmesh lessons validate`. Off by default and per-machine; the shared graph is your rules, the effectiveness is your own history.
+
 In practice:
 
 ```bash
@@ -159,7 +163,7 @@ agentsmesh lessons query --file src/cli/output.ts
 agentsmesh init --lessons && agentsmesh generate   # wire the recall/capture loop once
 ```
 
-`init --lessons` drops a small always-on rule into `.agentsmesh/rules/_root.md` (so every target gets the habit), seeds the full operating manual as a `lessons` skill where supported, and wires a recall hook (a `PreToolUse` first-touch guard plus a `PostToolUse` fallback) on hook-capable tools; agents without shell access use the matching MCP tools (`lessons_query` / `lessons_add`). Because the graph is a normal git-tracked file, a lesson one agent learns today helps every teammate's agent tomorrow, and every change is reviewable like any other diff.
+`init --lessons` drops a small always-on rule into `.agentsmesh/rules/_root.md` (so every target gets the habit), seeds the full operating manual as a `lessons` skill where supported, and wires a recall hook on hook-capable tools — a `PreToolUse` first-touch guard plus a `PostToolUse` fallback for file/command scope, a `UserPromptSubmit` pass so conceptual (`keyword`) and always-on lessons recall against the **task text**, a `PostToolUseFailure` advisory nudge to capture at the moment something breaks, and a `SessionStart` reset so recall re-surfaces lessons a long chat has summarized away. Agents without shell access use the matching MCP tools (`lessons_query` / `lessons_add`). Because the graph is a normal git-tracked file, a lesson one agent learns today helps every teammate's agent tomorrow, and every change is reviewable like any other diff.
 
 Full walkthrough: [Teach your AI agents with lessons](https://samplexbro.github.io/agentsmesh/guides/lessons/) · [`agentsmesh lessons` reference](https://samplexbro.github.io/agentsmesh/cli/lessons/).
 

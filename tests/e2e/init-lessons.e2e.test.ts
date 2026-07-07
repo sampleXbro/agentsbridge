@@ -35,14 +35,19 @@ describe('agentsmesh init --lessons (e2e)', () => {
     expect(existsSync(join(tempDir, 'agentsmesh.yaml'))).toBe(true);
     expect(existsSync(join(tempDir, '.agentsmesh/lessons/lessons.json'))).toBe(true);
 
+    // Team merge driver: the committable .gitattributes binding is written, and the
+    // per-clone git-config half is surfaced as a setup hint.
+    expect(readFileSync(join(tempDir, '.gitattributes'), 'utf8')).toContain(
+      '.agentsmesh/lessons/lessons.json merge=agentsmesh-lessons',
+    );
+    expect(result.stdout).toContain('git config merge.agentsmesh-lessons.driver');
+
     const rootRule = readFileSync(join(tempDir, '.agentsmesh/rules/_root.md'), 'utf8');
     expect(rootRule).toContain('<!-- agentsmesh:lessons-contract:start -->');
     expect(rootRule).toContain('**Recall');
     expect(rootRule).toContain('**Capture');
     // The ritual leads the body, after frontmatter, above any other content.
-    expect(rootRule).toContain(
-      '---\n\n<!-- agentsmesh:lessons-contract:start -->',
-    );
+    expect(rootRule).toContain('---\n\n<!-- agentsmesh:lessons-contract:start -->');
   });
 
   it('generate projects both managed blocks at the TOP of the target root file', async () => {

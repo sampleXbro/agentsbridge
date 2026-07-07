@@ -4,7 +4,7 @@
  * merge ternary branches in update.
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtemp, rm, mkdir, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm, mkdir, writeFile, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { rulesHandlers } from '../../../../src/mcp/handlers/rules.js';
@@ -50,6 +50,19 @@ describe('canonical-factory edge branches', () => {
       code: 'IO_ERROR',
       details: { errno: 'EISDIR' },
     });
+  });
+
+  it('get rejects markdown files symlinked outside the feature dir', async () => {
+    const outside = await mkdtemp(join(tmpdir(), 'cf-edges-out-'));
+    try {
+      await writeFile(join(outside, 'secret.md'), '---\n---\n\nsecret\n', 'utf8');
+      await symlink(join(outside, 'secret.md'), join(projectRoot, '.agentsmesh/rules/linked.md'));
+      await expect(rulesHandlers.get(ctx, { name: 'linked' })).rejects.toMatchObject({
+        code: 'PATH_TRAVERSAL',
+      });
+    } finally {
+      await rm(outside, { recursive: true, force: true });
+    }
   });
 
   it('update throws IO_ERROR when target path is a directory', async () => {

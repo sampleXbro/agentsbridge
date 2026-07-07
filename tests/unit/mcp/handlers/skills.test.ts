@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtemp, rm, mkdir, writeFile, readFile, stat } from 'node:fs/promises';
+import { mkdtemp, rm, mkdir, writeFile, readFile, stat, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { skillsHandlers } from '../../../../src/mcp/handlers/skills.js';
@@ -7,6 +7,7 @@ import { resolveContext } from '../../../../src/mcp/context.js';
 import type { McpContext } from '../../../../src/mcp/context.js';
 
 let projectRoot: string;
+let outsideDir: string;
 let ctx: McpContext;
 
 async function makeSkill(
@@ -28,6 +29,7 @@ async function makeSkill(
 
 beforeEach(async () => {
   projectRoot = await mkdtemp(join(tmpdir(), 'skills-'));
+  outsideDir = await mkdtemp(join(tmpdir(), 'skills-out-'));
   await mkdir(join(projectRoot, '.agentsmesh/skills'), { recursive: true });
   await writeFile(
     join(projectRoot, 'agentsmesh.yaml'),
@@ -44,6 +46,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await rm(projectRoot, { recursive: true, force: true });
+  await rm(outsideDir, { recursive: true, force: true });
 });
 
 describe('skillsHandlers', () => {
@@ -67,6 +70,19 @@ describe('skillsHandlers', () => {
     expect(r.body).toBe('skill body\n');
     expect(r.frontmatter).toMatchObject({ name: 'my-skill', description: 'does things' });
     expect(r.supportingFiles).toEqual(['helper.md', 'template.ts']);
+  });
+
+  it('get rejects SKILL.md symlinked outside the skill dir', async () => {
+    await makeSkill('linked-skill', '---\ndescription: placeholder\n---\n\nbody\n');
+    await rm(join(projectRoot, '.agentsmesh/skills/linked-skill/SKILL.md'));
+    await writeFile(join(outsideDir, 'SKILL.md'), '---\n---\n\nsecret\n', 'utf8');
+    await symlink(
+      join(outsideDir, 'SKILL.md'),
+      join(projectRoot, '.agentsmesh/skills/linked-skill/SKILL.md'),
+    );
+    await expect(skillsHandlers.get(ctx, { name: 'linked-skill' })).rejects.toMatchObject({
+      code: 'PATH_TRAVERSAL',
+    });
   });
 
   // 4. get throws NOT_FOUND for missing skill
@@ -198,6 +214,28 @@ describe('skillsHandlers', () => {
       'utf8',
     );
     expect(newFile).toBe('brand new');
+  });
+
+  it('update rejects writes through symlinked supporting directories', async () => {
+    await symlink(outsideDir, join(projectRoot, '.agentsmesh/skills/my-skill/linked'), 'dir');
+    await expect(
+      skillsHandlers.update(ctx, {
+        name: 'my-skill',
+        supportingFiles: { 'linked/secret.md': 'secret' },
+      }),
+    ).rejects.toMatchObject({ code: 'PATH_TRAVERSAL' });
+  });
+
+  it('update rejects deletes through symlinked supporting directories', async () => {
+    await writeFile(join(outsideDir, 'secret.md'), 'secret', 'utf8');
+    await symlink(outsideDir, join(projectRoot, '.agentsmesh/skills/my-skill/linked'), 'dir');
+    await expect(
+      skillsHandlers.update(ctx, {
+        name: 'my-skill',
+        supportingFiles: { 'linked/secret.md': null },
+      }),
+    ).rejects.toMatchObject({ code: 'PATH_TRAVERSAL' });
+    expect(await readFile(join(outsideDir, 'secret.md'), 'utf8')).toBe('secret');
   });
 
   // 13. update honors dry_run (returns intended written/deleted lists, no fs writes)

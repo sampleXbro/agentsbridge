@@ -1,17 +1,20 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtemp, rm, mkdir, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm, mkdir, writeFile, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { safeRead } from '../../../../src/mcp/writers/safe-read.js';
 
 let projectRoot: string;
+let outsideDir: string;
 beforeEach(async () => {
   projectRoot = await mkdtemp(join(tmpdir(), 'saferead-'));
+  outsideDir = await mkdtemp(join(tmpdir(), 'saferead-out-'));
   await mkdir(join(projectRoot, '.agentsmesh/skills/example'), { recursive: true });
   await writeFile(join(projectRoot, '.agentsmesh/skills/example/helper.md'), 'help', 'utf8');
 });
 afterEach(async () => {
   await rm(projectRoot, { recursive: true, force: true });
+  await rm(outsideDir, { recursive: true, force: true });
 });
 
 describe('safeRead', () => {
@@ -23,6 +26,16 @@ describe('safeRead', () => {
   it('blocks traversal', async () => {
     await expect(
       safeRead({ projectRoot, skillName: 'example', filePath: '../../../etc/passwd' }),
+    ).rejects.toMatchObject({ code: 'PATH_TRAVERSAL' });
+  });
+  it('blocks symlinked files that escape the skill dir', async () => {
+    await writeFile(join(outsideDir, 'secret.md'), 'secret', 'utf8');
+    await symlink(
+      join(outsideDir, 'secret.md'),
+      join(projectRoot, '.agentsmesh/skills/example/secret.md'),
+    );
+    await expect(
+      safeRead({ projectRoot, skillName: 'example', filePath: 'secret.md' }),
     ).rejects.toMatchObject({ code: 'PATH_TRAVERSAL' });
   });
   it('throws NOT_FOUND for missing files', async () => {

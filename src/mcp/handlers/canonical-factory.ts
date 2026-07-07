@@ -5,6 +5,7 @@ import type { McpContext } from '../context.js';
 import { McpError } from '../errors.js';
 import { MAX_DIR_ENTRIES } from '../limits.js';
 import { safeWrite } from '../writers/safe-write.js';
+import { assertContainedPath } from '../writers/path-containment.js';
 import { parseMd, serializeMd } from '../writers/md-frontmatter.js';
 
 // Flat identifier only — `/` is intentionally excluded so canonical names
@@ -96,6 +97,12 @@ export function createCanonicalHandlers<TSummary>(
     async get(ctx, { name }) {
       checkName(name);
       const file = pathFor(ctx.projectRoot, feature, name);
+      await assertContainedPath({
+        root: featureDir(ctx.projectRoot),
+        target: file,
+        boundaryRoot: resolve(ctx.projectRoot, '.agentsmesh'),
+        message: `path escapes ${feature} directory`,
+      });
       try {
         const src = await readFile(file, 'utf8');
         const { frontmatter, body } = parseMd(src);
@@ -136,6 +143,12 @@ export function createCanonicalHandlers<TSummary>(
       checkName(name);
       const file = pathFor(ctx.projectRoot, feature, name);
       let current: { frontmatter: Record<string, unknown>; body: string };
+      await assertContainedPath({
+        root: featureDir(ctx.projectRoot),
+        target: file,
+        boundaryRoot: resolve(ctx.projectRoot, '.agentsmesh'),
+        message: `path escapes ${feature} directory`,
+      });
       try {
         const src = await readFile(file, 'utf8');
         current = parseMd(src);

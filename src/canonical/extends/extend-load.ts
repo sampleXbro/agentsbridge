@@ -31,9 +31,14 @@ function emptyCanonical(): CanonicalFiles {
 }
 
 /**
- * Load canonical files contributed by one extend entry.
+ * Load canonical files contributed by one extend entry. Takes only the
+ * discovery fields — the elevated-artifact consent gate (`isRemote`/`accept`)
+ * is applied by the caller after this returns, so they are intentionally
+ * excluded from the parameter type.
  */
-export async function loadCanonicalForExtend(ext: ResolvedExtend): Promise<CanonicalFiles> {
+export async function loadCanonicalForExtend(
+  ext: Omit<ResolvedExtend, 'isRemote' | 'accept'>,
+): Promise<CanonicalFiles> {
   const base = ext.resolvedPath;
 
   if (ext.as !== undefined) {

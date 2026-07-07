@@ -5,7 +5,6 @@
       "Bash(pnpm test:*)",
       "Bash(git add:*)",
       "Bash(npx vitest:*)",
-      "Bash(node -e \"console.log\\(['.windsurfrules', 'AGENTS.md'].sort\\(\\)\\)\")",
       "Bash(node -e \"console.log\\(['.windsurfrules', 'AGENTS.md'].sort\\(\\)\\)\":*)"
     ],
     "deny": [],
@@ -19,6 +18,15 @@
           {
             "type": "command",
             "command": "echo \"Running: $(jq -r '.tool_input.command' < /dev/stdin)\""
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "agentsmesh lessons hook"
           }
         ]
       }

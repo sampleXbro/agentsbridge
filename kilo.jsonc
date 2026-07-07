@@ -4,7 +4,6 @@
     "Bash(pnpm test:*)": "allow",
     "Bash(git add:*)": "allow",
     "Bash(npx vitest:*)": "allow",
-    "Bash(node -e \"console.log\\(['.windsurfrules', 'AGENTS.md'].sort\\(\\)\\)\")": "allow",
     "Bash(node -e \"console.log\\(['.windsurfrules', 'AGENTS.md'].sort\\(\\)\\)\":*)": "allow"
   }
 }

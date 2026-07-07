@@ -52,6 +52,7 @@ extends:
 | `features` | `string[]` | No | Which features to inherit. Omit to inherit all. |
 | `path` | `string` | No | Subdirectory within the source to look for config. |
 | `pick` | `object` | No | Cherry-pick specific named resources. |
+| `accept` | `string[]` | No | Consent to keep elevated artifacts (`hooks`, `permissions`, `mcp`) from a **remote** source. Stripped by default; ignored for local sources. |
 
 ## Source formats
 
@@ -115,6 +116,22 @@ AgentsMesh applies the following limits to every `extends:` and `install` fetch:
 - Canonical entity traversal — rules, commands, agents, and skill supporting files — does not follow symlinks, preventing a pack from pulling external bytes (e.g. `rules/notes.md -> ~/.ssh/id_rsa`) into canonical content and into a redistributed pack.
 - Git transports are allowlisted: `https` and `ssh` are permitted by default; `http` requires `AGENTSMESH_ALLOW_INSECURE_GIT=1`, `file` requires `AGENTSMESH_ALLOW_LOCAL_GIT=1`, and all other transports (`git://`, `ext::`, …) are refused — enforced on the `install` ref-resolution path as well as `extends:`.
 - Credentials are redacted from error output: `oauth2:<token>@`, `x-access-token:<token>@`, and any userinfo-bearing URL is masked (`https://***@host/...`) so tokens never leak into CI logs or terminal scrollback.
+
+## Elevated artifacts from remote sources
+
+`hooks`, `permissions`, and `mcp` control local code execution at generate time — a remote source that ships them effectively gets to run commands on your machine the next time the target agent fires the matching event. So when an `extends` source is **remote** (`github:`, `gitlab:`, `git+…`, including `git+file://`), those three artifacts are **stripped by default**, even when listed in `features`. A warning reports what was dropped.
+
+To merge them, opt in per-artifact with `accept:` on the entry — only what you list is kept:
+
+```yaml
+extends:
+  - name: company-base
+    source: github:my-org/ai-config@v1.0.0
+    features: [rules, hooks, permissions, mcp]
+    accept: [hooks, permissions, mcp]
+```
+
+**Local** extends (e.g. `../shared-config`) are trusted as-is and ignore `accept` — you already control those bytes. This mirrors the `--accept-*` flags on [`agentsmesh install`](../../cli/install/).
 
 ## Merge precedence
 

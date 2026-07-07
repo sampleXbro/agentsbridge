@@ -45,9 +45,17 @@ Every AI coding assistant ships a different configuration surface. Claude Code r
 
 AgentsMesh turns that spread into one editable source of truth. Put the real project instructions in `.agentsmesh/`, then generate native files for every enabled tool. Import goes the other direction, so existing tool configs can be adopted without starting from scratch.
 
+<div style="text-align: center; margin: 1.5rem 0;">
+  <img src="https://raw.githubusercontent.com/sampleXbro/agentsmesh/master/assets/generate-demo.gif" alt="agentsmesh detects existing tool configs, imports them into one source, and generates native config for every tool" style="max-width: 100%; border-radius: 8px;" />
+</div>
+
 ## Your agents learn from your repo
 
 Lessons give your AI coding agents a **memory of past mistakes**. When something goes wrong — a failing test, a code review comment, a wrong assumption — the agent captures a short rule. Before it touches the same files again, it recalls that rule automatically. Same mistake, never twice — in any tool, for every teammate, because the memory is one git-tracked file the whole team shares.
+
+<div style="text-align: center; margin: 1.5rem 0;">
+  <img src="https://raw.githubusercontent.com/sampleXbro/agentsmesh/master/assets/lessons-demo.gif" alt="an AI agent captures a lesson after a failure, then recalls it before editing the same file — by file, command, or keyword" style="max-width: 100%; border-radius: 8px;" />
+</div>
 
 ```bash
 # One-time setup

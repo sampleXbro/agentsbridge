@@ -173,6 +173,7 @@ export default defineConfig({
           label: 'Reference',
           items: [
             { label: 'Supported Tools Matrix', slug: 'reference/supported-tools' },
+            { label: 'Alternatives (vs Ruler / rulesync)', slug: 'reference/alternatives' },
             { label: 'Lessons Graph', slug: 'reference/lessons' },
             { label: 'Generation Pipeline', slug: 'reference/generation-pipeline' },
             { label: 'Managed Embedding', slug: 'reference/managed-embedding' },

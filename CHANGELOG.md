@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.29.0
+
+### Minor Changes
+
+- 663f0e6: Strip elevated artifacts from remote `extends` sources by default
+
+  `hooks`, `permissions`, and `mcp` contributed by a **remote** `extends` source (`github:`, `gitlab:`, `git+…`, including `git+file://`) are now stripped during config load unless the entry opts in with `accept: [hooks, permissions, mcp]`. This closes a gap where a remote `extends` could inject shell-executing config (settings hooks, MCP launch specs) without the per-artifact consent that `agentsmesh install` already requires. Local `extends` remain trusted as-is, and a warning reports anything that was stripped.
+
+### Patch Changes
+
+- 11f90bc: Harden plugin source containment against intermediate-symlink escapes
+
+  The plugin loader now canonicalizes an unresolvable source path against its nearest existing ancestor instead of falling back to the raw path. This closes a gap where a local plugin `source` routed through a symlinked directory that resolves outside the project root could slip past the trust-boundary check when its entry file did not exist yet. Legitimate in-project plugins are unaffected.
+
+- c647c9b: Docs: the README now leads with lessons (the shared agent memory), adds a head-to-head comparison with Ruler and rulesync, embeds demo GIFs, leads the quickstart with the import-first path for existing repos, and documents the new `extends` `accept:` consent. Documentation-only — no behavior change.
+
 ## 0.28.0
 
 ### Minor Changes

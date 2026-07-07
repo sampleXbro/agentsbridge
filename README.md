@@ -1,8 +1,10 @@
 <div align="center">
 
-# AgentsMesh — One `.agentsmesh/` Directory for Every AI Coding Tool
+# AgentsMesh
 
-<img src="https://raw.githubusercontent.com/sampleXbro/agentsmesh/master/assets/agentsmesh-banner.jpeg" alt="AgentsMesh — One source. Every AI coding tool. Always in sync." width="100%" />
+### One source for every AI coding tool — with a shared agent memory that learns from your repo.
+
+<img src="https://raw.githubusercontent.com/sampleXbro/agentsmesh/master/assets/agentsmesh-banner.jpeg" alt="AgentsMesh — One source. Every AI coding tool. Agents that learn." width="100%" />
 
 [![CI](https://github.com/sampleXbro/agentsmesh/actions/workflows/ci.yml/badge.svg)](https://github.com/sampleXbro/agentsmesh/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/agentsmesh.svg)](https://www.npmjs.com/package/agentsmesh)
@@ -22,6 +24,28 @@ Every AI coding assistant has its own config format — `CLAUDE.md`, `AGENTS.md`
 
 > [!NOTE]
 > Full documentation, guides, and the per-tool reference live at **[samplexbro.github.io/agentsmesh](https://samplexbro.github.io/agentsmesh/)**.
+
+## How AgentsMesh compares
+
+Most config tools stop at copying rule files into each assistant's folder. AgentsMesh is the only one that also gives your agents a **shared memory that learns**, round-trips **losslessly** in both directions, and lets anyone **add a new tool as a plugin** — no release required.
+
+| Capability | AgentsMesh | [Ruler](https://github.com/intellectronica/ruler) | [rulesync](https://github.com/dyoshikawa/rulesync) |
+|---|:---:|:---:|:---:|
+| Generate native config for many tools | ✅ | ✅ | ✅ |
+| Import existing tool config back to source | ✅ | — | ✅ |
+| **Lossless round-trip** (re-import restores originals) | ✅ | — | partial |
+| Convert one tool's config directly to another | ✅ | — | ✅ |
+| **Automatic cross-tool link rebasing** | ✅ | — | — |
+| **Lessons — a shared agent memory that learns** | ✅ | — | — |
+| **Plugins — add a target without a release** | ✅ | — | — |
+| Cross-target lint (warn before silent data loss) | ✅ | — | — |
+| CI drift gate + git-merge recovery | ✅ | partial | partial |
+| Self-serve MCP server (agent-operable config) | ✅ | — | — |
+| `--json` everywhere + typed programmatic API | ✅ | — | partial |
+
+<sub>Reflects the public projects as of June 2026 — see the [alternatives guide](https://samplexbro.github.io/agentsmesh/reference/alternatives/) for sources and detail. Corrections welcome.</sub>
+
+Built to be depended on: **8,000+ tests** run on Linux, macOS, and Windows CI (Node 22 & 24), configs are JSON-Schema-validated, npm releases ship with [provenance](https://docs.npmjs.com/generating-provenance-statements), and standalone binaries are published with SHA-256 checksums.
 
 ## Install
 
@@ -45,11 +69,14 @@ Standalone binaries are also on [GitHub Releases](https://github.com/sampleXbro/
 
 ## 60-second quickstart
 
-Works on Linux, macOS, and Windows. After [installing](#install):
+Works on Linux, macOS, and Windows. After [installing](#install), `agentsmesh init` adapts to your repo:
+
+- **Already using AI tools?** It detects your existing `.cursor/`, `.claude/`, `.github/copilot-instructions.md`, and more, and offers to import them all into one `.agentsmesh/` source — nothing rewritten by hand. (`agentsmesh init --yes` does it non-interactively.)
+- **Starting fresh?** It scaffolds a minimal `.agentsmesh/` to grow from.
 
 ```bash
-agentsmesh init       # scaffold .agentsmesh/ + agentsmesh.yaml
-agentsmesh generate   # write native configs for every enabled tool
+agentsmesh init       # detect & import existing configs, or scaffold fresh
+agentsmesh generate   # write each tool's native config from the one source
 agentsmesh check      # CI-friendly drift gate against .agentsmesh/.lock
 ```
 
@@ -99,14 +126,34 @@ AGENTS.md
 
 Edit canonical sources, run `agentsmesh generate`, and every native file above is (re)written for you — always in sync. Alongside the directory, `agentsmesh.yaml` selects which targets and features are enabled, `agentsmesh.local.yaml` holds per-developer overrides (gitignored), and `.agentsmesh/.lock` records the checksums that `agentsmesh check` enforces.
 
+<div align="center">
+  <img src="https://raw.githubusercontent.com/sampleXbro/agentsmesh/master/assets/generate-demo.gif" alt="agentsmesh detects existing tool configs, imports them into one source, and generates native config for every tool" width="100%" />
+</div>
+
 ## Teach your agents: lessons
 
-Lessons give your AI agents a **memory of past mistakes** — read *before* they touch anything, written *after* something goes wrong, so the same mistake doesn't happen twice in any tool.
+This is the part no other config-sync tool has. Lessons give your AI agents a **memory of past mistakes** — read *before* they touch anything, written *after* something goes wrong, so the same mistake doesn't happen twice in any tool. It's what turns a static pile of rules into an agent that gets better at *your* codebase over time.
+
+<div align="center">
+  <img src="https://raw.githubusercontent.com/sampleXbro/agentsmesh/master/assets/lessons-demo.gif" alt="an AI agent captures a lesson after a failure, then recalls it before editing the same file — triggered by file, command, or keyword" width="100%" />
+</div>
 
 The memory is one git-tracked file, `.agentsmesh/lessons/lessons.json`, and every agent talks to it through two commands:
 
 - **Recall** — before an edit or a state-changing command, the agent runs `agentsmesh lessons query --file <path> --cmd <command>` and follows the rules that match.
 - **Capture** — right after a failure (red test, lint error, review comment, wrong assumption), it saves the rule with `agentsmesh lessons add "<rule>" --topic <id> --trigger-file <glob>`.
+
+In practice:
+
+```bash
+# An agent breaks the Windows build, finds the cause, and writes the lesson down:
+agentsmesh lessons add "Normalize CLI display paths to forward slashes" \
+  --topic windows-paths --trigger-file "src/cli/**/*.ts"
+
+# Days later, any agent — in any tool — about to touch that path recalls it first:
+agentsmesh lessons query --file src/cli/output.ts
+# → "Normalize CLI display paths to forward slashes"
+```
 
 ```bash
 agentsmesh init --lessons && agentsmesh generate   # wire the recall/capture loop once
@@ -125,8 +172,8 @@ Full walkthrough: [Teach your AI agents with lessons](https://samplexbro.github.
 - **Migrate between tools** — `convert --from <a> --to <b>` rewrites one tool's config directly into another's native format. [convert →](https://samplexbro.github.io/agentsmesh/cli/convert/)
 - **Global mode** — `~/.agentsmesh/` syncs your personal config to `~/.claude/`, `~/.cursor/`, `~/.codex/`, and more. Every command accepts `--global`. [Global paths →](https://samplexbro.github.io/agentsmesh/reference/supported-tools/#global-mode)
 - **Team-safe and CI-ready** — `check` is a drift gate against `.agentsmesh/.lock`, `diff` previews changes, `merge` rebuilds the lock after a 3-way Git conflict, and `lock_features` + per-feature `strategy` prevent accidental overrides. `lint` adds cross-target warnings (`silent-drop-guard`, `hook-script-references`, `rule-scope-inversion`) for content a tool would silently mishandle. [check →](https://samplexbro.github.io/agentsmesh/cli/check/) · [lint →](https://samplexbro.github.io/agentsmesh/cli/lint/)
-- **Community packs and `extends`** — install shared rules, skills, agents, and commands from any git repo (`install`, `--sync`, `refresh`, remote `extends`); a multi-signal classifier auto-detects Anthropic-style skill packs. Elevated artifacts (hooks, permissions, MCP) from remote sources are stripped unless you opt in with `--accept-*`. [Install reference →](https://samplexbro.github.io/agentsmesh/cli/install/)
-- **Plugins** — ship support for a new tool as a standalone npm package, with full parity to built-in targets (project + global, conversions, lint hooks, hook post-processing). [Build a plugin →](https://samplexbro.github.io/agentsmesh/guides/building-plugins/)
+- **Community packs and `extends`** — install shared rules, skills, agents, and commands from any git repo (`install`, `--sync`, `refresh`, remote `extends`); a multi-signal classifier auto-detects Anthropic-style skill packs. Elevated artifacts (hooks, permissions, MCP) from remote sources are stripped unless you opt in — with `--accept-*` on `install`, or `accept:` on a remote `extends` entry. [Install reference →](https://samplexbro.github.io/agentsmesh/cli/install/)
+- **Plugins — add a tool without waiting for a release** — ship support for a new AI tool as a standalone npm package, with full parity to built-in targets (project + global, conversions, lint hooks, hook post-processing). When a tool ships or changes its format, you don't file an issue and wait on the maintainer — you publish a plugin. [Build a plugin →](https://samplexbro.github.io/agentsmesh/guides/building-plugins/)
 - **Schema-validated configs** — each config ships a JSON Schema, so editors give you autocomplete and validation out of the box. [JSON schemas →](https://samplexbro.github.io/agentsmesh/reference/json-schemas/)
 - **Typed programmatic API** — drive `generate` / `import` / `lint` / `diff` / `check` from scripts or CI via `agentsmesh`, `/engine`, `/canonical`, `/targets`, `/lessons`. [API reference →](https://samplexbro.github.io/agentsmesh/reference/programmatic-api/)
 - **Self-serve MCP server** — `agentsmesh mcp` (seeded by `init`) exposes canonical config as MCP tools so agents can introspect rules, commands, and skills and trigger `generate` in-conversation. [MCP server →](https://samplexbro.github.io/agentsmesh/reference/mcp-server/)
@@ -135,9 +182,11 @@ Full walkthrough: [Teach your AI agents with lessons](https://samplexbro.github.
 > [!TIP]
 > Commit **both** `.agentsmesh/` and the generated tool files, the same way you commit `package-lock.json`: they're deterministic build output that the AI tools read directly, and `agentsmesh check` guards the two from drifting.
 
-## Why not just `AGENTS.md`?
+## Why not Ruler, rulesync, or just `AGENTS.md`?
 
-[`AGENTS.md`](https://agents.md) is a great shared instruction file, and AgentsMesh emits it natively wherever a tool supports it. But a single markdown file isn't enough on its own: most assistants expose configuration *beyond* it — Cursor's `.cursor/rules/*.mdc` and MCP config, Claude Code's agents/skills/commands/hooks/permissions, Copilot's `.github/instructions/`, Gemini's `.gemini/settings.json`, and so on — and those surfaces don't overlap. AgentsMesh canonicalizes all of them so you never have to pick one tool's surface as the lowest common denominator.
+**vs. `AGENTS.md`** — [`AGENTS.md`](https://agents.md) is a great shared instruction file, and AgentsMesh emits it natively wherever a tool supports it. But a single markdown file isn't enough on its own: most assistants expose configuration *beyond* it — Cursor's `.cursor/rules/*.mdc` and MCP config, Claude Code's agents/skills/commands/hooks/permissions, Copilot's `.github/instructions/`, Gemini's `.gemini/settings.json`, and so on — and those surfaces don't overlap. AgentsMesh canonicalizes all of them so you never have to pick one tool's surface as the lowest common denominator.
+
+**vs. other sync tools** — [Ruler](https://github.com/intellectronica/ruler) and [rulesync](https://github.com/dyoshikawa/rulesync) solve the rules-distribution half well. AgentsMesh goes further on the parts that are hardest to keep in sync: a shared [lessons](#teach-your-agents-lessons) memory your agents learn from, lossless two-way [import](https://samplexbro.github.io/agentsmesh/cli/import/), automatic cross-tool [link rebasing](https://samplexbro.github.io/agentsmesh/reference/generation-pipeline/), [plugins](https://samplexbro.github.io/agentsmesh/guides/building-plugins/) so a new tool ships without a release, and [lint](https://samplexbro.github.io/agentsmesh/cli/lint/) that warns before a tool would silently drop content. See the [full comparison](#how-agentsmesh-compares) and the [alternatives guide](https://samplexbro.github.io/agentsmesh/reference/alternatives/).
 
 ## Commands
 

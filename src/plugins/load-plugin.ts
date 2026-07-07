@@ -2,7 +2,7 @@
  * Plugin loader: dynamically imports npm packages that export TargetDescriptors.
  */
 
-import { resolve, join, sep } from 'node:path';
+import { resolve, join, sep, dirname, basename } from 'node:path';
 import { readFileSync, existsSync, realpathSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { validateDescriptor } from '../targets/catalog/target-descriptor.schema.js';
@@ -68,11 +68,24 @@ function canonicalize(path: string): string {
   try {
     return realpathSync(path);
   } catch {
-    // Fall back to the resolved path so the prefix check still fires on
-    // structurally-escaping paths whose realpath fails (e.g. the target
-    // does not exist yet). Dynamic import would surface a clearer error
-    // immediately after.
-    return path;
+    // The full path can't be resolved (a missing tail, or a dangling symlink).
+    // Walk up to the nearest existing ancestor, canonicalize THAT, then
+    // re-append the unresolved tail. This stops an intermediate symlink from
+    // smuggling the path past the containment prefix check via a suffix that
+    // does not exist yet — falling back to the raw (non-realpathed) path would
+    // otherwise let `node_modules/linked-out/missing.js` look in-root.
+    let current = resolve(path);
+    const tail: string[] = [];
+    for (;;) {
+      const parent = dirname(current);
+      if (parent === current) return resolve(path);
+      tail.unshift(basename(current));
+      try {
+        return join(realpathSync(parent), ...tail);
+      } catch {
+        current = parent;
+      }
+    }
   }
 }
 

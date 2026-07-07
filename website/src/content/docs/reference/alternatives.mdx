@@ -1,0 +1,68 @@
+---
+draft: false
+title: Alternatives — AgentsMesh vs Ruler vs rulesync
+description: How AgentsMesh compares to Ruler, rulesync, and the AGENTS.md standard for syncing AI coding assistant config — a Ruler/rulesync alternative with a shared lessons memory, lossless two-way import, cross-tool link rebasing, and plugins.
+---
+
+AgentsMesh, [Ruler](https://github.com/intellectronica/ruler), and [rulesync](https://github.com/dyoshikawa/rulesync) all solve the same first problem: keep one source of truth and stop hand-editing a different config file for every AI coding tool. They differ in how far they go beyond distributing rule files.
+
+This page is an honest, sourced comparison — including when a simpler tool is the better choice.
+
+## At a glance
+
+| Capability | AgentsMesh | Ruler | rulesync |
+|---|:---:|:---:|:---:|
+| Generate native config across tools | ✅ | ✅ | ✅ |
+| Tools supported (their marketing number) | 30 | "30+" | "40+" |
+| Import existing tool config back to source | ✅ | — | ✅ |
+| **Lossless round-trip** (re-import restores originals) | ✅ | — | partial |
+| Convert one tool's config directly to another | ✅ | — | ✅ |
+| **Automatic cross-tool link rebasing** | ✅ | — | — |
+| **Lessons — a shared agent memory that learns** | ✅ | — | — |
+| **Plugins — add a target without a release** | ✅ | — | — |
+| Community packs / install from a git repo | ✅ | — | ✅ |
+| Global (user-level) mode | ✅ | ✅ | ✅ |
+| Cross-target lint (warn before silent data loss) | ✅ | — | — |
+| CI drift gate + git-merge recovery | ✅ | partial | partial |
+| Self-serve MCP server (agent-operable config) | ✅ | — | — |
+| `--json` everywhere + typed programmatic API | ✅ | — | partial |
+| Install via npm / Homebrew / standalone binary | ✅ | npm | ✅ |
+
+A few notes on fairness:
+
+- **Tool count is a marketing number, not a capability.** All three cover the major assistants; the headline counts vary mostly in how variants are tallied. See the [supported-tools matrix](../supported-tools/) for what AgentsMesh supports per tool, native vs. embedded.
+- **"partial"** means the capability exists but with caveats — e.g. rulesync embeds unsupported features into a single rules file (a lossy fallback), and both Ruler and rulesync detect CI drift by re-running and diffing rather than verifying against a committed lockfile.
+
+## The differences that matter
+
+**Lessons (a shared agent memory).** Neither Ruler nor rulesync has anything like it. AgentsMesh agents [recall a rule before they act and capture one after a failure](../../guides/lessons/), so the same mistake doesn't recur — across every tool and every teammate, stored as a reviewable git-tracked file. This is the feature that turns static rules into agents that improve on *your* codebase.
+
+**Lossless, two-way [import](../../cli/import/).** Ruler is one-directional (you author everything in `.ruler/`; there is no import). rulesync imports, but embeds capability-mismatched features into a rules file. AgentsMesh uses [managed embedding](../managed-embedding/) so a re-import reconstructs the original canonical files exactly — adopt it on an existing repo without rewriting anything.
+
+**Automatic cross-tool [link rebasing](../generation-pipeline/).** A canonical reference like `.agentsmesh/skills/api-gen/template.hbs` is rewritten to each tool's native path (`.claude/…`, `.cursor/…`) in every generated file, so cross-file links keep working — while literal prose and embedded payloads are left untouched. Neither competitor documents this.
+
+**[Plugins](../../guides/building-plugins/) as first-class targets.** Ruler and rulesync hardcode their target lists; supporting a new tool means a PR and a release. AgentsMesh lets anyone ship a full target as a standalone npm package — the durable answer to the constant churn of chasing 30+ upstream formats.
+
+**Safer for teams.** Cross-target [lint](../../cli/lint/) warns before a tool would silently drop content, the CI drift gate checks against a committed lockfile (with `merge` to recover after a Git conflict), and a [self-serve MCP server](../mcp-server/) lets the agent introspect and regenerate config in-conversation.
+
+## When a simpler tool is the better pick
+
+Use the smallest tool that solves your problem:
+
+- **You only need rules in one or two tools, one-directional.** A single `AGENTS.md` (or [Ruler](https://github.com/intellectronica/ruler)) is less to learn.
+- **You never import and never round-trip.** The lossless machinery buys you nothing.
+- **You want the largest headline tool count today.** rulesync markets the most targets and ships very frequently.
+
+Reach for AgentsMesh when you want agents that **learn**, lossless **two-way** adoption on an existing repo, **plugins** instead of waiting on releases, and **team/CI** guardrails — i.e. when config-sync is a system you maintain, not a one-off script.
+
+## Why not just `AGENTS.md`?
+
+[`AGENTS.md`](https://agents.md) is consolidating the *rules* layer, and AgentsMesh emits it natively wherever a tool reads it. But rules are only part of the problem — skills, slash-commands, subagents, MCP servers, hooks, and permissions are unstandardized and don't overlap between tools. AgentsMesh canonicalizes all of them, so you never have to settle for the lowest common denominator.
+
+## Sources
+
+Comparison reflects the public projects as of June 2026. Capabilities change — corrections are welcome via a [GitHub issue](https://github.com/sampleXbro/agentsmesh/issues).
+
+- Ruler — [github.com/intellectronica/ruler](https://github.com/intellectronica/ruler)
+- rulesync — [github.com/dyoshikawa/rulesync](https://github.com/dyoshikawa/rulesync)
+- AGENTS.md — [agents.md](https://agents.md)

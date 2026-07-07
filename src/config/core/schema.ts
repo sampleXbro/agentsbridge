@@ -39,6 +39,13 @@ const extendSourceSchema = z.object({
   /** Repo-relative POSIX path for discovery (skill packs, nested .agentsmesh). */
   path: z.string().optional(),
   pick: extendPickSchema.optional(),
+  /**
+   * Per-entry consent for "elevated" artifacts (`hooks`, `permissions`, `mcp`)
+   * from a remote source. These control local code execution at generate time,
+   * so for non-local extends they are stripped by default and only merged for
+   * the artifacts listed here. Local extends are trusted and ignore this field.
+   */
+  accept: z.array(z.enum(['hooks', 'permissions', 'mcp'])).optional(),
 });
 
 const collaborationSchema = z.object({

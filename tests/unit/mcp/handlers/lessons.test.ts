@@ -74,7 +74,9 @@ describe('lessonsHandlers.query', () => {
   });
 
   it('rejects a query with no predicate (file/command/keyword)', async () => {
-    await expect(lessonsHandlers.query(ctx, {})).rejects.toThrow(/file.*command.*keyword|predicate/i);
+    await expect(lessonsHandlers.query(ctx, {})).rejects.toThrow(
+      /file.*command.*keyword|predicate/i,
+    );
   });
 
   it('matches a file glob when --file is passed as an absolute path', async () => {
@@ -332,6 +334,21 @@ describe('lessonsHandlers.add', () => {
     ).rejects.toThrow(/unknown topic/i);
   });
 
+  it('captures an always-on lesson with scope="always" and no trigger', async () => {
+    const r = await lessonsHandlers.add(ctx, {
+      rule: 'Write comments per the repo style.',
+      topic: 'topic-x',
+      scope: 'always',
+    });
+    expect(loadLessonsGraph(projectRoot).lessons[r.id]?.scope).toBe('always');
+  });
+
+  it('rejects a scope other than "always"', async () => {
+    await expect(
+      lessonsHandlers.add(ctx, { rule: 'X.', topic: 'topic-x', scope: 'sometimes' }),
+    ).rejects.toThrow(/scope must be/i);
+  });
+
   it('creates a topic when new_topic + topic_summary are provided', async () => {
     const r = await lessonsHandlers.add(ctx, {
       rule: 'New topic rule.',
@@ -533,7 +550,19 @@ describe('lessonsHandlers — error codes (no IO_ERROR mislabel)', () => {
   it('query with no predicate is VALIDATION_FAILED', async () => {
     const err = await captureMcpError(lessonsHandlers.query(ctx, {}));
     expect(err.code).toBe('VALIDATION_FAILED');
-    expect(err.message).toMatch(/at least one of file, command, or keyword/i);
+    expect(err.message).toMatch(/at least one of file, command, keyword/i);
+  });
+
+  it('query with always=true and no predicate returns the always-on lessons', async () => {
+    await lessonsHandlers.add(ctx, {
+      rule: 'Write comments per the repo style.',
+      topic: 'style',
+      new_topic: true,
+      topic_summary: 'Style.',
+      scope: 'always',
+    });
+    const r = await lessonsHandlers.query(ctx, { always: true });
+    expect(r.lessons.some((l) => l.rule === 'Write comments per the repo style.')).toBe(true);
   });
 
   it('add to an unknown topic is NOT_FOUND with UNKNOWN_TOPIC machine code', async () => {

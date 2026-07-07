@@ -13,7 +13,13 @@ import { mergeLessons } from '../../lessons/merge.js';
 import { mutateLessonsGraph } from '../../lessons/mutate.js';
 import { stripMarkersInGraph } from '../../lessons/strip-markers.js';
 import { untriggerLesson } from '../../lessons/untrigger.js';
-import { errorResult, listFlag, repeatedFlag, stringFlag, type LessonsFlags } from './lessons-helpers.js';
+import {
+  errorResult,
+  listFlag,
+  repeatedFlag,
+  stringFlag,
+  type LessonsFlags,
+} from './lessons-helpers.js';
 import { lessonsAddHint } from './lessons-usage.js';
 import type {
   LessonsAddData,
@@ -58,8 +64,9 @@ export async function doAdd(
 
   // Flag a capture about to create a stray graph in a subdirectory of a real
   // project (computed before capture, which would create .agentsmesh here).
-  const ancestorLessons =
-    existsSync(join(projectRoot, '.agentsmesh')) ? null : ancestorLessonsProjectDir(projectRoot);
+  const ancestorLessons = existsSync(join(projectRoot, '.agentsmesh'))
+    ? null
+    : ancestorLessonsProjectDir(projectRoot);
   const locationNote =
     ancestorLessons !== null
       ? `Capturing into a new .agentsmesh here — a lessons project already exists at ${ancestorLessons.replaceAll('\\', '/')}. If that was unintended, cd into it and re-run.`
@@ -71,7 +78,14 @@ export async function doAdd(
     ? undefined
     : 'Captured — but recall is not wired into your AI tools yet (no `init --lessons`). Run `agentsmesh init --lessons`, then `agentsmesh generate`, so agents recall this automatically.';
 
+  // `--scope always` captures a universal always-on lesson (no trigger needed).
+  const scopeFlag = stringFlag(flags, 'scope') ?? undefined;
+
   try {
+    // Any other --scope value is a mistake worth surfacing (caught below → exit 1).
+    if (scopeFlag !== undefined && scopeFlag !== 'always') {
+      throw new Error(`lessons add: --scope must be "always" (got "${scopeFlag}").`);
+    }
     // Route through captureLesson (not addLesson directly) so capture telemetry
     // records EVERY shell-driven add — the MCP path already routes here, and a
     // direct addLesson call would leave CLI captures invisible to `lessons stats`.
@@ -87,6 +101,7 @@ export async function doAdd(
         },
         evidence: listFlag(flags, 'evidence'),
         rationale: stringFlag(flags, 'rationale') ?? undefined,
+        ...(scopeFlag === 'always' ? { scope: 'always' as const } : {}),
       },
       {
         allowNewTopic: flags['new-topic'] === true,

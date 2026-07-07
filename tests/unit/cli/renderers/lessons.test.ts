@@ -44,7 +44,9 @@ describe('renderLessons — query', () => {
       exitCode: 0,
       format: 'plain',
       data: {
-        lessons: [{ id: 'topic-x-rule-1', rule: 'Rule one.', topics: ['t'], triggers: [], evidence: [] }],
+        lessons: [
+          { id: 'topic-x-rule-1', rule: 'Rule one.', topics: ['t'], triggers: [], evidence: [] },
+        ],
         query: {},
         autoMigrated: false,
         showIds: true,
@@ -591,7 +593,13 @@ describe('renderLessons — stats', () => {
       subcommand: 'stats',
       exitCode: 0,
       format: 'text',
-      data: { report, captureReport: emptyCapture, hasLog: true, hasCaptureLog: true, telemetryEnabled: true },
+      data: {
+        report,
+        captureReport: emptyCapture,
+        hasLog: true,
+        hasCaptureLog: true,
+        telemetryEnabled: true,
+      },
     });
     expect(output.stdout()).toContain('—');
   });
@@ -601,7 +609,13 @@ describe('renderLessons — stats', () => {
       subcommand: 'stats',
       exitCode: 0,
       format: 'text',
-      data: { report, captureReport: emptyCapture, hasLog: true, hasCaptureLog: false, telemetryEnabled: true },
+      data: {
+        report,
+        captureReport: emptyCapture,
+        hasLog: true,
+        hasCaptureLog: false,
+        telemetryEnabled: true,
+      },
     });
     const out = output.stdout();
     expect(out).toContain('recalls: 4');
@@ -613,12 +627,48 @@ describe('renderLessons — stats', () => {
     expect(out).toContain('keyword-only-unreachable lessons 3');
   });
 
+  it('renders the effectiveness (benefit) block with an honest coarse label and a pointer to validate', () => {
+    renderLessons({
+      subcommand: 'stats',
+      exitCode: 0,
+      format: 'text',
+      data: {
+        report,
+        captureReport: emptyCapture,
+        effectiveness: {
+          deliveries: 10,
+          lessonsDelivered: 4,
+          failuresObserved: 3,
+          heldRate: 0.7,
+          ineffectiveLessons: 1,
+        },
+        hasLog: false,
+        hasCaptureLog: false,
+        hasOutcomeLog: true,
+        telemetryEnabled: true,
+      },
+    });
+    const out = output.stdout();
+    expect(out).toContain('effectiveness (coarse)');
+    expect(out).toContain('10 deliveries of 4 lessons');
+    expect(out).toContain('held 70.0%');
+    expect(out).toContain('not proof'); // never overclaims prevention
+    expect(out).toContain('1 ineffective');
+    expect(out).toContain('lessons validate'); // pointer to the actionable list
+  });
+
   it('hints to enable telemetry and run queries when no log exists and telemetry is off', () => {
     renderLessons({
       subcommand: 'stats',
       exitCode: 0,
       format: 'text',
-      data: { report, captureReport: emptyCapture, hasLog: false, hasCaptureLog: false, telemetryEnabled: false },
+      data: {
+        report,
+        captureReport: emptyCapture,
+        hasLog: false,
+        hasCaptureLog: false,
+        telemetryEnabled: false,
+      },
     });
     const out = output.stdout();
     expect(out).toContain('AGENTSMESH_LESSONS_TELEMETRY=1');
@@ -632,7 +682,13 @@ describe('renderLessons — stats', () => {
       subcommand: 'stats',
       exitCode: 0,
       format: 'text',
-      data: { report, captureReport: emptyCapture, hasLog: false, hasCaptureLog: false, telemetryEnabled: true },
+      data: {
+        report,
+        captureReport: emptyCapture,
+        hasLog: false,
+        hasCaptureLog: false,
+        telemetryEnabled: true,
+      },
     });
     const out = output.stdout();
     expect(out).toContain('telemetry is ON');
@@ -654,7 +710,13 @@ describe('renderLessons — stats', () => {
       subcommand: 'stats',
       exitCode: 0,
       format: 'text',
-      data: { report: heavy, captureReport: emptyCapture, hasLog: true, hasCaptureLog: false, telemetryEnabled: true },
+      data: {
+        report: heavy,
+        captureReport: emptyCapture,
+        hasLog: true,
+        hasCaptureLog: false,
+        telemetryEnabled: true,
+      },
     });
     expect(output.stdout()).toContain('preload cheaper');
   });
@@ -753,7 +815,12 @@ describe('renderLessons — branch coverage for less-common subcommands', () => 
     renderLessons({
       subcommand: 'untrigger',
       exitCode: 0,
-      data: { lessonId: 'rule-a', triggerId: 't-1', removedTriggerNode: false, remainingTriggerCount: 1 },
+      data: {
+        lessonId: 'rule-a',
+        triggerId: 't-1',
+        removedTriggerNode: false,
+        remainingTriggerCount: 1,
+      },
     });
     expect(output.stdout()).toMatch(/Removed trigger t-1 from rule-a \(1 trigger left\)/);
   });
@@ -762,7 +829,12 @@ describe('renderLessons — branch coverage for less-common subcommands', () => 
     renderLessons({
       subcommand: 'untrigger',
       exitCode: 0,
-      data: { lessonId: 'rule-a', triggerId: 't-1', removedTriggerNode: true, remainingTriggerCount: 2 },
+      data: {
+        lessonId: 'rule-a',
+        triggerId: 't-1',
+        removedTriggerNode: true,
+        remainingTriggerCount: 2,
+      },
     });
     expect(output.stdout()).toMatch(/2 triggers left.*garbage-collected/);
   });
@@ -772,7 +844,12 @@ describe('renderLessons — branch coverage for less-common subcommands', () => 
       subcommand: 'query',
       exitCode: 0,
       format: 'plain',
-      data: { lessons: [], query: {}, autoMigrated: false, warning: 'lessons.json is unreadable (corrupt)' },
+      data: {
+        lessons: [],
+        query: {},
+        autoMigrated: false,
+        warning: 'lessons.json is unreadable (corrupt)',
+      },
     });
     expect(output.stderr()).toContain('corrupt');
   });
@@ -806,6 +883,8 @@ describe('renderLessons — branch coverage for less-common subcommands', () => 
         autoPruned: { removedTriggers: 1, removedTopics: 2, detachedDeadGlobs: 0 },
       },
     });
-    expect(output.stdout()).toMatch(/auto-pruned: 1 orphan trigger, 2 orphan topics, 0 dead globs detached/);
+    expect(output.stdout()).toMatch(
+      /auto-pruned: 1 orphan trigger, 2 orphan topics, 0 dead globs detached/,
+    );
   });
 });

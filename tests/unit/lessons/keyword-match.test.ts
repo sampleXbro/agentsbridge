@@ -40,8 +40,42 @@ describe('keywordMatches — derived from file path + command (new)', () => {
     expect(keywordMatches('the', { command: 'the test' })).toBe(false);
   });
 
-  it('does not split joined identifiers — a multi-word pattern misses a camelCase/joined token', () => {
-    // `readonly` is one token; "read only" (two tokens) is not a contiguous run in it.
+  it('does not split a LOWERCASE-joined identifier — "read only" misses "readonly"', () => {
+    // `readonly` has no case/word boundary to split on, so it stays one token; only
+    // camelCase / acronym boundaries are split (see the camelCase suite below).
     expect(keywordMatches('read only', { file: 'src/readonly.ts' })).toBe(false);
+  });
+});
+
+describe('keywordMatches — camelCase / acronym reach (additive, backward compatible)', () => {
+  it('a sub-word keyword reaches the camelCase identifier it is compressed inside', () => {
+    expect(keywordMatches('guard', { file: 'src/lib/useLeaveGuard.ts' })).toBe(true);
+    expect(keywordMatches('blocker', { file: 'src/lib/useBlocker.ts' })).toBe(true);
+    expect(keywordMatches('selector', { file: 'src/ui/InvoiceCompanySelector.tsx' })).toBe(true);
+  });
+
+  it('a multi-word keyword matches contiguous camelCase sub-words', () => {
+    expect(keywordMatches('company selector', { file: 'src/ui/InvoiceCompanySelector.tsx' })).toBe(
+      true,
+    );
+    expect(keywordMatches('number input', { file: 'src/components/MaskedNumberInput.tsx' })).toBe(
+      true,
+    );
+  });
+
+  it('splits an ACRONYM→Word boundary (HTMLParser → html, parser)', () => {
+    expect(keywordMatches('parser', { file: 'src/HTMLParser.ts' })).toBe(true);
+  });
+
+  it('BACKWARD COMPATIBLE — the whole compressed identifier still matches', () => {
+    // A trigger authored as the full identifier keeps firing: the whole token is retained.
+    expect(keywordMatches('useblocker', { file: 'src/lib/useBlocker.ts' })).toBe(true);
+  });
+
+  it('stays token-exact, NOT substring — an infix that is not a boundary does not match', () => {
+    // 'ompan' sits inside 'Company' but is not a boundary token → no match (precision kept).
+    expect(keywordMatches('ompan', { file: 'src/ui/InvoiceCompanySelector.tsx' })).toBe(false);
+    // 'category' has no boundary, so 'cat' still does not fire (unchanged).
+    expect(keywordMatches('cat', { file: 'src/category.ts' })).toBe(false);
   });
 });

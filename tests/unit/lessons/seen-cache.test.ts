@@ -1,10 +1,11 @@
-import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { Lesson } from '../../../src/lessons/graph-schema.js';
 import type { MatchedLesson } from '../../../src/lessons/query.js';
 import {
+  clearSeen,
   commitSeen,
   filterUnseen,
   openSessionDedup,
@@ -19,8 +20,14 @@ function uniqueSession(): string {
 }
 
 afterEach(() => {
-  for (const id of used.splice(0)) {
-    rmSync(join(tmpdir(), 'agentsmesh-lessons-seen', `${id}.json`), { force: true });
+  // Targeted cleanup (keeps parallel test files isolated): remove only THIS file's
+  // sessions, which may be flat (`${id}.json`) or project-namespaced (`${id}__<hash>.json`).
+  const dir = join(tmpdir(), 'agentsmesh-lessons-seen');
+  const ids = new Set(used.splice(0));
+  if (!existsSync(dir)) return;
+  for (const entry of readdirSync(dir)) {
+    const base = entry.replace(/(__[a-z0-9]+)?\.json$/, '');
+    if (ids.has(base)) rmSync(join(dir, entry), { force: true });
   }
 });
 
@@ -44,7 +51,10 @@ describe('openSessionDedup', () => {
   });
 
   it('resolves an explicit session id over the environment', () => {
-    const d = openSessionDedup({ explicit: uniqueSession(), env: { AGENTSMESH_SESSION_ID: 's-env' } });
+    const d = openSessionDedup({
+      explicit: uniqueSession(),
+      env: { AGENTSMESH_SESSION_ID: 's-env' },
+    });
     expect(d).not.toBeNull();
     expect(d!.sessionId).toMatch(/^test-/);
   });
@@ -84,6 +94,18 @@ describe('filterUnseen + commitSeen', () => {
     const d2 = openSessionDedup({ explicit: id2 })!;
     expect(filterUnseen(d2, [match('a')]).map((m) => m.id)).toEqual(['a']);
   });
+
+  it('namespaces by project root — the SAME session id in two projects is isolated', () => {
+    const id = uniqueSession();
+    // Project A marks lesson "a" seen under a shared session id.
+    commitSeen(openSessionDedup({ explicit: id, projectRoot: '/tmp/projA' })!, ['a']);
+    // Project B, same session id, must NOT inherit A's seen set.
+    const b = openSessionDedup({ explicit: id, projectRoot: '/tmp/projB' })!;
+    expect(filterUnseen(b, [match('a')]).map((m) => m.id)).toEqual(['a']);
+    // Same project A re-open DOES see it (dedup still works within a project).
+    const a2 = openSessionDedup({ explicit: id, projectRoot: '/tmp/projA' })!;
+    expect(filterUnseen(a2, [match('a')]).map((m) => m.id)).toEqual([]);
+  });
 });
 
 describe('seen-cache — robustness branches', () => {
@@ -95,6 +117,37 @@ describe('seen-cache — robustness branches', () => {
     writeFileSync(d1!.path, JSON.stringify({ not: 'an array' }));
     const d2 = openSessionDedup({ explicit: id });
     expect(d2!.seen.size).toBe(0);
+  });
+
+  it('clearSeen discards the session set so ids are fresh again', () => {
+    const id = uniqueSession();
+    commitSeen(openSessionDedup({ explicit: id })!, ['a']);
+    expect(filterUnseen(openSessionDedup({ explicit: id })!, [match('a')])).toEqual([]);
+    clearSeen(id);
+    // After the reset, "a" is unseen again.
+    expect(
+      filterUnseen(openSessionDedup({ explicit: id })!, [match('a')]).map((m) => m.id),
+    ).toEqual(['a']);
+  });
+
+  it('clearSeen namespaces by project root (only that project is reset)', () => {
+    const id = uniqueSession();
+    commitSeen(openSessionDedup({ explicit: id, projectRoot: '/tmp/pA' })!, ['a']);
+    commitSeen(openSessionDedup({ explicit: id, projectRoot: '/tmp/pB' })!, ['a']);
+    clearSeen(id, '/tmp/pA');
+    // pA reset → "a" fresh; pB untouched → "a" still seen.
+    expect(
+      filterUnseen(openSessionDedup({ explicit: id, projectRoot: '/tmp/pA' })!, [match('a')]).map(
+        (m) => m.id,
+      ),
+    ).toEqual(['a']);
+    expect(
+      filterUnseen(openSessionDedup({ explicit: id, projectRoot: '/tmp/pB' })!, [match('a')]),
+    ).toEqual([]);
+  });
+
+  it('clearSeen is a safe no-op when nothing was committed', () => {
+    expect(() => clearSeen(uniqueSession())).not.toThrow();
   });
 
   it('commitSeen writes nothing when every returned id was already seen', () => {

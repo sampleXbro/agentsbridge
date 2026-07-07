@@ -27,10 +27,7 @@ function activeTriggerIds(graph: LessonsGraph): Set<string> {
  * (which warns) and `prune` (which can GC them when doing so won't strand a
  * lesson). `knownPaths` is project-relative, forward-slash.
  */
-export function deadFileGlobIds(
-  graph: LessonsGraph,
-  knownPaths: ReadonlySet<string>,
-): Set<string> {
+export function deadFileGlobIds(graph: LessonsGraph, knownPaths: ReadonlySet<string>): Set<string> {
   const active = activeTriggerIds(graph);
   const paths = [...knownPaths];
   const dead = new Set<string>();
@@ -65,6 +62,14 @@ export function collectDeadFileGlobs(
       triggerId,
     });
   }
+}
+
+/** How many working-tree paths a `file_glob` pattern matches — for the breadth guardrail. */
+export function fileGlobMatchCount(pattern: string, knownPaths: ReadonlySet<string>): number {
+  const isMatch = picomatch(pattern, { dot: true });
+  let n = 0;
+  for (const p of knownPaths) if (isMatch(p)) n += 1;
+  return n;
 }
 
 /** Anchored to a single package-runner at the start of the pattern. */

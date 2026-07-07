@@ -3,6 +3,7 @@
  */
 
 import { relative } from 'node:path';
+import { LESSONS_MERGE_DRIVER_CONFIG } from '../../lessons/merge-driver-setup.js';
 import { logger } from '../../utils/output/logger.js';
 import type { InitCommandResult } from '../commands/init.js';
 
@@ -77,12 +78,19 @@ function renderLessons(lessons: NonNullable<InitCommandResult['data']['lessons']
       '  Wired the PostToolUse recall hook into .agentsmesh/hooks.yaml (deterministic recall on hook-capable targets)',
     );
   }
+  if (lessons.gitattributesUpdated) {
+    logger.success(
+      '  Bound .agentsmesh/lessons/lessons.json to the merge driver in .gitattributes (commit it so concurrent captures union-merge)',
+    );
+  }
   logger.success('Lessons subsystem ready (.agentsmesh/lessons/).');
   logger.info("  Run 'agentsmesh generate' to sync the ritual into every target.");
   logger.info('');
   // Only claim the graph is empty when THIS run created it; on a re-init over an
   // existing project the graph may already hold lessons.
-  const graphCreated = lessons.created.some((p) => p.replaceAll('\\', '/').endsWith('lessons.json'));
+  const graphCreated = lessons.created.some((p) =>
+    p.replaceAll('\\', '/').endsWith('lessons.json'),
+  );
   logger.info(
     graphCreated
       ? '  The graph starts empty and grows as agents capture failures. Try the loop:'
@@ -92,6 +100,18 @@ function renderLessons(lessons: NonNullable<InitCommandResult['data']['lessons']
     '    capture:  agentsmesh lessons add "<rule>" --topic <id> --new-topic --topic-summary "<line>" --trigger-file "<glob>"',
   );
   logger.info('    recall:   agentsmesh lessons query --file <path> --cmd <command>');
-  logger.info('    inspect:  agentsmesh lessons journal   |   lessons show <id>   |   lessons validate');
-  logger.info('  Optional: export AGENTSMESH_LESSONS_TELEMETRY=1 to measure recall cost via `lessons stats`.');
+  logger.info(
+    '    inspect:  agentsmesh lessons journal   |   lessons show <id>   |   lessons validate',
+  );
+  logger.info(
+    '  Optional: export AGENTSMESH_LESSONS_TELEMETRY=1 to measure recall cost via `lessons stats`.',
+  );
+  if (lessons.gitattributesUpdated) {
+    logger.info(
+      '  Team: each clone enables the merge driver once (the per-clone half git cannot auto-run):',
+    );
+    for (const cmd of LESSONS_MERGE_DRIVER_CONFIG) {
+      logger.info(`    ${cmd}`);
+    }
+  }
 }

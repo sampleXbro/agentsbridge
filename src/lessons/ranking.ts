@@ -27,6 +27,14 @@ export interface RankOptions {
    * worse for the agent than one slightly-over-budget rule.
    */
   readonly maxTokens?: number;
+  /**
+   * Per-lesson effectiveness score in [0,1] from the outcome log (1 = always
+   * helped; absent = neutral). Fed as a LOW-weight RRF signal so a proven
+   * fire-but-fail lesson sinks below an equally-matched effective one — a
+   * corrective nudge, never a driver. Empty/absent ⇒ every lesson ties on this
+   * signal ⇒ ordering is unchanged from the pre-effectiveness ranker.
+   */
+  readonly effectiveness?: ReadonlyMap<string, number>;
 }
 
 /** Default recall cap: a broad trigger match returns the most-relevant few, not the whole topic. */
@@ -53,6 +61,11 @@ const RRF_K = 60;
 const SPECIFICITY_WEIGHT = 3;
 const TOPIC_COHERENCE_WEIGHT = 2;
 const BM25_WEIGHT = 1;
+// Effectiveness (outcome-log) is a corrective nudge, not a driver — the same low
+// weight as BM25, so it only sinks a proven fire-but-fail lesson below an
+// equally-matched sibling and never overrides a specificity lead. Neutral (every
+// lesson equal) when the log carries no signal, so ranking is then unchanged.
+const EFFECTIVENESS_WEIGHT = 1;
 
 /**
  * Competition ranking (1,1,3,…): equal values share a rank so a signal that
@@ -118,12 +131,16 @@ export function rankLessons(
       // `id` is a matched lesson, and buildTopicCoherence keys every matched id.
       topicCoherence: coherence.get(id)!,
       matchedTriggers: hitTriggers,
+      // Absent from the log ⇒ neutral 1, so a lesson with no outcome data never
+      // sinks below one that has merely been recorded.
+      effectiveness: options.effectiveness?.get(id) ?? 1,
     };
   });
 
   const bm25Ranks = rankMap(scored.map((s) => ({ id: s.id, value: s.bm25 })));
   const specRanks = rankMap(scored.map((s) => ({ id: s.id, value: s.specificity })));
   const topicRanks = rankMap(scored.map((s) => ({ id: s.id, value: s.topicCoherence })));
+  const effRanks = rankMap(scored.map((s) => ({ id: s.id, value: s.effectiveness })));
 
   const ranked: RankedLesson[] = scored
     .map((s) => ({
@@ -132,7 +149,8 @@ export function rankLessons(
       score:
         SPECIFICITY_WEIGHT / (RRF_K + specRanks.get(s.id)!) +
         TOPIC_COHERENCE_WEIGHT / (RRF_K + topicRanks.get(s.id)!) +
-        BM25_WEIGHT / (RRF_K + bm25Ranks.get(s.id)!),
+        BM25_WEIGHT / (RRF_K + bm25Ranks.get(s.id)!) +
+        EFFECTIVENESS_WEIGHT / (RRF_K + effRanks.get(s.id)!),
       reason: {
         matchedTriggers: s.matchedTriggers,
         bm25: s.bm25,

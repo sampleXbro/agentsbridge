@@ -1,15 +1,15 @@
-import {
-  captureLogExists,
-  readCaptureLog,
-} from '../../lessons/capture-telemetry.js';
+import { captureLogExists, readCaptureLog } from '../../lessons/capture-telemetry.js';
 import { tryLoadLessonsGraph } from '../../lessons/graph-store.js';
 import { buildRecallHookOutput } from '../../lessons/hook.js';
 import { lessonsActivated, lessonsSetupHint } from '../../lessons/paths.js';
 import { listProjectFiles } from '../../lessons/project-files.js';
+import { outcomeLogExists, readOutcomeLog } from '../../lessons/outcome-log.js';
 import { summarizeCapture } from '../../lessons/stats-capture.js';
+import { summarizeEffectiveness } from '../../lessons/stats-effectiveness.js';
 import { summarizeRecall } from '../../lessons/stats.js';
 import { isTelemetryEnabled, readRecallLog, recallLogExists } from '../../lessons/telemetry.js';
 import { validateLessonsGraph } from '../../lessons/validate.js';
+import { collectHealthFindings } from '../../lessons/validate-health.js';
 import {
   emptyGraph,
   errorResult,
@@ -45,7 +45,11 @@ export function doTopics(projectRoot: string): LessonsCommandResult {
     .map(([id, t]) => ({ id, summary: t.summary }))
     .sort((a, b) => (a.id < b.id ? -1 : 1));
   const setupHint = lessonsActivated(projectRoot) ? undefined : lessonsSetupHint();
-  return { subcommand: 'topics', exitCode: 0, data: { topics, ...(setupHint ? { setupHint } : {}) } };
+  return {
+    subcommand: 'topics',
+    exitCode: 0,
+    data: { topics, ...(setupHint ? { setupHint } : {}) },
+  };
 }
 
 export function doShow(arg: string | undefined, projectRoot: string): LessonsCommandResult {
@@ -90,6 +94,8 @@ export function doStats(flags: LessonsFlags, projectRoot: string): LessonsComman
   const graph = tryLoadLessonsGraph(projectRoot) ?? emptyGraph();
   const report = summarizeRecall(readRecallLog(projectRoot), graph);
   const captureReport = summarizeCapture(readCaptureLog(projectRoot));
+  // The benefit side: did delivered lessons prevent the repeat? (Coarse — see the report.)
+  const effectiveness = summarizeEffectiveness(readOutcomeLog(projectRoot), graph);
   const format = flags.json === true ? 'json' : 'text';
   return {
     subcommand: 'stats',
@@ -98,8 +104,10 @@ export function doStats(flags: LessonsFlags, projectRoot: string): LessonsComman
     data: {
       report,
       captureReport,
+      effectiveness,
       hasLog: recallLogExists(projectRoot),
       hasCaptureLog: captureLogExists(projectRoot),
+      hasOutcomeLog: outcomeLogExists(projectRoot),
       telemetryEnabled: isTelemetryEnabled(),
     },
   };
@@ -129,7 +137,12 @@ export function doValidate(projectRoot: string): LessonsCommandResult {
   // false "everything is dead".
   const knownPaths = listProjectFiles(projectRoot) ?? undefined;
   const report = validateLessonsGraph(graph, { knownPaths });
-  const data: LessonsValidateData = { ok: report.ok, findings: report.findings };
+  // Append the log-derived health view (ineffective / uncovered). These are always
+  // WARNING level and computed HERE, never inside validateLessonsGraph — that call
+  // is also the write barrier, and telemetry-derived findings must not gate a write.
+  // `ok`/exit-code stay driven by error-level findings, so warnings never fail.
+  const findings = [...report.findings, ...collectHealthFindings(projectRoot, graph)];
+  const data: LessonsValidateData = { ok: report.ok, findings };
   return { subcommand: 'validate', exitCode: report.ok ? 0 : 1, data };
 }
 

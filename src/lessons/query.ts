@@ -44,6 +44,9 @@ export function queryLessons(graph: LessonsGraph, query: LessonsQuery): MatchedL
   const matched: MatchedLesson[] = [];
   for (const [id, lesson] of Object.entries(graph.lessons)) {
     if (lesson.status !== 'active') continue;
+    // Always-on lessons are delivered on every task (see collectAlwaysLessons),
+    // not via triggers — exclude them here so triggered recall never double-injects.
+    if (lesson.scope === 'always') continue;
     if (lesson.triggers.some((t) => matchedTriggerIds.has(t))) {
       matched.push({ id, lesson });
     }
@@ -51,6 +54,28 @@ export function queryLessons(graph: LessonsGraph, query: LessonsQuery): MatchedL
 
   matched.sort((a, b) => (a.id < b.id ? -1 : 1));
   return matched;
+}
+
+/**
+ * Active always-on lessons (`scope: 'always'`) — universal standards delivered on
+ * every task rather than matched by triggers. Sorted newest-first (then id) so a
+ * token cap keeps the most recent; the caller bounds the set.
+ */
+export function collectAlwaysLessons(graph: LessonsGraph): MatchedLesson[] {
+  const out: MatchedLesson[] = [];
+  for (const [id, lesson] of Object.entries(graph.lessons)) {
+    if (lesson.status === 'active' && lesson.scope === 'always') out.push({ id, lesson });
+  }
+  out.sort((a, b) =>
+    a.lesson.createdAt !== b.lesson.createdAt
+      ? a.lesson.createdAt < b.lesson.createdAt
+        ? 1
+        : -1
+      : a.id < b.id
+        ? -1
+        : 1,
+  );
+  return out;
 }
 
 /** Matched trigger ids split by kind — drives recall telemetry provenance. */

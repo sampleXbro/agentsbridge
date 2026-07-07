@@ -4,7 +4,7 @@ import { CURRENT_GRAPH_VERSION } from '../../lessons/graph-schema.js';
 import { loadLessonsGraphResilient } from '../../lessons/graph-store.js';
 import { normalizeRecallFile } from '../../lessons/normalize-query-file.js';
 import { ancestorLessonsProjectDir, lessonsSetupHint } from '../../lessons/paths.js';
-import { queryLessons } from '../../lessons/query.js';
+import { collectAlwaysLessons, queryLessons } from '../../lessons/query.js';
 import { rankLessons } from '../../lessons/ranking.js';
 import { recordRecallTelemetry } from '../../lessons/recall.js';
 import { loadRecallConfig, lessonsConfigWarning } from '../../lessons/recall-config.js';
@@ -68,13 +68,20 @@ export function doQuery(
 
   const format = parseFormat(flags);
   const raw = queryFromFlags(flags);
+  // `--always` returns the universal always-on lessons and needs no predicate.
+  const wantAlways = flags.always === true;
   // A recall must be anchored to something. Zero predicates is a no-op call —
   // fail loudly so an agent learns to pass the file/command it is about to touch.
-  if (raw.file === undefined && raw.command === undefined && raw.keyword === undefined) {
+  if (
+    !wantAlways &&
+    raw.file === undefined &&
+    raw.command === undefined &&
+    raw.keyword === undefined
+  ) {
     return errorResult(
       'query',
       'Recall needs a predicate: pass at least one of --file <path-about-to-edit>, ' +
-        '--cmd <command-about-to-run>, or --keyword <text>.',
+        '--cmd <command-about-to-run>, --keyword <text>, or --always.',
       2,
     );
   }
@@ -157,7 +164,11 @@ export function doQuery(
   const maxTokens =
     flags.all === true ? undefined : (numberFlag(flags, 'max-tokens') ?? cfg.maxTokens);
   const ranked = rankLessons(graph, query, forRank, { limit, maxTokens });
-  if (dedup !== null) commitSeen(dedup, ranked.map(({ id }) => id));
+  if (dedup !== null)
+    commitSeen(
+      dedup,
+      ranked.map(({ id }) => id),
+    );
   // Record recall telemetry on the CLI path too (gated; no-op unless opt-in),
   // so shell-driven `lessons query` is visible to `lessons stats` — parity with
   // the MCP `lessons_query` tool, which records via recallLessons. `--all` is a
@@ -165,14 +176,29 @@ export function doQuery(
   recordRecallTelemetry(projectRoot, graph, query, matches, ranked, {
     bypassed: flags.all === true,
   });
-  const lessons = ranked.map(({ id, lesson, score }) => ({
-    id,
-    rule: lesson.rule,
-    topics: [...lesson.topics],
-    triggers: [...lesson.triggers],
-    evidence: [...lesson.evidence],
-    score,
-  }));
+  // `--always` prepends the universal always-on lessons (delivered on every task,
+  // excluded from triggered recall) so a non-hook agent can pull them at task start.
+  const alwaysLessons = wantAlways
+    ? collectAlwaysLessons(graph).map(({ id, lesson }) => ({
+        id,
+        rule: lesson.rule,
+        topics: [...lesson.topics],
+        triggers: [...lesson.triggers],
+        evidence: [...lesson.evidence],
+        score: undefined,
+      }))
+    : [];
+  const lessons = [
+    ...alwaysLessons,
+    ...ranked.map(({ id, lesson, score }) => ({
+      id,
+      rule: lesson.rule,
+      topics: [...lesson.topics],
+      triggers: [...lesson.triggers],
+      evidence: [...lesson.evidence],
+      score,
+    })),
+  ];
   const suppressed = matches.length - forRank.length;
   const data: LessonsQueryData = {
     lessons,

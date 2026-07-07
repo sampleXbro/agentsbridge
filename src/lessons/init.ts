@@ -2,11 +2,14 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { maybeAutoMigrateLessons } from './auto-migrate.js';
 import { captureLogPath } from './capture-telemetry.js';
+import { outcomeLogPath } from './outcome-log.js';
 import { mutateLessonsGraphLocked } from './mutate.js';
 import { lessonsPaths, toRelPath } from './paths.js';
 import { defaultLessonsConfig } from './recall-config.js';
 import { injectRecallHook } from './recall-hook-scaffold.js';
+import { LESSONS_GITATTRIBUTES_ENTRY } from './merge-driver-setup.js';
 import { recallLogPath } from './telemetry.js';
+import { ensureGitattributesEntries } from '../utils/filesystem/gitattributes.js';
 import { ensureGitignoreEntries } from '../utils/filesystem/gitignore.js';
 import {
   appendLessonsParagraph,
@@ -22,6 +25,8 @@ export interface ScaffoldLessonsResult {
   readonly rootRuleUpdated: boolean;
   /** True when the recall-log gitignore entry was added to `.gitignore`. */
   readonly gitignoreUpdated: boolean;
+  /** True when the lessons.json merge-driver entry was added to `.gitattributes`. */
+  readonly gitattributesUpdated: boolean;
   /** True when the PostToolUse recall hook was injected into `hooks.yaml`. */
   readonly recallHookInjected: boolean;
 }
@@ -80,8 +85,25 @@ export async function scaffoldLessons(projectRoot: string): Promise<ScaffoldLess
   const gitignoreUpdated = await ensureGitignoreEntries(projectRoot, [
     toRelPath(projectRoot, recallLogPath(projectRoot)),
     toRelPath(projectRoot, captureLogPath(projectRoot)),
+    toRelPath(projectRoot, outcomeLogPath(projectRoot)),
   ]);
-  return { created, updated, skipped, rootRuleUpdated, gitignoreUpdated, recallHookInjected };
+  // Commit the merge-driver binding for the shared graph so a team's concurrent
+  // captures union-merge instead of leaving conflict markers. This is the
+  // COMMITTABLE half; the per-clone `git config` half is surfaced as a setup hint
+  // by the renderer (git cannot auto-run it on clone). Idempotent + preserves any
+  // existing .gitattributes content.
+  const gitattributesUpdated = await ensureGitattributesEntries(projectRoot, [
+    LESSONS_GITATTRIBUTES_ENTRY,
+  ]);
+  return {
+    created,
+    updated,
+    skipped,
+    rootRuleUpdated,
+    gitignoreUpdated,
+    gitattributesUpdated,
+    recallHookInjected,
+  };
 }
 
 /**

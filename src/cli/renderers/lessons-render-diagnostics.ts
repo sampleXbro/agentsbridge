@@ -1,3 +1,4 @@
+import { INEFFECTIVE_MIN_DELIVERIES } from '../../lessons/validate-health.js';
 import { logger } from '../../utils/output/logger.js';
 import type {
   LessonsPruneData,
@@ -17,21 +18,35 @@ function pct(x: number): string {
 
 export function renderStats(data: LessonsStatsData, format: 'text' | 'json'): void {
   if (format === 'json') {
-    // Recall report with the capture aggregate nested under `capture`, so a
-    // single JSON document carries both halves of the telemetry picture.
+    // Recall (cost) with capture (activity) and effectiveness (benefit) nested, so a
+    // single JSON document carries all three halves of the telemetry picture.
     process.stdout.write(
-      `${JSON.stringify({ ...data.report, capture: data.captureReport }, null, 2)}\n`,
+      `${JSON.stringify({ ...data.report, capture: data.captureReport, effectiveness: data.effectiveness }, null, 2)}\n`,
     );
     return;
   }
-  // The empty hint fires only when NEITHER log exists — a capture-only or
-  // recall-only log still shows its block below.
-  if (!data.hasLog && !data.hasCaptureLog) {
+  // The empty hint fires only when NO log exists — any one present shows its block.
+  if (!data.hasLog && !data.hasCaptureLog && !data.hasOutcomeLog) {
     renderEmptyStatsHint(data.telemetryEnabled);
     return;
   }
   if (data.hasLog) renderRecallStats(data.report);
   if (data.hasCaptureLog) renderCaptureStats(data);
+  if (data.hasOutcomeLog) renderEffectivenessStats(data.effectiveness);
+}
+
+function renderEffectivenessStats(e: LessonsStatsData['effectiveness']): void {
+  // The BENEFIT side. `held` is a COARSE upper bound (a delivery with no recorded
+  // repeat on the same action) — not proof of prevention — so it is labeled as
+  // such, with a pointer to `validate` for the actionable ineffective/uncovered list.
+  logger.info(
+    `effectiveness (coarse): ${e.deliveries} deliveries of ${e.lessonsDelivered} lesson${e.lessonsDelivered === 1 ? '' : 's'}, ` +
+      `held ${pct(e.heldRate)} (no repeat recorded on the same action after delivery — a weak upper bound, not proof)`,
+  );
+  logger.info(
+    `  ${e.ineffectiveLessons} ineffective (delivered ≥${INEFFECTIVE_MIN_DELIVERIES}×, repeated every time), ` +
+      `${e.failuresObserved} failures observed — run \`lessons validate\` for the actionable list`,
+  );
 }
 
 function renderEmptyStatsHint(telemetryEnabled: boolean): void {

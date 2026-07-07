@@ -1,6 +1,7 @@
 import type { AutoPruneSummary } from '../../lessons/auto-prune.js';
 import type { GuardrailWarning } from '../../lessons/capture-guardrails.js';
 import type { CaptureStatsReport } from '../../lessons/stats-capture.js';
+import type { EffectivenessStatsReport } from '../../lessons/stats-effectiveness.js';
 import type { RecallStatsReport } from '../../lessons/stats.js';
 import type { ValidationFinding } from '../../lessons/validate.js';
 
@@ -125,10 +126,14 @@ export interface LessonsStatsData {
   readonly report: RecallStatsReport;
   /** Capture-side aggregate (totals, blocked, new vs upsert, trigger-kind mix). */
   readonly captureReport: CaptureStatsReport;
+  /** Benefit-side aggregate (coarse) — did delivered lessons prevent the repeat? */
+  readonly effectiveness: EffectivenessStatsReport;
   /** False when no recall log exists yet (telemetry never enabled). */
   readonly hasLog: boolean;
   /** False when no capture log exists yet — the capture block is shown only when true. */
   readonly hasCaptureLog: boolean;
+  /** False when no outcome log exists yet — the effectiveness block is shown only when true. */
+  readonly hasOutcomeLog: boolean;
   /** Whether telemetry is enabled in THIS process — tailors the empty-log hint. */
   readonly telemetryEnabled: boolean;
 }

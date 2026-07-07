@@ -8,6 +8,7 @@ import {
 import { maybeAutoMigrateLessons } from '../../lessons/auto-migrate.js';
 import { tryLoadLessonsGraph } from '../../lessons/graph-store.js';
 import { captureLesson, recallLessons } from '../../lessons/recall.js';
+import { recallAlwaysLessons } from '../../lessons/recall-always.js';
 import { McpError } from '../errors.js';
 import { lessonsDeprecate, lessonsShow } from './lessons-curation.js';
 
@@ -22,6 +23,8 @@ interface LessonsQueryInput {
   /** CLI-flag alias of `max_tokens` (--max-tokens); folded in below. */
   readonly 'max-tokens'?: number;
   readonly verbose?: boolean;
+  /** Include the universal always-on lessons (no predicate required). */
+  readonly always?: boolean;
 }
 
 /** A list input the agent may pass as a bare string or an array (CLI parity). */
@@ -43,6 +46,8 @@ interface LessonsAddInput {
   readonly rationale?: string;
   readonly new_topic?: boolean;
   readonly topic_summary?: string;
+  /** `'always'` = a universal always-on lesson (no trigger needed). */
+  readonly scope?: string;
 }
 
 /**
@@ -95,13 +100,18 @@ export const lessonsHandlers = {
       command: input.command ?? input.cmd,
       keyword: input.keyword,
     };
-    if (query.file === undefined && query.command === undefined && query.keyword === undefined) {
+    if (
+      input.always !== true &&
+      query.file === undefined &&
+      query.command === undefined &&
+      query.keyword === undefined
+    ) {
       throw new McpError(
         'VALIDATION_FAILED',
-        'lessons_query: provide at least one of file, command, or keyword to recall against.',
+        'lessons_query: provide at least one of file, command, keyword, or always=true to recall against.',
       );
     }
-    if (query.file === undefined && query.command === undefined) {
+    if (query.keyword !== undefined && query.file === undefined && query.command === undefined) {
       process.stderr.write(
         'agentsmesh: keyword-only recall misses file_glob/command_pattern lessons — ' +
           'pass file and/or command for complete recall.\n',
@@ -128,22 +138,29 @@ export const lessonsHandlers = {
         `agentsmesh: lessons.json is version ${newerVersion}, newer than this build supports — recall returned no lessons. Upgrade agentsmesh to read it.\n`,
       );
     }
+    // `always=true` prepends the universal always-on lessons (excluded from
+    // triggered recall) so a non-hook agent can pull them at task start.
+    const alwaysOut =
+      input.always === true ? (await recallAlwaysLessons(ctx.projectRoot)).lessons : [];
     // Compact by default — return only id + rule to keep recall token-cheap.
     // Metadata (topics/triggers/evidence/score) is opt-in via `verbose`.
     const verbose = input.verbose === true;
     return {
-      lessons: ranked.map(({ id, lesson, score }) =>
-        verbose
-          ? {
-              id,
-              rule: lesson.rule,
-              topics: [...lesson.topics],
-              triggers: [...lesson.triggers],
-              evidence: [...lesson.evidence],
-              score,
-            }
-          : { id, rule: lesson.rule },
-      ),
+      lessons: [
+        ...alwaysOut.map(({ id, rule }) => ({ id, rule })),
+        ...ranked.map(({ id, lesson, score }) =>
+          verbose
+            ? {
+                id,
+                rule: lesson.rule,
+                topics: [...lesson.topics],
+                triggers: [...lesson.triggers],
+                evidence: [...lesson.evidence],
+                score,
+              }
+            : { id, rule: lesson.rule },
+        ),
+      ],
       totalMatches,
       ...(suppressed > 0 ? { suppressed } : {}),
     };
@@ -175,6 +192,12 @@ export const lessonsHandlers = {
     warnings: Array<{ code: string; message: string }>;
     autoPruned?: { removedTriggers: number; removedTopics: number; detachedDeadGlobs: number };
   }> {
+    if (input.scope !== undefined && input.scope !== 'always') {
+      throw new McpError(
+        'VALIDATION_FAILED',
+        `lessons_add: scope must be "always" (got "${input.scope}").`,
+      );
+    }
     // captureLesson migrates any legacy store first so capture enriches the real
     // graph instead of creating lessons.json and stranding the legacy lessons.
     try {
@@ -193,6 +216,7 @@ export const lessonsHandlers = {
           },
           evidence: toEvidenceList(input.evidence),
           rationale: input.rationale,
+          ...(input.scope === 'always' ? { scope: 'always' as const } : {}),
         },
         {
           allowNewTopic: input.new_topic === true,

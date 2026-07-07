@@ -1,3 +1,5 @@
+import type { ScaffoldLessonsResult } from '../lessons/init.js';
+
 export type CommandResult =
   | { success: true; data: unknown }
   | { success: false; error: string; data?: unknown };
@@ -26,17 +28,11 @@ export interface InitData {
   importedToolCount: number;
   scaffoldType: 'full' | 'gap-fill' | 'none';
   gitignoreUpdated: boolean;
-  /** Populated when --lessons is passed; absent otherwise. */
-  lessons?: {
-    created: string[];
-    updated: string[];
-    skipped: string[];
-    rootRuleUpdated: boolean;
-    /** True when the recall-log gitignore entry was added to `.gitignore`. */
-    gitignoreUpdated: boolean;
-    /** True when the PostToolUse recall hook was injected into `hooks.yaml`. */
-    recallHookInjected: boolean;
-  };
+  /**
+   * Populated when --lessons is passed; absent otherwise. The scaffold's own
+   * result type is the single source of truth — do not re-declare the shape here.
+   */
+  lessons?: ScaffoldLessonsResult;
   /**
    * True when --lessons was passed against an already-initialized project,
    * meaning init only scaffolded the lessons subsystem (config + scaffold

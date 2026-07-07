@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import type { AddLessonInput } from './add.js';
-import type { Lesson, Topic, Trigger } from './graph-schema.js';
+import { CURRENT_GRAPH_VERSION, type Lesson, type Topic, type Trigger } from './graph-schema.js';
 import {
   collectClusterTriggerIds,
   deleteLegacyArtifacts,
@@ -149,7 +149,7 @@ export async function importLegacyLessons(
     if (options.force !== true && populated) {
       throw new LessonsGraphExistsError();
     }
-    g.version = 1;
+    g.version = CURRENT_GRAPH_VERSION;
     g.lessons = lessons;
     g.topics = topics;
     g.triggers = triggers;

@@ -51,6 +51,19 @@ describe('addLesson', () => {
     expect(graph.topics['windows-paths']?.summary).toBe('Path handling.');
   });
 
+  it('captures an always-scoped lesson with NO trigger (gates skipped, scope stored)', async () => {
+    const result = await addLesson(
+      root,
+      { rule: 'Write comments per the repo style.', topic: 'style', triggers: {}, scope: 'always' },
+      { allowNewTopic: true, topicSummary: 'Style.' },
+    );
+    expect(result.isNewLesson).toBe(true);
+    const graph = loadLessonsGraph(root);
+    const lesson = graph.lessons[result.id];
+    expect(lesson?.scope).toBe('always');
+    expect(lesson?.triggers).toEqual([]);
+  });
+
   it('assigns a deterministic kebab-case id derived from topic and rule', async () => {
     seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
     const result = await addLesson(root, baseInput);
@@ -60,9 +73,9 @@ describe('addLesson', () => {
 
   it('rejects a new lesson with no triggers (unreachable)', async () => {
     seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
-    await expect(
-      addLesson(root, { ...baseInput, triggers: {} }),
-    ).rejects.toThrow(/at least one trigger/i);
+    await expect(addLesson(root, { ...baseInput, triggers: {} })).rejects.toThrow(
+      /at least one trigger/i,
+    );
   });
 
   it('allows re-adding an existing lesson with no new triggers (upsert keeps its triggers)', async () => {

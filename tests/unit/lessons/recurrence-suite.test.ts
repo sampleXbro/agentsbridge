@@ -118,7 +118,7 @@ describe('parseSuite', () => {
 
   it('rejects a graph with an unsupported version (shape validation)', () => {
     const raw = validSuite();
-    (raw.graph as { version: number }).version = 2;
+    (raw.graph as { version: number }).version = 99;
     expect(() => parseSuite(raw)).toThrow();
   });
 

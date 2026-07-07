@@ -1,7 +1,17 @@
 import { z } from 'zod';
 
-/** Schema version this build reads/writes. A graph stamped higher is from a newer CLI. */
-export const CURRENT_GRAPH_VERSION = 1;
+/**
+ * Schema version this build WRITES. A graph stamped higher is from a newer CLI.
+ * v2 adds the optional lesson `scope: 'always'` (always-on lessons). Reads accept
+ * v1 (legacy) and v2 — see {@link VersionSchema}; every write stamps this value, so
+ * a v1 graph upgrades to v2 on first mutation. An older CLI reading a v2 graph
+ * reports `newer-version` (graph-store) and degrades gracefully rather than
+ * choking on the unknown `scope` key under its strict v1 schema.
+ */
+export const CURRENT_GRAPH_VERSION = 2;
+
+/** Versions this build can READ (accepts legacy v1 and current v2). */
+const VersionSchema = z.union([z.literal(1), z.literal(2)]);
 
 /**
  * Upper bound on a lesson rule's length, in characters. A rule is one imperative
@@ -48,12 +58,19 @@ const LessonSchema = z
     status: LessonStatusSchema,
     supersededBy: IdSchema.optional(),
     createdAt: DateSchema,
+    /**
+     * `'always'` marks an ALWAYS-ON lesson: a universal standard delivered on
+     * every task (via the UserPromptSubmit hook / a `--always` recall) rather than
+     * matched by triggers. Such a lesson needs no trigger and is excluded from
+     * triggered recall. Absent = a normal triggered lesson.
+     */
+    scope: z.literal('always').optional(),
   })
   .strict();
 
 export const LessonsGraphSchema = z
   .object({
-    version: z.literal(CURRENT_GRAPH_VERSION),
+    version: VersionSchema,
     lessons: z.record(IdSchema, LessonSchema),
     topics: z.record(IdSchema, TopicSchema),
     triggers: z.record(IdSchema, TriggerSchema),

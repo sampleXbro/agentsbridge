@@ -1,6 +1,7 @@
-import { resolve, sep } from 'node:path';
+import { resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { McpError } from '../errors.js';
+import { assertContainedPath } from './path-containment.js';
 
 export async function safeRead(opts: {
   projectRoot: string;
@@ -9,9 +10,12 @@ export async function safeRead(opts: {
 }): Promise<string> {
   const root = resolve(opts.projectRoot, '.agentsmesh/skills', opts.skillName);
   const target = resolve(root, opts.filePath);
-  if (!target.startsWith(root + sep) && target !== root) {
-    throw new McpError('PATH_TRAVERSAL', 'file escapes skill directory');
-  }
+  await assertContainedPath({
+    root,
+    target,
+    boundaryRoot: opts.projectRoot,
+    message: 'file escapes skill directory',
+  });
   try {
     return await readFile(target, 'utf8');
   } catch (e: unknown) {

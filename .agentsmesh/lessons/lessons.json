@@ -4836,6 +4836,36 @@
         "t-glob-4c8d45b0"
       ]
     },
+    "mcp-path-containment-mcp-path-containment-canonicalize-recons": {
+      "createdAt": "2026-07-08",
+      "evidence": [
+        "commit:54b4f38f"
+      ],
+      "rule": "MCP path containment: canonicalize() reconstructs a DANGLING symlink leaf (a link whose target does not exist) as if it were an in-root file — realpath throws ENOENT, the tail is re-appended, and assertContainedPath then ALLOWS it. Any writer relying on the guard MUST create via temp-file + rename (rename replaces the link) and must NEVER writeFile directly on the target path (that follows the dangling link and writes outside the project). safeWrite/safeConfigWrite/atomicWrite are all rename-based; keep every new MCP writer rename-based.",
+      "status": "active",
+      "topics": [
+        "mcp-path-containment"
+      ],
+      "triggers": [
+        "t-glob-2f2abaf1",
+        "t-glob-13a07989"
+      ]
+    },
+    "mcp-path-containment-mcp-path-containment-must-anchor": {
+      "createdAt": "2026-07-08",
+      "evidence": [
+        "commit:54b4f38f"
+      ],
+      "rule": "MCP path containment must anchor the boundary at the PROJECT ROOT, never at `.agentsmesh`: a `.agentsmesh` boundary canonicalizes THROUGH a symlinked `.agentsmesh` and cancels (root and boundary both resolve outside, so the escape passes) — this lets a symlinked `.agentsmesh` parent leak reads and land destructive out-of-tree writes. Guard EVERY user/config read, write, AND delete at choke points so no handler can forget: canonical `list` (not just get/update/delete), settings config WRITES (atomicWrite + safeConfigWrite), and read-before-write pre-reads (updatePermissions/updateIgnore append). Every symlink test must `it.skipIf(platform()==='win32')` — unprivileged Windows `symlink()` throws EPERM and reddens the windows-latest CI matrix.",
+      "status": "active",
+      "topics": [
+        "mcp-path-containment"
+      ],
+      "triggers": [
+        "t-glob-13a07989",
+        "t-glob-2f2abaf1"
+      ]
+    },
     "pnpm-lockfile-in-this-repo-run-dev": {
       "createdAt": "2026-06-23",
       "evidence": [],
@@ -6514,6 +6544,21 @@
         "t-cmd-7c1c43ea"
       ]
     },
+    "verification-workflow-to-fetch-a-pr-head": {
+      "createdAt": "2026-07-07",
+      "evidence": [
+        "commit:d4e496a5"
+      ],
+      "rationale": "SSH keyless environment blocks the default origin fetch when reviewing external PRs.",
+      "rule": "To fetch a PR head in this repo, `origin` is SSH-only (git@github.com) with no local key so `git fetch origin pull/<n>/head` fails with Permission denied (publickey); instead fetch over HTTPS with the gh token: `git fetch \"https://x-access-token:$(gh auth token)@github.com/<owner>/<repo>.git\" pull/<n>/head:pr-<n>`.",
+      "status": "active",
+      "topics": [
+        "verification-workflow"
+      ],
+      "triggers": [
+        "t-cmd-671640f4"
+      ]
+    },
     "verification-workflow-verify-a-referenced-source-path": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -7413,6 +7458,9 @@
     "mcp-generate-lock": {
       "summary": "MCP generate must mirror CLI generate (lockfile/stale-cleanup/process-lock)"
     },
+    "mcp-path-containment": {
+      "summary": "MCP path containment implementation guardrails (project-root anchor, choke points, Windows symlink tests)"
+    },
     "pnpm-lockfile": {
       "summary": "pnpm lockfile overrides ↔ package.json consistency and pnpm-version parity with CI (CI uses pnpm 10)."
     },
@@ -7581,6 +7629,10 @@
     "t-cmd-64a39b90": {
       "kind": "command_pattern",
       "pattern": "pnpm exec"
+    },
+    "t-cmd-671640f4": {
+      "kind": "command_pattern",
+      "pattern": "git fetch.*pull/\\d+/head"
     },
     "t-cmd-69dc7d4e": {
       "kind": "command_pattern",
@@ -7858,6 +7910,10 @@
       "kind": "file_glob",
       "pattern": "src/targets/catalog/registry.ts"
     },
+    "t-glob-13a07989": {
+      "kind": "file_glob",
+      "pattern": "src/mcp/handlers/*.ts"
+    },
     "t-glob-151a6581": {
       "kind": "file_glob",
       "pattern": "tests/e2e/helpers/**"
@@ -7929,6 +7985,10 @@
     "t-glob-2e07c687": {
       "kind": "file_glob",
       "pattern": "src/lessons/ranking.ts"
+    },
+    "t-glob-2f2abaf1": {
+      "kind": "file_glob",
+      "pattern": "src/mcp/writers/*.ts"
     },
     "t-glob-300bbdba": {
       "kind": "file_glob",

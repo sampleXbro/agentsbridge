@@ -5,6 +5,7 @@ import type { McpContext } from '../context.js';
 import { McpError } from '../errors.js';
 import { MAX_DIR_ENTRIES } from '../limits.js';
 import { safeWrite } from '../writers/safe-write.js';
+import { assertContainedPath } from '../writers/path-containment.js';
 import { parseMd, serializeMd } from '../writers/md-frontmatter.js';
 
 // Flat identifier only — `/` is intentionally excluded so canonical names
@@ -82,6 +83,12 @@ export function createCanonicalHandlers<TSummary>(
 
   return {
     async list(ctx) {
+      // Reject a symlinked feature dir before reading any file through it.
+      await assertContainedPath({
+        root: ctx.projectRoot,
+        target: featureDir(ctx.projectRoot),
+        message: `path escapes ${feature} directory`,
+      });
       const files = await listFiles(ctx.projectRoot);
       const out: TSummary[] = [];
       for (const f of files) {
@@ -96,6 +103,12 @@ export function createCanonicalHandlers<TSummary>(
     async get(ctx, { name }) {
       checkName(name);
       const file = pathFor(ctx.projectRoot, feature, name);
+      await assertContainedPath({
+        root: featureDir(ctx.projectRoot),
+        target: file,
+        boundaryRoot: ctx.projectRoot,
+        message: `path escapes ${feature} directory`,
+      });
       try {
         const src = await readFile(file, 'utf8');
         const { frontmatter, body } = parseMd(src);
@@ -111,11 +124,19 @@ export function createCanonicalHandlers<TSummary>(
 
     async create(ctx, { name, frontmatter, body, dry_run }) {
       checkName(name);
+      const file = pathFor(ctx.projectRoot, feature, name);
+      // Assert containment BEFORE the existence probe so a symlinked feature dir
+      // cannot leak an out-of-project filename-existence oracle via ALREADY_EXISTS.
+      await assertContainedPath({
+        root: featureDir(ctx.projectRoot),
+        target: file,
+        boundaryRoot: ctx.projectRoot,
+        message: `path escapes ${feature} directory`,
+      });
       const parsed = frontmatterSchema.safeParse(frontmatter);
       if (!parsed.success) {
         throw new McpError('VALIDATION_FAILED', 'invalid frontmatter', parsed.error.issues);
       }
-      const file = pathFor(ctx.projectRoot, feature, name);
       if (await exists(file)) throw new McpError('ALREADY_EXISTS', `${feature} "${name}" exists`);
       const all = await listFiles(ctx.projectRoot);
       if (all.length >= MAX_DIR_ENTRIES) {
@@ -136,6 +157,12 @@ export function createCanonicalHandlers<TSummary>(
       checkName(name);
       const file = pathFor(ctx.projectRoot, feature, name);
       let current: { frontmatter: Record<string, unknown>; body: string };
+      await assertContainedPath({
+        root: featureDir(ctx.projectRoot),
+        target: file,
+        boundaryRoot: ctx.projectRoot,
+        message: `path escapes ${feature} directory`,
+      });
       try {
         const src = await readFile(file, 'utf8');
         current = parseMd(src);
@@ -174,6 +201,12 @@ export function createCanonicalHandlers<TSummary>(
         throw new McpError('PROTECTED_FILE', `${feature} "${name}" requires force: true`);
       }
       const file = pathFor(ctx.projectRoot, feature, name);
+      await assertContainedPath({
+        root: featureDir(ctx.projectRoot),
+        target: file,
+        boundaryRoot: ctx.projectRoot,
+        message: `path escapes ${feature} directory`,
+      });
       if (!(await exists(file))) throw new McpError('NOT_FOUND', `${feature} "${name}" not found`);
       if (dry_run === true) return { path: file, deleted: false };
       await rm(file);

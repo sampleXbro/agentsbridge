@@ -530,6 +530,7 @@
         "dist-backed-tests"
       ],
       "triggers": [
+        "t-glob-08eb6b3f",
         "t-glob-a970d979",
         "t-glob-151a6581",
         "t-glob-d23b21be",
@@ -550,6 +551,7 @@
         "dist-backed-tests"
       ],
       "triggers": [
+        "t-glob-08eb6b3f",
         "t-glob-a970d979",
         "t-glob-151a6581",
         "t-glob-d23b21be",
@@ -570,6 +572,7 @@
         "dist-backed-tests"
       ],
       "triggers": [
+        "t-glob-08eb6b3f",
         "t-glob-a970d979",
         "t-glob-151a6581",
         "t-glob-d23b21be",
@@ -590,6 +593,7 @@
         "dist-backed-tests"
       ],
       "triggers": [
+        "t-glob-08eb6b3f",
         "t-glob-a970d979",
         "t-glob-151a6581",
         "t-glob-d23b21be",
@@ -610,6 +614,7 @@
         "dist-backed-tests"
       ],
       "triggers": [
+        "t-glob-08eb6b3f",
         "t-glob-a970d979",
         "t-glob-151a6581",
         "t-glob-d23b21be",
@@ -630,6 +635,7 @@
         "dist-backed-tests"
       ],
       "triggers": [
+        "t-glob-08eb6b3f",
         "t-glob-a970d979",
         "t-glob-151a6581",
         "t-glob-d23b21be",
@@ -650,6 +656,7 @@
         "dist-backed-tests"
       ],
       "triggers": [
+        "t-glob-08eb6b3f",
         "t-glob-a970d979",
         "t-glob-151a6581",
         "t-glob-d23b21be",
@@ -4829,20 +4836,6 @@
         "t-glob-4c8d45b0"
       ]
     },
-    "mcp-path-containment-when-implementing-boolean-containment-he": {
-      "createdAt": "2026-07-07",
-      "evidence": [
-        "HEAD"
-      ],
-      "rule": "When implementing boolean containment helpers, make the allowed branch return true explicitly before relying on negative-path tests.",
-      "status": "active",
-      "topics": [
-        "mcp-path-containment"
-      ],
-      "triggers": [
-        "t-glob-7562526b"
-      ]
-    },
     "pnpm-lockfile-in-this-repo-run-dev": {
       "createdAt": "2026-06-23",
       "evidence": [],
@@ -7420,9 +7413,6 @@
     "mcp-generate-lock": {
       "summary": "MCP generate must mirror CLI generate (lockfile/stale-cleanup/process-lock)"
     },
-    "mcp-path-containment": {
-      "summary": "MCP path containment implementation guardrails"
-    },
     "pnpm-lockfile": {
       "summary": "pnpm lockfile overrides ↔ package.json consistency and pnpm-version parity with CI (CI uses pnpm 10)."
     },
@@ -7816,6 +7806,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/strip-markers.ts"
     },
+    "t-glob-08eb6b3f": {
+      "kind": "file_glob",
+      "pattern": "dist/cli.js"
+    },
     "t-glob-09987b10": {
       "kind": "file_glob",
       "pattern": "src/lessons/validate-liveness.ts"
@@ -8163,10 +8157,6 @@
     "t-glob-7462f277": {
       "kind": "file_glob",
       "pattern": ".agentsmesh/skills/**/SKILL.md"
-    },
-    "t-glob-7562526b": {
-      "kind": "file_glob",
-      "pattern": "src/mcp/writers/path-containment.ts"
     },
     "t-glob-759713e1": {
       "kind": "file_glob",

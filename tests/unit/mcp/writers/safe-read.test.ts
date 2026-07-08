@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtemp, rm, mkdir, writeFile, symlink } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { tmpdir, platform } from 'node:os';
 import { join } from 'node:path';
 import { safeRead } from '../../../../src/mcp/writers/safe-read.js';
+
+const isWin = platform() === 'win32';
 
 let projectRoot: string;
 let outsideDir: string;
@@ -28,7 +30,7 @@ describe('safeRead', () => {
       safeRead({ projectRoot, skillName: 'example', filePath: '../../../etc/passwd' }),
     ).rejects.toMatchObject({ code: 'PATH_TRAVERSAL' });
   });
-  it('blocks symlinked files that escape the skill dir', async () => {
+  it.skipIf(isWin)('blocks symlinked files that escape the skill dir', async () => {
     await writeFile(join(outsideDir, 'secret.md'), 'secret', 'utf8');
     await symlink(
       join(outsideDir, 'secret.md'),
@@ -42,5 +44,11 @@ describe('safeRead', () => {
     await expect(
       safeRead({ projectRoot, skillName: 'example', filePath: 'missing.md' }),
     ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+  });
+  it('throws IO_ERROR on a non-ENOENT read failure (target is a directory)', async () => {
+    await mkdir(join(projectRoot, '.agentsmesh/skills/example/adir'), { recursive: true });
+    await expect(
+      safeRead({ projectRoot, skillName: 'example', filePath: 'adir' }),
+    ).rejects.toMatchObject({ code: 'IO_ERROR' });
   });
 });

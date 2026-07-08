@@ -37,7 +37,7 @@ async function atomicWrite(
   await assertContainedPath({
     root,
     target,
-    boundaryRoot: skillsDir(projectRoot),
+    boundaryRoot: projectRoot,
     message: 'file escapes skill directory',
   });
   if (Buffer.byteLength(content, 'utf8') > MAX_FILE_SIZE_BYTES) {
@@ -56,7 +56,7 @@ async function assertSkillFile(projectRoot: string, dir: string, target: string)
   await assertContainedPath({
     root: dir,
     target,
-    boundaryRoot: skillsDir(projectRoot),
+    boundaryRoot: projectRoot,
     message: 'file escapes skill directory',
   });
 }
@@ -68,6 +68,12 @@ export interface SkillSummary {
 
 export const skillsHandlers = {
   async list(ctx: McpContext): Promise<SkillSummary[]> {
+    // Reject a symlinked skills tree before enumerating (mirrors canonical list).
+    await assertContainedPath({
+      root: ctx.projectRoot,
+      target: skillsDir(ctx.projectRoot),
+      message: 'skills directory escapes project',
+    });
     let entries: string[];
     try {
       entries = (await readdir(skillsDir(ctx.projectRoot), { withFileTypes: true }))
@@ -142,11 +148,19 @@ export const skillsHandlers = {
     },
   ): Promise<{ path: string; written: boolean; supportingFilesWritten: string[] }> {
     checkName(input.name);
+    const dir = skillDir(ctx.projectRoot, input.name);
+    // Assert containment BEFORE the existence probe so a symlinked skills tree
+    // cannot leak an out-of-project existence oracle via ALREADY_EXISTS.
+    await assertContainedPath({
+      root: skillsDir(ctx.projectRoot),
+      target: dir,
+      boundaryRoot: ctx.projectRoot,
+      message: 'skill escapes skills directory',
+    });
     const parsed = skillFrontmatter.safeParse(input.frontmatter);
     if (!parsed.success) {
       throw new McpError('VALIDATION_FAILED', 'invalid frontmatter', parsed.error.issues);
     }
-    const dir = skillDir(ctx.projectRoot, input.name);
     let dirExists = false;
     try {
       await stat(dir);
@@ -256,6 +270,12 @@ export const skillsHandlers = {
   ): Promise<{ path: string; deleted: boolean }> {
     checkName(name);
     const dir = skillDir(ctx.projectRoot, name);
+    await assertContainedPath({
+      root: skillsDir(ctx.projectRoot),
+      target: dir,
+      boundaryRoot: ctx.projectRoot,
+      message: 'skill escapes skills directory',
+    });
     try {
       await stat(dir);
     } catch {

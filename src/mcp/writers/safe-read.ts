@@ -8,13 +8,12 @@ export async function safeRead(opts: {
   skillName: string;
   filePath: string;
 }): Promise<string> {
-  const skillsRoot = resolve(opts.projectRoot, '.agentsmesh/skills');
   const root = resolve(opts.projectRoot, '.agentsmesh/skills', opts.skillName);
   const target = resolve(root, opts.filePath);
   await assertContainedPath({
     root,
     target,
-    boundaryRoot: skillsRoot,
+    boundaryRoot: opts.projectRoot,
     message: 'file escapes skill directory',
   });
   try {

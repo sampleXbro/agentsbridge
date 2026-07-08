@@ -12,13 +12,12 @@ export interface SafeWriteOptions {
 }
 
 export async function safeWrite(opts: SafeWriteOptions): Promise<string> {
-  const canonicalRoot = resolve(opts.projectRoot, '.agentsmesh');
   const root = resolve(opts.projectRoot, '.agentsmesh', opts.feature);
   const target = resolve(root, opts.relativePath);
   await assertContainedPath({
     root,
     target,
-    boundaryRoot: canonicalRoot,
+    boundaryRoot: opts.projectRoot,
     message: `path escapes ${opts.feature} directory`,
   });
   if (Buffer.byteLength(opts.content, 'utf8') > MAX_FILE_SIZE_BYTES) {

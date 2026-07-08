@@ -1,10 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtemp, rm, mkdir, writeFile, readFile, stat, symlink } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { tmpdir, platform } from 'node:os';
 import { join } from 'node:path';
 import { skillsHandlers } from '../../../../src/mcp/handlers/skills.js';
 import { resolveContext } from '../../../../src/mcp/context.js';
 import type { McpContext } from '../../../../src/mcp/context.js';
+
+const isWin = platform() === 'win32';
 
 let projectRoot: string;
 let outsideDir: string;
@@ -72,7 +74,7 @@ describe('skillsHandlers', () => {
     expect(r.supportingFiles).toEqual(['helper.md', 'template.ts']);
   });
 
-  it('get rejects SKILL.md symlinked outside the skill dir', async () => {
+  it.skipIf(isWin)('get rejects SKILL.md symlinked outside the skill dir', async () => {
     await makeSkill('linked-skill', '---\ndescription: placeholder\n---\n\nbody\n');
     await rm(join(projectRoot, '.agentsmesh/skills/linked-skill/SKILL.md'));
     await writeFile(join(outsideDir, 'SKILL.md'), '---\n---\n\nsecret\n', 'utf8');
@@ -84,6 +86,65 @@ describe('skillsHandlers', () => {
       code: 'PATH_TRAVERSAL',
     });
   });
+
+  it.skipIf(isWin)('get rejects reads through a symlinked skills tree', async () => {
+    // The whole skills dir is a symlink to an external location holding a skill.
+    await rm(join(projectRoot, '.agentsmesh/skills'), { recursive: true, force: true });
+    await mkdir(join(outsideDir, 'ext-skill'), { recursive: true });
+    await writeFile(
+      join(outsideDir, 'ext-skill/SKILL.md'),
+      '---\ndescription: x\n---\n\nb\n',
+      'utf8',
+    );
+    await symlink(outsideDir, join(projectRoot, '.agentsmesh/skills'), 'dir');
+    await expect(skillsHandlers.get(ctx, { name: 'ext-skill' })).rejects.toMatchObject({
+      code: 'PATH_TRAVERSAL',
+    });
+  });
+
+  it.skipIf(isWin)(
+    'delete rejects removals through a symlinked skills tree (no escape)',
+    async () => {
+      await rm(join(projectRoot, '.agentsmesh/skills'), { recursive: true, force: true });
+      await mkdir(join(outsideDir, 'ext-skill'), { recursive: true });
+      await writeFile(join(outsideDir, 'ext-skill/SKILL.md'), '---\n---\n\nb\n', 'utf8');
+      await symlink(outsideDir, join(projectRoot, '.agentsmesh/skills'), 'dir');
+      await expect(skillsHandlers.delete(ctx, { name: 'ext-skill' })).rejects.toMatchObject({
+        code: 'PATH_TRAVERSAL',
+      });
+      // The outside skill must survive the rejected delete.
+      await expect(stat(join(outsideDir, 'ext-skill/SKILL.md'))).resolves.toBeDefined();
+    },
+  );
+
+  it.skipIf(isWin)('list rejects reads through a symlinked skills tree', async () => {
+    await rm(join(projectRoot, '.agentsmesh/skills'), { recursive: true, force: true });
+    await mkdir(join(outsideDir, 'ext-skill'), { recursive: true });
+    await writeFile(
+      join(outsideDir, 'ext-skill/SKILL.md'),
+      '---\ndescription: x\n---\n\nb\n',
+      'utf8',
+    );
+    await symlink(outsideDir, join(projectRoot, '.agentsmesh/skills'), 'dir');
+    await expect(skillsHandlers.list(ctx)).rejects.toMatchObject({ code: 'PATH_TRAVERSAL' });
+  });
+
+  it.skipIf(isWin)(
+    'create rejects through a symlinked skills tree even when the target exists',
+    async () => {
+      await mkdir(join(outsideDir, 'ext-skill'), { recursive: true });
+      await writeFile(join(outsideDir, 'ext-skill/SKILL.md'), '---\n---\n\nx\n', 'utf8');
+      await rm(join(projectRoot, '.agentsmesh/skills'), { recursive: true, force: true });
+      await symlink(outsideDir, join(projectRoot, '.agentsmesh/skills'), 'dir');
+      await expect(
+        skillsHandlers.create(ctx, {
+          name: 'ext-skill',
+          frontmatter: { description: 'x' },
+          body: 'b\n',
+        }),
+      ).rejects.toMatchObject({ code: 'PATH_TRAVERSAL' });
+    },
+  );
 
   // 4. get throws NOT_FOUND for missing skill
   it('get throws NOT_FOUND for missing skill', async () => {
@@ -216,7 +277,7 @@ describe('skillsHandlers', () => {
     expect(newFile).toBe('brand new');
   });
 
-  it('update rejects writes through symlinked supporting directories', async () => {
+  it.skipIf(isWin)('update rejects writes through symlinked supporting directories', async () => {
     await symlink(outsideDir, join(projectRoot, '.agentsmesh/skills/my-skill/linked'), 'dir');
     await expect(
       skillsHandlers.update(ctx, {
@@ -226,7 +287,7 @@ describe('skillsHandlers', () => {
     ).rejects.toMatchObject({ code: 'PATH_TRAVERSAL' });
   });
 
-  it('update rejects deletes through symlinked supporting directories', async () => {
+  it.skipIf(isWin)('update rejects deletes through symlinked supporting directories', async () => {
     await writeFile(join(outsideDir, 'secret.md'), 'secret', 'utf8');
     await symlink(outsideDir, join(projectRoot, '.agentsmesh/skills/my-skill/linked'), 'dir');
     await expect(
@@ -236,6 +297,15 @@ describe('skillsHandlers', () => {
       }),
     ).rejects.toMatchObject({ code: 'PATH_TRAVERSAL' });
     expect(await readFile(join(outsideDir, 'secret.md'), 'utf8')).toBe('secret');
+  });
+
+  it('update rethrows a non-ENOENT error when deleting a supporting file fails', async () => {
+    // A non-empty directory at the supporting path makes rm() fail with a
+    // non-ENOENT error, which must propagate (not be swallowed like ENOENT).
+    await mkdir(join(projectRoot, '.agentsmesh/skills/my-skill/dir.md/inner'), { recursive: true });
+    await expect(
+      skillsHandlers.update(ctx, { name: 'my-skill', supportingFiles: { 'dir.md': null } }),
+    ).rejects.toBeDefined();
   });
 
   // 13. update honors dry_run (returns intended written/deleted lists, no fs writes)

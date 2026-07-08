@@ -1,13 +1,16 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtemp, rm, mkdir, writeFile, readFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { mkdtemp, rm, mkdir, writeFile, readFile, symlink } from 'node:fs/promises';
+import { tmpdir, platform } from 'node:os';
 import { join } from 'node:path';
 import { settingsHandlers } from '../../../../src/mcp/handlers/settings.js';
 import { parseHooks } from '../../../../src/canonical/features/hooks.js';
 import { resolveContext } from '../../../../src/mcp/context.js';
 import type { McpContext } from '../../../../src/mcp/context.js';
 
+const isWin = platform() === 'win32';
+
 let projectRoot: string;
+let outsideDir: string;
 let ctx: McpContext;
 
 const BASELINE_YAML = `version: 1
@@ -53,6 +56,7 @@ dist
 
 beforeEach(async () => {
   projectRoot = await mkdtemp(join(tmpdir(), 'settings-'));
+  outsideDir = await mkdtemp(join(tmpdir(), 'settings-out-'));
   await mkdir(join(projectRoot, '.agentsmesh'), { recursive: true });
   await writeFile(join(projectRoot, 'agentsmesh.yaml'), BASELINE_YAML, 'utf8');
   await writeFile(join(projectRoot, '.agentsmesh/mcp.json'), BASELINE_MCP_JSON, 'utf8');
@@ -68,6 +72,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await rm(projectRoot, { recursive: true, force: true });
+  await rm(outsideDir, { recursive: true, force: true });
 });
 
 describe('settingsHandlers', () => {
@@ -117,6 +122,164 @@ describe('settingsHandlers', () => {
     const result = await settingsHandlers.getIgnore(ctx);
     expect(result.patterns).toEqual(['node_modules', 'dist', '.env']);
   });
+
+  it('getPermissions throws IO_ERROR on a non-ENOENT read failure', async () => {
+    await rm(join(projectRoot, '.agentsmesh/permissions.yaml'));
+    await mkdir(join(projectRoot, '.agentsmesh/permissions.yaml'), { recursive: true });
+    await expect(settingsHandlers.getPermissions(ctx)).rejects.toMatchObject({ code: 'IO_ERROR' });
+  });
+
+  it('updateIgnore append starts from empty when the ignore file is absent', async () => {
+    await rm(join(projectRoot, '.agentsmesh/ignore'));
+    const r = await settingsHandlers.updateIgnore(ctx, { patterns: ['x.log'], mode: 'append' });
+    expect(r.written).toBe(true);
+    expect((await settingsHandlers.getIgnore(ctx)).patterns).toEqual(['x.log']);
+  });
+
+  // ─── symlink containment (reads must not escape the project) ───
+
+  it.skipIf(isWin)(
+    'getConfig rejects a symlinked agentsmesh.yaml escaping the project',
+    async () => {
+      await writeFile(join(outsideDir, 'secret.yaml'), 'leaked: true\n', 'utf8');
+      await rm(join(projectRoot, 'agentsmesh.yaml'));
+      await symlink(join(outsideDir, 'secret.yaml'), join(projectRoot, 'agentsmesh.yaml'));
+      await expect(settingsHandlers.getConfig(ctx)).rejects.toMatchObject({
+        code: 'PATH_TRAVERSAL',
+      });
+    },
+  );
+
+  it.skipIf(isWin)('listMcpServers rejects a symlinked mcp.json escaping the project', async () => {
+    await writeFile(
+      join(outsideDir, 'secret.json'),
+      JSON.stringify({
+        mcpServers: { leaked: { command: 'x', args: [], env: {}, type: 'stdio' } },
+      }),
+      'utf8',
+    );
+    await rm(join(projectRoot, '.agentsmesh/mcp.json'));
+    await symlink(join(outsideDir, 'secret.json'), join(projectRoot, '.agentsmesh/mcp.json'));
+    await expect(settingsHandlers.listMcpServers(ctx)).rejects.toMatchObject({
+      code: 'PATH_TRAVERSAL',
+    });
+  });
+
+  it.skipIf(isWin)(
+    'getPermissions rejects a symlinked permissions.yaml escaping the project',
+    async () => {
+      await writeFile(join(outsideDir, 'secret.yaml'), 'allow: [Leaked]\n', 'utf8');
+      await rm(join(projectRoot, '.agentsmesh/permissions.yaml'));
+      await symlink(
+        join(outsideDir, 'secret.yaml'),
+        join(projectRoot, '.agentsmesh/permissions.yaml'),
+      );
+      await expect(settingsHandlers.getPermissions(ctx)).rejects.toMatchObject({
+        code: 'PATH_TRAVERSAL',
+      });
+    },
+  );
+
+  it.skipIf(isWin)('getHooks rejects a symlinked hooks.yaml escaping the project', async () => {
+    await writeFile(join(outsideDir, 'secret.yaml'), 'PreToolUse: []\n', 'utf8');
+    await rm(join(projectRoot, '.agentsmesh/hooks.yaml'));
+    await symlink(join(outsideDir, 'secret.yaml'), join(projectRoot, '.agentsmesh/hooks.yaml'));
+    await expect(settingsHandlers.getHooks(ctx)).rejects.toMatchObject({ code: 'PATH_TRAVERSAL' });
+  });
+
+  it.skipIf(isWin)('getIgnore rejects a symlinked ignore file escaping the project', async () => {
+    await writeFile(join(outsideDir, 'secret'), 'leaked-pattern\n', 'utf8');
+    await rm(join(projectRoot, '.agentsmesh/ignore'));
+    await symlink(join(outsideDir, 'secret'), join(projectRoot, '.agentsmesh/ignore'));
+    await expect(settingsHandlers.getIgnore(ctx)).rejects.toMatchObject({ code: 'PATH_TRAVERSAL' });
+  });
+
+  it.skipIf(isWin)(
+    'getPermissions rejects a symlinked .agentsmesh parent escaping the project',
+    async () => {
+      // Not a leaf symlink — the whole .agentsmesh dir points outside the project.
+      await writeFile(join(outsideDir, 'permissions.yaml'), 'allow: [Leaked]\n', 'utf8');
+      await rm(join(projectRoot, '.agentsmesh'), { recursive: true, force: true });
+      await symlink(outsideDir, join(projectRoot, '.agentsmesh'), 'dir');
+      await expect(settingsHandlers.getPermissions(ctx)).rejects.toMatchObject({
+        code: 'PATH_TRAVERSAL',
+      });
+    },
+  );
+
+  // ─── symlink containment (writes/pre-reads must not escape the project) ───
+
+  it.skipIf(isWin)(
+    'updatePermissions rejects writes through a symlinked .agentsmesh (no out-of-tree escape)',
+    async () => {
+      await writeFile(join(outsideDir, 'permissions.yaml'), 'allow: [Original]\n', 'utf8');
+      await rm(join(projectRoot, '.agentsmesh'), { recursive: true, force: true });
+      await symlink(outsideDir, join(projectRoot, '.agentsmesh'), 'dir');
+      await expect(
+        settingsHandlers.updatePermissions(ctx, { allow: ['Attacker'] }),
+      ).rejects.toMatchObject({ code: 'PATH_TRAVERSAL' });
+      // The out-of-tree file must be untouched.
+      expect(await readFile(join(outsideDir, 'permissions.yaml'), 'utf8')).toBe(
+        'allow: [Original]\n',
+      );
+    },
+  );
+
+  it.skipIf(isWin)(
+    'addMcpServer rejects writes through a symlinked .agentsmesh (no out-of-tree escape)',
+    async () => {
+      await writeFile(join(outsideDir, 'mcp.json'), '{"mcpServers":{}}\n', 'utf8');
+      await rm(join(projectRoot, '.agentsmesh'), { recursive: true, force: true });
+      await symlink(outsideDir, join(projectRoot, '.agentsmesh'), 'dir');
+      await expect(
+        settingsHandlers.addMcpServer(ctx, {
+          name: 'evil',
+          server: { command: 'x', args: [], env: {}, type: 'stdio' },
+        }),
+      ).rejects.toMatchObject({ code: 'PATH_TRAVERSAL' });
+      expect(await readFile(join(outsideDir, 'mcp.json'), 'utf8')).toBe('{"mcpServers":{}}\n');
+    },
+  );
+
+  it.skipIf(isWin)(
+    'updateIgnore append does not read or persist through a symlinked ignore file',
+    async () => {
+      await writeFile(join(outsideDir, 'secret'), 'SECRET_OUTSIDE\n', 'utf8');
+      await rm(join(projectRoot, '.agentsmesh/ignore'));
+      await symlink(join(outsideDir, 'secret'), join(projectRoot, '.agentsmesh/ignore'));
+      await expect(
+        settingsHandlers.updateIgnore(ctx, { patterns: ['x'], mode: 'append' }),
+      ).rejects.toMatchObject({ code: 'PATH_TRAVERSAL' });
+      // The outside file is neither slurped nor overwritten.
+      expect(await readFile(join(outsideDir, 'secret'), 'utf8')).toBe('SECRET_OUTSIDE\n');
+    },
+  );
+
+  it.skipIf(isWin)(
+    'updateConfig rejects writes through a symlinked agentsmesh.yaml (no out-of-tree escape)',
+    async () => {
+      await writeFile(join(outsideDir, 'victim.yaml'), 'version: 1\n', 'utf8');
+      await rm(join(projectRoot, 'agentsmesh.yaml'));
+      await symlink(join(outsideDir, 'victim.yaml'), join(projectRoot, 'agentsmesh.yaml'));
+      await expect(
+        settingsHandlers.updateConfig(ctx, { targets: ['claude-code'] }),
+      ).rejects.toMatchObject({ code: 'PATH_TRAVERSAL' });
+      expect(await readFile(join(outsideDir, 'victim.yaml'), 'utf8')).toBe('version: 1\n');
+    },
+  );
+
+  it.skipIf(isWin)(
+    'updateHooks rejects writes through a symlinked .agentsmesh (no out-of-tree escape)',
+    async () => {
+      await writeFile(join(outsideDir, 'hooks.yaml'), 'PreToolUse: []\n', 'utf8');
+      await rm(join(projectRoot, '.agentsmesh'), { recursive: true, force: true });
+      await symlink(outsideDir, join(projectRoot, '.agentsmesh'), 'dir');
+      await expect(
+        settingsHandlers.updateHooks(ctx, { hooks: { PostToolUse: [] } }),
+      ).rejects.toMatchObject({ code: 'PATH_TRAVERSAL' });
+      expect(await readFile(join(outsideDir, 'hooks.yaml'), 'utf8')).toBe('PreToolUse: []\n');
+    },
+  );
 
   // ─── updateConfig ───
 

@@ -6,6 +6,7 @@ import { McpError } from '../errors.js';
 import { MAX_DIR_ENTRIES, MAX_FILE_SIZE_BYTES } from '../limits.js';
 import { parseMd, serializeMd } from '../writers/md-frontmatter.js';
 import { safeRead } from '../writers/safe-read.js';
+import { assertContainedPath } from '../writers/path-containment.js';
 
 const NAME_RE = /^[a-zA-Z0-9_][a-zA-Z0-9_-]*$/;
 const SUPPORT_PATH_RE = /^[a-zA-Z0-9_][a-zA-Z0-9_/-]*\.[a-zA-Z0-9]+$/;
@@ -27,7 +28,18 @@ function checkSupportPath(p: string): void {
   }
 }
 
-async function atomicWrite(target: string, content: string): Promise<void> {
+async function atomicWrite(
+  projectRoot: string,
+  root: string,
+  target: string,
+  content: string,
+): Promise<void> {
+  await assertContainedPath({
+    root,
+    target,
+    boundaryRoot: projectRoot,
+    message: 'file escapes skill directory',
+  });
   if (Buffer.byteLength(content, 'utf8') > MAX_FILE_SIZE_BYTES) {
     throw new McpError('LIMIT_EXCEEDED', 'file body exceeds 1 MiB cap');
   }
@@ -40,6 +52,15 @@ async function atomicWrite(target: string, content: string): Promise<void> {
 const skillsDir = (root: string): string => resolve(root, '.agentsmesh/skills');
 const skillDir = (root: string, name: string): string => resolve(skillsDir(root), name);
 
+async function assertSkillFile(projectRoot: string, dir: string, target: string): Promise<void> {
+  await assertContainedPath({
+    root: dir,
+    target,
+    boundaryRoot: projectRoot,
+    message: 'file escapes skill directory',
+  });
+}
+
 export interface SkillSummary {
   name: string;
   description: string | null;
@@ -47,6 +68,12 @@ export interface SkillSummary {
 
 export const skillsHandlers = {
   async list(ctx: McpContext): Promise<SkillSummary[]> {
+    // Reject a symlinked skills tree before enumerating (mirrors canonical list).
+    await assertContainedPath({
+      root: ctx.projectRoot,
+      target: skillsDir(ctx.projectRoot),
+      message: 'skills directory escapes project',
+    });
     let entries: string[];
     try {
       entries = (await readdir(skillsDir(ctx.projectRoot), { withFileTypes: true }))
@@ -58,7 +85,10 @@ export const skillsHandlers = {
     const out: SkillSummary[] = [];
     for (const name of entries) {
       try {
-        const src = await readFile(resolve(skillDir(ctx.projectRoot, name), 'SKILL.md'), 'utf8');
+        const dir = skillDir(ctx.projectRoot, name);
+        const skillMd = resolve(dir, 'SKILL.md');
+        await assertSkillFile(ctx.projectRoot, dir, skillMd);
+        const src = await readFile(skillMd, 'utf8');
         const fm = parseMd(src).frontmatter as { description?: string };
         out.push({ name, description: fm.description ?? null });
       } catch {
@@ -79,8 +109,10 @@ export const skillsHandlers = {
   }> {
     checkName(name);
     const dir = skillDir(ctx.projectRoot, name);
+    const skillMd = resolve(dir, 'SKILL.md');
+    await assertSkillFile(ctx.projectRoot, dir, skillMd);
     try {
-      const src = await readFile(resolve(dir, 'SKILL.md'), 'utf8');
+      const src = await readFile(skillMd, 'utf8');
       const { frontmatter, body } = parseMd(src);
       const all = await readdir(dir);
       const supportingFiles = all.filter((f) => f !== 'SKILL.md').sort();
@@ -116,11 +148,19 @@ export const skillsHandlers = {
     },
   ): Promise<{ path: string; written: boolean; supportingFilesWritten: string[] }> {
     checkName(input.name);
+    const dir = skillDir(ctx.projectRoot, input.name);
+    // Assert containment BEFORE the existence probe so a symlinked skills tree
+    // cannot leak an out-of-project existence oracle via ALREADY_EXISTS.
+    await assertContainedPath({
+      root: skillsDir(ctx.projectRoot),
+      target: dir,
+      boundaryRoot: ctx.projectRoot,
+      message: 'skill escapes skills directory',
+    });
     const parsed = skillFrontmatter.safeParse(input.frontmatter);
     if (!parsed.success) {
       throw new McpError('VALIDATION_FAILED', 'invalid frontmatter', parsed.error.issues);
     }
-    const dir = skillDir(ctx.projectRoot, input.name);
     let dirExists = false;
     try {
       await stat(dir);
@@ -139,9 +179,14 @@ export const skillsHandlers = {
       return { path: dir, written: false, supportingFilesWritten: [] };
     }
     const skillMdPath = resolve(dir, 'SKILL.md');
-    await atomicWrite(skillMdPath, serializeMd(input.frontmatter, input.body));
+    await atomicWrite(
+      ctx.projectRoot,
+      dir,
+      skillMdPath,
+      serializeMd(input.frontmatter, input.body),
+    );
     for (const [p, content] of Object.entries(support)) {
-      await atomicWrite(resolve(dir, p), content);
+      await atomicWrite(ctx.projectRoot, dir, resolve(dir, p), content);
     }
     return { path: dir, written: true, supportingFilesWritten: supportPaths };
   },
@@ -163,9 +208,11 @@ export const skillsHandlers = {
   }> {
     checkName(input.name);
     const dir = skillDir(ctx.projectRoot, input.name);
+    const skillMd = resolve(dir, 'SKILL.md');
+    await assertSkillFile(ctx.projectRoot, dir, skillMd);
     let current: { frontmatter: Record<string, unknown>; body: string };
     try {
-      const src = await readFile(resolve(dir, 'SKILL.md'), 'utf8');
+      const src = await readFile(skillMd, 'utf8');
       current = parseMd(src);
     } catch (e: unknown) {
       if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
@@ -192,18 +239,25 @@ export const skillsHandlers = {
       Object.entries(support).forEach(([p, c]) => (c === null ? deleted : written).push(p));
       return { path: dir, written: false, supportingFilesAffected: { written, deleted } };
     }
-    await atomicWrite(resolve(dir, 'SKILL.md'), serializeMd(nextFm, nextBody));
+    await atomicWrite(
+      ctx.projectRoot,
+      dir,
+      resolve(dir, 'SKILL.md'),
+      serializeMd(nextFm, nextBody),
+    );
     for (const [p, content] of Object.entries(support)) {
       const target = resolve(dir, p);
       if (content === null) {
         try {
+          await assertSkillFile(ctx.projectRoot, dir, target);
           await rm(target);
           deleted.push(p);
-        } catch {
-          // not present — silent
+        } catch (e: unknown) {
+          if (e instanceof McpError) throw e;
+          if ((e as NodeJS.ErrnoException).code !== 'ENOENT') throw e;
         }
       } else {
-        await atomicWrite(target, content);
+        await atomicWrite(ctx.projectRoot, dir, target, content);
         written.push(p);
       }
     }
@@ -216,6 +270,12 @@ export const skillsHandlers = {
   ): Promise<{ path: string; deleted: boolean }> {
     checkName(name);
     const dir = skillDir(ctx.projectRoot, name);
+    await assertContainedPath({
+      root: skillsDir(ctx.projectRoot),
+      target: dir,
+      boundaryRoot: ctx.projectRoot,
+      message: 'skill escapes skills directory',
+    });
     try {
       await stat(dir);
     } catch {

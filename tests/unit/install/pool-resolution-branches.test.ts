@@ -125,6 +125,20 @@ describe('resolveSkillPool — branches', () => {
     expect(mockConfirm).not.toHaveBeenCalled();
   });
 
+  it('force overrides dry-run: --force --dry-run preview includes invalid candidates', async () => {
+    mockValidateSkill
+      .mockReturnValueOnce({ ok: true, skill: valid })
+      .mockReturnValueOnce({ ok: false, skill: broken, reason: 'bad' });
+    const pool = await resolveSkillPool(
+      makeCanonical({ skills: [valid, broken] }),
+      true,
+      true,
+      false,
+    );
+    expect(pool.map((s) => s.name).sort()).toEqual(['broken', 'valid']);
+    expect(mockConfirm).not.toHaveBeenCalled();
+  });
+
   it('prompts in interactive mode and includes invalid skill on yes', async () => {
     mockValidateSkill
       .mockReturnValueOnce({ ok: true, skill: valid })

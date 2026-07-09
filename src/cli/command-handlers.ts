@@ -52,6 +52,23 @@ function narrowFlags(flags: CliFlags): Record<string, string | boolean> {
   return out;
 }
 
+/**
+ * True when an install/uninstall/refresh run may show an interactive prompt: a
+ * real TTY on both streams and neither --force nor --dry-run (both bypass every
+ * prompt). Such runs must NOT hold a spinner — its redraw timer overwrites the
+ * prompt line, hiding the question and hanging the command on stdin. `--json`
+ * maps to --force upstream for install/uninstall, and refresh reads json→force
+ * internally, so json runs never reach a prompt either way.
+ */
+function mayPrompt(nf: Record<string, string | boolean>): boolean {
+  return (
+    process.stdin.isTTY === true &&
+    process.stdout.isTTY === true &&
+    nf.force !== true &&
+    nf['dry-run'] !== true
+  );
+}
+
 export const cmdHandlers: Record<string, CommandHandler> = {
   generate: async (flags, _args) => {
     void _args;
@@ -161,10 +178,15 @@ export const cmdHandlers: Record<string, CommandHandler> = {
     const nf = narrowFlags(flags);
     if (nf.json === true) nf.force = true;
     ui.intro('agentsmesh install');
-    const sp = ui.spinner();
-    sp.start('Installing…');
+    // An animated spinner and an interactive readline prompt cannot share a TTY:
+    // the spinner's redraw timer overwrites the prompt line, so the confirmation
+    // question is invisible and the install hangs waiting for stdin. When the run
+    // may prompt (real TTY, no --force/--dry-run), skip the spinner and let the
+    // prompt flow own the terminal.
+    const sp = mayPrompt(nf) ? null : ui.spinner();
+    sp?.start('Installing…');
     const result = await runInstall(nf, args, process.cwd());
-    sp.stop('Install complete');
+    sp?.stop('Install complete');
     handleResult('install', result, nf, () => renderInstall(result));
     ui.outro('Done');
   },
@@ -172,20 +194,24 @@ export const cmdHandlers: Record<string, CommandHandler> = {
     const nf = narrowFlags(flags);
     if (nf.json === true) nf.force = true;
     ui.intro('agentsmesh uninstall');
-    const sp = ui.spinner();
-    sp.start('Removing…');
+    // See install: the spinner must yield the TTY to the interactive prompt flow.
+    const sp = mayPrompt(nf) ? null : ui.spinner();
+    sp?.start('Removing…');
     const result = await runUninstall(nf, args, process.cwd());
-    sp.stop('Uninstall complete');
+    sp?.stop('Uninstall complete');
     handleResult('uninstall', result, nf, () => renderUninstall(result));
     ui.outro('Done');
   },
   refresh: async (flags, args) => {
     const nf = narrowFlags(flags);
     ui.intro('agentsmesh refresh');
-    const sp = ui.spinner();
-    sp.start('Refreshing…');
+    // See install: refresh reaches an interactive consent prompt (packs with
+    // local edits, no --force/--dry-run) via runConsentPrompt → readLine. The
+    // spinner must yield the TTY to that prompt or it hangs/times-out unseen.
+    const sp = mayPrompt(nf) ? null : ui.spinner();
+    sp?.start('Refreshing…');
     const result = await runRefresh(nf, args, process.cwd());
-    sp.stop('Refresh complete');
+    sp?.stop('Refresh complete');
     handleResult('refresh', result, nf, () => renderRefresh(result));
     ui.outro('Done');
   },

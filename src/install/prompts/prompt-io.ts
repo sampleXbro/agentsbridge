@@ -31,6 +31,16 @@ export function readLine(prompt: string, options?: PromptIOOptions): Promise<str
     rl.on('close', () => {
       if (!answered) resolve('');
     });
+    // A stream 'error' (broken pipe, terminal disconnect, SSH drop) would
+    // otherwise throw an unhandled event and crash the process. Collapse it to
+    // the same EOF contract: resolve '' so callers uniformly treat it as "no
+    // input" (decline) instead of hanging or crashing.
+    rl.on('error', () => {
+      if (!answered) {
+        answered = true;
+        resolve('');
+      }
+    });
     rl.question(prompt, (answer) => {
       answered = true;
       rl.close();

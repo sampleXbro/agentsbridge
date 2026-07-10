@@ -81,4 +81,20 @@ describe('readLine', () => {
     const answer = await readLine('input', { input, output });
     expect(answer).toBe('  spaced  ');
   });
+
+  it("resolves to '' (does not crash or hang) when the input stream errors mid-prompt", async () => {
+    const input = new PassThrough();
+    const { stream: output } = makeCapture();
+
+    const racePromise = Promise.race([
+      readLine('continue?', { input, output }),
+      new Promise<'__timeout__'>((resolve) => {
+        setTimeout(() => resolve('__timeout__'), 1000);
+      }),
+    ]);
+    input.emit('error', new Error('EPIPE: broken pipe'));
+
+    const result = await racePromise;
+    expect(result).toBe('');
+  });
 });

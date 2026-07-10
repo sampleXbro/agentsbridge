@@ -9,6 +9,7 @@ import { renderPlugin } from '../../../src/cli/renderers/plugin.js';
 import { renderTarget } from '../../../src/cli/renderers/target.js';
 import { handleResult } from '../../../src/cli/json-handler.js';
 import { emitJson } from '../../../src/cli/json-output.js';
+import { ui } from '../../../src/cli/ui/ui.js';
 
 vi.mock('../../../src/cli/commands/watch.js', () => ({ runWatch: vi.fn() }));
 vi.mock('../../../src/cli/commands/install.js', () => ({ runInstall: vi.fn() }));
@@ -98,6 +99,65 @@ describe('cmdHandlers watch/install/plugin/target', () => {
     );
     expect(runInstall).toHaveBeenNthCalledWith(2, textFlags, ['pack'], process.cwd());
     expect(renderInstall).toHaveBeenCalledWith(installResult);
+  });
+
+  it('skips the install spinner on an interactive TTY so prompts are not clobbered', async () => {
+    const start = vi.fn();
+    const spinnerSpy = vi
+      .spyOn(ui, 'spinner')
+      .mockReturnValue({ start, stop: vi.fn(), message: vi.fn() });
+    const inDesc = Object.getOwnPropertyDescriptor(process.stdin, 'isTTY');
+    const outDesc = Object.getOwnPropertyDescriptor(process.stdout, 'isTTY');
+    Object.defineProperty(process.stdin, 'isTTY', { value: true, configurable: true });
+    Object.defineProperty(process.stdout, 'isTTY', { value: true, configurable: true });
+    try {
+      await cmdHandlers.install({}, ['pack']);
+      expect(ui.spinner).not.toHaveBeenCalled();
+      expect(start).not.toHaveBeenCalled();
+      expect(runInstall).toHaveBeenCalledWith({}, ['pack'], process.cwd());
+    } finally {
+      if (inDesc) Object.defineProperty(process.stdin, 'isTTY', inDesc);
+      if (outDesc) Object.defineProperty(process.stdout, 'isTTY', outDesc);
+      spinnerSpy.mockRestore();
+    }
+  });
+
+  it('runs the install spinner when non-interactive (--force bypasses prompts)', async () => {
+    const start = vi.fn();
+    const spinnerSpy = vi
+      .spyOn(ui, 'spinner')
+      .mockReturnValue({ start, stop: vi.fn(), message: vi.fn() });
+    const inDesc = Object.getOwnPropertyDescriptor(process.stdin, 'isTTY');
+    const outDesc = Object.getOwnPropertyDescriptor(process.stdout, 'isTTY');
+    Object.defineProperty(process.stdin, 'isTTY', { value: true, configurable: true });
+    Object.defineProperty(process.stdout, 'isTTY', { value: true, configurable: true });
+    try {
+      await cmdHandlers.install({ force: true }, ['pack']);
+      expect(start).toHaveBeenCalledWith('Installing…');
+    } finally {
+      if (inDesc) Object.defineProperty(process.stdin, 'isTTY', inDesc);
+      if (outDesc) Object.defineProperty(process.stdout, 'isTTY', outDesc);
+      spinnerSpy.mockRestore();
+    }
+  });
+
+  it('runs the install spinner for --dry-run on a TTY (dry-run bypasses prompts)', async () => {
+    const start = vi.fn();
+    const spinnerSpy = vi
+      .spyOn(ui, 'spinner')
+      .mockReturnValue({ start, stop: vi.fn(), message: vi.fn() });
+    const inDesc = Object.getOwnPropertyDescriptor(process.stdin, 'isTTY');
+    const outDesc = Object.getOwnPropertyDescriptor(process.stdout, 'isTTY');
+    Object.defineProperty(process.stdin, 'isTTY', { value: true, configurable: true });
+    Object.defineProperty(process.stdout, 'isTTY', { value: true, configurable: true });
+    try {
+      await cmdHandlers.install({ 'dry-run': true }, ['pack']);
+      expect(start).toHaveBeenCalledWith('Installing…');
+    } finally {
+      if (inDesc) Object.defineProperty(process.stdin, 'isTTY', inDesc);
+      if (outDesc) Object.defineProperty(process.stdout, 'isTTY', outDesc);
+      spinnerSpy.mockRestore();
+    }
   });
 
   it('delegates plugin and target commands through structured results', async () => {

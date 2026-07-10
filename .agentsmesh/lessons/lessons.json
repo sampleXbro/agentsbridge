@@ -478,6 +478,54 @@
         "t-kw-3bb206ca"
       ]
     },
+    "cli-presentation-a-clack-spinner-and-an": {
+      "createdAt": "2026-07-09",
+      "evidence": [
+        "src/cli/command-handlers.ts",
+        "src/install/prompts/bulk-prompt.ts",
+        "src/install/prompts/modified-files-prompt.ts"
+      ],
+      "rule": "A clack spinner and an interactive readline prompt cannot share a TTY: the spinner's redraw timer overwrites the prompt line, so the question is invisible and the command hangs on stdin. In src/cli/command-handlers.ts, any handler whose runX may prompt (install → broken-link/bulk prompts; uninstall → modified-files drift prompt) MUST skip the spinner when it may prompt — gate with mayPrompt(nf) (stdin AND stdout isTTY, and neither --force nor --dry-run), mirroring the init handler. The earlier \"install/uninstall are spinner-safe because runX outputs only via the renderer after the run\" claim is WRONG: it ignored the interactive prompt flow (writeBanner + deps.ask/readLine) which writes DURING the run.",
+      "status": "active",
+      "topics": [
+        "cli-presentation"
+      ],
+      "triggers": [
+        "t-glob-8173701c"
+      ]
+    },
+    "cli-presentation-all-interactive-install-uninstall-refres": {
+      "createdAt": "2026-07-09",
+      "evidence": [
+        "src/install/core/prompts.ts",
+        "src/install/prompts/prompt-io.ts"
+      ],
+      "rule": "All interactive install/uninstall/refresh prompts MUST go through prompt-io.readLine (or delegate to it), never a bespoke readline.createInterface. A raw readline without a 'close' handler HANGS on EOF/Ctrl-D (the question callback never fires), and without an 'error' handler CRASHES the process on a stream error (broken pipe, SSH drop). readLine collapses both to '' (decline) — the uniform EOF contract. This is why confirm() (src/install/core/prompts.ts) was refactored to delegate to readLine. When adding a new prompt, reuse readLine and treat '' as the safe-decline default.",
+      "status": "active",
+      "topics": [
+        "cli-presentation"
+      ],
+      "triggers": [
+        "t-glob-7ba39ec1",
+        "t-glob-dd0538cf"
+      ]
+    },
+    "cli-presentation-when-auditing-spinner-vs-prompt": {
+      "createdAt": "2026-07-09",
+      "evidence": [
+        "src/cli/command-handlers.ts",
+        "src/install/refresh/run-refresh.ts",
+        "src/install/refresh/refresh-prompt.ts"
+      ],
+      "rule": "When auditing spinner-vs-prompt collisions, check EVERY command handler in src/cli/command-handlers.ts that holds a ui.spinner(), not just the one reported. refresh is a THIRD collision site (besides install/uninstall): runRefresh → runConsentPrompt (run-refresh.ts) → readLine shows a [y/N/per-pack] consent prompt for drifted packs, and it was ungated. generate/import/convert are genuinely prompt-free (verified) so their spinners are safe. Gate refresh with mayPrompt(nf) too. Rule: a handler is spinner-safe ONLY if its runX has zero reachable readLine/confirm/clack prompt; trace the full call graph before trusting an ungated spinner.",
+      "status": "active",
+      "topics": [
+        "cli-presentation"
+      ],
+      "triggers": [
+        "t-glob-8173701c"
+      ]
+    },
     "coverage-analysis-agentsmesh-coverage-thresholds-in-vitest": {
       "createdAt": "2026-06-28",
       "evidence": [],
@@ -8238,6 +8286,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/keyword-match.ts"
     },
+    "t-glob-7ba39ec1": {
+      "kind": "file_glob",
+      "pattern": "src/install/prompts/prompt-io.ts"
+    },
     "t-glob-7d39ded4": {
       "kind": "file_glob",
       "pattern": "src/config/core/conversions.ts"
@@ -8569,6 +8621,10 @@
     "t-glob-dc08e1d8": {
       "kind": "file_glob",
       "pattern": "tests/fixtures/lessons/recurrence/**"
+    },
+    "t-glob-dd0538cf": {
+      "kind": "file_glob",
+      "pattern": "src/install/core/prompts.ts"
     },
     "t-glob-dd0e31f0": {
       "kind": "file_glob",

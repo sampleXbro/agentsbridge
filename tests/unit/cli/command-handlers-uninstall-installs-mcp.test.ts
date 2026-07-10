@@ -15,6 +15,7 @@ import { renderInstall } from '../../../src/cli/renderers/install.js';
 import { renderUninstall } from '../../../src/cli/renderers/uninstall.js';
 import { renderInstalls } from '../../../src/cli/renderers/installs.js';
 import { handleResult } from '../../../src/cli/json-handler.js';
+import { ui } from '../../../src/cli/ui/ui.js';
 
 vi.mock('../../../src/cli/commands/install.js', () => ({ runInstall: vi.fn() }));
 vi.mock('../../../src/cli/commands/uninstall.js', () => ({ runUninstall: vi.fn() }));
@@ -89,6 +90,45 @@ describe('cmdHandlers — install/uninstall/installs/mcp', () => {
   it('uninstall handler calls the human renderer in non-JSON mode', async () => {
     await cmdHandlers.uninstall({}, ['pack-name']);
     expect(renderUninstall).toHaveBeenCalled();
+  });
+
+  it('skips the uninstall spinner on an interactive TTY so the drift prompt is not clobbered', async () => {
+    const start = vi.fn();
+    const spinnerSpy = vi
+      .spyOn(ui, 'spinner')
+      .mockReturnValue({ start, stop: vi.fn(), message: vi.fn() });
+    const inDesc = Object.getOwnPropertyDescriptor(process.stdin, 'isTTY');
+    const outDesc = Object.getOwnPropertyDescriptor(process.stdout, 'isTTY');
+    Object.defineProperty(process.stdin, 'isTTY', { value: true, configurable: true });
+    Object.defineProperty(process.stdout, 'isTTY', { value: true, configurable: true });
+    try {
+      await cmdHandlers.uninstall({}, ['pack-name']);
+      expect(ui.spinner).not.toHaveBeenCalled();
+      expect(start).not.toHaveBeenCalled();
+    } finally {
+      if (inDesc) Object.defineProperty(process.stdin, 'isTTY', inDesc);
+      if (outDesc) Object.defineProperty(process.stdout, 'isTTY', outDesc);
+      spinnerSpy.mockRestore();
+    }
+  });
+
+  it('runs the uninstall spinner when non-interactive (--force bypasses the prompt)', async () => {
+    const start = vi.fn();
+    const spinnerSpy = vi
+      .spyOn(ui, 'spinner')
+      .mockReturnValue({ start, stop: vi.fn(), message: vi.fn() });
+    const inDesc = Object.getOwnPropertyDescriptor(process.stdin, 'isTTY');
+    const outDesc = Object.getOwnPropertyDescriptor(process.stdout, 'isTTY');
+    Object.defineProperty(process.stdin, 'isTTY', { value: true, configurable: true });
+    Object.defineProperty(process.stdout, 'isTTY', { value: true, configurable: true });
+    try {
+      await cmdHandlers.uninstall({ force: true }, ['pack-name']);
+      expect(start).toHaveBeenCalledWith('Removing…');
+    } finally {
+      if (inDesc) Object.defineProperty(process.stdin, 'isTTY', inDesc);
+      if (outDesc) Object.defineProperty(process.stdout, 'isTTY', outDesc);
+      spinnerSpy.mockRestore();
+    }
   });
 
   it('installs handler routes through handleResult and renders the list', async () => {

@@ -42,7 +42,8 @@ export async function generatePermissionsFeature(
       resolveTargetFeatureGenerator(target, 'permissions', undefined, scope) ??
       getDescriptor(target)?.generators.generatePermissions;
     if (!gen) continue;
-    for (const out of gen(canonical)) {
+    const ctx = featureContext(target, 'permissions', scope);
+    for (const out of gen(canonical, ctx)) {
       await emitGeneratedOutput(results, target, out, projectRoot, scope, {
         mergeContent: (existing, pending, newContent, resolvedPath) =>
           mergeOutputContent(target, existing, pending, newContent, resolvedPath),

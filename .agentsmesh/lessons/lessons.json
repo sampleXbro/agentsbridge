@@ -112,6 +112,39 @@
         "t-kw-ab6ac577"
       ]
     },
+    "capability-ledger-never-run-pnpm-capabilities-seed": {
+      "createdAt": "2026-07-11",
+      "evidence": [],
+      "rationale": "The seed script does a full JSON.stringify({cells}) rewrite from live-generated project-scope output only; there is no merge path, so it would silently wipe hand-verified confirmed/rejected/global cells recorded by prior audit passes.",
+      "rule": "Never run `pnpm capabilities:seed` after hand-adding verified/rejected/global-scope ledger cells — it fully overwrites capability-ledger.json from scratch with only auto-derivable project-scope native/embedded skeletons (extensionless-file features and all global-scope cells are silently dropped, and existing verified provenance is destroyed). Hand-edit capability-ledger.json directly for global-scope, rejected, or extensionless-path cells instead.",
+      "status": "active",
+      "topics": [
+        "capability-ledger"
+      ],
+      "triggers": [
+        "t-glob-4d2ee3c5",
+        "t-glob-3614774b",
+        "t-cmd-fc33692e",
+        "t-kw-1f060c49",
+        "t-kw-ec5d186a"
+      ]
+    },
+    "capability-ledger-pnpm-capabilities-verify-exits-non": {
+      "createdAt": "2026-07-11",
+      "evidence": [
+        "commit:25f84e94"
+      ],
+      "rule": "`pnpm capabilities:verify` exits non-zero BY DESIGN — it is a backlog tracker for native/embedded cells that still lack `capability-ledger.json` provenance (hundreds are intentionally un-researched: global scope, directory features, extensionless/unstructured files). Do NOT wire it into CI as a hard gate and do NOT try to drive its \"missing\" count to zero wholesale. The enforced CI gate is the conformance test `tests/contract/capability-ledger-conformance.test.ts` (runs under `pnpm test`), which fails only when a SEEDED native/embedded cell's generated output drifts from its recorded ext/format/fingerprint, plus the ledger-integrity assertion (no orphan/invalid/duplicate cells).",
+      "status": "active",
+      "topics": [
+        "capability-ledger"
+      ],
+      "triggers": [
+        "t-glob-1120a27d",
+        "t-cmd-33ca9506",
+        "t-kw-8d854c5e"
+      ]
+    },
     "ci-and-release-security-rule-1": {
       "createdAt": "2026-06-05",
       "evidence": [
@@ -7452,6 +7485,9 @@
     "agent-orchestration": {
       "summary": "Subagent/parallel-agent orchestration safety — tool profiles, isolation, destructive-command guards, fan-out discipline."
     },
+    "capability-ledger": {
+      "summary": "Capability provenance ledger, deterministic audit, and conformance-gate semantics"
+    },
     "ci-and-release-security": {
       "summary": "CI workflows + release security — ${{ }} injection, needs cascade, token leakage, supply-chain pinning, fail-closed checksums."
     },
@@ -7617,6 +7653,10 @@
     "t-cmd-31dfa72c": {
       "kind": "command_pattern",
       "pattern": "sed.*SKILL.md"
+    },
+    "t-cmd-33ca9506": {
+      "kind": "command_pattern",
+      "pattern": "capabilities:verify"
     },
     "t-cmd-34d713b6": {
       "kind": "command_pattern",
@@ -7870,6 +7910,10 @@
       "kind": "command_pattern",
       "pattern": "pnpm lint"
     },
+    "t-cmd-fc33692e": {
+      "kind": "command_pattern",
+      "pattern": "capabilities:seed"
+    },
     "t-cmd-fd015df7": {
       "kind": "command_pattern",
       "pattern": "dist/cli\\.js"
@@ -7949,6 +7993,10 @@
     "t-glob-10b2c4ed": {
       "kind": "file_glob",
       "pattern": ".husky/pre-commit"
+    },
+    "t-glob-1120a27d": {
+      "kind": "file_glob",
+      "pattern": "scripts/capabilities-audit.ts"
     },
     "t-glob-11a8af2c": {
       "kind": "file_glob",
@@ -8046,6 +8094,10 @@
       "kind": "file_glob",
       "pattern": "tests/e2e/generate-capabilities.e2e.test.ts"
     },
+    "t-glob-3614774b": {
+      "kind": "file_glob",
+      "pattern": "scripts/seed-capability-ledger.ts"
+    },
     "t-glob-36d72b33": {
       "kind": "file_glob",
       "pattern": "tests/consumer-smoke/src/smoke.ts"
@@ -8125,6 +8177,10 @@
     "t-glob-4c8d45b0": {
       "kind": "file_glob",
       "pattern": "src/mcp/handlers/orchestrate.ts"
+    },
+    "t-glob-4d2ee3c5": {
+      "kind": "file_glob",
+      "pattern": "src/targets/catalog/capability-ledger.json"
     },
     "t-glob-4eefad64": {
       "kind": "file_glob",
@@ -8766,6 +8822,10 @@
       "kind": "keyword",
       "pattern": "strip markers"
     },
+    "t-kw-1f060c49": {
+      "kind": "keyword",
+      "pattern": "capability ledger"
+    },
     "t-kw-1fca5e27": {
       "kind": "keyword",
       "pattern": "tie-break sort"
@@ -8974,6 +9034,10 @@
       "kind": "keyword",
       "pattern": "epsilon closure"
     },
+    "t-kw-8d854c5e": {
+      "kind": "keyword",
+      "pattern": "capabilities verify ledger CI gate"
+    },
     "t-kw-9304db48": {
       "kind": "keyword",
       "pattern": "text transform"
@@ -9137,6 +9201,10 @@
     "t-kw-ebee7e76": {
       "kind": "keyword",
       "pattern": "keyword trigger length dead"
+    },
+    "t-kw-ec5d186a": {
+      "kind": "keyword",
+      "pattern": "seed-capability-ledger"
     },
     "t-kw-ed1c9d6e": {
       "kind": "keyword",

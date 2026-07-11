@@ -1249,6 +1249,60 @@
     },
     {
       "target": "roo-code",
+      "feature": "agents",
+      "scope": "global",
+      "maxAchievable": "partial",
+      "path": ".roo/settings/custom_modes.yaml",
+      "ext": ".yaml",
+      "format": "yaml",
+      "fingerprint": {
+        "topLevelKeys": [
+          "customModes"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": [
+          {
+            "pointer": "/customModes/*/groups",
+            "kind": "array"
+          }
+        ]
+      },
+      "source": [
+        "https://github.com/RooCodeInc/Roo-Code/blob/main/src/utils/globalContext.ts"
+      ],
+      "verifiedAt": "2026-07-11",
+      "verdict": "confirmed",
+      "rejectionReason": "Real read path is <context.globalStorageUri.fsPath>/settings/custom_modes.yaml, a non-deterministic per-OS/per-fork VS Code extension globalStorage dir; ~/.roo/settings/custom_modes.yaml is a best-effort location only, so this stays partial rather than native."
+    },
+    {
+      "target": "roo-code",
+      "feature": "agents",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".roomodes",
+      "ext": "",
+      "format": "yaml",
+      "fingerprint": {
+        "topLevelKeys": [
+          "customModes"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": [
+          {
+            "pointer": "/customModes/*/groups",
+            "kind": "array"
+          }
+        ]
+      },
+      "source": [
+        "https://github.com/RooCodeInc/Roo-Code/blob/main/packages/types/src/mode.ts"
+      ],
+      "verifiedAt": "2026-07-11",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "roo-code",
       "feature": "commands",
       "scope": "project",
       "maxAchievable": "native",
@@ -1269,6 +1323,46 @@
     },
     {
       "target": "roo-code",
+      "feature": "ignore",
+      "scope": "global",
+      "maxAchievable": "none",
+      "path": "",
+      "ext": "",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/RooCodeInc/Roo-Code/blob/main/src/core/ignore/RooIgnoreController.ts"
+      ],
+      "verifiedAt": "2026-07-11",
+      "verdict": "rejected",
+      "rejectionReason": "RooIgnoreController only reads .rooignore at path.join(cwd, '.rooignore') (the open workspace); there is no home-directory/global ignore concept."
+    },
+    {
+      "target": "roo-code",
+      "feature": "mcp",
+      "scope": "global",
+      "maxAchievable": "partial",
+      "path": "",
+      "ext": "",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/RooCodeInc/Roo-Code/blob/main/src/services/mcp/McpHub.ts"
+      ],
+      "verifiedAt": "2026-07-11",
+      "verdict": "rejected",
+      "rejectionReason": "McpHub.getMcpSettingsFilePath() resolves via context.globalStorageUri.fsPath + '/settings/mcp_settings.json' (non-deterministic per-OS/per-fork VS Code extension globalStorage dir); ~/mcp_settings.json is never read by Roo Code."
+    },
+    {
+      "target": "roo-code",
       "feature": "mcp",
       "scope": "project",
       "maxAchievable": "native",
@@ -1285,6 +1379,54 @@
       "source": [],
       "verifiedAt": null,
       "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "roo-code",
+      "feature": "permissions",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".vscode/settings.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "roo-cline.allowedCommands",
+          "roo-cline.deniedCommands"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": [
+          {
+            "pointer": "/roo-cline.allowedCommands",
+            "kind": "array"
+          }
+        ]
+      },
+      "source": [
+        "https://github.com/RooCodeInc/Roo-Code/blob/main/src/package.json"
+      ],
+      "verifiedAt": "2026-07-11",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "roo-code",
+      "feature": "rules",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".roo/rules/00-root.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/RooCodeInc/Roo-Code/blob/main/src/services/roo-config/index.ts"
+      ],
+      "verifiedAt": "2026-07-11",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {

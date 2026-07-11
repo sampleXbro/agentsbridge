@@ -14,6 +14,10 @@ import {
   ROO_CODE_ROOT_RULE,
   ROO_CODE_ROOT_RULE_FALLBACK,
   ROO_CODE_MODES_FILE,
+  ROO_CODE_VSCODE_SETTINGS,
+  ROO_CODE_ALLOWED_COMMANDS_KEY,
+  ROO_CODE_DENIED_COMMANDS_KEY,
+  ROO_CODE_GLOBAL_AGENTS_MD,
 } from '../../../../src/targets/roo-code/constants.js';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
 
@@ -203,6 +207,138 @@ describe('importFromRooCode — agents (.roomodes)', () => {
     writeFileSync(join(TEST_DIR, ROO_CODE_MODES_FILE), 'customModes: not-an-array\n');
     const results = await importFromRooCode(TEST_DIR);
     expect(results.filter((r) => r.feature === 'agents')).toHaveLength(0);
+  });
+
+  it('ignores .roomodes with unparseable YAML content', async () => {
+    // Block collections are not valid inside a flow sequence — yaml's parser
+    // throws here, exercising importRooModes' YAML-parse-failure catch branch.
+    writeFileSync(join(TEST_DIR, ROO_CODE_MODES_FILE), 'customModes: [\n  - broken');
+    const results = await importFromRooCode(TEST_DIR);
+    expect(results.filter((r) => r.feature === 'agents')).toHaveLength(0);
+  });
+
+  it('skips non-object entries and entries with neither slug nor name; falls back slug<->name and defaults description/roleDefinition', async () => {
+    writeFileSync(
+      join(TEST_DIR, ROO_CODE_MODES_FILE),
+      [
+        'customModes:',
+        '  - "just-a-string"', // not an object -> skipped
+        '  - slug: minimal-mode', // no name/description/roleDefinition -> all fall back
+        '  - name: Named Only', // no slug -> slug falls back to name
+        '    description: Has a name but no slug',
+        '    roleDefinition: Act accordingly.',
+        '  - description: Orphan entry with no identifiers', // no slug AND no name -> skipped
+        '    roleDefinition: Should be skipped.',
+        '',
+      ].join('\n'),
+    );
+
+    const results = await importFromRooCode(TEST_DIR);
+    const agentResults = results.filter((r) => r.feature === 'agents');
+    expect(agentResults).toHaveLength(2);
+
+    const minimalContent = readFileSync(
+      join(TEST_DIR, '.agentsmesh', 'agents', 'minimal-mode.md'),
+      'utf-8',
+    );
+    expect(minimalContent).toContain('name: minimal-mode');
+
+    const namedOnlyContent = readFileSync(
+      join(TEST_DIR, '.agentsmesh', 'agents', 'Named Only.md'),
+      'utf-8',
+    );
+    expect(namedOnlyContent).toContain('name: Named Only');
+    expect(namedOnlyContent).toContain('Has a name but no slug');
+    expect(namedOnlyContent).toContain('Act accordingly.');
+  });
+});
+
+describe('importFromRooCode — permissions (.vscode/settings.json)', () => {
+  it('imports roo-cline.allowedCommands/deniedCommands as canonical permissions', async () => {
+    mkdirSync(join(TEST_DIR, '.vscode'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, ROO_CODE_VSCODE_SETTINGS),
+      JSON.stringify({
+        'editor.tabSize': 2,
+        [ROO_CODE_ALLOWED_COMMANDS_KEY]: ['git log', 'git diff'],
+        [ROO_CODE_DENIED_COMMANDS_KEY]: ['rm -rf'],
+      }),
+    );
+
+    const results = await importFromRooCode(TEST_DIR);
+    const permResults = results.filter((r) => r.feature === 'permissions');
+    expect(permResults).toHaveLength(1);
+    expect(permResults[0]!.toPath).toBe('.agentsmesh/permissions.yaml');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'permissions.yaml'), 'utf-8');
+    expect(content).toContain('git log');
+    expect(content).toContain('rm -rf');
+  });
+
+  it('ignores unrelated .vscode/settings.json keys and emits nothing when both arrays are absent', async () => {
+    mkdirSync(join(TEST_DIR, '.vscode'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, ROO_CODE_VSCODE_SETTINGS),
+      JSON.stringify({ 'editor.tabSize': 2 }),
+    );
+
+    const results = await importFromRooCode(TEST_DIR);
+    expect(results.filter((r) => r.feature === 'permissions')).toHaveLength(0);
+  });
+
+  it('does not import permissions in global scope (no deterministic path)', async () => {
+    mkdirSync(join(TEST_DIR, '.vscode'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, ROO_CODE_VSCODE_SETTINGS),
+      JSON.stringify({ [ROO_CODE_ALLOWED_COMMANDS_KEY]: ['git log'] }),
+    );
+
+    const results = await importFromRooCode(TEST_DIR, { scope: 'global' });
+    expect(results.filter((r) => r.feature === 'permissions')).toHaveLength(0);
+  });
+
+  it('ignores .vscode/settings.json with unparseable JSON content', async () => {
+    mkdirSync(join(TEST_DIR, '.vscode'), { recursive: true });
+    writeFileSync(join(TEST_DIR, ROO_CODE_VSCODE_SETTINGS), '{ not valid json,,,');
+
+    const results = await importFromRooCode(TEST_DIR);
+    expect(results.filter((r) => r.feature === 'permissions')).toHaveLength(0);
+  });
+
+  it('ignores .vscode/settings.json when it parses to a non-object (e.g. a JSON array)', async () => {
+    mkdirSync(join(TEST_DIR, '.vscode'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, ROO_CODE_VSCODE_SETTINGS),
+      JSON.stringify(['not', 'an', 'object']),
+    );
+
+    const results = await importFromRooCode(TEST_DIR);
+    expect(results.filter((r) => r.feature === 'permissions')).toHaveLength(0);
+  });
+});
+
+describe('importFromRooCode — global root rule priority', () => {
+  it('prefers .roo/rules/00-root.md over legacy .roo/AGENTS.md', async () => {
+    mkdirSync(join(TEST_DIR, ROO_CODE_RULES_DIR), { recursive: true });
+    writeFileSync(join(TEST_DIR, ROO_CODE_ROOT_RULE), '# Current root\n\nReal Roo Code path.');
+    writeFileSync(join(TEST_DIR, ROO_CODE_GLOBAL_AGENTS_MD), '# Legacy root\n\nStale.');
+
+    const results = await importFromRooCode(TEST_DIR, { scope: 'global' });
+    expect(results.some((r) => r.toPath === '.agentsmesh/rules/_root.md')).toBe(true);
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
+    expect(content).toContain('Real Roo Code path.');
+  });
+
+  it('falls back to legacy .roo/AGENTS.md when .roo/rules/00-root.md is absent', async () => {
+    mkdirSync(join(TEST_DIR, '.roo'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, ROO_CODE_GLOBAL_AGENTS_MD),
+      '# Legacy root\n\nFrom old agentsmesh.',
+    );
+
+    const results = await importFromRooCode(TEST_DIR, { scope: 'global' });
+    expect(results.some((r) => r.toPath === '.agentsmesh/rules/_root.md')).toBe(true);
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
+    expect(content).toContain('From old agentsmesh.');
   });
 });
 

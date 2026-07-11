@@ -1,6 +1,6 @@
 import { readdir } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
-import { parse as parseYaml } from 'yaml';
+import { parse as parseYaml, stringify as yamlStringify } from 'yaml';
 import type { ImportResult } from '../../core/types.js';
 import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
@@ -15,8 +15,12 @@ import {
   ROO_CODE_DIR,
   ROO_CODE_MODES_FILE,
   ROO_CODE_SKILLS_DIR,
+  ROO_CODE_VSCODE_SETTINGS,
+  ROO_CODE_ALLOWED_COMMANDS_KEY,
+  ROO_CODE_DENIED_COMMANDS_KEY,
   ROO_CODE_CANONICAL_RULES_DIR,
   ROO_CODE_CANONICAL_AGENTS_DIR,
+  ROO_CODE_CANONICAL_PERMISSIONS,
 } from './constants.js';
 import { descriptor } from './index.js';
 
@@ -120,6 +124,41 @@ async function importPerModeRules(
   }
 }
 
+/**
+ * Import `.vscode/settings.json`'s `roo-cline.allowedCommands` /
+ * `roo-cline.deniedCommands` back into canonical `permissions.yaml`.
+ * Project-only: Roo Code has no deterministic global VS Code user-settings
+ * path for `--global`'s single root (see index.ts globalCapabilities.permissions).
+ */
+async function importRooPermissions(projectRoot: string, results: ImportResult[]): Promise<void> {
+  const srcPath = join(projectRoot, ROO_CODE_VSCODE_SETTINGS);
+  const content = await readFileSafe(srcPath);
+  if (content === null) return;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    return;
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return;
+  const settings = parsed as Record<string, unknown>;
+  const toStringArray = (value: unknown): string[] =>
+    Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [];
+  const allow = toStringArray(settings[ROO_CODE_ALLOWED_COMMANDS_KEY]);
+  const deny = toStringArray(settings[ROO_CODE_DENIED_COMMANDS_KEY]);
+  if (allow.length === 0 && deny.length === 0) return;
+
+  const destPath = join(projectRoot, ROO_CODE_CANONICAL_PERMISSIONS);
+  await mkdirp(dirname(destPath));
+  await writeFileAtomic(destPath, yamlStringify({ allow, deny }));
+  results.push({
+    fromTool: ROO_CODE_TARGET,
+    fromPath: srcPath,
+    toPath: ROO_CODE_CANONICAL_PERMISSIONS,
+    feature: 'permissions',
+  });
+}
+
 export async function importFromRooCode(
   projectRoot: string,
   options: { scope?: TargetLayoutScope } = {},
@@ -129,8 +168,12 @@ export async function importFromRooCode(
   const normalize = await createImportReferenceNormalizer(ROO_CODE_TARGET, projectRoot, scope);
   results.push(...(await runDescriptorImport(descriptor, projectRoot, scope, { normalize })));
   await importPerModeRules(projectRoot, results, normalize);
-  // `.roomodes` is a project-only file; global custom modes live in VS Code globalStorage.
-  if (scope === 'project') await importRooModes(projectRoot, results, normalize);
+  // `.roomodes` and `.vscode/settings.json` permissions are project-only files;
+  // global custom modes / VS Code user settings live outside `--global`'s root.
+  if (scope === 'project') {
+    await importRooModes(projectRoot, results, normalize);
+    await importRooPermissions(projectRoot, results);
+  }
   await importEmbeddedSkills(projectRoot, ROO_CODE_SKILLS_DIR, ROO_CODE_TARGET, results, normalize);
   return results;
 }

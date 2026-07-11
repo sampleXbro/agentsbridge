@@ -47,7 +47,7 @@ With `--global`, the canonical directory is `~/.agentsmesh/` and CLI commands re
 | Pi Agent | `~/.pi/agent/AGENTS.md`, `~/.pi/agent/skills/`, optional mirror to `~/.agents/skills/` | Same user-level paths |
 | Qwen Code | `~/.qwen/QWEN.md`, `~/.qwen/settings.json`, `~/.qwen/commands/*.md`, `~/.qwen/agents/*.md`, `~/.qwen/skills/` | Same user-level paths (ignore file not emitted globally) |
 | Replit Agent | Cloud-only — no global paths (Replit Agent runs on Replit's cloud infrastructure) | Cloud-only — no global paths |
-| Roo Code | `~/.roo/AGENTS.md`, `~/.roo/rules/`, `~/.roo/commands/`, `~/.roo/skills/`, `~/mcp_settings.json` (home-level MCP file), `~/.rooignore`, `~/.roo/settings/custom_modes.yaml` (agents → custom modes), optional mirror to `~/.agents/skills/` | Same paths |
+| Roo Code | `~/.roo/rules/00-root.md` (root, read from `.roo/rules/` like project scope), `~/.roo/rules/`, `~/.roo/commands/`, `~/.roo/skills/`, `~/mcp_settings.json` (partial — Roo Code's real MCP path is a non-deterministic per-OS/per-fork VS Code extension globalStorage directory), `~/.roo/settings/custom_modes.yaml` (agents → custom modes; same non-deterministic globalStorage caveat, capability partial), optional mirror to `~/.agents/skills/`. No global ignore (`.rooignore` is workspace-only) and no global permissions (no deterministic VS Code user-settings path) | Same paths |
 | Rovo Dev | `~/.rovodev/AGENTS.md`, `~/.rovodev/skills/`, `~/.rovodev/mcp.json`, optional mirror to `~/.agents/skills/` | Same user-level paths |
 | Trae | `~/.trae/user_rules/rules.md`, `~/.trae/skills/`, `~/.trae/mcp.json` | Same user-level paths |
 | Warp | `~/.warp/skills/`, optional mirror to `~/.agents/skills/` | Same user-level paths |
@@ -69,7 +69,7 @@ Catalog defaults for a repo-local `agentsmesh generate` (see `descriptor.capabil
 | MCP Servers | — | Native | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | — | Native | Native | Native | Native | — | Native | — | Native | Native | Native | Native | Partial | Native |
 | Hooks | — | — | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Partial | Native | — | — | — | Native | — | — | Native | — | — | — | — | — | Native | — |
 | Ignore | Native | — | — | — | Native | Native | Native | — | — | — | Native | Native | — | — | Native (settings-embedded) | Native | — | Native | Native | Native | — | — | Native | — | Native | — | Native | — | Native | — |
-| Permissions | — | — | Native | Partial | — | Native | — | — | — | — | Partial | Partial | — | — | Partial | — | — | — | Native | — | Native | — | Native | — | Partial | — | — | Partial | — | — |
+| Permissions | — | — | Native | Partial | — | Native | — | — | — | — | Partial | Partial | — | — | Partial | — | — | — | Native | — | Native | — | Native | — | Native | — | — | Partial | — | — |
 {/* agentsmesh:support-matrix:project:end */}
 
 ## Feature matrix (global scope)
@@ -84,9 +84,9 @@ Catalog defaults for `agentsmesh matrix --global` / `agentsmesh generate --globa
 | Commands | — | — | Native | Partial (workflows) | Native | Native | Native (workflows) | Embedded | Native | Native | — | Native | — | Native | Native | — | — | Native | Native | Embedded | Native | Native | Native | — | Native | — | Native | — | Native (workflows) | — |
 | Agents | — | Native | — | — | Native | Native | Native | Native | — | Native | — | Native | — | Native | Native | — | — | Native | Native | Native | Native | — | Native | — | Partial | — | — | — | Embedded | — |
 | Skills | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | — |
-| MCP Servers | — | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | — | Native | — | Native | Native | Native | Native | Native | Native |
+| MCP Servers | — | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | — | Native | — | Partial | Native | Native | Native | Native | Native |
 | Hooks | — | — | Native | Native | — | Native | Native | Native | — | — | Native | Native | Native | Native | Partial | Native | — | — | — | — | — | — | Native | — | — | Native | — | — | Native | — |
-| Ignore | Native | — | — | — | — | Native | Native | — | — | — | — | Native | — | — | — | Native | — | — | Native | Native | — | — | — | — | Native | — | — | — | Native | — |
+| Ignore | Native | — | — | — | — | Native | Native | — | — | — | — | Native | — | — | — | Native | — | — | Native | Native | — | — | — | — | — | — | — | — | Native | — |
 | Permissions | — | — | Native | Partial | Native | Native | — | — | Native | — | — | — | — | — | Native | Native | — | Native | Native | — | Native | — | Native | — | Partial | Native | — | Partial | — | — |
 {/* agentsmesh:support-matrix:global:end */}
 
@@ -411,7 +411,7 @@ IDE integration · [roocode.com](https://roocode.com)
 Open-source AI VS Code extension.
 
 **Project mode:** root `.roo/rules/00-root.md`, skills `.roo/skills/`.
-**Global mode:** root `.roo/AGENTS.md`, skills `.roo/skills/`.
+**Global mode:** root `.roo/rules/00-root.md`, skills `.roo/skills/`.
 
 See the [project feature matrix](#feature-matrix-project-scope) and [global feature matrix](#feature-matrix-global-scope) for per-feature support.
 

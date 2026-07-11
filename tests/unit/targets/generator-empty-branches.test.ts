@@ -124,7 +124,7 @@ describe('per-target generators — empty/fallback branches', () => {
     expect(out[0]!.content).not.toContain('description:');
   });
 
-  it('roo-code: agent without description/body omits both keys', () => {
+  it('roo-code: agent without description omits the description key but keeps a non-empty roleDefinition', () => {
     const c: CanonicalFiles = {
       ...baseCanonical(),
       agents: [
@@ -148,7 +148,11 @@ describe('per-target generators — empty/fallback branches', () => {
     const out = rooAgents(c);
     expect(out).toHaveLength(1);
     expect(out[0]!.content).not.toContain('description:');
-    expect(out[0]!.content).not.toContain('roleDefinition:');
+    // Roo's modeConfigSchema requires roleDefinition (min length 1, no
+    // default) — a blank body/description must still fall back to the
+    // agent's name so CustomModesManager.loadModesFromFile() doesn't drop
+    // every mode in the file.
+    expect(out[0]!.content).toContain('roleDefinition: r');
   });
 
   it('kilo-code: empty canonical produces zero outputs', () => {

@@ -5,8 +5,10 @@ import { createCanonicalProject } from '../e2e/helpers/canonical.js';
 import { cleanup } from '../e2e/helpers/setup.js';
 import { runGenerate } from '../../src/cli/commands/generate.js';
 import { getTargetCapabilities } from '../../src/targets/catalog/builtin-targets.js';
+import { TARGET_IDS } from '../../src/targets/catalog/target-ids.js';
 import { loadCapabilityLedger } from '../../src/core/capabilities/ledger.js';
 import { checkConformance } from '../../src/core/capabilities/fingerprint.js';
+import { verifyLedgerIntegrity } from '../../src/core/capabilities/audit-report.js';
 import { MATRIX_CONFIG } from './matrix-config.js';
 
 let dir = '';
@@ -26,6 +28,10 @@ const projectNativeCells = ledger.cells.filter((c) => {
 describe('capability ledger conformance (project)', () => {
   it('has a well-formed ledger', () => {
     expect(Array.isArray(ledger.cells)).toBe(true);
+  });
+
+  it('has no orphan, invalid, or duplicate cells', () => {
+    expect(verifyLedgerIntegrity(ledger, [...TARGET_IDS])).toEqual([]);
   });
 
   const cases = projectNativeCells.map((c) => [`${c.target}/${c.feature}`, c] as const);

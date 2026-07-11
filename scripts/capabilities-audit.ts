@@ -8,7 +8,12 @@
  */
 import { loadCapabilityLedger } from '../src/core/capabilities/ledger.js';
 import { auditCapabilities } from '../src/core/capabilities/audit.js';
-import { renderAuditReport, verifyLedgerCoverage } from '../src/core/capabilities/audit-report.js';
+import {
+  renderAuditReport,
+  verifyLedgerCoverage,
+  verifyLedgerIntegrity,
+} from '../src/core/capabilities/audit-report.js';
+import { TARGET_IDS } from '../src/targets/catalog/target-ids.js';
 
 function flagValue(name: string, fallback: number): number {
   const idx = process.argv.indexOf(name);
@@ -19,10 +24,11 @@ function flagValue(name: string, fallback: number): number {
 
 const today = new Date().toISOString().slice(0, 10);
 const staleDays = flagValue('--stale', 180);
-const report = auditCapabilities({ ledger: loadCapabilityLedger(), today, staleDays });
+const ledger = loadCapabilityLedger();
+const report = auditCapabilities({ ledger, today, staleDays });
 
 if (process.argv.includes('--verify')) {
-  const problems = verifyLedgerCoverage(report);
+  const problems = [...verifyLedgerIntegrity(ledger, [...TARGET_IDS]), ...verifyLedgerCoverage(report)];
   if (problems.length > 0) {
     process.stderr.write(`capabilities:verify failed:\n${problems.map((p) => `  - ${p}`).join('\n')}\n`);
     process.exit(1);

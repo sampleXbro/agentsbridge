@@ -30,9 +30,6 @@
   ],
   "ignoreDependencies": [],
   "ignoreExportsUsedInFile": true,
-  "ignoreIssues": {
-    "src/core/capabilities/ledger-types.ts": ["exports", "types"]
-  },
   "rules": {
     "files": "error",
     "dependencies": "error",

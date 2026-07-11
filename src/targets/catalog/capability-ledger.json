@@ -455,6 +455,51 @@
     },
     {
       "target": "copilot",
+      "feature": "hooks",
+      "scope": "global",
+      "maxAchievable": "none",
+      "path": "",
+      "ext": "",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": "2026-07-11",
+      "verdict": "rejected",
+      "rejectionReason": "VS Code Copilot has no hooks; hooks exist only for Copilot CLI/cloud agent"
+    },
+    {
+      "target": "copilot",
+      "feature": "mcp",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": "~/.config/Code/User/mcp.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "servers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": [
+          {
+            "pointer": "/servers",
+            "kind": "object"
+          }
+        ]
+      },
+      "source": [
+        "https://code.visualstudio.com/docs/agents/reference/mcp-configuration"
+      ],
+      "verifiedAt": "2026-07-11",
+      "verdict": "confirmed",
+      "rejectionReason": "OS-specific user-profile path (mac: ~/Library/Application Support/Code/User/mcp.json); needs per-OS global-path wiring"
+    },
+    {
+      "target": "copilot",
       "feature": "mcp",
       "scope": "project",
       "maxAchievable": "native",
@@ -752,6 +797,60 @@
     },
     {
       "target": "gemini-cli",
+      "feature": "hooks",
+      "scope": "global",
+      "maxAchievable": "embedded",
+      "path": "~/.gemini/settings.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "hooks"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": [
+          {
+            "pointer": "/hooks",
+            "kind": "object"
+          }
+        ]
+      },
+      "source": [
+        "https://github.com/google-gemini/gemini-cli/blob/main/docs/hooks/index.md"
+      ],
+      "verifiedAt": "2026-07-11",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "gemini-cli",
+      "feature": "hooks",
+      "scope": "project",
+      "maxAchievable": "embedded",
+      "path": ".gemini/settings.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "hooks"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": [
+          {
+            "pointer": "/hooks",
+            "kind": "object"
+          }
+        ]
+      },
+      "source": [
+        "https://github.com/google-gemini/gemini-cli/blob/main/docs/hooks/index.md"
+      ],
+      "verifiedAt": "2026-07-11",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "gemini-cli",
       "feature": "mcp",
       "scope": "project",
       "maxAchievable": "native",
@@ -912,6 +1011,24 @@
       "verifiedAt": null,
       "verdict": "unverified",
       "rejectionReason": null
+    },
+    {
+      "target": "kiro",
+      "feature": "hooks",
+      "scope": "global",
+      "maxAchievable": "none",
+      "path": "",
+      "ext": "",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": "2026-07-11",
+      "verdict": "rejected",
+      "rejectionReason": "Kiro agent hooks are workspace-only (.kiro/hooks/*.kiro.hook); no global ~/.kiro/hooks/"
     },
     {
       "target": "kiro",
@@ -1251,6 +1368,33 @@
     {
       "target": "warp",
       "feature": "mcp",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": "~/.warp/.mcp.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": [
+          {
+            "pointer": "/mcpServers",
+            "kind": "object"
+          }
+        ]
+      },
+      "source": [
+        "https://docs.warp.dev/knowledge-and-collaboration/mcp"
+      ],
+      "verifiedAt": "2026-07-11",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "warp",
+      "feature": "mcp",
       "scope": "project",
       "maxAchievable": "native",
       "path": ".mcp.json",
@@ -1326,6 +1470,51 @@
       "verifiedAt": null,
       "verdict": "unverified",
       "rejectionReason": null
+    },
+    {
+      "target": "windsurf",
+      "feature": "mcp",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": "~/.codeium/windsurf/mcp_config.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": [
+          {
+            "pointer": "/mcpServers",
+            "kind": "object"
+          }
+        ]
+      },
+      "source": [
+        "https://docs.windsurf.com/windsurf/cascade/mcp"
+      ],
+      "verifiedAt": "2026-07-11",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "windsurf",
+      "feature": "mcp",
+      "scope": "project",
+      "maxAchievable": "partial",
+      "path": "",
+      "ext": "",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": "2026-07-11",
+      "verdict": "rejected",
+      "rejectionReason": "global-only: Windsurf reads MCP only from ~/.codeium/windsurf/mcp_config.json; no project file"
     },
     {
       "target": "zed",

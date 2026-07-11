@@ -1,3 +1,4 @@
+import { basename } from 'node:path';
 import {
   addScopedAgentsMappings,
   addSimpleFileMapping,
@@ -7,6 +8,7 @@ import {
 } from '../import-map-shared.js';
 import type { TargetLayoutScope } from '../../../targets/catalog/target-descriptor.js';
 import { AB_AGENTS, AB_RULES } from './constants.js';
+import { CODEX_PERMISSIONS_RULES_BASENAME } from '../../../targets/codex-cli/constants.js';
 
 export async function buildCodexCliImportPaths(
   refs: Map<string, string>,
@@ -27,6 +29,7 @@ export async function buildCodexCliImportPaths(
     }
   }
   for (const absPath of await listFiles(projectRoot, '.codex/rules')) {
+    if (basename(absPath) === CODEX_PERMISSIONS_RULES_BASENAME) continue;
     const relPath = rel(projectRoot, absPath);
     if (relPath.endsWith('.rules')) {
       addSimpleFileMapping(refs, relPath, AB_RULES, '.rules');

@@ -26,7 +26,7 @@ describe('target layout metadata', () => {
 
   it('returns managed outputs from descriptor metadata', () => {
     expect(getTargetManagedOutputs('codex-cli')).toEqual({
-      dirs: ['.agents/skills', '.codex/agents', '.codex/instructions'],
+      dirs: ['.agents/skills', '.codex/agents', '.codex/instructions', '.codex/rules'],
       files: ['AGENTS.md', '.codex/config.toml', '.codex/hooks.json'],
     });
   });

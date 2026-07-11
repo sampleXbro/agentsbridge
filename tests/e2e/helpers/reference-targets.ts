@@ -179,7 +179,7 @@ export function outputPaths(target: TargetName): OutputPathGroups {
                               : target === 'cline'
                                 ? '.clinerules/typescript.md'
                                 : target === 'codex-cli'
-                                  ? '.codex/instructions/typescript.md'
+                                  ? 'src/AGENTS.md'
                                   : target === 'kiro'
                                     ? '.kiro/steering/typescript.md'
                                     : target === 'antigravity'
@@ -300,7 +300,7 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
                                     ? '.rules'
                                     : 'AGENTS.md';
   // From `src/AGENTS.md`, the rewriter points at repo-root AGENTS as `../AGENTS.md`.
-  if (target === 'windsurf' && path === 'src/AGENTS.md') {
+  if ((target === 'windsurf' || target === 'codex-cli') && path === 'src/AGENTS.md') {
     rootRule = '../AGENTS.md';
   }
   const rule =
@@ -321,7 +321,7 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
                   : target === 'cline'
                     ? '.clinerules/typescript.md'
                     : target === 'codex-cli'
-                      ? '.codex/instructions/typescript.md'
+                      ? 'src/AGENTS.md'
                       : target === 'windsurf'
                         ? '.windsurf/rules/typescript.md'
                         : target === 'antigravity'

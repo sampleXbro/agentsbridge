@@ -646,7 +646,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
     ]);
   });
 
-  it('Codex CLI generates AGENTS.md + .codex/instructions/*.md + .codex/agents/*.toml + skills + MCP', async () => {
+  it('Codex CLI generates AGENTS.md + nested AGENTS.md + .codex/agents/*.toml + skills + MCP + permissions', async () => {
     const results = await generate({
       config: allFeaturesConfig(['codex-cli']),
       canonical,
@@ -659,8 +659,9 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.codex/agents/reviewer.toml',
       '.codex/config.toml',
       '.codex/hooks.json',
-      '.codex/instructions/typescript.md',
+      '.codex/rules/agentsmesh-permissions.rules',
       'AGENTS.md',
+      'typescript/AGENTS.md',
     ]);
   });
 
@@ -781,7 +782,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.codex/agents/reviewer.toml',
       '.codex/config.toml',
       '.codex/hooks.json',
-      '.codex/instructions/typescript.md',
+      '.codex/rules/agentsmesh-permissions.rules',
       '.continue/mcpServers/agentsmesh.json',
       '.continue/prompts/review.md',
       '.continue/rules/general.md',
@@ -827,6 +828,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
       'AGENTS.md',
       'CLAUDE.md',
       'GEMINI.md',
+      'typescript/AGENTS.md',
     ]);
   });
 });

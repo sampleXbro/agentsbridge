@@ -16,7 +16,7 @@ function canonicalWithMcp(mcp: CanonicalFiles['mcp']): CanonicalFiles {
 }
 
 describe('generateMcp (codex-cli) transport filtering', () => {
-  it('serializes only stdio servers to config.toml', () => {
+  it('serializes both stdio and remote (url) servers to config.toml', () => {
     const results = generateMcp(
       canonicalWithMcp({
         mcpServers: {
@@ -30,7 +30,7 @@ describe('generateMcp (codex-cli) transport filtering', () => {
             type: 'http',
             url: 'https://example.com/mcp',
             headers: { Authorization: 'Bearer ${TOKEN}' },
-            env: { TOKEN: '${TOKEN}' },
+            env: {},
           },
         },
       }),
@@ -38,7 +38,25 @@ describe('generateMcp (codex-cli) transport filtering', () => {
 
     expect(results).toHaveLength(1);
     expect(results[0]!.content).toContain('command = "npx"');
-    expect(results[0]!.content).not.toContain('https://example.com/mcp');
-    expect(results[0]!.content).not.toContain('[mcp_servers.remote]');
+    expect(results[0]!.content).toContain('[mcp_servers.remote]');
+    expect(results[0]!.content).toContain('url = "https://example.com/mcp"');
+    expect(results[0]!.content).toContain('bearer_token_env_var = "TOKEN"');
+  });
+
+  it('emits literal custom headers under http_headers', () => {
+    const results = generateMcp(
+      canonicalWithMcp({
+        mcpServers: {
+          remote: {
+            type: 'http',
+            url: 'https://example.com/mcp',
+            headers: { 'X-Custom': 'value' },
+            env: {},
+          },
+        },
+      }),
+    );
+
+    expect(results[0]!.content).toContain('http_headers = { X-Custom = "value" }');
   });
 });

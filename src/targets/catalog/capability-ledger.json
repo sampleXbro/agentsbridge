@@ -360,9 +360,11 @@
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://learn.chatgpt.com/docs/hooks"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -380,9 +382,11 @@
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://developers.openai.com/codex/mcp"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -1676,6 +1680,70 @@
       "source": [],
       "verifiedAt": null,
       "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "codex-cli",
+      "feature": "permissions",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".codex/rules/agentsmesh-permissions.rules",
+      "ext": ".rules",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://developers.openai.com/codex/rules",
+        "https://developers.openai.com/codex/config-reference"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "codex-cli",
+      "feature": "permissions",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".codex/rules/agentsmesh-permissions.rules",
+      "ext": ".rules",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://developers.openai.com/codex/rules",
+        "https://developers.openai.com/codex/config-reference"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "codex-cli",
+      "feature": "hooks",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".codex/hooks.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "hooks"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://learn.chatgpt.com/docs/hooks"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
       "rejectionReason": null
     }
   ]

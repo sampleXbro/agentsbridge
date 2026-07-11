@@ -12,7 +12,7 @@ describe('MCP transport variants', () => {
     dir = '';
   });
 
-  it('generates remote MCP transports for Claude/Cursor and warns for Cursor/Codex limitations', async () => {
+  it('generates remote MCP transports for Claude/Cursor/Codex and warns about their respective limitations', async () => {
     dir = createTestProject();
     mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(
@@ -33,13 +33,16 @@ describe('MCP transport variants', () => {
     expect(readFileSync(join(dir, '.cursor', 'mcp.json'), 'utf-8')).toContain(
       '"Authorization": "Bearer ${TOKEN}"',
     );
-    expect(readFileSync(join(dir, '.codex', 'config.toml'), 'utf-8')).not.toContain(
-      'https://example.com/mcp',
-    );
+    // codex-cli now also generates the remote (url) transport, per
+    // https://developers.openai.com/codex/mcp — url/bearer_token_env_var/http_headers.
+    const codexConfig = readFileSync(join(dir, '.codex', 'config.toml'), 'utf-8');
+    expect(codexConfig).toContain('url = "https://example.com/mcp?token=${TOKEN}"');
+    expect(codexConfig).toContain('bearer_token_env_var = "TOKEN"');
 
     const lint = await runCli('lint', dir);
     expect(lint.exitCode).toBe(0);
     expect(lint.stdout + lint.stderr).toMatch(/cursor.*URL\/header interpolation/i);
-    expect(lint.stdout + lint.stderr).toMatch(/codex-cli.*only generates stdio MCP servers/i);
+    // codex-cli has no config.toml key for arbitrary env vars on the remote transport.
+    expect(lint.stdout + lint.stderr).toMatch(/codex-cli.*does not project env vars/i);
   });
 });

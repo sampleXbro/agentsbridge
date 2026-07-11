@@ -141,9 +141,8 @@ Prefer strict mode.
 
     const result = await runCli('generate', dir);
     expect(result.exitCode).toBe(0);
-    expect(readFileSync(join(dir, 'AGENTS.md'), 'utf-8')).toContain(
-      '.codex/instructions/typescript.md',
-    );
+    // typescript.md has no globs here, so it nests under its own slug directory.
+    expect(readFileSync(join(dir, 'AGENTS.md'), 'utf-8')).toContain('typescript/AGENTS.md');
   });
 
   it('rewrites skill directory references across all generated root artifacts', async () => {
@@ -169,9 +168,7 @@ Prefer strict mode.
     const result = await runCli('generate', dir);
     expect(result.exitCode).toBe(0);
 
-    expect(readFileSync(join(dir, 'CLAUDE.md'), 'utf-8')).toContain(
-      'skills/post-feature-qa/',
-    );
+    expect(readFileSync(join(dir, 'CLAUDE.md'), 'utf-8')).toContain('skills/post-feature-qa/');
     expect(readFileSync(join(dir, '.cursor', 'rules', 'general.mdc'), 'utf-8')).toContain(
       'skills/post-feature-qa/',
     );

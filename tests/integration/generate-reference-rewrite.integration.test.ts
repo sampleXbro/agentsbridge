@@ -101,7 +101,7 @@ Prefer strict mode.
     expect(claudeSkill).toContain('references/checklist.md');
   });
 
-  it('rewrites codex rule references to .codex/instructions/typescript.md', () => {
+  it('rewrites codex rule references to the nested typescript/AGENTS.md (no directory-prefixed glob)', () => {
     writeFileSync(
       join(testDir, 'agentsmesh.yaml'),
       `version: 1
@@ -133,9 +133,8 @@ Prefer strict mode.
 
     execSync(`node ${CLI_PATH} generate`, { cwd: testDir });
 
-    expect(readFileSync(join(testDir, 'AGENTS.md'), 'utf-8')).toContain(
-      '.codex/instructions/typescript.md',
-    );
+    // globs: ["**/*.ts"] has no directory prefix, so it nests under its own slug directory.
+    expect(readFileSync(join(testDir, 'AGENTS.md'), 'utf-8')).toContain('typescript/AGENTS.md');
   });
 
   it('rewrites skill directory references for every target root artifact', () => {
@@ -167,9 +166,7 @@ Use [.agentsmesh/skills/post-feature-qa/](.agentsmesh/skills/post-feature-qa/) a
 
     execSync(`node ${CLI_PATH} generate`, { cwd: testDir });
 
-    expect(readFileSync(join(testDir, 'CLAUDE.md'), 'utf-8')).toContain(
-      'skills/post-feature-qa/',
-    );
+    expect(readFileSync(join(testDir, 'CLAUDE.md'), 'utf-8')).toContain('skills/post-feature-qa/');
     expect(readFileSync(join(testDir, '.cursor', 'rules', 'general.mdc'), 'utf-8')).toContain(
       'skills/post-feature-qa/',
     );

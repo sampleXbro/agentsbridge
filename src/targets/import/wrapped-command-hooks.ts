@@ -24,10 +24,13 @@ export interface WrappedHookOutput {
 export function buildWrappedCommandHooks(
   canonical: CanonicalFiles,
   hooksFilePath: string,
+  options?: { readonly supportedEvents?: readonly string[] },
 ): WrappedHookOutput[] {
   if (!canonical.hooks) return [];
+  const supported = options?.supportedEvents ? new Set(options.supportedEvents) : null;
   const hooks: Record<string, unknown[]> = {};
   for (const [event, entries] of Object.entries(canonical.hooks)) {
+    if (supported && !supported.has(event)) continue;
     if (!Array.isArray(entries)) continue;
     const mapped = entries.flatMap((entry) => {
       if (!hasHookCommand(entry) || entry.type === 'prompt') return [];

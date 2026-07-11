@@ -96,4 +96,17 @@ describe('codex command skill helpers', () => {
     expect(output).toContain('allowed-tools: []');
     expect(output).toContain('Review the diff.');
   });
+
+  it('serializes an empty body as an empty string (command skill)', () => {
+    const output = serializeCommandSkill(makeCommand({ body: '   \n  ' }));
+    expect(output).toMatch(/---\s*$/);
+  });
+
+  it('serializes an empty body as an empty string (imported command)', () => {
+    const output = serializeImportedCommand(
+      { name: 'review', description: '', allowedTools: [] },
+      '   \n  ',
+    );
+    expect(output).toMatch(/---\s*$/);
+  });
 });

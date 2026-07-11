@@ -105,10 +105,14 @@ function expectToolPathOrDotRelative(content: string, ref: string): void {
 }
 
 function pathRewriteCandidates(ref: string): string[] {
-  if (!ref.startsWith('.')) {
+  // Absolute or already-parent-relative refs aren't further rewritten.
+  if (ref.startsWith('/') || ref.startsWith('..')) {
     return [ref];
   }
-  const rest = ref.replace(/^\.[^/]+\//, '');
+  // Dot-prefixed tool paths (`.windsurf/...`) strip their tool-root segment;
+  // plain repo-root-relative paths (`src/AGENTS.md`, codex-cli's nested
+  // AGENTS.md) keep every segment — both still get `./`/`../`/tail variants.
+  const rest = ref.startsWith('.') ? ref.replace(/^\.[^/]+\//, '') : ref;
   const parts = rest.split('/').filter(Boolean);
   const out = new Set<string>([ref, `./${rest}`, `../${rest}`]);
   for (let n = 1; n <= Math.min(4, parts.length); n++) {
@@ -125,7 +129,7 @@ function escapeRegExp(s: string): string {
 
 /** Rewriter often prefixes tool paths with several `../` from deep outputs (workflows, command skills). */
 function deepRelativeToolPaths(ref: string): string[] {
-  if (!ref.startsWith('.') || ref.startsWith('..')) return [];
+  if (ref.startsWith('/') || ref.startsWith('..')) return [];
   const out: string[] = [];
   for (let up = 1; up <= 6; up++) {
     out.push(`${'../'.repeat(up)}${ref}`);

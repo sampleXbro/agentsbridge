@@ -105,9 +105,14 @@ describe('descriptor.project.paths.rulePath', () => {
     expect(cline.project.paths.rulePath('example', rule)).toBe('.clinerules/example.md');
   });
 
-  it('codex-cli: returns path under .codex/instructions based on rule source', () => {
+  it('codex-cli: returns a nested AGENTS.md under the rule slug when there is no glob directory', () => {
     const rule = makeRule('example');
-    expect(codexCli.project.paths.rulePath('example', rule)).toBe('.codex/instructions/example.md');
+    expect(codexCli.project.paths.rulePath('example', rule)).toBe('example/AGENTS.md');
+  });
+
+  it('codex-cli: returns .codex/rules/{slug}.rules for execution-emit rules', () => {
+    const rule = makeRule('example', { codexEmit: 'execution' });
+    expect(codexCli.project.paths.rulePath('example', rule)).toBe('.codex/rules/example.rules');
   });
 
   it('windsurf: returns .windsurf/rules/{slug}.md', () => {

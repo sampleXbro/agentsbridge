@@ -9,6 +9,7 @@ import { descriptor } from '../../../../src/targets/codex-cli/index.js';
 import { generateHooks } from '../../../../src/targets/codex-cli/generator.js';
 import { importFromCodex } from '../../../../src/targets/codex-cli/importer.js';
 import { importCodexHooks } from '../../../../src/targets/codex-cli/importer-hooks.js';
+import { lintHooks } from '../../../../src/targets/codex-cli/lint.js';
 import type { ImportResult } from '../../../../src/core/types.js';
 
 const TEST_DIR = join(tmpdir(), 'am-codex-hooks-test');
@@ -94,6 +95,27 @@ describe('generateHooks (codex-cli)', () => {
     expect(generateHooks(canonicalWithHooks(null))).toEqual([]);
   });
 
+  it('drops Notification hooks — Codex has no Notification lifecycle event', () => {
+    const results = generateHooks(
+      canonicalWithHooks({
+        Notification: [{ matcher: '.*', type: 'command', command: 'notify-send hi' }],
+      }),
+    );
+    expect(results).toEqual([]);
+  });
+
+  it('drops only the unsupported event, keeping supported ones in the same pass', () => {
+    const results = generateHooks(
+      canonicalWithHooks({
+        Notification: [{ matcher: '.*', type: 'command', command: 'notify-send hi' }],
+        Stop: [{ matcher: '.*', type: 'command', command: 'notify-send done' }],
+      }),
+    );
+    expect(results).toHaveLength(1);
+    const parsed = JSON.parse(results[0]!.content) as { hooks: Record<string, unknown> };
+    expect(Object.keys(parsed.hooks)).toEqual(['Stop']);
+  });
+
   it('skips non-array hook event entries', () => {
     const results = generateHooks(
       canonicalWithHooks({
@@ -117,6 +139,33 @@ describe('generateHooks (codex-cli)', () => {
         ),
       },
     ]);
+  });
+});
+
+describe('lintHooks (codex-cli)', () => {
+  it('returns [] when hooks is null or empty', () => {
+    expect(lintHooks(canonicalWithHooks(null))).toEqual([]);
+    expect(lintHooks(canonicalWithHooks({}))).toEqual([]);
+  });
+
+  it('warns about Notification — not a real Codex lifecycle event', () => {
+    const out = lintHooks(
+      canonicalWithHooks({
+        Notification: [{ matcher: '.*', type: 'command', command: 'notify-send hi' }],
+      }),
+    );
+    expect(out).toHaveLength(1);
+    expect(out[0]!.message).toContain('Notification');
+  });
+
+  it('does not warn about documented Codex events', () => {
+    const out = lintHooks(
+      canonicalWithHooks({
+        Stop: [{ matcher: '.*', type: 'command', command: 'notify-send done' }],
+        PreToolUse: [{ matcher: '.*', type: 'command', command: 'echo pre' }],
+      }),
+    );
+    expect(out).toEqual([]);
   });
 });
 
@@ -233,11 +282,11 @@ describe('codex-cli hook descriptor contract', () => {
   it('declares native hook support with managed hooks.json round-trip', () => {
     expect(descriptor.capabilities).toMatchObject({
       hooks: 'native',
-      permissions: 'none',
+      permissions: 'native',
     });
     expect(descriptor.globalSupport?.capabilities).toMatchObject({
       hooks: 'native',
-      permissions: 'none',
+      permissions: 'native',
     });
     expect(descriptor.project.managedOutputs?.files).toContain('.codex/hooks.json');
     expect(descriptor.globalSupport?.layout.managedOutputs?.files).toContain('.codex/hooks.json');

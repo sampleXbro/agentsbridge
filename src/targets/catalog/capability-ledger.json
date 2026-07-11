@@ -1,3 +1,1351 @@
 {
-  "cells": []
+  "cells": [
+    {
+      "target": "amazon-q",
+      "feature": "mcp",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".amazonq/mcp.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "amp",
+      "feature": "commands",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".agents/skills/am-command-review/SKILL.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "name",
+          "description",
+          "x-agentsmesh-kind",
+          "x-agentsmesh-name",
+          "x-agentsmesh-allowed-tools"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "amp",
+      "feature": "hooks",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".amp/settings.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "amp.hooks"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "amp",
+      "feature": "mcp",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".amp/settings.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "amp.mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "amp",
+      "feature": "permissions",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".amp/settings.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "amp.permissions"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "amp",
+      "feature": "rules",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": "AGENTS.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "antigravity",
+      "feature": "hooks",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".agents/hooks.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "PostToolUse"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "augment-code",
+      "feature": "commands",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".augment/commands/review.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "description"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "augment-code",
+      "feature": "hooks",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".augment/settings.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "hooks"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "augment-code",
+      "feature": "mcp",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".augment/settings.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "claude-code",
+      "feature": "commands",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".claude/commands/review.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "description",
+          "allowed-tools"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "claude-code",
+      "feature": "hooks",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".claude/settings.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "hooks"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "claude-code",
+      "feature": "mcp",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".mcp.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "claude-code",
+      "feature": "permissions",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".claude/settings.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "permissions"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "cline",
+      "feature": "commands",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".clinerules/workflows/review.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "cline",
+      "feature": "mcp",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".cline/cline_mcp_settings.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "codex-cli",
+      "feature": "commands",
+      "scope": "project",
+      "maxAchievable": "embedded",
+      "path": ".agents/skills/am-command-review/SKILL.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "name",
+          "description",
+          "x-agentsmesh-kind",
+          "x-agentsmesh-name",
+          "x-agentsmesh-allowed-tools"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "codex-cli",
+      "feature": "hooks",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".codex/hooks.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "hooks"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "codex-cli",
+      "feature": "mcp",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".codex/config.toml",
+      "ext": ".toml",
+      "format": "toml",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcp_servers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "continue",
+      "feature": "commands",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".continue/prompts/review.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "description",
+          "invokable",
+          "x-agentsmesh-kind",
+          "x-agentsmesh-name",
+          "x-agentsmesh-allowed-tools"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "continue",
+      "feature": "mcp",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".continue/mcpServers/agentsmesh.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "copilot",
+      "feature": "commands",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".github/prompts/review.prompt.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "agent",
+          "description",
+          "x-agentsmesh-kind",
+          "x-agentsmesh-name",
+          "x-agentsmesh-allowed-tools"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "copilot",
+      "feature": "mcp",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".vscode/mcp.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "servers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "crush",
+      "feature": "hooks",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": "crush.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "$schema",
+          "hooks"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "crush",
+      "feature": "mcp",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": "crush.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "$schema",
+          "mcp"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "crush",
+      "feature": "rules",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": "CRUSH.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "cursor",
+      "feature": "commands",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".cursor/commands/review.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "cursor",
+      "feature": "hooks",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".cursor/hooks.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "version",
+          "hooks"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "cursor",
+      "feature": "mcp",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".cursor/mcp.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "deepagents-cli",
+      "feature": "hooks",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".deepagents/hooks.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "PostToolUse"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "deepagents-cli",
+      "feature": "mcp",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".mcp.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "deepagents-cli",
+      "feature": "rules",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".deepagents/AGENTS.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "factory-droid",
+      "feature": "commands",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".factory/commands/review.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "description",
+          "allowed-tools"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "factory-droid",
+      "feature": "hooks",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".factory/hooks.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "hooks"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "factory-droid",
+      "feature": "mcp",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".factory/mcp.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "factory-droid",
+      "feature": "rules",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": "AGENTS.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "gemini-cli",
+      "feature": "commands",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".gemini/commands/review.toml",
+      "ext": ".toml",
+      "format": "toml",
+      "fingerprint": {
+        "topLevelKeys": [
+          "description",
+          "prompt"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "gemini-cli",
+      "feature": "mcp",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".gemini/settings.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers",
+          "context"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "goose",
+      "feature": "hooks",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".agents/plugins/agentsmesh/hooks/hooks.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "hooks"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "jules",
+      "feature": "rules",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": "AGENTS.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "junie",
+      "feature": "commands",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".junie/commands/review.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "description"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "junie",
+      "feature": "mcp",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".junie/mcp/mcp.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "kilo-code",
+      "feature": "commands",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".kilo/commands/review.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "description"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "kilo-code",
+      "feature": "mcp",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".kilo/mcp.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "kiro",
+      "feature": "commands",
+      "scope": "project",
+      "maxAchievable": "embedded",
+      "path": ".kiro/skills/am-command-review/SKILL.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "name",
+          "description",
+          "x-agentsmesh-kind",
+          "x-agentsmesh-name",
+          "x-agentsmesh-allowed-tools"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "kiro",
+      "feature": "mcp",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".kiro/settings/mcp.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "opencode",
+      "feature": "commands",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".opencode/commands/review.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "description"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "opencode",
+      "feature": "mcp",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": "opencode.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcp"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "opencode",
+      "feature": "permissions",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": "opencode.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "permission"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "pi-agent",
+      "feature": "commands",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".pi/prompts/review.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "description"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "pi-agent",
+      "feature": "rules",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": "AGENTS.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "qwen-code",
+      "feature": "commands",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".qwen/commands/review.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "description",
+          "allowed-tools"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "qwen-code",
+      "feature": "hooks",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".qwen/settings.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "hooks"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "qwen-code",
+      "feature": "mcp",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".qwen/settings.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "qwen-code",
+      "feature": "permissions",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".qwen/settings.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "permissions"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "replit-agent",
+      "feature": "rules",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": "replit.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "roo-code",
+      "feature": "commands",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".roo/commands/review.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "description"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "roo-code",
+      "feature": "mcp",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".roo/mcp.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "rovodev",
+      "feature": "mcp",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".rovodev/mcp.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "rovodev",
+      "feature": "rules",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": "AGENTS.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "trae",
+      "feature": "commands",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".trae/commands/review.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "description"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "trae",
+      "feature": "mcp",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".trae/mcp.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "warp",
+      "feature": "mcp",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".mcp.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "warp",
+      "feature": "rules",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": "AGENTS.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "windsurf",
+      "feature": "commands",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".windsurf/workflows/review.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "description",
+          "allowedTools"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "windsurf",
+      "feature": "hooks",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".windsurf/hooks.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "hooks"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "zed",
+      "feature": "mcp",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".zed/settings.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "context_servers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [],
+      "verifiedAt": null,
+      "verdict": "unverified",
+      "rejectionReason": null
+    }
+  ]
 }

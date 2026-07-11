@@ -210,6 +210,22 @@ describe('buildCompatibilityMatrix', () => {
     );
   });
 
+  it('shows warp mcp native at both scopes (project and global)', () => {
+    const config: ValidatedConfig = {
+      ...baseConfig,
+      targets: ['warp'],
+      features: ['mcp'],
+    };
+    const canonical: CanonicalFiles = {
+      ...emptyCanonical,
+      mcp: { mcpServers: { docs: { type: 'stdio', command: 'npx', args: [], env: {} } } },
+    };
+    const projectRows = buildCompatibilityMatrix(config, canonical, 'project');
+    const globalRows = buildCompatibilityMatrix(config, canonical, 'global');
+    expect(projectRows.find((r) => r.feature.startsWith('mcp'))?.support['warp']).toBe('native');
+    expect(globalRows.find((r) => r.feature.startsWith('mcp'))?.support['warp']).toBe('native');
+  });
+
   it('respects target filter from config', () => {
     const config: ValidatedConfig = {
       ...baseConfig,

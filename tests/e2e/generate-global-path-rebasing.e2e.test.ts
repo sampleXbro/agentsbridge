@@ -214,6 +214,38 @@ You are a security expert.
     });
   });
 
+  describe('warp global MCP', () => {
+    beforeEach(() => {
+      mkdirSync(join(homeDir, '.agentsmesh'), { recursive: true });
+      writeFileSync(
+        join(homeDir, '.agentsmesh', 'agentsmesh.yaml'),
+        `version: 1
+targets: [warp]
+features: [mcp]
+`,
+      );
+      writeFileSync(
+        join(homeDir, '.agentsmesh', 'mcp.json'),
+        JSON.stringify(
+          { mcpServers: { context7: { command: 'npx', args: ['-y', 'context7'] } } },
+          null,
+          2,
+        ),
+      );
+    });
+
+    it('generates ~/.warp/.mcp.json (not project .mcp.json)', async () => {
+      const r = await runCli('generate --global --targets warp', projectDir);
+      expect(r.exitCode).toBe(0);
+
+      fileExists(join(homeDir, '.warp', '.mcp.json'));
+      fileContains(join(homeDir, '.warp', '.mcp.json'), 'mcpServers');
+      fileContains(join(homeDir, '.warp', '.mcp.json'), 'context7');
+      fileNotExists(join(projectDir, '.mcp.json'));
+      fileNotExists(join(homeDir, '.mcp.json'));
+    });
+  });
+
   describe('reference rewriting in global mode', () => {
     beforeEach(() => {
       mkdirSync(join(homeDir, '.agentsmesh', 'rules'), { recursive: true });

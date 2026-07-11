@@ -11,7 +11,17 @@ import {
   WARP_ROOT_FILE,
   WARP_SKILLS_DIR,
   WARP_MCP_FILE,
+  WARP_GLOBAL_MCP_FILE,
 } from '../../../../src/targets/warp/constants.js';
+import type { GenerateFeatureContext } from '../../../../src/targets/catalog/target.interface.js';
+
+function projectCtx(): GenerateFeatureContext {
+  return { capability: { level: 'native' }, scope: 'project' };
+}
+
+function globalCtx(): GenerateFeatureContext {
+  return { capability: { level: 'native' }, scope: 'global' };
+}
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
   return {
@@ -252,8 +262,8 @@ describe('generateAgents (warp)', () => {
 });
 
 describe('generateMcp (warp)', () => {
-  it('generates .mcp.json with standard format', () => {
-    const canonical = makeCanonical({
+  const withServer = (): CanonicalFiles =>
+    makeCanonical({
       mcp: {
         mcpServers: {
           filesystem: {
@@ -264,7 +274,8 @@ describe('generateMcp (warp)', () => {
       },
     });
 
-    const results = generateMcp(canonical);
+  it('generates .mcp.json with standard format (project scope)', () => {
+    const results = generateMcp(withServer(), projectCtx());
 
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(WARP_MCP_FILE);
@@ -273,15 +284,39 @@ describe('generateMcp (warp)', () => {
     expect(parsed['mcpServers']).toHaveProperty('filesystem');
   });
 
-  it('returns empty when no MCP config exists', () => {
-    const canonical = makeCanonical({ mcp: null });
-    const results = generateMcp(canonical);
+  it('generates .mcp.json when no ctx is provided (defaults to project)', () => {
+    const results = generateMcp(withServer());
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(WARP_MCP_FILE);
+  });
+
+  it('generates ~/.warp/.mcp.json with standard format (global scope)', () => {
+    const results = generateMcp(withServer(), globalCtx());
+
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(WARP_GLOBAL_MCP_FILE);
+    const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
+    expect(parsed).toHaveProperty('mcpServers');
+    expect(parsed['mcpServers']).toHaveProperty('filesystem');
+  });
+
+  it('returns empty when no MCP config exists (project scope)', () => {
+    const results = generateMcp(makeCanonical({ mcp: null }), projectCtx());
     expect(results).toHaveLength(0);
   });
 
-  it('returns empty when mcpServers is empty', () => {
-    const canonical = makeCanonical({ mcp: { mcpServers: {} } });
-    const results = generateMcp(canonical);
+  it('returns empty when no MCP config exists (global scope)', () => {
+    const results = generateMcp(makeCanonical({ mcp: null }), globalCtx());
+    expect(results).toHaveLength(0);
+  });
+
+  it('returns empty when mcpServers is empty (project scope)', () => {
+    const results = generateMcp(makeCanonical({ mcp: { mcpServers: {} } }), projectCtx());
+    expect(results).toHaveLength(0);
+  });
+
+  it('returns empty when mcpServers is empty (global scope)', () => {
+    const results = generateMcp(makeCanonical({ mcp: { mcpServers: {} } }), globalCtx());
     expect(results).toHaveLength(0);
   });
 });

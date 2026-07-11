@@ -9,8 +9,9 @@
  * Import reads `WARP.md` (legacy, higher priority), `AGENTS.md`,
  * `.warp/skills/`, and `.mcp.json`.
  *
- * Global mode supports skills only — Warp's global rules are
- * UI-managed via Warp Drive, not file-based.
+ * Global mode supports skills and MCP — Warp reads a global MCP config
+ * at `~/.warp/.mcp.json` (standard `mcpServers` JSON). Warp's global
+ * rules remain UI-managed via Warp Drive, not file-based.
  */
 
 import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
@@ -37,6 +38,7 @@ import {
   WARP_SKILLS_DIR,
   WARP_MCP_FILE,
   WARP_GLOBAL_SKILLS_DIR,
+  WARP_GLOBAL_MCP_FILE,
   WARP_CANONICAL_RULES_DIR,
 } from './constants.js';
 
@@ -77,12 +79,14 @@ const globalLayout: TargetLayout = {
   skillDir: WARP_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [WARP_GLOBAL_SKILLS_DIR],
-    files: [],
+    files: [WARP_GLOBAL_MCP_FILE],
   },
   rewriteGeneratedPath(path) {
     if (path.startsWith(`${WARP_SKILLS_DIR}/`)) {
       return path.replace(`${WARP_SKILLS_DIR}/`, `${WARP_GLOBAL_SKILLS_DIR}/`);
     }
+    // The MCP generator already emits the global path (`.warp/.mcp.json`)
+    // directly when scope is global, so it passes through unchanged.
     return path;
   },
   mirrorGlobalPath(path, activeTargets) {
@@ -122,7 +126,7 @@ const globalCapabilities: TargetCapabilities = {
   commands: 'none',
   agents: 'none',
   skills: 'native',
-  mcp: 'none',
+  mcp: 'native',
   hooks: 'none',
   ignore: 'none',
   permissions: 'partial',
@@ -149,7 +153,7 @@ export const descriptor = {
   project,
   globalSupport: {
     capabilities: globalCapabilities,
-    detectionPaths: [WARP_GLOBAL_SKILLS_DIR],
+    detectionPaths: [WARP_GLOBAL_SKILLS_DIR, WARP_GLOBAL_MCP_FILE],
     layout: globalLayout,
   },
   importer: {
@@ -168,6 +172,7 @@ export const descriptor = {
       mode: 'mcpJson',
       source: {
         project: [WARP_MCP_FILE],
+        global: [WARP_GLOBAL_MCP_FILE],
       },
       canonicalDir: '.agentsmesh',
       canonicalFilename: 'mcp.json',

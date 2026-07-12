@@ -1818,8 +1818,28 @@
       "target": "rovodev",
       "feature": "mcp",
       "scope": "project",
+      "maxAchievable": "none",
+      "path": "",
+      "ext": "",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://support.atlassian.com/rovo/docs/manage-rovo-dev-cli-settings/"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "rejected",
+      "rejectionReason": "No project-level MCP config file is documented for Rovo Dev; only ~/.rovodev/mcp_config.json (global, configurable via mcp.mcpConfigPath) is read."
+    },
+    {
+      "target": "rovodev",
+      "feature": "mcp",
+      "scope": "global",
       "maxAchievable": "native",
-      "path": ".rovodev/mcp.json",
+      "path": "~/.rovodev/mcp_config.json",
       "ext": ".json",
       "format": "json",
       "fingerprint": {
@@ -1827,11 +1847,99 @@
           "mcpServers"
         ],
         "requiredFrontmatter": [],
-        "keyChecks": []
+        "keyChecks": [
+          {
+            "pointer": "/mcpServers",
+            "kind": "object"
+          }
+        ]
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://support.atlassian.com/rovo/docs/manage-rovo-dev-cli-settings/"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "rovodev",
+      "feature": "commands",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".rovodev/prompts.yml",
+      "ext": ".yml",
+      "format": "yaml",
+      "fingerprint": {
+        "topLevelKeys": [
+          "prompts"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": [
+          {
+            "pointer": "/prompts",
+            "kind": "array"
+          }
+        ]
+      },
+      "source": [
+        "https://support.atlassian.com/rovo/docs/save-and-reuse-a-prompt-in-rovo-dev-cli/"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "rovodev",
+      "feature": "commands",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": "~/.rovodev/prompts.yml",
+      "ext": ".yml",
+      "format": "yaml",
+      "fingerprint": {
+        "topLevelKeys": [
+          "prompts"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": [
+          {
+            "pointer": "/prompts",
+            "kind": "array"
+          }
+        ]
+      },
+      "source": [
+        "https://support.atlassian.com/rovo/docs/save-and-reuse-a-prompt-in-rovo-dev-cli/"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "rovodev",
+      "feature": "permissions",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": "~/.rovodev/config.yml",
+      "ext": ".yml",
+      "format": "yaml",
+      "fingerprint": {
+        "topLevelKeys": [
+          "toolPermissions"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": [
+          {
+            "pointer": "/toolPermissions/tools",
+            "kind": "object"
+          }
+        ]
+      },
+      "source": [
+        "https://support.atlassian.com/rovo/docs/manage-rovo-dev-cli-settings/"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {

@@ -56,7 +56,6 @@ const TARGETS_WITH_PROJECTED_COMMANDS = new Set<TargetName>([
   'jules',
   'kiro',
   'replit-agent',
-  'rovodev',
   'trae',
   'warp',
   'zed',

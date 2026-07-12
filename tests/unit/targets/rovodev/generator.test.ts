@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { parse as yamlParse } from 'yaml';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
 import {
   generateRules,
@@ -10,7 +11,9 @@ import {
 import {
   ROVODEV_ROOT_FILE,
   ROVODEV_SKILLS_DIR,
-  ROVODEV_MCP_FILE,
+  ROVODEV_COMMANDS_DIR,
+  ROVODEV_PROMPTS_FILE,
+  ROVODEV_GLOBAL_MCP_FILE,
 } from '../../../../src/targets/rovodev/constants.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
@@ -205,7 +208,7 @@ describe('generateSkills (rovodev)', () => {
 });
 
 describe('generateCommands (rovodev)', () => {
-  it('projects commands as skills', () => {
+  it('generates a prompts.yml manifest entry plus a commands/<name>.md content file', () => {
     const canonical = makeCanonical({
       commands: [
         {
@@ -220,23 +223,76 @@ describe('generateCommands (rovodev)', () => {
 
     const results = generateCommands(canonical);
 
-    expect(results).toHaveLength(1);
-    expect(results[0].path).toContain(`${ROVODEV_SKILLS_DIR}/`);
-    expect(results[0].path).toContain('SKILL.md');
-    expect(results[0].content).toContain('review');
-    const cmd = results.find((r) => r.path.endsWith('SKILL.md'));
-    expect(cmd!.content).toContain('x-agentsmesh-kind: command');
-    expect(cmd!.content).toContain('x-agentsmesh-name: review');
-    expect(cmd!.content).toContain('name: am-command-review');
-    expect(cmd!.content).toContain('description: Review code changes');
-    expect(cmd!.content).toContain('x-agentsmesh-allowed-tools:');
-    expect(cmd!.content).toContain('- Read');
+    expect(results).toHaveLength(2);
+    const manifest = results.find((r) => r.path === ROVODEV_PROMPTS_FILE);
+    expect(manifest).toBeDefined();
+    const parsed = yamlParse(manifest!.content) as {
+      prompts: { name: string; description: string; content_file: string }[];
+    };
+    expect(parsed.prompts).toEqual([
+      { name: 'review', description: 'Review code changes', content_file: 'commands/review.md' },
+    ]);
+
+    const content = results.find((r) => r.path === `${ROVODEV_COMMANDS_DIR}/review.md`);
+    expect(content).toBeDefined();
+    expect(content!.content).toBe('Run code review.\n');
+    // Content files carry no frontmatter — Rovo Dev sends them verbatim as prompt text.
+    expect(content!.content).not.toContain('---');
+  });
+
+  it('generates one manifest entry + content file per command, in order', () => {
+    const canonical = makeCanonical({
+      commands: [
+        {
+          name: 'review',
+          source: '/proj/.agentsmesh/commands/review.md',
+          description: 'Review',
+          body: 'Do review.',
+          allowedTools: [],
+        },
+        {
+          name: 'deploy',
+          source: '/proj/.agentsmesh/commands/deploy.md',
+          description: 'Deploy',
+          body: 'Do deploy.',
+          allowedTools: [],
+        },
+      ],
+    });
+
+    const results = generateCommands(canonical);
+
+    expect(results).toHaveLength(3);
+    const manifest = results.find((r) => r.path === ROVODEV_PROMPTS_FILE)!;
+    const parsed = yamlParse(manifest.content) as { prompts: { name: string }[] };
+    expect(parsed.prompts.map((p) => p.name)).toEqual(['review', 'deploy']);
+    expect(results.some((r) => r.path === `${ROVODEV_COMMANDS_DIR}/review.md`)).toBe(true);
+    expect(results.some((r) => r.path === `${ROVODEV_COMMANDS_DIR}/deploy.md`)).toBe(true);
   });
 
   it('returns empty when no commands', () => {
     const canonical = makeCanonical({ commands: [] });
     const results = generateCommands(canonical);
     expect(results).toHaveLength(0);
+  });
+
+  it('writes an empty content file for a command with a blank body', () => {
+    const canonical = makeCanonical({
+      commands: [
+        {
+          name: 'noop',
+          source: '/proj/.agentsmesh/commands/noop.md',
+          description: 'No-op',
+          body: '   \n  ',
+          allowedTools: [],
+        },
+      ],
+    });
+
+    const results = generateCommands(canonical);
+
+    const content = results.find((r) => r.path === `${ROVODEV_COMMANDS_DIR}/noop.md`);
+    expect(content!.content).toBe('');
   });
 });
 
@@ -285,36 +341,47 @@ describe('generateAgents (rovodev)', () => {
 });
 
 describe('generateMcp (rovodev)', () => {
-  it('generates .rovodev/mcp.json with standard format', () => {
-    const canonical = makeCanonical({
-      mcp: {
-        mcpServers: {
-          filesystem: {
-            command: 'npx',
-            args: ['-y', '@modelcontextprotocol/server-filesystem', '/tmp'],
-          },
-        },
+  const MCP = {
+    mcpServers: {
+      filesystem: {
+        command: 'npx',
+        args: ['-y', '@modelcontextprotocol/server-filesystem', '/tmp'],
       },
-    });
+    },
+  };
 
-    const results = generateMcp(canonical);
+  it('generates ~/.rovodev/mcp_config.json at global scope', () => {
+    const canonical = makeCanonical({ mcp: MCP });
+
+    const results = generateMcp(canonical, { scope: 'global', capability: { level: 'native' } });
 
     expect(results).toHaveLength(1);
-    expect(results[0].path).toBe(ROVODEV_MCP_FILE);
+    expect(results[0].path).toBe(ROVODEV_GLOBAL_MCP_FILE);
     const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
     expect(parsed).toHaveProperty('mcpServers');
     expect(parsed['mcpServers']).toHaveProperty('filesystem');
   });
 
+  it('returns empty at project scope (no project-level MCP file is documented)', () => {
+    const canonical = makeCanonical({ mcp: MCP });
+    const results = generateMcp(canonical, { scope: 'project', capability: { level: 'none' } });
+    expect(results).toHaveLength(0);
+  });
+
+  it('returns empty when scope context is omitted (defaults away from global)', () => {
+    const canonical = makeCanonical({ mcp: MCP });
+    expect(generateMcp(canonical)).toHaveLength(0);
+  });
+
   it('returns empty when no MCP config exists', () => {
     const canonical = makeCanonical({ mcp: null });
-    const results = generateMcp(canonical);
+    const results = generateMcp(canonical, { scope: 'global', capability: { level: 'native' } });
     expect(results).toHaveLength(0);
   });
 
   it('returns empty when mcpServers is empty', () => {
     const canonical = makeCanonical({ mcp: { mcpServers: {} } });
-    const results = generateMcp(canonical);
+    const results = generateMcp(canonical, { scope: 'global', capability: { level: 'native' } });
     expect(results).toHaveLength(0);
   });
 });

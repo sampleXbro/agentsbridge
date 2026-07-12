@@ -9,10 +9,13 @@ import type { CanonicalFiles } from '../../../../src/core/types.js';
 import {
   ROVODEV_ROOT_FILE,
   ROVODEV_SKILLS_DIR,
-  ROVODEV_MCP_FILE,
+  ROVODEV_COMMANDS_DIR,
+  ROVODEV_PROMPTS_FILE,
   ROVODEV_GLOBAL_DIR,
   ROVODEV_GLOBAL_ROOT_FILE,
   ROVODEV_GLOBAL_SKILLS_DIR,
+  ROVODEV_GLOBAL_COMMANDS_DIR,
+  ROVODEV_GLOBAL_PROMPTS_FILE,
   ROVODEV_GLOBAL_MCP_FILE,
   ROVODEV_GLOBAL_CONFIG_FILE,
 } from '../../../../src/targets/rovodev/constants.js';
@@ -39,9 +42,15 @@ describe('rovodev global layout', () => {
     expect(rewrite(skillPath)).toBe(`${ROVODEV_GLOBAL_SKILLS_DIR}/debugging/SKILL.md`);
   });
 
-  it('rewriteGeneratedPath transforms .rovodev/mcp.json to global mcp path', () => {
+  it('rewriteGeneratedPath transforms .rovodev/prompts.yml to the global prompts path', () => {
     const rewrite = descriptor.globalSupport!.layout.rewriteGeneratedPath!;
-    expect(rewrite(ROVODEV_MCP_FILE)).toBe(ROVODEV_GLOBAL_MCP_FILE);
+    expect(rewrite(ROVODEV_PROMPTS_FILE)).toBe(ROVODEV_GLOBAL_PROMPTS_FILE);
+  });
+
+  it('rewriteGeneratedPath transforms .rovodev/commands/ to the global commands path', () => {
+    const rewrite = descriptor.globalSupport!.layout.rewriteGeneratedPath!;
+    const commandPath = `${ROVODEV_COMMANDS_DIR}/review.md`;
+    expect(rewrite(commandPath)).toBe(`${ROVODEV_GLOBAL_COMMANDS_DIR}/review.md`);
   });
 
   it('rewriteGeneratedPath passes through unknown paths', () => {
@@ -52,11 +61,11 @@ describe('rovodev global layout', () => {
   it('globalSupport.capabilities matches project capabilities', () => {
     expect(descriptor.globalSupport!.capabilities.rules).toBe('native');
     expect(descriptor.globalSupport!.capabilities.skills).toBe('native');
+    expect(descriptor.globalSupport!.capabilities.commands).toBe('native');
     expect(descriptor.globalSupport!.capabilities.mcp).toBe('native');
   });
 
   it('globalSupport.capabilities disables unsupported features', () => {
-    expect(descriptor.globalSupport!.capabilities.commands).toBe('none');
     expect(descriptor.globalSupport!.capabilities.agents).toBe('none');
     expect(descriptor.globalSupport!.capabilities.ignore).toBe('none');
   });
@@ -73,8 +82,8 @@ describe('rovodev global layout', () => {
     expect(descriptor.globalSupport!.detectionPaths).toContain(ROVODEV_GLOBAL_SKILLS_DIR);
   });
 
-  it('descriptor supports conversion for commands and agents', () => {
-    expect(descriptor.supportsConversion).toEqual({ commands: true, agents: true });
+  it('descriptor supports conversion for agents only (commands is native)', () => {
+    expect(descriptor.supportsConversion).toEqual({ agents: true });
   });
 
   it('project layout has correct rootInstructionPath', () => {
@@ -87,8 +96,9 @@ describe('rovodev global layout', () => {
 
   it('project layout managedOutputs includes all paths', () => {
     expect(descriptor.project.managedOutputs!.dirs).toContain(ROVODEV_SKILLS_DIR);
+    expect(descriptor.project.managedOutputs!.dirs).toContain(ROVODEV_COMMANDS_DIR);
     expect(descriptor.project.managedOutputs!.files).toContain(ROVODEV_ROOT_FILE);
-    expect(descriptor.project.managedOutputs!.files).toContain(ROVODEV_MCP_FILE);
+    expect(descriptor.project.managedOutputs!.files).toContain(ROVODEV_PROMPTS_FILE);
   });
 
   it('global layout has correct rootInstructionPath', () => {
@@ -103,8 +113,14 @@ describe('rovodev global layout', () => {
     expect(descriptor.globalSupport!.layout.managedOutputs!.dirs).toContain(
       ROVODEV_GLOBAL_SKILLS_DIR,
     );
+    expect(descriptor.globalSupport!.layout.managedOutputs!.dirs).toContain(
+      ROVODEV_GLOBAL_COMMANDS_DIR,
+    );
     expect(descriptor.globalSupport!.layout.managedOutputs!.files).toContain(
       ROVODEV_GLOBAL_ROOT_FILE,
+    );
+    expect(descriptor.globalSupport!.layout.managedOutputs!.files).toContain(
+      ROVODEV_GLOBAL_PROMPTS_FILE,
     );
     expect(descriptor.globalSupport!.layout.managedOutputs!.files).toContain(
       ROVODEV_GLOBAL_MCP_FILE,
@@ -117,7 +133,7 @@ describe('rovodev global layout', () => {
   it('detection paths include project-level paths', () => {
     expect(descriptor.detectionPaths).toContain(ROVODEV_ROOT_FILE);
     expect(descriptor.detectionPaths).toContain(ROVODEV_SKILLS_DIR);
-    expect(descriptor.detectionPaths).toContain(ROVODEV_MCP_FILE);
+    expect(descriptor.detectionPaths).toContain(ROVODEV_PROMPTS_FILE);
   });
 
   it('mirrorGlobalPath mirrors skills to .agents/skills/', () => {
@@ -221,7 +237,7 @@ describe('rovodev global frontmatter preservation', () => {
     expect(rule!.content).toContain('Use TDD and strict TypeScript.');
   });
 
-  it('preserves MCP content in global mode (written to .rovodev/mcp.json with mcpServers key)', async () => {
+  it('preserves MCP content in global mode (written to .rovodev/mcp_config.json with mcpServers key)', async () => {
     const results = await generate({
       config: { ...makeGlobalConfig(), features: ['mcp'] } as ValidatedConfig,
       canonical: makeCanonical({
@@ -276,7 +292,11 @@ describe('rovodev emitScopedSettings', () => {
 
   it('returns [] for global scope with no hooks or permissions', () => {
     const canonical = makeCanonical();
-    const result = descriptor.emitScopedSettings!(canonical, 'global', new Set(['hooks', 'permissions']));
+    const result = descriptor.emitScopedSettings!(
+      canonical,
+      'global',
+      new Set(['hooks', 'permissions']),
+    );
     expect(result).toHaveLength(0);
   });
 
@@ -306,7 +326,7 @@ describe('rovodev emitScopedSettings', () => {
 
   it('emits config.yml with toolPermissions when permissions present', () => {
     const canonical = makeCanonical({
-      permissions: { allow: ['Bash(**)'], deny: [], ask: [] },
+      permissions: { allow: ['Read'], deny: [], ask: [] },
     });
     const result = descriptor.emitScopedSettings!(canonical, 'global', new Set(['permissions']));
     expect(result).toHaveLength(1);
@@ -314,9 +334,8 @@ describe('rovodev emitScopedSettings', () => {
     const parsed = yamlParse(result[0].content) as Record<string, unknown>;
     expect(parsed).toHaveProperty('toolPermissions');
     expect(parsed).not.toHaveProperty('eventHooks');
-    const perms = parsed.toolPermissions as Record<string, unknown>;
-    expect(perms.allow).toEqual(['Bash(**)']);
-    expect(perms.deny).toBeUndefined();
+    const perms = parsed.toolPermissions as { tools: Record<string, unknown> };
+    expect(perms.tools.Read).toBe('allow');
   });
 
   it('emits config.yml with both sections when both present', () => {

@@ -231,7 +231,9 @@ export function outputPaths(target: TargetName): OutputPathGroups {
                                       ? '.factory/commands/review.md'
                                       : target === 'pi-agent'
                                         ? '.pi/prompts/review.md'
-                                        : `${skillDir(target)}/${commandSkillDirName('review')}/SKILL.md`,
+                                        : target === 'rovodev'
+                                          ? '.rovodev/commands/review.md'
+                                          : `${skillDir(target)}/${commandSkillDirName('review')}/SKILL.md`,
     ],
     agent: [
       target === 'claude-code'
@@ -380,7 +382,9 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
                                       ? '.factory/commands/review.md'
                                       : target === 'pi-agent'
                                         ? '.pi/prompts/review.md'
-                                        : '.windsurf/workflows/review.md',
+                                        : target === 'rovodev'
+                                          ? '.rovodev/commands/review.md'
+                                          : '.windsurf/workflows/review.md',
     agent:
       target === 'claude-code'
         ? '.claude/agents/code-reviewer.md'

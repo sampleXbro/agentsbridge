@@ -1,0 +1,4 @@
+prompts:
+  - name: review
+    description: Review code changes
+    content_file: commands/review.md

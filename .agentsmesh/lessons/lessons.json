@@ -6018,6 +6018,20 @@
         "t-kw-725f99c9"
       ]
     },
+    "target-capability-audits-when-a-capability-finding-s": {
+      "createdAt": "2026-07-12",
+      "evidence": [
+        "rovodev-commands-global-prompts-yml"
+      ],
+      "rule": "When a capability finding's cited source URL, once fetched, does not mention the claimed feature at all (e.g. 'prompts.yml' absent from manage-rovo-dev-cli-settings/), do not conclude the finding is fabricated yet — check sibling pages on the same docs site (via its nav/TOC, e.g. a linked 'Save and reuse a prompt' page) before rejecting. A miscited URL is common; the real primary-source proof and a 'no global surface' claim can both be one click away and directly contradict the given instruction.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-kw-01a1d77f"
+      ]
+    },
     "target-capability-audits-when-a-target-declares-a": {
       "createdAt": "2026-06-24",
       "evidence": [
@@ -9019,6 +9033,10 @@
     "t-kw-012b2936": {
       "kind": "keyword",
       "pattern": "keyword floor"
+    },
+    "t-kw-01a1d77f": {
+      "kind": "keyword",
+      "pattern": "capability finding source verification"
     },
     "t-kw-04b69ea5": {
       "kind": "keyword",

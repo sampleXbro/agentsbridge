@@ -1,16 +1,13 @@
 /**
  * Kilo Code target descriptor.
  *
- * Generation always uses the new layout:
- *   - `AGENTS.md`              — root rule (kilo's documented portable root)
- *   - `.kilo/rules/<slug>.md`  — additional rules
- *   - `.kilo/commands/`        — slash commands
- *   - `.kilo/agents/`          — first-class subagents (YAML frontmatter)
- *   - `.kilo/skills/`          — Anthropic-conventional skill bundles
- *   - `.kilo/mcp.json`         — MCP servers (mcpServers wrapper)
- *   - `.kilocodeignore`        — ignore patterns (legacy filename, only
- *                                natively-loaded ignore in kilo today)
- *   - `kilo.jsonc`             — permissions (permission key)
+ * Project scope uses the new layout (`AGENTS.md` + `.kilo/...` + `kilo.jsonc`
+ * for permissions). Global scope is a DIFFERENT, unified shape — root rule,
+ * commands, and agents stay plain files under `~/.config/kilo/`, skills stay
+ * under `~/.kilo/skills/`, but additional rules and MCP servers fold into
+ * `~/.config/kilo/kilo.jsonc` as `instructions`/`mcp` keys (no global ignore
+ * mechanism exists). See constants.ts and global-settings.ts for the full
+ * rationale and doc citations.
  *
  * Import covers BOTH new and legacy layouts so existing kilo / Roo-era users
  * round-trip cleanly.
@@ -40,8 +37,6 @@ import {
   KILO_CODE_GLOBAL_COMMANDS_DIR,
   KILO_CODE_GLOBAL_AGENTS_DIR,
   KILO_CODE_GLOBAL_SKILLS_DIR,
-  KILO_CODE_GLOBAL_MCP_FILE,
-  KILO_CODE_GLOBAL_IGNORE,
   KILO_CODE_RULES_DIR,
   KILO_CODE_COMMANDS_DIR,
   KILO_CODE_AGENTS_DIR,
@@ -53,6 +48,7 @@ import {
   KILO_CODE_CANONICAL_AGENTS_DIR,
   KILO_CODE_CANONICAL_MCP,
   KILO_CODE_CANONICAL_IGNORE,
+  KILO_GLOBAL_CONFIG_FILE,
 } from './constants.js';
 import { importFromKiloCode } from './importer.js';
 import { kiloAgentMapper, kiloCommandMapper, kiloNonRootRuleMapper } from './import-mappers.js';
@@ -60,6 +56,7 @@ import { lintRules } from './linter.js';
 import { lintHooks } from './lint.js';
 import { buildKiloCodeImportPaths } from '../../core/reference/import-map-builders.js';
 import { mergeKiloConfig } from './merge.js';
+import { emitKiloGlobalSettings } from './global-settings.js';
 import { project, globalLayout, capabilities, globalCapabilities } from './layout.js';
 
 export const target: TargetGenerators = {
@@ -92,6 +89,7 @@ export const descriptor = {
     hooks: lintHooks,
   },
   mergeGeneratedOutputContent: mergeKiloConfig,
+  emitScopedSettings: emitKiloGlobalSettings,
   project,
   globalSupport: {
     capabilities: globalCapabilities,
@@ -101,8 +99,7 @@ export const descriptor = {
       KILO_CODE_GLOBAL_COMMANDS_DIR,
       KILO_CODE_GLOBAL_AGENTS_DIR,
       KILO_CODE_GLOBAL_SKILLS_DIR,
-      KILO_CODE_GLOBAL_MCP_FILE,
-      KILO_CODE_GLOBAL_IGNORE,
+      KILO_GLOBAL_CONFIG_FILE,
     ],
     layout: globalLayout,
   },
@@ -161,9 +158,13 @@ export const descriptor = {
     mcp: {
       feature: 'mcp',
       mode: 'mcpJson',
+      // Global scope has no `source.global`: at global scope MCP servers are
+      // a key inside the shared kilo.jsonc (different schema entirely — see
+      // `mcp` key in kilo.ai/docs/automate/mcp/using-in-kilo-code), imported
+      // manually by importGlobalMcp() in importer.ts instead of this generic
+      // mcpJson-file mode.
       source: {
         project: [KILO_CODE_MCP_FILE, KILO_CODE_LEGACY_MCP_FILE],
-        global: [KILO_CODE_GLOBAL_MCP_FILE],
       },
       canonicalDir: '.agentsmesh',
       canonicalFilename: KILO_CODE_CANONICAL_MCP,
@@ -171,9 +172,10 @@ export const descriptor = {
     ignore: {
       feature: 'ignore',
       mode: 'flatFile',
+      // Project-only: no documented global `.kilocodeignore` equivalent
+      // (kilo.ai/docs/customize/context/kilocodeignore is workspace-root-only).
       source: {
         project: [KILO_CODE_IGNORE],
-        global: [KILO_CODE_GLOBAL_IGNORE],
       },
       canonicalDir: '.agentsmesh',
       canonicalFilename: KILO_CODE_CANONICAL_IGNORE,

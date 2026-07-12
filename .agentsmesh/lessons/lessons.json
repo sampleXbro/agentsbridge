@@ -196,6 +196,20 @@
         "t-glob-1d8119c8"
       ]
     },
+    "capability-ledger-fixes-new-target-source-files-must": {
+      "createdAt": "2026-07-12",
+      "evidence": [
+        "deepagents-cli branch coverage 94.99%->95.03% fix"
+      ],
+      "rule": "New target source files must explicitly test defensive/narrow branches (falsy-fallback '||', non-object array-entry guards, optional-array-key ternaries in importer/hooks-format code) or global branch coverage (95% threshold in pnpm precommit) fails even when all logic is correct — check coverage-final.json per-file branch % for new files before running full precommit",
+      "status": "active",
+      "topics": [
+        "capability-ledger-fixes"
+      ],
+      "triggers": [
+        "t-glob-840ca032"
+      ]
+    },
     "capability-ledger-never-run-pnpm-capabilities-seed": {
       "createdAt": "2026-07-11",
       "evidence": [],
@@ -3325,6 +3339,20 @@
       "triggers": [
         "t-glob-7e7851c6",
         "t-kw-c65f9220"
+      ]
+    },
+    "kilo-code-for-kilo-code-global-agents": {
+      "createdAt": "2026-07-12",
+      "evidence": [
+        "kilo.ai/docs/customize/custom-subagents vs custom-modes"
+      ],
+      "rule": "For kilo-code global agents, trust the dedicated custom-subagents.md doc page (plural ~/.config/kilo/agents/, stated 3x incl. Configuration Precedence) over custom-modes.md's singular ~/.config/kilo/agent/ (also stated 3x) — kilo.ai's own docs self-contradict on this path; custom-subagents.md is the newer CLI-focused page and is more authoritative.",
+      "status": "active",
+      "topics": [
+        "kilo-code"
+      ],
+      "triggers": [
+        "t-glob-497f5415"
       ]
     },
     "lessons-system-a-command-pattern-trigger-s": {
@@ -7725,6 +7753,9 @@
     "capability-ledger": {
       "summary": "Capability provenance ledger, deterministic audit, and conformance-gate semantics"
     },
+    "capability-ledger-fixes": {
+      "summary": "Fixing raised/broken/downgraded target capabilities from the capability-ledger audit"
+    },
     "ci-and-release-security": {
       "summary": "CI workflows + release security — ${{ }} injection, needs cascade, token leakage, supply-chain pinning, fail-closed checksums."
     },
@@ -7763,6 +7794,9 @@
     },
     "install-import-pickers": {
       "summary": "Install pipeline, importers, picker routing, marketplace sub-packs, pack materialization, manifest persistence, sync replay."
+    },
+    "kilo-code": {
+      "summary": "Kilo Code target capability fixes and doc quirks"
     },
     "kilo-code-config-surface": {
       "summary": "Real current config-surface facts for the kilo-code target (kilo.jsonc keys, MCP/rules loading, plugin-only hooks)."
@@ -8649,6 +8683,10 @@
     "t-glob-81a938c7": {
       "kind": "file_glob",
       "pattern": "src/lessons/import-legacy*.ts"
+    },
+    "t-glob-840ca032": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/{hooks-format,agent-format,global-hooks,importer}.ts"
     },
     "t-glob-848355ab": {
       "kind": "file_glob",

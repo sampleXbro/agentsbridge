@@ -1423,6 +1423,170 @@
       "rejectionReason": null
     },
     {
+      "target": "kilo-code",
+      "feature": "rules",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".config/kilo/AGENTS.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://kilo.ai/docs/getting-started/settings",
+        "https://kilo.ai/docs/customize/custom-instructions"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "kilo-code",
+      "feature": "additionalRules",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".config/kilo/kilo.jsonc",
+      "ext": ".jsonc",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "instructions"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": [
+          {
+            "pointer": "/instructions",
+            "kind": "array"
+          }
+        ]
+      },
+      "source": [
+        "https://kilo.ai/docs/getting-started/settings",
+        "https://kilo.ai/docs/customize/custom-rules"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "kilo-code",
+      "feature": "commands",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".config/kilo/commands/review.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "description"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://kilo.ai/docs/getting-started/settings",
+        "https://kilo.ai/docs/customize/workflows"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "kilo-code",
+      "feature": "agents",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".config/kilo/agents/code-reviewer.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mode",
+          "description"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://kilo.ai/docs/getting-started/settings",
+        "https://kilo.ai/docs/customize/custom-subagents"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "kilo-code",
+      "feature": "skills",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".kilo/skills/api-generator/SKILL.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "name",
+          "description"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://kilo.ai/docs/getting-started/settings",
+        "https://kilo.ai/docs/customize/skills"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "kilo-code",
+      "feature": "mcp",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".config/kilo/kilo.jsonc",
+      "ext": ".jsonc",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcp"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://kilo.ai/docs/getting-started/settings",
+        "https://kilo.ai/docs/automate/mcp/using-in-kilo-code"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "kilo-code",
+      "feature": "ignore",
+      "scope": "global",
+      "maxAchievable": "none",
+      "path": "",
+      "ext": "",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://kilo.ai/docs/getting-started/settings",
+        "https://kilo.ai/docs/customize/context/kilocodeignore"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "rejected",
+      "rejectionReason": "No documented global .kilocodeignore equivalent: kilo.ai/docs/customize/context/kilocodeignore describes .kilocodeignore as a workspace-root-only file (patterns evaluated relative to the workspace root), auto-migrated into project-scope `permission` deny-rules via the IgnoreMigrator. No global ignore file or kilo.jsonc key is documented."
+    },
+    {
       "target": "kiro",
       "feature": "commands",
       "scope": "project",

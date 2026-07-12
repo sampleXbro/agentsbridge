@@ -17,8 +17,6 @@ import {
   KILO_CODE_GLOBAL_COMMANDS_DIR,
   KILO_CODE_GLOBAL_AGENTS_DIR,
   KILO_CODE_GLOBAL_SKILLS_DIR,
-  KILO_CODE_GLOBAL_MCP_FILE,
-  KILO_CODE_GLOBAL_IGNORE,
   KILO_CODE_GLOBAL_AGENTS_SKILLS_DIR,
   KILO_CONFIG_FILE,
   KILO_GLOBAL_CONFIG_FILE,
@@ -56,16 +54,27 @@ export const globalLayout: TargetLayout = {
       KILO_CODE_GLOBAL_SKILLS_DIR,
       KILO_CODE_GLOBAL_AGENTS_SKILLS_DIR,
     ],
-    files: [
-      KILO_CODE_GLOBAL_AGENTS_MD,
-      KILO_CODE_GLOBAL_MCP_FILE,
-      KILO_CODE_GLOBAL_IGNORE,
-      KILO_GLOBAL_CONFIG_FILE,
-    ],
+    files: [KILO_CODE_GLOBAL_AGENTS_MD, KILO_GLOBAL_CONFIG_FILE],
   },
   rewriteGeneratedPath(path) {
     if (path === KILO_CODE_ROOT_RULE) return KILO_CODE_GLOBAL_AGENTS_MD;
     if (path === KILO_CONFIG_FILE) return KILO_GLOBAL_CONFIG_FILE;
+    // MCP folds into the `mcp` key of kilo.jsonc at global scope (see
+    // global-settings.ts) instead of a standalone `.kilo/mcp.json` file.
+    if (path === KILO_CODE_MCP_FILE) return null;
+    // No documented global `.kilocodeignore` equivalent — ignore is 'none'
+    // at global scope (kilo.ai/docs/customize/context/kilocodeignore
+    // describes it as workspace-root-only).
+    if (path === KILO_CODE_IGNORE) return null;
+    if (path.startsWith(`${KILO_CODE_RULES_DIR}/`)) {
+      return path.replace(`${KILO_CODE_RULES_DIR}/`, `${KILO_CODE_GLOBAL_RULES_DIR}/`);
+    }
+    if (path.startsWith(`${KILO_CODE_COMMANDS_DIR}/`)) {
+      return path.replace(`${KILO_CODE_COMMANDS_DIR}/`, `${KILO_CODE_GLOBAL_COMMANDS_DIR}/`);
+    }
+    if (path.startsWith(`${KILO_CODE_AGENTS_DIR}/`)) {
+      return path.replace(`${KILO_CODE_AGENTS_DIR}/`, `${KILO_CODE_GLOBAL_AGENTS_DIR}/`);
+    }
     return path;
   },
   mirrorGlobalPath(path, activeTargets) {
@@ -104,6 +113,10 @@ export const globalCapabilities: TargetCapabilities = {
   skills: 'native',
   mcp: 'native',
   hooks: 'none',
-  ignore: 'native',
+  // No documented global `.kilocodeignore` equivalent — downgraded from
+  // 'native' (kilo.ai/docs/customize/context/kilocodeignore describes the
+  // file as workspace-root-only, auto-migrated into project-scope
+  // `permission` deny-rules; there is no global ignore mechanism).
+  ignore: 'none',
   permissions: 'native',
 };

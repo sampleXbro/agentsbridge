@@ -26,7 +26,7 @@ import {
 } from '../../../../src/targets/opencode/constants.js';
 import {
   KILO_CODE_GLOBAL_AGENTS_MD,
-  KILO_CODE_GLOBAL_MCP_FILE,
+  KILO_GLOBAL_CONFIG_FILE,
 } from '../../../../src/targets/kilo-code/constants.js';
 
 let root = '';
@@ -87,11 +87,11 @@ describe('per-target import-map builders — global-scope branches', () => {
     expect(refs.size).toBe(2);
   });
 
-  it('kilo-code global scope sets exactly AGENTS.md root alias and MCP file when no global content', async () => {
+  it('kilo-code global scope sets exactly AGENTS.md root alias and shared kilo.jsonc alias when no global content', async () => {
     const refs = new Map<string, string>();
     await buildKiloCodeImportPaths(refs, root, 'global');
     expect(refs.get(KILO_CODE_GLOBAL_AGENTS_MD)).toBe('.agentsmesh/rules/_root.md');
-    expect(refs.get(KILO_CODE_GLOBAL_MCP_FILE)).toBe('.agentsmesh/mcp.json');
+    expect(refs.get(KILO_GLOBAL_CONFIG_FILE)).toBe('.agentsmesh/mcp.json');
     expect(refs.size).toBe(2);
   });
 });

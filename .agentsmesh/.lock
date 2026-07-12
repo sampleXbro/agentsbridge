@@ -1,9 +1,9 @@
 # Auto-generated. DO NOT EDIT MANUALLY.
 # Tracks the state of all config files for team conflict resolution.
 
-generated_at: 2026-07-05T17:58:27.534Z
+generated_at: 2026-07-11T20:19:50.244Z
 generated_by: serhii
-lib_version: 0.28.0
+lib_version: 0.30.1
 checksums:
   agents/code-debugger.md: sha256:33452bf839256a119a602cd10d085bff3cdb8f537ded76e60053bb9d8e5d33bc
   agents/code-documenter.md: sha256:89b4ebd27718bcd50a7283c95ea1ff9cad153b1112cf695f9f1fc22d90ec85ec
@@ -123,7 +123,7 @@ checksums:
   skills/typescript-pro/references/type-guards.md: sha256:86f0452f173414a37fd69ecdc663f42ec903b5eb1eaa9a3ebad213780e58b197
   skills/typescript-pro/references/utility-types.md: sha256:89856b5cfc91cad3f827d882e05ba229d3385adf52c3fa5c57f6cebe8833e5e6
   skills/typescript-quality-gates/SKILL.md: sha256:7deae185cdfbfd93c3f904c290d26a2fd9a4b9c5b5d754d3ddb2915282dedce7
-  skills/update-target-capabilities/SKILL.md: sha256:f5faa297046d8c710118ce218e4048452162ead4eb35b4594a0f401def455e42
+  skills/update-target-capabilities/SKILL.md: sha256:593dae73b4ed948b8dfee7c5eafcbf01ff5ccfcaf6db281df5ca6802b33649b3
   skills/update-target-capabilities/references/capability-update-checklist.md: sha256:b83a4e9ca4a9a4bd528421983500aab513bc32cffcad573425598854d0326256
 extends:
   shared-samplexbro-rules: 0b393ecfeb7419d648d4c36203998d11ad3a0fdc

@@ -16,7 +16,7 @@ import {
   KILO_CODE_GLOBAL_COMMANDS_DIR,
   KILO_CODE_GLOBAL_AGENTS_DIR,
   KILO_CODE_GLOBAL_SKILLS_DIR,
-  KILO_CODE_GLOBAL_MCP_FILE,
+  KILO_GLOBAL_CONFIG_FILE,
 } from '../../../targets/kilo-code/constants.js';
 import type { TargetLayoutScope } from '../../../targets/catalog/target-descriptor.js';
 import { AB_AGENTS, AB_COMMANDS, AB_RULES } from './constants.js';
@@ -47,7 +47,9 @@ export async function buildKiloCodeImportPaths(
     for (const absPath of await listFiles(projectRoot, KILO_CODE_GLOBAL_SKILLS_DIR)) {
       addSkillLikeMapping(refs, rel(projectRoot, absPath), KILO_CODE_GLOBAL_SKILLS_DIR);
     }
-    refs.set(KILO_CODE_GLOBAL_MCP_FILE, '.agentsmesh/mcp.json');
+    // MCP folds into the shared kilo.jsonc's `mcp` key at global scope (see
+    // global-settings.ts) — same convention OpenCode uses for its config file.
+    refs.set(KILO_GLOBAL_CONFIG_FILE, '.agentsmesh/mcp.json');
     return;
   }
 

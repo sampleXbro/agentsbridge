@@ -41,7 +41,7 @@ With `--global`, the canonical directory is `~/.agentsmesh/` and CLI commands re
 | Goose | `~/.config/goose/.goosehints`, `~/.config/goose/.gooseignore`, `~/.agents/skills/`, optional mirror to `~/.agents/skills/` | Same user-level paths |
 | Jules | Cloud-only — no global paths (Jules runs asynchronously on Google's cloud infrastructure) | Cloud-only — no global paths |
 | Junie | `~/.junie/AGENTS.md`, `~/.junie/commands/`, `~/.junie/agents/`, `~/.junie/skills/`, `~/.junie/mcp/mcp.json`, optional mirror to `~/.agents/skills/` | Same user-level paths |
-| Kilo Code | `~/.kilo/AGENTS.md`, `~/.kilo/rules/*.md`, `~/.kilo/commands/*.md`, `~/.kilo/agents/*.md` (first-class subagents), `~/.kilo/skills/`, `~/.kilo/mcp.json`, `~/.kilocodeignore`, optional mirror to `~/.agents/skills/` | Same user-level paths; legacy `~/.kilocode/` and `~/.kilocodemodes` (not yet read in global scope) |
+| Kilo Code | `~/.config/kilo/AGENTS.md`, `~/.config/kilo/rules/*.md` (registered via the `instructions` key in `~/.config/kilo/kilo.jsonc`), `~/.config/kilo/commands/*.md`, `~/.config/kilo/agents/*.md` (first-class subagents), `~/.kilo/skills/`, `~/.config/kilo/kilo.jsonc` (`mcp` key), optional mirror to `~/.agents/skills/`. No global ignore (`.kilocodeignore` is workspace-root-only) | Same user-level paths (MCP servers parsed from the `mcp` key of `kilo.jsonc`); legacy `~/.kilocode/` and `~/.kilocodemodes` (not yet read in global scope) |
 | Kiro | `~/.kiro/steering/AGENTS.md`, `~/.kiro/steering/*.md`, `~/.kiro/agents/`, `~/.kiro/skills/`, `~/.kiro/settings/mcp.json`, `~/.kiro/settings/kiroignore`, optional mirror to `~/.agents/skills/` | Same paths (hooks not emitted globally) |
 | OpenCode | `~/.config/opencode/AGENTS.md`, `~/.config/opencode/rules/*.md`, `~/.config/opencode/commands/*.md`, `~/.config/opencode/agents/*.md`, `~/.config/opencode/skills/`, `~/.config/opencode/opencode.json`, optional mirror to `~/.agents/skills/` | Same user-level paths |
 | Pi Agent | `~/.pi/agent/AGENTS.md`, `~/.pi/agent/skills/`, optional mirror to `~/.agents/skills/` | Same user-level paths |
@@ -86,7 +86,7 @@ Catalog defaults for `agentsmesh matrix --global` / `agentsmesh generate --globa
 | Skills | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | — |
 | MCP Servers | — | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | — | Native | — | Partial | Native | Native | Native | Native | Native |
 | Hooks | — | — | — | Native | — | Native | Native | Native | — | Native | Native | Native | Native | Native | Partial | Native | — | — | — | — | — | — | Native | — | — | Native | — | — | Native | — |
-| Ignore | Native | — | — | — | — | Native | — | — | — | — | — | Native | — | — | — | Native | — | — | Native | Native | — | — | — | — | — | — | — | — | Native | — |
+| Ignore | Native | — | — | — | — | Native | — | — | — | — | — | Native | — | — | — | Native | — | — | — | Native | — | — | — | — | — | — | — | — | Native | — |
 | Permissions | — | — | Native | Partial | Native | Native | Partial | Native | Native | Partial | — | — | — | — | Native | Native | — | Native | Native | — | Native | — | Native | — | Partial | Native | — | Partial | — | — |
 {/* agentsmesh:support-matrix:global:end */}
 
@@ -334,7 +334,7 @@ IDE integration · [kilocode.ai](https://kilocode.ai)
 Open-source AI coding agent for VS Code.
 
 **Project mode:** root `AGENTS.md`, skills `.kilo/skills/`.
-**Global mode:** root `.kilo/AGENTS.md`, skills `.kilo/skills/`.
+**Global mode:** root `.config/kilo/AGENTS.md`, skills `.kilo/skills/`.
 
 See the [project feature matrix](#feature-matrix-project-scope) and [global feature matrix](#feature-matrix-global-scope) for per-feature support.
 

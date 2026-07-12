@@ -910,20 +910,42 @@
       "target": "deepagents-cli",
       "feature": "hooks",
       "scope": "project",
+      "maxAchievable": "none",
+      "path": "",
+      "ext": "",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://docs.langchain.com/oss/javascript/deepagents/code/hooks"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "rejected",
+      "rejectionReason": "docs.langchain.com/oss/javascript/deepagents/code/hooks documents only the global ~/.deepagents/hooks.json; no project-level hooks config file exists anywhere in the docs."
+    },
+    {
+      "target": "deepagents-cli",
+      "feature": "hooks",
+      "scope": "global",
       "maxAchievable": "native",
       "path": ".deepagents/hooks.json",
       "ext": ".json",
       "format": "json",
       "fingerprint": {
         "topLevelKeys": [
-          "PostToolUse"
+          "hooks"
         ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://docs.langchain.com/oss/javascript/deepagents/code/hooks"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -962,6 +984,149 @@
       "source": [],
       "verifiedAt": null,
       "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "deepagents-cli",
+      "feature": "rules",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".deepagents/agent/AGENTS.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://docs.langchain.com/oss/javascript/deepagents/code/configuration#data-locations"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "deepagents-cli",
+      "feature": "skills",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".deepagents/agent/skills/api-generator/SKILL.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "name",
+          "description"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://docs.langchain.com/oss/javascript/deepagents/code/configuration#data-locations"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "deepagents-cli",
+      "feature": "agents",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".deepagents/agents/code-reviewer/AGENTS.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "name",
+          "description",
+          "model"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://docs.langchain.com/oss/javascript/deepagents/code/configuration#data-locations"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "deepagents-cli",
+      "feature": "agents",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".deepagents/agent/agents/code-reviewer/AGENTS.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "name",
+          "description",
+          "model"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://docs.langchain.com/oss/javascript/deepagents/code/configuration#data-locations"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "deepagents-cli",
+      "feature": "commands",
+      "scope": "project",
+      "maxAchievable": "embedded",
+      "path": ".deepagents/skills/am-command-review/SKILL.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "name",
+          "description",
+          "x-agentsmesh-kind",
+          "x-agentsmesh-name",
+          "x-agentsmesh-allowed-tools"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://docs.langchain.com/oss/javascript/deepagents/code/configuration"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "deepagents-cli",
+      "feature": "commands",
+      "scope": "global",
+      "maxAchievable": "embedded",
+      "path": ".deepagents/agent/skills/am-command-review/SKILL.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "name",
+          "description",
+          "x-agentsmesh-kind",
+          "x-agentsmesh-name",
+          "x-agentsmesh-allowed-tools"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://docs.langchain.com/oss/javascript/deepagents/code/configuration"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {

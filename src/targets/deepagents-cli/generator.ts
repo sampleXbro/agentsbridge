@@ -4,25 +4,29 @@
  * Emits:
  *   - `.deepagents/AGENTS.md`   — root rule + embedded non-root rules
  *   - `.deepagents/skills/`     — skill bundles
+ *   - `.deepagents/agents/`     — native subagent files (dedicated AGENTS.md
+ *     per subagent — see `agent-format.ts`)
  *   - `.mcp.json`               — MCP servers (standard format)
- *   - `.deepagents/hooks.json`  — lifecycle hooks (Claude Code format)
+ *
+ * Commands have no dedicated file format (docs.langchain.com/oss/javascript/
+ * deepagents/code/configuration): they are projected as skills, the same
+ * embedding `generateSkills` already uses natively.
+ *
+ * Hooks have no project-level surface at all — see `global-hooks.ts` for the
+ * global-only `~/.deepagents/hooks.json` support wired via `scopeExtras`.
  */
 
 import type { CanonicalFiles } from '../../core/types.js';
 import { generateEmbeddedSkills } from '../import/embedded-skill.js';
 import { appendEmbeddedRulesBlock } from '../projection/managed-blocks.js';
-import {
-  projectedAgentSkillDirName,
-  serializeProjectedAgentSkill,
-} from '../projection/projected-agent-skill.js';
 import { commandSkillDirName, serializeCommandSkill } from '../codex-cli/command-skill.js';
-import { buildClaudeHooksObjectFromCanonical } from '../claude-code/hooks-format.js';
+import { serializeDeepagentsAgent } from './agent-format.js';
 import {
   DEEPAGENTS_CLI_TARGET,
   DEEPAGENTS_CLI_ROOT_FILE,
   DEEPAGENTS_CLI_SKILLS_DIR,
+  DEEPAGENTS_CLI_AGENTS_DIR,
   DEEPAGENTS_CLI_MCP_FILE,
-  DEEPAGENTS_CLI_HOOKS_FILE,
 } from './constants.js';
 
 export interface DeepagentsCliOutput {
@@ -57,8 +61,8 @@ export function generateCommands(canonical: CanonicalFiles): DeepagentsCliOutput
 
 export function generateAgents(canonical: CanonicalFiles): DeepagentsCliOutput[] {
   return canonical.agents.map((agent) => ({
-    path: `${DEEPAGENTS_CLI_SKILLS_DIR}/${projectedAgentSkillDirName(agent.name)}/SKILL.md`,
-    content: serializeProjectedAgentSkill(agent),
+    path: `${DEEPAGENTS_CLI_AGENTS_DIR}/${agent.name}/AGENTS.md`,
+    content: serializeDeepagentsAgent(agent),
   }));
 }
 
@@ -66,11 +70,4 @@ export function generateMcp(canonical: CanonicalFiles): DeepagentsCliOutput[] {
   if (!canonical.mcp || Object.keys(canonical.mcp.mcpServers).length === 0) return [];
   const content = JSON.stringify({ mcpServers: canonical.mcp.mcpServers }, null, 2);
   return [{ path: DEEPAGENTS_CLI_MCP_FILE, content }];
-}
-
-export function generateHooks(canonical: CanonicalFiles): DeepagentsCliOutput[] {
-  if (!canonical.hooks || Object.keys(canonical.hooks).length === 0) return [];
-  const hooks = buildClaudeHooksObjectFromCanonical(canonical);
-  if (Object.keys(hooks).length === 0) return [];
-  return [{ path: DEEPAGENTS_CLI_HOOKS_FILE, content: JSON.stringify(hooks, null, 2) }];
 }

@@ -3,31 +3,48 @@
  *
  * Deep Agents CLI is a coding agent by LangChain, built on LangGraph.
  *
- *   - **Project config**: `.deepagents/AGENTS.md` + `.deepagents/skills/` + `.mcp.json`
- *   - **Global config**: `~/.deepagents/` (config.toml, hooks.json, .mcp.json, agent dirs)
+ *   - **Project config**: `.deepagents/AGENTS.md` + `.deepagents/skills/` +
+ *     `.deepagents/agents/` + `.mcp.json`
+ *   - **Global config**: `~/.deepagents/{agent}/` (AGENTS.md, skills/, agents/,
+ *     per agent-instance, default agent name `"agent"`) + flat `~/.deepagents/`
+ *     (.mcp.json, hooks.json — NOT per-agent scoped)
  *
  * Deep Agents reads both `.deepagents/AGENTS.md` and root `AGENTS.md` for
  * project instructions (combining them, with `.deepagents/AGENTS.md` first).
  * We generate to `.deepagents/AGENTS.md` to avoid collision with Amp/Codex/Warp
  * which also use root `AGENTS.md`.
  *
- * Skills are stored in `.deepagents/skills/` (project) or
- * `~/.deepagents/<agent>/skills/` (global, per-agent).
- * MCP uses standard `.mcp.json` format at project root.
+ * Verified against docs.langchain.com/oss/javascript/deepagents/code/configuration
+ * (#data-locations): global instructions/skills/subagents live under a
+ * per-agent-instance directory `~/.deepagents/{agent}/`, NOT a flat
+ * `~/.deepagents/` root — the default agent instance name is `"agent"`. MCP
+ * (`.mcp.json`) and hooks (`hooks.json`) are the only flat, unscoped globals.
+ *
+ * Subagents are a dedicated on-disk surface, distinct from skills:
+ * `.deepagents/agents/{name}/AGENTS.md` (project) and
+ * `~/.deepagents/{agent}/agents/{name}/AGENTS.md` (global).
  */
 
 export const DEEPAGENTS_CLI_TARGET = 'deepagents-cli';
 
+/** Default per-agent-instance directory segment used for global-scope paths. */
+export const DEEPAGENTS_CLI_DEFAULT_AGENT_NAME = 'agent';
+
 // Project-level paths
 export const DEEPAGENTS_CLI_ROOT_FILE = '.deepagents/AGENTS.md';
 export const DEEPAGENTS_CLI_SKILLS_DIR = '.deepagents/skills';
+export const DEEPAGENTS_CLI_AGENTS_DIR = '.deepagents/agents';
 export const DEEPAGENTS_CLI_MCP_FILE = '.mcp.json';
-export const DEEPAGENTS_CLI_HOOKS_FILE = '.deepagents/hooks.json';
 
-export const DEEPAGENTS_CLI_GLOBAL_ROOT_FILE = '.deepagents/AGENTS.md';
-export const DEEPAGENTS_CLI_GLOBAL_SKILLS_DIR = '.deepagents/skills';
+// Global-level paths — scoped under the per-agent-instance directory, except
+// for the flat, unscoped `.mcp.json` / `hooks.json`.
+export const DEEPAGENTS_CLI_GLOBAL_ROOT_FILE = `.deepagents/${DEEPAGENTS_CLI_DEFAULT_AGENT_NAME}/AGENTS.md`;
+export const DEEPAGENTS_CLI_GLOBAL_SKILLS_DIR = `.deepagents/${DEEPAGENTS_CLI_DEFAULT_AGENT_NAME}/skills`;
+export const DEEPAGENTS_CLI_GLOBAL_AGENTS_DIR = `.deepagents/${DEEPAGENTS_CLI_DEFAULT_AGENT_NAME}/agents`;
 export const DEEPAGENTS_CLI_GLOBAL_MCP_FILE = '.deepagents/.mcp.json';
 export const DEEPAGENTS_CLI_GLOBAL_HOOKS_FILE = '.deepagents/hooks.json';
 
 // Canonical paths
 export const DEEPAGENTS_CLI_CANONICAL_RULES_DIR = '.agentsmesh/rules';
+export const DEEPAGENTS_CLI_CANONICAL_AGENTS_DIR = '.agentsmesh/agents';
+export const DEEPAGENTS_CLI_CANONICAL_HOOKS = '.agentsmesh/hooks.yaml';

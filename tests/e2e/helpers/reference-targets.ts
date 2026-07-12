@@ -256,7 +256,9 @@ export function outputPaths(target: TargetName): OutputPathGroups {
                         ? '.qwen/agents/code-reviewer.md'
                         : target === 'factory-droid'
                           ? '.factory/droids/code-reviewer.md'
-                          : agentSkill,
+                          : target === 'deepagents-cli'
+                            ? '.deepagents/agents/code-reviewer/AGENTS.md'
+                            : agentSkill,
     ],
     skill: [`${skillDir(target)}/api-generator/SKILL.md`],
     template: [`${skillDir(target)}/api-generator/template.ts`],
@@ -384,7 +386,9 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
                                         ? '.pi/prompts/review.md'
                                         : target === 'rovodev'
                                           ? '.rovodev/commands/review.md'
-                                          : '.windsurf/workflows/review.md',
+                                          : target === 'deepagents-cli'
+                                            ? `${skills}/${commandSkillDirName('review')}/SKILL.md`
+                                            : '.windsurf/workflows/review.md',
     agent:
       target === 'claude-code'
         ? '.claude/agents/code-reviewer.md'
@@ -412,7 +416,9 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
                             ? '.qwen/agents/code-reviewer.md'
                             : target === 'factory-droid'
                               ? '.factory/droids/code-reviewer.md'
-                              : `${skills}/${projectedAgentSkillDirName('code-reviewer')}/SKILL.md`,
+                              : target === 'deepagents-cli'
+                                ? '.deepagents/agents/code-reviewer/AGENTS.md'
+                                : `${skills}/${projectedAgentSkillDirName('code-reviewer')}/SKILL.md`,
     skill: `${geminiCompatSkills}/api-generator/SKILL.md`,
     template: `${geminiCompatSkills}/api-generator/template.ts`,
     checklist,

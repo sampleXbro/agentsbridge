@@ -33,7 +33,6 @@ const TARGETS_WITH_PROJECTED_AGENTS = new Set<TargetName>([
   'amp',
   'cline',
   'crush',
-  'deepagents-cli',
   'pi-agent',
   'replit-agent',
   'rovodev',

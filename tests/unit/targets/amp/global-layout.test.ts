@@ -45,6 +45,23 @@ describe('amp global layout', () => {
     expect(descriptor.globalSupport!.capabilities).toEqual(descriptor.capabilities);
   });
 
+  // Amp has no declarative slash-command file format (ampcode.com/manual):
+  // commands only exist via `amp.registerCommand(...)` inside a TypeScript
+  // plugin. AgentsMesh projects commands as skills, so the honest ceiling is
+  // 'embedded' (routes through the already-native skills surface), not 'native'.
+  it('commands capability is embedded (routed through the native skills surface), project + global', () => {
+    expect(descriptor.capabilities.commands).toBe('embedded');
+    expect(descriptor.globalSupport!.capabilities.commands).toBe('embedded');
+  });
+
+  // Amp has no documented settings-file hook mechanism at all — only
+  // plugin-based `amp.on(...)` event handlers (ampcode.com/manual). There is
+  // no declarative surface agentsmesh can own, so hooks is 'none'.
+  it('hooks capability is none (no declarative hook surface), project + global', () => {
+    expect(descriptor.capabilities.hooks).toBe('none');
+    expect(descriptor.globalSupport!.capabilities.hooks).toBe('none');
+  });
+
   it('globalSupport has detection paths', () => {
     expect(descriptor.globalSupport!.detectionPaths.length).toBeGreaterThan(0);
     expect(descriptor.globalSupport!.detectionPaths).toContain(AMP_GLOBAL_ROOT_FILE);

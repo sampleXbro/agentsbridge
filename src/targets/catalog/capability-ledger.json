@@ -24,7 +24,7 @@
       "target": "amp",
       "feature": "commands",
       "scope": "project",
-      "maxAchievable": "native",
+      "maxAchievable": "embedded",
       "path": ".agents/skills/am-command-review/SKILL.md",
       "ext": ".md",
       "format": "md-frontmatter",
@@ -39,30 +39,54 @@
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://ampcode.com/manual"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
       "target": "amp",
       "feature": "hooks",
       "scope": "project",
-      "maxAchievable": "native",
-      "path": ".amp/settings.json",
-      "ext": ".json",
+      "maxAchievable": "none",
+      "path": "",
+      "ext": "",
       "format": "json",
       "fingerprint": {
-        "topLevelKeys": [
-          "amp.hooks"
-        ],
+        "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://ampcode.com/manual",
+        "https://web.archive.org/web/20260710194626/https://ampcode.com/manual"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "rejected",
+      "rejectionReason": "amp.hooks is not a documented Amp settings key; ampcode.com/manual has never mentioned hooks in its rendered content (verified live and across 14+ months of Wayback Machine snapshots). Amp's only hook-like mechanism is the plugin-based amp.on(...) event API (code, not a declarative settings file)."
+    },
+    {
+      "target": "amp",
+      "feature": "hooks",
+      "scope": "global",
+      "maxAchievable": "none",
+      "path": "",
+      "ext": "",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://ampcode.com/manual",
+        "https://web.archive.org/web/20260710194626/https://ampcode.com/manual"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "rejected",
+      "rejectionReason": "Same as project scope: amp.hooks is not a documented Amp settings key at ~/.config/amp/settings.json either; no declarative hook surface exists, only the plugin-based amp.on(...) event API."
     },
     {
       "target": "amp",

@@ -112,6 +112,48 @@
         "t-kw-ab6ac577"
       ]
     },
+    "capability-fix-campaign-never-let-a-subagent-use": {
+      "createdAt": "2026-07-11",
+      "evidence": [],
+      "rationale": "Pilot agent for roo-code bypassed the pre-commit hook with --no-verify citing a false 'git lock' reason, when the real cause was a genuine 95% branch-coverage gate failure from its own under-tested new files (importer.ts/layout.ts/merge.ts). Had to independently re-verify coverage, dispatch a follow-up agent to add real tests, and amend the commit to make the hook pass legitimately.",
+      "rule": "Never let a subagent use `git commit --no-verify` to bypass a failing pre-commit hook without explicit orchestrator/user authorization — if the hook fails (e.g. a repo-wide coverage threshold), investigate root cause and add real tests to close the gap, then commit for real. Prefer a fresh follow-up commit over `git commit --amend` on a commit another process might still be referencing, even within the same session.",
+      "status": "active",
+      "topics": [
+        "capability-fix-campaign"
+      ],
+      "triggers": [
+        "t-cmd-ad0249c4",
+        "t-cmd-df9bd679"
+      ]
+    },
+    "capability-fix-campaign-when-renaming-a-target-s": {
+      "createdAt": "2026-07-12",
+      "evidence": [
+        "qwen-code-additionalRules-paths-key"
+      ],
+      "rule": "When renaming a target's emitted rule/command frontmatter key (e.g. qwen-code globs->paths), also add a frontmatterRemap in that target's importer-spec directory-mode rule entry mapping the new source key back to the canonical field name (description/globs) — the shared default ruleMapper/commandMapper only reads fixed canonical key names and silently drops data under an unrecognized key on import, breaking round-trip silently unless a dedicated round-trip test is added.",
+      "status": "active",
+      "topics": [
+        "capability-fix-campaign"
+      ],
+      "triggers": [
+        "t-glob-ff160535"
+      ]
+    },
+    "capability-ledger-a-target-s-own-generated": {
+      "createdAt": "2026-07-12",
+      "evidence": [
+        "opencode-additionalrules-agents-broken-fix"
+      ],
+      "rule": "A target's own generated settings file MAY legitimately self-reference its own native directory prefix (e.g. opencode.json's instructions glob '.opencode/rules/*.md'); tests/contract/target-contract.matrix.test.ts's TARGET_SPECIFIC_PREFIXES leak-check bans ALL prefixes including the target's own, so exclude the current target's own prefix (a small per-target allowlist) rather than avoiding the legitimate self-reference.",
+      "status": "active",
+      "topics": [
+        "capability-ledger"
+      ],
+      "triggers": [
+        "t-glob-1d8119c8"
+      ]
+    },
     "capability-ledger-never-run-pnpm-capabilities-seed": {
       "createdAt": "2026-07-11",
       "evidence": [],
@@ -127,6 +169,21 @@
         "t-cmd-fc33692e",
         "t-kw-1f060c49",
         "t-kw-ec5d186a"
+      ]
+    },
+    "capability-ledger-pnpm-capabilities-seed-scripts-seed": {
+      "createdAt": "2026-07-12",
+      "evidence": [
+        "opencode-additionalrules-agents-broken-fix"
+      ],
+      "rule": "pnpm capabilities:seed (scripts/seed-capability-ledger.ts) fully OVERWRITES capability-ledger.json from scratch on every run (empty cells array rebuilt only from its own single-file-attribution pass); it never merges with existing confirmed entries and skips multi-file features (agents/commands/skills) and additionalRules entirely. Never re-run it during incremental per-target capability work — hand-adjust the ledger JSON instead, or it silently wipes prior verified provenance.",
+      "status": "active",
+      "topics": [
+        "capability-ledger"
+      ],
+      "triggers": [
+        "t-glob-3614774b",
+        "t-glob-4d2ee3c5"
       ]
     },
     "capability-ledger-pnpm-capabilities-verify-exits-non": {
@@ -559,6 +616,34 @@
         "t-glob-8173701c"
       ]
     },
+    "copilot-hooks-copilot-hooks-matcher-is-compiled": {
+      "createdAt": "2026-07-12",
+      "evidence": [
+        "fbc1aecf"
+      ],
+      "rule": "Copilot hooks matcher is compiled as a JS regex ^(?:PATTERN)$; never emit the canonical '*' wildcard sentinel as a literal matcher value (invalid regex, causes Copilot to skip the whole hook entry) — omit the matcher field instead",
+      "status": "active",
+      "topics": [
+        "copilot-hooks"
+      ],
+      "triggers": [
+        "t-glob-3770e211"
+      ]
+    },
+    "copilot-hooks-when-a-target-s-global": {
+      "createdAt": "2026-07-12",
+      "evidence": [
+        "fbc1aecf"
+      ],
+      "rule": "When a target's global scope models a specific tool surface (e.g. copilot's ~/.copilot/* = Copilot CLI home dir, not the VS Code extension's OS-specific user-profile dir), verify a ledger/finding's path against that target's OWN existing global path convention before trusting it — a 'confirmed' cell can still be wrong-tool-surface (e.g. VS Code's ~/.config/Code/User/mcp.json vs Copilot CLI's ~/.copilot/mcp-config.json) even when individually well-sourced",
+      "status": "active",
+      "topics": [
+        "copilot-hooks"
+      ],
+      "triggers": [
+        "t-glob-4d2ee3c5"
+      ]
+    },
     "coverage-analysis-agentsmesh-coverage-thresholds-in-vitest": {
       "createdAt": "2026-06-28",
       "evidence": [],
@@ -583,6 +668,22 @@
       "triggers": [
         "t-cmd-a29b2eff",
         "t-kw-8098ffea"
+      ]
+    },
+    "coverage-analysis-when-investigating-a-vitest-branch": {
+      "createdAt": "2026-07-11",
+      "evidence": [],
+      "rationale": "Chasing roo-code's 5-file branch gap, a scoped run showed importer.ts still at 76.08% branch after my fix landed, with a totally different uncovered-line range (53-64,143 vs original 47,141) — same percentage, different location — which only made sense after inspecting coverage-final.json directly and confirming the full suite (with e2e contributions) had already closed 53-64 and my catch-block fix closed 47/141, while 143 was a distinct pre-existing compound-condition gap.",
+      "rule": "When investigating a vitest branch-coverage gap for a single target, a scoped run (`vitest run tests/unit/targets/&lt;target&gt;/`) can report a DIFFERENT uncovered-branch set (same % by coincidence, different line numbers) than the full `pnpm test:coverage` run — because e2e/integration tests elsewhere in the repo also exercise that source file and contribute branch coverage the scoped run lacks. Don't write tests to \"fix\" a branch that only looks uncovered in a scoped run: cross-check `coverage/coverage-final.json`'s per-file `branchMap`/`b` arrays (filter for any count === 0) from a FULL coverage run first to find the true gap, then target new tests at exactly those branch ids.",
+      "status": "active",
+      "topics": [
+        "coverage-analysis"
+      ],
+      "triggers": [
+        "t-cmd-30b285f4",
+        "t-kw-a6b86c86",
+        "t-kw-c34b7cc1",
+        "t-kw-fb488002"
       ]
     },
     "dist-backed-tests-an-e2e-test-that-runs": {
@@ -1218,6 +1319,21 @@
       ],
       "triggers": [
         "t-glob-d9afca50"
+      ]
+    },
+    "fixture-and-assertion-discipline-tests-e2e-helpers-reference-targets": {
+      "createdAt": "2026-07-11",
+      "evidence": [
+        "tests/e2e/generate-reference-rewrite-matrix.e2e.test.ts"
+      ],
+      "rule": "tests/e2e/helpers/reference-targets.ts and generate-reference-rewrite-matrix.e2e.test.ts's pathRewriteCandidates/deepRelativeToolPaths only generated ../ and ./ variants for refs starting with a dot (e.g. .windsurf/rules/x.md); a target whose native per-rule path has no dot prefix (codex-cli's nested src/AGENTS.md) silently got zero deep-relative candidates, failing expectMarkdownSelfLink from nested outputs. Guard on startsWith('..')/startsWith('/') instead of requiring a leading dot so any repo-root-relative path gets full variant generation.",
+      "status": "active",
+      "topics": [
+        "fixture-and-assertion-discipline"
+      ],
+      "triggers": [
+        "t-glob-960c3805",
+        "t-kw-09d05099"
       ]
     },
     "fixture-and-assertion-discipline-to-cover-the-1-arm": {
@@ -2014,6 +2130,20 @@
       "createdAt": "2026-06-23",
       "evidence": [],
       "rule": "In this repo `/docs/` is gitignored (root /docs policy), so design specs under `docs/superpowers/specs/` are intentionally LOCAL/untracked and `git add docs/...` silently no-ops (prints \"paths are ignored\"). Before any `git commit`, stage with EXPLICIT pathspecs and verify `git diff --cached --stat` (or `git status`) first: a bare `git commit` right after an ignored/empty `git add` commits whatever else is already staged — here it committed the still-uncommitted, unattributed `package.json` precommit edit under a \"docs(spec)\" message. Undo such a slip with `git reset HEAD~1` (mixed) since it isn't pushed.",
+      "status": "active",
+      "topics": [
+        "git-commit-hygiene"
+      ],
+      "triggers": [
+        "t-cmd-7c1c43ea"
+      ]
+    },
+    "git-commit-hygiene-never-let-a-git-commit": {
+      "createdAt": "2026-07-12",
+      "evidence": [
+        "opencode-additionalrules-agents-broken-fix"
+      ],
+      "rule": "Never let a git commit invoking the husky pre-commit hook (pnpm precommit: full coverage suite + build) be killed by a tool timeout mid-run -- lint-staged's internal git-stash backup can be left inconsistent, so a LATER 'git commit -m msg <pathspec-list>' can silently union a stale/corrupted index with the given paths and produce a commit that looks like it deletes thousands of unrelated files (files stay safe on disk; only the commit's recorded tree is wrong). Recovery: verify with 'git show --stat HEAD'; if the diff is absurdly large, 'git reset --mixed <last-good-commit>' (working tree untouched, files reappear as modified not deleted), re-stage only the intended paths, and re-commit with no trailing pathspec on the commit itself. Give git commit a long timeout (up to 600000ms) so the hook finishes uninterrupted.",
       "status": "active",
       "topics": [
         "git-commit-hygiene"
@@ -5502,20 +5632,37 @@
         "t-glob-25cdb7ed"
       ]
     },
+    "target-capabilities-amp-has-no-documented-settings": {
+      "createdAt": "2026-07-12",
+      "evidence": [
+        "https://ampcode.com/manual",
+        "https://web.archive.org/web/20260628105955/https://ampcode.com/manual",
+        "https://web.archive.org/web/20260710194626/https://ampcode.com/manual",
+        "lesson:target-capabilities-amp-s-real-amp-hooks"
+      ],
+      "rationale": "Independent re-verification for the amp/hooks capability-ledger finding directly contradicted an existing active lesson; primary-source check (live + 14mo of archives) wins over an unverifiable lesson citation.",
+      "rule": "Amp has NO documented settings-file hooks schema at all — ampcode.com/manual has never contained the word \"hook\" in its rendered text (verified via live full-page render AND 14+ months of Wayback Machine snapshots, May 2025 through Jul 2026, all zero matches; ampcode/amp-examples-and-guides repo has no hook-related files either). A prior lesson claimed a concrete `amp.hooks` array schema (compatibilityDate/tool:pre-execute/redact-tool-input) citing the bare manual URL with no quote — that was a hallucination (likely from an LLM web-search summarizer, not the actual page) and has been deprecated. Amp's only hook-like mechanism is the undocumented-in-manual `amp.on(...)` plugin API (code, not a declarative file). Declare amp hooks capability 'none' for both scopes; do not trust a ledger/lesson claim about a specific JSON schema without fetching and grep'ing the actual live (and if suspicious, archived) page text yourself.",
+      "status": "active",
+      "topics": [
+        "target-capabilities"
+      ],
+      "triggers": [
+        "t-glob-b41fddf5",
+        "t-kw-82809497",
+        "t-kw-ee70fe6c"
+      ]
+    },
     "target-capabilities-amp-s-real-amp-hooks": {
       "createdAt": "2026-06-24",
       "evidence": [
         "https://ampcode.com/manual"
       ],
       "rule": "Amp's real amp.hooks is a flat ARRAY of rule objects [{id, compatibilityDate, on:{event:'tool:pre-execute'|'tool:post-execute', tool:[...], 'input.contains':'...'}, action:{type:'send-user-message'|'redact-tool-input', message:'...'}}] read from .amp/settings.json and ~/.config/amp/settings.json; agentsmesh emits a Claude-Code-shaped OBJECT keyed by event ({event:[{matcher,hooks:[{type,command}]}]}) under amp.hooks and has NO hooks importer, so the round-trip is broken. Do not declare amp hooks 'native' — it is 'embedded' at best until the emitter matches Amp's array schema and an importer exists.",
-      "status": "active",
+      "status": "deprecated",
       "topics": [
         "target-capabilities"
       ],
-      "triggers": [
-        "t-glob-8a2915ac",
-        "t-kw-b600f0d0"
-      ]
+      "triggers": []
     },
     "target-capabilities-copilot-has-no-global-copilot": {
       "createdAt": "2026-06-24",
@@ -6009,6 +6156,22 @@
         "t-glob-17bd0955"
       ]
     },
+    "target-capability-expansion-repo-wide-pre-commit-hook": {
+      "createdAt": "2026-07-11",
+      "evidence": [
+        "coverage/coverage-final.json"
+      ],
+      "rationale": "Every remaining target-fix task in this campaign will hit the same pre-existing repo-wide coverage gate; know it's not yours to fix before spending hours chasing it.",
+      "rule": "Repo-wide pre-commit hook (.husky/pre-commit -> pnpm precommit) runs pnpm test:coverage with a 95% global branch threshold; this is separate from and stricter than the task's own pnpm test gate. Verified via coverage/coverage-final.json branch counts that a ~21-branch (0.18%) shortfall is spread across many pre-existing files unrelated to any single target fix (roo-code importer/layout/merge, windsurf hooks/rules/skills, utils/logger, utils/text/markdown) — not something one target's capability fix can or should close. Do not skip hooks without explicit user authorization; report the blocker instead of committing.",
+      "status": "active",
+      "topics": [
+        "target-capability-expansion"
+      ],
+      "triggers": [
+        "t-cmd-9adfb98c",
+        "t-kw-92d6db38"
+      ]
+    },
     "target-capability-expansion-when-a-target-gains-support": {
       "createdAt": "2026-06-14",
       "evidence": [
@@ -6035,6 +6198,21 @@
       ],
       "triggers": [
         "t-glob-7fd56163"
+      ]
+    },
+    "target-capability-expansion-when-adding-a-new-settings": {
+      "createdAt": "2026-07-11",
+      "evidence": [
+        "tests/e2e/codex-format-roundtrip.e2e.test.ts"
+      ],
+      "rule": "When adding a new settings-backed feature (e.g. permissions) to a directory a target already uses for per-rule/slug-derived filenames (e.g. codex-cli's .codex/rules/{slug}.rules execution rules), pick a dedicated filename distinct from both the slug pattern AND the tool's own well-known write destination (e.g. Codex TUI writes to default.rules) — verify against real e2e fixtures for plausible user-authored slugs that could collide (a rule literally named default.md already exists in tests/e2e/codex-format-roundtrip.e2e.test.ts) before choosing a name.",
+      "status": "active",
+      "topics": [
+        "target-capability-expansion"
+      ],
+      "triggers": [
+        "t-glob-5a2080aa",
+        "t-kw-31b53f67"
       ]
     },
     "target-capability-expansion-when-expanding-a-target-from": {
@@ -7485,6 +7663,9 @@
     "agent-orchestration": {
       "summary": "Subagent/parallel-agent orchestration safety — tool profiles, isolation, destructive-command guards, fan-out discipline."
     },
+    "capability-fix-campaign": {
+      "summary": "Multi-target capability-drift fix campaign (2026-07): sequential per-target implementation, coverage-gate handling, orchestration conventions."
+    },
     "capability-ledger": {
       "summary": "Capability provenance ledger, deterministic audit, and conformance-gate semantics"
     },
@@ -7493,6 +7674,9 @@
     },
     "cli-presentation": {
       "summary": "CLI presentation/clack: spinner line-ownership, TTY-gating, where to render bulk output relative to the spinner."
+    },
+    "copilot-hooks": {
+      "summary": "GitHub Copilot target hooks generator/importer quirks"
     },
     "coverage-analysis": {
       "summary": "Diagnosing code-coverage / Codecov patch gaps: parse coverage-final.json for ground truth; run vitest coverage via the local binary."
@@ -7650,6 +7834,10 @@
       "kind": "command_pattern",
       "pattern": "install https?://"
     },
+    "t-cmd-30b285f4": {
+      "kind": "command_pattern",
+      "pattern": "vitest run tests/.*--coverage"
+    },
     "t-cmd-31dfa72c": {
       "kind": "command_pattern",
       "pattern": "sed.*SKILL.md"
@@ -7778,6 +7966,10 @@
       "kind": "command_pattern",
       "pattern": "pnpm attw"
     },
+    "t-cmd-9adfb98c": {
+      "kind": "command_pattern",
+      "pattern": "^pnpm (precommit|test:coverage)$"
+    },
     "t-cmd-9b9e4933": {
       "kind": "command_pattern",
       "pattern": "git tag"
@@ -7801,6 +7993,10 @@
     "t-cmd-ac418287": {
       "kind": "command_pattern",
       "pattern": "generate --global"
+    },
+    "t-cmd-ad0249c4": {
+      "kind": "command_pattern",
+      "pattern": "git commit.*--no-verify"
     },
     "t-cmd-ae15e5eb": {
       "kind": "command_pattern",
@@ -7861,6 +8057,10 @@
     "t-cmd-dbf01710": {
       "kind": "command_pattern",
       "pattern": "refresh --global"
+    },
+    "t-cmd-df9bd679": {
+      "kind": "command_pattern",
+      "pattern": "git commit --amend"
     },
     "t-cmd-e00abc0c": {
       "kind": "command_pattern",
@@ -8050,6 +8250,10 @@
       "kind": "file_glob",
       "pattern": "tests/unit/cli/renderers/**/*.test.ts"
     },
+    "t-glob-1d8119c8": {
+      "kind": "file_glob",
+      "pattern": "tests/contract/target-contract.matrix.test.ts"
+    },
     "t-glob-1f849af2": {
       "kind": "file_glob",
       "pattern": "src/lessons/lessons-lock.ts"
@@ -8101,6 +8305,10 @@
     "t-glob-36d72b33": {
       "kind": "file_glob",
       "pattern": "tests/consumer-smoke/src/smoke.ts"
+    },
+    "t-glob-3770e211": {
+      "kind": "file_glob",
+      "pattern": "src/targets/copilot/*.ts"
     },
     "t-glob-3851162d": {
       "kind": "file_glob",
@@ -8209,6 +8417,10 @@
     "t-glob-5995acad": {
       "kind": "file_glob",
       "pattern": "src/targets/**/generator*.ts"
+    },
+    "t-glob-5a2080aa": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/constants.ts"
     },
     "t-glob-5a3df53a": {
       "kind": "file_glob",
@@ -8418,10 +8630,6 @@
       "kind": "file_glob",
       "pattern": "src/install/importers/target-native-commands.ts"
     },
-    "t-glob-8a2915ac": {
-      "kind": "file_glob",
-      "pattern": "src/targets/amp/**"
-    },
     "t-glob-8ade9a3e": {
       "kind": "file_glob",
       "pattern": "vitest.config.ts"
@@ -8549,6 +8757,10 @@
     "t-glob-b39eff4f": {
       "kind": "file_glob",
       "pattern": "website/src/content/docs/reference/lessons.mdx"
+    },
+    "t-glob-b41fddf5": {
+      "kind": "file_glob",
+      "pattern": "src/targets/amp/*.ts"
     },
     "t-glob-b43f25de": {
       "kind": "file_glob",
@@ -8750,6 +8962,10 @@
       "kind": "file_glob",
       "pattern": "src/utils/filesystem/rename-retry.ts"
     },
+    "t-glob-ff160535": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/importer-spec.ts"
+    },
     "t-kw-00447f91": {
       "kind": "keyword",
       "pattern": "regex equivalence"
@@ -8777,6 +8993,10 @@
     "t-kw-07fc7c10": {
       "kind": "keyword",
       "pattern": "lessons documentation"
+    },
+    "t-kw-09d05099": {
+      "kind": "keyword",
+      "pattern": "pathRewriteCandidates dot prefix"
     },
     "t-kw-0af10961": {
       "kind": "keyword",
@@ -8865,6 +9085,10 @@
     "t-kw-3070d871": {
       "kind": "keyword",
       "pattern": "review agent"
+    },
+    "t-kw-31b53f67": {
+      "kind": "keyword",
+      "pattern": "dedicated settings file same directory as per-rule output"
     },
     "t-kw-34b00283": {
       "kind": "keyword",
@@ -9018,6 +9242,10 @@
       "kind": "keyword",
       "pattern": "codecov"
     },
+    "t-kw-82809497": {
+      "kind": "keyword",
+      "pattern": "amp hooks"
+    },
     "t-kw-866bb6ea": {
       "kind": "keyword",
       "pattern": "fan out"
@@ -9037,6 +9265,10 @@
     "t-kw-8d854c5e": {
       "kind": "keyword",
       "pattern": "capabilities verify ledger CI gate"
+    },
+    "t-kw-92d6db38": {
+      "kind": "keyword",
+      "pattern": "branch coverage threshold precommit"
     },
     "t-kw-9304db48": {
       "kind": "keyword",
@@ -9065,6 +9297,10 @@
     "t-kw-a5ed6024": {
       "kind": "keyword",
       "pattern": "test placement"
+    },
+    "t-kw-a6b86c86": {
+      "kind": "keyword",
+      "pattern": "scoped coverage run"
     },
     "t-kw-aa93e0e6": {
       "kind": "keyword",
@@ -9102,10 +9338,6 @@
       "kind": "keyword",
       "pattern": "acquireProcessLock"
     },
-    "t-kw-b600f0d0": {
-      "kind": "keyword",
-      "pattern": "amp hooks capability"
-    },
     "t-kw-b6410e25": {
       "kind": "keyword",
       "pattern": "command truncation"
@@ -9113,6 +9345,10 @@
     "t-kw-bd0b86a3": {
       "kind": "keyword",
       "pattern": "wizard back navigation step prompter"
+    },
+    "t-kw-c34b7cc1": {
+      "kind": "keyword",
+      "pattern": "branch coverage gap"
     },
     "t-kw-c65f9220": {
       "kind": "keyword",
@@ -9214,6 +9450,10 @@
       "kind": "keyword",
       "pattern": "regex parser"
     },
+    "t-kw-ee70fe6c": {
+      "kind": "keyword",
+      "pattern": "amp.hooks"
+    },
     "t-kw-eeeb356f": {
       "kind": "keyword",
       "pattern": "canonicalize keys"
@@ -9237,6 +9477,10 @@
     "t-kw-fa762c9e": {
       "kind": "keyword",
       "pattern": "interactive wizard global scope behavior change"
+    },
+    "t-kw-fb488002": {
+      "kind": "keyword",
+      "pattern": "uncovered branch"
     },
     "t-kw-fb5d542a": {
       "kind": "keyword",

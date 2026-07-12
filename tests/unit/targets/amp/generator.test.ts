@@ -264,43 +264,45 @@ describe('emitScopedSettings — MCP format (amp)', () => {
 });
 
 describe('emitScopedSettings — hooks (amp)', () => {
-  it('returns [] when hooks is null', () => {
-    const results = descriptor.emitScopedSettings!(makeCanonical({ hooks: null }), 'project', ALL_FEATURES);
-    expect(results.filter((r) => JSON.parse(r.content)['amp.hooks'] !== undefined)).toHaveLength(0);
-  });
-
-  it('returns [] when hooks is empty', () => {
+  // Amp has no documented `amp.hooks` (or any) settings-file hook mechanism —
+  // ampcode.com/manual only describes plugin-based `amp.on(...)` event handlers.
+  // `hooks` capability is 'none'; emitScopedSettings must never write an
+  // `amp.hooks` key regardless of canonical hooks content or enabled features.
+  it('never emits amp.hooks even when hooks is populated and enabled', () => {
     const results = descriptor.emitScopedSettings!(
-      makeCanonical({ hooks: { PreToolUse: [] } }),
-      'project',
-      ALL_FEATURES,
-    );
-    expect(results.filter((r) => JSON.parse(r.content)['amp.hooks'] !== undefined)).toHaveLength(0);
-  });
-
-  it('emits .amp/settings.json with amp.hooks key', () => {
-    const result = descriptor.emitScopedSettings!(
       makeCanonical({
         hooks: { PreToolUse: [{ matcher: '*', command: 'echo hi', type: 'command' }] },
       }),
       'project',
       ALL_FEATURES,
     );
-    const settings = result.find((r) => {
-      const parsed = JSON.parse(r.content) as Record<string, unknown>;
-      return parsed['amp.hooks'] !== undefined;
-    });
-    expect(settings).toBeDefined();
-    expect(settings!.path).toBe(AMP_MCP_FILE);
-    const parsed = JSON.parse(settings!.content) as Record<string, unknown>;
-    expect(parsed['amp.hooks']).toBeDefined();
+    expect(
+      results.filter((r) => 'amp.hooks' in (JSON.parse(r.content) as Record<string, unknown>)),
+    ).toHaveLength(0);
+  });
+
+  it('emits nothing when only hooks is enabled (mcp/permissions disabled)', () => {
+    const results = descriptor.emitScopedSettings!(
+      makeCanonical({
+        hooks: { PreToolUse: [{ matcher: '*', command: 'echo hi', type: 'command' }] },
+      }),
+      'project',
+      new Set(['rules', 'hooks']),
+    );
+    expect(results).toEqual([]);
   });
 });
 
 describe('emitScopedSettings — permissions (amp)', () => {
   it('returns [] when permissions is null', () => {
-    const results = descriptor.emitScopedSettings!(makeCanonical({ permissions: null }), 'project', ALL_FEATURES);
-    expect(results.filter((r) => JSON.parse(r.content)['amp.permissions'] !== undefined)).toHaveLength(0);
+    const results = descriptor.emitScopedSettings!(
+      makeCanonical({ permissions: null }),
+      'project',
+      ALL_FEATURES,
+    );
+    expect(
+      results.filter((r) => JSON.parse(r.content)['amp.permissions'] !== undefined),
+    ).toHaveLength(0);
   });
 
   it('returns [] when all permission lists are empty', () => {
@@ -309,7 +311,9 @@ describe('emitScopedSettings — permissions (amp)', () => {
       'project',
       ALL_FEATURES,
     );
-    expect(results.filter((r) => JSON.parse(r.content)['amp.permissions'] !== undefined)).toHaveLength(0);
+    expect(
+      results.filter((r) => JSON.parse(r.content)['amp.permissions'] !== undefined),
+    ).toHaveLength(0);
   });
 
   it('emits .amp/settings.json with amp.permissions key', () => {
@@ -361,24 +365,36 @@ describe('emitScopedSettings — permissions (amp)', () => {
   });
 });
 
-describe('mergeGeneratedOutputContent — accumulates hooks, permissions, mcp (amp)', () => {
-  it('merges amp.hooks and amp.permissions into existing amp.mcpServers without losing keys', () => {
+describe('mergeGeneratedOutputContent — accumulates permissions, mcp (amp)', () => {
+  it('merges amp.permissions into existing amp.mcpServers without losing keys', () => {
     const existing = JSON.stringify({ 'amp.mcpServers': { ctx: {} } }, null, 2);
-    const hooksContent = JSON.stringify({ 'amp.hooks': { PreToolUse: [] } }, null, 2);
     const permContent = JSON.stringify({ 'amp.permissions': { allow: ['Bash'] } }, null, 2);
-    // Simulate two sequential merges (pending carries forward)
-    const afterHooks = descriptor.mergeGeneratedOutputContent!(existing, undefined, hooksContent, AMP_MCP_FILE);
-    expect(afterHooks).not.toBeNull();
     const afterPerm = descriptor.mergeGeneratedOutputContent!(
       existing,
-      { target: 'amp', path: AMP_MCP_FILE, content: afterHooks! },
+      undefined,
       permContent,
       AMP_MCP_FILE,
     );
     expect(afterPerm).not.toBeNull();
     const parsed = JSON.parse(afterPerm!) as Record<string, unknown>;
     expect(parsed['amp.mcpServers']).toBeDefined();
-    expect(parsed['amp.hooks']).toBeDefined();
     expect(parsed['amp.permissions']).toEqual({ allow: ['Bash'] });
+  });
+
+  it('does not resurrect amp.hooks even if the overlay content carries the key', () => {
+    // Defense-in-depth: mergeAmpSettings must not special-case `amp.hooks` at
+    // all now that Amp has no hooks settings-file surface. A stray overlay
+    // with that key (e.g. hand-edited) must not be copied into the merge result.
+    const existing = JSON.stringify({ 'amp.mcpServers': { ctx: {} } }, null, 2);
+    const overlay = JSON.stringify({ 'amp.hooks': { PreToolUse: [] } }, null, 2);
+    const merged = descriptor.mergeGeneratedOutputContent!(
+      existing,
+      undefined,
+      overlay,
+      AMP_MCP_FILE,
+    );
+    expect(merged).not.toBeNull();
+    const parsed = JSON.parse(merged!) as Record<string, unknown>;
+    expect(parsed['amp.hooks']).toBeUndefined();
   });
 });

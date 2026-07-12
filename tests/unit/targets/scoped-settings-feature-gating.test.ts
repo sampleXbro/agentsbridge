@@ -3,6 +3,8 @@
  * enabled-feature set passed to `emitScopedSettings`.
  *
  * - zed / amp only project `mcpServers` -> gated on `mcp`.
+ *   (Amp has no settings-file hooks surface at all — `amp.hooks` is not a
+ *   documented key — so amp never emits hooks regardless of feature gating.)
  * - augment-code projects `mcpServers` (gated on `mcp`) and `hooks` (gated on `hooks`).
  */
 
@@ -58,13 +60,9 @@ describe('amp emitScopedSettings — feature gating', () => {
     expect(parse(out[0].content)).toHaveProperty('amp.mcpServers');
   });
 
-  it('emits amp.hooks when hooks enabled and mcp disabled', () => {
+  it('emits nothing when hooks is enabled and mcp is disabled (no hooks surface)', () => {
     const out = ampDescriptor.emitScopedSettings!(fullCanonical(), 'project', WITHOUT_MCP);
-    expect(out).toHaveLength(1);
-    expect(out[0].path).toBe(AMP_MCP_FILE);
-    const json = parse(out[0].content);
-    expect(json).toHaveProperty('amp.hooks');
-    expect(json).not.toHaveProperty('amp.mcpServers');
+    expect(out).toEqual([]);
   });
 
   it('emits nothing when neither mcp nor hooks is enabled', () => {

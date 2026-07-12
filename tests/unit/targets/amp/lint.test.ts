@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
-import { lintIgnore } from '../../../../src/targets/amp/lint.js';
+import { lintIgnore, lintHooks } from '../../../../src/targets/amp/lint.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
   return {
@@ -26,5 +26,25 @@ describe('lintIgnore (amp)', () => {
     expect(result).toHaveLength(1);
     expect(result[0].level).toBe('warning');
     expect(result[0].target).toBe('amp');
+  });
+});
+
+describe('lintHooks (amp)', () => {
+  it('returns empty when hooks is null', () => {
+    expect(lintHooks(makeCanonical({ hooks: null }))).toHaveLength(0);
+  });
+
+  it('returns empty when hooks has no entries', () => {
+    expect(lintHooks(makeCanonical({ hooks: { PreToolUse: [] } }))).toHaveLength(0);
+  });
+
+  it('warns when hooks entries exist', () => {
+    const result = lintHooks(
+      makeCanonical({ hooks: { PreToolUse: [{ matcher: '*', command: 'echo hi' }] } }),
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0].level).toBe('warning');
+    expect(result[0].target).toBe('amp');
+    expect(result[0].message).toContain('amp.on');
   });
 });

@@ -13,6 +13,7 @@ import { buildKiloCodeImportPaths } from '../../../../src/core/reference/import-
 import {
   QWEN_GLOBAL_ROOT,
   QWEN_GLOBAL_SETTINGS,
+  QWEN_GLOBAL_RULES_DIR,
   QWEN_ROOT,
 } from '../../../../src/targets/qwen-code/constants.js';
 import {
@@ -57,6 +58,17 @@ describe('per-target import-map builders — global-scope branches', () => {
     const refs = new Map<string, string>();
     await buildQwenCodeImportPaths(refs, home, 'global');
     expect(refs.get('.qwen/commands/sync.md')).toBe('.agentsmesh/commands/sync.md');
+  });
+
+  it('qwen-code global scope discovers non-root rules in the global rules dir (native additionalRules)', async () => {
+    const home = root;
+    mkdirSync(join(home, QWEN_GLOBAL_RULES_DIR), { recursive: true });
+    writeFileSync(join(home, QWEN_GLOBAL_RULES_DIR, 'typescript.md'), 'Use strict mode.');
+    const refs = new Map<string, string>();
+    await buildQwenCodeImportPaths(refs, home, 'global');
+    expect(refs.get(`${QWEN_GLOBAL_RULES_DIR}/typescript.md`)).toBe(
+      '.agentsmesh/rules/typescript.md',
+    );
   });
 
   it('roo-code global scope sets exactly AGENTS.md root alias and MCP file when no global content', async () => {

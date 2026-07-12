@@ -1286,15 +1286,17 @@
       "format": "md-frontmatter",
       "fingerprint": {
         "topLevelKeys": [
-          "description",
-          "allowed-tools"
+          "description"
         ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://github.com/QwenLM/qwen-code/blob/main/packages/cli/src/services/markdown-command-parser.ts",
+        "https://github.com/QwenLM/qwen-code/blob/main/packages/cli/src/services/FileCommandLoader.ts"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -1910,6 +1912,76 @@
       "verifiedAt": "2026-07-12",
       "verdict": "rejected",
       "rejectionReason": "Copilot CLI has no prompt-file/slash-command mechanism: the official ~/.copilot config-dir reference lists no `prompts/` entry, and github/copilot-cli#618 (maintainer, closed) confirms prompt files are not planned (\"superseded by skills\"). VS Code Copilot Chat's own user-level prompt files live in the OS-specific VS Code profile folder, not ~/.copilot."
+    },
+    {
+      "target": "qwen-code",
+      "feature": "additionalRules",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".qwen/rules/typescript.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "description",
+          "paths"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/QwenLM/qwen-code/blob/main/packages/core/src/utils/rulesDiscovery.ts"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "qwen-code",
+      "feature": "additionalRules",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".qwen/rules/typescript.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "description",
+          "paths"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/QwenLM/qwen-code/blob/main/packages/core/src/utils/rulesDiscovery.ts",
+        "https://github.com/QwenLM/qwen-code/blob/main/packages/core/src/config/storage.ts"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "qwen-code",
+      "feature": "commands",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".qwen/commands/review.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "description"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/QwenLM/qwen-code/blob/main/packages/cli/src/services/markdown-command-parser.ts",
+        "https://github.com/QwenLM/qwen-code/blob/main/packages/cli/src/services/FileCommandLoader.ts"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
     }
   ]
 }

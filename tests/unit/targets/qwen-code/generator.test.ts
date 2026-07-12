@@ -10,7 +10,6 @@ import {
   generateIgnore,
   generateHooks,
   generatePermissions,
-  renderQwenGlobalInstructions,
 } from '../../../../src/targets/qwen-code/generator.js';
 import {
   QWEN_ROOT,
@@ -79,7 +78,10 @@ describe('generateRules (qwen-code)', () => {
     expect(results[0].path).toBe(`${QWEN_RULES_DIR}/typescript.md`);
     const parsedRule = parseFrontmatter(results[0].content);
     expect(parsedRule.frontmatter.description).toBe('TypeScript standards');
-    expect(parsedRule.frontmatter.globs).toEqual(['src/**/*.ts']);
+    // Qwen Code's rulesDiscovery.ts parseRuleFile() only recognizes `paths:`
+    // for path-conditional rule injection — never `globs`.
+    expect(parsedRule.frontmatter.paths).toEqual(['src/**/*.ts']);
+    expect(parsedRule.frontmatter.globs).toBeUndefined();
     expect(parsedRule.body).toContain('Use strict mode.');
   });
 
@@ -231,7 +233,9 @@ describe('generateCommands (qwen-code)', () => {
     expect(results[0].path).toBe(`${QWEN_COMMANDS_DIR}/review.md`);
     const parsedCmd = parseFrontmatter(results[0].content);
     expect(parsedCmd.frontmatter.description).toBe('Review the current file for issues');
-    expect(parsedCmd.frontmatter['allowed-tools']).toEqual(['Read', 'Bash']);
+    // Qwen Code's MarkdownCommandDefSchema has no tool-restriction field —
+    // allowed-tools is never projected, even when canonical data has it.
+    expect(parsedCmd.frontmatter['allowed-tools']).toBeUndefined();
     expect(parsedCmd.body).toContain('Read the file and review it.');
   });
 
@@ -265,7 +269,7 @@ describe('generateCommands (qwen-code)', () => {
     expect(results).toHaveLength(0);
   });
 
-  it('omits allowed-tools from frontmatter when empty', () => {
+  it('omits allowed-tools from frontmatter when canonical allowedTools is empty', () => {
     const canonical = makeCanonical({
       commands: [
         {
@@ -523,9 +527,7 @@ describe('generateHooks (qwen-code)', () => {
   it('emits settings.json with hooks key', () => {
     const canonical = makeCanonical({
       hooks: {
-        PreToolUse: [
-          { matcher: 'Bash', command: 'echo pre', type: 'command' as const },
-        ],
+        PreToolUse: [{ matcher: 'Bash', command: 'echo pre', type: 'command' as const }],
       },
     });
     const results = generateHooks(canonical);
@@ -620,92 +622,5 @@ describe('generatePermissions (qwen-code)', () => {
     const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
     expect(parsed).not.toHaveProperty('mcpServers');
     expect(parsed).not.toHaveProperty('hooks');
-  });
-});
-
-describe('renderQwenGlobalInstructions (qwen-code)', () => {
-  it('embeds untargeted non-root rules after the root body', () => {
-    const canonical = makeCanonical({
-      rules: [
-        {
-          source: '/proj/.agentsmesh/rules/_root.md',
-          root: true,
-          targets: [],
-          description: '',
-          globs: [],
-          body: '# Root\n\nUse TDD.',
-        },
-        {
-          source: '/proj/.agentsmesh/rules/typescript.md',
-          root: false,
-          targets: [],
-          description: 'TypeScript standards',
-          globs: [],
-          body: 'Use strict mode.',
-        },
-      ],
-    });
-
-    const output = renderQwenGlobalInstructions(canonical);
-
-    expect(output).toContain('Use TDD.');
-    expect(output).toContain('Use strict mode.');
-    expect(output).toContain('agentsmesh:embedded-rules:start');
-  });
-
-  it('embeds rules explicitly targeting qwen-code and excludes other targets', () => {
-    const canonical = makeCanonical({
-      rules: [
-        {
-          source: '/proj/.agentsmesh/rules/_root.md',
-          root: true,
-          targets: [],
-          description: '',
-          globs: [],
-          body: '# Root',
-        },
-        {
-          source: '/proj/.agentsmesh/rules/qwen-only.md',
-          root: false,
-          targets: ['qwen-code'],
-          description: '',
-          globs: [],
-          body: 'Qwen specific guidance.',
-        },
-        {
-          source: '/proj/.agentsmesh/rules/cursor-only.md',
-          root: false,
-          targets: ['cursor'],
-          description: '',
-          globs: [],
-          body: 'Cursor specific guidance.',
-        },
-      ],
-    });
-
-    const output = renderQwenGlobalInstructions(canonical);
-
-    expect(output).toContain('Qwen specific guidance.');
-    expect(output).not.toContain('Cursor specific guidance.');
-  });
-
-  it('falls back to empty root body when no root rule exists', () => {
-    const canonical = makeCanonical({
-      rules: [
-        {
-          source: '/proj/.agentsmesh/rules/security.md',
-          root: false,
-          targets: [],
-          description: '',
-          globs: [],
-          body: 'No hardcoded secrets.',
-        },
-      ],
-    });
-
-    const output = renderQwenGlobalInstructions(canonical);
-
-    expect(output).toContain('No hardcoded secrets.');
-    expect(output.startsWith('<!-- agentsmesh:embedded-rules:start')).toBe(true);
   });
 });

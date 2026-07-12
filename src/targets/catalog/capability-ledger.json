@@ -461,46 +461,56 @@
       "target": "copilot",
       "feature": "hooks",
       "scope": "global",
-      "maxAchievable": "none",
-      "path": "",
-      "ext": "",
+      "maxAchievable": "native",
+      "path": ".copilot/hooks/agentsmesh.json",
+      "ext": ".json",
       "format": "json",
       "fingerprint": {
-        "topLevelKeys": [],
+        "topLevelKeys": [
+          "version",
+          "hooks"
+        ],
         "requiredFrontmatter": [],
-        "keyChecks": []
+        "keyChecks": [
+          {
+            "pointer": "/hooks",
+            "kind": "object"
+          }
+        ]
       },
-      "source": [],
-      "verifiedAt": "2026-07-11",
-      "verdict": "rejected",
-      "rejectionReason": "VS Code Copilot has no hooks; hooks exist only for Copilot CLI/cloud agent"
+      "source": [
+        "https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-hooks"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
     },
     {
       "target": "copilot",
       "feature": "mcp",
       "scope": "global",
       "maxAchievable": "native",
-      "path": "~/.config/Code/User/mcp.json",
+      "path": ".copilot/mcp-config.json",
       "ext": ".json",
       "format": "json",
       "fingerprint": {
         "topLevelKeys": [
-          "servers"
+          "mcpServers"
         ],
         "requiredFrontmatter": [],
         "keyChecks": [
           {
-            "pointer": "/servers",
+            "pointer": "/mcpServers",
             "kind": "object"
           }
         ]
       },
       "source": [
-        "https://code.visualstudio.com/docs/agents/reference/mcp-configuration"
+        "https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-mcp-servers"
       ],
-      "verifiedAt": "2026-07-11",
+      "verifiedAt": "2026-07-12",
       "verdict": "confirmed",
-      "rejectionReason": "OS-specific user-profile path (mac: ~/Library/Application Support/Code/User/mcp.json); needs per-OS global-path wiring"
+      "rejectionReason": null
     },
     {
       "target": "copilot",
@@ -1745,6 +1755,47 @@
       "verifiedAt": "2026-07-12",
       "verdict": "confirmed",
       "rejectionReason": null
+    },
+    {
+      "target": "copilot",
+      "feature": "permissions",
+      "scope": "global",
+      "maxAchievable": "partial",
+      "path": "",
+      "ext": "",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-config-dir-reference"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "copilot",
+      "feature": "commands",
+      "scope": "global",
+      "maxAchievable": "none",
+      "path": "",
+      "ext": "",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://code.visualstudio.com/docs/agent-customization/prompt-files",
+        "https://github.com/github/copilot-cli/issues/618"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "rejected",
+      "rejectionReason": "Copilot CLI has no prompt-file/slash-command mechanism: the official ~/.copilot config-dir reference lists no `prompts/` entry, and github/copilot-cli#618 (maintainer, closed) confirms prompt files are not planned (\"superseded by skills\"). VS Code Copilot Chat's own user-level prompt files live in the OS-specific VS Code profile folder, not ~/.copilot."
     }
   ]
 }

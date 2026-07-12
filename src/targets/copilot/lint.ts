@@ -3,11 +3,37 @@
  */
 
 import type { CanonicalFiles, LintDiagnostic } from '../../core/types.js';
+import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 import {
   createWarning,
   createUnsupportedHookWarning,
   unsupportedHookEventNames,
 } from '../../core/lint/shared/helpers.js';
+
+/**
+ * Copilot CLI's `~/.copilot/permissions-config.json` only records saved
+ * tool/directory approval decisions — per docs.github.com/en/copilot/reference/
+ * copilot-cli-reference/cli-config-dir-reference, it "doesn't support deny
+ * rules, 'ask' rules, default modes, URL rules, tool filtering, or
+ * repository-local shared policy." Global scope is capped at 'partial'; this
+ * warns instead of generating a file that would overclaim control. There is
+ * no project-scope permissions surface at all (capability stays 'none').
+ */
+export function lintPermissions(canonical: CanonicalFiles, options?: unknown): LintDiagnostic[] {
+  const scope = (options as { scope?: TargetLayoutScope } | undefined)?.scope;
+  if (scope !== 'global') return [];
+  if (!canonical.permissions) return [];
+  const { allow, deny } = canonical.permissions;
+  const ask = canonical.permissions.ask ?? [];
+  if (allow.length === 0 && deny.length === 0 && ask.length === 0) return [];
+  return [
+    createWarning(
+      '.agentsmesh/permissions.yaml',
+      'copilot',
+      "Copilot CLI's ~/.copilot/permissions-config.json only records saved tool/directory approvals; it has no deny rules, ask rules, default modes, URL rules, tool filtering, or repository-local shared policy, so canonical permissions are not projected as config.",
+    ),
+  ];
+}
 
 export function lintCommands(canonical: CanonicalFiles): LintDiagnostic[] {
   return canonical.commands

@@ -57,7 +57,7 @@ describe('generate capabilities', () => {
           {
             type: 'command',
             bash: './scripts/posttooluse-0.sh',
-            comment: 'Matcher: Write|Edit',
+            matcher: 'Write|Edit',
           },
         ],
       },
@@ -110,28 +110,28 @@ describe('generate capabilities', () => {
           {
             type: 'command',
             bash: './scripts/pretooluse-0.sh',
-            comment: 'Matcher: Bash',
+            matcher: 'Bash',
           },
         ],
         postToolUse: [
           {
             type: 'command',
             bash: './scripts/posttooluse-0.sh',
-            comment: 'Matcher: Write',
+            matcher: 'Write',
           },
         ],
         notification: [
           {
             type: 'command',
             bash: './scripts/notification-0.sh',
-            comment: 'Matcher: .*',
+            matcher: '.*',
           },
         ],
         userPromptSubmitted: [
           {
             type: 'command',
             bash: './scripts/userpromptsubmit-0.sh',
-            comment: 'Matcher: .*',
+            matcher: '.*',
           },
         ],
       },
@@ -227,7 +227,7 @@ features: [rules, commands, agents, skills, hooks]
           {
             type: 'command',
             bash: './scripts/posttooluse-0.sh',
-            comment: 'Matcher: Write|Edit',
+            matcher: 'Write|Edit',
             timeoutSec: 2,
           },
         ],

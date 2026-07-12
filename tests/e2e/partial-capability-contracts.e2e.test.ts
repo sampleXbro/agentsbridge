@@ -137,9 +137,7 @@ describe('partial capability subset contracts', () => {
     expect(readJson(join(dir, '.github', 'hooks', 'agentsmesh.json'))).toEqual({
       version: 1,
       hooks: {
-        preToolUse: [
-          { type: 'command', bash: './scripts/pretooluse-0.sh', comment: 'Matcher: Bash' },
-        ],
+        preToolUse: [{ type: 'command', bash: './scripts/pretooluse-0.sh', matcher: 'Bash' }],
       },
     });
 

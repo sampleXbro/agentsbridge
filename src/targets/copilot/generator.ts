@@ -10,13 +10,11 @@ import type { CanonicalFiles } from '../../core/types.js';
 import { serializeFrontmatter } from '../../utils/text/markdown.js';
 import {
   COPILOT_INSTRUCTIONS,
-  COPILOT_HOOKS_DIR,
   COPILOT_INSTRUCTIONS_DIR,
   COPILOT_SKILLS_DIR,
   COPILOT_AGENTS_DIR,
 } from './constants.js';
 import { commandPromptPath, serializeCommandPrompt } from './command-prompt.js';
-import { hasHookCommand } from './hook-entry.js';
 
 export interface RulesOutput {
   path: string;
@@ -26,21 +24,6 @@ export interface RulesOutput {
 function ruleSlug(source: string): string {
   const name = basename(source, '.md');
   return name === '_root' ? 'root' : name;
-}
-
-function mapHookEvent(event: string): string | null {
-  switch (event) {
-    case 'PreToolUse':
-      return 'preToolUse';
-    case 'PostToolUse':
-      return 'postToolUse';
-    case 'Notification':
-      return 'notification';
-    case 'UserPromptSubmit':
-      return 'userPromptSubmitted';
-    default:
-      return null;
-  }
 }
 
 /**
@@ -159,40 +142,5 @@ export function generateAgents(canonical: CanonicalFiles): RulesOutput[] {
   });
 }
 
-/**
- * Generate .github/hooks/agentsmesh.json from canonical hooks.
- */
 export { generateMcp } from './mcp-generator.js';
-
-export function generateHooks(canonical: CanonicalFiles): RulesOutput[] {
-  if (!canonical.hooks) return [];
-  const hooks = Object.fromEntries(
-    Object.entries(canonical.hooks).flatMap(([event, entries]) => {
-      const mappedEvent = mapHookEvent(event);
-      if (!mappedEvent || !Array.isArray(entries)) return [];
-      const mappedEntries = entries
-        .filter(
-          (entry): entry is NonNullable<typeof entry> =>
-            typeof entry === 'object' && entry !== null && hasHookCommand(entry),
-        )
-        .map((entry, index) => {
-          const safePhase = event.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-          const hook: Record<string, unknown> = {
-            type: 'command',
-            bash: `./scripts/${safePhase}-${index}.sh`,
-            comment: `Matcher: ${entry.matcher}`,
-          };
-          if (entry.timeout !== undefined) hook.timeoutSec = Math.ceil(entry.timeout / 1000);
-          return hook;
-        });
-      return mappedEntries.length > 0 ? [[mappedEvent, mappedEntries] as const] : [];
-    }),
-  );
-  if (Object.keys(hooks).length === 0) return [];
-  return [
-    {
-      path: `${COPILOT_HOOKS_DIR}/agentsmesh.json`,
-      content: JSON.stringify({ version: 1, hooks }, null, 2),
-    },
-  ];
-}
+export { buildCopilotHooksObject, generateHooks } from './hook-format.js';

@@ -51,11 +51,41 @@ export function extractWrapperCommand(content: string): string {
 }
 
 /**
- * Import Copilot hook JSON configs (.github/hooks/*.json) into canonical hooks.yaml.
- * Also supports legacy .github/copilot-hooks/*.sh wrappers for backwards compatibility.
+ * Extract a hook entry's matcher: prefers the real top-level `matcher` field
+ * (docs.github.com/en/copilot/reference/hooks-configuration), falling back to
+ * the legacy `comment: "Matcher: ..."` convention emitted by older agentsmesh
+ * versions, for backwards-compatible import of previously-generated files.
  */
-export async function importHooks(projectRoot: string, results: ImportResult[]): Promise<void> {
-  const hooksDir = join(projectRoot, COPILOT_HOOKS_DIR);
+function extractEntryMatcher(entryRecord: Record<string, unknown>): string {
+  if (typeof entryRecord.matcher === 'string' && entryRecord.matcher.length > 0) {
+    return entryRecord.matcher;
+  }
+  return extractMatcher(entryRecord.comment);
+}
+
+export interface ImportHooksOptions {
+  /** Hooks JSON directory, relative to projectRoot. Defaults to the project `.github/hooks`. */
+  hooksDirRel?: string;
+  /** Legacy shell-wrapper directory, relative to projectRoot. Pass `null` to skip
+   * (there is no global equivalent of the legacy `.github/copilot-hooks/` convention). */
+  legacyDirRel?: string | null;
+}
+
+/**
+ * Import Copilot hook JSON configs (`.github/hooks/*.json` project scope, or
+ * `.copilot/hooks/*.json` global scope — identical schema) into canonical
+ * hooks.yaml. Project scope also supports legacy `.github/copilot-hooks/*.sh`
+ * wrappers for backwards compatibility.
+ */
+export async function importHooks(
+  projectRoot: string,
+  results: ImportResult[],
+  options: ImportHooksOptions = {},
+): Promise<void> {
+  const hooksDirRel = options.hooksDirRel ?? COPILOT_HOOKS_DIR;
+  const legacyDirRel =
+    options.legacyDirRel === undefined ? COPILOT_LEGACY_HOOKS_DIR : options.legacyDirRel;
+  const hooksDir = join(projectRoot, hooksDirRel);
   const allFiles = await readDirRecursiveNoSymlinks(hooksDir).catch(() => []);
   const jsonFiles = allFiles.filter((file) => file.endsWith('.json'));
   const hooks: Record<string, Array<{ matcher: string; command: string; type: string }>> = {};
@@ -85,7 +115,7 @@ export async function importHooks(projectRoot: string, results: ImportResult[]):
         if (!command) continue;
         if (!hooks[canonicalEvent]) hooks[canonicalEvent] = [];
         hooks[canonicalEvent]!.push({
-          matcher: extractMatcher(entryRecord.comment),
+          matcher: extractEntryMatcher(entryRecord),
           command,
           type: 'command',
         });
@@ -93,19 +123,25 @@ export async function importHooks(projectRoot: string, results: ImportResult[]):
     }
   }
 
-  const legacyDir = join(projectRoot, COPILOT_LEGACY_HOOKS_DIR);
-  const legacyFiles = await readDirRecursiveNoSymlinks(legacyDir).catch(() => []);
-  const shFiles = legacyFiles.filter(
-    (file) => dirname(file) === legacyDir && /^[^-]+-\d+\.sh$/i.test(basename(file)),
-  );
-  for (const srcPath of shFiles) {
-    const content = await readFileSafe(srcPath);
-    if (!content) continue;
-    const name = basename(srcPath, '.sh');
-    const dashIdx = name.lastIndexOf('-');
-    const phase = dashIdx > 0 ? name.slice(0, dashIdx) : name;
-    if (!hooks[phase]) hooks[phase] = [];
-    hooks[phase]!.push({ matcher: '*', command: extractWrapperCommand(content), type: 'command' });
+  if (legacyDirRel) {
+    const legacyDir = join(projectRoot, legacyDirRel);
+    const legacyFiles = await readDirRecursiveNoSymlinks(legacyDir).catch(() => []);
+    const shFiles = legacyFiles.filter(
+      (file) => dirname(file) === legacyDir && /^[^-]+-\d+\.sh$/i.test(basename(file)),
+    );
+    for (const srcPath of shFiles) {
+      const content = await readFileSafe(srcPath);
+      if (!content) continue;
+      const name = basename(srcPath, '.sh');
+      const dashIdx = name.lastIndexOf('-');
+      const phase = dashIdx > 0 ? name.slice(0, dashIdx) : name;
+      if (!hooks[phase]) hooks[phase] = [];
+      hooks[phase]!.push({
+        matcher: '*',
+        command: extractWrapperCommand(content),
+        type: 'command',
+      });
+    }
   }
 
   if (Object.keys(hooks).length === 0) return;
@@ -115,7 +151,7 @@ export async function importHooks(projectRoot: string, results: ImportResult[]):
   await writeFileAtomic(destPath, yamlStringify(hooks));
   results.push({
     fromTool: COPILOT_TARGET,
-    fromPath: join(projectRoot, COPILOT_HOOKS_DIR),
+    fromPath: hooksDir,
     toPath: COPILOT_CANONICAL_HOOKS,
     feature: 'hooks',
   });

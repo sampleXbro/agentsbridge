@@ -88,6 +88,25 @@ describe('generateRules (copilot) — branch coverage', () => {
     expect(out!.content).toContain('tests/**/*.ts');
   });
 
+  it('emits empty body when a non-root rule body is whitespace-only', () => {
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: '/p/.agentsmesh/rules/blank.md',
+          root: false,
+          targets: [],
+          description: '',
+          globs: ['src/**'],
+          body: '   \n',
+        },
+      ],
+    });
+    const out = generateRules(canonical).find((r) => r.path.endsWith('/blank.instructions.md'));
+    expect(out).toBeDefined();
+    const afterFm = out!.content.split(/^---\n[\s\S]*?\n---\n/m)[1];
+    expect(afterFm?.trim() ?? '').toBe('');
+  });
+
   it('renames non-root rule whose source basename is `_root` to `root` slug', () => {
     const canonical = makeCanonical({
       rules: [
@@ -296,6 +315,14 @@ describe('generateAgents (copilot) — branch coverage', () => {
     expect(out.content).toContain('ctx');
     expect(out.content).toContain('skills:');
     expect(out.content).toContain('qa');
+  });
+
+  it('emits empty body when agent body is whitespace-only', () => {
+    const out = generateAgents(
+      makeCanonical({ agents: [{ ...baseAgent(), name: 'blank', body: '   \n' }] }),
+    )[0]!;
+    const afterFm = out.content.split(/^---\n[\s\S]*?\n---\n/m)[1];
+    expect(afterFm?.trim() ?? '').toBe('');
   });
 });
 

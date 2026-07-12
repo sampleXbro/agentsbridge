@@ -41,6 +41,49 @@ describe('copilot lint', () => {
   it('lintCommands returns [] when no commands have allowedTools', () => {
     expect(copilot.lintCommands(emptyCanonical())).toEqual([]);
   });
+
+  it('lintPermissions returns [] for project scope (no global-only warning leak)', () => {
+    const canonical = {
+      ...emptyCanonical(),
+      permissions: { allow: ['Bash(git *)'], deny: [], ask: [] },
+    };
+    expect(copilot.lintPermissions(canonical, { scope: 'project' })).toEqual([]);
+    expect(copilot.lintPermissions(canonical)).toEqual([]);
+  });
+
+  it('lintPermissions returns [] for global scope when canonical permissions is null/empty', () => {
+    expect(copilot.lintPermissions(emptyCanonical(), { scope: 'global' })).toEqual([]);
+    expect(
+      copilot.lintPermissions(
+        { ...emptyCanonical(), permissions: { allow: [], deny: [], ask: [] } },
+        { scope: 'global' },
+      ),
+    ).toEqual([]);
+  });
+
+  it('lintPermissions warns for global scope when canonical permissions has entries', () => {
+    const diags = copilot.lintPermissions(
+      { ...emptyCanonical(), permissions: { allow: ['Bash(git *)'], deny: [], ask: [] } },
+      { scope: 'global' },
+    );
+    expect(diags).toHaveLength(1);
+    expect(diags[0]!.target).toBe('copilot');
+    expect(diags[0]!.message).toContain('permissions-config.json');
+  });
+
+  it('lintPermissions defaults ask to [] when the field is omitted (legacy fixtures)', () => {
+    expect(
+      copilot.lintPermissions(
+        { ...emptyCanonical(), permissions: { allow: [], deny: [] } },
+        { scope: 'global' },
+      ),
+    ).toEqual([]);
+    const diags = copilot.lintPermissions(
+      { ...emptyCanonical(), permissions: { allow: ['Bash(git *)'], deny: [] } },
+      { scope: 'global' },
+    );
+    expect(diags).toHaveLength(1);
+  });
 });
 
 describe('cline lint', () => {

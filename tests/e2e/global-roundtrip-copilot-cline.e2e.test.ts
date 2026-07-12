@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { runCli } from './helpers/run-cli.js';
 import {
   fileExists,
+  fileNotExists,
   fileContains,
   readText,
   validJson,
@@ -18,7 +19,6 @@ describe('global mode round-trip: Copilot', () => {
   it('canonical → generate --global → import --global → matches canonical', async () => {
     const { homeDir, canonicalDir, projectDir } = env;
     mkdirSync(join(canonicalDir, 'rules'), { recursive: true });
-    mkdirSync(join(canonicalDir, 'commands'), { recursive: true });
     mkdirSync(join(canonicalDir, 'agents'), { recursive: true });
     mkdirSync(join(canonicalDir, 'skills', 'copilot-skill'), { recursive: true });
     mkdirSync(join(canonicalDir, 'skills', 'copilot-skill', 'references'), { recursive: true });
@@ -26,10 +26,6 @@ describe('global mode round-trip: Copilot', () => {
     writeFileSync(
       join(canonicalDir, 'rules', '_root.md'),
       '---\ndescription: Root\n---\n# Root\nCopilot instructions\n',
-    );
-    writeFileSync(
-      join(canonicalDir, 'commands', 'explain.md'),
-      '---\ndescription: Explain\n---\n# Explain\nExplain the code\n',
     );
     writeFileSync(
       join(canonicalDir, 'agents', 'explainer.md'),
@@ -44,8 +40,16 @@ describe('global mode round-trip: Copilot', () => {
       '# Guide\nExplain clearly.\n',
     );
     writeFileSync(
+      join(canonicalDir, 'mcp.json'),
+      JSON.stringify({ mcpServers: { docs: { command: 'npx', args: ['-y'] } } }),
+    );
+    writeFileSync(
+      join(canonicalDir, 'hooks.yaml'),
+      'PreToolUse:\n  - matcher: Bash\n    command: echo hi\n',
+    );
+    writeFileSync(
       join(canonicalDir, 'agentsmesh.yaml'),
-      'version: 1\ntargets: [copilot]\nfeatures: [rules, commands, agents, skills]\n',
+      'version: 1\ntargets: [copilot]\nfeatures: [rules, agents, skills, mcp, hooks]\n',
     );
 
     const gen = await runCli('generate --global --targets copilot', projectDir);
@@ -94,17 +98,30 @@ describe('global mode round-trip: Copilot', () => {
     );
     fileExists(join(homeDir, '.claude', 'skills', 'copilot-skill', 'references', 'guide.md'));
 
-    // 7. Prompts/commands (docs: ~/.copilot/prompts/*.prompt.md)
-    fileExists(join(homeDir, '.copilot', 'prompts', 'explain.prompt.md'));
-    fileContains(join(homeDir, '.copilot', 'prompts', 'explain.prompt.md'), 'Explain the code');
-    expect(
-      markdownFrontmatter(join(homeDir, '.copilot', 'prompts', 'explain.prompt.md')).description,
-    ).toBe('Explain');
+    // 7. No commands surface (Copilot CLI has no prompt-file/slash-command mechanism)
+    fileNotExists(join(homeDir, '.copilot', 'prompts'));
+
+    // 8. MCP (docs: ~/.copilot/mcp-config.json, `mcpServers` key)
+    fileExists(join(homeDir, '.copilot', 'mcp-config.json'));
+    validJson(join(homeDir, '.copilot', 'mcp-config.json'));
+    const mcp = JSON.parse(readText(join(homeDir, '.copilot', 'mcp-config.json')));
+    expect(mcp.mcpServers.docs).toBeDefined();
+    expect(mcp.servers).toBeUndefined();
+
+    // 9. Hooks (docs: ~/.copilot/hooks/*.json — same schema as project scope)
+    fileExists(join(homeDir, '.copilot', 'hooks', 'agentsmesh.json'));
+    const hooks = JSON.parse(readText(join(homeDir, '.copilot', 'hooks', 'agentsmesh.json')));
+    expect(hooks.hooks.preToolUse[0].matcher).toBe('Bash');
+    fileExists(join(homeDir, '.copilot', 'hooks', 'scripts', 'pretooluse-0.sh'));
+    fileContains(join(homeDir, '.copilot', 'hooks', 'scripts', 'pretooluse-0.sh'), 'echo hi');
+
     dirFilesExactly(join(homeDir, '.copilot'), [
       'AGENTS.md',
       'agents/explainer.agent.md',
       'copilot-instructions.md',
-      'prompts/explain.prompt.md',
+      'hooks/agentsmesh.json',
+      'hooks/scripts/pretooluse-0.sh',
+      'mcp-config.json',
       'skills/copilot-skill/SKILL.md',
       'skills/copilot-skill/references/guide.md',
     ]);
@@ -125,13 +142,17 @@ describe('global mode round-trip: Copilot', () => {
 
     fileExists(join(canonicalDir, 'rules', '_root.md'));
     fileContains(join(canonicalDir, 'rules', '_root.md'), 'Copilot instructions');
-    fileExists(join(canonicalDir, 'commands', 'explain.md'));
-    fileContains(join(canonicalDir, 'commands', 'explain.md'), 'Explain the code');
     fileExists(join(canonicalDir, 'agents', 'explainer.md'));
     fileContains(join(canonicalDir, 'agents', 'explainer.md'), 'Explain code');
     fileExists(join(canonicalDir, 'skills', 'copilot-skill', 'SKILL.md'));
     fileContains(join(canonicalDir, 'skills', 'copilot-skill', 'SKILL.md'), 'Helps with Copilot');
     fileExists(join(canonicalDir, 'skills', 'copilot-skill', 'references', 'guide.md'));
+    fileExists(join(canonicalDir, 'mcp.json'));
+    const importedMcp = JSON.parse(readText(join(canonicalDir, 'mcp.json')));
+    expect(importedMcp.mcpServers.docs).toBeDefined();
+    fileExists(join(canonicalDir, 'hooks.yaml'));
+    fileContains(join(canonicalDir, 'hooks.yaml'), 'Bash');
+    fileContains(join(canonicalDir, 'hooks.yaml'), 'echo hi');
   });
 });
 

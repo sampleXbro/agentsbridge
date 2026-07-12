@@ -29,6 +29,7 @@ function rewriteWrapperCommand(command: string, assetRelativePath: string): stri
 async function buildAssetOutput(
   projectRoot: string,
   command: string,
+  hooksDirRel: string,
 ): Promise<{ assetPath: string; content: string; rewrittenCommand: string } | null> {
   const match = command.match(SCRIPT_PREFIX_RE);
   const sourceToken = match?.groups?.['path'];
@@ -42,14 +43,14 @@ async function buildAssetOutput(
   if (!repoRelative) return null;
 
   return {
-    assetPath: `${COPILOT_HOOKS_DIR}/scripts/${repoRelative}`,
+    assetPath: `${hooksDirRel}/scripts/${repoRelative}`,
     content: assetContent,
     rewrittenCommand: rewriteWrapperCommand(command, repoRelative),
   };
 }
 
-function wrapperPath(event: string, index: number): string {
-  return `${COPILOT_HOOKS_DIR}/scripts/${safePhaseName(event)}-${index}.sh`;
+function wrapperPath(event: string, index: number, hooksDirRel: string): string {
+  return `${hooksDirRel}/scripts/${safePhaseName(event)}-${index}.sh`;
 }
 
 // CR/LF in matcher/command would otherwise break out of the comment header
@@ -75,6 +76,7 @@ export async function addHookScriptAssets(
   projectRoot: string,
   canonical: CanonicalFiles,
   outputs: RulesOutput[],
+  hooksDirRel: string = COPILOT_HOOKS_DIR,
 ): Promise<RulesOutput[]> {
   if (!canonical.hooks) return outputs;
 
@@ -86,9 +88,9 @@ export async function addHookScriptAssets(
     let index = 0;
     for (const entry of entries) {
       if (!hasHookCommand(entry)) continue;
-      const scriptPath = wrapperPath(event, index);
+      const scriptPath = wrapperPath(event, index, hooksDirRel);
       let command = entry.command;
-      const asset = await buildAssetOutput(projectRoot, entry.command);
+      const asset = await buildAssetOutput(projectRoot, entry.command, hooksDirRel);
       if (asset) {
         command = asset.rewrittenCommand;
         if (!assetOutputs.has(asset.assetPath)) {

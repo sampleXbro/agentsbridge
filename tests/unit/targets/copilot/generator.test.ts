@@ -417,7 +417,21 @@ describe('generateHooks (copilot)', () => {
     expect(results[0]!.content).toContain('"version": 1');
     expect(results[0]!.content).toContain('"postToolUse"');
     expect(results[0]!.content).toContain('"bash"');
-    expect(results[0]!.content).toContain('"comment": "Matcher: Write"');
+    // Real `matcher` field (docs.github.com/en/copilot/reference/hooks-configuration),
+    // not the old non-functional `comment: "Matcher: ..."` field.
+    expect(results[0]!.content).toContain('"matcher": "Write"');
+    expect(results[0]!.content).not.toContain('comment');
+  });
+
+  it('omits the matcher field for the canonical "*" wildcard sentinel (invalid as a Copilot regex)', () => {
+    const canonical = makeCanonical({
+      hooks: {
+        PreToolUse: [{ matcher: '*', command: 'pnpm lint', type: 'command' }],
+      },
+    });
+    const results = generateHooks(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0]!.content).not.toContain('matcher');
   });
 
   it('maps hook timeout milliseconds to timeoutSec with ceiling', () => {
@@ -493,7 +507,12 @@ describe('generateMcp (copilot)', () => {
     const canonical = makeCanonical({
       mcp: {
         mcpServers: {
-          context7: { type: 'stdio', command: 'npx', args: ['-y', '@upstash/context7-mcp'], env: {} },
+          context7: {
+            type: 'stdio',
+            command: 'npx',
+            args: ['-y', '@upstash/context7-mcp'],
+            env: {},
+          },
         },
       },
     });

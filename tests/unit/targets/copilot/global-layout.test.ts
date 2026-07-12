@@ -22,10 +22,11 @@ describe('copilot global layout — paths', () => {
     ).toBe('.copilot/copilot-instructions.md');
   });
 
-  it('resolves command path to .copilot/prompts/', () => {
-    expect(layout.paths.commandPath('deploy', {} as never)).toBe(
-      '.copilot/prompts/deploy.prompt.md',
-    );
+  it('resolves command path to null (no global commands surface)', () => {
+    // Copilot CLI has no prompt-file/slash-command mechanism (no `prompts/`
+    // entry in the official ~/.copilot config-dir reference); global commands
+    // capability is 'none'.
+    expect(layout.paths.commandPath('deploy', {} as never)).toBeNull();
   });
 
   it('resolves agent path to .copilot/agents/', () => {
@@ -50,8 +51,8 @@ describe('copilot global layout — rewriteGeneratedPath', () => {
     expect(rewrite('.github/copilot-instructions.md')).toBe('.copilot/copilot-instructions.md');
   });
 
-  it('rewrites .github/prompts/ to .copilot/prompts/', () => {
-    expect(rewrite('.github/prompts/deploy.prompt.md')).toBe('.copilot/prompts/deploy.prompt.md');
+  it('suppresses .github/prompts/ in global mode (returns null — no global commands surface)', () => {
+    expect(rewrite('.github/prompts/deploy.prompt.md')).toBeNull();
   });
 
   it('rewrites .github/agents/ to .copilot/agents/', () => {

@@ -137,7 +137,8 @@ You are a security expert.
         'Use TypeScript strict mode',
       );
       fileExists(join(homeDir, '.copilot', 'skills', 'security-audit', 'SKILL.md'));
-      fileExists(join(homeDir, '.copilot', 'prompts', 'audit.prompt.md'));
+      // Copilot CLI has no prompt-file/slash-command mechanism — no global commands surface.
+      fileNotExists(join(homeDir, '.copilot', 'prompts', 'audit.prompt.md'));
     });
 
     it('generates Windsurf files in ~/.codeium/windsurf/', async () => {

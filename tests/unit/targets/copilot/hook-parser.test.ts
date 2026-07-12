@@ -85,6 +85,30 @@ describe('importHooks', () => {
     });
   });
 
+  it('prefers the real top-level `matcher` field over the legacy comment fallback', async () => {
+    projectRoot = mkdtempSync(join(tmpdir(), 'am-copilot-hooks-'));
+    const hooksDir = join(projectRoot, '.github', 'hooks');
+    mkdirSync(hooksDir, { recursive: true });
+
+    writeFileSync(
+      join(hooksDir, 'agentsmesh.json'),
+      JSON.stringify({
+        hooks: {
+          preToolUse: [{ bash: './pre.sh', matcher: 'Write|Edit' }],
+        },
+      }),
+    );
+    writeFileSync(join(hooksDir, 'pre.sh'), '#!/bin/sh\n# agentsmesh-command: pnpm lint\n');
+
+    const results = await runImport();
+    const hooks = readHooksYaml(projectRoot);
+
+    expect(results).toHaveLength(1);
+    expect(hooks).toEqual({
+      PreToolUse: [{ matcher: 'Write|Edit', command: 'pnpm lint', type: 'command' }],
+    });
+  });
+
   it('imports legacy shell wrappers when JSON hooks are absent or invalid', async () => {
     projectRoot = mkdtempSync(join(tmpdir(), 'am-copilot-hooks-'));
     const hooksDir = join(projectRoot, '.github', 'hooks');
@@ -142,6 +166,52 @@ describe('importHooks', () => {
     await importHooks(projectRoot, results);
     return results;
   }
+});
+
+describe('importHooks — global scope (hooksDirRel option)', () => {
+  let projectRoot = '';
+
+  afterEach(() => {
+    if (projectRoot) rmSync(projectRoot, { recursive: true, force: true });
+    projectRoot = '';
+  });
+
+  it('reads from a custom hooksDirRel and skips the legacy dir when legacyDirRel is null', async () => {
+    projectRoot = mkdtempSync(join(tmpdir(), 'am-copilot-global-hooks-'));
+    const hooksDir = join(projectRoot, '.copilot', 'hooks');
+    const legacyDir = join(projectRoot, '.github', 'copilot-hooks');
+    mkdirSync(hooksDir, { recursive: true });
+    mkdirSync(legacyDir, { recursive: true });
+
+    writeFileSync(
+      join(hooksDir, 'agentsmesh.json'),
+      JSON.stringify({ hooks: { preToolUse: [{ bash: './pre.sh', matcher: 'Bash' }] } }),
+    );
+    writeFileSync(join(hooksDir, 'pre.sh'), '#!/bin/sh\n# agentsmesh-command: pnpm lint\n');
+    // Legacy-format file present at the legacy dir; must NOT be picked up when
+    // legacyDirRel is explicitly null (global scope has no legacy convention).
+    writeFileSync(join(legacyDir, 'PostToolUse-1.sh'), '#!/bin/sh\npnpm test\n');
+
+    const results: Array<{ fromTool: string; fromPath: string; toPath: string; feature: string }> =
+      [];
+    await importHooks(projectRoot, results, {
+      hooksDirRel: '.copilot/hooks',
+      legacyDirRel: null,
+    });
+
+    expect(results).toEqual([
+      {
+        fromTool: 'copilot',
+        fromPath: hooksDir,
+        toPath: '.agentsmesh/hooks.yaml',
+        feature: 'hooks',
+      },
+    ]);
+    const hooks = readHooksYaml(projectRoot);
+    expect(hooks).toEqual({
+      PreToolUse: [{ matcher: 'Bash', command: 'pnpm lint', type: 'command' }],
+    });
+  });
 });
 
 function readHooksYaml(projectRoot: string): Record<string, unknown> {

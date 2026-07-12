@@ -172,7 +172,7 @@ You are an expert code reviewer. Focus on security and performance.`,
   });
 
   it.each([
-    ['cline', '.cline/agents/code-reviewer.md', 'name: code-reviewer'],
+    ['cline', '.cline/agents.yaml', 'name: code-reviewer'],
     ['codex-cli', '.codex/agents/code-reviewer.toml', 'name = "code-reviewer"'],
     ['windsurf', '.windsurf/skills/am-agent-code-reviewer/SKILL.md', 'x-agentsmesh-kind: agent'],
   ] as const)('generates agent outputs for %s', (target, agentPath, contentCheck) => {
@@ -649,7 +649,7 @@ features: [rules, mcp, ignore, hooks]
     expect(readFileSync(join(TEST_DIR, '.geminiignore'), 'utf-8')).toBe('node_modules\ndist');
   });
 
-  it('generates .clinerules/hooks/*.sh when cline hooks feature enabled', () => {
+  it('generates .cline/hooks/*.sh when cline hooks feature enabled', () => {
     writeFileSync(
       join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1
@@ -668,14 +668,8 @@ PreToolUse:
 `,
     );
     execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
-    const postHook = readFileSync(
-      join(TEST_DIR, '.clinerules', 'hooks', 'posttooluse-0.sh'),
-      'utf-8',
-    );
-    const preHook = readFileSync(
-      join(TEST_DIR, '.clinerules', 'hooks', 'pretooluse-0.sh'),
-      'utf-8',
-    );
+    const postHook = readFileSync(join(TEST_DIR, '.cline', 'hooks', 'posttooluse-0.sh'), 'utf-8');
+    const preHook = readFileSync(join(TEST_DIR, '.cline', 'hooks', 'pretooluse-0.sh'), 'utf-8');
     expect(postHook).toContain('#!/usr/bin/env bash');
     expect(postHook).toContain('prettier --write $FILE_PATH');
     expect(postHook).toContain('Write|Edit');

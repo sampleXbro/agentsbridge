@@ -167,7 +167,7 @@ describe('validateGeneratedMarkdownLinks: skill outputs with absolute links', ()
     expect(findBrokenMarkdownLinks(results, '/proj').length).toBe(1);
   });
 
-  it('R-4 ext: demotes pack-originated rules emitted as .mdc (cursor), steering/ (kiro), and top-level .clinerules', () => {
+  it('R-4 ext: demotes pack-originated rules emitted as .mdc (cursor), steering/ (kiro), and .cline/rules/', () => {
     const results: GenerateResult[] = [
       {
         target: 'cursor',
@@ -183,7 +183,7 @@ describe('validateGeneratedMarkdownLinks: skill outputs with absolute links', ()
       },
       {
         target: 'cline',
-        path: '.clinerules/code-review.md',
+        path: '.cline/rules/code-review.md',
         content: 'See [security](security.md).',
         status: 'created',
       },

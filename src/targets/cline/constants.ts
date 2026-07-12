@@ -1,39 +1,57 @@
 /**
  * Cline target constants.
- * Cline uses .clinerules (rules), .clineignore, .cline/cline_mcp_settings.json, .cline/skills (skills).
+ *
+ * Paths follow the standalone Cline CLI's documented layout
+ * (https://docs.cline.bot/cli/cli-reference), not the VS Code extension's
+ * IDE-era paths:
+ *   project: .cline/rules/, .cline/hooks/, .cline/skills/, .cline/mcp.json,
+ *            .cline/agents.yaml, .clineignore (project-only)
+ *   global:  ~/.cline/data/settings/rules/, ~/.cline/hooks (same relative
+ *            path as project — the CLI resolves it against $HOME instead of
+ *            the project root), ~/.cline/data/settings/skills/
+ * Commands (workflows) are not covered by the CLI reference and keep the
+ * pre-existing `.clinerules/workflows` IDE-era path unchanged.
  */
 
 export const CLINE_TARGET = 'cline';
 
-/** Rules directory (all rules as .md) */
-export const CLINE_RULES_DIR = '.clinerules';
+/** Rules directory (project) — CLI docs: `.cline/rules/` */
+export const CLINE_RULES_DIR = '.cline/rules';
 
-/** Ignore file path */
+/** Ignore file path — project-only; no documented global equivalent (docs.cline.bot/customization/clineignore) */
 export const CLINE_IGNORE = '.clineignore';
 
-/** MCP settings (Cline-specific path) */
-export const CLINE_MCP_SETTINGS = '.cline/cline_mcp_settings.json';
+/** MCP settings — CLI docs: `.cline/mcp.json` (project-only; no documented global MCP surface) */
+export const CLINE_MCP_SETTINGS = '.cline/mcp.json';
+/** Legacy filenames accepted on import for backward compatibility. */
 export const CLINE_MCP_SETTINGS_LEGACY = '.cline/mcp_settings.json';
+export const CLINE_MCP_SETTINGS_LEGACY_AGENTSMESH = '.cline/cline_mcp_settings.json';
 
-/** Skills directory prefix */
+/** Skills directory (project) — CLI docs: `.cline/skills/` */
 export const CLINE_SKILLS_DIR = '.cline/skills';
-export const CLINE_AGENTS_DIR = '.cline/agents';
+/** Skills directory (global) — CLI docs: `~/.cline/data/settings/skills/` */
+export const CLINE_GLOBAL_SKILLS_DIR = '.cline/data/settings/skills';
 
-/** Workflows directory (.clinerules/workflows/*.md → canonical commands) */
+/** Agents — CLI docs: a single `.cline/agents.yaml` file (project-only; no documented global surface) */
+export const CLINE_AGENTS_FILE = '.cline/agents.yaml';
+
+/** Workflows directory (.clinerules/workflows/*.md → canonical commands) — not covered by CLI docs, unchanged */
 export const CLINE_WORKFLOWS_DIR = '.clinerules/workflows';
 
 /** Root compatibility file (Cline cross-tool; same content as root rule) */
 export const CLINE_AGENTS_MD = 'AGENTS.md';
 
-/** Hooks directory (.clinerules/hooks/*.sh → canonical hooks) */
-export const CLINE_HOOKS_DIR = '.clinerules/hooks';
+/**
+ * Hooks directory — CLI docs: `.cline/hooks/` (project) and `~/.cline/hooks`
+ * (global, also configurable via `--hooks-dir`/`CLINE_HOOKS_DIR`). Both
+ * scopes resolve to the same relative path against their respective roots.
+ */
+export const CLINE_HOOKS_DIR = '.cline/hooks';
 
-/** Global rules directory: ~/Documents/Cline/Rules/ */
-export const CLINE_GLOBAL_RULES_DIR = 'Documents/Cline/Rules';
-/** Global workflows directory: ~/Documents/Cline/Workflows/ */
+/** Global rules directory — CLI docs: `~/.cline/data/settings/rules/` */
+export const CLINE_GLOBAL_RULES_DIR = '.cline/data/settings/rules';
+/** Global workflows directory — not covered by CLI docs, unchanged (IDE-era path) */
 export const CLINE_GLOBAL_WORKFLOWS_DIR = 'Documents/Cline/Workflows';
-/** Global hooks directory: ~/Documents/Cline/Hooks/ */
-export const CLINE_GLOBAL_HOOKS_DIR = 'Documents/Cline/Hooks';
 
 export const CLINE_CANONICAL_HOOKS = '.agentsmesh/hooks.yaml';
 export const CLINE_CANONICAL_RULES_DIR = '.agentsmesh/rules';

@@ -175,12 +175,13 @@ You are a security expert.
       fileExists(join(homeDir, '.kiro', 'skills', 'security-audit', 'SKILL.md'));
     });
 
-    it('generates Cline files in ~/.cline/ and ~/.cline/AGENTS.md', async () => {
+    it('generates Cline files in ~/.cline/data/settings/skills/', async () => {
       const r = await runCli('generate --global --targets cline', projectDir);
       expect(r.exitCode).toBe(0);
 
-      // Cline in global mode may place AGENTS.md differently - check actual behavior
-      fileExists(join(homeDir, '.cline', 'skills', 'security-audit', 'SKILL.md'));
+      fileExists(
+        join(homeDir, '.cline', 'data', 'settings', 'skills', 'security-audit', 'SKILL.md'),
+      );
     });
 
     it('generates Continue files in ~/.continue/', async () => {

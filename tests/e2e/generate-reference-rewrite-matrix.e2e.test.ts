@@ -17,7 +17,10 @@ const TARGETS: TargetName[] = [
   'copilot',
   // gemini-cli: link validator flags `.agents/skills/.../route-checklist.md` from GEMINI/AGENTS
   // before that mirror path is materialized — tracked separately from this matrix contract.
-  'cline',
+  // cline: agents are combined into one `.cline/agents.yaml` (CLI docs), not one file per
+  // agent (like roo-code's `.roomodes`, also excluded here) — `agentPath` returns null since
+  // there is no per-name destination, so the output-source map can't attribute the combined
+  // file to a single canonical agent source and cross-references inside it are never rewritten.
   'codex-cli',
   'windsurf',
 ];

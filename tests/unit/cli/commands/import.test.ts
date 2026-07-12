@@ -453,9 +453,9 @@ Review carefully.
     expect(existsSync(join(TEST_DIR, '.agentsmesh'))).toBe(false);
   });
 
-  it('imports from cline when .clinerules/_root.md exists', async () => {
-    mkdirSync(join(TEST_DIR, '.clinerules'), { recursive: true });
-    writeFileSync(join(TEST_DIR, '.clinerules', '_root.md'), '# Cline Rules\n\nUse TDD.');
+  it('imports from cline when .cline/rules/_root.md exists', async () => {
+    mkdirSync(join(TEST_DIR, '.cline', 'rules'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.cline', 'rules', '_root.md'), '# Cline Rules\n\nUse TDD.');
     const result = await runImport({ from: 'cline' }, TEST_DIR);
     expect(result.exitCode).toBe(0);
     expect(result.data.target).toBe('cline');

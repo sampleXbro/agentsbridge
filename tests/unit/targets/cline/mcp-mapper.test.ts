@@ -76,7 +76,7 @@ describe('cline MCP mapper', () => {
     const dir = createTempDir();
     mkdirSync(join(dir, '.cline'), { recursive: true });
     writeFileSync(
-      join(dir, '.cline', 'cline_mcp_settings.json'),
+      join(dir, '.cline', 'mcp.json'),
       JSON.stringify({
         mcpServers: {
           remote: { type: 'sse', url: 'https://mcp.example.com/sse', headers: { A: 'b' } },
@@ -96,17 +96,14 @@ describe('cline MCP mapper', () => {
   it('returns without writing anything for malformed or empty MCP settings', async () => {
     const invalidDir = createTempDir();
     mkdirSync(join(invalidDir, '.cline'), { recursive: true });
-    writeFileSync(join(invalidDir, '.cline', 'cline_mcp_settings.json'), '{invalid');
+    writeFileSync(join(invalidDir, '.cline', 'mcp.json'), '{invalid');
     const invalidResults: ImportResult[] = [];
     await importClineMcp(invalidDir, invalidResults);
     expect(invalidResults).toEqual([]);
 
     const emptyDir = createTempDir();
     mkdirSync(join(emptyDir, '.cline'), { recursive: true });
-    writeFileSync(
-      join(emptyDir, '.cline', 'cline_mcp_settings.json'),
-      JSON.stringify({ mcpServers: {} }),
-    );
+    writeFileSync(join(emptyDir, '.cline', 'mcp.json'), JSON.stringify({ mcpServers: {} }));
     const emptyResults: ImportResult[] = [];
     await importClineMcp(emptyDir, emptyResults);
     expect(emptyResults).toEqual([]);
@@ -116,7 +113,7 @@ describe('cline MCP mapper', () => {
     const dir = createTempDir();
     mkdirSync(join(dir, '.cline'), { recursive: true });
     writeFileSync(
-      join(dir, '.cline', 'cline_mcp_settings.json'),
+      join(dir, '.cline', 'mcp.json'),
       JSON.stringify({
         mcpServers: {
           docs: { command: 'npx', args: ['-y'], env: { TOKEN: 'abc' } },
@@ -136,11 +133,55 @@ describe('cline MCP mapper', () => {
     expect(mcp).not.toContain('"invalid"');
   });
 
+  it('imports the primary .cline/mcp.json path (CLI docs)', async () => {
+    const dir = createTempDir();
+    mkdirSync(join(dir, '.cline'), { recursive: true });
+    writeFileSync(
+      join(dir, '.cline', 'mcp.json'),
+      JSON.stringify({
+        mcpServers: {
+          context7: { command: 'npx', args: ['-y', '@upstash/context7-mcp'] },
+        },
+      }),
+    );
+
+    const results: ImportResult[] = [];
+    await importClineMcp(dir, results);
+
+    expect(results.map(({ feature, toPath }) => ({ feature, toPath }))).toEqual([
+      { feature: 'mcp', toPath: '.agentsmesh/mcp.json' },
+    ]);
+    const mcp = readFileSync(join(dir, '.agentsmesh', 'mcp.json'), 'utf-8');
+    expect(mcp).toContain('"context7"');
+  });
+
   it('imports the legacy .cline/mcp_settings.json path for backward compatibility', async () => {
     const dir = createTempDir();
     mkdirSync(join(dir, '.cline'), { recursive: true });
     writeFileSync(
       join(dir, '.cline', 'mcp_settings.json'),
+      JSON.stringify({
+        mcpServers: {
+          context7: { command: 'npx', args: ['-y', '@upstash/context7-mcp'] },
+        },
+      }),
+    );
+
+    const results: ImportResult[] = [];
+    await importClineMcp(dir, results);
+
+    expect(results.map(({ feature, toPath }) => ({ feature, toPath }))).toEqual([
+      { feature: 'mcp', toPath: '.agentsmesh/mcp.json' },
+    ]);
+    const mcp = readFileSync(join(dir, '.agentsmesh', 'mcp.json'), 'utf-8');
+    expect(mcp).toContain('"context7"');
+  });
+
+  it('imports the legacy agentsmesh-generated .cline/cline_mcp_settings.json filename', async () => {
+    const dir = createTempDir();
+    mkdirSync(join(dir, '.cline'), { recursive: true });
+    writeFileSync(
+      join(dir, '.cline', 'cline_mcp_settings.json'),
       JSON.stringify({
         mcpServers: {
           context7: { command: 'npx', args: ['-y', '@upstash/context7-mcp'] },

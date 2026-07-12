@@ -1,13 +1,15 @@
 /**
  * Generate Cline config files from canonical sources.
- * Cline uses .clinerules (rules, workflows), .clineignore, .cline/cline_mcp_settings.json, .cline/skills (skills).
- * Supports rules, workflows, agents, ignore, MCP, skills, and hooks.
+ * Cline (standalone CLI) uses .cline/rules (rules), .clineignore (project-only
+ * ignore), .cline/mcp.json (project-only MCP), .cline/skills (skills),
+ * .cline/agents.yaml (agents), and .clinerules/workflows (commands — an
+ * IDE-era path not covered by the CLI reference, kept unchanged).
  */
 
 import { basename } from 'node:path';
 import type { CanonicalFiles } from '../../core/types.js';
-import { hasHookCommand } from '../../core/hook-command.js';
 import { serializeFrontmatter } from '../../utils/text/markdown.js';
+import type { GenerateFeatureContext } from '../catalog/target.interface.js';
 import {
   CLINE_RULES_DIR,
   CLINE_AGENTS_MD,
@@ -15,10 +17,10 @@ import {
   CLINE_MCP_SETTINGS,
   CLINE_SKILLS_DIR,
   CLINE_WORKFLOWS_DIR,
-  CLINE_HOOKS_DIR,
 } from './constants.js';
 
 export { generateAgents } from './agent-generator.js';
+export { generateHooks } from './hook-generator.js';
 
 export interface RulesOutput {
   path: string;
@@ -31,9 +33,9 @@ function ruleSlug(source: string): string {
 }
 
 /**
- * Generate .clinerules/*.md from canonical rules.
+ * Generate .cline/rules/*.md from canonical rules.
  * Cline supports plain markdown with optional frontmatter.
- * Root rule → AGENTS.md, non-root → .clinerules/{slug}.md
+ * Root rule → AGENTS.md, non-root → .cline/rules/{slug}.md
  *
  * @param canonical - Loaded canonical files
  * @returns Array of rule outputs, or [] if no rules for cline
@@ -87,76 +89,55 @@ export function generateCommands(canonical: CanonicalFiles): RulesOutput[] {
 
 /**
  * Generate .clineignore from canonical ignore patterns.
+ * Project-only: no documented global `.clineignore` equivalent exists
+ * (docs.cline.bot/customization/clineignore is explicitly workspace-root
+ * scoped), so this is a no-op for global scope.
  *
  * @param canonical - Loaded canonical files
- * @returns Array with single .clineignore output, or [] if no patterns
+ * @param ctx - Feature context (scope-gated: project only)
+ * @returns Array with single .clineignore output, or [] if no patterns or global scope
  */
-export function generateIgnore(canonical: CanonicalFiles): RulesOutput[] {
+export function generateIgnore(
+  canonical: CanonicalFiles,
+  ctx?: GenerateFeatureContext,
+): RulesOutput[] {
+  if (ctx?.scope === 'global') return [];
   if (!canonical.ignore || canonical.ignore.length === 0) return [];
   const content = canonical.ignore.join('\n');
   return [{ path: CLINE_IGNORE, content }];
 }
 
 /**
- * Generate .cline/cline_mcp_settings.json from canonical MCP config.
+ * Generate .cline/mcp.json from canonical MCP config.
  * Cline uses mcpServers format compatible with canonical.
+ * Project-only: the CLI reference documents `.cline/mcp.json` only under the
+ * project-level `.cline/` tree — no global MCP path is documented.
  *
  * @param canonical - Loaded canonical files
- * @returns Array with single output, or [] if no MCP
+ * @param ctx - Feature context (scope-gated: project only)
+ * @returns Array with single output, or [] if no MCP or global scope
  */
-export function generateMcp(canonical: CanonicalFiles): RulesOutput[] {
+export function generateMcp(
+  canonical: CanonicalFiles,
+  ctx?: GenerateFeatureContext,
+): RulesOutput[] {
+  if (ctx?.scope === 'global') return [];
   if (!canonical.mcp || Object.keys(canonical.mcp.mcpServers).length === 0) return [];
   const content = JSON.stringify({ mcpServers: canonical.mcp.mcpServers }, null, 2);
   return [{ path: CLINE_MCP_SETTINGS, content }];
 }
 
-function safeEventName(event: string): string {
-  return event.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-}
-
-// CR/LF in event/matcher/command would otherwise break out of the comment
-// header and inject executable lines BEFORE `set -eu` enables strict mode.
-// Canonical hooks parser permits arbitrary YAML strings, so a remote pack
-// pulled via `extends:` could carry multi-line values.
-function safeShellLine(value: string): string {
-  return value.replace(/[\r\n]+/g, ' ');
-}
-
-function buildHookScript(event: string, command: string, matcher: string): string {
-  return [
-    '#!/usr/bin/env bash',
-    `# agentsmesh-event: ${safeShellLine(event)}`,
-    `# agentsmesh-matcher: ${safeShellLine(matcher)}`,
-    `# agentsmesh-command: ${safeShellLine(command)}`,
-    'set -eu',
-    command,
-    '',
-  ].join('\n');
-}
-
 /**
- * Generate .clinerules/hooks/{event}-{index}.sh from canonical hooks.
- * Cline hooks are deterministic shell scripts at .clinerules/hooks/.
+ * Cline has no dedicated writable permissions file in either scope — approval
+ * control is CLI-flag/env-var/UI only (`--auto-approve`,
+ * `CLINE_COMMAND_PERMISSIONS`, Auto Approve/YOLO Mode in the extension UI;
+ * see docs.cline.bot/cli/cli-reference). `partial` no-op stub; see
+ * `lintPermissions` for the user-facing explanation.
  *
- * @param canonical - Loaded canonical files
- * @returns Array of hook script outputs, or [] if no hooks
+ * @returns Always []
  */
-export function generateHooks(canonical: CanonicalFiles): RulesOutput[] {
-  if (!canonical.hooks || Object.keys(canonical.hooks).length === 0) return [];
-  const outputs: RulesOutput[] = [];
-  for (const [event, entries] of Object.entries(canonical.hooks)) {
-    if (!Array.isArray(entries)) continue;
-    let index = 0;
-    for (const entry of entries) {
-      if (!hasHookCommand(entry)) continue;
-      outputs.push({
-        path: `${CLINE_HOOKS_DIR}/${safeEventName(event)}-${index}.sh`,
-        content: buildHookScript(event, entry.command, entry.matcher),
-      });
-      index++;
-    }
-  }
-  return outputs;
+export function generatePermissions(_canonical: CanonicalFiles): RulesOutput[] {
+  return [];
 }
 
 /**

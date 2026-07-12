@@ -112,7 +112,7 @@ export function outputPaths(target: TargetName): OutputPathGroups {
     target === 'codex-cli'
       ? '.codex/agents/code-reviewer.toml'
       : target === 'cline'
-        ? '.cline/agents/code-reviewer.md'
+        ? '.cline/agents.yaml'
         : `${skillDir(target)}/${projectedAgentSkillDirName('code-reviewer')}/SKILL.md`;
 
   return {
@@ -177,7 +177,7 @@ export function outputPaths(target: TargetName): OutputPathGroups {
                             : target === 'gemini-cli'
                               ? 'GEMINI.md'
                               : target === 'cline'
-                                ? '.clinerules/typescript.md'
+                                ? '.cline/rules/typescript.md'
                                 : target === 'codex-cli'
                                   ? 'src/AGENTS.md'
                                   : target === 'kiro'
@@ -319,7 +319,7 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
                 : target === 'gemini-cli'
                   ? 'GEMINI.md'
                   : target === 'cline'
-                    ? '.clinerules/typescript.md'
+                    ? '.cline/rules/typescript.md'
                     : target === 'codex-cli'
                       ? 'src/AGENTS.md'
                       : target === 'windsurf'
@@ -395,7 +395,9 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
                 : target === 'gemini-cli'
                   ? '.gemini/agents/code-reviewer.md'
                   : target === 'cline'
-                    ? '.cline/agents/code-reviewer.md'
+                    ? // agentPath returns null for cline (combined agents.yaml has no
+                      // per-name destination); the canonical mention is left unrewritten.
+                      '.agentsmesh/agents/code-reviewer.md'
                     : target === 'codex-cli'
                       ? '.codex/agents/code-reviewer.toml'
                       : target === 'kilo-code'

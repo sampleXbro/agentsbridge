@@ -1,4 +1,3 @@
-import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { ImportResult } from '../../core/types.js';
 import {
@@ -13,113 +12,84 @@ import { importFileDirectory } from '../import/import-orchestrator.js';
 import { mapClineRuleFile } from './importer-mappers.js';
 import { CLINE_RULES_DIR, CLINE_AGENTS_MD, CLINE_CANONICAL_RULES_DIR } from './constants.js';
 
+async function writeRootRule(
+  destRulesDir: string,
+  sourcePath: string,
+  content: string,
+  normalize: (content: string, sourceFile: string, destinationFile: string) => string,
+  results: ImportResult[],
+): Promise<void> {
+  await mkdirp(destRulesDir);
+  const destPath = join(destRulesDir, '_root.md');
+  const { frontmatter, body } = parseFrontmatter(normalize(content, sourcePath, destPath));
+  const hasRoot = frontmatter.root === true;
+  const outFm = hasRoot ? frontmatter : { ...frontmatter, root: true };
+  const outContent = await serializeImportedRuleWithFallback(destPath, outFm, body);
+  await writeFileAtomic(destPath, outContent);
+  results.push({
+    fromTool: 'cline',
+    fromPath: sourcePath,
+    toPath: `${CLINE_CANONICAL_RULES_DIR}/_root.md`,
+    feature: 'rules',
+  });
+}
+
+export interface ImportClineRulesOptions {
+  /** Rules directory to read from — project `.cline/rules` or global `.cline/data/settings/rules`. */
+  rulesDir?: string;
+  /**
+   * Whether to fall back to `AGENTS.md` at `projectRoot` when no `_root.md`
+   * is found. Only meaningful for project scope — in global mode
+   * `projectRoot` is `$HOME`, which has no canonical `AGENTS.md` concept.
+   */
+  allowAgentsMdFallback?: boolean;
+}
+
 /**
- * Imports Cline rules from `.clinerules` (file or directory) into canonical rules.
- * @returns `true` when `.clinerules` is a flat file (workflows path must be skipped).
+ * Imports Cline rules from a rules directory (CLI docs: `.cline/rules/`, a
+ * directory — no flat-file convention) into canonical rules.
+ *
+ * Root rule detection order: `<rulesDir>/_root.md`, then (project scope
+ * only) `AGENTS.md` at the project root, then the first alphabetically-
+ * sorted rule file.
  */
 export async function importClineRules(
   projectRoot: string,
   results: ImportResult[],
   normalize: (content: string, sourceFile: string, destinationFile: string) => string,
-): Promise<boolean> {
+  options: ImportClineRulesOptions = {},
+): Promise<void> {
+  const rulesDir = options.rulesDir ?? CLINE_RULES_DIR;
+  const allowAgentsMdFallback = options.allowAgentsMdFallback ?? true;
   const destRulesDir = join(projectRoot, CLINE_CANONICAL_RULES_DIR);
-  const clineRulesPath = join(projectRoot, CLINE_RULES_DIR);
-
-  const clineRulesRaw = join(projectRoot, CLINE_RULES_DIR);
-  let clineRulesIsFile = false;
-  try {
-    const clineRulesStat = await stat(clineRulesRaw);
-    clineRulesIsFile = clineRulesStat.isFile();
-  } catch {
-    // path doesn't exist — fine
-  }
-
-  if (clineRulesIsFile) {
-    const flatContent = await readFileSafe(clineRulesRaw);
-    if (flatContent !== null) {
-      await mkdirp(destRulesDir);
-      const destPath = join(destRulesDir, '_root.md');
-      const { frontmatter, body } = parseFrontmatter(
-        normalize(flatContent, clineRulesRaw, destPath),
-      );
-      const hasRoot = frontmatter.root === true;
-      const outFm = hasRoot ? frontmatter : { ...frontmatter, root: true };
-      const outContent = await serializeImportedRuleWithFallback(destPath, outFm, body);
-      await writeFileAtomic(destPath, outContent);
-      results.push({
-        fromTool: 'cline',
-        fromPath: clineRulesRaw,
-        toPath: `${CLINE_CANONICAL_RULES_DIR}/_root.md`,
-        feature: 'rules',
-      });
-    }
-    return clineRulesIsFile;
-  }
+  const clineRulesPath = join(projectRoot, rulesDir);
 
   let rootSourcePath: string | null = null;
   const rootPath = join(clineRulesPath, '_root.md');
   const rootContent = await readFileSafe(rootPath);
-  if (rootContent === null) {
+  if (rootContent !== null) {
+    rootSourcePath = rootPath;
+    await writeRootRule(destRulesDir, rootPath, rootContent, normalize, results);
+  } else if (allowAgentsMdFallback) {
     const agentsMdPath = join(projectRoot, CLINE_AGENTS_MD);
     const agentsMdContent = await readFileSafe(agentsMdPath);
     if (agentsMdContent !== null) {
       rootSourcePath = agentsMdPath;
-      await mkdirp(destRulesDir);
-      const destPath = join(destRulesDir, '_root.md');
-      const { frontmatter, body } = parseFrontmatter(
-        normalize(agentsMdContent, agentsMdPath, destPath),
-      );
-      const hasRoot = frontmatter.root === true;
-      const outFm = hasRoot ? frontmatter : { ...frontmatter, root: true };
-      const outContent = await serializeImportedRuleWithFallback(destPath, outFm, body);
-      await writeFileAtomic(destPath, outContent);
-      results.push({
-        fromTool: 'cline',
-        fromPath: agentsMdPath,
-        toPath: `${CLINE_CANONICAL_RULES_DIR}/_root.md`,
-        feature: 'rules',
-      });
-    } else {
-      const ruleFiles = await readDirRecursiveNoSymlinks(clineRulesPath);
-      const mdFiles = ruleFiles
-        .filter((f) => f.endsWith('.md') && !f.includes('/workflows/'))
-        .sort();
-      const first = mdFiles[0];
-      if (first) {
-        const fc = await readFileSafe(first);
-        if (fc !== null) {
-          rootSourcePath = first;
-          await mkdirp(destRulesDir);
-          const destPath = join(destRulesDir, '_root.md');
-          const { frontmatter, body } = parseFrontmatter(normalize(fc, first, destPath));
-          const hasRoot = frontmatter.root === true;
-          const outFm = hasRoot ? frontmatter : { ...frontmatter, root: true };
-          const outContent = await serializeImportedRuleWithFallback(destPath, outFm, body);
-          await writeFileAtomic(destPath, outContent);
-          results.push({
-            fromTool: 'cline',
-            fromPath: first,
-            toPath: `${CLINE_CANONICAL_RULES_DIR}/_root.md`,
-            feature: 'rules',
-          });
-        }
+      await writeRootRule(destRulesDir, agentsMdPath, agentsMdContent, normalize, results);
+    }
+  }
+
+  if (rootSourcePath === null) {
+    const ruleFiles = await readDirRecursiveNoSymlinks(clineRulesPath);
+    const mdFiles = ruleFiles.filter((f) => f.endsWith('.md')).sort();
+    const first = mdFiles[0];
+    if (first) {
+      const firstContent = await readFileSafe(first);
+      if (firstContent !== null) {
+        rootSourcePath = first;
+        await writeRootRule(destRulesDir, first, firstContent, normalize, results);
       }
     }
-  } else {
-    rootSourcePath = rootPath;
-    await mkdirp(destRulesDir);
-    const destPath = join(destRulesDir, '_root.md');
-    const { frontmatter, body } = parseFrontmatter(normalize(rootContent, rootPath, destPath));
-    const hasRoot = frontmatter.root === true;
-    const outFm = hasRoot ? frontmatter : { ...frontmatter, root: true };
-    const outContent = await serializeImportedRuleWithFallback(destPath, outFm, body);
-    await writeFileAtomic(destPath, outContent);
-    results.push({
-      fromTool: 'cline',
-      fromPath: rootPath,
-      toPath: `${CLINE_CANONICAL_RULES_DIR}/_root.md`,
-      feature: 'rules',
-    });
   }
 
   results.push(
@@ -135,6 +105,4 @@ export async function importClineRules(
       },
     })),
   );
-
-  return clineRulesIsFile;
 }

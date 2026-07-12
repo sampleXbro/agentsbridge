@@ -112,6 +112,20 @@
         "t-kw-ab6ac577"
       ]
     },
+    "capability-fix-campaign-global-scope-import-for-a": {
+      "createdAt": "2026-07-12",
+      "evidence": [
+        "cline global rules/skills import fix (2026-07-12)"
+      ],
+      "rule": "Global-scope import for a target's rules/skills importer that historically hardcoded project-scope directory constants (ignoring options.scope) was silently broken for --global the whole time — verify by grepping the importer for a scope-aware directory param before assuming existing global import tests pass for real; add an explicit rulesDir/skillsDir override parameter selected by scope in the orchestrator (importFromX), and gate project-only features (mcp/ignore/agents-file) behind an early return for scope==='global' rather than leaving them to silently no-op on the wrong path.",
+      "status": "active",
+      "topics": [
+        "capability-fix-campaign"
+      ],
+      "triggers": [
+        "t-glob-860c694c"
+      ]
+    },
     "capability-fix-campaign-never-let-a-subagent-use": {
       "createdAt": "2026-07-11",
       "evidence": [],
@@ -124,6 +138,34 @@
       "triggers": [
         "t-cmd-ad0249c4",
         "t-cmd-df9bd679"
+      ]
+    },
+    "capability-fix-campaign-when-a-target-s-agents": {
+      "createdAt": "2026-07-12",
+      "evidence": [
+        "cline agents.yaml restructure (2026-07-12)"
+      ],
+      "rule": "When a target's agents feature moves to a single combined multi-agent file (e.g. YAML), set layout.paths.agentPath() to return null (not a fixed path). The output-source-map/reference-rewrite pipeline assumes one output path maps to exactly one canonical source file; a combined file breaks that, silently leaking unrewritten canonical .agentsmesh/... paths into generated content. Follow the existing roo-code .roomodes precedent (also excluded from tests/e2e/generate-reference-rewrite-matrix.e2e.test.ts's TARGETS list for the same reason).",
+      "status": "active",
+      "topics": [
+        "capability-fix-campaign"
+      ],
+      "triggers": [
+        "t-glob-9f0a5990"
+      ]
+    },
+    "capability-fix-campaign-when-downgrading-a-target-s": {
+      "createdAt": "2026-07-12",
+      "evidence": [
+        "cline agents global none downgrade (2026-07-12)"
+      ],
+      "rule": "When downgrading a target's global capability from native to none for a feature with conversionDefaults (e.g. agents with agentsToSkills), also flip the conversionDefaults flag to false explicitly (not omitted) — builtin-targets.ts's isConversionUpgrading() reports the shared 'none -> embedded via skill projection' matrix-display upgrade whenever supportsConversion + a truthy conversionDefault exist, silently overstating the matrix even though generateX itself correctly emits [].",
+      "status": "active",
+      "topics": [
+        "capability-fix-campaign"
+      ],
+      "triggers": [
+        "t-glob-9f0a5990"
       ]
     },
     "capability-fix-campaign-when-renaming-a-target-s": {
@@ -8605,6 +8647,10 @@
     "t-glob-85da531e": {
       "kind": "file_glob",
       "pattern": "src/public/index.ts"
+    },
+    "t-glob-860c694c": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/importer.ts"
     },
     "t-glob-861a9bdb": {
       "kind": "file_glob",

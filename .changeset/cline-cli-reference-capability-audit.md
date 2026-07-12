@@ -1,0 +1,17 @@
+---
+"agentsmesh": minor
+---
+
+Cline: rebase on the standalone CLI's documented paths (docs.cline.bot/cli/cli-reference) instead of the VS Code extension's IDE-era layout, raise Permissions, and downgrade unsupported global surfaces.
+
+- **Rules (project + global, native — fixed)**: project rules move from `.clinerules/{slug}.md` to `.cline/rules/{slug}.md`; global rules move from `~/Documents/Cline/Rules/` to `~/.cline/data/settings/rules/`. The legacy flat-file `.clinerules` convention (no directory) is dropped — it is undocumented for the CLI; only the directory form is imported. Root-rule detection order is unchanged: `_root.md`, then `AGENTS.md`, then the first alphabetically-sorted rule file.
+- **Hooks (project + global, native — fixed)**: hooks move from `.clinerules/hooks/*.sh` to `.cline/hooks/*.sh`. Project and global scope now resolve to the identical relative path (project root vs. `$HOME`), matching the CLI's documented `~/.cline/hooks` default (also configurable via `--hooks-dir`/`CLINE_HOOKS_DIR`) — the importer reads a single directory instead of merging two.
+- **MCP (project, native — fixed)**: the settings file moves from `.cline/cline_mcp_settings.json` to `.cline/mcp.json`. Both the old filename and `.cline/mcp_settings.json` are still accepted on import for backward compatibility.
+- **MCP (global): native → none**. No global MCP config path is documented anywhere in the CLI reference's `~/.cline/data/settings/` tree; `.cline/mcp.json` is project-only.
+- **Skills (global, native — fixed)**: global skills move from the project-identical `.cline/skills/` to the documented `~/.cline/data/settings/skills/`.
+- **Agents (project, native — fixed)**: agents move from one file per agent (`.cline/agents/<name>.md`, undocumented) to a single combined `.cline/agents.yaml` (CLI docs: "Agent definitions"), containing a top-level `agents:` list. The per-agent field schema isn't documented beyond the filename, so agentsmesh uses a round-trippable `name`/`description`/`model`/`tools`/`prompt` shape plus the same `x-agentsmesh-*` extension keys used by other native-agent targets. Because it's a combined file, `agentPath()` now returns `null` (no per-name destination for cross-reference rewriting) — canonical `.agentsmesh/agents/<name>.md` mentions embedded in other generated files are left unrewritten for cline, same as roo-code's `.roomodes`.
+- **Agents (global): native → none**. No `agents.yaml` or `agents/` directory is documented anywhere under `~/.cline/data/settings/` — only `providers.json`, `rules/`, and `skills/`.
+- **Ignore (global): native → none**. docs.cline.bot/customization/clineignore documents `.clineignore` as strictly per-workspace-root (each monorepo workspace root can have its own); no global/home-directory ignore file exists.
+- **Permissions (project + global): none → partial**. Cline has no dedicated writable permissions file in either scope — approval is controlled via the `--auto-approve` CLI flag, the `CLINE_COMMAND_PERMISSIONS` environment variable (JSON allow/deny command-glob policy), or the extension UI's Auto Approve/YOLO Mode. A no-op generator stub plus a lint warning point users at these mechanisms directly.
+
+Commands (workflows) are unaffected by this change and remain at the pre-existing `.clinerules/workflows/` (project) and `~/Documents/Cline/Workflows/` (global) paths — the CLI reference does not document a workflows/commands surface, so this IDE-era path is left as-is.

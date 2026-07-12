@@ -9,7 +9,9 @@
  * - Cursor: .cursorrules (legacy; we use .cursor/rules/), .cursor/sandbox.json and .cursor/environment.json (no canonical schema yet)
  * - Copilot: .github/copilot/pull_request_review.json
  * - Gemini: .gemini/.env, .gemini/system.md, .gemini/sandbox-* (skills now supported)
- * - Cline: .clinerules flat file (legacy; we use .clinerules/*.md)
+ * - Cline: standalone CLI paths per docs.cline.bot/cli/cli-reference (.cline/rules/,
+ *   .cline/hooks/, .cline/skills/, .cline/mcp.json, .cline/agents.yaml); the legacy
+ *   flat-file `.clinerules` convention is no longer generated or imported.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -751,14 +753,13 @@ describe('agents-folder-structure-research: Gemini CLI (docs §4)', () => {
   });
 });
 
-describe('agents-folder-structure-research: Cline (docs §5)', () => {
+describe('agents-folder-structure-research: Cline (docs.cline.bot/cli/cli-reference)', () => {
   const EXPECTED_PATHS = {
-    rulesDir: '.clinerules/', // research: .clinerules/*.md (directory-based)
-    ignore: '.clineignore', // research: .clinerules (flat) — we use .clinerules/*.md + .clineignore
-    mcp: '.cline/cline_mcp_settings.json',
+    rulesDir: '.cline/rules/', // CLI docs: `.cline/rules/` (directory-based, project-only)
+    ignore: '.clineignore', // docs.cline.bot/customization/clineignore: project-only, no global equivalent
+    mcp: '.cline/mcp.json', // CLI docs: `.cline/mcp.json` (project-only)
     skillsDir: '.cline/skills/',
   };
-  // Gaps: .clinerules flat file (legacy) — we use .clinerules/*.md
 
   it('generates AGENTS.md from root rule', async () => {
     const results = await generate({
@@ -771,7 +772,7 @@ describe('agents-folder-structure-research: Cline (docs §5)', () => {
     expect(r!.content).toContain('Cline Root');
   });
 
-  it('generates .clinerules/*.md for non-root rules', async () => {
+  it('generates .cline/rules/*.md for non-root rules', async () => {
     const canonical = fullCanonical({
       rootBody: '# Root',
       nonRootRules: [
@@ -787,7 +788,7 @@ describe('agents-folder-structure-research: Cline (docs §5)', () => {
       canonical,
       projectRoot: TEST_DIR,
     });
-    const tsRule = results.find((x) => x.path === '.clinerules/ts.md');
+    const tsRule = results.find((x) => x.path === '.cline/rules/ts.md');
     expect(tsRule).toBeDefined();
   });
 
@@ -820,7 +821,7 @@ describe('agents-folder-structure-research: Cline (docs §5)', () => {
     expect(s!.content).toContain('Debug steps.');
   });
 
-  it('generates .cline/cline_mcp_settings.json for MCP', async () => {
+  it('generates .cline/mcp.json for MCP', async () => {
     const canonical = fullCanonical({
       rootBody: '# Root',
       mcp: {
@@ -1152,7 +1153,7 @@ describe('agents-folder-structure-research: Windsurf (docs §7)', () => {
  * Cursor:  .cursorrules (legacy — we use .cursor/rules/), .cursor/sandbox.json and .cursor/environment.json (no canonical schema yet)
  * Copilot: .github/copilot/pull_request_review.json
  * Gemini:  .gemini/.env, .gemini/system.md, .gemini/sandbox-* (skills now supported)
- * Cline:   .clinerules flat file (legacy — we use .clinerules/*.md)
+ * Cline:   legacy flat-file `.clinerules` (IDE-era) — we use CLI-documented .cline/rules/*.md
  * Codex:   nested `AGENTS.md` / `AGENTS.override.md` for advisory rules; `.rules` only for `codex_emit: execution` (§11 in codex-cli-project-level-advanced.md)
  * Kiro: no repo-native commands or agents directory for IDE-first support
  * Windsurf: .windsurfrules/.windsurfignore (legacy), subdirectory AGENTS.md

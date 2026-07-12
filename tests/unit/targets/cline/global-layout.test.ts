@@ -9,7 +9,7 @@ import type { CanonicalFiles } from '../../../../src/core/types.js';
 describe('cline global layout — paths', () => {
   const layout = getTargetLayout('cline', 'global')!;
 
-  it('resolves rule path to Documents/Cline/Rules/', () => {
+  it('resolves rule path to .cline/data/settings/rules/', () => {
     expect(
       layout.paths.rulePath('typescript', {
         source: 'typescript.md',
@@ -19,7 +19,7 @@ describe('cline global layout — paths', () => {
         globs: [],
         body: '',
       }),
-    ).toBe('Documents/Cline/Rules/typescript.md');
+    ).toBe('.cline/data/settings/rules/typescript.md');
   });
 
   it('resolves command path to Documents/Cline/Workflows/', () => {
@@ -28,7 +28,7 @@ describe('cline global layout — paths', () => {
     );
   });
 
-  it('resolves agent path to native .cline/agents/', () => {
+  it('resolves agent path to null (no per-name destination; no global agents surface)', () => {
     expect(
       layout.paths.agentPath('my-agent', {
         features: [],
@@ -39,7 +39,7 @@ describe('cline global layout — paths', () => {
         collaboration: { strategy: 'merge', lock_features: [] },
         conversions: { agents_to_skills: { cline: true } },
       }),
-    ).toBe('.cline/agents/my-agent.md');
+    ).toBeNull();
   });
 });
 
@@ -55,20 +55,18 @@ describe('cline global layout — rewriteGeneratedPath', () => {
     expect(rewrite('.clinerules/workflows/deploy.md')).toBe('Documents/Cline/Workflows/deploy.md');
   });
 
-  it('rewrites .clinerules/ rules to Documents/Cline/Rules/', () => {
-    expect(rewrite('.clinerules/typescript.md')).toBe('Documents/Cline/Rules/typescript.md');
+  it('rewrites .cline/rules/ to .cline/data/settings/rules/', () => {
+    expect(rewrite('.cline/rules/typescript.md')).toBe('.cline/data/settings/rules/typescript.md');
   });
 
-  it('keeps .cline/skills/ paths unchanged', () => {
-    expect(rewrite('.cline/skills/ts-pro/SKILL.md')).toBe('.cline/skills/ts-pro/SKILL.md');
+  it('rewrites .cline/skills/ to .cline/data/settings/skills/', () => {
+    expect(rewrite('.cline/skills/ts-pro/SKILL.md')).toBe(
+      '.cline/data/settings/skills/ts-pro/SKILL.md',
+    );
   });
 
-  it('keeps .cline/cline_mcp_settings.json unchanged', () => {
-    expect(rewrite('.cline/cline_mcp_settings.json')).toBe('.cline/cline_mcp_settings.json');
-  });
-
-  it('keeps .clineignore unchanged', () => {
-    expect(rewrite('.clineignore')).toBe('.clineignore');
+  it('keeps .cline/hooks/ unchanged (same relative path in both scopes)', () => {
+    expect(rewrite('.cline/hooks/pretooluse-0.sh')).toBe('.cline/hooks/pretooluse-0.sh');
   });
 });
 
@@ -76,12 +74,14 @@ describe('cline global layout — mirrorGlobalPath', () => {
   const layout = getTargetLayout('cline', 'global')!;
   const mirror = layout.mirrorGlobalPath!;
 
-  it('mirrors .cline/skills/ to .agents/skills/', () => {
-    expect(mirror('.cline/skills/ts-pro/SKILL.md', [])).toBe('.agents/skills/ts-pro/SKILL.md');
+  it('mirrors .cline/data/settings/skills/ to .agents/skills/', () => {
+    expect(mirror('.cline/data/settings/skills/ts-pro/SKILL.md', [])).toBe(
+      '.agents/skills/ts-pro/SKILL.md',
+    );
   });
 
-  it('mirrors nested supporting file under .cline/skills/', () => {
-    expect(mirror('.cline/skills/ts-pro/references/checklist.md', [])).toBe(
+  it('mirrors nested supporting file under .cline/data/settings/skills/', () => {
+    expect(mirror('.cline/data/settings/skills/ts-pro/references/checklist.md', [])).toBe(
       '.agents/skills/ts-pro/references/checklist.md',
     );
   });
@@ -142,7 +142,7 @@ describe('cline global frontmatter preservation', () => {
     });
 
     const skill = results.find(
-      (r) => r.target === 'cline' && r.path === '.cline/skills/debugging/SKILL.md',
+      (r) => r.target === 'cline' && r.path === '.cline/data/settings/skills/debugging/SKILL.md',
     );
     expect(skill).toBeDefined();
     expect(skill!.content).toContain('name: debugging');
@@ -170,7 +170,7 @@ describe('cline global frontmatter preservation', () => {
     });
 
     const rule = results.find(
-      (r) => r.target === 'cline' && r.path === 'Documents/Cline/Rules/ts.md',
+      (r) => r.target === 'cline' && r.path === '.cline/data/settings/rules/ts.md',
     );
     expect(rule).toBeDefined();
     expect(rule!.content).toContain('description: TypeScript standards');
@@ -178,7 +178,7 @@ describe('cline global frontmatter preservation', () => {
     expect(rule!.content).toContain('Use strict mode.');
   });
 
-  it('preserves MCP content in global mode (written to .cline/cline_mcp_settings.json)', async () => {
+  it('does not generate MCP in global mode (no documented global MCP surface)', async () => {
     const results = await generate({
       config: { ...makeGlobalConfig(), features: ['mcp'] } as ValidatedConfig,
       canonical: makeCanonical({
@@ -192,17 +192,8 @@ describe('cline global frontmatter preservation', () => {
       scope: 'global',
     });
 
-    const mcpFile = results.find(
-      (r) => r.target === 'cline' && r.path === '.cline/cline_mcp_settings.json',
-    );
-    expect(mcpFile).toBeDefined();
-    const parsed = JSON.parse(mcpFile!.content) as Record<string, unknown>;
-    expect(parsed).toHaveProperty('mcpServers');
-    const servers = parsed.mcpServers as Record<string, unknown>;
-    expect(servers).toHaveProperty('test-server');
-    const server = servers['test-server'] as Record<string, unknown>;
-    expect(server.command).toBe('npx');
-    expect(server.args).toEqual(['-y', '@test/mcp']);
+    const mcpFile = results.find((r) => r.target === 'cline' && r.path.includes('mcp'));
+    expect(mcpFile).toBeUndefined();
   });
 
   it('preserves hooks configuration in global mode', async () => {
@@ -224,14 +215,56 @@ describe('cline global frontmatter preservation', () => {
       scope: 'global',
     });
 
-    // Cline hooks are shell scripts; .clinerules/hooks/ rewrites to Documents/Cline/Hooks/
+    // Cline hooks resolve to the same relative path (.cline/hooks/) in both scopes.
     const hookFile = results.find(
-      (r) => r.target === 'cline' && r.path === 'Documents/Cline/Hooks/pretooluse-0.sh',
+      (r) => r.target === 'cline' && r.path === '.cline/hooks/pretooluse-0.sh',
     );
     expect(hookFile).toBeDefined();
     expect(hookFile!.content).toContain('#!/usr/bin/env bash');
     expect(hookFile!.content).toContain('./scripts/validate.sh');
     expect(hookFile!.content).toContain('agentsmesh-event: PreToolUse');
     expect(hookFile!.content).toContain('agentsmesh-matcher: Bash');
+  });
+
+  it('does not generate agents.yaml in global mode (no documented global agents surface)', async () => {
+    const results = await generate({
+      config: { ...makeGlobalConfig(), features: ['agents'] } as ValidatedConfig,
+      canonical: makeCanonical({
+        agents: [
+          {
+            source: '/proj/.agentsmesh/agents/reviewer.md',
+            name: 'reviewer',
+            description: '',
+            tools: [],
+            disallowedTools: [],
+            model: '',
+            permissionMode: '',
+            maxTurns: 0,
+            mcpServers: [],
+            hooks: {},
+            skills: [],
+            memory: '',
+            body: 'Body.',
+          },
+        ],
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const agentsFile = results.find((r) => r.target === 'cline' && r.path.includes('agents'));
+    expect(agentsFile).toBeUndefined();
+  });
+
+  it('does not generate .clineignore in global mode (no documented global ignore surface)', async () => {
+    const results = await generate({
+      config: { ...makeGlobalConfig(), features: ['ignore'] } as ValidatedConfig,
+      canonical: makeCanonical({ ignore: ['node_modules/'] }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const ignoreFile = results.find((r) => r.target === 'cline' && r.path.includes('ignore'));
+    expect(ignoreFile).toBeUndefined();
   });
 });

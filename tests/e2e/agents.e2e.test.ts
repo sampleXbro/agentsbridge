@@ -175,20 +175,27 @@ function projectedAgentSkillPath(target: string, name: string): string {
   }
 }
 
-function assertClineNativeAgentFields(filePath: string, name: AgentName): void {
-  fileExists(filePath);
+/**
+ * Cline combines all agents into a single `.cline/agents.yaml` file (CLI
+ * docs) rather than one file per agent — find the entry by name and assert
+ * against its fields.
+ */
+function assertClineAgentYamlFields(agentsYamlPath: string, name: AgentName): void {
+  fileExists(agentsYamlPath);
   const agent = getAgent(name);
-  const fm = parseFm(filePath);
-  const raw = readFileSync(filePath, 'utf-8');
+  const raw = readFileSync(agentsYamlPath, 'utf-8');
+  const parsed = parseYaml(raw) as { agents?: Array<Record<string, unknown>> };
+  const entry = parsed.agents?.find((a) => a.name === name);
+  expect(entry, `${name}: entry present in .cline/agents.yaml`).toBeDefined();
 
-  expect(String(fm.name ?? ''), `${name}: native name`).toBe(name);
-  expect(String(fm.description ?? ''), `${name}: native description`).toBe(agent.description);
-  expect(String(fm.model ?? ''), `${name}: native model`).toBe(agent.model);
-  expect(toStringArray(fm.tools), `${name}: native tools`).toEqual(agent.tools);
-  expect(toStringArray(fm['x-agentsmesh-disallowed-tools'])).toEqual(agent.disallowedTools);
-  expect(String(fm['x-agentsmesh-permission-mode'] ?? '')).toBe(agent.permissionMode);
-  expect(Number(fm['x-agentsmesh-max-turns'] ?? 0)).toBe(agent.maxTurns);
-  expect(raw, `${name}: native body snippet`).toContain(agent.bodySnippet);
+  expect(String(entry?.name ?? ''), `${name}: native name`).toBe(name);
+  expect(String(entry?.description ?? ''), `${name}: native description`).toBe(agent.description);
+  expect(String(entry?.model ?? ''), `${name}: native model`).toBe(agent.model);
+  expect(toStringArray(entry?.tools), `${name}: native tools`).toEqual(agent.tools);
+  expect(toStringArray(entry?.['x-agentsmesh-disallowed-tools'])).toEqual(agent.disallowedTools);
+  expect(String(entry?.['x-agentsmesh-permission-mode'] ?? '')).toBe(agent.permissionMode);
+  expect(Number(entry?.['x-agentsmesh-max-turns'] ?? 0)).toBe(agent.maxTurns);
+  expect(String(entry?.prompt ?? ''), `${name}: native body snippet`).toContain(agent.bodySnippet);
 }
 
 function assertProjectedAgentFields(filePath: string, name: AgentName): void {
@@ -276,7 +283,7 @@ describe('agents: generate from canonical fixture', () => {
     }
   });
 
-  // ── cline (native .cline/agents/*.md) ──────────────────────────────────
+  // ── cline (native, combined .cline/agents.yaml) ────────────────────────
 
   it('cline: generates native agents with round-trip extension metadata', async () => {
     dir = setupCanonicalProject();
@@ -284,7 +291,7 @@ describe('agents: generate from canonical fixture', () => {
     expect(r.exitCode, r.stderr).toBe(0);
 
     for (const name of AGENT_NAMES) {
-      assertClineNativeAgentFields(join(dir, '.cline', 'agents', `${name}.md`), name);
+      assertClineAgentYamlFields(join(dir, '.cline', 'agents.yaml'), name);
     }
   });
 
@@ -662,7 +669,7 @@ const REPORT_PATH = join(process.cwd(), 'tests', 'e2e', 'agents-last-run.md');
 const NATIVE_TARGETS = ['claude-code', 'cursor'] as const;
 const EMBEDDED_TARGETS = ['windsurf'] as const;
 const NATIVE_AGENT_TOML_TARGETS = ['codex-cli'] as const;
-const NATIVE_AGENT_MD_TARGETS = ['gemini-cli', 'cline'] as const;
+const NATIVE_AGENT_MD_TARGETS = ['gemini-cli'] as const;
 
 function agentBlock(dir: string, file: string): string {
   const fm = parseFm(join(dir, file));
@@ -809,7 +816,7 @@ describe('agents: file manifest (written to tests/e2e/agents-last-run.md)', () =
       const r = await runCli(`generate --targets ${target}`, manifestDir);
       expect(r.exitCode, r.stderr).toBe(0);
       const ext = target === 'codex-cli' ? '.toml' : '.md';
-      const targetDir = target === 'codex-cli' ? '.codex' : target === 'cline' ? '.cline' : '.gemini';
+      const targetDir = target === 'codex-cli' ? '.codex' : '.gemini';
       const agentDir = join(manifestDir, targetDir, 'agents');
       lines.push(`### ${target}: exit=${r.exitCode}\n`);
       if (existsSync(agentDir)) {
@@ -827,6 +834,37 @@ describe('agents: file manifest (written to tests/e2e/agents-last-run.md)', () =
         }
       } else {
         lines.push('  - (agents directory not found)');
+      }
+    }
+
+    // ── CLINE (native, combined .cline/agents.yaml) ────────────────────────
+    lines.push(`\n## Cline (combined .cline/agents.yaml)\n`);
+    {
+      const r = await runCli('generate --targets cline', manifestDir);
+      expect(r.exitCode, r.stderr).toBe(0);
+      const agentsYamlPath = join(manifestDir, '.cline', 'agents.yaml');
+      lines.push(`### cline: exit=${r.exitCode}\n`);
+      if (existsSync(agentsYamlPath)) {
+        const parsed = parseYaml(readFileSync(agentsYamlPath, 'utf-8')) as {
+          agents?: Array<Record<string, unknown>>;
+        };
+        for (const name of AGENT_NAMES) {
+          const entry = parsed.agents?.find((a) => a.name === name);
+          const agent = getAgent(name);
+          if (entry) {
+            lines.push(`  - **${name}**: ✓ \`.cline/agents.yaml\``);
+            lines.push(
+              `    - description : ${String(entry.description ?? '').includes(agent.description) ? '✓' : '✗'}`,
+            );
+            lines.push(
+              `    - body snippet: ${String(entry.prompt ?? '').includes(agent.bodySnippet) ? '✓' : '✗'}`,
+            );
+          } else {
+            lines.push(`  - **${name}**: ✗ not found`);
+          }
+        }
+      } else {
+        lines.push('  - (.cline/agents.yaml not found)');
       }
     }
 

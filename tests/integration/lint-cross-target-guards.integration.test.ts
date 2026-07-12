@@ -41,9 +41,13 @@ describe('agentsmesh lint — cross-target guards', () => {
   });
 
   it('warns when canonical permissions exist but a configured target has no permissions support (#1418/1420)', () => {
+    // junie: permissions is 'none' at project scope with no target-specific
+    // lint.permissions override, so the generic silent-drop guard is the only
+    // one that can fire here (cline now has a dedicated partial-support
+    // lint.permissions message instead, since it raised to 'partial').
     writeFileSync(
       join(dir, 'agentsmesh.yaml'),
-      'version: 1\ntargets: [cline]\nfeatures: [rules, permissions]\n',
+      'version: 1\ntargets: [junie]\nfeatures: [rules, permissions]\n',
     );
     writeBaselineRoot(dir);
     writeFileSync(
@@ -52,7 +56,7 @@ describe('agentsmesh lint — cross-target guards', () => {
     );
 
     const { combined } = runLint(dir);
-    expect(combined).toMatch(/cline/);
+    expect(combined).toMatch(/junie/);
     expect(combined).toMatch(/permissions/i);
     expect(combined).toMatch(/silently/i);
     expect(combined).toMatch(/warning/i);

@@ -10,6 +10,7 @@ import {
   CLINE_TARGET,
   CLINE_MCP_SETTINGS,
   CLINE_MCP_SETTINGS_LEGACY,
+  CLINE_MCP_SETTINGS_LEGACY_AGENTSMESH,
   CLINE_CANONICAL_MCP,
 } from './constants.js';
 
@@ -60,9 +61,14 @@ export function mapClineServerToCanonical(raw: unknown): McpServer | null {
 }
 
 export async function importClineMcp(projectRoot: string, results: ImportResult[]): Promise<void> {
-  const candidatePaths = [CLINE_MCP_SETTINGS, CLINE_MCP_SETTINGS_LEGACY].map((path) =>
-    join(projectRoot, path),
-  );
+  // Primary path first, then legacy filenames (including the old
+  // agentsmesh-generated `.cline/cline_mcp_settings.json` name) as fallbacks
+  // so existing repos still import correctly after the filename fix.
+  const candidatePaths = [
+    CLINE_MCP_SETTINGS,
+    CLINE_MCP_SETTINGS_LEGACY,
+    CLINE_MCP_SETTINGS_LEGACY_AGENTSMESH,
+  ].map((path) => join(projectRoot, path));
   let mcpPath: string | null = null;
   let mcpContent: string | null = null;
 

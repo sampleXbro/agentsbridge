@@ -272,19 +272,19 @@ describe('target contract matrix', () => {
     }
     if (target === 'cline') {
       expect(read(dir, 'AGENTS.md')).toContain('# Standards');
-      expect(read(dir, '.clinerules/typescript.md')).toContain(
+      expect(read(dir, '.cline/rules/typescript.md')).toContain(
         'description: TypeScript specific rules',
       );
-      expect(read(dir, '.clinerules/typescript.md')).toContain('paths:');
+      expect(read(dir, '.cline/rules/typescript.md')).toContain('paths:');
       expect(read(dir, '.cline/skills/api-generator/SKILL.md')).toContain('name: api-generator');
       expect(read(dir, '.clinerules/workflows/review.md')).toContain(
         'Review current changes for quality.',
       );
-      expect(read(dir, '.clinerules/hooks/posttooluse-0.sh')).toContain('#!/usr/bin/env bash');
-      expect(read(dir, '.clinerules/hooks/posttooluse-0.sh')).toContain(
+      expect(read(dir, '.cline/hooks/posttooluse-0.sh')).toContain('#!/usr/bin/env bash');
+      expect(read(dir, '.cline/hooks/posttooluse-0.sh')).toContain(
         '# agentsmesh-command: prettier --write $FILE_PATH',
       );
-      expect(read(dir, '.cline/cline_mcp_settings.json')).toContain('"mcpServers"');
+      expect(read(dir, '.cline/mcp.json')).toContain('"mcpServers"');
     }
   });
 

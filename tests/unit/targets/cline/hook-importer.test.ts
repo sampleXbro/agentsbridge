@@ -4,11 +4,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { parse as yamlParse } from 'yaml';
 import { importClineHooks } from '../../../../src/targets/cline/hook-importer.js';
-import {
-  CLINE_HOOKS_DIR,
-  CLINE_GLOBAL_HOOKS_DIR,
-  CLINE_CANONICAL_HOOKS,
-} from '../../../../src/targets/cline/constants.js';
+import { CLINE_HOOKS_DIR, CLINE_CANONICAL_HOOKS } from '../../../../src/targets/cline/constants.js';
 
 const TEST_DIR = join(tmpdir(), 'am-cline-hook-importer-test');
 
@@ -34,12 +30,12 @@ describe('importClineHooks', () => {
     expect(results).toHaveLength(0);
   });
 
-  it('imports hooks from Documents/Cline/Hooks/ (global mode)', async () => {
-    const hooksDir = join(TEST_DIR, CLINE_GLOBAL_HOOKS_DIR);
+  it('imports hooks from .cline/hooks/ (project mode)', async () => {
+    const hooksDir = join(TEST_DIR, CLINE_HOOKS_DIR);
     mkdirSync(hooksDir, { recursive: true });
     writeFileSync(
-      join(hooksDir, 'posttooluse-0.sh'),
-      hookScript('PostToolUse', 'Write|Edit', 'prettier --write $FILE_PATH'),
+      join(hooksDir, 'pretooluse-0.sh'),
+      hookScript('PreToolUse', 'Bash', './scripts/validate.sh'),
     );
 
     const results: import('../../../../src/core/types.js').ImportResult[] = [];
@@ -52,42 +48,20 @@ describe('importClineHooks', () => {
 
     const content = readFileSync(join(TEST_DIR, CLINE_CANONICAL_HOOKS), 'utf8');
     const parsed = yamlParse(content) as Record<string, unknown>;
-    expect(Array.isArray(parsed['PostToolUse'])).toBe(true);
-    const entries = parsed['PostToolUse'] as Array<Record<string, string>>;
-    expect(entries[0]!.matcher).toBe('Write|Edit');
-    expect(entries[0]!.command).toBe('prettier --write $FILE_PATH');
+    expect(Array.isArray(parsed['PreToolUse'])).toBe(true);
+    const entries = parsed['PreToolUse'] as Array<Record<string, string>>;
+    expect(entries[0]!.matcher).toBe('Bash');
+    expect(entries[0]!.command).toBe('./scripts/validate.sh');
   });
 
-  it('imports hooks from .clinerules/hooks/ (project mode)', async () => {
+  it('imports hooks from .cline/hooks/ when used as the global root (same relative path)', async () => {
+    // Global scope resolves `.cline/hooks` against $HOME instead of the
+    // project root — `projectRoot` here stands in for `homedir()`.
     const hooksDir = join(TEST_DIR, CLINE_HOOKS_DIR);
     mkdirSync(hooksDir, { recursive: true });
     writeFileSync(
-      join(hooksDir, 'pretooluse-0.sh'),
-      hookScript('PreToolUse', 'Bash', './scripts/validate.sh'),
-    );
-
-    const results: import('../../../../src/core/types.js').ImportResult[] = [];
-    await importClineHooks(TEST_DIR, results);
-
-    expect(results).toHaveLength(1);
-    const content = readFileSync(join(TEST_DIR, CLINE_CANONICAL_HOOKS), 'utf8');
-    const parsed = yamlParse(content) as Record<string, unknown>;
-    expect(Array.isArray(parsed['PreToolUse'])).toBe(true);
-  });
-
-  it('merges hooks from both dirs into a single hooks.yaml', async () => {
-    const projectHooksDir = join(TEST_DIR, CLINE_HOOKS_DIR);
-    const globalHooksDir = join(TEST_DIR, CLINE_GLOBAL_HOOKS_DIR);
-    mkdirSync(projectHooksDir, { recursive: true });
-    mkdirSync(globalHooksDir, { recursive: true });
-
-    writeFileSync(
-      join(projectHooksDir, 'posttooluse-0.sh'),
-      hookScript('PostToolUse', 'Write', 'prettier --write $FILE_PATH'),
-    );
-    writeFileSync(
-      join(globalHooksDir, 'pretooluse-0.sh'),
-      hookScript('PreToolUse', 'Bash', './validate.sh'),
+      join(hooksDir, 'posttooluse-0.sh'),
+      hookScript('PostToolUse', 'Write|Edit', 'prettier --write $FILE_PATH'),
     );
 
     const results: import('../../../../src/core/types.js').ImportResult[] = [];
@@ -97,7 +71,6 @@ describe('importClineHooks', () => {
     const content = readFileSync(join(TEST_DIR, CLINE_CANONICAL_HOOKS), 'utf8');
     const parsed = yamlParse(content) as Record<string, unknown>;
     expect(Array.isArray(parsed['PostToolUse'])).toBe(true);
-    expect(Array.isArray(parsed['PreToolUse'])).toBe(true);
   });
 
   it('skips files missing agentsmesh-event comment', async () => {

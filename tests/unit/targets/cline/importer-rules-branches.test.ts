@@ -1,10 +1,9 @@
 /**
  * Branch coverage tests for cline/importer-rules.ts.
  * Targets:
- *   - .clinerules-as-flat-file with empty/null content (lines 38-46)
- *   - root frontmatter already true (line 73 / 96 / 113 short-circuit)
- *   - first-md-as-root path with non-readable / unreadable file (lines 90-114)
- *   - workflow file skipped from md scan
+ *   - root frontmatter already true (short-circuit) across all three
+ *     detection tiers: `.cline/rules/_root.md`, `AGENTS.md`, first-md fallback
+ *   - empty rules dir (no root candidate found at all)
  */
 
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync, readFileSync } from 'node:fs';
@@ -26,18 +25,7 @@ describe('importClineRules — branch coverage', () => {
     projectRoot = '';
   });
 
-  it('preserves frontmatter.root === true on flat-file .clinerules', async () => {
-    writeFileSync(
-      join(projectRoot, CLINE_RULES_DIR),
-      '---\nroot: true\ndescription: pre-set\n---\n\n# Body\n',
-    );
-    await importFromCline(projectRoot);
-    const root = readFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), 'utf-8');
-    expect(root).toContain('root: true');
-    expect(root).toContain('description: pre-set');
-  });
-
-  it('preserves frontmatter.root === true on .clinerules/_root.md', async () => {
+  it('preserves frontmatter.root === true on .cline/rules/_root.md', async () => {
     mkdirSync(join(projectRoot, CLINE_RULES_DIR), { recursive: true });
     writeFileSync(
       join(projectRoot, CLINE_RULES_DIR, '_root.md'),
@@ -72,20 +60,7 @@ describe('importClineRules — branch coverage', () => {
     expect(root).toContain('root: true');
   });
 
-  it('skips files inside workflows/ when picking first-md as root', async () => {
-    mkdirSync(join(projectRoot, CLINE_RULES_DIR, 'workflows'), { recursive: true });
-    writeFileSync(
-      join(projectRoot, CLINE_RULES_DIR, 'workflows', 'aaa-deploy.md'),
-      'Workflow content',
-    );
-    writeFileSync(join(projectRoot, CLINE_RULES_DIR, 'beta.md'), 'Beta content');
-    await importFromCline(projectRoot);
-    const root = readFileSync(join(projectRoot, '.agentsmesh/rules/_root.md'), 'utf-8');
-    // Should not have used workflows/aaa-deploy.md even though alphabetically it would sort first
-    expect(root).toContain('Beta content');
-  });
-
-  it('returns empty when .clinerules dir is empty (no _root, no AGENTS.md, no md)', async () => {
+  it('returns empty when .cline/rules dir is empty (no _root, no AGENTS.md, no md)', async () => {
     mkdirSync(join(projectRoot, CLINE_RULES_DIR), { recursive: true });
     const results = await importFromCline(projectRoot);
     expect(results.find((r) => r.toPath === '.agentsmesh/rules/_root.md')).toBeUndefined();

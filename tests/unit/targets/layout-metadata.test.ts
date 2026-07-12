@@ -189,17 +189,16 @@ describe('target layout metadata', () => {
     const layout = getTargetLayout('cline', 'global');
     expect(layout).toEqual(
       expect.objectContaining({
-        skillDir: '.cline/skills',
+        skillDir: '.cline/data/settings/skills',
         managedOutputs: {
           dirs: [
-            'Documents/Cline/Rules',
+            '.cline/data/settings/rules',
             'Documents/Cline/Workflows',
-            'Documents/Cline/Hooks',
-            '.cline/skills',
-            '.cline/agents',
+            '.cline/hooks',
+            '.cline/data/settings/skills',
             '.agents/skills',
           ],
-          files: ['.cline/cline_mcp_settings.json', '.clineignore'],
+          files: [],
         },
         paths: expect.objectContaining({
           rulePath: expect.any(Function),
@@ -219,7 +218,7 @@ describe('target layout metadata', () => {
         globs: [],
         body: '',
       }),
-    ).toBe('Documents/Cline/Rules/typescript.md');
+    ).toBe('.cline/data/settings/rules/typescript.md');
     expect(layout!.paths.commandPath('commit', {} as never)).toBe(
       'Documents/Cline/Workflows/commit.md',
     );
@@ -227,13 +226,10 @@ describe('target layout metadata', () => {
 
   it('lists Cline global detection paths', () => {
     expect(getTargetDetectionPaths('cline', 'global')).toEqual([
-      'Documents/Cline/Rules',
+      '.cline/data/settings/rules',
       'Documents/Cline/Workflows',
-      'Documents/Cline/Hooks',
-      '.cline/skills',
-      '.cline/agents',
-      '.cline/cline_mcp_settings.json',
-      '.clineignore',
+      '.cline/hooks',
+      '.cline/data/settings/skills',
     ]);
   });
 

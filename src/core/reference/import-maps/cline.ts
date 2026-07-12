@@ -3,13 +3,20 @@ import { addSimpleFileMapping, addSkillLikeMapping, listFiles, rel } from '../im
 import {
   CLINE_GLOBAL_RULES_DIR,
   CLINE_GLOBAL_WORKFLOWS_DIR,
+  CLINE_GLOBAL_SKILLS_DIR,
+  CLINE_RULES_DIR,
   CLINE_SKILLS_DIR,
-  CLINE_AGENTS_DIR,
-  CLINE_MCP_SETTINGS,
+  CLINE_WORKFLOWS_DIR,
 } from '../../../targets/cline/constants.js';
 import type { TargetLayoutScope } from '../../../targets/catalog/target-descriptor.js';
-import { AB_AGENTS, AB_COMMANDS, AB_RULES } from './constants.js';
+import { AB_COMMANDS, AB_RULES } from './constants.js';
 
+/**
+ * Agents are not mapped here: `.cline/agents.yaml` (project-only, no
+ * documented global equivalent) is a single combined YAML file, not one
+ * generated file per agent, so there is no per-entry destination path for
+ * cross-file link rewriting to target.
+ */
 export async function buildClineImportPaths(
   refs: Map<string, string>,
   projectRoot: string,
@@ -22,35 +29,24 @@ export async function buildClineImportPaths(
     for (const absPath of await listFiles(projectRoot, CLINE_GLOBAL_WORKFLOWS_DIR)) {
       addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_COMMANDS, '.md');
     }
-    for (const absPath of await listFiles(projectRoot, CLINE_SKILLS_DIR)) {
-      addSkillLikeMapping(refs, rel(projectRoot, absPath), CLINE_SKILLS_DIR);
+    for (const absPath of await listFiles(projectRoot, CLINE_GLOBAL_SKILLS_DIR)) {
+      addSkillLikeMapping(refs, rel(projectRoot, absPath), CLINE_GLOBAL_SKILLS_DIR);
     }
-    for (const absPath of await listFiles(projectRoot, CLINE_AGENTS_DIR)) {
-      addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_AGENTS, '.md');
-    }
-    refs.set(CLINE_MCP_SETTINGS, '.agentsmesh/mcp.json');
     return;
   }
 
-  refs.set('.clinerules/_root.md', `${AB_RULES}/_root.md`);
-  for (const absPath of await listFiles(projectRoot, '.clinerules')) {
+  refs.set(`${CLINE_RULES_DIR}/_root.md`, `${AB_RULES}/_root.md`);
+  for (const absPath of await listFiles(projectRoot, CLINE_RULES_DIR)) {
     const relPath = rel(projectRoot, absPath);
-    if (
-      !relPath.endsWith('.md') ||
-      relPath.includes('/workflows/') ||
-      basename(relPath) === '_root.md'
-    ) {
+    if (!relPath.endsWith('.md') || basename(relPath) === '_root.md') {
       continue;
     }
     addSimpleFileMapping(refs, relPath, AB_RULES, '.md');
   }
-  for (const absPath of await listFiles(projectRoot, '.clinerules/workflows')) {
+  for (const absPath of await listFiles(projectRoot, CLINE_WORKFLOWS_DIR)) {
     addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_COMMANDS, '.md');
   }
-  for (const absPath of await listFiles(projectRoot, '.cline/skills')) {
-    addSkillLikeMapping(refs, rel(projectRoot, absPath), '.cline/skills');
-  }
-  for (const absPath of await listFiles(projectRoot, CLINE_AGENTS_DIR)) {
-    addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_AGENTS, '.md');
+  for (const absPath of await listFiles(projectRoot, CLINE_SKILLS_DIR)) {
+    addSkillLikeMapping(refs, rel(projectRoot, absPath), CLINE_SKILLS_DIR);
   }
 }

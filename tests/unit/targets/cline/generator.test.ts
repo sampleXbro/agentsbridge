@@ -11,6 +11,7 @@ import {
   generateSkills,
   generateCommands,
   generateHooks,
+  generatePermissions,
 } from '../../../../src/targets/cline/generator.js';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
 import {
@@ -59,7 +60,7 @@ describe('generateRules (cline)', () => {
     expect(results.find((r) => r.path === `${CLINE_RULES_DIR}/_root.md`)).toBeUndefined();
   });
 
-  it('generates .clinerules/*.md for non-root rules with paths frontmatter', () => {
+  it('generates .cline/rules/*.md for non-root rules with paths frontmatter', () => {
     const canonical = makeCanonical({
       rules: [
         {
@@ -182,6 +183,13 @@ describe('generateIgnore (cline)', () => {
     expect(generateIgnore(makeCanonical({ ignore: [] }))).toEqual([]);
     expect(generateIgnore(makeCanonical())).toEqual([]);
   });
+
+  it('returns empty for global scope (no documented global .clineignore surface)', () => {
+    const canonical = makeCanonical({ ignore: ['node_modules/'] });
+    expect(generateIgnore(canonical, { capability: { level: 'none' }, scope: 'global' })).toEqual(
+      [],
+    );
+  });
 });
 
 describe('generateMcp (cline)', () => {
@@ -213,6 +221,13 @@ describe('generateMcp (cline)', () => {
 
   it('returns empty when mcpServers empty', () => {
     expect(generateMcp(makeCanonical({ mcp: { mcpServers: {} } }))).toEqual([]);
+  });
+
+  it('returns empty for global scope (no documented global MCP surface)', () => {
+    const canonical = makeCanonical({
+      mcp: { mcpServers: { fs: { command: 'npx', args: [], env: {}, type: 'stdio' } } },
+    });
+    expect(generateMcp(canonical, { capability: { level: 'none' }, scope: 'global' })).toEqual([]);
   });
 });
 
@@ -282,7 +297,7 @@ describe('generateSkills (cline)', () => {
 });
 
 describe('generateAgents (cline)', () => {
-  it('generates native Cline agent definitions', () => {
+  it('generates a single combined .cline/agents.yaml with all agents', () => {
     const canonical = makeCanonical({
       agents: [
         {
@@ -300,22 +315,70 @@ describe('generateAgents (cline)', () => {
           memory: 'notes/reviewer.md',
           body: 'Review risky changes first.',
         },
+        {
+          source: '/proj/.agentsmesh/agents/researcher.md',
+          name: 'researcher',
+          description: '',
+          tools: [],
+          disallowedTools: [],
+          model: '',
+          permissionMode: '',
+          maxTurns: 0,
+          mcpServers: [],
+          hooks: {},
+          skills: [],
+          memory: '',
+          body: 'Research first.',
+        },
       ],
     });
 
     const results = generateAgents(canonical);
 
     expect(results).toHaveLength(1);
-    expect(results[0]?.path).toBe('.cline/agents/reviewer.md');
-    expect(results[0]?.content).toContain('name: reviewer');
-    expect(results[0]?.content).toContain('tools:');
-    expect(results[0]?.content).toContain('x-agentsmesh-disallowed-tools:');
-    expect(results[0]?.content).toContain('x-agentsmesh-permission-mode: ask');
-    expect(results[0]?.content).toContain('x-agentsmesh-max-turns: 9');
-    expect(results[0]?.content).toContain('x-agentsmesh-mcp-servers:');
-    expect(results[0]?.content).toContain('x-agentsmesh-skills:');
-    expect(results[0]?.content).toContain('x-agentsmesh-memory: notes/reviewer.md');
-    expect(results[0]?.content).toContain('Review risky changes first.');
+    expect(results[0]?.path).toBe('.cline/agents.yaml');
+    const content = results[0]!.content;
+    expect(content).toContain('agents:');
+    expect(content).toContain('name: reviewer');
+    expect(content).toContain('name: researcher');
+    expect(content).toContain('tools:');
+    expect(content).toContain('x-agentsmesh-disallowed-tools:');
+    expect(content).toContain('x-agentsmesh-permission-mode: ask');
+    expect(content).toContain('x-agentsmesh-max-turns: 9');
+    expect(content).toContain('x-agentsmesh-mcp-servers:');
+    expect(content).toContain('x-agentsmesh-skills:');
+    expect(content).toContain('x-agentsmesh-memory: notes/reviewer.md');
+    expect(content).toContain('Review risky changes first.');
+    expect(content).toContain('Research first.');
+  });
+
+  it('returns empty when no agents', () => {
+    expect(generateAgents(makeCanonical())).toEqual([]);
+  });
+
+  it('returns empty for global scope (no documented global agents.yaml surface)', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          source: '/proj/.agentsmesh/agents/reviewer.md',
+          name: 'reviewer',
+          description: '',
+          tools: [],
+          disallowedTools: [],
+          model: '',
+          permissionMode: '',
+          maxTurns: 0,
+          mcpServers: [],
+          hooks: {},
+          skills: [],
+          memory: '',
+          body: 'Body.',
+        },
+      ],
+    });
+    expect(generateAgents(canonical, { capability: { level: 'none' }, scope: 'global' })).toEqual(
+      [],
+    );
   });
 });
 
@@ -391,6 +454,17 @@ describe('generateCommands (cline)', () => {
   });
 });
 
+describe('generatePermissions (cline)', () => {
+  it('always returns empty (partial: no writable permissions file in either scope)', () => {
+    expect(generatePermissions(makeCanonical())).toEqual([]);
+    expect(
+      generatePermissions(
+        makeCanonical({ permissions: { allow: ['Bash(git *)'], deny: [], ask: [] } }),
+      ),
+    ).toEqual([]);
+  });
+});
+
 describe('generateHooks (cline)', () => {
   it('returns empty when hooks is null', () => {
     expect(generateHooks(makeCanonical({ hooks: null }))).toEqual([]);
@@ -409,7 +483,7 @@ describe('generateHooks (cline)', () => {
     expect(generateHooks(canonical)).toEqual([]);
   });
 
-  it('generates .clinerules/hooks/{event-slug}-0.sh for a single hook command', () => {
+  it('generates .cline/hooks/{event-slug}-0.sh for a single hook command', () => {
     const canonical = makeCanonical({
       hooks: {
         PostToolUse: [{ matcher: 'Write|Edit', command: 'prettier --write $FILE_PATH' }],

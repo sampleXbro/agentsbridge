@@ -2,15 +2,14 @@ import type { TargetPathContract } from './types.js';
 
 export const clineContract: TargetPathContract = {
   generated: [
-    '.cline/agents/code-reviewer.md',
-    '.cline/agents/researcher.md',
-    '.cline/cline_mcp_settings.json',
+    '.cline/agents.yaml',
+    '.cline/hooks/posttooluse-0.sh',
+    '.cline/mcp.json',
+    '.cline/rules/typescript.md',
     '.cline/skills/api-generator/SKILL.md',
     '.cline/skills/api-generator/references/route-checklist.md',
     '.cline/skills/api-generator/template.ts',
     '.clineignore',
-    '.clinerules/hooks/posttooluse-0.sh',
-    '.clinerules/typescript.md',
     '.clinerules/workflows/review.md',
     'AGENTS.md',
   ],

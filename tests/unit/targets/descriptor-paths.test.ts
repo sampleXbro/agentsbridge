@@ -100,9 +100,9 @@ describe('descriptor.project.paths.rulePath', () => {
     );
   });
 
-  it('cline: returns .clinerules/{slug}.md', () => {
+  it('cline: returns .cline/rules/{slug}.md', () => {
     const rule = makeRule('example');
-    expect(cline.project.paths.rulePath('example', rule)).toBe('.clinerules/example.md');
+    expect(cline.project.paths.rulePath('example', rule)).toBe('.cline/rules/example.md');
   });
 
   it('codex-cli: returns a nested AGENTS.md under the rule slug when there is no glob directory', () => {
@@ -251,18 +251,16 @@ describe('descriptor.project.paths.agentPath', () => {
     expect(result).toBe('.gemini/skills/am-agent-reviewer/SKILL.md');
   });
 
-  it('cline default: returns native agent path', () => {
+  it('cline default: returns null (combined .cline/agents.yaml has no per-name destination)', () => {
     const result = cline.project.paths.agentPath('reviewer', config);
-    expect(result).toBe('.cline/agents/reviewer.md');
+    expect(result).toBeNull();
   });
 
-  it('cline with conversion OFF: still returns native agent path', () => {
+  it('cline with conversion OFF: still returns null', () => {
     const configWithConversionOff = baseConfig({
       conversions: { agents_to_skills: { cline: false } },
     });
-    expect(cline.project.paths.agentPath('reviewer', configWithConversionOff)).toBe(
-      '.cline/agents/reviewer.md',
-    );
+    expect(cline.project.paths.agentPath('reviewer', configWithConversionOff)).toBeNull();
   });
 
   it('codex-cli: returns .codex/agents/{name}.toml', () => {

@@ -309,6 +309,53 @@
     },
     {
       "target": "cline",
+      "feature": "agents",
+      "scope": "global",
+      "maxAchievable": "none",
+      "path": "",
+      "ext": "",
+      "format": "yaml",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://docs.cline.bot/cli/cli-reference"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "rejected",
+      "rejectionReason": "CLI docs' ~/.cline/data/settings/ tree lists only providers.json, rules/, and skills/ - no agents.yaml or agents/ directory is documented at global scope; agents.yaml is project-only (.cline/agents.yaml)."
+    },
+    {
+      "target": "cline",
+      "feature": "agents",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".cline/agents.yaml",
+      "ext": ".yaml",
+      "format": "yaml",
+      "fingerprint": {
+        "topLevelKeys": [
+          "agents"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": [
+          {
+            "pointer": "/agents/*/name",
+            "kind": "string"
+          }
+        ]
+      },
+      "source": [
+        "https://docs.cline.bot/cli/cli-reference"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "cline",
       "feature": "commands",
       "scope": "project",
       "maxAchievable": "native",
@@ -327,10 +374,90 @@
     },
     {
       "target": "cline",
+      "feature": "hooks",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".cline/hooks/posttooluse-0.sh",
+      "ext": ".sh",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://docs.cline.bot/cli/cli-reference"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "cline",
+      "feature": "hooks",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".cline/hooks/posttooluse-0.sh",
+      "ext": ".sh",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://docs.cline.bot/cli/cli-reference"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "cline",
+      "feature": "ignore",
+      "scope": "global",
+      "maxAchievable": "none",
+      "path": "",
+      "ext": "",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://docs.cline.bot/customization/clineignore"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "rejected",
+      "rejectionReason": "docs.cline.bot/customization/clineignore documents .clineignore as strictly per-workspace-root (each monorepo workspace root can have its own); no global/home-directory ignore file is documented or read."
+    },
+    {
+      "target": "cline",
+      "feature": "mcp",
+      "scope": "global",
+      "maxAchievable": "none",
+      "path": "",
+      "ext": "",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://docs.cline.bot/cli/cli-reference"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "rejected",
+      "rejectionReason": "CLI docs' ~/.cline/data/settings/ tree lists only providers.json, rules/, and skills/ - no global MCP config path is documented; .cline/mcp.json is project-only."
+    },
+    {
+      "target": "cline",
       "feature": "mcp",
       "scope": "project",
       "maxAchievable": "native",
-      "path": ".cline/cline_mcp_settings.json",
+      "path": ".cline/mcp.json",
       "ext": ".json",
       "format": "json",
       "fingerprint": {
@@ -340,9 +467,113 @@
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://docs.cline.bot/cli/cli-reference"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "cline",
+      "feature": "permissions",
+      "scope": "global",
+      "maxAchievable": "partial",
+      "path": "",
+      "ext": "",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://docs.cline.bot/cli/cli-reference"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "cline",
+      "feature": "permissions",
+      "scope": "project",
+      "maxAchievable": "partial",
+      "path": "",
+      "ext": "",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://docs.cline.bot/cli/cli-reference"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "cline",
+      "feature": "rules",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".cline/data/settings/rules/typescript.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://docs.cline.bot/cli/cli-reference"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "cline",
+      "feature": "rules",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".cline/rules/typescript.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://docs.cline.bot/cli/cli-reference"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "cline",
+      "feature": "skills",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".cline/data/settings/skills/api-generator/SKILL.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "name"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://docs.cline.bot/cli/cli-reference"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {

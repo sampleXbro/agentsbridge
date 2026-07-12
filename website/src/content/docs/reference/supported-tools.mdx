@@ -29,7 +29,7 @@ With `--global`, the canonical directory is `~/.agentsmesh/` and CLI commands re
 | Antigravity | `~/.gemini/antigravity/GEMINI.md`, `~/.gemini/antigravity/skills/`, `~/.gemini/antigravity/workflows/`, `~/.gemini/antigravity/mcp_config.json` | Same user-level paths |
 | Augment Code | `~/.augment/rules/*.md`, `~/.augment/commands/*.md`, `~/.augment/skills/`, `~/.augment/settings.json` | Same user-level paths |
 | Claude Code | `~/.claude/**` (including `CLAUDE.md`, `settings.json`, `hooks.json`, `skills/`, `agents/`, `commands/`, `output-styles/`), `~/.claude.json`, `~/.claudeignore`, mirrored skills under `~/.agents/skills/` | Same user-level paths (hooks prefer `~/.claude/hooks.json` when present) |
-| Cline | `~/Documents/Cline/Rules/*.md`, `~/Documents/Cline/Workflows/*.md`, `~/Documents/Cline/Hooks/`, `~/.cline/agents/*.md`, `~/.cline/skills/*/SKILL.md`, `~/.cline/cline_mcp_settings.json`, `~/.clineignore`, mirrored skills under `~/.agents/skills/` | Current importer reads Cline project-style paths under `$HOME`, including `~/.cline/agents/`; projected agent-skills remain import-compatible |
+| Cline | `~/.cline/data/settings/rules/*.md`, `~/Documents/Cline/Workflows/*.md`, `~/.cline/hooks/`, `~/.cline/data/settings/skills/*/SKILL.md`, mirrored skills under `~/.agents/skills/` (no documented global MCP, ignore, or agents surface — those are project-only per docs.cline.bot/cli/cli-reference) | Reads the same documented global directories (`~/.cline/data/settings/rules/`, `~/.cline/hooks/`, `~/.cline/data/settings/skills/`); MCP, ignore, and agents are not read at global scope |
 | Codex CLI | `~/.codex/AGENTS.md`, `~/.codex/config.toml`, `~/.codex/agents/*.toml`, `~/.codex/hooks.json`, `~/.codex/rules/*.rules` for execution rules, `~/.agents/skills/` | Same user-level paths; hooks currently round-trip command handlers while prompt/agent handlers remain experimental |
 | Continue | `~/.continue/rules/*.md`, `~/.continue/prompts/*.md`, `~/.continue/skills/`, `~/.continue/mcpServers/agentsmesh.json`, `~/.continue/AGENTS.md` (compat mirror), `~/.continue/config.yaml` (global config) | Same user-level paths |
 | GitHub Copilot | `~/.copilot/copilot-instructions.md` (all instructions merged), `~/.copilot/AGENTS.md` (compat mirror), `~/.copilot/agents/*.agent.md`, `~/.copilot/skills/`, `~/.copilot/mcp-config.json` (`mcpServers` key), `~/.copilot/hooks/` (+ wrapper scripts), mirrored skills under `~/.agents/skills/` and `~/.claude/skills/` — no global commands surface (Copilot CLI has no prompt-file/slash-command mechanism) | Same user-level paths |
@@ -69,7 +69,7 @@ Catalog defaults for a repo-local `agentsmesh generate` (see `descriptor.capabil
 | MCP Servers | — | Native | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | — | Native | Native | Native | Native | — | Native | — | Native | Native | Native | Native | Partial | Native |
 | Hooks | — | — | — | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Partial | Native | — | — | — | Native | — | — | Native | — | — | — | — | — | Native | — |
 | Ignore | Native | — | — | — | Native | Native | Native | — | — | — | Native | Native | — | — | Native (settings-embedded) | Native | — | Native | Native | Native | — | — | Native | — | Native | — | Native | — | Native | — |
-| Permissions | — | — | Native | Partial | — | Native | — | Native | — | — | Partial | Partial | — | — | Partial | — | — | — | Native | — | Native | — | Native | — | Native | — | — | Partial | — | — |
+| Permissions | — | — | Native | Partial | — | Native | Partial | Native | — | — | Partial | Partial | — | — | Partial | — | — | — | Native | — | Native | — | Native | — | Native | — | — | Partial | — | — |
 {/* agentsmesh:support-matrix:project:end */}
 
 ## Feature matrix (global scope)
@@ -82,12 +82,12 @@ Catalog defaults for `agentsmesh matrix --global` / `agentsmesh generate --globa
 | Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | — | Native | — |
 | Additional Rules | Embedded | — | Embedded | Embedded | Native | Native | Native | Embedded | Native | Native | Embedded | Native | Embedded | Embedded | Embedded | Embedded | — | Embedded | Native | Native | Native | Embedded | Native | — | Native | Embedded | Native | — | Partial | — |
 | Commands | — | — | Embedded | Partial (workflows) | Native | Native | Native (workflows) | Embedded | Native | — | — | Native | — | Native | Native | — | — | Native | Native | Embedded | Native | Native | Native | — | Native | — | Native | — | Native (workflows) | — |
-| Agents | — | Native | — | — | Native | Native | Native | Native | — | Native | — | Native | — | Native | Native | — | — | Native | Native | Native | Native | — | Native | — | Partial | — | — | — | Embedded | — |
+| Agents | — | Native | — | — | Native | Native | — | Native | — | Native | — | Native | — | Native | Native | — | — | Native | Native | Native | Native | — | Native | — | Partial | — | — | — | Embedded | — |
 | Skills | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | — |
-| MCP Servers | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | — | Native | — | Partial | Native | Native | Native | Native | Native |
+| MCP Servers | — | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | — | Native | — | Partial | Native | Native | Native | Native | Native |
 | Hooks | — | — | — | Native | — | Native | Native | Native | — | Native | Native | Native | Native | Native | Partial | Native | — | — | — | — | — | — | Native | — | — | Native | — | — | Native | — |
-| Ignore | Native | — | — | — | — | Native | Native | — | — | — | — | Native | — | — | — | Native | — | — | Native | Native | — | — | — | — | — | — | — | — | Native | — |
-| Permissions | — | — | Native | Partial | Native | Native | — | Native | Native | Partial | — | — | — | — | Native | Native | — | Native | Native | — | Native | — | Native | — | Partial | Native | — | Partial | — | — |
+| Ignore | Native | — | — | — | — | Native | — | — | — | — | — | Native | — | — | — | Native | — | — | Native | Native | — | — | — | — | — | — | — | — | Native | — |
+| Permissions | — | — | Native | Partial | Native | Native | Partial | Native | Native | Partial | — | — | — | — | Native | Native | — | Native | Native | — | Native | — | Native | — | Partial | Native | — | Partial | — | — |
 {/* agentsmesh:support-matrix:global:end */}
 
 ## Tool details
@@ -179,7 +179,7 @@ IDE integration · [cline.bot](https://cline.bot)
 Autonomous coding agent for VS Code.
 
 **Project mode:** root `AGENTS.md`, skills `.cline/skills/`.
-**Global mode:** skills `.cline/skills/`.
+**Global mode:** skills `.cline/data/settings/skills/`.
 
 See the [project feature matrix](#feature-matrix-project-scope) and [global feature matrix](#feature-matrix-global-scope) for per-feature support.
 

@@ -147,13 +147,6 @@ describe('import capabilities', () => {
     fileContains(join(dir, '.agentsmesh', 'mcp.json'), 'context7');
   });
 
-  it('imports flat .clinerules as the canonical root rule', async () => {
-    dir = createTestProject('cline-flat-project');
-    const result = await runCli('import --from cline', dir);
-    expect(result.exitCode, result.stderr).toBe(0);
-    fileContains(join(dir, '.agentsmesh', 'rules', '_root.md'), 'Flat Cline Rules');
-  });
-
   it('imports Gemini TOML frontmatter, skills, and settings-derived files', async () => {
     dir = createTestProject('gemini-project');
     const result = await runCli('import --from gemini-cli', dir);

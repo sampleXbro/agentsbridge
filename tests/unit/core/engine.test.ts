@@ -1381,7 +1381,7 @@ describe('generate Cline', () => {
     expect(root!.content).toContain('Use TypeScript');
   });
 
-  it('produces .clinerules/{slug}.md for non-root rules', async () => {
+  it('produces .cline/rules/{slug}.md for non-root rules', async () => {
     const config = minimalConfig({
       targets: ['cline'],
       features: ['rules'],
@@ -1412,7 +1412,7 @@ describe('generate Cline', () => {
       canonical,
       projectRoot: TEST_DIR,
     });
-    const tsRule = results.find((r) => r.path === '.clinerules/ts.md');
+    const tsRule = results.find((r) => r.path === '.cline/rules/ts.md');
     expect(tsRule).toBeDefined();
     expect(tsRule!.content).toContain('Use strict TS.');
   });
@@ -1436,7 +1436,7 @@ describe('generate Cline', () => {
     expect(ign!.content).toContain('node_modules');
   });
 
-  it('produces .cline/cline_mcp_settings.json when mcp feature enabled', async () => {
+  it('produces .cline/mcp.json when mcp feature enabled', async () => {
     const config = minimalConfig({
       targets: ['cline'],
       features: ['rules', 'mcp'],
@@ -1454,7 +1454,7 @@ describe('generate Cline', () => {
       canonical,
       projectRoot: TEST_DIR,
     });
-    const mcp = results.find((r) => r.path === '.cline/cline_mcp_settings.json');
+    const mcp = results.find((r) => r.path === '.cline/mcp.json');
     expect(mcp).toBeDefined();
     const parsed = JSON.parse(mcp!.content) as Record<string, unknown>;
     expect(parsed.mcpServers).toBeDefined();
@@ -1852,7 +1852,7 @@ describe('generate Windsurf', () => {
     });
 
     expect(results.some((r) => r.path === '.gemini/agents/reviewer.md')).toBe(true);
-    expect(results.some((r) => r.path === '.cline/agents/reviewer.md')).toBe(true);
+    expect(results.some((r) => r.path === '.cline/agents.yaml')).toBe(true);
     expect(results.some((r) => r.path === '.codex/agents/reviewer.toml')).toBe(true);
     expect(results.some((r) => r.path === '.windsurf/skills/am-agent-reviewer/SKILL.md')).toBe(
       true,
@@ -1898,7 +1898,7 @@ describe('generate Windsurf', () => {
 
     // gemini-cli: false = native agents → produces .gemini/agents/*
     expect(results.some((r) => r.path === '.gemini/agents/reviewer.md')).toBe(true);
-    expect(results.some((r) => r.path === '.cline/agents/reviewer.md')).toBe(true);
+    expect(results.some((r) => r.path === '.cline/agents.yaml')).toBe(true);
     expect(results.some((r) => r.path === '.codex/agents/reviewer.toml')).toBe(true);
     expect(results.some((r) => r.path === '.windsurf/skills/am-agent-reviewer/SKILL.md')).toBe(
       false,

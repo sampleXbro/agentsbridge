@@ -375,16 +375,19 @@ describe('import: Gemini CLI (rules + commands + mcp + hooks + ignore)', () => {
 
 describe('import: Cline (rules + skills + mcp + ignore)', () => {
   it('imports all Cline-supported features', async () => {
-    mkdirSync(join(TEST_DIR, '.clinerules'), { recursive: true });
-    writeFileSync(join(TEST_DIR, '.clinerules', '_root.md'), '# Root\n');
-    writeFileSync(join(TEST_DIR, '.clinerules', 'ts.md'), '---\nglobs:\n  - "**/*.ts"\n---\n\nTS');
+    mkdirSync(join(TEST_DIR, '.cline', 'rules'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.cline', 'rules', '_root.md'), '# Root\n');
+    writeFileSync(
+      join(TEST_DIR, '.cline', 'rules', 'ts.md'),
+      '---\nglobs:\n  - "**/*.ts"\n---\n\nTS',
+    );
     mkdirSync(join(TEST_DIR, '.cline', 'skills', 'qa'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, '.cline', 'skills', 'qa', 'SKILL.md'),
       '---\ndescription: QA\n---\n\nQA.',
     );
     writeFileSync(
-      join(TEST_DIR, '.cline', 'cline_mcp_settings.json'),
+      join(TEST_DIR, '.cline', 'mcp.json'),
       JSON.stringify({ mcpServers: { ctx: { type: 'stdio', command: 'npx', args: [], env: {} } } }),
     );
     writeFileSync(join(TEST_DIR, '.clineignore'), 'dist\n');
@@ -635,12 +638,12 @@ describe('generate: full canonical → all agents produce all supported outputs'
     });
     const paths = results.map((r) => r.path).sort();
     expect(paths).toEqual([
-      '.cline/agents/reviewer.md',
-      '.cline/cline_mcp_settings.json',
+      '.cline/agents.yaml',
+      '.cline/hooks/posttooluse-0.sh',
+      '.cline/mcp.json',
+      '.cline/rules/typescript.md',
       '.cline/skills/qa/SKILL.md',
       '.clineignore',
-      '.clinerules/hooks/posttooluse-0.sh',
-      '.clinerules/typescript.md',
       '.clinerules/workflows/review.md',
       'AGENTS.md',
     ]);
@@ -771,12 +774,12 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.claude/settings.json',
       '.claude/skills/qa/SKILL.md',
       '.claudeignore',
-      '.cline/agents/reviewer.md',
-      '.cline/cline_mcp_settings.json',
+      '.cline/agents.yaml',
+      '.cline/hooks/posttooluse-0.sh',
+      '.cline/mcp.json',
+      '.cline/rules/typescript.md',
       '.cline/skills/qa/SKILL.md',
       '.clineignore',
-      '.clinerules/hooks/posttooluse-0.sh',
-      '.clinerules/typescript.md',
       '.clinerules/workflows/review.md',
       '.codeiumignore',
       '.codex/agents/reviewer.toml',

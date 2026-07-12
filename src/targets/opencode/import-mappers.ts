@@ -15,6 +15,7 @@ import {
   serializeImportedRuleWithFallback,
 } from '../import/import-metadata.js';
 import type { ImportEntryMapper } from '../catalog/import-descriptor.js';
+import { mapOpenCodePermissionToAgentTools } from './permission-map.js';
 import {
   OPENCODE_CANONICAL_AGENTS_DIR,
   OPENCODE_CANONICAL_COMMANDS_DIR,
@@ -68,6 +69,12 @@ export const opencodeCommandMapper: ImportEntryMapper = async ({
   };
 };
 
+/**
+ * OpenCode agents carry a `permission` object, not `tools`/`disallowedTools`
+ * arrays (see generator.ts / permission-map.ts). Translate `permission` back
+ * into the canonical `tools`/`disallowedTools` shape the shared serializer
+ * expects, so tool restrictions survive a generate -> import round trip.
+ */
 export const opencodeAgentMapper: ImportEntryMapper = async ({
   relativePath,
   normalizeTo,
@@ -75,9 +82,15 @@ export const opencodeAgentMapper: ImportEntryMapper = async ({
 }) => {
   const destPath = join(destDir, relativePath);
   const { frontmatter, body } = parseFrontmatter(normalizeTo(destPath));
+  const mapped: Record<string, unknown> = { ...frontmatter };
+  if (Object.prototype.hasOwnProperty.call(frontmatter, 'permission')) {
+    const { tools, disallowedTools } = mapOpenCodePermissionToAgentTools(frontmatter.permission);
+    mapped.tools = tools;
+    mapped.disallowedTools = disallowedTools;
+  }
   return {
     destPath,
     toPath: `${OPENCODE_CANONICAL_AGENTS_DIR}/${relativePath}`,
-    content: await serializeImportedAgentWithFallback(destPath, frontmatter, body),
+    content: await serializeImportedAgentWithFallback(destPath, mapped, body),
   };
 };

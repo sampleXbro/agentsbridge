@@ -302,4 +302,72 @@ describe('opencode global frontmatter preservation', () => {
       },
     });
   });
+
+  it('declares an absolute ~/-prefixed instructions glob in global opencode.json when rules enabled', async () => {
+    const results = await generate({
+      config: { ...makeGlobalConfig(), features: ['rules', 'mcp'] } as ValidatedConfig,
+      canonical: makeCanonical({
+        rules: [
+          {
+            source: '/proj/.agentsmesh/rules/ts.md',
+            root: false,
+            targets: [],
+            description: '',
+            globs: [],
+            body: 'Use strict mode.',
+          },
+        ],
+        mcp: {
+          mcpServers: {
+            'test-server': { type: 'stdio', command: 'npx', args: ['-y', '@test/mcp'], env: {} },
+          },
+        },
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const configs = results.filter(
+      (result) => result.target === 'opencode' && result.path === OPENCODE_GLOBAL_CONFIG_FILE,
+    );
+    expect(configs).toHaveLength(1);
+    const parsed = JSON.parse(configs[0]!.content) as Record<string, unknown>;
+    expect(parsed.instructions).toEqual(['~/.config/opencode/rules/*.md']);
+    expect(parsed.mcp).toBeDefined();
+  });
+
+  it('writes a permission object (not tools/disallowedTools) for global agents', async () => {
+    const results = await generate({
+      config: { ...makeGlobalConfig(), features: ['agents'] } as ValidatedConfig,
+      canonical: makeCanonical({
+        agents: [
+          {
+            source: '/proj/.agentsmesh/agents/locked.md',
+            name: 'locked',
+            description: 'Locked-down agent',
+            tools: ['Read'],
+            disallowedTools: ['Bash'],
+            model: '',
+            permissionMode: '',
+            maxTurns: 0,
+            mcpServers: [],
+            hooks: {},
+            skills: [],
+            memory: '',
+            body: 'Restricted.',
+          },
+        ],
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const agent = results.find(
+      (r) => r.target === 'opencode' && r.path === '.opencode/agents/locked.md',
+    );
+    expect(agent).toBeDefined();
+    expect(agent!.content).toContain('permission:');
+    expect(agent!.content).not.toContain('tools:');
+    expect(agent!.content).not.toContain('disallowedTools:');
+  });
 });

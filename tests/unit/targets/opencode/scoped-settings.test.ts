@@ -57,21 +57,44 @@ describe('mergeOpenCodeSettings (opencode)', () => {
   });
 
   it('merges base and newContent JSON when base present (preserving unrelated base keys)', () => {
-    const existing = JSON.stringify({ theme: 'dark', mcp: { old: {} } });
-    const newContent = JSON.stringify({ permissions: { allow: ['Read'] } });
+    const existing = JSON.stringify({ theme: 'dark', model: 'anthropic/claude' });
+    const newContent = JSON.stringify({ permission: { bash: 'deny' } });
     const result = mergeOpenCodeSettings(existing, null, newContent, OPENCODE_CONFIG_FILE);
     const parsed = JSON.parse(result as string) as Record<string, unknown>;
     expect(parsed.theme).toBe('dark');
-    expect(parsed.mcp).toEqual({ old: {} });
-    expect(parsed.permissions).toMatchObject({ allow: ['Read'] });
+    expect(parsed.model).toBe('anthropic/claude');
+    expect(parsed.permission).toEqual({ bash: 'deny' });
   });
 
   it('prefers pending.content over existing as merge base', () => {
-    const existing = JSON.stringify({ from: 'existing' });
-    const pending = { path: OPENCODE_CONFIG_FILE, content: JSON.stringify({ from: 'pending' }) };
+    const existing = JSON.stringify({ theme: 'existing' });
+    const pending = { path: OPENCODE_CONFIG_FILE, content: JSON.stringify({ theme: 'pending' }) };
     const result = mergeOpenCodeSettings(existing, pending, '{}', OPENCODE_CONFIG_FILE);
     const parsed = JSON.parse(result as string) as Record<string, unknown>;
-    expect(parsed.from).toBe('pending');
+    expect(parsed.theme).toBe('pending');
+  });
+
+  it('overwrites stale mcp/permission/instructions from a prior generate with the fresh values', () => {
+    // Regression: mergeOpenCodeSettings used to delegate to the Claude-shaped
+    // mergeSettingsJson, which only carries over `permissions`(plural)/`hooks`
+    // — silently freezing `mcp`/`permission`/`instructions` at whatever a
+    // FIRST generate wrote, on every subsequent regenerate.
+    const existing = JSON.stringify({
+      mcp: { old: { type: 'local', command: ['stale'] } },
+      permission: { bash: 'allow' },
+      instructions: ['stale/*.md'],
+    });
+    const newContent = JSON.stringify({
+      mcp: { fresh: { type: 'local', command: ['node', 'x.js'] } },
+      permission: { bash: 'deny' },
+      instructions: ['.opencode/rules/*.md'],
+    });
+    const result = mergeOpenCodeSettings(existing, null, newContent, OPENCODE_CONFIG_FILE);
+    expect(JSON.parse(result as string)).toEqual({
+      mcp: { fresh: { type: 'local', command: ['node', 'x.js'] } },
+      permission: { bash: 'deny' },
+      instructions: ['.opencode/rules/*.md'],
+    });
   });
 });
 
@@ -131,5 +154,59 @@ describe('emitOpenCodeScopedSettings (opencode)', () => {
   it('returns [] when permissions enabled and present but all lists empty', () => {
     const canonical = makeCanonical({ permissions: { allow: [], deny: [], ask: [] } });
     expect(emitOpenCodeScopedSettings(canonical, 'global', new Set(['permissions']))).toEqual([]);
+  });
+
+  const ADDITIONAL_RULE: NonNullable<CanonicalFiles['rules']>[number] = {
+    source: '/proj/.agentsmesh/rules/typescript.md',
+    root: false,
+    targets: [],
+    description: '',
+    globs: [],
+    body: 'Use strict TypeScript.',
+  };
+
+  it('emits instructions (project scope) when rules enabled and additional rules present', () => {
+    const canonical = makeCanonical({ rules: [ADDITIONAL_RULE] });
+    const results = emitOpenCodeScopedSettings(canonical, 'project', new Set(['rules']));
+    expect(results).toHaveLength(1);
+    expect(JSON.parse(results[0].content)).toEqual({ instructions: ['.opencode/rules/*.md'] });
+  });
+
+  it('emits an absolute ~/-prefixed instructions glob in global scope', () => {
+    const canonical = makeCanonical({ rules: [ADDITIONAL_RULE] });
+    const results = emitOpenCodeScopedSettings(canonical, 'global', new Set(['rules']));
+    expect(JSON.parse(results[0].content)).toEqual({
+      instructions: ['~/.config/opencode/rules/*.md'],
+    });
+  });
+
+  it('returns [] when rules enabled but there are no additional (non-root) rules', () => {
+    const canonical = makeCanonical({
+      rules: [{ ...ADDITIONAL_RULE, root: true, source: '/proj/.agentsmesh/rules/_root.md' }],
+    });
+    expect(emitOpenCodeScopedSettings(canonical, 'project', new Set(['rules']))).toEqual([]);
+  });
+
+  it('returns [] when rules is not enabled, even with additional rules present', () => {
+    const canonical = makeCanonical({ rules: [ADDITIONAL_RULE] });
+    expect(emitOpenCodeScopedSettings(canonical, 'project', new Set())).toEqual([]);
+  });
+
+  it('merges instructions with mcp and permission when all three are enabled', () => {
+    const canonical = makeCanonical({
+      rules: [ADDITIONAL_RULE],
+      mcp: MCP_CANONICAL,
+      permissions: PERMISSIONS,
+    });
+    const results = emitOpenCodeScopedSettings(
+      canonical,
+      'project',
+      new Set(['rules', 'mcp', 'permissions']),
+    );
+    expect(results).toHaveLength(1);
+    const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
+    expect(parsed.instructions).toEqual(['.opencode/rules/*.md']);
+    expect(parsed.mcp).toBeDefined();
+    expect(parsed.permission).toBeDefined();
   });
 });

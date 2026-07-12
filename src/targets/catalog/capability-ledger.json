@@ -1066,6 +1066,60 @@
     },
     {
       "target": "opencode",
+      "feature": "additionalRules",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": "opencode.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "instructions"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": [
+          {
+            "pointer": "/instructions",
+            "kind": "array"
+          }
+        ]
+      },
+      "source": [
+        "https://opencode.ai/docs/rules/"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "opencode",
+      "feature": "additionalRules",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".config/opencode/opencode.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "instructions"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": [
+          {
+            "pointer": "/instructions",
+            "kind": "array"
+          }
+        ]
+      },
+      "source": [
+        "https://opencode.ai/docs/rules/"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "opencode",
       "feature": "commands",
       "scope": "project",
       "maxAchievable": "native",
@@ -1082,6 +1136,66 @@
       "source": [],
       "verifiedAt": null,
       "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "opencode",
+      "feature": "agents",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".opencode/agents/code-reviewer.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mode",
+          "description",
+          "permission"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": [
+          {
+            "pointer": "/permission",
+            "kind": "object"
+          }
+        ]
+      },
+      "source": [
+        "https://opencode.ai/docs/agents/",
+        "https://opencode.ai/docs/permissions/"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "opencode",
+      "feature": "agents",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".config/opencode/agents/code-reviewer.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mode",
+          "description",
+          "permission"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": [
+          {
+            "pointer": "/permission",
+            "kind": "object"
+          }
+        ]
+      },
+      "source": [
+        "https://opencode.ai/docs/agents/",
+        "https://opencode.ai/docs/permissions/"
+      ],
+      "verifiedAt": "2026-07-12",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {

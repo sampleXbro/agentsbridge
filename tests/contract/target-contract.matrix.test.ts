@@ -31,6 +31,26 @@ function expectNoTargetSpecificPrefixes(content: string): void {
   }
 }
 
+/**
+ * A target legitimately referencing its OWN native directory from within its
+ * own generated settings file is not a leak (e.g. OpenCode's `opencode.json`
+ * `instructions` glob pointing at `.opencode/rules/*.md` — required for
+ * OpenCode to actually load those files; see opencode.ai/docs/rules). This
+ * check only guards against a DIFFERENT tool's prefix leaking in via a
+ * reference-rewriting bug, so the current target's own prefix is excluded.
+ */
+const NATIVE_SELF_REFERENCE_PREFIX: Partial<Record<BuiltinTargetId, string>> = {
+  opencode: '.opencode/',
+};
+
+function expectNoForeignTargetPrefixes(content: string, target: BuiltinTargetId): void {
+  const ownPrefix = NATIVE_SELF_REFERENCE_PREFIX[target];
+  for (const prefix of TARGET_SPECIFIC_PREFIXES) {
+    if (prefix === ownPrefix) continue;
+    expect(content).not.toContain(prefix);
+  }
+}
+
 /** Activate the lessons subsystem: scaffold injects the ritual block into canonical _root.md. */
 async function activateLessons(dir: string): Promise<void> {
   await scaffoldLessons(dir);
@@ -91,7 +111,7 @@ describe('target contract matrix (in-process)', () => {
           !body.includes('## Rewrite Matrix') &&
           !(body.includes('Plain:') && body.includes('Status markers:'))
         ) {
-          expectNoTargetSpecificPrefixes(body);
+          expectNoForeignTargetPrefixes(body, target);
         }
       }
     },

@@ -7,8 +7,11 @@
  *   - **Global config**: `~/.config/opencode/` + `opencode.json`
  *
  * OpenCode natively supports commands, agents, and skills in `.opencode/`.
- * Additional rules are generated to `.opencode/rules/` — users reference them
- * via the `instructions` array in `opencode.json`.
+ * OpenCode does NOT auto-load any rules directory (opencode.ai/docs/rules):
+ * only `AGENTS.md`/`CLAUDE.md` auto-discover via directory traversal. So
+ * additional rules are generated to `.opencode/rules/<slug>.md` AND declared
+ * in the `instructions` array of `opencode.json` (a glob pointing at that
+ * dir), or they are invisible to OpenCode.
  *
  * MCP is configured in `opencode.json` under the `mcp` key.
  * Hooks are plugin-based (TypeScript/JavaScript), not config-based.
@@ -37,6 +40,18 @@ export const OPENCODE_GLOBAL_CONFIG_FILE = `${OPENCODE_GLOBAL_DIR}/opencode.json
 
 /** Cross-agent compatibility mirror for skills. */
 export const OPENCODE_GLOBAL_AGENTS_SKILLS_DIR = '.agents/skills';
+
+/**
+ * `instructions` glob entries for `opencode.json`'s `instructions` array —
+ * this is what actually makes `.opencode/rules/*.md` load (see module doc).
+ * Project-relative globs resolve via `globUp` from the project root; the
+ * global entry uses an explicit `~/` prefix so OpenCode resolves it as an
+ * absolute path regardless of the current project directory
+ * (`Instruction.systemPaths` in opencode's own source: a `~/`-prefixed entry
+ * is joined against the user's home dir and glob'd directly).
+ */
+export const OPENCODE_RULES_INSTRUCTIONS_GLOB = `${OPENCODE_RULES_DIR}/*.md`;
+export const OPENCODE_GLOBAL_RULES_INSTRUCTIONS_GLOB = `~/${OPENCODE_GLOBAL_RULES_DIR}/*.md`;
 
 // Canonical paths
 export const OPENCODE_CANONICAL_RULES_DIR = '.agentsmesh/rules';

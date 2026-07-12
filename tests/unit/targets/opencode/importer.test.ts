@@ -3,6 +3,8 @@ import { mkdirSync, writeFileSync, rmSync, readFileSync, mkdtempSync } from 'nod
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { importFromOpenCode } from '../../../../src/targets/opencode/importer.js';
+import { generateAgents } from '../../../../src/targets/opencode/generator.js';
+import type { CanonicalFiles } from '../../../../src/core/types.js';
 import {
   OPENCODE_ROOT_RULE,
   OPENCODE_RULES_DIR,
@@ -116,6 +118,75 @@ describe('importFromOpenCode — agents', () => {
     expect(results.some((r) => r.toPath === '.agentsmesh/agents/researcher.md')).toBe(true);
     const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'agents', 'researcher.md'), 'utf-8');
     expect(content).toContain('Research docs.');
+  });
+
+  it('translates a deny-only permission object into canonical disallowedTools', async () => {
+    mkdirSync(join(TEST_DIR, OPENCODE_AGENTS_DIR), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, OPENCODE_AGENTS_DIR, 'reviewer.md'),
+      '---\nmode: subagent\ndescription: Reviewer\npermission:\n  bash: deny\n  webfetch: deny\n---\n\nReview code.',
+    );
+
+    await importFromOpenCode(TEST_DIR);
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'), 'utf-8');
+    expect(content).toContain('disallowedTools:');
+    expect(content).toContain('- bash');
+    expect(content).toContain('- webfetch');
+    expect(content).not.toContain('tools:\n  - bash');
+  });
+
+  it('translates an allow-list permission object ("*": deny) into canonical tools', async () => {
+    mkdirSync(join(TEST_DIR, OPENCODE_AGENTS_DIR), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, OPENCODE_AGENTS_DIR, 'locked.md'),
+      '---\nmode: subagent\ndescription: Locked\npermission:\n  "*": deny\n  read: allow\n  grep: allow\n---\n\nRestricted agent.',
+    );
+
+    await importFromOpenCode(TEST_DIR);
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'agents', 'locked.md'), 'utf-8');
+    expect(content).toContain('tools:');
+    expect(content).toContain('- read');
+    expect(content).toContain('- grep');
+  });
+
+  it('round-trips generator output: generate -> write -> import preserves the tool restriction', async () => {
+    const canonicalAgents: CanonicalFiles['agents'] = [
+      {
+        source: '/proj/.agentsmesh/agents/locked.md',
+        name: 'locked',
+        description: 'Locked-down agent',
+        tools: ['Read', 'Grep'],
+        disallowedTools: ['Bash'],
+        model: '',
+        permissionMode: '',
+        maxTurns: 0,
+        mcpServers: [],
+        hooks: {},
+        skills: [],
+        memory: '',
+        body: 'Restricted agent.',
+      },
+    ];
+    const [generated] = generateAgents({
+      rules: [],
+      commands: [],
+      agents: canonicalAgents,
+      skills: [],
+      mcp: null,
+      permissions: null,
+      hooks: null,
+      ignore: [],
+    });
+    mkdirSync(join(TEST_DIR, OPENCODE_AGENTS_DIR), { recursive: true });
+    writeFileSync(join(TEST_DIR, generated.path), generated.content);
+
+    await importFromOpenCode(TEST_DIR);
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'agents', 'locked.md'), 'utf-8');
+    expect(content).toContain('tools:');
+    expect(content).toContain('- read');
+    expect(content).toContain('- grep');
+    expect(content).toContain('disallowedTools:');
+    expect(content).toContain('- bash');
   });
 });
 

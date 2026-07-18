@@ -8,10 +8,13 @@ import type { CanonicalFiles } from '../../../../src/core/types.js';
 import {
   FACTORY_DROID_ROOT_FILE,
   FACTORY_DROID_MCP_FILE,
+  FACTORY_DROID_HOOKS_FILE,
+  FACTORY_DROID_SETTINGS_FILE,
   FACTORY_DROID_SKILLS_DIR,
   FACTORY_DROID_DROIDS_DIR,
   FACTORY_DROID_GLOBAL_ROOT_FILE,
   FACTORY_DROID_GLOBAL_MCP_FILE,
+  FACTORY_DROID_GLOBAL_HOOKS_FILE,
   FACTORY_DROID_GLOBAL_SKILLS_DIR,
   FACTORY_DROID_GLOBAL_DROIDS_DIR,
 } from '../../../../src/targets/factory-droid/constants.js';
@@ -31,8 +34,8 @@ describe('factory-droid descriptor shape', () => {
     expect(descriptor.capabilities.skills).toBe('native');
     expect(descriptor.capabilities.mcp).toBe('native');
     expect(descriptor.capabilities.hooks).toBe('native');
-    expect(descriptor.capabilities.ignore).toBe('none');
-    expect(descriptor.capabilities.permissions).toBe('none');
+    expect(descriptor.capabilities.ignore).toBe('partial');
+    expect(descriptor.capabilities.permissions).toBe('native');
   });
 
   it('has detection paths', () => {
@@ -60,7 +63,15 @@ describe('factory-droid descriptor shape', () => {
     expect(descriptor.project.managedOutputs!.dirs).toContain(FACTORY_DROID_SKILLS_DIR);
     expect(descriptor.project.managedOutputs!.dirs).toContain(FACTORY_DROID_DROIDS_DIR);
     expect(descriptor.project.managedOutputs!.files).toContain(FACTORY_DROID_ROOT_FILE);
+    expect(descriptor.project.managedOutputs!.files).toContain(FACTORY_DROID_HOOKS_FILE);
+    expect(descriptor.project.managedOutputs!.files).toContain(FACTORY_DROID_SETTINGS_FILE);
     expect(descriptor.project.managedOutputs!.files).toContain(FACTORY_DROID_MCP_FILE);
+  });
+
+  it('global layout has managed outputs including hooks and settings files', () => {
+    const globalLayout = descriptor.globalSupport!.layout;
+    expect(globalLayout.managedOutputs!.files).toContain(FACTORY_DROID_GLOBAL_HOOKS_FILE);
+    expect(globalLayout.managedOutputs!.files).toContain(FACTORY_DROID_GLOBAL_MCP_FILE);
   });
 });
 

@@ -8,6 +8,7 @@ import {
   generateAgents,
   generateMcp,
   generateHooks,
+  generatePermissions,
 } from '../../../../src/targets/factory-droid/generator.js';
 import {
   FACTORY_DROID_ROOT_FILE,
@@ -16,6 +17,7 @@ import {
   FACTORY_DROID_DROIDS_DIR,
   FACTORY_DROID_MCP_FILE,
   FACTORY_DROID_HOOKS_FILE,
+  FACTORY_DROID_SETTINGS_FILE,
 } from '../../../../src/targets/factory-droid/constants.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
@@ -274,7 +276,7 @@ describe('generateHooks (factory-droid)', () => {
     expect(generateHooks(makeCanonical({ hooks: {} }))).toHaveLength(0);
   });
 
-  it('emits .factory/hooks.json wrapped under a top-level "hooks" key', () => {
+  it('emits .factory/hooks.json (not settings.json) with hooks key wrapping events', () => {
     const results = generateHooks(
       makeCanonical({
         hooks: {
@@ -290,6 +292,7 @@ describe('generateHooks (factory-droid)', () => {
     );
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(FACTORY_DROID_HOOKS_FILE);
+    expect(results[0].path).not.toBe(FACTORY_DROID_SETTINGS_FILE);
     const parsed = JSON.parse(results[0].content) as { hooks?: Record<string, unknown> };
     // Factory Droid nests events under "hooks" (codex-cli shape), NOT bare top-level.
     expect(parsed.PreToolUse).toBeUndefined();
@@ -310,6 +313,60 @@ describe('generateHooks (factory-droid)', () => {
 
   it('returns [] when hooks entries are all empty arrays', () => {
     expect(generateHooks(makeCanonical({ hooks: { PreToolUse: [] } }))).toHaveLength(0);
+  });
+});
+
+describe('generatePermissions (factory-droid)', () => {
+  it('returns [] when permissions is null', () => {
+    expect(generatePermissions(makeCanonical())).toHaveLength(0);
+  });
+
+  it('returns [] when allow and deny are both empty', () => {
+    expect(
+      generatePermissions(makeCanonical({ permissions: { allow: [], deny: [] } })),
+    ).toHaveLength(0);
+  });
+
+  it('emits .factory/settings.json with commandAllowlist from allow', () => {
+    const results = generatePermissions(
+      makeCanonical({ permissions: { allow: ['Bash(npm run test)'], deny: [] } }),
+    );
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(FACTORY_DROID_SETTINGS_FILE);
+    const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
+    expect(parsed.commandAllowlist).toEqual(['Bash(npm run test)']);
+    expect(parsed.commandDenylist).toBeUndefined();
+  });
+
+  it('emits .factory/settings.json with commandDenylist from deny', () => {
+    const results = generatePermissions(
+      makeCanonical({ permissions: { allow: [], deny: ['Bash(rm -rf *)'] } }),
+    );
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(FACTORY_DROID_SETTINGS_FILE);
+    const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
+    expect(parsed.commandDenylist).toEqual(['Bash(rm -rf *)']);
+    expect(parsed.commandAllowlist).toBeUndefined();
+  });
+
+  it('emits both commandAllowlist and commandDenylist when both are present', () => {
+    const results = generatePermissions(
+      makeCanonical({
+        permissions: { allow: ['Bash(npm run test)'], deny: ['Bash(rm -rf *)'] },
+      }),
+    );
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(FACTORY_DROID_SETTINGS_FILE);
+    const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
+    expect(parsed.commandAllowlist).toEqual(['Bash(npm run test)']);
+    expect(parsed.commandDenylist).toEqual(['Bash(rm -rf *)']);
+  });
+
+  it('emits valid JSON', () => {
+    const results = generatePermissions(
+      makeCanonical({ permissions: { allow: ['Bash(git status)'], deny: [] } }),
+    );
+    expect(() => JSON.parse(results[0].content)).not.toThrow();
   });
 });
 

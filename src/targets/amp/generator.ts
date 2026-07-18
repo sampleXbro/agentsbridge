@@ -64,11 +64,17 @@ export function generateAgents(canonical: CanonicalFiles): AmpOutput[] {
 }
 
 /**
- * MCP + permissions are the only two settings sidecars Amp actually reads.
- * Amp has NO documented `amp.hooks` (or any) settings-file hooks key
- * (ampcode.com/manual never mentions hooks) — only the plugin-based
- * `amp.on(...)` event API, which is code, not a file agentsmesh can emit.
- * Do not add a hooks branch here; hooks capability is 'none'.
+ * MCP is the only settings sidecar Amp actually reads that agentsmesh can emit.
+ *
+ * Amp has NO documented `amp.hooks` settings-file key (ampcode.com/manual never
+ * mentions hooks) — only the plugin-based `amp.on(...)` event API, which is code,
+ * not a file agentsmesh can emit. hooks capability is 'partial'.
+ *
+ * `amp.permissions` is a LEGACY key (ampcode.com/manual/appendix/legacy-permissions-rules.txt)
+ * with an array-of-rule-objects schema that is incompatible with the canonical
+ * {allow,deny,ask} string-array format. agentsmesh cannot emit a valid
+ * amp.permissions value; permissions capability is 'partial'. Use lintPermissions
+ * to surface this to users.
  */
 export function buildAmpScopedSettings(
   canonical: CanonicalFiles,
@@ -84,20 +90,6 @@ export function buildAmpScopedSettings(
       path: AMP_MCP_FILE,
       content: JSON.stringify({ 'amp.mcpServers': canonical.mcp.mcpServers }, null, 2),
     });
-  }
-  if (enabledFeatures.has('permissions') && canonical.permissions) {
-    const { allow, deny } = canonical.permissions;
-    const ask = canonical.permissions.ask ?? [];
-    if (allow.length > 0 || deny.length > 0 || ask.length > 0) {
-      const permissions: Record<string, string[]> = {};
-      if (allow.length > 0) permissions.allow = allow;
-      if (deny.length > 0) permissions.deny = deny;
-      if (ask.length > 0) permissions.ask = ask;
-      outputs.push({
-        path: AMP_MCP_FILE,
-        content: JSON.stringify({ 'amp.permissions': permissions }, null, 2),
-      });
-    }
   }
   return outputs;
 }

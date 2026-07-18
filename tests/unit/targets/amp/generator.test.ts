@@ -294,6 +294,25 @@ describe('emitScopedSettings — hooks (amp)', () => {
 });
 
 describe('emitScopedSettings — permissions (amp)', () => {
+  // amp.permissions is a LEGACY key (ampcode.com/manual). The documented schema
+  // is an ARRAY of rule objects, not the {allow,deny,ask} object the canonical
+  // Permissions type holds. The format mismatch means we cannot emit a valid
+  // amp.permissions value; permissions capability is therefore 'partial' and
+  // buildAmpScopedSettings must NOT emit amp.permissions at all. lintPermissions
+  // warns users that their canonical permissions are not projected.
+  it('never emits amp.permissions regardless of canonical permissions content', () => {
+    const result = descriptor.emitScopedSettings!(
+      makeCanonical({ permissions: { allow: ['npm run build'], deny: ['rm -rf'], ask: ['Bash'] } }),
+      'project',
+      ALL_FEATURES,
+    );
+    const permOutput = result.filter((r) => {
+      const parsed = JSON.parse(r.content) as Record<string, unknown>;
+      return parsed['amp.permissions'] !== undefined;
+    });
+    expect(permOutput).toHaveLength(0);
+  });
+
   it('returns [] when permissions is null', () => {
     const results = descriptor.emitScopedSettings!(
       makeCanonical({ permissions: null }),
@@ -315,70 +334,25 @@ describe('emitScopedSettings — permissions (amp)', () => {
       results.filter((r) => JSON.parse(r.content)['amp.permissions'] !== undefined),
     ).toHaveLength(0);
   });
-
-  it('emits .amp/settings.json with amp.permissions key', () => {
-    const result = descriptor.emitScopedSettings!(
-      makeCanonical({ permissions: { allow: ['npm run build'], deny: [], ask: [] } }),
-      'project',
-      ALL_FEATURES,
-    );
-    const settings = result.find((r) => {
-      const parsed = JSON.parse(r.content) as Record<string, unknown>;
-      return parsed['amp.permissions'] !== undefined;
-    });
-    expect(settings).toBeDefined();
-    expect(settings!.path).toBe(AMP_MCP_FILE);
-    const parsed = JSON.parse(settings!.content) as Record<string, unknown>;
-    expect(parsed['amp.permissions']).toEqual({ allow: ['npm run build'] });
-  });
-
-  it('emits .amp/settings.json with amp.permissions.deny when deny-only', () => {
-    const result = descriptor.emitScopedSettings!(
-      makeCanonical({ permissions: { allow: [], deny: ['rm -rf'], ask: [] } }),
-      'project',
-      ALL_FEATURES,
-    );
-    const settings = result.find((r) => {
-      const parsed = JSON.parse(r.content) as Record<string, unknown>;
-      return parsed['amp.permissions'] !== undefined;
-    });
-    expect(settings).toBeDefined();
-    expect(settings!.path).toBe(AMP_MCP_FILE);
-    const parsed = JSON.parse(settings!.content) as Record<string, unknown>;
-    expect(parsed['amp.permissions']).toEqual({ deny: ['rm -rf'] });
-  });
-
-  it('emits .amp/settings.json with amp.permissions.ask when ask-only', () => {
-    const result = descriptor.emitScopedSettings!(
-      makeCanonical({ permissions: { allow: [], deny: [], ask: ['Bash'] } }),
-      'project',
-      ALL_FEATURES,
-    );
-    const settings = result.find((r) => {
-      const parsed = JSON.parse(r.content) as Record<string, unknown>;
-      return parsed['amp.permissions'] !== undefined;
-    });
-    expect(settings).toBeDefined();
-    expect(settings!.path).toBe(AMP_MCP_FILE);
-    const parsed = JSON.parse(settings!.content) as Record<string, unknown>;
-    expect(parsed['amp.permissions']).toEqual({ ask: ['Bash'] });
-  });
 });
 
-describe('mergeGeneratedOutputContent — accumulates permissions, mcp (amp)', () => {
-  it('merges amp.permissions into existing amp.mcpServers without losing keys', () => {
+describe('mergeGeneratedOutputContent — accumulates mcp (amp)', () => {
+  it('merges new mcp content into existing amp.mcpServers without losing keys', () => {
     const existing = JSON.stringify({ 'amp.mcpServers': { ctx: {} } }, null, 2);
-    const permContent = JSON.stringify({ 'amp.permissions': { allow: ['Bash'] } }, null, 2);
-    const afterPerm = descriptor.mergeGeneratedOutputContent!(
+    const newMcpContent = JSON.stringify(
+      { 'amp.mcpServers': { ctx: {}, extra: { command: 'npx' } } },
+      null,
+      2,
+    );
+    const after = descriptor.mergeGeneratedOutputContent!(
       existing,
       undefined,
-      permContent,
+      newMcpContent,
       AMP_MCP_FILE,
     );
-    expect(afterPerm).not.toBeNull();
-    const parsed = JSON.parse(afterPerm!) as Record<string, unknown>;
+    expect(after).not.toBeNull();
+    const parsed = JSON.parse(after!) as Record<string, unknown>;
     expect(parsed['amp.mcpServers']).toBeDefined();
-    expect(parsed['amp.permissions']).toEqual({ allow: ['Bash'] });
   });
 
   it('does not resurrect amp.hooks even if the overlay content carries the key', () => {

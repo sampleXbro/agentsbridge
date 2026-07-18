@@ -54,12 +54,24 @@ describe('amp global layout', () => {
     expect(descriptor.globalSupport!.capabilities.commands).toBe('embedded');
   });
 
-  // Amp has no documented settings-file hook mechanism at all — only
-  // plugin-based `amp.on(...)` event handlers (ampcode.com/manual). There is
-  // no declarative surface agentsmesh can own, so hooks is 'none'.
-  it('hooks capability is none (no declarative hook surface), project + global', () => {
-    expect(descriptor.capabilities.hooks).toBe('none');
-    expect(descriptor.globalSupport!.capabilities.hooks).toBe('none');
+  it('hooks capability is partial, project + global', () => {
+    expect(descriptor.capabilities.hooks).toBe('partial');
+    expect(descriptor.globalSupport!.capabilities.hooks).toBe('partial');
+  });
+
+  it('agents capability is embedded (projected through native skills surface), project + global', () => {
+    expect(descriptor.capabilities.agents).toBe('embedded');
+    expect(descriptor.globalSupport!.capabilities.agents).toBe('embedded');
+  });
+
+  it('ignore capability is partial (no dedicated ignore file; lintIgnore warns), project + global', () => {
+    expect(descriptor.capabilities.ignore).toBe('partial');
+    expect(descriptor.globalSupport!.capabilities.ignore).toBe('partial');
+  });
+
+  it('permissions capability is partial (amp.permissions is legacy; format mismatch prevents native claim), project + global', () => {
+    expect(descriptor.capabilities.permissions).toBe('partial');
+    expect(descriptor.globalSupport!.capabilities.permissions).toBe('partial');
   });
 
   it('globalSupport has detection paths', () => {

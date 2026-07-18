@@ -25,7 +25,7 @@ import {
 import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromAmp } from './importer.js';
 import { lintRules } from './linter.js';
-import { lintIgnore, lintHooks } from './lint.js';
+import { lintIgnore, lintPermissions, lintHooks } from './lint.js';
 import { buildAmpImportPaths } from '../../core/reference/import-map-builders.js';
 import {
   AMP_TARGET,
@@ -107,16 +107,15 @@ const capabilities: TargetCapabilities = {
   // plugin. AgentsMesh projects commands as skills, so 'embedded' (routed
   // through the already-native skills surface) is the honest ceiling.
   commands: 'embedded',
-  agents: 'none',
+  agents: 'embedded',
   skills: 'native',
   mcp: 'native',
-  // Amp has no documented settings-file hook mechanism at all (no `amp.hooks`
-  // key anywhere in ampcode.com/manual). The only hook-like surface is the
-  // plugin-based `amp.on(...)` event API, which is code, not a declarative
-  // file agentsmesh can own — so there is no achievable level above 'none'.
-  hooks: 'none',
-  ignore: 'none',
-  permissions: 'native',
+  hooks: 'partial',
+  ignore: 'partial',
+  // amp.permissions is a LEGACY key (ampcode.com/manual) with an array-of-rule-objects
+  // schema that is incompatible with the canonical {allow,deny,ask} format.
+  // agentsmesh cannot emit a valid amp.permissions value; 'partial' is the ceiling.
+  permissions: 'partial',
 };
 
 function mergeAmpSettings(existing: string | null, newContent: string): string {
@@ -135,8 +134,6 @@ function mergeAmpSettings(existing: string | null, newContent: string): string {
   if (incoming === null || typeof incoming !== 'object' || Array.isArray(incoming)) return existing;
   const overlay = incoming as Record<string, unknown>;
   if (overlay['amp.mcpServers'] !== undefined) base['amp.mcpServers'] = overlay['amp.mcpServers'];
-  if (overlay['amp.permissions'] !== undefined)
-    base['amp.permissions'] = overlay['amp.permissions'];
   return JSON.stringify(base, null, 2);
 }
 
@@ -154,6 +151,7 @@ export const descriptor = {
   lintRules,
   lint: {
     ignore: lintIgnore,
+    permissions: lintPermissions,
     hooks: lintHooks,
   },
   supportsConversion: { commands: true, agents: true },

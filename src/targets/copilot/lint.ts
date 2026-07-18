@@ -30,7 +30,7 @@ export function lintPermissions(canonical: CanonicalFiles, options?: unknown): L
     createWarning(
       '.agentsmesh/permissions.yaml',
       'copilot',
-      "Copilot CLI's ~/.copilot/permissions-config.json only records saved tool/directory approvals; it has no deny rules, ask rules, default modes, URL rules, tool filtering, or repository-local shared policy, so canonical permissions are not projected as config.",
+      'Copilot permissions are embedded via hooks permissionRequest and pre-tool allow/deny/ask decisions; standalone permissions config is not generated separately.',
     ),
   ];
 }

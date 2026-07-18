@@ -65,9 +65,12 @@ describe('rovodev global layout', () => {
     expect(descriptor.globalSupport!.capabilities.mcp).toBe('native');
   });
 
-  it('globalSupport.capabilities disables unsupported features', () => {
-    expect(descriptor.globalSupport!.capabilities.agents).toBe('none');
-    expect(descriptor.globalSupport!.capabilities.ignore).toBe('none');
+  it('globalSupport.capabilities has embedded agents', () => {
+    expect(descriptor.globalSupport!.capabilities.agents).toBe('embedded');
+  });
+
+  it('globalSupport.capabilities has partial ignore', () => {
+    expect(descriptor.globalSupport!.capabilities.ignore).toBe('partial');
   });
 
   it('globalSupport.capabilities supports hooks and permissions natively', () => {

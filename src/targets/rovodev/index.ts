@@ -61,11 +61,11 @@ const capabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'embedded',
   commands: 'native',
-  agents: 'none',
+  agents: 'embedded',
   skills: 'native',
-  mcp: 'none',
+  mcp: 'partial',
   hooks: 'none',
-  ignore: 'none',
+  ignore: 'partial',
   permissions: 'none',
 };
 
@@ -73,11 +73,11 @@ const globalCapabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'embedded',
   commands: 'native',
-  agents: 'none',
+  agents: 'embedded',
   skills: 'native',
   mcp: 'native',
   hooks: 'native',
-  ignore: 'none',
+  ignore: 'partial',
   permissions: 'native',
 };
 

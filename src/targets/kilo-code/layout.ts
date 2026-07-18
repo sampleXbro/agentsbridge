@@ -100,7 +100,7 @@ export const capabilities: TargetCapabilities = {
   agents: 'native',
   skills: 'native',
   mcp: 'native',
-  hooks: 'none',
+  hooks: 'partial',
   ignore: 'native',
   permissions: 'native',
 };
@@ -112,11 +112,7 @@ export const globalCapabilities: TargetCapabilities = {
   agents: 'native',
   skills: 'native',
   mcp: 'native',
-  hooks: 'none',
-  // No documented global `.kilocodeignore` equivalent — downgraded from
-  // 'native' (kilo.ai/docs/customize/context/kilocodeignore describes the
-  // file as workspace-root-only, auto-migrated into project-scope
-  // `permission` deny-rules; there is no global ignore mechanism).
+  hooks: 'partial',
   ignore: 'none',
   permissions: 'native',
 };

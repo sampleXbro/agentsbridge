@@ -61,7 +61,10 @@ describe('kilo-code global layout — paths', () => {
   });
 
   it('declares all global managed-output files (no standalone mcp.json or ignore file)', () => {
-    expect(layout.managedOutputs.files).toEqual([KILO_CODE_GLOBAL_AGENTS_MD, KILO_GLOBAL_CONFIG_FILE]);
+    expect(layout.managedOutputs.files).toEqual([
+      KILO_CODE_GLOBAL_AGENTS_MD,
+      KILO_GLOBAL_CONFIG_FILE,
+    ]);
   });
 });
 
@@ -74,7 +77,9 @@ describe('kilo-code global layout — rewriteGeneratedPath', () => {
   });
 
   it('rewrites .kilo/rules/ paths to .config/kilo/rules/', () => {
-    expect(rewrite('.kilo/rules/typescript.md')).toBe(`${KILO_CODE_GLOBAL_RULES_DIR}/typescript.md`);
+    expect(rewrite('.kilo/rules/typescript.md')).toBe(
+      `${KILO_CODE_GLOBAL_RULES_DIR}/typescript.md`,
+    );
   });
 
   it('rewrites .kilo/commands/ paths to .config/kilo/commands/', () => {
@@ -142,7 +147,7 @@ describe('kilo-code global layout — mirrorGlobalPath', () => {
 });
 
 describe('kilo-code global layout — capabilities', () => {
-  it('downgrades ignore to none at global scope; everything else stays native (hooks: none)', () => {
+  it('downgrades ignore to none and hooks to partial at global scope', () => {
     expect(getTargetCapabilities('kilo-code', 'global')).toEqual({
       rules: { level: 'native' },
       additionalRules: { level: 'native' },
@@ -150,7 +155,7 @@ describe('kilo-code global layout — capabilities', () => {
       agents: { level: 'native' },
       skills: { level: 'native' },
       mcp: { level: 'native' },
-      hooks: { level: 'none' },
+      hooks: { level: 'partial' },
       ignore: { level: 'none' },
       permissions: { level: 'native' },
     });

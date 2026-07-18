@@ -33,7 +33,9 @@
  * equivalent (kilo.ai/docs/customize/context/kilocodeignore describes it as
  * workspace-root-only), so ignore is 'none' at global scope.
  *
- * Hooks are not supported by kilo (no user-facing lifecycle hook system).
+ * Hooks are partially supported via the auto-loaded plugin directory
+ * (kilo.ai/docs/automate/extending/plugins, `.kilo/plugin/*.{ts,js}`);
+ * agentsmesh does not generate plugin files, so a lint warning surfaces the gap.
  * Permissions are projected into `kilo.jsonc` via the `permission` key.
  */
 

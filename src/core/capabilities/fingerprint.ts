@@ -6,6 +6,7 @@ export function parseByFormat(raw: string, format: LedgerFormat): unknown {
   if (format === 'json') return JSON.parse(raw);
   if (format === 'toml') return parseToml(raw);
   if (format === 'yaml') return parseYaml(raw);
+  if (format === 'text') return raw;
   // md-frontmatter: parse the leading `---` block, else empty object.
   if (raw.startsWith('---')) {
     const end = raw.indexOf('\n---', 3);
@@ -68,6 +69,8 @@ export function checkConformance(cell: LedgerCell, actualExt: string, raw: strin
   if (actualExt !== cell.ext) {
     return [`extension mismatch: expected "${cell.ext}", got "${actualExt}"`];
   }
+  // text format: path/ext-only conformance — no structural parsing.
+  if (cell.format === 'text') return [];
   let parsed: unknown;
   try {
     parsed = parseByFormat(raw, cell.format);
@@ -79,7 +82,8 @@ export function checkConformance(cell: LedgerCell, actualExt: string, raw: strin
     if (!isRecord(parsed) || !(key in parsed)) issues.push(`missing top-level key "${key}"`);
   }
   for (const field of cell.fingerprint.requiredFrontmatter) {
-    if (!isRecord(parsed) || !(field in parsed)) issues.push(`missing frontmatter field "${field}"`);
+    if (!isRecord(parsed) || !(field in parsed))
+      issues.push(`missing frontmatter field "${field}"`);
   }
   for (const check of cell.fingerprint.keyChecks) {
     issues.push(...checkKey(parsed, check));

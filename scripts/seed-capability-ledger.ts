@@ -49,7 +49,10 @@ function formatForExt(ext: string): LedgerFormat | null {
   if (ext === '.json') return 'json';
   if (ext === '.toml') return 'toml';
   if (ext === '.yaml' || ext === '.yml') return 'yaml';
-  if (ext === '.md' || ext === '.mdc') return 'md-frontmatter';
+  if (ext === '.md' || ext === '.mdc' || ext === '.mdx') return 'md-frontmatter';
+  if (ext === '.sh' || ext === '.bash' || ext === '.py' || ext === '.star' || ext === '.rules') {
+    return 'text';
+  }
   return null;
 }
 

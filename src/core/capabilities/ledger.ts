@@ -4,7 +4,13 @@ import { fileURLToPath } from 'node:url';
 import type { CapabilityFeatureKey } from '../../targets/catalog/capabilities.js';
 import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
 import type { SupportLevel } from '../result-types.js';
-import type { CapabilityLedger, Fingerprint, LedgerCell, LedgerFormat, LedgerVerdict } from './ledger-types.js';
+import type {
+  CapabilityLedger,
+  Fingerprint,
+  LedgerCell,
+  LedgerFormat,
+  LedgerVerdict,
+} from './ledger-types.js';
 
 const DEFAULT_LEDGER_PATH = join(
   dirname(fileURLToPath(import.meta.url)),
@@ -12,7 +18,7 @@ const DEFAULT_LEDGER_PATH = join(
 );
 
 const LEVELS: readonly SupportLevel[] = ['native', 'embedded', 'partial', 'none'];
-const FORMATS: readonly LedgerFormat[] = ['json', 'yaml', 'toml', 'md-frontmatter'];
+const FORMATS: readonly LedgerFormat[] = ['json', 'yaml', 'toml', 'md-frontmatter', 'text'];
 const VERDICTS: readonly LedgerVerdict[] = ['confirmed', 'rejected', 'unverified'];
 
 function isRecord(value: unknown): value is Record<string, unknown> {

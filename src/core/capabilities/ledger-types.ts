@@ -2,7 +2,7 @@ import type { SupportLevel } from '../result-types.js';
 import type { CapabilityFeatureKey } from '../../targets/catalog/capabilities.js';
 import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
 
-export type LedgerFormat = 'json' | 'yaml' | 'toml' | 'md-frontmatter';
+export type LedgerFormat = 'json' | 'yaml' | 'toml' | 'md-frontmatter' | 'text';
 export type LedgerVerdict = 'confirmed' | 'rejected' | 'unverified';
 
 export interface KeyCheck {

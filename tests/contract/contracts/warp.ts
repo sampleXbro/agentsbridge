@@ -2,7 +2,7 @@ import type { TargetPathContract } from './types.js';
 
 export const warpContract: TargetPathContract = {
   generated: [
-    '.mcp.json',
+    '.warp/.mcp.json',
     '.warp/skills/am-agent-code-reviewer/SKILL.md',
     '.warp/skills/am-agent-researcher/SKILL.md',
     '.warp/skills/am-command-review/SKILL.md',

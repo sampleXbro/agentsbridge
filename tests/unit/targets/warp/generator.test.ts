@@ -274,20 +274,22 @@ describe('generateMcp (warp)', () => {
       },
     });
 
-  it('generates .mcp.json with standard format (project scope)', () => {
+  it('generates .warp/.mcp.json with standard format (project scope)', () => {
     const results = generateMcp(withServer(), projectCtx());
 
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(WARP_MCP_FILE);
+    expect(results[0].path).toBe('.warp/.mcp.json');
     const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
     expect(parsed).toHaveProperty('mcpServers');
     expect(parsed['mcpServers']).toHaveProperty('filesystem');
   });
 
-  it('generates .mcp.json when no ctx is provided (defaults to project)', () => {
+  it('generates .warp/.mcp.json when no ctx is provided (defaults to project)', () => {
     const results = generateMcp(withServer());
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(WARP_MCP_FILE);
+    expect(results[0].path).toBe('.warp/.mcp.json');
   });
 
   it('generates ~/.warp/.mcp.json with standard format (global scope)', () => {

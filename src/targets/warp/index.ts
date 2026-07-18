@@ -2,12 +2,12 @@
  * Warp target descriptor.
  *
  * Generation emits:
- *   - `AGENTS.md`        — root rule + embedded additional rules
- *   - `.warp/skills/`    — skill bundles
- *   - `.mcp.json`        — MCP servers (standard format)
+ *   - `AGENTS.md`           — root rule + embedded additional rules
+ *   - `.warp/skills/`       — skill bundles
+ *   - `.warp/.mcp.json`     — MCP servers (standard format, project scope)
  *
  * Import reads `WARP.md` (legacy, higher priority), `AGENTS.md`,
- * `.warp/skills/`, and `.mcp.json`.
+ * `.warp/skills/`, and `.warp/.mcp.json`.
  *
  * Global mode supports skills and MCP — Warp reads a global MCP config
  * at `~/.warp/.mcp.json` (standard `mcpServers` JSON). Warp's global
@@ -25,6 +25,8 @@ import {
   generateSkills,
   generateMcp,
   generatePermissions,
+  generateHooks,
+  generateIgnore,
 } from './generator.js';
 import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromWarp } from './importer.js';
@@ -51,6 +53,8 @@ export const target: TargetGenerators = {
   generateSkills,
   generateMcp,
   generatePermissions,
+  generateHooks,
+  generateIgnore,
   importFrom: importFromWarp,
 };
 
@@ -111,24 +115,24 @@ const globalLayout: TargetLayout = {
 const capabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'embedded',
-  commands: 'none',
+  commands: 'embedded',
   agents: 'none',
   skills: 'native',
   mcp: 'native',
-  hooks: 'none',
-  ignore: 'none',
+  hooks: 'partial',
+  ignore: 'partial',
   permissions: 'partial',
 };
 
 const globalCapabilities: TargetCapabilities = {
   rules: 'none',
   additionalRules: 'none',
-  commands: 'none',
+  commands: 'embedded',
   agents: 'none',
   skills: 'native',
   mcp: 'native',
-  hooks: 'none',
-  ignore: 'none',
+  hooks: 'partial',
+  ignore: 'partial',
   permissions: 'partial',
 };
 
@@ -142,7 +146,8 @@ export const descriptor = {
   },
   generators: target,
   capabilities,
-  emptyImportMessage: 'No Warp config found (WARP.md, AGENTS.md, .warp/skills, or .mcp.json).',
+  emptyImportMessage:
+    'No Warp config found (WARP.md, AGENTS.md, .warp/skills, or .warp/.mcp.json).',
   lintRules,
   lint: {
     hooks: lintHooks,

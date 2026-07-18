@@ -116,11 +116,12 @@ export async function importFromContinue(
   projectRoot: string,
   options: { scope?: TargetLayoutScope } = {},
 ): Promise<ImportResult[]> {
+  const scope = options.scope ?? 'project';
   const results: ImportResult[] = [];
-  const normalize = await createImportReferenceNormalizer(CONTINUE_TARGET, projectRoot);
-  results.push(...(await runDescriptorImport(descriptor, projectRoot, 'project', { normalize })));
+  const normalize = await createImportReferenceNormalizer(CONTINUE_TARGET, projectRoot, scope);
+  results.push(...(await runDescriptorImport(descriptor, projectRoot, scope, { normalize })));
   await importEmbeddedSkills(projectRoot, CONTINUE_SKILLS_DIR, CONTINUE_TARGET, results, normalize);
   await importMcp(projectRoot, results);
-  if (options.scope === 'global') await importPermissions(projectRoot, results);
+  if (scope === 'global') await importPermissions(projectRoot, results);
   return results;
 }

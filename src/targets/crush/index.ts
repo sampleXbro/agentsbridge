@@ -118,25 +118,25 @@ const globalLayout: TargetLayout = {
 const capabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'embedded',
-  commands: 'none',
+  commands: 'embedded',
   agents: 'none',
   skills: 'native',
   mcp: 'native',
   hooks: 'native',
   ignore: 'native',
-  permissions: 'partial',
+  permissions: 'native',
 };
 
 const globalCapabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'embedded',
-  commands: 'none',
+  commands: 'embedded',
   agents: 'none',
   skills: 'native',
   mcp: 'native',
   hooks: 'native',
   ignore: 'none',
-  permissions: 'none',
+  permissions: 'native',
 };
 
 export const descriptor = {

@@ -95,8 +95,12 @@ export function generatePermissions(canonical: CanonicalFiles): CrushOutput[] {
   if (allow.length === 0 && deny.length === 0 && ask.length === 0) return [];
   const permissions: Record<string, unknown> = {};
   if (allow.length > 0) permissions['allowed_tools'] = allow;
-  if (deny.length > 0) permissions['denied_tools'] = deny;
-  const crushConfig = buildCrushConfigJson({ permissions });
+  const options: Record<string, unknown> = {};
+  if (deny.length > 0) options['disabled_tools'] = deny;
+  const crushConfig = buildCrushConfigJson({
+    ...(Object.keys(permissions).length > 0 ? { permissions } : {}),
+    ...(Object.keys(options).length > 0 ? { options } : {}),
+  });
   return [{ path: CRUSH_CONFIG_FILE, content: JSON.stringify(crushConfig, null, 2) }];
 }
 
@@ -109,9 +113,7 @@ export function generateIgnore(canonical: CanonicalFiles): CrushOutput[] {
   return [{ path: CRUSH_IGNORE, content }];
 }
 
-function buildCrushHooksFromCanonical(
-  canonical: CanonicalFiles,
-): Record<string, unknown> {
+function buildCrushHooksFromCanonical(canonical: CanonicalFiles): Record<string, unknown> {
   if (!canonical.hooks) return {};
   const result: Record<string, unknown[]> = {};
   for (const [event, entries] of Object.entries(canonical.hooks)) {

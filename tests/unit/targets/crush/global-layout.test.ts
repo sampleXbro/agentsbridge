@@ -74,12 +74,13 @@ describe('crush descriptor global layout', () => {
   it('global capabilities have correct values', () => {
     const caps = descriptor.globalSupport!.capabilities;
     expect(caps.rules).toBe('native');
+    expect(caps.additionalRules).toBe('embedded');
     expect(caps.skills).toBe('native');
     expect(caps.mcp).toBe('native');
     expect(caps.hooks).toBe('native');
     expect(caps.ignore).toBe('none');
-    expect(caps.permissions).toBe('none');
-    expect(caps.commands).toBe('none');
+    expect(caps.permissions).toBe('native');
+    expect(caps.commands).toBe('embedded');
     expect(caps.agents).toBe('none');
   });
 });

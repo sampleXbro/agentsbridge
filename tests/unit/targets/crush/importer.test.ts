@@ -159,22 +159,94 @@ describe('importFromCrush', () => {
     expect(hooksResult).toBeUndefined();
   });
 
-  it('does not crash when crush.json contains a permissions key', async () => {
+  it('imports permissions.allowed_tools from crush.json into canonical permissions.yaml', async () => {
     await writeJson(join(projectRoot, 'crush.json'), {
       permissions: {
-        allow: ['Bash'],
-        deny: ['rm -rf'],
+        allowed_tools: ['Bash', 'Read'],
       },
     });
 
     const results = await importFromCrush(projectRoot);
 
-    // permissions in crush.json are not currently imported to canonical
-    // (allowed_tools/denied_tools format differs from canonical allow/deny);
-    // verify the importer handles the key gracefully without errors.
-    expect(Array.isArray(results)).toBe(true);
+    const permResult = results.find((r) => r.feature === 'permissions');
+    expect(permResult).toBeDefined();
+    expect(permResult!.toPath).toBe('.agentsmesh/permissions.yaml');
+    expect(toPosixPath(permResult!.fromPath)).toContain('crush.json');
+
+    const { readFile } = await import('node:fs/promises');
+    const content = await readFile(join(projectRoot, '.agentsmesh/permissions.yaml'), 'utf-8');
+    expect(content).toContain('allow:');
+    expect(content).toContain('Bash');
+    expect(content).toContain('Read');
+  });
+
+  it('imports options.disabled_tools from crush.json into canonical permissions.yaml deny list', async () => {
+    await writeJson(join(projectRoot, 'crush.json'), {
+      options: {
+        disabled_tools: ['bash', 'write'],
+      },
+    });
+
+    const results = await importFromCrush(projectRoot);
+
+    const permResult = results.find((r) => r.feature === 'permissions');
+    expect(permResult).toBeDefined();
+    expect(permResult!.toPath).toBe('.agentsmesh/permissions.yaml');
+
+    const { readFile } = await import('node:fs/promises');
+    const content = await readFile(join(projectRoot, '.agentsmesh/permissions.yaml'), 'utf-8');
+    expect(content).toContain('deny:');
+    expect(content).toContain('bash');
+    expect(content).toContain('write');
+  });
+
+  it('imports both allowed_tools and disabled_tools in a single permissions round-trip', async () => {
+    await writeJson(join(projectRoot, 'crush.json'), {
+      permissions: {
+        allowed_tools: ['View', 'Grep'],
+      },
+      options: {
+        disabled_tools: ['rm', 'curl'],
+      },
+    });
+
+    const results = await importFromCrush(projectRoot);
+
+    const permResults = results.filter((r) => r.feature === 'permissions');
+    expect(permResults).toHaveLength(1);
+    expect(permResults[0].toPath).toBe('.agentsmesh/permissions.yaml');
+
+    const { readFile } = await import('node:fs/promises');
+    const content = await readFile(join(projectRoot, '.agentsmesh/permissions.yaml'), 'utf-8');
+    expect(content).toContain('allow:');
+    expect(content).toContain('View');
+    expect(content).toContain('deny:');
+    expect(content).toContain('rm');
+  });
+
+  it('skips permissions import when neither allowed_tools nor disabled_tools present', async () => {
+    await writeJson(join(projectRoot, 'crush.json'), {
+      permissions: {},
+      options: {},
+    });
+
+    const results = await importFromCrush(projectRoot);
     const permResult = results.find((r) => r.feature === 'permissions');
     expect(permResult).toBeUndefined();
+  });
+
+  it('imports permissions from global ~/.config/crush/crush.json when scope=global', async () => {
+    await mkdir(join(projectRoot, '.config', 'crush'), { recursive: true });
+    await writeJson(join(projectRoot, '.config', 'crush', 'crush.json'), {
+      permissions: { allowed_tools: ['GlobalTool'] },
+    });
+
+    const results = await importFromCrush(projectRoot, { scope: 'global' });
+
+    const permResult = results.find((r) => r.feature === 'permissions');
+    expect(permResult).toBeDefined();
+    expect(permResult!.toPath).toBe('.agentsmesh/permissions.yaml');
+    expect(toPosixPath(permResult!.fromPath)).toContain('.config/crush/crush.json');
   });
 
   it('skips MCP servers with neither command nor url', async () => {

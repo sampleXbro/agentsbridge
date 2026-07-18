@@ -1,4 +1,5 @@
-import { basename, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
+import { stringify as stringifyYaml } from 'yaml';
 import type { ImportResult } from '../../core/types.js';
 import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
@@ -17,6 +18,9 @@ import {
   TRAE_GLOBAL_ROOT_RULE,
   TRAE_GLOBAL_SKILLS_DIR,
   TRAE_CANONICAL_RULES_DIR,
+  TRAE_HOOKS_FILE,
+  TRAE_GLOBAL_HOOKS_FILE,
+  TRAE_CANONICAL_HOOKS,
 } from './constants.js';
 import { descriptor } from './index.js';
 
@@ -95,6 +99,67 @@ async function importNonRootRules(
   );
 }
 
+/**
+ * Import Trae hooks.json (project: .trae/hooks.json, global: ~/.trae-cn/hooks.json)
+ * into canonical hooks.yaml.
+ *
+ * Trae flat format: { "version": 1, "hooks": { "<Event>": [{ "matcher", "type", "command", "timeout"? }] } }
+ */
+async function importHooks(
+  projectRoot: string,
+  results: ImportResult[],
+  scope: TargetLayoutScope,
+): Promise<void> {
+  const hooksFileRel = scope === 'global' ? TRAE_GLOBAL_HOOKS_FILE : TRAE_HOOKS_FILE;
+  const srcPath = join(projectRoot, hooksFileRel);
+  const content = await readFileSafe(srcPath);
+  if (content === null) return;
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    return;
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return;
+
+  const rawHooks = (parsed as Record<string, unknown>).hooks;
+  if (!rawHooks || typeof rawHooks !== 'object' || Array.isArray(rawHooks)) return;
+
+  const hooks: Record<
+    string,
+    Array<{ matcher: string; type: string; command: string; timeout?: number }>
+  > = {};
+  for (const [event, entries] of Object.entries(rawHooks as Record<string, unknown>)) {
+    if (!Array.isArray(entries)) continue;
+    for (const raw of entries) {
+      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) continue;
+      const entry = raw as Record<string, unknown>;
+      if (entry.type !== 'command' || typeof entry.command !== 'string') continue;
+      const matcher = typeof entry.matcher === 'string' ? entry.matcher : '*';
+      const imported: { matcher: string; type: string; command: string; timeout?: number } = {
+        matcher,
+        type: 'command',
+        command: entry.command,
+      };
+      if (typeof entry.timeout === 'number') imported.timeout = entry.timeout;
+      (hooks[event] ??= []).push(imported);
+    }
+  }
+
+  if (Object.keys(hooks).length === 0) return;
+
+  const destPath = join(projectRoot, TRAE_CANONICAL_HOOKS);
+  await mkdirp(dirname(destPath));
+  await writeFileAtomic(destPath, stringifyYaml(hooks));
+  results.push({
+    fromTool: TRAE_TARGET,
+    fromPath: srcPath,
+    toPath: TRAE_CANONICAL_HOOKS,
+    feature: 'hooks',
+  });
+}
+
 export async function importFromTrae(
   projectRoot: string,
   options: { scope?: TargetLayoutScope } = {},
@@ -113,6 +178,7 @@ export async function importFromTrae(
     results,
     normalize,
   );
+  await importHooks(projectRoot, results, scope);
 
   return results;
 }

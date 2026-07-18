@@ -2,14 +2,17 @@ import { basename } from 'node:path';
 import type { CanonicalFiles } from '../../core/types.js';
 import { generateEmbeddedSkills } from '../import/embedded-skill.js';
 import { serializeFrontmatter } from '../../utils/text/markdown.js';
+import { hasHookCommand } from '../../core/hook-command.js';
 import {
   TRAE_TARGET,
   TRAE_PROJECT_RULES,
   TRAE_RULES_DIR,
+  TRAE_AGENTS_DIR,
   TRAE_COMMANDS_DIR,
   TRAE_SKILLS_DIR,
   TRAE_MCP_FILE,
   TRAE_IGNORE,
+  TRAE_HOOKS_FILE,
 } from './constants.js';
 
 export interface TraeOutput {
@@ -49,6 +52,21 @@ export function generateCommands(canonical: CanonicalFiles): TraeOutput[] {
   });
 }
 
+export function generateAgents(canonical: CanonicalFiles): TraeOutput[] {
+  return canonical.agents.map((agent) => {
+    const frontmatter: Record<string, unknown> = {
+      name: agent.name,
+      description: agent.description,
+    };
+    if (agent.tools.length > 0) frontmatter.tools = agent.tools;
+    if (agent.model) frontmatter.model = agent.model;
+    return {
+      path: `${TRAE_AGENTS_DIR}/${agent.name}.md`,
+      content: serializeFrontmatter(frontmatter, agent.body.trim() || ''),
+    };
+  });
+}
+
 export function generateSkills(canonical: CanonicalFiles): TraeOutput[] {
   return generateEmbeddedSkills(canonical, TRAE_SKILLS_DIR);
 }
@@ -66,4 +84,34 @@ export function generateMcp(canonical: CanonicalFiles): TraeOutput[] {
 export function generateIgnore(canonical: CanonicalFiles): TraeOutput[] {
   if (canonical.ignore.length === 0) return [];
   return [{ path: TRAE_IGNORE, content: canonical.ignore.join('\n') }];
+}
+
+/**
+ * Generate .trae/hooks.json from canonical hooks.
+ *
+ * Trae uses a flat JSON format (docs.trae.ai/ide/hooks):
+ *   { "version": 1, "hooks": { "<Event>": [{ "matcher", "type", "command", "timeout"? }] } }
+ *
+ * Only command-type hooks are emitted. Prompt/agent hooks have no on-disk
+ * equivalent and are dropped so the round-trip stays symmetric.
+ */
+export function generateHooks(canonical: CanonicalFiles): TraeOutput[] {
+  if (!canonical.hooks) return [];
+  const hooks: Record<string, unknown[]> = {};
+  for (const [event, entries] of Object.entries(canonical.hooks)) {
+    if (!Array.isArray(entries)) continue;
+    const mapped = entries.flatMap((entry) => {
+      if (!hasHookCommand(entry) || entry.type === 'prompt') return [];
+      const hook: Record<string, unknown> = {
+        matcher: entry.matcher,
+        type: 'command',
+        command: entry.command,
+      };
+      if (entry.timeout !== undefined) hook.timeout = entry.timeout;
+      return [hook];
+    });
+    if (mapped.length > 0) hooks[event] = mapped;
+  }
+  if (Object.keys(hooks).length === 0) return [];
+  return [{ path: TRAE_HOOKS_FILE, content: JSON.stringify({ version: 1, hooks }, null, 2) }];
 }

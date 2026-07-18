@@ -8,13 +8,19 @@ import type { CanonicalFiles } from '../../../../src/core/types.js';
 import {
   TRAE_PROJECT_RULES,
   TRAE_RULES_DIR,
+  TRAE_AGENTS_DIR,
+  TRAE_COMMANDS_DIR,
   TRAE_SKILLS_DIR,
   TRAE_MCP_FILE,
   TRAE_IGNORE,
+  TRAE_HOOKS_FILE,
   TRAE_GLOBAL_ROOT_RULE,
   TRAE_GLOBAL_RULES_DIR,
+  TRAE_GLOBAL_AGENTS_DIR,
+  TRAE_GLOBAL_COMMANDS_DIR,
   TRAE_GLOBAL_SKILLS_DIR,
   TRAE_GLOBAL_MCP_FILE,
+  TRAE_GLOBAL_HOOKS_FILE,
 } from '../../../../src/targets/trae/constants.js';
 
 describe('trae descriptor global layout', () => {
@@ -52,10 +58,27 @@ describe('trae descriptor global layout', () => {
     expect(rewrite(TRAE_IGNORE)).toBeNull();
   });
 
-  it('globalSupport.capabilities has no agents, hooks, or permissions', () => {
+  it('rewriteGeneratedPath rewrites .trae/agents/<name>.md to .trae-cn/agents/<name>.md', () => {
+    const rewrite = descriptor.globalSupport!.layout.rewriteGeneratedPath!;
+    expect(rewrite(`${TRAE_AGENTS_DIR}/code-reviewer.md`)).toBe(
+      `${TRAE_GLOBAL_AGENTS_DIR}/code-reviewer.md`,
+    );
+  });
+
+  it('rewriteGeneratedPath rewrites .trae/commands/<name>.md to .trae/commands/<name>.md (global)', () => {
+    const rewrite = descriptor.globalSupport!.layout.rewriteGeneratedPath!;
+    expect(rewrite(`${TRAE_COMMANDS_DIR}/review.md`)).toBe(`${TRAE_GLOBAL_COMMANDS_DIR}/review.md`);
+  });
+
+  it('rewriteGeneratedPath rewrites .trae/hooks.json to .trae-cn/hooks.json', () => {
+    const rewrite = descriptor.globalSupport!.layout.rewriteGeneratedPath!;
+    expect(rewrite(TRAE_HOOKS_FILE)).toBe(TRAE_GLOBAL_HOOKS_FILE);
+  });
+
+  it('globalSupport.capabilities has native agents, native hooks, no permissions', () => {
     const caps = descriptor.globalSupport!.capabilities;
-    expect(caps.agents).toBe('none');
-    expect(caps.hooks).toBe('none');
+    expect(caps.agents).toBe('native');
+    expect(caps.hooks).toBe('native');
     expect(caps.permissions).toBe('none');
   });
 

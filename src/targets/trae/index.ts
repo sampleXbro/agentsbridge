@@ -2,42 +2,48 @@ import type { TargetCapabilities, TargetGenerators } from '../catalog/target.int
 import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
 import {
   generateRules,
+  generateAgents,
   generateSkills,
   generateMcp,
   generateIgnore,
   generateCommands,
+  generateHooks,
 } from './generator.js';
 import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromTrae } from './importer.js';
 import { lintRules } from './linter.js';
 import { buildTraeImportPaths } from '../../core/reference/import-map-builders.js';
+import { traeImporterSpec } from './importer-spec.js';
 import {
   TRAE_TARGET,
   TRAE_PROJECT_RULES,
   TRAE_RULES_DIR,
+  TRAE_AGENTS_DIR,
   TRAE_COMMANDS_DIR,
+  TRAE_GLOBAL_AGENTS_DIR,
   TRAE_GLOBAL_COMMANDS_DIR,
   TRAE_SKILLS_DIR,
   TRAE_MCP_FILE,
   TRAE_IGNORE,
+  TRAE_HOOKS_FILE,
+  TRAE_GLOBAL_HOOKS_FILE,
   TRAE_GLOBAL_RULES_DIR,
   TRAE_GLOBAL_ROOT_RULE,
   TRAE_GLOBAL_SKILLS_DIR,
   TRAE_GLOBAL_MCP_FILE,
   TRAE_GLOBAL_AGENTS_SKILLS_DIR,
-  TRAE_CANONICAL_COMMANDS_DIR,
-  TRAE_CANONICAL_MCP,
-  TRAE_CANONICAL_IGNORE,
 } from './constants.js';
 
 export const target: TargetGenerators = {
   name: TRAE_TARGET,
   primaryRootInstructionPath: TRAE_PROJECT_RULES,
   generateRules,
+  generateAgents,
   generateCommands,
   generateSkills,
   generateMcp,
   generateIgnore,
+  generateHooks,
   importFrom: importFromTrae,
 };
 
@@ -45,8 +51,8 @@ const project: TargetLayout = {
   rootInstructionPath: TRAE_PROJECT_RULES,
   skillDir: TRAE_SKILLS_DIR,
   managedOutputs: {
-    dirs: [TRAE_RULES_DIR, TRAE_COMMANDS_DIR, TRAE_SKILLS_DIR],
-    files: [TRAE_MCP_FILE, TRAE_IGNORE],
+    dirs: [TRAE_RULES_DIR, TRAE_AGENTS_DIR, TRAE_COMMANDS_DIR, TRAE_SKILLS_DIR],
+    files: [TRAE_MCP_FILE, TRAE_IGNORE, TRAE_HOOKS_FILE],
   },
   paths: {
     rulePath(slug, _rule) {
@@ -55,9 +61,8 @@ const project: TargetLayout = {
     commandPath(name, _config) {
       return `${TRAE_COMMANDS_DIR}/${name}.md`;
     },
-    agentPath(_name, _config) {
-      // Trae agents are UI-driven; no file-based config format
-      return null;
+    agentPath(name, _config) {
+      return `${TRAE_AGENTS_DIR}/${name}.md`;
     },
   },
 };
@@ -68,11 +73,12 @@ const globalLayout: TargetLayout = {
   managedOutputs: {
     dirs: [
       TRAE_GLOBAL_RULES_DIR,
+      TRAE_GLOBAL_AGENTS_DIR,
       TRAE_GLOBAL_COMMANDS_DIR,
       TRAE_GLOBAL_SKILLS_DIR,
       TRAE_GLOBAL_AGENTS_SKILLS_DIR,
     ],
-    files: [TRAE_GLOBAL_ROOT_RULE, TRAE_GLOBAL_MCP_FILE],
+    files: [TRAE_GLOBAL_ROOT_RULE, TRAE_GLOBAL_MCP_FILE, TRAE_GLOBAL_HOOKS_FILE],
   },
   rewriteGeneratedPath(path) {
     // Transform .trae/rules/project_rules.md → .trae/user_rules/rules.md
@@ -91,7 +97,16 @@ const globalLayout: TargetLayout = {
     if (path === TRAE_MCP_FILE) {
       return TRAE_GLOBAL_MCP_FILE;
     }
-    // Suppress project ignore in global mode
+    if (path.startsWith(`${TRAE_AGENTS_DIR}/`)) {
+      return path.replace(`${TRAE_AGENTS_DIR}/`, `${TRAE_GLOBAL_AGENTS_DIR}/`);
+    }
+    if (path.startsWith(`${TRAE_COMMANDS_DIR}/`)) {
+      return path.replace(`${TRAE_COMMANDS_DIR}/`, `${TRAE_GLOBAL_COMMANDS_DIR}/`);
+    }
+    // Transform .trae/hooks.json → .trae-cn/hooks.json (global config dir)
+    if (path === TRAE_HOOKS_FILE) {
+      return TRAE_GLOBAL_HOOKS_FILE;
+    }
     if (path === TRAE_IGNORE) {
       return null;
     }
@@ -108,9 +123,8 @@ const globalLayout: TargetLayout = {
     commandPath(name, _config) {
       return `${TRAE_GLOBAL_COMMANDS_DIR}/${name}.md`;
     },
-    agentPath(_name, _config) {
-      // Trae agents are UI-driven; no file-based config format
-      return null;
+    agentPath(name, _config) {
+      return `${TRAE_GLOBAL_AGENTS_DIR}/${name}.md`;
     },
   },
 };
@@ -119,10 +133,10 @@ const globalCapabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'native',
   commands: 'native',
-  agents: 'none',
+  agents: 'native',
   skills: 'native',
   mcp: 'native',
-  hooks: 'none',
+  hooks: 'native',
   ignore: 'none',
   permissions: 'none',
 };
@@ -140,10 +154,10 @@ export const descriptor = {
     rules: 'native',
     additionalRules: 'native',
     commands: 'native',
-    agents: 'none',
+    agents: 'native',
     skills: 'native',
     mcp: 'native',
-    hooks: 'none',
+    hooks: 'native',
     ignore: 'native',
     permissions: 'none',
   },
@@ -161,33 +175,7 @@ export const descriptor = {
     ],
     layout: globalLayout,
   },
-  importer: {
-    commands: {
-      feature: 'commands',
-      mode: 'directory',
-      source: {
-        project: [TRAE_COMMANDS_DIR],
-        global: [TRAE_GLOBAL_COMMANDS_DIR],
-      },
-      canonicalDir: TRAE_CANONICAL_COMMANDS_DIR,
-      extensions: ['.md'],
-      preset: 'command',
-    },
-    mcp: {
-      feature: 'mcp',
-      mode: 'mcpJson',
-      source: { project: [TRAE_MCP_FILE], global: [TRAE_GLOBAL_MCP_FILE] },
-      canonicalDir: '.agentsmesh',
-      canonicalFilename: TRAE_CANONICAL_MCP,
-    },
-    ignore: {
-      feature: 'ignore',
-      mode: 'flatFile',
-      source: { project: [TRAE_IGNORE] },
-      canonicalDir: '.agentsmesh',
-      canonicalFilename: TRAE_CANONICAL_IGNORE,
-    },
-  },
+  importer: traeImporterSpec,
   buildImportPaths: buildTraeImportPaths,
   detectionPaths: [TRAE_RULES_DIR, TRAE_MCP_FILE, TRAE_PROJECT_RULES],
 } satisfies TargetDescriptor;

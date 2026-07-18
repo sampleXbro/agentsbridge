@@ -3,18 +3,22 @@ import type { CanonicalFiles } from '../../../../src/core/types.js';
 import { parseFrontmatter } from '../../../../src/utils/text/markdown.js';
 import {
   generateRules,
+  generateAgents,
   generateSkills,
   generateMcp,
   generateIgnore,
   generateCommands,
+  generateHooks,
 } from '../../../../src/targets/trae/generator.js';
 import {
   TRAE_PROJECT_RULES,
   TRAE_RULES_DIR,
+  TRAE_AGENTS_DIR,
   TRAE_SKILLS_DIR,
   TRAE_MCP_FILE,
   TRAE_IGNORE,
   TRAE_COMMANDS_DIR,
+  TRAE_HOOKS_FILE,
 } from '../../../../src/targets/trae/constants.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
@@ -322,5 +326,233 @@ describe('generateCommands (trae)', () => {
 
   it('returns empty array when no commands', () => {
     expect(generateCommands(makeCanonical())).toHaveLength(0);
+  });
+});
+
+describe('generateAgents (trae)', () => {
+  it('generates .trae/agents/{name}.md for each agent', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          name: 'code-reviewer',
+          description: 'Reviews code quality',
+          tools: [],
+          model: '',
+          body: 'You are a code reviewer.',
+          hooks: { PreToolUse: [] },
+          source: '/proj/.agentsmesh/agents/code-reviewer.md',
+        },
+      ],
+    });
+
+    const results = generateAgents(canonical);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(`${TRAE_AGENTS_DIR}/code-reviewer.md`);
+  });
+
+  it('serializes name and description in frontmatter', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          name: 'researcher',
+          description: 'Research assistant',
+          tools: [],
+          model: '',
+          body: 'Research thoroughly.',
+          hooks: { PreToolUse: [] },
+          source: '/proj/.agentsmesh/agents/researcher.md',
+        },
+      ],
+    });
+
+    const results = generateAgents(canonical);
+    const { frontmatter } = parseFrontmatter(results[0].content);
+
+    expect(frontmatter.name).toBe('researcher');
+    expect(frontmatter.description).toBe('Research assistant');
+  });
+
+  it('includes tools in frontmatter when non-empty', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          name: 'builder',
+          description: 'Build agent',
+          tools: ['Bash', 'Read'],
+          model: '',
+          body: 'Build things.',
+          hooks: { PreToolUse: [] },
+          source: '/proj/.agentsmesh/agents/builder.md',
+        },
+      ],
+    });
+
+    const results = generateAgents(canonical);
+    const { frontmatter } = parseFrontmatter(results[0].content);
+
+    expect(frontmatter.tools).toEqual(['Bash', 'Read']);
+  });
+
+  it('omits tools from frontmatter when empty', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          name: 'simple',
+          description: 'Simple agent',
+          tools: [],
+          model: '',
+          body: 'Do work.',
+          hooks: { PreToolUse: [] },
+          source: '/proj/.agentsmesh/agents/simple.md',
+        },
+      ],
+    });
+
+    const results = generateAgents(canonical);
+    const { frontmatter } = parseFrontmatter(results[0].content);
+
+    expect(frontmatter.tools).toBeUndefined();
+  });
+
+  it('includes model in frontmatter when set', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          name: 'smart',
+          description: 'Smart agent',
+          tools: [],
+          model: 'claude-opus-4',
+          body: 'Think deep.',
+          hooks: { PreToolUse: [] },
+          source: '/proj/.agentsmesh/agents/smart.md',
+        },
+      ],
+    });
+
+    const results = generateAgents(canonical);
+    const { frontmatter } = parseFrontmatter(results[0].content);
+
+    expect(frontmatter.model).toBe('claude-opus-4');
+  });
+
+  it('omits model from frontmatter when empty string', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          name: 'nomodel',
+          description: 'No model agent',
+          tools: [],
+          model: '',
+          body: 'Run.',
+          hooks: { PreToolUse: [] },
+          source: '/proj/.agentsmesh/agents/nomodel.md',
+        },
+      ],
+    });
+
+    const results = generateAgents(canonical);
+    const { frontmatter } = parseFrontmatter(results[0].content);
+
+    expect(frontmatter.model).toBeUndefined();
+  });
+
+  it('trims body whitespace', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          name: 'trimmer',
+          description: '',
+          tools: [],
+          model: '',
+          body: '\n\nDo the work.\n\n',
+          hooks: { PreToolUse: [] },
+          source: '/proj/.agentsmesh/agents/trimmer.md',
+        },
+      ],
+    });
+
+    const results = generateAgents(canonical);
+    const { body } = parseFrontmatter(results[0].content);
+
+    expect(body.trim()).toBe('Do the work.');
+  });
+
+  it('returns empty array when agents list is empty', () => {
+    expect(generateAgents(makeCanonical())).toHaveLength(0);
+  });
+});
+
+describe('generateHooks (trae)', () => {
+  it('returns empty array when hooks is null', () => {
+    expect(generateHooks(makeCanonical({ hooks: null }))).toHaveLength(0);
+  });
+
+  it('returns empty array when all hook events have no command entries', () => {
+    expect(generateHooks(makeCanonical({ hooks: { PreToolUse: [] } }))).toHaveLength(0);
+  });
+
+  it('generates .trae/hooks.json with version:1 and command entry', () => {
+    const results = generateHooks(
+      makeCanonical({
+        hooks: {
+          PreToolUse: [{ matcher: '.*', command: 'echo pre', timeout: 30 }],
+        },
+      }),
+    );
+
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(TRAE_HOOKS_FILE);
+
+    const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
+    expect(parsed.version).toBe(1);
+    const hooks = parsed.hooks as Record<string, unknown[]>;
+    expect(Array.isArray(hooks['PreToolUse'])).toBe(true);
+    const entry = hooks['PreToolUse']![0] as Record<string, unknown>;
+    expect(entry.matcher).toBe('.*');
+    expect(entry.type).toBe('command');
+    expect(entry.command).toBe('echo pre');
+    expect(entry.timeout).toBe(30);
+  });
+
+  it('includes multiple events in hooks output', () => {
+    const results = generateHooks(
+      makeCanonical({
+        hooks: {
+          PreToolUse: [{ matcher: '*', command: 'echo pre' }],
+          PostToolUse: [{ matcher: '*', command: 'echo post' }],
+        },
+      }),
+    );
+
+    expect(results).toHaveLength(1);
+    const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
+    const hooks = parsed.hooks as Record<string, unknown[]>;
+    expect(Object.keys(hooks).sort()).toEqual(['PostToolUse', 'PreToolUse']);
+  });
+
+  it('omits timeout when not set', () => {
+    const results = generateHooks(
+      makeCanonical({
+        hooks: { PreToolUse: [{ matcher: '*', command: 'echo hi' }] },
+      }),
+    );
+
+    const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
+    const hooks = parsed.hooks as Record<string, unknown[]>;
+    const entry = hooks['PreToolUse']![0] as Record<string, unknown>;
+    expect(Object.prototype.hasOwnProperty.call(entry, 'timeout')).toBe(false);
+  });
+
+  it('drops prompt-type hook entries (command-only round-trip)', () => {
+    const results = generateHooks(
+      makeCanonical({
+        hooks: {
+          PreToolUse: [{ matcher: '*', command: '', type: 'prompt', prompt: 'Summarize' }],
+        },
+      }),
+    );
+
+    expect(results).toHaveLength(0);
   });
 });

@@ -3,7 +3,10 @@ import type { TargetPathContract } from './types.js';
 export const traeContract: TargetPathContract = {
   generated: [
     '.trae/.ignore',
+    '.trae/agents/code-reviewer.md',
+    '.trae/agents/researcher.md',
     '.trae/commands/review.md',
+    '.trae/hooks.json',
     '.trae/mcp.json',
     '.trae/rules/project_rules.md',
     '.trae/rules/typescript.md',
@@ -12,7 +15,10 @@ export const traeContract: TargetPathContract = {
     '.trae/skills/api-generator/template.ts',
   ],
   imported: [
+    '.agentsmesh/agents/code-reviewer.md',
+    '.agentsmesh/agents/researcher.md',
     '.agentsmesh/commands/review.md',
+    '.agentsmesh/hooks.yaml',
     '.agentsmesh/ignore',
     '.agentsmesh/mcp.json',
     '.agentsmesh/rules/_root.md',

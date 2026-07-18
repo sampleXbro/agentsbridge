@@ -53,6 +53,10 @@ describe('pi-agent global layout', () => {
     expect(descriptor.sharedArtifacts).toEqual({ '.agents/skills/': 'consumer' });
   });
 
+  it('descriptor lint object has no mcp handler (mcp is none)', () => {
+    expect(descriptor.lint).not.toHaveProperty('mcp');
+  });
+
   it('descriptor projects agents only (commands are native)', () => {
     expect(descriptor.supportsConversion).toEqual({ agents: true });
   });
@@ -73,9 +77,9 @@ describe('pi-agent global layout', () => {
       agents: 'none',
       skills: 'native',
       mcp: 'none',
-      hooks: 'none',
-      ignore: 'none',
-      permissions: 'none',
+      hooks: 'partial',
+      ignore: 'partial',
+      permissions: 'partial',
     });
   });
 

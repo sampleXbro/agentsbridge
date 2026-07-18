@@ -26,7 +26,7 @@ describe('builtin targets', () => {
 
     expect(cursor).toBeDefined();
     expect(cursor?.generators.primaryRootInstructionPath).toBe('.cursor/rules/general.mdc');
-    expect(cursor?.capabilities.permissions).toBe('partial');
+    expect(cursor?.capabilities.permissions).toBe('native');
     expect(kiro?.generators.primaryRootInstructionPath).toBe('AGENTS.md');
     expect(kiro?.capabilities.rules).toBe('native');
     expect(kiro?.capabilities.commands).toBe('embedded');
@@ -79,7 +79,7 @@ describe('builtin targets', () => {
     );
     expect(getEffectiveTargetSupportLevel('antigravity', 'mcp', config, 'global')).toBe('native');
     expect(getEffectiveTargetSupportLevel('antigravity', 'commands', config, 'global')).toBe(
-      'partial',
+      'native',
     );
     expect(getEffectiveTargetSupportLevel('cursor', 'rules', config, 'global')).toBe('native');
     expect(getEffectiveTargetSupportLevel('cursor', 'hooks', config, 'global')).toBe('native');

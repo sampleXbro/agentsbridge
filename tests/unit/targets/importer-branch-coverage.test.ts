@@ -94,12 +94,17 @@ describe('importFromKiro — root rule scope ordering', () => {
     writeFileSync(join(TEST_DIR, KIRO_AGENTS_MD), '# Root\n');
     mkdirSync(join(TEST_DIR, KIRO_HOOKS_DIR), { recursive: true });
     writeFileSync(
-      join(TEST_DIR, KIRO_HOOKS_DIR, 'lint.kiro.hook'),
+      join(TEST_DIR, KIRO_HOOKS_DIR, 'lint.json'),
       JSON.stringify({
-        name: 'lint',
-        version: '1',
-        when: { type: 'preToolUse', tools: ['write'] },
-        then: { type: 'shellCommand', command: 'lint' },
+        version: 'v1',
+        hooks: [
+          {
+            name: 'lint-1',
+            trigger: 'PreToolUse',
+            matcher: 'write',
+            action: { type: 'command', command: 'lint' },
+          },
+        ],
       }),
     );
 
@@ -197,10 +202,10 @@ describe('importFromKiro — non-root rules', () => {
 // ---------------------------------------------------------------------------
 
 describe('importFromKiro — importHooks branches', () => {
-  it('skips files in hooks dir without .kiro.hook extension', async () => {
+  it('skips files in hooks dir without .json extension', async () => {
     mkdirSync(join(TEST_DIR, KIRO_HOOKS_DIR), { recursive: true });
     writeFileSync(join(TEST_DIR, KIRO_HOOKS_DIR, 'README.md'), '# Notes\n');
-    writeFileSync(join(TEST_DIR, KIRO_HOOKS_DIR, 'config.json'), '{}');
+    writeFileSync(join(TEST_DIR, KIRO_HOOKS_DIR, 'notes.txt'), 'ignored');
 
     const results = await importFromKiro(TEST_DIR, { scope: 'project' });
 
@@ -208,16 +213,21 @@ describe('importFromKiro — importHooks branches', () => {
     expect(existsSync(join(TEST_DIR, '.agentsmesh', 'hooks.yaml'))).toBe(false);
   });
 
-  it('mixes valid .kiro.hook with non-hook siblings (only valid imported)', async () => {
+  it('mixes valid .json hooks with non-json siblings (only valid imported)', async () => {
     mkdirSync(join(TEST_DIR, KIRO_HOOKS_DIR), { recursive: true });
     writeFileSync(join(TEST_DIR, KIRO_HOOKS_DIR, 'notes.txt'), 'ignored');
     writeFileSync(
-      join(TEST_DIR, KIRO_HOOKS_DIR, 'review.kiro.hook'),
+      join(TEST_DIR, KIRO_HOOKS_DIR, 'review.json'),
       JSON.stringify({
-        name: 'review',
-        version: '1',
-        when: { type: 'postToolUse', tools: ['write'] },
-        then: { type: 'shellCommand', command: 'review' },
+        version: 'v1',
+        hooks: [
+          {
+            name: 'review-1',
+            trigger: 'PostToolUse',
+            matcher: 'write',
+            action: { type: 'command', command: 'review' },
+          },
+        ],
       }),
     );
 
@@ -558,89 +568,76 @@ describe('parseKiroHookFile — guard branches', () => {
     expect(parseKiroHookFile('[1,2,3]')).toBeNull();
   });
 
-  it('returns null when when block is missing', () => {
-    expect(
-      parseKiroHookFile(JSON.stringify({ then: { type: 'shellCommand', command: 'x' } })),
-    ).toBeNull();
+  it('returns null when hooks array is missing', () => {
+    expect(parseKiroHookFile(JSON.stringify({ version: 'v1' }))).toBeNull();
   });
 
-  it('returns null when then block is missing', () => {
-    expect(parseKiroHookFile(JSON.stringify({ when: { type: 'preToolUse' } }))).toBeNull();
+  it('returns null when hooks array is empty', () => {
+    expect(parseKiroHookFile(JSON.stringify({ version: 'v1', hooks: [] }))).toBeNull();
   });
 
-  it('returns null when when.type is not a string', () => {
+  it('returns null when hooks[0].trigger is not a string', () => {
     expect(
       parseKiroHookFile(
         JSON.stringify({
-          when: { type: 42 },
-          then: { type: 'shellCommand', command: 'x' },
+          version: 'v1',
+          hooks: [{ trigger: 42, action: { type: 'command', command: 'x' } }],
         }),
       ),
     ).toBeNull();
   });
 
-  it('returns null for unknown when.type', () => {
+  it('returns null for unknown trigger value', () => {
     expect(
       parseKiroHookFile(
         JSON.stringify({
-          when: { type: 'unknownEvent' },
-          then: { type: 'shellCommand', command: 'x' },
+          version: 'v1',
+          hooks: [{ trigger: 'UnknownEvent', action: { type: 'command', command: 'x' } }],
         }),
       ),
     ).toBeNull();
   });
 
-  it("returns null when then.type='askAgent' but prompt is not a string", () => {
+  it("returns null when action.type='agent' but prompt is not a string", () => {
     expect(
       parseKiroHookFile(
         JSON.stringify({
-          when: { type: 'preToolUse', tools: ['write'] },
-          then: { type: 'askAgent' },
+          version: 'v1',
+          hooks: [{ trigger: 'PreToolUse', matcher: 'write', action: { type: 'agent' } }],
         }),
       ),
     ).toBeNull();
   });
 
-  it("returns null when then.type='shellCommand' but command is not a string", () => {
+  it("returns null when action.type='command' but command is not a string", () => {
     expect(
       parseKiroHookFile(
         JSON.stringify({
-          when: { type: 'preToolUse', tools: ['write'] },
-          then: { type: 'shellCommand' },
+          version: 'v1',
+          hooks: [{ trigger: 'PreToolUse', matcher: 'write', action: { type: 'command' } }],
         }),
       ),
     ).toBeNull();
   });
 
-  it('returns null when then.type is neither askAgent nor shellCommand', () => {
+  it('returns null when action.type is neither agent nor command', () => {
     expect(
       parseKiroHookFile(
         JSON.stringify({
-          when: { type: 'preToolUse', tools: ['write'] },
-          then: { type: 'unknown', command: 'x' },
+          version: 'v1',
+          hooks: [
+            { trigger: 'PreToolUse', matcher: 'write', action: { type: 'unknown', command: 'x' } },
+          ],
         }),
       ),
     ).toBeNull();
   });
 
-  it('falls back matcher to patterns[0] when tools is absent', () => {
+  it("falls back matcher to '*' when matcher is absent", () => {
     const result = parseKiroHookFile(
       JSON.stringify({
-        when: { type: 'promptSubmit', patterns: ['*.md'] },
-        then: { type: 'askAgent', prompt: 'hi' },
-      }),
-    );
-    expect(result).toEqual({
-      event: 'UserPromptSubmit',
-      entry: { matcher: '*.md', command: 'hi', prompt: 'hi', type: 'prompt' },
-    });
-  });
-
-  it("falls back matcher to '*' when tools and patterns are both absent", () => {
-    const result = parseKiroHookFile(
-      JSON.stringify({
-        when: { type: 'agentStop' },
-        then: { type: 'shellCommand', command: 'cleanup' },
+        version: 'v1',
+        hooks: [{ trigger: 'Stop', action: { type: 'command', command: 'cleanup' } }],
       }),
     );
     expect(result).toEqual({
@@ -649,11 +646,13 @@ describe('parseKiroHookFile — guard branches', () => {
     });
   });
 
-  it('parses askAgent prompt entry into prompt-type canonical entry', () => {
+  it('parses agent action into prompt-type canonical entry', () => {
     const result = parseKiroHookFile(
       JSON.stringify({
-        when: { type: 'preToolUse', tools: ['Write'] },
-        then: { type: 'askAgent', prompt: 'review' },
+        version: 'v1',
+        hooks: [
+          { trigger: 'PreToolUse', matcher: 'Write', action: { type: 'agent', prompt: 'review' } },
+        ],
       }),
     );
     expect(result?.event).toBe('PreToolUse');
@@ -661,11 +660,13 @@ describe('parseKiroHookFile — guard branches', () => {
     expect(result?.entry.matcher).toBe('Write');
   });
 
-  it('parses shellCommand entry into command-type canonical entry', () => {
+  it('parses command action into command-type canonical entry', () => {
     const result = parseKiroHookFile(
       JSON.stringify({
-        when: { type: 'postToolUse', tools: ['Edit'] },
-        then: { type: 'shellCommand', command: 'fmt' },
+        version: 'v1',
+        hooks: [
+          { trigger: 'PostToolUse', matcher: 'Edit', action: { type: 'command', command: 'fmt' } },
+        ],
       }),
     );
     expect(result?.event).toBe('PostToolUse');
@@ -699,25 +700,39 @@ describe('generateKiroHooks — branches', () => {
     expect(generateKiroHooks(hooks)).toEqual([]);
   });
 
-  it('emits non-tool events without tools field', () => {
+  it('emits UserPromptSubmit trigger with no matcher when matcher is wildcard', () => {
     const hooks: Hooks = {
       UserPromptSubmit: [{ matcher: '*', prompt: 'hi', type: 'prompt' }],
     };
     const out = generateKiroHooks(hooks);
     expect(out).toHaveLength(1);
-    const parsed = JSON.parse(out[0]!.content) as { when: { type: string; tools?: string[] } };
-    expect(parsed.when.type).toBe('promptSubmit');
-    expect(parsed.when).not.toHaveProperty('tools');
+    const parsed = JSON.parse(out[0]!.content) as {
+      version: string;
+      hooks: Array<{ trigger: string; matcher?: string }>;
+    };
+    expect(parsed.version).toBe('v1');
+    expect(parsed.hooks[0]!.trigger).toBe('UserPromptSubmit');
+    expect(parsed.hooks[0]).not.toHaveProperty('matcher');
   });
 
-  it("emits tool events with tools=['*'] when matcher is empty", () => {
+  it('emits PreToolUse trigger with matcher when matcher is non-empty non-wildcard', () => {
+    const hooks: Hooks = {
+      PreToolUse: [{ matcher: 'write', command: 'echo hi', type: 'command' }],
+    };
+    const out = generateKiroHooks(hooks);
+    expect(out).toHaveLength(1);
+    const parsed = JSON.parse(out[0]!.content) as { hooks: Array<{ matcher?: string }> };
+    expect(parsed.hooks[0]!.matcher).toBe('write');
+  });
+
+  it('emits PreToolUse trigger without matcher when matcher is empty string', () => {
     const hooks: Hooks = {
       PreToolUse: [{ matcher: '', command: 'echo hi', type: 'command' }],
     };
     const out = generateKiroHooks(hooks);
     expect(out).toHaveLength(1);
-    const parsed = JSON.parse(out[0]!.content) as { when: { tools: string[] } };
-    expect(parsed.when.tools).toEqual(['*']);
+    const parsed = JSON.parse(out[0]!.content) as { hooks: Array<{ matcher?: string }> };
+    expect(parsed.hooks[0]).not.toHaveProperty('matcher');
   });
 
   it('serializeCanonicalHooks returns trimmed YAML', () => {

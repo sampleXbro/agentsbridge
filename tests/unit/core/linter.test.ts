@@ -246,7 +246,7 @@ describe('runLint', () => {
         deny: ['Bash(rm -rf:*)'],
       },
       hooks: {
-        SubagentStart: [{ matcher: '*', command: 'echo start' }],
+        SessionEnd: [{ matcher: '*', command: 'echo end' }],
       },
       ignore: [],
     };
@@ -273,16 +273,14 @@ describe('runLint', () => {
       file: '.agentsmesh/hooks.yaml',
       target: 'gemini-cli',
       message:
-        'SubagentStart is not supported by gemini-cli; only PreToolUse, PostToolUse, and Notification are projected.',
+        'SessionEnd is not supported by gemini-cli; only PreToolUse, PostToolUse, Notification, SubagentStart, SubagentStop, and SessionStart are projected.',
     });
+    // cursor permissions are native — no stale 'partial' warning should appear
     expect(
       diagnostics.some(
-        (d) =>
-          d.target === 'cursor' &&
-          d.file === '.agentsmesh/permissions.yaml' &&
-          d.message.includes('Cursor permissions are partial'),
+        (d) => d.target === 'cursor' && d.message.includes('Cursor permissions are partial'),
       ),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it('warns when cursor MCP uses env vars with tool-specific handling differences', async () => {
@@ -467,5 +465,42 @@ describe('runLint', () => {
     const { diagnostics, hasErrors } = await runLint(config, canonical, TEST_DIR);
     expect(hasErrors).toBe(true);
     expect(diagnostics.some((d) => d.target === 'lessons' && d.level === 'error')).toBe(true);
+  });
+
+  it('dispatches descriptor.lint.ignore when ignore feature is enabled and patterns exist', async () => {
+    // jules has ignore: 'partial' and lint.ignore wired; the engine must call it.
+    // Before the fix, descriptor.lint?.ignore is never dispatched and the warning is
+    // silently dropped (the silent-drop guard skips non-none capabilities).
+    const config = minimalConfig({
+      targets: ['jules'],
+      features: ['rules', 'ignore'],
+    });
+    const canonical: CanonicalFiles = {
+      rules: [
+        {
+          source: join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
+          root: true,
+          targets: [],
+          description: 'Root',
+          globs: [],
+          body: '# Root',
+        },
+      ],
+      commands: [],
+      agents: [],
+      skills: [],
+      mcp: null,
+      permissions: null,
+      hooks: null,
+      ignore: ['node_modules', '.env'],
+    };
+    const { diagnostics } = await runLint(config, canonical, TEST_DIR);
+    expect(diagnostics).toContainEqual({
+      level: 'warning',
+      file: '.agentsmesh/ignore',
+      target: 'jules',
+      message:
+        'Jules is a cloud-based agent with no dedicated ignore file; canonical ignore patterns are not projected.',
+    });
   });
 });

@@ -38,12 +38,14 @@ describe('per-target lint.hooks hooks', () => {
   it('warns for unsupported gemini-cli hook events', () => {
     const diagnostics = lintGeminiHooks(
       makeCanonical({
-        SubagentStop: [{ matcher: '*', command: 'echo stop' }],
+        SessionEnd: [{ matcher: '*', command: 'echo end' }],
       }),
     );
 
     expect(diagnostics).toHaveLength(1);
-    expect(diagnostics[0]?.message).toContain('only PreToolUse, PostToolUse, and Notification');
+    expect(diagnostics[0]?.message).toContain(
+      'only PreToolUse, PostToolUse, Notification, SubagentStart, SubagentStop, and SessionStart',
+    );
   });
 
   it('warns for unsupported copilot hook events', () => {

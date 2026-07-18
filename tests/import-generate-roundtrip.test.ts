@@ -195,7 +195,7 @@ describe('import: Cursor (all features)', () => {
       JSON.stringify({ mcpServers: { ctx: { type: 'stdio', command: 'npx', args: [], env: {} } } }),
     );
     writeFileSync(
-      join(TEST_DIR, '.cursor', 'settings.json'),
+      join(TEST_DIR, '.cursor', 'cli.json'),
       JSON.stringify({ permissions: { allow: ['Read'], deny: [] } }),
     );
     writeFileSync(
@@ -569,6 +569,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
     expect(paths).toEqual([
       '.cursor/AGENTS.md',
       '.cursor/agents/reviewer.md',
+      '.cursor/cli.json',
       '.cursor/commands/review.md',
       '.cursor/hooks.json',
       '.cursor/mcp.json',
@@ -687,7 +688,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
     ]);
   });
 
-  it('Continue generates rules + prompt files + skills + mcp', async () => {
+  it('Continue generates rules + prompt files + skills + mcp + ignore', async () => {
     const results = await generate({
       config: allFeaturesConfig(['continue']),
       canonical,
@@ -701,6 +702,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.continue/rules/typescript.md',
       '.continue/skills/am-agent-reviewer/SKILL.md',
       '.continue/skills/qa/SKILL.md',
+      '.continueignore',
     ]);
   });
 
@@ -792,8 +794,10 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.continue/rules/typescript.md',
       '.continue/skills/am-agent-reviewer/SKILL.md',
       '.continue/skills/qa/SKILL.md',
+      '.continueignore',
       '.cursor/AGENTS.md',
       '.cursor/agents/reviewer.md',
+      '.cursor/cli.json',
       '.cursor/commands/review.md',
       '.cursor/hooks.json',
       '.cursor/mcp.json',

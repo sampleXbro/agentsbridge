@@ -150,11 +150,11 @@ describe('stageNativeInstallScope Claude Code and Cursor', () => {
       features: ['hooks'],
     },
     {
-      name: 'cursor-settings-file',
+      name: 'cursor-cli-json-file',
       target: 'cursor',
-      path: '.cursor/settings.json',
+      path: '.cursor/cli.json',
       files: {
-        '.cursor/settings.json': JSON.stringify({
+        '.cursor/cli.json': JSON.stringify({
           permissions: { allow: ['Read'], deny: ['Bash(rm:*)'] },
         }),
       },

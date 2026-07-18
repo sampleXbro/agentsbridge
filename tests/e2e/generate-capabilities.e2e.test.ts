@@ -714,7 +714,7 @@ features: [rules, skills, mcp, hooks, ignore]
       '.agentsmeshcache',
       '.kiro/',
       '.kiro/hooks/',
-      '.kiro/hooks/post-tool-use-1.kiro.hook',
+      '.kiro/hooks/post-tool-use-1.json',
       '.kiro/settings/',
       '.kiro/settings/mcp.json',
       '.kiro/skills/',
@@ -735,8 +735,8 @@ features: [rules, skills, mcp, hooks, ignore]
     fileContains(join(dir, '.kiro', 'steering', 'typescript.md'), 'inclusion: fileMatch');
     fileContains(join(dir, '.kiro', 'steering', 'typescript.md'), 'fileMatchPattern: src/**/*.ts');
     fileContains(join(dir, '.kiro', 'skills', 'api-generator', 'SKILL.md'), 'name: api-generator');
-    fileContains(join(dir, '.kiro', 'hooks', 'post-tool-use-1.kiro.hook'), '"type": "postToolUse"');
-    fileContains(join(dir, '.kiro', 'hooks', 'post-tool-use-1.kiro.hook'), 'prettier --write');
+    fileContains(join(dir, '.kiro', 'hooks', 'post-tool-use-1.json'), '"trigger": "PostToolUse"');
+    fileContains(join(dir, '.kiro', 'hooks', 'post-tool-use-1.json'), 'prettier --write');
     const mcp = readJson(join(dir, '.kiro', 'settings', 'mcp.json'));
     expect(mcp).toHaveProperty('mcpServers');
     expect(mcp).toHaveProperty('mcpServers.context7.command', 'npx');
@@ -910,7 +910,7 @@ features: [rules, mcp]
     fileContains(join(dir, '.zed', 'settings.json'), 'context7');
   });
 
-  it('generates Warp AGENTS.md, skills, and .mcp.json', async () => {
+  it('generates Warp AGENTS.md, skills, and .warp/.mcp.json', async () => {
     dir = createCanonicalProject(`version: 1
 targets: [warp]
 features: [rules, skills, mcp]
@@ -925,8 +925,8 @@ features: [rules, skills, mcp]
       join(dir, '.warp', 'skills', 'api-generator', 'references', 'route-checklist.md'),
       'response schema',
     );
-    fileContains(join(dir, '.mcp.json'), 'mcpServers');
-    fileContains(join(dir, '.mcp.json'), 'context7');
+    fileContains(join(dir, '.warp', '.mcp.json'), 'mcpServers');
+    fileContains(join(dir, '.warp', '.mcp.json'), 'context7');
   });
 
   it('generates Goose .goosehints, skills, and .gooseignore', async () => {

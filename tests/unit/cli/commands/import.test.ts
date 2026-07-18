@@ -94,14 +94,14 @@ describe('runImport', () => {
     vi.stubEnv('HOME', TEST_DIR);
     vi.stubEnv('USERPROFILE', TEST_DIR);
 
-    mkdirSync(join(TEST_DIR, '.gemini', 'antigravity', 'skills', 'review'), { recursive: true });
-    writeFileSync(join(TEST_DIR, '.gemini', 'antigravity', 'GEMINI.md'), '# Antigravity Root\n');
+    mkdirSync(join(TEST_DIR, '.gemini', 'config', 'skills', 'review'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.gemini', 'GEMINI.md'), '# Antigravity Root\n');
     writeFileSync(
-      join(TEST_DIR, '.gemini', 'antigravity', 'skills', 'review', 'SKILL.md'),
+      join(TEST_DIR, '.gemini', 'config', 'skills', 'review', 'SKILL.md'),
       '# Review\n',
     );
     writeFileSync(
-      join(TEST_DIR, '.gemini', 'antigravity', 'mcp_config.json'),
+      join(TEST_DIR, '.gemini', 'config', 'mcp_config.json'),
       JSON.stringify(
         { mcpServers: { docs: { command: 'npx', args: ['-y', '@docs/mcp'] } } },
         null,

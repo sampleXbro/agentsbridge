@@ -369,7 +369,7 @@ describe('agents-folder-structure-research: Cursor (docs §2)', () => {
     agents: '.cursor/agents/',
     skills: '.cursor/skills/',
     // Gaps: .cursor/sandbox.json, .cursor/environment.json (no canonical schema yet)
-    // Not emitted: .cursor/settings.json (no native Cursor tool-permission file)
+    // Permissions: native — emitted to .cursor/cli.json (project) or ~/.cursor/cli-config.json (global)
     // Not emitted: .cursorindexingignore (community-sourced, not official)
   };
   // Gaps: .cursorrules (legacy — we generate .cursor/rules/)
@@ -488,7 +488,7 @@ describe('agents-folder-structure-research: Cursor (docs §2)', () => {
     expect(s!.content).toContain('QA checklist.');
   });
 
-  it('does not emit .cursor/settings.json for permissions (no native Cursor tool-permission file)', async () => {
+  it('emits .cursor/cli.json for permissions (native capability) and never .cursor/settings.json', async () => {
     const canonical = fullCanonical({
       rootBody: '# Root',
       permissions: { allow: ['Read'], deny: [] },
@@ -498,6 +498,13 @@ describe('agents-folder-structure-research: Cursor (docs §2)', () => {
       canonical,
       projectRoot: TEST_DIR,
     });
+    // Positive assertion: the native permissions file must be present
+    const cliJson = results.find((r) => r.path === '.cursor/cli.json');
+    expect(cliJson).toBeDefined();
+    const parsed = JSON.parse(cliJson!.content) as Record<string, unknown>;
+    expect(parsed).toHaveProperty('permissions');
+    expect((parsed.permissions as Record<string, unknown>).allow).toEqual(['Read']);
+    // settings.json must not appear — permissions are not stored there
     expect(results.every((r) => r.path !== '.cursor/settings.json')).toBe(true);
   });
 
@@ -981,7 +988,7 @@ describe('agents-folder-structure-research: Kiro (docs §8)', () => {
     expect(skill!.content).toContain('Review logs first.');
   });
 
-  it('generates .kiro/hooks/*.kiro.hook from canonical hooks', async () => {
+  it('generates .kiro/hooks/*.json from canonical hooks', async () => {
     const canonical = fullCanonical({
       rootBody: '# Root',
       hooks: {
@@ -993,9 +1000,9 @@ describe('agents-folder-structure-research: Kiro (docs §8)', () => {
       canonical,
       projectRoot: TEST_DIR,
     });
-    const hook = results.find((x) => x.path === '.kiro/hooks/user-prompt-submit-1.kiro.hook');
+    const hook = results.find((x) => x.path === '.kiro/hooks/user-prompt-submit-1.json');
     expect(hook).toBeDefined();
-    expect(hook!.content).toContain('"type": "promptSubmit"');
+    expect(hook!.content).toContain('"trigger": "UserPromptSubmit"');
     expect(hook!.content).toContain('Capture intent.');
   });
 

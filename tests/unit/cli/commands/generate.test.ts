@@ -208,18 +208,15 @@ ship it
 
     await runGenerate({ global: true }, TEST_DIR, { printMatrix: false });
 
-    expect(readFileSync(join(TEST_DIR, '.gemini', 'antigravity', 'GEMINI.md'), 'utf-8')).toContain(
+    expect(readFileSync(join(TEST_DIR, '.gemini', 'GEMINI.md'), 'utf-8')).toContain(
       'Use strict types.',
     );
     expect(
-      readFileSync(
-        join(TEST_DIR, '.gemini', 'antigravity', 'skills', 'review', 'SKILL.md'),
-        'utf-8',
-      ),
+      readFileSync(join(TEST_DIR, '.gemini', 'config', 'skills', 'review', 'SKILL.md'), 'utf-8'),
     ).toContain('Review carefully.');
-    expect(
-      readFileSync(join(TEST_DIR, '.gemini', 'antigravity', 'mcp_config.json'), 'utf-8'),
-    ).toContain('"mcpServers"');
+    expect(readFileSync(join(TEST_DIR, '.gemini', 'config', 'mcp_config.json'), 'utf-8')).toContain(
+      '"mcpServers"',
+    );
     expect(existsSync(join(TEST_DIR, '.agents', 'workflows', 'ship.md'))).toBe(false);
   });
 

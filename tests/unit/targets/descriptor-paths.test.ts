@@ -251,16 +251,18 @@ describe('descriptor.project.paths.agentPath', () => {
     expect(result).toBe('.gemini/skills/am-agent-reviewer/SKILL.md');
   });
 
-  it('cline default: returns null (combined .cline/agents.yaml has no per-name destination)', () => {
+  it('cline default: returns .cline/agents.yaml (combined file, all agents share one output)', () => {
     const result = cline.project.paths.agentPath('reviewer', config);
-    expect(result).toBeNull();
+    expect(result).toBe('.cline/agents.yaml');
   });
 
-  it('cline with conversion OFF: still returns null', () => {
+  it('cline with conversion OFF: returns .cline/agents.yaml (combined file, not projected)', () => {
     const configWithConversionOff = baseConfig({
       conversions: { agents_to_skills: { cline: false } },
     });
-    expect(cline.project.paths.agentPath('reviewer', configWithConversionOff)).toBeNull();
+    expect(cline.project.paths.agentPath('reviewer', configWithConversionOff)).toBe(
+      '.cline/agents.yaml',
+    );
   });
 
   it('codex-cli: returns .codex/agents/{name}.toml', () => {
@@ -284,6 +286,16 @@ describe('descriptor.project.paths.agentPath', () => {
   it('antigravity: returns projected agent skill path', () => {
     expect(antigravity.project.paths.agentPath('reviewer', config)).toBe(
       '.agents/skills/am-agent-reviewer/SKILL.md',
+    );
+  });
+
+  it('trae: returns .trae/agents/{name}.md', () => {
+    expect(trae.project.paths.agentPath('reviewer', config)).toBe('.trae/agents/reviewer.md');
+  });
+
+  it('trae: global agentPath returns .trae-cn/agents/{name}.md', () => {
+    expect(trae.globalSupport!.layout.paths.agentPath('reviewer', config)).toBe(
+      '.trae-cn/agents/reviewer.md',
     );
   });
 });

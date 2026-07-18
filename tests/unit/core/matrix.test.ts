@@ -145,7 +145,7 @@ describe('buildCompatibilityMatrix', () => {
     };
     const rows = buildCompatibilityMatrix(config, canonical);
     const permRow = rows.find((r) => r.feature.startsWith('permissions'));
-    expect(permRow?.support['cursor']).toBe('partial');
+    expect(permRow?.support['cursor']).toBe('native');
     expect(permRow?.support['claude-code']).toBe('native');
     expect(permRow?.support['opencode']).toBe('native');
   });
@@ -190,7 +190,7 @@ describe('buildCompatibilityMatrix', () => {
     ).toBe('native');
   });
 
-  it('shows goose permissions native at global scope only (project stays none)', () => {
+  it('shows goose permissions native at global scope (project is partial)', () => {
     const config: ValidatedConfig = {
       ...baseConfig,
       targets: ['goose'],
@@ -203,7 +203,7 @@ describe('buildCompatibilityMatrix', () => {
     const projectRows = buildCompatibilityMatrix(config, canonical, 'project');
     const globalRows = buildCompatibilityMatrix(config, canonical, 'global');
     expect(projectRows.find((r) => r.feature.startsWith('permissions'))?.support['goose']).toBe(
-      'none',
+      'partial',
     );
     expect(globalRows.find((r) => r.feature.startsWith('permissions'))?.support['goose']).toBe(
       'native',
@@ -390,7 +390,7 @@ describe('buildCompatibilityMatrix', () => {
     };
     const rows = buildCompatibilityMatrix(config, canonical);
     expect(rows.find((r) => r.feature.startsWith('hooks'))?.feature).toBe('hooks (1)');
-    expect(rows.find((r) => r.feature.startsWith('hooks'))?.support['gemini-cli']).toBe('partial');
+    expect(rows.find((r) => r.feature.startsWith('hooks'))?.support['gemini-cli']).toBe('native');
     expect(rows.find((r) => r.feature.startsWith('hooks'))?.support['copilot']).toBe('native');
     expect(rows.find((r) => r.feature.startsWith('hooks'))?.support['codex-cli']).toBe('native');
     expect(rows.find((r) => r.feature.startsWith('hooks'))?.support.kiro).toBe('native');

@@ -97,9 +97,9 @@ function listFilesRecursive(root: string): string[] {
  * across every built-in target without conflating with the aggregator outputs.
  */
 const TARGET_RULES_DIRS: Record<string, readonly string[]> = {
-  antigravity: ['.agents/rules', '.gemini/antigravity/rules'],
+  antigravity: ['.agents/rules'],
   'claude-code': ['.claude/rules', '.agents/rules'],
-  cline: ['.clinerules'],
+  cline: ['.cline/rules'],
   'codex-cli': ['.codex/rules', '.agents/rules'],
   continue: ['.continue/rules'],
   copilot: ['.github/instructions', '.github/copilot'],

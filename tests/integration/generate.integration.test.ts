@@ -357,7 +357,7 @@ Start with logs.
       readFileSync(join(TEST_DIR, '.kiro', 'skills', 'debugging', 'SKILL.md'), 'utf-8'),
     ).toContain('Debug production failures');
     expect(
-      readFileSync(join(TEST_DIR, '.kiro', 'hooks', 'user-prompt-submit-1.kiro.hook'), 'utf-8'),
+      readFileSync(join(TEST_DIR, '.kiro', 'hooks', 'user-prompt-submit-1.json'), 'utf-8'),
     ).toContain('Capture intent before acting.');
     expect(readFileSync(join(TEST_DIR, '.kiro', 'settings', 'mcp.json'), 'utf-8')).toContain(
       'context7',
@@ -395,8 +395,13 @@ deny:
     expect(claudeSettings).toContain('deny');
     expect(claudeSettings).toContain('Read');
     expect(claudeSettings).toContain('WebFetch');
-    // Cursor has no native tool-permission file — permissions not emitted
-    expect(() => readFileSync(join(TEST_DIR, '.cursor', 'settings.json'))).toThrow();
+    // Cursor emits permissions to .cursor/cli.json (not settings.json)
+    const cursorCli = readFileSync(join(TEST_DIR, '.cursor', 'cli.json'), 'utf-8') as string;
+    expect(cursorCli).toContain('permissions');
+    expect(cursorCli).toContain('allow');
+    expect(cursorCli).toContain('deny');
+    expect(cursorCli).toContain('Read');
+    expect(cursorCli).toContain('WebFetch');
   });
 
   it('generates hooks in .cursor/hooks.json when hooks feature enabled', () => {

@@ -385,7 +385,7 @@ describe('import capabilities', () => {
     fileContains(join(dir, '.agentsmesh', 'mcp.json'), 'filesystem');
   });
 
-  it('imports Warp AGENTS.md, skills, and MCP from .mcp.json', async () => {
+  it('imports Warp AGENTS.md, skills, and MCP from .warp/.mcp.json', async () => {
     dir = createTestProject('warp-project');
     const result = await runCli('import --from warp', dir);
     expect(result.exitCode, result.stderr).toBe(0);

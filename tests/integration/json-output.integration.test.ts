@@ -93,10 +93,7 @@ describe('agentsmesh --json output (integration)', () => {
 
     const generated = runCli(['generate']);
     expect(generated.status).toBe(0);
-    writeFileSync(
-      join(TEST_DIR, 'CLAUDE.md'),
-      '# Manually edited generated output\n',
-    );
+    writeFileSync(join(TEST_DIR, 'CLAUDE.md'), '# Manually edited generated output\n');
 
     const { stdout, status } = runCli(['check', '--json']);
     const envelope = JSON.parse(stdout);
@@ -107,6 +104,42 @@ describe('agentsmesh --json output (integration)', () => {
     expect(envelope.data.outputDrift).toBe(true);
     expect(envelope.data.outputModified).toEqual(['CLAUDE.md']);
     expect(envelope.data.outputRemoved).toEqual([]);
+  });
+
+  it('check --json reports a missing generated output separately', () => {
+    setupValidProject();
+
+    const generated = runCli(['generate']);
+    expect(generated.status).toBe(0);
+    rmSync(join(TEST_DIR, 'CLAUDE.md'));
+
+    const { stdout, status } = runCli(['check', '--json']);
+    const envelope = JSON.parse(stdout);
+
+    expect(status).toBe(1);
+    expect(envelope.data.canonicalDrift).toBe(false);
+    expect(envelope.data.outputDrift).toBe(true);
+    expect(envelope.data.outputModified).toEqual([]);
+    expect(envelope.data.outputRemoved).toEqual(['CLAUDE.md']);
+  });
+
+  it('check --json reports a stale generated output separately', () => {
+    setupValidProject();
+
+    const generated = runCli(['generate']);
+    expect(generated.status).toBe(0);
+    const stalePath = join(TEST_DIR, '.cursor', 'rules', 'orphaned.mdc');
+    writeFileSync(stalePath, '# Stale generated output\n');
+
+    const { stdout, status } = runCli(['check', '--json']);
+    const envelope = JSON.parse(stdout);
+
+    expect(status).toBe(1);
+    expect(envelope.data.canonicalDrift).toBe(false);
+    expect(envelope.data.outputDrift).toBe(true);
+    expect(envelope.data.outputModified).toEqual([]);
+    expect(envelope.data.outputRemoved).toEqual([]);
+    expect(envelope.data.outputStale).toEqual(['.cursor/rules/orphaned.mdc']);
   });
 
   it('check --json reports no lock as failure', () => {

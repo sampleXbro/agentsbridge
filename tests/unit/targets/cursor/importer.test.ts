@@ -359,11 +359,11 @@ describe('importFromCursor — mcp.json', () => {
   });
 });
 
-describe('importFromCursor — settings.json decomposition', () => {
-  it('imports permissions to .agentsmesh/permissions.yaml', async () => {
+describe('importFromCursor — cli.json / settings.json decomposition', () => {
+  it('imports permissions from cli.json to .agentsmesh/permissions.yaml', async () => {
     mkdirSync(join(TEST_DIR, '.cursor'), { recursive: true });
     writeFileSync(
-      join(TEST_DIR, '.cursor', 'settings.json'),
+      join(TEST_DIR, '.cursor', 'cli.json'),
       JSON.stringify({ permissions: { allow: ['Read', 'Grep'], deny: ['WebFetch'] } }),
     );
     const results = await importFromCursor(TEST_DIR);
@@ -397,18 +397,17 @@ describe('importFromCursor — settings.json decomposition', () => {
     expect(content).toContain('prettier');
   });
 
-  it('skips settings.json when malformed', async () => {
+  it('skips permissions when cli.json is malformed', async () => {
     mkdirSync(join(TEST_DIR, '.cursor'), { recursive: true });
-    writeFileSync(join(TEST_DIR, '.cursor', 'settings.json'), 'BAD JSON');
+    writeFileSync(join(TEST_DIR, '.cursor', 'cli.json'), 'BAD JSON');
     const results = await importFromCursor(TEST_DIR);
     expect(results.filter((r) => r.feature === 'permissions')).toHaveLength(0);
-    expect(results.filter((r) => r.feature === 'hooks')).toHaveLength(0);
   });
 
   it('skips permissions when allow and deny are empty', async () => {
     mkdirSync(join(TEST_DIR, '.cursor'), { recursive: true });
     writeFileSync(
-      join(TEST_DIR, '.cursor', 'settings.json'),
+      join(TEST_DIR, '.cursor', 'cli.json'),
       JSON.stringify({ permissions: { allow: [], deny: [] } }),
     );
     const results = await importFromCursor(TEST_DIR);
@@ -491,7 +490,7 @@ describe('importFromCursor — full fidelity', () => {
       JSON.stringify({ mcpServers: { ctx: { type: 'stdio', command: 'npx', args: [], env: {} } } }),
     );
     writeFileSync(
-      join(TEST_DIR, '.cursor', 'settings.json'),
+      join(TEST_DIR, '.cursor', 'cli.json'),
       JSON.stringify({ permissions: { allow: ['Read'], deny: [] } }),
     );
     writeFileSync(join(TEST_DIR, '.cursorignore'), 'dist\n');

@@ -25,6 +25,7 @@ import {
   CURSOR_RULES_DIR,
   CURSOR_SETTINGS,
   CURSOR_SKILLS_DIR,
+  CURSOR_GLOBAL_CLI_CONFIG,
 } from './constants.js';
 import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromCursor } from './importer.js';
@@ -59,7 +60,13 @@ const project: TargetLayout = {
   skillDir: '.cursor/skills',
   managedOutputs: {
     dirs: ['.cursor/agents', '.cursor/commands', '.cursor/rules', '.cursor/skills'],
-    files: ['.cursor/hooks.json', '.cursor/mcp.json', '.cursorignore', 'AGENTS.md'],
+    files: [
+      '.cursor/hooks.json',
+      '.cursor/mcp.json',
+      '.cursor/cli.json',
+      '.cursorignore',
+      'AGENTS.md',
+    ],
   },
   paths: {
     rulePath(slug, _rule) {
@@ -92,6 +99,7 @@ const globalLayout: TargetLayout = {
       CURSOR_MCP,
       CURSOR_HOOKS,
       CURSOR_IGNORE,
+      CURSOR_GLOBAL_CLI_CONFIG,
       CURSOR_GLOBAL_USER_RULES,
     ],
   },
@@ -103,6 +111,7 @@ const globalLayout: TargetLayout = {
     if (path.startsWith(`${CURSOR_AGENTS_DIR}/`)) return path;
     if (path.startsWith(`${CURSOR_SKILLS_DIR}/`)) return path;
     if (path === CURSOR_MCP) return path;
+    if (path === CURSOR_GLOBAL_CLI_CONFIG) return path;
     if (path === CURSOR_HOOKS || path === CURSOR_IGNORE) return path;
     if (path === CURSOR_SETTINGS) return null;
     return path;
@@ -132,7 +141,7 @@ const globalCapabilities: TargetCapabilities = {
   mcp: 'native',
   hooks: 'native',
   ignore: 'native',
-  permissions: 'none',
+  permissions: 'native',
 };
 
 export const descriptor = {
@@ -153,7 +162,7 @@ export const descriptor = {
     mcp: 'native',
     hooks: 'native',
     ignore: 'native',
-    permissions: 'partial',
+    permissions: 'native',
   },
   emptyImportMessage:
     'No Cursor config found (AGENTS.md or .cursor/rules/*.mdc; with --global: ~/.cursor/{rules/*.mdc,AGENTS.md,mcp.json,hooks.json,cursorignore,skills/,agents/,commands/} and legacy ~/.agentsmesh-exports/cursor/user-rules.md).',

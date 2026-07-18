@@ -14,6 +14,9 @@ export const CURSOR_HOOKS = '.cursor/hooks.json';
 export const CURSOR_SETTINGS = '.cursor/settings.json';
 export const CURSOR_IGNORE = '.cursorignore';
 export const CURSOR_INDEXING_IGNORE = '.cursorindexingignore';
+export const CURSOR_CLI_JSON = '.cursor/cli.json';
+/** Global-scope Cursor CLI config path: ~/.cursor/cli-config.json (distinct filename from project-scope). */
+export const CURSOR_GLOBAL_CLI_CONFIG = '.cursor/cli-config.json';
 
 /** Legacy global merged rules path (import still reads this when present). */
 export const CURSOR_GLOBAL_EXPORT_DIR = '.agentsmesh-exports/cursor';

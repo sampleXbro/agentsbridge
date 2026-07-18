@@ -53,9 +53,14 @@ describe('cursor settings helpers', () => {
       }),
     );
     writeFileSync(
-      join(dir, '.cursor', 'settings.json'),
+      join(dir, '.cursor', 'cli.json'),
       JSON.stringify({
         permissions: { allow: ['Read', 7], deny: ['Bash'] },
+      }),
+    );
+    writeFileSync(
+      join(dir, '.cursor', 'settings.json'),
+      JSON.stringify({
         hooks: { postToolUse: [{ matcher: '*', type: 'command', command: 'pnpm test' }] },
       }),
     );

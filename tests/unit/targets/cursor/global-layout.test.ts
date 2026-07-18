@@ -75,6 +75,12 @@ describe('cursor global layout — rewriteGeneratedPath', () => {
     expect(rewrite('.cursorignore')).toBe('.cursorignore');
   });
 
+  it('keeps .cursor/cli-config.json unchanged (global-scope permissions file)', () => {
+    // Global-scope cursor permissions use ~/.cursor/cli-config.json (distinct from project-scope .cursor/cli.json)
+    // per https://cursor.com/docs/cli/reference/permissions
+    expect(rewrite('.cursor/cli-config.json')).toBe('.cursor/cli-config.json');
+  });
+
   it('suppresses .cursor/settings.json (not in global mode)', () => {
     expect(rewrite('.cursor/settings.json')).toBeNull();
   });
@@ -261,5 +267,34 @@ describe('cursor global frontmatter preservation', () => {
     expect(entries[0]!.command).toBe('./scripts/validate.sh');
     expect(entries[0]!.timeout).toBe(30);
     expect(entries[0]).not.toHaveProperty('hooks');
+  });
+
+  it('emits permissions to .cursor/cli-config.json in global mode (not .cursor/cli.json)', async () => {
+    // Global Cursor permissions use ~/.cursor/cli-config.json per
+    // https://cursor.com/docs/cli/reference/permissions
+    const results = await generate({
+      config: { ...makeGlobalConfig(), features: ['permissions'] } as ValidatedConfig,
+      canonical: makeCanonical({
+        permissions: { allow: ['Read', 'Grep'], deny: ['WebFetch'] },
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const cliConfig = results.find(
+      (r) => r.target === 'cursor' && r.path === '.cursor/cli-config.json',
+    );
+    expect(cliConfig).toBeDefined();
+    const parsed = JSON.parse(cliConfig!.content) as Record<string, unknown>;
+    expect(parsed).toHaveProperty('permissions');
+    const perms = parsed.permissions as Record<string, unknown>;
+    expect(perms.allow).toEqual(['Read', 'Grep']);
+    expect(perms.deny).toEqual(['WebFetch']);
+
+    // project-scope path must NOT be emitted in global mode
+    const projectScopeFile = results.find(
+      (r) => r.target === 'cursor' && r.path === '.cursor/cli.json',
+    );
+    expect(projectScopeFile).toBeUndefined();
   });
 });

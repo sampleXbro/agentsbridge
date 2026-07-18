@@ -71,15 +71,15 @@ describe('cursorHooksToCanonical — uncovered branches', () => {
 });
 
 describe('importSettings — uncovered branches', () => {
-  it('returns silently when settings.json is missing', async () => {
+  it('returns silently when cli.json and settings.json are missing', async () => {
     const results: ImportResult[] = [];
     await importSettings(dir, results);
     expect(results).toEqual([]);
   });
 
-  it('handles invalid JSON in settings.json (no throw)', async () => {
+  it('handles invalid JSON in cli.json (no throw)', async () => {
     mkdirSync(join(dir, '.cursor'), { recursive: true });
-    writeFileSync(join(dir, '.cursor', 'settings.json'), '{invalid');
+    writeFileSync(join(dir, '.cursor', 'cli.json'), '{invalid');
     const results: ImportResult[] = [];
     await importSettings(dir, results);
     expect(results).toEqual([]);
@@ -87,7 +87,7 @@ describe('importSettings — uncovered branches', () => {
 
   it('skips permissions when rawPerms is array (not object)', async () => {
     mkdirSync(join(dir, '.cursor'), { recursive: true });
-    writeFileSync(join(dir, '.cursor', 'settings.json'), JSON.stringify({ permissions: ['Read'] }));
+    writeFileSync(join(dir, '.cursor', 'cli.json'), JSON.stringify({ permissions: ['Read'] }));
     const results: ImportResult[] = [];
     await importSettings(dir, results);
     expect(results.filter((r) => r.feature === 'permissions')).toEqual([]);
@@ -96,7 +96,7 @@ describe('importSettings — uncovered branches', () => {
   it('skips permissions when allow and deny are both empty', async () => {
     mkdirSync(join(dir, '.cursor'), { recursive: true });
     writeFileSync(
-      join(dir, '.cursor', 'settings.json'),
+      join(dir, '.cursor', 'cli.json'),
       JSON.stringify({ permissions: { allow: [], deny: [] } }),
     );
     const results: ImportResult[] = [];
@@ -107,7 +107,7 @@ describe('importSettings — uncovered branches', () => {
   it('skips permissions when allow/deny are non-array', async () => {
     mkdirSync(join(dir, '.cursor'), { recursive: true });
     writeFileSync(
-      join(dir, '.cursor', 'settings.json'),
+      join(dir, '.cursor', 'cli.json'),
       JSON.stringify({ permissions: { allow: 'no', deny: 7 } }),
     );
     const results: ImportResult[] = [];

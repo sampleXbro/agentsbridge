@@ -9,7 +9,7 @@
  *  - Skills: imperative (`.cursor/skills/*.md` flat → directory rename).
  *  - MCP: imperative (writes the source JSON verbatim to preserve fields the
  *    runner's `mcpJson` parser would drop, e.g. `disabledMcpjsonServers`).
- *  - Settings: imperative (extracts `permissions` out of `.cursor/settings.json`).
+ *  - Settings: imperative (extracts `permissions` out of `.cursor/cli.json`).
  *  - Ignore: imperative (merges `.cursorignore` + `.cursorindexingignore` into
  *    one deduped list — the runner's `flatFile` mode does not model merge).
  *  - Commands / Agents: declared on the descriptor.

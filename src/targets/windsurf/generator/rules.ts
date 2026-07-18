@@ -1,6 +1,7 @@
 import { basename } from 'node:path';
 import type { CanonicalFiles } from '../../../core/types.js';
 import { serializeFrontmatter } from '../../../utils/text/markdown.js';
+import { appendEmbeddedRulesBlock } from '../../projection/managed-blocks.js';
 import { WINDSURF_RULES_DIR, WINDSURF_AGENTS_MD } from '../constants.js';
 import type { RulesOutput } from './types.js';
 
@@ -58,4 +59,14 @@ export function generateRules(canonical: CanonicalFiles): RulesOutput[] {
   }
 
   return outputs;
+}
+
+export function renderWindsurfGlobalInstructions(canonical: CanonicalFiles): string {
+  const root = canonical.rules.find((r) => r.root);
+  const nonRootRules = canonical.rules.filter((r) => {
+    if (r.root) return false;
+    return r.targets.length === 0 || r.targets.includes('windsurf');
+  });
+
+  return appendEmbeddedRulesBlock(root?.body.trim() ?? '', nonRootRules);
 }

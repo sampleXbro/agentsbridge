@@ -28,3 +28,17 @@ export function lintMcp(canonical: CanonicalFiles): LintDiagnostic[] {
     ),
   ];
 }
+
+export function lintPermissions(canonical: CanonicalFiles): LintDiagnostic[] {
+  if (!canonical.permissions) return [];
+  const { allow, deny } = canonical.permissions;
+  const ask = canonical.permissions.ask ?? [];
+  if (allow.length === 0 && deny.length === 0 && ask.length === 0) return [];
+  return [
+    createWarning(
+      '.agentsmesh/permissions.yaml',
+      'windsurf',
+      'Windsurf terminal permissions (auto-execution, command allow/deny lists) are managed via user settings UI; agentsmesh does not generate permissions config.',
+    ),
+  ];
+}

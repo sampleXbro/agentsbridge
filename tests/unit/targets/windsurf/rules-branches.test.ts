@@ -9,13 +9,18 @@
  *   - rule with no description and no globs → no frontmatter wrapper
  *   - directoryScopedRuleDir branches: single dir (mirror), multi-segment, mismatched dirs
  *   - rule slug fallback when source is _root → 'root'
+ *   - renderWindsurfGlobalInstructions: root-only, root+non-root, no-root, target filter
  */
 import { describe, it, expect } from 'vitest';
-import { generateRules } from '../../../../src/targets/windsurf/generator/rules.js';
+import {
+  generateRules,
+  renderWindsurfGlobalInstructions,
+} from '../../../../src/targets/windsurf/generator/rules.js';
 import {
   WINDSURF_RULES_DIR,
   WINDSURF_AGENTS_MD,
 } from '../../../../src/targets/windsurf/constants.js';
+import { EMBEDDED_RULES_START } from '../../../../src/targets/projection/managed-blocks.js';
 import type { CanonicalFiles, CanonicalRule } from '../../../../src/core/types.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
@@ -276,5 +281,133 @@ describe('windsurf generateRules — directoryScopedRuleDir branches', () => {
       }),
     );
     expect(result.some((r) => r.path === `${WINDSURF_RULES_DIR}/root.md`)).toBe(true);
+  });
+});
+
+describe('renderWindsurfGlobalInstructions — branch coverage', () => {
+  it('returns empty string when there is no root rule and no non-root rules', () => {
+    const result = renderWindsurfGlobalInstructions(makeCanonical());
+    expect(result).toBe('');
+  });
+
+  it('returns root body trimmed when there are no non-root rules', () => {
+    const result = renderWindsurfGlobalInstructions(
+      makeCanonical({
+        rules: [
+          {
+            source: '/p/.agentsmesh/rules/_root.md',
+            root: true,
+            targets: [],
+            description: 'Root',
+            globs: [],
+            body: '  Use TypeScript.  \n',
+          },
+        ],
+      }),
+    );
+    expect(result).toBe('Use TypeScript.');
+    expect(result).not.toContain(EMBEDDED_RULES_START);
+  });
+
+  it('embeds non-root windsurf rules after root body', () => {
+    const result = renderWindsurfGlobalInstructions(
+      makeCanonical({
+        rules: [
+          {
+            source: '/p/.agentsmesh/rules/_root.md',
+            root: true,
+            targets: [],
+            description: '',
+            globs: [],
+            body: 'Root body.',
+          },
+          {
+            source: '/p/.agentsmesh/rules/ts.md',
+            root: false,
+            targets: [],
+            description: 'TypeScript rules',
+            globs: ['src/**/*.ts'],
+            body: 'Use strict mode.',
+          },
+        ],
+      }),
+    );
+    expect(result).toContain('Root body.');
+    expect(result).toContain(EMBEDDED_RULES_START);
+    expect(result).toContain('Use strict mode.');
+  });
+
+  it('skips non-root rules whose targets exclude windsurf', () => {
+    const result = renderWindsurfGlobalInstructions(
+      makeCanonical({
+        rules: [
+          {
+            source: '/p/.agentsmesh/rules/_root.md',
+            root: true,
+            targets: [],
+            description: '',
+            globs: [],
+            body: 'Root.',
+          },
+          {
+            source: '/p/.agentsmesh/rules/cursor-only.md',
+            root: false,
+            targets: ['cursor'],
+            description: '',
+            globs: [],
+            body: 'Cursor only.',
+          },
+        ],
+      }),
+    );
+    expect(result).not.toContain(EMBEDDED_RULES_START);
+    expect(result).toBe('Root.');
+  });
+
+  it('includes non-root rules targeting windsurf explicitly', () => {
+    const result = renderWindsurfGlobalInstructions(
+      makeCanonical({
+        rules: [
+          {
+            source: '/p/.agentsmesh/rules/_root.md',
+            root: true,
+            targets: [],
+            description: '',
+            globs: [],
+            body: 'Root.',
+          },
+          {
+            source: '/p/.agentsmesh/rules/windsurf-only.md',
+            root: false,
+            targets: ['windsurf'],
+            description: '',
+            globs: [],
+            body: 'Windsurf specific.',
+          },
+        ],
+      }),
+    );
+    expect(result).toContain(EMBEDDED_RULES_START);
+    expect(result).toContain('Windsurf specific.');
+  });
+
+  it('returns empty string (no root body) and embeds rules when root is absent', () => {
+    const result = renderWindsurfGlobalInstructions(
+      makeCanonical({
+        rules: [
+          {
+            source: '/p/.agentsmesh/rules/ts.md',
+            root: false,
+            targets: [],
+            description: 'TS',
+            globs: [],
+            body: 'TS body.',
+          },
+        ],
+      }),
+    );
+    // No root rule → root body is '' → appendEmbeddedRulesBlock returns the block only
+    expect(result).toContain(EMBEDDED_RULES_START);
+    expect(result).toContain('TS body.');
   });
 });

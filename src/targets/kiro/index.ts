@@ -9,11 +9,12 @@ import {
   generateMcp,
   generateHooks,
   generateIgnore,
+  generatePermissions,
 } from './generator.js';
 import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromKiro } from './importer.js';
 import { lintRules } from './linter.js';
-import { lintHooks } from './lint.js';
+import { lintHooks, lintPermissions } from './lint.js';
 import { buildKiroImportPaths } from '../../core/reference/import-map-builders.js';
 import {
   KIRO_TARGET,
@@ -46,6 +47,7 @@ export const target: TargetGenerators = {
   generateMcp,
   generateHooks,
   generateIgnore,
+  generatePermissions,
   importFrom: importFromKiro,
 };
 
@@ -130,9 +132,9 @@ const globalCapabilities: TargetCapabilities = {
   agents: 'native',
   skills: 'native',
   mcp: 'native',
-  hooks: 'none',
+  hooks: 'partial',
   ignore: 'native',
-  permissions: 'none',
+  permissions: 'partial',
 };
 
 export const descriptor = {
@@ -153,7 +155,7 @@ export const descriptor = {
     mcp: 'native',
     hooks: 'native',
     ignore: 'native',
-    permissions: 'none',
+    permissions: 'partial',
   },
   emptyImportMessage:
     'No Kiro config found (AGENTS.md, .kiro/steering, .kiro/skills, .kiro/agents, .kiro/hooks, .kiro/settings/mcp.json, or .kiroignore).',
@@ -161,6 +163,7 @@ export const descriptor = {
   lintRules,
   lint: {
     hooks: lintHooks,
+    permissions: lintPermissions,
   },
   project,
   globalSupport: {

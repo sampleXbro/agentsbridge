@@ -4,7 +4,7 @@ export const kiroContract: TargetPathContract = {
   generated: [
     '.kiro/agents/code-reviewer.md',
     '.kiro/agents/researcher.md',
-    '.kiro/hooks/post-tool-use-1.kiro.hook',
+    '.kiro/hooks/post-tool-use-1.json',
     '.kiro/settings/mcp.json',
     '.kiro/skills/am-command-review/SKILL.md',
     '.kiro/skills/api-generator/SKILL.md',

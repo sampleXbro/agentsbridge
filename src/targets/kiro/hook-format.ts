@@ -1,38 +1,39 @@
 import { stringify as yamlStringify } from 'yaml';
 import type { HookEntry, Hooks } from '../../core/types.js';
 
-interface KiroWhen {
-  type: string;
-  patterns?: string[];
-  tools?: string[];
-}
-
-interface KiroThen {
-  type: 'askAgent' | 'shellCommand';
+interface KiroHookAction {
+  type: 'agent' | 'command';
   prompt?: string;
   command?: string;
 }
 
-interface KiroHookFile {
+interface KiroHookEntry {
   name: string;
   description?: string;
-  version: '1';
-  when: KiroWhen;
-  then: KiroThen;
+  trigger: string;
+  matcher?: string;
+  action: KiroHookAction;
+  timeout?: number;
+  enabled?: boolean;
 }
 
-const CANONICAL_TO_KIRO = {
-  UserPromptSubmit: 'promptSubmit',
-  SubagentStop: 'agentStop',
-  PreToolUse: 'preToolUse',
-  PostToolUse: 'postToolUse',
+interface KiroHookFile {
+  version: 'v1';
+  hooks: KiroHookEntry[];
+}
+
+const CANONICAL_TO_KIRO_TRIGGER = {
+  UserPromptSubmit: 'UserPromptSubmit',
+  SubagentStop: 'Stop',
+  PreToolUse: 'PreToolUse',
+  PostToolUse: 'PostToolUse',
 } as const;
 
-const KIRO_TO_CANONICAL = new Map<string, keyof typeof CANONICAL_TO_KIRO>([
-  ['promptSubmit', 'UserPromptSubmit'],
-  ['agentStop', 'SubagentStop'],
-  ['preToolUse', 'PreToolUse'],
-  ['postToolUse', 'PostToolUse'],
+const KIRO_TO_CANONICAL = new Map<string, keyof typeof CANONICAL_TO_KIRO_TRIGGER>([
+  ['UserPromptSubmit', 'UserPromptSubmit'],
+  ['Stop', 'SubagentStop'],
+  ['PreToolUse', 'PreToolUse'],
+  ['PostToolUse', 'PostToolUse'],
 ]);
 
 function toKebab(value: string): string {
@@ -46,34 +47,33 @@ function hookText(entry: HookEntry): string | undefined {
   return entry.type === 'prompt' ? entry.prompt : entry.command;
 }
 
-function toWhen(event: keyof typeof CANONICAL_TO_KIRO, matcher: string): KiroWhen {
-  const type = CANONICAL_TO_KIRO[event];
-  if (event === 'PreToolUse' || event === 'PostToolUse') {
-    return { type, tools: [matcher || '*'] };
-  }
-  return { type };
-}
-
 export function generateKiroHooks(hooks: Hooks): Array<{ name: string; content: string }> {
   const outputs: Array<{ name: string; content: string }> = [];
   for (const [event, entries] of Object.entries(hooks)) {
-    const mappedEvent = event as keyof typeof CANONICAL_TO_KIRO;
-    if (!(mappedEvent in CANONICAL_TO_KIRO) || !Array.isArray(entries)) continue;
+    const mappedEvent = event as keyof typeof CANONICAL_TO_KIRO_TRIGGER;
+    if (!(mappedEvent in CANONICAL_TO_KIRO_TRIGGER) || !Array.isArray(entries)) continue;
+    const trigger = CANONICAL_TO_KIRO_TRIGGER[mappedEvent];
     let index = 1;
     for (const entry of entries) {
       const text = hookText(entry);
       if (!text) continue;
+      const matcher = entry.matcher && entry.matcher !== '*' ? entry.matcher : undefined;
+      const action: KiroHookAction =
+        entry.type === 'prompt'
+          ? { type: 'agent', prompt: text }
+          : { type: 'command', command: text };
+      const hookEntry: KiroHookEntry = {
+        name: `${toKebab(event)}-${index}`,
+        trigger,
+        ...(matcher !== undefined && { matcher }),
+        action,
+      };
       const file: KiroHookFile = {
-        name: `${toKebab(event)} ${index}`,
-        version: '1',
-        when: toWhen(mappedEvent, entry.matcher),
-        then:
-          entry.type === 'prompt'
-            ? { type: 'askAgent', prompt: text }
-            : { type: 'shellCommand', command: text },
+        version: 'v1',
+        hooks: [hookEntry],
       };
       outputs.push({
-        name: `${toKebab(event)}-${index}.kiro.hook`,
+        name: `${toKebab(event)}-${index}.json`,
         content: JSON.stringify(file, null, 2),
       });
       index += 1;
@@ -82,25 +82,25 @@ export function generateKiroHooks(hooks: Hooks): Array<{ name: string; content: 
   return outputs;
 }
 
-function toCanonicalEntry(file: KiroHookFile): { event: string; entry: HookEntry } | null {
-  const canonicalEvent = KIRO_TO_CANONICAL.get(file.when.type);
+function toCanonicalEntry(hookEntry: KiroHookEntry): { event: string; entry: HookEntry } | null {
+  const canonicalEvent = KIRO_TO_CANONICAL.get(hookEntry.trigger);
   if (!canonicalEvent) return null;
-  const matcher = file.when.tools?.[0] ?? file.when.patterns?.[0] ?? '*';
-  if (file.then.type === 'askAgent' && typeof file.then.prompt === 'string') {
+  const matcher = hookEntry.matcher ?? '*';
+  if (hookEntry.action.type === 'agent' && typeof hookEntry.action.prompt === 'string') {
     return {
       event: canonicalEvent,
       entry: {
         matcher,
-        command: file.then.prompt,
-        prompt: file.then.prompt,
+        command: hookEntry.action.prompt,
+        prompt: hookEntry.action.prompt,
         type: 'prompt',
       },
     };
   }
-  if (file.then.type === 'shellCommand' && typeof file.then.command === 'string') {
+  if (hookEntry.action.type === 'command' && typeof hookEntry.action.command === 'string') {
     return {
       event: canonicalEvent,
-      entry: { matcher, command: file.then.command, type: 'command' },
+      entry: { matcher, command: hookEntry.action.command, type: 'command' },
     };
   }
   return null;
@@ -114,9 +114,11 @@ export function parseKiroHookFile(content: string): { event: string; entry: Hook
     return null;
   }
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
-  const file = parsed as KiroHookFile;
-  if (!file.when || !file.then || typeof file.when.type !== 'string') return null;
-  return toCanonicalEntry(file);
+  const file = parsed as Partial<KiroHookFile>;
+  if (!Array.isArray(file.hooks) || file.hooks.length === 0) return null;
+  const hookEntry = file.hooks[0];
+  if (!hookEntry || typeof hookEntry.trigger !== 'string') return null;
+  return toCanonicalEntry(hookEntry as KiroHookEntry);
 }
 
 export function serializeCanonicalHooks(hooks: Hooks): string {

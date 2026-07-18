@@ -15,7 +15,7 @@ import type { TargetDescriptor, TargetLayout } from '../catalog/target-descripto
 import { generateRules, generateSkills } from './generator.js';
 import { importFromZed } from './importer.js';
 import { lintRules } from './linter.js';
-import { lintHooks, lintPermissions, lintIgnore } from './lint.js';
+import { lintPermissions, lintIgnore } from './lint.js';
 import { buildZedImportPaths } from '../../core/reference/import-map-builders.js';
 import {
   ZED_TARGET,
@@ -23,6 +23,7 @@ import {
   ZED_SETTINGS_FILE,
   ZED_SKILLS_DIR,
   ZED_GLOBAL_SETTINGS_FILE,
+  ZED_GLOBAL_SKILLS_DIR,
   ZED_CANONICAL_RULES_DIR,
 } from './constants.js';
 
@@ -56,8 +57,9 @@ const project: TargetLayout = {
 
 const globalLayout: TargetLayout = {
   rootInstructionPath: undefined,
+  skillDir: ZED_GLOBAL_SKILLS_DIR,
   managedOutputs: {
-    dirs: [],
+    dirs: [ZED_GLOBAL_SKILLS_DIR],
     files: [ZED_GLOBAL_SETTINGS_FILE],
   },
   rewriteGeneratedPath(path) {
@@ -85,8 +87,8 @@ const capabilities: TargetCapabilities = {
   skills: 'native',
   mcp: 'native',
   hooks: 'none',
-  ignore: 'none',
-  permissions: 'none',
+  ignore: 'partial',
+  permissions: 'partial',
 };
 
 const globalCapabilities: TargetCapabilities = {
@@ -94,11 +96,11 @@ const globalCapabilities: TargetCapabilities = {
   additionalRules: 'none',
   commands: 'none',
   agents: 'none',
-  skills: 'none',
+  skills: 'native',
   mcp: 'native',
   hooks: 'none',
-  ignore: 'none',
-  permissions: 'none',
+  ignore: 'partial',
+  permissions: 'partial',
 };
 
 function mergeZedSettings(existing: string | null, newContent: string): string {
@@ -135,7 +137,6 @@ export const descriptor = {
   emptyImportMessage: 'No Zed config found (.rules or .zed/settings.json).',
   lintRules,
   lint: {
-    hooks: lintHooks,
     permissions: lintPermissions,
     ignore: lintIgnore,
   },

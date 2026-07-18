@@ -239,6 +239,20 @@
         "t-glob-840ca032"
       ]
     },
+    "capability-ledger-ledger-cell-fingerprint-toplevelkeys-mus": {
+      "createdAt": "2026-07-18",
+      "evidence": [],
+      "rationale": "Fingerprints are verified against real generator output using the canonical-full fixture; doc-schema keys that the generator never writes cause conformance failures.",
+      "rule": "Ledger cell fingerprint topLevelKeys must reflect what the generator actually emits for the canonical-full fixture — not the full documentation schema. Keys that are conditional on non-empty canonical inputs (e.g. allowedTools when tools=[]) or runtime-managed by the tool (e.g. smart_approve) must be omitted from topLevelKeys.",
+      "status": "active",
+      "topics": [
+        "capability-ledger"
+      ],
+      "triggers": [
+        "t-glob-4d2ee3c5",
+        "t-kw-9a36f4fd"
+      ]
+    },
     "capability-ledger-never-run-pnpm-capabilities-seed": {
       "createdAt": "2026-07-11",
       "evidence": [],
@@ -285,6 +299,20 @@
         "t-glob-1120a27d",
         "t-cmd-33ca9506",
         "t-kw-8d854c5e"
+      ]
+    },
+    "capability-ledger-when-a-target-s-mergegeneratedoutputcont": {
+      "createdAt": "2026-07-18",
+      "evidence": [],
+      "rationale": "The mergeGeneratedOutputContent hook receives the already-rewritten path, so a check against the project constant always fails in global scope.",
+      "rule": "When a target's mergeGeneratedOutputContent checks a path constant (e.g. CRUSH_CONFIG_FILE) to decide whether to merge, also include the global-scope rewritten path (e.g. CRUSH_GLOBAL_CONFIG_FILE) — otherwise global-scope multi-feature merges silently overwrite each other because the rewritten path never matches the project-only constant.",
+      "status": "active",
+      "topics": [
+        "capability-ledger"
+      ],
+      "triggers": [
+        "t-glob-9f0a5990",
+        "t-kw-3d736288"
       ]
     },
     "capability-ledger-when-consuming-pnpm-script-json": {
@@ -9480,6 +9508,10 @@
       "kind": "keyword",
       "pattern": "continue permissions hooks capability"
     },
+    "t-kw-3d736288": {
+      "kind": "keyword",
+      "pattern": "mergeGeneratedOutputContent"
+    },
     "t-kw-3e99909c": {
       "kind": "keyword",
       "pattern": "instrumented entry point"
@@ -9651,6 +9683,10 @@
     "t-kw-969d455a": {
       "kind": "keyword",
       "pattern": "root artifact collision"
+    },
+    "t-kw-9a36f4fd": {
+      "kind": "keyword",
+      "pattern": "topLevelKeys fingerprint ledger"
     },
     "t-kw-9cc52861": {
       "kind": "keyword",

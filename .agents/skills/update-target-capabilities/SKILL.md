@@ -77,6 +77,22 @@ Run `superpowers:subagent-driven-development` when touching more than one (targe
 
 The ledger is an oracle, not a source of truth: current levels always come from the descriptor (the matrix derives from there); the ledger records where the tool's docs say the file/shape is, so we validate — never generate — against it. Re-run `pnpm capabilities:seed` after adding or changing a native/embedded feature to refresh fingerprint skeletons.
 
+## Fast Execution Playbook
+
+Optimise for zero wasted tokens. Treat each phase as a gate: only enter the next if the previous signals real work.
+
+**Phase 0 — Deterministic triage (~0 tokens).**
+Run `pnpm capabilities:audit --json` then the full verification stack (`pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm matrix:verify`, `pnpm capabilities:verify`), capturing the **real exit codes** — never pipe any of those commands through `tail`/`grep`; a non-zero exit masked by the pipeline is the single most common source of false-green audits. If the audit returns 0 gaps, 0 stale, 0 missing, 0 broken **and** all verification passes, **stop** — there is nothing to do.
+
+**Phase 1 — One pipelined pass per target.**
+Work only the targets that appear in the gaps/stale/missing/broken buckets or in the current diff. For each such target, execute research → primary-doc verification → ledger update → descriptor fix as **one uninterrupted unit of work**. Do not split into separate "research wave" then "fix wave" — that forces redundant diff re-reads and doubles context. Assignment rules:
+- Shared cross-cutting test suites (layout-metadata, agents-folder-structure-research, skill-mirror, reference-rewrite matrix, e2e content contracts) each get **exactly one owner target** designated up front; other targets import from or assert against that owner's output rather than duplicating coverage.
+- Verify majors (level raises) once with primary-doc evidence; verify criticals (round-trip symmetry claims, scopeExtras gating, multi-write merge base) twice — run the test and re-read the generator path to confirm the gate is actually reached.
+- Ledger cell `path`, `ext`, `format`, and `fingerprint` values MUST be derived from the conformance fixture's actual generated output — not from docs. Docs determine `maxAchievable`, `verdict`, and `source` only.
+
+**Phase 2 — Single-writer close.**
+After all per-target fixes are in, merge ledger provenance in one pass, then run `catalog:generate` → `matrix:generate` sequentially. Follow with exactly **one** full-stack run: `pnpm test` to completion, then `pnpm test:e2e` — never concurrent with a build, never interleaved. If any command fails, diagnose before retrying; a second blind retry without root-cause analysis wastes more context than it saves.
+
 ## Required Verification
 
 Before claiming completion, every command must pass:

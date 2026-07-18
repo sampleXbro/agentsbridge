@@ -1,11 +1,3 @@
----
-root: false
-description: TypeScript-specific coding standards
-globs:
-  - src/**/*.ts
-  - tests/**/*.ts
----
-
 # TypeScript Standards
 
 - Use strict mode

@@ -490,7 +490,8 @@ describe('generate', () => {
     });
     const paths = results.map((r) => r.path).sort();
     expect(paths).toContain('.claude/settings.json');
-    // Cursor has no native tool-permission file — permissions not emitted
+    // Cursor permissions are native — emitted to .cursor/cli.json (not settings.json)
+    expect(paths).toContain('.cursor/cli.json');
     expect(paths).not.toContain('.cursor/settings.json');
     const claudePerm = results.find((r) => r.path === '.claude/settings.json');
     expect(claudePerm?.content).toContain('"allow"');
@@ -767,7 +768,7 @@ describe('generate hooks', () => {
     });
     expect(claudeParsed.hooks).toBeDefined();
     expect((claudeParsed.hooks as Record<string, unknown>).PostToolUse).toBeDefined();
-    // Cursor: no native permissions file; hooks in .cursor/hooks.json
+    // Cursor: permissions native (.cursor/cli.json), hooks in .cursor/hooks.json
     const cursorSettings = results.find((r) => r.path === '.cursor/settings.json');
     expect(cursorSettings).toBeUndefined();
     const cursorHooks = results.find((r) => r.path === '.cursor/hooks.json');
@@ -1997,15 +1998,22 @@ describe('generate Windsurf', () => {
     expect(mcpSecond?.status).toBe('unchanged');
   });
 
-  it('produces no permissions settings for cursor (no native tool-permission file)', async () => {
+  it('produces .cursor/cli.json for cursor permissions (native capability)', async () => {
     const config = minimalConfig({ targets: ['cursor'], features: ['rules', 'permissions'] });
     const canonical: CanonicalFiles = {
       ...canonicalWithRootRule('Root'),
       permissions: { allow: ['Read'], deny: [] },
     };
     const results = await generate({ config, canonical, projectRoot: TEST_DIR });
-    const permResult = results.find((r) => r.path === '.cursor/settings.json');
-    expect(permResult).toBeUndefined();
+    // cursor permissions are native — written to .cursor/cli.json (not settings.json)
+    const permResult = results.find((r) => r.path === '.cursor/cli.json');
+    expect(permResult).toBeDefined();
+    const parsed = JSON.parse(permResult!.content) as Record<string, unknown>;
+    expect(parsed).toHaveProperty('permissions');
+    const perms = parsed.permissions as Record<string, unknown>;
+    expect(perms.allow).toEqual(['Read']);
+    expect(perms).not.toHaveProperty('deny');
+    expect(results.find((r) => r.path === '.cursor/settings.json')).toBeUndefined();
   });
 
   it('produces unchanged status for hooks settings when content matches', async () => {
@@ -2025,5 +2033,52 @@ describe('generate Windsurf', () => {
     const second = await generate({ config, canonical, projectRoot: TEST_DIR });
     const hooksSecond = second.find((r) => r.path === '.cursor/settings.json');
     if (hooksSecond) expect(hooksSecond.status).toBe('unchanged');
+  });
+});
+
+describe('generate OpenCode — scoped settings gate', () => {
+  it('writes instructions glob in opencode.json when features includes only rules (no mcp/ignore/hooks/agents/permissions)', async () => {
+    // Regression: engine.ts gate at generateScopedSettingsFeature only fired when
+    // hasMcp || hasIgnore || hasHooks || hasAgents || hasPermissions — hasRules was absent.
+    // With features: ['rules'] alone, emitOpenCodeScopedSettings was never called, so no
+    // `instructions` entry was written to opencode.json, making .opencode/rules/*.md invisible.
+    const config = minimalConfig({
+      targets: ['opencode'],
+      features: ['rules'],
+    });
+    const canonical: CanonicalFiles = {
+      ...canonicalWithRootRule('Root'),
+      rules: [
+        {
+          source: join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
+          root: true,
+          targets: [],
+          description: '',
+          globs: [],
+          body: 'Root',
+        },
+        {
+          source: join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'),
+          root: false,
+          targets: [],
+          description: 'TS rules',
+          globs: ['src/**/*.ts'],
+          body: 'Use strict TypeScript.',
+        },
+      ],
+    };
+
+    const results = await generate({
+      config,
+      canonical,
+      projectRoot: TEST_DIR,
+    });
+
+    const opencodeConfig = results.find(
+      (r) => r.target === 'opencode' && r.path === 'opencode.json',
+    );
+    expect(opencodeConfig).toBeDefined();
+    const parsed = JSON.parse(opencodeConfig!.content) as Record<string, unknown>;
+    expect(parsed.instructions).toEqual(['.opencode/rules/*.md']);
   });
 });

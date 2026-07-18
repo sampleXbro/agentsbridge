@@ -2,7 +2,9 @@ import { addSimpleFileMapping, addSkillLikeMapping, listFiles, rel } from '../im
 import {
   TRAE_PROJECT_RULES,
   TRAE_RULES_DIR,
+  TRAE_AGENTS_DIR,
   TRAE_COMMANDS_DIR,
+  TRAE_GLOBAL_AGENTS_DIR,
   TRAE_GLOBAL_COMMANDS_DIR,
   TRAE_SKILLS_DIR,
   TRAE_GLOBAL_RULES_DIR,
@@ -10,7 +12,7 @@ import {
   TRAE_GLOBAL_SKILLS_DIR,
 } from '../../../targets/trae/constants.js';
 import type { TargetLayoutScope } from '../../../targets/catalog/target-descriptor.js';
-import { AB_RULES, AB_COMMANDS } from './constants.js';
+import { AB_AGENTS, AB_RULES, AB_COMMANDS } from './constants.js';
 
 export async function buildTraeImportPaths(
   refs: Map<string, string>,
@@ -27,6 +29,9 @@ export async function buildTraeImportPaths(
     for (const absPath of await listFiles(projectRoot, TRAE_GLOBAL_COMMANDS_DIR)) {
       addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_COMMANDS, '.md');
     }
+    for (const absPath of await listFiles(projectRoot, TRAE_GLOBAL_AGENTS_DIR)) {
+      addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_AGENTS, '.md');
+    }
     for (const absPath of await listFiles(projectRoot, TRAE_GLOBAL_SKILLS_DIR)) {
       addSkillLikeMapping(refs, rel(projectRoot, absPath), TRAE_GLOBAL_SKILLS_DIR);
     }
@@ -38,6 +43,9 @@ export async function buildTraeImportPaths(
     const relPath = rel(projectRoot, absPath);
     if (relPath === TRAE_PROJECT_RULES) continue;
     addSimpleFileMapping(refs, relPath, AB_RULES, '.md');
+  }
+  for (const absPath of await listFiles(projectRoot, TRAE_AGENTS_DIR)) {
+    addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_AGENTS, '.md');
   }
   for (const absPath of await listFiles(projectRoot, TRAE_COMMANDS_DIR)) {
     addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_COMMANDS, '.md');

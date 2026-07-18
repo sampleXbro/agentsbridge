@@ -139,7 +139,9 @@ export async function generate(ctx: GenerateContext): Promise<GenerateResult[]> 
   }
 
   // Scoped settings: target-specific sidecars (e.g. Gemini settings.json, plugin settings)
-  if (hasMcp || hasIgnore || hasHooks || hasAgents || hasPermissions) {
+  // hasRules is included so targets like opencode that write the instructions glob into their
+  // config file (opencode.json) are reached even when rules is the only enabled feature.
+  if (hasRules || hasMcp || hasIgnore || hasHooks || hasAgents || hasPermissions) {
     await generateScopedSettingsFeature(
       results,
       targets,

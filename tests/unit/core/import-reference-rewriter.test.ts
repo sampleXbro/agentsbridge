@@ -110,23 +110,23 @@ describe('createImportReferenceNormalizer', () => {
   });
 
   it('normalizes Antigravity global target prose paths back to canonical paths', async () => {
-    mkdirSync(join(TEST_DIR, '.gemini', 'antigravity', 'skills', 'api-gen', 'references'), {
+    mkdirSync(join(TEST_DIR, '.gemini', 'config', 'skills', 'api-gen', 'references'), {
       recursive: true,
     });
-    writeFileSync(join(TEST_DIR, '.gemini', 'antigravity', 'GEMINI.md'), '# Root\n');
+    writeFileSync(join(TEST_DIR, '.gemini', 'GEMINI.md'), '# Root\n');
     writeFileSync(
-      join(TEST_DIR, '.gemini', 'antigravity', 'skills', 'api-gen', 'SKILL.md'),
+      join(TEST_DIR, '.gemini', 'config', 'skills', 'api-gen', 'SKILL.md'),
       '# Skill\n',
     );
     writeFileSync(
-      join(TEST_DIR, '.gemini', 'antigravity', 'skills', 'api-gen', 'references', 'checklist.md'),
+      join(TEST_DIR, '.gemini', 'config', 'skills', 'api-gen', 'references', 'checklist.md'),
       '# Checklist\n',
     );
 
     const normalize = await createImportReferenceNormalizer('antigravity', TEST_DIR, 'global');
     const normalized = normalize(
-      'Use .gemini/antigravity/GEMINI.md and .gemini/antigravity/skills/api-gen/references/checklist.md.',
-      join(TEST_DIR, '.gemini', 'antigravity', 'GEMINI.md'),
+      'Use .gemini/GEMINI.md and .gemini/config/skills/api-gen/references/checklist.md.',
+      join(TEST_DIR, '.gemini', 'GEMINI.md'),
       join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
     );
 

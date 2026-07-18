@@ -51,6 +51,7 @@ export async function runLint(
   const hasMcp = config.features.includes('mcp');
   const hasPermissions = config.features.includes('permissions');
   const hasHooks = config.features.includes('hooks');
+  const hasIgnore = config.features.includes('ignore');
 
   const diagnostics: LintDiagnostic[] = [...lintLessonsSubsystem(projectRoot, scope)];
   const projectFiles = scope === 'global' ? [] : await getProjectFiles(projectRoot);
@@ -108,6 +109,9 @@ export async function runLint(
     }
     if (hasHooks && descriptor?.lint?.hooks) {
       diagnostics.push(...descriptor.lint.hooks(canonical, lintOpts));
+    }
+    if (hasIgnore && descriptor?.lint?.ignore) {
+      diagnostics.push(...descriptor.lint.ignore(canonical, lintOpts));
     }
   }
 

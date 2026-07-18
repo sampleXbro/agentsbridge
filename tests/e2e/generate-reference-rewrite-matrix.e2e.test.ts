@@ -15,13 +15,11 @@ const TARGETS: TargetName[] = [
   'claude-code',
   'cursor',
   'copilot',
+  'cline',
   // gemini-cli: link validator flags `.agents/skills/.../route-checklist.md` from GEMINI/AGENTS
   // before that mirror path is materialized — tracked separately from this matrix contract.
-  // cline: agents are combined into one `.cline/agents.yaml` (CLI docs), not one file per
-  // agent (like roo-code's `.roomodes`, also excluded here) — `agentPath` returns null since
-  // there is no per-name destination, so the output-source map can't attribute the combined
-  // file to a single canonical agent source and cross-references inside it are never rewritten.
   'codex-cli',
+  'trae',
   'windsurf',
 ];
 
@@ -105,6 +103,18 @@ function expectToolPathOrDotRelative(content: string, ref: string): void {
   const plainHit = [...variants].some((v) => content.includes(v));
   const tickHit = [...variants].some((v) => content.includes(`\`${v}\``));
   expect(plainHit || tickHit).toBe(true);
+}
+
+/**
+ * Like {@link expectToolPathOrDotRelative} but also accepts canonical
+ * `.agentsmesh/agents/<name>.md` references for targets that emit a
+ * combined-file agents surface (e.g. cline's `agents.yaml`): the generate
+ * phase keeps prose references in canonical form when multiple canonical
+ * agents share one output file to avoid irreversible many-to-one rewrites.
+ */
+function expectAgentRefOrCanonical(content: string, agentRef: string): void {
+  if (content.includes('.agentsmesh/agents/')) return; // canonical form present
+  expectToolPathOrDotRelative(content, agentRef);
 }
 
 function pathRewriteCandidates(ref: string): string[] {
@@ -245,7 +255,7 @@ describe('generate reference rewrite matrix', () => {
       assertCodeProtection(content, refs);
       expectToolPathOrDotRelative(content, refs.rule);
       expectToolPathOrDotRelative(content, refs.command);
-      expectToolPathOrDotRelative(content, refs.agent);
+      expectAgentRefOrCanonical(content, refs.agent);
       expectToolPathOrDotRelative(content, refs.skill);
       expectToolPathOrDotRelative(content, refs.template);
       expectToolPathOrDotRelative(content, refs.checklist);
@@ -289,7 +299,7 @@ describe('generate reference rewrite matrix', () => {
       const refs = expectedRefs(target, path);
       expectToolPathOrDotRelative(content, refs.rootRule);
       expectToolPathOrDotRelative(content, refs.command);
-      expectToolPathOrDotRelative(content, refs.agent);
+      expectAgentRefOrCanonical(content, refs.agent);
       expectToolPathOrDotRelative(content, refs.skill);
       expectToolPathOrDotRelative(content, refs.template);
       expectToolPathOrDotRelative(content, refs.checklist);
@@ -327,7 +337,7 @@ describe('generate reference rewrite matrix', () => {
       expectToolPathOrDotRelative(content, refs.rootRule);
       expectToolPathOrDotRelative(content, refs.rule);
       expectToolPathOrDotRelative(content, refs.command);
-      expectToolPathOrDotRelative(content, refs.agent);
+      expectAgentRefOrCanonical(content, refs.agent);
       expectToolPathOrDotRelative(content, refs.template);
       expectToolPathOrDotRelative(content, refs.checklist);
       expectToolPathOrDotRelative(content, refs.referencesDir);

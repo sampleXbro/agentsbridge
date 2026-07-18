@@ -9,7 +9,7 @@
  *
  * Existing test suites exercise the warning branch through generate flows,
  * leaving the two "no diagnostic" branches uncovered. This file fills the
- * gap for goose, opencode, zed, and kilo-code.
+ * gap for goose, opencode, zed (permissions only), and kilo-code.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -50,7 +50,6 @@ function withPermissions(
 describe('per-target lint helpers', () => {
   describe.each([
     ['opencode', opencode],
-    ['zed', zed],
     ['kilo-code', kilo],
   ] as const)('%s', (_name, mod) => {
     it('lintHooks returns [] when canonical.hooks is null', () => {
@@ -113,11 +112,28 @@ describe('per-target lint helpers', () => {
       expect(diags).toEqual([]);
     });
 
-    it('returns one warning when mcp.mcpServers has entries', () => {
+    it('returns one warning when mcp.mcpServers has entries (project scope)', () => {
       const diags = goose.lintMcp({
         ...emptyCanonical(),
         mcp: { mcpServers: { test: { command: 'x' } } } as never,
       });
+      expect(diags).toHaveLength(1);
+      expect(diags[0]!.level).toBe('warning');
+    });
+
+    it('returns [] at global scope even when mcp.mcpServers has entries', () => {
+      const diags = goose.lintMcp(
+        { ...emptyCanonical(), mcp: { mcpServers: { test: { command: 'x' } } } as never },
+        { scope: 'global' },
+      );
+      expect(diags).toEqual([]);
+    });
+
+    it('returns one warning at project scope with explicit scope option', () => {
+      const diags = goose.lintMcp(
+        { ...emptyCanonical(), mcp: { mcpServers: { test: { command: 'x' } } } as never },
+        { scope: 'project' },
+      );
       expect(diags).toHaveLength(1);
       expect(diags[0]!.level).toBe('warning');
     });

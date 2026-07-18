@@ -8,21 +8,6 @@
 import type { CanonicalFiles, LintDiagnostic } from '../../core/types.js';
 import { createWarning } from '../../core/lint/shared/helpers.js';
 
-export function lintHooks(canonical: CanonicalFiles): LintDiagnostic[] {
-  if (!canonical.hooks) return [];
-  const hasEntries = Object.values(canonical.hooks).some(
-    (entries) => Array.isArray(entries) && entries.length > 0,
-  );
-  if (!hasEntries) return [];
-  return [
-    createWarning(
-      '.agentsmesh/hooks.yaml',
-      'zed',
-      'Zed has no lifecycle hook system; canonical hooks are not projected.',
-    ),
-  ];
-}
-
 export function lintPermissions(canonical: CanonicalFiles): LintDiagnostic[] {
   if (!canonical.permissions) return [];
   const { allow, deny } = canonical.permissions;
@@ -32,7 +17,7 @@ export function lintPermissions(canonical: CanonicalFiles): LintDiagnostic[] {
     createWarning(
       '.agentsmesh/permissions.yaml',
       'zed',
-      'Zed permissions are managed via agent.tool_permissions in settings.json; canonical permissions are not projected.',
+      'Zed permissions are supported via agent.tool_permissions in .zed/settings.json; agentsmesh does not generate permissions config yet. Configure tool_permissions manually.',
     ),
   ];
 }
@@ -43,7 +28,7 @@ export function lintIgnore(canonical: CanonicalFiles): LintDiagnostic[] {
     createWarning(
       '.agentsmesh/ignore',
       'zed',
-      'Zed has no dedicated ignore file and relies on file_scan_exclusions in settings.json; canonical ignore patterns are not projected.',
+      'Zed ignore is supported via file_scan_exclusions in .zed/settings.json; agentsmesh does not generate ignore config yet. Configure file_scan_exclusions manually.',
     ),
   ];
 }

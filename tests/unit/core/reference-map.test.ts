@@ -108,10 +108,10 @@ describe('buildReferenceMap', () => {
     ];
     const refs = buildReferenceMap('antigravity', can, config(['antigravity']), 'global');
 
-    expect(refs.get('.agentsmesh/rules/_root.md')).toBe('.gemini/antigravity/GEMINI.md');
-    expect(refs.get('.agentsmesh/rules/typescript.md')).toBe('.gemini/antigravity/GEMINI.md');
+    expect(refs.get('.agentsmesh/rules/_root.md')).toBe('.gemini/GEMINI.md');
+    expect(refs.get('.agentsmesh/rules/typescript.md')).toBe('.gemini/GEMINI.md');
     expect(refs.get('.agentsmesh/skills/post-feature-qa/SKILL.md')).toBe(
-      '.gemini/antigravity/skills/post-feature-qa/SKILL.md',
+      '.gemini/config/skills/post-feature-qa/SKILL.md',
     );
   });
 
@@ -136,10 +136,10 @@ describe('buildReferenceMap', () => {
     const refs = buildReferenceMap('antigravity', can, config(['antigravity']), 'global');
 
     expect(refs.get('.agentsmesh/commands/deploy.md')).toBe(
-      '.gemini/antigravity/workflows/deploy.md',
+      '.gemini/antigravity/global_workflows/deploy.md',
     );
     expect(refs.get('.agentsmesh/commands/review.md')).toBe(
-      '.gemini/antigravity/workflows/review.md',
+      '.gemini/antigravity/global_workflows/review.md',
     );
   });
 

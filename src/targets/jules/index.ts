@@ -14,7 +14,14 @@
 
 import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
 import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
-import { generateRules } from './generator.js';
+import {
+  generateRules,
+  generateCommands,
+  generateMcp,
+  generateHooks,
+  generateIgnore,
+  generatePermissions,
+} from './generator.js';
 import { importFromJules } from './importer.js';
 import { lintRules } from './linter.js';
 import { lintHooks, lintPermissions, lintIgnore, lintMcp, lintCommands } from './lint.js';
@@ -25,6 +32,11 @@ export const target: TargetGenerators = {
   name: JULES_TARGET,
   primaryRootInstructionPath: JULES_ROOT_FILE,
   generateRules,
+  generateCommands,
+  generateMcp,
+  generateHooks,
+  generateIgnore,
+  generatePermissions,
   importFrom: importFromJules,
 };
 
@@ -50,13 +62,13 @@ const project: TargetLayout = {
 const capabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'embedded',
-  commands: 'none',
+  commands: 'partial',
   agents: 'none',
   skills: 'none',
-  mcp: 'none',
-  hooks: 'none',
-  ignore: 'none',
-  permissions: 'none',
+  mcp: 'partial',
+  hooks: 'partial',
+  ignore: 'partial',
+  permissions: 'partial',
 };
 
 export const descriptor = {

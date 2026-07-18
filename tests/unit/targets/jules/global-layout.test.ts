@@ -25,16 +25,16 @@ describe('jules descriptor layout', () => {
     expect(descriptor.project.managedOutputs?.dirs).toEqual([]);
   });
 
-  it('capabilities reflect rules-only support', () => {
+  it('capabilities reflect expected support levels', () => {
     expect(descriptor.capabilities.rules).toBe('native');
     expect(descriptor.capabilities.additionalRules).toBe('embedded');
-    expect(descriptor.capabilities.commands).toBe('none');
+    expect(descriptor.capabilities.commands).toBe('partial');
     expect(descriptor.capabilities.agents).toBe('none');
     expect(descriptor.capabilities.skills).toBe('none');
-    expect(descriptor.capabilities.mcp).toBe('none');
-    expect(descriptor.capabilities.hooks).toBe('none');
-    expect(descriptor.capabilities.ignore).toBe('none');
-    expect(descriptor.capabilities.permissions).toBe('none');
+    expect(descriptor.capabilities.mcp).toBe('partial');
+    expect(descriptor.capabilities.hooks).toBe('partial');
+    expect(descriptor.capabilities.ignore).toBe('partial');
+    expect(descriptor.capabilities.permissions).toBe('partial');
   });
 
   it('detection paths include AGENTS.md', () => {

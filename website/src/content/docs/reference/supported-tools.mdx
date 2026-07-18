@@ -26,7 +26,7 @@ With `--global`, the canonical directory is `~/.agentsmesh/` and CLI commands re
 | Aider | `~/CONVENTIONS.md`, `~/.aiderignore`, `~/.aider/skills/` | Same user-level paths |
 | Amazon Q Developer | `~/.aws/amazonq/rules/*.md`, `~/.aws/amazonq/mcp.json` | Same user-level paths |
 | Amp | `~/.config/amp/AGENTS.md`, `~/.config/amp/skills/`, `~/.config/amp/settings.json`, optional mirror to `~/.agents/skills/` | Same user-level paths |
-| Antigravity | `~/.gemini/antigravity/GEMINI.md`, `~/.gemini/antigravity/skills/`, `~/.gemini/antigravity/workflows/`, `~/.gemini/antigravity/mcp_config.json` | Same user-level paths |
+| Antigravity | `~/.gemini/GEMINI.md` (rules embedded), `~/.gemini/config/skills/`, `~/.gemini/antigravity/global_workflows/`, `~/.gemini/config/mcp_config.json`, `~/.gemini/config/hooks.json` | Same user-level paths |
 | Augment Code | `~/.augment/rules/*.md`, `~/.augment/commands/*.md`, `~/.augment/skills/`, `~/.augment/settings.json` | Same user-level paths |
 | Claude Code | `~/.claude/**` (including `CLAUDE.md`, `settings.json`, `hooks.json`, `skills/`, `agents/`, `commands/`, `output-styles/`), `~/.claude.json`, `~/.claudeignore`, mirrored skills under `~/.agents/skills/` | Same user-level paths (hooks prefer `~/.claude/hooks.json` when present) |
 | Cline | `~/.cline/data/settings/rules/*.md`, `~/Documents/Cline/Workflows/*.md`, `~/.cline/hooks/`, `~/.cline/data/settings/skills/*/SKILL.md`, mirrored skills under `~/.agents/skills/` (no documented global MCP, ignore, or agents surface — those are project-only per docs.cline.bot/cli/cli-reference) | Reads the same documented global directories (`~/.cline/data/settings/rules/`, `~/.cline/hooks/`, `~/.cline/data/settings/skills/`); MCP, ignore, and agents are not read at global scope |
@@ -63,13 +63,13 @@ Catalog defaults for a repo-local `agentsmesh generate` (see `descriptor.capabil
 |---|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
 | Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
 | Additional Rules | Embedded | Native | Embedded | Native | Native | Native | Native | Native | Native | Native | Embedded | Native | Embedded | Embedded | Embedded | Embedded | Embedded | Native | Native | Native | Native | Embedded | Native | Embedded | Native | Embedded | Native | Embedded | Native | Embedded |
-| Commands | — | — | Embedded | Partial (workflows) | Native | Native | Native (workflows) | Embedded | Native | Native | — | Native | Embedded | Native | Native | — | — | Native | Native | Embedded | Native | Native | Native | — | Native | Native | Native | — | Native (workflows) | — |
-| Agents | — | Native | — | — | Native | Native | Native | Native | — | Native | — | Native | Native | Native | Native | — | — | Native | Native | Native | Native | — | Native | — | Native | — | — | — | Embedded | — |
+| Commands | — | — | Embedded | Native (workflows) | Native | Native | Native (workflows) | Embedded | Native | Native | Embedded | Native | Embedded | Native | Native | Embedded | Partial | Native | Native | Embedded | Native | Native | Native | — | Native | Native | Native | Embedded | Native (workflows) | — |
+| Agents | — | Native | Embedded | — | Native | Native | Native | Native | — | Native | — | Native | Native | Native | Native | Embedded | — | Native | Native | Native | Native | — | Native | — | Native | Embedded | Native | — | Embedded | — |
 | Skills | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
-| MCP Servers | — | Native | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | — | Native | Native | Native | Native | — | Native | — | Native | — | Native | Native | Partial | Native |
-| Hooks | — | — | — | Native | Native | Native | Native | Native | — | Native | Native | Native | — | Native | Partial | Native | — | — | — | Native | — | — | Native | — | — | — | — | — | Native | — |
-| Ignore | Native | — | — | — | Native | Native | Native | — | — | — | Native | Native | — | — | Native (settings-embedded) | Native | — | Native | Native | Native | — | — | Native | — | Native | — | Native | — | Native | — |
-| Permissions | — | — | Native | Partial | — | Native | Partial | Native | — | — | Partial | Partial | — | — | Partial | — | — | — | Native | — | Native | — | Native | — | Native | — | — | Partial | — | — |
+| MCP Servers | Partial | Native | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Partial | Partial | Native | Native | Native | Native | — | Native | Partial | Native | Partial | Native | Native | Partial | Native |
+| Hooks | Partial | Embedded | Partial | Native | Native | Native | Native | Native | — | Native | Native | Native | — | Native | Native | Native | Partial | Partial | Partial | Native | Partial | Partial | Native | Partial | — | — | Native | Partial | Native | — |
+| Ignore | Native | — | Partial | — | Native | Native | Native | — | Native | — | Native | Native | Partial | Partial | Native (settings-embedded) | Native | Partial | Native | Native | Native | Partial | Partial | Native | Partial | Native | Partial | Native | Partial | Native | Partial |
+| Permissions | Partial | Embedded | Partial | Partial | — | Native | Partial | Native | — | — | Native | Native | Partial | Native | Partial | Partial | Partial | Partial | Native | Partial | Native | Partial | Native | Partial | Native | — | — | Partial | Partial | Partial |
 {/* agentsmesh:support-matrix:project:end */}
 
 ## Feature matrix (global scope)
@@ -79,15 +79,15 @@ Catalog defaults for `agentsmesh matrix --global` / `agentsmesh generate --globa
 {/* agentsmesh:support-matrix:global:start */}
 | Feature | Aider | Amazon Q Developer | Amp | Antigravity | Augment Code | Claude Code | Cline | Codex CLI | Continue | GitHub Copilot | Crush | Cursor | Deep Agents CLI | Factory Droid | Gemini CLI | Goose | Jules | Junie | Kilo Code | Kiro | OpenCode | Pi Agent | Qwen Code | Replit Agent | Roo Code | Rovo Dev | Trae | Warp | Windsurf | Zed |
 |---|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
-| Rules | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | — | Native | — |
-| Additional Rules | Embedded | — | Embedded | Embedded | Native | Native | Native | Embedded | Native | Native | Embedded | Native | Embedded | Embedded | Embedded | Embedded | — | Embedded | Native | Native | Native | Embedded | Native | — | Native | Embedded | Native | — | Partial | — |
-| Commands | — | — | Embedded | Partial (workflows) | Native | Native | Native (workflows) | Embedded | Native | — | — | Native | Embedded | Native | Native | — | — | Native | Native | Embedded | Native | Native | Native | — | Native | Native | Native | — | Native (workflows) | — |
-| Agents | — | Native | — | — | Native | Native | — | Native | — | Native | — | Native | Native | Native | Native | — | — | Native | Native | Native | Native | — | Native | — | Partial | — | — | — | Embedded | — |
-| Skills | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | — |
-| MCP Servers | — | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | — | Native | — | Partial | Native | Native | Native | Native | Native |
-| Hooks | — | — | — | Native | — | Native | Native | Native | — | Native | Native | Native | Native | Native | Partial | Native | — | — | — | — | — | — | Native | — | — | Native | — | — | Native | — |
-| Ignore | Native | — | — | — | — | Native | — | — | — | — | — | Native | — | — | — | Native | — | — | — | Native | — | — | — | — | — | — | — | — | Native | — |
-| Permissions | — | — | Native | Partial | Native | Native | Partial | Native | Native | Partial | — | — | — | — | Native | Native | — | Native | Native | — | Native | — | Native | — | Partial | Native | — | Partial | — | — |
+| Rules | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | — | Native | — |
+| Additional Rules | Embedded | — | Embedded | Embedded | Native | Native | Native | Embedded | Native | Embedded | Embedded | Native | Embedded | Embedded | Embedded | Embedded | — | Embedded | Native | Native | Native | Embedded | Native | — | Native | Embedded | Native | — | Embedded | — |
+| Commands | — | — | Embedded | Native (workflows) | Native | Native | Native (workflows) | Embedded | Native | — | Embedded | Native | Embedded | Native | Native | Embedded | — | Native | Native | Embedded | Native | Native | Native | — | Native | Native | Native | Embedded | Native (workflows) | — |
+| Agents | — | Native | Embedded | — | Native | Native | — | Native | — | Native | — | Native | Native | Native | Native | Embedded | — | Native | Native | Native | Native | — | Native | — | Partial | Embedded | Native | — | Embedded | — |
+| Skills | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native |
+| MCP Servers | Partial | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | — | Native | — | Partial | Native | Native | Native | Native | Native |
+| Hooks | Partial | Embedded | Partial | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | Native | — | Embedded | Partial | Partial | Partial | Partial | Native | — | — | Native | Native | Partial | Native | — |
+| Ignore | Native | — | Partial | — | — | Native | — | — | Native | — | — | Native | Partial | Partial | — | Native | — | — | — | Native | Partial | Partial | — | — | — | Partial | — | Partial | Native | Partial |
+| Permissions | Partial | Embedded | Partial | Partial | Native | Native | Partial | Native | Native | Partial | Native | Native | Partial | Native | Native | Native | — | Native | Native | Partial | Native | Partial | Native | — | Partial | Native | — | Partial | Partial | Partial |
 {/* agentsmesh:support-matrix:global:end */}
 
 ## Tool details
@@ -140,7 +140,7 @@ IDE integration · [antigravity.google](https://antigravity.google)
 Google's agentic IDE.
 
 **Project mode:** root `.agents/rules/general.md`, skills `.agents/skills/`.
-**Global mode:** root `.gemini/antigravity/GEMINI.md`, skills `.gemini/antigravity/skills/`.
+**Global mode:** root `.gemini/GEMINI.md`, skills `.gemini/config/skills/`.
 
 See the [project feature matrix](#feature-matrix-project-scope) and [global feature matrix](#feature-matrix-global-scope) for per-feature support.
 
@@ -476,7 +476,7 @@ IDE integration · [zed.dev](https://zed.dev)
 Collaborative AI editor.
 
 **Project mode:** root `.rules`, skills `.agents/skills/`.
-**Global mode:** see the [Global mode paths table](#global-mode).
+**Global mode:** skills `.agents/skills/`.
 
 See the [project feature matrix](#feature-matrix-project-scope) and [global feature matrix](#feature-matrix-global-scope) for per-feature support.
 {/* agentsmesh:tool-details:end */}

@@ -95,7 +95,7 @@ describe('roo-code descriptor — capability levels', () => {
     expect(descriptor.globalSupport?.capabilities.mcp).toBe('partial');
   });
 
-  it('downgrades global ignore to none (workspace-only .rooignore)', () => {
+  it('downgrades global ignore to none (RooIgnoreController has no global/home-dir concept)', () => {
     expect(descriptor.capabilities.ignore).toBe('native');
     expect(descriptor.globalSupport?.capabilities.ignore).toBe('none');
   });

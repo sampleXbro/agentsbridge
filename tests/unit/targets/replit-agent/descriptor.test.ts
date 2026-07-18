@@ -35,10 +35,10 @@ describe('replit-agent descriptor', () => {
     expect(descriptor.capabilities.commands).toBe('none');
     expect(descriptor.capabilities.agents).toBe('none');
     expect(descriptor.capabilities.skills).toBe('native');
-    expect(descriptor.capabilities.mcp).toBe('none');
-    expect(descriptor.capabilities.hooks).toBe('none');
-    expect(descriptor.capabilities.ignore).toBe('none');
-    expect(descriptor.capabilities.permissions).toBe('none');
+    expect(descriptor.capabilities.mcp).toBe('partial');
+    expect(descriptor.capabilities.hooks).toBe('partial');
+    expect(descriptor.capabilities.ignore).toBe('partial');
+    expect(descriptor.capabilities.permissions).toBe('partial');
   });
 
   it('supports conversion for commands and agents', () => {

@@ -4,6 +4,14 @@
  * Emits:
  *   - `replit.md`          — root rule + embedded non-root rules
  *   - `.agents/skills/`    — skill bundles
+ *
+ * MCP, hooks, ignore, and permissions are 'partial' (advisory lint only):
+ *   - MCP: configured via Replit Integrations UI, not a project file
+ *   - hooks: no lifecycle hook file surface in Replit Agent
+ *   - ignore: no dedicated ignore file (relies on .gitignore)
+ *   - permissions: managed in the cloud UI, not a writable file surface
+ * The four no-op generator stubs below satisfy the schema contract that
+ * requires a generateX function when capability level != 'none'.
  */
 
 import type { CanonicalFiles } from '../../core/types.js';
@@ -55,4 +63,36 @@ export function generateAgents(canonical: CanonicalFiles): ReplitAgentOutput[] {
     path: `${REPLIT_AGENT_SKILLS_DIR}/${projectedAgentSkillDirName(agent.name)}/SKILL.md`,
     content: serializeProjectedAgentSkill(agent),
   }));
+}
+
+/**
+ * No-op stub — MCP servers are configured via the Replit Integrations UI,
+ * not through any project file. Lint warnings surface this via lintMcp.
+ */
+export function generateMcp(_canonical: CanonicalFiles): ReplitAgentOutput[] {
+  return [];
+}
+
+/**
+ * No-op stub — Replit Agent has no lifecycle hook file surface.
+ * Lint warnings surface this via lintHooks.
+ */
+export function generateHooks(_canonical: CanonicalFiles): ReplitAgentOutput[] {
+  return [];
+}
+
+/**
+ * No-op stub — Replit Agent has no dedicated ignore file.
+ * Lint warnings surface this via lintIgnore.
+ */
+export function generateIgnore(_canonical: CanonicalFiles): ReplitAgentOutput[] {
+  return [];
+}
+
+/**
+ * No-op stub — Replit Agent permissions are managed in the cloud UI,
+ * not through any writable project file. Lint warnings surface this via lintPermissions.
+ */
+export function generatePermissions(_canonical: CanonicalFiles): ReplitAgentOutput[] {
+  return [];
 }

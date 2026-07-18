@@ -19,6 +19,7 @@ import {
   CLINE_IGNORE,
   CLINE_MCP_SETTINGS,
   CLINE_SKILLS_DIR,
+  CLINE_AGENTS_FILE,
   CLINE_WORKFLOWS_DIR,
   CLINE_HOOKS_DIR,
 } from '../../../../src/targets/cline/constants.js';
@@ -297,7 +298,7 @@ describe('generateSkills (cline)', () => {
 });
 
 describe('generateAgents (cline)', () => {
-  it('generates a single combined .cline/agents.yaml with all agents', () => {
+  it('generates a single .cline/agents.yaml file containing all agents', () => {
     const canonical = makeCanonical({
       agents: [
         {
@@ -335,28 +336,73 @@ describe('generateAgents (cline)', () => {
 
     const results = generateAgents(canonical);
 
+    // Must produce exactly one file — the combined YAML (documented CLI surface)
     expect(results).toHaveLength(1);
-    expect(results[0]?.path).toBe('.cline/agents.yaml');
+    expect(results[0]!.path).toBe(CLINE_AGENTS_FILE);
+
     const content = results[0]!.content;
-    expect(content).toContain('agents:');
+    // Top-level key is 'agents:'
+    expect(content).toMatch(/^agents:/m);
+    // Both agents present
     expect(content).toContain('name: reviewer');
     expect(content).toContain('name: researcher');
-    expect(content).toContain('tools:');
+    // Reviewer metadata fields
+    expect(content).toContain('description: Review specialist');
+    expect(content).toContain('model: sonnet');
+    expect(content).toContain('Read');
+    expect(content).toContain('Grep');
     expect(content).toContain('x-agentsmesh-disallowed-tools:');
     expect(content).toContain('x-agentsmesh-permission-mode: ask');
     expect(content).toContain('x-agentsmesh-max-turns: 9');
     expect(content).toContain('x-agentsmesh-mcp-servers:');
     expect(content).toContain('x-agentsmesh-skills:');
     expect(content).toContain('x-agentsmesh-memory: notes/reviewer.md');
-    expect(content).toContain('Review risky changes first.');
-    expect(content).toContain('Research first.');
+    expect(content).toContain('prompt: Review risky changes first.');
+    // Researcher is minimal (no description/model/tools emitted when empty)
+    expect(content).toContain('prompt: Research first.');
+    // No per-agent .md files should be produced
+    expect(results.some((r) => r.path.endsWith('.md'))).toBe(false);
+  });
+
+  it('omits undefined/empty optional fields from YAML entries', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          source: '/proj/.agentsmesh/agents/simple.md',
+          name: 'simple',
+          description: '',
+          tools: [],
+          disallowedTools: [],
+          model: '',
+          permissionMode: '',
+          maxTurns: 0,
+          mcpServers: [],
+          hooks: {},
+          skills: [],
+          memory: '',
+          body: 'Keep it simple.',
+        },
+      ],
+    });
+    const results = generateAgents(canonical);
+    expect(results).toHaveLength(1);
+    const content = results[0]!.content;
+    expect(content).toContain('name: simple');
+    expect(content).toContain('prompt: Keep it simple.');
+    // Empty optional fields must not appear
+    expect(content).not.toContain('description:');
+    expect(content).not.toContain('model:');
+    expect(content).not.toContain('tools:');
+    expect(content).not.toContain('x-agentsmesh-disallowed-tools:');
+    expect(content).not.toContain('x-agentsmesh-permission-mode:');
+    expect(content).not.toContain('x-agentsmesh-max-turns:');
   });
 
   it('returns empty when no agents', () => {
     expect(generateAgents(makeCanonical())).toEqual([]);
   });
 
-  it('returns empty for global scope (no documented global agents.yaml surface)', () => {
+  it('returns empty for global scope (no documented global agents surface)', () => {
     const canonical = makeCanonical({
       agents: [
         {

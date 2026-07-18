@@ -32,8 +32,10 @@ export const CLINE_SKILLS_DIR = '.cline/skills';
 /** Skills directory (global) — CLI docs: `~/.cline/data/settings/skills/` */
 export const CLINE_GLOBAL_SKILLS_DIR = '.cline/data/settings/skills';
 
-/** Agents — CLI docs: a single `.cline/agents.yaml` file (project-only; no documented global surface) */
+/** Agents file — combined YAML (CLI-documented surface: docs.cline.bot/cli/cli-reference) */
 export const CLINE_AGENTS_FILE = '.cline/agents.yaml';
+/** @deprecated Per-agent `.md` directory; kept for backward-compatible import fallback. */
+export const CLINE_AGENTS_DIR = '.cline/agents';
 
 /** Workflows directory (.clinerules/workflows/*.md → canonical commands) — not covered by CLI docs, unchanged */
 export const CLINE_WORKFLOWS_DIR = '.clinerules/workflows';

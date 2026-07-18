@@ -63,14 +63,9 @@ const project: TargetLayout = {
     commandPath(name, _config) {
       return `${CLINE_WORKFLOWS_DIR}/${name}.md`;
     },
-    // Agents are combined into a single `.cline/agents.yaml` file (CLI docs),
-    // not one file per agent — there is no meaningful per-name destination
-    // for cross-reference rewriting, so this returns null like other
-    // combined-file agent targets (e.g. roo-code's `.roomodes`). Canonical
-    // `.agentsmesh/agents/<name>.md` mentions in generated prose are left
-    // unrewritten for cline rather than pointed at a specific wrong entry.
+    // agents.yaml is a combined file — all agents go to the same output file
     agentPath(_name) {
-      return null;
+      return CLINE_AGENTS_FILE;
     },
   },
 };
@@ -123,7 +118,7 @@ const globalLayout: TargetLayout = {
 };
 
 const globalCapabilities: TargetCapabilities = {
-  rules: 'native',
+  rules: 'none',
   additionalRules: 'native',
   commands: cap('native', 'workflows'),
   agents: 'none',
@@ -186,10 +181,10 @@ export const descriptor = {
       },
     ],
   },
-  // Agents are already `native` at project scope (so this flag never drives
-  // real generation there — `agentPath` always returns the native path
-  // regardless). Kept `false` (not omitted) so the shared "none → embedded
-  // via skill projection" matrix-display upgrade never fires for the global
-  // scope, which has no agents surface at all (not even a skills fallback).
+  // Project agentPath returns the combined `.cline/agents.yaml` for all agent
+  // names — multiple canonical agents share one output file. Global scope has
+  // no agents surface (agentPath returns null there). `agentsToSkills: false`
+  // is kept so the shared "none → embedded via skill projection" upgrade never
+  // fires for global scope, which has no agents surface at all.
   conversionDefaults: { agentsToSkills: false },
 } satisfies TargetDescriptor;

@@ -14,6 +14,7 @@ import {
   CLINE_SKILLS_DIR,
   CLINE_WORKFLOWS_DIR,
   CLINE_AGENTS_FILE,
+  CLINE_AGENTS_DIR,
 } from '../../../../src/targets/cline/constants.js';
 
 const TEST_DIR = join(tmpdir(), 'am-cline-importer-test');
@@ -158,6 +159,55 @@ describe('importFromCline', () => {
     expect(content).toContain('name: reviewer');
     expect(content).toContain('description: Review specialist');
     expect(content).toContain('Review risky changes first.');
+  });
+
+  it('imports agents from per-agent .cline/agents/<name>.md directory (fallback format) when agents.yaml absent', async () => {
+    const agentsDir = join(TEST_DIR, CLINE_AGENTS_DIR);
+    mkdirSync(agentsDir, { recursive: true });
+    writeFileSync(
+      join(agentsDir, 'reviewer.md'),
+      [
+        '---',
+        'name: reviewer',
+        'description: Review specialist',
+        'model: sonnet',
+        'tools:',
+        '  - Read',
+        'disallowedTools:',
+        '  - Bash(rm -rf *)',
+        'permissionMode: ask',
+        'maxTurns: 9',
+        '---',
+        '',
+        'Review risky changes first.',
+      ].join('\n'),
+    );
+
+    const results = await importFromCline(TEST_DIR);
+    expect(results.find((r) => r.toPath === '.agentsmesh/agents/reviewer.md')).toBeDefined();
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'), 'utf-8');
+    expect(content).toContain('name: reviewer');
+    expect(content).toContain('description: Review specialist');
+    expect(content).toContain('Review risky changes first.');
+  });
+
+  it('prefers .cline/agents.yaml over per-agent directory when both present', async () => {
+    // Directory present (fallback format)
+    const agentsDir = join(TEST_DIR, CLINE_AGENTS_DIR);
+    mkdirSync(agentsDir, { recursive: true });
+    writeFileSync(join(agentsDir, 'from-dir.md'), '---\nname: from-dir\n---\n\nFrom directory.');
+    // Primary format (YAML)
+    mkdirSync(join(TEST_DIR, '.cline'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, CLINE_AGENTS_FILE),
+      ['agents:', '  - name: from-yaml', '    prompt: From YAML.'].join('\n'),
+    );
+
+    const results = await importFromCline(TEST_DIR);
+
+    // Only the YAML-based agent is imported (primary wins)
+    expect(results.some((r) => r.toPath === '.agentsmesh/agents/from-yaml.md')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/agents/from-dir.md')).toBe(false);
   });
 
   it('imports agents from the combined .cline/agents.yaml and restores agentsmesh extension metadata', async () => {

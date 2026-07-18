@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { parse as yamlParse } from 'yaml';
 import { createCanonicalProject } from './helpers/canonical.js';
 import { runCli } from './helpers/run-cli.js';
 import { cleanup } from './helpers/setup.js';
@@ -86,15 +85,12 @@ features:
     expect(skillTemplate).toContain("import { z } from 'zod';");
     expect(skillTemplate).toContain('export const createRouteSchema = z.object');
 
-    const agentsYaml = yamlParse(read(projectDir, '.cline/agents.yaml')) as {
-      agents: Array<Record<string, unknown>>;
-    };
-    expect(Array.isArray(agentsYaml.agents)).toBe(true);
-    const reviewer = agentsYaml.agents.find((a) => a.name === 'code-reviewer');
-    expect(reviewer).toBeDefined();
-    expect(reviewer?.prompt).toContain('You are a code reviewer.');
-    const researcher = agentsYaml.agents.find((a) => a.name === 'researcher');
-    expect(researcher).toBeDefined();
+    const agentsYaml = read(projectDir, '.cline/agents.yaml');
+    // agents.yaml is a combined YAML list — head field uses "agents:" key
+    expect(agentsYaml).toContain('agents:');
+    expect(agentsYaml).toContain('name: code-reviewer');
+    expect(agentsYaml).toContain('You are a code reviewer.');
+    expect(agentsYaml).toContain('name: researcher');
 
     const hook = read(projectDir, '.cline/hooks/posttooluse-0.sh');
     expect(hook).toContain('#!/usr/bin/env bash');

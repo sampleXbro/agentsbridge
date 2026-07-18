@@ -4,6 +4,8 @@ import {
   generateRules,
   generateMcp,
   generateAgents,
+  generateHooks,
+  generatePermissions,
 } from '../../../../src/targets/amazon-q/generator.js';
 import {
   AMAZON_Q_RULES_DIR,
@@ -298,5 +300,202 @@ describe('generateMcp (amazon-q)', () => {
   it('returns empty array when mcpServers is empty', () => {
     const canonical = makeCanonical({ mcp: { mcpServers: {} } });
     expect(generateMcp(canonical)).toHaveLength(0);
+  });
+});
+
+describe('generateAgents (amazon-q) — embedded hooks', () => {
+  function makeAgent(
+    name: string,
+    opts: { tools?: string[]; hooks?: Record<string, unknown> } = {},
+  ): CanonicalFiles['agents'][number] {
+    return {
+      source: `/proj/.agentsmesh/agents/${name}.md`,
+      name,
+      description: '',
+      tools: opts.tools ?? [],
+      disallowedTools: [],
+      model: '',
+      permissionMode: 'default',
+      maxTurns: 0,
+      mcpServers: [],
+      hooks: (opts.hooks ?? {}) as import('../../../../src/core/hook-types.js').Hooks,
+      skills: [],
+      memory: '',
+      body: 'Agent body.',
+    };
+  }
+
+  it('embeds canonical PreToolUse hooks into agent JSON as preToolUse', () => {
+    const canonical = makeCanonical({
+      agents: [makeAgent('coder')],
+      hooks: {
+        PreToolUse: [{ matcher: 'fs_write', command: 'lint.sh' }],
+      },
+    });
+    const results = generateAgents(canonical);
+    expect(results).toHaveLength(1);
+    const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
+    const hooks = parsed.hooks as Record<string, unknown>;
+    expect(hooks).toBeDefined();
+    const preToolUse = hooks.preToolUse as Array<{ matcher: string; command: string }>;
+    expect(preToolUse).toHaveLength(1);
+    expect(preToolUse[0].matcher).toBe('fs_write');
+    expect(preToolUse[0].command).toBe('lint.sh');
+  });
+
+  it('embeds canonical PostToolUse hooks into agent JSON as postToolUse', () => {
+    const canonical = makeCanonical({
+      agents: [makeAgent('coder')],
+      hooks: {
+        PostToolUse: [{ matcher: '**', command: 'echo done' }],
+      },
+    });
+    const [result] = generateAgents(canonical);
+    const parsed = JSON.parse(result.content) as Record<string, unknown>;
+    const hooks = parsed.hooks as Record<string, unknown>;
+    const postToolUse = hooks.postToolUse as Array<{ matcher: string; command: string }>;
+    expect(postToolUse).toHaveLength(1);
+    expect(postToolUse[0].command).toBe('echo done');
+  });
+
+  it('embeds canonical UserPromptSubmit hooks into agent JSON as userPromptSubmit', () => {
+    const canonical = makeCanonical({
+      agents: [makeAgent('coder')],
+      hooks: {
+        UserPromptSubmit: [{ matcher: '**', command: 'recall.sh' }],
+      },
+    });
+    const [result] = generateAgents(canonical);
+    const parsed = JSON.parse(result.content) as Record<string, unknown>;
+    const hooks = parsed.hooks as Record<string, unknown>;
+    const userPromptSubmit = hooks.userPromptSubmit as Array<{ command: string }>;
+    expect(userPromptSubmit).toHaveLength(1);
+    expect(userPromptSubmit[0].command).toBe('recall.sh');
+  });
+
+  it('omits hooks key from agent JSON when no canonical hooks are mappable', () => {
+    const canonical = makeCanonical({
+      agents: [makeAgent('coder')],
+      hooks: {
+        Notification: [{ matcher: '**', command: 'notify.sh' }],
+      },
+    });
+    const [result] = generateAgents(canonical);
+    const parsed = JSON.parse(result.content) as Record<string, unknown>;
+    expect(parsed).not.toHaveProperty('hooks');
+  });
+
+  it('omits hooks key from agent JSON when canonical hooks is null', () => {
+    const canonical = makeCanonical({ agents: [makeAgent('coder')], hooks: null });
+    const [result] = generateAgents(canonical);
+    const parsed = JSON.parse(result.content) as Record<string, unknown>;
+    expect(parsed).not.toHaveProperty('hooks');
+  });
+
+  it('embeds hooks into each agent when multiple agents are present', () => {
+    const canonical = makeCanonical({
+      agents: [makeAgent('a'), makeAgent('b')],
+      hooks: {
+        PreToolUse: [{ matcher: 'fs_write', command: 'lint.sh' }],
+      },
+    });
+    const results = generateAgents(canonical);
+    expect(results).toHaveLength(2);
+    for (const r of results) {
+      const parsed = JSON.parse(r.content) as Record<string, unknown>;
+      expect(parsed).toHaveProperty('hooks');
+    }
+  });
+});
+
+describe('generateAgents (amazon-q) — embedded permissions', () => {
+  function makeAgent(name: string, tools: string[] = []): CanonicalFiles['agents'][number] {
+    return {
+      source: `/proj/.agentsmesh/agents/${name}.md`,
+      name,
+      description: '',
+      tools,
+      disallowedTools: [],
+      model: '',
+      permissionMode: 'default',
+      maxTurns: 0,
+      mcpServers: [],
+      hooks: {} as import('../../../../src/core/hook-types.js').Hooks,
+      skills: [],
+      memory: '',
+      body: 'Agent body.',
+    };
+  }
+
+  it('embeds canonical permissions.allow into allowedTools (merged with agent.tools)', () => {
+    const canonical = makeCanonical({
+      agents: [makeAgent('coder', ['Read'])],
+      permissions: { allow: ['Bash(git:*)'], deny: [], ask: [] },
+    });
+    const [result] = generateAgents(canonical);
+    const parsed = JSON.parse(result.content) as Record<string, unknown>;
+    const allowedTools = parsed.allowedTools as string[];
+    // Both agent tools and canonical allow list should be present, deduplicated
+    expect(allowedTools).toContain('Read');
+    expect(allowedTools).toContain('Bash(git:*)');
+    expect(new Set(allowedTools).size).toBe(allowedTools.length); // no duplicates
+  });
+
+  it('deduplicates when agent.tools and permissions.allow overlap', () => {
+    const canonical = makeCanonical({
+      agents: [makeAgent('coder', ['Read', 'Bash(git:*)'])],
+      permissions: { allow: ['Bash(git:*)'], deny: [], ask: [] },
+    });
+    const [result] = generateAgents(canonical);
+    const parsed = JSON.parse(result.content) as Record<string, unknown>;
+    const allowedTools = parsed.allowedTools as string[];
+    expect(allowedTools.filter((t) => t === 'Bash(git:*)')).toHaveLength(1);
+  });
+
+  it('omits allowedTools when agent.tools is empty and permissions.allow is empty', () => {
+    const canonical = makeCanonical({
+      agents: [makeAgent('coder')],
+      permissions: null,
+    });
+    const [result] = generateAgents(canonical);
+    const parsed = JSON.parse(result.content) as Record<string, unknown>;
+    expect(parsed).not.toHaveProperty('allowedTools');
+  });
+
+  it('includes allowedTools from permissions.allow even when agent.tools is empty', () => {
+    const canonical = makeCanonical({
+      agents: [makeAgent('coder')],
+      permissions: { allow: ['Bash(git:*)'], deny: [], ask: [] },
+    });
+    const [result] = generateAgents(canonical);
+    const parsed = JSON.parse(result.content) as Record<string, unknown>;
+    const allowedTools = parsed.allowedTools as string[];
+    expect(allowedTools).toEqual(['Bash(git:*)']);
+  });
+});
+
+describe('generateHooks (amazon-q) — no-op stub', () => {
+  it('returns empty array (hooks are embedded in generateAgents)', () => {
+    const canonical = makeCanonical({
+      hooks: { PreToolUse: [{ matcher: '**', command: 'lint.sh' }] },
+    });
+    expect(generateHooks(canonical)).toHaveLength(0);
+  });
+
+  it('returns empty array when hooks is null', () => {
+    expect(generateHooks(makeCanonical({ hooks: null }))).toHaveLength(0);
+  });
+});
+
+describe('generatePermissions (amazon-q) — no-op stub', () => {
+  it('returns empty array (permissions are embedded in generateAgents)', () => {
+    const canonical = makeCanonical({
+      permissions: { allow: ['Bash(git:*)'], deny: [], ask: [] },
+    });
+    expect(generatePermissions(canonical)).toHaveLength(0);
+  });
+
+  it('returns empty array when permissions is null', () => {
+    expect(generatePermissions(makeCanonical({ permissions: null }))).toHaveLength(0);
   });
 });

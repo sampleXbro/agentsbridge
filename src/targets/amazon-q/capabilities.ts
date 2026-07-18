@@ -7,9 +7,9 @@ export const projectCapabilities: TargetCapabilities = {
   agents: 'native',
   skills: 'none',
   mcp: 'native',
-  hooks: 'none',
+  hooks: 'embedded',
   ignore: 'none',
-  permissions: 'none',
+  permissions: 'embedded',
 };
 
 export const globalCapabilities: TargetCapabilities = {
@@ -19,7 +19,7 @@ export const globalCapabilities: TargetCapabilities = {
   agents: 'native',
   skills: 'none',
   mcp: 'native',
-  hooks: 'none',
+  hooks: 'embedded',
   ignore: 'none',
-  permissions: 'none',
+  permissions: 'embedded',
 };

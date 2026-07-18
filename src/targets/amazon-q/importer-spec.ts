@@ -22,6 +22,10 @@ import {
 /**
  * Maps an Amazon Q `.amazonq/cli-agents/{name}.json` file to a canonical
  * `.agentsmesh/agents/{name}.md` agent file.
+ *
+ * Round-trips the `hooks` key: Amazon Q trigger names (preToolUse, postToolUse,
+ * userPromptSubmit) are written verbatim into the canonical agent frontmatter so
+ * that re-generating re-embeds the same hooks without data loss.
  */
 async function amazonQAgentMapper(ctx: ImportEntryContext): Promise<ImportEntryMapping | null> {
   const agentName = basename(ctx.relativePath, '.json');
@@ -52,11 +56,17 @@ async function amazonQAgentMapper(ctx: ImportEntryContext): Promise<ImportEntryM
         ? raw.systemPrompt
         : '';
 
-  const content = await serializeImportedAgentWithFallback(
-    destPath,
-    { name, description, tools },
-    body,
-  );
+  // Preserve the hooks key (Amazon Q trigger names) verbatim so a re-generate
+  // re-embeds the same hooks without data loss.
+  const hooks =
+    raw.hooks && typeof raw.hooks === 'object' && !Array.isArray(raw.hooks)
+      ? (raw.hooks as Record<string, unknown>)
+      : undefined;
+
+  const frontmatter: Record<string, unknown> = { name, description, tools };
+  if (hooks !== undefined) frontmatter.hooks = hooks;
+
+  const content = await serializeImportedAgentWithFallback(destPath, frontmatter, body);
 
   return {
     destPath,

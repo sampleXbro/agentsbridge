@@ -12,14 +12,20 @@
  *   - rules: native (directory of .md files)
  *   - mcp: native (.amazonq/mcp.json / ~/.aws/amazonq/mcp.json)
  *   - agents: native (.amazonq/cli-agents/{name}.json)
- *   - hooks: partial (per-agent only; canonical hooks not projected as standalone)
- *   - permissions: partial (per-agent allowedTools; canonical permissions not projected)
+ *   - hooks: embedded (PreToolUse/PostToolUse/UserPromptSubmit embedded in agent JSON)
+ *   - permissions: embedded (allow embedded in agent JSON as allowedTools; deny/ask unsupported)
  *   - commands/skills/ignore: none
  */
 
 import type { TargetGenerators } from '../catalog/target.interface.js';
 import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
-import { generateRules, generateMcp, generateAgents } from './generator.js';
+import {
+  generateRules,
+  generateMcp,
+  generateAgents,
+  generateHooks,
+  generatePermissions,
+} from './generator.js';
 import { importFromAmazonQ } from './importer.js';
 import { lintRules } from './linter.js';
 import { lintHooks, lintPermissions } from './lint.js';
@@ -41,6 +47,8 @@ export const target: TargetGenerators = {
   generateRules,
   generateMcp,
   generateAgents,
+  generateHooks,
+  generatePermissions,
   importFrom: importFromAmazonQ,
 };
 
@@ -112,7 +120,11 @@ export const descriptor = {
   project,
   globalSupport: {
     capabilities: globalCapabilities,
-    detectionPaths: [AMAZON_Q_GLOBAL_RULES_DIR, AMAZON_Q_GLOBAL_MCP_FILE, AMAZON_Q_GLOBAL_AGENTS_DIR],
+    detectionPaths: [
+      AMAZON_Q_GLOBAL_RULES_DIR,
+      AMAZON_Q_GLOBAL_MCP_FILE,
+      AMAZON_Q_GLOBAL_AGENTS_DIR,
+    ],
     layout: globalLayout,
   },
   importer: amazonQImporterSpec,

@@ -29,7 +29,11 @@ export function lintPermissions(canonical: CanonicalFiles, options?: unknown): L
   ];
 }
 
-export function lintMcp(canonical: CanonicalFiles): LintDiagnostic[] {
+export function lintMcp(canonical: CanonicalFiles, options?: unknown): LintDiagnostic[] {
+  // MCP is native at global scope (~/.config/goose/config.yaml);
+  // only project scope (no per-project config file) warrants a warning.
+  const scope = (options as { scope?: TargetLayoutScope } | undefined)?.scope;
+  if (scope === 'global') return [];
   if (!canonical.mcp || Object.keys(canonical.mcp.mcpServers).length === 0) return [];
   return [
     createWarning(

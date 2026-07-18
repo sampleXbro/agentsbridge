@@ -44,14 +44,14 @@ describe('goose global layout', () => {
     expect(rewrite(skillPath, '')).toBe(skillPath);
   });
 
-  it('globalSupport.capabilities has mcp native (project has none)', () => {
+  it('globalSupport.capabilities has mcp native (project has partial)', () => {
     expect(descriptor.globalSupport!.capabilities.mcp).toBe('native');
-    expect(descriptor.capabilities.mcp).toBe('none');
+    expect(descriptor.capabilities.mcp).toBe('partial');
   });
 
-  it('globalSupport.capabilities has permissions native (project has none)', () => {
+  it('globalSupport.capabilities has permissions native (project has partial)', () => {
     expect(descriptor.globalSupport!.capabilities.permissions).toBe('native');
-    expect(descriptor.capabilities.permissions).toBe('none');
+    expect(descriptor.capabilities.permissions).toBe('partial');
   });
 
   it('rewriteGeneratedPath passes through global config path unchanged', () => {

@@ -73,6 +73,7 @@
     "typecheck": "tsc --noEmit",
     "schemas:generate": "tsx scripts/generate-schemas.ts",
     "capabilities:audit": "tsx scripts/capabilities-audit.ts",
+    "capabilities:merge": "tsx scripts/merge-capability-ledger.ts",
     "capabilities:seed": "tsx scripts/seed-capability-ledger.ts",
     "capabilities:verify": "tsx scripts/capabilities-audit.ts --verify",
     "matrix:generate": "tsx scripts/render-support-matrix.ts",

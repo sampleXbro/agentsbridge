@@ -88,15 +88,34 @@ export function auditCapabilities(input: AuditInput): AuditReport {
         }
 
         if (cell.verdict !== 'rejected' && LEVEL_RANK[current] < LEVEL_RANK[cell.maxAchievable]) {
-          gaps.push({ target, feature, scope, from: current, to: cell.maxAchievable, source: cell.source });
+          gaps.push({
+            target,
+            feature,
+            scope,
+            from: current,
+            to: cell.maxAchievable,
+            source: cell.source,
+          });
         }
 
         if (cell.verifiedAt === null) {
           stale.push({ target, feature, scope, verifiedAt: null, reason: 'unverified' });
-        } else if (cell.verdict === 'confirmed' && daysBetween(cell.verifiedAt, today) > staleDays) {
+        } else if (
+          cell.verdict === 'confirmed' &&
+          daysBetween(cell.verifiedAt, today) > staleDays
+        ) {
           stale.push({ target, feature, scope, verifiedAt: cell.verifiedAt, reason: 'expired' });
-        } else if (LEVEL_RANK[current] > LEVEL_RANK[cell.maxAchievable]) {
-          stale.push({ target, feature, scope, verifiedAt: cell.verifiedAt, reason: 'over-declared' });
+        }
+        // over-declared is checked independently so a cell with verifiedAt=null can
+        // appear in the stale bucket with BOTH 'unverified' AND 'over-declared' reasons.
+        if (LEVEL_RANK[current] > LEVEL_RANK[cell.maxAchievable]) {
+          stale.push({
+            target,
+            feature,
+            scope,
+            verifiedAt: cell.verifiedAt,
+            reason: 'over-declared',
+          });
         }
       }
     }

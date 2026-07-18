@@ -22,7 +22,7 @@ export function lintPermissions(canonical: CanonicalFiles): LintDiagnostic[] {
     createWarning(
       '.agentsmesh/permissions.yaml',
       'deepagents-cli',
-      'Deep Agents CLI permissions are managed via shell allow-lists (--shell-allow-list); canonical permissions are not projected.',
+      'Deep Agents CLI permissions are partially supported via DEEPAGENTS_CODE_SHELL_ALLOW_LIST in .env; agentsmesh does not generate permissions config.',
     ),
   ];
 }

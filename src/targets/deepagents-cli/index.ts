@@ -22,7 +22,15 @@
 
 import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
 import type { TargetDescriptor } from '../catalog/target-descriptor.js';
-import { generateRules, generateCommands, generateAgents, generateSkills, generateMcp } from './generator.js';
+import {
+  generateRules,
+  generateCommands,
+  generateAgents,
+  generateSkills,
+  generateMcp,
+  generateIgnore,
+  generatePermissions,
+} from './generator.js';
 import { deepagentsCliAgentMapper } from './agent-format.js';
 import { deepagentsCliScopeExtras } from './global-hooks.js';
 import { importFromDeepagentsCli } from './importer.js';
@@ -50,6 +58,8 @@ export const target: TargetGenerators = {
   generateAgents,
   generateSkills,
   generateMcp,
+  generateIgnore,
+  generatePermissions,
   importFrom: importFromDeepagentsCli,
 };
 
@@ -65,11 +75,12 @@ const capabilities: TargetCapabilities = {
   agents: 'native',
   skills: 'native',
   mcp: 'native',
-  // No project-level hooks surface at all (docs.langchain.com/oss/javascript/
-  // deepagents/code/hooks documents only `~/.deepagents/hooks.json`).
+  // No project-level hooks surface exists at all (only global
+  // ~/.deepagents/hooks.json — see global-hooks.ts). 'none' means no support
+  // path exists; lintHooks warns when canonical hooks can't be projected.
   hooks: 'none',
-  ignore: 'none',
-  permissions: 'none',
+  ignore: 'partial',
+  permissions: 'partial',
 };
 
 const globalCapabilities: TargetCapabilities = {
@@ -80,8 +91,8 @@ const globalCapabilities: TargetCapabilities = {
   skills: 'native',
   mcp: 'native',
   hooks: 'native',
-  ignore: 'none',
-  permissions: 'none',
+  ignore: 'partial',
+  permissions: 'partial',
 };
 
 export const descriptor = {

@@ -68,7 +68,7 @@ describe('deepagents-cli global layout', () => {
     expect(DEEPAGENTS_CLI_GLOBAL_HOOKS_FILE).toBe('.deepagents/hooks.json');
   });
 
-  it('project capabilities.hooks is none (no project-level hooks surface)', () => {
+  it('project capabilities.hooks is none (no project-level hooks surface exists)', () => {
     expect(descriptor.capabilities.hooks).toBe('none');
   });
 
@@ -92,9 +92,9 @@ describe('deepagents-cli global layout', () => {
     expect(descriptor.globalSupport!.capabilities.hooks).toBe('native');
   });
 
-  it('globalSupport.capabilities disables unsupported features', () => {
-    expect(descriptor.globalSupport!.capabilities.ignore).toBe('none');
-    expect(descriptor.globalSupport!.capabilities.permissions).toBe('none');
+  it('globalSupport.capabilities for ignore and permissions', () => {
+    expect(descriptor.globalSupport!.capabilities.ignore).toBe('partial');
+    expect(descriptor.globalSupport!.capabilities.permissions).toBe('partial');
   });
 
   it('globalSupport has detection paths', () => {
@@ -124,7 +124,7 @@ describe('deepagents-cli global layout', () => {
     expect(descriptor.project.managedOutputs!.dirs).toContain(DEEPAGENTS_CLI_AGENTS_DIR);
     expect(descriptor.project.managedOutputs!.files).toContain(DEEPAGENTS_CLI_ROOT_FILE);
     expect(descriptor.project.managedOutputs!.files).toContain(DEEPAGENTS_CLI_MCP_FILE);
-    // No project-level hooks file at all — see capabilities.hooks === 'none'.
+    // No project-level hooks file — hooks are none (global-only surface).
     expect(descriptor.project.managedOutputs!.files).not.toContain('.deepagents/hooks.json');
   });
 

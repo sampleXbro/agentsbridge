@@ -71,3 +71,20 @@ export function generateMcp(canonical: CanonicalFiles): DeepagentsCliOutput[] {
   const content = JSON.stringify({ mcpServers: canonical.mcp.mcpServers }, null, 2);
   return [{ path: DEEPAGENTS_CLI_MCP_FILE, content }];
 }
+
+/**
+ * No-op stub — Deep Agents CLI has no dedicated ignore file and relies on
+ * .gitignore. Lint warnings surface this via lintIgnore.
+ */
+export function generateIgnore(_canonical: CanonicalFiles): DeepagentsCliOutput[] {
+  return [];
+}
+
+/**
+ * No-op stub — Deep Agents CLI permissions are partially supported via
+ * DEEPAGENTS_CODE_SHELL_ALLOW_LIST in .env; agentsmesh does not generate
+ * permissions config. Lint warnings surface this via lintPermissions.
+ */
+export function generatePermissions(_canonical: CanonicalFiles): DeepagentsCliOutput[] {
+  return [];
+}

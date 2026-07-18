@@ -11,6 +11,12 @@ function mapHookEvent(event: string): string | null {
       return 'AfterTool';
     case 'Notification':
       return 'Notification';
+    case 'SubagentStart':
+      return 'BeforeAgent';
+    case 'SubagentStop':
+      return 'AfterAgent';
+    case 'SessionStart':
+      return 'SessionStart';
     default:
       return null;
   }

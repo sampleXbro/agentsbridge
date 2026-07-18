@@ -140,6 +140,7 @@ describe('agentsmesh --json output (integration)', () => {
     expect(envelope.data.outputModified).toEqual([]);
     expect(envelope.data.outputRemoved).toEqual([]);
     expect(envelope.data.outputStale).toEqual(['.cursor/rules/orphaned.mdc']);
+    expect(existsSync(stalePath)).toBe(true);
   });
 
   it('check --json reports no lock as failure', () => {

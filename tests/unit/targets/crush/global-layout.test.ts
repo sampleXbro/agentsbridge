@@ -239,4 +239,51 @@ describe('crush global frontmatter preservation', () => {
     expect(entries[0]!.command).toBe('./scripts/validate.sh');
     expect(entries[0]!.timeout).toBe(30);
   });
+
+  it('merges mcp + hooks + permissions into a single .config/crush/crush.json in global mode', async () => {
+    const results = await generate({
+      config: {
+        version: 1,
+        targets: ['crush'],
+        features: ['mcp', 'hooks', 'permissions'],
+        extends: [],
+        overrides: {},
+        collaboration: { strategy: 'merge', lock_features: [] },
+      } as ValidatedConfig,
+      canonical: makeCanonical({
+        mcp: {
+          mcpServers: {
+            'test-server': { type: 'stdio', command: 'npx', args: ['-y', '@test/mcp'], env: {} },
+          },
+        },
+        hooks: {
+          PreToolUse: [
+            {
+              matcher: 'Bash',
+              type: 'command' as const,
+              command: './scripts/lint.sh',
+            },
+          ],
+        },
+        permissions: { allow: ['Read'], deny: ['WebFetch'], ask: [] },
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const configs = results.filter(
+      (r) => r.target === 'crush' && r.path === CRUSH_GLOBAL_CONFIG_FILE,
+    );
+    // All three features collapse into exactly one file
+    expect(configs).toHaveLength(1);
+    const parsed = JSON.parse(configs[0]!.content) as Record<string, unknown>;
+    // mcp key must survive
+    expect(parsed).toHaveProperty('mcp');
+    // hooks key must survive
+    expect(parsed).toHaveProperty('hooks');
+    // permissions key must survive
+    expect(parsed).toHaveProperty('permissions');
+    // options (deny) must survive
+    expect(parsed).toHaveProperty('options');
+  });
 });

@@ -54,8 +54,8 @@ describe('augment-code global layout', () => {
     expect(result).toBeNull();
   });
 
-  it('globalSupport.capabilities has hooks: none', () => {
-    expect(descriptor.globalSupport!.capabilities.hooks).toBe('none');
+  it('globalSupport.capabilities has hooks: native', () => {
+    expect(descriptor.globalSupport!.capabilities.hooks).toBe('native');
   });
 
   it('globalSupport.capabilities has ignore: none', () => {

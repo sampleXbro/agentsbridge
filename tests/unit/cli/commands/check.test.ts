@@ -23,7 +23,7 @@ afterEach(() => {
 
 describe('runCheck', () => {
   it('returns 0 when checksums match', async () => {
-    writeFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'version: 1');
+    writeFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'version: 1\ntargets: []\nfeatures: []');
     mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
     const body = '# Rules';
     writeFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), body);
@@ -42,20 +42,24 @@ extends: {}
     expect(result.exitCode).toBe(0);
     expect(result.data.hasLock).toBe(true);
     expect(result.data.inSync).toBe(true);
+    expect(result.data.canonicalDrift).toBe(false);
+    expect(result.data.outputDrift).toBe(false);
   });
 
   it('returns exitCode 1 when lock is missing', async () => {
-    writeFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'version: 1');
+    writeFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'version: 1\ntargets: []\nfeatures: []');
     mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), '# Rules');
     const result = await runCheck({}, TEST_DIR);
     expect(result.exitCode).toBe(1);
     expect(result.data.hasLock).toBe(false);
+    expect(result.data.canonicalDrift).toBe(false);
+    expect(result.data.outputDrift).toBe(false);
     expect(result.data.inSync).toBe(false);
   });
 
   it('returns exitCode 1 when checksums mismatch', async () => {
-    writeFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'version: 1');
+    writeFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'version: 1\ntargets: []\nfeatures: []');
     mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), '# Modified');
     writeFileSync(
@@ -73,10 +77,12 @@ extends: {}
     expect(result.data.hasLock).toBe(true);
     expect(result.data.inSync).toBe(false);
     expect(result.data.modified).toContain('rules/_root.md');
+    expect(result.data.canonicalDrift).toBe(true);
+    expect(result.data.outputDrift).toBe(false);
   });
 
   it('returns exitCode 1 when new file added (not in lock)', async () => {
-    writeFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'version: 1');
+    writeFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'version: 1\ntargets: []\nfeatures: []');
     mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), '# Rules');
     writeFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'new.md'), '# New');
@@ -101,7 +107,7 @@ extends: {}
     writeFileSync(join(baseDir, '.agentsmesh', 'rules', '_root.md'), '# Base');
     writeFileSync(
       join(TEST_DIR, 'agentsmesh.yaml'),
-      `version: 1\ntargets: [claude-code]\nfeatures: [rules]\nextends:\n  - name: base\n    source: ./base-config\n    features: [rules]\n`,
+      `version: 1\ntargets: []\nfeatures: [rules]\nextends:\n  - name: base\n    source: ./base-config\n    features: [rules]\n`,
     );
     mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), '# Local');
@@ -115,7 +121,7 @@ extends: {}
   });
 
   it('returns exitCode 1 when file removed from canonical', async () => {
-    writeFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'version: 1');
+    writeFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'version: 1\ntargets: []\nfeatures: []');
     mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), '# Rules');
     const h = 'sha256:' + 'a'.repeat(64);
@@ -139,6 +145,7 @@ extends: {}
     writeFileSync(
       join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1
+targets: []
 collaboration:
   strategy: lock
   lock_features: [rules]
@@ -162,6 +169,8 @@ packs: {}
     expect(result.exitCode).toBe(1);
     expect(result.data.lockedViolations).toContain('rules/_root.md');
     expect(result.data.modified).toContain('rules/_root.md');
+    expect(result.data.canonicalDrift).toBe(true);
+    expect(result.data.outputDrift).toBe(false);
   });
 
   it('reads ~/.agentsmesh/.lock when --global is set', async () => {
@@ -174,7 +183,7 @@ packs: {}
     mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, '.agentsmesh', 'agentsmesh.yaml'),
-      'version: 1\ntargets: [claude-code]\nfeatures: [rules]\n',
+      'version: 1\ntargets: []\nfeatures: [rules]\n',
     );
     const body = '# Global Rules';
     writeFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), body);
@@ -195,5 +204,7 @@ packs: {}
     expect(result.exitCode).toBe(0);
     expect(result.data.hasLock).toBe(true);
     expect(result.data.inSync).toBe(true);
+    expect(result.data.canonicalDrift).toBe(false);
+    expect(result.data.outputDrift).toBe(false);
   });
 });

@@ -1,13 +1,3 @@
-# Issue #98 - make `check` detect generated-output drift (ACTIVE)
-
-- [ ] Add a regression test proving `check` fails after a generated file is edited.
-- [ ] Expose canonical drift and output drift separately in structured check results.
-- [ ] Reuse the generation check path without changing the public lock-sync API contract.
-- [ ] Update CLI documentation and human-readable output.
-- [ ] Run focused tests, full verification, and post-feature QA.
-
----
-
 # Lessons coverage completion — capture/recall at the right time, for all types (ACTIVE)
 
 **Goal (user):** lessons must be *captured and queried when they are really needed*; general,

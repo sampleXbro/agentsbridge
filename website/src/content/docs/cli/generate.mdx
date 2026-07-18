@@ -67,7 +67,7 @@ Shows a unified diff of what would change without writing any files. Useful befo
 agentsmesh generate --check
 ```
 
-Exits 0 if generated files match the lock file. Exits 1 if drift is detected. Use this in CI pipelines instead of `agentsmesh check` when you want the full generation path to be verified.
+Exits 0 if generated files match the current canonical projection and exits 1 if output drift is detected. This mode can verify a filtered target set; configured `lock_features` guards still apply unless `--force` is used.
 
 ### Force through locks
 

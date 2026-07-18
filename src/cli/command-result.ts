@@ -65,12 +65,22 @@ export interface LintData {
 
 export interface CheckData {
   hasLock: boolean;
+  /** True when canonical files or extends differ from the collaboration lock. */
+  canonicalDrift: boolean;
+  /** True when generated outputs differ from the current canonical projection. */
+  outputDrift: boolean;
   inSync: boolean;
   modified: string[];
   added: string[];
   removed: string[];
   extendsModified: string[];
   lockedViolations: string[];
+  /** Generated files whose contents differ from the canonical projection. */
+  outputModified: string[];
+  /** Generated files expected from the canonical projection but missing on disk. */
+  outputRemoved: string[];
+  /** Managed generated files that are no longer part of the canonical projection. */
+  outputStale: string[];
 }
 
 export interface MergeData {

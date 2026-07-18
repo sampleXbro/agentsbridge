@@ -36,7 +36,7 @@ describe('runCheck — multi-drift structured data', () => {
     writeFileSync(
       join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1
-targets: [claude-code]
+targets: []
 features: [rules, mcp]
 collaboration:
   strategy: lock
@@ -89,7 +89,7 @@ packs: {}
     writeFileSync(
       join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1
-targets: [claude-code]
+targets: []
 features: [rules, hooks, permissions]
 collaboration:
   strategy: lock
@@ -127,7 +127,7 @@ describe('runCheck — lock format compatibility', () => {
   it('accepts a lock written by a pre-`packs` library version (missing packs field)', async () => {
     writeFileSync(
       join(TEST_DIR, 'agentsmesh.yaml'),
-      'version: 1\ntargets: [claude-code]\nfeatures: [rules]\n',
+      'version: 1\ntargets: []\nfeatures: [rules]\n',
     );
     mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
     const body = '# stable';
@@ -153,7 +153,7 @@ extends: {}
   it('treats a malformed YAML lock as "no lock" and exits 1', async () => {
     writeFileSync(
       join(TEST_DIR, 'agentsmesh.yaml'),
-      'version: 1\ntargets: [claude-code]\nfeatures: [rules]\n',
+      'version: 1\ntargets: []\nfeatures: [rules]\n',
     );
     mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), '# x');

@@ -44,6 +44,20 @@
         "t-cmd-31dfa72c"
       ]
     },
+    "agent-orchestration-treat-any-command-containing-output": {
+      "createdAt": "2026-07-17",
+      "evidence": [
+        "process-violation-2026-07-17"
+      ],
+      "rule": "Treat any command containing output redirection as state-changing and run file/command lessons recall before executing it, even when the underlying workload is read-only.",
+      "status": "active",
+      "topics": [
+        "agent-orchestration"
+      ],
+      "triggers": [
+        "t-cmd-5efd7022"
+      ]
+    },
     "agent-orchestration-when-a-subagent-audit-lane": {
       "createdAt": "2026-06-24",
       "evidence": [
@@ -196,6 +210,21 @@
         "t-glob-1d8119c8"
       ]
     },
+    "capability-ledger-derive-capability-ledger-cell-path": {
+      "createdAt": "2026-07-18",
+      "evidence": [
+        "lesson:capability-ledger-never-run-pnpm-capabilities-seed"
+      ],
+      "rule": "Derive capability-ledger cell path/ext/format/fingerprint from the conformance fixture's ACTUAL generated output (run the target through createCanonicalProject(MATRIX_CONFIG) + runGenerate and inspect the tree), never from the tool's docs. Doc-derived cells break conformance with aspirational keys (e.g. optional agent-JSON fields), '<name>' placeholder paths, or dir-only paths. Docs determine only maxAchievable/verdict/source; generated output determines the fingerprint.",
+      "status": "active",
+      "topics": [
+        "capability-ledger"
+      ],
+      "triggers": [
+        "t-glob-4d2ee3c5",
+        "t-glob-d27835e3"
+      ]
+    },
     "capability-ledger-fixes-new-target-source-files-must": {
       "createdAt": "2026-07-12",
       "evidence": [
@@ -256,6 +285,20 @@
         "t-glob-1120a27d",
         "t-cmd-33ca9506",
         "t-kw-8d854c5e"
+      ]
+    },
+    "capability-ledger-when-consuming-pnpm-script-json": {
+      "createdAt": "2026-07-12",
+      "evidence": [
+        "lesson-runtime-parse-failure"
+      ],
+      "rule": "When consuming pnpm script JSON output, strip pnpm lifecycle preamble and parse from the first JSON delimiter instead of redirecting stdout directly.",
+      "status": "active",
+      "topics": [
+        "capability-ledger"
+      ],
+      "triggers": [
+        "t-glob-1120a27d"
       ]
     },
     "ci-and-release-security-rule-1": {
@@ -2220,6 +2263,20 @@
         "t-cmd-7c1c43ea"
       ]
     },
+    "git-commit-hygiene-when-auditing-unpushed-work-probe": {
+      "createdAt": "2026-07-13",
+      "evidence": [
+        "41fd09542d4dd9aa93dbc5f88a2f808972adfaef"
+      ],
+      "rule": "When auditing unpushed work, probe the configured upstream independently before running other read-only inventory commands, because a branch without an upstream exits nonzero and can suppress later chained evidence.",
+      "status": "active",
+      "topics": [
+        "git-commit-hygiene"
+      ],
+      "triggers": [
+        "t-cmd-a17d0ed7"
+      ]
+    },
     "global-mode-global-scope-capability-resolution-has": {
       "createdAt": "2026-06-13",
       "evidence": [
@@ -3702,6 +3759,21 @@
         "t-kw-0e1a8ecb"
       ]
     },
+    "lessons-system-exclude-interruptions-cancellations-and": {
+      "createdAt": "2026-07-17",
+      "evidence": [
+        "architecture-review-2026-07-17"
+      ],
+      "rule": "Exclude interruptions, cancellations, and permission denials from mistake fingerprints; control-flow outcomes are not evidence of an agent mistake.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-71b4b110",
+        "t-kw-a5e58b87"
+      ]
+    },
     "lessons-system-export-stable-error-classes-thrown": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -3761,6 +3833,20 @@
         "t-glob-d40017a0",
         "t-glob-c9dfc34a",
         "t-glob-6c89621d"
+      ]
+    },
+    "lessons-system-for-lessons-system-efficiency-reviews": {
+      "createdAt": "2026-07-17",
+      "evidence": [
+        "user-correction-2026-07-17"
+      ],
+      "rule": "For lessons-system efficiency reviews, define the optimization metric as prevented repeat mistakes unless the user explicitly asks about runtime performance.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-kw-90b1f143"
       ]
     },
     "lessons-system-give-mandatory-lessons-recall-a": {
@@ -3990,6 +4076,22 @@
         "t-glob-300bbdba"
       ]
     },
+    "lessons-system-never-infer-that-a-recalled": {
+      "createdAt": "2026-07-17",
+      "evidence": [
+        "architecture-review-2026-07-17"
+      ],
+      "rule": "Never infer that a recalled lesson failed from a tool failure alone; require an exact durable mistake-to-lesson evidence link before prompting lesson review.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-82cf3af5",
+        "t-glob-d40017a0",
+        "t-kw-313d1d49"
+      ]
+    },
     "lessons-system-preserve-documented-regex-semantics-in": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -4153,6 +4255,21 @@
         "lessons-system"
       ],
       "triggers": []
+    },
+    "lessons-system-run-agentsmesh-lessons-subcommand-help": {
+      "createdAt": "2026-07-17",
+      "evidence": [
+        "failed-command-2026-07-17"
+      ],
+      "rule": "Run `agentsmesh lessons <subcommand> --help` before using an unfamiliar lessons flag; the keyword-trigger flag for `lessons add` is `--trigger-kw`, not `--trigger-keyword`.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-fbe4ce70",
+        "t-cmd-56d79bf7"
+      ]
     },
     "lessons-system-scope-always-lessons-are-delivered": {
       "createdAt": "2026-07-03",
@@ -5227,6 +5344,22 @@
         "t-glob-d044343b"
       ]
     },
+    "reference-rewriting-when-a-target-generates-multiple": {
+      "createdAt": "2026-07-18",
+      "evidence": [
+        "commit:0f60696"
+      ],
+      "rule": "When a target generates MULTIPLE canonical agents into ONE combined output file (e.g. cline .cline/agents.yaml), audit the whole reference-rewrite chain: buildReferenceMap must skip the many-to-one prose mapping (else all agent references rewrite to the combined file and cannot round-trip), buildOutputSourceMap needs an explicit fallback entry so command/rule/skill refs inside the combined file still rewrite, and the target's import-map builder must parse the combined file to emit per-agent canonical mappings.",
+      "status": "active",
+      "topics": [
+        "reference-rewriting"
+      ],
+      "triggers": [
+        "t-glob-59cdb485",
+        "t-glob-8ce6202e",
+        "t-glob-71d466f5"
+      ]
+    },
     "release-changesets-when-auditing-which-changes-since": {
       "createdAt": "2026-06-23",
       "evidence": [],
@@ -5674,6 +5807,20 @@
         "t-glob-e9606afe"
       ]
     },
+    "source-verification-keep-web-search-calls-in": {
+      "createdAt": "2026-07-12",
+      "evidence": [
+        "web-search-second-pass-syntax-error"
+      ],
+      "rule": "Keep web search calls in functions.exec syntactically minimal; assign the query array to a variable before passing it to web__run when nested quoting has already caused a parser failure.",
+      "status": "active",
+      "topics": [
+        "source-verification"
+      ],
+      "triggers": [
+        "t-kw-492df4f9"
+      ]
+    },
     "source-verification-re-open-official-documentation-from": {
       "createdAt": "2026-06-14",
       "evidence": [
@@ -6029,6 +6176,20 @@
       "triggers": [
         "t-glob-aa152d85",
         "t-kw-0bea3e46"
+      ]
+    },
+    "target-capability-audits-keep-capability-audit-inspection-command": {
+      "createdAt": "2026-07-12",
+      "evidence": [
+        "capability-audit-placeholder-require-failure"
+      ],
+      "rule": "Keep capability-audit inspection commands limited to real repository modules; do not append placeholder require probes after a successful audit because they turn a valid audit run into a false command failure.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-cmd-78625976"
       ]
     },
     "target-capability-audits-pi-pi-agent-natively-supports": {
@@ -6733,6 +6894,39 @@
         "t-glob-6511ff88",
         "t-cmd-3dd013c6",
         "t-cmd-8a0598a5"
+      ]
+    },
+    "verification-after-any-multi-agent-fix": {
+      "createdAt": "2026-07-18",
+      "evidence": [
+        "lesson:verification-never-pipe-verification-commands-pnpm"
+      ],
+      "rule": "After any multi-agent fix wave where each agent runs only its focused test suites, ALWAYS follow with one full `pnpm test` + `pnpm test:e2e` run and budget a sync pass: cross-cutting suites no agent owns (layout-metadata, agents-folder-structure-research, skill-mirror, reference-rewrite matrix, e2e content contracts) will hold stale expectations that focused runs cannot see. Also assign any shared test file to exactly ONE agent — concurrent edits to the same spec file race.",
+      "status": "active",
+      "topics": [
+        "verification"
+      ],
+      "triggers": [
+        "t-kw-15065ff0",
+        "t-kw-013fafa7",
+        "t-kw-e2160d81",
+        "t-kw-745cab00",
+        "t-kw-1171e894"
+      ]
+    },
+    "verification-never-pipe-verification-commands-pnpm": {
+      "createdAt": "2026-07-18",
+      "evidence": [
+        "commit:41fd0954"
+      ],
+      "rule": "Never pipe verification commands (pnpm test/lint/typecheck/vitest) into tail/grep/head when the exit code matters — the pipeline returns the LAST command's status, so a red suite reads as exit 0 (this masked 31 real failures). Redirect to a log file (`> /tmp/x.log 2>&1`), capture `$?` explicitly, then grep the log.",
+      "status": "active",
+      "topics": [
+        "verification"
+      ],
+      "triggers": [
+        "t-cmd-d75c3b91",
+        "t-cmd-f68bf5e2"
       ]
     },
     "verification-workflow-changing-the-public-api-surface": {
@@ -7831,6 +8025,9 @@
     "readme-codegen-blocks": {
       "summary": "README.md auto-generated marker blocks (support matrix, tool list) and the generator/tests that pin their layout."
     },
+    "reference-rewriting": {
+      "summary": "Cross-format reference rewriting and import-map construction pitfalls"
+    },
     "release-changesets": {
       "summary": "Changeset authoring/auditing — which changes are user-facing (npm files surface) vs repo-internal, and mapping commits to changesets."
     },
@@ -7869,6 +8066,9 @@
     },
     "typescript-esm-cycles": {
       "summary": "TypeScript strict + ESM cycles — TDZ traps in descriptor literals, third-file import-mappers, lazy registry caches, union narrowing."
+    },
+    "verification": {
+      "summary": "Running and interpreting the repo verification stack correctly"
     },
     "verification-workflow": {
       "summary": "Reliable ordering and interpretation of repository verification gates."
@@ -7992,6 +8192,10 @@
       "kind": "command_pattern",
       "pattern": "agentsmesh lessons add"
     },
+    "t-cmd-5efd7022": {
+      "kind": "command_pattern",
+      "pattern": ">"
+    },
     "t-cmd-64a39b90": {
       "kind": "command_pattern",
       "pattern": "pnpm exec"
@@ -8015,6 +8219,10 @@
     "t-cmd-73382791": {
       "kind": "command_pattern",
       "pattern": "agentsmesh lessons"
+    },
+    "t-cmd-78625976": {
+      "kind": "command_pattern",
+      "pattern": "capabilities-audit"
     },
     "t-cmd-79806ff2": {
       "kind": "command_pattern",
@@ -8063,6 +8271,10 @@
     "t-cmd-9b9e4933": {
       "kind": "command_pattern",
       "pattern": "git tag"
+    },
+    "t-cmd-a17d0ed7": {
+      "kind": "command_pattern",
+      "pattern": "git rev-parse .*upstream"
     },
     "t-cmd-a29b2eff": {
       "kind": "command_pattern",
@@ -8136,6 +8348,10 @@
       "kind": "command_pattern",
       "pattern": "sed|cat"
     },
+    "t-cmd-d75c3b91": {
+      "kind": "command_pattern",
+      "pattern": "pnpm (test|lint|typecheck)[^|]*\\|\\s*(tail|head|grep)"
+    },
     "t-cmd-d9dce045": {
       "kind": "command_pattern",
       "pattern": "install --as"
@@ -8195,6 +8411,10 @@
     "t-cmd-f2638ce0": {
       "kind": "command_pattern",
       "pattern": "init --global"
+    },
+    "t-cmd-f68bf5e2": {
+      "kind": "command_pattern",
+      "pattern": "vitest run[^|]*\\|\\s*(tail|head|grep)"
     },
     "t-cmd-f77373d3": {
       "kind": "command_pattern",
@@ -8508,6 +8728,10 @@
       "kind": "file_glob",
       "pattern": "src/targets/**/generator*.ts"
     },
+    "t-glob-59cdb485": {
+      "kind": "file_glob",
+      "pattern": "src/core/reference/map.ts"
+    },
     "t-glob-5a2080aa": {
       "kind": "file_glob",
       "pattern": "src/targets/*/constants.ts"
@@ -8684,6 +8908,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/import-legacy*.ts"
     },
+    "t-glob-82cf3af5": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/*hook*.ts"
+    },
     "t-glob-840ca032": {
       "kind": "file_glob",
       "pattern": "src/targets/*/{hooks-format,agent-format,global-hooks,importer}.ts"
@@ -8731,6 +8959,10 @@
     "t-glob-8ade9a3e": {
       "kind": "file_glob",
       "pattern": "vitest.config.ts"
+    },
+    "t-glob-8ce6202e": {
+      "kind": "file_glob",
+      "pattern": "src/core/reference/output-source-map.ts"
     },
     "t-glob-8df49dba": {
       "kind": "file_glob",
@@ -8948,6 +9180,10 @@
       "kind": "file_glob",
       "pattern": "tsup.config*"
     },
+    "t-glob-d27835e3": {
+      "kind": "file_glob",
+      "pattern": "tests/contract/capability-ledger-conformance.test.ts"
+    },
     "t-glob-d3ba8a40": {
       "kind": "file_glob",
       "pattern": "src/lessons/**"
@@ -9060,6 +9296,10 @@
       "kind": "file_glob",
       "pattern": "src/utils/filesystem/rename-retry.ts"
     },
+    "t-glob-fbe4ce70": {
+      "kind": "file_glob",
+      "pattern": "src/cli/commands/lessons-known-flags.ts"
+    },
     "t-glob-ff160535": {
       "kind": "file_glob",
       "pattern": "src/targets/*/importer-spec.ts"
@@ -9071,6 +9311,10 @@
     "t-kw-012b2936": {
       "kind": "keyword",
       "pattern": "keyword floor"
+    },
+    "t-kw-013fafa7": {
+      "kind": "keyword",
+      "pattern": "fix wave"
     },
     "t-kw-01a1d77f": {
       "kind": "keyword",
@@ -9136,6 +9380,10 @@
       "kind": "keyword",
       "pattern": "qa report commit"
     },
+    "t-kw-15065ff0": {
+      "kind": "keyword",
+      "pattern": "multi-agent"
+    },
     "t-kw-1b4e1dda": {
       "kind": "keyword",
       "pattern": "reference-targets two chains outputPaths expectedRefs command path"
@@ -9187,6 +9435,10 @@
     "t-kw-3070d871": {
       "kind": "keyword",
       "pattern": "review agent"
+    },
+    "t-kw-313d1d49": {
+      "kind": "keyword",
+      "pattern": "lesson outcome attribution"
     },
     "t-kw-31b53f67": {
       "kind": "keyword",
@@ -9256,6 +9508,10 @@
       "kind": "keyword",
       "pattern": "lessons recall"
     },
+    "t-kw-492df4f9": {
+      "kind": "keyword",
+      "pattern": "web search parser failure"
+    },
     "t-kw-4c23a772": {
       "kind": "keyword",
       "pattern": "colocate"
@@ -9324,6 +9580,10 @@
       "kind": "keyword",
       "pattern": "opencode additionalRules instructions"
     },
+    "t-kw-745cab00": {
+      "kind": "keyword",
+      "pattern": "workflow fixes"
+    },
     "t-kw-75645732": {
       "kind": "keyword",
       "pattern": "environment variable"
@@ -9368,6 +9628,10 @@
       "kind": "keyword",
       "pattern": "capabilities verify ledger CI gate"
     },
+    "t-kw-90b1f143": {
+      "kind": "keyword",
+      "pattern": "lessons efficiency"
+    },
     "t-kw-92d6db38": {
       "kind": "keyword",
       "pattern": "branch coverage threshold precommit"
@@ -9395,6 +9659,10 @@
     "t-kw-a03e44b6": {
       "kind": "keyword",
       "pattern": "control character probe"
+    },
+    "t-kw-a5e58b87": {
+      "kind": "keyword",
+      "pattern": "mistake fingerprint"
     },
     "t-kw-a5ed6024": {
       "kind": "keyword",
@@ -9511,6 +9779,10 @@
     "t-kw-e0aa2fb2": {
       "kind": "keyword",
       "pattern": "precommit hook"
+    },
+    "t-kw-e2160d81": {
+      "kind": "keyword",
+      "pattern": "subagent fixes"
     },
     "t-kw-e3a2ec15": {
       "kind": "keyword",

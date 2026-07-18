@@ -1,3 +1,17 @@
+# Lessons efficiency architecture audit (2026-07-17)
+
+**Goal:** Produce an evidence-backed recommendation for a simpler lessons system
+that prevents agents from repeating mistakes more reliably. Runtime performance is
+secondary; this task makes no implementation changes.
+
+- [x] Map the failure → capture → recall → action → outcome loop and preserved contracts.
+- [x] Find where repeat prevention fails: capture, retrieval, delivery, obedience, or evaluation.
+- [x] Compare alternatives; select the smallest high-leverage prevention design.
+- [x] Document migration, rollout, risks, and verification criteria.
+- [x] Apply documentation QA and record the lessons capture decision.
+
+---
+
 # Lessons coverage completion — capture/recall at the right time, for all types (ACTIVE)
 
 **Goal (user):** lessons must be *captured and queried when they are really needed*; general,

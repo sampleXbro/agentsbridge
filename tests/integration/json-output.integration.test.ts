@@ -88,6 +88,27 @@ describe('agentsmesh --json output (integration)', () => {
     expect(drifted.length).toBeGreaterThan(0);
   });
 
+  it('check --json reports generated-output drift separately', () => {
+    setupValidProject();
+
+    const generated = runCli(['generate']);
+    expect(generated.status).toBe(0);
+    writeFileSync(
+      join(TEST_DIR, 'CLAUDE.md'),
+      '# Manually edited generated output\n',
+    );
+
+    const { stdout, status } = runCli(['check', '--json']);
+    const envelope = JSON.parse(stdout);
+
+    expect(status).toBe(1);
+    expect(envelope.success).toBe(false);
+    expect(envelope.data.canonicalDrift).toBe(false);
+    expect(envelope.data.outputDrift).toBe(true);
+    expect(envelope.data.outputModified).toEqual(['CLAUDE.md']);
+    expect(envelope.data.outputRemoved).toEqual([]);
+  });
+
   it('check --json reports no lock as failure', () => {
     setupValidProject();
     // No generate run, so no .lock file

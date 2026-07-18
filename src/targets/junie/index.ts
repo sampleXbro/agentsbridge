@@ -10,6 +10,7 @@ import {
   generatePermissions,
   renderJunieGlobalInstructions,
 } from './generator.js';
+import { emitJunieScopedSettings, mergeJunieConfig } from './global-config.js';
 import {
   JUNIE_DOT_AGENTS,
   JUNIE_RULES_DIR,
@@ -24,6 +25,7 @@ import {
   JUNIE_GLOBAL_MCP_FILE,
   JUNIE_GLOBAL_AGENTS_SKILLS_DIR,
   JUNIE_GLOBAL_ALLOWLIST,
+  JUNIE_GLOBAL_CONFIG,
   JUNIE_SKILLS_DIR,
   JUNIE_CANONICAL_RULES_DIR,
   JUNIE_CANONICAL_COMMANDS_DIR,
@@ -34,7 +36,7 @@ import {
 import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromJunie } from './importer.js';
 import { lintRules } from './linter.js';
-import { lintMcp } from './lint.js';
+import { lintMcp, lintHooks, lintPermissions } from './lint.js';
 import { buildJunieImportPaths } from '../../core/reference/import-map-builders.js';
 
 export const target: TargetGenerators = {
@@ -81,7 +83,12 @@ const globalLayout: TargetLayout = {
       JUNIE_GLOBAL_COMMANDS_DIR,
       JUNIE_GLOBAL_AGENTS_SKILLS_DIR,
     ],
-    files: [JUNIE_GLOBAL_AGENTS_MD, JUNIE_GLOBAL_MCP_FILE, JUNIE_GLOBAL_ALLOWLIST],
+    files: [
+      JUNIE_GLOBAL_AGENTS_MD,
+      JUNIE_GLOBAL_MCP_FILE,
+      JUNIE_GLOBAL_ALLOWLIST,
+      JUNIE_GLOBAL_CONFIG,
+    ],
   },
   rewriteGeneratedPath(path) {
     // Transform project-level paths to global ~/.junie/ paths
@@ -132,7 +139,7 @@ const globalCapabilities: TargetCapabilities = {
   agents: 'native',
   skills: 'native',
   mcp: 'native',
-  hooks: 'none',
+  hooks: 'embedded',
   ignore: 'none',
   permissions: 'native',
 };
@@ -153,15 +160,17 @@ export const descriptor = {
     agents: 'native',
     skills: 'native',
     mcp: 'native',
-    hooks: 'none',
+    hooks: 'partial',
     ignore: 'native',
-    permissions: 'none',
+    permissions: 'partial',
   },
   emptyImportMessage:
     'No Junie config found (.junie/guidelines.md, .junie/AGENTS.md, .junie/skills, .junie/mcp/mcp.json, or .aiignore).',
   lintRules,
   lint: {
     mcp: lintMcp,
+    hooks: lintHooks,
+    permissions: lintPermissions,
   },
   project,
   globalSupport: {
@@ -174,6 +183,11 @@ export const descriptor = {
       JUNIE_GLOBAL_MCP_FILE,
     ],
     layout: globalLayout,
+  },
+  emitScopedSettings: emitJunieScopedSettings,
+  mergeGeneratedOutputContent(existing, _pending, newContent, resolvedPath) {
+    if (resolvedPath !== JUNIE_GLOBAL_CONFIG) return null;
+    return mergeJunieConfig(existing, newContent);
   },
   importer: {
     rules: {

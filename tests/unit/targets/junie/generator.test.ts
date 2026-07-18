@@ -250,12 +250,18 @@ describe('generatePermissions (junie)', () => {
     const canonical = makeCanonical({
       permissions: { allow: ['*'], deny: [], ask: [] },
     });
-    const results = generatePermissions(canonical, { capability: { level: 'none' }, scope: 'project' });
+    const results = generatePermissions(canonical, {
+      capability: { level: 'none' },
+      scope: 'project',
+    });
     expect(results).toHaveLength(0);
   });
 
   it('returns empty for global scope with no permissions', () => {
-    const results = generatePermissions(makeCanonical({ permissions: null }), { capability: { level: 'native' }, scope: 'global' });
+    const results = generatePermissions(makeCanonical({ permissions: null }), {
+      capability: { level: 'native' },
+      scope: 'global',
+    });
     expect(results).toHaveLength(0);
   });
 
@@ -267,16 +273,45 @@ describe('generatePermissions (junie)', () => {
     expect(results).toHaveLength(0);
   });
 
-  it('generates allowlist.json for global scope', () => {
+  it('generates allowlist.json for global scope with categorized rules schema', () => {
     const canonical = makeCanonical({
-      permissions: { allow: ['Bash', 'Read'], deny: ['Write'], ask: ['MCP'] },
+      permissions: { allow: ['Bash', 'Read'], deny: ['Write'], ask: ['**/node_modules/**'] },
     });
-    const results = generatePermissions(canonical, { capability: { level: 'native' }, scope: 'global' });
+    const results = generatePermissions(canonical, {
+      capability: { level: 'native' },
+      scope: 'global',
+    });
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(JUNIE_GLOBAL_ALLOWLIST);
-    const parsed = JSON.parse(results[0].content) as { allow: string[]; deny: string[]; ask: string[] };
-    expect(parsed.allow).toEqual(['Bash', 'Read']);
-    expect(parsed.deny).toEqual(['Write']);
-    expect(parsed.ask).toEqual(['MCP']);
+    const parsed = JSON.parse(results[0].content) as {
+      defaultBehavior: string;
+      allowReadonlyCommands: boolean;
+      rules: {
+        fileEditing: { rules: Array<{ prefix?: string; pattern?: string; action: string }> };
+        executables: { rules: Array<{ prefix?: string; pattern?: string; action: string }> };
+        mcpTools: { rules: Array<{ prefix?: string; pattern?: string; action: string }> };
+        readOutsideProject: { rules: Array<{ prefix?: string; pattern?: string; action: string }> };
+      };
+    };
+    expect(parsed.defaultBehavior).toBe('ask');
+    expect(parsed.allowReadonlyCommands).toBe(true);
+    // rules must be an object, not an array
+    expect(typeof parsed.rules).toBe('object');
+    expect(Array.isArray(parsed.rules)).toBe(false);
+    // all four required sub-keys must exist
+    expect(typeof parsed.rules.fileEditing).toBe('object');
+    expect(typeof parsed.rules.executables).toBe('object');
+    expect(typeof parsed.rules.mcpTools).toBe('object');
+    expect(typeof parsed.rules.readOutsideProject).toBe('object');
+    // executables category should carry the allow entries (Bash, Read)
+    const execRules = parsed.rules.executables.rules;
+    expect(execRules.some((r) => r.prefix === 'Bash' && r.action === 'allow')).toBe(true);
+    expect(execRules.some((r) => r.prefix === 'Read' && r.action === 'allow')).toBe(true);
+    // executables deny (Write) mapped as ask (Junie has no deny action)
+    expect(execRules.some((r) => r.prefix === 'Write' && r.action === 'ask')).toBe(true);
+    // ask glob entry uses 'pattern' not 'prefix'
+    expect(execRules.some((r) => r.pattern === '**/node_modules/**' && r.action === 'ask')).toBe(
+      true,
+    );
   });
 });

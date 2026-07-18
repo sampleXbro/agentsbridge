@@ -4,7 +4,7 @@ import { cap } from '../catalog/capabilities.js';
 export const projectCapabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'native',
-  commands: cap('partial', 'workflows'),
+  commands: cap('native', 'workflows'),
   agents: 'none',
   skills: 'native',
   mcp: 'none',
@@ -16,7 +16,7 @@ export const projectCapabilities: TargetCapabilities = {
 export const globalCapabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'embedded',
-  commands: cap('partial', 'workflows'),
+  commands: cap('native', 'workflows'),
   agents: 'none',
   skills: 'native',
   mcp: 'native',

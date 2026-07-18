@@ -14,7 +14,7 @@ import {
 describe('antigravity global layout — paths', () => {
   const layout = getTargetLayout('antigravity', 'global')!;
 
-  it('resolves rule path to .gemini/antigravity/GEMINI.md (aggregate)', () => {
+  it('resolves rule path to .gemini/GEMINI.md (aggregate)', () => {
     expect(
       layout.paths.rulePath('typescript', {
         source: 'typescript.md',
@@ -24,21 +24,21 @@ describe('antigravity global layout — paths', () => {
         globs: [],
         body: '',
       }),
-    ).toBe('.gemini/antigravity/GEMINI.md');
+    ).toBe('.gemini/GEMINI.md');
   });
 
-  it('resolves command path to .gemini/antigravity/workflows/', () => {
+  it('resolves command path to .gemini/antigravity/global_workflows/', () => {
     expect(layout.paths.commandPath('deploy', {} as never)).toBe(
-      '.gemini/antigravity/workflows/deploy.md',
+      '.gemini/antigravity/global_workflows/deploy.md',
     );
   });
 
-  it('returns projected agent skill path under .gemini/antigravity/skills/', () => {
+  it('returns projected agent skill path under .gemini/config/skills/', () => {
     // Phase 7.F: agentPath must return the global path directly so reference
     // map consumers (`agentTargetPath`) get the correct destination without
     // depending on `rewriteGeneratedPath` running after them.
     expect(layout.paths.agentPath('reviewer', {} as never)).toBe(
-      '.gemini/antigravity/skills/am-agent-reviewer/SKILL.md',
+      '.gemini/config/skills/am-agent-reviewer/SKILL.md',
     );
   });
 });
@@ -47,8 +47,8 @@ describe('antigravity global layout — rewriteGeneratedPath', () => {
   const layout = getTargetLayout('antigravity', 'global')!;
   const rewrite = layout.rewriteGeneratedPath!;
 
-  it('rewrites .agents/rules/general.md to .gemini/antigravity/GEMINI.md', () => {
-    expect(rewrite('.agents/rules/general.md')).toBe('.gemini/antigravity/GEMINI.md');
+  it('rewrites .agents/rules/general.md to .gemini/GEMINI.md', () => {
+    expect(rewrite('.agents/rules/general.md')).toBe('.gemini/GEMINI.md');
   });
 
   it('suppresses per-rule files (returns null)', () => {
@@ -56,20 +56,18 @@ describe('antigravity global layout — rewriteGeneratedPath', () => {
     expect(rewrite('.agents/rules/testing.md')).toBeNull();
   });
 
-  it('rewrites .agents/skills/ to .gemini/antigravity/skills/', () => {
-    expect(rewrite('.agents/skills/ts-pro/SKILL.md')).toBe(
-      '.gemini/antigravity/skills/ts-pro/SKILL.md',
+  it('rewrites .agents/skills/ to .gemini/config/skills/', () => {
+    expect(rewrite('.agents/skills/ts-pro/SKILL.md')).toBe('.gemini/config/skills/ts-pro/SKILL.md');
+  });
+
+  it('rewrites .agents/workflows/ to .gemini/antigravity/global_workflows/', () => {
+    expect(rewrite('.agents/workflows/deploy.md')).toBe(
+      '.gemini/antigravity/global_workflows/deploy.md',
     );
   });
 
-  it('rewrites .agents/workflows/ to .gemini/antigravity/workflows/', () => {
-    expect(rewrite('.agents/workflows/deploy.md')).toBe('.gemini/antigravity/workflows/deploy.md');
-  });
-
-  it('rewrites .agents/antigravity/mcp_config.json to .gemini/antigravity/mcp_config.json', () => {
-    expect(rewrite('.agents/antigravity/mcp_config.json')).toBe(
-      '.gemini/antigravity/mcp_config.json',
-    );
+  it('rewrites .agents/antigravity/mcp_config.json to .gemini/config/mcp_config.json', () => {
+    expect(rewrite('.agents/antigravity/mcp_config.json')).toBe('.gemini/config/mcp_config.json');
   });
 
   it('returns unchanged path for unrecognized paths', () => {
@@ -80,7 +78,7 @@ describe('antigravity global layout — rewriteGeneratedPath', () => {
 describe('antigravity global layout — no mirrorGlobalPath', () => {
   const layout = getTargetLayout('antigravity', 'global')!;
 
-  it('has no mirrorGlobalPath (antigravity uses .gemini/antigravity/ namespace)', () => {
+  it('has no mirrorGlobalPath (antigravity uses .gemini/ namespace)', () => {
     expect(layout.mirrorGlobalPath).toBeUndefined();
   });
 });
@@ -168,7 +166,7 @@ describe('antigravity global frontmatter preservation', () => {
     expect(rule!.content).toContain('Use TDD and strict TypeScript.');
   });
 
-  it('preserves MCP content in global mode (written to .gemini/antigravity/mcp_config.json)', async () => {
+  it('preserves MCP content in global mode (written to .gemini/config/mcp_config.json)', async () => {
     const results = await generate({
       config: { ...makeGlobalConfig(), features: ['mcp'] } as ValidatedConfig,
       canonical: makeCanonical({

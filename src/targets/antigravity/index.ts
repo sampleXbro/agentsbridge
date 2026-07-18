@@ -140,17 +140,17 @@ export const descriptor = {
   globalSupport: {
     capabilities: globalCapabilities,
     detectionPaths: [
-      '.gemini/antigravity/GEMINI.md',
-      '.gemini/antigravity/skills',
-      '.gemini/antigravity/workflows',
-      '.gemini/antigravity/mcp_config.json',
+      ANTIGRAVITY_GLOBAL_ROOT,
+      ANTIGRAVITY_GLOBAL_SKILLS_DIR,
+      ANTIGRAVITY_GLOBAL_WORKFLOWS_DIR,
+      ANTIGRAVITY_GLOBAL_MCP_CONFIG,
     ],
     layout: globalLayout,
   },
   importer: {
     rules: {
       // Project-only directory scan; root rule + global-aggregated rules
-      // (which collapse into the single .gemini/antigravity/GEMINI.md) are
+      // (which collapse into the single .gemini/GEMINI.md) are
       // handled imperatively in importer.ts.
       feature: 'rules',
       mode: 'directory',

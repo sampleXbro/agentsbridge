@@ -130,20 +130,20 @@ describe('importFromAntigravity — skills', () => {
 });
 
 describe('importFromAntigravity — global scope', () => {
-  it('imports ~/.gemini/antigravity/GEMINI.md, global workflows, skills, and mcp_config.json (not project .agents/workflows)', async () => {
-    mkdirSync(join(TEST_DIR, '.gemini', 'antigravity', 'skills', 'review'), { recursive: true });
-    mkdirSync(join(TEST_DIR, '.gemini', 'antigravity', 'workflows'), { recursive: true });
-    writeFileSync(join(TEST_DIR, '.gemini', 'antigravity', 'GEMINI.md'), '# Global root\n');
+  it('imports ~/.gemini/GEMINI.md, global workflows, skills, and mcp_config.json (not project .agents/workflows)', async () => {
+    mkdirSync(join(TEST_DIR, '.gemini', 'config', 'skills', 'review'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.gemini', 'antigravity', 'global_workflows'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.gemini', 'GEMINI.md'), '# Global root\n');
     writeFileSync(
-      join(TEST_DIR, '.gemini', 'antigravity', 'workflows', 'review.md'),
+      join(TEST_DIR, '.gemini', 'antigravity', 'global_workflows', 'review.md'),
       '---\ndescription: Review workflow\n---\n\nReview the diff.',
     );
     writeFileSync(
-      join(TEST_DIR, '.gemini', 'antigravity', 'skills', 'review', 'SKILL.md'),
+      join(TEST_DIR, '.gemini', 'config', 'skills', 'review', 'SKILL.md'),
       '---\ndescription: Review\n---\n# Skill body',
     );
     writeFileSync(
-      join(TEST_DIR, '.gemini', 'antigravity', 'mcp_config.json'),
+      join(TEST_DIR, '.gemini', 'config', 'mcp_config.json'),
       JSON.stringify({ mcpServers: { x: { command: 'npx', args: [] } } }, null, 2),
     );
     mkdirSync(join(TEST_DIR, '.agents', 'workflows'), { recursive: true });

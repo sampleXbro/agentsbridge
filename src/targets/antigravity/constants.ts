@@ -12,10 +12,10 @@ export const ANTIGRAVITY_MCP_CONFIG = `${ANTIGRAVITY_DIR}/antigravity/mcp_config
 export const ANTIGRAVITY_HOOKS_FILE = `${ANTIGRAVITY_DIR}/hooks.json`;
 export const ANTIGRAVITY_GLOBAL_HOOKS_FILE = '.gemini/config/hooks.json';
 
-export const ANTIGRAVITY_GLOBAL_ROOT = '.gemini/antigravity/GEMINI.md';
-export const ANTIGRAVITY_GLOBAL_SKILLS_DIR = '.gemini/antigravity/skills';
-export const ANTIGRAVITY_GLOBAL_WORKFLOWS_DIR = '.gemini/antigravity/workflows';
-export const ANTIGRAVITY_GLOBAL_MCP_CONFIG = '.gemini/antigravity/mcp_config.json';
+export const ANTIGRAVITY_GLOBAL_ROOT = '.gemini/GEMINI.md';
+export const ANTIGRAVITY_GLOBAL_SKILLS_DIR = '.gemini/config/skills';
+export const ANTIGRAVITY_GLOBAL_WORKFLOWS_DIR = '.gemini/antigravity/global_workflows';
+export const ANTIGRAVITY_GLOBAL_MCP_CONFIG = '.gemini/config/mcp_config.json';
 
 export const ANTIGRAVITY_CANONICAL_ROOT_RULE = '.agentsmesh/rules/_root.md';
 export const ANTIGRAVITY_CANONICAL_RULES_DIR = '.agentsmesh/rules';

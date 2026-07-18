@@ -66,7 +66,7 @@ export const capabilities: TargetCapabilities = {
   agents: 'native',
   skills: 'native',
   mcp: 'native',
-  hooks: 'none',
-  ignore: 'none',
+  hooks: 'partial',
+  ignore: 'partial',
   permissions: 'native',
 };

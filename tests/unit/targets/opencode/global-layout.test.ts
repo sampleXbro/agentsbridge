@@ -133,7 +133,7 @@ describe('opencode global layout — mirrorGlobalPath', () => {
 });
 
 describe('opencode global layout — capabilities', () => {
-  it('exposes the same capabilities in global as in project', () => {
+  it('exposes expected capabilities at global scope', () => {
     expect(getTargetCapabilities('opencode', 'global')).toEqual({
       rules: { level: 'native' },
       additionalRules: { level: 'native' },
@@ -141,8 +141,8 @@ describe('opencode global layout — capabilities', () => {
       agents: { level: 'native' },
       skills: { level: 'native' },
       mcp: { level: 'native' },
-      hooks: { level: 'none' },
-      ignore: { level: 'none' },
+      hooks: { level: 'partial' },
+      ignore: { level: 'partial' },
       permissions: { level: 'native' },
     });
   });

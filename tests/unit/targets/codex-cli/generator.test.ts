@@ -231,6 +231,30 @@ describe('generateRules (codex-cli)', () => {
     expect(results.find((r) => r.path === 'policy/AGENTS.md')).toBeUndefined();
   });
 
+  it('derives the .rules slug from the basename even when source is a Windows absolute path', () => {
+    // Regression: on Windows, canonical `rule.source` is a native path with
+    // backslashes (e.g. C:\...\.agentsmesh\rules\policy.md). Splitting on '/'
+    // only leaves the whole absolute path as the "slug", producing a bogus
+    // output path like `.codex/rules/C:\...\.agentsmesh\rules\policy.rules`
+    // whose dirname mkdir throws ENOENT on Windows (drive-colon mid-path).
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: 'C:\\Users\\runner\\proj\\.agentsmesh\\rules\\policy.md',
+          root: false,
+          targets: [],
+          description: '',
+          globs: [],
+          body: 'prefix_rule(\n  pattern = ["git", "status"],\n  decision = "allow",\n)\n',
+          codexEmit: 'execution',
+        },
+      ],
+    });
+    const results = generateRules(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0]!.path).toBe(`${CODEX_RULES_DIR}/policy.rules`);
+  });
+
   it('emits comment-only .rules when execution body is markdown text', () => {
     const markdown = '# TypeScript Standards\n\n- Use strict mode\n- Prefer unknown over any';
     const canonical = makeCanonical({

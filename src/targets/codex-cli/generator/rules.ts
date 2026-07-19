@@ -68,7 +68,11 @@ export function generateRules(canonical: CanonicalFiles): RulesOutput[] {
     if (rule.root) continue;
     if (rule.codexEmit !== 'execution') continue;
     if (rule.targets.length > 0 && !rule.targets.includes('codex-cli')) continue;
-    const slug = rule.source.split('/').pop()!.replace(/\.md$/, '');
+    // Split on both separators: on Windows `rule.source` is a native path with
+    // backslashes, so splitting on '/' alone would leave the whole absolute path
+    // as the slug and emit a bogus `.codex/rules/C:\...\policy.rules` path whose
+    // mkdir throws ENOENT (drive-colon mid-path).
+    const slug = rule.source.split(/[\\/]/).pop()!.replace(/\.md$/i, '');
     outputs.push({
       path: `${CODEX_RULES_DIR}/${slug}.rules`,
       content: toSafeCodexRulesContent(rule.body),

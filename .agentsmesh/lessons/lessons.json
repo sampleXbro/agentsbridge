@@ -7591,6 +7591,21 @@
         "t-glob-6184efaf"
       ]
     },
+    "windows-paths-never-derive-a-slug-basename": {
+      "createdAt": "2026-07-19",
+      "evidence": [
+        "commit:d23a7780"
+      ],
+      "rule": "Never derive a slug/basename from a native filesystem path (e.g. `rule.source`, load-walk paths) with `.split('/').pop()` — on Windows those paths use backslashes, so the split no-ops and the whole absolute path (incl. drive `C:`) becomes the \"slug\", producing a bogus output path whose `mkdir` throws ENOENT mid-path (drive-colon). It passes on POSIX (absolute paths use `/`), so the bug is Windows-CI-only. Use `path.basename(src, ext)` (native, matches the running platform's separator) or split on both separators `.split(/[\\\\/]/).pop()` (platform-independent — required if a unit test feeds a foreign-separator literal, since POSIX `basename` won't strip `\\`).",
+      "status": "active",
+      "topics": [
+        "windows-paths"
+      ],
+      "triggers": [
+        "t-glob-aceab730",
+        "t-glob-59f84b11"
+      ]
+    },
     "windows-paths-on-windows-only-a-git": {
       "createdAt": "2026-06-12",
       "evidence": [
@@ -8855,6 +8870,10 @@
       "kind": "file_glob",
       "pattern": "src/core/reference/map.ts"
     },
+    "t-glob-59f84b11": {
+      "kind": "file_glob",
+      "pattern": "src/targets/**/generator.ts"
+    },
     "t-glob-5a2080aa": {
       "kind": "file_glob",
       "pattern": "src/targets/*/constants.ts"
@@ -9190,6 +9209,10 @@
     "t-glob-ab07d638": {
       "kind": "file_glob",
       "pattern": "src/targets/copilot/capabilities.ts"
+    },
+    "t-glob-aceab730": {
+      "kind": "file_glob",
+      "pattern": "src/targets/**/generator/*.ts"
     },
     "t-glob-b13cc3e2": {
       "kind": "file_glob",

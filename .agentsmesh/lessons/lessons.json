@@ -1022,6 +1022,21 @@
         "t-kw-1397bfda"
       ]
     },
+    "docs-lock-format-the-agentsmesh-lock-is-a": {
+      "createdAt": "2026-07-18",
+      "evidence": [
+        "src/config/core/lock.ts:56-96"
+      ],
+      "rule": "The .agentsmesh/.lock is a YAML file (keys: generated_at, generated_by, lib_version, checksums for canonical .agentsmesh/-relative sources, extends, packs, and optional outputs map of project-root-relative generated-file checksums) — NOT a JSON file with a version/files map. When documenting the lock, describe canonical `checksums` and generated `outputs` separately; don't reuse the old JSON `{version, files}` shape.",
+      "status": "active",
+      "topics": [
+        "docs-lock-format"
+      ],
+      "triggers": [
+        "t-glob-d0a4b76e",
+        "t-kw-4683ab67"
+      ]
+    },
     "fixture-and-assertion-discipline-after-changing-a-target-capability": {
       "createdAt": "2026-06-14",
       "evidence": [
@@ -5247,6 +5262,37 @@
         "t-glob-40333e0c"
       ]
     },
+    "lock-file-format-src-config-core-lock-ts": {
+      "createdAt": "2026-07-18",
+      "evidence": [
+        "a09ae204"
+      ],
+      "rule": "src/config/core/lock.ts sits ~199 lines against the 200-line cap. When adding a LockFile field that round-trips through readLock/writeLock, put all new drift/build logic in a sibling file (e.g. lock-outputs.ts) and keep lock.ts edits to minimal parse/serialize lines; trim adjacent comments if you spill past 200.",
+      "status": "active",
+      "topics": [
+        "lock-file-format"
+      ],
+      "triggers": [
+        "t-glob-17f43180"
+      ]
+    },
+    "lock-file-format-src-config-core-lock-ts-when-recording-or-comparing-checksums": {
+      "createdAt": "2026-07-18",
+      "evidence": [],
+      "rationale": "Issue #98 fix initially hashed raw GenerateResult.content while writeFileAtomic normalized line endings on write — any CRLF content would self-report as drift immediately after generate; caught in final review.",
+      "rule": "When recording or comparing checksums of files written via writeFileAtomic, hash the normalized payload (mirror hashFileForManifest: strip UTF-8 BOM + LF-normalize for shouldNormalizeLineEndings extensions, raw bytes otherwise) — never hash raw in-memory content, since writeFileAtomic rewrites CRLF to LF on disk and the hashes diverge.",
+      "status": "active",
+      "topics": [
+        "lock-file-format-src-config-core-lock-ts"
+      ],
+      "triggers": [
+        "t-glob-e6cc94f4",
+        "t-glob-4ba3bf59",
+        "t-kw-925d9b8d",
+        "t-kw-8a80159c",
+        "t-kw-5197b195"
+      ]
+    },
     "mcp-generate-lock-the-mcp-generate-handler-src": {
       "createdAt": "2026-06-23",
       "evidence": [
@@ -5303,6 +5349,23 @@
       "triggers": [
         "t-glob-9499d1a7",
         "t-cmd-64a39b90"
+      ]
+    },
+    "pnpm-lockfile-pnpm-overrides-live-in-three": {
+      "createdAt": "2026-07-19",
+      "evidence": [
+        "commit:68851507"
+      ],
+      "rule": "pnpm overrides live in THREE synced places: `package.json` `pnpm.overrides`, `pnpm-workspace.yaml` `overrides`, and the `pnpm-lock.yaml` `overrides:` snapshot. When adding/changing an override, update all three — edit both config files, then regenerate the lock with the CI pnpm major (`CI=true npx -y pnpm@10 install --lockfile-only`) and confirm `CI=true npx -y pnpm@10 install --frozen-lockfile` exits 0. Editing only `package.json` (as a lone security-override commit does) leaves `pnpm-workspace.yaml` and the lockfile snapshot stale and breaks CI's frozen install with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.",
+      "status": "active",
+      "topics": [
+        "pnpm-lockfile"
+      ],
+      "triggers": [
+        "t-glob-5e0d226f",
+        "t-glob-f564ed24",
+        "t-glob-9499d1a7",
+        "t-cmd-b25b679a"
       ]
     },
     "pnpm-lockfile-the-committed-pnpm-lock-yaml": {
@@ -7993,6 +8056,9 @@
     "dist-backed-tests": {
       "summary": "e2e and integration tests that exec dist/cli.js; require fresh build; avoid parallel rebuilds."
     },
+    "docs-lock-format": {
+      "summary": "Accurate description of the .agentsmesh/.lock file format in docs"
+    },
     "fixture-and-assertion-discipline": {
       "summary": "Exact-path/exact-count test assertions, richest-fixture-first, descriptor data dump before parameterizing, mock completeness."
     },
@@ -8034,6 +8100,12 @@
     },
     "link-rebaser": {
       "summary": "How reference text is rewritten — protected anchors vs markdown destinations, fenced code, project-root-relative, existence gates, pathApi discipline."
+    },
+    "lock-file-format": {
+      "summary": "Lock file (.agentsmesh/.lock) format, readLock/writeLock round-trip, and the 200-line cap on lock.ts."
+    },
+    "lock-file-format-src-config-core-lock-ts": {
+      "summary": "Lock-file format and checksum invariants (src/config/core/lock*.ts)"
     },
     "mcp-generate-lock": {
       "summary": "MCP generate must mirror CLI generate (lockfile/stale-cleanup/process-lock)"
@@ -8560,6 +8632,10 @@
       "kind": "file_glob",
       "pattern": "src/**/*.ts"
     },
+    "t-glob-17f43180": {
+      "kind": "file_glob",
+      "pattern": "src/config/core/lock.ts"
+    },
     "t-glob-19a73bc2": {
       "kind": "file_glob",
       "pattern": "src/cli/commands/watch.ts"
@@ -8711,6 +8787,10 @@
     "t-glob-49e2783c": {
       "kind": "file_glob",
       "pattern": "src/canonical/**/*.ts"
+    },
+    "t-glob-4ba3bf59": {
+      "kind": "file_glob",
+      "pattern": "src/utils/crypto/hash.ts"
     },
     "t-glob-4bb2d21b": {
       "kind": "file_glob",
@@ -9288,6 +9368,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/validate-health.ts"
     },
+    "t-glob-e6cc94f4": {
+      "kind": "file_glob",
+      "pattern": "src/config/core/lock*.ts"
+    },
     "t-glob-e9606afe": {
       "kind": "file_glob",
       "pattern": ".agentsmesh/skills/**"
@@ -9311,6 +9395,10 @@
     "t-glob-f394f32c": {
       "kind": "file_glob",
       "pattern": "src/targets/cline/mcp-mapper.ts"
+    },
+    "t-glob-f564ed24": {
+      "kind": "file_glob",
+      "pattern": "pnpm-workspace.yaml"
     },
     "t-glob-f6905ae6": {
       "kind": "file_glob",
@@ -9536,6 +9624,10 @@
       "kind": "keyword",
       "pattern": "hooks.yaml"
     },
+    "t-kw-4683ab67": {
+      "kind": "keyword",
+      "pattern": "lock file format outputs checksums"
+    },
     "t-kw-4875fad7": {
       "kind": "keyword",
       "pattern": "lessons recall"
@@ -9555,6 +9647,10 @@
     "t-kw-50851a9b": {
       "kind": "keyword",
       "pattern": "recurrence harness"
+    },
+    "t-kw-5197b195": {
+      "kind": "keyword",
+      "pattern": "lock outputs"
     },
     "t-kw-519df655": {
       "kind": "keyword",
@@ -9652,6 +9748,10 @@
       "kind": "keyword",
       "pattern": "deepagents agents capability"
     },
+    "t-kw-8a80159c": {
+      "kind": "keyword",
+      "pattern": "hash drift"
+    },
     "t-kw-8be8afaf": {
       "kind": "keyword",
       "pattern": "epsilon closure"
@@ -9663,6 +9763,10 @@
     "t-kw-90b1f143": {
       "kind": "keyword",
       "pattern": "lessons efficiency"
+    },
+    "t-kw-925d9b8d": {
+      "kind": "keyword",
+      "pattern": "checksum"
     },
     "t-kw-92d6db38": {
       "kind": "keyword",

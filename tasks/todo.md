@@ -1,3 +1,36 @@
+# Fix #98 — `agentsmesh check` ignores generated-output drift (ACTIVE 2026-07-18)
+
+Issue: https://github.com/sampleXbro/agentsmesh/issues/98
+Docs promise `check` catches direct edits to generated files (`check.mdx:29-32`, `README.md:187`), but `checkLockSync()` only hashes canonical `.agentsmesh/` sources. Fix: record generated-output checksums in `.agentsmesh/.lock` at generate time; `check` verifies both canonical and output drift.
+
+## Design decisions (settled — do not re-litigate)
+
+- **Lock format**: new optional `outputs:` section in `.lock` — flat map of project-root-relative forward-slash path → `sha256:<hex>`. `LockFile.outputs?: Record<string, string>` (optional = old locks lack it).
+- **Recorded at generate time** from in-memory `GenerateResult.content` (statuses `created|updated|unchanged`; `skipped` excluded) via `hashContent` — no re-reading disk.
+- **Filtered runs**: full generate (no `--targets`/`--features` filter) **replaces** the outputs map; filtered generate **merges per-path** into the existing lock's outputs (`{...old, ...run}`). Limitation (documented): filtered runs never prune entries; full generate does.
+- **Check semantics**: hash each path listed in `lock.outputs` against disk. Changed → `outputsModified`; missing → `outputsRemoved`. No `outputsAdded` (stale-cleanup owns unexpected files). `inSync=false` on any output drift. Exit 1.
+- **Old lock / opt-out**: lock without `outputs` → skip output verification, report `outputsChecked: false`, renderer hints "run `agentsmesh generate` to enable output verification". New CLI flag `check --no-outputs` skips it too. Default = verify.
+- **Public API compat**: `CheckLockSyncOptions` gains optional `rootBase?: string`; when absent → outputs skipped (`outputsChecked: false`). All new `LockSyncReport`/`CheckData` fields additive.
+- **Merger** (`resolveLockConflict`): writes lock **without** `outputs` (old-lock semantics) — after merge a regenerate is required anyway; document why inline.
+- **`lockedViolations`** stay canonical-only.
+- **File size**: new output-checksum helpers live in `src/config/core/lock-outputs.ts` (lock.ts is at 197/200 lines).
+
+## Tasks
+
+- [x] Recon: code + docs confirmed the bug; touchpoints mapped
+- [x] **T1 — Lock core**: `LockFile.outputs`, read/write round-trip, `lock-outputs.ts` helpers, `lock-sync.ts` drift + report fields. 51 unit tests.
+- [x] **T2 — Generate/merge wiring**: `writeLockFile` records outputs (replace vs merge), empty path, merger omits outputs (commented). Unit + integration.
+- [x] **T3 — Check surface**: `check.ts` `--no-outputs` + rootBase, `CheckData`, renderer note, MCP handler (now passes projectRoot — was silently skipping), help-data. Public engine passes through unchanged.
+- [x] **T4 — E2E**: new `tests/e2e/check-outputs.e2e.test.ts` (7 cases incl. exact issue repro).
+- [x] **T5 — Docs**: check.mdx rewritten; README lock line; generation-pipeline (stale JSON example → real YAML), generate/merge/ci-drift/mcp-server/canonical-config/quick-start updated.
+- [x] Review fix: CRLF/BOM hash mismatch — build side normalizes like `hashFileForManifest`, diff side uses `hashFileForManifest` (lesson captured).
+- [x] Panel findings closed: filtered-run wiring integration tests (inversion-proofed), merger outputs-undefined assertion, help-text test, lock YAML example completed.
+- [x] Full suite green: 10,575 unit/integration + 638 e2e; lint + typecheck clean.
+- [x] Final review: 3 senior lenses (correctness APPROVED; test-rigor + contract findings fixed).
+- [x] post-feature-qa: report delivered in session.
+
+---
+
 # Lessons efficiency architecture audit (2026-07-17)
 
 **Goal:** Produce an evidence-backed recommendation for a simpler lessons system

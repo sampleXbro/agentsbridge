@@ -12,6 +12,7 @@ import {
   readLock,
 } from '../../config/core/lock.js';
 import { resolveExtendPaths } from '../../config/resolve/resolver.js';
+import { diffOutputChecksums } from '../../config/core/lock-outputs.js';
 
 export interface LockSyncReport {
   /** True when the canonical state matches the lock file and no extend drifted. */
@@ -31,6 +32,16 @@ export interface LockSyncReport {
    * `collaboration.lock_features`. Empty when no `lock_features` are configured.
    */
   readonly lockedViolations: readonly string[];
+  /** Generated outputs whose on-disk hash differs from the lock. */
+  readonly outputsModified: readonly string[];
+  /** Generated outputs recorded in the lock but missing from disk. */
+  readonly outputsRemoved: readonly string[];
+  /**
+   * True when output drift was actually verified — requires `rootBase` and a
+   * lock with an `outputs` map. False for old-format locks or when no
+   * `rootBase` was supplied.
+   */
+  readonly outputsChecked: boolean;
 }
 
 export interface CheckLockSyncOptions {
@@ -39,6 +50,11 @@ export interface CheckLockSyncOptions {
   readonly configDir: string;
   /** Directory containing `.agentsmesh/.lock` and canonical files. */
   readonly canonicalDir: string;
+  /**
+   * Project root the generated outputs are relative to. When absent, output
+   * verification is skipped (keeps the programmatic API backward compatible).
+   */
+  readonly rootBase?: string;
 }
 
 /**
@@ -49,7 +65,7 @@ export interface CheckLockSyncOptions {
  * callers decide whether that's a hard error (CI) or just informational.
  */
 export async function checkLockSync(opts: CheckLockSyncOptions): Promise<LockSyncReport> {
-  const { config, configDir, canonicalDir } = opts;
+  const { config, configDir, canonicalDir, rootBase } = opts;
 
   const lock = await readLock(canonicalDir);
   if (lock === null) {
@@ -61,6 +77,9 @@ export async function checkLockSync(opts: CheckLockSyncOptions): Promise<LockSyn
       removed: [],
       extendsModified: [],
       lockedViolations: [],
+      outputsModified: [],
+      outputsRemoved: [],
+      outputsChecked: false,
     };
   }
 
@@ -104,11 +123,20 @@ export async function checkLockSync(opts: CheckLockSyncOptions): Promise<LockSyn
     config.collaboration?.lock_features ?? [],
   );
 
+  // Output verification runs only when a rootBase is supplied AND the lock
+  // carries an outputs map (old-format locks leave `lock.outputs` undefined).
+  const outputsChecked = rootBase !== undefined && lock.outputs !== undefined;
+  const { outputsModified, outputsRemoved } = outputsChecked
+    ? await diffOutputChecksums(rootBase, lock.outputs ?? {})
+    : { outputsModified: [], outputsRemoved: [] };
+
   const inSync =
     modified.length === 0 &&
     added.length === 0 &&
     removed.length === 0 &&
-    extendsModified.length === 0;
+    extendsModified.length === 0 &&
+    outputsModified.length === 0 &&
+    outputsRemoved.length === 0;
 
   return {
     inSync,
@@ -118,5 +146,8 @@ export async function checkLockSync(opts: CheckLockSyncOptions): Promise<LockSyn
     removed,
     extendsModified,
     lockedViolations,
+    outputsModified,
+    outputsRemoved,
+    outputsChecked,
   };
 }

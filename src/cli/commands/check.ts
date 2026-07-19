@@ -15,7 +15,8 @@ export interface CheckCommandResult {
 
 /**
  * Run the check command.
- * @param flags - CLI flags (unused for check)
+ * @param flags - CLI flags. `--global` targets `~/.agentsmesh`; `--no-outputs`
+ *   skips generated-output verification.
  * @param projectRoot - Project root (default process.cwd())
  * @returns Structured check result with exit code and data
  */
@@ -29,10 +30,15 @@ export async function runCheck(
   const { config, context } = await loadScopedConfig(root, scope);
   await bootstrapPlugins(config, root);
 
+  // `--no-outputs` disables generated-output verification by withholding
+  // `rootBase`, which is exactly the signal checkLockSync uses to skip it.
+  const verifyOutputs = flags['no-outputs'] !== true;
+
   const report = await checkLockSync({
     config,
     configDir: context.configDir,
     canonicalDir: context.canonicalDir,
+    rootBase: verifyOutputs ? context.rootBase : undefined,
   });
 
   if (!report.hasLock) {
@@ -46,6 +52,9 @@ export async function runCheck(
         removed: [],
         extendsModified: [],
         lockedViolations: [],
+        outputsModified: [],
+        outputsRemoved: [],
+        outputsChecked: false,
       },
     };
   }
@@ -60,6 +69,9 @@ export async function runCheck(
       removed: [...report.removed],
       extendsModified: [...report.extendsModified],
       lockedViolations: [...report.lockedViolations],
+      outputsModified: [...report.outputsModified],
+      outputsRemoved: [...report.outputsRemoved],
+      outputsChecked: report.outputsChecked,
     },
   };
 }

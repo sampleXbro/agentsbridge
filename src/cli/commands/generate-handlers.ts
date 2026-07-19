@@ -10,6 +10,7 @@ import { cleanupStaleGeneratedOutputs } from '../../core/generate/stale-cleanup.
 import { getTargetLayout } from '../../targets/catalog/builtin-targets.js';
 import { ensurePathInsideRoot } from './generate-path.js';
 import { writeLockFile } from './generate-lock.js';
+import { buildOutputChecksums } from '../../config/core/lock-outputs.js';
 import type { GenerateData } from '../command-result.js';
 import type { ResolvedExtend } from '../../config/resolve/resolver.js';
 import type { GenerateResult } from '../../core/result-types.js';
@@ -25,6 +26,15 @@ export interface EmptyResultsArgs {
   root: string;
   options: RunGenerateOptions;
   activeTargets: string[];
+}
+
+/**
+ * A run is "filtered" when it targets a subset via `--targets`/`--features`.
+ * Filtered runs merge into the lock's existing outputs (never prune); full runs
+ * replace the map outright so disabled targets' entries drop off.
+ */
+function isFilteredRun(flags: Record<string, string | boolean>): boolean {
+  return flags.targets !== undefined || flags.features !== undefined;
 }
 
 /**
@@ -54,7 +64,8 @@ export async function handleEmptyResults(args: EmptyResultsArgs): Promise<Genera
   }
 
   if (!dryRun) {
-    await writeLockFile(context, resolvedExtends);
+    // Empty results → empty output map; still records the flag-driven scope.
+    await writeLockFile(context, resolvedExtends, buildOutputChecksums([]), isFilteredRun(flags));
   }
 
   if (options.printMatrix !== false) {
@@ -133,7 +144,12 @@ export async function handleGenerateOrDryRun(
         expectedPaths: results.map((result) => result.path),
         scope,
       });
-      await writeLockFile(context, resolvedExtends);
+      await writeLockFile(
+        context,
+        resolvedExtends,
+        buildOutputChecksums(results),
+        isFilteredRun(flags),
+      );
     }
   } finally {
     if (release) await release();

@@ -65,4 +65,34 @@ description: "Modified"
     );
     expect(() => execSync(`node ${CLI_PATH} check`, { cwd: TEST_DIR, encoding: 'utf8' })).toThrow();
   });
+
+  it('fails with the exact generated-output path when a generated file is hand-edited', () => {
+    execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
+    // Hand-edit a generated artifact (a target output, not a canonical file).
+    writeFileSync(join(TEST_DIR, 'AGENTS.md'), '# hand-edited generated output\n');
+
+    let combined = '';
+    let threw = false;
+    try {
+      // Merge stderr into stdout: drift lines are emitted via ui.error (stderr).
+      execSync(`node ${CLI_PATH} check 2>&1`, { cwd: TEST_DIR, encoding: 'utf8' });
+    } catch (e) {
+      threw = true;
+      const err = e as { stdout?: string; stderr?: string };
+      combined = (err.stdout ?? '') + (err.stderr ?? '');
+    }
+    expect(threw).toBe(true);
+    expect(combined).toContain('generated output "AGENTS.md" was modified');
+  });
+
+  it('passes with --no-outputs even when a generated file is hand-edited', () => {
+    execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
+    writeFileSync(join(TEST_DIR, 'AGENTS.md'), '# hand-edited generated output\n');
+
+    const out = execSync(`node ${CLI_PATH} check --no-outputs`, {
+      cwd: TEST_DIR,
+      encoding: 'utf8',
+    });
+    expect(out).toContain('Lock file is in sync');
+  });
 });

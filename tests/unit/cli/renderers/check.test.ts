@@ -16,6 +16,9 @@ describe('renderCheck', () => {
         removed: [],
         extendsModified: [],
         lockedViolations: [],
+        outputsModified: [],
+        outputsRemoved: [],
+        outputsChecked: false,
       },
     });
 
@@ -33,6 +36,9 @@ describe('renderCheck', () => {
         removed: [],
         extendsModified: [],
         lockedViolations: [],
+        outputsModified: [],
+        outputsRemoved: [],
+        outputsChecked: true,
       },
     });
 
@@ -50,6 +56,9 @@ describe('renderCheck', () => {
         added: ['commands/deploy.md', 'commands/open.md'],
         removed: ['skills/old/SKILL.md', 'skills/open/SKILL.md'],
         lockedViolations: ['rules/root.md', 'commands/deploy.md', 'skills/old/SKILL.md'],
+        outputsModified: [],
+        outputsRemoved: [],
+        outputsChecked: true,
       },
     });
 
@@ -63,5 +72,72 @@ describe('renderCheck', () => {
     expect(errors).toContain('skills/old/SKILL.md was removed [LOCKED]');
     expect(errors).toContain('skills/open/SKILL.md was removed\n');
     expect(output.stdout()).toContain("Run 'agentsmesh merge' to resolve");
+  });
+
+  it('renders generated-output drift with forward-slash paths', () => {
+    renderCheck({
+      exitCode: 1,
+      data: {
+        hasLock: true,
+        inSync: false,
+        modified: [],
+        added: [],
+        removed: [],
+        extendsModified: [],
+        lockedViolations: [],
+        outputsModified: ['.cursor/rules/_root.mdc', 'AGENTS.md'],
+        outputsRemoved: ['.claude/CLAUDE.md'],
+        outputsChecked: true,
+      },
+    });
+
+    const errors = output.stderr();
+    expect(errors).toContain('Conflict detected:');
+    expect(errors).toContain('generated output ".cursor/rules/_root.mdc" was modified');
+    expect(errors).toContain('generated output "AGENTS.md" was modified');
+    expect(errors).toContain('generated output ".claude/CLAUDE.md" was removed');
+    // Forward slashes only — never backslashes.
+    expect(errors).not.toContain('\\');
+  });
+
+  it('notes skipped output verification when hasLock but outputsChecked is false', () => {
+    renderCheck({
+      exitCode: 0,
+      data: {
+        hasLock: true,
+        inSync: true,
+        modified: [],
+        added: [],
+        removed: [],
+        extendsModified: [],
+        lockedViolations: [],
+        outputsModified: [],
+        outputsRemoved: [],
+        outputsChecked: false,
+      },
+    });
+
+    expect(output.stdout()).toContain('Generated-output verification skipped');
+    expect(output.stdout()).toContain('agentsmesh generate');
+  });
+
+  it('does not print the skipped-verification note when outputsChecked is true', () => {
+    renderCheck({
+      exitCode: 0,
+      data: {
+        hasLock: true,
+        inSync: true,
+        modified: [],
+        added: [],
+        removed: [],
+        extendsModified: [],
+        lockedViolations: [],
+        outputsModified: [],
+        outputsRemoved: [],
+        outputsChecked: true,
+      },
+    });
+
+    expect(output.stdout()).not.toContain('Generated-output verification skipped');
   });
 });

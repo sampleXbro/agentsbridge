@@ -7,6 +7,8 @@ import { mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execSync } from 'node:child_process';
+import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
+import { hashFile } from '../../src/utils/crypto/hash.js';
 
 const TEST_DIR = join(tmpdir(), 'am-integration-generate');
 const CLI_PATH = join(process.cwd(), 'dist', 'cli.js');
@@ -52,6 +54,85 @@ describe('agentsmesh generate (integration)', () => {
   it('--dry-run does not write files', () => {
     execSync(`node ${CLI_PATH} generate --dry-run`, { cwd: TEST_DIR });
     expect(() => readFileSync(join(TEST_DIR, 'CLAUDE.md'))).toThrow();
+  });
+
+  it('records generated outputs in the lock with hashes matching on-disk files', async () => {
+    execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
+    const lockRaw = readFileSync(join(TEST_DIR, '.agentsmesh', '.lock'), 'utf-8');
+    const lock = parseYaml(lockRaw) as { outputs?: Record<string, string> };
+
+    const expectedPaths = [
+      'AGENTS.md',
+      'CLAUDE.md',
+      '.cursor/AGENTS.md',
+      '.cursor/rules/general.mdc',
+    ];
+    const expected: Record<string, string> = {};
+    for (const rel of expectedPaths) {
+      const h = await hashFile(join(TEST_DIR, rel));
+      expect(h).not.toBeNull();
+      expected[rel] = `sha256:${h}`;
+    }
+    // Exact key set and exact hashes — no partial containment.
+    expect(lock.outputs).toEqual(expected);
+  });
+
+  it('filtered --targets run merges into (never replaces) the lock outputs map', async () => {
+    // Full generate first: seeds outputs for both claude-code and cursor.
+    execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
+    // Filtered run touches only claude-code; the cursor entries must survive.
+    execSync(`node ${CLI_PATH} generate --targets claude-code`, { cwd: TEST_DIR });
+
+    const lockRaw = readFileSync(join(TEST_DIR, '.agentsmesh', '.lock'), 'utf-8');
+    const lock = parseYaml(lockRaw) as { outputs?: Record<string, string> };
+
+    const expectedPaths = [
+      'AGENTS.md',
+      'CLAUDE.md',
+      '.cursor/AGENTS.md',
+      '.cursor/rules/general.mdc',
+    ];
+    const expected: Record<string, string> = {};
+    for (const rel of expectedPaths) {
+      const h = await hashFile(join(TEST_DIR, rel));
+      expect(h).not.toBeNull();
+      expected[rel] = `sha256:${h}`;
+    }
+    // Untouched (cursor) AND filtered (claude-code) entries both present — merge, not replace.
+    expect(lock.outputs).toEqual(expected);
+  });
+
+  it('full generate replaces the lock outputs map, dropping pre-existing entries', async () => {
+    // Seed a lock, then hand-inject a bogus output entry.
+    execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
+    const lockPath = join(TEST_DIR, '.agentsmesh', '.lock');
+    const seeded = parseYaml(readFileSync(lockPath, 'utf-8')) as {
+      outputs?: Record<string, string>;
+      [key: string]: unknown;
+    };
+    seeded.outputs = { ...(seeded.outputs ?? {}), 'bogus/stale.md': 'sha256:deadbeef' };
+    writeFileSync(lockPath, stringifyYaml(seeded));
+
+    // A full generate replaces the map outright — the bogus entry must be gone.
+    execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
+    const lock = parseYaml(readFileSync(lockPath, 'utf-8')) as {
+      outputs?: Record<string, string>;
+    };
+
+    const expectedPaths = [
+      'AGENTS.md',
+      'CLAUDE.md',
+      '.cursor/AGENTS.md',
+      '.cursor/rules/general.mdc',
+    ];
+    const expected: Record<string, string> = {};
+    for (const rel of expectedPaths) {
+      const h = await hashFile(join(TEST_DIR, rel));
+      expect(h).not.toBeNull();
+      expected[rel] = `sha256:${h}`;
+    }
+    expect(lock.outputs).toEqual(expected);
+    expect(lock.outputs).not.toHaveProperty('bogus/stale.md');
   });
 
   it('no root rule produces no files', () => {

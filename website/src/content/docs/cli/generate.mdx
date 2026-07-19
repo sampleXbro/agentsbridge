@@ -93,7 +93,7 @@ Forces a re-fetch of all remote `extends` sources. Without this flag, AgentsMesh
 3. **Generate per target** — for each enabled target, run target-specific generators for rules, commands, agents, skills, MCP, hooks, ignore, and permissions.
 4. **Rewrite references** — internal `.agentsmesh/` file paths are rewritten to target-relative paths.
 5. **Resolve collisions** — detect overlapping output paths, prefer native over embedded.
-6. **Write output** — create target directories, write all files, update the lock file.
+6. **Write output** — create target directories, write all files, update the lock file (canonical-source checksums plus an `outputs` map of every generated file's checksum, so `agentsmesh check` can later detect direct edits to generated files). Filtered runs (`--targets`/`--features`) merge outputs per-path into the existing map; a full run replaces it.
 7. **Clean stale files** — remove previously generated files no longer in the output set.
 
 ## Output locations

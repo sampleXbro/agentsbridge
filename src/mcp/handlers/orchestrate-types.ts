@@ -19,6 +19,15 @@ export interface CheckHandlerResult {
   missing: string[];
   extra: string[];
   modified: string[];
+  /** Generated outputs whose on-disk hash differs from the lock. */
+  outputsModified: string[];
+  /** Generated outputs recorded in the lock but missing from disk. */
+  outputsRemoved: string[];
+  /**
+   * True when generated-output drift was verified; false for old-format locks
+   * without an `outputs` map.
+   */
+  outputsChecked: boolean;
 }
 
 export interface DiffHandlerResult {

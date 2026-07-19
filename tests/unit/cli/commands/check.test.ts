@@ -9,6 +9,18 @@ import { tmpdir } from 'node:os';
 import { hashContent } from '../../../../src/utils/crypto/hash.js';
 import { runCheck } from '../../../../src/cli/commands/check.js';
 
+/** Lock body with an in-sync canonical `_root.md` plus a caller-supplied outputs block. */
+function lockWithOutputs(rootBody: string, outputsBlock: string): string {
+  const h = 'sha256:' + hashContent(rootBody);
+  return `generated_at: "2026-01-01T00:00:00Z"
+generated_by: test
+lib_version: "0.1.0"
+checksums:
+  rules/_root.md: "${h}"
+extends: {}
+${outputsBlock}`;
+}
+
 const TEST_DIR = join(tmpdir(), 'am-check-test');
 
 beforeEach(() => {
@@ -42,6 +54,10 @@ extends: {}
     expect(result.exitCode).toBe(0);
     expect(result.data.hasLock).toBe(true);
     expect(result.data.inSync).toBe(true);
+    // Old-format lock (no outputs map) → verification is skipped.
+    expect(result.data.outputsChecked).toBe(false);
+    expect(result.data.outputsModified).toEqual([]);
+    expect(result.data.outputsRemoved).toEqual([]);
   });
 
   it('returns exitCode 1 when lock is missing', async () => {
@@ -52,6 +68,9 @@ extends: {}
     expect(result.exitCode).toBe(1);
     expect(result.data.hasLock).toBe(false);
     expect(result.data.inSync).toBe(false);
+    expect(result.data.outputsChecked).toBe(false);
+    expect(result.data.outputsModified).toEqual([]);
+    expect(result.data.outputsRemoved).toEqual([]);
   });
 
   it('returns exitCode 1 when checksums mismatch', async () => {
@@ -162,6 +181,76 @@ packs: {}
     expect(result.exitCode).toBe(1);
     expect(result.data.lockedViolations).toContain('rules/_root.md');
     expect(result.data.modified).toContain('rules/_root.md');
+  });
+
+  it('returns exitCode 1 with exact output drift when a generated file is hand-edited', async () => {
+    writeFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'version: 1');
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
+    const body = '# Rules';
+    writeFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), body);
+    // AGENTS.md exists on disk but its content no longer matches the locked hash.
+    writeFileSync(join(TEST_DIR, 'AGENTS.md'), '# hand-edited');
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', '.lock'),
+      lockWithOutputs(
+        body,
+        `packs: {}
+outputs:
+  AGENTS.md: "sha256:${'0'.repeat(64)}"
+  .cursor/rules/_root.mdc: "sha256:${'1'.repeat(64)}"
+`,
+      ),
+    );
+
+    const result = await runCheck({}, TEST_DIR);
+    expect(result.exitCode).toBe(1);
+    expect(result.data.inSync).toBe(false);
+    expect(result.data.outputsChecked).toBe(true);
+    expect(result.data.outputsModified).toEqual(['AGENTS.md']);
+    // Locked-but-absent output is reported as removed.
+    expect(result.data.outputsRemoved).toEqual(['.cursor/rules/_root.mdc']);
+  });
+
+  it('returns exitCode 0 and outputsChecked:false for an old-format lock (no outputs map)', async () => {
+    writeFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'version: 1');
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
+    const body = '# Rules';
+    writeFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), body);
+    // A drifted AGENTS.md must NOT fail an old-format lock — it isn't tracked.
+    writeFileSync(join(TEST_DIR, 'AGENTS.md'), '# hand-edited');
+    writeFileSync(join(TEST_DIR, '.agentsmesh', '.lock'), lockWithOutputs(body, ''));
+
+    const result = await runCheck({}, TEST_DIR);
+    expect(result.exitCode).toBe(0);
+    expect(result.data.inSync).toBe(true);
+    expect(result.data.outputsChecked).toBe(false);
+    expect(result.data.outputsModified).toEqual([]);
+    expect(result.data.outputsRemoved).toEqual([]);
+  });
+
+  it('skips output verification and returns exitCode 0 with --no-outputs despite drift', async () => {
+    writeFileSync(join(TEST_DIR, 'agentsmesh.yaml'), 'version: 1');
+    mkdirSync(join(TEST_DIR, '.agentsmesh', 'rules'), { recursive: true });
+    const body = '# Rules';
+    writeFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), body);
+    writeFileSync(join(TEST_DIR, 'AGENTS.md'), '# hand-edited');
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', '.lock'),
+      lockWithOutputs(
+        body,
+        `packs: {}
+outputs:
+  AGENTS.md: "sha256:${'0'.repeat(64)}"
+`,
+      ),
+    );
+
+    const result = await runCheck({ 'no-outputs': true }, TEST_DIR);
+    expect(result.exitCode).toBe(0);
+    expect(result.data.inSync).toBe(true);
+    expect(result.data.outputsChecked).toBe(false);
+    expect(result.data.outputsModified).toEqual([]);
+    expect(result.data.outputsRemoved).toEqual([]);
   });
 
   it('reads ~/.agentsmesh/.lock when --global is set', async () => {

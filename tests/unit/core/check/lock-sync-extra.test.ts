@@ -43,6 +43,10 @@ describe('checkLockSync — uncovered branches', () => {
     expect(report.removed).toEqual([]);
     expect(report.extendsModified).toEqual([]);
     expect(report.lockedViolations).toEqual([]);
+    // Old-format lock (no outputs) → output verification is skipped.
+    expect(report.outputsChecked).toBe(false);
+    expect(report.outputsModified).toEqual([]);
+    expect(report.outputsRemoved).toEqual([]);
   });
 
   it('uses [] fallback when collaboration.lock_features is undefined', async () => {

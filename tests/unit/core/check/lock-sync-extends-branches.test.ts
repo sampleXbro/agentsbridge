@@ -11,6 +11,7 @@ import { join } from 'node:path';
 import { checkLockSync } from '../../../../src/core/check/lock-sync.js';
 import { writeLock, buildChecksums } from '../../../../src/config/core/lock.js';
 import { loadConfigFromDir } from '../../../../src/config/core/loader.js';
+import { hashContent } from '../../../../src/utils/crypto/hash.js';
 
 let testDir = '';
 
@@ -93,5 +94,40 @@ describe('checkLockSync — extends drift branches', () => {
     const { config } = await loadConfigFromDir(projectRoot);
     const report = await checkLockSync({ config, configDir: projectRoot, canonicalDir });
     expect(report.removed).toContain('rules/ghost.md');
+  });
+
+  it('outputsChecked=true and no output drift when rootBase + matching outputs', async () => {
+    const projectRoot = join(testDir, 'proj4');
+    const canonicalDir = join(projectRoot, '.agentsmesh');
+    mkdirSync(join(canonicalDir, 'rules'), { recursive: true });
+    writeFileSync(join(projectRoot, 'agentsmesh.yaml'), 'version: 1\ntargets: []\n');
+    writeFileSync(join(canonicalDir, 'rules', '_root.md'), '# r\n');
+    writeFileSync(join(projectRoot, 'AGENTS.md'), '# generated');
+
+    const checksums = await buildChecksums(canonicalDir);
+    await writeLock(canonicalDir, {
+      generatedAt: '2026-07-18T00:00:00Z',
+      generatedBy: 'test',
+      libVersion: '0.1.0',
+      checksums,
+      extends: {},
+      packs: {},
+      outputs: {
+        'AGENTS.md': `sha256:${hashContent('# generated')}`,
+      },
+    });
+
+    const { config } = await loadConfigFromDir(projectRoot);
+    const report = await checkLockSync({
+      config,
+      configDir: projectRoot,
+      canonicalDir,
+      rootBase: projectRoot,
+    });
+
+    expect(report.outputsChecked).toBe(true);
+    expect(report.outputsModified).toEqual([]);
+    expect(report.outputsRemoved).toEqual([]);
+    expect(report.inSync).toBe(true);
   });
 });

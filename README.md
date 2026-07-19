@@ -124,7 +124,7 @@ AGENTS.md
   lessons/            # optional recall/capture memory
 ```
 
-Edit canonical sources, run `agentsmesh generate`, and every native file above is (re)written for you — always in sync. Alongside the directory, `agentsmesh.yaml` selects which targets and features are enabled, `agentsmesh.local.yaml` holds per-developer overrides (gitignored), and `.agentsmesh/.lock` records the checksums that `agentsmesh check` enforces.
+Edit canonical sources, run `agentsmesh generate`, and every native file above is (re)written for you — always in sync. Alongside the directory, `agentsmesh.yaml` selects which targets and features are enabled, `agentsmesh.local.yaml` holds per-developer overrides (gitignored), and `.agentsmesh/.lock` records both the canonical-source and generated-output checksums that `agentsmesh check` enforces.
 
 <div align="center">
   <img src="https://raw.githubusercontent.com/sampleXbro/agentsmesh/master/assets/generate-demo.gif" alt="agentsmesh detects existing tool configs, imports them into one source, and generates native config for every tool" width="100%" />

@@ -162,7 +162,7 @@ The classifier sees `skills/<kebab>/SKILL.md`, multi-tool root rules, and per-ta
   Why generated configs stay committed: same reason `package-lock.json` does. They're deterministic build output that downstream consumers (in this case, the AI tool itself) read directly. Gitignoring them breaks fresh-clone UX and makes `agentsmesh check` meaningless. PR reviewers also benefit from seeing the projected diff in the format Claude/Cursor/Copilot will actually consume.
 </Aside>
 
-If your team has a strong reason to gitignore generated configs (monorepo size, regenerate-on-checkout hooks), add the target-specific entries manually — but expect to wire `agentsmesh generate` into your post-checkout flow.
+If your team has a strong reason to gitignore generated configs (monorepo size, regenerate-on-checkout hooks), add the target-specific entries manually — but expect to wire `agentsmesh generate` into your post-checkout flow, and run `agentsmesh check --no-outputs` in CI so the gitignored outputs (which would otherwise report as removed) don't trip the drift gate.
 
 ## What's next
 

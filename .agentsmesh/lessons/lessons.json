@@ -1530,6 +1530,21 @@
         "t-kw-575b3002"
       ]
     },
+    "fixture-and-assertion-discipline-when-adding-an-e2e-test": {
+      "createdAt": "2026-07-19",
+      "evidence": [
+        "commit:dd0d72dc"
+      ],
+      "rule": "When adding an e2e/test fixture file whose path contains a segment matching a repo-root .gitignore pattern (generated target dirs like .cursor/, .kiro/, .warp/ or root files like CONVENTIONS.md/.rules), git silently ignores it — a bare `git add` no-ops and the file never reaches CI, so tests pass locally (file on disk) but fail on CI's fresh checkout with the fixture source absent (readFileSafe→null→import silently skips, exit 0). Keep such .gitignore patterns ROOT-ANCHORED (leading /) so they match only the repo's own dogfood outputs, not tests/e2e/fixtures/. After adding any fixture, verify none were dropped: `git ls-files --others --ignored --exclude-standard tests/e2e/fixtures/` must be empty.",
+      "status": "active",
+      "topics": [
+        "fixture-and-assertion-discipline"
+      ],
+      "triggers": [
+        "t-glob-72a39ab6",
+        "t-glob-baf0a939"
+      ]
+    },
     "fixture-and-assertion-discipline-when-adding-an-mcp-tool": {
       "createdAt": "2026-06-10",
       "evidence": [],

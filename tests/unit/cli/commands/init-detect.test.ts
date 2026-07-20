@@ -53,9 +53,9 @@ describe('detectExistingConfigs', () => {
 
   it('detects Antigravity and Codex from global home paths when scope is global', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'agentsmesh-test-'));
-    await mkdir(join(dir, '.gemini', 'antigravity', 'skills'), { recursive: true });
+    await mkdir(join(dir, '.gemini', 'config', 'skills'), { recursive: true });
     await mkdir(join(dir, '.codex', 'agents'), { recursive: true });
-    await writeFile(join(dir, '.gemini', 'antigravity', 'GEMINI.md'), '');
+    await writeFile(join(dir, '.gemini', 'GEMINI.md'), '');
     await writeFile(join(dir, '.codex', 'AGENTS.md'), '');
 
     const result = await detectExistingConfigs(dir, 'global');

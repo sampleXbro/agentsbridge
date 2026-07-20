@@ -75,7 +75,24 @@ describe('generateRules (codex-cli) — branch coverage', () => {
       ],
     });
     const results = generateRules(canonical);
-    expect(results.find((r) => r.path === '.codex/instructions/codex.md')).toBeDefined();
+    expect(results.find((r) => r.path === 'src/AGENTS.md')).toBeDefined();
+  });
+
+  it('skips execution-emit rules whose targets exclude codex-cli', () => {
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: '/p/.agentsmesh/rules/other-tool.md',
+          root: false,
+          targets: ['cursor'],
+          description: '',
+          globs: [],
+          body: 'prefix_rule(pattern = ["ls"], decision = "allow")',
+          codexEmit: 'execution',
+        },
+      ],
+    });
+    expect(generateRules(canonical)).toEqual([]);
   });
 
   it('emits empty .rules content when execution rule body is whitespace-only', () => {

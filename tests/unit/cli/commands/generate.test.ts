@@ -208,18 +208,15 @@ ship it
 
     await runGenerate({ global: true }, TEST_DIR, { printMatrix: false });
 
-    expect(readFileSync(join(TEST_DIR, '.gemini', 'antigravity', 'GEMINI.md'), 'utf-8')).toContain(
+    expect(readFileSync(join(TEST_DIR, '.gemini', 'GEMINI.md'), 'utf-8')).toContain(
       'Use strict types.',
     );
     expect(
-      readFileSync(
-        join(TEST_DIR, '.gemini', 'antigravity', 'skills', 'review', 'SKILL.md'),
-        'utf-8',
-      ),
+      readFileSync(join(TEST_DIR, '.gemini', 'config', 'skills', 'review', 'SKILL.md'), 'utf-8'),
     ).toContain('Review carefully.');
-    expect(
-      readFileSync(join(TEST_DIR, '.gemini', 'antigravity', 'mcp_config.json'), 'utf-8'),
-    ).toContain('"mcpServers"');
+    expect(readFileSync(join(TEST_DIR, '.gemini', 'config', 'mcp_config.json'), 'utf-8')).toContain(
+      '"mcpServers"',
+    );
     expect(existsSync(join(TEST_DIR, '.agents', 'workflows', 'ship.md'))).toBe(false);
   });
 
@@ -1011,7 +1008,8 @@ Review code carefully
     await runGenerate({ global: true }, TEST_DIR, { printMatrix: false });
 
     expect(existsSync(join(TEST_DIR, '.copilot', 'copilot-instructions.md'))).toBe(true);
-    expect(existsSync(join(TEST_DIR, '.copilot', 'prompts', 'test.prompt.md'))).toBe(true);
+    // Copilot CLI has no prompt-file/slash-command mechanism — no global commands surface.
+    expect(existsSync(join(TEST_DIR, '.copilot', 'prompts', 'test.prompt.md'))).toBe(false);
     expect(existsSync(join(TEST_DIR, '.copilot', 'agents', 'reviewer.agent.md'))).toBe(true);
     expect(existsSync(join(TEST_DIR, '.copilot', 'skills', 'demo', 'SKILL.md'))).toBe(true);
     expect(existsSync(join(TEST_DIR, '.agents', 'skills', 'demo', 'SKILL.md'))).toBe(true);

@@ -107,11 +107,11 @@ async function importNonRootRules(
   );
 }
 
-/** Kiro hooks live in `.kiro.hook` files with a custom JSON schema; not declarable through the runner. */
+/** Kiro hooks live in `.json` files with a custom JSON schema; not declarable through the runner. */
 async function importHooks(projectRoot: string, results: ImportResult[]): Promise<void> {
   const hooks: Hooks = {};
   for (const absPath of await readDirRecursiveNoSymlinks(join(projectRoot, KIRO_HOOKS_DIR))) {
-    if (!absPath.endsWith('.kiro.hook')) continue;
+    if (!absPath.endsWith('.json')) continue;
     const parsed = parseKiroHookFile((await readFileSafe(absPath)) ?? '');
     if (!parsed) continue;
     hooks[parsed.event] ??= [];

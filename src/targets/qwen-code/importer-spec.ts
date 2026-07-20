@@ -12,6 +12,7 @@ import {
   QWEN_SETTINGS,
   QWEN_IGNORE,
   QWEN_GLOBAL_ROOT,
+  QWEN_GLOBAL_RULES_DIR,
   QWEN_GLOBAL_COMMANDS_DIR,
   QWEN_GLOBAL_AGENTS_DIR,
   QWEN_GLOBAL_SETTINGS,
@@ -38,11 +39,17 @@ export const qwenCodeImporterSpec: TargetImporterDescriptor = {
       mode: 'directory' as const,
       source: {
         project: [QWEN_RULES_DIR],
-        global: [],
+        global: [QWEN_GLOBAL_RULES_DIR],
       },
       canonicalDir: QWEN_CANONICAL_RULES_DIR,
       extensions: ['.md'],
       preset: 'rule' as const,
+      // Qwen Code rule files use `paths:` for path-conditional injection (never
+      // `globs:` — see rulesDiscovery.ts). Remap onto the canonical `globs` field.
+      frontmatterRemap: ({ description, paths }) => ({
+        description: typeof description === 'string' ? description : undefined,
+        globs: Array.isArray(paths) ? paths : undefined,
+      }),
     },
   ],
   commands: {

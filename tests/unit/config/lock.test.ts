@@ -98,6 +98,40 @@ extends: {}
     expect(lock?.packs).toEqual({});
   });
 
+  it('reads outputs field when present', async () => {
+    const abDir = join(TEST_DIR, '.agentsmesh');
+    mkdirSync(abDir, { recursive: true });
+    writeFileSync(
+      join(abDir, '.lock'),
+      `generated_at: "2026-07-18T10:00:00Z"
+generated_by: "test"
+lib_version: "0.1.0"
+checksums: {}
+extends: {}
+outputs:
+  AGENTS.md: sha256:deadbeef
+`,
+    );
+    const lock = await readLock(abDir);
+    expect(lock?.outputs).toEqual({ 'AGENTS.md': 'sha256:deadbeef' });
+  });
+
+  it('outputs is undefined when the key is absent (old-format lock)', async () => {
+    const abDir = join(TEST_DIR, '.agentsmesh');
+    mkdirSync(abDir, { recursive: true });
+    writeFileSync(
+      join(abDir, '.lock'),
+      `generated_at: "2026-07-18"
+generated_by: "test"
+lib_version: "0.1.0"
+checksums: {}
+extends: {}
+`,
+    );
+    const lock = await readLock(abDir);
+    expect(lock?.outputs).toBeUndefined();
+  });
+
   it('handles lock with non-object checksums or extends', async () => {
     const abDir = join(TEST_DIR, '.agentsmesh');
     mkdirSync(abDir, { recursive: true });
@@ -135,6 +169,42 @@ describe('writeLock', () => {
     );
     expect(content).toContain('generated_at:');
     expect(content).toContain('rules/_root.md');
+  });
+
+  it('round-trips outputs: writeLock with outputs → readLock returns them', async () => {
+    const abDir = join(TEST_DIR, '.agentsmesh');
+    mkdirSync(abDir, { recursive: true });
+    await writeLock(abDir, {
+      generatedAt: '2026-07-18T10:00:00Z',
+      generatedBy: 'me',
+      libVersion: '0.1.0',
+      checksums: {},
+      extends: {},
+      packs: {},
+      outputs: { 'AGENTS.md': 'sha256:aaa', '.claude/commands/foo.md': 'sha256:bbb' },
+    });
+    const lock = await readLock(abDir);
+    expect(lock?.outputs).toEqual({
+      'AGENTS.md': 'sha256:aaa',
+      '.claude/commands/foo.md': 'sha256:bbb',
+    });
+  });
+
+  it('omits the outputs key entirely when outputs is undefined', async () => {
+    const abDir = join(TEST_DIR, '.agentsmesh');
+    mkdirSync(abDir, { recursive: true });
+    await writeLock(abDir, {
+      generatedAt: '2026-07-18T10:00:00Z',
+      generatedBy: 'me',
+      libVersion: '0.1.0',
+      checksums: {},
+      extends: {},
+      packs: {},
+    });
+    const content = await import('node:fs/promises').then((fs) =>
+      fs.readFile(join(abDir, '.lock'), 'utf8'),
+    );
+    expect(content).not.toContain('outputs:');
   });
 
   it('creates .agentsmesh if missing', async () => {

@@ -126,4 +126,52 @@ describe('importFromAmazonQ', () => {
     expect(mcpResults).toHaveLength(1);
     expect(mcpResults[0].toPath).toBe('.agentsmesh/mcp.json');
   });
+
+  it('round-trips agent hooks: embedded hooks in agent JSON are written to canonical agent frontmatter', async () => {
+    const dir = createTempDir();
+    mkdirSync(join(dir, '.amazonq', 'cli-agents'), { recursive: true });
+    writeFileSync(
+      join(dir, '.amazonq', 'cli-agents', 'coder.json'),
+      JSON.stringify({
+        name: 'coder',
+        prompt: 'You write code.',
+        hooks: {
+          preToolUse: [{ matcher: 'fs_write', command: 'lint.sh' }],
+          postToolUse: [{ matcher: '**', command: 'echo done' }],
+        },
+      }),
+    );
+
+    const results = await importFromAmazonQ(dir);
+
+    const agentResults = results.filter((r) => r.feature === 'agents');
+    expect(agentResults).toHaveLength(1);
+    const body = readFileSync(join(dir, '.agentsmesh', 'agents', 'coder.md'), 'utf-8');
+    // The hooks key should be present in the canonical agent frontmatter
+    expect(body).toContain('hooks:');
+    expect(body).toContain('preToolUse');
+    expect(body).toContain('lint.sh');
+  });
+
+  it('round-trips agent allowedTools: allowedTools in agent JSON are written to canonical agent tools frontmatter', async () => {
+    const dir = createTempDir();
+    mkdirSync(join(dir, '.amazonq', 'cli-agents'), { recursive: true });
+    writeFileSync(
+      join(dir, '.amazonq', 'cli-agents', 'reviewer.json'),
+      JSON.stringify({
+        name: 'reviewer',
+        prompt: 'You review code.',
+        allowedTools: ['Read', 'Grep'],
+      }),
+    );
+
+    const results = await importFromAmazonQ(dir);
+
+    const agentResults = results.filter((r) => r.feature === 'agents');
+    expect(agentResults).toHaveLength(1);
+    const body = readFileSync(join(dir, '.agentsmesh', 'agents', 'reviewer.md'), 'utf-8');
+    expect(body).toContain('tools:');
+    expect(body).toContain('Read');
+    expect(body).toContain('Grep');
+  });
 });

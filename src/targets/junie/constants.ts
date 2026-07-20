@@ -29,6 +29,9 @@ export const JUNIE_GLOBAL_AGENTS_SKILLS_DIR = '.agents/skills';
 // Global allowlist
 export const JUNIE_GLOBAL_ALLOWLIST = `.junie/allowlist.json`;
 
+// Global config file — multi-feature JSON (model, provider, brave, mcp-locations, hooks, etc.)
+export const JUNIE_GLOBAL_CONFIG = `.junie/config.json`;
+
 export const JUNIE_CANONICAL_ROOT_RULE = '.agentsmesh/rules/_root.md';
 export const JUNIE_CANONICAL_RULES_DIR = '.agentsmesh/rules';
 export const JUNIE_CANONICAL_COMMANDS_DIR = '.agentsmesh/commands';

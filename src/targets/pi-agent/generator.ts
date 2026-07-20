@@ -68,3 +68,28 @@ export function generateAgents(canonical: CanonicalFiles): PiAgentOutput[] {
     content: serializeProjectedAgentSkill(agent),
   }));
 }
+
+/**
+ * No-op stub — Pi Agent hooks are supported via extensions at .pi/extensions/
+ * but agentsmesh does not generate extension files yet.
+ * Lint warnings surface this via lintHooks.
+ */
+export function generateHooks(_canonical: CanonicalFiles): PiAgentOutput[] {
+  return [];
+}
+
+/**
+ * No-op stub — Pi Agent has no dedicated ignore file and relies on .gitignore.
+ * Lint warnings surface this via lintIgnore.
+ */
+export function generateIgnore(_canonical: CanonicalFiles): PiAgentOutput[] {
+  return [];
+}
+
+/**
+ * No-op stub — Pi Agent has no dedicated permissions config.
+ * Lint warnings surface this via lintPermissions.
+ */
+export function generatePermissions(_canonical: CanonicalFiles): PiAgentOutput[] {
+  return [];
+}

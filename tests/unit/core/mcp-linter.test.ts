@@ -70,7 +70,7 @@ describe('MCP linting', () => {
     });
   });
 
-  it('warns when codex-cli cannot generate non-stdio MCP servers', async () => {
+  it('does not warn for codex-cli remote (url) MCP servers with no env vars', async () => {
     const { diagnostics } = await runLint(
       config(['codex-cli']),
       canonicalWithMcp({
@@ -84,12 +84,29 @@ describe('MCP linting', () => {
       TEST_DIR,
     );
 
+    expect(diagnostics.filter((d) => d.target === 'codex-cli')).toEqual([]);
+  });
+
+  it('warns when codex-cli cannot project env vars for a remote (url) MCP server', async () => {
+    const { diagnostics } = await runLint(
+      config(['codex-cli']),
+      canonicalWithMcp({
+        remote: {
+          type: 'http',
+          url: 'https://example.com/mcp',
+          headers: {},
+          env: { TOKEN: 'secret' },
+        },
+      }),
+      TEST_DIR,
+    );
+
     expect(diagnostics).toContainEqual({
       level: 'warning',
       file: '.agentsmesh/mcp.json',
       target: 'codex-cli',
       message:
-        'MCP server "remote" uses http transport; codex-cli only generates stdio MCP servers.',
+        'MCP server "remote" has env vars, but codex-cli does not project env vars for remote (url) MCP servers — only headers/bearer_token_env_var are projected.',
     });
   });
 });

@@ -55,18 +55,12 @@ export function lintMcp(canonical: CanonicalFiles): LintDiagnostic[] {
   return diagnostics;
 }
 
-export function lintPermissions(canonical: CanonicalFiles): LintDiagnostic[] {
-  if (!canonical.permissions) return [];
-  const askLen = canonical.permissions.ask?.length ?? 0;
-  const hasEntries =
-    canonical.permissions.allow.length > 0 || canonical.permissions.deny.length > 0 || askLen > 0;
-  if (!hasEntries) return [];
-
-  return [
-    createWarning(
-      '.agentsmesh/permissions.yaml',
-      'cursor',
-      'Cursor permissions are partial; tool-level allow/deny may lose fidelity.',
-    ),
-  ];
+/**
+ * Permissions are native for cursor (written to .cursor/cli.json / ~/.cursor/cli-config.json).
+ * No lint warning is needed — the round-trip is lossless for allow/deny entries.
+ * The `ask` category has no Cursor equivalent, but that is a silent omission by design
+ * (Cursor's default for unlisted tools is to prompt, matching the `ask` semantic).
+ */
+export function lintPermissions(_canonical: CanonicalFiles): LintDiagnostic[] {
+  return [];
 }

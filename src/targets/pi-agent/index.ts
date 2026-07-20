@@ -13,11 +13,19 @@
 import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
 import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
 import { projectedAgentSkillDirName } from '../projection/projected-agent-skill.js';
-import { generateRules, generateCommands, generateAgents, generateSkills } from './generator.js';
+import {
+  generateRules,
+  generateCommands,
+  generateAgents,
+  generateSkills,
+  generateHooks,
+  generateIgnore,
+  generatePermissions,
+} from './generator.js';
 import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromPiAgent } from './importer.js';
 import { lintRules } from './linter.js';
-import { lintHooks, lintPermissions, lintIgnore, lintMcp } from './lint.js';
+import { lintHooks, lintPermissions, lintIgnore } from './lint.js';
 import { buildPiAgentImportPaths } from '../../core/reference/import-maps/pi-agent.js';
 import {
   PI_AGENT_TARGET,
@@ -38,6 +46,9 @@ export const target: TargetGenerators = {
   generateCommands,
   generateAgents,
   generateSkills,
+  generateHooks,
+  generateIgnore,
+  generatePermissions,
   importFrom: importFromPiAgent,
 };
 
@@ -101,9 +112,9 @@ const capabilities: TargetCapabilities = {
   agents: 'none',
   skills: 'native',
   mcp: 'none',
-  hooks: 'none',
-  ignore: 'none',
-  permissions: 'none',
+  hooks: 'partial',
+  ignore: 'partial',
+  permissions: 'partial',
 };
 
 export const descriptor = {
@@ -122,7 +133,6 @@ export const descriptor = {
     hooks: lintHooks,
     permissions: lintPermissions,
     ignore: lintIgnore,
-    mcp: lintMcp,
   },
   supportsConversion: { agents: true },
   project,

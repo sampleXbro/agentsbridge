@@ -71,6 +71,16 @@ export interface CheckData {
   removed: string[];
   extendsModified: string[];
   lockedViolations: string[];
+  /** Generated outputs whose on-disk hash differs from the lock. */
+  outputsModified: string[];
+  /** Generated outputs recorded in the lock but missing from disk. */
+  outputsRemoved: string[];
+  /**
+   * True when generated-output drift was actually verified. False for
+   * old-format locks (no `outputs` map) or when `--no-outputs` was passed;
+   * the renderer surfaces an informational note in that case.
+   */
+  outputsChecked: boolean;
 }
 
 export interface MergeData {

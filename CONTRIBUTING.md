@@ -53,3 +53,19 @@ Use the `add-agent-target` skill documented in `.claude/skills/add-agent-target/
 ## Reporting bugs
 
 Open a GitHub issue with a minimal reproduction case. See [SECURITY.md](SECURITY.md) for security vulnerabilities.
+
+### Updating target capabilities
+
+Capability provenance lives in `src/targets/catalog/capability-ledger.json` — an *oracle* that validates descriptors; it never generates. Current capability levels always come from each target's `capabilities.ts` (the matrix derives from there); the ledger records where the tool's own docs say each file/shape is, so generated output can be validated against it.
+
+Maintainer commands:
+
+- `pnpm capabilities:audit` — join descriptors × ledger and print three buckets: **GAPS** (descriptor below the researched ceiling — raise-opportunities), **STALE** (provenance null/expired, or descriptor over-declares), **MISSING** (a native/embedded cell with no ledger provenance yet).
+- `pnpm capabilities:audit --json` / `--stale <days>` — machine-readable output / override the staleness window (default 180).
+- `pnpm capabilities:merge` — rebuild the ledger from all builtin target descriptors while **preserving existing provenance**. For confirmed/rejected cells the researched `maxAchievable` ceiling is kept even when the descriptor level is lower; for unverified cells the higher of the descriptor and existing level is used. Existing fingerprints (topLevelKeys, requiredFrontmatter, keyChecks) are preserved when any array is non-empty. Run this after adding a new target or changing capability levels en-masse; commit the resulting diff to `src/targets/catalog/capability-ledger.json`. The merge logic lives in `src/core/capabilities/merge.ts` (pure, unit-tested).
+- `pnpm capabilities:seed` — regenerate fingerprint skeletons from current generator output (run after adding or changing a native/embedded feature). Seeds only project-scope, single-structured-file cells; directory/projection features (commands/agents/skills) and extensionless ignore files are left for manual research.
+- `pnpm capabilities:verify` — reports native/embedded cells that still lack ledger provenance. This is a **backlog tracker**, not a CI gate: many cells are intentionally un-researched, so it currently exits non-zero.
+
+The enforced gate is the conformance test in `tests/contract/capability-ledger-conformance.test.ts` (runs under `pnpm test`, hence in CI): every seeded native/embedded cell is generated and its output must match the recorded extension, serialization, and structural fingerprint. A declared-native cell whose output drifts (wrong path/key/shape/extension) fails CI.
+
+Use the `update-target-capabilities` skill to drive research on the flagged STALE/MISSING cells and to flip GAPS.

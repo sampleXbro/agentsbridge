@@ -98,12 +98,17 @@ async function check(ctx: McpContext): Promise<CheckHandlerResult> {
       config: pctx.config,
       configDir: pctx.configDir,
       canonicalDir: pctx.canonicalDir,
+      // Enables generated-output verification (skipped for old-format locks).
+      rootBase: pctx.projectRoot,
     });
     return {
       drift: !report.inSync,
       missing: [...report.removed],
       extra: [...report.added],
       modified: [...report.modified],
+      outputsModified: [...report.outputsModified],
+      outputsRemoved: [...report.outputsRemoved],
+      outputsChecked: report.outputsChecked,
     };
   } catch (e) {
     wrapEngineError(e);

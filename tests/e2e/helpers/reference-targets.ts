@@ -112,8 +112,10 @@ export function outputPaths(target: TargetName): OutputPathGroups {
     target === 'codex-cli'
       ? '.codex/agents/code-reviewer.toml'
       : target === 'cline'
-        ? '.cline/agents/code-reviewer.md'
-        : `${skillDir(target)}/${projectedAgentSkillDirName('code-reviewer')}/SKILL.md`;
+        ? '.cline/agents.yaml'
+        : target === 'trae'
+          ? '.trae/agents/code-reviewer.md'
+          : `${skillDir(target)}/${projectedAgentSkillDirName('code-reviewer')}/SKILL.md`;
 
   return {
     root:
@@ -177,9 +179,9 @@ export function outputPaths(target: TargetName): OutputPathGroups {
                             : target === 'gemini-cli'
                               ? 'GEMINI.md'
                               : target === 'cline'
-                                ? '.clinerules/typescript.md'
+                                ? '.cline/rules/typescript.md'
                                 : target === 'codex-cli'
-                                  ? '.codex/instructions/typescript.md'
+                                  ? 'src/AGENTS.md'
                                   : target === 'kiro'
                                     ? '.kiro/steering/typescript.md'
                                     : target === 'antigravity'
@@ -231,7 +233,11 @@ export function outputPaths(target: TargetName): OutputPathGroups {
                                       ? '.factory/commands/review.md'
                                       : target === 'pi-agent'
                                         ? '.pi/prompts/review.md'
-                                        : `${skillDir(target)}/${commandSkillDirName('review')}/SKILL.md`,
+                                        : target === 'rovodev'
+                                          ? '.rovodev/commands/review.md'
+                                          : target === 'trae'
+                                            ? '.trae/commands/review.md'
+                                            : `${skillDir(target)}/${commandSkillDirName('review')}/SKILL.md`,
     ],
     agent: [
       target === 'claude-code'
@@ -254,7 +260,9 @@ export function outputPaths(target: TargetName): OutputPathGroups {
                         ? '.qwen/agents/code-reviewer.md'
                         : target === 'factory-droid'
                           ? '.factory/droids/code-reviewer.md'
-                          : agentSkill,
+                          : target === 'deepagents-cli'
+                            ? '.deepagents/agents/code-reviewer/AGENTS.md'
+                            : agentSkill,
     ],
     skill: [`${skillDir(target)}/api-generator/SKILL.md`],
     template: [`${skillDir(target)}/api-generator/template.ts`],
@@ -300,7 +308,7 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
                                     ? '.rules'
                                     : 'AGENTS.md';
   // From `src/AGENTS.md`, the rewriter points at repo-root AGENTS as `../AGENTS.md`.
-  if (target === 'windsurf' && path === 'src/AGENTS.md') {
+  if ((target === 'windsurf' || target === 'codex-cli') && path === 'src/AGENTS.md') {
     rootRule = '../AGENTS.md';
   }
   const rule =
@@ -319,9 +327,9 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
                 : target === 'gemini-cli'
                   ? 'GEMINI.md'
                   : target === 'cline'
-                    ? '.clinerules/typescript.md'
+                    ? '.cline/rules/typescript.md'
                     : target === 'codex-cli'
-                      ? '.codex/instructions/typescript.md'
+                      ? 'src/AGENTS.md'
                       : target === 'windsurf'
                         ? '.windsurf/rules/typescript.md'
                         : target === 'antigravity'
@@ -380,7 +388,13 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
                                       ? '.factory/commands/review.md'
                                       : target === 'pi-agent'
                                         ? '.pi/prompts/review.md'
-                                        : '.windsurf/workflows/review.md',
+                                        : target === 'rovodev'
+                                          ? '.rovodev/commands/review.md'
+                                          : target === 'trae'
+                                            ? '.trae/commands/review.md'
+                                            : target === 'deepagents-cli'
+                                              ? `${skills}/${commandSkillDirName('review')}/SKILL.md`
+                                              : '.windsurf/workflows/review.md',
     agent:
       target === 'claude-code'
         ? '.claude/agents/code-reviewer.md'
@@ -395,18 +409,22 @@ export function expectedRefs(target: TargetName, path?: string): Record<string, 
                 : target === 'gemini-cli'
                   ? '.gemini/agents/code-reviewer.md'
                   : target === 'cline'
-                    ? '.cline/agents/code-reviewer.md'
-                    : target === 'codex-cli'
-                      ? '.codex/agents/code-reviewer.toml'
-                      : target === 'kilo-code'
-                        ? '.kilo/agents/code-reviewer.md'
-                        : target === 'opencode'
-                          ? '.opencode/agents/code-reviewer.md'
-                          : target === 'qwen-code'
-                            ? '.qwen/agents/code-reviewer.md'
-                            : target === 'factory-droid'
-                              ? '.factory/droids/code-reviewer.md'
-                              : `${skills}/${projectedAgentSkillDirName('code-reviewer')}/SKILL.md`,
+                    ? '.cline/agents.yaml'
+                    : target === 'trae'
+                      ? '.trae/agents/code-reviewer.md'
+                      : target === 'codex-cli'
+                        ? '.codex/agents/code-reviewer.toml'
+                        : target === 'kilo-code'
+                          ? '.kilo/agents/code-reviewer.md'
+                          : target === 'opencode'
+                            ? '.opencode/agents/code-reviewer.md'
+                            : target === 'qwen-code'
+                              ? '.qwen/agents/code-reviewer.md'
+                              : target === 'factory-droid'
+                                ? '.factory/droids/code-reviewer.md'
+                                : target === 'deepagents-cli'
+                                  ? '.deepagents/agents/code-reviewer/AGENTS.md'
+                                  : `${skills}/${projectedAgentSkillDirName('code-reviewer')}/SKILL.md`,
     skill: `${geminiCompatSkills}/api-generator/SKILL.md`,
     template: `${geminiCompatSkills}/api-generator/template.ts`,
     checklist,

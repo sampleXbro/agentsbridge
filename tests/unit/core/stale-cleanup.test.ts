@@ -72,32 +72,32 @@ describe('cleanupStaleGeneratedOutputs', () => {
   });
 
   it('uses Antigravity global managed outputs for cleanup', async () => {
-    mkdirSync(join(TEST_ROOT, '.gemini', 'antigravity', 'skills', 'review'), { recursive: true });
-    mkdirSync(join(TEST_ROOT, '.gemini', 'antigravity', 'workflows'), { recursive: true });
-    writeFileSync(join(TEST_ROOT, '.gemini', 'antigravity', 'GEMINI.md'), 'keep');
+    mkdirSync(join(TEST_ROOT, '.gemini', 'config', 'skills', 'review'), { recursive: true });
+    mkdirSync(join(TEST_ROOT, '.gemini', 'antigravity', 'global_workflows'), { recursive: true });
+    writeFileSync(join(TEST_ROOT, '.gemini', 'GEMINI.md'), 'keep');
+    writeFileSync(join(TEST_ROOT, '.gemini', 'config', 'skills', 'review', 'SKILL.md'), 'stale');
+    writeFileSync(join(TEST_ROOT, '.gemini', 'config', 'mcp_config.json'), '{}');
     writeFileSync(
-      join(TEST_ROOT, '.gemini', 'antigravity', 'skills', 'review', 'SKILL.md'),
+      join(TEST_ROOT, '.gemini', 'antigravity', 'global_workflows', 'deploy.md'),
       'stale',
     );
-    writeFileSync(join(TEST_ROOT, '.gemini', 'antigravity', 'mcp_config.json'), '{}');
-    writeFileSync(join(TEST_ROOT, '.gemini', 'antigravity', 'workflows', 'deploy.md'), 'stale');
     writeFileSync(join(TEST_ROOT, '.gemini', 'notes.md'), 'unrelated');
 
     await cleanupStaleGeneratedOutputs({
       projectRoot: TEST_ROOT,
       targets: ['antigravity'],
-      expectedPaths: ['.gemini/antigravity/GEMINI.md'],
+      expectedPaths: ['.gemini/GEMINI.md'],
       scope: 'global',
     });
 
-    expect(existsSync(join(TEST_ROOT, '.gemini', 'antigravity', 'GEMINI.md'))).toBe(true);
-    expect(
-      existsSync(join(TEST_ROOT, '.gemini', 'antigravity', 'skills', 'review', 'SKILL.md')),
-    ).toBe(false);
-    expect(existsSync(join(TEST_ROOT, '.gemini', 'antigravity', 'mcp_config.json'))).toBe(false);
-    expect(existsSync(join(TEST_ROOT, '.gemini', 'antigravity', 'workflows', 'deploy.md'))).toBe(
+    expect(existsSync(join(TEST_ROOT, '.gemini', 'GEMINI.md'))).toBe(true);
+    expect(existsSync(join(TEST_ROOT, '.gemini', 'config', 'skills', 'review', 'SKILL.md'))).toBe(
       false,
     );
+    expect(existsSync(join(TEST_ROOT, '.gemini', 'config', 'mcp_config.json'))).toBe(false);
+    expect(
+      existsSync(join(TEST_ROOT, '.gemini', 'antigravity', 'global_workflows', 'deploy.md')),
+    ).toBe(false);
     expect(existsSync(join(TEST_ROOT, '.gemini', 'notes.md'))).toBe(true);
   });
 

@@ -39,7 +39,7 @@ describe('writeLockFile — branch coverage', () => {
     process.env['USER'] = 'alice';
     delete process.env['USERNAME'];
     try {
-      await writeLockFile({ canonicalDir, configDir }, []);
+      await writeLockFile({ canonicalDir, configDir }, [], {}, false);
       expect(readLock().generated_by).toBe('alice');
     } finally {
       if (prevUser !== undefined) process.env['USER'] = prevUser;
@@ -54,7 +54,7 @@ describe('writeLockFile — branch coverage', () => {
     delete process.env['USER'];
     process.env['USERNAME'] = 'bob';
     try {
-      await writeLockFile({ canonicalDir, configDir }, []);
+      await writeLockFile({ canonicalDir, configDir }, [], {}, false);
       expect(readLock().generated_by).toBe('bob');
     } finally {
       if (prevUser !== undefined) process.env['USER'] = prevUser;
@@ -69,7 +69,7 @@ describe('writeLockFile — branch coverage', () => {
     delete process.env['USER'];
     delete process.env['USERNAME'];
     try {
-      await writeLockFile({ canonicalDir, configDir }, []);
+      await writeLockFile({ canonicalDir, configDir }, [], {}, false);
       expect(readLock().generated_by).toBe('unknown');
     } finally {
       if (prevUser !== undefined) process.env['USER'] = prevUser;
@@ -80,13 +80,13 @@ describe('writeLockFile — branch coverage', () => {
   it('catches and warns when ensureCacheSymlink throws a non-Error value (String(e) branch)', async () => {
     vi.spyOn(fsUtils, 'ensureCacheSymlink').mockRejectedValue('plain-string-failure');
     // Should not throw; lock file should still be written.
-    await writeLockFile({ canonicalDir, configDir }, []);
+    await writeLockFile({ canonicalDir, configDir }, [], {}, false);
     expect(readLock()).toHaveProperty('lib_version');
   });
 
   it('catches and warns when ensureCacheSymlink throws an Error', async () => {
     vi.spyOn(fsUtils, 'ensureCacheSymlink').mockRejectedValue(new Error('symlink boom'));
-    await writeLockFile({ canonicalDir, configDir }, []);
+    await writeLockFile({ canonicalDir, configDir }, [], {}, false);
     expect(readLock()).toHaveProperty('lib_version');
   });
 });

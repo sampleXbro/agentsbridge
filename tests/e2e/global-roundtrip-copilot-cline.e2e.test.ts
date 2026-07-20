@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { runCli } from './helpers/run-cli.js';
 import {
   fileExists,
+  fileNotExists,
   fileContains,
   readText,
   validJson,
@@ -18,7 +19,6 @@ describe('global mode round-trip: Copilot', () => {
   it('canonical → generate --global → import --global → matches canonical', async () => {
     const { homeDir, canonicalDir, projectDir } = env;
     mkdirSync(join(canonicalDir, 'rules'), { recursive: true });
-    mkdirSync(join(canonicalDir, 'commands'), { recursive: true });
     mkdirSync(join(canonicalDir, 'agents'), { recursive: true });
     mkdirSync(join(canonicalDir, 'skills', 'copilot-skill'), { recursive: true });
     mkdirSync(join(canonicalDir, 'skills', 'copilot-skill', 'references'), { recursive: true });
@@ -26,10 +26,6 @@ describe('global mode round-trip: Copilot', () => {
     writeFileSync(
       join(canonicalDir, 'rules', '_root.md'),
       '---\ndescription: Root\n---\n# Root\nCopilot instructions\n',
-    );
-    writeFileSync(
-      join(canonicalDir, 'commands', 'explain.md'),
-      '---\ndescription: Explain\n---\n# Explain\nExplain the code\n',
     );
     writeFileSync(
       join(canonicalDir, 'agents', 'explainer.md'),
@@ -44,8 +40,16 @@ describe('global mode round-trip: Copilot', () => {
       '# Guide\nExplain clearly.\n',
     );
     writeFileSync(
+      join(canonicalDir, 'mcp.json'),
+      JSON.stringify({ mcpServers: { docs: { command: 'npx', args: ['-y'] } } }),
+    );
+    writeFileSync(
+      join(canonicalDir, 'hooks.yaml'),
+      'PreToolUse:\n  - matcher: Bash\n    command: echo hi\n',
+    );
+    writeFileSync(
       join(canonicalDir, 'agentsmesh.yaml'),
-      'version: 1\ntargets: [copilot]\nfeatures: [rules, commands, agents, skills]\n',
+      'version: 1\ntargets: [copilot]\nfeatures: [rules, agents, skills, mcp, hooks]\n',
     );
 
     const gen = await runCli('generate --global --targets copilot', projectDir);
@@ -94,17 +98,30 @@ describe('global mode round-trip: Copilot', () => {
     );
     fileExists(join(homeDir, '.claude', 'skills', 'copilot-skill', 'references', 'guide.md'));
 
-    // 7. Prompts/commands (docs: ~/.copilot/prompts/*.prompt.md)
-    fileExists(join(homeDir, '.copilot', 'prompts', 'explain.prompt.md'));
-    fileContains(join(homeDir, '.copilot', 'prompts', 'explain.prompt.md'), 'Explain the code');
-    expect(
-      markdownFrontmatter(join(homeDir, '.copilot', 'prompts', 'explain.prompt.md')).description,
-    ).toBe('Explain');
+    // 7. No commands surface (Copilot CLI has no prompt-file/slash-command mechanism)
+    fileNotExists(join(homeDir, '.copilot', 'prompts'));
+
+    // 8. MCP (docs: ~/.copilot/mcp-config.json, `mcpServers` key)
+    fileExists(join(homeDir, '.copilot', 'mcp-config.json'));
+    validJson(join(homeDir, '.copilot', 'mcp-config.json'));
+    const mcp = JSON.parse(readText(join(homeDir, '.copilot', 'mcp-config.json')));
+    expect(mcp.mcpServers.docs).toBeDefined();
+    expect(mcp.servers).toBeUndefined();
+
+    // 9. Hooks (docs: ~/.copilot/hooks/*.json — same schema as project scope)
+    fileExists(join(homeDir, '.copilot', 'hooks', 'agentsmesh.json'));
+    const hooks = JSON.parse(readText(join(homeDir, '.copilot', 'hooks', 'agentsmesh.json')));
+    expect(hooks.hooks.preToolUse[0].matcher).toBe('Bash');
+    fileExists(join(homeDir, '.copilot', 'hooks', 'scripts', 'pretooluse-0.sh'));
+    fileContains(join(homeDir, '.copilot', 'hooks', 'scripts', 'pretooluse-0.sh'), 'echo hi');
+
     dirFilesExactly(join(homeDir, '.copilot'), [
       'AGENTS.md',
       'agents/explainer.agent.md',
       'copilot-instructions.md',
-      'prompts/explain.prompt.md',
+      'hooks/agentsmesh.json',
+      'hooks/scripts/pretooluse-0.sh',
+      'mcp-config.json',
       'skills/copilot-skill/SKILL.md',
       'skills/copilot-skill/references/guide.md',
     ]);
@@ -125,13 +142,17 @@ describe('global mode round-trip: Copilot', () => {
 
     fileExists(join(canonicalDir, 'rules', '_root.md'));
     fileContains(join(canonicalDir, 'rules', '_root.md'), 'Copilot instructions');
-    fileExists(join(canonicalDir, 'commands', 'explain.md'));
-    fileContains(join(canonicalDir, 'commands', 'explain.md'), 'Explain the code');
     fileExists(join(canonicalDir, 'agents', 'explainer.md'));
     fileContains(join(canonicalDir, 'agents', 'explainer.md'), 'Explain code');
     fileExists(join(canonicalDir, 'skills', 'copilot-skill', 'SKILL.md'));
     fileContains(join(canonicalDir, 'skills', 'copilot-skill', 'SKILL.md'), 'Helps with Copilot');
     fileExists(join(canonicalDir, 'skills', 'copilot-skill', 'references', 'guide.md'));
+    fileExists(join(canonicalDir, 'mcp.json'));
+    const importedMcp = JSON.parse(readText(join(canonicalDir, 'mcp.json')));
+    expect(importedMcp.mcpServers.docs).toBeDefined();
+    fileExists(join(canonicalDir, 'hooks.yaml'));
+    fileContains(join(canonicalDir, 'hooks.yaml'), 'Bash');
+    fileContains(join(canonicalDir, 'hooks.yaml'), 'echo hi');
   });
 });
 
@@ -182,67 +203,76 @@ describe('global mode round-trip: Cline', () => {
     const gen = await runCli('generate --global --targets cline', projectDir);
     expect(gen.exitCode).toBe(0);
 
-    // 1. Rules (docs: ~/Documents/Cline/Rules/)
-    fileExists(join(homeDir, 'Documents', 'Cline', 'Rules', 'python.md'));
-    fileContains(join(homeDir, 'Documents', 'Cline', 'Rules', 'python.md'), 'Use type hints');
+    // 1. Rules (CLI docs: ~/.cline/data/settings/rules/)
+    fileExists(join(homeDir, '.cline', 'data', 'settings', 'rules', 'python.md'));
+    fileContains(
+      join(homeDir, '.cline', 'data', 'settings', 'rules', 'python.md'),
+      'Use type hints',
+    );
     expect(
-      markdownFrontmatter(join(homeDir, 'Documents', 'Cline', 'Rules', 'python.md')).description,
+      markdownFrontmatter(join(homeDir, '.cline', 'data', 'settings', 'rules', 'python.md'))
+        .description,
     ).toBe('Python');
 
-    // 2. Workflows/commands (docs: ~/Documents/Cline/Workflows/)
+    // 2. Workflows/commands (docs: ~/Documents/Cline/Workflows/ — unaffected by this fix)
     fileExists(join(homeDir, 'Documents', 'Cline', 'Workflows', 'review.md'));
     fileContains(join(homeDir, 'Documents', 'Cline', 'Workflows', 'review.md'), 'Review code');
     markdownHasNoFrontmatter(join(homeDir, 'Documents', 'Cline', 'Workflows', 'review.md'));
 
-    // 3. Skills (docs: ~/.cline/skills/<skill>/SKILL.md)
-    fileExists(join(homeDir, '.cline', 'skills', 'cline-skill', 'SKILL.md'));
-    fileContains(join(homeDir, '.cline', 'skills', 'cline-skill', 'SKILL.md'), 'Cline helper');
+    // 3. Skills (CLI docs: ~/.cline/data/settings/skills/<skill>/SKILL.md)
+    fileExists(join(homeDir, '.cline', 'data', 'settings', 'skills', 'cline-skill', 'SKILL.md'));
+    fileContains(
+      join(homeDir, '.cline', 'data', 'settings', 'skills', 'cline-skill', 'SKILL.md'),
+      'Cline helper',
+    );
     expect(
-      markdownFrontmatter(join(homeDir, '.cline', 'skills', 'cline-skill', 'SKILL.md')).name,
+      markdownFrontmatter(
+        join(homeDir, '.cline', 'data', 'settings', 'skills', 'cline-skill', 'SKILL.md'),
+      ).name,
     ).toBe('cline-skill');
-    fileExists(join(homeDir, '.cline', 'skills', 'cline-skill', 'references', 'workflow.md'));
+    fileExists(
+      join(
+        homeDir,
+        '.cline',
+        'data',
+        'settings',
+        'skills',
+        'cline-skill',
+        'references',
+        'workflow.md',
+      ),
+    );
 
     // 4. Skills mirror (docs: ~/.agents/skills/)
     fileExists(join(homeDir, '.agents', 'skills', 'cline-skill', 'SKILL.md'));
     fileExists(join(homeDir, '.agents', 'skills', 'cline-skill', 'references', 'workflow.md'));
 
-    // 5. MCP (docs: ~/.cline/cline_mcp_settings.json)
-    fileExists(join(homeDir, '.cline', 'cline_mcp_settings.json'));
-    validJson(join(homeDir, '.cline', 'cline_mcp_settings.json'));
-    const mcp = JSON.parse(readText(join(homeDir, '.cline', 'cline_mcp_settings.json')));
-    expect(mcp.mcpServers.test).toBeDefined();
+    // 5. MCP: no documented global MCP surface (CLI docs) — not generated at global scope.
+    fileNotExists(join(homeDir, '.cline', 'mcp.json'));
 
-    // 6. Ignore (docs: ~/.clineignore)
-    fileExists(join(homeDir, '.clineignore'));
-    fileContains(join(homeDir, '.clineignore'), 'node_modules');
+    // 6. Ignore: no documented global ignore surface (docs.cline.bot/customization/clineignore)
+    // — not generated at global scope.
+    fileNotExists(join(homeDir, '.clineignore'));
 
-    // 7. Hooks (docs: ~/Documents/Cline/Hooks/*.sh)
-    fileExists(join(homeDir, 'Documents', 'Cline', 'Hooks', 'pretooluse-0.sh'));
-    fileContains(join(homeDir, 'Documents', 'Cline', 'Hooks', 'pretooluse-0.sh'), 'echo hook');
-    fileContains(
-      join(homeDir, 'Documents', 'Cline', 'Hooks', 'pretooluse-0.sh'),
-      '#!/usr/bin/env bash',
-    );
-    dirFilesExactly(join(homeDir, 'Documents', 'Cline'), [
-      'Hooks/pretooluse-0.sh',
-      'Rules/python.md',
-      'Workflows/review.md',
-    ]);
+    // 7. Hooks (CLI docs: ~/.cline/hooks — same relative path as project scope)
+    fileExists(join(homeDir, '.cline', 'hooks', 'pretooluse-0.sh'));
+    fileContains(join(homeDir, '.cline', 'hooks', 'pretooluse-0.sh'), 'echo hook');
+    fileContains(join(homeDir, '.cline', 'hooks', 'pretooluse-0.sh'), '#!/usr/bin/env bash');
+    dirFilesExactly(join(homeDir, 'Documents', 'Cline'), ['Workflows/review.md']);
     dirFilesExactly(join(homeDir, '.cline'), [
-      'cline_mcp_settings.json',
-      'skills/cline-skill/SKILL.md',
-      'skills/cline-skill/references/workflow.md',
+      'data/settings/rules/python.md',
+      'data/settings/skills/cline-skill/SKILL.md',
+      'data/settings/skills/cline-skill/references/workflow.md',
+      'hooks/pretooluse-0.sh',
     ]);
 
-    // Cline importer reads from .clinerules/ — copy generated files for import round-trip
-    mkdirSync(join(homeDir, '.clinerules'), { recursive: true });
+    // The root rule is never written at global scope (AGENTS.md is suppressed there,
+    // and there is no alternative root-rule destination) — write it directly into the
+    // real global rules dir so the import round-trip below can recover it, mirroring
+    // what a real Cline user's ~/.cline/data/settings/rules/_root.md would contain.
     writeFileSync(
-      join(homeDir, '.clinerules', '_root.md'),
+      join(homeDir, '.cline', 'data', 'settings', 'rules', '_root.md'),
       readText(join(canonicalDir, 'rules', '_root.md')),
-    );
-    writeFileSync(
-      join(homeDir, '.clinerules', 'python.md'),
-      readText(join(homeDir, 'Documents', 'Cline', 'Rules', 'python.md')),
     );
 
     rmSync(canonicalDir, { recursive: true, force: true });
@@ -257,8 +287,13 @@ describe('global mode round-trip: Cline', () => {
     fileContains(join(canonicalDir, 'rules', 'python.md'), 'Use type hints');
     fileExists(join(canonicalDir, 'skills', 'cline-skill', 'SKILL.md'));
     fileExists(join(canonicalDir, 'skills', 'cline-skill', 'references', 'workflow.md'));
+    // MCP and ignore are project-only surfaces — cline's own import doesn't populate
+    // them at global scope. `.agentsmesh/mcp.json` still exists because the import
+    // safety net (seedAgentsmeshMcpEntry) always seeds the built-in agentsmesh MCP
+    // entry after any successful import, regardless of the target's own mcp support.
     fileExists(join(canonicalDir, 'mcp.json'));
-    fileExists(join(canonicalDir, 'ignore'));
-    // Hooks are emitted globally under ~/Documents/Cline/Hooks/; Cline import does not read them back yet.
+    expect(JSON.parse(readText(join(canonicalDir, 'mcp.json'))).mcpServers.test).toBeUndefined();
+    fileNotExists(join(canonicalDir, 'ignore'));
+    // Hooks are emitted globally under ~/.cline/hooks/; Cline import does not read them back yet.
   });
 });

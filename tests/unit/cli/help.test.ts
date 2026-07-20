@@ -47,6 +47,22 @@ describe('printCommandHelp', () => {
     }
   });
 
+  it('prints check help with --no-outputs', () => {
+    let output = '';
+    const write = process.stdout.write.bind(process.stdout);
+    process.stdout.write = (chunk: string | Uint8Array) => {
+      output += String(chunk);
+      return true;
+    };
+    try {
+      printCommandHelp('check');
+      expect(output).toContain('agentsmesh check');
+      expect(output).toContain('--no-outputs');
+    } finally {
+      process.stdout.write = write;
+    }
+  });
+
   it('prints install help with --path, --target, --as, and --sync', () => {
     let output = '';
     const write = process.stdout.write.bind(process.stdout);

@@ -100,14 +100,19 @@ describe('descriptor.project.paths.rulePath', () => {
     );
   });
 
-  it('cline: returns .clinerules/{slug}.md', () => {
+  it('cline: returns .cline/rules/{slug}.md', () => {
     const rule = makeRule('example');
-    expect(cline.project.paths.rulePath('example', rule)).toBe('.clinerules/example.md');
+    expect(cline.project.paths.rulePath('example', rule)).toBe('.cline/rules/example.md');
   });
 
-  it('codex-cli: returns path under .codex/instructions based on rule source', () => {
+  it('codex-cli: returns a nested AGENTS.md under the rule slug when there is no glob directory', () => {
     const rule = makeRule('example');
-    expect(codexCli.project.paths.rulePath('example', rule)).toBe('.codex/instructions/example.md');
+    expect(codexCli.project.paths.rulePath('example', rule)).toBe('example/AGENTS.md');
+  });
+
+  it('codex-cli: returns .codex/rules/{slug}.rules for execution-emit rules', () => {
+    const rule = makeRule('example', { codexEmit: 'execution' });
+    expect(codexCli.project.paths.rulePath('example', rule)).toBe('.codex/rules/example.rules');
   });
 
   it('windsurf: returns .windsurf/rules/{slug}.md', () => {
@@ -246,17 +251,17 @@ describe('descriptor.project.paths.agentPath', () => {
     expect(result).toBe('.gemini/skills/am-agent-reviewer/SKILL.md');
   });
 
-  it('cline default: returns native agent path', () => {
+  it('cline default: returns .cline/agents.yaml (combined file, all agents share one output)', () => {
     const result = cline.project.paths.agentPath('reviewer', config);
-    expect(result).toBe('.cline/agents/reviewer.md');
+    expect(result).toBe('.cline/agents.yaml');
   });
 
-  it('cline with conversion OFF: still returns native agent path', () => {
+  it('cline with conversion OFF: returns .cline/agents.yaml (combined file, not projected)', () => {
     const configWithConversionOff = baseConfig({
       conversions: { agents_to_skills: { cline: false } },
     });
     expect(cline.project.paths.agentPath('reviewer', configWithConversionOff)).toBe(
-      '.cline/agents/reviewer.md',
+      '.cline/agents.yaml',
     );
   });
 
@@ -281,6 +286,16 @@ describe('descriptor.project.paths.agentPath', () => {
   it('antigravity: returns projected agent skill path', () => {
     expect(antigravity.project.paths.agentPath('reviewer', config)).toBe(
       '.agents/skills/am-agent-reviewer/SKILL.md',
+    );
+  });
+
+  it('trae: returns .trae/agents/{name}.md', () => {
+    expect(trae.project.paths.agentPath('reviewer', config)).toBe('.trae/agents/reviewer.md');
+  });
+
+  it('trae: global agentPath returns .trae-cn/agents/{name}.md', () => {
+    expect(trae.globalSupport!.layout.paths.agentPath('reviewer', config)).toBe(
+      '.trae-cn/agents/reviewer.md',
     );
   });
 });

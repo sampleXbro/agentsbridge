@@ -54,37 +54,35 @@ describe('buildRovodevConfig (rovodev)', () => {
     expect(buildRovodevConfig(canonical, new Set(['hooks']))).toEqual([]);
   });
 
-  it('emits toolPermissions with only allow', () => {
+  it('emits toolPermissions.tools with only allow', () => {
     const canonical = makeCanonical({ permissions: { allow: ['Read'], deny: [] } });
     const results = buildRovodevConfig(canonical, new Set(['permissions']));
     const parsed = yamlParse(results[0].content) as {
-      toolPermissions: Record<string, unknown>;
+      toolPermissions: { tools: Record<string, unknown> };
     };
-    expect(parsed.toolPermissions.allow).toEqual(['Read']);
-    expect(parsed.toolPermissions.deny).toBeUndefined();
-    expect(parsed.toolPermissions.ask).toBeUndefined();
+    expect(parsed.toolPermissions.tools.Read).toBe('allow');
   });
 
-  it('emits toolPermissions with only deny', () => {
+  it('emits toolPermissions.tools.bash.default for a bare "Bash" pattern', () => {
     const canonical = makeCanonical({ permissions: { allow: [], deny: ['Bash'] } });
     const results = buildRovodevConfig(canonical, new Set(['permissions']));
     const parsed = yamlParse(results[0].content) as {
-      toolPermissions: Record<string, unknown>;
+      toolPermissions: { tools: { bash: { default: string } } };
     };
-    expect(parsed.toolPermissions.deny).toEqual(['Bash']);
-    expect(parsed.toolPermissions.allow).toBeUndefined();
-    expect(parsed.toolPermissions.ask).toBeUndefined();
+    expect(parsed.toolPermissions.tools.bash.default).toBe('deny');
   });
 
-  it('emits toolPermissions with only ask', () => {
-    const canonical = makeCanonical({ permissions: { allow: [], deny: [], ask: ['Write'] } });
+  it('emits toolPermissions.tools.bash.commands for "Bash(<command>)" patterns', () => {
+    const canonical = makeCanonical({
+      permissions: { allow: [], deny: [], ask: ['Bash(git push:*)'] },
+    });
     const results = buildRovodevConfig(canonical, new Set(['permissions']));
     const parsed = yamlParse(results[0].content) as {
-      toolPermissions: Record<string, unknown>;
+      toolPermissions: { tools: { bash: { commands: { command: string; permission: string }[] } } };
     };
-    expect(parsed.toolPermissions.ask).toEqual(['Write']);
-    expect(parsed.toolPermissions.allow).toBeUndefined();
-    expect(parsed.toolPermissions.deny).toBeUndefined();
+    expect(parsed.toolPermissions.tools.bash.commands).toEqual([
+      { command: 'git push', permission: 'ask' },
+    ]);
   });
 
   it('omits toolPermissions when permissions enabled but all lists empty', () => {
@@ -100,18 +98,22 @@ describe('buildRovodevConfig (rovodev)', () => {
   it('emits both eventHooks and toolPermissions when both enabled', () => {
     const canonical = makeCanonical({
       hooks: HOOKS,
-      permissions: { allow: ['Read'], deny: ['Bash'], ask: ['Write'] },
+      permissions: { allow: ['Read'], deny: ['Bash(rm -rf:*)'], ask: ['Write'] },
     });
     const results = buildRovodevConfig(canonical, new Set(['hooks', 'permissions']));
     expect(results).toHaveLength(1);
     const parsed = yamlParse(results[0].content) as {
       eventHooks: unknown;
-      toolPermissions: { allow: string[]; deny: string[]; ask: string[] };
+      toolPermissions: {
+        tools: { Read: string; Write: string; bash: { commands: unknown[] } };
+      };
     };
     expect(parsed.eventHooks).toEqual(HOOKS);
-    expect(parsed.toolPermissions.allow).toEqual(['Read']);
-    expect(parsed.toolPermissions.deny).toEqual(['Bash']);
-    expect(parsed.toolPermissions.ask).toEqual(['Write']);
+    expect(parsed.toolPermissions.tools.Read).toBe('allow');
+    expect(parsed.toolPermissions.tools.Write).toBe('ask');
+    expect(parsed.toolPermissions.tools.bash.commands).toEqual([
+      { command: 'rm -rf', permission: 'deny' },
+    ]);
   });
 });
 

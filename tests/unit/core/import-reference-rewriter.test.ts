@@ -110,23 +110,23 @@ describe('createImportReferenceNormalizer', () => {
   });
 
   it('normalizes Antigravity global target prose paths back to canonical paths', async () => {
-    mkdirSync(join(TEST_DIR, '.gemini', 'antigravity', 'skills', 'api-gen', 'references'), {
+    mkdirSync(join(TEST_DIR, '.gemini', 'config', 'skills', 'api-gen', 'references'), {
       recursive: true,
     });
-    writeFileSync(join(TEST_DIR, '.gemini', 'antigravity', 'GEMINI.md'), '# Root\n');
+    writeFileSync(join(TEST_DIR, '.gemini', 'GEMINI.md'), '# Root\n');
     writeFileSync(
-      join(TEST_DIR, '.gemini', 'antigravity', 'skills', 'api-gen', 'SKILL.md'),
+      join(TEST_DIR, '.gemini', 'config', 'skills', 'api-gen', 'SKILL.md'),
       '# Skill\n',
     );
     writeFileSync(
-      join(TEST_DIR, '.gemini', 'antigravity', 'skills', 'api-gen', 'references', 'checklist.md'),
+      join(TEST_DIR, '.gemini', 'config', 'skills', 'api-gen', 'references', 'checklist.md'),
       '# Checklist\n',
     );
 
     const normalize = await createImportReferenceNormalizer('antigravity', TEST_DIR, 'global');
     const normalized = normalize(
-      'Use .gemini/antigravity/GEMINI.md and .gemini/antigravity/skills/api-gen/references/checklist.md.',
-      join(TEST_DIR, '.gemini', 'antigravity', 'GEMINI.md'),
+      'Use .gemini/GEMINI.md and .gemini/config/skills/api-gen/references/checklist.md.',
+      join(TEST_DIR, '.gemini', 'GEMINI.md'),
       join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
     );
 
@@ -235,28 +235,28 @@ describe('createImportReferenceNormalizer', () => {
     expect(normalized).toContain('```\n.claude/commands/review.md\n```');
   });
 
-  it('normalizes cline root rule references from .clinerules paths', async () => {
-    mkdirSync(join(TEST_DIR, '.clinerules'), { recursive: true });
-    writeFileSync(join(TEST_DIR, '.clinerules', 'typescript.md'), '# TS\n');
+  it('normalizes cline root rule references from .cline/rules paths', async () => {
+    mkdirSync(join(TEST_DIR, '.cline', 'rules'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.cline', 'rules', 'typescript.md'), '# TS\n');
 
     const normalize = await createImportReferenceNormalizer('cline', TEST_DIR);
     const normalized = normalize(
-      'See .clinerules/typescript.md.',
-      join(TEST_DIR, '.clinerules', '_root.md'),
+      'See .cline/rules/typescript.md.',
+      join(TEST_DIR, '.cline', 'rules', '_root.md'),
       join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
     );
 
     expect(normalized).toBe('See .agentsmesh/rules/typescript.md.');
   });
 
-  it('normalizes .clinerules/_root.md reference to canonical _root.md path', async () => {
-    mkdirSync(join(TEST_DIR, '.clinerules'), { recursive: true });
-    writeFileSync(join(TEST_DIR, '.clinerules', '_root.md'), '# Root\n');
+  it('normalizes .cline/rules/_root.md reference to canonical _root.md path', async () => {
+    mkdirSync(join(TEST_DIR, '.cline', 'rules'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.cline', 'rules', '_root.md'), '# Root\n');
 
     const normalize = await createImportReferenceNormalizer('cline', TEST_DIR);
     const normalized = normalize(
-      'See .clinerules/_root.md for global rules.',
-      join(TEST_DIR, '.clinerules', 'typescript.md'),
+      'See .cline/rules/_root.md for global rules.',
+      join(TEST_DIR, '.cline', 'rules', 'typescript.md'),
       join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'),
     );
 
@@ -264,21 +264,21 @@ describe('createImportReferenceNormalizer', () => {
   });
 
   it('normalizes cline paths when source file is AGENTS.md (fallback import)', async () => {
-    mkdirSync(join(TEST_DIR, '.clinerules'), { recursive: true });
-    writeFileSync(join(TEST_DIR, '.clinerules', 'typescript.md'), '# TS\n');
+    mkdirSync(join(TEST_DIR, '.cline', 'rules'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.cline', 'rules', 'typescript.md'), '# TS\n');
     mkdirSync(join(TEST_DIR, '.cline', 'skills', 'qa'), { recursive: true });
     writeFileSync(join(TEST_DIR, '.cline', 'skills', 'qa', 'SKILL.md'), '# QA\n');
 
     const normalize = await createImportReferenceNormalizer('cline', TEST_DIR);
     const normalized = normalize(
-      ['Rule: .clinerules/typescript.md.', 'Skill: .cline/skills/qa/SKILL.md.'].join('\n'),
+      ['Rule: .cline/rules/typescript.md.', 'Skill: .cline/skills/qa/SKILL.md.'].join('\n'),
       join(TEST_DIR, 'AGENTS.md'),
       join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
     );
 
     expect(normalized).toContain('.agentsmesh/rules/typescript.md');
     expect(normalized).toContain('.agentsmesh/skills/qa/SKILL.md');
-    expect(normalized).not.toContain('.clinerules/typescript.md');
+    expect(normalized).not.toContain('.cline/rules/typescript.md');
     expect(normalized).not.toContain('.cline/skills/qa/SKILL.md');
   });
 

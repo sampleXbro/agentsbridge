@@ -15,7 +15,16 @@ import type { TargetCapabilities, TargetGenerators } from '../catalog/target.int
 import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
 import { commandSkillDirName } from '../codex-cli/command-skill.js';
 import { projectedAgentSkillDirName } from '../projection/projected-agent-skill.js';
-import { generateRules, generateCommands, generateAgents, generateSkills } from './generator.js';
+import {
+  generateRules,
+  generateCommands,
+  generateAgents,
+  generateSkills,
+  generateMcp,
+  generateHooks,
+  generateIgnore,
+  generatePermissions,
+} from './generator.js';
 import { importFromReplitAgent } from './importer.js';
 import { lintRules } from './linter.js';
 import { lintHooks, lintPermissions, lintIgnore, lintMcp } from './lint.js';
@@ -34,6 +43,10 @@ export const target: TargetGenerators = {
   generateCommands,
   generateAgents,
   generateSkills,
+  generateMcp,
+  generateHooks,
+  generateIgnore,
+  generatePermissions,
   importFrom: importFromReplitAgent,
 };
 
@@ -63,10 +76,10 @@ const capabilities: TargetCapabilities = {
   commands: 'none',
   agents: 'none',
   skills: 'native',
-  mcp: 'none',
-  hooks: 'none',
-  ignore: 'none',
-  permissions: 'none',
+  mcp: 'partial',
+  hooks: 'partial',
+  ignore: 'partial',
+  permissions: 'partial',
 };
 
 export const descriptor = {

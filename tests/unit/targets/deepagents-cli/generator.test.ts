@@ -6,13 +6,12 @@ import {
   generateCommands,
   generateAgents,
   generateMcp,
-  generateHooks,
 } from '../../../../src/targets/deepagents-cli/generator.js';
 import {
   DEEPAGENTS_CLI_ROOT_FILE,
   DEEPAGENTS_CLI_SKILLS_DIR,
+  DEEPAGENTS_CLI_AGENTS_DIR,
   DEEPAGENTS_CLI_MCP_FILE,
-  DEEPAGENTS_CLI_HOOKS_FILE,
 } from '../../../../src/targets/deepagents-cli/constants.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
@@ -218,7 +217,7 @@ describe('generateCommands (deepagents-cli)', () => {
 });
 
 describe('generateAgents (deepagents-cli)', () => {
-  it('projects agents as skills', () => {
+  it('emits a native .deepagents/agents/{name}/AGENTS.md subagent file', () => {
     const canonical = makeCanonical({
       agents: [
         {
@@ -242,16 +241,48 @@ describe('generateAgents (deepagents-cli)', () => {
     const results = generateAgents(canonical);
 
     expect(results).toHaveLength(1);
-    expect(results[0].path).toContain(`${DEEPAGENTS_CLI_SKILLS_DIR}/`);
-    expect(results[0].path).toContain('SKILL.md');
-    expect(results[0].content).toContain('researcher');
-    const agent = results.find((r) => r.path.endsWith('SKILL.md'));
-    expect(agent!.content).toContain('x-agentsmesh-kind: agent');
-    expect(agent!.content).toContain('x-agentsmesh-name: researcher');
-    expect(agent!.content).toContain('name: am-agent-researcher');
-    expect(agent!.content).toContain('description: Research agent');
-    expect(agent!.content).toContain('x-agentsmesh-tools:');
-    expect(agent!.content).toContain('x-agentsmesh-model: claude-sonnet');
+    expect(results[0].path).toBe(`${DEEPAGENTS_CLI_AGENTS_DIR}/researcher/AGENTS.md`);
+    expect(results[0].content).toContain('name: researcher');
+    expect(results[0].content).toContain('description: Research agent');
+    expect(results[0].content).toContain('model: claude-sonnet');
+    expect(results[0].content).toContain('Research topics thoroughly.');
+    // Only the documented frontmatter (name, description, model) is emitted —
+    // the rich Claude-Code-style fields (tools, permissionMode, …) have no
+    // Deep Agents equivalent and are not fabricated.
+    expect(results[0].content).not.toContain('tools:');
+    expect(results[0].content).not.toContain('x-agentsmesh-kind');
+  });
+
+  it('omits the model key when unset', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          name: 'reviewer',
+          source: '/proj/.agentsmesh/agents/reviewer.md',
+          description: 'Review agent',
+          body: 'Review changes.',
+          tools: [],
+          disallowedTools: [],
+          model: '',
+          permissionMode: '',
+          maxTurns: 0,
+          mcpServers: [],
+          hooks: {},
+          skills: [],
+          memory: '',
+        },
+      ],
+    });
+
+    const results = generateAgents(canonical);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(`${DEEPAGENTS_CLI_AGENTS_DIR}/reviewer/AGENTS.md`);
+    expect(results[0].content).not.toContain('model:');
+  });
+
+  it('returns empty when no agents exist', () => {
+    expect(generateAgents(makeCanonical({ agents: [] }))).toHaveLength(0);
   });
 });
 
@@ -290,36 +321,6 @@ describe('generateMcp (deepagents-cli)', () => {
   });
 });
 
-describe('generateHooks (deepagents-cli)', () => {
-  it('returns [] when hooks is null', () => {
-    expect(generateHooks(makeCanonical())).toHaveLength(0);
-  });
-
-  it('returns [] when hooks object is empty', () => {
-    expect(generateHooks(makeCanonical({ hooks: {} }))).toHaveLength(0);
-  });
-
-  it('returns [] when all hook entries have no command text', () => {
-    expect(
-      generateHooks(makeCanonical({ hooks: { PostToolUse: [{ matcher: 'Write', command: '' }] } })),
-    ).toHaveLength(0);
-  });
-
-  it('emits .deepagents/hooks.json with Claude Code format', () => {
-    const results = generateHooks(
-      makeCanonical({
-        hooks: {
-          PreToolUse: [{ matcher: '*', command: 'echo pre', type: 'command' }],
-        },
-      }),
-    );
-    expect(results).toHaveLength(1);
-    expect(results[0].path).toBe(DEEPAGENTS_CLI_HOOKS_FILE);
-    const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
-    expect(parsed.PreToolUse).toBeDefined();
-  });
-
-  it('returns [] when hook arrays are all empty', () => {
-    expect(generateHooks(makeCanonical({ hooks: { PreToolUse: [] } }))).toHaveLength(0);
-  });
-});
+// Hooks have no project-level generator at all (capabilities.hooks = 'none') —
+// see tests/unit/targets/deepagents-cli/global-hooks.test.ts for the
+// global-only `~/.deepagents/hooks.json` support wired via `scopeExtras`.

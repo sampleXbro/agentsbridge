@@ -118,25 +118,25 @@ const globalLayout: TargetLayout = {
 const capabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'embedded',
-  commands: 'none',
+  commands: 'embedded',
   agents: 'none',
   skills: 'native',
   mcp: 'native',
   hooks: 'native',
   ignore: 'native',
-  permissions: 'partial',
+  permissions: 'native',
 };
 
 const globalCapabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'embedded',
-  commands: 'none',
+  commands: 'embedded',
   agents: 'none',
   skills: 'native',
   mcp: 'native',
   hooks: 'native',
   ignore: 'none',
-  permissions: 'none',
+  permissions: 'native',
 };
 
 export const descriptor = {
@@ -164,9 +164,9 @@ export const descriptor = {
   },
   mergeGeneratedOutputContent(existing, pending, newContent, resolvedPath) {
     const base = pending?.content ?? existing;
-    return base !== null && resolvedPath === CRUSH_CONFIG_FILE
-      ? mergeCrushConfigJson(base, newContent)
-      : null;
+    const isCrushConfig =
+      resolvedPath === CRUSH_CONFIG_FILE || resolvedPath === CRUSH_GLOBAL_CONFIG_FILE;
+    return base !== null && isCrushConfig ? mergeCrushConfigJson(base, newContent) : null;
   },
   importer: {
     rules: {

@@ -2,9 +2,10 @@
  * Import Warp config into canonical `.agentsmesh/`.
  *
  * Reads:
- *   - `WARP.md` / `AGENTS.md` — root rule (legacy WARP.md takes priority)
- *   - `.warp/skills/`         — skill bundles
- *   - `.mcp.json`             — MCP servers (standard format)
+ *   - `WARP.md` / `AGENTS.md`  — root rule (legacy WARP.md takes priority)
+ *   - `.warp/skills/`           — skill bundles
+ *   - `.warp/.mcp.json`         — MCP servers (standard format, project scope)
+ *   - `~/.warp/.mcp.json`       — MCP servers (standard format, global scope)
  */
 
 import type { ImportResult } from '../../core/types.js';

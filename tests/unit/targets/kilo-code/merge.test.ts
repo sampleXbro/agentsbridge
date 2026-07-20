@@ -120,4 +120,60 @@ describe('mergeKiloConfig (kilo-code)', () => {
     expect(parsed.custom).toBe('keep');
     expect(parsed.unrelated).toBeUndefined();
   });
+
+  it('overlays the instructions key (global additionalRules)', () => {
+    const existing = JSON.stringify({ custom: 'keep' });
+    const incoming = JSON.stringify({ instructions: ['rules/*.md'] });
+    const result = mergeKiloConfig(existing, null, incoming, KILO_GLOBAL_CONFIG_FILE);
+    const parsed = JSON.parse(result as string) as Record<string, unknown>;
+    expect(parsed.custom).toBe('keep');
+    expect(parsed.instructions).toEqual(['rules/*.md']);
+  });
+
+  it('overlays the mcp key (global MCP servers)', () => {
+    const existing = JSON.stringify({ custom: 'keep' });
+    const incoming = JSON.stringify({ mcp: { test: { type: 'local', command: ['node'] } } });
+    const result = mergeKiloConfig(existing, null, incoming, KILO_GLOBAL_CONFIG_FILE);
+    const parsed = JSON.parse(result as string) as Record<string, unknown>;
+    expect(parsed.custom).toBe('keep');
+    expect(parsed.mcp).toEqual({ test: { type: 'local', command: ['node'] } });
+  });
+
+  it('chains permission, instructions, and mcp writes to the same file (pending base)', () => {
+    // Simulates three sequential emitGeneratedOutput calls to the same path in
+    // one generate run: permissions writes first, then instructions, then mcp
+    // — each using the previous pending result as its base.
+    const afterPermissions = mergeKiloConfig(
+      null,
+      undefined,
+      JSON.stringify({ permission: { allow: ['Read'] } }),
+      KILO_GLOBAL_CONFIG_FILE,
+    ) as string;
+    const afterInstructions = mergeKiloConfig(
+      null,
+      { target: 'kilo-code', path: KILO_GLOBAL_CONFIG_FILE, content: afterPermissions, status: 'created' },
+      JSON.stringify({ instructions: ['rules/*.md'] }),
+      KILO_GLOBAL_CONFIG_FILE,
+    ) as string;
+    const afterMcp = mergeKiloConfig(
+      null,
+      { target: 'kilo-code', path: KILO_GLOBAL_CONFIG_FILE, content: afterInstructions, status: 'created' },
+      JSON.stringify({ mcp: { test: { type: 'local', command: ['node'] } } }),
+      KILO_GLOBAL_CONFIG_FILE,
+    ) as string;
+    const parsed = JSON.parse(afterMcp) as Record<string, unknown>;
+    expect(parsed.permission).toEqual({ allow: ['Read'] });
+    expect(parsed.instructions).toEqual(['rules/*.md']);
+    expect(parsed.mcp).toEqual({ test: { type: 'local', command: ['node'] } });
+  });
+
+  it('does not touch instructions or mcp when overlay has neither key', () => {
+    const base = JSON.stringify({ instructions: ['keep/*.md'], mcp: { keep: {} }, custom: 'keep' });
+    const incoming = JSON.stringify({ permission: { allow: ['Read'] } });
+    const result = mergeKiloConfig(base, null, incoming, KILO_GLOBAL_CONFIG_FILE);
+    const parsed = JSON.parse(result as string) as Record<string, unknown>;
+    expect(parsed.instructions).toEqual(['keep/*.md']);
+    expect(parsed.mcp).toEqual({ keep: {} });
+    expect(parsed.permission).toEqual({ allow: ['Read'] });
+  });
 });

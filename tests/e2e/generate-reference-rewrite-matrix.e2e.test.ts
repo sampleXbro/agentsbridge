@@ -15,10 +15,11 @@ const TARGETS: TargetName[] = [
   'claude-code',
   'cursor',
   'copilot',
+  'cline',
   // gemini-cli: link validator flags `.agents/skills/.../route-checklist.md` from GEMINI/AGENTS
   // before that mirror path is materialized — tracked separately from this matrix contract.
-  'cline',
   'codex-cli',
+  'trae',
   'windsurf',
 ];
 
@@ -104,11 +105,27 @@ function expectToolPathOrDotRelative(content: string, ref: string): void {
   expect(plainHit || tickHit).toBe(true);
 }
 
+/**
+ * Like {@link expectToolPathOrDotRelative} but also accepts canonical
+ * `.agentsmesh/agents/<name>.md` references for targets that emit a
+ * combined-file agents surface (e.g. cline's `agents.yaml`): the generate
+ * phase keeps prose references in canonical form when multiple canonical
+ * agents share one output file to avoid irreversible many-to-one rewrites.
+ */
+function expectAgentRefOrCanonical(content: string, agentRef: string): void {
+  if (content.includes('.agentsmesh/agents/')) return; // canonical form present
+  expectToolPathOrDotRelative(content, agentRef);
+}
+
 function pathRewriteCandidates(ref: string): string[] {
-  if (!ref.startsWith('.')) {
+  // Absolute or already-parent-relative refs aren't further rewritten.
+  if (ref.startsWith('/') || ref.startsWith('..')) {
     return [ref];
   }
-  const rest = ref.replace(/^\.[^/]+\//, '');
+  // Dot-prefixed tool paths (`.windsurf/...`) strip their tool-root segment;
+  // plain repo-root-relative paths (`src/AGENTS.md`, codex-cli's nested
+  // AGENTS.md) keep every segment — both still get `./`/`../`/tail variants.
+  const rest = ref.startsWith('.') ? ref.replace(/^\.[^/]+\//, '') : ref;
   const parts = rest.split('/').filter(Boolean);
   const out = new Set<string>([ref, `./${rest}`, `../${rest}`]);
   for (let n = 1; n <= Math.min(4, parts.length); n++) {
@@ -125,7 +142,7 @@ function escapeRegExp(s: string): string {
 
 /** Rewriter often prefixes tool paths with several `../` from deep outputs (workflows, command skills). */
 function deepRelativeToolPaths(ref: string): string[] {
-  if (!ref.startsWith('.') || ref.startsWith('..')) return [];
+  if (ref.startsWith('/') || ref.startsWith('..')) return [];
   const out: string[] = [];
   for (let up = 1; up <= 6; up++) {
     out.push(`${'../'.repeat(up)}${ref}`);
@@ -238,7 +255,7 @@ describe('generate reference rewrite matrix', () => {
       assertCodeProtection(content, refs);
       expectToolPathOrDotRelative(content, refs.rule);
       expectToolPathOrDotRelative(content, refs.command);
-      expectToolPathOrDotRelative(content, refs.agent);
+      expectAgentRefOrCanonical(content, refs.agent);
       expectToolPathOrDotRelative(content, refs.skill);
       expectToolPathOrDotRelative(content, refs.template);
       expectToolPathOrDotRelative(content, refs.checklist);
@@ -282,7 +299,7 @@ describe('generate reference rewrite matrix', () => {
       const refs = expectedRefs(target, path);
       expectToolPathOrDotRelative(content, refs.rootRule);
       expectToolPathOrDotRelative(content, refs.command);
-      expectToolPathOrDotRelative(content, refs.agent);
+      expectAgentRefOrCanonical(content, refs.agent);
       expectToolPathOrDotRelative(content, refs.skill);
       expectToolPathOrDotRelative(content, refs.template);
       expectToolPathOrDotRelative(content, refs.checklist);
@@ -320,7 +337,7 @@ describe('generate reference rewrite matrix', () => {
       expectToolPathOrDotRelative(content, refs.rootRule);
       expectToolPathOrDotRelative(content, refs.rule);
       expectToolPathOrDotRelative(content, refs.command);
-      expectToolPathOrDotRelative(content, refs.agent);
+      expectAgentRefOrCanonical(content, refs.agent);
       expectToolPathOrDotRelative(content, refs.template);
       expectToolPathOrDotRelative(content, refs.checklist);
       expectToolPathOrDotRelative(content, refs.referencesDir);

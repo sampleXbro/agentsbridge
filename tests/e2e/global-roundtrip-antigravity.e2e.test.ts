@@ -14,10 +14,10 @@ import { useGlobalEnv } from './helpers/global-roundtrip-setup.js';
 
 /**
  * Global Antigravity layout (descriptor.globalSupport + constants):
- * - Rules: single ~/.gemini/antigravity/GEMINI.md (named canonical rules are merged on generate)
- * - Commands: ~/.gemini/antigravity/workflows/*.md
- * - Skills: ~/.gemini/antigravity/skills/<name>/SKILL.md
- * - MCP: ~/.gemini/antigravity/mcp_config.json
+ * - Rules: single ~/.gemini/GEMINI.md (named canonical rules are merged on generate)
+ * - Commands: ~/.gemini/antigravity/global_workflows/*.md
+ * - Skills: ~/.gemini/config/skills/<name>/SKILL.md
+ * - MCP: ~/.gemini/config/mcp_config.json
  */
 describe('global mode round-trip: Antigravity', () => {
   const env = useGlobalEnv();
@@ -61,42 +61,42 @@ describe('global mode round-trip: Antigravity', () => {
     const gen = await runCli('generate --global --targets antigravity', projectDir);
     expect(gen.exitCode).toBe(0);
 
-    fileExists(join(homeDir, '.gemini', 'antigravity', 'GEMINI.md'));
-    fileContains(join(homeDir, '.gemini', 'antigravity', 'GEMINI.md'), 'Antigravity root body');
-    fileContains(join(homeDir, '.gemini', 'antigravity', 'GEMINI.md'), 'Use AG checks');
-    markdownHasNoFrontmatter(join(homeDir, '.gemini', 'antigravity', 'GEMINI.md'));
+    fileExists(join(homeDir, '.gemini', 'GEMINI.md'));
+    fileContains(join(homeDir, '.gemini', 'GEMINI.md'), 'Antigravity root body');
+    fileContains(join(homeDir, '.gemini', 'GEMINI.md'), 'Use AG checks');
+    markdownHasNoFrontmatter(join(homeDir, '.gemini', 'GEMINI.md'));
 
-    fileExists(join(homeDir, '.gemini', 'antigravity', 'workflows', 'ship.md'));
+    fileExists(join(homeDir, '.gemini', 'antigravity', 'global_workflows', 'ship.md'));
     fileContains(
-      join(homeDir, '.gemini', 'antigravity', 'workflows', 'ship.md'),
+      join(homeDir, '.gemini', 'antigravity', 'global_workflows', 'ship.md'),
       'Ship the release',
     );
-    markdownHasNoFrontmatter(join(homeDir, '.gemini', 'antigravity', 'workflows', 'ship.md'));
+    markdownHasNoFrontmatter(
+      join(homeDir, '.gemini', 'antigravity', 'global_workflows', 'ship.md'),
+    );
 
-    fileExists(join(homeDir, '.gemini', 'antigravity', 'skills', 'ag-skill', 'SKILL.md'));
+    fileExists(join(homeDir, '.gemini', 'config', 'skills', 'ag-skill', 'SKILL.md'));
     fileContains(
-      join(homeDir, '.gemini', 'antigravity', 'skills', 'ag-skill', 'SKILL.md'),
+      join(homeDir, '.gemini', 'config', 'skills', 'ag-skill', 'SKILL.md'),
       'Skill content',
     );
     expect(
-      markdownFrontmatter(join(homeDir, '.gemini', 'antigravity', 'skills', 'ag-skill', 'SKILL.md'))
+      markdownFrontmatter(join(homeDir, '.gemini', 'config', 'skills', 'ag-skill', 'SKILL.md'))
         .name,
     ).toBe('ag-skill');
-    fileExists(
-      join(homeDir, '.gemini', 'antigravity', 'skills', 'ag-skill', 'references', 'notes.md'),
-    );
+    fileExists(join(homeDir, '.gemini', 'config', 'skills', 'ag-skill', 'references', 'notes.md'));
 
-    fileExists(join(homeDir, '.gemini', 'antigravity', 'mcp_config.json'));
-    validJson(join(homeDir, '.gemini', 'antigravity', 'mcp_config.json'));
+    fileExists(join(homeDir, '.gemini', 'config', 'mcp_config.json'));
+    validJson(join(homeDir, '.gemini', 'config', 'mcp_config.json'));
     expect(
-      JSON.parse(readText(join(homeDir, '.gemini', 'antigravity', 'mcp_config.json'))).mcpServers,
+      JSON.parse(readText(join(homeDir, '.gemini', 'config', 'mcp_config.json'))).mcpServers,
     ).toHaveProperty('demo');
-    dirFilesExactly(join(homeDir, '.gemini', 'antigravity'), [
+    dirFilesExactly(join(homeDir, '.gemini'), [
       'GEMINI.md',
-      'mcp_config.json',
-      'skills/ag-skill/SKILL.md',
-      'skills/ag-skill/references/notes.md',
-      'workflows/ship.md',
+      'antigravity/global_workflows/ship.md',
+      'config/mcp_config.json',
+      'config/skills/ag-skill/SKILL.md',
+      'config/skills/ag-skill/references/notes.md',
     ]);
 
     rmSync(canonicalDir, { recursive: true, force: true });

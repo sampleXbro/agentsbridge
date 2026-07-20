@@ -5,7 +5,11 @@ import { getBuiltinTargetDefinition } from '../../../../src/targets/catalog/buil
 import { generate } from '../../../../src/core/generate/engine.js';
 import type { ValidatedConfig } from '../../../../src/config/core/schema.js';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
-import { WARP_SKILLS_DIR, WARP_GLOBAL_SKILLS_DIR } from '../../../../src/targets/warp/constants.js';
+import {
+  WARP_SKILLS_DIR,
+  WARP_GLOBAL_SKILLS_DIR,
+  WARP_GLOBAL_MCP_FILE,
+} from '../../../../src/targets/warp/constants.js';
 
 describe('warp global layout', () => {
   const descriptor = getBuiltinTargetDefinition('warp')!;
@@ -27,6 +31,20 @@ describe('warp global layout', () => {
     expect(descriptor.globalSupport!.capabilities.rules).toBe('none');
     expect(descriptor.globalSupport!.capabilities.skills).toBe('native');
     expect(descriptor.capabilities.rules).toBe('native');
+  });
+
+  it('globalSupport.capabilities has mcp native (project also native)', () => {
+    expect(descriptor.globalSupport!.capabilities.mcp).toBe('native');
+    expect(descriptor.capabilities.mcp).toBe('native');
+  });
+
+  it('rewriteGeneratedPath passes through the global mcp path unchanged', () => {
+    const rewrite = descriptor.globalSupport!.layout.rewriteGeneratedPath!;
+    expect(rewrite(WARP_GLOBAL_MCP_FILE)).toBe(WARP_GLOBAL_MCP_FILE);
+  });
+
+  it('managedOutputs.files includes the global mcp file', () => {
+    expect(descriptor.globalSupport!.layout.managedOutputs.files).toContain(WARP_GLOBAL_MCP_FILE);
   });
 
   it('globalSupport has detection paths', () => {
@@ -110,5 +128,32 @@ describe('warp global frontmatter preservation', () => {
     expect(skill!.content).toContain('name: debugging');
     expect(skill!.content).toContain('description: Debug workflow');
     expect(skill!.content).toContain('# Debugging');
+  });
+
+  it('emits ~/.warp/.mcp.json from canonical MCP servers in global mode', async () => {
+    const results = await generate({
+      config: {
+        version: 1,
+        targets: ['warp'],
+        features: ['mcp'],
+        extends: [],
+        overrides: {},
+        collaboration: { strategy: 'merge', lock_features: [] },
+      } as ValidatedConfig,
+      canonical: makeCanonical({
+        mcp: {
+          mcpServers: {
+            context7: { type: 'stdio', command: 'npx', args: ['-y', 'context7'], env: {} },
+          },
+        },
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const mcp = results.find((r) => r.target === 'warp' && r.path === WARP_GLOBAL_MCP_FILE);
+    expect(mcp).toBeDefined();
+    const parsed = JSON.parse(mcp!.content) as Record<string, Record<string, unknown>>;
+    expect(parsed.mcpServers).toHaveProperty('context7');
   });
 });

@@ -1,8 +1,9 @@
 /**
  * Kilo Code-specific lint hooks.
  *
- * Kilo has no user-facing lifecycle hook system, so canonical hooks cannot be
- * projected. A warning surfaces the gap to users.
+ * Kilo supports hooks only via auto-loaded plugins (`.kilo/plugin/*.{ts,js}`),
+ * which agentsmesh does not generate — so canonical hooks cannot be projected
+ * and a warning surfaces the gap to users.
  *
  * Permissions are natively supported via `kilo.jsonc` (`permission` key) and
  * do not require a lint warning.
@@ -21,7 +22,7 @@ export function lintHooks(canonical: CanonicalFiles): LintDiagnostic[] {
     createWarning(
       '.agentsmesh/hooks.yaml',
       'kilo-code',
-      'kilo-code does not support user-defined lifecycle hooks; canonical hooks are not projected.',
+      'Kilo Code hooks are supported via auto-loaded plugins at .kilo/plugin/*.{ts,js}; agentsmesh does not generate plugin files yet. Configure hooks manually.',
     ),
   ];
 }

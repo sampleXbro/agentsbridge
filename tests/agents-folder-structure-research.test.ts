@@ -9,7 +9,9 @@
  * - Cursor: .cursorrules (legacy; we use .cursor/rules/), .cursor/sandbox.json and .cursor/environment.json (no canonical schema yet)
  * - Copilot: .github/copilot/pull_request_review.json
  * - Gemini: .gemini/.env, .gemini/system.md, .gemini/sandbox-* (skills now supported)
- * - Cline: .clinerules flat file (legacy; we use .clinerules/*.md)
+ * - Cline: standalone CLI paths per docs.cline.bot/cli/cli-reference (.cline/rules/,
+ *   .cline/hooks/, .cline/skills/, .cline/mcp.json, .cline/agents.yaml); the legacy
+ *   flat-file `.clinerules` convention is no longer generated or imported.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -367,7 +369,7 @@ describe('agents-folder-structure-research: Cursor (docs §2)', () => {
     agents: '.cursor/agents/',
     skills: '.cursor/skills/',
     // Gaps: .cursor/sandbox.json, .cursor/environment.json (no canonical schema yet)
-    // Not emitted: .cursor/settings.json (no native Cursor tool-permission file)
+    // Permissions: native — emitted to .cursor/cli.json (project) or ~/.cursor/cli-config.json (global)
     // Not emitted: .cursorindexingignore (community-sourced, not official)
   };
   // Gaps: .cursorrules (legacy — we generate .cursor/rules/)
@@ -486,7 +488,7 @@ describe('agents-folder-structure-research: Cursor (docs §2)', () => {
     expect(s!.content).toContain('QA checklist.');
   });
 
-  it('does not emit .cursor/settings.json for permissions (no native Cursor tool-permission file)', async () => {
+  it('emits .cursor/cli.json for permissions (native capability) and never .cursor/settings.json', async () => {
     const canonical = fullCanonical({
       rootBody: '# Root',
       permissions: { allow: ['Read'], deny: [] },
@@ -496,6 +498,13 @@ describe('agents-folder-structure-research: Cursor (docs §2)', () => {
       canonical,
       projectRoot: TEST_DIR,
     });
+    // Positive assertion: the native permissions file must be present
+    const cliJson = results.find((r) => r.path === '.cursor/cli.json');
+    expect(cliJson).toBeDefined();
+    const parsed = JSON.parse(cliJson!.content) as Record<string, unknown>;
+    expect(parsed).toHaveProperty('permissions');
+    expect((parsed.permissions as Record<string, unknown>).allow).toEqual(['Read']);
+    // settings.json must not appear — permissions are not stored there
     expect(results.every((r) => r.path !== '.cursor/settings.json')).toBe(true);
   });
 
@@ -751,14 +760,13 @@ describe('agents-folder-structure-research: Gemini CLI (docs §4)', () => {
   });
 });
 
-describe('agents-folder-structure-research: Cline (docs §5)', () => {
+describe('agents-folder-structure-research: Cline (docs.cline.bot/cli/cli-reference)', () => {
   const EXPECTED_PATHS = {
-    rulesDir: '.clinerules/', // research: .clinerules/*.md (directory-based)
-    ignore: '.clineignore', // research: .clinerules (flat) — we use .clinerules/*.md + .clineignore
-    mcp: '.cline/cline_mcp_settings.json',
+    rulesDir: '.cline/rules/', // CLI docs: `.cline/rules/` (directory-based, project-only)
+    ignore: '.clineignore', // docs.cline.bot/customization/clineignore: project-only, no global equivalent
+    mcp: '.cline/mcp.json', // CLI docs: `.cline/mcp.json` (project-only)
     skillsDir: '.cline/skills/',
   };
-  // Gaps: .clinerules flat file (legacy) — we use .clinerules/*.md
 
   it('generates AGENTS.md from root rule', async () => {
     const results = await generate({
@@ -771,7 +779,7 @@ describe('agents-folder-structure-research: Cline (docs §5)', () => {
     expect(r!.content).toContain('Cline Root');
   });
 
-  it('generates .clinerules/*.md for non-root rules', async () => {
+  it('generates .cline/rules/*.md for non-root rules', async () => {
     const canonical = fullCanonical({
       rootBody: '# Root',
       nonRootRules: [
@@ -787,7 +795,7 @@ describe('agents-folder-structure-research: Cline (docs §5)', () => {
       canonical,
       projectRoot: TEST_DIR,
     });
-    const tsRule = results.find((x) => x.path === '.clinerules/ts.md');
+    const tsRule = results.find((x) => x.path === '.cline/rules/ts.md');
     expect(tsRule).toBeDefined();
   });
 
@@ -820,7 +828,7 @@ describe('agents-folder-structure-research: Cline (docs §5)', () => {
     expect(s!.content).toContain('Debug steps.');
   });
 
-  it('generates .cline/cline_mcp_settings.json for MCP', async () => {
+  it('generates .cline/mcp.json for MCP', async () => {
     const canonical = fullCanonical({
       rootBody: '# Root',
       mcp: {
@@ -980,7 +988,7 @@ describe('agents-folder-structure-research: Kiro (docs §8)', () => {
     expect(skill!.content).toContain('Review logs first.');
   });
 
-  it('generates .kiro/hooks/*.kiro.hook from canonical hooks', async () => {
+  it('generates .kiro/hooks/*.json from canonical hooks', async () => {
     const canonical = fullCanonical({
       rootBody: '# Root',
       hooks: {
@@ -992,9 +1000,9 @@ describe('agents-folder-structure-research: Kiro (docs §8)', () => {
       canonical,
       projectRoot: TEST_DIR,
     });
-    const hook = results.find((x) => x.path === '.kiro/hooks/user-prompt-submit-1.kiro.hook');
+    const hook = results.find((x) => x.path === '.kiro/hooks/user-prompt-submit-1.json');
     expect(hook).toBeDefined();
-    expect(hook!.content).toContain('"type": "promptSubmit"');
+    expect(hook!.content).toContain('"trigger": "UserPromptSubmit"');
     expect(hook!.content).toContain('Capture intent.');
   });
 
@@ -1152,7 +1160,7 @@ describe('agents-folder-structure-research: Windsurf (docs §7)', () => {
  * Cursor:  .cursorrules (legacy — we use .cursor/rules/), .cursor/sandbox.json and .cursor/environment.json (no canonical schema yet)
  * Copilot: .github/copilot/pull_request_review.json
  * Gemini:  .gemini/.env, .gemini/system.md, .gemini/sandbox-* (skills now supported)
- * Cline:   .clinerules flat file (legacy — we use .clinerules/*.md)
+ * Cline:   legacy flat-file `.clinerules` (IDE-era) — we use CLI-documented .cline/rules/*.md
  * Codex:   nested `AGENTS.md` / `AGENTS.override.md` for advisory rules; `.rules` only for `codex_emit: execution` (§11 in codex-cli-project-level-advanced.md)
  * Kiro: no repo-native commands or agents directory for IDE-first support
  * Windsurf: .windsurfrules/.windsurfignore (legacy), subdirectory AGENTS.md

@@ -20,7 +20,7 @@ export function lintHooks(canonical: CanonicalFiles): LintDiagnostic[] {
     createWarning(
       '.agentsmesh/hooks.yaml',
       'opencode',
-      'opencode hooks are plugin-based (TypeScript/JavaScript); canonical config hooks are not projected.',
+      'OpenCode hooks are supported via auto-loaded plugins at .opencode/plugins/; agentsmesh does not generate plugin files yet. Configure hooks manually.',
     ),
   ];
 }

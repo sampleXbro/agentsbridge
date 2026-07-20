@@ -104,7 +104,7 @@ Project-only paths such as `.agents/workflows/` are not scanned in global mode.
 
 ### Cline
 
-`agentsmesh generate --global --targets cline` writes rules and workflows to `~/Documents/Cline/`, but the current importer reads Cline's project-style paths under `$HOME` (`~/.clinerules`, `~/.cline/skills/`, `~/.cline/cline_mcp_settings.json`, `~/.clineignore`). Generated hook scripts under `~/Documents/Cline/Hooks/` are not imported back into `hooks.yaml` yet.
+`agentsmesh generate --global --targets cline` writes rules to `~/.cline/data/settings/rules/`, workflows to `~/Documents/Cline/Workflows/`, hooks to `~/.cline/hooks/`, and skills to `~/.cline/data/settings/skills/` — the importer reads back from these same documented global directories. MCP, ignore, and agents have no documented global surface (per docs.cline.bot/cli/cli-reference) and are project-only; they are neither generated nor imported at global scope.
 
 ### Windsurf
 

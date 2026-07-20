@@ -137,7 +137,8 @@ You are a security expert.
         'Use TypeScript strict mode',
       );
       fileExists(join(homeDir, '.copilot', 'skills', 'security-audit', 'SKILL.md'));
-      fileExists(join(homeDir, '.copilot', 'prompts', 'audit.prompt.md'));
+      // Copilot CLI has no prompt-file/slash-command mechanism — no global commands surface.
+      fileNotExists(join(homeDir, '.copilot', 'prompts', 'audit.prompt.md'));
     });
 
     it('generates Windsurf files in ~/.codeium/windsurf/', async () => {
@@ -174,12 +175,13 @@ You are a security expert.
       fileExists(join(homeDir, '.kiro', 'skills', 'security-audit', 'SKILL.md'));
     });
 
-    it('generates Cline files in ~/.cline/ and ~/.cline/AGENTS.md', async () => {
+    it('generates Cline files in ~/.cline/data/settings/skills/', async () => {
       const r = await runCli('generate --global --targets cline', projectDir);
       expect(r.exitCode).toBe(0);
 
-      // Cline in global mode may place AGENTS.md differently - check actual behavior
-      fileExists(join(homeDir, '.cline', 'skills', 'security-audit', 'SKILL.md'));
+      fileExists(
+        join(homeDir, '.cline', 'data', 'settings', 'skills', 'security-audit', 'SKILL.md'),
+      );
     });
 
     it('generates Continue files in ~/.continue/', async () => {
@@ -211,6 +213,38 @@ You are a security expert.
       const instructions = readFileSync(join(homeDir, '.codex', 'AGENTS.md'), 'utf-8');
       expect(instructions).toContain('Use TypeScript strict mode');
       fileExists(join(homeDir, '.codex', 'agents', 'security-expert.toml'));
+    });
+  });
+
+  describe('warp global MCP', () => {
+    beforeEach(() => {
+      mkdirSync(join(homeDir, '.agentsmesh'), { recursive: true });
+      writeFileSync(
+        join(homeDir, '.agentsmesh', 'agentsmesh.yaml'),
+        `version: 1
+targets: [warp]
+features: [mcp]
+`,
+      );
+      writeFileSync(
+        join(homeDir, '.agentsmesh', 'mcp.json'),
+        JSON.stringify(
+          { mcpServers: { context7: { command: 'npx', args: ['-y', 'context7'] } } },
+          null,
+          2,
+        ),
+      );
+    });
+
+    it('generates ~/.warp/.mcp.json (not project .mcp.json)', async () => {
+      const r = await runCli('generate --global --targets warp', projectDir);
+      expect(r.exitCode).toBe(0);
+
+      fileExists(join(homeDir, '.warp', '.mcp.json'));
+      fileContains(join(homeDir, '.warp', '.mcp.json'), 'mcpServers');
+      fileContains(join(homeDir, '.warp', '.mcp.json'), 'context7');
+      fileNotExists(join(projectDir, '.mcp.json'));
+      fileNotExists(join(homeDir, '.mcp.json'));
     });
   });
 

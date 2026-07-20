@@ -13,9 +13,11 @@
  * `.factory/mcp.json` for MCP servers.
  *
  * There is no dedicated rules directory — non-root rules are embedded in the
- * root file. Commands are merged into skills. Hooks live in settings.json
- * (not a standalone file). No `.factoryignore` — relies on `.gitignore`.
- * Permissions are CLI-flag-only (`--skip-permissions-unsafe`).
+ * root file. Commands are merged into skills. Hooks live in a standalone
+ * `hooks.json` file at each scope (`.factory/hooks.json` project,
+ * `~/.factory/hooks.json` global). Settings live in `settings.json`
+ * (`commandAllowlist`, `commandDenylist`). No `.factoryignore` — relies on
+ * `.gitignore`.
  *
  * Assumptions (documented from official docs at docs.factory.ai):
  *   - Droids use `.md` files with YAML frontmatter in `.factory/droids/`
@@ -40,11 +42,17 @@ export const FACTORY_DROID_GLOBAL_COMMANDS_DIR = '.factory/commands';
 export const FACTORY_DROID_GLOBAL_DROIDS_DIR = '.factory/droids';
 export const FACTORY_DROID_GLOBAL_MCP_FILE = '.factory/mcp.json';
 
+// Hooks: primary standalone files (per docs.factory.ai/reference/hooks-reference)
 export const FACTORY_DROID_HOOKS_FILE = '.factory/hooks.json';
 export const FACTORY_DROID_GLOBAL_HOOKS_FILE = '.factory/hooks.json';
+
+// Settings: permissions config (commandAllowlist / commandDenylist)
+export const FACTORY_DROID_SETTINGS_FILE = '.factory/settings.json';
+export const FACTORY_DROID_GLOBAL_SETTINGS_FILE = '.factory/settings.json';
 
 // Canonical paths
 export const FACTORY_DROID_CANONICAL_RULES_DIR = '.agentsmesh/rules';
 export const FACTORY_DROID_CANONICAL_AGENTS_DIR = '.agentsmesh/agents';
 export const FACTORY_DROID_CANONICAL_COMMANDS_DIR = '.agentsmesh/commands';
 export const FACTORY_DROID_CANONICAL_HOOKS = '.agentsmesh/hooks.yaml';
+export const FACTORY_DROID_CANONICAL_PERMISSIONS = '.agentsmesh/permissions.yaml';

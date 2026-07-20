@@ -17,7 +17,7 @@ describe('generate MCP transport variants (integration)', () => {
     if (testDir) rmSync(testDir, { recursive: true, force: true });
   });
 
-  it('preserves URL-based MCP for Claude and Cursor while filtering Codex to stdio', () => {
+  it('preserves URL-based MCP for Claude, Cursor, and Codex (remote/Streamable HTTP)', () => {
     writeFileSync(
       join(testDir, 'agentsmesh.yaml'),
       `version: 1
@@ -60,6 +60,7 @@ features: [rules, mcp]
     );
     const codexConfig = readFileSync(join(testDir, '.codex', 'config.toml'), 'utf-8');
     expect(codexConfig).toContain('command = "npx"');
-    expect(codexConfig).not.toContain('https://example.com/mcp');
+    expect(codexConfig).toContain('url = "https://example.com/mcp"');
+    expect(codexConfig).toContain('bearer_token_env_var = "TOKEN"');
   });
 });

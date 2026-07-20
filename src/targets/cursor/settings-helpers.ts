@@ -9,6 +9,8 @@ import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/filesystem/fs
 import { stringify as yamlStringify } from 'yaml';
 import {
   CURSOR_SETTINGS,
+  CURSOR_CLI_JSON,
+  CURSOR_GLOBAL_CLI_CONFIG,
   CURSOR_HOOKS,
   CURSOR_IGNORE,
   CURSOR_INDEXING_IGNORE,
@@ -16,10 +18,15 @@ import {
   CURSOR_CANONICAL_HOOKS,
   CURSOR_CANONICAL_IGNORE,
 } from './constants.js';
+import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 
 export { cursorHooksToCanonical };
 
-export async function importSettings(projectRoot: string, results: ImportResult[]): Promise<void> {
+export async function importSettings(
+  projectRoot: string,
+  results: ImportResult[],
+  scope: TargetLayoutScope = 'project',
+): Promise<void> {
   let hooksImportedFromHooksJson = false;
   const hooksJsonPath = join(projectRoot, CURSOR_HOOKS);
   const hooksJsonContent = await readFileSafe(hooksJsonPath);
@@ -47,53 +54,69 @@ export async function importSettings(projectRoot: string, results: ImportResult[
     }
   }
 
-  const settingsPath = join(projectRoot, CURSOR_SETTINGS);
-  const content = await readFileSafe(settingsPath);
-  if (!content) return;
-  let settings: Record<string, unknown>;
-  try {
-    settings = JSON.parse(content) as Record<string, unknown>;
-  } catch {
-    return;
-  }
-
-  const rawPerms = settings.permissions;
-  if (rawPerms && typeof rawPerms === 'object' && !Array.isArray(rawPerms)) {
-    const perms = rawPerms as Record<string, unknown>;
-    const allow = Array.isArray(perms.allow)
-      ? (perms.allow as string[]).filter((s) => typeof s === 'string')
-      : [];
-    const deny = Array.isArray(perms.deny)
-      ? (perms.deny as string[]).filter((s) => typeof s === 'string')
-      : [];
-    if (allow.length > 0 || deny.length > 0) {
-      const permContent = yamlStringify({ allow, deny });
-      const destPath = join(projectRoot, CURSOR_CANONICAL_PERMISSIONS);
-      await mkdirp(dirname(destPath));
-      await writeFileAtomic(destPath, permContent);
-      results.push({
-        fromTool: 'cursor',
-        fromPath: settingsPath,
-        toPath: CURSOR_CANONICAL_PERMISSIONS,
-        feature: 'permissions',
-      });
+  // Permissions: read from the scope-appropriate CLI config file.
+  // Project scope: .cursor/cli.json; Global scope: .cursor/cli-config.json
+  // (per https://cursor.com/docs/cli/reference/permissions — distinct filenames).
+  const cliPermPath = scope === 'global' ? CURSOR_GLOBAL_CLI_CONFIG : CURSOR_CLI_JSON;
+  const cliJsonPath = join(projectRoot, cliPermPath);
+  const cliContent = await readFileSafe(cliJsonPath);
+  if (cliContent) {
+    try {
+      const cliJson = JSON.parse(cliContent) as Record<string, unknown>;
+      const rawPerms = cliJson.permissions;
+      if (rawPerms && typeof rawPerms === 'object' && !Array.isArray(rawPerms)) {
+        const perms = rawPerms as Record<string, unknown>;
+        const allow = Array.isArray(perms.allow)
+          ? (perms.allow as string[]).filter((s) => typeof s === 'string')
+          : [];
+        const deny = Array.isArray(perms.deny)
+          ? (perms.deny as string[]).filter((s) => typeof s === 'string')
+          : [];
+        if (allow.length > 0 || deny.length > 0) {
+          const permContent = yamlStringify({ allow, deny });
+          const destPath = join(projectRoot, CURSOR_CANONICAL_PERMISSIONS);
+          await mkdirp(dirname(destPath));
+          await writeFileAtomic(destPath, permContent);
+          results.push({
+            fromTool: 'cursor',
+            fromPath: cliJsonPath,
+            toPath: CURSOR_CANONICAL_PERMISSIONS,
+            feature: 'permissions',
+          });
+        }
+      }
+    } catch {
+      /* ignore parse errors */
     }
   }
 
-  const rawHooks = !hooksImportedFromHooksJson ? settings.hooks : undefined;
-  if (rawHooks && typeof rawHooks === 'object' && !Array.isArray(rawHooks)) {
-    const canonicalHooks = cursorHooksToCanonical(rawHooks as Record<string, unknown>);
-    if (Object.keys(canonicalHooks).length > 0) {
-      const hooksContent = yamlStringify(canonicalHooks);
-      const destPath = join(projectRoot, CURSOR_CANONICAL_HOOKS);
-      await mkdirp(dirname(destPath));
-      await writeFileAtomic(destPath, hooksContent);
-      results.push({
-        fromTool: 'cursor',
-        fromPath: settingsPath,
-        toPath: CURSOR_CANONICAL_HOOKS,
-        feature: 'hooks',
-      });
+  // Hooks fallback: read from .cursor/settings.json only when hooks.json
+  // was not found (legacy Cursor versions stored hooks there).
+  if (!hooksImportedFromHooksJson) {
+    const settingsPath = join(projectRoot, CURSOR_SETTINGS);
+    const settingsContent = await readFileSafe(settingsPath);
+    if (settingsContent) {
+      try {
+        const settings = JSON.parse(settingsContent) as Record<string, unknown>;
+        const rawHooks = settings.hooks;
+        if (rawHooks && typeof rawHooks === 'object' && !Array.isArray(rawHooks)) {
+          const canonicalHooks = cursorHooksToCanonical(rawHooks as Record<string, unknown>);
+          if (Object.keys(canonicalHooks).length > 0) {
+            const hooksContent = yamlStringify(canonicalHooks);
+            const destPath = join(projectRoot, CURSOR_CANONICAL_HOOKS);
+            await mkdirp(dirname(destPath));
+            await writeFileAtomic(destPath, hooksContent);
+            results.push({
+              fromTool: 'cursor',
+              fromPath: settingsPath,
+              toPath: CURSOR_CANONICAL_HOOKS,
+              feature: 'hooks',
+            });
+          }
+        }
+      } catch {
+        /* ignore parse errors */
+      }
     }
   }
 }

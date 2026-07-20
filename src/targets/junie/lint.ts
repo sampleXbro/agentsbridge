@@ -23,3 +23,31 @@ export function lintMcp(canonical: CanonicalFiles): LintDiagnostic[] {
   }
   return diagnostics;
 }
+
+export function lintHooks(canonical: CanonicalFiles): LintDiagnostic[] {
+  if (!canonical.hooks) return [];
+  const hasEntries = Object.values(canonical.hooks).some(
+    (entries) => Array.isArray(entries) && entries.length > 0,
+  );
+  if (!hasEntries) return [];
+  return [
+    createWarning(
+      '.agentsmesh/hooks.yaml',
+      'junie',
+      'Junie project hooks require --config-location to take effect; hooks from the default project config file are ignored by Junie for safety. Use ~/.junie/config.json for personal hooks (global scope).',
+    ),
+  ];
+}
+
+export function lintPermissions(canonical: CanonicalFiles): LintDiagnostic[] {
+  if (!canonical.permissions) return [];
+  const { allow = [], deny = [], ask = [] } = canonical.permissions;
+  if (allow.length === 0 && deny.length === 0 && ask.length === 0) return [];
+  return [
+    createWarning(
+      '.agentsmesh/permissions.yaml',
+      'junie',
+      'Junie project config supports only a coarse brave boolean flag (auto-approve mode); granular allow/deny/ask rules are not available at project scope. Use ~/.junie/allowlist.json (global scope) for fine-grained permissions.',
+    ),
+  ];
+}

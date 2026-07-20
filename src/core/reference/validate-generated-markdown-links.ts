@@ -107,15 +107,15 @@ const OUTPUT_DIR_TO_FEATURE: Record<string, string> = {
 
 /**
  * Target-specific top-level rule dirs that are themselves the "rules" output
- * (no per-feature subdirectory). Each entry maps the leading directory of the
+ * (no per-feature subdirectory, i.e. `<top-level-dir>/<name>.md` with no
+ * middle feature segment). Each entry maps the leading directory of the
  * generated output path to a canonical feature.
  *
- * Examples:
- *   `.clinerules/code-review.md` → rules/code-review
+ * No target currently needs this (Cline's rules now live at
+ * `.cline/rules/<name>.md`, a 3-segment path already matched by
+ * `OUTPUT_DIR_TO_FEATURE` above) — kept as an extension point.
  */
-const TOP_LEVEL_DIR_TO_FEATURE: Record<string, string> = {
-  '.clinerules': 'rules',
-};
+const TOP_LEVEL_DIR_TO_FEATURE: Record<string, string> = {};
 
 /**
  * Target-specific double-extensions that wrap a canonical entity name.

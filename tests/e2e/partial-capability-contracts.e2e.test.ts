@@ -22,7 +22,7 @@ describe('partial capability subset contracts', () => {
     dir = '';
   });
 
-  it('keeps the exact Cursor permissions subset and emits a deterministic warning', async () => {
+  it('generates .cursor/cli.json for Cursor permissions (native capability, no partial warning)', async () => {
     dir = createTestProject();
     writeProject(dir, 'cursor', ['permissions']);
     writeFileSync(
@@ -31,10 +31,17 @@ describe('partial capability subset contracts', () => {
     );
 
     expect((await runCli('generate --targets cursor', dir)).exitCode).toBe(0);
+    // Permissions are native — written to .cursor/cli.json, not .cursor/permissions.json
     fileNotExists(join(dir, '.cursor', 'permissions.json'));
+    const cliJson = readJson(join(dir, '.cursor', 'cli.json'));
+    expect(cliJson['permissions']).toEqual({
+      allow: ['Read', 'Bash(npm run test:*)'],
+      deny: ['Read(./.env)', 'Bash(curl:*)'],
+    });
 
+    // Native capability — no stale partial-fidelity warning
     const lintResult = await runCli('lint --targets cursor', dir);
-    expect(lintResult.stdout + lintResult.stderr).toContain(
+    expect(lintResult.stdout + lintResult.stderr).not.toContain(
       'Cursor permissions are partial; tool-level allow/deny may lose fidelity.',
     );
   });
@@ -57,6 +64,9 @@ describe('partial capability subset contracts', () => {
         'SubagentStart:',
         '  - matcher: ".*"',
         '    command: echo start',
+        'SessionEnd:',
+        '  - matcher: ".*"',
+        '    command: echo end',
         '',
       ].join('\n'),
     );
@@ -82,11 +92,68 @@ describe('partial capability subset contracts', () => {
           hooks: [{ name: 'Notification-1', type: 'command', command: 'echo notify' }],
         },
       ],
+      BeforeAgent: [
+        {
+          matcher: '.*',
+          hooks: [{ name: 'BeforeAgent-1', type: 'command', command: 'echo start' }],
+        },
+      ],
     });
 
     const lintResult = await runCli('lint --targets gemini-cli', dir);
     expect(lintResult.stdout + lintResult.stderr).toContain(
-      'SubagentStart is not supported by gemini-cli; only PreToolUse, PostToolUse, and Notification are projected.',
+      'SessionEnd is not supported by gemini-cli; only PreToolUse, PostToolUse, Notification, SubagentStart, SubagentStop, and SessionStart are projected.',
+    );
+  });
+
+  it('emits partial-capability warnings for all 5 jules partial features', async () => {
+    dir = createTestProject();
+    mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
+    mkdirSync(join(dir, '.agentsmesh', 'commands'), { recursive: true });
+    writeFileSync(
+      join(dir, 'agentsmesh.yaml'),
+      'version: 1\ntargets: [jules]\nfeatures: [rules, commands, mcp, hooks, ignore, permissions]\n',
+    );
+    writeFileSync(join(dir, '.agentsmesh', 'rules', '_root.md'), '---\nroot: true\n---\n# Root\n');
+    writeFileSync(
+      join(dir, '.agentsmesh', 'commands', 'review.md'),
+      '---\ndescription: Review code\n---\nReview the diff.',
+    );
+    writeFileSync(
+      join(dir, '.agentsmesh', 'mcp.json'),
+      JSON.stringify(
+        { mcpServers: { context7: { command: 'npx', args: ['-y', '@upstash/context7-mcp'] } } },
+        null,
+        2,
+      ),
+    );
+    writeFileSync(
+      join(dir, '.agentsmesh', 'hooks.yaml'),
+      'PreToolUse:\n  - matcher: Bash\n    command: echo pre\n',
+    );
+    writeFileSync(join(dir, '.agentsmesh', 'ignore'), 'node_modules\n.env\n');
+    writeFileSync(
+      join(dir, '.agentsmesh', 'permissions.yaml'),
+      'allow:\n  - Bash\ndeny:\n  - Read(./.env)\n',
+    );
+
+    expect((await runCli('generate --targets jules', dir)).exitCode).toBe(0);
+
+    const lintResult = await runCli('lint --targets jules', dir);
+    const output = lintResult.stdout + lintResult.stderr;
+
+    expect(output).toContain('Jules has no command system; canonical commands are not projected.');
+    expect(output).toContain(
+      'Jules is a cloud-based agent with no MCP support; canonical MCP servers are not projected.',
+    );
+    expect(output).toContain(
+      'Jules has no lifecycle hook system; canonical hooks are not projected.',
+    );
+    expect(output).toContain(
+      'Jules is a cloud-based agent with no dedicated ignore file; canonical ignore patterns are not projected.',
+    );
+    expect(output).toContain(
+      'Jules has no permissions system; canonical permissions are not projected.',
     );
   });
 
@@ -137,9 +204,7 @@ describe('partial capability subset contracts', () => {
     expect(readJson(join(dir, '.github', 'hooks', 'agentsmesh.json'))).toEqual({
       version: 1,
       hooks: {
-        preToolUse: [
-          { type: 'command', bash: './scripts/pretooluse-0.sh', comment: 'Matcher: Bash' },
-        ],
+        preToolUse: [{ type: 'command', bash: './scripts/pretooluse-0.sh', matcher: 'Bash' }],
       },
     });
 

@@ -68,7 +68,7 @@ Detect overlapping output paths across features. When two features would write t
 
 ### Step 6: Write output
 
-Create target directories if they don't exist. Write all `{path, content}` pairs to disk. Update `.agentsmesh/.lock` with checksums of all written files.
+Create target directories if they don't exist. Write all `{path, content}` pairs to disk. Update `.agentsmesh/.lock` with canonical-source checksums and an `outputs` map of every generated file's checksum (so `agentsmesh check` can later detect direct edits to generated files).
 
 ### Step 7: Clean stale files
 
@@ -113,21 +113,28 @@ Write the restored canonical files to `.agentsmesh/`. Existing files are merged 
 
 ## Lock file
 
-`.agentsmesh/.lock` is a JSON file managed by the CLI:
+`.agentsmesh/.lock` is a YAML file managed by the CLI:
 
-```json
-{
-  "version": 1,
-  "generated": "2026-03-28T10:00:00Z",
-  "files": {
-    ".claude/rules/_root.md": "sha256:abc123...",
-    ".claude/rules/security.md": "sha256:def456...",
-    ".cursor/rules/_root.mdc": "sha256:ghi789...",
-    "..."
-  }
-}
+```yaml
+generated_at: 2026-03-28T10:00:00Z
+generated_by: alice
+lib_version: 0.30.1
+checksums:
+  rules/_root.md: sha256:abc123...
+  rules/security.md: sha256:def456...
+extends: {}
+packs: {}
+outputs:
+  .claude/rules/_root.md: sha256:ghi789...
+  .cursor/rules/_root.mdc: sha256:jkl012...
+  AGENTS.md: sha256:mno345...
 ```
 
-`agentsmesh check` reads this file and compares hashes against what's currently on disk. Any mismatch is reported as drift.
+- `checksums` — hashes of the canonical `.agentsmesh/` sources (paths relative to `.agentsmesh/`).
+- `outputs` — hashes of every generated file written or verified at generate time (paths relative to the project root, forward-slashed).
+
+`agentsmesh check` reads this file and re-hashes both maps against what's currently on disk. A canonical mismatch or a changed/deleted generated output is reported as drift.
+
+Filtered generates (`--targets`/`--features`) merge their outputs per-path into the existing `outputs` map without pruning stale entries; a full `agentsmesh generate` replaces the map, which is when entries for disabled targets drop off. `agentsmesh merge` omits the `outputs` map entirely, so output verification is reported as skipped until you regenerate.
 
 The lock file is committed to git. It should not be edited manually.

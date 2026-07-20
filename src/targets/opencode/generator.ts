@@ -7,14 +7,17 @@
  *   - `.opencode/commands/<name>.md` — slash commands (with optional frontmatter)
  *   - `.opencode/agents/<slug>.md`   — custom agents (with YAML frontmatter)
  *   - `.opencode/skills/`            — skill bundles
- *   - `opencode.json`               — MCP servers under `mcp` key
+ *   - `opencode.json`               — MCP servers under `mcp` key, plus
+ *     `instructions` (additional rules glob) and `permission` (permissions)
  */
 
 import { basename } from 'node:path';
-import type { CanonicalFiles } from '../../core/types.js';
+import type { CanonicalFiles, CanonicalRule } from '../../core/types.js';
 import type { McpServer } from '../../core/mcp-types.js';
+import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 import { generateEmbeddedSkills } from '../import/embedded-skill.js';
 import { serializeFrontmatter } from '../../utils/text/markdown.js';
+import { mapAgentToolsToOpenCodePermission } from './permission-map.js';
 import {
   OPENCODE_TARGET,
   OPENCODE_ROOT_RULE,
@@ -23,11 +26,18 @@ import {
   OPENCODE_AGENTS_DIR,
   OPENCODE_SKILLS_DIR,
   OPENCODE_CONFIG_FILE,
+  OPENCODE_RULES_INSTRUCTIONS_GLOB,
+  OPENCODE_GLOBAL_RULES_INSTRUCTIONS_GLOB,
 } from './constants.js';
 
 export interface OpenCodeOutput {
   path: string;
   content: string;
+}
+
+function isAdditionalRule(rule: CanonicalRule): boolean {
+  if (rule.root) return false;
+  return rule.targets.length === 0 || rule.targets.includes(OPENCODE_TARGET);
 }
 
 export function generateRules(canonical: CanonicalFiles): OpenCodeOutput[] {
@@ -41,9 +51,7 @@ export function generateRules(canonical: CanonicalFiles): OpenCodeOutput[] {
     });
   }
 
-  for (const rule of canonical.rules) {
-    if (rule.root) continue;
-    if (rule.targets.length > 0 && !rule.targets.includes(OPENCODE_TARGET)) continue;
+  for (const rule of canonical.rules.filter(isAdditionalRule)) {
     const slug = basename(rule.source, '.md');
     const frontmatter: Record<string, unknown> = {};
     if (rule.description) frontmatter.description = rule.description;
@@ -59,6 +67,27 @@ export function generateRules(canonical: CanonicalFiles): OpenCodeOutput[] {
   }
 
   return outputs;
+}
+
+/**
+ * Generate the `instructions` array entry in `opencode.json` that makes
+ * `.opencode/rules/*.md` actually load — OpenCode does not auto-scan that
+ * directory (opencode.ai/docs/rules); only files listed in `instructions`
+ * are read, alongside `AGENTS.md`.
+ */
+export function generateInstructions(
+  canonical: CanonicalFiles,
+  scope: TargetLayoutScope,
+): OpenCodeOutput[] {
+  if (!canonical.rules.some(isAdditionalRule)) return [];
+  const glob =
+    scope === 'global' ? OPENCODE_GLOBAL_RULES_INSTRUCTIONS_GLOB : OPENCODE_RULES_INSTRUCTIONS_GLOB;
+  return [
+    {
+      path: OPENCODE_CONFIG_FILE,
+      content: JSON.stringify({ instructions: [glob] }, null, 2),
+    },
+  ];
 }
 
 export function generateCommands(canonical: CanonicalFiles): OpenCodeOutput[] {
@@ -78,8 +107,11 @@ export function generateAgents(canonical: CanonicalFiles): OpenCodeOutput[] {
     const frontmatter: Record<string, unknown> = { mode: 'subagent' };
     if (agent.description) frontmatter.description = agent.description;
     if (agent.model) frontmatter.model = agent.model;
-    if (agent.tools.length > 0) frontmatter.tools = agent.tools;
-    if (agent.disallowedTools.length > 0) frontmatter.disallowedTools = agent.disallowedTools;
+    // `tools` is deprecated (boolean-map shape, not a string array) and
+    // `disallowedTools` does not exist in OpenCode's schema at all — use the
+    // real `permission` object instead. See opencode.ai/docs/agents.
+    const permission = mapAgentToolsToOpenCodePermission(agent);
+    if (Object.keys(permission).length > 0) frontmatter.permission = permission;
     return {
       path: `${OPENCODE_AGENTS_DIR}/${slug}.md`,
       content: serializeFrontmatter(frontmatter, agent.body.trim() || ''),

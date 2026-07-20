@@ -7,6 +7,7 @@ import {
   generateAgents,
   generateMcp,
   generatePermissions,
+  generateInstructions,
   generateSkills,
 } from '../../../../src/targets/opencode/generator.js';
 import {
@@ -179,6 +180,53 @@ describe('generateRules (opencode)', () => {
   });
 });
 
+describe('generateInstructions (opencode)', () => {
+  const additionalRule = {
+    source: '/proj/.agentsmesh/rules/typescript.md',
+    root: false,
+    targets: [],
+    description: '',
+    globs: [],
+    body: 'Use strict TypeScript.',
+  };
+
+  it('emits a project-relative rules glob in opencode.json when additional rules exist', () => {
+    const canonical = makeCanonical({ rules: [additionalRule] });
+    const results = generateInstructions(canonical, 'project');
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(OPENCODE_CONFIG_FILE);
+    expect(JSON.parse(results[0].content)).toEqual({
+      instructions: [`${OPENCODE_RULES_DIR}/*.md`],
+    });
+  });
+
+  it('emits an absolute ~/-prefixed rules glob in global scope', () => {
+    const canonical = makeCanonical({ rules: [additionalRule] });
+    const results = generateInstructions(canonical, 'global');
+    expect(JSON.parse(results[0].content)).toEqual({
+      instructions: ['~/.config/opencode/rules/*.md'],
+    });
+  });
+
+  it('returns empty array when only a root rule exists (nothing to declare)', () => {
+    const canonical = makeCanonical({
+      rules: [{ ...additionalRule, source: '/proj/.agentsmesh/rules/_root.md', root: true }],
+    });
+    expect(generateInstructions(canonical, 'project')).toEqual([]);
+  });
+
+  it('returns empty array when a non-root rule is filtered to another target', () => {
+    const canonical = makeCanonical({
+      rules: [{ ...additionalRule, targets: ['claude-code'] }],
+    });
+    expect(generateInstructions(canonical, 'project')).toEqual([]);
+  });
+
+  it('returns empty array when there are no rules at all', () => {
+    expect(generateInstructions(makeCanonical(), 'project')).toEqual([]);
+  });
+});
+
 describe('generateCommands (opencode)', () => {
   it('generates command files in .opencode/commands/', () => {
     const canonical = makeCanonical({
@@ -298,7 +346,9 @@ describe('generateAgents (opencode)', () => {
     expect(generateAgents(canonical)[0].content).not.toContain('model:');
   });
 
-  it('writes tools and disallowedTools when present', () => {
+  it('writes a permission object mapped from tools/disallowedTools, never raw tools/disallowedTools keys', () => {
+    // OpenCode has no `disallowedTools` key at all, and `tools` is deprecated
+    // (boolean-map shape, not a string array) — see opencode.ai/docs/agents.
     const canonical = makeCanonical({
       agents: [
         makeAgent({
@@ -310,11 +360,21 @@ describe('generateAgents (opencode)', () => {
       ],
     });
     const content = generateAgents(canonical)[0].content;
-    expect(content).toContain('tools:');
-    expect(content).toContain('Read');
-    expect(content).toContain('Grep');
-    expect(content).toContain('disallowedTools:');
-    expect(content).toContain('Bash');
+    const parsed = yamlParse(content.split('\n---', 2)[0].replace(/^---\n?/, '')) as Record<
+      string,
+      unknown
+    >;
+    expect(parsed.permission).toEqual({ '*': 'deny', read: 'allow', grep: 'allow', bash: 'deny' });
+    expect(content).not.toContain('tools:');
+    expect(content).not.toContain('disallowedTools:');
+  });
+
+  it('omits permission entirely when no tools/disallowedTools present', () => {
+    const canonical = makeCanonical({
+      agents: [makeAgent({ source: '/proj/.agentsmesh/agents/free.md', body: 'Free agent.' })],
+    });
+    const content = generateAgents(canonical)[0].content;
+    expect(content).not.toContain('permission:');
   });
 
   it('produces slug from source basename without extension', () => {

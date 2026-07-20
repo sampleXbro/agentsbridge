@@ -1,3 +1,3 @@
 version: 1
-targets: [claude-code, cursor, copilot, gemini-cli, cline, codex-cli, windsurf, antigravity]
+targets: [claude-code, cursor, copilot, gemini-cli, cline, codex-cli, trae, windsurf, antigravity]
 features: [rules, commands, agents, skills, mcp, hooks, ignore, permissions]

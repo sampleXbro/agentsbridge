@@ -172,7 +172,7 @@ const globalCapabilities: TargetCapabilities = {
   agents: 'native',
   skills: 'native',
   mcp: 'native',
-  hooks: 'partial',
+  hooks: 'native',
   ignore: 'none',
   permissions: 'native',
 };
@@ -193,7 +193,7 @@ export const descriptor = {
     agents: 'native',
     skills: 'native',
     mcp: 'native',
-    hooks: 'partial',
+    hooks: 'native',
     ignore: cap('native', 'settings-embedded'),
     permissions: 'partial',
   },

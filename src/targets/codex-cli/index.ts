@@ -9,6 +9,7 @@ import {
   generateSkills,
   generateMcp,
   generateHooks,
+  generatePermissions,
   renderCodexGlobalInstructions,
 } from './generator.js';
 import {
@@ -22,10 +23,10 @@ import {
 } from './constants.js';
 import { importFromCodex } from './importer.js';
 import { lintRules } from './linter.js';
-import { lintMcp } from './lint.js';
+import { lintMcp, lintHooks } from './lint.js';
 import { buildCodexCliImportPaths } from '../../core/reference/import-map-builders.js';
 import { shouldConvertCommandsToSkills } from '../../config/core/conversions.js';
-import { codexAdvisoryInstructionPath } from './codex-rule-paths.js';
+import { codexNestedAgentsPath } from './codex-rule-paths.js';
 import { commandSkillDirName } from './command-skill.js';
 
 export const target: TargetGenerators = {
@@ -37,8 +38,17 @@ export const target: TargetGenerators = {
   generateSkills,
   generateMcp,
   generateHooks,
+  generatePermissions,
   importFrom: importFromCodex,
 };
+
+function codexRulePath(rule: Parameters<TargetLayout['paths']['rulePath']>[1]): string {
+  if (rule.codexEmit === 'execution') {
+    const slug = basename(rule.source, '.md');
+    return `${CODEX_RULES_DIR}/${slug}.rules`;
+  }
+  return codexNestedAgentsPath(rule);
+}
 
 const project: TargetLayout = {
   rootInstructionPath: AGENTS_MD,
@@ -49,12 +59,12 @@ const project: TargetLayout = {
   },
   skillDir: '.agents/skills',
   managedOutputs: {
-    dirs: ['.agents/skills', '.codex/agents', '.codex/instructions'],
+    dirs: ['.agents/skills', '.codex/agents', '.codex/instructions', '.codex/rules'],
     files: ['AGENTS.md', '.codex/config.toml', CODEX_HOOKS_FILE],
   },
   paths: {
     rulePath(_slug, rule) {
-      return codexAdvisoryInstructionPath(rule);
+      return codexRulePath(rule);
     },
     commandPath(name, config: ValidatedConfig) {
       return shouldConvertCommandsToSkills(config, 'codex-cli')
@@ -82,6 +92,10 @@ const globalLayout: TargetLayout = {
   },
   rewriteGeneratedPath(path) {
     if (path === AGENTS_MD) return CODEX_GLOBAL_AGENTS_MD;
+    // Advisory rules nest as `<dir>/AGENTS(.override).md` at project scope (see
+    // codex-rule-paths.ts); global scope embeds them into CODEX_GLOBAL_AGENTS_MD
+    // instead (renderCodexGlobalInstructions), so nested paths are suppressed here.
+    if (/\/AGENTS(\.override)?\.md$/.test(path)) return null;
     if (path.startsWith(`${CODEX_INSTRUCTIONS_DIR}/`)) return null;
     return path;
   },
@@ -111,7 +125,7 @@ const globalCapabilities: TargetCapabilities = {
   mcp: 'native',
   hooks: 'native',
   ignore: 'none',
-  permissions: 'none',
+  permissions: 'native',
 };
 
 export const descriptor = {
@@ -132,13 +146,14 @@ export const descriptor = {
     mcp: 'native',
     hooks: 'native',
     ignore: 'none',
-    permissions: 'none',
+    permissions: 'native',
   },
   emptyImportMessage: 'No Codex config found (codex.md or AGENTS.md).',
   supportsConversion: { commands: true },
   lintRules,
   lint: {
     mcp: lintMcp,
+    hooks: lintHooks,
   },
   project,
   globalSupport: {

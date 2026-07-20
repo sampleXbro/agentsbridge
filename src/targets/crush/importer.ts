@@ -10,6 +10,7 @@
  */
 
 import { dirname, join } from 'node:path';
+import { stringify as stringifyYaml } from 'yaml';
 import type { ImportResult, McpServer } from '../../core/types.js';
 import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
@@ -101,6 +102,47 @@ async function importCrushConfigJson(
       feature: 'hooks',
     });
   }
+
+  // Import permissions from `permissions.allowed_tools` (allow) and `options.disabled_tools` (deny)
+  const permissions = parseCrushPermissions(config['permissions'], config['options']);
+  if (permissions !== null) {
+    const canonicalPath = '.agentsmesh/permissions.yaml';
+    const destPath = join(projectRoot, canonicalPath);
+    await mkdirp(dirname(destPath));
+    await writeFileAtomic(destPath, stringifyYaml(permissions));
+    results.push({
+      fromTool: CRUSH_TARGET,
+      fromPath: configPath,
+      toPath: canonicalPath,
+      feature: 'permissions',
+    });
+  }
+}
+
+interface CrushPermissions {
+  allow: string[];
+  deny: string[];
+}
+
+/**
+ * Parse crush.json permissions.allowed_tools (allow list) and
+ * options.disabled_tools (deny list) into canonical form.
+ * Returns null when both lists are empty or absent.
+ */
+function parseCrushPermissions(
+  rawPermissions: unknown,
+  rawOptions: unknown,
+): CrushPermissions | null {
+  const allow =
+    rawPermissions !== null && typeof rawPermissions === 'object' && !Array.isArray(rawPermissions)
+      ? toStringArray((rawPermissions as Record<string, unknown>)['allowed_tools'])
+      : [];
+  const deny =
+    rawOptions !== null && typeof rawOptions === 'object' && !Array.isArray(rawOptions)
+      ? toStringArray((rawOptions as Record<string, unknown>)['disabled_tools'])
+      : [];
+  if (allow.length === 0 && deny.length === 0) return null;
+  return { allow, deny };
 }
 
 function parseCrushMcpServers(raw: unknown): Record<string, McpServer> {

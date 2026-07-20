@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import type { CanonicalRule } from '../../../../src/core/types.js';
-import { codexAdvisoryInstructionPath } from '../../../../src/targets/codex-cli/codex-rule-paths.js';
+import {
+  codexNestedAgentsPath,
+  codexRuleDirectory,
+} from '../../../../src/targets/codex-cli/codex-rule-paths.js';
 
 function rule(source: string, globs: string[], opts?: { override?: boolean }): CanonicalRule {
   return {
@@ -14,50 +17,78 @@ function rule(source: string, globs: string[], opts?: { override?: boolean }): C
   };
 }
 
-describe('codexAdvisoryInstructionPath', () => {
-  it('uses canonical slug inside .codex/instructions for advisory rules', () => {
-    expect(
-      codexAdvisoryInstructionPath(rule('/p/.agentsmesh/rules/typescript.md', ['src/**/*.ts'])),
-    ).toBe('.codex/instructions/typescript.md');
+describe('codexNestedAgentsPath', () => {
+  it('derives the directory from a single-level glob prefix', () => {
+    expect(codexNestedAgentsPath(rule('/p/.agentsmesh/rules/typescript.md', ['src/**/*.ts']))).toBe(
+      'src/AGENTS.md',
+    );
   });
 
-  it('uses slug for **/… globs', () => {
+  it('derives a multi-level directory from a nested glob prefix', () => {
     expect(
-      codexAdvisoryInstructionPath(rule('/p/.agentsmesh/rules/typescript.md', ['**/*.ts'])),
-    ).toBe('.codex/instructions/typescript.md');
+      codexNestedAgentsPath(rule('/p/.agentsmesh/rules/payments.md', ['services/payments/**'])),
+    ).toBe('services/payments/AGENTS.md');
   });
 
-  it('keeps override rules in the same instructions folder', () => {
+  it('uses the slug as directory for **/… globs (no directory prefix)', () => {
+    expect(codexNestedAgentsPath(rule('/p/.agentsmesh/rules/typescript.md', ['**/*.ts']))).toBe(
+      'typescript/AGENTS.md',
+    );
+  });
+
+  it('writes AGENTS.override.md for override rules', () => {
     expect(
-      codexAdvisoryInstructionPath(
+      codexNestedAgentsPath(
         rule('/p/.agentsmesh/rules/payments.md', ['services/payments/**'], { override: true }),
       ),
-    ).toBe('.codex/instructions/payments.md');
+    ).toBe('services/payments/AGENTS.override.md');
+  });
+
+  it('falls back to slug when no globs are present', () => {
+    expect(codexNestedAgentsPath(rule('/p/.agentsmesh/rules/general.md', []))).toBe(
+      'general/AGENTS.md',
+    );
   });
 
   it('falls back to slug when glob prefix escapes project via traversal', () => {
-    expect(
-      codexAdvisoryInstructionPath(rule('/p/.agentsmesh/rules/typescript.md', ['../**/*.ts'])),
-    ).toBe('.codex/instructions/typescript.md');
+    expect(codexNestedAgentsPath(rule('/p/.agentsmesh/rules/typescript.md', ['../**/*.ts']))).toBe(
+      'typescript/AGENTS.md',
+    );
   });
 
   it('falls back to slug when glob prefix is absolute', () => {
     expect(
-      codexAdvisoryInstructionPath(rule('/p/.agentsmesh/rules/typescript.md', ['/src/**/*.ts'])),
-    ).toBe('.codex/instructions/typescript.md');
+      codexNestedAgentsPath(rule('/p/.agentsmesh/rules/typescript.md', ['/src/**/*.ts'])),
+    ).toBe('typescript/AGENTS.md');
   });
 
-  it('normalizes ./ prefix for safe relative globs without changing the output slug', () => {
+  it('normalizes ./ prefix and extracts the real directory', () => {
     expect(
-      codexAdvisoryInstructionPath(rule('/p/.agentsmesh/rules/typescript.md', ['./src/**/*.ts'])),
-    ).toBe('.codex/instructions/typescript.md');
+      codexNestedAgentsPath(rule('/p/.agentsmesh/rules/typescript.md', ['./src/**/*.ts'])),
+    ).toBe('src/AGENTS.md');
   });
 
   it('falls back to slug for brace-prefixed ambiguous globs', () => {
     expect(
-      codexAdvisoryInstructionPath(
-        rule('/p/.agentsmesh/rules/typescript.md', ['{src,tests}/**/*.ts']),
+      codexNestedAgentsPath(rule('/p/.agentsmesh/rules/typescript.md', ['{src,tests}/**/*.ts'])),
+    ).toBe('typescript/AGENTS.md');
+  });
+
+  it('picks the first glob with a usable directory prefix among several', () => {
+    expect(
+      codexNestedAgentsPath(
+        rule('/p/.agentsmesh/rules/typescript.md', ['src/**/*.ts', 'tests/**/*.ts']),
       ),
-    ).toBe('.codex/instructions/typescript.md');
+    ).toBe('src/AGENTS.md');
+  });
+
+  it('treats a literal (non-wildcard) glob path as pointing at its parent directory', () => {
+    expect(codexRuleDirectory(rule('/p/.agentsmesh/rules/x.md', ['docs/readme.md']))).toBe('docs');
+  });
+
+  it('falls back to slug for a single-segment literal glob with no parent directory', () => {
+    expect(codexRuleDirectory(rule('/p/.agentsmesh/rules/readme.md', ['readme.md']))).toBe(
+      'readme',
+    );
   });
 });

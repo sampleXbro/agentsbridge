@@ -38,8 +38,15 @@ export const COPILOT_LEGACY_HOOKS_DIR = '.github/copilot-hooks';
 export const COPILOT_GLOBAL_INSTRUCTIONS = '.copilot/copilot-instructions.md';
 export const COPILOT_GLOBAL_AGENTS_DIR = '.copilot/agents';
 export const COPILOT_GLOBAL_SKILLS_DIR = '.copilot/skills';
-export const COPILOT_GLOBAL_PROMPTS_DIR = '.copilot/prompts';
 export const COPILOT_GLOBAL_AGENTS_MD = '.copilot/AGENTS.md';
+
+/** User-level MCP config (Copilot CLI). `mcpServers` key, distinct from the
+ * project `.vscode/mcp.json` `servers` key. */
+export const COPILOT_GLOBAL_MCP = '.copilot/mcp-config.json';
+
+/** User-level hooks directory (Copilot CLI). Same `{version, hooks}` schema
+ * as the project `.github/hooks/` directory. */
+export const COPILOT_GLOBAL_HOOKS_DIR = '.copilot/hooks';
 
 /** Compatibility mirror paths for skills */
 export const COPILOT_GLOBAL_CLAUDE_SKILLS_DIR = '.claude/skills';

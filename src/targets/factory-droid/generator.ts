@@ -24,6 +24,7 @@ import {
   FACTORY_DROID_DROIDS_DIR,
   FACTORY_DROID_MCP_FILE,
   FACTORY_DROID_HOOKS_FILE,
+  FACTORY_DROID_SETTINGS_FILE,
 } from './constants.js';
 
 export interface FactoryDroidOutput {
@@ -75,6 +76,16 @@ export function generateHooks(canonical: CanonicalFiles): FactoryDroidOutput[] {
   return buildWrappedCommandHooks(canonical, FACTORY_DROID_HOOKS_FILE);
 }
 
+export function generatePermissions(canonical: CanonicalFiles): FactoryDroidOutput[] {
+  if (!canonical.permissions) return [];
+  const { allow, deny } = canonical.permissions;
+  if (allow.length === 0 && deny.length === 0) return [];
+  const settings: Record<string, unknown> = {};
+  if (allow.length > 0) settings.commandAllowlist = allow;
+  if (deny.length > 0) settings.commandDenylist = deny;
+  return [{ path: FACTORY_DROID_SETTINGS_FILE, content: JSON.stringify(settings, null, 2) }];
+}
+
 export function generateMcp(canonical: CanonicalFiles): FactoryDroidOutput[] {
   if (!canonical.mcp || Object.keys(canonical.mcp.mcpServers).length === 0) return [];
 
@@ -84,4 +95,12 @@ export function generateMcp(canonical: CanonicalFiles): FactoryDroidOutput[] {
       content: JSON.stringify({ mcpServers: canonical.mcp.mcpServers }, null, 2),
     },
   ];
+}
+
+/**
+ * No-op stub — Factory Droid has no dedicated ignore file and relies on
+ * .gitignore. Lint warnings surface this via lintIgnore.
+ */
+export function generateIgnore(_canonical: CanonicalFiles): FactoryDroidOutput[] {
+  return [];
 }

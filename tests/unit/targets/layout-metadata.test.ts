@@ -26,7 +26,7 @@ describe('target layout metadata', () => {
 
   it('returns managed outputs from descriptor metadata', () => {
     expect(getTargetManagedOutputs('codex-cli')).toEqual({
-      dirs: ['.agents/skills', '.codex/agents', '.codex/instructions'],
+      dirs: ['.agents/skills', '.codex/agents', '.codex/instructions', '.codex/rules'],
       files: ['AGENTS.md', '.codex/config.toml', '.codex/hooks.json'],
     });
   });
@@ -96,13 +96,13 @@ describe('target layout metadata', () => {
     const layout = getTargetLayout('antigravity', 'global');
     expect(layout).toEqual(
       expect.objectContaining({
-        rootInstructionPath: '.gemini/antigravity/GEMINI.md',
-        skillDir: '.gemini/antigravity/skills',
+        rootInstructionPath: '.gemini/GEMINI.md',
+        skillDir: '.gemini/config/skills',
         managedOutputs: {
-          dirs: ['.gemini/antigravity/skills', '.gemini/antigravity/workflows'],
+          dirs: ['.gemini/config/skills', '.gemini/antigravity/global_workflows'],
           files: [
-            '.gemini/antigravity/GEMINI.md',
-            '.gemini/antigravity/mcp_config.json',
+            '.gemini/GEMINI.md',
+            '.gemini/config/mcp_config.json',
             '.gemini/config/hooks.json',
           ],
         },
@@ -117,7 +117,7 @@ describe('target layout metadata', () => {
     );
     const mockConfig = {} as import('../../../src/config/core/schema.js').ValidatedConfig;
     expect(layout?.paths.commandPath('deploy', mockConfig)).toBe(
-      '.gemini/antigravity/workflows/deploy.md',
+      '.gemini/antigravity/global_workflows/deploy.md',
     );
   });
 
@@ -155,6 +155,7 @@ describe('target layout metadata', () => {
             '.cursor/mcp.json',
             '.cursor/hooks.json',
             '.cursorignore',
+            '.cursor/cli-config.json',
             '.agentsmesh-exports/cursor/user-rules.md',
           ],
         },
@@ -189,17 +190,16 @@ describe('target layout metadata', () => {
     const layout = getTargetLayout('cline', 'global');
     expect(layout).toEqual(
       expect.objectContaining({
-        skillDir: '.cline/skills',
+        skillDir: '.cline/data/settings/skills',
         managedOutputs: {
           dirs: [
-            'Documents/Cline/Rules',
+            '.cline/data/settings/rules',
             'Documents/Cline/Workflows',
-            'Documents/Cline/Hooks',
-            '.cline/skills',
-            '.cline/agents',
+            '.cline/hooks',
+            '.cline/data/settings/skills',
             '.agents/skills',
           ],
-          files: ['.cline/cline_mcp_settings.json', '.clineignore'],
+          files: [],
         },
         paths: expect.objectContaining({
           rulePath: expect.any(Function),
@@ -219,7 +219,7 @@ describe('target layout metadata', () => {
         globs: [],
         body: '',
       }),
-    ).toBe('Documents/Cline/Rules/typescript.md');
+    ).toBe('.cline/data/settings/rules/typescript.md');
     expect(layout!.paths.commandPath('commit', {} as never)).toBe(
       'Documents/Cline/Workflows/commit.md',
     );
@@ -227,13 +227,10 @@ describe('target layout metadata', () => {
 
   it('lists Cline global detection paths', () => {
     expect(getTargetDetectionPaths('cline', 'global')).toEqual([
-      'Documents/Cline/Rules',
+      '.cline/data/settings/rules',
       'Documents/Cline/Workflows',
-      'Documents/Cline/Hooks',
-      '.cline/skills',
-      '.cline/agents',
-      '.cline/cline_mcp_settings.json',
-      '.clineignore',
+      '.cline/hooks',
+      '.cline/data/settings/skills',
     ]);
   });
 
@@ -243,6 +240,9 @@ describe('target layout metadata', () => {
       expect.objectContaining({
         rootInstructionPath: '.continue/rules/general.md',
         skillDir: '.continue/skills',
+        outputFamilies: [
+          { id: 'compat-agents', kind: 'additional', explicitPaths: ['.continue/AGENTS.md'] },
+        ],
         managedOutputs: {
           dirs: ['.continue/rules', '.continue/prompts', '.continue/skills', '.agents/skills'],
           files: [
@@ -250,6 +250,7 @@ describe('target layout metadata', () => {
             '.continue/AGENTS.md',
             '.continue/config.yaml',
             '.continue/permissions.yaml',
+            '.continue/.continueignore',
           ],
         },
         paths: expect.objectContaining({

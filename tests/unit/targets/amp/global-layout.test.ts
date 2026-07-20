@@ -45,6 +45,35 @@ describe('amp global layout', () => {
     expect(descriptor.globalSupport!.capabilities).toEqual(descriptor.capabilities);
   });
 
+  // Amp has no declarative slash-command file format (ampcode.com/manual):
+  // commands only exist via `amp.registerCommand(...)` inside a TypeScript
+  // plugin. AgentsMesh projects commands as skills, so the honest ceiling is
+  // 'embedded' (routes through the already-native skills surface), not 'native'.
+  it('commands capability is embedded (routed through the native skills surface), project + global', () => {
+    expect(descriptor.capabilities.commands).toBe('embedded');
+    expect(descriptor.globalSupport!.capabilities.commands).toBe('embedded');
+  });
+
+  it('hooks capability is partial, project + global', () => {
+    expect(descriptor.capabilities.hooks).toBe('partial');
+    expect(descriptor.globalSupport!.capabilities.hooks).toBe('partial');
+  });
+
+  it('agents capability is embedded (projected through native skills surface), project + global', () => {
+    expect(descriptor.capabilities.agents).toBe('embedded');
+    expect(descriptor.globalSupport!.capabilities.agents).toBe('embedded');
+  });
+
+  it('ignore capability is partial (no dedicated ignore file; lintIgnore warns), project + global', () => {
+    expect(descriptor.capabilities.ignore).toBe('partial');
+    expect(descriptor.globalSupport!.capabilities.ignore).toBe('partial');
+  });
+
+  it('permissions capability is partial (amp.permissions is legacy; format mismatch prevents native claim), project + global', () => {
+    expect(descriptor.capabilities.permissions).toBe('partial');
+    expect(descriptor.globalSupport!.capabilities.permissions).toBe('partial');
+  });
+
   it('globalSupport has detection paths', () => {
     expect(descriptor.globalSupport!.detectionPaths.length).toBeGreaterThan(0);
     expect(descriptor.globalSupport!.detectionPaths).toContain(AMP_GLOBAL_ROOT_FILE);

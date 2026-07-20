@@ -33,21 +33,21 @@ describe('lint capabilities', () => {
       join(dir, '.agentsmesh', 'permissions.yaml'),
       'allow:\n  - Bash(npm run test:*)\ndeny:\n  - Read(./.env)\n',
     );
-    // SubagentStop is unsupported by gemini-cli and NOT a best-effort agentsmesh
+    // SessionEnd is unsupported by gemini-cli and NOT a best-effort agentsmesh
     // recall/capture event, so it must warn. (Best-effort events like
     // UserPromptSubmit are intentionally silenced — see unsupportedHookEventNames.)
     writeFileSync(
       join(dir, '.agentsmesh', 'hooks.yaml'),
-      'SubagentStop:\n  - matcher: "*"\n    command: "./scripts/validate.sh $TOOL_INPUT"\n',
+      'SessionEnd:\n  - matcher: "*"\n    command: "./scripts/validate.sh $TOOL_INPUT"\n',
     );
 
     const result = await runCli('lint', dir);
 
     expect(result.exitCode).toBe(0);
     expect(result.stdout + result.stderr).toMatch(/copilot.*allowed-tools/i);
-    expect(result.stdout + result.stderr).toMatch(/cursor.*permissions/i);
+    expect(result.stdout + result.stderr).toMatch(/cursor.*allowed-tools/i);
     expect(result.stdout + result.stderr).toMatch(/cursor.*env/i);
     expect(result.stdout + result.stderr).toMatch(/codex-cli.*descriptions?/i);
-    expect(result.stdout + result.stderr).toMatch(/gemini-cli.*SubagentStop/i);
+    expect(result.stdout + result.stderr).toMatch(/gemini-cli.*SessionEnd/i);
   });
 });

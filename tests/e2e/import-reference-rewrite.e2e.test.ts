@@ -55,7 +55,11 @@ function appendReferenceVariants(dir: string): void {
 }
 
 function ruleLinkInRoot(target: RewriteTarget): string {
-  return target === 'gemini-cli' ? 'GEMINI.md' : 'typescript.md';
+  if (target === 'gemini-cli') return 'GEMINI.md';
+  // codex-cli's scoped rule nests as `src/AGENTS.md` (globs: src/**/*.ts) and round-trips
+  // back renamed to its directory — see codex-rule-paths.ts / importer-rules.ts.
+  if (target === 'codex-cli') return 'src.md';
+  return 'typescript.md';
 }
 
 describe('import reference normalization', () => {
@@ -121,11 +125,14 @@ describe('import reference normalization', () => {
       // `.agentsmesh/rules/typescript.md` file from the root context alone.
       const mdSelfName = ruleName;
       const escapedRule = mdSelfName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      // codex-cli's scoped rule round-trips renamed to `src.md` (directory-derived, see
+      // ruleLinkInRoot), so the canonical label is `.agentsmesh/rules/src.md`, not `typescript.md`.
+      const canonicalLabel = target === 'codex-cli' ? escapedRule : 'typescript\\.md';
       const ruleMdSelf =
         target === 'gemini-cli'
           ? /\[(?:\.agentsmesh\/rules\/typescript\.md|(?:\.\/)?(?:typescript\.md|GEMINI\.md))\]\((?:\.\/)?GEMINI\.md\)/
           : new RegExp(
-              `\\[(?:\\.agentsmesh/rules/typescript\\.md|(?:\\./)?${escapedRule})\\]\\((?:\\./)?${escapedRule}\\)`,
+              `\\[(?:\\.agentsmesh/rules/${canonicalLabel}|(?:\\./)?${escapedRule})\\]\\((?:\\./)?${escapedRule}\\)`,
             );
       expect(rootContent).toContain(mdSelfName);
       expect(rootContent).toContain('.agentsmesh/commands/review.md');
@@ -251,17 +258,17 @@ describe('import reference normalization', () => {
       expect(agentContent).not.toContain(join(dir, '.agentsmesh', 'commands', 'review.md'));
       assertPortable(agentContent, targetPrefix[target]);
 
-      const ruleFromSkill = target === 'gemini-cli' ? 'GEMINI.md' : '../../rules/typescript.md';
+      const ruleFromSkill = target === 'gemini-cli' ? 'GEMINI.md' : `../../rules/${ruleName}`;
       const ruleMarkdownFromSkill =
         target === 'gemini-cli'
           ? `[GEMINI.md](../../../GEMINI.md)`
-          : `[.agentsmesh/rules/typescript.md](${ruleFromSkill})`;
+          : `[.agentsmesh/rules/${ruleName}](${ruleFromSkill})`;
       expect(skillContent).toContain(ruleFromSkill);
       expect(skillContent).toContain(ruleMarkdownFromSkill);
       expect(
-        skillContent.includes('@.agentsmesh/rules/typescript.md') ||
+        skillContent.includes(`@.agentsmesh/rules/${ruleName}`) ||
           skillContent.includes(`@${ruleFromSkill}`) ||
-          /@\.\.\/.*(?:typescript|GEMINI|instructions)/i.test(skillContent),
+          /@\.\.\/.*(?:typescript|src|GEMINI|instructions)/i.test(skillContent),
       ).toBe(true);
       expect(
         skillContent.includes('".agentsmesh/skills/api-generator/references/"') ||

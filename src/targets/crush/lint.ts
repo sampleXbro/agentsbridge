@@ -3,8 +3,8 @@
  *
  * Crush does not support dedicated commands as slash-commands;
  * use supportsConversion to project commands/agents as skills instead.
- * Permissions in crush.json use allowed_tools/denied_tools — canonical
- * permissions map to partial support.
+ * Permissions in crush.json use permissions.allowed_tools (allow list) and
+ * options.disabled_tools (deny list) — native round-trip supported.
  */
 
 import type { CanonicalFiles, LintDiagnostic } from '../../core/types.js';

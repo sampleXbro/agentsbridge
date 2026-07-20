@@ -206,12 +206,17 @@ features: [rules, mcp, ignore]
       '---\ninclusion: fileMatch\nfileMatchPattern: src/**/*.ts\n---\n\nUse strict TypeScript.\n',
     );
     writeFileSync(
-      join(TEST_DIR, '.kiro', 'hooks', 'review-on-save.kiro.hook'),
+      join(TEST_DIR, '.kiro', 'hooks', 'review-on-save.json'),
       JSON.stringify({
-        name: 'Review on save',
-        version: '1',
-        when: { type: 'preToolUse', tools: ['write'] },
-        then: { type: 'askAgent', prompt: 'Review the latest changes.' },
+        version: 'v1',
+        hooks: [
+          {
+            name: 'review-on-save-1',
+            trigger: 'PreToolUse',
+            matcher: 'write',
+            action: { type: 'agent', prompt: 'Review the latest changes.' },
+          },
+        ],
       }),
     );
     writeFileSync(
@@ -243,7 +248,7 @@ features: [rules, skills, mcp, hooks, ignore]
       'fileMatchPattern: src/**/*.ts',
     );
     expect(
-      readFileSync(join(TEST_DIR, '.kiro', 'hooks', 'pre-tool-use-1.kiro.hook'), 'utf-8'),
+      readFileSync(join(TEST_DIR, '.kiro', 'hooks', 'pre-tool-use-1.json'), 'utf-8'),
     ).toContain('Review the latest changes.');
     expect(readFileSync(join(TEST_DIR, '.kiro', 'settings', 'mcp.json'), 'utf-8')).toContain(
       'context7',
@@ -319,7 +324,7 @@ features: [rules, ignore]
     mkdirSync(join(TEST_DIR, '.agents', 'skills', 'post-feature-qa', 'references'), {
       recursive: true,
     });
-    mkdirSync(join(TEST_DIR, '.clinerules'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.cline', 'rules'), { recursive: true });
     writeFileSync(join(TEST_DIR, '.agents', 'skills', 'post-feature-qa', 'SKILL.md'), '# QA\n');
     writeFileSync(
       join(
@@ -333,7 +338,7 @@ features: [rules, ignore]
       '# Edge Cases\n',
     );
     writeFileSync(
-      join(TEST_DIR, '.clinerules', '_root.md'),
+      join(TEST_DIR, '.cline', 'rules', '_root.md'),
       'Use `.agents/skills/post-feature-qa/` and `.agents/skills/post-feature-qa/references/edge-case-checklist.md`.\n',
     );
 
@@ -459,11 +464,7 @@ features: [agents]
 
   it.each([
     ['gemini-cli', '.gemini/skills/am-agent-reviewer/SKILL.md', '.gemini/agents/reviewer.md'],
-    [
-      'cline',
-      '.cline/skills/am-agent-reviewer/SKILL.md',
-      '.cline/agents/reviewer.md',
-    ],
+    ['cline', '.cline/skills/am-agent-reviewer/SKILL.md', '.cline/agents.yaml'],
     ['codex-cli', '.agents/skills/am-agent-reviewer/SKILL.md', '.codex/agents/reviewer.toml'],
     [
       'windsurf',
@@ -542,9 +543,9 @@ features: [rules]
     expect(geminiMd).toContain('Use TDD.');
   });
 
-  it('imports .clinerules/_root.md to .agentsmesh/rules/_root.md (cline)', () => {
-    mkdirSync(join(TEST_DIR, '.clinerules'), { recursive: true });
-    writeFileSync(join(TEST_DIR, '.clinerules', '_root.md'), '# Cline Rules\n\nUse TDD.');
+  it('imports .cline/rules/_root.md to .agentsmesh/rules/_root.md (cline)', () => {
+    mkdirSync(join(TEST_DIR, '.cline', 'rules'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.cline', 'rules', '_root.md'), '# Cline Rules\n\nUse TDD.');
     execSync(`node ${CLI_PATH} import --from cline`, { cwd: TEST_DIR });
     const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(content).toContain('root: true');
@@ -552,9 +553,9 @@ features: [rules]
     expect(content).toContain('Use TDD.');
   });
 
-  it('import from cline then generate produces .clinerules and .clineignore', () => {
-    mkdirSync(join(TEST_DIR, '.clinerules'), { recursive: true });
-    writeFileSync(join(TEST_DIR, '.clinerules', '_root.md'), '# Cline Rules\n\nUse TDD.');
+  it('import from cline then generate produces .cline/rules and .clineignore', () => {
+    mkdirSync(join(TEST_DIR, '.cline', 'rules'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.cline', 'rules', '_root.md'), '# Cline Rules\n\nUse TDD.');
     writeFileSync(join(TEST_DIR, '.clineignore'), 'node_modules/\n');
     execSync(`node ${CLI_PATH} import --from cline`, { cwd: TEST_DIR });
     writeFileSync(
@@ -565,7 +566,7 @@ features: [rules, ignore]
 `,
     );
     execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
-    // Cline writes the root rule to AGENTS.md, not .clinerules/_root.md
+    // Cline writes the root rule to AGENTS.md, not .cline/rules/_root.md
     const rootContent = readFileSync(join(TEST_DIR, 'AGENTS.md'), 'utf-8');
     expect(rootContent).toContain('Use TDD.');
     const ignoreContent = readFileSync(join(TEST_DIR, '.clineignore'), 'utf-8');

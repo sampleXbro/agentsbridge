@@ -62,7 +62,7 @@ describe('stale artifact cleanup e2e', () => {
       target: 'cline',
       features: '[rules]',
       canonicalPath: '.agentsmesh/rules/typescript.md',
-      stale: ['.clinerules/typescript.md'],
+      stale: ['.cline/rules/typescript.md'],
     },
     {
       label: 'roo-code agents',

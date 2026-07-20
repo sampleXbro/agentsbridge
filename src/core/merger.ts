@@ -55,6 +55,10 @@ export async function resolveLockConflict(
   const packChecksums = await buildPackChecksums(join(abDir, 'packs'));
   const generatedBy = process.env['USER'] ?? process.env['USERNAME'] ?? 'unknown';
 
+  // `outputs` is intentionally omitted (old-lock semantics): a merge changes the
+  // canonical inputs, so a regenerate is required before generated outputs are
+  // trustworthy. Until that regenerate rewrites the lock, `check` reports
+  // `outputsChecked: false` rather than diffing stale hashes.
   await writeLock(abDir, {
     generatedAt: new Date().toISOString(),
     generatedBy,

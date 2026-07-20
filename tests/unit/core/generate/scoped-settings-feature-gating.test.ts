@@ -77,10 +77,8 @@ describe('generate — scoped settings feature gating', () => {
     // zed sidecar only projects mcp -> must not be emitted at all.
     expect(results.some((r) => r.path === '.zed/settings.json')).toBe(false);
 
-    // amp now projects hooks too -> emitted, but without amp.mcpServers.
-    const amp = settingsFor(results, '.amp/settings.json');
-    expect(amp).not.toHaveProperty('amp.mcpServers');
-    expect(amp).toHaveProperty('amp.hooks');
+    // amp has no hooks settings-file surface (only mcp) -> must not be emitted at all.
+    expect(results.some((r) => r.path === '.amp/settings.json')).toBe(false);
 
     // gemini projects hooks too -> emitted, but without mcpServers.
     const gemini = settingsFor(results, '.gemini/settings.json');
@@ -146,14 +144,20 @@ function pluginWithScopedSettings(id: string): TargetDescriptor {
     emptyImportMessage: 'No plugin files.',
     lintRules: null,
     project: {
-      paths: { rulePath: () => '.plugin/rules/root.md', commandPath: () => null, agentPath: () => null },
+      paths: {
+        rulePath: () => '.plugin/rules/root.md',
+        commandPath: () => null,
+        agentPath: () => null,
+      },
     },
-    buildImportPaths: async (refs) => refs.set('.plugin/rules/root.md', '.agentsmesh/rules/_root.md'),
+    buildImportPaths: async (refs) =>
+      refs.set('.plugin/rules/root.md', '.agentsmesh/rules/_root.md'),
     detectionPaths: ['.plugin'],
     // Gates the mcp projection on the feature set the engine must supply.
     emitScopedSettings: (canonical, scope, enabledFeatures) => {
       const settings: Record<string, unknown> = { scope };
-      if (enabledFeatures.has('mcp') && canonical.mcp) settings.mcpServers = canonical.mcp.mcpServers;
+      if (enabledFeatures.has('mcp') && canonical.mcp)
+        settings.mcpServers = canonical.mcp.mcpServers;
       return [{ path: '.plugin/settings.json', content: JSON.stringify(settings) }];
     },
   };

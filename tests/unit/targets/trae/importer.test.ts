@@ -117,6 +117,54 @@ describe('importFromTrae (project scope)', () => {
     expect(ignoreResult).toBeDefined();
     expect(ignoreResult?.toPath).toBe('.agentsmesh/ignore');
   });
+
+  it('imports agent files from .trae/agents/ (round-trip)', async () => {
+    mkdirSync(join(tmpDir, '.trae', 'agents'), { recursive: true });
+    mkdirSync(join(tmpDir, '.agentsmesh', 'agents'), { recursive: true });
+    writeFileSync(
+      join(tmpDir, '.trae', 'agents', 'code-reviewer.md'),
+      '---\nname: code-reviewer\ndescription: Reviews code\ntools:\n  - Read\n---\nYou review code.',
+    );
+
+    const results = await importFromTrae(tmpDir, { scope: 'project' });
+
+    const agentResults = results.filter((r) => r.feature === 'agents');
+    expect(agentResults).toHaveLength(1);
+    expect(agentResults[0].toPath).toBe('.agentsmesh/agents/code-reviewer.md');
+    expect(agentResults[0].fromTool).toBe('trae');
+  });
+
+  it('imports hooks from .trae/hooks.json into canonical hooks.yaml', async () => {
+    mkdirSync(join(tmpDir, '.trae'), { recursive: true });
+    mkdirSync(join(tmpDir, '.agentsmesh'), { recursive: true });
+    writeFileSync(
+      join(tmpDir, '.trae', 'hooks.json'),
+      JSON.stringify({
+        version: 1,
+        hooks: {
+          PreToolUse: [{ matcher: '.*', type: 'command', command: 'echo pre', timeout: 30 }],
+        },
+      }),
+    );
+
+    const results = await importFromTrae(tmpDir, { scope: 'project' });
+
+    const hooksResult = results.find((r) => r.feature === 'hooks');
+    expect(hooksResult).toBeDefined();
+    expect(hooksResult?.toPath).toBe('.agentsmesh/hooks.yaml');
+    expect(hooksResult?.fromTool).toBe('trae');
+  });
+
+  it('skips hooks import when hooks.json is absent', async () => {
+    mkdirSync(join(tmpDir, '.trae', 'rules'), { recursive: true });
+    mkdirSync(join(tmpDir, '.agentsmesh', 'rules'), { recursive: true });
+    writeFileSync(join(tmpDir, '.trae', 'rules', 'project_rules.md'), '# Root');
+
+    const results = await importFromTrae(tmpDir, { scope: 'project' });
+
+    const hooksResults = results.filter((r) => r.feature === 'hooks');
+    expect(hooksResults).toHaveLength(0);
+  });
 });
 
 describe('importFromTrae (global scope)', () => {
@@ -159,5 +207,42 @@ describe('importFromTrae (global scope)', () => {
     const skillResults = results.filter((r) => r.feature === 'skills');
     expect(skillResults.length).toBeGreaterThanOrEqual(1);
     expect(skillResults.some((r) => r.toPath.includes('refactor'))).toBe(true);
+  });
+
+  it('imports agent files from .trae-cn/agents/ in global scope (round-trip)', async () => {
+    mkdirSync(join(tmpDir, '.trae-cn', 'agents'), { recursive: true });
+    mkdirSync(join(tmpDir, '.agentsmesh', 'agents'), { recursive: true });
+    writeFileSync(
+      join(tmpDir, '.trae-cn', 'agents', 'researcher.md'),
+      '---\nname: researcher\ndescription: Deep research\n---\nResearch thoroughly.',
+    );
+
+    const results = await importFromTrae(tmpDir, { scope: 'global' });
+
+    const agentResults = results.filter((r) => r.feature === 'agents');
+    expect(agentResults).toHaveLength(1);
+    expect(agentResults[0].toPath).toBe('.agentsmesh/agents/researcher.md');
+    expect(agentResults[0].fromTool).toBe('trae');
+  });
+
+  it('imports hooks from .trae-cn/hooks.json in global scope', async () => {
+    mkdirSync(join(tmpDir, '.trae-cn'), { recursive: true });
+    mkdirSync(join(tmpDir, '.agentsmesh'), { recursive: true });
+    writeFileSync(
+      join(tmpDir, '.trae-cn', 'hooks.json'),
+      JSON.stringify({
+        version: 1,
+        hooks: {
+          PostToolUse: [{ matcher: '.*', type: 'command', command: 'echo done' }],
+        },
+      }),
+    );
+
+    const results = await importFromTrae(tmpDir, { scope: 'global' });
+
+    const hooksResult = results.find((r) => r.feature === 'hooks');
+    expect(hooksResult).toBeDefined();
+    expect(hooksResult?.toPath).toBe('.agentsmesh/hooks.yaml');
+    expect(hooksResult?.fromTool).toBe('trae');
   });
 });

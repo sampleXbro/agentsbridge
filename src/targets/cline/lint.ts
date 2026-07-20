@@ -27,7 +27,23 @@ export function lintHooks(canonical: CanonicalFiles): LintDiagnostic[] {
     createWarning(
       '.agentsmesh/hooks.yaml',
       'cline',
-      'cline hooks are emitted as .clinerules/hooks/*.sh wrapper scripts with a `#!/usr/bin/env bash` header; they require a POSIX shell (git-bash or WSL) to execute on Windows.',
+      'cline hooks are emitted as .cline/hooks/*.sh wrapper scripts with a `#!/usr/bin/env bash` header; they require a POSIX shell (git-bash or WSL) to execute on Windows.',
+    ),
+  ];
+}
+
+export function lintPermissions(canonical: CanonicalFiles): LintDiagnostic[] {
+  if (!canonical.permissions) return [];
+  const { allow, deny } = canonical.permissions;
+  const ask = canonical.permissions.ask ?? [];
+  if (allow.length === 0 && deny.length === 0 && ask.length === 0) return [];
+  return [
+    createWarning(
+      '.agentsmesh/permissions.yaml',
+      'cline',
+      'cline has no dedicated permissions file in either scope; canonical allow/deny/ask rules are not projected. ' +
+        'Approval is controlled via the --auto-approve CLI flag, the CLINE_COMMAND_PERMISSIONS environment variable ' +
+        "(JSON allow/deny command-glob policy), or the extension UI's Auto Approve / YOLO Mode — set these directly.",
     ),
   ];
 }

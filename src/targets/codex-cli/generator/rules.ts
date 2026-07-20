@@ -1,12 +1,7 @@
-import type { CanonicalFiles } from '../../../core/types.js';
-import { basename } from 'node:path';
+import type { CanonicalFiles, CanonicalRule } from '../../../core/types.js';
 import { appendEmbeddedRulesBlock } from '../../projection/managed-blocks.js';
 import { AGENTS_MD, CODEX_RULES_DIR } from '../constants.js';
-import {
-  appendCodexRuleIndex,
-  codexInstructionMirrorPath,
-  serializeCodexInstructionMirror,
-} from '../instruction-mirror.js';
+import { codexNestedAgentsPath } from '../codex-rule-paths.js';
 import type { RulesOutput } from './types.js';
 
 function looksLikeCodexRulesDsl(body: string): boolean {
@@ -41,27 +36,55 @@ function toSafeCodexRulesContent(body: string): string {
   return `${lines.join('\n')}\n`;
 }
 
+/** Non-root, non-filtered, advisory (non-execution) rules eligible for this target. */
+function eligibleAdvisoryRules(canonical: CanonicalFiles): CanonicalRule[] {
+  return canonical.rules.filter((rule) => {
+    if (rule.root) return false;
+    if (rule.codexEmit === 'execution') return false;
+    return rule.targets.length === 0 || rule.targets.includes('codex-cli');
+  });
+}
+
+/** Groups advisory rules by their resolved nested `AGENTS.md` path, joining bodies that collide. */
+function groupByNestedPath(rules: CanonicalRule[]): Map<string, CanonicalRule[]> {
+  const groups = new Map<string, CanonicalRule[]>();
+  for (const rule of rules) {
+    const path = codexNestedAgentsPath(rule);
+    const existing = groups.get(path);
+    if (existing) existing.push(rule);
+    else groups.set(path, [rule]);
+  }
+  return groups;
+}
+
 export function generateRules(canonical: CanonicalFiles): RulesOutput[] {
   const root = canonical.rules.find((r) => r.root);
   const outputs: RulesOutput[] = [];
   if (root) {
-    outputs.push({ path: AGENTS_MD, content: appendCodexRuleIndex(root.body, canonical.rules) });
+    outputs.push({ path: AGENTS_MD, content: root.body.trim() });
   }
 
   for (const rule of canonical.rules) {
     if (rule.root) continue;
-    const slug = basename(rule.source, '.md');
+    if (rule.codexEmit !== 'execution') continue;
     if (rule.targets.length > 0 && !rule.targets.includes('codex-cli')) continue;
-    if (rule.codexEmit === 'execution') {
-      outputs.push({
-        path: `${CODEX_RULES_DIR}/${slug}.rules`,
-        content: toSafeCodexRulesContent(rule.body),
-      });
-    }
+    // Split on both separators: on Windows `rule.source` is a native path with
+    // backslashes, so splitting on '/' alone would leave the whole absolute path
+    // as the slug and emit a bogus `.codex/rules/C:\...\policy.rules` path whose
+    // mkdir throws ENOENT (drive-colon mid-path).
+    const slug = rule.source.split(/[\\/]/).pop()!.replace(/\.md$/i, '');
     outputs.push({
-      path: codexInstructionMirrorPath(rule),
-      content: serializeCodexInstructionMirror(rule),
+      path: `${CODEX_RULES_DIR}/${slug}.rules`,
+      content: toSafeCodexRulesContent(rule.body),
     });
+  }
+
+  for (const [path, rules] of groupByNestedPath(eligibleAdvisoryRules(canonical))) {
+    const content = rules
+      .map((rule) => rule.body.trim())
+      .filter((body) => body.length > 0)
+      .join('\n\n');
+    outputs.push({ path, content });
   }
 
   return outputs;
@@ -69,11 +92,6 @@ export function generateRules(canonical: CanonicalFiles): RulesOutput[] {
 
 export function renderCodexGlobalInstructions(canonical: CanonicalFiles): string {
   const root = canonical.rules.find((rule) => rule.root);
-  const nonRootRules = canonical.rules.filter((rule) => {
-    if (rule.root) return false;
-    if (rule.codexEmit === 'execution') return false;
-    return rule.targets.length === 0 || rule.targets.includes('codex-cli');
-  });
-
+  const nonRootRules = eligibleAdvisoryRules(canonical);
   return appendEmbeddedRulesBlock(root?.body.trim() ?? '', nonRootRules);
 }

@@ -26,7 +26,7 @@ describe('builtin targets', () => {
 
     expect(cursor).toBeDefined();
     expect(cursor?.generators.primaryRootInstructionPath).toBe('.cursor/rules/general.mdc');
-    expect(cursor?.capabilities.permissions).toBe('partial');
+    expect(cursor?.capabilities.permissions).toBe('native');
     expect(kiro?.generators.primaryRootInstructionPath).toBe('AGENTS.md');
     expect(kiro?.capabilities.rules).toBe('native');
     expect(kiro?.capabilities.commands).toBe('embedded');
@@ -79,7 +79,7 @@ describe('builtin targets', () => {
     );
     expect(getEffectiveTargetSupportLevel('antigravity', 'mcp', config, 'global')).toBe('native');
     expect(getEffectiveTargetSupportLevel('antigravity', 'commands', config, 'global')).toBe(
-      'partial',
+      'native',
     );
     expect(getEffectiveTargetSupportLevel('cursor', 'rules', config, 'global')).toBe('native');
     expect(getEffectiveTargetSupportLevel('cursor', 'hooks', config, 'global')).toBe('native');
@@ -87,6 +87,12 @@ describe('builtin targets', () => {
     expect(getEffectiveTargetSupportLevel('cursor', 'skills', config, 'global')).toBe('native');
     expect(getEffectiveTargetSupportLevel('cursor', 'commands', config, 'global')).toBe('native');
     expect(getEffectiveTargetSupportLevel('codex-cli', 'rules', config, 'global')).toBe('native');
+    expect(getEffectiveTargetSupportLevel('copilot', 'mcp', config, 'global')).toBe('native');
+    expect(getEffectiveTargetSupportLevel('copilot', 'hooks', config, 'global')).toBe('native');
+    expect(getEffectiveTargetSupportLevel('copilot', 'permissions', config, 'global')).toBe(
+      'partial',
+    );
+    expect(getEffectiveTargetSupportLevel('copilot', 'commands', config, 'global')).toBe('none');
   });
 
   it('rewrites generated output paths through scope-specific target layouts', () => {
@@ -98,9 +104,10 @@ describe('builtin targets', () => {
     );
     expect(rewriteGeneratedOutputPath('claude-code', '.mcp.json', 'global')).toBe('.claude.json');
 
+    // Copilot CLI has no prompt-file/slash-command mechanism — no global commands surface.
     expect(
       rewriteGeneratedOutputPath('copilot', '.github/prompts/review.prompt.md', 'global'),
-    ).toBe('.copilot/prompts/review.prompt.md');
+    ).toBeNull();
     expect(
       rewriteGeneratedOutputPath(
         'copilot',

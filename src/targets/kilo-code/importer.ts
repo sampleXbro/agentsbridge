@@ -13,7 +13,6 @@
 
 import { join } from 'node:path';
 import { stat } from 'node:fs/promises';
-import { parse as yamlParse } from 'yaml';
 import type { ImportResult } from '../../core/types.js';
 import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
@@ -21,22 +20,19 @@ import { importEmbeddedSkills } from '../import/embedded-skill.js';
 import { importFileDirectory } from '../import/import-orchestrator.js';
 import { runDescriptorImport } from '../import/descriptor-import-runner.js';
 import { readFileSafe, writeFileAtomic } from '../../utils/filesystem/fs.js';
-import {
-  serializeImportedAgentWithFallback,
-  serializeImportedRuleWithFallback,
-} from '../import/import-metadata.js';
+import { serializeImportedRuleWithFallback } from '../import/import-metadata.js';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
 import { kiloNonRootRuleMapper, kiloCommandMapper } from './import-mappers.js';
+import { importGlobalKiloMcp } from './global-mcp-import.js';
+import { importLegacyModes } from './legacy-modes-import.js';
 import {
   KILO_CODE_TARGET,
   KILO_CODE_SKILLS_DIR,
   KILO_CODE_LEGACY_RULES_DIR,
   KILO_CODE_LEGACY_WORKFLOWS_DIR,
   KILO_CODE_LEGACY_SKILLS_DIR,
-  KILO_CODE_LEGACY_MODES_FILE,
   KILO_CODE_CANONICAL_RULES_DIR,
   KILO_CODE_CANONICAL_COMMANDS_DIR,
-  KILO_CODE_CANONICAL_AGENTS_DIR,
 } from './constants.js';
 import { descriptor } from './index.js';
 
@@ -140,66 +136,6 @@ async function importLegacyWorkflows(
   );
 }
 
-interface LegacyMode {
-  slug?: unknown;
-  name?: unknown;
-  description?: unknown;
-  roleDefinition?: unknown;
-  whenToUse?: unknown;
-}
-
-interface LegacyModesFile {
-  customModes?: unknown;
-}
-
-/**
- * Import `.kilocodemodes` (YAML or JSON) custom modes into
- * `.agentsmesh/agents/<slug>.md`. Translates the legacy roo/kilo
- * `roleDefinition` body into the canonical agent body.
- */
-async function importLegacyModes(
-  projectRoot: string,
-  results: ImportResult[],
-  normalize: Normalizer,
-): Promise<void> {
-  const sourceFile = join(projectRoot, KILO_CODE_LEGACY_MODES_FILE);
-  const content = await readFileSafe(sourceFile);
-  if (content === null) return;
-  let parsed: LegacyModesFile;
-  try {
-    parsed = yamlParse(content) as LegacyModesFile;
-  } catch {
-    return;
-  }
-  if (!parsed || !Array.isArray(parsed.customModes)) return;
-  for (const raw of parsed.customModes) {
-    if (!raw || typeof raw !== 'object') continue;
-    const mode = raw as LegacyMode;
-    if (typeof mode.slug !== 'string' || mode.slug.length === 0) continue;
-    const slug = mode.slug;
-    const destPath = join(projectRoot, KILO_CODE_CANONICAL_AGENTS_DIR, `${slug}.md`);
-    const description = typeof mode.description === 'string' ? mode.description : '';
-    const role = typeof mode.roleDefinition === 'string' ? mode.roleDefinition.trim() : '';
-    const whenToUse = typeof mode.whenToUse === 'string' ? mode.whenToUse.trim() : '';
-    const body = whenToUse ? `${role}\n\n## When to use\n\n${whenToUse}` : role;
-    // Only canonical agent fields are preserved by the shared serializer; the
-    // kilo-specific `mode: subagent` frontmatter key is re-added by the
-    // generator on round-trip.
-    const frontmatter: Record<string, unknown> = {};
-    if (description) frontmatter.description = description;
-    if (typeof mode.name === 'string' && mode.name.length > 0) frontmatter.name = mode.name;
-    const serialized = await serializeImportedAgentWithFallback(destPath, frontmatter, body);
-    const normalized = normalize(serialized, sourceFile, destPath);
-    await writeFileAtomic(destPath, normalized);
-    results.push({
-      feature: 'agents',
-      fromTool: KILO_CODE_TARGET,
-      fromPath: sourceFile,
-      toPath: `${KILO_CODE_CANONICAL_AGENTS_DIR}/${slug}.md`,
-    });
-  }
-}
-
 export async function importFromKiloCode(
   projectRoot: string,
   options: { scope?: TargetLayoutScope } = {},
@@ -231,6 +167,12 @@ export async function importFromKiloCode(
       results,
       normalize,
     );
+  }
+
+  // Global-only: MCP servers are a key inside the shared kilo.jsonc rather
+  // than a standalone mcpJson file (see global-mcp-import.ts).
+  if (scope === 'global') {
+    await importGlobalKiloMcp(projectRoot, results);
   }
 
   return results;

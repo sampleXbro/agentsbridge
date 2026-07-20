@@ -48,15 +48,14 @@ features:
       .filter((path) => !path.startsWith('.agentsmeshcache'))
       .sort();
     expect(generatedPaths).toEqual([
-      '.cline/agents/code-reviewer.md',
-      '.cline/agents/researcher.md',
-      '.cline/cline_mcp_settings.json',
+      '.cline/agents.yaml',
+      '.cline/hooks/posttooluse-0.sh',
+      '.cline/mcp.json',
+      '.cline/rules/typescript.md',
       '.cline/skills/api-generator/SKILL.md',
       '.cline/skills/api-generator/references/route-checklist.md',
       '.cline/skills/api-generator/template.ts',
       '.clineignore',
-      '.clinerules/hooks/posttooluse-0.sh',
-      '.clinerules/typescript.md',
       '.clinerules/workflows/review.md',
       'AGENTS.md',
     ]);
@@ -64,7 +63,7 @@ features:
     const agentsRoot = read(projectDir, 'AGENTS.md');
     expect(agentsRoot).toContain('# Standards');
 
-    const scopedRule = read(projectDir, '.clinerules/typescript.md');
+    const scopedRule = read(projectDir, '.cline/rules/typescript.md');
     expect(scopedRule).toContain('description: TypeScript specific rules');
     expect(scopedRule).toContain('paths:');
     expect(scopedRule).toContain('src/**/*.ts');
@@ -86,19 +85,20 @@ features:
     expect(skillTemplate).toContain("import { z } from 'zod';");
     expect(skillTemplate).toContain('export const createRouteSchema = z.object');
 
-    const reviewer = read(projectDir, '.cline/agents/code-reviewer.md');
-    expect(reviewer).toContain('name: code-reviewer');
-    expect(reviewer).toContain('You are a code reviewer.');
-    const researcher = read(projectDir, '.cline/agents/researcher.md');
-    expect(researcher).toContain('name: researcher');
+    const agentsYaml = read(projectDir, '.cline/agents.yaml');
+    // agents.yaml is a combined YAML list — head field uses "agents:" key
+    expect(agentsYaml).toContain('agents:');
+    expect(agentsYaml).toContain('name: code-reviewer');
+    expect(agentsYaml).toContain('You are a code reviewer.');
+    expect(agentsYaml).toContain('name: researcher');
 
-    const hook = read(projectDir, '.clinerules/hooks/posttooluse-0.sh');
+    const hook = read(projectDir, '.cline/hooks/posttooluse-0.sh');
     expect(hook).toContain('#!/usr/bin/env bash');
     expect(hook).toContain('# agentsmesh-matcher: Write|Edit');
     expect(hook).toContain('# agentsmesh-command: prettier --write $FILE_PATH');
     expect(hook).toContain('set -e');
 
-    const mcp = JSON.parse(read(projectDir, '.cline/cline_mcp_settings.json')) as {
+    const mcp = JSON.parse(read(projectDir, '.cline/mcp.json')) as {
       mcpServers?: Record<string, unknown>;
     };
     expect(mcp.mcpServers).toBeDefined();

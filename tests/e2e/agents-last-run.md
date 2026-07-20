@@ -1,6 +1,6 @@
 # Agents E2E Last Run Report
 
-_Generated: 2026-07-07T13:29:29.754Z_
+_Generated: 2026-07-19T18:15:59.844Z_
 
 ## Initial — `.agentsmesh/agents/` (canonical fixture)
 
@@ -107,13 +107,14 @@ Imported 12 file(s). Run 'agentsmesh generate' to sync to other tools.
 ✓ created .cursor/skills/api-generator/references/route-checklist.md
 ✓ created .cursor/skills/api-generator/template.ts
 ✓ created .cursor/mcp.json
+✓ created .cursor/cli.json
 ✓ created .cursor/hooks.json
 ✓ created .cursorignore
-Generated: 13 created, 0 updated, 0 unchanged
+Generated: 14 created, 0 updated, 0 unchanged
 ┌────────┬───────┬──────────────────┬──────────┬────────┬────────┬─────┬───────┬────────┬─────────────┐
 │ Target │ Rules │ Additional Rules │ Commands │ Agents │ Skills │ MCP │ Hooks │ Ignore │ Permissions │
 ├────────┼───────┼──────────────────┼──────────┼────────┼────────┼─────┼───────┼────────┼─────────────┤
-│ cursor │   ✓   │        ✓         │    ✓     │   ✓    │   ✓    │  ✓  │   ✓   │   ✓    │      ◐      │
+│ cursor │   ✓   │        ✓         │    ✓     │   ✓    │   ✓    │  ✓  │   ✓   │   ✓    │      ✓      │
 └────────┴───────┴──────────────────┴──────────┴────────┴────────┴─────┴───────┴────────┴─────────────┘
 
 ✓ native  ◆ embedded  ◐ partial  – none
@@ -147,8 +148,9 @@ Generated: 13 created, 0 updated, 0 unchanged
 ✓ .cursor/skills/api-generator/template.ts → .agentsmesh/skills/api-generator/template.ts
 ✓ .cursor/mcp.json → .agentsmesh/mcp.json
 ✓ .cursor/hooks.json → .agentsmesh/hooks.yaml
+✓ .cursor/cli.json → .agentsmesh/permissions.yaml
 ✓ .cursorignore → .agentsmesh/ignore
-Imported 11 file(s). Run 'agentsmesh generate' to sync to other tools.
+Imported 12 file(s). Run 'agentsmesh generate' to sync to other tools.
 ```
 
 #### Canonical `.agentsmesh/agents/` after import
@@ -232,11 +234,9 @@ Generated: 11 created, 0 updated, 0 unchanged
   - **researcher**: ✓ `.gemini/agents/researcher.md`
     - description : ✓
     - body snippet: ✓
+
+## Cline (per-file .cline/agents/{name}.md)
+
 ### cline: exit=0
 
-  - **code-reviewer**: ✓ `.cline/agents/code-reviewer.md`
-    - description : ✓
-    - body snippet: ✓
-  - **researcher**: ✓ `.cline/agents/researcher.md`
-    - description : ✓
-    - body snippet: ✓
+  - (.cline/agents/ directory not found)

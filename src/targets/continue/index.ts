@@ -7,6 +7,7 @@ import {
   generateAgents,
   generateSkills,
   generateMcp,
+  generateIgnore,
 } from './generator.js';
 import {
   CONTINUE_ROOT_RULE,
@@ -17,8 +18,11 @@ import {
   CONTINUE_GLOBAL_AGENTS_MD,
   CONTINUE_GLOBAL_CONFIG,
   CONTINUE_GLOBAL_PERMISSIONS,
+  CONTINUE_IGNORE,
+  CONTINUE_GLOBAL_IGNORE,
   CONTINUE_CANONICAL_RULES_DIR,
   CONTINUE_CANONICAL_COMMANDS_DIR,
+  CONTINUE_CANONICAL_IGNORE,
 } from './constants.js';
 import { importFromContinue } from './importer.js';
 import { continueCommandMapper, continueRuleMapper } from './import-mappers.js';
@@ -36,6 +40,7 @@ export const target: TargetGenerators = {
   generateAgents,
   generateSkills,
   generateMcp,
+  generateIgnore,
   importFrom: importFromContinue,
 };
 
@@ -44,7 +49,7 @@ const project: TargetLayout = {
   skillDir: '.continue/skills',
   managedOutputs: {
     dirs: ['.continue/prompts', '.continue/rules', '.continue/skills'],
-    files: ['.continue/mcpServers/agentsmesh.json'],
+    files: ['.continue/mcpServers/agentsmesh.json', CONTINUE_IGNORE],
   },
   paths: {
     rulePath(slug, _rule) {
@@ -72,6 +77,7 @@ const globalLayout: TargetLayout = {
       CONTINUE_GLOBAL_AGENTS_MD,
       CONTINUE_GLOBAL_CONFIG,
       CONTINUE_GLOBAL_PERMISSIONS,
+      CONTINUE_GLOBAL_IGNORE,
     ],
   },
   mirrorGlobalPath(path, _activeTargets) {
@@ -101,7 +107,7 @@ const globalCapabilities: TargetCapabilities = {
   skills: 'native',
   mcp: 'native',
   hooks: 'none',
-  ignore: 'none',
+  ignore: 'native',
   permissions: 'native',
 };
 
@@ -122,7 +128,7 @@ export const descriptor = {
     skills: 'native',
     mcp: 'native',
     hooks: 'none',
-    ignore: 'none',
+    ignore: 'native',
     permissions: 'none',
   },
   emptyImportMessage:
@@ -160,6 +166,16 @@ export const descriptor = {
       canonicalDir: CONTINUE_CANONICAL_COMMANDS_DIR,
       extensions: ['.md'],
       map: continueCommandMapper,
+    },
+    ignore: {
+      feature: 'ignore',
+      mode: 'flatFile',
+      source: {
+        project: [CONTINUE_IGNORE],
+        global: [CONTINUE_GLOBAL_IGNORE],
+      },
+      canonicalDir: '.agentsmesh',
+      canonicalFilename: CONTINUE_CANONICAL_IGNORE,
     },
   },
   buildImportPaths: buildContinueImportPaths,

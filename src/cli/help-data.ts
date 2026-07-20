@@ -243,7 +243,13 @@ export const COMMANDS: HelpCommand[] = [
     name: 'check',
     usage: 'agentsmesh check',
     description: 'Verify canonical files still match .agentsmesh/.lock',
-    flags: [{ name: '--global', description: 'Check ~/.agentsmesh/.lock' }],
+    flags: [
+      { name: '--global', description: 'Check ~/.agentsmesh/.lock' },
+      {
+        name: '--no-outputs',
+        description: 'Skip verification of generated target outputs against the lock',
+      },
+    ],
   },
   {
     name: 'merge',

@@ -4,6 +4,7 @@ import {
   WARP_SKILLS_DIR,
   WARP_MCP_FILE,
   WARP_GLOBAL_SKILLS_DIR,
+  WARP_GLOBAL_MCP_FILE,
 } from '../../../targets/warp/constants.js';
 import type { TargetLayoutScope } from '../../../targets/catalog/target-descriptor.js';
 import { AB_RULES } from './constants.js';
@@ -17,6 +18,7 @@ export async function buildWarpImportPaths(
     for (const absPath of await listFiles(projectRoot, WARP_GLOBAL_SKILLS_DIR)) {
       addSkillLikeMapping(refs, rel(projectRoot, absPath), WARP_GLOBAL_SKILLS_DIR);
     }
+    refs.set(WARP_GLOBAL_MCP_FILE, '.agentsmesh/mcp.json');
     return;
   }
 

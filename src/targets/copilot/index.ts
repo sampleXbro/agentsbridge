@@ -21,17 +21,18 @@ import {
   COPILOT_GLOBAL_INSTRUCTIONS,
   COPILOT_GLOBAL_AGENTS_DIR,
   COPILOT_GLOBAL_SKILLS_DIR,
-  COPILOT_GLOBAL_PROMPTS_DIR,
   COPILOT_GLOBAL_AGENTS_SKILLS_DIR,
   COPILOT_GLOBAL_AGENTS_MD,
   COPILOT_GLOBAL_CLAUDE_SKILLS_DIR,
+  COPILOT_GLOBAL_MCP,
+  COPILOT_GLOBAL_HOOKS_DIR,
 } from './constants.js';
 import { importFromCopilot } from './importer.js';
 import { inferCopilotPickFromPath } from '../../install/native/native-path-pick-infer-copilot.js';
 import { lintRules } from './linter.js';
 import { buildCopilotImportPaths } from '../../core/reference/import-map-builders.js';
 import { commandPromptPath } from './command-prompt.js';
-import { lintCommands, lintHooks } from './lint.js';
+import { lintCommands, lintHooks, lintPermissions } from './lint.js';
 import { addHookScriptAssets } from './hook-assets.js';
 import { generateCopilotGlobalExtras } from './scope-extras.js';
 import { copilotImporterSpec } from './importer-spec.js';
@@ -92,11 +93,11 @@ const globalLayout: TargetLayout = {
     dirs: [
       COPILOT_GLOBAL_AGENTS_DIR,
       COPILOT_GLOBAL_SKILLS_DIR,
-      COPILOT_GLOBAL_PROMPTS_DIR,
       COPILOT_GLOBAL_AGENTS_SKILLS_DIR,
       COPILOT_GLOBAL_CLAUDE_SKILLS_DIR,
+      COPILOT_GLOBAL_HOOKS_DIR,
     ],
-    files: [COPILOT_GLOBAL_INSTRUCTIONS, COPILOT_GLOBAL_AGENTS_MD],
+    files: [COPILOT_GLOBAL_INSTRUCTIONS, COPILOT_GLOBAL_AGENTS_MD, COPILOT_GLOBAL_MCP],
   },
   rewriteGeneratedPath(path) {
     // Transform project-level .github/ paths to global ~/.copilot/ paths
@@ -107,8 +108,11 @@ const globalLayout: TargetLayout = {
       // Glob-scoped instructions aggregate into the single root instructions file in global mode
       return COPILOT_GLOBAL_INSTRUCTIONS;
     }
+    // Copilot CLI has no prompt-file/slash-command mechanism (no `prompts/`
+    // entry in the official ~/.copilot config-dir reference; github/copilot-cli#618
+    // confirms prompt files are not planned) — commands are not projected in global mode.
     if (path.startsWith(`${COPILOT_PROMPTS_DIR}/`)) {
-      return path.replace(`${COPILOT_PROMPTS_DIR}/`, `${COPILOT_GLOBAL_PROMPTS_DIR}/`);
+      return null;
     }
     if (path.startsWith(`${COPILOT_AGENTS_DIR}/`)) {
       return path.replace(`${COPILOT_AGENTS_DIR}/`, `${COPILOT_GLOBAL_AGENTS_DIR}/`);
@@ -116,11 +120,13 @@ const globalLayout: TargetLayout = {
     if (path.startsWith(`${COPILOT_SKILLS_DIR}/`)) {
       return path.replace(`${COPILOT_SKILLS_DIR}/`, `${COPILOT_GLOBAL_SKILLS_DIR}/`);
     }
-    // Skip hooks in global mode
+    // Hooks and MCP are emitted for global scope via globalSupport.scopeExtras
+    // (different schema/key than project scope), not through this plain
+    // project-shaped generator path — skip here so the project-shaped output
+    // doesn't leak into global mode at the wrong path.
     if (path.startsWith(`${COPILOT_HOOKS_DIR}/`)) {
       return null;
     }
-    // Skip MCP in global mode (no .vscode/ equivalent for global)
     if (path === COPILOT_MCP_JSON) {
       return null;
     }
@@ -139,8 +145,9 @@ const globalLayout: TargetLayout = {
       // Global mode uses single instructions file, not per-rule files
       return COPILOT_GLOBAL_INSTRUCTIONS;
     },
-    commandPath(name, _config) {
-      return `${COPILOT_GLOBAL_PROMPTS_DIR}/${name}.prompt.md`;
+    commandPath(_name, _config) {
+      // No global commands surface (see globalCapabilities.commands = 'none').
+      return null;
     },
     agentPath(name, _config) {
       return `${COPILOT_GLOBAL_AGENTS_DIR}/${name}.agent.md`;
@@ -164,6 +171,7 @@ export const descriptor = {
   lint: {
     commands: lintCommands,
     hooks: lintHooks,
+    permissions: lintPermissions,
   },
   postProcessHookOutputs: async (projectRoot, canonical, outputs) =>
     addHookScriptAssets(projectRoot, canonical, [...outputs]),
@@ -175,8 +183,9 @@ export const descriptor = {
       COPILOT_GLOBAL_AGENTS_MD,
       COPILOT_GLOBAL_AGENTS_DIR,
       COPILOT_GLOBAL_SKILLS_DIR,
-      COPILOT_GLOBAL_PROMPTS_DIR,
       COPILOT_GLOBAL_AGENTS_SKILLS_DIR,
+      COPILOT_GLOBAL_MCP,
+      COPILOT_GLOBAL_HOOKS_DIR,
     ],
     layout: globalLayout,
     scopeExtras: generateCopilotGlobalExtras,

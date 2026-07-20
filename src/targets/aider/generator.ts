@@ -72,3 +72,27 @@ export function generateIgnore(canonical: CanonicalFiles): AiderOutput[] {
   if (canonical.ignore.length === 0) return [];
   return [{ path: AIDER_IGNORE, content: canonical.ignore.join('\n') }];
 }
+
+/**
+ * No-op stub — Aider has no MCP config file surface.
+ * Lint warnings surface this via lintMcp.
+ */
+export function generateMcp(_canonical: CanonicalFiles): AiderOutput[] {
+  return [];
+}
+
+/**
+ * No-op stub — Aider has no lifecycle hook system.
+ * Lint warnings surface this via lintHooks.
+ */
+export function generateHooks(_canonical: CanonicalFiles): AiderOutput[] {
+  return [];
+}
+
+/**
+ * No-op stub — Aider has no permissions config.
+ * Lint warnings surface this via lintPermissions.
+ */
+export function generatePermissions(_canonical: CanonicalFiles): AiderOutput[] {
+  return [];
+}

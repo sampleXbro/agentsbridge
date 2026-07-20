@@ -1,8 +1,9 @@
 /**
  * Pi Coding Agent-specific lint hooks.
  *
- * Pi does not support hooks, permissions, ignore, or MCP as standalone
- * config files. Commands and agents are projected as skills via
+ * Pi does not support hooks, permissions, or ignore as standalone config
+ * files, and has no MCP surface at all (mcp=none; silent-drop applies).
+ * Commands are native (.pi/prompts/); agents are projected as skills via
  * supportsConversion.
  */
 
@@ -19,7 +20,7 @@ export function lintHooks(canonical: CanonicalFiles): LintDiagnostic[] {
     createWarning(
       '.agentsmesh/hooks.yaml',
       'pi-agent',
-      'Pi Coding Agent has no lifecycle hook system; canonical hooks are not projected.',
+      'Pi Agent hooks are supported via extensions at .pi/extensions/; agentsmesh does not generate extension files yet. Configure hooks manually.',
     ),
   ];
 }
@@ -45,17 +46,6 @@ export function lintIgnore(canonical: CanonicalFiles): LintDiagnostic[] {
       '.agentsmesh/ignore',
       'pi-agent',
       'Pi Coding Agent has no dedicated ignore file and relies on .gitignore; canonical ignore patterns are not projected.',
-    ),
-  ];
-}
-
-export function lintMcp(canonical: CanonicalFiles): LintDiagnostic[] {
-  if (!canonical.mcp || Object.keys(canonical.mcp.mcpServers).length === 0) return [];
-  return [
-    createWarning(
-      '.agentsmesh/mcp.json',
-      'pi-agent',
-      'Pi Coding Agent manages MCP servers via extensions, not a dedicated config file; canonical MCP servers are not projected.',
     ),
   ];
 }

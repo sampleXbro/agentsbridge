@@ -116,7 +116,7 @@ describe('compatibility matrix docs', () => {
       'utf-8',
     );
 
-    expect(supportedTools).toContain('~/.gemini/antigravity/workflows/');
+    expect(supportedTools).toContain('~/.gemini/antigravity/global_workflows/');
     expect(supportedTools).not.toContain('commands/workflows are not emitted');
     expect(supportedTools).not.toContain('Workflows/commands are not emitted');
   });

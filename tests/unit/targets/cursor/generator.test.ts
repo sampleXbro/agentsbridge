@@ -578,16 +578,21 @@ describe('generateMcp (cursor)', () => {
 });
 
 describe('generatePermissions (cursor)', () => {
-  it('returns empty — cursor has no native tool-permission file', () => {
+  it('generates .cursor/cli.json with permissions allow and deny', () => {
     const canonical = makeCanonical({
       permissions: {
         allow: ['Read', 'Grep'],
         deny: ['WebFetch'],
       },
     });
-    // Cursor does not have a native settings.json equivalent for tool allow/deny.
-    // Permissions are handled via linter warning, not file generation.
-    expect(generatePermissions(canonical)).toEqual([]);
+    const results = generatePermissions(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0]!.path).toBe('.cursor/cli.json');
+    const parsed = JSON.parse(results[0]!.content) as {
+      permissions: { allow?: string[]; deny?: string[] };
+    };
+    expect(parsed.permissions.allow).toEqual(['Read', 'Grep']);
+    expect(parsed.permissions.deny).toEqual(['WebFetch']);
   });
 
   it('returns empty when permissions is null', () => {
@@ -598,6 +603,32 @@ describe('generatePermissions (cursor)', () => {
     expect(generatePermissions(makeCanonical({ permissions: { allow: [], deny: [] } }))).toEqual(
       [],
     );
+  });
+
+  it('generates cli.json with only allow when deny is empty', () => {
+    const canonical = makeCanonical({
+      permissions: { allow: ['Read'], deny: [] },
+    });
+    const results = generatePermissions(canonical);
+    expect(results).toHaveLength(1);
+    const parsed = JSON.parse(results[0]!.content) as {
+      permissions: { allow?: string[]; deny?: string[] };
+    };
+    expect(parsed.permissions.allow).toEqual(['Read']);
+    expect(parsed.permissions.deny).toBeUndefined();
+  });
+
+  it('generates cli.json with only deny when allow is empty', () => {
+    const canonical = makeCanonical({
+      permissions: { allow: [], deny: ['WebFetch'] },
+    });
+    const results = generatePermissions(canonical);
+    expect(results).toHaveLength(1);
+    const parsed = JSON.parse(results[0]!.content) as {
+      permissions: { allow?: string[]; deny?: string[] };
+    };
+    expect(parsed.permissions.allow).toBeUndefined();
+    expect(parsed.permissions.deny).toEqual(['WebFetch']);
   });
 });
 

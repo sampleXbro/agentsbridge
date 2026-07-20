@@ -15,7 +15,6 @@ import {
   COPILOT_AGENTS_DIR,
   COPILOT_MCP_JSON,
   COPILOT_GLOBAL_INSTRUCTIONS,
-  COPILOT_GLOBAL_PROMPTS_DIR,
   COPILOT_GLOBAL_AGENTS_DIR,
   COPILOT_CANONICAL_AGENTS_DIR,
   COPILOT_CANONICAL_COMMANDS_DIR,
@@ -61,9 +60,11 @@ export const copilotImporterSpec: TargetImporterDescriptor = {
     },
   ],
   commands: {
+    // Project scope only: Copilot CLI has no global commands surface (see
+    // globalCapabilities.commands = 'none' in capabilities.ts).
     feature: 'commands',
     mode: 'directory',
-    source: { project: [COPILOT_PROMPTS_DIR], global: [COPILOT_GLOBAL_PROMPTS_DIR] },
+    source: { project: [COPILOT_PROMPTS_DIR] },
     canonicalDir: COPILOT_CANONICAL_COMMANDS_DIR,
     extensions: ['.prompt.md'],
     map: copilotCommandMapper,

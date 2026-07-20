@@ -110,15 +110,20 @@ describe('importFromKiro — MCP', () => {
 });
 
 describe('importFromKiro — hooks', () => {
-  it('imports .kiro/hooks/*.kiro.hook into canonical hooks.yaml', async () => {
+  it('imports .kiro/hooks/*.json (v1 schema) into canonical hooks.yaml', async () => {
     mkdirSync(join(TEST_DIR, KIRO_HOOKS_DIR), { recursive: true });
     writeFileSync(
-      join(TEST_DIR, KIRO_HOOKS_DIR, 'review-on-save.kiro.hook'),
+      join(TEST_DIR, KIRO_HOOKS_DIR, 'review-on-save.json'),
       JSON.stringify({
-        name: 'Review on save',
-        version: '1',
-        when: { type: 'preToolUse', tools: ['write'] },
-        then: { type: 'askAgent', prompt: 'Review the updated file.' },
+        version: 'v1',
+        hooks: [
+          {
+            name: 'review-on-save-1',
+            trigger: 'PreToolUse',
+            matcher: 'write',
+            action: { type: 'agent', prompt: 'Review the updated file.' },
+          },
+        ],
       }),
     );
 
@@ -133,7 +138,7 @@ describe('importFromKiro — hooks', () => {
 
   it('ignores malformed hook JSON', async () => {
     mkdirSync(join(TEST_DIR, KIRO_HOOKS_DIR), { recursive: true });
-    writeFileSync(join(TEST_DIR, KIRO_HOOKS_DIR, 'broken.kiro.hook'), '{broken');
+    writeFileSync(join(TEST_DIR, KIRO_HOOKS_DIR, 'broken.json'), '{broken');
 
     const results = await importFromKiro(TEST_DIR);
 

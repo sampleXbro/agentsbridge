@@ -100,19 +100,17 @@ describe('hooks round-trip e2e', () => {
           {
             type: 'command',
             bash: './scripts/posttooluse-0.sh',
-            comment: 'Matcher: Write|Edit',
+            matcher: 'Write|Edit',
             timeoutSec: 2,
           },
           {
             type: 'command',
             bash: './scripts/posttooluse-1.sh',
-            comment: 'Matcher: Bash',
+            matcher: 'Bash',
             timeoutSec: 4,
           },
         ],
-        notification: [
-          { type: 'command', bash: './scripts/notification-0.sh', comment: 'Matcher: .*' },
-        ],
+        notification: [{ type: 'command', bash: './scripts/notification-0.sh', matcher: '.*' }],
       },
     });
     expect(readText(join(dir, '.github', 'hooks', 'scripts', 'posttooluse-0.sh'))).toContain(

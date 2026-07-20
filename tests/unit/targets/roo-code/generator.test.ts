@@ -18,6 +18,9 @@ import {
   ROO_CODE_IGNORE,
   ROO_CODE_SKILLS_DIR,
   ROO_CODE_MODES_FILE,
+  ROO_CODE_VSCODE_SETTINGS,
+  ROO_CODE_ALLOWED_COMMANDS_KEY,
+  ROO_CODE_DENIED_COMMANDS_KEY,
 } from '../../../../src/targets/roo-code/constants.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
@@ -277,6 +280,13 @@ describe('generateIgnore (roo-code)', () => {
   it('returns empty array when no ignore patterns', () => {
     expect(generateIgnore(makeCanonical())).toEqual([]);
   });
+
+  it('emits nothing in global scope (Roo Code has no home-directory ignore concept)', () => {
+    const canonical = makeCanonical({ ignore: ['.env'] });
+    expect(generateIgnore(canonical, { capability: { level: 'none' }, scope: 'global' })).toEqual(
+      [],
+    );
+  });
 });
 
 describe('generateAgents (roo-code)', () => {
@@ -304,6 +314,67 @@ describe('generateAgents (roo-code)', () => {
     expect(parsed.customModes[0].name).toBe('Code Reviewer');
     expect(parsed.customModes[0].description).toBe('Reviews code for quality');
     expect(parsed.customModes[0].roleDefinition).toBe('You are an expert code reviewer.');
+    // Roo Code's modeConfigSchema requires `groups` (no default) — omitting it
+    // makes CustomModesManager.loadModesFromFile() drop ALL modes in the file.
+    expect(Array.isArray(parsed.customModes[0].groups)).toBe(true);
+    expect((parsed.customModes[0].groups as string[]).length).toBeGreaterThan(0);
+  });
+
+  it('always emits a non-empty roleDefinition (schema requires min length 1)', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          source: '/proj/.agentsmesh/agents/blank-body.md',
+          name: 'Blank Body',
+          description: 'Has no body',
+          body: '   \n  ',
+          tools: [],
+          allowedTools: [],
+          disallowedTools: [],
+        },
+      ],
+    });
+    const results = generateAgents(canonical);
+    const parsed = yamlParse(results[0].content) as { customModes: Array<Record<string, unknown>> };
+    expect(String(parsed.customModes[0].roleDefinition ?? '').length).toBeGreaterThan(0);
+  });
+
+  it('defaults groups to the safe permissive set when the agent specifies no tools', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          source: '/proj/.agentsmesh/agents/generalist.md',
+          name: 'Generalist',
+          description: '',
+          body: 'Do everything.',
+          tools: [],
+          allowedTools: [],
+          disallowedTools: [],
+        },
+      ],
+    });
+    const results = generateAgents(canonical);
+    const parsed = yamlParse(results[0].content) as { customModes: Array<Record<string, unknown>> };
+    expect(parsed.customModes[0].groups).toEqual(['read', 'edit', 'command', 'mcp']);
+  });
+
+  it('maps canonical tools to a restricted groups subset', () => {
+    const canonical = makeCanonical({
+      agents: [
+        {
+          source: '/proj/.agentsmesh/agents/read-only.md',
+          name: 'Read Only',
+          description: '',
+          body: 'Read only.',
+          tools: ['Read', 'Grep'],
+          allowedTools: [],
+          disallowedTools: [],
+        },
+      ],
+    });
+    const results = generateAgents(canonical);
+    const parsed = yamlParse(results[0].content) as { customModes: Array<Record<string, unknown>> };
+    expect(parsed.customModes[0].groups).toEqual(['read']);
   });
 
   it('produces slug from source basename without extension', () => {
@@ -424,14 +495,43 @@ describe('generateSkills (roo-code)', () => {
 });
 
 describe('generatePermissions (roo-code)', () => {
-  it('emits no files even when canonical permissions are present', () => {
+  it('emits .vscode/settings.json with roo-cline.allowedCommands/deniedCommands', () => {
     const canonical = makeCanonical({
       permissions: { allow: ['Bash(git diff)'], deny: ['Bash(rm -rf)'], ask: ['WebSearch'] },
     });
-    expect(generatePermissions(canonical)).toEqual([]);
+    const results = generatePermissions(canonical);
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(ROO_CODE_VSCODE_SETTINGS);
+    const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
+    expect(parsed[ROO_CODE_ALLOWED_COMMANDS_KEY]).toEqual(['Bash(git diff)']);
+    expect(parsed[ROO_CODE_DENIED_COMMANDS_KEY]).toEqual(['Bash(rm -rf)']);
+    // "ask" has no Roo Code equivalent — never projected.
+    expect(parsed).not.toHaveProperty('ask');
+  });
+
+  it('omits deniedCommands key when deny is empty', () => {
+    const canonical = makeCanonical({ permissions: { allow: ['Read'], deny: [] } });
+    const parsed = JSON.parse(generatePermissions(canonical)[0]!.content) as Record<
+      string,
+      unknown
+    >;
+    expect(parsed[ROO_CODE_ALLOWED_COMMANDS_KEY]).toEqual(['Read']);
+    expect(parsed).not.toHaveProperty(ROO_CODE_DENIED_COMMANDS_KEY);
   });
 
   it('emits no files when permissions are null', () => {
     expect(generatePermissions(makeCanonical())).toEqual([]);
+  });
+
+  it('emits no files when allow and deny are both empty', () => {
+    const canonical = makeCanonical({ permissions: { allow: [], deny: [], ask: ['WebSearch'] } });
+    expect(generatePermissions(canonical)).toEqual([]);
+  });
+
+  it('emits nothing in global scope (no deterministic VS Code user-settings path)', () => {
+    const canonical = makeCanonical({ permissions: { allow: ['Read'], deny: [] } });
+    expect(
+      generatePermissions(canonical, { capability: { level: 'partial' }, scope: 'global' }),
+    ).toEqual([]);
   });
 });

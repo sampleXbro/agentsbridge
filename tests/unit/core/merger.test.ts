@@ -72,6 +72,9 @@ checksums:
     expect(lock!.checksums['rules/_root.md']).toMatch(/^sha256:[a-f0-9]{64}$/);
     expect(lock!.libVersion).toBe('0.1.0');
     expect(lock!.generatedAt).toBeDefined();
+    // A merge-resolved lock intentionally omits generated outputs (old-lock
+    // semantics): a regenerate must rewrite them before they are trustworthy.
+    expect(lock!.outputs).toBeUndefined();
   });
 
   it('throws when lock has no conflict', async () => {

@@ -199,4 +199,22 @@ describe('codex-cli global frontmatter preservation', () => {
     expect(server.command).toBe('npx');
     expect(server.args).toEqual(['-y', '@test/mcp']);
   });
+
+  it('writes native permissions to .codex/rules/agentsmesh-permissions.rules in global mode', async () => {
+    const results = await generate({
+      config: { ...makeGlobalConfig(), features: ['permissions'] } as ValidatedConfig,
+      canonical: makeCanonical({
+        permissions: { allow: ['Bash(git status:*)'], deny: [] },
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const permissionsFile = results.find(
+      (r) => r.target === 'codex-cli' && r.path === '.codex/rules/agentsmesh-permissions.rules',
+    );
+    expect(permissionsFile).toBeDefined();
+    expect(permissionsFile!.content).toContain('prefix_rule(');
+    expect(permissionsFile!.content).toContain('pattern = ["git", "status"],');
+  });
 });

@@ -195,7 +195,7 @@ describe('import: Cursor (all features)', () => {
       JSON.stringify({ mcpServers: { ctx: { type: 'stdio', command: 'npx', args: [], env: {} } } }),
     );
     writeFileSync(
-      join(TEST_DIR, '.cursor', 'settings.json'),
+      join(TEST_DIR, '.cursor', 'cli.json'),
       JSON.stringify({ permissions: { allow: ['Read'], deny: [] } }),
     );
     writeFileSync(
@@ -375,16 +375,19 @@ describe('import: Gemini CLI (rules + commands + mcp + hooks + ignore)', () => {
 
 describe('import: Cline (rules + skills + mcp + ignore)', () => {
   it('imports all Cline-supported features', async () => {
-    mkdirSync(join(TEST_DIR, '.clinerules'), { recursive: true });
-    writeFileSync(join(TEST_DIR, '.clinerules', '_root.md'), '# Root\n');
-    writeFileSync(join(TEST_DIR, '.clinerules', 'ts.md'), '---\nglobs:\n  - "**/*.ts"\n---\n\nTS');
+    mkdirSync(join(TEST_DIR, '.cline', 'rules'), { recursive: true });
+    writeFileSync(join(TEST_DIR, '.cline', 'rules', '_root.md'), '# Root\n');
+    writeFileSync(
+      join(TEST_DIR, '.cline', 'rules', 'ts.md'),
+      '---\nglobs:\n  - "**/*.ts"\n---\n\nTS',
+    );
     mkdirSync(join(TEST_DIR, '.cline', 'skills', 'qa'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, '.cline', 'skills', 'qa', 'SKILL.md'),
       '---\ndescription: QA\n---\n\nQA.',
     );
     writeFileSync(
-      join(TEST_DIR, '.cline', 'cline_mcp_settings.json'),
+      join(TEST_DIR, '.cline', 'mcp.json'),
       JSON.stringify({ mcpServers: { ctx: { type: 'stdio', command: 'npx', args: [], env: {} } } }),
     );
     writeFileSync(join(TEST_DIR, '.clineignore'), 'dist\n');
@@ -566,6 +569,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
     expect(paths).toEqual([
       '.cursor/AGENTS.md',
       '.cursor/agents/reviewer.md',
+      '.cursor/cli.json',
       '.cursor/commands/review.md',
       '.cursor/hooks.json',
       '.cursor/mcp.json',
@@ -635,18 +639,18 @@ describe('generate: full canonical → all agents produce all supported outputs'
     });
     const paths = results.map((r) => r.path).sort();
     expect(paths).toEqual([
-      '.cline/agents/reviewer.md',
-      '.cline/cline_mcp_settings.json',
+      '.cline/agents.yaml',
+      '.cline/hooks/posttooluse-0.sh',
+      '.cline/mcp.json',
+      '.cline/rules/typescript.md',
       '.cline/skills/qa/SKILL.md',
       '.clineignore',
-      '.clinerules/hooks/posttooluse-0.sh',
-      '.clinerules/typescript.md',
       '.clinerules/workflows/review.md',
       'AGENTS.md',
     ]);
   });
 
-  it('Codex CLI generates AGENTS.md + .codex/instructions/*.md + .codex/agents/*.toml + skills + MCP', async () => {
+  it('Codex CLI generates AGENTS.md + nested AGENTS.md + .codex/agents/*.toml + skills + MCP + permissions', async () => {
     const results = await generate({
       config: allFeaturesConfig(['codex-cli']),
       canonical,
@@ -659,8 +663,9 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.codex/agents/reviewer.toml',
       '.codex/config.toml',
       '.codex/hooks.json',
-      '.codex/instructions/typescript.md',
+      '.codex/rules/agentsmesh-permissions.rules',
       'AGENTS.md',
+      'typescript/AGENTS.md',
     ]);
   });
 
@@ -683,7 +688,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
     ]);
   });
 
-  it('Continue generates rules + prompt files + skills + mcp', async () => {
+  it('Continue generates rules + prompt files + skills + mcp + ignore', async () => {
     const results = await generate({
       config: allFeaturesConfig(['continue']),
       canonical,
@@ -697,6 +702,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.continue/rules/typescript.md',
       '.continue/skills/am-agent-reviewer/SKILL.md',
       '.continue/skills/qa/SKILL.md',
+      '.continueignore',
     ]);
   });
 
@@ -770,26 +776,28 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.claude/settings.json',
       '.claude/skills/qa/SKILL.md',
       '.claudeignore',
-      '.cline/agents/reviewer.md',
-      '.cline/cline_mcp_settings.json',
+      '.cline/agents.yaml',
+      '.cline/hooks/posttooluse-0.sh',
+      '.cline/mcp.json',
+      '.cline/rules/typescript.md',
       '.cline/skills/qa/SKILL.md',
       '.clineignore',
-      '.clinerules/hooks/posttooluse-0.sh',
-      '.clinerules/typescript.md',
       '.clinerules/workflows/review.md',
       '.codeiumignore',
       '.codex/agents/reviewer.toml',
       '.codex/config.toml',
       '.codex/hooks.json',
-      '.codex/instructions/typescript.md',
+      '.codex/rules/agentsmesh-permissions.rules',
       '.continue/mcpServers/agentsmesh.json',
       '.continue/prompts/review.md',
       '.continue/rules/general.md',
       '.continue/rules/typescript.md',
       '.continue/skills/am-agent-reviewer/SKILL.md',
       '.continue/skills/qa/SKILL.md',
+      '.continueignore',
       '.cursor/AGENTS.md',
       '.cursor/agents/reviewer.md',
+      '.cursor/cli.json',
       '.cursor/commands/review.md',
       '.cursor/hooks.json',
       '.cursor/mcp.json',
@@ -827,6 +835,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
       'AGENTS.md',
       'CLAUDE.md',
       'GEMINI.md',
+      'typescript/AGENTS.md',
     ]);
   });
 });

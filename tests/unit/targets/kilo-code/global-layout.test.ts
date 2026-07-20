@@ -11,13 +11,13 @@ import type { ValidatedConfig } from '../../../../src/config/core/schema.js';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
 import {
   KILO_CODE_ROOT_RULE,
+  KILO_CODE_MCP_FILE,
+  KILO_CODE_IGNORE,
   KILO_CODE_GLOBAL_AGENTS_MD,
   KILO_CODE_GLOBAL_RULES_DIR,
   KILO_CODE_GLOBAL_COMMANDS_DIR,
   KILO_CODE_GLOBAL_AGENTS_DIR,
   KILO_CODE_GLOBAL_SKILLS_DIR,
-  KILO_CODE_GLOBAL_MCP_FILE,
-  KILO_CODE_GLOBAL_IGNORE,
   KILO_CONFIG_FILE,
   KILO_GLOBAL_CONFIG_FILE,
 } from '../../../../src/targets/kilo-code/constants.js';
@@ -25,7 +25,7 @@ import {
 describe('kilo-code global layout — paths', () => {
   const layout = getTargetLayout('kilo-code', 'global')!;
 
-  it('resolves rule path to .kilo/rules/', () => {
+  it('resolves rule path to .config/kilo/rules/', () => {
     expect(
       layout.paths.rulePath('typescript', {
         source: 'typescript.md',
@@ -38,13 +38,13 @@ describe('kilo-code global layout — paths', () => {
     ).toBe(`${KILO_CODE_GLOBAL_RULES_DIR}/typescript.md`);
   });
 
-  it('resolves command path to .kilo/commands/', () => {
+  it('resolves command path to .config/kilo/commands/', () => {
     expect(layout.paths.commandPath('deploy', {} as never)).toBe(
       `${KILO_CODE_GLOBAL_COMMANDS_DIR}/deploy.md`,
     );
   });
 
-  it('resolves agent path to .kilo/agents/ (native first-class)', () => {
+  it('resolves agent path to .config/kilo/agents/', () => {
     expect(layout.paths.agentPath('reviewer', {} as never)).toBe(
       `${KILO_CODE_GLOBAL_AGENTS_DIR}/reviewer.md`,
     );
@@ -60,11 +60,9 @@ describe('kilo-code global layout — paths', () => {
     ]);
   });
 
-  it('declares all global managed-output files', () => {
+  it('declares all global managed-output files (no standalone mcp.json or ignore file)', () => {
     expect(layout.managedOutputs.files).toEqual([
       KILO_CODE_GLOBAL_AGENTS_MD,
-      KILO_CODE_GLOBAL_MCP_FILE,
-      KILO_CODE_GLOBAL_IGNORE,
       KILO_GLOBAL_CONFIG_FILE,
     ]);
   });
@@ -74,44 +72,44 @@ describe('kilo-code global layout — rewriteGeneratedPath', () => {
   const layout = getTargetLayout('kilo-code', 'global')!;
   const rewrite = layout.rewriteGeneratedPath!;
 
-  it('rewrites AGENTS.md to .kilo/AGENTS.md (nest under global parent)', () => {
+  it('rewrites AGENTS.md to .config/kilo/AGENTS.md', () => {
     expect(rewrite(KILO_CODE_ROOT_RULE)).toBe(KILO_CODE_GLOBAL_AGENTS_MD);
   });
 
-  it('keeps .kilo/rules/ paths unchanged', () => {
-    expect(rewrite(`${KILO_CODE_GLOBAL_RULES_DIR}/typescript.md`)).toBe(
+  it('rewrites .kilo/rules/ paths to .config/kilo/rules/', () => {
+    expect(rewrite('.kilo/rules/typescript.md')).toBe(
       `${KILO_CODE_GLOBAL_RULES_DIR}/typescript.md`,
     );
   });
 
-  it('keeps .kilo/commands/ paths unchanged', () => {
-    expect(rewrite(`${KILO_CODE_GLOBAL_COMMANDS_DIR}/deploy.md`)).toBe(
-      `${KILO_CODE_GLOBAL_COMMANDS_DIR}/deploy.md`,
-    );
+  it('rewrites .kilo/commands/ paths to .config/kilo/commands/', () => {
+    expect(rewrite('.kilo/commands/deploy.md')).toBe(`${KILO_CODE_GLOBAL_COMMANDS_DIR}/deploy.md`);
   });
 
-  it('keeps .kilo/agents/ paths unchanged', () => {
-    expect(rewrite(`${KILO_CODE_GLOBAL_AGENTS_DIR}/reviewer.md`)).toBe(
-      `${KILO_CODE_GLOBAL_AGENTS_DIR}/reviewer.md`,
-    );
+  it('rewrites .kilo/agents/ paths to .config/kilo/agents/', () => {
+    expect(rewrite('.kilo/agents/reviewer.md')).toBe(`${KILO_CODE_GLOBAL_AGENTS_DIR}/reviewer.md`);
   });
 
-  it('keeps .kilo/skills/ paths unchanged', () => {
+  it('keeps .kilo/skills/ paths unchanged (documented global skill location)', () => {
     expect(rewrite(`${KILO_CODE_GLOBAL_SKILLS_DIR}/api-gen/SKILL.md`)).toBe(
       `${KILO_CODE_GLOBAL_SKILLS_DIR}/api-gen/SKILL.md`,
     );
   });
 
-  it('keeps .kilo/mcp.json unchanged', () => {
-    expect(rewrite(KILO_CODE_GLOBAL_MCP_FILE)).toBe(KILO_CODE_GLOBAL_MCP_FILE);
+  it('suppresses .kilo/mcp.json — MCP folds into kilo.jsonc `mcp` key at global scope', () => {
+    expect(rewrite(KILO_CODE_MCP_FILE)).toBeNull();
   });
 
-  it('keeps .kilocodeignore unchanged', () => {
-    expect(rewrite(KILO_CODE_GLOBAL_IGNORE)).toBe(KILO_CODE_GLOBAL_IGNORE);
+  it('suppresses .kilocodeignore — no documented global ignore mechanism', () => {
+    expect(rewrite(KILO_CODE_IGNORE)).toBeNull();
   });
 
   it('rewrites kilo.jsonc to .config/kilo/kilo.jsonc for global scope', () => {
     expect(rewrite(KILO_CONFIG_FILE)).toBe(KILO_GLOBAL_CONFIG_FILE);
+  });
+
+  it('leaves unrelated paths untouched', () => {
+    expect(rewrite('some/other/path.md')).toBe('some/other/path.md');
   });
 });
 
@@ -149,7 +147,7 @@ describe('kilo-code global layout — mirrorGlobalPath', () => {
 });
 
 describe('kilo-code global layout — capabilities', () => {
-  it('exposes the same native capabilities in global as in project (hooks: none, permissions: native)', () => {
+  it('downgrades ignore to none and hooks to partial at global scope', () => {
     expect(getTargetCapabilities('kilo-code', 'global')).toEqual({
       rules: { level: 'native' },
       additionalRules: { level: 'native' },
@@ -157,13 +155,13 @@ describe('kilo-code global layout — capabilities', () => {
       agents: { level: 'native' },
       skills: { level: 'native' },
       mcp: { level: 'native' },
-      hooks: { level: 'none' },
-      ignore: { level: 'native' },
+      hooks: { level: 'partial' },
+      ignore: { level: 'none' },
       permissions: { level: 'native' },
     });
   });
 
-  it('descriptor.globalSupport.detectionPaths covers all global locations', () => {
+  it('descriptor.globalSupport.detectionPaths covers all global locations (no standalone mcp/ignore files)', () => {
     const desc = getBuiltinTargetDefinition('kilo-code')!;
     const paths = desc.globalSupport?.detectionPaths ?? [];
     expect(paths).toEqual([
@@ -172,8 +170,7 @@ describe('kilo-code global layout — capabilities', () => {
       KILO_CODE_GLOBAL_COMMANDS_DIR,
       KILO_CODE_GLOBAL_AGENTS_DIR,
       KILO_CODE_GLOBAL_SKILLS_DIR,
-      KILO_CODE_GLOBAL_MCP_FILE,
-      KILO_CODE_GLOBAL_IGNORE,
+      KILO_GLOBAL_CONFIG_FILE,
     ]);
   });
 });
@@ -181,11 +178,11 @@ describe('kilo-code global layout — capabilities', () => {
 describe('kilo-code global frontmatter preservation', () => {
   const TEST_DIR = join(tmpdir(), 'am-kilo-code-global-fm');
 
-  function makeGlobalConfig(): ValidatedConfig {
+  function makeGlobalConfig(features: string[]): ValidatedConfig {
     return {
       version: 1,
       targets: ['kilo-code'],
-      features: ['rules', 'skills'],
+      features,
       extends: [],
       overrides: {},
       collaboration: { strategy: 'merge', lock_features: [] },
@@ -208,7 +205,7 @@ describe('kilo-code global frontmatter preservation', () => {
 
   it('preserves skill frontmatter in global mode', async () => {
     const results = await generate({
-      config: makeGlobalConfig(),
+      config: makeGlobalConfig(['rules', 'skills']),
       canonical: makeCanonical({
         skills: [
           {
@@ -234,9 +231,9 @@ describe('kilo-code global frontmatter preservation', () => {
     expect(skill!.content).toContain('# Debugging');
   });
 
-  it('preserves rule frontmatter in global mode', async () => {
+  it('preserves rule frontmatter in global mode (written under .config/kilo/rules/)', async () => {
     const results = await generate({
-      config: makeGlobalConfig(),
+      config: makeGlobalConfig(['rules']),
       canonical: makeCanonical({
         rules: [
           {
@@ -262,9 +259,66 @@ describe('kilo-code global frontmatter preservation', () => {
     expect(rule!.content).toContain('Use strict mode.');
   });
 
-  it('preserves MCP configuration in global mode', async () => {
+  it('registers non-root rules under the `instructions` key of the shared kilo.jsonc', async () => {
+    // `emitScopedSettings` only runs when the engine's mcp/ignore/hooks/agents/
+    // permissions gate fires (rules alone does not trigger it — see
+    // src/core/generate/engine.ts and global-settings.ts); real generate runs
+    // include `permissions` by default (VALID_FEATURES), so this reflects
+    // realistic usage rather than an artificial isolated-feature scenario.
     const results = await generate({
-      config: { ...makeGlobalConfig(), features: ['mcp'] } as ValidatedConfig,
+      config: makeGlobalConfig(['rules', 'permissions']),
+      canonical: makeCanonical({
+        rules: [
+          {
+            source: '/proj/.agentsmesh/rules/ts.md',
+            root: false,
+            targets: [],
+            description: '',
+            globs: [],
+            body: 'Use strict mode.',
+          },
+        ],
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const configFile = results.find(
+      (r) => r.target === 'kilo-code' && r.path === KILO_GLOBAL_CONFIG_FILE,
+    );
+    expect(configFile).toBeDefined();
+    const parsed = JSON.parse(configFile!.content) as Record<string, unknown>;
+    expect(parsed.instructions).toEqual(['rules/*.md']);
+  });
+
+  it('does not register `instructions` when only a root rule is generated', async () => {
+    const results = await generate({
+      config: makeGlobalConfig(['rules', 'permissions']),
+      canonical: makeCanonical({
+        rules: [
+          {
+            source: '/proj/.agentsmesh/rules/_root.md',
+            root: true,
+            targets: [],
+            description: '',
+            globs: [],
+            body: '# Root',
+          },
+        ],
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const configFile = results.find(
+      (r) => r.target === 'kilo-code' && r.path === KILO_GLOBAL_CONFIG_FILE,
+    );
+    expect(configFile).toBeUndefined();
+  });
+
+  it('folds MCP servers into the `mcp` key of the shared kilo.jsonc (new type/command schema)', async () => {
+    const results = await generate({
+      config: makeGlobalConfig(['mcp']),
       canonical: makeCanonical({
         mcp: {
           mcpServers: {
@@ -276,16 +330,31 @@ describe('kilo-code global frontmatter preservation', () => {
       scope: 'global',
     });
 
-    const mcpFile = results.find(
-      (r) => r.target === 'kilo-code' && r.path === KILO_CODE_GLOBAL_MCP_FILE,
+    // No standalone mcp.json is emitted at global scope.
+    expect(results.some((r) => r.target === 'kilo-code' && r.path === KILO_CODE_MCP_FILE)).toBe(
+      false,
     );
-    expect(mcpFile).toBeDefined();
-    const parsed = JSON.parse(mcpFile!.content) as Record<string, unknown>;
-    expect(parsed).toHaveProperty('mcpServers');
-    const servers = parsed.mcpServers as Record<string, unknown>;
-    expect(servers).toHaveProperty('test-server');
-    const server = servers['test-server'] as Record<string, unknown>;
-    expect(server.command).toBe('npx');
-    expect(server.args).toEqual(['-y', '@test/mcp']);
+
+    const configFile = results.find(
+      (r) => r.target === 'kilo-code' && r.path === KILO_GLOBAL_CONFIG_FILE,
+    );
+    expect(configFile).toBeDefined();
+    const parsed = JSON.parse(configFile!.content) as { mcp: Record<string, unknown> };
+    const server = parsed.mcp['test-server'] as Record<string, unknown>;
+    expect(server.type).toBe('local');
+    expect(server.command).toEqual(['npx', '-y', '@test/mcp']);
+  });
+
+  it('does not emit .kilocodeignore at global scope even when ignore patterns are set', async () => {
+    const results = await generate({
+      config: makeGlobalConfig(['ignore']),
+      canonical: makeCanonical({ ignore: ['node_modules/', '.env'] }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    expect(results.some((r) => r.target === 'kilo-code' && r.path === KILO_CODE_IGNORE)).toBe(
+      false,
+    );
   });
 });

@@ -203,7 +203,7 @@ Check logs first.
         join(HOME_DIR, '.agentsmesh', 'agentsmesh.yaml'),
         `version: 1
 targets: [copilot]
-features: [rules, commands]
+features: [rules, commands, mcp, hooks]
 `,
       );
       writeFileSync(
@@ -225,6 +225,14 @@ description: Review code
 Review the current changes.
 `,
       );
+      writeFileSync(
+        join(HOME_DIR, '.agentsmesh', 'mcp.json'),
+        JSON.stringify({ mcpServers: { docs: { command: 'npx', args: ['-y'] } } }),
+      );
+      writeFileSync(
+        join(HOME_DIR, '.agentsmesh', 'hooks.yaml'),
+        'PreToolUse:\n  - matcher: Bash\n    command: echo hi\n',
+      );
     });
 
     it('generates root at ~/.copilot/copilot-instructions.md', () => {
@@ -239,16 +247,45 @@ Review the current changes.
       expect(content).toContain('Use TypeScript strict mode');
     });
 
-    it('generates command at ~/.copilot/prompts/review.prompt.md', () => {
+    it('does not generate ~/.copilot/prompts/ (Copilot CLI has no global commands surface)', () => {
       execSync(`node ${CLI_PATH} generate --global`, {
         cwd: PROJECT_DIR,
         env: { ...process.env, HOME: HOME_DIR, USERPROFILE: HOME_DIR },
       });
 
-      const prompt = join(HOME_DIR, '.copilot', 'prompts', 'review.prompt.md');
-      expect(existsSync(prompt)).toBe(true);
-      const content = readFileSync(prompt, 'utf-8');
-      expect(content).toContain('Review the current changes');
+      expect(existsSync(join(HOME_DIR, '.copilot', 'prompts', 'review.prompt.md'))).toBe(false);
+      expect(existsSync(join(HOME_DIR, '.copilot', 'prompts'))).toBe(false);
+    });
+
+    it('generates MCP at ~/.copilot/mcp-config.json under the mcpServers key', () => {
+      execSync(`node ${CLI_PATH} generate --global`, {
+        cwd: PROJECT_DIR,
+        env: { ...process.env, HOME: HOME_DIR, USERPROFILE: HOME_DIR },
+      });
+
+      const mcpPath = join(HOME_DIR, '.copilot', 'mcp-config.json');
+      expect(existsSync(mcpPath)).toBe(true);
+      const parsed = JSON.parse(readFileSync(mcpPath, 'utf-8')) as Record<string, unknown>;
+      expect(parsed.mcpServers).toBeDefined();
+      expect(parsed.servers).toBeUndefined();
+    });
+
+    it('generates hooks at ~/.copilot/hooks/agentsmesh.json + wrapper scripts', () => {
+      execSync(`node ${CLI_PATH} generate --global`, {
+        cwd: PROJECT_DIR,
+        env: { ...process.env, HOME: HOME_DIR, USERPROFILE: HOME_DIR },
+      });
+
+      const hooksJson = join(HOME_DIR, '.copilot', 'hooks', 'agentsmesh.json');
+      expect(existsSync(hooksJson)).toBe(true);
+      const parsed = JSON.parse(readFileSync(hooksJson, 'utf-8')) as {
+        hooks: { preToolUse: Array<{ matcher?: string }> };
+      };
+      expect(parsed.hooks.preToolUse[0]?.matcher).toBe('Bash');
+
+      const wrapper = join(HOME_DIR, '.copilot', 'hooks', 'scripts', 'pretooluse-0.sh');
+      expect(existsSync(wrapper)).toBe(true);
+      expect(readFileSync(wrapper, 'utf-8')).toContain('echo hi');
     });
   });
 

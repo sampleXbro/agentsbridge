@@ -9,6 +9,7 @@ import {
   QWEN_SKILLS_DIR,
   QWEN_IGNORE,
   QWEN_GLOBAL_ROOT,
+  QWEN_GLOBAL_RULES_DIR,
   QWEN_GLOBAL_COMMANDS_DIR,
   QWEN_GLOBAL_AGENTS_DIR,
   QWEN_GLOBAL_SKILLS_DIR,
@@ -24,6 +25,9 @@ export async function buildQwenCodeImportPaths(
   if (scope === 'global') {
     refs.set(QWEN_GLOBAL_ROOT, `${AB_RULES}/_root.md`);
     refs.set(QWEN_GLOBAL_SETTINGS, '.agentsmesh/mcp.json');
+    for (const absPath of await listFiles(projectRoot, QWEN_GLOBAL_RULES_DIR)) {
+      addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_RULES, '.md');
+    }
     for (const absPath of await listFiles(projectRoot, QWEN_GLOBAL_COMMANDS_DIR)) {
       addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_COMMANDS, '.md');
     }

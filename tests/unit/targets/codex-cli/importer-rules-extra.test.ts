@@ -69,4 +69,13 @@ describe('importCodexRules — extra branches', () => {
     await importCodexRules(projectRoot, out, noopNorm, noopNorm, 'project');
     expect(out.some((r) => r.toPath.endsWith('_root.md'))).toBe(true);
   });
+
+  it('skips a legacy .codex/instructions/_root.md mirror (backward-compat, not a real rule)', async () => {
+    writeFile('.codex/instructions/_root.md', '# stale root mirror');
+    writeFile('.codex/instructions/other.md', '# other rule');
+    const out: ImportResult[] = [];
+    await importCodexRules(projectRoot, out, noopNorm, noopNorm, 'project');
+    expect(out.some((r) => r.toPath.endsWith('rules/other.md'))).toBe(true);
+    expect(out.some((r) => r.toPath.endsWith('rules/_root.md.md'))).toBe(false);
+  });
 });

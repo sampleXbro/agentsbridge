@@ -220,7 +220,7 @@ describe('import: multi-target sequential merge (integration)', () => {
       }),
     );
     writeFileSync(
-      join(TEST_DIR, '.cursor', 'settings.json'),
+      join(TEST_DIR, '.cursor', 'cli.json'),
       JSON.stringify({
         permissions: { allow: ['Write'], deny: ['PERM_FROM_CURSOR'] },
       }),

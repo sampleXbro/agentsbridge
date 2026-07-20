@@ -75,18 +75,23 @@ describe('permissions round-trip e2e', () => {
     });
   });
 
-  it('shows Cursor partial-support behavior after re-import instead of inventing a projection', async () => {
+  it('round-trips Cursor permissions through cli.json with no lint warning (native capability)', async () => {
     dir = createTestProject();
     writeProject(dir, 'cursor');
 
+    // cursor permissions are native — no partial-fidelity warning should appear
     const lintBefore = await runCli('lint --targets cursor', dir);
-    expect(lintBefore.stdout + lintBefore.stderr).toContain(
+    expect(lintBefore.stdout + lintBefore.stderr).not.toContain(
       'Cursor permissions are partial; tool-level allow/deny may lose fidelity.',
     );
 
     expect((await runCli('generate --targets cursor', dir)).exitCode).toBe(0);
     rmSync(join(dir, '.agentsmesh'), { recursive: true, force: true });
     expect((await runCli('import --from cursor', dir)).exitCode).toBe(0);
-    expect(existsSync(join(dir, '.agentsmesh', 'permissions.yaml'))).toBe(false);
+    expect(existsSync(join(dir, '.agentsmesh', 'permissions.yaml'))).toBe(true);
+    expect(readYaml(join(dir, '.agentsmesh', 'permissions.yaml'))).toMatchObject({
+      allow: ['Read', 'Bash(pnpm test:*)'],
+      deny: ['Read(./.env)', 'Bash(curl:*)'],
+    });
   });
 });

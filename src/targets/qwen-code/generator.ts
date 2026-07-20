@@ -14,7 +14,6 @@
 import { basename } from 'node:path';
 import type { CanonicalFiles } from '../../core/types.js';
 import { serializeFrontmatter } from '../../utils/text/markdown.js';
-import { appendEmbeddedRulesBlock } from '../projection/managed-blocks.js';
 import { buildClaudeHooksObjectFromCanonical } from '../claude-code/hooks-format.js';
 import {
   QWEN_CODE_TARGET,
@@ -53,7 +52,9 @@ export function generateRules(canonical: CanonicalFiles): QwenCodeOutput[] {
     const slug = basename(rule.source, '.md');
     const frontmatter: Record<string, unknown> = {};
     if (rule.description) frontmatter.description = rule.description;
-    if (rule.globs.length > 0) frontmatter.globs = rule.globs;
+    // Qwen Code's rulesDiscovery.ts parseRuleFile() only recognizes a `paths:`
+    // frontmatter key for path-conditional rule injection (never `globs`).
+    if (rule.globs.length > 0) frontmatter.paths = rule.globs;
     const content = serializeFrontmatter(frontmatter, rule.body.trim() || '');
     outputs.push({ path: `${QWEN_RULES_DIR}/${slug}.md`, content });
   }
@@ -63,14 +64,18 @@ export function generateRules(canonical: CanonicalFiles): QwenCodeOutput[] {
 
 /**
  * Generate .qwen/commands/<name>.md from canonical commands.
+ *
+ * Qwen Code's MarkdownCommandDefSchema (markdown-command-parser.ts) only maps
+ * `description`, `argument-hint`, `when_to_use`, and `disable-model-invocation`
+ * frontmatter into a command definition — there is no tool-restriction field,
+ * so canonical `allowedTools` is intentionally dropped here (see lintCommands
+ * in ./lint.ts for the corresponding lint warning).
  */
 export function generateCommands(canonical: CanonicalFiles): QwenCodeOutput[] {
   return canonical.commands.map((cmd) => {
     const frontmatter: Record<string, unknown> = {
       description: cmd.description,
-      'allowed-tools': cmd.allowedTools.length > 0 ? cmd.allowedTools : undefined,
     };
-    if (frontmatter['allowed-tools'] === undefined) delete frontmatter['allowed-tools'];
     const content = serializeFrontmatter(frontmatter, cmd.body.trim() || '');
     return { path: `${QWEN_COMMANDS_DIR}/${cmd.name}.md`, content };
   });
@@ -163,18 +168,4 @@ export function generatePermissions(canonical: CanonicalFiles): QwenCodeOutput[]
   if (deny.length > 0) permissions.deny = deny;
   if (ask.length > 0) permissions.ask = ask;
   return [{ path: QWEN_SETTINGS, content: JSON.stringify({ permissions }, null, 2) }];
-}
-
-/**
- * Render global root instructions with non-root rules embedded.
- * Used by the global layout's `renderPrimaryRootInstruction` callback.
- */
-export function renderQwenGlobalInstructions(canonical: CanonicalFiles): string {
-  const root = canonical.rules.find((rule) => rule.root);
-  const nonRootRules = canonical.rules.filter((rule) => {
-    if (rule.root) return false;
-    return rule.targets.length === 0 || rule.targets.includes(QWEN_CODE_TARGET);
-  });
-
-  return appendEmbeddedRulesBlock(root?.body.trim() ?? '', nonRootRules);
 }

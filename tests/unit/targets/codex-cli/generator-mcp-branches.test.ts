@@ -32,16 +32,31 @@ describe('codex-cli generateMcp — branch coverage', () => {
     expect(generateMcp({ ...base(), mcp: { mcpServers: {} } })).toEqual([]);
   });
 
-  it('returns [] when no stdio servers (filters out url-type)', () => {
+  it('returns [] when every server is neither stdio nor url (malformed entry)', () => {
     const result = generateMcp({
       ...base(),
       mcp: {
         mcpServers: {
-          web: { type: 'url', url: 'https://x', headers: {}, env: {} },
+          // @ts-expect-error simulating a malformed entry with neither command nor url
+          broken: { type: 'unknown', env: {} },
         },
       },
     });
     expect(result).toEqual([]);
+  });
+
+  it('emits remote (url) servers alongside stdio ones', () => {
+    const result = generateMcp({
+      ...base(),
+      mcp: {
+        mcpServers: {
+          web: { type: 'http', url: 'https://x', headers: {}, env: {} },
+        },
+      },
+    });
+    expect(result).toHaveLength(1);
+    expect(result[0]!.content).toContain('[mcp_servers.web]');
+    expect(result[0]!.content).toContain('url = "https://x"');
   });
 
   it('emits TOML with quoted name containing special chars', () => {
@@ -92,6 +107,18 @@ describe('codex-cli generateSkills — branch coverage', () => {
     };
     const outputs = generateSkills({ ...base(), skills: [skill] });
     expect(outputs[0]!.content).not.toContain('description:');
+  });
+
+  it('serializes a whitespace-only skill body as empty content', () => {
+    const skill: CanonicalSkill = {
+      source: '/x',
+      name: 'blank',
+      description: 'desc',
+      body: '   \n  ',
+      supportingFiles: [],
+    };
+    const outputs = generateSkills({ ...base(), skills: [skill] });
+    expect(outputs[0]!.content).toMatch(/---\s*$/);
   });
 
   it('normalizes Windows backslash paths in supporting files to forward slashes', () => {

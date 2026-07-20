@@ -12,17 +12,13 @@ import {
   JUNIE_IGNORE,
   JUNIE_MCP_FILE,
   JUNIE_SKILLS_DIR,
-  JUNIE_GLOBAL_ALLOWLIST,
 } from './constants.js';
-import type { GenerateFeatureContext } from '../catalog/target.interface.js';
 
-export interface JunieOutput {
-  path: string;
-  content: string;
-}
+export type { JunieOutput } from './global-config.js';
+export { generatePermissions, emitJunieScopedSettings, mergeJunieConfig } from './global-config.js';
 
-export function generateRules(canonical: CanonicalFiles): JunieOutput[] {
-  const outputs: JunieOutput[] = [];
+export function generateRules(canonical: CanonicalFiles): Array<{ path: string; content: string }> {
+  const outputs: Array<{ path: string; content: string }> = [];
   const root = canonical.rules.find((rule) => rule.root);
 
   if (root) {
@@ -62,7 +58,7 @@ function toJunieMcpServer(server: McpServer): Record<string, unknown> {
   return out;
 }
 
-export function generateMcp(canonical: CanonicalFiles): JunieOutput[] {
+export function generateMcp(canonical: CanonicalFiles): Array<{ path: string; content: string }> {
   if (!canonical.mcp || Object.keys(canonical.mcp.mcpServers).length === 0) return [];
   const servers = Object.fromEntries(
     Object.entries(canonical.mcp.mcpServers).map(([name, srv]) => [name, toJunieMcpServer(srv)]),
@@ -70,7 +66,9 @@ export function generateMcp(canonical: CanonicalFiles): JunieOutput[] {
   return [{ path: JUNIE_MCP_FILE, content: JSON.stringify({ mcpServers: servers }, null, 2) }];
 }
 
-export function generateCommands(canonical: CanonicalFiles): JunieOutput[] {
+export function generateCommands(
+  canonical: CanonicalFiles,
+): Array<{ path: string; content: string }> {
   return canonical.commands.map((command) => {
     const frontmatter: Record<string, unknown> = {
       description: command.description || undefined,
@@ -83,7 +81,9 @@ export function generateCommands(canonical: CanonicalFiles): JunieOutput[] {
   });
 }
 
-export function generateAgents(canonical: CanonicalFiles): JunieOutput[] {
+export function generateAgents(
+  canonical: CanonicalFiles,
+): Array<{ path: string; content: string }> {
   return canonical.agents.map((agent) => {
     const frontmatter: Record<string, unknown> = {
       name: agent.name,
@@ -103,12 +103,16 @@ export function generateAgents(canonical: CanonicalFiles): JunieOutput[] {
   });
 }
 
-export function generateIgnore(canonical: CanonicalFiles): JunieOutput[] {
+export function generateIgnore(
+  canonical: CanonicalFiles,
+): Array<{ path: string; content: string }> {
   if (canonical.ignore.length === 0) return [];
   return [{ path: JUNIE_IGNORE, content: canonical.ignore.join('\n') }];
 }
 
-export function generateSkills(canonical: CanonicalFiles): JunieOutput[] {
+export function generateSkills(
+  canonical: CanonicalFiles,
+): Array<{ path: string; content: string }> {
   return generateEmbeddedSkills(canonical, JUNIE_SKILLS_DIR);
 }
 
@@ -120,21 +124,4 @@ export function renderJunieGlobalInstructions(canonical: CanonicalFiles): string
   });
 
   return appendEmbeddedRulesBlock(root?.body.trim() ?? '', nonRootRules);
-}
-
-export function generatePermissions(
-  canonical: CanonicalFiles,
-  ctx?: GenerateFeatureContext,
-): JunieOutput[] {
-  if (ctx?.scope !== 'global') return [];
-  if (!canonical.permissions) return [];
-  const { allow, deny } = canonical.permissions;
-  const ask = canonical.permissions.ask ?? [];
-  if (allow.length === 0 && deny.length === 0 && ask.length === 0) return [];
-  return [
-    {
-      path: JUNIE_GLOBAL_ALLOWLIST,
-      content: JSON.stringify({ allow, deny, ask }, null, 2),
-    },
-  ];
 }

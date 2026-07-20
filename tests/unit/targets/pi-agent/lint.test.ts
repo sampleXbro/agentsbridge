@@ -1,11 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
-import {
-  lintHooks,
-  lintPermissions,
-  lintIgnore,
-  lintMcp,
-} from '../../../../src/targets/pi-agent/lint.js';
+import { lintHooks, lintPermissions, lintIgnore } from '../../../../src/targets/pi-agent/lint.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
   return {
@@ -97,34 +92,6 @@ describe('lintIgnore (pi-agent)', () => {
 
   it('warns when ignore patterns exist', () => {
     const result = lintIgnore(makeCanonical({ ignore: ['.env', 'node_modules/'] }));
-    expect(result).toHaveLength(1);
-    expect(result[0].level).toBe('warning');
-    expect(result[0].target).toBe('pi-agent');
-  });
-});
-
-describe('lintMcp (pi-agent)', () => {
-  it('returns empty when no mcp', () => {
-    expect(lintMcp(makeCanonical())).toHaveLength(0);
-  });
-
-  it('returns empty when mcp has no servers', () => {
-    expect(lintMcp(makeCanonical({ mcp: { mcpServers: {} } }))).toHaveLength(0);
-  });
-
-  it('warns when mcp servers exist', () => {
-    const result = lintMcp(
-      makeCanonical({
-        mcp: {
-          mcpServers: {
-            filesystem: {
-              command: 'npx',
-              args: ['-y', '@modelcontextprotocol/server-filesystem'],
-            },
-          },
-        },
-      }),
-    );
     expect(result).toHaveLength(1);
     expect(result[0].level).toBe('warning');
     expect(result[0].target).toBe('pi-agent');

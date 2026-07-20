@@ -8,12 +8,14 @@ import type { CanonicalFiles } from '../../../../src/core/types.js';
 import {
   DEEPAGENTS_CLI_ROOT_FILE,
   DEEPAGENTS_CLI_SKILLS_DIR,
+  DEEPAGENTS_CLI_AGENTS_DIR,
   DEEPAGENTS_CLI_MCP_FILE,
-  DEEPAGENTS_CLI_HOOKS_FILE,
   DEEPAGENTS_CLI_GLOBAL_ROOT_FILE,
   DEEPAGENTS_CLI_GLOBAL_SKILLS_DIR,
+  DEEPAGENTS_CLI_GLOBAL_AGENTS_DIR,
   DEEPAGENTS_CLI_GLOBAL_MCP_FILE,
   DEEPAGENTS_CLI_GLOBAL_HOOKS_FILE,
+  DEEPAGENTS_CLI_DEFAULT_AGENT_NAME,
 } from '../../../../src/targets/deepagents-cli/constants.js';
 
 describe('deepagents-cli global layout', () => {
@@ -49,25 +51,50 @@ describe('deepagents-cli global layout', () => {
     expect(rewrite('some/other/path.md')).toBe('some/other/path.md');
   });
 
-  it('project capabilities.hooks is native', () => {
-    expect(descriptor.capabilities.hooks).toBe('native');
+  it('rewriteGeneratedPath transforms project agents dir to global agents dir', () => {
+    const rewrite = descriptor.globalSupport!.layout.rewriteGeneratedPath!;
+    const agentPath = `${DEEPAGENTS_CLI_AGENTS_DIR}/code-reviewer/AGENTS.md`;
+    const expected = `${DEEPAGENTS_CLI_GLOBAL_AGENTS_DIR}/code-reviewer/AGENTS.md`;
+    expect(rewrite(agentPath)).toBe(expected);
+  });
+
+  it('global paths are scoped under the per-agent-instance directory (default "agent")', () => {
+    expect(DEEPAGENTS_CLI_DEFAULT_AGENT_NAME).toBe('agent');
+    expect(DEEPAGENTS_CLI_GLOBAL_ROOT_FILE).toBe('.deepagents/agent/AGENTS.md');
+    expect(DEEPAGENTS_CLI_GLOBAL_SKILLS_DIR).toBe('.deepagents/agent/skills');
+    expect(DEEPAGENTS_CLI_GLOBAL_AGENTS_DIR).toBe('.deepagents/agent/agents');
+    // MCP and hooks are the only flat, unscoped globals.
+    expect(DEEPAGENTS_CLI_GLOBAL_MCP_FILE).toBe('.deepagents/.mcp.json');
+    expect(DEEPAGENTS_CLI_GLOBAL_HOOKS_FILE).toBe('.deepagents/hooks.json');
+  });
+
+  it('project capabilities.hooks is none (no project-level hooks surface exists)', () => {
+    expect(descriptor.capabilities.hooks).toBe('none');
+  });
+
+  it('project capabilities.commands is embedded (projected as skills)', () => {
+    expect(descriptor.capabilities.commands).toBe('embedded');
+  });
+
+  it('project capabilities.agents is native (.deepagents/agents/{name}/AGENTS.md)', () => {
+    expect(descriptor.capabilities.agents).toBe('native');
   });
 
   it('globalSupport.capabilities matches project capabilities for supported features', () => {
     expect(descriptor.globalSupport!.capabilities.rules).toBe('native');
     expect(descriptor.globalSupport!.capabilities.skills).toBe('native');
     expect(descriptor.globalSupport!.capabilities.mcp).toBe('native');
+    expect(descriptor.globalSupport!.capabilities.agents).toBe('native');
+    expect(descriptor.globalSupport!.capabilities.commands).toBe('embedded');
   });
 
   it('globalSupport.capabilities.hooks is native', () => {
     expect(descriptor.globalSupport!.capabilities.hooks).toBe('native');
   });
 
-  it('globalSupport.capabilities disables unsupported features', () => {
-    expect(descriptor.globalSupport!.capabilities.commands).toBe('none');
-    expect(descriptor.globalSupport!.capabilities.agents).toBe('none');
-    expect(descriptor.globalSupport!.capabilities.ignore).toBe('none');
-    expect(descriptor.globalSupport!.capabilities.permissions).toBe('none');
+  it('globalSupport.capabilities for ignore and permissions', () => {
+    expect(descriptor.globalSupport!.capabilities.ignore).toBe('partial');
+    expect(descriptor.globalSupport!.capabilities.permissions).toBe('partial');
   });
 
   it('globalSupport has detection paths', () => {
@@ -76,8 +103,12 @@ describe('deepagents-cli global layout', () => {
     expect(descriptor.globalSupport!.detectionPaths).toContain(DEEPAGENTS_CLI_GLOBAL_MCP_FILE);
   });
 
-  it('descriptor supports conversion for commands and agents', () => {
-    expect(descriptor.supportsConversion).toEqual({ commands: true, agents: true });
+  it('globalSupport declares a scopeExtras hook for global-only hooks generation', () => {
+    expect(descriptor.globalSupport!.scopeExtras).toBeDefined();
+  });
+
+  it('descriptor supports conversion for commands only (agents are native)', () => {
+    expect(descriptor.supportsConversion).toEqual({ commands: true });
   });
 
   it('project layout has correct rootInstructionPath', () => {
@@ -90,12 +121,17 @@ describe('deepagents-cli global layout', () => {
 
   it('project layout managedOutputs includes all paths', () => {
     expect(descriptor.project.managedOutputs!.dirs).toContain(DEEPAGENTS_CLI_SKILLS_DIR);
+    expect(descriptor.project.managedOutputs!.dirs).toContain(DEEPAGENTS_CLI_AGENTS_DIR);
     expect(descriptor.project.managedOutputs!.files).toContain(DEEPAGENTS_CLI_ROOT_FILE);
     expect(descriptor.project.managedOutputs!.files).toContain(DEEPAGENTS_CLI_MCP_FILE);
-    expect(descriptor.project.managedOutputs!.files).toContain(DEEPAGENTS_CLI_HOOKS_FILE);
+    // No project-level hooks file — hooks are none (global-only surface).
+    expect(descriptor.project.managedOutputs!.files).not.toContain('.deepagents/hooks.json');
   });
 
-  it('globalLayout managedOutputs includes global hooks file', () => {
+  it('globalLayout managedOutputs includes global agents dir and hooks file', () => {
+    expect(descriptor.globalSupport!.layout.managedOutputs!.dirs).toContain(
+      DEEPAGENTS_CLI_GLOBAL_AGENTS_DIR,
+    );
     expect(descriptor.globalSupport!.layout.managedOutputs!.files).toContain(
       DEEPAGENTS_CLI_GLOBAL_HOOKS_FILE,
     );

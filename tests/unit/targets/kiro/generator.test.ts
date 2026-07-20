@@ -291,7 +291,7 @@ describe('generateMcp (kiro)', () => {
 });
 
 describe('generateHooks (kiro)', () => {
-  it('generates askAgent hooks for prompt entries and shell hooks for command entries', () => {
+  it('generates v1 agent hooks for prompt entries and command hooks for command entries', () => {
     const canonical = makeCanonical({
       hooks: {
         UserPromptSubmit: [
@@ -303,23 +303,30 @@ describe('generateHooks (kiro)', () => {
 
     const results = generateHooks(canonical);
     const promptHook = results.find(
-      (result) => result.path === `${KIRO_HOOKS_DIR}/user-prompt-submit-1.kiro.hook`,
+      (result) => result.path === `${KIRO_HOOKS_DIR}/user-prompt-submit-1.json`,
     );
     const toolHook = results.find(
-      (result) => result.path === `${KIRO_HOOKS_DIR}/pre-tool-use-1.kiro.hook`,
+      (result) => result.path === `${KIRO_HOOKS_DIR}/pre-tool-use-1.json`,
     );
 
     expect(promptHook).toBeDefined();
     expect(toolHook).toBeDefined();
-    expect(JSON.parse(promptHook!.content)).toMatchObject({
-      version: '1',
-      when: { type: 'promptSubmit' },
-      then: { type: 'askAgent', prompt: 'Capture intent before acting.' },
+    const promptParsed = JSON.parse(promptHook!.content);
+    expect(promptParsed.version).toBe('v1');
+    expect(Array.isArray(promptParsed.hooks)).toBe(true);
+    expect(promptParsed.hooks).toHaveLength(1);
+    expect(promptParsed.hooks[0]).toMatchObject({
+      trigger: 'UserPromptSubmit',
+      action: { type: 'agent', prompt: 'Capture intent before acting.' },
     });
-    expect(JSON.parse(toolHook!.content)).toMatchObject({
-      version: '1',
-      when: { type: 'preToolUse', tools: ['write'] },
-      then: { type: 'shellCommand', command: 'pnpm lint' },
+    const toolParsed = JSON.parse(toolHook!.content);
+    expect(toolParsed.version).toBe('v1');
+    expect(Array.isArray(toolParsed.hooks)).toBe(true);
+    expect(toolParsed.hooks).toHaveLength(1);
+    expect(toolParsed.hooks[0]).toMatchObject({
+      trigger: 'PreToolUse',
+      matcher: 'write',
+      action: { type: 'command', command: 'pnpm lint' },
     });
   });
 });

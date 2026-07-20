@@ -11,11 +11,13 @@ export const continueContract: TargetPathContract = {
     '.continue/skills/api-generator/SKILL.md',
     '.continue/skills/api-generator/references/route-checklist.md',
     '.continue/skills/api-generator/template.ts',
+    '.continueignore',
   ],
   imported: [
     '.agentsmesh/agents/code-reviewer.md',
     '.agentsmesh/agents/researcher.md',
     '.agentsmesh/commands/review.md',
+    '.agentsmesh/ignore',
     '.agentsmesh/mcp.json',
     '.agentsmesh/rules/_root.md',
     '.agentsmesh/rules/typescript.md',

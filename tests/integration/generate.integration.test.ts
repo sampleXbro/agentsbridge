@@ -7,6 +7,8 @@ import { mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execSync } from 'node:child_process';
+import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
+import { hashFile } from '../../src/utils/crypto/hash.js';
 
 const TEST_DIR = join(tmpdir(), 'am-integration-generate');
 const CLI_PATH = join(process.cwd(), 'dist', 'cli.js');
@@ -52,6 +54,85 @@ describe('agentsmesh generate (integration)', () => {
   it('--dry-run does not write files', () => {
     execSync(`node ${CLI_PATH} generate --dry-run`, { cwd: TEST_DIR });
     expect(() => readFileSync(join(TEST_DIR, 'CLAUDE.md'))).toThrow();
+  });
+
+  it('records generated outputs in the lock with hashes matching on-disk files', async () => {
+    execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
+    const lockRaw = readFileSync(join(TEST_DIR, '.agentsmesh', '.lock'), 'utf-8');
+    const lock = parseYaml(lockRaw) as { outputs?: Record<string, string> };
+
+    const expectedPaths = [
+      'AGENTS.md',
+      'CLAUDE.md',
+      '.cursor/AGENTS.md',
+      '.cursor/rules/general.mdc',
+    ];
+    const expected: Record<string, string> = {};
+    for (const rel of expectedPaths) {
+      const h = await hashFile(join(TEST_DIR, rel));
+      expect(h).not.toBeNull();
+      expected[rel] = `sha256:${h}`;
+    }
+    // Exact key set and exact hashes — no partial containment.
+    expect(lock.outputs).toEqual(expected);
+  });
+
+  it('filtered --targets run merges into (never replaces) the lock outputs map', async () => {
+    // Full generate first: seeds outputs for both claude-code and cursor.
+    execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
+    // Filtered run touches only claude-code; the cursor entries must survive.
+    execSync(`node ${CLI_PATH} generate --targets claude-code`, { cwd: TEST_DIR });
+
+    const lockRaw = readFileSync(join(TEST_DIR, '.agentsmesh', '.lock'), 'utf-8');
+    const lock = parseYaml(lockRaw) as { outputs?: Record<string, string> };
+
+    const expectedPaths = [
+      'AGENTS.md',
+      'CLAUDE.md',
+      '.cursor/AGENTS.md',
+      '.cursor/rules/general.mdc',
+    ];
+    const expected: Record<string, string> = {};
+    for (const rel of expectedPaths) {
+      const h = await hashFile(join(TEST_DIR, rel));
+      expect(h).not.toBeNull();
+      expected[rel] = `sha256:${h}`;
+    }
+    // Untouched (cursor) AND filtered (claude-code) entries both present — merge, not replace.
+    expect(lock.outputs).toEqual(expected);
+  });
+
+  it('full generate replaces the lock outputs map, dropping pre-existing entries', async () => {
+    // Seed a lock, then hand-inject a bogus output entry.
+    execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
+    const lockPath = join(TEST_DIR, '.agentsmesh', '.lock');
+    const seeded = parseYaml(readFileSync(lockPath, 'utf-8')) as {
+      outputs?: Record<string, string>;
+      [key: string]: unknown;
+    };
+    seeded.outputs = { ...(seeded.outputs ?? {}), 'bogus/stale.md': 'sha256:deadbeef' };
+    writeFileSync(lockPath, stringifyYaml(seeded));
+
+    // A full generate replaces the map outright — the bogus entry must be gone.
+    execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
+    const lock = parseYaml(readFileSync(lockPath, 'utf-8')) as {
+      outputs?: Record<string, string>;
+    };
+
+    const expectedPaths = [
+      'AGENTS.md',
+      'CLAUDE.md',
+      '.cursor/AGENTS.md',
+      '.cursor/rules/general.mdc',
+    ];
+    const expected: Record<string, string> = {};
+    for (const rel of expectedPaths) {
+      const h = await hashFile(join(TEST_DIR, rel));
+      expect(h).not.toBeNull();
+      expected[rel] = `sha256:${h}`;
+    }
+    expect(lock.outputs).toEqual(expected);
+    expect(lock.outputs).not.toHaveProperty('bogus/stale.md');
   });
 
   it('no root rule produces no files', () => {
@@ -172,7 +253,7 @@ You are an expert code reviewer. Focus on security and performance.`,
   });
 
   it.each([
-    ['cline', '.cline/agents/code-reviewer.md', 'name: code-reviewer'],
+    ['cline', '.cline/agents.yaml', 'name: code-reviewer'],
     ['codex-cli', '.codex/agents/code-reviewer.toml', 'name = "code-reviewer"'],
     ['windsurf', '.windsurf/skills/am-agent-code-reviewer/SKILL.md', 'x-agentsmesh-kind: agent'],
   ] as const)('generates agent outputs for %s', (target, agentPath, contentCheck) => {
@@ -357,7 +438,7 @@ Start with logs.
       readFileSync(join(TEST_DIR, '.kiro', 'skills', 'debugging', 'SKILL.md'), 'utf-8'),
     ).toContain('Debug production failures');
     expect(
-      readFileSync(join(TEST_DIR, '.kiro', 'hooks', 'user-prompt-submit-1.kiro.hook'), 'utf-8'),
+      readFileSync(join(TEST_DIR, '.kiro', 'hooks', 'user-prompt-submit-1.json'), 'utf-8'),
     ).toContain('Capture intent before acting.');
     expect(readFileSync(join(TEST_DIR, '.kiro', 'settings', 'mcp.json'), 'utf-8')).toContain(
       'context7',
@@ -395,8 +476,13 @@ deny:
     expect(claudeSettings).toContain('deny');
     expect(claudeSettings).toContain('Read');
     expect(claudeSettings).toContain('WebFetch');
-    // Cursor has no native tool-permission file — permissions not emitted
-    expect(() => readFileSync(join(TEST_DIR, '.cursor', 'settings.json'))).toThrow();
+    // Cursor emits permissions to .cursor/cli.json (not settings.json)
+    const cursorCli = readFileSync(join(TEST_DIR, '.cursor', 'cli.json'), 'utf-8') as string;
+    expect(cursorCli).toContain('permissions');
+    expect(cursorCli).toContain('allow');
+    expect(cursorCli).toContain('deny');
+    expect(cursorCli).toContain('Read');
+    expect(cursorCli).toContain('WebFetch');
   });
 
   it('generates hooks in .cursor/hooks.json when hooks feature enabled', () => {
@@ -649,7 +735,7 @@ features: [rules, mcp, ignore, hooks]
     expect(readFileSync(join(TEST_DIR, '.geminiignore'), 'utf-8')).toBe('node_modules\ndist');
   });
 
-  it('generates .clinerules/hooks/*.sh when cline hooks feature enabled', () => {
+  it('generates .cline/hooks/*.sh when cline hooks feature enabled', () => {
     writeFileSync(
       join(TEST_DIR, 'agentsmesh.yaml'),
       `version: 1
@@ -668,14 +754,8 @@ PreToolUse:
 `,
     );
     execSync(`node ${CLI_PATH} generate`, { cwd: TEST_DIR });
-    const postHook = readFileSync(
-      join(TEST_DIR, '.clinerules', 'hooks', 'posttooluse-0.sh'),
-      'utf-8',
-    );
-    const preHook = readFileSync(
-      join(TEST_DIR, '.clinerules', 'hooks', 'pretooluse-0.sh'),
-      'utf-8',
-    );
+    const postHook = readFileSync(join(TEST_DIR, '.cline', 'hooks', 'posttooluse-0.sh'), 'utf-8');
+    const preHook = readFileSync(join(TEST_DIR, '.cline', 'hooks', 'pretooluse-0.sh'), 'utf-8');
     expect(postHook).toContain('#!/usr/bin/env bash');
     expect(postHook).toContain('prettier --write $FILE_PATH');
     expect(postHook).toContain('Write|Edit');

@@ -29,6 +29,12 @@ export const QWEN_GLOBAL_SETTINGS = '.qwen/settings.json';
 export const QWEN_GLOBAL_COMMANDS_DIR = '.qwen/commands';
 export const QWEN_GLOBAL_SKILLS_DIR = '.qwen/skills';
 export const QWEN_GLOBAL_AGENTS_DIR = '.qwen/agents';
+/**
+ * `~/.qwen/rules/` — Qwen Code's `loadRules()` (rulesDiscovery.ts) reads rule
+ * files from BOTH this global dir and the project `.qwen/rules/` dir, using
+ * the identical recursive-.md-with-frontmatter mechanism. Native, not embedded.
+ */
+export const QWEN_GLOBAL_RULES_DIR = '.qwen/rules';
 
 // Canonical paths
 export const QWEN_CANONICAL_RULES_DIR = '.agentsmesh/rules';

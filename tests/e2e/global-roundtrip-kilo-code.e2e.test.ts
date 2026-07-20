@@ -2,8 +2,12 @@
  * Global mode round-trip e2e for Kilo Code.
  *
  * Verifies that canonical → `agentsmesh generate --global --targets kilo-code`
- * writes the documented `~/.kilo/...` layout, mirrors skills into
- * `~/.agents/skills/`, and the inverse import recovers canonical content.
+ * writes the documented unified `~/.config/kilo/...` layout (root rule,
+ * commands, and agents as plain files; additional rules and MCP servers
+ * folded into the shared `~/.config/kilo/kilo.jsonc`), mirrors skills into
+ * `~/.agents/skills/`, suppresses global ignore output entirely (no
+ * documented global `.kilocodeignore` equivalent), and the inverse import
+ * recovers canonical content.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -12,6 +16,7 @@ import { join } from 'node:path';
 import { runCli } from './helpers/run-cli.js';
 import {
   fileExists,
+  fileNotExists,
   fileContains,
   readText,
   validJson,
@@ -70,39 +75,41 @@ describe('global mode round-trip: Kilo Code', () => {
     writeFileSync(join(canonicalDir, 'ignore'), 'dist\n');
     writeFileSync(
       join(canonicalDir, 'agentsmesh.yaml'),
-      'version: 1\ntargets: [kilo-code]\nfeatures: [rules, commands, agents, skills, mcp, ignore]\n',
+      'version: 1\ntargets: [kilo-code]\nfeatures: [rules, commands, agents, skills, mcp, ignore, permissions]\n',
     );
 
     const gen = await runCli('generate --global --targets kilo-code', projectDir);
     expect(gen.exitCode).toBe(0);
 
-    // 1. Root → ~/.kilo/AGENTS.md (rewritten from project-mode AGENTS.md per global layout).
-    fileExists(join(homeDir, '.kilo', 'AGENTS.md'));
-    fileContains(join(homeDir, '.kilo', 'AGENTS.md'), 'Kilo instructions');
-    fileContains(join(homeDir, '.kilo', 'AGENTS.md'), '.kilo/commands/build.md');
-    fileContains(join(homeDir, '.kilo', 'AGENTS.md'), '.kilo/agents/reviewer.md');
-    fileContains(join(homeDir, '.kilo', 'AGENTS.md'), '.kilo/skills/kilo-skill/SKILL.md');
+    // 1. Root → ~/.config/kilo/AGENTS.md (rewritten from project-mode AGENTS.md).
+    fileExists(join(homeDir, '.config', 'kilo', 'AGENTS.md'));
+    fileContains(join(homeDir, '.config', 'kilo', 'AGENTS.md'), 'Kilo instructions');
+    fileContains(join(homeDir, '.config', 'kilo', 'AGENTS.md'), '.config/kilo/commands/build.md');
+    fileContains(join(homeDir, '.config', 'kilo', 'AGENTS.md'), '.config/kilo/agents/reviewer.md');
+    fileContains(join(homeDir, '.config', 'kilo', 'AGENTS.md'), '.kilo/skills/kilo-skill/SKILL.md');
 
-    // 2. Named rules.
-    fileExists(join(homeDir, '.kilo', 'rules', 'testing.md'));
-    fileContains(join(homeDir, '.kilo', 'rules', 'testing.md'), 'Write tests');
+    // 2. Named rules under ~/.config/kilo/rules/.
+    fileExists(join(homeDir, '.config', 'kilo', 'rules', 'testing.md'));
+    fileContains(join(homeDir, '.config', 'kilo', 'rules', 'testing.md'), 'Write tests');
 
-    // 3. Commands.
-    fileExists(join(homeDir, '.kilo', 'commands', 'build.md'));
-    fileContains(join(homeDir, '.kilo', 'commands', 'build.md'), 'Build the project');
-    expect(markdownFrontmatter(join(homeDir, '.kilo', 'commands', 'build.md')).description).toBe(
-      'Build',
-    );
+    // 3. Commands under ~/.config/kilo/commands/.
+    fileExists(join(homeDir, '.config', 'kilo', 'commands', 'build.md'));
+    fileContains(join(homeDir, '.config', 'kilo', 'commands', 'build.md'), 'Build the project');
+    expect(
+      markdownFrontmatter(join(homeDir, '.config', 'kilo', 'commands', 'build.md')).description,
+    ).toBe('Build');
 
-    // 4. Native first-class agents at ~/.kilo/agents/<slug>.md with mode: subagent.
-    fileExists(join(homeDir, '.kilo', 'agents', 'reviewer.md'));
-    fileContains(join(homeDir, '.kilo', 'agents', 'reviewer.md'), 'Review code carefully');
-    expect(markdownFrontmatter(join(homeDir, '.kilo', 'agents', 'reviewer.md'))).toMatchObject({
+    // 4. Native first-class agents at ~/.config/kilo/agents/<slug>.md with mode: subagent.
+    fileExists(join(homeDir, '.config', 'kilo', 'agents', 'reviewer.md'));
+    fileContains(join(homeDir, '.config', 'kilo', 'agents', 'reviewer.md'), 'Review code carefully');
+    expect(
+      markdownFrontmatter(join(homeDir, '.config', 'kilo', 'agents', 'reviewer.md')),
+    ).toMatchObject({
       mode: 'subagent',
       description: 'Reviewer',
     });
 
-    // 5. Skills at ~/.kilo/skills/<slug>/SKILL.md.
+    // 5. Skills stay at ~/.kilo/skills/<slug>/SKILL.md (documented separately).
     fileExists(join(homeDir, '.kilo', 'skills', 'kilo-skill', 'SKILL.md'));
     fileContains(join(homeDir, '.kilo', 'skills', 'kilo-skill', 'SKILL.md'), 'Skill body');
     fileExists(join(homeDir, '.kilo', 'skills', 'kilo-skill', 'references', 'runbook.md'));
@@ -112,31 +119,38 @@ describe('global mode round-trip: Kilo Code', () => {
     fileContains(join(homeDir, '.agents', 'skills', 'kilo-skill', 'SKILL.md'), 'Skill body');
     fileExists(join(homeDir, '.agents', 'skills', 'kilo-skill', 'references', 'runbook.md'));
 
-    // 7. MCP at ~/.kilo/mcp.json with mcpServers wrapper.
-    fileExists(join(homeDir, '.kilo', 'mcp.json'));
-    validJson(join(homeDir, '.kilo', 'mcp.json'));
-    const mcp = JSON.parse(readText(join(homeDir, '.kilo', 'mcp.json')));
-    expect(mcp.mcpServers.test).toBeDefined();
+    // 7. No standalone mcp.json — MCP folds into kilo.jsonc's `mcp` key.
+    fileNotExists(join(homeDir, '.kilo', 'mcp.json'));
+    fileNotExists(join(homeDir, '.config', 'kilo', 'mcp.json'));
 
-    // 8. Ignore at ~/.kilocodeignore.
-    fileExists(join(homeDir, '.kilocodeignore'));
-    fileContains(join(homeDir, '.kilocodeignore'), 'dist');
+    // 8. No global ignore file at all (downgraded to 'none' — no documented mechanism).
+    fileNotExists(join(homeDir, '.kilocodeignore'));
+
+    // 9. Shared ~/.config/kilo/kilo.jsonc carries instructions + mcp + permission keys.
+    const configPath = join(homeDir, '.config', 'kilo', 'kilo.jsonc');
+    fileExists(configPath);
+    validJson(configPath);
+    const config = JSON.parse(readText(configPath));
+    expect(config.instructions).toEqual(['rules/*.md']);
+    expect(config.mcp.test).toEqual({ type: 'local', command: ['node'] });
 
     dirFilesExactly(join(homeDir, '.kilo'), [
+      'skills/kilo-skill/SKILL.md',
+      'skills/kilo-skill/references/runbook.md',
+    ]);
+    dirFilesExactly(join(homeDir, '.config', 'kilo'), [
       'AGENTS.md',
       'agents/reviewer.md',
       'commands/build.md',
-      'mcp.json',
+      'kilo.jsonc',
       'rules/testing.md',
-      'skills/kilo-skill/SKILL.md',
-      'skills/kilo-skill/references/runbook.md',
     ]);
     dirFilesExactly(join(homeDir, '.agents'), [
       'skills/kilo-skill/SKILL.md',
       'skills/kilo-skill/references/runbook.md',
     ]);
 
-    // Round-trip: nuke canonical and import back from ~/.kilo/.
+    // Round-trip: nuke canonical and import back from the global layout.
     rmSync(canonicalDir, { recursive: true, force: true });
     mkdirSync(canonicalDir, { recursive: true });
 
@@ -158,7 +172,10 @@ describe('global mode round-trip: Kilo Code', () => {
     fileExists(join(canonicalDir, 'skills', 'kilo-skill', 'SKILL.md'));
     fileExists(join(canonicalDir, 'skills', 'kilo-skill', 'references', 'runbook.md'));
     fileExists(join(canonicalDir, 'mcp.json'));
-    fileExists(join(canonicalDir, 'ignore'));
-    fileContains(join(canonicalDir, 'ignore'), 'dist');
+    const importedMcp = JSON.parse(readText(join(canonicalDir, 'mcp.json')));
+    expect(importedMcp.mcpServers.test).toBeDefined();
+
+    // No global ignore concept — nothing to import back.
+    fileNotExists(join(canonicalDir, 'ignore'));
   });
 });

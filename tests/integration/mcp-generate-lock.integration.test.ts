@@ -29,7 +29,17 @@ describe('mcp generate — lockfile persistence', () => {
     expect(existsSync(join(dir, '.agentsmesh', '.lock'))).toBe(true);
 
     const check = await orchestrateHandlers.check(ctx);
-    expect(check).toEqual({ drift: false, missing: [], extra: [], modified: [] });
+    // A real generate writes an `outputs` map, so output verification runs
+    // (outputsChecked: true) and finds no drift right after generation.
+    expect(check).toEqual({
+      drift: false,
+      missing: [],
+      extra: [],
+      modified: [],
+      outputsModified: [],
+      outputsRemoved: [],
+      outputsChecked: true,
+    });
   });
 
   it('does not write the lockfile on dry_run', async () => {

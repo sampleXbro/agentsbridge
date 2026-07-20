@@ -19,6 +19,7 @@ export const crushContract: TargetPathContract = {
     '.agentsmesh/hooks.yaml',
     '.agentsmesh/ignore',
     '.agentsmesh/mcp.json',
+    '.agentsmesh/permissions.yaml',
     '.agentsmesh/rules/_root.md',
     '.agentsmesh/skills/api-generator/SKILL.md',
     '.agentsmesh/skills/api-generator/references/route-checklist.md',

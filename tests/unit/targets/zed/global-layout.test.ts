@@ -32,7 +32,32 @@ describe('zed global layout', () => {
 
   it('globalSupport.capabilities differs from project capabilities', () => {
     expect(descriptor.globalSupport!.capabilities.rules).toBe('none');
+    expect(descriptor.globalSupport!.capabilities.additionalRules).toBe('none');
+    expect(descriptor.globalSupport!.capabilities.commands).toBe('none');
+    expect(descriptor.globalSupport!.capabilities.skills).toBe('native');
     expect(descriptor.globalSupport!.capabilities.mcp).toBe('native');
+    expect(descriptor.globalSupport!.capabilities.ignore).toBe('partial');
+    expect(descriptor.globalSupport!.capabilities.permissions).toBe('partial');
+  });
+
+  it('global hooks capability is none — Zed has no lifecycle hook system', () => {
+    expect(descriptor.globalSupport!.capabilities.hooks).toBe('none');
+  });
+
+  it('project hooks capability is none — Zed has no lifecycle hook system', () => {
+    expect(descriptor.capabilities.hooks).toBe('none');
+  });
+
+  it('descriptor.lint has no hooks entry — hooks=none defers to silent-drop-guard', () => {
+    expect((descriptor.lint as Record<string, unknown>)['hooks']).toBeUndefined();
+  });
+
+  it('global layout has a skillDir for ~/.agents/skills/', () => {
+    expect(descriptor.globalSupport!.layout.skillDir).toBe('.agents/skills');
+  });
+
+  it('global layout managedOutputs.dirs includes .agents/skills', () => {
+    expect(descriptor.globalSupport!.layout.managedOutputs.dirs).toContain('.agents/skills');
   });
 
   it('globalSupport has detection paths', () => {
@@ -58,8 +83,8 @@ describe('zed global layout', () => {
     expect(descriptor.capabilities.skills).toBe('native');
   });
 
-  it('global capabilities keep skills as none', () => {
-    expect(descriptor.globalSupport!.capabilities.skills).toBe('none');
+  it('global capabilities keep skills as native', () => {
+    expect(descriptor.globalSupport!.capabilities.skills).toBe('native');
   });
 });
 

@@ -22,6 +22,9 @@ import {
   generateAgents,
   generateSkills,
   generateIgnore,
+  generateMcp,
+  generateHooks,
+  generatePermissions,
 } from './generator.js';
 import { importFromAider } from './importer.js';
 import { lintRules } from './linter.js';
@@ -74,6 +77,9 @@ export const target: TargetGenerators = {
   generateAgents,
   generateSkills,
   generateIgnore,
+  generateMcp,
+  generateHooks,
+  generatePermissions,
   importFrom: importFromAider,
 };
 
@@ -134,10 +140,10 @@ const capabilities: TargetCapabilities = {
   commands: 'none',
   agents: 'none',
   skills: 'native',
-  mcp: 'none',
-  hooks: 'none',
+  mcp: 'partial',
+  hooks: 'partial',
   ignore: 'native',
-  permissions: 'none',
+  permissions: 'partial',
 };
 
 export const descriptor = {

@@ -1,6 +1,6 @@
 ---
 name: update-target-capabilities
-description: Use when an AI tool gains support for a feature agentsmesh does not yet expose — or exposes wrongly — and you must raise or correct an existing target's capability for project and/or global scope (rules, additionalRules, commands, agents, skills, mcp, hooks, ignore, permissions). Also use to audit every target for capability gaps, or to act on an audit/feature-request someone else wrote. Start by verifying the claim against the tool's OWN primary docs — such findings are frequently fabricated, stale, or wrong-scoped, so be ready to reject. Covers verification-first research, descriptor wiring, round-trip symmetry, global-only scopeExtras emission, settings-merge and plugin safety, format/path-change blast radius, strict TDD, two-stage review, and matrix/docs sync.
+description: Use when an AI tool gains support for a feature agentsmesh does not yet expose — or exposes wrongly — and you must raise or correct an existing target's capability for project and/or global scope (rules, additionalRules, commands, agents, skills, mcp, hooks, ignore, permissions). Also use to audit every target for capability gaps, or to act on an audit/feature-request someone else wrote. Start by verifying the claim against the tool's OWN primary docs — such findings are frequently fabricated, stale, or wrong-scoped, so be ready to reject. Covers verification-first research, descriptor wiring, round-trip symmetry, global-only scopeExtras emission, settings-merge and plugin safety, format/path-change blast radius, strict TDD, two-stage review, and matrix/docs sync. Start with `pnpm capabilities:audit`; research only STALE/MISSING cells; the ledger memoizes verified formats so audits stay fast.
 ---
 
 ## Purpose
@@ -61,20 +61,37 @@ Read `./references/capability-update-checklist.md` before editing code. It holds
 - Do not update README without the website page, or vice versa.
 - Do not hand-edit `package.json` version or the matrix tables; they are generated.
 
-## Workflow
+## Workflow (audit-driven)
 
-Run this with `superpowers:subagent-driven-development` when touching more than one target/feature — one implementer subagent per (target, feature), each under `superpowers:test-driven-development`, followed by the two-stage review below. One target/feature per implementer; never parallel-edit the same target.
+Run `superpowers:subagent-driven-development` when touching more than one (target, feature).
 
-0. **Verify the claim** — confirm the surface exists, in this shape, at this scope, from the tool's own docs/source. If it fails (fabricated / already-correct / wrong-scope / GUI-only), stop and report the rejection with evidence. When verifying a batch (an audit), fan out one read-only verifier per candidate and gate implementation on the verdicts — the cost is small next to shipping a broken native.
-1. **Research** — record the exact path, format, top-level key, and per-scope support level. Resolve every unknown from primary sources before coding.
-2. **Decide levels** — set `capabilities` and `globalSupport.capabilities` independently using the level matrix.
-3. **Tests first** — generator/emitter edge cases, strict contract arrays, global-layout capability assertions; for round-trip, a generate→import equality test.
-4. **Implement the descriptor wiring** — constants (project + global), generator OR `emitScopedSettings` OR `mergeGeneratedOutputContent`, capabilities, `managedOutputs`, `rewriteGeneratedPath`, the **importer** (round-trip), and the `partial` lint stub. Reuse shared helpers (`buildClaudeHooksObjectFromCanonical`, `createWarning`, `mergeSettingsJson`).
-5. **Split for size** — extract to keep every file ≤ 200 lines.
-6. **References + docs (mind the blast radius)** — wire import-maps if new ref-bearing dirs were added; run `pnpm schemas:generate && pnpm matrix:generate`. A new generated file, a changed output path, or a projection→native move ripples far beyond the descriptor — update the contract arrays, the e2e exclusion sets, **both** `reference-targets.ts` chains, the per-target `dirTreeExactly`, and layout/matrix tests in lockstep (full list in the checklist's blast-radius section). `grep -rn '<old-path-or-shape>' tests/` before declaring done. A global-only level change still moves the rendered matrix (`SUPPORT_MATRIX_GLOBAL`), so README + website must be regenerated.
-7. **Review (two-stage, read-only Explore subagents)** — first spec compliance (does it match the researched format + scope levels + round-trip?), then code quality (no `any`, explicit return types, ≤ 200 lines, helper reuse, no shared hardcoding). Fix and re-review until both pass.
-8. **Double-check pass** — verify the four cross-cutting contracts explicitly: round-trip symmetry, settings-merge base, plugin safety, and matrix/README/website agreement. See the checklist's "Double-Check" section.
-9. **Changeset + QA** — `minor` for a level raise (new backward-compatible capability), `patch` for a same-level fix (a broken/wrong `native` made functional). No `major`: generated files are artifacts, so changed output is not a breaking change. Run `post-feature-qa`; run the full verification stack.
+1. **Audit (deterministic, ~0 tokens):** `pnpm capabilities:audit --json`. It joins descriptors × the capability ledger (`src/targets/catalog/capability-ledger.json`) and returns four buckets:
+   - **GAPS** — `descriptor < maxAchievable`: raise-opportunities. Do NOT leave these on the table (coverage bias: overstatement beats understatement).
+   - **STALE** — provenance is null (seeded but unverified) or older than the window, or the descriptor over-declares vs the ledger: re-verify.
+   - **MISSING** — a native/embedded cell with no ledger provenance: research and add an entry.
+   - **BROKEN** — surfaced by `pnpm test` (the conformance test): a native/embedded cell whose generated output fails its ledger fingerprint (wrong path / extension / top-level key / shape).
+2. **Research ONLY STALE + MISSING** against the tool's OWN primary docs (the §0 verification rules below still apply — reject fabricated / GUI-only / wrong-scope claims). Update the ledger cell's `path`, `ext`, `format`, `fingerprint`, `source` (primary-doc URL), `verifiedAt` (today), `maxAchievable`, and `verdict: "confirmed"`. Never re-research a cell whose provenance is fresh. Directory/projection features (commands, agents, skills) and extensionless ignore files are intentionally unseeded — research those by hand and add cells (or leave `none`).
+3. **Fix BROKEN** — correct the generator/importer until `pnpm test` conformance passes for that cell.
+4. **Flip GAPS** — for each, follow `./references/capability-update-checklist.md` in full (TDD generator + importer, round-trip symmetry, blast-radius). The format is already in the ledger — do not re-research it. A flip to `native` still requires proven generate **and** import; the matrix never advertises an unproven native.
+5. **Guard:** `pnpm capabilities:verify` (every native/embedded cell has provenance) + `pnpm matrix:verify` + the full stack.
+
+The ledger is an oracle, not a source of truth: current levels always come from the descriptor (the matrix derives from there); the ledger records where the tool's docs say the file/shape is, so we validate — never generate — against it. Re-run `pnpm capabilities:seed` after adding or changing a native/embedded feature to refresh fingerprint skeletons.
+
+## Fast Execution Playbook
+
+Optimise for zero wasted tokens. Treat each phase as a gate: only enter the next if the previous signals real work.
+
+**Phase 0 — Deterministic triage (~0 tokens).**
+Run `pnpm capabilities:audit --json` then the full verification stack (`pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm matrix:verify`, `pnpm capabilities:verify`), capturing the **real exit codes** — never pipe any of those commands through `tail`/`grep`; a non-zero exit masked by the pipeline is the single most common source of false-green audits. If the audit returns 0 gaps, 0 stale, 0 missing, 0 broken **and** all verification passes, **stop** — there is nothing to do.
+
+**Phase 1 — One pipelined pass per target.**
+Work only the targets that appear in the gaps/stale/missing/broken buckets or in the current diff. For each such target, execute research → primary-doc verification → ledger update → descriptor fix as **one uninterrupted unit of work**. Do not split into separate "research wave" then "fix wave" — that forces redundant diff re-reads and doubles context. Assignment rules:
+- Shared cross-cutting test suites (layout-metadata, agents-folder-structure-research, skill-mirror, reference-rewrite matrix, e2e content contracts) each get **exactly one owner target** designated up front; other targets import from or assert against that owner's output rather than duplicating coverage.
+- Verify majors (level raises) once with primary-doc evidence; verify criticals (round-trip symmetry claims, scopeExtras gating, multi-write merge base) twice — run the test and re-read the generator path to confirm the gate is actually reached.
+- Ledger cell `path`, `ext`, `format`, and `fingerprint` values MUST be derived from the conformance fixture's actual generated output — not from docs. Docs determine `maxAchievable`, `verdict`, and `source` only.
+
+**Phase 2 — Single-writer close.**
+After all per-target fixes are in, merge ledger provenance in one pass, then run `catalog:generate` → `matrix:generate` sequentially. Follow with exactly **one** full-stack run: `pnpm test` to completion, then `pnpm test:e2e` — never concurrent with a build, never interleaved. If any command fails, diagnose before retrying; a second blind retry without root-cause analysis wastes more context than it saves.
 
 ## Required Verification
 
@@ -85,6 +102,7 @@ Before claiming completion, every command must pass:
 - `pnpm build` — **before** any e2e/round-trip run. The e2e matrix spawns the built `dist/cli.js`; the in-process contract test does not. If the contract round-trip passes but the e2e fails with a missing/extra/relocated file, the dist is stale — rebuild, don't chase the importer.
 - `pnpm test`
 - `pnpm matrix:verify`
+- `pnpm capabilities:verify`
 
 Run narrower target-scoped tests while iterating, but do not skip the full stack at the end. (Note: a few test runs rewrite `tests/e2e/agents-last-run.md` as a side effect — `git checkout --` that file before committing so it doesn't ride along.)
 

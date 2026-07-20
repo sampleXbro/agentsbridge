@@ -49,6 +49,9 @@ describe('checkLockSync', () => {
     expect(report.removed).toEqual([]);
     expect(report.extendsModified).toEqual([]);
     expect(report.lockedViolations).toEqual([]);
+    expect(report.outputsChecked).toBe(false);
+    expect(report.outputsModified).toEqual([]);
+    expect(report.outputsRemoved).toEqual([]);
   });
 
   it('reports added + modified + removed + extendsModified all in one report', async () => {
@@ -293,5 +296,98 @@ collaboration:
     expect(report.modified).toEqual([]);
     expect(report.added).toEqual([]);
     expect(report.removed).toEqual([]);
+  });
+
+  it('output drift: modified + removed outputs make inSync false with exact arrays', async () => {
+    const { projectRoot, canonicalDir } = setupBareProject(
+      'version: 1\ntargets: [claude-code]\nfeatures: [rules]\n',
+    );
+    writeFileSync(join(canonicalDir, 'rules', '_root.md'), '# stable');
+    const checksums = await buildChecksums(canonicalDir);
+    // Generated output that exists on disk but drifted.
+    writeFileSync(join(projectRoot, 'AGENTS.md'), '# edited by hand');
+    await writeLock(canonicalDir, {
+      generatedAt: '2026-07-18T00:00:00Z',
+      generatedBy: 'test',
+      libVersion: '0.1.0',
+      checksums,
+      extends: {},
+      packs: {},
+      outputs: {
+        'AGENTS.md': `sha256:${hashContent('# generated')}`,
+        'CLAUDE.md': `sha256:${hashContent('# gone')}`,
+      },
+    });
+
+    const config = await loadConfig(projectRoot);
+    const report = await checkLockSync({
+      config,
+      configDir: projectRoot,
+      canonicalDir,
+      rootBase: projectRoot,
+    });
+
+    expect(report.outputsChecked).toBe(true);
+    expect(report.outputsModified).toEqual(['AGENTS.md']);
+    expect(report.outputsRemoved).toEqual(['CLAUDE.md']);
+    expect(report.inSync).toBe(false);
+    // Canonical is untouched.
+    expect(report.modified).toEqual([]);
+  });
+
+  it('old lock without outputs: outputsChecked=false and canonical inSync unaffected', async () => {
+    const { projectRoot, canonicalDir } = setupBareProject(
+      'version: 1\ntargets: [claude-code]\nfeatures: [rules]\n',
+    );
+    writeFileSync(join(canonicalDir, 'rules', '_root.md'), '# stable');
+    const checksums = await buildChecksums(canonicalDir);
+    await writeLock(canonicalDir, {
+      generatedAt: '2026-07-18T00:00:00Z',
+      generatedBy: 'test',
+      libVersion: '0.1.0',
+      checksums,
+      extends: {},
+      packs: {},
+      // no outputs key → old-format lock
+    });
+
+    const config = await loadConfig(projectRoot);
+    const report = await checkLockSync({
+      config,
+      configDir: projectRoot,
+      canonicalDir,
+      rootBase: projectRoot,
+    });
+
+    expect(report.outputsChecked).toBe(false);
+    expect(report.outputsModified).toEqual([]);
+    expect(report.outputsRemoved).toEqual([]);
+    expect(report.inSync).toBe(true);
+  });
+
+  it('no rootBase: output verification is skipped even when lock.outputs is present', async () => {
+    const { projectRoot, canonicalDir } = setupBareProject(
+      'version: 1\ntargets: [claude-code]\nfeatures: [rules]\n',
+    );
+    writeFileSync(join(canonicalDir, 'rules', '_root.md'), '# stable');
+    const checksums = await buildChecksums(canonicalDir);
+    writeFileSync(join(projectRoot, 'AGENTS.md'), '# edited by hand');
+    await writeLock(canonicalDir, {
+      generatedAt: '2026-07-18T00:00:00Z',
+      generatedBy: 'test',
+      libVersion: '0.1.0',
+      checksums,
+      extends: {},
+      packs: {},
+      outputs: { 'AGENTS.md': `sha256:${hashContent('# generated')}` },
+    });
+
+    const config = await loadConfig(projectRoot);
+    const report = await checkLockSync({ config, configDir: projectRoot, canonicalDir });
+
+    expect(report.outputsChecked).toBe(false);
+    expect(report.outputsModified).toEqual([]);
+    expect(report.outputsRemoved).toEqual([]);
+    expect(report.inSync).toBe(true);
   });
 });

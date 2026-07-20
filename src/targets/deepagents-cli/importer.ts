@@ -2,9 +2,13 @@
  * Import Deep Agents CLI config into canonical `.agentsmesh/`.
  *
  * Reads:
- *   - `.deepagents/AGENTS.md` — root rule
- *   - `.deepagents/skills/`   — skill bundles
- *   - `.mcp.json`             — MCP servers (standard format)
+ *   - `.deepagents/AGENTS.md`  — root rule
+ *   - `.deepagents/skills/`    — skill bundles (+ commands projected as skills)
+ *   - `.deepagents/agents/`    — native subagent files
+ *   - `.mcp.json`              — MCP servers (standard format)
+ *   - `~/.deepagents/hooks.json` — lifecycle hooks (global scope only; no
+ *     declarative importer mode fits its bespoke array shape, so this is
+ *     imperative — see `global-hooks.ts`)
  */
 
 import type { ImportResult } from '../../core/types.js';
@@ -12,6 +16,7 @@ import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
 import { importEmbeddedSkills } from '../import/embedded-skill.js';
 import { runDescriptorImport } from '../import/descriptor-import-runner.js';
+import { importDeepagentsCliGlobalHooks } from './global-hooks.js';
 import {
   DEEPAGENTS_CLI_TARGET,
   DEEPAGENTS_CLI_SKILLS_DIR,
@@ -36,6 +41,10 @@ export async function importFromDeepagentsCli(
   const skillsDir =
     scope === 'global' ? DEEPAGENTS_CLI_GLOBAL_SKILLS_DIR : DEEPAGENTS_CLI_SKILLS_DIR;
   await importEmbeddedSkills(projectRoot, skillsDir, DEEPAGENTS_CLI_TARGET, results, normalize);
+
+  if (scope === 'global') {
+    await importDeepagentsCliGlobalHooks(projectRoot, results);
+  }
 
   return results;
 }

@@ -71,19 +71,30 @@ describe('stageNativeInstallScope Junie, Cline, and Windsurf', () => {
       features: ['ignore'],
     },
     {
-      name: 'cline-flat-root',
+      name: 'cline-root',
       target: 'cline',
-      path: '.clinerules',
-      files: { '.clinerules': '# Cline Root\n' },
+      path: 'AGENTS.md',
+      files: { 'AGENTS.md': '# Cline Root\n' },
       features: ['rules'],
       pick: { rules: ['_root'] },
+    },
+    {
+      name: 'cline-rules-folder',
+      target: 'cline',
+      path: '.cline/rules',
+      files: {
+        '.cline/rules/_root.md': '# Root\n',
+        '.cline/rules/review.md': '---\ndescription: Review\n---\n\nReview code.\n',
+      },
+      features: ['rules'],
+      pick: { rules: ['_root', 'review'] },
     },
     {
       name: 'cline-workflows-folder',
       target: 'cline',
       path: '.clinerules/workflows',
       files: {
-        '.clinerules/_root.md': '# Root\n',
+        '.cline/rules/_root.md': '# Root\n',
         '.clinerules/workflows/deploy.md': '---\ndescription: Deploy\n---\n\nDeploy now.\n',
       },
       features: ['commands'],
@@ -102,9 +113,9 @@ describe('stageNativeInstallScope Junie, Cline, and Windsurf', () => {
     {
       name: 'cline-mcp-file',
       target: 'cline',
-      path: '.cline/cline_mcp_settings.json',
+      path: '.cline/mcp.json',
       files: {
-        '.cline/cline_mcp_settings.json': JSON.stringify({
+        '.cline/mcp.json': JSON.stringify({
           mcpServers: { fs: { command: 'npx', args: ['-y', '@mcp/fs'] } },
         }),
       },

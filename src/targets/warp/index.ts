@@ -2,15 +2,16 @@
  * Warp target descriptor.
  *
  * Generation emits:
- *   - `AGENTS.md`        — root rule + embedded additional rules
- *   - `.warp/skills/`    — skill bundles
- *   - `.mcp.json`        — MCP servers (standard format)
+ *   - `AGENTS.md`           — root rule + embedded additional rules
+ *   - `.warp/skills/`       — skill bundles
+ *   - `.warp/.mcp.json`     — MCP servers (standard format, project scope)
  *
  * Import reads `WARP.md` (legacy, higher priority), `AGENTS.md`,
- * `.warp/skills/`, and `.mcp.json`.
+ * `.warp/skills/`, and `.warp/.mcp.json`.
  *
- * Global mode supports skills only — Warp's global rules are
- * UI-managed via Warp Drive, not file-based.
+ * Global mode supports skills and MCP — Warp reads a global MCP config
+ * at `~/.warp/.mcp.json` (standard `mcpServers` JSON). Warp's global
+ * rules remain UI-managed via Warp Drive, not file-based.
  */
 
 import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
@@ -24,6 +25,8 @@ import {
   generateSkills,
   generateMcp,
   generatePermissions,
+  generateHooks,
+  generateIgnore,
 } from './generator.js';
 import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromWarp } from './importer.js';
@@ -37,6 +40,7 @@ import {
   WARP_SKILLS_DIR,
   WARP_MCP_FILE,
   WARP_GLOBAL_SKILLS_DIR,
+  WARP_GLOBAL_MCP_FILE,
   WARP_CANONICAL_RULES_DIR,
 } from './constants.js';
 
@@ -49,6 +53,8 @@ export const target: TargetGenerators = {
   generateSkills,
   generateMcp,
   generatePermissions,
+  generateHooks,
+  generateIgnore,
   importFrom: importFromWarp,
 };
 
@@ -77,12 +83,14 @@ const globalLayout: TargetLayout = {
   skillDir: WARP_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [WARP_GLOBAL_SKILLS_DIR],
-    files: [],
+    files: [WARP_GLOBAL_MCP_FILE],
   },
   rewriteGeneratedPath(path) {
     if (path.startsWith(`${WARP_SKILLS_DIR}/`)) {
       return path.replace(`${WARP_SKILLS_DIR}/`, `${WARP_GLOBAL_SKILLS_DIR}/`);
     }
+    // The MCP generator already emits the global path (`.warp/.mcp.json`)
+    // directly when scope is global, so it passes through unchanged.
     return path;
   },
   mirrorGlobalPath(path, activeTargets) {
@@ -107,24 +115,24 @@ const globalLayout: TargetLayout = {
 const capabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'embedded',
-  commands: 'none',
+  commands: 'embedded',
   agents: 'none',
   skills: 'native',
   mcp: 'native',
-  hooks: 'none',
-  ignore: 'none',
+  hooks: 'partial',
+  ignore: 'partial',
   permissions: 'partial',
 };
 
 const globalCapabilities: TargetCapabilities = {
   rules: 'none',
   additionalRules: 'none',
-  commands: 'none',
+  commands: 'embedded',
   agents: 'none',
   skills: 'native',
-  mcp: 'none',
-  hooks: 'none',
-  ignore: 'none',
+  mcp: 'native',
+  hooks: 'partial',
+  ignore: 'partial',
   permissions: 'partial',
 };
 
@@ -138,7 +146,8 @@ export const descriptor = {
   },
   generators: target,
   capabilities,
-  emptyImportMessage: 'No Warp config found (WARP.md, AGENTS.md, .warp/skills, or .mcp.json).',
+  emptyImportMessage:
+    'No Warp config found (WARP.md, AGENTS.md, .warp/skills, or .warp/.mcp.json).',
   lintRules,
   lint: {
     hooks: lintHooks,
@@ -149,7 +158,7 @@ export const descriptor = {
   project,
   globalSupport: {
     capabilities: globalCapabilities,
-    detectionPaths: [WARP_GLOBAL_SKILLS_DIR],
+    detectionPaths: [WARP_GLOBAL_SKILLS_DIR, WARP_GLOBAL_MCP_FILE],
     layout: globalLayout,
   },
   importer: {
@@ -168,6 +177,7 @@ export const descriptor = {
       mode: 'mcpJson',
       source: {
         project: [WARP_MCP_FILE],
+        global: [WARP_GLOBAL_MCP_FILE],
       },
       canonicalDir: '.agentsmesh',
       canonicalFilename: 'mcp.json',

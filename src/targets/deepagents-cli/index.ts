@@ -3,46 +3,51 @@
  *
  * Generation emits:
  *   - `.deepagents/AGENTS.md`   — root rule + embedded additional rules
- *   - `.deepagents/skills/`     — skill bundles
+ *   - `.deepagents/skills/`     — skill bundles (+ commands projected as skills)
+ *   - `.deepagents/agents/`     — native subagent files (dedicated AGENTS.md
+ *     per subagent)
  *   - `.mcp.json`               — MCP servers (standard format)
- *   - `.deepagents/hooks.json`  — lifecycle hooks (Claude Code format)
  *
- * Import reads `.deepagents/AGENTS.md`, `.deepagents/skills/`, and `.mcp.json`.
+ * Import reads `.deepagents/AGENTS.md`, `.deepagents/skills/`,
+ * `.deepagents/agents/`, and `.mcp.json`.
  *
  * Deep Agents CLI uses `.deepagents/AGENTS.md` (not root `AGENTS.md`) to
  * avoid collision with Amp, Codex CLI, and Warp which share root `AGENTS.md`.
  *
- * Global mode generates to `~/.deepagents/` (AGENTS.md, skills/, .mcp.json,
- * hooks.json).
+ * Global mode generates to `~/.deepagents/{agent}/` (AGENTS.md, skills/,
+ * agents/ — per-agent-instance, default agent name `"agent"`), plus the flat,
+ * unscoped `~/.deepagents/.mcp.json` and `~/.deepagents/hooks.json`. There is
+ * no project-level hooks surface at all (see `global-hooks.ts`).
  */
 
 import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
-import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
-import { commandSkillDirName } from '../codex-cli/command-skill.js';
-import { projectedAgentSkillDirName } from '../projection/projected-agent-skill.js';
+import type { TargetDescriptor } from '../catalog/target-descriptor.js';
 import {
   generateRules,
   generateCommands,
   generateAgents,
   generateSkills,
   generateMcp,
-  generateHooks,
+  generateIgnore,
+  generatePermissions,
 } from './generator.js';
+import { deepagentsCliAgentMapper } from './agent-format.js';
+import { deepagentsCliScopeExtras } from './global-hooks.js';
 import { importFromDeepagentsCli } from './importer.js';
 import { lintRules } from './linter.js';
-import { lintPermissions, lintIgnore } from './lint.js';
+import { lintPermissions, lintIgnore, lintHooks } from './lint.js';
+import { project, globalLayout } from './layout.js';
 import { buildDeepagentsCliImportPaths } from '../../core/reference/import-map-builders.js';
 import {
   DEEPAGENTS_CLI_TARGET,
   DEEPAGENTS_CLI_ROOT_FILE,
-  DEEPAGENTS_CLI_SKILLS_DIR,
+  DEEPAGENTS_CLI_AGENTS_DIR,
   DEEPAGENTS_CLI_MCP_FILE,
-  DEEPAGENTS_CLI_HOOKS_FILE,
   DEEPAGENTS_CLI_GLOBAL_ROOT_FILE,
-  DEEPAGENTS_CLI_GLOBAL_SKILLS_DIR,
+  DEEPAGENTS_CLI_GLOBAL_AGENTS_DIR,
   DEEPAGENTS_CLI_GLOBAL_MCP_FILE,
-  DEEPAGENTS_CLI_GLOBAL_HOOKS_FILE,
   DEEPAGENTS_CLI_CANONICAL_RULES_DIR,
+  DEEPAGENTS_CLI_CANONICAL_AGENTS_DIR,
 } from './constants.js';
 
 export const target: TargetGenerators = {
@@ -53,84 +58,41 @@ export const target: TargetGenerators = {
   generateAgents,
   generateSkills,
   generateMcp,
-  generateHooks,
+  generateIgnore,
+  generatePermissions,
   importFrom: importFromDeepagentsCli,
-};
-
-const project: TargetLayout = {
-  rootInstructionPath: DEEPAGENTS_CLI_ROOT_FILE,
-  skillDir: DEEPAGENTS_CLI_SKILLS_DIR,
-  managedOutputs: {
-    dirs: [DEEPAGENTS_CLI_SKILLS_DIR],
-    files: [DEEPAGENTS_CLI_ROOT_FILE, DEEPAGENTS_CLI_MCP_FILE, DEEPAGENTS_CLI_HOOKS_FILE],
-  },
-  paths: {
-    rulePath(_slug) {
-      return DEEPAGENTS_CLI_ROOT_FILE;
-    },
-    commandPath(name) {
-      return `${DEEPAGENTS_CLI_SKILLS_DIR}/${commandSkillDirName(name)}/SKILL.md`;
-    },
-    agentPath(name) {
-      return `${DEEPAGENTS_CLI_SKILLS_DIR}/${projectedAgentSkillDirName(name)}/SKILL.md`;
-    },
-  },
-};
-
-const globalLayout: TargetLayout = {
-  rootInstructionPath: DEEPAGENTS_CLI_GLOBAL_ROOT_FILE,
-  skillDir: DEEPAGENTS_CLI_GLOBAL_SKILLS_DIR,
-  managedOutputs: {
-    dirs: [DEEPAGENTS_CLI_GLOBAL_SKILLS_DIR],
-    files: [
-      DEEPAGENTS_CLI_GLOBAL_ROOT_FILE,
-      DEEPAGENTS_CLI_GLOBAL_MCP_FILE,
-      DEEPAGENTS_CLI_GLOBAL_HOOKS_FILE,
-    ],
-  },
-  rewriteGeneratedPath(path) {
-    if (path === DEEPAGENTS_CLI_ROOT_FILE) return DEEPAGENTS_CLI_GLOBAL_ROOT_FILE;
-    if (path === DEEPAGENTS_CLI_MCP_FILE) return DEEPAGENTS_CLI_GLOBAL_MCP_FILE;
-    if (path.startsWith(`${DEEPAGENTS_CLI_SKILLS_DIR}/`)) {
-      return path.replace(`${DEEPAGENTS_CLI_SKILLS_DIR}/`, `${DEEPAGENTS_CLI_GLOBAL_SKILLS_DIR}/`);
-    }
-    return path;
-  },
-  paths: {
-    rulePath(_slug) {
-      return DEEPAGENTS_CLI_GLOBAL_ROOT_FILE;
-    },
-    commandPath(name) {
-      return `${DEEPAGENTS_CLI_GLOBAL_SKILLS_DIR}/${commandSkillDirName(name)}/SKILL.md`;
-    },
-    agentPath(name) {
-      return `${DEEPAGENTS_CLI_GLOBAL_SKILLS_DIR}/${projectedAgentSkillDirName(name)}/SKILL.md`;
-    },
-  },
 };
 
 const capabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'embedded',
-  commands: 'none',
-  agents: 'none',
+  // No dedicated command file format (docs.langchain.com/oss/javascript/
+  // deepagents/code/configuration): commands are projected as skills, the
+  // same embedding `skills` already uses natively.
+  commands: 'embedded',
+  // `.deepagents/agents/{name}/AGENTS.md` — a dedicated on-disk subagent
+  // surface, distinct from skills (see `agent-format.ts`).
+  agents: 'native',
   skills: 'native',
   mcp: 'native',
-  hooks: 'native',
-  ignore: 'none',
-  permissions: 'none',
+  // No project-level hooks surface exists at all (only global
+  // ~/.deepagents/hooks.json — see global-hooks.ts). 'none' means no support
+  // path exists; lintHooks warns when canonical hooks can't be projected.
+  hooks: 'none',
+  ignore: 'partial',
+  permissions: 'partial',
 };
 
 const globalCapabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'embedded',
-  commands: 'none',
-  agents: 'none',
+  commands: 'embedded',
+  agents: 'native',
   skills: 'native',
   mcp: 'native',
   hooks: 'native',
-  ignore: 'none',
-  permissions: 'none',
+  ignore: 'partial',
+  permissions: 'partial',
 };
 
 export const descriptor = {
@@ -149,13 +111,17 @@ export const descriptor = {
   lint: {
     permissions: lintPermissions,
     ignore: lintIgnore,
+    hooks: lintHooks,
   },
-  supportsConversion: { commands: true, agents: true },
+  // Only commands lack a native surface and fall back to skill projection;
+  // agents have their own dedicated `.deepagents/agents/` surface.
+  supportsConversion: { commands: true },
   project,
   globalSupport: {
     capabilities: globalCapabilities,
     detectionPaths: [DEEPAGENTS_CLI_GLOBAL_ROOT_FILE, DEEPAGENTS_CLI_GLOBAL_MCP_FILE],
     layout: globalLayout,
+    scopeExtras: deepagentsCliScopeExtras,
   },
   importer: {
     rules: {
@@ -168,6 +134,17 @@ export const descriptor = {
       canonicalDir: DEEPAGENTS_CLI_CANONICAL_RULES_DIR,
       canonicalRootFilename: '_root.md',
       markAsRoot: true,
+    },
+    agents: {
+      feature: 'agents',
+      mode: 'directory',
+      source: {
+        project: [DEEPAGENTS_CLI_AGENTS_DIR],
+        global: [DEEPAGENTS_CLI_GLOBAL_AGENTS_DIR],
+      },
+      canonicalDir: DEEPAGENTS_CLI_CANONICAL_AGENTS_DIR,
+      extensions: ['.md'],
+      map: deepagentsCliAgentMapper,
     },
     mcp: {
       feature: 'mcp',

@@ -45,7 +45,10 @@ const minimalDescriptor = {
 describe('targetDescriptorSchema', () => {
   it('validates every built-in descriptor without throwing', () => {
     for (const descriptor of BUILTIN_TARGETS) {
-      expect(() => validateDescriptor(descriptor)).not.toThrow();
+      expect(
+        () => validateDescriptor(descriptor),
+        `${descriptor.id} failed validation`,
+      ).not.toThrow();
     }
   });
 

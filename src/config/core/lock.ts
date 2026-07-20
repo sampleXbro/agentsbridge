@@ -1,7 +1,4 @@
-/**
- * Lock file management for team collaboration.
- * Tracks checksums of canonical source files.
- */
+/** Lock file management for team collaboration. Tracks canonical checksums. */
 
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { join, relative } from 'node:path';
@@ -63,6 +60,7 @@ export async function readLock(abDir: string): Promise<LockFile | null> {
       checksums?: Record<string, string>;
       extends?: Record<string, string>;
       packs?: Record<string, string>;
+      outputs?: Record<string, string>;
     };
     if (!raw || typeof raw !== 'object') return null;
     return {
@@ -72,6 +70,8 @@ export async function readLock(abDir: string): Promise<LockFile | null> {
       checksums: raw.checksums && typeof raw.checksums === 'object' ? raw.checksums : {},
       extends: raw.extends && typeof raw.extends === 'object' ? raw.extends : {},
       packs: raw.packs && typeof raw.packs === 'object' ? raw.packs : {},
+      // undefined (not {}) when absent → old-format lock; skips output check.
+      outputs: raw.outputs && typeof raw.outputs === 'object' ? raw.outputs : undefined,
     };
   } catch {
     return null;
@@ -92,6 +92,8 @@ export async function writeLock(abDir: string, lock: LockFile): Promise<void> {
     checksums: lock.checksums,
     extends: lock.extends,
     packs: lock.packs,
+    // Omit the key entirely when undefined (old-format lock).
+    ...(lock.outputs !== undefined ? { outputs: lock.outputs } : {}),
   };
   const content =
     '# Auto-generated. DO NOT EDIT MANUALLY.\n# Tracks the state of all config files for team conflict resolution.\n\n' +

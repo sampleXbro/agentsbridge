@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { getBuiltinTargetDefinition } from '../../../../src/targets/catalog/builtin-targets.js';
 import { generate } from '../../../../src/core/generate/engine.js';
 import type { ValidatedConfig } from '../../../../src/config/core/schema.js';
-import type { CanonicalFiles } from '../../../../src/core/types.js';
+import type { CanonicalFiles, CanonicalRule } from '../../../../src/core/types.js';
 import {
   QWEN_ROOT,
   QWEN_IGNORE,
@@ -15,6 +15,7 @@ import {
   QWEN_SKILLS_DIR,
   QWEN_GLOBAL_ROOT,
   QWEN_GLOBAL_SETTINGS,
+  QWEN_GLOBAL_RULES_DIR,
   QWEN_GLOBAL_COMMANDS_DIR,
   QWEN_GLOBAL_AGENTS_DIR,
   QWEN_GLOBAL_SKILLS_DIR,
@@ -64,9 +65,10 @@ describe('qwen-code global layout', () => {
     expect(rewrite(QWEN_IGNORE)).toBeNull();
   });
 
-  it('rewriteGeneratedPath returns null for .qwen/rules paths in global mode', () => {
+  it('rewriteGeneratedPath transforms .qwen/rules paths to the global rules dir (native, not embedded)', () => {
     const rewrite = descriptor.globalSupport!.layout.rewriteGeneratedPath!;
-    expect(rewrite(`${QWEN_RULES_DIR}/typescript.md`)).toBeNull();
+    const result = rewrite(`${QWEN_RULES_DIR}/typescript.md`);
+    expect(result).toBe(`${QWEN_GLOBAL_RULES_DIR}/typescript.md`);
   });
 
   it('rewriteGeneratedPath passes through unknown paths unchanged', () => {
@@ -77,6 +79,20 @@ describe('qwen-code global layout', () => {
   it('globalSupport has detection paths', () => {
     expect(descriptor.globalSupport!.detectionPaths.length).toBeGreaterThan(0);
     expect(descriptor.globalSupport!.detectionPaths).toContain(QWEN_GLOBAL_ROOT);
+  });
+
+  it('globalSupport.layout.paths.rulePath returns the global root for root rules, global rules dir otherwise', () => {
+    const rulePath = descriptor.globalSupport!.layout.paths.rulePath;
+    const baseRule: CanonicalRule = {
+      source: '/proj/.agentsmesh/rules/typescript.md',
+      root: false,
+      targets: [],
+      description: '',
+      globs: [],
+      body: '',
+    };
+    expect(rulePath('typescript', { ...baseRule, root: true })).toBe(QWEN_GLOBAL_ROOT);
+    expect(rulePath('typescript', baseRule)).toBe(`${QWEN_GLOBAL_RULES_DIR}/typescript.md`);
   });
 });
 
@@ -160,7 +176,7 @@ describe('qwen-code global frontmatter preservation', () => {
     expect(rootFile!.content).toContain('Use TypeScript.');
   });
 
-  it('embeds non-root rules into root instructions in global mode', async () => {
+  it('writes non-root rules as real files under the global rules dir (native, not embedded)', async () => {
     const results = await generate({
       config: makeGlobalConfig(),
       canonical: makeCanonical({
@@ -188,15 +204,21 @@ describe('qwen-code global frontmatter preservation', () => {
     });
 
     const ruleFile = results.find(
-      (r) => r.target === 'qwen-code' && r.path.includes('rules/ts.md'),
+      (r) => r.target === 'qwen-code' && r.path === `${QWEN_GLOBAL_RULES_DIR}/ts.md`,
     );
-    expect(ruleFile).toBeUndefined();
+    expect(ruleFile).toBeDefined();
+    expect(ruleFile!.content).toContain('Use strict mode.');
+    expect(ruleFile!.content).toContain('TypeScript standards');
+    // Qwen Code's rulesDiscovery.ts only recognizes `paths:`, not `globs:`.
+    expect(ruleFile!.content).toContain('paths:');
+    expect(ruleFile!.content).not.toContain('globs:');
 
     const rootFile = results.find((r) => r.target === 'qwen-code' && r.path === QWEN_GLOBAL_ROOT);
     expect(rootFile).toBeDefined();
     expect(rootFile!.content).toContain('Root instructions.');
-    expect(rootFile!.content).toContain('Use strict mode.');
-    expect(rootFile!.content).toContain('TypeScript standards');
+    // Root file no longer embeds non-root rules — they're real global files now.
+    expect(rootFile!.content).not.toContain('Use strict mode.');
+    expect(rootFile!.content).not.toContain('agentsmesh:embedded-rules');
   });
 
   it('preserves MCP content in global mode (written to .qwen/settings.json with mcpServers key)', async () => {

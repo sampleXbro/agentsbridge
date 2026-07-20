@@ -12,6 +12,12 @@ export function mapGeminiHookEvent(event: string): string | null {
     case 'Notification':
     case 'notification':
       return 'Notification';
+    case 'BeforeAgent':
+      return 'SubagentStart';
+    case 'AfterAgent':
+      return 'SubagentStop';
+    case 'SessionStart':
+      return 'SessionStart';
     default:
       return null;
   }

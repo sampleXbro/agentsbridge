@@ -16,6 +16,11 @@ import {
   KILO_CODE_LEGACY_SKILLS_DIR,
   KILO_CODE_LEGACY_MCP_FILE,
   KILO_CODE_LEGACY_MODES_FILE,
+  KILO_CODE_GLOBAL_AGENTS_MD,
+  KILO_CODE_GLOBAL_RULES_DIR,
+  KILO_CODE_GLOBAL_COMMANDS_DIR,
+  KILO_CODE_GLOBAL_AGENTS_DIR,
+  KILO_GLOBAL_CONFIG_FILE,
 } from '../../../../src/targets/kilo-code/constants.js';
 
 let TEST_DIR: string;
@@ -304,6 +309,78 @@ describe('importFromKiloCode — ignore', () => {
     const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'ignore'), 'utf-8');
     expect(content).toContain('.env');
     expect(content).toContain('node_modules/');
+  });
+});
+
+describe('importFromKiloCode — global scope', () => {
+  it('imports the root rule from ~/.config/kilo/AGENTS.md', async () => {
+    mkdirSync(join(TEST_DIR, '.config', 'kilo'), { recursive: true });
+    writeFileSync(join(TEST_DIR, KILO_CODE_GLOBAL_AGENTS_MD), '# Global Root\n\nAlways use TDD.');
+
+    const results = await importFromKiloCode(TEST_DIR, { scope: 'global' });
+    expect(results.some((r) => r.toPath === '.agentsmesh/rules/_root.md')).toBe(true);
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
+    expect(content).toContain('root: true');
+    expect(content).toContain('Always use TDD.');
+  });
+
+  it('imports non-root rules from ~/.config/kilo/rules/', async () => {
+    mkdirSync(join(TEST_DIR, KILO_CODE_GLOBAL_RULES_DIR), { recursive: true });
+    writeFileSync(join(TEST_DIR, KILO_CODE_GLOBAL_RULES_DIR, 'typescript.md'), 'Use strict TS.');
+
+    const results = await importFromKiloCode(TEST_DIR, { scope: 'global' });
+    expect(results.some((r) => r.toPath === '.agentsmesh/rules/typescript.md')).toBe(true);
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', 'typescript.md'), 'utf-8');
+    expect(content).toContain('Use strict TS.');
+  });
+
+  it('imports commands from ~/.config/kilo/commands/', async () => {
+    mkdirSync(join(TEST_DIR, KILO_CODE_GLOBAL_COMMANDS_DIR), { recursive: true });
+    writeFileSync(join(TEST_DIR, KILO_CODE_GLOBAL_COMMANDS_DIR, 'build.md'), 'Build the project.');
+
+    const results = await importFromKiloCode(TEST_DIR, { scope: 'global' });
+    expect(results.some((r) => r.toPath === '.agentsmesh/commands/build.md')).toBe(true);
+  });
+
+  it('imports agents from ~/.config/kilo/agents/', async () => {
+    mkdirSync(join(TEST_DIR, KILO_CODE_GLOBAL_AGENTS_DIR), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, KILO_CODE_GLOBAL_AGENTS_DIR, 'reviewer.md'),
+      '---\ndescription: Reviewer\n---\n\nReview carefully.',
+    );
+
+    const results = await importFromKiloCode(TEST_DIR, { scope: 'global' });
+    expect(results.some((r) => r.toPath === '.agentsmesh/agents/reviewer.md')).toBe(true);
+  });
+
+  it('imports MCP servers from the `mcp` key of ~/.config/kilo/kilo.jsonc', async () => {
+    mkdirSync(join(TEST_DIR, '.config', 'kilo'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, KILO_GLOBAL_CONFIG_FILE),
+      JSON.stringify({ mcp: { fs: { type: 'local', command: ['node', 'server.js'] } } }),
+    );
+
+    const results = await importFromKiloCode(TEST_DIR, { scope: 'global' });
+    expect(results.some((r) => r.feature === 'mcp' && r.toPath === '.agentsmesh/mcp.json')).toBe(
+      true,
+    );
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf-8');
+    const parsed = JSON.parse(content) as { mcpServers: Record<string, unknown> };
+    expect(parsed.mcpServers.fs).toBeDefined();
+  });
+
+  it('does not import a global ignore file (no `ignore` results at global scope)', async () => {
+    // Even if a stray `.kilocodeignore` exists at the fake home root, global
+    // scope has no `source.global` for ignore, so it must not be picked up.
+    writeFileSync(join(TEST_DIR, KILO_CODE_IGNORE), '.env\n');
+
+    const results = await importFromKiloCode(TEST_DIR, { scope: 'global' });
+    expect(results.some((r) => r.feature === 'ignore')).toBe(false);
+  });
+
+  it('returns empty array for an empty global project', async () => {
+    const results = await importFromKiloCode(TEST_DIR, { scope: 'global' });
+    expect(results).toEqual([]);
   });
 });
 

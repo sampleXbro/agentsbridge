@@ -1,6 +1,1 @@
-{
-  "permissions": {
-    "allow": ["Read", "Grep", "Edit", "Bash(pnpm test:*)"],
-    "deny": ["Bash(curl:*)"]
-  }
-}
+{}

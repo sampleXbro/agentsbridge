@@ -6,6 +6,7 @@ import {
   ROO_CODE_COMMANDS_DIR,
   ROO_CODE_SKILLS_DIR,
   ROO_CODE_GLOBAL_AGENTS_MD,
+  ROO_CODE_GLOBAL_ROOT_RULE,
   ROO_CODE_GLOBAL_RULES_DIR,
   ROO_CODE_GLOBAL_COMMANDS_DIR,
   ROO_CODE_GLOBAL_SKILLS_DIR,
@@ -20,9 +21,16 @@ export async function buildRooCodeImportPaths(
   scope: TargetLayoutScope = 'project',
 ): Promise<void> {
   if (scope === 'global') {
+    // Primary alias: the file the generator actually writes in global scope.
+    refs.set(ROO_CODE_GLOBAL_ROOT_RULE, `${AB_RULES}/_root.md`);
+    // Legacy fallback: kept for users migrating from the old (buggy) output
+    // that wrote .roo/AGENTS.md — Roo Code itself never reads that path.
     refs.set(ROO_CODE_GLOBAL_AGENTS_MD, `${AB_RULES}/_root.md`);
     for (const absPath of await listFiles(projectRoot, ROO_CODE_GLOBAL_RULES_DIR)) {
-      addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_RULES, '.md');
+      const relPath = rel(projectRoot, absPath);
+      // Skip the root rule — it is already mapped explicitly above.
+      if (relPath === ROO_CODE_GLOBAL_ROOT_RULE) continue;
+      addSimpleFileMapping(refs, relPath, AB_RULES, '.md');
     }
     for (const absPath of await listFiles(projectRoot, ROO_CODE_GLOBAL_COMMANDS_DIR)) {
       addSimpleFileMapping(refs, rel(projectRoot, absPath), AB_COMMANDS, '.md');

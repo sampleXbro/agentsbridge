@@ -48,3 +48,27 @@ export const CODEX_RULE_EMBED_B64_LINE = '# am64:';
 
 export const CODEX_RULE_INDEX_START = '<!-- agentsmesh:codex-rule-index:start -->';
 export const CODEX_RULE_INDEX_END = '<!-- agentsmesh:codex-rule-index:end -->';
+
+/**
+ * Codex's documented hook lifecycle events (https://learn.chatgpt.com/docs/hooks).
+ * Notably there is no `Notification` event — canonical `Notification` hooks are
+ * dropped (with a lint warning) rather than written as an unrecognized key.
+ */
+export const CODEX_SUPPORTED_HOOK_EVENTS = [
+  'SessionStart',
+  'SubagentStart',
+  'PreToolUse',
+  'PermissionRequest',
+  'PostToolUse',
+  'PreCompact',
+  'PostCompact',
+  'UserPromptSubmit',
+  'SubagentStop',
+  'Stop',
+] as const;
+
+/** Dedicated `.rules` file for canonical permissions (distinct from per-rule `{slug}.rules`
+ * execution-emit files, and from Codex's own `default.rules` TUI-write destination, so
+ * agentsmesh never double-writes or collides with either). */
+export const CODEX_PERMISSIONS_RULES_BASENAME = 'agentsmesh-permissions.rules';
+export const CODEX_CANONICAL_PERMISSIONS = '.agentsmesh/permissions.yaml';

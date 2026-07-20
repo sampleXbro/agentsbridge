@@ -121,3 +121,13 @@ export function generateMcp(
   );
   return [{ path: GOOSE_GLOBAL_CONFIG, content: yamlStringify({ extensions }) }];
 }
+
+/**
+ * No-op stub — Goose applies tool permissions only at global scope via
+ * ~/.config/goose/permission.yaml (emitted by scopeExtras); project-scope
+ * permissions have no file surface. Lint warnings surface this via
+ * lintPermissions.
+ */
+export function generatePermissions(_canonical: CanonicalFiles): GooseOutput[] {
+  return [];
+}

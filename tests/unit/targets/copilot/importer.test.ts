@@ -372,3 +372,43 @@ describe('importFromCopilot — skills', () => {
     expect(checklistContent).toContain('.agentsmesh/commands/review.md');
   });
 });
+
+describe('importFromCopilot — global scope (mcp + hooks)', () => {
+  it('imports ~/.copilot/mcp-config.json (mcpServers key)', async () => {
+    mkdirSync(join(TEST_DIR, '.copilot'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.copilot', 'mcp-config.json'),
+      JSON.stringify({ mcpServers: { docs: { command: 'npx', args: ['-y'] } } }),
+    );
+    const results = await importFromCopilot(TEST_DIR, { scope: 'global' });
+    const mcpResult = results.find((r) => r.feature === 'mcp');
+    expect(mcpResult).toBeDefined();
+    expect(mcpResult?.toPath).toBe('.agentsmesh/mcp.json');
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'mcp.json'), 'utf-8');
+    expect(content).toContain('docs');
+  });
+
+  it('imports ~/.copilot/hooks/*.json (same schema as project scope)', async () => {
+    const hooksDir = join(TEST_DIR, '.copilot', 'hooks');
+    mkdirSync(hooksDir, { recursive: true });
+    writeFileSync(
+      join(hooksDir, 'agentsmesh.json'),
+      JSON.stringify({ hooks: { preToolUse: [{ bash: './pre.sh', matcher: 'Bash' }] } }),
+    );
+    writeFileSync(join(hooksDir, 'pre.sh'), '#!/bin/sh\n# agentsmesh-command: echo hi\n');
+    const results = await importFromCopilot(TEST_DIR, { scope: 'global' });
+    const hookResult = results.find((r) => r.feature === 'hooks');
+    expect(hookResult).toBeDefined();
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'hooks.yaml'), 'utf-8');
+    expect(content).toContain('Bash');
+    expect(content).toContain('echo hi');
+  });
+
+  it('does not scan the project .github/hooks legacy dir in global scope', async () => {
+    const legacyDir = join(TEST_DIR, '.github', 'copilot-hooks');
+    mkdirSync(legacyDir, { recursive: true });
+    writeFileSync(join(legacyDir, 'PostToolUse-0.sh'), '#!/bin/bash\necho post');
+    const results = await importFromCopilot(TEST_DIR, { scope: 'global' });
+    expect(results.filter((r) => r.feature === 'hooks')).toEqual([]);
+  });
+});

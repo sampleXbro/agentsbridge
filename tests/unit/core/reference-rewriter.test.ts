@@ -242,19 +242,19 @@ describe('rewriteGeneratedReferences', () => {
     const results: GenerateResult[] = [
       {
         target: 'antigravity',
-        path: '.gemini/antigravity/GEMINI.md',
+        path: '.gemini/GEMINI.md',
         content: 'See [checklist](.agentsmesh/skills/api-gen/references/checklist.md).',
         status: 'created',
       },
       {
         target: 'antigravity',
-        path: '.gemini/antigravity/skills/api-gen/SKILL.md',
+        path: '.gemini/config/skills/api-gen/SKILL.md',
         content: '',
         status: 'created',
       },
       {
         target: 'antigravity',
-        path: '.gemini/antigravity/skills/api-gen/references/checklist.md',
+        path: '.gemini/config/skills/api-gen/references/checklist.md',
         content: '',
         status: 'created',
       },
@@ -269,7 +269,7 @@ describe('rewriteGeneratedReferences', () => {
     );
 
     expect(rewritten[0]!.content).toContain(
-      '[checklist](./skills/api-gen/references/checklist.md)',
+      '[checklist](./config/skills/api-gen/references/checklist.md)',
     );
   });
 

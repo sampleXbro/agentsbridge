@@ -5,6 +5,10 @@ import {
   generateSkills,
   generateCommands,
   generateAgents,
+  generateMcp,
+  generateHooks,
+  generateIgnore,
+  generatePermissions,
 } from '../../../../src/targets/replit-agent/generator.js';
 import {
   REPLIT_AGENT_ROOT_FILE,
@@ -278,5 +282,70 @@ describe('generateAgents (replit-agent)', () => {
     const canonical = makeCanonical({ agents: [] });
     const results = generateAgents(canonical);
     expect(results).toHaveLength(0);
+  });
+});
+
+describe('generateMcp (replit-agent)', () => {
+  it('returns empty array — MCP is configured via Integrations UI, not files', () => {
+    const canonical = makeCanonical({
+      mcp: {
+        mcpServers: {
+          filesystem: {
+            command: 'npx',
+            args: ['-y', '@modelcontextprotocol/server-filesystem', '/tmp'],
+          },
+        },
+      },
+    });
+    const results = generateMcp(canonical);
+    expect(results).toHaveLength(0);
+  });
+
+  it('returns empty array when mcp is null', () => {
+    const canonical = makeCanonical({ mcp: null });
+    expect(generateMcp(canonical)).toHaveLength(0);
+  });
+});
+
+describe('generateHooks (replit-agent)', () => {
+  it('returns empty array — Replit Agent has no lifecycle hook file surface', () => {
+    const canonical = makeCanonical({
+      hooks: { preCommit: [{ command: 'pnpm lint' }] },
+    });
+    const results = generateHooks(canonical);
+    expect(results).toHaveLength(0);
+  });
+
+  it('returns empty array when hooks is null', () => {
+    const canonical = makeCanonical({ hooks: null });
+    expect(generateHooks(canonical)).toHaveLength(0);
+  });
+});
+
+describe('generateIgnore (replit-agent)', () => {
+  it('returns empty array — Replit Agent has no dedicated ignore file', () => {
+    const canonical = makeCanonical({ ignore: ['node_modules', '.env'] });
+    const results = generateIgnore(canonical);
+    expect(results).toHaveLength(0);
+  });
+
+  it('returns empty array when ignore is empty', () => {
+    const canonical = makeCanonical({ ignore: [] });
+    expect(generateIgnore(canonical)).toHaveLength(0);
+  });
+});
+
+describe('generatePermissions (replit-agent)', () => {
+  it('returns empty array — permissions are managed via cloud UI', () => {
+    const canonical = makeCanonical({
+      permissions: { allow: ['Bash'], deny: [], ask: [] },
+    });
+    const results = generatePermissions(canonical);
+    expect(results).toHaveLength(0);
+  });
+
+  it('returns empty array when permissions is null', () => {
+    const canonical = makeCanonical({ permissions: null });
+    expect(generatePermissions(canonical)).toHaveLength(0);
   });
 });

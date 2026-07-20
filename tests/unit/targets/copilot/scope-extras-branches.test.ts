@@ -112,4 +112,60 @@ describe('generateCopilotGlobalExtras — branch coverage', () => {
     );
     expect(result[0]!.status).toBe('updated');
   });
+
+  it('includes ~/.copilot/mcp-config.json when mcp feature is enabled', async () => {
+    const result = await generateCopilotGlobalExtras(
+      {
+        ...emptyCanonical(),
+        mcp: { mcpServers: { docs: { type: 'stdio', command: 'npx', args: [], env: {} } } },
+      },
+      root,
+      'global',
+      new Set(['mcp']),
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0]!.path).toBe('.copilot/mcp-config.json');
+    expect(result[0]!.content).toContain('mcpServers');
+  });
+
+  it('excludes MCP output when mcp feature is disabled', async () => {
+    const result = await generateCopilotGlobalExtras(
+      {
+        ...emptyCanonical(),
+        mcp: { mcpServers: { docs: { type: 'stdio', command: 'npx', args: [], env: {} } } },
+      },
+      root,
+      'global',
+      new Set(['rules']),
+    );
+    expect(result).toEqual([]);
+  });
+
+  it('includes ~/.copilot/hooks/agentsmesh.json when hooks feature is enabled', async () => {
+    const result = await generateCopilotGlobalExtras(
+      {
+        ...emptyCanonical(),
+        hooks: { PreToolUse: [{ matcher: 'Bash', command: 'echo hi', type: 'command' }] },
+      },
+      root,
+      'global',
+      new Set(['hooks']),
+    );
+    const main = result.find((r) => r.path === '.copilot/hooks/agentsmesh.json');
+    expect(main).toBeDefined();
+    expect(main!.content).toContain('"matcher": "Bash"');
+  });
+
+  it('excludes hooks output when hooks feature is disabled', async () => {
+    const result = await generateCopilotGlobalExtras(
+      {
+        ...emptyCanonical(),
+        hooks: { PreToolUse: [{ matcher: 'Bash', command: 'echo hi', type: 'command' }] },
+      },
+      root,
+      'global',
+      new Set(['rules']),
+    );
+    expect(result).toEqual([]);
+  });
 });

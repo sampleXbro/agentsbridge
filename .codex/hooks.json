@@ -51,17 +51,6 @@
         ]
       }
     ],
-    "PostToolUseFailure": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "agentsmesh lessons hook"
-          }
-        ]
-      }
-    ],
     "SessionStart": [
       {
         "matcher": "*",

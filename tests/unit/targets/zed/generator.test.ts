@@ -141,7 +141,7 @@ describe('generateSkills (zed)', () => {
     expect(generateSkills(makeCanonical())).toHaveLength(0);
   });
 
-  it('generates .agents/skills/{name}/SKILL.md', () => {
+  it('generates exactly one file (.agents/skills/{name}/SKILL.md) for a skill with no supporting files', () => {
     const canonical = makeCanonical({
       skills: [
         {
@@ -154,10 +154,9 @@ describe('generateSkills (zed)', () => {
       ],
     });
     const results = generateSkills(canonical);
-    expect(results.length).toBeGreaterThanOrEqual(1);
-    expect(results.some((r) => r.path === '.agents/skills/api-generator/SKILL.md')).toBe(true);
-    const skill = results.find((r) => r.path === '.agents/skills/api-generator/SKILL.md')!;
-    expect(skill.content).toContain('name: api-generator');
+    expect(results).toHaveLength(1);
+    expect(results[0]!.path).toBe('.agents/skills/api-generator/SKILL.md');
+    expect(results[0]!.content).toContain('name: api-generator');
   });
 
   it('generates supporting files alongside SKILL.md', () => {

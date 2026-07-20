@@ -4,8 +4,8 @@
  * settings.json holds MCP, hooks, and permissions (merged via mergeGeneratedOutputContent).
  */
 
-import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
-import type { TargetDescriptor, TargetLayout, GeneratedOutputMerger } from '../catalog/target-descriptor.js';
+import type { TargetGenerators } from '../catalog/target.interface.js';
+import type { TargetDescriptor, GeneratedOutputMerger } from '../catalog/target-descriptor.js';
 import {
   generateRules,
   generateCommands,
@@ -15,23 +15,20 @@ import {
   generateIgnore,
   generateHooks,
   generatePermissions,
-  renderQwenGlobalInstructions,
 } from './generator.js';
 import { importFromQwenCode } from './importer.js';
 import { lintRules } from './linter.js';
+import { lintCommands } from './lint.js';
+import { project, globalLayout, capabilities, globalCapabilities } from './layout.js';
 import { buildQwenCodeImportPaths } from '../../core/reference/import-map-builders.js';
 import { qwenCodeImporterSpec } from './importer-spec.js';
 import {
   QWEN_CODE_TARGET,
   QWEN_ROOT,
-  QWEN_RULES_DIR,
-  QWEN_COMMANDS_DIR,
-  QWEN_AGENTS_DIR,
-  QWEN_SKILLS_DIR,
   QWEN_SETTINGS,
-  QWEN_IGNORE,
   QWEN_GLOBAL_ROOT,
   QWEN_GLOBAL_SETTINGS,
+  QWEN_GLOBAL_RULES_DIR,
   QWEN_GLOBAL_COMMANDS_DIR,
   QWEN_GLOBAL_AGENTS_DIR,
   QWEN_GLOBAL_SKILLS_DIR,
@@ -49,90 +46,6 @@ export const target: TargetGenerators = {
   generateHooks,
   generatePermissions,
   importFrom: importFromQwenCode,
-};
-
-const project: TargetLayout = {
-  rootInstructionPath: QWEN_ROOT,
-  skillDir: QWEN_SKILLS_DIR,
-  managedOutputs: {
-    dirs: [QWEN_RULES_DIR, QWEN_COMMANDS_DIR, QWEN_AGENTS_DIR, QWEN_SKILLS_DIR],
-    files: [QWEN_ROOT, QWEN_SETTINGS, QWEN_IGNORE],
-  },
-  paths: {
-    rulePath(slug, rule) {
-      if (rule.root) return QWEN_ROOT;
-      return `${QWEN_RULES_DIR}/${slug}.md`;
-    },
-    commandPath(name) {
-      return `${QWEN_COMMANDS_DIR}/${name}.md`;
-    },
-    agentPath(name) {
-      return `${QWEN_AGENTS_DIR}/${name}.md`;
-    },
-  },
-};
-
-const globalLayout: TargetLayout = {
-  rootInstructionPath: QWEN_GLOBAL_ROOT,
-  renderPrimaryRootInstruction: renderQwenGlobalInstructions,
-  skillDir: QWEN_GLOBAL_SKILLS_DIR,
-  managedOutputs: {
-    dirs: [QWEN_GLOBAL_COMMANDS_DIR, QWEN_GLOBAL_AGENTS_DIR, QWEN_GLOBAL_SKILLS_DIR],
-    files: [QWEN_GLOBAL_ROOT, QWEN_GLOBAL_SETTINGS],
-  },
-  rewriteGeneratedPath(path) {
-    if (path === QWEN_ROOT) return QWEN_GLOBAL_ROOT;
-    if (path === QWEN_SETTINGS) return QWEN_GLOBAL_SETTINGS;
-    if (path === QWEN_IGNORE) return null;
-    if (path.startsWith(`${QWEN_COMMANDS_DIR}/`)) {
-      return path.replace(`${QWEN_COMMANDS_DIR}/`, `${QWEN_GLOBAL_COMMANDS_DIR}/`);
-    }
-    if (path.startsWith(`${QWEN_AGENTS_DIR}/`)) {
-      return path.replace(`${QWEN_AGENTS_DIR}/`, `${QWEN_GLOBAL_AGENTS_DIR}/`);
-    }
-    if (path.startsWith(`${QWEN_SKILLS_DIR}/`)) {
-      return path.replace(`${QWEN_SKILLS_DIR}/`, `${QWEN_GLOBAL_SKILLS_DIR}/`);
-    }
-    if (path.startsWith(`${QWEN_RULES_DIR}/`)) {
-      return null;
-    }
-    return path;
-  },
-  paths: {
-    rulePath(_slug, _rule) {
-      return QWEN_GLOBAL_ROOT;
-    },
-    commandPath(name) {
-      return `${QWEN_GLOBAL_COMMANDS_DIR}/${name}.md`;
-    },
-    agentPath(name) {
-      return `${QWEN_GLOBAL_AGENTS_DIR}/${name}.md`;
-    },
-  },
-};
-
-const capabilities: TargetCapabilities = {
-  rules: 'native',
-  additionalRules: 'native',
-  commands: 'native',
-  agents: 'native',
-  skills: 'native',
-  mcp: 'native',
-  hooks: 'native',
-  ignore: 'native',
-  permissions: 'native',
-};
-
-const globalCapabilities: TargetCapabilities = {
-  rules: 'native',
-  additionalRules: 'embedded',
-  commands: 'native',
-  agents: 'native',
-  skills: 'native',
-  mcp: 'native',
-  hooks: 'native',
-  ignore: 'none',
-  permissions: 'native',
 };
 
 function parseJsonObject(s: string | null | undefined): Record<string, unknown> {
@@ -175,12 +88,14 @@ export const descriptor = {
   emptyImportMessage:
     'No Qwen Code config found (QWEN.md or .qwen/rules, .qwen/commands, .qwen/settings.json).',
   lintRules,
+  lint: { commands: lintCommands },
   project,
   globalSupport: {
     capabilities: globalCapabilities,
     detectionPaths: [
       QWEN_GLOBAL_ROOT,
       QWEN_GLOBAL_SETTINGS,
+      QWEN_GLOBAL_RULES_DIR,
       QWEN_GLOBAL_COMMANDS_DIR,
       QWEN_GLOBAL_AGENTS_DIR,
       QWEN_GLOBAL_SKILLS_DIR,

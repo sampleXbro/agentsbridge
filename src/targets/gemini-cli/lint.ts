@@ -23,7 +23,14 @@ export function lintCommands(canonical: CanonicalFiles): LintDiagnostic[] {
 
 export function lintHooks(canonical: CanonicalFiles): LintDiagnostic[] {
   if (!canonical.hooks || Object.keys(canonical.hooks).length === 0) return [];
-  const supported = ['PreToolUse', 'PostToolUse', 'Notification'] as const;
+  const supported = [
+    'PreToolUse',
+    'PostToolUse',
+    'Notification',
+    'SubagentStart',
+    'SubagentStop',
+    'SessionStart',
+  ] as const;
   return unsupportedHookEventNames(canonical.hooks, supported).map((event) =>
     createUnsupportedHookWarning(event, 'gemini-cli', supported),
   );

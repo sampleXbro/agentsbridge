@@ -52,7 +52,8 @@ export const ORCHESTRATE_TOOL_DESCRIPTORS: ToolDescriptor[] = [
   },
   {
     name: 'check',
-    description: 'Detect drift between canonical and lockfile',
+    description:
+      'Detect drift between canonical and lockfile, including hand-edits to generated target outputs (outputsChecked is false for old-format locks without an outputs map)',
     inputSchema: NoInput,
     handler: (ctx) => orchestrateHandlers.check(ctx),
   },

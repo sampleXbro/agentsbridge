@@ -110,9 +110,7 @@ describe('orchestrateHandlers.generate', () => {
   });
 
   it('reports lockfileUpdated=false for a dry_run', async () => {
-    mockRunGenerate.mockResolvedValue(
-      makeRunResult([], { created: 0, updated: 0, unchanged: 0 }),
-    );
+    mockRunGenerate.mockResolvedValue(makeRunResult([], { created: 0, updated: 0, unchanged: 0 }));
 
     const out = await orchestrateHandlers.generate(ctx, { dry_run: true });
 
@@ -125,10 +123,11 @@ describe('orchestrateHandlers.generate', () => {
 
   it('includes the actionable file paths when verbose is true', async () => {
     mockRunGenerate.mockResolvedValue(
-      makeRunResult(
-        [{ path: 'x.md', target: 'claude-code', status: 'created' }],
-        { created: 1, updated: 0, unchanged: 0 },
-      ),
+      makeRunResult([{ path: 'x.md', target: 'claude-code', status: 'created' }], {
+        created: 1,
+        updated: 0,
+        unchanged: 0,
+      }),
     );
 
     const out = await orchestrateHandlers.generate(ctx, { verbose: true });
@@ -179,9 +178,9 @@ describe('orchestrateHandlers.generate', () => {
       new Error('Unknown target(s) in --targets: nope. Available: claude-code'),
     );
 
-    await expect(
-      orchestrateHandlers.generate(ctx, { targets: ['nope'] }),
-    ).rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
+    await expect(orchestrateHandlers.generate(ctx, { targets: ['nope'] })).rejects.toMatchObject({
+      code: 'VALIDATION_FAILED',
+    });
   });
 });
 
@@ -229,7 +228,16 @@ describe('orchestrateHandlers.lint', () => {
 });
 
 describe('orchestrateHandlers.check', () => {
-  it('returns drift/missing/extra/modified from LockSyncReport', async () => {
+  beforeEach(() => {
+    mockLoadProjectContext.mockResolvedValue({
+      config: {},
+      configDir: '/project',
+      canonicalDir: '/project/.agentsmesh',
+      projectRoot: '/project',
+    });
+  });
+
+  it('returns drift/missing/extra/modified plus output drift from LockSyncReport', async () => {
     mockCheck.mockResolvedValue({
       inSync: false,
       hasLock: true,
@@ -238,6 +246,9 @@ describe('orchestrateHandlers.check', () => {
       removed: ['rules/old.md'],
       extendsModified: [],
       lockedViolations: [],
+      outputsModified: ['AGENTS.md'],
+      outputsRemoved: ['.claude/CLAUDE.md'],
+      outputsChecked: true,
     } satisfies LockSyncReport);
 
     const out = await orchestrateHandlers.check(ctx);
@@ -246,6 +257,28 @@ describe('orchestrateHandlers.check', () => {
     expect(out.missing).toEqual(['rules/old.md']);
     expect(out.extra).toEqual(['rules/new.md']);
     expect(out.modified).toEqual(['rules/foo.md']);
+    expect(out.outputsModified).toEqual(['AGENTS.md']);
+    expect(out.outputsRemoved).toEqual(['.claude/CLAUDE.md']);
+    expect(out.outputsChecked).toBe(true);
+  });
+
+  it('passes projectRoot as rootBase so output verification runs', async () => {
+    mockCheck.mockResolvedValue({
+      inSync: true,
+      hasLock: true,
+      modified: [],
+      added: [],
+      removed: [],
+      extendsModified: [],
+      lockedViolations: [],
+      outputsModified: [],
+      outputsRemoved: [],
+      outputsChecked: true,
+    } satisfies LockSyncReport);
+
+    await orchestrateHandlers.check(ctx);
+
+    expect(mockCheck).toHaveBeenCalledWith(expect.objectContaining({ rootBase: '/project' }));
   });
 
   it('wraps engine error via wrapEngineError', async () => {

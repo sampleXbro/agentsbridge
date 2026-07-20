@@ -23,6 +23,7 @@ import {
   generateIgnore,
   generateMcp,
   generateHooks,
+  generatePermissions,
 } from './generator.js';
 import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromGoose } from './importer.js';
@@ -54,6 +55,7 @@ export const target: TargetGenerators = {
   generateIgnore,
   generateMcp,
   generateHooks,
+  generatePermissions,
   importFrom: importFromGoose,
 };
 
@@ -117,20 +119,20 @@ const globalLayout: TargetLayout = {
 const capabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'embedded',
-  commands: 'none',
-  agents: 'none',
+  commands: 'embedded',
+  agents: 'embedded',
   skills: 'native',
-  mcp: 'none',
+  mcp: 'partial',
   hooks: 'native',
   ignore: 'native',
-  permissions: 'none',
+  permissions: 'partial',
 };
 
 const globalCapabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'embedded',
-  commands: 'none',
-  agents: 'none',
+  commands: 'embedded',
+  agents: 'embedded',
   skills: 'native',
   mcp: 'native',
   hooks: 'native',

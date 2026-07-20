@@ -149,7 +149,23 @@ describe('importFromFactoryDroid', () => {
     rmSync(projectRoot, { recursive: true, force: true });
   });
 
-  it('does not import hooks from the bare (unwrapped) shape', async () => {
+  it('does not import hooks from settings.json (that is the permissions/fallback file)', async () => {
+    projectRoot = setupFixture({
+      '.factory/settings.json': JSON.stringify({
+        hooks: {
+          PostToolUse: [{ matcher: '*', hooks: [{ type: 'command', command: 'x' }] }],
+        },
+      }),
+    });
+
+    const results = await importFromFactoryDroid(projectRoot);
+    // hooks.json was not present so no hooks should be imported
+    expect(results.find((r) => r.feature === 'hooks')).toBeUndefined();
+
+    rmSync(projectRoot, { recursive: true, force: true });
+  });
+
+  it('does not import hooks from the bare (unwrapped) shape in hooks.json', async () => {
     projectRoot = setupFixture({
       '.factory/hooks.json': JSON.stringify({
         PostToolUse: [{ matcher: '*', hooks: [{ type: 'command', command: 'x' }] }],
@@ -158,6 +174,60 @@ describe('importFromFactoryDroid', () => {
 
     const results = await importFromFactoryDroid(projectRoot);
     expect(results.find((r) => r.feature === 'hooks')).toBeUndefined();
+
+    rmSync(projectRoot, { recursive: true, force: true });
+  });
+
+  it('imports permissions (commandAllowlist/commandDenylist) from .factory/settings.json', async () => {
+    projectRoot = setupFixture({
+      '.factory/settings.json': JSON.stringify(
+        {
+          commandAllowlist: ['Bash(npm run test)', 'Bash(git status)'],
+          commandDenylist: ['Bash(rm -rf *)'],
+        },
+        null,
+        2,
+      ),
+    });
+
+    const results = await importFromFactoryDroid(projectRoot);
+
+    const permResult = results.find((r) => r.feature === 'permissions');
+    expect(permResult).toBeDefined();
+    expect(permResult!.fromTool).toBe('factory-droid');
+    expect(permResult!.toPath).toBe('.agentsmesh/permissions.yaml');
+
+    const { readFileSync } = await import('node:fs');
+    const written = readFileSync(join(projectRoot, '.agentsmesh/permissions.yaml'), 'utf-8');
+    expect(written).toContain('allow');
+    expect(written).toContain('Bash(npm run test)');
+    expect(written).toContain('deny');
+    expect(written).toContain('Bash(rm -rf *)');
+
+    rmSync(projectRoot, { recursive: true, force: true });
+  });
+
+  it('imports only commandAllowlist when commandDenylist is absent', async () => {
+    projectRoot = setupFixture({
+      '.factory/settings.json': JSON.stringify({ commandAllowlist: ['Bash(git log)'] }, null, 2),
+    });
+
+    const results = await importFromFactoryDroid(projectRoot);
+
+    const permResult = results.find((r) => r.feature === 'permissions');
+    expect(permResult).toBeDefined();
+    expect(permResult!.toPath).toBe('.agentsmesh/permissions.yaml');
+
+    rmSync(projectRoot, { recursive: true, force: true });
+  });
+
+  it('does not import permissions when settings.json has no allowlist or denylist', async () => {
+    projectRoot = setupFixture({
+      '.factory/settings.json': JSON.stringify({ maxAutonomyLevel: 'full' }, null, 2),
+    });
+
+    const results = await importFromFactoryDroid(projectRoot);
+    expect(results.find((r) => r.feature === 'permissions')).toBeUndefined();
 
     rmSync(projectRoot, { recursive: true, force: true });
   });

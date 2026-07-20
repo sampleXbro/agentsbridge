@@ -44,9 +44,26 @@ export function buildReferenceMap(
     if (path) refs.set(`.agentsmesh/commands/${command.name}.md`, path);
   }
 
+  // Build a temporary map of agent canonical paths → target paths, then filter
+  // out mappings where multiple canonical agents share the same combined output
+  // file (e.g. cline's `.cline/agents.yaml`). Rewriting individual agent refs
+  // to a combined file loses per-agent distinction and cannot be round-tripped;
+  // keeping the canonical path in prose is safer and preserves semantics.
+  const agentTargetPaths = new Map<string, string>();
+  const sharedTargetPaths = new Set<string>();
   for (const agent of canonical.agents) {
     const path = agentTargetPath(target, agent.name, config, scope);
-    if (path) refs.set(`.agentsmesh/agents/${agent.name}.md`, path);
+    if (!path) continue;
+    if (agentTargetPaths.has(path)) {
+      sharedTargetPaths.add(path);
+    } else {
+      agentTargetPaths.set(path, `.agentsmesh/agents/${agent.name}.md`);
+    }
+  }
+  for (const [path, canonicalPath] of agentTargetPaths.entries()) {
+    if (!sharedTargetPaths.has(path)) {
+      refs.set(canonicalPath, path);
+    }
   }
 
   const skillDir = getTargetSkillDir(target, scope);

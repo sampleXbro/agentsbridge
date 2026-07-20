@@ -15,12 +15,18 @@ function makeCanonical(permissions: CanonicalFiles['permissions']): CanonicalFil
   };
 }
 
+/**
+ * Cursor permissions capability is 'native' (both project and global scope).
+ * generatePermissions writes .cursor/cli.json (project) or ~/.cursor/cli-config.json (global).
+ * lintPermissions must return no diagnostics — emitting a stale 'partial' warning would
+ * contradict the native capability declaration.
+ */
 describe('cursor lint.permissions hook', () => {
   it('returns no diagnostics when permissions are missing', () => {
     expect(lintCursorPermissions(makeCanonical(null))).toEqual([]);
   });
 
-  it('returns no diagnostics when cursor permissions are empty', () => {
+  it('returns no diagnostics when permissions are empty', () => {
     expect(
       lintCursorPermissions(
         makeCanonical({
@@ -31,15 +37,17 @@ describe('cursor lint.permissions hook', () => {
     ).toEqual([]);
   });
 
-  it('warns when cursor permissions contain allow or deny entries', () => {
+  it('returns no diagnostics even when allow and deny entries are present (native capability)', () => {
     const diagnostics = lintCursorPermissions(
       makeCanonical({
-        allow: [],
+        allow: ['Read', 'Grep'],
         deny: ['Bash(rm -rf:*)'],
       }),
     );
+    expect(diagnostics).toHaveLength(0);
+  });
 
-    expect(diagnostics).toHaveLength(1);
-    expect(diagnostics[0]?.message).toContain('Cursor permissions are partial');
+  it('returns no diagnostics when only deny entries are present', () => {
+    expect(lintCursorPermissions(makeCanonical({ allow: [], deny: ['WebFetch'] }))).toHaveLength(0);
   });
 });

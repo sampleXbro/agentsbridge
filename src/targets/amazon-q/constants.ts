@@ -9,7 +9,8 @@
  *   - **Global rules dir**: `.aws/amazonq/rules/*.md` (relative to home dir)
  *   - **Global MCP config**: `.aws/amazonq/mcp.json` (relative to home dir)
  *
- * No native commands, agents, skills, hooks, ignore, or permissions support.
+ * No native commands, skills, or ignore support. Hooks (PreToolUse/PostToolUse/UserPromptSubmit)
+ * and permissions (allow) are embedded inside each generated agent JSON.
  *
  * Reference:
  *   https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/command-line-project-rules.html

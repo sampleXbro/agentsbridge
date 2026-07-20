@@ -41,12 +41,10 @@ describe('mapClineRuleFile / mapClineWorkflowFile — edge branches', () => {
     expect(result!.content).toContain('globs:');
   });
 
-  it('returns null for workflows/ paths and _root.md', async () => {
+  it('returns null for _root.md (handled separately as the root rule)', async () => {
     const destDir = join(projectRoot, '.agentsmesh/rules');
     mkdirSync(destDir, { recursive: true });
     const noop = (dest: string): string => dest;
-    expect(await mapClineRuleFile('workflows', destDir, noop)).toBeNull();
-    expect(await mapClineRuleFile('workflows/x.md', destDir, noop)).toBeNull();
     expect(await mapClineRuleFile('_root.md', destDir, noop)).toBeNull();
   });
 

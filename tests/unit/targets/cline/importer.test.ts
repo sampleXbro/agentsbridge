@@ -13,6 +13,7 @@ import {
   CLINE_MCP_SETTINGS,
   CLINE_SKILLS_DIR,
   CLINE_WORKFLOWS_DIR,
+  CLINE_AGENTS_FILE,
   CLINE_AGENTS_DIR,
 } from '../../../../src/targets/cline/constants.js';
 
@@ -22,7 +23,7 @@ beforeEach(() => mkdirSync(TEST_DIR, { recursive: true }));
 afterEach(() => rmSync(TEST_DIR, { recursive: true, force: true }));
 
 describe('importFromCline', () => {
-  it('imports .clinerules/_root.md into _root.md with root frontmatter', async () => {
+  it('imports .cline/rules/_root.md into _root.md with root frontmatter', async () => {
     mkdirSync(join(TEST_DIR, CLINE_RULES_DIR), { recursive: true });
     writeFileSync(join(TEST_DIR, CLINE_RULES_DIR, '_root.md'), '# Cline Rules\n- Use TDD\n');
     const results = await importFromCline(TEST_DIR);
@@ -35,7 +36,7 @@ describe('importFromCline', () => {
     expect(content).toContain('- Use TDD');
   });
 
-  it('imports first .clinerules/*.md as root when no _root.md', async () => {
+  it('imports first .cline/rules/*.md as root when no _root.md', async () => {
     mkdirSync(join(TEST_DIR, CLINE_RULES_DIR), { recursive: true });
     writeFileSync(join(TEST_DIR, CLINE_RULES_DIR, 'first.md'), '# First Rule\n');
     const results = await importFromCline(TEST_DIR);
@@ -45,7 +46,7 @@ describe('importFromCline', () => {
     expect(content).toContain('# First Rule');
   });
 
-  it('imports .clinerules/*.md non-root rules with frontmatter', async () => {
+  it('imports .cline/rules/*.md non-root rules with frontmatter', async () => {
     mkdirSync(join(TEST_DIR, CLINE_RULES_DIR), { recursive: true });
     writeFileSync(join(TEST_DIR, CLINE_RULES_DIR, '_root.md'), 'Root');
     writeFileSync(
@@ -72,7 +73,7 @@ describe('importFromCline', () => {
     expect(content).toContain('.env');
   });
 
-  it('imports .cline/cline_mcp_settings.json into .agentsmesh/mcp.json', async () => {
+  it('imports .cline/mcp.json into .agentsmesh/mcp.json', async () => {
     mkdirSync(join(TEST_DIR, '.cline'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, CLINE_MCP_SETTINGS),
@@ -92,7 +93,7 @@ describe('importFromCline', () => {
     expect(mcp.mcpServers.fs!.command).toBe('npx');
   });
 
-  it('maps transportType to type when importing cline_mcp_settings.json', async () => {
+  it('maps transportType to type when importing mcp.json', async () => {
     mkdirSync(join(TEST_DIR, '.cline'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, CLINE_MCP_SETTINGS),
@@ -160,41 +161,110 @@ describe('importFromCline', () => {
     expect(content).toContain('Review risky changes first.');
   });
 
-  it('imports native agents and restores agentsmesh extension metadata', async () => {
-    mkdirSync(join(TEST_DIR, CLINE_AGENTS_DIR), { recursive: true });
+  it('imports agents from per-agent .cline/agents/<name>.md directory (fallback format) when agents.yaml absent', async () => {
+    const agentsDir = join(TEST_DIR, CLINE_AGENTS_DIR);
+    mkdirSync(agentsDir, { recursive: true });
     writeFileSync(
-      join(TEST_DIR, CLINE_AGENTS_DIR, 'reviewer.md'),
+      join(agentsDir, 'reviewer.md'),
       [
         '---',
         'name: reviewer',
         'description: Review specialist',
+        'model: sonnet',
         'tools:',
         '  - Read',
-        'model: sonnet',
-        'x-agentsmesh-disallowed-tools:',
+        'disallowedTools:',
         '  - Bash(rm -rf *)',
-        'x-agentsmesh-permission-mode: ask',
-        'x-agentsmesh-max-turns: 9',
-        'x-agentsmesh-mcp-servers:',
-        '  - context7',
-        'x-agentsmesh-skills:',
-        '  - post-feature-qa',
-        'x-agentsmesh-memory: notes/reviewer.md',
+        'permissionMode: ask',
+        'maxTurns: 9',
         '---',
         '',
         'Review risky changes first.',
       ].join('\n'),
     );
 
-    await importFromCline(TEST_DIR);
-
+    const results = await importFromCline(TEST_DIR);
+    expect(results.find((r) => r.toPath === '.agentsmesh/agents/reviewer.md')).toBeDefined();
     const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'), 'utf-8');
+    expect(content).toContain('name: reviewer');
+    expect(content).toContain('description: Review specialist');
+    expect(content).toContain('Review risky changes first.');
+  });
+
+  it('prefers .cline/agents.yaml over per-agent directory when both present', async () => {
+    // Directory present (fallback format)
+    const agentsDir = join(TEST_DIR, CLINE_AGENTS_DIR);
+    mkdirSync(agentsDir, { recursive: true });
+    writeFileSync(join(agentsDir, 'from-dir.md'), '---\nname: from-dir\n---\n\nFrom directory.');
+    // Primary format (YAML)
+    mkdirSync(join(TEST_DIR, '.cline'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, CLINE_AGENTS_FILE),
+      ['agents:', '  - name: from-yaml', '    prompt: From YAML.'].join('\n'),
+    );
+
+    const results = await importFromCline(TEST_DIR);
+
+    // Only the YAML-based agent is imported (primary wins)
+    expect(results.some((r) => r.toPath === '.agentsmesh/agents/from-yaml.md')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/agents/from-dir.md')).toBe(false);
+  });
+
+  it('imports agents from the combined .cline/agents.yaml and restores agentsmesh extension metadata', async () => {
+    mkdirSync(join(TEST_DIR, '.cline'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, CLINE_AGENTS_FILE),
+      [
+        'agents:',
+        '  - name: reviewer',
+        '    description: Review specialist',
+        '    tools:',
+        '      - Read',
+        '    model: sonnet',
+        '    prompt: Review risky changes first.',
+        '    x-agentsmesh-disallowed-tools:',
+        '      - Bash(rm -rf *)',
+        '    x-agentsmesh-permission-mode: ask',
+        '    x-agentsmesh-max-turns: 9',
+        '    x-agentsmesh-mcp-servers:',
+        '      - context7',
+        '    x-agentsmesh-skills:',
+        '      - post-feature-qa',
+        '    x-agentsmesh-memory: notes/reviewer.md',
+      ].join('\n'),
+    );
+
+    const results = await importFromCline(TEST_DIR);
+
+    expect(results.find((r) => r.toPath === '.agentsmesh/agents/reviewer.md')).toBeDefined();
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'agents', 'reviewer.md'), 'utf-8');
+    expect(content).toContain('name: reviewer');
+    expect(content).toContain('description: Review specialist');
     expect(content).toContain('disallowedTools:');
     expect(content).toContain('permissionMode: ask');
     expect(content).toContain('maxTurns: 9');
     expect(content).toContain('mcpServers:');
     expect(content).toContain('skills:');
     expect(content).toContain('memory: notes/reviewer.md');
+    expect(content).toContain('Review risky changes first.');
+  });
+
+  it('imports multiple agents from a single .cline/agents.yaml', async () => {
+    mkdirSync(join(TEST_DIR, '.cline'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, CLINE_AGENTS_FILE),
+      [
+        'agents:',
+        '  - name: reviewer',
+        '    prompt: Review first.',
+        '  - name: researcher',
+        '    prompt: Research first.',
+      ].join('\n'),
+    );
+
+    const results = await importFromCline(TEST_DIR);
+    expect(results.some((r) => r.toPath === '.agentsmesh/agents/reviewer.md')).toBe(true);
+    expect(results.some((r) => r.toPath === '.agentsmesh/agents/researcher.md')).toBe(true);
   });
 
   it('imports skill supporting files', async () => {
@@ -312,7 +382,7 @@ describe('importFromCline', () => {
     expect(results).toEqual([]);
   });
 
-  it('skips malformed cline_mcp_settings.json without crash', async () => {
+  it('skips malformed mcp.json without crash', async () => {
     mkdirSync(join(TEST_DIR, '.cline'), { recursive: true });
     writeFileSync(join(TEST_DIR, CLINE_MCP_SETTINGS), 'not json');
     mkdirSync(join(TEST_DIR, CLINE_RULES_DIR), { recursive: true });
@@ -330,30 +400,5 @@ describe('importFromCline', () => {
     const rootContent = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
     expect(rootContent).toContain('From _root');
     expect(results.filter((r) => r.toPath === '.agentsmesh/rules/_root.md')).toHaveLength(1);
-  });
-});
-
-describe('importFromCline — .clinerules as flat file', () => {
-  it('imports .clinerules flat file as root rule', async () => {
-    writeFileSync(join(TEST_DIR, CLINE_RULES_DIR), '# Flat Cline Rules\n- Use TDD\n');
-    const results = await importFromCline(TEST_DIR);
-    const rootResult = results.find((r) => r.toPath === '.agentsmesh/rules/_root.md');
-    expect(rootResult).toBeDefined();
-    expect(rootResult?.fromTool).toBe('cline');
-    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
-    expect(content).toContain('root: true');
-    expect(content).toContain('# Flat Cline Rules');
-  });
-
-  it('imports .clinerules flat file with frontmatter as root rule', async () => {
-    writeFileSync(
-      join(TEST_DIR, CLINE_RULES_DIR),
-      '---\ndescription: Flat file rules\n---\n\nBody content.',
-    );
-    await importFromCline(TEST_DIR);
-    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'), 'utf-8');
-    expect(content).toContain('root: true');
-    expect(content).toContain('description: Flat file rules');
-    expect(content).toContain('Body content.');
   });
 });

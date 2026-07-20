@@ -9,6 +9,8 @@ import {
   generateIgnore,
   generateMcp,
   generateHooks,
+  generatePermissions,
+  renderWindsurfGlobalInstructions,
 } from './generator.js';
 import { cap } from '../catalog/capabilities.js';
 import {
@@ -30,7 +32,7 @@ import {
 import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromWindsurf } from './importer.js';
 import { lintRules } from './linter.js';
-import { lintCommands, lintMcp } from './lint.js';
+import { lintCommands, lintMcp, lintPermissions } from './lint.js';
 import { buildWindsurfImportPaths } from '../../core/reference/import-map-builders.js';
 import { shouldConvertAgentsToSkills } from '../../config/core/conversions.js';
 import { projectedAgentSkillDirName } from '../projection/projected-agent-skill.js';
@@ -54,6 +56,7 @@ export const target: TargetGenerators = {
   generateMcp,
   generateHooks,
   generateIgnore,
+  generatePermissions,
   importFrom: importFromWindsurf,
 };
 
@@ -91,6 +94,7 @@ const project: TargetLayout = {
 
 const globalLayout: TargetLayout = {
   rootInstructionPath: WINDSURF_GLOBAL_RULES,
+  renderPrimaryRootInstruction: renderWindsurfGlobalInstructions,
   skillDir: WINDSURF_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [
@@ -150,14 +154,14 @@ const globalLayout: TargetLayout = {
 
 const globalCapabilities: TargetCapabilities = {
   rules: 'native',
-  additionalRules: 'partial',
+  additionalRules: 'embedded',
   commands: cap('native', 'workflows'),
   agents: 'embedded',
   skills: 'native',
   mcp: 'native',
   hooks: 'native',
   ignore: 'native',
-  permissions: 'none',
+  permissions: 'partial',
 };
 
 export const descriptor = {
@@ -178,7 +182,7 @@ export const descriptor = {
     mcp: 'partial',
     hooks: 'native',
     ignore: 'native',
-    permissions: 'none',
+    permissions: 'partial',
   },
   emptyImportMessage:
     'No Windsurf config found (.windsurfrules, .windsurf/rules, .windsurfignore, or .codeiumignore).',
@@ -187,6 +191,7 @@ export const descriptor = {
   lint: {
     commands: lintCommands,
     mcp: lintMcp,
+    permissions: lintPermissions,
   },
   project,
   globalSupport: {

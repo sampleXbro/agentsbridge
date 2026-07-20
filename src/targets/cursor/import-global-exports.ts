@@ -33,7 +33,7 @@ export async function importFromCursorGlobalExports(projectRoot: string): Promis
   await importSkills(projectRoot, results, normalize, CURSOR_SKILLS_DIR);
   await importGlobalAgents(projectRoot, results, normalize);
   await importGlobalCommands(projectRoot, results, normalize);
-  await importSettings(projectRoot, results);
+  await importSettings(projectRoot, results, 'global');
   await importIgnore(projectRoot, results);
   return results;
 }

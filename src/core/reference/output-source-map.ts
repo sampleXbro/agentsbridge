@@ -7,6 +7,7 @@ import { addPackSkillArtifactMappings } from './pack-skill-artifact-paths.js';
 import { applyCopilotInstructionArtifactRefs } from '../../targets/catalog/copilot-instruction-artifacts.js';
 import { extraRuleOutputPaths } from '../../targets/catalog/rule-output-extra-paths.js';
 import { getTargetLayout } from '../../targets/catalog/builtin-targets.js';
+import { agentTargetPath } from './map-targets.js';
 
 function addSkillMirrorSourceEntry(
   target: string,
@@ -88,9 +89,19 @@ export function buildOutputSourceMap(
     const targetPath = refs.get(canonicalCommandPath(command));
     if (targetPath) sourceMap.set(targetPath, command.source);
   }
+  // For agents, the prose reference map skips combined-file outputs (e.g.
+  // cline's `agents.yaml`) to avoid irreversible many-to-one prose rewrites.
+  // The source map must still include the combined file so the rewriter can
+  // translate command/rule/skill references within agent content. Use the
+  // first agent that resolves to each unique target path as the source.
+  const seenAgentTargets = new Set<string>();
   for (const agent of canonical.agents) {
-    const targetPath = refs.get(canonicalAgentPath(agent));
-    if (targetPath) sourceMap.set(targetPath, agent.source);
+    const targetPath =
+      refs.get(canonicalAgentPath(agent)) ?? agentTargetPath(target, agent.name, config, scope);
+    if (targetPath && !seenAgentTargets.has(targetPath)) {
+      seenAgentTargets.add(targetPath);
+      sourceMap.set(targetPath, agent.source);
+    }
   }
   for (const skill of canonical.skills) {
     const skillTargetPath = refs.get(canonicalSkillPath(skill));

@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { join } from 'node:path';
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { importFromQwenCode } from '../../../../src/targets/qwen-code/importer.js';
+import { generateRules } from '../../../../src/targets/qwen-code/generator.js';
+import type { CanonicalFiles } from '../../../../src/core/types.js';
 
 function setupFixture(files: Record<string, string>): string {
   const root = join(
@@ -37,8 +39,7 @@ describe('importFromQwenCode', () => {
 
   it('imports .qwen/rules/<slug>.md as additional rules', async () => {
     const root = setupFixture({
-      '.qwen/rules/typescript.md':
-        '---\ndescription: TypeScript rules\n---\n\nUse strict mode.',
+      '.qwen/rules/typescript.md': '---\ndescription: TypeScript rules\n---\n\nUse strict mode.',
     });
 
     const results = await importFromQwenCode(root);
@@ -52,10 +53,64 @@ describe('importFromQwenCode', () => {
     rmSync(root, { recursive: true, force: true });
   });
 
+  it('imports .qwen/rules/<slug>.md as additional rules from global scope (native, not embedded)', async () => {
+    const root = setupFixture({
+      '.qwen/rules/typescript.md':
+        '---\ndescription: TypeScript rules\npaths:\n  - src/**/*.ts\n---\n\nUse strict mode.',
+    });
+
+    const results = await importFromQwenCode(root, { scope: 'global' });
+
+    const ruleResult = results.find(
+      (r) => r.feature === 'rules' && r.toPath.includes('typescript'),
+    );
+    expect(ruleResult).toBeDefined();
+    expect(ruleResult!.fromTool).toBe('qwen-code');
+
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it('round-trips canonical path-scoping (globs) through the `paths:` frontmatter key, both scopes', async () => {
+    const canonical: CanonicalFiles = {
+      rules: [
+        {
+          source: '/proj/.agentsmesh/rules/typescript.md',
+          root: false,
+          targets: [],
+          description: 'TypeScript standards',
+          globs: ['src/**/*.ts'],
+          body: 'Use strict mode.',
+        },
+      ],
+      commands: [],
+      agents: [],
+      skills: [],
+      mcp: null,
+      permissions: null,
+      hooks: null,
+      ignore: [],
+    };
+    const generated = generateRules(canonical)[0]!;
+    expect(generated.content).toContain('paths:');
+    expect(generated.content).not.toContain('globs:');
+
+    for (const scope of ['project', 'global'] as const) {
+      const root = setupFixture({ [generated.path]: generated.content });
+
+      await importFromQwenCode(root, { scope });
+      const content = readFileSync(join(root, '.agentsmesh', 'rules', 'typescript.md'), 'utf-8');
+      expect(content).toContain('globs:');
+      expect(content).toContain('src/**/*.ts');
+      expect(content).not.toContain('paths:');
+      expect(content).toContain('description: TypeScript standards');
+
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('imports .qwen/commands/<name>.md as canonical commands', async () => {
     const root = setupFixture({
-      '.qwen/commands/review.md':
-        '---\ndescription: Review code\n---\n\nReview the current file.',
+      '.qwen/commands/review.md': '---\ndescription: Review code\n---\n\nReview the current file.',
     });
 
     const results = await importFromQwenCode(root);

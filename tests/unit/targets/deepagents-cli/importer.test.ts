@@ -117,10 +117,10 @@ describe('importFromDeepagentsCli', () => {
     rmSync(projectRoot, { recursive: true, force: true });
   });
 
-  it('imports root rule and skills from global scope paths', async () => {
+  it('imports root rule and skills from global scope paths (per-agent-instance)', async () => {
     projectRoot = setupFixture({
-      '.deepagents/AGENTS.md': '# Global Instructions\n\nApply everywhere.',
-      '.deepagents/skills/review/SKILL.md':
+      '.deepagents/agent/AGENTS.md': '# Global Instructions\n\nApply everywhere.',
+      '.deepagents/agent/skills/review/SKILL.md':
         '---\nname: review\ndescription: Code review workflow\n---\n\n# Review\n\nCheck everything.',
     });
 
@@ -129,6 +129,37 @@ describe('importFromDeepagentsCli', () => {
     const rootRule = results.find((r) => r.toPath.endsWith('_root.md'));
     expect(rootRule).toBeDefined();
     expect(rootRule!.fromTool).toBe('deepagents-cli');
+
+    rmSync(projectRoot, { recursive: true, force: true });
+  });
+
+  it('imports native subagents from .deepagents/agents/', async () => {
+    projectRoot = setupFixture({
+      '.deepagents/agents/researcher/AGENTS.md':
+        '---\nname: researcher\ndescription: Research agent\nmodel: claude-sonnet\n---\n\nResearch topics thoroughly.',
+    });
+
+    const results = await importFromDeepagentsCli(projectRoot);
+
+    const agentResult = results.find((r) => r.feature === 'agents');
+    expect(agentResult).toBeDefined();
+    expect(agentResult!.fromTool).toBe('deepagents-cli');
+    expect(agentResult!.toPath).toBe('.agentsmesh/agents/researcher.md');
+
+    rmSync(projectRoot, { recursive: true, force: true });
+  });
+
+  it('imports native subagents from global scope (.deepagents/agent/agents/)', async () => {
+    projectRoot = setupFixture({
+      '.deepagents/agent/agents/researcher/AGENTS.md':
+        '---\nname: researcher\ndescription: Research agent\n---\n\nResearch topics thoroughly.',
+    });
+
+    const results = await importFromDeepagentsCli(projectRoot, { scope: 'global' });
+
+    const agentResult = results.find((r) => r.feature === 'agents');
+    expect(agentResult).toBeDefined();
+    expect(agentResult!.toPath).toBe('.agentsmesh/agents/researcher.md');
 
     rmSync(projectRoot, { recursive: true, force: true });
   });

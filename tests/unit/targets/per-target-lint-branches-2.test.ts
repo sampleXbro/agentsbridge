@@ -41,6 +41,49 @@ describe('copilot lint', () => {
   it('lintCommands returns [] when no commands have allowedTools', () => {
     expect(copilot.lintCommands(emptyCanonical())).toEqual([]);
   });
+
+  it('lintPermissions returns [] for project scope (no global-only warning leak)', () => {
+    const canonical = {
+      ...emptyCanonical(),
+      permissions: { allow: ['Bash(git *)'], deny: [], ask: [] },
+    };
+    expect(copilot.lintPermissions(canonical, { scope: 'project' })).toEqual([]);
+    expect(copilot.lintPermissions(canonical)).toEqual([]);
+  });
+
+  it('lintPermissions returns [] for global scope when canonical permissions is null/empty', () => {
+    expect(copilot.lintPermissions(emptyCanonical(), { scope: 'global' })).toEqual([]);
+    expect(
+      copilot.lintPermissions(
+        { ...emptyCanonical(), permissions: { allow: [], deny: [], ask: [] } },
+        { scope: 'global' },
+      ),
+    ).toEqual([]);
+  });
+
+  it('lintPermissions warns for global scope when canonical permissions has entries', () => {
+    const diags = copilot.lintPermissions(
+      { ...emptyCanonical(), permissions: { allow: ['Bash(git *)'], deny: [], ask: [] } },
+      { scope: 'global' },
+    );
+    expect(diags).toHaveLength(1);
+    expect(diags[0]!.target).toBe('copilot');
+    expect(diags[0]!.message).toContain('embedded');
+  });
+
+  it('lintPermissions defaults ask to [] when the field is omitted (legacy fixtures)', () => {
+    expect(
+      copilot.lintPermissions(
+        { ...emptyCanonical(), permissions: { allow: [], deny: [] } },
+        { scope: 'global' },
+      ),
+    ).toEqual([]);
+    const diags = copilot.lintPermissions(
+      { ...emptyCanonical(), permissions: { allow: ['Bash(git *)'], deny: [] } },
+      { scope: 'global' },
+    );
+    expect(diags).toHaveLength(1);
+  });
 });
 
 describe('cline lint', () => {
@@ -71,6 +114,40 @@ describe('kiro lint', () => {
   it('lintHooks returns [] when hooks is empty', () => {
     expect(kiro.lintHooks({ ...emptyCanonical(), hooks: {} as never })).toEqual([]);
   });
+
+  it('lintPermissions returns [] when permissions is null', () => {
+    expect(kiro.lintPermissions(emptyCanonical())).toEqual([]);
+  });
+  it('lintPermissions returns [] when all permission arrays are empty', () => {
+    expect(
+      kiro.lintPermissions({
+        ...emptyCanonical(),
+        permissions: { allow: [], deny: [], ask: [] },
+      }),
+    ).toEqual([]);
+  });
+  it('lintPermissions emits one warning when permissions has entries', () => {
+    const diags = kiro.lintPermissions({
+      ...emptyCanonical(),
+      permissions: { allow: ['Bash(git *)'], deny: [], ask: [] },
+    });
+    expect(diags).toHaveLength(1);
+    expect(diags[0]!.target).toBe('kiro');
+    expect(diags[0]!.message).toContain('permissions');
+  });
+  it('lintPermissions defaults ask to [] when field is omitted (legacy fixtures)', () => {
+    expect(
+      kiro.lintPermissions({
+        ...emptyCanonical(),
+        permissions: { allow: [], deny: [] },
+      }),
+    ).toEqual([]);
+    const diags = kiro.lintPermissions({
+      ...emptyCanonical(),
+      permissions: { allow: ['Bash(git *)'], deny: [] },
+    });
+    expect(diags).toHaveLength(1);
+  });
 });
 
 describe('windsurf lint', () => {
@@ -82,6 +159,44 @@ describe('windsurf lint', () => {
   });
   it('lintCommands returns [] when commands have no metadata', () => {
     expect(windsurf.lintCommands(emptyCanonical())).toEqual([]);
+  });
+
+  it('lintPermissions returns [] when permissions is null', () => {
+    expect(windsurf.lintPermissions(emptyCanonical())).toEqual([]);
+  });
+  it('lintPermissions returns [] when all permission arrays are empty', () => {
+    expect(
+      windsurf.lintPermissions({
+        ...emptyCanonical(),
+        permissions: { allow: [], deny: [], ask: [] },
+      }),
+    ).toEqual([]);
+  });
+  it('lintPermissions returns [] when only ask is empty and allow+deny are also empty (legacy fixture without ask field)', () => {
+    expect(
+      windsurf.lintPermissions({
+        ...emptyCanonical(),
+        permissions: { allow: [], deny: [] } as never,
+      }),
+    ).toEqual([]);
+  });
+  it('lintPermissions emits one warning when allow list has entries', () => {
+    const diags = windsurf.lintPermissions({
+      ...emptyCanonical(),
+      permissions: { allow: ['Bash(git *)'], deny: [], ask: [] },
+    });
+    expect(diags).toHaveLength(1);
+    expect(diags[0]!.target).toBe('windsurf');
+    expect(diags[0]!.level).toBe('warning');
+    expect(diags[0]!.message).toContain('permissions');
+  });
+  it('lintPermissions emits one warning when deny list has entries', () => {
+    const diags = windsurf.lintPermissions({
+      ...emptyCanonical(),
+      permissions: { allow: [], deny: ['rm -rf'], ask: [] },
+    });
+    expect(diags).toHaveLength(1);
+    expect(diags[0]!.target).toBe('windsurf');
   });
 });
 

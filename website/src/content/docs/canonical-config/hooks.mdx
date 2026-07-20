@@ -115,7 +115,7 @@ See the **Hooks** row in the [supported tools matrix](../../reference/supported-
 
 For targets that embed the canonical `command` verbatim in a JSON config (executed by the agent at runtime), a portable command (`pnpm test`, `npx eslint $FILE`) works identically on Linux, macOS, and Windows.
 
-**Cline and Copilot are different**: their native hook contracts are shell wrapper files. AgentsMesh emits them as `.clinerules/hooks/*.sh` and `.github/hooks/scripts/*.sh` with a `#!/usr/bin/env bash` header. These wrappers will not execute on Windows without a POSIX shell (git-bash or WSL). `agentsmesh lint` warns when hooks are configured for either target. If your team includes Windows developers, prefer a JSON-embedded hook target (see the [hooks row in the support matrix](../../reference/supported-tools/#hooks)) or supply a POSIX shell on the Windows machines.
+**Cline and Copilot are different**: their native hook contracts are shell wrapper files. AgentsMesh emits them as `.cline/hooks/*.sh` and `.github/hooks/scripts/*.sh` with a `#!/usr/bin/env bash` header. These wrappers will not execute on Windows without a POSIX shell (git-bash or WSL). `agentsmesh lint` warns when hooks are configured for either target. If your team includes Windows developers, prefer a JSON-embedded hook target (see the [hooks row in the support matrix](../../reference/supported-tools/#hooks)) or supply a POSIX shell on the Windows machines.
 
 ## Generated wrapper contract (Cline / Copilot)
 

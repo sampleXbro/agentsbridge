@@ -1,8 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { join } from 'node:path';
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { importFromWarp } from '../../../../src/targets/warp/importer.js';
+import { generateMcp } from '../../../../src/targets/warp/generator.js';
+import { WARP_GLOBAL_MCP_FILE, WARP_MCP_FILE } from '../../../../src/targets/warp/constants.js';
+import type { CanonicalFiles } from '../../../../src/core/types.js';
 
 function setupFixture(files: Record<string, string>): string {
   const root = join(
@@ -87,9 +90,9 @@ describe('importFromWarp', () => {
     rmSync(projectRoot, { recursive: true, force: true });
   });
 
-  it('imports MCP from .mcp.json', async () => {
+  it('imports MCP from .warp/.mcp.json (Warp native project path)', async () => {
     projectRoot = setupFixture({
-      '.mcp.json': JSON.stringify(
+      [WARP_MCP_FILE]: JSON.stringify(
         {
           mcpServers: {
             filesystem: {
@@ -108,6 +111,7 @@ describe('importFromWarp', () => {
     const mcpResult = results.find((r) => r.feature === 'mcp');
     expect(mcpResult).toBeDefined();
     expect(mcpResult!.fromTool).toBe('warp');
+    expect(mcpResult!.fromPath).toBe(join(projectRoot, WARP_MCP_FILE));
     expect(mcpResult!.toPath).toBe('.agentsmesh/mcp.json');
 
     rmSync(projectRoot, { recursive: true, force: true });
@@ -121,9 +125,9 @@ describe('importFromWarp', () => {
     rmSync(projectRoot, { recursive: true, force: true });
   });
 
-  it('handles malformed JSON in .mcp.json', async () => {
+  it('handles malformed JSON in .warp/.mcp.json', async () => {
     projectRoot = setupFixture({
-      '.mcp.json': '{ broken json',
+      [WARP_MCP_FILE]: '{ broken json',
     });
 
     const results = await importFromWarp(projectRoot);
@@ -136,7 +140,7 @@ describe('importFromWarp', () => {
 
   it('handles empty mcpServers object', async () => {
     projectRoot = setupFixture({
-      '.mcp.json': JSON.stringify({ mcpServers: {} }, null, 2),
+      [WARP_MCP_FILE]: JSON.stringify({ mcpServers: {} }, null, 2),
     });
 
     const results = await importFromWarp(projectRoot);
@@ -145,5 +149,96 @@ describe('importFromWarp', () => {
     expect(mcpResult).toBeUndefined();
 
     rmSync(projectRoot, { recursive: true, force: true });
+  });
+
+  it('imports .warp/.mcp.json in both project and global scope (same native path)', async () => {
+    // Since WARP_MCP_FILE and WARP_GLOBAL_MCP_FILE are both .warp/.mcp.json,
+    // the same file is read in both scopes (rebased under home dir for global).
+    projectRoot = setupFixture({
+      [WARP_MCP_FILE]: JSON.stringify(
+        { mcpServers: { filesystem: { command: 'npx', args: [] } } },
+        null,
+        2,
+      ),
+    });
+
+    const projectResults = await importFromWarp(projectRoot, { scope: 'project' });
+    const globalResults = await importFromWarp(projectRoot, { scope: 'global' });
+
+    expect(projectResults.find((r) => r.feature === 'mcp')).toBeDefined();
+    expect(globalResults.find((r) => r.feature === 'mcp')).toBeDefined();
+
+    rmSync(projectRoot, { recursive: true, force: true });
+  });
+
+  it('imports MCP from ~/.warp/.mcp.json under global scope', async () => {
+    projectRoot = setupFixture({
+      [WARP_GLOBAL_MCP_FILE]: JSON.stringify(
+        {
+          mcpServers: {
+            context7: { command: 'npx', args: ['-y', 'context7'] },
+          },
+        },
+        null,
+        2,
+      ),
+    });
+
+    const results = await importFromWarp(projectRoot, { scope: 'global' });
+
+    const mcpResult = results.find((r) => r.feature === 'mcp');
+    expect(mcpResult).toBeDefined();
+    expect(mcpResult!.fromTool).toBe('warp');
+    expect(mcpResult!.toPath).toBe('.agentsmesh/mcp.json');
+    expect(mcpResult!.fromPath).toBe(join(projectRoot, WARP_GLOBAL_MCP_FILE));
+
+    rmSync(projectRoot, { recursive: true, force: true });
+  });
+});
+
+describe('warp global MCP round-trip', () => {
+  function makeCanonical(): CanonicalFiles {
+    return {
+      rules: [],
+      commands: [],
+      agents: [],
+      skills: [],
+      mcp: {
+        mcpServers: {
+          context7: { type: 'stdio', command: 'npx', args: ['-y', 'context7'], env: {} },
+        },
+      },
+      permissions: null,
+      hooks: null,
+      ignore: [],
+    };
+  }
+
+  it('generate --global → import --global round-trips mcpServers back to canonical', async () => {
+    const root = join(tmpdir(), `warp-rt-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    mkdirSync(join(root, '.warp'), { recursive: true });
+    mkdirSync(join(root, '.agentsmesh'), { recursive: true });
+
+    // Generate the global MCP file from canonical.
+    const outputs = generateMcp(makeCanonical(), {
+      capability: { level: 'native' },
+      scope: 'global',
+    });
+    expect(outputs).toHaveLength(1);
+    expect(outputs[0].path).toBe(WARP_GLOBAL_MCP_FILE);
+    writeFileSync(join(root, outputs[0].path), outputs[0].content, 'utf-8');
+
+    // Import it back.
+    const results = await importFromWarp(root, { scope: 'global' });
+    const mcpResult = results.find((r) => r.feature === 'mcp');
+    expect(mcpResult).toBeDefined();
+
+    const imported = JSON.parse(readFileSync(join(root, '.agentsmesh/mcp.json'), 'utf-8')) as {
+      mcpServers: Record<string, { command: string; args: string[] }>;
+    };
+    expect(imported.mcpServers.context7.command).toBe('npx');
+    expect(imported.mcpServers.context7.args).toEqual(['-y', 'context7']);
+
+    rmSync(root, { recursive: true, force: true });
   });
 });

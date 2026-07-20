@@ -21,12 +21,12 @@ export const projectCapabilities: TargetCapabilities = {
 
 export const globalCapabilities: TargetCapabilities = {
   rules: 'native',
-  additionalRules: 'native',
-  commands: 'native',
+  additionalRules: 'embedded',
+  commands: 'none',
   agents: 'native',
   skills: 'native',
-  mcp: 'none',
-  hooks: 'none',
+  mcp: 'native',
+  hooks: 'native',
   ignore: 'none',
-  permissions: 'none',
+  permissions: 'partial',
 };

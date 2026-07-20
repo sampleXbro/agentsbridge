@@ -54,41 +54,47 @@ describe('codex-cli lintMcp', () => {
     expect(out.filter((d) => d.message.includes('description'))).toEqual([]);
   });
 
-  it('warns about non-stdio transport via type field', () => {
+  it('does not warn about remote (url) servers with no env vars', () => {
     const out = lintMcp(
       makeCanonical({
         mcpServers: {
           srv: {
-            // @ts-expect-error simulating non-stdio variant
             type: 'http',
             url: 'https://example.com',
+            headers: {},
+            env: {},
           },
         },
       }),
     );
-    expect(out.some((d) => d.message.includes('http transport'))).toBe(true);
+    expect(out).toEqual([]);
   });
 
-  it('warns about url transport when only url is present (no type)', () => {
-    const out = lintMcp(
-      makeCanonical({
-        mcpServers: {
-          // @ts-expect-error url-only variant
-          srv: { url: 'https://example.com' },
-        },
-      }),
-    );
-    expect(out.some((d) => d.message.includes('url transport'))).toBe(true);
-  });
-
-  it('produces both description and transport warnings on the same server', () => {
+  it('warns when a remote (url) server has env vars codex-cli cannot project', () => {
     const out = lintMcp(
       makeCanonical({
         mcpServers: {
           srv: {
-            // @ts-expect-error non-stdio
-            type: 'sse',
+            type: 'http',
             url: 'https://example.com',
+            headers: {},
+            env: { TOKEN: 'secret' },
+          },
+        },
+      }),
+    );
+    expect(out.some((d) => d.message.includes('env vars'))).toBe(true);
+  });
+
+  it('produces both description and env-var warnings on the same server', () => {
+    const out = lintMcp(
+      makeCanonical({
+        mcpServers: {
+          srv: {
+            type: 'http',
+            url: 'https://example.com',
+            headers: {},
+            env: { TOKEN: 'secret' },
             description: 'has desc',
           },
         },

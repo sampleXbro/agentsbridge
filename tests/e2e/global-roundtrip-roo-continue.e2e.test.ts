@@ -61,10 +61,13 @@ describe('global mode round-trip: Roo Code', () => {
     const gen = await runCli('generate --global --targets roo-code', projectDir);
     expect(gen.exitCode).toBe(0);
 
-    // 1. Root → ~/.roo/AGENTS.md (rewritten from .roo/rules/00-root.md per global layout)
-    fileExists(join(homeDir, '.roo', 'AGENTS.md'));
-    fileContains(join(homeDir, '.roo', 'AGENTS.md'), 'Roo instructions');
-    markdownHasNoFrontmatter(join(homeDir, '.roo', 'AGENTS.md'));
+    // 1. Root → ~/.roo/rules/00-root.md (Roo Code's loadRuleFiles() reads
+    // `.roo/rules/` from the global `~/.roo` dir; it never reads a
+    // home-directory AGENTS.md, so no AGENTS.md redirect happens here).
+    fileExists(join(homeDir, '.roo', 'rules', '00-root.md'));
+    fileContains(join(homeDir, '.roo', 'rules', '00-root.md'), 'Roo instructions');
+    markdownHasNoFrontmatter(join(homeDir, '.roo', 'rules', '00-root.md'));
+    fileNotExists(join(homeDir, '.roo', 'AGENTS.md'));
 
     // 2. Named rules (docs: ~/.roo/rules/*.md)
     fileExists(join(homeDir, '.roo', 'rules', 'testing.md'));
@@ -97,21 +100,25 @@ describe('global mode round-trip: Roo Code', () => {
     const mcp = JSON.parse(readText(join(homeDir, 'mcp_settings.json')));
     expect(mcp.mcpServers.test).toBeDefined();
 
-    // 7. Ignore (docs: ~/.rooignore)
-    fileExists(join(homeDir, '.rooignore'));
-    fileContains(join(homeDir, '.rooignore'), 'dist');
+    // 7. Ignore: Roo Code has no home-directory/global ignore concept
+    // (RooIgnoreController only reads `.rooignore` from the open workspace) —
+    // global scope is capability 'none' and emits nothing.
+    fileNotExists(join(homeDir, '.rooignore'));
 
-    // 8. agents → settings/custom_modes.yaml (global scope suppresses .roomodes)
+    // 8. agents → .roo/settings/custom_modes.yaml (global scope suppresses .roomodes)
     fileNotExists(join(homeDir, '.roomodes'));
-    fileExists(join(homeDir, 'settings', 'custom_modes.yaml'));
-    fileContains(join(homeDir, 'settings', 'custom_modes.yaml'), 'customModes');
-    fileContains(join(homeDir, 'settings', 'custom_modes.yaml'), 'coder');
-    fileContains(join(homeDir, 'settings', 'custom_modes.yaml'), 'Code assistant');
+    fileExists(join(homeDir, '.roo', 'settings', 'custom_modes.yaml'));
+    fileContains(join(homeDir, '.roo', 'settings', 'custom_modes.yaml'), 'customModes');
+    fileContains(join(homeDir, '.roo', 'settings', 'custom_modes.yaml'), 'coder');
+    fileContains(join(homeDir, '.roo', 'settings', 'custom_modes.yaml'), 'Code assistant');
+    // Roo's modeConfigSchema requires `groups` (no default) or ALL modes get dropped.
+    fileContains(join(homeDir, '.roo', 'settings', 'custom_modes.yaml'), 'groups:');
 
     dirFilesExactly(join(homeDir, '.roo'), [
-      'AGENTS.md',
       'commands/build.md',
+      'rules/00-root.md',
       'rules/testing.md',
+      'settings/custom_modes.yaml',
       'skills/roo-skill/SKILL.md',
       'skills/roo-skill/references/runbook.md',
     ]);
@@ -135,8 +142,8 @@ describe('global mode round-trip: Roo Code', () => {
     fileExists(join(canonicalDir, 'skills', 'roo-skill', 'SKILL.md'));
     fileExists(join(canonicalDir, 'skills', 'roo-skill', 'references', 'runbook.md'));
     fileExists(join(canonicalDir, 'mcp.json'));
-    fileExists(join(canonicalDir, 'ignore'));
-    fileContains(join(canonicalDir, 'ignore'), 'dist');
+    // Ignore has no global equivalent (workspace-only .rooignore) — nothing to import back.
+    fileNotExists(join(canonicalDir, 'ignore'));
   });
 });
 

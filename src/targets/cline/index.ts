@@ -8,6 +8,7 @@ import {
   generateMcp,
   generateIgnore,
   generateHooks,
+  generatePermissions,
 } from './generator.js';
 import { cap } from '../catalog/capabilities.js';
 import {
@@ -16,16 +17,16 @@ import {
   CLINE_WORKFLOWS_DIR,
   CLINE_HOOKS_DIR,
   CLINE_SKILLS_DIR,
-  CLINE_AGENTS_DIR,
+  CLINE_GLOBAL_SKILLS_DIR,
+  CLINE_AGENTS_FILE,
   CLINE_MCP_SETTINGS,
   CLINE_IGNORE,
   CLINE_GLOBAL_RULES_DIR,
   CLINE_GLOBAL_WORKFLOWS_DIR,
-  CLINE_GLOBAL_HOOKS_DIR,
 } from './constants.js';
 import { importFromCline } from './importer.js';
 import { lintRules } from './linter.js';
-import { lintCommands, lintHooks } from './lint.js';
+import { lintCommands, lintHooks, lintPermissions } from './lint.js';
 import { buildClineImportPaths } from '../../core/reference/import-map-builders.js';
 
 export const target: TargetGenerators = {
@@ -38,25 +39,21 @@ export const target: TargetGenerators = {
   generateMcp,
   generateHooks,
   generateIgnore,
+  generatePermissions,
   importFrom: importFromCline,
 };
 
 const project: TargetLayout = {
   rootInstructionPath: CLINE_AGENTS_MD,
-  skillDir: '.cline/skills',
+  skillDir: CLINE_SKILLS_DIR,
   managedOutputs: {
-    dirs: [
-      CLINE_AGENTS_DIR,
-      '.cline/skills',
-      '.clinerules',
-      '.clinerules/hooks',
-      '.clinerules/workflows',
-    ],
+    dirs: [CLINE_SKILLS_DIR, CLINE_RULES_DIR, CLINE_HOOKS_DIR, CLINE_WORKFLOWS_DIR],
     files: [
       'AGENTS.md',
-      '.cline/cline_mcp_settings.json',
-      '.clineignore',
-      '.clinerules/typescript.md',
+      CLINE_MCP_SETTINGS,
+      CLINE_IGNORE,
+      CLINE_AGENTS_FILE,
+      `${CLINE_RULES_DIR}/typescript.md`,
     ],
   },
   paths: {
@@ -66,41 +63,44 @@ const project: TargetLayout = {
     commandPath(name, _config) {
       return `${CLINE_WORKFLOWS_DIR}/${name}.md`;
     },
-    agentPath(name) {
-      return `${CLINE_AGENTS_DIR}/${name}.md`;
+    // agents.yaml is a combined file — all agents go to the same output file
+    agentPath(_name) {
+      return CLINE_AGENTS_FILE;
     },
   },
 };
 
 const globalLayout: TargetLayout = {
-  skillDir: CLINE_SKILLS_DIR,
+  skillDir: CLINE_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [
       CLINE_GLOBAL_RULES_DIR,
       CLINE_GLOBAL_WORKFLOWS_DIR,
-      CLINE_GLOBAL_HOOKS_DIR,
-      CLINE_SKILLS_DIR,
-      CLINE_AGENTS_DIR,
+      CLINE_HOOKS_DIR,
+      CLINE_GLOBAL_SKILLS_DIR,
       '.agents/skills',
     ],
-    files: [CLINE_MCP_SETTINGS, CLINE_IGNORE],
+    files: [],
   },
   rewriteGeneratedPath(path) {
     if (path === CLINE_AGENTS_MD) return null;
-    if (path.startsWith(`${CLINE_HOOKS_DIR}/`)) {
-      return `${CLINE_GLOBAL_HOOKS_DIR}/${path.slice(CLINE_HOOKS_DIR.length + 1)}`;
-    }
     if (path.startsWith(`${CLINE_WORKFLOWS_DIR}/`)) {
       return `${CLINE_GLOBAL_WORKFLOWS_DIR}/${path.slice(CLINE_WORKFLOWS_DIR.length + 1)}`;
     }
     if (path.startsWith(`${CLINE_RULES_DIR}/`)) {
       return `${CLINE_GLOBAL_RULES_DIR}/${path.slice(CLINE_RULES_DIR.length + 1)}`;
     }
+    if (path.startsWith(`${CLINE_SKILLS_DIR}/`)) {
+      return `${CLINE_GLOBAL_SKILLS_DIR}/${path.slice(CLINE_SKILLS_DIR.length + 1)}`;
+    }
+    // `.cline/hooks` resolves to the same relative path in both scopes
+    // (CLI docs: `~/.cline/hooks`) — no rewrite needed. MCP/ignore/agents are
+    // scope-gated to `[]` in global scope, so they never reach this point.
     return path;
   },
   mirrorGlobalPath(path, _activeTargets) {
-    if (path.startsWith(`${CLINE_SKILLS_DIR}/`)) {
-      return `.agents/skills/${path.slice(CLINE_SKILLS_DIR.length + 1)}`;
+    if (path.startsWith(`${CLINE_GLOBAL_SKILLS_DIR}/`)) {
+      return `.agents/skills/${path.slice(CLINE_GLOBAL_SKILLS_DIR.length + 1)}`;
     }
     return null;
   },
@@ -111,22 +111,22 @@ const globalLayout: TargetLayout = {
     commandPath(name, _config) {
       return `${CLINE_GLOBAL_WORKFLOWS_DIR}/${name}.md`;
     },
-    agentPath(name) {
-      return `${CLINE_AGENTS_DIR}/${name}.md`;
+    agentPath(_name) {
+      return null;
     },
   },
 };
 
 const globalCapabilities: TargetCapabilities = {
-  rules: 'native',
+  rules: 'none',
   additionalRules: 'native',
   commands: cap('native', 'workflows'),
-  agents: 'native',
+  agents: 'none',
   skills: 'native',
-  mcp: 'native',
+  mcp: 'none',
   hooks: 'native',
-  ignore: 'native',
-  permissions: 'none',
+  ignore: 'none',
+  permissions: 'partial',
 };
 
 export const descriptor = {
@@ -147,15 +147,16 @@ export const descriptor = {
     mcp: 'native',
     hooks: 'native',
     ignore: 'native',
-    permissions: 'none',
+    permissions: 'partial',
   },
   emptyImportMessage:
-    'No Cline config found (.clinerules, .clineignore, .cline/cline_mcp_settings.json, or .cline/skills).',
+    'No Cline config found (.cline/rules, .clineignore, .cline/mcp.json, .cline/agents.yaml, or .cline/skills).',
   supportsConversion: { agents: true },
   lintRules,
   lint: {
     commands: lintCommands,
     hooks: lintHooks,
+    permissions: lintPermissions,
   },
   project,
   globalSupport: {
@@ -163,11 +164,8 @@ export const descriptor = {
     detectionPaths: [
       CLINE_GLOBAL_RULES_DIR,
       CLINE_GLOBAL_WORKFLOWS_DIR,
-      CLINE_GLOBAL_HOOKS_DIR,
-      CLINE_SKILLS_DIR,
-      CLINE_AGENTS_DIR,
-      CLINE_MCP_SETTINGS,
-      CLINE_IGNORE,
+      CLINE_HOOKS_DIR,
+      CLINE_GLOBAL_SKILLS_DIR,
     ],
     layout: globalLayout,
   },
@@ -183,5 +181,10 @@ export const descriptor = {
       },
     ],
   },
-  conversionDefaults: { agentsToSkills: true },
+  // Project agentPath returns the combined `.cline/agents.yaml` for all agent
+  // names — multiple canonical agents share one output file. Global scope has
+  // no agents surface (agentPath returns null there). `agentsToSkills: false`
+  // is kept so the shared "none → embedded via skill projection" upgrade never
+  // fires for global scope, which has no agents surface at all.
+  conversionDefaults: { agentsToSkills: false },
 } satisfies TargetDescriptor;

@@ -16,6 +16,7 @@ import {
   ZED_TARGET,
   ZED_SETTINGS_FILE,
   ZED_SKILLS_DIR,
+  ZED_GLOBAL_SKILLS_DIR,
   ZED_GLOBAL_SETTINGS_FILE,
 } from './constants.js';
 import { descriptor } from './index.js';
@@ -30,9 +31,8 @@ export async function importFromZed(
 
   results.push(...(await runDescriptorImport(descriptor, projectRoot, scope, { normalize })));
 
-  if (scope === 'project') {
-    await importEmbeddedSkills(projectRoot, ZED_SKILLS_DIR, ZED_TARGET, results, normalize);
-  }
+  const skillsDir = scope === 'global' ? ZED_GLOBAL_SKILLS_DIR : ZED_SKILLS_DIR;
+  await importEmbeddedSkills(projectRoot, skillsDir, ZED_TARGET, results, normalize);
 
   const mcpFile = scope === 'global' ? ZED_GLOBAL_SETTINGS_FILE : ZED_SETTINGS_FILE;
   await importZedMcp(projectRoot, mcpFile, results);

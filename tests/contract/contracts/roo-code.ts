@@ -11,6 +11,7 @@ export const rooCodeContract: TargetPathContract = {
     '.roo/skills/api-generator/template.ts',
     '.rooignore',
     '.roomodes',
+    '.vscode/settings.json',
   ],
   imported: [
     '.agentsmesh/agents/code-reviewer.md',
@@ -18,6 +19,7 @@ export const rooCodeContract: TargetPathContract = {
     '.agentsmesh/commands/review.md',
     '.agentsmesh/ignore',
     '.agentsmesh/mcp.json',
+    '.agentsmesh/permissions.yaml',
     '.agentsmesh/rules/_root.md',
     '.agentsmesh/rules/typescript.md',
     '.agentsmesh/skills/api-generator/SKILL.md',

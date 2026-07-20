@@ -219,8 +219,7 @@ describe('generateCommands (crush)', () => {
     const results = generateCommands(canonical);
 
     expect(results).toHaveLength(1);
-    expect(results[0].path).toContain(CRUSH_SKILLS_DIR);
-    expect(results[0].path).toContain('SKILL.md');
+    expect(results[0].path).toBe(`${CRUSH_SKILLS_DIR}/am-command-review/SKILL.md`);
     expect(results[0].content).toContain('review');
     const cmd = results.find((r) => r.path.endsWith('SKILL.md'));
     expect(cmd!.content).toContain('x-agentsmesh-kind: command');
@@ -395,7 +394,7 @@ describe('generatePermissions (crush)', () => {
     expect(permissions['allowed_tools']).toEqual(['view', 'ls', 'grep']);
   });
 
-  it('generates crush.json with denied_tools', () => {
+  it('generates crush.json with disabled_tools under options key', () => {
     const canonical = makeCanonical({
       permissions: {
         allow: [],
@@ -408,8 +407,8 @@ describe('generatePermissions (crush)', () => {
 
     expect(results).toHaveLength(1);
     const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
-    const permissions = parsed['permissions'] as Record<string, unknown>;
-    expect(permissions['denied_tools']).toEqual(['bash', 'write']);
+    const options = parsed['options'] as Record<string, unknown>;
+    expect(options['disabled_tools']).toEqual(['bash', 'write']);
   });
 
   it('returns empty when no permissions exist', () => {

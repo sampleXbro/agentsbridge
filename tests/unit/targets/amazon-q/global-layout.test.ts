@@ -25,12 +25,12 @@ describe('amazon-q descriptor', () => {
     expect(descriptor.capabilities.additionalRules).toBe('native');
   });
 
-  it('declares none for unsupported features', () => {
+  it('declares none for unsupported features and embedded for partially-supported ones', () => {
     expect(descriptor.capabilities.commands).toBe('none');
     expect(descriptor.capabilities.skills).toBe('none');
     expect(descriptor.capabilities.ignore).toBe('none');
-    expect(descriptor.capabilities.hooks).toBe('none');
-    expect(descriptor.capabilities.permissions).toBe('none');
+    expect(descriptor.capabilities.hooks).toBe('embedded');
+    expect(descriptor.capabilities.permissions).toBe('embedded');
   });
 
   it('declares native agents capability', () => {

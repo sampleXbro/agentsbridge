@@ -1,5 +1,6 @@
 import { basename } from 'node:path';
 import type { CanonicalFiles } from '../../core/types.js';
+import type { GenerateFeatureContext } from '../catalog/target.interface.js';
 import { generateEmbeddedSkills } from '../import/embedded-skill.js';
 import {
   projectedAgentSkillDirName,
@@ -8,6 +9,8 @@ import {
 import { serializeFrontmatter } from '../../utils/text/markdown.js';
 import { serializeCommandRule } from './command-rule.js';
 import {
+  CONTINUE_IGNORE,
+  CONTINUE_GLOBAL_IGNORE,
   CONTINUE_MCP_FILE,
   CONTINUE_PROMPTS_DIR,
   CONTINUE_ROOT_RULE,
@@ -75,4 +78,21 @@ export function generateAgents(canonical: CanonicalFiles): ContinueOutput[] {
 
 export function generateSkills(canonical: CanonicalFiles): ContinueOutput[] {
   return generateEmbeddedSkills(canonical, CONTINUE_SKILLS_DIR);
+}
+
+/**
+ * Generate .continueignore (project) or .continue/.continueignore (global)
+ * from canonical ignore patterns.
+ *
+ * Continue supports `.continueignore` at the project root for project scope,
+ * and `~/.continue/.continueignore` for global scope — both are plain
+ * gitignore-format files.
+ */
+export function generateIgnore(
+  canonical: CanonicalFiles,
+  ctx?: GenerateFeatureContext,
+): ContinueOutput[] {
+  if (canonical.ignore.length === 0) return [];
+  const path = ctx?.scope === 'global' ? CONTINUE_GLOBAL_IGNORE : CONTINUE_IGNORE;
+  return [{ path, content: canonical.ignore.join('\n') }];
 }

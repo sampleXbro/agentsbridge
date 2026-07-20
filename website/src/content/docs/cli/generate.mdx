@@ -49,7 +49,7 @@ agentsmesh init --global
 agentsmesh generate --global --targets claude-code,antigravity,codex-cli,cursor
 ```
 
-Reads canonical files from `~/.agentsmesh/` and writes user-level outputs per target (for example Claude Code under `~/.claude/` including `hooks.json`, `~/.claudeignore`, skills under `~/.claude/skills/` and mirrored to `~/.agents/skills/` only when Codex is not also a global target, optional `output-styles/` when `outputStyle: true`, plus `~/.claude.json` for MCP; Antigravity under `~/.gemini/antigravity/`; Codex CLI under `~/.codex/` plus `~/.agents/skills/`; and Cursor under `~/.cursor/` with `rules/*.mdc`, aggregated `AGENTS.md`, MCP, hooks, `cursorignore`, skills, agents, and commands). See the [supported tools matrix](../../reference/supported-tools#global-mode) for the full global-mode map.
+Reads canonical files from `~/.agentsmesh/` and writes user-level outputs per target (for example Claude Code under `~/.claude/` including `hooks.json`, `~/.claudeignore`, skills under `~/.claude/skills/` and mirrored to `~/.agents/skills/` only when Codex is not also a global target, optional `output-styles/` when `outputStyle: true`, plus `~/.claude.json` for MCP; Antigravity under `~/.gemini/` (rules in `~/.gemini/GEMINI.md`, skills in `~/.gemini/config/skills/`, commands in `~/.gemini/antigravity/global_workflows/`, MCP at `~/.gemini/config/mcp_config.json`); Codex CLI under `~/.codex/` plus `~/.agents/skills/`; and Cursor under `~/.cursor/` with `rules/*.mdc`, aggregated `AGENTS.md`, MCP, hooks, `cursorignore`, skills, agents, and commands). See the [supported tools matrix](../../reference/supported-tools#global-mode) for the full global-mode map.
 
 The rest of the maintenance commands (`install`, `diff`, `lint`, `watch`, `check`, `merge`, and `matrix`) also accept `--global` and operate on the same `~/.agentsmesh/` canonical root.
 
@@ -93,7 +93,7 @@ Forces a re-fetch of all remote `extends` sources. Without this flag, AgentsMesh
 3. **Generate per target** — for each enabled target, run target-specific generators for rules, commands, agents, skills, MCP, hooks, ignore, and permissions.
 4. **Rewrite references** — internal `.agentsmesh/` file paths are rewritten to target-relative paths.
 5. **Resolve collisions** — detect overlapping output paths, prefer native over embedded.
-6. **Write output** — create target directories, write all files, update the lock file.
+6. **Write output** — create target directories, write all files, update the lock file (canonical-source checksums plus an `outputs` map of every generated file's checksum, so `agentsmesh check` can later detect direct edits to generated files). Filtered runs (`--targets`/`--features`) merge outputs per-path into the existing map; a full run replaces it.
 7. **Clean stale files** — remove previously generated files no longer in the output set.
 
 ## Output locations
@@ -103,7 +103,7 @@ Each target writes to its own native directory (e.g. `claude-code` → `.claude/
 ## Global mode path resolution
 
 When `--global` is used, AgentsMesh sets the project root to the user's home directory (`homedir()`).
-All target path constants — such as `.cursor/rules/`, `.claude/skills/`, or `Documents/Cline/Hooks/` — are relative to that root, so they resolve to the expected `~/`-prefixed locations (e.g. `~/.cursor/rules/`, `~/.claude/skills/`).
+All target path constants — such as `.cursor/rules/`, `.claude/skills/`, or `.cline/data/settings/rules/` — are relative to that root, so they resolve to the expected `~/`-prefixed locations (e.g. `~/.cursor/rules/`, `~/.claude/skills/`).
 
 If `~/.agentsmesh/agentsmesh.yaml` does not exist, `--global` commands fail with a scope-aware error pointing at the missing path and suggesting `agentsmesh init --global` (or dropping the flag to operate on the current project). The check applies uniformly to `generate`, `import`, `lint`, `check`, `diff`, `watch`, and `matrix`.
 

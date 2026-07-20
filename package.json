@@ -1,6 +1,6 @@
 {
   "name": "agentsmesh",
-  "version": "0.30.2",
+  "version": "0.31.0",
   "description": "One canonical source for AI coding agent rules, commands, skills, MCP, hooks, and permissions — synced across every major AI coding tool.",
   "type": "module",
   "main": "./dist/index.js",

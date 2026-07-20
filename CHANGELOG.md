@@ -1,5 +1,350 @@
 # Changelog
 
+## 0.31.0
+
+### Minor Changes
+
+- 580c7ea: Aider: raise MCP, Hooks, and Permissions from none to partial.
+  - **MCP (project, none → partial)**: Aider has no project-local MCP config file surface — MCP tool use is handled by Aider's own `--mcp` CLI flag or the `mcp` section of `~/.aider.conf.yml` (global user config, not a project file). `lintMcp` warns when canonical MCP servers are present but cannot be projected to the project scope. `generateMcp` returns `[]` (no-op stub satisfying the descriptor schema contract).
+  - **Hooks (project, none → partial)**: Aider has no file-based lifecycle hook system for projects. Lifecycle behavior is controlled via scripting (e.g. `--script` mode) rather than a writable config surface. `lintHooks` warns when canonical hooks are present but cannot be projected. `generateHooks` returns `[]`.
+  - **Permissions (project, none → partial)**: Aider has no writable permissions file in the project — tool allow/deny is configured via the `--allowed-cmds`/`--no-auto-accept-architect` CLI flags or user-global config, not a project-scope file. `lintPermissions` warns when canonical permissions are present but cannot be projected. `generatePermissions` returns `[]`.
+
+  All three features remain `none` at global scope (Aider's `~/.aider.conf.yml` user config exists but carries no MCP-server list, hook-event list, or structured permission blocks that map faithfully from canonical form).
+
+- b71fd29: Amazon Q: raise Hooks and Permissions from partial to embedded; add missing ledger cells for rules/project, rules/global, and mcp/global.
+  - **Hooks (project + global, none → partial → embedded)**: Amazon Q agent JSON files at `.amazonq/cli-agents/*.json` support a top-level `hooks` key with triggers `agentSpawn`, `userPromptSubmit`, `preToolUse`, `postToolUse`, and `stop`. Verified at https://aws.github.io/amazon-q-developer-cli/agent-format.html. Canonical `PreToolUse`, `PostToolUse`, and `UserPromptSubmit` entries are now embedded into each generated agent JSON under the corresponding Amazon Q trigger names. `Notification`, `SubagentStart`, and `SubagentStop` have no Amazon Q equivalent — `lintHooks` warns about those events only (not about the mappable ones). `generateHooks()` is a registered no-op so the engine's dispatch path finds a generator.
+  - **Permissions (project + global, none → partial → embedded)**: Agent JSON files support `allowedTools` (array of tool names) and `toolsSettings` (per-tool restrictions). Canonical `permissions.allow` maps directly to `allowedTools` and is now merged with per-agent tools (deduplicated) in each generated agent JSON. `deny` and `ask` have no Amazon Q equivalent — `lintPermissions` warns about those only when they are non-empty. `generatePermissions()` is a registered no-op.
+  - **Round-trip (importer)**: `amazonQAgentMapper` now preserves the `hooks` key from imported agent JSON into canonical agent frontmatter, completing the generate → import → generate round-trip.
+  - **Ledger cells (rules/project, rules/global, mcp/global)**: These three cells were absent from `capability-ledger.json` despite the descriptor declaring `rules=native` for both scopes and `mcp=native` for global scope. Added with correct paths and format metadata.
+  - **Hooks/permissions ledger cells**: Updated `maxAchievable` from `partial` to `embedded` for hooks and permissions in both project and global scopes.
+
+- 3462660: Amp: downgrade Commands to embedded, Hooks to partial, Permissions to partial; add Agents (embedded) and Ignore (partial).
+  - **Commands (project + global, native → embedded)**: Amp has no declarative slash-command file format — per https://ampcode.com/manual, commands only exist via `amp.registerCommand(...)` inside a TypeScript plugin. `generateCommands()` projects each command as `.agents/skills/<name>/SKILL.md` (the same embedding `generateSkills` uses natively), so the generated output is unchanged; only the declared capability level is corrected from `native` to `embedded`.
+  - **Hooks (project + global, native → partial)**: `buildAmpScopedSettings()` used to write an undocumented `"amp.hooks"` key into `.amp/settings.json`. Re-verified directly against ampcode.com/manual — the word "hooks" never appears anywhere in the manual's content. Amp's only hook-like mechanism is the plugin-based `amp.on(...)` event API (code, not a declarative settings file), which qualifies as a partial surface (the product supports via unstable/code surface). `buildAmpScopedSettings()` no longer emits `amp.hooks`, and a `lintHooks` warning fires when canonical hooks exist but cannot be projected.
+  - **Agents (project + global, none → embedded)**: Agents are now projected as skills via `generateAgents()` (each agent emits `.agents/skills/am-agent-<name>/SKILL.md`), raising the ceiling from `none` to `embedded`.
+  - **Ignore (project + global, none → partial)**: Amp has no dedicated ignore file and relies on `.gitignore`. Canonical ignore patterns are not projected; `lintIgnore` warns users. The ceiling is `partial` (the product supports the concept via an adjacent mechanism, but agentsmesh cannot write it).
+  - **Permissions (project + global, native → partial)**: `amp.permissions` is a LEGACY key per https://ampcode.com/manual/appendix/legacy-permissions-rules.txt. Its documented schema is an array of rule objects (`[{ tool, matches, action, context }]`), which is incompatible with the canonical `{allow,deny,ask}` string-array structure. agentsmesh cannot emit a valid `amp.permissions` value; `buildAmpScopedSettings()` no longer emits the key, `mergeAmpSettings()` no longer special-cases it, and a new `lintPermissions` warning fires when canonical permissions are present. The ceiling is `partial` (the legacy surface exists but cannot be driven from canonical config).
+  - Updated `src/targets/catalog/capability-ledger.json` entries for `amp/commands`, `amp/hooks`, `amp/agents`, `amp/ignore`, and `amp/permissions` across project + global scopes.
+
+- a9698e3: Antigravity: promote commands to native (both scopes) and correct global workflows path.
+  - **Commands (project + global, partial → native)**: `generateCommands()` produces `.agents/workflows/<name>.md` files and the importer reads them back from the same directory. The old `partial` declaration was incorrect — full round-trip has always been present. Global scope commands round-trip via `ANTIGRAVITY_GLOBAL_WORKFLOWS_DIR`.
+  - **Global workflows path corrected**: `ANTIGRAVITY_GLOBAL_WORKFLOWS_DIR` was changed on this branch from `.gemini/antigravity/workflows` (master) to `.gemini/config/workflows` — but no primary source confirms `.gemini/config/workflows` as a valid Antigravity global workflows location. Multiple sources (GitHub Issue #16058 on google-gemini/gemini-cli and the antigravity-minimal-setup community repo) document the correct path as `~/.gemini/antigravity/global_workflows/`. The constant is now set to `.gemini/antigravity/global_workflows`. The MCP path (`.gemini/config/mcp_config.json`) and skills path (`.gemini/config/skills/`) are unaffected — both are confirmed by primary sources (Google Codelabs).
+  - **Global paths summary (final state)**:
+    - Rules (global): `~/.gemini/GEMINI.md` (aggregate, all rules embedded)
+    - Skills (global): `~/.gemini/config/skills/`
+    - Commands/workflows (global): `~/.gemini/antigravity/global_workflows/`
+    - MCP (global): `~/.gemini/config/mcp_config.json`
+    - Hooks (global): `~/.gemini/config/hooks.json`
+
+- 91d3885: Augment Code: raise global Hooks from none to native.
+  - **Hooks (global, none → native)**: `~/.augment/settings.json` supports the same `hooks` key as the project-scope `.augment/settings.json` — the `buildSettingsContent` helper already serialises canonical hooks into AugmentCode's native format (`{ event: [{ matcher, hooks: [{ type, command, timeout }] }] }`), and `importAugmentSettings` already reads them back. The global capability was previously declared `none` even though generation and import were already wired. Only the `globalCapabilities.hooks` declaration needed to change from `none` to `native`; no code changes were required.
+  - **Project hooks (native — unchanged)**: project-scope hooks were already `native` and are unaffected.
+
+- 5369c3b: Add a capability provenance ledger (`src/targets/catalog/capability-ledger.json`) plus deterministic `pnpm capabilities:audit` / `capabilities:seed` and a CI conformance test that validates each target's generated files against a recorded path/extension/structure fingerprint. Reworks the `update-target-capabilities` skill to an audit-driven flow.
+- 1991a3f: `agentsmesh check` now detects drift in generated outputs. `agentsmesh generate` records a checksum for every generated file in a new `outputs` map inside `.agentsmesh/.lock` (full runs replace the map; `--targets`/`--features` runs merge per-path), and `check` re-hashes those files, failing with exit code 1 when a generated output was hand-edited or deleted. JSON output gains `outputsModified`, `outputsRemoved`, and `outputsChecked` alongside the existing canonical-drift fields, so the two drift kinds are reported separately. A new `check --no-outputs` flag skips output verification (for setups that gitignore generated outputs in CI). Locks written by earlier versions skip output verification with a hint until the next `generate` upgrades them. The MCP `check` tool performs the same output verification. Checksums are BOM- and line-ending-normalized, so CRLF-only editor rewrites do not register as drift.
+- 0fa6069: Cline: rebase on the standalone CLI's documented paths (docs.cline.bot/cli/cli-reference) instead of the VS Code extension's IDE-era layout, raise Permissions, and downgrade unsupported global surfaces.
+  - **Rules (project + global, native — fixed)**: project rules move from `.clinerules/{slug}.md` to `.cline/rules/{slug}.md`; global rules move from `~/Documents/Cline/Rules/` to `~/.cline/data/settings/rules/`. The legacy flat-file `.clinerules` convention (no directory) is dropped — it is undocumented for the CLI; only the directory form is imported. Root-rule detection order is unchanged: `_root.md`, then `AGENTS.md`, then the first alphabetically-sorted rule file.
+  - **Hooks (project + global, native — fixed)**: hooks move from `.clinerules/hooks/*.sh` to `.cline/hooks/*.sh`. Project and global scope now resolve to the identical relative path (project root vs. `$HOME`), matching the CLI's documented `~/.cline/hooks` default (also configurable via `--hooks-dir`/`CLINE_HOOKS_DIR`) — the importer reads a single directory instead of merging two.
+  - **MCP (project, native — fixed)**: the settings file moves from `.cline/cline_mcp_settings.json` to `.cline/mcp.json`. Both the old filename and `.cline/mcp_settings.json` are still accepted on import for backward compatibility.
+  - **MCP (global): native → none**. No global MCP config path is documented anywhere in the CLI reference's `~/.cline/data/settings/` tree; `.cline/mcp.json` is project-only.
+  - **Skills (global, native — fixed)**: global skills move from the project-identical `.cline/skills/` to the documented `~/.cline/data/settings/skills/`.
+  - **Agents (project, native — fixed)**: generator now writes a single combined `.cline/agents.yaml` (the CLI-documented surface: "Agent definitions") instead of per-agent `.cline/agents/<name>.md` files (the undocumented per-file format used by earlier agentsmesh versions). The YAML file has a top-level `agents:` list; each entry uses a round-trippable `name`/`description`/`model`/`tools`/`prompt` shape plus the same `x-agentsmesh-*` extension keys used by other native-agent targets. The importer now reads `.cline/agents.yaml` as the primary format and falls back to the legacy `.cline/agents/<name>.md` directory for backward compatibility. Because `.cline/agents.yaml` is a combined file, `agentPath()` returns `null` at project scope (no per-name destination for cross-reference rewriting) — the same pattern used by roo-code's `.roomodes`.
+  - **Agents (global): native → none**. No `agents.yaml` or `agents/` directory is documented anywhere under `~/.cline/data/settings/` — only `providers.json`, `rules/`, and `skills/`.
+  - **Ignore (global): native → none**. docs.cline.bot/customization/clineignore documents `.clineignore` as strictly per-workspace-root (each monorepo workspace root can have its own); no global/home-directory ignore file exists.
+  - **Permissions (project + global): none → partial**. Cline has no dedicated writable permissions file in either scope — approval is controlled via the `--auto-approve` CLI flag, the `CLINE_COMMAND_PERMISSIONS` environment variable (JSON allow/deny command-glob policy), or the extension UI's Auto Approve/YOLO Mode. A no-op generator stub plus a lint warning point users at these mechanisms directly.
+
+  Commands (workflows) are unaffected by this change and remain at the pre-existing `.clinerules/workflows/` (project) and `~/Documents/Cline/Workflows/` (global) paths — the CLI reference does not document a workflows/commands surface, so this IDE-era path is left as-is.
+
+- 8cae45c: Codex CLI: raise Permissions to native and fix broken AdditionalRules/Hooks/MCP.
+  - **Permissions (project + global): none → native**. Canonical `allow`/`ask`/`deny` command patterns now project onto `.codex/rules/agentsmesh-permissions.rules`, Codex's real Starlark `prefix_rule(pattern, decision, justification)` execution-policy DSL (allow → `allow`, ask → `prompt`, deny → `forbidden`), per https://developers.openai.com/codex/rules. `Bash(<command>[:*])` entries get a real, enforceable `prefix_rule`; every entry (including non-Bash ones like `Read`/`WebFetch`, which have no Codex command-execution equivalent) is also recorded as a `# agentsmesh-permission <decision>: <pattern>` marker comment so import recovers the exact canonical string losslessly. Uses a dedicated filename distinct from both per-rule `{slug}.rules` execution files and Codex's own `default.rules` TUI-write destination, so nothing double-writes or collides. `.codex/config.toml`'s `sandbox_mode`/`approval_policy`/`[permissions.<name>]` schema is real but has no faithful, round-trippable mapping from canonical allow/deny/ask command patterns, so it is intentionally not used here.
+  - **AdditionalRules (project, native — fixed)**: scoped/non-root advisory rules now generate real nested `<dir>/AGENTS.md` (or `AGENTS.override.md`) files that Codex's documented root-to-cwd directory walk actually loads, instead of `.codex/instructions/{slug}.md` (not part of Codex's instruction-loading hierarchy) plus a link-only index in the root `AGENTS.md`. `{dir}` is the first glob's directory prefix, falling back to the rule's slug when no glob yields one (no globs, root-wildcard globs, traversal/absolute/brace-ambiguous globs). Multiple rules resolving to the same directory are joined into one file. The old `.codex/instructions/` mirror is still imported for backward compatibility with repos generated by older agentsmesh versions.
+  - **Hooks (project + global, native — fixed)**: canonical `Notification` hooks are no longer written to `hooks.json` — Codex's real lifecycle events are `SessionStart`, `SubagentStart`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PreCompact`, `PostCompact`, `UserPromptSubmit`, `SubagentStop`, `Stop` (https://learn.chatgpt.com/docs/hooks); there is no `Notification` event, so it silently never fired. A new lint warning flags any unsupported event. The shared `buildWrappedCommandHooks` helper (also used by factory-droid and goose) gained an optional `supportedEvents` filter, defaulting to unfiltered so those targets are unaffected.
+  - **MCP (project, native — fixed)**: `.codex/config.toml`'s `[mcp_servers.<name>]` now supports Codex's remote/Streamable HTTP transport (`url`, `bearer_token_env_var`, `http_headers`, per https://developers.openai.com/codex/mcp) on both the generator and importer side. Previously the importer required `command` and silently dropped every URL-based server, and the generator only ever emitted stdio servers. A `bearer_token_env_var` round-trips through the canonical `Authorization: Bearer ${VAR}` header convention. The stale "codex-cli only generates stdio MCP servers" lint warning is replaced with one that only fires when a remote server has env vars (which codex-cli still can't project).
+
+- cec0e7a: Continue: raise ignore from partial to native for both project and global scopes — generate and import `.continueignore` and `~/.continue/.continueignore`.
+  - **Ignore (project, partial → native)**: agentsmesh now generates `.continueignore` at the project root from canonical ignore patterns (gitignore format, one pattern per line). Import reads `.continueignore` back into `.agentsmesh/ignore`. Verified against the official Continue docs: "If you'd like to exclude additional files, you can add them to a `.continueignore` file, which follows the exact same rules as `.gitignore`." (docs.continue.dev/reference/deprecated-codebase)
+  - **Ignore (global, partial → native)**: agentsmesh now generates `~/.continue/.continueignore` from canonical ignore patterns in global mode. Import reads it back into `.agentsmesh/ignore`. Verified: "Continue also supports a global `.continueignore` file that will be respected for all workspaces, which can be created at `~/.continue/.continueignore`." (docs.continue.dev/reference/deprecated-codebase)
+  - The `lintIgnore` warning that told users to configure ignore manually is removed — generation handles it natively.
+  - The global importer now correctly propagates the `scope` parameter to `runDescriptorImport` (was hardcoded to `'project'`), enabling scope-correct path resolution for all descriptor-driven imports.
+
+- df5bf44: GitHub Copilot: raise global MCP/Hooks to native, permissions to partial, fix the project-scope hooks matcher bug, and drop the phantom global commands surface.
+  - **MCP (global): none → native**. `~/.copilot/mcp-config.json` (`mcpServers` key — distinct from the project-scope `.vscode/mcp.json` `servers` key) now round-trips canonical MCP servers via generator + importer, wired through `globalSupport.scopeExtras` (per https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-mcp-servers). The prior ledger cell for this cell pointed at the OS-specific VS Code user-profile `mcp.json` (`~/.config/Code/User/mcp.json`, `servers` key) — that models the VS Code extension's own config, not this target's `~/.copilot`-based global scope (every other global path here — `copilot-instructions.md`, `agents/`, `skills/` — lives under `~/.copilot`), so the ledger cell is corrected to Copilot CLI's own path/key.
+  - **Hooks (global): none → native**. `~/.copilot/hooks/agentsmesh.json` (+ wrapper scripts under `~/.copilot/hooks/scripts/`) uses the exact same `{version, hooks}` schema as project scope (https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-hooks), wired independently via `scopeExtras` so the project-shaped generator never leaks into global paths.
+  - **Permissions (global): none → partial**. `~/.copilot/permissions-config.json` records saved tool/directory approvals, but per https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-config-dir-reference it has no deny rules, ask rules, default modes, URL rules, tool filtering, or repository-local shared policy — capped at `partial` with a lint warning rather than a generator that would overclaim control.
+  - **Commands (global): native → none**. Global commands were generated to `.copilot/prompts/{name}.prompt.md`, but no real Copilot surface reads that path: Copilot CLI has no prompt-file/slash-command mechanism at all (maintainer, github/copilot-cli#618, closed: "we do not plan on supporting prompt files"; confirmed absent from the official `~/.copilot` config-dir reference), and VS Code Copilot Chat's own user-level prompt files live in the OS-specific VS Code profile folder, not `~/.copilot`. The phantom path is no longer generated or imported in global scope; project-scope commands (`.github/prompts/*.prompt.md`, a real VS Code Copilot Chat workspace surface) are unaffected.
+  - **Hooks (project, native — fixed)**: `generateHooks` now emits the real top-level `matcher` regex field (https://docs.github.com/en/copilot/reference/hooks-configuration) instead of a non-functional `comment: "Matcher: ..."` field, so hooks actually filter by tool instead of firing unconditionally for every tool. The canonical `'*'` wildcard sentinel is omitted (Copilot compiles `matcher` as `^(?:PATTERN)$`, and `"*"` alone is an invalid regex that would cause the whole entry to be skipped). The importer prefers the real field, falling back to the legacy comment for previously-generated files. (Re-verification note: the research pass also flagged canonical `Notification` hooks as unsupported by Copilot — that does not hold up against the current docs, which document `notification` as a real, supported hook event; no change was made there.)
+
+- 944efc2: Crush: raise Commands to embedded, Permissions to native (project + global); fix generator key, add permissions round-trip importer.
+  - **Commands (project + global): none → embedded**. Canonical commands are projected as skill bundles under `.crush/skills/am-command-<name>/SKILL.md` (with `x-agentsmesh-kind: command` frontmatter) via `serializeCommandSkill`. Crush has no native slash-command file format; embedded projection via `supportsConversion` is the correct level. Import recovers commands through `importEmbeddedSkills`.
+  - **Permissions (project + global): partial/none → native**. Canonical `allow` list maps to `permissions.allowed_tools` and `deny` list maps to `options.disabled_tools` in `crush.json` — both confirmed against the official crush schema.json (`charmbracelet/crush`) and `internal/config/config.go` (`Permissions.AllowedTools`, `Options.DisabledTools`). The generator previously wrote `permissions.denied_tools` (a non-existent field); this is corrected to `options.disabled_tools`. A new `parseCrushPermissions` function in the importer reads both fields back into canonical `permissions.yaml`, completing the native round-trip for both project scope (`crush.json`) and global scope (`~/.config/crush/crush.json`).
+  - **Generator fix**: `generatePermissions` now correctly emits deny-list entries under `options.disabled_tools` instead of the non-existent `permissions.denied_tools` key.
+  - **Lint comment updated**: file-level comment in `lint.ts` updated to reflect native support and the correct field names.
+
+- 45684bd: Cursor: raise permissions to native in both scopes, fix global path to `~/.cursor/cli-config.json`.
+  - **Permissions (project, native)**: canonical `allow`/`deny` entries are now written to `.cursor/cli.json` (project root) and imported back, completing the round-trip. The output format is `{ "permissions": { "allow": [...], "deny": [...] } }` per the official Cursor CLI docs.
+  - **Permissions (global, native — path fix)**: global scope now correctly writes to `.cursor/cli-config.json` (resolved as `~/.cursor/cli-config.json`), distinct from the project-scope `.cursor/cli.json`. The previous implementation used `.cursor/cli.json` for both scopes, landing permissions at `~/.cursor/cli.json` — an undocumented path that Cursor does not read. Source: https://cursor.com/docs/cli/reference/permissions.
+  - **lintPermissions removed**: the stale `'Cursor permissions are partial; tool-level allow/deny may lose fidelity.'` warning no longer fires. Cursor permissions are fully round-trippable at the `native` level; emitting a partial warning was factually incorrect after the capability upgrade.
+  - **Importer (global scope)**: `importSettings` now reads from `.cursor/cli-config.json` when called in global scope, matching the generate path.
+
+- cc7de10: Deep Agents CLI: fix per-agent global paths, raise Agents to native and Commands to embedded, downgrade project Hooks to none.
+  - **Hooks (project, native → none)**: docs.langchain.com/oss/javascript/deepagents/code/hooks documents only the global `~/.deepagents/hooks.json` — there is no project-level hooks surface at all. `generateHooks()` is removed from the project generator; project `capabilities.hooks` is now `none`, with a `lintHooks` warning when canonical hooks exist but can't be projected.
+  - **Hooks (global, native, broken-fix)**: the generator wrote the Claude-Code-style `{EventName: [{matcher, hooks:[...]}]}` shape, which Deep Agents Code never reads — the real schema is a flat `{"hooks":[{"command":[...], "events":[...]}]}` array with its own dotted event vocabulary (`session.start`, `task.complete`, …). Added `hooks-format.ts` (canonical ⇄ Deep Agents event mapping, limited to the 5 events with an honest 1:1 match — `SessionStart`/`SessionEnd`/`UserPromptSubmit`/`Stop`/`PreCompact`) and moved generation to `globalSupport.scopeExtras` (gated on `scope === 'global'`) so it never leaks into project scope. Added a matching importer (`importDeepagentsCliGlobalHooks`) — hooks previously had no round-trip at all.
+  - **Agents (project + global, none → native)**: `.deepagents/agents/{name}/AGENTS.md` (project) and `~/.deepagents/{agent}/agents/{name}/AGENTS.md` (global) are a dedicated on-disk subagent surface, distinct from skills — previously agentsmesh only projected agents as skills (`am-agent-*`). Added a native generator/importer (`agent-format.ts`) emitting the documented frontmatter (`name`, `description`, optional `model`) instead of the richer Claude-Code-style fields no Deep Agents subagent reads.
+  - **Commands (project + global, none → embedded)**: no dedicated command file format exists; commands are (and already were) projected as skills via the existing `am-command-*` mechanism. Only the declared capability level was wrong — output is unchanged.
+  - **Global paths (broken-fix)**: global rules/skills/agents were generated to the exact same flat paths as project scope (`.deepagents/AGENTS.md`, `.deepagents/skills/`) instead of the documented per-agent-instance directory `~/.deepagents/{agent}/...` (default instance name `"agent"`). Fixed via `DEEPAGENTS_CLI_DEFAULT_AGENT_NAME` threaded through the global constants — global root/skills/agents now resolve under `.deepagents/agent/...`. MCP (`.mcp.json`) and hooks (`hooks.json`) are unaffected — both are flat, unscoped globals per the docs.
+  - Updated `src/targets/catalog/capability-ledger.json`: added confirmed cells for `hooks/global`, `rules/global`, `skills/global`, `agents/project`, `agents/global`, `commands/project`, `commands/global`; `hooks/project` marked `rejected`.
+
+- 969b4a4: Factory Droid: fix hooks output path regression and raise permissions to native.
+  - **Hooks (project + global, native — path corrected)**: The primary hooks surface is `.factory/hooks.json` (project) and `~/.factory/hooks.json` (global) per the official Factory Droid reference docs (`docs.factory.ai/reference/hooks-reference`). The branch had regressed this to `.factory/settings.json` (only a documented fallback when `hooks.json` is absent), which would cause generated hooks to be silently ignored whenever a real `hooks.json` exists. The generator, importer, constants, and managed-outputs arrays are restored to target `.factory/hooks.json` as the primary surface.
+  - **Permissions (project + global): partial → native**. `commandAllowlist` and `commandDenylist` are documented top-level keys of `.factory/settings.json` at both project and global scope (plain JSON, not GUI-only or cloud-managed). A new `generatePermissions` generator writes canonical `allow` → `commandAllowlist` and `deny` → `commandDenylist`; a new `importFactoryDroidPermissions` helper reads them back into `.agentsmesh/permissions.yaml`. The misleading lint warning (which directed users to manually edit the file we now generate) is removed.
+  - **`.factory/settings.json`** is now the dedicated permissions file; **`.factory/hooks.json`** is the dedicated hooks file. Both are tracked in `managedOutputs.files`.
+
+- b4b78f5: Gemini CLI: upgrade hooks from partial to native and extend canonical↔Gemini hook event mapping to all supported events.
+  - **Hooks (project + global): partial → native**. Gemini CLI reads hooks natively from `.gemini/settings.json` (project) and `~/.gemini/settings.json` (global), confirmed against upstream `settingsSchema.ts`. Both scopes are file-writable with full round-trip support.
+  - **Extended hook event mapping**: the generator and importer previously mapped only 3 events (PreToolUse↔BeforeTool, PostToolUse↔AfterTool, Notification↔Notification). Gemini CLI's schema defines 11 hook events; 6 now have canonical equivalents and are fully wired:
+
+    | Canonical (agentsmesh) | Gemini CLI             |
+    | ---------------------- | ---------------------- |
+    | `PreToolUse`           | `BeforeTool`           |
+    | `PostToolUse`          | `AfterTool`            |
+    | `Notification`         | `Notification`         |
+    | `SubagentStart`        | `BeforeAgent` _(new)_  |
+    | `SubagentStop`         | `AfterAgent` _(new)_   |
+    | `SessionStart`         | `SessionStart` _(new)_ |
+
+    The 5 Gemini-only events (`SessionEnd`, `PreCompress`, `BeforeModel`, `AfterModel`, `BeforeToolSelection`) have no canonical equivalent and are silently dropped on import, as before for any unmapped event. The lint `supported` list is updated to match; `SubagentStart`, `SubagentStop`, and `SessionStart` no longer produce spurious unsupported-event warnings.
+
+- 27799dd: Goose: raise commands/agents to embedded, mcp/permissions to partial, fix lintMcp scope-gate.
+  - **commands (project + global): none → embedded**. Canonical commands are projected as Goose skills under `.agents/skills/<name>/SKILL.md` with `name`/`description` frontmatter, discoverable by Goose's skills system at both project and global (`~/.agents/skills/`) scope.
+  - **agents (project + global): none → embedded**. Canonical agents are projected as skills under `.agents/skills/<agent-name>/SKILL.md`, consistent with the commands projection path.
+  - **mcp (project): none → partial**. Goose has no per-project MCP config file; all MCP extensions live in `~/.config/goose/config.yaml` (global, native). A lint warning is emitted when canonical MCP servers are present at project scope, directing users to configure extensions globally via `goose configure`.
+  - **permissions (project): none → partial**. Goose tool permissions live exclusively in `~/.config/goose/permission.yaml` (global, native). A lint warning is emitted when canonical permissions are present at project scope.
+  - **lintMcp scope-gate (bug fix)**. `lintMcp` previously accepted no `options` argument and always emitted a "project-level MCP is not projected" warning, even at global scope where MCP is native. The function now matches the `lintPermissions` pattern: it accepts `options?: unknown`, reads `scope` via narrowing, and returns `[]` at global scope.
+
+- ac93729: Jules: raise Commands, MCP, Hooks, Ignore, and Permissions from none to partial; fix engine ignore-dispatch gap.
+  - **Commands (project, none → partial)**: Jules has no slash-command or prompt-file mechanism. Tasks are submitted via GitHub issues or the web UI. No commands config file surface exists. `lintCommands` warns when canonical commands are present but cannot be projected.
+  - **MCP (project, none → partial)**: No MCP configuration surface is mentioned anywhere in Jules documentation. Jules is cloud-hosted with no writable file surface for MCP. `lintMcp` warns when canonical MCP servers are present but cannot be projected.
+  - **Hooks (project, none → partial)**: Jules has no lifecycle hook system. It is async and cloud-based with no local hook execution mechanism. `lintHooks` warns when canonical hooks are present but cannot be projected.
+  - **Ignore (project, none → partial)**: Jules has no dedicated ignore file (no `.julesignore` or similar surface). It is a cloud agent with no local ignore mechanism. `lintIgnore` warns when canonical ignore patterns are present but cannot be projected.
+  - **Permissions (project, none → partial)**: Jules has no permissions configuration file. Permission-like controls exist only via GitHub PR review workflows (GUI), not a writable file. `lintPermissions` warns when canonical permissions are present but cannot be projected.
+  - **Engine fix — ignore dispatch gap (linter.ts)**: `descriptor.lint?.ignore` was never dispatched by the engine. The `lintSilentFeatureDrops` guard only fires for `capability.level === 'none'`, so promoting ignore from `none` to `partial` silently dropped the only warning path. The engine now dispatches `descriptor.lint?.ignore` when the `ignore` feature is enabled, matching how commands, mcp, permissions, and hooks are dispatched. This fix applies to all targets with `ignore: 'partial'` and a `lint.ignore` hook.
+
+  All primary-doc claims verified against https://jules.google/docs.
+
+- 5dcf731: fix(junie): correct allowlist.json schema, raise hooks/global to embedded, raise permissions/project to partial
+
+  **Breaking fix — allowlist.json schema correction (permissions/global)**
+
+  `generatePermissions` previously emitted `rules` as a flat array of
+  `{type, name, behavior}` objects. The real `~/.junie/allowlist.json` schema
+  requires `rules` to be an object with four categorized sub-keys
+  (`fileEditing`, `executables`, `mcpTools`, `readOutsideProject`), each
+  containing a `rules` array of `{prefix|pattern, action}` items — no `type`,
+  `name`, or `behavior` field exists anywhere in the real schema. The old output
+  was silently ignored by Junie, making all permission rules non-functional.
+  Canonical allow/deny/ask entries are now mapped to the `executables` category
+  using `prefix` (literal) or `pattern` (glob) fields with `action: allow|ask`
+  (Junie has no deny action; deny is mapped to ask as the safe equivalent).
+
+  **hooks/global raised: partial → embedded**
+
+  `~/.junie/config.json` is a writable multi-feature file with a top-level
+  `hooks` key that Junie auto-loads. Hooks are now folded into this file via
+  `emitScopedSettings`. A `mergeGeneratedOutputContent` hook preserves
+  pre-existing keys (model, provider, brave, mcp-locations, etc.) on
+  regeneration. The lint warning for project-scope hooks (which require
+  `--config-location` and are ignored from the default project config file for
+  safety) is preserved.
+
+  **permissions/project raised: none → partial**
+
+  `.junie/config.json` at project scope exposes a `brave` boolean (auto-approve
+  mode). This is a coarse project-level permission control. A `lintPermissions`
+  warning is now emitted when granular allow/deny/ask rules are configured,
+  explaining that only the `brave` flag is available at project scope.
+
+  **generator.ts split**
+
+  Global-scope config emitters (`generatePermissions`, `emitJunieScopedSettings`,
+  `mergeJunieConfig`) moved to a new `global-config.ts` module to keep both
+  files under 200 lines.
+
+- 41fd095: Kilo Code: fix broken global-scope capabilities, downgrade global Ignore, raise Hooks to partial.
+  - **Rules / AdditionalRules / Commands / Agents (global, native — fixed)**: global-scope paths now point at the documented `~/.config/kilo/` unified config directory instead of the old `~/.kilo/` mirror. Per https://kilo.ai/docs/getting-started/settings, kilo reads global config from `~/.config/kilo/kilo.jsonc` (and its sibling `~/.config/kilo/AGENTS.md`), not `~/.kilo/`. Root rule → `~/.config/kilo/AGENTS.md` (https://kilo.ai/docs/customize/custom-instructions); commands → `~/.config/kilo/commands/*.md` (https://kilo.ai/docs/customize/workflows); agents → `~/.config/kilo/agents/*.md` (https://kilo.ai/docs/customize/custom-subagents — note `custom-modes.md` inconsistently shows a singular `agent/` in three spots, but the dedicated `custom-subagents.md` page states plural `agents/` in its Configuration Precedence list, Method 2 directory list, and legacy-migration note; treated as authoritative). Additional (non-root) rules are now also registered under the `instructions` key of the shared `kilo.jsonc` (https://kilo.ai/docs/customize/custom-rules) — a bare `.kilo/rules/`-style directory is not auto-loaded at global scope, only `AGENTS.md` is. Global Skills were re-verified and are unchanged: `~/.kilo/skills/` is the correct, currently-documented location (https://kilo.ai/docs/customize/skills), separate from the `~/.config/kilo/` migration.
+  - **MCP (global, native — fixed)**: MCP servers now fold into the `mcp` key of the shared `~/.config/kilo/kilo.jsonc` (https://kilo.ai/docs/automate/mcp/using-in-kilo-code) using kilo's own schema (`{ type: "local"|"remote", command: [...], environment, url, headers }`), instead of a standalone `~/.kilo/mcp.json` with the unrelated `mcpServers` wrapper kilo does not read at global scope. A new `importGlobalKiloMcp()` reads it back. `mergeKiloConfig` now overlays `instructions` and `mcp` alongside the existing `permission` key so permissions, rules, and MCP writes to the same file compose correctly across one generate run (`pending?.content ?? existing` base, per this repo's settings-merge-discipline rule).
+  - **Ignore (global): native → none**. `~/.kilocodeignore` is no longer generated or imported. Per https://kilo.ai/docs/customize/context/kilocodeignore, `.kilocodeignore` is documented as a workspace-root-only file (patterns evaluated relative to the workspace root, auto-migrated into project-scope `permission` deny-rules) — there is no global ignore file or `kilo.jsonc` key.
+  - **Hooks (project + global, none → partial)**: Kilo Code hooks are supported via auto-loaded plugin files at `.kilo/plugin/*.{ts,js}` (and their global equivalents), not via a writable config surface. agentsmesh cannot generate plugin code from canonical hook definitions. `lintHooks` warns when canonical hooks are present and directs users to author plugin files manually. No hook file is generated at either scope.
+  - Updated `src/targets/catalog/capability-ledger.json`: added confirmed `kilo-code` global cells for `rules`, `additionalRules`, `commands`, `agents`, `skills`, and `mcp`; added a rejected `kilo-code/ignore/global` cell recording the downgrade rationale.
+
+- 054ff57: kiro: migrate hook schema to v1, raise hooks/global and permissions to partial
+  - Hook JSON schema migrated from deprecated beta format (`version:"1"`, `when`/`then`, `askAgent`/`shellCommand`) to the current Kiro v1.0.0 format (`version:"v1"`, top-level `hooks` array, `trigger`/`action` with `agent`/`command` types). Old-format hooks are no longer active in Kiro IDE v1.0.0+.
+  - Hook file extension renamed from `.kiro.hook` to `.json` (Kiro v1.0.0 requires `.json`).
+  - `globalCapabilities.hooks` raised from `none` to `partial` (global ~/.kiro/hooks/ path does not exist; hooks are workspace-only).
+  - `globalCapabilities.permissions` raised from `none` to `partial` (Kiro v3 CLI exposes `~/.kiro/settings/permissions.yaml`; agentsmesh does not yet generate it).
+  - `capabilities.permissions` (project scope) raised from `none` to `partial` (workspace permissions live at `~/.kiro/workspace-roots/<hash>/permissions.yaml`, outside the repo).
+  - `lintPermissions` added: emits a warning when canonical permissions are non-empty, directing users to configure permissions manually.
+
+- 27f3a61: OpenCode: fix broken AdditionalRules and Agents, raise Hooks and Ignore to partial.
+  - **AdditionalRules (project + global, native — fixed)**: `.opencode/rules/<slug>.md` files are now also declared in `opencode.json`'s `instructions` array (project: `.opencode/rules/*.md`; global: an absolute `~/.config/opencode/rules/*.md`). Per https://opencode.ai/docs/rules/, OpenCode does not auto-scan any rules directory — only `AGENTS.md`/`CLAUDE.md` auto-discover via directory traversal, and every other instruction file needs an explicit `instructions` entry. Previously the generated rule files were invisible to stock OpenCode.
+  - **Engine gate fix (core)**: `generateScopedSettingsFeature` was only invoked when at least one of `mcp`, `ignore`, `hooks`, `agents`, or `permissions` was enabled — `rules` was absent from the gate condition. With `features: ['rules']` alone (no other features), `emitOpenCodeScopedSettings` was never reached, so the `instructions` glob was never written to `opencode.json`. The gate now also fires when `hasRules` is true, making the instructions entry visible again for rules-only configs.
+  - **Agents (project + global, native — fixed)**: `.opencode/agents/<slug>.md` now emits a real `permission` object (e.g. `permission: { edit: deny }`) mapped from canonical `tools`/`disallowedTools`, instead of `tools`/`disallowedTools` frontmatter keys. Per https://opencode.ai/docs/agents/, OpenCode has no `disallowedTools` key at all, and `tools` is deprecated ("Prefer the agent's permission field") and takes a boolean-map shape, not a string array — both emitted keys were silently non-functional. The importer now translates an imported `permission` object back into canonical `tools`/`disallowedTools` so the restriction round-trips (categorically, not by original tool name).
+  - **Fix (opencode.json merge)**: `mergeOpenCodeSettings` previously delegated to the generic Claude-shaped settings merger, which only ever carried over `permissions`(plural)/`hooks` from freshly generated content — silently freezing `mcp`/`permission`/`instructions` at whatever a first `generate` wrote, on every subsequent regenerate. It now merges OpenCode's own `mcp`/`permission`/`instructions` keys directly.
+  - **Hooks (project, none → partial)**: OpenCode hooks are plugin-based TypeScript/JavaScript lifecycle events (`.opencode/plugins/`), not a writable config surface that agentsmesh can generate. `lintHooks` warns when canonical hooks are present, directing users to author plugins manually. No hook file is generated.
+  - **Ignore (project, none → partial)**: OpenCode's ignore configuration lives under the `watcher.ignore` key of `opencode.json` rather than a standalone file, and mapping canonical glob-patterns to that key has no clean round-trip. `lintIgnore` warns when canonical ignore patterns are present, directing users to configure `watcher.ignore` manually. No ignore file is generated.
+
+- 27c977f: Correct pi-agent capability levels based on primary-source verification of the earendil-works/pi repository.
+  - `mcp` (project + global): `partial` → `none`. A full recursive tree scan of the earendil-works/pi repository finds zero MCP-related source files. Pi has no native MCP config file surface — neither at project scope (`.pi/`) nor global scope (`~/.pi/agent/`). The extension system supports custom TypeScript tools and lifecycle events but not the MCP protocol. Declaring `partial` was inaccurate; `none` re-enables the silent-drop guard. The `lintMcp` stub (which falsely claimed MCP was managed via `extensions`) is removed.
+  - `hooks` (project + global): `none` → `partial`. Pi Agent lifecycle hooks are supported via TypeScript extensions auto-discovered from `.pi/extensions/` (project) and `~/.pi/agent/extensions/` (global). These are hand-authored code files, not a writable config surface, which justifies `partial`. A `lintHooks` warning is emitted when canonical hooks are present.
+  - `ignore` (project + global): `none` → `partial`. Pi has no dedicated ignore file; it relies on `.gitignore`. A `lintIgnore` warning is emitted to inform users that canonical ignore patterns are not projected.
+  - `permissions` (project + global): `none` → `partial`. Pi has no built-in permissions config; permissions can be implemented via extension hooks. A `lintPermissions` warning is emitted when canonical permissions are present.
+
+- c24a762: Qwen Code: raise global AdditionalRules to native and fix broken rule/command frontmatter keys.
+  - **AdditionalRules (global, embedded → native)**: non-root rules now generate real files under `~/.qwen/rules/<slug>.md` instead of being folded into `~/.qwen/QWEN.md`'s body. Qwen Code's `loadRules()` (`rulesDiscovery.ts`) reads `.qwen/rules/` recursively from **both** the global `~/.qwen` dir and the project dir with the identical mechanism, so there's no reason to embed. A new `QWEN_GLOBAL_RULES_DIR` constant, global layout rewrite, and importer-spec global source wire this up; the now-unused `renderQwenGlobalInstructions` embedding helper is removed.
+  - **AdditionalRules (project + global, native — fixed)**: the emitted frontmatter key for path-scoped rules changes from `globs:` to `paths:` in `.qwen/rules/<slug>.md`. Qwen Code's `parseRuleFile()` only recognizes `paths:` for conditional (turn-level lazy) rule injection — `globs:` was never read, so any canonical rule with path-scoping silently became an always-injected baseline rule. The importer's `frontmatterRemap` now maps the on-disk `paths:` key back to the canonical `globs` field so round-tripping still works.
+  - **Commands (project + global, native — fixed)**: the generator no longer emits `allowed-tools` into `.qwen/commands/<name>.md` frontmatter. Qwen Code's `MarkdownCommandDefSchema` (`markdown-command-parser.ts`) only maps `description`, `argument-hint`, `when_to_use`, and `disable-model-invocation` — there is no tool-restriction field, so the value was silently ignored. A new `lintCommands` warning flags canonical commands with non-empty `allowedTools` for this target.
+
+  Source: https://github.com/QwenLM/qwen-code/blob/main/packages/core/src/utils/rulesDiscovery.ts, https://github.com/QwenLM/qwen-code/blob/main/packages/cli/src/services/markdown-command-parser.ts, https://github.com/QwenLM/qwen-code/blob/main/packages/cli/src/services/FileCommandLoader.ts
+
+- 73b4872: replit-agent: raise MCP, Hooks, Ignore, and Permissions from none to partial; add no-op generator stubs to satisfy schema contract.
+  - **MCP (project, none → partial)**: Replit Agent MCP servers are configured exclusively via the Integrations UI pane, not via any project-local file. `lintMcp` warns when canonical MCP servers are present but cannot be projected. `generateMcp` is a no-op stub (returns `[]`) satisfying the descriptor schema contract.
+  - **Hooks (project, none → partial)**: Replit Agent has no lifecycle hook file surface. Hook state transitions (Draft, Active, Queued, etc.) are internal platform states, not user-writable hooks. `lintHooks` warns when canonical hooks are present but cannot be projected. `generateHooks` is a no-op stub (returns `[]`).
+  - **Ignore (project, none → partial)**: Replit Agent has no dedicated ignore file (no `.replitignore` or similar). The agent relies on `.gitignore` for version-control purposes, but no Replit-specific file-based ignore surface exists. `lintIgnore` warns when canonical ignore patterns are present but cannot be projected. `generateIgnore` is a no-op stub (returns `[]`).
+  - **Permissions (project, none → partial)**: Replit Agent permissions are managed in the cloud UI with no writable file surface in the project. `lintPermissions` warns when canonical permissions are present but cannot be projected. `generatePermissions` is a no-op stub (returns `[]`).
+
+  All primary-doc claims verified against https://docs.replit.com/references/mcp/overview, https://docs.replit.com/replitai/agent, https://docs.replit.com/references/agent/task-lifecycle, and https://docs.replit.com/replitai/replit-dot-md.
+
+- d715e69: Roo Code: fix broken capabilities and correct mislabeled support levels.
+  - **Agents (project, native — fixed)**: `.roomodes` custom modes now include a `groups` array (mapped from canonical agent `tools`) and always a non-empty `roleDefinition`. Roo Code's `modeConfigSchema` requires both fields with no default — omitting either made `CustomModesManager.loadModesFromFile()` silently drop every mode in the file.
+  - **Agents (global, partial — fixed)**: the settings file now writes to `~/.roo/settings/custom_modes.yaml` (was missing the `.roo/` prefix, i.e. `~/settings/custom_modes.yaml`) and carries the same `groups`/`roleDefinition` fix. Stays `partial`: Roo Code's real read path is a non-deterministic per-OS/per-fork VS Code extension `globalStorage` directory that `--global` cannot resolve deterministically.
+  - **Rules (global, native — fixed)**: the root rule now stays at `~/.roo/rules/00-root.md` instead of being redirected to `~/.roo/AGENTS.md`. Roo Code's `loadRuleFiles()` reads `.roo/rules/` from both the global `~/.roo` directory and the project directory; `loadAllAgentRulesFiles()` never reads a home-directory `AGENTS.md`. The old `~/.roo/AGENTS.md` path is kept as a lowest-priority import fallback for users migrating from the old (buggy) output.
+  - **MCP (global): native → partial**. `~/mcp_settings.json` is still written, but Roo Code's `McpHub.getMcpSettingsFilePath()` actually resolves via `context.globalStorageUri.fsPath + '/settings/mcp_settings.json'` — a non-deterministic per-OS/per-fork path agentsmesh cannot target. A new global-scope lint warning explains this.
+  - **Ignore (global): native → none**. `~/.rooignore` is no longer generated or imported. `RooIgnoreController` only ever reads `.rooignore` from the open workspace (`path.join(cwd, '.rooignore')`) — there is no home-directory/global ignore concept. A new global-scope lint warning explains the drop.
+  - **Permissions (project): partial → native**. Canonical `allow`/`deny` command-prefix rules are now written to (and read back from) `.vscode/settings.json` under `roo-cline.allowedCommands` / `roo-cline.deniedCommands` — real, workspace-scoped VS Code settings Roo Code's `package.json` contributes without a `scope: application` restriction. The file is merged (read-modify-write), never overwritten. Scoped to command-prefix allow/deny only — canonical "ask" rules have no Roo Code equivalent and are lint-warned instead. Global scope stays `partial` (no deterministic VS Code user-settings path).
+  - **Import-map (global root-rule) — fixed**: `src/core/reference/import-maps/roo-code.ts` now registers `.roo/rules/00-root.md` (`ROO_CODE_GLOBAL_ROOT_RULE`) as the primary `_root.md` alias in global scope, and adds a skip guard in the global rules-dir iteration so the root file is not double-mapped to `.agentsmesh/rules/00-root.md`. The legacy `.roo/AGENTS.md` path is kept as a secondary fallback alias for users migrating from the old (buggy) output. Previously, cross-reference rewriting for the global root rule was broken: links pointing to the root resolved to `.agentsmesh/rules/00-root.md` instead of `.agentsmesh/rules/_root.md`.
+
+- e61f789: Rovo Dev: raise Commands and Agents to native/embedded, add Ignore partial, fix MCP path, fix permissions schema.
+  - **Commands (project + global, none → native)**: `.rovodev/prompts.yml` (repo root) and `~/.rovodev/prompts.yml` (global user prompts) are real, documented saved-prompts manifests — https://support.atlassian.com/rovo/docs/save-and-reuse-a-prompt-in-rovo-dev-cli/ documents both the repo-root/cwd tier and the `~/.rovodev/prompts.yml` "global user prompts" tier. Canonical commands now generate a `prompts.yml` manifest entry (`name`/`description`/`content_file`) plus a `.rovodev/commands/<name>.md` content file, and both are read back on import. Commands are no longer projected as skills (`am-command-*` skill dirs) for this target.
+  - **Agents (project + global, none → embedded)**: Rovo Dev has no native agent file format; agents are projected as skill bundles under `.rovodev/skills/am-agent-<name>/SKILL.md` (project) and `~/.rovodev/skills/am-agent-<name>/SKILL.md` (global) via `supportsConversion: { agents: true }`. The old `supportsConversion: { commands: true, agents: true }` for commands is removed since commands are now native (no longer need conversion).
+  - **Ignore (project + global, none → partial)**: Rovo Dev has no dedicated project-level ignore file surface. `lintIgnore` warns when canonical ignore patterns are present but cannot be projected.
+  - **MCP (project): native → partial**. No project-level MCP config file is documented for Rovo Dev — only `~/.rovodev/mcp_config.json` (global) exists. `.rovodev/mcp.json` is no longer generated or imported at project scope; a `lintMcp` warning explains the drop to users. (Final level is `partial`, not `none` — the lint stub satisfies the schema contract.)
+  - **MCP (global): native — fixed path**. The generated/imported file is renamed from `~/.rovodev/mcp.json` to `~/.rovodev/mcp_config.json`, the actual documented filename (configurable via `mcp.mcpConfigPath` in `~/.rovodev/config.yml`).
+  - **Permissions (global): native — fixed schema**. `~/.rovodev/config.yml`'s `toolPermissions` now emits the real nested shape (`toolPermissions.tools.<name>: allow|ask|deny`, with bash rules under `toolPermissions.tools.bash.default` / `toolPermissions.tools.bash.commands[]`) instead of a flat `{allow:[],deny:[],ask:[]}` list the CLI never reads.
+
+  Source: https://support.atlassian.com/rovo/docs/manage-rovo-dev-cli-settings/, https://support.atlassian.com/rovo/docs/save-and-reuse-a-prompt-in-rovo-dev-cli/
+
+- f5df6c1: Trae: fix agents round-trip, raise hooks to native, add full test coverage.
+  - **Agents (project + global, native — fixed)**: `.trae/agents/<name>.md` files are now imported back via the descriptor importer (`preset: 'agent'`). The `importer` block previously had no `agents` key, so `agentsmesh import` silently dropped every agent file written by `agentsmesh generate`, breaking every generate→edit→import round-trip. Project agents import from `.trae/agents/`, global agents from `.trae-cn/agents/` (Trae CN edition). A canonical `TRAE_CANONICAL_AGENTS_DIR` constant and `importer-spec.ts` module were added.
+  - **Hooks (project + global, partial → native)**: Trae's official documentation (docs.trae.cn/ide_hook-configuration-reference) confirms a fully writable file-based hook system. Project hooks live at `$PROJECT/.trae/hooks.json`; global hooks at `~/.trae-cn/hooks.json` (macOS/Linux). Both use a flat JSON schema: `{ "version": 1, "hooks": { "<Event>": [{ "matcher", "type", "command", "timeout"? }] } }`. `generateHooks` now serialises canonical command-type hooks to this format; `importHooks` in `importer.ts` reads them back into `hooks.yaml`. Prompt/agent hook types are dropped on both sides for a symmetric round-trip. The previous partial-level `lintHooks` warning is removed.
+  - **Test coverage added**: `generateAgents` unit tests (path, frontmatter fields, tools conditional, model conditional, empty-array short-circuit, body trim); `generateHooks` unit tests (null, empty, single event, multi-event, timeout omit, prompt-drop); `rewriteGeneratedPath` tests for agents (`.trae/agents/` → `.trae-cn/agents/`) and hooks (`.trae/hooks.json` → `.trae-cn/hooks.json`); project and global agentPath tests in `descriptor-paths.test.ts`; agents + hooks import round-trip tests in `importer.test.ts` for both project and global scope.
+  - **File size**: `index.ts` (was 205 lines) refactored to delegate the importer spec to `importer-spec.ts`, bringing it to 181 lines (within the 200-line rule).
+
+- c09be1c: Warp: correct project MCP path to `.warp/.mcp.json` (Warp's own native surface) and raise five additional capabilities.
+
+  **Path correction (project MCP):** `agentsmesh generate` now writes MCP servers to `.warp/.mcp.json` at the project root — Warp's own native project-scope config — instead of `.mcp.json`. The root `.mcp.json` is a cross-tool compatibility path Warp reads via autodiscovery (not its own primary surface). `agentsmesh import --from warp` reads `.warp/.mcp.json` accordingly.
+
+  **Capability raises (both scopes unless noted):**
+  - `commands`: none → embedded — commands are projected as Warp skill bundles under `.warp/skills/`.
+  - `hooks`: none → partial — Warp has no file-based lifecycle hooks; a lint warning is emitted when hooks are configured (no file is generated).
+  - `ignore`: none → partial — Warp has no ignore-file surface; a lint warning is emitted when ignore patterns are configured.
+
+  **Global scope only:**
+  - `mcp`: none → native — `agentsmesh generate --global` writes MCP servers to `~/.warp/.mcp.json` (standard `mcpServers` JSON), and `agentsmesh import --global` reads it back to canonical.
+
+- 5be661a: fix(windsurf): raise additionalRules global partial→embedded, add permissions partial, add unit tests
+
+  ## Changes
+
+  **globalCapabilities.additionalRules: partial → embedded (global scope)**
+
+  Windsurf's global additional rules are embedded into the single aggregate file
+  `~/.codeium/windsurf/memories/global_rules.md` (confirmed by official Devin Desktop
+  documentation at https://docs.devin.ai/desktop/cascade/memories). Per-rule files do
+  not exist at global scope. `renderWindsurfGlobalInstructions` is now wired as
+  `globalLayout.renderPrimaryRootInstruction` and appends non-root rules via
+  `appendEmbeddedRulesBlock`. Branch coverage tests added to
+  `tests/unit/targets/windsurf/rules-branches.test.ts`.
+
+  **permissions: none → partial (project and global scopes)**
+
+  `windsurf.cascadeCommandsAllowList` and `windsurf.cascadeCommandsDenyList` are real
+  VS Code extension settings (documented at https://docs.windsurf.com/windsurf/terminal).
+  The settings surface is real but does not meet the native threshold: no official
+  documentation specifies a writable file path or workspace-scope support for these keys —
+  all docs reference "Command Palette → Open Settings (UI)". Partial is the accurate level
+  for both scopes. `lintPermissions` is added to both the project and global descriptor
+  lint hooks to emit a warning when canonical permissions are present. Branch coverage tests
+  added to `tests/unit/targets/per-target-lint-branches-2.test.ts`.
+
+  **Deferred: .devin/rules/ path (Devin Desktop rebrand)**
+
+  Windsurf rebranded to Devin Desktop on June 2 2026. The new preferred workspace rules
+  directory is `.devin/rules/` (`.windsurf/rules/` is kept as legacy fallback per official
+  docs). The importer, generator, import-maps, and detection paths have not been updated to
+  support `.devin/rules/`. This is a deferred follow-up tracked separately; the `native`
+  level for `additionalRules` at project scope remains accurate because `.windsurf/rules/`
+  is still read by Devin Desktop.
+
+- 4cca64a: fix(zed): revert hooks to none, wire global skills round-trip
+
+  ## Changes
+
+  **hooks: partial → none (project and global)**
+
+  Zed lifecycle hooks (agent.hooks) are a 2026 GitHub proposal (#57890,
+  #57943) that has never shipped. No writable hooks surface exists in any
+  stable or preview release. Reverted both project and global hooks capability
+  from 'partial' to 'none'. The lintHooks descriptor entry is removed; the
+  generic silent-drop-guard now issues the warning when canonical hooks are
+  present. The lintHooks message itself ("Zed has no lifecycle hook system")
+  confirmed the over-claim.
+
+  **globalCapabilities.skills: wired generator and importer (native, confirmed)**
+
+  Zed v1.4.0+ officially reads global skills from ~/.agents/skills/ (confirmed
+  at https://github.com/zed-industries/zed/blob/main/docs/src/ai/skills.md).
+  The native claim was correct per primary docs but the round-trip was broken:
+  - Added `ZED_GLOBAL_SKILLS_DIR = '.agents/skills'` constant (home-relative,
+    same suffix as project because Zed uses the same dir name at both scopes).
+  - Added `skillDir: ZED_GLOBAL_SKILLS_DIR` to globalLayout so the reference
+    rewriter maps skill references correctly in global scope.
+  - Added `.agents/skills` to `globalLayout.managedOutputs.dirs`.
+  - Removed the `scope === 'project'` guard in importFromZed so global import
+    reads skills from .agents/skills/ (relative to the home-dir projectRoot).
+
+  The generator already emits to `.agents/skills/*` which, in global mode
+  (projectRoot = home dir), correctly resolves to ~/.agents/skills/\*.
+
+### Patch Changes
+
+- 059b177: Capability ledger: add a `text` format for plain-text surfaces (shell hook scripts, Starlark permission rules, gitignore-style files) so conformance checks them by path/extension instead of mislabeling them as markdown.
+- 0ea9e4f: Crush: fix global-scope settings merge — `mergeGeneratedOutputContent` now also matches the global `~/.config/crush/crush.json` path, so mcp, hooks, and permissions merge into one file instead of overwriting each other in global mode.
+- e205914: Fix capability-ledger engine: preserve researched maxAchievable ceilings and full fingerprints during merge, report over-declared cells independently from unverified.
+  - `scripts/merge-capability-ledger.ts`: fix two data-loss bugs — (1) confirmed/rejected cells now keep their researched `maxAchievable` ceiling instead of being overwritten by the descriptor level; (2) fingerprint preservation now checks all three arrays (topLevelKeys, requiredFrontmatter, keyChecks), not just topLevelKeys, so manually-added keyChecks and requiredFrontmatter entries are no longer silently wiped.
+  - `src/core/capabilities/merge.ts`: extract merge logic into a pure, unit-tested module (`mergeCell`, `hasNonEmptyFingerprint`). `pnpm capabilities:merge` is now a registered script.
+  - `src/core/capabilities/audit.ts`: report `over-declared` independently from `unverified` — a cell with `verifiedAt=null` and a descriptor that exceeds its `maxAchievable` now appears in the stale bucket with both reasons rather than masking the over-declared signal.
+
+- 2f27b64: schema-test: add no-op generator stubs to satisfy descriptor schema contract across 9 targets; remove pending-validation skip from the builtin-descriptor schema test so all builtins are validated on every run.
+
+  The descriptor schema validator requires a `generateX` function (or `emitScopedSettings` / `globalSupport.scopeExtras`) for every capability whose level is not `'none'`. Nine built-in targets declared partial/native capabilities without a matching generator, causing the schema test to skip them. This change adds minimal no-op stubs (returning `[]`) to each affected target and removes the skip set so the test now validates all 30 built-in descriptors.
+
+  **aider**: add `generateMcp`, `generateHooks`, `generatePermissions` no-op stubs. Aider has no MCP config file, no lifecycle hook system, and no permissions config. Existing lint functions (`lintMcp`, `lintHooks`, `lintPermissions`) surface advisory warnings.
+
+  **deepagents-cli**: add `generateIgnore`, `generatePermissions` no-op stubs. Deep Agents CLI has no dedicated ignore file (relies on `.gitignore`) and permissions are env-var-based. Existing lint functions warn.
+
+  **factory-droid**: add `generateIgnore` no-op stub. Factory Droid relies on `.gitignore` for ignore; the existing `lintIgnore` warns when canonical ignore patterns are present.
+
+  **goose**: add `generatePermissions` no-op stub. Goose permissions are global-only (`~/.config/goose/permission.yaml`, emitted by `scopeExtras`); project-scope has no file surface. `lintPermissions` warns at project scope.
+
+  **jules**: add `generateCommands`, `generateMcp`, `generateHooks`, `generateIgnore`, `generatePermissions` no-op stubs. Jules is a cloud-based async agent that only reads `AGENTS.md`; none of these surfaces exist. Existing lint functions warn.
+
+  **kiro**: add `generatePermissions` no-op stub. Kiro permissions.yaml is not yet generated by agentsmesh. `lintPermissions` warns.
+
+  **pi-agent**: add `generateHooks`, `generateIgnore`, `generatePermissions` no-op stubs. Pi Agent hooks are extension-based (not yet generated), has no dedicated ignore file, and no permissions config. Existing lint functions warn.
+
+  **warp**: add `generateHooks`, `generateIgnore` no-op stubs. Warp has no lifecycle hook system and no dedicated ignore file. Existing lint functions warn.
+
+  **windsurf**: add `generatePermissions` no-op stub in `generator/permissions.ts`. Windsurf terminal permissions are managed via the user settings UI. `lintPermissions` warns.
+
 ## 0.30.2
 
 ### Patch Changes

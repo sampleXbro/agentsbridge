@@ -328,11 +328,51 @@ collaboration:
     });
 
     expect(report.outputsChecked).toBe(true);
+    expect(report.canonicalDrift).toBe(false);
+    expect(report.outputDrift).toBe(true);
     expect(report.outputsModified).toEqual(['AGENTS.md']);
     expect(report.outputsRemoved).toEqual(['CLAUDE.md']);
+    expect(report.outputsStale).toEqual([]);
     expect(report.inSync).toBe(false);
     // Canonical is untouched.
     expect(report.modified).toEqual([]);
+  });
+
+  it('hand-added managed output is reported as stale without changing canonical drift', async () => {
+    const { projectRoot, canonicalDir } = setupBareProject(
+      'version: 1\ntargets: [cursor]\nfeatures: [rules]\n',
+    );
+    writeFileSync(join(canonicalDir, 'rules', '_root.md'), '# stable');
+    const checksums = await buildChecksums(canonicalDir);
+    mkdirSync(join(projectRoot, '.cursor', 'rules'), { recursive: true });
+    writeFileSync(join(projectRoot, '.cursor', 'rules', '_root.mdc'), '# generated');
+    writeFileSync(join(projectRoot, '.cursor', 'rules', 'orphaned.mdc'), '# hand-added');
+    await writeLock(canonicalDir, {
+      generatedAt: '2026-07-18T00:00:00Z',
+      generatedBy: 'test',
+      libVersion: '0.1.0',
+      checksums,
+      extends: {},
+      packs: {},
+      outputs: {
+        '.cursor/rules/_root.mdc': `sha256:${hashContent('# generated')}`,
+      },
+    });
+
+    const config = await loadConfig(projectRoot);
+    const report = await checkLockSync({
+      config,
+      configDir: projectRoot,
+      canonicalDir,
+      rootBase: projectRoot,
+    });
+
+    expect(report.canonicalDrift).toBe(false);
+    expect(report.outputDrift).toBe(true);
+    expect(report.outputsModified).toEqual([]);
+    expect(report.outputsRemoved).toEqual([]);
+    expect(report.outputsStale).toEqual(['.cursor/rules/orphaned.mdc']);
+    expect(report.inSync).toBe(false);
   });
 
   it('old lock without outputs: outputsChecked=false and canonical inSync unaffected', async () => {

@@ -13,10 +13,11 @@ Add `agentsmesh check` and `agentsmesh lint` to your CI pipeline to catch config
 **Drift** happens when:
 - Someone edits `.agentsmesh/` but forgets to run `agentsmesh generate`
 - Someone edits a generated file (`.claude/`, `.cursor/`, etc.) directly
+- Someone adds an unexpected file under a managed generated-output location
 - A PR merges canonical changes without regenerating
 - An `extends` source changes and the project hasn't refreshed
 
-`agentsmesh check` detects all of these. It verifies two things against the stored lock: **canonical-source drift** (the `.agentsmesh/` sources vs. the recorded checksums) and **generated-output drift** (each generated file listed in the lock's `outputs` map, re-hashed on disk to catch direct hand-edits or deletions). Either kind of drift exits with code 1.
+`agentsmesh check` detects all of these. It verifies two things against the stored lock: **canonical-source drift** (the `.agentsmesh/` sources vs. the recorded checksums) and **generated-output drift** (recorded files are re-hashed to catch hand-edits or deletions, and managed output locations are scanned for stale files absent from the lock). Either kind of drift exits with code 1.
 
 ## Basic CI setup
 
@@ -64,6 +65,7 @@ Fails with exit code 1 if any lint errors are found.
 Verifies that both canonical sources and generated tool directories match the lock:
 - Re-hashes `.agentsmesh/` sources against the lock's `checksums` (canonical drift)
 - Re-hashes each generated file recorded in the lock's `outputs` map (generated-output drift)
+- Scans configured targets' managed output locations for stale files absent from the lock
 - Fails with exit code 1 if either has drifted
 
 Locks written before generated-output tracking existed have no `outputs` map; `check` skips output verification and prints a note until you run `agentsmesh generate` once to upgrade the lock. Pass `--no-outputs` to skip output verification deliberately — for example, in CI setups that gitignore generated outputs, where every output would otherwise report as removed after checkout.

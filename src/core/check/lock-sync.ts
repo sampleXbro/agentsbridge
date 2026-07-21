@@ -13,12 +13,18 @@ import {
 } from '../../config/core/lock.js';
 import { resolveExtendPaths } from '../../config/resolve/resolver.js';
 import { diffOutputChecksums } from '../../config/core/lock-outputs.js';
+import { findStaleGeneratedOutputs } from '../generate/stale-cleanup.js';
+import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
 
 export interface LockSyncReport {
-  /** True when the canonical state matches the lock file and no extend drifted. */
+  /** True when canonical state and checked generated outputs are all in sync. */
   readonly inSync: boolean;
   /** True when a `.lock` file was found at the canonical directory. */
   readonly hasLock: boolean;
+  /** True when canonical files or extends differ from the lock. */
+  readonly canonicalDrift: boolean;
+  /** True when a generated output is modified, removed, or stale. */
+  readonly outputDrift: boolean;
   /** Canonical files whose checksum differs from the lock. */
   readonly modified: readonly string[];
   /** Canonical files present now but not in the lock. */
@@ -36,6 +42,8 @@ export interface LockSyncReport {
   readonly outputsModified: readonly string[];
   /** Generated outputs recorded in the lock but missing from disk. */
   readonly outputsRemoved: readonly string[];
+  /** Managed generated outputs present on disk but absent from the lock. */
+  readonly outputsStale: readonly string[];
   /**
    * True when output drift was actually verified — requires `rootBase` and a
    * lock with an `outputs` map. False for old-format locks or when no
@@ -55,6 +63,8 @@ export interface CheckLockSyncOptions {
    * verification is skipped (keeps the programmatic API backward compatible).
    */
   readonly rootBase?: string;
+  /** Output-layout scope used when scanning managed locations for stale files. */
+  readonly scope?: TargetLayoutScope;
 }
 
 /**
@@ -65,13 +75,15 @@ export interface CheckLockSyncOptions {
  * callers decide whether that's a hard error (CI) or just informational.
  */
 export async function checkLockSync(opts: CheckLockSyncOptions): Promise<LockSyncReport> {
-  const { config, configDir, canonicalDir, rootBase } = opts;
+  const { config, configDir, canonicalDir, rootBase, scope = 'project' } = opts;
 
   const lock = await readLock(canonicalDir);
   if (lock === null) {
     return {
       inSync: false,
       hasLock: false,
+      canonicalDrift: false,
+      outputDrift: false,
       modified: [],
       added: [],
       removed: [],
@@ -79,6 +91,7 @@ export async function checkLockSync(opts: CheckLockSyncOptions): Promise<LockSyn
       lockedViolations: [],
       outputsModified: [],
       outputsRemoved: [],
+      outputsStale: [],
       outputsChecked: false,
     };
   }
@@ -130,17 +143,30 @@ export async function checkLockSync(opts: CheckLockSyncOptions): Promise<LockSyn
     ? await diffOutputChecksums(rootBase, lock.outputs ?? {})
     : { outputsModified: [], outputsRemoved: [] };
 
-  const inSync =
-    modified.length === 0 &&
-    added.length === 0 &&
-    removed.length === 0 &&
-    extendsModified.length === 0 &&
-    outputsModified.length === 0 &&
-    outputsRemoved.length === 0;
+  const outputsStale =
+    rootBase !== undefined && lock.outputs !== undefined
+      ? await findStaleGeneratedOutputs({
+          projectRoot: rootBase,
+          targets: [...config.targets, ...config.pluginTargets],
+          expectedPaths: Object.keys(lock.outputs),
+          scope,
+        })
+      : [];
+
+  const canonicalDrift =
+    modified.length > 0 ||
+    added.length > 0 ||
+    removed.length > 0 ||
+    extendsModified.length > 0;
+  const outputDrift =
+    outputsModified.length > 0 || outputsRemoved.length > 0 || outputsStale.length > 0;
+  const inSync = !canonicalDrift && !outputDrift;
 
   return {
     inSync,
     hasLock: true,
+    canonicalDrift,
+    outputDrift,
     modified,
     added,
     removed,
@@ -148,6 +174,7 @@ export async function checkLockSync(opts: CheckLockSyncOptions): Promise<LockSyn
     lockedViolations,
     outputsModified,
     outputsRemoved,
+    outputsStale,
     outputsChecked,
   };
 }

@@ -39,6 +39,7 @@ export async function runCheck(
     configDir: context.configDir,
     canonicalDir: context.canonicalDir,
     rootBase: verifyOutputs ? context.rootBase : undefined,
+    scope,
   });
 
   if (!report.hasLock) {
@@ -46,6 +47,8 @@ export async function runCheck(
       exitCode: 1,
       data: {
         hasLock: false,
+        canonicalDrift: false,
+        outputDrift: false,
         inSync: false,
         modified: [],
         added: [],
@@ -54,6 +57,7 @@ export async function runCheck(
         lockedViolations: [],
         outputsModified: [],
         outputsRemoved: [],
+        outputsStale: [],
         outputsChecked: false,
       },
     };
@@ -63,6 +67,8 @@ export async function runCheck(
     exitCode: report.inSync ? 0 : 1,
     data: {
       hasLock: true,
+      canonicalDrift: report.canonicalDrift,
+      outputDrift: report.outputDrift,
       inSync: report.inSync,
       modified: [...report.modified],
       added: [...report.added],
@@ -71,6 +77,7 @@ export async function runCheck(
       lockedViolations: [...report.lockedViolations],
       outputsModified: [...report.outputsModified],
       outputsRemoved: [...report.outputsRemoved],
+      outputsStale: [...report.outputsStale],
       outputsChecked: report.outputsChecked,
     },
   };

@@ -65,6 +65,10 @@ export interface LintData {
 
 export interface CheckData {
   hasLock: boolean;
+  /** True when canonical files or extends differ from the lock. */
+  canonicalDrift: boolean;
+  /** True when a generated output is modified, removed, or stale. */
+  outputDrift: boolean;
   inSync: boolean;
   modified: string[];
   added: string[];
@@ -75,6 +79,8 @@ export interface CheckData {
   outputsModified: string[];
   /** Generated outputs recorded in the lock but missing from disk. */
   outputsRemoved: string[];
+  /** Managed generated outputs present on disk but absent from the lock. */
+  outputsStale: string[];
   /**
    * True when generated-output drift was actually verified. False for
    * old-format locks (no `outputs` map) or when `--no-outputs` was passed;

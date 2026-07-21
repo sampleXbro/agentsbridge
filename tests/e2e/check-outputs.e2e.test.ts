@@ -8,13 +8,22 @@
  */
 
 import { afterEach, describe, expect, it } from 'vitest';
-import { appendFileSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { join } from 'node:path';
 import { cleanup, createTestProject } from './helpers/setup.js';
 import { runCli } from './helpers/run-cli.js';
 
 interface CheckData {
   hasLock: boolean;
+  canonicalDrift: boolean;
+  outputDrift: boolean;
   inSync: boolean;
   modified: string[];
   added: string[];
@@ -23,6 +32,7 @@ interface CheckData {
   lockedViolations: string[];
   outputsModified: string[];
   outputsRemoved: string[];
+  outputsStale: string[];
   outputsChecked: boolean;
 }
 
@@ -71,8 +81,11 @@ describe('check generated-output verification (e2e)', () => {
     const { data } = parseCheck(r.stdout);
     expect(data.inSync).toBe(false);
     expect(data.outputsChecked).toBe(true);
+    expect(data.canonicalDrift).toBe(false);
+    expect(data.outputDrift).toBe(true);
     expect(data.outputsModified).toEqual(['AGENTS.md']);
     expect(data.outputsRemoved).toEqual([]);
+    expect(data.outputsStale).toEqual([]);
     expect(data.modified).toEqual([]);
   });
 
@@ -87,9 +100,31 @@ describe('check generated-output verification (e2e)', () => {
     const { data } = parseCheck(r.stdout);
     expect(data.inSync).toBe(false);
     expect(data.outputsChecked).toBe(true);
+    expect(data.canonicalDrift).toBe(false);
+    expect(data.outputDrift).toBe(true);
     expect(data.outputsRemoved).toEqual(['AGENTS.md']);
     expect(data.outputsModified).toEqual([]);
+    expect(data.outputsStale).toEqual([]);
     expect(data.modified).toEqual([]);
+  });
+
+  it('hand-added managed output → exit 1, outputsStale only, without deleting it', async () => {
+    dir = createTestProject('canonical-full');
+    await runCli('generate', dir);
+
+    const stalePath = join(dir, '.cursor', 'rules', 'orphaned.mdc');
+    mkdirSync(join(dir, '.cursor', 'rules'), { recursive: true });
+    writeFileSync(stalePath, '# hand-added output\n');
+
+    const r = await runCli('check --json', dir);
+    expect(r.exitCode).toBe(1);
+    const { data } = parseCheck(r.stdout);
+    expect(data.canonicalDrift).toBe(false);
+    expect(data.outputDrift).toBe(true);
+    expect(data.outputsStale).toEqual(['.cursor/rules/orphaned.mdc']);
+    expect(data.outputsModified).toEqual([]);
+    expect(data.outputsRemoved).toEqual([]);
+    expect(existsSync(stalePath)).toBe(true);
   });
 
   it('edited canonical file → exit 1, modified set but outputsModified empty', async () => {
@@ -103,9 +138,12 @@ describe('check generated-output verification (e2e)', () => {
     const { data } = parseCheck(r.stdout);
     expect(data.inSync).toBe(false);
     expect(data.outputsChecked).toBe(true);
+    expect(data.canonicalDrift).toBe(true);
+    expect(data.outputDrift).toBe(false);
     expect(data.modified).toEqual(['rules/typescript.md']);
     expect(data.outputsModified).toEqual([]);
     expect(data.outputsRemoved).toEqual([]);
+    expect(data.outputsStale).toEqual([]);
   });
 
   it('old-format lock (no outputs block) → exit 0, outputsChecked:false', async () => {
@@ -122,8 +160,11 @@ describe('check generated-output verification (e2e)', () => {
     const { data } = parseCheck(r.stdout);
     expect(data.inSync).toBe(true);
     expect(data.outputsChecked).toBe(false);
+    expect(data.canonicalDrift).toBe(false);
+    expect(data.outputDrift).toBe(false);
     expect(data.outputsModified).toEqual([]);
     expect(data.outputsRemoved).toEqual([]);
+    expect(data.outputsStale).toEqual([]);
   });
 
   it('old-format lock → human output prints the skipped-verification note', async () => {
@@ -149,7 +190,10 @@ describe('check generated-output verification (e2e)', () => {
     const { data } = parseCheck(r.stdout);
     expect(data.inSync).toBe(true);
     expect(data.outputsChecked).toBe(false);
+    expect(data.canonicalDrift).toBe(false);
+    expect(data.outputDrift).toBe(false);
     expect(data.outputsModified).toEqual([]);
+    expect(data.outputsStale).toEqual([]);
   });
 
   it('human (non-JSON) drift output names the modified generated output on stderr', async () => {

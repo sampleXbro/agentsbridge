@@ -10,6 +10,8 @@ describe('renderCheck', () => {
       exitCode: 1,
       data: {
         hasLock: false,
+        canonicalDrift: false,
+        outputDrift: false,
         inSync: false,
         modified: [],
         added: [],
@@ -18,6 +20,7 @@ describe('renderCheck', () => {
         lockedViolations: [],
         outputsModified: [],
         outputsRemoved: [],
+        outputsStale: [],
         outputsChecked: false,
       },
     });
@@ -30,6 +33,8 @@ describe('renderCheck', () => {
       exitCode: 0,
       data: {
         hasLock: true,
+        canonicalDrift: false,
+        outputDrift: false,
         inSync: true,
         modified: [],
         added: [],
@@ -38,6 +43,7 @@ describe('renderCheck', () => {
         lockedViolations: [],
         outputsModified: [],
         outputsRemoved: [],
+        outputsStale: [],
         outputsChecked: true,
       },
     });
@@ -50,6 +56,8 @@ describe('renderCheck', () => {
       exitCode: 1,
       data: {
         hasLock: true,
+        canonicalDrift: true,
+        outputDrift: false,
         inSync: false,
         extendsModified: ['pack-a'],
         modified: ['rules/root.md', 'rules/open.md'],
@@ -58,6 +66,7 @@ describe('renderCheck', () => {
         lockedViolations: ['rules/root.md', 'commands/deploy.md', 'skills/old/SKILL.md'],
         outputsModified: [],
         outputsRemoved: [],
+        outputsStale: [],
         outputsChecked: true,
       },
     });
@@ -79,6 +88,8 @@ describe('renderCheck', () => {
       exitCode: 1,
       data: {
         hasLock: true,
+        canonicalDrift: false,
+        outputDrift: true,
         inSync: false,
         modified: [],
         added: [],
@@ -87,6 +98,7 @@ describe('renderCheck', () => {
         lockedViolations: [],
         outputsModified: ['.cursor/rules/_root.mdc', 'AGENTS.md'],
         outputsRemoved: ['.claude/CLAUDE.md'],
+        outputsStale: ['.cursor/rules/orphaned.mdc'],
         outputsChecked: true,
       },
     });
@@ -96,6 +108,7 @@ describe('renderCheck', () => {
     expect(errors).toContain('generated output ".cursor/rules/_root.mdc" was modified');
     expect(errors).toContain('generated output "AGENTS.md" was modified');
     expect(errors).toContain('generated output ".claude/CLAUDE.md" was removed');
+    expect(errors).toContain('generated output ".cursor/rules/orphaned.mdc" is stale');
     // Forward slashes only — never backslashes.
     expect(errors).not.toContain('\\');
   });
@@ -105,6 +118,8 @@ describe('renderCheck', () => {
       exitCode: 0,
       data: {
         hasLock: true,
+        canonicalDrift: false,
+        outputDrift: false,
         inSync: true,
         modified: [],
         added: [],
@@ -113,6 +128,7 @@ describe('renderCheck', () => {
         lockedViolations: [],
         outputsModified: [],
         outputsRemoved: [],
+        outputsStale: [],
         outputsChecked: false,
       },
     });
@@ -126,6 +142,8 @@ describe('renderCheck', () => {
       exitCode: 0,
       data: {
         hasLock: true,
+        canonicalDrift: false,
+        outputDrift: false,
         inSync: true,
         modified: [],
         added: [],
@@ -134,6 +152,7 @@ describe('renderCheck', () => {
         lockedViolations: [],
         outputsModified: [],
         outputsRemoved: [],
+        outputsStale: [],
         outputsChecked: true,
       },
     });

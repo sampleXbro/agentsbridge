@@ -43,6 +43,9 @@ export function renderCheck(result: CheckCommandResult): void {
   for (const p of data.outputsRemoved) {
     ui.error(`  generated output "${fwd(p)}" was removed`);
   }
+  for (const p of data.outputsStale) {
+    ui.error(`  generated output "${fwd(p)}" is stale`);
+  }
   ui.note('Generated files are out of sync.', 'Check');
   ui.info(
     "Run 'agentsmesh merge' to resolve, or 'agentsmesh generate --force' to accept current state.",

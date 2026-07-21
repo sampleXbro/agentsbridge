@@ -16,6 +16,8 @@ export interface LintHandlerResult {
 
 export interface CheckHandlerResult {
   drift: boolean;
+  canonicalDrift: boolean;
+  outputDrift: boolean;
   missing: string[];
   extra: string[];
   modified: string[];
@@ -23,6 +25,8 @@ export interface CheckHandlerResult {
   outputsModified: string[];
   /** Generated outputs recorded in the lock but missing from disk. */
   outputsRemoved: string[];
+  /** Managed generated outputs present on disk but absent from the lock. */
+  outputsStale: string[];
   /**
    * True when generated-output drift was verified; false for old-format locks
    * without an `outputs` map.

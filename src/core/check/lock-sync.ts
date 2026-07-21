@@ -147,7 +147,7 @@ export async function checkLockSync(opts: CheckLockSyncOptions): Promise<LockSyn
     rootBase !== undefined && lock.outputs !== undefined
       ? await findStaleGeneratedOutputs({
           projectRoot: rootBase,
-          targets: [...config.targets, ...config.pluginTargets],
+          targets: [...config.targets, ...(config.pluginTargets ?? [])],
           expectedPaths: Object.keys(lock.outputs),
           scope,
         })

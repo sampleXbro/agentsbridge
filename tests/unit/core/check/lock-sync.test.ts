@@ -12,6 +12,11 @@ import { checkLockSync } from '../../../../src/core/check/lock-sync.js';
 import { writeLock, buildChecksums } from '../../../../src/config/core/lock.js';
 import { loadConfigFromDir } from '../../../../src/config/core/loader.js';
 import { hashContent } from '../../../../src/utils/crypto/hash.js';
+import {
+  registerTargetDescriptor,
+  resetRegistry,
+} from '../../../../src/targets/catalog/registry.js';
+import type { TargetDescriptor } from '../../../../src/targets/catalog/target-descriptor.js';
 import type { ValidatedConfig } from '../../../../src/config/core/schema.js';
 
 const TEST_DIR = join(tmpdir(), `am-lock-sync-unit-${process.pid}`);
@@ -33,6 +38,49 @@ function setupBareProject(yaml: string): { projectRoot: string; canonicalDir: st
   mkdirSync(join(canonicalDir, 'rules'), { recursive: true });
   writeFileSync(join(projectRoot, 'agentsmesh.yaml'), yaml);
   return { projectRoot, canonicalDir };
+}
+
+const PLUGIN_ID = 'check-stale-plugin';
+
+/**
+ * Register a plugin descriptor whose managed output location is `.plugin/rules`.
+ * Proves the stale-output scan resolves plugin targets via the registry
+ * (`getBuiltinTargetDefinition(id) ?? getDescriptor(id)`), not builtins only.
+ */
+function registerPluginWithManagedOutputs(): void {
+  registerTargetDescriptor({
+    id: PLUGIN_ID,
+    metadata: {
+      displayName: PLUGIN_ID,
+      category: 'cli',
+      officialUrl: 'https://example.test/',
+      shortDescription: 'Stale-output contract fixture',
+    },
+    generators: { name: PLUGIN_ID, generateRules: () => [], importFrom: async () => [] },
+    capabilities: {
+      rules: 'native',
+      additionalRules: 'none',
+      commands: 'none',
+      agents: 'none',
+      skills: 'none',
+      mcp: 'none',
+      hooks: 'none',
+      ignore: 'none',
+      permissions: 'none',
+    },
+    emptyImportMessage: 'No plugin config found.',
+    lintRules: null,
+    project: {
+      paths: {
+        rulePath: (slug: string) => `.plugin/rules/${slug}.md`,
+        commandPath: () => null,
+        agentPath: () => null,
+      },
+      managedOutputs: { dirs: ['.plugin/rules'], files: [] },
+    },
+    buildImportPaths: async () => {},
+    detectionPaths: ['.plugin'],
+  } as unknown as TargetDescriptor);
 }
 
 describe('checkLockSync', () => {
@@ -328,11 +376,93 @@ collaboration:
     });
 
     expect(report.outputsChecked).toBe(true);
+    expect(report.canonicalDrift).toBe(false);
+    expect(report.outputDrift).toBe(true);
     expect(report.outputsModified).toEqual(['AGENTS.md']);
     expect(report.outputsRemoved).toEqual(['CLAUDE.md']);
+    expect(report.outputsStale).toEqual([]);
     expect(report.inSync).toBe(false);
     // Canonical is untouched.
     expect(report.modified).toEqual([]);
+  });
+
+  it('hand-added managed output is reported as stale without changing canonical drift', async () => {
+    const { projectRoot, canonicalDir } = setupBareProject(
+      'version: 1\ntargets: [cursor]\nfeatures: [rules]\n',
+    );
+    writeFileSync(join(canonicalDir, 'rules', '_root.md'), '# stable');
+    const checksums = await buildChecksums(canonicalDir);
+    mkdirSync(join(projectRoot, '.cursor', 'rules'), { recursive: true });
+    writeFileSync(join(projectRoot, '.cursor', 'rules', '_root.mdc'), '# generated');
+    writeFileSync(join(projectRoot, '.cursor', 'rules', 'orphaned.mdc'), '# hand-added');
+    await writeLock(canonicalDir, {
+      generatedAt: '2026-07-18T00:00:00Z',
+      generatedBy: 'test',
+      libVersion: '0.1.0',
+      checksums,
+      extends: {},
+      packs: {},
+      outputs: {
+        '.cursor/rules/_root.mdc': `sha256:${hashContent('# generated')}`,
+      },
+    });
+
+    const config = await loadConfig(projectRoot);
+    const report = await checkLockSync({
+      config,
+      configDir: projectRoot,
+      canonicalDir,
+      rootBase: projectRoot,
+    });
+
+    expect(report.canonicalDrift).toBe(false);
+    expect(report.outputDrift).toBe(true);
+    expect(report.outputsModified).toEqual([]);
+    expect(report.outputsRemoved).toEqual([]);
+    expect(report.outputsStale).toEqual(['.cursor/rules/orphaned.mdc']);
+    expect(report.inSync).toBe(false);
+  });
+
+  describe('plugin-target managed outputs (registered descriptor)', () => {
+    beforeEach(() => registerPluginWithManagedOutputs());
+    afterEach(() => resetRegistry());
+
+    it("reports a hand-added file under a plugin target's managed dir as stale", async () => {
+      const { projectRoot, canonicalDir } = setupBareProject(
+        `version: 1\ntargets: [claude-code]\npluginTargets: [${PLUGIN_ID}]\nfeatures: [rules]\n`,
+      );
+      writeFileSync(join(canonicalDir, 'rules', '_root.md'), '# stable');
+      const checksums = await buildChecksums(canonicalDir);
+      mkdirSync(join(projectRoot, '.plugin', 'rules'), { recursive: true });
+      writeFileSync(join(projectRoot, '.plugin', 'rules', '_root.md'), '# generated');
+      writeFileSync(join(projectRoot, '.plugin', 'rules', 'orphaned.md'), '# hand-added');
+      await writeLock(canonicalDir, {
+        generatedAt: '2026-07-18T00:00:00Z',
+        generatedBy: 'test',
+        libVersion: '0.1.0',
+        checksums,
+        extends: {},
+        packs: {},
+        outputs: {
+          '.plugin/rules/_root.md': `sha256:${hashContent('# generated')}`,
+        },
+      });
+
+      const config = await loadConfig(projectRoot);
+      const report = await checkLockSync({
+        config,
+        configDir: projectRoot,
+        canonicalDir,
+        rootBase: projectRoot,
+      });
+
+      expect(report.canonicalDrift).toBe(false);
+      expect(report.outputDrift).toBe(true);
+      expect(report.outputsStale).toEqual(['.plugin/rules/orphaned.md']);
+      expect(report.outputsModified).toEqual([]);
+      expect(report.outputsRemoved).toEqual([]);
+      expect(report.inSync).toBe(false);
+    });
   });
 
   it('old lock without outputs: outputsChecked=false and canonical inSync unaffected', async () => {

@@ -241,6 +241,8 @@ describe('orchestrateHandlers.check', () => {
     mockCheck.mockResolvedValue({
       inSync: false,
       hasLock: true,
+      canonicalDrift: true,
+      outputDrift: true,
       modified: ['rules/foo.md'],
       added: ['rules/new.md'],
       removed: ['rules/old.md'],
@@ -248,6 +250,7 @@ describe('orchestrateHandlers.check', () => {
       lockedViolations: [],
       outputsModified: ['AGENTS.md'],
       outputsRemoved: ['.claude/CLAUDE.md'],
+      outputsStale: ['.cursor/rules/orphaned.mdc'],
       outputsChecked: true,
     } satisfies LockSyncReport);
 
@@ -257,8 +260,11 @@ describe('orchestrateHandlers.check', () => {
     expect(out.missing).toEqual(['rules/old.md']);
     expect(out.extra).toEqual(['rules/new.md']);
     expect(out.modified).toEqual(['rules/foo.md']);
+    expect(out.canonicalDrift).toBe(true);
+    expect(out.outputDrift).toBe(true);
     expect(out.outputsModified).toEqual(['AGENTS.md']);
     expect(out.outputsRemoved).toEqual(['.claude/CLAUDE.md']);
+    expect(out.outputsStale).toEqual(['.cursor/rules/orphaned.mdc']);
     expect(out.outputsChecked).toBe(true);
   });
 
@@ -266,6 +272,8 @@ describe('orchestrateHandlers.check', () => {
     mockCheck.mockResolvedValue({
       inSync: true,
       hasLock: true,
+      canonicalDrift: false,
+      outputDrift: false,
       modified: [],
       added: [],
       removed: [],
@@ -273,6 +281,7 @@ describe('orchestrateHandlers.check', () => {
       lockedViolations: [],
       outputsModified: [],
       outputsRemoved: [],
+      outputsStale: [],
       outputsChecked: true,
     } satisfies LockSyncReport);
 

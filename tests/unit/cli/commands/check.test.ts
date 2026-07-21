@@ -206,9 +206,12 @@ outputs:
     expect(result.exitCode).toBe(1);
     expect(result.data.inSync).toBe(false);
     expect(result.data.outputsChecked).toBe(true);
+    expect(result.data.canonicalDrift).toBe(false);
+    expect(result.data.outputDrift).toBe(true);
     expect(result.data.outputsModified).toEqual(['AGENTS.md']);
     // Locked-but-absent output is reported as removed.
     expect(result.data.outputsRemoved).toEqual(['.cursor/rules/_root.mdc']);
+    expect(result.data.outputsStale).toEqual([]);
   });
 
   it('returns exitCode 0 and outputsChecked:false for an old-format lock (no outputs map)', async () => {
@@ -224,8 +227,11 @@ outputs:
     expect(result.exitCode).toBe(0);
     expect(result.data.inSync).toBe(true);
     expect(result.data.outputsChecked).toBe(false);
+    expect(result.data.canonicalDrift).toBe(false);
+    expect(result.data.outputDrift).toBe(false);
     expect(result.data.outputsModified).toEqual([]);
     expect(result.data.outputsRemoved).toEqual([]);
+    expect(result.data.outputsStale).toEqual([]);
   });
 
   it('skips output verification and returns exitCode 0 with --no-outputs despite drift', async () => {
@@ -249,8 +255,11 @@ outputs:
     expect(result.exitCode).toBe(0);
     expect(result.data.inSync).toBe(true);
     expect(result.data.outputsChecked).toBe(false);
+    expect(result.data.canonicalDrift).toBe(false);
+    expect(result.data.outputDrift).toBe(false);
     expect(result.data.outputsModified).toEqual([]);
     expect(result.data.outputsRemoved).toEqual([]);
+    expect(result.data.outputsStale).toEqual([]);
   });
 
   it('reads ~/.agentsmesh/.lock when --global is set', async () => {

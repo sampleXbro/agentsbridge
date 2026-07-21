@@ -18,22 +18,16 @@ async function listFiles(root: string, base = root): Promise<string[]> {
   return files;
 }
 
-async function removeIfStale(
-  projectRoot: string,
-  relPath: string,
-  expected: Set<string>,
-): Promise<void> {
-  if (expected.has(relPath)) return;
-  const abs = join(projectRoot, relPath);
-  if (await exists(abs)) await rm(abs, { recursive: true, force: true });
-}
-
-export async function cleanupStaleGeneratedOutputs(args: {
+interface StaleGeneratedOutputsArgs {
   projectRoot: string;
   targets: string[];
   expectedPaths: string[];
   scope?: TargetLayoutScope;
-}): Promise<void> {
+}
+
+export async function findStaleGeneratedOutputs(
+  args: StaleGeneratedOutputsArgs,
+): Promise<string[]> {
   const expected = new Set(args.expectedPaths);
   const stale = new Set<string>();
   const scope = args.scope ?? 'project';
@@ -51,7 +45,18 @@ export async function cleanupStaleGeneratedOutputs(args: {
     }
   }
 
+  const found: string[] = [];
   for (const relPath of stale) {
-    await removeIfStale(args.projectRoot, relPath, expected);
+    if (expected.has(relPath)) continue;
+    if (await exists(join(args.projectRoot, relPath))) found.push(relPath);
+  }
+  return found.sort();
+}
+
+export async function cleanupStaleGeneratedOutputs(
+  args: StaleGeneratedOutputsArgs,
+): Promise<void> {
+  for (const relPath of await findStaleGeneratedOutputs(args)) {
+    await rm(join(args.projectRoot, relPath), { recursive: true, force: true });
   }
 }

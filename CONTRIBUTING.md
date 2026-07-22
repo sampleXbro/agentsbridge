@@ -2,8 +2,8 @@
 
 ## Prerequisites
 
-- Node.js 20 or later
-- pnpm 10 or later
+- Node.js 20 or later (CI verifies 22 and 24)
+- pnpm 10 — CI pins this version; newer pnpm majors can trip `--frozen-lockfile` on the committed lockfile
 
 ## Setup
 
@@ -18,21 +18,26 @@ pnpm install
 ```bash
 pnpm build          # compile src/ → dist/
 pnpm test           # unit + integration tests
-pnpm test:e2e       # end-to-end tests (requires build)
-pnpm test:coverage  # coverage report
+pnpm test:e2e       # end-to-end tests (self-builds first)
+pnpm test:coverage  # coverage report (thresholds enforced in CI)
 pnpm lint           # ESLint
+pnpm lint:dead      # knip — unused files / exports / deps
 pnpm typecheck      # tsc --noEmit
-pnpm format         # prettier
+pnpm format         # prettier --write
+pnpm changeset      # record a user-facing change (see Changesets)
 ```
 
-Always run `pnpm build` before `pnpm test:e2e` — e2e tests execute `dist/cli.js` directly.
+`git commit` runs the husky pre-commit gate (`pnpm precommit` = typecheck → dead-code → coverage → lint-staged → build), so a commit takes a couple of minutes and fails on any red gate. Always run `pnpm build` before `pnpm test:e2e` — e2e tests execute `dist/cli.js` directly.
 
 ## Rules
 
 - **TDD mandatory**: write a failing test first, then implement.
 - **Max file size**: 200 lines. Split by responsibility if larger.
-- **No `any`**: use `unknown` + narrowing.
+- **No `any`**: use `unknown` + narrowing. Explicit return types on public functions; prefer `interface` over `type` for object shapes.
 - **No classes unless stateful**: prefer pure functions + types.
+- **Never edit generated files.** `.agentsmesh/` is the source of truth; `.claude/`, `.cursor/`, `AGENTS.md`, `.github/copilot-instructions.md`, and the other per-tool outputs are produced by `agentsmesh generate` and will be overwritten. Change `.agentsmesh/` and regenerate — `agentsmesh generate --check` must report in sync before you commit.
+- **Docs stay current.** Any change to CLI commands, flags, config schema, or supported targets must update `README.md` and the website docs (`website/src/content/docs/`). Per-target support lives only in `reference/supported-tools.mdx`; other pages link to it.
+- **Strict artifact tests.** Generated-output tests assert exact paths and counts — no `some(...)`, prefix, or "at least one" checks.
 - Commits must follow [Conventional Commits](https://www.conventionalcommits.org/): `feat|fix|test|refactor|docs|chore(scope): message`.
 
 ## Adding a new target
@@ -44,17 +49,28 @@ Use the `add-agent-target` skill documented in `.claude/skills/add-agent-target/
 - Complete unit, integration, and e2e coverage
 - Matrix and docs updates
 
+For **global mode** (`--global` / `.agentsmesh`) on an existing target, use the `add-global-mode-target` skill instead.
+
+## Changesets
+
+Releases are **changesets-driven** — every user-facing change ships a changeset.
+
+- Add a changeset when you touch the **published surface**: `src/`, `schemas/`, `package.json` (deps/exports), or `README.md`. Changes confined to `tests/`, `website/`, `docs/`, or `.agentsmesh/` ship nothing and need **no** changeset.
+- Run `pnpm changeset`, choose the bump (`patch` fix / `minor` additive / `major` breaking), and write a one-paragraph, user-facing summary — it becomes the `CHANGELOG.md` entry, so describe the capability, not the commit.
+- Commit the changeset alongside the code it describes (no orphan changesets, no orphan code).
+- **Never** hand-edit `package.json` `version` or `CHANGELOG.md` — the automated "chore: version packages" PR generates both on merge to `master`.
+
 ## Pull requests
 
 - Keep PRs small and focused on one change.
-- All CI checks must pass (`pnpm test`, `pnpm lint`, `pnpm typecheck`).
-- Add a changeset (`pnpm changeset`) for any user-visible change.
+- All CI gates must pass: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`, `pnpm test:contract`, `pnpm matrix:verify`, `pnpm test:coverage`, and `pnpm audit --prod`.
+- Include a changeset for any published-surface change (see [Changesets](#changesets)).
 
 ## Reporting bugs
 
 Open a GitHub issue with a minimal reproduction case. See [SECURITY.md](SECURITY.md) for security vulnerabilities.
 
-### Updating target capabilities
+## Updating target capabilities
 
 Capability provenance lives in `src/targets/catalog/capability-ledger.json` — an *oracle* that validates descriptors; it never generates. Current capability levels always come from each target's `capabilities.ts` (the matrix derives from there); the ledger records where the tool's own docs say each file/shape is, so generated output can be validated against it.
 

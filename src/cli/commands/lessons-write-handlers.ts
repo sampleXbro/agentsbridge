@@ -6,7 +6,7 @@ import {
   UnknownTopicError,
   UnrecallableLessonError,
 } from '../../lessons/add.js';
-import { captureLesson } from '../../lessons/recall.js';
+import { captureLesson } from '../../lessons/capture.js';
 import { deprecateLesson } from '../../lessons/deprecate.js';
 import { ancestorLessonsProjectDir, lessonsActivated } from '../../lessons/paths.js';
 import { mergeLessons } from '../../lessons/merge.js';

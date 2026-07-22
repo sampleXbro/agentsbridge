@@ -26,6 +26,7 @@ export interface LessonsConfigFile {
   readonly recallLimit: number;
   readonly recallMaxTokens: number;
   readonly autoPrune: boolean;
+  readonly repairTriggers: boolean;
 }
 
 /**
@@ -41,6 +42,7 @@ export function defaultLessonsConfig(): LessonsConfigFile {
     recallLimit: DEFAULT_RECALL_LIMIT,
     recallMaxTokens: DEFAULT_RECALL_MAX_TOKENS,
     autoPrune: false,
+    repairTriggers: false,
   };
 }
 

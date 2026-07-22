@@ -7,7 +7,8 @@ import {
 } from '../../lessons/add.js';
 import { maybeAutoMigrateLessons } from '../../lessons/auto-migrate.js';
 import { tryLoadLessonsGraph } from '../../lessons/graph-store.js';
-import { captureLesson, recallLessons } from '../../lessons/recall.js';
+import { captureLesson } from '../../lessons/capture.js';
+import { recallLessons } from '../../lessons/recall.js';
 import { recallAlwaysLessons } from '../../lessons/recall-always.js';
 import { McpError } from '../errors.js';
 import { lessonsDeprecate, lessonsShow } from './lessons-curation.js';

@@ -29,7 +29,13 @@ export type GuardrailCode =
   | 'LOW_SIGNAL_KEYWORD'
   | 'STOPWORD_KEYWORD'
   | 'DEAD_GLOB'
-  | 'NEAR_DUPLICATE_LESSON';
+  | 'NEAR_DUPLICATE_LESSON'
+  // Opt-in capture-time trigger repair (see trigger-repair.ts) — informational,
+  // reported through the same warning channel so CLI/MCP output and capture
+  // telemetry surface what was rewritten.
+  | 'NARROWED_GLOB'
+  | 'KEYWORD_VARIANT_ADDED'
+  | 'DROPPED_KEYWORD';
 
 /**
  * A `file_glob` matching more working-tree files than this is too wide for one
@@ -54,9 +60,10 @@ export const MAX_RECOMMENDED_TRIGGERS = 8;
  * basename is itself a wildcard (starts with a star — e.g. a globstar followed
  * by a star-extension). A double-star with a concrete basename (a globstar
  * followed by `index.ts`) or a single-directory wildcard is specific enough and
- * is not flagged.
+ * is not flagged. Exported so capture-time trigger repair narrows on the SAME
+ * predicate this guardrail warns on.
  */
-function isBroadGlob(pattern: string): boolean {
+export function isBroadGlob(pattern: string): boolean {
   const p = pattern.trim();
   if (p === '*' || p === '**') return true;
   if (!p.includes('**')) return false;

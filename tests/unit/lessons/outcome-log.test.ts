@@ -152,6 +152,22 @@ describe('record helpers (stamp ts + session, gated on telemetry)', () => {
     expect(recs[0]!.session).toBeUndefined();
   });
 
+  it('an explicit session argument wins over the env session', () => {
+    recordDelivered(root, ['l1'], 'file:x', withSession, 'stdin-s');
+    expect(readOutcomeLog(root)[0]!.session).toBe('stdin-s');
+  });
+
+  it('recordDelivered stamps each delivered event with its 0-based rank', () => {
+    recordDelivered(root, ['l1', 'l2'], 'file:x', withSession);
+    const ranks = readOutcomeLog(root).map((r) => (r.kind === 'delivered' ? r.rank : undefined));
+    expect(ranks).toEqual([0, 1]);
+  });
+
+  it('recordFailure: an explicit session argument wins over the env session', () => {
+    recordFailure(root, 'file:x', undefined, withSession, 'stdin-s');
+    expect(readOutcomeLog(root)[0]!.session).toBe('stdin-s');
+  });
+
   it('recordFailure carries an error class when provided', () => {
     recordFailure(root, 'cmd:build', 'typeerror: boom', {
       AGENTSMESH_LESSONS_TELEMETRY: '1',

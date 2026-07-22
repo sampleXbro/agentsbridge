@@ -138,7 +138,7 @@ SessionStart:
     command: agentsmesh lessons hook
 ```
 
-- **`PreToolUse`** guards the **first touch** — recall injects before the edit.
+- **`PreToolUse`** guards the **first touch** — recall injects before the edit. With the [outcome log](../../reference/lessons/#effectiveness-telemetry-opt-in) enabled it also runs the **recurrence gate**: when the exact action about to run has already failed **twice or more** and a captured lesson covers it, the covering rule is re-injected **above** the regular bullets with the failure count (`RECURRENT FAILURE: this exact action has failed N× before …`) — and it cuts through session dedup, since a rule the agent saw but did not apply must be shown again. Advisory context only, once per action per session.
 - **`PostToolUse`** covers later actions and harnesses that support only post-call injection.
 - **`UserPromptSubmit`** recalls against the **task text itself**. The tool-call events only ever see a file path or command, so a `keyword` (conceptual / general) lesson can otherwise fire only when its concept happens to appear as a path/command token. `UserPromptSubmit` is the only event that carries the prompt, so it is where keyword lessons recall against actual **intent** — and where the universal always-on lessons ride onto every task.
 - **`PostToolUseFailure`** fires when a tool call **fails** (`PostToolUse` is success-only) and injects an advisory **capture-decision nudge**, pre-filled with a ready-to-paste `--trigger-file`/`--trigger-cmd` for the failed file/command — once per session.
@@ -148,7 +148,7 @@ The last three are agentsmesh recall refinements; a hook-capable target that can
 
 (Scaffolded lessons before this was automatic? Re-run `agentsmesh init --lessons` — it adds the hooks idempotently — or paste the block above into your `hooks.yaml`.)
 
-`agentsmesh lessons hook` reads the harness's hook payload from stdin, **branches on `hook_event_name`** (recall for tool-call / prompt events; the capture nudge for `PostToolUseFailure`), recalls lessons for the touched `file_path` / `notebook_path` / `command` or the submitted prompt, and emits the harness context-injection JSON (`hookSpecificOutput.additionalContext`). It uses the harness `session_id` for [dedup](#query) (namespaced per project), so a lesson is injected at most once per session.
+`agentsmesh lessons hook` reads the harness's hook payload from stdin, **branches on `hook_event_name`** (recall for tool-call / prompt events; the capture nudge for `PostToolUseFailure`), recalls lessons for the touched `file_path` / `notebook_path` / `command` or the submitted prompt, and emits the harness context-injection JSON (`hookSpecificOutput.additionalContext`). It uses the harness `session_id` for [dedup](#query) (namespaced per project), so a lesson is injected at most once per session — and stamps the same id on recall/outcome telemetry rows, so `stats` groups by real harness sessions and a failure only impeaches deliveries from its own session (no `AGENTSMESH_SESSION_ID` export needed on hook-driven recalls).
 
 It is **safe everywhere**: the command is harness-adaptive and a silent no-op (exit 0, no output) on any payload it doesn't recognize, so projecting the hook to a target whose hooks can't inject context (or to an unrecognized event) does nothing rather than breaking the run.
 
@@ -184,8 +184,9 @@ project lands in a clean state. Run `agentsmesh lessons import-md` explicitly
 if you prefer to migrate at a specific point in time. New projects skip this
 entirely — `agentsmesh init --lessons` creates the graph directly, alongside
 `.agentsmesh/lessons/config.json` with every tunable at its default
-(`recallLimit`, `recallMaxTokens`, `autoPrune`) so they are discoverable and
-editable. An existing config is never overwritten — your edits are preserved.
+(`recallLimit`, `recallMaxTokens`, `autoPrune`, `repairTriggers`) so they are
+discoverable and editable. An existing config is never overwritten — your edits
+are preserved.
 
 ## Flag reference
 

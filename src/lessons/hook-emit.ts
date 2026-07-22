@@ -45,6 +45,12 @@ export interface EmitOptions {
   readonly lead: string;
   /** Session correlator for per-session dedup. */
   readonly sessionId: string | undefined;
+  /**
+   * Escalation text injected ABOVE the recall lead (recurrence gate). Unlike the
+   * recall body it survives full session-dedup: when every matched lesson was
+   * already delivered this session, the preface is still emitted alone.
+   */
+  readonly preface?: string;
 }
 
 /**
@@ -66,17 +72,30 @@ export async function emitRecall(
     sessionId: options.sessionId,
     limit: HOOK_INJECT_LIMIT,
   });
-  if (lessons.length === 0) return EMPTY;
+  if (lessons.length === 0) {
+    return options.preface === undefined ? EMPTY : contextOutput(options.event, options.preface);
+  }
   recordDelivered(
     projectRoot,
     lessons.map((l) => l.id),
     contextKey({ file: query.file, command: query.command }, projectRoot),
+    process.env,
+    options.sessionId,
   );
-  return formatInjection(
-    options.event,
+  const body = injectionText(
     options.lead,
     lessons.map((l) => l.lesson.rule),
   );
+  return contextOutput(
+    options.event,
+    options.preface === undefined ? body : `${options.preface}\n\n${body}`,
+  );
+}
+
+/** The injected context body: lead sentence + clamped rule bullets. */
+function injectionText(lead: string, rules: readonly string[]): string {
+  const bullets = rules.map((r) => `- ${clampRule(r)}`).join('\n');
+  return `${lead} — apply before your next action:\n${bullets}`;
 }
 
 /** Assemble recalled rules into the harness's injection shape (clamp + bullets + lead + wrap). */
@@ -85,8 +104,7 @@ export function formatInjection(
   lead: string,
   rules: readonly string[],
 ): RecallHookResult {
-  const bullets = rules.map((r) => `- ${clampRule(r)}`).join('\n');
-  return contextOutput(event, `${lead} — apply before your next action:\n${bullets}`);
+  return contextOutput(event, injectionText(lead, rules));
 }
 
 /** Wrap injected context in the harness's `hookSpecificOutput` shape for `event`. */

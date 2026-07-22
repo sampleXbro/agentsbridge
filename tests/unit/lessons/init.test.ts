@@ -186,7 +186,12 @@ describe('scaffoldLessons', async () => {
     expect(parsed).toEqual(defaultLessonsConfig());
     // Materialized defaults must equal the in-code defaults — writing them out is
     // behaviour-neutral, only discoverability changes.
-    expect(parsed).toEqual({ recallLimit: 10, recallMaxTokens: 400, autoPrune: false });
+    expect(parsed).toEqual({
+      recallLimit: 10,
+      recallMaxTokens: 400,
+      autoPrune: false,
+      repairTriggers: false,
+    });
   });
 
   it('never overwrites an existing config.json — user edits are preserved (reported skipped)', async () => {

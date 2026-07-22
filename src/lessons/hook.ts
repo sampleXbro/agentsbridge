@@ -2,7 +2,6 @@ import { buildCaptureNudge, RECURRENCE_THRESHOLD } from './capture-nudge.js';
 import { contextKey } from './context-key.js';
 import { diffTerms } from './diff-terms.js';
 import { errorClass } from './error-class.js';
-import { loadLessonsGraphResilient } from './graph-store.js';
 import {
   contextOutput,
   emitRecall,
@@ -10,11 +9,11 @@ import {
   formatInjection,
   type RecallHookResult,
 } from './hook-emit.js';
-import { normalizeRecallFile } from './normalize-query-file.js';
 import { failuresForContext, recordFailure } from './outcome-log.js';
-import { queryLessons, type LessonsQuery } from './query.js';
+import type { LessonsQuery } from './query.js';
 import { recallAlwaysLessons } from './recall-always.js';
 import { recallLessons } from './recall.js';
+import { hasCoveringLesson, recurrenceEscalation } from './recurrence-gate.js';
 import { clearSeen } from './seen-cache.js';
 
 /**
@@ -138,7 +137,13 @@ export async function buildRecallHookOutput(
       const key = contextKey({ file, command }, projectRoot);
       // Record the failure so effectiveness can tell whether a lesson delivered for
       // this same action earlier actually prevented the repeat (EVALUATE).
-      recordFailure(projectRoot, key, errorClass(failureText ?? str(parsed.tool_response)));
+      recordFailure(
+        projectRoot,
+        key,
+        errorClass(failureText ?? str(parsed.tool_response)),
+        process.env,
+        sessionId,
+      );
       const history = failuresForContext(projectRoot, key);
       failures = history.count;
       lastErrorClass = history.lastErrorClass;
@@ -167,6 +172,12 @@ export async function buildRecallHookOutput(
   // PostToolUse for back-compat and unrecognized events.
   const event = parsed.hook_event_name === 'PreToolUse' ? 'PreToolUse' : 'PostToolUse';
 
+  // Recurrence gate (PreToolUse only): the first-touch guard is the last moment
+  // to stop a KNOWN repeat, so a recurring covered action escalates above the
+  // regular recall bullets — see recurrence-gate.ts.
+  const escalation =
+    event === 'PreToolUse' ? recurrenceEscalation(projectRoot, { file, command, sessionId }) : null;
+
   // Fold the change content into the query so keyword triggers match what is being
   // written, not just the path (diff-aware recall). Empty for non-writing tools.
   const keyword = parsed.tool_input ? diffTerms(parsed.tool_input) : '';
@@ -180,30 +191,6 @@ export async function buildRecallHookOutput(
     event,
     lead: `Recalled agentsmesh lessons for ${target}`,
     sessionId,
+    ...(escalation !== null ? { preface: escalation } : {}),
   });
-}
-
-/**
- * True when any active lesson matches this action. A raw graph query — NOT
- * recallLessons — so it neither runs the ranker nor writes a recall-telemetry
- * record (a boolean coverage probe must not pollute the recall stats it feeds).
- *
- * The command is passed RAW (unlike the recurrence key, which normalizes it): a
- * `command_pattern` trigger is a regex matched against the FULL command, so
- * `/git commit -m/` must see `git commit -m 'x'`, not the normalized class
- * `git commit`. Normalizing here would make coverage lossy and fire false
- * "uncovered" escalations. The file IS normalized project-relative, so globs match.
- */
-function hasCoveringLesson(
-  projectRoot: string,
-  file: string | undefined,
-  command: string | undefined,
-): boolean {
-  const load = loadLessonsGraphResilient(projectRoot);
-  if (load.status !== 'ok') return false;
-  const query: LessonsQuery = {
-    ...(file !== undefined ? { file: normalizeRecallFile(file, projectRoot) } : {}),
-    ...(command !== undefined ? { command } : {}),
-  };
-  return queryLessons(load.graph, query).length > 0;
 }

@@ -2321,6 +2321,22 @@
         "t-cmd-7c1c43ea"
       ]
     },
+    "git-commit-hygiene-running-pnpm-install-inside-a": {
+      "createdAt": "2026-07-21",
+      "evidence": [
+        "commit:a180aedd"
+      ],
+      "rationale": "Commits 1-3 in a symlink-only worktree were hook-free; a later pnpm@10 install activated husky, and pnpm 11's deps-status check then aborted the deps-bump commit despite node_modules correctly holding tar@7.5.20.",
+      "rule": "Running `pnpm install` inside a fresh git worktree fires the `prepare: husky` script, which activates the git hooks (core.hooksPath=.husky) for that worktree — so commits AFTER an install run the full `pnpm precommit` suite, while commits before it are hook-free. Also, a pnpm 10 install followed by a pnpm 11 pre-run deps-status check fails spuriously on version metadata. When a worktree commit hook fails only on this environmental deps-status noise and the change is deps-only + independently verified against the CI pnpm major (frozen install + audit green), commit with --no-verify.",
+      "status": "active",
+      "topics": [
+        "git-commit-hygiene"
+      ],
+      "triggers": [
+        "t-cmd-eae4aa4a",
+        "t-kw-eeddb5dd"
+      ]
+    },
     "git-commit-hygiene-when-auditing-unpushed-work-probe": {
       "createdAt": "2026-07-13",
       "evidence": [
@@ -2333,6 +2349,21 @@
       ],
       "triggers": [
         "t-cmd-a17d0ed7"
+      ]
+    },
+    "git-commit-hygiene-when-writing-a-git-commit": {
+      "createdAt": "2026-07-21",
+      "evidence": [
+        "commit:076a683a"
+      ],
+      "rationale": "A backtick-quoted `?? []` in a commit -m body was executed as a command and stripped, mangling the message and forcing an amend.",
+      "rule": "When writing a git commit message via the Bash tool (zsh), never put backticks or bare glob chars (`, ?, [, ]) inside -m \"...\": zsh runs command substitution on backticks even within double quotes (and glob-expands ? / []), silently deleting that span from the recorded message. Use single quotes or plain prose for code identifiers, or pass the body via -F -/a heredoc, and verify with `git log -1 --format=%B` right after committing.",
+      "status": "active",
+      "topics": [
+        "git-commit-hygiene"
+      ],
+      "triggers": [
+        "t-cmd-7241113d"
       ]
     },
     "global-mode-global-scope-capability-resolution-has": {
@@ -4419,6 +4450,22 @@
         "t-glob-8148e382"
       ]
     },
+    "lessons-system-the-pretooluse-recurrence-gate-escalatio": {
+      "createdAt": "2026-07-22",
+      "evidence": [
+        "review:2026-07-22-recurrence-dup-injection"
+      ],
+      "rationale": "Advisory escalation that re-runs the body's query double-injects unless the preface's deliveries are committed to the per-session dedup cache.",
+      "rule": "The PreToolUse recurrence-gate escalation and the recall body query the SAME action, so the gate MUST record+commit its shown covering lesson ids to the session seen-cache (recurrence-gate.ts recurrenceEscalation) — that is what makes emitRecall's recall body dedup them. Skip it and the identical covering rule is injected twice in one hook output (preface + body). Assert each covering rule appears exactly once; a `toContain` check cannot detect the duplicate.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-eb1e5fce",
+        "t-glob-2e029bcd"
+      ]
+    },
     "lessons-system-the-recall-contract-lessons-procedural": {
       "createdAt": "2026-06-10",
       "evidence": [
@@ -5476,7 +5523,9 @@
         "release-changesets"
       ],
       "triggers": [
-        "t-glob-b1cdb41a"
+        "t-glob-b1cdb41a",
+        "t-cmd-8f7e2d67",
+        "t-kw-244e9a72"
       ]
     },
     "security-a-directory-reader-that-ingests": {
@@ -5939,6 +5988,58 @@
       ],
       "triggers": [
         "t-glob-e1afdd1c"
+      ]
+    },
+    "subagent-delegation-in-workflow-scripts-treat-every": {
+      "createdAt": "2026-07-21",
+      "evidence": [
+        "workflow:wf_a544808b-0c0 (2/4 Explore agents errored: StructuredOutput retry cap 5 exceeded after ~490s of work each; digest degraded to 'agent failed — no data')"
+      ],
+      "rationale": "Two of four identical-schema explorers failed all 5 StructuredOutput retries and returned null, thinning the design-stage input; the null-tolerant digest was what kept the workflow usable.",
+      "rule": "In Workflow scripts, treat every agent() result as possibly null in downstream digests AND keep StructuredOutput schemas permissive for long-running analysts (few required fields, generous maxItems, no tight nested required arrays; consider a plain report:string fallback field) — strict schemas can burn the 5-retry StructuredOutput cap and silently null out an agent's entire multi-minute analysis.",
+      "status": "active",
+      "topics": [
+        "subagent-delegation"
+      ],
+      "triggers": [
+        "t-kw-945cc933",
+        "t-kw-0dae4033",
+        "t-kw-3a0adbef"
+      ]
+    },
+    "subagent-delegation-validate-schema-d-subagent-results": {
+      "createdAt": "2026-07-21",
+      "evidence": [
+        "workflow:wf_8c519419-98f (contracts + tests reviewers returned {title:'t'",
+        "file:'f'",
+        "scenario:'s'} placeholder findings that passed schema validation; verifiers caught them; dimension re-run directly came back CLEAN)"
+      ],
+      "rule": "Validate schema'd subagent results for placeholder degeneracy before trusting them — a StructuredOutput schema guarantees shape, not content, and an agent can satisfy it with single-letter junk values (title 't', file 'f', scenario 's'). Spot-check at least one field of each result against reality; if degenerate, re-run that agent directly instead of counting the dimension as covered.",
+      "status": "active",
+      "topics": [
+        "subagent-delegation"
+      ],
+      "triggers": [
+        "t-kw-e43b6312",
+        "t-kw-742c6a9b",
+        "t-kw-b975b1b2"
+      ]
+    },
+    "subagent-delegation-when-partitioning-consolidation-audit-wo": {
+      "createdAt": "2026-07-21",
+      "evidence": [
+        "workflow:wf_50992872-09d (link-rebaser verifier FAILed on windows-paths-rule-10/14/16 as unaccounted; all three were already replaced by windows-paths cluster rules 4/8/2 — gap was bookkeeping",
+        "not information loss)"
+      ],
+      "rule": "When partitioning consolidation/audit work across parallel agents by cluster, make the verifier check CROSS-cluster ownership before treating an in-cluster gap as a failure: content-twins without lineage links are often legitimately owned by a sibling cluster's output — resolve by looking up the sibling's replaces/leftovers list, and add a cross-cluster ownership note instead of duplicating the item in both clusters.",
+      "status": "active",
+      "topics": [
+        "subagent-delegation"
+      ],
+      "triggers": [
+        "t-kw-8d16fd3a",
+        "t-kw-244aacac",
+        "t-kw-6c43e9c1"
       ]
     },
     "subagent-delegation-when-spawning-a-full-history": {
@@ -7017,7 +7118,8 @@
         "t-kw-013fafa7",
         "t-kw-e2160d81",
         "t-kw-745cab00",
-        "t-kw-1171e894"
+        "t-kw-1171e894",
+        "t-cmd-ec116ffc"
       ]
     },
     "verification-never-pipe-verification-commands-pnpm": {
@@ -8346,6 +8448,10 @@
       "kind": "command_pattern",
       "pattern": "\\bcoverage\\b"
     },
+    "t-cmd-7241113d": {
+      "kind": "command_pattern",
+      "pattern": "git commit.*-m"
+    },
     "t-cmd-73382791": {
       "kind": "command_pattern",
       "pattern": "agentsmesh lessons"
@@ -8393,6 +8499,10 @@
     "t-cmd-8c4a10c7": {
       "kind": "command_pattern",
       "pattern": "pnpm attw"
+    },
+    "t-cmd-8f7e2d67": {
+      "kind": "command_pattern",
+      "pattern": "git log v"
     },
     "t-cmd-9adfb98c": {
       "kind": "command_pattern",
@@ -8525,6 +8635,14 @@
     "t-cmd-e94ef0dd": {
       "kind": "command_pattern",
       "pattern": "node node_modules/\\.ignored_"
+    },
+    "t-cmd-eae4aa4a": {
+      "kind": "command_pattern",
+      "pattern": "pnpm.*install --lockfile-only"
+    },
+    "t-cmd-ec116ffc": {
+      "kind": "command_pattern",
+      "pattern": "vitest run tests/"
     },
     "t-cmd-ed8bfc0c": {
       "kind": "command_pattern",
@@ -8725,6 +8843,10 @@
     "t-glob-2be00990": {
       "kind": "file_glob",
       "pattern": "src/cli/commands/init-wizard.ts"
+    },
+    "t-glob-2e029bcd": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/hook-emit.ts"
     },
     "t-glob-2e07c687": {
       "kind": "file_glob",
@@ -9418,6 +9540,10 @@
       "kind": "file_glob",
       "pattern": "src/targets/augment-code/*.ts"
     },
+    "t-glob-eb1e5fce": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/recurrence-gate.ts"
+    },
     "t-glob-ed0be781": {
       "kind": "file_glob",
       "pattern": "src/lessons/skill.ts"
@@ -9514,6 +9640,10 @@
       "kind": "keyword",
       "pattern": "parseDocument"
     },
+    "t-kw-0dae4033": {
+      "kind": "keyword",
+      "pattern": "structured output schema"
+    },
     "t-kw-0e1a8ecb": {
       "kind": "keyword",
       "pattern": "legacy-only store"
@@ -9570,6 +9700,14 @@
       "kind": "keyword",
       "pattern": "NFA state"
     },
+    "t-kw-244aacac": {
+      "kind": "keyword",
+      "pattern": "cluster partition"
+    },
+    "t-kw-244e9a72": {
+      "kind": "keyword",
+      "pattern": "changeset"
+    },
     "t-kw-265fd6c5": {
       "kind": "keyword",
       "pattern": "fixture gitignored force-add CI-red local-green missing file"
@@ -9617,6 +9755,10 @@
     "t-kw-381d10a9": {
       "kind": "keyword",
       "pattern": "ANSI color stdout assertion"
+    },
+    "t-kw-3a0adbef": {
+      "kind": "keyword",
+      "pattern": "subagent schema"
     },
     "t-kw-3bb206ca": {
       "kind": "keyword",
@@ -9726,6 +9868,10 @@
       "kind": "keyword",
       "pattern": "fork_context"
     },
+    "t-kw-6c43e9c1": {
+      "kind": "keyword",
+      "pattern": "cross-cluster"
+    },
     "t-kw-6d98db32": {
       "kind": "keyword",
       "pattern": "branch coverage"
@@ -9745,6 +9891,10 @@
     "t-kw-73739274": {
       "kind": "keyword",
       "pattern": "opencode additionalRules instructions"
+    },
+    "t-kw-742c6a9b": {
+      "kind": "keyword",
+      "pattern": "subagent findings"
     },
     "t-kw-745cab00": {
       "kind": "keyword",
@@ -9794,6 +9944,10 @@
       "kind": "keyword",
       "pattern": "epsilon closure"
     },
+    "t-kw-8d16fd3a": {
+      "kind": "keyword",
+      "pattern": "consolidation proposal"
+    },
     "t-kw-8d854c5e": {
       "kind": "keyword",
       "pattern": "capabilities verify ledger CI gate"
@@ -9813,6 +9967,10 @@
     "t-kw-9304db48": {
       "kind": "keyword",
       "pattern": "text transform"
+    },
+    "t-kw-945cc933": {
+      "kind": "keyword",
+      "pattern": "workflow"
     },
     "t-kw-9479ae91": {
       "kind": "keyword",
@@ -9890,6 +10048,10 @@
       "kind": "keyword",
       "pattern": "command truncation"
     },
+    "t-kw-b975b1b2": {
+      "kind": "keyword",
+      "pattern": "structured output"
+    },
     "t-kw-bd0b86a3": {
       "kind": "keyword",
       "pattern": "wizard back navigation step prompter"
@@ -9966,6 +10128,10 @@
       "kind": "keyword",
       "pattern": "agentsmesh lessons unknown command"
     },
+    "t-kw-e43b6312": {
+      "kind": "keyword",
+      "pattern": "review workflow results"
+    },
     "t-kw-e48528c1": {
       "kind": "keyword",
       "pattern": "change generated file format event names shape"
@@ -10005,6 +10171,10 @@
     "t-kw-ee70fe6c": {
       "kind": "keyword",
       "pattern": "amp.hooks"
+    },
+    "t-kw-eeddb5dd": {
+      "kind": "keyword",
+      "pattern": "worktree husky pre-commit hook activate"
     },
     "t-kw-eeeb356f": {
       "kind": "keyword",

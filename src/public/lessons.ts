@@ -24,8 +24,9 @@ export type {
 // Migration-aware application APIs — the BLESSED entry points. Each runs the
 // legacy→JSON migration first, so callers never strand a legacy `index.yaml`.
 // Prefer these over the low-level primitives below for ordinary recall/capture.
-export { recallLessons, captureLesson } from '../lessons/recall.js';
+export { recallLessons } from '../lessons/recall.js';
 export type { RecallOptions, RecallResult } from '../lessons/recall.js';
+export { captureLesson } from '../lessons/capture.js';
 
 // The transactional write path. `mutateLessonsGraph` MIGRATES a legacy store
 // first (so even a first raw write cannot strand `index.yaml`) — it is safe to

@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { doAdd } from '../../src/cli/commands/lessons-write-handlers.js';
-import { captureLesson } from '../../src/lessons/recall.js';
+import { captureLesson } from '../../src/lessons/capture.js';
 import { readCaptureLog } from '../../src/lessons/capture-telemetry.js';
 import { loadLessonsGraph, saveLessonsGraph } from '../../src/lessons/graph-store.js';
 import { lessonsPaths } from '../../src/lessons/paths.js';
@@ -36,11 +36,7 @@ afterEach(() => {
 describe('capture telemetry — both entry points record', () => {
   it('records a capture from the CLI doAdd path AND the captureLesson (MCP) path', async () => {
     // 1) CLI path — doAdd routes through captureLesson, so it must record.
-    const cli = await doAdd(
-      { topic: 't', 'trigger-file': ['src/cli.ts'] },
-      'CLI rule.',
-      root,
-    );
+    const cli = await doAdd({ topic: 't', 'trigger-file': ['src/cli.ts'] }, 'CLI rule.', root);
     expect(cli.exitCode).toBe(0);
 
     // 2) MCP/app path — captureLesson directly.
@@ -92,7 +88,11 @@ describe('capture telemetry — both entry points record', () => {
     const r = await doAdd({ topic: 't', 'trigger-file': ['src/new.ts'] }, 'Fresh rule.', root);
     expect(r.exitCode).toBe(0);
     if (r.subcommand !== 'add') throw new Error('expected add');
-    expect(r.data.autoPruned).toEqual({ removedTriggers: 1, removedTopics: 1, detachedDeadGlobs: 0 });
+    expect(r.data.autoPruned).toEqual({
+      removedTriggers: 1,
+      removedTopics: 1,
+      detachedDeadGlobs: 0,
+    });
 
     const graph = loadLessonsGraph(root);
     expect(Object.keys(graph.triggers)).not.toContain('t-orphan');

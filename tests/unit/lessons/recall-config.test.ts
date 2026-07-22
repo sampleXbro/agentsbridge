@@ -93,6 +93,7 @@ describe('defaultLessonsConfig', () => {
       recallLimit: DEFAULT_RECALL_LIMIT,
       recallMaxTokens: DEFAULT_RECALL_MAX_TOKENS,
       autoPrune: false,
+      repairTriggers: false,
     });
   });
 

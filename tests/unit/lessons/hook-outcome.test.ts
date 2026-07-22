@@ -25,6 +25,7 @@ const GRAPH: LessonsGraph = {
 
 let root: string;
 let prevTel: string | undefined;
+let prevSession: string | undefined;
 beforeEach(() => {
   root = mkdtempSync(join(tmpdir(), 'amesh-hook-outcome-'));
   const p = graphFilePath(root);
@@ -32,10 +33,13 @@ beforeEach(() => {
   writeFileSync(p, JSON.stringify(GRAPH), 'utf8');
   prevTel = process.env.AGENTSMESH_LESSONS_TELEMETRY;
   process.env.AGENTSMESH_LESSONS_TELEMETRY = '1';
+  prevSession = process.env.AGENTSMESH_SESSION_ID;
+  delete process.env.AGENTSMESH_SESSION_ID;
 });
 afterEach(() => {
   if (prevTel === undefined) delete process.env.AGENTSMESH_LESSONS_TELEMETRY;
   else process.env.AGENTSMESH_LESSONS_TELEMETRY = prevTel;
+  if (prevSession !== undefined) process.env.AGENTSMESH_SESSION_ID = prevSession;
   rmSync(root, { recursive: true, force: true });
 });
 
@@ -81,6 +85,34 @@ describe('hook wiring: outcome emission', () => {
     );
     expect(readOutcomeLog(root)).toEqual([
       expect.objectContaining({ kind: 'failure', contextKey: 'file:src/x.ts' }),
+    ]);
+  });
+
+  it('threads the harness session_id into delivered records (env session unset)', async () => {
+    await buildRecallHookOutput(
+      JSON.stringify({
+        hook_event_name: 'PostToolUse',
+        session_id: 'hs1',
+        tool_input: { file_path: 'src/x.ts' },
+      }),
+      root,
+    );
+    expect(readOutcomeLog(root)).toEqual([
+      expect.objectContaining({ kind: 'delivered', lessonId: 'l1', session: 'hs1', rank: 0 }),
+    ]);
+  });
+
+  it('threads the harness session_id into failure records', async () => {
+    await buildRecallHookOutput(
+      JSON.stringify({
+        hook_event_name: 'PostToolUseFailure',
+        session_id: 'hs1',
+        tool_input: { file_path: 'src/x.ts' },
+      }),
+      root,
+    );
+    expect(readOutcomeLog(root)).toEqual([
+      expect.objectContaining({ kind: 'failure', session: 'hs1' }),
     ]);
   });
 

@@ -124,6 +124,8 @@ export interface LessonsPruneData {
 
 export interface LessonsStatsData {
   readonly report: RecallStatsReport;
+  /** Actionable diagnoses derived from the report (empty = nothing to flag). */
+  readonly advice: readonly string[];
   /** Capture-side aggregate (totals, blocked, new vs upsert, trigger-kind mix). */
   readonly captureReport: CaptureStatsReport;
   /** Benefit-side aggregate (coarse) — did delivered lessons prevent the repeat? */

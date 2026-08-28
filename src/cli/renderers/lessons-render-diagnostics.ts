@@ -21,7 +21,7 @@ export function renderStats(data: LessonsStatsData, format: 'text' | 'json'): vo
     // Recall (cost) with capture (activity) and effectiveness (benefit) nested, so a
     // single JSON document carries all three halves of the telemetry picture.
     process.stdout.write(
-      `${JSON.stringify({ ...data.report, capture: data.captureReport, effectiveness: data.effectiveness }, null, 2)}\n`,
+      `${JSON.stringify({ ...data.report, capture: data.captureReport, effectiveness: data.effectiveness, ...(data.advice.length > 0 ? { advice: data.advice } : {}) }, null, 2)}\n`,
     );
     return;
   }
@@ -33,6 +33,8 @@ export function renderStats(data: LessonsStatsData, format: 'text' | 'json'): vo
   if (data.hasLog) renderRecallStats(data.report);
   if (data.hasCaptureLog) renderCaptureStats(data);
   if (data.hasOutcomeLog) renderEffectivenessStats(data.effectiveness);
+  // Diagnoses last, after every block — the numbers above are their evidence.
+  for (const line of data.advice) logger.warn(line);
 }
 
 function renderEffectivenessStats(e: LessonsStatsData['effectiveness']): void {

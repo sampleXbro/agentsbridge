@@ -1,4 +1,4 @@
-import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -10,6 +10,9 @@ const LEGACY_FIXTURE = join(
   '../../../fixtures/lessons/legacy-input',
 );
 import { lessonsHandlers } from '../../../../src/mcp/handlers/lessons.js';
+import { mcpSessionId } from '../../../../src/mcp/handlers/lessons-query.js';
+import { AUTO_SESSION_TTL_MS } from '../../../../src/lessons/seen-cache.js';
+import { seenStorePath } from '../../../../src/lessons/seen-store.js';
 import type { McpContext } from '../../../../src/mcp/context.js';
 import { resolveContext } from '../../../../src/mcp/context.js';
 import {
@@ -60,6 +63,58 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await rm(projectRoot, { recursive: true, force: true });
+});
+
+describe('lessonsHandlers.query — session dedup (default on)', () => {
+  it('suppresses a repeat recall by default and reports the suppressed count', async () => {
+    const r1 = await lessonsHandlers.query(ctx, { file: 'src/cli/x.ts' });
+    expect(r1.lessons).toHaveLength(1);
+    const r2 = await lessonsHandlers.query(ctx, { file: 'src/cli/x.ts' });
+    expect(r2.lessons).toHaveLength(0);
+    expect(r2.suppressed).toBe(1);
+  });
+
+  it('no_dedup returns the full set even after a prior delivery', async () => {
+    await lessonsHandlers.query(ctx, { file: 'src/cli/x.ts' });
+    const r = await lessonsHandlers.query(ctx, { file: 'src/cli/x.ts', no_dedup: true });
+    expect(r.lessons).toHaveLength(1);
+  });
+
+  it("accepts the CLI-flag alias 'no-dedup' for no_dedup", async () => {
+    await lessonsHandlers.query(ctx, { file: 'src/cli/x.ts' });
+    const r = await lessonsHandlers.query(ctx, { file: 'src/cli/x.ts', 'no-dedup': true });
+    expect(r.lessons).toHaveLength(1);
+  });
+
+  it('bounds suppression with a TTL — an aged delivery resurfaces', async () => {
+    // The MCP server has no compaction signal (unlike the hook's SessionStart
+    // reset), so an unbounded correlator would hide a mandatory rule for the
+    // whole server lifetime once the client compacted it away. Age the store
+    // past the window and the rule must come back.
+    const r1 = await lessonsHandlers.query(ctx, { file: 'src/cli/x.ts' });
+    expect(r1.lessons).toHaveLength(1);
+    expect((await lessonsHandlers.query(ctx, { file: 'src/cli/x.ts' })).lessons).toHaveLength(0);
+
+    const path = seenStorePath(mcpSessionId(), projectRoot);
+    const aged = Date.now() - (AUTO_SESSION_TTL_MS + 60_000);
+    const stored = JSON.parse(readFileSync(path, 'utf8')) as { seen: Record<string, number> };
+    writeFileSync(
+      path,
+      JSON.stringify({ v: 2, seen: Object.fromEntries(Object.keys(stored.seen).map((k) => [k, aged])) }),
+      'utf8',
+    );
+    const r3 = await lessonsHandlers.query(ctx, { file: 'src/cli/x.ts' });
+    expect(r3.lessons.map((l) => l.id)).toEqual(['topic-x-rule-1']);
+  });
+
+  it('an explicit session isolates dedup state per correlator', async () => {
+    const a1 = await lessonsHandlers.query(ctx, { file: 'src/cli/x.ts', session: 's-a' });
+    expect(a1.lessons).toHaveLength(1);
+    const a2 = await lessonsHandlers.query(ctx, { file: 'src/cli/x.ts', session: 's-a' });
+    expect(a2.lessons).toHaveLength(0);
+    const b1 = await lessonsHandlers.query(ctx, { file: 'src/cli/x.ts', session: 's-b' });
+    expect(b1.lessons).toHaveLength(1);
+  });
 });
 
 describe('lessonsHandlers.query', () => {
@@ -189,8 +244,13 @@ describe('lessonsHandlers.query', () => {
       topics: { 'topic-x': { summary: 'Topic X.' } },
       triggers: { 't-cmd': { kind: 'command_pattern', pattern: '^pnpm build' } },
     });
-    const viaCmd = await lessonsHandlers.query(ctx, { cmd: 'pnpm build --watch' });
-    const viaCommand = await lessonsHandlers.query(ctx, { command: 'pnpm build --watch' });
+    // no_dedup: the two calls hit the same action key; default dedup would hide
+    // the second and mask the alias-equivalence this test asserts.
+    const viaCmd = await lessonsHandlers.query(ctx, { cmd: 'pnpm build --watch', no_dedup: true });
+    const viaCommand = await lessonsHandlers.query(ctx, {
+      command: 'pnpm build --watch',
+      no_dedup: true,
+    });
     expect(viaCmd.lessons.map((l) => l.id)).toEqual(['topic-x-rule-1']);
     expect(viaCmd.lessons).toEqual(viaCommand.lessons);
   });

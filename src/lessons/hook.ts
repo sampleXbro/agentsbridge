@@ -1,4 +1,5 @@
 import { buildCaptureNudge, RECURRENCE_THRESHOLD } from './capture-nudge.js';
+import { hookCommandFastpath } from './cmd-fastpath.js';
 import { contextKey } from './context-key.js';
 import { diffTerms } from './diff-terms.js';
 import { errorClass } from './error-class.js';
@@ -14,7 +15,7 @@ import type { LessonsQuery } from './query.js';
 import { recallAlwaysLessons } from './recall-always.js';
 import { recallLessons } from './recall.js';
 import { hasCoveringLesson, recurrenceEscalation } from './recurrence-gate.js';
-import { clearSeen } from './seen-cache.js';
+import { clearSeenForSessionStart } from './seen-cache.js';
 
 /**
  * Hook-mode recall: the runtime engine behind a generated tool-call hook.
@@ -80,17 +81,12 @@ export async function buildRecallHookOutput(
   }
   const sessionId = str(parsed.session_id);
 
-  // SessionStart with source `compact`/`clear` means the model's context was just
-  // discarded (summarized or wiped). Per-session dedup assumes a delivered lesson
-  // STAYS in context, so after compaction it would keep suppressing lessons the
-  // summary dropped. Reset the seen set here so the next recall re-injects them.
-  // `startup`/`resume` keep the set (resume restores the prior context). No recall
-  // content is emitted — the following UserPromptSubmit/edit re-delivers.
+  // SessionStart resets dedup to match what actually happened to the context —
+  // compact/clear discarded it, startup began a new chat, resume restored the old
+  // one. See clearSeenForSessionStart. No recall content is emitted here; the
+  // following UserPromptSubmit/edit re-delivers.
   if (parsed.hook_event_name === 'SessionStart') {
-    const source = str(parsed.source);
-    if ((source === 'compact' || source === 'clear') && sessionId !== undefined) {
-      clearSeen(sessionId, projectRoot);
-    }
+    clearSeenForSessionStart(str(parsed.source), sessionId, projectRoot);
     return EMPTY;
   }
 
@@ -181,6 +177,9 @@ export async function buildRecallHookOutput(
   // Fold the change content into the query so keyword triggers match what is being
   // written, not just the path (diff-aware recall). Empty for non-writing tools.
   const keyword = parsed.tool_input ? diffTerms(parsed.tool_input) : '';
+  // Provable command-only no-match: skip the full recall load — see cmd-fastpath.ts.
+  if (escalation === null && hookCommandFastpath(projectRoot, { file, command, keyword, sessionId }))
+    return EMPTY;
   const query: LessonsQuery = {
     ...(file !== undefined ? { file } : {}),
     ...(command !== undefined ? { command } : {}),

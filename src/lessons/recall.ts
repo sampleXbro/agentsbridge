@@ -1,4 +1,5 @@
 import { maybeAutoMigrateLessons } from './auto-migrate.js';
+import { currentGraphStamp, refreshCommandFastpath } from './cmd-fastpath.js';
 import type { LessonsGraph } from './graph-schema.js';
 import { loadLessonsGraphResilient } from './graph-store.js';
 import { normalizeRecallFile } from './normalize-query-file.js';
@@ -47,6 +48,14 @@ export interface RecallOptions {
   readonly sessionId?: string;
   /** Force dedup off even when a session correlator is present. */
   readonly noDedup?: boolean;
+  /**
+   * Expire suppressions this long after delivery. Set by callers that have NO
+   * context-reset signal (the MCP server never sees the client compact), so a
+   * lesson dropped from a summarized context cannot stay hidden forever. The
+   * hook path leaves this unset on purpose: it resets on SessionStart
+   * compact/clear, which is the exact signal a wall-clock TTL only approximates.
+   */
+  readonly ttlMs?: number;
 }
 
 export interface RecallResult {
@@ -92,6 +101,10 @@ export async function recallLessons(
   } catch {
     // Degrade; see above.
   }
+  // Stamp BEFORE the read: refreshCommandFastpath only writes when the file
+  // still carries this stamp, so a graph write landing inside the read window
+  // can never be cached under stale patterns (see cmd-fastpath.ts).
+  const preReadStamp = currentGraphStamp(projectRoot);
   const load = loadLessonsGraphResilient(projectRoot);
   if (load.status === 'corrupt') {
     return { lessons: [], totalMatches: 0, suppressed: 0, corrupt: true };
@@ -101,6 +114,8 @@ export async function recallLessons(
   }
   if (load.status === 'absent') return { lessons: [], totalMatches: 0, suppressed: 0 };
   const graph = load.graph;
+  // Freshen the command fast-path cache while the graph is in hand (no-op when fresh).
+  refreshCommandFastpath(projectRoot, graph, preReadStamp);
   // Normalize the file path so a project-relative glob matches regardless of the
   // shape the caller passed (absolute / ./-prefixed / backslash).
   const matchQuery: LessonsQuery =
@@ -113,6 +128,7 @@ export async function recallLessons(
     explicit: options.sessionId,
     disabled: options.noDedup,
     projectRoot,
+    ...(options.ttlMs !== undefined ? { ttlMs: options.ttlMs } : {}),
   });
   const forRank = dedup === null ? matches : filterUnseen(dedup, matches);
   // Per-project recall tuning is the fallback for unset options; explicit
@@ -122,8 +138,10 @@ export async function recallLessons(
     limit: options.limit ?? cfg.limit,
     maxTokens: options.maxTokens === null ? undefined : (options.maxTokens ?? cfg.maxTokens),
     // Down-rank proven fire-but-fail lessons (empty ⇒ neutral, so recall is
-    // unchanged until the outcome log has real signal). Read from the side-channel.
-    effectiveness: loadEffectiveness(projectRoot),
+    // unchanged until the outcome log has real signal). Read from the side-channel
+    // only when something survived matching+dedup — a no-match recall must not pay
+    // the (up to 2MB) outcome-log read for a ranking of nothing.
+    effectiveness: forRank.length === 0 ? new Map() : loadEffectiveness(projectRoot),
   });
   if (dedup !== null)
     commitSeen(

@@ -140,7 +140,7 @@ This is the part no other config-sync tool has. Lessons give your AI agents a **
 
 The memory is one git-tracked file, `.agentsmesh/lessons/lessons.json`, and every agent talks to it through two commands:
 
-- **Recall** — before an edit or a state-changing command, the agent runs `agentsmesh lessons query --file <path> --cmd <command>` and follows the rules that match.
+- **Recall** — before an edit or a state-changing command, the agent runs `agentsmesh lessons query --file <path> --cmd <command> --session auto` and follows the rules that match (`--session auto` suppresses rules already shown this session; `--no-dedup` re-shows them).
 - **Capture** — right after a failure (red test, lint error, review comment, wrong assumption), it saves the rule with `agentsmesh lessons add "<rule>" --topic <id> --trigger-file <glob>`.
 
 Rules can be **scoped** (fire only on a matching file, command, or keyword) or **always-on** (`--scope always`) for universal standards that apply to every task — delivered on each task automatically, no trigger needed.

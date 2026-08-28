@@ -3576,6 +3576,21 @@
         "t-kw-544706af"
       ]
     },
+    "lessons-system-any-recall-dedup-path-that": {
+      "createdAt": "2026-08-27",
+      "evidence": [
+        "workflow:wf_4a3a99d8-50d (confirmed blocker); fixed by threading RecallOptions.ttlMs and applying AUTO_SESSION_TTL_MS on the MCP path"
+      ],
+      "rule": "Any recall-dedup path that lacks a context-reset signal MUST bound suppression with a TTL. The hook resets on SessionStart compact/clear, so it needs none — but the MCP server (stdio, one long-lived process per client) never observes the client compacting, so an unbounded correlator hides a rule the client summarized away for the whole server lifetime, turning a BLOCKING recall gate into one that silently returns nothing. Pass ttlMs on every non-hook recall path (MCP, CLI --session auto) and keep a per-call escape (no_dedup / --no-dedup).",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-4669d772",
+        "t-kw-b5a60c47"
+      ]
+    },
     "lessons-system-apply-the-same-legacy-auto": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -4360,6 +4375,21 @@
         "t-cmd-56d79bf7"
       ]
     },
+    "lessons-system-scope-a-recall-dedup-correlator": {
+      "createdAt": "2026-08-28",
+      "evidence": [
+        "Verified with the real CLI: two separate `lessons query --session auto` processes on the same day → second returned \"(no matches)\"; fixed by idle reset + 1h ceiling + SessionStart(startup) clear"
+      ],
+      "rule": "Scope a recall-dedup correlator to the AGENT'S CONTEXT, never to wall-clock time. A day-bucket key (`auto-<date>`) silently spans every chat that day, so a brand-new conversation editing the same files inherits the previous one's suppressions and gets NOTHING from a blocking recall gate. Bound every signal-less correlator three ways: reset the whole session on an idle gap (a pause means the old chat ended), cap each entry with a short TTL, and — where the harness reports it — clear on SessionStart `startup` (new chat) while leaving `resume` alone. Hiding a rule from a context that never saw it is far worse than re-showing one.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-d1039a1d",
+        "t-kw-c393e903"
+      ]
+    },
     "lessons-system-scope-always-lessons-are-delivered": {
       "createdAt": "2026-07-03",
       "evidence": [
@@ -4541,6 +4571,23 @@
         "t-cmd-56d79bf7"
       ]
     },
+    "lessons-system-validate-any-lessons-graph-consolidation": {
+      "createdAt": "2026-08-27",
+      "evidence": [
+        "workflow:wf_413b1563-487 (simulation-backed review: generation-collision delivered 0 lessons on generator.ts post-apply vs 4 before; leftovers outranked merged rules on path-helpers.ts; 4 rules over the 300-token budget)"
+      ],
+      "rule": "Validate any lessons-graph consolidation by DELIVERY SIMULATION against the real ranker before applying — information preservation is necessary but nowhere near sufficient. Merged rules sharing triggers drop to specificity 1/fanout while singletons keep 1.0, the cluster's topic-coherence mass shrinks with its lesson count, and rules over half of recallMaxTokens deliver alone (applyCaps keeps top-1 over budget and BREAKS, not skips, at the first over-cost row) — together these can make a cluster UNDELIVERABLE on its own anchor files. v2 constraints: each merged rule ≤½ the token budget; distinct fanout-aware triggers (no superset globs); keep command/keyword triggers with the content that fires at that moment; retrigger the leftovers in the same pass; gate the apply on before/after recall simulation of the anchor files.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-a9519573",
+        "t-kw-00522ba8",
+        "t-kw-14b41a96",
+        "t-kw-27f3c3f6"
+      ]
+    },
     "lessons-system-when-a-cli-subsystem-is": {
       "createdAt": "2026-06-11",
       "evidence": [
@@ -4585,6 +4632,23 @@
         "t-glob-4eefad64",
         "t-kw-519df655",
         "t-kw-3e99909c"
+      ]
+    },
+    "lessons-system-when-a-reset-policy-branches": {
+      "createdAt": "2026-08-28",
+      "evidence": [
+        "workflow:wf_f9609846-81e (11 confirmed findings: compact/clear missed the auto bucket",
+        "unknown source reset nothing",
+        "cross-process env mismatch missed the day key)"
+      ],
+      "rule": "When a reset policy branches on an external enum (a harness's SessionStart `source`), invert the default: enumerate only the values that are safe to KEEP and clear on everything else, including unknown and missing values. Listing the clear-worthy sources instead left `startup` unhandled at first and any future/absent source unhandled forever, and it also cleared only ONE of several stores that the same context feeds. State the keep-condition once (`resume` restores the context, so it keeps), then clear every store the vanished context could have written — cheaper to redo work than to hide state from a context that never saw it.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-405208da",
+        "t-kw-287eb53c"
       ]
     },
     "lessons-system-when-editing-the-lessons-wording": {
@@ -4658,6 +4722,22 @@
         "t-glob-8148e382"
       ]
     },
+    "lessons-system-when-stamping-a-derived-cache": {
+      "createdAt": "2026-08-27",
+      "evidence": [
+        "workflow:wf_f14d8389-9ae (adversarial review confirmed high-severity read-then-stat race in cmd-fastpath; fixed via currentGraphStamp pre-read + equality gate; race test added)"
+      ],
+      "rationale": "Found by refute-biased review of the command fast path: the stale cache silently skipped mandatory recalls while telemetry recorded them as legitimate no-matches.",
+      "rule": "When stamping a derived cache with a source file's (mtimeMs, size), take the stamp BEFORE reading the source and write the cache only when a post-derivation re-stat matches that pre-read stamp exactly. Stamping after the read races atomic tmp+rename writers: a write landing inside the read window yields a fresh-stamped cache of stale content, and the freshness check then validates it forever (self-perpetuating false negatives). The obvious fix — stat at write time — is exactly the bug.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-be5f6012",
+        "t-kw-c655c133"
+      ]
+    },
     "lessons-system-when-testing-direct-legacy-import": {
       "createdAt": "2026-06-06",
       "evidence": [
@@ -4688,6 +4768,21 @@
         "t-kw-d6524007",
         "t-kw-e3a2ec15",
         "t-cmd-38934d6c"
+      ]
+    },
+    "lessons-system-when-two-writers-with-different": {
+      "createdAt": "2026-08-27",
+      "evidence": [
+        "workflow:wf_4a3a99d8-50d; reproduced live then fixed in commitSeen (seen-cache.ts)"
+      ],
+      "rule": "When two writers with different modes share one on-disk store (a TTL'd writer and an untimed one on the same seen-cache file), the WRITTEN shape must follow the shape that was READ, never the writer's own mode. An untimed commit that downgraded a stamped v2 store back to a bare id array discarded every timestamp, and the next TTL read — which treats an unstamped store as fully expired — then suppressed nothing, silently zeroing dedup for the rest of the session. Preserve the richer shape on write; only a session that never saw one may keep writing the legacy shape (so an older binary can still read it).",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-ea0c6170",
+        "t-kw-b8d4ca2e"
       ]
     },
     "lessons-system-when-wiring-lessons-recall-hooks": {
@@ -4747,6 +4842,22 @@
       "triggers": [
         "t-glob-0571e0f3",
         "t-kw-574e42b9"
+      ]
+    },
+    "lessons-telemetry-when-interpreting-lessons-stats-diagnose": {
+      "createdAt": "2026-08-27",
+      "evidence": [
+        "field report 2026-07-21: redundancy 58.7% + 16 time-gap sessions + ritual lacking --session; no-match 82.4% with cmd triggers 28 vs kw 135"
+      ],
+      "rule": "When interpreting `lessons stats`, diagnose deployment before content: intra-session redundancy above ~25% combined with sessions counted by time-gap means NO session correlator reaches recall (harness hook stdin absent, or the CLI ritual run without --session) — dedup is inert and most \"skimming noise\" is repeats; a high no-match rate (with returned-token p50≈0) is normally the unconditional per-command recall against a graph with few command_pattern triggers — a latency cost, not a token cost. Fix those two before touching ranking or rule content.",
+      "status": "active",
+      "topics": [
+        "lessons-telemetry"
+      ],
+      "triggers": [
+        "t-glob-9c1d823f",
+        "t-kw-4e1fef3d",
+        "t-kw-6c171a08"
       ]
     },
     "lessons-the-lessons-graph-has-no": {
@@ -8928,6 +9039,10 @@
       "kind": "file_glob",
       "pattern": "vitest.config*"
     },
+    "t-glob-4669d772": {
+      "kind": "file_glob",
+      "pattern": "src/mcp/handlers/lessons-query.ts"
+    },
     "t-glob-49133422": {
       "kind": "file_glob",
       "pattern": "tests/unit/plugins/**/*.ts"
@@ -9264,6 +9379,10 @@
       "kind": "file_glob",
       "pattern": "tests/unit/cli/commands/lessons.test.ts"
     },
+    "t-glob-9c1d823f": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/stats.ts"
+    },
     "t-glob-9c525d4d": {
       "kind": "file_glob",
       "pattern": "src/cli/commands/lessons-query-handler.ts"
@@ -9315,6 +9434,10 @@
     "t-glob-a93a3ef5": {
       "kind": "file_glob",
       "pattern": "src/lessons/recall-always.ts"
+    },
+    "t-glob-a9519573": {
+      "kind": "file_glob",
+      "pattern": "tasks/lessons-consolidation-proposal.md"
     },
     "t-glob-a970d979": {
       "kind": "file_glob",
@@ -9388,6 +9511,10 @@
       "kind": "file_glob",
       "pattern": ".gitignore"
     },
+    "t-glob-be5f6012": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/cmd-fastpath.ts"
+    },
     "t-glob-c1deac29": {
       "kind": "file_glob",
       "pattern": "src/targets/projection/lessons-paragraph.ts"
@@ -9443,6 +9570,10 @@
     "t-glob-d0a4b76e": {
       "kind": "file_glob",
       "pattern": "website/src/content/docs/**/*.mdx"
+    },
+    "t-glob-d1039a1d": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/session-window.ts"
     },
     "t-glob-d23b21be": {
       "kind": "file_glob",
@@ -9536,6 +9667,10 @@
       "kind": "file_glob",
       "pattern": ".agentsmesh/skills/**"
     },
+    "t-glob-ea0c6170": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/seen-*.ts"
+    },
     "t-glob-eac2566f": {
       "kind": "file_glob",
       "pattern": "src/targets/augment-code/*.ts"
@@ -9587,6 +9722,10 @@
     "t-kw-00447f91": {
       "kind": "keyword",
       "pattern": "regex equivalence"
+    },
+    "t-kw-00522ba8": {
+      "kind": "keyword",
+      "pattern": "lessons consolidation"
     },
     "t-kw-012b2936": {
       "kind": "keyword",
@@ -9664,6 +9803,10 @@
       "kind": "keyword",
       "pattern": "qa report commit"
     },
+    "t-kw-14b41a96": {
+      "kind": "keyword",
+      "pattern": "merge lessons"
+    },
     "t-kw-15065ff0": {
       "kind": "keyword",
       "pattern": "multi-agent"
@@ -9723,6 +9866,14 @@
     "t-kw-27b89f58": {
       "kind": "keyword",
       "pattern": "irregular whitespace"
+    },
+    "t-kw-27f3c3f6": {
+      "kind": "keyword",
+      "pattern": "delivery simulation"
+    },
+    "t-kw-287eb53c": {
+      "kind": "keyword",
+      "pattern": "session start reset"
     },
     "t-kw-3070d871": {
       "kind": "keyword",
@@ -9824,6 +9975,10 @@
       "kind": "keyword",
       "pattern": "jsdoc"
     },
+    "t-kw-4e1fef3d": {
+      "kind": "keyword",
+      "pattern": "stats interpretation"
+    },
     "t-kw-50851a9b": {
       "kind": "keyword",
       "pattern": "recurrence harness"
@@ -9867,6 +10022,10 @@
     "t-kw-6829f894": {
       "kind": "keyword",
       "pattern": "fork_context"
+    },
+    "t-kw-6c171a08": {
+      "kind": "keyword",
+      "pattern": "redundancy diagnosis"
     },
     "t-kw-6c43e9c1": {
       "kind": "keyword",
@@ -10044,9 +10203,17 @@
       "kind": "keyword",
       "pattern": "acquireProcessLock"
     },
+    "t-kw-b5a60c47": {
+      "kind": "keyword",
+      "pattern": "dedup ttl"
+    },
     "t-kw-b6410e25": {
       "kind": "keyword",
       "pattern": "command truncation"
+    },
+    "t-kw-b8d4ca2e": {
+      "kind": "keyword",
+      "pattern": "seen store shape"
     },
     "t-kw-b975b1b2": {
       "kind": "keyword",
@@ -10059,6 +10226,14 @@
     "t-kw-c34b7cc1": {
       "kind": "keyword",
       "pattern": "branch coverage gap"
+    },
+    "t-kw-c393e903": {
+      "kind": "keyword",
+      "pattern": "session correlator scope"
+    },
+    "t-kw-c655c133": {
+      "kind": "keyword",
+      "pattern": "derived cache stamp"
     },
     "t-kw-c65f9220": {
       "kind": "keyword",

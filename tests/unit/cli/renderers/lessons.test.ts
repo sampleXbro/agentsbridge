@@ -595,6 +595,7 @@ describe('renderLessons — stats', () => {
       format: 'text',
       data: {
         report,
+        advice: [],
         captureReport: emptyCapture,
         hasLog: true,
         hasCaptureLog: true,
@@ -611,6 +612,7 @@ describe('renderLessons — stats', () => {
       format: 'text',
       data: {
         report,
+        advice: [],
         captureReport: emptyCapture,
         hasLog: true,
         hasCaptureLog: false,
@@ -634,6 +636,7 @@ describe('renderLessons — stats', () => {
       format: 'text',
       data: {
         report,
+        advice: [],
         captureReport: emptyCapture,
         effectiveness: {
           deliveries: 10,
@@ -664,6 +667,7 @@ describe('renderLessons — stats', () => {
       format: 'text',
       data: {
         report,
+        advice: [],
         captureReport: emptyCapture,
         hasLog: false,
         hasCaptureLog: false,
@@ -684,6 +688,7 @@ describe('renderLessons — stats', () => {
       format: 'text',
       data: {
         report,
+        advice: [],
         captureReport: emptyCapture,
         hasLog: false,
         hasCaptureLog: false,
@@ -712,6 +717,7 @@ describe('renderLessons — stats', () => {
       format: 'text',
       data: {
         report: heavy,
+        advice: [],
         captureReport: emptyCapture,
         hasLog: true,
         hasCaptureLog: false,
@@ -728,6 +734,7 @@ describe('renderLessons — stats', () => {
       format: 'json',
       data: {
         report,
+        advice: [],
         captureReport: { ...emptyCapture, total: 2, blocked: 1, newLessons: 1 },
         hasLog: true,
         hasCaptureLog: true,
@@ -741,6 +748,57 @@ describe('renderLessons — stats', () => {
     expect(parsed.capture).toMatchObject({ total: 2, blocked: 1, newLessons: 1 });
   });
 
+  it('prints advice lines after the stat blocks (text format, stderr)', () => {
+    renderLessons({
+      subcommand: 'stats',
+      exitCode: 0,
+      format: 'text',
+      data: {
+        report,
+        advice: ['advice: session dedup is inert — pass --session auto'],
+        captureReport: emptyCapture,
+        hasLog: true,
+        hasCaptureLog: false,
+        telemetryEnabled: true,
+      },
+    });
+    expect(output.stderr()).toContain('session dedup is inert');
+  });
+
+  it('json format includes the advice key only when advice is non-empty', () => {
+    renderLessons({
+      subcommand: 'stats',
+      exitCode: 0,
+      format: 'json',
+      data: {
+        report,
+        advice: ['advice: x'],
+        captureReport: emptyCapture,
+        hasLog: true,
+        hasCaptureLog: false,
+        telemetryEnabled: true,
+      },
+    });
+    expect(JSON.parse(output.stdout()).advice).toEqual(['advice: x']);
+  });
+
+  it('json format omits the advice key when advice is empty', () => {
+    renderLessons({
+      subcommand: 'stats',
+      exitCode: 0,
+      format: 'json',
+      data: {
+        report,
+        advice: [],
+        captureReport: emptyCapture,
+        hasLog: true,
+        hasCaptureLog: false,
+        telemetryEnabled: true,
+      },
+    });
+    expect('advice' in JSON.parse(output.stdout())).toBe(false);
+  });
+
   it('prints a Capture block (totals, blocked, trigger-kind mix, recall:capture ratio) when a capture log exists', () => {
     renderLessons({
       subcommand: 'stats',
@@ -748,6 +806,7 @@ describe('renderLessons — stats', () => {
       format: 'text',
       data: {
         report, // totalRecalls: 4
+        advice: [],
         captureReport: {
           total: 2,
           blocked: 1,
@@ -779,6 +838,7 @@ describe('renderLessons — stats', () => {
       format: 'text',
       data: {
         report,
+        advice: [],
         captureReport: { ...emptyCapture, total: 1, newLessons: 1 },
         hasLog: false,
         hasCaptureLog: true,

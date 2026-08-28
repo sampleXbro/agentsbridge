@@ -19,14 +19,18 @@ regression / wrong assumption / surprise and you have not captured (nor stated
 
 ## Recall — before each edit/command, and at task start
 
-`agentsmesh lessons query --file <path> --cmd <command>`, then apply every rule.
-Pure-read commands (read-only) and the query itself are exempt. **keyword-only recall
+`agentsmesh lessons query --file <path> --cmd <command> --session auto`, then apply every
+rule. Pure-read commands (read-only) and the query itself are exempt. **keyword-only recall
 for a specific edit is the anti-pattern** — anchor those to `--file`/`--cmd`. But at the
 START of a task (or when planning), run `agentsmesh lessons query --keyword "<the task's
-key terms>" --always`: that surfaces the conceptual rules no file/command names PLUS the
-universal always-on lessons — the manual equivalent of the automatic prompt recall on
-hook-capable tools. Author a `keyword` trigger beside a `file_glob` on conceptual lessons
-so they are reachable both ways. No shell → MCP `lessons_query` (`file`/`command`/`keyword`/`always`).
+key terms>" --always --session auto`: that surfaces the conceptual rules no file/command
+names PLUS the universal always-on lessons — the manual equivalent of the automatic prompt
+recall on hook-capable tools. **Always pass `--session auto`**: it suppresses rules already
+shown this session so repeat recalls stay quiet (without it every recall re-delivers the
+whole matched set); `--no-dedup` re-shows everything after a context reset. Author a
+`keyword` trigger beside a `file_glob` on conceptual lessons so they are reachable both
+ways. No shell → MCP `lessons_query` (`file`/`command`/`keyword`/`always`; session dedup
+is on by default there — `no_dedup:true` to re-show).
 
 ## Capture — Gate Function (before any completion claim)
 

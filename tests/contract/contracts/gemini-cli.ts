@@ -8,7 +8,8 @@ export const geminiCliContract: TargetPathContract = {
     '.gemini/agents/code-reviewer.md',
     '.gemini/agents/researcher.md',
     '.gemini/commands/review.toml',
-    '.gemini/policies/permissions.toml',
+    // No `.gemini/policies/permissions.toml`: Gemini's Workspace policy tier is
+    // non-functional upstream, so permissions are emitted only at global scope.
     '.gemini/settings.json',
     '.gemini/skills/api-generator/SKILL.md',
     '.gemini/skills/api-generator/references/route-checklist.md',
@@ -24,7 +25,6 @@ export const geminiCliContract: TargetPathContract = {
     '.agentsmesh/hooks.yaml',
     '.agentsmesh/ignore',
     '.agentsmesh/mcp.json',
-    '.agentsmesh/permissions.yaml',
     '.agentsmesh/rules/_root.md',
     '.agentsmesh/skills/api-generator/SKILL.md',
     '.agentsmesh/skills/api-generator/references/route-checklist.md',

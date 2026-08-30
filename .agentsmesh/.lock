@@ -1,7 +1,7 @@
 # Auto-generated. DO NOT EDIT MANUALLY.
 # Tracks the state of all config files for team conflict resolution.
 
-generated_at: 2026-08-28T07:19:20.816Z
+generated_at: 2026-08-30T11:56:49.981Z
 generated_by: serhii
 lib_version: 0.31.0
 checksums:
@@ -318,6 +318,15 @@ outputs:
   .aider/skills/am-command-planning/SKILL.md: sha256:24a0004d27c3a4eb4318295d52cee61d0087f7f2913d969d35ed7e9b99c1d451
   .aider/skills/am-command-ship/SKILL.md: sha256:b50ab1dfe28e0c815a5bbff8115630f9efcad80b5f416372e65dc63c05307327
   .aider/skills/am-command-spec/SKILL.md: sha256:b1d75db24651b48206cffa37c62ac7800123ac94703e99cd040124b9ee73da95
+  .amazonq/prompts/commit.md: sha256:e3d927c6d903faa27e01e1fe733926c72b1905eacda0f6a4b9472ee2e6d26485
+  .amazonq/prompts/review.md: sha256:51944d6b2973136558a21fc6cc49dda9602a5e3893c7600024c711429101a142
+  .amazonq/prompts/test.md: sha256:3e0b3f3c553cb8d874d77e695ca44602393df0cce2bd10b2e4d1ebbb54379e8d
+  .amazonq/prompts/build.md: sha256:93e8c5d44055033438e190614b7eb5c2befe4db6059bb83405967978f520c444
+  .amazonq/prompts/code-simplify.md: sha256:76a3787968d44203b1f8739cce0a148733a1d4eeb14ef9152d53c479f9097522
+  .amazonq/prompts/plan.md: sha256:41a7b76aec504373a149e03f8f6ed212dbcc8ceb2bf4935d169cbb0e8a13f583
+  .amazonq/prompts/planning.md: sha256:863a799fac45e86aaed7bb9143555bfcff6561f7706a53d3fd36e909ecdd01d7
+  .amazonq/prompts/ship.md: sha256:4fad208aa9ff7ba12f1d3afcdb9ee3a78ebdef5a6b12e0358e5aca0a479ae4d6
+  .amazonq/prompts/spec.md: sha256:fe3a8cd8f233d4ada8ffda79ca20fe35c2644c1fa42c05d786f233f2c2748cd8
   .augment/commands/commit.md: sha256:56f9232d37c003abda4ef281c9349f5417091bbad8d0c5911d06ea99bbb1d0b5
   .augment/commands/review.md: sha256:b7373e051bccdb75e96205e4fb38529e8a66f7e5db1ee346edd7c5d5f32869d9
   .augment/commands/test.md: sha256:17ce1150b023e4b708954b5f05c14cf0dd6da1b5b71d6f3a0cf8d78f030dd3da
@@ -3859,7 +3868,6 @@ outputs:
   .trae/mcp.json: sha256:beafdf9d60bbe72fa11ff90017241727fadad6bcdcb82bd87c6ec3164d2c720d
   .factory/mcp.json: sha256:beafdf9d60bbe72fa11ff90017241727fadad6bcdcb82bd87c6ec3164d2c720d
   .cursor/cli.json: sha256:3c3b42f0cfa6a777989c4f87f18101ef9da4d69f46c6bc24c594000c6cd08ccf
-  .gemini/policies/permissions.toml: sha256:09f359b153101c0618a2f3ee8123011120490a36c020d155e4cf40fdbd2c8fce
   .codex/rules/agentsmesh-permissions.rules: sha256:6b1e125e95aef4580c325fdf17f101b1433de06127c5f69025f6fee2cc38c568
   .vscode/settings.json: sha256:de2e6a624e5bc4c4c5d652398089c77b57e1d6f509dba007cb009f383ce10544
   kilo.jsonc: sha256:630c265b1463315e3060b5e25e25c34b6ffc3f2f0d4dc22d2b814275f1049ed1

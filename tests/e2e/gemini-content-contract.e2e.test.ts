@@ -4,7 +4,13 @@ import { rmSync } from 'node:fs';
 import { createCanonicalProject } from './helpers/canonical.js';
 import { runCli } from './helpers/run-cli.js';
 import { cleanup } from './helpers/setup.js';
-import { fileContains, fileExists, readJson, readText } from './helpers/assertions.js';
+import {
+  fileContains,
+  fileExists,
+  fileNotExists,
+  readJson,
+  readText,
+} from './helpers/assertions.js';
 
 describe('gemini-cli content contract roundtrip', () => {
   let dir = '';
@@ -25,6 +31,8 @@ describe('gemini-cli content contract roundtrip', () => {
     const settingsPath = join(dir, '.gemini', 'settings.json');
     const commandPath = join(dir, '.gemini', 'commands', 'review.toml');
     const agentPath = join(dir, '.gemini', 'agents', 'code-reviewer.md');
+    // Gemini's Workspace policy tier is non-functional upstream, so permissions are
+    // emitted only at global scope (see tests/e2e/global-roundtrip-gemini.e2e.test.ts).
     const policyPath = join(dir, '.gemini', 'policies', 'permissions.toml');
 
     fileExists(rootPath);
@@ -32,7 +40,7 @@ describe('gemini-cli content contract roundtrip', () => {
     fileExists(settingsPath);
     fileExists(commandPath);
     fileExists(agentPath);
-    fileExists(policyPath);
+    fileNotExists(policyPath);
 
     fileContains(commandPath, 'description = "Code review"');
     fileContains(commandPath, 'prompt = """');
@@ -49,10 +57,6 @@ describe('gemini-cli content contract roundtrip', () => {
     fileContains(agentPath, 'maxTurns: 10');
     fileContains(agentPath, 'permissionMode: ask');
 
-    fileContains(policyPath, '[[rule]]');
-    fileContains(policyPath, 'decision = "allow"');
-    fileContains(policyPath, 'decision = "deny"');
-
     rmSync(join(dir, '.agentsmesh'), { recursive: true, force: true });
 
     const imported = await runCli('import --from gemini-cli', dir);
@@ -62,7 +66,5 @@ describe('gemini-cli content contract roundtrip', () => {
     fileContains(join(dir, '.agentsmesh', 'commands', 'review.md'), 'Review current changes');
     fileContains(join(dir, '.agentsmesh', 'agents', 'code-reviewer.md'), 'maxTurns: 10');
     fileContains(join(dir, '.agentsmesh', 'agents', 'code-reviewer.md'), 'permissionMode: ask');
-    fileContains(join(dir, '.agentsmesh', 'permissions.yaml'), 'allow:');
-    fileContains(join(dir, '.agentsmesh', 'permissions.yaml'), 'deny:');
   });
 });

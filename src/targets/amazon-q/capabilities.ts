@@ -3,7 +3,7 @@ import type { TargetCapabilities } from '../catalog/target.interface.js';
 export const projectCapabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'native',
-  commands: 'none',
+  commands: 'native',
   agents: 'native',
   skills: 'none',
   mcp: 'native',
@@ -15,7 +15,7 @@ export const projectCapabilities: TargetCapabilities = {
 export const globalCapabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'none',
-  commands: 'none',
+  commands: 'native',
   agents: 'native',
   skills: 'none',
   mcp: 'native',

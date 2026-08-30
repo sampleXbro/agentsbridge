@@ -1,6 +1,5 @@
 import type { TargetGenerators, TargetCapabilities } from '../catalog/target.interface.js';
-import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
-import type { ValidatedConfig } from '../../config/core/schema.js';
+import type { TargetDescriptor } from '../catalog/target-descriptor.js';
 import {
   generateRules,
   generateCommands,
@@ -9,20 +8,18 @@ import {
   generateIgnore,
 } from './generator.js';
 import { cap } from '../catalog/capabilities.js';
-import { generateGeminiPermissionsPolicies } from './policies-generator.js';
+import { generateGeminiScopeExtras } from './scope-extras.js';
+import { projectLayout, globalLayout } from './layout.js';
 import {
   GEMINI_ROOT,
-  GEMINI_COMPAT_AGENTS,
   GEMINI_COMMANDS_DIR,
   GEMINI_RULES_DIR,
-  GEMINI_AGENTS_DIR,
   GEMINI_GLOBAL_ROOT,
   GEMINI_GLOBAL_COMPAT_AGENTS,
   GEMINI_GLOBAL_SETTINGS,
   GEMINI_GLOBAL_COMMANDS_DIR,
   GEMINI_GLOBAL_SKILLS_DIR,
   GEMINI_GLOBAL_AGENTS_DIR,
-  GEMINI_GLOBAL_POLICIES_FILE,
   GEMINI_SETTINGS,
   GEMINI_CANONICAL_RULES_DIR,
   GEMINI_CANONICAL_COMMANDS_DIR,
@@ -32,11 +29,8 @@ import { inferGeminiPick } from '../../install/native/gemini-install-commands.js
 import { geminiCommandMapper, geminiRuleMapper } from './import-mappers.js';
 import { lintRules } from './linter.js';
 import { buildGeminiCliImportPaths } from '../../core/reference/import-map-builders.js';
-import { shouldConvertAgentsToSkills } from '../../config/core/conversions.js';
-import { projectedAgentSkillDirName } from '../projection/projected-agent-skill.js';
-import { lintCommands, lintHooks } from './lint.js';
+import { lintCommands, lintHooks, lintPermissions } from './lint.js';
 import { emitScopedGeminiSettings } from './scoped-settings-emit.js';
-import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { mergeGeminiSettingsJson } from '../../core/generate/settings.js';
 
 export const target: TargetGenerators = {
@@ -47,124 +41,14 @@ export const target: TargetGenerators = {
   generateAgents,
   generateSkills,
   generateIgnore,
-  generatePermissions: generateGeminiPermissionsPolicies,
   importFrom: importFromGemini,
 };
 
-const project: TargetLayout = {
-  rootInstructionPath: GEMINI_ROOT,
-  outputFamilies: [
-    { id: 'compat-agents', kind: 'additional', explicitPaths: [GEMINI_COMPAT_AGENTS] },
-  ],
-  extraRuleOutputPaths() {
-    return [GEMINI_COMPAT_AGENTS];
-  },
-  skillDir: '.gemini/skills',
-  managedOutputs: {
-    dirs: ['.gemini/agents', '.gemini/commands', '.gemini/skills', '.agents/skills'],
-    files: [
-      'AGENTS.md',
-      'GEMINI.md',
-      '.gemini/settings.json',
-      '.gemini/policies/permissions.toml',
-      '.geminiignore',
-    ],
-  },
-  // `AGENTS.md` rewrites skill links to `.agents/skills/…` for cross-tool compatibility; mirror
-  // project skills there so link validation and consumers see real files (same as global layout).
-  mirrorGlobalPath(path, activeTargets) {
-    return mirrorSkillsToAgents(path, '.gemini/skills', activeTargets);
-  },
-  paths: {
-    rulePath(_slug, _rule) {
-      return GEMINI_ROOT;
-    },
-    commandPath(name, _config) {
-      if (name.includes(':')) {
-        const parts = name.split(':').filter(Boolean);
-        const fileBase = parts.pop() ?? name;
-        const dirs = parts;
-        return `${GEMINI_COMMANDS_DIR}/${dirs.join('/')}/${fileBase}.toml`;
-      }
-      return `${GEMINI_COMMANDS_DIR}/${name}.toml`;
-    },
-    agentPath(name, config: ValidatedConfig) {
-      return shouldConvertAgentsToSkills(config, 'gemini-cli')
-        ? `.gemini/skills/${projectedAgentSkillDirName(name)}/SKILL.md`
-        : `${GEMINI_AGENTS_DIR}/${name}.md`;
-    },
-  },
-};
-
-const globalLayout: TargetLayout = {
-  rootInstructionPath: GEMINI_GLOBAL_ROOT,
-  outputFamilies: [
-    { id: 'compat-agents', kind: 'additional', explicitPaths: [GEMINI_GLOBAL_COMPAT_AGENTS] },
-  ],
-  extraRuleOutputPaths() {
-    return [GEMINI_GLOBAL_COMPAT_AGENTS];
-  },
-  skillDir: GEMINI_GLOBAL_SKILLS_DIR,
-  managedOutputs: {
-    dirs: [GEMINI_GLOBAL_COMMANDS_DIR, GEMINI_GLOBAL_SKILLS_DIR, GEMINI_GLOBAL_AGENTS_DIR],
-    files: [
-      GEMINI_GLOBAL_ROOT,
-      GEMINI_GLOBAL_COMPAT_AGENTS,
-      GEMINI_GLOBAL_SETTINGS,
-      GEMINI_GLOBAL_POLICIES_FILE,
-    ],
-  },
-  rewriteGeneratedPath(path) {
-    // Transform project-level paths to global ~/.gemini/ paths
-    if (path === GEMINI_ROOT) {
-      return GEMINI_GLOBAL_ROOT;
-    }
-    if (path === GEMINI_COMPAT_AGENTS) {
-      return GEMINI_GLOBAL_COMPAT_AGENTS;
-    }
-    if (path === GEMINI_SETTINGS) {
-      return GEMINI_GLOBAL_SETTINGS;
-    }
-    if (path.startsWith(`${GEMINI_COMMANDS_DIR}/`)) {
-      return path.replace(`${GEMINI_COMMANDS_DIR}/`, `${GEMINI_GLOBAL_COMMANDS_DIR}/`);
-    }
-    if (path.startsWith('.gemini/skills/')) {
-      return path.replace('.gemini/skills/', `${GEMINI_GLOBAL_SKILLS_DIR}/`);
-    }
-    if (path.startsWith(`${GEMINI_AGENTS_DIR}/`)) {
-      return path.replace(`${GEMINI_AGENTS_DIR}/`, `${GEMINI_GLOBAL_AGENTS_DIR}/`);
-    }
-    // User-tier policies ARE loaded by the engine globally; only ignore is suppressed.
-    if (path === '.geminiignore') {
-      return null;
-    }
-    return path;
-  },
-  mirrorGlobalPath(path, activeTargets) {
-    return mirrorSkillsToAgents(path, GEMINI_GLOBAL_SKILLS_DIR, activeTargets);
-  },
-  paths: {
-    rulePath(_slug, _rule) {
-      // Global mode uses single instructions file, not per-rule files
-      return GEMINI_GLOBAL_ROOT;
-    },
-    commandPath(name, _config) {
-      if (name.includes(':')) {
-        const parts = name.split(':').filter(Boolean);
-        const fileBase = parts.pop() ?? name;
-        const dirs = parts;
-        return `${GEMINI_GLOBAL_COMMANDS_DIR}/${dirs.join('/')}/${fileBase}.toml`;
-      }
-      return `${GEMINI_GLOBAL_COMMANDS_DIR}/${name}.toml`;
-    },
-    agentPath(name, config: ValidatedConfig) {
-      return shouldConvertAgentsToSkills(config, 'gemini-cli')
-        ? `${GEMINI_GLOBAL_SKILLS_DIR}/${projectedAgentSkillDirName(name)}/SKILL.md`
-        : `${GEMINI_GLOBAL_AGENTS_DIR}/${name}.md`;
-    },
-  },
-};
-
+/**
+ * Permissions are `native` globally (`~/.gemini/policies/permissions.toml`) but only
+ * `partial` for the project: the policy engine's Workspace tier is non-functional
+ * upstream, so a repo-local policy file would never be read.
+ */
 const globalCapabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'embedded',
@@ -203,6 +87,7 @@ export const descriptor = {
   lint: {
     commands: lintCommands,
     hooks: lintHooks,
+    permissions: lintPermissions,
   },
   emitScopedSettings: emitScopedGeminiSettings,
   mergeGeneratedOutputContent(existing, pending, newContent, resolvedPath) {
@@ -211,7 +96,7 @@ export const descriptor = {
       ? mergeGeminiSettingsJson(base, newContent)
       : null;
   },
-  project,
+  project: projectLayout,
   globalSupport: {
     capabilities: globalCapabilities,
     detectionPaths: [
@@ -223,6 +108,7 @@ export const descriptor = {
       GEMINI_GLOBAL_AGENTS_DIR,
     ],
     layout: globalLayout,
+    scopeExtras: generateGeminiScopeExtras,
   },
   importer: {
     rules: {

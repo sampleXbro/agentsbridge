@@ -14,13 +14,15 @@
  *   - agents: native (.amazonq/cli-agents/{name}.json)
  *   - hooks: embedded (PreToolUse/PostToolUse/UserPromptSubmit embedded in agent JSON)
  *   - permissions: embedded (allow embedded in agent JSON as allowedTools; deny/ask unsupported)
- *   - commands/skills/ignore: none
+ *   - commands: native (.amazonq/prompts/{name}.md — plain markdown, read verbatim)
+ *   - skills/ignore: none
  */
 
 import type { TargetGenerators } from '../catalog/target.interface.js';
 import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
 import {
   generateRules,
+  generateCommands,
   generateMcp,
   generateAgents,
   generateHooks,
@@ -28,23 +30,27 @@ import {
 } from './generator.js';
 import { importFromAmazonQ } from './importer.js';
 import { lintRules } from './linter.js';
-import { lintHooks, lintPermissions } from './lint.js';
+import { lintCommands, lintHooks, lintPermissions } from './lint.js';
 import { buildAmazonQImportPaths } from '../../core/reference/import-map-builders.js';
 import { amazonQImporterSpec } from './importer-spec.js';
 import { projectCapabilities, globalCapabilities } from './capabilities.js';
+import { amazonQPromptName } from './generator.js';
 import {
   AMAZON_Q_TARGET,
   AMAZON_Q_RULES_DIR,
   AMAZON_Q_MCP_FILE,
   AMAZON_Q_AGENTS_DIR,
+  AMAZON_Q_PROMPTS_DIR,
   AMAZON_Q_GLOBAL_RULES_DIR,
   AMAZON_Q_GLOBAL_MCP_FILE,
   AMAZON_Q_GLOBAL_AGENTS_DIR,
+  AMAZON_Q_GLOBAL_PROMPTS_DIR,
 } from './constants.js';
 
 export const target: TargetGenerators = {
   name: AMAZON_Q_TARGET,
   generateRules,
+  generateCommands,
   generateMcp,
   generateAgents,
   generateHooks,
@@ -54,15 +60,15 @@ export const target: TargetGenerators = {
 
 const project: TargetLayout = {
   managedOutputs: {
-    dirs: [AMAZON_Q_RULES_DIR, AMAZON_Q_AGENTS_DIR],
+    dirs: [AMAZON_Q_RULES_DIR, AMAZON_Q_AGENTS_DIR, AMAZON_Q_PROMPTS_DIR],
     files: [AMAZON_Q_MCP_FILE],
   },
   paths: {
     rulePath(slug, _rule) {
       return `${AMAZON_Q_RULES_DIR}/${slug}.md`;
     },
-    commandPath(_name, _config) {
-      return null;
+    commandPath(name, _config) {
+      return `${AMAZON_Q_PROMPTS_DIR}/${amazonQPromptName(name)}.md`;
     },
     agentPath(name, _config) {
       return `${AMAZON_Q_AGENTS_DIR}/${name}.json`;
@@ -72,7 +78,7 @@ const project: TargetLayout = {
 
 const globalLayout: TargetLayout = {
   managedOutputs: {
-    dirs: [AMAZON_Q_GLOBAL_RULES_DIR, AMAZON_Q_GLOBAL_AGENTS_DIR],
+    dirs: [AMAZON_Q_GLOBAL_RULES_DIR, AMAZON_Q_GLOBAL_AGENTS_DIR, AMAZON_Q_GLOBAL_PROMPTS_DIR],
     files: [AMAZON_Q_GLOBAL_MCP_FILE],
   },
   rewriteGeneratedPath(path: string) {
@@ -81,6 +87,9 @@ const globalLayout: TargetLayout = {
     }
     if (path.startsWith(`${AMAZON_Q_RULES_DIR}/`)) {
       return path.replace(`${AMAZON_Q_RULES_DIR}/`, `${AMAZON_Q_GLOBAL_RULES_DIR}/`);
+    }
+    if (path.startsWith(`${AMAZON_Q_PROMPTS_DIR}/`)) {
+      return path.replace(`${AMAZON_Q_PROMPTS_DIR}/`, `${AMAZON_Q_GLOBAL_PROMPTS_DIR}/`);
     }
     if (path === AMAZON_Q_MCP_FILE) {
       return AMAZON_Q_GLOBAL_MCP_FILE;
@@ -91,8 +100,8 @@ const globalLayout: TargetLayout = {
     rulePath(slug, _rule) {
       return `${AMAZON_Q_GLOBAL_RULES_DIR}/${slug}.md`;
     },
-    commandPath(_name, _config) {
-      return null;
+    commandPath(name, _config) {
+      return `${AMAZON_Q_GLOBAL_PROMPTS_DIR}/${amazonQPromptName(name)}.md`;
     },
     agentPath(name, _config) {
       return `${AMAZON_Q_GLOBAL_AGENTS_DIR}/${name}.json`;
@@ -114,6 +123,7 @@ export const descriptor = {
     'No Amazon Q Developer config found (.amazonq/rules/, .amazonq/cli-agents/, or .amazonq/mcp.json).',
   lintRules,
   lint: {
+    commands: lintCommands,
     hooks: lintHooks,
     permissions: lintPermissions,
   },
@@ -129,5 +139,10 @@ export const descriptor = {
   },
   importer: amazonQImporterSpec,
   buildImportPaths: buildAmazonQImportPaths,
-  detectionPaths: [AMAZON_Q_RULES_DIR, AMAZON_Q_AGENTS_DIR, AMAZON_Q_MCP_FILE],
+  detectionPaths: [
+    AMAZON_Q_RULES_DIR,
+    AMAZON_Q_AGENTS_DIR,
+    AMAZON_Q_PROMPTS_DIR,
+    AMAZON_Q_MCP_FILE,
+  ],
 } satisfies TargetDescriptor;

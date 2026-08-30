@@ -5624,6 +5624,22 @@
         "t-glob-71d466f5"
       ]
     },
+    "release-changesets-during-release-prep-run-pnpm": {
+      "createdAt": "2026-08-30",
+      "evidence": [
+        "commit:HEAD"
+      ],
+      "rationale": "The CI job runs this exact command; a masked exit code turns a red release into a surprise CI failure after push.",
+      "rule": "During release prep, run `pnpm audit --prod --audit-level=high` as its own command and read the real exit code — never pipe it through `tail`/`grep`, which reports the filter's status and hides a failing gate. Re-run it even when a dependency was bumped for advisories recently: new CVEs land against already-patched versions (tar 7.5.20 was clean at bump time, then GHSA-r292-9mhp-454m required >=7.5.21).",
+      "status": "active",
+      "topics": [
+        "release-changesets"
+      ],
+      "triggers": [
+        "t-cmd-a8736974",
+        "t-kw-32512568"
+      ]
+    },
     "release-changesets-when-auditing-which-changes-since": {
       "createdAt": "2026-06-23",
       "evidence": [],
@@ -6496,6 +6512,22 @@
         "t-kw-0bea3e46"
       ]
     },
+    "target-capability-audits-in-capability-ledger-json-a": {
+      "createdAt": "2026-08-30",
+      "evidence": [
+        "commit:HEAD"
+      ],
+      "rationale": "Blanking a path to record a \"none\" doc verdict broke conformance for goose/ignore and rovodev/hooks; the two axes are independent.",
+      "rule": "In capability-ledger.json, a cell whose DESCRIPTOR level is native/embedded must carry path/ext/format/fingerprint derived from the actual generated output (probe it with a tsx script over tests/e2e/fixtures/canonical-full), not from the tool's docs — the conformance test validates by descriptor level, so a doc-derived path fails with \"no result emitted at path\". Record the documentation verdict in maxAchievable/verdict/rejectionReason instead; the audit then surfaces the mismatch as `over-declared`.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-4d2ee3c5",
+        "t-kw-5a193613"
+      ]
+    },
     "target-capability-audits-keep-capability-audit-inspection-command": {
       "createdAt": "2026-07-12",
       "evidence": [
@@ -6537,6 +6569,22 @@
       ],
       "triggers": [
         "t-kw-01a1d77f"
+      ]
+    },
+    "target-capability-audits-when-a-generator-branches-on": {
+      "createdAt": "2026-08-30",
+      "evidence": [
+        "commit:HEAD"
+      ],
+      "rationale": "A scope branch to a distinct filename is unverifiable from the descriptor alone and produces artifacts no tool reads; tests passed because they asserted our own output.",
+      "rule": "When a generator branches on scope to a DIFFERENT output path (e.g. `if (ctx?.scope === 'global') return [{ path: SOME_OTHER_FILE }]`), verify that global path against the tool's own docs before trusting it — this branch is where fabricated surfaces hide. Claude Code's global hooks were written to `~/.claude/hooks.json`, a file its docs never list (hooks belong in `~/.claude/settings.json` under `hooks`), so global hooks silently never loaded. Same class: gemini-cli project `.gemini/policies/`, goose `.gooseignore`.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-62ce3dcb",
+        "t-kw-603ecbc4"
       ]
     },
     "target-capability-audits-when-a-target-declares-a": {
@@ -8643,6 +8691,10 @@
       "kind": "command_pattern",
       "pattern": "gh release"
     },
+    "t-cmd-a8736974": {
+      "kind": "command_pattern",
+      "pattern": "pnpm audit"
+    },
     "t-cmd-ac418287": {
       "kind": "command_pattern",
       "pattern": "generate --global"
@@ -9158,6 +9210,10 @@
     "t-glob-62cc99bd": {
       "kind": "file_glob",
       "pattern": ".agentsmesh/agents/**/*.md"
+    },
+    "t-glob-62ce3dcb": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/generator*.ts"
     },
     "t-glob-633537fc": {
       "kind": "file_glob",
@@ -9887,6 +9943,10 @@
       "kind": "keyword",
       "pattern": "dedicated settings file same directory as per-rule output"
     },
+    "t-kw-32512568": {
+      "kind": "keyword",
+      "pattern": "prepare release audit gate"
+    },
     "t-kw-34b00283": {
       "kind": "keyword",
       "pattern": "MCP CLI parity"
@@ -10011,9 +10071,17 @@
       "kind": "keyword",
       "pattern": "discrimination"
     },
+    "t-kw-5a193613": {
+      "kind": "keyword",
+      "pattern": "capability ledger provenance"
+    },
     "t-kw-5c8c2424": {
       "kind": "keyword",
       "pattern": "e2e round-trip stale dist rebuild importer contract passes e2e fails"
+    },
+    "t-kw-603ecbc4": {
+      "kind": "keyword",
+      "pattern": "global scope generator path branch"
     },
     "t-kw-606bb3e1": {
       "kind": "keyword",

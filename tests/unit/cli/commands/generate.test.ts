@@ -107,7 +107,16 @@ deny:
     );
     expect(readFileSync(join(TEST_DIR, '.claude.json'), 'utf-8')).toContain('"mcpServers"');
     expect(readFileSync(join(TEST_DIR, '.claudeignore'), 'utf-8')).toContain('dist');
-    expect(readFileSync(join(TEST_DIR, '.claude', 'hooks.json'), 'utf-8')).toContain('PostToolUse');
+    // Global hooks belong in ~/.claude/settings.json under `hooks`; Claude Code
+    // documents no standalone hooks.json. https://code.claude.com/docs/en/hooks
+    expect(existsSync(join(TEST_DIR, '.claude', 'hooks.json'))).toBe(false);
+    // permissions and hooks both write settings.json in one pass; the merge base must
+    // keep the earlier key rather than clobbering it.
+    const globalSettings = JSON.parse(
+      readFileSync(join(TEST_DIR, '.claude', 'settings.json'), 'utf-8'),
+    ) as Record<string, unknown>;
+    expect(Object.keys(globalSettings).sort()).toEqual(['hooks', 'permissions']);
+    expect(globalSettings.hooks).toHaveProperty('PostToolUse');
     expect(existsSync(join(TEST_DIR, '.agents', 'skills', 'demo', 'SKILL.md'))).toBe(true);
     expect(
       readFileSync(join(TEST_DIR, '.claude', 'skills', 'demo', 'SKILL.md'), 'utf-8'),

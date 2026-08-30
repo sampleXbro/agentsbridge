@@ -11,6 +11,62 @@
 
 import type { CanonicalFiles, LintDiagnostic } from '../../core/types.js';
 import { createWarning } from '../../core/lint/shared/helpers.js';
+import { amazonQPromptName } from './generator.js';
+
+/**
+ * Q prompt files are plain markdown bodies read verbatim, so command metadata is
+ * dropped, and `validate_prompt_name` forces names into `^[a-zA-Z0-9_-]{1,50}$`.
+ */
+export function lintCommands(canonical: CanonicalFiles): LintDiagnostic[] {
+  const diagnostics: LintDiagnostic[] = [];
+
+  // Prompt files are flat, so two canonical names can sanitize onto one file and
+  // silently overwrite each other.
+  const byPromptName = new Map<string, string[]>();
+  for (const command of canonical.commands) {
+    const key = amazonQPromptName(command.name);
+    byPromptName.set(key, [...(byPromptName.get(key) ?? []), command.source]);
+  }
+  for (const [promptName, sources] of byPromptName) {
+    if (sources.length < 2) continue;
+    for (const source of sources) {
+      diagnostics.push(
+        createWarning(
+          source,
+          'amazon-q',
+          `${sources.length} commands resolve to the same Amazon Q prompt file ` +
+            `"${promptName}.md"; only the last one generated survives.`,
+        ),
+      );
+    }
+  }
+
+  for (const command of canonical.commands) {
+    const renamed = amazonQPromptName(command.name);
+    if (renamed !== command.name) {
+      diagnostics.push(
+        createWarning(
+          command.source,
+          'amazon-q',
+          `Amazon Q prompt names allow only [a-zA-Z0-9_-] up to 50 characters; ` +
+            `"${command.name}" is written as "${renamed}.md".`,
+        ),
+      );
+      continue;
+    }
+    if (command.description || command.allowedTools.length > 0) {
+      diagnostics.push(
+        createWarning(
+          command.source,
+          'amazon-q',
+          'Amazon Q prompt files are plain markdown read verbatim; ' +
+            'description and allowed-tools metadata are not projected.',
+        ),
+      );
+    }
+  }
+  return diagnostics;
+}
 
 /** Amazon Q canonical event names that are embeddable into agent JSON. */
 const AQ_EMBEDDABLE_EVENTS: ReadonlySet<string> = new Set([

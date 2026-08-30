@@ -1,0 +1,9 @@
+---
+'agentsmesh': minor
+---
+
+**Amazon Q Developer: commands are now native.** The Q CLI reads saved prompts as flat `<name>.md` files from `.amazonq/prompts/` (workspace) and `~/.aws/amazonq/prompts/` (user), invoked as `/prompts`. AgentsMesh now generates and imports both scopes. Q reads the file body verbatim, so no frontmatter is emitted; a lint warning reports `description` / `allowed-tools` metadata that the format cannot carry, and names outside `^[a-zA-Z0-9_-]{1,50}$` (including `:`-namespaced commands, which Q cannot nest) are rewritten with a warning naming the resulting file.
+
+**Claude Code: global hooks now actually load.** `agentsmesh generate --global` wrote hooks to `~/.claude/hooks.json` — a file Claude Code never reads. Its documented hook locations are `~/.claude/settings.json`, `.claude/settings.json`, `.claude/settings.local.json`, managed policy, and plugin/skill/subagent frontmatter; there is no standalone `hooks.json`. Global hooks now merge into `~/.claude/settings.json` under `hooks`, matching project scope, and the stale `~/.claude/hooks.json` is removed on the next `generate`. Import still reads the old file so existing setups migrate.
+
+**Gemini CLI: permissions are no longer written into the project.** Gemini's policy engine documents its Workspace tier (`<repo>/.gemini/policies/`) as non-functional, so the `permissions.toml` AgentsMesh generated there was a security policy the tool silently ignored — deny rules that never applied. Permissions now emit only at global scope (`~/.gemini/policies/permissions.toml`, unchanged) via `globalSupport.scopeExtras`, and a project-scope lint warning points users at `agentsmesh generate --global`. The stale project file is removed on the next `generate` because the path stays a managed output.

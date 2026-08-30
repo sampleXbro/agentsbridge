@@ -23,7 +23,20 @@ import {
   AMAZON_Q_RULES_DIR,
   AMAZON_Q_MCP_FILE,
   AMAZON_Q_AGENTS_DIR,
+  AMAZON_Q_PROMPTS_DIR,
 } from './constants.js';
+
+/** `validate_prompt_name` in `cli/chat/cli/prompts.rs`. */
+const AQ_PROMPT_NAME_MAX = 50;
+
+/**
+ * Coerce a canonical command name into a legal Q prompt name. Q rejects anything
+ * outside `^[a-zA-Z0-9_-]+$` and never scans prompt subdirectories, so namespace
+ * separators collapse into the filename rather than nesting.
+ */
+export function amazonQPromptName(name: string): string {
+  return name.replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, AQ_PROMPT_NAME_MAX);
+}
 
 /**
  * Amazon Q hook trigger names that map from canonical event names.
@@ -71,6 +84,18 @@ export function generateRules(canonical: CanonicalFiles): FeatureGeneratorOutput
   }
 
   return outputs;
+}
+
+/**
+ * Q reads the whole prompt file verbatim as the prompt text, so the body is written
+ * unwrapped: frontmatter would surface as literal prompt content. `description` and
+ * `allowedTools` have no representation here — lintCommands warns about the loss.
+ */
+export function generateCommands(canonical: CanonicalFiles): FeatureGeneratorOutput[] {
+  return canonical.commands.map((command) => ({
+    path: `${AMAZON_Q_PROMPTS_DIR}/${amazonQPromptName(command.name)}.md`,
+    content: command.body.trim(),
+  }));
 }
 
 export function generateAgents(canonical: CanonicalFiles): FeatureGeneratorOutput[] {

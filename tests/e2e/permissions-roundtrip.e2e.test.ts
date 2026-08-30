@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createTestProject, cleanup } from './helpers/setup.js';
 import { runCli } from './helpers/run-cli.js';
-import { readJson, readText, readYaml } from './helpers/assertions.js';
+import { readJson, readYaml } from './helpers/assertions.js';
 
 function writeProject(dir: string, target: string): void {
   mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
@@ -56,23 +56,18 @@ describe('permissions round-trip e2e', () => {
     });
   });
 
-  it('round-trips Gemini permissions with duplicate entry ordering preserved', async () => {
+  // Gemini's policy engine documents its Workspace tier as non-functional, so project
+  // scope must stay empty and warn; the global round-trip lives in
+  // tests/e2e/global-roundtrip-gemini.e2e.test.ts.
+  it('does not write Gemini permissions into the project and warns instead', async () => {
     dir = createTestProject();
     writeProject(dir, 'gemini-cli');
 
     expect((await runCli('generate --targets gemini-cli', dir)).exitCode).toBe(0);
-    const generated = readText(join(dir, '.gemini', 'policies', 'permissions.toml'));
-    expect(generated).toContain('priority = 100');
-    expect(generated).toContain('toolName = "read_file"');
-    expect(generated).toContain('priority = 101');
-    expect(generated).toContain('commandPrefix = "pnpm test"');
+    expect(existsSync(join(dir, '.gemini', 'policies', 'permissions.toml'))).toBe(false);
 
-    rmSync(join(dir, '.agentsmesh'), { recursive: true, force: true });
-    expect((await runCli('import --from gemini-cli', dir)).exitCode).toBe(0);
-    expect(readYaml(join(dir, '.agentsmesh', 'permissions.yaml'))).toMatchObject({
-      allow: ['Read', 'Bash(pnpm test:*)'],
-      deny: ['Read(./.env)', 'Bash(curl:*)'],
-    });
+    const lint = await runCli('lint --targets gemini-cli', dir);
+    expect(lint.stdout + lint.stderr).toContain('~/.gemini/policies');
   });
 
   it('round-trips Cursor permissions through cli.json with no lint warning (native capability)', async () => {

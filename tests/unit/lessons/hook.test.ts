@@ -286,17 +286,32 @@ describe('buildRecallHookOutput', () => {
     expect((await buildRecallHookOutput(edit, root)).output).not.toBe('');
   });
 
-  it('SessionStart source=startup does NOT reset dedup (fresh/resumed context keeps the set)', async () => {
+  it('SessionStart source=startup RESETS dedup — a new chat must not inherit suppressions', async () => {
     const session = uniqueSession();
     const edit = JSON.stringify({ session_id: session, tool_input: { file_path: 'src/x.ts' } });
     expect((await buildRecallHookOutput(edit, root)).output).not.toBe('');
+    // Suppressed while the same context is live.
+    expect((await buildRecallHookOutput(edit, root)).output).toBe('');
     const startup = JSON.stringify({
       session_id: session,
       hook_event_name: 'SessionStart',
       source: 'startup',
     });
     expect((await buildRecallHookOutput(startup, root)).output).toBe('');
-    // Still deduped — startup did not clear the seen set.
+    // A new chat began: the rule must be delivered again.
+    expect((await buildRecallHookOutput(edit, root)).output).not.toBe('');
+  });
+
+  it('SessionStart source=resume KEEPS the set — the prior context came back with it', async () => {
+    const session = uniqueSession();
+    const edit = JSON.stringify({ session_id: session, tool_input: { file_path: 'src/x.ts' } });
+    expect((await buildRecallHookOutput(edit, root)).output).not.toBe('');
+    const resume = JSON.stringify({
+      session_id: session,
+      hook_event_name: 'SessionStart',
+      source: 'resume',
+    });
+    expect((await buildRecallHookOutput(resume, root)).output).toBe('');
     expect((await buildRecallHookOutput(edit, root)).output).toBe('');
   });
 

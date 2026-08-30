@@ -42,6 +42,22 @@ const LessonsQueryInput = z
       .describe(
         'Include the UNIVERSAL always-on lessons (standards that apply to every task, e.g. comment/test conventions) — they are excluded from triggered recall and delivered here. Set true at task start; no predicate is required when `always` is the only field.',
       ),
+    session: z
+      .string()
+      .optional()
+      .describe(
+        'Session correlator for dedup. Omitted or "auto" = AGENTSMESH_SESSION_ID when exported, else this MCP server process — so repeats within one client session are suppressed by default. Pass an explicit id to control the scope.',
+      ),
+    no_dedup: z
+      .boolean()
+      .optional()
+      .describe(
+        'Disable session dedup for this call — return the full ranked set including lessons already delivered this session (e.g. after the client compacted its context).',
+      ),
+    'no-dedup': z
+      .boolean()
+      .optional()
+      .describe('Alias of `no_dedup` (matches the CLI `--no-dedup` flag).'),
   })
   .strict();
 
@@ -93,7 +109,7 @@ export const LESSONS_TOOL_DESCRIPTORS: ToolDescriptor[] = [
   {
     name: 'lessons_query',
     description:
-      'Recall primitive — return active lessons whose triggers match the supplied (file, command, keyword) predicates, relevance-ranked (trigger specificity + per-query topic coherence + BM25 over rule text) and capped to `limit` (default 10). Pass at least one predicate OR `always:true` (a call with neither is rejected); always include `file` for an edit and `command` for a shell command — keyword-only recall misses file/command-scoped lessons. `always:true` additionally prepends the universal always-on lessons. Returns compact `{id, rule}` by default; pass `verbose:true` for topics/triggers/evidence/score. Excludes deprecated and superseded lessons.',
+      'Recall primitive — return active lessons whose triggers match the supplied (file, command, keyword) predicates, relevance-ranked (trigger specificity + per-query topic coherence + BM25 over rule text) and capped to `limit` (default 10). Pass at least one predicate OR `always:true` (a call with neither is rejected); always include `file` for an edit and `command` for a shell command — keyword-only recall misses file/command-scoped lessons. `always:true` additionally prepends the universal always-on lessons. Session dedup is ON by default (correlator: AGENTSMESH_SESSION_ID, else this server process): a lesson already delivered this session is suppressed and counted in `suppressed` — pass `no_dedup:true` to re-show everything (e.g. after context compaction), or `session` to control the scope. Returns compact `{id, rule}` by default; pass `verbose:true` for topics/triggers/evidence/score. Excludes deprecated and superseded lessons.',
     inputSchema: LessonsQueryInput,
     handler: (ctx, i) => lessonsHandlers.query(ctx, i as never),
   },

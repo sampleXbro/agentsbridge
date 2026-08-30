@@ -43,16 +43,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://github.com/Aider-AI/aider/blob/main/aider/args.py"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: no subagent concept in args.py, the full YAML key list, or the docs."
     },
     {
       "target": "aider",
@@ -61,16 +63,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://github.com/Aider-AI/aider/blob/main/aider/args.py"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: no subagent concept in args.py, the full YAML key list, or the docs."
     },
     {
       "target": "aider",
@@ -79,16 +83,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://github.com/Aider-AI/aider/blob/main/aider/commands.py"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: slash commands are hardcoded cmd_* Python methods; no on-disk custom-command surface."
     },
     {
       "target": "aider",
@@ -97,51 +103,71 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://github.com/Aider-AI/aider/blob/main/aider/commands.py"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: slash commands are hardcoded cmd_* Python methods; no on-disk custom-command surface."
     },
     {
       "target": "aider",
       "feature": "hooks",
       "scope": "global",
-      "maxAchievable": "partial",
-      "path": "",
-      "ext": "",
-      "format": "json",
+      "maxAchievable": "native",
+      "path": ".aider.conf.yml",
+      "ext": ".yml",
+      "format": "yaml",
       "fingerprint": {
-        "topLevelKeys": [],
+        "topLevelKeys": [
+          "test-cmd",
+          "auto-test",
+          "lint-cmd",
+          "auto-lint",
+          "notifications-command"
+        ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://aider.chat/docs/usage/lint-test.html",
+        "https://aider.chat/docs/config/aider_conf.html"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
       "target": "aider",
       "feature": "hooks",
       "scope": "project",
-      "maxAchievable": "partial",
-      "path": "",
-      "ext": "",
-      "format": "json",
+      "maxAchievable": "native",
+      "path": ".aider.conf.yml",
+      "ext": ".yml",
+      "format": "yaml",
       "fingerprint": {
-        "topLevelKeys": [],
+        "topLevelKeys": [
+          "test-cmd",
+          "auto-test",
+          "lint-cmd",
+          "auto-lint",
+          "notifications-command"
+        ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://aider.chat/docs/usage/lint-test.html",
+        "https://aider.chat/docs/config/aider_conf.html"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -188,37 +214,41 @@
       "target": "aider",
       "feature": "mcp",
       "scope": "global",
-      "maxAchievable": "partial",
+      "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://github.com/Aider-AI/aider/blob/main/requirements/requirements.in"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "FABRICATED: aider ships no MCP client at all; requirements.in deliberately avoids the mcp package."
     },
     {
       "target": "aider",
       "feature": "mcp",
       "scope": "project",
-      "maxAchievable": "partial",
+      "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://github.com/Aider-AI/aider/blob/main/requirements/requirements.in"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "FABRICATED: aider ships no MCP client at all; requirements.in deliberately avoids the mcp package."
     },
     {
       "target": "aider",
@@ -227,16 +257,18 @@
       "maxAchievable": "partial",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://github.com/Aider-AI/aider/blob/main/aider/args.py"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: only session-wide yes-always / suggest-shell-commands booleans; no allow/deny/ask rules."
     },
     {
       "target": "aider",
@@ -245,16 +277,18 @@
       "maxAchievable": "partial",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://github.com/Aider-AI/aider/blob/main/aider/args.py"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: only session-wide yes-always / suggest-shell-commands booleans; no allow/deny/ask rules."
     },
     {
       "target": "aider",
@@ -346,18 +380,23 @@
       "target": "amazon-q",
       "feature": "additionalRules",
       "scope": "global",
-      "maxAchievable": "none",
-      "path": "",
-      "ext": "",
+      "maxAchievable": "embedded",
+      "path": ".aws/amazonq/cli-agents/agentsmesh.json",
+      "ext": ".json",
       "format": "json",
       "fingerprint": {
-        "topLevelKeys": [],
+        "topLevelKeys": [
+          "resources"
+        ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://github.com/aws/amazon-q-developer-cli/blob/main/crates/chat-cli/src/util/paths.rs",
+        "https://github.com/aws/amazon-q-developer-cli/blob/main/docs/default-agent-behavior.md"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -434,36 +473,42 @@
       "target": "amazon-q",
       "feature": "commands",
       "scope": "global",
-      "maxAchievable": "none",
-      "path": "",
-      "ext": "",
-      "format": "json",
+      "maxAchievable": "native",
+      "path": ".aws/amazonq/prompts/review.md",
+      "ext": ".md",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://github.com/aws/amazon-q-developer-cli/blob/main/crates/chat-cli/src/util/paths.rs",
+        "https://github.com/aws/amazon-q-developer-cli/blob/main/crates/chat-cli/src/cli/chat/cli/prompts.rs"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
       "target": "amazon-q",
       "feature": "commands",
       "scope": "project",
-      "maxAchievable": "none",
-      "path": "",
-      "ext": "",
-      "format": "json",
+      "maxAchievable": "native",
+      "path": ".amazonq/prompts/review.md",
+      "ext": ".md",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://github.com/aws/amazon-q-developer-cli/blob/main/crates/chat-cli/src/util/paths.rs",
+        "https://github.com/aws/amazon-q-developer-cli/blob/main/crates/chat-cli/src/cli/chat/cli/prompts.rs"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -514,36 +559,44 @@
       "target": "amazon-q",
       "feature": "ignore",
       "scope": "global",
-      "maxAchievable": "none",
-      "path": "",
-      "ext": "",
+      "maxAchievable": "embedded",
+      "path": ".aws/amazonq/cli-agents/agentsmesh.json",
+      "ext": ".json",
       "format": "json",
       "fingerprint": {
-        "topLevelKeys": [],
+        "topLevelKeys": [
+          "toolsSettings"
+        ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://github.com/aws/amazon-q-developer-cli/blob/main/docs/built-in-tools.md"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
       "target": "amazon-q",
       "feature": "ignore",
       "scope": "project",
-      "maxAchievable": "none",
-      "path": "",
-      "ext": "",
+      "maxAchievable": "embedded",
+      "path": ".amazonq/cli-agents/agentsmesh.json",
+      "ext": ".json",
       "format": "json",
       "fingerprint": {
-        "topLevelKeys": [],
+        "topLevelKeys": [
+          "toolsSettings"
+        ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://github.com/aws/amazon-q-developer-cli/blob/main/docs/built-in-tools.md"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -681,16 +734,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://github.com/aws/amazon-q-developer-cli/blob/main/crates/chat-cli/src/util/paths.rs"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: no SKILL.md concept anywhere in Q CLI source, paths, or docs."
     },
     {
       "target": "amazon-q",
@@ -699,16 +754,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://github.com/aws/amazon-q-developer-cli/blob/main/crates/chat-cli/src/util/paths.rs"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: no SKILL.md concept anywhere in Q CLI source, paths, or docs."
     },
     {
       "target": "amp",
@@ -879,37 +936,43 @@
       "target": "amp",
       "feature": "ignore",
       "scope": "global",
-      "maxAchievable": "partial",
+      "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://ampcode.com/fif#ignore-files",
+        "https://ampcode.com/docs/cli/settings"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "FABRICATED: no ignore file or ignore/exclude config key exists at any scope."
     },
     {
       "target": "amp",
       "feature": "ignore",
       "scope": "project",
-      "maxAchievable": "partial",
+      "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://ampcode.com/fif#ignore-files",
+        "https://ampcode.com/docs/cli/settings"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "FABRICATED: no ignore file or ignore/exclude config key exists at any scope."
     },
     {
       "target": "amp",
@@ -1119,36 +1182,40 @@
       "target": "antigravity",
       "feature": "agents",
       "scope": "global",
-      "maxAchievable": "none",
-      "path": "",
-      "ext": "",
-      "format": "json",
+      "maxAchievable": "native",
+      "path": ".gemini/config/agents/reviewer/agent.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://antigravity.google/docs/subagents/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
       "target": "antigravity",
       "feature": "agents",
       "scope": "project",
-      "maxAchievable": "none",
-      "path": "",
-      "ext": "",
-      "format": "json",
+      "maxAchievable": "native",
+      "path": ".agents/agents/reviewer.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://antigravity.google/docs/subagents/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -1240,33 +1307,37 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://antigravity.google/docs/agent-settings/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: no home-directory ignore file; global exclusion is IDE toggles plus permission deny rules."
     },
     {
       "target": "antigravity",
       "feature": "ignore",
       "scope": "project",
-      "maxAchievable": "none",
-      "path": "",
+      "maxAchievable": "native",
+      "path": ".antigravityignore",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://antigravity.google/changelog"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -1295,36 +1366,44 @@
       "target": "antigravity",
       "feature": "mcp",
       "scope": "project",
-      "maxAchievable": "none",
-      "path": "",
-      "ext": "",
+      "maxAchievable": "native",
+      "path": ".agents/mcp_config.json",
+      "ext": ".json",
       "format": "json",
       "fingerprint": {
-        "topLevelKeys": [],
+        "topLevelKeys": [
+          "mcpServers"
+        ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://antigravity.google/docs/mcp/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
       "target": "antigravity",
       "feature": "permissions",
       "scope": "global",
-      "maxAchievable": "partial",
-      "path": "",
-      "ext": "",
+      "maxAchievable": "native",
+      "path": ".gemini/antigravity-cli/settings.json",
+      "ext": ".json",
       "format": "json",
       "fingerprint": {
-        "topLevelKeys": [],
+        "topLevelKeys": [
+          "permissions"
+        ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://antigravity.google/docs/cli/permissions/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -1334,16 +1413,18 @@
       "maxAchievable": "partial",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://antigravity.google/docs/cli/permissions/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: no repo-writable permissions file; project config lives under ~/.gemini/config/projects/."
     },
     {
       "target": "antigravity",
@@ -1582,15 +1663,37 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://docs.augmentcode.com/setup-augment/workspace-indexing"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: no user-level ignore concept documented."
+    },
+    {
+      "target": "augment-code",
+      "feature": "ignore",
+      "scope": "project",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "native",
+      "path": ".augmentignore",
+      "ext": "",
+      "format": "text",
+      "source": [
+        "https://docs.augmentcode.com/setup-augment/workspace-indexing"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -1663,18 +1766,22 @@
       "target": "augment-code",
       "feature": "permissions",
       "scope": "project",
-      "maxAchievable": "none",
-      "path": "",
-      "ext": "",
+      "maxAchievable": "native",
+      "path": ".augment/settings.json",
+      "ext": ".json",
       "format": "json",
       "fingerprint": {
-        "topLevelKeys": [],
+        "topLevelKeys": [
+          "toolPermissions"
+        ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://docs.augmentcode.com/cli/permissions"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -1867,6 +1974,28 @@
     {
       "target": "claude-code",
       "feature": "hooks",
+      "scope": "global",
+      "fingerprint": {
+        "topLevelKeys": [
+          "hooks"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "native",
+      "path": ".claude/settings.json",
+      "ext": ".json",
+      "format": "json",
+      "source": [
+        "https://code.claude.com/docs/en/hooks"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "claude-code",
+      "feature": "hooks",
       "scope": "project",
       "maxAchievable": "native",
       "path": ".claude/settings.json",
@@ -1882,6 +2011,74 @@
       "source": [],
       "verifiedAt": null,
       "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "claude-code",
+      "feature": "ignore",
+      "scope": "global",
+      "fingerprint": {
+        "topLevelKeys": [
+          "permissions"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "embedded",
+      "path": ".claude/settings.json",
+      "ext": ".json",
+      "format": "json",
+      "source": [
+        "https://code.claude.com/docs/en/permissions",
+        "https://code.claude.com/docs/en/settings-reference"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "FABRICATED: no dedicated ignore file; exclusion is permissions.deny Read(...) entries in settings.json (ignorePatterns is deprecated)."
+    },
+    {
+      "target": "claude-code",
+      "feature": "ignore",
+      "scope": "project",
+      "fingerprint": {
+        "topLevelKeys": [
+          "permissions"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "embedded",
+      "path": ".claude/settings.json",
+      "ext": ".json",
+      "format": "json",
+      "source": [
+        "https://code.claude.com/docs/en/permissions",
+        "https://code.claude.com/docs/en/settings-reference"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "FABRICATED: no dedicated ignore file; exclusion is permissions.deny Read(...) entries in settings.json (ignorePatterns is deprecated)."
+    },
+    {
+      "target": "claude-code",
+      "feature": "mcp",
+      "scope": "global",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "native",
+      "path": ".claude.json",
+      "ext": ".json",
+      "format": "json",
+      "source": [
+        "https://code.claude.com/docs/en/mcp"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -1902,6 +2099,29 @@
       "source": [],
       "verifiedAt": null,
       "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "claude-code",
+      "feature": "permissions",
+      "scope": "global",
+      "fingerprint": {
+        "topLevelKeys": [
+          "permissions"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "native",
+      "path": ".claude/settings.json",
+      "ext": ".json",
+      "format": "json",
+      "source": [
+        "https://code.claude.com/docs/en/permissions",
+        "https://code.claude.com/docs/en/settings-reference"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -2523,16 +2743,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://github.com/openai/codex/blob/main/codex-rs/config/src/config_toml.rs"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: no ignore file and no ignore/exclude key in config.toml; only inherited .gitignore semantics."
     },
     {
       "target": "codex-cli",
@@ -2541,16 +2763,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://github.com/openai/codex/blob/main/codex-rs/config/src/config_toml.rs"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: no ignore file and no ignore/exclude key in config.toml; only inherited .gitignore semantics."
     },
     {
       "target": "codex-cli",
@@ -2757,36 +2981,40 @@
       "target": "continue",
       "feature": "agents",
       "scope": "global",
-      "maxAchievable": "none",
-      "path": "",
-      "ext": "",
-      "format": "json",
+      "maxAchievable": "native",
+      "path": ".continue/agents/reviewer.yaml",
+      "ext": ".yaml",
+      "format": "yaml",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://github.com/continuedev/continue/blob/main/core/config/loadLocalAssistants.ts"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
       "target": "continue",
       "feature": "agents",
       "scope": "project",
-      "maxAchievable": "none",
-      "path": "",
-      "ext": "",
-      "format": "json",
+      "maxAchievable": "native",
+      "path": ".continue/agents/reviewer.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://github.com/continuedev/continue/blob/main/packages/config-yaml/src/markdown/agentFiles.ts"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -2835,36 +3063,44 @@
       "target": "continue",
       "feature": "hooks",
       "scope": "global",
-      "maxAchievable": "none",
-      "path": "",
-      "ext": "",
+      "maxAchievable": "native",
+      "path": ".continue/settings.json",
+      "ext": ".json",
       "format": "json",
       "fingerprint": {
-        "topLevelKeys": [],
+        "topLevelKeys": [
+          "hooks"
+        ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://github.com/continuedev/continue/blob/main/extensions/cli/src/hooks/hookConfig.ts"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
       "target": "continue",
       "feature": "hooks",
       "scope": "project",
-      "maxAchievable": "none",
-      "path": "",
-      "ext": "",
+      "maxAchievable": "native",
+      "path": ".continue/settings.json",
+      "ext": ".json",
       "format": "json",
       "fingerprint": {
-        "topLevelKeys": [],
+        "topLevelKeys": [
+          "hooks"
+        ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://github.com/continuedev/continue/blob/main/extensions/cli/src/hooks/hookConfig.ts"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -2984,16 +3220,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://github.com/continuedev/continue/blob/main/extensions/cli/src/permissions/permissionsYamlLoader.ts"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "WRONG-SCOPE: the only allow/ask/exclude file is ~/.continue/permissions.yaml; project permissions are explicitly unimplemented."
     },
     {
       "target": "continue",
@@ -3245,34 +3483,38 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://docs.github.com/en/copilot/how-tos/configure-content-exclusion/exclude-content-from-copilot"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: content exclusion has repo/org/enterprise scopes only; no user scope."
     },
     {
       "target": "copilot",
       "feature": "ignore",
       "scope": "project",
-      "maxAchievable": "none",
+      "maxAchievable": "partial",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://docs.github.com/en/copilot/how-tos/configure-content-exclusion/exclude-content-from-copilot"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "GUI-ONLY: repository content exclusion is entered in GitHub repo settings, not a file on disk."
     },
     {
       "target": "copilot",
@@ -3347,19 +3589,21 @@
       "target": "copilot",
       "feature": "permissions",
       "scope": "project",
-      "maxAchievable": "none",
+      "maxAchievable": "partial",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://code.visualstudio.com/docs/agents/run/approvals"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "GUI-ONLY for Copilot's own config: .github/copilot/settings.json has no permissions key; the only project surface is VS Code's chat.tools.terminal.autoApprove editor setting."
     },
     {
       "target": "copilot",
@@ -3476,16 +3720,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://github.com/charmbracelet/crush/blob/main/schema.json"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: schema.json is additionalProperties:false with no agents key; the Go Agents field is json:\"-\" (built-in only)."
     },
     {
       "target": "crush",
@@ -3494,16 +3740,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://github.com/charmbracelet/crush/blob/main/schema.json"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: schema.json is additionalProperties:false with no agents key; the Go Agents field is json:\"-\" (built-in only)."
     },
     {
       "target": "crush",
@@ -3603,18 +3851,41 @@
       "target": "crush",
       "feature": "ignore",
       "scope": "global",
-      "maxAchievable": "none",
-      "path": "",
+      "maxAchievable": "native",
+      "path": ".config/crush/ignore",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://github.com/charmbracelet/crush/blob/main/internal/fsext/ls.go"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "crush",
+      "feature": "ignore",
+      "scope": "project",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "native",
+      "path": ".crushignore",
+      "ext": "",
+      "format": "text",
+      "source": [
+        "https://github.com/charmbracelet/crush/blob/main/internal/fsext/ls.go",
+        "https://github.com/charmbracelet/crush/blob/main/README.md"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -3906,6 +4177,29 @@
     {
       "target": "cursor",
       "feature": "hooks",
+      "scope": "global",
+      "fingerprint": {
+        "topLevelKeys": [
+          "version",
+          "hooks"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "native",
+      "path": ".cursor/hooks.json",
+      "ext": ".json",
+      "format": "json",
+      "source": [
+        "https://cursor.com/docs/agent/hooks"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "cursor",
+      "feature": "hooks",
       "scope": "project",
       "maxAchievable": "native",
       "path": ".cursor/hooks.json",
@@ -3922,6 +4216,68 @@
       "source": [],
       "verifiedAt": null,
       "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "cursor",
+      "feature": "ignore",
+      "scope": "global",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "partial",
+      "path": ".cursorignore",
+      "ext": "",
+      "format": "text",
+      "source": [
+        "https://cursor.com/docs/reference/ignore-file"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "GUI-ONLY: no home-directory ignore file is documented; global ignore patterns are a Cursor settings-UI list."
+    },
+    {
+      "target": "cursor",
+      "feature": "ignore",
+      "scope": "project",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "native",
+      "path": ".cursorignore",
+      "ext": "",
+      "format": "text",
+      "source": [
+        "https://cursor.com/docs/reference/ignore-file"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "cursor",
+      "feature": "mcp",
+      "scope": "global",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "native",
+      "path": ".cursor/mcp.json",
+      "ext": ".json",
+      "format": "json",
+      "source": [
+        "https://cursor.com/docs/context/mcp"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -4248,36 +4604,62 @@
       "target": "deepagents-cli",
       "feature": "ignore",
       "scope": "global",
-      "maxAchievable": "partial",
+      "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://github.com/langchain-ai/deepagents/blob/main/libs/code/deepagents_code/_paths.py"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "FABRICATED: no ignore file or ignore/exclude key at any scope; only ripgrep's implicit .gitignore handling."
     },
     {
       "target": "deepagents-cli",
       "feature": "ignore",
       "scope": "project",
-      "maxAchievable": "partial",
+      "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://github.com/langchain-ai/deepagents/blob/main/libs/code/deepagents_code/_paths.py"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "FABRICATED: no ignore file or ignore/exclude key at any scope; only ripgrep's implicit .gitignore handling."
+    },
+    {
+      "target": "deepagents-cli",
+      "feature": "mcp",
+      "scope": "global",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "native",
+      "path": ".deepagents/.mcp.json",
+      "ext": ".json",
+      "format": "json",
+      "source": [
+        "https://github.com/langchain-ai/deepagents/blob/main/libs/code/deepagents_code/_paths.py"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -4304,37 +4686,44 @@
       "target": "deepagents-cli",
       "feature": "permissions",
       "scope": "global",
-      "maxAchievable": "partial",
-      "path": "",
-      "ext": "",
-      "format": "json",
+      "maxAchievable": "embedded",
+      "path": ".deepagents/config.toml",
+      "ext": ".toml",
+      "format": "toml",
       "fingerprint": {
-        "topLevelKeys": [],
+        "topLevelKeys": [
+          "shell",
+          "startup"
+        ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://github.com/langchain-ai/deepagents/blob/main/libs/code/deepagents_code/config_manifest.py"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
       "target": "deepagents-cli",
       "feature": "permissions",
       "scope": "project",
-      "maxAchievable": "partial",
+      "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://github.com/langchain-ai/deepagents/blob/main/libs/code/deepagents_code/_paths.py"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "WRONG-SCOPE: the resolver has no project tier; every permission setting lives in the user/managed TOML tiers."
     },
     {
       "target": "deepagents-cli",
@@ -4581,37 +4970,43 @@
       "target": "factory-droid",
       "feature": "ignore",
       "scope": "global",
-      "maxAchievable": "partial",
+      "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://docs.factory.ai/droid-cli/settings",
+        "https://docs.factory.ai/harness/agents-md"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "FABRICATED: no ignore file or ignore/exclude config key exists at any scope."
     },
     {
       "target": "factory-droid",
       "feature": "ignore",
       "scope": "project",
-      "maxAchievable": "partial",
+      "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://docs.factory.ai/droid-cli/settings",
+        "https://docs.factory.ai/harness/agents-md"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "FABRICATED: no ignore file or ignore/exclude config key exists at any scope."
     },
     {
       "target": "factory-droid",
@@ -4949,15 +5344,59 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/utils/ignoreFileParser.ts"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: .geminiignore resolves strictly against projectRoot; no home-directory lookup exists."
+    },
+    {
+      "target": "gemini-cli",
+      "feature": "ignore",
+      "scope": "project",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "native",
+      "path": ".geminiignore",
+      "ext": "",
+      "format": "text",
+      "source": [
+        "https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/gemini-ignore.md"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "gemini-cli",
+      "feature": "mcp",
+      "scope": "global",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "native",
+      "path": ".gemini/settings.json",
+      "ext": ".json",
+      "format": "json",
+      "source": [
+        "https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -4985,20 +5424,44 @@
     {
       "target": "gemini-cli",
       "feature": "permissions",
+      "scope": "global",
+      "fingerprint": {
+        "topLevelKeys": [
+          "rule"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "native",
+      "path": ".gemini/policies/permissions.toml",
+      "ext": ".toml",
+      "format": "toml",
+      "source": [
+        "https://github.com/google-gemini/gemini-cli/blob/main/docs/reference/policy-engine.md"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "gemini-cli",
+      "feature": "permissions",
       "scope": "project",
       "maxAchievable": "partial",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://github.com/google-gemini/gemini-cli/blob/main/docs/reference/policy-engine.md"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "WRONG-SCOPE: the policy engine documents its Workspace tier (.gemini/policies/) as non-functional; only the User tier is loaded."
     },
     {
       "target": "gemini-cli",
@@ -5183,6 +5646,29 @@
     {
       "target": "goose",
       "feature": "hooks",
+      "scope": "global",
+      "fingerprint": {
+        "topLevelKeys": [
+          "hooks"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "native",
+      "path": ".agents/plugins/agentsmesh/hooks/hooks.json",
+      "ext": ".json",
+      "format": "json",
+      "source": [
+        "https://goose-docs.ai/docs/guides/context-engineering/plugins",
+        "https://goose-docs.ai/docs/guides/context-engineering/hooks"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "goose",
+      "feature": "hooks",
       "scope": "project",
       "maxAchievable": "native",
       "path": ".agents/plugins/agentsmesh/hooks/hooks.json",
@@ -5201,6 +5687,48 @@
       "verifiedAt": "2026-07-16",
       "verdict": "confirmed",
       "rejectionReason": null
+    },
+    {
+      "target": "goose",
+      "feature": "ignore",
+      "scope": "global",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "none",
+      "path": ".config/goose/.gooseignore",
+      "ext": "",
+      "format": "text",
+      "source": [
+        "https://github.com/block/goose/pull/10359",
+        "https://github.com/block/goose/issues/10343"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "FABRICATED: .gooseignore was retired upstream (PR #10359, 2026-07-15); goose reads no goose-specific ignore file today."
+    },
+    {
+      "target": "goose",
+      "feature": "ignore",
+      "scope": "project",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "none",
+      "path": ".gooseignore",
+      "ext": "",
+      "format": "text",
+      "source": [
+        "https://github.com/block/goose/pull/10359",
+        "https://github.com/block/goose/issues/10343"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "FABRICATED: .gooseignore was retired upstream (PR #10359, 2026-07-15); goose reads no goose-specific ignore file today."
     },
     {
       "target": "goose",
@@ -5228,18 +5756,22 @@
       "target": "goose",
       "feature": "mcp",
       "scope": "project",
-      "maxAchievable": "partial",
-      "path": "",
-      "ext": "",
+      "maxAchievable": "native",
+      "path": ".agents/plugins/agentsmesh/.mcp.json",
+      "ext": ".json",
       "format": "json",
       "fingerprint": {
-        "topLevelKeys": [],
+        "topLevelKeys": [
+          "mcpServers"
+        ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://github.com/block/goose/blob/main/crates/goose/src/plugins/mcp_servers.rs"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -5268,19 +5800,21 @@
       "target": "goose",
       "feature": "permissions",
       "scope": "project",
-      "maxAchievable": "partial",
+      "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://github.com/block/goose/blob/main/crates/goose/src/config/permission.rs"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "WRONG-SCOPE: permission.yaml is pinned to the user config dir; the only project file goose reads holds enabled/disabledPlugins."
     },
     {
       "target": "goose",
@@ -5375,16 +5909,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://jules.google/docs/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: cloud agent; AGENTS.md is the only repo surface and everything else is web-dashboard settings."
     },
     {
       "target": "jules",
@@ -5413,16 +5949,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://jules.google/docs/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: cloud agent; AGENTS.md is the only repo surface and everything else is web-dashboard settings."
     },
     {
       "target": "jules",
@@ -5431,16 +5969,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://jules.google/docs/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: cloud agent; AGENTS.md is the only repo surface and everything else is web-dashboard settings."
     },
     {
       "target": "jules",
@@ -5449,16 +5989,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://jules.google/docs/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: cloud agent; AGENTS.md is the only repo surface and everything else is web-dashboard settings."
     },
     {
       "target": "jules",
@@ -5467,16 +6009,18 @@
       "maxAchievable": "partial",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://jules.google/docs/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "GUI-ONLY: configured in the Jules web dashboard, not committed to the repository."
     },
     {
       "target": "jules",
@@ -5485,16 +6029,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://jules.google/docs/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: cloud agent; AGENTS.md is the only repo surface and everything else is web-dashboard settings."
     },
     {
       "target": "jules",
@@ -5503,16 +6049,18 @@
       "maxAchievable": "partial",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://jules.google/docs/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "GUI-ONLY: configured in the Jules web dashboard, not committed to the repository."
     },
     {
       "target": "jules",
@@ -5521,34 +6069,38 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://jules.google/docs/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: cloud agent; AGENTS.md is the only repo surface and everything else is web-dashboard settings."
     },
     {
       "target": "jules",
       "feature": "ignore",
       "scope": "project",
-      "maxAchievable": "partial",
+      "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://jules.google/docs/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "FABRICATED: Jules documents no file-exclusion concept, only an inclusion-based file selector."
     },
     {
       "target": "jules",
@@ -5557,16 +6109,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://jules.google/docs/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: cloud agent; AGENTS.md is the only repo surface and everything else is web-dashboard settings."
     },
     {
       "target": "jules",
@@ -5575,16 +6129,18 @@
       "maxAchievable": "partial",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://jules.google/docs/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "GUI-ONLY: configured in the Jules web dashboard, not committed to the repository."
     },
     {
       "target": "jules",
@@ -5593,16 +6149,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://jules.google/docs/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: cloud agent; AGENTS.md is the only repo surface and everything else is web-dashboard settings."
     },
     {
       "target": "jules",
@@ -5611,16 +6169,18 @@
       "maxAchievable": "partial",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://jules.google/docs/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "GUI-ONLY: configured in the Jules web dashboard, not committed to the repository."
     },
     {
       "target": "jules",
@@ -5629,16 +6189,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://jules.google/docs/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: cloud agent; AGENTS.md is the only repo surface and everything else is web-dashboard settings."
     },
     {
       "target": "jules",
@@ -5667,16 +6229,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://jules.google/docs/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: cloud agent; AGENTS.md is the only repo surface and everything else is web-dashboard settings."
     },
     {
       "target": "jules",
@@ -5685,16 +6249,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://jules.google/docs/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: cloud agent; AGENTS.md is the only repo surface and everything else is web-dashboard settings."
     },
     {
       "target": "junie",
@@ -5835,16 +6401,18 @@
       "maxAchievable": "partial",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://junie.jetbrains.com/docs/junie-cli-hooks.html"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: project .junie/config.json hooks are parsed but skipped by default for safety unless --config-location is passed."
     },
     {
       "target": "junie",
@@ -5853,15 +6421,59 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://junie.jetbrains.com/docs/junie-ide-plugin.html"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: .aiignore is project-root only; no user-home ignore file exists."
+    },
+    {
+      "target": "junie",
+      "feature": "ignore",
+      "scope": "project",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "native",
+      "path": ".aiignore",
+      "ext": "",
+      "format": "text",
+      "source": [
+        "https://junie.jetbrains.com/docs/junie-ide-plugin.html"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "junie",
+      "feature": "mcp",
+      "scope": "global",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "native",
+      "path": ".junie/mcp/mcp.json",
+      "ext": ".json",
+      "format": "json",
+      "source": [
+        "https://junie.jetbrains.com/docs/junie-cli-mcp-configuration.html"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -5915,16 +6527,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://junie.jetbrains.com/docs/action-allowlist-junie-cli.html"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "WRONG-SCOPE: the allowlist exists solely as ~/.junie/allowlist.json plus a GUI IDE settings page."
     },
     {
       "target": "junie",
@@ -6133,37 +6747,45 @@
       "target": "kilo-code",
       "feature": "hooks",
       "scope": "global",
-      "maxAchievable": "partial",
+      "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://app.kilo.ai/config.json",
+        "https://kilo.ai/docs/getting-started/settings",
+        "https://kilo.ai/docs/automate/extending/plugins"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "FABRICATED: the published schema has no hook key; hooks exist only as executable TS/JS plugin modules."
     },
     {
       "target": "kilo-code",
       "feature": "hooks",
       "scope": "project",
-      "maxAchievable": "partial",
+      "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://app.kilo.ai/config.json",
+        "https://kilo.ai/docs/getting-started/settings",
+        "https://kilo.ai/docs/automate/extending/plugins"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "FABRICATED: the published schema has no hook key; hooks exist only as executable TS/JS plugin modules."
     },
     {
       "target": "kilo-code",
@@ -6185,6 +6807,26 @@
       "verifiedAt": "2026-07-12",
       "verdict": "rejected",
       "rejectionReason": "No documented global .kilocodeignore equivalent: kilo.ai/docs/customize/context/kilocodeignore describes .kilocodeignore as a workspace-root-only file (patterns evaluated relative to the workspace root), auto-migrated into project-scope `permission` deny-rules via the IgnoreMigrator. No global ignore file or kilo.jsonc key is documented."
+    },
+    {
+      "target": "kilo-code",
+      "feature": "ignore",
+      "scope": "project",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "native",
+      "path": ".kilocodeignore",
+      "ext": "",
+      "format": "text",
+      "source": [
+        "https://kilo.ai/docs/customize/context/kilocodeignore"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
     },
     {
       "target": "kilo-code",
@@ -6227,6 +6869,52 @@
       "source": [],
       "verifiedAt": null,
       "verdict": "unverified",
+      "rejectionReason": null
+    },
+    {
+      "target": "kilo-code",
+      "feature": "permissions",
+      "scope": "global",
+      "fingerprint": {
+        "topLevelKeys": [
+          "permission"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "native",
+      "path": ".config/kilo/kilo.jsonc",
+      "ext": ".jsonc",
+      "format": "json",
+      "source": [
+        "https://app.kilo.ai/config.json",
+        "https://kilo.ai/docs/getting-started/settings"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "kilo-code",
+      "feature": "permissions",
+      "scope": "project",
+      "fingerprint": {
+        "topLevelKeys": [
+          "permission"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "native",
+      "path": "kilo.jsonc",
+      "ext": ".jsonc",
+      "format": "json",
+      "source": [
+        "https://app.kilo.ai/config.json",
+        "https://kilo.ai/docs/getting-started/settings"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -6467,6 +7155,68 @@
     },
     {
       "target": "kiro",
+      "feature": "ignore",
+      "scope": "global",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "native",
+      "path": ".kiro/settings/kiroignore",
+      "ext": "",
+      "format": "text",
+      "source": [
+        "https://kiro.dev/docs/kiroignore/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "kiro",
+      "feature": "ignore",
+      "scope": "project",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "native",
+      "path": ".kiroignore",
+      "ext": "",
+      "format": "text",
+      "source": [
+        "https://kiro.dev/docs/kiroignore/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "kiro",
+      "feature": "mcp",
+      "scope": "global",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "native",
+      "path": ".kiro/settings/mcp.json",
+      "ext": ".json",
+      "format": "json",
+      "source": [
+        "https://kiro.dev/docs/mcp/configuration/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "kiro",
       "feature": "mcp",
       "scope": "project",
       "maxAchievable": "native",
@@ -6491,36 +7241,45 @@
       "target": "kiro",
       "feature": "permissions",
       "scope": "global",
-      "maxAchievable": "partial",
-      "path": "",
-      "ext": "",
-      "format": "json",
+      "maxAchievable": "native",
+      "path": ".kiro/settings/permissions.yaml",
+      "ext": ".yaml",
+      "format": "yaml",
       "fingerprint": {
-        "topLevelKeys": [],
+        "topLevelKeys": [
+          "rules"
+        ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://kiro.dev/docs/permissions/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
       "target": "kiro",
       "feature": "permissions",
       "scope": "project",
-      "maxAchievable": "partial",
-      "path": "",
-      "ext": "",
-      "format": "json",
+      "maxAchievable": "embedded",
+      "path": ".kiro/agents/reviewer.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
       "fingerprint": {
-        "topLevelKeys": [],
+        "topLevelKeys": [
+          "permissions"
+        ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://kiro.dev/docs/permissions/",
+        "https://kiro.dev/docs/custom-agents/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -6755,16 +7514,19 @@
       "maxAchievable": "partial",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://opencode.ai/config.json",
+        "https://github.com/anomalyco/opencode/commit/7d0777a7"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: the declarative experimental.hook key was removed upstream (commit 7d0777a7, 2026-01-30); only executable plugin code remains."
     },
     {
       "target": "opencode",
@@ -6773,51 +7535,62 @@
       "maxAchievable": "partial",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://opencode.ai/config.json",
+        "https://github.com/anomalyco/opencode/commit/7d0777a7"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: the declarative experimental.hook key was removed upstream (commit 7d0777a7, 2026-01-30); only executable plugin code remains."
     },
     {
       "target": "opencode",
       "feature": "ignore",
       "scope": "global",
-      "maxAchievable": "partial",
-      "path": "",
-      "ext": "",
+      "maxAchievable": "embedded",
+      "path": ".config/opencode/opencode.json",
+      "ext": ".json",
       "format": "json",
       "fingerprint": {
-        "topLevelKeys": [],
+        "topLevelKeys": [
+          "watcher"
+        ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://opencode.ai/docs/config"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
       "target": "opencode",
       "feature": "ignore",
       "scope": "project",
-      "maxAchievable": "partial",
-      "path": "",
-      "ext": "",
+      "maxAchievable": "embedded",
+      "path": "opencode.json",
+      "ext": ".json",
       "format": "json",
       "fingerprint": {
-        "topLevelKeys": [],
+        "topLevelKeys": [
+          "watcher"
+        ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://opencode.ai/docs/config"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -7040,37 +7813,41 @@
       "target": "pi-agent",
       "feature": "agents",
       "scope": "global",
-      "maxAchievable": "none",
+      "maxAchievable": "partial",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/extensions/subagent/README.md"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT ceiling is partial: ~/.pi/agent/agents/*.md requires the same opt-in extension."
     },
     {
       "target": "pi-agent",
       "feature": "agents",
       "scope": "project",
-      "maxAchievable": "none",
+      "maxAchievable": "partial",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/extensions/subagent/README.md"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT ceiling is partial: .pi/agents/*.md is inert unless the user installs the subagent example extension and opts in."
     },
     {
       "target": "pi-agent",
@@ -7121,16 +7898,18 @@
       "maxAchievable": "partial",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://pi.dev/docs/latest/extensions"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: lifecycle hooks are expressible only as executable TypeScript extension code."
     },
     {
       "target": "pi-agent",
@@ -7139,16 +7918,18 @@
       "maxAchievable": "partial",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://pi.dev/docs/latest/extensions"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: lifecycle hooks are expressible only as executable TypeScript extension code."
     },
     {
       "target": "pi-agent",
@@ -7157,16 +7938,18 @@
       "maxAchievable": "partial",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://pi.dev/docs/latest/settings"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: no pi-owned ignore file or config key; only hardcoded .gitignore behavior plus extension code."
     },
     {
       "target": "pi-agent",
@@ -7175,16 +7958,18 @@
       "maxAchievable": "partial",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://pi.dev/docs/latest/settings"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: no pi-owned ignore file or config key; only hardcoded .gitignore behavior plus extension code."
     },
     {
       "target": "pi-agent",
@@ -7230,36 +8015,44 @@
       "target": "pi-agent",
       "feature": "permissions",
       "scope": "global",
-      "maxAchievable": "partial",
-      "path": "",
-      "ext": "",
+      "maxAchievable": "native",
+      "path": ".pi/agent/settings.json",
+      "ext": ".json",
       "format": "json",
       "fingerprint": {
-        "topLevelKeys": [],
+        "topLevelKeys": [
+          "defaultTools"
+        ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://pi.dev/docs/latest/settings"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
       "target": "pi-agent",
       "feature": "permissions",
       "scope": "project",
-      "maxAchievable": "partial",
-      "path": "",
-      "ext": "",
+      "maxAchievable": "native",
+      "path": ".pi/settings.json",
+      "ext": ".json",
       "format": "json",
       "fingerprint": {
-        "topLevelKeys": [],
+        "topLevelKeys": [
+          "defaultTools"
+        ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://pi.dev/docs/latest/settings"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -7518,16 +8311,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://github.com/QwenLM/qwen-code/blob/main/packages/core/src/utils/qwenIgnoreParser.ts"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: ignore resolution is hard-anchored to the project root; absolute and parent paths are explicitly rejected."
     },
     {
       "target": "qwen-code",
@@ -7712,16 +8507,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://docs.replit.com/chat/custom-instructions"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: cloud workspace; user-scope config is Replit account settings, not a home-directory file."
     },
     {
       "target": "replit-agent",
@@ -7748,33 +8545,37 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://docs.replit.com/chat/custom-instructions"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: cloud workspace; user-scope config is Replit account settings, not a home-directory file."
     },
     {
       "target": "replit-agent",
       "feature": "agents",
       "scope": "project",
-      "maxAchievable": "none",
-      "path": "",
-      "ext": "",
-      "format": "json",
+      "maxAchievable": "embedded",
+      "path": ".agents/skills/reviewer/SKILL.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://docs.replit.com/features/agent/skills"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -7784,33 +8585,37 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://docs.replit.com/chat/custom-instructions"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: cloud workspace; user-scope config is Replit account settings, not a home-directory file."
     },
     {
       "target": "replit-agent",
       "feature": "commands",
       "scope": "project",
-      "maxAchievable": "none",
-      "path": "",
-      "ext": "",
-      "format": "json",
+      "maxAchievable": "embedded",
+      "path": ".agents/skills/review/SKILL.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://docs.replit.com/features/agent/skills"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -7820,34 +8625,38 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://docs.replit.com/chat/custom-instructions"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: cloud workspace; user-scope config is Replit account settings, not a home-directory file."
     },
     {
       "target": "replit-agent",
       "feature": "hooks",
       "scope": "project",
-      "maxAchievable": "partial",
+      "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://docs.replit.com/replit-app/configuration"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "FABRICATED: .replit onBoot is container boot, not an agent lifecycle hook; no agent hook concept exists."
     },
     {
       "target": "replit-agent",
@@ -7856,34 +8665,38 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://docs.replit.com/chat/custom-instructions"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: cloud workspace; user-scope config is Replit account settings, not a home-directory file."
     },
     {
       "target": "replit-agent",
       "feature": "ignore",
       "scope": "project",
-      "maxAchievable": "partial",
+      "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://docs.replit.com/replit-app/configuration"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "FABRICATED: .replit hidden / packager.ignoredPaths do not restrict agent context; no exclusion surface exists."
     },
     {
       "target": "replit-agent",
@@ -7892,16 +8705,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://docs.replit.com/chat/custom-instructions"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: cloud workspace; user-scope config is Replit account settings, not a home-directory file."
     },
     {
       "target": "replit-agent",
@@ -7910,16 +8725,18 @@
       "maxAchievable": "partial",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://docs.replit.com/features/mcp/overview"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "GUI-ONLY: MCP servers are connected through the Replit Integrations UI, not a workspace file."
     },
     {
       "target": "replit-agent",
@@ -7928,16 +8745,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://docs.replit.com/chat/custom-instructions"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: cloud workspace; user-scope config is Replit account settings, not a home-directory file."
     },
     {
       "target": "replit-agent",
@@ -7946,16 +8765,18 @@
       "maxAchievable": "partial",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://docs.replit.com/replitai/assistant/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "GUI-ONLY: approval and connector permissions are per-user cloud UI settings."
     },
     {
       "target": "replit-agent",
@@ -7964,16 +8785,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://docs.replit.com/chat/custom-instructions"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: cloud workspace; user-scope config is Replit account settings, not a home-directory file."
     },
     {
       "target": "replit-agent",
@@ -8002,16 +8825,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://docs.replit.com/chat/custom-instructions"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: cloud workspace; user-scope config is Replit account settings, not a home-directory file."
     },
     {
       "target": "replit-agent",
@@ -8171,16 +8996,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://github.com/RooCodeInc/Roo-Code/blob/main/packages/types/src/global-settings.ts"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: Roo Code has never shipped a lifecycle-hook surface; hooks exist only as open enhancement requests."
     },
     {
       "target": "roo-code",
@@ -8189,16 +9016,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://github.com/RooCodeInc/Roo-Code/blob/main/packages/types/src/global-settings.ts"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: Roo Code has never shipped a lifecycle-hook surface; hooks exist only as open enhancement requests."
     },
     {
       "target": "roo-code",
@@ -8219,6 +9048,26 @@
       "verifiedAt": "2026-07-17",
       "verdict": "rejected",
       "rejectionReason": "RooIgnoreController resolves .rooignore only from the workspace root; no global ignore path exists."
+    },
+    {
+      "target": "roo-code",
+      "feature": "ignore",
+      "scope": "project",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "native",
+      "path": ".rooignore",
+      "ext": "",
+      "format": "text",
+      "source": [
+        "https://roocodeinc.github.io/Roo-Code/features/rooignore"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
     },
     {
       "target": "roo-code",
@@ -8269,16 +9118,18 @@
       "maxAchievable": "partial",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://roocodeinc.github.io/Roo-Code/features/auto-approving-actions"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: auto-approve rules live in VS Code extension settings/state, not a documented ~/.roo/ config file."
     },
     {
       "target": "roo-code",
@@ -8515,56 +9366,83 @@
     {
       "target": "rovodev",
       "feature": "hooks",
-      "scope": "project",
-      "maxAchievable": "none",
-      "path": "",
-      "ext": "",
-      "format": "json",
+      "scope": "global",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "maxAchievable": "partial",
+      "path": ".rovodev/config.yml",
+      "ext": ".yml",
+      "format": "yaml",
+      "source": [
+        "https://support.atlassian.com/rovo/docs/manage-rovo-dev-cli-settings/",
+        "https://support.atlassian.com/rovo/docs/rovo-dev-cli-commands/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "GUI-ONLY: hooks are managed through the interactive /hooks picker; the published ~/.rovodev/config.yml schema has no hooks key."
+    },
+    {
+      "target": "rovodev",
+      "feature": "hooks",
+      "scope": "project",
+      "maxAchievable": "none",
+      "path": "",
+      "ext": "",
+      "format": "text",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://support.atlassian.com/rovo/docs/manage-rovo-dev-cli-settings/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: no repo-level config is auto-discovered, so there is no project hooks surface."
     },
     {
       "target": "rovodev",
       "feature": "ignore",
       "scope": "global",
-      "maxAchievable": "partial",
+      "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://support.atlassian.com/rovo/docs/use-tools-in-rovo-dev-cli/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "FABRICATED: Rovo Dev has no file-exclusion concept; accessible-directory allowlists are a permissions surface."
     },
     {
       "target": "rovodev",
       "feature": "ignore",
       "scope": "project",
-      "maxAchievable": "partial",
+      "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://support.atlassian.com/rovo/docs/use-tools-in-rovo-dev-cli/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "FABRICATED: Rovo Dev has no file-exclusion concept; accessible-directory allowlists are a permissions surface."
     },
     {
       "target": "rovodev",
@@ -8644,19 +9522,21 @@
       "target": "rovodev",
       "feature": "permissions",
       "scope": "project",
-      "maxAchievable": "none",
+      "maxAchievable": "partial",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://support.atlassian.com/bitbucket-cloud/docs/rovo-dev-advanced-agentic-configuration/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "GUI-ONLY / CI-managed: .rovodev/config.yaml toolPermissions is read only when a pipeline points at it explicitly; the local CLI never auto-discovers it."
     },
     {
       "target": "rovodev",
@@ -8906,16 +9786,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://docs.trae.ai/ide/ignore-files"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: Trae's ignore file is project-only (.trae/.ignore); no global ignore surface exists."
     },
     {
       "target": "trae",
@@ -8985,18 +9867,23 @@
       "target": "trae",
       "feature": "permissions",
       "scope": "global",
-      "maxAchievable": "none",
-      "path": "",
-      "ext": "",
+      "maxAchievable": "native",
+      "path": ".trae/permission/global.json",
+      "ext": ".json",
       "format": "json",
       "fingerprint": {
-        "topLevelKeys": [],
+        "topLevelKeys": [
+          "resourceAuthorization",
+          "customProfiles"
+        ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://docs.trae.ai/ide/permission-and-approval"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -9006,16 +9893,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://docs.trae.ai/ide/permission-and-approval"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: Trae centralizes all permission configuration in the user-scope global.json."
     },
     {
       "target": "trae",
@@ -9095,18 +9984,20 @@
       "target": "warp",
       "feature": "additionalRules",
       "scope": "global",
-      "maxAchievable": "none",
-      "path": "",
-      "ext": "",
-      "format": "json",
+      "maxAchievable": "embedded",
+      "path": ".agents/AGENTS.md",
+      "ext": ".md",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://docs.warp.dev/agents/cli/configuration/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -9134,16 +10025,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://docs.warp.dev/agents/capabilities/agent-profiles-permissions/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: agent profiles are Settings/cloud-synced with no documented on-disk format."
     },
     {
       "target": "warp",
@@ -9152,16 +10045,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://docs.warp.dev/agents/capabilities/agent-profiles-permissions/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: agent profiles are Settings/cloud-synced with no documented on-disk format."
     },
     {
       "target": "warp",
@@ -9206,16 +10101,18 @@
       "maxAchievable": "partial",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://docs.warp.dev/terminal/settings/all-settings"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: no hook file or settings key; event-driven behavior is cloud automations only."
     },
     {
       "target": "warp",
@@ -9224,16 +10121,18 @@
       "maxAchievable": "partial",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://docs.warp.dev/terminal/settings/all-settings"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: no hook file or settings key; event-driven behavior is cloud automations only."
     },
     {
       "target": "warp",
@@ -9242,33 +10141,37 @@
       "maxAchievable": "partial",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://docs.warp.dev/agents/capabilities/codebase-context/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: no home-level ignore file; only the GUI indexed-folders control."
     },
     {
       "target": "warp",
       "feature": "ignore",
       "scope": "project",
-      "maxAchievable": "partial",
-      "path": "",
+      "maxAchievable": "native",
+      "path": ".warpindexingignore",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://docs.warp.dev/agents/capabilities/codebase-context/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -9322,18 +10225,22 @@
       "target": "warp",
       "feature": "permissions",
       "scope": "global",
-      "maxAchievable": "partial",
-      "path": "",
-      "ext": "",
-      "format": "json",
+      "maxAchievable": "native",
+      "path": ".warp/settings.toml",
+      "ext": ".toml",
+      "format": "toml",
       "fingerprint": {
-        "topLevelKeys": [],
+        "topLevelKeys": [
+          "agents"
+        ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://docs.warp.dev/terminal/settings/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -9343,33 +10250,37 @@
       "maxAchievable": "partial",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://docs.warp.dev/terminal/settings/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: settings.toml is user-level only; the sole project file Warp reads is .warp/.mcp.json."
     },
     {
       "target": "warp",
       "feature": "rules",
       "scope": "global",
-      "maxAchievable": "none",
-      "path": "",
-      "ext": "",
-      "format": "json",
+      "maxAchievable": "native",
+      "path": ".agents/AGENTS.md",
+      "ext": ".md",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://docs.warp.dev/agents/cli/configuration/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -9544,6 +10455,28 @@
     {
       "target": "windsurf",
       "feature": "hooks",
+      "scope": "global",
+      "fingerprint": {
+        "topLevelKeys": [
+          "hooks"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "native",
+      "path": ".codeium/windsurf/hooks.json",
+      "ext": ".json",
+      "format": "json",
+      "source": [
+        "https://docs.devin.ai/desktop/cascade/hooks"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "windsurf",
+      "feature": "hooks",
       "scope": "project",
       "maxAchievable": "native",
       "path": ".windsurf/hooks.json",
@@ -9560,6 +10493,46 @@
         "https://docs.devin.ai/desktop/cascade/hooks"
       ],
       "verifiedAt": "2026-07-16",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "windsurf",
+      "feature": "ignore",
+      "scope": "global",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "native",
+      "path": ".codeium/.codeiumignore",
+      "ext": "",
+      "format": "text",
+      "source": [
+        "https://docs.devin.ai/desktop/context-awareness/windsurf-ignore"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "windsurf",
+      "feature": "ignore",
+      "scope": "project",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "native",
+      "path": ".codeiumignore",
+      "ext": "",
+      "format": "text",
+      "source": [
+        "https://docs.devin.ai/desktop/context-awareness/windsurf-ignore"
+      ],
+      "verifiedAt": "2026-08-30",
       "verdict": "confirmed",
       "rejectionReason": null
     },
@@ -9726,18 +10699,20 @@
       "target": "zed",
       "feature": "additionalRules",
       "scope": "global",
-      "maxAchievable": "none",
-      "path": "",
-      "ext": "",
-      "format": "json",
+      "maxAchievable": "embedded",
+      "path": ".config/zed/AGENTS.md",
+      "ext": ".md",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://github.com/zed-industries/zed/blob/main/docs/src/ai/instructions.md"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -9765,16 +10740,18 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://github.com/zed-industries/zed/blob/main/docs/src/ai/tools.md"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: spawn_agent is a generic ad-hoc delegation tool; no user-definable subagent files exist."
     },
     {
       "target": "zed",
@@ -9783,51 +10760,57 @@
       "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://github.com/zed-industries/zed/blob/main/docs/src/ai/tools.md"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "ALREADY-CORRECT: spawn_agent is a generic ad-hoc delegation tool; no user-definable subagent files exist."
     },
     {
       "target": "zed",
       "feature": "commands",
       "scope": "global",
-      "maxAchievable": "none",
-      "path": "",
-      "ext": "",
-      "format": "json",
+      "maxAchievable": "embedded",
+      "path": ".agents/skills/review/SKILL.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://github.com/zed-industries/zed/blob/main/docs/src/ai/skills.md"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
       "target": "zed",
       "feature": "commands",
       "scope": "project",
-      "maxAchievable": "none",
-      "path": "",
-      "ext": "",
-      "format": "json",
+      "maxAchievable": "embedded",
+      "path": ".agents/skills/review/SKILL.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://github.com/zed-industries/zed/blob/main/docs/src/ai/skills.md"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -9874,36 +10857,46 @@
       "target": "zed",
       "feature": "ignore",
       "scope": "global",
-      "maxAchievable": "partial",
-      "path": "",
-      "ext": "",
+      "maxAchievable": "embedded",
+      "path": ".config/zed/settings.json",
+      "ext": ".json",
       "format": "json",
       "fingerprint": {
-        "topLevelKeys": [],
+        "topLevelKeys": [
+          "file_scan_exclusions",
+          "private_files"
+        ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://github.com/zed-industries/zed/blob/main/docs/src/reference/all-settings.md"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
       "target": "zed",
       "feature": "ignore",
       "scope": "project",
-      "maxAchievable": "partial",
-      "path": "",
-      "ext": "",
+      "maxAchievable": "embedded",
+      "path": ".zed/settings.json",
+      "ext": ".json",
       "format": "json",
       "fingerprint": {
-        "topLevelKeys": [],
+        "topLevelKeys": [
+          "file_scan_exclusions",
+          "private_files"
+        ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://github.com/zed-industries/zed/blob/main/crates/settings_content/src/project.rs"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -9954,54 +10947,62 @@
       "target": "zed",
       "feature": "permissions",
       "scope": "global",
-      "maxAchievable": "partial",
-      "path": "",
-      "ext": "",
+      "maxAchievable": "native",
+      "path": ".config/zed/settings.json",
+      "ext": ".json",
       "format": "json",
       "fingerprint": {
-        "topLevelKeys": [],
+        "topLevelKeys": [
+          "agent"
+        ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://github.com/zed-industries/zed/blob/main/docs/src/ai/tool-permissions.md"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
       "target": "zed",
       "feature": "permissions",
       "scope": "project",
-      "maxAchievable": "partial",
+      "maxAchievable": "none",
       "path": "",
       "ext": "",
-      "format": "json",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
-      "rejectionReason": null
+      "source": [
+        "https://github.com/zed-industries/zed/blob/main/crates/settings/src/settings_store.rs"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "WRONG-SCOPE: .zed/settings.json is parsed as ProjectSettingsContent, which has no agent field, so agent.tool_permissions is discarded."
     },
     {
       "target": "zed",
       "feature": "rules",
       "scope": "global",
-      "maxAchievable": "none",
-      "path": "",
-      "ext": "",
-      "format": "json",
+      "maxAchievable": "native",
+      "path": ".config/zed/AGENTS.md",
+      "ext": ".md",
+      "format": "text",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://github.com/zed-industries/zed/blob/main/docs/src/ai/instructions.md"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -10021,6 +11022,26 @@
         "https://github.com/zed-industries/zed/blob/main/docs/src/ai/rules.md"
       ],
       "verifiedAt": "2026-07-16",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "zed",
+      "feature": "skills",
+      "scope": "global",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "maxAchievable": "native",
+      "path": ".agents/skills/api-generator/SKILL.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "source": [
+        "https://github.com/zed-industries/zed/blob/main/docs/src/ai/skills.md"
+      ],
+      "verifiedAt": "2026-08-30",
       "verdict": "confirmed",
       "rejectionReason": null
     },

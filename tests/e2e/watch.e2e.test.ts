@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node
 import { spawn } from 'node:child_process';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { delay, pollForWatch, watchStabilityDelayMs } from '../harness/watch.js';
+import { delay, pollForWatch, stopWatchChild, watchStabilityDelayMs } from '../harness/watch.js';
 
 const TEST_DIR = join(tmpdir(), 'am-e2e-watch');
 const CLI_PATH = join(process.cwd(), 'dist', 'cli.js');
@@ -43,8 +43,7 @@ describe('watch', () => {
       // Claude output was generated; cursor output was NOT (--targets filtered).
       expect(existsSync(join(TEST_DIR, '.cursor', 'rules'))).toBe(false);
     } finally {
-      child.kill('SIGINT');
-      await new Promise((resolve) => child.on('exit', resolve));
+      await stopWatchChild(child);
     }
   });
 
@@ -86,7 +85,6 @@ describe('watch', () => {
     expect(stdout).toContain('Watching');
     expect(stdout).toMatch(/Regenerated|Generated|created|updated/);
 
-    child.kill('SIGINT');
-    await new Promise((resolve) => child.on('exit', resolve));
+    await stopWatchChild(child);
   });
 });

@@ -26,7 +26,8 @@ describe('amazon-q descriptor', () => {
   });
 
   it('declares none for unsupported features and embedded for partially-supported ones', () => {
-    expect(descriptor.capabilities.commands).toBe('none');
+    // Commands are native: `/prompts` reads `.amazonq/prompts/<name>.md` (see commands.test.ts).
+    expect(descriptor.capabilities.commands).toBe('native');
     expect(descriptor.capabilities.skills).toBe('none');
     expect(descriptor.capabilities.ignore).toBe('none');
     expect(descriptor.capabilities.hooks).toBe('embedded');

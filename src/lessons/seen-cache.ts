@@ -1,8 +1,11 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
 import type { MatchedLesson } from './query.js';
+import { readSeenStore, removeSeenStore, seenStorePath, writeSeenStore } from './seen-store.js';
+import { autoSessionId, dayBucketId, isIdleSession, stampAgeMs } from './session-window.js';
 import { sessionId as envSessionId } from './telemetry.js';
+
+// The session-window policy (correlator + expiry windows) lives next door;
+// re-exported here so `seen-cache` stays the one import for session dedup.
+export { AUTO_SESSION_IDLE_MS, AUTO_SESSION_TTL_MS, autoSessionId } from './session-window.js';
 
 /**
  * Session-scoped recall dedup. Recall is stateless and deterministic, so the
@@ -13,15 +16,20 @@ import { sessionId as envSessionId } from './telemetry.js';
  * what is NEW. Opt-in: with no correlator the recall path is untouched.
  *
  * The per-session set of delivered lesson ids lives in the OS temp dir (not the
- * project tree), so it never dirties `.agentsmesh/` and the OS reclaims it.
+ * project tree — see seen-store.ts), so it never dirties `.agentsmesh/` and the
+ * OS reclaims it. TTL sessions (the `--session auto` day bucket) stamp each
+ * delivery and expire entries after {@link AUTO_SESSION_TTL_MS}, so a fresh
+ * agent session later the same day is not starved by the morning's deliveries.
  */
-
-const SEEN_DIR = 'agentsmesh-lessons-seen';
 
 export interface SessionDedup {
   readonly sessionId: string;
   readonly seen: ReadonlySet<string>;
   readonly path: string;
+  /** Per-id delivery stamps from a v2 store; null for legacy array stores. */
+  readonly stamps: ReadonlyMap<string, number> | null;
+  /** Set for TTL sessions: an entry suppresses only within this window. */
+  readonly ttlMs?: number;
 }
 
 export interface OpenDedupOptions {
@@ -38,6 +46,12 @@ export interface OpenDedupOptions {
    * Omitted → the legacy flat path (unchanged behavior).
    */
   readonly projectRoot?: string;
+  /**
+   * Expire suppressions after this window (TTL sessions — the auto day bucket).
+   * A legacy array store has no stamps and is treated as fully expired under a
+   * TTL: the safe direction is re-delivery, never over-suppression.
+   */
+  readonly ttlMs?: number;
 }
 
 /**
@@ -52,22 +66,34 @@ export function openSessionDedup(options: OpenDedupOptions = {}): SessionDedup |
       ? options.explicit.trim()
       : envSessionId(options.env);
   if (id === undefined) return null;
-  const path = seenPath(id, options.projectRoot);
-  return { sessionId: id, seen: loadSeen(path), path };
+  const path = seenStorePath(id, options.projectRoot);
+  const store = readSeenStore(path);
+  // A signal-less session that has gone quiet belonged to a context that is
+  // gone: drop the whole set, and drop the stamps too so the next commit cannot
+  // resurrect it (see AUTO_SESSION_IDLE_MS).
+  const stale = options.ttlMs !== undefined && isIdleSession(store.stamps, store.lastAt);
+  const stamps = stale ? null : store.stamps;
+  return {
+    sessionId: id,
+    seen: stale ? new Set<string>() : visibleSeen(store.ids, stamps, options.ttlMs),
+    path,
+    stamps,
+    ...(options.ttlMs !== undefined ? { ttlMs: options.ttlMs } : {}),
+  };
 }
 
-/** Short, stable, dependency-free hash (djb2) of a string, base-36. */
-function shortHash(value: string): string {
-  let h = 5381;
-  for (let i = 0; i < value.length; i += 1) h = ((h << 5) + h + value.charCodeAt(i)) >>> 0;
-  return h.toString(36);
-}
-
-function seenPath(id: string, projectRoot?: string): string {
-  const safe = id.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 200);
-  // Namespace by a hash of the resolved project root (per-project × per-session).
-  const scoped = projectRoot === undefined ? safe : `${safe}__${shortHash(resolve(projectRoot))}`;
-  return join(tmpdir(), SEEN_DIR, `${scoped}.json`);
+/** Under a TTL only stamped-and-fresh entries suppress; untimed stores suppress fully. */
+function visibleSeen(
+  ids: ReadonlySet<string>,
+  stamps: ReadonlyMap<string, number> | null,
+  ttlMs: number | undefined,
+): ReadonlySet<string> {
+  if (ttlMs === undefined) return ids;
+  if (stamps === null) return new Set();
+  const now = Date.now();
+  const fresh = new Set<string>();
+  for (const [id, ms] of stamps) if (stampAgeMs(ms, now) <= ttlMs) fresh.add(id);
+  return fresh;
 }
 
 /**
@@ -78,22 +104,31 @@ function seenPath(id: string, projectRoot?: string): string {
  * failed remove just leaves the stale set, degrading to today's behavior.
  */
 export function clearSeen(sessionId: string, projectRoot?: string): void {
-  try {
-    rmSync(seenPath(sessionId, projectRoot), { force: true });
-  } catch {
-    // Never let a dedup-reset failure break the blocking recall path.
-  }
+  removeSeenStore(seenStorePath(sessionId, projectRoot));
 }
 
-function loadSeen(path: string): Set<string> {
-  if (!existsSync(path)) return new Set();
-  try {
-    const parsed: unknown = JSON.parse(readFileSync(path, 'utf8'));
-    if (!Array.isArray(parsed)) return new Set();
-    return new Set(parsed.filter((x): x is string => typeof x === 'string'));
-  } catch {
-    return new Set();
-  }
+/**
+ * Apply a harness `SessionStart` to dedup state. `resume` is the ONLY source
+ * that keeps the sets, because it is the only one where the prior context comes
+ * back; `compact`, `clear`, `startup`, and any source this build does not model
+ * (or a harness that omits the field) all mean the context those suppressions
+ * were based on is gone. Both the harness session store AND the CLI/MCP
+ * correlator stores are cleared: they are separate files, and clearing only the
+ * first left an agent's own `--session auto` recalls suppressed after a
+ * compaction. Re-showing a rule costs tokens; hiding one from a context that
+ * never saw it defeats the recall gate, so this errs toward clearing.
+ */
+export function clearSeenForSessionStart(
+  source: string | undefined,
+  sessionId: string | undefined,
+  projectRoot: string,
+): void {
+  if (source === 'resume') return;
+  if (sessionId !== undefined) clearSeen(sessionId, projectRoot);
+  // The CLI/MCP correlators live in other stores, resolved in other processes
+  // whose environments need not match this one — clear every key they could
+  // have used rather than assuming they agreed with us.
+  for (const id of new Set([autoSessionId(), dayBucketId()])) clearSeen(id, projectRoot);
 }
 
 /**
@@ -109,20 +144,42 @@ export function filterUnseen(
 
 /**
  * Record the ids actually returned so a later recall this session suppresses
- * them. Best-effort and atomic (temp + rename); a write failure is swallowed —
- * dedup is an optimization and must never break the blocking recall path.
+ * them. Best-effort and atomic (see seen-store).
+ *
+ * The written SHAPE follows the shape that was read, never the caller's mode:
+ * one correlator can be shared by a TTL writer (CLI `--session auto`) and an
+ * untimed one (hook/MCP), which happens whenever `AGENTSMESH_SESSION_ID` is
+ * exported. An untimed commit that downgraded a stamped store back to the bare
+ * array would discard every timestamp, and the next TTL read — which treats an
+ * unstamped store as fully expired — would suppress nothing, silently zeroing
+ * dedup for the rest of the session. So a stamped store stays stamped; only a
+ * session that never saw one keeps writing the legacy array (an older binary
+ * must still be able to read what this one writes).
  */
 export function commitSeen(dedup: SessionDedup, returnedIds: readonly string[]): void {
-  if (returnedIds.length === 0) return;
+  // A recall that delivered nothing still proves the session is ALIVE. Record
+  // that (cheaply, and only for stamped sessions, which are the ones whose idle
+  // gap can reset them) so steady work is not mistaken for an abandoned chat.
+  if (returnedIds.length === 0) {
+    if (dedup.ttlMs !== undefined && dedup.stamps !== null) {
+      writeSeenStore(dedup.path, dedup.stamps);
+    }
+    return;
+  }
+  if (dedup.ttlMs !== undefined || dedup.stamps !== null) {
+    const now = Date.now();
+    const merged = new Map<string, number>();
+    // Prune expired siblings only when this session actually has a TTL; an
+    // untimed session preserves every stamp it read.
+    for (const [id, ms] of dedup.stamps ?? []) {
+      if (dedup.ttlMs === undefined || now - ms <= dedup.ttlMs) merged.set(id, ms);
+    }
+    for (const id of returnedIds) merged.set(id, now);
+    writeSeenStore(dedup.path, merged);
+    return;
+  }
   const union = new Set(dedup.seen);
   for (const id of returnedIds) union.add(id);
   if (union.size === dedup.seen.size) return;
-  try {
-    mkdirSync(dirname(dedup.path), { recursive: true });
-    const tmp = `${dedup.path}.${process.pid}.tmp`;
-    writeFileSync(tmp, JSON.stringify([...union]), 'utf8');
-    renameSync(tmp, dedup.path);
-  } catch {
-    // Optimization only — never fail recall because the seen cache could not be written.
-  }
+  writeSeenStore(dedup.path, [...union]);
 }

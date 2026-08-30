@@ -1,14 +1,18 @@
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
 import { CURRENT_GRAPH_VERSION } from '../../lessons/graph-schema.js';
 import { loadLessonsGraphResilient } from '../../lessons/graph-store.js';
 import { normalizeRecallFile } from '../../lessons/normalize-query-file.js';
-import { ancestorLessonsProjectDir, lessonsSetupHint } from '../../lessons/paths.js';
+import { lessonsSetupHint } from '../../lessons/paths.js';
 import { collectAlwaysLessons, queryLessons } from '../../lessons/query.js';
 import { rankLessons } from '../../lessons/ranking.js';
 import { recordRecallTelemetry } from '../../lessons/recall.js';
 import { loadRecallConfig, lessonsConfigWarning } from '../../lessons/recall-config.js';
-import { commitSeen, filterUnseen, openSessionDedup } from '../../lessons/seen-cache.js';
+import {
+  AUTO_SESSION_TTL_MS,
+  autoSessionId,
+  commitSeen,
+  filterUnseen,
+  openSessionDedup,
+} from '../../lessons/seen-cache.js';
 import {
   errorResult,
   numberFlag,
@@ -18,41 +22,12 @@ import {
   type LessonsFlags,
 } from './lessons-helpers.js';
 import type { LessonsCommandResult, LessonsQueryData } from './lessons-types.js';
-
-/** Returns an error message if the flag is present but not a positive integer, else null. */
-function validatePositiveIntFlag(flags: LessonsFlags, name: string): string | null {
-  const v = flags[name];
-  if (v === undefined || v === false) return null;
-  const n = typeof v === 'string' ? Number(v) : NaN;
-  if (!Number.isInteger(n) || n < 1) return `Invalid --${name}: expected a positive integer.`;
-  return null;
-}
-
-/** Returns an error message if --format is present with a value outside plain|md|json, else null. */
-function validateFormatFlag(flags: LessonsFlags): string | null {
-  const v = flags.format;
-  if (v === undefined) return null;
-  if (v === 'plain' || v === 'md' || v === 'json') return null;
-  return 'Invalid --format: expected plain|md|json.';
-}
-
-/** Join the non-empty warning parts into one stderr blob (or undefined when none). */
-function mergeWarnings(...parts: Array<string | undefined>): string | undefined {
-  const present = parts.filter((p): p is string => p !== undefined && p.length > 0);
-  return present.length > 0 ? present.join('\n') : undefined;
-}
-
-/**
- * Warn when recall finds no graph at the CWD but a `.agentsmesh` project exists
- * in an ancestor — the classic "invoked from a subdirectory" trap, which would
- * otherwise look like an empty (but valid) recall.
- */
-function strayDirWarning(projectRoot: string): string | undefined {
-  if (existsSync(join(projectRoot, '.agentsmesh'))) return undefined;
-  const ancestor = ancestorLessonsProjectDir(projectRoot);
-  if (ancestor === null) return undefined;
-  return `no lessons graph here — this directory has no .agentsmesh, but a lessons project exists at ${ancestor.replaceAll('\\', '/')}. Run lessons from there (cd into it) for recall to work.`;
-}
+import {
+  mergeWarnings,
+  strayDirWarning,
+  validateFormatFlag,
+  validatePositiveIntFlag,
+} from './lessons-query-guards.js';
 
 export function doQuery(
   flags: LessonsFlags,
@@ -151,9 +126,16 @@ export function doQuery(
   const graph = load.graph;
   const matches = queryLessons(graph, query);
   // Dedup before ranking so the caps fill with fresh lessons (see seen-cache).
+  // `--session auto` derives a correlator (env id, else a TTL'd day key so a
+  // later same-day session is not starved); every session — explicit, env, or
+  // auto — is project-namespaced so state never bleeds across repos.
+  const sessionFlag = stringFlag(flags, 'session');
+  const resolvedSession = sessionFlag === 'auto' ? autoSessionId() : (sessionFlag ?? undefined);
   const dedup = openSessionDedup({
-    explicit: stringFlag(flags, 'session') ?? undefined,
+    explicit: resolvedSession,
     disabled: flags['no-dedup'] === true,
+    projectRoot,
+    ...(sessionFlag === 'auto' ? { ttlMs: AUTO_SESSION_TTL_MS } : {}),
   });
   const forRank = dedup === null ? matches : filterUnseen(dedup, matches);
   // `--all` bypasses both caps; otherwise apply the per-project caps (which
@@ -175,6 +157,8 @@ export function doQuery(
   // diagnostic dump, not a mandatory recall, so flag it as a bypass.
   recordRecallTelemetry(projectRoot, graph, query, matches, ranked, {
     bypassed: flags.all === true,
+    // Thread the resolved correlator so stats sees real sessions.
+    session: dedup?.sessionId ?? resolvedSession,
   });
   // `--always` prepends the universal always-on lessons (delivered on every task,
   // excluded from triggered recall) so a non-hook agent can pull them at task start.

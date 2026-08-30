@@ -133,3 +133,25 @@ function triggerMatches(trigger: Trigger, query: LessonsQuery, budget: WorkBudge
       return keywordMatches(trigger.pattern, query);
   }
 }
+
+/**
+ * Fast-path parity probe: could a command-only query match ANY of these
+ * patterns? MUST mirror {@link queryLessons}'s trigger matching exactly (same
+ * linear engine, same budget seed, same keyword semantics) — a false "cannot
+ * match" here would silently skip a mandatory recall. Consumed by
+ * cmd-fastpath.ts against its precomputed active-trigger pattern lists.
+ */
+export function commandCouldMatch(
+  commandPatterns: readonly string[],
+  keywordPatterns: readonly string[],
+  command: string,
+): boolean {
+  const budget: WorkBudget = { remaining: COMMAND_MATCH_BUDGET };
+  const query: LessonsQuery = { command };
+  return (
+    commandPatterns.some((p) => {
+      const matcher = getCommandMatcher(p);
+      return matcher !== null && matcher.test(command, budget);
+    }) || keywordPatterns.some((p) => keywordMatches(p, query))
+  );
+}

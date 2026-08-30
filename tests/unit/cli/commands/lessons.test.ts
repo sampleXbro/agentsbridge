@@ -20,6 +20,8 @@ import {
 } from '../../../../src/lessons/graph-store.js';
 import type { LessonsGraph } from '../../../../src/lessons/graph-schema.js';
 import { appendOutcomeEvent, type OutcomeEvent } from '../../../../src/lessons/outcome-log.js';
+import { clearSeen } from '../../../../src/lessons/seen-cache.js';
+import { readRecallLog } from '../../../../src/lessons/telemetry.js';
 
 const TELEMETRY_ON = { AGENTSMESH_LESSONS_TELEMETRY: '1' } as NodeJS.ProcessEnv;
 const failEvent = (contextKey: string): OutcomeEvent => ({
@@ -835,7 +837,9 @@ describe('runLessons query — session dedup', () => {
   const seenFiles: string[] = [];
   afterEach(() => {
     for (const id of seenFiles.splice(0)) {
+      // Explicit CLI sessions are project-namespaced now; clean both shapes.
       rmSync(join(tmpdir(), 'agentsmesh-lessons-seen', `${id}.json`), { force: true });
+      clearSeen(id, root);
     }
   });
 
@@ -855,6 +859,73 @@ describe('runLessons query — session dedup', () => {
     expect(r2.data.suppressed).toBe(1);
 
     const r3 = await runLessons({ file: 'src/a.ts', session, 'no-dedup': true }, ['query'], root);
+    if (r3.subcommand !== 'query') throw new Error('expected query');
+    expect(r3.data.lessons).toHaveLength(1);
+  });
+});
+
+describe('runLessons query — --session auto', () => {
+  let prevSession: string | undefined;
+  beforeEach(() => {
+    prevSession = process.env.AGENTSMESH_SESSION_ID;
+    delete process.env.AGENTSMESH_SESSION_ID;
+  });
+  afterEach(() => {
+    if (prevSession === undefined) delete process.env.AGENTSMESH_SESSION_ID;
+    else process.env.AGENTSMESH_SESSION_ID = prevSession;
+    // Auto sessions are project-namespaced; root is unique per test, but clean anyway.
+    clearSeen(`auto-${new Date().toISOString().slice(0, 10)}`, root);
+  });
+
+  it('derives a project-scoped day session: repeat suppressed, --no-dedup restores', async () => {
+    seedSimpleGraph();
+    const r1 = await runLessons({ file: 'src/a.ts', session: 'auto' }, ['query'], root);
+    if (r1.subcommand !== 'query') throw new Error('expected query');
+    expect(r1.data.lessons).toHaveLength(1);
+
+    const r2 = await runLessons({ file: 'src/a.ts', session: 'auto' }, ['query'], root);
+    if (r2.subcommand !== 'query') throw new Error('expected query');
+    expect(r2.data.lessons).toHaveLength(0);
+    expect(r2.data.suppressed).toBe(1);
+
+    const r3 = await runLessons(
+      { file: 'src/a.ts', session: 'auto', 'no-dedup': true },
+      ['query'],
+      root,
+    );
+    if (r3.subcommand !== 'query') throw new Error('expected query');
+    expect(r3.data.lessons).toHaveLength(1);
+  });
+
+  it('threads the auto correlator (day-key shape) into recall telemetry', async () => {
+    const prevTel = process.env.AGENTSMESH_LESSONS_TELEMETRY;
+    process.env.AGENTSMESH_LESSONS_TELEMETRY = '1';
+    try {
+      seedSimpleGraph();
+      await runLessons({ file: 'src/a.ts', session: 'auto' }, ['query'], root);
+      const recs = readRecallLog(root);
+      expect(recs).toHaveLength(1);
+      expect(recs[0]!.session).toMatch(/^auto-\d{4}-\d{2}-\d{2}$/);
+    } finally {
+      if (prevTel === undefined) delete process.env.AGENTSMESH_LESSONS_TELEMETRY;
+      else process.env.AGENTSMESH_LESSONS_TELEMETRY = prevTel;
+    }
+  });
+
+  it('prefers AGENTSMESH_SESSION_ID over the day key when the env is set', async () => {
+    seedSimpleGraph();
+    const envId = `env-auto-${process.pid}`;
+    process.env.AGENTSMESH_SESSION_ID = envId;
+    const r1 = await runLessons({ file: 'src/a.ts', session: 'auto' }, ['query'], root);
+    if (r1.subcommand !== 'query') throw new Error('expected query');
+    expect(r1.data.lessons).toHaveLength(1);
+    const r2 = await runLessons({ file: 'src/a.ts', session: 'auto' }, ['query'], root);
+    if (r2.subcommand !== 'query') throw new Error('expected query');
+    expect(r2.data.lessons).toHaveLength(0);
+    // Clearing the ENV-derived, project-namespaced session restores delivery —
+    // proof the env id (not the day key) was the correlator.
+    clearSeen(envId, root);
+    const r3 = await runLessons({ file: 'src/a.ts', session: 'auto' }, ['query'], root);
     if (r3.subcommand !== 'query') throw new Error('expected query');
     expect(r3.data.lessons).toHaveLength(1);
   });

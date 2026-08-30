@@ -23,7 +23,7 @@ export interface LessonsSubcommandUsage {
 export const LESSONS_USAGE: Record<string, LessonsSubcommandUsage> = {
   query: {
     usage:
-      'agentsmesh lessons query [--file <path>] [--cmd <command>] [--keyword <text>] [--always] [--format plain|md|json] [--top <n>] [--all] [--max-tokens <n>] [--session <id>] [--no-dedup] [--ids]',
+      'agentsmesh lessons query [--file <path>] [--cmd <command>] [--keyword <text>] [--always] [--format plain|md|json] [--top <n>] [--all] [--max-tokens <n>] [--session <id>|auto] [--no-dedup] [--ids]',
     example: 'agentsmesh lessons query --file src/app/page.tsx --cmd "git commit -m wip"',
   },
   add: {

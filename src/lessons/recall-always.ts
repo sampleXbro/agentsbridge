@@ -32,7 +32,12 @@ export interface AlwaysRecallResult {
 
 export async function recallAlwaysLessons(
   projectRoot: string,
-  options: { readonly maxTokens?: number | null; readonly sessionId?: string } = {},
+  options: {
+    readonly maxTokens?: number | null;
+    readonly sessionId?: string;
+    /** Bound suppression for callers with no context-reset signal — see RecallOptions.ttlMs. */
+    readonly ttlMs?: number;
+  } = {},
 ): Promise<AlwaysRecallResult> {
   // Mirror recallLessons: migrate if needed, and never throw on a blocking path.
   try {
@@ -47,7 +52,11 @@ export async function recallAlwaysLessons(
   const total = all.length;
   // Per-session dedup (same as keyword recall): an always-lesson is injected at
   // most once per session, so re-prompting does not re-inject the whole set.
-  const dedup = openSessionDedup({ explicit: options.sessionId, projectRoot });
+  const dedup = openSessionDedup({
+    explicit: options.sessionId,
+    projectRoot,
+    ...(options.ttlMs !== undefined ? { ttlMs: options.ttlMs } : {}),
+  });
   const fresh = dedup === null ? all : filterUnseen(dedup, all);
   const budget =
     options.maxTokens === null ? undefined : (options.maxTokens ?? DEFAULT_ALWAYS_MAX_TOKENS);

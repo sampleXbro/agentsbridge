@@ -11,10 +11,13 @@ import {
   AMAZON_Q_RULES_DIR,
   AMAZON_Q_MCP_FILE,
   AMAZON_Q_AGENTS_DIR,
+  AMAZON_Q_PROMPTS_DIR,
   AMAZON_Q_GLOBAL_RULES_DIR,
   AMAZON_Q_GLOBAL_MCP_FILE,
   AMAZON_Q_GLOBAL_AGENTS_DIR,
+  AMAZON_Q_GLOBAL_PROMPTS_DIR,
   AMAZON_Q_CANONICAL_RULES_DIR,
+  AMAZON_Q_CANONICAL_COMMANDS_DIR,
   AMAZON_Q_CANONICAL_MCP,
   AMAZON_Q_CANONICAL_AGENTS_DIR,
 } from './constants.js';
@@ -86,6 +89,17 @@ export const amazonQImporterSpec: TargetImporterDescriptor = {
     canonicalDir: AMAZON_Q_CANONICAL_RULES_DIR,
     extensions: ['.md'],
     preset: 'rule',
+  },
+  commands: {
+    feature: 'commands',
+    mode: 'directory',
+    source: {
+      project: [AMAZON_Q_PROMPTS_DIR],
+      global: [AMAZON_Q_GLOBAL_PROMPTS_DIR],
+    },
+    canonicalDir: AMAZON_Q_CANONICAL_COMMANDS_DIR,
+    extensions: ['.md'],
+    preset: 'command',
   },
   agents: {
     feature: 'agents',

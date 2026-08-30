@@ -7,6 +7,17 @@ import {
 } from './managed-blocks.js';
 
 const LEGACY_RAW_FORMS = [
+  // Pre-`--session auto` wording (2026-07): strip sentinel-less copies so a
+  // project scaffolded before the dedup correlator dedups on the next scaffold.
+  `## Lessons (BLOCKING)
+
+Graph \`.agentsmesh/lessons/lessons.json\` is canonical; never hand-edit it. Manual: \`lessons\` skill.
+
+**Recall:** before every file edit or state-changing command, MUST run \`agentsmesh lessons query --file <path> --cmd <command>\` and obey matches; at task start, ALSO run \`agentsmesh lessons query --keyword "<task terms>" --always\` for conceptual + universal rules no path/command names. Pure-read commands and recall itself are exempt.
+
+**Capture:** after any failure, user correction, regression, wrong assumption, useful surprise, repeated friction, or non-obvious fix, MUST self-critique and run \`agentsmesh lessons add "<imperative rule>" --topic <id> --trigger-file <glob> --evidence <sha|lesson-id>\`.
+
+**Before final:** report \`Lesson: captured <id>\` or \`Lesson: none\`. No recall/capture gate = task incomplete. No shell: use \`lessons_query\` / \`lessons_add\`.`,
   `## Lessons (BLOCKING REQUIREMENT — MUST run both, no exceptions; the user will check)
 
 Graph \`.agentsmesh/lessons/lessons.json\` is canonical — never hand-edit. Manual: the \`lessons\` skill.

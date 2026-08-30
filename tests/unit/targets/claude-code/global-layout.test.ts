@@ -226,11 +226,15 @@ describe('claude-code global frontmatter preservation', () => {
       scope: 'global',
     });
 
+    // Claude Code documents no standalone hooks.json: global hooks belong in
+    // ~/.claude/settings.json under `hooks`. https://code.claude.com/docs/en/hooks
+    expect(results.some((r) => r.path === '.claude/hooks.json')).toBe(false);
     const hooksFile = results.find(
-      (r) => r.target === 'claude-code' && r.path === '.claude/hooks.json',
+      (r) => r.target === 'claude-code' && r.path === '.claude/settings.json',
     );
     expect(hooksFile).toBeDefined();
-    const parsed = JSON.parse(hooksFile!.content) as Record<string, unknown>;
+    const settings = JSON.parse(hooksFile!.content) as Record<string, unknown>;
+    const parsed = settings.hooks as Record<string, unknown>;
     expect(parsed).toHaveProperty('PreToolUse');
     const entries = parsed.PreToolUse as Array<Record<string, unknown>>;
     expect(entries).toHaveLength(1);

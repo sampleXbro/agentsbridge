@@ -116,10 +116,9 @@ describe('global mode round-trip: Claude Code', () => {
       'Code review',
     );
 
-    // 8. Hooks (docs: ~/.claude/hooks.json)
-    fileExists(join(homeDir, '.claude', 'hooks.json'));
-    validJson(join(homeDir, '.claude', 'hooks.json'));
-    const hooks = JSON.parse(readText(join(homeDir, '.claude', 'hooks.json')));
+    // 8. Hooks (docs: ~/.claude/settings.json `hooks` — there is no hooks.json)
+    validJson(join(homeDir, '.claude', 'settings.json'));
+    const hooks = JSON.parse(readText(join(homeDir, '.claude', 'settings.json'))).hooks;
     expect(Array.isArray(hooks.PreToolUse)).toBe(true);
 
     // 9. Ignore (docs: ~/.claudeignore)
@@ -135,7 +134,6 @@ describe('global mode round-trip: Claude Code', () => {
       'CLAUDE.md',
       'agents/reviewer.md',
       'commands/review.md',
-      'hooks.json',
       'output-styles/review.md',
       'rules/typescript.md',
       'settings.json',

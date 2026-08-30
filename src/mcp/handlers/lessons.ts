@@ -8,25 +8,9 @@ import {
 import { maybeAutoMigrateLessons } from '../../lessons/auto-migrate.js';
 import { tryLoadLessonsGraph } from '../../lessons/graph-store.js';
 import { captureLesson } from '../../lessons/capture.js';
-import { recallLessons } from '../../lessons/recall.js';
-import { recallAlwaysLessons } from '../../lessons/recall-always.js';
 import { McpError } from '../errors.js';
 import { lessonsDeprecate, lessonsShow } from './lessons-curation.js';
-
-interface LessonsQueryInput {
-  readonly file?: string;
-  readonly command?: string;
-  /** CLI-flag alias of `command` (--cmd); folded into `command` below. */
-  readonly cmd?: string;
-  readonly keyword?: string;
-  readonly limit?: number;
-  readonly max_tokens?: number;
-  /** CLI-flag alias of `max_tokens` (--max-tokens); folded in below. */
-  readonly 'max-tokens'?: number;
-  readonly verbose?: boolean;
-  /** Include the universal always-on lessons (no predicate required). */
-  readonly always?: boolean;
-}
+import { lessonsQuery } from './lessons-query.js';
 
 /** A list input the agent may pass as a bare string or an array (CLI parity). */
 type ListInput = string | readonly string[] | undefined;
@@ -78,94 +62,7 @@ function toEvidenceList(v: ListInput): string[] {
 }
 
 export const lessonsHandlers = {
-  async query(
-    ctx: McpContext,
-    input: LessonsQueryInput,
-  ): Promise<{
-    lessons: Array<{
-      id: string;
-      rule: string;
-      topics?: string[];
-      triggers?: string[];
-      evidence?: string[];
-      score?: number;
-    }>;
-    totalMatches: number;
-  }> {
-    // Migration-aware recall; applies the default token budget when the caller
-    // omits max_tokens so mandatory recall stays token-lean. Fold the CLI-flag
-    // aliases (`cmd`, `max-tokens`) into their canonical fields so agents coming
-    // from the CLI docs are not tripped by the name difference.
-    const query = {
-      file: input.file,
-      command: input.command ?? input.cmd,
-      keyword: input.keyword,
-    };
-    if (
-      input.always !== true &&
-      query.file === undefined &&
-      query.command === undefined &&
-      query.keyword === undefined
-    ) {
-      throw new McpError(
-        'VALIDATION_FAILED',
-        'lessons_query: provide at least one of file, command, keyword, or always=true to recall against.',
-      );
-    }
-    if (query.keyword !== undefined && query.file === undefined && query.command === undefined) {
-      process.stderr.write(
-        'agentsmesh: keyword-only recall misses file_glob/command_pattern lessons — ' +
-          'pass file and/or command for complete recall.\n',
-      );
-    }
-    const {
-      lessons: ranked,
-      totalMatches,
-      suppressed,
-      corrupt,
-      newerVersion,
-    } = await recallLessons(ctx.projectRoot, query, {
-      limit: input.limit,
-      maxTokens: input.max_tokens ?? input['max-tokens'],
-    });
-    if (corrupt === true) {
-      // Recall degrades to empty rather than throwing; surface the reason on
-      // stderr (stdout is the MCP protocol channel) so the server log shows it.
-      process.stderr.write(
-        'agentsmesh: lessons.json is unreadable (corrupt) — recall returned no lessons. Run `agentsmesh lessons validate`.\n',
-      );
-    } else if (newerVersion !== undefined) {
-      process.stderr.write(
-        `agentsmesh: lessons.json is version ${newerVersion}, newer than this build supports — recall returned no lessons. Upgrade agentsmesh to read it.\n`,
-      );
-    }
-    // `always=true` prepends the universal always-on lessons (excluded from
-    // triggered recall) so a non-hook agent can pull them at task start.
-    const alwaysOut =
-      input.always === true ? (await recallAlwaysLessons(ctx.projectRoot)).lessons : [];
-    // Compact by default — return only id + rule to keep recall token-cheap.
-    // Metadata (topics/triggers/evidence/score) is opt-in via `verbose`.
-    const verbose = input.verbose === true;
-    return {
-      lessons: [
-        ...alwaysOut.map(({ id, rule }) => ({ id, rule })),
-        ...ranked.map(({ id, lesson, score }) =>
-          verbose
-            ? {
-                id,
-                rule: lesson.rule,
-                topics: [...lesson.topics],
-                triggers: [...lesson.triggers],
-                evidence: [...lesson.evidence],
-                score,
-              }
-            : { id, rule: lesson.rule },
-        ),
-      ],
-      totalMatches,
-      ...(suppressed > 0 ? { suppressed } : {}),
-    };
-  },
+  query: lessonsQuery,
 
   async topics(ctx: McpContext): Promise<{ topics: Array<{ id: string; summary: string }> }> {
     await maybeAutoMigrateLessons(ctx.projectRoot);

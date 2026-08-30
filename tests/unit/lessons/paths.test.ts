@@ -107,6 +107,13 @@ describe('LESSONS_PROCEDURAL_RULE', () => {
     expect(LESSONS_PROCEDURAL_RULE).toContain('agentsmesh lessons add');
   });
 
+  it('carries the session correlator so prose-driven recall dedups repeats', () => {
+    // Without --session auto, ritual recall re-delivers the whole matched set on
+    // every call (field-measured at ~59% repeated rule-tokens in one deployment).
+    const recallBlock = LESSONS_PROCEDURAL_RULE.split('**Capture:**')[0]!;
+    expect(recallBlock.match(/--session auto/g)).toHaveLength(2);
+  });
+
   it('delegates the expansive manual to the lessons skill rather than inlining it', () => {
     // Tier 1 is the minimal always-on trigger; the full how-to (command set,
     // topic workflow, trigger-flag mechanics, exhaustive excuse list) lives in
@@ -168,8 +175,9 @@ describe('LESSONS_PROCEDURAL_RULE', () => {
   it('is compact — far smaller than the prior maximalist block', () => {
     // Forceful framing is restored, but the always-on per-session tax stays
     // bounded: this guards against regrowth toward the ~1450-char maximalist
-    // V1/V2 block, not against the deliberate forceful frame.
-    expect(LESSONS_PROCEDURAL_RULE.length).toBeLessThan(900);
+    // V1/V2 block, not against the deliberate forceful frame. (Raised 900→950
+    // for the two `--session auto` correlators — a functional flag, not prose.)
+    expect(LESSONS_PROCEDURAL_RULE.length).toBeLessThan(950);
   });
 
   it('does NOT bake in any Claude Code-specific tool names as required actions', () => {

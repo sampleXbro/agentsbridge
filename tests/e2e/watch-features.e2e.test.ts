@@ -3,7 +3,7 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { delay, pollForWatch, watchStabilityDelayMs } from '../harness/watch.js';
+import { delay, pollForWatch, stopWatchChild, watchStabilityDelayMs } from '../harness/watch.js';
 
 const TEST_DIR = join(tmpdir(), 'am-e2e-watch-features');
 const CLI_PATH = join(process.cwd(), 'dist', 'cli.js');
@@ -137,7 +137,6 @@ describe('watch feature coverage', () => {
       expect(stdout).toContain('✓ native');
     });
 
-    child.kill('SIGINT');
-    await new Promise((resolve) => child.on('exit', resolve));
+    await stopWatchChild(child);
   });
 });

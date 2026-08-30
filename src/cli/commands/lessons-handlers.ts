@@ -6,6 +6,7 @@ import { listProjectFiles } from '../../lessons/project-files.js';
 import { outcomeLogExists, readOutcomeLog } from '../../lessons/outcome-log.js';
 import { summarizeCapture } from '../../lessons/stats-capture.js';
 import { summarizeEffectiveness } from '../../lessons/stats-effectiveness.js';
+import { statsAdvice } from '../../lessons/stats-advice.js';
 import { summarizeRecall } from '../../lessons/stats.js';
 import { isTelemetryEnabled, readRecallLog, recallLogExists } from '../../lessons/telemetry.js';
 import { validateLessonsGraph } from '../../lessons/validate.js';
@@ -92,7 +93,8 @@ export function doJournal(projectRoot: string): LessonsCommandResult {
 
 export function doStats(flags: LessonsFlags, projectRoot: string): LessonsCommandResult {
   const graph = tryLoadLessonsGraph(projectRoot) ?? emptyGraph();
-  const report = summarizeRecall(readRecallLog(projectRoot), graph);
+  const records = readRecallLog(projectRoot);
+  const report = summarizeRecall(records, graph);
   const captureReport = summarizeCapture(readCaptureLog(projectRoot));
   // The benefit side: did delivered lessons prevent the repeat? (Coarse — see the report.)
   const effectiveness = summarizeEffectiveness(readOutcomeLog(projectRoot), graph);
@@ -105,6 +107,7 @@ export function doStats(flags: LessonsFlags, projectRoot: string): LessonsComman
       report,
       captureReport,
       effectiveness,
+      advice: statsAdvice(records, graph, report),
       hasLog: recallLogExists(projectRoot),
       hasCaptureLog: captureLogExists(projectRoot),
       hasOutcomeLog: outcomeLogExists(projectRoot),

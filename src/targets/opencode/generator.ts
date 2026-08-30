@@ -8,7 +8,8 @@
  *   - `.opencode/agents/<slug>.md`   — custom agents (with YAML frontmatter)
  *   - `.opencode/skills/`            — skill bundles
  *   - `opencode.json`               — MCP servers under `mcp` key, plus
- *     `instructions` (additional rules glob) and `permission` (permissions)
+ *     `instructions` (additional rules glob) and `permission` (permissions
+ *     and ignore path deny rules)
  */
 
 import { basename } from 'node:path';
@@ -18,6 +19,7 @@ import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 import { generateEmbeddedSkills } from '../import/embedded-skill.js';
 import { serializeFrontmatter } from '../../utils/text/markdown.js';
 import { mapAgentToolsToOpenCodePermission } from './permission-map.js';
+import { mapIgnoreToOpenCodePermission } from './ignore-map.js';
 import {
   OPENCODE_TARGET,
   OPENCODE_ROOT_RULE,
@@ -155,6 +157,17 @@ export function generatePermissions(canonical: CanonicalFiles): OpenCodeOutput[]
   for (const name of canonical.permissions.allow) permission[name] = 'allow';
   for (const name of canonical.permissions.ask ?? []) permission[name] = 'ask';
   for (const name of canonical.permissions.deny) permission[name] = 'deny';
+  if (Object.keys(permission).length === 0) return [];
+  return [{ path: OPENCODE_CONFIG_FILE, content: JSON.stringify({ permission }, null, 2) }];
+}
+
+/**
+ * Canonical ignore becomes `permission.read`/`permission.edit` path deny rules
+ * — the only OpenCode surface that actually blocks access to a file. See
+ * `ignore-map.ts` for why `watcher.ignore` is not used.
+ */
+export function generateIgnore(canonical: CanonicalFiles): OpenCodeOutput[] {
+  const permission = mapIgnoreToOpenCodePermission(canonical.ignore);
   if (Object.keys(permission).length === 0) return [];
   return [{ path: OPENCODE_CONFIG_FILE, content: JSON.stringify({ permission }, null, 2) }];
 }

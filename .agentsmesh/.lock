@@ -1,7 +1,7 @@
 # Auto-generated. DO NOT EDIT MANUALLY.
 # Tracks the state of all config files for team conflict resolution.
 
-generated_at: 2026-08-30T11:56:49.981Z
+generated_at: 2026-08-30T16:20:03.104Z
 generated_by: serhii
 lib_version: 0.31.0
 checksums:
@@ -3919,7 +3919,7 @@ outputs:
   .qwenignore: sha256:53ad60cb2c945a41619fbb5dd0d43559c8461e4cb35e30f4d98b901c73766e12
   .trae/.ignore: sha256:53ad60cb2c945a41619fbb5dd0d43559c8461e4cb35e30f4d98b901c73766e12
   .gemini/settings.json: sha256:e080788025b333bd5ac7d75fd1a1da6df7a68623723b3ea145005fcfef90a90c
-  opencode.json: sha256:37306ce78d1ed353a0d2460e1e8d9b427ecf6876b3954af88991a9e0253c85d3
+  opencode.json: sha256:e23debb337bd6883a85f1a6cc4d4c4c65f56be0f75ca6d58c25621c87294f2ed
   .amp/settings.json: sha256:6e4cf0d284153cac726c6018d58bca6195c552d052c6af0f774f22e1e07e8a8a
   .zed/settings.json: sha256:a7b798260264e44f511c395e7728d8f25e0a9330215b351f2ffc999aaaa82ac2
-  .augment/settings.json: sha256:88e649616a533c015d97265f9fd7039d85d872ad70a8922ac2e7dc1fa85b6c98
+  .augment/settings.json: sha256:85a773baa7182417d67807050b22339fd3619a61a53e20ad7c9f5a695e7d6d7f

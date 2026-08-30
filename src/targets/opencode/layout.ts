@@ -67,6 +67,6 @@ export const capabilities: TargetCapabilities = {
   skills: 'native',
   mcp: 'native',
   hooks: 'partial',
-  ignore: 'partial',
+  ignore: 'embedded',
   permissions: 'native',
 };

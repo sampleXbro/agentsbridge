@@ -51,6 +51,45 @@ describe('lintPermissions (deepagents-cli)', () => {
     expect(result[0].level).toBe('warning');
     expect(result[0].target).toBe('deepagents-cli');
   });
+
+  it('warns at project scope that config.toml is global-only', () => {
+    const canonical = makeCanonical({
+      permissions: { allow: ['Bash(ls:*)'], deny: [], ask: [] },
+    });
+    const results = lintPermissions(canonical, { scope: 'project' });
+    expect(results).toHaveLength(1);
+    expect(results[0].message).toContain('global');
+  });
+
+  it('returns empty at global scope when every entry maps to shell.allow_list', () => {
+    const canonical = makeCanonical({
+      permissions: { allow: ['Bash(npm run test:*)'], deny: [], ask: [] },
+    });
+    expect(lintPermissions(canonical, { scope: 'global' })).toHaveLength(0);
+  });
+
+  it('names deny, ask, and non-shell allow entries at global scope', () => {
+    const canonical = makeCanonical({
+      permissions: {
+        allow: ['Read', 'Bash(npm run test:*)'],
+        deny: ['WebFetch'],
+        ask: ['Bash(git push:*)'],
+      },
+    });
+
+    const results = lintPermissions(canonical, { scope: 'global' });
+
+    expect(results).toHaveLength(1);
+    expect(results[0].level).toBe('warning');
+    expect(results[0].message).toContain('allow Read');
+    expect(results[0].message).toContain('deny WebFetch');
+    expect(results[0].message).toContain('ask Bash(git push:*)');
+    expect(results[0].message).not.toContain('Bash(npm run test:*)');
+  });
+
+  it('returns empty at global scope when permissions is null', () => {
+    expect(lintPermissions(makeCanonical(), { scope: 'global' })).toHaveLength(0);
+  });
 });
 
 describe('lintIgnore (deepagents-cli)', () => {

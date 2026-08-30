@@ -15,6 +15,7 @@ import {
   DEEPAGENTS_CLI_GLOBAL_AGENTS_DIR,
   DEEPAGENTS_CLI_GLOBAL_MCP_FILE,
   DEEPAGENTS_CLI_GLOBAL_HOOKS_FILE,
+  DEEPAGENTS_CLI_GLOBAL_CONFIG_FILE,
   DEEPAGENTS_CLI_DEFAULT_AGENT_NAME,
 } from '../../../../src/targets/deepagents-cli/constants.js';
 
@@ -92,9 +93,8 @@ describe('deepagents-cli global layout', () => {
     expect(descriptor.globalSupport!.capabilities.hooks).toBe('native');
   });
 
-  it('globalSupport.capabilities for ignore and permissions', () => {
+  it('globalSupport.capabilities.ignore is partial', () => {
     expect(descriptor.globalSupport!.capabilities.ignore).toBe('partial');
-    expect(descriptor.globalSupport!.capabilities.permissions).toBe('partial');
   });
 
   it('globalSupport has detection paths', () => {
@@ -135,6 +135,17 @@ describe('deepagents-cli global layout', () => {
     expect(descriptor.globalSupport!.layout.managedOutputs!.files).toContain(
       DEEPAGENTS_CLI_GLOBAL_HOOKS_FILE,
     );
+  });
+
+  it('globalLayout managedOutputs excludes config.toml (shared user file)', () => {
+    expect(descriptor.globalSupport!.layout.managedOutputs!.files).not.toContain(
+      DEEPAGENTS_CLI_GLOBAL_CONFIG_FILE,
+    );
+  });
+
+  it('permissions are embedded at global scope and partial at project scope', () => {
+    expect(descriptor.globalSupport!.capabilities.permissions).toBe('embedded');
+    expect(descriptor.capabilities.permissions).toBe('partial');
   });
 
   it('detection paths include project-level paths', () => {
@@ -251,5 +262,30 @@ describe('deepagents-cli global frontmatter preservation', () => {
     const server = servers['test-server'] as Record<string, unknown>;
     expect(server.command).toBe('npx');
     expect(server.args).toEqual(['-y', '@test/mcp']);
+  });
+
+  const permissionsCanonical = (): CanonicalFiles =>
+    makeCanonical({ permissions: { allow: ['Bash(npm run test:*)'], deny: ['WebFetch'] } });
+
+  it('emits config.toml in global mode', async () => {
+    const results = await generate({
+      config: { ...makeGlobalConfig(), features: ['permissions'] } as ValidatedConfig,
+      canonical: permissionsCanonical(),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    expect(results.map((r) => r.path)).toEqual([DEEPAGENTS_CLI_GLOBAL_CONFIG_FILE]);
+  });
+
+  it('never emits config.toml in project mode', async () => {
+    const results = await generate({
+      config: { ...makeGlobalConfig(), features: ['permissions'] } as ValidatedConfig,
+      canonical: permissionsCanonical(),
+      projectRoot: TEST_DIR,
+      scope: 'project',
+    });
+
+    expect(results).toEqual([]);
   });
 });

@@ -7559,13 +7559,14 @@
       "format": "json",
       "fingerprint": {
         "topLevelKeys": [
-          "watcher"
+          "permission"
         ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
       "source": [
-        "https://opencode.ai/docs/config"
+        "https://opencode.ai/config.json",
+        "https://opencode.ai/docs/permissions/"
       ],
       "verifiedAt": "2026-08-30",
       "verdict": "confirmed",
@@ -7581,13 +7582,14 @@
       "format": "json",
       "fingerprint": {
         "topLevelKeys": [
-          "watcher"
+          "permission"
         ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
       "source": [
-        "https://opencode.ai/docs/config"
+        "https://opencode.ai/config.json",
+        "https://opencode.ai/docs/permissions/"
       ],
       "verifiedAt": "2026-08-30",
       "verdict": "confirmed",

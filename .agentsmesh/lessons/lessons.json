@@ -6275,6 +6275,20 @@
         "t-glob-497f5415"
       ]
     },
+    "target-capabilities-for-opencode-ignore-map-canonical": {
+      "createdAt": "2026-08-30",
+      "evidence": [],
+      "rationale": "Verified against the live schema (opencode.ai/config.json, Config.additionalProperties=false) and opencode.ai/docs/permissions.",
+      "rule": "For opencode ignore, map canonical patterns onto permission.read/permission.edit path deny rules — never watcher.ignore (watcher-only, does not block reads) and never grep/glob (their rules match the search string, not the file path). Emit deny rules only: user rules append AFTER OpenCode's built-in defaults with last-match-wins, so a generated \"*\": \"allow\" catch-all silently undoes OpenCode's own .env protection.",
+      "status": "active",
+      "topics": [
+        "target-capabilities"
+      ],
+      "triggers": [
+        "t-glob-a2e61f30",
+        "t-kw-cbded3f7"
+      ]
+    },
     "target-capabilities-for-the-crush-target-only": {
       "createdAt": "2026-06-24",
       "evidence": [
@@ -6354,13 +6368,30 @@
         "commit:9492875"
       ],
       "rule": "Augment Code tool permissions are GLOBAL/CLI-only: `toolPermissions` lives in the personal `~/.augment/settings.json` ([{toolName, permission:{type: allow|deny|ask-user}}], maps to canonical allow/deny/ask) and per docs.augmentcode.com/cli/permissions applies only in the Auggie CLI, NOT the IDE extension and NOT project `.augment/settings.json`. So raise permissions to native for GLOBAL scope only (gate it in buildSettingsContent on scope==='global' and import on scope==='global'); project stays none. General rule: confirm a capability's real scope from the tool's own docs, not from agentsmesh's own code comments — an internal comment claiming a key exists is not primary-source verification.",
-      "status": "active",
+      "status": "superseded",
+      "supersededBy": "target-capability-audits-augment-code-toolpermissions-is-native",
       "topics": [
         "target-capability-audits"
       ],
       "triggers": [
         "t-glob-eac2566f",
         "t-kw-9479ae91"
+      ]
+    },
+    "target-capability-audits-augment-code-toolpermissions-is-native": {
+      "createdAt": "2026-08-30",
+      "evidence": [
+        "commit:HEAD"
+      ],
+      "rationale": "The prior lesson asserted project scope must stay none, which contradicted Augment's own docs and would have blocked a real capability.",
+      "rule": "Augment Code `toolPermissions` is native at BOTH scopes, not global-only. docs.augmentcode.com/cli/permissions documents two settings files with the same shape: `~/.augment/settings.json` (user) and `.augment/settings.json` described as \"Repo-level settings committed to the project, applied to any agent running in that repo\" — committing it is the documented way to enforce org policy. Entries are `{toolName, permission:{type: allow|deny|ask-user}}`, honored by the Auggie CLI and Cosmos cloud agents but not the IDE extension. Do not gate emission or import on `scope === 'global'`.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-3f3d7245",
+        "t-kw-3bf61ef5"
       ]
     },
     "target-capability-audits-capability-audits-for-agentsmesh-are": {
@@ -9067,6 +9098,10 @@
       "kind": "file_glob",
       "pattern": "tests/integration/refresh-git-source.test.ts"
     },
+    "t-glob-3f3d7245": {
+      "kind": "file_glob",
+      "pattern": "src/targets/augment-code/**"
+    },
     "t-glob-40333e0c": {
       "kind": "file_glob",
       "pattern": "tests/**/reference-rewrite*.test.ts"
@@ -9979,6 +10014,10 @@
       "kind": "keyword",
       "pattern": "shared data type field"
     },
+    "t-kw-3bf61ef5": {
+      "kind": "keyword",
+      "pattern": "augment permissions scope"
+    },
     "t-kw-3c5328a3": {
       "kind": "keyword",
       "pattern": "Lessons graph: ok"
@@ -10314,6 +10353,10 @@
     "t-kw-c8f23353": {
       "kind": "keyword",
       "pattern": "captureLesson"
+    },
+    "t-kw-cbded3f7": {
+      "kind": "keyword",
+      "pattern": "opencode ignore"
     },
     "t-kw-cca8cf8e": {
       "kind": "keyword",

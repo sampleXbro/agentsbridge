@@ -16,8 +16,9 @@
  *
  * Global mode generates to `~/.deepagents/{agent}/` (AGENTS.md, skills/,
  * agents/ — per-agent-instance, default agent name `"agent"`), plus the flat,
- * unscoped `~/.deepagents/.mcp.json` and `~/.deepagents/hooks.json`. There is
- * no project-level hooks surface at all (see `global-hooks.ts`).
+ * unscoped `~/.deepagents/.mcp.json`, `~/.deepagents/hooks.json` and
+ * `~/.deepagents/config.toml`. There is no project-level hooks or permissions
+ * surface at all (see `global-hooks.ts` and `global-permissions.ts`).
  */
 
 import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
@@ -32,7 +33,7 @@ import {
   generatePermissions,
 } from './generator.js';
 import { deepagentsCliAgentMapper } from './agent-format.js';
-import { deepagentsCliScopeExtras } from './global-hooks.js';
+import { deepagentsCliScopeExtras } from './scope-extras.js';
 import { importFromDeepagentsCli } from './importer.js';
 import { lintRules } from './linter.js';
 import { lintPermissions, lintIgnore, lintHooks } from './lint.js';
@@ -80,6 +81,8 @@ const capabilities: TargetCapabilities = {
   // path exists; lintHooks warns when canonical hooks can't be projected.
   hooks: 'none',
   ignore: 'partial',
+  // `_paths.py` exposes no project-tier config.toml, so the only permission
+  // surface is the global one (see globalCapabilities + global-permissions.ts).
   permissions: 'partial',
 };
 
@@ -92,7 +95,10 @@ const globalCapabilities: TargetCapabilities = {
   mcp: 'native',
   hooks: 'native',
   ignore: 'partial',
-  permissions: 'partial',
+  // `shell.allow_list` + `startup.mode` inside the general user config file
+  // `~/.deepagents/config.toml` — no dedicated permissions file, no deny/ask
+  // rules (see `permissions-format.ts`).
+  permissions: 'embedded',
 };
 
 export const descriptor = {

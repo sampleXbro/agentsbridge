@@ -31,7 +31,9 @@ import {
   OPENCODE_GLOBAL_CONFIG_FILE,
   OPENCODE_CANONICAL_MCP,
   OPENCODE_CANONICAL_PERMISSIONS,
+  OPENCODE_CANONICAL_IGNORE,
 } from './constants.js';
+import { mapOpenCodePermissionToIgnore } from './ignore-map.js';
 import { descriptor } from './index.js';
 
 function toStringRecord(value: unknown): Record<string, string> {
@@ -123,7 +125,15 @@ async function importPermissions(
   const permission = (parsed as Record<string, unknown>).permission;
   if (!permission || typeof permission !== 'object' || Array.isArray(permission)) return;
   const canonical = { allow: [] as string[], ask: [] as string[], deny: [] as string[] };
-  for (const [name, level] of Object.entries(permission)) {
+  for (const [name, rule] of Object.entries(permission)) {
+    // A tool whose rules were folded into the object form keeps its blanket action
+    // under the `"*"` catch-all; without one, the globs belong to ignore, not permissions.
+    const level =
+      typeof rule === 'string'
+        ? rule
+        : rule && typeof rule === 'object' && !Array.isArray(rule)
+          ? (rule as Record<string, unknown>)['*']
+          : undefined;
     if (level === 'allow') canonical.allow.push(name);
     if (level === 'ask') canonical.ask.push(name);
     if (level === 'deny') canonical.deny.push(name);
@@ -137,6 +147,34 @@ async function importPermissions(
     fromTool: OPENCODE_TARGET,
     fromPath: srcPath,
     toPath: OPENCODE_CANONICAL_PERMISSIONS,
+  });
+}
+
+async function importIgnore(
+  projectRoot: string,
+  scope: TargetLayoutScope,
+  results: ImportResult[],
+): Promise<void> {
+  const configFile = scope === 'global' ? OPENCODE_GLOBAL_CONFIG_FILE : OPENCODE_CONFIG_FILE;
+  const srcPath = join(projectRoot, configFile);
+  const content = await readFileSafe(srcPath);
+  if (content === null) return;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    return;
+  }
+  if (!parsed || typeof parsed !== 'object') return;
+  const patterns = mapOpenCodePermissionToIgnore((parsed as Record<string, unknown>).permission);
+  if (patterns.length === 0) return;
+  await mkdirp(join(projectRoot, '.agentsmesh'));
+  await writeFileAtomic(join(projectRoot, OPENCODE_CANONICAL_IGNORE), `${patterns.join('\n')}\n`);
+  results.push({
+    feature: 'ignore',
+    fromTool: OPENCODE_TARGET,
+    fromPath: srcPath,
+    toPath: OPENCODE_CANONICAL_IGNORE,
   });
 }
 
@@ -154,6 +192,7 @@ export async function importFromOpenCode(
 
   await importMcp(projectRoot, scope, results);
   await importPermissions(projectRoot, scope, results);
+  await importIgnore(projectRoot, scope, results);
 
   return results;
 }

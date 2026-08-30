@@ -237,8 +237,8 @@ AgentsMesh generates native config for every major AI coding assistant — plus 
 | Skills | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native |
 | MCP Servers | Partial | Native | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Partial | Partial | Native | Native | Native | Native | — | Native | Partial | Native | Partial | Native | Native | Partial | Native |
 | Hooks | Partial | Embedded | Partial | Native | Native | Native | Native | Native | — | Native | Native | Native | — | Native | Native | Native | Partial | Partial | Partial | Native | Partial | Partial | Native | Partial | — | — | Native | Partial | Native | — |
-| Ignore | Native | — | Partial | — | Native | Native | Native | — | Native | — | Native | Native | Partial | Partial | Native (settings-embedded) | Native | Partial | Native | Native | Native | Partial | Partial | Native | Partial | Native | Partial | Native | Partial | Native | Partial |
-| Permissions | Partial | Embedded | Partial | Partial | — | Native | Partial | Native | — | — | Native | Native | Partial | Native | Partial | Partial | Partial | Partial | Native | Partial | Native | Partial | Native | Partial | Native | — | — | Partial | Partial | Partial |
+| Ignore | Native | — | Partial | — | Native | Native | Native | — | Native | — | Native | Native | Partial | Partial | Native (settings-embedded) | Native | Partial | Native | Native | Native | Embedded | Partial | Native | Partial | Native | Partial | Native | Partial | Native | Partial |
+| Permissions | Partial | Embedded | Partial | Partial | Native | Native | Partial | Native | — | — | Native | Native | Partial | Native | Partial | Partial | Partial | Partial | Native | Partial | Native | Partial | Native | Partial | Native | — | — | Partial | Partial | Partial |
 <!-- /agentsmesh:support-matrix:project -->
 
 ### Global scope (`agentsmesh generate --global`)
@@ -253,8 +253,8 @@ AgentsMesh generates native config for every major AI coding assistant — plus 
 | Skills | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native |
 | MCP Servers | Partial | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | — | Native | — | Partial | Native | Native | Native | Native | Native |
 | Hooks | Partial | Embedded | Partial | Native | Native | Native | Native | Native | — | Native | Native | Native | Native | Native | Native | Native | — | Embedded | Partial | Partial | Partial | Partial | Native | — | — | Native | Native | Partial | Native | — |
-| Ignore | Native | — | Partial | — | — | Native | — | — | Native | — | — | Native | Partial | Partial | — | Native | — | — | — | Native | Partial | Partial | — | — | — | Partial | — | Partial | Native | Partial |
-| Permissions | Partial | Embedded | Partial | Partial | Native | Native | Partial | Native | Native | Partial | Native | Native | Partial | Native | Native | Native | — | Native | Native | Partial | Native | Partial | Native | — | Partial | Native | — | Partial | Partial | Partial |
+| Ignore | Native | — | Partial | — | — | Native | — | — | Native | — | Native | Native | Partial | Partial | — | Native | — | — | — | Native | Embedded | Partial | — | — | — | Partial | — | Partial | Native | Partial |
+| Permissions | Partial | Embedded | Partial | Partial | Native | Native | Partial | Native | Native | Partial | Native | Native | Embedded | Native | Native | Native | — | Native | Native | Partial | Native | Partial | Native | — | Partial | Native | — | Partial | Partial | Partial |
 <!-- /agentsmesh:support-matrix:global -->
 
 See the [full feature matrix](https://samplexbro.github.io/agentsmesh/reference/supported-tools/) for native vs. embedded details and per-tool global paths.

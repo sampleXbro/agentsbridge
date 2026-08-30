@@ -142,9 +142,13 @@ describe('opencode global layout — capabilities', () => {
       skills: { level: 'native' },
       mcp: { level: 'native' },
       hooks: { level: 'partial' },
-      ignore: { level: 'partial' },
+      ignore: { level: 'embedded' },
       permissions: { level: 'native' },
     });
+  });
+
+  it('exposes the same ignore level at project scope', () => {
+    expect(getTargetCapabilities('opencode', 'project').ignore).toEqual({ level: 'embedded' });
   });
 
   it('descriptor.globalSupport.detectionPaths covers all global locations', () => {

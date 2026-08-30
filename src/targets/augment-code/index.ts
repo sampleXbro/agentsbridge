@@ -8,7 +8,7 @@
  *   - `.augment/rules/*.md`          — scoped rules (always_apply / agent_requested)
  *   - `.augment/commands/*.md`       — slash commands
  *   - `.augment/skills/<n>/SKILL.md` — native skill bundles
- *   - `.augment/settings.json`       — MCP servers + hooks (via emitScopedSettings)
+ *   - `.augment/settings.json`       — MCP servers + hooks + tool permissions (via emitScopedSettings)
  *   - `.augmentignore`               — workspace ignore patterns
  *
  * Import reads all the above paths.
@@ -17,7 +17,7 @@
  */
 
 import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
-import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
+import type { TargetDescriptor } from '../catalog/target-descriptor.js';
 import {
   generateRules,
   generateCommands,
@@ -31,17 +31,16 @@ import { lintHooks } from './lint.js';
 import { buildAugmentCodeImportPaths } from '../../core/reference/import-map-builders.js';
 import { buildSettingsContent, mergeAugmentSettings } from './settings-build.js';
 import type { CanonicalFiles } from '../../core/types.js';
+import { projectLayout, globalLayout } from './layout.js';
 import {
   AUGMENT_CODE_TARGET,
   AUGMENT_CODE_RULES_DIR,
   AUGMENT_CODE_COMMANDS_DIR,
-  AUGMENT_CODE_AGENTS_DIR,
   AUGMENT_CODE_SKILLS_DIR,
   AUGMENT_CODE_SETTINGS_FILE,
   AUGMENT_CODE_IGNORE_FILE,
   AUGMENT_CODE_GLOBAL_RULES_DIR,
   AUGMENT_CODE_GLOBAL_COMMANDS_DIR,
-  AUGMENT_CODE_GLOBAL_AGENTS_DIR,
   AUGMENT_CODE_GLOBAL_SKILLS_DIR,
   AUGMENT_CODE_GLOBAL_SETTINGS_FILE,
 } from './constants.js';
@@ -56,75 +55,6 @@ export const target: TargetGenerators = {
   importFrom: importFromAugmentCode,
 };
 
-const project: TargetLayout = {
-  skillDir: AUGMENT_CODE_SKILLS_DIR,
-  managedOutputs: {
-    dirs: [
-      AUGMENT_CODE_RULES_DIR,
-      AUGMENT_CODE_COMMANDS_DIR,
-      AUGMENT_CODE_AGENTS_DIR,
-      AUGMENT_CODE_SKILLS_DIR,
-    ],
-    files: [AUGMENT_CODE_SETTINGS_FILE, AUGMENT_CODE_IGNORE_FILE],
-  },
-  paths: {
-    rulePath(slug) {
-      return `${AUGMENT_CODE_RULES_DIR}/${slug}.md`;
-    },
-    commandPath(name) {
-      return `${AUGMENT_CODE_COMMANDS_DIR}/${name}.md`;
-    },
-    agentPath(name) {
-      return `${AUGMENT_CODE_AGENTS_DIR}/${name}.md`;
-    },
-  },
-};
-
-const globalLayout: TargetLayout = {
-  skillDir: AUGMENT_CODE_GLOBAL_SKILLS_DIR,
-  managedOutputs: {
-    dirs: [
-      AUGMENT_CODE_GLOBAL_RULES_DIR,
-      AUGMENT_CODE_GLOBAL_COMMANDS_DIR,
-      AUGMENT_CODE_GLOBAL_AGENTS_DIR,
-      AUGMENT_CODE_GLOBAL_SKILLS_DIR,
-    ],
-    files: [AUGMENT_CODE_GLOBAL_SETTINGS_FILE],
-  },
-  rewriteGeneratedPath(path) {
-    if (path.startsWith(`${AUGMENT_CODE_RULES_DIR}/`)) {
-      return path.replace(`${AUGMENT_CODE_RULES_DIR}/`, `${AUGMENT_CODE_GLOBAL_RULES_DIR}/`);
-    }
-    if (path.startsWith(`${AUGMENT_CODE_COMMANDS_DIR}/`)) {
-      return path.replace(`${AUGMENT_CODE_COMMANDS_DIR}/`, `${AUGMENT_CODE_GLOBAL_COMMANDS_DIR}/`);
-    }
-    // AUGMENT_CODE_AGENTS_DIR === AUGMENT_CODE_GLOBAL_AGENTS_DIR ('.augment/agents'),
-    // so no path rewrite needed — agent paths are identical in project and global scope.
-    if (path.startsWith(`${AUGMENT_CODE_SKILLS_DIR}/`)) {
-      return path.replace(`${AUGMENT_CODE_SKILLS_DIR}/`, `${AUGMENT_CODE_GLOBAL_SKILLS_DIR}/`);
-    }
-    if (path === AUGMENT_CODE_SETTINGS_FILE) {
-      return AUGMENT_CODE_GLOBAL_SETTINGS_FILE;
-    }
-    // Ignore project-only paths in global mode
-    if (path === AUGMENT_CODE_IGNORE_FILE) {
-      return null;
-    }
-    return path;
-  },
-  paths: {
-    rulePath(slug) {
-      return `${AUGMENT_CODE_GLOBAL_RULES_DIR}/${slug}.md`;
-    },
-    commandPath(name) {
-      return `${AUGMENT_CODE_GLOBAL_COMMANDS_DIR}/${name}.md`;
-    },
-    agentPath(name) {
-      return `${AUGMENT_CODE_GLOBAL_AGENTS_DIR}/${name}.md`;
-    },
-  },
-};
-
 const capabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'native',
@@ -134,7 +64,7 @@ const capabilities: TargetCapabilities = {
   mcp: 'native',
   hooks: 'native',
   ignore: 'native',
-  permissions: 'none',
+  permissions: 'native',
 };
 
 const globalCapabilities: TargetCapabilities = {
@@ -165,7 +95,7 @@ export const descriptor = {
   lint: {
     hooks: lintHooks,
   },
-  project,
+  project: projectLayout,
   globalSupport: {
     capabilities: globalCapabilities,
     detectionPaths: [
@@ -176,17 +106,19 @@ export const descriptor = {
     ],
     layout: globalLayout,
   },
-  emitScopedSettings(canonical: CanonicalFiles, scope, enabledFeatures) {
-    const content = buildSettingsContent(canonical, enabledFeatures, scope);
+  emitScopedSettings(canonical: CanonicalFiles, _scope, enabledFeatures) {
+    const content = buildSettingsContent(canonical, enabledFeatures);
     if (content === null) return [];
     return [{ path: AUGMENT_CODE_SETTINGS_FILE, content }];
   },
-  mergeGeneratedOutputContent(existing, _pending, newContent, resolvedPath) {
+  mergeGeneratedOutputContent(existing, pending, newContent, resolvedPath) {
     if (
       resolvedPath === AUGMENT_CODE_SETTINGS_FILE ||
       resolvedPath === AUGMENT_CODE_GLOBAL_SETTINGS_FILE
     ) {
-      return mergeAugmentSettings(existing, newContent);
+      // mcp, hooks and permissions all land in settings.json — build on the
+      // pending write from this run so a later pass keeps the earlier keys.
+      return mergeAugmentSettings(pending?.content ?? existing, newContent);
     }
     return null;
   },

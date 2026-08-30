@@ -6,6 +6,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { randomBytes } from 'node:crypto';
+import type { ChildProcess } from 'node:child_process';
 import { runWatch } from '../../src/cli/commands/watch.js';
 import type { RunWatchOptions } from '../../src/cli/commands/watch.js';
 export { runWatch };
@@ -81,6 +82,29 @@ export async function pollForWatch(
     await delay(interval);
   }
   await check();
+}
+
+/**
+ * Terminate a spawned `agentsmesh watch` child and wait for it, bounded.
+ *
+ * Never use a bare `child.kill('SIGINT'); await new Promise((r) => child.on('exit', r))`:
+ * if the child already exited (crash on startup, lock contention) the 'exit' event has
+ * been emitted and a fresh listener never fires, so the spec hangs until the suite
+ * timeout and reports a timeout instead of the assertion that actually failed.
+ */
+export function stopWatchChild(child: ChildProcess, graceMs = 5_000): Promise<void> {
+  if (child.exitCode !== null || child.signalCode !== null) return Promise.resolve();
+  return new Promise<void>((resolve) => {
+    const timer = setTimeout(() => {
+      child.kill('SIGKILL');
+      resolve();
+    }, graceMs);
+    child.once('exit', () => {
+      clearTimeout(timer);
+      resolve();
+    });
+    child.kill('SIGINT');
+  });
 }
 
 export function createWatchTestDir(): string {

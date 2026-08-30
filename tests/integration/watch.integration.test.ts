@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { spawn } from 'node:child_process';
 import {
   createWatchTestDir,
+  stopWatchChild,
   writeMinimalWatchProject,
   watchWaitTimeoutMs,
 } from '../harness/watch.js';
@@ -59,9 +60,7 @@ describe('agentsmesh watch (integration)', () => {
 
     await waitForFile(join(TEST_DIR, 'CLAUDE.md'), fileWaitMs());
 
-    expect(readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8')).toContain(
-      'Use TypeScript',
-    );
+    expect(readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8')).toContain('Use TypeScript');
 
     writeFileSync(
       join(TEST_DIR, '.agentsmesh', 'rules', '_root.md'),
@@ -81,11 +80,7 @@ description: "Updated"
     expect(output).toContain('Watching');
     expect(output).toMatch(/Regenerated|Generated|created|updated/);
 
-    child.kill('SIGINT');
-    await new Promise<void>((resolve) => {
-      child.on('exit', () => resolve());
-      setTimeout(resolve, 1000);
-    });
+    await stopWatchChild(child);
   });
 
   it('respects --targets filter', async () => {
@@ -100,15 +95,9 @@ description: "Updated"
 
     await waitForFile(join(TEST_DIR, 'CLAUDE.md'), fileWaitMs());
 
-    expect(readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8')).toContain(
-      'Use TypeScript',
-    );
+    expect(readFileSync(join(TEST_DIR, 'CLAUDE.md'), 'utf-8')).toContain('Use TypeScript');
     expect(() => readFileSync(join(TEST_DIR, '.cursor', 'rules', 'general.mdc'))).toThrow();
 
-    child.kill('SIGINT');
-    await new Promise<void>((resolve) => {
-      child.on('exit', () => resolve());
-      setTimeout(resolve, 1000);
-    });
+    await stopWatchChild(child);
   });
 });

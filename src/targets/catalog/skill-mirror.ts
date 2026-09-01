@@ -24,8 +24,10 @@
 const NATIVE_AGENTS_SKILL_WRITERS: readonly string[] = [
   'amp',
   'antigravity',
+  'codebuff',
   'codex-cli',
   'goose',
+  'openhands',
   'replit-agent',
   'zed',
 ];

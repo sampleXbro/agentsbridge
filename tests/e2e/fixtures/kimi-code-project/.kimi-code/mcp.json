@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"],
+      "env": {
+        "CONTEXT7_CACHE": "1"
+      }
+    },
+    "orders-staging": {
+      "transport": "http",
+      "url": "https://staging.internal.example.com/mcp",
+      "headers": {
+        "X-Team": "orders"
+      }
+    },
+    "order-events": {
+      "transport": "sse",
+      "url": "https://events.internal.example.com/sse",
+      "bearerTokenEnvVar": "ORDER_EVENTS_TOKEN"
+    }
+  }
+}

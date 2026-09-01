@@ -1,0 +1,46 @@
+{
+  "pre_tool_use": [
+    {
+      "matcher": "terminal",
+      "hooks": [
+        {
+          "command": "bash .openhands/hooks/block-dangerous.sh",
+          "timeout": 10
+        }
+      ]
+    }
+  ],
+  "post_tool_use": [
+    {
+      "matcher": "file_editor",
+      "hooks": [
+        {
+          "command": "pnpm exec prettier --write \"$OPENHANDS_PROJECT_DIR\"",
+          "timeout": 30
+        }
+      ]
+    }
+  ],
+  "session_start": [
+    {
+      "matcher": "*",
+      "hooks": [
+        {
+          "command": "pnpm install --frozen-lockfile",
+          "timeout": 120
+        }
+      ]
+    }
+  ],
+  "stop": [
+    {
+      "matcher": "*",
+      "hooks": [
+        {
+          "type": "prompt",
+          "prompt": "Confirm every changed behaviour has a test before finishing."
+        }
+      ]
+    }
+  ]
+}

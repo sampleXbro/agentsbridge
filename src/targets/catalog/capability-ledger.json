@@ -2581,6 +2581,388 @@
       "rejectionReason": null
     },
     {
+      "target": "codebuff",
+      "feature": "additionalRules",
+      "scope": "global",
+      "maxAchievable": "embedded",
+      "path": ".AGENTS.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/CodebuffAI/freebuff"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "codebuff",
+      "feature": "additionalRules",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": "src/AGENTS.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/CodebuffAI/freebuff"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "codebuff",
+      "feature": "agents",
+      "scope": "global",
+      "maxAchievable": "partial",
+      "path": "",
+      "ext": "",
+      "format": "text",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/CodebuffAI/freebuff"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "Level partial: the tool has no writable file surface agentsmesh can own for this feature."
+    },
+    {
+      "target": "codebuff",
+      "feature": "agents",
+      "scope": "project",
+      "maxAchievable": "partial",
+      "path": "",
+      "ext": "",
+      "format": "text",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/CodebuffAI/freebuff"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "Level partial: the tool has no writable file surface agentsmesh can own for this feature."
+    },
+    {
+      "target": "codebuff",
+      "feature": "commands",
+      "scope": "global",
+      "maxAchievable": "embedded",
+      "path": ".agents/skills/am-command-review/SKILL.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "name",
+          "description",
+          "x-agentsmesh-kind",
+          "x-agentsmesh-name",
+          "x-agentsmesh-allowed-tools"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/CodebuffAI/freebuff"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "codebuff",
+      "feature": "commands",
+      "scope": "project",
+      "maxAchievable": "embedded",
+      "path": ".agents/skills/am-command-review/SKILL.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "name",
+          "description",
+          "x-agentsmesh-kind",
+          "x-agentsmesh-name",
+          "x-agentsmesh-allowed-tools"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/CodebuffAI/freebuff"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "codebuff",
+      "feature": "hooks",
+      "scope": "global",
+      "maxAchievable": "partial",
+      "path": "",
+      "ext": "",
+      "format": "text",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/CodebuffAI/freebuff"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "Level partial: the tool has no writable file surface agentsmesh can own for this feature."
+    },
+    {
+      "target": "codebuff",
+      "feature": "hooks",
+      "scope": "project",
+      "maxAchievable": "partial",
+      "path": "",
+      "ext": "",
+      "format": "text",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/CodebuffAI/freebuff"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "Level partial: the tool has no writable file surface agentsmesh can own for this feature."
+    },
+    {
+      "target": "codebuff",
+      "feature": "ignore",
+      "scope": "global",
+      "maxAchievable": "none",
+      "path": "",
+      "ext": "",
+      "format": "text",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/CodebuffAI/freebuff"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "Level none: the tool has no writable file surface agentsmesh can own for this feature."
+    },
+    {
+      "target": "codebuff",
+      "feature": "ignore",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".codebuffignore",
+      "ext": "",
+      "format": "text",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/CodebuffAI/freebuff"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "codebuff",
+      "feature": "mcp",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".agents/mcp.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/CodebuffAI/freebuff"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "codebuff",
+      "feature": "mcp",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".agents/mcp.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/CodebuffAI/freebuff"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "codebuff",
+      "feature": "permissions",
+      "scope": "global",
+      "maxAchievable": "partial",
+      "path": "",
+      "ext": "",
+      "format": "text",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/CodebuffAI/freebuff"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "Level partial: the tool has no writable file surface agentsmesh can own for this feature."
+    },
+    {
+      "target": "codebuff",
+      "feature": "permissions",
+      "scope": "project",
+      "maxAchievable": "partial",
+      "path": "",
+      "ext": "",
+      "format": "text",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/CodebuffAI/freebuff"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "Level partial: the tool has no writable file surface agentsmesh can own for this feature."
+    },
+    {
+      "target": "codebuff",
+      "feature": "rules",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".AGENTS.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/CodebuffAI/freebuff"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "codebuff",
+      "feature": "rules",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": "AGENTS.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/CodebuffAI/freebuff"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "codebuff",
+      "feature": "skills",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".agents/skills/api-generator/SKILL.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "name",
+          "description"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/CodebuffAI/freebuff"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "codebuff",
+      "feature": "skills",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".agents/skills/api-generator/SKILL.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "name",
+          "description"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/CodebuffAI/freebuff"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
       "target": "codex-cli",
       "feature": "additionalRules",
       "scope": "global",
@@ -7001,6 +7383,424 @@
       "rejectionReason": null
     },
     {
+      "target": "kimi-code",
+      "feature": "additionalRules",
+      "scope": "global",
+      "maxAchievable": "embedded",
+      "path": ".kimi-code/AGENTS.md",
+      "ext": ".md",
+      "format": "text",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/MoonshotAI/kimi-code",
+        "https://moonshotai.github.io/kimi-code/en/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "kimi-code",
+      "feature": "additionalRules",
+      "scope": "project",
+      "maxAchievable": "embedded",
+      "path": "AGENTS.md",
+      "ext": ".md",
+      "format": "text",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/MoonshotAI/kimi-code",
+        "https://moonshotai.github.io/kimi-code/en/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "kimi-code",
+      "feature": "agents",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".kimi-code/agents/code-reviewer.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "name",
+          "description",
+          "tools"
+        ],
+        "requiredFrontmatter": [
+          "name",
+          "description"
+        ],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/MoonshotAI/kimi-code",
+        "https://moonshotai.github.io/kimi-code/en/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "kimi-code",
+      "feature": "agents",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".kimi-code/agents/code-reviewer.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "name",
+          "description",
+          "tools"
+        ],
+        "requiredFrontmatter": [
+          "name",
+          "description"
+        ],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/MoonshotAI/kimi-code",
+        "https://moonshotai.github.io/kimi-code/en/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "kimi-code",
+      "feature": "commands",
+      "scope": "global",
+      "maxAchievable": "embedded",
+      "path": ".kimi-code/skills/am-command-review/SKILL.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "name",
+          "description",
+          "x-agentsmesh-kind",
+          "x-agentsmesh-name",
+          "x-agentsmesh-allowed-tools"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/MoonshotAI/kimi-code",
+        "https://moonshotai.github.io/kimi-code/en/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "kimi-code",
+      "feature": "commands",
+      "scope": "project",
+      "maxAchievable": "embedded",
+      "path": ".kimi-code/skills/am-command-review/SKILL.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "name",
+          "description",
+          "x-agentsmesh-kind",
+          "x-agentsmesh-name",
+          "x-agentsmesh-allowed-tools"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/MoonshotAI/kimi-code",
+        "https://moonshotai.github.io/kimi-code/en/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "kimi-code",
+      "feature": "hooks",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".kimi-code/config.toml",
+      "ext": ".toml",
+      "format": "toml",
+      "fingerprint": {
+        "topLevelKeys": [
+          "hooks"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/MoonshotAI/kimi-code",
+        "https://moonshotai.github.io/kimi-code/en/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "kimi-code",
+      "feature": "hooks",
+      "scope": "project",
+      "maxAchievable": "partial",
+      "path": "",
+      "ext": "",
+      "format": "text",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/MoonshotAI/kimi-code",
+        "https://moonshotai.github.io/kimi-code/en/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "Level partial: the tool has no writable file surface agentsmesh can own for this feature."
+    },
+    {
+      "target": "kimi-code",
+      "feature": "ignore",
+      "scope": "global",
+      "maxAchievable": "none",
+      "path": "",
+      "ext": "",
+      "format": "text",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/MoonshotAI/kimi-code",
+        "https://moonshotai.github.io/kimi-code/en/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "Level none: the tool has no writable file surface agentsmesh can own for this feature."
+    },
+    {
+      "target": "kimi-code",
+      "feature": "ignore",
+      "scope": "project",
+      "maxAchievable": "none",
+      "path": "",
+      "ext": "",
+      "format": "text",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/MoonshotAI/kimi-code",
+        "https://moonshotai.github.io/kimi-code/en/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "Level none: the tool has no writable file surface agentsmesh can own for this feature."
+    },
+    {
+      "target": "kimi-code",
+      "feature": "mcp",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".kimi-code/mcp.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/MoonshotAI/kimi-code",
+        "https://moonshotai.github.io/kimi-code/en/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "kimi-code",
+      "feature": "mcp",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".kimi-code/mcp.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/MoonshotAI/kimi-code",
+        "https://moonshotai.github.io/kimi-code/en/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "kimi-code",
+      "feature": "permissions",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".kimi-code/config.toml",
+      "ext": ".toml",
+      "format": "toml",
+      "fingerprint": {
+        "topLevelKeys": [
+          "permission"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/MoonshotAI/kimi-code",
+        "https://moonshotai.github.io/kimi-code/en/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "kimi-code",
+      "feature": "permissions",
+      "scope": "project",
+      "maxAchievable": "partial",
+      "path": "",
+      "ext": "",
+      "format": "text",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/MoonshotAI/kimi-code",
+        "https://moonshotai.github.io/kimi-code/en/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "Level partial: the tool has no writable file surface agentsmesh can own for this feature."
+    },
+    {
+      "target": "kimi-code",
+      "feature": "rules",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".kimi-code/AGENTS.md",
+      "ext": ".md",
+      "format": "text",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/MoonshotAI/kimi-code",
+        "https://moonshotai.github.io/kimi-code/en/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "kimi-code",
+      "feature": "rules",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": "AGENTS.md",
+      "ext": ".md",
+      "format": "text",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/MoonshotAI/kimi-code",
+        "https://moonshotai.github.io/kimi-code/en/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "kimi-code",
+      "feature": "skills",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".kimi-code/skills/api-generator/SKILL.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "name",
+          "description"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/MoonshotAI/kimi-code",
+        "https://moonshotai.github.io/kimi-code/en/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "kimi-code",
+      "feature": "skills",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".kimi-code/skills/api-generator/SKILL.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "name",
+          "description"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/MoonshotAI/kimi-code",
+        "https://moonshotai.github.io/kimi-code/en/"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
       "target": "kiro",
       "feature": "additionalRules",
       "scope": "global",
@@ -7774,6 +8574,424 @@
         "https://opencode.ai/docs/skills/"
       ],
       "verifiedAt": "2026-07-16",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "openhands",
+      "feature": "additionalRules",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".agents/skills/typescript.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "description",
+          "paths"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/OpenHands/software-agent-sdk",
+        "https://docs.openhands.dev"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "openhands",
+      "feature": "additionalRules",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".agents/skills/typescript.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "description",
+          "paths"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/OpenHands/software-agent-sdk",
+        "https://docs.openhands.dev"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "openhands",
+      "feature": "agents",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".agents/agents/code-reviewer.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "name",
+          "description",
+          "tools",
+          "model",
+          "permissionMode",
+          "maxTurns"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/OpenHands/software-agent-sdk",
+        "https://docs.openhands.dev"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "openhands",
+      "feature": "agents",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".agents/agents/code-reviewer.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "name",
+          "description",
+          "tools",
+          "model",
+          "permissionMode",
+          "maxTurns"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/OpenHands/software-agent-sdk",
+        "https://docs.openhands.dev"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "openhands",
+      "feature": "commands",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".agents/plugins/agentsmesh/commands/review.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "description",
+          "allowed-tools"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/OpenHands/software-agent-sdk",
+        "https://docs.openhands.dev"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "openhands",
+      "feature": "commands",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".agents/plugins/agentsmesh/commands/review.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "description",
+          "allowed-tools"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/OpenHands/software-agent-sdk",
+        "https://docs.openhands.dev"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "openhands",
+      "feature": "hooks",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".openhands/hooks.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "post_tool_use"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/OpenHands/software-agent-sdk",
+        "https://docs.openhands.dev"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "openhands",
+      "feature": "hooks",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".openhands/hooks.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "post_tool_use"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/OpenHands/software-agent-sdk",
+        "https://docs.openhands.dev"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "openhands",
+      "feature": "ignore",
+      "scope": "global",
+      "maxAchievable": "none",
+      "path": "",
+      "ext": "",
+      "format": "text",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/OpenHands/software-agent-sdk",
+        "https://docs.openhands.dev"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "Level none: the tool has no writable file surface agentsmesh can own for this feature."
+    },
+    {
+      "target": "openhands",
+      "feature": "ignore",
+      "scope": "project",
+      "maxAchievable": "none",
+      "path": "",
+      "ext": "",
+      "format": "text",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/OpenHands/software-agent-sdk",
+        "https://docs.openhands.dev"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "Level none: the tool has no writable file surface agentsmesh can own for this feature."
+    },
+    {
+      "target": "openhands",
+      "feature": "mcp",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".agents/plugins/agentsmesh/.mcp.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/OpenHands/software-agent-sdk",
+        "https://docs.openhands.dev"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "openhands",
+      "feature": "mcp",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".agents/plugins/agentsmesh/.mcp.json",
+      "ext": ".json",
+      "format": "json",
+      "fingerprint": {
+        "topLevelKeys": [
+          "mcpServers"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/OpenHands/software-agent-sdk",
+        "https://docs.openhands.dev"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "openhands",
+      "feature": "permissions",
+      "scope": "global",
+      "maxAchievable": "partial",
+      "path": "",
+      "ext": "",
+      "format": "text",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/OpenHands/software-agent-sdk",
+        "https://docs.openhands.dev"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "Level partial: the tool has no writable file surface agentsmesh can own for this feature."
+    },
+    {
+      "target": "openhands",
+      "feature": "permissions",
+      "scope": "project",
+      "maxAchievable": "partial",
+      "path": "",
+      "ext": "",
+      "format": "text",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/OpenHands/software-agent-sdk",
+        "https://docs.openhands.dev"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "rejected",
+      "rejectionReason": "Level partial: the tool has no writable file surface agentsmesh can own for this feature."
+    },
+    {
+      "target": "openhands",
+      "feature": "rules",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".agents/skills/_root.md",
+      "ext": ".md",
+      "format": "text",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/OpenHands/software-agent-sdk",
+        "https://docs.openhands.dev"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "openhands",
+      "feature": "rules",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": "AGENTS.md",
+      "ext": ".md",
+      "format": "text",
+      "fingerprint": {
+        "topLevelKeys": [],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/OpenHands/software-agent-sdk",
+        "https://docs.openhands.dev"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "openhands",
+      "feature": "skills",
+      "scope": "global",
+      "maxAchievable": "native",
+      "path": ".agents/skills/api-generator/SKILL.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "name",
+          "description"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/OpenHands/software-agent-sdk",
+        "https://docs.openhands.dev"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
+      "rejectionReason": null
+    },
+    {
+      "target": "openhands",
+      "feature": "skills",
+      "scope": "project",
+      "maxAchievable": "native",
+      "path": ".agents/skills/api-generator/SKILL.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
+      "fingerprint": {
+        "topLevelKeys": [
+          "name",
+          "description"
+        ],
+        "requiredFrontmatter": [],
+        "keyChecks": []
+      },
+      "source": [
+        "https://github.com/OpenHands/software-agent-sdk",
+        "https://docs.openhands.dev"
+      ],
+      "verifiedAt": "2026-08-30",
       "verdict": "confirmed",
       "rejectionReason": null
     },

@@ -7137,6 +7137,38 @@
         "t-kw-7b64e8ec"
       ]
     },
+    "targets-in-a-target-unit-test": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "Cost 20 minutes debugging a commandPath returning null only in the descriptor unit test while real generate worked.",
+      "rule": "In a target unit test, import `src/targets/catalog/builtin-targets.js` before the target's own `index.js`: entering the circular graph from the target module leaves that target's slot in BUILTIN_TARGETS undefined, so `getDescriptor(id)` returns undefined and `shouldConvertCommandsToSkills` silently falls back to false (commandPath returns null).",
+      "status": "active",
+      "topics": [
+        "targets"
+      ],
+      "triggers": [
+        "t-glob-7346acca",
+        "t-kw-74382752"
+      ]
+    },
+    "targets-never-invent-a-stricter-validator": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "kimi-code's permission-pattern regex rejected mcp__github__*, * and Tool(), all of which Kimi Code's parsePattern accepts, silently un-enforcing deny rules.",
+      "rule": "Never invent a stricter validator than the tool's own parser: copy the tool's parse function's exact accept/reject set (globs, wildcards, empty payloads), or valid user rules are silently dropped and the lint message states a false rule.",
+      "status": "active",
+      "topics": [
+        "targets"
+      ],
+      "triggers": [
+        "t-kw-c05b997a",
+        "t-glob-563e56bd",
+        "t-glob-592c65a4",
+        "t-glob-4c7af71e",
+        "t-kw-fd9f6809",
+        "t-kw-b7576e32"
+      ]
+    },
     "targets-never-list-a-tool-s": {
       "createdAt": "2026-09-01",
       "evidence": [],
@@ -7149,6 +7181,39 @@
       "triggers": [
         "t-glob-a9a4fad0",
         "t-kw-2a85c9a4"
+      ]
+    },
+    "targets-when-a-target-reads-several": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "kimi-code was built on a docs-only reading that the two AGENTS.md paths were alternatives; loadAgentsMdForRoots concatenates them, so import dropped a whole file and import->generate duplicated the rules.",
+      "rule": "When a target reads several instruction files, verify from the tool's own loader source whether it CONCATENATES them or picks the first; if it concatenates, import every readable source and list the files generation does not write in managedOutputs so a leftover copy cannot double the rules in the prompt.",
+      "status": "active",
+      "topics": [
+        "targets"
+      ],
+      "triggers": [
+        "t-kw-e15dc48c",
+        "t-glob-55ff9a58",
+        "t-glob-bdb31b92",
+        "t-kw-e10b834c",
+        "t-kw-963ac4f6"
+      ]
+    },
+    "targets-when-a-target-writes-an": {
+      "createdAt": "2026-09-01",
+      "evidence": [
+        "src/targets/codebuff/mcp-format.ts"
+      ],
+      "rationale": "Codebuff's mcpConfigSchema is a z.strictObject union; loadMCPConfig `continue`s on parse failure, dropping every server in the file.",
+      "rule": "When a target writes an MCP/config JSON file, validate the generated shape against the tool's ACTUAL parse schema from source (not just the file wrapper): strict/closed schemas reject the WHOLE file on one unknown key, so passing canonical `description`/`env` through silently disables every server.",
+      "status": "active",
+      "topics": [
+        "targets"
+      ],
+      "triggers": [
+        "t-glob-17bd0955",
+        "t-kw-39fd552c"
       ]
     },
     "targets-when-a-target-writes-keys": {
@@ -7204,6 +7269,22 @@
       "triggers": [
         "t-glob-17bd0955",
         "t-kw-92e062be"
+      ]
+    },
+    "targets-when-two-targets-emit-the": {
+      "createdAt": "2026-09-01",
+      "evidence": [
+        "src/targets/codebuff/nested-rules.ts"
+      ],
+      "rationale": "codexEmit and codexInstructionVariant both change which rules land in the shared file; ordering only for one of them still breaks containment.",
+      "rule": "When two targets emit the same nested `<dir>/AGENTS.md` but filter rules differently, order the rules the OTHER target also emits FIRST so its exact string stays a contiguous substring of yours — resolveOutputCollisions resolves by containment first and only then by raw length, and the length fallback silently drops the shorter side's rules.",
+      "status": "active",
+      "topics": [
+        "targets"
+      ],
+      "triggers": [
+        "t-glob-706a24db",
+        "t-kw-12b92504"
       ]
     },
     "targets-zed-s-file-scan-exclusions": {
@@ -9508,6 +9589,10 @@
       "kind": "file_glob",
       "pattern": "tests/**/*.test.ts"
     },
+    "t-glob-4c7af71e": {
+      "kind": "file_glob",
+      "pattern": "src/targets/**/mcp-format.ts"
+    },
     "t-glob-4c8d45b0": {
       "kind": "file_glob",
       "pattern": "src/mcp/handlers/orchestrate.ts"
@@ -9528,6 +9613,14 @@
       "kind": "file_glob",
       "pattern": "src/core/reference/link-rebaser-helpers.ts"
     },
+    "t-glob-55ff9a58": {
+      "kind": "file_glob",
+      "pattern": "src/targets/**/rules-import.ts"
+    },
+    "t-glob-563e56bd": {
+      "kind": "file_glob",
+      "pattern": "src/targets/**/permissions-format.ts"
+    },
     "t-glob-5647ec65": {
       "kind": "file_glob",
       "pattern": "src/targets/cursor/**"
@@ -9535,6 +9628,10 @@
     "t-glob-570abc49": {
       "kind": "file_glob",
       "pattern": "src/targets/continue/index.ts"
+    },
+    "t-glob-592c65a4": {
+      "kind": "file_glob",
+      "pattern": "src/targets/**/hooks-format.ts"
     },
     "t-glob-593303ad": {
       "kind": "file_glob",
@@ -9648,6 +9745,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/add.ts"
     },
+    "t-glob-706a24db": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/nested-rules.ts"
+    },
     "t-glob-71436975": {
       "kind": "file_glob",
       "pattern": "src/lessons/reachability.ts"
@@ -9667,6 +9768,10 @@
     "t-glob-72a39ab6": {
       "kind": "file_glob",
       "pattern": "tests/e2e/fixtures/**"
+    },
+    "t-glob-7346acca": {
+      "kind": "file_glob",
+      "pattern": "tests/unit/targets/**/descriptor*.test.ts"
     },
     "t-glob-74262634": {
       "kind": "file_glob",
@@ -9967,6 +10072,10 @@
     "t-glob-baf0a939": {
       "kind": "file_glob",
       "pattern": ".gitignore"
+    },
+    "t-glob-bdb31b92": {
+      "kind": "file_glob",
+      "pattern": "src/targets/**/layout.ts"
     },
     "t-glob-be5f6012": {
       "kind": "file_glob",
@@ -10272,6 +10381,10 @@
       "kind": "keyword",
       "pattern": "schema hardening"
     },
+    "t-kw-12b92504": {
+      "kind": "keyword",
+      "pattern": "nested AGENTS.md collision ordering"
+    },
     "t-kw-1397bfda": {
       "kind": "keyword",
       "pattern": "qa report commit"
@@ -10391,6 +10504,10 @@
     "t-kw-381d10a9": {
       "kind": "keyword",
       "pattern": "ANSI color stdout assertion"
+    },
+    "t-kw-39fd552c": {
+      "kind": "keyword",
+      "pattern": "mcp.json generator strict schema"
     },
     "t-kw-3a0adbef": {
       "kind": "keyword",
@@ -10572,6 +10689,10 @@
       "kind": "keyword",
       "pattern": "subagent findings"
     },
+    "t-kw-74382752": {
+      "kind": "keyword",
+      "pattern": "target descriptor unit test commandPath conversion"
+    },
     "t-kw-745cab00": {
       "kind": "keyword",
       "pattern": "workflow fixes"
@@ -10752,6 +10873,10 @@
       "kind": "keyword",
       "pattern": "command truncation"
     },
+    "t-kw-b7576e32": {
+      "kind": "keyword",
+      "pattern": "config schema"
+    },
     "t-kw-b8d4ca2e": {
       "kind": "keyword",
       "pattern": "seen store shape"
@@ -10767,6 +10892,10 @@
     "t-kw-bd0b86a3": {
       "kind": "keyword",
       "pattern": "wizard back navigation step prompter"
+    },
+    "t-kw-c05b997a": {
+      "kind": "keyword",
+      "pattern": "permission pattern validation,tool schema validator"
     },
     "t-kw-c34b7cc1": {
       "kind": "keyword",
@@ -10851,6 +10980,14 @@
     "t-kw-e0f0d755": {
       "kind": "keyword",
       "pattern": "owned settings key revocation"
+    },
+    "t-kw-e10b834c": {
+      "kind": "keyword",
+      "pattern": "AGENTS.md"
+    },
+    "t-kw-e15dc48c": {
+      "kind": "keyword",
+      "pattern": "instruction file discovery,AGENTS.md,managedOutputs"
     },
     "t-kw-e2160d81": {
       "kind": "keyword",
@@ -10943,6 +11080,10 @@
     "t-kw-fcd36912": {
       "kind": "keyword",
       "pattern": "lessons json schema contract golden"
+    },
+    "t-kw-fd9f6809": {
+      "kind": "keyword",
+      "pattern": "permission pattern"
     }
   },
   "version": 2

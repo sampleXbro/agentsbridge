@@ -20,6 +20,7 @@ const TARGETS = Object.keys(TARGET_CONTRACTS) as TargetName[];
 /** Targets that do not emit native agent files (import also omits `.agentsmesh/agents/*`). */
 const TARGETS_WITHOUT_AGENT_OUTPUT = new Set<TargetName>([
   'amazon-q',
+  'codebuff',
   'augment-code',
   'jules',
   'roo-code',
@@ -46,6 +47,8 @@ const TARGETS_WITH_PROJECTED_AGENTS = new Set<TargetName>([
 /** Targets whose commands are projected skills (no cross-references in command body). */
 const TARGETS_WITH_PROJECTED_COMMANDS = new Set<TargetName>([
   'aider',
+  'codebuff',
+  'kimi-code',
   'amazon-q',
   'amp',
   'codex-cli',
@@ -81,6 +84,7 @@ targets:
   - junie
   - gemini-cli
   - cline
+  - codebuff
   - codex-cli
   - windsurf
   - antigravity
@@ -90,7 +94,9 @@ targets:
   - roo-code
   - rovodev
   - kilo-code
+  - kimi-code
   - opencode
+  - openhands
   - qwen-code
   - trae
   - warp

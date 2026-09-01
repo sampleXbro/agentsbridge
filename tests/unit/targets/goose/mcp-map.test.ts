@@ -43,6 +43,22 @@ describe('gooseMcpMap (goose) — parseExtensions branches', () => {
     expect(await gooseMcpMap(ctx(yamlStringify({ other: true }), makeDestDir()))).toBeNull();
   });
 
+  it('returns null when the whole document is a YAML sequence', async () => {
+    expect(await gooseMcpMap(ctx(yamlStringify(['a', 'b']), makeDestDir()))).toBeNull();
+  });
+
+  it('returns null when the whole document is null', async () => {
+    expect(await gooseMcpMap(ctx('null\n', makeDestDir()))).toBeNull();
+  });
+
+  it('keeps the description on a remote extension', async () => {
+    const content = yamlStringify({
+      extensions: { docs: { type: 'sse', uri: 'https://x.dev/sse', description: 'Docs' } },
+    });
+    const result = await gooseMcpMap(ctx(content, makeDestDir()));
+    expect(parsedServers(result!.content).docs).toMatchObject({ description: 'Docs' });
+  });
+
   it('returns null when extensions is a non-object (array)', async () => {
     expect(
       await gooseMcpMap(ctx(yamlStringify({ extensions: ['a', 'b'] }), makeDestDir())),
@@ -95,6 +111,80 @@ describe('gooseMcpMap (goose) — parseExtensions branches', () => {
       url: 'https://x.dev/sse',
       headers: {},
       env: {},
+    });
+  });
+});
+
+describe('gooseMcpMap (goose) — parsePluginMcpJson branches', () => {
+  function jsonCtx(content: string, destDir: string): ImportEntryContext {
+    return {
+      absolutePath: join(destDir, '.mcp.json'),
+      relativePath: '.agents/plugins/agentsmesh/.mcp.json',
+      content,
+      destDir,
+      normalizeTo: (dest) => dest,
+    };
+  }
+
+  it('returns null on invalid JSON content', async () => {
+    expect(await gooseMcpMap(jsonCtx('{ not json', makeDestDir()))).toBeNull();
+  });
+
+  it('returns null when the top-level value is an array', async () => {
+    expect(await gooseMcpMap(jsonCtx(JSON.stringify(['a']), makeDestDir()))).toBeNull();
+  });
+
+  it('returns null when the top-level value is null', async () => {
+    expect(await gooseMcpMap(jsonCtx('null', makeDestDir()))).toBeNull();
+  });
+
+  it('returns null when there is no mcpServers key', async () => {
+    expect(await gooseMcpMap(jsonCtx(JSON.stringify({ other: 1 }), makeDestDir()))).toBeNull();
+  });
+
+  it('returns null when mcpServers is an array', async () => {
+    expect(
+      await gooseMcpMap(jsonCtx(JSON.stringify({ mcpServers: ['a'] }), makeDestDir())),
+    ).toBeNull();
+  });
+
+  it('skips non-object entries and entries without a command', async () => {
+    const content = JSON.stringify({
+      mcpServers: {
+        bad: 'nope',
+        alsoBad: null,
+        noCommand: { args: ['x'] },
+        ok: { command: 'node' },
+      },
+    });
+    const result = await gooseMcpMap(jsonCtx(content, makeDestDir()));
+    expect(Object.keys(parsedServers(result!.content))).toEqual(['ok']);
+  });
+
+  it('defaults type to stdio and normalizes args/env when they are absent', async () => {
+    const content = JSON.stringify({ mcpServers: { fs: { command: 'npx' } } });
+    const result = await gooseMcpMap(jsonCtx(content, makeDestDir()));
+    expect(parsedServers(result!.content).fs).toEqual({
+      type: 'stdio',
+      command: 'npx',
+      args: [],
+      env: {},
+    });
+  });
+
+  it('keeps an explicit type and description', async () => {
+    const content = JSON.stringify({
+      mcpServers: {
+        fs: { type: 'custom', command: 'npx', args: ['-y'], env: { K: 'v' }, description: 'd' },
+      },
+    });
+    const result = await gooseMcpMap(jsonCtx(content, makeDestDir()));
+    expect(parsedServers(result!.content).fs).toEqual({
+      type: 'custom',
+      command: 'npx',
+      args: ['-y'],
+      env: { K: 'v' },
+      description: 'd',
     });
   });
 });

@@ -13,7 +13,6 @@ import {
   AIDER_SKILLS_DIR,
   AIDER_IGNORE,
 } from '../../../../src/targets/aider/constants.js';
-import { parse as parseYaml } from 'yaml';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
   return {
@@ -51,7 +50,7 @@ describe('generateRules (aider)', () => {
     expect(conventions!.content).toContain('Use TDD and strict TypeScript.');
   });
 
-  it('wires CONVENTIONS.md via .aider.conf.yml read: (aider has no auto-discovery)', () => {
+  it('emits CONVENTIONS.md only; the read: wiring is not a rules output', () => {
     const canonical = makeCanonical({
       rules: [
         {
@@ -65,11 +64,9 @@ describe('generateRules (aider)', () => {
       ],
     });
 
-    const results = generateRules(canonical);
-    const conf = results.find((r) => r.path === AIDER_CONF_FILE);
-    expect(conf).toBeDefined();
-    const parsed = parseYaml(conf!.content) as { read?: unknown };
-    expect(parsed.read).toEqual(['CONVENTIONS.md']);
+    // The `read:` wiring that makes aider load CONVENTIONS.md lives in
+    // `.aider.conf.yml`, which the user owns — see conf-file.ts.
+    expect(generateRules(canonical).map((r) => r.path)).toEqual([AIDER_CONVENTIONS]);
   });
 
   it('emits no .aider.conf.yml when there are no rules', () => {

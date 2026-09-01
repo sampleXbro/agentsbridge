@@ -245,4 +245,30 @@ describe('importFromTrae (global scope)', () => {
     expect(hooksResult?.toPath).toBe('.agentsmesh/hooks.yaml');
     expect(hooksResult?.fromTool).toBe('trae');
   });
+
+  it('imports permissions from .trae/permission/global.json in global scope', async () => {
+    mkdirSync(join(tmpDir, '.trae', 'permission'), { recursive: true });
+    mkdirSync(join(tmpDir, '.agentsmesh'), { recursive: true });
+    writeFileSync(
+      join(tmpDir, '.trae', 'permission', 'global.json'),
+      JSON.stringify({
+        customProfiles: {
+          defaultCustomProfile: {
+            approval: { commandRules: { prefix: { 'npm test': { approval: 'allow' } } } },
+          },
+        },
+      }),
+    );
+
+    const globalResults = await importFromTrae(tmpDir, { scope: 'global' });
+    const projectResults = await importFromTrae(tmpDir, { scope: 'project' });
+
+    expect(globalResults.find((r) => r.feature === 'permissions')).toEqual({
+      fromTool: 'trae',
+      fromPath: join(tmpDir, '.trae', 'permission', 'global.json'),
+      toPath: '.agentsmesh/permissions.yaml',
+      feature: 'permissions',
+    });
+    expect(projectResults.find((r) => r.feature === 'permissions')).toBeUndefined();
+  });
 });

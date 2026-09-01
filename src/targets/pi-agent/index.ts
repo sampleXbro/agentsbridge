@@ -26,6 +26,8 @@ import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromPiAgent } from './importer.js';
 import { lintRules } from './linter.js';
 import { lintHooks, lintPermissions, lintIgnore } from './lint.js';
+import { mergePiSettings } from './permissions-format.js';
+import { revokePiAgentPermissions } from './permissions-revoke.js';
 import { buildPiAgentImportPaths } from '../../core/reference/import-maps/pi-agent.js';
 import {
   PI_AGENT_TARGET,
@@ -35,6 +37,8 @@ import {
   PI_AGENT_GLOBAL_ROOT_FILE,
   PI_AGENT_GLOBAL_SKILLS_DIR,
   PI_AGENT_GLOBAL_COMMANDS_DIR,
+  PI_AGENT_SETTINGS_FILE,
+  PI_AGENT_GLOBAL_SETTINGS_FILE,
   PI_AGENT_CANONICAL_RULES_DIR,
   PI_AGENT_CANONICAL_COMMANDS_DIR,
 } from './constants.js';
@@ -81,6 +85,7 @@ const globalLayout: TargetLayout = {
   },
   rewriteGeneratedPath(path) {
     if (path === PI_AGENT_ROOT_FILE) return PI_AGENT_GLOBAL_ROOT_FILE;
+    if (path === PI_AGENT_SETTINGS_FILE) return PI_AGENT_GLOBAL_SETTINGS_FILE;
     if (path.startsWith(`${PI_AGENT_COMMANDS_DIR}/`)) {
       return path.replace(`${PI_AGENT_COMMANDS_DIR}/`, `${PI_AGENT_GLOBAL_COMMANDS_DIR}/`);
     }
@@ -114,7 +119,8 @@ const capabilities: TargetCapabilities = {
   mcp: 'none',
   hooks: 'partial',
   ignore: 'partial',
-  permissions: 'partial',
+  // settings.json `defaultTools`; coarse but a real native surface at both scopes.
+  permissions: 'native',
 };
 
 export const descriptor = {
@@ -140,6 +146,9 @@ export const descriptor = {
     capabilities,
     detectionPaths: [PI_AGENT_GLOBAL_ROOT_FILE],
     layout: globalLayout,
+    // Runs at both scopes; clears a stale defaultTools when canonical
+    // permissions are gone, which the canonical-only feature loop cannot see.
+    scopeExtras: revokePiAgentPermissions,
   },
   importer: {
     rules: {
@@ -164,6 +173,15 @@ export const descriptor = {
       extensions: ['.md'],
       preset: 'command',
     },
+  },
+  mergeGeneratedOutputContent(existing, pending, newContent, resolvedPath) {
+    if (resolvedPath !== PI_AGENT_SETTINGS_FILE && resolvedPath !== PI_AGENT_GLOBAL_SETTINGS_FILE) {
+      return null;
+    }
+    // settings.json is the user's own file (~48 unrelated keys), so only
+    // `defaultTools` is rewritten. Build on the pending write from this run
+    // when there is one so a later pass keeps the earlier keys.
+    return mergePiSettings(pending?.content ?? existing, newContent);
   },
   sharedArtifacts: {
     '.agents/skills/': 'consumer',

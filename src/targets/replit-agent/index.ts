@@ -3,7 +3,9 @@
  *
  * Generation emits:
  *   - `replit.md`          — root rule + embedded additional rules
- *   - `.agents/skills/`    — skill bundles
+ *   - `.agents/skills/`    — skill bundles, plus commands and agents projected
+ *                            as skills (Replit invokes them by name from the
+ *                            slash-command / "Use a skill" picker)
  *
  * Import reads `replit.md` and `.agents/skills/`.
  *
@@ -13,6 +15,10 @@
 
 import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
 import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
+import {
+  shouldConvertCommandsToSkills,
+  shouldConvertAgentsToSkills,
+} from '../../config/core/conversions.js';
 import { commandSkillDirName } from '../codex-cli/command-skill.js';
 import { projectedAgentSkillDirName } from '../projection/projected-agent-skill.js';
 import {
@@ -61,11 +67,16 @@ const project: TargetLayout = {
     rulePath(_slug) {
       return REPLIT_AGENT_ROOT_FILE;
     },
-    commandPath(name) {
-      return `${REPLIT_AGENT_SKILLS_DIR}/${commandSkillDirName(name)}/SKILL.md`;
+    commandPath(name, config) {
+      // Mirrors the generator dispatch: with the conversion off nothing is emitted.
+      return shouldConvertCommandsToSkills(config, REPLIT_AGENT_TARGET, true)
+        ? `${REPLIT_AGENT_SKILLS_DIR}/${commandSkillDirName(name)}/SKILL.md`
+        : null;
     },
-    agentPath(name) {
-      return `${REPLIT_AGENT_SKILLS_DIR}/${projectedAgentSkillDirName(name)}/SKILL.md`;
+    agentPath(name, config) {
+      return shouldConvertAgentsToSkills(config, REPLIT_AGENT_TARGET, true)
+        ? `${REPLIT_AGENT_SKILLS_DIR}/${projectedAgentSkillDirName(name)}/SKILL.md`
+        : null;
     },
   },
 };
@@ -73,8 +84,11 @@ const project: TargetLayout = {
 const capabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'embedded',
-  commands: 'none',
-  agents: 'none',
+  // Replit skills are repo-committed folders under `/.agents/skills`, invoked by
+  // name from the slash-command picker — the saved-prompt semantics of commands
+  // and agents. Both project onto that one surface, so both are `embedded`.
+  commands: 'embedded',
+  agents: 'embedded',
   skills: 'native',
   mcp: 'partial',
   hooks: 'partial',
@@ -101,6 +115,7 @@ export const descriptor = {
     mcp: lintMcp,
   },
   supportsConversion: { commands: true, agents: true },
+  conversionDefaults: { commandsToSkills: true, agentsToSkills: true },
   project,
   sharedArtifacts: {
     '.agents/skills/': 'consumer',

@@ -49,9 +49,14 @@ describe('aider global layout', () => {
     expect(rewrite('some/unknown/path.txt', '')).toBe('some/unknown/path.txt');
   });
 
-  it('rewriteGeneratedPath suppresses .aider.conf.yml in global mode', () => {
+  it('rewriteGeneratedPath keeps .aider.conf.yml so hook keys reach ~/.aider.conf.yml', () => {
     const rewrite = descriptor.globalSupport!.layout.rewriteGeneratedPath!;
-    expect(rewrite(AIDER_CONF_FILE, '')).toBeNull();
+    expect(rewrite(AIDER_CONF_FILE, '')).toBe(AIDER_CONF_FILE);
+  });
+
+  it('does not manage .aider.conf.yml for stale cleanup in either scope', () => {
+    expect(descriptor.project.managedOutputs!.files).not.toContain(AIDER_CONF_FILE);
+    expect(descriptor.globalSupport!.layout.managedOutputs!.files).not.toContain(AIDER_CONF_FILE);
   });
 
   it('mergeGeneratedOutputContent unions read: and preserves existing keys', () => {
@@ -159,6 +164,34 @@ describe('aider global frontmatter preservation', () => {
     expect(results.find((r) => r.target === 'aider' && r.path === AIDER_CONF_FILE)).toBeUndefined();
   });
 
+  it('writes hook keys to ~/.aider.conf.yml in global mode without the read: wiring', async () => {
+    const results = await generate({
+      config: { ...makeGlobalConfig(), features: ['rules', 'hooks'] } as ValidatedConfig,
+      canonical: makeCanonical({
+        rules: [
+          {
+            source: '/proj/.agentsmesh/rules/_root.md',
+            root: true,
+            targets: [],
+            description: '',
+            globs: [],
+            body: 'Use TDD.',
+          },
+        ],
+        hooks: { PostToolUse: [{ matcher: 'Write|Edit', command: 'ruff check' }] },
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    const conf = results.find((r) => r.target === 'aider' && r.path === AIDER_CONF_FILE);
+    expect(conf).toBeDefined();
+    const parsed = parseYaml(conf!.content) as Record<string, unknown>;
+    expect(parsed['lint-cmd']).toEqual(['ruff check']);
+    expect(parsed['auto-lint']).toBe(true);
+    expect(parsed.read).toBeUndefined();
+  });
+
   it('emits .aider.conf.yml wiring CONVENTIONS.md in project mode', async () => {
     const results = await generate({
       config: { ...makeGlobalConfig(), features: ['rules'] } as ValidatedConfig,
@@ -182,5 +215,32 @@ describe('aider global frontmatter preservation', () => {
     expect(conf).toBeDefined();
     const parsed = parseYaml(conf!.content) as { read?: string[] };
     expect(parsed.read).toEqual(['CONVENTIONS.md']);
+  });
+
+  it('keeps the read: wiring when hooks write the same conf file in one pass', async () => {
+    const results = await generate({
+      config: { ...makeGlobalConfig(), features: ['rules', 'hooks'] } as ValidatedConfig,
+      canonical: makeCanonical({
+        rules: [
+          {
+            source: '/proj/.agentsmesh/rules/_root.md',
+            root: true,
+            targets: [],
+            description: '',
+            globs: [],
+            body: 'Use TDD.',
+          },
+        ],
+        hooks: { Notification: [{ matcher: '*', command: 'notify-send aider' }] },
+      }),
+      projectRoot: TEST_DIR,
+      scope: 'project',
+    });
+
+    const confs = results.filter((r) => r.target === 'aider' && r.path === AIDER_CONF_FILE);
+    expect(confs).toHaveLength(1);
+    const parsed = parseYaml(confs[0].content) as Record<string, unknown>;
+    expect(parsed.read).toEqual(['CONVENTIONS.md']);
+    expect(parsed['notifications-command']).toBe('notify-send aider');
   });
 });

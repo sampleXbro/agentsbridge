@@ -71,6 +71,37 @@ describe('importFromAider', () => {
     rmSync(projectRoot, { recursive: true, force: true });
   });
 
+  it('imports .aider.conf.yml hook keys as canonical hooks', async () => {
+    projectRoot = setupFixture({ '.aider.conf.yml': 'lint-cmd: ruff check\n' });
+
+    const results = await importFromAider(projectRoot);
+
+    expect(results.filter((r) => r.feature === 'hooks')).toEqual([
+      {
+        fromTool: 'aider',
+        fromPath: join(projectRoot, '.aider.conf.yml'),
+        toPath: '.agentsmesh/hooks.yaml',
+        feature: 'hooks',
+      },
+    ]);
+
+    rmSync(projectRoot, { recursive: true, force: true });
+  });
+
+  it('imports global-scope skills and hook keys from the home layout', async () => {
+    projectRoot = setupFixture({
+      '.aider.conf.yml': 'notifications-command: notify\n',
+      '.aider/skills/debugging/SKILL.md':
+        '---\nname: debugging\ndescription: Debug workflow\n---\n\n# Debugging',
+    });
+
+    const results = await importFromAider(projectRoot, { scope: 'global' });
+
+    expect(results.map((r) => r.feature).sort()).toEqual(['hooks', 'skills']);
+
+    rmSync(projectRoot, { recursive: true, force: true });
+  });
+
   it('returns empty results when no aider config exists', async () => {
     projectRoot = setupFixture({});
     const results = await importFromAider(projectRoot);

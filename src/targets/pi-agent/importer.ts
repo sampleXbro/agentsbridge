@@ -12,6 +12,7 @@ import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 import { createImportReferenceNormalizer } from '../../core/reference/import-rewriter.js';
 import { importEmbeddedSkills } from '../import/embedded-skill.js';
 import { runDescriptorImport } from '../import/descriptor-import-runner.js';
+import { importPiAgentPermissions } from './permissions-import.js';
 import { PI_AGENT_TARGET, PI_AGENT_SKILLS_DIR, PI_AGENT_GLOBAL_SKILLS_DIR } from './constants.js';
 import { descriptor } from './index.js';
 
@@ -27,6 +28,7 @@ export async function importFromPiAgent(
 
   const skillsDir = scope === 'global' ? PI_AGENT_GLOBAL_SKILLS_DIR : PI_AGENT_SKILLS_DIR;
   await importEmbeddedSkills(projectRoot, skillsDir, PI_AGENT_TARGET, results, normalize);
+  await importPiAgentPermissions(projectRoot, scope, results);
 
   return results;
 }

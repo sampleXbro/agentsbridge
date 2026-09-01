@@ -112,13 +112,14 @@ describe('per-target lint helpers', () => {
       expect(diags).toEqual([]);
     });
 
-    it('returns one warning when mcp.mcpServers has entries (project scope)', () => {
+    it('returns [] for a stdio server at project scope — now natively emitted', () => {
+      // Project MCP writes .agents/plugins/agentsmesh/.mcp.json, which models stdio
+      // servers, so a stdio server is no longer lossy.
       const diags = goose.lintMcp({
         ...emptyCanonical(),
         mcp: { mcpServers: { test: { command: 'x' } } } as never,
       });
-      expect(diags).toHaveLength(1);
-      expect(diags[0]!.level).toBe('warning');
+      expect(diags).toEqual([]);
     });
 
     it('returns [] at global scope even when mcp.mcpServers has entries', () => {
@@ -129,9 +130,11 @@ describe('per-target lint helpers', () => {
       expect(diags).toEqual([]);
     });
 
-    it('returns one warning at project scope with explicit scope option', () => {
+    it('warns at project scope only for a server the plugin file cannot represent', () => {
+      // The plugin .mcp.json parser models stdio only; a remote server still needs
+      // the user-scope config.yaml extensions block.
       const diags = goose.lintMcp(
-        { ...emptyCanonical(), mcp: { mcpServers: { test: { command: 'x' } } } as never },
+        { ...emptyCanonical(), mcp: { mcpServers: { remote: { url: 'https://x' } } } as never },
         { scope: 'project' },
       );
       expect(diags).toHaveLength(1);

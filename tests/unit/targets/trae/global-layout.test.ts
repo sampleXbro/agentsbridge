@@ -21,6 +21,7 @@ import {
   TRAE_GLOBAL_SKILLS_DIR,
   TRAE_GLOBAL_MCP_FILE,
   TRAE_GLOBAL_HOOKS_FILE,
+  TRAE_GLOBAL_PERMISSIONS_FILE,
 } from '../../../../src/targets/trae/constants.js';
 
 describe('trae descriptor global layout', () => {
@@ -75,11 +76,55 @@ describe('trae descriptor global layout', () => {
     expect(rewrite(TRAE_HOOKS_FILE)).toBe(TRAE_GLOBAL_HOOKS_FILE);
   });
 
-  it('globalSupport.capabilities has native agents, native hooks, no permissions', () => {
+  it('globalSupport.capabilities has native agents and hooks, partial permissions', () => {
     const caps = descriptor.globalSupport!.capabilities;
     expect(caps.agents).toBe('native');
     expect(caps.hooks).toBe('native');
-    expect(caps.permissions).toBe('none');
+    // Additive-only writes into a file Trae maintains itself, and an
+    // undocumented per-rule shape inside commandRules — see index.ts.
+    expect(caps.permissions).toBe('partial');
+  });
+
+  it('keeps permissions unsupported in project scope', () => {
+    expect(descriptor.capabilities.permissions).toBe('none');
+  });
+
+  it('does not manage the global permission file for stale cleanup', () => {
+    const managed = descriptor.globalSupport!.layout.managedOutputs!;
+    expect(managed.files).not.toContain(TRAE_GLOBAL_PERMISSIONS_FILE);
+    expect(managed.dirs.some((dir) => TRAE_GLOBAL_PERMISSIONS_FILE.startsWith(`${dir}/`))).toBe(
+      false,
+    );
+  });
+
+  it('emits ~/.trae/permission/global.json only in global scope', async () => {
+    const config = {
+      version: 1,
+      targets: ['trae'],
+      features: ['permissions'],
+      extends: [],
+      overrides: {},
+      collaboration: { strategy: 'merge', lock_features: [] },
+    } as ValidatedConfig;
+    const canonical: CanonicalFiles = {
+      rules: [],
+      commands: [],
+      agents: [],
+      skills: [],
+      mcp: null,
+      permissions: { allow: ['Bash(npm run test:*)'], deny: [], ask: [] },
+      hooks: null,
+      ignore: [],
+    };
+    const projectRoot = join(tmpdir(), 'am-trae-global-perms');
+
+    const globalResults = await generate({ config, canonical, projectRoot, scope: 'global' });
+    const projectResults = await generate({ config, canonical, projectRoot, scope: 'project' });
+
+    expect(globalResults.find((r) => r.path === TRAE_GLOBAL_PERMISSIONS_FILE)?.content).toContain(
+      '"npm run test"',
+    );
+    expect(projectResults.find((r) => r.path === TRAE_GLOBAL_PERMISSIONS_FILE)).toBeUndefined();
   });
 
   it('globalSupport.capabilities has native commands', () => {

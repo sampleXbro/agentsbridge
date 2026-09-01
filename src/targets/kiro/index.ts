@@ -1,6 +1,5 @@
 import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
-import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
-import { commandSkillDirName } from '../codex-cli/command-skill.js';
+import type { TargetDescriptor } from '../catalog/target-descriptor.js';
 import {
   generateRules,
   generateCommands,
@@ -11,7 +10,8 @@ import {
   generateIgnore,
   generatePermissions,
 } from './generator.js';
-import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
+import { projectLayout, globalLayout } from './layout.js';
+import { emitKiroAgentPermissions, generateKiroGlobalPermissions } from './permissions-generate.js';
 import { importFromKiro } from './importer.js';
 import { lintRules } from './linter.js';
 import { lintHooks, lintPermissions } from './lint.js';
@@ -31,7 +31,7 @@ import {
   KIRO_GLOBAL_AGENTS_DIR,
   KIRO_GLOBAL_MCP_FILE,
   KIRO_GLOBAL_IGNORE,
-  KIRO_GLOBAL_AGENTS_SKILLS_DIR,
+  KIRO_GLOBAL_PERMISSIONS_FILE,
   KIRO_CANONICAL_AGENTS_DIR,
   KIRO_CANONICAL_MCP,
   KIRO_CANONICAL_IGNORE,
@@ -51,80 +51,6 @@ export const target: TargetGenerators = {
   importFrom: importFromKiro,
 };
 
-const project: TargetLayout = {
-  rootInstructionPath: KIRO_AGENTS_MD,
-  skillDir: KIRO_SKILLS_DIR,
-  managedOutputs: {
-    dirs: ['.kiro/hooks', '.kiro/skills', '.kiro/steering', '.kiro/agents'],
-    files: ['AGENTS.md', '.kiro/settings/mcp.json', '.kiroignore'],
-  },
-  paths: {
-    rulePath(slug, _rule) {
-      return `${KIRO_STEERING_DIR}/${slug}.md`;
-    },
-    commandPath(name) {
-      return `${KIRO_SKILLS_DIR}/${commandSkillDirName(name)}/SKILL.md`;
-    },
-    agentPath(name, _config) {
-      return `${KIRO_AGENTS_DIR}/${name}.md`;
-    },
-  },
-};
-
-const globalLayout: TargetLayout = {
-  rootInstructionPath: KIRO_GLOBAL_STEERING_AGENTS_MD,
-  skillDir: KIRO_GLOBAL_SKILLS_DIR,
-  managedOutputs: {
-    dirs: [
-      KIRO_GLOBAL_STEERING_DIR,
-      KIRO_GLOBAL_SKILLS_DIR,
-      KIRO_GLOBAL_AGENTS_DIR,
-      KIRO_GLOBAL_AGENTS_SKILLS_DIR,
-    ],
-    files: [KIRO_GLOBAL_STEERING_AGENTS_MD, KIRO_GLOBAL_MCP_FILE, KIRO_GLOBAL_IGNORE],
-  },
-  rewriteGeneratedPath(path) {
-    // Transform project-level paths to global ~/.kiro/ paths
-    if (path === KIRO_AGENTS_MD) {
-      return KIRO_GLOBAL_STEERING_AGENTS_MD;
-    }
-    if (path.startsWith(`${KIRO_STEERING_DIR}/`)) {
-      return path.replace(`${KIRO_STEERING_DIR}/`, `${KIRO_GLOBAL_STEERING_DIR}/`);
-    }
-    if (path.startsWith(`${KIRO_SKILLS_DIR}/`)) {
-      return path.replace(`${KIRO_SKILLS_DIR}/`, `${KIRO_GLOBAL_SKILLS_DIR}/`);
-    }
-    if (path.startsWith(`${KIRO_AGENTS_DIR}/`)) {
-      return path.replace(`${KIRO_AGENTS_DIR}/`, `${KIRO_GLOBAL_AGENTS_DIR}/`);
-    }
-    if (path === KIRO_MCP_FILE) {
-      return KIRO_GLOBAL_MCP_FILE;
-    }
-    if (path === KIRO_IGNORE) {
-      return KIRO_GLOBAL_IGNORE;
-    }
-    // Skip hooks in global mode
-    if (path.startsWith(`${KIRO_HOOKS_DIR}/`)) {
-      return null;
-    }
-    return path;
-  },
-  mirrorGlobalPath(path, activeTargets) {
-    return mirrorSkillsToAgents(path, '.kiro/skills', activeTargets);
-  },
-  paths: {
-    rulePath(slug, _rule) {
-      return `${KIRO_GLOBAL_STEERING_DIR}/${slug}.md`;
-    },
-    commandPath(name) {
-      return `${KIRO_SKILLS_DIR}/${commandSkillDirName(name)}/SKILL.md`;
-    },
-    agentPath(name, _config) {
-      return `${KIRO_GLOBAL_AGENTS_DIR}/${name}.md`;
-    },
-  },
-};
-
 const globalCapabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'native',
@@ -134,7 +60,7 @@ const globalCapabilities: TargetCapabilities = {
   mcp: 'native',
   hooks: 'partial',
   ignore: 'native',
-  permissions: 'partial',
+  permissions: 'native',
 };
 
 export const descriptor = {
@@ -155,7 +81,8 @@ export const descriptor = {
     mcp: 'native',
     hooks: 'native',
     ignore: 'native',
-    permissions: 'partial',
+    // No in-repo permissions file: rules ride in the `.kiro/agents/` profiles.
+    permissions: 'embedded',
   },
   emptyImportMessage:
     'No Kiro config found (AGENTS.md, .kiro/steering, .kiro/skills, .kiro/agents, .kiro/hooks, .kiro/settings/mcp.json, or .kiroignore).',
@@ -165,7 +92,8 @@ export const descriptor = {
     hooks: lintHooks,
     permissions: lintPermissions,
   },
-  project,
+  emitScopedSettings: emitKiroAgentPermissions,
+  project: projectLayout,
   globalSupport: {
     capabilities: globalCapabilities,
     detectionPaths: [
@@ -175,8 +103,10 @@ export const descriptor = {
       KIRO_GLOBAL_AGENTS_DIR,
       KIRO_GLOBAL_MCP_FILE,
       KIRO_GLOBAL_IGNORE,
+      KIRO_GLOBAL_PERMISSIONS_FILE,
     ],
     layout: globalLayout,
+    scopeExtras: generateKiroGlobalPermissions,
   },
   importer: {
     agents: {

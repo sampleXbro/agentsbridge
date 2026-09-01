@@ -2,6 +2,7 @@ import type { TargetPathContract } from './types.js';
 
 export const gooseContract: TargetPathContract = {
   generated: [
+    '.agents/plugins/agentsmesh/.mcp.json',
     '.agents/plugins/agentsmesh/hooks/hooks.json',
     '.agents/skills/am-agent-code-reviewer/SKILL.md',
     '.agents/skills/am-agent-researcher/SKILL.md',
@@ -18,6 +19,7 @@ export const gooseContract: TargetPathContract = {
     '.agentsmesh/commands/review.md',
     '.agentsmesh/hooks.yaml',
     '.agentsmesh/ignore',
+    '.agentsmesh/mcp.json',
     '.agentsmesh/rules/_root.md',
     '.agentsmesh/skills/api-generator/SKILL.md',
     '.agentsmesh/skills/api-generator/references/route-checklist.md',

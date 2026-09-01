@@ -1,10 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
-import {
-  lintHooks,
-  lintPermissions,
-  lintMcp,
-} from '../../../../src/targets/aider/lint.js';
+import { lintHooks, lintPermissions, lintMcp } from '../../../../src/targets/aider/lint.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
   return {
@@ -46,6 +42,39 @@ describe('lintHooks (aider)', () => {
     expect(result[0].level).toBe('warning');
     expect(result[0].target).toBe('aider');
     expect(result[0].message).toContain('hook');
+  });
+
+  it('names every dropped event, matcher and command', () => {
+    const result = lintHooks(
+      makeCanonical({
+        hooks: {
+          PreToolUse: [{ matcher: '*', command: 'guard' }],
+          PostToolUse: [{ matcher: 'Bash', command: 'audit' }],
+        },
+      }),
+    );
+
+    expect(result).toHaveLength(1);
+    expect(result[0].message).toContain('PreToolUse(*): guard');
+    expect(result[0].message).toContain('PostToolUse(Bash): audit');
+  });
+
+  it('warns separately that test-cmd narrows an unscoped PostToolUse hook', () => {
+    const result = lintHooks(
+      makeCanonical({ hooks: { PostToolUse: [{ matcher: '*', command: 'npm test' }] } }),
+    );
+
+    expect(result).toHaveLength(1);
+    expect(result[0].message).toContain('test-cmd');
+    expect(result[0].message).toContain('PostToolUse(*): npm test');
+  });
+
+  it('stays silent for hooks aider maps exactly', () => {
+    expect(
+      lintHooks(
+        makeCanonical({ hooks: { PostToolUse: [{ matcher: 'Write|Edit', command: 'ruff' }] } }),
+      ),
+    ).toHaveLength(0);
   });
 });
 

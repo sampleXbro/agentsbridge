@@ -4,7 +4,7 @@
  * Extracted from `index.ts` to keep that file under the 200-line cap. The shared
  * runner (`runDescriptorImport`) walks these specs per scope:
  *   - rules  → `.goosehints` (project) / global `.goosehints`
- *   - mcp    → global `config.yaml` extensions (custom YAML mapper, global-only)
+ *   - mcp    → plugin `.mcp.json` (project) / global `config.yaml` extensions
  *   - ignore → `.gooseignore` (project) / global `.gooseignore`
  */
 
@@ -13,6 +13,7 @@ import { gooseMcpMap } from './mcp-import.js';
 import {
   GOOSE_ROOT_FILE,
   GOOSE_IGNORE,
+  GOOSE_PROJECT_MCP_FILE,
   GOOSE_GLOBAL_ROOT_FILE,
   GOOSE_GLOBAL_IGNORE,
   GOOSE_GLOBAL_CONFIG,
@@ -35,9 +36,9 @@ export const gooseImporter: TargetImporterDescriptor = {
   mcp: {
     feature: 'mcp',
     mode: 'singleFile',
-    // Goose MCP lives only in the global `config.yaml`; with no project source
-    // the runner skips this feature entirely under project scope.
-    source: { global: [GOOSE_GLOBAL_CONFIG] },
+    // Two shapes behind one feature: the plugin `.mcp.json` at project scope and
+    // the bespoke `extensions` YAML globally. `gooseMcpMap` picks by source path.
+    source: { project: [GOOSE_PROJECT_MCP_FILE], global: [GOOSE_GLOBAL_CONFIG] },
     canonicalDir: '.agentsmesh',
     canonicalRootFilename: 'mcp.json',
     map: gooseMcpMap,

@@ -6790,6 +6790,20 @@
         "t-kw-706233bb"
       ]
     },
+    "target-capability-audits-when-a-target-descriptor-declares": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "replit-agent shipped commands/agents at `none` while emitting both to .agents/skills; the gap was pure declaration drift.",
+      "rule": "When a target descriptor declares `commands`/`agents` as `none` but also sets `supportsConversion` plus a wired `generateCommands`/`generateAgents`, the generate engine already emits those skill bundles — the level is a mislabel, not a missing feature. Probe with a real `generate()` test before writing generator code, then fix the capability to `embedded` and add the matching `conversionDefaults` so `usesCommandSkillProjection`/`usesAgentSkillProjection` agree with the dispatcher.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-9f0a5990",
+        "t-kw-2d3efbf2"
+      ]
+    },
     "target-capability-audits-when-a-target-gains-a": {
       "createdAt": "2026-06-25",
       "evidence": [
@@ -7053,6 +7067,48 @@
       ],
       "triggers": [
         "t-glob-87083445"
+      ]
+    },
+    "target-permissions-a-target-importer-must-never": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "`rules: []` (the file agentsmesh itself writes on revocation) imported back and cleared canonical allow AND deny, silently dropping a protective Read(./.env) deny for claude-code and cursor.",
+      "rule": "A target importer must never treat an empty or partial target-side list as a revocation of canonical: skip the write when the target yields no entries, and rewrite only the canonical lists (allow/deny/ask) the target actually carries entries for — canonical is shared, so a wipe leaks into every other target.",
+      "status": "active",
+      "topics": [
+        "target-permissions"
+      ],
+      "triggers": [
+        "t-glob-341a7fe1",
+        "t-glob-860c694c"
+      ]
+    },
+    "target-permissions-when-a-per-target-import": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "A round-trip fixed-point test caught allow/deny/ask cross-contamination that per-entry unit tests did not.",
+      "rule": "When a per-target import fans one target file set into one canonical file (e.g. permissions from many agent profiles), filter imported records by their effect/list INSIDE the merge helper, not at the call site — passing the whole record set to each list merge silently duplicates every entry into allow, deny and ask.",
+      "status": "active",
+      "topics": [
+        "target-permissions"
+      ],
+      "triggers": [
+        "t-glob-11717c97",
+        "t-kw-4abb9189"
+      ]
+    },
+    "target-permissions-when-a-target-generator-rewrites": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "Whole-key replacement of `rules:` in ~/.kiro/settings/permissions.yaml deleted hand-written exclude protections, and a parse-error fallback to an empty Document deleted the whole file.",
+      "rule": "When a target generator rewrites a shared config file the user also edits, own it PER ELEMENT by shape (rewrite only the entries the generator itself emits, preserve everything else verbatim) and never fall back to a fresh document when the existing file fails to parse — return \"no write\" instead.",
+      "status": "active",
+      "topics": [
+        "target-permissions"
+      ],
+      "triggers": [
+        "t-glob-c36b4923",
+        "t-glob-471d1b86"
       ]
     },
     "targets-a-target-declaring-additionalrules-embed": {
@@ -8744,6 +8800,9 @@
     "target-deepagents-cli": {
       "summary": "Verified on-disk config contract for the deepagents-cli target (paths, scopes, hooks format)."
     },
+    "target-permissions": {
+      "summary": "Canonical permissions <-> per-target permission surfaces: mapping, merge, revocation and round-trip rules."
+    },
     "targets": {
       "summary": "Per-target descriptor, generator and importer behaviour"
     },
@@ -9225,6 +9284,10 @@
       "kind": "file_glob",
       "pattern": "scripts/capabilities-audit.ts"
     },
+    "t-glob-11717c97": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/permissions-*.ts"
+    },
     "t-glob-11a8af2c": {
       "kind": "file_glob",
       "pattern": "tests/unit/**/*.test.ts"
@@ -9333,6 +9396,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/mutate.ts"
     },
+    "t-glob-341a7fe1": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/permissions-import.ts"
+    },
     "t-glob-35a0a200": {
       "kind": "file_glob",
       "pattern": "tests/e2e/generate-capabilities.e2e.test.ts"
@@ -9412,6 +9479,10 @@
     "t-glob-4669d772": {
       "kind": "file_glob",
       "pattern": "src/mcp/handlers/lessons-query.ts"
+    },
+    "t-glob-471d1b86": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/*-generate.ts"
     },
     "t-glob-49133422": {
       "kind": "file_glob",
@@ -10281,6 +10352,10 @@
       "kind": "keyword",
       "pattern": "managedOutputs,stale cleanup,settings.json ownership"
     },
+    "t-kw-2d3efbf2": {
+      "kind": "keyword",
+      "pattern": "capability gap none to embedded"
+    },
     "t-kw-3070d871": {
       "kind": "keyword",
       "pattern": "review agent"
@@ -10384,6 +10459,10 @@
     "t-kw-492df4f9": {
       "kind": "keyword",
       "pattern": "web search parser failure"
+    },
+    "t-kw-4abb9189": {
+      "kind": "keyword",
+      "pattern": "permissions importer merge canonical allow deny ask"
     },
     "t-kw-4c23a772": {
       "kind": "keyword",

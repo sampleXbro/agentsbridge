@@ -44,9 +44,9 @@ describe('goose global layout', () => {
     expect(rewrite(skillPath, '')).toBe(skillPath);
   });
 
-  it('globalSupport.capabilities has mcp native (project has partial)', () => {
+  it('has mcp native in both scopes (different files, both real)', () => {
     expect(descriptor.globalSupport!.capabilities.mcp).toBe('native');
-    expect(descriptor.capabilities.mcp).toBe('partial');
+    expect(descriptor.capabilities.mcp).toBe('native');
   });
 
   it('globalSupport.capabilities has permissions native (project has partial)', () => {
@@ -166,5 +166,23 @@ describe('goose global frontmatter preservation', () => {
     const parsed = parseYaml(perm!.content) as Record<string, Record<string, unknown>>;
     expect(parsed.user.always_allow).toEqual(['developer__shell']);
     expect(parsed.user.never_allow).toEqual(['developer__rm']);
+  });
+
+  it('emits no permission.yaml when canonical carries no permissions', async () => {
+    const results = await generate({
+      config: {
+        version: 1,
+        targets: ['goose'],
+        features: ['permissions'],
+        extends: [],
+        overrides: {},
+        collaboration: { strategy: 'merge', lock_features: [] },
+      } as ValidatedConfig,
+      canonical: makeCanonical({ permissions: { allow: [], deny: [], ask: [] } }),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    expect(results.filter((r) => r.path === GOOSE_GLOBAL_PERMISSIONS)).toEqual([]);
   });
 });

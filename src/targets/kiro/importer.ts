@@ -15,6 +15,7 @@ import {
 } from '../../utils/filesystem/fs.js';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
 import { parseKiroHookFile, serializeCanonicalHooks } from './hook-format.js';
+import { importKiroAgentPermissions, importKiroGlobalPermissions } from './permissions-import.js';
 import {
   KIRO_TARGET,
   KIRO_AGENTS_MD,
@@ -140,6 +141,8 @@ export async function importFromKiro(
   await importNonRootRules(projectRoot, results, normalize);
   results.push(...(await runDescriptorImport(descriptor, projectRoot, scope, { normalize })));
   await importEmbeddedSkills(projectRoot, KIRO_SKILLS_DIR, KIRO_TARGET, results, normalize);
+  if (scope === 'global') await importKiroGlobalPermissions(projectRoot, results);
+  else await importKiroAgentPermissions(projectRoot, results);
   if (scope === 'project') await importHooks(projectRoot, results);
   return results;
 }

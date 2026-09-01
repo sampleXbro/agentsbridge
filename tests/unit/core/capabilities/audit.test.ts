@@ -27,24 +27,25 @@ const TODAY = '2026-07-11';
 
 describe('auditCapabilities', () => {
   it('flags exactly one GAP when descriptor is below maxAchievable', () => {
-    // aider/hooks/project is below native; a native ceiling makes it a gap.
+    // zed has no user-definable subagents, so the descriptor is 'none'; a native
+    // ceiling makes it a gap. (This used aider/hooks until aider/hooks went native.)
     const ledger: CapabilityLedger = {
       cells: [
-        cell({ target: 'aider', feature: 'hooks', maxAchievable: 'native', verifiedAt: TODAY }),
+        cell({ target: 'zed', feature: 'agents', maxAchievable: 'native', verifiedAt: TODAY }),
       ],
     };
     const report = auditCapabilities({
       ledger,
       today: TODAY,
       staleDays: 180,
-      targetIds: ['aider'],
+      targetIds: ['zed'],
     });
     expect(report.gaps).toHaveLength(1);
     expect(report.gaps[0]).toMatchObject({
-      target: 'aider',
-      feature: 'hooks',
+      target: 'zed',
+      feature: 'agents',
       scope: 'project',
-      from: 'partial',
+      from: 'none',
       to: 'native',
     });
     expect(report.stale).toEqual([]);

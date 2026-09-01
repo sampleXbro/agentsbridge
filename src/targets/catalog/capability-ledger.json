@@ -126,11 +126,8 @@
       "format": "yaml",
       "fingerprint": {
         "topLevelKeys": [
-          "test-cmd",
-          "auto-test",
           "lint-cmd",
-          "auto-lint",
-          "notifications-command"
+          "auto-lint"
         ],
         "requiredFrontmatter": [],
         "keyChecks": []
@@ -153,11 +150,8 @@
       "format": "yaml",
       "fingerprint": {
         "topLevelKeys": [
-          "test-cmd",
-          "auto-test",
           "lint-cmd",
-          "auto-lint",
-          "notifications-command"
+          "auto-lint"
         ],
         "requiredFrontmatter": [],
         "keyChecks": []
@@ -7272,7 +7266,7 @@
       "feature": "permissions",
       "scope": "project",
       "maxAchievable": "embedded",
-      "path": ".kiro/agents/reviewer.md",
+      "path": ".kiro/agents/code-reviewer.md",
       "ext": ".md",
       "format": "md-frontmatter",
       "fingerprint": {
@@ -8573,7 +8567,7 @@
       "feature": "agents",
       "scope": "project",
       "maxAchievable": "embedded",
-      "path": ".agents/skills/reviewer/SKILL.md",
+      "path": ".agents/skills/am-agent-code-reviewer/SKILL.md",
       "ext": ".md",
       "format": "md-frontmatter",
       "fingerprint": {
@@ -8613,7 +8607,7 @@
       "feature": "commands",
       "scope": "project",
       "maxAchievable": "embedded",
-      "path": ".agents/skills/review/SKILL.md",
+      "path": ".agents/skills/am-command-review/SKILL.md",
       "ext": ".md",
       "format": "md-frontmatter",
       "fingerprint": {

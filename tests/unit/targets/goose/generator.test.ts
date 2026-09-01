@@ -6,15 +6,17 @@ import {
   generateCommands,
   generateAgents,
   generateIgnore,
-  generateMcp,
   generateHooks,
 } from '../../../../src/targets/goose/generator.js';
+import { emitGooseProjectMcp } from '../../../../src/targets/goose/mcp-settings.js';
+import { generateGooseGlobalMcp } from '../../../../src/targets/goose/global-mcp.js';
 import {
   GOOSE_ROOT_FILE,
   GOOSE_SKILLS_DIR,
   GOOSE_IGNORE,
   GOOSE_GLOBAL_CONFIG,
   GOOSE_HOOKS_FILE,
+  GOOSE_PROJECT_MCP_FILE,
 } from '../../../../src/targets/goose/constants.js';
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
@@ -251,24 +253,23 @@ describe('generateIgnore (goose)', () => {
   });
 });
 
-describe('generateMcp (goose)', () => {
-  it('returns empty for project scope', () => {
+describe('goose MCP emission', () => {
+  it('writes the plugin .mcp.json for project scope', () => {
     const canonical = makeCanonical({
       mcp: { mcpServers: { 'my-server': { command: 'cmd', args: [], env: {}, type: 'stdio' } } },
     });
-    const results = generateMcp(canonical, { capability: { level: 'none' }, scope: 'project' });
-    expect(results).toHaveLength(0);
+    const results = emitGooseProjectMcp(canonical, 'project', new Set(['mcp']));
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(GOOSE_PROJECT_MCP_FILE);
   });
 
-  it('returns empty for global scope with no MCP servers', () => {
-    const results = generateMcp(makeCanonical({ mcp: null }), {
-      capability: { level: 'native' },
-      scope: 'global',
-    });
-    expect(results).toHaveLength(0);
+  it('returns empty for global scope with no MCP servers', async () => {
+    expect(
+      await generateGooseGlobalMcp(makeCanonical({ mcp: null }), '/nonexistent', new Set(['mcp'])),
+    ).toHaveLength(0);
   });
 
-  it('generates config.yaml with extensions block for global scope', () => {
+  it('generates config.yaml with extensions block for global scope', async () => {
     const canonical = makeCanonical({
       mcp: {
         mcpServers: {
@@ -281,7 +282,7 @@ describe('generateMcp (goose)', () => {
         },
       },
     });
-    const results = generateMcp(canonical, { capability: { level: 'native' }, scope: 'global' });
+    const results = await generateGooseGlobalMcp(canonical, '/nonexistent', new Set(['mcp']));
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(GOOSE_GLOBAL_CONFIG);
     expect(results[0].content).toContain('extensions:');

@@ -1,7 +1,7 @@
 # Auto-generated. DO NOT EDIT MANUALLY.
 # Tracks the state of all config files for team conflict resolution.
 
-generated_at: 2026-09-01T14:04:25.394Z
+generated_at: 2026-09-01T17:47:23.221Z
 generated_by: serhii
 lib_version: 0.31.0
 checksums:
@@ -162,7 +162,6 @@ outputs:
   .goosehints: sha256:47266a18dd886f18847823e3bb23f718d74569781e9ae3f3a0ca3fabd50b2330
   .rules: sha256:47266a18dd886f18847823e3bb23f718d74569781e9ae3f3a0ca3fabd50b2330
   CONVENTIONS.md: sha256:8602cdf471d98d47e011f9aa8e810097cb599d4d6a9bb40408cb1c6afd9cab25
-  .aider.conf.yml: sha256:37673ba21c04b8b4924b0af643ca095ed00d84f1ada7c64f97eb9c45cda2d50e
   .amazonq/rules/_root.md: sha256:4e8b004afc6fbf5ddfa673e3afb7b060b722c9f4c1e9c28740bb82b5ad1ff8b4
   .amazonq/rules/typescript.md: sha256:f417aa9c45ec6da39a74f1911e482347033f7373f86229676a12073620abce84
   .augment/rules/_root.md: sha256:ff206f1b2cc7ff9ae8190dea9802b9743f3826bab1b2ec2a80bd55f61760d1dd
@@ -492,16 +491,6 @@ outputs:
   .agents/agents/code-standards-enforcer.md: sha256:9a76ec6a17b570bede4bbb00c627ebf269f2cb4a7cbb7401b1399dfb989e2902
   .agents/agents/typescript-developer.md: sha256:6401bbb16e583e36e4b76ac2a20df254c11e3c3d9f7e881d5342065322cfcb52
   .roomodes: sha256:bea8b33acb9e62772467264ee1a0b8788b87af3bfb69cb77c3b4182dc3ab05b2
-  .kiro/agents/code-reviewer.md: sha256:4a7776df7492743cecaaf6ef07f2b35cd37db5ded71732eff309f5d6029ea090
-  .kiro/agents/test-runner.md: sha256:86b2fa9ce9a66c8ef2dc4e08e033e1726f17377c356548005145b499503beee9
-  .kiro/agents/security-auditor.md: sha256:204dfb61d6823148f18c4a57aeba0eabde8aac5dab8234a4e3d5297934e80500
-  .kiro/agents/test-engineer.md: sha256:35b16ee095d8d0ec3281cac102ced2302d564e958cdcf2cac069b5eb26715389
-  .kiro/agents/code-debugger.md: sha256:709ae1f93183cb9e77f557479d414718b7e11406be7168b2f6101027f5a7e921
-  .kiro/agents/code-documenter.md: sha256:dd604b2072eb07a3632512f5c1af98d8e34d612e2cd785f6756c84312f6c6cf1
-  .kiro/agents/code-refactor.md: sha256:ea1b97c36b94c917eaf52b4b6fd1f6d49d57f76f0bb2a790584faba83ca083f6
-  .kiro/agents/code-security-auditor.md: sha256:87d3dab49818881eb46c6c65aaee1f940533a3b55bc0673bf25bb7e03b7c342c
-  .kiro/agents/code-standards-enforcer.md: sha256:9a76ec6a17b570bede4bbb00c627ebf269f2cb4a7cbb7401b1399dfb989e2902
-  .kiro/agents/typescript-developer.md: sha256:6401bbb16e583e36e4b76ac2a20df254c11e3c3d9f7e881d5342065322cfcb52
   .kilo/agents/code-reviewer.md: sha256:f5e22871b3243b08a23dc808dccb3c56fc1e3b35a4597ee009b19de65bf9f1e8
   .kilo/agents/test-runner.md: sha256:67df7a268ab91ba72add895b48769a4be7a0a05681292e9df82c0894ea9b5f55
   .kilo/agents/security-auditor.md: sha256:4148e7b7a0aca167be17565ec40db910f0f623a2e14d1be19212c6a2d543f8d9
@@ -3872,6 +3861,7 @@ outputs:
   .vscode/settings.json: sha256:de2e6a624e5bc4c4c5d652398089c77b57e1d6f509dba007cb009f383ce10544
   kilo.jsonc: sha256:630c265b1463315e3060b5e25e25c34b6ffc3f2f0d4dc22d2b814275f1049ed1
   .factory/settings.json: sha256:44127052c3853d12af2d34d7cc8bce0807a2f5927e642bdcfc9a91e99faa52a5
+  .pi/settings.json: sha256:ded948deafe0744a31515b27ab1ae292e838477bc7281d9dc8724dc163b3e7f1
   .claude/settings.json: sha256:535e755ef2d06de5445eced2bb99d040914c2d4cd9973138ba8007955f1f7444
   .cursor/hooks.json: sha256:8959d46a7201c486b68b3f58bc1f9ece148e674ae35e5de388959d6edfd7b331
   .github/hooks/agentsmesh.json: sha256:8aa44e401effaac2a65811e30809712fded94f3a0952e7f6c3390c9a1fc93082
@@ -3923,9 +3913,21 @@ outputs:
   .trae/.ignore: sha256:53ad60cb2c945a41619fbb5dd0d43559c8461e4cb35e30f4d98b901c73766e12
   .gemini/settings.json: sha256:e080788025b333bd5ac7d75fd1a1da6df7a68623723b3ea145005fcfef90a90c
   .agents/mcp_config.json: sha256:1aa1ba0782154eca7fedd6aba057291106f7076298eb84393324c4c7698e2546
+  .kiro/agents/code-reviewer.md: sha256:26851c88906f4d1a494b4919586df4fb5718867ab85326307585402e9d0dee8b
+  .kiro/agents/test-runner.md: sha256:0b45f061fda561fc86609cd9b874723a88391c517d8dc38bd309219791bc3688
+  .kiro/agents/security-auditor.md: sha256:f62a6d8d7b85e64f70395704300e401f4d31d6d92ed6fa25b05cb4f19f256010
+  .kiro/agents/test-engineer.md: sha256:42f0c16d1e0dd1fd93671fd013ad3a5fd77202482977b5304d923c83bd59da2b
+  .kiro/agents/code-debugger.md: sha256:70f9a0f4c4867c7f7b743500c4d192fcccfdede8f5f906a5fc18eb4d9e5dc78c
+  .kiro/agents/code-documenter.md: sha256:e2760c0c32041ba9b40b0a14e51f887be4614b7343bbdc219cfb4f7fb67a61be
+  .kiro/agents/code-refactor.md: sha256:4d42755259d758f7048d2a958c207d3ac45d01b9f953ade9733e9868482e2a55
+  .kiro/agents/code-security-auditor.md: sha256:8ef33803480b9c5fde8a399c66ff276ec3f4c61922e7a4ebb7b7999c863b6632
+  .kiro/agents/code-standards-enforcer.md: sha256:6693a73734d413db20145e9d4043163bf9fcabe0a455225fe315634e306eb873
+  .kiro/agents/typescript-developer.md: sha256:c2bac380ce5205afb39737a70c7d14f2eaf85e73a2dc080513d15eae90f4cace
   opencode.json: sha256:e23debb337bd6883a85f1a6cc4d4c4c65f56be0f75ca6d58c25621c87294f2ed
+  .agents/plugins/agentsmesh/.mcp.json: sha256:beafdf9d60bbe72fa11ff90017241727fadad6bcdcb82bd87c6ec3164d2c720d
   .amp/settings.json: sha256:6e4cf0d284153cac726c6018d58bca6195c552d052c6af0f774f22e1e07e8a8a
   .zed/settings.json: sha256:8eb6f12988863348ec57058db461869f6abe8c447facd796c0cf40b8506a99a9
+  .aider.conf.yml: sha256:9c0aec04e8821683cba3386a751c97beef53dd49714d72307002edd57dbfd6ef
   .amazonq/cli-agents/code-reviewer.json: sha256:ae8e4909b389d9116559e343f570ee9c54e7406967fbb5808c5a88d466a8f10d
   .amazonq/cli-agents/test-runner.json: sha256:8ffd3780c2261c51a9fccd40115bf8b3769b9c827fcf2bbb9229a87ce00d20c3
   .amazonq/cli-agents/security-auditor.json: sha256:b33bcf4d20484b5ee9ae4f8aaf2efc7a725d3b32d1242a47afcd7349fbfa332a

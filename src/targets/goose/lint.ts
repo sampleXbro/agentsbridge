@@ -2,14 +2,16 @@
  * Goose-specific lint warnings.
  *
  * Goose supports lifecycle hooks natively (Open Plugin Specification), so hooks
- * are generated, not warned about. Project-level MCP and permissions have no
- * standalone project config file. Commands and agents are projected as skills
- * via supportsConversion.
+ * are generated, not warned about. Project MCP is native through the plugin
+ * `.mcp.json`, but that parser is stdio-only — remote servers are the lossy part
+ * and get named. Project-level permissions have no config file at all. Commands
+ * and agents are projected as skills via supportsConversion.
  */
 
 import type { CanonicalFiles, LintDiagnostic } from '../../core/types.js';
 import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 import { createWarning } from '../../core/lint/shared/helpers.js';
+import { GOOSE_PROJECT_MCP_FILE } from './constants.js';
 
 export function lintPermissions(canonical: CanonicalFiles, options?: unknown): LintDiagnostic[] {
   // Permissions are native at global scope (~/.config/goose/permission.yaml);
@@ -30,16 +32,23 @@ export function lintPermissions(canonical: CanonicalFiles, options?: unknown): L
 }
 
 export function lintMcp(canonical: CanonicalFiles, options?: unknown): LintDiagnostic[] {
-  // MCP is native at global scope (~/.config/goose/config.yaml);
-  // only project scope (no per-project config file) warrants a warning.
+  // Global `config.yaml` extensions carry every transport. The project plugin
+  // `.mcp.json` parser models stdio alone, so only remote servers are lossy.
   const scope = (options as { scope?: TargetLayoutScope } | undefined)?.scope;
   if (scope === 'global') return [];
-  if (!canonical.mcp || Object.keys(canonical.mcp.mcpServers).length === 0) return [];
+  if (!canonical.mcp) return [];
+  const remote = Object.entries(canonical.mcp.mcpServers)
+    .filter(([, server]) => !('command' in server))
+    .map(([name]) => name);
+  if (remote.length === 0) return [];
   return [
     createWarning(
       '.agentsmesh/mcp.json',
       'goose',
-      'Goose MCP extensions are configured globally in ~/.config/goose/config.yaml; project-level MCP is not projected.',
+      `Goose plugin MCP config (${GOOSE_PROJECT_MCP_FILE}) models stdio servers only ` +
+        `(command/args/env/cwd), so remote server(s) are not projected at project scope: ` +
+        `${remote.join(', ')}. Goose reads remote servers from the extensions block of ` +
+        `~/.config/goose/config.yaml only.`,
     ),
   ];
 }

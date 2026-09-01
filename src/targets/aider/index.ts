@@ -3,18 +3,27 @@
  *
  * Generation emits:
  *   - `CONVENTIONS.md`    — root rule + embedded additional rules
- *   - `.aider.conf.yml`   — wires CONVENTIONS.md via `read:` (project scope only)
+ *   - `.aider.conf.yml`   — the `read:` wiring for CONVENTIONS.md (project scope
+ *     only) plus the hook command keys (both scopes)
  *   - `.aider/skills/`    — skill bundles
  *   - `.aiderignore`      — ignore patterns
  *
- * Import reads `CONVENTIONS.md`, `.aider/skills/`, and `.aiderignore`. The
- * `.aider.conf.yml` is deterministic wiring (not imported as canonical content).
+ * `.aider.conf.yml` is the user's own config, so it is neither a rules output
+ * nor a hooks output: `emitScopedSettings` writes the whole agentsmesh
+ * projection once (`conf-file.ts`), `mergeGeneratedOutputContent` merges it
+ * key-scoped into whatever is already there, and it is deliberately absent from
+ * `managedOutputs` so stale cleanup can never delete it.
+ *
+ * Import reads `CONVENTIONS.md`, `.aider/skills/`, `.aiderignore`, and the hook
+ * keys of `.aider.conf.yml`. The `read:` wiring is deterministic and is not
+ * imported as canonical content.
  */
 
 import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
 import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
-import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { commandSkillDirName } from '../codex-cli/command-skill.js';
+import { mergeAiderConf } from './conf-merge.js';
+import { clearAiderConf, emitAiderConf } from './conf-file.js';
 import { projectedAgentSkillDirName } from '../projection/projected-agent-skill.js';
 import {
   generateRules,
@@ -23,7 +32,6 @@ import {
   generateSkills,
   generateIgnore,
   generateMcp,
-  generateHooks,
   generatePermissions,
 } from './generator.js';
 import { importFromAider } from './importer.js';
@@ -43,32 +51,6 @@ import {
   AIDER_CANONICAL_IGNORE,
 } from './constants.js';
 
-/**
- * Merge the generated `.aider.conf.yml` (which carries `read: [CONVENTIONS.md]`)
- * into an existing user config: preserve every other key and union the `read`
- * list so the conventions wiring is added without clobbering user settings.
- */
-function mergeAiderConf(existing: string | null, newContent: string): string {
-  if (existing === null) return newContent;
-  let parsed: unknown;
-  try {
-    parsed = parseYaml(existing);
-  } catch {
-    return newContent;
-  }
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return newContent;
-  const base = parsed as Record<string, unknown>;
-  const reads = new Set<string>();
-  const existingRead = base.read;
-  if (typeof existingRead === 'string') reads.add(existingRead);
-  else if (Array.isArray(existingRead)) {
-    for (const entry of existingRead) if (typeof entry === 'string') reads.add(entry);
-  }
-  reads.add(AIDER_CONVENTIONS);
-  base.read = [...reads];
-  return stringifyYaml(base);
-}
-
 export const target: TargetGenerators = {
   name: AIDER_TARGET,
   primaryRootInstructionPath: AIDER_CONVENTIONS,
@@ -78,7 +60,6 @@ export const target: TargetGenerators = {
   generateSkills,
   generateIgnore,
   generateMcp,
-  generateHooks,
   generatePermissions,
   importFrom: importFromAider,
 };
@@ -86,9 +67,12 @@ export const target: TargetGenerators = {
 const project: TargetLayout = {
   rootInstructionPath: AIDER_CONVENTIONS,
   skillDir: AIDER_SKILLS_DIR,
+  // `.aider.conf.yml` is deliberately absent: it is the user's own aider config
+  // (model, keys, editor settings) that agentsmesh only merges keys into, and
+  // stale cleanup deletes every listed file a run does not emit.
   managedOutputs: {
     dirs: [AIDER_SKILLS_DIR],
-    files: [AIDER_CONVENTIONS, AIDER_CONF_FILE, AIDER_IGNORE],
+    files: [AIDER_CONVENTIONS, AIDER_IGNORE],
   },
   paths: {
     rulePath(_slug) {
@@ -113,9 +97,9 @@ const globalLayout: TargetLayout = {
   rewriteGeneratedPath(path) {
     if (path === AIDER_CONVENTIONS) return AIDER_GLOBAL_CONVENTIONS;
     if (path === AIDER_IGNORE) return AIDER_GLOBAL_IGNORE;
-    // The `.aider.conf.yml read:` wiring is project-only — a home-level config's
-    // `read:` path semantics differ, so suppress it in global mode.
-    if (path === AIDER_CONF_FILE) return null;
+    // `.aider.conf.yml` passes through: aider loads it from the home directory
+    // too, so the hook keys land in `~/.aider.conf.yml`. The `read:` wiring is
+    // suppressed at the source (see `generateRules`), not by path.
     if (path.startsWith(`${AIDER_SKILLS_DIR}/`)) {
       return path.replace(`${AIDER_SKILLS_DIR}/`, `${AIDER_GLOBAL_SKILLS_DIR}/`);
     }
@@ -141,7 +125,10 @@ const capabilities: TargetCapabilities = {
   agents: 'none',
   skills: 'native',
   mcp: 'partial',
-  hooks: 'partial',
+  // `.aider.conf.yml` test-cmd/auto-test/lint-cmd/auto-lint/notifications-command
+  // are aider's own keys for running commands around edits — its whole hook
+  // surface, generated and imported. See `hooks-format.ts`.
+  hooks: 'native',
   ignore: 'native',
   permissions: 'partial',
 };
@@ -169,6 +156,10 @@ export const descriptor = {
     capabilities,
     detectionPaths: [AIDER_GLOBAL_CONVENTIONS, AIDER_GLOBAL_IGNORE, AIDER_GLOBAL_SKILLS_DIR],
     layout: globalLayout,
+    // Runs at both scopes: the only pass that reads `.aider.conf.yml`, so the
+    // only one that can clear the keys agentsmesh wrote without creating an
+    // empty config file where there was none. See `conf-file.ts`.
+    scopeExtras: clearAiderConf,
   },
   importer: {
     rules: {
@@ -193,9 +184,12 @@ export const descriptor = {
       canonicalFilename: AIDER_CANONICAL_IGNORE,
     },
   },
-  mergeGeneratedOutputContent(existing, _pending, newContent, resolvedPath) {
-    if (resolvedPath === AIDER_CONF_FILE) return mergeAiderConf(existing, newContent);
-    return null;
+  // `.aider.conf.yml` carries the `read:` wiring and the hook keys of a file the
+  // user owns, so every write merges key-scoped into what is already there.
+  emitScopedSettings: emitAiderConf,
+  mergeGeneratedOutputContent(existing, pending, newContent, resolvedPath) {
+    if (resolvedPath !== AIDER_CONF_FILE) return null;
+    return mergeAiderConf(pending?.content ?? existing, newContent);
   },
   buildImportPaths: buildAiderImportPaths,
   detectionPaths: [AIDER_CONVENTIONS, AIDER_IGNORE],

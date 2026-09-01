@@ -7,11 +7,25 @@ import {
   generateHooks,
   generatePermissions,
 } from '../../../../src/targets/amazon-q/generator.js';
+import { emitAmazonQAgentSettings } from '../../../../src/targets/amazon-q/agent-outputs.js';
+import type { FeatureGeneratorOutput } from '../../../../src/targets/catalog/target.interface.js';
 import {
   AMAZON_Q_RULES_DIR,
   AMAZON_Q_MCP_FILE,
   AMAZON_Q_AGENTS_DIR,
 } from '../../../../src/targets/amazon-q/constants.js';
+
+/** Embedded extras are written by the feature-gated scoped-settings emitter. */
+const EMBEDDED_FEATURES: ReadonlySet<string> = new Set([
+  'agents',
+  'hooks',
+  'permissions',
+  'ignore',
+]);
+
+function emitAgentFiles(canonical: CanonicalFiles): readonly FeatureGeneratorOutput[] {
+  return emitAmazonQAgentSettings(canonical, 'project', EMBEDDED_FEATURES);
+}
 
 function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
   return {
@@ -303,7 +317,7 @@ describe('generateMcp (amazon-q)', () => {
   });
 });
 
-describe('generateAgents (amazon-q) — embedded hooks', () => {
+describe('emitAmazonQAgentSettings (amazon-q) — embedded hooks', () => {
   function makeAgent(
     name: string,
     opts: { tools?: string[]; hooks?: Record<string, unknown> } = {},
@@ -332,7 +346,7 @@ describe('generateAgents (amazon-q) — embedded hooks', () => {
         PreToolUse: [{ matcher: 'fs_write', command: 'lint.sh' }],
       },
     });
-    const results = generateAgents(canonical);
+    const results = emitAgentFiles(canonical);
     expect(results).toHaveLength(1);
     const parsed = JSON.parse(results[0].content) as Record<string, unknown>;
     const hooks = parsed.hooks as Record<string, unknown>;
@@ -350,7 +364,7 @@ describe('generateAgents (amazon-q) — embedded hooks', () => {
         PostToolUse: [{ matcher: '**', command: 'echo done' }],
       },
     });
-    const [result] = generateAgents(canonical);
+    const [result] = emitAgentFiles(canonical);
     const parsed = JSON.parse(result.content) as Record<string, unknown>;
     const hooks = parsed.hooks as Record<string, unknown>;
     const postToolUse = hooks.postToolUse as Array<{ matcher: string; command: string }>;
@@ -365,7 +379,7 @@ describe('generateAgents (amazon-q) — embedded hooks', () => {
         UserPromptSubmit: [{ matcher: '**', command: 'recall.sh' }],
       },
     });
-    const [result] = generateAgents(canonical);
+    const [result] = emitAgentFiles(canonical);
     const parsed = JSON.parse(result.content) as Record<string, unknown>;
     const hooks = parsed.hooks as Record<string, unknown>;
     const userPromptSubmit = hooks.userPromptSubmit as Array<{ command: string }>;
@@ -380,14 +394,14 @@ describe('generateAgents (amazon-q) — embedded hooks', () => {
         Notification: [{ matcher: '**', command: 'notify.sh' }],
       },
     });
-    const [result] = generateAgents(canonical);
+    const [result] = emitAgentFiles(canonical);
     const parsed = JSON.parse(result.content) as Record<string, unknown>;
     expect(parsed).not.toHaveProperty('hooks');
   });
 
   it('omits hooks key from agent JSON when canonical hooks is null', () => {
     const canonical = makeCanonical({ agents: [makeAgent('coder')], hooks: null });
-    const [result] = generateAgents(canonical);
+    const [result] = emitAgentFiles(canonical);
     const parsed = JSON.parse(result.content) as Record<string, unknown>;
     expect(parsed).not.toHaveProperty('hooks');
   });
@@ -399,16 +413,25 @@ describe('generateAgents (amazon-q) — embedded hooks', () => {
         PreToolUse: [{ matcher: 'fs_write', command: 'lint.sh' }],
       },
     });
-    const results = generateAgents(canonical);
+    const results = emitAgentFiles(canonical);
     expect(results).toHaveLength(2);
     for (const r of results) {
       const parsed = JSON.parse(r.content) as Record<string, unknown>;
       expect(parsed).toHaveProperty('hooks');
     }
   });
+
+  it('leaves hooks out of the ungated base file generateAgents writes', () => {
+    const canonical = makeCanonical({
+      agents: [makeAgent('coder')],
+      hooks: { PreToolUse: [{ matcher: 'fs_write', command: 'lint.sh' }] },
+    });
+    const [result] = generateAgents(canonical);
+    expect(JSON.parse(result.content)).not.toHaveProperty('hooks');
+  });
 });
 
-describe('generateAgents (amazon-q) — embedded permissions', () => {
+describe('emitAmazonQAgentSettings (amazon-q) — embedded permissions', () => {
   function makeAgent(name: string, tools: string[] = []): CanonicalFiles['agents'][number] {
     return {
       source: `/proj/.agentsmesh/agents/${name}.md`,
@@ -432,7 +455,7 @@ describe('generateAgents (amazon-q) — embedded permissions', () => {
       agents: [makeAgent('coder', ['Read'])],
       permissions: { allow: ['Bash(git:*)'], deny: [], ask: [] },
     });
-    const [result] = generateAgents(canonical);
+    const [result] = emitAgentFiles(canonical);
     const parsed = JSON.parse(result.content) as Record<string, unknown>;
     const allowedTools = parsed.allowedTools as string[];
     // Both agent tools and canonical allow list should be present, deduplicated
@@ -446,7 +469,7 @@ describe('generateAgents (amazon-q) — embedded permissions', () => {
       agents: [makeAgent('coder', ['Read', 'Bash(git:*)'])],
       permissions: { allow: ['Bash(git:*)'], deny: [], ask: [] },
     });
-    const [result] = generateAgents(canonical);
+    const [result] = emitAgentFiles(canonical);
     const parsed = JSON.parse(result.content) as Record<string, unknown>;
     const allowedTools = parsed.allowedTools as string[];
     expect(allowedTools.filter((t) => t === 'Bash(git:*)')).toHaveLength(1);
@@ -457,7 +480,7 @@ describe('generateAgents (amazon-q) — embedded permissions', () => {
       agents: [makeAgent('coder')],
       permissions: null,
     });
-    const [result] = generateAgents(canonical);
+    const [result] = emitAgentFiles(canonical);
     const parsed = JSON.parse(result.content) as Record<string, unknown>;
     expect(parsed).not.toHaveProperty('allowedTools');
   });
@@ -467,10 +490,21 @@ describe('generateAgents (amazon-q) — embedded permissions', () => {
       agents: [makeAgent('coder')],
       permissions: { allow: ['Bash(git:*)'], deny: [], ask: [] },
     });
-    const [result] = generateAgents(canonical);
+    const [result] = emitAgentFiles(canonical);
     const parsed = JSON.parse(result.content) as Record<string, unknown>;
     const allowedTools = parsed.allowedTools as string[];
     expect(allowedTools).toEqual(['Bash(git:*)']);
+  });
+
+  it('leaves canonical permissions.allow out of the base file generateAgents writes', () => {
+    const canonical = makeCanonical({
+      agents: [makeAgent('coder', ['Read'])],
+      permissions: { allow: ['Bash(git:*)'], deny: [], ask: [] },
+    });
+    const [result] = generateAgents(canonical);
+    expect((JSON.parse(result.content) as { allowedTools: string[] }).allowedTools).toEqual([
+      'Read',
+    ]);
   });
 });
 

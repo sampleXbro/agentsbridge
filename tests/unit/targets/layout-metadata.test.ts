@@ -272,9 +272,9 @@ describe('target layout metadata', () => {
       }),
     ).toBe('.continue/rules/typescript.md');
     expect(layout!.paths.commandPath('commit', {} as never)).toBe('.continue/prompts/commit.md');
-    expect(layout!.paths.agentPath('my-agent', {} as never)).toBe(
-      '.continue/skills/am-agent-my-agent/SKILL.md',
-    );
+    // Continue reads `.continue/agents/<name>.md` at both scopes (agentFiles.ts),
+    // so agents are native rather than projected as skills.
+    expect(layout!.paths.agentPath('my-agent', {} as never)).toBe('.continue/agents/my-agent.md');
   });
 
   it('lists Continue global detection paths', () => {
@@ -283,6 +283,7 @@ describe('target layout metadata', () => {
       '.continue/prompts',
       '.continue/mcpServers',
       '.continue/skills',
+      '.continue/agents',
     ]);
   });
 

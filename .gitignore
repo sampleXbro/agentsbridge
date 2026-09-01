@@ -116,4 +116,5 @@ settings.local.json
 /.kiroignore
 /.qwenignore
 /.rooignore
+/.warpindexingignore
 /.aider.conf.yml

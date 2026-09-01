@@ -3,6 +3,8 @@ import {
   WARP_ROOT_FILE,
   WARP_SKILLS_DIR,
   WARP_MCP_FILE,
+  WARP_IGNORE_FILE,
+  WARP_GLOBAL_ROOT_FILE,
   WARP_GLOBAL_SKILLS_DIR,
   WARP_GLOBAL_MCP_FILE,
 } from '../../../targets/warp/constants.js';
@@ -18,6 +20,7 @@ export async function buildWarpImportPaths(
     for (const absPath of await listFiles(projectRoot, WARP_GLOBAL_SKILLS_DIR)) {
       addSkillLikeMapping(refs, rel(projectRoot, absPath), WARP_GLOBAL_SKILLS_DIR);
     }
+    refs.set(WARP_GLOBAL_ROOT_FILE, `${AB_RULES}/_root.md`);
     refs.set(WARP_GLOBAL_MCP_FILE, '.agentsmesh/mcp.json');
     return;
   }
@@ -27,4 +30,5 @@ export async function buildWarpImportPaths(
     addSkillLikeMapping(refs, rel(projectRoot, absPath), WARP_SKILLS_DIR);
   }
   refs.set(WARP_MCP_FILE, '.agentsmesh/mcp.json');
+  refs.set(WARP_IGNORE_FILE, '.agentsmesh/ignore');
 }

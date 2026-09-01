@@ -1,7 +1,7 @@
 # Auto-generated. DO NOT EDIT MANUALLY.
 # Tracks the state of all config files for team conflict resolution.
 
-generated_at: 2026-08-30T16:20:03.104Z
+generated_at: 2026-09-01T11:39:23.638Z
 generated_by: serhii
 lib_version: 0.31.0
 checksums:
@@ -461,16 +461,16 @@ outputs:
   .windsurf/skills/am-agent-code-security-auditor/SKILL.md: sha256:4b8f681ef81569ace673901069e36ab344e8e5b00c7e23072db8d74f2988f26d
   .windsurf/skills/am-agent-code-standards-enforcer/SKILL.md: sha256:cc71353653046c7efcedae0a3b44c30b62aa4885021b6f1d77a65152e0fe7642
   .windsurf/skills/am-agent-typescript-developer/SKILL.md: sha256:f0357a99257d60ca4dde253568b0b16782bc160a1be67a8e4231c2ee18f9c4bf
-  .continue/skills/am-agent-code-reviewer/SKILL.md: sha256:632c097fe5729b5d167a665dbad360aff8bde179f82b50940d1be9bfe028d234
-  .continue/skills/am-agent-test-runner/SKILL.md: sha256:9def447f37a28ea142f8c0d1c2d9400a2ff09a6e3fc3e84e4060a16d67fb6aae
-  .continue/skills/am-agent-security-auditor/SKILL.md: sha256:0d706c3206a7b2de1b7f0eba7f5392e8b28b6a2414afbfa0ef77c49a494cdafb
-  .continue/skills/am-agent-test-engineer/SKILL.md: sha256:214f1a731919e61701bdd849f5d042ffa517703529eb078f3a7b6e8ceb89a23d
-  .continue/skills/am-agent-code-debugger/SKILL.md: sha256:18b6e6f75b7dc60effc721f32546e666cc2817ccda2211d27f182ce1ec215726
-  .continue/skills/am-agent-code-documenter/SKILL.md: sha256:6e6d87426238ea28dcafd9af1b1910dec803f6a698acc201abce712cc1e80bbb
-  .continue/skills/am-agent-code-refactor/SKILL.md: sha256:7120fd987885ce1ffdd3cc92aeaddadc8108b4da3e35efa3a70ef7324ecb7299
-  .continue/skills/am-agent-code-security-auditor/SKILL.md: sha256:4b8f681ef81569ace673901069e36ab344e8e5b00c7e23072db8d74f2988f26d
-  .continue/skills/am-agent-code-standards-enforcer/SKILL.md: sha256:cc71353653046c7efcedae0a3b44c30b62aa4885021b6f1d77a65152e0fe7642
-  .continue/skills/am-agent-typescript-developer/SKILL.md: sha256:f0357a99257d60ca4dde253568b0b16782bc160a1be67a8e4231c2ee18f9c4bf
+  .continue/agents/code-reviewer.md: sha256:e23ee91c12ab6c2a2f7397d94f0d88fbaa498ccd70f3d79b9b634f32432cc6db
+  .continue/agents/test-runner.md: sha256:2e462728252439a8e96f796714655ef5c0ba8def4abc3192dfe46498f1dbd590
+  .continue/agents/security-auditor.md: sha256:204dfb61d6823148f18c4a57aeba0eabde8aac5dab8234a4e3d5297934e80500
+  .continue/agents/test-engineer.md: sha256:35b16ee095d8d0ec3281cac102ced2302d564e958cdcf2cac069b5eb26715389
+  .continue/agents/code-debugger.md: sha256:709ae1f93183cb9e77f557479d414718b7e11406be7168b2f6101027f5a7e921
+  .continue/agents/code-documenter.md: sha256:dd604b2072eb07a3632512f5c1af98d8e34d612e2cd785f6756c84312f6c6cf1
+  .continue/agents/code-refactor.md: sha256:ea1b97c36b94c917eaf52b4b6fd1f6d49d57f76f0bb2a790584faba83ca083f6
+  .continue/agents/code-security-auditor.md: sha256:87d3dab49818881eb46c6c65aaee1f940533a3b55bc0673bf25bb7e03b7c342c
+  .continue/agents/code-standards-enforcer.md: sha256:9a76ec6a17b570bede4bbb00c627ebf269f2cb4a7cbb7401b1399dfb989e2902
+  .continue/agents/typescript-developer.md: sha256:6401bbb16e583e36e4b76ac2a20df254c11e3c3d9f7e881d5342065322cfcb52
   .junie/agents/code-reviewer.md: sha256:4a7776df7492743cecaaf6ef07f2b35cd37db5ded71732eff309f5d6029ea090
   .junie/agents/test-runner.md: sha256:9e297ff900ebffb67bc90d3e4aed4316fda68d8f125fa2d37e174a64e598283c
   .junie/agents/security-auditor.md: sha256:204dfb61d6823148f18c4a57aeba0eabde8aac5dab8234a4e3d5297934e80500
@@ -542,16 +542,6 @@ outputs:
   .aider/skills/am-agent-code-security-auditor/SKILL.md: sha256:4b8f681ef81569ace673901069e36ab344e8e5b00c7e23072db8d74f2988f26d
   .aider/skills/am-agent-code-standards-enforcer/SKILL.md: sha256:cc71353653046c7efcedae0a3b44c30b62aa4885021b6f1d77a65152e0fe7642
   .aider/skills/am-agent-typescript-developer/SKILL.md: sha256:f0357a99257d60ca4dde253568b0b16782bc160a1be67a8e4231c2ee18f9c4bf
-  .amazonq/cli-agents/code-reviewer.json: sha256:84948c14ab92a2a9fb301868dfbc10ea7706fcab4afce919dc463756185b7728
-  .amazonq/cli-agents/test-runner.json: sha256:b11d5a56a4b38900ebe91082b1dd9f5f4e90a6e3597fde72ee05040c4a337acb
-  .amazonq/cli-agents/security-auditor.json: sha256:c1aa71246bcc3df2e4eef587d71bda889a841abf7b74d9a945aec2b817942a0c
-  .amazonq/cli-agents/test-engineer.json: sha256:2b94516603f4af2c94cf8591ce5fb3ee462481623f214c60e29c5f5100474ac0
-  .amazonq/cli-agents/code-debugger.json: sha256:a800c3e6cb8cab7037f09de72fde44462165a635baf7647be96bfb4abd00c03a
-  .amazonq/cli-agents/code-documenter.json: sha256:9aa4d47b887ef6f4364978f7857c601712cc4820bdf4dcf3b3f9d16da0d60d08
-  .amazonq/cli-agents/code-refactor.json: sha256:219c75e0dc9e20eca9288c0ee2889e12b6632463113b2e8f7d1f45c9970964ad
-  .amazonq/cli-agents/code-security-auditor.json: sha256:5e64ab28b2b8a5c988e6b30aa971f2c47df2da0069f662382c2f392ce6ff938f
-  .amazonq/cli-agents/code-standards-enforcer.json: sha256:a3eeeece6bc3343b824a3a9eb1558f9defa428c2a964677673c0968ba271a6a4
-  .amazonq/cli-agents/typescript-developer.json: sha256:4666261e5235d9c0656021dc8a4762850a06fb20f342ac3d4df6449286172c80
   .augment/agents/code-reviewer.md: sha256:d29ace4ad28fe3d17410e8374853c1d50955f768435265daf228a7277d92640a
   .augment/agents/test-runner.md: sha256:d1bf9e8064c156c06b6e90d578211e720f94169287a0d4ebbccabd4483de025b
   .augment/agents/security-auditor.md: sha256:204dfb61d6823148f18c4a57aeba0eabde8aac5dab8234a4e3d5297934e80500
@@ -3891,6 +3881,7 @@ outputs:
   .cline/hooks/sessionstart-0.sh: sha256:7f166713a9d610e8148cc7b49db0c15800bf4a04176ae22b51bc859b74c000ae
   .codex/hooks.json: sha256:8f3723a1c42fe368e08a180e8cd585c1d24caa3a8e8979f2f000a0af7f47538f
   .windsurf/hooks.json: sha256:8197b0ad3a43f39db3b0443e91e1f68551fadf408f3b386dfec4c42ca1b10f3b
+  .continue/settings.json: sha256:cf1c0f0b8bc28c97e6d9bc25bccbba3ed398ee319bc8a7af162da099ae8f6bb7
   .agents/hooks.json: sha256:b01f7c24f7b1be39a41768ce84f124c39831e8f1a4c6436814845923f22d3888
   .kiro/hooks/pre-tool-use-1.json: sha256:eb7a57379357419113f3496ecf2fb9cb3c535984ccad94ab6bdf5cb786cc4c2f
   .kiro/hooks/pre-tool-use-2.json: sha256:4ec3b4f5d26437726f9f7bfc2e912b06f6d24a4504d368838ddcb375b10dd9ee
@@ -3913,6 +3904,7 @@ outputs:
   .kiroignore: sha256:53ad60cb2c945a41619fbb5dd0d43559c8461e4cb35e30f4d98b901c73766e12
   .kilocodeignore: sha256:53ad60cb2c945a41619fbb5dd0d43559c8461e4cb35e30f4d98b901c73766e12
   .gooseignore: sha256:53ad60cb2c945a41619fbb5dd0d43559c8461e4cb35e30f4d98b901c73766e12
+  .warpindexingignore: sha256:53ad60cb2c945a41619fbb5dd0d43559c8461e4cb35e30f4d98b901c73766e12
   .aiderignore: sha256:53ad60cb2c945a41619fbb5dd0d43559c8461e4cb35e30f4d98b901c73766e12
   .augmentignore: sha256:53ad60cb2c945a41619fbb5dd0d43559c8461e4cb35e30f4d98b901c73766e12
   .crushignore: sha256:53ad60cb2c945a41619fbb5dd0d43559c8461e4cb35e30f4d98b901c73766e12
@@ -3922,4 +3914,14 @@ outputs:
   opencode.json: sha256:e23debb337bd6883a85f1a6cc4d4c4c65f56be0f75ca6d58c25621c87294f2ed
   .amp/settings.json: sha256:6e4cf0d284153cac726c6018d58bca6195c552d052c6af0f774f22e1e07e8a8a
   .zed/settings.json: sha256:a7b798260264e44f511c395e7728d8f25e0a9330215b351f2ffc999aaaa82ac2
+  .amazonq/cli-agents/code-reviewer.json: sha256:ae8e4909b389d9116559e343f570ee9c54e7406967fbb5808c5a88d466a8f10d
+  .amazonq/cli-agents/test-runner.json: sha256:8ffd3780c2261c51a9fccd40115bf8b3769b9c827fcf2bbb9229a87ce00d20c3
+  .amazonq/cli-agents/security-auditor.json: sha256:b33bcf4d20484b5ee9ae4f8aaf2efc7a725d3b32d1242a47afcd7349fbfa332a
+  .amazonq/cli-agents/test-engineer.json: sha256:4b21cb88ea38b02788ffcfe14f4bef469be3a259170c866379c377dbf7c2a45d
+  .amazonq/cli-agents/code-debugger.json: sha256:dca10cafb9ba3459adfce39f09e39a7f313a6dd47a114e876dc06ea17a926866
+  .amazonq/cli-agents/code-documenter.json: sha256:b62f17174c17a47701007b5da4f106df0151f6d69763130519f5abbeed9861ea
+  .amazonq/cli-agents/code-refactor.json: sha256:4f04fb749df20594974e2367e6f2d9fc98dea96d60549e4ccb6a193e62d9f014
+  .amazonq/cli-agents/code-security-auditor.json: sha256:f5552ca87de980151dff6ab93afa85ebac9db81319c545b8eb1bc5fbf0afebb9
+  .amazonq/cli-agents/code-standards-enforcer.json: sha256:e5ae9db5b72a6770e8a851e42b07d8136e84cbf3b2c7b6a0970d6905e09b1644
+  .amazonq/cli-agents/typescript-developer.json: sha256:b3170fdca6374894b039ec7ca5c752fbbd0ccdf99b2b7523a1fa1f58f0a846f6
   .augment/settings.json: sha256:85a773baa7182417d67807050b22339fd3619a61a53e20ad7c9f5a695e7d6d7f

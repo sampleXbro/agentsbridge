@@ -687,7 +687,7 @@ describe('generate: full canonical → all agents produce all supported outputs'
     ]);
   });
 
-  it('Continue generates rules + prompt files + skills + mcp + ignore', async () => {
+  it('Continue generates rules + prompts + agents + hooks + skills + mcp + ignore', async () => {
     const results = await generate({
       config: allFeaturesConfig(['continue']),
       canonical,
@@ -695,11 +695,12 @@ describe('generate: full canonical → all agents produce all supported outputs'
     });
     const paths = results.map((result) => result.path).sort();
     expect(paths).toEqual([
+      '.continue/agents/reviewer.md',
       '.continue/mcpServers/agentsmesh.json',
       '.continue/prompts/review.md',
       '.continue/rules/general.md',
       '.continue/rules/typescript.md',
-      '.continue/skills/am-agent-reviewer/SKILL.md',
+      '.continue/settings.json',
       '.continue/skills/qa/SKILL.md',
       '.continueignore',
     ]);
@@ -787,11 +788,12 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.codex/config.toml',
       '.codex/hooks.json',
       '.codex/rules/agentsmesh-permissions.rules',
+      '.continue/agents/reviewer.md',
       '.continue/mcpServers/agentsmesh.json',
       '.continue/prompts/review.md',
       '.continue/rules/general.md',
       '.continue/rules/typescript.md',
-      '.continue/skills/am-agent-reviewer/SKILL.md',
+      '.continue/settings.json',
       '.continue/skills/qa/SKILL.md',
       '.continueignore',
       '.cursor/AGENTS.md',

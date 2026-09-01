@@ -1,11 +1,12 @@
 import { basename } from 'node:path';
 import { addSimpleFileMapping, addSkillLikeMapping, listFiles, rel } from '../import-map-shared.js';
 import {
+  CONTINUE_AGENTS_DIR,
   CONTINUE_ROOT_RULE,
   CONTINUE_ROOT_RULE_LEGACY,
 } from '../../../targets/continue/constants.js';
 import type { TargetLayoutScope } from '../../../targets/catalog/target-descriptor.js';
-import { AB_COMMANDS, AB_RULES } from './constants.js';
+import { AB_AGENTS, AB_COMMANDS, AB_RULES } from './constants.js';
 
 export async function buildContinueImportPaths(
   refs: Map<string, string>,
@@ -21,6 +22,9 @@ export async function buildContinueImportPaths(
   }
   for (const absPath of await listFiles(projectRoot, '.continue/prompts')) {
     refs.set(rel(projectRoot, absPath), `${AB_COMMANDS}/${basename(absPath, '.md')}.md`);
+  }
+  for (const absPath of await listFiles(projectRoot, CONTINUE_AGENTS_DIR)) {
+    refs.set(rel(projectRoot, absPath), `${AB_AGENTS}/${basename(absPath, '.md')}.md`);
   }
   for (const absPath of await listFiles(projectRoot, '.continue/skills')) {
     addSkillLikeMapping(refs, rel(projectRoot, absPath), '.continue/skills');

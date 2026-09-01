@@ -9,6 +9,7 @@ import {
   WARP_SKILLS_DIR,
   WARP_GLOBAL_SKILLS_DIR,
   WARP_GLOBAL_MCP_FILE,
+  WARP_GLOBAL_SETTINGS_FILE,
 } from '../../../../src/targets/warp/constants.js';
 
 describe('warp global layout', () => {
@@ -28,9 +29,21 @@ describe('warp global layout', () => {
   });
 
   it('globalSupport.capabilities differs from project capabilities', () => {
-    expect(descriptor.globalSupport!.capabilities.rules).toBe('none');
+    expect(descriptor.globalSupport!.capabilities.ignore).toBe('partial');
+    expect(descriptor.globalSupport!.capabilities.permissions).toBe('native');
     expect(descriptor.globalSupport!.capabilities.skills).toBe('native');
-    expect(descriptor.capabilities.rules).toBe('native');
+    expect(descriptor.capabilities.ignore).toBe('native');
+    expect(descriptor.capabilities.permissions).toBe('partial');
+  });
+
+  it('uses the documented macOS settings.toml path for global permissions', () => {
+    expect(WARP_GLOBAL_SETTINGS_FILE).toBe('.warp/settings.toml');
+  });
+
+  it('keeps settings.toml out of managed outputs so stale cleanup never deletes it', () => {
+    expect(descriptor.globalSupport!.layout.managedOutputs!.files).not.toContain(
+      WARP_GLOBAL_SETTINGS_FILE,
+    );
   });
 
   it('globalSupport.capabilities has mcp native (project also native)', () => {
@@ -57,21 +70,12 @@ describe('warp global layout', () => {
   });
 
   it('does not declare sharedArtifacts', () => {
+    // `~/.agents/AGENTS.md` sits under the `.agents/` prefix codex-cli shares,
+    // but codex-cli owns `.agents/skills/` only, and no other target writes
+    // `.agents/AGENTS.md`. The reference rewriter therefore already falls back
+    // to warp's own artifact map; claiming ownership of a leaf file would
+    // hijack that map from any future target emitting there.
     expect(descriptor).not.toHaveProperty('sharedArtifacts');
-  });
-
-  it('global rulePath returns null because rules capability is "none"', () => {
-    // Warp's global rules are Warp Drive UI-managed; the resolver must NOT
-    // fabricate a path that callers would treat as a generation target.
-    const rulePath = descriptor.globalSupport!.layout.paths.rulePath('typescript', {
-      source: 'rules/typescript.md',
-      root: false,
-      targets: [],
-      description: 'ts',
-      globs: [],
-      body: '',
-    });
-    expect(rulePath).toBeNull();
   });
 });
 

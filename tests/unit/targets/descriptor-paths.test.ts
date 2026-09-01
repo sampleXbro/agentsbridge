@@ -223,9 +223,9 @@ describe('descriptor.project.paths.agentPath', () => {
     );
   });
 
-  it('continue: returns projected agent skill path', () => {
+  it('continue: returns .continue/agents/{name}.md', () => {
     expect(continueTarget.project.paths.agentPath('reviewer', config)).toBe(
-      '.continue/skills/am-agent-reviewer/SKILL.md',
+      '.continue/agents/reviewer.md',
     );
   });
 

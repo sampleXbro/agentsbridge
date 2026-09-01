@@ -87,7 +87,9 @@ describe('lintRules (amazon-q)', () => {
     });
 
     const globalResult = lintRules(canonical, '/proj', [], { scope: 'global' });
-    expect(globalResult).toHaveLength(0);
+    expect(
+      globalResult.filter((d) => d.file === '/proj/.agentsmesh/rules/unmatched.md'),
+    ).toHaveLength(0);
   });
 
   it('checks glob matches in project scope', () => {

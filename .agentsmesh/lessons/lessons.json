@@ -1806,6 +1806,20 @@
         "t-kw-45ee2cca"
       ]
     },
+    "generation-collision-source-maps-a-generator-that-merges-into": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "Conditional key assignment made grant-then-revoke a no-op that did not even report drift.",
+      "rule": "A generator that merges into a user-owned config file must rewrite every key it owns on EVERY emit (empty list or key removal), or revoking a canonical entry never propagates; guard the fully-empty case by skipping the emit only when the file holds none of those owned keys yet, so a freshly scaffolded empty permissions.yaml never overrides the tool's own defaults.",
+      "status": "active",
+      "topics": [
+        "generation-collision-source-maps"
+      ],
+      "triggers": [
+        "t-glob-fb5c7dc9",
+        "t-kw-ae28d58d"
+      ]
+    },
     "generation-collision-source-maps-adding-a-parameter-to-a": {
       "createdAt": "2026-06-13",
       "evidence": [
@@ -5624,6 +5638,20 @@
         "t-glob-71d466f5"
       ]
     },
+    "reference-rewriting-when-a-target-s-generate": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "Amazon Q deniedPaths cannot express `!re-inclusion` or comments; a wholesale writeFileAtomic on .agentsmesh/ignore destroyed them for claude-code/aider/cursor too.",
+      "rule": "When a target's generate projection is lossy (drops comments, negations, or per-scope structure), the importer MUST merge into the existing canonical file instead of overwriting it — preserve every line the target cannot represent, or the next import silently deletes canonical data every other target still reads.",
+      "status": "active",
+      "topics": [
+        "reference-rewriting"
+      ],
+      "triggers": [
+        "t-glob-052cbaea",
+        "t-kw-8791c1d5"
+      ]
+    },
     "release-changesets-during-release-prep-run-pnpm": {
       "createdAt": "2026-08-30",
       "evidence": [
@@ -6215,6 +6243,19 @@
       ],
       "triggers": []
     },
+    "target-capabilities-an-amazon-q-custom-agent": {
+      "createdAt": "2026-08-30",
+      "evidence": [],
+      "rationale": "crates/chat-cli/src/cli/agent/mod.rs: `Agent::default()` injects RULES_PATTERN, but `#[serde(default)]` on the `resources` field means a parsed custom agent starts empty.",
+      "rule": "An Amazon Q custom agent JSON deserializes `resources` with serde default (empty), so it does NOT inherit the built-in default agent's `.amazonq/rules/**/*.md` glob — always write the rules glob into every generated agent JSON or the generated rules are never loaded for anyone who selects that agent.",
+      "status": "active",
+      "topics": [
+        "target-capabilities"
+      ],
+      "triggers": [
+        "t-glob-21a3924d"
+      ]
+    },
     "target-capabilities-copilot-has-no-global-copilot": {
       "createdAt": "2026-06-24",
       "evidence": [
@@ -6257,6 +6298,20 @@
       "triggers": [
         "t-glob-87083445",
         "t-kw-89bf9a2d"
+      ]
+    },
+    "target-capabilities-for-amazon-q-global-scope": {
+      "createdAt": "2026-08-30",
+      "evidence": [],
+      "rationale": "paths.rs `mod global` has no rules constant, so `.aws/amazonq/rules/*.md` was dead until an agent JSON pointed at it; the agent `resources` array is the mechanism that actually works.",
+      "rule": "For amazon-q global scope, do not treat \"Q CLI has no global rules directory\" as \"global rules are impossible\": route global rules and additionalRules through the generated agent JSON `resources` array as `file://~/.aws/amazonq/rules/**/*.md` (collect_resources runs shellexpand, so `~` expands), and declare both capabilities `embedded`, not `none` or `native`.",
+      "status": "active",
+      "topics": [
+        "target-capabilities"
+      ],
+      "triggers": [
+        "t-glob-21a3924d",
+        "t-kw-875469bd"
       ]
     },
     "target-capabilities-for-kilo-code-the-new": {
@@ -6303,6 +6358,20 @@
         "t-glob-b80b011c"
       ]
     },
+    "target-capabilities-when-a-target-s-permission": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "Escaping silently disabled a user's own deny rule on the documented import --global -> generate --global path.",
+      "rule": "When a target's permission surface stores REGEX patterns (Warp `[agents.profiles]` command lists), never regex-escape the canonical `Bash(<payload>)` payload on generate — an imported user regex like `rm -rf .*` comes back as `rm \\-rf \\.\\*` and stops matching. Pass the payload through verbatim, anchor allowlist entries (`^…$`) and leave denylist entries unanchored, so each list takes the narrower reading of the undocumented match semantics.",
+      "status": "active",
+      "topics": [
+        "target-capabilities"
+      ],
+      "triggers": [
+        "t-glob-c36b4923",
+        "t-kw-6b0a8413"
+      ]
+    },
     "target-capabilities-when-auditing-the-antigravity-target": {
       "createdAt": "2026-06-23",
       "evidence": [],
@@ -6330,6 +6399,20 @@
       "triggers": [
         "t-glob-ab07d638",
         "t-kw-8087e0cf"
+      ]
+    },
+    "target-capabilities-when-one-generated-artifact-carries": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "config.features filters which generators run, never which keys a shared artifact contains.",
+      "rule": "When one generated artifact carries several canonical features (e.g. an Amazon Q agent JSON holding agents+hooks+permissions+ignore), gate every embedded key on the enabled feature set inside the descriptor's `emitScopedSettings` hook — feature generators receive only `{capability, scope}`, so a builder that reads `canonical.ignore`/`hooks`/`permissions` directly leaks features the user disabled in `agentsmesh.yaml`.",
+      "status": "active",
+      "topics": [
+        "target-capabilities"
+      ],
+      "triggers": [
+        "t-glob-17bd0955",
+        "t-kw-7ebb8695"
       ]
     },
     "target-capability-audits-a-test-fixture-placed-under": {
@@ -6373,10 +6456,7 @@
       "topics": [
         "target-capability-audits"
       ],
-      "triggers": [
-        "t-glob-eac2566f",
-        "t-kw-9479ae91"
-      ]
+      "triggers": []
     },
     "target-capability-audits-augment-code-toolpermissions-is-native": {
       "createdAt": "2026-08-30",
@@ -6421,6 +6501,51 @@
       "triggers": [
         "t-glob-08570b7a",
         "t-kw-d47cffbf"
+      ]
+    },
+    "target-capability-audits-continue-agent-files-are-continue": {
+      "createdAt": "2026-09-01",
+      "evidence": [
+        "lesson:target-capability-audits-continue-hooks-are-native-at"
+      ],
+      "rationale": "The prior lesson claimed a project-.md / global-.yaml split; reading ConfigHandler.getLocalProfiles, getDotContinueSubDirs and AgentFileService shows both scopes behave identically.",
+      "rule": "Continue agent files are `.continue/agents/<name>.md` at BOTH scopes — the format does not vary by scope. `getDotContinueSubDirs` adds `~/.continue/<subdir>` to the same scan under `includeGlobal`, so the `fileExtType: 'yaml'` agents scan in `ConfigHandler.getLocalProfiles` treats YAML there as an *assistant profile* at every scope; markdown agent files are loaded by explicit path via `AgentFileService.getAgentFile` -> `path.resolve`, which is location-independent. Never emit, import, or stale-delete `.continue/agents/*.yaml`.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-61ea5981"
+      ]
+    },
+    "target-capability-audits-continue-hooks-are-native-at": {
+      "createdAt": "2026-08-30",
+      "evidence": [
+        "lesson:target-capability-audits-for-the-continue-target-permissions"
+      ],
+      "rationale": "A prior lesson declared Continue hooks unsupported based on config.yaml's schema only; the CLI reads hooks from settings.json, so the earlier audit under-reported two capabilities.",
+      "rule": "Continue hooks ARE native at both scopes: they live under the `hooks` key of `.continue/settings.json` / `~/.continue/settings.json` (Claude-Code-compatible shape, 17 events), NOT in config.yaml — verify extensions/cli/src/hooks/hookConfig.ts before concluding a Continue feature is unsupported from config.yaml alone. Continue agents are native too but the format differs by scope: `.continue/agents/<name>.md` (markdown agent file, `tools` must be a comma STRING) at project, `.continue/agents/<name>.yaml` (assistant profile) at global.",
+      "status": "superseded",
+      "supersededBy": "target-capability-audits-continue-agent-files-are-continue",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-61ea5981"
+      ]
+    },
+    "target-capability-audits-continue-hooks-are-native-at-2": {
+      "createdAt": "2026-09-01",
+      "evidence": [
+        "lesson:target-capability-audits-continue-hooks-are-native-at"
+      ],
+      "rule": "Continue hooks are native at both scopes: they live under the `hooks` key of `.continue/settings.json` / `~/.continue/settings.json` in the Claude-Code-compatible shape (17 events), NOT in config.yaml — check extensions/cli/src/hooks/hookConfig.ts before concluding a Continue feature is unsupported from config.yaml alone.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-f6c50a2d"
       ]
     },
     "target-capability-audits-cursor-ide-permissions-are-file": {
@@ -6573,6 +6698,20 @@
         "t-cmd-78625976"
       ]
     },
+    "target-capability-audits-never-list-a-native-directory": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "Continue's `.continue/agents` held user assistant profiles that generate deleted.",
+      "rule": "Never list a native directory in `TargetLayout.managedOutputs.dirs` when the tool also stores user-authored artifacts there: `cleanupStaleGeneratedOutputs` deletes every file in a managed dir the current generate run did not emit, so hand-written config is destroyed outright. Prefer losing stale-file eviction over deleting user files.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-a9a4fad0",
+        "t-kw-963ac4f6"
+      ]
+    },
     "target-capability-audits-pi-pi-agent-natively-supports": {
       "createdAt": "2026-06-24",
       "evidence": [
@@ -6633,6 +6772,22 @@
         "t-glob-9f0a5990",
         "t-kw-c6d64f2b",
         "t-kw-797b277a"
+      ]
+    },
+    "target-capability-audits-when-a-target-declares-a-2": {
+      "createdAt": "2026-08-30",
+      "evidence": [
+        "src/targets/warp/layout.ts"
+      ],
+      "rationale": "Capability levels are metadata; only rewriteGeneratedPath (or a scope-aware generator) actually suppresses an output at global scope.",
+      "rule": "When a target declares a global capability as `none` or `partial`, verify `globalSupport.layout.rewriteGeneratedPath` returns null for that feature's project path — the generate engine never gates generators on capability level, so a project-shaped output silently lands at the home root (warp emitted a bare ~/AGENTS.md while globalCapabilities.rules was 'none').",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-9f0a5990",
+        "t-kw-706233bb"
       ]
     },
     "target-capability-audits-when-a-target-gains-a": {
@@ -8882,6 +9037,10 @@
       "kind": "file_glob",
       "pattern": ".agentsmesh/lessons/lessons.json"
     },
+    "t-glob-052cbaea": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/import*.ts"
+    },
     "t-glob-0571e0f3": {
       "kind": "file_glob",
       "pattern": "src/lessons/telemetry.ts"
@@ -9021,6 +9180,10 @@
     "t-glob-20330f9b": {
       "kind": "file_glob",
       "pattern": "scripts/flake-check-watch.ts"
+    },
+    "t-glob-21a3924d": {
+      "kind": "file_glob",
+      "pattern": "src/targets/amazon-q/**"
     },
     "t-glob-257fb095": {
       "kind": "file_glob",
@@ -9229,6 +9392,10 @@
     "t-glob-6184efaf": {
       "kind": "file_glob",
       "pattern": "src/config/remote/git-remote.ts"
+    },
+    "t-glob-61ea5981": {
+      "kind": "file_glob",
+      "pattern": "src/targets/continue/**"
     },
     "t-glob-6200f5c1": {
       "kind": "file_glob",
@@ -9534,6 +9701,10 @@
       "kind": "file_glob",
       "pattern": "tests/e2e/helpers/run-cli.ts"
     },
+    "t-glob-a9a4fad0": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/layout.ts"
+    },
     "t-glob-aa152d85": {
       "kind": "file_glob",
       "pattern": "src/targets/goose/**"
@@ -9621,6 +9792,10 @@
     "t-glob-c3684e2c": {
       "kind": "file_glob",
       "pattern": "src/mcp/handlers/lessons.ts"
+    },
+    "t-glob-c36b4923": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/permissions*.ts"
     },
     "t-glob-c424af85": {
       "kind": "file_glob",
@@ -9762,10 +9937,6 @@
       "kind": "file_glob",
       "pattern": "src/lessons/seen-*.ts"
     },
-    "t-glob-eac2566f": {
-      "kind": "file_glob",
-      "pattern": "src/targets/augment-code/*.ts"
-    },
     "t-glob-eb1e5fce": {
       "kind": "file_glob",
       "pattern": "src/lessons/recurrence-gate.ts"
@@ -9794,6 +9965,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/graph-schema.ts"
     },
+    "t-glob-f6c50a2d": {
+      "kind": "file_glob",
+      "pattern": "src/targets/continue/hooks.ts"
+    },
     "t-glob-f8afe7f1": {
       "kind": "file_glob",
       "pattern": "src/targets/opencode/scoped-settings.ts"
@@ -9801,6 +9976,10 @@
     "t-glob-f9578eb1": {
       "kind": "file_glob",
       "pattern": "src/utils/filesystem/rename-retry.ts"
+    },
+    "t-glob-fb5c7dc9": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/global-permissions.ts"
     },
     "t-glob-fbe4ce70": {
       "kind": "file_glob",
@@ -10130,6 +10309,10 @@
       "kind": "keyword",
       "pattern": "fork_context"
     },
+    "t-kw-6b0a8413": {
+      "kind": "keyword",
+      "pattern": "permission regex allowlist denylist round-trip"
+    },
     "t-kw-6c171a08": {
       "kind": "keyword",
       "pattern": "redundancy diagnosis"
@@ -10145,6 +10328,10 @@
     "t-kw-6e2ad015": {
       "kind": "keyword",
       "pattern": "stranded lessons"
+    },
+    "t-kw-706233bb": {
+      "kind": "keyword",
+      "pattern": "global capability none partial scope leak"
     },
     "t-kw-719d8353": {
       "kind": "keyword",
@@ -10178,6 +10365,10 @@
       "kind": "keyword",
       "pattern": "scalar array coercion alias"
     },
+    "t-kw-7ebb8695": {
+      "kind": "keyword",
+      "pattern": "embedded feature agent json"
+    },
     "t-kw-8087e0cf": {
       "kind": "keyword",
       "pattern": "copilot hooks capability"
@@ -10197,6 +10388,14 @@
     "t-kw-8738d72d": {
       "kind": "keyword",
       "pattern": "FORCE_COLOR renderer color tests fail locally CI green"
+    },
+    "t-kw-875469bd": {
+      "kind": "keyword",
+      "pattern": "amazon-q capability"
+    },
+    "t-kw-8791c1d5": {
+      "kind": "keyword",
+      "pattern": "import canonical ignore round-trip"
     },
     "t-kw-89bf9a2d": {
       "kind": "keyword",
@@ -10238,13 +10437,13 @@
       "kind": "keyword",
       "pattern": "workflow"
     },
-    "t-kw-9479ae91": {
-      "kind": "keyword",
-      "pattern": "augment toolPermissions global CLI-only scope verify docs not code comment"
-    },
     "t-kw-9520fa61": {
       "kind": "keyword",
       "pattern": "recallLessons"
+    },
+    "t-kw-963ac4f6": {
+      "kind": "keyword",
+      "pattern": "managedOutputs"
     },
     "t-kw-969d455a": {
       "kind": "keyword",
@@ -10293,6 +10492,10 @@
     "t-kw-adbdb028": {
       "kind": "keyword",
       "pattern": "commit untracked"
+    },
+    "t-kw-ae28d58d": {
+      "kind": "keyword",
+      "pattern": "merge user config revoke owned keys"
     },
     "t-kw-ae9d9bb9": {
       "kind": "keyword",

@@ -29,7 +29,8 @@ describe('amazon-q descriptor', () => {
     // Commands are native: `/prompts` reads `.amazonq/prompts/<name>.md` (see commands.test.ts).
     expect(descriptor.capabilities.commands).toBe('native');
     expect(descriptor.capabilities.skills).toBe('none');
-    expect(descriptor.capabilities.ignore).toBe('none');
+    // No ignore file exists in Q CLI; patterns ride in agent JSON toolsSettings.
+    expect(descriptor.capabilities.ignore).toBe('embedded');
     expect(descriptor.capabilities.hooks).toBe('embedded');
     expect(descriptor.capabilities.permissions).toBe('embedded');
   });
@@ -56,12 +57,13 @@ describe('amazon-q global layout', () => {
     expect(descriptor.globalSupport).toBeDefined();
   });
 
-  it('global capabilities declare native rules and mcp', () => {
-    expect(descriptor.globalSupport?.capabilities.rules).toBe('native');
+  it('global capabilities declare embedded rules and native mcp', () => {
+    // paths.rs `mod global` has no rules constant, so `.aws/amazonq/rules/*.md` is read
+    // only via the `resources` glob in a generated agent JSON — embedded, not native.
+    expect(descriptor.globalSupport?.capabilities.rules).toBe('embedded');
+    expect(descriptor.globalSupport?.capabilities.additionalRules).toBe('embedded');
     expect(descriptor.globalSupport?.capabilities.mcp).toBe('native');
-    // Amazon Q has no global rules dir on disk (~/.aws/amazonq/ is MCP/agents only),
-    // so additionalRules stays none for global.
-    expect(descriptor.globalSupport?.capabilities.additionalRules).toBe('none');
+    expect(descriptor.globalSupport?.capabilities.ignore).toBe('embedded');
   });
 
   it('global detection paths include rules dir and mcp file', () => {

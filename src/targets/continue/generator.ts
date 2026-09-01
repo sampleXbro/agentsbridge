@@ -2,11 +2,8 @@ import { basename } from 'node:path';
 import type { CanonicalFiles } from '../../core/types.js';
 import type { GenerateFeatureContext } from '../catalog/target.interface.js';
 import { generateEmbeddedSkills } from '../import/embedded-skill.js';
-import {
-  projectedAgentSkillDirName,
-  serializeProjectedAgentSkill,
-} from '../projection/projected-agent-skill.js';
 import { serializeFrontmatter } from '../../utils/text/markdown.js';
+import { continueAgentFilePath, serializeContinueAgentFile } from './agent-file.js';
 import { serializeCommandRule } from './command-rule.js';
 import {
   CONTINUE_IGNORE,
@@ -69,10 +66,11 @@ export function generateMcp(canonical: CanonicalFiles): ContinueOutput[] {
   ];
 }
 
+/** One agent format at both scopes: Continue's markdown agent file (see agent-file.ts). */
 export function generateAgents(canonical: CanonicalFiles): ContinueOutput[] {
   return canonical.agents.map((agent) => ({
-    path: `${CONTINUE_SKILLS_DIR}/${projectedAgentSkillDirName(agent.name)}/SKILL.md`,
-    content: serializeProjectedAgentSkill(agent),
+    path: continueAgentFilePath(agent.name),
+    content: serializeContinueAgentFile(agent),
   }));
 }
 

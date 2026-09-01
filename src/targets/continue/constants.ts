@@ -8,6 +8,10 @@ export const CONTINUE_MCP_FILE = `${CONTINUE_MCP_DIR}/agentsmesh.json`;
 export const CONTINUE_ROOT_RULE = `${CONTINUE_RULES_DIR}/general.md`;
 export const CONTINUE_ROOT_RULE_LEGACY = `${CONTINUE_RULES_DIR}/_root.md`;
 export const CONTINUE_SKILLS_DIR = '.continue/skills';
+/** Agent files (`<name>.md`) at both scopes; `*.yaml` here is a user assistant profile. */
+export const CONTINUE_AGENTS_DIR = '.continue/agents';
+/** Hooks live under the `hooks` key of this file at both scopes. */
+export const CONTINUE_SETTINGS = '.continue/settings.json';
 
 export const CONTINUE_GLOBAL_AGENTS_MD = '.continue/AGENTS.md';
 export const CONTINUE_GLOBAL_CONFIG = '.continue/config.yaml';
@@ -21,6 +25,8 @@ export const CONTINUE_GLOBAL_IGNORE = '.continue/.continueignore';
 
 export const CONTINUE_CANONICAL_RULES_DIR = '.agentsmesh/rules';
 export const CONTINUE_CANONICAL_COMMANDS_DIR = '.agentsmesh/commands';
+export const CONTINUE_CANONICAL_AGENTS_DIR = '.agentsmesh/agents';
+export const CONTINUE_CANONICAL_HOOKS = '.agentsmesh/hooks.yaml';
 export const CONTINUE_CANONICAL_MCP = '.agentsmesh/mcp.json';
 export const CONTINUE_CANONICAL_PERMISSIONS = '.agentsmesh/permissions.yaml';
 export const CONTINUE_CANONICAL_IGNORE = '.agentsmesh/ignore';

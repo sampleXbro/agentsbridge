@@ -41,6 +41,9 @@ function expectNoTargetSpecificPrefixes(content: string): void {
  */
 const NATIVE_SELF_REFERENCE_PREFIX: Partial<Record<BuiltinTargetId, string>> = {
   opencode: '.opencode/',
+  // Amazon Q agent JSON carries `resources: ["file://.amazonq/rules/**/*.md"]` — a custom
+  // agent inherits no default resources, so the glob is required for its own rules to load.
+  'amazon-q': '.amazonq/',
 };
 
 function expectNoForeignTargetPrefixes(content: string, target: BuiltinTargetId): void {

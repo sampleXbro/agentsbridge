@@ -9,13 +9,16 @@
  * relative to the user home directory).
  *
  * Features:
- *   - rules: native (directory of .md files)
+ *   - rules: native in project scope (Q's default agent auto-loads the `.amazonq/rules`
+ *     glob), embedded in global scope (no global rules path exists — the agent JSON
+ *     `resources` glob is what loads `~/.aws/amazonq/rules`)
  *   - mcp: native (.amazonq/mcp.json / ~/.aws/amazonq/mcp.json)
  *   - agents: native (.amazonq/cli-agents/{name}.json)
  *   - hooks: embedded (PreToolUse/PostToolUse/UserPromptSubmit embedded in agent JSON)
  *   - permissions: embedded (allow embedded in agent JSON as allowedTools; deny/ask unsupported)
+ *   - ignore: embedded (agent JSON toolsSettings fs_read/fs_write deniedPaths)
  *   - commands: native (.amazonq/prompts/{name}.md — plain markdown, read verbatim)
- *   - skills/ignore: none
+ *   - skills: none
  */
 
 import type { TargetGenerators } from '../catalog/target.interface.js';
@@ -26,11 +29,13 @@ import {
   generateMcp,
   generateAgents,
   generateHooks,
+  generateIgnore,
   generatePermissions,
 } from './generator.js';
+import { emitAmazonQAgentSettings } from './agent-outputs.js';
 import { importFromAmazonQ } from './importer.js';
 import { lintRules } from './linter.js';
-import { lintCommands, lintHooks, lintPermissions } from './lint.js';
+import { lintCommands, lintHooks, lintIgnore, lintPermissions } from './lint.js';
 import { buildAmazonQImportPaths } from '../../core/reference/import-map-builders.js';
 import { amazonQImporterSpec } from './importer-spec.js';
 import { projectCapabilities, globalCapabilities } from './capabilities.js';
@@ -54,6 +59,7 @@ export const target: TargetGenerators = {
   generateMcp,
   generateAgents,
   generateHooks,
+  generateIgnore,
   generatePermissions,
   importFrom: importFromAmazonQ,
 };
@@ -125,9 +131,13 @@ export const descriptor = {
   lint: {
     commands: lintCommands,
     hooks: lintHooks,
+    ignore: lintIgnore,
     permissions: lintPermissions,
   },
   project,
+  // The agent JSON carries hooks, permissions and ignore as well as the agent itself,
+  // so the fully populated file is written here, where the enabled feature set is known.
+  emitScopedSettings: emitAmazonQAgentSettings,
   globalSupport: {
     capabilities: globalCapabilities,
     detectionPaths: [

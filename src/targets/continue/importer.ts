@@ -22,6 +22,7 @@ import {
   CONTINUE_CANONICAL_PERMISSIONS,
 } from './constants.js';
 import { parseContinuePermissions } from './permissions.js';
+import { importContinueHooks } from './hooks.js';
 import { descriptor } from './index.js';
 
 function readMcpServers(content: string, extension: string): Record<string, McpServer> {
@@ -122,6 +123,7 @@ export async function importFromContinue(
   results.push(...(await runDescriptorImport(descriptor, projectRoot, scope, { normalize })));
   await importEmbeddedSkills(projectRoot, CONTINUE_SKILLS_DIR, CONTINUE_TARGET, results, normalize);
   await importMcp(projectRoot, results);
+  await importContinueHooks(projectRoot, results);
   if (scope === 'global') await importPermissions(projectRoot, results);
   return results;
 }

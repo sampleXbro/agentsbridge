@@ -381,7 +381,7 @@
       "feature": "additionalRules",
       "scope": "global",
       "maxAchievable": "embedded",
-      "path": ".aws/amazonq/cli-agents/agentsmesh.json",
+      "path": ".aws/amazonq/cli-agents/code-reviewer.json",
       "ext": ".json",
       "format": "json",
       "fingerprint": {
@@ -560,7 +560,7 @@
       "feature": "ignore",
       "scope": "global",
       "maxAchievable": "embedded",
-      "path": ".aws/amazonq/cli-agents/agentsmesh.json",
+      "path": ".aws/amazonq/cli-agents/code-reviewer.json",
       "ext": ".json",
       "format": "json",
       "fingerprint": {
@@ -582,7 +582,7 @@
       "feature": "ignore",
       "scope": "project",
       "maxAchievable": "embedded",
-      "path": ".amazonq/cli-agents/agentsmesh.json",
+      "path": ".amazonq/cli-agents/code-reviewer.json",
       "ext": ".json",
       "format": "json",
       "fingerprint": {
@@ -691,19 +691,21 @@
       "target": "amazon-q",
       "feature": "rules",
       "scope": "global",
-      "maxAchievable": "native",
-      "path": ".aws/amazonq/rules/typescript.md",
-      "ext": ".md",
-      "format": "md-frontmatter",
+      "maxAchievable": "embedded",
+      "path": ".aws/amazonq/cli-agents/code-reviewer.json",
+      "ext": ".json",
+      "format": "json",
       "fingerprint": {
-        "topLevelKeys": [],
+        "topLevelKeys": [
+          "resources"
+        ],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
       "source": [
-        "https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/command-line-project-rules.html"
+        "https://github.com/aws/amazon-q-developer-cli/blob/main/crates/chat-cli/src/util/paths.rs"
       ],
-      "verifiedAt": "2026-07-17",
+      "verifiedAt": "2026-08-30",
       "verdict": "confirmed",
       "rejectionReason": null
     },
@@ -2982,16 +2984,16 @@
       "feature": "agents",
       "scope": "global",
       "maxAchievable": "native",
-      "path": ".continue/agents/reviewer.yaml",
-      "ext": ".yaml",
-      "format": "yaml",
+      "path": ".continue/agents/code-reviewer.md",
+      "ext": ".md",
+      "format": "md-frontmatter",
       "fingerprint": {
         "topLevelKeys": [],
         "requiredFrontmatter": [],
         "keyChecks": []
       },
       "source": [
-        "https://github.com/continuedev/continue/blob/main/core/config/loadLocalAssistants.ts"
+        "https://github.com/continuedev/continue/blob/main/packages/config-yaml/src/markdown/agentFiles.ts"
       ],
       "verifiedAt": "2026-08-30",
       "verdict": "confirmed",
@@ -3002,7 +3004,7 @@
       "feature": "agents",
       "scope": "project",
       "maxAchievable": "native",
-      "path": ".continue/agents/reviewer.md",
+      "path": ".continue/agents/code-reviewer.md",
       "ext": ".md",
       "format": "md-frontmatter",
       "fingerprint": {

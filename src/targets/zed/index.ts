@@ -2,127 +2,67 @@
  * Zed target descriptor.
  *
  * Generation emits:
- *   - `.rules`              — root rule + embedded additional rules
- *   - `.zed/settings.json`  — MCP servers (via emitScopedSettings)
+ *   - `.rules` / `~/.config/zed/AGENTS.md` — root rule + embedded additional rules
+ *   - `.agents/skills/`                    — skills, plus commands projected as skills
+ *   - `settings.json`                      — MCP servers, ignore globs and
+ *                                            (global only) agent tool permissions
  *
- * Import reads `.rules` and `.zed/settings.json`.
- * Zed also reads `AGENTS.md`, `CLAUDE.md`, and `.cursorrules` as
- * fallbacks but we generate to the native `.rules` path.
+ * Import reads the same set back. Zed also reads `AGENTS.md`, `CLAUDE.md` and
+ * `.cursorrules` as project fallbacks, but we generate the native `.rules` path.
  */
 
 import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
-import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
-import { generateRules, generateSkills } from './generator.js';
+import type { TargetDescriptor } from '../catalog/target-descriptor.js';
+import { generateRules, generateCommands, generateSkills } from './generator.js';
+import { project, globalLayout } from './layout.js';
 import { importFromZed } from './importer.js';
 import { lintRules } from './linter.js';
-import { lintPermissions, lintIgnore } from './lint.js';
+import { lintPermissions, lintIgnore, lintCommands } from './lint.js';
+import { emitZedScopedSettings, mergeZedSettings } from './scoped-settings.js';
+import { zedScopeExtras } from './scope-extras.js';
 import { buildZedImportPaths } from '../../core/reference/import-map-builders.js';
 import {
   ZED_TARGET,
   ZED_ROOT_FILE,
   ZED_SETTINGS_FILE,
-  ZED_SKILLS_DIR,
+  ZED_GLOBAL_ROOT_FILE,
   ZED_GLOBAL_SETTINGS_FILE,
-  ZED_GLOBAL_SKILLS_DIR,
-  ZED_CANONICAL_RULES_DIR,
 } from './constants.js';
 
 export const target: TargetGenerators = {
   name: ZED_TARGET,
   primaryRootInstructionPath: ZED_ROOT_FILE,
   generateRules,
+  generateCommands,
   generateSkills,
   importFrom: importFromZed,
-};
-
-const project: TargetLayout = {
-  rootInstructionPath: ZED_ROOT_FILE,
-  skillDir: ZED_SKILLS_DIR,
-  managedOutputs: {
-    dirs: [ZED_SKILLS_DIR],
-    files: [ZED_ROOT_FILE, ZED_SETTINGS_FILE],
-  },
-  paths: {
-    rulePath(_slug) {
-      return ZED_ROOT_FILE;
-    },
-    commandPath() {
-      return null;
-    },
-    agentPath() {
-      return null;
-    },
-  },
-};
-
-const globalLayout: TargetLayout = {
-  rootInstructionPath: undefined,
-  skillDir: ZED_GLOBAL_SKILLS_DIR,
-  managedOutputs: {
-    dirs: [ZED_GLOBAL_SKILLS_DIR],
-    files: [ZED_GLOBAL_SETTINGS_FILE],
-  },
-  rewriteGeneratedPath(path) {
-    if (path === ZED_SETTINGS_FILE) return ZED_GLOBAL_SETTINGS_FILE;
-    return path;
-  },
-  paths: {
-    rulePath() {
-      return ZED_GLOBAL_SETTINGS_FILE;
-    },
-    commandPath() {
-      return null;
-    },
-    agentPath() {
-      return null;
-    },
-  },
 };
 
 const capabilities: TargetCapabilities = {
   rules: 'native',
   additionalRules: 'embedded',
-  commands: 'none',
+  commands: 'embedded',
   agents: 'none',
   skills: 'native',
   mcp: 'native',
   hooks: 'none',
-  ignore: 'partial',
-  permissions: 'partial',
+  ignore: 'embedded',
+  // agent.tool_permissions is a user-settings field; .zed/settings.json is parsed
+  // as ProjectSettingsContent and discards it.
+  permissions: 'none',
 };
 
 const globalCapabilities: TargetCapabilities = {
-  rules: 'none',
-  additionalRules: 'none',
-  commands: 'none',
+  rules: 'native',
+  additionalRules: 'embedded',
+  commands: 'embedded',
   agents: 'none',
   skills: 'native',
   mcp: 'native',
   hooks: 'none',
-  ignore: 'partial',
-  permissions: 'partial',
+  ignore: 'embedded',
+  permissions: 'native',
 };
-
-function mergeZedSettings(existing: string | null, newContent: string): string {
-  if (existing === null) return newContent;
-  let base: Record<string, unknown>;
-  try {
-    const parsed: unknown = JSON.parse(existing);
-    base =
-      parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)
-        ? (parsed as Record<string, unknown>)
-        : {};
-  } catch {
-    base = {};
-  }
-  const incoming: unknown = JSON.parse(newContent);
-  if (incoming === null || typeof incoming !== 'object' || Array.isArray(incoming)) return existing;
-  const overlay = incoming as Record<string, unknown>;
-  if (overlay['context_servers'] !== undefined) {
-    base['context_servers'] = overlay['context_servers'];
-  }
-  return JSON.stringify(base, null, 2);
-}
 
 export const descriptor = {
   id: ZED_TARGET,
@@ -134,54 +74,33 @@ export const descriptor = {
   },
   generators: target,
   capabilities,
-  emptyImportMessage: 'No Zed config found (.rules or .zed/settings.json).',
+  emptyImportMessage:
+    'No Zed config found (.rules, .zed/settings.json, or ~/.config/zed/AGENTS.md).',
   lintRules,
   lint: {
+    commands: lintCommands,
     permissions: lintPermissions,
     ignore: lintIgnore,
   },
+  supportsConversion: { commands: true },
   project,
   globalSupport: {
     capabilities: globalCapabilities,
-    detectionPaths: [ZED_GLOBAL_SETTINGS_FILE],
+    // `.agents/skills` is deliberately absent: it is shared with codex-cli and
+    // friends, so detecting on it would claim Zed in any repo that uses it.
+    detectionPaths: [ZED_GLOBAL_ROOT_FILE, ZED_GLOBAL_SETTINGS_FILE],
     layout: globalLayout,
+    scopeExtras: zedScopeExtras,
   },
-  importer: {
-    rules: {
-      feature: 'rules',
-      mode: 'singleFile',
-      source: {
-        project: [ZED_ROOT_FILE],
-        global: [],
-      },
-      canonicalDir: ZED_CANONICAL_RULES_DIR,
-      canonicalRootFilename: '_root.md',
-      markAsRoot: true,
-    },
-  },
-  emitScopedSettings(canonical, _scope, enabledFeatures) {
-    if (!enabledFeatures.has('mcp')) return [];
-    if (!canonical.mcp || Object.keys(canonical.mcp.mcpServers).length === 0) return [];
-    const contextServers: Record<string, unknown> = {};
-    for (const [name, server] of Object.entries(canonical.mcp.mcpServers)) {
-      contextServers[name] = server;
-    }
-    return [
-      {
-        path: ZED_SETTINGS_FILE,
-        content: JSON.stringify({ context_servers: contextServers }, null, 2),
-      },
-    ];
-  },
-  mergeGeneratedOutputContent(existing, _pending, newContent, resolvedPath) {
-    if (resolvedPath === ZED_SETTINGS_FILE || resolvedPath === ZED_GLOBAL_SETTINGS_FILE) {
-      return mergeZedSettings(existing, newContent);
-    }
-    return null;
-  },
+  // No `importer.rules` spec: the `singleFile` runner copies the whole body into
+  // `_root.md`, which loses the embedded non-root rules. `rules-import.ts` splits
+  // them out first — the runner cannot express that post-processing step yet.
+  emitScopedSettings: emitZedScopedSettings,
+  mergeGeneratedOutputContent: mergeZedSettings,
   sharedArtifacts: {
     '.agents/skills/': 'consumer',
   },
   buildImportPaths: buildZedImportPaths,
   detectionPaths: [ZED_ROOT_FILE, ZED_SETTINGS_FILE],
+  conversionDefaults: { commandsToSkills: true },
 } satisfies TargetDescriptor;

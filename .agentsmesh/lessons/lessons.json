@@ -7055,6 +7055,115 @@
         "t-glob-87083445"
       ]
     },
+    "targets-a-target-declaring-additionalrules-embed": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rule": "A target declaring `additionalRules: 'embedded'` MUST call `splitEmbeddedRulesToCanonical` in its importer. The descriptor `singleFile` runner copies the whole body — managed block included — into `_root.md`, and the next `generateRules` strips that block before rebuilding it, so every non-root rule is deleted on the documented generate -> import -> generate path.",
+      "status": "active",
+      "topics": [
+        "targets"
+      ],
+      "triggers": [
+        "t-glob-8ac72756",
+        "t-kw-b8d88f99"
+      ]
+    },
+    "targets-import-into-a-shared-canonical": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rule": "Import into a SHARED canonical file (`.agentsmesh/ignore`, `.agentsmesh/permissions.yaml`) must be additive. A native config is routinely only partly populated, so treating its silence as a deletion strips entries every other target relies on. Only a target-owned generated file may be treated as authoritative on import.",
+      "status": "active",
+      "topics": [
+        "targets"
+      ],
+      "triggers": [
+        "t-glob-d9a5247c",
+        "t-kw-7b64e8ec"
+      ]
+    },
+    "targets-never-list-a-tool-s": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "Found pre-existing in zed: .zed/settings.json was in managedOutputs.files while only being emitted when canonical had MCP servers.",
+      "rule": "Never list a tool's general settings file (`.zed/settings.json`, `~/.config/zed/settings.json`, `~/.warp/settings.toml`) in `managedOutputs.files`: `cleanupStaleGeneratedOutputs` deletes every managed file a run did not emit, so one generate with no MCP servers wipes the user's whole editor config. Revoke inside the file with a key-scoped overlay instead.",
+      "status": "active",
+      "topics": [
+        "targets"
+      ],
+      "triggers": [
+        "t-glob-a9a4fad0",
+        "t-kw-2a85c9a4"
+      ]
+    },
+    "targets-when-a-target-writes-keys": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "features default to every VALID_FEATURES entry, so an unconditional claim fires for everyone.",
+      "rule": "When a target writes keys into a file the USER owns (editor settings.json, config.toml), claim a key only when that feature's canonical SOURCE exists — `canonical.mcp === null` / `canonical.permissions === null` means \"no opinion\" while an empty-but-present file means \"explicitly empty\". Claiming unconditionally makes a plain `agentsmesh generate` delete hand-written config in any repo that has no `.agentsmesh/mcp.json` or `permissions.yaml`.",
+      "status": "active",
+      "topics": [
+        "targets"
+      ],
+      "triggers": [
+        "t-glob-d0a4b7f4",
+        "t-kw-e0f0d755"
+      ]
+    },
+    "targets-when-importing-a-target-surface": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "Same failure class as the Warp allowlist escaping lesson, solved generically with a re-encode guard in zed permissions-map fromZedRule.",
+      "rule": "When importing a target surface that stores REGEXES back into canonical literals, only accept a value that re-encodes byte-for-byte through the generate mapping; otherwise a hand-written regex (`^cargo\\s+(build|test)$`) decodes to a nonsense literal and the next generate escapes it into a pattern that matches nothing, silently disabling the user's own rule.",
+      "status": "active",
+      "topics": [
+        "targets"
+      ],
+      "triggers": [
+        "t-glob-c36b4923",
+        "t-kw-5a2a3bf2"
+      ]
+    },
+    "targets-when-merging-generated-entries-into": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rule": "When merging generated entries into a list inside a user-owned file, revoke ONLY entries the importer can decode back to canonical; entries it refuses (hand-written regexes, foreign shapes) are the user's and must survive every generate. Whole-list replace on an \"owned\" key silently deletes the user's own deny rules.",
+      "status": "active",
+      "topics": [
+        "targets"
+      ],
+      "triggers": [
+        "t-glob-3f1e17dc",
+        "t-kw-3bbc3d7f"
+      ]
+    },
+    "targets-when-two-targets-emit-into": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "Zed projecting commands into codex-cli's .agents/skills/ with an extra frontmatter key would have crashed every zed+codex-cli generate run.",
+      "rule": "When two targets emit into the same shared artifact directory (e.g. `.agents/skills/`), the consumer MUST reuse the owner's serializer byte-for-byte; any content difference on the same path makes `resolveOutputCollisions` throw and breaks `generate` for anyone enabling both targets.",
+      "status": "active",
+      "topics": [
+        "targets"
+      ],
+      "triggers": [
+        "t-glob-17bd0955",
+        "t-kw-92e062be"
+      ]
+    },
+    "targets-zed-s-file-scan-exclusions": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "Verified in zed-industries/zed crates/settings_content/src/project.rs field types and settings_content.rs MergeFrom impls.",
+      "rule": "Zed's `file_scan_exclusions` is a `SplicingVec` (a written array replaces the inherited layer unless it contains `\"...\"`) while `private_files` is an `ExtendingVec` (a written array appends). Emit `\"...\"` as the last entry of file_scan_exclusions and never inside private_files, where it would be taken as a literal glob.",
+      "status": "active",
+      "topics": [
+        "targets"
+      ],
+      "triggers": [
+        "t-glob-01a25e93",
+        "t-kw-dbd98683"
+      ]
+    },
     "test-execution-do-not-run-pnpm-stashed": {
       "createdAt": "2026-06-17",
       "evidence": [
@@ -8635,6 +8744,9 @@
     "target-deepagents-cli": {
       "summary": "Verified on-disk config contract for the deepagents-cli target (paths, scopes, hooks format)."
     },
+    "targets": {
+      "summary": "Per-target descriptor, generator and importer behaviour"
+    },
     "test-execution": {
       "summary": "Reliable focused and full test command patterns."
     },
@@ -9033,6 +9145,10 @@
       "kind": "file_glob",
       "pattern": "src/targets/qwen-code/**"
     },
+    "t-glob-01a25e93": {
+      "kind": "file_glob",
+      "pattern": "src/targets/zed/**"
+    },
     "t-glob-0465888e": {
       "kind": "file_glob",
       "pattern": ".agentsmesh/lessons/lessons.json"
@@ -9260,6 +9376,10 @@
     "t-glob-3edb9d76": {
       "kind": "file_glob",
       "pattern": "tests/integration/refresh-git-source.test.ts"
+    },
+    "t-glob-3f1e17dc": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/permissions-merge.ts"
     },
     "t-glob-3f3d7245": {
       "kind": "file_glob",
@@ -9593,6 +9713,10 @@
       "kind": "file_glob",
       "pattern": "src/install/importers/target-native-commands.ts"
     },
+    "t-glob-8ac72756": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/rules-import.ts"
+    },
     "t-glob-8ade9a3e": {
       "kind": "file_glob",
       "pattern": "vitest.config.ts"
@@ -9837,6 +9961,10 @@
       "kind": "file_glob",
       "pattern": "website/src/content/docs/**/*.mdx"
     },
+    "t-glob-d0a4b7f4": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/settings-overlay.ts"
+    },
     "t-glob-d1039a1d": {
       "kind": "file_glob",
       "pattern": "src/lessons/session-window.ts"
@@ -9876,6 +10004,10 @@
     "t-glob-d8e040bc": {
       "kind": "file_glob",
       "pattern": "tests/unit/utils/filesystem/rename-retry.test.ts"
+    },
+    "t-glob-d9a5247c": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/settings-import.ts"
     },
     "t-glob-d9afca50": {
       "kind": "file_glob",
@@ -10145,6 +10277,10 @@
       "kind": "keyword",
       "pattern": "session start reset"
     },
+    "t-kw-2a85c9a4": {
+      "kind": "keyword",
+      "pattern": "managedOutputs,stale cleanup,settings.json ownership"
+    },
     "t-kw-3070d871": {
       "kind": "keyword",
       "pattern": "review agent"
@@ -10188,6 +10324,10 @@
     "t-kw-3bb206ca": {
       "kind": "keyword",
       "pattern": "clack spinner"
+    },
+    "t-kw-3bbc3d7f": {
+      "kind": "keyword",
+      "pattern": "permission merge revoke grant"
     },
     "t-kw-3bdacef0": {
       "kind": "keyword",
@@ -10293,6 +10433,10 @@
       "kind": "keyword",
       "pattern": "capability ledger provenance"
     },
+    "t-kw-5a2a3bf2": {
+      "kind": "keyword",
+      "pattern": "regex round-trip"
+    },
     "t-kw-5c8c2424": {
       "kind": "keyword",
       "pattern": "e2e round-trip stale dist rebuild importer contract passes e2e fails"
@@ -10361,6 +10505,10 @@
       "kind": "keyword",
       "pattern": "raise capability partial to native"
     },
+    "t-kw-7b64e8ec": {
+      "kind": "keyword",
+      "pattern": "import merge canonical ignore permissions"
+    },
     "t-kw-7dd5abb2": {
       "kind": "keyword",
       "pattern": "scalar array coercion alias"
@@ -10428,6 +10576,10 @@
     "t-kw-92d6db38": {
       "kind": "keyword",
       "pattern": "branch coverage threshold precommit"
+    },
+    "t-kw-92e062be": {
+      "kind": "keyword",
+      "pattern": "shared artifact,sharedArtifacts,.agents/skills,command skill projection"
     },
     "t-kw-9304db48": {
       "kind": "keyword",
@@ -10525,6 +10677,10 @@
       "kind": "keyword",
       "pattern": "seen store shape"
     },
+    "t-kw-b8d88f99": {
+      "kind": "keyword",
+      "pattern": "embedded additional rules import round trip"
+    },
     "t-kw-b975b1b2": {
       "kind": "keyword",
       "pattern": "structured output"
@@ -10601,6 +10757,10 @@
       "kind": "keyword",
       "pattern": "qwen-code global additionalRules rules directory"
     },
+    "t-kw-dbd98683": {
+      "kind": "keyword",
+      "pattern": "file_scan_exclusions"
+    },
     "t-kw-ddc1bdcc": {
       "kind": "keyword",
       "pattern": "antigravity permissions capability"
@@ -10608,6 +10768,10 @@
     "t-kw-e0aa2fb2": {
       "kind": "keyword",
       "pattern": "precommit hook"
+    },
+    "t-kw-e0f0d755": {
+      "kind": "keyword",
+      "pattern": "owned settings key revocation"
     },
     "t-kw-e2160d81": {
       "kind": "keyword",

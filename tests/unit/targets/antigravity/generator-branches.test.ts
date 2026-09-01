@@ -3,7 +3,7 @@
  * Targets:
  *   - generateRules: empty body trim → '' fallback, target filter exclude / include
  *   - generateCommands: intro+body branching (intro startsWith body, body absent, intro absent)
- *   - generateMcp: null + empty mcpServers branches
+ *   - emitAntigravityMcp: null + empty mcpServers branches
  *   - renderAntigravityGlobalInstructions: missing root.body fallback (??),
  *     non-root rule include vs exclude branches
  */
@@ -11,9 +11,9 @@ import { describe, it, expect } from 'vitest';
 import {
   generateRules,
   generateCommands,
-  generateMcp,
   renderAntigravityGlobalInstructions,
 } from '../../../../src/targets/antigravity/generator.js';
+import { emitAntigravityMcp } from '../../../../src/targets/antigravity/mcp-settings.js';
 import {
   ANTIGRAVITY_RULES_ROOT,
   ANTIGRAVITY_RULES_DIR,
@@ -182,13 +182,17 @@ describe('antigravity generateCommands — intro/body branches', () => {
   });
 });
 
-describe('antigravity generateMcp — empty branches', () => {
+describe('antigravity emitAntigravityMcp — empty branches', () => {
+  const mcpEnabled = new Set(['mcp']);
+
   it('returns [] when canonical.mcp is null', () => {
-    expect(generateMcp(makeCanonical())).toEqual([]);
+    expect(emitAntigravityMcp(makeCanonical(), 'project', mcpEnabled)).toEqual([]);
   });
 
   it('returns [] when mcpServers is empty', () => {
-    expect(generateMcp(makeCanonical({ mcp: { mcpServers: {} } }))).toEqual([]);
+    expect(
+      emitAntigravityMcp(makeCanonical({ mcp: { mcpServers: {} } }), 'project', mcpEnabled),
+    ).toEqual([]);
   });
 });
 

@@ -28,9 +28,17 @@ describe('zed lintIgnore', () => {
     expect(zedLint.lintIgnore(emptyCanonical())).toEqual([]);
   });
 
-  it('returns a warning when ignore has entries', () => {
-    const diags = zedLint.lintIgnore({ ...emptyCanonical(), ignore: ['node_modules/'] });
+  it('returns [] when every pattern maps to a Zed glob', () => {
+    expect(zedLint.lintIgnore({ ...emptyCanonical(), ignore: ['node_modules/'] })).toEqual([]);
+  });
+
+  it('warns and names the re-inclusions Zed glob lists cannot express', () => {
+    const diags = zedLint.lintIgnore({
+      ...emptyCanonical(),
+      ignore: ['dist/', '!dist/keep.txt'],
+    });
     expect(diags).toHaveLength(1);
+    expect(diags[0]!.message).toContain('!dist/keep.txt');
   });
 });
 

@@ -283,9 +283,9 @@ describe('descriptor.project.paths.agentPath', () => {
     expect(windsurf.project.paths.agentPath('reviewer', configWithConversionOff)).toBeNull();
   });
 
-  it('antigravity: returns projected agent skill path', () => {
+  it('antigravity: returns .agents/agents/{name}.md', () => {
     expect(antigravity.project.paths.agentPath('reviewer', config)).toBe(
-      '.agents/skills/am-agent-reviewer/SKILL.md',
+      '.agents/agents/reviewer.md',
     );
   });
 

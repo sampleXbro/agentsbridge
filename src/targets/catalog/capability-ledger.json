@@ -1185,12 +1185,15 @@
       "feature": "agents",
       "scope": "global",
       "maxAchievable": "native",
-      "path": ".gemini/config/agents/reviewer/agent.md",
+      "path": ".gemini/config/agents/code-reviewer/agent.md",
       "ext": ".md",
       "format": "md-frontmatter",
       "fingerprint": {
         "topLevelKeys": [],
-        "requiredFrontmatter": [],
+        "requiredFrontmatter": [
+          "name",
+          "description"
+        ],
         "keyChecks": []
       },
       "source": [
@@ -1205,12 +1208,15 @@
       "feature": "agents",
       "scope": "project",
       "maxAchievable": "native",
-      "path": ".agents/agents/reviewer.md",
+      "path": ".agents/agents/code-reviewer.md",
       "ext": ".md",
       "format": "md-frontmatter",
       "fingerprint": {
         "topLevelKeys": [],
-        "requiredFrontmatter": [],
+        "requiredFrontmatter": [
+          "name",
+          "description"
+        ],
         "keyChecks": []
       },
       "source": [
@@ -10732,9 +10738,11 @@
         "requiredFrontmatter": [],
         "keyChecks": []
       },
-      "source": [],
-      "verifiedAt": null,
-      "verdict": "unverified",
+      "source": [
+        "https://github.com/zed-industries/zed/blob/main/docs/src/ai/rules.md"
+      ],
+      "verifiedAt": "2026-08-30",
+      "verdict": "confirmed",
       "rejectionReason": null
     },
     {
@@ -10782,7 +10790,7 @@
       "feature": "commands",
       "scope": "global",
       "maxAchievable": "embedded",
-      "path": ".agents/skills/review/SKILL.md",
+      "path": ".agents/skills/am-command-review/SKILL.md",
       "ext": ".md",
       "format": "md-frontmatter",
       "fingerprint": {
@@ -10802,7 +10810,7 @@
       "feature": "commands",
       "scope": "project",
       "maxAchievable": "embedded",
-      "path": ".agents/skills/review/SKILL.md",
+      "path": ".agents/skills/am-command-review/SKILL.md",
       "ext": ".md",
       "format": "md-frontmatter",
       "fingerprint": {

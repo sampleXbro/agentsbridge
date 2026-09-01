@@ -99,7 +99,11 @@ describe('target layout metadata', () => {
         rootInstructionPath: '.gemini/GEMINI.md',
         skillDir: '.gemini/config/skills',
         managedOutputs: {
-          dirs: ['.gemini/config/skills', '.gemini/antigravity/global_workflows'],
+          dirs: [
+            '.gemini/config/agents',
+            '.gemini/config/skills',
+            '.gemini/antigravity/global_workflows',
+          ],
           files: [
             '.gemini/GEMINI.md',
             '.gemini/config/mcp_config.json',

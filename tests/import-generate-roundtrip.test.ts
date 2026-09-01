@@ -732,12 +732,14 @@ describe('generate: full canonical → all agents produce all supported outputs'
     });
     const paths = results.map((r) => r.path).sort();
     expect(paths).toEqual([
+      '.agents/agents/reviewer.md',
       '.agents/hooks.json',
+      '.agents/mcp_config.json',
       '.agents/rules/general.md',
       '.agents/rules/typescript.md',
-      '.agents/skills/am-agent-reviewer/SKILL.md',
       '.agents/skills/qa/SKILL.md',
       '.agents/workflows/review.md',
+      '.antigravityignore',
     ]);
   });
 
@@ -762,14 +764,16 @@ describe('generate: full canonical → all agents produce all supported outputs'
 
     const allPaths = results.map((r) => r.path).sort();
     expect(allPaths).toEqual([
+      '.agents/agents/reviewer.md',
       '.agents/hooks.json',
+      '.agents/mcp_config.json',
       '.agents/rules/general.md',
       '.agents/rules/typescript.md',
-      '.agents/skills/am-agent-reviewer/SKILL.md',
       '.agents/skills/am-command-review/SKILL.md',
       '.agents/skills/qa/SKILL.md',
       '.agents/workflows/review.md',
       '.aiignore',
+      '.antigravityignore',
       '.claude/agents/reviewer.md',
       '.claude/commands/review.md',
       '.claude/rules/typescript.md',

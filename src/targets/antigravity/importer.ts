@@ -8,6 +8,8 @@ import { importEmbeddedSkills } from '../import/embedded-skill.js';
 import { runDescriptorImport } from '../import/descriptor-import-runner.js';
 import { serializeImportedRuleWithFallback } from '../import/import-metadata.js';
 import { splitEmbeddedRulesToCanonical } from '../import/embedded-rules.js';
+import { importAntigravityMcp } from './mcp-import.js';
+import { importAntigravityGlobalPermissions } from './global-permissions.js';
 import {
   ANTIGRAVITY_TARGET,
   ANTIGRAVITY_RULES_ROOT,
@@ -75,5 +77,8 @@ export async function importFromAntigravity(
     results,
     normalize,
   );
+  await importAntigravityMcp(projectRoot, results, scope);
+  // Permissions have no project tier — the settings file is user-level only.
+  if (scope === 'global') await importAntigravityGlobalPermissions(projectRoot, results);
   return results;
 }

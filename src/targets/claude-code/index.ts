@@ -33,6 +33,7 @@ import { importFromClaudeCode } from './importer.js';
 import { claudeAgentMapper, claudeCommandMapper, claudeRuleMapper } from './import-mappers.js';
 import { lintRules } from './linter.js';
 import { buildClaudeCodeImportPaths } from '../../core/reference/import-map-builders.js';
+import { mergeClaudeMcpJson } from './mcp-merge.js';
 
 export const target: TargetGenerators = {
   name: 'claude-code',
@@ -138,6 +139,7 @@ export const descriptor = {
   },
   emptyImportMessage: 'No Claude Code config found (CLAUDE.md or .claude/rules/*.md).',
   lintRules,
+  mergeGeneratedOutputContent: mergeClaudeMcpJson,
   project,
   globalSupport: {
     capabilities: globalCapabilities,

@@ -1806,6 +1806,21 @@
         "t-kw-45ee2cca"
       ]
     },
+    "generate-when-an-emission-helper-takes": {
+      "createdAt": "2026-09-03",
+      "evidence": [
+        "commit:bf88aaa2"
+      ],
+      "rationale": "generateFeature emitted without mergeContent for six features, replacing shared user config files (~/.codex/config.toml) wholesale.",
+      "rule": "When an emission helper takes an OPTIONAL merge/transform callback, do not pass it per call site — export a single `options` factory (e.g. `outputMergeOptions(target)`) and thread it through every emitter, including sibling branches that push results directly (feature-loop `mirrorGlobalPath`). One call site silently omitting the callback is invisible to types and destroyed real user config.",
+      "status": "active",
+      "topics": [
+        "generate"
+      ],
+      "triggers": [
+        "t-glob-87a63917"
+      ]
+    },
     "generation-collision-source-maps-a-generator-that-merges-into": {
       "createdAt": "2026-09-01",
       "evidence": [],
@@ -2281,6 +2296,50 @@
       "triggers": [
         "t-glob-d458a5b8",
         "t-glob-861a9bdb"
+      ]
+    },
+    "generation-safety-a-key-scoped-merger-must": {
+      "createdAt": "2026-09-03",
+      "evidence": [],
+      "rationale": "mergeOwnedJsonKeys returned null on a commented .vscode/mcp.json, so the fallback wrote generated content over the user's inputs array; null means \"not my path\", not \"keep the file\".",
+      "rule": "A key-scoped merger must return the base verbatim when it cannot parse the user's file (JSONC, array, unknown syntax) — returning null falls through to the default policy, which replaces the whole file and destroys the very keys the merger exists to protect.",
+      "status": "active",
+      "topics": [
+        "generation-safety"
+      ],
+      "triggers": [
+        "t-glob-154f0b83",
+        "t-kw-d6fa9b31"
+      ]
+    },
+    "generation-safety-when-a-defect-is-traced": {
+      "createdAt": "2026-09-02",
+      "evidence": [
+        "commit:bf88aaa2"
+      ],
+      "rationale": "bf88aaa2 diagnosed the shared feature-loop merge gap but rerouted goose only; codex-cli, crush, qwen-code and copilot kept wholesale-rewriting user config, and a real ~/.codex/config.toml was destroyed.",
+      "rule": "When a defect is traced to a shared engine path (e.g. generateFeature passing no mergeContent), fix the shared path or sweep every target routed through it — never patch the one target whose symptom you happened to be looking at.",
+      "status": "active",
+      "topics": [
+        "generation-safety"
+      ],
+      "triggers": [
+        "t-glob-87a63917",
+        "t-kw-b97d39e2"
+      ]
+    },
+    "generation-safety-when-adding-mergegeneratedoutputcontent": {
+      "createdAt": "2026-09-03",
+      "evidence": [],
+      "rationale": "claude-code gained a .mcp.json merger while deepagents-cli kept writing it raw; any user with both enabled and a .mcp.json holding a key besides mcpServers got exit 1 on every generate.",
+      "rule": "When adding mergeGeneratedOutputContent to a target, first find every other target that emits the same path and give them an identical owned-key merger; a path with one merging and one raw writer makes resolveOutputCollisions hard-fail the whole generate run.",
+      "status": "active",
+      "topics": [
+        "generation-safety"
+      ],
+      "triggers": [
+        "t-glob-053e51da",
+        "t-kw-0560ceb4"
       ]
     },
     "git-commit-hygiene-before-creating-a-new-standalone": {
@@ -8788,8 +8847,14 @@
     "frontmatter-and-canonical-shapes": {
       "summary": "Frontmatter parsing + canonical entity shape contracts — lenient parsing for third-party, allowed file shapes, derived booleans."
     },
+    "generate": {
+      "summary": "Generate engine emission, merge policy and stale cleanup"
+    },
     "generation-collision-source-maps": {
       "summary": "Generation pipeline — output-source map completeness, shared artifact collision, multi-output rewrite maps, decoration as artifacts."
+    },
+    "generation-safety": {
+      "summary": "Preventing generate from destroying user-owned config files"
     },
     "git-commit-hygiene": {
       "summary": "Staging/commit discipline: explicit pathspecs, verify staged set, /docs is gitignored (local specs)."
@@ -9297,6 +9362,10 @@
       "kind": "file_glob",
       "pattern": "src/targets/*/import*.ts"
     },
+    "t-glob-053e51da": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/mcp-merge.ts"
+    },
     "t-glob-0571e0f3": {
       "kind": "file_glob",
       "pattern": "src/lessons/telemetry.ts"
@@ -9384,6 +9453,10 @@
     "t-glob-151a6581": {
       "kind": "file_glob",
       "pattern": "tests/e2e/helpers/**"
+    },
+    "t-glob-154f0b83": {
+      "kind": "file_glob",
+      "pattern": "src/core/generate/json-owned-keys.ts"
     },
     "t-glob-17bd0955": {
       "kind": "file_glob",
@@ -10325,6 +10398,10 @@
       "kind": "keyword",
       "pattern": "UNREACHABLE_LESSON"
     },
+    "t-kw-0560ceb4": {
+      "kind": "keyword",
+      "pattern": "mergeGeneratedOutputContent, resolveOutputCollisions, shared output path"
+    },
     "t-kw-057477d3": {
       "kind": "keyword",
       "pattern": "target output format blast radius tests"
@@ -10889,6 +10966,10 @@
       "kind": "keyword",
       "pattern": "structured output"
     },
+    "t-kw-b97d39e2": {
+      "kind": "keyword",
+      "pattern": "mergeContent, managedOutputs, wholesale rewrite"
+    },
     "t-kw-bd0b86a3": {
       "kind": "keyword",
       "pattern": "wizard back navigation step prompter"
@@ -10956,6 +11037,10 @@
     "t-kw-d6524007": {
       "kind": "keyword",
       "pattern": "VALIDATION_FAILED unrecognized_keys"
+    },
+    "t-kw-d6fa9b31": {
+      "kind": "keyword",
+      "pattern": "JSONC merge fallback, mergeOwnedJsonKeys"
     },
     "t-kw-db579650": {
       "kind": "keyword",

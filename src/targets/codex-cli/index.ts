@@ -28,6 +28,7 @@ import { buildCodexCliImportPaths } from '../../core/reference/import-map-builde
 import { shouldConvertCommandsToSkills } from '../../config/core/conversions.js';
 import { codexNestedAgentsPath } from './codex-rule-paths.js';
 import { commandSkillDirName } from './command-skill.js';
+import { mergeCodexConfigToml } from './config-merge.js';
 
 export const target: TargetGenerators = {
   name: 'codex-cli',
@@ -155,6 +156,7 @@ export const descriptor = {
     mcp: lintMcp,
     hooks: lintHooks,
   },
+  mergeGeneratedOutputContent: mergeCodexConfigToml,
   project,
   globalSupport: {
     capabilities: globalCapabilities,

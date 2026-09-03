@@ -54,8 +54,8 @@ export const target: TargetGenerators = {
   generateCommands,
   generateAgents,
   generateSkills,
-  // No `generateMcp`: the shared plugin `.mcp.json` needs the merge callback
-  // only `emitScopedSettings` provides (see mcp-settings.ts).
+  // No `generateMcp`: the shared plugin `.mcp.json` is merged, not rewritten
+  // (see mcp-settings.ts).
   generateHooks,
   generatePermissions,
   importFrom: importFromOpenhands,

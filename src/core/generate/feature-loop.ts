@@ -13,6 +13,7 @@ import type {
   FeatureGeneratorFn,
   GenerateFeatureContext,
 } from '../../targets/catalog/target.interface.js';
+import { outputMergeOptions, type OutputMergeOptions } from './merge-policy.js';
 
 export function computeStatus(existing: string | null, content: string): GenerateResult['status'] {
   if (existing === null) return 'created';
@@ -36,29 +37,20 @@ export function resolveGeneratedOutputPath(
   return resolvedPath;
 }
 
-export async function emitGeneratedOutput(
+/** Emits at an already-resolved path, applying the merge policy and pending-result dedup. */
+async function pushMergedResult(
   results: GenerateResult[],
   target: string,
-  out: { readonly path: string; readonly content: string },
+  resolvedPath: string,
+  newContent: string,
   projectRoot: string,
-  scope: TargetLayoutScope,
-  options?: {
-    readonly mergeContent?: (
-      existing: string | null,
-      pending: GenerateResult | undefined,
-      newContent: string,
-      resolvedPath: string,
-    ) => string;
-  },
-): Promise<string | null> {
-  const resolvedPath = resolveGeneratedOutputPath(target, out.path, scope);
-  if (resolvedPath === null) return null;
-
+  options?: OutputMergeOptions,
+): Promise<void> {
   const existing = await readFileSafe(join(projectRoot, resolvedPath));
   const pendingIdx = results.findIndex((r) => r.path === resolvedPath && r.target === target);
   const pendingResult = pendingIdx >= 0 ? results[pendingIdx] : undefined;
   const content =
-    options?.mergeContent?.(existing, pendingResult, out.content, resolvedPath) ?? out.content;
+    options?.mergeContent?.(existing, pendingResult, newContent, resolvedPath) ?? newContent;
   if (pendingIdx >= 0) {
     results.splice(pendingIdx, 1);
   }
@@ -69,6 +61,19 @@ export async function emitGeneratedOutput(
     currentContent: existing ?? undefined,
     status: computeStatus(existing, content),
   });
+}
+
+export async function emitGeneratedOutput(
+  results: GenerateResult[],
+  target: string,
+  out: { readonly path: string; readonly content: string },
+  projectRoot: string,
+  scope: TargetLayoutScope,
+  options?: OutputMergeOptions,
+): Promise<string | null> {
+  const resolvedPath = resolveGeneratedOutputPath(target, out.path, scope);
+  if (resolvedPath === null) return null;
+  await pushMergedResult(results, target, resolvedPath, out.content, projectRoot, options);
   return resolvedPath;
 }
 
@@ -101,8 +106,18 @@ export async function generateFeature(
     const gen = getGen(target);
     if (!gen) continue;
     const ctx = featureContext(target, feature, scope);
+    // Same merge policy the permissions/hooks/scoped-settings paths use: a target
+    // writing into a file the user also owns must never replace it wholesale.
+    const options = outputMergeOptions(target);
     for (const out of gen(canonical, ctx)) {
-      const resolvedPath = await emitGeneratedOutput(results, target, out, projectRoot, scope);
+      const resolvedPath = await emitGeneratedOutput(
+        results,
+        target,
+        out,
+        projectRoot,
+        scope,
+        options,
+      );
       if (resolvedPath === null) continue;
       // `getTargetLayout` already falls back to the plugin registry via
       // `getDescriptor`, so no separate descriptor lookup is needed.
@@ -111,14 +126,9 @@ export async function generateFeature(
         const raw = layout.mirrorGlobalPath(resolvedPath, targets);
         const mirrorPaths = raw === null ? [] : Array.isArray(raw) ? raw : [raw];
         for (const mirrorPath of mirrorPaths) {
-          const existingMirror = await readFileSafe(join(projectRoot, mirrorPath));
-          results.push({
-            target,
-            path: mirrorPath,
-            content: out.content,
-            currentContent: existingMirror ?? undefined,
-            status: computeStatus(existingMirror, out.content),
-          });
+          // Mirror paths are already resolved, so they skip path rewriting but keep
+          // the merge policy and pending-result dedup.
+          await pushMergedResult(results, target, mirrorPath, out.content, projectRoot, options);
         }
       }
     }

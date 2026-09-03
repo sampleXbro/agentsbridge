@@ -37,6 +37,7 @@ import { addHookScriptAssets } from './hook-assets.js';
 import { generateCopilotGlobalExtras } from './scope-extras.js';
 import { copilotImporterSpec } from './importer-spec.js';
 import { projectCapabilities, globalCapabilities } from './capabilities.js';
+import { mergeCopilotMcpJson } from './mcp-merge.js';
 
 export const target: TargetGenerators = {
   name: 'copilot',
@@ -175,6 +176,7 @@ export const descriptor = {
   },
   postProcessHookOutputs: async (projectRoot, canonical, outputs) =>
     addHookScriptAssets(projectRoot, canonical, [...outputs]),
+  mergeGeneratedOutputContent: mergeCopilotMcpJson,
   project,
   globalSupport: {
     capabilities: globalCapabilities,

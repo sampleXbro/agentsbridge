@@ -57,9 +57,8 @@ export const target: TargetGenerators = {
   generateAgents,
   generateSkills,
   generateIgnore,
-  // No `generateMcp`: both MCP files merge into content agentsmesh does not own,
-  // and only the optional-features paths hand a target a merge callback. Project
-  // scope goes through `emitScopedSettings`, global through `scopeExtras`.
+  // No `generateMcp`: both MCP files merge into content agentsmesh does not own.
+  // Project scope goes through `emitScopedSettings`, global through `scopeExtras`.
   generateHooks,
   generatePermissions,
   importFrom: importFromGoose,

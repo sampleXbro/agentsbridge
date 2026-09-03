@@ -8,8 +8,8 @@
  *   - `.agents/plugins/agentsmesh/hooks/hooks.json` — lifecycle hooks
  *
  * MCP is NOT here: both of its files are merged into content agentsmesh does not
- * own, and only the optional-features paths hand a target a merge callback. See
- * `mcp-format.ts` (project plugin `.mcp.json`) and `global-mcp.ts` (`config.yaml`).
+ * own. See `mcp-format.ts` (project plugin `.mcp.json`) and `global-mcp.ts`
+ * (`config.yaml`).
  */
 
 import type { CanonicalFiles } from '../../core/types.js';

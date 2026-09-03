@@ -1,9 +1,10 @@
 /**
  * Project MCP emission for Goose: `.agents/plugins/agentsmesh/.mcp.json`.
  *
- * Routed through `emitScopedSettings` instead of `generators.generateMcp`
- * because only the optional-features path hands the target a merge callback.
- * The plain feature loop rewrites the whole file from canonical, which erases
+ * Routed through `emitScopedSettings` instead of `generators.generateMcp`.
+ * Both paths now apply the shared merge policy (`core/generate/merge-policy.ts`),
+ * so this routing is structural. Without the merge below the file is rewritten
+ * whole from canonical, which erases
  * `cwd` — a real `McpServerConfig` field (`crates/goose/src/plugins/mcp_servers.rs`)
  * that canonical has no home for — and any unknown top-level key such as
  * `$schema`.

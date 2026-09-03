@@ -33,6 +33,7 @@ import {
   generatePermissions,
 } from './generator.js';
 import { deepagentsCliAgentMapper } from './agent-format.js';
+import { mergeDeepagentsMcpJson } from './mcp-merge.js';
 import { deepagentsCliScopeExtras } from './scope-extras.js';
 import { importFromDeepagentsCli } from './importer.js';
 import { lintRules } from './linter.js';
@@ -111,6 +112,7 @@ export const descriptor = {
   },
   generators: target,
   capabilities,
+  mergeGeneratedOutputContent: mergeDeepagentsMcpJson,
   emptyImportMessage:
     'No Deep Agents CLI config found (.deepagents/AGENTS.md, .deepagents/skills, or .mcp.json).',
   lintRules,

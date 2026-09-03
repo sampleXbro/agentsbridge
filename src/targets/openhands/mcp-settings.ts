@@ -11,8 +11,8 @@
  * so a single remote entry stops it loading ANY server from the shared file.
  * `lintMcp` names every server dropped for that reason.
  *
- * Routed through `emitScopedSettings` rather than `generators.generateMcp`
- * because only that path hands the target its merge callback.
+ * Routed through `emitScopedSettings` rather than `generators.generateMcp`;
+ * both paths apply the shared merge policy, so the routing is structural.
  */
 
 import type { CanonicalFiles } from '../../core/types.js';

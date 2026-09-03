@@ -12,6 +12,7 @@
  * - globalSupport.scopeExtras
  * - sharedArtifacts ownership declaration
  * - emitScopedSettings native settings sidecar
+ * - mergeGeneratedOutputContent shared-config merge hook
  * - postProcessHookOutputs async hook post-processing
  * - Detection paths
  */
@@ -321,6 +322,24 @@ export const descriptor = {
       }
       return results;
     },
+  },
+
+  // ──── Shared-config Merge Hook ────────────────────────────────────────────
+  // `.rich/mcp.json` stands in for a config file the USER also owns: the plugin
+  // owns only the `mcpServers` key. Proves the shared merge policy reaches a
+  // registered plugin descriptor on the generateFeature path (rules, commands,
+  // agents, skills, mcp, ignore), not just on permissions/hooks/scoped settings.
+  mergeGeneratedOutputContent(existing, pending, newContent, resolvedPath) {
+    if (resolvedPath !== '.rich/mcp.json') return null;
+    const base = pending?.content ?? existing;
+    if (base === null || base === undefined) return null;
+    try {
+      const merged = JSON.parse(base);
+      merged.mcpServers = JSON.parse(newContent).mcpServers;
+      return JSON.stringify(merged, null, 2);
+    } catch {
+      return null;
+    }
   },
 
   // ──── Scoped Settings Sidecar ──────────────────────────────────────────────

@@ -10,4 +10,14 @@ describe('generation architecture boundaries', () => {
 
     expect(source).not.toContain('../../targets/gemini-cli/');
   });
+
+  // The merge policy moved out of optional-features.ts so generateFeature can share
+  // it; the boundary follows it. Per-target merge behaviour belongs in descriptor
+  // hooks, never in a target-name branch here.
+  it('keeps the shared merge policy target-agnostic', () => {
+    const source = readFileSync(join(ROOT, 'src/core/generate/merge-policy.ts'), 'utf8');
+
+    expect(source).not.toContain('../../targets/gemini-cli/');
+    expect(source).not.toMatch(/target === '/);
+  });
 });

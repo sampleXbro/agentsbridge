@@ -1,10 +1,10 @@
 /**
  * MCP emission for both scopes.
  *
- * Routed through `emitScopedSettings` instead of `generators.generateMcp`
- * because only the optional-features path hands the target a merge callback.
- * The plain feature loop rewrites the whole file from canonical, which wipes
- * the Antigravity-only per-server keys documented at antigravity.google/docs/mcp/
+ * Routed through `emitScopedSettings` instead of `generators.generateMcp`.
+ * Both paths now apply the shared merge policy (`core/generate/merge-policy.ts`),
+ * so this routing is structural, not load-bearing. Without the merge below the
+ * generated file would wipe the Antigravity-only per-server keys documented at antigravity.google/docs/mcp/
  * (`cwd`, `disabled`, `disabledTools`, `oauth`, `authProviderType`) — canonical
  * has no home for them, so a `disabled: true` server would silently re-enable
  * itself on the next generate.

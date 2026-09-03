@@ -7,7 +7,25 @@ const PATH = '.vscode/mcp.json';
 
 describe('mergeCopilotMcpJson', () => {
   it('declines paths it does not own', () => {
-    expect(mergeCopilotMcpJson('{}', undefined, GENERATED, '.copilot/mcp-config.json')).toBeNull();
+    expect(mergeCopilotMcpJson('{}', undefined, GENERATED, 'AGENTS.md')).toBeNull();
+  });
+
+  it('owns only the server set of ~/.copilot/mcp-config.json', () => {
+    const existing = JSON.stringify({
+      $schema: 'https://example.invalid/copilot.json',
+      mcpServers: { ctx: { command: 'old', tools: ['search'] }, gone: { command: 'x' } },
+    });
+    const generated = JSON.stringify({ mcpServers: { ctx: { command: 'npx' } } });
+    expect(mergeCopilotMcpJson(existing, undefined, generated, '.copilot/mcp-config.json')).toBe(
+      JSON.stringify(
+        {
+          $schema: 'https://example.invalid/copilot.json',
+          mcpServers: { ctx: { command: 'npx', tools: ['search'] } },
+        },
+        null,
+        2,
+      ),
+    );
   });
 
   it('declines when there is no base file', () => {

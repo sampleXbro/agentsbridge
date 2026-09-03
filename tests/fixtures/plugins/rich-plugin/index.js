@@ -329,6 +329,17 @@ export const descriptor = {
           content: `scope=${scope}\nfeatures=${[...enabledFeatures].join(',')}`,
         });
       }
+      // A canonical-only projection into the CO-OWNED file. scopeExtras used to
+      // bypass the shared merge policy, so an emit like this replaced the user's
+      // whole config; the engine must run it through
+      // `mergeGeneratedOutputContent` and dedup it against the pending `mcp`
+      // result for the same path, exactly as it does for a builtin.
+      if (scope === 'global' && enabledFeatures.has('mcp') && canonical.mcp) {
+        results.push({
+          path: '.rich/mcp.json',
+          content: JSON.stringify({ mcpServers: canonical.mcp.mcpServers }, null, 2),
+        });
+      }
       return results;
     },
   },
@@ -350,6 +361,12 @@ export const descriptor = {
       return null;
     }
   },
+
+  // ──── Revocation Claims ───────────────────────────────────────────────────
+  // Declares the cleared projection for the co-owned `.rich/mcp.json`. Proves
+  // `emitRevocations` reaches a registered plugin descriptor: an emptied
+  // `.agentsmesh/mcp.json` must clear `mcpServers` here too, and the plugin's
+  // own merge hook is what performs the clear.
 
   // ──── Scoped Settings Sidecar ──────────────────────────────────────────────
   // Receives the enabled-feature set so a plugin can gate each key, exactly like

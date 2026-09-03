@@ -16,6 +16,7 @@ import { validateGeneratedMarkdownLinks } from '../reference/validate-generated-
 import { buildPackOriginatedKeys } from '../reference/pack-originated-keys.js';
 import { resolveOutputCollisions, refreshResultStatus } from './collision.js';
 import { generateFeature } from './feature-loop.js';
+import { emitScopeExtras } from './scope-extras.js';
 import { decoratePrimaryRootInstructions } from './root-instruction-decorator.js';
 import {
   generatePermissionsFeature,
@@ -134,7 +135,7 @@ export async function generate(ctx: GenerateContext): Promise<GenerateResult[]> 
     const scopeExtras = descriptor?.globalSupport?.scopeExtras;
     if (scopeExtras) {
       const extras = await scopeExtras(canonical, projectRoot, scope, enabledFeatures);
-      results.push(...extras);
+      await emitScopeExtras(results, target, extras, projectRoot);
     }
   }
 

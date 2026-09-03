@@ -44,8 +44,10 @@ export const globalLayout: TargetLayout = {
   skillDir: DEEPAGENTS_CLI_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [DEEPAGENTS_CLI_GLOBAL_SKILLS_DIR, DEEPAGENTS_CLI_GLOBAL_AGENTS_DIR],
-    files: [DEEPAGENTS_CLI_GLOBAL_ROOT_FILE, DEEPAGENTS_CLI_GLOBAL_HOOKS_FILE],
-    coOwnedFiles: [DEEPAGENTS_CLI_GLOBAL_MCP_FILE],
+    files: [DEEPAGENTS_CLI_GLOBAL_ROOT_FILE],
+    // The tool's only documented hooks file, so users hand-edit it; agentsmesh
+    // owns only the entries bound to the events it maps.
+    coOwnedFiles: [DEEPAGENTS_CLI_GLOBAL_MCP_FILE, DEEPAGENTS_CLI_GLOBAL_HOOKS_FILE],
   },
   rewriteGeneratedPath(path) {
     if (path === DEEPAGENTS_CLI_ROOT_FILE) return DEEPAGENTS_CLI_GLOBAL_ROOT_FILE;

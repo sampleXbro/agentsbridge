@@ -101,7 +101,9 @@ const globalLayout: TargetLayout = {
       COPILOT_GLOBAL_CLAUDE_SKILLS_DIR,
       COPILOT_GLOBAL_HOOKS_DIR,
     ],
-    files: [COPILOT_GLOBAL_INSTRUCTIONS, COPILOT_GLOBAL_AGENTS_MD, COPILOT_GLOBAL_MCP],
+    files: [COPILOT_GLOBAL_INSTRUCTIONS, COPILOT_GLOBAL_AGENTS_MD],
+    // `copilot mcp add` writes this file; agentsmesh owns only the server set.
+    coOwnedFiles: [COPILOT_GLOBAL_MCP],
   },
   rewriteGeneratedPath(path) {
     // Transform project-level .github/ paths to global ~/.copilot/ paths

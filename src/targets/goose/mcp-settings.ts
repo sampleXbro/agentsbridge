@@ -15,16 +15,17 @@
  * would stop goose loading ANY server in the file).
  */
 
+import { ownedYamlKeysMerger } from '../../core/generate/yaml-owned-keys.js';
+import { GOOSE_GLOBAL_PERMISSIONS } from './constants.js';
 import type { CanonicalFiles } from '../../core/types.js';
 import type { GeneratedOutputMerger, TargetLayoutScope } from '../catalog/target-descriptor.js';
+import { mcpServersJsonMerger } from '../../core/generate/mcp-servers-merge.js';
 import {
   GOOSE_OWNED_MCP_SERVER_KEYS,
   hasGooseProjectMcpServers,
   serializeGooseProjectMcp,
 } from './mcp-format.js';
 import { GOOSE_PROJECT_MCP_FILE } from './constants.js';
-
-type Json = Record<string, unknown>;
 
 /** Global scope writes the `config.yaml` extensions block instead (global-mcp.ts). */
 export function emitGooseProjectMcp(
@@ -37,57 +38,28 @@ export function emitGooseProjectMcp(
   return [{ path: GOOSE_PROJECT_MCP_FILE, content: serializeGooseProjectMcp(canonical.mcp!) }];
 }
 
-function asObject(value: unknown): Json | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
-  return value as Json;
-}
+const mergeGooseMcpJson: GeneratedOutputMerger = mcpServersJsonMerger(
+  [GOOSE_PROJECT_MCP_FILE],
+  GOOSE_OWNED_MCP_SERVER_KEYS,
+);
 
-function parseJson(content: string): Json | null {
-  try {
-    return asObject(JSON.parse(content));
-  } catch {
-    return null;
-  }
-}
-
-function serverObjects(root: Json | null): Json {
-  const raw = asObject(root?.mcpServers);
-  if (!raw) return {};
-  const out: Json = {};
-  for (const [name, value] of Object.entries(raw)) {
-    const entry = asObject(value);
-    if (entry) out[name] = entry;
-  }
-  return out;
-}
-
-/** Keys of an on-disk entry canonical cannot express, so generate keeps them. */
-function carriedOverKeys(existing: unknown): Json {
-  const entry = asObject(existing);
-  if (!entry) return {};
-  const out: Json = {};
-  for (const [key, value] of Object.entries(entry)) {
-    if (!GOOSE_OWNED_MCP_SERVER_KEYS.includes(key)) out[key] = value;
-  }
-  return out;
-}
+/**
+ * `~/.config/goose/permission.yaml` is keyed by permission category and
+ * agentsmesh owns only `user`; `smart_approve` is Goose's own runtime cache.
+ * The merge used to live inside `serializeGoosePermissions`, which meant the
+ * shared policy had no way to write a revocation there. Declaring it here also
+ * buys comment preservation, which the reserialize-based merge did not have.
+ */
+const mergeGoosePermissionsYaml: GeneratedOutputMerger = ownedYamlKeysMerger(
+  [GOOSE_GLOBAL_PERMISSIONS],
+  ['user'],
+);
 
 export const mergeGooseMcpContent: GeneratedOutputMerger = (
   existing,
   pending,
   newContent,
   resolvedPath,
-) => {
-  if (resolvedPath !== GOOSE_PROJECT_MCP_FILE) return null;
-  const base = pending?.content ?? existing;
-  const baseRoot = base === null ? null : parseJson(base);
-  if (baseRoot === null) return newContent;
-
-  const baseServers = serverObjects(baseRoot);
-  const nextServers = serverObjects(parseJson(newContent));
-  const merged: Json = {};
-  for (const [name, entry] of Object.entries(nextServers)) {
-    merged[name] = { ...(entry as Json), ...carriedOverKeys(baseServers[name]) };
-  }
-  return JSON.stringify({ ...baseRoot, mcpServers: merged }, null, 2);
-};
+) =>
+  mergeGooseMcpJson(existing, pending, newContent, resolvedPath) ??
+  mergeGoosePermissionsYaml(existing, pending, newContent, resolvedPath);

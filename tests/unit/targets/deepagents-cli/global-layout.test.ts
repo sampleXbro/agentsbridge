@@ -129,11 +129,16 @@ describe('deepagents-cli global layout', () => {
     expect(descriptor.project.managedOutputs!.files).not.toContain('.deepagents/hooks.json');
   });
 
-  it('globalLayout managedOutputs includes global agents dir and hooks file', () => {
+  it('globalLayout managedOutputs includes global agents dir and co-owns hooks.json', () => {
     expect(descriptor.globalSupport!.layout.managedOutputs!.dirs).toContain(
       DEEPAGENTS_CLI_GLOBAL_AGENTS_DIR,
     );
-    expect(descriptor.globalSupport!.layout.managedOutputs!.files).toContain(
+    // The tool's only documented hooks file, hand-edited by users: agentsmesh
+    // owns the entries on the events it maps, so stale cleanup must not delete it.
+    expect(descriptor.globalSupport!.layout.managedOutputs!.files).not.toContain(
+      DEEPAGENTS_CLI_GLOBAL_HOOKS_FILE,
+    );
+    expect(descriptor.globalSupport!.layout.managedOutputs!.coOwnedFiles).toContain(
       DEEPAGENTS_CLI_GLOBAL_HOOKS_FILE,
     );
   });

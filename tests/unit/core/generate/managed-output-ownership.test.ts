@@ -155,7 +155,7 @@ describe('managedOutputs ownership invariant', () => {
     expect(overlaps).toEqual([]);
   });
 
-  it('declares exactly the 31 co-owned paths the audit identified', () => {
+  it('declares exactly the 40 co-owned paths the audit identified', () => {
     const rows: string[] = [];
     for (const row of scopedLayouts(allDescriptors)) {
       for (const file of row.layout.managedOutputs?.coOwnedFiles ?? []) {
@@ -179,12 +179,33 @@ describe('managedOutputs ownership invariant', () => {
         'claude-code project .mcp.json',
         'codex-cli global .codex/config.toml',
         'codex-cli project .codex/config.toml',
+        // Continue's personal assistant config (models, apiKey, context
+        // providers) and the approval cache Continue writes when the user picks
+        // "always allow"; agentsmesh owns only some keys of each.
+        'continue global .continue/config.yaml',
+        'continue global .continue/permissions.yaml',
+        // Only agentsmesh's `hooks` key; the file also holds the user's
+        // `description` and `disableAllHooks`. Declared at both scopes so the
+        // revocation invariant can see it — it used to be in NEITHER list.
+        'continue global .continue/settings.json',
+        'continue project .continue/settings.json',
+        // Written by `copilot mcp add`; agentsmesh owns only the server set.
+        'copilot global .copilot/mcp-config.json',
         'copilot project .vscode/mcp.json',
         'crush global .config/crush/crush.json',
         'crush project crush.json',
         'deepagents-cli global .deepagents/.mcp.json',
+        // The tool's only documented hooks file, so users hand-edit it;
+        // agentsmesh owns only entries on the five events it maps.
+        'deepagents-cli global .deepagents/hooks.json',
         'deepagents-cli project .mcp.json',
+        // The tool's own user-tier policy dir: agentsmesh owns only the
+        // `[[rule]]` blocks it marked. Listed at both scopes because the
+        // workspace-tier copy an older agentsmesh wrote must not be deleted
+        // either — a user may have added rules to it since.
+        'gemini-cli global .gemini/policies/permissions.toml',
         'gemini-cli global .gemini/settings.json',
+        'gemini-cli project .gemini/policies/permissions.toml',
         'gemini-cli project .gemini/settings.json',
         'goose global .config/goose/permission.yaml',
         'junie global .junie/config.json',
@@ -196,6 +217,9 @@ describe('managedOutputs ownership invariant', () => {
         'openhands project .openhands/hooks.json',
         'qwen-code global .qwen/settings.json',
         'qwen-code project .qwen/settings.json',
+        // Roo Code writes this itself when the user creates a Global mode;
+        // agentsmesh owns only the modes carrying its marker comment.
+        'roo-code global .roo/settings/custom_modes.yaml',
         'roo-code project .vscode/settings.json',
         'rovodev global .rovodev/config.yml',
       ].sort(),

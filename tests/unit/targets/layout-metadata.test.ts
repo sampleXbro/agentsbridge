@@ -247,9 +247,12 @@ describe('target layout metadata', () => {
           files: [
             '.continue/mcpServers/agentsmesh.json',
             '.continue/AGENTS.md',
+            '.continue/.continueignore',
+          ],
+          coOwnedFiles: [
             '.continue/config.yaml',
             '.continue/permissions.yaml',
-            '.continue/.continueignore',
+            '.continue/settings.json',
           ],
         },
         paths: expect.objectContaining({

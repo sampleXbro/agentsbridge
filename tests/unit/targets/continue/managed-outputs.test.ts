@@ -83,15 +83,21 @@ describe('continue managed outputs — hand-written agent files survive generate
     expect(getTargetLayout('continue', 'project')!.managedOutputs).toEqual({
       dirs: ['.continue/prompts', '.continue/rules', '.continue/skills'],
       files: ['.continue/mcpServers/agentsmesh.json', '.continueignore'],
+      coOwnedFiles: ['.continue/settings.json'],
     });
     expect(getTargetLayout('continue', 'global')!.managedOutputs).toEqual({
       dirs: ['.continue/rules', '.continue/prompts', '.continue/skills', '.agents/skills'],
       files: [
         '.continue/mcpServers/agentsmesh.json',
         '.continue/AGENTS.md',
+        '.continue/.continueignore',
+      ],
+      // The user's assistant config and Continue's own approval cache: merged
+      // key-scoped, never deleted by stale cleanup.
+      coOwnedFiles: [
         '.continue/config.yaml',
         '.continue/permissions.yaml',
-        '.continue/.continueignore',
+        '.continue/settings.json',
       ],
     });
   });

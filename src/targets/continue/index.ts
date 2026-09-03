@@ -9,6 +9,7 @@ import {
   generateIgnore,
 } from './generator.js';
 import { generateHooks, mergeContinueSettings } from './hooks.js';
+import { mergeContinueGlobalYaml } from './config-merge.js';
 import { globalCapabilities, projectCapabilities } from './capabilities.js';
 import { globalLayout, projectLayout } from './layout.js';
 import {
@@ -80,7 +81,9 @@ export const descriptor = {
     layout: globalLayout,
     scopeExtras: generateContinueScopeExtras,
   },
-  mergeGeneratedOutputContent: mergeContinueSettings,
+  mergeGeneratedOutputContent: (existing, pending, newContent, resolvedPath) =>
+    mergeContinueSettings(existing, pending, newContent, resolvedPath) ??
+    mergeContinueGlobalYaml(existing, pending, newContent, resolvedPath),
   importer: {
     rules: {
       feature: 'rules',

@@ -12,6 +12,13 @@
  * this result as its pending output and merges onto it. Both use the same
  * overlay, so the two passes agree and the outcome is idempotent.
  *
+ * What this hook emits is a PROJECTION, not a finished file: `{ key: null }` for
+ * every claimed key with no canonical content. The engine folds it into the file
+ * through `mergeZedSettings`, exactly like every other emission. Emitting the
+ * merged file here instead would be folded a second time by the shared policy,
+ * and an absent key means "not claimed" to that policy — the revoked key would
+ * come straight back.
+ *
  * `settings.json` deliberately stays out of `managedOutputs`: it is the user's
  * editor config (theme, formatters, language servers), and stale-cleanup deletes
  * every managed file a run did not emit.
@@ -21,9 +28,8 @@ import { join } from 'node:path';
 import type { GenerateResult } from '../../core/types.js';
 import type { ScopeExtrasFn } from '../catalog/target-descriptor.js';
 import { readFileSafe } from '../../utils/filesystem/fs.js';
-import { computeStatus } from '../../core/generate/feature-loop.js';
 import {
-  applyZedOwnedOverlay,
+  ZED_REVOCABLE_SETTINGS_KEYS,
   buildZedOwnedOverlay,
   parseZedSettings,
 } from './settings-overlay.js';
@@ -43,10 +49,13 @@ export const zedScopeExtras: ScopeExtrasFn = async (
   if (parsed === null) return [];
 
   const overlay = buildZedOwnedOverlay(canonical, scope, enabledFeatures);
-  if (overlay.owned.length === 0) return [];
+  const revoked = overlay.owned.filter(
+    (key) =>
+      ZED_REVOCABLE_SETTINGS_KEYS.includes(key) && !(key in overlay.present) && key in parsed,
+  );
+  if (revoked.length === 0) return [];
 
-  const content = JSON.stringify(applyZedOwnedOverlay(parsed, overlay), null, 2);
-  if (content === existing) return [];
+  const content = JSON.stringify(Object.fromEntries(revoked.map((key) => [key, null])), null, 2);
 
   return [
     {
@@ -54,7 +63,7 @@ export const zedScopeExtras: ScopeExtrasFn = async (
       path,
       content,
       currentContent: existing,
-      status: computeStatus(existing, content),
+      status: 'updated',
     },
   ];
 };

@@ -9,6 +9,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
 import { zedScopeExtras } from '../../../../src/targets/zed/scope-extras.js';
+import { mergeZedSettings } from '../../../../src/targets/zed/scoped-settings.js';
 import {
   ZED_SETTINGS_FILE,
   ZED_GLOBAL_SETTINGS_FILE,
@@ -32,6 +33,17 @@ function canonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles {
 
 function parse(content: string): Record<string, unknown> {
   return JSON.parse(content) as Record<string, unknown>;
+}
+
+/**
+ * The hook emits a revocation PROJECTION (`{ key: null }`), which the engine
+ * folds into the file through the shared merge policy. Asserting the projection
+ * alone would not prove the key actually goes away, so every revocation case
+ * asserts the file the pipeline ends up writing.
+ */
+function applied(projection: string, onDisk: unknown, path: string): Record<string, unknown> {
+  const merged = mergeZedSettings(JSON.stringify(onDisk, null, 2), undefined, projection, path);
+  return parse(merged!);
 }
 
 describe('zedScopeExtras — revocation pass', () => {
@@ -75,7 +87,14 @@ describe('zedScopeExtras — revocation pass', () => {
     expect(results).toHaveLength(1);
     expect(results[0]!.target).toBe('zed');
     expect(results[0]!.path).toBe(ZED_SETTINGS_FILE);
-    expect(parse(results[0]!.content)).toEqual({ theme: 'One Dark' });
+    expect(parse(results[0]!.content)).toEqual({ context_servers: null });
+    expect(
+      applied(
+        results[0]!.content,
+        { theme: 'One Dark', context_servers: { stale: { command: 'old' } } },
+        ZED_SETTINGS_FILE,
+      ),
+    ).toEqual({ theme: 'One Dark' });
   });
 
   it('leaves hand-written editor settings alone when no canonical source exists', async () => {
@@ -113,7 +132,18 @@ describe('zedScopeExtras — revocation pass', () => {
 
     expect(results).toHaveLength(1);
     expect(results[0]!.path).toBe(ZED_GLOBAL_SETTINGS_FILE);
-    expect(parse(results[0]!.content)).toEqual({});
+    expect(parse(results[0]!.content)).toEqual({ agent: null });
+    expect(
+      applied(
+        results[0]!.content,
+        {
+          agent: {
+            tool_permissions: { tools: { terminal: { always_allow: [{ pattern: '^rm$' }] } } },
+          },
+        },
+        ZED_GLOBAL_SETTINGS_FILE,
+      ),
+    ).toEqual({});
   });
 
   it('keeps a hand-written regex when the grant beside it is revoked', async () => {
@@ -132,7 +162,19 @@ describe('zedScopeExtras — revocation pass', () => {
       ALL,
     );
 
-    expect(parse(results[0]!.content)).toEqual({
+    expect(
+      applied(
+        results[0]!.content,
+        {
+          agent: {
+            tool_permissions: {
+              tools: { terminal: { always_deny: [{ pattern: '^sudo' }, { pattern: '^rm$' }] } },
+            },
+          },
+        },
+        ZED_GLOBAL_SETTINGS_FILE,
+      ),
+    ).toEqual({
       agent: {
         tool_permissions: { tools: { terminal: { always_deny: [{ pattern: '^sudo' }] } } },
       },

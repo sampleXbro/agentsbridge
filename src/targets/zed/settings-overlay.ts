@@ -41,6 +41,16 @@ export const ZED_OWNED_SETTINGS_KEYS = [
   ZED_AGENT_KEY,
 ] as const;
 
+/**
+ * Owned keys whose absence from canonical means "remove it". The two ignore glob
+ * lists are missing on purpose: they carry no marker saying who wrote an entry,
+ * so they are only ever added to and an emptied canonical ignore revokes nothing.
+ */
+export const ZED_REVOCABLE_SETTINGS_KEYS: readonly string[] = [
+  ZED_CONTEXT_SERVERS_KEY,
+  ZED_AGENT_KEY,
+];
+
 export interface ZedOwnedOverlay {
   /** Keys this run may rewrite. */
   readonly owned: string[];

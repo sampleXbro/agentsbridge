@@ -548,6 +548,13 @@ globalSupport: {
 },
 ```
 
+Scope-extras output goes through the same merge policy as every other emission:
+AgentsMesh reads the file, applies your `mergeGeneratedOutputContent` hook, and
+recomputes the status from the merged result. So a `scopeExtras` that writes into
+a file the user co-owns must claim that path with the hook — building the content
+from canonical alone is not enough on its own, and would replace the user's file.
+`target` is optional on each entry; AgentsMesh fills in your plugin's id.
+
 ### Shared Artifacts
 
 If your target generates files into a path shared with other targets, declare ownership:
@@ -587,6 +594,47 @@ project: {
 },
 ```
 
+### Revoking what you wrote
+
+Because a co-owned file is never deleted, emptying a canonical source is the only
+way a user can revoke what a previous run wrote into it. Your generator cannot do
+that — it sees canonical alone, so it returns nothing and the path drops out of
+the run entirely. Declare a `revocableOutputs` claim instead:
+
+```js
+revocableOutputs(scope) {
+  return [
+    {
+      feature: 'mcp',                        // 'mcp' | 'permissions' | 'hooks'
+      path: '.foo-ide/settings.json',        // must be a coOwnedFiles path
+      cleared: '{"mcpServers":{}}',          // projection, not a finished file
+      holds: (existing) => {                 // still holds something of ours?
+        try {
+          return Object.keys(JSON.parse(existing).mcpServers ?? {}).length > 0;
+        } catch {
+          return false;                      // unparseable: leave it alone
+        }
+      },
+    },
+  ];
+},
+```
+
+`cleared` is a projection: AgentsMesh folds it into the file with your own
+`mergeGeneratedOutputContent` hook, so keys you leave out are untouched. Write it
+in whatever shape that hook reads as "this key is mine and it is empty now".
+
+A claim fires only when the feature is enabled AND the canonical source exists
+but lists nothing. A missing source (no `.agentsmesh/mcp.json` at all) and a
+disabled feature both mean "no opinion" — AgentsMesh leaves the user's keys
+alone. AgentsMesh also stands down when the file does not exist, and when `holds`
+returns `false`, so revocation never creates a config the tool never had and
+never reflows a file that carries nothing of yours.
+
+Only `mcp`, `permissions` and `hooks` can drive a claim. Rules, commands, agents,
+skills and ignore come from directories, where "empty" and "missing" are
+indistinguishable, so they never revoke.
+
 ## Descriptor Reference
 
 ### Required Fields
@@ -617,6 +665,7 @@ project: {
 | `sharedArtifacts` | `Record<string, 'owner' \| 'consumer'>` | Shared output path ownership |
 | `emitScopedSettings` | `function` | Emit native settings sidecar files |
 | `mergeGeneratedOutputContent` | `function` | Custom merge for generated outputs |
+| `revocableOutputs` | `function` | Cleared-key claims for `coOwnedFiles` paths (see above) |
 | `postProcessHookOutputs` | `function` | Async post-pass for hook outputs |
 
 ## What's Next

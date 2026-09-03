@@ -1806,6 +1806,18 @@
         "t-kw-45ee2cca"
       ]
     },
+    "generate-never-insert-an-import-by": {
+      "createdAt": "2026-09-03",
+      "evidence": [],
+      "rule": "Never insert an import by regex-matching the first occurrence of the word 'import' in a TypeScript file — target files open with a doc comment that often contains the word in prose, and the insertion silently corrupts the comment while still compiling elsewhere. Anchor on a line-start match (^import) or insert after the last existing import line, then diff the file to confirm only imports changed.",
+      "status": "active",
+      "topics": [
+        "generate"
+      ],
+      "triggers": [
+        "t-glob-9f0a5990"
+      ]
+    },
     "generate-when-an-emission-helper-takes": {
       "createdAt": "2026-09-03",
       "evidence": [
@@ -2312,6 +2324,20 @@
         "t-kw-d6fa9b31"
       ]
     },
+    "generation-safety-never-scaffold-an-explicitly-empty": {
+      "createdAt": "2026-09-03",
+      "evidence": [],
+      "rationale": "agentsmesh init wrote allow: []/deny: []/ask: [], so the first generate after adoption cleared a user's existing .claude/settings.json permissions including their deny entries.",
+      "rule": "Never scaffold an explicitly empty collection (allow: [], deny: [], mcpServers: {}) into a canonical template — an empty collection is an instruction the generators apply over the user's existing tool config, whereas an absent key means \"not managed yet\". Comment the examples out instead.",
+      "status": "active",
+      "topics": [
+        "generation-safety"
+      ],
+      "triggers": [
+        "t-glob-a4ff119a",
+        "t-kw-8a7ceee6"
+      ]
+    },
     "generation-safety-when-a-defect-is-traced": {
       "createdAt": "2026-09-02",
       "evidence": [
@@ -2340,6 +2366,18 @@
       "triggers": [
         "t-glob-053e51da",
         "t-kw-0560ceb4"
+      ]
+    },
+    "generation-safety-when-making-a-co-owned": {
+      "createdAt": "2026-09-03",
+      "evidence": [],
+      "rule": "When making a co-owned target output revocable (managedOutputs.coOwnedFiles), the merge hook must be able to DELETE or empty the key, and the cleared projection must name only the leaf keys agentsmesh writes — never the containers. A container-level clear (permissions/options/agent objects) destroys the user's sibling keys, and an assign-only merger cannot express revocation at all. Verify the merger against a base holding foreign sibling keys before declaring the claim.",
+      "status": "active",
+      "topics": [
+        "generation-safety"
+      ],
+      "triggers": [
+        "t-glob-98a32718"
       ]
     },
     "generation-safety-when-writing-an-invariant-test": {
@@ -10020,6 +10058,10 @@
       "kind": "file_glob",
       "pattern": "tests/e2e/helpers/reference-targets.ts"
     },
+    "t-glob-98a32718": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/revocation.ts"
+    },
     "t-glob-9a12f490": {
       "kind": "file_glob",
       "pattern": "tests/e2e/lessons-merge-driver.e2e.test.ts"
@@ -10075,6 +10117,10 @@
     "t-glob-a386fcc3": {
       "kind": "file_glob",
       "pattern": "src/targets/deepagents-cli/generator.ts"
+    },
+    "t-glob-a4ff119a": {
+      "kind": "file_glob",
+      "pattern": "src/cli/commands/init-templates.ts"
     },
     "t-glob-a5fc7764": {
       "kind": "file_glob",
@@ -10843,6 +10889,10 @@
     "t-kw-89bf9a2d": {
       "kind": "keyword",
       "pattern": "deepagents agents capability"
+    },
+    "t-kw-8a7ceee6": {
+      "kind": "keyword",
+      "pattern": "init template, scaffold canonical"
     },
     "t-kw-8a80159c": {
       "kind": "keyword",

@@ -54,8 +54,12 @@ export const mergeZedSettings: GeneratedOutputMerger = (
   // rewriting it as strict JSON would silently delete their comments.
   if (merged === null || overlay === null) return base;
   for (const key of ZED_OWNED_SETTINGS_KEYS) {
-    if (overlay[key] === undefined) continue;
-    applyZedOwnedSettingsKey(merged, key, overlay[key]);
+    if (!(key in overlay)) continue;
+    // An explicit `null` is the revocation marker `scope-extras.ts` emits: the
+    // key is claimed but has no canonical content, so it must be removed rather
+    // than left at its previous value. An absent key is simply not claimed.
+    const desired = overlay[key];
+    applyZedOwnedSettingsKey(merged, key, desired === null ? undefined : desired);
   }
   return JSON.stringify(merged, null, 2);
 };

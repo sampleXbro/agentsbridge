@@ -97,7 +97,10 @@ export const globalLayout: TargetLayout = {
       ROO_CODE_GLOBAL_SKILLS_DIR,
       ROO_CODE_GLOBAL_AGENTS_SKILLS_DIR,
     ],
-    files: [ROO_CODE_GLOBAL_MCP_FILE, ROO_CODE_GLOBAL_MODES_FILE],
+    files: [ROO_CODE_GLOBAL_MCP_FILE],
+    // Roo Code writes this file itself whenever the user creates a Global mode;
+    // agentsmesh owns only the modes it marked (see modes-merge.ts).
+    coOwnedFiles: [ROO_CODE_GLOBAL_MODES_FILE],
   },
   rewriteGeneratedPath(path) {
     // Transform project-level paths to global ~/.roo/ paths. The root rule

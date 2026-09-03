@@ -1,10 +1,12 @@
 /**
  * Continue output layouts per scope.
  *
- * `.continue/settings.json` is deliberately absent from `managedOutputs`: it is
+ * `.continue/settings.json` is listed under `coOwnedFiles`, never `files`: it is
  * a user-owned file (description, disableAllHooks, future keys) that agentsmesh
- * only folds a `hooks` key into. Listing it would make stale cleanup delete the
- * whole file whenever canonical hooks are empty.
+ * only folds a `hooks` key into. Listing it under `files` would make stale
+ * cleanup delete the whole file whenever canonical hooks are empty; leaving it
+ * out of `managedOutputs` altogether (as it used to be) hid it from the
+ * revocation invariant, so an emptied `hooks.yaml` left the key live.
  *
  * `.continue/agents` is absent for the same reason: the directory is shared with
  * artifacts agentsmesh never writes — user assistant profiles (`*.yaml`, loaded
@@ -18,6 +20,7 @@ import type { TargetLayout } from '../catalog/target-descriptor.js';
 import { continueAgentFilePath } from './agent-file.js';
 import { continueCommandRulePath } from './command-rule.js';
 import {
+  CONTINUE_SETTINGS,
   CONTINUE_GLOBAL_AGENTS_MD,
   CONTINUE_GLOBAL_CONFIG,
   CONTINUE_GLOBAL_IGNORE,
@@ -36,6 +39,7 @@ export const projectLayout: TargetLayout = {
   managedOutputs: {
     dirs: [CONTINUE_PROMPTS_DIR, CONTINUE_RULES_DIR, CONTINUE_SKILLS_DIR],
     files: [CONTINUE_MCP_FILE, CONTINUE_IGNORE],
+    coOwnedFiles: [CONTINUE_SETTINGS],
   },
   paths: {
     rulePath(slug, _rule) {
@@ -58,13 +62,11 @@ export const globalLayout: TargetLayout = {
   skillDir: CONTINUE_SKILLS_DIR,
   managedOutputs: {
     dirs: [CONTINUE_RULES_DIR, CONTINUE_PROMPTS_DIR, CONTINUE_SKILLS_DIR, '.agents/skills'],
-    files: [
-      CONTINUE_MCP_FILE,
-      CONTINUE_GLOBAL_AGENTS_MD,
-      CONTINUE_GLOBAL_CONFIG,
-      CONTINUE_GLOBAL_PERMISSIONS,
-      CONTINUE_GLOBAL_IGNORE,
-    ],
+    files: [CONTINUE_MCP_FILE, CONTINUE_GLOBAL_AGENTS_MD, CONTINUE_GLOBAL_IGNORE],
+    // `config.yaml` is the user's personal assistant config (models, apiKey,
+    // context providers) and `permissions.yaml` is written by Continue itself
+    // when the user approves a tool; agentsmesh owns only some keys of each.
+    coOwnedFiles: [CONTINUE_GLOBAL_CONFIG, CONTINUE_GLOBAL_PERMISSIONS, CONTINUE_SETTINGS],
   },
   mirrorGlobalPath(path, _activeTargets) {
     if (path.startsWith(`${CONTINUE_SKILLS_DIR}/`)) {

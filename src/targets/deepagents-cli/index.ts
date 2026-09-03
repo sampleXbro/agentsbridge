@@ -35,6 +35,7 @@ import {
 import { deepagentsCliAgentMapper } from './agent-format.js';
 import { mergeDeepagentsMcpJson } from './mcp-merge.js';
 import { deepagentsCliScopeExtras } from './scope-extras.js';
+import { mergeDeepagentsHooksJson } from './hooks-merge.js';
 import { importFromDeepagentsCli } from './importer.js';
 import { lintRules } from './linter.js';
 import { lintPermissions, lintIgnore, lintHooks } from './lint.js';
@@ -112,7 +113,9 @@ export const descriptor = {
   },
   generators: target,
   capabilities,
-  mergeGeneratedOutputContent: mergeDeepagentsMcpJson,
+  mergeGeneratedOutputContent: (existing, pending, newContent, resolvedPath) =>
+    mergeDeepagentsMcpJson(existing, pending, newContent, resolvedPath) ??
+    mergeDeepagentsHooksJson(existing, pending, newContent, resolvedPath),
   emptyImportMessage:
     'No Deep Agents CLI config found (.deepagents/AGENTS.md, .deepagents/skills, or .mcp.json).',
   lintRules,

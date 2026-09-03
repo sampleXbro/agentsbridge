@@ -19,7 +19,7 @@
 
 import { Document, isMap, isSeq, parseDocument, parse as parseYaml, type Node } from 'yaml';
 import type { GeneratedOutputMerger } from '../catalog/target-descriptor.js';
-import { ROO_CODE_GLOBAL_MODES_FILE } from './constants.js';
+import { ROO_CODE_GLOBAL_MODES_FILE, ROO_CODE_MODES_FILE } from './constants.js';
 
 /** Written above every mode agentsmesh emits; its presence is the ownership proof. */
 export const ROO_MODE_MARKER = ' agentsmesh: generated from .agentsmesh/agents/ — do not edit';
@@ -64,13 +64,18 @@ export function mergeRooCustomModes(base: string | null, newContent: string): st
   const slugs = new Set(modes.map((mode) => mode.slug));
   const seq = doc.get('customModes', true);
   const existing = isSeq(seq) ? seq.items : [];
+  // Re-parsing moves the comment above the FIRST item onto the sequence node
+  // itself, so the first mode's ownership marker arrives here. Without this the
+  // first generated mode reads back as the user's and is never revoked.
+  const firstMarked = isSeq(seq) && isMarked(seq);
 
   const kept: unknown[] = [];
   const carried = new Map<unknown, Json>();
-  for (const item of existing) {
+  for (const [index, item] of existing.entries()) {
     const value: unknown = isMap(item) ? item.toJSON() : item;
     const slug = isRecord(value) ? value.slug : undefined;
-    if (isMarked(item) || (slug !== undefined && slugs.has(slug))) {
+    const marked = isMarked(item) || (index === 0 && firstMarked);
+    if (marked || (slug !== undefined && slugs.has(slug))) {
       if (isRecord(value)) carried.set(slug, value);
       continue;
     }
@@ -89,12 +94,18 @@ export function mergeRooCustomModes(base: string | null, newContent: string): st
   return doc.toString();
 }
 
+/**
+ * Both scopes, one merge: `.roomodes` is the project store Roo writes when the
+ * user creates a mode at Project scope, and `custom_modes.yaml` is its Global
+ * twin. Only one is ever resolved per run — the global layout suppresses
+ * `.roomodes` (`layout.ts`) and emits the settings file from `scopeExtras`.
+ */
 export const mergeRooCustomModesYaml: GeneratedOutputMerger = (
   existing,
   pending,
   newContent,
   resolvedPath,
 ) =>
-  resolvedPath === ROO_CODE_GLOBAL_MODES_FILE
+  resolvedPath === ROO_CODE_GLOBAL_MODES_FILE || resolvedPath === ROO_CODE_MODES_FILE
     ? mergeRooCustomModes(pending?.content ?? existing, newContent)
     : null;

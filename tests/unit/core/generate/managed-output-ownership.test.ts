@@ -155,7 +155,7 @@ describe('managedOutputs ownership invariant', () => {
     expect(overlaps).toEqual([]);
   });
 
-  it('declares exactly the 40 co-owned paths the audit identified', () => {
+  it('declares exactly the 41 co-owned paths the audit identified', () => {
     const rows: string[] = [];
     for (const row of scopedLayouts(allDescriptors)) {
       for (const file of row.layout.managedOutputs?.coOwnedFiles ?? []) {
@@ -220,6 +220,10 @@ describe('managedOutputs ownership invariant', () => {
         // Roo Code writes this itself when the user creates a Global mode;
         // agentsmesh owns only the modes carrying its marker comment.
         'roo-code global .roo/settings/custom_modes.yaml',
+        // Roo's own project custom-modes store: it writes here whenever the
+        // user creates a mode at Project scope, so agentsmesh owns only the
+        // modes carrying its marker comment (modes-merge.ts).
+        'roo-code project .roomodes',
         'roo-code project .vscode/settings.json',
         'rovodev global .rovodev/config.yml',
       ].sort(),

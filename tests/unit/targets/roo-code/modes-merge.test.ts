@@ -81,6 +81,28 @@ describe('mergeRooCustomModes', () => {
     ]);
   });
 
+  // On re-parse, YAML reattaches the comment above the FIRST sequence item to
+  // the sequence node itself, so the first generated mode used to come back
+  // unmarked and was never revoked — it silently became "the user's" forever.
+  it('drops the FIRST marked mode too when its canonical agent is gone', () => {
+    const previous = mergeRooCustomModes(
+      null,
+      [
+        'customModes:',
+        '  - slug: beta',
+        '    name: beta',
+        '  - slug: gamma',
+        '    name: gamma',
+        '',
+      ].join('\n'),
+    );
+    const merged = mergeRooCustomModes(
+      previous,
+      ['customModes:', '  - slug: gamma', '    name: gamma', ''].join('\n'),
+    );
+    expect(modes(merged).map((m) => m.slug)).toEqual(['gamma']);
+  });
+
   it('returns the base verbatim when the generated content is not a modes document', () => {
     expect(mergeRooCustomModes('customModes: []\n', 'just a string\n')).toBe('customModes: []\n');
     expect(mergeRooCustomModes('customModes: []\n', 'a: [unclosed\n')).toBe('customModes: []\n');
@@ -142,8 +164,10 @@ describe('mergeRooCustomModes', () => {
 });
 
 describe('mergeRooCustomModesYaml', () => {
+  // `.roomodes` is owned too — it is the project twin of this file. See
+  // tests/unit/targets/roo-code/project-modes-merge.test.ts.
   it('declines a path it does not own', () => {
-    expect(mergeRooCustomModesYaml(null, undefined, GENERATED, '.roomodes')).toBeNull();
+    expect(mergeRooCustomModesYaml(null, undefined, GENERATED, '.roo/mcp.json')).toBeNull();
   });
 
   it('prefers a pending result over the on-disk file as merge base', () => {

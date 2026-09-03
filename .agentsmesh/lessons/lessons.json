@@ -2324,6 +2324,20 @@
         "t-kw-d6fa9b31"
       ]
     },
+    "generation-safety-a-yaml-ownership-marker-written": {
+      "createdAt": "2026-09-03",
+      "evidence": [],
+      "rationale": "mergeRooCustomModes marked every mode it wrote, but on re-read item 0 had commentBefore undefined, so the first generated Roo mode was treated as user-authored and never revoked; the existing test only revoked a second item so it passed.",
+      "rule": "A YAML ownership marker written as a comment above the FIRST sequence item does not survive a round-trip on that item — the parser reattaches it to the sequence node's commentBefore. Always assert revocation of the first item, not just a middle one, or the marker scheme silently fails for it.",
+      "status": "active",
+      "topics": [
+        "generation-safety"
+      ],
+      "triggers": [
+        "t-glob-862adcd2",
+        "t-kw-4c615812"
+      ]
+    },
     "generation-safety-never-scaffold-an-explicitly-empty": {
       "createdAt": "2026-09-03",
       "evidence": [],
@@ -2352,6 +2366,20 @@
       "triggers": [
         "t-glob-87a63917",
         "t-kw-b97d39e2"
+      ]
+    },
+    "generation-safety-when-a-target-has-project": {
+      "createdAt": "2026-09-03",
+      "evidence": [],
+      "rationale": "mergeRooCustomModesYaml claimed only ~/.roo/settings/custom_modes.yaml, so .roomodes (Roo's project custom-modes store) was still replaced wholesale and deleted when the agents feature was disabled.",
+      "rule": "When a target has project and global twins of the same user-owned file, make the merge hook claim BOTH path constants in one place — fixing only the scope you were looking at leaves the twin on whole-file replacement, and its layout entry on the stale-cleanup delete list.",
+      "status": "active",
+      "topics": [
+        "generation-safety"
+      ],
+      "triggers": [
+        "t-glob-862adcd2",
+        "t-kw-e2f842f3"
       ]
     },
     "generation-safety-when-adding-mergegeneratedoutputcontent": {
@@ -10026,6 +10054,10 @@
       "kind": "file_glob",
       "pattern": "tests/fixtures/plugins/rich-plugin/index.js"
     },
+    "t-glob-862adcd2": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/modes-merge.ts"
+    },
     "t-glob-86844292": {
       "kind": "file_glob",
       "pattern": "tests/unit/lessons/paths.test.ts"
@@ -10758,6 +10790,10 @@
       "kind": "keyword",
       "pattern": "colocate"
     },
+    "t-kw-4c615812": {
+      "kind": "keyword",
+      "pattern": "commentBefore, yaml marker"
+    },
     "t-kw-4df0ba9f": {
       "kind": "keyword",
       "pattern": "jsdoc"
@@ -11185,6 +11221,10 @@
     "t-kw-e2160d81": {
       "kind": "keyword",
       "pattern": "subagent fixes"
+    },
+    "t-kw-e2f842f3": {
+      "kind": "keyword",
+      "pattern": "project global twin"
     },
     "t-kw-e3a2ec15": {
       "kind": "keyword",

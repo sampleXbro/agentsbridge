@@ -56,8 +56,10 @@ describe('warp global layout', () => {
     expect(rewrite(WARP_GLOBAL_MCP_FILE)).toBe(WARP_GLOBAL_MCP_FILE);
   });
 
-  it('managedOutputs.files includes the global mcp file', () => {
-    expect(descriptor.globalSupport!.layout.managedOutputs.files).toContain(WARP_GLOBAL_MCP_FILE);
+  it('co-owns the global mcp file rather than delete-listing it', () => {
+    const managed = descriptor.globalSupport!.layout.managedOutputs;
+    expect(managed.coOwnedFiles).toContain(WARP_GLOBAL_MCP_FILE);
+    expect(managed.files).not.toContain(WARP_GLOBAL_MCP_FILE);
   });
 
   it('globalSupport has detection paths', () => {

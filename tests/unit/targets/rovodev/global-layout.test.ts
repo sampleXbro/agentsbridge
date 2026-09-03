@@ -101,7 +101,8 @@ describe('rovodev global layout', () => {
     expect(descriptor.project.managedOutputs!.dirs).toContain(ROVODEV_SKILLS_DIR);
     expect(descriptor.project.managedOutputs!.dirs).toContain(ROVODEV_COMMANDS_DIR);
     expect(descriptor.project.managedOutputs!.files).toContain(ROVODEV_ROOT_FILE);
-    expect(descriptor.project.managedOutputs!.files).toContain(ROVODEV_PROMPTS_FILE);
+    // Co-owned: the user authors prompts in the manifest, so it is never deleted.
+    expect(descriptor.project.managedOutputs!.coOwnedFiles).toContain(ROVODEV_PROMPTS_FILE);
   });
 
   it('global layout has correct rootInstructionPath', () => {
@@ -122,16 +123,19 @@ describe('rovodev global layout', () => {
     expect(descriptor.globalSupport!.layout.managedOutputs!.files).toContain(
       ROVODEV_GLOBAL_ROOT_FILE,
     );
-    expect(descriptor.globalSupport!.layout.managedOutputs!.files).toContain(
+    expect(descriptor.globalSupport!.layout.managedOutputs!.coOwnedFiles).toContain(
       ROVODEV_GLOBAL_PROMPTS_FILE,
     );
-    expect(descriptor.globalSupport!.layout.managedOutputs!.files).toContain(
-      ROVODEV_GLOBAL_MCP_FILE,
-    );
-    // Co-owned: Rovo Dev's documented settings file, never stale-deleted.
+    // Co-owned: Rovo Dev's documented settings file and the MCP config the CLI
+    // manages — never stale-deleted.
     expect(descriptor.globalSupport!.layout.managedOutputs!.coOwnedFiles).toEqual([
       ROVODEV_GLOBAL_CONFIG_FILE,
+      ROVODEV_GLOBAL_MCP_FILE,
+      ROVODEV_GLOBAL_PROMPTS_FILE,
     ]);
+    expect(descriptor.globalSupport!.layout.managedOutputs!.files).not.toContain(
+      ROVODEV_GLOBAL_MCP_FILE,
+    );
   });
 
   it('detection paths include project-level paths', () => {

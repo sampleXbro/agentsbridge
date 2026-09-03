@@ -25,6 +25,7 @@ import {
   CLINE_GLOBAL_WORKFLOWS_DIR,
 } from './constants.js';
 import { importFromCline } from './importer.js';
+import { mergeClineOutput } from './merge.js';
 import { lintRules } from './linter.js';
 import { lintCommands, lintHooks, lintPermissions } from './lint.js';
 import { buildClineImportPaths } from '../../core/reference/import-map-builders.js';
@@ -48,13 +49,12 @@ const project: TargetLayout = {
   skillDir: CLINE_SKILLS_DIR,
   managedOutputs: {
     dirs: [CLINE_SKILLS_DIR, CLINE_RULES_DIR, CLINE_HOOKS_DIR, CLINE_WORKFLOWS_DIR],
-    files: [
-      'AGENTS.md',
-      CLINE_MCP_SETTINGS,
-      CLINE_IGNORE,
-      CLINE_AGENTS_FILE,
-      `${CLINE_RULES_DIR}/typescript.md`,
-    ],
+    files: ['AGENTS.md', CLINE_IGNORE, `${CLINE_RULES_DIR}/typescript.md`],
+    // Cline's own MCP settings file (its MCP panel writes `disabled`,
+    // `autoApprove` and `timeout` back into it) and the combined agents
+    // manifest, whose ownership is unresolved in-repo — both merged key-scoped
+    // and never deleted (see merge.ts).
+    coOwnedFiles: [CLINE_MCP_SETTINGS, CLINE_AGENTS_FILE],
   },
   paths: {
     rulePath(slug, _rule) {
@@ -187,4 +187,5 @@ export const descriptor = {
   // is kept so the shared "none → embedded via skill projection" upgrade never
   // fires for global scope, which has no agents surface at all.
   conversionDefaults: { agentsToSkills: false },
+  mergeGeneratedOutputContent: mergeClineOutput,
 } satisfies TargetDescriptor;

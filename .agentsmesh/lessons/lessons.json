@@ -2450,6 +2450,20 @@
         "t-kw-b9c4415c"
       ]
     },
+    "generation-safety-when-you-add-a-guard": {
+      "createdAt": "2026-09-03",
+      "evidence": [],
+      "rationale": "mergeMcpServersJson returned newContent for an unparsable base long after mergeOwnedJsonKeys was fixed to preserve it; a later sweep then wired that helper into ~20 more paths, multiplying the data loss.",
+      "rule": "When you add a guard to one merge helper (e.g. preservedUnparsableBase in json-owned-keys.ts), grep every sibling helper in src/core/generate for the same parse-then-fall-back shape and apply it there too — a second helper without the guard silently reintroduces the bug at whatever scale the next sweep applies it.",
+      "status": "active",
+      "topics": [
+        "generation-safety"
+      ],
+      "triggers": [
+        "t-glob-cf079804",
+        "t-kw-e9ca865e"
+      ]
+    },
     "git-commit-hygiene-before-creating-a-new-standalone": {
       "createdAt": "2026-06-24",
       "evidence": [
@@ -10330,6 +10344,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/regex-linear/*.ts"
     },
+    "t-glob-cf079804": {
+      "kind": "file_glob",
+      "pattern": "src/core/generate/*-merge.ts"
+    },
     "t-glob-d044343b": {
       "kind": "file_glob",
       "pattern": "README.md"
@@ -11253,6 +11271,10 @@
     "t-kw-e86a782c": {
       "kind": "keyword",
       "pattern": "lessons_query"
+    },
+    "t-kw-e9ca865e": {
+      "kind": "keyword",
+      "pattern": "merge helper guard"
     },
     "t-kw-ebee7e76": {
       "kind": "keyword",

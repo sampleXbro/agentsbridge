@@ -127,7 +127,10 @@ describe('codebuff project layout', () => {
   it('manages only directories and files agentsmesh fully owns', () => {
     expect(descriptor.project.managedOutputs).toEqual({
       dirs: [CODEBUFF_SKILLS_DIR],
-      files: [CODEBUFF_ROOT_FILE, CODEBUFF_MCP_FILE, CODEBUFF_IGNORE_FILE],
+      files: [CODEBUFF_ROOT_FILE, CODEBUFF_IGNORE_FILE],
+      // Hand-authored config inside the user's `.agents/` tree: merged, never
+      // deleted (merge.ts).
+      coOwnedFiles: [CODEBUFF_MCP_FILE],
     });
   });
 

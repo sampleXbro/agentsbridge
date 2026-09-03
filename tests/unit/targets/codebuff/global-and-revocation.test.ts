@@ -146,7 +146,12 @@ describe('codebuff global scope generation', () => {
 });
 
 describe('codebuff revocation', () => {
-  it('deletes .agents/mcp.json when the last canonical server is removed', async () => {
+  // `.agents/mcp.json` lives in the user-scaffolded `.agents/` tree and is
+  // hand-authored, so it is co-owned: emptying canonical stops writing servers
+  // into it but must never delete the file. Revoking to EMPTY is the same
+  // documented gap every co-owned file has — the run emits nothing, so there is
+  // nothing to merge a revocation into.
+  it('keeps .agents/mcp.json when the last canonical server is removed', async () => {
     dir = createCanonicalProject(CONFIG);
     expect((await runGenerate({ targets: 'codebuff' }, dir, { printMatrix: false })).exitCode).toBe(
       0,
@@ -158,7 +163,7 @@ describe('codebuff revocation', () => {
       0,
     );
 
-    expect(existsSync(join(dir, CODEBUFF_MCP_FILE))).toBe(false);
+    expect(existsSync(join(dir, CODEBUFF_MCP_FILE))).toBe(true);
   });
 
   it('deletes .codebuffignore when the canonical ignore file is emptied', async () => {

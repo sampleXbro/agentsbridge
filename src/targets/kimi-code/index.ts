@@ -29,6 +29,7 @@ import {
 } from './generator.js';
 import { projectLayout, globalLayout } from './layout.js';
 import { importFromKimiCode } from './importer.js';
+import { mergeKimiCodeMcpJson } from './merge.js';
 import { lintRules } from './linter.js';
 import { lintAgents, lintHooks, lintMcp, lintPermissions } from './lint.js';
 import { kimiCodeScopeExtras } from './scope-extras.js';
@@ -92,6 +93,7 @@ const globalCapabilities: TargetCapabilities = {
 };
 
 export const descriptor = {
+  mergeGeneratedOutputContent: mergeKimiCodeMcpJson,
   id: KIMI_CODE_TARGET,
   metadata: {
     displayName: 'Kimi Code CLI',

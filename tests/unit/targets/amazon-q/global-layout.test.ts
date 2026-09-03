@@ -44,9 +44,12 @@ describe('amazon-q descriptor', () => {
     expect(descriptor.detectionPaths).toContain(AMAZON_Q_MCP_FILE);
   });
 
-  it('has project managedOutputs for rules dir and mcp file', () => {
+  // `q mcp add --scope workspace` writes the MCP file too, so it is co-owned
+  // (merged, never deleted) rather than delete-listed.
+  it('has project managedOutputs for rules dir and co-owns the mcp file', () => {
     expect(descriptor.project.managedOutputs?.dirs).toContain(AMAZON_Q_RULES_DIR);
-    expect(descriptor.project.managedOutputs?.files).toContain(AMAZON_Q_MCP_FILE);
+    expect(descriptor.project.managedOutputs?.coOwnedFiles).toContain(AMAZON_Q_MCP_FILE);
+    expect(descriptor.project.managedOutputs?.files).not.toContain(AMAZON_Q_MCP_FILE);
   });
 });
 
@@ -104,10 +107,11 @@ describe('amazon-q global layout', () => {
     expect(rulePath).toBe(`${AMAZON_Q_GLOBAL_RULES_DIR}/security.md`);
   });
 
-  it('global managedOutputs include global rules dir and mcp file', () => {
+  it('global managedOutputs include global rules dir and co-own the mcp file', () => {
     const managedOutputs = descriptor.globalSupport?.layout.managedOutputs;
     expect(managedOutputs?.dirs).toContain(AMAZON_Q_GLOBAL_RULES_DIR);
-    expect(managedOutputs?.files).toContain(AMAZON_Q_GLOBAL_MCP_FILE);
+    expect(managedOutputs?.coOwnedFiles).toContain(AMAZON_Q_GLOBAL_MCP_FILE);
+    expect(managedOutputs?.files).not.toContain(AMAZON_Q_GLOBAL_MCP_FILE);
   });
 });
 

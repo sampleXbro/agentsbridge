@@ -55,7 +55,7 @@ import { kiloAgentMapper, kiloCommandMapper, kiloNonRootRuleMapper } from './imp
 import { lintRules } from './linter.js';
 import { lintHooks } from './lint.js';
 import { buildKiloCodeImportPaths } from '../../core/reference/import-map-builders.js';
-import { mergeKiloConfig } from './merge.js';
+import { mergeKiloConfig, mergeKiloMcpJson } from './merge.js';
 import { emitKiloGlobalSettings } from './global-settings.js';
 import { project, globalLayout, capabilities, globalCapabilities } from './layout.js';
 
@@ -88,7 +88,9 @@ export const descriptor = {
   lint: {
     hooks: lintHooks,
   },
-  mergeGeneratedOutputContent: mergeKiloConfig,
+  mergeGeneratedOutputContent: (existing, pending, newContent, resolvedPath) =>
+    mergeKiloConfig(existing, pending, newContent, resolvedPath) ??
+    mergeKiloMcpJson(existing, pending, newContent, resolvedPath),
   emitScopedSettings: emitKiloGlobalSettings,
   project,
   globalSupport: {

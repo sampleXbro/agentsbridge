@@ -1,8 +1,8 @@
 /**
  * `cleanupStaleGeneratedOutputs` deletes every path a target declares in
  * `managedOutputs` that the run did not emit. `.agents/` holds the user's own
- * agent modules, so the layout lists `.agents/skills` and `.agents/mcp.json`
- * but never `.agents` itself.
+ * agent modules, so the layout lists `.agents/skills` but never `.agents`
+ * itself, and `.agents/mcp.json` is co-owned rather than delete-listed.
  */
 
 import { describe, it, expect, afterEach } from 'vitest';
@@ -61,7 +61,8 @@ describe('codebuff managed outputs never claim the user .agents directory', () =
     expect(stale).not.toContain('.agents/my-custom-agent.ts');
     expect(stale).not.toContain('.agents/types/agent-definition.ts');
     expect(stale).not.toContain('.agents/package.json');
-    // The two single-purpose files agentsmesh owns end to end DO get revoked.
-    expect(stale).toEqual(['.agents/mcp.json', '.codebuffignore']);
+    // `.codebuffignore` is agentsmesh's end to end and DOES get revoked;
+    // `.agents/mcp.json` is co-owned, so cleanup never reaches it.
+    expect(stale).toEqual(['.codebuffignore']);
   });
 });

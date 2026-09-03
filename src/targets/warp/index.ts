@@ -28,6 +28,7 @@ import {
 } from './generator.js';
 import { project, globalLayout } from './layout.js';
 import { importFromWarp } from './importer.js';
+import { mergeWarpMcpJson } from './merge.js';
 import { lintRules } from './linter.js';
 import { lintHooks, lintPermissions, lintIgnore } from './lint.js';
 import { warpScopeExtras } from './scope-extras.js';
@@ -84,6 +85,7 @@ const globalCapabilities: TargetCapabilities = {
 };
 
 export const descriptor = {
+  mergeGeneratedOutputContent: mergeWarpMcpJson,
   id: WARP_TARGET,
   metadata: {
     displayName: 'Warp',

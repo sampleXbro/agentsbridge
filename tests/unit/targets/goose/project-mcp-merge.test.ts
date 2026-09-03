@@ -168,12 +168,13 @@ describe('goose mergeGeneratedOutputContent — project .mcp.json', () => {
     expect(Object.keys(merged.mcpServers)).toEqual(['filesystem']);
   });
 
-  it('falls back to the generated document when the existing file is not JSON', () => {
-    expect(merge('{ not json', generated)).toBe(generated);
+  // Preserved, not replaced: rewriting a file we cannot parse drops every key.
+  it('preserves an existing file that is not JSON', () => {
+    expect(merge('{ not json', generated)).toBe('{ not json');
   });
 
-  it('falls back to the generated document when the existing file is a JSON array', () => {
-    expect(merge('[]', generated)).toBe(generated);
+  it('preserves an existing file that is a JSON array', () => {
+    expect(merge('[]', generated)).toBe('[]');
   });
 
   it('returns the generated document when there is no existing file', () => {

@@ -26,9 +26,11 @@ import {
   CURSOR_SETTINGS,
   CURSOR_SKILLS_DIR,
   CURSOR_GLOBAL_CLI_CONFIG,
+  CURSOR_CLI_JSON,
 } from './constants.js';
 import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromCursor } from './importer.js';
+import { mergeCursorOutput } from './merge.js';
 import { cursorAgentMapper, cursorCommandMapper } from './import-mappers.js';
 import { lintRules } from './linter.js';
 import { buildCursorImportPaths } from '../../core/reference/import-map-builders.js';
@@ -60,13 +62,12 @@ const project: TargetLayout = {
   skillDir: '.cursor/skills',
   managedOutputs: {
     dirs: ['.cursor/agents', '.cursor/commands', '.cursor/rules', '.cursor/skills'],
-    files: [
-      '.cursor/hooks.json',
-      '.cursor/mcp.json',
-      '.cursor/cli.json',
-      '.cursorignore',
-      'AGENTS.md',
-    ],
+    files: ['.cursorignore', 'AGENTS.md'],
+    // All three are Cursor's own files: the MCP panel writes mcp.json, hooks
+    // are hand-authored or plugin-installed, and cli.json is the Agent CLI
+    // config (version/editor/network live beside `permissions`). agentsmesh
+    // owns only its keys inside each (see merge.ts).
+    coOwnedFiles: [CURSOR_HOOKS, CURSOR_MCP, CURSOR_CLI_JSON],
   },
   paths: {
     rulePath(slug, _rule) {
@@ -93,15 +94,8 @@ const globalLayout: TargetLayout = {
   skillDir: CURSOR_SKILLS_DIR,
   managedOutputs: {
     dirs: [CURSOR_RULES_DIR, CURSOR_COMMANDS_DIR, CURSOR_AGENTS_DIR, CURSOR_SKILLS_DIR],
-    files: [
-      CURSOR_GENERAL_RULE,
-      CURSOR_DOT_CURSOR_AGENTS,
-      CURSOR_MCP,
-      CURSOR_HOOKS,
-      CURSOR_IGNORE,
-      CURSOR_GLOBAL_CLI_CONFIG,
-      CURSOR_GLOBAL_USER_RULES,
-    ],
+    files: [CURSOR_GENERAL_RULE, CURSOR_DOT_CURSOR_AGENTS, CURSOR_IGNORE, CURSOR_GLOBAL_USER_RULES],
+    coOwnedFiles: [CURSOR_MCP, CURSOR_HOOKS, CURSOR_GLOBAL_CLI_CONFIG],
   },
   rewriteGeneratedPath(path) {
     if (path === CURSOR_COMPAT_AGENTS) return null;
@@ -145,6 +139,7 @@ const globalCapabilities: TargetCapabilities = {
 };
 
 export const descriptor = {
+  mergeGeneratedOutputContent: mergeCursorOutput,
   id: 'cursor',
   metadata: {
     displayName: 'Cursor',

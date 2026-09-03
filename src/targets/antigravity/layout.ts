@@ -59,8 +59,10 @@ export const projectLayout: TargetLayout = {
       ANTIGRAVITY_WORKFLOWS_DIR,
       ANTIGRAVITY_SKILLS_DIR,
     ],
-    files: [ANTIGRAVITY_RULES_ROOT, ANTIGRAVITY_HOOKS_FILE, ANTIGRAVITY_IGNORE_FILE],
-    coOwnedFiles: [ANTIGRAVITY_MCP_CONFIG],
+    files: [ANTIGRAVITY_RULES_ROOT, ANTIGRAVITY_IGNORE_FILE],
+    // hooks.json is keyed by user-chosen handler names and there is no hooks
+    // importer, so an overwritten handler is unrecoverable (see hooks-merge.ts).
+    coOwnedFiles: [ANTIGRAVITY_MCP_CONFIG, ANTIGRAVITY_HOOKS_FILE],
   },
   paths: {
     rulePath(slug, _rule) {
@@ -85,8 +87,8 @@ export const globalLayout: TargetLayout = {
       ANTIGRAVITY_GLOBAL_SKILLS_DIR,
       ANTIGRAVITY_GLOBAL_WORKFLOWS_DIR,
     ],
-    files: [ANTIGRAVITY_GLOBAL_ROOT, ANTIGRAVITY_GLOBAL_HOOKS_FILE],
-    coOwnedFiles: [ANTIGRAVITY_GLOBAL_MCP_CONFIG],
+    files: [ANTIGRAVITY_GLOBAL_ROOT],
+    coOwnedFiles: [ANTIGRAVITY_GLOBAL_MCP_CONFIG, ANTIGRAVITY_GLOBAL_HOOKS_FILE],
   },
   rewriteGeneratedPath(path) {
     if (path === ANTIGRAVITY_HOOKS_FILE) return ANTIGRAVITY_GLOBAL_HOOKS_FILE;

@@ -10,7 +10,8 @@ import {
   generatePermissions,
   renderJunieGlobalInstructions,
 } from './generator.js';
-import { emitJunieScopedSettings, mergeJunieConfig } from './global-config.js';
+import { emitJunieScopedSettings } from './global-config.js';
+import { mergeJunieOutput } from './merge.js';
 import {
   JUNIE_DOT_AGENTS,
   JUNIE_RULES_DIR,
@@ -57,7 +58,10 @@ const project: TargetLayout = {
   skillDir: '.junie/skills',
   managedOutputs: {
     dirs: ['.junie/agents', '.junie/commands', '.junie/rules', '.junie/skills'],
-    files: ['.aiignore', '.junie/AGENTS.md', '.junie/mcp/mcp.json'],
+    files: ['.aiignore', '.junie/AGENTS.md'],
+    // Junie's IDE/CLI MCP settings UI writes this file; agentsmesh owns only
+    // the server set inside it (see merge.ts).
+    coOwnedFiles: [JUNIE_MCP_FILE],
   },
   paths: {
     rulePath(slug, _rule) {
@@ -83,10 +87,12 @@ const globalLayout: TargetLayout = {
       JUNIE_GLOBAL_COMMANDS_DIR,
       JUNIE_GLOBAL_AGENTS_SKILLS_DIR,
     ],
-    files: [JUNIE_GLOBAL_AGENTS_MD, JUNIE_GLOBAL_MCP_FILE, JUNIE_GLOBAL_ALLOWLIST],
+    files: [JUNIE_GLOBAL_AGENTS_MD],
     // Junie's own config file (model, provider, API keys); the merge keeps
-    // every pre-existing key.
-    coOwnedFiles: [JUNIE_GLOBAL_CONFIG],
+    // every pre-existing key. `allowlist.json` is the persistent Action
+    // Allowlist every "Always allow" approval is written into, so agentsmesh
+    // owns only `rules.executables` there (see merge.ts).
+    coOwnedFiles: [JUNIE_GLOBAL_CONFIG, JUNIE_GLOBAL_MCP_FILE, JUNIE_GLOBAL_ALLOWLIST],
   },
   rewriteGeneratedPath(path) {
     // Transform project-level paths to global ~/.junie/ paths
@@ -183,10 +189,7 @@ export const descriptor = {
     layout: globalLayout,
   },
   emitScopedSettings: emitJunieScopedSettings,
-  mergeGeneratedOutputContent(existing, _pending, newContent, resolvedPath) {
-    if (resolvedPath !== JUNIE_GLOBAL_CONFIG) return null;
-    return mergeJunieConfig(existing, newContent);
-  },
+  mergeGeneratedOutputContent: mergeJunieOutput,
   importer: {
     rules: {
       feature: 'rules',

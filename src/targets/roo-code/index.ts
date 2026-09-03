@@ -35,7 +35,7 @@ import {
   globalCapabilities,
   generateRooGlobalExtras,
 } from './layout.js';
-import { mergeRooCodeSettings } from './merge.js';
+import { mergeRooCodeSettings, mergeRooProjectMcpJson } from './merge.js';
 import { mergeRooCustomModesYaml } from './modes-merge.js';
 import { importFromRooCode } from './importer.js';
 import { rooCommandMapper, rooNonRootRuleMapper } from './import-mappers.js';
@@ -142,7 +142,8 @@ export const descriptor = {
   },
   mergeGeneratedOutputContent: (existing, pending, newContent, resolvedPath) =>
     mergeRooCodeSettings(existing, pending, newContent, resolvedPath) ??
-    mergeRooCustomModesYaml(existing, pending, newContent, resolvedPath),
+    mergeRooCustomModesYaml(existing, pending, newContent, resolvedPath) ??
+    mergeRooProjectMcpJson(existing, pending, newContent, resolvedPath),
   buildImportPaths: buildRooCodeImportPaths,
   detectionPaths: [
     '.roo/rules',

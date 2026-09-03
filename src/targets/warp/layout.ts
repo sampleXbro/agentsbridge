@@ -21,7 +21,10 @@ export const project: TargetLayout = {
   skillDir: WARP_SKILLS_DIR,
   managedOutputs: {
     dirs: [WARP_SKILLS_DIR],
-    files: [WARP_ROOT_FILE, WARP_MCP_FILE, WARP_IGNORE_FILE],
+    files: [WARP_ROOT_FILE, WARP_IGNORE_FILE],
+    // The MCP config Warp reads and users author; agentsmesh owns only the
+    // server set inside it (see merge.ts).
+    coOwnedFiles: [WARP_MCP_FILE],
   },
   paths: {
     rulePath(_slug) {
@@ -41,7 +44,8 @@ export const globalLayout: TargetLayout = {
   skillDir: WARP_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [WARP_GLOBAL_SKILLS_DIR],
-    files: [WARP_GLOBAL_ROOT_FILE, WARP_GLOBAL_MCP_FILE],
+    files: [WARP_GLOBAL_ROOT_FILE],
+    coOwnedFiles: [WARP_GLOBAL_MCP_FILE],
   },
   rewriteGeneratedPath(path) {
     if (path === WARP_ROOT_FILE) return WARP_GLOBAL_ROOT_FILE;

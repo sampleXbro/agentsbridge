@@ -130,7 +130,9 @@ describe('cleanupStaleGeneratedOutputs', () => {
     expect(existsSync(join(TEST_ROOT, '.cursor', 'skills', 'review', 'SKILL.md'))).toBe(false);
     expect(existsSync(join(TEST_ROOT, '.cursor', 'agents', 'reviewer.md'))).toBe(false);
     expect(existsSync(join(TEST_ROOT, '.cursor', 'commands', 'ship.md'))).toBe(false);
-    expect(existsSync(join(TEST_ROOT, '.cursor', 'mcp.json'))).toBe(false);
+    // `.cursor/mcp.json` is what Cursor's MCP panel writes, so it is co-owned
+    // and cleanup must leave it alone.
+    expect(existsSync(join(TEST_ROOT, '.cursor', 'mcp.json'))).toBe(true);
   });
 
   it('uses Codex global managed outputs for cleanup', async () => {

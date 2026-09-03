@@ -7,6 +7,14 @@
  * key is replaced wholesale, not deep-merged.
  */
 
+import type { GeneratedOutputMerger } from '../../targets/catalog/target-descriptor.js';
+
+function asObject(value: unknown): Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
 function parseJsonObject(raw: string): Record<string, unknown> | null {
   try {
     const parsed: unknown = JSON.parse(raw);
@@ -82,5 +90,55 @@ export function ownedJsonKeysMerger(
   return (existing, pending, newContent, resolvedPath) =>
     paths.includes(resolvedPath)
       ? mergeOwnedJsonKeys(pending?.content ?? existing, newContent, ownedKeys)
+      : null;
+}
+
+/**
+ * Same contract one level down: agentsmesh owns `ownedSubKeys` INSIDE
+ * `container`, and nothing else in the document.
+ *
+ * `~/.junie/allowlist.json` is the case that needs it. Junie stores every
+ * approval the user accepts with "Always allow" there, split into categories
+ * (`fileEditing`, `executables`, `mcpTools`, `readOutsideProject`,
+ * `readSecretFile`), and agentsmesh maps canonical permissions into exactly one
+ * of them. Owning the whole `rules` key would still erase the other four, so the
+ * merge has to reach inside it.
+ *
+ * Revocation still works: `container[subKey]` is replaced wholesale, and a
+ * sub-key the generated content no longer carries is dropped from the base.
+ */
+export function mergeOwnedJsonSubKeys(
+  base: string | null,
+  newContent: string,
+  container: string,
+  ownedSubKeys: readonly string[],
+): string | null {
+  if (base === null || base.trim() === '') return null;
+  const incoming = parseJsonObject(newContent);
+  if (incoming === null) return null;
+  const baseObject = parseJsonObject(base);
+  if (baseObject === null) return base;
+
+  const baseContainer = asObject(baseObject[container]);
+  const incomingContainer = asObject(incoming[container]);
+  const merged: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(baseContainer)) {
+    if (!ownedSubKeys.includes(key)) merged[key] = value;
+  }
+  for (const key of ownedSubKeys) {
+    if (key in incomingContainer) merged[key] = incomingContainer[key];
+  }
+  return JSON.stringify({ ...baseObject, [container]: merged }, null, 2);
+}
+
+/** Builds a `mergeGeneratedOutputContent` hook owning `container.ownedSubKeys`. */
+export function ownedJsonSubKeysMerger(
+  paths: readonly string[],
+  container: string,
+  ownedSubKeys: readonly string[],
+): GeneratedOutputMerger {
+  return (existing, pending, newContent, resolvedPath) =>
+    paths.includes(resolvedPath)
+      ? mergeOwnedJsonSubKeys(pending?.content ?? existing, newContent, container, ownedSubKeys)
       : null;
 }

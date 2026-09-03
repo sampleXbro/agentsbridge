@@ -34,6 +34,7 @@ import {
 } from './generator.js';
 import { emitAmazonQAgentSettings } from './agent-outputs.js';
 import { importFromAmazonQ } from './importer.js';
+import { mergeAmazonQMcpJson } from './merge.js';
 import { lintRules } from './linter.js';
 import { lintCommands, lintHooks, lintIgnore, lintPermissions } from './lint.js';
 import { buildAmazonQImportPaths } from '../../core/reference/import-map-builders.js';
@@ -67,7 +68,10 @@ export const target: TargetGenerators = {
 const project: TargetLayout = {
   managedOutputs: {
     dirs: [AMAZON_Q_RULES_DIR, AMAZON_Q_AGENTS_DIR, AMAZON_Q_PROMPTS_DIR],
-    files: [AMAZON_Q_MCP_FILE],
+    files: [],
+    // `q mcp add --scope workspace` writes this file; agentsmesh owns only the
+    // server set inside it (see merge.ts).
+    coOwnedFiles: [AMAZON_Q_MCP_FILE],
   },
   paths: {
     rulePath(slug, _rule) {
@@ -85,7 +89,9 @@ const project: TargetLayout = {
 const globalLayout: TargetLayout = {
   managedOutputs: {
     dirs: [AMAZON_Q_GLOBAL_RULES_DIR, AMAZON_Q_GLOBAL_AGENTS_DIR, AMAZON_Q_GLOBAL_PROMPTS_DIR],
-    files: [AMAZON_Q_GLOBAL_MCP_FILE],
+    files: [],
+    // Written by `q mcp add --scope global`.
+    coOwnedFiles: [AMAZON_Q_GLOBAL_MCP_FILE],
   },
   rewriteGeneratedPath(path: string) {
     if (path.startsWith(`${AMAZON_Q_AGENTS_DIR}/`)) {
@@ -138,6 +144,7 @@ export const descriptor = {
   // The agent JSON carries hooks, permissions and ignore as well as the agent itself,
   // so the fully populated file is written here, where the enabled feature set is known.
   emitScopedSettings: emitAmazonQAgentSettings,
+  mergeGeneratedOutputContent: mergeAmazonQMcpJson,
   globalSupport: {
     capabilities: globalCapabilities,
     detectionPaths: [

@@ -13,6 +13,7 @@ import {
 import { projectLayout, globalLayout } from './layout.js';
 import { emitKiroAgentPermissions, generateKiroGlobalPermissions } from './permissions-generate.js';
 import { importFromKiro } from './importer.js';
+import { mergeKiroMcpJson } from './merge.js';
 import { lintRules } from './linter.js';
 import { lintHooks, lintPermissions } from './lint.js';
 import { buildKiroImportPaths } from '../../core/reference/import-map-builders.js';
@@ -64,6 +65,7 @@ const globalCapabilities: TargetCapabilities = {
 };
 
 export const descriptor = {
+  mergeGeneratedOutputContent: mergeKiroMcpJson,
   id: KIRO_TARGET,
   metadata: {
     displayName: 'Kiro',

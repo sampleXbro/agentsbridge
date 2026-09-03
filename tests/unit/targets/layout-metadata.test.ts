@@ -27,9 +27,11 @@ describe('target layout metadata', () => {
   it('returns managed outputs from descriptor metadata', () => {
     expect(getTargetManagedOutputs('codex-cli')).toEqual({
       dirs: ['.agents/skills', '.codex/agents', '.codex/instructions', '.codex/rules'],
-      files: ['AGENTS.md', '.codex/hooks.json'],
-      // Co-owned: Codex writes its own model/provider/trust state here.
-      coOwnedFiles: ['.codex/config.toml'],
+      files: ['AGENTS.md'],
+      // Co-owned: Codex writes its own model/provider/trust state into
+      // config.toml, and hooks.json is hand-authored (it also carries a
+      // top-level `description` agentsmesh does not own).
+      coOwnedFiles: ['.codex/config.toml', '.codex/hooks.json'],
     });
   });
 
@@ -101,8 +103,8 @@ describe('target layout metadata', () => {
             '.gemini/config/skills',
             '.gemini/antigravity/global_workflows',
           ],
-          files: ['.gemini/GEMINI.md', '.gemini/config/hooks.json'],
-          coOwnedFiles: ['.gemini/config/mcp_config.json'],
+          files: ['.gemini/GEMINI.md'],
+          coOwnedFiles: ['.gemini/config/mcp_config.json', '.gemini/config/hooks.json'],
         },
         paths: expect.objectContaining({
           rulePath: expect.any(Function),
@@ -150,12 +152,10 @@ describe('target layout metadata', () => {
           files: [
             '.cursor/rules/general.mdc',
             '.cursor/AGENTS.md',
-            '.cursor/mcp.json',
-            '.cursor/hooks.json',
             '.cursorignore',
-            '.cursor/cli-config.json',
             '.agentsmesh-exports/cursor/user-rules.md',
           ],
+          coOwnedFiles: ['.cursor/mcp.json', '.cursor/hooks.json', '.cursor/cli-config.json'],
         },
         paths: expect.objectContaining({
           rulePath: expect.any(Function),
@@ -173,8 +173,8 @@ describe('target layout metadata', () => {
         skillDir: '.agents/skills',
         managedOutputs: {
           dirs: ['.agents/skills', '.codex/agents', '.codex/rules'],
-          files: ['.codex/AGENTS.md', '.codex/hooks.json'],
-          coOwnedFiles: ['.codex/config.toml'],
+          files: ['.codex/AGENTS.md'],
+          coOwnedFiles: ['.codex/config.toml', '.codex/hooks.json'],
         },
         paths: expect.objectContaining({
           rulePath: expect.any(Function),

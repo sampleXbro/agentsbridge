@@ -13,12 +13,14 @@
  * The cost is that removing a scoped rule from canonical leaves its nested file
  * behind — the same limitation Codex CLI has for the same paths.
  *
- * `.agents/mcp.json` and `.codebuffignore` ARE listed. Both are single-purpose
- * files agentsmesh owns end to end (`mcpFileSchema` is exactly `{ mcpServers }`),
- * so listing them is what makes revocation work — the same call Claude Code
- * makes for `.mcp.json`/`.claudeignore` and Cursor for `.cursor/mcp.json`.
- * Contrast goose's `config.yaml` or zed's `settings.json`, which are omitted
- * because agentsmesh owns only a few keys inside a wider user config.
+ * `.codebuffignore` IS listed: it is a single-purpose file agentsmesh owns end
+ * to end, so listing it is what makes revocation work.
+ *
+ * `.agents/mcp.json` is NOT. It lives in the same user-scaffolded tree, the
+ * importer reads it at both scopes, and no in-repo evidence shows the tool
+ * creating it — so it is treated as hand-authored config: merged key-scoped
+ * (merge.ts) and never deleted. Contrast goose's `config.yaml` or zed's
+ * `settings.json`, which are omitted from managedOutputs entirely.
  */
 
 import type { TargetLayout, TargetLayoutScope } from '../catalog/target-descriptor.js';
@@ -54,7 +56,8 @@ export const projectLayout: TargetLayout = {
   skillDir: CODEBUFF_SKILLS_DIR,
   managedOutputs: {
     dirs: [CODEBUFF_SKILLS_DIR],
-    files: [CODEBUFF_ROOT_FILE, CODEBUFF_MCP_FILE, CODEBUFF_IGNORE_FILE],
+    files: [CODEBUFF_ROOT_FILE, CODEBUFF_IGNORE_FILE],
+    coOwnedFiles: [CODEBUFF_MCP_FILE],
   },
   paths: {
     rulePath(_slug, rule) {
@@ -75,7 +78,8 @@ export const globalLayout: TargetLayout = {
   skillDir: CODEBUFF_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [CODEBUFF_GLOBAL_SKILLS_DIR],
-    files: [CODEBUFF_GLOBAL_ROOT_FILE, CODEBUFF_GLOBAL_MCP_FILE],
+    files: [CODEBUFF_GLOBAL_ROOT_FILE],
+    coOwnedFiles: [CODEBUFF_GLOBAL_MCP_FILE],
   },
   rewriteGeneratedPath(path) {
     if (path === CODEBUFF_ROOT_FILE) return CODEBUFF_GLOBAL_ROOT_FILE;

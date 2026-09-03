@@ -32,7 +32,10 @@ export const projectLayout: TargetLayout = {
   skillDir: KIRO_SKILLS_DIR,
   managedOutputs: {
     dirs: [KIRO_HOOKS_DIR, KIRO_SKILLS_DIR, KIRO_STEERING_DIR, KIRO_AGENTS_DIR],
-    files: [KIRO_AGENTS_MD, KIRO_MCP_FILE, KIRO_IGNORE],
+    files: [KIRO_AGENTS_MD, KIRO_IGNORE],
+    // Kiro's own MCP config: its MCP UI writes `disabled`, `autoApprove` and
+    // `disabledTools` back into it (see merge.ts).
+    coOwnedFiles: [KIRO_MCP_FILE],
   },
   paths: {
     rulePath(slug, _rule) {
@@ -57,7 +60,8 @@ export const globalLayout: TargetLayout = {
       KIRO_GLOBAL_AGENTS_DIR,
       KIRO_GLOBAL_AGENTS_SKILLS_DIR,
     ],
-    files: [KIRO_GLOBAL_STEERING_AGENTS_MD, KIRO_GLOBAL_MCP_FILE, KIRO_GLOBAL_IGNORE],
+    files: [KIRO_GLOBAL_STEERING_AGENTS_MD, KIRO_GLOBAL_IGNORE],
+    coOwnedFiles: [KIRO_GLOBAL_MCP_FILE],
   },
   rewriteGeneratedPath(path) {
     // Transform project-level paths to global ~/.kiro/ paths

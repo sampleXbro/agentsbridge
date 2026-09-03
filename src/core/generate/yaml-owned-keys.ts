@@ -38,8 +38,13 @@ export function mergeOwnedYamlKeys(
 
   const doc = parseDocument(base);
   if (doc.errors.length > 0 || !isMap(doc.contents)) return base;
+  // Transplant the generated NODE, not the plain JS value: re-stringifying a
+  // value picks default scalar styles, so a `|-` block prompt came back folded
+  // as `>-` and the merge stopped being byte-stable (`generate --check` then
+  // reported drift on every run).
+  const incomingDoc = parseDocument(newContent);
   for (const key of ownedKeys) {
-    if (key in incoming) doc.set(key, incoming[key]);
+    if (key in incoming) doc.set(key, incomingDoc.get(key, true));
   }
   return doc.toString();
 }

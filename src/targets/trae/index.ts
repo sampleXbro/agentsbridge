@@ -11,6 +11,7 @@ import {
 } from './generator.js';
 import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromTrae } from './importer.js';
+import { mergeTraeOutput } from './merge.js';
 import { lintRules } from './linter.js';
 import { lintPermissions } from './lint.js';
 import { traeScopeExtras } from './scope-extras.js';
@@ -55,7 +56,10 @@ const project: TargetLayout = {
   skillDir: TRAE_SKILLS_DIR,
   managedOutputs: {
     dirs: [TRAE_RULES_DIR, TRAE_AGENTS_DIR, TRAE_COMMANDS_DIR, TRAE_SKILLS_DIR],
-    files: [TRAE_MCP_FILE, TRAE_IGNORE, TRAE_HOOKS_FILE],
+    files: [TRAE_IGNORE],
+    // Trae's MCP panel writes mcp.json and hooks.json is the documented project
+    // hook config; agentsmesh owns only its keys inside each (see merge.ts).
+    coOwnedFiles: [TRAE_MCP_FILE, TRAE_HOOKS_FILE],
   },
   paths: {
     rulePath(slug, _rule) {
@@ -81,7 +85,8 @@ const globalLayout: TargetLayout = {
       TRAE_GLOBAL_SKILLS_DIR,
       TRAE_GLOBAL_AGENTS_SKILLS_DIR,
     ],
-    files: [TRAE_GLOBAL_ROOT_RULE, TRAE_GLOBAL_MCP_FILE, TRAE_GLOBAL_HOOKS_FILE],
+    files: [TRAE_GLOBAL_ROOT_RULE],
+    coOwnedFiles: [TRAE_GLOBAL_MCP_FILE, TRAE_GLOBAL_HOOKS_FILE],
   },
   rewriteGeneratedPath(path) {
     // Transform .trae/rules/project_rules.md → .trae/user_rules/rules.md
@@ -155,6 +160,7 @@ const globalCapabilities: TargetCapabilities = {
 };
 
 export const descriptor = {
+  mergeGeneratedOutputContent: mergeTraeOutput,
   id: TRAE_TARGET,
   metadata: {
     displayName: 'Trae',

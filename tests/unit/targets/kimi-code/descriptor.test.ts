@@ -76,11 +76,14 @@ describe('kimi-code descriptor', () => {
       dirs: ['.kimi-code/agents', '.kimi-code/skills'],
       // `.kimi-code/AGENTS.md` is never written but IS evicted: Kimi Code reads
       // it alongside the root file, so a leftover copy doubles the rules.
-      files: ['AGENTS.md', '.kimi-code/AGENTS.md', '.kimi-code/mcp.json'],
+      files: ['AGENTS.md', '.kimi-code/AGENTS.md'],
+      // Kimi Code's own MCP config, in the same directory as config.toml.
+      coOwnedFiles: ['.kimi-code/mcp.json'],
     });
     expect(descriptor.globalSupport!.layout.managedOutputs).toEqual({
       dirs: ['.kimi-code/agents', '.kimi-code/skills'],
-      files: ['.kimi-code/AGENTS.md', '.kimi-code/mcp.json'],
+      files: ['.kimi-code/AGENTS.md'],
+      coOwnedFiles: ['.kimi-code/mcp.json'],
     });
   });
 

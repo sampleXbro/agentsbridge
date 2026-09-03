@@ -28,10 +28,12 @@ export const project: TargetLayout = {
   skillDir: KILO_CODE_SKILLS_DIR,
   managedOutputs: {
     dirs: [KILO_CODE_RULES_DIR, KILO_CODE_COMMANDS_DIR, KILO_CODE_AGENTS_DIR, KILO_CODE_SKILLS_DIR],
-    files: [KILO_CODE_ROOT_RULE, KILO_CODE_MCP_FILE, KILO_CODE_IGNORE],
+    files: [KILO_CODE_ROOT_RULE, KILO_CODE_IGNORE],
     // Kilo's documented settings file, comments and custom keys included;
-    // agentsmesh overlays only the keys it manages (see merge.ts).
-    coOwnedFiles: [KILO_CONFIG_FILE],
+    // agentsmesh overlays only the keys it manages (see merge.ts). `.kilo/mcp.json`
+    // is Kilo's own MCP store (Roo lineage: `alwaysAllow`, `disabled`, `timeout`
+    // are written back by the extension), so agentsmesh owns the server set only.
+    coOwnedFiles: [KILO_CONFIG_FILE, KILO_CODE_MCP_FILE],
   },
   paths: {
     rulePath(slug, _rule) {

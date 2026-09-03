@@ -52,6 +52,7 @@ import {
   FACTORY_DROID_CANONICAL_COMMANDS_DIR,
 } from './constants.js';
 import { importFromFactoryDroid } from './importer.js';
+import { mergeFactoryDroidOutput } from './merge.js';
 import { lintRules } from './linter.js';
 import { lintIgnore } from './lint.js';
 import { buildFactoryDroidImportPaths } from '../../core/reference/import-map-builders.js';
@@ -75,12 +76,11 @@ const project: TargetLayout = {
   skillDir: FACTORY_DROID_SKILLS_DIR,
   managedOutputs: {
     dirs: [FACTORY_DROID_SKILLS_DIR, FACTORY_DROID_COMMANDS_DIR, FACTORY_DROID_DROIDS_DIR],
-    files: [
-      FACTORY_DROID_ROOT_FILE,
-      FACTORY_DROID_HOOKS_FILE,
-      FACTORY_DROID_SETTINGS_FILE,
-      FACTORY_DROID_MCP_FILE,
-    ],
+    files: [FACTORY_DROID_ROOT_FILE],
+    // `droid` creates settings.json with defaults on first run and the `/hooks`
+    // manager saves hooks.json; `droid mcp add` writes mcp.json. agentsmesh
+    // owns only its keys inside each (see merge.ts).
+    coOwnedFiles: [FACTORY_DROID_HOOKS_FILE, FACTORY_DROID_SETTINGS_FILE, FACTORY_DROID_MCP_FILE],
   },
   paths: {
     rulePath(_slug) {
@@ -104,8 +104,8 @@ const globalLayout: TargetLayout = {
       FACTORY_DROID_GLOBAL_COMMANDS_DIR,
       FACTORY_DROID_GLOBAL_DROIDS_DIR,
     ],
-    files: [
-      FACTORY_DROID_GLOBAL_ROOT_FILE,
+    files: [FACTORY_DROID_GLOBAL_ROOT_FILE],
+    coOwnedFiles: [
       FACTORY_DROID_GLOBAL_HOOKS_FILE,
       FACTORY_DROID_GLOBAL_SETTINGS_FILE,
       FACTORY_DROID_GLOBAL_MCP_FILE,
@@ -148,6 +148,7 @@ const capabilities: TargetCapabilities = {
 };
 
 export const descriptor = {
+  mergeGeneratedOutputContent: mergeFactoryDroidOutput,
   id: FACTORY_DROID_TARGET,
   metadata: {
     displayName: 'Factory Droid',

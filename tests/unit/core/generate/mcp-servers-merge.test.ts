@@ -12,9 +12,17 @@ describe('mergeMcpServersJson', () => {
     expect(mergeMcpServersJson(null, GENERATED, OWNED)).toBe(GENERATED);
   });
 
-  it('returns the generated content when the base is not a JSON object', () => {
-    expect(mergeMcpServersJson('[1,2]', GENERATED, OWNED)).toBe(GENERATED);
-    expect(mergeMcpServersJson('not json', GENERATED, OWNED)).toBe(GENERATED);
+  // A base we cannot parse is a file we do not understand — MCP config files are
+  // comment-legal in several tools — so it is preserved rather than replaced.
+  it('preserves a base that is not a JSON object', () => {
+    expect(mergeMcpServersJson('[1,2]', GENERATED, OWNED)).toBe('[1,2]');
+    expect(mergeMcpServersJson('not json', GENERATED, OWNED)).toBe('not json');
+    const jsonc = '{\n  // mine\n  "mcpServers": {}\n}';
+    expect(mergeMcpServersJson(jsonc, GENERATED, OWNED)).toBe(jsonc);
+  });
+
+  it('still writes the generated document when there is no base', () => {
+    expect(mergeMcpServersJson(null, GENERATED, OWNED)).toBe(GENERATED);
   });
 
   it('keeps foreign top-level keys and per-server keys canonical cannot express', () => {

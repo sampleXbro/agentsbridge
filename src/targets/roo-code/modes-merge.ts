@@ -17,34 +17,14 @@
  * canonical equivalent, and `iconName` / per-mode model bindings likewise.
  */
 
-import { Document, isMap, isSeq, parseDocument, parse as parseYaml, type Node } from 'yaml';
 import type { GeneratedOutputMerger } from '../catalog/target-descriptor.js';
+import { mergeMarkedYamlList } from '../../core/generate/yaml-list-merge.js';
 import { ROO_CODE_GLOBAL_MODES_FILE, ROO_CODE_MODES_FILE } from './constants.js';
 
 /** Written above every mode agentsmesh emits; its presence is the ownership proof. */
 export const ROO_MODE_MARKER = ' agentsmesh: generated from .agentsmesh/agents/ — do not edit';
 
-type Json = Record<string, unknown>;
-
-function isRecord(value: unknown): value is Json {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function incomingModes(newContent: string): Json[] | null {
-  let parsed: unknown;
-  try {
-    parsed = parseYaml(newContent);
-  } catch {
-    return null;
-  }
-  if (!isRecord(parsed) || !Array.isArray(parsed.customModes)) return null;
-  return parsed.customModes.filter(isRecord);
-}
-
-function isMarked(item: Node | unknown): boolean {
-  const comment = (item as { commentBefore?: unknown }).commentBefore;
-  return typeof comment === 'string' && comment.includes('agentsmesh');
-}
+const SPEC = { listKey: 'customModes', idKey: 'slug', marker: ROO_MODE_MARKER };
 
 /**
  * A new file is written through the same path so its modes carry the ownership
@@ -54,44 +34,7 @@ function isMarked(item: Node | unknown): boolean {
  * @returns Merged YAML, or the base verbatim when it is not a YAML mapping
  */
 export function mergeRooCustomModes(base: string | null, newContent: string): string {
-  const modes = incomingModes(newContent);
-  if (modes === null) return base ?? newContent;
-
-  const fresh = base === null || base.trim() === '';
-  const doc = fresh ? new Document({}) : parseDocument(base);
-  if (!fresh && (doc.errors.length > 0 || !isMap(doc.contents))) return base!;
-
-  const slugs = new Set(modes.map((mode) => mode.slug));
-  const seq = doc.get('customModes', true);
-  const existing = isSeq(seq) ? seq.items : [];
-  // Re-parsing moves the comment above the FIRST item onto the sequence node
-  // itself, so the first mode's ownership marker arrives here. Without this the
-  // first generated mode reads back as the user's and is never revoked.
-  const firstMarked = isSeq(seq) && isMarked(seq);
-
-  const kept: unknown[] = [];
-  const carried = new Map<unknown, Json>();
-  for (const [index, item] of existing.entries()) {
-    const value: unknown = isMap(item) ? item.toJSON() : item;
-    const slug = isRecord(value) ? value.slug : undefined;
-    const marked = isMarked(item) || (index === 0 && firstMarked);
-    if (marked || (slug !== undefined && slugs.has(slug))) {
-      if (isRecord(value)) carried.set(slug, value);
-      continue;
-    }
-    kept.push(item);
-  }
-
-  const emitted = modes.map((mode) => {
-    const node = doc.createNode({ ...(carried.get(mode.slug) ?? {}), ...mode });
-    node.commentBefore = ROO_MODE_MARKER;
-    return node;
-  });
-
-  doc.set('customModes', doc.createNode([]));
-  const merged = doc.get('customModes', true);
-  if (isSeq(merged)) merged.items = [...kept, ...emitted];
-  return doc.toString();
+  return mergeMarkedYamlList(base, newContent, SPEC);
 }
 
 /**

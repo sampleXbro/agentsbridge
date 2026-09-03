@@ -1,7 +1,7 @@
 # Auto-generated. DO NOT EDIT MANUALLY.
 # Tracks the state of all config files for team conflict resolution.
 
-generated_at: 2026-09-03T18:43:04.398Z
+generated_at: 2026-09-03T20:37:01.779Z
 generated_by: serhii
 lib_version: 0.31.0
 checksums:
@@ -389,7 +389,7 @@ outputs:
   .pi/prompts/planning.md: sha256:557bbbde4d66cf8b31588b2188fd633bb071b331d9e54d8c19cfdc80ec2ef7be
   .pi/prompts/ship.md: sha256:0c3a139a059f841c25bac4661c16f1c4bafe7f0b703233d50c6b7ea48fe6a12a
   .pi/prompts/spec.md: sha256:c7de854f4d60f5703fcaa2d8e19133516da326d74bf1186f79492e0e3a285a01
-  .rovodev/prompts.yml: sha256:daca2bbd7932232cb76fa7e0228688fd6a18faa511beebd917e6b835e9965846
+  .rovodev/prompts.yml: sha256:4ee521dd5e726f43c8b62b5ad7f1e8a8e1ffe3b7a7b9b5d1d1f6e27241352900
   .rovodev/commands/commit.md: sha256:fd5b099f000e11d3590d0126c36ae8dc54182fdddf01f28bda955d80a796c3eb
   .rovodev/commands/review.md: sha256:d599b9f8997d2c03790fb1ad9ba9ba9390fa31161117d79b95b135f4b3689bed
   .rovodev/commands/test.md: sha256:e3c75bf5d6dd1c641a40b4b824c8ca07657126df31d2b405bc4032dc2c484391
@@ -439,7 +439,7 @@ outputs:
   .gemini/agents/code-security-auditor.md: sha256:b47d048cd1887472ae8797f57257c92f95841ec7cb41dca3050d139c4145b75b
   .gemini/agents/code-standards-enforcer.md: sha256:6db4c64576f99a4e12c1b2f6c4fa9b3d068280da9c74d9095bce6295dca6de94
   .gemini/agents/typescript-developer.md: sha256:41157521fb3f86a61ee6cc298ff8305889c46d8a619d1eb093c3f178694ae8b9
-  .cline/agents.yaml: sha256:103e23d3a9692f4dbb9d600aa77e2b12144eb653a156880297dc41f35d7ea548
+  .cline/agents.yaml: sha256:8ccc63f16189f1fa846ad3a489d37ad4b66f8c6d7b004c4f142fe28e3a0afd4e
   .codex/agents/code-reviewer.toml: sha256:956ec5e2cefa22659b5c2d826798201cc68c69accfadbeb75873e87d5b280ffb
   .codex/agents/test-runner.toml: sha256:b7877b297924d660af2da2a5713932a808a77222cda3e239ebb51b3e996b927f
   .codex/agents/security-auditor.toml: sha256:c1c3d206e66558ca1e21f0c0fadb390dff0f80d563140874bc2857e36c4df464

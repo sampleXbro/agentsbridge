@@ -29,9 +29,11 @@ import {
 } from './generator.js';
 import { project, globalLayout } from './layout.js';
 import { importFromRovodev } from './importer.js';
+import { mergeRovodevPromptsYaml } from './prompts-merge.js';
 import { lintRules } from './linter.js';
 import { lintIgnore, lintMcp } from './lint.js';
 import { buildRovodevConfig, mergeRovodevConfig } from './settings.js';
+import { mergeRovodevMcpJson } from './mcp-merge.js';
 import { buildRovodevImportPaths } from '../../core/reference/import-map-builders.js';
 import {
   ROVODEV_TARGET,
@@ -113,9 +115,13 @@ export const descriptor = {
     if (scope !== 'global') return [];
     return buildRovodevConfig(canonical, enabledFeatures);
   },
-  mergeGeneratedOutputContent(existing, _pending, newContent, resolvedPath) {
-    if (resolvedPath !== ROVODEV_GLOBAL_CONFIG_FILE) return null;
-    return mergeRovodevConfig(existing, newContent);
+  mergeGeneratedOutputContent(existing, pending, newContent, resolvedPath) {
+    if (resolvedPath === ROVODEV_GLOBAL_CONFIG_FILE)
+      return mergeRovodevConfig(existing, newContent);
+    return (
+      mergeRovodevPromptsYaml(existing, pending, newContent, resolvedPath) ??
+      mergeRovodevMcpJson(existing, pending, newContent, resolvedPath)
+    );
   },
   importer: {
     rules: {

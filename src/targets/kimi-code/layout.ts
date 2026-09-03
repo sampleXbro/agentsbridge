@@ -42,7 +42,10 @@ export const projectLayout: TargetLayout = {
   skillDir: KIMI_CODE_SKILLS_DIR,
   managedOutputs: {
     dirs: [KIMI_CODE_AGENTS_DIR, KIMI_CODE_SKILLS_DIR],
-    files: [KIMI_CODE_ROOT_FILE, KIMI_CODE_NESTED_ROOT_FILE, KIMI_CODE_MCP_FILE],
+    files: [KIMI_CODE_ROOT_FILE, KIMI_CODE_NESTED_ROOT_FILE],
+    // Kimi Code's own MCP config, in the same directory as the credential-
+    // bearing config.toml this layout already refuses to delete.
+    coOwnedFiles: [KIMI_CODE_MCP_FILE],
   },
   paths: {
     rulePath() {
@@ -63,7 +66,8 @@ export const globalLayout: TargetLayout = {
   skillDir: KIMI_CODE_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [KIMI_CODE_GLOBAL_AGENTS_DIR, KIMI_CODE_GLOBAL_SKILLS_DIR],
-    files: [KIMI_CODE_GLOBAL_ROOT_FILE, KIMI_CODE_GLOBAL_MCP_FILE],
+    files: [KIMI_CODE_GLOBAL_ROOT_FILE],
+    coOwnedFiles: [KIMI_CODE_GLOBAL_MCP_FILE],
   },
   rewriteGeneratedPath(path) {
     if (path === KIMI_CODE_ROOT_FILE) return KIMI_CODE_GLOBAL_ROOT_FILE;

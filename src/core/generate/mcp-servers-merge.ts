@@ -14,6 +14,24 @@
  */
 
 import type { GeneratedOutputMerger } from '../../targets/catalog/target-descriptor.js';
+import { preservedUnparsableBase } from './json-owned-keys.js';
+
+/**
+ * The per-server keys canonical can express — exactly the fields of `McpServer`
+ * (`src/core/mcp-types.ts`). Every target whose MCP file is keyed by
+ * `mcpServers` owns this set and nothing else, so two targets writing the same
+ * path can never disagree and trip `resolveOutputCollisions`. A target whose
+ * serializer emits an extra field (Kimi Code's `transport`) appends to it.
+ */
+export const CANONICAL_MCP_SERVER_KEYS: readonly string[] = [
+  'type',
+  'command',
+  'args',
+  'env',
+  'url',
+  'headers',
+  'description',
+];
 
 type Json = Record<string, unknown>;
 
@@ -45,13 +63,22 @@ function serverObjects(root: Json | null): Json {
  * Merge canonical's `mcpServers` into `base`, keeping foreign top-level keys and
  * the per-server keys outside `ownedServerKeys`.
  *
- * @returns Merged JSON, or `newContent` when there is no parsable base.
+ * @returns Merged JSON; the base verbatim when it is present but unparsable; or
+ * `newContent` when there is no base to merge into.
+ *
+ * A base we cannot parse is a file we do not understand — MCP config files are
+ * comment-legal in several tools — so it is preserved rather than replaced, the
+ * same rule `preservedUnparsableBase` applies to every other JSON merger.
  */
 export function mergeMcpServersJson(
   base: string | null,
   newContent: string,
   ownedServerKeys: readonly string[],
 ): string {
+  if (base !== null) {
+    const preserved = preservedUnparsableBase(base);
+    if (preserved !== null) return preserved;
+  }
   const baseRoot = base === null ? null : parseJson(base);
   if (baseRoot === null) return newContent;
 

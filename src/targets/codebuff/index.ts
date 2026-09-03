@@ -31,6 +31,7 @@ import {
   generatePermissions,
 } from './generator.js';
 import { importFromCodebuff } from './importer.js';
+import { mergeCodebuffMcpJson } from './merge.js';
 import { projectCapabilities, globalCapabilities } from './capabilities.js';
 import { projectLayout, globalLayout } from './layout.js';
 import { lintRules } from './linter.js';
@@ -68,6 +69,7 @@ export const descriptor = {
     shortDescription: 'Terminal multi-agent coding CLI',
   },
   generators: target,
+  mergeGeneratedOutputContent: mergeCodebuffMcpJson,
   capabilities: projectCapabilities,
   emptyImportMessage:
     'No Codebuff config found (AGENTS.md, .agents/skills, .agents/mcp.json, or .codebuffignore).',

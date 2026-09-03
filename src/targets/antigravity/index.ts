@@ -31,6 +31,7 @@ import { importFromAntigravity } from './importer.js';
 import { agentMapper, nonRootRuleMapper, workflowMapper } from './import-mappers.js';
 import { projectLayout, globalLayout } from './layout.js';
 import { emitAntigravityMcp, mergeAntigravityMcpContent } from './mcp-settings.js';
+import { mergeAntigravityHooks } from './hooks-merge.js';
 import { generateAntigravityGlobalPermissions } from './global-permissions.js';
 import { lintRules } from './linter.js';
 import { lintAgents, lintMcp, lintPermissions } from './lint.js';
@@ -70,7 +71,9 @@ export const descriptor = {
     permissions: lintPermissions,
   },
   emitScopedSettings: emitAntigravityMcp,
-  mergeGeneratedOutputContent: mergeAntigravityMcpContent,
+  mergeGeneratedOutputContent: (existing, pending, newContent, resolvedPath) =>
+    mergeAntigravityMcpContent(existing, pending, newContent, resolvedPath) ??
+    mergeAntigravityHooks(existing, pending, newContent, resolvedPath),
   project: projectLayout,
   globalSupport: {
     capabilities: globalCapabilities,

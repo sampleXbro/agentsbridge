@@ -10,7 +10,7 @@
 
 **Codebuff** (`codebuff`) — the multi-agent terminal CLI. Rules to `AGENTS.md` including nested per-directory files, skills to `.agents/skills/`, MCP to `.agents/mcp.json`, and ignore to `.codebuffignore`. Agents and permissions stay `partial`: Codebuff agents are executable TypeScript modules, and agentsmesh generates config, not code.
 
-All three read `.agents/skills/`, which `codex-cli` owns, so each emits byte-identical skill content and is registered as a native `.agents/` writer — without that, `generate --global` alongside Claude Code threw `Conflicting generated outputs`.
+OpenHands and Codebuff both read `.agents/skills/`, which `codex-cli` owns, so each emits byte-identical skill content and is registered as a native `.agents/` writer — without that, `generate --global` alongside Claude Code threw `Conflicting generated outputs`. Kimi Code writes its own `.kimi-code/skills/` at both scopes and is not part of that set.
 
 Two behaviours worth knowing before you run this:
 

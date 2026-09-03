@@ -11,7 +11,7 @@
 - `files` — agentsmesh owns the file outright; a run that stops emitting it deletes it (this is how revocation works).
 - `coOwnedFiles` — agentsmesh writes into the file but the user owns it too. Never deleted; the descriptor's `mergeGeneratedOutputContent` hook keeps the user's content on the runs that do write it.
 
-31 paths across 18 targets moved from `files` to `coOwnedFiles`: `.codex/config.toml`, `.mcp.json` / `~/.claude.json`, `.claude/settings.json`, `.vscode/mcp.json`, `.vscode/settings.json`, `.gemini/settings.json`, `.qwen/settings.json`, `crush.json`, `opencode.json`, `kilo.jsonc`, `.amp/settings.json`, `.augment/settings.json`, `.agents/mcp_config.json`, `.openhands/hooks.json`, `.deepagents/.mcp.json`, `.junie/config.json`, `.rovodev/config.yml`, `~/.config/goose/permission.yaml` and their global counterparts.
+31 paths across 17 targets moved from `files` to `coOwnedFiles`: `.codex/config.toml`, `.mcp.json` / `~/.claude.json`, `.claude/settings.json`, `.vscode/mcp.json`, `.vscode/settings.json`, `.gemini/settings.json`, `.qwen/settings.json`, `crush.json`, `opencode.json`, `kilo.jsonc`, `.amp/settings.json`, `.augment/settings.json`, `.agents/mcp_config.json`, `.openhands/hooks.json`, `.deepagents/.mcp.json`, `.junie/config.json`, `.rovodev/config.yml`, `~/.config/goose/permission.yaml` and their global counterparts.
 
 Stale cleanup reads `files` only, and skips `coOwnedFiles` during the directory sweep too — a co-owned file living inside a managed directory was otherwise still deleted.
 

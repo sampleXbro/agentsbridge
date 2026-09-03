@@ -56,7 +56,8 @@ Every install method ships the same CLI (`agentsmesh`, plus the shorter `amsh` a
 brew tap samplexbro/agentsmesh
 brew install agentsmesh
 
-# Standalone binary (Linux / macOS / Windows) — no Node.js required
+# Standalone binary (Linux / macOS) — no Node.js required
+# Windows: download agentsmesh-windows-x64.exe from GitHub Releases
 curl -fsSL https://github.com/sampleXbro/agentsmesh/releases/latest/download/install.sh | sh
 
 # npm / pnpm / yarn — requires Node.js 20+
@@ -174,8 +175,8 @@ Full walkthrough: [Teach your AI agents with lessons](https://samplexbro.github.
 - **Agents that learn** — the optional [lessons memory](#teach-your-agents-lessons) recalls past-mistake rules before each edit and captures new ones after each failure, shared across every tool and teammate.
 - **Safe adoption** — already have `.cursor/`, `.claude/`, or `.github/copilot-instructions.md`? Run `import` → `diff` → `generate` → `check`; nothing is overwritten blind. [Existing-project guide →](https://samplexbro.github.io/agentsmesh/guides/existing-project/)
 - **Migrate between tools** — `convert --from <a> --to <b>` rewrites one tool's config directly into another's native format. [convert →](https://samplexbro.github.io/agentsmesh/cli/convert/)
-- **Global mode** — `~/.agentsmesh/` syncs your personal config to `~/.claude/`, `~/.cursor/`, `~/.codex/`, and more. Every command accepts `--global`. [Global paths →](https://samplexbro.github.io/agentsmesh/reference/supported-tools/#global-mode)
-- **Team-safe and CI-ready** — `check` is a drift gate against `.agentsmesh/.lock`, `diff` previews changes, `merge` rebuilds the lock after a 3-way Git conflict, and `lock_features` + per-feature `strategy` prevent accidental overrides. `lint` adds cross-target warnings (`silent-drop-guard`, `hook-script-references`, `rule-scope-inversion`) for content a tool would silently mishandle. [check →](https://samplexbro.github.io/agentsmesh/cli/check/) · [lint →](https://samplexbro.github.io/agentsmesh/cli/lint/)
+- **Global mode** — `~/.agentsmesh/` syncs your personal config to `~/.claude/`, `~/.cursor/`, `~/.codex/`, and more. Every config command accepts `--global`. [Global paths →](https://samplexbro.github.io/agentsmesh/reference/supported-tools/#global-mode)
+- **Team-safe and CI-ready** — `check` is a drift gate against `.agentsmesh/.lock`, `diff` previews changes, `merge` rebuilds the lock after a 3-way Git conflict, and `collaboration.strategy: lock` + `lock_features` prevent accidental overrides. `lint` adds cross-target warnings (`silent-drop-guard`, `hook-script-references`, `rule-scope-inversion`) for content a tool would silently mishandle. [check →](https://samplexbro.github.io/agentsmesh/cli/check/) · [lint →](https://samplexbro.github.io/agentsmesh/cli/lint/)
 - **Community packs and `extends`** — install shared rules, skills, agents, and commands from any git repo (`install`, `--sync`, `refresh`, remote `extends`); a multi-signal classifier auto-detects Anthropic-style skill packs. Elevated artifacts (hooks, permissions, MCP) from remote sources are stripped unless you opt in — with `--accept-*` on `install`, or `accept:` on a remote `extends` entry. [Install reference →](https://samplexbro.github.io/agentsmesh/cli/install/)
 - **Plugins — add a tool without waiting for a release** — ship support for a new AI tool as a standalone npm package, with full parity to built-in targets (project + global, conversions, lint hooks, hook post-processing). When a tool ships or changes its format, you don't file an issue and wait on the maintainer — you publish a plugin. [Build a plugin →](https://samplexbro.github.io/agentsmesh/guides/building-plugins/)
 - **Schema-validated configs** — each config ships a JSON Schema, so editors give you autocomplete and validation out of the box. [JSON schemas →](https://samplexbro.github.io/agentsmesh/reference/json-schemas/)
@@ -213,7 +214,7 @@ Full walkthrough: [Teach your AI agents with lessons](https://samplexbro.github.
 | `lessons` | Query and capture agent memory (recall / capture) |
 | `mcp` | Start the AgentsMesh MCP server (stdio) |
 
-Every command accepts `--global` (operate on `~/.agentsmesh/`) and `--json` (machine-readable output). Run `agentsmesh <command> --help` for flags, or see the [CLI reference](https://samplexbro.github.io/agentsmesh/cli/).
+Every command accepts `--json` (machine-readable output). The config commands also accept `--global` (operate on `~/.agentsmesh/`); `lessons` rejects it — lessons live in the project tree — and `mcp`, `plugin` and `target` have no scope of their own. Run `agentsmesh <command> --help` for flags, or see the [CLI reference](https://samplexbro.github.io/agentsmesh/cli/).
 
 ## Supported tools
 

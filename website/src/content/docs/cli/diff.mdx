@@ -83,4 +83,9 @@ git commit -m "security: add SQL injection and XSS rules"
 
 ## Relationship to `generate --dry-run`
 
-`agentsmesh diff` and `agentsmesh generate --dry-run` produce the same output. They are aliases for the same operation.
+Both preview a run without writing, but they are separate commands with different output.
+
+- `agentsmesh diff` writes each unified patch to stdout, then a summary line: `N files would be created, N updated, N unchanged, N deleted`.
+- `agentsmesh generate --dry-run` writes one status line per file — `[dry-run] <status> <path> (<target>)` — and no patches or summary.
+
+Use `diff` when you want to read the change, `generate --dry-run` when you want the file list.

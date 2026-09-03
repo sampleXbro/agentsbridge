@@ -52,19 +52,19 @@ agentsmesh matrix --global
 
 ## Sample output
 
-Column headers match the `targets` list in your `agentsmesh.yaml` (here: every built-in target). Feature labels include counts when your canonical tree has items (for example `commands (2)` or `additional rules (1)`). Colors are emitted only when output is an interactive terminal: piped or redirected output (for example `agentsmesh matrix | cat`) prints plain symbols with no ANSI codes, so consumers like scripts and AI agents get clean text. Set `NO_COLOR=1` to force plain symbols even in a terminal, or `FORCE_COLOR=1` to keep colors when piping. The block below illustrates **project-scope** catalog symbols for that full target list.
+Rows are the targets from the `targets` list in your `agentsmesh.yaml`, sorted by display label; the column headers are the feature names. Counts appear in the feature labels of `--json` output (for example `commands (9)` or `additional rules (1)`); the rendered table always prints the plain label. Colors are emitted only when output is an interactive terminal: piped or redirected output (for example `agentsmesh matrix | cat`) prints plain symbols with no ANSI codes, so consumers like scripts and AI agents get clean text. Set `NO_COLOR=1` to force plain symbols even in a terminal, or `FORCE_COLOR=1` to keep colors when piping. The block below illustrates **project-scope** catalog symbols for four targets.
 
 ```
 ┌─────────────┬───────┬──────────────────┬──────────┬────────┬────────┬─────┬───────┬────────┬─────────────┐
 │ Target      │ Rules │ Additional Rules │ Commands │ Agents │ Skills │ MCP │ Hooks │ Ignore │ Permissions │
 ├─────────────┼───────┼──────────────────┼──────────┼────────┼────────┼─────┼───────┼────────┼─────────────┤
-│ antigravity │   ✓   │        ✓         │    ◐     │   ◆    │   ✓    │  –  │   ✓   │   –    │      ◐      │
+│ antigravity │   ✓   │        ✓         │    ✓     │   ✓    │   ✓    │  ✓  │   ✓   │   ✓    │      ◐      │
 ├─────────────┼───────┼──────────────────┼──────────┼────────┼────────┼─────┼───────┼────────┼─────────────┤
 │ Claude      │   ✓   │        ✓         │    ✓     │   ✓    │   ✓    │  ✓  │   ✓   │   ✓    │      ✓      │
 ├─────────────┼───────┼──────────────────┼──────────┼────────┼────────┼─────┼───────┼────────┼─────────────┤
-│ cursor      │   ✓   │        ◆         │    ✓     │   ✓    │   ✓    │  ✓  │   ✓   │   ✓    │      ◐      │
+│ cursor      │   ✓   │        ✓         │    ✓     │   ✓    │   ✓    │  ✓  │   ✓   │   ✓    │      ✓      │
 ├─────────────┼───────┼──────────────────┼──────────┼────────┼────────┼─────┼───────┼────────┼─────────────┤
-│ roo-code    │   ✓   │        ✓         │    ✓     │   ◐    │   ✓    │  ✓  │   –   │   ✓    │      ◐      │
+│ roo-code    │   ✓   │        ✓         │    ✓     │   ✓    │   ✓    │  ✓  │   –   │   ✓    │      ✓      │
 └─────────────┴───────┴──────────────────┴──────────┴────────┴────────┴─────┴───────┴────────┴─────────────┘
 
 ✓ native  ◆ embedded  ◐ partial  – none

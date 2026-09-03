@@ -76,12 +76,16 @@ agentsmesh.local.yaml     # Local overrides (gitignored)
   skills/
     lessons/              # Tier-2 manual, seeded with --lessons
       SKILL.md            # Full recall/capture operating manual
-.gitignore                # Updated: agentsmesh.local.yaml (+ lessons/recall-log.jsonl with --lessons)
+.gitignore                # Updated: agentsmesh.local.yaml, .agentsmeshcache,
+                          # .agentsmesh/.lock.tmp, .agentsmesh/packs/
+                          # (+ the three lessons/*.jsonl logs with --lessons)
 ```
 
 Files and directories prefixed with `_` are excluded from generation — they exist only as reference templates. The sole exception is `_root.md`, which is always included as the project-wide root rule.
 
-Running `agentsmesh init --global` creates the same canonical structure under `~/.agentsmesh/`:
+The scaffolded `permissions.yaml` ships with its `allow` / `deny` / `ask` lists **commented out**, not scaffolded empty. An explicit `allow: []` is a real instruction — "grant nothing" — and targets that project permissions into a shared config file apply it, which would clear permissions you already had. Absent keys mean "AgentsMesh manages nothing here yet". Uncomment a list when you want to start managing it.
+
+Running `agentsmesh init --global` creates the same canonical structure under `~/.agentsmesh/` — the same nine scaffolded artifacts, since the scaffolder is not scope-aware:
 
 ```
 ~/.agentsmesh/
@@ -89,7 +93,21 @@ Running `agentsmesh init --global` creates the same canonical structure under `~
   agentsmesh.local.yaml
   rules/
     _root.md
+    _example.md
+  commands/
+    _example.md
+  agents/
+    _example.md
+  skills/
+    _example/
+      SKILL.md
+  mcp.json
+  hooks.yaml
+  permissions.yaml
+  ignore
 ```
+
+Only two init steps are project-only: the `.gitignore` update and the lessons scaffold (`--lessons` is rejected with `--global`).
 
 ## Auto-detection
 

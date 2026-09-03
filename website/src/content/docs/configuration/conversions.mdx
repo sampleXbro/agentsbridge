@@ -14,16 +14,15 @@ Each conversion value can be either a **boolean** (applies to both project and g
 conversions:
   commands_to_skills:
     codex-cli: true       # both scopes — project commands as skills (default: true)
-    continue: true
-    junie: true
+    crush: true
+    zed: true
 
   agents_to_skills:
-    cline: true           # both scopes
+    goose: true           # both scopes
     windsurf:             # per-scope: convert in project mode, skip in global
       project: true
       global: false
-    junie: true
-    gemini-cli: true
+    warp: true
 ```
 
 ## Why conversions exist
@@ -36,11 +35,22 @@ Not all AI tools support all feature types natively. When a tool lacks native su
 
 Controls whether commands are projected as skills for tools without native command support.
 
+Only targets that declare `supportsConversion: { commands: true }` are configurable here. A target whose `commands` capability is already **Native** ignores the setting entirely.
+
 | Target | Default | Notes |
 |--------|---------|-------|
+| `amp` | `true` | Commands projected as embedded skills. |
+| `aider` | `true` | Aider has no command format; conversion is the only way commands reach it. |
+| `codebuff` | `true` | Commands projected as embedded skills. |
 | `codex-cli` | `true` | Commands embedded as skills in `AGENTS.md`. |
-| `continue` | `true` | Commands projected as embedded skills. |
-| `junie` | `true` | Commands projected as embedded skills. |
+| `crush` | `true` | Commands projected as embedded skills. |
+| `deepagents-cli` | `true` | Commands projected as embedded skills. |
+| `goose` | `true` | Commands projected as embedded skills. |
+| `kimi-code` | `true` | Commands projected as embedded skills. |
+| `kiro` | `true` | Commands projected as embedded skills. |
+| `replit-agent` | `true` | Commands projected onto the repo-committed `.agents/skills/` surface. |
+| `warp` | `true` | Commands projected as embedded skills. |
+| `zed` | `true` | Commands projected as embedded skills. |
 
 Set to `false` to skip the target entirely (the command is not included in that tool's output):
 
@@ -54,19 +64,27 @@ conversions:
 
 Controls whether agents are projected as skills for tools without native agent support.
 
+Only targets that declare `supportsConversion: { agents: true }` are configurable here. A target whose `agents` capability is already **Native** ignores the setting entirely.
+
 | Target | Default | Notes |
 |--------|---------|-------|
-| `cline` | `true` | Agents embedded as skills. |
+| `amp` | `true` | Agents embedded as skills. |
+| `aider` | `true` | Aider has no subagent format; conversion is the only way agents reach it. |
+| `cline` | `false` | Project agents are native (`.cline/agents.yaml`), so the setting only has an effect in global mode, where it is opt-in. |
+| `crush` | `true` | Agents embedded as skills. |
+| `goose` | `true` | Agents embedded as skills. |
+| `pi-agent` | `true` | Agents embedded as skills. |
+| `replit-agent` | `true` | Agents projected onto the repo-committed `.agents/skills/` surface. |
+| `rovodev` | `true` | Agents embedded as skills. |
+| `warp` | `true` | Agents embedded as skills. |
 | `windsurf` | `true` | Agents embedded as skills. |
-| `junie` | `true` | Agents embedded as skills. |
-| `gemini-cli` | `true` | Agents embedded as skills (partial native support). |
 
 Set to `false` to skip:
 
 ```yaml
 conversions:
   agents_to_skills:
-    cline: false     # skip agents for Cline entirely
+    windsurf: false   # skip agents for Windsurf entirely
 ```
 
 ## Per-scope conversions

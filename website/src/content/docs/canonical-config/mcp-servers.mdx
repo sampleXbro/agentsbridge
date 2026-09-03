@@ -107,7 +107,7 @@ For sensitive MCP configs (production endpoints, auth-required servers), use `co
 ```yaml
 # agentsmesh.yaml
 collaboration:
-  strategy: merge
+  strategy: lock
   lock_features:
     - mcp
 ```

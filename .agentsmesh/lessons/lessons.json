@@ -2394,6 +2394,20 @@
         "t-glob-98a32718"
       ]
     },
+    "generation-safety-when-removing-a-feature-or": {
+      "createdAt": "2026-09-03",
+      "evidence": [],
+      "rationale": "Commit 6e7b06f3 stripped revocableOutputs from 20 descriptors and the engine but left three references in website/src/content/docs/guides/building-plugins.mdx; only a later docs audit caught it.",
+      "rule": "When removing a feature or descriptor hook from the codebase, grep website/src/content/docs and README for its name in the same change — a hook documented for plugin authors but deleted from the code tells them to implement dead code, and no test or typecheck catches it.",
+      "status": "active",
+      "topics": [
+        "generation-safety"
+      ],
+      "triggers": [
+        "t-glob-d458a5b8",
+        "t-kw-55efcf0f"
+      ]
+    },
     "generation-safety-when-writing-an-invariant-test": {
       "createdAt": "2026-09-03",
       "evidence": [],
@@ -10775,6 +10789,10 @@
     "t-kw-544706af": {
       "kind": "keyword",
       "pattern": "NFA engine"
+    },
+    "t-kw-55efcf0f": {
+      "kind": "keyword",
+      "pattern": "remove hook, delete feature"
     },
     "t-kw-574e42b9": {
       "kind": "keyword",

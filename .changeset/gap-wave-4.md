@@ -8,7 +8,7 @@
 
 **pi-agent** — permissions at both scopes via `defaultTools` in `.pi/settings.json` and `~/.pi/agent/settings.json`. The mapping is deliberately narrow: Pi has an allow-list over eight built-in tools and no deny, ask, path or command matching, so every canonical entry that cannot be expressed is named in a lint warning.
 
-**aider** — hooks at both scopes via `lint-cmd` and `auto-lint` in `.aider.conf.yml`. Only those two of the five candidate keys map honestly from canonical hooks; the rest are warned about rather than faked.
+**aider** — hooks at both scopes via `.aider.conf.yml`. Three canonical events map onto command keys — `PostToolUse` with an edit-tool matcher to `lint-cmd`, `PostToolUse` with a wildcard matcher to `test-cmd`, and `Notification` to `notifications-command` — with `auto-lint` / `auto-test` written alongside the first two. Canonical hooks that fit none of those shapes are warned about rather than faked.
 
 **goose** — project MCP via `.agents/plugins/agentsmesh/.mcp.json`. **replit-agent** — commands and agents project onto the repo-committed `.agents/skills/` surface, byte-identical to codex-cli's output so the two dedupe rather than collide.
 
@@ -17,7 +17,7 @@
 Four fixes to behaviour that was already shipping:
 
 - **Goose project MCP erased `cwd` and any hand-added server key.** MCP went through the one emission path that passes no merge callback, so the file was rewritten wholesale. Both scopes now route through merge-capable paths; `cwd`, `timeout`, `$schema` and unknown keys survive.
-- **Deleting pi-agent permissions silently widened access.** Removing `defaultTools` handed every built-in back, including `bash` and `write`. An empty canonical list now writes `defaultTools: []`, which fails closed.
+- **Deleting pi-agent permissions silently widened access.** Removing `defaultTools` handed every built-in back, including `bash` and `write`. A canonical file whose entries project onto no Pi built-in — only scoped `Bash(...)` patterns, say, or only deny/ask rules — now writes `defaultTools: []`, which fails closed. An *empty* canonical permissions file still writes nothing at all: it is not a claim that no tool is approved. Revoking a previously written array is handled separately, by `revokePiAgentPermissions` through `scopeExtras`.
 - **Kiro generation overwrote hand-written permission rules.** Ownership is now per rule: a rule is agentsmesh's only when its keys are a subset of `{capability, match, effect}` and it projects back onto canonical, so `exclude` protections and unknown capabilities survive with their comments.
 - **`.aider.conf.yml` had two writers competing.** It now has one, and every key agentsmesh owns carries a generated-by marker comment — so an `auto-lint: false` you set by hand is never flipped, and only marked keys are removed when they leave the projection.
 

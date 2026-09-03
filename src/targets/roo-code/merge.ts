@@ -7,6 +7,7 @@
  */
 
 import type { GeneratedOutputMerger } from '../catalog/target-descriptor.js';
+import { preservedUnparsableBase } from '../../core/generate/json-owned-keys.js';
 import {
   ROO_CODE_VSCODE_SETTINGS,
   ROO_CODE_ALLOWED_COMMANDS_KEY,
@@ -22,15 +23,11 @@ export const mergeRooCodeSettings: GeneratedOutputMerger = (
   if (resolvedPath !== ROO_CODE_VSCODE_SETTINGS) return null;
   const base = pending?.content ?? existing;
   if (base === null) return newContent;
+  // VS Code ships this file commented, and JSONC is its documented format.
+  const preserved = preservedUnparsableBase(base);
+  if (preserved !== null) return preserved;
 
-  let parsedBase: Record<string, unknown>;
-  try {
-    const p: unknown = JSON.parse(base);
-    parsedBase =
-      p !== null && typeof p === 'object' && !Array.isArray(p) ? (p as Record<string, unknown>) : {};
-  } catch {
-    parsedBase = {};
-  }
+  const parsedBase = JSON.parse(base) as Record<string, unknown>;
 
   let incoming: unknown;
   try {

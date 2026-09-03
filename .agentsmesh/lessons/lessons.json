@@ -2368,6 +2368,20 @@
         "t-kw-0560ceb4"
       ]
     },
+    "generation-safety-when-inserting-an-import-after": {
+      "createdAt": "2026-09-03",
+      "evidence": [],
+      "rationale": "Inserting after `import {` in src/targets/qwen-code/index.ts produced TS1003/TS1005 syntax errors; the existing lesson covers regex-matching the word import in prose but not the multi-line import case.",
+      "rule": "When inserting an import after \"the last line starting with import\", check that line is a complete statement — a multi-line `import {` is the last such line in most target index.ts files, and inserting after it splits the brace block. Anchor on the last line that also ends with a quote-and-semicolon, or insert before the first import instead.",
+      "status": "active",
+      "topics": [
+        "generation-safety"
+      ],
+      "triggers": [
+        "t-glob-9f0a5990",
+        "t-kw-175711e2"
+      ]
+    },
     "generation-safety-when-making-a-co-owned": {
       "createdAt": "2026-09-03",
       "evidence": [],
@@ -10537,6 +10551,10 @@
     "t-kw-15065ff0": {
       "kind": "keyword",
       "pattern": "multi-agent"
+    },
+    "t-kw-175711e2": {
+      "kind": "keyword",
+      "pattern": "insert import"
     },
     "t-kw-1b4e1dda": {
       "kind": "keyword",

@@ -11,6 +11,7 @@
  */
 
 import type { GeneratedOutputMerger } from '../catalog/target-descriptor.js';
+import { preservedUnparsableBase } from '../../core/generate/json-owned-keys.js';
 import { KILO_CONFIG_FILE, KILO_GLOBAL_CONFIG_FILE } from './constants.js';
 
 export const mergeKiloConfig: GeneratedOutputMerger = (
@@ -22,14 +23,10 @@ export const mergeKiloConfig: GeneratedOutputMerger = (
   if (resolvedPath !== KILO_CONFIG_FILE && resolvedPath !== KILO_GLOBAL_CONFIG_FILE) return null;
   const base = pending?.content ?? existing;
   if (base === null) return newContent;
-  let parsed: Record<string, unknown>;
-  try {
-    const p: unknown = JSON.parse(base);
-    parsed =
-      p !== null && typeof p === 'object' && !Array.isArray(p) ? (p as Record<string, unknown>) : {};
-  } catch {
-    parsed = {};
-  }
+  // `jsonc` is the file's own format: comments are legal and expected.
+  const preserved = preservedUnparsableBase(base);
+  if (preserved !== null) return preserved;
+  const parsed = JSON.parse(base) as Record<string, unknown>;
   const incoming: unknown = JSON.parse(newContent);
   if (incoming === null || typeof incoming !== 'object' || Array.isArray(incoming)) return base;
   const overlay = incoming as Record<string, unknown>;

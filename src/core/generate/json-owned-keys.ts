@@ -19,6 +19,23 @@ function parseJsonObject(raw: string): Record<string, unknown> | null {
 }
 
 /**
+ * Guard for mergers that parse the user's file before rewriting it.
+ *
+ * A base we cannot parse as a JSON object is a file we do not understand:
+ * `.vscode/settings.json`, `kilo.jsonc` and `.qwen/settings.json` are all
+ * comment-legal, and coercing an unparsable base to `{}` before serialising
+ * over it costs the user every key in the file.
+ *
+ * @returns The base verbatim when it must be preserved, or null to proceed with
+ * a normal merge (a blank base is "nothing to preserve", so the caller writes
+ * the generated file).
+ */
+export function preservedUnparsableBase(base: string): string | null {
+  if (base.trim() === '') return null;
+  return parseJsonObject(base) === null ? base : null;
+}
+
+/**
  * @returns Merged JSON; the base verbatim when it is present but not a JSON
  * object; or null when there is no base to merge into (so the caller writes the
  * generated file).

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { preservedUnparsableBase } from './json-owned-keys.js';
 
 export const SETTINGS_JSON_PATHS = ['.claude/settings.json', '.gemini/settings.json'];
 
@@ -49,6 +50,10 @@ function asRecord(value: unknown): Record<string, unknown> {
 }
 
 export function mergeSettingsJson(existing: string, newContent: string): string {
+  // A base we cannot parse is a file we do not understand — these paths are
+  // comment-legal, and rewriting drops the comments and every key.
+  const preserved = preservedUnparsableBase(existing);
+  if (preserved !== null) return preserved;
   const base = parseJsonObject(existing);
   const incoming = claudeIncomingSchema.parse(JSON.parse(newContent));
   const merged = { ...base };
@@ -67,6 +72,10 @@ export function mergeSettingsJson(existing: string, newContent: string): string 
 }
 
 export function mergeGeminiSettingsJson(existing: string, newContent: string): string {
+  // A base we cannot parse is a file we do not understand — these paths are
+  // comment-legal, and rewriting drops the comments and every key.
+  const preserved = preservedUnparsableBase(existing);
+  if (preserved !== null) return preserved;
   const base = parseJsonObject(existing);
   const incoming = geminiIncomingSchema.parse(JSON.parse(newContent));
   const merged = { ...base };
@@ -78,6 +87,10 @@ export function mergeGeminiSettingsJson(existing: string, newContent: string): s
 }
 
 export function mergeCrushConfigJson(existing: string, newContent: string): string {
+  // A base we cannot parse is a file we do not understand — these paths are
+  // comment-legal, and rewriting drops the comments and every key.
+  const preserved = preservedUnparsableBase(existing);
+  if (preserved !== null) return preserved;
   const base = parseJsonObject(existing);
   const incoming = crushIncomingSchema.parse(JSON.parse(newContent));
   const merged = { ...base };

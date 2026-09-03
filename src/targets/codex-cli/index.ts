@@ -20,6 +20,7 @@ import {
   CODEX_INSTRUCTIONS_DIR,
   CODEX_RULES_DIR,
   CODEX_HOOKS_FILE,
+  CODEX_CONFIG_TOML,
 } from './constants.js';
 import { importFromCodex } from './importer.js';
 import { lintRules } from './linter.js';
@@ -61,7 +62,10 @@ const project: TargetLayout = {
   skillDir: '.agents/skills',
   managedOutputs: {
     dirs: ['.agents/skills', '.codex/agents', '.codex/instructions', '.codex/rules'],
-    files: ['AGENTS.md', '.codex/config.toml', CODEX_HOOKS_FILE],
+    files: ['AGENTS.md', CODEX_HOOKS_FILE],
+    // Codex writes its own model / provider / trust state into config.toml;
+    // agentsmesh owns only the `[mcp_servers.*]` tables (see config-merge.ts).
+    coOwnedFiles: [CODEX_CONFIG_TOML],
   },
   paths: {
     rulePath(_slug, rule) {
@@ -89,7 +93,8 @@ const globalLayout: TargetLayout = {
   skillDir: CODEX_SKILLS_DIR,
   managedOutputs: {
     dirs: ['.agents/skills', '.codex/agents', '.codex/rules'],
-    files: [CODEX_GLOBAL_AGENTS_MD, '.codex/config.toml', CODEX_HOOKS_FILE],
+    files: [CODEX_GLOBAL_AGENTS_MD, CODEX_HOOKS_FILE],
+    coOwnedFiles: [CODEX_CONFIG_TOML],
   },
   rewriteGeneratedPath(path) {
     if (path === AGENTS_MD) return CODEX_GLOBAL_AGENTS_MD;

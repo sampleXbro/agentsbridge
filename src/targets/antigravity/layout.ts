@@ -9,9 +9,13 @@
  * same call claude-code makes for `.claude/agents` — unlike `.continue/agents`,
  * which additionally holds user `*.yaml` assistant profiles.
  *
- * `.gemini/antigravity-cli/settings.json` stays out: it is the user's own
- * settings file that agentsmesh only folds a `permissions` key into (see
+ * `.gemini/antigravity-cli/settings.json` stays out entirely: it is the user's
+ * own settings file that agentsmesh only folds a `permissions` key into (see
  * `global-permissions.ts`), so cleanup would delete the whole file.
+ *
+ * The MCP config files are `coOwnedFiles`, not `files`: Antigravity's own UI
+ * writes per-server `cwd` / `disabled` / `oauth` keys into them (see
+ * `mcp-settings.ts`), so disabling the `mcp` feature must leave them in place.
  */
 
 import type { TargetLayout } from '../catalog/target-descriptor.js';
@@ -55,12 +59,8 @@ export const projectLayout: TargetLayout = {
       ANTIGRAVITY_WORKFLOWS_DIR,
       ANTIGRAVITY_SKILLS_DIR,
     ],
-    files: [
-      ANTIGRAVITY_RULES_ROOT,
-      ANTIGRAVITY_HOOKS_FILE,
-      ANTIGRAVITY_MCP_CONFIG,
-      ANTIGRAVITY_IGNORE_FILE,
-    ],
+    files: [ANTIGRAVITY_RULES_ROOT, ANTIGRAVITY_HOOKS_FILE, ANTIGRAVITY_IGNORE_FILE],
+    coOwnedFiles: [ANTIGRAVITY_MCP_CONFIG],
   },
   paths: {
     rulePath(slug, _rule) {
@@ -85,7 +85,8 @@ export const globalLayout: TargetLayout = {
       ANTIGRAVITY_GLOBAL_SKILLS_DIR,
       ANTIGRAVITY_GLOBAL_WORKFLOWS_DIR,
     ],
-    files: [ANTIGRAVITY_GLOBAL_ROOT, ANTIGRAVITY_GLOBAL_MCP_CONFIG, ANTIGRAVITY_GLOBAL_HOOKS_FILE],
+    files: [ANTIGRAVITY_GLOBAL_ROOT, ANTIGRAVITY_GLOBAL_HOOKS_FILE],
+    coOwnedFiles: [ANTIGRAVITY_GLOBAL_MCP_CONFIG],
   },
   rewriteGeneratedPath(path) {
     if (path === ANTIGRAVITY_HOOKS_FILE) return ANTIGRAVITY_GLOBAL_HOOKS_FILE;

@@ -128,9 +128,10 @@ describe('rovodev global layout', () => {
     expect(descriptor.globalSupport!.layout.managedOutputs!.files).toContain(
       ROVODEV_GLOBAL_MCP_FILE,
     );
-    expect(descriptor.globalSupport!.layout.managedOutputs!.files).toContain(
+    // Co-owned: Rovo Dev's documented settings file, never stale-deleted.
+    expect(descriptor.globalSupport!.layout.managedOutputs!.coOwnedFiles).toEqual([
       ROVODEV_GLOBAL_CONFIG_FILE,
-    );
+    ]);
   });
 
   it('detection paths include project-level paths', () => {

@@ -50,9 +50,30 @@ const pathResolversSchema = z.object({
   agentPath: z.function(),
 });
 
+// `files` is the delete list and `coOwnedFiles` the never-delete list, so a path
+// in both would make stale cleanup's answer depend on iteration order.
+const managedOutputsSchema = z
+  .object({
+    dirs: z.array(z.string()),
+    files: z.array(z.string()),
+    coOwnedFiles: z.array(z.string()).optional(),
+  })
+  .passthrough()
+  .superRefine((value, ctx) => {
+    for (const file of value.coOwnedFiles ?? []) {
+      if (!value.files.includes(file)) continue;
+      ctx.addIssue({
+        code: 'custom',
+        path: ['coOwnedFiles'],
+        message: `"${file}" is in both managedOutputs.files and managedOutputs.coOwnedFiles.`,
+      });
+    }
+  });
+
 const layoutSchema = z
   .object({
     paths: pathResolversSchema,
+    managedOutputs: managedOutputsSchema.optional(),
   })
   .passthrough();
 

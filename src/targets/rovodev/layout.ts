@@ -44,12 +44,10 @@ export const globalLayout: TargetLayout = {
   skillDir: ROVODEV_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [ROVODEV_GLOBAL_SKILLS_DIR, ROVODEV_GLOBAL_COMMANDS_DIR],
-    files: [
-      ROVODEV_GLOBAL_ROOT_FILE,
-      ROVODEV_GLOBAL_PROMPTS_FILE,
-      ROVODEV_GLOBAL_MCP_FILE,
-      ROVODEV_GLOBAL_CONFIG_FILE,
-    ],
+    files: [ROVODEV_GLOBAL_ROOT_FILE, ROVODEV_GLOBAL_PROMPTS_FILE, ROVODEV_GLOBAL_MCP_FILE],
+    // Rovo Dev's documented settings file; agentsmesh owns only `eventHooks`
+    // and `toolPermissions` inside it.
+    coOwnedFiles: [ROVODEV_GLOBAL_CONFIG_FILE],
   },
   rewriteGeneratedPath(path) {
     if (path === ROVODEV_ROOT_FILE) return ROVODEV_GLOBAL_ROOT_FILE;

@@ -22,4 +22,4 @@ Two safety rules came out of this and are now enforced by tests:
 
 Also fixed: a TOML table header whose quoted key contains a bracket — `[projects."/Users/me/[wo]rk"]`, a legal path — was not recognised as a header, so it stayed inside the dropped `[mcp_servers.*]` region and was deleted along with its `trust_level`.
 
-**Known gap, not addressed here:** stale cleanup still deletes these same files. Every entry in a target's `managedOutputs.files` that a run does not emit is removed, so disabling `mcp` (or emptying canonical `mcp.json`) still destroys `.codex/config.toml`, `~/.claude.json`, `crush.json`, `.qwen/settings.json` and others. `zed`, `pi-agent` and `aider` are the only merge-hooked targets that correctly keep their user-owned file out of `managedOutputs`.
+**Follow-up, shipped alongside this:** stale cleanup used to delete these same files whenever a run stopped emitting them. `managedOutputs.coOwnedFiles` now separates "agentsmesh owns this, delete it when stale" from "the user owns this too, never delete it" — see the co-owned managed-outputs entry.

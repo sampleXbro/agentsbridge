@@ -237,9 +237,13 @@ export const descriptor = {
   project: {
     rootInstructionPath: '.rich/ROOT.md',
     skillDir: '.rich/skills',
+    // `.rich/mcp.json` is the co-owned file: `mergeGeneratedOutputContent`
+    // claims it, so it must NOT be in `files` (the stale-cleanup delete list)
+    // or disabling the `mcp` feature would delete the user's whole config.
     managedOutputs: {
       dirs: ['.rich/rules', '.rich/commands', '.rich/agents', '.rich/skills'],
-      files: ['.richignore', '.rich/ROOT.md', '.rich/mcp.json', '.rich/hooks.json', '.rich/permissions.json', '.rich/settings.json'],
+      files: ['.richignore', '.rich/ROOT.md', '.rich/hooks.json', '.rich/permissions.json', '.rich/settings.json'],
+      coOwnedFiles: ['.rich/mcp.json'],
     },
     outputFamilies: [
       { id: 'rules', kind: 'primary', pathPrefix: '.rich/rules/' },
@@ -288,6 +292,11 @@ export const descriptor = {
     layout: {
       rootInstructionPath: '.rich/ROOT.md',
       skillDir: '.rich/skills',
+      managedOutputs: {
+        dirs: ['.rich/rules', '.rich/commands', '.rich/agents'],
+        files: ['.richignore', '.rich/ROOT.md', '.rich/hooks.json', '.rich/permissions.json', '.rich/settings.json'],
+        coOwnedFiles: ['.rich/mcp.json'],
+      },
       outputFamilies: [
         { id: 'rules', kind: 'primary', pathPrefix: '.rich/rules/' },
         { id: 'agents', kind: 'additional', pathPrefix: '.rich/agents/' },

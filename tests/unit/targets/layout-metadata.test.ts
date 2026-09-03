@@ -27,7 +27,9 @@ describe('target layout metadata', () => {
   it('returns managed outputs from descriptor metadata', () => {
     expect(getTargetManagedOutputs('codex-cli')).toEqual({
       dirs: ['.agents/skills', '.codex/agents', '.codex/instructions', '.codex/rules'],
-      files: ['AGENTS.md', '.codex/config.toml', '.codex/hooks.json'],
+      files: ['AGENTS.md', '.codex/hooks.json'],
+      // Co-owned: Codex writes its own model/provider/trust state here.
+      coOwnedFiles: ['.codex/config.toml'],
     });
   });
 
@@ -73,13 +75,8 @@ describe('target layout metadata', () => {
             '.claude/output-styles',
             '.agents/skills',
           ],
-          files: [
-            '.claude/CLAUDE.md',
-            '.claude/settings.json',
-            '.claude.json',
-            '.claude/hooks.json',
-            '.claudeignore',
-          ],
+          files: ['.claude/CLAUDE.md', '.claude/hooks.json', '.claudeignore'],
+          coOwnedFiles: ['.claude.json', '.claude/settings.json'],
         },
         paths: expect.objectContaining({
           rulePath: expect.any(Function),
@@ -104,11 +101,8 @@ describe('target layout metadata', () => {
             '.gemini/config/skills',
             '.gemini/antigravity/global_workflows',
           ],
-          files: [
-            '.gemini/GEMINI.md',
-            '.gemini/config/mcp_config.json',
-            '.gemini/config/hooks.json',
-          ],
+          files: ['.gemini/GEMINI.md', '.gemini/config/hooks.json'],
+          coOwnedFiles: ['.gemini/config/mcp_config.json'],
         },
         paths: expect.objectContaining({
           rulePath: expect.any(Function),
@@ -179,7 +173,8 @@ describe('target layout metadata', () => {
         skillDir: '.agents/skills',
         managedOutputs: {
           dirs: ['.agents/skills', '.codex/agents', '.codex/rules'],
-          files: ['.codex/AGENTS.md', '.codex/config.toml', '.codex/hooks.json'],
+          files: ['.codex/AGENTS.md', '.codex/hooks.json'],
+          coOwnedFiles: ['.codex/config.toml'],
         },
         paths: expect.objectContaining({
           rulePath: expect.any(Function),

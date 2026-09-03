@@ -61,10 +61,9 @@ describe('kilo-code global layout — paths', () => {
   });
 
   it('declares all global managed-output files (no standalone mcp.json or ignore file)', () => {
-    expect(layout.managedOutputs.files).toEqual([
-      KILO_CODE_GLOBAL_AGENTS_MD,
-      KILO_GLOBAL_CONFIG_FILE,
-    ]);
+    expect(layout.managedOutputs.files).toEqual([KILO_CODE_GLOBAL_AGENTS_MD]);
+    // Kilo's own settings file: co-owned, never stale-deleted.
+    expect(layout.managedOutputs.coOwnedFiles).toEqual([KILO_GLOBAL_CONFIG_FILE]);
   });
 });
 

@@ -2342,6 +2342,20 @@
         "t-kw-0560ceb4"
       ]
     },
+    "generation-safety-when-writing-an-invariant-test": {
+      "createdAt": "2026-09-03",
+      "evidence": [],
+      "rationale": "The first stale-cleanup fix shipped a repo-wide invariant that only probed descriptor hooks, so .claude/settings.json (user model/env/auth) and goose permission.yaml stayed on the delete list with the test reporting no violations.",
+      "rule": "When writing an invariant test whose oracle detects \"co-ownership\", enumerate every mechanism that confers it — descriptor merge hook, the SETTINGS_JSON_PATHS fallback, and scopeExtras generators that read-and-merge — because an oracle that knows only one mechanism passes green while the other cases stay broken.",
+      "status": "active",
+      "topics": [
+        "generation-safety"
+      ],
+      "triggers": [
+        "t-glob-40524b6c",
+        "t-kw-b9c4415c"
+      ]
+    },
     "git-commit-hygiene-before-creating-a-new-standalone": {
       "createdAt": "2026-06-24",
       "evidence": [
@@ -9614,6 +9628,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/seen-cache.ts"
     },
+    "t-glob-40524b6c": {
+      "kind": "file_glob",
+      "pattern": "tests/unit/core/generate/managed-output-ownership.test.ts"
+    },
     "t-glob-406306ec": {
       "kind": "file_glob",
       "pattern": "tests/unit/lessons/import-legacy.test.ts"
@@ -10969,6 +10987,10 @@
     "t-kw-b97d39e2": {
       "kind": "keyword",
       "pattern": "mergeContent, managedOutputs, wholesale rewrite"
+    },
+    "t-kw-b9c4415c": {
+      "kind": "keyword",
+      "pattern": "invariant test oracle, co-owned, managedOutputs"
     },
     "t-kw-bd0b86a3": {
       "kind": "keyword",

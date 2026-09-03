@@ -33,7 +33,10 @@ export const project: TargetLayout = {
   skillDir: '.roo/skills',
   managedOutputs: {
     dirs: ['.roo/rules', '.roo/commands', '.roo/skills'],
-    files: ['.roo/mcp.json', '.rooignore', '.roorules', ROO_CODE_MODES_FILE, ROO_CODE_VSCODE_SETTINGS],
+    files: ['.roo/mcp.json', '.rooignore', '.roorules', ROO_CODE_MODES_FILE],
+    // Shared VS Code workspace settings: agentsmesh owns only the two Roo
+    // command-permission keys (see merge.ts).
+    coOwnedFiles: [ROO_CODE_VSCODE_SETTINGS],
   },
   paths: {
     rulePath(slug, _rule) {

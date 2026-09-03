@@ -125,14 +125,26 @@ describe('openhands stale cleanup', () => {
     expect(existsSync(script)).toBe(true);
   });
 
-  it('removes the hooks file when canonical hooks are revoked', async () => {
+  /**
+   * `.openhands/hooks.json` used to be deleted here. It is the user's own
+   * OpenHands config file — it also holds `HookType.AGENT` handlers and
+   * per-handler keys canonical cannot express — so it is now `coOwnedFiles`
+   * and stale cleanup never touches it. Emptying `hooks.yaml` and disabling
+   * the `hooks` feature are indistinguishable at cleanup time (both just stop
+   * emitting the path), and deleting the user's file is the worse of the two
+   * outcomes. Revocation is still event-scoped: rewriting `hooks.yaml` drops
+   * the handlers agentsmesh no longer emits.
+   */
+  it('keeps the user-owned hooks file when canonical hooks are revoked', async () => {
     dir = createCanonicalProject(`version: 1\ntargets: [openhands]\n${FEATURES}\n`);
     await generateAll();
     const hooks = join(dir, '.openhands/hooks.json');
     expect(existsSync(hooks)).toBe(true);
+    const before = readFileSync(hooks, 'utf8');
 
     rmSync(join(dir, '.agentsmesh/hooks.yaml'));
     await generateAll();
-    expect(existsSync(hooks)).toBe(false);
+    expect(existsSync(hooks)).toBe(true);
+    expect(readFileSync(hooks, 'utf8')).toBe(before);
   });
 });

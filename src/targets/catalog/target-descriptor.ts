@@ -62,8 +62,21 @@ export interface TargetPathResolvers {
 }
 
 export interface TargetManagedOutputs {
+  /** Directories agentsmesh fills alone; every file inside is deletable. */
   dirs: readonly string[];
+  /**
+   * Files agentsmesh owns outright. A run that stops emitting one DELETES it,
+   * which is how revocation works.
+   */
   files: readonly string[];
+  /**
+   * Files agentsmesh writes into but the user owns too (a shared tool config
+   * holding their model, auth or editor settings). NEVER deleted: a run that
+   * stops emitting one just leaves it alone, and the descriptor's
+   * `mergeGeneratedOutputContent` hook keeps the user's content on the runs
+   * that do write it. A path belongs to exactly one of the two lists.
+   */
+  coOwnedFiles?: readonly string[];
 }
 
 export interface TargetLayout {

@@ -123,7 +123,8 @@ describe('deepagents-cli global layout', () => {
     expect(descriptor.project.managedOutputs!.dirs).toContain(DEEPAGENTS_CLI_SKILLS_DIR);
     expect(descriptor.project.managedOutputs!.dirs).toContain(DEEPAGENTS_CLI_AGENTS_DIR);
     expect(descriptor.project.managedOutputs!.files).toContain(DEEPAGENTS_CLI_ROOT_FILE);
-    expect(descriptor.project.managedOutputs!.files).toContain(DEEPAGENTS_CLI_MCP_FILE);
+    // Co-owned: `.mcp.json` is the shared MCP file claude-code also writes.
+    expect(descriptor.project.managedOutputs!.coOwnedFiles).toEqual([DEEPAGENTS_CLI_MCP_FILE]);
     // No project-level hooks file — hooks are none (global-only surface).
     expect(descriptor.project.managedOutputs!.files).not.toContain('.deepagents/hooks.json');
   });

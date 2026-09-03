@@ -73,7 +73,9 @@ describe('openhands project layout', () => {
   it('manages only directories it fills itself, never the whole plugin dir', () => {
     expect(project.managedOutputs).toEqual({
       dirs: ['.agents/agents', '.agents/skills', '.agents/plugins/agentsmesh/commands'],
-      files: ['AGENTS.md', '.agents/plugins/agentsmesh/.mcp.json', '.openhands/hooks.json'],
+      files: ['AGENTS.md', '.agents/plugins/agentsmesh/.mcp.json'],
+      // The user's own OpenHands config file: co-owned, never stale-deleted.
+      coOwnedFiles: ['.openhands/hooks.json'],
     });
     // goose owns `.agents/plugins/agentsmesh/hooks/hooks.json`; managing the plugin
     // directory would delete it on every openhands-only run.
@@ -115,11 +117,9 @@ describe('openhands global layout', () => {
   it('manages the global root file instead of AGENTS.md', () => {
     expect(global.managedOutputs).toEqual({
       dirs: ['.agents/agents', '.agents/skills', '.agents/plugins/agentsmesh/commands'],
-      files: [
-        '.agents/skills/_root.md',
-        '.agents/plugins/agentsmesh/.mcp.json',
-        '.openhands/hooks.json',
-      ],
+      files: ['.agents/skills/_root.md', '.agents/plugins/agentsmesh/.mcp.json'],
+      // The user's own OpenHands config file: co-owned, never stale-deleted.
+      coOwnedFiles: ['.openhands/hooks.json'],
     });
   });
 

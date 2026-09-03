@@ -32,9 +32,16 @@ export async function findStaleGeneratedOutputs(
   const stale = new Set<string>();
   const scope = args.scope ?? 'project';
 
+  // Shared user configs (their model, auth and editor settings live there). A run
+  // that emits nothing for one must leave it alone rather than delete it. Collected
+  // across every target first: a directory sweep for one target can otherwise reach
+  // a file another target co-owns.
+  const coOwned = new Set<string>();
+
   for (const target of args.targets) {
     const managed = getTargetManagedOutputs(target, scope);
     if (!managed) continue;
+    for (const file of managed.coOwnedFiles ?? []) coOwned.add(file);
     for (const file of managed.files) stale.add(file);
     for (const dir of managed.dirs) {
       const absDir = join(args.projectRoot, dir);
@@ -47,15 +54,13 @@ export async function findStaleGeneratedOutputs(
 
   const found: string[] = [];
   for (const relPath of stale) {
-    if (expected.has(relPath)) continue;
+    if (expected.has(relPath) || coOwned.has(relPath)) continue;
     if (await exists(join(args.projectRoot, relPath))) found.push(relPath);
   }
   return found.sort();
 }
 
-export async function cleanupStaleGeneratedOutputs(
-  args: StaleGeneratedOutputsArgs,
-): Promise<void> {
+export async function cleanupStaleGeneratedOutputs(args: StaleGeneratedOutputsArgs): Promise<void> {
   for (const relPath of await findStaleGeneratedOutputs(args)) {
     await rm(join(args.projectRoot, relPath), { recursive: true, force: true });
   }

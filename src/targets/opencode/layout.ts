@@ -22,7 +22,10 @@ export const project: TargetLayout = {
   skillDir: OPENCODE_SKILLS_DIR,
   managedOutputs: {
     dirs: [OPENCODE_RULES_DIR, OPENCODE_COMMANDS_DIR, OPENCODE_AGENTS_DIR, OPENCODE_SKILLS_DIR],
-    files: [OPENCODE_ROOT_RULE, OPENCODE_CONFIG_FILE],
+    files: [OPENCODE_ROOT_RULE],
+    // OpenCode's own config (model, provider, theme, keybinds); agentsmesh
+    // overlays mcp / permission / instructions only.
+    coOwnedFiles: [OPENCODE_CONFIG_FILE],
   },
   paths: {
     rulePath: (slug) => `${OPENCODE_RULES_DIR}/${slug}.md`,
@@ -42,7 +45,8 @@ export const globalLayout: TargetLayout = {
       OPENCODE_GLOBAL_SKILLS_DIR,
       OPENCODE_GLOBAL_AGENTS_SKILLS_DIR,
     ],
-    files: [OPENCODE_GLOBAL_AGENTS_MD, OPENCODE_GLOBAL_CONFIG_FILE],
+    files: [OPENCODE_GLOBAL_AGENTS_MD],
+    coOwnedFiles: [OPENCODE_GLOBAL_CONFIG_FILE],
   },
   rewriteGeneratedPath(path) {
     if (path === OPENCODE_ROOT_RULE) return OPENCODE_GLOBAL_AGENTS_MD;

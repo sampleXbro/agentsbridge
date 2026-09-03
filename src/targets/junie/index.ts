@@ -83,12 +83,10 @@ const globalLayout: TargetLayout = {
       JUNIE_GLOBAL_COMMANDS_DIR,
       JUNIE_GLOBAL_AGENTS_SKILLS_DIR,
     ],
-    files: [
-      JUNIE_GLOBAL_AGENTS_MD,
-      JUNIE_GLOBAL_MCP_FILE,
-      JUNIE_GLOBAL_ALLOWLIST,
-      JUNIE_GLOBAL_CONFIG,
-    ],
+    files: [JUNIE_GLOBAL_AGENTS_MD, JUNIE_GLOBAL_MCP_FILE, JUNIE_GLOBAL_ALLOWLIST],
+    // Junie's own config file (model, provider, API keys); the merge keeps
+    // every pre-existing key.
+    coOwnedFiles: [JUNIE_GLOBAL_CONFIG],
   },
   rewriteGeneratedPath(path) {
     // Transform project-level paths to global ~/.junie/ paths

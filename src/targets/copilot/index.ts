@@ -68,7 +68,10 @@ const project: TargetLayout = {
       '.github/skills',
       '.github/hooks/scripts',
     ],
-    files: ['.github/copilot-instructions.md', '.github/hooks/agentsmesh.json', COPILOT_MCP_JSON],
+    files: ['.github/copilot-instructions.md', '.github/hooks/agentsmesh.json'],
+    // VS Code writes `.vscode/mcp.json` itself and the user's secret-prompt
+    // `inputs` live there; agentsmesh owns only `servers`.
+    coOwnedFiles: [COPILOT_MCP_JSON],
   },
   paths: {
     rulePath(slug, _rule) {

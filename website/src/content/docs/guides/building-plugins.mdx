@@ -358,7 +358,7 @@ You have already seen `project.paths` and `project.managedOutputs` in the minima
 
 | Field | Purpose |
 |-------|---------|
-| `managedOutputs` | Directories and files that AgentsMesh fully manages — stale artifacts are deleted on `generate` |
+| `managedOutputs` | `dirs` and `files` AgentsMesh fully manages — stale artifacts are deleted on `generate`. Put a shared config file the user also owns in `coOwnedFiles` instead: it is never deleted, and your `mergeGeneratedOutputContent` hook keeps their content. A path claimed by that hook must not appear in `files`. |
 | `rootInstructionPath` | Path to the primary root instruction file (e.g. `.foo-ide/ROOT.md`) |
 | `skillDir` | Target-native skills directory for skill generation and import |
 | `outputFamilies` | Declared output path families for reference rewriting between targets |
@@ -572,6 +572,18 @@ mergeGeneratedOutputContent(existingContent, pendingContent, newContent, path) {
     return JSON.stringify({ ...existing, ...update }, null, 2);
   }
   return newContent;
+},
+```
+
+A file you merge into is a file the user co-owns, so list it in `managedOutputs.coOwnedFiles`, never in `files`. Stale cleanup deletes every `files` entry a run did not emit — with the path in the wrong list, turning off one feature deletes the user's whole config:
+
+```js
+project: {
+  managedOutputs: {
+    dirs: ['.foo-ide/rules'],
+    files: ['.foo-ide/ROOT.md'],
+    coOwnedFiles: ['.foo-ide/settings.json'],   // merged into, never deleted
+  },
 },
 ```
 

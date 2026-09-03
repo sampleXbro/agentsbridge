@@ -66,7 +66,10 @@ const project: TargetLayout = {
   skillDir: CRUSH_SKILLS_DIR,
   managedOutputs: {
     dirs: [CRUSH_SKILLS_DIR],
-    files: [CRUSH_ROOT_FILE, CRUSH_CONFIG_FILE, CRUSH_IGNORE],
+    files: [CRUSH_ROOT_FILE, CRUSH_IGNORE],
+    // Crush's own config file: providers, models and LSP settings the user
+    // owns sit beside the keys agentsmesh writes.
+    coOwnedFiles: [CRUSH_CONFIG_FILE],
   },
   paths: {
     rulePath(_slug) {
@@ -86,7 +89,8 @@ const globalLayout: TargetLayout = {
   skillDir: CRUSH_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [CRUSH_GLOBAL_SKILLS_DIR],
-    files: [CRUSH_GLOBAL_ROOT_FILE, CRUSH_GLOBAL_CONFIG_FILE, CRUSH_GLOBAL_IGNORE],
+    files: [CRUSH_GLOBAL_ROOT_FILE, CRUSH_GLOBAL_IGNORE],
+    coOwnedFiles: [CRUSH_GLOBAL_CONFIG_FILE],
   },
   rewriteGeneratedPath(path) {
     if (path === CRUSH_ROOT_FILE) return CRUSH_GLOBAL_ROOT_FILE;

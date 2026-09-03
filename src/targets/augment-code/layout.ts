@@ -31,7 +31,10 @@ export const projectLayout: TargetLayout = {
       AUGMENT_CODE_AGENTS_DIR,
       AUGMENT_CODE_SKILLS_DIR,
     ],
-    files: [AUGMENT_CODE_SETTINGS_FILE, AUGMENT_CODE_IGNORE_FILE],
+    files: [AUGMENT_CODE_IGNORE_FILE],
+    // Augment's own repo settings file (JSON5): agentsmesh owns only
+    // mcpServers / hooks / toolPermissions inside it.
+    coOwnedFiles: [AUGMENT_CODE_SETTINGS_FILE],
   },
   paths: {
     rulePath(slug) {
@@ -55,7 +58,8 @@ export const globalLayout: TargetLayout = {
       AUGMENT_CODE_GLOBAL_AGENTS_DIR,
       AUGMENT_CODE_GLOBAL_SKILLS_DIR,
     ],
-    files: [AUGMENT_CODE_GLOBAL_SETTINGS_FILE],
+    files: [],
+    coOwnedFiles: [AUGMENT_CODE_GLOBAL_SETTINGS_FILE],
   },
   rewriteGeneratedPath(path) {
     if (path.startsWith(`${AUGMENT_CODE_RULES_DIR}/`)) {

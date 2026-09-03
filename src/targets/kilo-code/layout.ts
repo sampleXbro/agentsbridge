@@ -28,7 +28,10 @@ export const project: TargetLayout = {
   skillDir: KILO_CODE_SKILLS_DIR,
   managedOutputs: {
     dirs: [KILO_CODE_RULES_DIR, KILO_CODE_COMMANDS_DIR, KILO_CODE_AGENTS_DIR, KILO_CODE_SKILLS_DIR],
-    files: [KILO_CODE_ROOT_RULE, KILO_CODE_MCP_FILE, KILO_CODE_IGNORE, KILO_CONFIG_FILE],
+    files: [KILO_CODE_ROOT_RULE, KILO_CODE_MCP_FILE, KILO_CODE_IGNORE],
+    // Kilo's documented settings file, comments and custom keys included;
+    // agentsmesh overlays only the keys it manages (see merge.ts).
+    coOwnedFiles: [KILO_CONFIG_FILE],
   },
   paths: {
     rulePath(slug, _rule) {
@@ -54,7 +57,8 @@ export const globalLayout: TargetLayout = {
       KILO_CODE_GLOBAL_SKILLS_DIR,
       KILO_CODE_GLOBAL_AGENTS_SKILLS_DIR,
     ],
-    files: [KILO_CODE_GLOBAL_AGENTS_MD, KILO_GLOBAL_CONFIG_FILE],
+    files: [KILO_CODE_GLOBAL_AGENTS_MD],
+    coOwnedFiles: [KILO_GLOBAL_CONFIG_FILE],
   },
   rewriteGeneratedPath(path) {
     if (path === KILO_CODE_ROOT_RULE) return KILO_CODE_GLOBAL_AGENTS_MD;

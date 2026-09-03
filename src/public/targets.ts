@@ -60,6 +60,8 @@ function copyManagedOutputs(outputs: TargetManagedOutputs): TargetManagedOutputs
   return Object.freeze({
     dirs: Object.freeze([...outputs.dirs]),
     files: Object.freeze([...outputs.files]),
+    coOwnedFiles:
+      outputs.coOwnedFiles === undefined ? undefined : Object.freeze([...outputs.coOwnedFiles]),
   });
 }
 

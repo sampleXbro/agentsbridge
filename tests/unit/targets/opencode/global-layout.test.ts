@@ -59,10 +59,9 @@ describe('opencode global layout — paths', () => {
   });
 
   it('declares all global managed-output files', () => {
-    expect(layout.managedOutputs.files).toEqual([
-      OPENCODE_GLOBAL_AGENTS_MD,
-      OPENCODE_GLOBAL_CONFIG_FILE,
-    ]);
+    expect(layout.managedOutputs.files).toEqual([OPENCODE_GLOBAL_AGENTS_MD]);
+    // OpenCode's own config file: co-owned, never stale-deleted.
+    expect(layout.managedOutputs.coOwnedFiles).toEqual([OPENCODE_GLOBAL_CONFIG_FILE]);
   });
 });
 

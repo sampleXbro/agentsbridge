@@ -21,7 +21,10 @@ export const project: TargetLayout = {
   skillDir: DEEPAGENTS_CLI_SKILLS_DIR,
   managedOutputs: {
     dirs: [DEEPAGENTS_CLI_SKILLS_DIR, DEEPAGENTS_CLI_AGENTS_DIR],
-    files: [DEEPAGENTS_CLI_ROOT_FILE, DEEPAGENTS_CLI_MCP_FILE],
+    files: [DEEPAGENTS_CLI_ROOT_FILE],
+    // Shared `.mcp.json`: claude-code writes the same path and users hand-add
+    // servers to it. agentsmesh owns only `mcpServers`.
+    coOwnedFiles: [DEEPAGENTS_CLI_MCP_FILE],
   },
   paths: {
     rulePath(_slug) {
@@ -41,11 +44,8 @@ export const globalLayout: TargetLayout = {
   skillDir: DEEPAGENTS_CLI_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [DEEPAGENTS_CLI_GLOBAL_SKILLS_DIR, DEEPAGENTS_CLI_GLOBAL_AGENTS_DIR],
-    files: [
-      DEEPAGENTS_CLI_GLOBAL_ROOT_FILE,
-      DEEPAGENTS_CLI_GLOBAL_MCP_FILE,
-      DEEPAGENTS_CLI_GLOBAL_HOOKS_FILE,
-    ],
+    files: [DEEPAGENTS_CLI_GLOBAL_ROOT_FILE, DEEPAGENTS_CLI_GLOBAL_HOOKS_FILE],
+    coOwnedFiles: [DEEPAGENTS_CLI_GLOBAL_MCP_FILE],
   },
   rewriteGeneratedPath(path) {
     if (path === DEEPAGENTS_CLI_ROOT_FILE) return DEEPAGENTS_CLI_GLOBAL_ROOT_FILE;

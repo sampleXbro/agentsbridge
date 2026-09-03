@@ -98,12 +98,11 @@ const globalLayout: TargetLayout = {
     // GOOSE_MODE, builtin extensions) and stale-cleanup deletes every managed
     // file a run did not emit, so a global run without `mcp` would erase it.
     // Revocation is handled inside `global-mcp.ts` by clearing `extensions`.
-    files: [
-      GOOSE_GLOBAL_ROOT_FILE,
-      GOOSE_GLOBAL_IGNORE,
-      GOOSE_HOOKS_FILE,
-      GOOSE_GLOBAL_PERMISSIONS,
-    ],
+    files: [GOOSE_GLOBAL_ROOT_FILE, GOOSE_GLOBAL_IGNORE, GOOSE_HOOKS_FILE],
+    // `permission.yaml` carries goose's own tool-permission state; agentsmesh
+    // merges canonical permissions into the `user` category only
+    // (`scope-extras.ts`), so deleting it discards the categories goose owns.
+    coOwnedFiles: [GOOSE_GLOBAL_PERMISSIONS],
   },
   rewriteGeneratedPath(path) {
     if (path === GOOSE_ROOT_FILE) return GOOSE_GLOBAL_ROOT_FILE;

@@ -49,12 +49,14 @@ export const projectLayout: TargetLayout = {
     files: [
       'AGENTS.md',
       'GEMINI.md',
-      '.gemini/settings.json',
       // Retained so a policies file written by an older agentsmesh is cleaned up:
       // Gemini's Workspace policy tier is non-functional, so we no longer emit it.
       '.gemini/policies/permissions.toml',
       '.geminiignore',
     ],
+    // Gemini CLI's own settings file (theme, auth, context.fileName);
+    // agentsmesh owns only mcpServers / hooks / experimental / context.
+    coOwnedFiles: ['.gemini/settings.json'],
   },
   // `AGENTS.md` rewrites skill links to `.agents/skills/…` for cross-tool compatibility; mirror
   // project skills there so link validation and consumers see real files (same as global layout).
@@ -87,12 +89,8 @@ export const globalLayout: TargetLayout = {
   skillDir: GEMINI_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [GEMINI_GLOBAL_COMMANDS_DIR, GEMINI_GLOBAL_SKILLS_DIR, GEMINI_GLOBAL_AGENTS_DIR],
-    files: [
-      GEMINI_GLOBAL_ROOT,
-      GEMINI_GLOBAL_COMPAT_AGENTS,
-      GEMINI_GLOBAL_SETTINGS,
-      GEMINI_GLOBAL_POLICIES_FILE,
-    ],
+    files: [GEMINI_GLOBAL_ROOT, GEMINI_GLOBAL_COMPAT_AGENTS, GEMINI_GLOBAL_POLICIES_FILE],
+    coOwnedFiles: [GEMINI_GLOBAL_SETTINGS],
   },
   rewriteGeneratedPath(path) {
     if (path === GEMINI_ROOT) return GEMINI_GLOBAL_ROOT;

@@ -48,6 +48,16 @@ export default defineConfig({
       plugins: [starlightLinksValidator({ errorOnRelativeLinks: false })],
       title: 'AgentsMesh',
       tagline: 'One config. Every AI coding tool. Agents that learn.',
+      components: {
+        Hero: './src/components/home/Hero.astro',
+      },
+      expressiveCode: {
+        styleOverrides: {
+          borderRadius: '0.625rem',
+          borderColor: 'var(--sl-color-gray-5)',
+          frames: { shadowColor: 'transparent' },
+        },
+      },
       description:
         'AgentsMesh is an open-source AI coding config sync CLI and TypeScript library for Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf, Codex CLI, and more — with lessons, a shared agent memory that learns from your repo.',
       logo: {
@@ -62,7 +72,15 @@ export default defineConfig({
         baseUrl: 'https://github.com/sampleXbro/agentsmesh/edit/master/website/',
       },
       customCss: [
-        './src/styles/custom.css',
+        '@fontsource-variable/bricolage-grotesque',
+        '@fontsource/ibm-plex-sans/400.css',
+        '@fontsource/ibm-plex-sans/500.css',
+        '@fontsource/ibm-plex-sans/600.css',
+        '@fontsource/ibm-plex-mono/400.css',
+        '@fontsource/ibm-plex-mono/500.css',
+        './src/styles/tokens.css',
+        './src/styles/docs-chrome.css',
+        './src/styles/docs-content.css',
         './src/styles/catalog-explorer.css',
         './src/styles/catalog-explorer-table.css',
       ],

@@ -1,4 +1,6 @@
 import type { CatalogRow } from '../../lib/catalog-rows';
+import { bindCopyButton } from '../../lib/copy-to-clipboard';
+import { libraryInstallCommand, packInstallCommand } from '../../lib/install-command.mjs';
 import { mountVirtualBrowse, type VirtualBrowseHandle } from './catalog-virtual-browse';
 
 export type CatalogPayload = {
@@ -7,32 +9,11 @@ export type CatalogPayload = {
   commands: CatalogRow[];
 };
 
-const DEFAULT_CMD = 'pnpm install agentsmesh';
-/** User-level CLI install (`pnpm add --global` is the supported global form). */
-const DEFAULT_CMD_GLOBAL = 'pnpm add --global agentsmesh';
-const TARGET = 'claude-code';
-const COPY_UI_MS = 2200;
 const LIVE_ACK_MS = 2500;
 const SEARCH_DEBOUNCE_MS = 100;
 type TabId = 'skills' | 'agents' | 'commands';
 
-const COPY_LABEL_DEFAULT = 'Copy';
-const COPY_LABEL_DONE = 'Copied ✓';
-
-const EMPTY_FILTER_MSG = 'No matches — try different words or another tab.';
-
-function shellSingleQuoted(url: string): string {
-  return url.replace(/'/g, `'\\''`);
-}
-
-function installCommand(link: string, asKind: TabId, global: boolean): string {
-  const globalFlag = global ? ' --global' : '';
-  return `agentsmesh install${globalFlag} '${shellSingleQuoted(link)}' --target ${TARGET} --as ${asKind}`;
-}
-
-function defaultLibCommand(global: boolean): string {
-  return global ? DEFAULT_CMD_GLOBAL : DEFAULT_CMD;
-}
+const EMPTY_FILTER_MSG = 'No matches. Try other words or another tab.';
 
 function tabRows(data: CatalogPayload, tab: TabId): CatalogRow[] {
   return data[tab];
@@ -46,21 +27,18 @@ function matchesQuery(row: CatalogRow, q: string): boolean {
 export function mountCatalogExplorer(root: HTMLElement, data: CatalogPayload): void {
   const copyInput = root.querySelector<HTMLInputElement>('[data-am-copy-input]');
   const copyBtn = root.querySelector<HTMLButtonElement>('[data-am-copy-btn]');
-  const copyLabel = root.querySelector<HTMLElement>('[data-am-copy-label]');
   const installGlobalEl = root.querySelector<HTMLInputElement>('[data-am-install-global]');
   const search = root.querySelector<HTMLInputElement>('[data-am-search]');
   const tableWrap = root.querySelector<HTMLElement>('[data-am-table-wrap]');
   const live = root.querySelector<HTMLElement>('[data-am-live]');
   const tabButtons = root.querySelectorAll<HTMLButtonElement>('[data-am-tab]');
 
-  if (!copyInput || !copyBtn || !copyLabel || !installGlobalEl || !search || !tableWrap || !live)
-    return;
+  if (!copyInput || !copyBtn || !installGlobalEl || !search || !tableWrap || !live) return;
 
   let tab: TabId = 'skills';
   let installGlobal = installGlobalEl.checked;
   let lastPicked: CatalogRow | null = null;
   let liveTimer: ReturnType<typeof setTimeout> | undefined;
-  let copyUiTimer: ReturnType<typeof setTimeout> | undefined;
   let searchTimer: ReturnType<typeof setTimeout> | undefined;
   let virtualBrowse: VirtualBrowseHandle | null = null;
 
@@ -75,28 +53,15 @@ export function mountCatalogExplorer(root: HTMLElement, data: CatalogPayload): v
     }
   }
 
-  function showCopyButtonDone(): void {
-    if (copyUiTimer !== undefined) clearTimeout(copyUiTimer);
-    copyBtn.classList.add('am-catalog-copy-btn--copied');
-    copyLabel.textContent = COPY_LABEL_DONE;
-    copyUiTimer = setTimeout(() => {
-      copyBtn.classList.remove('am-catalog-copy-btn--copied');
-      copyLabel.textContent = COPY_LABEL_DEFAULT;
-      copyUiTimer = undefined;
-    }, COPY_UI_MS);
+  function refreshCommandLine(): void {
+    copyInput.value = lastPicked
+      ? packInstallCommand({ link: lastPicked.l, kind: tab, global: installGlobal })
+      : libraryInstallCommand(installGlobal);
   }
 
   function applyPick(row: CatalogRow): void {
     lastPicked = row;
-    copyInput.value = installCommand(row.l, tab, installGlobal);
-  }
-
-  function refreshCommandLine(): void {
-    if (lastPicked) {
-      copyInput.value = installCommand(lastPicked.l, tab, installGlobal);
-    } else {
-      copyInput.value = defaultLibCommand(installGlobal);
-    }
+    refreshCommandLine();
   }
 
   function clearSearchDebounce(): void {
@@ -132,16 +97,10 @@ export function mountCatalogExplorer(root: HTMLElement, data: CatalogPayload): v
   function setTab(next: TabId): void {
     tab = next;
     lastPicked = null;
-    copyInput.value = defaultLibCommand(installGlobal);
+    refreshCommandLine();
     search.value = '';
     clearSearchDebounce();
     setLiveMessage('');
-    if (copyUiTimer !== undefined) {
-      clearTimeout(copyUiTimer);
-      copyUiTimer = undefined;
-    }
-    copyBtn.classList.remove('am-catalog-copy-btn--copied');
-    copyLabel.textContent = COPY_LABEL_DEFAULT;
     tabButtons.forEach((btn) => {
       const id = btn.getAttribute('data-am-tab') as TabId | null;
       btn.setAttribute('aria-selected', String(id === next));
@@ -149,19 +108,9 @@ export function mountCatalogExplorer(root: HTMLElement, data: CatalogPayload): v
     applyTable();
   }
 
-  copyBtn.addEventListener('click', () => {
-    void navigator.clipboard.writeText(copyInput.value).then(
-      () => {
-        showCopyButtonDone();
-        setLiveMessage('Copied to clipboard');
-      },
-      () => {
-        copyInput.select();
-        document.execCommand('copy');
-        showCopyButtonDone();
-        setLiveMessage('Copied to clipboard');
-      },
-    );
+  bindCopyButton(copyBtn, {
+    getText: () => copyInput.value,
+    onCopied: () => setLiveMessage('Copied to clipboard'),
   });
 
   installGlobalEl.addEventListener('change', () => {
@@ -177,6 +126,6 @@ export function mountCatalogExplorer(root: HTMLElement, data: CatalogPayload): v
     });
   });
 
-  copyInput.value = defaultLibCommand(installGlobal);
+  refreshCommandLine();
   applyTable();
 }

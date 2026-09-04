@@ -1,0 +1,89 @@
+---
+/** Homepage section shell: optional eyebrow, heading, lead, then slotted content. */
+import { inlineCode } from '../../lib/inline-code.mjs';
+
+interface Props {
+  id: string;
+  title: string;
+  eyebrow?: string;
+  lead?: string;
+  align?: 'start' | 'center';
+  more?: { text: string; href: string };
+}
+
+const { id, title, eyebrow, lead, align = 'start', more } = Astro.props;
+---
+
+<section class:list={['am-section', 'not-content', `am-section--${align}`]} id={id} aria-labelledby={`${id}-title`}>
+  <header class="am-section-head">
+    {eyebrow && <p class="am-eyebrow">{eyebrow}</p>}
+    <h2 id={`${id}-title`}>{title}</h2>
+    {lead && <p class="am-lead" set:html={inlineCode(lead)} />}
+    {more && <a class="am-more" href={more.href}>{more.text} →</a>}
+  </header>
+  <slot />
+</section>
+
+<style>
+  .am-section {
+    padding-block: clamp(2.5rem, 6vw, 4.5rem);
+    border-top: 1px solid var(--am-hairline);
+  }
+
+  .am-section-head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    max-width: 44rem;
+    margin-bottom: clamp(1.5rem, 3vw, 2.25rem);
+  }
+
+  .am-section--center .am-section-head {
+    align-items: center;
+    text-align: center;
+    margin-inline: auto;
+  }
+
+  .am-eyebrow {
+    margin: 0;
+    font-family: var(--__sl-font-mono);
+    font-size: var(--sl-text-2xs);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--am-signal);
+  }
+
+  h2 {
+    margin: 0;
+    font-size: clamp(1.75rem, 1.2rem + 1.8vw, 2.5rem);
+    line-height: 1.1;
+    color: var(--sl-color-white);
+    text-wrap: balance;
+  }
+
+  .am-lead {
+    margin: 0;
+    font-size: var(--sl-text-lg);
+    line-height: 1.55;
+    color: var(--sl-color-gray-2);
+    text-wrap: pretty;
+  }
+
+  .am-more {
+    margin-top: 0.25rem;
+    font-size: var(--sl-text-sm);
+    font-weight: 500;
+    color: var(--sl-color-white);
+    text-decoration: none;
+  }
+
+  .am-more:hover {
+    color: var(--am-signal);
+  }
+
+  .am-lead :global(code) {
+    font-family: var(--__sl-font-mono);
+    font-size: 0.85em;
+    color: var(--sl-color-white);
+  }
+</style>

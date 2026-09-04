@@ -1,0 +1,89 @@
+/*
+ * Design tokens. Starlight owns the semantic variables (--sl-*); this file only
+ * re-points them at the AgentsMesh palette and adds the few --am-* tokens the
+ * custom components share. Dark is the default, light overrides below.
+ */
+
+:root {
+  --am-font-display: 'Bricolage Grotesque Variable', 'IBM Plex Sans', system-ui, sans-serif;
+  --sl-font: 'IBM Plex Sans';
+  --sl-font-mono: 'IBM Plex Mono';
+
+  --am-radius-sm: 0.375rem;
+  --am-radius: 0.625rem;
+  --am-radius-lg: 1rem;
+  --am-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --am-hairline: var(--sl-color-gray-5);
+  --am-surface: var(--sl-color-gray-6);
+  --am-signal: var(--sl-color-accent);
+  --am-signal-ink: hsl(222 16% 7%);
+  --am-max-width: 72rem;
+
+  /* Graphite ramp (dark) */
+  --sl-color-white: hsl(220 20% 97%);
+  --sl-color-gray-1: hsl(220 14% 90%);
+  --sl-color-gray-2: hsl(220 10% 74%);
+  --sl-color-gray-3: hsl(220 8% 56%);
+  --sl-color-gray-4: hsl(220 8% 36%);
+  --sl-color-gray-5: hsl(220 10% 19%);
+  --sl-color-gray-6: hsl(221 13% 11%);
+  --sl-color-black: hsl(222 16% 7%);
+
+  /* Amber signal (dark) */
+  --sl-color-accent-low: hsl(40 45% 15%);
+  --sl-color-accent: hsl(40 92% 56%);
+  --sl-color-accent-high: hsl(42 96% 76%);
+
+  --sl-color-bg-nav: color-mix(in srgb, var(--sl-color-black) 82%, transparent);
+  --sl-color-bg-sidebar: var(--sl-color-black);
+  --sl-color-hairline-light: var(--sl-color-gray-5);
+  --sl-color-hairline: var(--sl-color-gray-6);
+  --sl-color-bg-inline-code: var(--sl-color-gray-6);
+
+  --sl-text-h1: var(--sl-text-4xl);
+  --sl-line-height: 1.65;
+  --sl-content-width: 46rem;
+}
+
+:root[data-theme='light'] {
+  /* Filled amber controls: the ochre is dark here, so their text goes light. */
+  --am-signal-ink: hsl(40 30% 99%);
+
+  /* Warm paper ramp (light) */
+  --sl-color-white: hsl(222 20% 9%);
+  --sl-color-gray-1: hsl(222 16% 15%);
+  --sl-color-gray-2: hsl(222 12% 27%);
+  --sl-color-gray-3: hsl(222 8% 43%);
+  --sl-color-gray-4: hsl(222 7% 64%);
+  --sl-color-gray-5: hsl(40 12% 84%);
+  --sl-color-gray-6: hsl(40 22% 94%);
+  --sl-color-gray-7: hsl(40 25% 97%);
+  --sl-color-black: hsl(40 30% 99%);
+
+  /* Ochre signal (light); accent stays above 5:1 on paper for link text */
+  --sl-color-accent-low: hsl(40 90% 89%);
+  --sl-color-accent: hsl(30 90% 32%);
+  --sl-color-accent-high: hsl(28 85% 22%);
+
+  --sl-color-bg-nav: color-mix(in srgb, var(--sl-color-black) 86%, transparent);
+  --sl-color-bg-sidebar: var(--sl-color-black);
+  --sl-color-bg-inline-code: var(--sl-color-gray-6);
+}
+
+/* Headings carry the display face everywhere. */
+h1,
+h2,
+h3,
+h4,
+.am-display {
+  font-family: var(--am-font-display);
+  font-optical-sizing: auto;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --am-ease: linear;
+  }
+}

@@ -1,0 +1,65 @@
+---
+/**
+ * Wraps the script-owned tool list (see scripts/render-support-matrix.ts).
+ * The slot is a Markdown list: one item per category, links separated by commas.
+ */
+---
+
+<div class="am-tools">
+  <slot />
+</div>
+
+<style>
+  .am-tools :global(ul) {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--am-hairline);
+  }
+
+  .am-tools :global(li) {
+    position: relative;
+    padding-block: 1rem;
+    border-bottom: 1px solid var(--am-hairline);
+    line-height: 1.9;
+    color: var(--sl-color-gray-3);
+  }
+
+  .am-tools :global(strong) {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-family: var(--__sl-font-mono);
+    font-size: var(--sl-text-2xs);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    line-height: 1.6;
+    color: var(--sl-color-gray-3);
+  }
+
+  .am-tools :global(a) {
+    color: var(--sl-color-white);
+    font-weight: 500;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 120ms var(--am-ease), color 120ms var(--am-ease);
+  }
+
+  .am-tools :global(a:hover) {
+    color: var(--am-signal);
+    border-bottom-color: var(--am-signal);
+  }
+
+  @media (min-width: 48rem) {
+    .am-tools :global(li) {
+      padding-inline-start: 12rem;
+    }
+
+    .am-tools :global(strong) {
+      position: absolute;
+      inset-inline-start: 0;
+      top: 1.2rem;
+      margin: 0;
+    }
+  }
+</style>

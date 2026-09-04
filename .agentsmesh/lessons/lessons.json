@@ -8480,6 +8480,53 @@
         "t-glob-d0a4b76e"
       ]
     },
+    "website-markup-in-script-owned-markdown-blocks": {
+      "createdAt": "2026-09-04",
+      "evidence": [],
+      "rule": "In script-owned Markdown blocks (between agentsmesh:*:start/end markers) never put display:grid or flex on the <li>: every inline <a> becomes its own grid item and the comma-separated list explodes into one link per row. Lay out the label with position:absolute plus padding-inline-start so the inline run stays one block.",
+      "status": "deprecated",
+      "topics": [
+        "website-markup"
+      ],
+      "triggers": []
+    },
+    "website-markup-in-script-owned-markdown-blocks-2": {
+      "createdAt": "2026-09-04",
+      "evidence": [],
+      "rule": "In script-owned Markdown blocks (between agentsmesh:*:start/end markers) never put display:grid or flex on the <li>: every inline <a> becomes its own grid item and the comma-separated list explodes into one link per row. Lay out the label with position:absolute plus padding-inline-start so the inline run stays one block.",
+      "status": "active",
+      "topics": [
+        "website-markup"
+      ],
+      "triggers": [
+        "t-glob-f0ab48c5",
+        "t-glob-cadfe882"
+      ]
+    },
+    "website-markup-starlight-component-styles-are-astro": {
+      "createdAt": "2026-09-04",
+      "evidence": [],
+      "rule": "Starlight component styles are Astro-scoped (selector + data-astro-cid attribute), so a global tag selector like 'starlight-toc nav h2' silently loses; override such elements by id (#starlight__on-this-page) or a class the component already emits, and verify with getComputedStyle in the browser.",
+      "status": "active",
+      "topics": [
+        "website-markup"
+      ],
+      "triggers": [
+        "t-glob-e5b597c8"
+      ]
+    },
+    "website-markup-with-the-chrome-devtools-mcp": {
+      "createdAt": "2026-09-04",
+      "evidence": [],
+      "rule": "With the Chrome DevTools MCP, resize_page on a background (non-selected) tab does not take effect before a screenshot; use emulate with a viewport string ('390x844x2,mobile,touch') to test breakpoints on any tab, and verify with innerWidth via evaluate_script.",
+      "status": "active",
+      "topics": [
+        "website-markup"
+      ],
+      "triggers": [
+        "t-kw-2df7a7e6"
+      ]
+    },
     "windows-paths-a-directory-rename-that-finalizes": {
       "createdAt": "2026-06-12",
       "evidence": [
@@ -9157,6 +9204,9 @@
     },
     "website-docs": {
       "summary": "Website (Starlight/Astro) docs authoring pitfalls"
+    },
+    "website-markup": {
+      "summary": "Website (Starlight) markup and CSS pitfalls"
     },
     "windows-paths": {
       "summary": "POSIX vs Windows path handling; separators, realpath divergence, drive letters, CRLF, chokidar polling, basename vs split."
@@ -10415,6 +10465,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/query.ts"
     },
+    "t-glob-cadfe882": {
+      "kind": "file_glob",
+      "pattern": "website/src/content/docs/index.mdx"
+    },
     "t-glob-cc00a64d": {
       "kind": "file_glob",
       "pattern": "src/targets/factory-droid/generator.ts"
@@ -10535,6 +10589,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/validate-health.ts"
     },
+    "t-glob-e5b597c8": {
+      "kind": "file_glob",
+      "pattern": "website/src/styles/*.css"
+    },
     "t-glob-e6cc94f4": {
       "kind": "file_glob",
       "pattern": "src/config/core/lock*.ts"
@@ -10562,6 +10620,10 @@
     "t-glob-ee01c259": {
       "kind": "file_glob",
       "pattern": "src/lessons/regex-safety.ts"
+    },
+    "t-glob-f0ab48c5": {
+      "kind": "file_glob",
+      "pattern": "website/src/components/home/ToolWall.astro"
     },
     "t-glob-f238075d": {
       "kind": "file_glob",
@@ -10790,6 +10852,10 @@
     "t-kw-2d3efbf2": {
       "kind": "keyword",
       "pattern": "capability gap none to embedded"
+    },
+    "t-kw-2df7a7e6": {
+      "kind": "keyword",
+      "pattern": "chrome devtools responsive viewport screenshot"
     },
     "t-kw-3070d871": {
       "kind": "keyword",

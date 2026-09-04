@@ -1,0 +1,118 @@
+---
+/** Recall → act → capture rail beside a slotted code example. */
+interface Props {
+  items: readonly { title: string; body: string }[];
+  links?: readonly { text: string; href: string }[];
+}
+
+const { items, links = [] } = Astro.props;
+---
+
+<div class="am-loop">
+  <ol class="am-loop-list">
+    {
+      items.map((item, i) => (
+        <li class="am-loop-item">
+          <span class="am-loop-marker" aria-hidden="true">{i + 1}</span>
+          <div>
+            <h3>{item.title}</h3>
+            <p>{item.body}</p>
+          </div>
+        </li>
+      ))
+    }
+  </ol>
+  <div class="am-loop-code">
+    <slot />
+    {
+      links.length > 0 && (
+        <p class="am-loop-links">
+          {links.map((link) => (
+            <a href={link.href}>{link.text} →</a>
+          ))}
+        </p>
+      )
+    }
+  </div>
+</div>
+
+<style>
+  .am-loop {
+    display: grid;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .am-loop-list {
+    display: grid;
+    gap: 1.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .am-loop-item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1rem;
+    align-items: start;
+  }
+
+  .am-loop-marker {
+    display: inline-grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--am-signal);
+    border-radius: 50%;
+    font-family: var(--am-font-display);
+    font-weight: 600;
+    font-size: var(--sl-text-sm);
+    color: var(--am-signal);
+  }
+
+  h3 {
+    margin: 0.25rem 0 0.25rem;
+    font-size: var(--sl-text-lg);
+    color: var(--sl-color-white);
+  }
+
+  p {
+    margin: 0;
+    color: var(--sl-color-gray-2);
+    line-height: 1.55;
+  }
+
+  .am-loop-code {
+    min-width: 0;
+  }
+
+  .am-loop-code :global(.expressive-code) {
+    margin: 0;
+  }
+
+  .am-loop-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    margin: 1rem 0 0;
+    font-size: var(--sl-text-sm);
+  }
+
+  .am-loop-links a {
+    color: var(--sl-color-white);
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .am-loop-links a:hover {
+    color: var(--am-signal);
+  }
+
+  @media (min-width: 56rem) {
+    .am-loop {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: 3rem;
+    }
+  }
+</style>

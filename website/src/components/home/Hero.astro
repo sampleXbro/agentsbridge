@@ -1,0 +1,199 @@
+---
+/**
+ * Starlight `Hero` override for the splash template. Title, tagline and
+ * actions still come from the page frontmatter; the install snippet and the
+ * mesh diagram are added around them.
+ */
+import { Icon } from '@astrojs/starlight/components';
+import InstallSnippet from './InstallSnippet.astro';
+import MeshDiagram from './MeshDiagram.astro';
+
+const { data } = Astro.locals.starlightRoute.entry;
+const { title = data.title, tagline, actions = [] } = data.hero ?? {};
+const EYEBROW = ['Open source', 'MIT', 'CLI + TypeScript API'];
+---
+
+<div class="am-hero not-content">
+  <div class="am-hero-copy">
+    <p class="am-hero-eyebrow">
+      {EYEBROW.map((item) => <span>{item}</span>)}
+    </p>
+    <h1 id="_top" data-page-title set:html={title} />
+    {tagline && <p class="am-hero-tagline" set:html={tagline} />}
+    {
+      actions.length > 0 && (
+        <div class="am-hero-actions">
+          {actions.map(({ attrs: { class: className, ...attrs } = {}, icon, link, text, variant }) => (
+            <a href={link} class:list={['am-btn', `am-btn--${variant}`, className]} {...attrs}>
+              {text}
+              {icon?.name && <Icon name={icon.name} size="1.1em" />}
+            </a>
+          ))}
+        </div>
+      )
+    }
+    <InstallSnippet />
+  </div>
+  <div class="am-hero-visual">
+    <MeshDiagram variant="wide" />
+    <MeshDiagram variant="compact" />
+  </div>
+</div>
+
+<style>
+  .am-hero {
+    position: relative;
+    display: grid;
+    gap: 2.5rem;
+    align-items: center;
+    padding-block: clamp(1.5rem, 5vw, 4.5rem) clamp(1rem, 3vw, 2.5rem);
+  }
+
+  .am-hero::before {
+    content: '';
+    position: absolute;
+    inset: -1.5rem 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: radial-gradient(var(--sl-color-gray-5) 1px, transparent 1.5px);
+    background-size: 26px 26px;
+    mask-image: radial-gradient(ellipse 70% 80% at 50% 40%, black 30%, transparent 75%);
+    opacity: 0.55;
+  }
+
+  .am-hero-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+    min-width: 0;
+  }
+
+  .am-hero-eyebrow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0;
+    margin: 0;
+    font-family: var(--__sl-font-mono);
+    font-size: var(--sl-text-2xs);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--sl-color-gray-3);
+  }
+
+  .am-hero-eyebrow span + span::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    margin-inline: 0.75rem;
+    vertical-align: middle;
+    border-radius: 50%;
+    background: var(--am-signal);
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(2.375rem, 1.2rem + 4.4vw, 4.5rem);
+    line-height: 1;
+    letter-spacing: -0.035em;
+    color: var(--sl-color-white);
+    text-wrap: balance;
+    max-width: 14ch;
+  }
+
+  .am-hero-tagline {
+    margin: 0;
+    max-width: 52ch;
+    font-size: clamp(1.0625rem, 0.95rem + 0.5vw, 1.25rem);
+    line-height: 1.5;
+    color: var(--sl-color-gray-2);
+    text-wrap: pretty;
+  }
+
+  .am-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.625rem;
+    margin-top: 0.25rem;
+  }
+
+  .am-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0.5rem 1.125rem;
+    border: 1px solid transparent;
+    border-radius: var(--am-radius);
+    font-size: var(--sl-text-sm);
+    font-weight: 500;
+    text-decoration: none;
+    transition: background-color 140ms var(--am-ease), border-color 140ms var(--am-ease), color 140ms var(--am-ease);
+  }
+
+  .am-btn--primary {
+    background: var(--am-signal);
+    border-color: var(--am-signal);
+    color: var(--am-signal-ink);
+  }
+
+  .am-btn--primary:hover {
+    background: var(--sl-color-accent-high);
+    border-color: var(--sl-color-accent-high);
+  }
+
+  .am-btn--secondary {
+    background: var(--am-surface);
+    border-color: var(--am-hairline);
+    color: var(--sl-color-white);
+  }
+
+  .am-btn--secondary:hover {
+    border-color: var(--sl-color-gray-4);
+  }
+
+  .am-btn--minimal {
+    padding-inline: 0.5rem;
+    color: var(--sl-color-gray-2);
+  }
+  .am-btn--minimal:hover {
+    color: var(--sl-color-white);
+  }
+
+  .am-hero-visual {
+    position: relative;
+    min-width: 0;
+  }
+
+  .am-hero-visual :global(.am-mesh--wide) {
+    display: none;
+  }
+
+  @media (min-width: 40rem) {
+    .am-hero-visual :global(.am-mesh--wide) {
+      display: block;
+    }
+
+    .am-hero-visual :global(.am-mesh--compact) {
+      display: none;
+    }
+  }
+
+  .am-hero-visual::before {
+    content: '';
+    position: absolute;
+    inset: 10% 5%;
+    z-index: -1;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--am-signal) 22%, transparent), transparent);
+    filter: blur(24px);
+  }
+
+  @media (min-width: 64rem) {
+    .am-hero {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      gap: 3rem;
+    }
+  }
+</style>

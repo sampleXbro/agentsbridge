@@ -1,99 +1,71 @@
-/* Virtual browse: one table, sticky thead, fixed col % (~3 body rows visible) */
+/* Virtual browse table: sticky head, fixed row height (must match VIRTUAL_ROW_HEIGHT_PX). */
 .am-catalog-table-wrap {
   width: 100%;
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--sl-color-gray-5);
-  border-radius: 0.5rem;
-  background: var(--sl-color-bg-nav);
+  border: 1px solid var(--am-hairline);
+  border-radius: var(--am-radius);
+  background: var(--sl-color-black);
   text-align: left;
   overflow: hidden;
 }
 
-.am-catalog-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.8rem;
-  table-layout: fixed;
-}
-
 .am-catalog-table-scroll {
   flex-shrink: 0;
-  overflow-x: auto;
-  overflow-y: auto;
-  border-top: 1px solid var(--sl-color-gray-5);
+  overflow: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-gutter: stable;
+  scrollbar-width: thin;
 }
 
-.am-catalog-table-scroll--virtual {
-  border-top: none;
+.am-catalog-table {
+  width: 100%;
+  min-width: 36rem;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: var(--sl-text-xs);
 }
 
 .am-catalog-thead-sticky th {
   position: sticky;
   top: 0;
   z-index: 2;
-  background: var(--sl-color-gray-6);
-  box-shadow: 0 1px 0 var(--sl-color-gray-5);
-}
-
-.am-catalog-table thead {
-  background: var(--sl-color-gray-6);
+  background: var(--am-surface);
+  box-shadow: 0 1px 0 var(--am-hairline);
 }
 
 .am-catalog-table th {
-  padding: 0.5rem 1.1rem;
+  padding: 0.5rem 1rem;
+  font-size: var(--sl-text-2xs);
   font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sl-color-gray-3);
   text-align: left;
-  border-bottom: 1px solid var(--sl-color-gray-5);
 }
 
 .am-catalog-table td {
-  padding: 0 1.1rem;
+  padding: 0 1rem;
   vertical-align: middle;
-  border-bottom: 1px solid var(--sl-color-gray-6);
-}
-
-/*
- * Catalog lives inside `.sl-markdown-content`; Starlight/prose table rules often zero
- * `padding-inline-start` on the first column — restore symmetric horizontal padding.
- */
-.am-catalog-explorer .am-catalog-table th,
-.am-catalog-explorer .am-catalog-table td {
-  padding-inline: 1.1rem;
-}
-
-.am-catalog-explorer .am-catalog-table thead th {
-  padding-block: 0.5rem;
-}
-
-.am-catalog-explorer .am-catalog-table tbody td {
-  padding-block: 0;
-}
-
-.am-catalog-explorer .am-catalog-table td.am-catalog-vspacer-cell {
-  padding: 0 !important;
-}
-
-.am-catalog-explorer .am-catalog-table td.am-catalog-table-empty {
-  padding: 1rem 1.1rem;
+  border-bottom: 1px solid var(--am-hairline);
 }
 
 .am-col-title {
-  width: 26%;
+  width: 34%;
 }
 
 .am-col-desc {
-  width: 54%;
+  width: 52%;
 }
 
 .am-col-link {
-  width: 20%;
+  width: 14%;
 }
 
 .am-catalog-td-title {
-  font-weight: 600;
+  font-family: var(--__sl-font-mono);
+  font-weight: 500;
+  color: var(--sl-color-white);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -114,7 +86,7 @@
 }
 
 .am-catalog-src-link {
-  color: var(--sl-color-accent-high);
+  color: var(--sl-color-text-accent);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -122,20 +94,20 @@
 .am-catalog-tr {
   cursor: pointer;
   height: 52px;
-  min-height: 52px;
-  max-height: 52px;
   box-sizing: border-box;
+  transition: background-color 100ms var(--am-ease);
 }
 
 .am-catalog-tr:hover,
-.am-catalog-tr:focus {
+.am-catalog-tr:focus-visible {
   outline: none;
-  background: var(--sl-color-accent-low);
+  background: var(--am-surface);
 }
 
-.am-catalog-tr--selected {
+.am-catalog-tr--selected,
+.am-catalog-tr--selected:hover {
   background: var(--sl-color-accent-low);
-  box-shadow: inset 3px 0 0 0 var(--sl-color-accent);
+  box-shadow: inset 3px 0 0 0 var(--am-signal);
 }
 
 .am-catalog-vspacer-cell {
@@ -143,39 +115,18 @@
   border: none !important;
   line-height: 0;
   font-size: 0;
-  vertical-align: top;
 }
 
 .am-catalog-table-empty {
-  padding: 1rem 1.1rem;
+  padding: 1.5rem 1rem !important;
   text-align: center;
   color: var(--sl-color-gray-3);
-  font-style: italic;
 }
 
 .am-catalog-live {
   min-height: 1.25rem;
-  margin: 0.5rem 0 0;
-  font-size: 0.8rem;
+  margin: 0;
+  font-size: var(--sl-text-xs);
   color: var(--sl-color-gray-3);
   text-align: center;
-}
-
-/* Keep virtual body as a real table on small screens (card layout breaks spacer rows) */
-@media (max-width: 768px) {
-  .am-catalog-table-scroll .am-catalog-table--body tr {
-    display: table-row;
-  }
-
-  .am-catalog-table-scroll .am-catalog-table--body td {
-    display: table-cell;
-  }
-
-  .am-catalog-table-scroll .am-catalog-table--body td::before {
-    content: none !important;
-  }
-
-  .am-catalog-table-scroll {
-    overflow-x: auto;
-  }
 }

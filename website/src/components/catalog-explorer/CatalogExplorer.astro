@@ -12,11 +12,11 @@ const payload = {
 const catalogJson = JSON.stringify(payload);
 ---
 
-<section class="am-catalog-explorer" aria-label="Popular skills, agents, and commands">
+<div class="am-catalog-explorer not-content" aria-label="Popular skills, agents, and commands">
   <div class="am-catalog-inner">
     <div class="am-catalog-copy-block">
       <label class="am-catalog-copy-label" for="am-catalog-copy-field">
-        Install skills, agents and commands with ease
+        Pick a row, then copy its install command
       </label>
       <!-- No whitespace between grid children — avoids anonymous flex items and uneven gaps. -->
       <div class="am-catalog-copy-row"
@@ -41,11 +41,12 @@ const catalogJson = JSON.stringify(payload);
           data-am-copy-btn
           aria-label="Copy install command line to clipboard"
         >
-          <span data-am-copy-label>Copy</span>
+          <span data-copy-label>Copy</span>
         </button>
       </div>
     </div>
 
+    <div class="am-catalog-toolbar">
     <div class="am-catalog-tabs" role="tablist" aria-label="Catalog category">
       <button
         type="button"
@@ -80,16 +81,17 @@ const catalogJson = JSON.stringify(payload);
     </div>
 
     <div class="am-catalog-search-wrap">
-      <label class="am-catalog-search-label" for="am-catalog-search-field">Search</label>
+      <label class="sr-only" for="am-catalog-search-field">Search</label>
       <input
         id="am-catalog-search-field"
         type="search"
         class="am-catalog-search"
         data-am-search
-        placeholder="Filter the table — type to narrow rows"
+        placeholder="Filter…"
         autocomplete="off"
         aria-controls="am-catalog-browse"
       />
+    </div>
     </div>
 
     <div
@@ -105,7 +107,7 @@ const catalogJson = JSON.stringify(payload);
   </div>
 
   <script type="application/json" id="am-catalog-json" set:html={catalogJson} />
-</section>
+</div>
 
 <script>
   import { mountCatalogExplorer } from './catalog-explorer-client';

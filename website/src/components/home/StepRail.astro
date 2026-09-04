@@ -1,0 +1,84 @@
+---
+/** Numbered how-it-works rail; each step carries one command. */
+import { Code } from '@astrojs/starlight/components';
+import { inlineCode } from '../../lib/inline-code.mjs';
+import type { HomeStep } from '../../content/data/home';
+
+interface Props {
+  steps: readonly HomeStep[];
+}
+
+const { steps } = Astro.props;
+---
+
+<ol class="am-steps">
+  {
+    steps.map((step, i) => (
+      <li class="am-step">
+        <span class="am-step-index" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+        <h3>{step.title}</h3>
+        <p set:html={inlineCode(step.body)} />
+        <Code code={step.code} lang="bash" frame="none" />
+      </li>
+    ))
+  }
+</ol>
+
+<style>
+  .am-steps {
+    display: grid;
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: step;
+  }
+
+  .am-step {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    padding: 1.5rem;
+    border: 1px solid var(--am-hairline);
+    border-radius: var(--am-radius-lg);
+    background: var(--am-surface);
+    min-width: 0;
+  }
+
+  .am-step-index {
+    font-family: var(--__sl-font-mono);
+    font-size: var(--sl-text-xs);
+    letter-spacing: 0.1em;
+    color: var(--am-signal);
+  }
+
+  h3 {
+    margin: 0;
+    font-size: var(--sl-text-xl);
+    color: var(--sl-color-white);
+  }
+
+  p {
+    margin: 0;
+    flex: 1;
+    color: var(--sl-color-gray-2);
+    line-height: 1.55;
+    font-size: var(--sl-text-sm);
+  }
+
+  p :global(code) {
+    font-family: var(--__sl-font-mono);
+    font-size: 0.9em;
+    color: var(--sl-color-white);
+  }
+
+  .am-step :global(.expressive-code) {
+    margin: 0.25rem 0 0;
+  }
+
+  @media (min-width: 60rem) {
+    .am-steps {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+</style>

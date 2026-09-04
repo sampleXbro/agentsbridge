@@ -1,0 +1,150 @@
+---
+/**
+ * Animated "one source, many targets" mesh for the hero. Pure SVG + CSS.
+ * Two variants share one layout function: `wide` for tablets and up, `compact`
+ * for phones, where labels need a larger share of the drawing.
+ */
+import { meshLayout } from '../../lib/mesh-layout.mjs';
+import { HOME_MESH_TARGETS } from '../../content/data/home';
+
+interface Props {
+  variant: 'wide' | 'compact';
+}
+
+const VARIANTS = {
+  wide: { geometry: { width: 300, height: 340, padX: 64, padY: 26 }, viewWidth: 520, fontSize: 12.5 },
+  compact: { geometry: { width: 196, height: 320, padX: 50, padY: 22 }, viewWidth: 440, fontSize: 15 },
+} as const;
+
+const { variant } = Astro.props;
+const { geometry, viewWidth, fontSize } = VARIANTS[variant];
+const { source, targets, edges } = meshLayout(HOME_MESH_TARGETS.length, geometry);
+const lastIndex = HOME_MESH_TARGETS.length - 1;
+const titleId = `am-mesh-title-${variant}`;
+---
+
+<svg
+  class:list={['am-mesh', `am-mesh--${variant}`]}
+  viewBox={`0 0 ${viewWidth} ${geometry.height}`}
+  role="img"
+  aria-labelledby={titleId}
+  style={`--am-mesh-font: ${fontSize}px`}
+>
+  <title id={titleId}>One .agentsmesh directory generates native config for every AI coding tool</title>
+  <g class="am-mesh-edges" fill="none">
+    {edges.map((d, i) => <path d={d} pathLength="1" style={`--i: ${i}`} />)}
+  </g>
+  <g class="am-mesh-pulses">
+    {
+      edges.map((d, i) => (
+        <circle r="2.5" style={`--i: ${i}`}>
+          <animateMotion dur="3.2s" begin={`${1.2 + i * 0.4}s`} repeatCount="indefinite" path={d} />
+        </circle>
+      ))
+    }
+  </g>
+  {
+    targets.map((t, i) => (
+      <g
+        class:list={['am-mesh-target', { 'am-mesh-target--more': i === lastIndex }]}
+        style={`--i: ${i}`}
+        transform={`translate(${t.x} ${t.y})`}
+      >
+        <circle r="4.5" />
+        <text x="14" dy="0.35em">{HOME_MESH_TARGETS[i]}</text>
+      </g>
+    ))
+  }
+  <g class="am-mesh-source" transform={`translate(${source.x} ${source.y})`}>
+    <rect x={-geometry.padX + 4} y="-19" width={geometry.padX * 2 - 8} height="38" rx="9" />
+    <text dy="0.35em" text-anchor="middle">.agentsmesh/</text>
+  </g>
+</svg>
+
+<style>
+  .am-mesh {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    font-family: var(--__sl-font-mono);
+    font-size: var(--am-mesh-font);
+  }
+
+  .am-mesh-edges path {
+    stroke: var(--sl-color-gray-4);
+    stroke-width: 1.25;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: am-mesh-draw 900ms var(--am-ease) forwards;
+    animation-delay: calc(200ms + var(--i) * 90ms);
+  }
+
+  .am-mesh-pulses circle {
+    fill: var(--am-signal);
+    opacity: 0;
+    animation: am-mesh-fade 500ms ease forwards;
+    animation-delay: calc(1.2s + var(--i) * 0.4s);
+  }
+
+  .am-mesh-target {
+    opacity: 0;
+    animation: am-mesh-fade 500ms var(--am-ease) forwards;
+    animation-delay: calc(600ms + var(--i) * 90ms);
+  }
+
+  .am-mesh-target circle {
+    fill: var(--sl-color-black);
+    stroke: var(--am-signal);
+    stroke-width: 1.5;
+  }
+
+  .am-mesh-target text {
+    fill: var(--sl-color-gray-1);
+  }
+
+  .am-mesh-target--more circle {
+    stroke: var(--sl-color-gray-3);
+    stroke-dasharray: 2 2;
+  }
+
+  .am-mesh-target--more text {
+    fill: var(--sl-color-gray-3);
+  }
+
+  .am-mesh-source rect {
+    fill: var(--sl-color-accent-low);
+    stroke: var(--am-signal);
+    stroke-width: 1.5;
+  }
+
+  .am-mesh-source text {
+    fill: var(--sl-color-white);
+    font-weight: 600;
+  }
+
+  @keyframes am-mesh-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes am-mesh-fade {
+    to {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .am-mesh-edges path,
+    .am-mesh-target {
+      animation: none;
+      stroke-dashoffset: 0;
+      opacity: 1;
+    }
+
+    .am-mesh-pulses {
+      display: none;
+    }
+  }
+</style>

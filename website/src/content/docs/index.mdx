@@ -1,188 +1,92 @@
 ---
 draft: false
-title: Sync AI Coding Config and Teach Your Agents
-description: One .agentsmesh directory syncs rules, MCP servers, and skills to every AI coding tool — and gives your agents a memory that learns from your repo.
+title: One config. Every AI coding tool.
+description: One .agentsmesh directory syncs rules, commands, agents, skills, MCP servers, hooks and permissions to every AI coding tool, and gives your agents a memory that learns from your repo.
 template: splash
 hero:
-  tagline: Write your AI coding rules, commands, skills, MCP servers, and permissions once — generate native config for every tool. Then let your agents learn from your repo with lessons.
-  image:
-    dark: ../../assets/logo-dark.svg
-    light: ../../assets/logo-light.svg
+  tagline: Write rules, commands, agents, skills, MCP servers and permissions once. Generate native config for every tool. Let your agents learn from failures with lessons.
   actions:
-    - text: Get Started
+    - text: Get started
       link: ./getting-started/installation/
       icon: right-arrow
       variant: primary
-    - text: Teach Your Agents
-      link: ./guides/lessons/
-      icon: open-book
-      variant: secondary
-    - text: Import Existing Config
+    - text: Import existing config
       link: ./guides/existing-project/
-      icon: document
       variant: secondary
-    - text: Supported Tools
+    - text: Supported tools
       link: ./reference/supported-tools/
-      icon: puzzle
-      variant: secondary
+      variant: minimal
 ---
 
-import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
+import { HOME_STEPS, HOME_SYNC, HOME_LESSON_LOOP, HOME_LESSON_LINKS, HOME_DEEPER } from '../data/home';
+import Section from '../../components/home/Section.astro';
+import StepRail from '../../components/home/StepRail.astro';
+import LinkGrid from '../../components/home/LinkGrid.astro';
+import LessonsLoop from '../../components/home/LessonsLoop.astro';
+import ToolWall from '../../components/home/ToolWall.astro';
 import CatalogExplorer from '../../components/catalog-explorer/CatalogExplorer.astro';
 import SoftwareApplicationJsonLd from '../../components/SoftwareApplicationJsonLd.astro';
 
-<div style="text-align: center; margin: 2rem 0 3rem;">
-  <span style="font-size: 1.1rem; color: var(--sl-color-gray-5);">
-    Homebrew · standalone binary · npm — pick any &nbsp;·&nbsp; MIT License &nbsp;·&nbsp; CLI + TypeScript API
-  </span>
-  <br/>
-  <div class="am-hero-badges"><img src="https://img.shields.io/npm/v/agentsmesh?style=flat-square" alt="npm version" /><img src="https://img.shields.io/npm/dm/agentsmesh?style=flat-square" alt="npm downloads" /><img src="https://github.com/sampleXbro/agentsmesh/actions/workflows/ci.yml/badge.svg" alt="CI" /><img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="License: MIT" /></div>
-</div>
+<Section
+  id="how"
+  eyebrow="How it works"
+  title="Three commands. No drift."
+  lead="Config lives in one place. Every tool reads the format it expects."
+>
+  <StepRail steps={HOME_STEPS} />
+</Section>
 
-## AI coding config should not drift between tools
+<Section
+  id="sync"
+  eyebrow="What syncs"
+  title="Everything a coding agent reads"
+  lead="Each canonical file maps to the native format of every enabled tool. Partial support is visible in the matrix, never silent."
+>
+  <LinkGrid items={HOME_SYNC} />
+</Section>
 
-Every AI coding assistant ships a different configuration surface. Claude Code reads `CLAUDE.md` and `.claude/settings.json`. Cursor uses `.cursor/rules/*.mdc`. GitHub Copilot reads `.github/copilot-instructions.md` and prompts. Every other [supported tool](./reference/supported-tools/) adds its own files for rules, commands, agents, skills, MCP servers, hooks, ignore patterns, or permissions.
-
-AgentsMesh turns that spread into one editable source of truth. Put the real project instructions in `.agentsmesh/`, then generate native files for every enabled tool. Import goes the other direction, so existing tool configs can be adopted without starting from scratch.
-
-<div style="text-align: center; margin: 1.5rem 0;">
-  <img src="https://raw.githubusercontent.com/sampleXbro/agentsmesh/master/assets/generate-demo.gif" alt="agentsmesh detects existing tool configs, imports them into one source, and generates native config for every tool" style="max-width: 100%; border-radius: 8px;" />
-</div>
-
-## Your agents learn from your repo
-
-Lessons give your AI coding agents a **memory of past mistakes**. When something goes wrong — a failing test, a code review comment, a wrong assumption — the agent captures a short rule. Before it touches the same files again, it recalls that rule automatically. Same mistake, never twice — in any tool, for every teammate, because the memory is one git-tracked file the whole team shares.
-
-<div style="text-align: center; margin: 1.5rem 0;">
-  <img src="https://raw.githubusercontent.com/sampleXbro/agentsmesh/master/assets/lessons-demo.gif" alt="an AI agent captures a lesson after a failure, then recalls it before editing the same file — by file, command, or keyword" style="max-width: 100%; border-radius: 8px;" />
-</div>
+<Section
+  id="lessons"
+  eyebrow="Lessons"
+  title="Agents that learn from your repo"
+  lead="A shared, git-tracked memory. Recall before every edit, capture after every failure. Same mistake, never twice, in any tool."
+>
+  <LessonsLoop items={HOME_LESSON_LOOP} links={HOME_LESSON_LINKS}>
 
 ```bash
-# One-time setup
 agentsmesh init --lessons && agentsmesh generate
 
-# After a failure, the agent captures the rule:
+# after a failure, the agent captures a rule
 agentsmesh lessons add "Normalize CLI display paths to forward slashes" \
-  --topic windows-paths --new-topic --topic-summary "Cross-platform paths" \
-  --trigger-file "src/cli/**/*.ts"
+  --topic windows-paths --trigger-file "src/cli/**/*.ts"
 
-# Before the next edit, it recalls the rule automatically:
+# before the next edit, it recalls the rule
 agentsmesh lessons query --file src/cli/foo.ts
 #   -> Normalize CLI display paths to forward slashes
 ```
 
-Start with the [lessons guide](./guides/lessons/) or jump to the [`agentsmesh lessons` CLI reference](./cli/lessons/).
+  </LessonsLoop>
+</Section>
 
-## Most wanted workflows
-
-<CardGrid>
-  <Card title="One .agentsmesh source" icon="pencil">
-    Manage AI coding rules, prompts, commands, agents, skills, MCP servers, hooks, ignore files, and permissions from one canonical directory.
-  </Card>
-  <Card title="Agents that learn from mistakes" icon="open-book">
-    Capture a lesson after every failure, recall it before every edit. One shared memory works in every tool and helps every teammate. [Teach your agents →](./guides/lessons/)
-  </Card>
-  <Card title="Bidirectional migration" icon="sync">
-    Import existing Claude Code, Cursor, Copilot, Gemini CLI, Windsurf, Codex CLI, and other configs, then generate them back out with round-trip metadata.
-  </Card>
-  <Card title="Project and global mode" icon="laptop">
-    Commit project config in `.agentsmesh/` for teams, or sync personal AI assistant setup from `~/.agentsmesh/` to user-level tool folders.
-  </Card>
-  <Card title="MCP, hooks, permissions" icon="setting">
-    Standardize high-value assistant capabilities where tools support them natively, with explicit matrix visibility when support is partial or embedded.
-  </Card>
-  <Card title="CI drift detection" icon="warning">
-    Use `agentsmesh diff`, `lint`, `check`, `watch`, and `merge` to keep generated tool files aligned with canonical sources during reviews.
-  </Card>
-  <Card title="Packs, plugins, typed API" icon="puzzle">
-    Share reusable skills and rules with packs, add new AI tools through plugin descriptors, or automate generation from the ESM API.
-  </Card>
-</CardGrid>
-
-## One canonical directory
-
-```bash
-.agentsmesh/
-  rules/_root.md
-  rules/*.md
-  commands/*.md
-  agents/*.md
-  skills/*/SKILL.md
-  mcp.json
-  hooks.yaml
-  permissions.yaml
-  ignore
-  lessons/lessons.json
-```
-
-```bash
-agentsmesh generate
-# writes CLAUDE.md, AGENTS.md, .cursor/rules/, .github/copilot-instructions.md,
-# .gemini/settings.json, .windsurf/rules/, .codex/config.toml, .kiro/steering/,
-# .cline/, .junie/, .roo/, .agents/, and more from the same source.
-```
-
-<Aside type="tip">
-  When a target lacks native support for a feature, AgentsMesh can project it into a compatible format and embed metadata so `agentsmesh import` can restore the canonical file later.
-</Aside>
-
-## Quick start
-
-Pick any install method — Homebrew, standalone binary, or npm/pnpm/yarn:
-
-```bash
-brew install samplexbro/agentsmesh/agentsmesh    # no Node.js required
-# or
-curl -fsSL https://github.com/sampleXbro/agentsmesh/releases/latest/download/install.sh | sh
-# or
-npm install -D agentsmesh                        # requires Node.js 20+
-```
-
-See the [installation guide](./getting-started/installation/) for full options. The examples below use the `agentsmesh` binary directly — prefix with `npx` if you installed via `npm` without `-g`.
-
-### New project
-
-```bash
-agentsmesh init
-# edit .agentsmesh/rules/_root.md
-agentsmesh generate
-```
-
-### Existing project
-
-```bash
-agentsmesh import --from cursor
-agentsmesh generate
-```
-
-### Teach your agents (optional)
-
-```bash
-agentsmesh init --lessons
-agentsmesh generate
-```
-
-### Personal global config
-
-```bash
-agentsmesh init --global
-agentsmesh import --global --from claude-code
-agentsmesh generate --global
-```
-
-The CLI is available as both `agentsmesh` and the shorter alias `amsh`.
-
-<section class="am-homepage-catalog" aria-labelledby="community-catalog">
-  <h2 id="community-catalog">Community catalog</h2>
-
-  <div class="am-homepage-catalog-intro">Install shared skills, agents, and commands from GitHub, GitLab, git URLs, or local paths with <code>agentsmesh install &lt;source&gt;</code>; list inventory with <code>agentsmesh installs list</code>; remove with <code>agentsmesh uninstall &lt;name&gt;</code>. Packs live in <code>.agentsmesh/packs/</code>, are tracked in <code>.agentsmesh/installs.yaml</code>, and merge with local canonical config during generation. The classifier auto-detects Anthropic-style skill packs and imports skills, agents, references, and per-target commands in one command — see the <a href="./guides/installing-skill-packs/">skill-pack guide</a>.</div>
-
+<Section
+  id="catalog"
+  eyebrow="Community catalog"
+  title="Install skills, agents and commands"
+  lead="From GitHub, GitLab, any git URL or a local path. Packs land in `.agentsmesh/packs/` and merge at generate time."
+  align="center"
+  more={{ text: 'Skill-pack guide', href: './guides/installing-skill-packs/' }}
+>
   <CatalogExplorer />
-</section>
+</Section>
 
-## Tool coverage and feature matrix
-
-AgentsMesh ships descriptor-driven support for every major AI coding tool plus plugin targets, so coverage can grow without changing the homepage copy.
+<Section
+  id="tools"
+  eyebrow="Supported tools"
+  title="Works with every major AI coding tool"
+  lead="Descriptor-driven support plus plugin targets. Native, embedded and partial coverage is spelled out per tool."
+  more={{ text: 'Full support matrix', href: './reference/supported-tools/' }}
+>
+  <ToolWall>
 
 {/* agentsmesh:tool-list:start */}
 - **CLI agents:** [Aider](https://aider.chat), [Amp](https://ampcode.com), [Claude Code](https://www.anthropic.com/claude-code), [Codebuff](https://github.com/CodebuffAI/freebuff), [Codex CLI](https://github.com/openai/codex), [Crush](https://github.com/charmbracelet/crush), [Deep Agents CLI](https://github.com/langchain-ai/deepagents), [Gemini CLI](https://github.com/google-gemini/gemini-cli), [Goose](https://block.github.io/goose), [Kimi Code CLI](https://moonshotai.github.io/kimi-code/en/), [OpenCode](https://opencode.ai), [OpenHands](https://docs.openhands.dev), [Pi Agent](https://github.com/earendil-works/pi), [Qwen Code](https://github.com/QwenLM/qwen-code), [Rovo Dev](https://www.atlassian.com/solutions/devops/rovo-dev), [Warp](https://www.warp.dev).
@@ -190,20 +94,11 @@ AgentsMesh ships descriptor-driven support for every major AI coding tool plus p
 - **Cloud agent platforms:** [Factory Droid](https://www.factory.ai), [Jules](https://jules.google), [Replit Agent](https://replit.com).
 {/* agentsmesh:tool-list:end */}
 
-Use the [supported tools matrix](./reference/supported-tools/) for the exact project/global paths and native, embedded, partial, or unsupported feature coverage.
+  </ToolWall>
+</Section>
 
-## Automation and extension paths
-
-<CardGrid>
-  <Card title="Typed programmatic API" icon="seti:typescript">
-    Import `generate`, `importFrom`, `lint`, `diff`, `check`, `loadCanonical`, and target catalog helpers from `agentsmesh`, `agentsmesh/engine`, `agentsmesh/canonical`, or `agentsmesh/targets`. [API reference →](./reference/programmatic-api/)
-  </Card>
-  <Card title="Runtime plugins" icon="puzzle">
-    Add support for new AI coding tools with npm plugin targets. Plugins participate in project mode, global mode, feature conversion, linting, and generation. [Build a plugin →](./guides/building-plugins/)
-  </Card>
-  <Card title="Team-safe sharing" icon="group">
-    Combine `extends`, installable packs, local overrides, and lock-file checks to standardize AI assistant behavior across repositories. [Multi-tool teams →](./guides/multi-tool-teams/)
-  </Card>
-</CardGrid>
+<Section id="deeper" eyebrow="Go deeper" title="Reference and guides">
+  <LinkGrid items={HOME_DEEPER} minWidth="16rem" />
+</Section>
 
 <SoftwareApplicationJsonLd />

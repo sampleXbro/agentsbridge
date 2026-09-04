@@ -42,7 +42,8 @@ export function buildDataRow(
   a.target = '_blank';
   a.rel = 'noopener noreferrer';
   a.className = 'am-catalog-src-link';
-  a.textContent = 'Link';
+  a.textContent = 'Source';
+  a.setAttribute('aria-label', `Source of ${r.t}`);
   a.title = r.l;
   tdLink.appendChild(a);
   tr.appendChild(tdLink);

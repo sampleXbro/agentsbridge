@@ -1,3 +1,29 @@
+# Website redesign (2026-09-04)
+
+Direction: "signal on graphite" — precision-instrument look. Amber accent on
+graphite (dark) / warm paper (light). Bricolage Grotesque display, IBM Plex
+Sans body, IBM Plex Mono code (self-hosted via fontsource). Signature element:
+animated SVG mesh (one source -> many targets) in the hero. Minimal copy.
+
+- [x] 1. Tokens + fonts: `src/styles/tokens.css` (Starlight var overrides, both
+      themes), fontsource deps, wire `customCss` in astro.config.mjs
+- [x] 2. TDD `src/lib/install-command.mjs` (shared by hero + catalog) and
+      `src/lib/mesh-layout.mjs` (node positions for the hero diagram)
+- [x] 3. Hero override (`components.Hero`): eyebrow, H1, tagline, CTAs from
+      frontmatter + install snippet (brew/curl/npm, copy) + `MeshDiagram.astro`
+- [x] 4. Homepage sections as small Astro components fed by
+      `src/content/data/home.ts`: HowItWorks, SyncGrid, LessonsLoop, ToolWall
+      (wraps the script-owned tool-list marker block), GoDeeper
+- [x] 5. Rewrite `index.mdx` with terse copy; keep tool-list markers verbatim
+- [x] 6. Catalog explorer: restyle to tokens, use shared install-command,
+      shorter labels; keep virtual table behaviour
+- [x] 7. Docs chrome: header, sidebar, TOC, headings, code frames, tables,
+      asides, cards, pagination — `src/styles/docs.css`
+- [x] 8. Responsive pass in Chrome DevTools at 375 / 768 / 1024 / 1440, light +
+      dark, homepage + 3 docs pages; console clean; Lighthouse a11y
+- [x] 9. `node --test`, `astro build` (link validator), `pnpm matrix:verify`
+      still green; post-feature-qa; lessons capture
+
 # Recurrence Escalation package (lessons feature)
 
 Audit-approved plan (2026-07-21): session+rank threading → advisory recurrence

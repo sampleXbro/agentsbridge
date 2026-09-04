@@ -1,0 +1,191 @@
+---
+/** Install one-liner with a method switcher and a copy button. Works without JS for the first method. */
+import { INSTALL_METHODS } from '../../lib/install-command.mjs';
+---
+
+<div class="am-install not-content" data-am-install>
+  <div class="am-install-tabs" role="tablist" aria-label="Install method">
+    {
+      INSTALL_METHODS.map((m, i) => (
+        <button
+          type="button"
+          role="tab"
+          id={`am-install-tab-${m.id}`}
+          aria-selected={i === 0 ? 'true' : 'false'}
+          aria-controls={`am-install-panel-${m.id}`}
+          tabindex={i === 0 ? 0 : -1}
+          data-am-install-tab={m.id}
+        >
+          {m.label}
+        </button>
+      ))
+    }
+  </div>
+  <div class="am-install-row">
+    {
+      INSTALL_METHODS.map((m, i) => (
+        <div
+          role="tabpanel"
+          id={`am-install-panel-${m.id}`}
+          aria-labelledby={`am-install-tab-${m.id}`}
+          class="am-install-panel"
+          hidden={i !== 0}
+          data-am-install-panel={m.id}
+        >
+          <pre><code data-am-install-cmd>{m.command}</code></pre>
+          <span class="am-install-note">{m.note}</span>
+        </div>
+      ))
+    }
+    <button type="button" class="am-install-copy" data-am-install-copy aria-label="Copy install command">
+      <span data-copy-label>Copy</span>
+    </button>
+  </div>
+</div>
+
+<script>
+  import { bindCopyButton } from '../../lib/copy-to-clipboard';
+
+  function mount(root: HTMLElement): void {
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-am-install-tab]')];
+    const panels = [...root.querySelectorAll<HTMLElement>('[data-am-install-panel]')];
+    const copy = root.querySelector<HTMLButtonElement>('[data-am-install-copy]');
+    if (tabs.length === 0 || !copy) return;
+
+    function select(id: string, focus = false): void {
+      for (const tab of tabs) {
+        const on = tab.dataset.amInstallTab === id;
+        tab.setAttribute('aria-selected', String(on));
+        tab.tabIndex = on ? 0 : -1;
+        if (on && focus) tab.focus();
+      }
+      for (const panel of panels) panel.hidden = panel.dataset.amInstallPanel !== id;
+    }
+
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => select(tab.dataset.amInstallTab ?? ''));
+      tab.addEventListener('keydown', (e) => {
+        const delta = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (delta === 0) return;
+        e.preventDefault();
+        const next = tabs[(index + delta + tabs.length) % tabs.length];
+        select(next.dataset.amInstallTab ?? '', true);
+      });
+    });
+
+    bindCopyButton(copy, {
+      getText: () => panels.find((p) => !p.hidden)?.querySelector('code')?.textContent ?? '',
+    });
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-am-install]').forEach(mount);
+</script>
+
+<style>
+  .am-install {
+    width: 100%;
+    max-width: 36rem;
+    margin-top: 0.75rem;
+    border: 1px solid var(--am-hairline);
+    border-radius: var(--am-radius-lg);
+    background: var(--am-surface);
+    overflow: hidden;
+  }
+
+  .am-install-tabs {
+    display: flex;
+    gap: 0.25rem;
+    padding: 0.375rem 0.375rem 0;
+    border-bottom: 1px solid var(--am-hairline);
+  }
+
+  .am-install-tabs [role='tab'] {
+    appearance: none;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    padding: 0.5rem 0.75rem;
+    background: none;
+    font: inherit;
+    font-size: var(--sl-text-xs);
+    font-weight: 500;
+    color: var(--sl-color-gray-3);
+    cursor: pointer;
+    border-radius: var(--am-radius-sm) var(--am-radius-sm) 0 0;
+  }
+
+  .am-install-tabs [role='tab']:hover {
+    color: var(--sl-color-white);
+  }
+
+  .am-install-tabs [role='tab'][aria-selected='true'] {
+    color: var(--sl-color-white);
+    border-bottom-color: var(--am-signal);
+  }
+
+  .am-install-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0.75rem 0.75rem 1rem;
+  }
+
+  .am-install-panel {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .am-install-panel pre {
+    margin: 0;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    font-family: var(--__sl-font-mono);
+    font-size: var(--sl-text-sm);
+    line-height: 1.5;
+    color: var(--sl-color-white);
+    white-space: pre;
+  }
+
+  .am-install-panel pre::before {
+    content: '$ ';
+    color: var(--am-signal);
+  }
+
+  .am-install-note {
+    display: block;
+    margin-top: 0.125rem;
+    font-size: var(--sl-text-2xs);
+    color: var(--sl-color-gray-3);
+  }
+
+  .am-install-copy {
+    flex: 0 0 auto;
+    appearance: none;
+    min-height: 2.25rem;
+    padding: 0.375rem 0.875rem;
+    border: 1px solid var(--am-hairline);
+    border-radius: var(--am-radius-sm);
+    background: var(--sl-color-black);
+    color: var(--sl-color-white);
+    font: inherit;
+    font-size: var(--sl-text-xs);
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 140ms var(--am-ease), color 140ms var(--am-ease);
+  }
+
+  .am-install-copy:hover {
+    border-color: var(--sl-color-gray-4);
+  }
+
+  .am-install-copy[data-copied] {
+    border-color: var(--am-signal);
+    color: var(--am-signal);
+  }
+
+  .am-install-copy:focus-visible,
+  .am-install-tabs [role='tab']:focus-visible {
+    outline: 2px solid var(--am-signal);
+    outline-offset: 2px;
+  }
+</style>

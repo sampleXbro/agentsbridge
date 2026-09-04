@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: ["**"]
+    branches: ['**']
   pull_request:
     branches: [master]
 
@@ -81,8 +81,22 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # `pnpm audit` exits 1 both when it FINDS advisories and when it cannot
+      # reach npm's advisory service, so a bare invocation turns an npm outage
+      # into a failed build. Real advisories still fail here; an unreachable
+      # service is reported as a warning on the run instead.
       - name: Audit production dependencies
-        run: pnpm audit --prod --audit-level=high
+        run: |
+          set +e
+          OUT=$(pnpm audit --prod --audit-level=high 2>&1)
+          CODE=$?
+          printf '%s\n' "$OUT"
+          if [ "$CODE" -eq 0 ]; then exit 0; fi
+          if printf '%s' "$OUT" | grep -qE 'ERR_SOCKET_TIMEOUT|ETIMEDOUT|ECONNRESET|EAI_AGAIN|ENOTFOUND|FetchError|socket timeout'; then
+            echo "::warning title=Dependency audit skipped::npm advisory service unreachable, so production dependencies were NOT audited on this run. Re-run once https://status.npmjs.org reports the registry healthy."
+            exit 0
+          fi
+          exit "$CODE"
 
       # Coverage runs the full vitest suite, which includes integration tests
       # that exec `dist/cli.js`. Build first so those tests can find the binary.
@@ -182,7 +196,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: "1.2"
+          bun-version: '1.2'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

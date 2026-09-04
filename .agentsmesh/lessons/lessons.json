@@ -2360,6 +2360,23 @@
         "t-kw-8a7ceee6"
       ]
     },
+    "generation-safety-when-a-code-path-deliberately": {
+      "createdAt": "2026-09-04",
+      "evidence": [
+        "commit:0c775e13"
+      ],
+      "rationale": "The omission was documented and correct when written; it only became a bug because a later change made `outputs` load-bearing for stale cleanup, and nothing linked the two.",
+      "rule": "When a code path deliberately omits a field from a written record, re-check that decision whenever the field gains a new consumer — `resolveLockConflict` omitted the lock's `outputs` map for good reasons, and that became a permanent data strand the day the directory sweep started gating deletion on it.",
+      "status": "active",
+      "topics": [
+        "generation-safety"
+      ],
+      "triggers": [
+        "t-glob-3e8deb25",
+        "t-glob-f9f526aa",
+        "t-kw-cb4df2d9"
+      ]
+    },
     "generation-safety-when-a-defect-is-traced": {
       "createdAt": "2026-09-02",
       "evidence": [
@@ -9766,6 +9783,10 @@
       "kind": "file_glob",
       "pattern": "src/core/reference/pack-skill-artifact-paths.ts"
     },
+    "t-glob-3e8deb25": {
+      "kind": "file_glob",
+      "pattern": "src/core/merger.ts"
+    },
     "t-glob-3eaea188": {
       "kind": "file_glob",
       "pattern": "src/schemas/schema-generator.ts"
@@ -10570,6 +10591,10 @@
       "kind": "file_glob",
       "pattern": "src/utils/filesystem/rename-retry.ts"
     },
+    "t-glob-f9f526aa": {
+      "kind": "file_glob",
+      "pattern": "src/cli/commands/generate-lock.ts"
+    },
     "t-glob-fb5c7dc9": {
       "kind": "file_glob",
       "pattern": "src/targets/*/global-permissions.ts"
@@ -11249,6 +11274,10 @@
     "t-kw-c8f23353": {
       "kind": "keyword",
       "pattern": "captureLesson"
+    },
+    "t-kw-cb4df2d9": {
+      "kind": "keyword",
+      "pattern": "lock outputs map"
     },
     "t-kw-cbded3f7": {
       "kind": "keyword",

@@ -1,9 +1,10 @@
 ---
 draft: false
-title: One config. Every AI coding tool.
-description: One .agentsmesh directory syncs rules, commands, agents, skills, MCP servers, hooks and permissions to every AI coding tool, and gives your agents a memory that learns from your repo.
+title: AI coding config sync for Claude Code, Cursor, Copilot and more
+description: One .agentsmesh source syncs rules, commands, skills, MCP servers, hooks and permissions to every AI coding tool. Open source, with a memory that learns.
 template: splash
 hero:
+  title: One config. Every AI coding tool.
   tagline: Write rules, commands, agents, skills, MCP servers and permissions once. Generate native config for every tool. Let your agents learn from failures with lessons.
   actions:
     - text: Get started
@@ -18,12 +19,13 @@ hero:
       variant: minimal
 ---
 
-import { HOME_STEPS, HOME_SYNC, HOME_LESSON_LOOP, HOME_LESSON_LINKS, HOME_DEEPER } from '../data/home';
+import { HOME_STEPS, HOME_SYNC, HOME_LESSON_LOOP, HOME_LESSON_LINKS, HOME_DEEPER, HOME_FAQ } from '../data/home';
 import Section from '../../components/home/Section.astro';
 import StepRail from '../../components/home/StepRail.astro';
 import LinkGrid from '../../components/home/LinkGrid.astro';
 import LessonsLoop from '../../components/home/LessonsLoop.astro';
 import ToolWall from '../../components/home/ToolWall.astro';
+import Faq from '../../components/home/Faq.astro';
 import CatalogExplorer from '../../components/catalog-explorer/CatalogExplorer.astro';
 import SoftwareApplicationJsonLd from '../../components/SoftwareApplicationJsonLd.astro';
 
@@ -95,6 +97,15 @@ agentsmesh lessons query --file src/cli/foo.ts
 {/* agentsmesh:tool-list:end */}
 
   </ToolWall>
+</Section>
+
+<Section
+  id="faq"
+  eyebrow="FAQ"
+  title="Common questions"
+  more={{ text: 'Full support matrix', href: './reference/supported-tools/' }}
+>
+  <Faq items={HOME_FAQ} />
 </Section>
 
 <Section id="deeper" eyebrow="Go deeper" title="Reference and guides">

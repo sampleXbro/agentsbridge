@@ -19,7 +19,7 @@ pnpm install
 pnpm build          # compile src/ → dist/
 pnpm test           # unit + integration tests
 pnpm test:e2e       # end-to-end tests (self-builds first)
-pnpm test:coverage  # coverage report (thresholds enforced in CI)
+pnpm test:coverage  # coverage report: 95% aggregate + per-file floor (scripts/coverage-floor.ts), enforced in CI
 pnpm lint           # ESLint
 pnpm lint:dead      # knip — unused files / exports / deps
 pnpm typecheck      # tsc --noEmit
@@ -43,6 +43,7 @@ pnpm changeset      # record a user-facing change (see Changesets)
 ## Adding a new target
 
 Use the `add-agent-target` skill documented in `.claude/skills/add-agent-target/`. It requires:
+
 - Current official documentation research for the target format
 - Full importer and generator implementation
 - Realistic fixtures
@@ -72,7 +73,7 @@ Open a GitHub issue with a minimal reproduction case. See [SECURITY.md](SECURITY
 
 ## Updating target capabilities
 
-Capability provenance lives in `src/targets/catalog/capability-ledger.json` — an *oracle* that validates descriptors; it never generates. Current capability levels always come from each target's `capabilities.ts` (the matrix derives from there); the ledger records where the tool's own docs say each file/shape is, so generated output can be validated against it.
+Capability provenance lives in `src/targets/catalog/capability-ledger.json` — an _oracle_ that validates descriptors; it never generates. Current capability levels always come from each target's `capabilities.ts` (the matrix derives from there); the ledger records where the tool's own docs say each file/shape is, so generated output can be validated against it.
 
 Maintainer commands:
 

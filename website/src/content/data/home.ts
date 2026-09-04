@@ -128,6 +128,43 @@ export const HOME_DEEPER: readonly HomeLink[] = [
   },
 ];
 
+export interface HomeFaq {
+  question: string;
+  answer: string;
+}
+
+export const HOME_FAQ: readonly HomeFaq[] = [
+  {
+    question: 'Which AI coding tools does AgentsMesh support?',
+    answer:
+      'Every major CLI agent, IDE integration and cloud agent, from Claude Code and Cursor to GitHub Copilot, Gemini CLI, Codex CLI, Windsurf and Zed. The support matrix lists native, embedded and partial coverage per feature.',
+  },
+  {
+    question: 'How do I keep CLAUDE.md, AGENTS.md and Cursor rules in sync?',
+    answer:
+      'Write the rule once in `.agentsmesh/rules/`, run `agentsmesh generate`, and each file is written in its native format. `agentsmesh check` fails CI when a generated file drifts.',
+  },
+  {
+    question: 'Does it work with config I already have?',
+    answer:
+      'Yes. `agentsmesh init` detects existing tool folders and imports them into `.agentsmesh/`. Import is lossless, so a later export restores the originals.',
+  },
+  {
+    question: 'What are lessons?',
+    answer:
+      'A shared, git-tracked memory of short rules with triggers. Agents recall matching rules before an edit and capture new ones after a failure, in any tool.',
+  },
+  {
+    question: 'Do I need Node.js?',
+    answer:
+      'No. Homebrew and the standalone binary run without Node. The npm package needs Node.js 20 or newer and also exposes the TypeScript API.',
+  },
+  {
+    question: 'Is AgentsMesh free?',
+    answer: 'Yes. It is open source under the MIT license, with no hosted service and telemetry off by default.',
+  },
+];
+
 /** Output paths drawn on the hero mesh. Decorative; the matrix page is the source of truth. */
 export const HOME_MESH_TARGETS: readonly string[] = [
   'CLAUDE.md',

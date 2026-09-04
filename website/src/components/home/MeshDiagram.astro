@@ -8,7 +8,7 @@ import { meshLayout } from '../../lib/mesh-layout.mjs';
 import { HOME_MESH_TARGETS } from '../../content/data/home';
 
 interface Props {
-  variant: 'wide' | 'compact';
+  variant?: 'wide' | 'compact';
 }
 
 const VARIANTS = {
@@ -16,7 +16,7 @@ const VARIANTS = {
   compact: { geometry: { width: 196, height: 320, padX: 50, padY: 22 }, viewWidth: 440, fontSize: 15 },
 } as const;
 
-const { variant } = Astro.props;
+const { variant = 'wide' } = Astro.props;
 const { geometry, viewWidth, fontSize } = VARIANTS[variant];
 const { source, targets, edges } = meshLayout(HOME_MESH_TARGETS.length, geometry);
 const lastIndex = HOME_MESH_TARGETS.length - 1;

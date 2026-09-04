@@ -1,0 +1,16 @@
+---
+/**
+ * Starlight `Head` override: preload the fonts used above the fold so the
+ * first paint does not swap. Importing the files gives the hashed asset URLs
+ * that the fontsource CSS also resolves to.
+ */
+import Default from '@astrojs/starlight/components/Head.astro';
+import display from '@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-wght-normal.woff2';
+import body from '@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff2';
+import mono from '@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2';
+
+const FONT_PRELOADS = [display, body, mono];
+---
+
+<Default><slot /></Default>
+{FONT_PRELOADS.map((href) => <link rel="preload" as="font" type="font/woff2" crossorigin href={href} />)}

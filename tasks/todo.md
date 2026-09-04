@@ -1,3 +1,39 @@
+# README rewrite + SEO (2026-09-04)
+
+- [x] 1. README.md per the `readme` skill: header, problem/solution, install,
+      60-second quickstart, before/after, lessons, comparison, highlights,
+      commands, supported tools (generated blocks kept verbatim), docs, one-line
+      contributing/license. Keyword-rich subtitle consistent with package.json.
+- [x] 2. package.json: description + keywords tuned for npm search
+- [x] 3. Website: SEO <title>/description on the homepage (H1 stays short via
+      hero.title), site-wide description/tagline, theme-color meta
+- [x] 4. Website: FAQ section with FAQPage JSON-LD (data in home.ts)
+- [x] 5. Website: llms.txt generated at build from dist titles/descriptions
+      (local integration, TDD with node --test)
+- [x] 6. Verify: website tests, astro build + link validation, matrix:verify
+      (README markers), README links resolve against dist; hand the GitHub
+      topics/description command to the user (outward-facing)
+
+# Coverage gate fix (2026-09-04)
+
+Problem: 95% thresholds are aggregate (a 0%-covered 200-line module moves the
+number ~0.25%); `src/**/index.ts` is blanket-excluded although the CLI parser
+and all 33 target descriptors live there; category (4)/(6) exclusions hide real
+branching. Goal: an honest gate that fails on an untested module.
+
+- [x] 1. Baseline: full coverage run with json-summary; rank files by lowest
+      lines/branches/functions within the current include set
+- [x] 2. Measure the excluded set: re-run coverage with `index.ts` and the
+      category (4)/(6) files included; list what falls under 95%
+- [x] 3. Decide gate shape: `perFile: true` at a defensible floor per metric
+      (target 95 lines/functions, branches floor from data) plus the global 95
+- [x] 4. TDD the gaps: add unit tests for logic-bearing `index.ts` files and
+      any pulled-in module below the floor; only re-exclude genuine
+      types-only barrels, listed by name (no glob)
+- [x] 5. Guard against `.only` (eslint rule) so the gate cannot be bypassed
+- [x] 6. Full `test:coverage` green; `pnpm typecheck` + lint green; docs note
+      in vitest.config.ts categories updated; lessons capture
+
 # Website redesign (2026-09-04)
 
 Direction: "signal on graphite" — precision-instrument look. Amber accent on

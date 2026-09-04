@@ -2,6 +2,8 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import starlightLinksValidator from 'starlight-links-validator';
+import devOnlyRoutes from './integrations/dev-only-routes.mjs';
+import llmsTxtIntegration from './integrations/llms-txt.mjs';
 import seoRobotsIntegration from './integrations/seo-robots.mjs';
 import { absoluteFromBase, fromBase, getSiteBase, getSiteOrigin, resolveDeploySite } from './site-url.mjs';
 
@@ -47,8 +49,9 @@ export default defineConfig({
     starlight({
       plugins: [starlightLinksValidator({ errorOnRelativeLinks: false })],
       title: 'AgentsMesh',
-      tagline: 'One config. Every AI coding tool. Agents that learn.',
+      tagline: 'One config for every AI coding tool. Agents that learn.',
       components: {
+        Head: './src/components/Head.astro',
         Hero: './src/components/home/Hero.astro',
       },
       expressiveCode: {
@@ -59,7 +62,7 @@ export default defineConfig({
         },
       },
       description:
-        'AgentsMesh is an open-source AI coding config sync CLI and TypeScript library for Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf, Codex CLI, and more — with lessons, a shared agent memory that learns from your repo.',
+        'AgentsMesh is an open-source CLI and TypeScript library that syncs AI coding agent config (rules, commands, agents, skills, MCP servers, hooks, permissions) from one .agentsmesh source to Claude Code, Cursor, GitHub Copilot, Gemini CLI, Codex CLI and every other tool, with a lessons memory that learns from your repo.',
       logo: {
         light: './src/assets/logo-light.svg',
         dark: './src/assets/logo-dark.svg',
@@ -100,6 +103,10 @@ export default defineConfig({
         {
           tag: 'meta',
           attrs: { name: 'twitter:site', content: '@agentsmesh' },
+        },
+        {
+          tag: 'meta',
+          attrs: { name: 'theme-color', content: '#0c0e12' },
         },
         {
           tag: 'link',
@@ -203,5 +210,11 @@ export default defineConfig({
       ],
     }),
     seoRobotsIntegration(() => deploySite.publicUrl),
+    devOnlyRoutes([{ pattern: '/og', entrypoint: './src/dev-pages/og.astro' }]),
+    llmsTxtIntegration({
+      siteName: 'AgentsMesh',
+      description: 'One config for every AI coding tool, with a shared lessons memory that learns from your repo.',
+      getSiteUrl: () => docsRoot,
+    }),
   ],
 });

@@ -1830,7 +1830,11 @@
         "generate"
       ],
       "triggers": [
-        "t-glob-87a63917"
+        "t-glob-e9f9f003",
+        "t-glob-a23d7b79",
+        "t-glob-0390d7f9",
+        "t-glob-5f37a5af",
+        "t-kw-16226ad2"
       ]
     },
     "generation-collision-source-maps-a-generator-that-merges-into": {
@@ -1902,7 +1906,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -1922,7 +1925,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -1942,7 +1944,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -1962,7 +1963,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -1982,7 +1982,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2002,7 +2001,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2023,7 +2021,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2043,7 +2040,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2064,7 +2060,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2085,7 +2080,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2105,7 +2099,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2125,7 +2118,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2146,7 +2138,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2166,7 +2157,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2186,7 +2176,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2206,7 +2195,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2226,7 +2214,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2246,7 +2233,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2266,7 +2252,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2286,7 +2271,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2312,7 +2296,10 @@
     },
     "generation-safety-a-key-scoped-merger-must": {
       "createdAt": "2026-09-03",
-      "evidence": [],
+      "evidence": [
+        "commit:5ca7d7b4",
+        "commit:4d793101"
+      ],
       "rationale": "mergeOwnedJsonKeys returned null on a commented .vscode/mcp.json, so the fallback wrote generated content over the user's inputs array; null means \"not my path\", not \"keep the file\".",
       "rule": "A key-scoped merger must return the base verbatim when it cannot parse the user's file (JSONC, array, unknown syntax) — returning null falls through to the default policy, which replaces the whole file and destroys the very keys the merger exists to protect.",
       "status": "active",
@@ -2321,7 +2308,12 @@
       ],
       "triggers": [
         "t-glob-154f0b83",
-        "t-kw-d6fa9b31"
+        "t-kw-d6fa9b31",
+        "t-glob-cf079804",
+        "t-glob-2841b685",
+        "t-glob-7e95936f",
+        "t-kw-bc36f123",
+        "t-kw-6c1da379"
       ]
     },
     "generation-safety-a-yaml-ownership-marker-written": {
@@ -2364,8 +2356,11 @@
         "generation-safety"
       ],
       "triggers": [
-        "t-glob-87a63917",
-        "t-kw-b97d39e2"
+        "t-kw-b97d39e2",
+        "t-glob-e9f9f003",
+        "t-glob-a23d7b79",
+        "t-glob-0390d7f9",
+        "t-glob-5f37a5af"
       ]
     },
     "generation-safety-when-a-target-has-project": {
@@ -2413,13 +2408,18 @@
     "generation-safety-when-making-a-co-owned": {
       "createdAt": "2026-09-03",
       "evidence": [],
+      "rationale": "Its only trigger was src/targets/*/revocation.ts, files deleted when the revocation layer was withdrawn, leaving the lesson unreachable. Re-pointed at where coOwnedFiles and the merge hooks actually live, so it fires when revocation is attempted again.",
       "rule": "When making a co-owned target output revocable (managedOutputs.coOwnedFiles), the merge hook must be able to DELETE or empty the key, and the cleared projection must name only the leaf keys agentsmesh writes — never the containers. A container-level clear (permissions/options/agent objects) destroys the user's sibling keys, and an assign-only merger cannot express revocation at all. Verify the merger against a base holding foreign sibling keys before declaring the claim.",
       "status": "active",
       "topics": [
         "generation-safety"
       ],
       "triggers": [
-        "t-glob-98a32718"
+        "t-glob-a9a4fad0",
+        "t-glob-7e95936f",
+        "t-glob-2841b685",
+        "t-kw-2543dfb6",
+        "t-kw-607ac147"
       ]
     },
     "generation-safety-when-removing-a-feature-or": {
@@ -9476,6 +9476,10 @@
       "kind": "file_glob",
       "pattern": "src/targets/zed/**"
     },
+    "t-glob-0390d7f9": {
+      "kind": "file_glob",
+      "pattern": "src/core/generate/optional-features.ts"
+    },
     "t-glob-0465888e": {
       "kind": "file_glob",
       "pattern": ".agentsmesh/lessons/lessons.json"
@@ -9647,6 +9651,10 @@
     "t-glob-25cdb7ed": {
       "kind": "file_glob",
       "pattern": "AGENTS.md"
+    },
+    "t-glob-2841b685": {
+      "kind": "file_glob",
+      "pattern": "src/core/generate/*-owned-keys.ts"
     },
     "t-glob-285fdf8b": {
       "kind": "file_glob",
@@ -9868,6 +9876,10 @@
       "kind": "file_glob",
       "pattern": "src/core/reference/**/*.ts"
     },
+    "t-glob-5f37a5af": {
+      "kind": "file_glob",
+      "pattern": "src/core/generate/scope-extras.ts"
+    },
     "t-glob-5fa55e64": {
       "kind": "file_glob",
       "pattern": "src/lessons/keyword-signal.ts"
@@ -10012,6 +10024,10 @@
       "kind": "file_glob",
       "pattern": "src/targets/kilo-code/**/*.ts"
     },
+    "t-glob-7e95936f": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/*merge*.ts"
+    },
     "t-glob-7f548275": {
       "kind": "file_glob",
       "pattern": ".agentsmesh/rules/**/*.md"
@@ -10080,10 +10096,6 @@
       "kind": "file_glob",
       "pattern": "src/targets/deepagents-cli/**"
     },
-    "t-glob-87a63917": {
-      "kind": "file_glob",
-      "pattern": "src/core/generate/**/*.ts"
-    },
     "t-glob-892c1e39": {
       "kind": "file_glob",
       "pattern": "tests/e2e/agents-last-run.md"
@@ -10131,10 +10143,6 @@
     "t-glob-960c3805": {
       "kind": "file_glob",
       "pattern": "tests/e2e/helpers/reference-targets.ts"
-    },
-    "t-glob-98a32718": {
-      "kind": "file_glob",
-      "pattern": "src/targets/*/revocation.ts"
     },
     "t-glob-9a12f490": {
       "kind": "file_glob",
@@ -10460,6 +10468,10 @@
       "kind": "file_glob",
       "pattern": ".agentsmesh/skills/**"
     },
+    "t-glob-e9f9f003": {
+      "kind": "file_glob",
+      "pattern": "src/core/generate/engine.ts"
+    },
     "t-glob-ea0c6170": {
       "kind": "file_glob",
       "pattern": "src/lessons/seen-*.ts"
@@ -10616,6 +10628,10 @@
       "kind": "keyword",
       "pattern": "multi-agent"
     },
+    "t-kw-16226ad2": {
+      "kind": "keyword",
+      "pattern": "emission path callback"
+    },
     "t-kw-175711e2": {
       "kind": "keyword",
       "pattern": "insert import"
@@ -10659,6 +10675,10 @@
     "t-kw-244e9a72": {
       "kind": "keyword",
       "pattern": "changeset"
+    },
+    "t-kw-2543dfb6": {
+      "kind": "keyword",
+      "pattern": "coOwnedFiles"
     },
     "t-kw-265fd6c5": {
       "kind": "keyword",
@@ -10876,6 +10896,10 @@
       "kind": "keyword",
       "pattern": "review workflow"
     },
+    "t-kw-607ac147": {
+      "kind": "keyword",
+      "pattern": "revoke owned keys"
+    },
     "t-kw-6829f894": {
       "kind": "keyword",
       "pattern": "fork_context"
@@ -10887,6 +10911,10 @@
     "t-kw-6c171a08": {
       "kind": "keyword",
       "pattern": "redundancy diagnosis"
+    },
+    "t-kw-6c1da379": {
+      "kind": "keyword",
+      "pattern": "unparsable base"
     },
     "t-kw-6c43e9c1": {
       "kind": "keyword",
@@ -11131,6 +11159,10 @@
     "t-kw-b9c4415c": {
       "kind": "keyword",
       "pattern": "invariant test oracle, co-owned, managedOutputs"
+    },
+    "t-kw-bc36f123": {
+      "kind": "keyword",
+      "pattern": "merger fallback"
     },
     "t-kw-bd0b86a3": {
       "kind": "keyword",

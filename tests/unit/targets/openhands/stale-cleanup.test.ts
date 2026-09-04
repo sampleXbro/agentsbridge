@@ -46,14 +46,30 @@ describe('openhands stale cleanup', () => {
     expect(existsSync(command)).toBe(false);
   });
 
-  it('removes an orphan agent left behind under the shared agents directory', async () => {
+  /**
+   * `.agents/agents` is shared with other tools, so cleanup deletes only what a
+   * previous run recorded in the lock. Was: a hand-written junk file, which the
+   * sweep deleted — the very ownership bug the provenance gate closes.
+   */
+  it('removes an agent it generated once the canonical agent is deleted', async () => {
     dir = createCanonicalProject(`version: 1\ntargets: [openhands]\n${FEATURES}\n`);
     await generateAll();
-    const orphan = join(dir, '.agents/agents/stale-openhands-junk.md');
-    writeFileSync(orphan, '---\nname: stale\n---\n# Stale');
+    const generated = join(dir, '.agents/agents/researcher.md');
+    expect(existsSync(generated)).toBe(true);
+
+    rmSync(join(dir, '.agentsmesh/agents/researcher.md'));
+    await generateAll();
+    expect(existsSync(generated)).toBe(false);
+  });
+
+  it('keeps an agent module it never wrote in the shared agents directory', async () => {
+    dir = createCanonicalProject(`version: 1\ntargets: [openhands]\n${FEATURES}\n`);
+    await generateAll();
+    const foreign = join(dir, '.agents/agents/hand-written.md');
+    writeFileSync(foreign, '---\nname: mine\n---\n# Mine');
 
     await generateAll();
-    expect(existsSync(orphan)).toBe(false);
+    expect(existsSync(foreign)).toBe(true);
   });
 
   /**

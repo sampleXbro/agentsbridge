@@ -13,7 +13,10 @@ import {
 } from '../../config/core/lock.js';
 import { resolveExtendPaths } from '../../config/resolve/resolver.js';
 import { diffOutputChecksums } from '../../config/core/lock-outputs.js';
-import { findStaleGeneratedOutputs } from '../generate/stale-cleanup.js';
+import {
+  findStaleGeneratedOutputs,
+  findUntrackedManagedDirFiles,
+} from '../generate/stale-cleanup.js';
 import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
 
 export interface LockSyncReport {
@@ -44,6 +47,12 @@ export interface LockSyncReport {
   readonly outputsRemoved: readonly string[];
   /** Managed generated outputs present on disk but absent from the lock. */
   readonly outputsStale: readonly string[];
+  /**
+   * Files inside a managed directory the lock does not claim — the tool's own
+   * output or something hand-authored. Informational: deliberately excluded
+   * from `outputDrift` and `inSync`, because `generate` cannot remove them.
+   */
+  readonly outputsUntracked: readonly string[];
   /**
    * True when output drift was actually verified — requires `rootBase` and a
    * lock with an `outputs` map. False for old-format locks or when no
@@ -92,6 +101,7 @@ export async function checkLockSync(opts: CheckLockSyncOptions): Promise<LockSyn
       outputsModified: [],
       outputsRemoved: [],
       outputsStale: [],
+      outputsUntracked: [],
       outputsChecked: false,
     };
   }
@@ -143,21 +153,37 @@ export async function checkLockSync(opts: CheckLockSyncOptions): Promise<LockSyn
     ? await diffOutputChecksums(rootBase, lock.outputs ?? {})
     : { outputsModified: [], outputsRemoved: [] };
 
+  // `generatedOutputs` is the same map as `expectedPaths` here, and that is the
+  // point: a file discovered under a managed DIRECTORY is only a generated
+  // output if the lock says agentsmesh wrote it. Without this gate the sweep
+  // reports the tool's own files — a hook Kiro wrote into `.kiro/hooks` — as
+  // stale generated output, and neither remedy the CLI prints can clear it.
+  // Static `managedOutputs.files` entries stay ungated, so a genuinely stale
+  // owned artifact is still caught.
   const outputsStale =
     rootBase !== undefined && lock.outputs !== undefined
       ? await findStaleGeneratedOutputs({
           projectRoot: rootBase,
           targets: [...config.targets, ...(config.pluginTargets ?? [])],
           expectedPaths: Object.keys(lock.outputs),
+          generatedOutputs: Object.keys(lock.outputs),
+          scope,
+        })
+      : [];
+
+  const outputsUntracked =
+    rootBase !== undefined && lock.outputs !== undefined
+      ? await findUntrackedManagedDirFiles({
+          projectRoot: rootBase,
+          targets: [...config.targets, ...(config.pluginTargets ?? [])],
+          expectedPaths: Object.keys(lock.outputs),
+          generatedOutputs: Object.keys(lock.outputs),
           scope,
         })
       : [];
 
   const canonicalDrift =
-    modified.length > 0 ||
-    added.length > 0 ||
-    removed.length > 0 ||
-    extendsModified.length > 0;
+    modified.length > 0 || added.length > 0 || removed.length > 0 || extendsModified.length > 0;
   const outputDrift =
     outputsModified.length > 0 || outputsRemoved.length > 0 || outputsStale.length > 0;
   const inSync = !canonicalDrift && !outputDrift;
@@ -175,6 +201,7 @@ export async function checkLockSync(opts: CheckLockSyncOptions): Promise<LockSyn
     outputsModified,
     outputsRemoved,
     outputsStale,
+    outputsUntracked,
     outputsChecked,
   };
 }

@@ -2330,6 +2330,22 @@
         "t-kw-4c615812"
       ]
     },
+    "generation-safety-in-lock-sync-ts-do": {
+      "createdAt": "2026-09-04",
+      "evidence": [
+        "commit:91e49083"
+      ],
+      "rationale": "Supersedes an earlier lesson claiming this gating empties outputsStale for every input and kills the drift gate. That claim is wrong: only the directory-discovered portion is gated.",
+      "rule": "In lock-sync.ts, DO pass the lock's outputs map as both expectedPaths and generatedOutputs to findStaleGeneratedOutputs. The dir sweep then only considers files agentsmesh actually generated, which stops `check` reporting a tool-written file as stale generated output; `managedOutputs.files` entries are added ungated, so genuine stale owned artifacts are still caught. Verified: foreign dir file exits 0, stale .kiroignore exits 1.",
+      "status": "active",
+      "topics": [
+        "generation-safety"
+      ],
+      "triggers": [
+        "t-glob-e19cc78a",
+        "t-kw-d1ad9a9a"
+      ]
+    },
     "generation-safety-never-scaffold-an-explicitly-empty": {
       "createdAt": "2026-09-03",
       "evidence": [],
@@ -6326,6 +6342,33 @@
         "t-glob-e1afdd1c"
       ]
     },
+    "stale-cleanup-do-not-pass-the-lock": {
+      "createdAt": "2026-09-04",
+      "evidence": [],
+      "rationale": "The check caller and the generate caller need opposite set differences over the same map.",
+      "rule": "Do not pass the lock's outputs map as both expectedPaths and provenance to findStaleGeneratedOutputs; lock-sync.ts already passes it as expectedPaths, so gating there makes outputsStale empty for every input and silently kills the check drift gate. Keep provenance an optional parameter that check omits.",
+      "status": "superseded",
+      "supersededBy": "generation-safety-in-lock-sync-ts-do",
+      "topics": [
+        "stale-cleanup"
+      ],
+      "triggers": [
+        "t-glob-e19cc78a"
+      ]
+    },
+    "stale-cleanup-never-delete-a-file-found": {
+      "createdAt": "2026-09-04",
+      "evidence": [],
+      "rationale": "The sweep deleted Kiro-authored .kiro/hooks files, user-authored .claude/skills and Cursor-generated .cursor/rules on every generate.",
+      "rule": "Never delete a file found by the managedOutputs.dirs sweep without provenance from the previous run's lock outputs map; dirs are shared with the tools and users, and coOwnedFiles cannot cover them because their contents are dynamic.",
+      "status": "active",
+      "topics": [
+        "stale-cleanup"
+      ],
+      "triggers": [
+        "t-glob-98419953"
+      ]
+    },
     "subagent-delegation-in-workflow-scripts-treat-every": {
       "createdAt": "2026-07-21",
       "evidence": [
@@ -9053,6 +9096,9 @@
     "source-verification": {
       "summary": "Recover reliably from official documentation lookup failures."
     },
+    "stale-cleanup": {
+      "summary": "Ownership rules for evicting generated outputs in stale cleanup."
+    },
     "subagent-delegation": {
       "summary": "Constraints and reliable patterns for delegating work to subagents."
     },
@@ -10144,6 +10190,10 @@
       "kind": "file_glob",
       "pattern": "tests/e2e/helpers/reference-targets.ts"
     },
+    "t-glob-98419953": {
+      "kind": "file_glob",
+      "pattern": "src/core/generate/stale-cleanup.ts"
+    },
     "t-glob-9a12f490": {
       "kind": "file_glob",
       "pattern": "tests/e2e/lessons-merge-driver.e2e.test.ts"
@@ -10443,6 +10493,10 @@
     "t-glob-e17eb287": {
       "kind": "file_glob",
       "pattern": ".agents/skills/update-target-capabilities/SKILL.md"
+    },
+    "t-glob-e19cc78a": {
+      "kind": "file_glob",
+      "pattern": "src/core/check/lock-sync.ts"
     },
     "t-glob-e1afdd1c": {
       "kind": "file_glob",
@@ -11207,6 +11261,10 @@
     "t-kw-cfaa4738": {
       "kind": "keyword",
       "pattern": "global-only permissions scopeExtras generateX leaks project scope"
+    },
+    "t-kw-d1ad9a9a": {
+      "kind": "keyword",
+      "pattern": "outputsStale, drift gate provenance"
     },
     "t-kw-d2cb2e25": {
       "kind": "keyword",

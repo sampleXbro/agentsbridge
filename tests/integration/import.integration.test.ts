@@ -514,7 +514,14 @@ features: [agents]
       if (generatedPath === projectedPath) {
         expect(generated).toContain('x-agentsmesh-kind: agent');
       } else {
-        expect(existsSync(fullProjectedPath)).toBe(false);
+        // The projection predates any lock here — it is hand-seeded, so no run
+        // of agentsmesh recorded writing it — and the directory sweep may only
+        // delete what the previous run's lock claims. Was `toBe(false)`: that
+        // asserted deletion of an unattributed file inside a managed dir, which
+        // is the same rule that deleted tool-written and user-written files.
+        // A projection agentsmesh really did generate is still evicted, covered
+        // by tests/e2e/generate-foreign-file-preservation.e2e.test.ts.
+        expect(existsSync(fullProjectedPath)).toBe(true);
       }
     },
   );

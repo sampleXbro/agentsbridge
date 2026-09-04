@@ -386,7 +386,10 @@ collaboration:
     expect(report.modified).toEqual([]);
   });
 
-  it('hand-added managed output is reported as stale without changing canonical drift', async () => {
+  // A file under a managed DIR that the lock does not claim is the tool's or the
+  // user's — `generate` no longer deletes it, so reporting it as drift would be a
+  // red gate with no remedy. It is surfaced as an informational notice instead.
+  it('hand-added managed-dir file is a notice, not drift', async () => {
     const { projectRoot, canonicalDir } = setupBareProject(
       'version: 1\ntargets: [cursor]\nfeatures: [rules]\n',
     );
@@ -416,18 +419,19 @@ collaboration:
     });
 
     expect(report.canonicalDrift).toBe(false);
-    expect(report.outputDrift).toBe(true);
+    expect(report.outputDrift).toBe(false);
     expect(report.outputsModified).toEqual([]);
     expect(report.outputsRemoved).toEqual([]);
-    expect(report.outputsStale).toEqual(['.cursor/rules/orphaned.mdc']);
-    expect(report.inSync).toBe(false);
+    expect(report.outputsStale).toEqual([]);
+    expect(report.outputsUntracked).toEqual(['.cursor/rules/orphaned.mdc']);
+    expect(report.inSync).toBe(true);
   });
 
   describe('plugin-target managed outputs (registered descriptor)', () => {
     beforeEach(() => registerPluginWithManagedOutputs());
     afterEach(() => resetRegistry());
 
-    it("reports a hand-added file under a plugin target's managed dir as stale", async () => {
+    it("reports a hand-added file under a plugin target's managed dir as a notice", async () => {
       const { projectRoot, canonicalDir } = setupBareProject(
         `version: 1\ntargets: [claude-code]\npluginTargets: [${PLUGIN_ID}]\nfeatures: [rules]\n`,
       );
@@ -457,11 +461,12 @@ collaboration:
       });
 
       expect(report.canonicalDrift).toBe(false);
-      expect(report.outputDrift).toBe(true);
-      expect(report.outputsStale).toEqual(['.plugin/rules/orphaned.md']);
+      expect(report.outputDrift).toBe(false);
+      expect(report.outputsStale).toEqual([]);
+      expect(report.outputsUntracked).toEqual(['.plugin/rules/orphaned.md']);
       expect(report.outputsModified).toEqual([]);
       expect(report.outputsRemoved).toEqual([]);
-      expect(report.inSync).toBe(false);
+      expect(report.inSync).toBe(true);
     });
   });
 

@@ -133,6 +133,7 @@ export async function runGenerate(
     mode,
     context,
     activeTargets,
+    configuredTargets: allTargets,
     resolvedExtends,
     flags,
     root,

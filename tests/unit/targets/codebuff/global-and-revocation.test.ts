@@ -187,9 +187,12 @@ describe('codebuff revocation', () => {
       0,
     );
 
-    const staleSkill = join(dir, '.agents/skills/stale-skill/SKILL.md');
-    mkdirSync(join(dir, '.agents/skills/stale-skill'), { recursive: true });
-    writeFileSync(staleSkill, '---\nname: stale-skill\n---\n# Stale');
+    // `.agents/skills` is shared, so a skill is evicted on the strength of the
+    // previous run's lock, not on being found there. Was: a hand-written
+    // `stale-skill/SKILL.md`, which asserted the sweep's delete-on-sight.
+    const staleSkill = join(dir, '.agents/skills/api-generator/SKILL.md');
+    expect(existsSync(staleSkill)).toBe(true);
+    rmSync(join(dir, '.agentsmesh/skills/api-generator'), { recursive: true, force: true });
     const userAgent = join(dir, '.agents/my-custom-agent.ts');
     writeFileSync(userAgent, 'export default {} as never;\n');
     mkdirSync(join(dir, '.agents/types'), { recursive: true });

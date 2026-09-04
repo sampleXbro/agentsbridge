@@ -183,15 +183,26 @@ features: [rules, commands, agents, skills, mcp, hooks, ignore, permissions]
     ).toBe(0);
   });
 
+  /**
+   * Cleanup deletes a managed-dir file only when a previous run recorded it in
+   * the lock. Was: a hand-written junk file, which asserted the sweep deleting
+   * whatever it found — including files Cursor's own rule UI writes.
+   */
   it('removes stale files under managed output (cursor)', async () => {
     const target: BuiltinTargetId = 'cursor';
     dir = createCanonicalProject(MATRIX_CONFIG);
     appendGenerateReferenceMatrix(dir);
     expect((await runGenerate({ targets: target }, dir, { printMatrix: false })).exitCode).toBe(0);
-    const stale = join(dir, '.cursor', 'agents', 'stale-contract-junk.md');
-    writeFileSync(stale, '---\nname: stale\n---\n# Stale');
+    const stale = join(dir, '.cursor', 'agents', 'researcher.md');
+    expect(existsSync(stale)).toBe(true);
+    const foreign = join(dir, '.cursor', 'agents', 'hand-written.md');
+    writeFileSync(foreign, '---\nname: mine\n---\n# Mine');
+
+    rmSync(join(dir, '.agentsmesh', 'agents', 'researcher.md'), { force: true });
     expect((await runGenerate({ targets: target }, dir, { printMatrix: false })).exitCode).toBe(0);
+
     expect(existsSync(stale)).toBe(false);
+    expect(existsSync(foreign)).toBe(true);
   });
 
   it('resolves AGENTS.md overlap for gemini-cli + windsurf', async () => {

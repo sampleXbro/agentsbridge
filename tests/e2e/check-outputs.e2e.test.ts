@@ -108,7 +108,7 @@ describe('check generated-output verification (e2e)', () => {
     expect(data.modified).toEqual([]);
   });
 
-  it('hand-added managed output → exit 1, outputsStale only, without deleting it', async () => {
+  it('hand-added managed-dir file → exit 0, reported as a notice, never deleted', async () => {
     dir = createTestProject('canonical-full');
     await runCli('generate', dir);
 
@@ -117,11 +117,12 @@ describe('check generated-output verification (e2e)', () => {
     writeFileSync(stalePath, '# hand-added output\n');
 
     const r = await runCli('check --json', dir);
-    expect(r.exitCode).toBe(1);
+    expect(r.exitCode).toBe(0);
     const { data } = parseCheck(r.stdout);
     expect(data.canonicalDrift).toBe(false);
-    expect(data.outputDrift).toBe(true);
-    expect(data.outputsStale).toEqual(['.cursor/rules/orphaned.mdc']);
+    expect(data.outputDrift).toBe(false);
+    expect(data.outputsStale).toEqual([]);
+    expect(data.outputsUntracked).toEqual(['.cursor/rules/orphaned.mdc']);
     expect(data.outputsModified).toEqual([]);
     expect(data.outputsRemoved).toEqual([]);
     expect(existsSync(stalePath)).toBe(true);

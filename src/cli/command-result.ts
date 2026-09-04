@@ -81,6 +81,8 @@ export interface CheckData {
   outputsRemoved: string[];
   /** Managed generated outputs present on disk but absent from the lock. */
   outputsStale: string[];
+  /** Managed-dir files agentsmesh did not write; informational, never drift. */
+  outputsUntracked: string[];
   /**
    * True when generated-output drift was actually verified. False for
    * old-format locks (no `outputs` map) or when `--no-outputs` was passed;

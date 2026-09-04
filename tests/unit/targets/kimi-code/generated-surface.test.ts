@@ -137,17 +137,28 @@ describe('kimi-code generated surface (global scope)', () => {
     });
   });
 
-  it('removes a stale generated skill but never the user config.toml', async () => {
+  /**
+   * A skill is evicted because the previous run's lock records it, not because
+   * the sweep found it. Was: a hand-written `skills/stale/SKILL.md`, i.e. the
+   * delete-on-sight behaviour that also removed user-authored skills.
+   */
+  it('removes a skill it generated but never the user config.toml', async () => {
     const { homeDir, projectDir } = globalFixture('kimi-code');
     await runGenerate({ global: true }, projectDir, { printMatrix: false });
-    mkdirSync(join(homeDir, '.kimi-code/skills/stale'), { recursive: true });
-    writeFileSync(join(homeDir, '.kimi-code/skills/stale/SKILL.md'), '---\nname: stale\n---\n');
+    expect(generated(homeDir)).toContain('.kimi-code/skills/api-generator/SKILL.md');
+    rmSync(join(homeDir, '.agentsmesh/skills/api-generator'), { recursive: true, force: true });
+    mkdirSync(join(homeDir, '.kimi-code/skills/hand-written'), { recursive: true });
+    writeFileSync(
+      join(homeDir, '.kimi-code/skills/hand-written/SKILL.md'),
+      '---\nname: mine\n---\n',
+    );
 
     expect((await runGenerate({ global: true }, projectDir, { printMatrix: false })).exitCode).toBe(
       0,
     );
     expect(generated(homeDir)).toContain('.kimi-code/config.toml');
-    expect(generated(homeDir)).not.toContain('.kimi-code/skills/stale/SKILL.md');
+    expect(generated(homeDir)).not.toContain('.kimi-code/skills/api-generator/SKILL.md');
+    expect(generated(homeDir)).toContain('.kimi-code/skills/hand-written/SKILL.md');
   });
 
   it('does not write the cross-tool ~/.agents files that other targets own', async () => {

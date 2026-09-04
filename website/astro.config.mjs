@@ -2,6 +2,7 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import starlightLinksValidator from 'starlight-links-validator';
+import devOnlyRoutes from './integrations/dev-only-routes.mjs';
 import seoRobotsIntegration from './integrations/seo-robots.mjs';
 import { absoluteFromBase, fromBase, getSiteBase, getSiteOrigin, resolveDeploySite } from './site-url.mjs';
 
@@ -49,6 +50,7 @@ export default defineConfig({
       title: 'AgentsMesh',
       tagline: 'One config. Every AI coding tool. Agents that learn.',
       components: {
+        Head: './src/components/Head.astro',
         Hero: './src/components/home/Hero.astro',
       },
       expressiveCode: {
@@ -203,5 +205,6 @@ export default defineConfig({
       ],
     }),
     seoRobotsIntegration(() => deploySite.publicUrl),
+    devOnlyRoutes([{ pattern: '/og', entrypoint: './src/dev-pages/og.astro' }]),
   ],
 });

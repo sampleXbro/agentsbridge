@@ -1806,6 +1806,51 @@
         "t-kw-45ee2cca"
       ]
     },
+    "generate-never-insert-an-import-by": {
+      "createdAt": "2026-09-03",
+      "evidence": [],
+      "rule": "Never insert an import by regex-matching the first occurrence of the word 'import' in a TypeScript file — target files open with a doc comment that often contains the word in prose, and the insertion silently corrupts the comment while still compiling elsewhere. Anchor on a line-start match (^import) or insert after the last existing import line, then diff the file to confirm only imports changed.",
+      "status": "active",
+      "topics": [
+        "generate"
+      ],
+      "triggers": [
+        "t-glob-9f0a5990"
+      ]
+    },
+    "generate-when-an-emission-helper-takes": {
+      "createdAt": "2026-09-03",
+      "evidence": [
+        "commit:bf88aaa2"
+      ],
+      "rationale": "generateFeature emitted without mergeContent for six features, replacing shared user config files (~/.codex/config.toml) wholesale.",
+      "rule": "When an emission helper takes an OPTIONAL merge/transform callback, do not pass it per call site — export a single `options` factory (e.g. `outputMergeOptions(target)`) and thread it through every emitter, including sibling branches that push results directly (feature-loop `mirrorGlobalPath`). One call site silently omitting the callback is invisible to types and destroyed real user config.",
+      "status": "active",
+      "topics": [
+        "generate"
+      ],
+      "triggers": [
+        "t-glob-e9f9f003",
+        "t-glob-a23d7b79",
+        "t-glob-0390d7f9",
+        "t-glob-5f37a5af",
+        "t-kw-16226ad2"
+      ]
+    },
+    "generation-collision-source-maps-a-generator-that-merges-into": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "Conditional key assignment made grant-then-revoke a no-op that did not even report drift.",
+      "rule": "A generator that merges into a user-owned config file must rewrite every key it owns on EVERY emit (empty list or key removal), or revoking a canonical entry never propagates; guard the fully-empty case by skipping the emit only when the file holds none of those owned keys yet, so a freshly scaffolded empty permissions.yaml never overrides the tool's own defaults.",
+      "status": "active",
+      "topics": [
+        "generation-collision-source-maps"
+      ],
+      "triggers": [
+        "t-glob-fb5c7dc9",
+        "t-kw-ae28d58d"
+      ]
+    },
     "generation-collision-source-maps-adding-a-parameter-to-a": {
       "createdAt": "2026-06-13",
       "evidence": [
@@ -1861,7 +1906,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -1881,7 +1925,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -1901,7 +1944,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -1921,7 +1963,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -1941,7 +1982,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -1961,7 +2001,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -1982,7 +2021,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2002,7 +2040,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2023,7 +2060,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2044,7 +2080,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2064,7 +2099,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2084,7 +2118,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2105,7 +2138,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2125,7 +2157,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2145,7 +2176,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2165,7 +2195,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2185,7 +2214,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2205,7 +2233,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2225,7 +2252,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2245,7 +2271,6 @@
         "generation-collision-source-maps"
       ],
       "triggers": [
-        "t-glob-87a63917",
         "t-glob-a23d7b79",
         "t-glob-1bd6cdf4",
         "t-glob-5995acad",
@@ -2267,6 +2292,209 @@
       "triggers": [
         "t-glob-d458a5b8",
         "t-glob-861a9bdb"
+      ]
+    },
+    "generation-safety-a-key-scoped-merger-must": {
+      "createdAt": "2026-09-03",
+      "evidence": [
+        "commit:5ca7d7b4",
+        "commit:4d793101"
+      ],
+      "rationale": "mergeOwnedJsonKeys returned null on a commented .vscode/mcp.json, so the fallback wrote generated content over the user's inputs array; null means \"not my path\", not \"keep the file\".",
+      "rule": "A key-scoped merger must return the base verbatim when it cannot parse the user's file (JSONC, array, unknown syntax) — returning null falls through to the default policy, which replaces the whole file and destroys the very keys the merger exists to protect.",
+      "status": "active",
+      "topics": [
+        "generation-safety"
+      ],
+      "triggers": [
+        "t-glob-154f0b83",
+        "t-kw-d6fa9b31",
+        "t-glob-cf079804",
+        "t-glob-2841b685",
+        "t-glob-7e95936f",
+        "t-kw-bc36f123",
+        "t-kw-6c1da379"
+      ]
+    },
+    "generation-safety-a-yaml-ownership-marker-written": {
+      "createdAt": "2026-09-03",
+      "evidence": [],
+      "rationale": "mergeRooCustomModes marked every mode it wrote, but on re-read item 0 had commentBefore undefined, so the first generated Roo mode was treated as user-authored and never revoked; the existing test only revoked a second item so it passed.",
+      "rule": "A YAML ownership marker written as a comment above the FIRST sequence item does not survive a round-trip on that item — the parser reattaches it to the sequence node's commentBefore. Always assert revocation of the first item, not just a middle one, or the marker scheme silently fails for it.",
+      "status": "active",
+      "topics": [
+        "generation-safety"
+      ],
+      "triggers": [
+        "t-glob-862adcd2",
+        "t-kw-4c615812"
+      ]
+    },
+    "generation-safety-in-lock-sync-ts-do": {
+      "createdAt": "2026-09-04",
+      "evidence": [
+        "commit:91e49083"
+      ],
+      "rationale": "Supersedes an earlier lesson claiming this gating empties outputsStale for every input and kills the drift gate. That claim is wrong: only the directory-discovered portion is gated.",
+      "rule": "In lock-sync.ts, DO pass the lock's outputs map as both expectedPaths and generatedOutputs to findStaleGeneratedOutputs. The dir sweep then only considers files agentsmesh actually generated, which stops `check` reporting a tool-written file as stale generated output; `managedOutputs.files` entries are added ungated, so genuine stale owned artifacts are still caught. Verified: foreign dir file exits 0, stale .kiroignore exits 1.",
+      "status": "active",
+      "topics": [
+        "generation-safety"
+      ],
+      "triggers": [
+        "t-glob-e19cc78a",
+        "t-kw-d1ad9a9a"
+      ]
+    },
+    "generation-safety-never-scaffold-an-explicitly-empty": {
+      "createdAt": "2026-09-03",
+      "evidence": [],
+      "rationale": "agentsmesh init wrote allow: []/deny: []/ask: [], so the first generate after adoption cleared a user's existing .claude/settings.json permissions including their deny entries.",
+      "rule": "Never scaffold an explicitly empty collection (allow: [], deny: [], mcpServers: {}) into a canonical template — an empty collection is an instruction the generators apply over the user's existing tool config, whereas an absent key means \"not managed yet\". Comment the examples out instead.",
+      "status": "active",
+      "topics": [
+        "generation-safety"
+      ],
+      "triggers": [
+        "t-glob-a4ff119a",
+        "t-kw-8a7ceee6"
+      ]
+    },
+    "generation-safety-when-a-code-path-deliberately": {
+      "createdAt": "2026-09-04",
+      "evidence": [
+        "commit:0c775e13"
+      ],
+      "rationale": "The omission was documented and correct when written; it only became a bug because a later change made `outputs` load-bearing for stale cleanup, and nothing linked the two.",
+      "rule": "When a code path deliberately omits a field from a written record, re-check that decision whenever the field gains a new consumer — `resolveLockConflict` omitted the lock's `outputs` map for good reasons, and that became a permanent data strand the day the directory sweep started gating deletion on it.",
+      "status": "active",
+      "topics": [
+        "generation-safety"
+      ],
+      "triggers": [
+        "t-glob-3e8deb25",
+        "t-glob-f9f526aa",
+        "t-kw-cb4df2d9"
+      ]
+    },
+    "generation-safety-when-a-defect-is-traced": {
+      "createdAt": "2026-09-02",
+      "evidence": [
+        "commit:bf88aaa2"
+      ],
+      "rationale": "bf88aaa2 diagnosed the shared feature-loop merge gap but rerouted goose only; codex-cli, crush, qwen-code and copilot kept wholesale-rewriting user config, and a real ~/.codex/config.toml was destroyed.",
+      "rule": "When a defect is traced to a shared engine path (e.g. generateFeature passing no mergeContent), fix the shared path or sweep every target routed through it — never patch the one target whose symptom you happened to be looking at.",
+      "status": "active",
+      "topics": [
+        "generation-safety"
+      ],
+      "triggers": [
+        "t-kw-b97d39e2",
+        "t-glob-e9f9f003",
+        "t-glob-a23d7b79",
+        "t-glob-0390d7f9",
+        "t-glob-5f37a5af"
+      ]
+    },
+    "generation-safety-when-a-target-has-project": {
+      "createdAt": "2026-09-03",
+      "evidence": [],
+      "rationale": "mergeRooCustomModesYaml claimed only ~/.roo/settings/custom_modes.yaml, so .roomodes (Roo's project custom-modes store) was still replaced wholesale and deleted when the agents feature was disabled.",
+      "rule": "When a target has project and global twins of the same user-owned file, make the merge hook claim BOTH path constants in one place — fixing only the scope you were looking at leaves the twin on whole-file replacement, and its layout entry on the stale-cleanup delete list.",
+      "status": "active",
+      "topics": [
+        "generation-safety"
+      ],
+      "triggers": [
+        "t-glob-862adcd2",
+        "t-kw-e2f842f3"
+      ]
+    },
+    "generation-safety-when-adding-mergegeneratedoutputcontent": {
+      "createdAt": "2026-09-03",
+      "evidence": [],
+      "rationale": "claude-code gained a .mcp.json merger while deepagents-cli kept writing it raw; any user with both enabled and a .mcp.json holding a key besides mcpServers got exit 1 on every generate.",
+      "rule": "When adding mergeGeneratedOutputContent to a target, first find every other target that emits the same path and give them an identical owned-key merger; a path with one merging and one raw writer makes resolveOutputCollisions hard-fail the whole generate run.",
+      "status": "active",
+      "topics": [
+        "generation-safety"
+      ],
+      "triggers": [
+        "t-glob-053e51da",
+        "t-kw-0560ceb4"
+      ]
+    },
+    "generation-safety-when-inserting-an-import-after": {
+      "createdAt": "2026-09-03",
+      "evidence": [],
+      "rationale": "Inserting after `import {` in src/targets/qwen-code/index.ts produced TS1003/TS1005 syntax errors; the existing lesson covers regex-matching the word import in prose but not the multi-line import case.",
+      "rule": "When inserting an import after \"the last line starting with import\", check that line is a complete statement — a multi-line `import {` is the last such line in most target index.ts files, and inserting after it splits the brace block. Anchor on the last line that also ends with a quote-and-semicolon, or insert before the first import instead.",
+      "status": "active",
+      "topics": [
+        "generation-safety"
+      ],
+      "triggers": [
+        "t-glob-9f0a5990",
+        "t-kw-175711e2"
+      ]
+    },
+    "generation-safety-when-making-a-co-owned": {
+      "createdAt": "2026-09-03",
+      "evidence": [],
+      "rationale": "Its only trigger was src/targets/*/revocation.ts, files deleted when the revocation layer was withdrawn, leaving the lesson unreachable. Re-pointed at where coOwnedFiles and the merge hooks actually live, so it fires when revocation is attempted again.",
+      "rule": "When making a co-owned target output revocable (managedOutputs.coOwnedFiles), the merge hook must be able to DELETE or empty the key, and the cleared projection must name only the leaf keys agentsmesh writes — never the containers. A container-level clear (permissions/options/agent objects) destroys the user's sibling keys, and an assign-only merger cannot express revocation at all. Verify the merger against a base holding foreign sibling keys before declaring the claim.",
+      "status": "active",
+      "topics": [
+        "generation-safety"
+      ],
+      "triggers": [
+        "t-glob-a9a4fad0",
+        "t-glob-7e95936f",
+        "t-glob-2841b685",
+        "t-kw-2543dfb6",
+        "t-kw-607ac147"
+      ]
+    },
+    "generation-safety-when-removing-a-feature-or": {
+      "createdAt": "2026-09-03",
+      "evidence": [],
+      "rationale": "Commit 6e7b06f3 stripped revocableOutputs from 20 descriptors and the engine but left three references in website/src/content/docs/guides/building-plugins.mdx; only a later docs audit caught it.",
+      "rule": "When removing a feature or descriptor hook from the codebase, grep website/src/content/docs and README for its name in the same change — a hook documented for plugin authors but deleted from the code tells them to implement dead code, and no test or typecheck catches it.",
+      "status": "active",
+      "topics": [
+        "generation-safety"
+      ],
+      "triggers": [
+        "t-glob-d458a5b8",
+        "t-kw-55efcf0f"
+      ]
+    },
+    "generation-safety-when-writing-an-invariant-test": {
+      "createdAt": "2026-09-03",
+      "evidence": [],
+      "rationale": "The first stale-cleanup fix shipped a repo-wide invariant that only probed descriptor hooks, so .claude/settings.json (user model/env/auth) and goose permission.yaml stayed on the delete list with the test reporting no violations.",
+      "rule": "When writing an invariant test whose oracle detects \"co-ownership\", enumerate every mechanism that confers it — descriptor merge hook, the SETTINGS_JSON_PATHS fallback, and scopeExtras generators that read-and-merge — because an oracle that knows only one mechanism passes green while the other cases stay broken.",
+      "status": "active",
+      "topics": [
+        "generation-safety"
+      ],
+      "triggers": [
+        "t-glob-40524b6c",
+        "t-kw-b9c4415c"
+      ]
+    },
+    "generation-safety-when-you-add-a-guard": {
+      "createdAt": "2026-09-03",
+      "evidence": [],
+      "rationale": "mergeMcpServersJson returned newContent for an unparsable base long after mergeOwnedJsonKeys was fixed to preserve it; a later sweep then wired that helper into ~20 more paths, multiplying the data loss.",
+      "rule": "When you add a guard to one merge helper (e.g. preservedUnparsableBase in json-owned-keys.ts), grep every sibling helper in src/core/generate for the same parse-then-fall-back shape and apply it there too — a second helper without the guard silently reintroduces the bug at whatever scale the next sweep applies it.",
+      "status": "active",
+      "topics": [
+        "generation-safety"
+      ],
+      "triggers": [
+        "t-glob-cf079804",
+        "t-kw-e9ca865e"
       ]
     },
     "git-commit-hygiene-before-creating-a-new-standalone": {
@@ -5624,6 +5852,20 @@
         "t-glob-71d466f5"
       ]
     },
+    "reference-rewriting-when-a-target-s-generate": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "Amazon Q deniedPaths cannot express `!re-inclusion` or comments; a wholesale writeFileAtomic on .agentsmesh/ignore destroyed them for claude-code/aider/cursor too.",
+      "rule": "When a target's generate projection is lossy (drops comments, negations, or per-scope structure), the importer MUST merge into the existing canonical file instead of overwriting it — preserve every line the target cannot represent, or the next import silently deletes canonical data every other target still reads.",
+      "status": "active",
+      "topics": [
+        "reference-rewriting"
+      ],
+      "triggers": [
+        "t-glob-052cbaea",
+        "t-kw-8791c1d5"
+      ]
+    },
     "release-changesets-during-release-prep-run-pnpm": {
       "createdAt": "2026-08-30",
       "evidence": [
@@ -6117,6 +6359,33 @@
         "t-glob-e1afdd1c"
       ]
     },
+    "stale-cleanup-do-not-pass-the-lock": {
+      "createdAt": "2026-09-04",
+      "evidence": [],
+      "rationale": "The check caller and the generate caller need opposite set differences over the same map.",
+      "rule": "Do not pass the lock's outputs map as both expectedPaths and provenance to findStaleGeneratedOutputs; lock-sync.ts already passes it as expectedPaths, so gating there makes outputsStale empty for every input and silently kills the check drift gate. Keep provenance an optional parameter that check omits.",
+      "status": "superseded",
+      "supersededBy": "generation-safety-in-lock-sync-ts-do",
+      "topics": [
+        "stale-cleanup"
+      ],
+      "triggers": [
+        "t-glob-e19cc78a"
+      ]
+    },
+    "stale-cleanup-never-delete-a-file-found": {
+      "createdAt": "2026-09-04",
+      "evidence": [],
+      "rationale": "The sweep deleted Kiro-authored .kiro/hooks files, user-authored .claude/skills and Cursor-generated .cursor/rules on every generate.",
+      "rule": "Never delete a file found by the managedOutputs.dirs sweep without provenance from the previous run's lock outputs map; dirs are shared with the tools and users, and coOwnedFiles cannot cover them because their contents are dynamic.",
+      "status": "active",
+      "topics": [
+        "stale-cleanup"
+      ],
+      "triggers": [
+        "t-glob-98419953"
+      ]
+    },
     "subagent-delegation-in-workflow-scripts-treat-every": {
       "createdAt": "2026-07-21",
       "evidence": [
@@ -6215,6 +6484,19 @@
       ],
       "triggers": []
     },
+    "target-capabilities-an-amazon-q-custom-agent": {
+      "createdAt": "2026-08-30",
+      "evidence": [],
+      "rationale": "crates/chat-cli/src/cli/agent/mod.rs: `Agent::default()` injects RULES_PATTERN, but `#[serde(default)]` on the `resources` field means a parsed custom agent starts empty.",
+      "rule": "An Amazon Q custom agent JSON deserializes `resources` with serde default (empty), so it does NOT inherit the built-in default agent's `.amazonq/rules/**/*.md` glob — always write the rules glob into every generated agent JSON or the generated rules are never loaded for anyone who selects that agent.",
+      "status": "active",
+      "topics": [
+        "target-capabilities"
+      ],
+      "triggers": [
+        "t-glob-21a3924d"
+      ]
+    },
     "target-capabilities-copilot-has-no-global-copilot": {
       "createdAt": "2026-06-24",
       "evidence": [
@@ -6259,6 +6541,20 @@
         "t-kw-89bf9a2d"
       ]
     },
+    "target-capabilities-for-amazon-q-global-scope": {
+      "createdAt": "2026-08-30",
+      "evidence": [],
+      "rationale": "paths.rs `mod global` has no rules constant, so `.aws/amazonq/rules/*.md` was dead until an agent JSON pointed at it; the agent `resources` array is the mechanism that actually works.",
+      "rule": "For amazon-q global scope, do not treat \"Q CLI has no global rules directory\" as \"global rules are impossible\": route global rules and additionalRules through the generated agent JSON `resources` array as `file://~/.aws/amazonq/rules/**/*.md` (collect_resources runs shellexpand, so `~` expands), and declare both capabilities `embedded`, not `none` or `native`.",
+      "status": "active",
+      "topics": [
+        "target-capabilities"
+      ],
+      "triggers": [
+        "t-glob-21a3924d",
+        "t-kw-875469bd"
+      ]
+    },
     "target-capabilities-for-kilo-code-the-new": {
       "createdAt": "2026-06-24",
       "evidence": [
@@ -6275,6 +6571,20 @@
         "t-glob-497f5415"
       ]
     },
+    "target-capabilities-for-opencode-ignore-map-canonical": {
+      "createdAt": "2026-08-30",
+      "evidence": [],
+      "rationale": "Verified against the live schema (opencode.ai/config.json, Config.additionalProperties=false) and opencode.ai/docs/permissions.",
+      "rule": "For opencode ignore, map canonical patterns onto permission.read/permission.edit path deny rules — never watcher.ignore (watcher-only, does not block reads) and never grep/glob (their rules match the search string, not the file path). Emit deny rules only: user rules append AFTER OpenCode's built-in defaults with last-match-wins, so a generated \"*\": \"allow\" catch-all silently undoes OpenCode's own .env protection.",
+      "status": "active",
+      "topics": [
+        "target-capabilities"
+      ],
+      "triggers": [
+        "t-glob-a2e61f30",
+        "t-kw-cbded3f7"
+      ]
+    },
     "target-capabilities-for-the-crush-target-only": {
       "createdAt": "2026-06-24",
       "evidence": [
@@ -6287,6 +6597,20 @@
       ],
       "triggers": [
         "t-glob-b80b011c"
+      ]
+    },
+    "target-capabilities-when-a-target-s-permission": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "Escaping silently disabled a user's own deny rule on the documented import --global -> generate --global path.",
+      "rule": "When a target's permission surface stores REGEX patterns (Warp `[agents.profiles]` command lists), never regex-escape the canonical `Bash(<payload>)` payload on generate — an imported user regex like `rm -rf .*` comes back as `rm \\-rf \\.\\*` and stops matching. Pass the payload through verbatim, anchor allowlist entries (`^…$`) and leave denylist entries unanchored, so each list takes the narrower reading of the undocumented match semantics.",
+      "status": "active",
+      "topics": [
+        "target-capabilities"
+      ],
+      "triggers": [
+        "t-glob-c36b4923",
+        "t-kw-6b0a8413"
       ]
     },
     "target-capabilities-when-auditing-the-antigravity-target": {
@@ -6316,6 +6640,20 @@
       "triggers": [
         "t-glob-ab07d638",
         "t-kw-8087e0cf"
+      ]
+    },
+    "target-capabilities-when-one-generated-artifact-carries": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "config.features filters which generators run, never which keys a shared artifact contains.",
+      "rule": "When one generated artifact carries several canonical features (e.g. an Amazon Q agent JSON holding agents+hooks+permissions+ignore), gate every embedded key on the enabled feature set inside the descriptor's `emitScopedSettings` hook — feature generators receive only `{capability, scope}`, so a builder that reads `canonical.ignore`/`hooks`/`permissions` directly leaks features the user disabled in `agentsmesh.yaml`.",
+      "status": "active",
+      "topics": [
+        "target-capabilities"
+      ],
+      "triggers": [
+        "t-glob-17bd0955",
+        "t-kw-7ebb8695"
       ]
     },
     "target-capability-audits-a-test-fixture-placed-under": {
@@ -6354,13 +6692,27 @@
         "commit:9492875"
       ],
       "rule": "Augment Code tool permissions are GLOBAL/CLI-only: `toolPermissions` lives in the personal `~/.augment/settings.json` ([{toolName, permission:{type: allow|deny|ask-user}}], maps to canonical allow/deny/ask) and per docs.augmentcode.com/cli/permissions applies only in the Auggie CLI, NOT the IDE extension and NOT project `.augment/settings.json`. So raise permissions to native for GLOBAL scope only (gate it in buildSettingsContent on scope==='global' and import on scope==='global'); project stays none. General rule: confirm a capability's real scope from the tool's own docs, not from agentsmesh's own code comments — an internal comment claiming a key exists is not primary-source verification.",
+      "status": "superseded",
+      "supersededBy": "target-capability-audits-augment-code-toolpermissions-is-native",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": []
+    },
+    "target-capability-audits-augment-code-toolpermissions-is-native": {
+      "createdAt": "2026-08-30",
+      "evidence": [
+        "commit:HEAD"
+      ],
+      "rationale": "The prior lesson asserted project scope must stay none, which contradicted Augment's own docs and would have blocked a real capability.",
+      "rule": "Augment Code `toolPermissions` is native at BOTH scopes, not global-only. docs.augmentcode.com/cli/permissions documents two settings files with the same shape: `~/.augment/settings.json` (user) and `.augment/settings.json` described as \"Repo-level settings committed to the project, applied to any agent running in that repo\" — committing it is the documented way to enforce org policy. Entries are `{toolName, permission:{type: allow|deny|ask-user}}`, honored by the Auggie CLI and Cosmos cloud agents but not the IDE extension. Do not gate emission or import on `scope === 'global'`.",
       "status": "active",
       "topics": [
         "target-capability-audits"
       ],
       "triggers": [
-        "t-glob-eac2566f",
-        "t-kw-9479ae91"
+        "t-glob-3f3d7245",
+        "t-kw-3bf61ef5"
       ]
     },
     "target-capability-audits-capability-audits-for-agentsmesh-are": {
@@ -6390,6 +6742,51 @@
       "triggers": [
         "t-glob-08570b7a",
         "t-kw-d47cffbf"
+      ]
+    },
+    "target-capability-audits-continue-agent-files-are-continue": {
+      "createdAt": "2026-09-01",
+      "evidence": [
+        "lesson:target-capability-audits-continue-hooks-are-native-at"
+      ],
+      "rationale": "The prior lesson claimed a project-.md / global-.yaml split; reading ConfigHandler.getLocalProfiles, getDotContinueSubDirs and AgentFileService shows both scopes behave identically.",
+      "rule": "Continue agent files are `.continue/agents/<name>.md` at BOTH scopes — the format does not vary by scope. `getDotContinueSubDirs` adds `~/.continue/<subdir>` to the same scan under `includeGlobal`, so the `fileExtType: 'yaml'` agents scan in `ConfigHandler.getLocalProfiles` treats YAML there as an *assistant profile* at every scope; markdown agent files are loaded by explicit path via `AgentFileService.getAgentFile` -> `path.resolve`, which is location-independent. Never emit, import, or stale-delete `.continue/agents/*.yaml`.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-61ea5981"
+      ]
+    },
+    "target-capability-audits-continue-hooks-are-native-at": {
+      "createdAt": "2026-08-30",
+      "evidence": [
+        "lesson:target-capability-audits-for-the-continue-target-permissions"
+      ],
+      "rationale": "A prior lesson declared Continue hooks unsupported based on config.yaml's schema only; the CLI reads hooks from settings.json, so the earlier audit under-reported two capabilities.",
+      "rule": "Continue hooks ARE native at both scopes: they live under the `hooks` key of `.continue/settings.json` / `~/.continue/settings.json` (Claude-Code-compatible shape, 17 events), NOT in config.yaml — verify extensions/cli/src/hooks/hookConfig.ts before concluding a Continue feature is unsupported from config.yaml alone. Continue agents are native too but the format differs by scope: `.continue/agents/<name>.md` (markdown agent file, `tools` must be a comma STRING) at project, `.continue/agents/<name>.yaml` (assistant profile) at global.",
+      "status": "superseded",
+      "supersededBy": "target-capability-audits-continue-agent-files-are-continue",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-61ea5981"
+      ]
+    },
+    "target-capability-audits-continue-hooks-are-native-at-2": {
+      "createdAt": "2026-09-01",
+      "evidence": [
+        "lesson:target-capability-audits-continue-hooks-are-native-at"
+      ],
+      "rule": "Continue hooks are native at both scopes: they live under the `hooks` key of `.continue/settings.json` / `~/.continue/settings.json` in the Claude-Code-compatible shape (17 events), NOT in config.yaml — check extensions/cli/src/hooks/hookConfig.ts before concluding a Continue feature is unsupported from config.yaml alone.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-f6c50a2d"
       ]
     },
     "target-capability-audits-cursor-ide-permissions-are-file": {
@@ -6542,6 +6939,20 @@
         "t-cmd-78625976"
       ]
     },
+    "target-capability-audits-never-list-a-native-directory": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "Continue's `.continue/agents` held user assistant profiles that generate deleted.",
+      "rule": "Never list a native directory in `TargetLayout.managedOutputs.dirs` when the tool also stores user-authored artifacts there: `cleanupStaleGeneratedOutputs` deletes every file in a managed dir the current generate run did not emit, so hand-written config is destroyed outright. Prefer losing stale-file eviction over deleting user files.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-a9a4fad0",
+        "t-kw-963ac4f6"
+      ]
+    },
     "target-capability-audits-pi-pi-agent-natively-supports": {
       "createdAt": "2026-06-24",
       "evidence": [
@@ -6602,6 +7013,36 @@
         "t-glob-9f0a5990",
         "t-kw-c6d64f2b",
         "t-kw-797b277a"
+      ]
+    },
+    "target-capability-audits-when-a-target-declares-a-2": {
+      "createdAt": "2026-08-30",
+      "evidence": [
+        "src/targets/warp/layout.ts"
+      ],
+      "rationale": "Capability levels are metadata; only rewriteGeneratedPath (or a scope-aware generator) actually suppresses an output at global scope.",
+      "rule": "When a target declares a global capability as `none` or `partial`, verify `globalSupport.layout.rewriteGeneratedPath` returns null for that feature's project path — the generate engine never gates generators on capability level, so a project-shaped output silently lands at the home root (warp emitted a bare ~/AGENTS.md while globalCapabilities.rules was 'none').",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-9f0a5990",
+        "t-kw-706233bb"
+      ]
+    },
+    "target-capability-audits-when-a-target-descriptor-declares": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "replit-agent shipped commands/agents at `none` while emitting both to .agents/skills; the gap was pure declaration drift.",
+      "rule": "When a target descriptor declares `commands`/`agents` as `none` but also sets `supportsConversion` plus a wired `generateCommands`/`generateAgents`, the generate engine already emits those skill bundles — the level is a mislabel, not a missing feature. Probe with a real `generate()` test before writing generator code, then fix the capability to `embedded` and add the matching `conversionDefaults` so `usesCommandSkillProjection`/`usesAgentSkillProjection` agree with the dispatcher.",
+      "status": "active",
+      "topics": [
+        "target-capability-audits"
+      ],
+      "triggers": [
+        "t-glob-9f0a5990",
+        "t-kw-2d3efbf2"
       ]
     },
     "target-capability-audits-when-a-target-gains-a": {
@@ -6867,6 +7308,238 @@
       ],
       "triggers": [
         "t-glob-87083445"
+      ]
+    },
+    "target-permissions-a-target-importer-must-never": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "`rules: []` (the file agentsmesh itself writes on revocation) imported back and cleared canonical allow AND deny, silently dropping a protective Read(./.env) deny for claude-code and cursor.",
+      "rule": "A target importer must never treat an empty or partial target-side list as a revocation of canonical: skip the write when the target yields no entries, and rewrite only the canonical lists (allow/deny/ask) the target actually carries entries for — canonical is shared, so a wipe leaks into every other target.",
+      "status": "active",
+      "topics": [
+        "target-permissions"
+      ],
+      "triggers": [
+        "t-glob-341a7fe1",
+        "t-glob-860c694c"
+      ]
+    },
+    "target-permissions-when-a-per-target-import": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "A round-trip fixed-point test caught allow/deny/ask cross-contamination that per-entry unit tests did not.",
+      "rule": "When a per-target import fans one target file set into one canonical file (e.g. permissions from many agent profiles), filter imported records by their effect/list INSIDE the merge helper, not at the call site — passing the whole record set to each list merge silently duplicates every entry into allow, deny and ask.",
+      "status": "active",
+      "topics": [
+        "target-permissions"
+      ],
+      "triggers": [
+        "t-glob-11717c97",
+        "t-kw-4abb9189"
+      ]
+    },
+    "target-permissions-when-a-target-generator-rewrites": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "Whole-key replacement of `rules:` in ~/.kiro/settings/permissions.yaml deleted hand-written exclude protections, and a parse-error fallback to an empty Document deleted the whole file.",
+      "rule": "When a target generator rewrites a shared config file the user also edits, own it PER ELEMENT by shape (rewrite only the entries the generator itself emits, preserve everything else verbatim) and never fall back to a fresh document when the existing file fails to parse — return \"no write\" instead.",
+      "status": "active",
+      "topics": [
+        "target-permissions"
+      ],
+      "triggers": [
+        "t-glob-c36b4923",
+        "t-glob-471d1b86"
+      ]
+    },
+    "targets-a-target-declaring-additionalrules-embed": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rule": "A target declaring `additionalRules: 'embedded'` MUST call `splitEmbeddedRulesToCanonical` in its importer. The descriptor `singleFile` runner copies the whole body — managed block included — into `_root.md`, and the next `generateRules` strips that block before rebuilding it, so every non-root rule is deleted on the documented generate -> import -> generate path.",
+      "status": "active",
+      "topics": [
+        "targets"
+      ],
+      "triggers": [
+        "t-glob-8ac72756",
+        "t-kw-b8d88f99"
+      ]
+    },
+    "targets-import-into-a-shared-canonical": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rule": "Import into a SHARED canonical file (`.agentsmesh/ignore`, `.agentsmesh/permissions.yaml`) must be additive. A native config is routinely only partly populated, so treating its silence as a deletion strips entries every other target relies on. Only a target-owned generated file may be treated as authoritative on import.",
+      "status": "active",
+      "topics": [
+        "targets"
+      ],
+      "triggers": [
+        "t-glob-d9a5247c",
+        "t-kw-7b64e8ec"
+      ]
+    },
+    "targets-in-a-target-unit-test": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "Cost 20 minutes debugging a commandPath returning null only in the descriptor unit test while real generate worked.",
+      "rule": "In a target unit test, import `src/targets/catalog/builtin-targets.js` before the target's own `index.js`: entering the circular graph from the target module leaves that target's slot in BUILTIN_TARGETS undefined, so `getDescriptor(id)` returns undefined and `shouldConvertCommandsToSkills` silently falls back to false (commandPath returns null).",
+      "status": "active",
+      "topics": [
+        "targets"
+      ],
+      "triggers": [
+        "t-glob-7346acca",
+        "t-kw-74382752"
+      ]
+    },
+    "targets-never-invent-a-stricter-validator": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "kimi-code's permission-pattern regex rejected mcp__github__*, * and Tool(), all of which Kimi Code's parsePattern accepts, silently un-enforcing deny rules.",
+      "rule": "Never invent a stricter validator than the tool's own parser: copy the tool's parse function's exact accept/reject set (globs, wildcards, empty payloads), or valid user rules are silently dropped and the lint message states a false rule.",
+      "status": "active",
+      "topics": [
+        "targets"
+      ],
+      "triggers": [
+        "t-kw-c05b997a",
+        "t-glob-563e56bd",
+        "t-glob-592c65a4",
+        "t-glob-4c7af71e",
+        "t-kw-fd9f6809",
+        "t-kw-b7576e32"
+      ]
+    },
+    "targets-never-list-a-tool-s": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "Found pre-existing in zed: .zed/settings.json was in managedOutputs.files while only being emitted when canonical had MCP servers.",
+      "rule": "Never list a tool's general settings file (`.zed/settings.json`, `~/.config/zed/settings.json`, `~/.warp/settings.toml`) in `managedOutputs.files`: `cleanupStaleGeneratedOutputs` deletes every managed file a run did not emit, so one generate with no MCP servers wipes the user's whole editor config. Revoke inside the file with a key-scoped overlay instead.",
+      "status": "active",
+      "topics": [
+        "targets"
+      ],
+      "triggers": [
+        "t-glob-a9a4fad0",
+        "t-kw-2a85c9a4"
+      ]
+    },
+    "targets-when-a-target-reads-several": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "kimi-code was built on a docs-only reading that the two AGENTS.md paths were alternatives; loadAgentsMdForRoots concatenates them, so import dropped a whole file and import->generate duplicated the rules.",
+      "rule": "When a target reads several instruction files, verify from the tool's own loader source whether it CONCATENATES them or picks the first; if it concatenates, import every readable source and list the files generation does not write in managedOutputs so a leftover copy cannot double the rules in the prompt.",
+      "status": "active",
+      "topics": [
+        "targets"
+      ],
+      "triggers": [
+        "t-kw-e15dc48c",
+        "t-glob-55ff9a58",
+        "t-glob-bdb31b92",
+        "t-kw-e10b834c",
+        "t-kw-963ac4f6"
+      ]
+    },
+    "targets-when-a-target-writes-an": {
+      "createdAt": "2026-09-01",
+      "evidence": [
+        "src/targets/codebuff/mcp-format.ts"
+      ],
+      "rationale": "Codebuff's mcpConfigSchema is a z.strictObject union; loadMCPConfig `continue`s on parse failure, dropping every server in the file.",
+      "rule": "When a target writes an MCP/config JSON file, validate the generated shape against the tool's ACTUAL parse schema from source (not just the file wrapper): strict/closed schemas reject the WHOLE file on one unknown key, so passing canonical `description`/`env` through silently disables every server.",
+      "status": "active",
+      "topics": [
+        "targets"
+      ],
+      "triggers": [
+        "t-glob-17bd0955",
+        "t-kw-39fd552c"
+      ]
+    },
+    "targets-when-a-target-writes-keys": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "features default to every VALID_FEATURES entry, so an unconditional claim fires for everyone.",
+      "rule": "When a target writes keys into a file the USER owns (editor settings.json, config.toml), claim a key only when that feature's canonical SOURCE exists — `canonical.mcp === null` / `canonical.permissions === null` means \"no opinion\" while an empty-but-present file means \"explicitly empty\". Claiming unconditionally makes a plain `agentsmesh generate` delete hand-written config in any repo that has no `.agentsmesh/mcp.json` or `permissions.yaml`.",
+      "status": "active",
+      "topics": [
+        "targets"
+      ],
+      "triggers": [
+        "t-glob-d0a4b7f4",
+        "t-kw-e0f0d755"
+      ]
+    },
+    "targets-when-importing-a-target-surface": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "Same failure class as the Warp allowlist escaping lesson, solved generically with a re-encode guard in zed permissions-map fromZedRule.",
+      "rule": "When importing a target surface that stores REGEXES back into canonical literals, only accept a value that re-encodes byte-for-byte through the generate mapping; otherwise a hand-written regex (`^cargo\\s+(build|test)$`) decodes to a nonsense literal and the next generate escapes it into a pattern that matches nothing, silently disabling the user's own rule.",
+      "status": "active",
+      "topics": [
+        "targets"
+      ],
+      "triggers": [
+        "t-glob-c36b4923",
+        "t-kw-5a2a3bf2"
+      ]
+    },
+    "targets-when-merging-generated-entries-into": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rule": "When merging generated entries into a list inside a user-owned file, revoke ONLY entries the importer can decode back to canonical; entries it refuses (hand-written regexes, foreign shapes) are the user's and must survive every generate. Whole-list replace on an \"owned\" key silently deletes the user's own deny rules.",
+      "status": "active",
+      "topics": [
+        "targets"
+      ],
+      "triggers": [
+        "t-glob-3f1e17dc",
+        "t-kw-3bbc3d7f"
+      ]
+    },
+    "targets-when-two-targets-emit-into": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "Zed projecting commands into codex-cli's .agents/skills/ with an extra frontmatter key would have crashed every zed+codex-cli generate run.",
+      "rule": "When two targets emit into the same shared artifact directory (e.g. `.agents/skills/`), the consumer MUST reuse the owner's serializer byte-for-byte; any content difference on the same path makes `resolveOutputCollisions` throw and breaks `generate` for anyone enabling both targets.",
+      "status": "active",
+      "topics": [
+        "targets"
+      ],
+      "triggers": [
+        "t-glob-17bd0955",
+        "t-kw-92e062be"
+      ]
+    },
+    "targets-when-two-targets-emit-the": {
+      "createdAt": "2026-09-01",
+      "evidence": [
+        "src/targets/codebuff/nested-rules.ts"
+      ],
+      "rationale": "codexEmit and codexInstructionVariant both change which rules land in the shared file; ordering only for one of them still breaks containment.",
+      "rule": "When two targets emit the same nested `<dir>/AGENTS.md` but filter rules differently, order the rules the OTHER target also emits FIRST so its exact string stays a contiguous substring of yours — resolveOutputCollisions resolves by containment first and only then by raw length, and the length fallback silently drops the shorter side's rules.",
+      "status": "active",
+      "topics": [
+        "targets"
+      ],
+      "triggers": [
+        "t-glob-706a24db",
+        "t-kw-12b92504"
+      ]
+    },
+    "targets-zed-s-file-scan-exclusions": {
+      "createdAt": "2026-09-01",
+      "evidence": [],
+      "rationale": "Verified in zed-industries/zed crates/settings_content/src/project.rs field types and settings_content.rs MergeFrom impls.",
+      "rule": "Zed's `file_scan_exclusions` is a `SplicingVec` (a written array replaces the inherited layer unless it contains `\"...\"`) while `private_files` is an `ExtendingVec` (a written array appends). Emit `\"...\"` as the last entry of file_scan_exclusions and never inside private_files, where it would be taken as a literal glob.",
+      "status": "active",
+      "topics": [
+        "targets"
+      ],
+      "triggers": [
+        "t-glob-01a25e93",
+        "t-kw-dbd98683"
       ]
     },
     "test-execution-do-not-run-pnpm-stashed": {
@@ -8356,8 +9029,14 @@
     "frontmatter-and-canonical-shapes": {
       "summary": "Frontmatter parsing + canonical entity shape contracts — lenient parsing for third-party, allowed file shapes, derived booleans."
     },
+    "generate": {
+      "summary": "Generate engine emission, merge policy and stale cleanup"
+    },
     "generation-collision-source-maps": {
       "summary": "Generation pipeline — output-source map completeness, shared artifact collision, multi-output rewrite maps, decoration as artifacts."
+    },
+    "generation-safety": {
+      "summary": "Preventing generate from destroying user-owned config files"
     },
     "git-commit-hygiene": {
       "summary": "Staging/commit discipline: explicit pathspecs, verify staged set, /docs is gitignored (local specs)."
@@ -8434,6 +9113,9 @@
     "source-verification": {
       "summary": "Recover reliably from official documentation lookup failures."
     },
+    "stale-cleanup": {
+      "summary": "Ownership rules for evicting generated outputs in stale cleanup."
+    },
     "subagent-delegation": {
       "summary": "Constraints and reliable patterns for delegating work to subagents."
     },
@@ -8448,6 +9130,12 @@
     },
     "target-deepagents-cli": {
       "summary": "Verified on-disk config contract for the deepagents-cli target (paths, scopes, hooks format)."
+    },
+    "target-permissions": {
+      "summary": "Canonical permissions <-> per-target permission surfaces: mapping, merge, revocation and round-trip rules."
+    },
+    "targets": {
+      "summary": "Per-target descriptor, generator and importer behaviour"
     },
     "test-execution": {
       "summary": "Reliable focused and full test command patterns."
@@ -8847,9 +9535,25 @@
       "kind": "file_glob",
       "pattern": "src/targets/qwen-code/**"
     },
+    "t-glob-01a25e93": {
+      "kind": "file_glob",
+      "pattern": "src/targets/zed/**"
+    },
+    "t-glob-0390d7f9": {
+      "kind": "file_glob",
+      "pattern": "src/core/generate/optional-features.ts"
+    },
     "t-glob-0465888e": {
       "kind": "file_glob",
       "pattern": ".agentsmesh/lessons/lessons.json"
+    },
+    "t-glob-052cbaea": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/import*.ts"
+    },
+    "t-glob-053e51da": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/mcp-merge.ts"
     },
     "t-glob-0571e0f3": {
       "kind": "file_glob",
@@ -8919,6 +9623,10 @@
       "kind": "file_glob",
       "pattern": "scripts/capabilities-audit.ts"
     },
+    "t-glob-11717c97": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/permissions-*.ts"
+    },
     "t-glob-11a8af2c": {
       "kind": "file_glob",
       "pattern": "tests/unit/**/*.test.ts"
@@ -8934,6 +9642,10 @@
     "t-glob-151a6581": {
       "kind": "file_glob",
       "pattern": "tests/e2e/helpers/**"
+    },
+    "t-glob-154f0b83": {
+      "kind": "file_glob",
+      "pattern": "src/core/generate/json-owned-keys.ts"
     },
     "t-glob-17bd0955": {
       "kind": "file_glob",
@@ -8991,6 +9703,10 @@
       "kind": "file_glob",
       "pattern": "scripts/flake-check-watch.ts"
     },
+    "t-glob-21a3924d": {
+      "kind": "file_glob",
+      "pattern": "src/targets/amazon-q/**"
+    },
     "t-glob-257fb095": {
       "kind": "file_glob",
       "pattern": "tests/harness/**"
@@ -8998,6 +9714,10 @@
     "t-glob-25cdb7ed": {
       "kind": "file_glob",
       "pattern": "AGENTS.md"
+    },
+    "t-glob-2841b685": {
+      "kind": "file_glob",
+      "pattern": "src/core/generate/*-owned-keys.ts"
     },
     "t-glob-285fdf8b": {
       "kind": "file_glob",
@@ -9022,6 +9742,10 @@
     "t-glob-300bbdba": {
       "kind": "file_glob",
       "pattern": "src/lessons/mutate.ts"
+    },
+    "t-glob-341a7fe1": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/permissions-import.ts"
     },
     "t-glob-35a0a200": {
       "kind": "file_glob",
@@ -9059,6 +9783,10 @@
       "kind": "file_glob",
       "pattern": "src/core/reference/pack-skill-artifact-paths.ts"
     },
+    "t-glob-3e8deb25": {
+      "kind": "file_glob",
+      "pattern": "src/core/merger.ts"
+    },
     "t-glob-3eaea188": {
       "kind": "file_glob",
       "pattern": "src/schemas/schema-generator.ts"
@@ -9067,6 +9795,14 @@
       "kind": "file_glob",
       "pattern": "tests/integration/refresh-git-source.test.ts"
     },
+    "t-glob-3f1e17dc": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/permissions-merge.ts"
+    },
+    "t-glob-3f3d7245": {
+      "kind": "file_glob",
+      "pattern": "src/targets/augment-code/**"
+    },
     "t-glob-40333e0c": {
       "kind": "file_glob",
       "pattern": "tests/**/reference-rewrite*.test.ts"
@@ -9074,6 +9810,10 @@
     "t-glob-405208da": {
       "kind": "file_glob",
       "pattern": "src/lessons/seen-cache.ts"
+    },
+    "t-glob-40524b6c": {
+      "kind": "file_glob",
+      "pattern": "tests/unit/core/generate/managed-output-ownership.test.ts"
     },
     "t-glob-406306ec": {
       "kind": "file_glob",
@@ -9094,6 +9834,10 @@
     "t-glob-4669d772": {
       "kind": "file_glob",
       "pattern": "src/mcp/handlers/lessons-query.ts"
+    },
+    "t-glob-471d1b86": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/*-generate.ts"
     },
     "t-glob-49133422": {
       "kind": "file_glob",
@@ -9119,6 +9863,10 @@
       "kind": "file_glob",
       "pattern": "tests/**/*.test.ts"
     },
+    "t-glob-4c7af71e": {
+      "kind": "file_glob",
+      "pattern": "src/targets/**/mcp-format.ts"
+    },
     "t-glob-4c8d45b0": {
       "kind": "file_glob",
       "pattern": "src/mcp/handlers/orchestrate.ts"
@@ -9139,6 +9887,14 @@
       "kind": "file_glob",
       "pattern": "src/core/reference/link-rebaser-helpers.ts"
     },
+    "t-glob-55ff9a58": {
+      "kind": "file_glob",
+      "pattern": "src/targets/**/rules-import.ts"
+    },
+    "t-glob-563e56bd": {
+      "kind": "file_glob",
+      "pattern": "src/targets/**/permissions-format.ts"
+    },
     "t-glob-5647ec65": {
       "kind": "file_glob",
       "pattern": "src/targets/cursor/**"
@@ -9146,6 +9902,10 @@
     "t-glob-570abc49": {
       "kind": "file_glob",
       "pattern": "src/targets/continue/index.ts"
+    },
+    "t-glob-592c65a4": {
+      "kind": "file_glob",
+      "pattern": "src/targets/**/hooks-format.ts"
     },
     "t-glob-593303ad": {
       "kind": "file_glob",
@@ -9183,6 +9943,10 @@
       "kind": "file_glob",
       "pattern": "src/core/reference/**/*.ts"
     },
+    "t-glob-5f37a5af": {
+      "kind": "file_glob",
+      "pattern": "src/core/generate/scope-extras.ts"
+    },
     "t-glob-5fa55e64": {
       "kind": "file_glob",
       "pattern": "src/lessons/keyword-signal.ts"
@@ -9194,6 +9958,10 @@
     "t-glob-6184efaf": {
       "kind": "file_glob",
       "pattern": "src/config/remote/git-remote.ts"
+    },
+    "t-glob-61ea5981": {
+      "kind": "file_glob",
+      "pattern": "src/targets/continue/**"
     },
     "t-glob-6200f5c1": {
       "kind": "file_glob",
@@ -9255,6 +10023,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/add.ts"
     },
+    "t-glob-706a24db": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/nested-rules.ts"
+    },
     "t-glob-71436975": {
       "kind": "file_glob",
       "pattern": "src/lessons/reachability.ts"
@@ -9274,6 +10046,10 @@
     "t-glob-72a39ab6": {
       "kind": "file_glob",
       "pattern": "tests/e2e/fixtures/**"
+    },
+    "t-glob-7346acca": {
+      "kind": "file_glob",
+      "pattern": "tests/unit/targets/**/descriptor*.test.ts"
     },
     "t-glob-74262634": {
       "kind": "file_glob",
@@ -9314,6 +10090,10 @@
     "t-glob-7e7851c6": {
       "kind": "file_glob",
       "pattern": "src/targets/kilo-code/**/*.ts"
+    },
+    "t-glob-7e95936f": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/*merge*.ts"
     },
     "t-glob-7f548275": {
       "kind": "file_glob",
@@ -9371,6 +10151,10 @@
       "kind": "file_glob",
       "pattern": "tests/fixtures/plugins/rich-plugin/index.js"
     },
+    "t-glob-862adcd2": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/modes-merge.ts"
+    },
     "t-glob-86844292": {
       "kind": "file_glob",
       "pattern": "tests/unit/lessons/paths.test.ts"
@@ -9379,10 +10163,6 @@
       "kind": "file_glob",
       "pattern": "src/targets/deepagents-cli/**"
     },
-    "t-glob-87a63917": {
-      "kind": "file_glob",
-      "pattern": "src/core/generate/**/*.ts"
-    },
     "t-glob-892c1e39": {
       "kind": "file_glob",
       "pattern": "tests/e2e/agents-last-run.md"
@@ -9390,6 +10170,10 @@
     "t-glob-895a6107": {
       "kind": "file_glob",
       "pattern": "src/install/importers/target-native-commands.ts"
+    },
+    "t-glob-8ac72756": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/rules-import.ts"
     },
     "t-glob-8ade9a3e": {
       "kind": "file_glob",
@@ -9426,6 +10210,10 @@
     "t-glob-960c3805": {
       "kind": "file_glob",
       "pattern": "tests/e2e/helpers/reference-targets.ts"
+    },
+    "t-glob-98419953": {
+      "kind": "file_glob",
+      "pattern": "src/core/generate/stale-cleanup.ts"
     },
     "t-glob-9a12f490": {
       "kind": "file_glob",
@@ -9483,6 +10271,10 @@
       "kind": "file_glob",
       "pattern": "src/targets/deepagents-cli/generator.ts"
     },
+    "t-glob-a4ff119a": {
+      "kind": "file_glob",
+      "pattern": "src/cli/commands/init-templates.ts"
+    },
     "t-glob-a5fc7764": {
       "kind": "file_glob",
       "pattern": "tests/**/*posix*"
@@ -9498,6 +10290,10 @@
     "t-glob-a970d979": {
       "kind": "file_glob",
       "pattern": "tests/e2e/helpers/run-cli.ts"
+    },
+    "t-glob-a9a4fad0": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/layout.ts"
     },
     "t-glob-aa152d85": {
       "kind": "file_glob",
@@ -9567,6 +10363,10 @@
       "kind": "file_glob",
       "pattern": ".gitignore"
     },
+    "t-glob-bdb31b92": {
+      "kind": "file_glob",
+      "pattern": "src/targets/**/layout.ts"
+    },
     "t-glob-be5f6012": {
       "kind": "file_glob",
       "pattern": "src/lessons/cmd-fastpath.ts"
@@ -9586,6 +10386,10 @@
     "t-glob-c3684e2c": {
       "kind": "file_glob",
       "pattern": "src/mcp/handlers/lessons.ts"
+    },
+    "t-glob-c36b4923": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/permissions*.ts"
     },
     "t-glob-c424af85": {
       "kind": "file_glob",
@@ -9619,6 +10423,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/regex-linear/*.ts"
     },
+    "t-glob-cf079804": {
+      "kind": "file_glob",
+      "pattern": "src/core/generate/*-merge.ts"
+    },
     "t-glob-d044343b": {
       "kind": "file_glob",
       "pattern": "README.md"
@@ -9626,6 +10434,10 @@
     "t-glob-d0a4b76e": {
       "kind": "file_glob",
       "pattern": "website/src/content/docs/**/*.mdx"
+    },
+    "t-glob-d0a4b7f4": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/settings-overlay.ts"
     },
     "t-glob-d1039a1d": {
       "kind": "file_glob",
@@ -9667,6 +10479,10 @@
       "kind": "file_glob",
       "pattern": "tests/unit/utils/filesystem/rename-retry.test.ts"
     },
+    "t-glob-d9a5247c": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/settings-import.ts"
+    },
     "t-glob-d9afca50": {
       "kind": "file_glob",
       "pattern": "tests/contract/contracts/*.ts"
@@ -9699,6 +10515,10 @@
       "kind": "file_glob",
       "pattern": ".agents/skills/update-target-capabilities/SKILL.md"
     },
+    "t-glob-e19cc78a": {
+      "kind": "file_glob",
+      "pattern": "src/core/check/lock-sync.ts"
+    },
     "t-glob-e1afdd1c": {
       "kind": "file_glob",
       "pattern": "src/targets/codex-cli/**"
@@ -9723,13 +10543,13 @@
       "kind": "file_glob",
       "pattern": ".agentsmesh/skills/**"
     },
+    "t-glob-e9f9f003": {
+      "kind": "file_glob",
+      "pattern": "src/core/generate/engine.ts"
+    },
     "t-glob-ea0c6170": {
       "kind": "file_glob",
       "pattern": "src/lessons/seen-*.ts"
-    },
-    "t-glob-eac2566f": {
-      "kind": "file_glob",
-      "pattern": "src/targets/augment-code/*.ts"
     },
     "t-glob-eb1e5fce": {
       "kind": "file_glob",
@@ -9759,6 +10579,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/graph-schema.ts"
     },
+    "t-glob-f6c50a2d": {
+      "kind": "file_glob",
+      "pattern": "src/targets/continue/hooks.ts"
+    },
     "t-glob-f8afe7f1": {
       "kind": "file_glob",
       "pattern": "src/targets/opencode/scoped-settings.ts"
@@ -9766,6 +10590,14 @@
     "t-glob-f9578eb1": {
       "kind": "file_glob",
       "pattern": "src/utils/filesystem/rename-retry.ts"
+    },
+    "t-glob-f9f526aa": {
+      "kind": "file_glob",
+      "pattern": "src/cli/commands/generate-lock.ts"
+    },
+    "t-glob-fb5c7dc9": {
+      "kind": "file_glob",
+      "pattern": "src/targets/*/global-permissions.ts"
     },
     "t-glob-fbe4ce70": {
       "kind": "file_glob",
@@ -9798,6 +10630,10 @@
     "t-kw-04b69ea5": {
       "kind": "keyword",
       "pattern": "UNREACHABLE_LESSON"
+    },
+    "t-kw-0560ceb4": {
+      "kind": "keyword",
+      "pattern": "mergeGeneratedOutputContent, resolveOutputCollisions, shared output path"
     },
     "t-kw-057477d3": {
       "kind": "keyword",
@@ -9855,6 +10691,10 @@
       "kind": "keyword",
       "pattern": "schema hardening"
     },
+    "t-kw-12b92504": {
+      "kind": "keyword",
+      "pattern": "nested AGENTS.md collision ordering"
+    },
     "t-kw-1397bfda": {
       "kind": "keyword",
       "pattern": "qa report commit"
@@ -9866,6 +10706,14 @@
     "t-kw-15065ff0": {
       "kind": "keyword",
       "pattern": "multi-agent"
+    },
+    "t-kw-16226ad2": {
+      "kind": "keyword",
+      "pattern": "emission path callback"
+    },
+    "t-kw-175711e2": {
+      "kind": "keyword",
+      "pattern": "insert import"
     },
     "t-kw-1b4e1dda": {
       "kind": "keyword",
@@ -9907,6 +10755,10 @@
       "kind": "keyword",
       "pattern": "changeset"
     },
+    "t-kw-2543dfb6": {
+      "kind": "keyword",
+      "pattern": "coOwnedFiles"
+    },
     "t-kw-265fd6c5": {
       "kind": "keyword",
       "pattern": "fixture gitignored force-add CI-red local-green missing file"
@@ -9930,6 +10782,14 @@
     "t-kw-287eb53c": {
       "kind": "keyword",
       "pattern": "session start reset"
+    },
+    "t-kw-2a85c9a4": {
+      "kind": "keyword",
+      "pattern": "managedOutputs,stale cleanup,settings.json ownership"
+    },
+    "t-kw-2d3efbf2": {
+      "kind": "keyword",
+      "pattern": "capability gap none to embedded"
     },
     "t-kw-3070d871": {
       "kind": "keyword",
@@ -9967,6 +10827,10 @@
       "kind": "keyword",
       "pattern": "ANSI color stdout assertion"
     },
+    "t-kw-39fd552c": {
+      "kind": "keyword",
+      "pattern": "mcp.json generator strict schema"
+    },
     "t-kw-3a0adbef": {
       "kind": "keyword",
       "pattern": "subagent schema"
@@ -9975,9 +10839,17 @@
       "kind": "keyword",
       "pattern": "clack spinner"
     },
+    "t-kw-3bbc3d7f": {
+      "kind": "keyword",
+      "pattern": "permission merge revoke grant"
+    },
     "t-kw-3bdacef0": {
       "kind": "keyword",
       "pattern": "shared data type field"
+    },
+    "t-kw-3bf61ef5": {
+      "kind": "keyword",
+      "pattern": "augment permissions scope"
     },
     "t-kw-3c5328a3": {
       "kind": "keyword",
@@ -10027,9 +10899,17 @@
       "kind": "keyword",
       "pattern": "web search parser failure"
     },
+    "t-kw-4abb9189": {
+      "kind": "keyword",
+      "pattern": "permissions importer merge canonical allow deny ask"
+    },
     "t-kw-4c23a772": {
       "kind": "keyword",
       "pattern": "colocate"
+    },
+    "t-kw-4c615812": {
+      "kind": "keyword",
+      "pattern": "commentBefore, yaml marker"
     },
     "t-kw-4df0ba9f": {
       "kind": "keyword",
@@ -10063,6 +10943,10 @@
       "kind": "keyword",
       "pattern": "NFA engine"
     },
+    "t-kw-55efcf0f": {
+      "kind": "keyword",
+      "pattern": "remove hook, delete feature"
+    },
     "t-kw-574e42b9": {
       "kind": "keyword",
       "pattern": "telemetry zshenv export"
@@ -10074,6 +10958,10 @@
     "t-kw-5a193613": {
       "kind": "keyword",
       "pattern": "capability ledger provenance"
+    },
+    "t-kw-5a2a3bf2": {
+      "kind": "keyword",
+      "pattern": "regex round-trip"
     },
     "t-kw-5c8c2424": {
       "kind": "keyword",
@@ -10087,13 +10975,25 @@
       "kind": "keyword",
       "pattern": "review workflow"
     },
+    "t-kw-607ac147": {
+      "kind": "keyword",
+      "pattern": "revoke owned keys"
+    },
     "t-kw-6829f894": {
       "kind": "keyword",
       "pattern": "fork_context"
     },
+    "t-kw-6b0a8413": {
+      "kind": "keyword",
+      "pattern": "permission regex allowlist denylist round-trip"
+    },
     "t-kw-6c171a08": {
       "kind": "keyword",
       "pattern": "redundancy diagnosis"
+    },
+    "t-kw-6c1da379": {
+      "kind": "keyword",
+      "pattern": "unparsable base"
     },
     "t-kw-6c43e9c1": {
       "kind": "keyword",
@@ -10106,6 +11006,10 @@
     "t-kw-6e2ad015": {
       "kind": "keyword",
       "pattern": "stranded lessons"
+    },
+    "t-kw-706233bb": {
+      "kind": "keyword",
+      "pattern": "global capability none partial scope leak"
     },
     "t-kw-719d8353": {
       "kind": "keyword",
@@ -10123,6 +11027,10 @@
       "kind": "keyword",
       "pattern": "subagent findings"
     },
+    "t-kw-74382752": {
+      "kind": "keyword",
+      "pattern": "target descriptor unit test commandPath conversion"
+    },
     "t-kw-745cab00": {
       "kind": "keyword",
       "pattern": "workflow fixes"
@@ -10135,9 +11043,17 @@
       "kind": "keyword",
       "pattern": "raise capability partial to native"
     },
+    "t-kw-7b64e8ec": {
+      "kind": "keyword",
+      "pattern": "import merge canonical ignore permissions"
+    },
     "t-kw-7dd5abb2": {
       "kind": "keyword",
       "pattern": "scalar array coercion alias"
+    },
+    "t-kw-7ebb8695": {
+      "kind": "keyword",
+      "pattern": "embedded feature agent json"
     },
     "t-kw-8087e0cf": {
       "kind": "keyword",
@@ -10159,9 +11075,21 @@
       "kind": "keyword",
       "pattern": "FORCE_COLOR renderer color tests fail locally CI green"
     },
+    "t-kw-875469bd": {
+      "kind": "keyword",
+      "pattern": "amazon-q capability"
+    },
+    "t-kw-8791c1d5": {
+      "kind": "keyword",
+      "pattern": "import canonical ignore round-trip"
+    },
     "t-kw-89bf9a2d": {
       "kind": "keyword",
       "pattern": "deepagents agents capability"
+    },
+    "t-kw-8a7ceee6": {
+      "kind": "keyword",
+      "pattern": "init template, scaffold canonical"
     },
     "t-kw-8a80159c": {
       "kind": "keyword",
@@ -10191,6 +11119,10 @@
       "kind": "keyword",
       "pattern": "branch coverage threshold precommit"
     },
+    "t-kw-92e062be": {
+      "kind": "keyword",
+      "pattern": "shared artifact,sharedArtifacts,.agents/skills,command skill projection"
+    },
     "t-kw-9304db48": {
       "kind": "keyword",
       "pattern": "text transform"
@@ -10199,13 +11131,13 @@
       "kind": "keyword",
       "pattern": "workflow"
     },
-    "t-kw-9479ae91": {
-      "kind": "keyword",
-      "pattern": "augment toolPermissions global CLI-only scope verify docs not code comment"
-    },
     "t-kw-9520fa61": {
       "kind": "keyword",
       "pattern": "recallLessons"
+    },
+    "t-kw-963ac4f6": {
+      "kind": "keyword",
+      "pattern": "managedOutputs"
     },
     "t-kw-969d455a": {
       "kind": "keyword",
@@ -10255,6 +11187,10 @@
       "kind": "keyword",
       "pattern": "commit untracked"
     },
+    "t-kw-ae28d58d": {
+      "kind": "keyword",
+      "pattern": "merge user config revoke owned keys"
+    },
     "t-kw-ae9d9bb9": {
       "kind": "keyword",
       "pattern": "recall options"
@@ -10279,17 +11215,41 @@
       "kind": "keyword",
       "pattern": "command truncation"
     },
+    "t-kw-b7576e32": {
+      "kind": "keyword",
+      "pattern": "config schema"
+    },
     "t-kw-b8d4ca2e": {
       "kind": "keyword",
       "pattern": "seen store shape"
+    },
+    "t-kw-b8d88f99": {
+      "kind": "keyword",
+      "pattern": "embedded additional rules import round trip"
     },
     "t-kw-b975b1b2": {
       "kind": "keyword",
       "pattern": "structured output"
     },
+    "t-kw-b97d39e2": {
+      "kind": "keyword",
+      "pattern": "mergeContent, managedOutputs, wholesale rewrite"
+    },
+    "t-kw-b9c4415c": {
+      "kind": "keyword",
+      "pattern": "invariant test oracle, co-owned, managedOutputs"
+    },
+    "t-kw-bc36f123": {
+      "kind": "keyword",
+      "pattern": "merger fallback"
+    },
     "t-kw-bd0b86a3": {
       "kind": "keyword",
       "pattern": "wizard back navigation step prompter"
+    },
+    "t-kw-c05b997a": {
+      "kind": "keyword",
+      "pattern": "permission pattern validation,tool schema validator"
     },
     "t-kw-c34b7cc1": {
       "kind": "keyword",
@@ -10315,6 +11275,14 @@
       "kind": "keyword",
       "pattern": "captureLesson"
     },
+    "t-kw-cb4df2d9": {
+      "kind": "keyword",
+      "pattern": "lock outputs map"
+    },
+    "t-kw-cbded3f7": {
+      "kind": "keyword",
+      "pattern": "opencode ignore"
+    },
     "t-kw-cca8cf8e": {
       "kind": "keyword",
       "pattern": "compaction"
@@ -10322,6 +11290,10 @@
     "t-kw-cfaa4738": {
       "kind": "keyword",
       "pattern": "global-only permissions scopeExtras generateX leaks project scope"
+    },
+    "t-kw-d1ad9a9a": {
+      "kind": "keyword",
+      "pattern": "outputsStale, drift gate provenance"
     },
     "t-kw-d2cb2e25": {
       "kind": "keyword",
@@ -10347,6 +11319,10 @@
       "kind": "keyword",
       "pattern": "VALIDATION_FAILED unrecognized_keys"
     },
+    "t-kw-d6fa9b31": {
+      "kind": "keyword",
+      "pattern": "JSONC merge fallback, mergeOwnedJsonKeys"
+    },
     "t-kw-db579650": {
       "kind": "keyword",
       "pattern": "matcher work budget"
@@ -10354,6 +11330,10 @@
     "t-kw-db955d8e": {
       "kind": "keyword",
       "pattern": "qwen-code global additionalRules rules directory"
+    },
+    "t-kw-dbd98683": {
+      "kind": "keyword",
+      "pattern": "file_scan_exclusions"
     },
     "t-kw-ddc1bdcc": {
       "kind": "keyword",
@@ -10363,9 +11343,25 @@
       "kind": "keyword",
       "pattern": "precommit hook"
     },
+    "t-kw-e0f0d755": {
+      "kind": "keyword",
+      "pattern": "owned settings key revocation"
+    },
+    "t-kw-e10b834c": {
+      "kind": "keyword",
+      "pattern": "AGENTS.md"
+    },
+    "t-kw-e15dc48c": {
+      "kind": "keyword",
+      "pattern": "instruction file discovery,AGENTS.md,managedOutputs"
+    },
     "t-kw-e2160d81": {
       "kind": "keyword",
       "pattern": "subagent fixes"
+    },
+    "t-kw-e2f842f3": {
+      "kind": "keyword",
+      "pattern": "project global twin"
     },
     "t-kw-e3a2ec15": {
       "kind": "keyword",
@@ -10394,6 +11390,10 @@
     "t-kw-e86a782c": {
       "kind": "keyword",
       "pattern": "lessons_query"
+    },
+    "t-kw-e9ca865e": {
+      "kind": "keyword",
+      "pattern": "merge helper guard"
     },
     "t-kw-ebee7e76": {
       "kind": "keyword",
@@ -10454,6 +11454,10 @@
     "t-kw-fcd36912": {
       "kind": "keyword",
       "pattern": "lessons json schema contract golden"
+    },
+    "t-kw-fd9f6809": {
+      "kind": "keyword",
+      "pattern": "permission pattern"
     }
   },
   "version": 2

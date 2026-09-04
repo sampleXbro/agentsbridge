@@ -62,16 +62,15 @@ describe('mergeCrushConfigJson', () => {
     expect(mcp).toHaveProperty('fs');
   });
 
-  it('returns valid JSON when existing content is invalid JSON', () => {
+  // An unparsable crush.json is preserved, not replaced. Overwriting it would
+  // discard the provider, model and LSP config agentsmesh never writes.
+  it('preserves an unparsable existing config instead of rewriting it', () => {
     const incoming = JSON.stringify({
       $schema: 'https://charm.land/crush.json',
       mcp: { server: { type: 'stdio', command: 'cmd' } },
     });
 
-    const merged = JSON.parse(mergeCrushConfigJson('not valid json', incoming)) as Record<string, unknown>;
-
-    expect(merged).toHaveProperty('mcp');
-    expect(merged).toHaveProperty('$schema');
+    expect(mergeCrushConfigJson('not valid json', incoming)).toBe('not valid json');
   });
 
   it('overwrites existing mcp key with incoming mcp', () => {

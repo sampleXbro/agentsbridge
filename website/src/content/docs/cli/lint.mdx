@@ -4,7 +4,7 @@ title: agentsmesh lint
 description: Validate canonical files against target-specific constraints. Catches frontmatter errors, format violations, and schema issues before generation.
 ---
 
-Validate canonical files against target-specific constraints. Each target has its own linting rules — for example, Cursor requires `.mdc` format compliance, Claude Code validates `settings.json` schema, and all targets check for valid frontmatter.
+Validate canonical files against target-specific constraints. Targets can register per-feature linters on top of the shared rule checks — Cursor validates `.mdc` format compliance, Gemini CLI warns that project permissions need `--global`, Kiro explains the scope its embedded permission rules apply in — and every target checks for valid frontmatter.
 
 ## Usage
 
@@ -52,9 +52,7 @@ agentsmesh lint --global --targets claude-code
 
 ### Claude Code
 
-- `settings.json` schema validation
-- Valid `permissionMode` values (`ask`, `default`, `none`)
-- Valid tool names in `allowed-tools` and `permissions.yaml`
+- The shared rule validation above. Claude Code registers no per-feature lint hooks, so there is no `settings.json` schema check and no tool-name or `permissionMode` validation.
 
 ### Cursor
 

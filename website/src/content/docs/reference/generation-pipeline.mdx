@@ -70,9 +70,24 @@ Detect overlapping output paths across features. When two features would write t
 
 Create target directories if they don't exist. Write all `{path, content}` pairs to disk. Update `.agentsmesh/.lock` with canonical-source checksums and an `outputs` map of every generated file's checksum (so `agentsmesh check` can later detect direct edits to generated files).
 
+Content is not always written verbatim. Every emitted output — including `scopeExtras` output — passes through the shared merge policy first:
+
+1. The target descriptor's `mergeGeneratedOutputContent` hook is consulted for the resolved path. Targets use it to own only their own keys in a shared file (for example the `mcpServers` key of a config the tool's own UI also writes).
+2. When the descriptor declines the path, a `settings.json` fallback merges the generated keys into the file already on disk.
+3. When the file on disk is comment-bearing JSONC (or otherwise cannot be parsed), it is left completely untouched and reported as `unchanged` rather than replaced. Losing a file to one `//` line is never the right trade.
+
+That is why user-owned keys in co-owned config files — `~/.claude/settings.json`, `~/.claude.json`, `crush.json`, `.zed/settings.json`, `~/.continue/config.yaml` and their siblings — survive regeneration.
+
 ### Step 7: Clean stale files
 
-Compare the list of files just written against the previous lock. Any file that was previously generated but is no longer in the output set is deleted. This prevents stale config from accumulating.
+Build the candidate set from every active target's `managedOutputs`: the declared `files` plus a recursive walk of the declared `dirs`. Any candidate that the current run did not emit is deleted. This prevents stale config from accumulating, and it is how revocation works — dropping a rule from canonical removes its generated file.
+
+Two paths are never deleted:
+
+- Anything in `managedOutputs.coOwnedFiles`. AgentsMesh writes into these files but the user owns them too, so a run that emits nothing for one must leave it alone. The co-owned set is collected across **all** active targets before the sweep, so one target's directory walk cannot reach a file another target co-owns.
+- Anything the current run emitted, which is the expected-path set.
+
+Plugin descriptors are read the same way as built-in ones, so a plugin declaring `coOwnedFiles` gets the same protection.
 
 ---
 

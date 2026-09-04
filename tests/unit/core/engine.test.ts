@@ -573,7 +573,7 @@ describe('generate', () => {
     expect((parsed.hooks as Record<string, unknown>).PostToolUse).toBeDefined();
   });
 
-  it('replaces invalid existing settings.json when merging permissions', async () => {
+  it('preserves an invalid existing settings.json instead of replacing it', async () => {
     mkdirSync(join(TEST_DIR, '.claude'), { recursive: true });
     writeFileSync(join(TEST_DIR, '.claude', 'settings.json'), 'not valid json {');
     const config = minimalConfig({ features: ['rules', 'permissions'] });
@@ -588,8 +588,10 @@ describe('generate', () => {
     });
     const claudePerm = results.find((r) => r.path === '.claude/settings.json');
     expect(claudePerm).toBeDefined();
-    const parsed = JSON.parse(claudePerm!.content) as Record<string, unknown>;
-    expect(parsed.permissions).toEqual({ allow: ['Read'], deny: [], ask: [] });
+    // The user's file is kept byte-for-byte: agentsmesh cannot merge into a
+    // document it cannot parse, and replacing it would destroy every key.
+    expect(claudePerm!.content).toBe('not valid json {');
+    expect(claudePerm!.status).toBe('unchanged');
   });
 
   it('deduplicates identical AGENTS.md outputs from codex-cli and windsurf', async () => {

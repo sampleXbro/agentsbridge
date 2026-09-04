@@ -5,7 +5,7 @@
  *   - `.augment/rules/*.md`          — scoped rules (frontmatter-driven)
  *   - `.augment/commands/*.md`       — slash commands
  *   - `.augment/skills/<n>/SKILL.md` — skill bundles
- *   - `.augment/settings.json`       — MCP, hooks
+ *   - `.augment/settings.json`       — MCP, hooks, tool permissions
  *   - `.augmentignore`               — workspace ignore patterns
  *
  * Global scope reads equivalent paths under `~/.augment/`.
@@ -181,9 +181,7 @@ export async function importFromAugmentCode(
 
   const settingsFile =
     scope === 'global' ? AUGMENT_CODE_GLOBAL_SETTINGS_FILE : AUGMENT_CODE_SETTINGS_FILE;
-  await importAugmentSettings(projectRoot, settingsFile, results, {
-    includePermissions: scope === 'global',
-  });
+  await importAugmentSettings(projectRoot, settingsFile, results);
 
   if (scope === 'project') {
     await importAugmentIgnore(projectRoot, AUGMENT_CODE_IGNORE_FILE, results);

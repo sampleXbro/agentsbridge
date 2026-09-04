@@ -4,15 +4,15 @@
  * `~/.deepagents/hooks.json` is the ONLY documented hooks config location
  * (docs.langchain.com/oss/javascript/deepagents/code/hooks) — there is no
  * project-level hooks surface at all. So this is wired independently of a
- * plain `generateHooks` (see `globalSupport.scopeExtras`, gated on
- * `scope === 'global'`) rather than letting a project-shaped generator leak
- * into project scope, where hooks capability is 'none'.
+ * plain `generateHooks` (via `globalSupport.scopeExtras`, which applies the
+ * `scope === 'global'` gate — see `scope-extras.ts`) rather than letting a
+ * project-shaped generator leak into project scope, where hooks capability
+ * is 'none'.
  */
 
 import { join, dirname } from 'node:path';
 import { stringify as yamlStringify } from 'yaml';
 import type { CanonicalFiles, GenerateResult, ImportResult } from '../../core/types.js';
-import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 import { mkdirp, readFileSafe, writeFileAtomic } from '../../utils/filesystem/fs.js';
 import { computeStatus } from '../../core/generate/feature-loop.js';
 import { toDeepagentsHooks, deepagentsHooksToCanonical } from './hooks-format.js';
@@ -22,13 +22,11 @@ import {
   DEEPAGENTS_CLI_CANONICAL_HOOKS,
 } from './constants.js';
 
-export async function deepagentsCliScopeExtras(
+export async function generateDeepagentsCliGlobalHooks(
   canonical: CanonicalFiles,
   projectRoot: string,
-  scope: TargetLayoutScope,
   enabledFeatures: ReadonlySet<string>,
 ): Promise<GenerateResult[]> {
-  if (scope !== 'global') return [];
   if (!enabledFeatures.has('hooks')) return [];
   if (!canonical.hooks || Object.keys(canonical.hooks).length === 0) return [];
 

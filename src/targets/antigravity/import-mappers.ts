@@ -10,11 +10,14 @@
 import { basename, join } from 'node:path';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
 import {
+  serializeImportedAgentWithFallback,
   serializeImportedCommandWithFallback,
   serializeImportedRuleWithFallback,
 } from '../import/import-metadata.js';
 import type { ImportEntryMapper } from '../catalog/import-descriptor.js';
+import { canonicalAgentFileName } from './agents-format.js';
 import {
+  ANTIGRAVITY_CANONICAL_AGENTS_DIR,
   ANTIGRAVITY_CANONICAL_COMMANDS_DIR,
   ANTIGRAVITY_CANONICAL_RULES_DIR,
 } from './constants.js';
@@ -41,6 +44,24 @@ export const nonRootRuleMapper: ImportEntryMapper = async ({
       },
       body,
     ),
+  };
+};
+
+/**
+ * Flattens the global `<name>/agent.md` shape to a canonical `<name>.md` and
+ * skips anything else nested in an agent directory. `serializeImportedAgentWithFallback`
+ * keeps the canonical fields Antigravity's frontmatter cannot express, so the
+ * lossy generate projection never erases them on re-import.
+ */
+export const agentMapper: ImportEntryMapper = async ({ relativePath, normalizeTo, destDir }) => {
+  const fileName = canonicalAgentFileName(relativePath);
+  if (fileName === null) return null;
+  const destPath = join(destDir, fileName);
+  const { frontmatter, body } = parseFrontmatter(normalizeTo(destPath));
+  return {
+    destPath,
+    toPath: `${ANTIGRAVITY_CANONICAL_AGENTS_DIR}/${fileName}`,
+    content: await serializeImportedAgentWithFallback(destPath, frontmatter, body),
   };
 };
 

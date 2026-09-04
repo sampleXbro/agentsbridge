@@ -13,14 +13,17 @@ targets:
   - deepagents-cli
   - factory-droid
   - junie
+  - kimi-code
   - gemini-cli
   - cline
+  - codebuff
   - codex-cli
   - windsurf
   - antigravity
   - kiro
   - roo-code
   - kilo-code
+  - openhands
   - opencode
   - goose
   - jules

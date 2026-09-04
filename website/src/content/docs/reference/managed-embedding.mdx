@@ -74,6 +74,7 @@ The marker metadata restores the rule description, globs, and target scoping. Th
 | `agentsmesh:embedded-rules` | Outer container for additional rules embedded in an aggregate/root instruction file. | Removed from root content after extraction. |
 | `agentsmesh:embedded-rule` | One additional rule inside `embedded-rules`. | Restored to `.agentsmesh/<source>`. |
 | `agentsmesh:codex-rule-index` | Generated Codex index of additional instruction files. | Stripped on Codex import. |
+| `agentsmesh:lessons-contract` | The always-on lessons recall/capture ritual, written into `.agentsmesh/rules/_root.md` by `init --lessons` and carried to every target through ordinary rule generation. | Canonical content, so it round-trips byte-stable; the sentinels let `scaffoldLessons` refresh the wording from one constant. |
 
 ## Matrix reporting
 

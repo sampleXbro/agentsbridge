@@ -12,6 +12,9 @@ import { descriptor as cline } from '../../../src/targets/cline/index.js';
 import { descriptor as codexCli } from '../../../src/targets/codex-cli/index.js';
 import { descriptor as windsurf } from '../../../src/targets/windsurf/index.js';
 import { descriptor as antigravity } from '../../../src/targets/antigravity/index.js';
+import { descriptor as codebuff } from '../../../src/targets/codebuff/index.js';
+import { descriptor as kimiCode } from '../../../src/targets/kimi-code/index.js';
+import { descriptor as openhands } from '../../../src/targets/openhands/index.js';
 import { descriptor as rooCode } from '../../../src/targets/roo-code/index.js';
 import { descriptor as kiloCode } from '../../../src/targets/kilo-code/index.js';
 import { descriptor as opencode } from '../../../src/targets/opencode/index.js';
@@ -223,9 +226,9 @@ describe('descriptor.project.paths.agentPath', () => {
     );
   });
 
-  it('continue: returns projected agent skill path', () => {
+  it('continue: returns .continue/agents/{name}.md', () => {
     expect(continueTarget.project.paths.agentPath('reviewer', config)).toBe(
-      '.continue/skills/am-agent-reviewer/SKILL.md',
+      '.continue/agents/reviewer.md',
     );
   });
 
@@ -283,9 +286,9 @@ describe('descriptor.project.paths.agentPath', () => {
     expect(windsurf.project.paths.agentPath('reviewer', configWithConversionOff)).toBeNull();
   });
 
-  it('antigravity: returns projected agent skill path', () => {
+  it('antigravity: returns .agents/agents/{name}.md', () => {
     expect(antigravity.project.paths.agentPath('reviewer', config)).toBe(
-      '.agents/skills/am-agent-reviewer/SKILL.md',
+      '.agents/agents/reviewer.md',
     );
   });
 
@@ -307,6 +310,9 @@ describe('descriptor metadata', () => {
   // caught separately by tests/unit/targets/catalog/builtin-catalog.test.ts.
   const allDescriptors = [
     aider,
+    codebuff,
+    kimiCode,
+    openhands,
     amp,
     claudeCode,
     cursor,

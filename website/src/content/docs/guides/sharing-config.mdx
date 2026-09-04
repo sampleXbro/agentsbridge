@@ -44,7 +44,10 @@ extends:
   - name: org-standards
     source: github:my-org/ai-config@v1.0.0
     features: [rules, commands, permissions]
+    accept: [permissions]
 ```
+
+`accept` is required here. `hooks`, `permissions` and `mcp` are **elevated artifacts** — they control what runs at generate time — so a remote source has them stripped by default even when `features` lists them, and the run prints a warning naming what was dropped. Listing an artifact in `accept` is the per-entry consent that keeps it. Local extends are trusted and ignore the field. See [extends](../../configuration/extends/) for the full gate.
 
 ### Step 3: Generate
 

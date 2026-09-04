@@ -33,6 +33,7 @@ import { importFromClaudeCode } from './importer.js';
 import { claudeAgentMapper, claudeCommandMapper, claudeRuleMapper } from './import-mappers.js';
 import { lintRules } from './linter.js';
 import { buildClaudeCodeImportPaths } from '../../core/reference/import-map-builders.js';
+import { mergeClaudeMcpJson } from './mcp-merge.js';
 
 export const target: TargetGenerators = {
   name: 'claude-code',
@@ -56,7 +57,13 @@ const project: TargetLayout = {
     // CLAUDE_NESTED_ROOT is the pre-migration project location; listing it here lets
     // `cleanupStaleGeneratedOutputs` evict a leftover `.claude/CLAUDE.md` once generation
     // writes the root `CLAUDE.md`, so Claude Code never concatenates both into context.
-    files: [CLAUDE_ROOT, CLAUDE_NESTED_ROOT, '.claude/settings.json', '.claudeignore', '.mcp.json'],
+    files: [CLAUDE_ROOT, CLAUDE_NESTED_ROOT, '.claudeignore'],
+    // `.mcp.json` is the shared project MCP file teams hand-commit and
+    // deepagents-cli writes too; agentsmesh owns only `mcpServers` in it.
+    // `.claude/settings.json` is co-owned through the `SETTINGS_JSON_PATHS`
+    // fallback rather than a descriptor hook: it holds the user's model, env
+    // and hook config, and agentsmesh overlays only its own keys.
+    coOwnedFiles: [CLAUDE_MCP_JSON, '.claude/settings.json'],
   },
   paths: {
     rulePath(slug, _rule) {
@@ -84,13 +91,11 @@ const globalLayout: TargetLayout = {
       '.claude/output-styles',
       '.agents/skills',
     ],
-    files: [
-      CLAUDE_NESTED_ROOT,
-      '.claude/settings.json',
-      CLAUDE_GLOBAL_MCP_JSON,
-      CLAUDE_HOOKS_JSON,
-      '.claudeignore',
-    ],
+    files: [CLAUDE_NESTED_ROOT, CLAUDE_HOOKS_JSON, '.claudeignore'],
+    // `~/.claude.json` holds the account and every project's history; deleting
+    // it logs the user out. `~/.claude/settings.json` carries the user's model,
+    // env and hook config and is co-owned via the `SETTINGS_JSON_PATHS` fallback.
+    coOwnedFiles: [CLAUDE_GLOBAL_MCP_JSON, '.claude/settings.json'],
   },
   rewriteGeneratedPath(path) {
     // Generator emits the root file at CLAUDE_ROOT (`CLAUDE.md`); global scope keeps it nested.
@@ -138,6 +143,7 @@ export const descriptor = {
   },
   emptyImportMessage: 'No Claude Code config found (CLAUDE.md or .claude/rules/*.md).',
   lintRules,
+  mergeGeneratedOutputContent: mergeClaudeMcpJson,
   project,
   globalSupport: {
     capabilities: globalCapabilities,

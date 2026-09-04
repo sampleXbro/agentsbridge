@@ -65,13 +65,18 @@ When you run `agentsmesh generate`, the CLI reads `.agentsmesh/`, applies per-ta
 
 ## What goes in `.gitignore`
 
-AgentsMesh updates `.gitignore` during `init`. The following should be gitignored:
+AgentsMesh updates `.gitignore` during `init` with these entries:
 
 ```txt
 agentsmesh.local.yaml
+.agentsmeshcache
+.agentsmesh/.lock.tmp
+.agentsmesh/packs/
 ```
 
-Everything else — `.agentsmesh/`, generated tool directories, and `agentsmesh.yaml` — should be committed. Generated files are intentionally committed so that team members who don't use AgentsMesh can still benefit from the configs.
+`init --lessons` adds three more — `.agentsmesh/lessons/recall-log.jsonl`, `capture-log.jsonl` and `outcome-log.jsonl` — because those logs are per-machine telemetry, not shared config.
+
+Everything else — the rest of `.agentsmesh/`, generated tool directories, and `agentsmesh.yaml` — should be committed. Generated files are intentionally committed so that team members who don't use AgentsMesh can still benefit from the configs. Note that `.agentsmesh/packs/` is the one exception inside the canonical directory: packs are materialized derivatives of `installs.yaml`, the same way `node_modules/` is a derivative of `package.json`.
 
 ## Naming constraints
 

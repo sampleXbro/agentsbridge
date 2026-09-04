@@ -92,7 +92,6 @@ export async function importAugmentSettings(
   projectRoot: string,
   settingsPath: string,
   results: ImportResult[],
-  options: { includePermissions?: boolean } = {},
 ): Promise<void> {
   const content = await readFileSafe(join(projectRoot, settingsPath));
   if (content === null) return;
@@ -133,20 +132,19 @@ export async function importAugmentSettings(
     }
   }
 
-  // Permissions are global-only (~/.augment/settings.json, Auggie CLI).
-  if (options.includePermissions) {
-    const permissions = parseToolPermissions(settings.toolPermissions);
-    if (permissions) {
-      const destPath = join(projectRoot, AUGMENT_CODE_CANONICAL_PERMISSIONS);
-      await mkdirp(dirname(destPath));
-      await writeFileAtomic(destPath, yamlStringify(permissions));
-      results.push({
-        fromTool: AUGMENT_CODE_TARGET,
-        fromPath: join(projectRoot, settingsPath),
-        toPath: AUGMENT_CODE_CANONICAL_PERMISSIONS,
-        feature: 'permissions',
-      });
-    }
+  // Permissions: same `toolPermissions` shape in the repo-level
+  // `.augment/settings.json` and the personal `~/.augment/settings.json`.
+  const permissions = parseToolPermissions(settings.toolPermissions);
+  if (permissions) {
+    const destPath = join(projectRoot, AUGMENT_CODE_CANONICAL_PERMISSIONS);
+    await mkdirp(dirname(destPath));
+    await writeFileAtomic(destPath, yamlStringify(permissions));
+    results.push({
+      fromTool: AUGMENT_CODE_TARGET,
+      fromPath: join(projectRoot, settingsPath),
+      toPath: AUGMENT_CODE_CANONICAL_PERMISSIONS,
+      feature: 'permissions',
+    });
   }
 }
 

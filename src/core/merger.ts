@@ -13,6 +13,7 @@ import {
 } from '../config/core/lock.js';
 import type { ValidatedConfig } from '../config/core/schema.js';
 import { resolveExtendPaths } from '../config/resolve/resolver.js';
+import { mergeConflictedLockOutputs } from './lock-conflict-outputs.js';
 
 const LOCK_FILENAME = '.lock';
 const CONFLICT_MARKER = '<<<<<<<';
@@ -42,8 +43,8 @@ export async function resolveLockConflict(
   libVersion: string,
   config?: ValidatedConfig,
 ): Promise<void> {
-  const hasConflict = await hasLockConflict(abDir);
-  if (!hasConflict) {
+  const conflicted = await readFileSafe(join(abDir, LOCK_FILENAME));
+  if (conflicted === null || !conflicted.includes(CONFLICT_MARKER)) {
     throw new Error('No conflict to resolve.');
   }
 
@@ -55,10 +56,15 @@ export async function resolveLockConflict(
   const packChecksums = await buildPackChecksums(join(abDir, 'packs'));
   const generatedBy = process.env['USER'] ?? process.env['USERNAME'] ?? 'unknown';
 
-  // `outputs` is intentionally omitted (old-lock semantics): a merge changes the
-  // canonical inputs, so a regenerate is required before generated outputs are
-  // trustworthy. Until that regenerate rewrites the lock, `check` reports
-  // `outputsChecked: false` rather than diffing stale hashes.
+  // `outputs` carries forward as the union of both conflict sides. It is the
+  // provenance the directory sweep gates on, and a full generate REPLACES the
+  // map — so dropping it here stranded every pre-merge output permanently
+  // rather than for one run. The map records only paths agentsmesh wrote, so a
+  // union can never make a foreign file deletable.
+  //
+  // The hashes may be stale until the next generate rewrites them; that is the
+  // same state a filtered run leaves behind, and `check` reports the diff.
+  const outputs = mergeConflictedLockOutputs(conflicted);
   await writeLock(abDir, {
     generatedAt: new Date().toISOString(),
     generatedBy,
@@ -66,5 +72,6 @@ export async function resolveLockConflict(
     checksums,
     extends: extendChecksums,
     packs: packChecksums,
+    ...(outputs !== undefined ? { outputs } : {}),
   });
 }

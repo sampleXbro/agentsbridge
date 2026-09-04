@@ -12,6 +12,7 @@
  * - globalSupport.scopeExtras
  * - sharedArtifacts ownership declaration
  * - emitScopedSettings native settings sidecar
+ * - mergeGeneratedOutputContent shared-config merge hook
  * - postProcessHookOutputs async hook post-processing
  * - Detection paths
  */
@@ -236,9 +237,13 @@ export const descriptor = {
   project: {
     rootInstructionPath: '.rich/ROOT.md',
     skillDir: '.rich/skills',
+    // `.rich/mcp.json` is the co-owned file: `mergeGeneratedOutputContent`
+    // claims it, so it must NOT be in `files` (the stale-cleanup delete list)
+    // or disabling the `mcp` feature would delete the user's whole config.
     managedOutputs: {
       dirs: ['.rich/rules', '.rich/commands', '.rich/agents', '.rich/skills'],
-      files: ['.richignore', '.rich/ROOT.md', '.rich/mcp.json', '.rich/hooks.json', '.rich/permissions.json', '.rich/settings.json'],
+      files: ['.richignore', '.rich/ROOT.md', '.rich/hooks.json', '.rich/permissions.json', '.rich/settings.json'],
+      coOwnedFiles: ['.rich/mcp.json'],
     },
     outputFamilies: [
       { id: 'rules', kind: 'primary', pathPrefix: '.rich/rules/' },
@@ -287,6 +292,11 @@ export const descriptor = {
     layout: {
       rootInstructionPath: '.rich/ROOT.md',
       skillDir: '.rich/skills',
+      managedOutputs: {
+        dirs: ['.rich/rules', '.rich/commands', '.rich/agents'],
+        files: ['.richignore', '.rich/ROOT.md', '.rich/hooks.json', '.rich/permissions.json', '.rich/settings.json'],
+        coOwnedFiles: ['.rich/mcp.json'],
+      },
       outputFamilies: [
         { id: 'rules', kind: 'primary', pathPrefix: '.rich/rules/' },
         { id: 'agents', kind: 'additional', pathPrefix: '.rich/agents/' },
@@ -319,9 +329,44 @@ export const descriptor = {
           content: `scope=${scope}\nfeatures=${[...enabledFeatures].join(',')}`,
         });
       }
+      // A canonical-only projection into the CO-OWNED file. scopeExtras used to
+      // bypass the shared merge policy, so an emit like this replaced the user's
+      // whole config; the engine must run it through
+      // `mergeGeneratedOutputContent` and dedup it against the pending `mcp`
+      // result for the same path, exactly as it does for a builtin.
+      if (scope === 'global' && enabledFeatures.has('mcp') && canonical.mcp) {
+        results.push({
+          path: '.rich/mcp.json',
+          content: JSON.stringify({ mcpServers: canonical.mcp.mcpServers }, null, 2),
+        });
+      }
       return results;
     },
   },
+
+  // ──── Shared-config Merge Hook ────────────────────────────────────────────
+  // `.rich/mcp.json` stands in for a config file the USER also owns: the plugin
+  // owns only the `mcpServers` key. Proves the shared merge policy reaches a
+  // registered plugin descriptor on the generateFeature path (rules, commands,
+  // agents, skills, mcp, ignore), not just on permissions/hooks/scoped settings.
+  mergeGeneratedOutputContent(existing, pending, newContent, resolvedPath) {
+    if (resolvedPath !== '.rich/mcp.json') return null;
+    const base = pending?.content ?? existing;
+    if (base === null || base === undefined) return null;
+    try {
+      const merged = JSON.parse(base);
+      merged.mcpServers = JSON.parse(newContent).mcpServers;
+      return JSON.stringify(merged, null, 2);
+    } catch {
+      return null;
+    }
+  },
+
+  // ──── Revocation Claims ───────────────────────────────────────────────────
+  // Declares the cleared projection for the co-owned `.rich/mcp.json`. Proves
+  // `emitRevocations` reaches a registered plugin descriptor: an emptied
+  // `.agentsmesh/mcp.json` must clear `mcpServers` here too, and the plugin's
+  // own merge hook is what performs the clear.
 
   // ──── Scoped Settings Sidecar ──────────────────────────────────────────────
   // Receives the enabled-feature set so a plugin can gate each key, exactly like

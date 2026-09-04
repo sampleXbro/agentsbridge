@@ -2,12 +2,13 @@ import type { TargetPathContract } from './types.js';
 
 export const continueContract: TargetPathContract = {
   generated: [
+    '.continue/agents/code-reviewer.md',
+    '.continue/agents/researcher.md',
     '.continue/mcpServers/agentsmesh.json',
     '.continue/prompts/review.md',
     '.continue/rules/general.md',
     '.continue/rules/typescript.md',
-    '.continue/skills/am-agent-code-reviewer/SKILL.md',
-    '.continue/skills/am-agent-researcher/SKILL.md',
+    '.continue/settings.json',
     '.continue/skills/api-generator/SKILL.md',
     '.continue/skills/api-generator/references/route-checklist.md',
     '.continue/skills/api-generator/template.ts',
@@ -17,6 +18,7 @@ export const continueContract: TargetPathContract = {
     '.agentsmesh/agents/code-reviewer.md',
     '.agentsmesh/agents/researcher.md',
     '.agentsmesh/commands/review.md',
+    '.agentsmesh/hooks.yaml',
     '.agentsmesh/ignore',
     '.agentsmesh/mcp.json',
     '.agentsmesh/rules/_root.md',

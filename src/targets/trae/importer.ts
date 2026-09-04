@@ -7,6 +7,7 @@ import { importEmbeddedSkills } from '../import/embedded-skill.js';
 import { importFileDirectory } from '../import/import-orchestrator.js';
 import { runDescriptorImport } from '../import/descriptor-import-runner.js';
 import { serializeImportedRuleWithFallback } from '../import/import-metadata.js';
+import { importTraeGlobalPermissions } from './global-permissions.js';
 import { readFileSafe, writeFileAtomic, mkdirp } from '../../utils/filesystem/fs.js';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
 import {
@@ -179,6 +180,7 @@ export async function importFromTrae(
     normalize,
   );
   await importHooks(projectRoot, results, scope);
+  if (scope === 'global') await importTraeGlobalPermissions(projectRoot, results);
 
   return results;
 }

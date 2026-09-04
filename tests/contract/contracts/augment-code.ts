@@ -20,6 +20,7 @@ export const augmentCodeContract: TargetPathContract = {
     '.agentsmesh/hooks.yaml',
     '.agentsmesh/ignore',
     '.agentsmesh/mcp.json',
+    '.agentsmesh/permissions.yaml',
     '.agentsmesh/rules/_root.md',
     '.agentsmesh/rules/typescript.md',
     '.agentsmesh/skills/api-generator/SKILL.md',

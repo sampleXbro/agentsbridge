@@ -25,7 +25,10 @@ export const project: TargetLayout = {
   skillDir: QWEN_SKILLS_DIR,
   managedOutputs: {
     dirs: [QWEN_RULES_DIR, QWEN_COMMANDS_DIR, QWEN_AGENTS_DIR, QWEN_SKILLS_DIR],
-    files: [QWEN_ROOT, QWEN_SETTINGS, QWEN_IGNORE],
+    files: [QWEN_ROOT, QWEN_IGNORE],
+    // Qwen's own settings file (theme, auth, model, JSONC comments);
+    // agentsmesh owns mcpServers / hooks / permissions inside it.
+    coOwnedFiles: [QWEN_SETTINGS],
   },
   paths: {
     rulePath(slug, rule) {
@@ -51,7 +54,8 @@ export const globalLayout: TargetLayout = {
       QWEN_GLOBAL_AGENTS_DIR,
       QWEN_GLOBAL_SKILLS_DIR,
     ],
-    files: [QWEN_GLOBAL_ROOT, QWEN_GLOBAL_SETTINGS],
+    files: [QWEN_GLOBAL_ROOT],
+    coOwnedFiles: [QWEN_GLOBAL_SETTINGS],
   },
   rewriteGeneratedPath(path) {
     if (path === QWEN_ROOT) return QWEN_GLOBAL_ROOT;

@@ -20,6 +20,7 @@ import {
   CODEX_INSTRUCTIONS_DIR,
   CODEX_RULES_DIR,
   CODEX_HOOKS_FILE,
+  CODEX_CONFIG_TOML,
 } from './constants.js';
 import { importFromCodex } from './importer.js';
 import { lintRules } from './linter.js';
@@ -28,6 +29,8 @@ import { buildCodexCliImportPaths } from '../../core/reference/import-map-builde
 import { shouldConvertCommandsToSkills } from '../../config/core/conversions.js';
 import { codexNestedAgentsPath } from './codex-rule-paths.js';
 import { commandSkillDirName } from './command-skill.js';
+import { mergeCodexConfigToml } from './config-merge.js';
+import { mergeCodexHooksJson } from './hooks-merge.js';
 
 export const target: TargetGenerators = {
   name: 'codex-cli',
@@ -60,7 +63,12 @@ const project: TargetLayout = {
   skillDir: '.agents/skills',
   managedOutputs: {
     dirs: ['.agents/skills', '.codex/agents', '.codex/instructions', '.codex/rules'],
-    files: ['AGENTS.md', '.codex/config.toml', CODEX_HOOKS_FILE],
+    files: ['AGENTS.md'],
+    // Codex writes its own model / provider / trust state into config.toml;
+    // agentsmesh owns only the `[mcp_servers.*]` tables (see config-merge.ts).
+    // hooks.json is hand-authored (learn.chatgpt.com/docs/hooks) and carries a
+    // top-level `description` agentsmesh does not own (see hooks-merge.ts).
+    coOwnedFiles: [CODEX_CONFIG_TOML, CODEX_HOOKS_FILE],
   },
   paths: {
     rulePath(_slug, rule) {
@@ -88,7 +96,8 @@ const globalLayout: TargetLayout = {
   skillDir: CODEX_SKILLS_DIR,
   managedOutputs: {
     dirs: ['.agents/skills', '.codex/agents', '.codex/rules'],
-    files: [CODEX_GLOBAL_AGENTS_MD, '.codex/config.toml', CODEX_HOOKS_FILE],
+    files: [CODEX_GLOBAL_AGENTS_MD],
+    coOwnedFiles: [CODEX_CONFIG_TOML, CODEX_HOOKS_FILE],
   },
   rewriteGeneratedPath(path) {
     if (path === AGENTS_MD) return CODEX_GLOBAL_AGENTS_MD;
@@ -155,6 +164,9 @@ export const descriptor = {
     mcp: lintMcp,
     hooks: lintHooks,
   },
+  mergeGeneratedOutputContent: (existing, pending, newContent, resolvedPath) =>
+    mergeCodexConfigToml(existing, pending, newContent, resolvedPath) ??
+    mergeCodexHooksJson(existing, pending, newContent, resolvedPath),
   project,
   globalSupport: {
     capabilities: globalCapabilities,

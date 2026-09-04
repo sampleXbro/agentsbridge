@@ -105,6 +105,7 @@ settings.local.json
 # per-target ignore files
 /.aiderignore
 /.aiignore
+/.antigravityignore
 /.augmentignore
 /.clineignore
 /.codeiumignore
@@ -116,4 +117,5 @@ settings.local.json
 /.kiroignore
 /.qwenignore
 /.rooignore
+/.warpindexingignore
 /.aider.conf.yml

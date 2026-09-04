@@ -3,13 +3,14 @@
  *
  * Emits:
  *   - `CONVENTIONS.md`    — root rule + embedded non-root rules
- *   - `.aider.conf.yml`   — wires CONVENTIONS.md via `read:` (aider has no auto-discovery)
  *   - `.aider/skills/`    — skill bundles
  *   - `.aiderignore`      — ignore patterns
+ *
+ * `.aider.conf.yml` is emitted from `conf-file.ts`: the user owns that file and
+ * two features write into it, so it needs one writer and one merge.
  */
 
 import type { CanonicalFiles } from '../../core/types.js';
-import { stringify as stringifyYaml } from 'yaml';
 import { generateEmbeddedSkills } from '../import/embedded-skill.js';
 import { appendEmbeddedRulesBlock } from '../projection/managed-blocks.js';
 import {
@@ -17,37 +18,32 @@ import {
   serializeProjectedAgentSkill,
 } from '../projection/projected-agent-skill.js';
 import { commandSkillDirName, serializeCommandSkill } from '../codex-cli/command-skill.js';
-import {
-  AIDER_TARGET,
-  AIDER_CONVENTIONS,
-  AIDER_CONF_FILE,
-  AIDER_SKILLS_DIR,
-  AIDER_IGNORE,
-} from './constants.js';
+import { AIDER_TARGET, AIDER_CONVENTIONS, AIDER_SKILLS_DIR, AIDER_IGNORE } from './constants.js';
 
 export interface AiderOutput {
   path: string;
   content: string;
 }
 
-export function generateRules(canonical: CanonicalFiles): AiderOutput[] {
+/** The CONVENTIONS.md body: root rule plus the embedded non-root rules. */
+export function buildAiderConventions(canonical: CanonicalFiles): string {
   const root = canonical.rules.find((rule) => rule.root);
   const nonRootRules = canonical.rules.filter((rule) => {
     if (rule.root) return false;
     return rule.targets.length === 0 || rule.targets.includes(AIDER_TARGET);
   });
+  return appendEmbeddedRulesBlock(root?.body.trim() ?? '', nonRootRules);
+}
 
-  const rootBody = root?.body.trim() ?? '';
-  const content = appendEmbeddedRulesBlock(rootBody, nonRootRules);
+/**
+ * Only `CONVENTIONS.md`. The `read:` wiring that makes aider load it lives in
+ * `.aider.conf.yml`, which the user also owns — it is emitted from
+ * `conf-file.ts` so the whole file has one writer and one merge.
+ */
+export function generateRules(canonical: CanonicalFiles): AiderOutput[] {
+  const content = buildAiderConventions(canonical);
   if (!content) return [];
-
-  // Aider does not auto-load CONVENTIONS.md; wire it via `.aider.conf.yml read:`
-  // so the conventions actually take effect. (Project scope only — the global
-  // rewrite suppresses this file.)
-  return [
-    { path: AIDER_CONVENTIONS, content },
-    { path: AIDER_CONF_FILE, content: stringifyYaml({ read: [AIDER_CONVENTIONS] }) },
-  ];
+  return [{ path: AIDER_CONVENTIONS, content }];
 }
 
 export function generateSkills(canonical: CanonicalFiles): AiderOutput[] {
@@ -78,14 +74,6 @@ export function generateIgnore(canonical: CanonicalFiles): AiderOutput[] {
  * Lint warnings surface this via lintMcp.
  */
 export function generateMcp(_canonical: CanonicalFiles): AiderOutput[] {
-  return [];
-}
-
-/**
- * No-op stub — Aider has no lifecycle hook system.
- * Lint warnings surface this via lintHooks.
- */
-export function generateHooks(_canonical: CanonicalFiles): AiderOutput[] {
   return [];
 }
 

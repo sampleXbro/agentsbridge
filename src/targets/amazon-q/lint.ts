@@ -7,11 +7,15 @@
  *
  * Permissions (embedded): allow is embedded into each agent JSON as allowedTools;
  * deny and ask have no Amazon Q equivalent and emit a warning.
+ *
+ * Ignore lives in `lint-ignore.ts` and is re-exported here for the descriptor.
  */
 
 import type { CanonicalFiles, LintDiagnostic } from '../../core/types.js';
 import { createWarning } from '../../core/lint/shared/helpers.js';
 import { amazonQPromptName } from './generator.js';
+
+export { lintIgnore } from './lint-ignore.js';
 
 /**
  * Q prompt files are plain markdown bodies read verbatim, so command metadata is

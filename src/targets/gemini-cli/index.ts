@@ -9,6 +9,7 @@ import {
 } from './generator.js';
 import { cap } from '../catalog/capabilities.js';
 import { generateGeminiScopeExtras } from './scope-extras.js';
+import { mergeGeminiPolicyRules } from './policies-merge.js';
 import { projectLayout, globalLayout } from './layout.js';
 import {
   GEMINI_ROOT,
@@ -92,9 +93,10 @@ export const descriptor = {
   emitScopedSettings: emitScopedGeminiSettings,
   mergeGeneratedOutputContent(existing, pending, newContent, resolvedPath) {
     const base = pending?.content ?? existing;
-    return base !== null && resolvedPath === GEMINI_SETTINGS
-      ? mergeGeminiSettingsJson(base, newContent)
-      : null;
+    if (base !== null && resolvedPath === GEMINI_SETTINGS) {
+      return mergeGeminiSettingsJson(base, newContent);
+    }
+    return mergeGeminiPolicyRules(existing, pending, newContent, resolvedPath);
   },
   project: projectLayout,
   globalSupport: {

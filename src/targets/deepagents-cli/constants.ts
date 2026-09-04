@@ -44,7 +44,15 @@ export const DEEPAGENTS_CLI_GLOBAL_AGENTS_DIR = `.deepagents/${DEEPAGENTS_CLI_DE
 export const DEEPAGENTS_CLI_GLOBAL_MCP_FILE = '.deepagents/.mcp.json';
 export const DEEPAGENTS_CLI_GLOBAL_HOOKS_FILE = '.deepagents/hooks.json';
 
+/**
+ * General user config (`config_manifest.py`): credentials, model, display state
+ * — and the only permission surface, `shell.allow_list` + `startup.mode`.
+ * Global-only and NOT agentsmesh-owned, so it stays out of managedOutputs.
+ */
+export const DEEPAGENTS_CLI_GLOBAL_CONFIG_FILE = '.deepagents/config.toml';
+
 // Canonical paths
 export const DEEPAGENTS_CLI_CANONICAL_RULES_DIR = '.agentsmesh/rules';
 export const DEEPAGENTS_CLI_CANONICAL_AGENTS_DIR = '.agentsmesh/agents';
 export const DEEPAGENTS_CLI_CANONICAL_HOOKS = '.agentsmesh/hooks.yaml';
+export const DEEPAGENTS_CLI_CANONICAL_PERMISSIONS = '.agentsmesh/permissions.yaml';

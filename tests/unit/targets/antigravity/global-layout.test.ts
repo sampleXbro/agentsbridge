@@ -33,12 +33,12 @@ describe('antigravity global layout — paths', () => {
     );
   });
 
-  it('returns projected agent skill path under .gemini/config/skills/', () => {
+  it('returns the native global agent path under .gemini/config/agents/', () => {
     // Phase 7.F: agentPath must return the global path directly so reference
     // map consumers (`agentTargetPath`) get the correct destination without
     // depending on `rewriteGeneratedPath` running after them.
     expect(layout.paths.agentPath('reviewer', {} as never)).toBe(
-      '.gemini/config/skills/am-agent-reviewer/SKILL.md',
+      '.gemini/config/agents/reviewer/agent.md',
     );
   });
 });
@@ -66,8 +66,8 @@ describe('antigravity global layout — rewriteGeneratedPath', () => {
     );
   });
 
-  it('rewrites .agents/antigravity/mcp_config.json to .gemini/config/mcp_config.json', () => {
-    expect(rewrite('.agents/antigravity/mcp_config.json')).toBe('.gemini/config/mcp_config.json');
+  it('rewrites .agents/mcp_config.json to .gemini/config/mcp_config.json', () => {
+    expect(rewrite('.agents/mcp_config.json')).toBe('.gemini/config/mcp_config.json');
   });
 
   it('returns unchanged path for unrecognized paths', () => {

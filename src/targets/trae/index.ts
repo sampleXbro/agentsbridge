@@ -11,7 +11,10 @@ import {
 } from './generator.js';
 import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromTrae } from './importer.js';
+import { mergeTraeOutput } from './merge.js';
 import { lintRules } from './linter.js';
+import { lintPermissions } from './lint.js';
+import { traeScopeExtras } from './scope-extras.js';
 import { buildTraeImportPaths } from '../../core/reference/import-map-builders.js';
 import { traeImporterSpec } from './importer-spec.js';
 import {
@@ -32,6 +35,7 @@ import {
   TRAE_GLOBAL_SKILLS_DIR,
   TRAE_GLOBAL_MCP_FILE,
   TRAE_GLOBAL_AGENTS_SKILLS_DIR,
+  TRAE_GLOBAL_PERMISSIONS_FILE,
 } from './constants.js';
 
 export const target: TargetGenerators = {
@@ -52,7 +56,10 @@ const project: TargetLayout = {
   skillDir: TRAE_SKILLS_DIR,
   managedOutputs: {
     dirs: [TRAE_RULES_DIR, TRAE_AGENTS_DIR, TRAE_COMMANDS_DIR, TRAE_SKILLS_DIR],
-    files: [TRAE_MCP_FILE, TRAE_IGNORE, TRAE_HOOKS_FILE],
+    files: [TRAE_IGNORE],
+    // Trae's MCP panel writes mcp.json and hooks.json is the documented project
+    // hook config; agentsmesh owns only its keys inside each (see merge.ts).
+    coOwnedFiles: [TRAE_MCP_FILE, TRAE_HOOKS_FILE],
   },
   paths: {
     rulePath(slug, _rule) {
@@ -78,7 +85,8 @@ const globalLayout: TargetLayout = {
       TRAE_GLOBAL_SKILLS_DIR,
       TRAE_GLOBAL_AGENTS_SKILLS_DIR,
     ],
-    files: [TRAE_GLOBAL_ROOT_RULE, TRAE_GLOBAL_MCP_FILE, TRAE_GLOBAL_HOOKS_FILE],
+    files: [TRAE_GLOBAL_ROOT_RULE],
+    coOwnedFiles: [TRAE_GLOBAL_MCP_FILE, TRAE_GLOBAL_HOOKS_FILE],
   },
   rewriteGeneratedPath(path) {
     // Transform .trae/rules/project_rules.md → .trae/user_rules/rules.md
@@ -138,10 +146,21 @@ const globalCapabilities: TargetCapabilities = {
   mcp: 'native',
   hooks: 'native',
   ignore: 'none',
-  permissions: 'none',
+  // ~/.trae/permission/global.json is Trae's own permission file, emitted from
+  // scopeExtras and imported back. Project scope stays 'none': Trae has no
+  // project-tier permission file at all.
+  //
+  // 'partial', not 'native': Trae writes this file itself (folder grants, "Add
+  // to allowlist"), so agentsmesh only adds to it and a removed canonical entry
+  // does not disappear from it; blanket tool toggles, denied/asked paths and MCP
+  // tool names have no key at all; and the per-rule shape inside `commandRules`
+  // is not documented anywhere public (docs.trae.ai/ide/permission-and-approval
+  // and docs.trae.cn/work_permission-and-approval both print `commandRules: {}`).
+  permissions: 'partial',
 };
 
 export const descriptor = {
+  mergeGeneratedOutputContent: mergeTraeOutput,
   id: TRAE_TARGET,
   metadata: {
     displayName: 'Trae',
@@ -164,6 +183,7 @@ export const descriptor = {
   emptyImportMessage:
     'No Trae config found (.trae/rules/project_rules.md, .trae/rules/*.md, .trae/skills/, .trae/mcp.json, or .trae/.ignore).',
   lintRules,
+  lint: { permissions: lintPermissions },
   project,
   globalSupport: {
     capabilities: globalCapabilities,
@@ -172,8 +192,10 @@ export const descriptor = {
       TRAE_GLOBAL_RULES_DIR,
       TRAE_GLOBAL_SKILLS_DIR,
       TRAE_GLOBAL_MCP_FILE,
+      TRAE_GLOBAL_PERMISSIONS_FILE,
     ],
     layout: globalLayout,
+    scopeExtras: traeScopeExtras,
   },
   importer: traeImporterSpec,
   buildImportPaths: buildTraeImportPaths,

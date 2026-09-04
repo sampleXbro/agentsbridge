@@ -7,12 +7,17 @@
 import { join } from 'node:path';
 import { parseFrontmatter } from '../../utils/text/markdown.js';
 import {
+  serializeImportedAgentWithFallback,
   serializeImportedCommandWithFallback,
   serializeImportedRuleWithFallback,
 } from '../import/import-metadata.js';
 import type { ImportEntryMapper } from '../catalog/import-descriptor.js';
 import { parseCommandRuleFrontmatter, serializeImportedCommand } from './command-rule.js';
-import { CONTINUE_CANONICAL_COMMANDS_DIR, CONTINUE_CANONICAL_RULES_DIR } from './constants.js';
+import {
+  CONTINUE_CANONICAL_AGENTS_DIR,
+  CONTINUE_CANONICAL_COMMANDS_DIR,
+  CONTINUE_CANONICAL_RULES_DIR,
+} from './constants.js';
 
 function isContinueRootRulePath(relativePath: string): boolean {
   return relativePath === 'general.md' || relativePath === '_root.md';
@@ -81,5 +86,25 @@ export const continueCommandMapper: ImportEntryMapper = async ({
     destPath: commandPath,
     toPath: `${CONTINUE_CANONICAL_COMMANDS_DIR}/${relativeCommandPath}`,
     content,
+  };
+};
+
+/**
+ * Continue agents: only `.continue/agents/*.md` (agent files) are imported.
+ * YAML in that folder is a Continue assistant profile — a whole config with
+ * models/context/docs at both scopes — so it is left to its owner rather than
+ * flattened into a canonical agent that keeps just name/description/prompt.
+ */
+export const continueAgentMapper: ImportEntryMapper = async ({
+  relativePath,
+  normalizeTo,
+  destDir,
+}) => {
+  const destPath = join(destDir, relativePath);
+  const { frontmatter, body } = parseFrontmatter(normalizeTo(destPath));
+  return {
+    destPath,
+    toPath: `${CONTINUE_CANONICAL_AGENTS_DIR}/${relativePath}`,
+    content: await serializeImportedAgentWithFallback(destPath, frontmatter, body),
   };
 };

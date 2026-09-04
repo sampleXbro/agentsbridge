@@ -3,7 +3,13 @@
  * pack, including files produced by entity-type conversions:
  *
  *   - antigravity: commands → workflows (`.agents/workflows/<name>.md`)
- *   - antigravity: agents     → skills    (`.agents/skills/am-agent-<name>/SKILL.md`)
+ *
+ * There used to be a second case here for antigravity agents → skills. Antigravity
+ * agents are native now (`.agents/agents/<name>.md`), so that conversion can never
+ * fire — `isFeatureSuppressedByConversion` short-circuits on capability level — and
+ * the case was removed rather than left asserting dead behaviour. Agent-skill
+ * projection cleanup is still exercised for the targets that actually use it via
+ * their own end-to-end tests (see the note below).
  *
  * Without these cleanups, projected files linger in the project tree after
  * uninstall — the per-target `managedOutputs` table is the only thing
@@ -78,22 +84,5 @@ describe('uninstall cleans converted-entity outputs (antigravity)', () => {
     // The projected workflow must not linger after uninstall — it was created
     // solely from the canonical command that the pack contributed.
     expect(existsSync(workflowPath)).toBe(false);
-  });
-
-  it('removes .agents/skills/am-agent-<name>/SKILL.md (agents → skills) on uninstall', async () => {
-    const project = join(ROOT, 'project');
-    const upstream = join(ROOT, 'upstream');
-
-    await runInstall({ force: true, name: 'conv-pack' }, [upstream], project);
-
-    const skillDir = join(project, '.agents', 'skills', 'am-agent-reviewer');
-    expect(existsSync(join(skillDir, 'SKILL.md'))).toBe(true);
-
-    const result = await runUninstall({ force: true }, ['conv-pack'], project);
-    expect(result.exitCode).toBe(0);
-
-    // The projected skill dir must also be removed; cleanup is the only thing
-    // standing between "uninstalled" and "still littering the user's project".
-    expect(existsSync(join(skillDir, 'SKILL.md'))).toBe(false);
   });
 });

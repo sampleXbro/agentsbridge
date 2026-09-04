@@ -4,7 +4,7 @@ import { mkdirSync, writeFileSync, rmSync, readFileSync, existsSync } from 'node
 import { tmpdir } from 'node:os';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
 import {
-  deepagentsCliScopeExtras,
+  generateDeepagentsCliGlobalHooks,
   importDeepagentsCliGlobalHooks,
 } from '../../../../src/targets/deepagents-cli/global-hooks.js';
 import { DEEPAGENTS_CLI_GLOBAL_HOOKS_FILE } from '../../../../src/targets/deepagents-cli/constants.js';
@@ -23,7 +23,7 @@ function makeCanonical(overrides: Partial<CanonicalFiles> = {}): CanonicalFiles 
   };
 }
 
-describe('deepagentsCliScopeExtras', () => {
+describe('generateDeepagentsCliGlobalHooks', () => {
   let projectRoot: string;
 
   beforeEach(() => {
@@ -38,32 +38,18 @@ describe('deepagentsCliScopeExtras', () => {
     rmSync(projectRoot, { recursive: true, force: true });
   });
 
-  it('returns [] for project scope (hooks are global-only)', async () => {
-    const canonical = makeCanonical({
-      hooks: { SessionStart: [{ matcher: '', command: 'echo hi' }] },
-    });
-    const results = await deepagentsCliScopeExtras(
-      canonical,
-      projectRoot,
-      'project',
-      new Set(['hooks']),
-    );
-    expect(results).toEqual([]);
-  });
-
   it('returns [] when hooks feature is disabled', async () => {
     const canonical = makeCanonical({
       hooks: { SessionStart: [{ matcher: '', command: 'echo hi' }] },
     });
-    const results = await deepagentsCliScopeExtras(canonical, projectRoot, 'global', new Set());
+    const results = await generateDeepagentsCliGlobalHooks(canonical, projectRoot, new Set());
     expect(results).toEqual([]);
   });
 
   it('returns [] when canonical.hooks is null', async () => {
-    const results = await deepagentsCliScopeExtras(
+    const results = await generateDeepagentsCliGlobalHooks(
       makeCanonical(),
       projectRoot,
-      'global',
       new Set(['hooks']),
     );
     expect(results).toEqual([]);
@@ -71,10 +57,9 @@ describe('deepagentsCliScopeExtras', () => {
 
   it('returns [] when every canonical event is unmapped', async () => {
     const canonical = makeCanonical({ hooks: { PreToolUse: [{ matcher: '*', command: 'a' }] } });
-    const results = await deepagentsCliScopeExtras(
+    const results = await generateDeepagentsCliGlobalHooks(
       canonical,
       projectRoot,
-      'global',
       new Set(['hooks']),
     );
     expect(results).toEqual([]);
@@ -84,17 +69,18 @@ describe('deepagentsCliScopeExtras', () => {
     const canonical = makeCanonical({
       hooks: { SessionStart: [{ matcher: '', command: 'echo hi' }] },
     });
-    const results = await deepagentsCliScopeExtras(
+    const results = await generateDeepagentsCliGlobalHooks(
       canonical,
       projectRoot,
-      'global',
       new Set(['hooks']),
     );
     expect(results).toHaveLength(1);
     expect(results[0].path).toBe(DEEPAGENTS_CLI_GLOBAL_HOOKS_FILE);
     expect(results[0].status).toBe('created');
     const parsed = JSON.parse(results[0].content) as { hooks: unknown[] };
-    expect(parsed.hooks).toEqual([{ command: ['bash', '-c', 'echo hi'], events: ['session.start'] }]);
+    expect(parsed.hooks).toEqual([
+      { command: ['bash', '-c', 'echo hi'], events: ['session.start'] },
+    ]);
   });
 
   it('reports status "updated" when file content differs from existing', async () => {
@@ -103,10 +89,9 @@ describe('deepagentsCliScopeExtras', () => {
     const canonical = makeCanonical({
       hooks: { SessionStart: [{ matcher: '', command: 'echo hi' }] },
     });
-    const results = await deepagentsCliScopeExtras(
+    const results = await generateDeepagentsCliGlobalHooks(
       canonical,
       projectRoot,
-      'global',
       new Set(['hooks']),
     );
     expect(results[0].status).toBe('updated');

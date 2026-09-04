@@ -13,6 +13,7 @@ import {
   CRUSH_GLOBAL_ROOT_FILE,
   CRUSH_GLOBAL_SKILLS_DIR,
   CRUSH_GLOBAL_CONFIG_FILE,
+  CRUSH_GLOBAL_IGNORE,
 } from '../../../../src/targets/crush/constants.js';
 
 describe('crush descriptor global layout', () => {
@@ -46,10 +47,10 @@ describe('crush descriptor global layout', () => {
     expect(result).toBe(CRUSH_GLOBAL_CONFIG_FILE);
   });
 
-  it('rewriteGeneratedPath drops .crushignore in global mode', () => {
+  it('rewriteGeneratedPath transforms .crushignore to the global ignore file', () => {
     const rewriteGeneratedPath = descriptor.globalSupport!.layout.rewriteGeneratedPath!;
     const result = rewriteGeneratedPath(CRUSH_IGNORE);
-    expect(result).toBeNull();
+    expect(result).toBe(CRUSH_GLOBAL_IGNORE);
   });
 
   it('rewriteGeneratedPath transforms .crush/skills/ paths to global paths', () => {
@@ -78,7 +79,7 @@ describe('crush descriptor global layout', () => {
     expect(caps.skills).toBe('native');
     expect(caps.mcp).toBe('native');
     expect(caps.hooks).toBe('native');
-    expect(caps.ignore).toBe('none');
+    expect(caps.ignore).toBe('native');
     expect(caps.permissions).toBe('native');
     expect(caps.commands).toBe('embedded');
     expect(caps.agents).toBe('none');

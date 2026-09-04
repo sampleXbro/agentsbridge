@@ -288,8 +288,11 @@ describe('codex-cli hook descriptor contract', () => {
       hooks: 'native',
       permissions: 'native',
     });
-    expect(descriptor.project.managedOutputs?.files).toContain('.codex/hooks.json');
-    expect(descriptor.globalSupport?.layout.managedOutputs?.files).toContain('.codex/hooks.json');
+    // Hand-authored per learn.chatgpt.com/docs/hooks, so co-owned, not deleted.
+    expect(descriptor.project.managedOutputs?.coOwnedFiles).toContain('.codex/hooks.json');
+    expect(descriptor.globalSupport?.layout.managedOutputs?.coOwnedFiles).toContain(
+      '.codex/hooks.json',
+    );
     expect(descriptor.detectionPaths).toContain('.codex/hooks.json');
     expect(descriptor.globalSupport?.detectionPaths).toContain('.codex/hooks.json');
   });

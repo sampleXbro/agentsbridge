@@ -2,15 +2,13 @@ import { basename } from 'node:path';
 import type { CanonicalFiles } from '../../core/types.js';
 import { generateEmbeddedSkills } from '../import/embedded-skill.js';
 import { appendEmbeddedRulesBlock } from '../projection/managed-blocks.js';
-import {
-  projectedAgentSkillDirName,
-  serializeProjectedAgentSkill,
-} from '../projection/projected-agent-skill.js';
 import { buildClaudeHooksObjectFromCanonical } from '../claude-code/hooks-format.js';
+import { serializeAntigravityAgent } from './agents-format.js';
 import {
+  ANTIGRAVITY_AGENTS_DIR,
   ANTIGRAVITY_GLOBAL_ROOT,
   ANTIGRAVITY_HOOKS_FILE,
-  ANTIGRAVITY_MCP_CONFIG,
+  ANTIGRAVITY_IGNORE_FILE,
   ANTIGRAVITY_RULES_ROOT,
   ANTIGRAVITY_RULES_DIR,
   ANTIGRAVITY_WORKFLOWS_DIR,
@@ -60,21 +58,17 @@ export function generateSkills(canonical: CanonicalFiles): AntigravityOutput[] {
   return generateEmbeddedSkills(canonical, ANTIGRAVITY_SKILLS_DIR);
 }
 
-export function generateMcp(canonical: CanonicalFiles): AntigravityOutput[] {
-  if (!canonical.mcp || Object.keys(canonical.mcp.mcpServers).length === 0) return [];
-  return [
-    {
-      path: ANTIGRAVITY_MCP_CONFIG,
-      content: JSON.stringify({ mcpServers: canonical.mcp.mcpServers }, null, 2),
-    },
-  ];
-}
-
 export function generateAgents(canonical: CanonicalFiles): AntigravityOutput[] {
   return canonical.agents.map((agent) => ({
-    path: `${ANTIGRAVITY_SKILLS_DIR}/${projectedAgentSkillDirName(agent.name)}/SKILL.md`,
-    content: serializeProjectedAgentSkill(agent),
+    path: `${ANTIGRAVITY_AGENTS_DIR}/${agent.name}.md`,
+    content: serializeAntigravityAgent(agent),
   }));
+}
+
+/** Project-only; the global layout suppresses this path (no home-dir ignore file). */
+export function generateIgnore(canonical: CanonicalFiles): AntigravityOutput[] {
+  if (canonical.ignore.length === 0) return [];
+  return [{ path: ANTIGRAVITY_IGNORE_FILE, content: canonical.ignore.join('\n') }];
 }
 
 export function renderAntigravityGlobalInstructions(canonical: CanonicalFiles): string {

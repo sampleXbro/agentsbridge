@@ -6,6 +6,7 @@ import { antigravityContract } from './antigravity.js';
 import { augmentCodeContract } from './augment-code.js';
 import { claudeCodeContract } from './claude-code.js';
 import { clineContract } from './cline.js';
+import { codebuffContract } from './codebuff.js';
 import { codexCliContract } from './codex-cli.js';
 import { continueContract } from './continue.js';
 import { copilotContract } from './copilot.js';
@@ -16,9 +17,11 @@ import { factoryDroidContract } from './factory-droid.js';
 import { geminiCliContract } from './gemini-cli.js';
 import { julesContract } from './jules.js';
 import { junieContract } from './junie.js';
+import { kimiCodeContract } from './kimi-code.js';
 import { kiloCodeContract } from './kilo-code.js';
 import { kiroContract } from './kiro.js';
 import { gooseContract } from './goose.js';
+import { openhandsContract } from './openhands.js';
 import { opencodeContract } from './opencode.js';
 import { piAgentContract } from './pi-agent.js';
 import { qwenCodeContract } from './qwen-code.js';
@@ -71,6 +74,7 @@ export const TARGET_CONTRACTS: TargetContractMap = {
   'augment-code': augmentCodeContract,
   'claude-code': claudeCodeContract,
   cline: clineContract,
+  codebuff: codebuffContract,
   'codex-cli': codexCliContract,
   continue: continueContract,
   copilot: copilotContract,
@@ -82,8 +86,10 @@ export const TARGET_CONTRACTS: TargetContractMap = {
   goose: gooseContract,
   jules: julesContract,
   junie: junieContract,
+  'kimi-code': kimiCodeContract,
   'kilo-code': kiloCodeContract,
   kiro: kiroContract,
+  openhands: openhandsContract,
   opencode: opencodeContract,
   'pi-agent': piAgentContract,
   'qwen-code': qwenCodeContract,

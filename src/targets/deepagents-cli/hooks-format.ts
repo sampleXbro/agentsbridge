@@ -35,6 +35,11 @@ const DEEPAGENTS_TO_CANONICAL = new Map<string, string>(
   Object.entries(CANONICAL_TO_DEEPAGENTS).map(([canonical, deep]) => [deep, canonical]),
 );
 
+/** The Deep Agents events agentsmesh projects into; hooks on any other event are the user's. */
+export const DEEPAGENTS_MANAGED_EVENTS: ReadonlySet<string> = new Set(
+  Object.values(CANONICAL_TO_DEEPAGENTS),
+);
+
 export interface DeepagentsHook {
   command: string[];
   events: string[];

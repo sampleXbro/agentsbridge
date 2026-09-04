@@ -5,14 +5,14 @@
  *   - `.goosehints`                  — root rule + embedded non-root rules
  *   - `.agents/skills/`              — skill bundles
  *   - `.gooseignore`                 — ignore patterns
- *   - `.config/goose/config.yaml`    — MCP extensions (global scope only)
  *   - `.agents/plugins/agentsmesh/hooks/hooks.json` — lifecycle hooks
+ *
+ * MCP is NOT here: both of its files are merged into content agentsmesh does not
+ * own. See `mcp-format.ts` (project plugin `.mcp.json`) and `global-mcp.ts`
+ * (`config.yaml`).
  */
 
-import { stringify as yamlStringify } from 'yaml';
 import type { CanonicalFiles } from '../../core/types.js';
-import type { McpServer } from '../../core/mcp-types.js';
-import type { GenerateFeatureContext } from '../catalog/target.interface.js';
 import { generateEmbeddedSkills } from '../import/embedded-skill.js';
 import { appendEmbeddedRulesBlock } from '../projection/managed-blocks.js';
 import {
@@ -26,7 +26,6 @@ import {
   GOOSE_ROOT_FILE,
   GOOSE_SKILLS_DIR,
   GOOSE_IGNORE,
-  GOOSE_GLOBAL_CONFIG,
   GOOSE_HOOKS_FILE,
 } from './constants.js';
 
@@ -74,52 +73,6 @@ export function generateIgnore(canonical: CanonicalFiles): GooseOutput[] {
 
 export function generateHooks(canonical: CanonicalFiles): GooseOutput[] {
   return buildWrappedCommandHooks(canonical, GOOSE_HOOKS_FILE);
-}
-
-interface GooseExtension {
-  args?: string[];
-  bundled: null;
-  cmd?: string;
-  description: string;
-  enabled: boolean;
-  env_keys: string[];
-  envs: Record<string, string>;
-  name: string;
-  timeout: number;
-  type: string;
-  uri?: string;
-}
-
-function mcpServerToExtension(name: string, server: McpServer): GooseExtension {
-  const base: GooseExtension = {
-    bundled: null,
-    description: server.description ?? '',
-    enabled: true,
-    env_keys: [],
-    envs: server.env ?? {},
-    name,
-    timeout: 30,
-    type: 'command' in server ? 'stdio' : 'sse',
-  };
-  if ('command' in server) {
-    return { ...base, args: server.args ?? [], cmd: server.command };
-  }
-  return { ...base, uri: server.url };
-}
-
-export function generateMcp(
-  canonical: CanonicalFiles,
-  ctx?: GenerateFeatureContext,
-): GooseOutput[] {
-  if (ctx?.scope !== 'global') return [];
-  if (!canonical.mcp || Object.keys(canonical.mcp.mcpServers).length === 0) return [];
-  const extensions = Object.fromEntries(
-    Object.entries(canonical.mcp.mcpServers).map(([name, server]) => [
-      name,
-      mcpServerToExtension(name, server),
-    ]),
-  );
-  return [{ path: GOOSE_GLOBAL_CONFIG, content: yamlStringify({ extensions }) }];
 }
 
 /**

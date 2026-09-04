@@ -22,6 +22,7 @@ import { lintCommands } from './lint.js';
 import { project, globalLayout, capabilities, globalCapabilities } from './layout.js';
 import { buildQwenCodeImportPaths } from '../../core/reference/import-map-builders.js';
 import { qwenCodeImporterSpec } from './importer-spec.js';
+import { preservedUnparsableBase } from '../../core/generate/json-owned-keys.js';
 import {
   QWEN_CODE_TARGET,
   QWEN_ROOT,
@@ -63,7 +64,14 @@ function parseJsonObject(s: string | null | undefined): Record<string, unknown> 
 const mergeQwenSettings: GeneratedOutputMerger = (existing, pending, newContent, resolvedPath) => {
   if (resolvedPath !== QWEN_SETTINGS && resolvedPath !== QWEN_GLOBAL_SETTINGS) return null;
   // Use in-memory pending result as base (preferred over stale disk content)
-  const base = parseJsonObject(pending?.content ?? existing);
+  const raw = pending?.content ?? existing;
+  // Qwen documents settings.json as JSONC; rewriting an unparsable base would
+  // drop the user's comments and every key in it.
+  if (raw !== null) {
+    const preserved = preservedUnparsableBase(raw);
+    if (preserved !== null) return preserved;
+  }
+  const base = parseJsonObject(raw);
   try {
     const incoming = JSON.parse(newContent) as Record<string, unknown>;
     if (incoming.mcpServers !== undefined) base.mcpServers = incoming.mcpServers;

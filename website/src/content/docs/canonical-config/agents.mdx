@@ -51,7 +51,7 @@ Suggest concrete fixes, not vague recommendations.
 | `tools` | `string[]` | Allowed tools. Supports tool names like `Read`, `Grep`, `Bash(cmd)`. |
 | `disallowedTools` | `string[]` | Explicitly denied tools (takes priority over `tools`). |
 | `model` | `string` | Model hint: `sonnet`, `opus`, `haiku`. Tools map this to their native model selector. |
-| `permissionMode` | `string` | How permissions are handled: `ask`, `default`, `none`. |
+| `permissionMode` | `string` | How permissions are handled. Free-form and unvalidated: most targets pass the value through to their own agent frontmatter verbatim. Codex CLI is the only target that acts on it — `read-only` and `deny` map to `sandbox_mode = "read-only"`, `allow` maps to `sandbox_mode = "workspace-write"`, and any other value is ignored. |
 | `maxTurns` | `number` | Maximum conversation turns before the agent stops. |
 | `mcpServers` | `string[]` | MCP server names available to this agent (must be defined in `mcp.json`). |
 | `hooks` | `object` | Agent-level lifecycle hooks. Same format as `hooks.yaml`. |
@@ -125,6 +125,10 @@ Run the tests to verify they pass.
 # agentsmesh.yaml
 conversions:
   agents_to_skills:
-    cline: false     # skip Cline instead of embedding
     windsurf: false  # skip Windsurf instead of embedding
+    warp: false      # skip Warp instead of embedding
 ```
+
+This only applies to targets whose `agents` capability is **not** already native. Setting it for a target with native agent support (Gemini CLI, Junie, …) has no effect — those targets keep writing their own agent files.
+
+Capability is per scope, so a target can be native in one and convertible in the other. Cline writes native project agents but has no global agent surface, so `agents_to_skills` is a no-op for its project scope and opt-in for its global scope. See the **Agents** row of the [supported tools matrix](../../reference/supported-tools/).

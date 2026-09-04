@@ -37,6 +37,20 @@ export const TRAE_COMMANDS_DIR = `${TRAE_DIR}/commands`;
 export const TRAE_GLOBAL_AGENTS_DIR = '.trae-cn/agents';
 export const TRAE_GLOBAL_COMMANDS_DIR = '.trae/commands'; // same path, relative to home in global mode
 
+/**
+ * Global permission config: `~/.trae/permission/global.json`. Trae keeps every
+ * permission rule here — including per-workspace paths, written with the
+ * `$WORKSPACE_FOLDER` variable — so there is no project-level counterpart.
+ * Docs: https://docs.trae.ai/ide/permission-and-approval
+ *
+ * The CN edition documents a different path — `~/.trae-cn/permission/work/global.json`
+ * (docs.trae.cn/work_permission-and-approval), with a `work` segment naming the
+ * task type — so it is not the same file under a different prefix and is not
+ * mirrored here. The international path above is the one the capability ledger
+ * records and verifies.
+ */
+export const TRAE_GLOBAL_PERMISSIONS_FILE = `${TRAE_DIR}/permission/global.json`;
+
 /** Project-level hooks config: $PROJECT/.trae/hooks.json */
 export const TRAE_HOOKS_FILE = `${TRAE_DIR}/hooks.json`;
 /** Global hooks config (macOS/Linux): ~/.trae-cn/hooks.json */
@@ -49,3 +63,4 @@ export const TRAE_CANONICAL_AGENTS_DIR = '.agentsmesh/agents';
 export const TRAE_CANONICAL_MCP = '.agentsmesh/mcp.json';
 export const TRAE_CANONICAL_IGNORE = '.agentsmesh/ignore';
 export const TRAE_CANONICAL_HOOKS = '.agentsmesh/hooks.yaml';
+export const TRAE_CANONICAL_PERMISSIONS = '.agentsmesh/permissions.yaml';

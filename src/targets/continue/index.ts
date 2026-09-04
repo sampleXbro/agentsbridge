@@ -1,6 +1,5 @@
-import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
-import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
-import { projectedAgentSkillDirName } from '../projection/projected-agent-skill.js';
+import type { TargetGenerators } from '../catalog/target.interface.js';
+import type { TargetDescriptor } from '../catalog/target-descriptor.js';
 import {
   generateRules,
   generateCommands,
@@ -9,26 +8,31 @@ import {
   generateMcp,
   generateIgnore,
 } from './generator.js';
+import { generateHooks, mergeContinueSettings } from './hooks.js';
+import { mergeContinueGlobalYaml } from './config-merge.js';
+import { globalCapabilities, projectCapabilities } from './capabilities.js';
+import { globalLayout, projectLayout } from './layout.js';
 import {
   CONTINUE_ROOT_RULE,
   CONTINUE_RULES_DIR,
   CONTINUE_PROMPTS_DIR,
-  CONTINUE_MCP_FILE,
+  CONTINUE_AGENTS_DIR,
   CONTINUE_SKILLS_DIR,
-  CONTINUE_GLOBAL_AGENTS_MD,
-  CONTINUE_GLOBAL_CONFIG,
-  CONTINUE_GLOBAL_PERMISSIONS,
   CONTINUE_IGNORE,
   CONTINUE_GLOBAL_IGNORE,
+  CONTINUE_CANONICAL_AGENTS_DIR,
   CONTINUE_CANONICAL_RULES_DIR,
   CONTINUE_CANONICAL_COMMANDS_DIR,
   CONTINUE_CANONICAL_IGNORE,
 } from './constants.js';
 import { importFromContinue } from './importer.js';
-import { continueCommandMapper, continueRuleMapper } from './import-mappers.js';
+import {
+  continueAgentMapper,
+  continueCommandMapper,
+  continueRuleMapper,
+} from './import-mappers.js';
 import { lintRules } from './linter.js';
-import { lintCommands } from './lint.js';
-import { continueCommandRulePath } from './command-rule.js';
+import { lintAgents, lintCommands, lintHooks } from './lint.js';
 import { buildContinueImportPaths } from '../../core/reference/import-map-builders.js';
 import { generateContinueScopeExtras } from './scope-extras.js';
 
@@ -40,75 +44,11 @@ export const target: TargetGenerators = {
   generateAgents,
   generateSkills,
   generateMcp,
+  generateHooks,
   generateIgnore,
+  // Feature-independent lint hook: agent warnings must not hang off `rules`.
+  lint: lintAgents,
   importFrom: importFromContinue,
-};
-
-const project: TargetLayout = {
-  rootInstructionPath: CONTINUE_ROOT_RULE,
-  skillDir: '.continue/skills',
-  managedOutputs: {
-    dirs: ['.continue/prompts', '.continue/rules', '.continue/skills'],
-    files: ['.continue/mcpServers/agentsmesh.json', CONTINUE_IGNORE],
-  },
-  paths: {
-    rulePath(slug, _rule) {
-      return `${CONTINUE_RULES_DIR}/${slug}.md`;
-    },
-    commandPath(name, _config) {
-      return continueCommandRulePath(name);
-    },
-    agentPath(name) {
-      return `${CONTINUE_SKILLS_DIR}/${projectedAgentSkillDirName(name)}/SKILL.md`;
-    },
-  },
-};
-
-const globalLayout: TargetLayout = {
-  rootInstructionPath: CONTINUE_ROOT_RULE,
-  outputFamilies: [
-    { id: 'compat-agents', kind: 'additional', explicitPaths: [CONTINUE_GLOBAL_AGENTS_MD] },
-  ],
-  skillDir: CONTINUE_SKILLS_DIR,
-  managedOutputs: {
-    dirs: [CONTINUE_RULES_DIR, CONTINUE_PROMPTS_DIR, CONTINUE_SKILLS_DIR, '.agents/skills'],
-    files: [
-      CONTINUE_MCP_FILE,
-      CONTINUE_GLOBAL_AGENTS_MD,
-      CONTINUE_GLOBAL_CONFIG,
-      CONTINUE_GLOBAL_PERMISSIONS,
-      CONTINUE_GLOBAL_IGNORE,
-    ],
-  },
-  mirrorGlobalPath(path, _activeTargets) {
-    if (path.startsWith(`${CONTINUE_SKILLS_DIR}/`)) {
-      return `.agents/skills/${path.slice(CONTINUE_SKILLS_DIR.length + 1)}`;
-    }
-    return null;
-  },
-  paths: {
-    rulePath(slug, _rule) {
-      return `${CONTINUE_RULES_DIR}/${slug}.md`;
-    },
-    commandPath(name, _config) {
-      return `${CONTINUE_PROMPTS_DIR}/${name}.md`;
-    },
-    agentPath(name) {
-      return `${CONTINUE_SKILLS_DIR}/${projectedAgentSkillDirName(name)}/SKILL.md`;
-    },
-  },
-};
-
-const globalCapabilities: TargetCapabilities = {
-  rules: 'native',
-  additionalRules: 'native',
-  commands: 'native',
-  agents: 'none',
-  skills: 'native',
-  mcp: 'native',
-  hooks: 'none',
-  ignore: 'native',
-  permissions: 'native',
 };
 
 export const descriptor = {
@@ -120,25 +60,15 @@ export const descriptor = {
     shortDescription: 'Open-source AI code assistant',
   },
   generators: target,
-  capabilities: {
-    rules: 'native',
-    additionalRules: 'native',
-    commands: 'native',
-    agents: 'none',
-    skills: 'native',
-    mcp: 'native',
-    hooks: 'none',
-    ignore: 'native',
-    permissions: 'none',
-  },
+  capabilities: projectCapabilities,
   emptyImportMessage:
-    'No Continue config found (.continue/rules/*.md, .continue/skills, or .continue/mcpServers/*).',
-  supportsConversion: { agents: true },
+    'No Continue config found (.continue/rules/*.md, .continue/agents, .continue/skills, or .continue/mcpServers/*).',
   lintRules,
   lint: {
     commands: lintCommands,
+    hooks: lintHooks,
   },
-  project,
+  project: projectLayout,
   globalSupport: {
     capabilities: globalCapabilities,
     detectionPaths: [
@@ -146,10 +76,14 @@ export const descriptor = {
       CONTINUE_PROMPTS_DIR,
       '.continue/mcpServers',
       CONTINUE_SKILLS_DIR,
+      CONTINUE_AGENTS_DIR,
     ],
     layout: globalLayout,
     scopeExtras: generateContinueScopeExtras,
   },
+  mergeGeneratedOutputContent: (existing, pending, newContent, resolvedPath) =>
+    mergeContinueSettings(existing, pending, newContent, resolvedPath) ??
+    mergeContinueGlobalYaml(existing, pending, newContent, resolvedPath),
   importer: {
     rules: {
       feature: 'rules',
@@ -167,6 +101,16 @@ export const descriptor = {
       extensions: ['.md'],
       map: continueCommandMapper,
     },
+    // `.md` only, at both scopes, matching `nativeInstall` below: YAML under
+    // `.continue/agents` is a user-owned assistant profile, not an agent.
+    agents: {
+      feature: 'agents',
+      mode: 'directory',
+      source: { project: [CONTINUE_AGENTS_DIR], global: [CONTINUE_AGENTS_DIR] },
+      canonicalDir: CONTINUE_CANONICAL_AGENTS_DIR,
+      extensions: ['.md'],
+      map: continueAgentMapper,
+    },
     ignore: {
       feature: 'ignore',
       mode: 'flatFile',
@@ -179,21 +123,30 @@ export const descriptor = {
     },
   },
   buildImportPaths: buildContinueImportPaths,
-  detectionPaths: ['.continue/rules', '.continue/skills', '.continue/mcpServers'],
+  detectionPaths: [
+    CONTINUE_RULES_DIR,
+    CONTINUE_AGENTS_DIR,
+    CONTINUE_SKILLS_DIR,
+    '.continue/mcpServers',
+  ],
   nativeInstall: {
     pickPaths: [
       {
-        prefix: '.continue/rules',
+        prefix: CONTINUE_RULES_DIR,
         feature: 'rules',
         strategy: { kind: 'basename', suffix: '.md' },
       },
       {
-        prefix: '.continue/prompts',
+        prefix: CONTINUE_PROMPTS_DIR,
         feature: 'commands',
         strategy: { kind: 'basename', suffix: '.md' },
       },
-      { prefix: '.continue/skills', feature: 'skills', strategy: { kind: 'skillDir' } },
+      {
+        prefix: CONTINUE_AGENTS_DIR,
+        feature: 'agents',
+        strategy: { kind: 'basename', suffix: '.md' },
+      },
+      { prefix: CONTINUE_SKILLS_DIR, feature: 'skills', strategy: { kind: 'skillDir' } },
     ],
   },
-  conversionDefaults: { agentsToSkills: true },
 } satisfies TargetDescriptor;

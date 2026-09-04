@@ -33,7 +33,15 @@ export const project: TargetLayout = {
   skillDir: '.roo/skills',
   managedOutputs: {
     dirs: ['.roo/rules', '.roo/commands', '.roo/skills'],
-    files: ['.roo/mcp.json', '.rooignore', '.roorules', ROO_CODE_MODES_FILE, ROO_CODE_VSCODE_SETTINGS],
+    files: ['.rooignore', '.roorules'],
+    // Shared VS Code workspace settings: agentsmesh owns only the two Roo
+    // command-permission keys (see merge.ts). `.roomodes` is Roo's own project
+    // custom-modes store — it writes there whenever the user creates a mode at
+    // Project scope — so agentsmesh owns only its marked modes (see
+    // modes-merge.ts) and must never delete the file.
+    // `.roo/mcp.json` is Roo's own project MCP store: it writes `alwaysAllow`,
+    // `disabled` and `timeout` back whenever the user toggles a server.
+    coOwnedFiles: [ROO_CODE_VSCODE_SETTINGS, ROO_CODE_MODES_FILE, ROO_CODE_MCP_FILE],
   },
   paths: {
     rulePath(slug, _rule) {
@@ -94,7 +102,10 @@ export const globalLayout: TargetLayout = {
       ROO_CODE_GLOBAL_SKILLS_DIR,
       ROO_CODE_GLOBAL_AGENTS_SKILLS_DIR,
     ],
-    files: [ROO_CODE_GLOBAL_MCP_FILE, ROO_CODE_GLOBAL_MODES_FILE],
+    files: [ROO_CODE_GLOBAL_MCP_FILE],
+    // Roo Code writes this file itself whenever the user creates a Global mode;
+    // agentsmesh owns only the modes it marked (see modes-merge.ts).
+    coOwnedFiles: [ROO_CODE_GLOBAL_MODES_FILE],
   },
   rewriteGeneratedPath(path) {
     // Transform project-level paths to global ~/.roo/ paths. The root rule

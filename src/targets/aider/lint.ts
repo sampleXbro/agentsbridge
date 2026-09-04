@@ -1,27 +1,52 @@
 /**
  * Aider-specific lint hooks.
  *
- * Aider does not support hooks, MCP (project-level), or permissions
- * as standalone config files. Commands and agents are projected as
- * skills via supportsConversion.
+ * Aider supports MCP and permissions through no config file at all, and its
+ * hook surface is five fixed `.aider.conf.yml` keys rather than a general
+ * lifecycle mechanism — so `lintHooks` names every canonical entry that has no
+ * key to land in, plus the ones aider narrows. Commands and agents are
+ * projected as skills via supportsConversion.
  */
 
 import type { CanonicalFiles, LintDiagnostic } from '../../core/types.js';
 import { createWarning } from '../../core/lint/shared/helpers.js';
+import { projectAiderHooks, type AiderHookEntry } from './hooks-format.js';
+
+const HOOKS_FILE = '.agentsmesh/hooks.yaml';
+
+/** `PostToolUse(Bash): audit` — one readable item per dropped entry. */
+function describeEntries(entries: readonly AiderHookEntry[]): string {
+  return entries
+    .map((entry) => `${entry.event}(${entry.matcher || '*'}): ${entry.command}`)
+    .join(', ');
+}
 
 export function lintHooks(canonical: CanonicalFiles): LintDiagnostic[] {
-  if (!canonical.hooks) return [];
-  const hasEntries = Object.values(canonical.hooks).some(
-    (entries) => Array.isArray(entries) && entries.length > 0,
-  );
-  if (!hasEntries) return [];
-  return [
-    createWarning(
-      '.agentsmesh/hooks.yaml',
-      'aider',
-      'Aider has no lifecycle hook system; canonical hooks are not projected.',
-    ),
-  ];
+  const { unmapped, narrowed } = projectAiderHooks(canonical.hooks);
+  const diagnostics: LintDiagnostic[] = [];
+  if (unmapped.length > 0) {
+    diagnostics.push(
+      createWarning(
+        HOOKS_FILE,
+        'aider',
+        'Aider has no lifecycle hook system — only lint-cmd (run on the files it edits), ' +
+          'test-cmd (run after it edits code) and notifications-command, each holding one ' +
+          `command; these canonical hooks are not projected: ${describeEntries(unmapped)}.`,
+      ),
+    );
+  }
+  if (narrowed.length > 0) {
+    diagnostics.push(
+      createWarning(
+        HOOKS_FILE,
+        'aider',
+        'Aider runs test-cmd only after it edits code, not after every tool use, and treats ' +
+          'its output as test failures; these unscoped hooks are projected with that narrower ' +
+          `meaning: ${describeEntries(narrowed)}.`,
+      ),
+    );
+  }
+  return diagnostics;
 }
 
 export function lintPermissions(canonical: CanonicalFiles): LintDiagnostic[] {

@@ -3,6 +3,7 @@ import type { TargetPathContract } from './types.js';
 export const piAgentContract: TargetPathContract = {
   generated: [
     '.pi/prompts/review.md',
+    '.pi/settings.json',
     '.pi/skills/am-agent-code-reviewer/SKILL.md',
     '.pi/skills/am-agent-researcher/SKILL.md',
     '.pi/skills/api-generator/SKILL.md',
@@ -14,6 +15,7 @@ export const piAgentContract: TargetPathContract = {
     '.agentsmesh/agents/code-reviewer.md',
     '.agentsmesh/agents/researcher.md',
     '.agentsmesh/commands/review.md',
+    '.agentsmesh/permissions.yaml',
     '.agentsmesh/rules/_root.md',
     '.agentsmesh/skills/api-generator/SKILL.md',
     '.agentsmesh/skills/api-generator/references/route-checklist.md',

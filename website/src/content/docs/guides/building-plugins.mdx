@@ -358,7 +358,7 @@ You have already seen `project.paths` and `project.managedOutputs` in the minima
 
 | Field | Purpose |
 |-------|---------|
-| `managedOutputs` | Directories and files that AgentsMesh fully manages — stale artifacts are deleted on `generate` |
+| `managedOutputs` | `dirs` and `files` AgentsMesh fully manages — stale artifacts are deleted on `generate`. Put a shared config file the user also owns in `coOwnedFiles` instead: it is never deleted, and your `mergeGeneratedOutputContent` hook keeps their content. A path claimed by that hook must not appear in `files`. |
 | `rootInstructionPath` | Path to the primary root instruction file (e.g. `.foo-ide/ROOT.md`) |
 | `skillDir` | Target-native skills directory for skill generation and import |
 | `outputFamilies` | Declared output path families for reference rewriting between targets |
@@ -548,6 +548,13 @@ globalSupport: {
 },
 ```
 
+Scope-extras output goes through the same merge policy as every other emission:
+AgentsMesh reads the file, applies your `mergeGeneratedOutputContent` hook, and
+recomputes the status from the merged result. So a `scopeExtras` that writes into
+a file the user co-owns must claim that path with the hook — building the content
+from canonical alone is not enough on its own, and would replace the user's file.
+`target` is optional on each entry; AgentsMesh fills in your plugin's id.
+
 ### Shared Artifacts
 
 If your target generates files into a path shared with other targets, declare ownership:
@@ -574,6 +581,36 @@ mergeGeneratedOutputContent(existingContent, pendingContent, newContent, path) {
   return newContent;
 },
 ```
+
+A file you merge into is a file the user co-owns, so list it in `managedOutputs.coOwnedFiles`, never in `files`. Stale cleanup deletes every `files` entry a run did not emit — with the path in the wrong list, turning off one feature deletes the user's whole config:
+
+```js
+project: {
+  managedOutputs: {
+    dirs: ['.foo-ide/rules'],
+    files: ['.foo-ide/ROOT.md'],
+    coOwnedFiles: ['.foo-ide/settings.json'],   // merged into, never deleted
+  },
+},
+```
+
+### Revoking what you wrote
+
+Per-entry revocation works on its own: your generator emits the current canonical
+projection every run, so a server or rule the user removed is rewritten out of the
+file by `mergeGeneratedOutputContent`.
+
+Revocation-to-**empty** is a known gap. Emptying a canonical source makes the
+generator return nothing, so the path drops out of the run entirely — and because
+a co-owned file is never deleted, whatever the previous run wrote stays live. The
+same is true when the user disables the feature. There is no descriptor hook for
+this yet: doing it safely needs a record of what AgentsMesh previously wrote, so
+revocation can tell its own output apart from keys the user added by hand.
+
+If your target must fail closed on an empty canonical list, handle it inside the
+generator (emit the explicitly-empty projection yourself) rather than relying on
+the engine — see `src/targets/pi-agent/permissions-revoke.ts` for the existing
+in-target precedent.
 
 ## Descriptor Reference
 

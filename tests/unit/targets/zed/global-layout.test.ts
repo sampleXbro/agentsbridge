@@ -30,14 +30,16 @@ describe('zed global layout', () => {
     expect(rewrite('some/other/file.md')).toBe('some/other/file.md');
   });
 
-  it('globalSupport.capabilities differs from project capabilities', () => {
-    expect(descriptor.globalSupport!.capabilities.rules).toBe('none');
-    expect(descriptor.globalSupport!.capabilities.additionalRules).toBe('none');
-    expect(descriptor.globalSupport!.capabilities.commands).toBe('none');
+  it('globalSupport.capabilities differ from project capabilities only for permissions', () => {
+    expect(descriptor.globalSupport!.capabilities.rules).toBe('native');
+    expect(descriptor.globalSupport!.capabilities.additionalRules).toBe('embedded');
+    expect(descriptor.globalSupport!.capabilities.commands).toBe('embedded');
     expect(descriptor.globalSupport!.capabilities.skills).toBe('native');
     expect(descriptor.globalSupport!.capabilities.mcp).toBe('native');
-    expect(descriptor.globalSupport!.capabilities.ignore).toBe('partial');
-    expect(descriptor.globalSupport!.capabilities.permissions).toBe('partial');
+    expect(descriptor.globalSupport!.capabilities.ignore).toBe('embedded');
+    // agent.tool_permissions is a user-settings field; project scope discards it.
+    expect(descriptor.globalSupport!.capabilities.permissions).toBe('native');
+    expect(descriptor.capabilities.permissions).toBe('none');
   });
 
   it('global hooks capability is none — Zed has no lifecycle hook system', () => {
@@ -60,9 +62,13 @@ describe('zed global layout', () => {
     expect(descriptor.globalSupport!.layout.managedOutputs.dirs).toContain('.agents/skills');
   });
 
-  it('globalSupport has detection paths', () => {
-    expect(descriptor.globalSupport!.detectionPaths).toHaveLength(1);
-    expect(descriptor.globalSupport!.detectionPaths).toContain(ZED_GLOBAL_SETTINGS_FILE);
+  it('detects only Zed-specific config paths, never the shared skills dir', () => {
+    expect([...descriptor.globalSupport!.detectionPaths]).toEqual([
+      '.config/zed/AGENTS.md',
+      ZED_GLOBAL_SETTINGS_FILE,
+    ]);
+    expect(descriptor.globalSupport!.detectionPaths).not.toContain('.agents/skills');
+    expect(descriptor.detectionPaths).not.toContain('.agents/skills');
   });
 
   it('project capabilities have native rules and mcp', () => {
@@ -71,8 +77,8 @@ describe('zed global layout', () => {
     expect(descriptor.capabilities.mcp).toBe('native');
   });
 
-  it('does not declare supportsConversion', () => {
-    expect(descriptor.supportsConversion).toBeUndefined();
+  it('declares the commands-as-skills conversion, the only command surface Zed has', () => {
+    expect(descriptor.supportsConversion).toEqual({ commands: true });
   });
 
   it('declares sharedArtifacts as consumer for .agents/skills/', () => {

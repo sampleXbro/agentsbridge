@@ -16,6 +16,7 @@ export function renderCheck(result: CheckCommandResult): void {
   if (data.inSync) {
     ui.note('Lock file is in sync.', 'Check');
     ui.success('Lock file is in sync.');
+    renderUntracked(data);
     renderSkippedNote(data);
     return;
   }
@@ -50,7 +51,21 @@ export function renderCheck(result: CheckCommandResult): void {
   ui.info(
     "Run 'agentsmesh merge' to resolve, or 'agentsmesh generate --force' to accept current state.",
   );
+  renderUntracked(data);
   renderSkippedNote(data);
+}
+
+/**
+ * Files inside a managed directory agentsmesh did not generate. Informational
+ * only — they never affect the exit code, because `generate` cannot remove them
+ * and reporting them as drift would be a red gate with no remedy.
+ */
+function renderUntracked(data: CheckCommandResult['data']): void {
+  if (data.outputsUntracked.length === 0) return;
+  ui.info(
+    `${data.outputsUntracked.length} file(s) in managed directories were not written by agentsmesh (left untouched):`,
+  );
+  for (const p of data.outputsUntracked) ui.info(`  ${fwd(p)}`);
 }
 
 /** Normalize a displayed path to forward slashes (CLI paths rule). */

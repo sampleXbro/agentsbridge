@@ -49,7 +49,7 @@ agentsmesh init --global
 agentsmesh generate --global --targets claude-code,antigravity,codex-cli,cursor
 ```
 
-Reads canonical files from `~/.agentsmesh/` and writes user-level outputs per target (for example Claude Code under `~/.claude/` including `hooks.json`, `~/.claudeignore`, skills under `~/.claude/skills/` and mirrored to `~/.agents/skills/` only when Codex is not also a global target, optional `output-styles/` when `outputStyle: true`, plus `~/.claude.json` for MCP; Antigravity under `~/.gemini/` (rules in `~/.gemini/GEMINI.md`, skills in `~/.gemini/config/skills/`, commands in `~/.gemini/antigravity/global_workflows/`, MCP at `~/.gemini/config/mcp_config.json`); Codex CLI under `~/.codex/` plus `~/.agents/skills/`; and Cursor under `~/.cursor/` with `rules/*.mdc`, aggregated `AGENTS.md`, MCP, hooks, `cursorignore`, skills, agents, and commands). See the [supported tools matrix](../../reference/supported-tools#global-mode) for the full global-mode map.
+Reads canonical files from `~/.agentsmesh/` and writes user-level outputs per target (for example Claude Code under `~/.claude/` including `settings.json` — which carries hooks, since Claude Code has no standalone `hooks.json` — plus `~/.claudeignore`, skills under `~/.claude/skills/` and mirrored to `~/.agents/skills/` only when Codex is not also a global target, optional `output-styles/` when `outputStyle: true`, plus `~/.claude.json` for MCP; Antigravity under `~/.gemini/` (rules in `~/.gemini/GEMINI.md`, skills in `~/.gemini/config/skills/`, commands in `~/.gemini/antigravity/global_workflows/`, MCP at `~/.gemini/config/mcp_config.json`); Codex CLI under `~/.codex/` plus `~/.agents/skills/`; and Cursor under `~/.cursor/` with `rules/*.mdc`, aggregated `AGENTS.md`, MCP, hooks, `cursorignore`, skills, agents, and commands). See the [supported tools matrix](../../reference/supported-tools#global-mode) for the full global-mode map.
 
 The rest of the maintenance commands (`install`, `diff`, `lint`, `watch`, `check`, `merge`, and `matrix`) also accept `--global` and operate on the same `~/.agentsmesh/` canonical root.
 
@@ -59,7 +59,7 @@ The rest of the maintenance commands (`install`, `diff`, `lint`, `watch`, `check
 agentsmesh generate --dry-run
 ```
 
-Shows a unified diff of what would change without writing any files. Useful before committing or during debugging.
+Prints one status line per file — `[dry-run] <status> <path> (<target>)` — without writing anything. Useful before committing or during debugging. For the actual unified patches, use [`agentsmesh diff`](../diff/).
 
 ### CI check mode
 

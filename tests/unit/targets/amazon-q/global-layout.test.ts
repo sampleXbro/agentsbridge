@@ -29,7 +29,8 @@ describe('amazon-q descriptor', () => {
     // Commands are native: `/prompts` reads `.amazonq/prompts/<name>.md` (see commands.test.ts).
     expect(descriptor.capabilities.commands).toBe('native');
     expect(descriptor.capabilities.skills).toBe('none');
-    expect(descriptor.capabilities.ignore).toBe('none');
+    // No ignore file exists in Q CLI; patterns ride in agent JSON toolsSettings.
+    expect(descriptor.capabilities.ignore).toBe('embedded');
     expect(descriptor.capabilities.hooks).toBe('embedded');
     expect(descriptor.capabilities.permissions).toBe('embedded');
   });
@@ -43,9 +44,12 @@ describe('amazon-q descriptor', () => {
     expect(descriptor.detectionPaths).toContain(AMAZON_Q_MCP_FILE);
   });
 
-  it('has project managedOutputs for rules dir and mcp file', () => {
+  // `q mcp add --scope workspace` writes the MCP file too, so it is co-owned
+  // (merged, never deleted) rather than delete-listed.
+  it('has project managedOutputs for rules dir and co-owns the mcp file', () => {
     expect(descriptor.project.managedOutputs?.dirs).toContain(AMAZON_Q_RULES_DIR);
-    expect(descriptor.project.managedOutputs?.files).toContain(AMAZON_Q_MCP_FILE);
+    expect(descriptor.project.managedOutputs?.coOwnedFiles).toContain(AMAZON_Q_MCP_FILE);
+    expect(descriptor.project.managedOutputs?.files).not.toContain(AMAZON_Q_MCP_FILE);
   });
 });
 
@@ -56,12 +60,13 @@ describe('amazon-q global layout', () => {
     expect(descriptor.globalSupport).toBeDefined();
   });
 
-  it('global capabilities declare native rules and mcp', () => {
-    expect(descriptor.globalSupport?.capabilities.rules).toBe('native');
+  it('global capabilities declare embedded rules and native mcp', () => {
+    // paths.rs `mod global` has no rules constant, so `.aws/amazonq/rules/*.md` is read
+    // only via the `resources` glob in a generated agent JSON — embedded, not native.
+    expect(descriptor.globalSupport?.capabilities.rules).toBe('embedded');
+    expect(descriptor.globalSupport?.capabilities.additionalRules).toBe('embedded');
     expect(descriptor.globalSupport?.capabilities.mcp).toBe('native');
-    // Amazon Q has no global rules dir on disk (~/.aws/amazonq/ is MCP/agents only),
-    // so additionalRules stays none for global.
-    expect(descriptor.globalSupport?.capabilities.additionalRules).toBe('none');
+    expect(descriptor.globalSupport?.capabilities.ignore).toBe('embedded');
   });
 
   it('global detection paths include rules dir and mcp file', () => {
@@ -102,10 +107,11 @@ describe('amazon-q global layout', () => {
     expect(rulePath).toBe(`${AMAZON_Q_GLOBAL_RULES_DIR}/security.md`);
   });
 
-  it('global managedOutputs include global rules dir and mcp file', () => {
+  it('global managedOutputs include global rules dir and co-own the mcp file', () => {
     const managedOutputs = descriptor.globalSupport?.layout.managedOutputs;
     expect(managedOutputs?.dirs).toContain(AMAZON_Q_GLOBAL_RULES_DIR);
-    expect(managedOutputs?.files).toContain(AMAZON_Q_GLOBAL_MCP_FILE);
+    expect(managedOutputs?.coOwnedFiles).toContain(AMAZON_Q_GLOBAL_MCP_FILE);
+    expect(managedOutputs?.files).not.toContain(AMAZON_Q_GLOBAL_MCP_FILE);
   });
 });
 

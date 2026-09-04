@@ -4,13 +4,10 @@
  * Crush is a terminal TUI AI coding agent by Charmbracelet.
  * https://github.com/charmbracelet/crush
  *
- * Generation emits:
- *   - `CRUSH.md`         — root rule + embedded non-root rules
- *   - `.crush/skills/`   — skill bundles
- *   - `crush.json`       — MCP servers, hooks, permissions
- *   - `.crushignore`     — ignore patterns
- *
- * Import reads `CRUSH.md`, `.crush/skills/`, `crush.json`, and `.crushignore`.
+ * Generate and import both cover `CRUSH.md` (root rule + embedded non-root
+ * rules), `.crush/skills/`, `crush.json` (MCP, hooks, permissions) and
+ * `.crushignore`. Global scope moves all four under `~/.config/crush/`, where
+ * the ignore file is named `ignore` — extensionless, with no leading dot.
  *
  * Commands and agents are projected as skills via supportsConversion —
  * Crush has no native slash-command or Markdown-file agent format.
@@ -45,6 +42,7 @@ import {
   CRUSH_GLOBAL_ROOT_FILE,
   CRUSH_GLOBAL_SKILLS_DIR,
   CRUSH_GLOBAL_CONFIG_FILE,
+  CRUSH_GLOBAL_IGNORE,
   CRUSH_CANONICAL_RULES_DIR,
   CRUSH_CANONICAL_IGNORE,
 } from './constants.js';
@@ -68,7 +66,10 @@ const project: TargetLayout = {
   skillDir: CRUSH_SKILLS_DIR,
   managedOutputs: {
     dirs: [CRUSH_SKILLS_DIR],
-    files: [CRUSH_ROOT_FILE, CRUSH_CONFIG_FILE, CRUSH_IGNORE],
+    files: [CRUSH_ROOT_FILE, CRUSH_IGNORE],
+    // Crush's own config file: providers, models and LSP settings the user
+    // owns sit beside the keys agentsmesh writes.
+    coOwnedFiles: [CRUSH_CONFIG_FILE],
   },
   paths: {
     rulePath(_slug) {
@@ -88,12 +89,13 @@ const globalLayout: TargetLayout = {
   skillDir: CRUSH_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [CRUSH_GLOBAL_SKILLS_DIR],
-    files: [CRUSH_GLOBAL_ROOT_FILE, CRUSH_GLOBAL_CONFIG_FILE],
+    files: [CRUSH_GLOBAL_ROOT_FILE, CRUSH_GLOBAL_IGNORE],
+    coOwnedFiles: [CRUSH_GLOBAL_CONFIG_FILE],
   },
   rewriteGeneratedPath(path) {
     if (path === CRUSH_ROOT_FILE) return CRUSH_GLOBAL_ROOT_FILE;
     if (path === CRUSH_CONFIG_FILE) return CRUSH_GLOBAL_CONFIG_FILE;
-    if (path === CRUSH_IGNORE) return null;
+    if (path === CRUSH_IGNORE) return CRUSH_GLOBAL_IGNORE;
     if (path.startsWith(`${CRUSH_SKILLS_DIR}/`)) {
       return path.replace(`${CRUSH_SKILLS_DIR}/`, `${CRUSH_GLOBAL_SKILLS_DIR}/`);
     }
@@ -135,7 +137,7 @@ const globalCapabilities: TargetCapabilities = {
   skills: 'native',
   mcp: 'native',
   hooks: 'native',
-  ignore: 'none',
+  ignore: 'native',
   permissions: 'native',
 };
 
@@ -152,14 +154,17 @@ export const descriptor = {
   emptyImportMessage:
     'No Crush config found (CRUSH.md, .crush/skills/, crush.json, or .crushignore).',
   lintRules,
-  lint: {
-    commands: lintCommands,
-  },
+  lint: { commands: lintCommands },
   supportsConversion: { commands: true, agents: true },
   project,
   globalSupport: {
     capabilities: globalCapabilities,
-    detectionPaths: [CRUSH_GLOBAL_ROOT_FILE, CRUSH_GLOBAL_CONFIG_FILE, CRUSH_GLOBAL_SKILLS_DIR],
+    detectionPaths: [
+      CRUSH_GLOBAL_ROOT_FILE,
+      CRUSH_GLOBAL_CONFIG_FILE,
+      CRUSH_GLOBAL_SKILLS_DIR,
+      CRUSH_GLOBAL_IGNORE,
+    ],
     layout: globalLayout,
   },
   mergeGeneratedOutputContent(existing, pending, newContent, resolvedPath) {
@@ -185,6 +190,7 @@ export const descriptor = {
       mode: 'flatFile',
       source: {
         project: [CRUSH_IGNORE],
+        global: [CRUSH_GLOBAL_IGNORE],
       },
       canonicalDir: '.agentsmesh',
       canonicalFilename: CRUSH_CANONICAL_IGNORE,

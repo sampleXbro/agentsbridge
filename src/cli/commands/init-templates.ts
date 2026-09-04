@@ -147,7 +147,14 @@ export const TEMPLATE_HOOKS = `${yamlSchemaDirective('hooks')}# Lifecycle hooks 
 #     command: npm test --passWithNoTests
 `;
 
+// The lists are commented out, not scaffolded empty. An explicit `allow: []`
+// says "grant nothing", which a target that projects permissions into a shared
+// config file would apply over whatever the user already had there. Absent keys
+// say "agentsmesh manages nothing here yet", which is what a fresh init means.
 export const TEMPLATE_PERMISSIONS = `${yamlSchemaDirective('permissions')}# Tool permission allow/deny lists
+#
+# Uncomment a list to start managing it. An empty list (\`allow: []\`) is a real
+# instruction — "grant nothing" — not a placeholder.
 #
 # allow:
 #   - Bash(npm run:*)
@@ -160,9 +167,6 @@ export const TEMPLATE_PERMISSIONS = `${yamlSchemaDirective('permissions')}# Tool
 #
 # ask:
 #   - Write(/tmp/**)
-allow: []
-deny: []
-ask: []
 `;
 
 export const TEMPLATE_IGNORE = `# Patterns ignored by all configured AI tools (gitignore syntax)

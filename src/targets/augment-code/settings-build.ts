@@ -1,15 +1,17 @@
 /**
  * Build and merge AugmentCode `settings.json` content from canonical files.
  *
- * settings.json carries `mcpServers`, `hooks`, and (global scope only)
- * `toolPermissions`. Permissions live exclusively in the personal
- * `~/.augment/settings.json` and are read only by the Auggie CLI, so they are
- * emitted at global scope only.
+ * settings.json carries `mcpServers`, `hooks`, and `toolPermissions`. Augment
+ * documents the same `toolPermissions` shape in the personal
+ * `~/.augment/settings.json` and in the repo-level `.augment/settings.json`
+ * that teams commit to enforce policy, so it is emitted at both scopes.
+ * Repo-level permissions are honored by the Auggie CLI and Cosmos cloud
+ * agents; the IDE extension ignores them.
+ * https://docs.augmentcode.com/cli/permissions
  */
 
 import type { CanonicalFiles, Permissions } from '../../core/types.js';
 import type { Hooks } from '../../core/hook-types.js';
-import type { TargetLayoutScope } from '../catalog/target-descriptor.js';
 
 interface ToolPermissionEntry {
   toolName: string;
@@ -54,7 +56,6 @@ export function serializeToolPermissions(
 export function buildSettingsContent(
   canonical: CanonicalFiles,
   enabledFeatures: ReadonlySet<string>,
-  scope: TargetLayoutScope,
 ): string | null {
   const settings: Record<string, unknown> = {};
 
@@ -70,7 +71,7 @@ export function buildSettingsContent(
     settings.hooks = serializeHooksForSettings(canonical.hooks);
   }
 
-  if (scope === 'global' && enabledFeatures.has('permissions')) {
+  if (enabledFeatures.has('permissions')) {
     const toolPermissions = serializeToolPermissions(canonical.permissions);
     if (toolPermissions) settings.toolPermissions = toolPermissions;
   }
@@ -79,23 +80,30 @@ export function buildSettingsContent(
   return JSON.stringify(settings, null, 2);
 }
 
-export function mergeAugmentSettings(existing: string | null, newContent: string): string {
-  if (existing === null) return newContent;
-  let base: Record<string, unknown>;
+/**
+ * Overlay the keys agentsmesh manages onto `base`.
+ *
+ * `base` is the pending write from an earlier pass of the same run when there
+ * is one, otherwise the on-disk file — several features share this one file,
+ * so each pass must build on the previous one instead of the stale disk copy.
+ */
+export function mergeAugmentSettings(base: string | null, newContent: string): string {
+  if (base === null) return newContent;
+  let merged: Record<string, unknown>;
   try {
-    const parsed: unknown = JSON.parse(existing);
-    base =
+    const parsed: unknown = JSON.parse(base);
+    merged =
       parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)
         ? (parsed as Record<string, unknown>)
         : {};
   } catch {
-    base = {};
+    merged = {};
   }
   const incoming: unknown = JSON.parse(newContent);
-  if (incoming === null || typeof incoming !== 'object' || Array.isArray(incoming)) return existing;
+  if (incoming === null || typeof incoming !== 'object' || Array.isArray(incoming)) return base;
   const overlay = incoming as Record<string, unknown>;
-  if (overlay.mcpServers !== undefined) base.mcpServers = overlay.mcpServers;
-  if (overlay.hooks !== undefined) base.hooks = overlay.hooks;
-  if (overlay.toolPermissions !== undefined) base.toolPermissions = overlay.toolPermissions;
-  return JSON.stringify(base, null, 2);
+  if (overlay.mcpServers !== undefined) merged.mcpServers = overlay.mcpServers;
+  if (overlay.hooks !== undefined) merged.hooks = overlay.hooks;
+  if (overlay.toolPermissions !== undefined) merged.toolPermissions = overlay.toolPermissions;
+  return JSON.stringify(merged, null, 2);
 }

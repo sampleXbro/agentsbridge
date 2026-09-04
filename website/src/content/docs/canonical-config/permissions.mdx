@@ -1,7 +1,7 @@
 ---
 draft: false
 title: Permissions
-description: Permissions in AgentsMesh define allow and deny lists for tool operations. Natively supported in Claude Code and partially in Cursor and Gemini CLI.
+description: Permissions in AgentsMesh define allow and deny lists for tool operations. Support varies per target — see the supported tools matrix.
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -67,7 +67,7 @@ Permissions often represent security boundaries. Use `collaboration.lock_feature
 ```yaml
 # agentsmesh.yaml
 collaboration:
-  strategy: merge
+  strategy: lock
   lock_features:
     - permissions
     - mcp

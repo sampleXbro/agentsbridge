@@ -1,7 +1,7 @@
 /**
  * Map install pathInRepo to target hint and whether repo-root discovery +
  * pick inference applies. The `path → target` map is derived from every
- * builtin descriptor's `project.managedOutputs.{dirs,files}` and
+ * builtin descriptor's `project.managedOutputs` (owned AND co-owned) and
  * `detectionPaths`, so adding a new target automatically extends this map.
  *
  * Only paths owned by exactly one descriptor are included. Shared markers
@@ -12,12 +12,12 @@
 
 import type { ExtendPick } from '../../config/core/schema.js';
 import { BUILTIN_TARGETS } from '../../targets/catalog/builtin-targets.js';
+import { managedOutputPaths } from '../../targets/catalog/managed-outputs.js';
 
 const PATH_PREFIX_TO_TARGET: ReadonlyArray<{ prefix: string; target: string }> = (() => {
   const owners = new Map<string, Set<string>>();
   for (const descriptor of BUILTIN_TARGETS) {
-    const mo = descriptor.project.managedOutputs;
-    const candidates = [...(mo?.dirs ?? []), ...(mo?.files ?? []), ...descriptor.detectionPaths];
+    const candidates = [...managedOutputPaths(descriptor.project), ...descriptor.detectionPaths];
     for (const raw of candidates) {
       const normalized = raw.replace(/\/$/, '');
       const ownerSet = owners.get(normalized) ?? new Set<string>();

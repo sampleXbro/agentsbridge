@@ -6,29 +6,8 @@ import {
 } from '../../targets/catalog/builtin-targets.js';
 import { getDescriptor } from '../../targets/catalog/registry.js';
 import { emitGeneratedOutput, featureContext } from './feature-loop.js';
-import { SETTINGS_JSON_PATHS, mergeSettingsJson } from './settings.js';
+import { outputMergeOptions } from './merge-policy.js';
 import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
-
-function mergeOutputContent(
-  target: string,
-  existing: string | null,
-  pending: GenerateResult | undefined,
-  newContent: string,
-  resolvedPath: string,
-): string {
-  const descriptor = getBuiltinTargetDefinition(target) ?? getDescriptor(target);
-  const merged = descriptor?.mergeGeneratedOutputContent?.(
-    existing,
-    pending,
-    newContent,
-    resolvedPath,
-  );
-  if (merged !== null && merged !== undefined) return merged;
-  const base = pending?.content ?? existing;
-  return base !== null && SETTINGS_JSON_PATHS.includes(resolvedPath)
-    ? mergeSettingsJson(base, newContent)
-    : newContent;
-}
 
 export async function generatePermissionsFeature(
   results: GenerateResult[],
@@ -43,11 +22,9 @@ export async function generatePermissionsFeature(
       getDescriptor(target)?.generators.generatePermissions;
     if (!gen) continue;
     const ctx = featureContext(target, 'permissions', scope);
+    const options = outputMergeOptions(target);
     for (const out of gen(canonical, ctx)) {
-      await emitGeneratedOutput(results, target, out, projectRoot, scope, {
-        mergeContent: (existing, pending, newContent, resolvedPath) =>
-          mergeOutputContent(target, existing, pending, newContent, resolvedPath),
-      });
+      await emitGeneratedOutput(results, target, out, projectRoot, scope, options);
     }
   }
 }
@@ -72,11 +49,9 @@ export async function generateHooksFeature(
     if (post) {
       outputs = [...(await post(projectRoot, canonical, outputs))];
     }
+    const options = outputMergeOptions(target);
     for (const out of outputs) {
-      await emitGeneratedOutput(results, target, out, projectRoot, scope, {
-        mergeContent: (existing, pending, newContent, resolvedPath) =>
-          mergeOutputContent(target, existing, pending, newContent, resolvedPath),
-      });
+      await emitGeneratedOutput(results, target, out, projectRoot, scope, options);
     }
   }
 }
@@ -95,11 +70,9 @@ export async function generateScopedSettingsFeature(
     if (!emit) continue;
     const outputs = emit(canonical, scope, enabledFeatures);
     if (outputs.length === 0) continue;
+    const options = outputMergeOptions(target);
     for (const out of outputs) {
-      await emitGeneratedOutput(results, target, out, projectRoot, scope, {
-        mergeContent: (existing, pending, newContent, resolvedPath) =>
-          mergeOutputContent(target, existing, pending, newContent, resolvedPath),
-      });
+      await emitGeneratedOutput(results, target, out, projectRoot, scope, options);
     }
   }
 }

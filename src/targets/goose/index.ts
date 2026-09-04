@@ -5,14 +5,17 @@
  *   - `.goosehints`       — root rule + embedded additional rules
  *   - `.agents/skills/`   — skill bundles
  *   - `.gooseignore`      — ignore patterns
+ *   - `.agents/plugins/agentsmesh/.mcp.json` — stdio MCP servers (project scope)
  *
- * Import reads `.goosehints`, `.agents/skills/`, and `.gooseignore`.
+ * Import reads `.goosehints`, `.agents/skills/`, `.gooseignore`, and the plugin
+ * `.mcp.json`.
  * Goose also reads `AGENTS.md` but we generate to the native `.goosehints`
  * path to avoid shared-artifact collisions with other targets.
  */
 
-import type { TargetCapabilities, TargetGenerators } from '../catalog/target.interface.js';
+import type { TargetGenerators } from '../catalog/target.interface.js';
 import type { TargetDescriptor, TargetLayout } from '../catalog/target-descriptor.js';
+import { projectCapabilities, globalCapabilities } from './capabilities.js';
 import { commandSkillDirName } from '../codex-cli/command-skill.js';
 import { projectedAgentSkillDirName } from '../projection/projected-agent-skill.js';
 import {
@@ -21,10 +24,10 @@ import {
   generateAgents,
   generateSkills,
   generateIgnore,
-  generateMcp,
   generateHooks,
   generatePermissions,
 } from './generator.js';
+import { emitGooseProjectMcp, mergeGooseMcpContent } from './mcp-settings.js';
 import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromGoose } from './importer.js';
 import { gooseImporter } from './importer-spec.js';
@@ -38,6 +41,7 @@ import {
   GOOSE_SKILLS_DIR,
   GOOSE_IGNORE,
   GOOSE_HOOKS_FILE,
+  GOOSE_PROJECT_MCP_FILE,
   GOOSE_GLOBAL_ROOT_FILE,
   GOOSE_GLOBAL_IGNORE,
   GOOSE_GLOBAL_CONFIG,
@@ -53,7 +57,8 @@ export const target: TargetGenerators = {
   generateAgents,
   generateSkills,
   generateIgnore,
-  generateMcp,
+  // No `generateMcp`: both MCP files merge into content agentsmesh does not own.
+  // Project scope goes through `emitScopedSettings`, global through `scopeExtras`.
   generateHooks,
   generatePermissions,
   importFrom: importFromGoose,
@@ -64,7 +69,12 @@ const project: TargetLayout = {
   skillDir: GOOSE_SKILLS_DIR,
   managedOutputs: {
     dirs: [GOOSE_SKILLS_DIR],
-    files: [GOOSE_ROOT_FILE, GOOSE_IGNORE, GOOSE_HOOKS_FILE],
+    // The plugin `.mcp.json` is listed so revoking every stdio server deletes it.
+    // Consequence, and intended: a run with `mcp` disabled also removes it, the
+    // same way `.goosehints` and the sibling `hooks/hooks.json` are removed. All
+    // three are agentsmesh's own artifacts inside the `agentsmesh` plugin dir.
+    // The user-owned `~/.config/goose/config.yaml` is deliberately NOT managed.
+    files: [GOOSE_ROOT_FILE, GOOSE_IGNORE, GOOSE_HOOKS_FILE, GOOSE_PROJECT_MCP_FILE],
   },
   paths: {
     rulePath(_slug) {
@@ -84,13 +94,15 @@ const globalLayout: TargetLayout = {
   skillDir: GOOSE_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [GOOSE_GLOBAL_SKILLS_DIR],
-    files: [
-      GOOSE_GLOBAL_ROOT_FILE,
-      GOOSE_GLOBAL_IGNORE,
-      GOOSE_GLOBAL_CONFIG,
-      GOOSE_HOOKS_FILE,
-      GOOSE_GLOBAL_PERMISSIONS,
-    ],
+    // `config.yaml` is NOT listed: it is goose's primary config (provider, model,
+    // GOOSE_MODE, builtin extensions) and stale-cleanup deletes every managed
+    // file a run did not emit, so a global run without `mcp` would erase it.
+    // Revocation is handled inside `global-mcp.ts` by clearing `extensions`.
+    files: [GOOSE_GLOBAL_ROOT_FILE, GOOSE_GLOBAL_IGNORE, GOOSE_HOOKS_FILE],
+    // `permission.yaml` carries goose's own tool-permission state; agentsmesh
+    // merges canonical permissions into the `user` category only
+    // (`scope-extras.ts`), so deleting it discards the categories goose owns.
+    coOwnedFiles: [GOOSE_GLOBAL_PERMISSIONS],
   },
   rewriteGeneratedPath(path) {
     if (path === GOOSE_ROOT_FILE) return GOOSE_GLOBAL_ROOT_FILE;
@@ -116,30 +128,6 @@ const globalLayout: TargetLayout = {
   },
 };
 
-const capabilities: TargetCapabilities = {
-  rules: 'native',
-  additionalRules: 'embedded',
-  commands: 'embedded',
-  agents: 'embedded',
-  skills: 'native',
-  mcp: 'partial',
-  hooks: 'native',
-  ignore: 'native',
-  permissions: 'partial',
-};
-
-const globalCapabilities: TargetCapabilities = {
-  rules: 'native',
-  additionalRules: 'embedded',
-  commands: 'embedded',
-  agents: 'embedded',
-  skills: 'native',
-  mcp: 'native',
-  hooks: 'native',
-  ignore: 'native',
-  permissions: 'native',
-};
-
 export const descriptor = {
   id: GOOSE_TARGET,
   metadata: {
@@ -149,13 +137,17 @@ export const descriptor = {
     shortDescription: "Block's open-source AI agent",
   },
   generators: target,
-  capabilities,
-  emptyImportMessage: 'No Goose config found (.goosehints, .agents/skills, or .gooseignore).',
+  capabilities: projectCapabilities,
+  emptyImportMessage:
+    `No Goose config found (.goosehints, .agents/skills, .gooseignore, or ` +
+    `${GOOSE_PROJECT_MCP_FILE}).`,
   lintRules,
   lint: {
     permissions: lintPermissions,
     mcp: lintMcp,
   },
+  emitScopedSettings: emitGooseProjectMcp,
+  mergeGeneratedOutputContent: mergeGooseMcpContent,
   supportsConversion: { commands: true, agents: true },
   project,
   globalSupport: {
@@ -174,6 +166,6 @@ export const descriptor = {
     '.agents/skills/': 'consumer',
   },
   buildImportPaths: buildGooseImportPaths,
-  detectionPaths: [GOOSE_ROOT_FILE, GOOSE_IGNORE],
+  detectionPaths: [GOOSE_ROOT_FILE, GOOSE_IGNORE, GOOSE_PROJECT_MCP_FILE],
   conversionDefaults: { commandsToSkills: true, agentsToSkills: true },
 } satisfies TargetDescriptor;

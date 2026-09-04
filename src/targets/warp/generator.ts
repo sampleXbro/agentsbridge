@@ -2,11 +2,13 @@
  * Generate Warp target outputs from canonical files.
  *
  * Emits:
- *   - `AGENTS.md`           — root rule + embedded non-root rules
- *   - `.warp/skills/`       — skill bundles
- *   - `.warp/.mcp.json`     — MCP servers, standard format (project scope)
- *   - `~/.warp/.mcp.json`   — MCP servers, standard format (global scope,
- *                             rebased under home dir by the engine)
+ *   - `AGENTS.md`            — root rule + embedded non-root rules (global
+ *                              scope rebases this to `~/.agents/AGENTS.md`)
+ *   - `.warp/skills/`        — skill bundles
+ *   - `.warp/.mcp.json`      — MCP servers, standard format (project scope)
+ *   - `~/.warp/.mcp.json`    — MCP servers, standard format (global scope,
+ *                              rebased under home dir by the engine)
+ *   - `.warpindexingignore`  — indexing exclusions (project scope)
  */
 
 import type { CanonicalFiles } from '../../core/types.js';
@@ -24,6 +26,7 @@ import {
   WARP_SKILLS_DIR,
   WARP_MCP_FILE,
   WARP_GLOBAL_MCP_FILE,
+  WARP_IGNORE_FILE,
 } from './constants.js';
 
 export interface WarpOutput {
@@ -73,8 +76,11 @@ export function generateMcp(canonical: CanonicalFiles, ctx?: GenerateFeatureCont
   return [{ path, content }];
 }
 
-// Warp permissions are managed via Agent Profiles in the Warp UI;
-// no config file is emitted.
+/**
+ * No-op stub — `~/.warp/settings.toml` is user-level only, so permissions are
+ * emitted from `globalSupport.scopeExtras` (see `global-permissions.ts`), never
+ * at project scope. Lint warnings surface this via lintPermissions.
+ */
 export function generatePermissions(_canonical: CanonicalFiles): WarpOutput[] {
   return [];
 }
@@ -88,9 +94,11 @@ export function generateHooks(_canonical: CanonicalFiles): WarpOutput[] {
 }
 
 /**
- * No-op stub — Warp has no dedicated ignore file and relies on .gitignore.
- * Lint warnings surface this via lintIgnore.
+ * `.warpindexingignore` — gitignore syntax, project root only. The global
+ * layout suppresses this path; Warp's home-level equivalent is a GUI
+ * indexed-folders control, surfaced by lintIgnore instead.
  */
-export function generateIgnore(_canonical: CanonicalFiles): WarpOutput[] {
-  return [];
+export function generateIgnore(canonical: CanonicalFiles): WarpOutput[] {
+  if (canonical.ignore.length === 0) return [];
+  return [{ path: WARP_IGNORE_FILE, content: canonical.ignore.join('\n') }];
 }

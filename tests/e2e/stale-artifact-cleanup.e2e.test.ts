@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { rmSync } from 'node:fs';
+import { readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createCanonicalProject } from './helpers/canonical.js';
 import { cleanup } from './helpers/setup.js';
@@ -64,13 +64,6 @@ describe('stale artifact cleanup e2e', () => {
       canonicalPath: '.agentsmesh/rules/typescript.md',
       stale: ['.cline/rules/typescript.md'],
     },
-    {
-      label: 'roo-code agents',
-      target: 'roo-code',
-      features: '[rules, agents]',
-      canonicalPath: '.agentsmesh/agents',
-      stale: ['.roomodes'],
-    },
   ])(
     'deletes stale %s artifacts after canonical removal',
     async ({ target, features, canonicalPath, stale }) => {
@@ -88,4 +81,33 @@ features: ${features}
       for (const stalePath of stale) fileNotExists(join(dir, stalePath));
     },
   );
+
+  /**
+   * `.roomodes` is Roo's own project custom-modes store, so it is co-owned and
+   * never deleted. Revocation is per mode instead: dropping one agent drops its
+   * marked mode while the user's own modes stay. Dropping EVERY agent is the
+   * documented revocation-to-empty gap — `generateAgents` returns `[]`, nothing
+   * is emitted, so the merger never runs and the last marked mode remains.
+   */
+  it('revokes a single roo-code mode without deleting the co-owned .roomodes', async () => {
+    dir = createCanonicalProject(`version: 1
+targets: [roo-code]
+features: [rules, agents]
+`);
+    writeFileSync(
+      join(dir, '.agentsmesh', 'agents', 'beta.md'),
+      '---\ndescription: Beta agent\n---\nBeta body.\n',
+    );
+    expect((await runCli('generate --targets roo-code', dir)).exitCode).toBe(0);
+
+    const roomodes = join(dir, '.roomodes');
+    expect(readFileSync(roomodes, 'utf-8')).toContain('slug: beta');
+
+    rmSync(join(dir, '.agentsmesh', 'agents', 'beta.md'), { force: true });
+    const rerun = await runCli('generate --targets roo-code', dir);
+    expect(rerun.exitCode, rerun.stderr).toBe(0);
+
+    const after = readFileSync(roomodes, 'utf-8');
+    expect(after).not.toContain('slug: beta');
+  });
 });

@@ -11,7 +11,12 @@
  */
 
 import type { GeneratedOutputMerger } from '../catalog/target-descriptor.js';
-import { KILO_CONFIG_FILE, KILO_GLOBAL_CONFIG_FILE } from './constants.js';
+import { preservedUnparsableBase } from '../../core/generate/json-owned-keys.js';
+import {
+  CANONICAL_MCP_SERVER_KEYS,
+  mcpServersJsonMerger,
+} from '../../core/generate/mcp-servers-merge.js';
+import { KILO_CODE_MCP_FILE, KILO_CONFIG_FILE, KILO_GLOBAL_CONFIG_FILE } from './constants.js';
 
 export const mergeKiloConfig: GeneratedOutputMerger = (
   existing,
@@ -22,14 +27,10 @@ export const mergeKiloConfig: GeneratedOutputMerger = (
   if (resolvedPath !== KILO_CONFIG_FILE && resolvedPath !== KILO_GLOBAL_CONFIG_FILE) return null;
   const base = pending?.content ?? existing;
   if (base === null) return newContent;
-  let parsed: Record<string, unknown>;
-  try {
-    const p: unknown = JSON.parse(base);
-    parsed =
-      p !== null && typeof p === 'object' && !Array.isArray(p) ? (p as Record<string, unknown>) : {};
-  } catch {
-    parsed = {};
-  }
+  // `jsonc` is the file's own format: comments are legal and expected.
+  const preserved = preservedUnparsableBase(base);
+  if (preserved !== null) return preserved;
+  const parsed = JSON.parse(base) as Record<string, unknown>;
   const incoming: unknown = JSON.parse(newContent);
   if (incoming === null || typeof incoming !== 'object' || Array.isArray(incoming)) return base;
   const overlay = incoming as Record<string, unknown>;
@@ -38,3 +39,18 @@ export const mergeKiloConfig: GeneratedOutputMerger = (
   if (overlay.mcp !== undefined) parsed.mcp = overlay.mcp;
   return JSON.stringify(parsed, null, 2);
 };
+
+/**
+ * `.kilo/mcp.json` is Kilo's own project MCP store. Kilo is a Roo Code fork, so
+ * the extension writes `alwaysAllow`, `disabled` and `timeout` back into the
+ * file whenever the user toggles a server; the importer also reads the legacy
+ * `.kilocode/mcp.json` it never generates, which only makes sense if the tool
+ * writes MCP files in its own directories.
+ *
+ * Global scope needs no claim: MCP folds into the already co-owned, already
+ * merged `kilo.jsonc` there (layout.ts).
+ */
+export const mergeKiloMcpJson: GeneratedOutputMerger = mcpServersJsonMerger(
+  [KILO_CODE_MCP_FILE],
+  CANONICAL_MCP_SERVER_KEYS,
+);

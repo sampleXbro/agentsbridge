@@ -24,7 +24,10 @@ export const project: TargetLayout = {
   skillDir: ROVODEV_SKILLS_DIR,
   managedOutputs: {
     dirs: [ROVODEV_SKILLS_DIR, ROVODEV_COMMANDS_DIR],
-    files: [ROVODEV_ROOT_FILE, ROVODEV_PROMPTS_FILE],
+    files: [ROVODEV_ROOT_FILE],
+    // The saved-prompt manifest: the user authors prompts in it and the
+    // importer reads them back, so agentsmesh owns only its marked entries.
+    coOwnedFiles: [ROVODEV_PROMPTS_FILE],
   },
   paths: {
     rulePath(_slug) {
@@ -44,11 +47,14 @@ export const globalLayout: TargetLayout = {
   skillDir: ROVODEV_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [ROVODEV_GLOBAL_SKILLS_DIR, ROVODEV_GLOBAL_COMMANDS_DIR],
-    files: [
-      ROVODEV_GLOBAL_ROOT_FILE,
-      ROVODEV_GLOBAL_PROMPTS_FILE,
-      ROVODEV_GLOBAL_MCP_FILE,
+    files: [ROVODEV_GLOBAL_ROOT_FILE],
+    // Rovo Dev's documented settings file; agentsmesh owns only `eventHooks`
+    // and `toolPermissions` inside it. `mcp_config.json` is the documented MCP
+    // config the CLI writes; agentsmesh owns the server set only.
+    coOwnedFiles: [
       ROVODEV_GLOBAL_CONFIG_FILE,
+      ROVODEV_GLOBAL_MCP_FILE,
+      ROVODEV_GLOBAL_PROMPTS_FILE,
     ],
   },
   rewriteGeneratedPath(path) {

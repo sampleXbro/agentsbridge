@@ -15,6 +15,7 @@ import {
   DEEPAGENTS_CLI_GLOBAL_AGENTS_DIR,
   DEEPAGENTS_CLI_GLOBAL_MCP_FILE,
   DEEPAGENTS_CLI_GLOBAL_HOOKS_FILE,
+  DEEPAGENTS_CLI_GLOBAL_CONFIG_FILE,
   DEEPAGENTS_CLI_DEFAULT_AGENT_NAME,
 } from '../../../../src/targets/deepagents-cli/constants.js';
 
@@ -92,9 +93,8 @@ describe('deepagents-cli global layout', () => {
     expect(descriptor.globalSupport!.capabilities.hooks).toBe('native');
   });
 
-  it('globalSupport.capabilities for ignore and permissions', () => {
+  it('globalSupport.capabilities.ignore is partial', () => {
     expect(descriptor.globalSupport!.capabilities.ignore).toBe('partial');
-    expect(descriptor.globalSupport!.capabilities.permissions).toBe('partial');
   });
 
   it('globalSupport has detection paths', () => {
@@ -123,18 +123,35 @@ describe('deepagents-cli global layout', () => {
     expect(descriptor.project.managedOutputs!.dirs).toContain(DEEPAGENTS_CLI_SKILLS_DIR);
     expect(descriptor.project.managedOutputs!.dirs).toContain(DEEPAGENTS_CLI_AGENTS_DIR);
     expect(descriptor.project.managedOutputs!.files).toContain(DEEPAGENTS_CLI_ROOT_FILE);
-    expect(descriptor.project.managedOutputs!.files).toContain(DEEPAGENTS_CLI_MCP_FILE);
+    // Co-owned: `.mcp.json` is the shared MCP file claude-code also writes.
+    expect(descriptor.project.managedOutputs!.coOwnedFiles).toEqual([DEEPAGENTS_CLI_MCP_FILE]);
     // No project-level hooks file — hooks are none (global-only surface).
     expect(descriptor.project.managedOutputs!.files).not.toContain('.deepagents/hooks.json');
   });
 
-  it('globalLayout managedOutputs includes global agents dir and hooks file', () => {
+  it('globalLayout managedOutputs includes global agents dir and co-owns hooks.json', () => {
     expect(descriptor.globalSupport!.layout.managedOutputs!.dirs).toContain(
       DEEPAGENTS_CLI_GLOBAL_AGENTS_DIR,
     );
-    expect(descriptor.globalSupport!.layout.managedOutputs!.files).toContain(
+    // The tool's only documented hooks file, hand-edited by users: agentsmesh
+    // owns the entries on the events it maps, so stale cleanup must not delete it.
+    expect(descriptor.globalSupport!.layout.managedOutputs!.files).not.toContain(
       DEEPAGENTS_CLI_GLOBAL_HOOKS_FILE,
     );
+    expect(descriptor.globalSupport!.layout.managedOutputs!.coOwnedFiles).toContain(
+      DEEPAGENTS_CLI_GLOBAL_HOOKS_FILE,
+    );
+  });
+
+  it('globalLayout managedOutputs excludes config.toml (shared user file)', () => {
+    expect(descriptor.globalSupport!.layout.managedOutputs!.files).not.toContain(
+      DEEPAGENTS_CLI_GLOBAL_CONFIG_FILE,
+    );
+  });
+
+  it('permissions are embedded at global scope and partial at project scope', () => {
+    expect(descriptor.globalSupport!.capabilities.permissions).toBe('embedded');
+    expect(descriptor.capabilities.permissions).toBe('partial');
   });
 
   it('detection paths include project-level paths', () => {
@@ -251,5 +268,30 @@ describe('deepagents-cli global frontmatter preservation', () => {
     const server = servers['test-server'] as Record<string, unknown>;
     expect(server.command).toBe('npx');
     expect(server.args).toEqual(['-y', '@test/mcp']);
+  });
+
+  const permissionsCanonical = (): CanonicalFiles =>
+    makeCanonical({ permissions: { allow: ['Bash(npm run test:*)'], deny: ['WebFetch'] } });
+
+  it('emits config.toml in global mode', async () => {
+    const results = await generate({
+      config: { ...makeGlobalConfig(), features: ['permissions'] } as ValidatedConfig,
+      canonical: permissionsCanonical(),
+      projectRoot: TEST_DIR,
+      scope: 'global',
+    });
+
+    expect(results.map((r) => r.path)).toEqual([DEEPAGENTS_CLI_GLOBAL_CONFIG_FILE]);
+  });
+
+  it('never emits config.toml in project mode', async () => {
+    const results = await generate({
+      config: { ...makeGlobalConfig(), features: ['permissions'] } as ValidatedConfig,
+      canonical: permissionsCanonical(),
+      projectRoot: TEST_DIR,
+      scope: 'project',
+    });
+
+    expect(results).toEqual([]);
   });
 });

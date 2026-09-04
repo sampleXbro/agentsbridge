@@ -4,7 +4,7 @@ import { mkdirSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { stringify as yamlStringify } from 'yaml';
 import { importFromGoose } from '../../../../src/targets/goose/importer.js';
-import { generateMcp } from '../../../../src/targets/goose/generator.js';
+import { generateGooseGlobalMcp } from '../../../../src/targets/goose/global-mcp.js';
 import { GOOSE_GLOBAL_CONFIG } from '../../../../src/targets/goose/constants.js';
 import type { CanonicalFiles, McpServer } from '../../../../src/core/types.js';
 
@@ -131,7 +131,7 @@ describe('goose global MCP import', () => {
       ignore: [],
     };
 
-    const generated = generateMcp(canonical, { scope: 'global' });
+    const generated = await generateGooseGlobalMcp(canonical, '/nonexistent', new Set(['mcp']));
     expect(generated).toHaveLength(1);
     expect(generated[0].path).toBe(GOOSE_GLOBAL_CONFIG);
 

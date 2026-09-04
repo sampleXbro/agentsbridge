@@ -170,7 +170,7 @@ describe('buildCompatibilityMatrix', () => {
     );
   });
 
-  it('shows augment-code permissions native at global scope only (project stays none)', () => {
+  it('shows augment-code permissions native at both scopes', () => {
     const config: ValidatedConfig = {
       ...baseConfig,
       targets: ['augment-code'],
@@ -182,9 +182,11 @@ describe('buildCompatibilityMatrix', () => {
     };
     const projectRows = buildCompatibilityMatrix(config, canonical, 'project');
     const globalRows = buildCompatibilityMatrix(config, canonical, 'global');
+    // Augment documents .augment/settings.json `toolPermissions` as repo-level settings
+    // committed to the project, with the same shape as ~/.augment/settings.json.
     expect(
       projectRows.find((r) => r.feature.startsWith('permissions'))?.support['augment-code'],
-    ).toBe('none');
+    ).toBe('native');
     expect(
       globalRows.find((r) => r.feature.startsWith('permissions'))?.support['augment-code'],
     ).toBe('native');

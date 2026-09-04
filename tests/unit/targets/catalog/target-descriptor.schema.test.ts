@@ -306,5 +306,6 @@ describe('targetDescriptorSchema', () => {
     expect(descriptor.sharedArtifacts).toEqual({ '.rich/skills/': 'owner' });
     expect(descriptor.emitScopedSettings).toBeTypeOf('function');
     expect(descriptor.postProcessHookOutputs).toBeTypeOf('function');
+    expect(descriptor.mergeGeneratedOutputContent).toBeTypeOf('function');
   });
 });

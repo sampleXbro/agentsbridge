@@ -46,32 +46,15 @@ describe('mergeRooCodeSettings (roo-code)', () => {
     );
   });
 
-  it('falls back to {} when the existing base JSON is invalid', () => {
-    const result = mergeRooCodeSettings(
-      '{not valid json',
-      undefined,
-      NEW_CONTENT,
-      ROO_CODE_VSCODE_SETTINGS,
-    );
-    const parsed = JSON.parse(result as string) as Record<string, unknown>;
-    expect(parsed).toEqual({
-      [ROO_CODE_ALLOWED_COMMANDS_KEY]: ['git log'],
-      [ROO_CODE_DENIED_COMMANDS_KEY]: ['rm -rf'],
-    });
-  });
-
-  it('falls back to {} when the existing base JSON is an array', () => {
-    const result = mergeRooCodeSettings(
-      '["a","b"]',
-      undefined,
-      NEW_CONTENT,
-      ROO_CODE_VSCODE_SETTINGS,
-    );
-    const parsed = JSON.parse(result as string) as Record<string, unknown>;
-    expect(parsed).toEqual({
-      [ROO_CODE_ALLOWED_COMMANDS_KEY]: ['git log'],
-      [ROO_CODE_DENIED_COMMANDS_KEY]: ['rm -rf'],
-    });
+  // `.vscode/settings.json` is comment-legal and VS Code ships it commented.
+  // A base we cannot parse as an object is preserved verbatim; coercing it to
+  // {} and serialising over the top destroyed every editor setting the user had.
+  it.each([
+    ['invalid JSON', '{not valid json'],
+    ['an array', '["a"]'],
+    ['JSONC with comments', '{\n  // prefs\n  "editor.fontSize": 14\n}'],
+  ])('preserves the base verbatim when it is %s', (_label, base) => {
+    expect(mergeRooCodeSettings(base, undefined, NEW_CONTENT, ROO_CODE_VSCODE_SETTINGS)).toBe(base);
   });
 
   it('returns base unchanged when newContent is unparseable JSON (defensive: generator always emits valid JSON)', () => {

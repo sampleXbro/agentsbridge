@@ -10,6 +10,7 @@ import {
   PROJECTED_AGENT_SKILL_PREFIX,
   LEGACY_PROJECTED_AGENT_SKILL_PREFIX,
 } from '../../targets/projection/projected-agent-skill.js';
+import { managedOutputPaths } from '../../targets/catalog/managed-outputs.js';
 
 const AB_RULES = '.agentsmesh/rules';
 const AB_COMMANDS = '.agentsmesh/commands';
@@ -115,13 +116,11 @@ async function targetRootSegments(): Promise<ReadonlySet<string>> {
     for (const path of [
       descriptor.project.rootInstructionPath,
       descriptor.project.skillDir,
-      ...(descriptor.project.managedOutputs?.dirs ?? []),
-      ...(descriptor.project.managedOutputs?.files ?? []),
+      ...managedOutputPaths(descriptor.project),
       ...descriptor.detectionPaths,
       descriptor.globalSupport?.layout.rootInstructionPath,
       descriptor.globalSupport?.layout.skillDir,
-      ...(descriptor.globalSupport?.layout.managedOutputs?.dirs ?? []),
-      ...(descriptor.globalSupport?.layout.managedOutputs?.files ?? []),
+      ...managedOutputPaths(descriptor.globalSupport?.layout),
       ...(descriptor.globalSupport?.detectionPaths ?? []),
     ]) {
       if (path !== undefined) {

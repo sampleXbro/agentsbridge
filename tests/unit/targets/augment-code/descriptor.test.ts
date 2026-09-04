@@ -35,7 +35,7 @@ describe('mergeGeneratedOutputContent (augment-code)', () => {
   const merge = (existing: string | null, newContent: string): string | null =>
     descriptor.mergeGeneratedOutputContent(
       existing,
-      AUGMENT_CODE_SETTINGS_FILE,
+      undefined,
       newContent,
       AUGMENT_CODE_SETTINGS_FILE,
     );
@@ -65,7 +65,7 @@ describe('mergeGeneratedOutputContent (augment-code)', () => {
   it('returns null for non-settings paths', () => {
     const result = descriptor.mergeGeneratedOutputContent(
       '{}',
-      '.augment/rules/test.md',
+      undefined,
       '# Test',
       '.augment/rules/test.md',
     );
@@ -77,7 +77,7 @@ describe('mergeGeneratedOutputContent (augment-code)', () => {
     const incoming = JSON.stringify({ hooks: { PreToolUse: [] } });
     const result = descriptor.mergeGeneratedOutputContent(
       existing,
-      AUGMENT_CODE_GLOBAL_SETTINGS_FILE,
+      undefined,
       incoming,
       AUGMENT_CODE_GLOBAL_SETTINGS_FILE,
     );

@@ -7,7 +7,9 @@
  *   - `.opencode/commands/<name>.md` — slash commands
  *   - `.opencode/agents/<slug>.md`   — custom agents
  *   - `.opencode/skills/`            — skill bundles
- *   - `opencode.json`               — MCP servers under `mcp` key
+ *   - `opencode.json`               — MCP servers under `mcp`, additional-rule
+ *     globs under `instructions`, and canonical permissions + ignore path deny
+ *     rules under `permission`
  *
  * Import reads both `AGENTS.md` and `.opencode/` directory structure.
  * OpenCode also reads `CLAUDE.md` as a fallback, but we import from

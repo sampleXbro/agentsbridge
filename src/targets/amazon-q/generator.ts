@@ -6,25 +6,25 @@
  * MCP is written to `.amazonq/mcp.json`.
  * Agents are written to `.amazonq/cli-agents/<name>.json`.
  *
- * Hooks (embedded): canonical PreToolUse/PostToolUse/UserPromptSubmit are mapped
- * to Amazon Q's preToolUse/postToolUse/userPromptSubmit trigger names and embedded
- * in each generated agent JSON under the top-level `hooks` key.
+ * Hooks, permissions and ignore are embedded in that same agent JSON, but each is
+ * gated on its own `config.features` entry, so `agent-outputs.ts` writes them from
+ * the descriptor's `emitScopedSettings` hook — the only generate-time hook that sees
+ * the enabled feature set. `generateAgents` here emits the ungated base file.
  *
- * Permissions (embedded): canonical permissions.allow is merged with per-agent
- * tools and embedded in each agent JSON as `allowedTools`. deny/ask have no
- * Amazon Q equivalent — lintPermissions warns about those.
+ * Rules (resources): the agent JSON `resources` glob is what makes the generated rule
+ * files readable — a custom agent inherits no default resources, and Q has no global
+ * rules directory at all.
  */
 
 import { basename } from 'node:path';
 import type { CanonicalFiles } from '../../core/types.js';
-import type { FeatureGeneratorOutput } from '../catalog/target.interface.js';
-import {
-  AMAZON_Q_TARGET,
-  AMAZON_Q_RULES_DIR,
-  AMAZON_Q_MCP_FILE,
-  AMAZON_Q_AGENTS_DIR,
-  AMAZON_Q_PROMPTS_DIR,
-} from './constants.js';
+import type {
+  FeatureGeneratorOutput,
+  GenerateFeatureContext,
+} from '../catalog/target.interface.js';
+import { isAmazonQRule } from './agent-json.js';
+import { buildBaseAgentOutputs } from './agent-outputs.js';
+import { AMAZON_Q_RULES_DIR, AMAZON_Q_MCP_FILE, AMAZON_Q_PROMPTS_DIR } from './constants.js';
 
 /** `validate_prompt_name` in `cli/chat/cli/prompts.rs`. */
 const AQ_PROMPT_NAME_MAX = 50;
@@ -38,43 +38,11 @@ export function amazonQPromptName(name: string): string {
   return name.replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, AQ_PROMPT_NAME_MAX);
 }
 
-/**
- * Amazon Q hook trigger names that map from canonical event names.
- * Only these events have a direct equivalent in the Amazon Q agent format.
- */
-const CANONICAL_TO_AQ_HOOK: ReadonlyMap<string, string> = new Map([
-  ['PreToolUse', 'preToolUse'],
-  ['PostToolUse', 'postToolUse'],
-  ['UserPromptSubmit', 'userPromptSubmit'],
-]);
-
-/**
- * Build the Amazon Q `hooks` object from canonical hooks, mapping only the
- * supported trigger names. Returns undefined when nothing maps.
- */
-function buildAmazonQHooks(
-  canonicalHooks: CanonicalFiles['hooks'],
-): Record<string, unknown> | undefined {
-  if (!canonicalHooks) return undefined;
-  const result: Record<string, unknown> = {};
-  for (const [canonicalEvent, aqEvent] of CANONICAL_TO_AQ_HOOK) {
-    const entries = canonicalHooks[canonicalEvent];
-    if (!Array.isArray(entries) || entries.length === 0) continue;
-    result[aqEvent] = entries.map((entry) => {
-      const hook: Record<string, unknown> = { command: entry.command };
-      if (entry.matcher) hook.matcher = entry.matcher;
-      return hook;
-    });
-  }
-  return Object.keys(result).length > 0 ? result : undefined;
-}
-
 export function generateRules(canonical: CanonicalFiles): FeatureGeneratorOutput[] {
   const outputs: FeatureGeneratorOutput[] = [];
 
   for (const rule of canonical.rules) {
-    // Skip rules filtered to other targets
-    if (rule.targets.length > 0 && !rule.targets.includes(AMAZON_Q_TARGET)) continue;
+    if (!isAmazonQRule(rule)) continue;
 
     const slug = rule.root ? '_root' : basename(rule.source, '.md');
     outputs.push({
@@ -98,30 +66,24 @@ export function generateCommands(canonical: CanonicalFiles): FeatureGeneratorOut
   }));
 }
 
-export function generateAgents(canonical: CanonicalFiles): FeatureGeneratorOutput[] {
-  const aqHooks = buildAmazonQHooks(canonical.hooks);
-  const globalAllow = canonical.permissions?.allow ?? [];
+/**
+ * Emits identity + `resources` only. Hooks, permissions and ignore are gated on their
+ * own feature flags and added by `emitAmazonQAgentSettings`, which runs later in the
+ * same generate pass and replaces this content.
+ */
+export function generateAgents(
+  canonical: CanonicalFiles,
+  ctx?: GenerateFeatureContext,
+): FeatureGeneratorOutput[] {
+  return buildBaseAgentOutputs(canonical, ctx?.scope ?? 'project');
+}
 
-  return canonical.agents.map((agent) => {
-    // Merge per-agent tools with canonical permissions.allow, deduplicating.
-    const mergedTools = [...new Set([...agent.tools, ...globalAllow])];
-    const hooks = aqHooks;
-
-    return {
-      path: `${AMAZON_Q_AGENTS_DIR}/${agent.name}.json`,
-      content: JSON.stringify(
-        {
-          name: agent.name,
-          ...(agent.description ? { description: agent.description } : {}),
-          prompt: agent.body.trim(),
-          ...(mergedTools.length > 0 ? { allowedTools: mergedTools } : {}),
-          ...(hooks ? { hooks } : {}),
-        },
-        null,
-        2,
-      ),
-    };
-  });
+/**
+ * No-op: ignore patterns are embedded inside each agent JSON by generateAgents as
+ * `toolsSettings.<tool>.deniedPaths`. Q CLI has no ignore file to write.
+ */
+export function generateIgnore(_canonical: CanonicalFiles): FeatureGeneratorOutput[] {
+  return [];
 }
 
 /**

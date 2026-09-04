@@ -4,10 +4,9 @@ import {
   generateRules,
   generateCommands,
   generateSkills,
-  generateAgents,
-  generateMcp,
   generateHooks,
 } from '../../../../src/targets/antigravity/generator.js';
+import { emitAntigravityMcp } from '../../../../src/targets/antigravity/mcp-settings.js';
 import {
   ANTIGRAVITY_RULES_ROOT,
   ANTIGRAVITY_RULES_DIR,
@@ -201,47 +200,9 @@ describe('generateSkills (antigravity)', () => {
   });
 });
 
-describe('generateAgents (antigravity)', () => {
-  it('projects agents as skill bundles with projected agent frontmatter', () => {
-    const canonical = makeCanonical({
-      agents: [
-        {
-          source: '/proj/.agentsmesh/agents/reviewer.md',
-          name: 'reviewer',
-          description: 'Reviews code for quality',
-          tools: ['Read', 'Grep', 'Glob'],
-          disallowedTools: [],
-          model: 'sonnet',
-          permissionMode: 'default',
-          maxTurns: 10,
-          mcpServers: [],
-          hooks: {},
-          skills: [],
-          memory: '',
-          body: 'You review code.',
-        },
-      ],
-    });
+describe('emitAntigravityMcp (antigravity)', () => {
+  const mcpEnabled = new Set(['mcp']);
 
-    const results = generateAgents(canonical);
-
-    expect(results).toHaveLength(1);
-    expect(results[0].path).toBe(`${ANTIGRAVITY_SKILLS_DIR}/am-agent-reviewer/SKILL.md`);
-    expect(results[0].content).toContain('x-agentsmesh-kind: agent');
-    expect(results[0].content).toContain('x-agentsmesh-name: reviewer');
-    expect(results[0].content).toContain('name: am-agent-reviewer');
-    expect(results[0].content).toContain('description: Reviews code for quality');
-    expect(results[0].content).toContain('x-agentsmesh-tools:');
-    expect(results[0].content).toContain('x-agentsmesh-model: sonnet');
-    expect(results[0].content).toContain('You review code.');
-  });
-
-  it('returns empty array when no agents exist', () => {
-    expect(generateAgents(makeCanonical())).toHaveLength(0);
-  });
-});
-
-describe('generateMcp (antigravity)', () => {
   it('emits mcp_config.json with mcpServers key', () => {
     const canonical = makeCanonical({
       mcp: {
@@ -255,25 +216,25 @@ describe('generateMcp (antigravity)', () => {
         },
       },
     });
-    const results = generateMcp(canonical);
+    const results = emitAntigravityMcp(canonical, 'project', mcpEnabled);
     expect(results).toHaveLength(1);
-    expect(results[0].path).toBe(ANTIGRAVITY_MCP_CONFIG);
-    const parsed = JSON.parse(results[0].content);
+    expect(results[0]!.path).toBe(ANTIGRAVITY_MCP_CONFIG);
+    const parsed = JSON.parse(results[0]!.content);
     expect(parsed).toEqual({
       mcpServers: {
-        context7: { type: 'stdio', command: 'npx', args: ['-y', '@upstash/context7-mcp'], env: {} },
+        context7: { command: 'npx', args: ['-y', '@upstash/context7-mcp'] },
       },
     });
   });
 
   it('returns empty array when mcp is null', () => {
-    const results = generateMcp(makeCanonical({ mcp: null }));
-    expect(results).toEqual([]);
+    expect(emitAntigravityMcp(makeCanonical({ mcp: null }), 'project', mcpEnabled)).toEqual([]);
   });
 
   it('returns empty array when mcpServers is empty', () => {
-    const results = generateMcp(makeCanonical({ mcp: { mcpServers: {} } }));
-    expect(results).toEqual([]);
+    expect(
+      emitAntigravityMcp(makeCanonical({ mcp: { mcpServers: {} } }), 'project', mcpEnabled),
+    ).toEqual([]);
   });
 });
 

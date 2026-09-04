@@ -13,6 +13,7 @@ export const amazonQContract: TargetPathContract = {
     '.agentsmesh/agents/code-reviewer.md',
     '.agentsmesh/agents/researcher.md',
     '.agentsmesh/commands/review.md',
+    '.agentsmesh/ignore',
     '.agentsmesh/mcp.json',
     '.agentsmesh/rules/_root.md',
     '.agentsmesh/rules/typescript.md',

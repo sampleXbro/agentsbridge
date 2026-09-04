@@ -7,7 +7,13 @@
  */
 
 import type { GeneratedOutputMerger } from '../catalog/target-descriptor.js';
+import { preservedUnparsableBase } from '../../core/generate/json-owned-keys.js';
 import {
+  CANONICAL_MCP_SERVER_KEYS,
+  mcpServersJsonMerger,
+} from '../../core/generate/mcp-servers-merge.js';
+import {
+  ROO_CODE_MCP_FILE,
   ROO_CODE_VSCODE_SETTINGS,
   ROO_CODE_ALLOWED_COMMANDS_KEY,
   ROO_CODE_DENIED_COMMANDS_KEY,
@@ -22,15 +28,11 @@ export const mergeRooCodeSettings: GeneratedOutputMerger = (
   if (resolvedPath !== ROO_CODE_VSCODE_SETTINGS) return null;
   const base = pending?.content ?? existing;
   if (base === null) return newContent;
+  // VS Code ships this file commented, and JSONC is its documented format.
+  const preserved = preservedUnparsableBase(base);
+  if (preserved !== null) return preserved;
 
-  let parsedBase: Record<string, unknown>;
-  try {
-    const p: unknown = JSON.parse(base);
-    parsedBase =
-      p !== null && typeof p === 'object' && !Array.isArray(p) ? (p as Record<string, unknown>) : {};
-  } catch {
-    parsedBase = {};
-  }
+  const parsedBase = JSON.parse(base) as Record<string, unknown>;
 
   let incoming: unknown;
   try {
@@ -48,3 +50,17 @@ export const mergeRooCodeSettings: GeneratedOutputMerger = (
   }
   return JSON.stringify(parsedBase, null, 2);
 };
+
+/**
+ * `.roo/mcp.json` is Roo's own project MCP config: Roo writes `alwaysAllow`,
+ * `disabled` and `timeout` back into it when the user toggles a server in the
+ * MCP panel, and the importer reads it. agentsmesh owns the server set only.
+ *
+ * The GLOBAL twin `~/mcp_settings.json` is deliberately NOT claimed: Roo
+ * resolves its global MCP settings under `globalStorageUri`, never `$HOME`, so
+ * that file is agentsmesh's own artifact and must stay delete-listed.
+ */
+export const mergeRooProjectMcpJson: GeneratedOutputMerger = mcpServersJsonMerger(
+  [ROO_CODE_MCP_FILE],
+  CANONICAL_MCP_SERVER_KEYS,
+);

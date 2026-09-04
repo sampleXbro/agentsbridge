@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdirSync, writeFileSync, rmSync, readFileSync, mkdtempSync } from 'node:fs';
+import { mkdirSync, writeFileSync, rmSync, readFileSync, mkdtempSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { importFromOpenCode } from '../../../../src/targets/opencode/importer.js';
-import { generateAgents } from '../../../../src/targets/opencode/generator.js';
+import { generateAgents, generateIgnore } from '../../../../src/targets/opencode/generator.js';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
 import {
   OPENCODE_ROOT_RULE,
@@ -12,6 +12,7 @@ import {
   OPENCODE_AGENTS_DIR,
   OPENCODE_SKILLS_DIR,
   OPENCODE_CONFIG_FILE,
+  OPENCODE_GLOBAL_CONFIG_FILE,
 } from '../../../../src/targets/opencode/constants.js';
 
 let TEST_DIR: string;
@@ -308,6 +309,81 @@ describe('importFromOpenCode — permissions', () => {
     expect(content).toContain('deny:');
     expect(content).toContain('- webfetch');
     expect(content).not.toContain('sometimes');
-    expect(content).not.toContain('nested');
+    // Object-form rules carry their blanket action under the "*" catch-all, which the
+    // ignore feature folds in — that blanket is a real permission and must round-trip.
+    expect(content).toContain('- nested');
+  });
+});
+
+describe('importFromOpenCode — ignore', () => {
+  it('imports read path deny rules from opencode.json as canonical ignore', async () => {
+    writeFileSync(
+      join(TEST_DIR, OPENCODE_CONFIG_FILE),
+      JSON.stringify({
+        permission: {
+          read: { '*.env': 'deny', '*dist/*': 'deny' },
+          edit: { '*.env': 'deny', '*dist/*': 'deny' },
+        },
+      }),
+    );
+
+    const results = await importFromOpenCode(TEST_DIR);
+    expect(toPaths(results)).toEqual(['.agentsmesh/ignore']);
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'ignore'), 'utf-8')).toBe('.env\ndist/*\n');
+  });
+
+  it('imports ignore from the global config file in global scope', async () => {
+    mkdirSync(join(TEST_DIR, '.config', 'opencode'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, OPENCODE_GLOBAL_CONFIG_FILE),
+      JSON.stringify({ permission: { read: { '*secrets/*': 'deny' } } }),
+    );
+
+    const results = await importFromOpenCode(TEST_DIR, { scope: 'global' });
+    expect(toPaths(results)).toEqual(['.agentsmesh/ignore']);
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'ignore'), 'utf-8')).toBe('secrets/*\n');
+  });
+
+  it('splits blanket string permissions from granular ignore rules', async () => {
+    writeFileSync(
+      join(TEST_DIR, OPENCODE_CONFIG_FILE),
+      JSON.stringify({ permission: { bash: 'ask', read: { '*.env': 'deny' } } }),
+    );
+
+    const results = await importFromOpenCode(TEST_DIR);
+    expect(toPaths(results)).toEqual(['.agentsmesh/ignore', '.agentsmesh/permissions.yaml']);
+    expect(readFileSync(join(TEST_DIR, '.agentsmesh', 'ignore'), 'utf-8')).toBe('.env\n');
+    const permissions = readFileSync(join(TEST_DIR, '.agentsmesh', 'permissions.yaml'), 'utf-8');
+    expect(permissions).toContain('- bash');
+  });
+
+  it('does not write an ignore file when opencode.json has no path rules', async () => {
+    writeFileSync(
+      join(TEST_DIR, OPENCODE_CONFIG_FILE),
+      JSON.stringify({ permission: { bash: 'ask' }, watcher: { ignore: ['node_modules/**'] } }),
+    );
+
+    const results = await importFromOpenCode(TEST_DIR);
+    expect(toPaths(results)).toEqual(['.agentsmesh/permissions.yaml']);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'ignore'))).toBe(false);
+  });
+
+  it('round-trips canonical ignore: generate -> write -> import', async () => {
+    const ignore = ['.env', 'node_modules/*', '*.log', '!keep/allowed.md'];
+    const [generated] = generateIgnore({
+      rules: [],
+      commands: [],
+      agents: [],
+      skills: [],
+      mcp: null,
+      permissions: null,
+      hooks: null,
+      ignore,
+    });
+    writeFileSync(join(TEST_DIR, generated.path), generated.content);
+
+    await importFromOpenCode(TEST_DIR);
+    const content = readFileSync(join(TEST_DIR, '.agentsmesh', 'ignore'), 'utf-8');
+    expect(content.trimEnd().split('\n')).toEqual(ignore);
   });
 });

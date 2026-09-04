@@ -21,6 +21,7 @@ describe('renderCheck', () => {
         outputsModified: [],
         outputsRemoved: [],
         outputsStale: [],
+        outputsUntracked: [],
         outputsChecked: false,
       },
     });
@@ -44,6 +45,7 @@ describe('renderCheck', () => {
         outputsModified: [],
         outputsRemoved: [],
         outputsStale: [],
+        outputsUntracked: [],
         outputsChecked: true,
       },
     });
@@ -67,6 +69,7 @@ describe('renderCheck', () => {
         outputsModified: [],
         outputsRemoved: [],
         outputsStale: [],
+        outputsUntracked: [],
         outputsChecked: true,
       },
     });
@@ -99,6 +102,7 @@ describe('renderCheck', () => {
         outputsModified: ['.cursor/rules/_root.mdc', 'AGENTS.md'],
         outputsRemoved: ['.claude/CLAUDE.md'],
         outputsStale: ['.cursor/rules/orphaned.mdc'],
+        outputsUntracked: [],
         outputsChecked: true,
       },
     });
@@ -129,6 +133,7 @@ describe('renderCheck', () => {
         outputsModified: [],
         outputsRemoved: [],
         outputsStale: [],
+        outputsUntracked: [],
         outputsChecked: false,
       },
     });
@@ -153,6 +158,7 @@ describe('renderCheck', () => {
         outputsModified: [],
         outputsRemoved: [],
         outputsStale: [],
+        outputsUntracked: [],
         outputsChecked: true,
       },
     });

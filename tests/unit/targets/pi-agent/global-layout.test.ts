@@ -79,7 +79,7 @@ describe('pi-agent global layout', () => {
       mcp: 'none',
       hooks: 'partial',
       ignore: 'partial',
-      permissions: 'partial',
+      permissions: 'native',
     });
   });
 

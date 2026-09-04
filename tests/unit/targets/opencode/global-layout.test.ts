@@ -59,10 +59,9 @@ describe('opencode global layout — paths', () => {
   });
 
   it('declares all global managed-output files', () => {
-    expect(layout.managedOutputs.files).toEqual([
-      OPENCODE_GLOBAL_AGENTS_MD,
-      OPENCODE_GLOBAL_CONFIG_FILE,
-    ]);
+    expect(layout.managedOutputs.files).toEqual([OPENCODE_GLOBAL_AGENTS_MD]);
+    // OpenCode's own config file: co-owned, never stale-deleted.
+    expect(layout.managedOutputs.coOwnedFiles).toEqual([OPENCODE_GLOBAL_CONFIG_FILE]);
   });
 });
 
@@ -142,9 +141,13 @@ describe('opencode global layout — capabilities', () => {
       skills: { level: 'native' },
       mcp: { level: 'native' },
       hooks: { level: 'partial' },
-      ignore: { level: 'partial' },
+      ignore: { level: 'embedded' },
       permissions: { level: 'native' },
     });
+  });
+
+  it('exposes the same ignore level at project scope', () => {
+    expect(getTargetCapabilities('opencode', 'project').ignore).toEqual({ level: 'embedded' });
   });
 
   it('descriptor.globalSupport.detectionPaths covers all global locations', () => {

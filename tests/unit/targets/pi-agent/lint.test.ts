@@ -63,18 +63,21 @@ describe('lintPermissions (pi-agent)', () => {
     const result = lintPermissions(
       makeCanonical({ permissions: { allow: [], deny: ['WebSearch'], ask: [] } }),
     );
-    expect(result).toHaveLength(1);
+    // the dropped deny list, plus the built-ins the empty projection disables
+    expect(result).toHaveLength(2);
     expect(result[0].level).toBe('warning');
     expect(result[0].target).toBe('pi-agent');
+    expect(result[0].message).toContain('WebSearch');
   });
 
   it('warns when permissions have ask entries', () => {
     const result = lintPermissions(
       makeCanonical({ permissions: { allow: [], deny: [], ask: ['Bash'] } }),
     );
-    expect(result).toHaveLength(1);
+    expect(result).toHaveLength(2);
     expect(result[0].level).toBe('warning');
     expect(result[0].target).toBe('pi-agent');
+    expect(result[0].message).toContain('no ask tier');
   });
 
   it('warns when permissions have entries but no ask field', () => {

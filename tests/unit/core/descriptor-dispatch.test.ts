@@ -124,9 +124,11 @@ describe('agentTargetPath', () => {
     expect(agentTargetPath('unknown-target', 'reviewer', baseConfig())).toBeNull();
   });
 
-  it('returns projected agent skill path for continue target', () => {
+  it('returns the native agent file path for continue target', () => {
+    // Continue reads `.continue/agents/<name>.md` at both scopes, so agents are no
+    // longer projected as skills.
     expect(agentTargetPath('continue', 'reviewer', baseConfig())).toBe(
-      '.continue/skills/am-agent-reviewer/SKILL.md',
+      '.continue/agents/reviewer.md',
     );
   });
 

@@ -11,6 +11,7 @@ import { getTargetLayout } from '../../targets/catalog/builtin-targets.js';
 import { ensurePathInsideRoot } from './generate-path.js';
 import { writeLockFile } from './generate-lock.js';
 import { buildOutputChecksums } from '../../config/core/lock-outputs.js';
+import { readLock } from '../../config/core/lock.js';
 import type { GenerateData } from '../command-result.js';
 import type { ResolvedExtend } from '../../config/resolve/resolver.js';
 import type { GenerateResult } from '../../core/result-types.js';
@@ -64,8 +65,11 @@ export async function handleEmptyResults(args: EmptyResultsArgs): Promise<Genera
   }
 
   if (!dryRun) {
-    // Empty results → empty output map; still records the flag-driven scope.
-    await writeLockFile(context, resolvedExtends, buildOutputChecksums([]), isFilteredRun(flags));
+    // An empty run emits nothing, but it must not FORGET what earlier runs
+    // wrote: that outputs map is the directory sweep's only provenance record,
+    // and wiping it to `{}` would leave those files undeletable forever.
+    const previousOutputs = (await readLock(context.canonicalDir))?.outputs ?? {};
+    await writeLockFile(context, resolvedExtends, previousOutputs, isFilteredRun(flags));
   }
 
   if (options.printMatrix !== false) {
@@ -103,6 +107,8 @@ export interface GenerateOrDryRunArgs {
   mode: GenerateData['mode'];
   context: { canonicalDir: string; configDir: string; rootBase: string };
   activeTargets: string[];
+  /** Every target in the config, so cleanup can spot the ones this run skipped. */
+  configuredTargets: string[];
   resolvedExtends: ResolvedExtend[];
   flags: Record<string, string | boolean>;
   root: string;
@@ -119,6 +125,7 @@ export async function handleGenerateOrDryRun(
     mode,
     context,
     activeTargets,
+    configuredTargets,
     resolvedExtends,
     flags,
     root,
@@ -138,11 +145,20 @@ export async function handleGenerateOrDryRun(
           await writeFileAtomic(fullPath, r.content);
         }
       }
+      // The lock on disk is still the PREVIOUS run's until `writeLockFile`
+      // below, so its outputs map is exactly the provenance the sweep needs.
+      // Absent (fresh project, or a lock predating the map) → an empty set, so
+      // the sweep deletes nothing this run and provenance exists from the next
+      // one on. The alternative — deleting on missing provenance — is the bug
+      // itself, and it lands hardest on first-run and just-upgraded users.
+      const previousLock = await readLock(context.canonicalDir);
       await cleanupStaleGeneratedOutputs({
         projectRoot: context.rootBase,
         targets: activeTargets,
         expectedPaths: results.map((result) => result.path),
         scope,
+        generatedOutputs: Object.keys(previousLock?.outputs ?? {}),
+        inactiveTargets: configuredTargets.filter((t) => !activeTargets.includes(t)),
       });
       await writeLockFile(
         context,

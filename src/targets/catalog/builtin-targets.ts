@@ -31,6 +31,7 @@ import { descriptor as antigravity } from '../antigravity/index.js';
 import { descriptor as augmentCode } from '../augment-code/index.js';
 import { descriptor as claudeCode } from '../claude-code/index.js';
 import { descriptor as cline } from '../cline/index.js';
+import { descriptor as codebuff } from '../codebuff/index.js';
 import { descriptor as codexCli } from '../codex-cli/index.js';
 import { descriptor as continueTarget } from '../continue/index.js';
 import { descriptor as copilot } from '../copilot/index.js';
@@ -43,8 +44,10 @@ import { descriptor as goose } from '../goose/index.js';
 import { descriptor as jules } from '../jules/index.js';
 import { descriptor as junie } from '../junie/index.js';
 import { descriptor as kiloCode } from '../kilo-code/index.js';
+import { descriptor as kimiCode } from '../kimi-code/index.js';
 import { descriptor as kiro } from '../kiro/index.js';
 import { descriptor as opencode } from '../opencode/index.js';
+import { descriptor as openhands } from '../openhands/index.js';
 import { descriptor as piAgent } from '../pi-agent/index.js';
 import { descriptor as qwenCode } from '../qwen-code/index.js';
 import { descriptor as replitAgent } from '../replit-agent/index.js';
@@ -90,6 +93,7 @@ export const BUILTIN_TARGETS: readonly TargetDescriptor[] = [
   augmentCode,
   claudeCode,
   cline,
+  codebuff,
   codexCli,
   continueTarget,
   copilot,
@@ -102,8 +106,10 @@ export const BUILTIN_TARGETS: readonly TargetDescriptor[] = [
   jules,
   junie,
   kiloCode,
+  kimiCode,
   kiro,
   opencode,
+  openhands,
   piAgent,
   qwenCode,
   replitAgent,

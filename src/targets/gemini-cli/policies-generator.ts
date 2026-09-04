@@ -1,5 +1,6 @@
 import type { CanonicalFiles } from '../../core/types.js';
 import { GEMINI_DEFAULT_POLICIES_FILE } from './constants.js';
+import { GEMINI_POLICY_MARKER } from './policies-merge.js';
 
 type RuleDecision = 'allow' | 'deny' | 'ask_user';
 
@@ -34,6 +35,7 @@ function parsePermissionExpr(
 
 function ruleForDecision(decision: RuleDecision, priority: number, tomlFields: string[]): string {
   return [
+    GEMINI_POLICY_MARKER,
     '[[rule]]',
     `decision = ${escapeTomlBasicString(decision)}`,
     `priority = ${priority}`,

@@ -37,6 +37,7 @@ import { addHookScriptAssets } from './hook-assets.js';
 import { generateCopilotGlobalExtras } from './scope-extras.js';
 import { copilotImporterSpec } from './importer-spec.js';
 import { projectCapabilities, globalCapabilities } from './capabilities.js';
+import { mergeCopilotMcpJson } from './mcp-merge.js';
 
 export const target: TargetGenerators = {
   name: 'copilot',
@@ -67,7 +68,10 @@ const project: TargetLayout = {
       '.github/skills',
       '.github/hooks/scripts',
     ],
-    files: ['.github/copilot-instructions.md', '.github/hooks/agentsmesh.json', COPILOT_MCP_JSON],
+    files: ['.github/copilot-instructions.md', '.github/hooks/agentsmesh.json'],
+    // VS Code writes `.vscode/mcp.json` itself and the user's secret-prompt
+    // `inputs` live there; agentsmesh owns only `servers`.
+    coOwnedFiles: [COPILOT_MCP_JSON],
   },
   paths: {
     rulePath(slug, _rule) {
@@ -97,7 +101,9 @@ const globalLayout: TargetLayout = {
       COPILOT_GLOBAL_CLAUDE_SKILLS_DIR,
       COPILOT_GLOBAL_HOOKS_DIR,
     ],
-    files: [COPILOT_GLOBAL_INSTRUCTIONS, COPILOT_GLOBAL_AGENTS_MD, COPILOT_GLOBAL_MCP],
+    files: [COPILOT_GLOBAL_INSTRUCTIONS, COPILOT_GLOBAL_AGENTS_MD],
+    // `copilot mcp add` writes this file; agentsmesh owns only the server set.
+    coOwnedFiles: [COPILOT_GLOBAL_MCP],
   },
   rewriteGeneratedPath(path) {
     // Transform project-level .github/ paths to global ~/.copilot/ paths
@@ -175,6 +181,7 @@ export const descriptor = {
   },
   postProcessHookOutputs: async (projectRoot, canonical, outputs) =>
     addHookScriptAssets(projectRoot, canonical, [...outputs]),
+  mergeGeneratedOutputContent: mergeCopilotMcpJson,
   project,
   globalSupport: {
     capabilities: globalCapabilities,

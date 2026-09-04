@@ -210,3 +210,71 @@ describe('emitOpenCodeScopedSettings (opencode)', () => {
     expect(parsed.permission).toBeDefined();
   });
 });
+
+describe('emitOpenCodeScopedSettings — ignore (opencode)', () => {
+  it('emits read/edit path deny rules when ignore is enabled and present', () => {
+    const canonical = makeCanonical({ ignore: ['.env', 'dist/'] });
+    const results = emitOpenCodeScopedSettings(canonical, 'project', new Set(['ignore']));
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(OPENCODE_CONFIG_FILE);
+    expect(JSON.parse(results[0].content)).toEqual({
+      permission: {
+        read: { '*.env': 'deny', '*dist/*': 'deny' },
+        edit: { '*.env': 'deny', '*dist/*': 'deny' },
+      },
+    });
+  });
+
+  it('emits the same rules in global scope', () => {
+    const canonical = makeCanonical({ ignore: ['.env'] });
+    const results = emitOpenCodeScopedSettings(canonical, 'global', new Set(['ignore']));
+    expect(JSON.parse(results[0].content)).toEqual({
+      permission: { read: { '*.env': 'deny' }, edit: { '*.env': 'deny' } },
+    });
+  });
+
+  it('returns [] when ignore is enabled but canonical ignore is empty', () => {
+    expect(emitOpenCodeScopedSettings(makeCanonical(), 'project', new Set(['ignore']))).toEqual([]);
+  });
+
+  it('returns [] when ignore is present but the feature is not enabled', () => {
+    const canonical = makeCanonical({ ignore: ['.env'] });
+    expect(emitOpenCodeScopedSettings(canonical, 'project', new Set())).toEqual([]);
+  });
+
+  it('keeps canonical permissions and ignore rules side by side under one permission key', () => {
+    const canonical = makeCanonical({ permissions: PERMISSIONS, ignore: ['.env'] });
+    const results = emitOpenCodeScopedSettings(
+      canonical,
+      'project',
+      new Set(['permissions', 'ignore']),
+    );
+    expect(results).toHaveLength(1);
+    expect(JSON.parse(results[0].content)).toEqual({
+      permission: {
+        Read: 'allow',
+        Bash: 'deny',
+        read: { '*.env': 'deny' },
+        edit: { '*.env': 'deny' },
+      },
+    });
+  });
+
+  it('folds a blanket permission action into the catch-all so ignore rules survive', () => {
+    const canonical = makeCanonical({
+      permissions: { allow: ['read'], deny: [] },
+      ignore: ['.env'],
+    });
+    const results = emitOpenCodeScopedSettings(
+      canonical,
+      'project',
+      new Set(['permissions', 'ignore']),
+    );
+    expect(JSON.parse(results[0].content)).toEqual({
+      permission: {
+        read: { '*': 'allow', '*.env': 'deny' },
+        edit: { '*.env': 'deny' },
+      },
+    });
+  });
+});

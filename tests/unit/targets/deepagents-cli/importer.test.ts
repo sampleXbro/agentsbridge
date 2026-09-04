@@ -163,4 +163,31 @@ describe('importFromDeepagentsCli', () => {
 
     rmSync(projectRoot, { recursive: true, force: true });
   });
+
+  it('imports shell.allow_list from global .deepagents/config.toml', async () => {
+    projectRoot = setupFixture({
+      '.deepagents/config.toml': '[shell]\nallow_list = [ "npm run test" ]\n',
+    });
+
+    const results = await importFromDeepagentsCli(projectRoot, { scope: 'global' });
+
+    const permissionResult = results.find((r) => r.feature === 'permissions');
+    expect(permissionResult).toBeDefined();
+    expect(permissionResult!.toPath).toBe('.agentsmesh/permissions.yaml');
+    expect(permissionResult!.fromTool).toBe('deepagents-cli');
+
+    rmSync(projectRoot, { recursive: true, force: true });
+  });
+
+  it('ignores config.toml at project scope (config.toml is global-only)', async () => {
+    projectRoot = setupFixture({
+      '.deepagents/config.toml': '[shell]\nallow_list = [ "npm run test" ]\n',
+    });
+
+    const results = await importFromDeepagentsCli(projectRoot);
+
+    expect(results.filter((r) => r.feature === 'permissions')).toHaveLength(0);
+
+    rmSync(projectRoot, { recursive: true, force: true });
+  });
 });

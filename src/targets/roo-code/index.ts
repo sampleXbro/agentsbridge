@@ -28,8 +28,15 @@ import {
   ROO_CODE_CANONICAL_MCP,
   ROO_CODE_CANONICAL_IGNORE,
 } from './constants.js';
-import { project, globalLayout, capabilities, globalCapabilities, generateRooGlobalExtras } from './layout.js';
-import { mergeRooCodeSettings } from './merge.js';
+import {
+  project,
+  globalLayout,
+  capabilities,
+  globalCapabilities,
+  generateRooGlobalExtras,
+} from './layout.js';
+import { mergeRooCodeSettings, mergeRooProjectMcpJson } from './merge.js';
+import { mergeRooCustomModesYaml } from './modes-merge.js';
 import { importFromRooCode } from './importer.js';
 import { rooCommandMapper, rooNonRootRuleMapper } from './import-mappers.js';
 import { lintRules } from './linter.js';
@@ -133,7 +140,10 @@ export const descriptor = {
       canonicalFilename: ROO_CODE_CANONICAL_IGNORE,
     },
   },
-  mergeGeneratedOutputContent: mergeRooCodeSettings,
+  mergeGeneratedOutputContent: (existing, pending, newContent, resolvedPath) =>
+    mergeRooCodeSettings(existing, pending, newContent, resolvedPath) ??
+    mergeRooCustomModesYaml(existing, pending, newContent, resolvedPath) ??
+    mergeRooProjectMcpJson(existing, pending, newContent, resolvedPath),
   buildImportPaths: buildRooCodeImportPaths,
   detectionPaths: [
     '.roo/rules',

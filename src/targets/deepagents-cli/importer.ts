@@ -9,6 +9,8 @@
  *   - `~/.deepagents/hooks.json` — lifecycle hooks (global scope only; no
  *     declarative importer mode fits its bespoke array shape, so this is
  *     imperative — see `global-hooks.ts`)
+ *   - `~/.deepagents/config.toml` — shell.allow_list permissions (global scope
+ *     only — see `global-permissions.ts`)
  */
 
 import type { ImportResult } from '../../core/types.js';
@@ -17,6 +19,7 @@ import { createImportReferenceNormalizer } from '../../core/reference/import-rew
 import { importEmbeddedSkills } from '../import/embedded-skill.js';
 import { runDescriptorImport } from '../import/descriptor-import-runner.js';
 import { importDeepagentsCliGlobalHooks } from './global-hooks.js';
+import { importDeepagentsCliGlobalPermissions } from './global-permissions.js';
 import {
   DEEPAGENTS_CLI_TARGET,
   DEEPAGENTS_CLI_SKILLS_DIR,
@@ -44,6 +47,7 @@ export async function importFromDeepagentsCli(
 
   if (scope === 'global') {
     await importDeepagentsCliGlobalHooks(projectRoot, results);
+    await importDeepagentsCliGlobalPermissions(projectRoot, results);
   }
 
   return results;

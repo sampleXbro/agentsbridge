@@ -15,7 +15,9 @@
  *
  * MCP is configured in `opencode.json` under the `mcp` key.
  * Hooks are plugin-based (TypeScript/JavaScript), not config-based.
- * Permissions live in `opencode.json` but are not generated in v1.
+ * Permissions and ignore both live in `opencode.json` under the `permission`
+ * key: canonical permissions become blanket tool actions, canonical ignore
+ * becomes `read`/`edit` path deny rules (see `ignore-map.ts`).
  */
 
 export const OPENCODE_TARGET = 'opencode';
@@ -59,3 +61,4 @@ export const OPENCODE_CANONICAL_COMMANDS_DIR = '.agentsmesh/commands';
 export const OPENCODE_CANONICAL_AGENTS_DIR = '.agentsmesh/agents';
 export const OPENCODE_CANONICAL_MCP = '.agentsmesh/mcp.json';
 export const OPENCODE_CANONICAL_PERMISSIONS = '.agentsmesh/permissions.yaml';
+export const OPENCODE_CANONICAL_IGNORE = '.agentsmesh/ignore';

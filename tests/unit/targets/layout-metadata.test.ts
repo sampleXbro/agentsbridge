@@ -27,7 +27,11 @@ describe('target layout metadata', () => {
   it('returns managed outputs from descriptor metadata', () => {
     expect(getTargetManagedOutputs('codex-cli')).toEqual({
       dirs: ['.agents/skills', '.codex/agents', '.codex/instructions', '.codex/rules'],
-      files: ['AGENTS.md', '.codex/config.toml', '.codex/hooks.json'],
+      files: ['AGENTS.md'],
+      // Co-owned: Codex writes its own model/provider/trust state into
+      // config.toml, and hooks.json is hand-authored (it also carries a
+      // top-level `description` agentsmesh does not own).
+      coOwnedFiles: ['.codex/config.toml', '.codex/hooks.json'],
     });
   });
 
@@ -73,13 +77,8 @@ describe('target layout metadata', () => {
             '.claude/output-styles',
             '.agents/skills',
           ],
-          files: [
-            '.claude/CLAUDE.md',
-            '.claude/settings.json',
-            '.claude.json',
-            '.claude/hooks.json',
-            '.claudeignore',
-          ],
+          files: ['.claude/CLAUDE.md', '.claude/hooks.json', '.claudeignore'],
+          coOwnedFiles: ['.claude.json', '.claude/settings.json'],
         },
         paths: expect.objectContaining({
           rulePath: expect.any(Function),
@@ -99,12 +98,13 @@ describe('target layout metadata', () => {
         rootInstructionPath: '.gemini/GEMINI.md',
         skillDir: '.gemini/config/skills',
         managedOutputs: {
-          dirs: ['.gemini/config/skills', '.gemini/antigravity/global_workflows'],
-          files: [
-            '.gemini/GEMINI.md',
-            '.gemini/config/mcp_config.json',
-            '.gemini/config/hooks.json',
+          dirs: [
+            '.gemini/config/agents',
+            '.gemini/config/skills',
+            '.gemini/antigravity/global_workflows',
           ],
+          files: ['.gemini/GEMINI.md'],
+          coOwnedFiles: ['.gemini/config/mcp_config.json', '.gemini/config/hooks.json'],
         },
         paths: expect.objectContaining({
           rulePath: expect.any(Function),
@@ -152,12 +152,10 @@ describe('target layout metadata', () => {
           files: [
             '.cursor/rules/general.mdc',
             '.cursor/AGENTS.md',
-            '.cursor/mcp.json',
-            '.cursor/hooks.json',
             '.cursorignore',
-            '.cursor/cli-config.json',
             '.agentsmesh-exports/cursor/user-rules.md',
           ],
+          coOwnedFiles: ['.cursor/mcp.json', '.cursor/hooks.json', '.cursor/cli-config.json'],
         },
         paths: expect.objectContaining({
           rulePath: expect.any(Function),
@@ -175,7 +173,8 @@ describe('target layout metadata', () => {
         skillDir: '.agents/skills',
         managedOutputs: {
           dirs: ['.agents/skills', '.codex/agents', '.codex/rules'],
-          files: ['.codex/AGENTS.md', '.codex/config.toml', '.codex/hooks.json'],
+          files: ['.codex/AGENTS.md'],
+          coOwnedFiles: ['.codex/config.toml', '.codex/hooks.json'],
         },
         paths: expect.objectContaining({
           rulePath: expect.any(Function),
@@ -248,9 +247,12 @@ describe('target layout metadata', () => {
           files: [
             '.continue/mcpServers/agentsmesh.json',
             '.continue/AGENTS.md',
+            '.continue/.continueignore',
+          ],
+          coOwnedFiles: [
             '.continue/config.yaml',
             '.continue/permissions.yaml',
-            '.continue/.continueignore',
+            '.continue/settings.json',
           ],
         },
         paths: expect.objectContaining({
@@ -272,9 +274,9 @@ describe('target layout metadata', () => {
       }),
     ).toBe('.continue/rules/typescript.md');
     expect(layout!.paths.commandPath('commit', {} as never)).toBe('.continue/prompts/commit.md');
-    expect(layout!.paths.agentPath('my-agent', {} as never)).toBe(
-      '.continue/skills/am-agent-my-agent/SKILL.md',
-    );
+    // Continue reads `.continue/agents/<name>.md` at both scopes (agentFiles.ts),
+    // so agents are native rather than projected as skills.
+    expect(layout!.paths.agentPath('my-agent', {} as never)).toBe('.continue/agents/my-agent.md');
   });
 
   it('lists Continue global detection paths', () => {
@@ -283,6 +285,7 @@ describe('target layout metadata', () => {
       '.continue/prompts',
       '.continue/mcpServers',
       '.continue/skills',
+      '.continue/agents',
     ]);
   });
 

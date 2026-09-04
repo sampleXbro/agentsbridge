@@ -8,6 +8,7 @@ import {
   generateMcp,
   generatePermissions,
   generateInstructions,
+  generateIgnore,
   generateSkills,
 } from '../../../../src/targets/opencode/generator.js';
 import {
@@ -570,5 +571,32 @@ describe('generateSkills (opencode)', () => {
 
   it('returns empty array when no skills', () => {
     expect(generateSkills(makeCanonical())).toEqual([]);
+  });
+});
+
+describe('generateIgnore (opencode)', () => {
+  it('returns empty array when canonical ignore is empty', () => {
+    expect(generateIgnore(makeCanonical())).toEqual([]);
+  });
+
+  it('writes read+edit path deny rules into opencode.json', () => {
+    const results = generateIgnore(makeCanonical({ ignore: ['.env', 'node_modules/'] }));
+    expect(results).toHaveLength(1);
+    expect(results[0].path).toBe(OPENCODE_CONFIG_FILE);
+    expect(JSON.parse(results[0].content)).toEqual({
+      permission: {
+        read: { '*.env': 'deny', '*node_modules/*': 'deny' },
+        edit: { '*.env': 'deny', '*node_modules/*': 'deny' },
+      },
+    });
+  });
+
+  it('does not emit a watcher key (watcher.ignore does not exclude reads)', () => {
+    const [result] = generateIgnore(makeCanonical({ ignore: ['.env'] }));
+    expect(Object.keys(JSON.parse(result.content))).toEqual(['permission']);
+  });
+
+  it('returns empty array when every ignore line is a comment', () => {
+    expect(generateIgnore(makeCanonical({ ignore: ['# nothing'] }))).toEqual([]);
   });
 });

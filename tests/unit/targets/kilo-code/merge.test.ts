@@ -65,35 +65,18 @@ describe('mergeKiloConfig (kilo-code)', () => {
     );
   });
 
-  it('falls back to {} when the base JSON is an array', () => {
-    const base = JSON.stringify(['a', 'b']);
-    const result = mergeKiloConfig(base, null, PERMISSION_CONTENT, KILO_CONFIG_FILE);
-    const parsed = JSON.parse(result as string) as Record<string, unknown>;
-    expect(parsed).toEqual({ permission: { allow: ['Read'], deny: ['Bash'] } });
-  });
-
-  it('falls back to {} when the base JSON is null', () => {
-    const result = mergeKiloConfig('null', null, PERMISSION_CONTENT, KILO_CONFIG_FILE);
-    const parsed = JSON.parse(result as string) as Record<string, unknown>;
-    expect(parsed).toEqual({ permission: { allow: ['Read'], deny: ['Bash'] } });
-  });
-
-  it('falls back to {} when the base JSON is a non-object scalar (number)', () => {
-    const result = mergeKiloConfig('42', null, PERMISSION_CONTENT, KILO_CONFIG_FILE);
-    const parsed = JSON.parse(result as string) as Record<string, unknown>;
-    expect(parsed).toEqual({ permission: { allow: ['Read'], deny: ['Bash'] } });
-  });
-
-  it('falls back to {} when the base JSON is a non-object scalar (string)', () => {
-    const result = mergeKiloConfig('"hello"', null, PERMISSION_CONTENT, KILO_CONFIG_FILE);
-    const parsed = JSON.parse(result as string) as Record<string, unknown>;
-    expect(parsed).toEqual({ permission: { allow: ['Read'], deny: ['Bash'] } });
-  });
-
-  it('falls back to {} when the base JSON is invalid', () => {
-    const result = mergeKiloConfig('{not valid json', null, PERMISSION_CONTENT, KILO_CONFIG_FILE);
-    const parsed = JSON.parse(result as string) as Record<string, unknown>;
-    expect(parsed).toEqual({ permission: { allow: ['Read'], deny: ['Bash'] } });
+  // A base kilo.jsonc we cannot parse as an object is preserved verbatim.
+  // Coercing it to {} and serialising over the top cost the user every key —
+  // and "jsonc" is the file's own format, so comments are expected.
+  it.each([
+    ['an array', JSON.stringify(['a', 'b'])],
+    ['null', 'null'],
+    ['a non-object scalar (number)', '42'],
+    ['a non-object scalar (string)', '"hello"'],
+    ['invalid JSON', '{not valid json'],
+    ['JSONC with comments', '{\n  // keep me\n  "theme": "dark"\n}'],
+  ])('preserves the base verbatim when it is %s', (_label, base) => {
+    expect(mergeKiloConfig(base, null, PERMISSION_CONTENT, KILO_CONFIG_FILE)).toBe(base);
   });
 
   it('returns base unchanged when incoming is null', () => {
@@ -151,13 +134,23 @@ describe('mergeKiloConfig (kilo-code)', () => {
     ) as string;
     const afterInstructions = mergeKiloConfig(
       null,
-      { target: 'kilo-code', path: KILO_GLOBAL_CONFIG_FILE, content: afterPermissions, status: 'created' },
+      {
+        target: 'kilo-code',
+        path: KILO_GLOBAL_CONFIG_FILE,
+        content: afterPermissions,
+        status: 'created',
+      },
       JSON.stringify({ instructions: ['rules/*.md'] }),
       KILO_GLOBAL_CONFIG_FILE,
     ) as string;
     const afterMcp = mergeKiloConfig(
       null,
-      { target: 'kilo-code', path: KILO_GLOBAL_CONFIG_FILE, content: afterInstructions, status: 'created' },
+      {
+        target: 'kilo-code',
+        path: KILO_GLOBAL_CONFIG_FILE,
+        content: afterInstructions,
+        status: 'created',
+      },
       JSON.stringify({ mcp: { test: { type: 'local', command: ['node'] } } }),
       KILO_GLOBAL_CONFIG_FILE,
     ) as string;

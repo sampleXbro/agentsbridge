@@ -58,6 +58,7 @@ export async function runCheck(
         outputsModified: [],
         outputsRemoved: [],
         outputsStale: [],
+        outputsUntracked: [],
         outputsChecked: false,
       },
     };
@@ -78,6 +79,7 @@ export async function runCheck(
       outputsModified: [...report.outputsModified],
       outputsRemoved: [...report.outputsRemoved],
       outputsStale: [...report.outputsStale],
+      outputsUntracked: [...report.outputsUntracked],
       outputsChecked: report.outputsChecked,
     },
   };

@@ -16,6 +16,8 @@ export const KIRO_GLOBAL_STEERING_AGENTS_MD = '.kiro/steering/AGENTS.md';
 export const KIRO_GLOBAL_SKILLS_DIR = '.kiro/skills';
 export const KIRO_GLOBAL_AGENTS_DIR = '.kiro/agents';
 export const KIRO_GLOBAL_MCP_FILE = '.kiro/settings/mcp.json';
+/** User-scoped permission rules; Kiro has no in-repo project equivalent. */
+export const KIRO_GLOBAL_PERMISSIONS_FILE = '.kiro/settings/permissions.yaml';
 export const KIRO_GLOBAL_IGNORE = '.kiro/settings/kiroignore';
 
 // Compatibility mirror paths
@@ -27,4 +29,5 @@ export const KIRO_CANONICAL_RULES_DIR = '.agentsmesh/rules';
 export const KIRO_CANONICAL_AGENTS_DIR = '.agentsmesh/agents';
 export const KIRO_CANONICAL_MCP = '.agentsmesh/mcp.json';
 export const KIRO_CANONICAL_HOOKS = '.agentsmesh/hooks.yaml';
+export const KIRO_CANONICAL_PERMISSIONS = '.agentsmesh/permissions.yaml';
 export const KIRO_CANONICAL_IGNORE = '.agentsmesh/ignore';

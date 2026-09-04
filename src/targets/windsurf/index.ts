@@ -31,6 +31,7 @@ import {
 } from './constants.js';
 import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromWindsurf } from './importer.js';
+import { mergeWindsurfOutput } from './merge.js';
 import { lintRules } from './linter.js';
 import { lintCommands, lintMcp, lintPermissions } from './lint.js';
 import { buildWindsurfImportPaths } from '../../core/reference/import-map-builders.js';
@@ -70,12 +71,11 @@ const project: TargetLayout = {
   skillDir: WINDSURF_SKILLS_DIR,
   managedOutputs: {
     dirs: ['.windsurf/rules', '.windsurf/skills', '.windsurf/workflows'],
-    files: [
-      'AGENTS.md',
-      '.codeiumignore',
-      '.windsurf/hooks.json',
-      '.windsurf/mcp_config.example.json',
-    ],
+    files: ['AGENTS.md', '.codeiumignore', '.windsurf/mcp_config.example.json'],
+    // The workspace hooks file users and enterprise fleets author; agentsmesh
+    // owns only the `hooks` key. The `.example.` sidecar beside it stays fully
+    // owned — Windsurf never reads it.
+    coOwnedFiles: [WINDSURF_HOOKS_FILE],
   },
   paths: {
     rulePath(slug, _rule) {
@@ -102,12 +102,9 @@ const globalLayout: TargetLayout = {
       WINDSURF_GLOBAL_WORKFLOWS_DIR,
       WINDSURF_GLOBAL_AGENTS_SKILLS_DIR,
     ],
-    files: [
-      WINDSURF_GLOBAL_RULES,
-      WINDSURF_GLOBAL_HOOKS_FILE,
-      WINDSURF_GLOBAL_MCP_FILE,
-      WINDSURF_GLOBAL_IGNORE,
-    ],
+    files: [WINDSURF_GLOBAL_RULES, WINDSURF_GLOBAL_IGNORE],
+    // The user-level hooks file and the MCP config Cascade's UI writes.
+    coOwnedFiles: [WINDSURF_GLOBAL_HOOKS_FILE, WINDSURF_GLOBAL_MCP_FILE],
   },
   rewriteGeneratedPath(path) {
     // Transform project-level paths to global ~/.codeium/windsurf/ paths
@@ -165,6 +162,7 @@ const globalCapabilities: TargetCapabilities = {
 };
 
 export const descriptor = {
+  mergeGeneratedOutputContent: mergeWindsurfOutput,
   id: 'windsurf',
   metadata: {
     displayName: 'Windsurf',

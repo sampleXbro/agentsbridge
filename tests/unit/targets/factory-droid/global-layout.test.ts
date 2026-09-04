@@ -15,6 +15,7 @@ import {
   FACTORY_DROID_GLOBAL_ROOT_FILE,
   FACTORY_DROID_GLOBAL_MCP_FILE,
   FACTORY_DROID_GLOBAL_HOOKS_FILE,
+  FACTORY_DROID_GLOBAL_SETTINGS_FILE,
   FACTORY_DROID_GLOBAL_SKILLS_DIR,
   FACTORY_DROID_GLOBAL_DROIDS_DIR,
 } from '../../../../src/targets/factory-droid/constants.js';
@@ -59,19 +60,28 @@ describe('factory-droid descriptor shape', () => {
     expect(descriptor.project.skillDir).toBe(FACTORY_DROID_SKILLS_DIR);
   });
 
+  // `droid` creates settings.json itself, `/hooks` saves hooks.json and
+  // `droid mcp add` writes mcp.json, so all three are co-owned: agentsmesh
+  // merges its keys in and never deletes them.
   it('project layout has managed outputs', () => {
     expect(descriptor.project.managedOutputs!.dirs).toContain(FACTORY_DROID_SKILLS_DIR);
     expect(descriptor.project.managedOutputs!.dirs).toContain(FACTORY_DROID_DROIDS_DIR);
     expect(descriptor.project.managedOutputs!.files).toContain(FACTORY_DROID_ROOT_FILE);
-    expect(descriptor.project.managedOutputs!.files).toContain(FACTORY_DROID_HOOKS_FILE);
-    expect(descriptor.project.managedOutputs!.files).toContain(FACTORY_DROID_SETTINGS_FILE);
-    expect(descriptor.project.managedOutputs!.files).toContain(FACTORY_DROID_MCP_FILE);
+    expect(descriptor.project.managedOutputs!.coOwnedFiles).toEqual([
+      FACTORY_DROID_HOOKS_FILE,
+      FACTORY_DROID_SETTINGS_FILE,
+      FACTORY_DROID_MCP_FILE,
+    ]);
   });
 
-  it('global layout has managed outputs including hooks and settings files', () => {
+  it('global layout co-owns the hooks, settings and mcp files', () => {
     const globalLayout = descriptor.globalSupport!.layout;
-    expect(globalLayout.managedOutputs!.files).toContain(FACTORY_DROID_GLOBAL_HOOKS_FILE);
-    expect(globalLayout.managedOutputs!.files).toContain(FACTORY_DROID_GLOBAL_MCP_FILE);
+    expect(globalLayout.managedOutputs!.coOwnedFiles).toEqual([
+      FACTORY_DROID_GLOBAL_HOOKS_FILE,
+      FACTORY_DROID_GLOBAL_SETTINGS_FILE,
+      FACTORY_DROID_GLOBAL_MCP_FILE,
+    ]);
+    expect(globalLayout.managedOutputs!.files).not.toContain(FACTORY_DROID_GLOBAL_MCP_FILE);
   });
 });
 

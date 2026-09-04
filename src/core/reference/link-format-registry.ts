@@ -22,6 +22,7 @@
 
 import type { TargetDescriptor } from '../../targets/catalog/target-descriptor.js';
 import { BUILTIN_TARGETS } from '../../targets/catalog/builtin-targets.js';
+import { managedOutputPaths } from '../../targets/catalog/managed-outputs.js';
 
 export interface LinkFormatRegistry {
   /** URI / scheme patterns that must never be rewritten as paths. */
@@ -65,8 +66,7 @@ function topLevelDotfilePrefixes(descriptor: TargetDescriptor): Iterable<string>
   );
   const candidates = [
     ...descriptor.detectionPaths,
-    ...layouts.flatMap((l) => l.managedOutputs?.dirs ?? []),
-    ...layouts.flatMap((l) => l.managedOutputs?.files ?? []),
+    ...layouts.flatMap((layout) => managedOutputPaths(layout)),
   ];
   const out = new Set<string>();
   for (const candidate of candidates) {

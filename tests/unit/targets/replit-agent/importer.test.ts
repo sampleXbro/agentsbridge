@@ -2,7 +2,12 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { join } from 'node:path';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { readFileSync } from 'node:fs';
 import { importFromReplitAgent } from '../../../../src/targets/replit-agent/importer.js';
+import {
+  generateCommands,
+  generateAgents,
+} from '../../../../src/targets/replit-agent/generator.js';
 
 function setupFixture(files: Record<string, string>): string {
   const root = join(
@@ -79,6 +84,78 @@ describe('importFromReplitAgent', () => {
 
     const skillResults = results.filter((r) => r.feature === 'skills');
     expect(skillResults.length).toBeGreaterThanOrEqual(1);
+
+    rmSync(projectRoot, { recursive: true, force: true });
+  });
+
+  it('round-trips generated command and agent skills back to canonical', async () => {
+    const command = {
+      source: '/proj/.agentsmesh/commands/review.md',
+      name: 'review',
+      description: 'Review the diff',
+      allowedTools: ['Bash(git diff:*)'],
+      body: 'Review every change.',
+    };
+    const agent = {
+      source: '/proj/.agentsmesh/agents/code-reviewer.md',
+      name: 'code-reviewer',
+      description: 'Reviews code',
+      body: 'Review carefully.',
+      tools: ['Read'],
+      disallowedTools: [],
+      model: 'claude-sonnet',
+      permissionMode: '',
+      maxTurns: 0,
+      mcpServers: [],
+      hooks: {},
+      skills: [],
+      memory: '',
+    };
+    const emitted = [
+      ...generateCommands({
+        rules: [],
+        commands: [command],
+        agents: [],
+        skills: [],
+        mcp: null,
+        permissions: null,
+        hooks: null,
+        ignore: [],
+      }),
+      ...generateAgents({
+        rules: [],
+        commands: [],
+        agents: [agent],
+        skills: [],
+        mcp: null,
+        permissions: null,
+        hooks: null,
+        ignore: [],
+      }),
+    ];
+    projectRoot = setupFixture(Object.fromEntries(emitted.map((o) => [o.path, o.content])));
+
+    const results = await importFromReplitAgent(projectRoot);
+
+    expect(results.map((r) => r.toPath).sort()).toEqual([
+      '.agentsmesh/agents/code-reviewer.md',
+      '.agentsmesh/commands/review.md',
+    ]);
+    expect(results.every((r) => r.fromTool === 'replit-agent')).toBe(true);
+    const importedCommand = readFileSync(
+      join(projectRoot, '.agentsmesh/commands/review.md'),
+      'utf-8',
+    );
+    expect(importedCommand).toContain('description: Review the diff');
+    expect(importedCommand).toContain('Bash(git diff:*)');
+    expect(importedCommand).toContain('Review every change.');
+    const importedAgent = readFileSync(
+      join(projectRoot, '.agentsmesh/agents/code-reviewer.md'),
+      'utf-8',
+    );
+    expect(importedAgent).toContain('name: code-reviewer');
+    expect(importedAgent).toContain('model: claude-sonnet');
+    expect(importedAgent).toContain('Review carefully.');
 
     rmSync(projectRoot, { recursive: true, force: true });
   });

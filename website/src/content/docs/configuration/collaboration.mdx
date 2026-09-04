@@ -10,7 +10,7 @@ The `collaboration` field in `agentsmesh.yaml` controls how generated config is 
 
 ```yaml
 collaboration:
-  strategy: merge
+  strategy: lock
   lock_features:
     - mcp
     - permissions
@@ -21,7 +21,7 @@ collaboration:
 | Field | Type | Description |
 |-------|------|-------------|
 | `strategy` | `string` | Merge strategy: `merge`, `lock`, or `last-wins`. |
-| `lock_features` | `string[]` | Features protected from accidental regeneration. |
+| `lock_features` | `string[]` | Features protected from accidental regeneration. Only enforced when `strategy` is `lock`. |
 
 ## Strategies
 
@@ -64,14 +64,16 @@ Use this for solo projects or when you don't want to deal with lock conflicts.
 
 ## Feature locking in detail
 
-`lock_features` protects specific features from being silently overwritten during `generate`. This is most useful for:
+`lock_features` protects specific features from being silently overwritten during `generate`. **It is only enforced when `strategy: lock` is set** — under the default `merge` strategy the list is accepted but has no effect on `generate`.
+
+This is most useful for:
 
 - **`mcp`** — MCP server definitions often contain production endpoints and auth tokens (via env var references). You don't want these accidentally regenerated from an outdated source.
 - **`permissions`** — Permission lists represent security boundaries. Lock them to require explicit `--force` for any change.
 
 ```yaml
 collaboration:
-  strategy: merge
+  strategy: lock
   lock_features:
     - mcp
     - permissions

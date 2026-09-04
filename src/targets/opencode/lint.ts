@@ -4,7 +4,10 @@
  * OpenCode hooks are plugin-based (TypeScript/JavaScript lifecycle events),
  * not config-based. agentsmesh cannot generate plugin code from canonical hooks.
  *
- * Ignore lives in `opencode.json` but is not generated from the canonical ignore file.
+ * Ignore is generated into `opencode.json` as `permission.read`/`permission.edit`
+ * path deny rules, which OpenCode enforces per file path. `grep` and `glob`
+ * rules match the search string instead of the resolved path, so those tools
+ * stay unrestricted — the one fidelity gap worth warning about.
  */
 
 import type { CanonicalFiles, LintDiagnostic } from '../../core/types.js';
@@ -31,7 +34,7 @@ export function lintIgnore(canonical: CanonicalFiles): LintDiagnostic[] {
     createWarning(
       '.agentsmesh/ignore',
       'opencode',
-      'opencode has no dedicated ignore file; canonical ignore patterns are not projected. Configure watcher.ignore in opencode.json manually.',
+      'opencode ignore patterns are projected as permission.read/permission.edit deny rules in opencode.json. OpenCode matches grep and glob rules against the search string, not the file path, so ignored files can still surface in search results.',
     ),
   ];
 }

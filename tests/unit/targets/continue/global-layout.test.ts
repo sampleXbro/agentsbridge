@@ -43,10 +43,8 @@ describe('continue global layout — paths', () => {
     expect(layout.paths.commandPath('deploy', {} as never)).toBe('.continue/prompts/deploy.md');
   });
 
-  it('returns projected agent skill path', () => {
-    expect(layout.paths.agentPath('my-agent', {} as never)).toBe(
-      '.continue/skills/am-agent-my-agent/SKILL.md',
-    );
+  it('returns the markdown agent-file path (same format as project scope)', () => {
+    expect(layout.paths.agentPath('my-agent', {} as never)).toBe('.continue/agents/my-agent.md');
   });
 });
 

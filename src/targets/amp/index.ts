@@ -53,7 +53,10 @@ const project: TargetLayout = {
   skillDir: AMP_SKILLS_DIR,
   managedOutputs: {
     dirs: [AMP_SKILLS_DIR],
-    files: [AMP_ROOT_FILE, AMP_MCP_FILE],
+    files: [AMP_ROOT_FILE],
+    // Amp's own settings file: agentsmesh owns `amp.mcpServers` and nothing else
+    // (the legacy `amp.permissions` key next to it is the user's).
+    coOwnedFiles: [AMP_MCP_FILE],
   },
   paths: {
     rulePath(_slug) {
@@ -73,7 +76,8 @@ const globalLayout: TargetLayout = {
   skillDir: AMP_GLOBAL_SKILLS_DIR,
   managedOutputs: {
     dirs: [AMP_GLOBAL_SKILLS_DIR],
-    files: [AMP_GLOBAL_ROOT_FILE, AMP_GLOBAL_MCP_FILE],
+    files: [AMP_GLOBAL_ROOT_FILE],
+    coOwnedFiles: [AMP_GLOBAL_MCP_FILE],
   },
   rewriteGeneratedPath(path) {
     if (path === AMP_ROOT_FILE) return AMP_GLOBAL_ROOT_FILE;

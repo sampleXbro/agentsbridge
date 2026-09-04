@@ -1,0 +1,23 @@
+{
+  "name": "orders-api",
+  "version": "1.4.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "tsx watch src/server/index.ts",
+    "test": "vitest run",
+    "openapi": "tsx scripts/openapi.ts"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.0"
+  }
+}

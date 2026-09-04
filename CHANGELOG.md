@@ -1,5 +1,320 @@
 # Changelog
 
+## 0.33.0
+
+### Minor Changes
+
+- 3eeadbc: **Four capability gaps closed, all verified against each tool's own docs or source.**
+
+  **opencode: `ignore` is now generated (both scopes).** Canonical ignore patterns become `permission.read` / `permission.edit` path deny rules in `opencode.json`. The obvious-looking key, `watcher.ignore`, is deliberately _not_ used — it scopes the filesystem watcher and never blocks a read, so mapping ignore there would have advertised exclusion that does not exist and left `.env` fully readable. No `"*"` catch-all is written, because user rules append after opencode's built-in defaults under last-match-wins, so a generated blanket allow would silently undo opencode's own `.env` protection. Per-pattern rules do carry both actions: a gitignore negation (`!pattern`) becomes an `allow` rule and round-trips back to `!pattern` on import. `grep`/`glob` rules are left alone since they match the search string rather than the file path; the lint warning now names that residual gap instead of claiming ignore is unsupported.
+
+  **crush: global `ignore` is now generated.** `~/.config/crush/ignore` — extensionless and without a leading dot, matching what Crush's `internal/fsext/ls.go` actually reads. Generate, import and reference-rewriting all cover the global scope now.
+
+  **augment-code: project `permissions` are now generated.** Augment documents `.augment/settings.json` as repo-level settings committed to the project, carrying the same `toolPermissions` shape as the user file, so a team can check a tool policy into the repo. Honored by the Auggie CLI and Cosmos cloud agents, not the IDE extension.
+
+  **deepagents-cli: global `permissions` are now generated (embedded).** Canonical allow entries map onto `shell.allow_list` in `~/.deepagents/config.toml`, merged key-scoped so unrelated settings in that shared file survive. The mapping is lossy by nature — dcode has no deny rules, no ask rules and no per-tool patterns — so `deny` and `ask` entries now raise a lint warning naming what was dropped instead of disappearing silently.
+
+- 4602b6f: **Eleven capability gaps closed across Continue, Amazon Q and Warp — plus three defects found along the way that were losing user data.**
+
+  **Continue: agents and hooks are now generated at both scopes.** Agents are `.continue/agents/<name>.md` — Markdown with `name`/`description`/`model`/`tools` frontmatter, where `tools` and `rules` are comma-separated strings because upstream types them as `z.string()` and rejects the whole file on a YAML list. Hooks are the `hooks` key of `.continue/settings.json`, reusing the Claude Code serializer since Continue's loader documents the same 17 event names and the same file shape. `.continue/agents/*.yaml` assistant profiles are treated as user-owned: never written, never imported, never deleted.
+
+  **Amazon Q: ignore and global rules now reach the agent.** Ignore patterns become `toolsSettings.fs_read.deniedPaths` / `fs_write.deniedPaths` in the agent JSON — Q CLI has no ignore file anywhere. Global rule files are still written to `~/.aws/amazonq/rules/`, but Q CLI never reads that directory on its own (`paths.rs` `mod global` has no rules constant), so the generated agent JSON now carries a `file://~/.aws/amazonq/rules/**/*.md` glob in its `resources` array — that entry is what makes the files reachable. `rules` at global scope is therefore honestly `embedded` rather than `native`.
+
+  **Warp: project ignore, global rules and global permissions.** `.warpindexingignore`, `~/.agents/AGENTS.md`, and the four `[agents.profiles]` keys in `~/.warp/settings.toml`, merged key-scoped so unrelated settings survive.
+
+  Three fixes to behaviour that was already shipping:
+  - **Every generated Amazon Q agent was silently dropping your project rules.** Q's `Agent` struct declares `resources` with `#[serde(default)]`, so a custom agent inherits nothing from the built-in default agent — including its `.amazonq/rules/**/*.md` glob and the `AGENTS.md` / `README.md` / `AmazonQ.md` documentation resources. Running `q chat --agent <name>` saw none of them. Generated agents now carry full default-agent parity.
+  - **Warp permission revocation was a no-op.** Removing an entry from `permissions.yaml` left the old allowlist in `settings.toml`, so a revoked `Bash(curl:*)` kept auto-running. agentsmesh now owns those four keys outright and rewrites them on every emit.
+  - **Warp's regexes were being escaped into dead literals.** Warp's allow/denylists are regexes, so `import --global` followed by `generate --global` turned a user's `rm -rf .*` deny rule into `rm -rf \.\*`, which matches nothing. Payloads now round-trip verbatim; allowlist entries are anchored `^…$` and denylist entries left unanchored, each taking the narrower reading of Warp's undocumented match semantics so no rule can come back weaker.
+
+  Amazon Q's embedded features (hooks, permissions, ignore) are now gated on their own `features` entries via `emitScopedSettings`, so disabling a feature no longer leaks it into the agent JSON. Amazon Q import merges into `.agentsmesh/ignore` instead of overwriting it, preserving comments and `!` negations that Q cannot express, and Warp import preserves canonical `ask` plus entries Warp has no key for.
+
+- 00d58e3: **Twelve capability gaps closed across Zed and Antigravity — and a bug that deleted your Zed editor config.**
+
+  **Zed.** Global rules now write `~/.config/zed/AGENTS.md`, the real file that replaced the database-backed Rules Library in v1.4.0, with secondary rules folded into it. Ignore projects onto `file_scan_exclusions` and `private_files` in `settings.json` at both scopes — `file_scan_exclusions` is a splicing list, so the `"..."` entry is appended to preserve Zed's own defaults, while `private_files` extends and must not carry it. Global permissions write `agent.tool_permissions`, mapped onto the five Zed tools that accept patterns, with `case_sensitive: true` so Zed's case-insensitive default cannot widen a grant. Commands ride the skills surface through the existing `supportsConversion` mechanism, emitting byte-identical output to codex-cli so the two dedupe instead of colliding. Project permissions are now correctly `none`: `.zed/settings.json` is parsed as `ProjectSettingsContent`, which has no `agent` field at all, so anything written there was discarded.
+
+  **Antigravity.** Project MCP is generated again — it had been deliberately suppressed, so every developer re-added their servers by hand in each repo — along with project and global agents, and `.antigravityignore`. Global permissions write `~/.gemini/antigravity-cli/settings.json`. The MCP config files (`.agents/mcp_config.json` project, `~/.gemini/config/mcp_config.json` global) are merged per server key, so the Antigravity-only `disabled`, `disabledTools`, `cwd`, `oauth` and `authProviderType` keys survive regeneration.
+
+  Three fixes to behaviour that was already shipping:
+  - **`agentsmesh generate` could delete your entire Zed editor config.** `.zed/settings.json` was listed in `managedOutputs.files`, so any run that produced no MCP servers treated it as a stale artifact and removed it. Neither Zed settings file is a managed output any more.
+  - **Zed generation overwrote hand-written permission rules.** Merging was per-tool whole-list replace. Ownership is now per pattern, decided by whether a rule decodes cleanly back to canonical — so `^cargo\s+(build|test)$`, `^sudo` and anything malformed survive every run, while agentsmesh's own grants are still revoked when removed from canonical.
+  - **Zed and Antigravity imports overwrote canonical files.** Importing merges now: ignore entries match by glob rather than line text, so `dist/` is recognised in `**/dist` instead of churning, and canonical entries the target cannot express are preserved rather than dropped.
+
+  Zed reads `settings.json` as JSONC and its default file is mostly comments, which `JSON.stringify` would destroy. agentsmesh now leaves a non-strict-JSON settings file completely untouched rather than rewriting it without the user's comments — safer than the previous behaviour, which replaced it with `{}`.
+
+- bf88aaa: **The last nine capability gaps closed across six targets — and four fixes to config-destroying behaviour.**
+
+  **kiro** — permissions at both scopes. Global writes `~/.kiro/settings/permissions.yaml` with canonical allow/deny/ask mapping straight onto Kiro's `effect`. Project embeds into the `.kiro/agents/<name>.md` frontmatter agentsmesh already writes, because Kiro stores workspace rules outside the repository and a cloned repo cannot inject permissions. Lint says so, and says that embedded rules apply only while that agent is active.
+
+  **pi-agent** — permissions at both scopes via `defaultTools` in `.pi/settings.json` and `~/.pi/agent/settings.json`. The mapping is deliberately narrow: Pi has an allow-list over eight built-in tools and no deny, ask, path or command matching, so every canonical entry that cannot be expressed is named in a lint warning.
+
+  **aider** — hooks at both scopes via `.aider.conf.yml`. Three canonical events map onto command keys — `PostToolUse` with an edit-tool matcher to `lint-cmd`, `PostToolUse` with a wildcard matcher to `test-cmd`, and `Notification` to `notifications-command` — with `auto-lint` / `auto-test` written alongside the first two. Canonical hooks that fit none of those shapes are warned about rather than faked.
+
+  **goose** — project MCP via `.agents/plugins/agentsmesh/.mcp.json`. **replit-agent** — commands and agents project onto the repo-committed `.agents/skills/` surface, byte-identical to codex-cli's output so the two dedupe rather than collide.
+
+  **trae** — global permissions were investigated and left at `partial`, not raised. Trae's `~/.trae/permission/global.json` is real, but canonical allow/deny/ask does not map onto its `resourceAuthorization` / `commandRules` split faithfully enough to call native. The gap stays open and visible in the audit rather than being closed dishonestly.
+
+  Four fixes to behaviour that was already shipping:
+  - **Goose project MCP erased `cwd` and any hand-added server key.** MCP went through the one emission path that passes no merge callback, so the file was rewritten wholesale. Both scopes now route through merge-capable paths; `cwd`, `timeout`, `$schema` and unknown keys survive.
+  - **Deleting pi-agent permissions silently widened access.** Removing `defaultTools` handed every built-in back, including `bash` and `write`. A canonical file whose entries project onto no Pi built-in — only scoped `Bash(...)` patterns, say, or only deny/ask rules — now writes `defaultTools: []`, which fails closed. An _empty_ canonical permissions file still writes nothing at all: it is not a claim that no tool is approved. Revoking a previously written array is handled separately, by `revokePiAgentPermissions` through `scopeExtras`.
+  - **Kiro generation overwrote hand-written permission rules.** Ownership is now per rule: a rule is agentsmesh's only when its keys are a subset of `{capability, match, effect}` and it projects back onto canonical, so `exclude` protections and unknown capabilities survive with their comments.
+  - **`.aider.conf.yml` had two writers competing.** It now has one, and every key agentsmesh owns carries a generated-by marker comment — so an `auto-lint: false` you set by hand is never flipped, and only marked keys are removed when they leave the projection.
+
+  Kiro and pi-agent imports also stopped overwriting canonical: silence about `deny` is no longer read as revocation of `deny`, so a Kiro file holding only allow rules can no longer drop `Read(./.env)` from canonical and cross-contaminate every other target.
+
+- 08240d8: Recall now carries a session correlator on every path, so repeated recalls stop re-delivering rules the agent has already been shown. Field telemetry from a long-running project measured **58.7% of all delivered rule-tokens as intra-session repeats** — dedup existed but nothing supplied it with a session id outside hook-driven recall.
+
+  `agentsmesh lessons query` accepts `--session auto`, which resolves to `AGENTSMESH_SESSION_ID` when exported and otherwise to a project-scoped day key — so a prose-driven (non-hook) agent gets dedup within a working session. The scaffolded recall ritual and the `lessons` skill now pass `--session auto` on both the per-action and task-start queries; re-run `agentsmesh init --lessons` (or regenerate) to pick up the new wording.
+
+  Suppression is only safe while the agent that saw a rule still has it in context, so it is bounded on three sides. On a hook-capable target, `SessionStart` now resets dedup for every source except `resume`: `startup` means a new chat, `compact`/`clear` mean the context was summarized or wiped, and an unrecognized source resets too. The reset clears both the harness session's set and the CLI/MCP correlator stores, which are separate files — previously a compaction cleared only the first, leaving an agent's own `--session auto` recalls suppressed against a context that no longer held those rules. Without a hook there is no such signal, so a 30-minute idle gap resets the whole session and every entry expires one hour after delivery. `--no-dedup` re-shows everything for one call, covering the residual case of a new chat opened immediately after the last one on a target with no hook.
+
+  **Behavior change:** the MCP `lessons_query` tool now deduplicates by default. The correlator is `AGENTSMESH_SESSION_ID` when set, otherwise the server process, and a lesson already delivered in that session is withheld and counted in the new `suppressed` field. Pass `no_dedup: true` to re-show everything (for example after the client compacts its context), or `session` to control the scope explicitly. Agents that re-query the same file repeatedly will now receive empty result sets where they previously received the same rules again — `suppressed` distinguishes "already shown" from "nothing applies". Because the server never observes the client compacting its context, MCP suppression is bounded by the same windows as `--session auto` — a 30-minute idle reset and a one-hour ceiling per entry — so a rule that was summarized away always comes back rather than staying hidden for the server's lifetime.
+
+  `agentsmesh lessons stats` is now self-diagnosing. When the numbers match a known pathology it appends an `advice` line naming the cause and the fix (also an `advice` key in `--json`): high intra-session redundancy on recalls that carry no session id means dedup is inert and the ritual should pass `--session auto`; a no-match rate dominated by command-only recalls against a graph with few `command_pattern` triggers means command-shaped lessons need `--trigger-cmd`. Silence is the default.
+
+  The capture-on-failure nudge now pre-fills a concrete command trigger. Instead of a `<regex matching the command>` placeholder it derives the failed command's class (`--trigger-cmd 'git commit'`), regex-escaped, falling back to the placeholder when no safe class can be derived — command-shaped lessons were starving because authors skipped the fill-in-the-blank. Each nudge also states the rule shape that makes a lesson worth reading: cite the symptom, and say why the obvious fix is wrong.
+
+  Command recalls that cannot possibly match now exit early. The recall hook fires on every shell command, but most command-only recalls match nothing (over 80% in the field), so a temp-dir cache of the active command-reachable trigger patterns — stamped against the lessons graph and refreshed automatically — lets a provable no-match skip the full graph load. The cached verdict is computed with the same matcher the full recall path uses, and any doubt (missing, stale, or unreadable cache) falls back to the full path, so the worst case is no speedup rather than a skipped recall.
+
+- 1a5254f: **Three new targets: OpenHands, Kimi Code CLI and Codebuff.** agentsmesh now supports 33 tools.
+
+  **OpenHands** (`openhands`) — the open-source autonomous coding agent. Rules to `AGENTS.md`, path-scoped rules and skills to `.agents/skills/`, subagents to `.agents/agents/`, commands and MCP into a `.agents/plugins/agentsmesh/` bundle, and hooks to `.openhands/hooks.json`. Hooks are the one surface that did _not_ move to `.agents/`, and its `HookConfig` forbids unknown keys outright, so only verified snake_case events are emitted. `AGENTS.md` is written with no frontmatter because OpenHands injects that file verbatim into the prompt.
+
+  **Kimi Code CLI** (`kimi-code`) — Moonshot AI's terminal agent. Rules to `AGENTS.md`, subagents to `.kimi-code/agents/`, skills to `.kimi-code/skills/`, MCP to `.kimi-code/mcp.json` (a genuine project-scope MCP file, which is rare), and hooks plus permissions into `~/.kimi-code/config.toml`. Those last two are user-scope only — Kimi Code has no project config file. That TOML also holds provider API keys in plain text, so agentsmesh merges key-scoped and never rewrites the file.
+
+  **Codebuff** (`codebuff`) — the multi-agent terminal CLI. Rules to `AGENTS.md` including nested per-directory files, skills to `.agents/skills/`, MCP to `.agents/mcp.json`, and ignore to `.codebuffignore`. Agents and permissions stay `partial`: Codebuff agents are executable TypeScript modules, and agentsmesh generates config, not code.
+
+  OpenHands and Codebuff both read `.agents/skills/`, which `codex-cli` owns, so each emits byte-identical skill content and is registered as a native `.agents/` writer — without that, `generate --global` alongside Claude Code threw `Conflicting generated outputs`. Kimi Code writes its own `.kimi-code/skills/` at both scopes and is not part of that set.
+
+  Two behaviours worth knowing before you run this:
+  - **Kimi Code concatenates every instruction file it finds** rather than picking the first, so a `.kimi-code/AGENTS.md` left over from a previous setup would double your rules in the prompt. It is now a managed output and `agentsmesh generate` removes it; the root `AGENTS.md` carries the merged content.
+  - **Codebuff's scope precedence is inverted** relative to every other target: it searches `[cwd/.agents, cwd/../.agents, ~/.agents]` last-write-wins, so a global file overrides the project one. It also has a middle scope (the parent directory, for monorepos) that agentsmesh cannot express.
+
+- e629741: **Amazon Q Developer: commands are now native.** The Q CLI reads saved prompts as flat `<name>.md` files from `.amazonq/prompts/` (workspace) and `~/.aws/amazonq/prompts/` (user), invoked as `/prompts`. AgentsMesh now generates and imports both scopes. Q reads the file body verbatim, so no frontmatter is emitted; a lint warning reports `description` / `allowed-tools` metadata that the format cannot carry, and names outside `^[a-zA-Z0-9_-]{1,50}$` (including `:`-namespaced commands, which Q cannot nest) are rewritten with a warning naming the resulting file.
+
+  **Claude Code: global hooks now actually load.** `agentsmesh generate --global` wrote hooks to `~/.claude/hooks.json` — a file Claude Code never reads. Its documented hook locations are `~/.claude/settings.json`, `.claude/settings.json`, `.claude/settings.local.json`, managed policy, and plugin/skill/subagent frontmatter; there is no standalone `hooks.json`. Global hooks now merge into `~/.claude/settings.json` under `hooks`, matching project scope, and the stale `~/.claude/hooks.json` is removed on the next `generate`. Import still reads the old file so existing setups migrate.
+
+  **Gemini CLI: permissions are no longer written into the project.** Gemini's policy engine documents its Workspace tier (`<repo>/.gemini/policies/`) as non-functional, so the `permissions.toml` AgentsMesh generated there was a security policy the tool silently ignored — deny rules that never applied. Permissions now emit only at global scope (`~/.gemini/policies/permissions.toml`, unchanged) via `globalSupport.scopeExtras`, and a project-scope lint warning points users at `agentsmesh generate --global`. The stale project file is left in place: `.gemini/policies/permissions.toml` is a `coOwnedFiles` entry at both scopes, which stale cleanup never deletes, because a user may have added their own `[[rule]]` blocks to it since. Delete it by hand if you want it gone.
+
+### Patch Changes
+
+- 20ff933: **Disabling a feature no longer deletes the user config file that feature wrote into.**
+
+  `cleanupStaleGeneratedOutputs` treated every entry in a target's `managedOutputs.files` as agentsmesh-owned: any path the current run did not emit was `rm -rf`'d. A run with `mcp` turned off emits nothing for `.codex/config.toml`, so the file — the user's own Codex model, provider and trust config — was deleted outright, and the CLI reported "Nothing changed."
+
+  `TargetManagedOutputs` now has a second list:
+  - `files` — agentsmesh owns the file outright; a run that stops emitting it deletes it (this is how revocation works).
+  - `coOwnedFiles` — agentsmesh writes into the file but the user owns it too. Never deleted; the descriptor's `mergeGeneratedOutputContent` hook keeps the user's content on the runs that do write it.
+
+  31 paths across 17 targets moved from `files` to `coOwnedFiles`: `.codex/config.toml`, `.mcp.json` / `~/.claude.json`, `.claude/settings.json`, `.vscode/mcp.json`, `.vscode/settings.json`, `.gemini/settings.json`, `.qwen/settings.json`, `crush.json`, `opencode.json`, `kilo.jsonc`, `.amp/settings.json`, `.augment/settings.json`, `.agents/mcp_config.json`, `.openhands/hooks.json`, `.deepagents/.mcp.json`, `.junie/config.json`, `.rovodev/config.yml`, `~/.config/goose/permission.yaml` and their global counterparts.
+
+  Stale cleanup reads `files` only, and skips `coOwnedFiles` during the directory sweep too — a co-owned file living inside a managed directory was otherwise still deleted.
+
+  A repo-wide invariant test now fails the build if any registered descriptor — builtin or plugin — lists a co-owned path in `managedOutputs.files`. Co-ownership is recognised through all three mechanisms agentsmesh actually uses: a descriptor `mergeGeneratedOutputContent` hook, the `SETTINGS_JSON_PATHS` fallback in `mergeOutputContent`, and a `scopeExtras` generator that reads the existing file and merges internally. The last two are why `.claude/settings.json` (the user's model, env and hook config) and goose's `permission.yaml` (which holds goose's own `smart_approve` cache) were still being deleted after the first pass — neither has a descriptor hook. Exceptions are an explicit, commented allowlist.
+
+  **Behaviour change:** emptying `hooks.yaml` no longer removes `.openhands/hooks.json`. That file is user-authored and holds `HookType.AGENT` handlers canonical cannot express; a feature-disable run and an empty-canonical run are indistinguishable at cleanup time, so the file is kept. Revocation is still event-scoped — rewriting `hooks.yaml` drops the handlers agentsmesh no longer emits.
+
+  **Known gap:** `agentsmesh uninstall` relied on stale cleanup deleting these files, so agentsmesh's own `mcpServers` / `[mcp_servers.*]` blocks now survive an uninstall in a co-owned file instead of going with it. The same applies to disabling a feature. Leaving a stale server behind is the safer failure than deleting the user's model and auth config, but it is not the end state: revoking owned keys on disable needs an explicit clear-owned-keys pass across all 31 paths (`src/targets/pi-agent/permissions-revoke.ts` is the existing precedent) and is not in this change.
+
+  **Plugin authors:** `coOwnedFiles` is optional and additive. Any path your `mergeGeneratedOutputContent` claims belongs there rather than in `files`; the schema rejects a path listed in both.
+
+- 5ca7d7b: **A comment in your config no longer costs you the whole file.**
+
+  Six mergers parsed the user's file with `JSON.parse` and coerced an unparsable base to `{}` before serialising their own keys over the top. One `//` line was enough to lose everything else in the file:
+
+  ```jsonc
+  // before
+  {
+    // my editor prefs
+    "editor.fontSize": 14,
+    "files.exclude": { "**/.git": true }
+  }
+
+  // after `agentsmesh generate` with roo-code enabled
+  {
+    "roo-cline.allowedCommands": ["Bash(ls)"]
+  }
+  ```
+
+  This was live on files that are comment-legal by design: `.vscode/settings.json` (VS Code ships its own settings commented), `kilo.jsonc` (the format's name is JSON-with-comments), `.qwen/settings.json`, and the shared `.claude/settings.json` / `.gemini/settings.json` / `crush.json` mergers.
+
+  All six now preserve a base they cannot parse, via one shared guard (`preservedUnparsableBase`). That is the rule `mergeOwnedJsonKeys` already followed — these sites simply never routed through it.
+
+  The trade-off is unchanged and deliberate: on a commented file, agentsmesh writes nothing and reports the path as `unchanged`, so generated content is silently not applied there. Preserving a file we cannot safely rewrite beats destroying it, but the run gives no warning yet.
+
+  Eleven existing tests asserted the old behaviour — names like "falls back to `{}` when the base JSON is invalid" and "replaces invalid existing settings.json". They encoded the data loss as intended behaviour and were rewritten to the new contract rather than removed.
+
+- 0c775e1: **`generate` no longer deletes files inside a managed directory that agentsmesh never wrote.**
+
+  `managedOutputs.dirs` was swept recursively and every file found that the current run did not emit was `rm -rf`'d. Those directories are shared: Kiro's Agent Hooks UI writes `.kiro/hooks/*.kiro.hook`, Cursor's rule generator writes `.cursor/rules/*.mdc`, users hand-author `~/.claude/skills/**`, and `.agents/skills` is the cross-tool skills convention. A single `generate` removed all of them — on a fresh project, the very first run did it before any lock existed.
+
+  This is the same ownership bug `coOwnedFiles` fixed for `managedOutputs.files`. Directories could not be fixed the same way because their contents are dynamic (one file per rule, command, agent, skill), so no descriptor can enumerate them. The lock's `outputs` map is the missing record: cleanup runs before the lock is rewritten, so the map on disk is still the previous run's list of everything agentsmesh generated.
+
+  A file discovered by the directory sweep is now deleted only when the previous run's lock says agentsmesh wrote it. Renaming a rule still evicts its old output. `managedOutputs.files` and `coOwnedFiles` are unchanged.
+
+  Two related fixes:
+  - **No provenance means no directory deletions.** A first run, a lock written before the `outputs` map existed, or a lock lost to `agentsmesh merge` leaves the sweep with nothing to go on, so it deletes nothing that run. Be aware this is not a one-run window: the lock a run writes records only what that run generated, so a file agentsmesh wrote earlier and no longer emits is never re-recorded and stays on disk indefinitely. Removing such an orphan is a manual step. That is the deliberate trade: an unwanted file that lingers is recoverable, a deleted one is not.
+  - **A filtered run (`--targets x`) leaves a configured-but-inactive target's directories alone.** `.agents/skills` is managed by amp, zed, goose, codex-cli and others, so `generate --targets zed` used to delete amp's generated skills. Provenance cannot tell them apart — agentsmesh did write them — so the guard is ownership: a directory another configured target also manages is skipped until the next unfiltered run.
+  - An empty run no longer wipes the lock's `outputs` map, which would have made everything already on disk permanently unevictable.
+
+  **`agentsmesh check` reports these files as a notice, not as drift.** Because `generate` no longer removes them, reporting them as stale generated output would exit 1 with no remedy — neither `agentsmesh merge` nor `generate --force` can clear a file agentsmesh does not own. They now appear under a new `outputsUntracked` list that is deliberately excluded from `outputDrift` and `inSync`:
+
+  ```
+  ✓ Lock file is in sync.
+  1 file(s) in managed directories were not written by agentsmesh (left untouched):
+    .kiro/hooks/my-hook.kiro.hook
+  ```
+
+  The signal is kept — a rule hand-added straight into `.claude/rules` instead of canonical still shows up — without turning a tool doing its job into a failed build. Four tests asserted the old exit-1 behaviour and were updated to the new contract rather than removed.
+
+- c233472: **`agentsmesh merge` no longer strands generated files forever.**
+
+  `resolveLockConflict` wrote the resolved `.agentsmesh/.lock` with no `outputs` key. That map is the provenance the managed-directory sweep gates on — a discovered file is deleted only when the previous lock says agentsmesh wrote it — so after a merge the sweep had nothing to go on and deleted nothing it found.
+
+  That was not a one-run deferral. A full `generate` **replaces** the outputs map with only what that run emitted, so a file generated before the merge and no longer emitted could never appear in any future map. It was never evicted, and `agentsmesh check` listed it indefinitely.
+
+  The map now carries forward as the union of both conflict sides. It records only paths agentsmesh itself wrote, so widening it can never make a foreign file deletable — it can only restore paths that were already ours. Where both sides claim the same path, ours wins; the hashes may be stale until the next generate rewrites them, which is the same state a filtered run already leaves behind and which `check` reports.
+
+  A lock with no `outputs` on either side stays without one, so an old-format lock is not silently upgraded to an empty map — `readLock` distinguishes the two and `check` relies on it.
+
+- 779c89e: **`.roomodes` is no longer replaced wholesale — your hand-written Roo Code project modes survive.**
+
+  `.roomodes` is Roo Code's own project custom-modes store: Roo writes it whenever you create a mode at Project scope. `generateAgents` emitted the entire file from canonical, and the mode-scoped merger claimed only the Global twin (`~/.roo/settings/custom_modes.yaml`), so `.roomodes` fell through to whole-file replacement. Every mode you authored was deleted, and modes that shared a slug with a canonical agent lost `whenToUse`, `customInstructions`, `iconName` and the tuple group form (`- - edit` / `fileRegex`).
+
+  `.roomodes` was also in `project.managedOutputs.files`, the stale-cleanup delete list, so turning the `agents` feature off deleted the file outright.
+
+  `mergeRooCustomModesYaml` now claims both paths, and `.roomodes` moved to `coOwnedFiles`. Ownership is per mode, recorded by the `# agentsmesh:` marker comment the merger writes — the same convention `.aider.conf.yml` uses:
+  - a marked mode, or one whose slug canonical still owns, is agentsmesh's and is re-emitted;
+  - everything else is yours and is kept verbatim;
+  - within a re-emitted mode, fields canonical cannot express are carried over.
+
+  Only one path resolves per run — the global layout suppresses `.roomodes` and emits the settings file from `scopeExtras` — so claiming both scopes in one merger cannot collide.
+
+  **Also fixes a marker bug that affected the global file too.** Re-parsing the YAML moves the comment above the _first_ sequence item onto the sequence node itself, so the first generated mode read back as unmarked. It was treated as the user's and never revoked — deleting that agent left its mode behind permanently. The merger now reads the marker from where the parser actually puts it. This was live in `~/.roo/settings/custom_modes.yaml` since the global merge shipped.
+
+  Two limits worth knowing:
+  - Deleting **every** agent leaves the last generated modes in place. `generateAgents` returns nothing for empty canonical, so the merger never runs — the same revocation-to-empty gap documented for the other co-owned files.
+  - A `.roomodes` that is not a YAML mapping is returned verbatim rather than rewritten, so generated modes are silently not applied to it.
+
+- 6e7b06f: **Global-scope generation no longer replaces user config files it only partly owns.**
+
+  `scopeExtras` — the hook targets use for global-only outputs — pushed its results straight onto the result list, bypassing the shared merge policy that every other emission path goes through. Six paths were rewritten from canonical alone:
+  - `~/.continue/config.yaml` — Continue's personal assistant config. The first `generate --global` erased the user's `models` blocks (**including `apiKey` / `apiBase`**), `context` providers, `docs`, hand-written rules and prompts, and overwrote the assistant `name` with the literal `agentsmesh`.
+  - `~/.continue/permissions.yaml` — the approval cache Continue writes when the user picks "always allow" / "always ask" / "exclude".
+  - `~/.copilot/mcp-config.json` — servers registered with `copilot mcp add`.
+  - `~/.gemini/policies/permissions.toml`
+  - `~/.deepagents/hooks.json`
+  - `~/.roo/settings/custom_modes.yaml`
+
+  `scopeExtras` results now route through the same `mergeOutputContent` policy as the feature loop, with pending-result dedup. Targets whose file needed key-scoped ownership gained a `mergeGeneratedOutputContent` hook; the affected paths moved to `managedOutputs.coOwnedFiles` so stale cleanup cannot delete them either.
+
+  Reading the existing file is not the same as merging it. `~/.copilot/mcp-config.json` was read on every run — but only to decide whether to report "created" or "updated", never as a merge base. Any audit of this class has to check whether the existing content reaches the emitted content, not whether the file was opened.
+
+  Two related merge fixes, each its own silent data loss:
+  - `mergeSettingsJson` now merges _inside_ `permissions`, so the user's `defaultMode` and `additionalDirectories` survive a write instead of being dropped every time agentsmesh wrote allow/deny/ask.
+  - `mergeCrushConfigJson` now merges inside `permissions` and `options`, so `options.debug` survives.
+
+  **`agentsmesh init` no longer scaffolds `allow: []` / `deny: []` / `ask: []`.** Those keys are commented-out examples now. An explicit empty list is a real instruction — "grant nothing" — not a placeholder, and targets that project permissions into a shared config file apply it. A user adopting agentsmesh with existing permissions in `.claude/settings.json` would have had them cleared. Absent keys mean "agentsmesh manages nothing here yet", which is what a fresh init actually means.
+
+  **Known gap, unchanged by this release:** emptying a canonical list still does not revoke what a previous run wrote into a co-owned file. Co-owned files are never deleted (that is deliberate — deleting them is what destroyed real user configs), so an emptied `allow` leaves the previously written grant live. Per-entry revocation works; only revocation-to-empty does not. A first attempt at this was withdrawn before release: without a record of what agentsmesh previously wrote, revocation cannot distinguish its own output from the user's, and it cleared permissions the user had authored by hand. Doing it properly needs provenance tracking.
+
+- 6dbe626: **`generate` no longer replaces shared config files it only partly owns.**
+
+  `generateFeature` — the emission path for rules, commands, agents, skills, MCP and ignore — was the only one that never received a merge callback, so those six features wrote whole files. Where a target's MCP output lands in a config file the user also owns, generation replaced everything else in it.
+
+  The merge policy now lives in one module (`src/core/generate/merge-policy.ts`) used by every emission path, including the `mirrorGlobalPath` branch that previously pushed raw content with no merge at all. Key-scoped mergers were added for the files that had none:
+  - **codex-cli** `.codex/config.toml` — `model`, `model_providers`, `shell_environment_policy` and `projects` trust survive; only `[mcp_servers.*]` is rewritten. The merge is text-preserving, so comments and formatting are kept.
+  - **claude-code** `.mcp.json` and global `.claude.json` — agentsmesh owns `mcpServers`; the account, project and history state in `~/.claude.json` is left alone.
+  - **copilot** `.vscode/mcp.json` — owns `servers`, so the `inputs` array holding secret prompts survives.
+  - **deepagents-cli** `.mcp.json` — the same owned-key set as claude-code, which writes the same path.
+
+  Servers removed from canonical are still revoked: owned keys are replaced wholesale, never deep-merged.
+
+  Two safety rules came out of this and are now enforced by tests:
+  - **A file we cannot parse is preserved, not replaced.** A `.vscode/mcp.json` or `.qwen/settings.json` containing comments is left untouched rather than rewritten without them — the rule `src/targets/zed/layout.ts` already documented. Note the run reports this as "unchanged", so generated servers are silently not applied to a JSONC file.
+  - **Targets sharing an output path must own identical keys.** claude-code and deepagents-cli both write `.mcp.json`; when only one merged, `resolveOutputCollisions` failed the entire run for anyone with both enabled.
+
+  Also fixed: a TOML table header whose quoted key contains a bracket — `[projects."/Users/me/[wo]rk"]`, a legal path — was not recognised as a header, so it stayed inside the dropped `[mcp_servers.*]` region and was deleted along with its `trust_level`.
+
+  **Follow-up, shipped alongside this:** stale cleanup used to delete these same files whenever a run stopped emitting them. `managedOutputs.coOwnedFiles` now separates "agentsmesh owns this, delete it when stale" from "the user owns this too, never delete it" — see the co-owned managed-outputs entry.
+
+- 9ef7c44: Bumped the `tar` production dependency to 7.5.22, clearing three advisories that ship to anyone installing agentsmesh: GHSA-23hp-3jrh-7fpw (critical — decompression/parse denial of service), GHSA-8x88-c5mf-7j5w (high — negative entry size infinite loop), and GHSA-r292-9mhp-454m (high — uncontrolled recursion in `mapHas`/`filesFilter`). `tar` backs `agentsmesh install` pack extraction.
+
+  Also pinned repo-local resolutions for two high-severity transitives of `@modelcontextprotocol/sdk` — `fast-uri` to `^3.1.5` (GHSA-7p8r-x3mc-p8w7, host confusion via backslash) and `ip-address` to `^10.3.1` (GHSA-mwp4-54f8-5fhr, leading-zero octet decoding). These are pnpm `overrides`, so they harden this repo's own builds and CI; consumers resolve those transitives through their own package manager and are not affected by the override.
+
+- 4d79310: Stop replacing and deleting the config files the AI tools write themselves
+
+  Twenty-two generated paths were written from canonical alone AND listed in
+  `managedOutputs.files`, the stale-cleanup delete list. Every run replaced the
+  whole document — losing every key the tool or the user had put there — and any
+  run that stopped emitting the path deleted the file outright.
+
+  Confirmed end to end: a `~/.codeium/windsurf/mcp_config.json` holding a server
+  added in Windsurf's MCP UI plus an unrelated top-level key came back with both
+  gone.
+
+  Each path now has a key-scoped merge hook and moved to
+  `managedOutputs.coOwnedFiles`, which cleanup never reads:
+  - **MCP configs** (`mcpServers` and the canonical per-server fields owned;
+    `disabled`, `autoApprove`, `timeout`, `cwd` and every other top-level key
+    carried over): amazon-q `.amazonq/mcp.json` + `~/.aws/amazonq/mcp.json`,
+    cline `.cline/mcp.json`, codebuff `.agents/mcp.json`, cursor
+    `.cursor/mcp.json`, factory-droid `.factory/mcp.json`, junie
+    `.junie/mcp/mcp.json`, kilo-code `.kilo/mcp.json`, kimi-code
+    `.kimi-code/mcp.json`, kiro `.kiro/settings/mcp.json`, roo-code
+    `.roo/mcp.json`, rovodev `~/.rovodev/mcp_config.json`, trae `.trae/mcp.json`,
+    warp `.warp/.mcp.json`, windsurf `~/.codeium/windsurf/mcp_config.json`.
+  - **Hooks configs**: antigravity `.agents/hooks.json` +
+    `~/.gemini/config/hooks.json` (keyed by user-chosen handler names, so the
+    user's handlers now survive), codex-cli `.codex/hooks.json` (keeps the
+    top-level `description`), cursor `.cursor/hooks.json`, factory-droid
+    `.factory/hooks.json`, trae `.trae/hooks.json` + `~/.trae-cn/hooks.json`,
+    windsurf `.windsurf/hooks.json` + `~/.codeium/windsurf/hooks.json`.
+  - **Permissions and settings**: cursor `.cursor/cli.json` /
+    `~/.cursor/cli-config.json` (keeps `version`, `editor`, `network`),
+    factory-droid `.factory/settings.json` (agentsmesh owns only
+    `commandAllowlist` / `commandDenylist`), junie `~/.junie/allowlist.json`
+    (agentsmesh owns only `rules.executables`, so "Always allow" approvals in the
+    other categories, plus `defaultBehavior` and `allowReadonlyCommands`,
+    survive).
+  - **Agents manifest**: cline `.cline/agents.yaml`, merged on the `agents` key.
+
+  A new repo-wide invariant makes the class impossible to reintroduce silently:
+  any structured config document (JSON/JSONC/TOML/YAML) left in
+  `managedOutputs.files` must be named in an explicit, justified allowlist of the
+  outputs agentsmesh owns outright. It runs over registered plugin descriptors as
+  well as builtins.
+
+  Paths deliberately unchanged because agentsmesh owns them end to end:
+  `.continue/mcpServers/agentsmesh.json`, `.github/hooks/agentsmesh.json`,
+  `.agents/plugins/agentsmesh/**`, `~/mcp_settings.json` (roo-code),
+  `.windsurf/mcp_config.example.json`, `~/.claude/hooks.json` (eviction entry) and
+  `.rovodev/prompts.yml`.
+
+  **Two fixes made while verifying this sweep.**
+
+  `mergeMcpServersJson` replaced the whole file when it could not parse the base,
+  so a comment in an MCP config destroyed it — the same fail-open that
+  `preservedUnparsableBase` was written to close, in a helper that never routed
+  through it. It now preserves an unparsable base, and this sweep would otherwise
+  have applied the destructive path to roughly twenty more files.
+
+  `.rovodev/prompts.yml` had been classified as agentsmesh-owned. It is not: the
+  importer reads it (`src/targets/rovodev/importer.ts`), which is the proof the
+  user authors prompts there. It now merges per entry by the same marker
+  convention Roo Code's custom modes use, and the marker algorithm — including
+  the fix for the first list entry, whose comment YAML reattaches to the sequence
+  node on re-parse — now lives once in `src/core/generate/yaml-list-merge.ts`
+  instead of being duplicated per target.
+
+  **Known gaps, unchanged by this release.** Managed _directories_ have the same
+  problem `managedOutputs.files` had: the sweep deletes every file under a managed
+  dir that the run did not emit, so a hook or prompt file the tool or user created
+  in `.kiro/hooks`, `.cline/hooks` or `.rovodev/commands` is still removed. And a
+  server you added in a tool's own UI and never imported is still revoked, because
+  agentsmesh owns the whole `mcpServers` key and cannot tell your server from one
+  it wrote itself.
+
 ## 0.32.0
 
 ### Minor Changes

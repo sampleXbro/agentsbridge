@@ -1,3 +1,19 @@
+# README rewrite + SEO (2026-09-04)
+
+- [x] 1. README.md per the `readme` skill: header, problem/solution, install,
+      60-second quickstart, before/after, lessons, comparison, highlights,
+      commands, supported tools (generated blocks kept verbatim), docs, one-line
+      contributing/license. Keyword-rich subtitle consistent with package.json.
+- [x] 2. package.json: description + keywords tuned for npm search
+- [x] 3. Website: SEO <title>/description on the homepage (H1 stays short via
+      hero.title), site-wide description/tagline, theme-color meta
+- [x] 4. Website: FAQ section with FAQPage JSON-LD (data in home.ts)
+- [x] 5. Website: llms.txt generated at build from dist titles/descriptions
+      (local integration, TDD with node --test)
+- [x] 6. Verify: website tests, astro build + link validation, matrix:verify
+      (README markers), README links resolve against dist; hand the GitHub
+      topics/description command to the user (outward-facing)
+
 # Coverage gate fix (2026-09-04)
 
 Problem: 95% thresholds are aggregate (a 0%-covered 200-line module moves the

@@ -1,0 +1,98 @@
+---
+/** Collapsible FAQ with FAQPage structured data for rich results. */
+import { inlineCode } from '../../lib/inline-code.mjs';
+import type { HomeFaq } from '../../content/data/home';
+
+interface Props {
+  items: readonly HomeFaq[];
+}
+
+const { items } = Astro.props;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: items.map((item) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: { '@type': 'Answer', text: item.answer.replaceAll('`', '') },
+  })),
+};
+---
+
+<div class="am-faq">
+  {
+    items.map((item) => (
+      <details class="am-faq-item">
+        <summary>
+          {item.question}
+          <span class="am-faq-mark" aria-hidden="true" />
+        </summary>
+        <p set:html={inlineCode(item.answer)} />
+      </details>
+    ))
+  }
+</div>
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+<style>
+  .am-faq {
+    display: grid;
+    gap: 0.5rem;
+    max-width: 48rem;
+  }
+
+  .am-faq-item {
+    border: 1px solid var(--am-hairline);
+    border-radius: var(--am-radius);
+    background: var(--am-surface);
+  }
+
+  summary {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.875rem 1.125rem;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--sl-color-white);
+    list-style: none;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .am-faq-mark {
+    flex-shrink: 0;
+    color: var(--am-signal);
+    font-family: var(--__sl-font-mono);
+  }
+
+  .am-faq-mark::before {
+    content: '+';
+  }
+
+  .am-faq-item[open] .am-faq-mark::before {
+    content: '–';
+  }
+
+  summary:focus-visible {
+    outline: 2px solid var(--am-signal);
+    outline-offset: -2px;
+    border-radius: var(--am-radius);
+  }
+
+  p {
+    margin: 0;
+    padding: 0 1.125rem 1rem;
+    color: var(--sl-color-gray-2);
+    line-height: 1.55;
+    font-size: var(--sl-text-sm);
+  }
+
+  p :global(code) {
+    font-family: var(--__sl-font-mono);
+    font-size: 0.9em;
+    color: var(--sl-color-white);
+  }
+</style>

@@ -7670,6 +7670,19 @@
         "t-kw-6c51ce04"
       ]
     },
+    "testing-the-bash-tool-s-working": {
+      "createdAt": "2026-09-04",
+      "evidence": [],
+      "rule": "The Bash tool's working directory persists across calls: after any 'cd website && ...' the next command starts inside website/, so relative paths like package.json silently hit the wrong file. Start every command with 'cd <repo root> &&' or use absolute paths, and never cd into a subdirectory in a compound command that also edits files.",
+      "status": "active",
+      "topics": [
+        "testing"
+      ],
+      "triggers": [
+        "t-cmd-d04a125f",
+        "t-kw-8b9ce28d"
+      ]
+    },
     "testing-vitest-coverage-thresholds-cannot-expres": {
       "createdAt": "2026-09-04",
       "evidence": [],
@@ -9593,6 +9606,10 @@
       "kind": "command_pattern",
       "pattern": "rg -n.*src/index\\.ts|rg -n.*src/lessons\\.ts"
     },
+    "t-cmd-d04a125f": {
+      "kind": "command_pattern",
+      "pattern": "cd website"
+    },
     "t-cmd-d4222599": {
       "kind": "command_pattern",
       "pattern": "sed|cat"
@@ -11296,6 +11313,10 @@
     "t-kw-8a80159c": {
       "kind": "keyword",
       "pattern": "hash drift"
+    },
+    "t-kw-8b9ce28d": {
+      "kind": "keyword",
+      "pattern": "working directory persists relative path wrong file"
     },
     "t-kw-8be8afaf": {
       "kind": "keyword",

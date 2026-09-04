@@ -37,11 +37,11 @@ export default [
     rules: {
       'no-unused-vars': 'off', // use @typescript-eslint/no-unused-vars
       '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
-      '@typescript-eslint/explicit-function-return-type': [
-        'warn',
-        { allowExpressions: true },
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
+      '@typescript-eslint/explicit-function-return-type': ['warn', { allowExpressions: true }],
       // import/order disabled: eslint-plugin-import@2.x incompatible with ESLint 10
       'import/order': 'off',
       'no-console': ['warn', { allow: ['warn', 'error'] }],
@@ -50,11 +50,20 @@ export default [
     },
   },
   {
-    files: [
-      'tests/unit/**/*.test.ts',
-      'tests/integration/**/*.test.ts',
-      'tests/e2e/**/*.test.ts',
-    ],
+    files: ['tests/**/*.ts'],
+    rules: {
+      // A stray `.only` silently shrinks a file to one test while CI stays green.
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "MemberExpression[object.name=/^(describe|it|test)$/][property.name='only']",
+          message: 'Remove `.only` before committing; it hides every other test in the file.',
+        },
+      ],
+    },
+  },
+  {
+    files: ['tests/unit/**/*.test.ts', 'tests/integration/**/*.test.ts', 'tests/e2e/**/*.test.ts'],
     rules: {
       'no-restricted-imports': [
         'error',

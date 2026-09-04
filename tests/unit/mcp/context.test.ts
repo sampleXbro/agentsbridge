@@ -33,3 +33,36 @@ describe('resolveContext', () => {
     await rm(empty, { recursive: true, force: true });
   });
 });
+
+describe('McpContext.loadCanonical', () => {
+  it('loads the canonical files under <projectRoot>/.agentsmesh', async () => {
+    await mkdir(join(projectRoot, '.agentsmesh/rules'), { recursive: true });
+    await writeFile(
+      join(projectRoot, '.agentsmesh/rules/_root.md'),
+      '---\nroot: true\ndescription: Root rule\n---\n\nAlways apply this.\n',
+      'utf8',
+    );
+    const ctx = await resolveContext({ cwd: projectRoot });
+    const canonical = await ctx.loadCanonical();
+    expect(canonical.rules).toHaveLength(1);
+    const root = canonical.rules[0];
+    expect(root?.root).toBe(true);
+    expect(root?.description).toBe('Root rule');
+    expect(root?.body.trim()).toBe('Always apply this.');
+    expect(root?.source).toBe(join(projectRoot, '.agentsmesh/rules/_root.md'));
+    expect(canonical.commands).toEqual([]);
+    expect(canonical.agents).toEqual([]);
+    expect(canonical.skills).toEqual([]);
+    expect(canonical.mcp).toBeNull();
+    expect(canonical.permissions).toBeNull();
+    expect(canonical.hooks).toBeNull();
+    expect(canonical.ignore).toEqual([]);
+  });
+
+  it('returns empty canonical files when .agentsmesh is absent', async () => {
+    const ctx = await resolveContext({ cwd: projectRoot });
+    const canonical = await ctx.loadCanonical();
+    expect(canonical.rules).toEqual([]);
+    expect(canonical.mcp).toBeNull();
+  });
+});

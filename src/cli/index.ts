@@ -82,7 +82,7 @@ export function parseArgs(argv: string[]): ParseResult {
 
 const router = createRouter(cmdHandlers);
 
-async function main(parsed: ParseResult): Promise<void> {
+export async function main(parsed: ParseResult): Promise<void> {
   const { command, flags, args } = parsed;
 
   if (command === 'help') {
@@ -103,7 +103,7 @@ async function main(parsed: ParseResult): Promise<void> {
   await router.route(command, flags, args);
 }
 
-function isMainModule(): boolean {
+export function isMainModule(): boolean {
   const invoked = process.argv[1];
   if (!invoked) return false;
   const ourPath = fileURLToPath(import.meta.url);

@@ -784,6 +784,20 @@
         "t-glob-8ade9a3e"
       ]
     },
+    "coverage-analysis-to-cover-catch-arms-around": {
+      "createdAt": "2026-09-04",
+      "evidence": [
+        "1fb05f1a"
+      ],
+      "rule": "To cover `.catch(() => [])` arms around readDirRecursiveNoSymlinks or dir-listing branches gated behind readFileSafe probes, mock the fs.js export with vi.mock + importOriginal (vi.hoisted mock fn); pointing the path at a regular file does not work because readDirRecursiveNoSymlinks swallows ENOENT/ENOTDIR/EACCES and readFileSafe throws FileSystemError on EISDIR for real directories.",
+      "status": "active",
+      "topics": [
+        "coverage-analysis"
+      ],
+      "triggers": [
+        "t-glob-c225e5cc"
+      ]
+    },
     "coverage-analysis-to-diagnose-a-codecov-patch": {
       "createdAt": "2026-06-23",
       "evidence": [],
@@ -5892,7 +5906,6 @@
         "release-changesets"
       ],
       "triggers": [
-        "t-glob-b1cdb41a",
         "t-cmd-8f7e2d67",
         "t-kw-244e9a72"
       ]
@@ -7630,6 +7643,81 @@
         "t-glob-4c29ad88"
       ]
     },
+    "testing-a-vitest-coverage-run-wipes": {
+      "createdAt": "2026-09-04",
+      "evidence": [],
+      "rule": "A vitest coverage run wipes reportsDirectory at start, so a summary file from a previous run vanishes the moment a second run begins; copy coverage-summary.json aside (or finish the analysis) before launching another run against the same directory.",
+      "status": "active",
+      "topics": [
+        "testing"
+      ],
+      "triggers": [
+        "t-cmd-c18f3a3e",
+        "t-kw-7ece8445"
+      ]
+    },
+    "testing-never-probe-a-directory-path": {
+      "createdAt": "2026-09-04",
+      "evidence": [],
+      "rule": "Never probe a directory path with readFileSafe (it swallows only ENOENT; a real directory throws EISDIR as FileSystemError). For presence checks on *_DIR constants use exists() or a directory listing, and write the presence test against the real filesystem — a mock that returns null for directories hides the crash.",
+      "status": "active",
+      "topics": [
+        "testing"
+      ],
+      "triggers": [
+        "t-glob-ee09fd4b",
+        "t-glob-848355ab",
+        "t-kw-6c51ce04"
+      ]
+    },
+    "testing-vitest-coverage-thresholds-cannot-expres": {
+      "createdAt": "2026-09-04",
+      "evidence": [],
+      "rule": "Vitest coverage thresholds cannot express two tiers: perFile applies the same numbers to every threshold, and glob thresholds accept no perFile. Keep the aggregate in vitest and enforce a per-file floor with a post-run script over coverage-summary.json (scripts/coverage-floor.ts); never lower the aggregate to make perFile fit.",
+      "status": "active",
+      "topics": [
+        "testing"
+      ],
+      "triggers": [
+        "t-glob-8ade9a3e",
+        "t-glob-a948ade3",
+        "t-kw-3bd487e2"
+      ]
+    },
+    "testing-when-a-test-helper-rethrows": {
+      "createdAt": "2026-09-04",
+      "evidence": [
+        "eslint preserve-caught-error on tests/unit/install/run/run-install-resolve.test.ts:37 (2026-09-04",
+        "session adding install unit tests)"
+      ],
+      "rule": "When a test helper rethrows a new Error inside a catch block, pass `{ cause: e }` to the Error constructor; ESLint 10's recommended `preserve-caught-error` rule fails the file otherwise.",
+      "status": "active",
+      "topics": [
+        "testing"
+      ],
+      "triggers": [
+        "t-glob-4c29ad88",
+        "t-kw-ccc4cf3d",
+        "t-kw-e9de15ff"
+      ]
+    },
+    "testing-when-measuring-per-file-coverage": {
+      "createdAt": "2026-09-04",
+      "evidence": [
+        "vitest 4.1.4 text reporter output for src/install/classify/marketplace-manifest.ts (2026-09-04",
+        "session adding install unit tests)"
+      ],
+      "rule": "When measuring per-file coverage with `vitest run --coverage --coverage.reporter=text`, read the \"Coverage summary\" block, not the file table: the v8 text reporter prints no row for a file that is at 100%, so an empty table means full coverage, not a missing file.",
+      "status": "active",
+      "topics": [
+        "testing"
+      ],
+      "triggers": [
+        "t-cmd-c18f3a3e",
+        "t-kw-f27ad5f1",
+        "t-kw-4859e2d1"
+      ]
+    },
     "typescript-contracts-after-adding-a-new-target": {
       "createdAt": "2026-06-14",
       "evidence": [
@@ -8480,6 +8568,19 @@
         "t-glob-d0a4b76e"
       ]
     },
+    "website-markup-for-dev-only-astro-pages": {
+      "createdAt": "2026-09-04",
+      "evidence": [],
+      "rule": "For dev-only Astro pages (OG card sources, previews), inject the route from a local integration only when command === 'dev'; do not gate a src/pages file with a PROD 404 Response — SSG skips the file but @astrojs/sitemap still lists the dead URL.",
+      "status": "active",
+      "topics": [
+        "website-markup"
+      ],
+      "triggers": [
+        "t-glob-308a43cc",
+        "t-kw-176143df"
+      ]
+    },
     "website-markup-in-script-owned-markdown-blocks": {
       "createdAt": "2026-09-04",
       "evidence": [],
@@ -9187,6 +9288,9 @@
     "test-execution": {
       "summary": "Reliable focused and full test command patterns."
     },
+    "testing": {
+      "summary": "Conventions and gotchas for writing and measuring unit tests in this repo."
+    },
     "typescript-contracts": {
       "summary": "TypeScript contract and local type-name verification."
     },
@@ -9468,6 +9572,10 @@
     "t-cmd-be67eb02": {
       "kind": "command_pattern",
       "pattern": "lessons_add"
+    },
+    "t-cmd-c18f3a3e": {
+      "kind": "command_pattern",
+      "pattern": "vitest run --coverage"
     },
     "t-cmd-c3982e63": {
       "kind": "command_pattern",
@@ -9792,6 +9900,10 @@
     "t-glob-300bbdba": {
       "kind": "file_glob",
       "pattern": "src/lessons/mutate.ts"
+    },
+    "t-glob-308a43cc": {
+      "kind": "file_glob",
+      "pattern": "website/integrations/*.mjs"
     },
     "t-glob-341a7fe1": {
       "kind": "file_glob",
@@ -10333,6 +10445,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/recall-always.ts"
     },
+    "t-glob-a948ade3": {
+      "kind": "file_glob",
+      "pattern": "scripts/coverage-floor*.ts"
+    },
     "t-glob-a9519573": {
       "kind": "file_glob",
       "pattern": "tasks/lessons-consolidation-proposal.md"
@@ -10372,10 +10488,6 @@
     "t-glob-b1aaff05": {
       "kind": "file_glob",
       "pattern": "src/core/generate/root-instruction-decorator.ts"
-    },
-    "t-glob-b1cdb41a": {
-      "kind": "file_glob",
-      "pattern": ".changeset/*.md"
     },
     "t-glob-b39eff4f": {
       "kind": "file_glob",
@@ -10621,6 +10733,10 @@
       "kind": "file_glob",
       "pattern": "src/lessons/regex-safety.ts"
     },
+    "t-glob-ee09fd4b": {
+      "kind": "file_glob",
+      "pattern": "src/targets/**/import-global-exports*.ts"
+    },
     "t-glob-f0ab48c5": {
       "kind": "file_glob",
       "pattern": "website/src/components/home/ToolWall.astro"
@@ -10777,6 +10893,10 @@
       "kind": "keyword",
       "pattern": "insert import"
     },
+    "t-kw-176143df": {
+      "kind": "keyword",
+      "pattern": "astro dev-only page sitemap"
+    },
     "t-kw-1b4e1dda": {
       "kind": "keyword",
       "pattern": "reference-targets two chains outputPaths expectedRefs command path"
@@ -10909,6 +11029,10 @@
       "kind": "keyword",
       "pattern": "permission merge revoke grant"
     },
+    "t-kw-3bd487e2": {
+      "kind": "keyword",
+      "pattern": "coverage threshold perFile floor"
+    },
     "t-kw-3bdacef0": {
       "kind": "keyword",
       "pattern": "shared data type field"
@@ -10956,6 +11080,10 @@
     "t-kw-4683ab67": {
       "kind": "keyword",
       "pattern": "lock file format outputs checksums"
+    },
+    "t-kw-4859e2d1": {
+      "kind": "keyword",
+      "pattern": "coverage floor"
     },
     "t-kw-4875fad7": {
       "kind": "keyword",
@@ -11065,6 +11193,10 @@
       "kind": "keyword",
       "pattern": "cross-cluster"
     },
+    "t-kw-6c51ce04": {
+      "kind": "keyword",
+      "pattern": "readFileSafe directory EISDIR"
+    },
     "t-kw-6d98db32": {
       "kind": "keyword",
       "pattern": "branch coverage"
@@ -11120,6 +11252,10 @@
     "t-kw-7ebb8695": {
       "kind": "keyword",
       "pattern": "embedded feature agent json"
+    },
+    "t-kw-7ece8445": {
+      "kind": "keyword",
+      "pattern": "coverage-summary.json missing"
     },
     "t-kw-8087e0cf": {
       "kind": "keyword",
@@ -11353,6 +11489,10 @@
       "kind": "keyword",
       "pattern": "compaction"
     },
+    "t-kw-ccc4cf3d": {
+      "kind": "keyword",
+      "pattern": "rethrow in catch"
+    },
     "t-kw-cfaa4738": {
       "kind": "keyword",
       "pattern": "global-only permissions scopeExtras generateX leaks project scope"
@@ -11461,6 +11601,10 @@
       "kind": "keyword",
       "pattern": "merge helper guard"
     },
+    "t-kw-e9de15ff": {
+      "kind": "keyword",
+      "pattern": "preserve-caught-error"
+    },
     "t-kw-ebee7e76": {
       "kind": "keyword",
       "pattern": "keyword trigger length dead"
@@ -11492,6 +11636,10 @@
     "t-kw-f169d21b": {
       "kind": "keyword",
       "pattern": "always lesson"
+    },
+    "t-kw-f27ad5f1": {
+      "kind": "keyword",
+      "pattern": "per-file coverage"
     },
     "t-kw-f3654aad": {
       "kind": "keyword",

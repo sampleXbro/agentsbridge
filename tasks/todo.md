@@ -1,3 +1,23 @@
+# Coverage gate fix (2026-09-04)
+
+Problem: 95% thresholds are aggregate (a 0%-covered 200-line module moves the
+number ~0.25%); `src/**/index.ts` is blanket-excluded although the CLI parser
+and all 33 target descriptors live there; category (4)/(6) exclusions hide real
+branching. Goal: an honest gate that fails on an untested module.
+
+- [x] 1. Baseline: full coverage run with json-summary; rank files by lowest
+      lines/branches/functions within the current include set
+- [x] 2. Measure the excluded set: re-run coverage with `index.ts` and the
+      category (4)/(6) files included; list what falls under 95%
+- [x] 3. Decide gate shape: `perFile: true` at a defensible floor per metric
+      (target 95 lines/functions, branches floor from data) plus the global 95
+- [x] 4. TDD the gaps: add unit tests for logic-bearing `index.ts` files and
+      any pulled-in module below the floor; only re-exclude genuine
+      types-only barrels, listed by name (no glob)
+- [x] 5. Guard against `.only` (eslint rule) so the gate cannot be bypassed
+- [x] 6. Full `test:coverage` green; `pnpm typecheck` + lint green; docs note
+      in vitest.config.ts categories updated; lessons capture
+
 # Website redesign (2026-09-04)
 
 Direction: "signal on graphite" — precision-instrument look. Amber accent on

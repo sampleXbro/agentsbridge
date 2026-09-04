@@ -61,7 +61,7 @@
     "flake:watch": "tsx scripts/flake-check-watch.ts",
     "test:watch": "vitest",
     "pretest:coverage": "pnpm build",
-    "test:coverage": "COVERAGE=1 vitest run --coverage",
+    "test:coverage": "COVERAGE=1 vitest run --coverage && tsx scripts/coverage-floor.ts",
     "test:e2e": "pnpm build && vitest run --config vitest.e2e.config.ts",
     "lint": "eslint src tests",
     "lint:dead": "knip",

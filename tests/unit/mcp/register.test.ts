@@ -1,5 +1,14 @@
-import { describe, it, expect } from 'vitest';
-import { TOOL_DESCRIPTORS, RESOURCE_DESCRIPTORS } from '../../../src/mcp/register.js';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { mkdtemp, rm, mkdir, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { z } from 'zod';
+import {
+  TOOL_DESCRIPTORS,
+  RESOURCE_DESCRIPTORS,
+  zodToMcpSchema,
+} from '../../../src/mcp/register.js';
+import { resolveContext } from '../../../src/mcp/context.js';
 
 function descriptor(name: string): {
   inputSchema: { safeParse: (input: unknown) => { success: boolean } };
@@ -70,5 +79,56 @@ describe('register — schema gate at the trust boundary', () => {
       allow: ['Bash(*)\nmalicious_key: value'],
     });
     expect(r.success).toBe(false);
+  });
+});
+
+describe('zodToMcpSchema', () => {
+  it('emits a draft-07 object schema without the $schema key', () => {
+    const json = zodToMcpSchema(z.object({ name: z.string(), limit: z.number().optional() }));
+    expect(json).not.toHaveProperty('$schema');
+    expect(json).toMatchObject({
+      type: 'object',
+      properties: { name: { type: 'string' }, limit: { type: 'number' } },
+      required: ['name'],
+    });
+  });
+});
+
+describe('RESOURCE_DESCRIPTORS — read delegates to the tool handler', () => {
+  let projectRoot: string;
+
+  beforeEach(async () => {
+    projectRoot = await mkdtemp(join(tmpdir(), 'am-'));
+    await mkdir(join(projectRoot, '.agentsmesh/rules'), { recursive: true });
+    await writeFile(
+      join(projectRoot, 'agentsmesh.yaml'),
+      'version: 1\ntargets: [claude-code]\nfeatures: [rules]\n',
+      'utf8',
+    );
+    await writeFile(
+      join(projectRoot, '.agentsmesh/rules/_root.md'),
+      '---\nroot: true\ndescription: root\n---\n\nbody\n',
+      'utf8',
+    );
+  });
+
+  afterEach(async () => {
+    await rm(projectRoot, { recursive: true, force: true });
+  });
+
+  it('mirrors the tool uri/name/description and returns the same payload as the tool', async () => {
+    const resource = RESOURCE_DESCRIPTORS[0];
+    if (resource === undefined) throw new Error('no resources registered');
+    const tool = TOOL_DESCRIPTORS.find((d) => d.name === resource.name);
+    if (tool === undefined) throw new Error(`tool not found: ${resource.name}`);
+    expect(resource.name).toBe('list_rules');
+    expect(resource.uri).toBe(tool.resourceUri);
+    expect(resource.description).toBe(tool.description);
+
+    const ctx = await resolveContext({ cwd: projectRoot });
+    const viaResource = await resource.read(ctx, {});
+    const viaTool = await tool.handler(ctx, {});
+    expect(viaResource).toEqual(viaTool);
+    expect(JSON.stringify(viaResource)).toContain('_root');
   });
 });

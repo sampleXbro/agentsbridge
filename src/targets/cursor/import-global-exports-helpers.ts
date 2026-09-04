@@ -37,14 +37,12 @@ export async function hasGlobalCursorArtifacts(projectRoot: string): Promise<boo
     join(projectRoot, CURSOR_MCP),
     join(projectRoot, CURSOR_HOOKS),
     join(projectRoot, CURSOR_IGNORE),
-    join(projectRoot, CURSOR_SKILLS_DIR),
-    join(projectRoot, CURSOR_AGENTS_DIR),
-    join(projectRoot, CURSOR_COMMANDS_DIR),
   ];
   for (const p of candidates) {
-    const stat = await readFileSafe(p);
-    if (stat !== null && stat.trim() !== '') return true;
+    const content = await readFileSafe(p);
+    if (content !== null && content.trim() !== '') return true;
   }
+  // Directories are probed by listing below; readFileSafe on a directory raises EISDIR.
   const skillFiles = await readDirRecursiveNoSymlinks(join(projectRoot, CURSOR_SKILLS_DIR));
   if (skillFiles.some((f) => f.endsWith('.md'))) return true;
   const agentFiles = await readDirRecursiveNoSymlinks(join(projectRoot, CURSOR_AGENTS_DIR));

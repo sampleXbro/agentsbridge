@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { keywordMatches } from '../../../src/lessons/keyword-match.js';
 
-describe('keywordMatches — explicit --keyword (unchanged behavior)', () => {
-  it('matches a substring of the explicit keyword, case-insensitively', () => {
+describe('keywordMatches — explicit --keyword', () => {
+  it('matches a whole token of the explicit keyword, case-insensitively', () => {
     expect(keywordMatches('windows', { keyword: 'Windows path bug' })).toBe(true);
     expect(keywordMatches('linux', { keyword: 'Windows path bug' })).toBe(false);
   });
@@ -77,5 +77,20 @@ describe('keywordMatches — camelCase / acronym reach (additive, backward compa
     expect(keywordMatches('ompan', { file: 'src/ui/InvoiceCompanySelector.tsx' })).toBe(false);
     // 'category' has no boundary, so 'cat' still does not fire (unchanged).
     expect(keywordMatches('cat', { file: 'src/category.ts' })).toBe(false);
+  });
+});
+
+describe('keywordMatches — explicit --keyword on token boundaries (not substring)', () => {
+  it('does not fire on a mid-word fragment — "art" must not match "start"', () => {
+    expect(keywordMatches('art', { keyword: 'please start the server' })).toBe(false);
+  });
+
+  it('fires on a whole token of the prompt', () => {
+    expect(keywordMatches('art', { keyword: 'the art of x' })).toBe(true);
+  });
+
+  it('a multi-word pattern must appear as a contiguous run in the prompt', () => {
+    expect(keywordMatches('read only', { keyword: 'open in read-only mode' })).toBe(true);
+    expect(keywordMatches('read only', { keyword: 'read the only file' })).toBe(false);
   });
 });

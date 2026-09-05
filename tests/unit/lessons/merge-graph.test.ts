@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Lesson, LessonsGraph } from '../../../src/lessons/graph-schema.js';
 import { mergeGraphs } from '../../../src/lessons/merge-graph.js';
+import { validateLessonsGraph } from '../../../src/lessons/validate.js';
 
 function lesson(rule: string, status: Lesson['status'] = 'active'): Lesson {
   return { rule, topics: ['t'], triggers: [], evidence: [], status, createdAt: '2026-06-01' };
@@ -84,5 +85,75 @@ describe('mergeGraphs — pick() tie-break branches', () => {
     const winA = mergeGraphs(base, withZ, withA).lessons.a!.evidence;
     const winB = mergeGraphs(base, withA, withZ).lessons.a!.evidence;
     expect(winA).toEqual(winB);
+  });
+});
+
+describe('mergeGraphs — cross-branch id collision (same id, different rule)', () => {
+  const ruleOf = (g: LessonsGraph, rule: string): string | undefined =>
+    Object.keys(g.lessons).find((id) => g.lessons[id]!.rule === rule);
+
+  it('keeps BOTH rules when each branch minted the same id for a different lesson', () => {
+    const m = mergeGraphs(
+      graph(),
+      graph({ lessons: { 'topic-use-x': lesson('Use X for A.') } }),
+      graph({ lessons: { 'topic-use-x': lesson('Use X for B.') } }),
+    );
+    expect(Object.keys(m.lessons).sort()).toEqual(['topic-use-x', 'topic-use-x-2']);
+    expect(ruleOf(m, 'Use X for A.')).toBeDefined();
+    expect(ruleOf(m, 'Use X for B.')).toBeDefined();
+    expect(validateLessonsGraph(m).ok).toBe(true);
+  });
+
+  it('is side-order independent: the same rule wins the bare id either way', () => {
+    const a = graph({ lessons: { k: lesson('Rule A.') } });
+    const b = graph({ lessons: { k: lesson('Rule B.') } });
+    const ab = mergeGraphs(graph(), a, b);
+    const ba = mergeGraphs(graph(), b, a);
+    expect(ruleOf(ab, 'Rule A.')).toBeDefined();
+    expect(ruleOf(ab, 'Rule B.')).toBeDefined();
+    expect(ruleOf(ab, 'Rule A.')).toBe(ruleOf(ba, 'Rule A.'));
+    expect(ruleOf(ab, 'Rule B.')).toBe(ruleOf(ba, 'Rule B.'));
+  });
+
+  it('skips suffixes already taken on either side (-2 taken → -3)', () => {
+    const m = mergeGraphs(
+      graph(),
+      graph({ lessons: { k: lesson('Rule A.'), 'k-2': lesson('Rule C.') } }),
+      graph({ lessons: { k: lesson('Rule B.') } }),
+    );
+    expect(Object.keys(m.lessons).sort()).toEqual(['k', 'k-2', 'k-3']);
+    expect(m.lessons['k-2']!.rule).toBe('Rule C.');
+    expect(validateLessonsGraph(m).ok).toBe(true);
+  });
+
+  it('remaps a same-side supersededBy chain that pointed at the re-keyed lesson', () => {
+    const ours = graph({ lessons: { k: lesson('Rule A.') } });
+    const theirs = graph({
+      lessons: {
+        k: lesson('Rule B.'),
+        old: { ...lesson('Old B.', 'superseded'), supersededBy: 'k' },
+      },
+    });
+    for (const m of [mergeGraphs(graph(), ours, theirs), mergeGraphs(graph(), theirs, ours)]) {
+      expect(ruleOf(m, 'Rule A.')).toBeDefined();
+      expect(m.lessons.old!.supersededBy).toBe(ruleOf(m, 'Rule B.'));
+      expect(validateLessonsGraph(m).ok).toBe(true);
+    }
+  });
+
+  it('is NOT a collision when only one side reworded the base rule (three-way edit)', () => {
+    const base = graph({ lessons: { k: lesson('Rule A.') } });
+    const m = mergeGraphs(base, base, graph({ lessons: { k: lesson('Rule A, reworded.') } }));
+    expect(Object.keys(m.lessons)).toEqual(['k']);
+    expect(m.lessons.k!.rule).toBe('Rule A, reworded.');
+  });
+
+  it('is NOT a collision when the rules match and only metadata differs', () => {
+    const m = mergeGraphs(
+      graph(),
+      graph({ lessons: { k: { ...lesson('Rule A.'), evidence: ['x'] } } }),
+      graph({ lessons: { k: { ...lesson('Rule A.'), evidence: ['y'] } } }),
+    );
+    expect(Object.keys(m.lessons)).toEqual(['k']);
   });
 });

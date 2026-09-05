@@ -10,12 +10,11 @@ import type {
   LessonsAddData,
   LessonsImportMdData,
   LessonsJournalData,
-  LessonsQueryData,
-  LessonsQueryFormat,
   LessonsShowData,
   LessonsTopicsData,
 } from '../commands/lessons-types.js';
 import { renderPrune, renderStats, renderValidate } from './lessons-render-diagnostics.js';
+import { renderQuery } from './lessons-render-query.js';
 
 export function renderLessons(result: LessonsCommandResult): void {
   if (result.error !== undefined && result.error.length > 0) {
@@ -76,48 +75,6 @@ export function renderLessons(result: LessonsCommandResult): void {
       return renderStats(result.data, result.format);
     case 'import-md':
       return renderImportMd(result.data);
-  }
-}
-
-function renderQuery(data: LessonsQueryData, format: LessonsQueryFormat): void {
-  if (data.autoMigrated) {
-    logger.warn('lessons.json was auto-migrated from index.yaml on first invocation.');
-  }
-  if (data.warning !== undefined && data.warning.length > 0) {
-    logger.warn(data.warning);
-  }
-  if (format === 'json') {
-    process.stdout.write(`${JSON.stringify(data, null, 2)}\n`);
-    return;
-  }
-  if (data.lessons.length === 0) {
-    logger.info('(no matches)');
-    return;
-  }
-  // `--ids` prefixes each line with the lesson id so an irrelevant recall can be
-  // traced to `show <id>` / `deprecate <id>`. Off by default to keep the plain
-  // output paste-clean and token-lean.
-  const withId = (id: string, rule: string): string =>
-    data.showIds === true ? `[${id}] ${rule}` : rule;
-  if (format === 'md') {
-    data.lessons.forEach((l, i) => logger.info(`${i + 1}. ${withId(l.id, l.rule)}`));
-  } else {
-    for (const l of data.lessons) logger.info(withId(l.id, l.rule));
-  }
-  // Never silently truncate: tell the user (on stderr, keeping stdout paste-clean)
-  // when the ranked cap hid matches.
-  if (data.totalMatches !== undefined && data.totalMatches > data.lessons.length) {
-    // `--top` alone still hits the token budget, so name both knobs (or --all).
-    logger.warn(
-      `(showing ${data.lessons.length} of ${data.totalMatches} matches — raise --top <n> with --max-tokens <m>, or pass --all)`,
-    );
-  }
-  // Dedup is opt-in via a session id; note when repeats were hidden so the
-  // suppression is never silent (stderr, keeping stdout paste-clean).
-  if (data.suppressed !== undefined && data.suppressed > 0) {
-    logger.warn(
-      `(${data.suppressed} already shown this session — deduped; pass --no-dedup to include)`,
-    );
   }
 }
 

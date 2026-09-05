@@ -4,6 +4,8 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   addLesson,
+  BroadCommandPatternError,
+  EmptyRuleError,
   RuleTooLongError,
   UnknownTopicError,
   UnrecallableLessonError,
@@ -435,5 +437,35 @@ describe('addLesson', () => {
     const result = await addLesson(root, { ...baseInput, rule: atCap });
     expect(result.isNewLesson).toBe(true);
     expect(loadLessonsGraph(root).lessons[result.id]?.rule.length).toBe(MAX_RULE_LENGTH);
+  });
+});
+
+describe('addLesson — capture rejections (rule shape, broad command pattern)', () => {
+  it('rejects a whitespace-only rule with EmptyRuleError and leaves the graph untouched', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    await expect(addLesson(root, { ...baseInput, rule: '   ' })).rejects.toBeInstanceOf(
+      EmptyRuleError,
+    );
+    expect(loadLessonsGraph(root).lessons).toEqual({});
+  });
+
+  it.each(['.*', ' '])(
+    'rejects the over-broad command pattern %j with BroadCommandPatternError',
+    async (pattern) => {
+      seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+      await expect(
+        addLesson(root, { ...baseInput, triggers: { commands: [pattern] } }),
+      ).rejects.toBeInstanceOf(BroadCommandPatternError);
+      expect(loadLessonsGraph(root).triggers).toEqual({});
+    },
+  );
+
+  it('accepts a word-bounded command class', async () => {
+    seedGraph({ version: 1, lessons: {}, topics: baseTopics, triggers: {} });
+    const result = await addLesson(root, {
+      ...baseInput,
+      triggers: { commands: ['\\brm\\b'] },
+    });
+    expect(result.isNewLesson).toBe(true);
   });
 });

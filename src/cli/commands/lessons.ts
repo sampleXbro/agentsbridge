@@ -34,10 +34,7 @@ export type { LessonsCommandResult } from './lessons-types.js';
  * other subcommand keeps the throw: failing a write loudly prevents a fresh
  * empty graph from permanently stranding an unmigrated legacy store.
  */
-async function migrateForSubcommand(
-  subcommand: string,
-  projectRoot: string,
-): Promise<boolean> {
+async function migrateForSubcommand(subcommand: string, projectRoot: string): Promise<boolean> {
   if (subcommand === 'import-md') return false;
   if (subcommand === 'query' || subcommand === 'hook') {
     try {

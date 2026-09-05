@@ -443,3 +443,43 @@ describe('validateLessonsGraph', () => {
     expect(r.findings.some((f) => f.code === 'SCHEMA_INVALID')).toBe(true);
   });
 });
+
+describe('validateLessonsGraph — BROAD_COMMAND_PATTERN', () => {
+  it('warns on an active command_pattern that matches nearly every command', () => {
+    const g = baseGraph();
+    g.triggers['t-any'] = { kind: 'command_pattern', pattern: '.*' };
+    g.lessons['a-rule']!.triggers.push('t-any');
+    const r = validateLessonsGraph(g);
+    expect(r.ok).toBe(true);
+    expect(r.findings).toContainEqual(
+      expect.objectContaining({
+        level: 'warning',
+        code: 'BROAD_COMMAND_PATTERN',
+        triggerId: 't-any',
+      }),
+    );
+  });
+
+  it('does not warn on a specific command_pattern', () => {
+    const g = baseGraph();
+    g.triggers['t-git'] = { kind: 'command_pattern', pattern: '\\bgit commit\\b' };
+    g.lessons['a-rule']!.triggers.push('t-git');
+    expect(validateLessonsGraph(g).findings.map((f) => f.code)).not.toContain(
+      'BROAD_COMMAND_PATTERN',
+    );
+  });
+
+  it('ignores a broad pattern referenced only by a deprecated lesson', () => {
+    const g = baseGraph();
+    g.triggers['t-any'] = { kind: 'command_pattern', pattern: '.*' };
+    g.lessons['old-rule'] = {
+      ...g.lessons['a-rule']!,
+      rule: 'Old.',
+      triggers: ['t-any'],
+      status: 'deprecated',
+    };
+    expect(validateLessonsGraph(g).findings.map((f) => f.code)).not.toContain(
+      'BROAD_COMMAND_PATTERN',
+    );
+  });
+});

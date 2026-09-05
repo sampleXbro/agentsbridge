@@ -6,6 +6,32 @@ import type { IneffectiveTrigger } from './trigger-effectiveness.js';
  * `add.js` so every existing importer keeps its `from './add.js'` path.
  */
 
+/** Thrown when the rule text is empty or whitespace-only — there is nothing to capture. */
+export class EmptyRuleError extends Error {
+  readonly code = 'EMPTY_RULE';
+  constructor() {
+    super('Lesson rule must not be empty — pass one imperative sentence.');
+    this.name = 'EmptyRuleError';
+  }
+}
+
+/**
+ * Thrown when a `--trigger-cmd` pattern matches the empty string or nearly every
+ * command (`.*`, ` `, `\w`). Such a trigger fires on every recall, so it is a
+ * leak that dilutes every command-shaped lesson rather than a trigger.
+ */
+export class BroadCommandPatternError extends Error {
+  readonly code = 'BROAD_COMMAND_PATTERN';
+  constructor(public readonly pattern: string) {
+    super(
+      `Command pattern ${JSON.stringify(pattern)} matches nearly every command, so it would fire on ` +
+        'every recall. Key it on the action instead — a word-bounded program + subcommand ' +
+        '(e.g. "\\bgit commit\\b", "\\brm\\b").',
+    );
+    this.name = 'BroadCommandPatternError';
+  }
+}
+
 export class UnknownTopicError extends Error {
   readonly code = 'UNKNOWN_TOPIC';
   constructor(public readonly topic: string) {

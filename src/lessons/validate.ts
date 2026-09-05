@@ -13,10 +13,13 @@ import {
   collectDuplicateTriggers,
   collectFanout,
   collectInvalidTriggerPatterns,
-  collectLowSignalKeywords,
-  collectStopwordKeywords,
 } from './validate-quality.js';
-import { collectDeadFileGlobs, collectRunnerAnchoredPatterns } from './validate-liveness.js';
+import { collectLowSignalKeywords, collectStopwordKeywords } from './validate-keywords.js';
+import {
+  collectBroadCommandPatterns,
+  collectDeadFileGlobs,
+  collectRunnerAnchoredPatterns,
+} from './validate-liveness.js';
 
 export type ValidationLevel = 'error' | 'warning';
 
@@ -75,6 +78,7 @@ export function validateLessonsGraph(
   collectLowSignalKeywords(graph, findings);
   collectStopwordKeywords(graph, findings);
   collectRunnerAnchoredPatterns(graph, findings);
+  collectBroadCommandPatterns(graph, findings);
   if (options.knownPaths !== undefined) collectDeadFileGlobs(graph, findings, options.knownPaths);
 
   const ok = findings.every((f) => f.level !== 'error');

@@ -146,10 +146,11 @@ describe('lessons recurrence harness — hard suites', () => {
     expect(retrieved('id-tiebreak', 'id-ascending-final-tiebreak')).toEqual(['l-id-a']);
   });
 
-  it('keyword: contiguity, explicit-substring, and stopword-safety all hold', () => {
+  it('keyword: contiguity, explicit whole-token, and stopword-safety all hold', () => {
     expect(retrieved('keyword-semantics', 'token-run-must-be-contiguous')).toEqual([]);
     expect(retrieved('keyword-semantics', 'token-run-contiguous-matches')).toEqual(['l-readonly']);
-    expect(retrieved('keyword-semantics', 'explicit-keyword-is-substring')).toEqual(['l-build']);
+    expect(retrieved('keyword-semantics', 'explicit-keyword-is-token-run')).toEqual(['l-build']);
+    expect(retrieved('keyword-semantics', 'explicit-keyword-is-not-substring')).toEqual([]);
     expect(retrieved('keyword-semantics', 'stopword-only-pattern-never-matches')).toEqual([]);
   });
 });

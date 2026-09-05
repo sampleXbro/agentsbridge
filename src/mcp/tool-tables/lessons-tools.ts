@@ -83,7 +83,7 @@ const LessonsAddInput = z
       .describe('Alias of `trigger_commands` (matches the CLI `--trigger-cmd` flag).'),
     trigger_keywords: stringOrStringArray
       .optional()
-      .describe('keyword triggers — case-insensitive substrings of task descriptions.'),
+      .describe('keyword triggers — case-insensitive whole-token runs of task descriptions.'),
     trigger_kw: stringOrStringArray
       .optional()
       .describe('Alias of `trigger_keywords` (matches the CLI `--trigger-kw` flag).'),

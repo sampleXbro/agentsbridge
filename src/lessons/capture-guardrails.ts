@@ -124,7 +124,7 @@ export function inspectCapturedLesson(
   if (lowSignal.length > 0) {
     warnings.push({
       code: 'LOW_SIGNAL_KEYWORD',
-      message: `Lesson "${lessonId}" has long keyword trigger(s) (${lowSignal.join(', ')}); recall matches a keyword only as a substring of --keyword or a contiguous token-run in the file/command, so a pattern past ${MAX_RECOMMENDED_KEYWORD_TOKENS} tokens rarely fires — use a short distinctive phrase.`,
+      message: `Lesson "${lessonId}" has long keyword trigger(s) (${lowSignal.join(', ')}); recall matches a keyword only as a contiguous token-run in --keyword or the file/command, so a pattern past ${MAX_RECOMMENDED_KEYWORD_TOKENS} tokens rarely fires — use a short distinctive phrase.`,
     });
   }
 

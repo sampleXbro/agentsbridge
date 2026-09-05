@@ -1,6 +1,8 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import {
+  BroadCommandPatternError,
+  EmptyRuleError,
   NoTriggerError,
   RuleTooLongError,
   UnknownTopicError,
@@ -9,10 +11,6 @@ import {
 import { captureLesson } from '../../lessons/capture.js';
 import { deprecateLesson } from '../../lessons/deprecate.js';
 import { ancestorLessonsProjectDir, lessonsActivated } from '../../lessons/paths.js';
-import { mergeLessons } from '../../lessons/merge.js';
-import { mutateLessonsGraph } from '../../lessons/mutate.js';
-import { stripMarkersInGraph } from '../../lessons/strip-markers.js';
-import { untriggerLesson } from '../../lessons/untrigger.js';
 import {
   errorResult,
   listFlag,
@@ -21,18 +19,14 @@ import {
   type LessonsFlags,
 } from './lessons-helpers.js';
 import { lessonsAddHint } from './lessons-usage.js';
-import type {
-  LessonsAddData,
-  LessonsCommandResult,
-  LessonsMergeData,
-  LessonsStripMarkersData,
-  LessonsUntriggerData,
-} from './lessons-types.js';
+import type { LessonsAddData, LessonsCommandResult } from './lessons-types.js';
 
-function errMessage(err: unknown): string {
+/**
+ * Strip internal function-name prefixes (the transactional write path tags its
+ * errors) so the agent sees a clean, actionable message.
+ */
+export function errMessage(err: unknown): string {
   const raw = err instanceof Error ? err.message : String(err);
-  // Strip internal function-name prefixes (the transactional write path tags its
-  // errors) so the agent sees a clean, actionable message.
   return raw.replace(/^(mutateLessonsGraph|mergeLessons):\s*/, '');
 }
 
@@ -123,9 +117,11 @@ export async function doAdd(
       );
     }
     if (
+      err instanceof EmptyRuleError ||
       err instanceof NoTriggerError ||
       err instanceof UnrecallableLessonError ||
-      err instanceof RuleTooLongError
+      err instanceof RuleTooLongError ||
+      err instanceof BroadCommandPatternError
     ) {
       return errorResult('add', `${err.message}${lessonsAddHint()}`, 2);
     }
@@ -157,58 +153,4 @@ export async function doDeprecate(
       : '';
     return errorResult('deprecate', `${message}${hint}`, 1);
   }
-}
-
-export async function doUntrigger(
-  lessonId: string | undefined,
-  triggerId: string | undefined,
-  projectRoot: string,
-): Promise<LessonsCommandResult> {
-  if (lessonId === undefined || lessonId === '' || triggerId === undefined || triggerId === '') {
-    return errorResult(
-      'untrigger',
-      'Usage: agentsmesh lessons untrigger <lesson-id> <trigger-id>',
-      2,
-    );
-  }
-  try {
-    const result = await mutateLessonsGraph(projectRoot, (graph) =>
-      untriggerLesson(graph, lessonId, triggerId),
-    );
-    const data: LessonsUntriggerData = result;
-    return { subcommand: 'untrigger', exitCode: 0, data };
-  } catch (err) {
-    return errorResult('untrigger', errMessage(err), 1);
-  }
-}
-
-export async function doMerge(
-  loserId: string | undefined,
-  keeperId: string | undefined,
-  projectRoot: string,
-): Promise<LessonsCommandResult> {
-  if (loserId === undefined || loserId === '' || keeperId === undefined || keeperId === '') {
-    return errorResult('merge', 'Usage: agentsmesh lessons merge <loser-id> <keeper-id>', 2);
-  }
-  try {
-    const result = await mergeLessons(projectRoot, loserId, keeperId);
-    const data: LessonsMergeData = result;
-    return { subcommand: 'merge', exitCode: 0, data };
-  } catch (err) {
-    return errorResult('merge', errMessage(err), 1);
-  }
-}
-
-export async function doStripMarkers(
-  flags: LessonsFlags,
-  projectRoot: string,
-): Promise<LessonsCommandResult> {
-  const dryRun = flags['dry-run'] === true;
-  const report = await stripMarkersInGraph(projectRoot, { dryRun });
-  const data: LessonsStripMarkersData = {
-    changedIds: report.changedIds,
-    changedCount: report.changedCount,
-    dryRun,
-  };
-  return { subcommand: 'strip-markers', exitCode: 0, data };
 }

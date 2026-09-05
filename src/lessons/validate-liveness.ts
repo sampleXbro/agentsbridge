@@ -1,4 +1,5 @@
 import picomatch from 'picomatch';
+import { isBroadCommandPattern } from './command-pattern-breadth.js';
 import type { LessonsGraph } from './graph-schema.js';
 import type { ValidationFinding } from './validate.js';
 
@@ -95,6 +96,30 @@ export function collectRunnerAnchoredPatterns(
       level: 'warning',
       code: 'RUNNER_ANCHORED_PATTERN',
       message: `command_pattern trigger "${triggerId}" (${trigger.pattern}) is anchored to one runner — it won't fire for the same task via another runner (e.g. \`npx\` vs \`pnpm\`). Drop the \`^<runner>\` anchor and key on the task (e.g. \`\\bvitest\\b\`).`,
+      triggerId,
+    });
+  }
+}
+
+/**
+ * A `command_pattern` on an active lesson that matches the empty string or most
+ * unrelated commands fires on every recall. `add` rejects a new one
+ * (BROAD_COMMAND_PATTERN, exit 2); this is the `validate` counterpart for a
+ * graph built before that guardrail existed (or a hand-edit). Warn-only.
+ */
+export function collectBroadCommandPatterns(
+  graph: LessonsGraph,
+  findings: ValidationFinding[],
+): void {
+  const active = activeTriggerIds(graph);
+  for (const [triggerId, trigger] of Object.entries(graph.triggers)) {
+    if (trigger.kind !== 'command_pattern') continue;
+    if (!active.has(triggerId)) continue;
+    if (!isBroadCommandPattern(trigger.pattern)) continue;
+    findings.push({
+      level: 'warning',
+      code: 'BROAD_COMMAND_PATTERN',
+      message: `command_pattern trigger "${triggerId}" (${trigger.pattern}) matches nearly every command, so the lesson fires on every recall. Key it on the action (e.g. \`\\bgit commit\\b\`), or detach it with \`lessons untrigger\`.`,
       triggerId,
     });
   }
